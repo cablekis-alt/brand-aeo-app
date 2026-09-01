@@ -18,14 +18,14 @@ export interface TenantSummary {
 const FALLBACK_TENANTS: TenantSummary[] = [
   {
     tenantId: 'example-brand',
-    brandName: '예시브랜드',
-    aliases: ['예시브랜드', 'ExampleBrand'],
-    ownedDomains: ['example-brand.com'],
-    industry: '가전',
-    region: '대한민국',
-    engines: ['openai', 'gemini', 'claude', 'perplexity'],
-    questionBankSize: 20,
-    competitors: ['경쟁브랜드A', '경쟁브랜드B'],
+    brandName: '뷰성형외과',
+    aliases: ['뷰성형외과', '강남 뷰성형외과', 'VIEW성형외과', 'View Clinic'],
+    ownedDomains: ['viewclinic.com'],
+    industry: '성형외과',
+    region: '서울 강남',
+    engines: ['openai'],
+    questionBankSize: 12,
+    competitors: ['강남성형A', '강남성형B'],
   },
 ]
 

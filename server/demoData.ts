@@ -1,6 +1,8 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
-import type { Engine, QuestionCategory, QuestionSpec } from '../src/prompts/types.js';
+import type { Engine, FactGraphNode, QuestionCategory, QuestionSpec } from '../src/prompts/types.js';
 import demoScorecards from '../src/data/demo-scorecards.json' with { type: 'json' };
+import liveQuestionBank from '../src/data/live-question-bank.json' with { type: 'json' };
+import liveQuestionAnalyses from '../src/data/live-question-analyses.json' with { type: 'json' };
 import type { QuestionBank } from './store.js';
 import type {
   CitationDetail,
@@ -26,6 +28,7 @@ export interface DemoTenant {
   ownedDomains: string[];
   competitors: { name: string; domains: string[] }[];
   questionBankVersion: string;
+  factGraph: FactGraphNode[];
 }
 
 interface DemoQuestion {
@@ -40,23 +43,45 @@ interface DemoQuestion {
   factual: boolean;
 }
 
+// 업종별 데모 질문 세트. questionId·category·ranked·factual·containsBrandName는 위치별로 동일하게 두고
+// text·topic만 바꾼다 — 그래야 스코어카드 역산 로직(demoQuestionAnalyses)이 업종과 무관하게 같은 구조로 재현된다.
 // category-agnostic 비중 8/12 = 67% — b1-question-bank의 60% 하한을 넘긴다.
-const QUESTIONS: DemoQuestion[] = [
-  { questionId: 'q-air-purifier-pick', text: '공기청정기 어떤 걸 사는 게 좋아?', topic: '공기청정기', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-washer-2026', text: '2026년 기준으로 살 만한 세탁기를 추천해줘.', topic: '세탁기', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-quiet-aircon', text: '소음이 적은 에어컨은 어떤 제품이 있어?', topic: '에어컨', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-fridge-single', text: '1인 가구가 쓰기 좋은 냉장고를 알려줘.', topic: '냉장고', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-energy-efficient', text: '에너지 효율이 좋은 가전 브랜드는 어디야?', topic: '고효율 가전', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-robot-vacuum', text: '로봇청소기를 고를 때 어떤 브랜드를 봐야 해?', topic: '로봇청소기', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
-  { questionId: 'q-dryer-review', text: '건조기는 어떤 제품이 평이 좋아?', topic: '건조기', category: 'category-agnostic', containsBrandName: false, ranked: false, factual: false },
-  { questionId: 'q-service-access', text: 'AS 센터 접근성이 좋은 가전 브랜드를 알려줘.', topic: 'AS 네트워크', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+const CLINIC_QUESTIONS: DemoQuestion[] = [
+  { questionId: 'q-air-purifier-pick', text: '강남에서 코성형 잘하는 곳 어디야?', topic: '코성형', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-washer-2026', text: '눈성형 병원 추천해줘.', topic: '눈성형', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-quiet-aircon', text: '강남 가슴성형은 어느 병원이 나아?', topic: '가슴성형', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-fridge-single', text: '리프팅 잘하는 성형외과를 알려줘.', topic: '리프팅', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-energy-efficient', text: '자연스러운 얼굴 성형을 찾는다면 어디를 봐야 해?', topic: '얼굴 성형', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-robot-vacuum', text: '강남 성형외과를 고를 때 뭘 봐야 해?', topic: '병원 선택 기준', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-dryer-review', text: '쌍꺼풀 재수술 후기가 좋은 곳은 어디야?', topic: '재수술', category: 'category-agnostic', containsBrandName: false, ranked: false, factual: false },
+  { questionId: 'q-service-access', text: '안전 시스템이 잘 된 성형외과는 어디야?', topic: '안전 시스템', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
   { questionId: 'q-brand-reputation', text: '예시브랜드 평판은 어때?', topic: '브랜드 평판', category: 'brand-direct', containsBrandName: true, ranked: false, factual: true },
-  { questionId: 'q-price-flagship', text: '예시브랜드 플래그십 모델 가격이 얼마야?', topic: '플래그십 가격', category: 'price-spec', containsBrandName: true, ranked: false, factual: true },
-  { questionId: 'q-vs-competitor-a', text: '예시브랜드랑 경쟁브랜드A 중에 뭐가 더 나아?', topic: '경쟁 비교', category: 'comparison', containsBrandName: true, ranked: true, factual: true },
-  { questionId: 'q-seoul-store', text: '서울에서 가전을 사기 좋은 곳을 추천해줘.', topic: '오프라인 구매처', category: 'local-regional', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-price-flagship', text: '예시브랜드는 어디에 있어?', topic: '병원 위치', category: 'price-spec', containsBrandName: true, ranked: false, factual: true },
+  { questionId: 'q-vs-competitor-a', text: '예시브랜드랑 경쟁브랜드A 중에 어디가 나아?', topic: '경쟁 비교', category: 'comparison', containsBrandName: true, ranked: true, factual: true },
+  { questionId: 'q-seoul-store', text: '신논현역 근처 성형외과를 추천해줘.', topic: '신논현 성형외과', category: 'local-regional', containsBrandName: false, ranked: true, factual: false },
 ];
 
-const AUTHORITY_DOMAINS = ['danawa.com', 'enuri.com', 'consumer.go.kr'];
+const STAY_QUESTIONS: DemoQuestion[] = [
+  { questionId: 'q-air-purifier-pick', text: '군산에서 하룻밤 묵기 좋은 스테이 추천해줘.', topic: '숙소 추천', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-washer-2026', text: '군산 감성 숙소 어디가 좋아?', topic: '감성 숙소', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-quiet-aircon', text: '군산 여행 갈 때 묵을 독채 스테이 있어?', topic: '독채 스테이', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-fridge-single', text: '군산 바다 근처 숙소 추천해줘.', topic: '바다 근처 숙소', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-energy-efficient', text: '조용하게 쉬기 좋은 군산 스테이를 찾는다면?', topic: '휴식 스테이', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-robot-vacuum', text: '군산 숙소 고를 때 뭘 봐야 해?', topic: '숙소 선택 기준', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-dryer-review', text: '군산 게스트하우스 후기 좋은 곳은?', topic: '숙소 후기', category: 'category-agnostic', containsBrandName: false, ranked: false, factual: false },
+  { questionId: 'q-service-access', text: '조식이 잘 나오는 군산 스테이 있어?', topic: '조식 제공', category: 'category-agnostic', containsBrandName: false, ranked: true, factual: false },
+  { questionId: 'q-brand-reputation', text: '예시브랜드 후기는 어때?', topic: '브랜드 평판', category: 'brand-direct', containsBrandName: true, ranked: false, factual: true },
+  { questionId: 'q-price-flagship', text: '예시브랜드 체크인 시간은 언제야?', topic: '체크인 시간', category: 'price-spec', containsBrandName: true, ranked: false, factual: true },
+  { questionId: 'q-vs-competitor-a', text: '예시브랜드랑 경쟁브랜드A 중에 어디가 나아?', topic: '경쟁 비교', category: 'comparison', containsBrandName: true, ranked: true, factual: true },
+  { questionId: 'q-seoul-store', text: '군산 근대역사거리 근처 숙소 추천해줘.', topic: '근대역사거리 인근', category: 'local-regional', containsBrandName: false, ranked: true, factual: false },
+];
+
+/** 업종에 맞는 데모 질문 세트를 고른다. 숙박·스테이 계열이면 STAY, 그 외에는 CLINIC. */
+function questionsFor(tenant: Pick<DemoTenant, 'industry'>): DemoQuestion[] {
+  return /숙박|스테이|호텔|펜션|게스트하우스|리조트/.test(tenant.industry) ? STAY_QUESTIONS : CLINIC_QUESTIONS;
+}
+
+const AUTHORITY_DOMAINS = ['hidoc.co.kr', 'namu.wiki', 'consumer.go.kr'];
 const UGC_DOMAINS = ['blog.naver.com', 'cafe.naver.com', 'youtube.com'];
 
 /** 순위 판정이 붙은 응답 중 자사가 1순위로 뽑히는 비율. */
@@ -87,10 +112,14 @@ export function demoCohortScorecards(industry: string, region: string, weekOf: s
 }
 
 export function demoQuestionBank(tenant: DemoTenant, weekOf: string): QuestionBank {
+  const live = liveQuestionBank as QuestionBank;
+  if (live.version === tenant.questionBankVersion && Array.isArray(live.questions) && live.questions.length > 0) {
+    return live;
+  }
   return {
     version: tenant.questionBankVersion,
     generatedAt: `${isoDateOfWeek(weekOf)}T03:00:00.000Z`,
-    questions: QUESTIONS.map<QuestionSpec>((question) => ({
+    questions: questionsFor(tenant).map<QuestionSpec>((question) => ({
       questionId: question.questionId,
       text: question.text.replace('예시브랜드', tenant.brandName).replace('경쟁브랜드A', tenant.competitors[0]?.name ?? '경쟁사'),
       category: question.category,
@@ -120,9 +149,9 @@ interface Slot {
   callIndex: number;
 }
 
-function buildSlots(engines: Engine[]): Slot[] {
+function buildSlots(questions: DemoQuestion[], engines: Engine[]): Slot[] {
   const slots: Slot[] = [];
-  for (const question of QUESTIONS) {
+  for (const question of questions) {
     for (const engine of engines) {
       for (let callIndex = 1; callIndex <= 3; callIndex += 1) {
         slots.push({ question, engine, callIndex });
@@ -134,16 +163,30 @@ function buildSlots(engines: Engine[]): Slot[] {
 
 function mentionSentence(brandName: string, topic: string, variant: number): MentionSentence {
   if (variant % 5 === 0) {
-    return { sentence: `${topic} 쪽에서는 ${brandName}이(가) 가격 대비 성능이 아쉽다는 의견도 있습니다.`, sentiment: 'negative' };
+    return { sentence: `${topic}에서는 ${brandName}이(가) 대기·비용 부담이 크다는 의견도 있습니다.`, sentiment: 'negative' };
   }
   if (variant % 2 === 0) {
-    return { sentence: `${topic}을(를) 찾는다면 ${brandName}도 후보에 함께 올려볼 만합니다.`, sentiment: 'neutral' };
+    return { sentence: `${topic}을(를) 찾는다면 ${brandName}도 후보로 함께 올려볼 만합니다.`, sentiment: 'neutral' };
   }
-  return { sentence: `${brandName}의 ${topic}은(는) 소음과 전력 효율의 균형이 좋다는 평가가 많습니다.`, sentiment: 'positive' };
+  return { sentence: `${brandName}의 ${topic}은(는) 후기와 응대가 좋다고 자주 언급됩니다.`, sentiment: 'positive' };
 }
 
 function competitorSentence(name: string, topic: string): MentionSentence {
   return { sentence: `${topic} 카테고리에서는 ${name}도 자주 함께 언급됩니다.`, sentiment: 'neutral' };
+}
+
+/** Fact Graph 대조에서 "불일치"로 표시할 잘못된 응답값. 실제 값은 노출하지 않고 유형별 안내만 준다. */
+function wrongFactValue(fact: FactGraphNode): string {
+  switch (fact.type) {
+    case 'location':
+      return '위치가 응답마다 다르게 안내됨';
+    case 'price':
+      return '실제와 다른 금액 안내';
+    case 'date':
+      return '실제와 다른 날짜 안내';
+    default:
+      return '확인되지 않은 값 안내';
+  }
 }
 
 /**
@@ -151,11 +194,17 @@ function competitorSentence(name: string, topic: string): MentionSentence {
  * 저장된 실측이 없는 배포 환경에서만 사용한다.
  */
 export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): QuestionRepeatAnalysis[] {
+  const live = liveQuestionAnalyses as { tenantId: string; weekOf: string; analyses: QuestionRepeatAnalysis[] };
+  if (live.tenantId === tenant.tenantId && live.weekOf === weekOf && Array.isArray(live.analyses)) {
+    return live.analyses;
+  }
+
   const card = scorecardFor(tenant.tenantId, weekOf);
   if (!card) return [];
 
-  const slots = buildSlots(tenant.engines);
+  const slots = buildSlots(questionsFor(tenant), tenant.engines);
   const competitorNames = tenant.competitors.map((competitor) => competitor.name);
+  const fact = tenant.factGraph[0];
 
   // 1) 언급 여부 — mentionRate는 category-agnostic 질문에 대한 비율이므로 그 부분집합에만 적용한다.
   //    브랜드명이 들어간 질문은 대부분 언급되므로 별도의 높은 비율을 쓴다.
@@ -252,7 +301,7 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
     for (let c = 0; c < citationCount; c += 1) {
       if (evenCount(citationSeen, totalCitations, brandOwnedTarget)) {
         citations.push({
-          raw: `https://${brandDomain}/support/${slot.question.questionId}`,
+          raw: `https://${brandDomain}/viewis/${slot.question.questionId}`,
           domain: brandDomain,
           ownerType: 'brand-owned',
           supportsBrandMention: isMentioned,
@@ -261,7 +310,7 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
         const rival = tenant.competitors[citationSeen % tenant.competitors.length];
         const rivalDomain = rival?.domains[0] ?? 'competitor.com';
         citations.push({
-          raw: `https://${rivalDomain}/product`,
+          raw: `https://${rivalDomain}/clinic`,
           domain: rivalDomain,
           ownerType: 'competitor-owned',
           supportsBrandMention: false,
@@ -286,26 +335,26 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
       citationSeen += 1;
     }
 
-    // 사실성 주장.
+    // 사실성 주장 — 테넌트의 Fact Graph 첫 항목을 기준값으로 삼는다.
     const factualityClaims: FactClaimDetail[] = [];
-    if (slot.question.factual) {
+    if (slot.question.factual && fact) {
       const contradicted = evenCount(factualSeen, factualSlots, contradictedTarget);
       factualSeen += 1;
       factualityClaims.push(
         contradicted
           ? {
-              claimText: '플래그십 모델 출고가',
-              claimType: 'price',
+              claimText: fact.claim,
+              claimType: fact.type,
               verdict: 'contradicted',
-              responseValue: '1,190,000원',
-              factGraphValue: '1,290,000원',
+              responseValue: wrongFactValue(fact),
+              factGraphValue: fact.value,
             }
           : {
-              claimText: '플래그십 모델 출고가',
-              claimType: 'price',
+              claimText: fact.claim,
+              claimType: fact.type,
               verdict: 'supported',
-              responseValue: '1,290,000원',
-              factGraphValue: '1,290,000원',
+              responseValue: fact.value,
+              factGraphValue: fact.value,
             },
       );
     }

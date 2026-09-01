@@ -5,6 +5,7 @@ import { GeminiEngineClient } from './geminiEngineClient';
 import { MockEngineClient } from './mockEngineClient';
 import { MockJudgeClient } from './mockJudgeClient';
 import { OpenAiEngineClient } from './openaiEngineClient';
+import { OpenAiJudgeClient } from './openaiJudgeClient';
 import { PerplexityEngineClient } from './perplexityEngineClient';
 import type { EngineClient } from './types';
 
@@ -40,11 +41,13 @@ export function getEngineClient(engine: Engine): EngineClient {
 let judgeClient: EngineClient | undefined;
 
 /**
- * B5 분석(심판) 전용 클라이언트. 수집용 4개 엔진과 분리된 고정 모델이어야 한다
- * (docs/prompt-design.md 2절 참고). 현재는 claude-opus-5로 고정 — 필요 시 JUDGE_MODEL 환경변수로 교체.
+ * B5 분석(심판) 전용 클라이언트. 수집용 엔진과 분리된 고정 모델이어야 한다.
+ * Anthropic 키가 있으면 Claude를 쓰고, 없으면 OpenAI 키로 폴백한다 (웹 검색 없음).
  */
 export function getJudgeClient(): EngineClient {
   if (USE_MOCK) return new MockJudgeClient();
-  if (!judgeClient) judgeClient = new ClaudeJudgeClient();
+  if (!judgeClient) {
+    judgeClient = process.env.ANTHROPIC_API_KEY ? new ClaudeJudgeClient() : new OpenAiJudgeClient();
+  }
   return judgeClient;
 }

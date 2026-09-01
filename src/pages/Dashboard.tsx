@@ -109,8 +109,8 @@ export default function Dashboard() {
       )}
 
       <p className="disclaimer">
-        파이프라인은 매주 월요일 03:00에 실행됩니다. 배포 환경의 예시 테넌트는 저장된 실측이 없으면 샘플 주간
-        데이터를 보여 줍니다. 실제 엔진 호출은 서버 API 키가 있는 백엔드에서만 이뤄집니다.
+        현재 점수는 ChatGPT(gpt-4o, 웹 검색 사용)로 {card ? weekLabel(card.weekOf) : '해당 주'}에 측정한 값입니다.
+        질문 12개 × 3회 반복이며, Gemini·Claude·Perplexity는 포함하지 않았습니다. 실제 인용·노출을 보장하지 않습니다.
       </p>
     </>
   )

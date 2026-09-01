@@ -24,7 +24,7 @@ export interface FetchPayload {
 }
 
 const MAX_BODY = 1_500_000;
-const TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 8_000;
 const MAX_REDIRECTS = 5;
 const UA =
   'BrandAEO-SiteChecker/1.0 (+page quality diagnostic) AppleWebKit/537.36 Chrome/149.0.0.0 Safari/537.36';

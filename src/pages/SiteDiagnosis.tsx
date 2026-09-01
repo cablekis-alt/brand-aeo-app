@@ -82,7 +82,7 @@ export default function SiteDiagnosis() {
             type="text"
             inputMode="url"
             autoComplete="url"
-            placeholder="https://your-site.com/page"
+            placeholder="https://www.viewclinic.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required

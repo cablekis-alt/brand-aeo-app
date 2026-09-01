@@ -81,6 +81,9 @@ function parseTarget(raw: string): URL {
   if (parsed.username || parsed.password) {
     throw new CollectorError('CREDENTIALS_NOT_ALLOWED', '계정 정보가 포함된 URL은 분석할 수 없습니다.');
   }
+  if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
+    throw new CollectorError('INVALID_PORT', '80/443 포트만 분석할 수 있습니다.');
+  }
   return parsed;
 }
 

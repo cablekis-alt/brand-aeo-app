@@ -20,18 +20,23 @@ function mean(values: number[]): number {
   return values.length === 0 ? 0 : values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-async function main() {
-  const tenant = (tenants as TenantConfig[])[0];
+async function verifyTenant(tenant: TenantConfig): Promise<number> {
   const store = new DemoResultStore([tenant]);
+  const history = demoScorecardHistory(tenant.tenantId);
+  if (history.length === 0) {
+    console.log(`—    ${tenant.tenantId}: 데모 스코어카드 없음 (건너뜀)`);
+    return 0;
+  }
+  console.log(`\n### ${tenant.brandName} (${tenant.tenantId}) — ${tenant.industry} · ${tenant.region}`);
   const agnostic = new Set(
-    demoQuestionAnalyses(tenant, '2026-W36')
+    demoQuestionAnalyses(tenant, history[0].weekOf)
       .map((a) => a.questionId)
       .filter((id) => !['q-brand-reputation', 'q-price-flagship', 'q-vs-competitor-a', 'q-seoul-store'].includes(id)),
   );
 
   let failures = 0;
 
-  for (const card of demoScorecardHistory(tenant.tenantId)) {
+  for (const card of history) {
     const analyses = demoQuestionAnalyses(tenant, card.weekOf);
     const agnosticRecords = analyses.filter((a) => agnostic.has(a.questionId));
 
@@ -71,7 +76,16 @@ async function main() {
     }
   }
 
-  console.log(failures === 0 ? '\n전체 주차 일치' : `\n불일치 ${failures}건`);
+  return failures;
+}
+
+async function main() {
+  let failures = 0;
+  for (const tenant of tenants as TenantConfig[]) {
+    failures += await verifyTenant(tenant);
+  }
+
+  console.log(failures === 0 ? '\n전체 테넌트·주차 일치' : `\n불일치 ${failures}건`);
   process.exitCode = failures === 0 ? 0 : 1;
 }
 

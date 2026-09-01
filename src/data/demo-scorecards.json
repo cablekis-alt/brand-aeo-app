@@ -2,123 +2,231 @@
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W29",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 38, "ma4": 38, "previousWeek": 38, "ciLow": 33.2, "ciHigh": 42.6 },
-    "mentionRate": 0.31,
-    "shareOfMention": 0.18,
-    "avgRecommendationRank": 3.1,
-    "factualityScore": 0.88,
-    "brandOwnedCitationRate": 0.12,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
-    "hallucinationFlags": []
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 35,
+      "ma4": 35,
+      "previousWeek": 35,
+      "ciLow": 25.6,
+      "ciHigh": 44.3
+    },
+    "mentionRate": 0.25,
+    "shareOfMention": 0.2,
+    "avgRecommendationRank": 3,
+    "factualityScore": 0.7777777777777778,
+    "brandOwnedCitationRate": 0.08,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": [
+      "openai / v2-004 #1: 사실성 불일치 1건",
+      "openai / v2-005 #2: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W30",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 41, "ma4": 40, "previousWeek": 38, "ciLow": 36.4, "ciHigh": 45.1 },
-    "mentionRate": 0.34,
-    "shareOfMention": 0.2,
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 38,
+      "ma4": 37,
+      "previousWeek": 35,
+      "ciLow": 28.6,
+      "ciHigh": 47.3
+    },
+    "mentionRate": 0.2916666666666667,
+    "shareOfMention": 0.22,
     "avgRecommendationRank": 2.9,
-    "factualityScore": 0.89,
-    "brandOwnedCitationRate": 0.13,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
-    "hallucinationFlags": []
+    "factualityScore": 0.7777777777777778,
+    "brandOwnedCitationRate": 0.1,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": [
+      "openai / v2-004 #1: 사실성 불일치 1건",
+      "openai / v2-005 #2: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W31",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 43, "ma4": 41, "previousWeek": 41, "ciLow": 38.8, "ciHigh": 47.0 },
-    "mentionRate": 0.36,
-    "shareOfMention": 0.22,
-    "avgRecommendationRank": 2.8,
-    "factualityScore": 0.9,
-    "brandOwnedCitationRate": 0.14,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
-    "hallucinationFlags": []
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 42,
+      "ma4": 38,
+      "previousWeek": 38,
+      "ciLow": 32.6,
+      "ciHigh": 51.3
+    },
+    "mentionRate": 0.3333333333333333,
+    "shareOfMention": 0.24,
+    "avgRecommendationRank": 2.7,
+    "factualityScore": 0.8888888888888888,
+    "brandOwnedCitationRate": 0.12,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": [
+      "openai / v2-004 #1: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W32",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 45, "ma4": 42, "previousWeek": 43, "ciLow": 40.5, "ciHigh": 49.2 },
-    "mentionRate": 0.38,
-    "shareOfMention": 0.24,
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 45,
+      "ma4": 40,
+      "previousWeek": 42,
+      "ciLow": 35.6,
+      "ciHigh": 54.3
+    },
+    "mentionRate": 0.375,
+    "shareOfMention": 0.26,
     "avgRecommendationRank": 2.6,
-    "factualityScore": 0.9,
-    "brandOwnedCitationRate": 0.15,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
-    "hallucinationFlags": []
+    "factualityScore": 0.8888888888888888,
+    "brandOwnedCitationRate": 0.14,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": [
+      "openai / v2-004 #1: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W33",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 47, "ma4": 44, "previousWeek": 45, "ciLow": 42.1, "ciHigh": 51.4 },
-    "mentionRate": 0.41,
-    "shareOfMention": 0.26,
-    "avgRecommendationRank": 2.5,
-    "factualityScore": 0.91,
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 47,
+      "ma4": 43,
+      "previousWeek": 45,
+      "ciLow": 37.6,
+      "ciHigh": 56.3
+    },
+    "mentionRate": 0.4166666666666667,
+    "shareOfMention": 0.28,
+    "avgRecommendationRank": 2.4,
+    "factualityScore": 0.8888888888888888,
     "brandOwnedCitationRate": 0.16,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
-    "hallucinationFlags": []
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": [
+      "openai / v2-004 #1: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W34",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 49, "ma4": 46, "previousWeek": 47, "ciLow": 44.0, "ciHigh": 53.6 },
-    "mentionRate": 0.44,
-    "shareOfMention": 0.28,
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 50,
+      "ma4": 46,
+      "previousWeek": 47,
+      "ciLow": 40.6,
+      "ciHigh": 59.3
+    },
+    "mentionRate": 0.4583333333333333,
+    "shareOfMention": 0.3,
     "avgRecommendationRank": 2.3,
-    "factualityScore": 0.92,
+    "factualityScore": 0.8888888888888888,
     "brandOwnedCitationRate": 0.18,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
     "hallucinationFlags": [
-      "openai / q-price-flagship #2: 사실성 불일치 1건"
+      "openai / v2-004 #1: 사실성 불일치 1건"
     ]
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W35",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 51, "ma4": 48, "previousWeek": 49, "ciLow": 46.3, "ciHigh": 55.4 },
-    "mentionRate": 0.47,
-    "shareOfMention": 0.31,
-    "avgRecommendationRank": 2.2,
-    "factualityScore": 0.93,
-    "brandOwnedCitationRate": 0.19,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 54,
+      "ma4": 49,
+      "previousWeek": 50,
+      "ciLow": 44.6,
+      "ciHigh": 63.3
+    },
+    "mentionRate": 0.5,
+    "shareOfMention": 0.32,
+    "avgRecommendationRank": 2.1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.2,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
     "hallucinationFlags": []
   },
   {
     "tenantId": "example-brand",
     "weekOf": "2026-W36",
-    "industry": "가전",
-    "region": "대한민국",
-    "brandName": "예시브랜드",
-    "aeoScore": { "current": 55, "ma4": 51, "previousWeek": 51, "ciLow": 50.1, "ciHigh": 59.7 },
-    "mentionRate": 0.51,
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 57,
+      "ma4": 52,
+      "previousWeek": 54,
+      "ciLow": 47.6,
+      "ciHigh": 66.3
+    },
+    "mentionRate": 0.5416666666666666,
     "shareOfMention": 0.34,
-    "avgRecommendationRank": 2.0,
-    "factualityScore": 0.94,
+    "avgRecommendationRank": 2,
+    "factualityScore": 1,
     "brandOwnedCitationRate": 0.22,
-    "cohortRank": { "position": 1, "totalTenants": 1 },
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "stay-meomum",
+    "weekOf": "2026-W36",
+    "industry": "숙박",
+    "region": "전북 군산",
+    "brandName": "스테이 머뭄",
+    "aeoScore": {
+      "current": 58,
+      "ma4": 58,
+      "previousWeek": 55,
+      "ciLow": 49.5,
+      "ciHigh": 66.5
+    },
+    "mentionRate": 0.45,
+    "shareOfMention": 0.35,
+    "avgRecommendationRank": 2,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.08,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
     "hallucinationFlags": []
   }
 ]

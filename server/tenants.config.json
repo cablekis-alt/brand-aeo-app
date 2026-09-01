@@ -1,25 +1,50 @@
 [
   {
     "tenantId": "example-brand",
-    "brandName": "예시브랜드",
-    "aliases": ["예시브랜드", "ExampleBrand"],
-    "ownedDomains": ["example-brand.com"],
-    "industry": "가전",
-    "region": "대한민국",
-    "engines": ["openai", "gemini", "claude", "perplexity"],
-    "questionBankSize": 20,
-    "questionBankVersion": "v1",
+    "brandName": "뷰성형외과",
+    "aliases": ["뷰성형외과", "강남 뷰성형외과", "VIEW성형외과", "View Clinic"],
+    "ownedDomains": ["viewclinic.com"],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": ["openai"],
+    "questionBankSize": 12,
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
-      { "name": "경쟁브랜드A", "aliases": ["경쟁브랜드A"], "domains": ["competitor-a.com"] },
-      { "name": "경쟁브랜드B", "aliases": ["경쟁브랜드B"], "domains": ["competitor-b.com"] }
+      { "name": "강남성형A", "aliases": ["강남성형A"], "domains": ["gangnam-clinic-a.com"] },
+      { "name": "강남성형B", "aliases": ["강남성형B"], "domains": ["gangnam-clinic-b.com"] }
     ],
     "factGraph": [
       {
-        "id": "price-flagship",
-        "type": "price",
-        "claim": "플래그십 모델 출고가",
-        "value": "1,290,000원",
+        "id": "clinic-address",
+        "type": "location",
+        "claim": "병원 주소",
+        "value": "서울 강남구 봉은사로 107",
+        "updatedAt": "2026-08-01"
+      }
+    ]
+  },
+  {
+    "tenantId": "stay-meomum",
+    "brandName": "스테이 머뭄",
+    "aliases": ["스테이 머뭄", "머뭄", "Stay Meomum"],
+    "ownedDomains": ["w4ai.o2o.kr"],
+    "industry": "숙박",
+    "region": "전북 군산",
+    "engines": ["openai"],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      { "name": "군산스테이A", "aliases": ["군산스테이A"], "domains": ["gunsan-stay-a.com"] },
+      { "name": "군산스테이B", "aliases": ["군산스테이B"], "domains": ["gunsan-stay-b.com"] }
+    ],
+    "factGraph": [
+      {
+        "id": "checkin-time",
+        "type": "other",
+        "claim": "체크인 시간",
+        "value": "오후 3시",
         "updatedAt": "2026-08-01"
       }
     ]

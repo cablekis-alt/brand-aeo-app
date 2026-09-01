@@ -5,7 +5,12 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "{server/tenants.config.json,src/data/demo-scorecards.json}"
+      "includeFiles": "{server/tenants.config.json,src/data/demo-scorecards.json,src/data/live-question-bank.json,src/data/live-question-analyses.json}",
+      "maxDuration": 20
+    },
+    "api/**/*.ts": {
+      "includeFiles": "{server/tenants.config.json,src/data/demo-scorecards.json,src/data/live-question-bank.json,src/data/live-question-analyses.json}",
+      "maxDuration": 20
     }
   },
   "rewrites": [

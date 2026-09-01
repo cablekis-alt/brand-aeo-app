@@ -10,13 +10,13 @@ export class MockEngineClient implements EngineClient {
     const start = performance.now();
     const mentionsBrand = Math.random() > 0.4;
     const text = mentionsBrand
-      ? `질문하신 내용에 대해 답변드리면, 예시브랜드는 이 분야에서 좋은 선택지 중 하나입니다. ` +
-        `경쟁브랜드A도 대안으로 고려할 만합니다. 자세한 내용은 example-brand.com 에서 확인하세요.`
-      : `이 분야에서는 여러 선택지가 있습니다. 가격, 사후지원, 리뷰를 비교해보시는 것을 추천합니다.`;
+      ? `질문하신 내용에 대해 답변드리면, 뷰성형외과는 강남에서 자주 언급되는 선택지 중 하나입니다. ` +
+        `강남성형A도 대안으로 고려할 만합니다. 자세한 내용은 viewclinic.com 에서 확인하세요.`
+      : `이 분야에서는 여러 선택지가 있습니다. 전문의, 안전 시스템, 후기를 비교해보시는 것을 추천합니다.`;
 
     return {
       text,
-      citations: mentionsBrand ? ['https://example-brand.com/products'] : [],
+      citations: mentionsBrand ? ['https://www.viewclinic.com/'] : [],
       usedWebSearch: Math.random() > 0.3,
       tokenUsage: Math.round(200 + Math.random() * 300),
       latencyMs: Math.round(performance.now() - start) + Math.round(Math.random() * 800),

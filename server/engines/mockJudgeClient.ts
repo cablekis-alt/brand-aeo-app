@@ -41,17 +41,17 @@ export class MockJudgeClient implements EngineClient {
   }
 
   private buildBrandMention(responseText: string) {
-    const mentioned = responseText.includes('예시브랜드');
+    const mentioned = responseText.includes('뷰성형외과');
     return {
       targetBrand: {
         mentioned,
         mentionCount: mentioned ? 1 : 0,
         mentions: mentioned
-          ? [{ mentionOrder: 1, sentence: responseText.slice(0, 40), sentiment: 'positive', matchedAlias: '예시브랜드' }]
+          ? [{ mentionOrder: 1, sentence: responseText.slice(0, 40), sentiment: 'positive', matchedAlias: '뷰성형외과' }]
           : [],
       },
       competitorMentions: mentioned
-        ? [{ name: '경쟁브랜드A', mentionCount: 1, mentions: [{ mentionOrder: 2, sentence: responseText.slice(0, 40), sentiment: 'neutral' }] }]
+        ? [{ name: '강남성형A', mentionCount: 1, mentions: [{ mentionOrder: 2, sentence: responseText.slice(0, 40), sentiment: 'neutral' }] }]
         : [],
     };
   }
