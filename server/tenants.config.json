@@ -11,8 +11,8 @@
     "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
-      { "name": "강남성형A", "aliases": ["강남성형A"], "domains": ["gangnam-clinic-a.com"] },
-      { "name": "강남성형B", "aliases": ["강남성형B"], "domains": ["gangnam-clinic-b.com"] }
+      { "name": "강남언니", "aliases": ["강남언니", "Gangnam Unni"], "domains": ["gangnamunni.com"] },
+      { "name": "원진성형외과", "aliases": ["원진성형외과", "원진"], "domains": ["k-wonjin.co.kr"] }
     ],
     "factGraph": [
       {
