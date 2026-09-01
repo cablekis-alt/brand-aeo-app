@@ -2,7 +2,7 @@ import { demoQuestionBank, demoScorecardHistory } from '../../server/demoData.js
 import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../../server/httpJson.js';
 
-// B-03 질문 프롬프트 빌더.
+// S-04 질문 프롬프트 빌더.
 export default function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

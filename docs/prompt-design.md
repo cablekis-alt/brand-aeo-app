@@ -82,26 +82,26 @@ server/
 
 **설계상 의도적으로 생략한 것**: 인증/멀티테넌트 격리, 재시도·백오프, 레이트리밋 대응(현재는 `mapWithConcurrency`로 동시성만 제한), 실패한 개별 호출의 부분 재실행. 테넌트 수와 실제 트래픽이 정해지면 그때 추가하는 것이 맞다 — 지금 단계에서는 과설계다.
 
-## 9. Brand AEO 메뉴용 API 라우트 (B-02/B-03/B-04/B-06)
+## 9. Brand AEO 메뉴용 API 라우트 (S-02/S-04/S-05/S-07)
 
-[Brand AEO Console 메뉴 설계](https://claude.ai/code/artifact/6770cc65-de1b-42ce-8b46-0a6ccf55a63d)의 화면 4개가 쓰는 라우트. B-01/B-05는 기존 `/api/tenants`, `/api/scorecards/:tenantId`를 그대로 쓴다.
+[Brand AEO Console 메뉴 설계](https://claude.ai/code/artifact/6770cc65-de1b-42ce-8b46-0a6ccf55a63d)의 화면 4개가 쓰는 라우트. S-01/S-06는 기존 `/api/tenants`, `/api/scorecards/:tenantId`를 그대로 쓴다.
 
 | 화면 | 라우트 | 구현 |
 |---|---|---|
-| B-02 브랜드 종합 진단 | `GET /api/question-analyses/:tenantId/:weekOf` | [store.ts](../server/store.ts)에 이미 저장된 문장 단위 판정을 그대로 반환 |
-| B-03 질문 프롬프트 빌더 | `GET /api/question-bank/:tenantId?version=` | `version` 생략 시 테넌트의 현재 `questionBankVersion` 사용 |
-| B-04 URL 상세 분석 | `GET /api/citations/:tenantId/:weekOf` | [queries.ts](../server/queries.ts)에서 도메인×소유권 기준으로 서버 집계 |
-| B-06 랭킹 분석 | `GET /api/ranking/:tenantId/:weekOf` | 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 응답으로 합쳐 반환 |
+| S-02 브랜드 종합 진단 | `GET /api/question-analyses/:tenantId/:weekOf` | [store.ts](../server/store.ts)에 이미 저장된 문장 단위 판정을 그대로 반환 |
+| S-04 질문 프롬프트 빌더 | `GET /api/question-bank/:tenantId?version=` | `version` 생략 시 테넌트의 현재 `questionBankVersion` 사용 |
+| S-05 URL 상세 분석 | `GET /api/citations/:tenantId/:weekOf` | [queries.ts](../server/queries.ts)에서 도메인×소유권 기준으로 서버 집계 |
+| S-07 랭킹 분석 | `GET /api/ranking/:tenantId/:weekOf` | 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 응답으로 합쳐 반환 |
 
-**QuestionRepeatAnalysis 확장**: B-02/B-04 화면이 문장 원문·어조·인용 도메인을 보여주려면 판정 단계에서 나온 상세가 그대로 남아 있어야 한다. 원래는 `mentioned`/`shareOfMention` 같은 집계값만 저장했는데, B5-A~D가 이미 파싱해둔 `mentionSentences`, `competitorMentions[].sentences`, `citations`, `factualityClaims`를 [types.ts](../server/types.ts)에 추가해 함께 저장하도록 [pipeline.ts](../server/pipeline.ts)의 `analyzeRawCall`을 바꿨다. 집계 로직(`aggregateScorecard`)이 쓰는 요약 필드(`mentioned`, `factualitySupported` 등)는 그대로 두고 상세를 곁들이는 식이라, B8 스코어 계산은 영향받지 않는다.
+**QuestionRepeatAnalysis 확장**: S-02/S-05 화면이 문장 원문·어조·인용 도메인을 보여주려면 판정 단계에서 나온 상세가 그대로 남아 있어야 한다. 원래는 `mentioned`/`shareOfMention` 같은 집계값만 저장했는데, B5-A~D가 이미 파싱해둔 `mentionSentences`, `competitorMentions[].sentences`, `citations`, `factualityClaims`를 [types.ts](../server/types.ts)에 추가해 함께 저장하도록 [pipeline.ts](../server/pipeline.ts)의 `analyzeRawCall`을 바꿨다. 집계 로직(`aggregateScorecard`)이 쓰는 요약 필드(`mentioned`, `factualitySupported` 등)는 그대로 두고 상세를 곁들이는 식이라, B8 스코어 계산은 영향받지 않는다.
 
-**B-03의 "새 버전 생성" 액션은 아직 없음**: 지금은 조회 라우트만 추가했다. 질문 은행을 재생성하는 쓰기 라우트(`POST`)는 실제 화면에서 필요해지면 추가하는 것이 맞다 — 지금 붙이면 쓰이지 않는 채로 남을 가능성이 크다.
+**S-04의 "새 버전 생성" 액션은 아직 없음**: 지금은 조회 라우트만 추가했다. 질문 은행을 재생성하는 쓰기 라우트(`POST`)는 실제 화면에서 필요해지면 추가하는 것이 맞다 — 지금 붙이면 쓰이지 않는 채로 남을 가능성이 크다.
 
 ## 10. S-03 사이트 종합 진단 (aeo-checker-app 통합)
 
 `브랜드 진단 및 분석` 그룹에 추가한, 단일 URL의 AI 검색 대응 준비도를 6개 영역·100점으로 채점하는 화면. 별도 프로젝트 [`aeo-checker-app`](../../aeo-checker-app)의 휴리스틱 채점 엔진을 가져와 통합했다.
 
-- **B/S 구분**: B-01~B-06은 테넌트(브랜드)의 주간 파이프라인 데이터를 읽는다. S-03은 그와 무관하게 임의의 공개 URL HTML을 즉시 수집해 채점한다 — 그래서 코드도 `S-` 접두사로 구분했다.
+- **S-03만 성격이 다르다**: 다른 화면(S-01·S-02·S-04~S-07)은 테넌트(브랜드)의 주간 파이프라인 데이터를 읽는다. S-03은 그와 무관하게 임의의 공개 URL HTML을 즉시 수집해 그 자리에서 채점한다 — 테넌트·주차 개념이 없고, 저장도 하지 않는다.
 - **프롬프트 없음**: S-03은 LLM을 쓰지 않는 결정적 휴리스틱 채점이다 (`source: 'heuristic'`). 그래서 `src/prompts/`가 아니라 [`src/lib/aeo/`](../src/lib/aeo)에 격리했다.
 - **아키텍처**: 수집(`/api/fetch`)만 서버에서 하고, HTML 파싱(`extractPage`, 브라우저 DOMParser)과 채점(`evaluateAeo`)은 전부 클라이언트에서 돈다. 서버는 원본 HTML만 넘긴다.
 - **SSRF 가드**: [`server/aeo/networkSafety.ts`](../server/aeo/networkSafety.ts)가 DNS 해석 결과가 사설 대역이면 수집을 거부한다 (localhost·169.254.169.254 등 차단 확인).

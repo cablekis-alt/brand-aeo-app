@@ -33,7 +33,7 @@ export interface FactClaimDetail {
   factGraphValue: string | null
 }
 
-// B-02 브랜드 종합 진단 화면이 그대로 소비하는, 반복 호출 1건당 판정 상세.
+// S-02 브랜드 종합 진단 화면이 그대로 소비하는, 반복 호출 1건당 판정 상세.
 export interface QuestionRepeatAnalysis {
   questionId: string
   engine: Engine
@@ -61,7 +61,7 @@ export interface QuestionSpec {
   version: string
 }
 
-// B-03 질문 프롬프트 빌더.
+// S-04 질문 프롬프트 빌더.
 export interface QuestionBank {
   version: string
   generatedAt: string
@@ -75,13 +75,13 @@ export interface CitationBreakdownRow {
   supportingBrandMentionCount: number
 }
 
-// B-04 URL 상세 분석.
+// S-05 URL 상세 분석.
 export interface CitationBreakdown {
   rows: CitationBreakdownRow[]
   brandOwnedCitationRate: number
 }
 
-// B-06 랭킹 분석.
+// S-07 랭킹 분석.
 export interface RankingView {
   cohort: {
     position: number

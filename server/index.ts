@@ -65,7 +65,7 @@ app.get('/scorecards/:tenantId', async (req, res) => {
   res.json(await scorecardsFor(req.params.tenantId));
 });
 
-// B-02 브랜드 종합 진단 — 해당 주차의 문장 단위 판정 원본(언급/인용/순위/사실성)을 그대로 내려준다.
+// S-02 브랜드 종합 진단 — 해당 주차의 문장 단위 판정 원본(언급/인용/순위/사실성)을 그대로 내려준다.
 app.get('/api/question-analyses/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -76,7 +76,7 @@ app.get('/api/question-analyses/:tenantId/:weekOf', async (req, res) => {
   res.json(await source.getQuestionAnalyses(tenant.tenantId, req.params.weekOf));
 });
 
-// B-03 질문 프롬프트 빌더 — ?version 없이 호출하면 테넌트에 설정된 현재 버전을 반환한다.
+// S-04 질문 프롬프트 빌더 — ?version 없이 호출하면 테넌트에 설정된 현재 버전을 반환한다.
 app.get('/api/question-bank/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -89,7 +89,7 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
   res.json(bank ?? demoQuestionBank(tenant, latestWeek));
 });
 
-// B-04 URL 상세 분석 — 도메인×소유권 기준 인용 집계.
+// S-05 URL 상세 분석 — 도메인×소유권 기준 인용 집계.
 app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -100,7 +100,7 @@ app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
   res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf));
 });
 
-// B-06 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
+// S-07 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
 app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {

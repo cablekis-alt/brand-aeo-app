@@ -3,7 +3,7 @@ import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../..
 import type { JsonRequest, JsonResponse } from '../../../server/httpJson.js';
 import { getCitationBreakdown } from '../../../server/queries.js';
 
-// B-04 URL 상세 분석.
+// S-05 URL 상세 분석.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

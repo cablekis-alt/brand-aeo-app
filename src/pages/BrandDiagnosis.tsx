@@ -46,7 +46,7 @@ export default function BrandDiagnosis() {
 
   return (
     <>
-      <p className="brand">B-02 · 브랜드 진단 및 분석</p>
+      <p className="brand">S-02 · 브랜드 진단 및 분석</p>
       <h1>브랜드 종합 진단</h1>
       <p className="lead">이번 주 응답(질문 × 엔진 × 반복 3회) 중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.</p>
 

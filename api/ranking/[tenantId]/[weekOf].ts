@@ -3,7 +3,7 @@ import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../..
 import type { JsonRequest, JsonResponse } from '../../../server/httpJson.js';
 import { getRankingView } from '../../../server/queries.js';
 
-// B-06 랭킹 분석.
+// S-07 랭킹 분석.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

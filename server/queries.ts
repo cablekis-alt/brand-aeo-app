@@ -16,7 +16,7 @@ export interface CitationBreakdown {
   brandOwnedCitationRate: number;
 }
 
-/** B-04 URL 상세 분석 — 주간 응답에 등장한 인용을 도메인×소유권 기준으로 집계한다. */
+/** S-05 URL 상세 분석 — 주간 응답에 등장한 인용을 도메인×소유권 기준으로 집계한다. */
 export async function getCitationBreakdown(
   store: CitationSource,
   tenantId: string,
@@ -69,7 +69,7 @@ export interface RankingTenant {
   region: string;
 }
 
-/** B-06 랭킹 분석 — 업종·지역 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 번에 내려준다. */
+/** S-07 랭킹 분석 — 업종·지역 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 번에 내려준다. */
 export async function getRankingView(
   store: RankingSource,
   tenant: RankingTenant,

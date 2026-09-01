@@ -1,6 +1,6 @@
 /**
  * 데모 판정 데이터가 demo-scorecards.json의 주간 지표를 실제로 재현하는지 확인한다.
- * 화면(B-02/04/06)이 이 레코드를 다시 집계하므로, 어긋나면 대시보드 수치와 상세 화면이 불일치한다.
+ * 화면(S-02/04/06)이 이 레코드를 다시 집계하므로, 어긋나면 대시보드 수치와 상세 화면이 불일치한다.
  *
  *   npx tsx scripts/verify-demo-data.ts
  */
@@ -49,7 +49,7 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
     const derivedFact = supported + contradicted > 0 ? supported / (supported + contradicted) : 1;
     // 스코어카드의 brandOwnedCitationRate는 "응답 단위"(자사 인용을 포함한 응답 비율)다.
-    // B-04 화면의 "인용 단위" 비율과는 정의가 다르므로 여기서는 응답 단위로 맞춘다.
+    // S-05 화면의 "인용 단위" 비율과는 정의가 다르므로 여기서는 응답 단위로 맞춘다.
     const brandOwnedCitationRate = mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0)));
     const ranking = await getRankingView(store, tenant, card.weekOf);
 

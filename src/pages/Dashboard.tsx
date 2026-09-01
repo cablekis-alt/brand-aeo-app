@@ -10,7 +10,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <p className="brand">Brand AEO</p>
+      <p className="brand">S-01 · 브랜드 진단 및 분석</p>
       <h1>답변 엔진에서 이 브랜드는 얼마나 보이는가</h1>
       <p className="lead">
         ChatGPT, Gemini, Claude, Perplexity에 같은 질문을 반복 호출해 주간 가시성을 측정합니다. 점수는 인용·노출을

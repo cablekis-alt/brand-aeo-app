@@ -15,23 +15,23 @@ const MENU: MenuGroup[] = [
   {
     title: '브랜드 진단 및 분석',
     items: [
-      { code: 'B-01', label: '홈 · 대시보드', to: '/' },
-      { code: 'B-02', label: '브랜드 종합 진단', to: '/diagnosis' },
+      { code: 'S-01', label: '홈 · 대시보드', to: '/' },
+      { code: 'S-02', label: '브랜드 종합 진단', to: '/diagnosis' },
       { code: 'S-03', label: '사이트 종합 진단', to: '/site-diagnosis' },
     ],
   },
   {
     title: 'AEO 최적화',
     items: [
-      { code: 'B-03', label: '질문 프롬프트 빌더', to: '/questions' },
-      { code: 'B-04', label: 'URL 상세 분석', to: '/citations' },
+      { code: 'S-04', label: '질문 프롬프트 빌더', to: '/questions' },
+      { code: 'S-05', label: 'URL 상세 분석', to: '/citations' },
     ],
   },
   {
     title: '브랜드 퍼포먼스',
     items: [
-      { code: 'B-05', label: '브랜드 AEO 퍼포먼스', to: '/performance' },
-      { code: 'B-06', label: '랭킹 분석', to: '/ranking' },
+      { code: 'S-06', label: '브랜드 AEO 퍼포먼스', to: '/performance' },
+      { code: 'S-07', label: '랭킹 분석', to: '/ranking' },
     ],
   },
 ]

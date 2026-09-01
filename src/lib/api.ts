@@ -59,7 +59,7 @@ export async function loadScorecards(tenantId: string): Promise<WeeklyScorecard[
   return (demoScorecards as WeeklyScorecard[]).filter((card) => card.tenantId === tenantId)
 }
 
-// B-02 브랜드 종합 진단 — 실측 데이터가 없는 주차는 빈 배열(화면에서 "데이터 없음"으로 처리).
+// S-02 브랜드 종합 진단 — 실측 데이터가 없는 주차는 빈 배열(화면에서 "데이터 없음"으로 처리).
 export async function loadQuestionAnalyses(tenantId: string, weekOf: string): Promise<QuestionRepeatAnalysis[]> {
   const remote = await getJson<QuestionRepeatAnalysis[]>(
     `/api/question-analyses/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
@@ -67,12 +67,12 @@ export async function loadQuestionAnalyses(tenantId: string, weekOf: string): Pr
   return remote ?? []
 }
 
-// B-03 질문 프롬프트 빌더 — version을 생략하면 서버가 테넌트의 현재 버전을 반환한다.
+// S-04 질문 프롬프트 빌더 — version을 생략하면 서버가 테넌트의 현재 버전을 반환한다.
 export async function loadQuestionBank(tenantId: string): Promise<QuestionBank | null> {
   return getJson<QuestionBank>(`/api/question-bank/${encodeURIComponent(tenantId)}`)
 }
 
-// B-04 URL 상세 분석.
+// S-05 URL 상세 분석.
 export async function loadCitationBreakdown(tenantId: string, weekOf: string): Promise<CitationBreakdown> {
   const remote = await getJson<CitationBreakdown>(
     `/api/citations/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
@@ -80,7 +80,7 @@ export async function loadCitationBreakdown(tenantId: string, weekOf: string): P
   return remote ?? { rows: [], brandOwnedCitationRate: 0 }
 }
 
-// B-06 랭킹 분석.
+// S-07 랭킹 분석.
 export async function loadRanking(tenantId: string, weekOf: string): Promise<RankingView | null> {
   return getJson<RankingView>(`/api/ranking/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`)
 }
