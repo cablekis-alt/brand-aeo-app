@@ -12,8 +12,8 @@ import type { TenantConfig } from '../server/types';
 
 const TOLERANCE = 0.02;
 
-function pct(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
+function pct(value: number | null): string {
+  return value === null ? '판정불가' : `${(value * 100).toFixed(1)}%`;
 }
 
 function mean(values: number[]): number {
@@ -55,10 +55,13 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
 
     const checks: [string, number, number][] = [
       ['언급률', derivedMention, card.mentionRate],
-      ['SoM', derivedSom, card.shareOfMention],
       ['사실성', derivedFact, card.factualityScore],
       ['인용', brandOwnedCitationRate, card.brandOwnedCitationRate],
     ];
+    // SoM은 경쟁사가 없으면 스코어카드에서 null이다. 그 경우 검증 대상에서 제외한다.
+    if (card.shareOfMention !== null) {
+      checks.push(['SoM', derivedSom, card.shareOfMention]);
+    }
 
     const bad = checks.filter(([, got, want]) => Math.abs(got - want) > TOLERANCE);
     // 순위는 추천 문맥이 없으면 null이다. 그 경우 파생값도 순위 레코드가 없어야 정합이다.

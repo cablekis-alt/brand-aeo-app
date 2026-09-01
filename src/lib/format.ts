@@ -1,4 +1,5 @@
-export function formatPct(value: number): string {
+export function formatPct(value: number | null): string {
+  if (value === null) return '판정 불가'
   return `${(value * 100).toFixed(1)}%`
 }
 

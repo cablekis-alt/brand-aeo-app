@@ -194,7 +194,10 @@ function aggregateScorecard(
   const categoryAgnostic = analyses.filter((a) => questionById.get(a.questionId)?.category === 'category-agnostic');
   const mentionRate = mean(categoryAgnostic.map((a) => (a.mentioned ? 1 : 0)));
 
-  const shareOfMention = mean(analyses.map((a) => a.shareOfMention));
+  // SoM은 경쟁사가 있어야 의미가 있다. 경쟁사가 없으면 분모에 경쟁사 언급이 없어 값이 언급률과
+  // 같아지므로(오해 유발), null로 두어 화면에서 "판정 불가"로 표시한다.
+  const hasCompetitors = tenant.competitors.length > 0;
+  const shareOfMention = hasCompetitors ? mean(analyses.map((a) => a.shareOfMention)) : null;
 
   const ranked = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
   const avgRecommendationRank = ranked.length > 0 ? mean(ranked) : null;
@@ -214,7 +217,7 @@ function aggregateScorecard(
         : 1;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
-      shareOfMention: a.shareOfMention,
+      shareOfMention: hasCompetitors ? a.shareOfMention : null,
       avgRecommendationRank: a.brandRank,
       factualityScore: perCallFactuality,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,

@@ -67,7 +67,11 @@ export default function Dashboard() {
             <article>
               <h2>Share of Mention</h2>
               <p>{formatPct(card.shareOfMention)}</p>
-              <span>경쟁 브랜드 대비 언급 점유</span>
+              <span>
+                {card.shareOfMention === null
+                  ? '경쟁사를 설정해야 측정됩니다'
+                  : '경쟁 브랜드 대비 언급 점유'}
+              </span>
             </article>
             <article>
               <h2>평균 추천 순위</h2>

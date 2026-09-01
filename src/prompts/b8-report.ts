@@ -8,7 +8,7 @@ export interface WeeklyScorecard {
   brandName: string;
   aeoScore: { current: number; ma4: number; previousWeek: number; ciLow: number; ciHigh: number };
   mentionRate: number; // category-agnostic 질문 중 언급 비율
-  shareOfMention: number;
+  shareOfMention: number | null; // 경쟁사가 없으면 측정 불가(null)
   avgRecommendationRank: number | null;
   factualityScore: number; // supported / (supported+contradicted)
   brandOwnedCitationRate: number;
@@ -35,7 +35,7 @@ export function buildWeeklyReportPrompt(card: WeeklyScorecard): PromptMessage {
   const user = `주간 스코어카드 (${card.weekOf} / ${card.industry} / ${card.region} / ${card.brandName}):
 - AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
-- Share of Mention: ${(card.shareOfMention * 100).toFixed(1)}%
+- Share of Mention: ${card.shareOfMention === null ? '경쟁사 미설정으로 측정 불가' : `${(card.shareOfMention * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성 점수: ${(card.factualityScore * 100).toFixed(1)}%
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%

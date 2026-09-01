@@ -52,7 +52,7 @@ export function movingAverage4(weeklyScoresOldestFirst: number[]): number {
 
 export interface AeoScoreInputs {
   mentionRate: number; // 0~1, category-agnostic 질문 중 언급 비율
-  shareOfMention: number; // 0~1
+  shareOfMention: number | null; // 0~1. 경쟁사가 없으면 측정 불가(null)
   avgRecommendationRank: number | null; // 1이 최상위, null이면 순위 데이터 없음
   factualityScore: number; // 0~1
   brandOwnedCitationRate: number; // 0~1
@@ -73,15 +73,23 @@ function normalizeRank(rank: number | null, maxRank = 5): number {
   return Math.max(0, (maxRank - rank + 1) / maxRank);
 }
 
-/** B8 AEO Score. 0~100 스케일. 산식은 리포트 생성 프롬프트(b8-report.ts)에 입력으로만 전달되고, 재계산되지 않는다. */
+/**
+ * B8 AEO Score. 0~100 스케일. 산식은 리포트 생성 프롬프트(b8-report.ts)에 입력으로만 전달되고, 재계산되지 않는다.
+ * shareOfMention이 null(경쟁사 없음)이면 그 가중치(0.25)를 나머지 항목에 비례 배분해 재정규화한다.
+ */
 export function computeAeoScore(inputs: AeoScoreInputs): number {
   const rankScore = normalizeRank(inputs.avgRecommendationRank);
-  const composite =
-    inputs.mentionRate * AEO_SCORE_WEIGHTS.mentionRate +
-    inputs.shareOfMention * AEO_SCORE_WEIGHTS.shareOfMention +
-    rankScore * AEO_SCORE_WEIGHTS.recommendationRank +
-    inputs.factualityScore * AEO_SCORE_WEIGHTS.factuality +
-    inputs.brandOwnedCitationRate * AEO_SCORE_WEIGHTS.brandOwnedCitation;
+  const components: { value: number; weight: number }[] = [
+    { value: inputs.mentionRate, weight: AEO_SCORE_WEIGHTS.mentionRate },
+    { value: rankScore, weight: AEO_SCORE_WEIGHTS.recommendationRank },
+    { value: inputs.factualityScore, weight: AEO_SCORE_WEIGHTS.factuality },
+    { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitation },
+  ];
+  if (inputs.shareOfMention !== null) {
+    components.push({ value: inputs.shareOfMention, weight: AEO_SCORE_WEIGHTS.shareOfMention });
+  }
+  const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);
+  const composite = components.reduce((sum, c) => sum + c.value * (c.weight / totalWeight), 0);
   return Math.round(composite * 100);
 }
 

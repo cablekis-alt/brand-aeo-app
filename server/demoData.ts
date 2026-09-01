@@ -255,7 +255,9 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
   // 2) Share of Mention — 스코어카드 값은 전체 레코드 평균이므로, 언급된 레코드의 평균이
   //    target / (언급 비율)이 되도록 경쟁사 언급 수를 인접한 두 단계로 섞는다.
   const mentionedRatio = mentionedCount / slots.length;
-  const targetWhenMentioned = mentionedRatio > 0 ? Math.min(1, card.shareOfMention / mentionedRatio) : 0;
+  // 합성 데이터 경로. 스코어카드 SoM이 null(경쟁사 없음)이면 경쟁사 언급도 0으로 둔다.
+  const cardShareOfMention = card.shareOfMention ?? 0;
+  const targetWhenMentioned = mentionedRatio > 0 ? Math.min(1, cardShareOfMention / mentionedRatio) : 0;
   const rivalFloor = Math.max(0, Math.floor(1 / Math.max(targetWhenMentioned, 1e-6)) - 1);
   const shareHigh = 1 / (1 + rivalFloor);
   const shareLow = 1 / (2 + rivalFloor);

@@ -61,17 +61,23 @@ export default function Ranking() {
 
           <section>
             <h3>경쟁사 Share of Mention</h3>
-            <ul className="rank-list">
-              {ranking.competitorShareOfMention.map((entity) => (
-                <li key={entity.name} className={`rank-row ${entity.name === tenant.brandName ? 'self' : ''}`}>
-                  <span className="rank-name">{entity.name}</span>
-                  <span className="rank-track">
-                    <span className="rank-fill" style={{ width: `${(entity.share / maxShare) * 100}%` }} />
-                  </span>
-                  <span className="rank-value">{formatPct(entity.share)}</span>
-                </li>
-              ))}
-            </ul>
+            {ranking.competitorShareOfMention.filter((e) => e.name !== tenant.brandName).length === 0 ? (
+              <p className="muted">
+                경쟁사가 설정되지 않아 언급 점유를 비교할 수 없습니다. 실제 경쟁 브랜드를 등록하면 측정됩니다.
+              </p>
+            ) : (
+              <ul className="rank-list">
+                {ranking.competitorShareOfMention.map((entity) => (
+                  <li key={entity.name} className={`rank-row ${entity.name === tenant.brandName ? 'self' : ''}`}>
+                    <span className="rank-name">{entity.name}</span>
+                    <span className="rank-track">
+                      <span className="rank-fill" style={{ width: `${(entity.share / maxShare) * 100}%` }} />
+                    </span>
+                    <span className="rank-value">{formatPct(entity.share)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </>
       )}
