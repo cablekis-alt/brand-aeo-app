@@ -6,24 +6,22 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 15,
-      "ma4": 15,
-      "previousWeek": 15,
-      "ciLow": 6.2,
-      "ciHigh": 23.8
+      "current": 23,
+      "ma4": 23,
+      "previousWeek": 23,
+      "ciLow": 15.3,
+      "ciHigh": 30.7
     },
-    "mentionRate": 0.08333333333333333,
-    "shareOfMention": 0.16666666666666666,
+    "mentionRate": 0,
+    "shareOfMention": 0.1951219512195122,
     "avgRecommendationRank": null,
-    "factualityScore": 0.3333333333333333,
-    "brandOwnedCitationRate": 0.07407407407407407,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 6,
       "totalTenants": 6
     },
-    "hallucinationFlags": [
-      "openai / v3-004 #1: 사실성 불일치 2건"
-    ]
+    "hallucinationFlags": []
   },
   {
     "tenantId": "gangnamunni",
@@ -32,19 +30,19 @@
     "region": "서울 강남",
     "brandName": "강남언니",
     "aeoScore": {
-      "current": 41,
-      "ma4": 41,
-      "previousWeek": 41,
-      "ciLow": 32.9,
-      "ciHigh": 49.1
+      "current": 33,
+      "ma4": 33,
+      "previousWeek": 33,
+      "ciLow": 26.6,
+      "ciHigh": 39.4
     },
-    "mentionRate": 0.08333333333333333,
-    "shareOfMention": 0.3392857142857143,
+    "mentionRate": 0,
+    "shareOfMention": 0.1,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
+      "position": 3,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -56,19 +54,19 @@
     "region": "서울 강남",
     "brandName": "원진성형외과",
     "aeoScore": {
-      "current": 47,
-      "ma4": 47,
-      "previousWeek": 47,
-      "ciLow": 37.2,
-      "ciHigh": 56.8
+      "current": 33,
+      "ma4": 33,
+      "previousWeek": 33,
+      "ciLow": 23.5,
+      "ciHigh": 42.5
     },
     "mentionRate": 0,
-    "shareOfMention": 0.6410256410256411,
-    "avgRecommendationRank": 1,
+    "shareOfMention": 0.5135135135135135,
+    "avgRecommendationRank": null,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.0625,
+    "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 1,
+      "position": 3,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -80,19 +78,19 @@
     "region": "서울 강남",
     "brandName": "제이준성형외과의원",
     "aeoScore": {
-      "current": 23,
-      "ma4": 23,
-      "previousWeek": 23,
-      "ciLow": 14.9,
-      "ciHigh": 31.1
+      "current": 40,
+      "ma4": 40,
+      "previousWeek": 40,
+      "ciLow": 31.7,
+      "ciHigh": 48.3
     },
     "mentionRate": 0,
-    "shareOfMention": 0.14285714285714285,
-    "avgRecommendationRank": null,
+    "shareOfMention": 0.3333333333333333,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.0625,
+    "brandOwnedCitationRate": 0.12,
     "cohortRank": {
-      "position": 5,
+      "position": 1,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -104,19 +102,19 @@
     "region": "서울 강남",
     "brandName": "스타라인성형외과의원",
     "aeoScore": {
-      "current": 37,
-      "ma4": 37,
-      "previousWeek": 37,
-      "ciLow": 29.8,
-      "ciHigh": 44.2
+      "current": 36,
+      "ma4": 36,
+      "previousWeek": 36,
+      "ciLow": 28.8,
+      "ciHigh": 43.2
     },
     "mentionRate": 0,
-    "shareOfMention": 0.23333333333333334,
+    "shareOfMention": 0.2054794520547945,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.12345679012345678,
+    "brandOwnedCitationRate": 0.046153846153846156,
     "cohortRank": {
-      "position": 3,
+      "position": 2,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -131,16 +129,16 @@
       "current": 29,
       "ma4": 29,
       "previousWeek": 29,
-      "ciLow": 20,
-      "ciHigh": 38
+      "ciLow": 19.7,
+      "ciHigh": 38.3
     },
-    "mentionRate": 0.041666666666666664,
-    "shareOfMention": 0.3137254901960784,
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": 0.27692307692307694,
     "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 4,
+      "position": 5,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -152,24 +150,24 @@
     "region": "전북 군산",
     "brandName": "스테이 머뭄",
     "aeoScore": {
-      "current": 39,
-      "ma4": 39,
-      "previousWeek": 39,
-      "ciLow": 30.3,
-      "ciHigh": 47.7
+      "current": 35,
+      "ma4": 35,
+      "previousWeek": 35,
+      "ciLow": 27.1,
+      "ciHigh": 42.9
     },
-    "mentionRate": 0,
-    "shareOfMention": 0.55,
+    "mentionRate": 0.041666666666666664,
+    "shareOfMention": 0.39473684210526316,
     "avgRecommendationRank": 1,
-    "factualityScore": 0.7142857142857143,
+    "factualityScore": 0.6,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 3,
       "totalTenants": 3
     },
     "hallucinationFlags": [
-      "openai / v2-008 #1: 사실성 불일치 1건",
-      "openai / v2-008 #2: 사실성 불일치 1건"
+      "openai / v2-006 #3: 사실성 불일치 1건",
+      "openai / v2-007 #2: 사실성 불일치 1건"
     ]
   },
   {
@@ -179,15 +177,15 @@
     "region": "전북 군산",
     "brandName": "군산스테이호텔",
     "aeoScore": {
-      "current": 53,
-      "ma4": 53,
-      "previousWeek": 53,
-      "ciLow": 42.4,
-      "ciHigh": 63.6
+      "current": 47,
+      "ma4": 47,
+      "previousWeek": 47,
+      "ciLow": 36.4,
+      "ciHigh": 57.6
     },
-    "mentionRate": 0.25,
-    "shareOfMention": 0.64,
-    "avgRecommendationRank": 1.5,
+    "mentionRate": 0.20833333333333334,
+    "shareOfMention": 0.72,
+    "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
@@ -203,14 +201,14 @@
     "region": "전북 군산",
     "brandName": "군산해들목펜션",
     "aeoScore": {
-      "current": 44,
-      "ma4": 44,
-      "previousWeek": 44,
-      "ciLow": 34.5,
-      "ciHigh": 53.5
+      "current": 43,
+      "ma4": 43,
+      "previousWeek": 43,
+      "ciLow": 33.5,
+      "ciHigh": 52.5
     },
     "mentionRate": 0,
-    "shareOfMention": 0.5555555555555556,
+    "shareOfMention": 0.5277777777777778,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
