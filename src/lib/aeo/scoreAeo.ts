@@ -1162,6 +1162,51 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
     }
   }
 
+  if (s.serverDefaultPage) {
+    const base = unevaluableReport(
+      s.requestedUrl,
+      {
+        status: '미배포 (웹서버 기본 페이지)',
+        cause: s.serverDefaultPageEvidence || 'Apache/nginx 등 웹서버 기본 페이지',
+        technical: `도메인은 응답하지만 실제 사이트 대신 웹서버 기본 페이지가 뜹니다 (추출 단어 ${s.wordCount}).`,
+        neededFromUser: '이 도메인에 실제 홈페이지(소개·객실/시술·위치·연락처)를 배포한 뒤 다시 진단.',
+        howToRetry: '실제 콘텐츠를 배포하고 HTTPS를 정상 발급한 뒤 다시 진단하세요.',
+      },
+      [
+        '웹서버 기본 페이지만 있어 브랜드 콘텐츠를 채점할 수 없습니다.',
+        '답변 엔진이 이 도메인에서 얻을 브랜드 정보가 없어, 다른 출처(제3자·유사 상호)로 대체하거나 혼동할 수 있습니다.',
+      ],
+    )
+    return {
+      ...base,
+      grade: '미배포 · 채점 제한',
+      oneLiner:
+        '이 도메인에는 웹서버 기본 페이지만 떠 있습니다 — 실제 사이트가 배포되지 않았습니다. 답변 엔진이 이 주소에서 브랜드 정보를 전혀 얻을 수 없습니다.',
+      problems: [
+        {
+          rank: 1,
+          severity: 'critical',
+          categoryId: 'answer_content',
+          title: '공식 사이트에 실제 콘텐츠가 없습니다 (웹서버 기본 페이지)',
+          evidence: s.serverDefaultPageEvidence || '“It works” 류의 서버 기본 페이지가 반환됩니다.',
+          aiImpact: '브랜드를 설명·인용할 1차 출처가 존재하지 않아, AI는 제3자에 의존하거나 다른 상호와 혼동합니다.',
+          quote: null,
+        },
+      ],
+      recommendations: [
+        {
+          priority: 1,
+          workType: 'content',
+          task: '이 도메인에 실제 홈페이지를 배포하세요 — 브랜드 소개, 객실/시술, 위치·주소, 연락처, 가격을 명확한 텍스트로. 그리고 HTTPS 인증서를 정상 발급하세요.',
+          expectedEffect: '답변 엔진이 인용·참조할 1차 출처가 생겨, 브랜드가 자기 정보의 근거가 됩니다.',
+          difficulty: '중간',
+          before: '웹서버 기본 페이지 (콘텐츠 없음)',
+          after: '실제 브랜드 홈페이지 + HTTPS',
+        },
+      ],
+    }
+  }
+
   const recs: RecBag = []
   const accessibility = scoreAccessibility(s, recs)
   if (httpFail || noBody) {

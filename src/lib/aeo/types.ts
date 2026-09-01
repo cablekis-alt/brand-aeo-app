@@ -187,6 +187,9 @@ export interface PageSignals {
   // 크롤러(AI 검색 봇 포함)는 이 벽을 넘지 못해 본문에 접근할 수 없다.
   botChallenge: boolean
   botChallengeEvidence: string
+  // Apache/nginx/IIS 등 웹서버 기본 페이지 — 실제 사이트가 배포되지 않은 상태.
+  serverDefaultPage: boolean
+  serverDefaultPageEvidence: string
   ymyl: boolean
   pageType: PageType
   emptyAltCount: number

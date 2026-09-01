@@ -543,6 +543,14 @@ export function extractPage(input: {
       : 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지'
     : ''
 
+  // 웹서버 기본 페이지 감지 — 도메인은 뜨지만 실제 사이트가 배포되지 않은 상태.
+  const defaultPageSig =
+    /Apache2 (Ubuntu|Debian|CentOS)?\s*Default Page|It works!|Test Page for the Apache HTTP Server|Welcome to nginx!|IIS Windows Server|이 페이지는 정상적으로 설치/i.exec(
+      `${title} ${mainText.slice(0, 400)}`,
+    )
+  const serverDefaultPage = Boolean(defaultPageSig)
+  const serverDefaultPageEvidence = serverDefaultPage ? `웹서버 기본 페이지: ${clip(defaultPageSig![0], 40)}` : ''
+
   const signals: PageSignals = {
     requestedUrl: input.requestedUrl,
     finalUrl: input.finalUrl,
@@ -607,6 +615,8 @@ export function extractPage(input: {
     authWallEvidence: AUTH_RE.exec(mainText)?.[0] ?? (input.status === 401 || input.status === 403 ? `HTTP ${input.status}` : ''),
     botChallenge,
     botChallengeEvidence,
+    serverDefaultPage,
+    serverDefaultPageEvidence,
     ymyl: detectYmyl(title, h1s, firstText, base),
     pageType: 'other',
     emptyAltCount,
