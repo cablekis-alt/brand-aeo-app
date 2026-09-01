@@ -9,14 +9,14 @@
       "current": 46,
       "ma4": 46,
       "previousWeek": 46,
-      "ciLow": 36.1,
-      "ciHigh": 56.8
+      "ciLow": 36.5,
+      "ciHigh": 55.8
     },
     "mentionRate": 0.3333333333333333,
-    "shareOfMention": 0.3472222222222222,
-    "avgRecommendationRank": 1,
+    "shareOfMention": 0.3287037037037037,
+    "avgRecommendationRank": 1.6666666666666667,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.1388888888888889,
+    "brandOwnedCitationRate": 0.05555555555555555,
     "cohortRank": {
       "position": 1,
       "totalTenants": 1
