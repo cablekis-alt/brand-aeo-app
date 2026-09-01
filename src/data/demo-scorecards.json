@@ -6,17 +6,17 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 14,
-      "ma4": 14,
-      "previousWeek": 14,
-      "ciLow": 5.4,
-      "ciHigh": 22.6
+      "current": 15,
+      "ma4": 15,
+      "previousWeek": 15,
+      "ciLow": 6.2,
+      "ciHigh": 23.8
     },
     "mentionRate": 0.08333333333333333,
-    "shareOfMention": 0.32608695652173914,
+    "shareOfMention": 0.16666666666666666,
     "avgRecommendationRank": null,
-    "factualityScore": 0,
-    "brandOwnedCitationRate": 0.04081632653061224,
+    "factualityScore": 0.3333333333333333,
+    "brandOwnedCitationRate": 0.07407407407407407,
     "cohortRank": {
       "position": 6,
       "totalTenants": 6
@@ -32,19 +32,19 @@
     "region": "서울 강남",
     "brandName": "강남언니",
     "aeoScore": {
-      "current": 23,
-      "ma4": 23,
-      "previousWeek": 23,
-      "ciLow": 16.7,
-      "ciHigh": 29.3
+      "current": 41,
+      "ma4": 41,
+      "previousWeek": 41,
+      "ciLow": 32.9,
+      "ciHigh": 49.1
     },
-    "mentionRate": 0.041666666666666664,
-    "shareOfMention": 0.14035087719298245,
-    "avgRecommendationRank": null,
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": 0.3392857142857143,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
+      "position": 2,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -56,19 +56,19 @@
     "region": "서울 강남",
     "brandName": "원진성형외과",
     "aeoScore": {
-      "current": 29,
-      "ma4": 29,
-      "previousWeek": 29,
-      "ciLow": 19.4,
-      "ciHigh": 38.6
+      "current": 47,
+      "ma4": 47,
+      "previousWeek": 47,
+      "ciLow": 37.2,
+      "ciHigh": 56.8
     },
     "mentionRate": 0,
-    "shareOfMention": 0.37777777777777777,
-    "avgRecommendationRank": null,
+    "shareOfMention": 0.6410256410256411,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
+    "brandOwnedCitationRate": 0.0625,
     "cohortRank": {
-      "position": 3,
+      "position": 1,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -80,19 +80,19 @@
     "region": "서울 강남",
     "brandName": "제이준성형외과의원",
     "aeoScore": {
-      "current": 32,
-      "ma4": 32,
-      "previousWeek": 32,
-      "ciLow": 24.1,
-      "ciHigh": 39.9
+      "current": 23,
+      "ma4": 23,
+      "previousWeek": 23,
+      "ciLow": 14.9,
+      "ciHigh": 31.1
     },
     "mentionRate": 0,
-    "shareOfMention": 0.18518518518518517,
-    "avgRecommendationRank": 2,
+    "shareOfMention": 0.14285714285714285,
+    "avgRecommendationRank": null,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.047619047619047616,
+    "brandOwnedCitationRate": 0.0625,
     "cohortRank": {
-      "position": 2,
+      "position": 5,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -104,19 +104,19 @@
     "region": "서울 강남",
     "brandName": "스타라인성형외과의원",
     "aeoScore": {
-      "current": 36,
-      "ma4": 36,
-      "previousWeek": 36,
-      "ciLow": 28.8,
-      "ciHigh": 43.2
+      "current": 37,
+      "ma4": 37,
+      "previousWeek": 37,
+      "ciLow": 29.8,
+      "ciHigh": 44.2
     },
     "mentionRate": 0,
-    "shareOfMention": 0.24285714285714285,
+    "shareOfMention": 0.23333333333333334,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.03305785123966942,
+    "brandOwnedCitationRate": 0.12345679012345678,
     "cohortRank": {
-      "position": 1,
+      "position": 3,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -128,14 +128,14 @@
     "region": "서울 강남",
     "brandName": "바노바기성형외과의원",
     "aeoScore": {
-      "current": 25,
-      "ma4": 25,
-      "previousWeek": 25,
-      "ciLow": 16.1,
-      "ciHigh": 33.9
+      "current": 29,
+      "ma4": 29,
+      "previousWeek": 29,
+      "ciLow": 20,
+      "ciHigh": 38
     },
     "mentionRate": 0.041666666666666664,
-    "shareOfMention": 0.18518518518518517,
+    "shareOfMention": 0.3137254901960784,
     "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
@@ -152,19 +152,19 @@
     "region": "전북 군산",
     "brandName": "스테이 머뭄",
     "aeoScore": {
-      "current": 44,
-      "ma4": 44,
-      "previousWeek": 44,
-      "ciLow": 34.1,
-      "ciHigh": 53.9
+      "current": 39,
+      "ma4": 39,
+      "previousWeek": 39,
+      "ciLow": 30.3,
+      "ciHigh": 47.7
     },
     "mentionRate": 0,
-    "shareOfMention": 0.75,
+    "shareOfMention": 0.55,
     "avgRecommendationRank": 1,
-    "factualityScore": 0.6875,
+    "factualityScore": 0.7142857142857143,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
+      "position": 3,
       "totalTenants": 3
     },
     "hallucinationFlags": [
@@ -182,14 +182,14 @@
     "region": "전북 군산",
     "brandName": "군산스테이호텔",
     "aeoScore": {
-      "current": 55,
-      "ma4": 55,
-      "previousWeek": 55,
-      "ciLow": 44.2,
-      "ciHigh": 65.8
+      "current": 53,
+      "ma4": 53,
+      "previousWeek": 53,
+      "ciLow": 42.4,
+      "ciHigh": 63.6
     },
     "mentionRate": 0.25,
-    "shareOfMention": 0.71875,
+    "shareOfMention": 0.64,
     "avgRecommendationRank": 1.5,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
@@ -206,19 +206,19 @@
     "region": "전북 군산",
     "brandName": "군산해들목펜션",
     "aeoScore": {
-      "current": 36,
-      "ma4": 36,
-      "previousWeek": 36,
-      "ciLow": 26.3,
-      "ciHigh": 45.7
+      "current": 44,
+      "ma4": 44,
+      "previousWeek": 44,
+      "ciLow": 34.5,
+      "ciHigh": 53.5
     },
-    "mentionRate": 0.08333333333333333,
-    "shareOfMention": 0.5238095238095238,
-    "avgRecommendationRank": null,
+    "mentionRate": 0,
+    "shareOfMention": 0.5555555555555556,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 2,
       "totalTenants": 3
     },
     "hallucinationFlags": []

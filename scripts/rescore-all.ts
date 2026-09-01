@@ -129,7 +129,7 @@ const next = cards.map((c) => {
   const fmt = (r: number | null) => (r === null ? 'null' : r.toFixed(2))
   console.log(
     `${c.tenantId.padEnd(16)} Score ${c.aeoScore.current}→${updated.aeoScore.current}` +
-      `  (순위 ${fmt(c.avgRecommendationRank)}${c.avgRecommendationRank === null ? ' 재정규화' : ''})`,
+      `  (순위 ${fmt(updated.avgRecommendationRank)}${updated.avgRecommendationRank === null ? ' → 재정규화 제외' : ''})`,
   )
   return updated
 })
