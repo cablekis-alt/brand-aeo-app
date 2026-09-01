@@ -1100,12 +1100,16 @@ export function unevaluableReport(
 }
 
 /**
- * 크롤러가 본문에 접근할 수 없는(=AI가 읽을 수 없는) 경우의 리포트. Lighthouse 원칙에 따라
- * "측정된 실패"로 보고 접근성 0점 + 총점 하한 0으로 표기한다("측정 불가"인 확인 불가와 구분).
+ * 크롤러가 본문에 접근할 수 없는(=AI가 읽을 수 없는) 경우의 리포트.
+ *   mode='floor0'  — "측정된 실패"로 보고 접근성 0점 + 총점 하한 0 (예: 미배포·HTTP 오류처럼
+ *                    실제로 읽을 콘텐츠가 없는 경우).
+ *   mode='unknown' — 벽 뒤에 실제 콘텐츠는 있을 수 있으나 우리 정적 수집기가 막혀 채점 불가.
+ *                    총점을 확인 불가(null)로 둔다 (예: 봇 차단(WAF) 챌린지).
  */
 function crawlerBlockedReport(
   s: PageSignals,
   o: {
+    mode?: 'floor0' | 'unknown'
     gradeReason: string
     accessStatus: string
     cause: string
@@ -1118,13 +1122,17 @@ function crawlerBlockedReport(
     limitations: string[]
   },
 ): AeoReport {
+  const mode = o.mode ?? 'floor0'
   const accMeta = CATEGORY_DEFS.find((c) => c.id === 'accessibility')!
   const accessibility: CategoryResult = {
     id: 'accessibility',
     name: accMeta.name,
-    score: 0,
+    score: mode === 'unknown' ? 'unknown' : 0,
     maxScore: accMeta.max,
-    judgment: `매우 미흡. 크롤러가 본문에 접근할 수 없습니다 — ${o.gradeReason}.`,
+    judgment:
+      mode === 'unknown'
+        ? `확인 불가. 크롤러가 차단되어 접근성 신호를 측정하지 못했습니다 — ${o.gradeReason}.`
+        : `매우 미흡. 크롤러가 본문에 접근할 수 없습니다 — ${o.gradeReason}.`,
     positives: [],
     issues: [{ severity: 'critical', title: o.problem.title, evidence: o.problem.evidence, aiImpact: o.problem.aiImpact, quote: null }],
   }
@@ -1148,8 +1156,8 @@ function crawlerBlockedReport(
       neededFromUser: o.neededFromUser,
       howToRetry: o.howToRetry,
     },
-    overallScore: 0,
-    grade: `0 · ${o.gradeReason}`,
+    overallScore: mode === 'unknown' ? null : 0,
+    grade: mode === 'unknown' ? `확인 불가 · ${o.gradeReason}` : `0 · ${o.gradeReason}`,
     oneLiner: o.oneLiner,
     categories: [accessibility, ...others],
     strengths: [],
@@ -1178,12 +1186,14 @@ function crawlerBlockedReport(
     contentSuggestions: null,
     citableSentences: [],
     verdict: {
-      readiness: `0 / 100 · ${o.gradeReason}`,
+      readiness: mode === 'unknown' ? `확인 불가 · ${o.gradeReason}` : `0 / 100 · ${o.gradeReason}`,
       biggestStrength: '—',
       biggestBlocker: o.problem.title,
       firstAction: o.rec.task,
       scoreRangeIfFixed:
-        '차단·부재가 해소되면 본문을 채점할 수 있습니다. 지금은 AI가 읽을 수 없어 총점 0입니다.',
+        mode === 'unknown'
+          ? '차단이 해소되면 본문을 채점할 수 있습니다. 지금은 크롤러가 막혀 총점을 확인할 수 없습니다.'
+          : '차단·부재가 해소되면 본문을 채점할 수 있습니다. 지금은 AI가 읽을 수 없어 총점 0입니다.',
     },
     limitations: o.limitations,
     disclaimer: DISCLAIMER,
@@ -1213,6 +1223,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
 
   if (s.botChallenge) {
     return crawlerBlockedReport(s, {
+      mode: 'unknown',
       gradeReason: '봇 차단',
       accessStatus: '봇 차단 (JS 쿠키 챌린지)',
       cause: s.botChallengeEvidence || '자바스크립트 쿠키/리다이렉트 챌린지',
@@ -1220,11 +1231,11 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       neededFromUser: 'AI·검색 크롤러(GPTBot, Google-Extended, ClaudeBot, PerplexityBot 등) 허용 설정, 또는 이들에게 서버 렌더링된 공개 HTML 제공.',
       howToRetry: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent를 허용한 뒤 다시 진단하세요.',
       oneLiner:
-        '봇 차단(자바스크립트 쿠키 챌린지)이 걸려 있어 크롤러가 본문에 접근할 수 없습니다. AI 검색 크롤러도 같은 이유로 차단되어, 이 페이지는 답변 엔진에 사실상 보이지 않습니다. (총점 하한 0)',
+        '봇 차단(자바스크립트 쿠키 챌린지)이 걸려 있어 정적 수집기가 본문에 접근하지 못했습니다 — 총점은 확인 불가입니다. 이 벽(WAF)은 흔히 AI 검색 크롤러도 함께 막으므로, 페이지가 답변 엔진에 보이지 않을 위험이 큽니다.',
       problem: {
         title: '봇 차단으로 크롤러가 본문에 접근할 수 없습니다',
         evidence: s.botChallengeEvidence || 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지만 반환됩니다.',
-        aiImpact: 'GPTBot·ClaudeBot 등 AI 검색 크롤러도 동일하게 차단되어, 인용·노출 후보에서 원천 제외됩니다.',
+        aiImpact: 'GPTBot·ClaudeBot 등 JS를 실행하지 않는 AI 검색 크롤러는 동일하게 차단되어, 인용·노출 후보에서 제외될 수 있습니다.',
       },
       rec: {
         workType: 'dev',
@@ -1234,8 +1245,8 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
         after: '크롤러 User-Agent에는 서버 HTML 제공',
       },
       limitations: [
-        '봇 차단으로 본문을 읽지 못해 콘텐츠 영역은 채점하지 않았습니다. 접근 실패는 측정된 결과이므로 총점은 하한 0으로 표기합니다.',
-        '이 차단은 자바스크립트를 실행하지 않는 AI 검색 크롤러에도 동일하게 적용됩니다.',
+        '봇 차단으로 정적 수집기가 본문을 읽지 못해 콘텐츠 영역을 채점하지 못했습니다 — 총점은 확인 불가로 둡니다(벽 뒤 실제 콘텐츠 품질은 알 수 없음).',
+        '이 차단은 자바스크립트를 실행하지 않는 AI 검색 크롤러에도 동일하게 적용됩니다. JS를 실행하는 크롤러라면 통과할 수도 있습니다.',
       ],
     })
   }
