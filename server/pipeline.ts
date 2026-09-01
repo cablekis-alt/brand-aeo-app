@@ -194,10 +194,17 @@ function aggregateScorecard(
   const categoryAgnostic = analyses.filter((a) => questionById.get(a.questionId)?.category === 'category-agnostic');
   const mentionRate = mean(categoryAgnostic.map((a) => (a.mentioned ? 1 : 0)));
 
-  // SoM은 경쟁사가 있어야 의미가 있다. 경쟁사가 없으면 분모에 경쟁사 언급이 없어 값이 언급률과
-  // 같아지므로(오해 유발), null로 두어 화면에서 "판정 불가"로 표시한다.
+  // SoM(Share of Voice) = 표준 정의인 "횟수 기준": 내 언급 총합 / (내 언급 + 경쟁사 언급) 총합.
+  // 응답별 비율을 단순 평균하면 언급이 적은 응답이 과대 반영되므로, 횟수 기준으로 집계한다
+  // (S-07 랭킹 화면과 동일). 경쟁사가 없거나 아무 언급도 없으면 측정 불가(null).
   const hasCompetitors = tenant.competitors.length > 0;
-  const shareOfMention = hasCompetitors ? mean(analyses.map((a) => a.shareOfMention)) : null;
+  const brandMentionTotal = analyses.reduce((sum, a) => sum + a.mentionSentences.length, 0);
+  const competitorMentionTotal = analyses.reduce(
+    (sum, a) => sum + a.competitorMentions.reduce((t, c) => t + c.mentionCount, 0),
+    0,
+  );
+  const shareTotal = brandMentionTotal + competitorMentionTotal;
+  const shareOfMention = hasCompetitors && shareTotal > 0 ? brandMentionTotal / shareTotal : null;
 
   const ranked = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
   const avgRecommendationRank = ranked.length > 0 ? mean(ranked) : null;
@@ -208,8 +215,16 @@ function aggregateScorecard(
 
   const brandOwnedCitationRate = analyses.length > 0 ? mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0))) : 0;
 
-  // 반복 호출 1건마다의 종합 점수 분포로 CI를 낸다 — 카테고리 평균 하나만 놓고 CI를 내면
-  // "동일 질문 3회 반복"의 분산 정보가 소실된다.
+  // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치).
+  const currentScore = computeAeoScore({
+    mentionRate,
+    shareOfMention,
+    avgRecommendationRank,
+    factualityScore,
+    brandOwnedCitationRate,
+  });
+
+  // CI 폭은 반복 호출 1건마다의 점수 분포에서 낸다(동일 질문 3회 반복의 분산). 중심은 위 결정적 점수.
   const perCallScores = analyses.map((a) => {
     const perCallFactuality =
       a.factualitySupported + a.factualityContradicted > 0
@@ -224,7 +239,7 @@ function aggregateScorecard(
     });
   });
   const scoreCi = meanWithConfidenceInterval(perCallScores.length > 0 ? perCallScores : [0]);
-  const currentScore = Math.round(scoreCi.mean);
+  const ciMargin = scoreCi.high - scoreCi.mean;
 
   const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : currentScore;
   const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), currentScore]));
@@ -243,8 +258,8 @@ function aggregateScorecard(
       current: currentScore,
       ma4,
       previousWeek,
-      ciLow: Math.round(scoreCi.low * 10) / 10,
-      ciHigh: Math.round(scoreCi.high * 10) / 10,
+      ciLow: Math.round((currentScore - ciMargin) * 10) / 10,
+      ciHigh: Math.round((currentScore + ciMargin) * 10) / 10,
     },
     mentionRate,
     shareOfMention,

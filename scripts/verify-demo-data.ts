@@ -42,7 +42,13 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     const agnosticRecords = analyses.filter((a) => agnostic.has(a.questionId));
 
     const derivedMention = mean(agnosticRecords.map((a) => (a.mentioned ? 1 : 0)));
-    const derivedSom = mean(analyses.map((a) => a.shareOfMention));
+    // SoM은 횟수 기준(Share of Voice): 내 언급 총합 / (내 + 경쟁사 언급) 총합.
+    const brandMentions = analyses.reduce((s, a) => s + a.mentionSentences.length, 0);
+    const compMentions = analyses.reduce(
+      (s, a) => s + a.competitorMentions.reduce((t, c) => t + c.mentionCount, 0),
+      0,
+    );
+    const derivedSom = brandMentions + compMentions > 0 ? brandMentions / (brandMentions + compMentions) : 0;
     const ranks = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
     const derivedRank = mean(ranks);
     const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0);

@@ -6,14 +6,14 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 46,
-      "ma4": 46,
-      "previousWeek": 46,
-      "ciLow": 36.5,
-      "ciHigh": 55.8
+      "current": 47,
+      "ma4": 47,
+      "previousWeek": 47,
+      "ciLow": 37.4,
+      "ciHigh": 56.6
     },
     "mentionRate": 0.3333333333333333,
-    "shareOfMention": 0.3287037037037037,
+    "shareOfMention": 0.28846153846153844,
     "avgRecommendationRank": 1.6666666666666667,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.05555555555555555,
@@ -30,14 +30,14 @@
     "region": "전북 군산",
     "brandName": "스테이 머뭄",
     "aeoScore": {
-      "current": 32,
-      "ma4": 32,
-      "previousWeek": 32,
-      "ciLow": 24.6,
-      "ciHigh": 39.6
+      "current": 35,
+      "ma4": 35,
+      "previousWeek": 35,
+      "ciLow": 27.5,
+      "ciHigh": 42.5
     },
     "mentionRate": 0,
-    "shareOfMention": 0.1574074074074074,
+    "shareOfMention": 0.2127659574468085,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
