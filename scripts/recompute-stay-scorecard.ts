@@ -62,7 +62,12 @@ function recompute(source: Source): WeeklyScorecard {
   const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
   const factualityScore = supported + contradicted > 0 ? supported / (supported + contradicted) : 1;
 
-  const brandOwnedCitationRate = mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0)));
+  const totalCitations = analyses.reduce((s, a) => s + a.citations.length, 0);
+  const brandOwnedCitations = analyses.reduce(
+    (s, a) => s + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
+    0,
+  );
+  const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
 
   const currentScore = computeAeoScore({
     mentionRate,

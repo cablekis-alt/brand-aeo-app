@@ -54,9 +54,13 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0);
     const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
     const derivedFact = supported + contradicted > 0 ? supported / (supported + contradicted) : 1;
-    // 스코어카드의 brandOwnedCitationRate는 "응답 단위"(자사 인용을 포함한 응답 비율)다.
-    // S-05 화면의 "인용 단위" 비율과는 정의가 다르므로 여기서는 응답 단위로 맞춘다.
-    const brandOwnedCitationRate = mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0)));
+    // 브랜드 소유 출처는 "인용 단위"(전체 인용 중 자사 도메인 비중, S-05와 동일)로 통일됐다.
+    const totalCitations = analyses.reduce((s, a) => s + a.citations.length, 0);
+    const brandOwnedCitations = analyses.reduce(
+      (s, a) => s + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
+      0,
+    );
+    const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
     const ranking = await getRankingView(store, tenant, card.weekOf);
 
     const checks: [string, number, number][] = [

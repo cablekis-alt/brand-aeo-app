@@ -213,7 +213,14 @@ function aggregateScorecard(
   const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
   const factualityScore = totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : 1;
 
-  const brandOwnedCitationRate = analyses.length > 0 ? mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0))) : 0;
+  // 브랜드 소유 출처 = "인용 단위"(전체 인용 중 자사 도메인 비중, S-05 화면과 동일).
+  // 이전의 "자사 인용을 포함한 응답 비율"과 달리 라벨("인용이 자사 도메인으로 연결된 비율")과 일치한다.
+  const totalCitations = analyses.reduce((sum, a) => sum + a.citations.length, 0);
+  const brandOwnedCitations = analyses.reduce(
+    (sum, a) => sum + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
+    0,
+  );
+  const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
 
   // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치).
   const currentScore = computeAeoScore({
