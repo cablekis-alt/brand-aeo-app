@@ -1099,6 +1099,100 @@ export function unevaluableReport(
   }
 }
 
+/**
+ * 크롤러가 본문에 접근할 수 없는(=AI가 읽을 수 없는) 경우의 리포트. Lighthouse 원칙에 따라
+ * "측정된 실패"로 보고 접근성 0점 + 총점 하한 0으로 표기한다("측정 불가"인 확인 불가와 구분).
+ */
+function crawlerBlockedReport(
+  s: PageSignals,
+  o: {
+    gradeReason: string
+    accessStatus: string
+    cause: string
+    technical: string
+    neededFromUser: string
+    howToRetry: string
+    oneLiner: string
+    problem: { title: string; evidence: string; aiImpact: string; categoryId?: CategoryId }
+    rec: { workType: Recommendation['workType']; task: string; expectedEffect: string; before: string | null; after: string | null }
+    limitations: string[]
+  },
+): AeoReport {
+  const accMeta = CATEGORY_DEFS.find((c) => c.id === 'accessibility')!
+  const accessibility: CategoryResult = {
+    id: 'accessibility',
+    name: accMeta.name,
+    score: 0,
+    maxScore: accMeta.max,
+    judgment: `매우 미흡. 크롤러가 본문에 접근할 수 없습니다 — ${o.gradeReason}.`,
+    positives: [],
+    issues: [{ severity: 'critical', title: o.problem.title, evidence: o.problem.evidence, aiImpact: o.problem.aiImpact, quote: null }],
+  }
+  const others = CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) =>
+    unknownCategory(c.id, '본문 미확인 — 채점 불가'),
+  )
+  return {
+    url: s.requestedUrl,
+    analyzedAt: new Date().toISOString(),
+    pageTitle: s.title || '확인 불가',
+    coreTopic: '확인 불가',
+    topicInferred: false,
+    audience: '확인 불가',
+    audienceInferred: false,
+    collectionMode: s.collectionMode,
+    accessStatus: 'failed',
+    accessFailure: {
+      status: o.accessStatus,
+      cause: o.cause,
+      technical: o.technical,
+      neededFromUser: o.neededFromUser,
+      howToRetry: o.howToRetry,
+    },
+    overallScore: 0,
+    grade: `0 · ${o.gradeReason}`,
+    oneLiner: o.oneLiner,
+    categories: [accessibility, ...others],
+    strengths: [],
+    problems: [
+      {
+        rank: 1,
+        severity: 'critical',
+        categoryId: o.problem.categoryId ?? 'accessibility',
+        title: o.problem.title,
+        evidence: o.problem.evidence,
+        aiImpact: o.problem.aiImpact,
+        quote: null,
+      },
+    ],
+    recommendations: [
+      {
+        priority: 1,
+        workType: o.rec.workType,
+        task: o.rec.task,
+        expectedEffect: o.rec.expectedEffect,
+        difficulty: '중간',
+        before: o.rec.before,
+        after: o.rec.after,
+      },
+    ],
+    contentSuggestions: null,
+    citableSentences: [],
+    verdict: {
+      readiness: `0 / 100 · ${o.gradeReason}`,
+      biggestStrength: '—',
+      biggestBlocker: o.problem.title,
+      firstAction: o.rec.task,
+      scoreRangeIfFixed:
+        '차단·부재가 해소되면 본문을 채점할 수 있습니다. 지금은 AI가 읽을 수 없어 총점 0입니다.',
+    },
+    limitations: o.limitations,
+    disclaimer: DISCLAIMER,
+    source: 'heuristic',
+    pageType: s.pageType,
+    bodyWordCount: s.wordCount,
+  }
+}
+
 export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDIT_CONTEXT): AeoReport {
   const httpFail = s.status < 200 || s.status >= 400 || Boolean(s.fetchError)
   const noBody = s.wordCount < 20 && (s.spaShell || s.iframeOnly || httpFail)
@@ -1118,93 +1212,62 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
   }
 
   if (s.botChallenge) {
-    const base = unevaluableReport(
-      s.requestedUrl,
-      {
-        status: '봇 차단 (JS 쿠키 챌린지)',
-        cause: s.botChallengeEvidence || '자바스크립트 쿠키/리다이렉트 챌린지',
-        technical: `HTTP ${s.status || '200'}이지만 본문 대신 봇 차단 스크립트만 반환됨 (추출 단어 ${s.wordCount}).`,
-        neededFromUser: 'AI·검색 크롤러(GPTBot, Google-Extended, ClaudeBot, PerplexityBot 등) 허용 설정, 또는 이들에게 서버 렌더링된 공개 HTML 제공.',
-        howToRetry: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent를 허용한 뒤 다시 진단하세요.',
+    return crawlerBlockedReport(s, {
+      gradeReason: '봇 차단',
+      accessStatus: '봇 차단 (JS 쿠키 챌린지)',
+      cause: s.botChallengeEvidence || '자바스크립트 쿠키/리다이렉트 챌린지',
+      technical: `HTTP ${s.status || '200'}이지만 본문 대신 봇 차단 스크립트만 반환됨 (추출 단어 ${s.wordCount}).`,
+      neededFromUser: 'AI·검색 크롤러(GPTBot, Google-Extended, ClaudeBot, PerplexityBot 등) 허용 설정, 또는 이들에게 서버 렌더링된 공개 HTML 제공.',
+      howToRetry: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent를 허용한 뒤 다시 진단하세요.',
+      oneLiner:
+        '봇 차단(자바스크립트 쿠키 챌린지)이 걸려 있어 크롤러가 본문에 접근할 수 없습니다. AI 검색 크롤러도 같은 이유로 차단되어, 이 페이지는 답변 엔진에 사실상 보이지 않습니다. (총점 하한 0)',
+      problem: {
+        title: '봇 차단으로 크롤러가 본문에 접근할 수 없습니다',
+        evidence: s.botChallengeEvidence || 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지만 반환됩니다.',
+        aiImpact: 'GPTBot·ClaudeBot 등 AI 검색 크롤러도 동일하게 차단되어, 인용·노출 후보에서 원천 제외됩니다.',
       },
-      [
-        '봇 차단 챌린지 때문에 본문을 확인하지 못해 콘텐츠 점수를 만들지 않았습니다.',
+      rec: {
+        workType: 'dev',
+        task: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent(GPTBot, Google-Extended, ClaudeBot, PerplexityBot, CCBot 등)를 허용하거나, 이들에게는 챌린지 없이 서버 렌더링된 HTML을 제공하세요.',
+        expectedEffect: 'AI·검색 크롤러가 본문을 읽어 인용·추천 후보로 삼을 수 있게 됩니다. 자사 사이트가 답변 엔진의 1차 출처가 될 수 있습니다.',
+        before: '전체 요청에 JS 쿠키 챌린지 적용',
+        after: '크롤러 User-Agent에는 서버 HTML 제공',
+      },
+      limitations: [
+        '봇 차단으로 본문을 읽지 못해 콘텐츠 영역은 채점하지 않았습니다. 접근 실패는 측정된 결과이므로 총점은 하한 0으로 표기합니다.',
         '이 차단은 자바스크립트를 실행하지 않는 AI 검색 크롤러에도 동일하게 적용됩니다.',
       ],
-    )
-    return {
-      ...base,
-      grade: '봇 차단 · 채점 제한',
-      oneLiner:
-        '봇 차단(자바스크립트 쿠키 챌린지)이 걸려 있어 크롤러가 본문에 접근할 수 없습니다. AI 검색 크롤러도 같은 이유로 차단되어, 이 페이지는 답변 엔진에 사실상 보이지 않습니다.',
-      problems: [
-        {
-          rank: 1,
-          severity: 'critical',
-          categoryId: 'accessibility',
-          title: '봇 차단으로 크롤러가 본문에 접근할 수 없습니다',
-          evidence: s.botChallengeEvidence || 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지만 반환됩니다.',
-          aiImpact: 'GPTBot·ClaudeBot 등 AI 검색 크롤러도 동일하게 차단되어, 인용·노출 후보에서 원천 제외됩니다.',
-          quote: null,
-        },
-      ],
-      recommendations: [
-        {
-          priority: 1,
-          workType: 'dev',
-          task: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent(GPTBot, Google-Extended, ClaudeBot, PerplexityBot, CCBot 등)를 허용하거나, 이들에게는 챌린지 없이 서버 렌더링된 HTML을 제공하세요.',
-          expectedEffect: 'AI·검색 크롤러가 본문을 읽어 인용·추천 후보로 삼을 수 있게 됩니다. 자사 사이트가 답변 엔진의 1차 출처가 될 수 있습니다.',
-          difficulty: '중간',
-          before: '전체 요청에 JS 쿠키 챌린지 적용',
-          after: '크롤러 User-Agent에는 서버 HTML 제공',
-        },
-      ],
-    }
+    })
   }
 
   if (s.serverDefaultPage) {
-    const base = unevaluableReport(
-      s.requestedUrl,
-      {
-        status: '미배포 (웹서버 기본 페이지)',
-        cause: s.serverDefaultPageEvidence || 'Apache/nginx 등 웹서버 기본 페이지',
-        technical: `도메인은 응답하지만 실제 사이트 대신 웹서버 기본 페이지가 뜹니다 (추출 단어 ${s.wordCount}).`,
-        neededFromUser: '이 도메인에 실제 홈페이지(소개·객실/시술·위치·연락처)를 배포한 뒤 다시 진단.',
-        howToRetry: '실제 콘텐츠를 배포하고 HTTPS를 정상 발급한 뒤 다시 진단하세요.',
+    return crawlerBlockedReport(s, {
+      gradeReason: '미배포',
+      accessStatus: '미배포 (웹서버 기본 페이지)',
+      cause: s.serverDefaultPageEvidence || 'Apache/nginx 등 웹서버 기본 페이지',
+      technical: `도메인은 응답하지만 실제 사이트 대신 웹서버 기본 페이지가 뜹니다 (추출 단어 ${s.wordCount}).`,
+      neededFromUser: '이 도메인에 실제 홈페이지(소개·객실/시술·위치·연락처)를 배포한 뒤 다시 진단.',
+      howToRetry: '실제 콘텐츠를 배포하고 HTTPS를 정상 발급한 뒤 다시 진단하세요.',
+      oneLiner:
+        '이 도메인에는 웹서버 기본 페이지만 떠 있습니다 — 실제 사이트가 배포되지 않았습니다. 답변 엔진이 이 주소에서 브랜드 정보를 전혀 얻을 수 없습니다. (총점 하한 0)',
+      problem: {
+        title: '공식 사이트에 실제 콘텐츠가 없습니다 (웹서버 기본 페이지)',
+        evidence: s.serverDefaultPageEvidence || '“It works” 류의 서버 기본 페이지가 반환됩니다.',
+        aiImpact: '브랜드를 설명·인용할 1차 출처가 존재하지 않아, AI는 제3자에 의존하거나 다른 상호와 혼동합니다.',
+        categoryId: 'answer_content',
       },
-      [
-        '웹서버 기본 페이지만 있어 브랜드 콘텐츠를 채점할 수 없습니다.',
+      rec: {
+        workType: 'content',
+        task: '이 도메인에 실제 홈페이지를 배포하세요 — 브랜드 소개, 객실/시술, 위치·주소, 연락처, 가격을 명확한 텍스트로. 그리고 HTTPS 인증서를 정상 발급하세요.',
+        expectedEffect: '답변 엔진이 인용·참조할 1차 출처가 생겨, 브랜드가 자기 정보의 근거가 됩니다.',
+        before: '웹서버 기본 페이지 (콘텐츠 없음)',
+        after: '실제 브랜드 홈페이지 + HTTPS',
+      },
+      limitations: [
+        '웹서버 기본 페이지만 있어 브랜드 콘텐츠를 채점할 수 없습니다. 콘텐츠 부재는 측정된 결과이므로 총점은 하한 0으로 표기합니다.',
         '답변 엔진이 이 도메인에서 얻을 브랜드 정보가 없어, 다른 출처(제3자·유사 상호)로 대체하거나 혼동할 수 있습니다.',
       ],
-    )
-    return {
-      ...base,
-      grade: '미배포 · 채점 제한',
-      oneLiner:
-        '이 도메인에는 웹서버 기본 페이지만 떠 있습니다 — 실제 사이트가 배포되지 않았습니다. 답변 엔진이 이 주소에서 브랜드 정보를 전혀 얻을 수 없습니다.',
-      problems: [
-        {
-          rank: 1,
-          severity: 'critical',
-          categoryId: 'answer_content',
-          title: '공식 사이트에 실제 콘텐츠가 없습니다 (웹서버 기본 페이지)',
-          evidence: s.serverDefaultPageEvidence || '“It works” 류의 서버 기본 페이지가 반환됩니다.',
-          aiImpact: '브랜드를 설명·인용할 1차 출처가 존재하지 않아, AI는 제3자에 의존하거나 다른 상호와 혼동합니다.',
-          quote: null,
-        },
-      ],
-      recommendations: [
-        {
-          priority: 1,
-          workType: 'content',
-          task: '이 도메인에 실제 홈페이지를 배포하세요 — 브랜드 소개, 객실/시술, 위치·주소, 연락처, 가격을 명확한 텍스트로. 그리고 HTTPS 인증서를 정상 발급하세요.',
-          expectedEffect: '답변 엔진이 인용·참조할 1차 출처가 생겨, 브랜드가 자기 정보의 근거가 됩니다.',
-          difficulty: '중간',
-          before: '웹서버 기본 페이지 (콘텐츠 없음)',
-          after: '실제 브랜드 홈페이지 + HTTPS',
-        },
-      ],
-    }
+    })
   }
 
   const recs: RecBag = []
@@ -1230,11 +1293,14 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
         neededFromUser: '렌더된 본문 HTML 또는 스크린샷, 공개 접근 가능한 URL',
         howToRetry: '200 응답의 공개 페이지 URL로 다시 제출하세요.',
       },
-      overallScore: null,
-      grade: null,
-      oneLiner: '접근 실패 또는 본문 부재로 콘텐츠 점수를 만들지 않았습니다.',
+      overallScore: 0,
+      grade: httpFail && s.status >= 400 ? `0 · HTTP ${s.status}` : '0 · 본문 없음',
+      oneLiner:
+        httpFail && s.status >= 400
+          ? `페이지가 HTTP ${s.status} 오류를 반환해 크롤러가 본문을 가져올 수 없습니다 — 답변 엔진에 보이지 않습니다. (총점 하한 0)`
+          : '본문이 거의 없어(스크립트/iframe 의존 등) 크롤러가 읽을 콘텐츠가 없습니다 — 답변 엔진에 보이지 않습니다. (총점 하한 0)',
       categories: [accessibility, ...others],
-      strengths: accessibility.positives.slice(0, 3),
+      strengths: [],
       problems: accessibility.issues.slice(0, 5).map((issue, i) => ({
         rank: i + 1,
         severity: issue.severity,
@@ -1247,10 +1313,16 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       recommendations: rankRecommendations(recs),
       contentSuggestions: null,
       citableSentences: [],
-      verdict: null,
+      verdict: {
+        readiness: httpFail && s.status >= 400 ? `0 / 100 · HTTP ${s.status}` : '0 / 100 · 본문 없음',
+        biggestStrength: '—',
+        biggestBlocker: accessibility.issues[0]?.title ?? '크롤러가 본문을 가져올 수 없습니다',
+        firstAction: rankRecommendations(recs)[0]?.task ?? '공개 200 응답 + 서버 HTML 본문을 제공하세요.',
+        scoreRangeIfFixed: '본문을 읽을 수 있게 되면 콘텐츠를 채점합니다. 지금은 AI가 읽을 수 없어 총점 0입니다.',
+      },
       limitations: [
-        '접근 실패를 콘텐츠 품질 감점으로 처리하지 않았습니다.',
-        '확인 불가 영역 점수는 unknown이며 overall_score는 null입니다.',
+        '접근 실패를 콘텐츠 품질 감점으로 처리하지 않았습니다. 다만 AI가 본문을 읽을 수 없다는 것은 측정된 결과이므로 총점은 하한 0으로 표기합니다.',
+        '콘텐츠 영역은 확인 불가(채점 제외)로 두었습니다.',
       ],
       disclaimer: DISCLAIMER,
       source: 'heuristic',
