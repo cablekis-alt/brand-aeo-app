@@ -1,0 +1,287 @@
+import {
+  buildBrandMentionPrompt,
+  buildCitationClassificationPrompt,
+  buildEngineCallPrompt,
+  buildFactCheckPrompt,
+  buildQuestionBankPrompt,
+  buildRecommendationOrderPrompt,
+  buildWeeklyReportPrompt,
+  type BrandContext,
+  type CitationCandidate,
+  type QuestionSpec,
+  type WeeklyScorecard,
+} from '../src/prompts';
+import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes';
+import { mapWithConcurrency } from './concurrency';
+import { getIsoWeekString } from './dateUtil';
+import { getEngineClient, getJudgeClient } from './engines';
+import { parseJsonLoose } from './jsonParse';
+import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4 } from './scoring';
+import type { ResultStore } from './store';
+import type {
+  CompetitorMentionDetail,
+  FactClaimDetail,
+  QuestionRepeatAnalysis,
+  RawCallRecord,
+  TenantConfig,
+} from './types';
+
+const COLLECTION_CONCURRENCY = 8;
+const ANALYSIS_CONCURRENCY = 8;
+
+function toBrandContext(tenant: TenantConfig): BrandContext {
+  return {
+    brandName: tenant.brandName,
+    aliases: tenant.aliases,
+    ownedDomains: tenant.ownedDomains,
+    competitors: tenant.competitors,
+    industry: tenant.industry,
+    region: tenant.region,
+  };
+}
+
+/** B1 — 질문 은행은 버전당 1회만 생성하고 이후 주차에는 재사용한다 (버전을 바꾸면 재생성). */
+export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+  const existing = await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion);
+  if (existing) return existing.questions;
+
+  const judge = getJudgeClient();
+  const prompt = buildQuestionBankPrompt({
+    industry: tenant.industry,
+    region: tenant.region,
+    brandName: tenant.brandName,
+    competitorNames: tenant.competitors.map((c) => c.name),
+    count: tenant.questionBankSize,
+    version: tenant.questionBankVersion,
+  });
+  const result = await judge.call(prompt);
+  const parsed = parseJsonLoose<Array<Omit<QuestionSpec, 'industry' | 'region' | 'version'>>>(result.text);
+  if (!parsed) {
+    throw new Error(`[B1] 질문 은행 생성 실패: JSON 파싱 불가 (tenant=${tenant.tenantId})`);
+  }
+
+  const questions: QuestionSpec[] = parsed.map((q) => ({
+    ...q,
+    industry: tenant.industry,
+    region: tenant.region,
+    version: tenant.questionBankVersion,
+  }));
+
+  await store.saveQuestionBank(tenant.tenantId, {
+    version: tenant.questionBankVersion,
+    generatedAt: new Date().toISOString(),
+    questions,
+  });
+
+  return questions;
+}
+
+/** B3 — 4개 엔진 × 반복 호출. 동일 질문 원문을 그대로 전달한다 (엔진 간 비교 가능성 유지). */
+async function collectRawCalls(
+  tenant: TenantConfig,
+  questions: QuestionSpec[],
+  weekOf: string,
+): Promise<RawCallRecord[]> {
+  const jobs = questions.flatMap((question) =>
+    tenant.engines.flatMap((engine) =>
+      Array.from({ length: tenant.repeatsPerQuestion }, (_, i) => ({ question, engine, callIndex: i + 1 })),
+    ),
+  );
+
+  return mapWithConcurrency(jobs, COLLECTION_CONCURRENCY, async (job): Promise<RawCallRecord> => {
+    const client = getEngineClient(job.engine);
+    const prompt = buildEngineCallPrompt(job.engine, job.question.text);
+    const result = await client.call(prompt);
+    return {
+      tenantId: tenant.tenantId,
+      weekOf,
+      engine: job.engine,
+      questionId: job.question.questionId,
+      callIndex: job.callIndex,
+      rawText: result.text,
+      citations: result.citations,
+      usedWebSearch: result.usedWebSearch,
+      tokenUsage: result.tokenUsage,
+      latencyMs: result.latencyMs,
+      calledAt: new Date().toISOString(),
+    };
+  });
+}
+
+/**
+ * B5-A~D — 반복 호출 1건마다 독립적으로 판정한다 (3회를 합쳐서 요약한 뒤 판정하지 않는다).
+ * 그래야 반복 간 분산이 그대로 살아남아 이후 신뢰구간 계산에 쓰일 수 있다.
+ */
+async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promise<QuestionRepeatAnalysis> {
+  const judge = getJudgeClient();
+  const brand = toBrandContext(tenant);
+
+  const [mentionRaw, citationRaw, rankRaw] = await Promise.all([
+    judge.call(buildBrandMentionPrompt(brand, call.rawText)),
+    judge.call(
+      buildCitationClassificationPrompt(
+        brand,
+        call.rawText,
+        call.citations.map((url): CitationCandidate => ({ url })),
+      ),
+    ),
+    judge.call(buildRecommendationOrderPrompt(brand, call.rawText)),
+  ]);
+
+  const mention = parseJsonLoose<BrandMentionResult>(mentionRaw.text);
+  const citation = parseJsonLoose<CitationResult>(citationRaw.text);
+  const rank = parseJsonLoose<RecommendationOrderResult>(rankRaw.text);
+
+  let fact: FactCheckResult | null = null;
+  if (tenant.factGraph.length > 0) {
+    const factRaw = await judge.call(buildFactCheckPrompt(brand, call.rawText, tenant.factGraph));
+    fact = parseJsonLoose<FactCheckResult>(factRaw.text);
+  }
+  const factualityClaims: FactClaimDetail[] = (fact?.claims ?? []).map((c) => ({
+    claimText: c.claimText,
+    claimType: c.claimType,
+    verdict: c.verdict,
+    responseValue: c.responseValue,
+    factGraphValue: c.factGraphValue,
+  }));
+
+  const mentioned = mention?.targetBrand.mentioned ?? false;
+  const targetCount = mention?.targetBrand.mentionCount ?? 0;
+  const competitorMentions: CompetitorMentionDetail[] = (mention?.competitorMentions ?? []).map((c) => ({
+    name: c.name,
+    mentionCount: c.mentionCount,
+    sentences: c.mentions.map((m) => ({ sentence: m.sentence, sentiment: m.sentiment })),
+  }));
+  const competitorTotal = competitorMentions.reduce((sum, c) => sum + c.mentionCount, 0);
+  const totalMentions = targetCount + competitorTotal;
+
+  const brandRankEntry = rank?.ranking.find((r) => r.entity === tenant.brandName) ?? null;
+
+  return {
+    questionId: call.questionId,
+    engine: call.engine,
+    callIndex: call.callIndex,
+    mentioned,
+    mentionSentences: (mention?.targetBrand.mentions ?? []).map((m) => ({ sentence: m.sentence, sentiment: m.sentiment })),
+    competitorMentions,
+    shareOfMention: totalMentions > 0 ? targetCount / totalMentions : 0,
+    citations: (citation?.citations ?? []).map((c) => ({
+      raw: c.raw,
+      domain: c.domain,
+      ownerType: c.ownerType,
+      supportsBrandMention: c.supportsBrandMention,
+    })),
+    topRecommendation: rank?.topRecommendation ?? null,
+    brandRank: brandRankEntry?.rank ?? null,
+    factualityClaims,
+    factualitySupported: factualityClaims.filter((c) => c.verdict === 'supported').length,
+    factualityContradicted: factualityClaims.filter((c) => c.verdict === 'contradicted').length,
+    brandOwnedCitation: citation?.citations.some((c) => c.ownerType === 'brand-owned') ?? false,
+  };
+}
+
+/** B8 — 결정적 집계. LLM은 여기서 계산된 수치를 재계산하지 않고 해석만 한다. */
+function aggregateScorecard(
+  tenant: TenantConfig,
+  weekOf: string,
+  questions: QuestionSpec[],
+  analyses: QuestionRepeatAnalysis[],
+  history: WeeklyScorecard[],
+  cohortScorecards: WeeklyScorecard[],
+): WeeklyScorecard {
+  const questionById = new Map(questions.map((q) => [q.questionId, q]));
+
+  const categoryAgnostic = analyses.filter((a) => questionById.get(a.questionId)?.category === 'category-agnostic');
+  const mentionRate = mean(categoryAgnostic.map((a) => (a.mentioned ? 1 : 0)));
+
+  const shareOfMention = mean(analyses.map((a) => a.shareOfMention));
+
+  const ranked = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
+  const avgRecommendationRank = ranked.length > 0 ? mean(ranked) : null;
+
+  const totalSupported = analyses.reduce((sum, a) => sum + a.factualitySupported, 0);
+  const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
+  const factualityScore = totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : 1;
+
+  const brandOwnedCitationRate = analyses.length > 0 ? mean(analyses.map((a) => (a.brandOwnedCitation ? 1 : 0))) : 0;
+
+  // 반복 호출 1건마다의 종합 점수 분포로 CI를 낸다 — 카테고리 평균 하나만 놓고 CI를 내면
+  // "동일 질문 3회 반복"의 분산 정보가 소실된다.
+  const perCallScores = analyses.map((a) => {
+    const perCallFactuality =
+      a.factualitySupported + a.factualityContradicted > 0
+        ? a.factualitySupported / (a.factualitySupported + a.factualityContradicted)
+        : 1;
+    return computeAeoScore({
+      mentionRate: a.mentioned ? 1 : 0,
+      shareOfMention: a.shareOfMention,
+      avgRecommendationRank: a.brandRank,
+      factualityScore: perCallFactuality,
+      brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
+    });
+  });
+  const scoreCi = meanWithConfidenceInterval(perCallScores.length > 0 ? perCallScores : [0]);
+  const currentScore = Math.round(scoreCi.mean);
+
+  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : currentScore;
+  const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), currentScore]));
+
+  const hallucinationFlags = analyses
+    .filter((a) => a.factualityContradicted > 0)
+    .map((a) => `${a.engine} / ${a.questionId} #${a.callIndex}: 사실성 불일치 ${a.factualityContradicted}건`);
+
+  return {
+    tenantId: tenant.tenantId,
+    weekOf,
+    industry: tenant.industry,
+    region: tenant.region,
+    brandName: tenant.brandName,
+    aeoScore: {
+      current: currentScore,
+      ma4,
+      previousWeek,
+      ciLow: Math.round(scoreCi.low * 10) / 10,
+      ciHigh: Math.round(scoreCi.high * 10) / 10,
+    },
+    mentionRate,
+    shareOfMention,
+    avgRecommendationRank,
+    factualityScore,
+    brandOwnedCitationRate,
+    cohortRank: computeCohortRank(currentScore, cohortScorecards),
+    hallucinationFlags,
+  };
+}
+
+export interface PipelineRunResult {
+  scorecard: WeeklyScorecard;
+  reportMarkdown: string;
+}
+
+/** 파이프라인 진입점. 스케줄러(B2)가 테넌트별로 주 1회 이 함수를 호출한다. */
+export async function runWeeklyPipeline(
+  tenant: TenantConfig,
+  store: ResultStore,
+  now: Date = new Date(),
+): Promise<PipelineRunResult> {
+  const weekOf = getIsoWeekString(now);
+
+  const questions = await ensureQuestionBank(tenant, store);
+  const rawCalls = await collectRawCalls(tenant, questions, weekOf);
+  await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
+
+  const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, (call) => analyzeRawCall(tenant, call));
+  await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
+
+  const history = await store.getScorecardHistory(tenant.tenantId, 12);
+  const cohortScorecards = await store.getCohortScorecards(tenant.industry, tenant.region, weekOf);
+
+  const scorecard = aggregateScorecard(tenant, weekOf, questions, analyses, history, cohortScorecards);
+  await store.saveScorecard(scorecard);
+
+  const judge = getJudgeClient();
+  const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard));
+  await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
+
+  return { scorecard, reportMarkdown: reportResult.text };
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "tenantId": "example-brand",
+    "brandName": "예시브랜드",
+    "aliases": ["예시브랜드", "ExampleBrand"],
+    "ownedDomains": ["example-brand.com"],
+    "industry": "가전",
+    "region": "대한민국",
+    "engines": ["openai", "gemini", "claude", "perplexity"],
+    "questionBankSize": 20,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      { "name": "경쟁브랜드A", "aliases": ["경쟁브랜드A"], "domains": ["competitor-a.com"] },
+      { "name": "경쟁브랜드B", "aliases": ["경쟁브랜드B"], "domains": ["competitor-b.com"] }
+    ],
+    "factGraph": [
+      {
+        "id": "price-flagship",
+        "type": "price",
+        "claim": "플래그십 모델 출고가",
+        "value": "1,290,000원",
+        "updatedAt": "2026-08-01"
+      }
+    ]
+  }
+]

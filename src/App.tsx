@@ -1,0 +1,31 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout'
+import { TenantProvider } from './context/TenantContext'
+import BrandDiagnosis from './pages/BrandDiagnosis'
+import Citations from './pages/Citations'
+import Dashboard from './pages/Dashboard'
+import Performance from './pages/Performance'
+import QuestionBank from './pages/QuestionBank'
+import Ranking from './pages/Ranking'
+import SiteDiagnosis from './pages/SiteDiagnosis'
+import './App.css'
+
+export default function App() {
+  return (
+    <TenantProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="diagnosis" element={<BrandDiagnosis />} />
+            <Route path="site-diagnosis" element={<SiteDiagnosis />} />
+            <Route path="questions" element={<QuestionBank />} />
+            <Route path="citations" element={<Citations />} />
+            <Route path="performance" element={<Performance />} />
+            <Route path="ranking" element={<Ranking />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </TenantProvider>
+  )
+}
