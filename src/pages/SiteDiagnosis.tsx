@@ -1,17 +1,33 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import SiteReportView from '../components/SiteReportView'
+import { useTenant } from '../context/useTenant'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import type { AeoReport, AuditContext } from '../lib/aeo/types'
 
+/** 선택한 브랜드의 대표 소유 도메인을 진단용 https URL로 만든다. */
+function brandSiteUrl(ownedDomains: string[] | undefined): string {
+  const domain = ownedDomains?.[0]?.trim()
+  if (!domain) return ''
+  return /^https?:\/\//i.test(domain) ? domain : `https://${domain}`
+}
+
 export default function SiteDiagnosis() {
+  const { tenant } = useTenant()
   const [url, setUrl] = useState('')
   const [topic, setTopic] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<AeoReport | null>(null)
+
+  // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
+  useEffect(() => {
+    setUrl(brandSiteUrl(tenant?.ownedDomains))
+    setReport(null)
+    setError(null)
+  }, [tenant?.tenantId])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -82,12 +98,15 @@ export default function SiteDiagnosis() {
             type="text"
             inputMode="url"
             autoComplete="url"
-            placeholder="https://www.viewclinic.com"
+            placeholder="https://example.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
           />
-          <span className="hint">공개 HTTPS 페이지만 수집합니다. 사설 IP·로그인 페이지는 진단할 수 없습니다.</span>
+          <span className="hint">
+            선택한 브랜드의 소유 도메인이 자동 입력됩니다 — 다른 페이지를 진단하려면 URL을 바꾸세요. 공개 HTTPS
+            페이지만 수집하며, 사설 IP·로그인 페이지는 진단할 수 없습니다.
+          </span>
         </label>
         <label className="field">
           <span>핵심 주제 / 검색어 (선택)</span>
