@@ -1117,6 +1117,51 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
     )
   }
 
+  if (s.botChallenge) {
+    const base = unevaluableReport(
+      s.requestedUrl,
+      {
+        status: '봇 차단 (JS 쿠키 챌린지)',
+        cause: s.botChallengeEvidence || '자바스크립트 쿠키/리다이렉트 챌린지',
+        technical: `HTTP ${s.status || '200'}이지만 본문 대신 봇 차단 스크립트만 반환됨 (추출 단어 ${s.wordCount}).`,
+        neededFromUser: 'AI·검색 크롤러(GPTBot, Google-Extended, ClaudeBot, PerplexityBot 등) 허용 설정, 또는 이들에게 서버 렌더링된 공개 HTML 제공.',
+        howToRetry: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent를 허용한 뒤 다시 진단하세요.',
+      },
+      [
+        '봇 차단 챌린지 때문에 본문을 확인하지 못해 콘텐츠 점수를 만들지 않았습니다.',
+        '이 차단은 자바스크립트를 실행하지 않는 AI 검색 크롤러에도 동일하게 적용됩니다.',
+      ],
+    )
+    return {
+      ...base,
+      grade: '봇 차단 · 채점 제한',
+      oneLiner:
+        '봇 차단(자바스크립트 쿠키 챌린지)이 걸려 있어 크롤러가 본문에 접근할 수 없습니다. AI 검색 크롤러도 같은 이유로 차단되어, 이 페이지는 답변 엔진에 사실상 보이지 않습니다.',
+      problems: [
+        {
+          rank: 1,
+          severity: 'critical',
+          categoryId: 'accessibility',
+          title: '봇 차단으로 크롤러가 본문에 접근할 수 없습니다',
+          evidence: s.botChallengeEvidence || 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지만 반환됩니다.',
+          aiImpact: 'GPTBot·ClaudeBot 등 AI 검색 크롤러도 동일하게 차단되어, 인용·노출 후보에서 원천 제외됩니다.',
+          quote: null,
+        },
+      ],
+      recommendations: [
+        {
+          priority: 1,
+          workType: 'dev',
+          task: '봇 차단(WAF) 정책에서 검색·AI 크롤러 User-Agent(GPTBot, Google-Extended, ClaudeBot, PerplexityBot, CCBot 등)를 허용하거나, 이들에게는 챌린지 없이 서버 렌더링된 HTML을 제공하세요.',
+          expectedEffect: 'AI·검색 크롤러가 본문을 읽어 인용·추천 후보로 삼을 수 있게 됩니다. 자사 사이트가 답변 엔진의 1차 출처가 될 수 있습니다.',
+          difficulty: '중간',
+          before: '전체 요청에 JS 쿠키 챌린지 적용',
+          after: '크롤러 User-Agent에는 서버 HTML 제공',
+        },
+      ],
+    }
+  }
+
   const recs: RecBag = []
   const accessibility = scoreAccessibility(s, recs)
   if (httpFail || noBody) {

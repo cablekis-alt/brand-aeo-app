@@ -183,6 +183,10 @@ export interface PageSignals {
   iframeOnly: boolean
   authWall: boolean
   authWallEvidence: string
+  // 자바스크립트 쿠키/리다이렉트 기반 봇 차단(WAF anti-bot) 챌린지. JS를 실행하지 않는
+  // 크롤러(AI 검색 봇 포함)는 이 벽을 넘지 못해 본문에 접근할 수 없다.
+  botChallenge: boolean
+  botChallengeEvidence: string
   ymyl: boolean
   pageType: PageType
   emptyAltCount: number

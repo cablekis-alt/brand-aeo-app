@@ -529,6 +529,20 @@ export function extractPage(input: {
   const canonical =
     attr(doc.querySelector('link[rel="canonical"]'), 'href') || metaContent(doc, 'og:url')
 
+  // 봇 차단(WAF) 챌린지 감지: JS로 쿠키를 세팅하고 리다이렉트하는 껍데기 페이지.
+  // slowAES/cupid.js/ckattempt 같은 알려진 시그니처, 또는 본문이 거의 없는데
+  // "쿠키 설정 + location 리다이렉트" 스크립트만 있는 경우.
+  const rawHtml = input.html || ''
+  const knownChallenge = /slowAES|toNumbers\(|\bckattempt\b|cupid\.js|imperva|distil_r_captcha|_Incapsula_/i.exec(rawHtml)
+  const cookieRedirect =
+    /document\.cookie\s*=/.test(rawHtml) && /location\.(href|replace|assign)|meta[^>]+http-equiv=["']?refresh/i.test(rawHtml)
+  const botChallenge = Boolean(knownChallenge) || (cookieRedirect && words.length < 20)
+  const botChallengeEvidence = botChallenge
+    ? knownChallenge?.[0]
+      ? `봇 차단 스크립트 감지: ${clip(knownChallenge[0], 40)}`
+      : 'JS 쿠키 설정 후 리다이렉트하는 봇 차단 페이지'
+    : ''
+
   const signals: PageSignals = {
     requestedUrl: input.requestedUrl,
     finalUrl: input.finalUrl,
@@ -591,6 +605,8 @@ export function extractPage(input: {
     iframeOnly: words.length < 30 && iframes.length > 0,
     authWall: AUTH_RE.test(mainText) || input.status === 401 || input.status === 403,
     authWallEvidence: AUTH_RE.exec(mainText)?.[0] ?? (input.status === 401 || input.status === 403 ? `HTTP ${input.status}` : ''),
+    botChallenge,
+    botChallengeEvidence,
     ymyl: detectYmyl(title, h1s, firstText, base),
     pageType: 'other',
     emptyAltCount,
