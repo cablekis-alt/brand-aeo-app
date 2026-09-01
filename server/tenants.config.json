@@ -536,11 +536,11 @@
     ],
     "factGraph": [
       {
-        "id": "checkin-time",
-        "type": "other",
-        "claim": "체크인 시간",
-        "value": "오후 3시",
-        "updatedAt": "2026-08-01"
+        "id": "stay-address",
+        "type": "location",
+        "claim": "숙소 주소",
+        "value": "전북 군산시 절골길 18",
+        "updatedAt": "2026-09-01"
       }
     ]
   },

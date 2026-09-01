@@ -150,22 +150,25 @@
     "region": "전북 군산",
     "brandName": "스테이 머뭄",
     "aeoScore": {
-      "current": 35,
-      "ma4": 35,
-      "previousWeek": 35,
-      "ciLow": 27.5,
-      "ciHigh": 42.5
+      "current": 38,
+      "ma4": 38,
+      "previousWeek": 38,
+      "ciLow": 28.7,
+      "ciHigh": 47.3
     },
     "mentionRate": 0,
-    "shareOfMention": 0.2127659574468085,
-    "avgRecommendationRank": 1,
-    "factualityScore": 1,
+    "shareOfMention": 0.5375,
+    "avgRecommendationRank": 1.25,
+    "factualityScore": 0.6666666666666666,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 3,
       "totalTenants": 3
     },
-    "hallucinationFlags": []
+    "hallucinationFlags": [
+      "openai / v1-003 #2: 사실성 불일치 1건",
+      "openai / v1-003 #3: 사실성 불일치 1건"
+    ]
   },
   {
     "tenantId": "gunsanstayhotel",
