@@ -1331,11 +1331,19 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
     }
   }
 
-  /** example.com 같은 스텁·IANA 예제 도메인은 제품 페이지처럼 채점하지 않는다. */
+  /** 본문이 짧은 경우 — 예제 도메인 / JS 렌더링(정적 수집 한계) / 진짜 짧은 본문을 구분한다. */
   const thinBody = s.wordCount < 50
   if (thinBody) {
     const placeholder = isPlaceholderHost(s.requestedUrl) || isPlaceholderHost(s.finalUrl)
-    if (placeholder) {
+    // 자바스크립트로 콘텐츠를 렌더링하는 페이지 — 정적 수집기로는 본문을 못 읽는다(우리 도구의 한계).
+    const jsRendered = !placeholder && (Boolean(s.renderWarning) || s.spaShell)
+    const mode: 'placeholder' | 'jsRendered' | 'short' = placeholder
+      ? 'placeholder'
+      : jsRendered
+        ? 'jsRendered'
+        : 'short'
+
+    if (mode === 'placeholder') {
       recs.length = 0
       recs.push({
         severity: 'high',
@@ -1347,6 +1355,20 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
           difficulty: '낮음',
           before: clip(s.mainText, 80) || '(예제 본문)',
           after: null,
+        },
+      })
+    } else if (mode === 'jsRendered') {
+      // 접근성 채점에서 이미 "핵심 문단을 서버 HTML로 출력" 권고가 들어가므로, 본문 늘리기 권고는 넣지 않는다.
+      recs.push({
+        severity: 'medium',
+        points: 0,
+        rec: {
+          workType: 'dev',
+          task: '핵심 본문(브랜드 소개·정의·주요 정보)을 서버 렌더링(SSR/prerender)으로 HTML에 함께 출력하세요. JS를 실행하지 않는 크롤러도 읽을 수 있습니다.',
+          expectedEffect: 'JS 미실행 크롤러에도 콘텐츠가 노출되어 인용·추천 후보가 됩니다.',
+          difficulty: '높음',
+          before: 'JS 렌더링 — 정적 HTML엔 본문 없음',
+          after: '서버 HTML에 핵심 본문 포함',
         },
       })
     } else {
@@ -1375,19 +1397,49 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
           judgment: 'IANA 예제 도메인. 페이지는 응답하지만 콘텐츠 준비도는 채점하지 않습니다.',
         }
       : accessibility
+    const contentJudgment =
+      mode === 'placeholder'
+        ? '예제 도메인이라 채점하지 않음'
+        : mode === 'jsRendered'
+          ? 'JS 렌더링 — 정적 수집으로 본문 미확인'
+          : '본문이 짧아 채점하지 않음'
     const categories = applyTypeWeights(
       [
         access,
-        ...CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) =>
-          unknownCategory(c.id, placeholder ? '예제 도메인이라 채점하지 않음' : '본문이 짧아 채점하지 않음'),
-        ),
+        ...CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) => unknownCategory(c.id, contentJudgment)),
       ],
       s.pageType,
     )
-    const grade = placeholder ? '예제 도메인 · 채점 대상 아님' : '본문 부족 · 채점 제한'
-    const blocker = placeholder
-      ? 'IANA 예제 도메인이라 서비스 페이지로 채점하지 않습니다'
-      : '본문이 채점 기준에 미달합니다'
+    const grade =
+      mode === 'placeholder'
+        ? '예제 도메인 · 채점 대상 아님'
+        : mode === 'jsRendered'
+          ? '확인 불가 · JS 렌더링'
+          : '본문 부족 · 채점 제한'
+    const blocker =
+      mode === 'placeholder'
+        ? 'IANA 예제 도메인이라 서비스 페이지로 채점하지 않습니다'
+        : mode === 'jsRendered'
+          ? '자바스크립트 렌더링으로 정적 수집이 본문을 읽지 못했습니다'
+          : '본문이 채점 기준에 미달합니다'
+    const oneLiner =
+      mode === 'placeholder'
+        ? 'example.com은 RFC 문서용으로 예약된 도메인입니다. 접근은 되지만 AEO 총점은 부여하지 않습니다.'
+        : mode === 'jsRendered'
+          ? '이 페이지는 자바스크립트로 콘텐츠를 렌더링해, 정적 수집기가 본문을 읽지 못했습니다 — 이 도구의 한계입니다. JS를 실행하는 크롤러는 콘텐츠를 보지만, 실행하지 않는 일부 크롤러에는 빈 페이지로 보일 수 있습니다.'
+          : '페이지는 열리지만 본문이 너무 짧아 AEO 준비도 총점을 부여하지 않습니다.'
+    const problemEvidence =
+      mode === 'placeholder'
+        ? `추출 단어 약 ${s.wordCount}개. IANA example.com 계열은 문서 예시용이라 제품 개선 대상으로 보지 않습니다.`
+        : mode === 'jsRendered'
+          ? `추출 단어 약 ${s.wordCount}개 — 대부분 내비게이션 요소이고 실제 본문은 JS로 렌더링됩니다(동적 렌더링 경고 발동).`
+          : `추출 단어 약 ${s.wordCount}개. 80단어 미만이면 질문 대응·신뢰·인용 점수를 만들지 않습니다.`
+    const problemAiImpact =
+      mode === 'placeholder'
+        ? '예제 도메인 점수를 실제 사이트 벤치마크로 쓰면 진단이 왜곡됩니다.'
+        : mode === 'jsRendered'
+          ? 'JS를 실행하지 않는 크롤러에는 콘텐츠가 보이지 않아 인용·노출에서 누락될 수 있습니다.'
+          : '스텁 페이지를 실제 서비스처럼 개선 대상으로 오해하게 됩니다.'
     return {
       url: s.requestedUrl,
       analyzedAt: new Date().toISOString(),
@@ -1401,23 +1453,17 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       accessFailure: null,
       overallScore: null,
       grade,
-      oneLiner: placeholder
-        ? 'example.com은 RFC 문서용으로 예약된 도메인입니다. 접근은 되지만 AEO 총점은 부여하지 않습니다.'
-        : '페이지는 열리지만 본문이 너무 짧아 AEO 준비도 총점을 부여하지 않습니다.',
+      oneLiner,
       categories,
       strengths: placeholder ? [] : access.positives.slice(0, 3),
       problems: [
         {
           rank: 1,
-          severity: 'high',
-          categoryId: 'answer_content',
+          severity: mode === 'jsRendered' ? 'medium' : 'high',
+          categoryId: mode === 'jsRendered' ? 'accessibility' : 'answer_content',
           title: blocker,
-          evidence: placeholder
-            ? `추출 단어 약 ${s.wordCount}개. IANA example.com 계열은 문서 예시용이라 제품 개선 대상으로 보지 않습니다.`
-            : `추출 단어 약 ${s.wordCount}개. 80단어 미만이면 질문 대응·신뢰·인용 점수를 만들지 않습니다.`,
-          aiImpact: placeholder
-            ? '예제 도메인 점수를 실제 사이트 벤치마크로 쓰면 진단이 왜곡됩니다.'
-            : '스텁 페이지를 실제 서비스처럼 개선 대상으로 오해하게 됩니다.',
+          evidence: problemEvidence,
+          aiImpact: problemAiImpact,
           quote: clip(s.mainText, 90) || null,
         },
       ],
@@ -1429,19 +1475,29 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
         biggestStrength: access.positives[0]?.title ?? '페이지가 응답합니다',
         biggestBlocker: blocker,
         firstAction: rankedRecs[0]?.task ?? '실제 공개 URL로 다시 진단하세요.',
-        scoreRangeIfFixed: placeholder
-          ? '예제 도메인에는 점수를 추정하지 않습니다. 실제 페이지 URL로 다시 제출하세요.'
-          : '본문이 충분해진 뒤에 다시 채점하세요. 지금은 점수를 추정하지 않습니다.',
+        scoreRangeIfFixed:
+          mode === 'placeholder'
+            ? '예제 도메인에는 점수를 추정하지 않습니다. 실제 페이지 URL로 다시 제출하세요.'
+            : mode === 'jsRendered'
+              ? '핵심 본문을 서버 HTML로도 제공하면 정적 크롤러까지 읽을 수 있습니다. 이 도구는 정적 HTML만 평가하므로 실제 콘텐츠 점수는 별도 확인이 필요합니다.'
+              : '본문이 충분해진 뒤에 다시 채점하세요. 지금은 점수를 추정하지 않습니다.',
       },
-      limitations: [
-        placeholder
-          ? 'IANA 예제 도메인(example.com 등)은 총점과 콘텐츠 영역 점수를 부여하지 않습니다.'
-          : '본문이 50단어 미만이라 총점과 콘텐츠 영역 점수를 부여하지 않았습니다.',
-        '제품 목차·FAQ 초안은 본문이 충분한 실제 페이지에만 제안합니다.',
-        s.collectionMode === 'browser'
-          ? 'JavaScript 실행 후 사용자에게 표시되는 본문을 기준으로 분석했습니다.'
-          : '정적 HTML을 기준으로 분석했습니다. 지연 로딩 영역은 포함되지 않을 수 있습니다.',
-      ],
+      limitations:
+        mode === 'jsRendered'
+          ? [
+              'JavaScript로 렌더링되는 페이지라 정적 수집기가 실제 본문을 읽지 못했습니다 — 콘텐츠 품질은 판정하지 않았습니다(도구의 한계).',
+              'JS를 실행하는 크롤러(일부 검색·AI 봇)는 콘텐츠를 읽을 수 있으므로, 이 결과가 곧 AEO 실패를 뜻하진 않습니다.',
+              '정적 HTML을 기준으로 분석했습니다. 지연 로딩 영역은 포함되지 않을 수 있습니다.',
+            ]
+          : [
+              placeholder
+                ? 'IANA 예제 도메인(example.com 등)은 총점과 콘텐츠 영역 점수를 부여하지 않습니다.'
+                : '본문이 50단어 미만이라 총점과 콘텐츠 영역 점수를 부여하지 않았습니다.',
+              '제품 목차·FAQ 초안은 본문이 충분한 실제 페이지에만 제안합니다.',
+              s.collectionMode === 'browser'
+                ? 'JavaScript 실행 후 사용자에게 표시되는 본문을 기준으로 분석했습니다.'
+                : '정적 HTML을 기준으로 분석했습니다. 지연 로딩 영역은 포함되지 않을 수 있습니다.',
+            ],
       disclaimer: DISCLAIMER,
       source: 'heuristic',
       pageType: s.pageType,
