@@ -21,7 +21,9 @@ export class OpenAiJudgeClient implements EngineClient {
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY 환경변수가 설정되지 않았습니다.');
-    this.client = new OpenAI({ apiKey });
+    // 멈춘 호출이 SDK 기본 타임아웃(10분)까지 슬롯을 붙잡지 않도록 90초로 제한.
+    // 재시도는 withOpenAiRetry가 담당하므로 SDK 자체 재시도는 끈다.
+    this.client = new OpenAI({ apiKey, timeout: 90_000, maxRetries: 0 });
   }
 
   async call(prompt: PromptMessage): Promise<EngineCallResult> {

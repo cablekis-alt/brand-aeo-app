@@ -54,7 +54,8 @@ app.get('/health', (_req, res) => {
 
 app.get('/api/tenants', async (_req, res) => {
   const tenants = await loadTenants();
-  res.json(tenants.map(toTenantSummary));
+  // 코호트 비교용 경쟁사 테넌트는 브랜드 선택 드롭다운에서 제외한다.
+  res.json(tenants.filter((tenant) => !tenant.cohortOnly).map(toTenantSummary));
 });
 
 app.get('/api/scorecards/:tenantId', async (req, res) => {

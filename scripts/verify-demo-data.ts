@@ -101,7 +101,9 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
 
 async function main() {
   let failures = 0;
-  for (const tenant of tenants as TenantConfig[]) {
+  // cohortOnly 경쟁사는 상세 화면(S-02/05/07)이 없고 코호트 랭킹에 스코어카드만 쓰이므로
+  // 스코어카드↔분석 정합성 검증 대상에서 제외한다.
+  for (const tenant of (tenants as TenantConfig[]).filter((t) => !t.cohortOnly)) {
     failures += await verifyTenant(tenant);
   }
 

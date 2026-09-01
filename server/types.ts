@@ -7,6 +7,9 @@ export interface TenantConfig extends BrandContext {
   questionBankVersion: string; // 버저닝 태그. 질문 은행을 새로 생성하려면 이 값을 바꾼다.
   repeatsPerQuestion: number; // 예: 3 — 설계 원칙: 비결정성 대응
   factGraph: FactGraphNode[];
+  // true면 코호트 비교용 경쟁사 테넌트. 파이프라인·코호트 랭킹에는 들어가지만
+  // 브랜드 선택 드롭다운(/api/tenants)에는 노출하지 않는다.
+  cohortOnly?: boolean;
 }
 
 export interface RawCallRecord {

@@ -23,16 +23,18 @@ export default function handler(req, res) {
     sendJson(res, 405, { error: 'GET만 허용됩니다.' })
     return
   }
-  const tenants = rawTenants.map((tenant) => ({
-    tenantId: tenant.tenantId,
-    brandName: tenant.brandName,
-    aliases: tenant.aliases,
-    ownedDomains: tenant.ownedDomains,
-    industry: tenant.industry,
-    region: tenant.region,
-    engines: tenant.engines,
-    questionBankSize: tenant.questionBankSize,
-    competitors: tenant.competitors.map((competitor) => competitor.name),
-  }))
+  const tenants = rawTenants
+    .filter((tenant) => !tenant.cohortOnly)
+    .map((tenant) => ({
+      tenantId: tenant.tenantId,
+      brandName: tenant.brandName,
+      aliases: tenant.aliases,
+      ownedDomains: tenant.ownedDomains,
+      industry: tenant.industry,
+      region: tenant.region,
+      engines: tenant.engines,
+      questionBankSize: tenant.questionBankSize,
+      competitors: tenant.competitors.map((competitor) => competitor.name),
+    }))
   sendJson(res, 200, tenants)
 }

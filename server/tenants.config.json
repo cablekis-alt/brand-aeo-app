@@ -2,20 +2,80 @@
   {
     "tenantId": "example-brand",
     "brandName": "뷰성형외과",
-    "aliases": ["뷰성형외과", "강남 뷰성형외과", "VIEW성형외과", "View Clinic"],
-    "ownedDomains": ["viewclinic.com"],
+    "aliases": [
+      "뷰성형외과",
+      "강남 뷰성형외과",
+      "VIEW성형외과",
+      "View Clinic"
+    ],
+    "ownedDomains": [
+      "viewclinic.com"
+    ],
     "industry": "성형외과",
     "region": "서울 강남",
-    "engines": ["openai"],
+    "engines": [
+      "openai"
+    ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
-      { "name": "강남언니", "aliases": ["강남언니", "Gangnam Unni"], "domains": ["gangnamunni.com"] },
-      { "name": "원진성형외과", "aliases": ["원진성형외과", "원진"], "domains": ["k-wonjin.co.kr"] },
-      { "name": "제이준성형외과의원", "aliases": ["제이준성형외과의원", "제이준성형외과", "제이준", "J.JUN"], "domains": ["jjprs.com"] },
-      { "name": "스타라인성형외과의원", "aliases": ["스타라인성형외과의원", "스타라인성형외과", "스타라인", "Starline"], "domains": ["starlineps.co.kr"] },
-      { "name": "바노바기성형외과의원", "aliases": ["바노바기성형외과의원", "바노바기성형외과", "바노바기", "Banobagi"], "domains": ["banobagi.com"] }
+      {
+        "name": "강남언니",
+        "aliases": [
+          "강남언니",
+          "Gangnam Unni"
+        ],
+        "domains": [
+          "gangnamunni.com"
+        ]
+      },
+      {
+        "name": "원진성형외과",
+        "aliases": [
+          "원진성형외과",
+          "원진"
+        ],
+        "domains": [
+          "k-wonjin.co.kr"
+        ]
+      },
+      {
+        "name": "제이준성형외과의원",
+        "aliases": [
+          "제이준성형외과의원",
+          "제이준성형외과",
+          "제이준",
+          "J.JUN"
+        ],
+        "domains": [
+          "jjprs.com"
+        ]
+      },
+      {
+        "name": "스타라인성형외과의원",
+        "aliases": [
+          "스타라인성형외과의원",
+          "스타라인성형외과",
+          "스타라인",
+          "Starline"
+        ],
+        "domains": [
+          "starlineps.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과의원",
+        "aliases": [
+          "바노바기성형외과의원",
+          "바노바기성형외과",
+          "바노바기",
+          "Banobagi"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      }
     ],
     "factGraph": [
       {
@@ -28,19 +88,451 @@
     ]
   },
   {
-    "tenantId": "stay-meomum",
-    "brandName": "스테이 머뭄",
-    "aliases": ["스테이 머뭄", "머뭄", "Stay Meomum"],
-    "ownedDomains": ["w4ai.o2o.kr"],
-    "industry": "숙박",
-    "region": "전북 군산",
-    "engines": ["openai"],
+    "tenantId": "gangnamunni",
+    "brandName": "강남언니",
+    "aliases": [
+      "강남언니",
+      "Gangnam Unni"
+    ],
+    "ownedDomains": [
+      "gangnamunni.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": [
+      "openai"
+    ],
     "questionBankSize": 12,
     "questionBankVersion": "v1",
     "repeatsPerQuestion": 3,
     "competitors": [
-      { "name": "군산스테이호텔", "aliases": ["군산스테이호텔", "군산 스테이호텔"], "domains": ["gunsanstayhotel.com"] },
-      { "name": "군산해들목펜션", "aliases": ["군산해들목펜션", "해들목펜션", "해들목"], "domains": ["hdmpension.co.kr"] }
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과",
+          "강남 뷰성형외과",
+          "VIEW성형외과",
+          "View Clinic"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "원진성형외과",
+        "aliases": [
+          "원진성형외과",
+          "원진"
+        ],
+        "domains": [
+          "k-wonjin.co.kr"
+        ]
+      },
+      {
+        "name": "제이준성형외과의원",
+        "aliases": [
+          "제이준성형외과의원",
+          "제이준성형외과",
+          "제이준",
+          "J.JUN"
+        ],
+        "domains": [
+          "jjprs.com"
+        ]
+      },
+      {
+        "name": "스타라인성형외과의원",
+        "aliases": [
+          "스타라인성형외과의원",
+          "스타라인성형외과",
+          "스타라인",
+          "Starline"
+        ],
+        "domains": [
+          "starlineps.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과의원",
+        "aliases": [
+          "바노바기성형외과의원",
+          "바노바기성형외과",
+          "바노바기",
+          "Banobagi"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "wonjin",
+    "brandName": "원진성형외과",
+    "aliases": [
+      "원진성형외과",
+      "원진"
+    ],
+    "ownedDomains": [
+      "k-wonjin.co.kr"
+    ],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과",
+          "강남 뷰성형외과",
+          "VIEW성형외과",
+          "View Clinic"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "강남언니",
+        "aliases": [
+          "강남언니",
+          "Gangnam Unni"
+        ],
+        "domains": [
+          "gangnamunni.com"
+        ]
+      },
+      {
+        "name": "제이준성형외과의원",
+        "aliases": [
+          "제이준성형외과의원",
+          "제이준성형외과",
+          "제이준",
+          "J.JUN"
+        ],
+        "domains": [
+          "jjprs.com"
+        ]
+      },
+      {
+        "name": "스타라인성형외과의원",
+        "aliases": [
+          "스타라인성형외과의원",
+          "스타라인성형외과",
+          "스타라인",
+          "Starline"
+        ],
+        "domains": [
+          "starlineps.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과의원",
+        "aliases": [
+          "바노바기성형외과의원",
+          "바노바기성형외과",
+          "바노바기",
+          "Banobagi"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "jjun",
+    "brandName": "제이준성형외과의원",
+    "aliases": [
+      "제이준성형외과의원",
+      "제이준성형외과",
+      "제이준",
+      "J.JUN"
+    ],
+    "ownedDomains": [
+      "jjprs.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과",
+          "강남 뷰성형외과",
+          "VIEW성형외과",
+          "View Clinic"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "강남언니",
+        "aliases": [
+          "강남언니",
+          "Gangnam Unni"
+        ],
+        "domains": [
+          "gangnamunni.com"
+        ]
+      },
+      {
+        "name": "원진성형외과",
+        "aliases": [
+          "원진성형외과",
+          "원진"
+        ],
+        "domains": [
+          "k-wonjin.co.kr"
+        ]
+      },
+      {
+        "name": "스타라인성형외과의원",
+        "aliases": [
+          "스타라인성형외과의원",
+          "스타라인성형외과",
+          "스타라인",
+          "Starline"
+        ],
+        "domains": [
+          "starlineps.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과의원",
+        "aliases": [
+          "바노바기성형외과의원",
+          "바노바기성형외과",
+          "바노바기",
+          "Banobagi"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "starline",
+    "brandName": "스타라인성형외과의원",
+    "aliases": [
+      "스타라인성형외과의원",
+      "스타라인성형외과",
+      "스타라인",
+      "Starline"
+    ],
+    "ownedDomains": [
+      "starlineps.co.kr"
+    ],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과",
+          "강남 뷰성형외과",
+          "VIEW성형외과",
+          "View Clinic"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "강남언니",
+        "aliases": [
+          "강남언니",
+          "Gangnam Unni"
+        ],
+        "domains": [
+          "gangnamunni.com"
+        ]
+      },
+      {
+        "name": "원진성형외과",
+        "aliases": [
+          "원진성형외과",
+          "원진"
+        ],
+        "domains": [
+          "k-wonjin.co.kr"
+        ]
+      },
+      {
+        "name": "제이준성형외과의원",
+        "aliases": [
+          "제이준성형외과의원",
+          "제이준성형외과",
+          "제이준",
+          "J.JUN"
+        ],
+        "domains": [
+          "jjprs.com"
+        ]
+      },
+      {
+        "name": "바노바기성형외과의원",
+        "aliases": [
+          "바노바기성형외과의원",
+          "바노바기성형외과",
+          "바노바기",
+          "Banobagi"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "banobagi",
+    "brandName": "바노바기성형외과의원",
+    "aliases": [
+      "바노바기성형외과의원",
+      "바노바기성형외과",
+      "바노바기",
+      "Banobagi"
+    ],
+    "ownedDomains": [
+      "banobagi.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과",
+          "강남 뷰성형외과",
+          "VIEW성형외과",
+          "View Clinic"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "강남언니",
+        "aliases": [
+          "강남언니",
+          "Gangnam Unni"
+        ],
+        "domains": [
+          "gangnamunni.com"
+        ]
+      },
+      {
+        "name": "원진성형외과",
+        "aliases": [
+          "원진성형외과",
+          "원진"
+        ],
+        "domains": [
+          "k-wonjin.co.kr"
+        ]
+      },
+      {
+        "name": "제이준성형외과의원",
+        "aliases": [
+          "제이준성형외과의원",
+          "제이준성형외과",
+          "제이준",
+          "J.JUN"
+        ],
+        "domains": [
+          "jjprs.com"
+        ]
+      },
+      {
+        "name": "스타라인성형외과의원",
+        "aliases": [
+          "스타라인성형외과의원",
+          "스타라인성형외과",
+          "스타라인",
+          "Starline"
+        ],
+        "domains": [
+          "starlineps.co.kr"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "stay-meomum",
+    "brandName": "스테이 머뭄",
+    "aliases": [
+      "스테이 머뭄",
+      "머뭄",
+      "Stay Meomum"
+    ],
+    "ownedDomains": [
+      "w4ai.o2o.kr"
+    ],
+    "industry": "숙박",
+    "region": "전북 군산",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "군산스테이호텔",
+        "aliases": [
+          "군산스테이호텔",
+          "군산 스테이호텔"
+        ],
+        "domains": [
+          "gunsanstayhotel.com"
+        ]
+      },
+      {
+        "name": "군산해들목펜션",
+        "aliases": [
+          "군산해들목펜션",
+          "해들목펜션",
+          "해들목"
+        ],
+        "domains": [
+          "hdmpension.co.kr"
+        ]
+      }
     ],
     "factGraph": [
       {
@@ -51,5 +543,95 @@
         "updatedAt": "2026-08-01"
       }
     ]
+  },
+  {
+    "tenantId": "gunsanstayhotel",
+    "brandName": "군산스테이호텔",
+    "aliases": [
+      "군산스테이호텔",
+      "군산 스테이호텔"
+    ],
+    "ownedDomains": [
+      "gunsanstayhotel.com"
+    ],
+    "industry": "숙박",
+    "region": "전북 군산",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "스테이 머뭄",
+        "aliases": [
+          "스테이 머뭄",
+          "머뭄",
+          "Stay Meomum"
+        ],
+        "domains": [
+          "w4ai.o2o.kr"
+        ]
+      },
+      {
+        "name": "군산해들목펜션",
+        "aliases": [
+          "군산해들목펜션",
+          "해들목펜션",
+          "해들목"
+        ],
+        "domains": [
+          "hdmpension.co.kr"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "hdmpension",
+    "brandName": "군산해들목펜션",
+    "aliases": [
+      "군산해들목펜션",
+      "해들목펜션",
+      "해들목"
+    ],
+    "ownedDomains": [
+      "hdmpension.co.kr"
+    ],
+    "industry": "숙박",
+    "region": "전북 군산",
+    "engines": [
+      "openai"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "스테이 머뭄",
+        "aliases": [
+          "스테이 머뭄",
+          "머뭄",
+          "Stay Meomum"
+        ],
+        "domains": [
+          "w4ai.o2o.kr"
+        ]
+      },
+      {
+        "name": "군산스테이호텔",
+        "aliases": [
+          "군산스테이호텔",
+          "군산 스테이호텔"
+        ],
+        "domains": [
+          "gunsanstayhotel.com"
+        ]
+      }
+    ],
+    "factGraph": [],
+    "cohortOnly": true
   }
 ]
