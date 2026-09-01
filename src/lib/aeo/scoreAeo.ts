@@ -1342,11 +1342,11 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
     }
   }
 
-  /** 본문이 짧은 경우 — 예제 도메인 / JS 렌더링(정적 수집 한계) / 진짜 짧은 본문을 구분한다. */
+  /** 본문이 짧은 경우 — 예제 도메인 / JS 렌더링(정적 HTML엔 본문 없음) / 진짜 짧은 본문을 구분한다. */
   const thinBody = s.wordCount < 50
   if (thinBody) {
     const placeholder = isPlaceholderHost(s.requestedUrl) || isPlaceholderHost(s.finalUrl)
-    // 자바스크립트로 콘텐츠를 렌더링하는 페이지 — 정적 수집기로는 본문을 못 읽는다(우리 도구의 한계).
+    // 자바스크립트로 콘텐츠를 렌더링하는 페이지 — 정적 HTML만 받는 크롤러(다수의 AI 봇 포함)에는 본문이 비어 보인다.
     const jsRendered = !placeholder && (Boolean(s.renderWarning) || s.spaShell)
     const mode: 'placeholder' | 'jsRendered' | 'short' = placeholder
       ? 'placeholder'
@@ -1437,7 +1437,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       mode === 'placeholder'
         ? 'example.com은 RFC 문서용으로 예약된 도메인입니다. 접근은 되지만 AEO 총점은 부여하지 않습니다.'
         : mode === 'jsRendered'
-          ? '이 페이지는 자바스크립트로 콘텐츠를 렌더링해, 정적 수집기가 본문을 읽지 못했습니다 — 이 도구의 한계입니다. JS를 실행하는 크롤러는 콘텐츠를 보지만, 실행하지 않는 일부 크롤러에는 빈 페이지로 보일 수 있습니다.'
+          ? '이 페이지는 본문을 자바스크립트로 렌더링합니다. 정적 HTML만 받는 크롤러 — GPTBot·ClaudeBot 등 JS를 실행하지 않는 AI 검색 봇을 포함 — 에는 본문이 비어 보이며, 우리 정적 수집기도 같은 관점이라 콘텐츠를 채점하지 못했습니다(확인 불가). JS를 실행하는 크롤러는 읽을 수 있으니, 안전하게 하려면 핵심 본문을 서버 HTML로도 제공하세요.'
           : '페이지는 열리지만 본문이 너무 짧아 AEO 준비도 총점을 부여하지 않습니다.'
     const problemEvidence =
       mode === 'placeholder'
@@ -1490,13 +1490,13 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
           mode === 'placeholder'
             ? '예제 도메인에는 점수를 추정하지 않습니다. 실제 페이지 URL로 다시 제출하세요.'
             : mode === 'jsRendered'
-              ? '핵심 본문을 서버 HTML로도 제공하면 정적 크롤러까지 읽을 수 있습니다. 이 도구는 정적 HTML만 평가하므로 실제 콘텐츠 점수는 별도 확인이 필요합니다.'
+              ? '핵심 본문을 서버 HTML(SSR/prerender)로도 제공하면 JS를 실행하지 않는 크롤러까지 읽을 수 있고, 그때 콘텐츠 영역을 채점할 수 있습니다. 지금은 정적 HTML에 본문이 없어 확인 불가입니다.'
               : '본문이 충분해진 뒤에 다시 채점하세요. 지금은 점수를 추정하지 않습니다.',
       },
       limitations:
         mode === 'jsRendered'
           ? [
-              'JavaScript로 렌더링되는 페이지라 정적 수집기가 실제 본문을 읽지 못했습니다 — 콘텐츠 품질은 판정하지 않았습니다(도구의 한계).',
+              '본문이 자바스크립트로 렌더링되어, 정적 HTML만 받는 크롤러(다수의 AI 봇 포함)와 동일하게 본문을 읽지 못했습니다 — 그래서 콘텐츠 품질은 확인 불가로 두었습니다.',
               'JS를 실행하는 크롤러(일부 검색·AI 봇)는 콘텐츠를 읽을 수 있으므로, 이 결과가 곧 AEO 실패를 뜻하진 않습니다.',
               '정적 HTML을 기준으로 분석했습니다. 지연 로딩 영역은 포함되지 않을 수 있습니다.',
             ]
