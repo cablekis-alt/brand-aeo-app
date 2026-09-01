@@ -22,7 +22,7 @@
       "totalTenants": 6
     },
     "hallucinationFlags": [
-      "openai / v3-012 #2: 사실성 불일치 1건"
+      "openai / v3-004 #1: 사실성 불일치 2건"
     ]
   },
   {
@@ -168,11 +168,8 @@
       "totalTenants": 3
     },
     "hallucinationFlags": [
-      "openai / v2-005 #3: 사실성 불일치 1건",
       "openai / v2-008 #1: 사실성 불일치 1건",
-      "openai / v2-009 #3: 사실성 불일치 1건",
-      "openai / v2-011 #1: 사실성 불일치 1건",
-      "openai / v2-011 #3: 사실성 불일치 1건"
+      "openai / v2-008 #2: 사실성 불일치 1건"
     ]
   },
   {

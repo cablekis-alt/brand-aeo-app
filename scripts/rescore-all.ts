@@ -104,6 +104,11 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig): WeeklyScorecard
   const ci = meanWithConfidenceInterval(perCallScores)
   const margin = ci.high - ci.mean
 
+  // 파이프라인과 동일하게 실측 분석에서 다시 만든다 (이전 카드 값을 재사용하면 stale해진다).
+  const hallucinationFlags = analyses
+    .filter((a) => a.factualityContradicted > 0)
+    .map((a) => `${a.engine} / ${a.questionId} #${a.callIndex}: 사실성 불일치 ${a.factualityContradicted}건`)
+
   return {
     ...prev,
     aeoScore: {
@@ -118,6 +123,7 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig): WeeklyScorecard
     avgRecommendationRank,
     factualityScore,
     brandOwnedCitationRate,
+    hallucinationFlags,
   }
 }
 
