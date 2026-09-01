@@ -103,6 +103,13 @@ export default function SiteReportView({ report }: { report: AeoReport }) {
             </tbody>
           </table>
         </div>
+        {report.overallScore === 0 && report.categories.some((c) => c.score === 'unknown') && (
+          <p className="muted" style={{ marginTop: '12px' }}>
+            콘텐츠 영역은 크롤러가 본문에 접근하지 못해 <b>확인 불가</b>입니다 — 못 본 콘텐츠의 품질은 판정하지
+            않습니다. 총점 <b>0</b>은 개별 점수의 합이 아니라, <b>AI가 이 페이지를 활용할 수 없다</b>는 결과를
+            나타내는 하한값입니다.
+          </p>
+        )}
       </section>
 
       {report.problems.length > 0 && (
