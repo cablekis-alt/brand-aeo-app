@@ -1,114 +1,114 @@
 {
-  "version": "v2",
-  "generatedAt": "2026-09-01T12:09:17.750Z",
+  "version": "v3",
+  "generatedAt": "2026-09-01T16:06:32.997Z",
   "questions": [
     {
-      "questionId": "v2-001",
-      "text": "서울 강남에서 코 성형 잘하는 곳 어디야?",
+      "questionId": "v3-001",
+      "text": "성형외과 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-002",
-      "text": "눈 성형 후 잘 된 사례가 많은 병원 추천해줘.",
+      "questionId": "v3-002",
+      "text": "서울 강남에서 성형외과 고를 때 뭘 봐야 해?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-003",
-      "text": "뷰성형외과에서 상담 받을 때 참고할 점 있을까?",
+      "questionId": "v3-003",
+      "text": "성형외과 후기 좋은 곳 알아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-004",
+      "text": "서울 강남에서 코수술 잘하는 곳이 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-005",
+      "text": "성형수술 상담은 어떻게 받는 게 좋을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-006",
+      "text": "뷰성형외과는 어떤 장점이 있어?",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-004",
-      "text": "강남언니랑 뷰성형외과 중에 어디가 더 유명해?",
+      "questionId": "v3-007",
+      "text": "강남언니와 뷰성형외과, 어디가 더 좋을까?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-005",
-      "text": "강남에서 성형 비용은 보통 얼마야?",
-      "category": "price-spec",
-      "containsBrandName": false,
-      "industry": "성형외과",
-      "region": "서울 강남",
-      "version": "v2"
-    },
-    {
-      "questionId": "v2-006",
-      "text": "원진성형외과 후기 괜찮은 편이야?",
-      "category": "troubleshooting-review",
-      "containsBrandName": true,
-      "industry": "성형외과",
-      "region": "서울 강남",
-      "version": "v2"
-    },
-    {
-      "questionId": "v2-007",
-      "text": "서울 강남에서 눈 성형 잘하는 병원 추천 좀!",
-      "category": "local-regional",
-      "containsBrandName": false,
-      "industry": "성형외과",
-      "region": "서울 강남",
-      "version": "v2"
-    },
-    {
-      "questionId": "v2-008",
-      "text": "바노바기성형외과에서 코 성형 견적 받아본 사람 있나요?",
-      "category": "price-spec",
-      "containsBrandName": true,
-      "industry": "성형외과",
-      "region": "서울 강남",
-      "version": "v2"
-    },
-    {
-      "questionId": "v2-009",
-      "text": "제이준성형외과랑 스타라인성형외과, 어디가 더 낫다는 의견 많아?",
-      "category": "comparison",
-      "containsBrandName": true,
-      "industry": "성형외과",
-      "region": "서울 강남",
-      "version": "v2"
-    },
-    {
-      "questionId": "v2-010",
-      "text": "성형외과 고를 때 주의할 점이 뭐야?",
+      "questionId": "v3-008",
+      "text": "성형외과 수술 가격이 대체로 얼마 정도야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-011",
-      "text": "뷰성형외과 후기 좀 알려줘!",
-      "category": "troubleshooting-review",
+      "questionId": "v3-009",
+      "text": "제이준성형외과의원과 원진성형외과, 어떤 차이가 있어?",
+      "category": "comparison",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
     },
     {
-      "questionId": "v2-012",
-      "text": "서울 강남에서 유명한 성형외과 목록 있어?",
-      "category": "local-regional",
+      "questionId": "v3-010",
+      "text": "성형수술 후기를 찾을 때 어떤 사이트가 좋을까?",
+      "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
-      "version": "v2"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "서울 강남의 성형외과 중에서 피부과도 하는 곳이 있나?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "스타라인성형외과의원은 어떤 곳이야?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v3"
     }
   ]
 }

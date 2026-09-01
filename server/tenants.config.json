@@ -17,7 +17,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v2",
+    "questionBankVersion": "v3",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -103,7 +103,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -184,7 +184,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -267,7 +267,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -348,7 +348,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -429,7 +429,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -509,7 +509,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -560,7 +560,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {
@@ -606,7 +606,7 @@
       "openai"
     ],
     "questionBankSize": 12,
-    "questionBankVersion": "v1",
+    "questionBankVersion": "v2",
     "repeatsPerQuestion": 3,
     "competitors": [
       {

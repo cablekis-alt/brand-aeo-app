@@ -5,6 +5,8 @@ import {
   buildFactCheckPrompt,
   buildQuestionBankPrompt,
   agnosticQuota,
+  countAgnostic,
+  enforceAgnosticQuota,
   buildRecommendationOrderPrompt,
   buildWeeklyReportPrompt,
   type BrandContext,
@@ -41,13 +43,31 @@ function toBrandContext(tenant: TenantConfig): BrandContext {
   };
 }
 
+function brandAndCompetitorNames(tenant: TenantConfig): string[] {
+  return [
+    tenant.brandName,
+    ...tenant.aliases,
+    ...tenant.competitors.flatMap((competitor) => [competitor.name, ...competitor.aliases]),
+  ];
+}
+
 /** B1 — 질문 은행은 버전당 1회만 생성하고 이후 주차에는 재사용한다 (버전을 바꾸면 재생성). */
 export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+  const quota = agnosticQuota(tenant.questionBankSize);
+  const names = brandAndCompetitorNames(tenant);
+
   const existing = await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion);
-  if (existing) return existing.questions;
+  if (existing) {
+    const enforced = enforceAgnosticQuota(existing.questions, quota, names);
+    if (countAgnostic(enforced) >= quota) {
+      if (JSON.stringify(enforced) !== JSON.stringify(existing.questions)) {
+        await store.saveQuestionBank(tenant.tenantId, { ...existing, questions: enforced });
+      }
+      return enforced;
+    }
+  }
 
   const judge = getJudgeClient();
-  const quota = agnosticQuota(tenant.questionBankSize);
 
   // category-agnostic 개수가 하한(quota)에 못 미치면, LLM이 지시를 무시한 것이므로
   // 부족분을 명시해 최대 3회까지 재생성한다 (프롬프트 준수 실패 방어).
@@ -71,14 +91,18 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
       throw new Error(`[B1] 질문 은행 생성 실패: JSON 파싱 불가 (tenant=${tenant.tenantId}, attempt=${attempt})`);
     }
 
-    const candidate: QuestionSpec[] = parsed.map((q) => ({
-      ...q,
-      industry: tenant.industry,
-      region: tenant.region,
-      version: tenant.questionBankVersion,
-    }));
+    const candidate: QuestionSpec[] = enforceAgnosticQuota(
+      parsed.map((q) => ({
+        ...q,
+        industry: tenant.industry,
+        region: tenant.region,
+        version: tenant.questionBankVersion,
+      })),
+      quota,
+      names,
+    );
 
-    const agnosticCount = candidate.filter((q) => q.category === 'category-agnostic').length;
+    const agnosticCount = countAgnostic(candidate);
     if (agnosticCount >= quota) {
       questions = candidate;
       break;

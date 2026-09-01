@@ -1,4 +1,4 @@
-import type { PromptMessage } from './types';
+import type { PromptMessage, QuestionSpec } from './types';
 
 export interface QuestionBankRequest {
   industry: string;
@@ -17,6 +17,41 @@ export interface QuestionBankRequest {
 /** 전체 count 중 category-agnostic이 최소 60%가 되도록 한 개수. */
 export function agnosticQuota(count: number): number {
   return Math.max(1, Math.ceil(count * 0.6));
+}
+
+export function countAgnostic(questions: Pick<QuestionSpec, 'category'>[]): number {
+  return questions.filter((q) => q.category === 'category-agnostic').length;
+}
+
+/** 상호·별칭이 본문에 들어 있는지. 카테고리 무관 승격 가능 여부를 코드로 판정할 때 쓴다. */
+export function questionMentionsName(text: string, names: string[]): boolean {
+  return names.some((name) => name.length > 0 && text.includes(name));
+}
+
+/**
+ * LLM이 카테고리 태그를 잘못 달아도, 브랜드·경쟁사명이 없는 질문은 category-agnostic으로 승격한다.
+ * 프롬프트 재시도만으로는 60% 하한을 자주 못 맞추기 때문에 저장 직전에 한 번 더 강제한다.
+ */
+export function enforceAgnosticQuota(
+  questions: QuestionSpec[],
+  quota: number,
+  names: string[],
+): QuestionSpec[] {
+  const next = questions.map((question) => ({ ...question }));
+  for (const question of next) {
+    if (question.category === 'category-agnostic') question.containsBrandName = false;
+  }
+
+  let agnostic = countAgnostic(next);
+  for (const question of next) {
+    if (agnostic >= quota) break;
+    if (question.category === 'category-agnostic') continue;
+    if (questionMentionsName(question.text, names)) continue;
+    question.category = 'category-agnostic';
+    question.containsBrandName = false;
+    agnostic += 1;
+  }
+  return next;
 }
 
 export function buildQuestionBankPrompt(req: QuestionBankRequest): PromptMessage {
