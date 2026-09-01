@@ -30,17 +30,17 @@
     "region": "전북 군산",
     "brandName": "스테이 머뭄",
     "aeoScore": {
-      "current": 50,
-      "ma4": 50,
-      "previousWeek": 50,
-      "ciLow": 42.1,
-      "ciHigh": 57.8
+      "current": 32,
+      "ma4": 32,
+      "previousWeek": 32,
+      "ciLow": 24.6,
+      "ciHigh": 39.6
     },
     "mentionRate": 0,
-    "shareOfMention": null,
-    "avgRecommendationRank": null,
+    "shareOfMention": 0.1574074074074074,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.027777777777777776,
+    "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
       "totalTenants": 1

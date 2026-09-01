@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "generatedAt": "2026-09-01T12:22:46.549Z",
+  "generatedAt": "2026-09-01T13:04:00.908Z",
   "questions": [
     {
       "questionId": "v1-001",
-      "text": "전북 군산에 가면 어떤 숙소 추천해?",
+      "text": "군산에서 호텔 예약할 때 참고할 만한 팁 있어?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v1-002",
-      "text": "군산에서 가족이랑 묵기 좋은 곳 있을까?",
+      "text": "군산에서 가족이랑 묵기 좋은 숙소 추천 좀.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -22,8 +22,8 @@
     },
     {
       "questionId": "v1-003",
-      "text": "스테이 머뭄에서 묵어본 사람들의 후기가 궁금해.",
-      "category": "troubleshooting-review",
+      "text": "스테이 머뭄은 어떤 장점이 있어?",
+      "category": "brand-direct",
       "containsBrandName": true,
       "industry": "숙박",
       "region": "전북 군산",
@@ -31,16 +31,7 @@
     },
     {
       "questionId": "v1-004",
-      "text": "군산에서 숙소 결정할 때 가장 중요한 게 뭐야?",
-      "category": "category-agnostic",
-      "containsBrandName": false,
-      "industry": "숙박",
-      "region": "전북 군산",
-      "version": "v1"
-    },
-    {
-      "questionId": "v1-005",
-      "text": "스테이 머뭄이랑 다른 호텔 비교해줘.",
+      "text": "군산스테이호텔과 군산해들목펜션 중 어디가 더 좋아?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "숙박",
@@ -48,9 +39,18 @@
       "version": "v1"
     },
     {
-      "questionId": "v1-006",
-      "text": "스테이 머뭄 예약할 때 가격 정보 좀 알려줘.",
+      "questionId": "v1-005",
+      "text": "군산에서 저렴한 숙소 찾고 싶은데 어디가 좋아?",
       "category": "price-spec",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "스테이 머뭄 이용해본 사람들 후기 좀 알려줘.",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "숙박",
       "region": "전북 군산",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v1-007",
-      "text": "군산 지역 숙소 예약할 때 팁 있을까?",
+      "text": "군산 지역에서 가장 인기 있는 숙박 시설이 어디야?",
       "category": "local-regional",
       "containsBrandName": false,
       "industry": "숙박",
@@ -67,17 +67,17 @@
     },
     {
       "questionId": "v1-008",
-      "text": "군산 여행할 때 예산 맞춰서 좋은 숙소 찾는 법 알려줘.",
-      "category": "category-agnostic",
-      "containsBrandName": false,
+      "text": "스테이 머뭄 가격대가 어떻게 돼?",
+      "category": "price-spec",
+      "containsBrandName": true,
       "industry": "숙박",
       "region": "전북 군산",
       "version": "v1"
     },
     {
       "questionId": "v1-009",
-      "text": "스테이 머뭄과 가까운 명소가 뭐가 있어?",
-      "category": "local-regional",
+      "text": "군산해들목펜션 분위기는 어떤가?",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "숙박",
       "region": "전북 군산",
@@ -85,16 +85,7 @@
     },
     {
       "questionId": "v1-010",
-      "text": "스테이 머뭄이 요즘 제공하는 특별 서비스가 있을까?",
-      "category": "brand-direct",
-      "containsBrandName": true,
-      "industry": "숙박",
-      "region": "전북 군산",
-      "version": "v1"
-    },
-    {
-      "questionId": "v1-011",
-      "text": "군산에서 가성비 좋은 숙소 찾는 방법 좀 알려줘.",
+      "text": "군산에서 파티하기 좋은 숙소 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -102,10 +93,19 @@
       "version": "v1"
     },
     {
-      "questionId": "v1-012",
-      "text": "스테이 머뭄의 시설이 궁금해, 어떤 것들이 있어?",
+      "questionId": "v1-011",
+      "text": "군산스테이호텔 서비스는 어때?",
       "category": "brand-direct",
       "containsBrandName": true,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "군산 여행할 때 주변에 뭐가 볼만한 게 있을까?",
+      "category": "local-regional",
+      "containsBrandName": false,
       "industry": "숙박",
       "region": "전북 군산",
       "version": "v1"

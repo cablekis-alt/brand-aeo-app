@@ -38,7 +38,10 @@
     "questionBankSize": 12,
     "questionBankVersion": "v1",
     "repeatsPerQuestion": 3,
-    "competitors": [],
+    "competitors": [
+      { "name": "군산스테이호텔", "aliases": ["군산스테이호텔", "군산 스테이호텔"], "domains": ["gunsanstayhotel.com"] },
+      { "name": "군산해들목펜션", "aliases": ["군산해들목펜션", "해들목펜션", "해들목"], "domains": ["hdmpension.co.kr"] }
+    ],
     "factGraph": [
       {
         "id": "checkin-time",
