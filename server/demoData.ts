@@ -3,6 +3,8 @@ import type { Engine, FactGraphNode, QuestionCategory, QuestionSpec } from '../s
 import demoScorecards from '../src/data/demo-scorecards.json' with { type: 'json' };
 import liveQuestionBank from '../src/data/live-question-bank.json' with { type: 'json' };
 import liveQuestionAnalyses from '../src/data/live-question-analyses.json' with { type: 'json' };
+import liveStayQuestionBank from '../src/data/live-stay-question-bank.json' with { type: 'json' };
+import liveStayQuestionAnalyses from '../src/data/live-stay-question-analyses.json' with { type: 'json' };
 import type { QuestionBank } from './store.js';
 import type {
   CitationDetail,
@@ -111,9 +113,29 @@ export function demoCohortScorecards(industry: string, region: string, weekOf: s
   );
 }
 
+interface LiveAnalysesFile {
+  tenantId: string;
+  weekOf: string;
+  analyses: QuestionRepeatAnalysis[];
+}
+
+/**
+ * 실제 파이프라인을 돌려 얻은 산출물. 테넌트별로 등록하며, 등록된 테넌트는 합성 데모 대신
+ * 이 실측 데이터를 그대로 내려준다 (파이프라인이 쓴 data/ 디렉터리가 없는 배포 환경용).
+ */
+const LIVE_BANKS: Record<string, QuestionBank> = {
+  'example-brand': liveQuestionBank as QuestionBank,
+  'stay-meomum': liveStayQuestionBank as QuestionBank,
+};
+
+const LIVE_ANALYSES: LiveAnalysesFile[] = [
+  liveQuestionAnalyses as LiveAnalysesFile,
+  liveStayQuestionAnalyses as LiveAnalysesFile,
+];
+
 export function demoQuestionBank(tenant: DemoTenant, weekOf: string): QuestionBank {
-  const live = liveQuestionBank as QuestionBank;
-  if (live.version === tenant.questionBankVersion && Array.isArray(live.questions) && live.questions.length > 0) {
+  const live = LIVE_BANKS[tenant.tenantId];
+  if (live && live.version === tenant.questionBankVersion && Array.isArray(live.questions) && live.questions.length > 0) {
     return live;
   }
   return {
@@ -194,8 +216,10 @@ function wrongFactValue(fact: FactGraphNode): string {
  * 저장된 실측이 없는 배포 환경에서만 사용한다.
  */
 export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): QuestionRepeatAnalysis[] {
-  const live = liveQuestionAnalyses as { tenantId: string; weekOf: string; analyses: QuestionRepeatAnalysis[] };
-  if (live.tenantId === tenant.tenantId && live.weekOf === weekOf && Array.isArray(live.analyses)) {
+  const live = LIVE_ANALYSES.find(
+    (file) => file.tenantId === tenant.tenantId && file.weekOf === weekOf && Array.isArray(file.analyses),
+  );
+  if (live && live.analyses.length > 0) {
     return live.analyses;
   }
 

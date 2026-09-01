@@ -38,10 +38,7 @@
     "questionBankSize": 12,
     "questionBankVersion": "v1",
     "repeatsPerQuestion": 3,
-    "competitors": [
-      { "name": "군산스테이A", "aliases": ["군산스테이A"], "domains": ["gunsan-stay-a.com"] },
-      { "name": "군산스테이B", "aliases": ["군산스테이B"], "domains": ["gunsan-stay-b.com"] }
-    ],
+    "competitors": [],
     "factGraph": [
       {
         "id": "checkin-time",

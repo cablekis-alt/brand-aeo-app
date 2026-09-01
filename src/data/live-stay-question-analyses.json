@@ -1,0 +1,1223 @@
+{
+  "tenantId": "stay-meomum",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 스테이 머뭄 펜션 (Stay Mumum, Gunsan)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kayak.com/Busan-Hotels-Residence-Mumum-Hotel.702341.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kayak.com/Busan-Hotels-Residence-Mumum-Hotel.702341.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g294197-d5484623-Reviews-MuMum_Guesthouse-Seoul.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g294197-d5484623-Reviews-MuMum_Guesthouse-Seoul.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g294197-d5484623-Reviews-MuMum_Guesthouse-Seoul.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotel_Review-g294197-d5484623-Reviews-MuMum_Guesthouse-Seoul.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g294197-d5484623-Reviews-MuMum_Guesthouse-Seoul.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "전주 – The Mumum Guesthouse",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.traveloka.com/en-en/hotel/south-korea/residence-mumum-hotel-1000000469683?utm_source=openai",
+          "domain": "traveloka.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.traveloka.com/en-en/hotel/south-korea/residence-mumum-hotel-1000000469683?utm_source=openai",
+          "domain": "traveloka.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotel_Review-g297884-d5895990-Reviews-Residence_Mumum-Busan.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "서울 “Mumune Stay” (무무네 스테이)",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "서울",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "양산 “내포리 머뭄 스테이” (반려견 동반 펜션)",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "양산",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "전북 군산 ‘스테이 머뭄 펜션’ (내포리)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/reviews/kr/hotel/residence-mumum.es-mx.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.zh-tw.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/en-ca/seomyeon-residence-mumum-hotel/hotel/busan-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "전주 The Mumum",
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "부산 Residence Mumum Hotel의 체크인 시간은 오후 3시이다.",
+          "claimType": "other",
+          "verdict": "supported",
+          "responseValue": "오후 3시",
+          "factGraphValue": "오후 3시"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄을 다른 호텔과 비교할 때 고려할 수 있는 몇 가지 중요한 요소는 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄이 위치한 지역이 주요 관광지나 비즈니스 중심지에 가까운지, 다른 호텔과 비교했을 때 그 주변에 어떤 편의시설이 있는지를 고려해 보세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄의 특징적인 서비스가 있다면 그것도 고려할 가치가 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄과 다른 호텔을 비교할 때 고려할 수 있는 요소들은 다음과 같습니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄은 특정 지역에 위치해 있을 테니, 주변 관광지나 접근성을 비교해 보세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "예산 범위 내에서 다른 호텔들과 스테이 머뭄의 가격대를 비교해 보세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄이 제공하는 시설(수영장, 헬스장 등)과 다른 호텔들의 시설을 비교해 보세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄이 특별한 테마나 경험(예: 자연 경관을 감상할 수 있는 방, 특별한 인테리어)을 제공하는지 확인해 보세요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄을 다른 호텔과 비교할 때 고려해야 할 몇 가지 주요 요소가 있습니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- **스테이 머뭄**: 보통은 조용한 환경에 위치해 있는 경우가 많습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **스테이 머뭄**: 주로 독특한 인테리어나 아늑한 객실을 제공할 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **스테이 머뭄**: 소규모로 운영되기 때문에 좀 더 개인화된 서비스를 받을 수 있을 것입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **스테이 머뭄**: 비교적 고급스러운 서비스를 제공해 가격이 높을 수도 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nodam.tistory.com/12469?utm_source=openai",
+          "domain": "nodam.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "“스테이 머뭄” 예약 시 가격을 문의 주셨는데, 해당 명칭이 명확히 어떤 장소 또는 숙소를 일컫는지에 따라 답변이 달라질 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "아이들 놀이 공간 또는 모임 공간을 찾으신다면 대구 수성구의 스테이 머뭄이 해당될 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://4blog.net/campaign/306010/?utm_source=openai",
+          "domain": "4blog.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pbp.co.kr/shop/PI_00000210?utm_source=openai",
+          "domain": "pbp.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "“스테이 머뭄” 예약 시 객실 요금은 숙소 종류(동 A 또는 B동), 인원 수, 날짜, 예약 사이트 등에 따라 다소 차이가 있을 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "즉, “스테이 머뭄”의 숙박 요금은 기본적으로 1박당 198,000원 정도부터 시작하며, 객실 유형(A동 또는 B동) 및 특정 기간(성수기, 주말 등)에 따라 최대 350,000원까지 상승할 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "정확한 요금은 예약 희망일과 인원 수, 객실 유형을 기준으로 실제 예약 사이트(예: 여기어때, 야놀자 등)에서 확인하는 것이 가장 정확합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-04-24&checkOutDate=2026-04-25&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스테이 머뭄 예약 시 객실 요금은 숙소 종류(동 A 또는 B동), 인원 수, 날짜, 예약 사이트 등에 따라 다소 차이가 있을 수 있습니다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "사실상 대표적인 요금은 아래와 같습니다: A동 기준(2인, 최대 4인) – 약 198,000원부터 시작",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "B동 기준(모던 스타일 공간, 기준 2인, 최대 4인) – 약 198,000원부터 350,000원까지 다양하게 형성",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이 머뭄의 숙박 요금은 기본적으로 1박당 198,000원 정도부터 시작하며, 객실 유형 및 특정 기간에 따라 최대 350,000원까지 상승할 수 있습니다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "객실별 최대 인원 초과 시 별도 요금이 발생하므로, 인원 수가 많으시다면 예약 전 반드시 확인하시는 것이 좋습니다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "예약 취소 및 환불 규정은 숙소 정책에 따라 다르며, 일반적으로 ‘숙박일 기준 6일 전 100% 환불’에서 당일 No‑show는 환불 불가 등의 규정이 적용됩니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄 근처에는 다양한 명소들이 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "수원 화성",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄 근처의 명소로는 유명한 관광지와 자연 경관이 있을 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "\"스테이 머뭄\"의 위치를 정확히 알 수 있다면 주변 명소를 더 잘 알려드릴 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일반적으로 머뭄는 제주도의 한 지역이므로, 제주도 내 유명한 명소 몇 가지를 추천드리자면 다음과 같습니다:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송합니다만, 말씀하신 \"스테이 머뭄\"이라는 이름의 숙소, 서비스 브랜드 또는 기관에 대한 정보를 현재 웹 검색이나 제 데이터베이스에서 확인할 수 없습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "‘스테이 머뭄’이라는 이름은 여러 숙소가 유사한 명칭을 쓰고 있어, 정확하게 어떤 숙소를 말씀하시는지에 따라 제공하는 서비스가 달라집니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "대표적으로 ‘레지던스 머뭄(Residence Mumum Hotel)’—부산 서면에 위치한 숙소—와 ‘내포리 머뭄 스테이’, 그리고 ‘군산 스테이 머뭄 펜션’이 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=3881dbc3-48e5-4625-bb4e-1115a60c086b&utm_source=openai",
+          "domain": "korean.visitkorea.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=3881dbc3-48e5-4625-bb4e-1115a60c086b&utm_source=openai",
+          "domain": "korean.visitkorea.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://meomumstay.kr/html/sub2_room.html?utm_source=openai",
+          "domain": "meomumstay.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://meomumstay.kr/html/sub2_room.html?utm_source=openai",
+          "domain": "meomumstay.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "군산 스테이 머뭄 펜션의 체크인 15:00",
+          "claimType": "other",
+          "verdict": "supported",
+          "responseValue": "15:00",
+          "factGraphValue": "오후 3시"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송합니다. 사용하신 단어 '스테이 머뭄'이 어떤 브랜드나 시설을 지칭하는지 정확히 확인되지 않습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄의 시설은 일반적으로 편안함과 휴식을 제공하기 위해 다양한 편의시설을 갖추고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11636097?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/cy/stay-lima-soul-apartment.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/cy/stay-lima-soul-apartment.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/cy/stay-mes-luxe-apartment.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.expedia.com/Limassol-Hotels-01-LIM-STAY-Sky-Apartment.h107502558.Hotel-Information?utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11922805?utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11922805?utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vrbo.com/en-gb/p11922805?utm_source=openai",
+          "domain": "vrbo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.expedia.com/Limassol-Hotels-STAY-Mouson-View-Apartment.h119506115.Hotel-Information?equalTargetTab=tab-1&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄은 다양한 시설과 서비스로 잘 알려져 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "스테이 머뭄의 특정 시설에 대해서는 웹 사이트나 고객 리뷰를 통해 자세한 정보를 확인하는 것이 좋습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
