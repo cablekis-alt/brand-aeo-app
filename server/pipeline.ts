@@ -4,6 +4,7 @@ import {
   buildEngineCallPrompt,
   buildFactCheckPrompt,
   buildQuestionBankPrompt,
+  agnosticQuota,
   buildRecommendationOrderPrompt,
   buildWeeklyReportPrompt,
   type BrandContext,
@@ -46,26 +47,57 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
   if (existing) return existing.questions;
 
   const judge = getJudgeClient();
-  const prompt = buildQuestionBankPrompt({
-    industry: tenant.industry,
-    region: tenant.region,
-    brandName: tenant.brandName,
-    competitorNames: tenant.competitors.map((c) => c.name),
-    count: tenant.questionBankSize,
-    version: tenant.questionBankVersion,
-  });
-  const result = await judge.call(prompt);
-  const parsed = parseJsonLoose<Array<Omit<QuestionSpec, 'industry' | 'region' | 'version'>>>(result.text);
-  if (!parsed) {
-    throw new Error(`[B1] 질문 은행 생성 실패: JSON 파싱 불가 (tenant=${tenant.tenantId})`);
+  const quota = agnosticQuota(tenant.questionBankSize);
+
+  // category-agnostic 개수가 하한(quota)에 못 미치면, LLM이 지시를 무시한 것이므로
+  // 부족분을 명시해 최대 3회까지 재생성한다 (프롬프트 준수 실패 방어).
+  const MAX_ATTEMPTS = 3;
+  let questions: QuestionSpec[] | null = null;
+  let shortfallNote: string | undefined;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const prompt = buildQuestionBankPrompt({
+      industry: tenant.industry,
+      region: tenant.region,
+      brandName: tenant.brandName,
+      competitorNames: tenant.competitors.map((c) => c.name),
+      count: tenant.questionBankSize,
+      version: tenant.questionBankVersion,
+      previousVersionDiffNote: shortfallNote,
+    });
+    const result = await judge.call(prompt);
+    const parsed = parseJsonLoose<Array<Omit<QuestionSpec, 'industry' | 'region' | 'version'>>>(result.text);
+    if (!parsed) {
+      throw new Error(`[B1] 질문 은행 생성 실패: JSON 파싱 불가 (tenant=${tenant.tenantId}, attempt=${attempt})`);
+    }
+
+    const candidate: QuestionSpec[] = parsed.map((q) => ({
+      ...q,
+      industry: tenant.industry,
+      region: tenant.region,
+      version: tenant.questionBankVersion,
+    }));
+
+    const agnosticCount = candidate.filter((q) => q.category === 'category-agnostic').length;
+    if (agnosticCount >= quota) {
+      questions = candidate;
+      break;
+    }
+
+    // 마지막 시도까지 미달이면 그대로 채택하되 경고 (측정은 계속). 그 외엔 부족분 명시 후 재시도.
+    console.warn(
+      `[B1] category-agnostic ${agnosticCount}/${candidate.length} < 하한 ${quota} ` +
+        `(tenant=${tenant.tenantId}, attempt=${attempt}/${MAX_ATTEMPTS})`,
+    );
+    shortfallNote =
+      `직전 생성은 category-agnostic이 ${agnosticCount}개뿐이라 실패했다. ` +
+      `반드시 정확히 ${quota}개를 category-agnostic으로 만들어라.`;
+    if (attempt === MAX_ATTEMPTS) questions = candidate;
   }
 
-  const questions: QuestionSpec[] = parsed.map((q) => ({
-    ...q,
-    industry: tenant.industry,
-    region: tenant.region,
-    version: tenant.questionBankVersion,
-  }));
+  if (!questions) {
+    throw new Error(`[B1] 질문 은행 생성 실패 (tenant=${tenant.tenantId})`);
+  }
 
   await store.saveQuestionBank(tenant.tenantId, {
     version: tenant.questionBankVersion,
