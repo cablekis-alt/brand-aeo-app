@@ -67,24 +67,30 @@ export const AEO_SCORE_WEIGHTS = {
   brandOwnedCitation: 0.1,
 };
 
-/** 순위(1=최상위)를 0~1 스코어로 변환. 순위가 없으면(추천 문맥 자체가 없었으면) 중립값 0.5. */
-function normalizeRank(rank: number | null, maxRank = 5): number {
-  if (rank === null) return 0.5;
+/** 순위(1=최상위)를 0~1 스코어로 변환. */
+function normalizeRank(rank: number, maxRank = 5): number {
   return Math.max(0, (maxRank - rank + 1) / maxRank);
 }
 
 /**
  * B8 AEO Score. 0~100 스케일. 산식은 리포트 생성 프롬프트(b8-report.ts)에 입력으로만 전달되고, 재계산되지 않는다.
- * shareOfMention이 null(경쟁사 없음)이면 그 가중치(0.25)를 나머지 항목에 비례 배분해 재정규화한다.
+ * 측정되지 않은 항목은 지어내지 않고 재정규화로 제외한다:
+ *   - shareOfMention이 null(경쟁사 없음)이면 그 가중치(0.25)를 제외.
+ *   - avgRecommendationRank가 null(추천 문맥 자체가 없어 순위 판정 불가)이면 그 가중치(0.15)를 제외.
+ * 남은 항목의 가중치 합으로 나눠 비례 재정규화한다.
  */
 export function computeAeoScore(inputs: AeoScoreInputs): number {
-  const rankScore = normalizeRank(inputs.avgRecommendationRank);
   const components: { value: number; weight: number }[] = [
     { value: inputs.mentionRate, weight: AEO_SCORE_WEIGHTS.mentionRate },
-    { value: rankScore, weight: AEO_SCORE_WEIGHTS.recommendationRank },
     { value: inputs.factualityScore, weight: AEO_SCORE_WEIGHTS.factuality },
     { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitation },
   ];
+  if (inputs.avgRecommendationRank !== null) {
+    components.push({
+      value: normalizeRank(inputs.avgRecommendationRank),
+      weight: AEO_SCORE_WEIGHTS.recommendationRank,
+    });
+  }
   if (inputs.shareOfMention !== null) {
     components.push({ value: inputs.shareOfMention, weight: AEO_SCORE_WEIGHTS.shareOfMention });
   }
