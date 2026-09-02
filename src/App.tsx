@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { TenantProvider } from './context/TenantContext'
 import BrandDiagnosis from './pages/BrandDiagnosis'
+import BrandOnboarding from './pages/BrandOnboarding'
 import Citations from './pages/Citations'
 import Dashboard from './pages/Dashboard'
 import Performance from './pages/Performance'
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="citations" element={<Citations />} />
             <Route path="performance" element={<Performance />} />
             <Route path="ranking" element={<Ranking />} />
+            <Route path="brand-onboarding" element={<BrandOnboarding />} />
           </Route>
         </Routes>
       </BrowserRouter>

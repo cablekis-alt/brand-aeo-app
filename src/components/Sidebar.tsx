@@ -34,6 +34,10 @@ const MENU: MenuGroup[] = [
       { code: 'S-07', label: '랭킹 분석', to: '/ranking' },
     ],
   },
+  {
+    title: '브랜드 관리',
+    items: [{ code: 'S-08', label: '브랜드 추가', to: '/brand-onboarding' }],
+  },
 ]
 
 export default function Sidebar() {

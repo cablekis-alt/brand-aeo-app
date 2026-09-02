@@ -277,6 +277,69 @@
   cursor: progress;
 }
 
+/* S-08 브랜드 온보딩 */
+.onboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+.onboard-grid .span2 {
+  grid-column: 1 / -1;
+}
+.onboard-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.onboard-grid .field > span:first-child {
+  font-size: 13px;
+  color: var(--muted);
+}
+.onboard-grid input,
+.onboard-grid textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 2px;
+  font: inherit;
+  resize: vertical;
+}
+.onboard-grid .hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.panel .primary {
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.panel .primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.json-block {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre;
+}
+@media (max-width: 720px) {
+  .onboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .site-report {
   display: flex;
   flex-direction: column;
