@@ -1,4 +1,4 @@
-import type { BrandContext, PromptMessage } from './types';
+import type { BrandContext, PromptMessage } from './types.js';
 
 /**
  * B5-C — 추천 순서 판정.

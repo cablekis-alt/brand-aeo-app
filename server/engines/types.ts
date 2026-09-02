@@ -1,4 +1,4 @@
-import type { PromptMessage } from '../../src/prompts/types';
+import type { PromptMessage } from '../../src/prompts/types.js';
 
 export interface EngineCallResult {
   text: string;

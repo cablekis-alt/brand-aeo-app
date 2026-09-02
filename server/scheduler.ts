@@ -1,7 +1,7 @@
 import cron from 'node-cron';
-import { loadTenants } from './config';
-import { runWeeklyPipeline } from './pipeline';
-import type { ResultStore } from './store';
+import { loadTenants } from './config.js';
+import { runWeeklyPipeline } from './pipeline.js';
+import type { ResultStore } from './store.js';
 
 // 매주 월요일 03:00 (서버 로컬 타임존). 예상 호출량(슬라이드 기준 100문항×4엔진×3회=1,200콜/테넌트/주)을
 // 감안해 트래픽이 적은 새벽 시간대로 잡는다. 환경변수로 오버라이드 가능하게 한다.

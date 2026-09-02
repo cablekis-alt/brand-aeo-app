@@ -1,4 +1,4 @@
-import type { BrandContext, PromptMessage } from './types';
+import type { BrandContext, PromptMessage } from './types.js';
 
 /**
  * B5-A — 브랜드 언급 탐지.

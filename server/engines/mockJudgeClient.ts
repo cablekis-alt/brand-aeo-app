@@ -1,5 +1,5 @@
-import type { PromptMessage } from '../../src/prompts/types';
-import type { EngineCallResult, EngineClient } from './types';
+import type { PromptMessage } from '../../src/prompts/types.js';
+import type { EngineCallResult, EngineClient } from './types.js';
 
 /**
  * 실제 심판 모델 연동 전, B1/B5/B8 프롬프트가 파이프라인에 올바르게 배선됐는지 검증하기 위한 목 클라이언트.

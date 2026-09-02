@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import type { PromptMessage } from '../../src/prompts/types';
-import type { EngineCallResult, EngineClient } from './types';
+import type { PromptMessage } from '../../src/prompts/types.js';
+import type { EngineCallResult, EngineClient } from './types.js';
 
 const MODEL = process.env.PERPLEXITY_MODEL ?? 'sonar-pro';
 

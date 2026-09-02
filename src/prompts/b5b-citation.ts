@@ -1,4 +1,4 @@
-import type { BrandContext, PromptMessage } from './types';
+import type { BrandContext, PromptMessage } from './types.js';
 
 export interface CitationCandidate {
   url?: string;

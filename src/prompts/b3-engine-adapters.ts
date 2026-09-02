@@ -1,4 +1,4 @@
-import type { Engine, PromptMessage } from './types';
+import type { Engine, PromptMessage } from './types.js';
 
 /**
  * B3 — 모델별 어댑터.

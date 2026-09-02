@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
-import type { PromptMessage } from '../../src/prompts/types';
-import type { EngineCallResult, EngineClient } from './types';
-import { withOpenAiRetry } from './retry';
+import type { PromptMessage } from '../../src/prompts/types.js';
+import type { EngineCallResult, EngineClient } from './types.js';
+import { withOpenAiRetry } from './retry.js';
 
 // 2026-09 기준 확인된 값은 아니며, 실제 배포 전 platform.openai.com에서 현재 모델명을 재확인할 것.
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o';

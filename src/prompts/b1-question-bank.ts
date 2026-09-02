@@ -1,4 +1,4 @@
-import type { PromptMessage, QuestionSpec } from './types';
+import type { PromptMessage, QuestionSpec } from './types.js';
 
 export interface QuestionBankRequest {
   industry: string;

@@ -1,4 +1,4 @@
-import type { BrandContext, FactGraphNode, PromptMessage } from './types';
+import type { BrandContext, FactGraphNode, PromptMessage } from './types.js';
 
 /**
  * B5-D — Fact Graph 기반 사실성 검증.

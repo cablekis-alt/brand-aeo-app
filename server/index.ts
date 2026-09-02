@@ -1,16 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
-import { collectPage } from './aeo/collectPage';
-import { inferBrandFields, inferCompetitors } from './brandInference';
-import { demoQuestionBank, demoScorecardHistory } from './demoData';
-import { DemoResultStore } from './demoStore';
-import { runWeeklyPipeline } from './pipeline';
-import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries';
-import { startScheduler } from './scheduler';
-import { FileResultStore } from './store';
-import { loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from './tenantRegistry';
-import type { TenantConfig } from './types';
-import type { WeeklyScorecard } from '../src/prompts/b8-report';
+import { collectPage } from './aeo/collectPage.js';
+import { inferBrandFields, inferCompetitors } from './brandInference.js';
+import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
+import { DemoResultStore } from './demoStore.js';
+import { runWeeklyPipeline } from './pipeline.js';
+import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
+import { startScheduler } from './scheduler.js';
+import { FileResultStore } from './store.js';
+import { loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from './tenantRegistry.js';
+import type { TenantConfig } from './types.js';
+import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 
 const app = express();
 app.use(express.json());

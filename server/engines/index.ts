@@ -1,14 +1,14 @@
-import type { Engine } from '../../src/prompts/types';
-import { ClaudeEngineClient } from './claudeEngineClient';
-import { ClaudeJudgeClient } from './claudeJudgeClient';
-import { GeminiEngineClient } from './geminiEngineClient';
-import { GeminiJudgeClient } from './geminiJudgeClient';
-import { MockEngineClient } from './mockEngineClient';
-import { MockJudgeClient } from './mockJudgeClient';
-import { OpenAiEngineClient } from './openaiEngineClient';
-import { OpenAiJudgeClient } from './openaiJudgeClient';
-import { PerplexityEngineClient } from './perplexityEngineClient';
-import type { EngineClient } from './types';
+import type { Engine } from '../../src/prompts/types.js';
+import { ClaudeEngineClient } from './claudeEngineClient.js';
+import { ClaudeJudgeClient } from './claudeJudgeClient.js';
+import { GeminiEngineClient } from './geminiEngineClient.js';
+import { GeminiJudgeClient } from './geminiJudgeClient.js';
+import { MockEngineClient } from './mockEngineClient.js';
+import { MockJudgeClient } from './mockJudgeClient.js';
+import { OpenAiEngineClient } from './openaiEngineClient.js';
+import { OpenAiJudgeClient } from './openaiJudgeClient.js';
+import { PerplexityEngineClient } from './perplexityEngineClient.js';
+import type { EngineClient } from './types.js';
 
 // 로컬 개발/파이프라인 배선 테스트 시 실제 API 키 없이 돌리기 위한 탈출구.
 // (docs/prompt-design.md 8절 스모크 테스트 참고)

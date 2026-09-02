@@ -1,4 +1,4 @@
-import type { WeeklyScorecard } from '../src/prompts/b8-report';
+import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 
 export function mean(values: number[]): number {
   if (values.length === 0) return 0;

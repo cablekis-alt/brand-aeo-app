@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { PromptMessage } from '../../src/prompts/types';
-import type { EngineCallResult, EngineClient } from './types';
+import type { PromptMessage } from '../../src/prompts/types.js';
+import type { EngineCallResult, EngineClient } from './types.js';
 
 const JUDGE_MODEL = process.env.JUDGE_MODEL ?? 'claude-opus-5';
 

@@ -1,4 +1,4 @@
-import type { PromptMessage } from './types';
+import type { PromptMessage } from './types.js';
 
 /**
  * B4 — 응답 정규화.

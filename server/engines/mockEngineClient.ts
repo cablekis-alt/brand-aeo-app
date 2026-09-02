@@ -1,5 +1,5 @@
-import type { PromptMessage } from '../../src/prompts/types';
-import type { EngineCallResult, EngineClient } from './types';
+import type { PromptMessage } from '../../src/prompts/types.js';
+import type { EngineCallResult, EngineClient } from './types.js';
 
 /**
  * 실제 엔진 SDK 연동 전, 파이프라인 배선(스케줄러 → 수집 → 분석 → 집계)을 검증하기 위한 목(mock) 클라이언트.

@@ -13,23 +13,23 @@ import {
   type CitationCandidate,
   type QuestionSpec,
   type WeeklyScorecard,
-} from '../src/prompts';
-import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes';
-import { mapWithConcurrency } from './concurrency';
-import { getIsoWeekString } from './dateUtil';
-import { getEngineClient, getJudgeClient } from './engines';
-import { parseJsonLoose } from './jsonParse';
-import { analyzeCitationSources } from './citationSources';
-import { computeEeatAnalysis } from './eeat';
-import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4 } from './scoring';
-import type { ResultStore } from './store';
+} from '../src/prompts/index.js';
+import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
+import { mapWithConcurrency } from './concurrency.js';
+import { getIsoWeekString } from './dateUtil.js';
+import { getEngineClient, getJudgeClient } from './engines/index.js';
+import { parseJsonLoose } from './jsonParse.js';
+import { analyzeCitationSources } from './citationSources.js';
+import { computeEeatAnalysis } from './eeat.js';
+import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4 } from './scoring.js';
+import type { ResultStore } from './store.js';
 import type {
   CompetitorMentionDetail,
   FactClaimDetail,
   QuestionRepeatAnalysis,
   RawCallRecord,
   TenantConfig,
-} from './types';
+} from './types.js';
 
 const COLLECTION_CONCURRENCY = 8;
 const ANALYSIS_CONCURRENCY = 8;
