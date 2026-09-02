@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/infer-*.ts": {
+    "api/infer.ts": {
       "includeFiles": "{server/tenants.config.json,src/data/*.json}",
       "maxDuration": 60
     },

@@ -167,32 +167,29 @@ app.get('/api/fetch', async (req, res) => {
   res.json(await collectPage(target));
 });
 
-// S-08 브랜드 추가 — 수집된 페이지 텍스트에서 업종·지역·주소를 Gemini로 추론한다.
-app.post('/api/infer-brand', async (req, res) => {
-  const text = typeof req.body?.text === 'string' ? req.body.text : '';
-  const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
-  if (!text.trim()) {
-    res.status(400).json({ error: 'text가 필요합니다.' });
-    return;
-  }
+// S-08 브랜드 추가 — Gemini 추론. ?kind=brand(업종·지역·주소) | competitors(경쟁사).
+// 배포와 동일하게 한 라우트로 합친다(Vercel Hobby 함수 개수 제한 대응).
+app.post('/api/infer', async (req, res) => {
+  const kind = typeof req.query.kind === 'string' ? req.query.kind : '';
   try {
+    if (kind === 'competitors') {
+      const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+      const industry = typeof req.body?.industry === 'string' ? req.body.industry : '';
+      const region = typeof req.body?.region === 'string' ? req.body.region : '';
+      if (!brandName.trim() || !industry.trim()) {
+        res.status(400).json({ error: 'brandName, industry가 필요합니다.' });
+        return;
+      }
+      res.json(await inferCompetitors(brandName, industry, region));
+      return;
+    }
+    const text = typeof req.body?.text === 'string' ? req.body.text : '';
+    const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+    if (!text.trim()) {
+      res.status(400).json({ error: 'text가 필요합니다.' });
+      return;
+    }
     res.json(await inferBrandFields(text, brandName));
-  } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
-  }
-});
-
-// S-08 브랜드 추가 — 같은 업종·지역의 경쟁사를 Gemini(웹검색)로 추천하고 도메인은 DNS로 검증한다.
-app.post('/api/infer-competitors', async (req, res) => {
-  const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
-  const industry = typeof req.body?.industry === 'string' ? req.body.industry : '';
-  const region = typeof req.body?.region === 'string' ? req.body.region : '';
-  if (!brandName.trim() || !industry.trim()) {
-    res.status(400).json({ error: 'brandName, industry가 필요합니다.' });
-    return;
-  }
-  try {
-    res.json(await inferCompetitors(brandName, industry, region));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

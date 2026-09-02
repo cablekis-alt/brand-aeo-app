@@ -150,7 +150,7 @@ export default function BrandOnboarding() {
       const pageText = (s.mainText || '').trim()
       if (pageText) {
         try {
-          const res = await fetch('/api/infer-brand', {
+          const res = await fetch('/api/infer?kind=brand', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: pageText, brandName: guessedName }),
@@ -206,7 +206,7 @@ export default function BrandOnboarding() {
     setSuggestingComp(true)
     setCompMsg('경쟁사를 추론하는 중… (웹검색·도메인 확인, 십여 초)')
     try {
-      const res = await fetch('/api/infer-competitors', {
+      const res = await fetch('/api/infer?kind=competitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brandName: brandName.trim(), industry: industry.trim(), region: region.trim() }),
