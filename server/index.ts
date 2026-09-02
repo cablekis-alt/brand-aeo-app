@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import { collectPage } from './aeo/collectPage';
-import { loadTenants } from './config';
+import { appendTenant, loadTenants } from './config';
 import { demoQuestionBank, demoScorecardHistory } from './demoData';
 import { DemoResultStore } from './demoStore';
 import { runWeeklyPipeline } from './pipeline';
@@ -12,6 +12,7 @@ import type { TenantConfig } from './types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 
 const app = express();
+app.use(express.json());
 const store = new FileResultStore();
 const PORT = process.env.PORT ?? 4000;
 
@@ -52,10 +53,61 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
+// 로컬 백엔드 감지용. 배포(Vercel)에는 이 라우트가 없어 404 → 프런트가 "등록" 버튼을 숨긴다.
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, backend: 'express', canRegister: true });
+});
+
 app.get('/api/tenants', async (_req, res) => {
   const tenants = await loadTenants();
   // 코호트 비교용 경쟁사 테넌트는 브랜드 선택 드롭다운에서 제외한다.
   res.json(tenants.filter((tenant) => !tenant.cohortOnly).map(toTenantSummary));
+});
+
+// S-08 브랜드 추가 — 온보딩 초안을 tenants.config.json에 등록한다 (로컬 백엔드 전용).
+app.post('/api/tenants', async (req, res) => {
+  const d = (req.body ?? {}) as Partial<TenantConfig>;
+  const missing = (['tenantId', 'brandName', 'industry', 'region'] as const).filter((k) => !d[k]);
+  if (!d.ownedDomains?.length) missing.push('ownedDomains' as never);
+  if (missing.length) {
+    res.status(400).json({ error: `필수 항목 누락: ${missing.join(', ')}` });
+    return;
+  }
+  const tenant: TenantConfig = {
+    tenantId: d.tenantId!,
+    brandName: d.brandName!,
+    aliases: d.aliases?.length ? d.aliases : [d.brandName!],
+    ownedDomains: d.ownedDomains!,
+    industry: d.industry!,
+    region: d.region!,
+    engines: d.engines?.length ? d.engines : ['openai'],
+    questionBankSize: d.questionBankSize ?? 12,
+    questionBankVersion: d.questionBankVersion ?? 'v1',
+    repeatsPerQuestion: d.repeatsPerQuestion ?? 3,
+    competitors: d.competitors ?? [],
+    factGraph: d.factGraph ?? [],
+  };
+  try {
+    await appendTenant(tenant);
+    res.status(201).json({ ok: true, tenantId: tenant.tenantId });
+  } catch (err) {
+    res.status(409).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// S-08 — 등록된 테넌트를 즉시 측정한다 (수 분 소요). /api 프리픽스라 vite 프록시로 전달된다.
+app.post('/api/tenants/:tenantId/run', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    const result = await runWeeklyPipeline(tenant, store);
+    res.json({ ok: true, tenantId: tenant.tenantId, aeoScore: result.scorecard.aeoScore.current });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 app.get('/api/scorecards/:tenantId', async (req, res) => {

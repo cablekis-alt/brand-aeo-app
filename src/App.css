@@ -323,6 +323,19 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.panel .ghost {
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.panel .ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .json-block {
   margin-top: 12px;
   padding: 14px 16px;

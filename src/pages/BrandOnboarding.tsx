@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
@@ -70,6 +70,25 @@ export default function BrandOnboarding() {
   const [error, setError] = useState<string | null>(null)
   const [extracted, setExtracted] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [canRegister, setCanRegister] = useState(false)
+  const [registering, setRegistering] = useState(false)
+  const [registerMsg, setRegisterMsg] = useState<string | null>(null)
+
+  // 쓰기 가능한 로컬 백엔드가 있을 때만 "등록 & 측정"을 노출한다 (배포 서버리스엔 /api/health가 없어 404).
+  useEffect(() => {
+    let alive = true
+    fetch('/api/health')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive) setCanRegister(Boolean(d?.canRegister))
+      })
+      .catch(() => {
+        if (alive) setCanRegister(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   async function handleExtract(e: FormEvent) {
     e.preventDefault()
@@ -161,6 +180,39 @@ export default function BrandOnboarding() {
     }
   }
 
+  // 로컬 백엔드에 등록 → 즉시 측정. JSON 복사 없이 브랜드를 추가한다.
+  async function registerAndMeasure() {
+    setRegistering(true)
+    setRegisterMsg('브랜드를 tenants.config.json에 등록하는 중…')
+    try {
+      const reg = await fetch('/api/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: json,
+      })
+      if (!reg.ok) {
+        const body = (await reg.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `등록 실패 (HTTP ${reg.status})`)
+      }
+      setRegisterMsg(
+        `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
+      )
+      const run = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/run`, { method: 'POST' })
+      if (!run.ok) {
+        const body = (await run.json().catch(() => ({}))) as { error?: string }
+        throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${run.status}`}. 나중에 CLI로 재시도할 수 있습니다.`)
+      }
+      const result = (await run.json()) as { aeoScore?: number }
+      setRegisterMsg(
+        `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴를 새로고침하면 선택할 수 있습니다.`,
+      )
+    } catch (err) {
+      setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
+    } finally {
+      setRegistering(false)
+    }
+  }
+
   return (
     <>
       <p className="brand">S-08 · 브랜드 관리</p>
@@ -235,13 +287,38 @@ export default function BrandOnboarding() {
 
       {extracted && (
         <section className="panel" style={{ marginTop: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
             <h3 style={{ margin: 0 }}>테넌트 초안 (tenantId: {tenant.tenantId})</h3>
-            <button type="button" className="primary" onClick={copyJson} disabled={!ready}>
-              {copied ? '복사됨 ✓' : 'JSON 복사'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {canRegister && (
+                <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
+                  {registering ? '진행 중…' : '브랜드 등록 & 측정'}
+                </button>
+              )}
+              <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
+                {copied ? '복사됨 ✓' : 'JSON 복사'}
+              </button>
+            </div>
           </div>
           {!ready && <p className="hint" style={{ marginTop: '8px' }}>* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
+          {canRegister ? (
+            <p className="hint" style={{ marginTop: '8px' }}>
+              백엔드가 감지됐습니다 — <b>등록 & 측정</b>을 누르면 JSON 복사 없이 바로 config에 추가하고 측정합니다.
+            </p>
+          ) : (
+            <p className="hint" style={{ marginTop: '8px' }}>
+              쓰기 가능한 백엔드가 없어(배포 환경) 자동 등록은 비활성화됩니다. JSON을 복사해 <code>tenants.config.json</code>에 추가하세요.
+            </p>
+          )}
+          {registerMsg && (
+            <p
+              className={registerMsg.startsWith('✗') ? 'error' : 'hint'}
+              role="status"
+              style={{ marginTop: '8px', fontWeight: 500 }}
+            >
+              {registerMsg}
+            </p>
+          )}
           <pre className="json-block">{json}</pre>
           <h4>등록·측정 방법</h4>
           <ol className="muted" style={{ lineHeight: 1.8 }}>
