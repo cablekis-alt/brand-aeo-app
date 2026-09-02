@@ -122,7 +122,80 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
+      "citations": [
+        {
+          "raw": "https://www.medifinder.com/en/lists/plastic-surgery/top-5-plastic-surgery-clinics-in-south-korea/?utm_source=openai",
+          "domain": "medifinder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
+          "domain": "medicaltourismco.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kclinichelp.com/?utm_source=openai",
+          "domain": "kclinichelp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
+          "domain": "medicaltourismco.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
+          "domain": "medicaltourismco.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wellmap.co/plastic-surgery-in-south-korea?utm_source=openai",
+          "domain": "wellmap.co",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kclinichelp.com/?utm_source=openai",
+          "domain": "kclinichelp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
+          "domain": "gangnambeautyguide.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
+          "domain": "gangnambeautyguide.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.seoulmirror.com/?utm_source=openai",
+          "domain": "seoulmirror.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1u0wyob/most_korean_clinic_reviews_are_paid_i_wrote_one/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://s24.q4cdn.com/622300748/files/doc_news/The-Largest-Plastic-Surgery-Information-Platform-in-South-Korea-Launches-UNNI-a-Global-K-Medical-Information-App-for-Foreigners-2023.pdf?utm_source=openai",
+          "domain": "s24.q4cdn.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -150,10 +223,30 @@
       "questionId": "v3-004",
       "engine": "openai",
       "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "청담제이 의원 강남, 어린공주성형외과의원 강남, 뷰성형외과 강남 등도 모두 후기 수 많고 평점 4.9점으로 상위권을 차지 중입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "Honesty Plastic Surgery, Kokoline Clinic, Shimmian Clinic, The Door Plastic Surgery, View Plastic Surgery, Noselab Clinic, Thank You Plastic Surgery 등은 Google Maps 기준 평점이 4.5~4.8 이상으로 강남권에서 안정적인 평판을 보이는 클리닉입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "프리미엄 바노바기 성형외과 (Banobagi): 자연스러운 코 라인 완성에 강점이 있으며, 안전한 수술 환경을 강조합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.6666666666666666,
       "citations": [
         {
           "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
@@ -164,6 +257,270 @@
         {
           "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
           "domain": "seoulchart.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
+          "domain": "seoulchart.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
+          "domain": "seoulchart.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamobgyn.com/foreigners-clinic-guide-korea/best-5-rhinoplasty-clinics-in-gangnam?utm_source=openai",
+          "domain": "gangnamobgyn.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gangnambeautyguide.com/en/clinics/?utm_source=openai",
+          "domain": "gangnambeautyguide.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.pleasureps.com/en/?utm_source=openai",
+          "domain": "pleasureps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1urb10y/girin_plastic_surgery_review/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/u_ZeroOne_Clinic/comments/1r82imu/were_zero_one_plastic_surgery_in_gangnam/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/KoreaPlasticSurgery/comments/1w32xh1/i_finally_came_to_korea_today_for_my_rhinoplasty/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "뷰성형외과",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과 강남",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**뷰성형외과의원 (신논현역 인근)** 3D-CT 기반 구조 분석, 마취통증의학과 전문의 상주, 응급 장비 및 체계적 사후관리 시스템을 갖춰 코성형 시 초기 안전에 중점을 둔 병원입니다",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**전문의 자격 확인**: 보건복지부 면허조회 서비스를 통해 원장 및 의료진의 전문의 자격을 직접 확인하는 것이 중요합니다([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**진료 체계의 구조화 여부**: 상담 → 검진 → 수술 → 회복이 층별 혹은 공간별로 구분되어 운영되는지, 마취통증의학과 전문의 상주 여부, 응급 장비 비치 등이 잘 되어 있는지를 점검하세요([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**상담의 질**: 본인의 코 구조나 고민 상황에 대해 원장이 얼마나 상세히 설명하고 공감하는지, 1:1 맞춤 설계를 제시하는지 확인하는 것이 실제 성형 만족도와 연결됩니다([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "**프리미엄 바노바기 성형외과** 강남 지역에서 코 성형을 포함한 여러 분야에서 기술력과 안전 시스템을 갖춘 대표적인 성형외과로 소개됩니다",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.8,
+      "citations": [
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.viewclinic.com/?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://xn--9p4bqa252h.com/%E1%84%8C%E1%85%A1%E1%84%80%E1%85%A1%E1%84%82%E1%85%B3%E1%86%A8%E1%84%8B%E1%85%A7%E1%86%AB%E1%84%80%E1%85%A9%E1%86%AF-%E1%84%8F%E1%85%A9%E1%84%89%E1%85%A5%E1%86%BC%E1%84%92%E1%85%A7%E1%86%BC?utm_source=openai",
+          "domain": "xn--9p4bqa252h.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://leomommy.tistory.com/16?utm_source=openai",
+          "domain": "leomommy.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과의원 (신논현역 인근)",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "신논현역 인근",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v3-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "• **뷰성형외과의원** – 3D-CT 기반 설계, 마취과 전문의 상주, 무균수술실·비상 시스템 등 안전 체계가 매우 철저합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **뷰성형외과의원**과 **노트성형외과**는 안전 시스템과 진료 체계가 매우 체계적입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **뷰성형외과의원**, **지앤지병원**은 기능성과 구축코 재수술에 대한 전문성을 갖추었습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "• **바노바기 성형외과** – 강남 대표 성형외과로, 24시간 의료진 모니터링 시스템을 갖추고 있어 안전한 수술 환경을 제공합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.75,
+      "citations": [
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
@@ -174,136 +531,88 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://xn--9p4bqa252h.com/?utm_source=openai",
-          "domain": "xn--9p4bqa252h.com",
+          "raw": "https://blog.viewclinic.com/?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.gnghospital.co.kr/%EB%B8%94%EB%A1%9C%EA%B7%B8/?p=1&s=196&v=r&utm_source=openai",
-          "domain": "gnghospital.co.kr",
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-station-rhinoplasty-best-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-004",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
+      "topRecommendation": "뷰성형외과",
+      "brandRank": 1,
+      "factualityClaims": [
         {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "claimText": "뷰성형외과의원 – 3D-CT 기반 설계, 마취과 전문의 상주, 무균수술실·비상 시스템 등 안전 체계가 매우 철저합니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         },
         {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "claimText": "뷰성형외과의원과 노트성형외과는 안전 시스템과 진료 체계가 매우 체계적입니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         },
         {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://koreaexperience.com/blog/best-rhinoplasty-clinics-gangnam-2026?utm_source=openai",
-          "domain": "koreaexperience.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
-          "domain": "gangnambeautyguide.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://us-uk.bookimed.com/clinics/country%3Drepublic-of-korea/city%3Dseoul/procedure%3Drhinoplasty-nose-job/best/?utm_source=openai",
-          "domain": "us-uk.bookimed.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "claimText": "뷰성형외과의원, 지앤지병원은 기능성과 구축코 재수술에 대한 전문성을 갖추었습니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://oliveclinic.com/htm/nosebest_01_01.php?category=01&key=&keyword=&mode=&page=9&utm_source=openai",
-          "domain": "oliveclinic.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/box/1062?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.klineps.com/noseclinic?utm_source=openai",
-          "domain": "klineps.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://xn--9p4bqa252h.com/?utm_source=openai",
-          "domain": "xn--9p4bqa252h.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://leomommy.tistory.com/16?utm_source=openai",
-          "domain": "leomommy.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
-          "domain": "beauty-cost-lab.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v3-005",
@@ -360,7 +669,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "뷰성형외과는 다양한 이유로 고객들 사이에서 긍정적인 평가를 받고 있습니다.",
+          "sentence": "뷰성형외과의 장점 중 일부는 다음과 같습니다:",
           "sentiment": "positive"
         }
       ],
@@ -381,14 +690,14 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "뷰성형외과의 장점은 주로 다음과 같습니다:",
+          "sentence": "뷰성형외과의 장점은 여러 가지가 있습니다.",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [],
-      "topRecommendation": null,
+      "topRecommendation": "뷰성형외과",
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
@@ -402,15 +711,19 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "뷰성형외과의 장점으로는 최신 기술과 장비를 이용한 맞춤형 시술, 숙련된 전문 의료진, 그리고 환자의 안전과 만족을 최우선으로 하는 철저한 사후 관리 서비스 등이 있습니다.",
+          "sentence": "뷰성형외과는 다양한 성형 분야에서 전문성을 갖춘 병원으로 알려져 있습니다.",
           "sentiment": "positive"
+        },
+        {
+          "sentence": "구체적인 정보나 상담을 원한다면 직접 뷰성형외과에 문의하는 것이 좋습니다.",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
+      "topRecommendation": "뷰성형외과",
+      "brandRank": 1,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
@@ -423,12 +736,12 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "이와 달리, 뷰성형외과는 실제 성형외과 병원입니다.",
+          "sentence": "\"뷰성형외과\"는 실제 성형외과 병원입니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "반면, 뷰성형외과는 특정 병원에서 시술을 받기 원할 때 직접 선택해야 하는 옵션입니다.",
-          "sentiment": "neutral"
+          "sentence": "시술을 결정했다면 신뢰할 수 있는 병원, 즉 뷰성형외과에서 상담을 받아보세요.",
+          "sentiment": "positive"
         }
       ],
       "competitorMentions": [
@@ -437,16 +750,16 @@
           "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "강남언니와 같은 플랫폼은 다양한 병원과 시술에 대한 정보를 제공하는 서비스입니다.",
+              "sentence": "\"강남언니\"는 성형 관련 정보를 찾고 공유하는 플랫폼이고, \"뷰성형외과\"는 실제 성형외과 병원입니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "만약 여러 병원과 시술 옵션을 비교하고, 다른 사람들의 후기나 가격 정보를 얻고 싶다면 강남언니와 같은 플랫폼이 유용할 수 있습니다.",
+              "sentence": "**강남언니**: 다양한 병원과 시술 정보를 확인하고, 사용자 리뷰를 통해 피드백을 얻을 수 있는 플랫폼입니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "결론적으로, 여러 병원을 비교해보며 선택을 넓히고 싶다면 강남언니를 이용해보는 것이 좋고, 특정 병원의 시술을 믿고 진행하고 싶다면 관심 있는 병원 중 하나를 선택하여 상담 받아보는 것이 좋습니다.",
-              "sentiment": "positive"
+              "sentence": "정보를 비교하고 싶다면 강남언니를 이용할 수 있고, 시술을 결정했다면 신뢰할 수 있는 병원, 즉 뷰성형외과에서 상담을 받아보세요.",
+              "sentiment": "neutral"
             }
           ]
         }
@@ -467,31 +780,35 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "\"뷰성형외과\"는 특정 성형외과 병원입니다.",
+          "sentence": "뷰성형외과는 성형 수술을 직접 제공하는 병원입니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "특정 병원을 방문하고 싶다면 뷰성형외과의 시술과 의료진 리뷰를 직접 조사해보세요.",
+          "sentence": "뷰성형외과: 특정 성형외과 병원으로, 원하는 시술을 직접 받을 수 있습니다.",
           "sentiment": "neutral"
         }
       ],
       "competitorMentions": [
         {
           "name": "강남언니",
-          "mentionCount": 2,
+          "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "\"강남언니\"는 다양한 병원 정보를 제공하는 플랫폼으로, 여러 병원의 리뷰와 시술 후기를 비교할 수 있는 곳입니다.",
+              "sentence": "강남언니는 성형외과와 피부과에 대한 정보를 제공하는 앱이고, 뷰성형외과는 성형 수술을 직접 제공하는 병원입니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "만약 여러 병원의 정보를 비교하고 싶다면 강남언니를 통해 다양한 후기와 정보를 얻을 수 있습니다.",
-              "sentiment": "neutral"
+              "sentence": "강남언니: 다양한 병원과 시술에 대한 정보와 리뷰를 쉽게 찾고 비교할 수 있어, 여러 병원을 상담하고 싶을 때 유용합니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "어떤 시술을 생각하고 계시다면, 강남언니를 통해 다양한 병원의 정보와 후기를 확인한 후, 몇 곳을 직접 상담해보는 것을 추천합니다.",
+              "sentiment": "positive"
             }
           ]
         }
       ],
-      "shareOfMention": 0.5,
+      "shareOfMention": 0.4,
       "citations": [],
       "topRecommendation": null,
       "brandRank": null,
@@ -507,164 +824,160 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "뷰성형외과는 특정 병원이므로, 수술과 시술을 실제로 제공하는 곳입니다.",
+          "sentence": "\"뷰성형외과\"는 특정한 병원으로, 성형 수술에 대한 각종 서비스를 제공하고 있습니다.",
           "sentiment": "neutral"
         }
       ],
       "competitorMentions": [
         {
           "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "\"강남언니\"는 성형 관련 정보를 제공하는 플랫폼으로, 다양한 성형외과를 비교하고 리뷰를 볼 수 있어 이를 통해 뷰성형외과에 대한 정보를 찾아볼 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 성형외과지만 몇 가지 차이가 있을 수 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "원진성형외과는 규모가 큰 것으로 알려져 있으며 다양한 부서와 전문의가 있을 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 성형외과지만 몇 가지 차이가 있을 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "제이준성형외과의원",
           "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "강남언니는 성형 수술 관련 정보를 제공하는 플랫폼으로, 병원 및 시술에 대한 리뷰와 가격 비교를 통해 사용자에게 다양한 선택지를 제공합니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "리뷰 참고: 강남언니에서 다양한 병원과 시술 후기를 볼 수 있으니, 리뷰를 통해 실제 사용자 경험을 체크해보세요.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "비용 비교: 강남언니를 통해 다양한 병원의 가격을 비교해 보세요.",
+              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 전문 분야와 운영 방식에서 차이가 있습니다.",
               "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.25,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "뷰성형외과는 특정 병원이므로, 수술과 시술을 실제로 제공하는 곳입니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-009",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "제이준성형외과의원",
-          "mentionCount": 1,
-          "sentences": [
+            },
             {
-              "sentence": "제이준성형외과의원과 원진성형외과는 모두 한국에서 유명한 성형외과 병원이지만, 몇 가지 차이점이 있어요:",
+              "sentence": "제이준성형외과의원은 보통 특정 분야의 성형 수술을 전문으로 하며, 최근 인기 있는 절차나 트렌드를 반영하기도 합니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "제이준성형외과의원은 상대적으로 소규모로, 개인 맞춤 서비스에 집중할 수 있습니다.",
               "sentiment": "neutral"
             }
           ]
         },
         {
           "name": "원진성형외과",
-          "mentionCount": 1,
+          "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "제이준성형외과의원과 원진성형외과는 모두 한국에서 유명한 성형외과 병원이지만, 몇 가지 차이점이 있어요:",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-009",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "제이준성형외과의원",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 특징과 전문 분야에서 차이가 있습니다.",
+              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 전문 분야와 운영 방식에서 차이가 있습니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "주로 자연스러운 결과와 개인 맞춤형 시술을 강조합니다.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "원진성형외과",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 특징과 전문 분야에서 차이가 있습니다.",
+              "sentence": "원진성형외과는 다양한 성형 분야를 포괄적으로 다루며, 피부과 및 시술의 다양한 선택지를 제공하는 경우가 많습니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "대규모 병원으로서 다양한 성형 수술과 시술의 선택지를 제공하는 경우가 많습니다.",
-              "sentiment": "positive"
+              "sentence": "원진성형외과는 큰 규모를 자랑하며, 다양한 전문의를 보유하고 있어 다각도로 접근할 수 있는 장점이 있습니다.",
+              "sentiment": "neutral"
             }
           ]
         }
@@ -686,29 +999,29 @@
       "mentionSentences": [],
       "competitorMentions": [
         {
-          "name": "원진성형외과",
+          "name": "제이준성형외과의원",
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "제이준성형외과의원과 원진성형외과는 모두 한국에 위치한 유명한 성형외과 병원입니다.",
+              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 서울에 위치한 성형외과이지만, 제공하는 서비스와 전문 분야, 시설 등이 다를 수 있습니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "원진성형외과: - 다양한 성형 분야에 걸쳐 종합적인 서비스를 제공하는 것으로 알려져 있습니다.",
+              "sentence": "제이준성형외과의원",
               "sentiment": "neutral"
             }
           ]
         },
         {
-          "name": "제이준성형외과의원",
+          "name": "원진성형외과",
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "제이준성형외과의원과 원진성형외과는 모두 한국에 위치한 유명한 성형외과 병원입니다.",
+              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 서울에 위치한 성형외과이지만, 제공하는 서비스와 전문 분야, 시설 등이 다를 수 있습니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "제이준성형외과의원: - 특정 분야에 대한 전문성을 강조할 수 있습니다.",
+              "sentence": "원진성형외과",
               "sentiment": "neutral"
             }
           ]
@@ -729,7 +1042,18 @@
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "강남언니: 국내 최대 규모의 성형수술 리얼리뷰 플랫폼입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
       "shareOfMention": 0,
       "citations": [],
       "topRecommendation": null,
@@ -751,8 +1075,8 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "성형 관련 정보를 제공하며 사용자 후기와 병원 평가를 볼 수 있습니다.",
-              "sentiment": "neutral"
+              "sentence": "3. **강남언니**: 성형 커뮤니티로 병원 정보와 더불어 사용자의 실제 후기를 많이 볼 수 있습니다.",
+              "sentiment": "positive"
             }
           ]
         }
@@ -778,15 +1102,15 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "레알셀이나 강남언니 같은 플랫폼에서는 성형외과별로 후기와 평가를 제공합니다.",
-              "sentiment": "neutral"
+              "sentence": "강남언니: 성형수술에 대한 정보와 후기를 제공하는 앱으로, 병원별 리뷰와 전문의 정보도 함께 확인할 수 있습니다.",
+              "sentiment": "positive"
             }
           ]
         }
       ],
       "shareOfMention": 0,
       "citations": [],
-      "topRecommendation": null,
+      "topRecommendation": "강남언니",
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
@@ -803,38 +1127,26 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.odymedi.com/kr/clinics/search_clinics?utm_source=openai",
-          "domain": "odymedi.com",
+          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
+          "domain": "hospital.today79.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.secretps.com/eyes02?utm_source=openai",
-          "domain": "secretps.com",
+          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
+          "domain": "hospital.today79.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.idhospital.com/intro/intro1?utm_source=openai",
-          "domain": "idhospital.com",
+          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
+          "domain": "addd.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://pspskorea.com/ko/pages/about.html?utm_source=openai",
-          "domain": "pspskorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beautv.co.kr/default/img/php/BEAU.TV_Ad%20Media%20Introduction_2022.pdf?utm_source=openai",
-          "domain": "beautv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.sangsanginib.com/_upload/attFile/CM0338/CM0338_800_1.pdf?utm_source=openai",
-          "domain": "sangsanginib.com",
+          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
+          "domain": "addd.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -856,33 +1168,27 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.odymedi.com/kr/clinics/search_clinics?utm_source=openai",
-          "domain": "odymedi.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
+          "domain": "hospital.today79.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.localpricekorea.com/ko?utm_source=openai",
-          "domain": "localpricekorea.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
-          "domain": "addd.co.kr",
-          "ownerType": "third-party-ugc",
+          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
+          "domain": "hospital.today79.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
           "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
           "domain": "addd.co.kr",
-          "ownerType": "third-party-ugc",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://pspskorea.com/ko/pages/about.html?utm_source=openai",
-          "domain": "pspskorea.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://gn.4-ever.co.kr/branch/?utm_source=openai",
+          "domain": "gn.4-ever.co.kr",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
@@ -909,20 +1215,20 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.idhospital.com/intro/intro1?utm_source=openai",
-          "domain": "idhospital.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnamssam.com/?utm_source=openai",
-          "domain": "gangnamssam.com",
+          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
+          "domain": "hospital.today79.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
           "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
           "domain": "addd.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulclinics.io/ko/blog/gangnam-aesthetic-clinics-district-guide-2026?utm_source=openai",
+          "domain": "seoulclinics.io",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -943,47 +1249,58 @@
       "competitorMentions": [
         {
           "name": "스타라인성형외과의원",
-          "mentionCount": 10,
+          "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "스타라인성형외과의원(Starline Plastic Surgery Clinic)은 서울 강남구 논현동에 위치한 성형외과 의원으로, 얼굴 윤곽·눈·코 수술 등 섬세한 안면 성형에 특화된 병원입니다.",
+              "sentence": "스타라인성형외과의원은 성형외과 전문 병원으로, 다양한 성형 및 미용 관련 서비스를 제공하는 곳입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스타라인성형외과의원",
+          "mentionCount": 6,
+          "sentences": [
+            {
+              "sentence": "스타라인성형외과의원에 대해 다음과 같이 정리드릴게요.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "다음은 스타라인성형외과의원의 주요 정보입니다:",
+              "sentence": "흉터 상태에 따라 방추형 절제, Z절제, 박피술 등 맞춤 수술법을 선택하며, 스마트 검진부터 맞춤 사후관리까지 체계적인 시스템을 갖추고 있습니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "서울특별시 강남구 봉은사로 105, 동양빌딩 3층에 위치해 있으며, 신논현역(9호선)과 매우 가깝습니다 ([starlineps.co.kr](https://www.starlineps.co.kr/?utm_source=openai)).",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "스터 부요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "진료시간은 평일 오전 9시 30분 ~ 오후 6시 30분, 토요일은 오후 4시 30분까지 운영되며, 일요일과 공휴일은 휴진입니다 ([starlineps.co.kr](https://www.starlineps.co.kr/?utm_source=openai)).",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "구조적인 얼굴 비율 분석을 바탕으로 맞춤형 수술 계획을 세워 자연스럽고 균형 잡힌 결과를 추구합니다 ([gangnam.health](https://www.gangnam.health/clinics/skin/seoul/gangnam/starline-plastic-surgery-clinic?utm_source=openai)).",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "외국인 환자 등록 기관",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "실제 이용자들의 평가를 종합하면, 평균 평점은 약 4.8점(후기 26건)이며, 서비스 만족도가 높은 편입니다 ([cashdoc.me](https://cashdoc.me/en-US/hospital/A1119038/StarlinePlasticSurgeryClinic?utm_source=openai)).",
+              "sentence": "리프팅 (안면거상, 이마거상), 상안검·하안검 수술 등 동안 성형에 강점을 두고 있습니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "정리하면, 스타라인성형외과의원은 서울 강남구 중심부에 위치한, 외국인 환자 등록을 갖춘 얼굴 중심 성형 전문 병원으로서, 환자 맞춤형 진료 철학과 비교적 높은 평판을 바탕으로 자연스러운 아름다움을 추구하는 분들에게 적합한 선택지라고 할 수 있습니다.",
+              "sentence": "일부 후기에서는 과한 권유 없이 상담을 꼼꼼히 해주며, 긴장을 완화시키기 위한 친근한 분위기를 좋아한다는 평가도 있습니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "또한 국내 커뮤니티에서도 상담, 수술 후기들이 꾸준히 올라오며, 눈·윤곽·거상 수술 등 다양한 시술의 실제 경험담들을 통해 참고할 수 있습니다 ([sungyesa.com](https://sungyesa.com/hlist/1530?utm_source=openai)).",
-              "sentiment": "neutral"
+              "sentence": "정리하자면, 스타라인성형외과의원은 흉터 전문성과 중장년층 동안 성형에 주력하면서, 상담 중심의 맞춤 진료를 지향하는 성형외과입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "강남 중심지에 위치해 접근성도 좋고, 외국인 환자 유치에도 적극적인 편입니다.",
+              "sentiment": "positive"
             }
           ]
         }
@@ -991,45 +1308,45 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.starlineps.co.kr/?utm_source=openai",
+          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
           "domain": "starlineps.co.kr",
           "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.starlineps.co.kr/?utm_source=openai",
-          "domain": "starlineps.co.kr",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnam.health/clinics/skin/seoul/gangnam/starline-plastic-surgery-clinic?utm_source=openai",
-          "domain": "gangnam.health",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kbeauty.today79.com/en/clinics/seutarain-plastic-surgery/?utm_source=openai",
-          "domain": "kbeauty.today79.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://cashdoc.me/en-US/hospital/A1119038/StarlinePlasticSurgeryClinic?utm_source=openai",
-          "domain": "cashdoc.me",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1530?utm_source=openai",
+          "raw": "https://sungyesa.com/drlist/17958?utm_source=openai",
           "domain": "sungyesa.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.hira.or.kr/ra/hosp/hospInfoAjax.do?ykiho=JDQ4MTg4MSM1MSMkMiMkOCMkMDAkMzgxMzUxIzIxIyQxIyQ5IyQ5OSQzNjEwMDIjODEjJDEjJDYjJDgz&utm_source=openai",
-          "domain": "hira.or.kr",
+          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
+          "domain": "starlineps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kmib.co.kr/article/view.asp?arcid=0017970814&utm_source=openai",
+          "domain": "kmib.co.kr",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/drlist/17958?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://koreamedicalinfo.com/institution/3601?utm_source=openai",
+          "domain": "koreamedicalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
+          "domain": "starlineps.co.kr",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         }
       ],
@@ -1043,7 +1360,7 @@
     {
       "questionId": "v3-012",
       "engine": "openai",
-      "callIndex": 2,
+      "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
@@ -1052,38 +1369,7 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "스타라인성형외과의원은 주로 성형수술과 피부 시술을 전문으로 하는 의료기관입니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-012",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "스타라인성형외과의원",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "스타라인성형외과의원에 대한 구체적인 정보는 확인할 수 없지만, 일반적으로 성형외과의원은 고객에게 다양한 미용 및 재건 성형 수술을 제공하는 곳입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "스타라인성형외과의원의 특징, 제공 서비스, 위치 등의 세부 정보는 해당 의료기관의 공식 웹사이트나 고객 리뷰를 통해 알아보시는 것이 정확할 것입니다.",
+              "sentence": "스타라인성형외과의원은 주로 성형 수술과 미용 관련 서비스를 제공하는 클리닉입니다.",
               "sentiment": "neutral"
             }
           ]

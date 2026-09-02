@@ -58,63 +58,331 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
       "citations": [
+        {
+          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
         {
           "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
           "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.agoda.com/ko-kr/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
           "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tour.gunsan.go.kr/tour/m2153?utm_source=openai",
+          "domain": "tour.gunsan.go.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "trip.com",
+          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
+          "domain": "traveldojo.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "trip.com",
+          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
+          "domain": "traveldojo.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=bfb7adf8-1c76-4ec3-b347-c3530b331be7&utm_source=openai",
-          "domain": "visitkorea.or.kr",
+          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
+          "domain": "traveldojo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.expedia.co.kr/Gunsan.dx1958?utm_source=openai",
+          "domain": "expedia.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
+          "domain": "leteamor.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
           "domain": "tripadvisor.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
@@ -126,1849 +394,8 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-002",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-002",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "군산 스테이 관광 호텔 2023년 신축된 호텔로 고급스러운 분위기와 넓은 객실, 조식 뷔페 제공으로 가족 여행객에게 추천됩니다 ([chairforce2632.tistory.com](https://chairforce2632.tistory.com/43?utm_source=openai)).",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "군산 스테이 관광 호텔, 라시에스타 호텔 시내에서 벗어난 성산면에 위치해 강이나 숲 뷰를 제공하며, 가족 단위 여행객에게 특히 좋습니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "시설 좋고 조식 포함 선호 라마다 바이 윈덤, 군산 스테이 관광 호텔 조식 뷔페, 최신식 객실",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://chairforce2632.tistory.com/43?utm_source=openai",
-          "domain": "chairforce2632.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://chairforce2632.tistory.com/43?utm_source=openai",
-          "domain": "chairforce2632.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/ko-kr/theme/cheap-hotels/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
-          "domain": "reportfront6769.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "군산 스테이 관광 호텔",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.kayak.co.kr/%EA%B5%B0%EC%82%B0-%ED%98%B8%ED%85%94.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.co.kr/%EA%B5%B0%EC%82%B0-%ED%98%B8%ED%85%94.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.co.kr/%EA%B5%B0%EC%82%B0-%ED%98%B8%ED%85%94.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://narangdesign.com/mail/korasi/240804/file/d3.pdf?utm_source=openai",
-          "domain": "narangdesign.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-39427985/gunsan-yeojeong-guest-house/?checkin=2026-06-15&checkout=2026-06-16&utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
-          "domain": "leteamor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
-          "domain": "leteamor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.traveloka.com/ko-kr/hotel/south-korea/landmark/gunsan-jeil-high-school-91742924497544?utm_source=openai",
-          "domain": "traveloka.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/89281?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripbtoz.com/en-US/hotel/korea/gunsan?utm_source=openai",
-          "domain": "tripbtoz.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.google.com/travel/hotels/landingpage/gunsan-si-hotels?utm_source=openai",
-          "domain": "google.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "전북 군산에서 가성비 좋은 숙소를 찾고 계시군요!",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/55115?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ontrip.kr/travel-guides/details/2637906?utm_source=openai",
-          "domain": "ontrip.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/1000104031?ratePlanId=768388&roomTypeId=666849&utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://trip.coupang.com/m/tp/products/10000001796251/rooms/70000280513685/rate-categories/465837468/facility?utm_source=openai",
-          "domain": "trip.coupang.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hafeel.tistory.com/577?utm_source=openai",
-          "domain": "hafeel.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://krcampusinfo.com/cost-effective-backpacking-destinations-for-college-students260312/?utm_source=openai",
-          "domain": "krcampusinfo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-006",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://en.planetofhotels.com/south-korea/busan/residence-mumum?utm_source=openai",
-          "domain": "en.planetofhotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://en.planetofhotels.com/south-korea/busan/residence-mumum?utm_source=openai",
-          "domain": "en.planetofhotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotels.com/ho714196160/the-mumum-jeonju-south-korea/?utm_source=openai",
-          "domain": "hotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotels.com/ho714196160/the-mumum-jeonju-south-korea/?utm_source=openai",
-          "domain": "hotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotels.com/ho714196160/the-mumum-jeonju-south-korea/?utm_source=openai",
-          "domain": "hotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cryptotraveler.com/en/hotel/166045/the-mumum?utm_source=openai",
-          "domain": "cryptotraveler.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cryptotraveler.com/en/hotel/166045/the-mumum?utm_source=openai",
-          "domain": "cryptotraveler.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "Residence Mumum Hotel",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-006",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이 머뭄에 대해 궁금해하시는군요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "가장 자주 언급되는 두 곳—‘군산 스테이, 머뭄’과 ‘춘천 머뭄’—후기를 정리해드릴게요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 군산 스테이, 머뭄 | 청결하고 아늑하며, 자연 속 힐링 및 포토 스폿으로도 좋다는 후기 |",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-07-03&checkOutDate=2026-07-04&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.ebotog.kr/323?utm_source=openai",
-          "domain": "ebotog.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/chuncheon-si-hotel-detail-114452540/meomum/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "군산 스테이, 머뭄",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "전북 군산시 절골길 18",
-          "factGraphValue": "전북 군산시 절골길 18"
-        },
-        {
-          "claimText": "춘천 머뭄",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-006",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.google.com/travel/hotels/entity/CiMIlp2ty9GkippzEI7e4OmG343tZxoNL2cvMTF5bHE0c3ZoMhAC?gsas=1&utm_source=openai",
-          "domain": "google.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.google.co.kr/travel/hotels/entity/CiMIlp2ty9GkippzEI7e4OmG343tZxoNL2cvMTF5bHE0c3ZoMhAC?ap=MAA&g2lb=4181926%2C4208993%2C4207631%2C4207819%2C4217964&gl=kr&hl=ko&rp=OAFAAEgC&tcfs=EjAKCS9tLzAyMjdmZBIJ7Jes7IiY7IucGhgKCjIwMTgtMTItMTISCjIwMTgtMTItMTNSAA&ts=CAESCgoCCAMKAggDEAAaVAo2EjIyJTB4MzU2ZTNjOWEzMTBjMDNiNToweDYwN2Q0ODdhNmZiYjlkYWM6Ceq1rOuhgOq1sBoAEhoSFAoHCOUPEAcYDRIHCOUPEAcYDhgBMgIQACoLCgcoAToDS1JXGgA&un=0&utm_source=openai",
-          "domain": "google.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "Stay Murmur은 전라남도 구례군에 위치하며 거실, 주방, 침실, 화장실, 데크(마당)로 구성된 숙소입니다.",
-          "claimType": "location",
-          "verdict": "contradicted",
-          "responseValue": "전라남도 구례군",
-          "factGraphValue": "전북 군산시 절골길 18"
-        },
-        {
-          "claimText": "1박 요금은 세금 및 수수료 포함 약 189달러입니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "체크인은 오후 3시, 체크아웃은 오전 11시로 안내되어 있습니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 1,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-007",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "\"스테이 머뭄\"과 \"군산스테이호텔\" 중 어느 곳이 더 나은지 결정하는 것은 방문 목적과 개인의 선호에 따라 다를 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "\"스테이 머뭄\"과 \"군산스테이호텔\" 중 어느 곳이 더 나은지 결정하는 것은 방문 목적과 개인의 선호에 따라 다를 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-007",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이, 머뭄(Stay, 머뭄)과 군산 스테이 관광 호텔은 서로 다른 스타일의 숙소로, 여행 목적이나 선호에 따라 더 나은 선택이 달라질 수 있어요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "## 스테이, 머뭄 (Stay, 머뭄)",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "전북 군산시 신흥동 또는 절골길 인근에 위치한 감성 독채형 펜션입니다 ([yeogi.com](https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai)).",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "## 스테이, 머뭄 (Stay, 머뭄)",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "조용한 휴식과 힐링 여행 | 스테이, 머뭄 | 조용한 주택가 중심 독채형 구조",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "요약: - **감성, 프라이빗하고 힐링 위주 여행**이라면 스테이, 머뭄이 잘 맞을 수 있어요.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 6,
-          "sentences": [
-            {
-              "sentence": "스테이, 머뭄(Stay, 머뭄)과 군산 스테이 관광 호텔은 서로 다른 스타일의 숙소로, 여행 목적이나 선호에 따라 더 나은 선택이 달라질 수 있어요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "## 군산 스테이 관광 호텔 (Gunsan Stay Tourist Hotel)",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "군산 성산면에 위치한 3성급 호텔로, 2023년 리모델링을 거쳐 깔끔하고 현대적인 시설을 갖추고 있습니다 ([m.view.nate.com](https://m.view.nate.com/travel/view/379814/?utm_source=openai)).",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "편의 시설, 접근성, 가성비를 중시하는 여행이라면 군산 스테이 관광 호텔이 더 적합합니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "## 군산 스테이 관광 호텔 (Gunsan Stay Tourist Hotel)",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "어떤 스타일의 여행인지 알려주시면, 더 맞춤 추천도 도와드릴게요!",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nodam.tistory.com/12469?utm_source=openai",
-          "domain": "nodam.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-06-11&checkOutDate=2026-06-12&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://place.udanax.org/p/3010396/%EC%8A%A4%ED%85%8C%EC%9D%B4%3B%EB%A8%B8%EB%AD%84?utm_source=openai",
-          "domain": "place.udanax.org",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.view.nate.com/travel/view/379814/?utm_source=openai",
-          "domain": "m.view.nate.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/ko-kr/gunsan-stay-tourist-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.view.nate.com/travel/view/379814/?utm_source=openai",
-          "domain": "m.view.nate.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "전북 군산시 신흥동 또는 절골길 인근에 위치한 감성 독채형 펜션입니다.",
-          "claimType": "location",
-          "verdict": "contradicted",
-          "responseValue": "전북 군산시 신흥동 또는 절골길 인근",
-          "factGraphValue": "전북 군산시 절골길 18"
-        },
-        {
-          "claimText": "가격은 1박 기준 약 198,000원부터 시작하며, 연박 시 할인도 제공됩니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "객실은 독채 구조로 프라이빗하고 아늑한 분위기를 자랑하며, 침실과 주방이 분리되어 있어 편리함도 높습니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "시설은 기본적인 편의사항이 잘 갖춰져 있고, 수압이나 청결도에 대한 평이 좋습니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "주로 힐링, 감성 여행, 가족이나 커플 중심의 조용한 숙박에 적합한 분위기입니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 1,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-007",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이, 머뭄과 군산 스테이 관광호텔 두 곳의 특징을 비교해 드릴게요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "스테이, 머뭄 (Stay, 머뭄) - **종류**: 프리미엄 독채 펜션",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "**스테이, 머뭄**은 고택의 정취와 프라이빗한 공간에서 힐링하고 싶거나, 독특한 분위기를 원하시는 분께 잘 맞습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "스테이, 머뭄과 군산 스테이 관광호텔 두 곳의 특징을 비교해 드릴게요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "군산 스테이 관광호텔 (Stay Tourism Hotel) - **등급 및 규모**: 3성급 호텔, 108개 객실, 2023년 신축 또는 리모델링된 신상 호텔입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "**군산 스테이 관광호텔**은 합리적인 가격에 다양한 부대시설, 청결하고 넓은 객실을 원하시는 분, 가족 단위 여행이나 접근성을 중시하는 분께 추천드려요.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "https://ewwdsdssdds.tistory.com/m/entry/%EC%A0%84%EB%9D%BC%EB%B6%81%EB%8F%84-%EA%B5%B0%EC%82%B0%EC%8B%9C-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-LIST-8%EA%B3%B3?utm_source=openai",
-          "domain": "ewwdsdssdds.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ewwdsdssdds.tistory.com/m/entry/%EC%A0%84%EB%9D%BC%EB%B6%81%EB%8F%84-%EA%B5%B0%EC%82%B0%EC%8B%9C-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-LIST-8%EA%B3%B3?utm_source=openai",
-          "domain": "ewwdsdssdds.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-06-11&checkOutDate=2026-06-12&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ewwdsdssdds.tistory.com/m/entry/%EC%A0%84%EB%9D%BC%EB%B6%81%EB%8F%84-%EA%B5%B0%EC%82%B0%EC%8B%9C-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-LIST-8%EA%B3%B3?utm_source=openai",
-          "domain": "ewwdsdssdds.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://chairforce2632.tistory.com/43?utm_source=openai",
-          "domain": "chairforce2632.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://epro.tistory.com/37?utm_source=openai",
-          "domain": "epro.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "스테이 머뭄",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "스테이, 머뭄 주소",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "전북 군산시 절골길 18",
-          "factGraphValue": "전북 군산시 절골길 18"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "“스테이 머뭄”이라는 이름으로 검색해보았지만, 현재는 그런 숙소나 브랜드로 정확히 일치하는 결과가 확인되지 않았습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://kr.trip.com/hotels/jongno-gu-hotel-detail-134013335/stay-myomi-jongno/?curr=&locale=ko-KR&tid=H0008_10650006152_class&utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.thescentedcottage.com/products/murmur?utm_source=openai",
-          "domain": "thescentedcottage.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://indiehousefragrances.com/product/murmur-by-pigmentarium/?utm_source=openai",
-          "domain": "indiehousefragrances.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://usa.hallburg.ae/ar/products/murmur?utm_source=openai",
-          "domain": "usa.hallburg.ae",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://stayparfums.com/collections/all?utm_source=openai",
-          "domain": "stayparfums.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://stayparfums.com/collections/all?utm_source=openai",
-          "domain": "stayparfums.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://stayparfums.com/collections/all?utm_source=openai",
-          "domain": "stayparfums.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://stayparfums.com/collections/all?utm_source=openai",
-          "domain": "stayparfums.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.google.mv/travel/hotels/entity/CiMIlp2ty9GkippzEI7e4OmG343tZxoNL2cvMTF5bHE0c3ZoMhAC?utm_source=openai",
-          "domain": "google.mv",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "“Stay Murmur”라는 숙소는 1박 기준 $189의 요금이 적용되는 것으로 나타납니다",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": "$189",
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.stayfolio.com/en/findstay/stay-murmur?utm_source=openai",
-          "domain": "stayfolio.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.google.com/travel/hotels/entity/CiMIlp2ty9GkippzEI7e4OmG343tZxoNL2cvMTF5bHE0c3ZoMhAC?ts=CAEaBAoCGgAqBAoAGgA&utm_source=openai",
-          "domain": "google.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "스테이 머뭄의 1박당 숙박 요금은 숙박일자, 예약 플랫폼, 할인 여부에 따라 달라진다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "STAYFOLIO 공식 웹사이트 기준 1박당 요금은 할인 적용 후 US$163.86부터 시작됩니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "STAYFOLIO 공식 웹사이트 기준 1박당 요금은 일반가 US$204.83에서 20% 할인이 적용된 US$163.86입니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "Google 여행에서 9월 13일 ~ 15일 기준 1박당 요금은 US$175이며, 2박 총액은 세금 및 수수료 포함 US$350입니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "현재 기대할 수 있는 1박 요금은 STAYFOLIO 할인 적용 요금 약 US$163.86, 기본 예약 요금은 약 US$175이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "전북 군산에서 **해들목펜션**보다 더 좋은 숙소를 찾고 계시다면, 아래 추천드리는 다양한 유형의 숙소들을 고려해 보세요.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://koreatravel-guide.tistory.com/229?utm_source=openai",
-          "domain": "koreatravel-guide.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
-          "domain": "da-suk.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/hotel/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/hotel/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "전북 군산에서 해들목펜션보다 더 마음에 드실 만한 숙소를 찾고 계시다면, 여행 스타일과 위치 선호에 따라 여러 좋은 선택지가 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "해들목펜션은 바닷가 인근 자연 풍경, 복층 구조, 개별 바베큐 등의 장점이 있지만, 다른 숙소는 위치, 공간 구성, 접근성 등에서 각기 다른 매력을 갖고 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ymkim86.tistory.com/197?utm_source=openai",
-          "domain": "ymkim86.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ymkim86.tistory.com/197?utm_source=openai",
-          "domain": "ymkim86.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ymkim86.tistory.com/197?utm_source=openai",
-          "domain": "ymkim86.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mom-mom.net/travel/map/places/664bf6677e8c1e71568e69d9?utm_source=openai",
-          "domain": "mom-mom.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "전라북도 군산 지역에서 해들목펜션보다 후기가 더 좋거나 시설이 뛰어난 숙소를 찾고 계시다면, 아래 몇 군데를 추천드립니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "해들목펜션보다 좀 더 프라이빗한 구조를 원할 때 고려해볼 만합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays?utm_source=openai",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays?utm_source=openai",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mom-mom.net/travel/properties/64f80d84acd3f742aa51cad3?utm_source=openai",
-          "domain": "mom-mom.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
-          "domain": "da-suk.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
-          "domain": "da-suk.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/landmark/kr/museum-of-modern-history.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/landmark/kr/museum-of-modern-history.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/landmark/kr/museum-of-modern-history.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.klook.com/ko/hotels/detail/419340-best-western-gunsan-hotel/?utm_source=openai",
-          "domain": "klook.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.klook.com/ko/hotels/detail/419340-best-western-gunsan-hotel/?utm_source=openai",
-          "domain": "klook.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-010",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "3. 군산스테이 관광호텔 (Gunsan Stay Tourist Hotel) - 객실이 넓고 스타일러, 공기청정기 등 편의 시설이 잘 갖춰져 있어 가성비 높은 숙소로 꼽힙니다 ([protecsound8627.tistory.com](https://protecsound8627.tistory.com/420?utm_source=openai)).",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "- **예산 고려**: 군산스테이, 터미널 인근 신축 숙소 등은 합리적인 가격대에 만족스러운 시설을 제공합니다.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "9. 다수의 펜션·풀빌라 (예: 해들목펜션, 서해민박 등) - 현재 군산 · 익산 지역에는 약 238곳의 펜션·풀빌라가 등록되어 있으며, 넓은 마당이나 바비큐장, 야외 수영장 등을 갖춘 곳도 많아 가족 단위의 숙박에 적합합니다 ([da-suk.com](https://da-suk.com/pensions/gunsan?utm_source=openai)).",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://qurqur01.tistory.com/926?utm_source=openai",
-          "domain": "qurqur01.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://qurqur01.tistory.com/926?utm_source=openai",
-          "domain": "qurqur01.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kangai.tistory.com/707?utm_source=openai",
-          "domain": "kangai.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
-          "domain": "travelquokka.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
-          "domain": "travelquokka.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
-          "domain": "da-suk.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "군산스테이호텔",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-010",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-010",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "군산 스테이 머뭄 (Stay Meomeom) - 2026년 4월 기준 프리미엄 키즈 전용 독채로 시설도 최신이라 아이와 함께 쾌적한 공간을 원하시는 가족에 적합합니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://suhaoo.tistory.com/265?utm_source=openai",
-          "domain": "suhaoo.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://minzzangstory.tistory.com/388?utm_source=openai",
-          "domain": "minzzangstory.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://conyplace.com/%ED%9A%8C%ED%98%84%ED%8E%9C%EC%85%98-%EC%A1%B0%EC%9A%A9%ED%95%9C-%EC%8B%9C%EA%B3%A8-%EB%A7%88%EC%9D%84%EC%9D%98-%ED%8E%B8%EC%95%88%ED%95%9C-%EC%88%99%EC%86%8C/?utm_source=openai",
-          "domain": "conyplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
-          "domain": "diningcode.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "스테이 머뭄",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "군산 스테이 머뭄의 주소는 전북 군산시 절골길 18입니다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "전북 군산시 절골길 18",
-          "factGraphValue": "전북 군산시 절골길 18"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-011",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "군산 스테이 투어리스트 호텔 (Gunsan Stay Tourist Hotel) - 바다 전망이 가능한 숙소 중에서도 평가가 좋은 편입니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://world.nol.com/stay/accommodations/NC-18473?utm_source=openai",
-          "domain": "world.nol.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://world.nol.com/stay/accommodations/NC-18473?utm_source=openai",
-          "domain": "world.nol.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gsco.kr/en/contents.htm?code=4_2&utm_source=openai",
-          "domain": "gsco.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://korean.visitkorea.or.kr/detail/rem_detail.do?con_type=11000&cotid=59561991-c47f-4542-929f-7664392600a2&utm_source=openai",
-          "domain": "korean.visitkorea.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-011",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.diningcode.com/profile.php?rid=tAXCrqECNQp6&utm_source=openai",
-          "domain": "diningcode.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/10qp9bZwq7?utm_source=openai",
-          "domain": "v.daum.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/ho3211057696/daswim-geseuteu-hauseu-gunsan-hangug/?utm_source=openai",
-          "domain": "kr.hotels.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://inbox898989.tistory.com/79?utm_source=openai",
-          "domain": "inbox898989.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gsco.kr/files/2023%20GSCO%20%EB%B8%8C%EB%A1%9C%EC%8A%88%EC%96%B4.pdf?utm_source=openai",
-          "domain": "gsco.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://trip.nextgennews.co.kr/31?utm_source=openai",
-          "domain": "trip.nextgennews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://inbox898989.tistory.com/79?utm_source=openai",
-          "domain": "inbox898989.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://isealove.suhyup.co.kr/sites/isealove/down/%EC%A0%84%EB%B6%81%EB%B0%94%EB%8B%A4.pdf?utm_source=openai",
-          "domain": "isealove.suhyup.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-011",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "Gunsan Stay Tourist Hotel 바다 조망이 가능하며 서비스와 시설이 우수한 호텔로 평가가 높습니다",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://m.liveanywhere.me/accommodations/14849?utm_source=openai",
-          "domain": "m.liveanywhere.me",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/theme/near-beach/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
-          "domain": "trip.com",
+          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
+          "domain": "tripadvisor.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -1983,9 +410,1537 @@
           "domain": "booking.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gajago.com/%EA%B5%B0%EC%82%B0/%EC%88%99%EC%86%8C/gunsan-stay-2026-06/?utm_source=openai",
+          "domain": "gajago.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         }
       ],
-      "topRecommendation": "Gunsan Stay Tourist Hotel",
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
+          "domain": "badaon.or.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
+          "domain": "badaon.or.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
+          "domain": "badaon.or.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
+          "domain": "tourvis.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
+          "domain": "healing-nino.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
+          "domain": "tourvis.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://goalexperi7616.tistory.com/85?utm_source=openai",
+          "domain": "goalexperi7616.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
+          "domain": "healing-nino.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
+          "domain": "healing-nino.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotelspedia.org/ko/hotel/h1545c0b42a?utm_source=openai",
+          "domain": "hotelspedia.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Place/Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Place/Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
+          "domain": "leteamor.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
+          "domain": "all-infor.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "차칸호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스테이 머뭄이라는 이름은 여러 지역에 다양한 형태의 숙소로 존재합니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄 (Stay Mumum, 또는 머뭄 스테이)라는 이름으로 불리는 여러 숙소들이 있는데, 지역별로 특징이 조금씩 다르니 아래에서 해당하는 장소의 후기를 한눈에 정리해드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "전북 군산 ‘스테이 머뭄 펜션’",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
+          "domain": "residencemumumhotel.southkrhotel.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "전북 군산 ‘스테이 머뭄 펜션’",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "전북 군산 ‘스테이 머뭄 펜션’",
+          "factGraphValue": "전북 군산시 절골길 18"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄에 대해 “머뭄 스테이” 혹은 “스테이 머뭄”으로 불리는 숙소들은 여러 지역에 존재하며 각각 후기가 다른 점 참고해 주세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "## 3. 군산 ‘스테이 머뭄 펜션’",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- 다만 리뷰 수가 적어 일반화에는 무리가 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- **군산 펜션**: 깨끗하고 편안하다는 단 한 명의 최신 후기 확인됨.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "원하시는 지역이나 유형(도시 호텔, 한옥 게스트하우스, 펜션 등)에 맞춰 좀 더 자세한 비교나 예약 팁이 필요하시면 말씀해 주세요!",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/en-ca/seomyeon-residence-mumum-hotel/hotel/busan-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/reviews/kr/hotel/residence-mumum.es-mx.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cryptotraveler.com/en/hotel/166045/the-mumum?utm_source=openai",
+          "domain": "cryptotraveler.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
+          "domain": "petel.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "군산 ‘스테이 머뭄 펜션’",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "전북 군산시 절골길 18",
+          "factGraphValue": "전북 군산시 절골길 18"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄과 군산스테이호텔의 선택은 방문 목적과 선호도에 따라 다를 수 있어요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 머뭄은 디자인과 인테리어가 독특하고, 아늑한 분위기를 제공합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "스테이 머뭄과 군산스테이호텔의 선택은 방문 목적과 선호도에 따라 다를 수 있어요.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "군산스테이호텔은 좀 더 현대적이고 대형 호텔 스타일일 수 있으며, 위치적으로 편리하거나 다양한 부대시설을 제공할 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "w4ai.o2o.kr",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "gunsanstayhotel.com",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "hdmpension.co.kr",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 개인의 취향과 여행 목적에 따라 다를 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 개인의 취향과 여행 목적에 따라 다를 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 어떤 경험을 원하시는지에 따라 달라질 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "이곳은 독특한 디자인과 편안한 분위기를 자랑하는 숙소로 알려져 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 어떤 경험을 원하시는지에 따라 달라질 수 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "이 호텔은 다양한 편의시설과 접근성 면에서 이점이 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.6pm.com/womens/clothing/show-me-your-mumu/CKvXAToC8hdaAqQiwAEB4gIEAQsYBw.zso?utm_source=openai",
+          "domain": "6pm.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kayak.com/Jeonju-Hotels-The-Mumum.3698267.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kayak.com/Busan-Hotels-Residence-Mumum-Hotel.702341.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스테이 머뭄(Stay Mumum)",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "‘The Mumum Guesthouse’라는 숙박 시설이 전주 지역에 있으며, 1박 가격이 약 46달러부터 시작합니다",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": "46달러",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "부산의 ‘Residence Mumum Hotel’은 약 39달러부터 시작하고, Klook에서는 1박에 약 54.62달러로 안내되고 있습니다",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": "39달러, 54.62달러",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 “스테이 머뭄”의 가격 정보를 정리해드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "군산 펜션 ‘스테이 머뭄’",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.momondo.com/hotels/jeonju/The-Mumum.mhd3698267.ksp?utm_source=openai",
+          "domain": "momondo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?rfrr=HOT.HIS.question.link.click&utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.co.kr/Busan-Hotels-Residence-Mumum-Hotel.h8765663.Hotel-Information?utm_source=openai",
+          "domain": "expedia.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.klook.com/hotels/detail/413562-residence-mumum-hotel/?utm_source=openai",
+          "domain": "klook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.momondo.com/hotels/busan/Residence-Mumum-Hotel.mhd702341.ksp?utm_source=openai",
+          "domain": "momondo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-04-24&checkOutDate=2026-04-25&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "군산 펜션 ‘스테이 머뭄’",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "전북 군산시 절골길 18",
+          "factGraphValue": "전북 군산시 절골길 18"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송하지만 “스테이 머뭄”이라는 이름의 숙박 시설이나 상품에 대한 정보를 정확하게 특정할 수 없어, 가격 정보를 바로 제공드리기 어려운 상황입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "혹시 “스테이 머뭄”이 다음 중 어느 것인지 더 자세히 알려주실 수 있을까요?",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://mom-mom.net/travel/properties/6787dc39c5b09bf7578930e6?utm_source=openai",
+          "domain": "mom-mom.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "군산 해들목펜션보다 더 좋은 숙소를 찾고 계시다면, 여행 목적과 선호하시는 스타일에 따라 매우 다양한 선택지를 추천드릴 수 있어요.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "어떤 숙소가 해들목펜션보다 좋은지는 여행 스타일에 따라 달라집니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 스테이 관광호텔 객실 내 스타일러, 공기청정기 등이 완비되어 있고, 가성비가 좋다는 평을 받고 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/blog/good-restaurant-in-gunsan?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/blog/good-restaurant-in-gunsan?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
+          "domain": "travelquokka.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
+          "domain": "travelquokka.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://suhaoo.tistory.com/265?utm_source=openai",
+          "domain": "suhaoo.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://suhaoo.tistory.com/265?utm_source=openai",
+          "domain": "suhaoo.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://lotisma.tistory.com/1020?utm_source=openai",
+          "domain": "lotisma.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 해들목펜션 인근에서 좀 더 “좋은” 숙소를 찾고 계시다면, 아래와 같이 다양한 형태—호텔부터 펜션, 섬 리조트까지—추천드릴 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 스테이 관광 호텔: 리버뷰나 야경이 훌륭하며, 넓고 쾌적한 객실과 스타일러, 조식 뷔페 등 편의 시설이 잘 갖춰져 있어 가성비 좋은 선택입니다",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://koreatravel-guide.tistory.com/229?utm_source=openai",
+          "domain": "koreatravel-guide.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
+          "domain": "da-suk.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "해들목펜션과 비교해 군산에서 더 좋을 수 있는 숙소들을 추천해 드릴게요.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "해들목펜션은 바닷가 근처의 경치와 조용한 분위기가 장점이지만, ‘그섬에’는 더 독립적인 공간과 높은 재방문율을 자랑합니다",
+              "sentiment": "negative"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
+          "domain": "diary96201.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
+          "domain": "diary96201.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
+          "domain": "diary96201.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
+          "domain": "diary96201.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-saemangeum-convention-center.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripbtoz.com/hotel/korea/gunsan?utm_source=openai",
+          "domain": "tripbtoz.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://brunch.co.kr/%40mytriplog/3469?utm_source=openai",
+          "domain": "brunch.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
+          "domain": "hotelspedia.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
+          "domain": "protecsound8627.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
+          "domain": "hotelspedia.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
+          "domain": "protecsound8627.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
+          "domain": "protecsound8627.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
+          "domain": "protecsound8627.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://younglife2401.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EA%B7%BC%EB%8C%80-%EC%97%AD%EC%82%AC-%EA%B5%90%EC%9C%A1-%EC%97%AC%ED%96%89-%ED%95%B5%EC%8B%AC-%EC%BD%94%EC%8A%A4-%EB%8B%B9%EC%9D%BC%EC%B9%98%EA%B8%B0%EB%B6%80%ED%84%B0-1%EB%B0%95-2%EC%9D%BC-%EA%B0%80%EC%A1%B1-%EB%A7%9B%EC%A7%91-%EC%88%99%EC%86%8C-%EC%B4%9D%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "younglife2401.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://younglife2401.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EA%B7%BC%EB%8C%80-%EC%97%AD%EC%82%AC-%EA%B5%90%EC%9C%A1-%EC%97%AC%ED%96%89-%ED%95%B5%EC%8B%AC-%EC%BD%94%EC%8A%A4-%EB%8B%B9%EC%9D%BC%EC%B9%98%EA%B8%B0%EB%B6%80%ED%84%B0-1%EB%B0%95-2%EC%9D%BC-%EA%B0%80%EC%A1%B1-%EB%A7%9B%EC%A7%91-%EC%88%99%EC%86%8C-%EC%B4%9D%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "younglife2401.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
+          "domain": "statecan1943.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
+          "domain": "statecan1943.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
+          "domain": "statecan1943.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
+          "domain": "statecan1943.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-39401068/gunsan-yeomirang-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-39401068/gunsan-yeomirang-guesthouse/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
+          "domain": "tripnote.choi0531.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
+          "domain": "tripnote.choi0531.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
+          "domain": "tripnote.choi0531.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
+          "domain": "tripnote.choi0531.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.ramadagunsan.com/view/viewLink.do?page=homepage%2FKOR%2Froom%2FdeluxeFam&utm_source=openai",
+          "domain": "ramadagunsan.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
+          "domain": "hotelspedia.org",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
+          "domain": "hotelspedia.org",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsanhotel.co.kr/eng/Accommodation/page2-4.asp?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
+          "domain": "statecan1943.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/Hotels-g790146-zff4-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "Gunsan Stay Tourist Hotel 오션뷰 옵션이 있는 호텔로 소개되기도 하며, 위치 및 서비스면에서 만족도가 높은 편입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://someclass7351.tistory.com/133?utm_source=openai",
+          "domain": "someclass7351.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://someclass7351.tistory.com/133?utm_source=openai",
+          "domain": "someclass7351.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dams.pa.go.kr/dams/DOCUMENT/2024/10/30/DOC/SRC/0A04202410301444368538578014271.pdf?utm_source=openai",
+          "domain": "dams.pa.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
+          "domain": "tripnote.choi0531.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.welfarehello.com/community/hometownNews/1441b097-9a98-4c16-80a3-c078389ce1b9?utm_source=openai",
+          "domain": "welfarehello.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gsco.kr/en/contents.htm?code=4_2&utm_source=openai",
+          "domain": "gsco.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "Trip.com에서는 **Gunsan Stay Tourist Hotel**이 ‘Ocean View’ 옵션으로 잘 소개되고 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/theme/near-beach/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gsco.kr/en/contents.htm?code=4_2&utm_source=openai",
+          "domain": "gsco.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/rooms/565695025473125527?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/port-of-gunsan-south-korea/stays?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
