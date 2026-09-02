@@ -19,6 +19,8 @@ import { mapWithConcurrency } from './concurrency';
 import { getIsoWeekString } from './dateUtil';
 import { getEngineClient, getJudgeClient } from './engines';
 import { parseJsonLoose } from './jsonParse';
+import { analyzeCitationSources } from './citationSources';
+import { computeEeatAnalysis } from './eeat';
 import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4 } from './scoring';
 import type { ResultStore } from './store';
 import type {
@@ -360,8 +362,11 @@ export async function runWeeklyPipeline(
   const scorecard = aggregateScorecard(tenant, weekOf, questions, analyses, history, cohortScorecards);
   await store.saveScorecard(scorecard);
 
+  const eeat = computeEeatAnalysis(analyses);
+  const citationSources = analyzeCitationSources(analyses);
+
   const judge = getJudgeClient();
-  const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard));
+  const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
   await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
 
   return { scorecard, reportMarkdown: reportResult.text };

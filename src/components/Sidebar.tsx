@@ -18,6 +18,7 @@ const MENU: MenuGroup[] = [
       { code: 'S-01', label: '홈 · 대시보드', to: '/' },
       { code: 'S-02', label: '브랜드 종합 진단', to: '/diagnosis' },
       { code: 'S-03', label: '사이트 종합 진단', to: '/site-diagnosis' },
+      { code: 'S-09', label: 'EEAT 분석', to: '/eeat' },
     ],
   },
   {
@@ -25,6 +26,7 @@ const MENU: MenuGroup[] = [
     items: [
       { code: 'S-04', label: '질문 프롬프트 빌더', to: '/questions' },
       { code: 'S-05', label: 'URL 상세 분석', to: '/citations' },
+      { code: 'S-10', label: 'AI 인용출처 분석', to: '/citation-sources' },
     ],
   },
   {

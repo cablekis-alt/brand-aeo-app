@@ -1,6 +1,8 @@
 import demoScorecards from '../data/demo-scorecards.json'
 import type { Engine } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
+import type { EeatAnalysis } from '../prompts/b6-eeat'
+import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { CitationBreakdown, QuestionBank, QuestionRepeatAnalysis, RankingView } from './types'
 
 export interface TenantSummary {
@@ -78,6 +80,41 @@ export async function loadCitationBreakdown(tenantId: string, weekOf: string): P
     `/api/citations/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
   )
   return remote ?? { rows: [], brandOwnedCitationRate: 0 }
+}
+
+const EMPTY_EEAT: EeatAnalysis = {
+  overall: 0,
+  experience: { score: 0, evidence: [] },
+  expertise: { score: 0, evidence: [] },
+  authoritativeness: { score: 0, evidence: [] },
+  trustworthiness: { score: 0, evidence: [] },
+  mentionedCallCount: 0,
+  totalCallCount: 0,
+}
+
+const EMPTY_CITATION_SOURCES: CitationSourceAnalysis = {
+  totalCitations: 0,
+  uniqueUrls: 0,
+  uniqueDomains: 0,
+  qualityRate: 0,
+  mix: [],
+  byEngine: [],
+  urls: [],
+  consensusDomains: [],
+}
+
+// S-09 EEAT 분석.
+export async function loadEeat(tenantId: string, weekOf: string): Promise<EeatAnalysis> {
+  const remote = await getJson<EeatAnalysis>(`/api/eeat/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`)
+  return remote ?? EMPTY_EEAT
+}
+
+// S-10 AI 인용출처 분석.
+export async function loadCitationSources(tenantId: string, weekOf: string): Promise<CitationSourceAnalysis> {
+  const remote = await getJson<CitationSourceAnalysis>(
+    `/api/citation-sources/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
+  )
+  return remote ?? EMPTY_CITATION_SOURCES
 }
 
 // S-07 랭킹 분석.

@@ -3,8 +3,10 @@ import Layout from './components/Layout'
 import { TenantProvider } from './context/TenantContext'
 import BrandDiagnosis from './pages/BrandDiagnosis'
 import BrandOnboarding from './pages/BrandOnboarding'
+import CitationSources from './pages/CitationSources'
 import Citations from './pages/Citations'
 import Dashboard from './pages/Dashboard'
+import Eeat from './pages/Eeat'
 import Performance from './pages/Performance'
 import QuestionBank from './pages/QuestionBank'
 import Ranking from './pages/Ranking'
@@ -22,6 +24,8 @@ export default function App() {
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />
             <Route path="citations" element={<Citations />} />
+            <Route path="citation-sources" element={<CitationSources />} />
+            <Route path="eeat" element={<Eeat />} />
             <Route path="performance" element={<Performance />} />
             <Route path="ranking" element={<Ranking />} />
             <Route path="brand-onboarding" element={<BrandOnboarding />} />

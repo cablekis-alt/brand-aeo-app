@@ -76,6 +76,8 @@ export default function BrandOnboarding() {
   const [canMeasure, setCanMeasure] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
+  const [suggestingComp, setSuggestingComp] = useState(false)
+  const [compMsg, setCompMsg] = useState<string | null>(null)
 
   // 배포(Vercel)에서도 /api/health가 canRegister를 알려 준다.
   useEffect(() => {
@@ -143,6 +145,26 @@ export default function BrandOnboarding() {
       const addr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
       setAddress(addr)
       setExtracted(true)
+
+      // 업종·지역·주소는 정규식만으로 부족하니, 읽어온 본문을 Gemini로 추론해 비어 있는 칸만 채운다.
+      const pageText = (s.mainText || '').trim()
+      if (pageText) {
+        try {
+          const res = await fetch('/api/infer-brand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: pageText, brandName: guessedName }),
+          })
+          if (res.ok) {
+            const inferred = (await res.json()) as { industry?: string; region?: string; address?: string }
+            if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
+            if (inferred.region) setRegion((prev) => prev || inferred.region!)
+            if (!addr && inferred.address) setAddress((prev) => prev || inferred.address!)
+          }
+        } catch {
+          // 추론 실패는 무시 — 사용자가 직접 입력하면 된다.
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '수집 중 오류가 발생했습니다.')
     } finally {
@@ -176,7 +198,47 @@ export default function BrandOnboarding() {
   }
 
   const ready = Boolean(tenant.brandName && tenant.ownedDomains.length && tenant.industry && tenant.region)
+  const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
+
+  // 같은 업종·지역 경쟁사를 Gemini로 추천해 경쟁사 칸에 병합한다. 도메인은 백엔드에서 DNS 검증된 것만 온다.
+  async function suggestCompetitors() {
+    setSuggestingComp(true)
+    setCompMsg('경쟁사를 추론하는 중… (웹검색·도메인 확인, 십여 초)')
+    try {
+      const res = await fetch('/api/infer-competitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: brandName.trim(), industry: industry.trim(), region: region.trim() }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `추천 실패 (HTTP ${res.status})`)
+      }
+      const list = (await res.json()) as { name: string; domain: string }[]
+      if (!Array.isArray(list) || list.length === 0) {
+        setCompMsg('추천 결과가 없습니다 — 직접 입력해 주세요.')
+        return
+      }
+      const existing = new Set(
+        competitorsRaw
+          .split('\n')
+          .map((l) => l.split(',')[0]?.trim())
+          .filter(Boolean),
+      )
+      const added = list.filter((c) => c.name && !existing.has(c.name))
+      const lines = added.map((c) => (c.domain ? `${c.name}, ${c.domain}` : c.name))
+      setCompetitorsRaw((prev) => [prev.trim(), ...lines].filter(Boolean).join('\n'))
+      const noDomain = added.filter((c) => !c.domain).length
+      setCompMsg(
+        `✓ ${added.length}곳 추가${noDomain ? ` — 도메인 미확인 ${noDomain}곳은 이름만 넣었으니 확인·보완하세요` : ''}. 경쟁사는 직접 검토를 권합니다.`,
+      )
+    } catch (err) {
+      setCompMsg(`✗ ${err instanceof Error ? err.message : '추천 실패'}`)
+    } finally {
+      setSuggestingComp(false)
+    }
+  }
 
   async function copyJson() {
     try {
@@ -289,14 +351,37 @@ export default function BrandOnboarding() {
               <span className="hint">사실성 검증에 쓰입니다. 자동 추출이 비었으면 직접 입력하세요.</span>
             </label>
             <label className="field span2">
-              <span>경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)</span>
+              <span
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+              >
+                경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)
+                {canRegister && (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={suggestCompetitors}
+                    disabled={!canSuggestComp || suggestingComp}
+                    title={canSuggestComp ? '' : '브랜드명·업종을 먼저 채우세요'}
+                  >
+                    {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (Gemini)'}
+                  </button>
+                )}
+              </span>
               <textarea
                 rows={4}
                 value={competitorsRaw}
                 onChange={(e) => setCompetitorsRaw(e.target.value)}
                 placeholder={'강남언니, gangnamunni.com\n원진성형외과, k-wonjin.co.kr'}
               />
-              <span className="hint">경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다. 비우면 SoM은 판정 불가로 표시됩니다.</span>
+              <span className="hint">
+                경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다. 비우면 SoM은 판정 불가로 표시됩니다.
+                자동 추천은 <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
+              </span>
+              {compMsg && (
+                <span className={compMsg.startsWith('✗') ? 'error' : 'hint'} role="status">
+                  {compMsg}
+                </span>
+              )}
             </label>
           </div>
         </section>

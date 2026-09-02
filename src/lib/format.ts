@@ -26,3 +26,31 @@ export const ENGINE_LABEL: Record<string, string> = {
   claude: 'Claude',
   perplexity: 'Perplexity',
 }
+
+export const OWNER_TYPE_LABEL: Record<string, string> = {
+  'brand-owned': '자사',
+  'competitor-owned': '경쟁사',
+  'third-party-authority': '제3자 권위',
+  'third-party-ugc': '제3자 UGC',
+  unknown: '알 수 없음',
+}
+
+export const SOURCE_KIND_LABEL: Record<string, string> = {
+  'brand-official': '자사 공식',
+  competitor: '경쟁사',
+  news: '뉴스·언론',
+  gov: '공공기관',
+  wiki: '위키',
+  review: '후기 플랫폼',
+  forum: '포럼',
+  social: '소셜',
+  blog: '블로그',
+  other: '기타',
+}
+
+export const EEAT_PILLAR_LABEL: Record<string, { name: string; hint: string }> = {
+  experience: { name: 'Experience', hint: '실제 이용·후기처럼 그려지는 정도' },
+  expertise: { name: 'Expertise', hint: '전문성·자격·원장 등 전문가 신호' },
+  authoritativeness: { name: 'Authoritativeness', hint: '권위 있는 제3자·1위 추천' },
+  trustworthiness: { name: 'Trustworthiness', hint: '사실성·부정 어조·공식 출처' },
+}

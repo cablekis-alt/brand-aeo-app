@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import { collectPage } from './aeo/collectPage';
+import { inferBrandFields, inferCompetitors } from './brandInference';
 import { demoQuestionBank, demoScorecardHistory } from './demoData';
 import { DemoResultStore } from './demoStore';
 import { runWeeklyPipeline } from './pipeline';
-import { getCitationBreakdown, getRankingView } from './queries';
+import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries';
 import { startScheduler } from './scheduler';
 import { FileResultStore } from './store';
 import { loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from './tenantRegistry';
@@ -121,6 +122,28 @@ app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
   res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf));
 });
 
+// S-09 EEAT 분석 — 답변에서 브랜드가 경험·전문성·권위·신뢰로 어떻게 그려지는지.
+app.get('/api/eeat/:tenantId/:weekOf', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const source = await sourceFor(tenant, req.params.weekOf);
+  res.json(await getEeatAnalysis(source, tenant.tenantId, req.params.weekOf));
+});
+
+// S-10 AI 인용출처 분석 — 출처 유형·엔진 치우침·합의 도메인.
+app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const source = await sourceFor(tenant, req.params.weekOf);
+  res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
+});
+
 // S-07 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
 app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
@@ -141,6 +164,37 @@ app.get('/api/fetch', async (req, res) => {
   }
   res.set('Cache-Control', 'no-store');
   res.json(await collectPage(target));
+});
+
+// S-08 브랜드 추가 — 수집된 페이지 텍스트에서 업종·지역·주소를 Gemini로 추론한다.
+app.post('/api/infer-brand', async (req, res) => {
+  const text = typeof req.body?.text === 'string' ? req.body.text : '';
+  const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+  if (!text.trim()) {
+    res.status(400).json({ error: 'text가 필요합니다.' });
+    return;
+  }
+  try {
+    res.json(await inferBrandFields(text, brandName));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// S-08 브랜드 추가 — 같은 업종·지역의 경쟁사를 Gemini(웹검색)로 추천하고 도메인은 DNS로 검증한다.
+app.post('/api/infer-competitors', async (req, res) => {
+  const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+  const industry = typeof req.body?.industry === 'string' ? req.body.industry : '';
+  const region = typeof req.body?.region === 'string' ? req.body.region : '';
+  if (!brandName.trim() || !industry.trim()) {
+    res.status(400).json({ error: 'brandName, industry가 필요합니다.' });
+    return;
+  }
+  try {
+    res.json(await inferCompetitors(brandName, industry, region));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 app.post('/pipeline/run/:tenantId', async (req, res) => {

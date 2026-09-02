@@ -6,4 +6,6 @@ export * from './b5a-brand-mention';
 export * from './b5b-citation';
 export * from './b5c-recommendation-order';
 export * from './b5d-fact-graph';
+export * from './b6-eeat';
+export * from './b7-citation-sources';
 export * from './b8-report';

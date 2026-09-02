@@ -563,6 +563,10 @@ select {
   .metrics {
     grid-template-columns: 1fr 1fr 1fr;
   }
+
+  .metrics.eeat-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .metrics article {
@@ -580,6 +584,18 @@ select {
 .metrics article span {
   color: var(--muted);
   font-size: 13px;
+}
+
+.eeat-bar {
+  height: 6px;
+  background: var(--line);
+  margin: 0 0 10px;
+}
+
+.eeat-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
 }
 
 .engines {
