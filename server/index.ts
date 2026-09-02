@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
@@ -54,10 +55,45 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true });
 });
 
-app.get('/api/tenants', async (_req, res) => {
+app.get('/api/tenants', async (req, res) => {
   const tenants = await loadRuntimeTenants();
-  // 코호트 비교용 경쟁사 테넌트는 브랜드 선택 드롭다운에서 제외한다.
-  res.json(tenants.filter((tenant) => !tenant.cohortOnly).map(toTenantSummary));
+  // 기본은 브랜드 드롭다운용(경쟁사 제외). ?all=1이면 측정 대상 선택용으로 전부 준다.
+  const all = req.query.all === '1' || req.query.all === 'true';
+  const picked = all ? tenants : tenants.filter((tenant) => !tenant.cohortOnly);
+  res.json(picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })));
+});
+
+// S-11 "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬 전용).
+const SEED_LIVE: Record<string, { bank: string; an: string }> = {
+  'example-brand': { bank: 'src/data/live-question-bank.json', an: 'src/data/live-question-analyses.json' },
+  'stay-meomum': { bank: 'src/data/live-stay-question-bank.json', an: 'src/data/live-stay-question-analyses.json' },
+};
+
+app.post('/api/tenants/:tenantId/measure', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    const { scorecard } = await runWeeklyPipeline(tenant, store);
+    const weekOf = scorecard.weekOf;
+    const id = tenant.tenantId;
+    const seed = SEED_LIVE[id];
+    if (seed) {
+      // 시드 브랜드는 고정 파일명으로 복사 후 전체 재계산.
+      writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
+      const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
+      writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
+      execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
+    } else {
+      // 그 외(정식 브랜드·경쟁사)는 publish-tenant가 live 파일·레지스트리·스코어카드·순위까지 처리.
+      execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
+    }
+    res.json({ ok: true, tenantId: id, brandName: tenant.brandName, aeoScore: scorecard.aeoScore.current });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // S-08 브랜드 추가 — 온보딩 초안을 등록한다.

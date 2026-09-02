@@ -21,6 +21,10 @@ export default function MeasureQueue() {
   const [canMeasure, setCanMeasure] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [processMsg, setProcessMsg] = useState<string | null>(null)
+  const [allTenants, setAllTenants] = useState<{ tenantId: string; brandName: string; cohortOnly?: boolean }[]>([])
+  const [pickedTenant, setPickedTenant] = useState('')
+  const [measuringOne, setMeasuringOne] = useState(false)
+  const [measureOneMsg, setMeasureOneMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -40,9 +44,41 @@ export default function MeasureQueue() {
     void load()
     fetch('/api/health')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setCanMeasure(Boolean(d?.canMeasure)))
+      .then((d) => {
+        const can = Boolean(d?.canMeasure)
+        setCanMeasure(can)
+        if (can) {
+          fetch('/api/tenants?all=1')
+            .then((r) => (r.ok ? r.json() : []))
+            .then((list) => setAllTenants(list as typeof allTenants))
+            .catch(() => setAllTenants([]))
+        }
+      })
       .catch(() => setCanMeasure(false))
   }, [load])
+
+  // 선택한 테넌트 하나만 측정 + baking한다 (로컬 백엔드).
+  async function measureOne() {
+    if (!pickedTenant) return
+    setMeasuringOne(true)
+    setMeasureOneMsg(`${pickedTenant} 측정 중… (수 분). 이 탭을 열어 두세요.`)
+    try {
+      const res = await fetch(`/api/tenants/${encodeURIComponent(pickedTenant)}/measure`, { method: 'POST' })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
+      }
+      const d = (await res.json()) as { brandName: string; aeoScore?: number }
+      setMeasureOneMsg(
+        `✓ ${d.brandName} 측정·baking 완료 (AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
+      )
+      await load()
+    } catch (err) {
+      setMeasureOneMsg(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+    } finally {
+      setMeasuringOne(false)
+    }
+  }
 
   // 로컬 백엔드에서 대기열 전체를 측정 + publish + 정리한다 (수 분 소요).
   async function processAll() {
@@ -170,6 +206,35 @@ export default function MeasureQueue() {
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {canMeasure && (
+        <section className="panel" style={{ marginTop: '20px' }}>
+          <h3>테넌트 골라 측정</h3>
+          <p className="muted">대기열과 무관하게 특정 테넌트 하나를 지금 측정 + baking합니다.</p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <select
+              value={pickedTenant}
+              onChange={(e) => setPickedTenant(e.target.value)}
+              style={{ padding: '9px 12px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', borderRadius: '2px', font: 'inherit', minWidth: '260px' }}
+            >
+              <option value="">테넌트 선택…</option>
+              {allTenants.map((t) => (
+                <option key={t.tenantId} value={t.tenantId}>
+                  {t.brandName} ({t.tenantId}){t.cohortOnly ? ' · 경쟁사' : ''}
+                </option>
+              ))}
+            </select>
+            <button type="button" className="primary" onClick={() => void measureOne()} disabled={!pickedTenant || measuringOne}>
+              {measuringOne ? '측정 중…' : '선택 측정'}
+            </button>
+          </div>
+          {measureOneMsg && (
+            <p className={measureOneMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ marginTop: '10px', fontWeight: 500 }}>
+              {measureOneMsg}
+            </p>
+          )}
         </section>
       )}
 
