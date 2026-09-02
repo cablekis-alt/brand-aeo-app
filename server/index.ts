@@ -1,6 +1,8 @@
 import 'dotenv/config';
+import { execSync } from 'node:child_process';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
+import { appendTenant, loadTenants } from './config.js';
 import { inferBrandFields, inferCompetitors } from './brandInference.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
@@ -9,7 +11,13 @@ import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
 import { FileResultStore } from './store.js';
-import { loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from './tenantRegistry.js';
+import {
+  blobStoreEnabled,
+  loadRuntimeTenants,
+  normalizeTenantDraft,
+  registerTenant,
+  toTenantSummary,
+} from './tenantRegistry.js';
 import type { TenantConfig } from './types.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 
@@ -195,9 +203,62 @@ app.post('/api/infer', async (req, res) => {
   }
 });
 
-// S-08 측정 요청 대기열 — 배포에서 측정을 못 돌리므로 요청만 쌓고, 로컬 CLI가 처리한다.
+// S-08/S-11 측정 요청 대기열. 로컬 백엔드엔 Blob 토큰이 없으므로, 배포(Blob)의 큐를 프록시로 읽어
+// 로컬 S-11이 실제 대기열을 보게 한다.
+const MEASURE_API_BASE = process.env.MEASURE_API_BASE ?? 'https://brand-aeo-app.vercel.app';
+
+async function fetchQueue(): Promise<import('./measureRequests.js').MeasureRequest[]> {
+  if (blobStoreEnabled()) return readMeasureRequests();
+  const r = await fetch(`${MEASURE_API_BASE}/api/measure-requests`);
+  return r.ok ? ((await r.json()) as import('./measureRequests.js').MeasureRequest[]) : [];
+}
+
+async function clearQueue(tenantId: string): Promise<void> {
+  if (blobStoreEnabled()) {
+    await removeMeasureRequest(tenantId);
+    return;
+  }
+  await fetch(`${MEASURE_API_BASE}/api/measure-requests?tenantId=${encodeURIComponent(tenantId)}`, {
+    method: 'DELETE',
+  });
+}
+
 app.get('/api/measure-requests', async (_req, res) => {
-  res.json(await readMeasureRequests());
+  try {
+    res.json(await fetchQueue());
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// S-11 "측정 실행" — 대기열의 브랜드를 config 등록 + 측정 + publish + 대기열 정리까지 처리한다(로컬 전용).
+app.post('/api/measure-requests/process', async (_req, res) => {
+  try {
+    const pending = await fetchQueue();
+    const results: { tenantId: string; brandName: string; aeoScore?: number; ok: boolean; error?: string }[] = [];
+    for (const item of pending) {
+      try {
+        // 큐에 저장된 시점의 정규화가 오래됐을 수 있으니 측정 직전 한 번 더 정규화한다.
+        const t = normalizeTenantDraft(item.tenant);
+        const existing = await loadTenants();
+        if (!existing.some((x) => x.tenantId === t.tenantId)) await appendTenant(t);
+        const { scorecard } = await runWeeklyPipeline(t, store);
+        execSync(`npx tsx scripts/publish-tenant.ts ${t.tenantId}`, { stdio: 'inherit' });
+        await clearQueue(t.tenantId);
+        results.push({ tenantId: t.tenantId, brandName: t.brandName, aeoScore: scorecard.aeoScore.current, ok: true });
+      } catch (err) {
+        results.push({
+          tenantId: item.tenant?.tenantId ?? '(unknown)',
+          brandName: item.tenant?.brandName ?? '(unknown)',
+          ok: false,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    res.json({ processed: results.length, results });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 app.post('/api/measure-requests', async (req, res) => {
   try {

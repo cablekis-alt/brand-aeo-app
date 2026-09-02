@@ -26,9 +26,22 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
 
   const ownedDomains = d.ownedDomains!.map((domain) => domain.replace(/^www\./, ''));
   const owned = new Set(ownedDomains);
-  const competitors = (d.competitors ?? []).filter(
-    (competitor) => !competitor.domains.some((domain) => owned.has(domain.replace(/^www\./, ''))),
-  );
+  // 경쟁사도 방어적으로 정규화한다 — aliases/domains가 비면 파이프라인이 깨진다(competitor.aliases 순회 등).
+  const competitors = (d.competitors ?? [])
+    .map((competitor) => {
+      const c = competitor as { name?: unknown; aliases?: unknown; domains?: unknown };
+      const name = typeof c.name === 'string' ? c.name.trim() : '';
+      const domains = Array.isArray(c.domains)
+        ? c.domains.filter((v): v is string => typeof v === 'string').map((v) => v.replace(/^www\./, ''))
+        : [];
+      const aliases = Array.isArray(c.aliases) && c.aliases.length
+        ? c.aliases.filter((v): v is string => typeof v === 'string')
+        : name
+          ? [name]
+          : [];
+      return { name, aliases, domains };
+    })
+    .filter((competitor) => competitor.name && !competitor.domains.some((domain) => owned.has(domain)));
 
   return {
     tenantId: d.tenantId!,

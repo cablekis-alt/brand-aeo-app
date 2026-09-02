@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server:dev": "tsx watch server/index.ts",
+    "server:dev": "tsx watch --ignore \"**/tenants.config.json\" --ignore \"**/liveRegistry.ts\" --ignore \"src/data/**\" --ignore \"**/*.overlay.json\" --ignore \"**/measure-requests.json\" server/index.ts",
     "server:start": "tsx server/index.ts",
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json"
   },

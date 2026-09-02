@@ -18,6 +18,9 @@ export default function MeasureQueue() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [canMeasure, setCanMeasure] = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [processMsg, setProcessMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -35,7 +38,41 @@ export default function MeasureQueue() {
 
   useEffect(() => {
     void load()
+    fetch('/api/health')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanMeasure(Boolean(d?.canMeasure)))
+      .catch(() => setCanMeasure(false))
   }, [load])
+
+  // 로컬 백엔드에서 대기열 전체를 측정 + publish + 정리한다 (수 분 소요).
+  async function processAll() {
+    setProcessing(true)
+    setProcessMsg(`측정 중… 대기 ${items.length}건을 순서대로 처리합니다 (브랜드당 수 분). 이 탭을 열어 두세요.`)
+    try {
+      const res = await fetch('/api/measure-requests/process', { method: 'POST' })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `처리 실패 (HTTP ${res.status})`)
+      }
+      const data = (await res.json()) as {
+        processed: number
+        results: { brandName: string; aeoScore?: number; ok: boolean; error?: string }[]
+      }
+      const done = data.results.filter((r) => r.ok)
+      const failed = data.results.filter((r) => !r.ok)
+      setProcessMsg(
+        `✓ ${done.length}건 측정·publish 완료` +
+          (done.length ? ` — ${done.map((r) => `${r.brandName}(${r.aeoScore})`).join(', ')}` : '') +
+          (failed.length ? ` · 실패 ${failed.length}건` : '') +
+          `. 이제 git commit + npx vercel --prod 로 배포하세요.`,
+      )
+      await load()
+    } catch (err) {
+      setProcessMsg(`✗ ${err instanceof Error ? err.message : '처리 실패'}`)
+    } finally {
+      setProcessing(false)
+    }
+  }
 
   async function cancel(tenantId: string) {
     setBusyId(tenantId)
@@ -59,14 +96,28 @@ export default function MeasureQueue() {
         함수에서 못 돌리므로, 이 대기열을 <b>로컬 CLI</b>가 처리합니다.
       </p>
 
-      <div style={{ display: 'flex', gap: '10px', margin: '4px 0 20px' }}>
-        <button type="button" className="ghost" onClick={() => void load()} disabled={loading}>
+      <div style={{ display: 'flex', gap: '10px', margin: '4px 0 12px', flexWrap: 'wrap' }}>
+        {canMeasure && (
+          <button type="button" className="primary" onClick={() => void processAll()} disabled={processing || items.length === 0}>
+            {processing ? '측정 중…' : `측정 실행 (${items.length}건)`}
+          </button>
+        )}
+        <button type="button" className="ghost" onClick={() => void load()} disabled={loading || processing}>
           {loading ? '불러오는 중…' : '새로고침'}
         </button>
-        <span className="hint" style={{ alignSelf: 'center' }}>
-          대기 {items.length}건
-        </span>
+        <span className="hint" style={{ alignSelf: 'center' }}>대기 {items.length}건</span>
       </div>
+      <p className="hint" style={{ marginTop: 0 }}>
+        {canMeasure
+          ? '로컬 백엔드 감지됨 — "측정 실행"으로 대기열을 바로 측정·publish합니다 (완료 후 커밋·배포).'
+          : '측정은 로컬에서만 실행됩니다. 아래 명령을 참고하세요.'}
+      </p>
+
+      {processMsg && (
+        <p className={processMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
+          {processMsg}
+        </p>
+      )}
 
       {error && (
         <p className="error" role="alert">
