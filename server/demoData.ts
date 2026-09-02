@@ -1,10 +1,7 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { Engine, FactGraphNode, QuestionCategory, QuestionSpec } from '../src/prompts/types.js';
 import demoScorecards from '../src/data/demo-scorecards.json' with { type: 'json' };
-import liveQuestionBank from '../src/data/live-question-bank.json' with { type: 'json' };
-import liveQuestionAnalyses from '../src/data/live-question-analyses.json' with { type: 'json' };
-import liveStayQuestionBank from '../src/data/live-stay-question-bank.json' with { type: 'json' };
-import liveStayQuestionAnalyses from '../src/data/live-stay-question-analyses.json' with { type: 'json' };
+import { LIVE_ANALYSES, LIVE_BANKS } from './liveRegistry.js';
 import type { QuestionBank } from './store.js';
 import type {
   CitationDetail,
@@ -113,25 +110,8 @@ export function demoCohortScorecards(industry: string, region: string, weekOf: s
   );
 }
 
-interface LiveAnalysesFile {
-  tenantId: string;
-  weekOf: string;
-  analyses: QuestionRepeatAnalysis[];
-}
-
-/**
- * 실제 파이프라인을 돌려 얻은 산출물. 테넌트별로 등록하며, 등록된 테넌트는 합성 데모 대신
- * 이 실측 데이터를 그대로 내려준다 (파이프라인이 쓴 data/ 디렉터리가 없는 배포 환경용).
- */
-const LIVE_BANKS: Record<string, QuestionBank> = {
-  'example-brand': liveQuestionBank as QuestionBank,
-  'stay-meomum': liveStayQuestionBank as QuestionBank,
-};
-
-const LIVE_ANALYSES: LiveAnalysesFile[] = [
-  liveQuestionAnalyses as LiveAnalysesFile,
-  liveStayQuestionAnalyses as LiveAnalysesFile,
-];
+// 실측 산출물(LIVE_BANKS·LIVE_ANALYSES)은 server/liveRegistry.ts에서 온다.
+// 새 브랜드는 scripts/publish-tenant.ts가 그 레지스트리를 자동 갱신한다 (배포 환경용).
 
 export function demoQuestionBank(tenant: DemoTenant, weekOf: string): QuestionBank {
   const live = LIVE_BANKS[tenant.tenantId];
