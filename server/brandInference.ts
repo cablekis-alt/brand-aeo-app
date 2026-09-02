@@ -1,6 +1,5 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
-import { getEngineClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 export interface InferredBrandFields {
@@ -91,7 +90,7 @@ export async function inferCompetitors(
 스키마: [{"name": string, "domain": string}]
 설명·마크다운·코드블록 없이 JSON 배열만 반환하세요.`;
 
-  const result = await getEngineClient('gemini').call({ system, user });
+  const result = await new GeminiJudgeClient().call({ system, user });
   const parsed = parseJsonLoose<Array<{ name?: unknown; domain?: unknown }>>(result.text);
   if (!Array.isArray(parsed)) return [];
 
