@@ -1,0 +1,642 @@
+{
+  "tenantId": "hdmpension",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v2-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-1y41M5frBAAFg76HanI5vA8UNtvsqLR4100Xb1DADGDae_7dCeJzIhH2mbUVW74aCn9kZZoNPPXMkx3f0Ey-TK82MmHFIyXfp1p0OcCiQFN8ydT2oQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGndazgQDIkC-vwNfbQ2tJptnsRvi8JsBxMC2rf2SVJ6XSEx_nrvNZQtdIfo98Lz9pGBYKEzOcYd6L5ok6qIZa9NkdYj93QBT83vqQvMVtRf8w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEipBdd-sLUpTJf15tDM2YjZgOlNCm_BBGZtAWHkZTD8FyU7nMx06R1OuwZatpHDVvrtr286vuPIZckdBIrE_nqOBlPvmp_ok5pqwVaVAKXl-noDy8bkTK1sg0smUT-vBru2Q0Y5YON3IvHkVtc1IY7kiilUWoGyFA12FSbNWgovKMlVnYuBH0sjSZ_OkTFbF66AyJcTLOKkV-M7LXt1aPCIK_Wc05e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeN1OydRAwm1Ke7i5RHJl3gUhzNez0ZbQF9E-OpNNcNI19f0NIad29EeaWa0jFxvWtFCHWygBKMhwLdUJoDKR-xSQkLHUEAx-j5c7k5059Q8Edsw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHF-DqYQaEDeLsGXD4BXRSfBZ5-ZA1jNN2BdKKBE5wjAxFIGQrdnUWnyPRurlj0K89r2o1OiI1_TQx_fTKPRhLvLy8pqHX4RFc5JRFWQyXr-6mfifHz1iV3easkZGV02moLTgoKc-7MKIBom2Mbin7WiGL0ozisW-OGIKk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0gc-6qYjEBHiDn0BpGFlaSaVZUGMAkfpk-pj0NgUa1b9ya6Z6AWOG79DEc-gbT7KqsXaE6heOQpyLZBP1mfL-oj3aooYn3Mi00L7Pffr5Chhus0vac6MnASIdyZcCluN2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQIIqNrBLr-Ejcx-TcBiL1G_aOaCLPAINDLUnKdNI8IaX32fo70WRWkptFByintXTSP0-WDKFP5mV8S4AYx_wV2C6MWpm745Bxd_Nd28A9rjDlrX-qnN12JgY_kangw136In8i8aiuMJsffqv8XZ-B92X5es__DScCgYCGGHrZSKjK7qyE7t2uoGzHVhrYRt0i1nffIBtkJ1geF_CFbUhLrCFddth667fgMl7gV6Pwehuz6VgIsrb601qvMhVrcZcU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElnkDtNCyncapEc6Qdq4MJRy8B_WV8itg6rKTVW2-os_Gh81rANoHeJ3BDr9vFQYCxXzR-cXAg-GM7m1v_a5I4W1SAlRdhAitbuXW1veUpbfwPhg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "전북 군산시 무녀도에 위치한 **군산 해들목펜션**의 객실 내 구비 편의시설 및 비품 목록입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiNGOgFPBAFEeSrmHLih88c_H0KEpWSay55t3eMOrNtNmmAn-DfSokMxxqojetjKLsEfureWimGSbDgJUy7t1nll1E9Mxm2T4T0QTLW8koMnAEKRyUzq5VaTE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsQCIcqc-BaKeu3FKxBxXHbLfFGISW3qYYT7NqgfmlMYKkUHKp6t9nrKDykEZxyLVF_3UYgCnzxF0QlgTRLyVZ2D_qf3FGONZ6oh8biEbbBpVKhOVyv-ZwVQnpd3upaowWu0HCSSx0ZuP9d9fj2CDRhivc9bBL01-2u_XMVozWD_OZlu8TuG5pkkbKk4X8LkLXY6YxQH5s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwek_A1A7tjrjWNrGcSR_Prymvxk7lUhyAoaKkPzkP5uj01gbadqz25VYlXCFfd2qtOT_d6B-0eA4zsRdhpk_m0c0NgZQxlpqxVwJsYmcolcKGsdl5uPW67LMVtWeAVgZDgok=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHifj4tki5dx0cNoBPYtYVS3H5XOHEwmcyhgTBvDp2rH23gfMzRoVnzfJRjYFHrt9eOJ2ELJ8ot6Ec0755U-1wGShYW7fQ8ZipAfp_OPRW7AXRo7pgedWJMO_4HGMuPU_zTHC7AU3VXbD3rom0ovBfsS48W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk1Ieuh_mHf9qX-1ZWog7lKLCEAaANns2hnXgGlgLqTj1H-3d5fluVmSEsWC-z85dzHrETyevdiQIwSOdj3Q4JK0z3UWE5sQ_I02mQ26glInJCi77QfVN5swo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGt3Divai7sjToza2qtS8ZeGq8ZGPyDEP0rXulgls_iXBNKpEXTbhkxchinFh5AqfKPx3Y8siC1ukkvBhCKYNCibiTZ0Fqtvql0o93TOR0saRawH1JidCOVpZE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**‘스테이 머뭄’**과 **‘군산해들목펜션’**은 위치와 숙소의 성격이 완전히 달라, **여행의 목적과 동선에 맞춰 선택**하시는 것이 좋습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 2. 군산 해들목펜션",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **\"선유도/무녀도 바다를 보며 힐링하고, 야외 바베큐와 자연 경관을 즐기고 싶다\"** ➔ **군산해들목펜션**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "스테이 머뭄",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "**‘스테이 머뭄’**과 **‘군산해들목펜션’**은 위치와 숙소의 성격이 완전히 달라, **여행의 목적과 동선에 맞춰 선택**하시는 것이 좋습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "### 1. 군산 스테이, 머뭄",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **\"군산 시내에서 감성적인 독채 숙소에 묵으며 사진 찍고 맛집을 탐방하고 싶다\"** ➔ **스테이 머뭄**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEf4rxZ8Uzw-6tyMk5GRRGou9zWugZrdpQeNJwPnw1pI8L4VSdG-0580FxXWKsUXEHmFWJ6drbcqAp03jQu1b1q6weaXRlQ8WgQBSURPFB0D0RDKKEaq1gDGKjUehhcRFSTxZB5Ao1e97UDUhn36-vmjYoxdNNLI3QruvVzmegRY9ijcNFBMcxhEmoNK1-YwCV2zPJsJiLx-sHxLkwY--4KZqKITBesbLZ3rqo06hlzg_1UMhvgTHlafNGPHWloF_8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6jS_6m9Y84DgxunMPyoFaq51JOHKpDChzlpAbFwUVrlgzZ-J_3ov1UdD3G2xCEb2obexw0QK6D5MYriMtRbesv1sqYk7SWCRIQNvmFSu5KanHbZKnovE0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEa0ZwfGR7zzSa5AiBIX3S1qSxTmVFGeYRVER_add1j2r8aTfTi0PojlUoChkQEJ80gHmwefdNfsKwedhuHrPh92mOy-CI6FpyP2VsmTL6ts4AuJoep_Q7Tz_HyM3SPsg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFFxS2aCLXdE4hUDZA4deRcgn1oFTpeLq3Dc62PTh1uxMWOFhwd1Wf6LhYWiZZfxW24bRsxsdftNiPykWccdPMnjiEz-rrq7g7s5bqNHXkHkEINEqgl0rXFxhXRO9uM7DjPMc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHTZcXQnEaxV5Z9zV0WIYRBUrT4P7VDf_6LgcOyOTz1z2WedAzNqHgVsuygEwKQb7ZwMGEW-gmJOYvUGh2T-aKTKx7NdMHqacdqTrVr0igQoyaLzhM4ND92km2K-fVWw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsTXqjxBKfk3QNohf9raNFy61Wr5n3JGjEJYaogtyH2n-HPW8dFstgiYwesvAdFtwgFKpk3Kfs8MNUBRxAMAlm7wUzRrObNNrbNPC3Kw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGp8SwrsRPnoJnzbF9P6R41DOSZqQ-sEoWdlcTKiWvwugBMM_daBv3-dM65vR0VT-hc7jCGhoqO_sL9W1MjEXiHs0JEfT3wBzZV-Vv_E7cIrHAWF6b6664LJmBaBj5Woa8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGL9DlQe1Hi1s0Wk0ZAJBKGyxrULgce0hwgr3CwPgCuWSMAXafAXbxz4PUSosXzFdWALjPV1maMKGs-0YPBNCzlr2IQcc0bnUjuP7CxUfw5V3MyzIwgmOj6TcedvFqUPmUv65I-K1Aq5S20_mQWi31276-CA_Xvb7Ypv81nlxTHfTOjYbSIBEBRIuxET7N7KmeNk--WoXl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvoAVeA-9w3P2C5QwV-Q8nk2zx1bP_KD6PP2aoWD7qUqMU5ZdOjVYo2PKaojsEEWF9lzUB3aHrbo8SUGkhkdgHQQyE5U9LYjcQJvBaamGy3PdK8fWptGeIzZDtUqVTyoS_hLw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoGDjxA5ZoKf1BjmpzH1FCw9_i8PMmdCfuxg011oUuoB9g32rvv6FHPiryIMyOeb1ZrkvmVNJnrzNFnc0kYbNKDfFIfSPbiv5mI___Gys3cu2FI8KtDi0D3y8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_cEWTm8ZCnF0pQya3U0LeKQ_p5XPFhnn4EwiayTopoVhagkaEdg1l8kq1X9u1Hz4RQgAWFD590ZORgA1ciwvunyN19xwF40QR61K31viijYeOWcmnDwGAV65rH9QFFMQhCRUze-HIePX8ZmamiWmv1w21",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHE1hOzbWsLOdEnpM8acpsd0s2m4P5i_RlI5aVkVrPo_DwSgpFzRPtYWWlObZslm4oaC-FRt4Ay-raM9JfOD-kSswVoJXybQBCa2HwOQho16Aui9aHwJ9WumRA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "**군산스테이호텔**(평일 기준 6~8만 원대, 주말 9~12만 원대)과 비슷한 가격대이면서 청결도와 이용객 만족도가 높은 군산의 추천 숙소들입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **군산스테이호텔의 조용한 강변 뷰/외곽 휴식 느낌**을 이어가고 싶다면 ➡️ **라마다 바이 윈덤 군산** (은파호수 인근)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이 머뭄",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-jKXOp55rQTcSLOrpOUpYwebQlPkvhNPEidoeRegXYDXpqcd8r4CYemGBMgpcMKxGrp1o42iC1YIOr3ANnA1AAp_Wzveb6sJdAlJ5oKmDfby5PETaMih3pWirNX-o2csCY7W5maZHS3jz271sXI0i42InfskYL_JsBg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFiVr8Gfw-7ZDfF-CnXCGjVWbwJliYm1qxbDyLnV4hhJ8GdH_YbHxeG-dA6Tg7YdjzSCY6HYcxuEG4vwht_JDRVtRRSPuJi2RoFQ4KqRA4Mj5raIfEP4rBwOEvHsQVEEwwsNXn-FkvlI27K3CV2q8Smrr5hXT02QBrJ_dp6DfP9rWYKmVmbudL50HXOw4rNDz8XTk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdERdjAUI2cvJ8a9mjxYOsv7pOLgD9kIhofWPT0JA6nPizeJ5la_G_3_jDCMScGZnBrITeQxZNYLZ9Sbj74qJqpt-biLjcSxmtRAZj039Xiy6SoYRfG687gYPdvgyOoQODvt618s-w",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJ5N5HjhvB2bXf_vA2X5kfl12uzzXxLhS9fQMNnXeV9CUInEXyNjCAnTT9nMM5pRIS9ozErKGrGiiM5Y1c58l09Ok3QI2eSiZZCC1ovWv6KsO7Gfmw8sBKW1kedprj6avViWGFUYCBrGipIQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZOYKOS2hY8a6iDKAUo5i5y4TaXL1tci-fgNJxWdHFV9sJWrBwHnodpeG1qz2zyfjFeKhDiLHzv-Jp1CMnR1kS1jJjGMROvS9oHO1pfQ35-5yW3ges-0-ieH1lKtuEaMgC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGo8HDCAwNVN6bDgd6pZqajZewe6cAgNT4Uy6SZBu0_grQ3CfjyMX_iuJhAeDlLcD9-I27ZIARrfKhCIg18WgSsW1B4-fOlpfZkn_F5yWUChXOyG23yVTRE3yKoAb0su0Krqde_f7lp3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRNg36wGsW3Abd_NWYpmUhkgev91TAnHAsV39rhC0BF-OTwjlKjGiudiNd4AgszdyLtwydX9_Mh03JVbmeXQJqOKXQ8G1ElzuuxkHoIZrvpD_MYIBKzgpYrEA3W-FSmWrEFG84lXwzHN9ZusExcsGuy1HX9zZAhkaUj1IUEnKwsT5OuX-Ghciq-zF8e-cJCetDSUnP_bjnusaQvcw5wb6FOVVakztb0L08MCowcA-x7InJK_8Y9jnsvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTQhstErF9C5VrKf5rK5XABwg1ZFnrjPAetwWJuGOqGts8FV3GNIVOuBmuwLBBdjDoGfkpr_-NNwDbWn1mglvEuq5Jo6cv3D6QEkBiLKxOSOpC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-gJYrpHXfPzytQjQ6eSrLbXLmfr66l5jo2X7daoiIFcQgnTAfgICYJgj9vLSURqWH9oCCx-LHz-2PSouOWhHZzX4fZeKz7WcK-18Et3fT2uVM28eomefAk3L-Bpd296c214Z1AynMuEAr2qYkh_QjmPbxRYYpdIbow3jzGjtL3lkcDZgpSfOOrsKLap6vmw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEW0pwFWoVLwDRH8rnUnmvRkE-zsYyNQBXLNsZokZ_IJL4IgIDBu_mQetrAdWanl82KfGra_whI0yIX4KxoclFUxCViLBj7wdg--duRYSXf4hBjiLqrZtjtLzsJwg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8ZCpqwxES51NfkCUDWLvC8gh0C0piJBFwN3gHG2ztcHIzF0IF62btK38FGzd71WGDH2JFj-kS4yNnU0LDHJeCWxo8gZVDVHfo-EsDOac03pWMH5W_PdA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJDY3ftLpg9_KWL0b0NyxoQ9ssL8xSP3IurlUBxvAd9MmeR2aqYAtXFgY3wJKXkK09TY_QX02UcoI_GsI7hcOeprcHaoOAseeGQPGyxRSdmIv6GgycV4TvPcJ4v4kXuaSzqw-lC9rHCwhU0G_Fr6VUdxT00Seq-wTQU48=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEo4_tfmyMtkjhQv0wejIOeVlDqYE4AmDnTZzg6JQ-XSTFOCigde98YXndToXTC2z1p8SbYWsuSoSaDQ2R6n-X6bbv4Q5b7v2ZZ6i347NV7zQ5Vk8ztoWKtpIpq4rBSI5nD8tmtL4BxDj86a20wt_Nx7z0GXcVzJ8mYWE7m2A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTrG51qRW1QA-BT2m3RsInaj3s5vrwp7HDejzOs7y4QPMyTxUwDGG_YbAu0z4dMr8trclZjQEVWMNe6irnONHPFMlwAkgjF9ISrasu14cwfH-sziZXXtVU_BX9x2agtaGz_wSu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeGiK2g-BQF6aiNjghKhNbicxCbEG0qmdueTBD30KFGtxs3xaeIPWmF0yv0Ne76CYBNAGeatDo3lbQGjgG22tQpSlwUaj8aUA9_e3xIE0cyOJtHs1bmcg0HDAyenkO0fUkw3Wrgp-qAoPsYFs5nMe4x_tEtUhfxNPBsKOdiFUDwpziS3-v9QdmUNW8mgzqiC-m8iyk2whZ3zc6rRZzm9iwl3E5CT0e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkTGe8Hj39UF5eWGjaqXWwgxms3cNeKNljXIVex4HTEGHH73oTDMi0k-MReo7ABp12OYs0fujlWGyTR2yNJIQsdkA7zmSWDOhZK3MDVQCzkN0zCf7Klm2bNTe4rNaJTUt2k2aMUFn2Gz8m21B443ZfpNlophC55c1FLd81TtQJrSGSMeCbuLLFe8IF1JOnB-8195nmyYxyJ7HjE1bAe-_DdJ95vFCtPXs3pqZE4WdeRtFc1vQ0pSfCW9QLLsJylQR-jyk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 고군산군도(무녀도)에 위치한 **해들목펜션**은 탁 트인 바다 전망과 조용한 휴식을 원하는 여행객들 사이에서 서비스와 가성비 면에서 전반적으로 좋은 평가를 받는 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTnJEgamWpH_wYQ9ORSAB305YlFsSik6MNW5m8sjTbGOpr9NQPqmnYbdVaoJMa0X-1sbrXRet_XljcMBsikn9DNIaK6oCOK_B3NBvujlbnDoLuIugdLD3G5u-tgu0j5y9pceK5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUvrBeW5O_cBEbrjoQdMxv99RYmwucKdB23dYlUcNcrA6N0BIfnHwe0JMnGmG6g8Rpq0l6CLTlzrnvJuVKyw1iGBiZdg2ol3_TdTxGwUYUMIqndfxob1Tnd00ZBVxpAqVW4IOptzdB4GixvkHuk1sRZGYcm6COXbdqRzF51DLCeJXlwQjhBaWjKXQxg5S4vdiiRQhPGVZ1rQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnZM-FSbppSjE-rj3lqKjFhssxbTEcRLzPjZW8qK0Jyt2zUvEp74mv7J3RPM_pxVjuuUqvHKlBSIcH_E3rIhzrMW0J8zejCdV5NqUkqPo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_nRoifHT7NaBCd8kJsYi5Z1Sc2QEIe6mFISgho3QpKUGr7cb1VeNZOIGz37eBOm1JSVvPlE38srrQn0w0OE_ZUWQvEDeKlohYKgJUBtC6dZs4a5FGhzoXgmkQCneG8wy01Dm8wPRlTZaXOVHW2Koxv2eDnw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCn-87IxbwsJX3ldP4KADjNOERQHHQeMYOzrwbctVXBD6LBr0-wBqvYylqsQg_LTZmFk2ZZ8NV9zrMVZC1YSAEtjRhtknjoB8R5z30UnWslanU9fEJBTK90I2H",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-DMNUl9hy1DkpzPITKPUyK-aYgngOEJXfeahbSOOD6KklJd4pHcQYdv8uWXSKjA_vFCWQUG1KxHjy-bub3DNDVXzUPpQGkw8GbukVngl3QnnLrNPcJn2OnOs5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 머뭄",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **군산스테이호텔** (성산면 철새로)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOABC-K3SJ6T5B-Xl_XQ28ipGwBhhLwgJq7SuBg-nXDFhIFK56E5R8HRMssIgPzPDi7r9jXZsFHaB5XC7qclRcWAyz_wDPGdZO79AZCilEAaja81sLTE9et-LaOGSVjMPL",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhn0IC4kPQ7TGrQo7XzcRU-l53YkMOu1sf6DtkZSH44MHWXxrhZs9YThrgTAlMjIB2UZ6cg8IRl4WHjGhBlfvVAkK_K1ZLzOu-mS7mFotzgYSiqg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8bOQF7AL9RRv59jpnr6MAYmknihuXD3ZzxPWLDZ0VxEPPkG70AbdLRxVbstPoudOPYrdvQaTA9qLQVO1_eYE-n9Rb1Apd_ygy_0dpBrWYKkGPVfXfj3kZNCPxXA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgbGSyLGYBDsSBAv1Om4V_5Nra21ZVAyHitDfVaPzJAFNgcGv__gU12Do2Bzpk9_oqqKkZ85VCJS5QEHyghGBrI3OISCe1rTgQqXFNP5bCnJHjGASIXhsfcRqG",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKvunyrsIcvT3javOWTmrU0EVFVpVsSxNARD01o7xSvOwBITb0pEmtPnm8dj0RDjbnI8GtjTxwtx-6WMkzTopQVaRAWMRblJFffuBv3S-jqEX5NJDdzH2ihBbAYQRNS8F7PsJXMZP946Cp09jEwTgefVgoPvU7iL265jGwwgb4Cc-d7MKIU4U58tQZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEe0xkmjSKTElLy5shiDOkwKkWNwellryemOHy-jVLr8Bl2jy5SJdnFM0GRg2RHH3f65y0mjQd9FIP28mPB7G2KLCKnNxRnD_61cBhmi5X3NOGEI5EAeiTv7uci_CUJIylS6Z-MjeY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJVnBw_9_a9Zx6h-t3PdkIRnMbAUHHq2gi7Rl_GQtUdfDj6I5Qf1mSSk5NlWI0fIdVV9V19Sl_EjVVgslpuvCR-xw5bqtI9189dB61RJSkrxXqiA6VDsRlieVbMaZOCSFMUjn9Nh5M4giehD-2W6Y2ojt7VCa4mnhJ1OajYXLcjBBnMjOULHM93x3SBXgXc1Gnh8-Xy8z5M4SAXViBOF7dFp5WlXJK3KP3KwpAfv949fSAvQZRJPr4Z6bU3MeudDIKxjGjdlrKhozVO7OfSU__2mamopK4GK4yu9IBU5e5CUHxRlUMXSzgrDd_otxAlkpsd4eZe1npdOrnL706MzDPWoW85uHCO7b8AJR_NRlSF2c4yfdT_6IjqMx_ch4iVAhUmEM7_Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHpuLEubqeGjchGuf05a7e7f0JF7E67RTA_ul8WY4499DqjCOLt54Dx5mlmLod9p5QQc3a5XHq74MAPrtli_WtzDUZBZP9vQH5HT_RboYKa56Xd5Jef0x_ZEj6BvL_XpO99WzeSO2HPt15GwAIYWRRIKyGSFaRvmQQbVAi_ole8Q4SprrTd10RM84xmaO_BrboGLwWjUVISUEo0pftuN1fvdbr528X20G-LfIKmlHI4cl6XKJ7foR6OYfM-bmiW5pd4ZGqIFBYD2H4aRRQ1g63VH1toYR6C9DACON6uPl6dhyneQzQlGRQBRbUSe-7kHQFYF-_3QJe3DKn_",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5uWIELV-FAEm6lxPm5H7rD9bDGmza1MoZBmP190tED_nrXiW-k47aZNMOVnooJDiRxHxwsQnYifv8cNMM-0FxTh1DJnA8fq8ym6uWTMd-23Xt6W0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhn0IC4kPQ7TGrQo7XzcRU-l53YkMOu1sf6DtkZSH44MHWXxrhZs9YThrgTAlMjIB2UZ6cg8IRl4WHjGhBlfvVAkK_K1ZLzOu-mS7mFotzgYSiqg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0Zf-Jt0-GeGS2cFdMb_HhnVmvMD9tuUFfOGJBSpPkvFYavQ13UqpZX41jflc3EwW9uKnH9LLfc7tcDRnaVO-IHNAabU7WNNJzbEDFxA5Q7iCE6SCMNAqH9gptBDoSHkob5xUhxwpufk07",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
