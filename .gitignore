@@ -15,6 +15,7 @@ dist-ssr
 # backend runtime
 .env
 /data
+server/tenants.overlay.json
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +29,6 @@ dist-ssr
 *.sw?
 
 .vercel
+.env
+.env.*
+!.env.example

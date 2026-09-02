@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
@@ -59,6 +60,7 @@ function parseCompetitors(raw: string): CompetitorDraft[] {
 }
 
 export default function BrandOnboarding() {
+  const { reloadTenants, setTenantId } = useTenant()
   const [url, setUrl] = useState('')
   const [industry, setIndustry] = useState('')
   const [region, setRegion] = useState('')
@@ -71,19 +73,25 @@ export default function BrandOnboarding() {
   const [extracted, setExtracted] = useState(false)
   const [copied, setCopied] = useState(false)
   const [canRegister, setCanRegister] = useState(false)
+  const [canMeasure, setCanMeasure] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
 
-  // 쓰기 가능한 로컬 백엔드가 있을 때만 "등록 & 측정"을 노출한다 (배포 서버리스엔 /api/health가 없어 404).
+  // 배포(Vercel)에서도 /api/health가 canRegister를 알려 준다.
   useEffect(() => {
     let alive = true
     fetch('/api/health')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (alive) setCanRegister(Boolean(d?.canRegister))
+        if (!alive || !d) return
+        setCanRegister(Boolean(d.canRegister))
+        setCanMeasure(d.canMeasure !== false)
       })
       .catch(() => {
-        if (alive) setCanRegister(false)
+        if (alive) {
+          setCanRegister(false)
+          setCanMeasure(false)
+        }
       })
     return () => {
       alive = false
@@ -180,10 +188,10 @@ export default function BrandOnboarding() {
     }
   }
 
-  // 로컬 백엔드에 등록 → 즉시 측정. JSON 복사 없이 브랜드를 추가한다.
+  // 등록 후 드롭다운에 바로 보이게 한다. 측정은 로컬 백엔드가 있을 때만 이어서 돈다.
   async function registerAndMeasure() {
     setRegistering(true)
-    setRegisterMsg('브랜드를 tenants.config.json에 등록하는 중…')
+    setRegisterMsg('브랜드를 등록하는 중…')
     try {
       const reg = await fetch('/api/tenants', {
         method: 'POST',
@@ -193,6 +201,14 @@ export default function BrandOnboarding() {
       if (!reg.ok) {
         const body = (await reg.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error || `등록 실패 (HTTP ${reg.status})`)
+      }
+      await reloadTenants()
+      setTenantId(tenant.tenantId)
+      if (!canMeasure) {
+        setRegisterMsg(
+          `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ChatGPT 측정은 로컬에서 npx tsx scripts/run-pipeline.ts ${tenant.tenantId} 로 실행하세요.`,
+        )
+        return
       }
       setRegisterMsg(
         `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
@@ -204,7 +220,7 @@ export default function BrandOnboarding() {
       }
       const result = (await run.json()) as { aeoScore?: number }
       setRegisterMsg(
-        `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴를 새로고침하면 선택할 수 있습니다.`,
+        `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -219,7 +235,8 @@ export default function BrandOnboarding() {
       <h1>브랜드 추가</h1>
       <p className="lead">
         브랜드 URL을 넣으면 페이지를 읽어 <b>브랜드명·도메인·주소</b>를 자동으로 채웁니다. 업종·지역·경쟁사만 확인하면
-        측정용 테넌트 초안(JSON)이 만들어집니다. 실제 측정은 이 초안을 등록한 뒤 백엔드 파이프라인으로 실행합니다.
+        측정용 테넌트가 만들어집니다. 프로덕션에서는 등록이 바로 반영되고, ChatGPT 측정은 로컬 파이프라인으로 이어서
+        실행합니다.
       </p>
 
       <form className="site-form" onSubmit={handleExtract}>
@@ -292,7 +309,7 @@ export default function BrandOnboarding() {
             <div style={{ display: 'flex', gap: '8px' }}>
               {canRegister && (
                 <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
-                  {registering ? '진행 중…' : '브랜드 등록 & 측정'}
+                  {registering ? '진행 중…' : canMeasure ? '브랜드 등록 & 측정' : '브랜드 등록'}
                 </button>
               )}
               <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
@@ -303,11 +320,14 @@ export default function BrandOnboarding() {
           {!ready && <p className="hint" style={{ marginTop: '8px' }}>* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
           {canRegister ? (
             <p className="hint" style={{ marginTop: '8px' }}>
-              백엔드가 감지됐습니다 — <b>등록 & 측정</b>을 누르면 JSON 복사 없이 바로 config에 추가하고 측정합니다.
+              {canMeasure
+                ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
+                : '프로덕션에 브랜드를 바로 등록합니다. ChatGPT 측정은 등록 후 로컬 CLI로 실행하세요.'}
             </p>
           ) : (
             <p className="hint" style={{ marginTop: '8px' }}>
-              쓰기 가능한 백엔드가 없어(배포 환경) 자동 등록은 비활성화됩니다. JSON을 복사해 <code>tenants.config.json</code>에 추가하세요.
+              자동 등록을 쓰려면 Vercel 프로젝트에 Blob 스토어를 연결하세요. 지금은 JSON을 복사해{' '}
+              <code>tenants.config.json</code>에 추가할 수 있습니다.
             </p>
           )}
           {registerMsg && (
@@ -322,10 +342,17 @@ export default function BrandOnboarding() {
           <pre className="json-block">{json}</pre>
           <h4>등록·측정 방법</h4>
           <ol className="muted" style={{ lineHeight: 1.8 }}>
-            <li>위 JSON을 <code>server/tenants.config.json</code> 배열에 추가합니다.</li>
-            <li>측정 실행: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId}</code></li>
-            <li>대시보드에 반영: 브랜드 분석을 <code>src/data/</code>로 baking 후 재배포 (기존 재측정 절차와 동일).</li>
-            <li>경쟁사까지 코호트로 비교하려면 각 경쟁사도 테넌트로 추가해 <code>run-cohort</code>를 실행합니다.</li>
+            <li>
+              {canRegister
+                ? '위 버튼으로 브랜드를 등록합니다.'
+                : '위 JSON을 복사해 server/tenants.config.json 배열에 추가합니다.'}
+            </li>
+            <li>
+              측정: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId}</code>
+            </li>
+            <li>
+              대시보드 점수 반영: <code>npx tsx scripts/publish-tenant.ts {tenant.tenantId}</code> 후 재배포
+            </li>
           </ol>
         </section>
       )}

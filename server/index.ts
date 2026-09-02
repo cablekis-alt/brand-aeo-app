@@ -1,13 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
 import { collectPage } from './aeo/collectPage';
-import { appendTenant, loadTenants } from './config';
 import { demoQuestionBank, demoScorecardHistory } from './demoData';
 import { DemoResultStore } from './demoStore';
 import { runWeeklyPipeline } from './pipeline';
 import { getCitationBreakdown, getRankingView } from './queries';
 import { startScheduler } from './scheduler';
 import { FileResultStore } from './store';
+import { loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from './tenantRegistry';
 import type { TenantConfig } from './types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 
@@ -16,22 +16,8 @@ app.use(express.json());
 const store = new FileResultStore();
 const PORT = process.env.PORT ?? 4000;
 
-function toTenantSummary(tenant: TenantConfig) {
-  return {
-    tenantId: tenant.tenantId,
-    brandName: tenant.brandName,
-    aliases: tenant.aliases,
-    ownedDomains: tenant.ownedDomains,
-    industry: tenant.industry,
-    region: tenant.region,
-    engines: tenant.engines,
-    questionBankSize: tenant.questionBankSize,
-    competitors: tenant.competitors.map((competitor) => competitor.name),
-  };
-}
-
 async function findTenant(tenantId: string): Promise<TenantConfig | undefined> {
-  const tenants = await loadTenants();
+  const tenants = await loadRuntimeTenants();
   return tenants.find((tenant) => tenant.tenantId === tenantId);
 }
 
@@ -53,45 +39,27 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-// 로컬 백엔드 감지용. 배포(Vercel)에는 이 라우트가 없어 404 → 프런트가 "등록" 버튼을 숨긴다.
+// 로컬 백엔드 감지용. 배포(Vercel)는 api/health.ts가 같은 계약을 제공한다.
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, backend: 'express', canRegister: true });
+  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true });
 });
 
 app.get('/api/tenants', async (_req, res) => {
-  const tenants = await loadTenants();
+  const tenants = await loadRuntimeTenants();
   // 코호트 비교용 경쟁사 테넌트는 브랜드 선택 드롭다운에서 제외한다.
   res.json(tenants.filter((tenant) => !tenant.cohortOnly).map(toTenantSummary));
 });
 
-// S-08 브랜드 추가 — 온보딩 초안을 tenants.config.json에 등록한다 (로컬 백엔드 전용).
+// S-08 브랜드 추가 — 온보딩 초안을 등록한다.
 app.post('/api/tenants', async (req, res) => {
-  const d = (req.body ?? {}) as Partial<TenantConfig>;
-  const missing = (['tenantId', 'brandName', 'industry', 'region'] as const).filter((k) => !d[k]);
-  if (!d.ownedDomains?.length) missing.push('ownedDomains' as never);
-  if (missing.length) {
-    res.status(400).json({ error: `필수 항목 누락: ${missing.join(', ')}` });
-    return;
-  }
-  const tenant: TenantConfig = {
-    tenantId: d.tenantId!,
-    brandName: d.brandName!,
-    aliases: d.aliases?.length ? d.aliases : [d.brandName!],
-    ownedDomains: d.ownedDomains!,
-    industry: d.industry!,
-    region: d.region!,
-    engines: d.engines?.length ? d.engines : ['openai'],
-    questionBankSize: d.questionBankSize ?? 12,
-    questionBankVersion: d.questionBankVersion ?? 'v1',
-    repeatsPerQuestion: d.repeatsPerQuestion ?? 3,
-    competitors: d.competitors ?? [],
-    factGraph: d.factGraph ?? [],
-  };
   try {
-    await appendTenant(tenant);
-    res.status(201).json({ ok: true, tenantId: tenant.tenantId });
+    const tenant = normalizeTenantDraft(req.body);
+    await registerTenant(tenant);
+    res.status(201).json({ ok: true, tenantId: tenant.tenantId, brandName: tenant.brandName });
   } catch (err) {
-    res.status(409).json({ error: err instanceof Error ? err.message : String(err) });
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message.includes('필수 항목') ? 400 : message.includes('이미 존재') ? 409 : 500;
+    res.status(status).json({ error: message });
   }
 });
 

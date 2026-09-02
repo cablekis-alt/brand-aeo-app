@@ -8,7 +8,7 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
 
   const tenantId = param(req.query, 'tenantId');
   const weekOf = param(req.query, 'weekOf');
-  const tenant = findTenant(tenantId);
+  const tenant = await findTenant(tenantId);
   if (!tenant) {
     tenantNotFound(res, tenantId);
     return;

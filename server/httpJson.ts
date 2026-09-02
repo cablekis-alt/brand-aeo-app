@@ -1,5 +1,5 @@
-import rawTenants from './tenants.config.json' with { type: 'json' };
 import type { DemoTenant } from './demoData.js';
+import { loadRuntimeTenants } from './tenantRegistry.js';
 import type { TenantConfig } from './types.js';
 
 /**
@@ -9,6 +9,7 @@ import type { TenantConfig } from './types.js';
 export interface JsonRequest {
   method?: string;
   query: Record<string, string | string[] | undefined>;
+  body?: unknown;
 }
 
 export interface JsonResponse {
@@ -46,11 +47,9 @@ export function param(query: JsonRequest['query'], key: string): string {
   return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
 }
 
-// 서버리스 번들에 정적으로 포함된다 (fs·process.cwd()에 의존하지 않는다).
-export const TENANTS = rawTenants as TenantConfig[];
-
-export function findTenant(tenantId: string): (TenantConfig & DemoTenant) | undefined {
-  return TENANTS.find((tenant) => tenant.tenantId === tenantId);
+export async function findTenant(tenantId: string): Promise<(TenantConfig & DemoTenant) | undefined> {
+  const tenants = await loadRuntimeTenants();
+  return tenants.find((tenant) => tenant.tenantId === tenantId);
 }
 
 export function tenantNotFound(res: JsonResponse, tenantId: string): void {

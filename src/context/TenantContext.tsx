@@ -8,6 +8,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  async function reloadTenants(): Promise<TenantSummary[]> {
+    const next = await loadTenants()
+    setTenants(next)
+    return next
+  }
+
   useEffect(() => {
     let cancelled = false
     loadTenants()
@@ -31,7 +37,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   return (
     <TenantContext.Provider
-      value={{ tenants, tenantId: tenant?.tenantId ?? tenantId, setTenantId, tenant, loading, error }}
+      value={{ tenants, tenantId: tenant?.tenantId ?? tenantId, setTenantId, tenant, loading, error, reloadTenants }}
     >
       {children}
     </TenantContext.Provider>

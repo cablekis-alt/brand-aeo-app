@@ -3,11 +3,11 @@ import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../se
 import type { JsonRequest, JsonResponse } from '../../server/httpJson.js';
 
 // S-04 질문 프롬프트 빌더.
-export default function handler(req: JsonRequest, res: JsonResponse) {
+export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 
   const tenantId = param(req.query, 'tenantId');
-  const tenant = findTenant(tenantId);
+  const tenant = await findTenant(tenantId);
   if (!tenant) {
     tenantNotFound(res, tenantId);
     return;

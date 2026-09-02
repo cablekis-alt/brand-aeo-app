@@ -8,6 +8,7 @@ export interface TenantContextValue {
   tenant: TenantSummary | undefined
   loading: boolean
   error: string | null
+  reloadTenants: () => Promise<TenantSummary[]>
 }
 
 export const TenantContext = createContext<TenantContextValue | null>(null)
