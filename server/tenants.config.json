@@ -18,7 +18,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v3",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "강남언니",
@@ -104,7 +104,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -185,7 +185,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -268,7 +268,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -349,7 +349,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -430,7 +430,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -510,7 +510,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "군산스테이호텔",
@@ -561,7 +561,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "스테이 머뭄",
@@ -607,7 +607,7 @@
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 1,
+    "repeatsPerQuestion": 3,
     "competitors": [
       {
         "name": "스테이 머뭄",
