@@ -38,7 +38,10 @@ const MENU: MenuGroup[] = [
   },
   {
     title: '브랜드 관리',
-    items: [{ code: 'S-08', label: '브랜드 추가', to: '/brand-onboarding' }],
+    items: [
+      { code: 'S-08', label: '브랜드 추가', to: '/brand-onboarding' },
+      { code: 'S-11', label: '측정 대기열', to: '/measure-queue' },
+    ],
   },
 ]
 

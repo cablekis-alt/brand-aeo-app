@@ -7,6 +7,7 @@ import CitationSources from './pages/CitationSources'
 import Citations from './pages/Citations'
 import Dashboard from './pages/Dashboard'
 import Eeat from './pages/Eeat'
+import MeasureQueue from './pages/MeasureQueue'
 import Performance from './pages/Performance'
 import QuestionBank from './pages/QuestionBank'
 import Ranking from './pages/Ranking'
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="performance" element={<Performance />} />
             <Route path="ranking" element={<Ranking />} />
             <Route path="brand-onboarding" element={<BrandOnboarding />} />
+            <Route path="measure-queue" element={<MeasureQueue />} />
           </Route>
         </Routes>
       </BrowserRouter>
