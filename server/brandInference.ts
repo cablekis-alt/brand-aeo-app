@@ -61,7 +61,11 @@ async function verifiedDomain(raw: string): Promise<string> {
     .toLowerCase();
   if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) return '';
   try {
-    await lookup(domain);
+    // 매달린 DNS 조회가 서버리스 시간 예산을 다 먹지 않도록 3초로 제한한다.
+    await Promise.race([
+      lookup(domain),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('dns timeout')), 3000)),
+    ]);
     return domain;
   } catch {
     return '';
@@ -91,14 +95,16 @@ export async function inferCompetitors(
   const parsed = parseJsonLoose<Array<{ name?: unknown; domain?: unknown }>>(result.text);
   if (!Array.isArray(parsed)) return [];
 
-  const out: InferredCompetitor[] = [];
   const seen = new Set<string>();
+  const candidates: { name: string; rawDomain: string }[] = [];
   for (const item of parsed.slice(0, 5)) {
     const name = typeof item?.name === 'string' ? item.name.trim() : '';
     if (!name || name === brandName.trim() || seen.has(name)) continue;
     seen.add(name);
-    const domain = typeof item?.domain === 'string' ? await verifiedDomain(item.domain) : '';
-    out.push({ name, domain });
+    candidates.push({ name, rawDomain: typeof item?.domain === 'string' ? item.domain : '' });
   }
-  return out;
+  // 도메인 DNS 검증은 병렬로 (순차로 하면 서버리스 시간 제한을 넘기 쉽다).
+  return Promise.all(
+    candidates.map(async (c) => ({ name: c.name, domain: c.rawDomain ? await verifiedDomain(c.rawDomain) : '' })),
+  );
 }
