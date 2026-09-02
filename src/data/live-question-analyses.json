@@ -4,55 +4,7 @@
   "analyses": [
     {
       "questionId": "v3-001",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-001",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-001",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-002",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
@@ -68,39 +20,7 @@
     },
     {
       "questionId": "v3-002",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-002",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-003",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
@@ -116,804 +36,503 @@
     },
     {
       "questionId": "v3-003",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.medifinder.com/en/lists/plastic-surgery/top-5-plastic-surgery-clinics-in-south-korea/?utm_source=openai",
-          "domain": "medifinder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
-          "domain": "medicaltourismco.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kclinichelp.com/?utm_source=openai",
-          "domain": "kclinichelp.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
-          "domain": "medicaltourismco.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.medicaltourismco.com/clinics/cosmetic/south-korea/?utm_source=openai",
-          "domain": "medicaltourismco.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://wellmap.co/plastic-surgery-in-south-korea?utm_source=openai",
-          "domain": "wellmap.co",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kclinichelp.com/?utm_source=openai",
-          "domain": "kclinichelp.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
-          "domain": "gangnambeautyguide.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
-          "domain": "gangnambeautyguide.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.seoulmirror.com/?utm_source=openai",
-          "domain": "seoulmirror.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1u0wyob/most_korean_clinic_reviews_are_paid_i_wrote_one/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://s24.q4cdn.com/622300748/files/doc_news/The-Largest-Plastic-Surgery-Information-Platform-in-South-Korea-Launches-UNNI-a-Global-K-Medical-Information-App-for-Foreigners-2023.pdf?utm_source=openai",
-          "domain": "s24.q4cdn.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-003",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-004",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "청담제이 의원 강남, 어린공주성형외과의원 강남, 뷰성형외과 강남 등도 모두 후기 수 많고 평점 4.9점으로 상위권을 차지 중입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "Honesty Plastic Surgery, Kokoline Clinic, Shimmian Clinic, The Door Plastic Surgery, View Plastic Surgery, Noselab Clinic, Thank You Plastic Surgery 등은 Google Maps 기준 평점이 4.5~4.8 이상으로 강남권에서 안정적인 평판을 보이는 클리닉입니다.",
-          "sentiment": "neutral"
-        }
-      ],
+      "mentioned": false,
+      "mentionSentences": [],
       "competitorMentions": [
         {
-          "name": "바노바기성형외과의원",
+          "name": "강남언니",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "프리미엄 바노바기 성형외과 (Banobagi): 자연스러운 코 라인 완성에 강점이 있으며, 안전한 수술 환경을 강조합니다.",
-              "sentiment": "positive"
+              "sentence": "* **바비톡 / 강남언니:** 시술·수술 전후 사진, 비용 이벤트, 대략적인 스타일 파악에 좋습니다. (단, 이벤트성 후기나 광고성 글도 섞여 있어 '후기 필터링' 기능으로 내돈내산 위주로 보시는 것을 추천합니다.)",
+              "sentiment": "neutral"
             }
           ]
         }
       ],
-      "shareOfMention": 0.6666666666666666,
-      "citations": [
-        {
-          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
-          "domain": "seoulchart.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
-          "domain": "seoulchart.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
-          "domain": "seoulchart.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seoulchart.com/procedure/nose?utm_source=openai",
-          "domain": "seoulchart.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnamobgyn.com/foreigners-clinic-guide-korea/best-5-rhinoplasty-clinics-in-gangnam?utm_source=openai",
-          "domain": "gangnamobgyn.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-rhinoplasty-clinics-in-seoul?utm_source=openai",
-          "domain": "gangnamwomenshealth.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gangnambeautyguide.com/en/clinics/?utm_source=openai",
-          "domain": "gangnambeautyguide.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.pleasureps.com/en/?utm_source=openai",
-          "domain": "pleasureps.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1urb10y/girin_plastic_surgery_review/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/u_ZeroOne_Clinic/comments/1r82imu/were_zero_one_plastic_surgery_in_gangnam/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/KoreaPlasticSurgery/comments/1w32xh1/i_finally_came_to_korea_today_for_my_rhinoplasty/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "뷰성형외과",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "뷰성형외과 강남",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
     },
     {
       "questionId": "v3-004",
-      "engine": "openai",
-      "callIndex": 2,
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "성형 정보 커뮤니티(바비톡, 강남언니, 성예사 등)에서 본인이 원하는 코 모양과 비슷한 전후 사진을 스크랩하세요.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-006",
+      "engine": "gemini",
+      "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**뷰성형외과의원 (신논현역 인근)** 3D-CT 기반 구조 분석, 마취통증의학과 전문의 상주, 응급 장비 및 체계적 사후관리 시스템을 갖춰 코성형 시 초기 안전에 중점을 둔 병원입니다",
+          "sentence": "뷰성형외과는 강남권의 대표적인 대형 성형외과 중 하나로, 체계적인 안전 시스템과 분야별 협진 인프라를 주요 강점으로 꼽을 수 있습니다.",
           "sentiment": "positive"
-        },
-        {
-          "sentence": "**전문의 자격 확인**: 보건복지부 면허조회 서비스를 통해 원장 및 의료진의 전문의 자격을 직접 확인하는 것이 중요합니다([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "**진료 체계의 구조화 여부**: 상담 → 검진 → 수술 → 회복이 층별 혹은 공간별로 구분되어 운영되는지, 마취통증의학과 전문의 상주 여부, 응급 장비 비치 등이 잘 되어 있는지를 점검하세요([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "**상담의 질**: 본인의 코 구조나 고민 상황에 대해 원장이 얼마나 상세히 설명하고 공감하는지, 1:1 맞춤 설계를 제시하는지 확인하는 것이 실제 성형 만족도와 연결됩니다([blog.viewclinic.com](https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai))",
-          "sentiment": "neutral"
         }
       ],
-      "competitorMentions": [
-        {
-          "name": "바노바기성형외과의원",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "**프리미엄 바노바기 성형외과** 강남 지역에서 코 성형을 포함한 여러 분야에서 기술력과 안전 시스템을 갖춘 대표적인 성형외과로 소개됩니다",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.8,
+      "competitorMentions": [],
+      "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog.viewclinic.com/?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
-          "domain": "mohazi.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
-          "domain": "mohazi.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://xn--9p4bqa252h.com/%E1%84%8C%E1%85%A1%E1%84%80%E1%85%A1%E1%84%82%E1%85%B3%E1%86%A8%E1%84%8B%E1%85%A7%E1%86%AB%E1%84%80%E1%85%A9%E1%86%AF-%E1%84%8F%E1%85%A9%E1%84%89%E1%85%A5%E1%86%BC%E1%84%92%E1%85%A7%E1%86%BC?utm_source=openai",
-          "domain": "xn--9p4bqa252h.com",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVA-U3b1veDNK8H4GVBYKZM1vS7Q5M8xZ2GN0tsjWUDlZxx0YVdpmHOxMuDlyKPiZviu9nFhck4bKGa4xedVs9Ty5alej18O3UNoxDQ-BGCMSKOZ94mqILUrcF3o-QjT09VG-y",
+          "domain": null,
           "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHB3d67EmLPZMB0_SIl2HG5Um5jkD4n76HRYfIKu2fjMCeprXk2TGmUEKQPtirGRe9EkBHYV9GFOcJfII1V7E3S7u7DEtuVMCcOWNhCbs4I3ZASVibINaBY2s5Ia6fJ1hdj57BWOTgFAH9MEUDoDETREfelOxkYcyO11GdhelU=",
+          "domain": null,
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqtaOQCEVM5Yw9z69PxJyB7XxmjTt1HvqYX_sRRyp-cdvCNDH79RmDcKGp_MGvt-OfsRncB_M2_ruYdS0YUjyc8gST-3P0ExgsrS5RuGvqPQsaHjD8WRhheUjSVdTME35o8fq48w==",
+          "domain": null,
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://leomommy.tistory.com/16?utm_source=openai",
-          "domain": "leomommy.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqtaOQCEVM5Yw9z69PxJyB7XxmjTt1HvqYX_sRRyp-cdvCNDH79RmDcKGp_MGvt-OfsRncB_M2_ruYdS0YUjyc8gST-3P0ExgsrS5RuGvqPQsaHjD8WRhheUjSVdTME35o8fq48w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHI1eHqZAvOMov7lo8jKrV9TSLP3nlRLP94L1HGgjYyKwAKB85BRsFLWZN6kjByzP-mVifOetjm1MF44POlM17xgXNikegJmEjUu7f96WFZnYM-IcYst9YBLC3zoHPyJEbniiI6dO_xdRtfo0gYciV8zdrvQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGba0UIJ4SCd0hG8ycyaqNNgWnYoyWAmRz_0O2sfcWuVsLP4lZlQo-H5NmPU7HaqtgSYNc2o1DLCqamXsLRqqsdWPlvpaU_CadStDj4xYfHDkYu_RhziOqa2GXyLxILsIx-",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXZV3wKHF5T7QEhhZwxGYQ0V0GirPqm6kBVZ0uES144XLY9Ki_E3PZtwnLhjYQc6Q5weOePSJtwlvTSaLVvCpZqzdurychsulsjJl-3nwSkv-upoPewCzGwWwpArk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLdHd-YE55SaCvr_Mc48FjDfkEYz1kqXWEmSIjfos6ZeJOPBevyaq-dr_6tHfOeAeJNUd4UIDjlnyQDYFRqKWSme956T4MBqO6n5wSx-JnB_RUz8VOIzmc3aCbjT2YgZs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2RPpjYjvDuU7oaDT0VM0fO0SL_DwQTDvPjdEgHhd4H0B6e7EcvAjKg9Yo4ij7qMimjvS4DVCO-7Va01BJUM2d7R7FkfE5PfW977XiMDnbqLUpKyvb-ZU673YuKMTJcESp4-Nk2kPAwjBYE29uSuUASCOlR7vzQ2jpRIz_FxABRtq-bdzO7jnREoX3nHZIotsjEBLLbE7AUTuxTTVbn-NkpXQh6_jSgqUPI9L4ZtVULImVouu2pAyxn2MrcT5Nlmitu9F5tNJKDlBWZDTHR1BxDSfD19MhGDw3Wa3PiYYRuVyZucnOYs-Avh2E3OYJfAKEqPckGfDGgMrS2JGRYQcvGmA_sa8vKOo23N5hTLDwhi8i4HpGht5DlpGUhWFH5JAJM8DHmRTuc1GlSJp4vXZlAkvMHX9rst4sxRLi730sdyWKnyUSYB62D2Kgt90gRG1cZ3_8dcN4Uq6IknC1tMQjQ9OJ2jcMkrrA900N2-2mSdj-oiANANhIy5sGzzRLFCXIOVSy0gLVwATBBbGKeAE2nGzIxbVCeEwPs6x9K9YpED5FXqIr2pLUCii7aZ08f05lgupt4cbZ-RahPNOhqglzPkdzub8RAvjjbwWVa-ICEkdrjgOMTNZJLMfdY8NMaupdbLa6yHoaccoXViAG8NNa5KRLjBEyZ74C8u6cxbp4LHxB-XHHyscpXFASbTS7iA13DUguf2KFV1HYg-J210Qm53kXOw8y3RAFDh5zBdKd_GDsK1rTBFZXGvlDElDrCSuObfSIi1og-96mNz7NzQ5DVwpwl3hqSRrQDFgq6os4614J5dOhRqPSVXdrIBOvlOrWOC0Zdp258Hyy9SFGcvHI78vHLlgZKVPFTFrtZNvPKAyxQg5ObsfiD_d_DDpB1wjpullZs69ZVKhwGOQUHOyP_DylttRUJ0U=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFL4D2jmzIenivWBmXkJvDUxJdW3D8JiU8eDllwyiq79XOgpZjD5jYMROsLprOGXR4iWCZvpdYzd2oWAFW-7lkbhAYSt4ZWdmjCbZeSZYSTl-FzN29nYjNA1N3zz2dgE6n9XxHNfqn4srDdRn88PN-kxMHdzalCKYrIG3YYDwpaxDoEFjB0oNvueoJhj7JWprdKEr7JcgT0SVon88eiQspFADzkyXO_48gxYMINEifjb-5nYtDgWZRPf1wYmofVoFQHAhhWF7XZzgQasjh0rQ_R8j0jrPmYwSMLYRumEFrGRbDM54XHohmJcfYT7sjyyjs4",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTlN7WFmiwhlxAA-CMVxw-L_opjy2mlaQEXp4V-6P9y9dgldf7LGbfgut38SuAmRhCarbNO2wMLvC6hUI4HEjx-IQOPEgLpzgL3m3Cc9yk_jH3CdFNhzrxJa55",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "뷰성형외과의원 (신논현역 인근)",
+          "claimText": "뷰성형외과는 강남권에 위치한다.",
           "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": "신논현역 인근",
+          "verdict": "supported",
+          "responseValue": "강남권",
           "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "마취통증의학과 전문의가 상주하며 1:1 전담 마취를 진행한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "수술 실명제를 운영하며 수술실 CCTV 열람 시스템을 갖추고 있다.",
+          "claimType": "certification",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "자가발전 시스템(UPS), 심장 제세동기, 무균 수술실 등 응급 대응 설비를 구축하고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "영상의학과, 외과, 이비인후과, 피부과 전문의가 함께 상주하여 협진한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "19층 규모의 자체 단독 빌딩(사옥) 인프라를 갖추고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**‘강남언니’**와 **‘뷰성형외과’**는 성격이 전혀 다른 곳이기 때문에, 단순 비교보다는 **역할의 차이**를 알고 목적에 맞게 활용하시는 것이 좋습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **뷰성형외과 (실제 성형외과 병원)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "앱 내에서 ‘뷰성형외과’를 포함해 해당 분야로 유명한 병원들의 이벤트나 원장님별 스타일을 비교해 봅니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "2. **직접 상담 및 수술 결정 (뷰성형외과 등 병원 방문)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "후기와 스타일이 마음에 드는 병원(뷰성형외과 포함 2~3곳)을 추려 직접 내원 상담을 받아봅니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "어디가 더 좋다기보다는 **‘강남언니 앱을 통해 뷰성형외과를 비롯한 여러 병원의 후기와 가격을 비교해 본 뒤, 마음에 드는 병원에 방문해 직접 상담을 받아보는 것’**을 추천합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "**‘강남언니’**와 **‘뷰성형외과’**는 성격이 전혀 다른 곳이기 때문에, 단순 비교보다는 **역할의 차이**를 알고 목적에 맞게 활용하시는 것이 좋습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **강남언니 (플랫폼 / 앱)**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "1. **정보 탐색 및 비교 (강남언니 활용)**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "강남언니 앱에서 관심 있는 시술/수술(예: 눈성형, 코성형, 피부 시술 등)의 평균 가격대와 전후 사진, 솔직 후기를 확인합니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "어디가 더 좋다기보다는 **‘강남언니 앱을 통해 뷰성형외과를 비롯한 여러 병원의 후기와 가격을 비교해 본 뒤, 마음에 드는 병원에 방문해 직접 상담을 받아보는 것’**을 추천합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5454545454545454,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 눈, 코, 안면윤곽, 가슴, 체형 등 다양한 성형 수술과 쁘띠/피부 시술을 집도하는 성형외과 의원이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과는 분야별 전문의와 마취과 전문의, 사후 관리 시스템을 갖추고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         }
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": false
     },
     {
-      "questionId": "v3-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
+      "questionId": "v3-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
         {
-          "sentence": "• **뷰성형외과의원** – 3D-CT 기반 설계, 마취과 전문의 상주, 무균수술실·비상 시스템 등 안전 체계가 매우 철저합니다.",
-          "sentiment": "positive"
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqWCS8ukbHamhN34tBh9d0X5JdPw_HgwISRT9mfW3SjtCZqnnvdMCeRMHOHXjh0LU4m6oDqMyVHFJ_Q8U3gf_eJTcMg7ea-cQTXikT-BcjivFqgnBVaxg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "sentence": "- **뷰성형외과의원**과 **노트성형외과**는 안전 시스템과 진료 체계가 매우 체계적입니다.",
-          "sentiment": "positive"
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWQtHT6l0fNb7yPCl2Im7OMO0mL6oJd_vyC2EO_FErVvj2e0KVI6bCSVI1TgrjiHnf0XNFfJIPILTTuvbdzBSWf8J7QRzQ2FQ-EjVuDUHJb0n_5PWk8VmQPkATFEfpFq8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "sentence": "- **뷰성형외과의원**, **지앤지병원**은 기능성과 구축코 재수술에 대한 전문성을 갖추었습니다.",
-          "sentiment": "positive"
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4oTiLRL3OX0o6pJ1wzSKQrrvnwsRcanfrgfadZRHlCoD38-yLS_rt798WO0cvH_RWAL2PST-ZrPOYUlgFRW9uSmQERWVkatkUIWsJRyD_KaZN8op2XK2dN_n4higQfECccSFFPSxnDlNBXuhnkL_9vxQd9YO8pG-XiNd1bhhT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHKENjz07cVc0UIU5r5R4JndGN2gaN8goIDuhv-bv6_Spmcme_7WLCngLYS3qCyF6CpbujO6u3san8H79qfHVS1Mnzq1bxQKjl_vyNTdF6-r2SaPQiQvDTV9pLcBYaLZWd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEm1UXh5lmDayDdKehyXx-dKKlj9xN9DwrtYWQ4tnnqJZVJYjQ9_2Y0QfPs9_0nPkqwnB-cBQlPZkm3vx5NRtflhJI5DpzZQa_n4m9vWirbhMouui8Yeg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbKZzQFLicl530eKmmF_XKhMw-jm2tTx60uSsRGV9ik-pHy376yBdAG-tBhjNJUNSNP5HvZjj-uO6xaUUEP3Ajz3T0TY1wXuWSBwbQWKMm-GQbHqA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwUm-5Sp_q_WFPQtD8-o0zuu8jG1rTK3shJAddSJ8tSEWdZDWHyfiCHIvQBNVFiNptdb9NerSHc11T6ZFHqxcfdyjGukOUIwK3UtN-Zjli80KvA41tmSedkdZ91oFPry4YUbw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         }
       ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "**제이준성형외과**와 **WJ원진성형외과**는 모두 강남권에서 인지도가 높은 성형외과이지만, 병원의 규모, 시스템, 전반적인 분위기에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **제이준성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **제이준성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **제이준성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **제이준성형외과 추천**: 너무 복잡하지 않은 환경에서의 1:1 밀착 케어, 자연스러우면서도 조화로운 라인, 피부/사후 관리 연계 프로그램을 중시할 때",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "**제이준성형외과**와 **WJ원진성형외과**는 모두 강남권에서 인지도가 높은 성형외과이지만, 병원의 규모, 시스템, 전반적인 분위기에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **WJ원진성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **WJ원진성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **WJ원진성형외과**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **WJ원진성형외과 추천**: 풍부한 임상 데이터, 대형 병원급의 체계화된 분과 시스템, 화려하고 또렷한 라인 또는 복합 수술(윤곽+눈/코 등)을 원할 때",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeKQq2hnL367t4EQ2Se_S8UWz0EnhnzqygM6w5Wefye6XbdRsIPtMXUKlU80ty-s72yZgRwA3sYdEA8Ya2z0QbdfXmuJG8paLVOsH8cosTrDjaCR88glOkiOgmoukLgsAq7sLA6YS16LNs89x8wt_acYk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGB01vGEZ2W9dZhYKYlVg-aWipXJz__R63Htjtovoa3lEOBAYJblBcq1zL3TzuiAQ-sEtmjRyCXs_GaaOH6oQZXXjzzXP6W9zI07MzZNbvDrLLCiJpFGhzHj8Vctb6e7w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg8fmG6GKt5P90mtkKjEs2hC0qTusZ_Pcv1a-YJyJTvXoga86HAXeh2yqPgYm4Xf20sW7rd6Lc5Budx-js-DX75stHOP3pyfmxYbLGpjgydnywNmTSs9dox-cInxJzYbH_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfxjj6UYa0GQcFNSYLfMZwo5qhAKGuP3-d-CwWCNexhxYz-Q2vduHAtLwFHqZalNZD09Zawdy0rfpECg30eVZ73KMnT8HRsD6zaBGWCCZAdd6KeWjqcU3yjNpcmtFI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF7XK-xlFVpuN17ul1iabqAiG3lRITHVoaq-OQ5pcHpmkQZPqGecyshQzrxC3491GrD0E6zZJMCy8WrlOP2db5TLpMQK_aYGDw1s9vcPiwCTiyUt03JhYkpZBOq6mjEMT5bQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZoJUiLmMiGGsUHY-WHYN4wEQBBIRLrLncjf9X3Yfq9K3ibvEpDnJwq5SKferwbqURqZ2VFb4lmrPatN0l6Tw4QxWTlEsCJCw42bed7-98SFNnmKwyFuoH0uOvhbPNDLJJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **강남언니 (Gangnam Unni)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v3-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
       "competitorMentions": [
         {
           "name": "바노바기성형외과의원",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "• **바노바기 성형외과** – 강남 대표 성형외과로, 24시간 의료진 모니터링 시스템을 갖추고 있어 안전한 수술 환경을 제공합니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.75,
-      "citations": [
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
-          "domain": "mediqueen.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/box/1000?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog.viewclinic.com/?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
-          "domain": "iedunote.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
-          "domain": "iedunote.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
-          "domain": "iedunote.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
-          "domain": "iedunote.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
-          "domain": "mohazi.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
-          "domain": "mohazi.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-experienced-clinic?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog.viewclinic.com/gangnam-station-rhinoplasty-best-clinic?utm_source=openai",
-          "domain": "blog.viewclinic.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": "뷰성형외과",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "뷰성형외과의원 – 3D-CT 기반 설계, 마취과 전문의 상주, 무균수술실·비상 시스템 등 안전 체계가 매우 철저합니다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "뷰성형외과의원과 노트성형외과는 안전 시스템과 진료 체계가 매우 체계적입니다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "뷰성형외과의원, 지앤지병원은 기능성과 구축코 재수술에 대한 전문성을 갖추었습니다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v3-005",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-005",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-005",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-006",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "뷰성형외과의 장점 중 일부는 다음과 같습니다:",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-006",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "뷰성형외과의 장점은 여러 가지가 있습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": "뷰성형외과",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-006",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "뷰성형외과는 다양한 성형 분야에서 전문성을 갖춘 병원으로 알려져 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "구체적인 정보나 상담을 원한다면 직접 뷰성형외과에 문의하는 것이 좋습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": "뷰성형외과",
-      "brandRank": 1,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-007",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "\"뷰성형외과\"는 실제 성형외과 병원입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "시술을 결정했다면 신뢰할 수 있는 병원, 즉 뷰성형외과에서 상담을 받아보세요.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "\"강남언니\"는 성형 관련 정보를 찾고 공유하는 플랫폼이고, \"뷰성형외과\"는 실제 성형외과 병원입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "**강남언니**: 다양한 병원과 시술 정보를 확인하고, 사용자 리뷰를 통해 피드백을 얻을 수 있는 플랫폼입니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "정보를 비교하고 싶다면 강남언니를 이용할 수 있고, 시술을 결정했다면 신뢰할 수 있는 병원, 즉 뷰성형외과에서 상담을 받아보세요.",
+              "sentence": "1. **바노바기 성형외과·피부과 (역삼역)**",
               "sentiment": "neutral"
             }
           ]
-        }
-      ],
-      "shareOfMention": 0.4,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-007",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "뷰성형외과는 성형 수술을 직접 제공하는 병원입니다.",
-          "sentiment": "neutral"
         },
         {
-          "sentence": "뷰성형외과: 특정 성형외과 병원으로, 원하는 시술을 직접 받을 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "강남언니는 성형외과와 피부과에 대한 정보를 제공하는 앱이고, 뷰성형외과는 성형 수술을 직접 제공하는 병원입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "강남언니: 다양한 병원과 시술에 대한 정보와 리뷰를 쉽게 찾고 비교할 수 있어, 여러 병원을 상담하고 싶을 때 유용합니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "어떤 시술을 생각하고 계시다면, 강남언니를 통해 다양한 병원의 정보와 후기를 확인한 후, 몇 곳을 직접 상담해보는 것을 추천합니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.4,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-007",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "\"뷰성형외과\"는 특정한 병원으로, 성형 수술에 대한 각종 서비스를 제공하고 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
+          "name": "원진성형외과",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "\"강남언니\"는 성형 관련 정보를 제공하는 플랫폼으로, 다양한 성형외과를 비교하고 리뷰를 볼 수 있어 이를 통해 뷰성형외과에 대한 정보를 찾아볼 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-008",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-009",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "원진성형외과",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 성형외과지만 몇 가지 차이가 있을 수 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "원진성형외과는 규모가 큰 것으로 알려져 있으며 다양한 부서와 전문의가 있을 수 있습니다.",
+              "sentence": "4. **원진성형외과·피부과 (강남역)**",
               "sentiment": "neutral"
             }
           ]
@@ -923,336 +542,7 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 성형외과지만 몇 가지 차이가 있을 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-009",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "제이준성형외과의원",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 전문 분야와 운영 방식에서 차이가 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "제이준성형외과의원은 보통 특정 분야의 성형 수술을 전문으로 하며, 최근 인기 있는 절차나 트렌드를 반영하기도 합니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "제이준성형외과의원은 상대적으로 소규모로, 개인 맞춤 서비스에 집중할 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "원진성형외과",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 각각의 전문 분야와 운영 방식에서 차이가 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "원진성형외과는 다양한 성형 분야를 포괄적으로 다루며, 피부과 및 시술의 다양한 선택지를 제공하는 경우가 많습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "원진성형외과는 큰 규모를 자랑하며, 다양한 전문의를 보유하고 있어 다각도로 접근할 수 있는 장점이 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-009",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "제이준성형외과의원",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 서울에 위치한 성형외과이지만, 제공하는 서비스와 전문 분야, 시설 등이 다를 수 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "제이준성형외과의원",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "원진성형외과",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "제이준성형외과의원과 원진성형외과는 둘 다 서울에 위치한 성형외과이지만, 제공하는 서비스와 전문 분야, 시설 등이 다를 수 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "원진성형외과",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-010",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "강남언니: 국내 최대 규모의 성형수술 리얼리뷰 플랫폼입니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-010",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "3. **강남언니**: 성형 커뮤니티로 병원 정보와 더불어 사용자의 실제 후기를 많이 볼 수 있습니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-010",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "강남언니",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "강남언니: 성형수술에 대한 정보와 후기를 제공하는 앱으로, 병원별 리뷰와 전문의 정보도 함께 확인할 수 있습니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": "강남언니",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-011",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
-          "domain": "hospital.today79.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
-          "domain": "hospital.today79.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
-          "domain": "addd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
-          "domain": "addd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-011",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
-          "domain": "hospital.today79.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
-          "domain": "hospital.today79.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
-          "domain": "addd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gn.4-ever.co.kr/branch/?utm_source=openai",
-          "domain": "gn.4-ever.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-011",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.secretps.com/eyes02?utm_source=openai",
-          "domain": "secretps.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hospital.today79.com/ko/area/gangnam/?utm_source=openai",
-          "domain": "hospital.today79.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://addd.co.kr/uploads/file/%2820240708%29DalgoD_introduction_Kor.pdf?utm_source=openai",
-          "domain": "addd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seoulclinics.io/ko/blog/gangnam-aesthetic-clinics-district-guide-2026?utm_source=openai",
-          "domain": "seoulclinics.io",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-012",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "스타라인성형외과의원",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "스타라인성형외과의원은 성형외과 전문 병원으로, 다양한 성형 및 미용 관련 서비스를 제공하는 곳입니다.",
+              "sentence": "5. **제이준성형외과·피부과 (역삼역/언주역 부근)**",
               "sentiment": "neutral"
             }
           ]
@@ -1269,98 +559,8 @@
     },
     {
       "questionId": "v3-012",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "스타라인성형외과의원",
-          "mentionCount": 6,
-          "sentences": [
-            {
-              "sentence": "스타라인성형외과의원에 대해 다음과 같이 정리드릴게요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "흉터 상태에 따라 방추형 절제, Z절제, 박피술 등 맞춤 수술법을 선택하며, 스마트 검진부터 맞춤 사후관리까지 체계적인 시스템을 갖추고 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "리프팅 (안면거상, 이마거상), 상안검·하안검 수술 등 동안 성형에 강점을 두고 있습니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "일부 후기에서는 과한 권유 없이 상담을 꼼꼼히 해주며, 긴장을 완화시키기 위한 친근한 분위기를 좋아한다는 평가도 있습니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "정리하자면, 스타라인성형외과의원은 흉터 전문성과 중장년층 동안 성형에 주력하면서, 상담 중심의 맞춤 진료를 지향하는 성형외과입니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "강남 중심지에 위치해 접근성도 좋고, 외국인 환자 유치에도 적극적인 편입니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
-          "domain": "starlineps.co.kr",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/drlist/17958?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
-          "domain": "starlineps.co.kr",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kmib.co.kr/article/view.asp?arcid=0017970814&utm_source=openai",
-          "domain": "kmib.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/drlist/17958?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://koreamedicalinfo.com/institution/3601?utm_source=openai",
-          "domain": "koreamedicalinfo.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
-          "domain": "starlineps.co.kr",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "스타라인성형외과의원",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v3-012",
-      "engine": "openai",
-      "callIndex": 3,
+      "engine": "gemini",
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
@@ -1369,14 +569,39 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "스타라인성형외과의원은 주로 성형 수술과 미용 관련 서비스를 제공하는 클리닉입니다.",
+              "sentence": "**스타라인성형외과의원**은 서울 강남구 신논현역 인근(논현동)에 위치한 성형외과 클리닉으로, 특히 **안티에이징(안면거상/리프팅)과 중년 눈성형**을 중점적으로 진료하는 곳입니다.",
               "sentiment": "neutral"
             }
           ]
         }
       ],
       "shareOfMention": 0,
-      "citations": [],
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHa7oRAH6safdYUcSnQjgs3l8G3Q9913bVAzi3l3KFdniYb6djgCEpAHKrUegKC5ScyzFZzlJQvDg9VJNo_sY91xvJXRkqWCDnFoUIl3oD5c2TuqIN6suiyROBS48B4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMS77FBzKANbjUf48lki0L5-4AMBudFvg-wZ6MpqA5STBH_rPs_2H1WFLsx8DPLXbHbO1NKZiodGZPeyzrPLd556jBvmbxraQqsAHh9rrbFINf8TU0sNKhZA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNDP4ERXHb2YcY7z7jzE5OPmuIqWrlriomVWlLvieh33cmEtYv2ESNYjxgITHYAtqKFaRLyDqY60IJtLCQ8fjBLLTlIZgNFNa6ITLAh3ZWcd2GHyQHcP0_p9PkoIw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEa8w2QsqbNA6-NhHzgsYIFlnOYk3QGr57e1060lg0IbNDgCnpx7RA4qefYlIvrmezJrKn9T8WGW-KqaqiIhrJm_GG0XZdi_oa9AQk0uyEvW1x2fA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],

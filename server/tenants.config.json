@@ -14,11 +14,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v3",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "강남언니",
@@ -100,11 +100,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -181,11 +181,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -264,11 +264,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -345,11 +345,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -426,11 +426,11 @@
     "industry": "성형외과",
     "region": "서울 강남",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "뷰성형외과",
@@ -506,11 +506,11 @@
     "industry": "숙박",
     "region": "전북 군산",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "군산스테이호텔",
@@ -557,11 +557,11 @@
     "industry": "숙박",
     "region": "전북 군산",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "스테이 머뭄",
@@ -603,11 +603,11 @@
     "industry": "숙박",
     "region": "전북 군산",
     "engines": [
-      "openai"
+      "gemini"
     ],
     "questionBankSize": 12,
     "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "스테이 머뭄",

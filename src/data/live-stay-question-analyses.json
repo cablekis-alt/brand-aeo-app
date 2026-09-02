@@ -4,55 +4,7 @@
   "analyses": [
     {
       "questionId": "v2-001",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-001",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-001",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-002",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
@@ -68,586 +20,153 @@
     },
     {
       "questionId": "v2-002",
-      "engine": "openai",
-      "callIndex": 2,
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRS_TarXDPpZKnhPWC8CwcbaYmDz_xaYPTx6eI6PGQFAiq8KPs8HHC9R0QF0b9wN2JJuZX1x_oz4Vc2KgrgqPD3wfLssY0uYH1nmbPhsOWWIGx0v0rf5WuQhRt2JG6gU3PwB0bc4D2xZHEdzk7mJ-E68oyVzpCRl4noUGCCh-su-efXH00FKSS0NDeC5zDJxfo1Zf9MRpEUylz8DFVLgAhru0LEIdpWltrA8HYNOSrfIc5difYrVWtyg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHh52CHgnsQVH9VGXr0Wk3BpbiMqVCFnrTFY_aAIdzg8jVap-vxc0Qk6FttFzrip6Xibkibo4zTIRUpYzYDuOf8dEvdJFjVIv_bz-iCpCDjfEUNTRbquqvBRvZmJ5qfimpUDzH4XSr66i9C9I4uaLxCvVJ0LQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiIixttl4BbsutxJQ0zyBNS8g4Mf9JbB0a7Mj41eShjr1jdwh1Xz0PTPHofHJo57TPTzqKSAj4Sz24nGDELzuzazH9BDHSORwxnluMYk84OdyINthIZdq6jJCEMoxUWprBmoyfRa6Epzo_9ATCenYgyA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSuDBeEo1LOHAzTD2845XwOyIZejxNSpcGb2E3vEVcpv2cOvUthew5-_QYxdBfmEY1Tef9oPV7xjU56St8P6TLyyd73d4VArVhqTlVR4UgiB5929lbTV6t8HdjugY3PLRy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxQJVUZpL6ZewruNb83au1pNOyu5DWcQLrLbN893rkDLiAxsu28DaziVA_sas1Y3P9H0eN2JwyHRs97NyJ0kh3DOYq9yVW_iJlWQoNuKpNAgHPAfZ8r8tkAwU5PutxtvVb2QGm8ZMUAVl8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "gemini",
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
         {
           "name": "군산스테이호텔",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **군산 스테이 관광호텔**",
+              "sentiment": "positive"
+            }
+          ]
         }
       ],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEd8O20_HMQ08tAWj4AbCqBCnpH-ZljyBqC0RaDf3HcQcCqnZ2x3dHO72OUfj70poHG6qegjOSMTa3BOe94DpzIeKKCwM4KManxTBqGh-UzwnXQI4dDS3-QwD4kthJeefwJCagDJconh9NZOynTLU-yWPSUvjJNRC7bD00jbdA4pPByP3HxjLDkgwIYN5bb0S43Z2Totq70Lf9vWzFmrnGIQYY8qkK2_TDV0qGY_Mw8V9K4tndNVLl5cNAnjzE5lDPZrXZIJ-9aEbG73-VyAb2gMBLLbFBvf3zTzfSDOLcvO7SuOhbbnNkMyKSKPtgXyKkzJ8NgpX1GZQB4XcRLFhKgmCSJL7PLrZBdpLIRaz9cLnW1fq0J",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5rIzLv_EfxgruCUqWZdvQ5o7mdJ6XJLldLHCEZscmDMAFwQW9SU_r6X5eQgZ8yXHUYJcMRGuL7RuKoVhNjE1eTwXwylfnQmcxwxOi-ZUDzgz4l3odfIHLZFd-olQjMXAIPOhNsx6L5573",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUGvXsRd8u0AR6hnNEsPgdt0t4YvLPokBXBf8tFcHfcNOlSvr_mqSmgTpzePFrrGmr3NmnjmWYAiC2F2KTK-J0OsMwK1Ww8m344TWJqi5HjwqXqw77FYhEOQI1QSrUkTIRWVTER-KQQfklwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEulmzfDiwWE0PQJKOlpMZjRZXzI_IBDo5bWFcH59SXFjtf-Bzzz28t5FnKGgFsjPN5-iawJ1zaECgGh2-8ZithtWnL9ia9rHfPF3Izq8pmQ7rhZhacyGm_lw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcwpiGD-MTf2rgiLgG-0MRIumW4mLzvbQWJB2Wig1HegrpydmyfWxQsI1b3ymEDSpnhUOVv8Mf7uUhaR79SvS1Y0JjI9MmHuhvw8mznQ_g9XrCpoqy5yEpWmf8MeMflg0etOoIS0oE1-fSvVEo_cuNfW0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEElN1R0Qk3ABAE9LGsqRqio0-1KIJ8cGX2_dH85-BgFDQFXr3gqjKX9YVgoF2lt303cvWFgTyUuWaMXCMudeStp6QVy5SvMb2aRZTsHMdPQ2IoTkxEn2jCpSXjtRAJPYn7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-urbK-xlSEPrnLOh70TrpWBiP__qDhlOxCVSZ6OTPf1NdGl7vIMfuQSHeiv5K9iyw30aKMHoe9P9DX-zTdOjEOi_xEXI8gSN_-7SXXqlElL5xS56ttmP17WT64RtNtTRBmrfMbnSmBg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tour.gunsan.go.kr/tour/m2153?utm_source=openai",
-          "domain": "tour.gunsan.go.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
-          "domain": "traveldojo.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
-          "domain": "traveldojo.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.traveldojo.com/gunsan/?utm_source=openai",
-          "domain": "traveldojo.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOWOMdgWtxDIochHf9ljazaSAe7J8iHhwtAUnSZVG4nlhHPOTsnrGfOwwaycTOKTkpjkgU_4TcOoNdivb2VMxkPX3Mp0Nr159GQsaDaLFvXDTvhf7oKmeJZQXfwevdvX9s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
       "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-002",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.expedia.co.kr/Gunsan.dx1958?utm_source=openai",
-          "domain": "expedia.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
-          "domain": "leteamor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-003",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.com/Tourism-g790146-Gunsan_Jeollabuk_do-Vacations.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gajago.com/%EA%B5%B0%EC%82%B0/%EC%88%99%EC%86%8C/gunsan-stay-2026-06/?utm_source=openai",
-          "domain": "gajago.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
-          "domain": "badaon.or.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
-          "domain": "badaon.or.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://badaon.or.kr/seantour_map/travel/destination/detail.do?destId=FCID110149&utm_source=openai",
-          "domain": "badaon.or.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/guest-house/city/kr/gunsan.html?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
-          "domain": "hotelscombined.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
-          "domain": "hotelscombined.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.com/Place/Gunsan.htm?utm_source=openai",
-          "domain": "hotelscombined.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kayak.com/Gunsan-Hotels.52706.hotel.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
-          "domain": "healing-nino.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tourvis.com/place/detail/gunsan?utm_source=openai",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://goalexperi7616.tistory.com/85?utm_source=openai",
-          "domain": "goalexperi7616.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
-          "domain": "healing-nino.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://healing-nino.tistory.com/154?utm_source=openai",
-          "domain": "healing-nino.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotelspedia.org/ko/hotel/h1545c0b42a?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-005",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/accommodation/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Place/Gunsan.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Place/Gunsan.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://leteamor.tistory.com/127?utm_source=openai",
-          "domain": "leteamor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://all-infor.tistory.com/217?utm_source=openai",
-          "domain": "all-infor.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "차칸호텔",
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
@@ -656,100 +175,82 @@
     },
     {
       "questionId": "v2-006",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
+      "mentioned": true,
+      "mentionSentences": [
         {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
-          "domain": "residencemumumhotel.southkrhotel.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
-          "domain": "residencemumumhotel.southkrhotel.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
-          "domain": "petel.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
-          "domain": "petel.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
+          "sentence": "**'스테이 머뭄'**(대표적으로 군산 말랭이마을 인근의 독채 감성 숙소 **‘군산 스테이, 머뭄’**)에 묵어본 투숙객들의 주요 후기와 평가를 종합해보면, 대체로 **조용하고 아늑한 힐링 숙소**로 만족도가 높은 편입니다.",
+          "sentiment": "positive"
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4KW-P9eA3Wk4M9POttKqP8lToFf8QVTb_k6W207b9Omss4U_l8uVOy6Jz59fxQWcbr5VXV-QLNnm26menTAtXT0phSbsjlCmjwRBHDBaJctlkkIXzlCSxGdmiaQFMrQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-HLRILOg5lKLw6mE0z9L_X9QpodqnEyhw4Kw8rYiWT2vLykcaWQBSyFZodiokk0CbYrNLGLLeUDTJN-K3_uQCOS5_ouZ_BLHJGGt3xZimuWaZHzOMYTeihhpbsfkSZA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkmoBAUz9FmeZfNWjgk59n2E2psycDyaqqAiS2rg5aiUX1xW9ldnn3_qCuC9vTLE-hZOpdd7tYywFiVdGwZgbAz2a3x6Wdb67c9pXi5YxY_T7DjX9IjB6lKxZvSzXszOKsg8c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4KW-P9eA3Wk4M9POttKqP8lToFf8QVTb_k6W207b9Omss4U_l8uVOy6Jz59fxQWcbr5VXV-QLNnm26menTAtXT0phSbsjlCmjwRBHDBaJctlkkIXzlCSxGdmiaQFMrQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkmoBAUz9FmeZfNWjgk59n2E2psycDyaqqAiS2rg5aiUX1xW9ldnn3_qCuC9vTLE-hZOpdd7tYywFiVdGwZgbAz2a3x6Wdb67c9pXi5YxY_T7DjX9IjB6lKxZvSzXszOKsg8c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuv0lrm5fTnlw6uGgQM4yijhsMRgwLxTqnuv5GRQ39QwLlmwaulWxG2B8dsJ6G3ZatRWVIwFRv9gQa7-EL9sR3TK1hP0rOPUlJFBNPORHUKVMwrFmOUMMLNOfDNFNqu_QBa6p2Pof6tiuzpn-FMiA-3_LZmPt18UoVjEbf9yylctO_PP0C-Z5l5X48yHDYRYG5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfvCc1ci8mKfOqYsdaGT7H1kFfXNtEQkzWUF2F9rJV7AayZEIoZQPjASdlQAOc8bjheGNBfQ4vXrh7T6cy-buzmMnW3nndm5QQGTk20g9NFrFrh4-zqS0QKjQiCpwT8GMsTTH9bkut6VBtGtnc5n_0roc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNgceKtDAdRhj8Of7-jh4xe1YNGsIKUXCi-8hVIk4PyFmSjVToexgs7HWmVnCPx_q9P6hFcazoEkGgIVpoNbjtToI-RMwBEwOwwF5hs0s2ypX7WFUh3I2g5fsp0_iRG4UBgWRzfAk5arHfdEA58clAyfsNXGuCYfLSsF3BZBsgdcrOqRGJepPFMGh4XFalB_8tYOPnQrO4oX8uZbWeOaqyoYADNQiEPab8Jw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "스테이 머뭄",
+      "brandRank": 1,
       "factualityClaims": [
         {
-          "claimText": "스테이 머뭄이라는 이름은 여러 지역에 다양한 형태의 숙소로 존재합니다.",
-          "claimType": "other",
+          "claimText": "‘군산 스테이, 머뭄’은 군산 말랭이마을 인근에 위치한다.",
+          "claimType": "location",
           "verdict": "unverifiable",
-          "responseValue": null,
+          "responseValue": "군산 말랭이마을 인근",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이 머뭄은 독채 형태로 운영된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "독채 형태",
           "factGraphValue": null
         }
       ],
@@ -758,411 +259,140 @@
       "brandOwnedCitation": false
     },
     {
-      "questionId": "v2-006",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이 머뭄 (Stay Mumum, 또는 머뭄 스테이)라는 이름으로 불리는 여러 숙소들이 있는데, 지역별로 특징이 조금씩 다르니 아래에서 해당하는 장소의 후기를 한눈에 정리해드릴게요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "전북 군산 ‘스테이 머뭄 펜션’",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
-          "domain": "residencemumumhotel.southkrhotel.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://residencemumumhotel.southkrhotel.com/ko/?utm_source=openai",
-          "domain": "residencemumumhotel.southkrhotel.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/mumunestay.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/en-nz/hotel-mumu/hotel/incheon-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
-          "domain": "petel.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
-          "domain": "petel.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "전북 군산 ‘스테이 머뭄 펜션’",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "전북 군산 ‘스테이 머뭄 펜션’",
-          "factGraphValue": "전북 군산시 절골길 18"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-006",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이 머뭄에 대해 “머뭄 스테이” 혹은 “스테이 머뭄”으로 불리는 숙소들은 여러 지역에 존재하며 각각 후기가 다른 점 참고해 주세요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "## 3. 군산 ‘스테이 머뭄 펜션’",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "- 다만 리뷰 수가 적어 일반화에는 무리가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "- **군산 펜션**: 깨끗하고 편안하다는 단 한 명의 최신 후기 확인됨.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "원하시는 지역이나 유형(도시 호텔, 한옥 게스트하우스, 펜션 등)에 맞춰 좀 더 자세한 비교나 예약 팁이 필요하시면 말씀해 주세요!",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/residence-mumum.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.agoda.com/en-ca/seomyeon-residence-mumum-hotel/hotel/busan-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.booking.com/reviews/kr/hotel/residence-mumum.es-mx.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
-          "domain": "expedia.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?equalTargetTab=tab-3&utm_source=openai",
-          "domain": "expedia.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-guesthouse/review.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.cryptotraveler.com/en/hotel/166045/the-mumum?utm_source=openai",
-          "domain": "cryptotraveler.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.petel.co.kr/html_3/html/post_detail.html?idx_Magazine=497&utm_source=openai",
-          "domain": "petel.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "군산 ‘스테이 머뭄 펜션’",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "전북 군산시 절골길 18",
-          "factGraphValue": "전북 군산시 절골길 18"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
       "questionId": "v2-007",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "스테이 머뭄과 군산스테이호텔의 선택은 방문 목적과 선호도에 따라 다를 수 있어요.",
+          "sentence": "**스테이 머뭄**과 **군산스테이호텔**은 숙소 유형과 여행 목적이 완전히 다른 곳이어서, **어떤 여행 스타일을 원하시는지**에 따라 선택이 나뉩니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "스테이 머뭄은 디자인과 인테리어가 독특하고, 아늑한 분위기를 제공합니다.",
+          "sentence": "### 1. 스테이 머뭄 (감성 독채 펜션)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **분위기 있는 사진, 고택의 감성, 시내 도보 여행**을 원하신다면 👉 **`스테이 머뭄`**",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [
         {
           "name": "군산스테이호텔",
-          "mentionCount": 2,
+          "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "스테이 머뭄과 군산스테이호텔의 선택은 방문 목적과 선호도에 따라 다를 수 있어요.",
+              "sentence": "**스테이 머뭄**과 **군산스테이호텔**은 숙소 유형과 여행 목적이 완전히 다른 곳이어서, **어떤 여행 스타일을 원하시는지**에 따라 선택이 나뉩니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "군산스테이호텔은 좀 더 현대적이고 대형 호텔 스타일일 수 있으며, 위치적으로 편리하거나 다양한 부대시설을 제공할 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "w4ai.o2o.kr",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "gunsanstayhotel.com",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "hdmpension.co.kr",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-007",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 개인의 취향과 여행 목적에 따라 다를 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 개인의 취향과 여행 목적에 따라 다를 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-007",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 어떤 경험을 원하시는지에 따라 달라질 수 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "이곳은 독특한 디자인과 편안한 분위기를 자랑하는 숙소로 알려져 있습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "스테이 머뭄과 군산스테이호텔 중 어느 곳이 더 나은지는 어떤 경험을 원하시는지에 따라 달라질 수 있습니다.",
-              "sentiment": "neutral"
+              "sentence": "### 2. 군산스테이호텔 (가성비 관광호텔)",
+              "sentiment": "positive"
             },
             {
-              "sentence": "이 호텔은 다양한 편의시설과 접근성 면에서 이점이 있습니다.",
+              "sentence": "* **합리적인 가격, 편리한 주차, 조식 제공, 깔끔한 호텔 객실**을 원하신다면 👉 **`군산스테이호텔`**",
               "sentiment": "positive"
             }
           ]
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
         }
       ],
       "shareOfMention": 0.5,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.6pm.com/womens/clothing/show-me-your-mumu/CKvXAToC8hdaAqQiwAEB4gIEAQsYBw.zso?utm_source=openai",
-          "domain": "6pm.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUNRwE4PHWzYO1Wx05aEc5aPo2fSdfr3ICN1XeoW0uXKuO47X72Syi6XRh2Gko5bZ7jfLZ7Di7YZTQBg_P5VTZUt_vDo64HW1hULydaEECQzJQjP7EcfIZisWqiZA6sVaoYWHq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.kayak.com/Jeonju-Hotels-The-Mumum.3698267.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZrGqArNpVIkFw07F105cXNMFafv6PPphHqjX6xJ5ms1gjXEhamkewk3g_DHt8r7Kw0vxite9vo-sHqKLoLGBu5cLe-9QugHkcKS1xXBvkROhwRR_oUaVqdZmKOO54aTk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.kayak.com/Busan-Hotels-Residence-Mumum-Hotel.702341.ksp?utm_source=openai",
-          "domain": "kayak.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERdt4FSGdSVg_-ofBmIsWxovNqjOsFsGlFPqmYwvvPQvjoMBf2SX25xOOpHi-hRUB3qm51DDR4C3Vztq_gEC_E0RgTiaKVe7s_FCxpgYZ5zpIekxPy_fBZMw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXAptlaQ3Y9xGkxjvtOUjJDAEMvsdTAMEOZrpeEjlv7qFGvj5GI6yD-OnRQXzNz5zfGBifnm5riDGEvzMT6TECbR9fBAX6w0y6AQAing7Wvo7zU_WYsfNwlVLnI_4bolSvCrspcmlaxRejQR-k7twvqNhUCJ6v07tsRTHoPaMb50OSGXzoyUSYwXUTa-PY4FBiuFWlqrhSOrS39eRWRewSQ4aV7lMdNAalJbI_GHlQCs9_PICf6ah1SEpNwcpZKZYu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZViQva0sTLbvepghHhk9IXo_NX6UMwa5u0pLutJCGZUd2RGjQuXiYpHcyOaVvTikvzu7TmKBbjhWMphdFnj0FZm8AOeea7IcOBWvt7gWUv2NEaeXmKQPLFa4nN4ZvQyE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUhfL-8pp7N8sXyaZJQxFZ8HVv-wYWMZV7R6AKiqC8sa2YAGAK_mKUAhU0Xy8YubB4ypKKjfbWREHSENXFIQV2yxvXakuE1GDnNMWigowgviCxKuGnh7IPPfiGz7sKgR9h",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcbPjOTV_ysW4mX6etHwpNSEcEHg80oucYUjCZCbdjStxaCtnqRSh_3GOsJ3R1OXZ0ACK1HIuio8JCPIzgwjcJdJ-2UUIYcoT6iaDFNTrqUVoq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB9BsbInd6PrkCmSbrNryRMw8MqyPbErPHenHAZfFnKHhOPPCcDXWI7ZihP0OfhOTlH3NRrGU-Gg5oPK5AqIHq0a1pQHP0lq1RY1-XQUalvM1PfCGxN4w1IRcCyWWMAhZN5kVdW-7oTr1R0-t4lGhFSLXdJxRFUOyUlQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlzESQ9jMWY7ijeRi1qjchl0kLpG7CL2dnXatGjQx8jjE-2f7zODTe6r3Qh5pZsPZ85zONRVruF2HXIbeK0_AsBIzn-OfsSyLIyaUevgQFU37gInykiKGMcz7Z8TnRqQAqCDA3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHER1kpyjr0VCsq_sOYDb1DpoQ6GT1x5gpn9qE5AX9_4DfVvg-S-pUeu7e1PhEywRq_FdbLumMUBOw2Qg9T9fLmIls7uya-h3rYs5Gw5UGFgty7avA7OE6iN2VL8RU_P7Gl-8iS6t4ac4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUr9Ngs8SsL3pxx1tl-DUQcNNIvvSMXCs3ux4KvcukyYzrBAsyfWvYIRipoTfQrKyxDcSrLOp5LNNAzLLef0Y7jxvuKCI3aCx_ncEfCInSAFdrtgE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5Ln44_RCMKea8Yeh2HXeD20EbGmq2_-b-4HmIkPDlocHwgmQR801mpcXDi4j6IgtUT9m4kMpNuc-_XBDg72bt2kxnhMoknxYqAgTyqQvhAV4z2T1DJkxsiNBBE0JO9srqPz83Idmqjg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "스테이 머뭄(Stay Mumum)",
-          "claimType": "other",
+          "claimText": "1925년 적산가옥(백년고택)을 리노베이션한 프라이빗 감성 독채 펜션",
+          "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "‘The Mumum Guesthouse’라는 숙박 시설이 전주 지역에 있으며, 1박 가격이 약 46달러부터 시작합니다",
-          "claimType": "price",
+          "claimText": "군산 신흥동 말랭이마을 인근에 위치",
+          "claimType": "location",
           "verdict": "unverifiable",
-          "responseValue": "46달러",
-          "factGraphValue": null
-        },
-        {
-          "claimText": "부산의 ‘Residence Mumum Hotel’은 약 39달러부터 시작하고, Klook에서는 1박에 약 54.62달러로 안내되고 있습니다",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": "39달러, 54.62달러",
-          "factGraphValue": null
+          "responseValue": "군산 신흥동 말랭이마을 인근",
+          "factGraphValue": "전북 군산시 절골길 18"
         }
       ],
       "factualitySupported": 0,
@@ -1171,68 +401,107 @@
     },
     {
       "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 2,
+      "engine": "gemini",
+      "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "문의하신 “스테이 머뭄”의 가격 정보를 정리해드릴게요.",
+          "sentence": "'스테이 머뭄'이라는 이름을 사용하는 숙소 중 가장 대표적인 곳은 **전북 군산에 위치한 독채 감성 숙소 '군산 스테이, 머뭄'**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "가장 많이 찾는 **군산 스테이, 머뭄**의 가격대와 이용 정보를 안내해 드릴게요.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "군산 펜션 ‘스테이 머뭄’",
+          "sentence": "### 1. 군산 '스테이, 머뭄' 가격대",
           "sentiment": "neutral"
         }
       ],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "군산스테이호텔",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "군산해들목펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.momondo.com/hotels/jeonju/The-Mumum.mhd3698267.ksp?utm_source=openai",
-          "domain": "momondo.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZOwlTQG_btlfyWpQf0MTgUxf3GBH3-aJqwaehwyrVUU_iVGlhfZTU9VATO4xcElJSW-R5uvgolj1VCMqu8SPBtfyIYCXvul47R0ADlCknBY4TiZg85t_X75eqA8iWops=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.expedia.com/Jeonju-Hotels-The-Mumum.h22287380.Hotel-Information?rfrr=HOT.HIS.question.link.click&utm_source=openai",
-          "domain": "expedia.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7ky9xKJJTllQ3LRczpT32a_H8JTKlNJxqocBvYJ5BfoCC5aCYTC2NNpHZt2UgHIk9Xf8Ot7In3ncFyVuhWzP6pG9TPfCp9leFZP2X4NINS8_iKKIXKcgYp2iOLgYf_teRqlhK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/Residence_Mumum.htm?utm_source=openai",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkSky9ef396UcYDLeGR4OsHphUmdeES-9dS1sToBgDCziL0T1lh4wCeYFKD1wVsQlteqsnbt84XrThqqoYxhGgv_xRsp_qjsbx8FjddPLLL3u4JLI6ltEK1xiEPM4jCQDzr-eUpLMspfeBDyjkD76ey347N2sUOuZG3VLJpg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.expedia.co.kr/Busan-Hotels-Residence-Mumum-Hotel.h8765663.Hotel-Information?utm_source=openai",
-          "domain": "expedia.co.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaaH-c-BhGMZK5O3VFL-q7Wnl_-phGM-g5x8cySqjpe8w5Dvk3yQyq_THwhkAuK3bx3JuB1x2tnoVuL1wTYS2IzSrOqR5KGwsJ0gY20YBLpkq1ZRhRWeMGTUUnZctnh9KtuT73PPMZ-mM4vYtQdBDapPgRbgpMGA4Rh5VpQheO6Y5TKLk5j5ej0LpzDEUxUWiIdT7li6nfavjay3_0UG4PUFxFVl0V9BJgVhhVgP8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.klook.com/hotels/detail/413562-residence-mumum-hotel/?utm_source=openai",
-          "domain": "klook.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFD2u2nzZqyslrRtyQSWm2htpm6Takc8ZQzXxlZ0Ur6l5XnM-jZHR9QZAZWNejXpD92FMnoiaPK1gunDafHF7rjUFHJUGnSOwmgFgh7xwnbDdo7CHl7XA9cfOatCvrXmt8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.momondo.com/hotels/busan/Residence-Mumum-Hotel.mhd702341.ksp?utm_source=openai",
-          "domain": "momondo.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGkQtSEvvbzFstEaylyCslrajYn0d0iSJWgUKIYBozCQzeMwHZc2anszm6LDwTVbWCUClIHP4N4i6qhLx7MSoNNdUIV8bUe0R0Buqj6m64pMiRUKnbkDkcFNAerA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.yeogi.com/domestic-accommodations/90328?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGkQtSEvvbzFstEaylyCslrajYn0d0iSJWgUKIYBozCQzeMwHZc2anszm6LDwTVbWCUClIHP4N4i6qhLx7MSoNNdUIV8bUe0R0Buqj6m64pMiRUKnbkDkcFNAerA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088?adultCount=2&checkInDate=2026-04-24&checkOutDate=2026-04-25&srpKeyword=%EA%B5%B0%EC%82%B0&trackcode=mkt_pseo&utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxeaEEWKoKdZJ8hfLKf8x0-ffNF-w5QxYfJsLccjLQLfngil4EH4Tc7C8lVZWk-leiWMFp8oWsNGGeO-LWC09loHvrfS88earf2B8CQ61v",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETmmaSExKUqntg2dm_N-PMR5ewFvR6lfnUnwcbzLtuftCrvHPf2lLdTm1zpjLzo8ur2B4pohHvR02ye9U-wSEt2N8pjo7r9dvEE-xENF_EBhzYOPg_uZjY5ako-vRxXcKjOHdZFCN80TbWKRdbPswF6cakhd4qih4ZglY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZLIWPqkrLSXjX4SF9CZYcgaaHQTS9ujhk5z-rJh51LudRswIFuCMf7PI5_nccg3i9EhsLRSxDmDwe5qA4e4Vfgph9jCzj9xcPUaZTHTgopeOV4rJPzfhifDXh1Mg4HpnYa8WcCE27e1XiUrPDhdHsaGlbZOuRewZReuOyX3NgzMCRgcHrNxTQisJPCpilU6-5TwJsrWNY67h2pIf5etSeqN597J9zB7eLto_L0A-F3aGrgPadR1U5cyXvMspBH-zNfBo1QDRlzDKth-p1rYOGZu9KMBI85OSYYkFOxzmJcb4xRZahbkSD46PDgKq4NbWtBIUfTfMeHEJrpoMqiVYk1OUOAEEohq50ubjgP2lhp-8cojk7lWJDuvNTXlvb9fMrtuT916c9eEcr0yBIZSuA06ZFYWpfCiHj5-005-DThC7yj_wd1JEFdBmsAorA6ekmFbhP-f8t2QQjzq16KIzvWqI0N_1a9p_LGQ4KUbK_FQU0V1e9iiWPy2GGNLBPthyKnieeltPubH5ZyoyIzz04WTXVmDSaljpmgOY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGl8wkyZzW8740sxvgGUYrrjWRSel9Ww2YmC2gzQs6vcqEjArujbue1BC1zNofIFwVszxWjpPKNl8rgLr3PDg8TsPaB346oWaAAx7XaXSpXJlY0BOnZ8LbQ-6eyxwyQJs64zTCcHavN7EM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_9fbro8JXHF7GI6oeAxZELMkQtP9ILTj59MOzfA7Ni_IeWOfBKySUW4a65gScMgWyVaAsNNSGXUhvuqlOcvCOF13ww46DnWi4yj9i6OtUfdGSuQCWgqidvSeetbu1GPneKO72sk022VlTHwSg3dw3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         }
       ],
@@ -1240,11 +509,46 @@
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "군산 펜션 ‘스테이 머뭄’",
+          "claimText": "군산 스테이, 머뭄은 전북 군산에 위치한다.",
           "claimType": "location",
           "verdict": "supported",
-          "responseValue": "전북 군산시 절골길 18",
+          "responseValue": "전북 군산",
           "factGraphValue": "전북 군산시 절골길 18"
+        },
+        {
+          "claimText": "100년 된 적산가옥 고택을 현대적으로 리노베이션한 독채 펜션이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "평일(비수기 기준) 1박 가격은 약 198,000원 ~ 20만 원대 초반이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "주말(금·토)/공휴일 1박 가격은 약 250,000원 ~ 30만 원대 초반이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "일본식 우디 스타일 공간(A동)과 현대식 모던 스타일 공간(B동) 등으로 구성되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "전북 군산시 신흥동/말랭이마을 인근에 위치한다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         }
       ],
       "factualitySupported": 1,
@@ -1252,26 +556,82 @@
       "brandOwnedCitation": false
     },
     {
-      "questionId": "v2-008",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
+      "questionId": "v2-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
         {
-          "sentence": "죄송하지만 “스테이 머뭄”이라는 이름의 숙박 시설이나 상품에 대한 정보를 정확하게 특정할 수 없어, 가격 정보를 바로 제공드리기 어려운 상황입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "혹시 “스테이 머뭄”이 다음 중 어느 것인지 더 자세히 알려주실 수 있을까요?",
-          "sentiment": "neutral"
+          "name": "군산해들목펜션",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "군산 무녀도에 위치한 **해들목펜션**은 탁 트인 바다 전망과 조용한 힐링 분위기로 인기 있는 펜션이지만, **여행 목적(럭셔리 휴양, 감성 독채, 시내 관광, 호캉스 등)**에 따라 더 만족도가 높은 대안 숙소들이 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "해들목펜션과 같은 고군산군도(무녀도·선유도·신시도) 쪽에서 더 고급스럽거나 프라이빗한 숙소를 찾으신다면 추천합니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "해들목펜션과 같은 무녀도에 위치한 하루 한 팀 전용 프라이빗 감성 독채 숙소입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "**해들목펜션 스타일의 바다 전망에 럭셔리함/수영장을 더하고 싶다면**: `풀빌라 신시담`",
+              "sentiment": "neutral"
+            }
+          ]
         }
       ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
+      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://mom-mom.net/travel/properties/6787dc39c5b09bf7578930e6?utm_source=openai",
-          "domain": "mom-mom.net",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFprqXZ3TZKBipp1OmjmHYwbBIDcofH3VYBvWlF-Oo0vdK9tWELP_xFekoyxCPHAM6DcXcQ-RCS1La7inaZ3_iNdGVAim4KPZtqknUtxiTYzuUNDGD-JvyJ78hke6z2L6g_lvc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvpEbfqG_CyR3adKjbwbCfa8zQc_eZwrqUwAYvX0leno_-8ozCSGqGOCnFSGfIaxHp2Qbc1QvXwwkA9X87l1-ItJ6cYXG-MLpeXBuvMgvhQuglWqz242525ofR2nGvFTtvErSninabGT1xAJW4YzjkkPZJcXl3REMHuBOPv4noHOqwG4XNwXGVGQIDR1Qxk0z-iBbg5QN9s-Tdu2JMxPid-cfrvk9Lvpeawzv4fWz1EaapbLb04mr8_6cLxp5GAeW4JPRLGoM1PDdrmHZbwEFu7nE4-wEUPRf2gAJFCTgLjoChU2NlIP6N0vABHhDublccFMyN-B1LHdARDvDArGI_41VoEE4r_YOAROgqVUR2vj917VY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnsX2rxWAb6J5LIUwANdkIvzmGouKyazpVJ7t5OaGkstP4VQlzqFvWiKew2ShFtfZ6f6vjaYUmpU5eThXdURnfbm1SsU8-BdP6ZRm096pOD4Se",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHr5Cb_osXoIU03MiLKWy0lP8XkLU-cGMlWVI-xBTFBPShnDVkMxMh8CZ8BjgEoJBHcp9qO7_uT9OZsebgRYMgvHlUd8jPH7sX_eb7H4K0chR2bM6QffmxLFTCcFuynNdDz74WrnHnv2ytI9WYznL1nWbrQ3VWI9jHhTXxU-Fv6j55Jlb6SCYQ4aHNc5g_JZ3idG4Z0HxU5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnyUNYojcJr5o4RIZ1DYqzTKD4MuRg-BplwueZCTiRTUZvo21W1dyHAOiAzDDLL_FH7XTyGbdk_DmVjxeSlBm3Lvs1ffECKXMy5Z7KubMsCBvuJrKzPmghnLMTwvkYXhoneTUY1O0PRXpTRDAv0UtziSev3w6EJFgSKbXxOfTYO4Q-GeJa9QH3vgjNEFf_rNP2wXhMrg5BYV-PGpMVMAwI3ZD0Qbe_tT9flh7_EUuE9D-bIxHiWn12",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMndMqNwu8tLXC8LFFKuZd7NH30eV0X4drkasN4T4gBvLsEnQqqCZrbR0f994UFhzIQWGwfan4CLpZDa8ZcpQgHS_10DoUKl-ob6Lr9eWwFmF1dPe9daWcGbKWIjUd_NIDwVYLFYTEuzg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzcHZN-EK8Wq7krp3MXGZT9v-K1E6-pQdAYxrbuJKI1hdaaUlVWDcToL6iMBTdvwNJDEEeUOrDPaZ1WvneieybGIfrTKh0RHjvj9lBQwKcEXhDCAI4UMVjlL8-ERiV6w_NS_AJL6Dx5oU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNQxZy6WvfmZrH1_OmpHSn7jjvdjL9bh797GscLmvhc8mY5CuFu57rDdWJ5mPRaHJL-I4tOsjaNIwVjFrZx4WOjBtC3Hj4GeDkO8SAox144UrxyeWdBN-RmjR63tUMtcT7v8DzyEoxCpT4l7eGcnB0UQ==",
+          "domain": "vertexaisearch.cloud.google.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1284,252 +644,8 @@
       "brandOwnedCitation": false
     },
     {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "군산 해들목펜션보다 더 좋은 숙소를 찾고 계시다면, 여행 목적과 선호하시는 스타일에 따라 매우 다양한 선택지를 추천드릴 수 있어요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "어떤 숙소가 해들목펜션보다 좋은지는 여행 스타일에 따라 달라집니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "군산 스테이 관광호텔 객실 내 스타일러, 공기청정기 등이 완비되어 있고, 가성비가 좋다는 평을 받고 있습니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://kr.trip.com/blog/good-restaurant-in-gunsan?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/blog/good-restaurant-in-gunsan?utm_source=openai",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
-          "domain": "travelquokka.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
-          "domain": "travelquokka.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://suhaoo.tistory.com/265?utm_source=openai",
-          "domain": "suhaoo.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://suhaoo.tistory.com/265?utm_source=openai",
-          "domain": "suhaoo.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://lotisma.tistory.com/1020?utm_source=openai",
-          "domain": "lotisma.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "군산 해들목펜션 인근에서 좀 더 “좋은” 숙소를 찾고 계시다면, 아래와 같이 다양한 형태—호텔부터 펜션, 섬 리조트까지—추천드릴 수 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "군산 스테이 관광 호텔: 리버뷰나 야경이 훌륭하며, 넓고 쾌적한 객실과 스타일러, 조식 뷔페 등 편의 시설이 잘 갖춰져 있어 가성비 좋은 선택입니다",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripadvisor.co.kr/Hotels-g790146-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
-          "domain": "reportfront6769.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
-          "domain": "reportfront6769.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://koreatravel-guide.tistory.com/229?utm_source=openai",
-          "domain": "koreatravel-guide.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://da-suk.com/pensions/gunsan?utm_source=openai",
-          "domain": "da-suk.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-009",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "해들목펜션과 비교해 군산에서 더 좋을 수 있는 숙소들을 추천해 드릴게요.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "해들목펜션은 바닷가 근처의 경치와 조용한 분위기가 장점이지만, ‘그섬에’는 더 독립적인 공간과 높은 재방문율을 자랑합니다",
-              "sentiment": "negative"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://diary96201.tistory.com/315?utm_source=openai",
-          "domain": "diary96201.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/landmark/kr/gunsan-saemangeum-convention-center.ko.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.tripbtoz.com/hotel/korea/gunsan?utm_source=openai",
-          "domain": "tripbtoz.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://brunch.co.kr/%40mytriplog/3469?utm_source=openai",
-          "domain": "brunch.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
       "questionId": "v2-010",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
@@ -1537,234 +653,81 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
-          "domain": "protecsound8627.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://younglife2401.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EA%B7%BC%EB%8C%80-%EC%97%AD%EC%82%AC-%EA%B5%90%EC%9C%A1-%EC%97%AC%ED%96%89-%ED%95%B5%EC%8B%AC-%EC%BD%94%EC%8A%A4-%EB%8B%B9%EC%9D%BC%EC%B9%98%EA%B8%B0%EB%B6%80%ED%84%B0-1%EB%B0%95-2%EC%9D%BC-%EA%B0%80%EC%A1%B1-%EB%A7%9B%EC%A7%91-%EC%88%99%EC%86%8C-%EC%B4%9D%EC%A0%95%EB%A6%AC?utm_source=openai",
-          "domain": "younglife2401.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://younglife2401.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EA%B7%BC%EB%8C%80-%EC%97%AD%EC%82%AC-%EA%B5%90%EC%9C%A1-%EC%97%AC%ED%96%89-%ED%95%B5%EC%8B%AC-%EC%BD%94%EC%8A%A4-%EB%8B%B9%EC%9D%BC%EC%B9%98%EA%B8%B0%EB%B6%80%ED%84%B0-1%EB%B0%95-2%EC%9D%BC-%EA%B0%80%EC%A1%B1-%EB%A7%9B%EC%A7%91-%EC%88%99%EC%86%8C-%EC%B4%9D%EC%A0%95%EB%A6%AC?utm_source=openai",
-          "domain": "younglife2401.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-39401068/gunsan-yeomirang-guesthouse/review.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-39401068/gunsan-yeomirang-guesthouse/review.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
-          "domain": "tripnote.choi0531.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
-          "domain": "tripnote.choi0531.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
-          "domain": "tripnote.choi0531.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
-          "domain": "tripnote.choi0531.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-010",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-010",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.ramadagunsan.com/view/viewLink.do?page=homepage%2FKOR%2Froom%2FdeluxeFam&utm_source=openai",
-          "domain": "ramadagunsan.com",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFU7tEWdWBYYkOe15nfiz-qe1bA1dM0QgmE3OoYWKZQkmWezZUHCgJnvpLJJ-CJmBOxFYf0GKsACvH8m9yk08gbyqwGhTqNBC65i-icvZSiY2JhZkFljtLXVRObfg6HKXYwDFsPCoikEP1nCBvDRvSEFkDjOYDPrNgOTZSwCVw4znh9HX0z4UMqSwF4SYirCGcBAbbIQuGSXgRbdaYfP8uX4ieClX7XFL_8J_Wp6CfH8rWSi6tO3Zly",
+          "domain": "vertexaisearch.cloud.google.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyhAirkFcCJP8hU4Y49yrvSD1qVqP-lRn2fy_aThixnNrlBfhQI_Et8lxLHYQoIF3by360RkxsewM-MKnx7HyRKAS7NT5x2outgW_lqRQgv6KOqh0K6Ci7KSZcDCDjGXZsfJctStisRCP5hRu4KkOGCI-yMjXgLV8Z3OtAuDQC4yu7HMU9HRSNDiNqjI94_Wxrjz6D07KP0o4sDey_a0R3Bb9k33YqMC0zOUVr_wdHPujE50pCIystOXdIs7zIOsI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://hotelspedia.org/ko/guides/g63a2da7c8c?utm_source=openai",
-          "domain": "hotelspedia.org",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjpr31KBc20_3dvvs7LQOZ7rojivr-QDnTEY4RC7fDdXkscM6E3pqNKFEeLUXXTqKsVLIE0ScnjNkXfJCAZM1kKe0ZSeNPAc7E6KVfO3nsR0HTvK802ppd81z6kDMg3PrkSJDvYAkULhY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.gunsanhotel.co.kr/eng/Accommodation/page2-4.asp?utm_source=openai",
-          "domain": "gunsanhotel.co.kr",
-          "ownerType": "competitor-owned",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLcajniZcc2rtQE4LNu1abyB4TlHWUhoc7fR5482ef1w4JEGy9mjnmTuhPRgbRPWZuPF_QiJX9SXKp8b8BHumx2vttowiRs-ttiF0MNDCTmsd_WEWDCFHmfJwtWImEhaBZ9pdLAk-HXFuUs84qW6z7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://statecan1943.tistory.com/57?utm_source=openai",
-          "domain": "statecan1943.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhBanEoGHgZKgCoXbUUedFH2qSRnF41Ilmu6qwC7A_n1cz9o2SHCfhIhsocaZ9jqw5cShoGOO5AI6yo9r_Cfw8j2eqbSfiPPK3P6w4eUB5c0a8FgqqpFcYwWZrV3t_QuD3FctuK-ggvvOZIFC3FdOHwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.tripadvisor.com/Hotels-g790146-zff4-Gunsan_Jeollabuk_do-Hotels.html?utm_source=openai",
-          "domain": "tripadvisor.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLnxN4xMhDYazdLrpQ_Wz-zLUk4sI4e11AebBsr5jhnWhU8Pyu_KeKGCSl8GY0YTogVegk1hUrs2Q06M8juZ7bWG_Jb_Al7o9U3Od0Tc8IASwITd9g1lwkpQt_x0AW8xA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGv7J1vtCMibj1WLx7ROzr7knw8lS16XHIRmPrVZp2VBa-N2DgKpl9H4i5bBy4tN72FP_dtpI5-8t0m8k7qz2qCGqgfdpFqoUkPowqje3-SpumanG5pjjHaOWELwgvRNg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk0cK19MAVDD3z8prbz1olffzSm77DTMDmb3h1ngr_0i1Y5vZZJwWfdKT2L_lSXlnekL6nbmH6M0WUUoxQyQ3tJA9xWiQwDWN9_96nt2jXzZaglV4GWBJbN4wxLmuAwmMMphSqbmjuwRnteHuA4coWpdPEQlGf6e-UKCYDd_VsiJERCor7Ui8SvZh6ehC4UQDkLaBYBy9uF1MOlDf4IEH-fenehww61eM2RDhHrGv7N1X8JRMVdjsQhDTZSApEXiU196lKQqtBQyYH_GqH3W6Hy4cAFF1-MxhSDsTCInXQQJnGRvAW-Q4exbXC-sVP0-trHavgmhDXDx0vobd3QHYZLt0RJa0O2iAcUfahRsBQfjncrJE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnjeE5U8rYCDbXFIngnIFWJ2moHRdKC0Pj52iQM7xN_sAd_u1HgdnuX4JqN2n4k8fEFVEHIg6eeL_lgSrZ9_-WTiLwqA1fUjFMAEMuilLcLsZp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGv7J1vtCMibj1WLx7ROzr7knw8lS16XHIRmPrVZp2VBa-N2DgKpl9H4i5bBy4tN72FP_dtpI5-8t0m8k7qz2qCGqgfdpFqoUkPowqje3-SpumanG5pjjHaOWELwgvRNg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnjeE5U8rYCDbXFIngnIFWJ2moHRdKC0Pj52iQM7xN_sAd_u1HgdnuX4JqN2n4k8fEFVEHIg6eeL_lgSrZ9_-WTiLwqA1fUjFMAEMuilLcLsZp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWGtF2O7QfyXXJp6B4pFcwkUgzn9FXDZ3KIACtMLpGWUvwSZen7OsW8jasr-w_JbeKT1dEmFnOFAfF7rMzTjx4BW5WJ3mqU6z-wKRR55-eaUc631TyDUheLmQVoqNKC9I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/family/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmRLKGFidw81KS0TqVKmLdMWDK7WvXlvA0nz4c7JsodEiAxfTB-PFLgsqXUuljrHgiHcRwRvSbJCzAWG78wC5sCQadVHV0oCUh6L_BiTzzourdjlfxMxXumxB1Ely6P_8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
@@ -1777,166 +740,71 @@
     },
     {
       "questionId": "v2-011",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-011",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "Gunsan Stay Tourist Hotel 오션뷰 옵션이 있는 호텔로 소개되기도 하며, 위치 및 서비스면에서 만족도가 높은 편입니다.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://someclass7351.tistory.com/133?utm_source=openai",
-          "domain": "someclass7351.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH42e5xhRdMq8TryS-PT0wd8K12uKme_KjycNLORN93JhvB4EALO5QL7u_ld9xRm_Tww6YXUc-b89RXb4i_8QDudhbefHXU1EqUwZvtSJEbZKmaP5Xi1hfOZqTbhEJyQaYGUJ8w8JBIMpHh3YsVhPsXLLxojQiNjgAqV7DbdQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://someclass7351.tistory.com/133?utm_source=openai",
-          "domain": "someclass7351.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHR8ITf3ib95O2CHlwjSGPU8YC5jqVCpI3r2I6Q5J75WO2uttfY8n73RPrDYUfInaPWP8NJnljq7U-leJvlROUK8A8xiAIblL_w-j-wlxM1VX5AOgm_UQTFv2IG_rWI2hX_6s6nVSh1EslgHv8NpClu1d577Ck62499-XQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://dams.pa.go.kr/dams/DOCUMENT/2024/10/30/DOC/SRC/0A04202410301444368538578014271.pdf?utm_source=openai",
-          "domain": "dams.pa.go.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT7721_r4FydsDx2IKSDBfeE4MuBK8F-wxDmJYL2FoGkKNMQo02-wWldIDUATM68Y5Q2LJha7ha8Srmiodq5j1QeOlzHL8D_7BcIHu6cmPoMJJBRkPaWNKvmNkrQl2YtvJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tripnote.choi0531.com/2026/07/gunsan-ocean-palette.html?utm_source=openai",
-          "domain": "tripnote.choi0531.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbYZ2N01riCXgKpfJidNf-GlPd11_kvCU-Yv9yQaWq49NNCitAMo_65lfCmBSQFgjf-mPdj6sArRV94Ql6jDoS5tMadL-P-6hLK6_Z10y_WEe5WjPTHVfCrvVrkqUpr3NkW_GxNkexAuTM8BE01Cv-1P-S_V3ob1YarjK27OBHDSjxs30GwEOu6eRgn-sN3m61FdWE_4EERo25H7h_bg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.welfarehello.com/community/hometownNews/1441b097-9a98-4c16-80a3-c078389ce1b9?utm_source=openai",
-          "domain": "welfarehello.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7mJ4h0u56KvzsA5PrGQ19zgNDZbMRGXWHho6c6xeLLaB9HNhNTakBsnEGh0KYFYHujZxHe3eRsg461f9l6zYx3AeL5cXpd1yHw7TxxPW-Kw0tm5civro=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.gsco.kr/en/contents.htm?code=4_2&utm_source=openai",
-          "domain": "gsco.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHF-hUvrpHncKMmKLDWukvcMCPNv1_lOS-jeMsUvX7jAgXCtGxcMydMkJ9YD0m8FYJf3RkK3wmb8T2Ae4fAQSsJZQ-xQZS5cGvHtHxctM3O3l771g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-011",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "군산스테이호텔",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "Trip.com에서는 **Gunsan Stay Tourist Hotel**이 ‘Ocean View’ 옵션으로 잘 소개되고 있습니다.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "군산해들목펜션",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGr5sHGRFm4zjppxOHlVJ829j29T7ghf2ts1-MJhMaUmrhBbIthk4ukHOfsww9wAAyPcU1KNrfWzbWbL5sONGMsfalunwBKIOWd2Ri-GxbNixfG4lRqbi5ezXLHGf4MNr_LGSBBddbHOlB_ClkVOp-2hvA96zdLANG8cOqqZp71YbtQBNwdi9Vce9wHWbCr1-YoqKleTbIYSiAoGFyfIA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5RsYWNoy9fVLfdHOBAgkVVKzW8JsneOaUltRaaKH24KfbTt6bcC0IHAYfvBmJrHFQv_n32E3PM5mm1F-QoNGyluq8qvmZud60s573ftbgM3Qs7qADlxH0q8XleUwddDjdwfSZlRLlbo_-Hx4HLsk7VqYWlKcVwHvvk-SJouhK25IMJVOgCevOWT5O8xwra4zJnQ_mNaL09_J0U9uNwiS8btSi2OmHFWIZiK3M8SYr_JXFKujcFmfc7BJIr6SqSxC5wghnos006mJntGivDdUjaud_J1wO-s_OKtd4_CW98GcFWwsZ1q_w2j_wLc37uvrFwnFExqxx_kDHK9PKRgAK8sLt-hj9lyVNQJ7BpxFcD-vNqAJIm4XGXl4bMwaHxFSkOk15UgxorscRpSatqnSmgw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHR8ITf3ib95O2CHlwjSGPU8YC5jqVCpI3r2I6Q5J75WO2uttfY8n73RPrDYUfInaPWP8NJnljq7U-leJvlROUK8A8xiAIblL_w-j-wlxM1VX5AOgm_UQTFv2IG_rWI2hX_6s6nVSh1EslgHv8NpClu1d577Ck62499-XQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.trip.com/hotels/seaview/city/kr/gunsan.html?utm_source=openai",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/theme/near-beach/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gsco.kr/en/contents.htm?code=4_2&utm_source=openai",
-          "domain": "gsco.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.com/rooms/565695025473125527?utm_source=openai",
-          "domain": "airbnb.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.com/port-of-gunsan-south-korea/stays?utm_source=openai",
-          "domain": "airbnb.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6MIGGwLT4SIGe5-cxMNUQtG6NdUy4QiN7g5rBVAFX0E0FA6KNpIbOFtDHwFahdci0gbe6dhCIJzBRQIMKDyGxoiptU2FxdcFVnDr4kydz_z9r9yNPzogv1JPHOmAmUKtKrLrsMXO4XqOEIqrMFG0DkyrPGM0PBuYAR5bB91-AS0eGeSLYWDw6ou892-PX-bJuZirGbtjXgGhZi0ILhh9sgtnLxboquzpHDRy4iLQfNpZRhCKmsIWa3oqf17M5DS-93xA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
@@ -1949,40 +817,8 @@
     },
     {
       "questionId": "v2-012",
-      "engine": "openai",
+      "engine": "gemini",
       "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-012",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v2-012",
-      "engine": "openai",
-      "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],

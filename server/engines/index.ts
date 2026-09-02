@@ -2,6 +2,7 @@ import type { Engine } from '../../src/prompts/types';
 import { ClaudeEngineClient } from './claudeEngineClient';
 import { ClaudeJudgeClient } from './claudeJudgeClient';
 import { GeminiEngineClient } from './geminiEngineClient';
+import { GeminiJudgeClient } from './geminiJudgeClient';
 import { MockEngineClient } from './mockEngineClient';
 import { MockJudgeClient } from './mockJudgeClient';
 import { OpenAiEngineClient } from './openaiEngineClient';
@@ -47,7 +48,9 @@ let judgeClient: EngineClient | undefined;
 export function getJudgeClient(): EngineClient {
   if (USE_MOCK) return new MockJudgeClient();
   if (!judgeClient) {
-    judgeClient = process.env.ANTHROPIC_API_KEY ? new ClaudeJudgeClient() : new OpenAiJudgeClient();
+    const preferred = process.env.JUDGE_ENGINE?.trim().toLowerCase();
+    if (preferred === 'gemini') judgeClient = new GeminiJudgeClient();
+    else judgeClient = process.env.ANTHROPIC_API_KEY ? new ClaudeJudgeClient() : new OpenAiJudgeClient();
   }
   return judgeClient;
 }
