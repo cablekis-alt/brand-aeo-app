@@ -438,13 +438,12 @@ export default function BrandOnboarding() {
               {registerMsg}
             </p>
           )}
-          <pre className="json-block">{json}</pre>
           <h4>등록·측정 방법</h4>
           <ol className="muted" style={{ lineHeight: 1.8 }}>
             <li>
               {canRegister
-                ? '위 버튼으로 브랜드를 등록합니다.'
-                : '위 JSON을 복사해 server/tenants.config.json 배열에 추가합니다.'}
+                ? '"브랜드 등록" 버튼으로 등록합니다.'
+                : '"JSON 복사"로 복사해 server/tenants.config.json 배열에 추가합니다.'}
             </li>
             <li>
               측정: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId}</code>
