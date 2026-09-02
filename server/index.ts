@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { inferBrandFields, inferCompetitors } from './brandInference.js';
+import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { runWeeklyPipeline } from './pipeline.js';
@@ -195,6 +196,30 @@ app.post('/api/infer-competitors', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// S-08 측정 요청 대기열 — 배포에서 측정을 못 돌리므로 요청만 쌓고, 로컬 CLI가 처리한다.
+app.get('/api/measure-requests', async (_req, res) => {
+  res.json(await readMeasureRequests());
+});
+app.post('/api/measure-requests', async (req, res) => {
+  try {
+    const tenant = normalizeTenantDraft(req.body);
+    const list = await addMeasureRequest(tenant);
+    res.status(201).json({ ok: true, pending: list.length });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(message.includes('필수 항목') ? 400 : 500).json({ error: message });
+  }
+});
+app.delete('/api/measure-requests', async (req, res) => {
+  const tenantId = typeof req.query.tenantId === 'string' ? req.query.tenantId : '';
+  if (!tenantId.trim()) {
+    res.status(400).json({ error: 'tenantId 쿼리가 필요합니다.' });
+    return;
+  }
+  const list = await removeMeasureRequest(tenantId);
+  res.json({ ok: true, pending: list.length });
 });
 
 app.post('/pipeline/run/:tenantId', async (req, res) => {

@@ -32,3 +32,4 @@ server/tenants.overlay.json
 .env
 .env.*
 !.env.example
+server/measure-requests.json

@@ -267,8 +267,22 @@ export default function BrandOnboarding() {
       await reloadTenants()
       setTenantId(tenant.tenantId)
       if (!canMeasure) {
+        // 배포에선 측정을 못 돌리니 "측정 요청"만 대기열에 쌓는다(로컬 CLI가 처리).
+        let queued = false
+        try {
+          const q = await fetch('/api/measure-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: json,
+          })
+          queued = q.ok
+        } catch {
+          queued = false
+        }
         setRegisterMsg(
-          `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ChatGPT 측정은 로컬에서 npx tsx scripts/run-pipeline.ts ${tenant.tenantId} 로 실행하세요.`,
+          `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 메뉴에서 선택할 수 있습니다. ` +
+            (queued ? '측정 대기열에 추가됐습니다 — ' : '') +
+            `측정은 로컬에서 npx tsx scripts/measure-requests.ts 로 대기열을 확인해 실행하세요.`,
         )
         return
       }
