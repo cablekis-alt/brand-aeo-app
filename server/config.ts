@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { TenantConfig } from './types';
+import type { TenantConfig } from './types.js';
 
 export const TENANTS_CONFIG_PATH = path.resolve(process.cwd(), 'server/tenants.config.json');
 
