@@ -3,8 +3,6 @@ import type { QuestionBank } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 import bank_banobagi from '../src/data/live-banobagi-question-bank.json' with { type: 'json' };
 import analyses_banobagi from '../src/data/live-banobagi-question-analyses.json' with { type: 'json' };
-import bank_starline from '../src/data/live-starline-question-bank.json' with { type: 'json' };
-import analyses_starline from '../src/data/live-starline-question-analyses.json' with { type: 'json' };
 
 export interface LiveAnalysesFile {
   tenantId: string;
@@ -14,10 +12,8 @@ export interface LiveAnalysesFile {
 
 export const LIVE_BANKS: Record<string, QuestionBank> = {
   'banobagi': bank_banobagi as QuestionBank,
-  'starline': bank_starline as QuestionBank,
 };
 
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_banobagi as LiveAnalysesFile,
-  analyses_starline as LiveAnalysesFile,
 ];
