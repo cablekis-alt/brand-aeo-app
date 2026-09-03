@@ -1,0 +1,37 @@
+name: Probe OpenAI key
+
+# repo Secret OPENAI_API_KEY가 유효한지(200) 확인만 한다. 키 값은 로그에 절대 찍지 않는다.
+run-name: probe openai key
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-4o' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # probe-openai-model.ts는 "OK <model>" 또는 "FAIL <model>: 401" 만 출력(키 미노출).
+      # 모든 후보 실패 시 exit 1 → 워크플로우가 빨간 X로 표시된다.
+      - name: Check OPENAI_API_KEY validity
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY secret이 설정되지 않았습니다."
+            exit 1
+          fi
+          npx tsx scripts/probe-openai-model.ts
