@@ -83,6 +83,50 @@ export async function inferAddressViaSearch(brandName: string, region = ''): Pro
   return '';
 }
 
+/**
+ * 봇 차단 등으로 페이지 텍스트를 못 가져왔을 때 도메인만으로 브랜드명·업종·지역을 추론한다.
+ * Gemini 웹검색 그라운딩을 사용하므로 로컬·Vercel 모두 동작한다.
+ */
+export async function inferBrandFromDomain(
+  domain: string,
+): Promise<{ brandName: string; industry: string; region: string }> {
+  const EMPTY_DOMAIN = { brandName: '', industry: '', region: '' };
+  if (!process.env.GEMINI_API_KEY || !domain.trim()) return EMPTY_DOMAIN;
+
+  const system =
+    '당신은 웹사이트 도메인에서 한국 브랜드 정보를 찾아주는 도우미입니다. 반드시 JSON만 반환하세요.';
+  const user = `도메인: "${domain}"
+이 웹사이트의 한국어 브랜드명·업종·지역을 아는 경우 JSON으로 답하세요. 모르면 ""로 두세요.
+스키마: {"brandName": string, "industry": string, "region": string}
+brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧은 명사(예: "성형외과"), region은 시+구(예: "서울 강남")
+설명 없이 JSON만 반환하세요.`;
+
+  try {
+    // 웹검색 그라운딩 우선 시도
+    const result = await new GeminiEngineClient().call({ system, user });
+    const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string }>>(result.text);
+    if (!parsed) return EMPTY_DOMAIN;
+    return {
+      brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
+      industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
+      region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
+    };
+  } catch {
+    try {
+      const result = await new GeminiJudgeClient().call({ system, user });
+      const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string }>>(result.text);
+      if (!parsed) return EMPTY_DOMAIN;
+      return {
+        brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
+        industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
+        region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
+      };
+    } catch {
+      return EMPTY_DOMAIN;
+    }
+  }
+}
+
 export interface InferredCompetitor {
   name: string;
   domain: string;

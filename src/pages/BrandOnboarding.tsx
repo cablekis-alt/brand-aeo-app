@@ -236,11 +236,20 @@ export default function BrandOnboarding() {
         rendered: payload.rendered,
         renderWarning: payload.renderWarning,
       })
+      // 봇 차단(JS-only 리다이렉트) 감지 — body에 실제 텍스트가 없고 JS 리다이렉트 패턴만 있으면 경고.
+      const htmlContent = payload.html || ''
+      const isBotBlocked =
+        !s.mainText?.trim() &&
+        !s.title?.trim() &&
+        (htmlContent.includes('ckattempt') || htmlContent.includes('slowAES') ||
+          (htmlContent.length < 3000 && /location\.href/.test(htmlContent)))
+
       const guessedName =
         s.ogSiteName?.trim() ||
         s.orgCandidates?.[0]?.trim() ||
         (s.title || '').split(/[|\-–—:·]/)[0].trim()
-      setDomain(hostToDomain(s.finalUrl || parsed.href))
+      const finalDomain = hostToDomain(s.finalUrl || parsed.href)
+      setDomain(finalDomain)
       setBrandName(guessedName)
       let resolvedAddr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
       let resolvedRegion = region
@@ -249,6 +258,27 @@ export default function BrandOnboarding() {
 
       // 업종·지역·주소는 정규식만으로 부족하니, 읽어온 본문을 Gemini로 추론해 비어 있는 칸만 채운다.
       const pageText = (s.mainText || '').trim()
+      if (isBotBlocked || !pageText) {
+        // 봇 차단 또는 텍스트 없음 — 도메인으로 추론 시도
+        try {
+          const res = await fetch('/api/infer?kind=domain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: finalDomain }),
+          })
+          if (res.ok) {
+            const inferred = (await res.json()) as { brandName?: string; industry?: string; region?: string }
+            if (inferred.brandName) setBrandName((prev) => prev || inferred.brandName!)
+            if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
+            if (inferred.region) setRegion((prev) => prev || inferred.region!)
+          }
+        } catch {
+          // 추론 실패는 무시
+        }
+        if (isBotBlocked) {
+          setError('이 사이트는 봇 차단이 적용되어 자동 추출이 제한됩니다. AI가 도메인 기반으로 일부 정보를 채웠으니 확인 후 수정해 주세요.')
+        }
+      }
       if (pageText) {
         try {
           const res = await fetch('/api/infer?kind=brand', {
