@@ -151,6 +151,8 @@ export default function BrandOnboarding() {
   const [copied, setCopied] = useState(false)
   const [canRegister, setCanRegister] = useState(false)
   const [canMeasure, setCanMeasure] = useState(false)
+  // 측정 경로: local(=/run 로컬 측정) | github(=GitHub Actions dispatch) | none(=대기열만).
+  const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   // 로컬 백엔드에서만 주소 조회(Gemini)가 동작한다 — Vercel(미국 리전)에선 "모름"이라 버튼을 숨긴다.
   const [addrLookupOn, setAddrLookupOn] = useState(false)
   const [registering, setRegistering] = useState(false)
@@ -187,6 +189,7 @@ export default function BrandOnboarding() {
         if (!alive || !d) return
         setCanRegister(Boolean(d.canRegister))
         setCanMeasure(d.canMeasure !== false)
+        setMeasureVia(d.measureVia === 'local' || d.measureVia === 'github' ? d.measureVia : 'none')
         setAddrLookupOn(typeof d.backend === 'string' && d.backend !== 'vercel')
       })
       .catch(() => {
@@ -503,37 +506,57 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
-      if (!canMeasure) {
-        // 배포에선 측정을 못 돌리니 "측정 요청"만 대기열에 쌓는다(로컬 CLI가 처리).
-        let queued = false
-        try {
-          const q = await fetch('/api/measure-requests', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: json,
-          })
-          queued = q.ok
-        } catch {
-          queued = false
+      // 배포(Vercel)는 서버리스라 측정을 함수에서 못 돌린다 → GitHub Actions로 트리거(자동 반영).
+      if (measureVia === 'github') {
+        const res = await fetch('/api/measure-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'run', tenantId: tenant.tenantId }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
+        if (!res.ok) {
+          throw new Error(
+            `등록은 됐지만 측정 트리거 실패: ${body.error || `HTTP ${res.status}`}. 테넌트 골라 측정에서 재시도하세요.`,
+          )
         }
         setRegisterMsg(
-          `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 메뉴에서 선택할 수 있습니다. ` +
-            (queued ? '측정 대기열에 추가됐습니다 — ' : '') +
-            `측정은 로컬에서 npx tsx scripts/measure-requests.ts 로 대기열을 확인해 실행하세요.`,
+          `✓ 등록 완료 · GitHub Actions 측정 시작 — ${tenant.brandName}. 수 분 뒤 이 사이트에 자동 반영됩니다.` +
+            (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
         )
         return
       }
-      setRegisterMsg(
-        `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
-      )
-      const run = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/run`, { method: 'POST' })
-      if (!run.ok) {
-        const body = (await run.json().catch(() => ({}))) as { error?: string }
-        throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${run.status}`}. 나중에 CLI로 재시도할 수 있습니다.`)
+      // 로컬 백엔드 — 즉시 측정·baking.
+      if (measureVia === 'local') {
+        setRegisterMsg(
+          `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
+        )
+        const run = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/run`, { method: 'POST' })
+        if (!run.ok) {
+          const body = (await run.json().catch(() => ({}))) as { error?: string }
+          throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${run.status}`}. 나중에 CLI로 재시도할 수 있습니다.`)
+        }
+        const result = (await run.json()) as { aeoScore?: number }
+        setRegisterMsg(
+          `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`,
+        )
+        return
       }
-      const result = (await run.json()) as { aeoScore?: number }
+      // 측정 경로 없음 — 측정 요청만 대기열(Blob)에 쌓는다.
+      let queued = false
+      try {
+        const q = await fetch('/api/measure-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: json,
+        })
+        queued = q.ok
+      } catch {
+        queued = false
+      }
       setRegisterMsg(
-        `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`,
+        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 메뉴에서 선택할 수 있습니다. ` +
+          (queued ? '측정 대기열에 추가됐습니다 — ' : '') +
+          `측정은 로컬에서 npx tsx scripts/measure-requests.ts 로 대기열을 확인해 실행하세요.`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -750,9 +773,11 @@ export default function BrandOnboarding() {
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
         {canRegister ? (
           <p className="hint">
-            {canMeasure
-              ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
-              : '프로덕션에 브랜드를 바로 등록합니다. 측정은 테넌트 골라 측정에서 GitHub Actions로 실행하세요.'}
+            {measureVia === 'github'
+              ? '등록 후 GitHub Actions가 측정을 실행하고, 끝나면 이 사이트에 자동 반영됩니다.'
+              : measureVia === 'local'
+                ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
+                : '프로덕션에 브랜드를 바로 등록합니다. 측정은 테넌트 골라 측정에서 GitHub Actions로 실행하세요.'}
           </p>
         ) : (
           <p className="hint">
