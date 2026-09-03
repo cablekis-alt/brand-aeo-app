@@ -34,6 +34,7 @@ const MENU: MenuGroup[] = [
     items: [
       { code: 'S-06', label: '브랜드 AEO 퍼포먼스', to: '/performance' },
       { code: 'S-07', label: '랭킹 분석', to: '/ranking' },
+      { code: 'S-13', label: '정기진단 보고서', to: '/report' },
     ],
   },
   {

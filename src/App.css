@@ -751,3 +751,106 @@ tbody tr.selected {
   color: var(--muted);
   font-size: 13px;
 }
+
+/* --- S-13 정기진단 보고서 (B9) --- */
+.report-verdict {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 14px 0 8px;
+}
+.report-verdict.sev-good { border-left-color: var(--good); }
+.report-verdict.sev-warn { border-left-color: var(--accent); }
+.report-verdict.sev-bad { border-left-color: var(--bad); }
+.verdict-head {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin: 4px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.verdict-head strong { color: var(--ink); }
+.score-chip {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.verdict-summary { margin: 0; color: var(--ink); }
+
+.diagnosis-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.diagnosis-table .weight-tag {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+.status-pill {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.status-pill.st-good { color: var(--good); }
+.status-pill.st-ok { color: var(--muted); }
+.status-pill.st-warn { color: var(--accent); }
+.status-pill.st-bad { color: var(--bad); }
+.status-pill.st-unknown { color: var(--muted); }
+
+.strength-list { margin: 0; padding-left: 18px; }
+.strength-list li { margin: 4px 0; }
+
+.rec-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.rec-card {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.rec-card.pr-high { border-left-color: var(--bad); }
+.rec-card.pr-medium { border-left-color: var(--accent); }
+.rec-card.pr-low { border-left-color: var(--muted); }
+.rec-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.rec-head h4 { margin: 0; font-family: var(--serif); font-weight: 560; font-size: 18px; flex: 1 1 auto; }
+.rec-num {
+  width: 26px; height: 26px; flex: 0 0 26px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent);
+  font-weight: 600; font-size: 13px;
+}
+.priority-pill {
+  font-size: 12px; font-weight: 600;
+  padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
+}
+.priority-pill.pr-high { color: var(--bad); }
+.priority-pill.pr-medium { color: var(--accent); }
+.priority-pill.pr-low { color: var(--muted); }
+.rec-basis { margin: 2px 0 10px; color: var(--ink); }
+.rec-label { margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.rec-actions { margin: 0; padding-left: 18px; }
+.rec-actions li { margin: 4px 0; }
+.rec-expected { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.rec-expected strong { color: var(--ink); }
+.rec-links { margin: 10px 0 0; display: flex; gap: 14px; flex-wrap: wrap; }
+.rec-link { font-size: 13px; color: var(--accent); text-decoration: none; }
+.rec-link:hover { text-decoration: underline; }
+
+@media print {
+  .sidebar, .top, .no-print { display: none !important; }
+  .shell { grid-template-columns: 1fr; gap: 0; }
+  .rec-card, .report-verdict, .panel { break-inside: avoid; }
+}
