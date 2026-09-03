@@ -886,7 +886,7 @@ export default function BrandOnboarding() {
         <div className="field">
           <div className="onboard-comp-label">
             <span>경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)</span>
-            {canRegister && (
+            {addrLookupOn && (
               <button
                 type="button"
                 className="ghost"
@@ -905,8 +905,17 @@ export default function BrandOnboarding() {
             placeholder={'강남언니, gangnamunni.com\n원진성형외과, k-wonjin.co.kr'}
           />
           <span className="hint">
-            경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다. 비우면 SoM은 판정 불가로 표시됩니다. 자동 추천은{' '}
-            <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
+            경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다.{' '}
+            {addrLookupOn ? (
+              <>
+                자동 추천은 <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
+              </>
+            ) : (
+              <>
+                비워 두면 <b>측정 시점(GitHub Actions)에 경쟁사가 자동 추론</b>되어 채워집니다. 배포 환경에서는 직접
+                추천이 부정확해 버튼을 숨겼습니다.
+              </>
+            )}
           </span>
           {compMsg && (
             <span className={compMsg.startsWith('✗') ? 'error' : 'hint'} role="status">
