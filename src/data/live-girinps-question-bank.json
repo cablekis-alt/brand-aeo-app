@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-03T23:41:59.712Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "강남역이나 신논현역 근처에서 안면윤곽 수술로 유명한 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울 서초구 쪽에서 눈재수술 자연스럽게 잘하는 병원 어디가 좋을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "코성형 첫 수술인데 서초·강남권에서 부작용 적고 후기 좋은 성형외과 리스트 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "안면윤곽 3종 수술할 때 안전 시스템이나 마취과 상주 여부 따져서 병원 고르는 팁 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "가슴 성형 상담받으러 가려는데 서초 성형외과 중에 사후관리 꼼꼼하게 해주는 곳 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "성형외과 전문의가 1:1로 전담해서 수술 집도하는 신뢰할 만한 대형 성형외과 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "이마거상이나 안면거상술로 중년층이 많이 찾는 서초구 성형외과 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "눈매교정이랑 트임 성형 같이 하려고 하는데 붓기 적고 라인 예쁘게 빼는 곳 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "기린성형외과 안면윤곽 수술 전후 후기나 평판이 어떤지 궁금해.",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "서초 기린성형외과 눈성형이나 코성형 대략적인 비용대랑 상담 예약 방법 알려줘.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "기린성형외과에서 윤곽 수술받은 사람들 사후관리나 붓기 케어 프로그램 만족도 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "강남역 서초 부근에 있는 기린성형외과 대중교통으로 찾아가기 편해? 위치 알려줘.",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    }
+  ]
+}

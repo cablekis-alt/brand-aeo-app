@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-03T23:47:43.900Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "서초나 강남 쪽에서 눈성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "코 재수술 고민 중인데 서울 서초구 쪽에 후기 좋은 성형외과 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "성형외과 첫 상담 갈 때 병원 고르는 기준이나 체크해야 할 점 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "서울에서 안면거상술이나 동안성형으로 유명한 전문의 있는 병원 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "서초역이나 신논현역 근처에 과잉 진료 안 하고 친절한 성형외과 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "쌍수 자연유착이랑 절개 중에 고민인데 상담 꼼꼼하게 봐주는 병원 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "요즘 눈밑지방재배치 잘하는 성형외과 트렌드나 평점 좋은 곳 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "강남 서초 일대에서 성형 수술 후 사후관리 잘해주는 병원 찾고 있어.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "서초 쁠리성형외과 원장님 경력이랑 수술 스타일 어떤지 궁금해.",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "쁠리성형외과에서 눈이나 코 수술 받아본 사람들 실제 후기나 만족도 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "서초동 쁠리성형외과 눈재수술 비용이나 가격대 대략 얼마 정도 해?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "서초역 강남역 인근에서 쁠리성형외과랑 같이 상담 비교해볼 만한 코성형 병원 어디 있어?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    }
+  ]
+}
