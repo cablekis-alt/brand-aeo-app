@@ -4,6 +4,7 @@ import { appendTenant, loadTenants } from './config.js';
 import { inferCompetitors } from './brandInference.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { normalizeTenantDraft } from './tenantRegistry.js';
+import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
 import type { FileResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -71,6 +72,20 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
         competitors: inferred.map((c) => ({ name: c.name, domains: c.domain ? [c.domain] : [] })),
       });
       console.log(`[measureAndBake] ${tenant.tenantId} 경쟁사 자동 추론: ${inferred.map((c) => c.name).join(', ')}`);
+
+      // 추론된 경쟁사를 즉시 오버레이에 반영 → 배포 사이트(등록 폼)가 긴 측정 파이프라인 전에 경쟁사를 볼 수 있다.
+      if (blobStoreEnabled()) {
+        try {
+          const overlay = await readOverlay();
+          const idx = overlay.findIndex((item) => item.tenantId === tenant.tenantId);
+          if (idx >= 0) overlay[idx] = tenant;
+          else overlay.push(tenant);
+          await writeOverlay(overlay);
+          console.log(`[measureAndBake] ${tenant.tenantId} 경쟁사 오버레이 조기 반영 완료`);
+        } catch (err) {
+          console.error(`[measureAndBake] 오버레이 조기 반영 실패: ${err instanceof Error ? err.message : err}`);
+        }
+      }
 
       // 경쟁사도 코호트로 함께 측정 → 본 브랜드 스코어카드에서 코호트 순위(1/N)가 채워진다.
       // 본 브랜드보다 "먼저" 측정해 같은 주차 코호트에 포함시킨다. cohortOnly 초안이라 재귀로 더 퍼지지 않는다.

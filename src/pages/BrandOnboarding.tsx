@@ -667,6 +667,32 @@ export default function BrandOnboarding() {
           `✓ 등록 완료 · GitHub Actions 측정 시작 — ${tenant.brandName}. 수 분 뒤 이 사이트에 자동 반영됩니다.` +
             (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
         )
+        // 경쟁사가 비어 자동 추론되는 경우, 러너가 추론 결과를 오버레이에 반영하면 3.경쟁사 란에 채워 진행 상황을 보여준다.
+        if (tenant.competitors.length === 0) {
+          const targetId = tenant.tenantId
+          const htmlUrl = body.htmlUrl
+          void (async () => {
+            for (let i = 0; i < 24; i++) {
+              await new Promise((r) => setTimeout(r, 12000))
+              try {
+                const poll = await fetch('/api/tenants?all=1')
+                if (!poll.ok) continue
+                const list = (await poll.json()) as Array<{ tenantId: string; competitors?: string[] }>
+                const names = list.find((t) => t.tenantId === targetId)?.competitors ?? []
+                if (names.length > 0) {
+                  setCompetitorsRaw(names.join('\n'))
+                  setRegisterMsg(
+                    `✓ 경쟁사 ${names.length}곳 자동 추론됨 — 3.경쟁사 란에 표시했습니다. 측정은 계속 진행 중입니다.` +
+                      (htmlUrl ? ` 진행: ${htmlUrl}` : ''),
+                  )
+                  return
+                }
+              } catch {
+                // 무시 — 다음 주기에 재시도
+              }
+            }
+          })()
+        }
         return
       }
       // 로컬 백엔드 — 즉시 측정·baking.
