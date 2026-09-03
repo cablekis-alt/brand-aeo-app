@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import BrandManageList from '../components/BrandManageList'
 import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -511,6 +512,8 @@ export default function BrandOnboarding() {
           점수 반영: <code>npx tsx scripts/publish-tenant.ts {tenant.tenantId || '<tenantId>'}</code>
         </p>
       </StageShell>
+
+      <BrandManageList />
     </>
   )
 }

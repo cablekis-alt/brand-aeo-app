@@ -1,4 +1,5 @@
-import { canPersistTenants, loadRuntimeTenants, normalizeTenantDraft, registerTenant, toTenantSummary } from '../server/tenantRegistry.js';
+import { canPersistTenants, isBakedTenant, loadRuntimeTenants, normalizeTenantDraft, registerTenant, removeOverlayTenant, toTenantSummary } from '../server/tenantRegistry.js';
+import { removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
 
@@ -20,8 +21,27 @@ function readBody(req: JsonRequest): unknown {
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
-    cors(res, 'GET, POST');
+    cors(res, 'GET, POST, DELETE');
     res.end();
+    return;
+  }
+  cors(res, 'GET, POST, DELETE');
+
+  if (req.method === 'DELETE') {
+    const raw = req.query?.tenantId;
+    const tenantId = (Array.isArray(raw) ? raw[0] : raw)?.trim();
+    if (!tenantId) {
+      sendJson(res, 400, { error: 'tenantId 쿼리가 필요합니다.' });
+      return;
+    }
+    try {
+      const { removed } = await removeOverlayTenant(tenantId);
+      await removeMeasureRequest(tenantId);
+      const stillBaked = isBakedTenant(tenantId);
+      sendJson(res, 200, { ok: true, tenantId, removedFromOverlay: removed, stillBaked });
+    } catch (err) {
+      sendJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
+    }
     return;
   }
 

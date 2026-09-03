@@ -15,9 +15,11 @@ import { startScheduler } from './scheduler.js';
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
+  isBakedTenant,
   loadRuntimeTenants,
   normalizeTenantDraft,
   registerTenant,
+  removeOverlayTenant,
   toTenantSummary,
 } from './tenantRegistry.js';
 import type { TenantConfig } from './types.js';
@@ -62,6 +64,22 @@ app.get('/api/tenants', async (req, res) => {
   const all = req.query.all === '1' || req.query.all === 'true';
   const picked = all ? tenants : tenants.filter((tenant) => !tenant.cohortOnly);
   res.json(picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })));
+});
+
+// 브랜드 삭제 — 오버레이(런타임 등록분)와 대기열에서 제거. 베이크된 테넌트는 CLI(delete-tenant.ts)+배포 필요.
+app.delete('/api/tenants', async (req, res) => {
+  const tenantId = typeof req.query.tenantId === 'string' ? req.query.tenantId.trim() : '';
+  if (!tenantId) {
+    res.status(400).json({ error: 'tenantId 쿼리가 필요합니다.' });
+    return;
+  }
+  try {
+    const { removed } = await removeOverlayTenant(tenantId);
+    await removeMeasureRequest(tenantId);
+    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked: isBakedTenant(tenantId) });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // S-12 "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬).

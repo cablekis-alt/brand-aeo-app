@@ -61,3 +61,12 @@ export async function writeOverlay(tenants: TenantConfig[]): Promise<void> {
   }
   await writeFile(LOCAL_PATH, JSON.stringify(tenants, null, 2) + '\n', 'utf-8');
 }
+
+/** 오버레이(런타임 등록분)에서 한 테넌트를 제거한다. 베이크된(BASE) 테넌트에는 영향 없음. */
+export async function removeOverlayTenant(tenantId: string): Promise<{ removed: boolean }> {
+  const overlay = await readOverlay();
+  const next = overlay.filter((tenant) => tenant.tenantId !== tenantId);
+  const removed = next.length !== overlay.length;
+  if (removed) await writeOverlay(next);
+  return { removed };
+}

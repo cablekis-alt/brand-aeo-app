@@ -1,13 +1,18 @@
 import rawTenants from './tenants.config.json' with { type: 'json' };
 import { appendTenant } from './config.js';
-import { blobStoreEnabled, canPersistTenants, readOverlay, writeOverlay } from './tenantOverlay.js';
+import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
 const BASE_TENANTS = rawTenants as TenantConfig[];
 const ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
 
-export { canPersistTenants, blobStoreEnabled };
+export { canPersistTenants, blobStoreEnabled, removeOverlayTenant };
+
+/** 커밋된(베이크된) 테넌트인지 — 삭제 시 오버레이 제거만으로는 사라지지 않아 CLI+배포가 필요하다. */
+export function isBakedTenant(tenantId: string): boolean {
+  return BASE_TENANTS.some((tenant) => tenant.tenantId === tenantId);
+}
 
 function asEngineList(value: unknown): Engine[] {
   if (!Array.isArray(value) || value.length === 0) return ['openai'];
