@@ -166,7 +166,9 @@ export async function inferCompetitors(
   region = '',
 ): Promise<InferredCompetitor[]> {
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
-  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY);
+  // OpenAI는 Vercel 리전(iad1)에서 한국어 브랜드 회상에 헛소리(식당·놀이공원 등)를 내므로 로컬/CI에서만 병합한다.
+  // Vercel에선 Gemini 단독 = 검증된 정상 경로. (주소 조회를 로컬 전용으로 게이트한 것과 동일한 이유.)
+  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY) && !process.env.VERCEL;
   if ((!hasGemini && !hasOpenAi) || !brandName.trim() || !industry.trim()) return [];
 
   const system =
