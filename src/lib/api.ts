@@ -49,8 +49,10 @@ async function getJson<T>(path: string): Promise<T | null> {
 
 export async function loadTenants(): Promise<TenantSummary[]> {
   const remote = await getJson<TenantSummary[]>('/api/tenants')
-  if (Array.isArray(remote) && remote.length > 0) return remote
-  return FALLBACK_TENANTS
+  // API가 응답하면 빈 배열도 그대로 신뢰한다 — "브랜드 0개"와 "API 미도달"을 구분해야
+  // 브랜드가 없을 때 더미(example-brand) 대신 빈 상태 화면을 보여줄 수 있다.
+  if (Array.isArray(remote)) return remote
+  return FALLBACK_TENANTS // 로컬 개발 등 API 미도달 시에만 데모 폴백.
 }
 
 export async function loadScorecards(tenantId: string): Promise<WeeklyScorecard[]> {
