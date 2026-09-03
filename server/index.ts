@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
-import { inferBrandFields, inferCompetitors } from './brandInference.js';
+import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
 import { canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
@@ -237,6 +237,16 @@ app.post('/api/infer', async (req, res) => {
         return;
       }
       res.json(await inferCompetitors(brandName, industry, region));
+      return;
+    }
+    if (kind === 'address') {
+      const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+      const region = typeof req.body?.region === 'string' ? req.body.region : '';
+      if (!brandName.trim()) {
+        res.status(400).json({ error: 'brandName이 필요합니다.' });
+        return;
+      }
+      res.json({ address: await inferAddressViaSearch(brandName, region) });
       return;
     }
     const text = typeof req.body?.text === 'string' ? req.body.text : '';

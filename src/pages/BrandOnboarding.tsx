@@ -142,6 +142,8 @@ export default function BrandOnboarding() {
   const [brandName, setBrandName] = useState('')
   const [domain, setDomain] = useState('')
   const [address, setAddress] = useState('')
+  const [findingAddr, setFindingAddr] = useState(false)
+  const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -238,6 +240,7 @@ export default function BrandOnboarding() {
       setDomain(hostToDomain(s.finalUrl || parsed.href))
       setBrandName(guessedName)
       let resolvedAddr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
+      let resolvedRegion = region
       if (resolvedAddr) setAddress(resolvedAddr)
       setExtracted(true)
 
@@ -253,7 +256,10 @@ export default function BrandOnboarding() {
           if (res.ok) {
             const inferred = (await res.json()) as { industry?: string; region?: string; address?: string }
             if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
-            if (inferred.region) setRegion((prev) => prev || inferred.region!)
+            if (inferred.region) {
+              resolvedRegion = resolvedRegion || inferred.region
+              setRegion((prev) => prev || inferred.region!)
+            }
             if (!resolvedAddr && inferred.address) {
               resolvedAddr = inferred.address
               setAddress((prev) => prev || inferred.address!)
@@ -307,17 +313,66 @@ export default function BrandOnboarding() {
                   // 무시
                 }
               }
-              if (contactAddr) setAddress((prev) => prev || contactAddr)
+              if (contactAddr) {
+                resolvedAddr = contactAddr
+                setAddress((prev) => prev || contactAddr)
+              }
             }
           } catch {
             // 연락처 페이지 수집 실패는 무시 — 직접 입력하면 된다.
           }
         }
       }
+
+      // B) 페이지에서 끝까지 못 찾으면 브랜드명+지역으로 웹검색 그라운딩 조회(최후 수단).
+      if (!resolvedAddr && guessedName) {
+        try {
+          const rb = await fetch('/api/infer?kind=address', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brandName: guessedName, region: resolvedRegion }),
+          })
+          if (rb.ok) {
+            const jb = (await rb.json()) as { address?: string }
+            if (jb.address) setAddress((prev) => prev || jb.address!)
+          }
+        } catch {
+          // 무시 — 직접 입력하면 된다.
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '수집 중 오류가 발생했습니다.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  // B) 수동 — 브랜드명+지역으로 웹검색 그라운딩 주소 조회. 사용자가 이름을 채운 뒤 쓰기 좋다.
+  async function handleFindAddress() {
+    if (!brandName.trim()) {
+      setAddrMsg('브랜드명을 먼저 입력하세요.')
+      return
+    }
+    setFindingAddr(true)
+    setAddrMsg(null)
+    try {
+      const r = await fetch('/api/infer?kind=address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: brandName.trim(), region: region.trim() }),
+      })
+      const j = (await r.json().catch(() => ({}))) as { address?: string; error?: string }
+      if (!r.ok) throw new Error(j.error || `조회 실패 (HTTP ${r.status})`)
+      if (j.address) {
+        setAddress(j.address)
+        setAddrMsg(null)
+      } else {
+        setAddrMsg('웹에서 주소를 확실히 찾지 못했습니다. 직접 입력하세요.')
+      }
+    } catch (err) {
+      setAddrMsg(err instanceof Error ? err.message : '주소 조회 실패')
+    } finally {
+      setFindingAddr(false)
     }
   }
 
@@ -578,8 +633,32 @@ export default function BrandOnboarding() {
           </label>
           <label className="field span2">
             <span>주소 (Fact Graph · 선택)</span>
-            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="예: 서울 강남구 봉은사로 107" />
-            <span className="hint">사실성 검증에 쓰입니다. 자동 추출이 비었으면 직접 입력하세요.</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="예: 서울 강남구 봉은사로 107"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => void handleFindAddress()}
+                disabled={findingAddr || !brandName.trim()}
+                title="브랜드명·지역으로 웹에서 주소를 찾습니다"
+              >
+                {findingAddr ? '찾는 중…' : '주소 찾기'}
+              </button>
+            </div>
+            <span className="hint">
+              사실성 검증에 쓰입니다. 자동 추출이 비면 브랜드명·지역을 채운 뒤 <b>주소 찾기</b>(웹검색)를 누르거나 직접 입력하세요.
+            </span>
+            {addrMsg && (
+              <span className="hint" style={{ color: 'var(--accent)' }} role="status">
+                {addrMsg}
+              </span>
+            )}
           </label>
         </div>
       </StageShell>

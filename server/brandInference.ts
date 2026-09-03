@@ -1,6 +1,11 @@
 import { lookup } from 'node:dns/promises';
+import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
 import { parseJsonLoose } from './jsonParse.js';
+
+// 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
+const KR_ADDRESS =
+  /((?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청?[남북]?|충[남북]|전라?[남북]?|전[남북]|경상?[남북]?|경[남북]|제주)[가-힣]*(?:특별자치[시도]|특별[시도]|광역시|도)?\s?[가-힣]+(?:시|군|구)\s?[가-힣0-9]+(?:로|길)\s?\d+[-\d]*)/;
 
 export interface InferredBrandFields {
   industry: string;
@@ -42,6 +47,27 @@ ${text.slice(0, 4000)}`;
     };
   } catch {
     return EMPTY;
+  }
+}
+
+/**
+ * 온보딩 보조(B) — 페이지에서 주소를 못 찾았을 때, 브랜드명+지역으로 Gemini 웹검색 그라운딩을 돌려
+ * 실제 도로명 주소를 조회한다. 응답에서 한국 주소 패턴만 뽑아 검증(환각 방지). 못 찾으면 "".
+ */
+export async function inferAddressViaSearch(brandName: string, region = ''): Promise<string> {
+  if (!process.env.GEMINI_API_KEY || !brandName.trim()) return '';
+  const system =
+    '당신은 한국 비즈니스의 실제 도로명 주소를 웹 검색으로 확인하는 도우미입니다. 확실하지 않으면 "모름"만 답하고, 주소를 지어내지 마세요.';
+  const user = `"${brandName}"${region ? ` (${region})` : ''}의 공식 도로명 주소를 웹에서 찾아 주소 한 줄만 답하세요.
+예: "서울 강남구 봉은사로 107". 확실하지 않으면 "모름"이라고만 답하세요.`;
+  try {
+    const result = await new GeminiEngineClient().call({ system, user });
+    const text = (result.text ?? '').trim();
+    if (!text) return '';
+    const match = text.match(KR_ADDRESS);
+    return match ? match[0].trim() : '';
+  } catch {
+    return '';
   }
 }
 

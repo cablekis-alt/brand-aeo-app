@@ -1,4 +1,4 @@
-import { inferBrandFields, inferCompetitors } from '../server/brandInference.js';
+import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from '../server/brandInference.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
 
@@ -44,6 +44,16 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
         return;
       }
       sendJson(res, 200, await inferCompetitors(brandName, industry, str(body.region)));
+      return;
+    }
+    if (kind === 'address') {
+      // B — 페이지에서 못 찾은 주소를 브랜드명+지역 웹검색 그라운딩으로 조회.
+      const brandName = str(body.brandName);
+      if (!brandName.trim()) {
+        sendJson(res, 400, { error: 'brandName이 필요합니다.' });
+        return;
+      }
+      sendJson(res, 200, { address: await inferAddressViaSearch(brandName, str(body.region)) });
       return;
     }
     // 기본: 브랜드 필드 추론
