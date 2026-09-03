@@ -78,7 +78,6 @@ export default function Sidebar() {
                   end={item.to === '/'}
                   className={({ isActive }) => [item.accent ? 'accent' : undefined, isActive ? 'on' : undefined].filter(Boolean).join(' ') || undefined}
                 >
-                  <span className="code">{item.code}</span>
                   <span className="label">{item.accent ? `＋ ${item.label}` : item.label}</span>
                   {item.b && <span className="bstage">{item.b}</span>}
                 </NavLink>
