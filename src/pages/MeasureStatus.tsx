@@ -97,7 +97,7 @@ export default function MeasureStatus() {
       <p className="brand">STAGE 2</p>
       <h1>측정 상태</h1>
       <p className="lead">
-        S-11·S-12에서 시작한 GitHub Actions 측정 실행의 진행 상태입니다. 완료되면 결과가 이 사이트에 자동 반영됩니다.
+        측정 대기열·테넌트 골라 측정에서 시작한 GitHub Actions 측정 실행의 진행 상태입니다. 완료되면 결과가 이 사이트에 자동 반영됩니다.
       </p>
 
       <div className="filters no-print" style={{ alignItems: 'center' }}>
@@ -128,8 +128,8 @@ export default function MeasureStatus() {
       ) : !loading && runs.length === 0 ? (
         <section className="panel">
           <p className="muted">
-            최근 측정 실행이 없습니다. <Link to="/measure-tenant">S-12 테넌트 골라 측정</Link> 또는{' '}
-            <Link to="/measure-queue">S-11 측정 대기열</Link>에서 측정을 시작하세요.
+            최근 측정 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link> 또는{' '}
+            <Link to="/measure-queue">측정 대기열</Link>에서 측정을 시작하세요.
           </p>
         </section>
       ) : (

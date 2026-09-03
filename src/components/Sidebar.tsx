@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 
 interface MenuItem {
-  code: string
   label: string
   to: string
   b?: string // 파이프라인 B-코드
@@ -19,42 +18,42 @@ const MENU: MenuGroup[] = [
   {
     title: '시작',
     items: [
-      { code: 'S-08', label: '브랜드 추가', to: '/brand-onboarding', accent: true },
-      { code: 'S-01', label: '대시보드 · 파이프라인', to: '/' },
+      { label: '브랜드 추가', to: '/brand-onboarding', accent: true },
+      { label: '대시보드 · 파이프라인', to: '/' },
     ],
   },
   {
     title: 'STAGE 1 · 질문 생성 & 스케줄',
     range: 'B1–B3',
     items: [
-      { code: 'S-04', label: '질문 프롬프트 빌더', to: '/questions', b: 'B1' },
-      { code: 'S-12', label: '테넌트 골라 측정', to: '/measure-tenant', b: 'B2' },
-      { code: 'S-11', label: '측정 대기열', to: '/measure-queue', b: 'B2' },
+      { label: '질문 프롬프트 빌더', to: '/questions', b: 'B1' },
+      { label: '테넌트 골라 측정', to: '/measure-tenant', b: 'B2' },
+      { label: '측정 대기열', to: '/measure-queue', b: 'B2' },
     ],
   },
   {
     title: 'STAGE 2 · 엔진 연동 & 정규화',
     range: 'B4',
-    items: [{ code: 'S-14', label: '측정 상태', to: '/measure-status', b: 'B4' }],
+    items: [{ label: '측정 상태', to: '/measure-status', b: 'B4' }],
   },
   {
     title: 'STAGE 3 · 다각도 분석',
     range: 'B5–B7',
     items: [
-      { code: 'S-02', label: '브랜드 종합 진단', to: '/diagnosis', b: 'B5' },
-      { code: 'S-05', label: 'URL 상세 분석', to: '/citations', b: 'B5' },
-      { code: 'S-10', label: 'AI 인용출처 분석', to: '/citation-sources', b: 'B7' },
-      { code: 'S-09', label: 'EEAT 분석', to: '/eeat', b: 'B6' },
-      { code: 'S-03', label: '사이트 종합 진단', to: '/site-diagnosis' },
+      { label: '브랜드 종합 진단', to: '/diagnosis', b: 'B5' },
+      { label: 'URL 상세 분석', to: '/citations', b: 'B5' },
+      { label: 'AI 인용출처 분석', to: '/citation-sources', b: 'B7' },
+      { label: 'EEAT 분석', to: '/eeat', b: 'B6' },
+      { label: '사이트 종합 진단', to: '/site-diagnosis' },
     ],
   },
   {
     title: 'STAGE 4 · 스코어 & 리포트',
     range: 'B8–B9',
     items: [
-      { code: 'S-06', label: '브랜드 AEO 퍼포먼스', to: '/performance', b: 'B8' },
-      { code: 'S-07', label: '랭킹 분석', to: '/ranking', b: 'B8' },
-      { code: 'S-13', label: '정기진단 보고서', to: '/report', b: 'B9' },
+      { label: '브랜드 AEO 퍼포먼스', to: '/performance', b: 'B8' },
+      { label: '랭킹 분석', to: '/ranking', b: 'B8' },
+      { label: '정기진단 보고서', to: '/report', b: 'B9' },
     ],
   },
 ]
@@ -72,7 +71,7 @@ export default function Sidebar() {
           </p>
           <ul>
             {group.items.map((item) => (
-              <li key={item.code}>
+              <li key={item.to}>
                 <NavLink
                   to={item.to}
                   end={item.to === '/'}

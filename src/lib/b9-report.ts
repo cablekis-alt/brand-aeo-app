@@ -202,14 +202,14 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
 }
 
 const REC_LINKS = {
-  questions: { label: 'S-04 질문 프롬프트 빌더', to: '/questions' },
-  diagnosis: { label: 'S-02 브랜드 종합 진단', to: '/diagnosis' },
-  site: { label: 'S-03 사이트 종합 진단', to: '/site-diagnosis' },
-  citations: { label: 'S-05 URL 상세 분석', to: '/citations' },
-  sources: { label: 'S-10 AI 인용출처 분석', to: '/citation-sources' },
-  ranking: { label: 'S-07 랭킹 분석', to: '/ranking' },
-  eeat: { label: 'S-09 EEAT 분석', to: '/eeat' },
-  onboarding: { label: 'S-08 브랜드 추가', to: '/brand-onboarding' },
+  questions: { label: '질문 프롬프트 빌더', to: '/questions' },
+  diagnosis: { label: '브랜드 종합 진단', to: '/diagnosis' },
+  site: { label: '사이트 종합 진단', to: '/site-diagnosis' },
+  citations: { label: 'URL 상세 분석', to: '/citations' },
+  sources: { label: 'AI 인용출처 분석', to: '/citation-sources' },
+  ranking: { label: '랭킹 분석', to: '/ranking' },
+  eeat: { label: 'EEAT 분석', to: '/eeat' },
+  onboarding: { label: '브랜드 추가', to: '/brand-onboarding' },
 }
 
 function priorityOf(weight: number, status: MetricStatus): Priority {
@@ -253,7 +253,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         ? '경쟁사가 설정되지 않아 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).'
         : `현재 SoM ${m.valueText} — 경쟁사가 함께 언급되는 질문에서 밀리고 있습니다.`,
       actions: isUnknown
-        ? ['S-08에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.']
+        ? ['브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.']
         : [
             '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
             '후기·평점 플랫폼과 지역 커뮤니티에서의 노출·언급을 늘려 비교 문맥에서 우위를 확보합니다.',
@@ -310,7 +310,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       priority: priorityOf(m.weight, m.status),
       basis: `자사 출처 인용률 ${m.valueText} — AI가 근거로 자사 콘텐츠를 거의 참조하지 않습니다.`,
       actions: [
-        '자바스크립트 없이도 읽히는 정적 콘텐츠를 확보합니다(비-JS 크롤러 패리티 — S-03 참고).',
+        '자바스크립트 없이도 읽히는 정적 콘텐츠를 확보합니다(비-JS 크롤러 패리티 — 사이트 종합 진단 참고).',
         '인용하기 좋은 "팩트/요약" 페이지를 만들고 llms.txt·구조화 데이터로 접근성을 높입니다.',
         'AI가 실제로 인용 중인 제3자 출처를 파악해 그 출처에 자사 정보가 반영되도록 합니다.',
       ],

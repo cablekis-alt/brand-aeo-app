@@ -33,7 +33,7 @@ export default function CitationSources() {
       <p className="brand">STAGE 3</p>
       <h1>AI 인용출처 분석</h1>
       <p className="lead">
-        엔진이 실제로 붙인 URL을 출처 유형별로 나눕니다. S-05의 소유권(자사/경쟁사) 위에, 뉴스·공공·후기·블로그 같은
+        엔진이 실제로 붙인 URL을 출처 유형별로 나눕니다. URL 상세 분석의 소유권(자사/경쟁사) 위에, 뉴스·공공·후기·블로그 같은
         매체 성격과 엔진 간 합의 도메인을 봅니다.
       </p>
 

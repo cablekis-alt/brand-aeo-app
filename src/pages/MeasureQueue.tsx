@@ -167,7 +167,7 @@ export default function MeasureQueue() {
 
       {!loading && items.length === 0 ? (
         <section className="panel">
-          <p className="muted">측정 대기열이 비어 있습니다. 배포 사이트의 S-08에서 브랜드를 등록하면 여기에 쌓입니다.</p>
+          <p className="muted">측정 대기열이 비어 있습니다. 배포 사이트의 브랜드 추가에서 브랜드를 등록하면 여기에 쌓입니다.</p>
         </section>
       ) : (
         <section>
@@ -215,8 +215,8 @@ export default function MeasureQueue() {
 
       <section className="panel" style={{ marginTop: '20px' }}>
         <p className="hint">
-          테넌트 하나만 측정하려면 <Link to="/measure-tenant">S-12 테넌트 골라 측정</Link>을 사용하세요. 실행 진행 상태는{' '}
-          <Link to="/measure-status">S-14 측정 상태</Link>에서 볼 수 있습니다.
+          테넌트 하나만 측정하려면 <Link to="/measure-tenant">테넌트 골라 측정</Link>을 사용하세요. 실행 진행 상태는{' '}
+          <Link to="/measure-status">측정 상태</Link>에서 볼 수 있습니다.
         </p>
       </section>
 

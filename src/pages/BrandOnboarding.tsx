@@ -546,7 +546,7 @@ export default function BrandOnboarding() {
           <p className="hint">
             {canMeasure
               ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
-              : '프로덕션에 브랜드를 바로 등록합니다. 측정은 S-12에서 GitHub Actions로 실행하세요.'}
+              : '프로덕션에 브랜드를 바로 등록합니다. 측정은 테넌트 골라 측정에서 GitHub Actions로 실행하세요.'}
           </p>
         ) : (
           <p className="hint">
