@@ -1,10 +1,10 @@
 {
   "version": "v3",
-  "generatedAt": "2026-09-01T16:06:32.997Z",
+  "generatedAt": "2026-09-03T06:01:32.188Z",
   "questions": [
     {
       "questionId": "v3-001",
-      "text": "성형외과 추천해줘",
+      "text": "강남 쪽에서 눈이랑 코 성형 같이 자연스럽게 잘하는 성형외과 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v3-002",
-      "text": "서울 강남에서 성형외과 고를 때 뭘 봐야 해?",
+      "text": "서울에서 안면윤곽 수술 안전 시스템 잘 갖춰진 대형 성형외과 어디가 유명해?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v3-003",
-      "text": "성형외과 후기 좋은 곳 알아?",
+      "text": "가슴 성형 처음 하려고 하는데 강남에서 후기 좋고 사후관리 잘해주는 병원 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v3-004",
-      "text": "서울 강남에서 코수술 잘하는 곳이 어디야?",
+      "text": "강남역이나 신논현역 근처 성형외과 고를 때 쉐도우 닥터 없이 믿을 만한 곳 어떻게 찾아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v3-005",
-      "text": "성형수술 상담은 어떻게 받는 게 좋을까?",
+      "text": "첫 코성형 고민 중인데 재수술 비율 낮고 과잉 진료 없는 성형외과 리스트 뽑아줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -49,25 +49,25 @@
     },
     {
       "questionId": "v3-006",
-      "text": "뷰성형외과는 어떤 장점이 있어?",
-      "category": "brand-direct",
-      "containsBrandName": true,
+      "text": "강남 성형외과 중에서 마취과 전문의 항상 상주하고 응급 대처 잘되는 곳 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
       "version": "v3"
     },
     {
       "questionId": "v3-007",
-      "text": "강남언니와 뷰성형외과, 어디가 더 좋을까?",
-      "category": "comparison",
-      "containsBrandName": true,
+      "text": "중년 상안검이랑 눈밑지방재배치 수술로 부모님 모시고 갈 만한 강남 성형외과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 강남",
       "version": "v3"
     },
     {
       "questionId": "v3-008",
-      "text": "성형외과 수술 가격이 대체로 얼마 정도야?",
+      "text": "서울 강남에서 양악이나 윤곽 수술 분야로 오래되고 입소문 난 성형외과 어디가 있어?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -76,8 +76,8 @@
     },
     {
       "questionId": "v3-009",
-      "text": "제이준성형외과의원과 원진성형외과, 어떤 차이가 있어?",
-      "category": "comparison",
+      "text": "뷰성형외과 윤곽이랑 가슴 수술 평판 어때? 실제 수술받은 사람들 후기 궁금해",
+      "category": "brand-direct",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
@@ -85,26 +85,26 @@
     },
     {
       "questionId": "v3-010",
-      "text": "성형수술 후기를 찾을 때 어떤 사이트가 좋을까?",
-      "category": "category-agnostic",
-      "containsBrandName": false,
+      "text": "강남에서 대형 성형외과 찾을 때 뷰성형외과랑 원진, 바노바기 장단점 비교해줘",
+      "category": "comparison",
+      "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
       "version": "v3"
     },
     {
       "questionId": "v3-011",
-      "text": "서울 강남의 성형외과 중에서 피부과도 하는 곳이 있나?",
-      "category": "category-agnostic",
-      "containsBrandName": false,
+      "text": "뷰성형외과 모티바 가슴 성형 대략적인 비용이랑 흉터 케어 프로그램 어떻게 구성돼 있어?",
+      "category": "price-spec",
+      "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",
       "version": "v3"
     },
     {
       "questionId": "v3-012",
-      "text": "스타라인성형외과의원은 어떤 곳이야?",
-      "category": "brand-direct",
+      "text": "뷰성형외과나 제이준성형외과에서 눈 재수술 상담 받아보려는데 라인 교정 만족도 어때?",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 강남",

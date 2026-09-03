@@ -6,19 +6,19 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 26,
-      "ma4": 26,
-      "previousWeek": 26,
-      "ciLow": 17.8,
-      "ciHigh": 34.2
+      "current": 46,
+      "ma4": 46,
+      "previousWeek": 46,
+      "ciLow": 36.2,
+      "ciHigh": 55.8
     },
-    "mentionRate": 0.041666666666666664,
-    "shareOfMention": 0.22727272727272727,
+    "mentionRate": 0.375,
+    "shareOfMention": 0.44871794871794873,
     "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
+      "position": 2,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -66,7 +66,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 4,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -90,7 +90,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
+      "position": 6,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -114,7 +114,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 4,
+      "position": 5,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -138,7 +138,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
+      "position": 3,
       "totalTenants": 6
     },
     "hallucinationFlags": []
