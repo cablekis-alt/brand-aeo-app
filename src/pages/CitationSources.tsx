@@ -30,7 +30,7 @@ export default function CitationSources() {
 
   return (
     <>
-      <p className="brand">S-10 · AEO 최적화</p>
+      <p className="brand">S-10 · STAGE 3</p>
       <h1>AI 인용출처 분석</h1>
       <p className="lead">
         엔진이 실제로 붙인 URL을 출처 유형별로 나눕니다. S-05의 소유권(자사/경쟁사) 위에, 뉴스·공공·후기·블로그 같은

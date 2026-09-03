@@ -126,7 +126,7 @@ export default function MeasureQueue() {
 
   return (
     <>
-      <p className="brand">S-11 · 브랜드 관리</p>
+      <p className="brand">S-11 · STAGE 1</p>
       <h1>측정 대기열</h1>
       <p className="lead">
         배포 사이트에서 등록된 브랜드의 <b>측정 요청</b> 목록입니다. 측정(질문 × 엔진 × 반복, 수 분)은 서버리스

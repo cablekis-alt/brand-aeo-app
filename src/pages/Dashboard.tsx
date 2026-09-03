@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
@@ -10,12 +11,51 @@ export default function Dashboard() {
 
   return (
     <>
-      <p className="brand">S-01 · 브랜드 진단 및 분석</p>
+      <p className="brand">S-01 · 개요</p>
       <h1>답변 엔진에서 이 브랜드는 얼마나 보이는가</h1>
       <p className="lead">
         ChatGPT, Gemini, Claude, Perplexity에 같은 질문을 반복 호출해 주간 가시성을 측정합니다. 점수는 인용·노출을
         예측하지 않고, 그 주에 실제로 관측된 값입니다.
       </p>
+
+      <Link to="/brand-onboarding" className="pipeline-add">
+        <span className="code">S-08</span>
+        <span>
+          <strong>브랜드 추가</strong>
+          <em>새 테넌트를 등록하고 측정 파이프라인에 넣습니다</em>
+        </span>
+      </Link>
+
+      <section className="pipeline" aria-label="Visibility 측정 파이프라인">
+        <p className="pipeline-kicker">Visibility 측정 파이프라인 B1–B9</p>
+        <p className="pipeline-flow">질문 생성 → 엔진 연동 → 다각도 분석 → 스코어·리포트</p>
+        <div className="pipeline-grid">
+          <article>
+            <p className="pipeline-stage">STAGE 1</p>
+            <h2>질문 생성 &amp; 스케줄</h2>
+            <p>B1 질문 프롬프트 빌더 · B2 스케줄러 · B3 모델별 어댑터</p>
+            <Link to="/questions">S-04 질문 빌더 →</Link>
+          </article>
+          <article>
+            <p className="pipeline-stage">STAGE 2</p>
+            <h2>엔진 연동 &amp; 정규화</h2>
+            <p>ChatGPT · Gemini · Claude · Perplexity · B4 응답 정규화 (엔진당 3회)</p>
+            <Link to="/measure-status">S-14 측정 상태 →</Link>
+          </article>
+          <article>
+            <p className="pipeline-stage">STAGE 3</p>
+            <h2>다각도 분석</h2>
+            <p>B5 언급·SoM·순위·사실성 · B6 EEAT · B7 AI 인용출처</p>
+            <Link to="/diagnosis">S-02 브랜드 진단 →</Link>
+          </article>
+          <article>
+            <p className="pipeline-stage">STAGE 4</p>
+            <h2>스코어 &amp; 리포트</h2>
+            <p>B8 AEO Score · B9 정기진단 보고서</p>
+            <Link to="/report">S-13 정기진단 →</Link>
+          </article>
+        </div>
+      </section>
 
       {error && (
         <p className="error" role="alert">

@@ -356,7 +356,7 @@ export default function BrandOnboarding() {
     <>
       <header className="onboard-masthead">
         <div>
-          <p className="brand">브랜드 관리</p>
+          <p className="brand">시작 · 진입점</p>
           <h1>브랜드 추가</h1>
           <p className="lead">URL을 넣으면 브랜드명·도메인·주소를 채웁니다. 업종·지역·경쟁사만 확인하면 테넌트가 만들어집니다.</p>
         </div>
@@ -366,10 +366,10 @@ export default function BrandOnboarding() {
       <nav className="onboard-steps" aria-label="브랜드 추가 단계">
         {(
           [
-            [1, 'STAGE 1', 'URL', s1],
-            [2, 'STAGE 2', '정보', s2],
-            [3, 'STAGE 3', '경쟁사', s3],
-            [4, 'STAGE 4', '등록', s4],
+            [1, '1', 'URL', s1],
+            [2, '2', '정보', s2],
+            [3, '3', '경쟁사', s3],
+            [4, '4', '등록', s4],
           ] as const
         ).map(([n, code, label, status]) => (
           <button
@@ -387,7 +387,7 @@ export default function BrandOnboarding() {
         ))}
       </nav>
 
-      <StageShell id="stage-1" code="STAGE 1" title="URL 수집" status={s1}>
+      <StageShell id="stage-1" code="1" title="URL 수집" status={s1}>
         <form className="site-form" onSubmit={handleExtract}>
           <label className="field">
             <span>브랜드 URL</span>
@@ -414,7 +414,7 @@ export default function BrandOnboarding() {
         )}
       </StageShell>
 
-      <StageShell id="stage-2" code="STAGE 2" title="브랜드 정보" status={s2}>
+      <StageShell id="stage-2" code="2" title="브랜드 정보" status={s2}>
         <div className="onboard-grid">
           <label className="field">
             <span>브랜드명 *</span>
@@ -440,7 +440,7 @@ export default function BrandOnboarding() {
         </div>
       </StageShell>
 
-      <StageShell id="stage-3" code="STAGE 3" title="경쟁사" status={s3}>
+      <StageShell id="stage-3" code="3" title="경쟁사" status={s3}>
         <div className="field">
           <div className="onboard-comp-label">
             <span>경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)</span>
@@ -474,7 +474,7 @@ export default function BrandOnboarding() {
         </div>
       </StageShell>
 
-      <StageShell id="stage-4" code="STAGE 4" title="등록" status={s4}>
+      <StageShell id="stage-4" code="4" title="등록" status={s4}>
         <div className="onboard-register">
           <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
           <div className="onboard-register-actions">

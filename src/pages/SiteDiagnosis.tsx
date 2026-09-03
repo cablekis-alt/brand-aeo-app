@@ -84,7 +84,7 @@ export default function SiteDiagnosis() {
 
   return (
     <>
-      <p className="brand">S-03 · 브랜드 진단 및 분석</p>
+      <p className="brand">S-03 · STAGE 3</p>
       <h1>사이트 종합 진단</h1>
       <p className="lead">
         단일 페이지 URL의 AI 검색 대응 준비도를 6개 영역, 100점 만점으로 진단합니다. 브랜드 가시성(주간 파이프라인)과

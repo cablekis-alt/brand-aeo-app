@@ -94,7 +94,7 @@ export default function MeasureStatus() {
 
   return (
     <>
-      <p className="brand">S-14 · 브랜드 관리</p>
+      <p className="brand">S-14 · STAGE 2</p>
       <h1>측정 상태</h1>
       <p className="lead">
         S-11·S-12에서 시작한 GitHub Actions 측정 실행의 진행 상태입니다. 완료되면 결과가 이 사이트에 자동 반영됩니다.
