@@ -15,9 +15,10 @@ export function isBakedTenant(tenantId: string): boolean {
 }
 
 function asEngineList(value: unknown): Engine[] {
-  if (!Array.isArray(value) || value.length === 0) return ['openai'];
+  // 기본 수집 엔진 = ChatGPT + Gemini (지정이 없거나 유효 항목이 없을 때).
+  if (!Array.isArray(value) || value.length === 0) return ['openai', 'gemini'];
   const picked = value.filter((item): item is Engine => ENGINES.includes(item as Engine));
-  return picked.length > 0 ? picked : ['openai'];
+  return picked.length > 0 ? picked : ['openai', 'gemini'];
 }
 
 /** 온보딩 JSON을 TenantConfig로 정규화한다. 자기 자신을 경쟁사로 넣은 줄은 빼 둔다. */

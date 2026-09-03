@@ -237,7 +237,7 @@ export default function BrandOnboarding() {
     ownedDomains: domain ? [domain] : [],
     industry: industry.trim(),
     region: region.trim(),
-    engines: ['openai'],
+    engines: ['openai', 'gemini'],
     questionBankSize: 12,
     questionBankVersion: 'v1',
     repeatsPerQuestion: 3,

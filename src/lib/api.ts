@@ -25,7 +25,7 @@ const FALLBACK_TENANTS: TenantSummary[] = [
     ownedDomains: ['viewclinic.com'],
     industry: '성형외과',
     region: '서울 강남',
-    engines: ['openai'],
+    engines: ['openai', 'gemini'],
     questionBankSize: 12,
     competitors: ['강남성형A', '강남성형B'],
   },
