@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tenantId:
-        description: tenantId to measure (e.g. example-brand)
+        description: tenantId to measure (e.g. example-brand), or __queue__ to process the whole measure queue
         required: true
         type: string
 
@@ -59,7 +59,9 @@ jobs:
             echo "baking 결과 변경 없음"
             exit 0
           fi
-          git commit -m "data: measure ${{ inputs.tenantId }}"
+          MSG="data: measure ${{ inputs.tenantId }}"
+          if [ "${{ inputs.tenantId }}" = "__queue__" ]; then MSG="data: measure queued brands"; fi
+          git commit -m "$MSG"
           git pull --rebase origin "${{ github.ref_name }}"
           git push
 

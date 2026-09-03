@@ -1,3 +1,6 @@
+// scripts/ci-measure.ts와 공유하는, "대기열 전체 측정" 신호.
+export const QUEUE_SENTINEL = '__queue__';
+
 export function canTriggerRemoteMeasure(): boolean {
   return Boolean(process.env.GH_MEASURE_TOKEN);
 }
@@ -33,4 +36,9 @@ export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl:
     throw new Error(`GitHub Actions 트리거 실패 (HTTP ${res.status}): ${text.slice(0, 240)}`);
   }
   return { htmlUrl: `https://github.com/${owner}/${repo}/actions/workflows/measure.yml` };
+}
+
+/** S-11 측정 대기열 전체를 GitHub Actions 한 번의 실행으로 순차 측정하도록 트리거한다. */
+export async function triggerGithubQueueMeasure(): Promise<{ htmlUrl: string }> {
+  return triggerGithubMeasure(QUEUE_SENTINEL);
 }

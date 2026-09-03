@@ -1,4 +1,4 @@
-import { triggerGithubMeasure } from '../server/githubMeasure.js';
+import { triggerGithubMeasure, triggerGithubQueueMeasure } from '../server/githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
@@ -36,6 +36,21 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
 
   if (req.method === 'POST') {
     const body = readBody(req) as { action?: string; tenantId?: string };
+    if (body?.action === 'run-queue') {
+      const pending = await readMeasureRequests();
+      if (pending.length === 0) {
+        sendJson(res, 400, { error: '대기열이 비어 있습니다.' });
+        return;
+      }
+      try {
+        const { htmlUrl } = await triggerGithubQueueMeasure();
+        sendJson(res, 202, { ok: true, via: 'github-actions', mode: 'queue', pending: pending.length, htmlUrl });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        sendJson(res, 503, { error: message });
+      }
+      return;
+    }
     if (body?.action === 'run') {
       const tenantId = typeof body.tenantId === 'string' ? body.tenantId.trim() : '';
       if (!tenantId) {

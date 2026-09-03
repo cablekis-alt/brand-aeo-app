@@ -20,6 +20,7 @@ export default function MeasureQueue() {
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [canMeasure, setCanMeasure] = useState(false)
+  const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   const [processing, setProcessing] = useState(false)
   const [processMsg, setProcessMsg] = useState<string | null>(null)
 
@@ -42,13 +43,41 @@ export default function MeasureQueue() {
     fetch('/api/health')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        setCanMeasure(Boolean(d?.canMeasure))
+        const via = d?.measureVia === 'local' || d?.measureVia === 'github' ? d.measureVia : 'none'
+        setMeasureVia(via)
+        setCanMeasure(Boolean(d?.canMeasure) || via !== 'none')
       })
-      .catch(() => setCanMeasure(false))
+      .catch(() => {
+        setCanMeasure(false)
+        setMeasureVia('none')
+      })
   }, [load])
 
-  // 로컬 백엔드에서 대기열 전체를 측정 + publish + 정리한다 (수 분 소요).
-  async function processAll() {
+  // 배포 환경: 대기열 전체를 GitHub Actions 한 번의 실행으로 순차 측정 → 자동 배포 → 러너가 대기열을 비운다.
+  async function processViaGithub() {
+    setProcessing(true)
+    setProcessMsg(`GitHub Actions에 대기열 ${items.length}건 측정을 요청하는 중…`)
+    try {
+      const res = await fetch('/api/measure-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'run-queue' }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string; pending?: number }
+      if (!res.ok) throw new Error(body.error || `요청 실패 (HTTP ${res.status})`)
+      setProcessMsg(
+        `✓ GitHub Actions가 대기열 ${body.pending ?? items.length}건을 순차 측정 중입니다. 완료되면 이 사이트에 자동 반영되고 대기열이 비워집니다 (수 분~수십 분).` +
+          (body.htmlUrl ? ` 진행 상황: ${body.htmlUrl}` : ''),
+      )
+    } catch (err) {
+      setProcessMsg(`✗ ${err instanceof Error ? err.message : '요청 실패'}`)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  // 로컬 백엔드: 대기열 전체를 측정 + publish + 정리한다 (수 분 소요, 이후 수동 배포).
+  async function processLocally() {
     setProcessing(true)
     setProcessMsg(`측정 중… 대기 ${items.length}건을 순서대로 처리합니다 (브랜드당 수 분). 이 탭을 열어 두세요.`)
     try {
@@ -77,6 +106,11 @@ export default function MeasureQueue() {
     }
   }
 
+  async function processAll() {
+    if (measureVia === 'github') await processViaGithub()
+    else await processLocally()
+  }
+
   async function cancel(tenantId: string) {
     setBusyId(tenantId)
     try {
@@ -96,7 +130,8 @@ export default function MeasureQueue() {
       <h1>측정 대기열</h1>
       <p className="lead">
         배포 사이트에서 등록된 브랜드의 <b>측정 요청</b> 목록입니다. 측정(질문 × 엔진 × 반복, 수 분)은 서버리스
-        함수에서 못 돌리므로, 이 대기열을 <b>로컬 CLI</b>가 처리합니다.
+        함수에서 못 돌리므로, 배포 환경에서는 <b>GitHub Actions</b>가, 로컬에서는 <b>로컬 백엔드</b>가 대기열을
+        처리합니다. 완료되면 결과가 자동 반영됩니다.
       </p>
 
       <div style={{ display: 'flex', gap: '10px', margin: '4px 0 12px', flexWrap: 'wrap' }}>
@@ -111,9 +146,11 @@ export default function MeasureQueue() {
         <span className="hint" style={{ alignSelf: 'center' }}>대기 {items.length}건</span>
       </div>
       <p className="hint" style={{ marginTop: 0 }}>
-        {canMeasure
-          ? '로컬 백엔드 감지됨 — "측정 실행"으로 대기열을 바로 측정·publish합니다 (완료 후 커밋·배포).'
-          : '측정은 로컬에서만 실행됩니다. 아래 명령을 참고하세요.'}
+        {measureVia === 'github'
+          ? '배포 환경 — "측정 실행"이 GitHub Actions 한 번의 실행으로 대기열 전체를 순차 측정하고, 끝나면 이 사이트에 자동 반영·대기열 정리까지 합니다.'
+          : measureVia === 'local'
+            ? '로컬 백엔드 감지됨 — "측정 실행"으로 대기열을 바로 측정·publish합니다 (완료 후 커밋·배포).'
+            : '측정을 켜려면 로컬 백엔드를 띄우거나 Vercel에 GH_MEASURE_TOKEN을 넣으세요. 아래 CLI도 사용할 수 있습니다.'}
       </p>
 
       {processMsg && (
