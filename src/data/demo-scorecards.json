@@ -24,30 +24,6 @@
     "hallucinationFlags": []
   },
   {
-    "tenantId": "jjun",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "제이준성형외과의원",
-    "aeoScore": {
-      "current": 26,
-      "ma4": 26,
-      "previousWeek": 26,
-      "ciLow": 18.2,
-      "ciHigh": 33.8
-    },
-    "mentionRate": 0,
-    "shareOfMention": 0.2692307692307692,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 6,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "starline",
     "weekOf": "2026-W36",
     "industry": "성형외과",
@@ -206,6 +182,30 @@
     },
     "mentionRate": 0.041666666666666664,
     "shareOfMention": 0.2807017543859649,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 5,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "jjun",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "제이준성형외과의원",
+    "aeoScore": {
+      "current": 28,
+      "ma4": 28,
+      "previousWeek": 28,
+      "ciLow": 18.4,
+      "ciHigh": 37.6
+    },
+    "mentionRate": 0,
+    "shareOfMention": 0.35294117647058826,
     "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
