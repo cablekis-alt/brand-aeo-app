@@ -24,30 +24,6 @@
     "hallucinationFlags": []
   },
   {
-    "tenantId": "gangnamunni",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "강남언니",
-    "aeoScore": {
-      "current": 53,
-      "ma4": 53,
-      "previousWeek": 53,
-      "ciLow": 41.7,
-      "ciHigh": 64.3
-    },
-    "mentionRate": 0.5833333333333334,
-    "shareOfMention": 0.3880597014925373,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 1,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "wonjin",
     "weekOf": "2026-W36",
     "industry": "성형외과",
@@ -212,6 +188,30 @@
     "cohortRank": {
       "position": 2,
       "totalTenants": 3
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "gangnamunni",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "강남언니",
+    "aeoScore": {
+      "current": 79,
+      "ma4": 79,
+      "previousWeek": 79,
+      "ciLow": 69.4,
+      "ciHigh": 88.6
+    },
+    "mentionRate": 0.75,
+    "shareOfMention": 0.9056603773584906,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   }
