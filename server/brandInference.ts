@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
-import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
+import { OpenAiEngineClient } from './engines/openaiEngineClient.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 // 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
@@ -199,8 +199,9 @@ export async function inferCompetitors(
     );
   }
   if (hasOpenAi) {
+    // judge 클라이언트는 gpt-4o-mini(약함)라 헛소리를 내므로, gpt-4o 기본인 engine 클라이언트를 쓴다.
     calls.push(
-      new OpenAiJudgeClient()
+      new OpenAiEngineClient()
         .call({ system, user })
         .then((r) => parseCandidates(r.text))
         .catch(() => []),
