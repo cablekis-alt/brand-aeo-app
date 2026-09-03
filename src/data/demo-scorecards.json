@@ -46,29 +46,5 @@
       "totalTenants": 2
     },
     "hallucinationFlags": []
-  },
-  {
-    "tenantId": "hdmpension",
-    "weekOf": "2026-W36",
-    "industry": "숙박",
-    "region": "전북 군산",
-    "brandName": "군산해들목펜션",
-    "aeoScore": {
-      "current": 45,
-      "ma4": 45,
-      "previousWeek": 45,
-      "ciLow": 34.5,
-      "ciHigh": 55.5
-    },
-    "mentionRate": 0,
-    "shareOfMention": 0.5925925925925926,
-    "avgRecommendationRank": 1,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 1,
-      "totalTenants": 1
-    },
-    "hallucinationFlags": []
   }
 ]
