@@ -162,7 +162,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
+      "position": 3,
       "totalTenants": 3
     },
     "hallucinationFlags": []
@@ -198,19 +198,19 @@
     "region": "전북 군산",
     "brandName": "군산해들목펜션",
     "aeoScore": {
-      "current": 40,
-      "ma4": 40,
-      "previousWeek": 40,
-      "ciLow": 30.5,
-      "ciHigh": 49.5
+      "current": 46,
+      "ma4": 46,
+      "previousWeek": 46,
+      "ciLow": 35.6,
+      "ciHigh": 56.4
     },
-    "mentionRate": 0,
-    "shareOfMention": 0.4117647058823529,
+    "mentionRate": 0.041666666666666664,
+    "shareOfMention": 0.5740740740740741,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 2,
       "totalTenants": 3
     },
     "hallucinationFlags": []
