@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 
 interface MeasureTenantOption {
@@ -146,6 +147,11 @@ export default function MeasureTenant() {
         {message && (
           <p className={message.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ marginTop: '10px', fontWeight: 500 }}>
             {message}
+          </p>
+        )}
+        {measureVia === 'github' && (
+          <p className="hint" style={{ marginTop: '10px' }}>
+            진행 상태는 <Link to="/measure-status">S-14 측정 상태</Link>에서 실시간으로 볼 수 있습니다.
           </p>
         )}
       </section>

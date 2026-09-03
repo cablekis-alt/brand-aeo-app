@@ -215,7 +215,8 @@ export default function MeasureQueue() {
 
       <section className="panel" style={{ marginTop: '20px' }}>
         <p className="hint">
-          테넌트 하나만 측정하려면 <Link to="/measure-tenant">S-12 테넌트 골라 측정</Link>을 사용하세요.
+          테넌트 하나만 측정하려면 <Link to="/measure-tenant">S-12 테넌트 골라 측정</Link>을 사용하세요. 실행 진행 상태는{' '}
+          <Link to="/measure-status">S-14 측정 상태</Link>에서 볼 수 있습니다.
         </p>
       </section>
 

@@ -8,6 +8,7 @@ import Citations from './pages/Citations'
 import Dashboard from './pages/Dashboard'
 import Eeat from './pages/Eeat'
 import MeasureQueue from './pages/MeasureQueue'
+import MeasureStatus from './pages/MeasureStatus'
 import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
 import Performance from './pages/Performance'
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="brand-onboarding" element={<BrandOnboarding />} />
             <Route path="measure-queue" element={<MeasureQueue />} />
             <Route path="measure-tenant" element={<MeasureTenant />} />
+            <Route path="measure-status" element={<MeasureStatus />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -121,3 +121,20 @@ export async function loadCitationSources(tenantId: string, weekOf: string): Pro
 export async function loadRanking(tenantId: string, weekOf: string): Promise<RankingView | null> {
   return getJson<RankingView>(`/api/ranking/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`)
 }
+
+// S-14 측정 상태 — 최근 GitHub Actions 측정 실행 목록.
+export interface MeasureRunInfo {
+  runNumber: number
+  title: string
+  status: string
+  conclusion: string | null
+  event: string
+  createdAt: string
+  updatedAt: string
+  htmlUrl: string
+}
+
+export async function loadMeasureRuns(): Promise<{ enabled: boolean; runs: MeasureRunInfo[] }> {
+  const remote = await getJson<{ enabled: boolean; runs: MeasureRunInfo[] }>('/api/measure-requests?view=runs')
+  return remote ?? { enabled: false, runs: [] }
+}

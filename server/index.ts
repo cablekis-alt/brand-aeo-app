@@ -4,6 +4,7 @@ import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
 import { inferBrandFields, inferCompetitors } from './brandInference.js';
+import { listMeasureRuns } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
@@ -241,8 +242,12 @@ async function clearQueue(tenantId: string): Promise<void> {
   });
 }
 
-app.get('/api/measure-requests', async (_req, res) => {
+app.get('/api/measure-requests', async (req, res) => {
   try {
+    if (req.query.view === 'runs') {
+      res.json(await listMeasureRuns());
+      return;
+    }
     res.json(await fetchQueue());
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });

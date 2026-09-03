@@ -1,4 +1,4 @@
-import { triggerGithubMeasure, triggerGithubQueueMeasure } from '../server/githubMeasure.js';
+import { listMeasureRuns, triggerGithubMeasure, triggerGithubQueueMeasure } from '../server/githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
@@ -30,6 +30,10 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   cors(res, 'GET, POST, DELETE');
 
   if (req.method === 'GET') {
+    if (req.query?.view === 'runs') {
+      sendJson(res, 200, await listMeasureRuns());
+      return;
+    }
     sendJson(res, 200, await readMeasureRequests());
     return;
   }

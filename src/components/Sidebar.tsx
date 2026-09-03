@@ -43,6 +43,7 @@ const MENU: MenuGroup[] = [
       { code: 'S-08', label: '브랜드 추가', to: '/brand-onboarding' },
       { code: 'S-11', label: '측정 대기열', to: '/measure-queue' },
       { code: 'S-12', label: '테넌트 골라 측정', to: '/measure-tenant' },
+      { code: 'S-14', label: '측정 상태', to: '/measure-status' },
     ],
   },
 ]

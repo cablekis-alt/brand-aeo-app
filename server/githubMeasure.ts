@@ -42,3 +42,49 @@ export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl:
 export async function triggerGithubQueueMeasure(): Promise<{ htmlUrl: string }> {
   return triggerGithubMeasure(QUEUE_SENTINEL);
 }
+
+export interface MeasureRunInfo {
+  runNumber: number;
+  title: string; // "measure <tenantId>" | "measure __queue__" | (구버전) 워크플로우명
+  status: string; // queued | in_progress | completed
+  conclusion: string | null; // success | failure | cancelled | ...
+  event: string;
+  createdAt: string;
+  updatedAt: string;
+  htmlUrl: string;
+}
+
+/** S-14 측정 상태 — 최근 measure 워크플로우 실행 목록을 반환한다(토큰 필요). */
+export async function listMeasureRuns(limit = 15): Promise<{ enabled: boolean; runs: MeasureRunInfo[] }> {
+  const token = process.env.GH_MEASURE_TOKEN;
+  if (!token) return { enabled: false, runs: [] };
+  let parts: { owner: string; repo: string };
+  try {
+    parts = repoParts();
+  } catch {
+    return { enabled: false, runs: [] };
+  }
+  const res = await fetch(
+    `https://api.github.com/repos/${parts.owner}/${parts.repo}/actions/workflows/measure.yml/runs?per_page=${limit}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    },
+  );
+  if (!res.ok) return { enabled: true, runs: [] };
+  const data = (await res.json()) as { workflow_runs?: Record<string, unknown>[] };
+  const runs: MeasureRunInfo[] = (data.workflow_runs ?? []).map((r) => ({
+    runNumber: Number(r.run_number) || 0,
+    title: (typeof r.display_title === 'string' && r.display_title) || String(r.name ?? '측정'),
+    status: String(r.status ?? ''),
+    conclusion: (r.conclusion as string | null) ?? null,
+    event: String(r.event ?? ''),
+    createdAt: String(r.created_at ?? ''),
+    updatedAt: String(r.updated_at ?? ''),
+    htmlUrl: String(r.html_url ?? ''),
+  }));
+  return { enabled: true, runs };
+}
