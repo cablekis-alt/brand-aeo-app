@@ -9,6 +9,12 @@ export default function Dashboard() {
   const card = history.at(-1) ?? null
   const delta = card ? formatDelta(card.aeoScore.current, card.aeoScore.previousWeek) : null
 
+  // 안내문은 실제 수집 엔진에서 파생한다(하드코딩 금지 — 엔진이 바뀌면 함께 바뀌어야 함).
+  const ALL_ENGINES = ['openai', 'gemini', 'claude', 'perplexity'] as const
+  const usedEngines = tenant?.engines ?? []
+  const usedLabels = usedEngines.map((e) => ENGINE_LABEL[e] ?? e)
+  const excludedLabels = ALL_ENGINES.filter((e) => !usedEngines.includes(e)).map((e) => ENGINE_LABEL[e] ?? e)
+
   return (
     <>
       <p className="brand">개요</p>
@@ -153,8 +159,9 @@ export default function Dashboard() {
       )}
 
       <p className="disclaimer">
-        현재 점수는 ChatGPT(gpt-4o, 웹 검색 사용)로 {card ? weekLabel(card.weekOf) : '해당 주'}에 측정한 값입니다.
-        질문 12개 × 3회 반복이며, Gemini·Claude·Perplexity는 포함하지 않았습니다. 실제 인용·노출을 보장하지 않습니다.
+        현재 점수는 {usedLabels.join(' · ') || '설정된 엔진'} 엔진으로 {card ? weekLabel(card.weekOf) : '해당 주'}에 측정한
+        값입니다. 질문 {tenant?.questionBankSize ?? 12}개 × 3회 반복입니다.
+        {excludedLabels.length > 0 && ` ${excludedLabels.join('·')}는 포함하지 않았습니다.`} 실제 인용·노출을 보장하지 않습니다.
       </p>
     </>
   )
