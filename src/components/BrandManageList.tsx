@@ -7,6 +7,7 @@ interface BrandRow {
   industry: string
   region: string
   cohortOnly?: boolean
+  competitors?: string[]
 }
 
 export default function BrandManageList() {
@@ -122,6 +123,7 @@ export default function BrandManageList() {
                 <th>브랜드</th>
                 <th>tenantId</th>
                 <th>업종 · 지역</th>
+                <th>경쟁사</th>
                 <th></th>
               </tr>
             </thead>
@@ -140,6 +142,15 @@ export default function BrandManageList() {
                     </td>
                     <td className="judgment">
                       {row.industry} · {row.region}
+                    </td>
+                    <td className="judgment">
+                      {row.cohortOnly ? (
+                        <span className="muted">—</span>
+                      ) : row.competitors && row.competitors.length > 0 ? (
+                        row.competitors.join(', ')
+                      ) : (
+                        <span className="muted">측정 후 자동 채움</span>
+                      )}
                     </td>
                     <td>
                       <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy}>

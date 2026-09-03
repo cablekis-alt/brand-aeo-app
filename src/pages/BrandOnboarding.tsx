@@ -902,7 +902,7 @@ export default function BrandOnboarding() {
             rows={4}
             value={competitorsRaw}
             onChange={(e) => setCompetitorsRaw(e.target.value)}
-            placeholder={'강남언니, gangnamunni.com\n원진성형외과, k-wonjin.co.kr'}
+            placeholder={'예) 경쟁사A, competitor-a.com\n경쟁사B, competitor-b.co.kr\n(비워 두면 측정 시 자동 추론)'}
           />
           <span className="hint">
             경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다.{' '}
