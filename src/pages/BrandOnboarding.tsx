@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -57,6 +57,43 @@ function parseCompetitors(raw: string): CompetitorDraft[] {
       }
     })
     .filter((c) => c.name)
+}
+
+type StageStatus = 'current' | 'done' | 'locked' | 'open'
+
+function stageStatus(id: 1 | 2 | 3 | 4, extracted: boolean, ready: boolean): StageStatus {
+  if (id === 1) return extracted ? 'done' : 'current'
+  if (!extracted) return 'locked'
+  if (id === 2) return ready ? 'done' : 'current'
+  if (id === 4) return ready ? 'current' : 'open'
+  return 'open'
+}
+
+function StageShell({
+  id,
+  code,
+  title,
+  status,
+  children,
+}: {
+  id: string
+  code: string
+  title: string
+  status: StageStatus
+  children: ReactNode
+}) {
+  const locked = status === 'locked'
+  return (
+    <section id={id} className={`onboard-stage panel${status === 'current' ? ' is-current' : ''}${locked ? ' is-locked' : ''}`}>
+      <header className="onboard-stage-head">
+        <span className="onboard-stage-code">{code}</span>
+        <h2>{title}</h2>
+        {status === 'done' && <span className="onboard-stage-mark">완료</span>}
+        {status === 'current' && <span className="onboard-stage-mark on">진행</span>}
+      </header>
+      {locked ? <p className="onboard-lock">URL에서 자동 채우기를 먼저 실행하세요.</p> : children}
+    </section>
+  )
 }
 
 export default function BrandOnboarding() {
@@ -305,155 +342,176 @@ export default function BrandOnboarding() {
     }
   }
 
+  const currentStage = !extracted ? 1 : !ready ? 2 : 4
+  const s1 = stageStatus(1, extracted, ready)
+  const s2 = stageStatus(2, extracted, ready)
+  const s3 = stageStatus(3, extracted, ready)
+  const s4 = stageStatus(4, extracted, ready)
+
+  function goStage(n: 1 | 2 | 3 | 4) {
+    document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <>
-      <p className="brand">S-08 · 브랜드 관리</p>
-      <h1>브랜드 추가</h1>
-      <p className="lead">
-        브랜드 URL을 넣으면 페이지를 읽어 <b>브랜드명·도메인·주소</b>를 자동으로 채웁니다. 업종·지역·경쟁사만 확인하면
-        측정용 테넌트가 만들어집니다. 프로덕션에서는 등록이 바로 반영되고, ChatGPT 측정은 로컬 파이프라인으로 이어서
-        실행합니다.
-      </p>
+      <header className="onboard-masthead">
+        <div>
+          <p className="brand">브랜드 관리</p>
+          <h1>브랜드 추가</h1>
+          <p className="lead">URL을 넣으면 브랜드명·도메인·주소를 채웁니다. 업종·지역·경쟁사만 확인하면 테넌트가 만들어집니다.</p>
+        </div>
+        <span className="onboard-code">S-08</span>
+      </header>
 
-      <form className="site-form" onSubmit={handleExtract}>
-        <label className="field">
-          <span>브랜드 URL</span>
-          <input
-            type="text"
-            inputMode="url"
-            placeholder="https://www.example.com"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
-          />
-          <span className="hint">공개 HTTPS 페이지만 읽습니다. 봇 차단·JS 렌더링 사이트는 자동 추출이 제한될 수 있으니 아래에서 직접 보완하세요.</span>
-        </label>
-        <button type="submit" className="primary" disabled={busy}>
-          {busy ? '페이지를 읽는 중…' : 'URL에서 자동 채우기'}
-        </button>
-      </form>
+      <nav className="onboard-steps" aria-label="브랜드 추가 단계">
+        {(
+          [
+            [1, 'STAGE 1', 'URL', s1],
+            [2, 'STAGE 2', '정보', s2],
+            [3, 'STAGE 3', '경쟁사', s3],
+            [4, 'STAGE 4', '등록', s4],
+          ] as const
+        ).map(([n, code, label, status]) => (
+          <button
+            key={n}
+            type="button"
+            className={`onboard-step${n === currentStage ? ' is-current' : ''}${status === 'done' ? ' is-done' : ''}${status === 'locked' ? ' is-locked' : ''}`}
+            onClick={() => goStage(n)}
+          >
+            <span className="onboard-step-code">
+              {code}
+              {status === 'done' ? ' · 완료' : n === currentStage ? ' · 진행' : ''}
+            </span>
+            <span className="onboard-step-title">{label}</span>
+          </button>
+        ))}
+      </nav>
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      <StageShell id="stage-1" code="STAGE 1" title="URL 수집" status={s1}>
+        <form className="site-form" onSubmit={handleExtract}>
+          <label className="field">
+            <span>브랜드 URL</span>
+            <input
+              type="text"
+              inputMode="url"
+              placeholder="https://www.example.com"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              required
+            />
+            <span className="hint">
+              공개 HTTPS 페이지만 읽습니다. 봇 차단·JS 렌더링 사이트는 자동 추출이 제한될 수 있으니 아래에서 직접 보완하세요.
+            </span>
+          </label>
+          <button type="submit" className="primary" disabled={busy}>
+            {busy ? '페이지를 읽는 중…' : 'URL에서 자동 채우기'}
+          </button>
+        </form>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+      </StageShell>
 
-      {extracted && (
-        <section className="panel" style={{ marginTop: '20px' }}>
-          <h3>브랜드 정보 확인·보완</h3>
-          <div className="onboard-grid">
-            <label className="field">
-              <span>브랜드명 *</span>
-              <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="예: 뷰성형외과" />
-            </label>
-            <label className="field">
-              <span>대표 도메인 *</span>
-              <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="예: viewclinic.com" />
-            </label>
-            <label className="field">
-              <span>업종 *</span>
-              <input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="예: 성형외과" />
-            </label>
-            <label className="field">
-              <span>지역 *</span>
-              <input type="text" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="예: 서울 강남" />
-            </label>
-            <label className="field span2">
-              <span>주소 (Fact Graph · 선택)</span>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="예: 서울 강남구 봉은사로 107" />
-              <span className="hint">사실성 검증에 쓰입니다. 자동 추출이 비었으면 직접 입력하세요.</span>
-            </label>
-            <label className="field span2">
-              <span
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+      <StageShell id="stage-2" code="STAGE 2" title="브랜드 정보" status={s2}>
+        <div className="onboard-grid">
+          <label className="field">
+            <span>브랜드명 *</span>
+            <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="예: 뷰성형외과" />
+          </label>
+          <label className="field">
+            <span>대표 도메인 *</span>
+            <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="예: viewclinic.com" />
+          </label>
+          <label className="field">
+            <span>업종 *</span>
+            <input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="예: 성형외과" />
+          </label>
+          <label className="field">
+            <span>지역 *</span>
+            <input type="text" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="예: 서울 강남" />
+          </label>
+          <label className="field span2">
+            <span>주소 (Fact Graph · 선택)</span>
+            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="예: 서울 강남구 봉은사로 107" />
+            <span className="hint">사실성 검증에 쓰입니다. 자동 추출이 비었으면 직접 입력하세요.</span>
+          </label>
+        </div>
+      </StageShell>
+
+      <StageShell id="stage-3" code="STAGE 3" title="경쟁사" status={s3}>
+        <div className="field">
+          <div className="onboard-comp-label">
+            <span>경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)</span>
+            {canRegister && (
+              <button
+                type="button"
+                className="ghost"
+                onClick={suggestCompetitors}
+                disabled={!canSuggestComp || suggestingComp}
+                title={canSuggestComp ? '' : '브랜드명·업종을 먼저 채우세요'}
               >
-                경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)
-                {canRegister && (
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={suggestCompetitors}
-                    disabled={!canSuggestComp || suggestingComp}
-                    title={canSuggestComp ? '' : '브랜드명·업종을 먼저 채우세요'}
-                  >
-                    {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (Gemini)'}
-                  </button>
-                )}
-              </span>
-              <textarea
-                rows={4}
-                value={competitorsRaw}
-                onChange={(e) => setCompetitorsRaw(e.target.value)}
-                placeholder={'강남언니, gangnamunni.com\n원진성형외과, k-wonjin.co.kr'}
-              />
-              <span className="hint">
-                경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다. 비우면 SoM은 판정 불가로 표시됩니다.
-                자동 추천은 <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
-              </span>
-              {compMsg && (
-                <span className={compMsg.startsWith('✗') ? 'error' : 'hint'} role="status">
-                  {compMsg}
-                </span>
-              )}
-            </label>
-          </div>
-        </section>
-      )}
-
-      {extracted && (
-        <section className="panel" style={{ marginTop: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-            <h3 style={{ margin: 0 }}>테넌트 초안 (tenantId: {tenant.tenantId})</h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {canRegister && (
-                <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
-                  {registering ? '진행 중…' : canMeasure ? '브랜드 등록 & 측정' : '브랜드 등록'}
-                </button>
-              )}
-              <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
-                {copied ? '복사됨 ✓' : 'JSON 복사'}
+                {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (Gemini)'}
               </button>
-            </div>
+            )}
           </div>
-          {!ready && <p className="hint" style={{ marginTop: '8px' }}>* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
-          {canRegister ? (
-            <p className="hint" style={{ marginTop: '8px' }}>
-              {canMeasure
-                ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
-                : '프로덕션에 브랜드를 바로 등록합니다. ChatGPT 측정은 등록 후 로컬 CLI로 실행하세요.'}
-            </p>
-          ) : (
-            <p className="hint" style={{ marginTop: '8px' }}>
-              자동 등록을 쓰려면 Vercel 프로젝트에 Blob 스토어를 연결하세요. 지금은 JSON을 복사해{' '}
-              <code>tenants.config.json</code>에 추가할 수 있습니다.
-            </p>
+          <textarea
+            rows={4}
+            value={competitorsRaw}
+            onChange={(e) => setCompetitorsRaw(e.target.value)}
+            placeholder={'강남언니, gangnamunni.com\n원진성형외과, k-wonjin.co.kr'}
+          />
+          <span className="hint">
+            경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다. 비우면 SoM은 판정 불가로 표시됩니다. 자동 추천은{' '}
+            <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
+          </span>
+          {compMsg && (
+            <span className={compMsg.startsWith('✗') ? 'error' : 'hint'} role="status">
+              {compMsg}
+            </span>
           )}
-          {registerMsg && (
-            <p
-              className={registerMsg.startsWith('✗') ? 'error' : 'hint'}
-              role="status"
-              style={{ marginTop: '8px', fontWeight: 500 }}
-            >
-              {registerMsg}
-            </p>
-          )}
-          <h4>등록·측정 방법</h4>
-          <ol className="muted" style={{ lineHeight: 1.8 }}>
-            <li>
-              {canRegister
-                ? '"브랜드 등록" 버튼으로 등록합니다.'
-                : '"JSON 복사"로 복사해 server/tenants.config.json 배열에 추가합니다.'}
-            </li>
-            <li>
-              측정: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId}</code>
-            </li>
-            <li>
-              대시보드 점수 반영: <code>npx tsx scripts/publish-tenant.ts {tenant.tenantId}</code> 후 재배포
-            </li>
-          </ol>
-        </section>
-      )}
+        </div>
+      </StageShell>
+
+      <StageShell id="stage-4" code="STAGE 4" title="등록" status={s4}>
+        <div className="onboard-register">
+          <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
+          <div className="onboard-register-actions">
+            {canRegister && (
+              <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
+                {registering ? '진행 중…' : canMeasure ? '브랜드 등록 & 측정' : '브랜드 등록'}
+              </button>
+            )}
+            <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
+              {copied ? '복사됨 ✓' : 'JSON 복사'}
+            </button>
+          </div>
+        </div>
+        {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
+        {canRegister ? (
+          <p className="hint">
+            {canMeasure
+              ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
+              : '프로덕션에 브랜드를 바로 등록합니다. 측정은 S-12에서 GitHub Actions로 실행하세요.'}
+          </p>
+        ) : (
+          <p className="hint">
+            자동 등록을 쓰려면 Vercel 프로젝트에 Blob 스토어를 연결하세요. 지금은 JSON을 복사해{' '}
+            <code>tenants.config.json</code>에 추가할 수 있습니다.
+          </p>
+        )}
+        {registerMsg && (
+          <p className={registerMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
+            {registerMsg}
+          </p>
+        )}
+        <p className="hint onboard-cli">
+          측정 CLI: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId || '<tenantId>'}</code>
+          {' · '}
+          점수 반영: <code>npx tsx scripts/publish-tenant.ts {tenant.tenantId || '<tenantId>'}</code>
+        </p>
+      </StageShell>
     </>
   )
 }
