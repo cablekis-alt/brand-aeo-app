@@ -43,6 +43,43 @@ function slugFromDomain(domain: string): string {
   return label.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '') || 'brand'
 }
 
+// 주소가 홈페이지 본문에 없을 때, 같은 도메인의 "오시는 길·연락처" 링크를 찾아 한 번 더 수집한다.
+const CONTACT_KEYWORDS = [
+  '오시는', '찾아오시', '오시는길', '연락처', '위치', '약도', '지도',
+  'contact', 'location', 'directions', 'direction', 'map', 'access', 'find-us', 'findus', 'way',
+]
+function findContactUrl(html: string, baseUrl: string): string | null {
+  try {
+    const base = new URL(baseUrl)
+    const scored: { url: string; score: number }[] = []
+    for (const m of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+      const href = m[1]
+      const text = m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+      const hrefLow = href.toLowerCase()
+      let score = 0
+      for (const k of CONTACT_KEYWORDS) {
+        if (text.includes(k)) score += 2
+        if (hrefLow.includes(k)) score += 3
+      }
+      if (score === 0) continue
+      let abs: URL
+      try {
+        abs = new URL(href, base)
+      } catch {
+        continue
+      }
+      if (abs.protocol !== 'https:' && abs.protocol !== 'http:') continue
+      if (abs.hostname !== base.hostname) continue // 같은 도메인만
+      if (abs.href.replace(/#.*$/, '') === base.href.replace(/#.*$/, '')) continue // 자기 자신 제외
+      scored.push({ url: abs.href, score })
+    }
+    scored.sort((a, b) => b.score - a.score)
+    return scored[0]?.url ?? null
+  } catch {
+    return null
+  }
+}
+
 /** "강남언니, gangnamunni.com" 형식 줄들을 경쟁사 배열로. */
 function parseCompetitors(raw: string): CompetitorDraft[] {
   return raw
@@ -200,8 +237,8 @@ export default function BrandOnboarding() {
         (s.title || '').split(/[|\-–—:·]/)[0].trim()
       setDomain(hostToDomain(s.finalUrl || parsed.href))
       setBrandName(guessedName)
-      const addr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
-      setAddress(addr)
+      let resolvedAddr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
+      if (resolvedAddr) setAddress(resolvedAddr)
       setExtracted(true)
 
       // 업종·지역·주소는 정규식만으로 부족하니, 읽어온 본문을 Gemini로 추론해 비어 있는 칸만 채운다.
@@ -217,10 +254,64 @@ export default function BrandOnboarding() {
             const inferred = (await res.json()) as { industry?: string; region?: string; address?: string }
             if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
             if (inferred.region) setRegion((prev) => prev || inferred.region!)
-            if (!addr && inferred.address) setAddress((prev) => prev || inferred.address!)
+            if (!resolvedAddr && inferred.address) {
+              resolvedAddr = inferred.address
+              setAddress((prev) => prev || inferred.address!)
+            }
           }
         } catch {
           // 추론 실패는 무시 — 사용자가 직접 입력하면 된다.
+        }
+      }
+
+      // A) 주소가 아직 없으면 같은 도메인의 "오시는 길·연락처" 페이지를 찾아 한 번 더 수집·추출한다.
+      if (!resolvedAddr) {
+        const contactUrl = findContactUrl(payload.html || '', s.finalUrl || parsed.href)
+        const guarded = contactUrl ? parsePublicHttpUrl(contactUrl) : null
+        if (guarded?.ok) {
+          try {
+            const cp = await fetchPage(guarded.href)
+            if (cp.html) {
+              const cs = extractPage({
+                requestedUrl: guarded.href,
+                finalUrl: cp.finalUrl || guarded.href,
+                status: cp.status,
+                contentType: cp.contentType,
+                redirected: cp.redirected,
+                html: cp.html,
+                robotsTxt: cp.robotsTxt,
+                robotsTxtStatus: cp.robotsTxtStatus,
+                sitemapFound: cp.sitemapFound,
+                llmsTxtFound: cp.llmsTxtFound,
+                xRobotsTag: cp.xRobotsTag,
+                fetchError: cp.fetchError,
+                fetchErrorCode: cp.fetchErrorCode,
+                renderMode: cp.renderMode,
+                rendered: cp.rendered,
+                renderWarning: cp.renderWarning,
+              })
+              const cText = (cs.mainText || '').trim()
+              let contactAddr = cText.match(KR_ADDRESS)?.[0] ?? ''
+              if (!contactAddr && cText) {
+                try {
+                  const r2 = await fetch('/api/infer?kind=brand', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: cText, brandName: guessedName }),
+                  })
+                  if (r2.ok) {
+                    const inf2 = (await r2.json()) as { address?: string }
+                    if (inf2.address) contactAddr = inf2.address
+                  }
+                } catch {
+                  // 무시
+                }
+              }
+              if (contactAddr) setAddress((prev) => prev || contactAddr)
+            }
+          } catch {
+            // 연락처 페이지 수집 실패는 무시 — 직접 입력하면 된다.
+          }
         }
       }
     } catch (err) {
