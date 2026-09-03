@@ -1,0 +1,62 @@
+name: Delete tenant
+
+# 실행 목록에서 무엇을 삭제 중인지 보이도록 실행 이름에 tenantId를 넣는다.
+run-name: delete ${{ inputs.tenantId }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenantId:
+        description: tenantId to fully delete (config·data·registry·scorecards)
+        required: true
+        type: string
+
+# 측정과 같은 그룹으로 직렬화 — git push 경쟁 방지.
+concurrency:
+  group: brand-aeo-measure
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Delete tenant (config·data·registry·scorecards·overlay·queue)
+        run: npx tsx scripts/delete-tenant.ts "${{ inputs.tenantId }}"
+
+      - name: Commit deletion
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "삭제 결과 변경 없음 (이미 없는 브랜드일 수 있음)"
+            exit 0
+          fi
+          git commit -m "data: delete ${{ inputs.tenantId }}"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push
+
+      # Vercel Git 연동이 있으면 위 push가 배포를 트리거하므로 스킵(VERCEL_TOKEN 미설정 → 스킵).
+      - name: Deploy to Vercel (CLI 배포용, 토큰 있을 때만)
+        if: ${{ env.VERCEL_TOKEN != '' }}
+        run: npx vercel deploy --prod --yes --token="$VERCEL_TOKEN"

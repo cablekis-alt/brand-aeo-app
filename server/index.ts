@@ -4,7 +4,7 @@ import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
 import { inferBrandFields, inferCompetitors } from './brandInference.js';
-import { listMeasureRuns } from './githubMeasure.js';
+import { canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
@@ -76,7 +76,18 @@ app.delete('/api/tenants', async (req, res) => {
   try {
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
-    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked: isBakedTenant(tenantId) });
+    const stillBaked = isBakedTenant(tenantId);
+    let dispatched = false;
+    let htmlUrl: string | undefined;
+    if (stillBaked && canTriggerRemoteMeasure()) {
+      try {
+        ({ htmlUrl } = await triggerGithubDelete(tenantId));
+        dispatched = true;
+      } catch {
+        dispatched = false;
+      }
+    }
+    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

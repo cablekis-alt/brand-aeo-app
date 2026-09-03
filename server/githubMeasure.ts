@@ -15,13 +15,14 @@ function repoParts(): { owner: string; repo: string; ref: string } {
   return { owner, repo, ref };
 }
 
-export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl: string }> {
+/** 지정 워크플로우를 workflow_dispatch로 트리거한다. */
+async function dispatchWorkflow(workflow: string, inputs: Record<string, string>): Promise<{ htmlUrl: string }> {
   const token = process.env.GH_MEASURE_TOKEN;
   if (!token) {
-    throw new Error('배포에서 측정하려면 Vercel에 GH_MEASURE_TOKEN(GitHub PAT, Actions 쓰기)을 넣어야 합니다.');
+    throw new Error('배포에서 측정·삭제하려면 Vercel에 GH_MEASURE_TOKEN(GitHub PAT, Actions 쓰기)을 넣어야 합니다.');
   }
   const { owner, repo, ref } = repoParts();
-  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/measure.yml/dispatches`, {
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -29,18 +30,27 @@ export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl:
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ref, inputs: { tenantId } }),
+    body: JSON.stringify({ ref, inputs }),
   });
   if (res.status !== 204) {
     const text = await res.text();
     throw new Error(`GitHub Actions 트리거 실패 (HTTP ${res.status}): ${text.slice(0, 240)}`);
   }
-  return { htmlUrl: `https://github.com/${owner}/${repo}/actions/workflows/measure.yml` };
+  return { htmlUrl: `https://github.com/${owner}/${repo}/actions/workflows/${workflow}` };
+}
+
+export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl: string }> {
+  return dispatchWorkflow('measure.yml', { tenantId });
 }
 
 /** S-11 측정 대기열 전체를 GitHub Actions 한 번의 실행으로 순차 측정하도록 트리거한다. */
 export async function triggerGithubQueueMeasure(): Promise<{ htmlUrl: string }> {
   return triggerGithubMeasure(QUEUE_SENTINEL);
+}
+
+/** 베이크된 브랜드를 GitHub Actions에서 완전 삭제(delete-tenant.ts + 커밋·배포)하도록 트리거한다. */
+export async function triggerGithubDelete(tenantId: string): Promise<{ htmlUrl: string }> {
+  return dispatchWorkflow('delete.yml', { tenantId });
 }
 
 export interface MeasureRunInfo {

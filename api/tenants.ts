@@ -1,4 +1,5 @@
 import { canPersistTenants, isBakedTenant, loadRuntimeTenants, normalizeTenantDraft, registerTenant, removeOverlayTenant, toTenantSummary } from '../server/tenantRegistry.js';
+import { canTriggerRemoteMeasure, triggerGithubDelete } from '../server/githubMeasure.js';
 import { removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
@@ -38,7 +39,18 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
       const { removed } = await removeOverlayTenant(tenantId);
       await removeMeasureRequest(tenantId);
       const stillBaked = isBakedTenant(tenantId);
-      sendJson(res, 200, { ok: true, tenantId, removedFromOverlay: removed, stillBaked });
+      // 베이크된 브랜드는 커밋된 데이터까지 지워야 하므로 GitHub Actions 삭제 워크플로우를 트리거한다.
+      let dispatched = false;
+      let htmlUrl: string | undefined;
+      if (stillBaked && canTriggerRemoteMeasure()) {
+        try {
+          ({ htmlUrl } = await triggerGithubDelete(tenantId));
+          dispatched = true;
+        } catch {
+          dispatched = false;
+        }
+      }
+      sendJson(res, 200, { ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl });
     } catch (err) {
       sendJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
     }
