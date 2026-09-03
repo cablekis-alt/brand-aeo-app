@@ -193,8 +193,9 @@ export async function inferCompetitors(
   // ChatGPT + Gemini 병렬 추천(하나 실패해도 다른 결과 사용) — 모델마다 아는 브랜드가 달라 커버리지가 넓어진다.
   const calls: Promise<{ name: string; rawDomain: string }[]>[] = [];
   if (hasGemini) {
+    // 구글 검색 그라운딩 — 실제 웹검색 기반이라 정확(과거 정확했던 방식). 순수 추론은 리전 탓 자유연상 오답을 내므로 지양.
     calls.push(
-      new GeminiJudgeClient()
+      new GeminiEngineClient()
         .call({ system, user })
         .then((r) => parseCandidates(r.text))
         .catch(() => []),
