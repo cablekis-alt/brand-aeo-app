@@ -1,0 +1,114 @@
+{
+  "version": "v2",
+  "generatedAt": "2026-09-03T06:27:12.314Z",
+  "questions": [
+    {
+      "questionId": "v2-001",
+      "text": "군산 1박 2일 여행 가는데 깔끔하고 위치 좋은 숙소 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-002",
+      "text": "부모님 모시고 전북 군산 여행 갈 때 묵기 좋은 조용한 호텔이나 펜션 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-003",
+      "text": "군산 출장 가서 머물 가성비 괜찮고 주차 편한 비즈니스 숙소 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-004",
+      "text": "군산 근대역사문화거리나 주요 관광지랑 접근성 좋은 숙박 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-005",
+      "text": "군산에서 숙소 잡으려고 하는데 보통 어느 동네 쪽으로 예약하는 게 편해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-006",
+      "text": "군산 숙소 중에 침구류 깨끗하고 조식 잘 나오는 곳 추천해줄 수 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-007",
+      "text": "군산 커플 여행 숙소로 분위기 깔끔하고 시설 괜찮은 곳 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-008",
+      "text": "주말에 군산 여행 가려고 하는데 10만원 안팎으로 갈만한 숙소 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-009",
+      "text": "군산스테이호텔 객실 시설이랑 주차장 편한지 알려줘",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-010",
+      "text": "군산 숙소 고민 중인데 군산스테이호텔이랑 스테이 머뭄 중에 어디가 더 나아?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-011",
+      "text": "군산스테이호텔 실제 투숙객 후기나 방음 상태 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    },
+    {
+      "questionId": "v2-012",
+      "text": "군산스테이호텔 주말 1박 가격대랑 체크인 시간 어떻게 돼?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "숙박",
+      "region": "전북 군산",
+      "version": "v2"
+    }
+  ]
+}

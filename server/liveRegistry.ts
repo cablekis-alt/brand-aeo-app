@@ -5,6 +5,8 @@ import bank_banobagi from '../src/data/live-banobagi-question-bank.json' with { 
 import analyses_banobagi from '../src/data/live-banobagi-question-analyses.json' with { type: 'json' };
 import bank_gangnamunni from '../src/data/live-gangnamunni-question-bank.json' with { type: 'json' };
 import analyses_gangnamunni from '../src/data/live-gangnamunni-question-analyses.json' with { type: 'json' };
+import bank_gunsanstayhotel from '../src/data/live-gunsanstayhotel-question-bank.json' with { type: 'json' };
+import analyses_gunsanstayhotel from '../src/data/live-gunsanstayhotel-question-analyses.json' with { type: 'json' };
 import bank_hdmpension from '../src/data/live-hdmpension-question-bank.json' with { type: 'json' };
 import analyses_hdmpension from '../src/data/live-hdmpension-question-analyses.json' with { type: 'json' };
 import bank_jjun from '../src/data/live-jjun-question-bank.json' with { type: 'json' };
@@ -27,6 +29,7 @@ export interface LiveAnalysesFile {
 export const LIVE_BANKS: Record<string, QuestionBank> = {
   'banobagi': bank_banobagi as QuestionBank,
   'gangnamunni': bank_gangnamunni as QuestionBank,
+  'gunsanstayhotel': bank_gunsanstayhotel as QuestionBank,
   'hdmpension': bank_hdmpension as QuestionBank,
   'jjun': bank_jjun as QuestionBank,
   'example-brand': bank_example_brand as QuestionBank,
@@ -38,6 +41,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_banobagi as LiveAnalysesFile,
   analyses_gangnamunni as LiveAnalysesFile,
+  analyses_gunsanstayhotel as LiveAnalysesFile,
   analyses_hdmpension as LiveAnalysesFile,
   analyses_jjun as LiveAnalysesFile,
   analyses_example_brand as LiveAnalysesFile,

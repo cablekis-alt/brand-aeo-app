@@ -50,30 +50,6 @@
     ]
   },
   {
-    "tenantId": "gunsanstayhotel",
-    "weekOf": "2026-W36",
-    "industry": "숙박",
-    "region": "전북 군산",
-    "brandName": "군산스테이호텔",
-    "aeoScore": {
-      "current": 48,
-      "ma4": 48,
-      "previousWeek": 48,
-      "ciLow": 38,
-      "ciHigh": 58
-    },
-    "mentionRate": 0.125,
-    "shareOfMention": 0.56,
-    "avgRecommendationRank": 1,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 2,
-      "totalTenants": 3
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "hdmpension",
     "weekOf": "2026-W36",
     "industry": "숙박",
@@ -92,7 +68,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 2,
       "totalTenants": 3
     },
     "hallucinationFlags": []
@@ -214,6 +190,30 @@
     "cohortRank": {
       "position": 2,
       "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "gunsanstayhotel",
+    "weekOf": "2026-W36",
+    "industry": "숙박",
+    "region": "전북 군산",
+    "brandName": "군산스테이호텔",
+    "aeoScore": {
+      "current": 45,
+      "ma4": 45,
+      "previousWeek": 45,
+      "ciLow": 34.2,
+      "ciHigh": 55.8
+    },
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": 0.7307692307692307,
+    "avgRecommendationRank": 3,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 3,
+      "totalTenants": 3
     },
     "hallucinationFlags": []
   }
