@@ -19,7 +19,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 3
+      "totalTenants": 2
     },
     "hallucinationFlags": [
       "gemini / v2-009 #1: 사실성 불일치 1건"
@@ -146,30 +146,6 @@
     "hallucinationFlags": []
   },
   {
-    "tenantId": "gunsanstayhotel",
-    "weekOf": "2026-W36",
-    "industry": "숙박",
-    "region": "전북 군산",
-    "brandName": "군산스테이호텔",
-    "aeoScore": {
-      "current": 45,
-      "ma4": 45,
-      "previousWeek": 45,
-      "ciLow": 34.2,
-      "ciHigh": 55.8
-    },
-    "mentionRate": 0.08333333333333333,
-    "shareOfMention": 0.7307692307692307,
-    "avgRecommendationRank": 3,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 2,
-      "totalTenants": 3
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "hdmpension",
     "weekOf": "2026-W36",
     "industry": "숙박",
@@ -189,7 +165,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 3
+      "totalTenants": 2
     },
     "hallucinationFlags": []
   }

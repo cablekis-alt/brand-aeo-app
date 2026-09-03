@@ -457,51 +457,6 @@
     ]
   },
   {
-    "tenantId": "gunsanstayhotel",
-    "brandName": "군산스테이호텔",
-    "aliases": [
-      "군산스테이호텔",
-      "군산 스테이호텔"
-    ],
-    "ownedDomains": [
-      "gunsanstayhotel.com"
-    ],
-    "industry": "숙박",
-    "region": "전북 군산",
-    "engines": [
-      "gemini"
-    ],
-    "questionBankSize": 12,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
-    "competitors": [
-      {
-        "name": "스테이 머뭄",
-        "aliases": [
-          "스테이 머뭄",
-          "머뭄",
-          "Stay Meomum"
-        ],
-        "domains": [
-          "w4ai.o2o.kr"
-        ]
-      },
-      {
-        "name": "군산해들목펜션",
-        "aliases": [
-          "군산해들목펜션",
-          "해들목펜션",
-          "해들목"
-        ],
-        "domains": [
-          "hdmpension.co.kr"
-        ]
-      }
-    ],
-    "factGraph": [],
-    "cohortOnly": true
-  },
-  {
     "tenantId": "hdmpension",
     "brandName": "군산해들목펜션",
     "aliases": [
