@@ -1,6 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
+import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 // 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
@@ -25,11 +26,11 @@ export async function inferBrandFields(pageText: string, brandName = ''): Promis
 
   const system =
     '당신은 한국 비즈니스 웹페이지에서 업종·지역·주소를 뽑아내는 도우미입니다. 반드시 JSON 객체만 반환하세요.';
-  const user = `아래는 ${brandName ? `"${brandName}"의 ` : ''}웹페이지에서 추출한 본문 텍스트입니다.
+  const user = `아래는 ${brandName ? `"${brandName}"의 ` : ''}웹페이지에서 추출한 본문과 위치 단서입니다.
 다음 세 가지를 추론해 JSON으로만 답하세요.
 - industry: 업종을 짧은 한국어 명사로 (예: "숙박", "성형외과", "카페", "치과"). 알 수 없으면 "".
-- region: 시/도 + 시군구 수준 (예: "전북 군산", "서울 강남"). 알 수 없으면 "".
-- address: 본문에 도로명/지번 전체 주소가 있으면 그대로, 없으면 "". 지어내지 마세요.
+- region: 시/도 + 시군구 수준 (예: "전북 군산", "서울 강남", "서울 서초"). 푸터·주소·강남역 표기가 있으면 비우지 마세요.
+- address: 본문·푸터에 도로명/지번 주소가 있으면 건물명까지 그대로. 없으면 "". 지어내지 마세요.
 스키마: {"industry": string, "region": string, "address": string}
 설명·마크다운·코드블록 없이 JSON만 반환하세요.
 
@@ -89,37 +90,39 @@ export async function inferAddressViaSearch(brandName: string, region = ''): Pro
  */
 export async function inferBrandFromDomain(
   domain: string,
-): Promise<{ brandName: string; industry: string; region: string }> {
-  const EMPTY_DOMAIN = { brandName: '', industry: '', region: '' };
+): Promise<{ brandName: string; industry: string; region: string; address: string }> {
+  const EMPTY_DOMAIN = { brandName: '', industry: '', region: '', address: '' };
   if (!process.env.GEMINI_API_KEY || !domain.trim()) return EMPTY_DOMAIN;
 
   const system =
     '당신은 웹사이트 도메인에서 한국 브랜드 정보를 찾아주는 도우미입니다. 반드시 JSON만 반환하세요.';
   const user = `도메인: "${domain}"
-이 웹사이트의 한국어 브랜드명·업종·지역을 아는 경우 JSON으로 답하세요. 모르면 ""로 두세요.
-스키마: {"brandName": string, "industry": string, "region": string}
-brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧은 명사(예: "성형외과"), region은 시+구(예: "서울 강남")
+이 웹사이트의 한국어 브랜드명·업종·지역·주소를 아는 경우 JSON으로 답하세요. 모르면 ""로 두세요.
+스키마: {"brandName": string, "industry": string, "region": string, "address": string}
+brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧은 명사(예: "성형외과"), region은 시+구(예: "서울 강남"), address는 도로명 주소(예: "서울 서초구 강남대로 419")
 설명 없이 JSON만 반환하세요.`;
 
   try {
     // 웹검색 그라운딩 우선 시도
     const result = await new GeminiEngineClient().call({ system, user });
-    const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string }>>(result.text);
+    const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string; address: string }>>(result.text);
     if (!parsed) return EMPTY_DOMAIN;
     return {
       brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
       industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
       region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
+      address: typeof parsed.address === 'string' ? parsed.address.trim() : '',
     };
   } catch {
     try {
       const result = await new GeminiJudgeClient().call({ system, user });
-      const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string }>>(result.text);
+      const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string; address: string }>>(result.text);
       if (!parsed) return EMPTY_DOMAIN;
       return {
         brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
         industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
         region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
+        address: typeof parsed.address === 'string' ? parsed.address.trim() : '',
       };
     } catch {
       return EMPTY_DOMAIN;
@@ -162,7 +165,9 @@ export async function inferCompetitors(
   industry: string,
   region = '',
 ): Promise<InferredCompetitor[]> {
-  if (!process.env.GEMINI_API_KEY || !brandName.trim() || !industry.trim()) return [];
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY);
+  if ((!hasGemini && !hasOpenAi) || !brandName.trim() || !industry.trim()) return [];
 
   const system =
     '당신은 한국 시장 리서처입니다. 반드시 JSON 배열만 반환하세요. 도메인은 확실할 때만 적고, 모르면 빈 문자열("")로 두세요. 도메인을 지어내지 마세요.';
@@ -172,20 +177,62 @@ export async function inferCompetitors(
 스키마: [{"name": string, "domain": string}]
 설명·마크다운·코드블록 없이 JSON 배열만 반환하세요.`;
 
-  const result = await new GeminiJudgeClient().call({ system, user });
-  const parsed = parseJsonLoose<Array<{ name?: unknown; domain?: unknown }>>(result.text);
-  if (!Array.isArray(parsed)) return [];
+  const parseCandidates = (text: string): { name: string; rawDomain: string }[] => {
+    const parsed = parseJsonLoose<Array<{ name?: unknown; domain?: unknown }>>(text);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => ({
+        name: typeof item?.name === 'string' ? item.name.trim() : '',
+        rawDomain: typeof item?.domain === 'string' ? item.domain : '',
+      }))
+      .filter((c) => c.name);
+  };
 
-  const seen = new Set<string>();
-  const candidates: { name: string; rawDomain: string }[] = [];
-  for (const item of parsed.slice(0, 5)) {
-    const name = typeof item?.name === 'string' ? item.name.trim() : '';
-    if (!name || name === brandName.trim() || seen.has(name)) continue;
-    seen.add(name);
-    candidates.push({ name, rawDomain: typeof item?.domain === 'string' ? item.domain : '' });
+  // ChatGPT + Gemini 병렬 추천(하나 실패해도 다른 결과 사용) — 모델마다 아는 브랜드가 달라 커버리지가 넓어진다.
+  const calls: Promise<{ name: string; rawDomain: string }[]>[] = [];
+  if (hasGemini) {
+    calls.push(
+      new GeminiJudgeClient()
+        .call({ system, user })
+        .then((r) => parseCandidates(r.text))
+        .catch(() => []),
+    );
   }
+  if (hasOpenAi) {
+    calls.push(
+      new OpenAiJudgeClient()
+        .call({ system, user })
+        .then((r) => parseCandidates(r.text))
+        .catch(() => []),
+    );
+  }
+  const lists = await Promise.all(calls);
+
+  // 이름 기준 중복 제거(브랜드 자신 제외). 같은 이름을 여러 엔진이 주면 도메인 있는 값으로 채운다.
+  const byName = new Map<string, string>();
+  for (const list of lists) {
+    for (const c of list) {
+      if (c.name === brandName.trim()) continue;
+      const existing = byName.get(c.name);
+      if (existing === undefined || (!existing && c.rawDomain)) byName.set(c.name, c.rawDomain);
+    }
+  }
+  const candidates = [...byName.entries()].map(([name, rawDomain]) => ({ name, rawDomain }));
+
   // 도메인 DNS 검증은 병렬로 (순차로 하면 서버리스 시간 제한을 넘기 쉽다).
-  return Promise.all(
+  const validated = await Promise.all(
     candidates.map(async (c) => ({ name: c.name, domain: c.rawDomain ? await verifiedDomain(c.rawDomain) : '' })),
   );
+  // 같은 도메인(같은 병원, 이름만 다른 경우)은 하나만 남기고, 최대 6곳.
+  const seenDomain = new Set<string>();
+  const out: InferredCompetitor[] = [];
+  for (const c of validated) {
+    if (c.domain) {
+      if (seenDomain.has(c.domain)) continue;
+      seenDomain.add(c.domain);
+    }
+    out.push(c);
+    if (out.length >= 6) break;
+  }
+  return out;
 }

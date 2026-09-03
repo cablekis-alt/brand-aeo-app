@@ -5,9 +5,57 @@ import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 
-// 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지). 실패해도 사용자가 직접 수정 가능.
+// 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
 const KR_ADDRESS =
-  /((?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청?[남북]?|충[남북]|전라?[남북]?|전[남북]|경상?[남북]?|경[남북]|제주)[가-힣]*(?:특별자치[시도]|특별[시도]|광역시|도)?\s?[가-힣]+(?:시|군|구)\s?[가-힣0-9]+(?:로|길)\s?\d+[-\d]*)/
+  /((?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청?[남북]?|충[남북]|전라?[남북]?|전[남북]|경상?[남북]?|경[남북]|제주)[가-힣]*(?:특별자치[시도]|특별[시도]|광역시|도)?\s?[가-힣]+(?:시|군|구)\s?[가-힣0-9]+(?:로|길)\s?\d+[-\d]*(?:\s+[가-힣A-Za-z0-9]+(?:타워|빌딩|건물|센터|프라자)(?:\s*\d+\s*[-~]?\s*\d*\s*층)?)?)/
+
+function htmlToPlain(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function firstKrAddress(text: string): string {
+  return text.match(KR_ADDRESS)?.[0]?.trim() ?? ''
+}
+
+/** 도로명 주소 → 코호트용 지역 ("서울시 서초구 …" → "서울 서초"). */
+function regionFromAddress(addr: string): string {
+  const m = addr.match(
+    /((?:서울|부산|대구|인천|광주|대전|울산|세종)(?:특별시|광역시|시)?|(?:경기|강원|충남|충북|전남|전북|경남|경북|제주|충청[남북]|전라[남북]|경상[남북])(?:도)?)\s*([가-힣]+(?:시|군|구))/,
+  )
+  if (!m) return ''
+  const sido = m[1]
+    .replace('충청남도', '충남')
+    .replace('충청북도', '충북')
+    .replace('전라남도', '전남')
+    .replace('전라북도', '전북')
+    .replace('경상남도', '경남')
+    .replace('경상북도', '경북')
+    .replace(/특별시|광역시|특별자치시|특별자치도|도$/g, '')
+    .replace(/시$/, '')
+  const district = m[2].replace(/(?:시|군|구)$/, '')
+  return `${sido} ${district}`.trim()
+}
+
+function locationClues(plain: string): string {
+  const hits: string[] = []
+  const addr = firstKrAddress(plain)
+  if (addr) hits.push(addr)
+  const around = plain.match(/.{0,24}(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|제주)[가-힣0-9\s,.]{0,60}/g) ?? []
+  for (const s of around) {
+    const t = s.replace(/\s+/g, ' ').trim()
+    if (t && !hits.includes(t)) hits.push(t)
+    if (hits.length >= 6) break
+  }
+  return hits.join('\n')
+}
 
 interface CompetitorDraft {
   name: string
@@ -287,13 +335,26 @@ export default function BrandOnboarding() {
       const finalDomain = hostToDomain(s.finalUrl || parsed.href)
       setDomain(finalDomain)
       setBrandName(guessedName)
-      let resolvedAddr = (s.mainText || '').match(KR_ADDRESS)?.[0] ?? ''
-      let resolvedRegion = region
+      // 진단용 extractPage는 footer를 버리므로, 주소는 원본 HTML 전체에서 다시 찾는다.
+      const pagePlain = htmlToPlain(payload.html || '')
+      let resolvedAddr = firstKrAddress(s.mainText || '') || firstKrAddress(pagePlain)
+      let resolvedRegion = regionFromAddress(resolvedAddr) || region
+      // 서초구 강남대로/강남역 병원은 기존 코호트가 "서울 강남"인 경우가 많다.
+      if (
+        resolvedRegion === '서울 서초' &&
+        cohortRegions.includes('서울 강남') &&
+        /강남역|강남대로/.test(pagePlain)
+      ) {
+        resolvedRegion = '서울 강남'
+      }
       if (resolvedAddr) setAddress(resolvedAddr)
+      if (resolvedRegion) setRegion((prev) => prev || resolvedRegion)
       setExtracted(true)
 
-      // 업종·지역·주소는 정규식만으로 부족하니, 읽어온 본문을 Gemini로 추론해 비어 있는 칸만 채운다.
+      // 업종·지역·주소는 정규식만으로 부족하니, 읽어온 본문+푸터 위치 단서를 Gemini로 추론해 비어 있는 칸만 채운다.
       const pageText = (s.mainText || '').trim()
+      const clues = locationClues(pagePlain)
+      const inferText = [clues && `위치 단서:\n${clues}`, pageText].filter(Boolean).join('\n\n')
       if (isBotBlocked || !pageText) {
         // 봇 차단 또는 텍스트 없음 — 도메인으로 추론 시도
         try {
@@ -303,10 +364,17 @@ export default function BrandOnboarding() {
             body: JSON.stringify({ domain: finalDomain }),
           })
           if (res.ok) {
-            const inferred = (await res.json()) as { brandName?: string; industry?: string; region?: string }
+            const inferred = (await res.json()) as { brandName?: string; industry?: string; region?: string; address?: string }
             if (inferred.brandName) setBrandName((prev) => prev || inferred.brandName!)
             if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
-            if (inferred.region) setRegion((prev) => prev || inferred.region!)
+            if (inferred.region) {
+              resolvedRegion = resolvedRegion || inferred.region
+              setRegion((prev) => prev || inferred.region!)
+            }
+            if (!resolvedAddr && inferred.address) {
+              resolvedAddr = inferred.address
+              setAddress((prev) => prev || inferred.address!)
+            }
           }
         } catch {
           // 추론 실패는 무시
@@ -315,12 +383,12 @@ export default function BrandOnboarding() {
           setError('이 사이트는 봇 차단이 적용되어 자동 추출이 제한됩니다. AI가 도메인 기반으로 일부 정보를 채웠으니 확인 후 수정해 주세요.')
         }
       }
-      if (pageText) {
+      if (inferText) {
         try {
           const res = await fetch('/api/infer?kind=brand', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: pageText, brandName: guessedName }),
+            body: JSON.stringify({ text: inferText, brandName: guessedName }),
           })
           if (res.ok) {
             const inferred = (await res.json()) as { industry?: string; region?: string; address?: string }
@@ -366,7 +434,8 @@ export default function BrandOnboarding() {
                 renderWarning: cp.renderWarning,
               })
               const cText = (cs.mainText || '').trim()
-              let contactAddr = cText.match(KR_ADDRESS)?.[0] ?? ''
+              const cPlain = htmlToPlain(cp.html || '')
+              let contactAddr = firstKrAddress(cText) || firstKrAddress(cPlain)
               if (!contactAddr && cText) {
                 try {
                   const r2 = await fetch('/api/infer?kind=brand', {
@@ -385,6 +454,11 @@ export default function BrandOnboarding() {
               if (contactAddr) {
                 resolvedAddr = contactAddr
                 setAddress((prev) => prev || contactAddr)
+                const fromAddr = regionFromAddress(contactAddr)
+                if (fromAddr) {
+                  resolvedRegion = resolvedRegion || fromAddr
+                  setRegion((prev) => prev || fromAddr)
+                }
               }
             }
           } catch {
@@ -393,8 +467,8 @@ export default function BrandOnboarding() {
         }
       }
 
-      // B) 페이지에서 끝까지 못 찾으면 브랜드명+지역으로 주소 조회(로컬 백엔드에서만 동작).
-      if (!resolvedAddr && guessedName && addrLookupOn) {
+      // B) 페이지에서 끝까지 못 찾으면 브랜드명+지역으로 주소 조회(Vercel 포함).
+      if (!resolvedAddr && guessedName) {
         try {
           const rb = await fetch('/api/infer?kind=address', {
             method: 'POST',
@@ -403,7 +477,11 @@ export default function BrandOnboarding() {
           })
           if (rb.ok) {
             const jb = (await rb.json()) as { address?: string }
-            if (jb.address) setAddress((prev) => prev || jb.address!)
+            if (jb.address) {
+              setAddress((prev) => prev || jb.address!)
+              const fromAddr = regionFromAddress(jb.address)
+              if (fromAddr) setRegion((prev) => prev || fromAddr)
+            }
           }
         } catch {
           // 무시 — 직접 입력하면 된다.
@@ -435,6 +513,8 @@ export default function BrandOnboarding() {
       if (j.address) {
         setAddress(j.address)
         setAddrMsg(null)
+        const fromAddr = regionFromAddress(j.address)
+        if (fromAddr) setRegion((prev) => prev || fromAddr)
       } else {
         setAddrMsg('웹에서 주소를 확실히 찾지 못했습니다. 직접 입력하세요.')
       }
@@ -814,7 +894,7 @@ export default function BrandOnboarding() {
                 disabled={!canSuggestComp || suggestingComp}
                 title={canSuggestComp ? '' : '브랜드명·업종을 먼저 채우세요'}
               >
-                {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (Gemini)'}
+                {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (ChatGPT+Gemini)'}
               </button>
             )}
           </div>
