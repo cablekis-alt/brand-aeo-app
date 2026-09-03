@@ -10,7 +10,7 @@ import { withOpenAiRetry } from './retry.js';
 function judgeModel(): string {
   const requested = process.env.JUDGE_MODEL?.trim() ?? '';
   if (requested && !requested.toLowerCase().startsWith('claude')) return requested;
-  return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
+  return process.env.OPENAI_MODEL?.trim() || 'gpt-4o';
 }
 
 const MODEL = judgeModel();
