@@ -98,7 +98,7 @@ export default function MeasureTenant() {
 
   return (
     <>
-      <p className="brand">S-12 · STAGE 1</p>
+      <p className="brand">STAGE 1</p>
       <h1>테넌트 골라 측정</h1>
       <p className="lead">
         대기열과 무관하게 테넌트 하나를 골라 측정합니다. 로컬에서는 이 탭에서 바로 돌리고, 배포에서는 GitHub Actions가

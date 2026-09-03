@@ -27,7 +27,7 @@ export default function Citations() {
 
   return (
     <>
-      <p className="brand">S-05 · STAGE 3</p>
+      <p className="brand">STAGE 3</p>
       <h1>URL 상세 분석</h1>
       <p className="lead">응답에 실제로 인용된 URL을 소유권 기준으로 분류해, 자사 도메인이 얼마나 노출되는지 봅니다.</p>
 

@@ -360,7 +360,6 @@ export default function BrandOnboarding() {
           <h1>브랜드 추가</h1>
           <p className="lead">URL을 넣으면 브랜드명·도메인·주소를 채웁니다. 업종·지역·경쟁사만 확인하면 테넌트가 만들어집니다.</p>
         </div>
-        <span className="onboard-code">S-08</span>
       </header>
 
       <nav className="onboard-steps" aria-label="브랜드 추가 단계">

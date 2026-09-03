@@ -36,7 +36,7 @@ export default function PeriodicReport() {
 
   return (
     <>
-      <p className="brand">S-13 · STAGE 4</p>
+      <p className="brand">STAGE 4</p>
       <h1>정기진단 보고서 · 개선제안</h1>
       <p className="lead">
         이번 주 스코어카드를 지표별로 진단하고, 약한 지표를 우선순위가 매겨진 실행 가능한 개선안으로 정리합니다. 모든

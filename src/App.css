@@ -776,9 +776,10 @@ select {
   border: 1px solid var(--accent);
   border-radius: 2px;
 }
-.pipeline-add .code {
-  font-family: var(--serif);
-  font-size: 12px;
+.pipeline-add-mark {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
   color: var(--accent);
 }
 .pipeline-add strong {

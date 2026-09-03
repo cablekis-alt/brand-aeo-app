@@ -32,7 +32,7 @@ export default function Eeat() {
 
   return (
     <>
-      <p className="brand">S-09 · STAGE 3</p>
+      <p className="brand">STAGE 3</p>
       <h1>EEAT 분석</h1>
       <p className="lead">
         답변 엔진이 이 브랜드를 경험·전문성·권위·신뢰 관점에서 어떻게 그리는지 봅니다. 점수는 B5 판정(언급 문장,

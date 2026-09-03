@@ -30,7 +30,7 @@ export default function Performance() {
 
   return (
     <>
-      <p className="brand">S-06 · STAGE 4</p>
+      <p className="brand">STAGE 4</p>
       <h1>브랜드 AEO 퍼포먼스</h1>
       <p className="lead">여러 주에 걸친 Score 추이를 4주 이동평균·95% 신뢰구간과 함께 봅니다.</p>
 
