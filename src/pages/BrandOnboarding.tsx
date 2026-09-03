@@ -151,6 +151,8 @@ export default function BrandOnboarding() {
   const [copied, setCopied] = useState(false)
   const [canRegister, setCanRegister] = useState(false)
   const [canMeasure, setCanMeasure] = useState(false)
+  // 로컬 백엔드에서만 주소 조회(Gemini)가 동작한다 — Vercel(미국 리전)에선 "모름"이라 버튼을 숨긴다.
+  const [addrLookupOn, setAddrLookupOn] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
   const [suggestingComp, setSuggestingComp] = useState(false)
@@ -185,6 +187,7 @@ export default function BrandOnboarding() {
         if (!alive || !d) return
         setCanRegister(Boolean(d.canRegister))
         setCanMeasure(d.canMeasure !== false)
+        setAddrLookupOn(typeof d.backend === 'string' && d.backend !== 'vercel')
       })
       .catch(() => {
         if (alive) {
@@ -324,8 +327,8 @@ export default function BrandOnboarding() {
         }
       }
 
-      // B) 페이지에서 끝까지 못 찾으면 브랜드명+지역으로 웹검색 그라운딩 조회(최후 수단).
-      if (!resolvedAddr && guessedName) {
+      // B) 페이지에서 끝까지 못 찾으면 브랜드명+지역으로 주소 조회(로컬 백엔드에서만 동작).
+      if (!resolvedAddr && guessedName && addrLookupOn) {
         try {
           const rb = await fetch('/api/infer?kind=address', {
             method: 'POST',
@@ -641,18 +644,21 @@ export default function BrandOnboarding() {
                 placeholder="예: 서울 강남구 봉은사로 107"
                 style={{ flex: 1 }}
               />
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => void handleFindAddress()}
-                disabled={findingAddr || !brandName.trim()}
-                title="브랜드명·지역으로 웹에서 주소를 찾습니다"
-              >
-                {findingAddr ? '찾는 중…' : '주소 찾기'}
-              </button>
+              {addrLookupOn && (
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => void handleFindAddress()}
+                  disabled={findingAddr || !brandName.trim()}
+                  title="브랜드명·지역으로 주소를 찾습니다"
+                >
+                  {findingAddr ? '찾는 중…' : '주소 찾기'}
+                </button>
+              )}
             </div>
             <span className="hint">
-              사실성 검증에 쓰입니다. 자동 추출이 비면 브랜드명·지역을 채운 뒤 <b>주소 찾기</b>(웹검색)를 누르거나 직접 입력하세요.
+              사실성 검증에 쓰입니다. 자동 추출이 비면 직접 입력하세요
+              {addrLookupOn ? ' (또는 브랜드명·지역을 채운 뒤 "주소 찾기").' : '.'}
             </span>
             {addrMsg && (
               <span className="hint" style={{ color: 'var(--accent)' }} role="status">
