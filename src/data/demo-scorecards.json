@@ -18,30 +18,6 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": []
-  },
-  {
-    "tenantId": "banobagi",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "바노바기성형외과의원",
-    "aeoScore": {
-      "current": 38,
-      "ma4": 38,
-      "previousWeek": 38,
-      "ciLow": 28.6,
-      "ciHigh": 47.4
-    },
-    "mentionRate": 0.16666666666666666,
-    "shareOfMention": 0.4583333333333333,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
       "position": 3,
       "totalTenants": 6
     },
@@ -211,6 +187,30 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 4,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "banobagi",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "바노바기성형외과의원",
+    "aeoScore": {
+      "current": 60,
+      "ma4": 60,
+      "previousWeek": 60,
+      "ciLow": 49.7,
+      "ciHigh": 70.3
+    },
+    "mentionRate": 0.5,
+    "shareOfMention": 0.4805194805194805,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 2,
       "totalTenants": 6
     },
     "hallucinationFlags": []

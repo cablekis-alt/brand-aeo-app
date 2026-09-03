@@ -1,0 +1,2325 @@
+{
+  "tenantId": "banobagi",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v2-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼)**: 오랜 기간 안면윤곽과 양악 수술 분야에서 높은 인지도를 가진 곳으로, 과교정을 지양하고 얼굴 밸런스와 안전을 최우선으로 하는 정밀 진단 시스템이 잘 갖추어져 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgjFvP3kkYenNIeCtWplOn6WY86bg4iTAXkSBXxP1W4ZQP4ADTw6RnrxR8_QodW7lkWmiwx2OX4s5yjV-7E66YM-DTe3QHB1UeJoGMV5ZPcFdxEBsMkasJ_ULuug==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjlCfafMNbQ06T_TwyBadjPtmFmWqG3DdGtjpvwCzeQKLSCJYJMNUzh2wqBWT8lTyyF2HlSTfttum1bj9rHk9bPD0T-fHJfs6ZDJYeh9JzZNk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaiUoppH75Xg_QgBUB8eYNN6FNBVKSxiQ8vrtMM5m5Tq56PsOp3IQ1hyRzOoHueu9zFFzjpBsFqZLfW70RQBxho81PWXbFux9T",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1UC-kCaZ3qqMyffyxwBC-tR8t-E9TDinAYL7oa-XUPFT5WY9DWoNWwKd8g7AwGUVmeGwEJS_EfVB-GQeGM6dq8dFZzHMYC36OWA9Ln0PYBs3NUyPXJHifqOSyS97DGsdFVwbvPQzVugLATxDMPPvBwJPpjNBjNcJGxRn3Gq0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼/강남)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **뷰성형외과 (신논현)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스타라인성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4S0ADTIqHMz846gftwLYr5RMym0TFaLdWExNjPrbtCyxSRE98TFu78-WZ_N0iLi3RNWtI64-ddPcCzqu9XXCK9QnF8xfERrTnBfErkSM9gUf85FxoMXpHlKxNmA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmwJ1yvDkw1JWpQT65Mz6lbiJgWz7ip1oCeY97ZKIubDhtyqmTNMxxhahTeqPAoDD5duf3At1hp5Q_PiuSrAnhBpdLEx42kdbZbHjSoafNYzLTUd-PbFj5RK7sA7bU2EobLjKcQgD3sFFQNi1Tc74cBWQVn5w-hIT9BC9atFYP0Y4F1FHoHjaxcOGHED557p_OiwqW9ugCVVxWa-QCvQ6GuCIjsG0XWgui69vexuMLuaLxn01rH7I=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3bluQq9lROs33_vlvvJeV_R6Kl6CZrq0WQCApqWU1gALnCtykDj4f8FjpT5RsGQWItPZ0CbberDXRXyD7jX4zbrkTQSKD7n_6uI3v9qw-R2A=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxT5kvWKau3CxZlQgZoxGjNLFsyl7pZE8pKRtLJpTKVYEmMjiORfWls-QJv-GV8QodZ44uWP4aBeipwXmG9-H1uxkBCtPmPW2yaVNHkMcmYN4F0JVPqE5tzc4kG0Lye_OAUY4TK60lGO5UsVy6WCIa6WzEra3TtKk2uPFhftk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiwAD4Fd9VZ-7zKij_Nj4SaPFgjhv_n0jg7apq0nFfpsWK-vajaY_QxYFB2QV9hI1R6SI2WyXJtg48LMsmlL2ktWFBxGrBKzzm",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSinLYOOgsX-6kdmrDqlv7Wn2fC82LXgbv4YtVJgZUYKLM5JDPXVWveAavOS_22jl0Hc-3TW1XNGVhtS68555PWr5LLy2PPAgNQY1xCLg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFv0gCDOyCtm2iWz9J-XZ7ZDxTbRN6Xx_jy7wO2InjZXc9LM2kyQQQyGMDYWI4xQb15D9F6J0MIO3SA4wMyd4B7PHi6AzobeA1WoryNzwcyS_WAfxaD-Gyt3KKN8gXP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼역)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **뷰성형외과 (신논현역)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스타라인성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVgvPC2uhnrZp-4w-8Esu2-KhRjtXwLICNBz5odQjo2RVyPxYbVuikoYvWLpKG2Gja4t0A2EGlgFU2QikRarZMa9QzNQCYRlp7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaN8uVzCuK9L0cI8AkAAgj7YkWzgqs3fzfTvIWBXtksT8x7bvNKSlXThr8tkYCf5dTHWkkRrlb4pnp_nUJiK8aJryA-oq7kkj0qlFXGaGk8_Y=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8QKPKG7eXG58T_v73Ajo0uvJe3FXRDpFkbrIow2fqDGCvtVfXTlXyvYcb_fOWDaD3Efh5MxtOWtHrXAExy0amxHhIT0hRJ2qKpJ5V4UZhLuPPBnC7H7qAuhQMfg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnRJWvdZ0H6WKLH3BmBRzoGf7CLbuJ_2crTI_Sx1mDzA57QM5zy_kG4HOTPLNiw1f2b3pbt5eRJ8HRt9r00WBuTStRRhy0b0mqHj6bdRJbInDb7KfTG5FzhXr4pQyMGUv4LsyZo3-GK2gX9aiagidWLxaNo3YtdwLBBTNZfgA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFP1E68dt6xDA5pdqvOqivKEDvZUJ0-tPzTwIp8xuBeE_K59w4izOOmRcNJ29iaqMYJXQfpBlUIjyHsL0Ag45D9EaqtjNo4vgGo3hVNvCfrNHLsKhCirx9dXtxRbGQObxBMTY8-i1UAph8Apvse--cwiqsQw0n_JL0Dv8w35WWZAZ7cPc9t-4BbYePLHtrN9U_h31RjFu1hD0EcGaIVBQBYLilXWgq0wvxzwMFr_m9HIAqtjE9blec=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAZF6yYQT0YHP3yjSWTzVMQ3l2fj6vxO8vI1521wLiFgUBC3csWlwiolL3JPEGBSSTz_CtyxmHT0cdU0YkBPgBFbf52aE7Ik-21nAJNNCdpWLgbEq6",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4AJ5xk-pXBh5ECrUrmU6lzjqFZOyxsmXootwAp0diMpKwezc0eV7SdmDyICsQNAjfkI1Yh-jtTPYXbqq949NY85O0A0_0pbqj0cugqEkDr2w=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBh-kQ0PTzxmyxhP8LZLy382lXEZxxk2doxUPvTor-vaarQ7gpuZQFo9Z1uUjcv-C4TdMW5s6XFDXqofHhhi8yyViOdiH1yC7DzaEhWPE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **뷰성형외과 (신논현역 인근)**\n  * **특징:** 대형급 규모의 병원으로 눈·코 부위별 전담 전문의 시스템과 마취통증의학과 상주, 체계적인 사후관리 시스템을 갖추고 있어 대형 병원의 안전성과 시스템을 선호하는 분들이 많이 방문합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* 성형 정보 앱(바비톡, 강남언니)이나 성형 커뮤니티(성예사 등)에서 **내가 원하는 코 라인(직반버선/직선) 및 눈 라인(인아웃/세미아웃)** 전후 사진을 3~4장 캡처해 가시면 상담 시 의사소통이 훨씬 수월합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHZGpukMG6xfeY64ZuMWCzOC9fUx7y2RQrA-o-UpmyZkImDx2eZ43k_MiJAmAsoWgnVEhEpUsr2HR-8U0XBfA0TKEepNMckX7QDb8HTX-Mp1nEM1etjhfVb7Joawb_MwCchKcuNsw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCD5G9RoFMDVMvG6tBOQpMwRVTY3Gg9WMqfwVUBNjYb1Dir5-lGsec1zWDdpc-FS4xmpfgyNZsSEomWhjZtmTOHKBFI_-4fWHQh7pS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETmc01BPVAipehthIWFmhEvIeD21jyGguQoVq5lbvg16EBcDCkHcnZMYojjzH6MORuqt2n1oRL9s5t8Oth91HPXgA4WQoJvq7Y-Eo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESH-ggJSKC1VnVTUC0OEE1z9ztoCXupEUXdOftejplyL8wYWokcZSo7AyoRs0HJa6DdPM2Nn9FG1mJnIBWL2nk6D2k-CYkvZ-357a1CJrxpf_2JdxSftWAuVyhDrosCh1jan84DDwsb-lscLrJKYltyYv6SksLF9CqlXI6FEI1NTi63MhMkPB3EnJoJjAU6FOc3l-JJku76dpg9JdGCgx-hTrUePNcUsVcw2LnJ3XskRGxYbo-ZsctDhWxP6-LkbwfTUqtG05Dp0QLShpwiqYGKaJTJ4_mbIQ1H-QWeKrE3zlVzokZbpgoK84NViTHo86VYsQWEefJtA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHK6iZHK6QV1bDqdv00JszACqCUaDo8JhvDsJ4axFZKbfJ5XQjfwQ_XzQwPMUv8OFrN80gKdQt-lA1siX4n6-tZO9O2SGQavicK8ok0ujeZBC9w8CNefmHPxMh_Zf6bLic5fB20jU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "성형외과마다 추구하는 스타일(자연스러움 vs 화려함/자려함)과 특화 분야가 다르므로, 성형 커뮤니티(바비톡, 강남언니, 성예사 등)에서 눈재수술 및 코성형으로 자주 언급되고 후기가 좋은 대표적인 병원들을 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHms30RI2kM8AWHj4eFx13cWBbpk71urD6tC2p2VtLkxGSF1nsfly2qHSkhu47p2JmmWq5OTNP-Rt1505WASFZaEYNtAztTRpy56SMZLUTPoLANFzmOaKiM3OXMVLtpAyvWHVDolTk7b9zXOY7bf75VpCrAI00tJc-ukPUiuDithRW6b11cbZqh3SIOVO94QNsS55qpPPLVkOWYcAPh0eE3KcfH-ftYGt6i_7dKYbcCMOHd8W4YjVSnK15p10QgeUCvrn1Vy1mw8wXrIvIEAmRr8LGoTYtRHN4ha5F44zAer4Qc0mAQlHf2hxNvN2W_5IQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUOkWI_S6fQruy46TpC142Nu6OC3CA4XJ0UxA0WboQHuGvaBzbIFaHxJEF9ya-wbYRSZ_qw0qH3Huw_ZB_MZ-jv68aJ-xvF1WOsSdN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMxMUorwNZkMpj2xgjpa6zV44t3Nx0wopZvJ3DG6ho_x27JPRABTc5ew1uMMUxVkqk2L4ybPMY0rEeFgLLWNRO3B63ofDSoRiAFibe",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG3teAnV5JsRMwhJfmhdmVUU3DOGfEpHJKo5Z7Ge4a6if0eAdp4y5GFPj7Z19LXICTWXVT5OcBVl2Fm4fJcU1Ud5E851R-alQYLm-oJV9I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnGOh3-hUVWF32BebM9vBpwPCNiJr8k1Tq8JGbpMYZMPmWSQ9X-o_CIXGK1bDNdQT5TY_cWiXiJF0CrcgTLKLscoIw7Hvag7QuQ6VaNn_gkMSkZs5__Ls0SLpOM14ff6w99A0vPkXk105BN3hiO6QpXGYMdPPsNFDnMzUxn--ZIclPb9maorddPaEz3Utmx6kRHf40JbGcD___UFUg9K1xsozVZ3MrauS0DhWYkHyQQ-U--IptGYJftUmzcO4VhqBrtCr7cDvxGzcGYKi521xZl-iCCqECybfyPlDk2QGnDRS_d4kGRhmlLGlD5Wf-P2vw97bDSZRBsw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqY6fKSiUhTnW--hTJQ8dvq-GZB8ehb35MrVjipZNZtYDmGVz032nQv2aUIyT2DJblezTOIL6ZvBQOIgCYyAUN55Fy12ftPFRWw2CV1gjMl1TBKpGW1ND5zk3mHyk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjFQK2q3ll5FlyBqmO_BHOpnywiSrRx8fjYQcmMNTiTEMMqZ-ycl4COZ3ESlHZaMyQLz-S179Art_M1C7W5MtrDjWH8x0ZkoGukgqyWjvYtnpe5cUEU6cazSSVbUfp-h8K2pjsqaI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "강남역 및 신논현역 인근에서 **눈재수술**과 **코성형(첫수술/재수술)**으로 성형 커뮤니티(바비톡, 강남언니, 성예사 등)에서 자주 언급되고 후기가 좋은 병원들을 유형별로 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNDm_qMpZI7tcQNlFepDMfhOttduHhphh91UDMHoj_2oJ4XQoIytCwP2PbSis_GLEm9cuZdo0ZOMXBxNGtBfeacTWB04Yz5-udRqg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFE20W4ntD4vfipfq1r2AYF7GP4HGTmbfx5zxVewCOmi5IulJSF-tjhAyNSVD_Ywz_5qBQkbwi9wE2PeTt60WQgtX4Ipaw3OBPEQs34",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYkuxRiqOAzbZabaemFd1jogGa7l49dgqFAAbGRslAdQVvH0JOafaoFkJsbBXqFNh7wZ7iimShbqG0QbD4LoByw1UYdWnD6IMTHq3dB90rv9nNPCCjr1WerPYNsgitG4uvMvadzg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbPc87fCdLsSKye4Ae-crlmNoKBH-4HxB-2zfsMvxnQVdT6-QdSIZxaAivfSJkX5Tjka2PcWxycvhHs_EZNxGCzqMckG8Jpkh26LQq1bNFY1HbimwJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHXGSVx5NjxLGqQOTNagem3lV5JALkY0kq5XQhs5ULTzMOQyH0ZkOT293lfEKC2wKTZ9gm7OHm0himmpsnW1UK8YIz3vxrhcvpvhgI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2xUUC9_L46P_C_TPB727YxTVQhwDRxc9fyXDIhPRXma3BX0Dt6vooTRSk14dkbY8eGtDSn6k-E7mJOURVI3HUkbxJ3HTUBT_p6AP3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과 (신논현): 마취과 전문의 상주, 단트롤렌 보유, 무균 수술실 및 UPS 시스템 등 종합 안전 인프라를 강조하는 대표적인 대형 병원 중 하나입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlk5MHB45C0cZTMKtY6wlyADos5FjM6Yrp1cRJZoRPXVLiB36pmhNJZGBE3TMANE9G3EmFkbJiU7zOzZ3dB9AodvfaVHvQpRU5sBtcZgVgT-BdJmat7iOV55WY96nLJSzlf6oGMXO16GQ6KYpgZ5wtuSuwp81R8o9DkPXxUQ8TUek8fxPoGA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-Vz8xzjw0k_3u7dfcYmedYXu-6Jn_GZr0iIm05HKEyF_q1_N74le7sKKTDYTfzwRI7eif6yOrPD4iQwCHk4rDSYSPtkNv6tyfF0ia5V8GRZSs0VTkujGbGA7fBv9XNOYBD9Pjz9aSG2TXzeVz2z8e",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwrDOYX-CY1-VL1hXW-Owl9WO1y7u2ktyveBv06gfvRh1OV07avLcyOuJfllDU_JSAkT4kfc7tL4lbSzKzwYH1UAtNIIhIofW1TECPme3p8ayN2yvwi6F7wOcxB40Pb9nglh4g6vgRXW7VtHGFo_bjEqmr6M0He2BGPRkfDofrvO6_Pqqb",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHF59EECOaSgr4BnSFs0dEuIkWo9-uSf37Rew0J--W1fizCktEbyaqAjv-HsAiWvDj8HzXB1Eo7Cpo63tuiz2EL7EeKiKXjzDRs9xRyPPMGoUSwDjdev-6gtpaQGvFK_yVR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBgubDIaqlR2H497wtTjP-DFSMnqJypg1iFeHWrevgGmYyUHejKT5YX3vlYYqTGaJdXo-1i5B9waJIRqhkGjCV2oySyIEMFmmKhNqHOdi-NXtvP25Y4sg_-v1PMNzYgf3pfPEbG5NVLpsuJ2tj_LeNzXG1J04=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBgubDIaqlR2H497wtTjP-DFSMnqJypg1iFeHWrevgGmYyUHejKT5YX3vlYYqTGaJdXo-1i5B9waJIRqhkGjCV2oySyIEMFmmKhNqHOdi-NXtvP25Y4sg_-v1PMNzYgf3pfPEbG5NVLpsuJ2tj_LeNzXG1J04=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGL-wg-mqLGUPGr8xQ93qNDUN_eEPb8xACdEySgpAvwaQpuRqpYv4w6Sh7Kxa8i3ksHKyGcy6UkZsSuat-3OCjwRfWL9syf0iJ-X_I16EICck60avYiGSY4CIE-hk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaQjq0RNTLxn-MILIAfNVkCabca655LiTjXLL1vmNUSUIxD4ed7mIHeH9qACj3JAjx-qnxhWTFxkHNueTXiP_JCu8xfLcbi1krjvOBnwWFxzh8tbBS4YxeTg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-edNmv3soS-Ofi8yPT6IBI5hX6aNQtXlBdxn5epMOAKVKziZhkFTd4xuQiekofuZWF_y0l3SSmDRfW_iygpj30VWsQEQUzUclYfaIMdBm0DtfjmQN3KNOa4ablPM3FfHsCbwrvg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRdcapfAMDkbl-5dqFqNzqNuTnvZ3By5xhIrpqv7n1ts0s3zsGRx_9-XwlJfhS3rQCdYzzndMtgpo2O_WmzK_OPVf_HDpA-7M0ciS8VFEqjnyEpXDQkZcaUVkg-JgclVRnZg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-Vz8xzjw0k_3u7dfcYmedYXu-6Jn_GZr0iIm05HKEyF_q1_N74le7sKKTDYTfzwRI7eif6yOrPD4iQwCHk4rDSYSPtkNv6tyfF0ia5V8GRZSs0VTkujGbGA7fBv9XNOYBD9Pjz9aSG2TXzeVz2z8e",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkTGKq3AhVoWT21LPlafS_dTsPyqeO2FhQwpW4M8pokKHdkD-GV6_sa8Gf9fUuShzCTodz0lrpM0hH_swN0T7-TvYORNMamICUNw-ncO6wKoRiEh2sM1ICx2PFJBdMa7Y9SQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkTGKq3AhVoWT21LPlafS_dTsPyqeO2FhQwpW4M8pokKHdkD-GV6_sa8Gf9fUuShzCTodz0lrpM0hH_swN0T7-TvYORNMamICUNw-ncO6wKoRiEh2sM1ICx2PFJBdMa7Y9SQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼/강남역)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼역)**\n  * 분야별 전담 마취과 전문의 상주 및 실시간 바이탈 체크 시스템.\n  * 정전 대비 자가발전기, 응급구조 키트 및 대학병원 핫라인 연계.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **뷰성형외과 (신논현역)**\n  * 마취통증의학과 전문의 상주 및 1:1 모니터링.\n  * 희귀 응급의약품인 '단트롤렌(악성고열증 치료제)' 보유, 무정전 전원공급장치(UPS), 제세동기 구비.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFakFqb3NlhLYcHz-SlEOpnuwwTDUomBM6lS94OSnRQt_VCk0JheDzo6e6eo_2ajO13gl7vHewV9ina4Gxr-om07fCdtNEEIfGoUNnVAiZlSlQvITkptoZ1VBKU0K5-vx0rc6dQcAbuk-1o0FRKxDJA0zM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhRs00asIOZtB6IO5Mr_Y8AqMQnt9-_PxNzpYa1Q1V8vhGiLw51R7pKAD9n3ETY58kb5Vcr2qFrcIBZTzByDjIeoE1l6czisrlk4I7ITNbRfHvgntdVrg3UjB4XRQS4eopEuwQuIoJz2K2yQ7SA8lYw-aVAw3OpJUZOXvk7D-EcN59qhnKag==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHianYHvL29zoUXunYzqEjwPmTJAL52Gtfuw77PYBlGd-kIGhKTW8TS2SifE-DjZMHUWMv-dJPQahess6fKKFKpnPgTBfFkp_keQy6y5OkW5NSOBZwzPFW1GDDykjArhY0F5RUM3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtQ6InQ37HPO8VfliV4fBObwTyGxrNVxJhf3kG5iul0IVeoashgJLH4BmNnoYQkGyHUPZ6jcJ_A4Fr3zwHRnswF0W7PPkY7sx2-oqr_V7gpK4yXa-XXc8YFg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqvX0XvW8OuhErRT8tfH0f5-HL652Zo42QQEzg3pY_jYq74rv47ljBHY05M8YdyKn7gZicSYcEPXGLmaeO2OHubs9n63hxGPSlNGmkBNnrU2kyme4cFkUUukVUy9cvI1umxTNclEEqY1E6fgyNwd6c0ok6gv4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEo-4QRiepviuUQq0op5Vp3Ecde3Zejtg-sNhk7JZ_RlJDVZliwAgQY1-gUnVyjXclc3bbGE2upGtG2stY0Tlmvn14NgTtYw45EiUcf6BsUu4y2KSXOCNFuteXehWkrLQHQxHzXsFk4W9ZdX8hcBE0DWMSzra1_jTc_BuUwNNhEWwwJLN-mAvMTpIyIMa9HEkQCUD68NLrgR6F2WXFYrIO_mciChcWW2VcyswzZHv5HqXtlr6e3hVcAGbsyy_4ktmmqA_RI51nkTNffSooBJAE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEl2QXaTCr22LtY1Yo2mNO5xpsP5vxXUWItGk0LA1MRndV1Q0xP1pVR4De7nwhQgltQM3IlzKe0m8VS5Xk1ioS27gTVO29cyWeRO3A49pkRvjvnB4r0Jx9TI4iyYRr_4DqcDGdtxvoYrw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDKzxwvtJnp79F49QinrEduEfZ2l2TB0PGQ0mndgpGtHLPPm09xiS4SB_Jdsd--yzuKDPDtnu4rc8RZ4imNDmDQGU2At4ubIY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSLJZRYRxR9qhw-3mX0Maj8DziA1qh0mOQMcbhrb-L0HvsFLinEvJSfQWKJiT9EFMcwGxGAo0O6qT3LE20xC_U3WGXrgrDapji_9Ac",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSRbyMo1mjfmZEe3Tj6ijKmi-OFacqxiB76zgVyO_9DbTkF0QEiPxqALch268QpjYDrKiGFLIv5Rid8QWj3wHLg14i5f2ttYl7dJNKnmmcqPLMiAm86xPtc5pO2DTa7us=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlo5DcfFAM9ouByo4j4da6CXASz1NUvuKguj5W9yEUAYzQRztw-_Rn8iEI2Qi3pbR9LJsPSHwrC4hQDow3cmgI1sHv9XSt3XOQifp6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERgHzJ0iYZKYQB60fwh6I0JSWhpUkWWl-XEeLqIxRRlXgUloCu2SFqUFs2zkha4WshrLw2jS7i_CdQPNiEFk3nrF2htnjJFVTLOx7GthpdzO8dW4vhr-PAFXcpB9zL1-w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7zsiUUxEeJ_ZD7jGOJYeZSWYS3M3uXXzEk6nUr9QgVyGdGxTRYcKYAz_4yp0deb0j8rQsh74q9knt6YZCWleQRMAuW3jKAgYhZ_eMhSvGByP7hn6I83RG5ToQn0tqSTI-ow-HZTYesRwhGX94Q8OcuE9jyq7I-kvZk-TnmfYW9TjAs8EdfsfvNtMmZrFC_MkBxN0xBBsF89u2R_X-7xjMFxH30Nk51fmB-SVu3EH75AztZ_pHz06YbTnqFb_sCP5qathJ0wfbN8c19DwG9_ZG",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWgDUn66Gsf59HuD9I7F9umagJ3xA2urdgVt7zY7axJeSF4ukao74gLc1fBFj12jwgzw34KuvJiWCtV_6nuMviR-NQBAg_Vb0BI7TLgTcmH16Rtsb173MO6F_w7WPEqWBIJly5816awCVyOmMI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwMoEbF-Nh58Lu7TcQpKmgrdw-_nO0cRxF6Qvvdp1IhAiWOdDQAX1tTnc-lte_9dT9-HtfUGxfBHvcP9Ti-4zMF3nvZCYhNw0YpM_ZGF_jq8l3NCJVlGgs1IT6F1sicZ37fdiGEw67DgTol4VpduLwKJbsw7GnYQy3ddl2OApbN6iN4prljrgGMTu8GpyWwMTWQfNnd2Y4yJQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFl34xn9hyh-9ym4syNW_M_de3O9QnWKa4WOSU3y3cNnrrJutNcPxZZMIriMmNYxAKTgFMRelnXKNpvVTcjO40G_wSrG3_NiXPo1IzLUGIAqbA3fVIWJOY4C9i-hf8gF4IT",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHACTkEH6PCVxfL4IFjN5nqRfWSSnobqA3Y3xf9m37hYKNWkWBl6X6NJRL12CLjXo8PXjIL4ZYchQ-WU6kWZgvnCGOGgdqv3LhbleF965UpjMXHHcPqHpxGOH1C",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRJL1cdrYd0uq8Lun-lo-ovov4VbcLNjnvW8RllVGuiFvK4CQf0kO1WP48mOwoJD9T2ZD_cbJW2HiDmNc9cCKbjaG_FgowHgr_JUXhBuYvwgLjWMDBxw-B9mhP7NZirUfB",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAp_rkMpX-3XMKZkPjWpca6lDIrclNZGmaclgR1gVYHPxO2WczXw-fqcGbhpL47hAvl_wys_li6HI9COCFmKs77_HIzzNHR1eoe4Ha1g==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBrGfLGnpvahxLOjUXjsT5l2VPDT1i61pEYaIaG941A2a0_Oc5oyI7-5v2-75u4C8gfnVbJuOPh740_4k7-FydexZQ3JcSwYjkJm9ijsosUF3TFt_O5T6h0TXAV8X3iJgk",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEYSeKhhQEEsC4NrkB0--Q328sgvOgfcf2YWP5rJmKXkubvmqPUoRj2k2Gm_Li84D0ONzHXwNe0-nvsPgjL8PABwVQzrDo642Laq5lEg09ZPckRZaKfSqyBTnFQv5J8sAZK7Kt8S4nQYg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfovDZU-hsAhqomIzEZrGMIMpz3MKs8szm4diL8FnEzQqd7nMnfkQrKSBFunINDMAG7ecOSjPV7KpqIv1MQvDm4A8onlA2Zi705Nv5Fg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGw-ZEz-UFyr7N-i0KUgmaqxGF5DwZL82DI1ZBF3sPdZL-tTGbQbVdeOHymPkQ61cHg6AmPhQcl_PYqt8RTTHrpPL2fJIjeUfHLXHjUVZ9KM5ktAtV5-JBSIi53K_GVPvkipB6lXmN0jpD_CFojlMzzuqBGbBJnL1FPwlQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjNorDOFI534wMZ0Yr01x72wz-UEYOuwcznoydD5YA0vfV6wDfs0OyU7Ibpn6WvTxfGgM8K7gWlF5j3AgY24o_EFtYzUZze4W6PZUaDkzY7enlCBs-5swVA5RMe6V_jFI5GkmxQOqQVNOd87FXoQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4J5R1qn3mlwzFXNDEpgHs9_18ywbK9RjmVPHapRFcI_waQyLKJMP2HeBoZSldWqR3gdKYxab_d1m1als-U85g7FiB2jBZSY7ZaSlMbP6ZJNuti7U5i7065gNF8pMKiUYYfKzeZV-dOHceYc8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFx1b0eZ0T3vm-6QIXchUJyqjqt1Dlo2cZXJ1ErwT6UzCtboarLDj7lma6qkv4MKQ0UcMT9R0_mjH5LWbRFf0zXNAwXwcAugSQas0IH6xwTyM5CVxWq4IzWdURpAVt-5rVYQWzahQr8MJbd_8dhDjoqIKnb8ekv0jqxa9fbJOCDO0ZYzue5aAWk-wj6QHVsGGKt1XfOaTqLHzFrTrxqTgevHOygxlY8-XZ-HaA89_K-ZKKWTt3Lt_d7XOdcV9jts8-A2AioYCgrLoEn2rl-SaA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOsxETWVK-SsvMMOUoTM73fXvodPDuEeg_o5PHCqZKeiqdSL_IxNNkrZuOv4tFxYOb4mawpbjC1Y2w0h6m6nGilwmI_MUEf1o=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwvPT4LjMJXq6rSXgKyJwx0TpqIj9Kvq6aiFKnWC_VghWUANcHIIaZEicdWBmh4bMUmZUjPBwcmn2k-nlPCyIXCZyuPiDs33nmVidnpzMk5N_E0tvi4XpfMEdC2MgrADKp4RJvDnGplJFOSHSd95bnLjMud2QJsz0eE8RIiFWVG2At6fQjC-fXaKcdtYSsCsmns-y_Vl3T_6PTbkq7LoCzZh5wIPHASEhsD1PN3zxqQyYe8AVHV7gvb2pA7NvsTBz9M3z4EQQc-RXl",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCP2TKKARdj3ey08lN-Xcv1z-xkRaJRAHprJufw4LhA9ZtmSgirfDrvwoNwXulocjvzB_-khabYFD18CalR3llGkiDy7K0iT4CgYhR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNmcKQBMR3JLJ66NKxoLK2vkBtd3rqYonlg4UwikfJRNayxVH-WRuxG6hfqIRdSrix_VoWsQKma1jKdlwFaNVm9zrxe7MBtjnOV4oP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNmcKQBMR3JLJ66NKxoLK2vkBtd3rqYonlg4UwikfJRNayxVH-WRuxG6hfqIRdSrix_VoWsQKma1jKdlwFaNVm9zrxe7MBtjnOV4oP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPm4rti5k9AM0F9_OXO_WVoXydaJPgivt4AEaK2WXYgCTsRxQzTY9yp3HD36EyxhK6yj3qqRv30i2dlXX1warbJ6zIvdQLtBiAuqIAtSLnMwf3u8KluT0e3TMWEuvZN65UIWxPXxPXhA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdUtJxM3EXYPEH_wfI2MtUI9PIm9AYtqq0odrEmJ1nvrXAc6fevBFi1FNMgolOzVoSm-FGTJ_UE6YghWA4Uqfs5VIq3fX2GyUyjAA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2mM5sBtMNE-GO4_9t_V39eG7UiHy9QPgGGZFo2x_wSe7ZHC5G5gGKlEYpkwekY0HeQB4rByk6b4YdkLiRE-LvJq3UoFNh7PLS5Qts7g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPgxT6pzBRskfuP6FkTmHEIRdoqq_EOZuRBxuOecw6ASHe05K_m96aDCp8SiWc0F1IETuXX18h_d1z_cNShWXtxpI5URrYgyON",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFghp7XjMr79HoDVDQ_5_VPzeHHOpdncIn6JgOPa-QE1gbiedw1S_kMpgWldHRG8XXrwK6S_k9idLPzmn-ZaVJmIbQOb9iwJRQBUvXJLOklsmy-AUiaUC-e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcUSDeFp7FnkhUVMEblgn_zFcqIH-_BqIFX6wC-YQmpOMx3yTLLQICzPC-XFRP7OFUnGf8uoY2QOZ84VHWjVP7UpTuv0oUfkfK602k",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqPl0u3RqdtwB1yZk95c7qphKTAjOa9n3PNiEe-bSoo5wu_s27xDV9YGug7T3-w0C0dj2L6cEwYfdA8IRosLZr1FWcQdAMQsWcuq1qM9XE9LwGGCLRSf9cewlu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **뷰성형외과**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1AOT2Dll9UGhU6-0LMZScBWy43xEipzlbIt8a79hKkR2i4VoI1otWspScTZLvnnZi_Kf28BT7RbmdLyzgsYBTHr6CLx8E64Fb_dUk3yg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbJfMf2s5ilaNLUiUyjzzQU5lBq_HsjblaM8WiyumXNxyHykC3PHULEBqzumNK1pKcs0N_2cwzzxvdDq5qCdSHg4uQHOBXAu5ybGF6GbmtIngto0TYf2Bmr7ly5Rw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0dywJPWsJuTMAN3IkfRrJa0vssFWBrUvDs3FPIMTLqYx-0qF1jHDVEZ074ysr29Uc_pyHIlsehnukvZ_H4z5m6ELI2hHne6bdgeuVQC2xnWg6W_c7CCK11Qf2L4LN0lbUfWE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKXpO-XgFrZ02uvDQPlJ2ik4K365y0KzeDo-ZyAqTSFStlutRZCCNJ9BHryIObyLlAtxG4dJiJ-183_TOG_8di4IoU4mbiIsaf-g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8QGcs47soEBz3lsoCfQrkQQDPQ3I4W677hLMyoTRvy16WPK7XNK7ifok1qb3r9Ecj1PM8ckUCRpTv535qy5C6XFzb5uK7gTxbB099-TuaTJeLRTIeorGlyiIgSJKFlogT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPlC-dYTd6fchA_drE-NKH7_RsphSQC8vxfHyV4iA0d94023kH_iFezkkrwlV3S4aBEAc5WBEj4HI0zLw6WHAOUcu92HWDTxunVyd_nd9iybQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3dhcRd4HlybHC8q17jzsQHRyDNTwCtZOflKa-hlmnxFLo0XP1lqEN3Wzv1Lv6pXxxESd4LgF72ia_hHAv1PkL2SX9gBrvQozj6VIS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6PEtKEynfGtEUcvwEefIl18BGWryEtkeFGQ3JRoXMfde8rUGdTLi7rJxy79A20M6_bIUOmkYZdbPkmSfnu9Hl56F77G0pIKp0tPOBe9LqM_vRhyB54h756pksJQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAwpkeUHMmOvDUhAp48idytneUNQ9CaQMWnSNw8WrP55lkPBmDk5F3BxeJdpIknbNpor6MdyJN01OCKY5WT4fdB96fcZfWoSQT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGm1OORFk8rrxBIFj4wKwDGBcNXj39Ieo0GPbF0skJSRQazeHuuPiSGGYMifn4TqgvkxfR0QX2hxyxfEePbZv6sXUAwvNrc507IpOiTcQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcNdF1xoPK4ICOHZBSBQBUbQy_K4BcOrxbynV1kCrIneJw0vxraxwqSxVy5rsjGxwTBfDXRDq_8B3QE9KdieDadhB-CYMOX20Kni0VvL6hgttwOpzPmTVzZkU6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfWFrQ1O9gsApIOP5Jwjtc9DQnQbBzIZz63-qwNmJ7fQTq6d7-tJiKNU_yWojL3ZIsMSv2-cfzjZaSeF2Jq6VUFgvg3UWpwVoPa7fuvZ0z_7CAEGuFeIPt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2DPZLJ0Pw3ZKcIGSqQloZYXf53tpiFubcGFwJmrv1O2IwfD-RWOgUGBa6Gb0FChETxxVGqwXgBV-NXe_4P0ICLwFDBwugZIVWR2o2tTuCwnoSmdo_B-tuksJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbCCq6kFyqLLHb_KcoN5RcqPIc1DQ5WumjRnisD4jFT2XbyVlKktXLuJWCrJAJVTRGn97sxUM5HgNA5mKL91_SDaCjMOJgeGxm3Ry6EBgwL1kY-wPzP0H-_Fw4xi_lMQ_s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz46rLmyYJXIbO1AuFWpiZzOsjgW6Duu0MmFNZO3lE-7URTnHmhKI9RJoTIq_kJ45stNSjyOmXZJI0Ocp_CYIiOptbUgKUAFQ7Gh0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 바노바기성형외과의원 (역삼/강남)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. WJ원진성형외과의원 (강남역)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 뷰성형외과의원 (신논현)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEN54wl-iQdSe-4tHfEwFN5KXFPvu5cN-ieJ_-ANqgr7HRCpx0yxlATGkVX1uE6e2rET-yW3tCpbZt1kmlWUZASCxNpyOVBz0c3_L7lZTw32To=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8ioe4PmODIUDPMDlF4HgYZT3E7TmJKPHtT92n9lcVuJwLbP3jXDBRMsjN_YCRAZHvE-xl0r6vLbJPYI_KCsrD5nJW5ivXelolcY5AdDrli9E=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0EqtPankX58bd7nHmAfR3xKwHM5EMlL8XEYYKUHSniTl8Xi-8F4Efw76ic1dgu7x1Xx2mcy5VKL3Dd-yYVMEVnszzVXVpkOD9k42vBZsS8Vr2tbYCsDTL6TATCzy4Teh1JQXxXYMjnuwvCkvpkDOZuNshCCvlCCj0b3Yl7J8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8ZcYNry9ZDl10rHxd2I7u_kq_gS5C5PfDKCZnd5Gg5RjkqAaaSxRv6wcajvcGkxGiNBeZnAUU6dJCfHk1--i7JSa70E5zdit07xPR4CQBDXOc3kQCSJugTc0YDt3AO6xhBI2s9c8u1p5ANuM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeZv7nyv_z-v_bFG330YZihcYCx1XwaCsdhPDvjMzPY1FfFzAyOjDNpqLXleCBYZUDUEjKPSizz9K4vh8hRUsmxc65PXlaz9gf916UNoDu",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlScniRu1egwGj1488JCHqUyzz8THQqVFtt8y1yGIUMmHbmW4tHPIfTFKsYZLhBZm8wkWhJGo8uqxWT6OQlBkq70_uQGCitkl3XbhAAN3JQnnb3Ou-dUHoEk55hBWWzS6g",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYMPhBlDum8hxNz3wJ2UXatToSNZFGZ5UwMPLQ5vBwZz8L8_JAtRcuBBdUHMI_OHcCYaORsRUKpRYyb-kfn7Psir8bBA6jByeOFed0vmstC3s9_9scqvi3Cmpdk2rkPGAe",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEijmlggdm2T_dKqH-Bsd7w4U3NZvysHCyxaGIxtVdBotB2Zfkg_dMNRgvrlm3uSaeRCPf9Q0mVeQpPXsYh4o5qFT9NwKm8ZMVQOwc8zs6SvL9EjlkA0jFSJG31RtNqSq2lPovTWcKtaVsNUcciec6NncWY_9XKPj85wJKO-O_fXMpE7gIhi8F8TTRLVxI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 바노바기 성형외과 (역삼역 인근)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 원진 성형외과 (강남역 인근)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 바노바기성형외과 (역삼역)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. WJ원진성형외과 (강남역)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스타라인성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "병원 홈페이지나 성형 앱(강남언니, 바비톡 등)에서 여성 모델 후기 위주가 아닌 '남성 실제 전후 사진'을 다수 보유한 원장님인지 확인하세요.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQER1t7d2ubnwMCIgSYxhQQoohB6-EcuV9ds0ipv2GDQN5zR4NgCD0lUOPztNJg3Dd05u9pnnRPNNQyg-Sa6Ms5_b2zIRPg_4_j24CWI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFh3b7VJgmHQCyn6LKGwtyB_HbSuGMSlwxyj4USloAe5Y4HRNbG_LgXh1BApkAEnXg8Y87wQZFgAFHFCd-dHq02LxC1uqf9AZYWSlY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGc13QDAME5UGUlmHsZ0KqsjQpklhtJkUfeQdRqxQGvOmM0-njoh8FAXylH5hWSctPQHFlVt5BCnfdYUhfmSZDPHwtSDkCY9r75EfH4ASNhXtHDU2eqyA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-k5y4ugPZOeOIGufE6-b7csY1vFCl7dMkNFohGd2BVri1XRwGW1b9Ig9FeMFamHkyr_p7fcihHAkduLhjosgh-1ztIwYeKbVlbsmpH11_B0ihf3o7G4NbSZlWku9sNB2TaO4p6D2BURTGCvFBjoD5GpQytrLCS5AoDk65xTqvrDSI8GQYSlaMfAXaJlsBl4rSmlzmWPJNN466F-PI6ePnUol9RGE2_lK0TgViwFZfhX_xNazoGkUIX3hrDLIGSywukXJXHEAej4Lx4kdGF6KfzbrEEOqxRQQTOTQEGaNDcJuEZPN-JcnI6WffhzVM3BY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZ3e-HORe-gK9Ij7mK3clITNsynChjhJLZTSRj6AnbY8dghHYeXW-o2blBEVrrjPXZSit7i9jcsAu6nPTRK8UuhLSJjk-VmEQB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEazaqjdvJrWAnr_isa8gO29gXBRQqqnm_JAw2iEpZwlKJTHTXEorlDN1TlcUl6L2dR6DSzUQvcazDLALvRqr08eCbAWUrEFNCO4bHX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFM30ZCCPbBqOzjS6YC5gw6MxBYKMTnX8qhAwZGEtqhXBtJ5fnuYhdKwNER_hB_tWuRKlTCwZmsrj8MgphyB7j8CVSHsFT5036K7MTOQ3c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **에이비(AB)성형외과 / 바노바기성형외과 (신논현/역삼)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "성형 커뮤니티(바비톡, 강남언니, 성예사 등) 및 후기에서 **자연스러운 남자 성형(맨즈 라인)**으로 자주 언급되는 강남권 병원들을 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGthQErEyVjRdJZGVyEiQsdFhs7o6Db-n7vI8tsDdtWtG9bE3uV_V_pkUjXVNZxT80IYAxtZ7YzYiL5xaL9JCi8fjj5XID1AE8Z6_7Fuy_oCNTaAg1MsI5cXKei2tcXYGnN6R4phYAxw_krsEO5CsAa5fWU9xclT6iZWSGL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgkn1YLekT1u2uLMQUW7R9dpPde2KVEegkgFgEgfMK5LRR7OOMSFusoCMpEH_XjAaOETCoBaxs5k7XXgKrzTjAwfvL-NEJ8JiJc4JBdctIws7ztk8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzZPhzNHlrvQUDr0gHdc3jEsxv3ycwKhWoQSEeXOEFUjycA56QXB5vcWaUdnrpVs0iFIlmPZgsJ2HdTUv3u5xRB7XSKSfmbt_DMpM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzZPhzNHlrvQUDr0gHdc3jEsxv3ycwKhWoQSEeXOEFUjycA56QXB5vcWaUdnrpVs0iFIlmPZgsJ2HdTUv3u5xRB7XSKSfmbt_DMpM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxcW3uW2V_xuuM6gcEciPxLUkrbcufG95ehOGSQTOI7EO7vjZR5dzzKBLMldh7zMskC1zsVZdFwSK6F1pIlwImtgfH_fHOubxV8XM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxcW3uW2V_xuuM6gcEciPxLUkrbcufG95ehOGSQTOI7EO7vjZR5dzzKBLMldh7zMskC1zsVZdFwSK6F1pIlwImtgfH_fHOubxV8XM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIAaUzdGYL4vczisvO3s_AGE6RGMYQtRYFPqztstubVMulZvYB2qSBXL-4S2se5TUZSlESDXukGLMorrs3LMrH5XlVl4UOqshJ82N-xOIlBGfHrsA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2y36mIWU5hsmjznLRlMH2NL62WhTxcQGwQBxJypPmQHH00E6aS-Li06JASbej3XrqFoUXpuoWzQPDP8SB185gaolHJ-FnVlKQfw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjsEazQDDfVI-Pfz-9SP_90gaKA3hjQmWGNDmDIkmcRQUpgw4zAy7rKCfjmDUP1zi1I1pgQ8QO6O8H5uQxNuLDlYRn2CmLhZ4YS_egdzklBPvc24CMF60tHgmDJbCn3b5_RjgUNN9ze_s4wqh88GIMfVWzR6WcnoFZhDwauzIE",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiw83BCFqYb72LIsSH-4fHBffla2IqJ4lMC2tI4yshSbCR2AU8BA_9tIippk_UYZmwQeqG-3VqzI3avgFE2bM---6ECxEw-ER9pMY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **디에이(DA)성형외과 / 바노바기성형외과 (대형 병원군)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6_CG0jZwiR6T4r1RDWIliZaNT7Jd9lLRra4stWQLT5ZSiuxeBDAzE76WcfSy5GiCf0L7uCsakoN6UmvZ3TgrP8ed8jHkNcogCQeunr8UcPIYhT2Jw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKK6AWzTc8rdnwb4NNbTitKWgghBkWC6jjIg0GZrpBbFTjwSOyMNNEG7R1DqL6QxH6fBSaqnJ-fdz2rsgFP1lS9hFyJwVLYkplIlX0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGESmjP_hKirmEtzrFN2JYlHDP3fDfBEL7Dm9girFsXEPDHN7khOzhPbjKvB4HWJ2h2ts9aYlK_z58TVgCi8sDCTe7T2VPf7OXbmwSVeRLlvRm1k1zcWbiSxt8IHOG3Vtf6YDPA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhr8TDX-BCudE6JpXsJgODGZxbUcl3atKqyb2BHY6fXkoub_GFKnEM4YJChtCiSG3kfbfUV0bdkMaiLGA7xn6S_MhEQkd49zo6p3U3ZnnoZKwSRmq9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuCgTfVkLetgEa9Wz05iRHnvV9B_RD3Jy69p6dV1R7bb8nYuU4QdSM-zx6sSK9NvEg3Xv1YR4rv4D1u9KPuV_SHEyrbkFu9vRFtVFW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUx4X4sZLwhBZ2OvWgeA9jc8k37QgLhOaEh0m3O6yRkrR7gA6m7mmcfP1VKd_dGo8awmIv4CTJ2CaT077OF2OVW6LSmG0FeiGn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUx4X4sZLwhBZ2OvWgeA9jc8k37QgLhOaEh0m3O6yRkrR7gA6m7mmcfP1VKd_dGo8awmIv4CTJ2CaT077OF2OVW6LSmG0FeiGn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPdvigNQhZkrvDhahcvol3oqKMgqd4xZsfJ5d3stPslAVIwrXY3LtuyhtX181dfLSlSZMJXTJoN2S2Ae007KagUZuhQOE6XaqXcMA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj2FjpPrMm9016jmAdYOoXyx0oVsGujP3iDuCPj2Ba8j-KcvZSxd7xE36TofD7BIgqXw8835Xe2qCkt4FdmPKYcDvobDN40VEwE2QV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz04LjemiC-xnSqW4wYWAyI_ng_gZowlTuEShlp7xlRi8tlV0lUVmev573tQ-tDNqqyZRMDhpXj5_LIqRhvlNhnhh5S5VGav1J19tXmkZlrjVwdMqkWARTwuBjDA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**바노바기성형외과의원**의 안면윤곽 및 양악수술 분야는 국내 대형 성형외과 중에서도 비교적 오랜 역사와 인지도를 가진 핵심 진료 분야 중 하나입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **대표 의료진의 임상 경력**: 바노바기에서 안면윤곽 및 양악을 총괄하는 **오창현 대표원장**(서울대학교 의과대학 및 서울대병원 성형외과 전문의 출신)은 20년 이상 얼굴뼈 수술을 전담해 온 베테랑 의료진입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기는 **\"오랜 임상 경험을 가진 대표 원장 중심의 안전성, 과절제를 피하는 자연스러운 윤곽 디자인, 체계적인 대형 병원급 안전 인프라\"**를 중요하게 생각하는 환자들에게 주로 추천되는 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-eYNgmrtyHsqrpnhj_6M47XhalSoLtpJ1yWVvDDY6cv_q5Dg0Y8ZuXoPHN6d-TZleLBkyMA8xMQwpsm11UTx5VUoqtUbdDO8FB3Ok3ucInuQOfeFDlGWlPqz6wzUalJU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDN8_HKiUcrZiGtDEhAg1a7AO0qnGibDMkN_rOQ-ITlC2Xn7tR3jZbYZKERk5jYwcAWanWKGIl5e4KfanwrTIziE1K61zyeFAKoClDwivpodAfLTWLahqsfAp5H18i",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEs4EzcxIDlg6FkwOHBXPRSE2psypaqpPu5DIi9VsLW2gemCGpR1Y3xp52PjY7KG9guo_8-HPXj-WnfTtxQFKAZGujP6IwjsD6We2BccsRZVCRsxBVlvhzFWozK92UCRJCG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFM1hw_31G0wVuEoOuf0liO_JJ-8AVAaJA8JHak2FzSDvLgAsYNfBzv4EYXRg62cKfgpH6uut6lASMzIUmhNDMxyMO3HHq_RiGEWlnlsfA0b7birhmFkaon7tCag==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUs-UcRbYl7P7LgnSwt_0MTMK0mUB0TOdBniZMLEVJwjIrmE4aQNYzXJOv9kQqlteUAxJFxfXWYqICaIHFNQ0NV0BAx79HskLB-Ue4elClNCBPwUsIayTcMISoflGO9FZb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxFIYJfsHbAZbwO8DZ1jNkxvIRt7te4MRRM0l1jUH0iJk77msRb9Zsx9fQqF8PY1vhKz1He5k15f9ZSQIbbJXDSeafykZ35UL8UIEsx55kGdOjy_Q08LWbbQocWw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLntQLd5jtJsd1vxbzE-ZzSkMUzlcjJTq4EyFWYfMGkW8klGSmrTTAhKNcjlDg8R_M2-HwzbhvBdyXrq_I5lmVwlh42NFFmVoQkFg6sPBldNF6j5W2afbFjAtT0v0gSa6QSIrPctoUFV0ZaVQf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의원은 국내 대형 성형외과 중에서도 **안면윤곽 및 양악수술(얼굴뼈 성형) 분야에서 오랜 업력과 인지도를 가진 곳** 중 하나입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기의 안면윤곽·양악 분야는 **오창현 대표원장(성형외과 전문의)**이 중심을 맡고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기성형외과는 **\"검증된 경험과 안전성을 바탕으로 자연스럽고 균형 잡힌 얼굴형을 원하는 경우\"** 우선적으로 상담 리스트(손품·발품)에 올려볼 만한 병원입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGC_fEOXIrs9zvUUWkgyH0w_JGftQEnYRZ4TNjPi0gdR_GKnwTTpHFKJmp1oA4PHjHgVD7sqMpBHLbjVA2Jwwp3CkhVU-Dx03unJgahMiQzVWhRpgylWzffucC3BDox",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG009epduFsx2FtXYJVAKgku45aDPGG5xE9BG-f91nkPM-UgQujfjWR_ACvxOweGP0I-NanKiG5AVFyy5RGzacjgXgQhoBioj8fAwovcGWwDAvmni83aQ7HNdkaWJtlcvM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxDm2xh_TXAbHFH6mHkRPvvl-c7gpTZgiVqXZFuJD8uHXXRKtjOR7gyvaDolbVH1map39-xG_qqNZBZjVjAjZHGF4ilgZCox83aM29wS7-GLeJxuLsXOjNAjLSwxPuuPT3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVdAAbSNSWCbeHPBj6Hw83jzVMUNDkr8VaADbi26_NhA5PYQaYsg9mMp95oF6g-LJX6XE5rgWxzkaOXKbgQBE_XwGwWP0_4O3fHqm9JsMM_UxwSHxgxAvFH84ot6caQA4P",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZKayuC3MPPhuzoUxHzdKXs-dj2mN4IDdeifJ722vg1Ylh1-zErjubUr4vf0bQ-saL7DHYY4A9Foa25aqnWVInbrLt7LHCrNZgkVInCmuIZ_2Nb3sL71NU0v3LoxYxnDwZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKxJjXdgcFX27MFlo5zsDwDOtSePaRhTNTy-oCTlcx52OAscnxzWZV8nka2SxsyBQ_DQmIcvYG4i9uWM3slZjPHBspxy-bomk8yUURO-CtDjeI7jqSUdSo6i10onxr7u2nFOuvXeIVF6my6Pk_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuI2XRKH7WQRxUR_HU_a20D2eIoeXPcBK0dwtVt-iW5tiXtT9IOiPYd5xgZaLQ4hN7DovMNnwpy2Y-gQXAING61VId6hOQu0H93SDPzpTatC5v2anaX1fURMfnDFqv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGII7exrPvbRbsbS0aXf8Ii86M7uJ0uZ2X0PLFBDsOk-suEZiev9Ju_y_r6JDhqf1va5l1fjU2xJouny5893xGTiV38arH8tyku7UuGfK7xhEBVLmWG2LRemhLUuA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxDm2xh_TXAbHFH6mHkRPvvl-c7gpTZgiVqXZFuJD8uHXXRKtjOR7gyvaDolbVH1map39-xG_qqNZBZjVjAjZHGF4ilgZCox83aM29wS7-GLeJxuLsXOjNAjLSwxPuuPT3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "바노바기성형외과의원",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의원의 안면윤곽 및 양악수술 분야는 병원의 핵심 주력 분야 중 하나로, 의료진의 경력과 환자 평판에서 다음과 같은 특징을 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "바노바기는 **\"안전성을 최우선으로 두고, 과하지 않고 자연스러운 비율의 턱선/윤곽 개선 및 기능 회복\"**을 원하는 분들에게 적합한 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCgUk3Wn1vUgbfo3DBmovbXw_bOqV7YTVGm_yI7ik73eodwnDdD9105w_LboaF3RUH7zpkDAW9tK3vCnq_fKxjPw4Rvm4MD8ruIRJCerukfHdk_k1nMZdvABJON6tpvoSI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFe_1RuM2GMHzICBLNW1LQMQCShxBSbHT9QLun4_m7hNHJpzr8t5crYcB1suHpCsf8PVp3kqHi1MKY0S-mmeWBALnkeRFS-6sYPHodZHCFKhSwRg41qgv_MAgFaWp7H",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFl_p3FPWRvQNPQ-9oGotInl-bgFRySLdFZYYUJOEAGuZRZcnpCJXc9ERnjUN5vZ6buAaJDR0nMXCnkfEG-32bAnwClpF9pqvN3DD6xcI6MlacvWfIvUmeisMHv13fZ3LE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmpgNzURMDlTMeBThww8zHxX5PoP5DYi1n6AuC_mWCZU-_MPw7t7of3Z5I9mu9LA_LZuU1JIphtFpXhfNhH6gfd5nrpkDmUNF3oItlZXW2IyCqY0eRqI7qRx3NEc0Rcnv7j21vm9Vf-J56xmNIboh8WBnZ6Iq4DoKVxkVFluslJ4hnLL2oRgyu2nt2O3hpngJfYGPKv74N9DNUA6brVAYS28J92rAfp49s10ZycUkXjIIZVjxFTWu7rD3HbDokY3YyaBcQ7vExWzhZyNk7eausMzaVMYGLpM-KPDpLFyBxkKY0yLxPUTUf9RWtcsL5UBLIXZidra8BI1AYqw32m75jKMzmI6dAhuPD34X-Y5Tjc56ymbO2EM43N8I8IGB0Ypv4CHPVg2wbCPROSmbALxwa8MTA1xF7s5J26ILZdQN2ehkzaaA58W9lZIV40TJ_eVl6UogTZ36NlcaUdx7wytMKjJh0-ukXhi8d4uIypISJ965Jz0kf7fjTPYv8Su-cxxsqluKI_92Kf3ndgYytK5AN5nGIPqYlcwuvhyDylNI4eeIcrwbhdmQVf78QtxUWlDrT6Flimo6O3BJoLVQQ-Ghl5XZBhUehChfXGAyuvfaTlqHNbuizju_tJbX79IcGsUcWqfakb8AiMeTNob_WBZ0tdEIJLejLSZBufb1bZvvM_qpjGBDSCLJp2PxATHhEQE_DMkfUm3D5j0u5FwsUYlN37QEiJ0mt3cbMJpsTg2NCHAmlniPYK1_ANfTNO399-x6EnEP-dpZBjRLR2GaOnka_CF2tWA7_TfZUXEtohQHbM66RyACquyUwN9gxVLjqXDI2tFJaGP257R_5yxG5yjWowPe8Pot5y--PWmfk2dbgyrzVRbtrazPkEwHXHcDsTqqTlW9WVbMvoy8SlO2HzSRmm5QZ1z_5QyYE73Gd23VmZlRGRZOKU0_xfnWt84RnXQ_62UKtrieb1A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIYDAH7Xz5uzEQQLwhdo6xBirapgAF5m-sNlMrN-rjzjw2W957ACUSyanJ5-RxWiOz_8HfxwHDdBb23flcosmK5U8W8ap9N4-1BDKijBinfi7rZCox_K4nC6uvBJzEQH2AHeW047KHCo6e8tzI-etF5x2MdSF9wU8am-vc3F2jKbOPyZ95sQoo7th9ig==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 원진성형외과는 모두 강남을 대표하는 1세대 대형 성형외과로, 분과별 전담의 시스템과 안전 설비를 잘 갖추고 있다는 공통점이 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: ‘자연스러운 조화 & 안전·유지력 중심’**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: ‘내 체형 맞춤 비율 & 자연스러운 촉감·움직임’**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **바노바기성형외과** | **원진성형외과** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "본인이 원하는 방향이 **‘자연스러운 개선(바노바기 쪽)’**인지, **‘확실하고 화려한 변화(원진 쪽)’**인지를 먼저 정한 뒤, 각 병원의 가슴·윤곽 대표 원장님 상담을 받아보며 전후 사진(포트폴리오)을 비교해 보시는 것을 권장합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "바노바기성형외과와 원진성형외과는 모두 강남을 대표하는 1세대 대형 성형외과로, 분과별 전담의 시스템과 안전 설비를 잘 갖추고 있다는 공통점이 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: ‘또렷한 V라인 & 트렌디한 화려함’**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: ‘볼륨감 & 글래머러스한 실루엣’**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | **바노바기성형외과** | **원진성형외과** |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "본인이 원하는 방향이 **‘자연스러운 개선(바노바기 쪽)’**인지, **‘확실하고 화려한 변화(원진 쪽)’**인지를 먼저 정한 뒤, 각 병원의 가슴·윤곽 대표 원장님 상담을 받아보며 전후 사진(포트폴리오)을 비교해 보시는 것을 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 WJ원진성형외과는 모두 강남을 대표하는 1세대 대형 성형외과로, 풍부한 임상 경험과 분야별 전문의 협진 시스템을 갖추고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: 체형 조화와 자연스러운 감촉/움직임 중심**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: 뼈 구조 안전성과 자연스러운 균형미**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | 바노바기성형외과 | WJ원진성형외과 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "바노바기성형외과와 WJ원진성형외과는 모두 강남을 대표하는 1세대 대형 성형외과로, 풍부한 임상 경험과 분야별 전문의 협진 시스템을 갖추고 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: 확실한 볼륨감과 화려한 라인**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: 트렌디하고 또렷한 V라인/인형 라인**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | 바노바기성형외과 | WJ원진성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 원진성형외과는 모두 강남을 대표하는 대형 성형외과로, 분야별 전담 의료진과 체계적인 마취·사후관리 시스템을 갖추고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: ‘자연스러운 조화와 구조적 안정성’**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **바노바기성형외과: ‘체형 맞춤형 자연미와 부드러운 감촉’**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | 바노바기성형외과 | 원진성형외과 |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "자연스러운 조화를 원하신다면 바노바기 성향의 상담을, 확실하고 화려한 변화를 원하신다면 원진 성향의 상담을 받아보시면서 본인이 원하는 레퍼런스(사진)를 직접 원장님과 맞춰보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "바노바기성형외과와 원진성형외과는 모두 강남을 대표하는 대형 성형외과로, 분야별 전담 의료진과 체계적인 마취·사후관리 시스템을 갖추고 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: ‘뚜렷하고 화려한 V라인(인형 라인)’**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **원진성형외과: ‘글래머러스한 볼륨감과 또렷한 핏’**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | 바노바기성형외과 | 원진성형외과 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "자연스러운 조화를 원하신다면 바노바기 성향의 상담을, 확실하고 화려한 변화를 원하신다면 원진 성향의 상담을 받아보시면서 본인이 원하는 레퍼런스(사진)를 직접 원장님과 맞춰보시는 것을 권장합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의원의 사후관리 및 붓기 케어 프로그램에 대한 환자들의 후기와 전반적인 만족도는 **대체로 ‘체계적이고 안정적이다’라는 긍정적인 평가**가 많은 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "실제 성형 커뮤니티, 앱(바비톡·강남언니·굿닥 등), 리얼 후기를 종합해 보면 다음과 같은 특징과 반응이 나타납니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIbVZ2gBINMbAGh2HVjvquTD13kfEaFUEBUAwCQuWs-Tr_1ZtiFCJwv-zgKarcuHRUWq3VkNB7bKAUUOzd75LpRLxXQ226D_BJahy-dLz6UA6WuLKXEzcsk5P7mQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnjDzs0E1Er82B8GXsc3Reez7lPaeSfKbR_niKBo0W8M1y8QIxYiGZzYLvVBDSZmKBHuTeCA8NO01PvQi-Eugeb5rxYK1mri8kn_h3rdKYxvD4NtnFy3gdBhTilEw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFH7gFmLq1rluQXBJcYPAOuZSvDqMlqaHJ7eEOkSngTlTz5ua8jf4xXQhM5r605_YmVXsd4OHSCX08Xe3eKniRivoPr5MOs5I4hESTiCxfWgKX3ZF0iM3l9HllVgkAXq5Mf-eBCrH7homu_NoUwCYSeVZLaWOYAozjuJvfA5psu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcYzotPx5wL7VDLePR6_Y_0ZLbBP6wCbqMMhM5-wZy5P-B5aN4lUKyjTNJUFCfjQptVI9szVPykxlly9QACEtynrqQbOpmSUT2h8rTdBGMtNkwkg4PmV_ZFY-Een6RSMWCIm6uNHELtx1B2SMeSQNtTAOIrIvf7NJsxoWcaBwAwoIgo8n8XLJR90h_5_rXtdky9og48zZgJ8m_0dHTNBXPjTo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcYzotPx5wL7VDLePR6_Y_0ZLbBP6wCbqMMhM5-wZy5P-B5aN4lUKyjTNJUFCfjQptVI9szVPykxlly9QACEtynrqQbOpmSUT2h8rTdBGMtNkwkg4PmV_ZFY-Een6RSMWCIm6uNHELtx1B2SMeSQNtTAOIrIvf7NJsxoWcaBwAwoIgo8n8XLJR90h_5_rXtdky9og48zZgJ8m_0dHTNBXPjTo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의원의 사후관리 및 붓기 케어 프로그램에 대한 환자들의 후기와 만족도는 전반적으로 체계적이고 전문적인 시스템에 대해 긍정적인 평가가 많은 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYMcidPb-VbZIj-BSp_18EFzzQ6YhiflxqBgAXY0G5niVcYei65gKzFPmz__ptCgxZxVt4uBOoqd6u4e4vAHR2-Edq-i103nc0oK2WEyZi3z8yD7HO9Yyws4ytl4A=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFY3wnnF-lzODEXn10zBFl9xjEZ_EX0MJOneCC1W37Blne4pvaoeocOCeCCwS7vIjiNeBqP00b04tUg1k2mjCB0nseboYq7OIXl828JfUJ4WVZ02JOTSzlsVjFA7J-wUN-W-jBoqhQ09lxx0XCUPU2IFARhmety0E_Qp91keY7D6g==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtFcHpowdUZs6ZMlnVJpF2Cmi6f5ezTaPBXQK-FJg4mDVXun1qbngf1lXc80ShkV2PSJw-RLdWMwVmYz5hfX0r08TUOylMbGh3jyLRHc-q7JYPmxN_lLngivs4elKP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPN7KWC0vuBKrR2dUdhe10JZ9lysnScRjPCTFtRJFlwJ_OzbS96kys7If0UKwI7zLDg7vDFg0VJZcbVygs_tyco1KgW1K2lAYbiOiL0rA9E0lRqzqQ2HGxgH_k-6jvDdBjZhSUY2r08HO9-D_MJ8aLehJKkX0BaITE6FPEc8cqT_U-tYLQXH_J4VaKjGjmrP7k12hn0n74nfN4v_ueznUw2D1N",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의원의 사후관리 및 붓기 케어 프로그램에 대한 실제 수술 환자들의 후기와 만족도는 전반적으로 체계적이고 안정적이라는 평가가 우세한 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "성형 커뮤니티(바비톡, 강남언니 등) 및 실제 후기들을 종합해보면 주요 특징과 만족도는 다음과 같이 나뉩니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBJ8DfMa84O3Y9KFr2_MyvqdfftWu3ykTvRiyx7sDzhZXgO2b5_w_8dizLOMXqnmqEtiY7vLGgmXcxkO74-WdVCtw0Pw8Q8P3QRy3WxJdTOlbFeWeoYrMZphmh8Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMppoMLueZygMn3ubZsOn4zWn_VWaqu5EaxUxscILFpvSM1cSSeDFd3I80DRyVDEx3REtSxU3PEeMndXkAn-grv5FO8_G-8IW8PSmLRgjv6OyyZHQIL3A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEfNGN5pFWEJtLW0tfcATPRvGaXfVpIcRiDBwkJalwaNSk6nC1K2-RtUEjPwMw8egZtvtDjO2cDRgK6SbgqsQF9_N8gDUPnxbJ8bHMqGEZFRZnpR36tHxT9WhBa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENSUhIimT8Jz1I6_vb6QcGOPZYaIrrmzks2zM-HKhQFPghJBkE91Lyy9OoVnYq551W1PxPyCrs5thhHWAifMdJCw-0Cz3RMGC0OcfNTNRJdx8Ik8YZ14B06PUI5YkBCY594gnCMXGvMOfY8Is72f-QSSKFSG93cikwPI_eHlq8hk76K-GkYkJUk07HUD4jSfhj-wTfaxOo0-ucGa98F0sL4XE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1U2Z7v6jnmrFzt6156h1yG4L63oq3KjDw2u5eUTVk5Av6wkYpN5x96TWFEzjagEbFtGKTUC0Uv0FxRSaERh-XZhlt9FiBFNXCiKK63Yflv2wk5aLGJtWLZscE5FDuY9mzxCjXKlT1ANqFbEHUAlY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과를 비롯한 강남권 대형 성형외과들의 **눈·코 첫 성형(재수술 제외) 대략적인 비용 견적 및 가격대**는 수술 방법과 추가 술식에 따라 다음과 같이 형성되어 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과를 비롯한 강남권 대형 성형외과들의 **눈·코 첫 성형(재수술 제외) 대략적인 비용 견적 및 가격대**는 수술 방법과 추가 술식에 따라 다음과 같이 형성되어 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "성형 앱(강남언니, 바비톡 등) 후기 작성이나 전후 사진 일부 공개 조건으로 할인 폭이 20~30% 이상 커질 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스타라인성형외과의원",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBE-nA3H4U7buQqjTsghooHb0gy-8nHwr0qKPml_oYKIU1GcrfYHvDSSVeor1yFFSOCIfmoxsAfKOrvYhNU-LwbLprNgchOsMy0GeE22_8wGMeyrN4wAKWW_IyWm5zSQGT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeGypKr0VoHXFmFlIN5dn6HCIB9JUY-V5chcLoXNZIZdkzv8LUYh3ui3_Kw74afXidz-BHv3zypotPRS-upyize4OBZyRYkM26R-wTqnBC6zU7l-58Q2lNdL2l5kc0mCSd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHr3AcN-CSjg3wYudlmjWxiffVYo-WwZ9L46Ssn1NptD46AoSZhNw3fBYNTwI1MBBIXL-sLLwcJUsKTI3b10aPRpuF3VceLXuEsWvZCznkWTsUBODEg_VJ4JeXI422z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7oLTdQrHr0-EZ7trgyaO9UFRgFLFExqGCAxqEv7kWmH_hGp7t0-UeCiBHT_1CgdCL_f2Va-yoT2D5eA2wzPD1aqazqvZO_pjQ4iqVam4vI-nH_HU8zgWJl8kIZn-ln-op",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과 등 강남권 대형·중대형 성형외과의 **첫 성형(초수술) 기준** 대략적인 견적과 가격대입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과 등 강남권 대형·중대형 성형외과의 **첫 성형(초수술) 기준** 대략적인 견적과 가격대입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "이벤트/모델 조건: 성형 어플(바비톡, 강남언니 등)이나 병원 프로모션(후기 사진 제공)을 활용하면 10~30%가량 할인된 견적을 받는 경우가 많습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ-k5okZ7QWXV4Bvwj0SCNvmkaUmBTyZxmqxVOakP-WPBwyvuFAbQM4PW7GhCxJHLmRUhQzYlxd3MLotuYL4dGcKfz4PxYTh_h8w1OTT8dShis9daRU84=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmp5R3l5mbXdlPxLC9ip5OkVO9DQrQ4giBxZCbQfogF2787wkTKiY0hsrgF27oazyBTl4v2_LCgkJQPYoIvicQilE_x46hQWw0FHHbVjhrQ6AtltmDskK-SDdcIZs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVB9NVweB0dF4V2i11L33YidnkwAbebFmZkoBBUtN7K1Ox7b_aFpWvSZqdrmBSPbedBISh0tsLQbkIUaniTXYczu5hWxpkEq8wSuqerRffSreJekoemqp2yWrDpAzF6gc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHluNw5QbdefLHtjfvXzKc6BUYf1HGoxHjki-ai0JX56AXg83lnReNsWRI-T9sxpVz2BItxB9EmDH1dbS5Jc2X5B6lCVSMA5G-KnyoQjg7vkrh0H0sC3kz95n2iO957cD3HxbHqriBAE1f-ynwsmYe36eK0KNL-145wV63iqAD8kYJkBJbV7RQ8mb1J",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v2-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "뷰성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과를 비롯한 강남권 대형 성형외과의 **첫 눈·코 성형 대략적인 비용 견적 및 가격대**는 수술 방식과 추가 항목, 프로모션(후기 이벤트 등) 적용 여부에 따라 차이가 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "제이준성형외과의원",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "뷰성형외과, 제이준성형외과를 비롯한 강남권 대형 성형외과의 **첫 눈·코 성형 대략적인 비용 견적 및 가격대**는 수술 방식과 추가 항목, 프로모션(후기 이벤트 등) 적용 여부에 따라 차이가 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "강남언니",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "2. **리뷰·모델 이벤트**: 성형 정보 앱(강남언니, 바비톡 등) 후기 작성 조건이나 부분 모델 조건으로 20~30%가량 할인된 이벤트가를 적용받는 경우가 흔합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtQGovftnZs8XgIrlADtdtRMshiu1DC6S1gmB2QP1r-pTTyvOHkZ1PRuZZCTp_vyVa0p_pTr8_tURQimC5d74kqtUREJiVOFMglJnHgKnz52bOLze-22acyVX8JlC_qMKaaQZUa-tDiOTI0vofdUlBqIyESkw31dfiELqOIrIPBQBGS3acNFoe7ICB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2fcsXZ6C4G5eEAO4Yl6cDECwmduE0aCj7n7AR9XttZxQSBRL7q1xRp74ixBg-S1SX_hCTwaWHI_fsNZm9D2UR_IkuviHeJA-XAQnP1xrEi1PisVs7MwJPggRh4srHVR0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3xSK61swpTdMH7ZjTKLVp62XRcGRWhvHrZi14eU8OWVwMAzQKT0Drt_VlaYYhEa6BT0JYIMQHcsQBbAGxQ6Ux8lStaNhy13gfpwFh0VlCSl_qTii3r4yjLMMOwpH6NN1pUURn2y7I3BdDMODvwTtQiyjVJJ39VqtDKyRC7gLeTAvYCaVp37SAOOAj8VqemL7MvLSjjCdvf1pKXzeoN50qMcusjjDlAmRZhP-P2KUkIlo7Kow=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWQ7COdrxl-DqnZdGfB2oo2D6ZX5QARmHCZOGFxJBxwCF4nFRhkDzRsYfZB0tujW8DQ2vTOzrCTvNQJBLzjNumTrAA8eldqxjS4rZOdRjgvWF74wFcu4EAS7vW2G3uZVm1SD5MAg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAjh7Vywop0tWj40jsCx-xByYHw0h_42LmPz8yjQEOftNUAQw4TbA_MAlPYMnKgs7MQ6hNfh28onU2iTYq8l-x52OOKEdETmP0obLAwzovry6ekqx3uswTZf9WAIC4sio=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJcd47eyIzZ6G9Wj225o3SP1IN0A-nEgZQkextBacQr8GVpB5gA9eI5BFJH5MgIDJY-oQpVsTrKrF8AlF3-i4oxpv3IfbDGrTwONj5iB14qqiYY-F7lSOrd6T6A7u521g=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
