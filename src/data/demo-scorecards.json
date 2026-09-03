@@ -6,15 +6,15 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 46,
-      "ma4": 46,
-      "previousWeek": 46,
-      "ciLow": 36.2,
-      "ciHigh": 55.8
+      "current": 48,
+      "ma4": 48,
+      "previousWeek": 48,
+      "ciLow": 38.5,
+      "ciHigh": 57.5
     },
-    "mentionRate": 0.375,
-    "shareOfMention": 0.44871794871794873,
-    "avgRecommendationRank": null,
+    "mentionRate": 0.25,
+    "shareOfMention": 0.3717948717948718,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
