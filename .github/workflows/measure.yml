@@ -1,5 +1,7 @@
 name: Measure tenant
 
+# Actions 등록 트리거용 (repo에서 Actions를 켠 뒤 재스캔 유도).
+
 on:
   workflow_dispatch:
     inputs:
