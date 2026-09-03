@@ -22,9 +22,9 @@ function statusBadge(run: MeasureRunInfo): { label: string; cls: string } {
   }
 }
 
-// 실행 이름 "measure <tenantId>" → 대상 라벨.
+// run-name "measure <tenantId>"(소문자) → 대상 라벨. 구버전 실행명 "Measure tenant"(대문자)는 그대로 둔다.
 function targetLabel(title: string): string {
-  const m = title.match(/^measure\s+(.+)$/i)
+  const m = title.match(/^measure\s+(.+)$/)
   if (!m) return title
   const id = m[1].trim()
   return id === '__queue__' ? '대기열 전체' : id
