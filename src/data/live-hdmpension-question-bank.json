@@ -1,10 +1,10 @@
 {
   "version": "v2",
-  "generatedAt": "2026-09-03T06:09:52.559Z",
+  "generatedAt": "2026-09-03T06:28:46.976Z",
   "questions": [
     {
       "questionId": "v2-001",
-      "text": "군산 1박 2일 여행 가는데 묵기 좋은 깔끔한 숙소 추천해줘.",
+      "text": "군산 1박 2일 여행 가는데 깔끔하고 묵기 좋은 숙소 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v2-002",
-      "text": "전북 군산에서 부모님 모시고 가족끼리 묵을만한 조용하고 편안한 펜션 있을까?",
+      "text": "전북 군산 쪽에 가족 여행으로 가기 좋은 펜션 어디가 괜찮아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v2-003",
-      "text": "군산에서 바베큐 시설 잘 되어 있고 단체나 가족이 머물기 좋은 독채 숙소 알려줘.",
+      "text": "군산 바다 가까운 숙박시설 찾고 있는데 괜찮은 곳 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v2-004",
-      "text": "군산 바닷가 쪽으로 전망 좋고 힐링하기 괜찮은 펜션 어디가 유명해?",
+      "text": "군산에서 개별 바베큐 잘 되어 있고 조용한 감성 펜션 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v2-005",
-      "text": "군산 여행 갈 때 숙박 위치는 어디 쪽으로 잡는 게 동선 짜기 좋아?",
+      "text": "친구들이랑 군산 여행 가려는데 여러 명 묵기 좋은 펜션 추천 부탁해",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -49,7 +49,7 @@
     },
     {
       "questionId": "v2-006",
-      "text": "군산 숙소 중에 실제 다녀온 사람들 후기 평점 높고 가성비 좋은 곳 리스트 뽑아줘.",
+      "text": "군산 여행 갈 때 숙소 위치는 어디 쪽으로 잡는 게 동선 짜기 좋아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v2-007",
-      "text": "군산에서 취사 가능하고 객실 위생 상태 깨끗한 펜박 찾고 있어.",
+      "text": "군산 오션뷰 펜션 중에서 가성비 좋고 이용 후기 괜찮은 숙소 어디야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -67,7 +67,7 @@
     },
     {
       "questionId": "v2-008",
-      "text": "주말에 군산 여행 계획 중인데 커플이나 소규모로 묵기 좋은 감성 펜션 추천해줘.",
+      "text": "부모님 모시고 전북 군산 가는데 편하게 쉴 만한 숙박 시설 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "숙박",
@@ -76,7 +76,7 @@
     },
     {
       "questionId": "v2-009",
-      "text": "군산해들목펜션 객실 컨디션이랑 바베큐장 이용 후기 어때?",
+      "text": "군산해들목펜션 객실 컨디션이랑 바베큐 시설 어떤지 알려줘",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "숙박",
@@ -85,7 +85,7 @@
     },
     {
       "questionId": "v2-010",
-      "text": "군산 여행 숙소로 군산해들목펜션이랑 스테이 머뭄 비교하면 각각 장단점이 뭐야?",
+      "text": "군산 숙소 알아보고 있는데 군산해들목펜션이랑 스테이 머뭄 중에 어디가 더 괜찮아?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "숙박",
@@ -94,7 +94,7 @@
     },
     {
       "questionId": "v2-011",
-      "text": "군산스테이호텔이랑 군산해들목펜션 1박 기준 가격대랑 부대시설 차이가 어떻게 돼?",
+      "text": "군산해들목펜션 숙박 요금이랑 주말 예약할 때 알아둬야 할 기준이 뭐야?",
       "category": "price-spec",
       "containsBrandName": true,
       "industry": "숙박",
@@ -103,8 +103,8 @@
     },
     {
       "questionId": "v2-012",
-      "text": "군산 선유도랑 고군산군도 구경하기에 군산해들목펜션 위치나 접근성 괜찮아?",
-      "category": "local-regional",
+      "text": "군산해들목펜션 다녀온 사람들 후기 보면 청결도나 접근성 만족도 어때?",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "숙박",
       "region": "전북 군산",
