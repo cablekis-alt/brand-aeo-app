@@ -1,1 +1,84 @@
-[]
+[
+  {
+    "tenantId": "k-wonjin",
+    "brandName": "WJ 원진성형외과",
+    "aliases": [
+      "WJ 원진성형외과"
+    ],
+    "ownedDomains": [
+      "k-wonjin.co.kr"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "기린성형외과",
+        "aliases": [
+          "기린성형외과"
+        ],
+        "domains": [
+          "girinps.com"
+        ]
+      },
+      {
+        "name": "디에이성형외과",
+        "aliases": [
+          "디에이성형외과"
+        ],
+        "domains": [
+          "daprs.com"
+        ]
+      },
+      {
+        "name": "바노바기성형외과",
+        "aliases": [
+          "바노바기성형외과"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      },
+      {
+        "name": "뷰성형외과",
+        "aliases": [
+          "뷰성형외과"
+        ],
+        "domains": [
+          "viewclinic.com"
+        ]
+      },
+      {
+        "name": "아이디병원",
+        "aliases": [
+          "아이디병원"
+        ],
+        "domains": [
+          "idhospital.com"
+        ]
+      },
+      {
+        "name": "압구정서울성형외과",
+        "aliases": [
+          "압구정서울성형외과"
+        ],
+        "domains": []
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "brand-address",
+        "type": "location",
+        "claim": "주소",
+        "value": "서울시 서초구 강남대로 419 파고다타워 12-18층",
+        "updatedAt": "2026-09-03"
+      }
+    ]
+  }
+]
