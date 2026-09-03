@@ -200,19 +200,19 @@
     "region": "전북 군산",
     "brandName": "군산해들목펜션",
     "aeoScore": {
-      "current": 38,
-      "ma4": 38,
-      "previousWeek": 38,
-      "ciLow": 27.5,
-      "ciHigh": 48.5
+      "current": 45,
+      "ma4": 45,
+      "previousWeek": 45,
+      "ciLow": 34.5,
+      "ciHigh": 55.5
     },
     "mentionRate": 0,
-    "shareOfMention": 0.7037037037037037,
-    "avgRecommendationRank": null,
+    "shareOfMention": 0.5925925925925926,
+    "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 2,
       "totalTenants": 3
     },
     "hallucinationFlags": []
