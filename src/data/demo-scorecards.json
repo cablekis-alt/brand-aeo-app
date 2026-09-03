@@ -19,7 +19,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -69,7 +69,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -92,8 +92,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 6,
-      "totalTenants": 7
+      "position": 5,
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -116,8 +116,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 6,
-      "totalTenants": 7
+      "position": 5,
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -140,8 +140,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
-      "totalTenants": 7
+      "position": 4,
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -165,7 +165,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -214,30 +214,6 @@
     "cohortRank": {
       "position": 2,
       "totalTenants": 3
-    },
-    "hallucinationFlags": []
-  },
-  {
-    "tenantId": "starlineps",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "스타라인성형외과",
-    "aeoScore": {
-      "current": 35,
-      "ma4": 35,
-      "previousWeek": 35,
-      "ciLow": 24,
-      "ciHigh": 46
-    },
-    "mentionRate": 0,
-    "shareOfMention": 0.5813953488372093,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0.016666666666666666,
-    "cohortRank": {
-      "position": 4,
-      "totalTenants": 7
     },
     "hallucinationFlags": []
   }
