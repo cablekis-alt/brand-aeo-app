@@ -336,6 +336,35 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.measure-pick {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 10px;
+}
+.measure-pick select {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 2px;
+  font: inherit;
+  min-width: 260px;
+}
+.measure-pick select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  color: var(--muted);
+}
+.panel.measure-local-only {
+  opacity: 0.72;
+}
+.panel.measure-local-only h3,
+.panel.measure-local-only .muted {
+  color: var(--muted);
+}
+
 .json-block {
   margin-top: 12px;
   padding: 14px 16px;

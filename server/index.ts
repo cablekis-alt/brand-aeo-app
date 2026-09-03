@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
@@ -8,6 +7,7 @@ import { inferBrandFields, inferCompetitors } from './brandInference.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
+import { measureAndBake } from './measureAndBake.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -52,7 +52,7 @@ app.get('/health', (_req, res) => {
 
 // 로컬 백엔드 감지용. 배포(Vercel)는 api/health.ts가 같은 계약을 제공한다.
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true });
+  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true, measureVia: 'local' });
 });
 
 app.get('/api/tenants', async (req, res) => {
@@ -63,12 +63,7 @@ app.get('/api/tenants', async (req, res) => {
   res.json(picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })));
 });
 
-// S-11 "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬 전용).
-const SEED_LIVE: Record<string, { bank: string; an: string }> = {
-  'example-brand': { bank: 'src/data/live-question-bank.json', an: 'src/data/live-question-analyses.json' },
-  'stay-meomum': { bank: 'src/data/live-stay-question-bank.json', an: 'src/data/live-stay-question-analyses.json' },
-};
-
+// S-12 "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬).
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -76,21 +71,8 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
     return;
   }
   try {
-    const { scorecard } = await runWeeklyPipeline(tenant, store);
-    const weekOf = scorecard.weekOf;
-    const id = tenant.tenantId;
-    const seed = SEED_LIVE[id];
-    if (seed) {
-      // 시드 브랜드는 고정 파일명으로 복사 후 전체 재계산.
-      writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
-      const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
-      writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
-      execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
-    } else {
-      // 그 외(정식 브랜드·경쟁사)는 publish-tenant가 live 파일·레지스트리·스코어카드·순위까지 처리.
-      execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
-    }
-    res.json({ ok: true, tenantId: id, brandName: tenant.brandName, aeoScore: scorecard.aeoScore.current });
+    const result = await measureAndBake(tenant, store);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

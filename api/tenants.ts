@@ -26,11 +26,15 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   }
 
   if (req.method === 'GET') {
+    const allRaw = req.query?.all
+    const allFlag = Array.isArray(allRaw) ? allRaw[0] : allRaw
+    const all = allFlag === '1' || allFlag === 'true'
     const tenants = await loadRuntimeTenants();
+    const picked = all ? tenants : tenants.filter((tenant) => !tenant.cohortOnly);
     sendJson(
       res,
       200,
-      tenants.filter((tenant) => !tenant.cohortOnly).map(toTenantSummary),
+      picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })),
     );
     return;
   }

@@ -1,3 +1,4 @@
+import { triggerGithubMeasure } from '../server/githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
@@ -33,14 +34,31 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
     return;
   }
 
-  if (!blobStoreEnabled() && process.env.VERCEL) {
-    sendJson(res, 503, { error: '측정 요청을 저장하려면 프로젝트에 Blob 스토어(BLOB_READ_WRITE_TOKEN)가 필요합니다.' });
-    return;
-  }
-
   if (req.method === 'POST') {
+    const body = readBody(req) as { action?: string; tenantId?: string };
+    if (body?.action === 'run') {
+      const tenantId = typeof body.tenantId === 'string' ? body.tenantId.trim() : '';
+      if (!tenantId) {
+        sendJson(res, 400, { error: 'tenantId가 필요합니다.' });
+        return;
+      }
+      try {
+        const { htmlUrl } = await triggerGithubMeasure(tenantId);
+        sendJson(res, 202, { ok: true, via: 'github-actions', tenantId, htmlUrl });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        sendJson(res, 503, { error: message });
+      }
+      return;
+    }
+
+    if (!blobStoreEnabled() && process.env.VERCEL) {
+      sendJson(res, 503, { error: '측정 요청을 저장하려면 프로젝트에 Blob 스토어(BLOB_READ_WRITE_TOKEN)가 필요합니다.' });
+      return;
+    }
+
     try {
-      const tenant = normalizeTenantDraft(readBody(req));
+      const tenant = normalizeTenantDraft(body);
       const list = await addMeasureRequest(tenant);
       sendJson(res, 201, { ok: true, pending: list.length });
     } catch (err) {
