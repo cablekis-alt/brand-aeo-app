@@ -24,30 +24,6 @@
     "hallucinationFlags": []
   },
   {
-    "tenantId": "starline",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "스타라인성형외과의원",
-    "aeoScore": {
-      "current": 31,
-      "ma4": 31,
-      "previousWeek": 31,
-      "ciLow": 24.5,
-      "ciHigh": 37.5
-    },
-    "mentionRate": 0,
-    "shareOfMention": 0.0379746835443038,
-    "avgRecommendationRank": 1,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 4,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "banobagi",
     "weekOf": "2026-W36",
     "industry": "성형외과",
@@ -211,6 +187,30 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 5,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "starline",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "스타라인성형외과의원",
+    "aeoScore": {
+      "current": 30,
+      "ma4": 30,
+      "previousWeek": 30,
+      "ciLow": 19.9,
+      "ciHigh": 40.1
+    },
+    "mentionRate": 0,
+    "shareOfMention": 0.4166666666666667,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 4,
       "totalTenants": 6
     },
     "hallucinationFlags": []
