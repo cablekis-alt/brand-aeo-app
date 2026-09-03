@@ -24,30 +24,6 @@
     "hallucinationFlags": []
   },
   {
-    "tenantId": "wonjin",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "원진성형외과",
-    "aeoScore": {
-      "current": 33,
-      "ma4": 33,
-      "previousWeek": 33,
-      "ciLow": 23.1,
-      "ciHigh": 42.9
-    },
-    "mentionRate": 0.041666666666666664,
-    "shareOfMention": 0.46835443037974683,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 4,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": []
-  },
-  {
     "tenantId": "jjun",
     "weekOf": "2026-W36",
     "industry": "성형외과",
@@ -90,7 +66,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
+      "position": 4,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -211,6 +187,30 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "wonjin",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "원진성형외과",
+    "aeoScore": {
+      "current": 28,
+      "ma4": 28,
+      "previousWeek": 28,
+      "ciLow": 18.7,
+      "ciHigh": 37.3
+    },
+    "mentionRate": 0.041666666666666664,
+    "shareOfMention": 0.2807017543859649,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 5,
       "totalTenants": 6
     },
     "hallucinationFlags": []

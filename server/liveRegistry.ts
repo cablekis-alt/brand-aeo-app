@@ -9,6 +9,8 @@ import bank_example_brand from '../src/data/live-question-bank.json' with { type
 import analyses_example_brand from '../src/data/live-question-analyses.json' with { type: 'json' };
 import bank_stay_meomum from '../src/data/live-stay-question-bank.json' with { type: 'json' };
 import analyses_stay_meomum from '../src/data/live-stay-question-analyses.json' with { type: 'json' };
+import bank_wonjin from '../src/data/live-wonjin-question-bank.json' with { type: 'json' };
+import analyses_wonjin from '../src/data/live-wonjin-question-analyses.json' with { type: 'json' };
 
 export interface LiveAnalysesFile {
   tenantId: string;
@@ -21,6 +23,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'hdmpension': bank_hdmpension as QuestionBank,
   'example-brand': bank_example_brand as QuestionBank,
   'stay-meomum': bank_stay_meomum as QuestionBank,
+  'wonjin': bank_wonjin as QuestionBank,
 };
 
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
@@ -28,4 +31,5 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_hdmpension as LiveAnalysesFile,
   analyses_example_brand as LiveAnalysesFile,
   analyses_stay_meomum as LiveAnalysesFile,
+  analyses_wonjin as LiveAnalysesFile,
 ];
