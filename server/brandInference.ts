@@ -51,24 +51,36 @@ ${text.slice(0, 4000)}`;
 }
 
 /**
- * 온보딩 보조(B) — 페이지에서 주소를 못 찾았을 때, 브랜드명+지역으로 Gemini 웹검색 그라운딩을 돌려
- * 실제 도로명 주소를 조회한다. 응답에서 한국 주소 패턴만 뽑아 검증(환각 방지). 못 찾으면 "".
+ * 온보딩 보조(B) — 페이지에서 주소를 못 찾았을 때 브랜드명+지역으로 도로명 주소를 조회한다.
+ * 로컬·CI에선 Gemini 웹검색 그라운딩(정확), Vercel 서버리스에선 그라운딩이 동작하지 않으므로
+ * 순수 추론 recall로 폴백한다(모델 지식 기반 — 사용자 확인 전제). 응답은 한국 주소 정규식으로 검증(환각 방지).
  */
 export async function inferAddressViaSearch(brandName: string, region = ''): Promise<string> {
   if (!process.env.GEMINI_API_KEY || !brandName.trim()) return '';
   const system =
-    '당신은 한국 비즈니스의 실제 도로명 주소를 웹 검색으로 확인하는 도우미입니다. 확실하지 않으면 "모름"만 답하고, 주소를 지어내지 마세요.';
-  const user = `"${brandName}"${region ? ` (${region})` : ''}의 공식 도로명 주소를 웹에서 찾아 주소 한 줄만 답하세요.
+    '당신은 한국 비즈니스의 실제 도로명 주소를 아는 도우미입니다. 확실하지 않으면 "모름"만 답하고, 주소를 지어내지 마세요.';
+  const user = `"${brandName}"${region ? ` (${region})` : ''}의 공식 도로명 주소를 한 줄만 답하세요.
 예: "서울 강남구 봉은사로 107". 확실하지 않으면 "모름"이라고만 답하세요.`;
-  try {
-    const result = await new GeminiEngineClient().call({ system, user });
-    const text = (result.text ?? '').trim();
-    if (!text) return '';
-    const match = text.match(KR_ADDRESS);
-    return match ? match[0].trim() : '';
-  } catch {
-    return '';
+
+  // 1) 웹검색 그라운딩 — Vercel 서버리스에선 결과를 못 주므로 로컬·CI에서만 시도한다.
+  if (!process.env.VERCEL) {
+    try {
+      const grounded = await new GeminiEngineClient().call({ system, user });
+      const m = (grounded.text ?? '').match(KR_ADDRESS);
+      if (m) return m[0].trim();
+    } catch {
+      // 폴백으로 넘어간다.
+    }
   }
+  // 2) 순수 추론 recall — 모든 환경에서 동작하는 폴백/기본.
+  try {
+    const reasoned = await new GeminiJudgeClient().call({ system, user });
+    const m = (reasoned.text ?? '').match(KR_ADDRESS);
+    if (m) return m[0].trim();
+  } catch {
+    // 무시
+  }
+  return '';
 }
 
 export interface InferredCompetitor {
