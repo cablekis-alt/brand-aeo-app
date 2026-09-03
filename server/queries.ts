@@ -20,7 +20,7 @@ export interface CitationBreakdown {
   brandOwnedCitationRate: number;
 }
 
-/** S-05 URL 상세 분석 — 주간 응답에 등장한 인용을 도메인×소유권 기준으로 집계한다. */
+/** URL 상세 분석 — 주간 응답에 등장한 인용을 도메인×소유권 기준으로 집계한다. */
 export async function getCitationBreakdown(
   store: CitationSource,
   tenantId: string,
@@ -73,7 +73,7 @@ export interface RankingTenant {
   region: string;
 }
 
-/** S-07 랭킹 분석 — 업종·지역 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 번에 내려준다. */
+/** 랭킹 분석 — 업종·지역 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 번에 내려준다. */
 export async function getRankingView(
   store: RankingSource,
   tenant: RankingTenant,
@@ -116,7 +116,7 @@ export async function getRankingView(
   };
 }
 
-/** S-09 EEAT 분석 — B5 판정에서 Experience/Expertise/Authoritativeness/Trustworthiness를 집계한다. */
+/** EEAT 분석 — B5 판정에서 Experience/Expertise/Authoritativeness/Trustworthiness를 집계한다. */
 export async function getEeatAnalysis(
   store: CitationSource,
   tenantId: string,
@@ -126,7 +126,7 @@ export async function getEeatAnalysis(
   return computeEeatAnalysis(analyses);
 }
 
-/** S-10 AI 인용출처 분석 — 소유권을 넘어 출처 유형·엔진 치우침·합의 도메인을 집계한다. */
+/** AI 인용출처 분석 — 소유권을 넘어 출처 유형·엔진 치우침·합의 도메인을 집계한다. */
 export async function getCitationSourceAnalysis(
   store: CitationSource,
   tenantId: string,

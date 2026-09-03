@@ -3,7 +3,7 @@ import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../..
 import type { JsonRequest, JsonResponse } from '../../../server/httpJson.js';
 import { getEeatAnalysis } from '../../../server/queries.js';
 
-// S-09 EEAT 분석.
+// EEAT 분석.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

@@ -11,7 +11,7 @@ export interface InferredBrandFields {
 const EMPTY: InferredBrandFields = { industry: '', region: '', address: '' };
 
 /**
- * S-08 온보딩 보조 — 수집된 페이지 텍스트에서 업종·지역·주소를 Gemini로 추론한다.
+ * 온보딩 보조 — 수집된 페이지 텍스트에서 업종·지역·주소를 Gemini로 추론한다.
  * GEMINI_API_KEY가 없거나 실패하면 빈 값으로 강등한다(사용자가 직접 입력).
  */
 export async function inferBrandFields(pageText: string, brandName = ''): Promise<InferredBrandFields> {
@@ -72,7 +72,7 @@ async function verifiedDomain(raw: string): Promise<string> {
 }
 
 /**
- * S-08 온보딩 보조 — 같은 업종·지역의 경쟁 브랜드를 Gemini(웹 검색 그라운딩)로 추천한다.
+ * 온보딩 보조 — 같은 업종·지역의 경쟁 브랜드를 Gemini(웹 검색 그라운딩)로 추천한다.
  * 이름은 그대로 쓰되, 도메인은 실재 확인(DNS)에 통과한 것만 채우고 나머지는 빈 값(사용자 보완)으로 둔다.
  */
 export async function inferCompetitors(

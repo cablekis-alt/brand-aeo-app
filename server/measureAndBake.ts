@@ -18,7 +18,7 @@ export interface MeasureBakeResult {
   aeoScore: number;
 }
 
-/** 한 테넌트를 측정한 뒤 배포용 src/data에 baking한다. GitHub Actions·로컬 S-12가 같이 쓴다. */
+/** 한 테넌트를 측정한 뒤 배포용 src/data에 baking한다. GitHub Actions·로컬 단건 측정이 같이 쓴다. */
 export async function measureAndBake(tenant: TenantConfig, store: FileResultStore): Promise<MeasureBakeResult> {
   const inConfig = (await loadTenants()).some((item) => item.tenantId === tenant.tenantId);
   if (!inConfig) await appendTenant(tenant);

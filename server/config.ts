@@ -10,7 +10,7 @@ export async function loadTenants(): Promise<TenantConfig[]> {
 }
 
 /**
- * 새 테넌트를 tenants.config.json 배열 끝에 추가한다 (S-08 온보딩용).
+ * 새 테넌트를 tenants.config.json 배열 끝에 추가한다 (온보딩용).
  * tenantId가 이미 있으면 에러. 로컬 백엔드에서만 동작한다(배포 서버리스는 읽기 전용).
  */
 export async function appendTenant(tenant: TenantConfig): Promise<void> {

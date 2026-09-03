@@ -52,7 +52,7 @@ export interface FactClaimDetail {
   factGraphValue: string | null;
 }
 
-// S-02(브랜드 종합 진단)/S-05(URL 상세 분석)/S-07(랭킹 분석) 화면이 그대로 소비할 수 있도록
+// 브랜드 종합 진단/URL 상세 분석/랭킹 분석 화면이 그대로 소비할 수 있도록
 // B5-A~D 판정 결과를 요약(mentioned, shareOfMention 등)과 원본 상세를 함께 저장한다.
 export interface QuestionRepeatAnalysis {
   questionId: string;

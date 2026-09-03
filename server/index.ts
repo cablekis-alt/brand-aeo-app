@@ -93,7 +93,7 @@ app.delete('/api/tenants', async (req, res) => {
   }
 });
 
-// S-12 "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬).
+// "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬).
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -108,7 +108,7 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
   }
 });
 
-// S-08 브랜드 추가 — 온보딩 초안을 등록한다.
+// 브랜드 추가 — 온보딩 초안을 등록한다.
 app.post('/api/tenants', async (req, res) => {
   try {
     const tenant = normalizeTenantDraft(req.body);
@@ -121,7 +121,7 @@ app.post('/api/tenants', async (req, res) => {
   }
 });
 
-// S-08 — 등록된 테넌트를 즉시 측정한다 (수 분 소요). /api 프리픽스라 vite 프록시로 전달된다.
+// — 등록된 테넌트를 즉시 측정한다 (수 분 소요). /api 프리픽스라 vite 프록시로 전달된다.
 app.post('/api/tenants/:tenantId/run', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -144,7 +144,7 @@ app.get('/scorecards/:tenantId', async (req, res) => {
   res.json(await scorecardsFor(req.params.tenantId));
 });
 
-// S-02 브랜드 종합 진단 — 해당 주차의 문장 단위 판정 원본(언급/인용/순위/사실성)을 그대로 내려준다.
+// 브랜드 종합 진단 — 해당 주차의 문장 단위 판정 원본(언급/인용/순위/사실성)을 그대로 내려준다.
 app.get('/api/question-analyses/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -155,7 +155,7 @@ app.get('/api/question-analyses/:tenantId/:weekOf', async (req, res) => {
   res.json(await source.getQuestionAnalyses(tenant.tenantId, req.params.weekOf));
 });
 
-// S-04 질문 프롬프트 빌더 — ?version 없이 호출하면 테넌트에 설정된 현재 버전을 반환한다.
+// 질문 프롬프트 빌더 — ?version 없이 호출하면 테넌트에 설정된 현재 버전을 반환한다.
 app.get('/api/question-bank/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -168,7 +168,7 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
   res.json(bank ?? demoQuestionBank(tenant, latestWeek));
 });
 
-// S-05 URL 상세 분석 — 도메인×소유권 기준 인용 집계.
+// URL 상세 분석 — 도메인×소유권 기준 인용 집계.
 app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -179,7 +179,7 @@ app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
   res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf));
 });
 
-// S-09 EEAT 분석 — 답변에서 브랜드가 경험·전문성·권위·신뢰로 어떻게 그려지는지.
+// EEAT 분석 — 답변에서 브랜드가 경험·전문성·권위·신뢰로 어떻게 그려지는지.
 app.get('/api/eeat/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -190,7 +190,7 @@ app.get('/api/eeat/:tenantId/:weekOf', async (req, res) => {
   res.json(await getEeatAnalysis(source, tenant.tenantId, req.params.weekOf));
 });
 
-// S-10 AI 인용출처 분석 — 출처 유형·엔진 치우침·합의 도메인.
+// AI 인용출처 분석 — 출처 유형·엔진 치우침·합의 도메인.
 app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -201,7 +201,7 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
   res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
 });
 
-// S-07 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
+// 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
 app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -212,7 +212,7 @@ app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   res.json(await getRankingView(source, tenant, req.params.weekOf));
 });
 
-// S-03 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집).
+// 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집).
 app.get('/api/fetch', async (req, res) => {
   const target = typeof req.query.url === 'string' ? req.query.url : '';
   if (!target) {
@@ -223,7 +223,7 @@ app.get('/api/fetch', async (req, res) => {
   res.json(await collectPage(target));
 });
 
-// S-08 브랜드 추가 — Gemini 추론. ?kind=brand(업종·지역·주소) | competitors(경쟁사).
+// 브랜드 추가 — Gemini 추론. ?kind=brand(업종·지역·주소) | competitors(경쟁사).
 // 배포와 동일하게 한 라우트로 합친다(Vercel Hobby 함수 개수 제한 대응).
 app.post('/api/infer', async (req, res) => {
   const kind = typeof req.query.kind === 'string' ? req.query.kind : '';
@@ -251,8 +251,8 @@ app.post('/api/infer', async (req, res) => {
   }
 });
 
-// S-08/S-11 측정 요청 대기열. 로컬 백엔드엔 Blob 토큰이 없으므로, 배포(Blob)의 큐를 프록시로 읽어
-// 로컬 S-11이 실제 대기열을 보게 한다.
+// 측정 요청 대기열. 로컬 백엔드엔 Blob 토큰이 없으므로, 배포(Blob)의 큐를 프록시로 읽어
+// 로컬 대기열 처리가 실제 대기열을 보게 한다.
 const MEASURE_API_BASE = process.env.MEASURE_API_BASE ?? 'https://brand-aeo-app.vercel.app';
 
 async function fetchQueue(): Promise<import('./measureRequests.js').MeasureRequest[]> {
@@ -283,7 +283,7 @@ app.get('/api/measure-requests', async (req, res) => {
   }
 });
 
-// S-11 "측정 실행" — 대기열의 브랜드를 config 등록 + 측정 + publish + 대기열 정리까지 처리한다(로컬 전용).
+// "측정 실행" — 대기열의 브랜드를 config 등록 + 측정 + publish + 대기열 정리까지 처리한다(로컬 전용).
 app.post('/api/measure-requests/process', async (_req, res) => {
   try {
     const pending = await fetchQueue();

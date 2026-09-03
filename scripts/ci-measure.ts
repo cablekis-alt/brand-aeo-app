@@ -4,7 +4,7 @@ import { readMeasureRequests, removeMeasureRequest } from '../server/measureRequ
 import { FileResultStore } from '../server/store.js';
 import { loadRuntimeTenants, normalizeTenantDraft } from '../server/tenantRegistry.js';
 
-// S-11 대기열 전체를 러너에서 순차 처리하라는 신호(GitHub Actions 큐 모드).
+// 대기열 전체를 러너에서 순차 처리하라는 신호(GitHub Actions 큐 모드).
 const QUEUE_SENTINEL = '__queue__';
 
 /** 대기열(Blob)에 쌓인 브랜드를 하나씩 측정·baking하고, 성공한 항목만 대기열에서 제거한다. */
@@ -37,7 +37,7 @@ async function measureQueue(): Promise<void> {
   console.log(JSON.stringify({ processed: results.length, results }));
 }
 
-/** 테넌트 하나만 측정·baking한다(S-12 단건 경로). */
+/** 테넌트 하나만 측정·baking한다(단건 경로). */
 async function measureOne(tenantId: string): Promise<void> {
   const tenants = await loadRuntimeTenants();
   const tenant = tenants.find((item) => item.tenantId === tenantId);

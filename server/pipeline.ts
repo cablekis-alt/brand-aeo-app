@@ -254,7 +254,7 @@ function aggregateScorecard(
 
   // SoM(Share of Voice) = 표준 정의인 "횟수 기준": 내 언급 총합 / (내 언급 + 경쟁사 언급) 총합.
   // 응답별 비율을 단순 평균하면 언급이 적은 응답이 과대 반영되므로, 횟수 기준으로 집계한다
-  // (S-07 랭킹 화면과 동일). 경쟁사가 없거나 아무 언급도 없으면 측정 불가(null).
+  // (랭킹 분석 화면과 동일). 경쟁사가 없거나 아무 언급도 없으면 측정 불가(null).
   const hasCompetitors = tenant.competitors.length > 0;
   const brandMentionTotal = analyses.reduce((sum, a) => sum + a.mentionSentences.length, 0);
   const competitorMentionTotal = analyses.reduce(
@@ -271,7 +271,7 @@ function aggregateScorecard(
   const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
   const factualityScore = totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : 1;
 
-  // 브랜드 소유 출처 = "인용 단위"(전체 인용 중 자사 도메인 비중, S-05 화면과 동일).
+  // 브랜드 소유 출처 = "인용 단위"(전체 인용 중 자사 도메인 비중, URL 상세 분석 화면과 동일).
   // 이전의 "자사 인용을 포함한 응답 비율"과 달리 라벨("인용이 자사 도메인으로 연결된 비율")과 일치한다.
   const totalCitations = analyses.reduce((sum, a) => sum + a.citations.length, 0);
   const brandOwnedCitations = analyses.reduce(

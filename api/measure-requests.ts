@@ -19,7 +19,7 @@ function readBody(req: JsonRequest): unknown {
   return body ?? {};
 }
 
-// S-08 — 배포에서 측정을 바로 못 돌리므로, "측정 요청"을 대기열(Blob)에 쌓아 로컬 CLI가 처리하게 한다.
+// — 배포에서 측정을 바로 못 돌리므로, "측정 요청"을 대기열(Blob)에 쌓아 로컬 CLI가 처리하게 한다.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;

@@ -43,7 +43,7 @@ export async function triggerGithubMeasure(tenantId: string): Promise<{ htmlUrl:
   return dispatchWorkflow('measure.yml', { tenantId });
 }
 
-/** S-11 측정 대기열 전체를 GitHub Actions 한 번의 실행으로 순차 측정하도록 트리거한다. */
+/** 측정 대기열 전체를 GitHub Actions 한 번의 실행으로 순차 측정하도록 트리거한다. */
 export async function triggerGithubQueueMeasure(): Promise<{ htmlUrl: string }> {
   return triggerGithubMeasure(QUEUE_SENTINEL);
 }
@@ -64,7 +64,7 @@ export interface MeasureRunInfo {
   htmlUrl: string;
 }
 
-/** S-14 측정 상태 — 최근 measure 워크플로우 실행 목록을 반환한다(토큰 필요). */
+/** 측정 상태 — 최근 measure 워크플로우 실행 목록을 반환한다(토큰 필요). */
 export async function listMeasureRuns(limit = 15): Promise<{ enabled: boolean; runs: MeasureRunInfo[] }> {
   const token = process.env.GH_MEASURE_TOKEN;
   if (!token) return { enabled: false, runs: [] };

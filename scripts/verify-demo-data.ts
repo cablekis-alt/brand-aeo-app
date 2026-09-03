@@ -1,6 +1,6 @@
 /**
  * 데모 판정 데이터가 demo-scorecards.json의 주간 지표를 실제로 재현하는지 확인한다.
- * 화면(S-02/04/06)이 이 레코드를 다시 집계하므로, 어긋나면 대시보드 수치와 상세 화면이 불일치한다.
+ * 화면이 이 레코드를 다시 집계하므로, 어긋나면 대시보드 수치와 상세 화면이 불일치한다.
  *
  *   npx tsx scripts/verify-demo-data.ts
  */
@@ -54,7 +54,7 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0);
     const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
     const derivedFact = supported + contradicted > 0 ? supported / (supported + contradicted) : 1;
-    // 브랜드 소유 출처는 "인용 단위"(전체 인용 중 자사 도메인 비중, S-05와 동일)로 통일됐다.
+    // 브랜드 소유 출처는 "인용 단위"(전체 인용 중 자사 도메인 비중, URL 상세 분석과 동일)로 통일됐다.
     const totalCitations = analyses.reduce((s, a) => s + a.citations.length, 0);
     const brandOwnedCitations = analyses.reduce(
       (s, a) => s + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
@@ -101,7 +101,7 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
 
 async function main() {
   let failures = 0;
-  // cohortOnly 경쟁사는 상세 화면(S-02/05/07)이 없고 코호트 랭킹에 스코어카드만 쓰이므로
+  // cohortOnly 경쟁사는 상세 화면이 없고 코호트 랭킹에 스코어카드만 쓰이므로
   // 스코어카드↔분석 정합성 검증 대상에서 제외한다.
   for (const tenant of (tenants as TenantConfig[]).filter((t) => !t.cohortOnly)) {
     failures += await verifyTenant(tenant);

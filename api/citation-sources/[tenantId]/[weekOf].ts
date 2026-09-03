@@ -3,7 +3,7 @@ import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../..
 import type { JsonRequest, JsonResponse } from '../../../server/httpJson.js';
 import { getCitationSourceAnalysis } from '../../../server/queries.js';
 
-// S-10 AI 인용출처 분석.
+// AI 인용출처 분석.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

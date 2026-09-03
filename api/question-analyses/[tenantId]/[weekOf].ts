@@ -2,7 +2,7 @@ import { DemoResultStore } from '../../../server/demoStore.js';
 import { acceptGet, findTenant, param, sendJson, tenantNotFound } from '../../../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../../../server/httpJson.js';
 
-// S-02 브랜드 종합 진단.
+// 브랜드 종합 진단.
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (!acceptGet(req, res)) return;
 

@@ -1,5 +1,5 @@
 /**
- * S-08 측정 대기열 처리 — 배포 사이트에서 "브랜드 등록"으로 쌓인 측정 요청을 로컬에서 처리한다.
+ * 측정 대기열 처리 — 배포 사이트에서 "브랜드 등록"으로 쌓인 측정 요청을 로컬에서 처리한다.
  *   npx tsx scripts/measure-requests.ts             # 대기열 목록만 표시
  *   npx tsx scripts/measure-requests.ts --measure   # config 등록 + 측정 + publish + 대기열 정리
  * 이후 git commit + npx vercel --prod 로 공개된다. (측정엔 OpenAI/Gemini 키 필요)
