@@ -116,6 +116,26 @@ export default function BrandOnboarding() {
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
   const [suggestingComp, setSuggestingComp] = useState(false)
   const [compMsg, setCompMsg] = useState<string | null>(null)
+  // 코호트 표기 불일치 방지 — 기존 브랜드의 업종·지역을 자동완성으로 제공한다.
+  const [cohortIndustries, setCohortIndustries] = useState<string[]>([])
+  const [cohortRegions, setCohortRegions] = useState<string[]>([])
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/tenants?all=1')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: { industry?: string; region?: string }[]) => {
+        if (!alive || !Array.isArray(list)) return
+        const uniq = (vals: (string | undefined)[]) =>
+          [...new Set(vals.filter((v): v is string => Boolean(v && v.trim())))].sort((a, b) => a.localeCompare(b, 'ko'))
+        setCohortIndustries(uniq(list.map((t) => t.industry)))
+        setCohortRegions(uniq(list.map((t) => t.region)))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // 배포(Vercel)에서도 /api/health가 canRegister를 알려 준다.
   useEffect(() => {
@@ -426,11 +446,44 @@ export default function BrandOnboarding() {
           </label>
           <label className="field">
             <span>업종 *</span>
-            <input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="예: 성형외과" />
+            <input
+              type="text"
+              list="cohort-industries"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+              placeholder="예: 성형외과"
+            />
+            <datalist id="cohort-industries">
+              {cohortIndustries.map((v) => (
+                <option key={v} value={v} />
+              ))}
+            </datalist>
+            <span className="hint">
+              코호트 랭킹은 <b>업종·지역이 정확히 일치</b>해야 같은 그룹입니다. 기존 값이 있으면 목록에서 고르세요.
+            </span>
+            {industry.trim() && cohortIndustries.length > 0 && !cohortIndustries.includes(industry.trim()) && (
+              <span className="hint">⚠ 기존 코호트에 없는 업종입니다 — 새 코호트로 분리됩니다.</span>
+            )}
           </label>
           <label className="field">
             <span>지역 *</span>
-            <input type="text" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="예: 서울 강남" />
+            <input
+              type="text"
+              list="cohort-regions"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder="예: 서울 강남"
+            />
+            <datalist id="cohort-regions">
+              {cohortRegions.map((v) => (
+                <option key={v} value={v} />
+              ))}
+            </datalist>
+            {region.trim() && cohortRegions.length > 0 && !cohortRegions.includes(region.trim()) && (
+              <span className="hint">
+                ⚠ 기존 코호트에 없는 지역입니다 — 새 코호트로 분리됩니다. 의도한 것이 아니면 기존 값과 맞추세요.
+              </span>
+            )}
           </label>
           <label className="field span2">
             <span>주소 (Fact Graph · 선택)</span>

@@ -1,5 +1,5 @@
 /**
- * 저장된 실측 분석으로부터 9개 테넌트 스코어카드를 새 점수식으로 재계산한다 (새 API 호출 없음).
+ * 저장된 실측 분석으로부터 등록된 모든 테넌트의 스코어카드를 새 점수식으로 재계산한다 (새 API 호출 없음).
  * computeAeoScore가 바뀔 때(예: 순위 null 재정규화) 반영용.
  *   - 브랜드(example-brand, stay-meomum): src/data/live-*-question-analyses.json + live-*-question-bank.json
  *   - 경쟁사(cohortOnly): data/<tenant>/2026-W36/question-analyses.json + data/<tenant>/question-bank/<ver>.json
