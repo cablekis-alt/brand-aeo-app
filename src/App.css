@@ -720,6 +720,10 @@
 .top {
   margin-bottom: 28px;
 }
+/* 브랜드 박스가 숨겨진 관리·측정 화면에선 빈 헤더가 여백을 남기지 않게 접는다. */
+.top:empty {
+  margin-bottom: 0;
+}
 
 .brand {
   letter-spacing: 0.16em;
