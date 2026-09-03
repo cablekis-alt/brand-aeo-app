@@ -1,0 +1,2488 @@
+{
+  "tenantId": "starlineps",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.sswan.co.kr/?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/07/jw-jeongwon-revision-philosophy/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/07/jw-jeongwon-revision-philosophy/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/07/jw-jeongwon-revision-philosophy/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ceraclinic.kr/about_doctors?utm_source=openai",
+          "domain": "ceraclinic.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ceraclinic.kr/about_doctors?utm_source=openai",
+          "domain": "ceraclinic.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/07/jw-jeongwon-revision-philosophy/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/06/01/gangnam-revision-plastic-surgery/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/08/31/gangnam-plastic-surgery-3/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/08/31/gangnam-plastic-surgery-3/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/08/31/gangnam-plastic-surgery-3/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medseoul.com/clinics/pac1f95o5p/naver-blog/noteprs01/223547877082?utm_source=openai",
+          "domain": "medseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medseoul.com/clinics/pac1f95o5p/naver-blog/noteprs01/223547877082?utm_source=openai",
+          "domain": "medseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/08/gangnam-revision-blepharoplasty-clinic/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/08/gangnam-revision-blepharoplasty-clinic/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "www.sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "www.sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-revision-eye?utm_source=openai",
+          "domain": "www.plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-revision-eye?utm_source=openai",
+          "domain": "www.plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-revision-eye?utm_source=openai",
+          "domain": "www.plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-revision-eye?utm_source=openai",
+          "domain": "www.plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/948?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/948?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hicell.co.kr/?utm_source=openai",
+          "domain": "hicell.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hicell.co.kr/?utm_source=openai",
+          "domain": "hicell.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.jwbeauty.com/2026/07/08/gangnam-revision-blepharoplasty-clinic/?utm_source=openai",
+          "domain": "blog.jwbeauty.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/reoperation?utm_source=openai",
+          "domain": "www.sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/948?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-revision-eye?utm_source=openai",
+          "domain": "www.plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://clinicinkor.com/kr/gangnam-plastic-surgery-3-clinics-guide/?utm_source=openai",
+          "domain": "clinicinkor.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sisunps.com/v1/12/view_06.php?utm_source=openai",
+          "domain": "sisunps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sisunps.com/v1/12/view_06.php?utm_source=openai",
+          "domain": "sisunps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.skylineclinic.co.kr/?redirect=1&utm_source=openai",
+          "domain": "skylineclinic.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.skylineclinic.co.kr/?redirect=1&utm_source=openai",
+          "domain": "skylineclinic.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jobploy.kr/ko/company/yellow-plastic-surgery-clinic?utm_source=openai",
+          "domain": "jobploy.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.naturalface.co.kr/intro/index.php?reqPageNo=4%3FreqPageNo%3D8&utm_source=openai",
+          "domain": "m.naturalface.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wseoul.knou.ac.kr/bbs/regional/2359/74976/download.do?utm_source=openai",
+          "domain": "wseoul.knou.ac.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://cometrueps.com/?idx=c65a095a1636a3%2Fc65a095e5636b4&utm_source=openai",
+          "domain": "cometrueps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.fixinc.co.kr/samples/plastic.html?utm_source=openai",
+          "domain": "fixinc.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rineps.com/?utm_source=openai",
+          "domain": "rineps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://404foundme.com/demos/real-plastic/about.html?utm_source=openai",
+          "domain": "404foundme.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ggnps.com/for-ai/index.html?utm_source=openai",
+          "domain": "ggnps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wonderfulps.kr/Eyes/Semiout?utm_source=openai",
+          "domain": "wonderfulps.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://editionps.com/blog/gangnam-plastic-surgery-clinic-checklist?utm_source=openai",
+          "domain": "editionps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sisunps.com/v1/12/view_06.php?utm_source=openai",
+          "domain": "sisunps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sisunps.com/v1/12/view_06.php?utm_source=openai",
+          "domain": "sisunps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.fixinc.co.kr/samples/plastic.html?utm_source=openai",
+          "domain": "fixinc.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.fixinc.co.kr/samples/plastic.html?utm_source=openai",
+          "domain": "fixinc.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.delightsurgery.co.kr/clinicInfoDelight/delight/demis.php?utm_source=openai",
+          "domain": "delightsurgery.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.delightsurgery.co.kr/clinicInfoDelight/delight/demis.php?utm_source=openai",
+          "domain": "delightsurgery.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.naturalface.co.kr/intro/index.php?reqPageNo=6%3FreqPageNo%3D11%3FreqPageNo%3D1&utm_source=openai",
+          "domain": "naturalface.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.naturalface.co.kr/intro/index.php?reqPageNo=6%3FreqPageNo%3D11%3FreqPageNo%3D1&utm_source=openai",
+          "domain": "naturalface.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cometrueps.com/index.php?idx=c65a095a2636ad&utm_source=openai",
+          "domain": "cometrueps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cometrueps.com/index.php?idx=c65a095a2636ad&utm_source=openai",
+          "domain": "cometrueps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d03/731533?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.100plasticsurgery.com/eye_double_eyelid.html?utm_source=openai",
+          "domain": "100plasticsurgery.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/1322019633/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/walk/8731?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/faq?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thereisnolimit12.tistory.com/1?utm_source=openai",
+          "domain": "thereisnolimit12.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "• **디에이성형외과**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "3. 팝성형외과 / 디에이성형외과 / 나나성형외과 / 블리스의원 – 평점 좋음, 자연유착 시술 제공",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d03/731533?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://web.babitalk.com/events/56588?utm_source=openai",
+          "domain": "web.babitalk.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.amondps.com/real_review/4971?utm_source=openai",
+          "domain": "amondps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.100plasticsurgery.com/eye_double_eyelid.html?utm_source=openai",
+          "domain": "100plasticsurgery.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thereisnolimit12.tistory.com/1?utm_source=openai",
+          "domain": "thereisnolimit12.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "## 2. 디에이성형외과",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 디에이성형외과 | 저렴한 가격, 높은 평점 |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "1. **후기와 평점 참고**: 아우어, 아몬드, 디에이, 바노바기 등은 후기가 좋고 평점도 높습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "## 3. 바노바기성형외과의원",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 바노바기성형외과 | 평점 우수, 가격 경쟁력 있음 |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "1. **후기와 평점 참고**: 아우어, 아몬드, 디에이, 바노바기 등은 후기가 좋고 평점도 높습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d03/731533?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/walk/3469?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/walk/3469?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/free/1136783?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.amondps.com/real_review/4971?utm_source=openai",
+          "domain": "amondps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.100plasticsurgery.com/eye_double_eyelid.html?utm_source=openai",
+          "domain": "100plasticsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.100plasticsurgery.com/eye_double_eyelid.html?utm_source=openai",
+          "domain": "100plasticsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gkbeauty.co.kr/pages/eyes?utm_source=openai",
+          "domain": "gkbeauty.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gkbeauty.co.kr/pages/eyes?utm_source=openai",
+          "domain": "gkbeauty.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "- **원진성형외과의원** (강남대로 419, 강남역 인근)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 일퍼센트 / 쥬얼리 / 원진 | 신사/강남역 | 언급만 / 정보 필요 | 정보 제한적 | – | 상담 시 확인 필요 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "기타 **일퍼센트, 쥬얼리, 원진, 시너지** 등도 후보가 될 수 있으나, 상담을 통해 마취상황, 수술 방식, 관리 시스템을 직접 확인하는 것이 중요합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/6634?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/facial-contouring-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dlrmsdn.tistory.com/entry/%EC%8B%A0%EC%82%AC%EB%8F%99-%EC%95%88%EB%A9%B4%EC%9C%A4%EA%B3%BD-%EC%88%98%EC%88%A0-%EC%9E%98%ED%95%98%EB%8A%94-%EA%B3%B3-TOP-10-%EC%B6%94%EC%B2%9C?utm_source=openai",
+          "domain": "dlrmsdn.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/6634?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "4. **원진성형외과 (강남역 인근)**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "- 강남역 인근에서는 **원진성형외과**, **베리굿성형외과**, **리엔장성형외과**, **라엘성형외과** 등이 추천됩니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.tsprs.com/contour/contour01.php?utm_source=openai",
+          "domain": "tsprs.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lhezz.com/?utm_source=openai",
+          "domain": "lhezz.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/facial-contouring-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.khidi.or.kr/news/201403/news/201403.pdf?utm_source=openai",
+          "domain": "khidi.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.expathealthseoul.com/forum%2Clisting%2Chealth-blog%2Ckorea-clinic-promotions%2Ccost/dentists-in-seoul-gangnam%2Cfacial-contouring?sort=popular&utm_source=openai",
+          "domain": "expathealthseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://babitalk.com/hospitals/2687?utm_source=openai",
+          "domain": "babitalk.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.fixinc.co.kr/samples/plastic.html?utm_source=openai",
+          "domain": "fixinc.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.h-mihak.com/contour/reoperation?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tsprs.com/contour/contour01.php?utm_source=openai",
+          "domain": "tsprs.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lhezz.com/?utm_source=openai",
+          "domain": "lhezz.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.fixinc.co.kr/samples/plastic.html?utm_source=openai",
+          "domain": "fixinc.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/6634?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-station-rhinoplasty-best-clinic?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/542?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://batangps.co.kr/?utm_source=openai",
+          "domain": "batangps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bst-ps.com/?idx=ct_5c6e0edc12b15%2Fct_5c6e0f1b12b35&utm_source=openai",
+          "domain": "bst-ps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://soonplus.com/sub/eyes/06/a/sub_1?utm_source=openai",
+          "domain": "soonplus.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://unupskorea.com/?utm_source=openai",
+          "domain": "unupskorea.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://unupskorea.com/?utm_source=openai",
+          "domain": "unupskorea.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://en.wesheps.com/?utm_source=openai",
+          "domain": "en.wesheps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://en.wesheps.com/?utm_source=openai",
+          "domain": "en.wesheps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.myeongdong.health/best-gangnam-clinics/breast-surgery-clinics-in-gangnam?utm_source=openai",
+          "domain": "myeongdong.health",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.realself.com/practices/wooa-plastic-surgery-clinic-gangnam-gu-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-breast-augmentation-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-breast-augmentation-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-breast-augmentation-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamwomenshealth.com/top-clinics-in-korea/best-breast-augmentation-clinics-in-seoul?utm_source=openai",
+          "domain": "gangnamwomenshealth.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://daprseng.com/safety/aftercare.php?utm_source=openai",
+          "domain": "daprseng.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://daprseng.com/safety/aftercare.php?utm_source=openai",
+          "domain": "daprseng.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://inflo.kr/en/service/hospital_view.php?idx=89&utm_source=openai",
+          "domain": "inflo.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://inflo.kr/en/service/hospital_view.php?idx=89&utm_source=openai",
+          "domain": "inflo.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://beautyreview.store/gangnam-toyo-kuchikomi-ranking-ko/?utm_source=openai",
+          "domain": "beautyreview.store",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beautyreview.store/gangnam-toyo-kuchikomi-ranking-ko/?utm_source=openai",
+          "domain": "beautyreview.store",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/7141?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/7141?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/347?tabindex=2&utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/347?tabindex=2&utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.soonplus.com/?utm_source=openai",
+          "domain": "soonplus.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.hidoc.co.kr/find/doctor/default/U0000177467?utm_source=openai",
+          "domain": "hidoc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hidoc.co.kr/find/doctor/default/U0000177467?utm_source=openai",
+          "domain": "hidoc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://health.gangnam.go.kr/web/community/news/1071084/view.do?utm_source=openai",
+          "domain": "health.gangnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://health.gangnam.go.kr/web/community/news/1071084/view.do?utm_source=openai",
+          "domain": "health.gangnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mygohyangnews.com/news/article.html?no=74940&utm_source=openai",
+          "domain": "mygohyangnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mygohyangnews.com/news/article.html?no=74940&utm_source=openai",
+          "domain": "mygohyangnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/community?bn_id=1674631&utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/36294945/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cashdoc.me/community/seoul/127990713?utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pspskorea.com/ko/pages/about.html?utm_source=openai",
+          "domain": "pspskorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.shoshoneglass.com/?utm_source=openai",
+          "domain": "shoshoneglass.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.shoshoneglass.com/?utm_source=openai",
+          "domain": "shoshoneglass.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.cara-ps.co.kr/page/sub01?utm_source=openai",
+          "domain": "cara-ps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.beandyoung.com/about/?utm_source=openai",
+          "domain": "beandyoung.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ggnps.com/clinicInfoGgn/lift/thread.php?utm_source=openai",
+          "domain": "ggnps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gongganprs.com/page/sub03_04?utm_source=openai",
+          "domain": "gongganprs.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과 눈·코 수술에 대한 후기와 평판을 요약해드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "강남언니 플랫폼에서 확인한 스타라인성형외과의 평점은 9.5점이며, 총 440개의 후기가 등록되어 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d03/748774?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/d03/748774?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/free/6451381?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newstomato.com/ReadNews.aspx?no=735407&utm_source=openai",
+          "domain": "newstomato.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/d03/748774?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/free/6451381?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과의 대표원장은 이상환 원장이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스타라인성형외과는 2017년에 개원 10주년을 기념해 압구정에서 신논현역으로 확장 이전했다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "강남언니 플랫폼에서 스타라인성형외과의 평점은 9.5점이며 후기는 총 440개 등록되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과(서울 강남구 논현동, 신논현역 인근)에서의 눈·코 수술 관련 후기와 평판을 아래에 정리해드릴게요:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**강남언니 플랫폼**에 따르면, 스타라인성형외과는 **후기 440건**, 평점 **9.5/10**의 평가를 받고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d03/747488?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/d03/747488?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/d03/747488?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/d03/747488?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/free/6451381?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vling.net/channel/UC3FPENOh9PiPpBL2c2PLzew/channel-info?utm_source=openai",
+          "domain": "vling.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과가 서울 강남구 논현동, 신논현역 인근에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "서울 강남구 논현동, 신논현역 인근",
+          "factGraphValue": "서울특별시 강남구 봉은사로 105"
+        },
+        {
+          "claimText": "스타라인성형외과는 강남언니 플랫폼에서 후기 440건, 평점 9.5/10의 평가를 받고 있다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스타라인성형외과는 이상환 원장이 대표로 진료를 전담한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과(서울 강남 신논현역 인근)의 눈·코 성형에 대한 후기와 평판에 대해 찾아본 결과, 온라인 후기는 제한적인 상황이며 직접적인 눈·코 수술 후기는 다수 확인되지 않았습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "• gangnamunni(강남언니) 플랫폼에서는 스타라인성형외과의 다양한 시술 후기 총 440건이 등록되어 있고, 병원 전체 평점은 9.5로 높은 편입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "• 성예사 커뮤니티글에서는 “스타라인성형외과 ㅂㅈ”이라는 표현과 함께 코 성형을 받은 사람의 후기를 묻는 게시글이 있었지만, 반응은 전혀 없었습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "• 스타라인성형외과의 공식 유튜브 채널에는 이상환 대표원장의 성형 정보, 시술 노하우, 리프팅·눈성형 관련 콘텐츠가 다수 있으며, 병원 측은 개인의 얼굴에 맞춘 맞춤형 수술을 지향한다고 설명하고 있습니다 ([vling.net](https://vling.net/channel/UC3FPENOh9PiPpBL2c2PLzew/channel-info?utm_source=openai)).",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "정리하자면, 스타라인성형외과는 눈·코 수술 분야에서 명시적인 개인 후기는 많지 않지만, 병원 자체 플랫폼 내에서는 높은 평점과 여러 후기 건수를 보이고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/free/6451381?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vling.net/channel/UC3FPENOh9PiPpBL2c2PLzew/channel-info?utm_source=openai",
+          "domain": "vling.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과는 서울 강남 신논현역 인근에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "서울 강남 신논현역 인근",
+          "factGraphValue": "서울특별시 강남구 봉은사로 105"
+        },
+        {
+          "claimText": "강남언니 플랫폼에 스타라인성형외과의 시술 후기 총 440건이 등록되어 있고 병원 전체 평점은 9.5점이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스타라인성형외과의 대표원장은 이상환이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과와 바노바기성형외과는 각각 다른 성형 스타일과 전문성을 갖고 있는 것으로 알려져 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "1. **스타라인성형외과**: 자연스러운 결과를 중시하며, 개개인의 얼굴에 맞는 맞춤형 성형을 지향합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "스타라인성형외과와 바노바기성형외과는 각각 다른 성형 스타일과 전문성을 갖고 있는 것으로 알려져 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "2. **바노바기성형외과**: 보다 트렌디하고 세련된 스타일을 선호하는 경향이 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과와 바노바기성형외과는 둘 다 한국에서 유명한 성형외과로, 각각의 스타일과 특징이 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "1. **스타라인성형외과**:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "스타라인성형외과와 바노바기성형외과는 둘 다 한국에서 유명한 성형외과로, 각각의 스타일과 특징이 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "2. **바노바기성형외과**:",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "주로 눈이나 코 성형에서부터 얼굴 전체 윤곽에 이르기까지 다양한 수술을 제공합니다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과와 바노바기성형외과는 각각 고유의 스타일과 접근 방식을 가지고 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**스타라인성형외과**는 자연스러움을 강조하며, 환자 개개인의 얼굴에 맞춘 맞춤형 성형을 지향합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "스타라인성형외과와 바노바기성형외과는 각각 고유의 스타일과 접근 방식을 가지고 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "**바노바기성형외과**는 명확하고도 세련된 이미지 변화를 선호합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "원진성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과 상담이 얼마나 꼼꼼한지, 방문객들의 평가가 궁금하신 거군요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/hlist/1530?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vling.net/channel/UC3FPENOh9PiPpBL2c2PLzew/channel-info?utm_source=openai",
+          "domain": "vling.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과의 이상환 대표원장이 직접 처음부터 끝까지 진료한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "강남언니 플랫폼에서 스타라인성형외과의 상담 리뷰 점수가 10.0 (리뷰 수 60건)이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스타라인성형외과 이상환 원장이 유튜브 채널을 운영하며 정보를 제공하고 있다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과 이상환 대표원장의 상담 스타일과 후기 관련 정보를 아래에 정리해드릴게요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.gangnamunni.com/hospitals/566?utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kmib.co.kr/article/view.asp?arcid=0017970814&utm_source=openai",
+          "domain": "kmib.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과의 대표원장은 이상환이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "강남언니 플랫폼에 스타라인성형외과에 등록된 후기가 약 440건이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스타라인성형외과 상담에 관심 있으시군요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "유튜브 채널 설명에 따르면, 스타라인성형외과 이상환 대표원장은 “천편일률적인 수술 방법을 지양하며, 환자 개인에 맞는 맞춤형 수술법을 적용하여 원하는 미적 가치를 함께 찾고자 한다”고 강조하고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "혹시 네이버 블로그, 인스타그램, 또는 “강남언니” 같은 성형 전문 후기 플랫폼을 통해 “스타라인성형외과 상담 후기” 또는 “이상환 원장 상담 후기” 등을 검색해 보시는 것을 권합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.starlineps.co.kr/pub/starline%2B/eliminatingscars.php?utm_source=openai",
+          "domain": "starlineps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vling.net/channel/UC3FPENOh9PiPpBL2c2PLzew/channel-info?utm_source=openai",
+          "domain": "vling.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과의 대표원장은 이상환이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": "이상환 대표원장",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남권, 특히 스타라인성형외과나 원진성형외과처럼 규모 있는 성형외과에서 쌍꺼풀 수술(눈성형)을 받으실 경우, 수술 방식(매몰법 vs. 절개법), 병원 인지도, 원장 경력, 회복 관리 시스템 등에 따라 비용 편차가 큽니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "강남권, 특히 스타라인성형외과나 원진성형외과처럼 규모 있는 성형외과에서 쌍꺼풀 수술(눈성형)을 받으실 경우, 수술 방식(매몰법 vs. 절개법), 병원 인지도, 원장 경력, 회복 관리 시스템 등에 따라 비용 편차가 큽니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "원진성형외과의 정확한 비용은 공식 홈페이지나 상담을 통해 확인하시는 게 가장 정확합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
+          "domain": "beauty.cceeo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thereisnolimit12.tistory.com/1?utm_source=openai",
+          "domain": "thereisnolimit12.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "www.localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://isclinic.co.kr/double-eyelid-surgery-cost-2026/?utm_source=openai",
+          "domain": "isclinic.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://clkwiseinfo.com/%EC%8C%8D%EC%88%98%ED%95%98%EB%A0%A4%EB%A9%B4-%EC%96%BC%EB%A7%88-%ED%95%84%EC%9A%94%ED%95%A0%EA%B9%8C-%EC%B5%9C%EC%8B%A0-%EC%8C%8D%EA%BA%BC%ED%92%80-%EC%88%98%EC%88%A0%EB%B9%84%EC%9A%A9%EA%B3%BC/?utm_source=openai",
+          "domain": "clkwiseinfo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.news1.kr/amp/bio/general/5705370?utm_source=openai",
+          "domain": "www.news1.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과는 강남권에 위치한다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남권",
+          "factGraphValue": "서울특별시 강남구 봉은사로 105"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 지역에서 스타라인성형외과나 원진성형외과 같은 병원을 기준으로 쌍꺼풀 수술의 대략적인 비용대를 아래에 정리했습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "필요하시면 특정 병원(예: 스타라인성형외과)의 공식 홈페이지나 상담센터에서 별도 상담 및 정확한 견적도 받아보시는 걸 추천드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "강남 지역에서 스타라인성형외과나 원진성형외과 같은 병원을 기준으로 쌍꺼풀 수술의 대략적인 비용대를 아래에 정리했습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "원진성형외과 웹사이트 기준으로:",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "- **원진성형외과**: 약 29만 원부터 시작 (할인 이벤트 기준)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "- **부가세 포함 여부**는 병원마다 다를 수 있으므로 상담 시 확인이 필요합니다. (예: 원진성형외과는 VAT 별도 명시)",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "- **아이디병원 (강남·신사역)**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "- **아이디병원**: 평균 약 100만 원",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://m.k-wonjin.co.kr/landing/common_event?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://isclinic.co.kr/double-eyelid-surgery-cost-2026/?utm_source=openai",
+          "domain": "isclinic.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://isclinic.co.kr/double-eyelid-surgery-cost-2026/?utm_source=openai",
+          "domain": "isclinic.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/assistant_logs/336?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/assistant_logs/336?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.idhospital.com/kin/view/page/40/docId/313917433?utm_source=openai",
+          "domain": "idhospital.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/landing/common_event?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/landing/common_event?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과는 강남 지역에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남 지역",
+          "factGraphValue": "서울특별시 강남구 봉은사로 105"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 지역, 특히 **스타라인성형외과**나 **원진성형외과**와 같은 곳에서의 쌍꺼풀 수술 비용은 여러 요인에 따라 달라지며, 수술 방식(매몰법, 자연유착, 절개법 등), 병원의 브랜드/위치, 이벤트 여부, 눈 상태에 따른 추가 수술 여부 등에 따라 크게 차이가 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "필요하시면 원하시는 구체적인 병원(예: 스타라인성형외과)이나 수술 방식(매몰/자연유착/절개 등)에 따라 더 상세하게 안내드릴 수 있어요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "원진성형외과",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "강남 지역, 특히 **스타라인성형외과**나 **원진성형외과**와 같은 곳에서의 쌍꺼풀 수술 비용은 여러 요인에 따라 달라지며, 수술 방식(매몰법, 자연유착, 절개법 등), 병원의 브랜드/위치, 이벤트 여부, 눈 상태에 따른 추가 수술 여부 등에 따라 크게 차이가 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "##  원진성형외과 사례 정보",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 원진성형외과 올아이 이벤트 | 100만 원부터 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 원진성형외과 재수술 | 약 180만 ~ 250만 원 (후기 기준) |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "아이디병원",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/m/5?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
+          "domain": "beauty.cceeo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=98&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/gangnam-station-double-eyelid?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thereisnolimit12.tistory.com/1?utm_source=openai",
+          "domain": "thereisnolimit12.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/landing/common_event?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/583224?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/en/plugin/mobile/board.php?bo_table=hlist&page=3&wr_id=1699&utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/landing/common_event?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thereisnolimit12.tistory.com/1?utm_source=openai",
+          "domain": "thereisnolimit12.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스타라인성형외과는 강남 지역에 위치한다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남 지역",
+          "factGraphValue": "서울특별시 강남구 봉은사로 105"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
