@@ -10,6 +10,8 @@ export interface TenantConfig extends BrandContext {
   // true면 코호트 비교용 경쟁사 테넌트. 파이프라인·코호트 랭킹에는 들어가지만
   // 브랜드 선택 드롭다운(/api/tenants)에는 노출하지 않는다.
   cohortOnly?: boolean;
+  // false면 측정 시 자동 추론된 경쟁사를 코호트로 함께 측정하지 않는다(기본 = 측정함).
+  autoCohort?: boolean;
 }
 
 export interface RawCallRecord {

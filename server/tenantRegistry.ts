@@ -63,6 +63,7 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     competitors,
     factGraph: d.factGraph ?? [],
     ...(d.cohortOnly ? { cohortOnly: true } : {}),
+    ...(d.autoCohort === false ? { autoCohort: false } : {}),
   };
 }
 

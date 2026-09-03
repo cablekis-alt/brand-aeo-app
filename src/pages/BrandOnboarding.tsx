@@ -77,6 +77,7 @@ interface TenantDraft {
   competitors: CompetitorDraft[]
   factGraph: { id: string; type: string; claim: string; value: string; updatedAt: string }[]
   cohortOnly?: boolean
+  autoCohort?: boolean
 }
 
 function hostToDomain(u: string): string {
@@ -548,6 +549,8 @@ export default function BrandOnboarding() {
           },
         ]
       : [],
+    // 경쟁사 비움+측정 시 자동 추론된 경쟁사를 코호트로 함께 측정할지. 체크 해제 시에만 false로 전달.
+    ...(withCohort ? {} : { autoCohort: false }),
   }
 
   const ready = Boolean(tenant.brandName && tenant.ownedDomains.length && tenant.industry && tenant.region)
