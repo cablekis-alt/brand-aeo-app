@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-03T18:07:49.377Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "강남이나 서초 쪽에서 눈재수술 자연스럽게 잘하는 성형외과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울에서 안면윤곽 수술 받으려는데 병원 고를 때 어떤 점을 우선으로 봐야 할까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "코성형 첫 수술로 유명하고 안전 관리 시스템 잘 되어 있는 대형 성형외과 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "서초 강남권 성형외과 중에 마취과 전문의 상주하고 응급 장비 갖춘 곳 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "가슴 성형 보형물 종류별로 상담 꼼꼼하게 해주는 유명한 병원 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "30대 후반 안티에이징 안면거상술이랑 리프팅 후기 좋은 곳 찾고 있어",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "양악이나 윤곽 수술할 때 3D CT 정밀 진단 시스템 잘 갖춘 성형외과 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "외국인 지인이 한국에서 성형 수술 받으려는데 통역이랑 사후케어 잘 되는 전문 병원 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "WJ 원진성형외과 눈성형이나 윤곽 수술 전반적인 평판이랑 의료진 시스템 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "윤곽이나 가슴 수술 쪽으로 WJ 원진성형외과랑 아이디병원 비교하면 각각 특징이 뭐야?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "WJ 원진성형외과에서 수술 후 붓기 관리나 사후 케어 프로그램 받아본 후기 궁금해",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "강남역이랑 신논현역 인근 서초 쪽에 있는 원진성형외과 위치랑 규모 시설은 어떤 편이야?",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v1"
+    }
+  ]
+}

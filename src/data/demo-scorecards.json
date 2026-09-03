@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "tenantId": "k-wonjin",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "WJ 원진성형외과",
+    "aeoScore": {
+      "current": 37,
+      "ma4": 37,
+      "previousWeek": 37,
+      "ciLow": 29.2,
+      "ciHigh": 44.8
+    },
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": 0.5,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.06793478260869565,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": []
+  }
+]
