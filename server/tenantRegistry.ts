@@ -62,6 +62,7 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     repeatsPerQuestion: d.repeatsPerQuestion ?? 3,
     competitors,
     factGraph: d.factGraph ?? [],
+    ...(d.cohortOnly ? { cohortOnly: true } : {}),
   };
 }
 

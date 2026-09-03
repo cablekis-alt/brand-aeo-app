@@ -28,6 +28,7 @@ interface TenantDraft {
   repeatsPerQuestion: number
   competitors: CompetitorDraft[]
   factGraph: { id: string; type: string; claim: string; value: string; updatedAt: string }[]
+  cohortOnly?: boolean
 }
 
 function hostToDomain(u: string): string {
@@ -78,6 +79,36 @@ function findContactUrl(html: string, baseUrl: string): string | null {
   } catch {
     return null
   }
+}
+
+// 경쟁사를 cohortOnly 테넌트 초안으로 변환한다(랭킹 분모용). 도메인이 있어야 안정적 tenantId를 만들 수 있어,
+// 도메인 없는 경쟁사는 측정 대상에서 제외한다(이름은 SoM 감지에 그대로 쓰인다).
+function cohortDraftsFrom(tenant: TenantDraft): TenantDraft[] {
+  const seen = new Set<string>([tenant.tenantId])
+  const out: TenantDraft[] = []
+  for (const c of tenant.competitors) {
+    const domain = c.domains[0]
+    if (!domain) continue
+    const id = slugFromDomain(domain)
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    out.push({
+      tenantId: id,
+      brandName: c.name,
+      aliases: c.aliases.length ? c.aliases : [c.name],
+      ownedDomains: [domain],
+      industry: tenant.industry,
+      region: tenant.region,
+      engines: tenant.engines,
+      questionBankSize: tenant.questionBankSize,
+      questionBankVersion: tenant.questionBankVersion,
+      repeatsPerQuestion: tenant.repeatsPerQuestion,
+      competitors: [],
+      factGraph: [],
+      cohortOnly: true,
+    })
+  }
+  return out
 }
 
 /** "강남언니, gangnamunni.com" 형식 줄들을 경쟁사 배열로. */
@@ -157,6 +188,8 @@ export default function BrandOnboarding() {
   const [addrLookupOn, setAddrLookupOn] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
+  // 경쟁사도 cohortOnly로 함께 측정 → 코호트 랭킹이 1/N으로 채워진다(기본 켬).
+  const [withCohort, setWithCohort] = useState(true)
   const [suggestingComp, setSuggestingComp] = useState(false)
   const [compMsg, setCompMsg] = useState<string | null>(null)
   // 코호트 표기 불일치 방지 — 기존 브랜드의 업종·지역을 자동완성으로 제공한다.
@@ -438,6 +471,7 @@ export default function BrandOnboarding() {
   }
 
   const ready = Boolean(tenant.brandName && tenant.ownedDomains.length && tenant.industry && tenant.region)
+  const cohortCount = cohortDraftsFrom(tenant).length
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
 
@@ -506,8 +540,35 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
+      // 경쟁사를 cohortOnly로 함께 측정하면 코호트 랭킹이 1/N으로 채워진다(도메인 있는 경쟁사만).
+      const cohort = withCohort ? cohortDraftsFrom(tenant) : []
+
       // 배포(Vercel)는 서버리스라 측정을 함수에서 못 돌린다 → GitHub Actions로 트리거(자동 반영).
       if (measureVia === 'github') {
+        if (cohort.length > 0) {
+          setRegisterMsg(`등록 완료 · 본 브랜드 + 경쟁사 ${cohort.length}곳을 측정 큐에 넣는 중…`)
+          for (const t of [tenant, ...cohort]) {
+            await fetch('/api/measure-requests', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(t),
+            })
+          }
+          const res = await fetch('/api/measure-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'run-queue' }),
+          })
+          const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
+          if (!res.ok) {
+            throw new Error(`등록은 됐지만 측정 트리거 실패: ${body.error || `HTTP ${res.status}`}. 측정 대기열에서 재시도하세요.`)
+          }
+          setRegisterMsg(
+            `✓ 등록 완료 · GitHub Actions가 본 브랜드 + 경쟁사 ${cohort.length}곳(총 ${cohort.length + 1}개)을 순차 측정 중입니다. 완료 시 자동 반영되고 코호트 랭킹이 채워집니다.` +
+              (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
+          )
+          return
+        }
         const res = await fetch('/api/measure-requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -527,6 +588,25 @@ export default function BrandOnboarding() {
       }
       // 로컬 백엔드 — 즉시 측정·baking.
       if (measureVia === 'local') {
+        if (cohort.length > 0) {
+          setRegisterMsg(`등록 완료 · 본 브랜드 + 경쟁사 ${cohort.length}곳 측정 중… (브랜드당 수 분) 이 탭을 열어 두세요.`)
+          for (const t of [tenant, ...cohort]) {
+            await fetch('/api/measure-requests', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(t),
+            })
+          }
+          const res = await fetch('/api/measure-requests/process', { method: 'POST' })
+          if (!res.ok) {
+            const body = (await res.json().catch(() => ({}))) as { error?: string }
+            throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${res.status}`}.`)
+          }
+          const data = (await res.json()) as { results?: { ok: boolean }[] }
+          const done = (data.results ?? []).filter((r) => r.ok).length
+          setRegisterMsg(`✓ 완료 — ${done}개 측정·publish됨 (본 브랜드 + 경쟁사). 코호트 랭킹이 채워집니다. 이후 git commit + 배포하세요.`)
+          return
+        }
         setRegisterMsg(
           `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
         )
@@ -759,6 +839,15 @@ export default function BrandOnboarding() {
       <StageShell id="stage-4" code="4" title="등록" status={s4}>
         <div className="onboard-register">
           <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
+          {canRegister && measureVia !== 'none' && (
+            <label className="onboard-cohort">
+              <input type="checkbox" checked={withCohort} onChange={(e) => setWithCohort(e.target.checked)} />
+              <span>
+                경쟁사도 코호트로 함께 측정{cohortCount > 0 ? ` (${cohortCount}곳)` : ''} — 코호트 랭킹(1/N)을 채웁니다.
+                {cohortCount === 0 && ' 도메인이 있는 경쟁사가 있어야 측정됩니다.'}
+              </span>
+            </label>
+          )}
           <div className="onboard-register-actions">
             {canRegister && (
               <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
