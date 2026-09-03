@@ -14,6 +14,8 @@ export default function BrandManageList() {
   const [rows, setRows] = useState<BrandRow[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  // GitHub Actions 완전 삭제가 진행 중인 tenantId — 실제로 사라질 때까지 행을 "삭제 중"으로 잠근다.
+  const [deletingIds, setDeletingIds] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -32,6 +34,34 @@ export default function BrandManageList() {
     void load()
   }, [load])
 
+  // 삭제 진행 중인 브랜드가 있으면, 실제로 목록에서 사라질 때까지 주기적으로 확인한다.
+  useEffect(() => {
+    if (deletingIds.length === 0) return
+    let alive = true
+    const tick = async () => {
+      try {
+        const res = await fetch('/api/tenants?all=1')
+        const fresh = res.ok ? ((await res.json()) as BrandRow[]) : []
+        if (!alive) return
+        setRows(fresh)
+        const freshIds = new Set(fresh.map((r) => r.tenantId))
+        const gone = deletingIds.filter((id) => !freshIds.has(id))
+        if (gone.length > 0) {
+          setDeletingIds((prev) => prev.filter((id) => freshIds.has(id)))
+          setMessage(`✓ ${gone.length}개 브랜드 완전 삭제가 반영됐습니다.`)
+          void reloadTenants()
+        }
+      } catch {
+        // 무시 — 다음 주기에 다시 확인
+      }
+    }
+    const iv = window.setInterval(() => void tick(), 15000)
+    return () => {
+      alive = false
+      window.clearInterval(iv)
+    }
+  }, [deletingIds, reloadTenants])
+
   async function remove(row: BrandRow) {
     if (!window.confirm(`'${row.brandName}' (${row.tenantId}) 브랜드를 삭제할까요?`)) return
     setBusyId(row.tenantId)
@@ -46,9 +76,10 @@ export default function BrandManageList() {
         setMessage(`✓ '${row.brandName}' 삭제 완료.`)
         await reloadTenants()
       } else if (body.dispatched) {
-        // 베이크된 브랜드 — GitHub Actions가 완전 삭제 실행 중. 완료되면 자동 반영.
+        // 베이크된 브랜드 — GitHub Actions가 완전 삭제 실행 중. 사라질 때까지 "삭제 중"으로 잠근다.
+        setDeletingIds((prev) => (prev.includes(row.tenantId) ? prev : [...prev, row.tenantId]))
         setMessage(
-          `✓ '${row.brandName}' 완전 삭제를 GitHub Actions에서 실행 중입니다. 수 분 후 이 사이트에 자동 반영됩니다.` +
+          `'${row.brandName}' 완전 삭제를 GitHub Actions에서 실행 중입니다. 완료되면 목록에서 자동으로 사라집니다(수 분 소요).` +
             (body.htmlUrl ? ` 진행 상황: ${body.htmlUrl}` : ''),
         )
       } else {
@@ -95,30 +126,29 @@ export default function BrandManageList() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.tenantId}>
-                  <td>
-                    {row.brandName}
-                    {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
-                  </td>
-                  <td>
-                    <code>{row.tenantId}</code>
-                  </td>
-                  <td className="judgment">
-                    {row.industry} · {row.region}
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => void remove(row)}
-                      disabled={busyId === row.tenantId}
-                    >
-                      {busyId === row.tenantId ? '삭제 중…' : '삭제'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const deleting = deletingIds.includes(row.tenantId)
+                const busy = busyId === row.tenantId || deleting
+                return (
+                  <tr key={row.tenantId} style={deleting ? { opacity: 0.55 } : undefined}>
+                    <td>
+                      {row.brandName}
+                      {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
+                    </td>
+                    <td>
+                      <code>{row.tenantId}</code>
+                    </td>
+                    <td className="judgment">
+                      {row.industry} · {row.region}
+                    </td>
+                    <td>
+                      <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy}>
+                        {busy ? '삭제 중…' : '삭제'}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
