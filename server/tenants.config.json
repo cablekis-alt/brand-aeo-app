@@ -162,58 +162,6 @@
     "cohortOnly": true
   },
   {
-    "tenantId": "stay-meomum",
-    "brandName": "스테이 머뭄",
-    "aliases": [
-      "스테이 머뭄",
-      "머뭄",
-      "Stay Meomum"
-    ],
-    "ownedDomains": [
-      "w4ai.o2o.kr"
-    ],
-    "industry": "숙박",
-    "region": "전북 군산",
-    "engines": [
-      "gemini"
-    ],
-    "questionBankSize": 12,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 3,
-    "competitors": [
-      {
-        "name": "군산스테이호텔",
-        "aliases": [
-          "군산스테이호텔",
-          "군산 스테이호텔"
-        ],
-        "domains": [
-          "gunsanstayhotel.com"
-        ]
-      },
-      {
-        "name": "군산해들목펜션",
-        "aliases": [
-          "군산해들목펜션",
-          "해들목펜션",
-          "해들목"
-        ],
-        "domains": [
-          "hdmpension.co.kr"
-        ]
-      }
-    ],
-    "factGraph": [
-      {
-        "id": "stay-address",
-        "type": "location",
-        "claim": "숙소 주소",
-        "value": "전북 군산시 절골길 18",
-        "updatedAt": "2026-09-01"
-      }
-    ]
-  },
-  {
     "tenantId": "hdmpension",
     "brandName": "군산해들목펜션",
     "aliases": [

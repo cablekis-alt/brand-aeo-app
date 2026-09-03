@@ -1,31 +1,5 @@
 [
   {
-    "tenantId": "stay-meomum",
-    "weekOf": "2026-W36",
-    "industry": "숙박",
-    "region": "전북 군산",
-    "brandName": "스테이 머뭄",
-    "aeoScore": {
-      "current": 52,
-      "ma4": 52,
-      "previousWeek": 52,
-      "ciLow": 41.1,
-      "ciHigh": 62.9
-    },
-    "mentionRate": 0.25,
-    "shareOfMention": 0.65625,
-    "avgRecommendationRank": 1,
-    "factualityScore": 0.8,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 1,
-      "totalTenants": 2
-    },
-    "hallucinationFlags": [
-      "gemini / v2-009 #1: 사실성 불일치 1건"
-    ]
-  },
-  {
     "tenantId": "starline",
     "weekOf": "2026-W36",
     "industry": "성형외과",
@@ -92,8 +66,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 2,
-      "totalTenants": 2
+      "position": 1,
+      "totalTenants": 1
     },
     "hallucinationFlags": []
   }
