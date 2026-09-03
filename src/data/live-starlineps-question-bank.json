@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-03T13:14:23.025Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "강남 쪽에서 눈성형 자연스럽게 잘하는 성형외과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울 강남역 근처에 첫 코수술 안전하게 하는 성형외과 어디가 유명해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "강남 성형외과 상담 갈 때 원장님 경력이나 후기 볼 때 어떤 점을 체크해야 할까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "강남에서 얼굴 안면윤곽 수술 잘하고 사후관리 꼼꼼한 병원 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "쌍꺼풀 재수술로 후기 좋은 강남 성형외과 리스트 좀 뽑아줄 수 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "강남구 신사나 압구정 쪽에서 중년 눈밑지방재배치 잘하는 성형외과 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "서울에서 대리수술 걱정 없고 성형외과 전문의가 직접 1:1 전담 집도하는 곳 찾고 있어",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "강남 부근에 안면 리프팅이랑 안티에이징 수술 잘하는 성형외과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "스타라인성형외과 눈성형이나 코성형 실제 후기랑 원장님 수술 스타일 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "강남 성형외과 중에서 바노바기, 디에이, 스타라인 비교하면 각각 어떤 수술로 유명해?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "스타라인성형외과 눈매교정이랑 트임 수술 비용 가격대가 대략 어떻게 돼?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "스타라인성형외과에서 수술받고 나서 붓기 레이저나 사후 흉터 케어 프로그램 잘 챙겨줘?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}
