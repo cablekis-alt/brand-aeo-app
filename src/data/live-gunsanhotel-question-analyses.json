@@ -1,0 +1,4084 @@
+{
+  "tenantId": "gunsanhotel",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "2. **베스트 웨스턴 군산 호텔** - 공항과 가깝고, 다양한 편의시설을 갖추고 있어 편리합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "라한호텔 군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.en-gb.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIhFKeTIvApG7TJtGvRPgAcyNCuqB5kIt3BTk6R6hqp2ktmCFLpQs-bUVYT2xgQxdHFFNevHI8zdCslKckwzuR856hRr0uT4dKi5BMgDMZoWJvouYyxM_GtSfJHLVAX8odJXrQvn1B-HNhjuCf4-uKN5K92vf_Hx19LzeBb4J4Sshqu0JcNo3lBo7cANLVukbXijI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmrY0FcaLCxncH-EorsR5g3NYuwivw7UtMe-Zj7r4FL5h1f4PmZWF7Kv5tSEEF3hm3iq16j8eO1mAkNQqD8n2R6ndtPyDOUPN0fsDdarZMOkdxyqhEORvgviz7UUu9cXawCG-VlXpuEBhI7EsmiBDfI-E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiCxh7lVTS62ScwlR004cUfo4WEtmt0VqASLY9HAAik09G6Wzv_JacAOWrrt4Bc80ougKPENvI8YUuI_fJzjNMnvdQi3vh9SqZiRqVp6uHcvj65FvNriKnBgJA5tCIAf95B2MT6flfwWRfAQ7atP0fmw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5xzjvMjHfbpGhEJFvBvLu5PjhsOKUYbBM2YfJKA4jQHFE-NpDp2ql6dRTOryeFwy2rGe-kW7QmlYdWiYZ0naRftxcwLefJIhUVdzNQnl9clSmQJeV3u6kGv3OpTim_DWxMNBJn-nJEji_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuRm4VzU5tFA_l1Nkiat3XLbf4B7dsp_ZTtuvIMWlXaGA3ueghyH4owwC3SrmWJ9rC6IpUv_pwQJlEICD9uZTeNg8taN1DmD_18E6LpJrOz5n-6Zh_bXAPzsVNfFHWdrfOxKBR4be9QG9jdN-XiyQ4oTajMMJTjSFwuOvBDWGQxtUtGVkSfhKZ2iZYh10UvNetMLbmzCcxPjedewsFiA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWjPnMacKBjriJXQqrTOjD2j7EVCn_vbemcl2lSo_g87Ah9r2bamDs_BvFAoh9eycODMLfebUte8LUVNTv_JOh2N2FWB591muqLJyflQ9D6aAoGJqFWnO2a6G-73dnwZ4-4XMfIf5CYIF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6kSDmGwa36h3R2q6jVWccVdxIfsi15MoBkWQ2AgC4psPy5uXLlIU2euVx-0uQZBZjlNDnmN-InD5AOAU9O96qJUihiouFCh3KwxB7bBreM9RvXVBkT-XSAUjaf-ClUD2U9isruLgSAFMFnpa3m2cIZw3SMWrq1sQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGax36E_HpsNDSmv5XNU1_8c82jDH8s1TWHuDbD8EJrOsode8Zh6TLnOPM9Fyr_3fXJqaVoJbHF-aMPr19B-vC8i7ZdTVFUxexx1McoQEFsnmKhmQaN5Lvxl4p91iuI_-VovcGyEszlroodmTNpC0AIkDERejab9XtjZ05URoJ1x6zmeU6ZFkSX0X5j1L8ii4hOe1LW77g-DgXEEeQZ_qBwcxQErdhiwg2chsb9Mj2YN7Fmm2R_y02NtYTs-gLy5GNdbKrlNr-fr0BkE9zCRMbXcO7PkU-0GsQ40mWwrMXAOoGnGrPz39atrE--Mj9Jbn-IB4JxUoNOvJKOsvSdsvgrJq0L8Q1qPkp_CXXDjZXOyYEEG9sVkJRV25XP1agwbPGkrObDTfGX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTuPUybtxvHsWpaeDcHwKlzVIyiz5Ax_H5l9AzCUHKdR5Zdw5IDBDyk2hGGAJUaEMGGVeGAOZ_jAmTgA8Frs4UAv8KFC3r_8EYQLW6lVjfcZucxAIfED0RV-M0pfeqWxyMx_sNtI1afkjfrMrj67jy3iPt4BVln2cS2m-y36Nk-DF1JURE2IxJAChKsohfXlBDQpO5Akz4Jg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCYBf3cigwrXTVjpmFEg6zldc8WujqhFOdU0hsy2-AKiQBRH8GbzUgXLo-uTSlu9psMSBw1yYmCZ4O8SrWe_qLWVwecD7XjPoV5oVr7WomW2cDpJtF_OZvvPGJw8EUGcbFzU6Tm-AASqDJOzRM61gbd13lHyu9Mcgmjt6P67ESu_CDs-aqUpHPBH0bsdbEeblY1zYMndE8tlhMRPCpscmmAr3o",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIxh4MpCyFdKNzWZT7P6FGeLauEIOxHCzVUqqWWI46KcrIpNIr9TbndZNHEjDwPqAmzEKyjNCO9l8jGPE3nPvtumCBjzCnDws8epBdk0Ut90RT61w25IF8Sag3Ygbetl_2Z3QOUJZS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8zwTXUg-BfdD168DeEj5K8CHC4W6kZtBPUGB3yXnMBH2HorqgmezOmEOkq8awnTLpdzzmSYHosYFhY1yKLMAgEwPf1CBChvZKG_ofpPpXwtECIE9YXSI3F4WHl23r-FIRQEmDVOVByWdtD_bZLCyEXWnGEI-Azp-WFsMVR0l_BxLnW2dR_aT34f_WDt7SlFfrOeSLuwCvqxTsORnx1QBsNDBhL40yU9baSUe8Zpd-w6-CnTj0UXu3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_ya4wYFzy84hmk4DxWYtYDFa-EP2Ppk71zP6_03AbYpKFhFfPUFmfhmZAEpfE2e-G77R43Qzkyox6q9X9I7bko5yUbkuUsj7bLpqmPn7flZ75R-K35aKh3BaHPKlcieQc6VMJT1959HeNO80NZgVBb_eMa5KoYyZg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "2. **베스트 웨스턴 군산 호텔** - 현대적인 시설과 다양한 객실 옵션을 제공하며, 피트니스 센터와 레스토랑도 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "라마다 군산 호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "라마다 군산 호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 베스트웨스턴 군산호텔 (오식도동)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **산단/오식도동 공장 방문** ➔ **베스트웨스턴 군산호텔**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1I4rYLAPBvmL3Nak6jmuNXcKxcCs7fmut50If2uizOZ-KBcXXznk33z_DuqF23IF1emiLKjqBvJEtLCsHtev_bcrb8LyeyM0whNev7XB7DIueWkkgSpVwTi0F-4txTaK52BswnYWDMORnhSNCAiA-LmXsER4NXw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB0zxr0FT1M1peabXbCSGdxWJNpLemGhB4q6M4WoSXHWPpgpsIW4kL-j41SPVRtKHCmgwnMWCBwBtm24Mqsc-m8kE1__2VXX1Z5NgTAFosS64R9Z8wQDgWmZQvreLmPw1Gt-4CXUCT98yRnrSwYMMmv3Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_l6n_EUhlkTEogpHD1BZgVCPZqSdIFQt0cNEWSpV_-ivg3GyC9xnpJrS4C_3VrK_jCh6P-PgWdPUJS1RDTc3E2pZF0vXZu4PsrJtgb_WMWfaxEFqfYqTh4BdJNroA2-I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXWnB9_nM3h-ERa5RSpGBht6uJFiM7RtC_6snqfCEAv4u_Qz6ymU-UrUYk3RjDKfnsbWxvZ631CaHqUlJIeIpflEK0vzNX9yHSYzqx4g48mz3lPkVAzEEULP8JqNP1WRRXc_S5EyNzO_1YWdSViQq-42k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOECOE1X0WuC_Pjv_zusYGR6-j9OlPC_niyrQ20EKR-xCe6pyIJPWz5H1gszMWplC2aXGPqEGf8kMVEeNK9skSvks26Ul7DlUdZduRoNsWKGs79c1yQQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmJZk6w-SIpVQ2B0SMrEDoKaL53z3vWe3YcuK8AB0_Pa73KwrAMwkhrXtYIXhLVczWmBtiyHys_GZhIoaXJx5bUGgTSat4TySK0odPHFv-Q0yspEg4-rqZmhtZRsdFPoR6AqeTOB9scbzy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMW5UJKjpqwklmAi4dqrIsCacOJX2nXkSGnpu1SZjFnK2ju1tp0228HA354JbT2xa9JzrZexrjUgPuotqNfNpp1UWCtEl0ysHMse6ng3335Wrnh7Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFq1kPHujY1WQVZQVr-IYSvbrxrQ0L3KqpzGuhYqWzMG1TkOxUXNuV3ATAgjUJafUfKuIYnM3Xwm49793bGK1fbeJ7boYHBOonPSQ69EGFz2MqU361PpjpWfPMj-ztH_nj50_c0d7CE6RbGZVNY6UnQGDKitBleE2AYz5C2KYmp3oo9IEhXgP8EuDa2EL2gmFrks2r0Jgtj8dqC5C6lF5uZSTGmNBCDqoCycqt2nbI0sxyl0DScJqqhdrrHG95VnZfOBVMX8AdybOVkuZW0PvSMUdH80zG16YrvLVBMNWqF3kA_OGoXS2PBY5vHLQdMCDyf5QuQOdjzpJmppbGVFnDD1Sg3OI3TqUcvx4rDGahvwQji5Wdz-Qz12ok3jMoKGN0V1_JbnNxh09zrpZMbyAN5IqkjV5rpx_nrmIUH5PDkNvh5yuLcx6Igj99-s_C6HsDpKc-8mZ24tSnPyylmrP3_t04VmAu1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 출장 시 가장 선호도가 높은 비즈니스 호텔은 **에이본 호텔**, **라마다 군산**, **베스트웨스턴 군산** 3곳이 대표적입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 3. 베스트웨스턴 플러스 군산 호텔 (Best Western Plus Gunsan)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **오식도동/새만금 공장·산단 방문이 주 목적이라면** ➡️ **베스트웨스턴 군산**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJ8pH00YraPlZe-c-yFWZ7UmzU1vov8OBW2fPpz8WC4sknaAFG0s8OYbj5L984rZe00CNgBLfAvxKbJLF0-yWPaPmsQZRoHajP_ufYIjKz4Rc5RrjAmTPQyQ2nyTOPmu1jKpCNKpY3oZaFvghi0OZd1JotDo8TYWw_9A6q0jw1ZTW5NrduUMy0HEeycGrAcvlz11BsOqnqlgFZQJmFkOnhzaeqBnc-b4T-QzUSPpVMiKf2TqdpuiwP1w5P4JI9LDmAnVSq_h_nZ0YNHQ8nJfqNh1YHp9nLhMAHZYN-l_8YyJPZkFT4YvDwngK9wtUHY5qa9gdGbVizfD_ey3Fk7xBuHJhU5hONl4EpluheZlgkHGRYSaTkSv8f8i9w1CHZ7mRmK-P_4tjSz7lBDqeM2SPL_lLKNqPLKV-l3aJVKfnCIdlEhjjUp8aKJjvHgHnrk48u9DrKi0DmcaEMivXJXpiZzdZIjmzrST2WCX--B6HcIqs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDmV4CvSph7TNkHBnhdk_dM483KTHvY59K2QtyuN3t3XRK_QZxjDpGwatGQhfcf3NvLVJgubu0hcjbZQ2Ol3xQ7RQ_B3XLsuHZMjSrMVRKeQDjeWYXcjuTrtDtozYfzhF76TZRmnR7BawKjaJVKe6170UYip6W82JNzISwruWG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3phsmxBkZrDnLHryfohThO_-lWPLHGhqTSNBHBrCrWnMX4fuvtBD-cxagMgxn2c1O4uwAxHrOJK6E4OQPyhoFZPk2IbjUeocLwzEASMs98WKvJ6320CgcQxu2pZddvyLV3t-jBETzgiweCt-_vEAoHWoathMk36iCu89YjXOp9gL_iGIl47SluBenoNZ3vMK1hnSwCh4bWXHuPm2rD1DXB4U_QMLATo7hnRizJtE_nezkROEtDkrSczkHo2hF-mo_izOyTAgzYdGwkcBmlcnAwDuHm9xOH3ddmngh55M4CMO38weMy_xThODFLbp-AN_RuHa7-dCxwQotQKDwfsPE2PLIMRlNbZKPntmdkJCwDlsAUuDY9d7Q8mv0IeQjKsgBKGPurmHe9xE9ZSRi_upSPgZErQt036vmhzzMRp-lhapWzCFXmQwcVo14kiszyqyqdapOru3pJmebGe21U5Gbi2gcA6x1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhZ7GpSLfvcy3ivWg8SEqXvV6V_MiCSFGQirvOIFUGYXmrFA3u4gDo9YZULEuzyqrey12QQdTm_zE_SHvPIdUQSWys7U5tlgDRgnT__D9rsTUpU9GB17cwBQsLv7clfvga",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7qPWkYlzAMfGG6ShGZ86KtKEkL4yKpHMRXQCPFQpInzoYHXWbd0tAX7pHx2DhDVH8SQRCOLKrBUZHEQmEDhuK2YWpY43kVmhMxNYKNhuGwFQmKexhq13e5SganOvsCS0aJMVSIFcJxjWJ56b6cWeBuI4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8mnoQcvwpJHKIJuokoSWiI3XZgTiDXT9EWYkcjp5zYoSGgvpordp-eWhJq545Xwod5wjn8zvjjuju2GsbYAdjWEn0_wpXXWR1YZVxWoGqFBBOmY7Iu3R-TKRJFTznfjVhsDvD8RyWJS_bftuJrLpZC4bWP_kqcWhtnBSM_ElJZXIg3pdKZBbvOoYAIocmhOBZh74=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVq0Ht5RrIjD47h7QGU7klxFkUiAt6u4_hY_aVfCi2GJkgceNf4lmjOrPGZd1fbQ5cu_5PsI2mSmvKuPdQC1TdFIPsvr3243GzuHtG2Am2vvqorvI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcTM0JU8ty2ZAPBCGTVX8COGWErdnhjj_MBLvaerO5kciVZKwIxIZ9CDaPPaYm1Oa4Jj33C-A4qb1UbsoyO8Y2oenqgUHFSOkweFh8aRL321JElUYYQj7BxIyx2WTilhPiw4R111-B8mcOmxQDizFPya0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzk62q1Ldab4V_JhgfZSF9UMNHZKniid1zj7djdRL6rw2sQtZ1rqhN5qcAgJx9kJxgZdvkKGbkliOuBAxG1qOBMm3lb5ehMZgvg6kLgORPcknCQUSGy0PJyaORVUqc91y0LHwWLIJjigD3xkCj95ESFqa4CQciPw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 베스트웨스턴 군산호텔",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **오식도동 산단/새만금 미팅:** 👉 **베스트웨스턴 군산호텔**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://world.nol.com/stay/accommodations/NC-41542?utm_source=openai",
+          "domain": "world.nol.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://world.nol.com/stay/accommodations/NC-41542?utm_source=openai",
+          "domain": "world.nol.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-us/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/en-us/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/en-in/ramada-hotel-gunsan/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-in/ramada-hotel-gunsan/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://world.nol.com/stay/accommodations/NC-36810?utm_source=openai",
+          "domain": "world.nol.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://world.nol.com/stay/accommodations/NC-36810?utm_source=openai",
+          "domain": "world.nol.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/gunsan-ribbon-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/gunsan-ribbon-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "군산 마루호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://mom-mom.net/travel/map/places/67a40e0ef45aa02b66d42c16?utm_source=openai",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mom-mom.net/travel/map/places/67a40e0ef45aa02b66d42c16?utm_source=openai",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mellongh.tistory.com/67?utm_source=openai",
+          "domain": "mellongh.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://staybridge.tistory.com/289?utm_source=openai",
+          "domain": "staybridge.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dawnilki.tistory.com/19?utm_source=openai",
+          "domain": "dawnilki.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://protecsound8627.tistory.com/420?utm_source=openai",
+          "domain": "protecsound8627.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/hotel/kr/haundeu-gunsanjeom.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/haundeu-gunsanjeom.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Chakan_Hotel.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://morestayz.tistory.com/87?category=1212412&utm_source=openai",
+          "domain": "morestayz.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ymkim86.tistory.com/197?utm_source=openai",
+          "domain": "ymkim86.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mellongh.tistory.com/67?utm_source=openai",
+          "domain": "mellongh.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://staybridge.tistory.com/289?utm_source=openai",
+          "domain": "staybridge.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.avonhotel.co.kr/on?utm_source=openai",
+          "domain": "avonhotel.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhA92MqUKAHgpeatm61ucadX4Yl3GbCCBEC1dZboEERRC69TW_CbTm-igZa2D1gS9LesZ2Iz91nnGF39Ho94ufxJZql8iz0qiqiJKFsktdcnuONItjk7LrfjjZyT1NBMy6Im9nq5Cz6qI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtqCr5XBwnjmx0oLi-hQgQR5gHVULtloIAKBFIOkPXuDO5-MusQnnFkX6muxONjr7CradsvZu6131avhBBXoMnwZc-dLudd_x0c6HoGbHzXbInj5NSPqsrQoIiwOJkcaFljTwMQ3m72Vq_S3oltRJb0HrOn_SS4VpGDKyEh5gmw-SGa59zzj9Uo40DsLd_W9bpkvbVYn4rSOxS3EYC0GGavFxWScT2FxXyuWESlppghHdRf4qU4WMyacWTrePZJkqyg9l9Z5x94IGjoU23P4Q6RzG5KSriwe93Rj5MiFM3_Xhe3p9TZqKEF1suxxwfFTORovFCgZeHqtgY_G7DSpfcwO0j6iPfBoRxerekdB6ooJlKvmlkq6ANgd89Z19MFsaBM2vRmU0eAlSZ1X5Ut20=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpAHPgCi1asMko91-b8zNFWewiLSPbWnbO4rqyfQS-1KcKGPOdbXJOJig0AGxxs7dkSkjOxKNMaB8c1Z7L4TM1sWzmbpsRCJ9nXBddPajUkr8mhlxmYpDhgy6eyD3M0p0A3oGv0VBqKpevKdedB7uyIjxKumXM8sbr7YDupILVoMwOeHg4HJIilF6IBYtMsasVh1LIir0TwlLh-iXVP-JBDkp4EUqoQ0W32MuVlbxFdKgpTcL3fDympESbeeco9vM34xs1u5z9MUEQ8TW_RiAtsH6zvnRDIUEU1erT-mI9ToydAgT_tiWpKQFL0c8OKzxeRi7_abNemmTaUzGSg7D71DanaQyh0QqXF-parWGyH_rbP4CL1H5Gh2iIM4n4uqlZUC4rRa7xZ1fSgDQWZRt0I7CDv4kWsbkGBfM7Dog0DDncWmTdysSYTyK_8wXkO27k_2Kp4H7MBjdM544wi2tIt6-3tZz_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9LF9pEe8NrBMZWU-NtAeTFvWnaizdWfTyH1XMe30jnPNUdT99dNOqJu4Vi1wlazmNLJCTKbkGGW2f3qOpsBSQnhUOVU3j6ZgEjOLphKF4-5MGRwmWUfi4LF7cP7EH2bDmxyURCexu-zVonA10WrLB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcMVKQXFkFBkYvMcYM12Go7cPllJ7W3Nx0U1-oJIm9Dm3eyuYOakLd7X_cgNAQtID80f0w3MlCeLsAON3PSZgpQljN_of86ILykVSI4T5-hKEeTdvsJz3yiSzmUv8rkv70suqDnl9qn3qfjH-yXO1RscgNZtFOqMQZ4NCv49bsVzgISNaalDkUhna-AZmql8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4I3ePHcCkZVpoHzB0cWfdsVlenKkABU769ng2kEm6_gi8lUdS6IHkH-hw2-pqxQFILMMXy9fBUhCxLmzYZO7eMJbVleknYTFyngahBPJVnRcHCdq8Tygd0fHOM_9cYbH3jwbG0VRKlJo8L3Q9m_OnQifVxlzsTnJBEZbBGQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyC8BX5MdTA1c2gMcDi_vyL4cVl8rh3WgjTM-718auLooltMKUmc5fOkb1MG_wLka7owmR7NChg_O7w_7cdoEkwFbTvZMzk_a7LYGGucSWhFyfxw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7c3V4Qkf4vwB9t4kFexXmPPsTjJNQcG-eW4W3GwaCVuJZHqE6_2L6CJ-11T9zF_warJfqdT1JOHY14D42zF5XeM0Cda5bOlNskW8L7pQ8H09PSgD5K6ihArQfWijV9bCNbfJzX_cueUcM7KlwTDQDyg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLWLJ-k4Z0WZrfmypx8GIx_f4fpYWiKzdagi-Xg0xTtFemPAo3wvq6w_yPZam3_V0bIuScTfKPyBYajdTN8ap6EFBR6vyCvguGPL_kgLOt7Pa3s4K1K-343FpBT4Lsbvsd4TsK0J4N3g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlDkOwBletWA6mDmRU4Op73_twdkCG1PfixY2-piX2FMHXvRGi7XZBXZ_VjCoRmh_tPWhXc5QsxC0GImrlnCOR-JxJIYggMSIOtkJyHftw4nVL8ZeGvV8zBlbqbLIUJ3sm5-Vc3AxTrmc03D2HSOKk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGK7lbmzKIw1IeXoq2AJ6ngmKEqflGhceTxts1WO5IcQkd7o_7ZrktLZo9paIMvP_ZGA8irAM3TymQBYKA2JhuJzBdImPCx3AI3eoxjbyHBtAoyGaH-0PJmoo9aOxnOJOner1s6rePKbmB8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 베스트웨스턴 플러스 군산호텔",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaI_3Hr-cKOH1qYmKx67Uog9zBLfrMtUx1ZZQQE2QeBldLx7f1MGfRlvc7c3LzXZY82bFWb3hyJSY-Sj2QTgW3ciqdnLg5ibJh0QuTPAHPxmFv6b7EaVNJteeju-NNmYV0daTELN6ChMLoVBsDGTqhbA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUxNC43kEMhwUdRSgTWi4r0EhJ0NikosIjQlNEzaBBb4BSI7S-P0fM18h4XBGJ8tQCWlpZEXPuHfJbMfnNWpUbbWxZDwN-dFhMoWb4wjOv84SUDQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEK-e4dtjdHBH8IY7Z86dqXK-f6-v9IhSMXo73jwbkL_6lnj0yS0kEroAL-EkJv49rGj_scONApK01OcQQgbjhMIeVp5b9QNJmp63GcmPQ1TJrsOSKGlFl-qDQpJRTk4bZ6GjVh91Lslsu-WZ8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCNMTYxIl2EuDC8Fi0uXgn4cL26AAy7fVAslAyxSIPplSYNrOXpqE9N00ybbDm3xeoTO2ZtINnPxjYynR3Z0tfJiMnLVnDdwN8UlP-f_At8M4spjf4-1_VaJInPJRYJew_E51KA_CK0DluCtTgxapkpQd4i3-41Sw49z6HFXY5t9NfxN4xmycaTOGZrgGspY0G",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9ttF5olPIyXd3TE3pJN_sYtIILT06vkzmU4cZMXr-oY6iHyi_JzPShyqFUYrqxo3FXPDSAbAnnjc0Jor6M6vtwzUWsm-wT3PZpQNVQRNb24jlQ2lad9S7To4Oowx-Ht8Bw2QGRPcc-mzS0Ci4KmiR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7RyxexGS60g8OHy6oC3vj-H08bywlwD_jACSec6Fu9dxN32UWe6lx1DCYGJFY1Kq3dBGQAT4fnZ-dM_9mcWAkX-nAkNftXezqj0-6A5AZbPQlLOUbOirViRRZisHJDby2-CIcxZb_B2k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwBfMtfGAE0vmlo82ss-LCGdSSxuzZLSosq4_UTzKOgxUMyJ46grIKhsEw2yPLGQ6fbWEL827XY8N6QP0tUPPgaqKrku6Yw7bm3yFEEirWF3BFdTs4uThEYs9OiJD1diTVdkpL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6FnxTSbdFPUKv98pSBLRdbIp8YGeNim5UMqA2lke289HYpX-rcYfw_3e_FvaTUdryw5E9i0Hf5QJENplDyYce6SnCRIEiAWOSN6YPqH7xYsA3fHFnVBKCwyBvrqiENgN_WadzBOijpdTa44zH-ZNlYcCdUpB6-3oACaOBcxqQlco-hZuaKaL5hiJVwgZXSuVq8wcrz268xE3ax2B5WFJ6sYspvSGQ1E3zfKEVn97PIHnmbAyRvNVi5g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoMByQzAdmT95p1llZ-Bx9Ee_C_4yY6nSEdGyPAErpioc--zdPR-75tN6KOAJVUL_9LNKReGM5rcI9G5WLpOXZq4rm4P1_kwUy6XSJTLoZN96kQa1a7reqkGeikcBao2T9ydyNrulRxg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBgjO2s9zAQzNTG-Bn_MztbZgV1YrmZ_k7l03kJ5q-HDD1I5c-EK-B9vOQHvuR-8ihnPIjEBPYmkF0OZW9kT7HNpAIWiP8RdRMtt7X4esm7BT8oLVIu-NR3plRjbsZ62A-5cQaeNBLUVt3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 베스트웨스턴 군산 호텔 (Best Western Gunsan Hotel)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **선유도 연계 & 주차 공간 최우선**: **베스트웨스턴 군산**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTW15n-YKx3myEa4FmWNLr_rV1M4kIXyjX6rku1qTkc7JhwgaAV9nfoYd8AO78eIwSPPZdeMUu0Z6_thBjLNyfU_NfUh8OBScBsrhFiPjGjnVADbFI1JzWEjVA9S-Piy-T-MWu_ydo6fSf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr7Rr7ZJ2JUUDqP2jQvBcI5MXBUPSaZ7qCKGMdZy3nnJbrYH14zvE3QdGhGAN75YBXpGBMysmUHnERhMvkzJi01_kDPcijR-nOpO_IsgAjAhbL_kPrJkPvIoAxywVvsFp53YWhhlW8fZkdyvbqDnFQSrQU_yAWSW4qVtXTjJIb7qQ5PvtX_mkQUyaDCVkp4-Da",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEM9w63OhxazcEXXZhXcduiyUU2-wxqhXvvfI6Zh0t6kUbULOCsxGVJeVth8Bc87gA8jOrkWyfE38CbF7yAVZSOPoFSbeSILTNh66I0tEC-tvy8CfIYCbzhJm1MsmvJbpaLUtMWgvWgG-fb5cA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJchrE9xFr551HTxntMnxuWJHspo37iCRATa5ouna7e4NnazWAN8ty3TQEX9wFk6qaw0fetu7hV6UZJWPhn6SBl27-MZRpvzV2awvE7NgGxpP1_43-aBc7-gNNgKoVjTnBhxGh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFM-b-PyoKPVCisPS2ux2OBbIqwLdtfR_UjimRTmsTj_93kaWrUlMytNZmWCdSviRvHoRHNFEowXtazb5Gun695bsWzrxQNBBSIuBENo-_zW28ardGYGMSG4rsFD5V5LmA8TGdGgpJ6BSlYuAE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoJ_BCNoTAD5d5xQAeRd8QfTwU_jPYYaY-dtAhNbOuV5gqTyzf5o8mLqv4t4Ok8ewsNw7LELbLOr4OfGMxpRhLEnpGSQIqNf8_mSHAH-MXZHhmrBLb2PQ9iZh2eqbB2gt_xfRCogGT2uyuH0ne50qlRko=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0t55_khKOwlHsZPtvUK2QM355_2S5ezibuq515Ii2uInVHcKj6wawDw9FQuWeqlabXKm30rKo7baBDWEjso1cPG2zlhOzxoiFcfpGoBY3LHeJSP2oj2NAtTjZ8QGIJt7zI2Kgbaq6BWP9Z-Ar0RjQ3pkW3vYkltSkLSaJjicOm66MnHuVrIYndaxdRPZrlwIosz-jkeraOVJ1XeGWpg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhracskGZvJZaMv3B_tpuLZmRJ-9QuIKR3HXzHNAln2FzeC961II0MOL3bIoN92iZIksTemjNXfP7q-fXVaNdWV-nY_h3xVVHukvtsgosW_Hd0owfifDWQEnO2ng5h1QAWyKgpN9rFcG2CkQaaeNj8ftjguZ-xCg69pXfjSLiyNhii9Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-125535965/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/budget/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "us.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/cheap/city/kr/gunsan.html?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.skyscanner.ie/hotels/south-korea/gunsan-hotels/ci-27543931?utm_source=openai",
+          "domain": "skyscanner.ie",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ninosite.com/154?utm_source=openai",
+          "domain": "ninosite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/landmark/kr/gunsan-kumgang-land.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "*참고:* '베스트웨스턴 플러스 군산'의 경우 시설은 좋으나 새만금/오식도동 산단 쪽(도심에서 차로 20~30분)에 있어 일반 관광 목적이라면 동선상 다소 불편할 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "에이본 호텔 군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "7. **베스트 웨스턴 군산 호텔 (Best Western Gunsan Hotel)**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- 넓고 쾌적한 객실 + 조식까지 고려: 에이본호텔, 베스트웨스턴",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/savills-gunsan.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotels.com/de749623-am2048/free-breakfast-hotels-gunsan-south-korea/?utm_source=openai",
+          "domain": "hotels.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.hotels.com/de749623-am2048/free-breakfast-hotels-gunsan-south-korea/?utm_source=openai",
+          "domain": "hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotels.com/de749623-am2048/free-breakfast-hotels-gunsan-south-korea/?utm_source=openai",
+          "domain": "hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/HotelsList-Gunsan-Hotels-With-Breakfast-Buffet-zfp18445271.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotels.com/de749623-am2048/breakfast-included-hotels-gunsan-south-korea/?utm_source=openai",
+          "domain": "hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotels.com/de749623-am2048/breakfast-included-hotels-gunsan-south-korea/?utm_source=openai",
+          "domain": "hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.com/SmartDeals-g790146-Gunsan_Jeollabuk_do-Hotel-Deals.html?utm_source=openai",
+          "domain": "tripadvisor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://goalexperi7616.tistory.com/181?utm_source=openai",
+          "domain": "goalexperi7616.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://goalexperi7616.tistory.com/181?utm_source=openai",
+          "domain": "goalexperi7616.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트 웨스턴 군산호텔",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **베스트 웨스턴 군산호텔**: 뷔페 메뉴가 고급스럽고 깔끔한 조식을 제공해요.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "2. 베스트 웨스턴 군산호텔",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dallydally.tistory.com/169?utm_source=openai",
+          "domain": "dallydally.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reportfront6769.tistory.com/289?utm_source=openai",
+          "domain": "reportfront6769.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://comsam2.blogspot.com/2025/08/blog-post_14.html?utm_source=openai",
+          "domain": "comsam2.blogspot.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "에이본 호텔 군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 베스트웨스턴 플러스 군산호텔",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGiBmJKhJWkzhWCp2Am4G1mkPM9r78jKqU7sEGFmy5b7BXBxkv2ZRrUNfBhgJRkmqb6PkPY5ifeYDzGKUz6izQ3F4iYzvCOJkv1UDuQkjBkOsfv1Tg7e0ayf1h6s8kk3YxTBRAV1FYVUXpMhPcNKQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZGNjtycC0IQfB5YLmxiJclqNvXrR9CcMbuTr4wErYbSH-jVgv2BuKl7yU05CYG55v7wxaj-FLymv5QcDbWxNNar9z1dn3jqpwQUB1j8NuHqb3ax6z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgzOcDXnip3VRPrRBYhXSceSwxP-qAoS6gKWUfh1XlpABCn__2MEtqr7W_p20ZuC2XvkrJK3O3WWnKqKlC-Y0jwILNECj_6lcc9OHwXCH42DV9s71Bh0LSCG09kJ10jJQeIMQGixXJAnhz2beI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRfC77jCQUy1y8yZUoTQ9f_Ym05d2DFuCW0QtstRSqtH4TgoeVCzycTQnmtsg93cKhvhaqS6GWy3XVcGsDB_VQNc0Ik5FHwonZSZOJ_db_Bja-kQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtOMUtODceqsrH9jrOrZD2ieUuWQgmEV9RntmSsOl_BAsn7o8CC6pkTKKyViL3avMrTPdluUvxAFMTSf1Ku5vZf_QyNg-RFbKRK6o0QZn2va0sSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMUZ94hd5N99bT5MF5c6t1oUMm5cM_s2Hbvu-uAJAuzQOmm6sTg4bZli4Qzp9aiuKamLY427ITAcT6AxMlC7gr6wEGGi6AebmMtAVAhVxbTEF-KEurpf_HZg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdu3_aJaWb_90tPKYnrQ7N0HqxD-Q_PucFWzatw-GqUYyGpCfpmfOMXRq_AdZmPDfhT3wBHx4HQuBLF_VmC_2jqVA58eO_219qKQp4FqQkOshTtjpV6B9NVtwqwRmio--WUvETzb97SRGWtDqnP7Rbs772NwHkYVNEy3sIFMx3TIqaTyjOjQ2NZDyJ2iIy-4Vx6Hy7-3VBfGAQx2OlZx1PK32QZHSEFkU1Wd20EayUTrKeKSrqk0Yo7L9zcQRaK7Nc-vl6_au8F9n7Dhdt479ZwamET5r2bHJLHEq8Y04YlCimSlCz3iDayQrUj1_L3hlXyDc8B5rGKFVFDZ3QLOUnQ2ClNSY25kLHdclg9X1Zexd4bKvGoJjRaQ0kbEqq6z8_xRvXMpyGobzs7TvhSLJ00mtT46E86kR9r6NJIYHyMxSn5G3ruJAH_dA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0qyhT7SxAEW09RRpkRfqNcKCHgEgySBrnvQcZJzBQTqRgEeabJR49_3iz04Y_vGkpiQywvq3xWr3Wj_2iEQTNXDMZQR88BoLvkc1udrrm-5gb5bgwC6xYmN4iu77-caPp-yp0q2L29miYvKQEpoTDxe2gjeWMhPhuxcHfGKhX7mI7uS2tg2stF1QwQ570MQyyFdsyFAy8nt0bQvLQFskfHP5VnQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNMcB23NilDsKBJcbvf7xlp5-0U86O0Y14apPdAhCEa_wBr-q88jsqWCpc27MEPr2iNEXRu0OaB1VP1I-5bhwStlNLrBlxqRKsjnd1HHl-UoX9qrwT9hRUaJf8r57eEC_W0fCp9_I3LggbnOdB9A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6Nr3eU1C2Uv5bNAgFKvHN3lP-ZBCcAaSIUHmI3wvtl_cvlAyH5IE261tUuYEyCODVffhsVSYQmh1_TWCBNu0hRUhZoPWd3Ua3vKl9knVmxTOhxoQ8SHFM5GiYEpl3e6nF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9Hu6OpWiVfi_011TAk3KvIbKAw6WhY7HHyHxvH9y2Ot6zXin4a9CXPjM3ypk_XsRxPzkRZM_TqwgJ3_aEHLuSIlJqndwkcuB_SeZmUFLntzTF6KMpAaCtqFM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2lQN4U1E5OWbKEgEwEpq-qZR0aJcG04kqEw6yjcwYVXdU3rWPV_Z-Pp5CsS7v5pzVn0FoYWNbae35yQ5LbXKaqmIKAmXeDI-dEZvNwNCb-vLowJGS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfva4cspQcPOLAMXQ3sE60A282zP_bhoppKds7RhO6-8Lw9-p46jhhxeMAvYUel_Gp38D5ptp6XUNugbjdVyY-EuAqqcSr2hLcUHLgXeuwO7Qnpw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTQ76keCtciSmZ9gR7SB8T2l1UsZf68Mfk56HbT0nwBtLWgJ3tiF7f5r9TqHLEwiSi58cw0mwsTI-60tpI_Clzh2npA3tCCVTsNXEjFyaE41Kv32-EKUqhiRAcUeJ0gxcAaBmX_tVMQw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCHG80oq0c16yIzWYFkaa4Ms0GJTVDKtIA9zrJ0FltCdbbfXUApfhzqF0H5NLYclAV6DrpLNsWAygH5MfOvH0z9w4YAqf9x69DqUnqECR5OccaxcbQjQtOVJe3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyyBfZBKfNUK1XNaIVy7QkUoapOuhxoDxzDNa1LFV0Iewd4nifnvHvxofardxwNYIHwcDW_wOJfyONu6QYGcFpZEJQVye8G7RRRCDqktJhfhyVnwtxgl5LrwrruFL1z2Ll2iH-QfmV9NTjYZ2eT_aCKOnK2Snr79FKrSGKZiaxSgU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFShyl83dVGnx8m1B6AhaCUvC3ePJ_MBUeJTdjsM7yU6jO4CLUABjGTZmGkOZTZowl9NS5uyBqlj2rYqSoIit335WTUw_RdwOKFgETEkV9cLN_r8SDluG9MBQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF88FeezVeGhRETz8Ict5bI3HOc-N30wSpjPcW2Le22XT9kKb4PWMdPXQRUJ3D_q5h97sDQkQwaXOaWTHjfDOUvlE5TotLBbdkUZFUAlKmkdqIy2g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7QDQJlXtlMu8TqLdZO4nm9vbBJypp4bLKGt9_C0tO4RvMj-j-90sHcYP2WRkkSyd3QEszfNN-TlS38wkvxvBSWpQZHw4MhdPykcqzOhdTfHJ4wwVIzDFuAHM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRFq5SoG8APZrOgAZuLgb_HIq7_Bun9BbNi-3FClYvhQAv5J_ZjXldV5EoaTAdq2k-3kMATtGyyp7T2KIcH4JW0NDdG7Lo2LcfKnp9iwrxLJ_o72xmntWv-g6mz-KYy1ez3YrfUACu2wjwxH8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRFq5SoG8APZrOgAZuLgb_HIq7_Bun9BbNi-3FClYvhQAv5J_ZjXldV5EoaTAdq2k-3kMATtGyyp7T2KIcH4JW0NDdG7Lo2LcfKnp9iwrxLJ_o72xmntWv-g6mz-KYy1ez3YrfUACu2wjwxH8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrZaxK71yvUaXaOXnrOGLkqd-fgg2X0L0PYqc7clTrttXWR-26tRRZCFIZGHiAlwpuUTeXz5_VHIuEscsrbQOCEqXq62hQlrOml5gWNflb7gGFV01SIZP4ZMSKeYgtQX7pc3DNNjEWIjD9oH0GXoO3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiVHGxzX6IuZJPiHSo7m12GbQjeGOpeKp2QYy8IC0KUxDKv-Ty2zy_dWYs_L95qpk2GTB2vKVLHf8UPBSggNPyFvRJpoptT_-SqhzfHi0NsIM4G7OS68XiB7kkVX9zQf0QP2pS4CK9dK8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFttHvo9hHLpvx6EEjmd9gbklbEHhNsA7geHHMjitl7OS-wmH4Msitxq7WkFCm387B0tXVMZkQ5waJrFSzG0413F_UeFlssyh3dOcT-XeJ7NipJqgLo-7wguJtqVxRK518-HctrKHYzSweV2l6EzzY2Bjv1A64QTcdlhlfv9UAnmcqmt2-CVtSAzk4NXmm3EFAVJDgVVcMxOaJ_807i9haZwuHSU8r5e2oPLG63uZFbpE90ymM3c6l5vxi4dz36QkBL0JIxrDAOsuVAd_T24RKwxTViX8RYL5CNBm547xK1uVkEengSqy6_4pRaMz1xbVV1ye60sjr8h7_umkR2NocnXvFmIcPHDlF45TpMzaTd7-2x18NMl-ndiLucVn7FTLbIcQ80iE2K3lg75HRdpPUDLRNjIVSt084lyDIGhvSkYq2Rm9pbSZGmznOSRjn7GWItMO1ZlHWfWyghyw1kV0EpUNxwrDxgqRWjO-UV9UFhmJTHaATLEShaa08_L-bwGsbT6PDlBoW-cjMNv_Elh-spPkshnvTEQCsO_dFxMLSi5ywI-0TU8nAdRm87oE3cSoY5aH0eQSVZT0VvMEe7t7_wbiWB7rduSY4FG6jxCWdpnSryGq0oZ_otGKbadJbl3Tt4LqFPqE4MPcvT4Huc2j-Fzgkbg51URw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVBP85gvkKBUrXoz3QXRYrgBoFkZOsex413nqdM0sKoNeI7Jch-rDC6GV9QCTbIizj54bqWeFhTQ1Ajzmy11oWh5TKKk2YNlI-7up3n58n6h5JOKlhw__FOrvb_8J-j0oWH7T6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbDtt0HtvdOvN448OrzAbSIgkMHD749Xxro9g2CbqteMH4nJwV4rgIkIEeKTc-5zXIyWnrAlmOE9hJMQaSk3HCuSkmeIBUtrr-CyyAtJUS_3l_igD3Ecq6LgJQ22-xvjGN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQET4yzkzxsGrgctfzlo-n7uL3dK__X3r3vvun5a-cemrn_NPSl38VTYZVr29qFXwjJmPpiqd_liwmnZYwWbkhaxqS4a-n4NNzbNLqf0ldXdev64erBPxwRn8l9qkV-gXdwbJn9jKu_QKbbth0Gnct1H_UFZmHJ_czRTR-u7_g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "에이본 호텔 군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlcd5qlclUtvuZWkVBP7arXxy3HbnAvGkI4UtQNdbS9o8tg2bzuEQfkNCGlouEOKrqcsD3nE0XfYU5jZPvLl-2i9P45BXbm0Ek66hfxQOr5H57FnGPG1EiQgxME5yUNyfXL6_xRt5db1M0-ZxRwA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdtiWEr6TJnY64TVPj-73CNL5rih2UVS-ZHwkJ36ATywFdVvm9szEa1tSn7YbFuzoIvFKHlxdCVdRvaGm5yKBYtJnUSilDMwtnyzMltMvEda_BWspefL8KIssWPidzvuSF6PshI7mIM7K0lj6B",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSkbFTn41CUcu-lLPkOu7SxsN6noAsMhMB9-pBGnaxns_LUISWGIqfsaZVkcY40nu_GuQR6Lx0nbHIIDxDkiQkMPcy9wyKUIL0L3ipyHCR2_1wCwkr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGydKsfriHgc9ltTOsLCWALY66FYu0HTx_rJenKT0MUJcnbgYKmO9-cI1rzXsgZqx9L752_UWdhkdXk-mY-5qqqum75SEb8ngU4P3P3YxcAI3Lxmg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFI12bMLoY4NccDYwrbEpFxB8cDPpxHQBj8mDW97Uz9fAHl2ispmi5j11nJfOMCPHtwle9MtK7ESGUW0mBEs1MH_x7cShfkuKfD2V1FMTkHsUARwPkpTuyjDl7MaHns9hDXVXShQ7vQK3Jwg9E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzz3DVPBf_RRY2v5wjC9Md5_r9JKzZXrJM0PMMVoXW38QaZeeN9DJIxAvPhaqpXB9B4QM31uSzoHpGSMlz8dx-6rrJuPY8UVLihVditdN7_8cEDz9nGMR_pQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJYRSuWVloRIugLOxA9-I7d5FfvALg9k9Ff4yThtsSzO90-3L4MOfu2IkCFmhtNqDrx3OAcplG2np00Odwck_sP6LHUvaMFmhODPK63tes5UiGew==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVZ7oOKO8Z-wWwr9Ta7OR8bUaaI2QifILFpLefW-Sw62RKrk1s3rBkhJRIJMTtUMLSbQxEtNGylQs9rsXv2EzLaqT1y09EwAQ49rgm8IBx8tT1IXddYpdwulWnO6o7hqM-_sMqTnEykjdQHe80KHAttEuJktmRvca80SqZYCAjK-c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGm3AZg6eIkWb0bYlH8DawnOUHpBbJ57tMCYkd-AkfN5WcUiw89wsnWk2ISTrG72_mvI8ykduEaVN8ZPHoPwumWvYP0hJ4-Xu__bpGJa0BUBNfRTie2XS4OoDw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFK-ONpe5vh9nu3SzxsomZn3Rf7MyLyR0toPeiXrUuDkfGgEhT5nUaWlJ_9T54ihP8ZlGPQMhFPK6vQboCU8-2Majz7zDclEFm_uX3DLgVouRl-wGYdoteqQ8v_M_z2ZDAcNct17HS62rLulJLHYRirkYdGbjp3scBdZQw0UYt1342w3ZXhkfpNPKV-qYxVc_4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHouaMGm_YsRiPRSfGp0Og5q_hm46SNIIGKkm6Rc6kEvO7NYP_noXEXmXfzFI9tDwN4KacqfoG03KtHHNZKy5m2RhjpL24Q8HGvX-2J8R8dBVCKQSGdnNwVy2Y8d87348FQrOl-GWWD8WD3QwUysfFG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNk5C30EgcNSRGY7jMRq5OiQjxqF7WvMUVfeTWUooV2Jl9-ZX3wtyKjM8wh6Gsmxt-BhaBhPneM8mQ5yAtIpA4HXW3TK4DZcg5b6XC92X5n8HV-iN1bTWCiP9wH3e86pi8lS_5AywN244=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNk5C30EgcNSRGY7jMRq5OiQjxqF7WvMUVfeTWUooV2Jl9-ZX3wtyKjM8wh6Gsmxt-BhaBhPneM8mQ5yAtIpA4HXW3TK4DZcg5b6XC92X5n8HV-iN1bTWCiP9wH3e86pi8lS_5AywN244=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPNr6BsmVexryBEybLMCPEQtLr8HtzEhtBoK7mPcqYBzR7QOIyJL5GYp69PsOt4jaGidex_w2Tuj3L3-Hehu1VPbHB0Anw1idDj65WOLoZz6SPQ-yyYlfyEv5yUijeSfD1SfGylmb31vvI34p7DUXpjDxqPk8Bvdh4F8ksI4BTLZxQwzg8uHHiwCnWGL9U_gVkdEEgCeoGfQ_IxJbx5qFs_-uHZOHDJqzmGa056Hie8m-C71BdV_0ETUfQ1ovJBpThKr4NcC2io_-Cx8fDisKbzGxD2Az--yxjpbnkkPHwwCHbK3bDmgVgBl9tKuMvoA8mNuMKc8KWQdsizrJbK0K-9bf0lP7_hpu1HtuUN6DurNPxQ7PZOIezxFNq3e4nAOlZ0S58x2kE-ClUt_LFdBJEUD9lUumqqkdbnQ3Y_uIH0I70sJGiACenX2uUJQ6PZSovsbFT2Q50pKXOCMt94dZ09-TII49fOkHa2KrMrFmtbs4er8h0v8dd4ALOv1bL0H8lU2b2Y3VivUcNoyLpLatNXC0y2TVKLPnsFglGKBiIeoJcdkSNPn2zU6RU7Mj54Ix7QwoRZKlFdJ50drzW2xUapw31KB_Y1MLVme4bKpecWLHJnulYqCfJY5gSOc4yUAnivyWOPAiFr84ZKJ8WOv23nLFboK1bsg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHR1nQHTL4xz0x3H7EqdR_j9s7l3v7tAvznsmavQ5XkKDyeCzBT95tbV0GE0fE4rgf4wb0J0hlCvBVVSg_dzMgEUdJprjyyMk0FYHa-iAiJHocqukxgSQMEPeKO7S7-CwBKCJR7c1fdUg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtV5JKI_clmPBbhWfDkeNoSpM6ETTJI-gYz7v-BVd6B7NgfR62vYynbIG1ZjIvvYuahl-aQUP0WkAePaPpPuGvw6Xw6o5PXUNmaSrcWQrXOYJsfTF8PIGbxbfmg2Cis4a7ddVjKT7nDvQBAVHdIuLaUK8nTz5Kpk61cSdImw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "에이본 호텔 군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "라마다 군산 호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "2. **베스트 웨스턴 군산 호텔**: 현대적인 시설과 편안한 객실을 갖추고 있어 비즈니스 방문객에게 적합합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "3. **베스트웨스턴 군산호텔**: 깔끔하고 현대적인 시설을 갖춘 호텔로, 편안한 숙박을 제공합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "라마다 군산 호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **베스트웨스턴 군산호텔 (오식도동)**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **산단 내부 미팅/현장 중심:** `베스트웨스턴 군산호텔`",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5nSK_R4PgeZSg-angReBM1trBvII6FkXK5NfoS_9ZQQQeNAgN0IgkuaexuTvLdqEUlud8HmgM3RkvSOCKNxazzl6HLijZvQL1IWSfIjhY80Aowxo_sqyZ7vsFa-uMacR4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbKrff9bhmDtsZAlcOLEML7clHburZex96Ksp4m54MmOzCfJgR5MIQUtoFYdHGjsK0irFfo-mfyO5wyvCKri4y0eTmkGtq2KXLdj5GjXLtygwRZ91i0T5hSs5N2owsygl3f7e9Mf4qJGDieQ-lZ7tKxbQPy6MM-V-5iOhfubK1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGV9w8br1mOtBjuI8WTVXq3_NbyfuAv9xl46UffBQT1dZzH0r6GUnrII2VhoTPQ6b8FrwtJapImaitoxaIDr22F2JqRV-8BA1ImSnm73iGdM5rwYzF5EQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEc8VmLq-YoA-3lmrSwUppltjAh1SGGeoaBZrruPnW3b2hCA8ycRptipPLb-rWYCYzRrKnRM9tG3miaQZE_ixSvk-5SHZY-ZSQuDU1ci3YyNHolWe-qAaVvHPwivvbbMi7PQvUhux57SnSi6XJ-WgClhy34Q0izzqsxEaRaBbNxp0PjhvOJdldLtFCsn91DqJdErMGgjQPf5nYNYeyJC4sZP2e5xFVRLxcazMRNzHppyV7LQBm-V_459vOlpzLTT2iqwnTOboAaveEQNSs5E3j7kUhGeKiRzsdf0ohcCJ86V6-zwQGCYPR95YbZ_mMjagNQJuhC-Zw4JVmSPR0zmjN-4ctm4kcZ7HpFl0w8UvUHZixMm4-lmftjzyzcLDVJ3s5FQ5P_SNp1ZqF4oMuQ9BL8fCVWBMGw_iU0XkItJ3Z6UNTEcRvZxSVtLkMvmsT9CnQBO6F1u2mz_wmqkTXJTb7_1OFTSjEJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXW5_zQ5uhjlDrltOx-jc0ozahU3XR6lh2psw7Ahcu24gFsozkP-APMRYt6vaYwWii5D3TajcWwByGs--6JrqOZ_cxmS33-DrxPH-2jf61DcCWf9UdpMk_0UWZHir0UsYIjn8q63W-472j3iLQqo5QeKrmQBE_9Zc3-7Kbecjo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsLo8IZvebl9kH1AO6r3lJ-9hPbb_g0O4tNtCOrFRoSLz8cuxR8U7joYw6PtnIl9LBTvjayUUkY3fBBtMwMYZfGd_aQY0AUCAy_ANlSW3a9VNMsD9kP0pW_cptGAwjh2uPm8kAP6lV8AcCvHWDdvBmLhiLk-KiR88D3AJXIwVYzcI5flKo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGiSjb9xEI431MnlkZKgKZPdUemmXh8TFj_-oy2RJ8cydCf_Vm2aC3VCir4lsdWFeu3yuUhZHlRUD6q1HkU8yEUaQD9LsYbxbN899_JBwvbJ0_iYGP41lUVNv9jPcubFXqHfG6hc6YtGq9wJYHrunjWXsSD70gaGQnIIzyof6tqOC3bGwGBVs3Fv6TOPdH1b8jVKlA2k0iqdm5YIaGsU2_uAvOz6BDDTnu3kIpEAaEn56ByBt2D2MnqxKetTiP5qRJjcl_QOBSj_oWhtKt8jpL7bkMMvJFF2md8EEiVQU_nmQNODVob9GWyMJE7ygx04vvalhpvuHaJ80yShPnCWUAx5f6LkskHSSMS9l3fi6uBoBr9Apr-qgXHAiG5LOepCQn-GOyNtQApZmKppqnYdF-lvIATaQSrYhP5fdT98NN0D2PRtUmicU3ETM8uC3nRYfXTbR53KgbWUoiuwzn_f9RVMG6vtAQf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE15ANcXSfhzhbQKOlZUgFOPK3Fld6jCuNUokkUG-JmfO2t8CoIpJwbdMSkdXjySCq1adl7f3PaZQPBJ63m8F99gEWHN99h3P0t_tDfh44_vlgQLVlbxZUSXNbJrBMOy2NoyXsv3tJeUGfz_RS7GM69nH57Csvq8JQHjPbhyEqqlcRf4phI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwFog61tupwRLDdKuxG4r-WSz2XLis97xGZtXFHSQrWezQ5FnN_0_GLr-MQ-xtmPZwetgs-9uhFfSvoggRJixUAtzUfnG5wUENvyW5yzASNZT-3ZrJvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFape66zY-O1RmExRrEuLNWgUOzM4_XC6Z_sR3AS2OD4uqRzpt1w2N4zBMpdg8WEisuT56fEbgXmrfcboWgwJ8xffU9ieyQNRImVy_lrb-_XC5CizBs4Oo8hUGBhkU-qdTWmk5rWrnA1kgvOtKKUXeWLaM4o-_LlK7tEw8Jhyg2iFHdB2siUATNWpYNmeHk15QiEKJQqC8hCjDZ97dKC18eb6AkF0W1sfvL9SduLP8QT7ukiYDTOH_zp8KFjjM0Gg_AgghZE61QdG-bWqlj4vueZjQ_23LbUiORzco2PYiEBmIBOZ7fHoc9dwlWtcv4La6dudTxTVYYxkMcvADpiAooaSeTZcxnuuGlngPZ4uGfd88O0wV-auueWXGXx4eGNskOfEGdDyWSGI9mDT0QqorMTsg-zdfIJoVh6_lAHXYEe2ERy868jyu8HAHcQqb9ESqnJ48ck_hoON61e6WjjvNM0AtfbKZTiyyMILwN11rGAU3ym2sU2edz6ZbBEqNAqtXzhCuDVP_bZ1LURljhal_KBTSYuTzbE8-hVlhjIXO2OhfnUaxRqEWJfdl10mpf47e4L6Od0CYzOAdXtw_P0YZHabE02q4wO8TiW-I47drXODsUcrNRPftv6lAsnpZfufUW6-3zxrunNlqprFB2arHD9LWDZxYX8qq4EyHpcDNNZUaizT46K5OqHZ8kSGyzJASYywXVHfFT9iZyUhDywtaKAxj6_4RaolawHXXR3PblgXn5kHOqlSQ_FOidpyFerFB-cirqX920nprR7LAbsoEMY6yjLpgXnQYj0VB1FPDVjgvPQqf1jzkh86LPwbGLm64x_6q5MoouIjxDRqRfCP1LxwJMw17OFH2IzwI6Qzml-UDrPifcdr9Y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNdNJvNW8WGPw3jq97r_ZppUaqkt0VGNpy-KUkQ7ruhRgGu9V0n7KFduQ6xAmzpuk3wHyfkcU68TlJZ0Vs3sajDUHbzq3v7YSv55T_mcEeI8Bg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG_x2fPaMCB09VR7GuebLmqF3zyWdmvKFchl55nVQzPgBkEMvMvTRMJCYictzZI-sf_AO5tF-YP1vU_yrujVOVqnFwNKtGk5JdjBVO59cMn10eEGOVcEAcTwx7w5tEN915dxtDq3dxoQc5zZ0a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **오전 일찍 미팅이 있거나 산단 내 이동이 잦다면:** **베스트웨스턴 플러스 군산호텔**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG25ymHzTRYFImJCbRWRjP0aV4aA8wyyfxoz-UgkAL5GfG9CV1Tg8oUVnJXUGAOLvt_rYQ6n_IJeH4tyfc3-0yqu2LQfXYUqYav4gFtSUOKHLsEkxodThTvnpnmOk_clcLZXYXkXz7OYlOgLWoGatmzDEnLndRqlONTjzsk0_SVRLNYqWfB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-vbaVGuXag899Lu1p31IBHEV2dZ-w0AsKQxhy2AJD02wmBBdnBNUgMU5BVN9g6YeRpUpRNT0L806rNKwpBeifrKnLthWoTm_BKylBgRaKNR0p1Mc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4is2_0v088D3gFtGkg34XQTa140iKgD9APMs356LKFMQRaITkg4JqUm11Xg4-xR0Yp_KlKEJN_dh5i4Xs1Df51btaf_wpSwD8W2vcaEL6KCt1xf3W3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFggVzebwWZ5CB7HyAdQK_PsCHC4SHG5lurKPCHXVSKnleO9KBSv6DXhx4DVagfWs0mkqhukFo4-wYCyxDTbDzgXBPKBJrL4HOw8HCGxVMvb2pytXAfw0M34mGFMPlqgQPc2yYlFTHjrWpKtwKziV3TLb_HxCYT6s1ZEZSC60ET",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXhUMGDComTyQMTdDJNoTrqabVvxkrNVc9wuECnBaSfHi3yoGVdM88PEYUAUoUHFg2toz43ndGrvvWWE7lIgFqxyYT9jRH1R_dJof7gtx69r8KIyEeovFuKAnsdOWm-bG0JMV9S4X3WgH0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuVpu33SBQwNQTduD76X36-jY1VqwdsGkWE9vlexnRnEgFvtr3r3bNJHRoXcnFuypiFhePgNhjgr4904qgidv6mOKE-K1JNrr025tVmNgFXAlzAyI29mOEAR-r6BYXa5Z9E_yk3DEXbnnNaAmx2OpXeg1TAoDi09porMR728KFSVU9zjoFTPKl1IGsKNmIpKQU3YU5DokSKdH1CmKvSFq0sCzo7IEulayHSO_Y-9a6PZxexirJAS2lmlBA2nHwPqAS2ku8IvSDSPe-RhkzV7wFZS6BePOlMCcMtUfvqnmDgjnKnsX0OLr-epSC49PSWLfaPOmG9tHBrKaL4E-mBGGPsszLz3o98Tcdl64HLattDswzorvhV6hhHSnKiy8lR9isNKPeRV9Hxz4nYuru8_6R5wpr2Wx3WVkyzjdm8_k-Hg19yHqddmKhhG-p-Kz4O1Jl2lsTK1T_PGJiW96bGydeBE1zT5we",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiFnT5-XDQydp-wkAY4_k0owRjLekPTe9SMLeWSYB4Z-s-GUihL9bd_LW9tGNY8k4muuFiv6-OQsuBVwwPUVohL-PbJlW-aSId8GD0V_ETrq_a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYU6tFCXYkSpPiQAy4Z7-r4Pm-EjVP-8ihdy3aawaj3vQde728kltQs6W9mOSXhQszfIlFJS1w4pj91tfEq5DkfwF-P_eEb9Ebjk993NqEOt3sDgvx3wy75mjfjl35SU8JX5QgmbI4kNE1Tn-e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트 웨스턴 군산 호텔\n• 피트니스 시설뿐만 아니라 수영장, 스파, 음식점 등의 부대시설을 제공합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **베스트 웨스턴 군산**: 피트니스 외 수영장, 스파까지 제공",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d8073787-Reviews-or5-Avon_Hotel_Gusan-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "www.tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d8073787-Reviews-or5-Avon_Hotel_Gusan-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "www.tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://datalab.visitkorea.or.kr/common/board/Download.do?bcIdx=302197&cbIdx=1129&streFileNm=1f661a06-026b-40f4-9eb7-4dd5fc5d2a4f.pdf&utm_source=openai",
+          "domain": "datalab.visitkorea.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/65267?utm_source=openai",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
+          "domain": "travelquokka.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
+          "domain": "travelquokka.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travelquokka.tistory.com/21?utm_source=openai",
+          "domain": "travelquokka.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "3. **베스트 웨스턴 군산 호텔 (Best Western Gunsan Hotel)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 베스트 웨스턴 | 있음 | 수영장, 사우나, 스팀룸, 레스토랑 등 | 다양한 부대시설, 평점 우수 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **다양한 피트니스 및 휴식 시설을 원한다면**: 베스트 웨스턴 호텔이 수영장, 사우나, 스팀룸 등 갖춰진 부대시설의 폭이 넓습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://en.avonhotel.co.kr/fitness?utm_source=openai",
+          "domain": "en.avonhotel.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d8073787-Reviews-or5-Avon_Hotel_Gusan-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.isa.org.jm/wp-content/uploads/2022/12/Info_Note_Participants_WS_Enhancing_Genetic_Approaches_Nov2022.pdf?utm_source=openai",
+          "domain": "isa.org.jm",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ramadagunsan.com/view/viewLink.do?page=homepage%2FENG%2Ffacility%2Ffitness&utm_source=openai",
+          "domain": "ramadagunsan.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ramadagunsan.com/view/viewLink.do?page=homepage%2FENG%2Ffacility%2Ffitness&utm_source=openai",
+          "domain": "ramadagunsan.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.google.ge/travel/hotels/entity/ChkIxrWTgafxhbbqARoML2cvMXB2NXlrNTJxEAE?ap=MACIAQI&g2lb=4208993%2C4223281%2C4242898%2C4251619%2C4252106%2C4253230%2C4254308%2C4258168%2C4260007%2C4262509%2C4263347%2C4264355%2C4265959%2C4250437%2C4251519%2C4260385%2C4265427%2C4269057%2C4270859&gl=ge&hl=en&rp=OAHCAhciFRITCOTHl4aCiogDFb4HCAUdu5YZlQ&tcfs=EhoaGAoKMjAxOS0wNi0xMRIKMjAxOS0wNi0xMlIA&ts=CAEaBAoCGgAqBAoAGgA&un=1&utm_source=openai",
+          "domain": "google.ge",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Gunsan-Hotels-Hotels-With-Fitness-Center.0-0-d1958-tHotelswithFitnessCenter.Travel-Guide-Filter-Hotels?utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Gunsan-Hotels-Hotels-With-Fitness-Center.0-0-d1958-tHotelswithFitnessCenter.Travel-Guide-Filter-Hotels?utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.expedia.com/Gunsan-Hotels-Hotels-With-Fitness-Center.0-0-d1958-tHotelswithFitnessCenter.Travel-Guide-Filter-Hotels?utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 베스트웨스턴 군산 호텔",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 베스트웨스턴 군산 호텔 | 피트니스, 수영장, 사우나, 레스토랑 등 | 4성급, 현대적, 다양한 편의시설 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **운동이나 휴식 중심**: 피트니스, 수영장, 사우나 등 종합 편의시설을 원하신다면 베스트웨스턴 군산 호텔이나 군산 웨스턴 호텔, 엘 타워 호텔이 좋습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://onehistory.tistory.com/88?utm_source=openai",
+          "domain": "onehistory.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-hotel?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-hotel?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-hotel?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/10060132/694564/816911?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hello-sunshine-garden.tistory.com/617?utm_source=openai",
+          "domain": "hello-sunshine-garden.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 베스트웨스턴 군산호텔 (Best Western Gunsan Hotel)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **새만금 방면 + 출장/비즈니스**: **베스트웨스턴 군산**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbmMkzvohwknAE0fXKTCwMHK2V9h6XxGu1TJcY0KSN-ERUD5T8Gavd4Z5a3TdDRQg_NgJVrQCsTb323YTC-hhRsV83e-WtWSLybnATqOhj6WYDgXmLp-7Bkg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHejSJRh05lRJAIbXl1M7xxGNid6YmujVOubMRa1C7pdWUd0auM_zRPDlotIsAPhPDO8Sd57oZkTmhDuFQZvK0EKcyGIU4l3UcpSdTxwci4DQ5ZU6Zl8lg6Fng7tVLGV0-T39lB0yMZjw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHyvvOK3p6k9j3Vnm5w5MDAZtG5tzrvbhCYXVtQcTsydy_Csdo6ieYp7OOFFadClW3GmjqlRoJWPndGkG2j_y4bbl8sokCoCuor6aJugqOQnk3arrhlhT-EWMS7UvR9ZQqaIUSziBByZGEX-UKWDGdGfRgsGfICJDZhSvmdOguzXg6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsbg9S0e5LFuf8WypelJiQWpPx54wqgG7DUslD49SD6huQ2cxglcl8ikda3NkR39gM2IhVZvdcZFSAROthkXYqWUynTtI0gJI-i9qK_d-AiAfhEJO4Gx8w9COb25y91twXSyNR5k3QQsS-xJ-NvAJiTmo==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGiA2N4YgnQtwVmVzDr45tBWDdl0BWxbYXP8aTp4XU2AddztNLr1_C-sVEFL7wTL54x4QF-FETvHUNJT1XxeAOzfqsWg5QQoagGcgVed2VlXANrhdDUOUI47OLhivAkqfQeoD_cRH28T3MWGMq99A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGScxsH_BUODZU45YfILJC-xWG5CCUG5NT1MpC0vIqP_gSwizs0UjFESjaCk9-uQC5iEDza4hJn2zbtBQwx73cuyjKMZh2cZLLosqgSLI8qRedvjtlCxgQp820Ydg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFb6V8D6JVo7qAhPgRLU8uWNzNZoINyZCGIjI4Dh60F7GyUIfnpcm0LbYAQFwRkwn14ZD1sYa-ZH1k1Lp1-bFDBfdYR_UDYXD-tJEBzzYT-2JcM7A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMmuKOZG2MbJDEJogHQQeKUK7dB0fEwc1URsaKCs37O0m6grNy-G4AHYXSCaphWoB4NVQyme_0knYLsYCt1uupa1N8W5xKRBfCo04JpudEErGK3Rt_SiUcdANBwJtOPqIs9c1G-0A9wg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQ2MDGBYfoCa04R2oDJMmUhn2ICHsOSLJkCkZzdEwqKUsybVh31-m45ySGJebRzUwFaaK57qCCJJhGaEfJ8fvkLiypBKk1Sdj3foQH-QY74Tx72hfHYpPrti-6l7hwoW5DUqYX7bUj7OjIo3bdQz2J3CUMMQPcRKVslCo_ykbclf6jbtn4bw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGt3THRqDjvU8GVM33SMoxqDSuU9uEOOMJrh6tCjd0ld52cBllq1rgRiRHxU2zEDnTgPJ2TDRbr5CRhHPFNnXiKY7rCMrxwWQ1-hbJ7EtCEsj7g7hOQ3kk04SkTUXEcpdncEIIk3tJsdV5VCJSQfwhiyzOyi9aQJT3vVu6aisdt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1YB-N1Y1cbca-ZPJLCRxWrRfgoxq_n4Bqplc9gumWF3Y-2_rSILZpd4deWYcglaS4nmpQYSY2GUoF1GYMbPeDJyNZUf9cCKHE3J_fyIxrhraN5E9DIVxn49K8Gb2ZXhljRC5zHGcRlk9HLLLQZ5I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQBnGswRq0BXTfJF26IQ_kTGBtqa_KaztlmPdkiekChgpZUuLrRLEixq99Nfv7Dd4kMOl6zyW6RXMmu_7309yhGi06k0j8wDpQqnIKv6Or62DfoVtP_IDrGEn1syzxzv8KUf074l8yfXRASitl_cXnNXo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnqZOWOKW_OudvcgXFhGsTt2tmFn9GcPtdYD40DjfBje232uBtI67D1jHP8RpfoGagJnTlsa9ZM1GniiXzxvIID3nxphm3LDbxNEsCrFNvg_FqOCst3D2RtyAqE_oMKr4us3Znasavbw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZ31PmHYMQM-5FyfJMQKPuQjX9jIutp1hyt-CAUy70kp3os8j8LUUmLPbdlMHij4KiNb6Arhd1DmSGdwZkMP1iePIJmjHcvijfsZNIoqgUvjzVY95br9WTROWRZVlMOh-J_mh01J0rv39uKtqR6gIR-5FgWLPr2aCNWa9voJClM7fYtwtBqrc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 베스트웨스턴 군산 호텔 (Best Western Gunsan Hotel)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **넓은 객실 + 조용한 휴식 (자차 필수)**: 베스트웨스턴 군산",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyv0XF8ASJmbjNQqrgiqRDD33lkeSo2iTSvX8oU_OS3AUXzg6MGvu4FpYyyQLen6gWh-jU3mJ2QdEYWC97XGPmwq4jCmLPJU0SKjb7aiO2RyPrvxzsfA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfTFXhoAYI0poxWerrtGQkhUH3Nn7l3JtFwwUsOeBeozqeqOuGAka2n-XUUuCeFM1ApuDfOkIMLJP7Kj-iUEkZGyOPnqU9lvW7uFiBPVoJDT7PqWBV5NcWh0kRQOrBUPEtwV9BKbgiZPdVB5eBnEA4mF7qHfklFpCLsm2JqU7jpEroW841x6i_nFgFTzoAKVqNPuBn5qQEDe0EsfinGu2tJWtHqlAweotnICkz1xTqimmP32CfdQPfVHuYLG9qTotX6KkGr8OuHC04wWhtMD3XHiMhxh_I_68dzLw3Wd17b_F2ofBiyoWcBVwW-rRQlVC5u1OOkyk06Kom8Xh2ULime-4hC0IitjNbBHqgLCrzIUblJoyKwl3053zqrAmqj0aUog996Q1otDQQKw0_ju69ycmpS2MEQXReu8qktDj613e3cGLMlOubNrKEHsnW6GK9jgAxF5Uka9IbKhsM81l2twJf50Q6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtKvSFCKcyH63EKSl_Qj_yNOST3YI6Yshx3cX4lDtXEmIHazcyLz-p40SaMH-GgNu4EyRfLy5XQLz8n7AtfNTju8bq7q_xEDi68M959X5-vDL50oDd-hGfRuJIEPFCIBmMOLU0U5M_bDkxcmsiqsYGbuId7Kb23Iq2TkEAGWIhyJxpeJ092w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdkp_NBynH4LgFMcm06qhyn5lporFiSWwQZjMygGBstsWMuRzAIAacIkkItYk4lbmv9XReuFiV-NFmFdp2BQtkDf0TrK3lpUVq8kstI9lISCuQICc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4dy3zPqjZ8-qTQ2XHPbM6VhGVY3ExVHcHI7wxw3OCxCarfIYDn36C0lL7jScA_2PVLFfO68wlkwya2TetJfqquZ2F7LgLnQCfNDUA3DhggWyShk4qJFLDCtX1m7XVHOlWANz0aozObRFLJgZTgmP5RpYcLeu9sGLkSvOce_bD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMaZiD_gVh1FkfzqElu7YIcuY7k2S28cWm_BrCHPImV78O00GG9X0W9dbEeNcvgBYrL65q_DplO8vzLPd5tNe_I-FyRfH0s3aywoRkcxgzxAANZ4gIVamgU0skkAgEwZjjj3jRbfwFsThVMdRFBzln2mw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFFb3a0XZdIUcQv5yCaiDUKabeQwnZdOnCx9xIYqwDUtmeL9mJUUeTxl8hPxMI3aNgyX8sb5ljwycxCim7geXRpY3ihp11rTWRqMlclwGGhxhf5VTBcgbW8Y2q",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMI-8cJ26swetw8CCOU2vnlw6057VCedzXEZmwrXWeWDATL7eSjCPXFZtBmJaF8rfl0Zp48eHRGq86mcIqZheu6EZqoIK_0e_ziBqyK6IyeLHLFtAyDquuY9QEJCvda4tbhgUtxjgm3Wdbr_XK4FO0o8c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 베스트웨스턴 군산 호텔 (Best Western Gunsan)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **선유도·새만금 드라이브 및 24시간 헬스장:** 베스트웨스턴 군산",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPkwhXQgOb06Yc6h29DQAdd8Jlb_nP0zBAQrLGF5KTvWQOqQTrWm8aEzsD6RHIrivan3Ja1TYEPYoHW9SPCQqRuwkudeGzzGLoKDu7ipKu0OHLqk94gVkr7rYtuxqYcE80XgXQ7xdAUdXDNBA_lmmIduELOFCpdr5BlFaxrxGvBNLWHQ35bEAQI0_ejFleJdp3MgNOXTfX-R7t71Sz736ykTazQHCIaoiCA603KvazmZLP6DC-9MDXXEExgbE8GNpxH60_qtmijxT0CnE-lYOamB7Hc_MhlLA_b_xc0zWkg_Rdu2mQUTuFiU_UiDUpuFBex5wah8z7E4wgmcyAkjHXsM85sM-uYOfHcGdueVnvNHaVUrZowM3gRqmd_mmwETxY6_hC_Hn-mzWN_pPFQlTt8A0_cClXoPpXVknY2CSeZRa9TvJtnFpj-OV6lbeVUzbB_rpZslX0P8BUWimdK1A6bX6kyjIX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSvdrk10uz-rl8fMzZ7oDR6GRHC6t84LFXRBpeaHkKEaFGewLcuMMQkZetqc18227zg3wWfKae50bpMnijVSDfVbO9RsfVfz8ihmBbYHtIWwFW-qwXlQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtSRVBCyjT-mV7ZrXT_8lXw71pteDAqkXcUd4ydWccBzZTiaTzJQFEst9--ZCTDsle78KOx6mcDdcoLxKzmmcjGimb_w3ZFjzK0NxhOo4p8DWf7Dyw2xbRZ8lhN5PtW7S5dT8f4S9Mufoo5N20JPlSdSPIDOaQA83LemwIM5M900JZkycZTg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYtBfc4NCOitieY6P_K9NKQQGI3ktaMAXfzsyKWmGPjnDqtc2i6KfUPCoCLUYXqWZU4QEJY_CZOgPNFW69k7JiDGTMQPjb0FJSGBUoWhmBeEuj7g8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCjXRX0ipjNIVcjIwKRc67pa4yh_Q20I2J0fNugfP6dQ9uN8K98ThkBlTKabZc-7EZvER5dgsaaoXl9dfvoGTa222xE9whs0aPoNRULLdI8dIesILsxY8qqiuAjgNfvw-uPIHcHG9jtmoRJCYYdo9VhHU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1Cg6Tr7GAogcCyzykfB0W4t9OasqeXQdz7oN5a4GsQRyan_p2CXAHv-hC4tzIdbUFUuPilmwvFwuXa5E4PpTyb6YyqgaBb79WPOe-U_BS3SNbYtzSvy-T9JLhALoHCQlB8PHyxjjEqnUvwNRy3qPEj-8sFpoxPZYstmRnbwmo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdYMIBj6v_nyH4piQnG-Zk59mESlzF1oVBoTekaZLwj09kE_ybg0uYoIgigr-kFGn-lzpC4aGRCv-qomYGAXQXe0-rzOSplzHgHNd0CBjMiww-sNv3AwIo36px",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEF5RI3frKmXShKq-mWbPrrlpDwtR9Wd74ttflGBtc7bFpy6yrfsx0bjiBWKujDZR5YAQCXryOCcCbxlQLpGezYFU1anyOzQHQJ9nWz04ZMYg_Qut4CuD16OxlZ-kfem7Wzu7vJ--Cs0wNDb9oOjLujVu0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/ko-kr/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/ko-kr/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://qurqur01.tistory.com/926?utm_source=openai",
+          "domain": "qurqur01.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gkslgksl1.tistory.com/3933?utm_source=openai",
+          "domain": "gkslgksl1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gkslgksl1.tistory.com/3933?utm_source=openai",
+          "domain": "gkslgksl1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bibotry.tistory.com/entry/%EC%A0%84%EC%9B%90-%ED%9E%90%EB%A7%81%EB%B6%80%ED%84%B0-%EB%A7%9B%EC%A7%91-%EB%8F%84%EB%B3%B4%EA%B9%8C%EC%A7%80-%EA%B5%B0%EC%82%B0-%EB%B2%A0%EC%8A%A4%ED%8A%B8-%EC%88%99%EC%86%8C-%EC%B4%9D%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "bibotry.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/27649/707505/844005?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/ko-kr/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotels-list-7254/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/city/kr/kunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/27649/707505/844005?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/1000112156?ratePlanId=227993&roomTypeId=359681&utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/82175?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/82175?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/27649/707505/844005?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/27649/707505/844005?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pickno6908.tistory.com/32?utm_source=openai",
+          "domain": "pickno6908.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pickno6908.tistory.com/32?utm_source=openai",
+          "domain": "pickno6908.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pickno6908.tistory.com/32?utm_source=openai",
+          "domain": "pickno6908.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/82175?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://place-site.yanolja.com/places/27649/707505/844005?utm_source=openai",
+          "domain": "place-site.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF40dG5sx3JN4p9PV75CXhcGJk3up71qU-zk9cX3kzZYfk3HdprsQh1ONR3Kj5xoWIAq07JIIcwhJPZ8X-IwlV9OhDcussC-s2nSevsA_8qlbP_VWdG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhsTGWNSL6XzWsBNV9-OIGLlA3Ax4eY5eK52kyGbwCcXsO1GBRgPpRpCeK35vPwG4T5foAXiqD-D06MLnOsMRfuzP8wjUx3LyO2p1F4Iviju0uXYpyv9bBo1ObAz4TElKrMubInUgofKdi3w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlniYpzEiXpUsVKI6B3Jnv3dZqZYl-sA6YW3YEd7CPO1BGeCWJgGDuw6Bb9SsY-ItxYD96D1AOgwuqMXdDAc0W1oaaA0DOkR0RH0gf961YtkboipZ2VV7FNElAkNRB0PJZ0MqF9SIJEG8DSWYa27PiwTkyIq6CclMZTXu4dhHgsUAW7_w7WX9FNXo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFu1fIfY_eofd_bkK__KcSJYKcZxdYvCjabu9k_fUbTr3P3mAeAvN6zOpufCXqzqMXRQuOqtm52Ip1xGzqzu7v-ojJ7CDFYq2gIyQVIa5f0BFyqqqrVbztR58Idonb_249LaVFWWUBAZkya4Fhx79Db",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzdSdx-llEKGLuOvYW1z3N6OEtQjAlAa2tKdzzvPiQYur5ruocvVgBLOIcSaTJi2VO6LwOwO2X4ySpVn-WXRPSNWvon_9oX5zBKp9_ftPdLV0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJNmL2T9qxemfqZtaJfbUJCHoee7aewK2QDglvgrn4YBLDPevbJnr2q6ALfblaciohrUBu6H7r21Tm7rEUIG8Nhs114u_0M6ETLkQFVd1O5oMnbxtxf6htIu1Gflq2JzjIe0HOB0dYT_rYEnxbb4UBzG1nm7LLhmSgMiDh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnzXiNgJdvmawChmykk0mKyvYpUE6mmSY6MvhLDWro2nxJ605qxemCI-xuolTSQEsv2m0WIG8qmBaDZyuC2zgmKPue7BhBpeTJjdP28-SDcKMQn-WGP4LKR7bwkZUpSCH30Lu19fJmIwdoaMh-SAX_KAgi",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJKUHwOtykEDnCRYOe-SnEydgb0gzi5WkEC5DLutmNKq1AwCB3IIZNWD1JNQEe4kuv9T418hOOvqX4xh4kEpl-VuYG4wqVG6dJ_VSP0evyAbyGUGIRnAR08i36920d1SnA-FHrGihoDLqEfwo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "호텔 은파팰리스",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 베스트웨스턴 군산 호텔 (Best Western Gunsan Hotel)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **\"선유도/새만금 드라이브 일정이 중심이다\"** ➡️ **베스트웨스턴 군산 호텔**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "라마다 군산 호텔",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 베스트웨스턴 군산 호텔 (Best Western Gunsan Hotel)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **선유도 드라이브와 조용한 외곽 휴식**을 원하신다면 ➡️ **베스트웨스턴 군산**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVAyyU0Bvi9ZHl2YcpaRzop-cGwwp6_B7vhHvgo5QmFaJZKMlmyRxCq-KAqkDlvmyIKUTQwrMfATfb9mwlh_3mDuEDgUv_Ki06Tb_oAXL5Mc5b0nBWIWMoSrv7uyT5b8SBVAiiXVm_xImC7KQj0nR01KpA1Wlu6as-6Scm45pQBhymzWPlmUJWClFzziWdOzNL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEiqODk-WJLjTU-NX5rYGPl66iUY5fwYeSE47WeXRuLHOejqpoQmRVN5iOgGOkis5YoxhVSWO9iO-TlSYYYEw-JFPTCDvtpXMP5VKV4_EHE7BUmUqKZmYV2kgqxNzdt72LdcLpavJHng6m0yjAhbhnVzYBcj6YnIUNDyCJJzjEx8OZNAv9DgTQM-hoSrccXPDbQYfoY5FWucip-x3cKHlEZJsJ_eC8E6yZKts3VDIhFhH1mcRMlj4BdTbldpOVz0tRoWezSyOTOVQ8y5yDEUToksTdvtGSJGbCDg8jK4CxvkzLoFB-KzLjciTyDY5OjeeUe4aZ0HOZVY3kBAdL0jWhxTkaeGbCnV-NP2LS69Q35VeLt4K5y36o7r5Exl5s-66rMF4PTRd6t6D7CYHENAFqiABgjfjrg07lmiIxFb_FSdgXzSUX3HHNQr1VM9b62DKFSWJXELNBjI9ZhwgFwUb24vELVg3I",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5AViX1KasAilMW1iRN_xQidJ_4SMwjppHZ-jpPA8zHc5K_hG4137YBN3AM_3HnHI0aJ7BPIq2ZL5lvVIxQLoTbP-7kWNuNATcDwC9tkhHpKTE7w6PzKxzDJ50VAgIEBthdZ5l0FtYR4qg5IWpjaNpYJLoiGafsrrGOr10jREjT78VnQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQED3kQX5Jx_S10MZxgYhzRFlElANU6wM5C0XqNMxmNTeR4KnZfn3iT7IjsCS9gqUNaml9TWrp7ljm6wwDOb9Qno5QgotyMPZ3C3ZiHB9e0SxG01sRhwyg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNkFpccGQFU6c0GprLCXuJfwlrd4mb0_ur-BA1moLnn9zaRza4lCCtb9E0oCNHQWgYdS2UYV4OmEq0U8D46naDDIfRftp0uYatwmtqEIIlx5K8avO8s399hXk9btgBXhfmFsQFTJUnRcoR07P29Lf9s0pMQg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkCcO6nu-Sift2GS1S8Kj3bloa1PQioWZ3Z6ZwHBCb3RJmfQPBMJK73TXN2Gy2EZBtWB78xcBVego3IM5qKkAsxDkTRA0Sn5Y7Xn7VsDza_2aKWMNBSmvp9YMbgNCfNiwjjstA8VH-Knp7iXjgvXeOrxvtgUnM6IGRnlE8wa65rqSYKw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(정식 명칭 “베스트웨스턴 군산호텔”)의 객실 컨디션 및 전반적인 시설에 대해 최근 투숙객들의 후기를 바탕으로 정리해 드릴게요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.ko.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.co.uk/Gunsan-Hotels-Best-Western-Gunsan-Hotel.h6791605.Hotel-Information?utm_source=openai",
+          "domain": "expedia.co.uk",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.google.co.kr/travel/hotels/entity/CgsIxrWTgafxhbbqARAB?utm_source=openai",
+          "domain": "google.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.ko.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/en-sg/best-western-gunsan-hotel/reviews/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.co.uk/Gunsan-Hotels-Best-Western-Gunsan-Hotel.h6791605.Hotel-Information?utm_source=openai",
+          "domain": "expedia.co.uk",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d5040348-Reviews-Best_Western_Gunsan_Hotel-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔 (Best Western Gunsan Hotel)에 대한 최근 객실 컨디션 및 시설에 대한 후기를 정리해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔은 객실 수준—청결, 편안함—에서 매우 높은 평점을 받고 있으며, 전반적인 시설과 서비스도 만족스럽다는 평가가 많습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.en-gb.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.co.uk/Gunsan-Hotels-Best-Western-Gunsan-Hotel.h6791605.Hotel-Information?utm_source=openai",
+          "domain": "expedia.co.uk",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bestwestern.com/en_US/book/hotel-details.99520.html?adults=1&aff=BFI&checkIn=2025-09-27&checkOut=2025-09-28&cid=&rooms=1&ssob=BKR&utm_source=openai",
+          "domain": "bestwestern.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.en-gb.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kayak.com/Gunsan-Hotels-Best-Western-Gunsan-Hotel.2013129.ksp?utm_source=openai",
+          "domain": "kayak.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d5040348-Reviews-Best_Western_Gunsan_Hotel-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.com/Gunsan-Hotels-Best-Western-Gunsan-Hotel.h6791605.Hotel-Information?utm_source=openai",
+          "domain": "expedia.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(“Best Western Gunsan Hotel”)의 객실 컨디션 및 전반적인 시설에 대한 최근 투숙 후기를 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.en-gb.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.en-gb.html?came_from_hotel_review=1&keep_landing=1&utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.co.kr/Hotel_Review-g790146-d5040348-Reviews-Best_Western_Gunsan_Hotel-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "tripadvisor.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Best_Western_Hotel_Gunsan.htm?utm_source=openai",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan/review.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 군산호텔**은 군산 오식도동(새만금 산업단지 인근)에 위치한 비즈니스 겸 관광 호텔로, 실제 투숙객들 사이에서 **'가성비와 청결도가 좋은 깔끔한 호텔'**로 평가받고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuBxnlTdBkIoqwaaJBYUsBvMrsMcmE_bieB0h714v0N6nWJFolhLe8oDuhyRus23GpcluvDQEkBic9C5L0qrwU-O9i-Ht5MKesBpU7mCci-vU2x162jmLAQT3kRjyroW0tv91kLZKGc3LUNhZgphU57Fk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBmF0GzdScFRtpPm-OdoVWfoAGf6Jrz4PugjW6UWaevX7SE_HU8gmXQWxY4onPGZY3n9wAMfOjzoI3A11LCc7dVTnfRoj_-vg0n0fN-IeLPAnAjluOhiaU5UGD78Ffaybn5IzPpzZlCA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1QPNHrO_Zpm8P-KfIpIOlMDpQ_aXYEfBtfyCwSA8lzUTZpXANyj3HcBcdvyDmYH2xjXh8kcnYlqZzjUndcqjcZ8yip-3798t_emWAbx5eKO70_l2H2wJXrkcxfptdrfjDQB0WGPbsvuJgiTps7csoN2CPymyVQMeawK7ddwdD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEp0IorVBSO34MNr9I6ub0f3U-oBV-JzO5ZohYH-cZ9_Th4PYkyaXW2rjv1DSno7KGnL5eP-1m7H_izZUe6iTJglwNk0QXZcQqzh4oSXzMGaV5ubwA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHZEycXOqCXKnM2FzHFp3PzmgMj_VgdVUQ97enYdnd0MaOWsAzCfgLRUgtMOZNWyLRnqdt81iPq-giuk-p4gWLjQK4PKN4U0IRiS9BXbWRDkk7W2l4WuVOMXg-qkXLE-OP1VzCmnApDRnXanJQoH9iJ06K6ClZRHTi5KR-D7sQlzkNJg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdra2V06mXJRrphfl09VMz4fPSC8poR1z4zYhxG0WcFftzmcv1CinUtnF22skOOJVzYbRwVdBaFXurAC-4NnuRcBnuv6xo8eVvtRjqQDYWnUSDEB_XAp52zwlNWDSwY_dk5ex23yq-r_ZQb64qWBL2bcoOntdXNa7Xfa9zlmdvGwKwXw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFn7R70duWGQVrtbWpVyEFqyluHxuWERV4WHYPAbmMDwp-FDSDNpsJHplhviwRp-K5JjxG_Sz1PBkPGqPmCKfbqbEnAgqdGWvkP3rmjCNCIFj74zhmW235q2GezgicjlpnPHXbM7l4xmYqWFqkO_e4iW3ZFRKI5VFrWJMg7ycrSqM46SlCd8ig=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdYkNk1lwz7JgsH86NZ2TcJGeqRBDddzFm35c5aQqlWWaH1CmdEdEcnkT1MRHv-ZELwzWBir2Y6rSlPlL2nTL2VTZta319lEoWZsT8SL5zaJnwpaXzLlaVnJZP1TRG3LXS98hotkyxN7mfkeVJhH1PTs4pzJT5G3-xnnQyX4zB-bEXJ0ULw5AvO8YtISwZbVHUAw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErnu1QDXGb_KnGjLi8i5Zyu4NAtsNUil9ppdxmrkNiS5Z-cqWUP8A5JtmvAh1ppQeqQJTzSpXT8wVQFprCtNBJEdWEpNWhnIR16CN2oFm2E1eCft4o6XZCERVV_br8Q5jeJT7OkOyWwBX89iIr77vFjGk-ILTo-VItE7mZv8d9Ywik6m59l295654NJXiHQSTFa35-9BciKPqpOXmpKA3nPGnhOCqkJ2M_39IkMPXGSFLRjiQotP2JKP_sb1NsS5VGtdUFHS8C4y12trjJeeAQ7vqRJv6_3W_tTmSZWHpgIaIiHNt-SShJNqpe0QkwiMWfwMjQyp1zrKeRc9kTxfkwB6HF-SbE0I37B4KcZWX60t5mvktTRPDX1yFHI7WwtrZ1osomSLoFVqc-CgY5eU7l1NlpSKpM_o9NUdVkj6Zv-nmc9KzkPo7XzSE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔**은 군산 오식도동(새만금/국가산업단지 인근)에 위치한 3성급 글로벌 체인 호텔로, **‘가성비 좋고 깔끔한 비즈니스 & 새만금 여행 숙소’**로 주로 평가받고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErJe2l044B_WWUXY4lLNBdT8Y-9mfh4YgA4-YLLoGWf0VkOXurVkq6V4v9jIEiWvO5UZwKiyWrIEpvBY0BW8mGgAr4sjTe6qgxGBypanMgJBoC4XNp1DQerlDK91ZxIjqgxkXVc3dmXQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIbTWlSrB04n06iOIXOJbheCwivgf353zayuGyJKI34h89vQxg_LG9DNd-9_DN7lYInSwGVM1cYiY5U3AVTKlQzML0CtMjoIMc-QlXCPSs6OR6SvU_0RsN2XWvtILgYzKCa3oDzc6bjWTDnXc2Gz22FQ4v-bZ5XLsOv9wKAMIQjspJXdihDuI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZveYVh3Xt4CMX98jjFax0BAn7eQBF9HZSIVP7QYlH3ZwNBMZrjnUG5kH6NAPw66OxPrIjKfoEjV85O5i7tVYUppIiFfX4pl_brYb4zM_i3Uw9Hk8wNVIJTfG37PZSl9ci01RVsmMZdjQBBqwQ1CNgjt8RiS9RNJ6sjnIEduPoyBVLrkHkhBnTXVNFWetcZ4e9Aw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbN5Rd28gLHKWcWoUfTqPvYvjlP3VXtY6f_kvuvH2zhhcl3T9lO6sJRkDwGCNg4-Xn9rBcAAU_aC3ByPmVawFiq5Bg-u5S7lXL0WxhlJok_FZRV8qiC-IHTHP2GGDRAtG3764MMeJsNgTAxTveXye3ZoSZoC-rV6CJom-_MGG2gcwu4cf9JH-tO50w6J9lylpdUL3XE3b80ne84E1uInnFLh0nMQADqkeStSJG0CHsQi5eNG5FMHAEcWLZiSy4PM-8ScuDjlNOirWb2RZsXv_MKk0HOUI14iNRTkVZsY8UXwzNpoEKjHT_j8rYNHTlMy44eIU0j6WeEtAlJpmUIGbtOkzIZmPg-HRkMTbpgxLExTE_pacD9o-Y-GY8bivd-iJpPzgwSL7Pcn9vtnZLR1MNF4IXax4D_ygKbsvs6URMFb2WfEXHaNPybQU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔**의 객실 컨디션과 부대시설에 대한 실투숙객 후기를 종합하면 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-X64TgNfQLd94TgI0i0r2Hlvdq5UCjX46oxqhl9oH8-aT6-2hCIB0iFSphNouucVQZvC6TDhCNG7w2nki4POveR2Rf_-qw4pSZq0q86rMv58InkWJfUb8m-H5vPKU4OUUxeKBpwrSc0i8K4U7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6LLJfbFQC-eopRJGoiqKc7nBvp9KlwpS-GwV8onFKNJcBMfPYFeP5kF4NNfpC-ifYvb8prawHdMghHDps8AxPdNB1H69wtjcQqo15AddDXA3AqorIy-oDomF1VnL7wJIiEbCY8R5yK5o4QV3_qduJihKRBp502AN9Jg-vc0due7vmRw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFG9IgOf80ZXHl3NmOv3aMFmlaVSkxsBrptXBQu0TlGt-KYlb0d3rDSQPPsWQgN5iTzlGBMS1mJxSJo5o3IOFFbwsJPcYyp4Ho8MV_ZHpugqG1b7g6RCY6lZzW_8qUA0pMj59sqEDB-dShdGDYWRtKzSGoZaw8K6EVXuk8nLkHuv0iF2J8bRgoz8qGeI2-HDlD_-UlotQxnQU3Dpud1zhnR3jJEh3ZfVguqOAwXUmaeQTwaDvdeepOSor-AUSFd5U2SrYZIvo6ksfynrZdJI52_SgY5b9ETSqw8IH-H01d2FBZk5ud1mR3pmPAW_CWE3l3F_LZNDtplu5rt",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvkSwYHxHFyKRgEoa-kgEYj9UnYWsWgQXv2bPmrZUaz2ycJe4CwdhSBwpY_2TSnefZjczK9W_ttDlNQIK5OQ5ftSIbERppT_iFWQ8dmdJNXrDEXg0fsJ_AaFk6_ut0b_ySH-XO0Riyog==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGmrZ5FcfdBkv2rsI_2MVEjx2Chw1nQG094D9wQqcgXFAOvdWbgP5OSbmqbIoAovsPyXtpNZ77dwMPgQVdBnPM_EBt2mae3mfCS7RsesuCjVCXL7peh7Ddivr7Ik52By_CdO-ANqaqupAMJXvFL_hOvYqywA_sJsh2ibIYUtUft21jkg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGVeYyl8sIygjQohG8pABvIyj54UZCaNMWHNioKA1-dcWEn4rQNGWnkmcnDIhc_9I2rUPXt4o9ktqNwPk8UEdeQzO5UxfmnWBirIep79RhhrEuZAxF8qWkKuLk4lZRbA-zZoqaO9DHh7WuWycbsoFPXVw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHr5_lny0ror9G8BATmEhJpStWB0YXLVFj0vjwaQ8Hg_ApGuXtDgekOX7tFlsZjQBu_Ae_k9cxinycnMwoj9afoBLlY_KBgYVgEc_Gp0K-P_Ga5FO3HChIEeTEcApIGMw0QnUafaor-oqptRB7cBI98qpm0CuNSCxvHiCfw5hd46g_DEvehXss=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGVeYyl8sIygjQohG8pABvIyj54UZCaNMWHNioKA1-dcWEn4rQNGWnkmcnDIhc_9I2rUPXt4o9ktqNwPk8UEdeQzO5UxfmnWBirIep79RhhrEuZAxF8qWkKuLk4lZRbA-zZoqaO9DHh7WuWycbsoFPXVw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9r4ISIKMUsKhNrjFjr-UMukPT5mA6wyxKsWQ4KnIILy6e1QN6hbh_RxG3AzEUIw1MAItQ9VDA2OX8NVIuy7NRRUFIoZP00IRYr9sOhZ_qUGuQbIYQ4xZ-3JRQ15Z5sHD75nbfnz85oqdBkAOfz_biGsFgLTX8G9FLfBX6TeTZEoNON6vwMN5_EZ7hyhUehpx4pmrjCJQpyv7g0pEjAnrOkhx-G19nhOEMmc2X0iHNJXaQUZnIHA3pqw4rDI8jR6dkT50FseE3pxcus6UhbRqd3SOd-d6M_F_Nk47jvquTQukwTEicU2cEMyrjEdRZY1cRmYadr_v2g1r7KTf_thRLtnoEW8j1ErIv6hTGewyaxD-SY0NtwthflqhbKwlX44NcZlcQ-k5_wX-H33SXzIRdkag3Qiovv03Vv5pcR242e4Qv9ZsjRgbNeMk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXB49iw0tzMzGKcsCQZMQlxr4hJ3SpiojJx7pC92OGaIqrhuUciADMZHRTJVSEt-HtRzvJ3T5rBV0R9QoaFjhR6mbH0tjRE64zNcWSxyvxYuekTSwSRAXkZfcN-SV5Onopboo_jvVg04LjI3gDcp5tLAe6RG3anqsIY8U8YBo9IKrZWwN8hCUI8IibWu4LicpzkQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 라마다호텔과 베스트웨스턴 플러스 군산호텔은 각각 장단점이 있어요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산에서 비즈니스 출장을 위한 숙소로 \"라마다 호텔\"과 \"베스트웨스턴 플러스 군산 호텔\"을 비교할 때 몇 가지 고려할 점이 있습니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**베스트웨스턴 플러스**: 비즈니스 센터, 피트니스 시설, 레스토랑 등이 있으며, 편안한 회의 공간을 제공합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 라마다호텔과 베스트웨스턴 플러스 군산호텔 모두 비즈니스 출장 숙소로 적합한 선택입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "2. **베스트웨스턴 플러스 군산호텔**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 베스트웨스턴 플러스 군산호텔이 더 나은 경우",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 베스트웨스턴 플러스 군산호텔",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **오식도동 산단/새만금 방면 공장 방문, 미팅이 목적**: 이동 동선이 가장 짧은 **베스트웨스턴 플러스 군산호텔**을 추천합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 출장 시 **라마다호텔 군산**과 **베스트웨스턴 플러스 군산호텔** 중 어디가 더 나은지는 **‘주요 업무지(미팅 장소)’**와 **‘저녁 시간 선호도’**에 따라 선택이 갈립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **베스트웨스턴 플러스 군산호텔 (오식도동)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **베스트웨스턴 플러스 군산호텔**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **베스트웨스턴 플러스 군산호텔**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔의 조식 뷔페 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(정식 명칭: Best Western Gunsan Hotel)의 조식 뷔페 정보는 아래와 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://triple.guide/hotels/d68a6ff1-3318-422e-ac12-d5f8f6baa4f7?utm_source=openai",
+          "domain": "triple.guide",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(정식 명칭: Best Western Gunsan Hotel)의 조식 뷔페 운영 시간과 요금은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://triple.guide/hotels/d68a6ff1-3318-422e-ac12-d5f8f6baa4f7?utm_source=openai",
+          "domain": "triple.guide",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔의 조식 뷔페 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlNINElpXspel7yEo4DRUCDzcTw83sSWeCaqyA8oQ6m0KK6DCBINhGTk5n6LqzKqaOaiiRGAe1JnyvfihJ75Dyvd9OJFo91fD8eZRsMvEyiB9v39YlU8T9KcmoKAkrEQfwPXl0kXHSOFFcvJEpuyzGiuXukyvYQQxkv5Li08z8PAbuZQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL4zqMo6GR7UIWKZG1b4yY69tpBlS2abPdMF3vHwP46-wcZMsXAZi3UfLftzR364fjf8eSBuNCFR13lKpJOywvSbI05DbVKYvPUAHm0qlMdWA4CXP_YxQa7wuMA2zT2QVZA5hcpsWNkt_6z2mmvpTOd_DcWbfAGj3wpec2QnuOvYBnuBK-Du3shETnRgi3Ik-Z11aoHmQxju33BqcMw0Hr0rFFp8V-0qk1zpS7TapdUxfhLf8F-43bZYp7F1cHjMhabj6ADQ5s8VdBRpcEb9o81PzZ7MpNMPKR3BK632OGFFUe3keksAePI-WEYHEJtEsqO4Oyd24TLkMrUyF6YK9S3HYVnw4ZqF1ooN5Ssz0H94ibYk76ZEXfDBLvZjjBLSxc43-78X5D0q1Kc9F9CNJvevPsAoKbQv7qoCHNS6cgisUVoSfmWpyIazE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHt1lqM6rw3sK5r80AIZ-6H3Gfueu-IRDMWIjpWaY2ERVcYRemmhftKOYvAP0Uvl4oKo4ylKsze_aJ120ZdyFcmjhJPm_l2o9oCqbLAfPEMqFjKuz6kgZZ9UKqln_PJ74ZMJcPHesDkoA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 군산호텔의 조식 뷔페 운영 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTu6i2DXgL86dGvSVrOg4Z4OsjmQCs-T1CE-0vFMl95uUc0WuZ6vW6lBVBoUi-WWX_V6_b3TCQPfMWABkXyxCwj2zXB0UVgE2nFvpvMXL_CWohxySOzWxHWTuVWBKp57cVz0JDnkpCp87K835Oqj_dL4n1qU8NRxDOJX9zK5Rq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgB5jOjSsbVGiSMrL09fcpCO21XVHfqYltDW-3CvnTCUZtDwL0CYChrHmGhGtEgRHdQzsXe2fNubgL-lFE71tavjgIWfDcJbyAXHrwpczqvbMMVQ53DpBr1GgQmf7TFp6D3pZbIjZEk1EQ1VF6urvOKd2v2RDQ0jipk_bGtTCJ0Nx8Mw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFryLOJTJszmaF7XL0e51kUK5ZVZh7SSwz-6kDK0ozzHderOCAPSIlBJQV3IU7qF6-Nep8AHpX4bVXm8VyeeEqx3Ph_LqTbEtpGPFYRexpjbaB7vW9qnux7pUz0QBKCPJWF55ny0PFKnQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzanNLDfdhO8jb0XMu26cx4WzQQW4eMJzfM9Cu0kwSiROKMh9E9iavenmjxJbZPHaPTNkd-ZbqWE56VmJ4WkcX2JWPfWQf_3yKXE_jOry4J-i1pNuRC1V51v9gicjuXIfgiYn4Ctho80epg5qq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔**의 조식 뷔페 운영 시간 및 이용 가격 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8effuAYAwRIWNzrvoEWF8CLX6eN-FrcdgzPTzWVg82fbreKUcDaC-FV274IJAnRCp9PYDGZD1LWIUcM0snYfF2X0A7xNIzE0dbqWhhANSssZn875pbrypLyPr2tGlMJlzgpqrNiq5Ag==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgNrg5Jp2Lj2qnJI00YRFFZC-yzqzBJWf4dZWpMAuIMn8tzoN96pMQGHD5N0dDYyDfUFzwUoba7l5g9ZsXOZbDvKPQiHjN3jYhhLg4Hl8yr2_wXVD88VS4G__NgpILEhZnjmF4yQBxj0RO0ZRHwEole-6_lU1R46bjFAVeqw4cI650rw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAkU6J2xSvgajWW3PWV80vcYFbyVEeUlwUEOvfpXN1d8nD8MUlk87RF_1cR6tX4B5qymiKBMOKcWktkBl-EcwzX9xXttcovFPnfglpZSew1nz6c90RuGTNHJJwsVfzQpvwbFqIMcGzA44u3MmX2FvCj04Y0Q56sE10SxDh0zzfPsssTpH6gzuA-XMkDziBGRxXwcLiTbcUHRkz6GzoXGBmCdtW34lBYlfvUen8PqTVylUttgRq6nHvNAEDOdx3-gnalbi79wTmw9pg_etfkNrr7_ojCIQvyESs92KQz6xpvslK0YMDRLoQ3F8pxOQ8Q6nhMnKMpj7-gi9lzMgT__S8-eu9q-jBZDJTUGkv64sNuJmQyMaJza22YrPS6Bqbp0YPurKdw5S98tm1dVvOzuA9bFZ5MFMnIU622-gZQB99yDLv5o-B6bRjktY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(정확 명칭: 베스트웨스턴 군산호텔, 주소: 전라북도 군산시 새만금북로 435) 주변에는 도보로 쉽게 갈 수 있는 편의시설과 음식점이 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://gunsanhotel.co.kr/?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gunsanhotel.co.kr/?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gunsanhotel.co.kr/?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.agoda.com/best-western-gunsan-hotel/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 군산호텔(Best Western Gunsan Hotel)은 군산시 새만금북로 435(오식도동)에 위치하며, 새만금 컨벤션센터까지 도보 약 3분 거리로 접근성이 매우 좋습니다 ([bestwestern.co.kr](https://www.bestwestern.co.kr/hotels/destinations/asia/korea-south/gunsan?utm_source=openai)).",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.bestwestern.co.kr/hotels/destinations/asia/korea-south/gunsan?utm_source=openai",
+          "domain": "bestwestern.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.tripinfo.co.kr/info.html?content_id=1830621&content_type_id=32&utm_source=openai",
+          "domain": "tripinfo.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gunsanhotel.co.kr/eng/Facilities/page3-1.asp?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.tripadvisor.ca/RestaurantsNear-g790146-d5040348-Best_Western_Gunsan_Hotel-Gunsan_Jeollabuk_do.html?utm_source=openai",
+          "domain": "tripadvisor.ca",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "베스트웨스턴 플러스 군산호텔(정확명칭: 베스트웨스턴 군산호텔)은 군산 새만금컨벤션센터와 도보 약 3분 거리로 위치해 있으며, 호텔 내 편의시설로 편의점과 식당이 있어 도보로 이용하기에 매우 편리합니다 ([gunsanhotel.co.kr](https://www.gunsanhotel.co.kr/?utm_source=openai)).",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.gunsanhotel.co.kr/?utm_source=openai",
+          "domain": "gunsanhotel.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tour.interpark.com/freeya/Discovery/iframe/Contents.aspx?aname=&seq=11671&utm_source=openai",
+          "domain": "tour.interpark.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/best-western-gunsan.ko.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://us.trip.com/hotels/gunsan-hotel-detail-1830063/best-western-hotel-gunsan?locale=en-US&utm_source=openai",
+          "domain": "us.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/6511?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔**은 새만금 컨벤션센터(GSCO) 및 군산 국가산업단지(오식도동) 쪽에 위치해 있어 번화가(군산 시내)와는 거리가 있지만, **도보권에서도 기본적인 식사와 편의시설 이용이 가능**합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUA2S2VYJ84M91zEUidoZ41kRFp46FJqpYFvW2LlwwOzSf6T9TEnAR_eHiOgnZ8XqRifGtf2wlYdX4l7n0yFcsfzO2z2xX_nt8sQJs9pd_StgS3xcwFmp_m8WPBuQlApjyJ6ao_gOM2w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOdBmukvJKCdq__WmnRxG_Hzlne1Y0niqfOw3L5Hcb5KNTqJYRuDSCAhO-P_ufvzFH0xXddssYQuqoMarMOH-Qf9M0P1kzFC-mrNcpQhzsGOdz-P5C-uwOqZ4GBmpxe_D0kd2BIjr5qGOX4ey-WKaodIEFPhflOj-uM3yWoxLU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGFcL1rT44t1H-RqRzQZrpAPVL2HTpQFRw8uv_i1kXgOsHdvJpqGpAzQi-zxI8ZjMdwZVORARxc7YN3ptb-XmpFgoOwE0qmfjlEAIVXnp4YT2LlIrDxB3occb3lWibQT_Dq2q-pnvu7bRMOaepdA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGidFVGNbX4IdfGySJypcu3QUGJjhUYb99xlfAjVMDh6CZdXoCa8twS2e-nHjTCEogDw7ALGMoTgJtVspI_AAlGFM_MQkrPIdsidTuK_OsL8OSDLFwHJK2a6e4CUWl0T2FR7xno1SEMGR0ZM9tPK8CiZrKHumfF7SVmBv7vVq2mskVdiw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEO5qptz-EjZKKNaF13RSqp3G81qAv8UXK4jss_3uikOmcxs-RV41eXOJeJpvDiMqht8gyj9g_LGruppIftrJfa8fWvO5bwLN9ILMVnD4FMRI91y0PVPdD2CJ7HTw3b10JkXh4DH3GmNG-SUWzN5Y8r0YPC6GW0wNtIWLbe-nERD_RXqIWC4RN-5QbdA6akV6CW4QY3TujDAWcJxw4BMxhmUQoJnyRvCFkuI7jD76LAoe2n1-BLuEErlvEsJlDHj4KHBTCmdfZp1T1ju0V6eI8zH9hS29Vw-MA09vbXlZF3qeXQ-NekhAqWSfpTB2Aw00BhogI_d8fL67JuB-3m3InIQdjL1cdNV5S4GrGIapVy4ZvceM_BV1G_MWXZ9cMLPn16XJ_sNYLVSu6poQOGssdxXLVnrHD4OFqdhIyZhnXlFg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsDU0F-nt7QKLosULprgeKmDMlIkkomLLyLdi1oYU0rsh5a6txlmRs_Qx1ryHLqf_vJuXY3znDEL7wwlV2uHlnimIfZxbqVjzrn6mtBVn3J8UVhlTWWwU6Li5D972j-ycG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELm2qbG2SYpWzqANouPDawMqVVqeUw4YGlxgT4v_KyRwN0V33BZcpbjYh0yw2OvB7M7Haskmp3cRIOEjWgxoS93csG54Cgdhha1gLYfv9cF01K52eXaIpUo8--f3P1Lt2w",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 플러스 군산호텔(오식도동)** 주변은 새만금 국가산업단지 및 군산새만금컨벤션센터(GSCO) 인근에 위치해 있어, 대형 관광 상권보다는 **출장객과 현지 근로자 대상의 실속형 식당 및 편의시설**이 도보권에 형성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkxEfSf76YDHyDCLjxCP6LKHJyXdaTUtaSohJFWk7tGtj1EeUg3fK3YQ2PexOAGCx3L2Ytq6tD6ws6kadn98Rz5bNw_wSFnknXj_M3fyVYfB7-fLryllA8HhdLNYoUU6V9O6gcVBbIbQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaT8CPKMYNH0TVXYyqMUZ0tlvYo15aUJPaC3HE6eciLNhXosRsK9pj2byzydRtFLoSghkltf21eGWqN2qwrSSdoTwVuifrtrKZxtxCLpuWwaF4gUGtw7X74JXvSOZr-PfWBLO0YeN7h9Yx5qE67oS9X72dqhXkjTxuEmBbhkbt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkxEfSf76YDHyDCLjxCP6LKHJyXdaTUtaSohJFWk7tGtj1EeUg3fK3YQ2PexOAGCx3L2Ytq6tD6ws6kadn98Rz5bNw_wSFnknXj_M3fyVYfB7-fLryllA8HhdLNYoUU6V9O6gcVBbIbQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHjHOxn5anhuV8reNzwuNWjqveWawCCa75UgXy4cl0fWoX7DzEoBlo9gq4RAxghYtm2UQ-kCVqZ1sKOaLvPKemuQ9153xoNRyqr12A5zhtdGciJF2SQeqzsa-puWyL5gSnCT53sEk2hJxvnTlML06J64k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfuQvaMHWBLXGkxgX1F1EwFY3Yf22qaly9rb4fEjW2y08ZUrzkD3HZv2gc1xdllLrZtsVNcXWwkhLiO_a3lf-F-VHWqQ1teWohtncHL7PsoBTd89sTr-LgrpeWlVG87AX2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVaqCQ2EsSUMmcaJlqLqMbkFDqdVqTzkCxPR8prAgBiBhCsKwuXGMG5L9l5fALDDWahhlraLQiNa-uWSPJsFoW4ZpLrxi0WxBUeLvOi3YXXHb1yaCjv2R3grw8ELoZe8uK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**베스트웨스턴 군산호텔**은 군산 국가산업단지 및 새만금컨벤션센터(GSCO) 인근(오식도동)에 위치해 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBaIqAm86dLKYauV-dPsLpHQOFmXecrfbEGap12VrnkDbE7_pTy07eapIY-gTvFc_ukkNIKe2i37VOs5So8L7myT7G3sPm18c_q376v5eNJRTvIilFunrz5s9HHFlgoTPvwecZTqgzEw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGABolSxggpCZDPrhsI_33O6333S905ofXgj0-PfcZ0r5AGpIFImpbsp5KMEzreMiuuxPlwJVlepm3WPZz3MLNNurkN0b4s_w4igpglWQckqVrmN1f8MToJZO7TwW9lvUCV2pwoVgRnwmHvj0BqlfXEoYO6sCGYyCajMlBE8KTFuyAIYw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj5jnigT8EKNvDidowtrhK21va29NIp_4iED0KeudNyuGHRxJdy4Y38tkUlQaOgbmVf1kpgWuv3Txq9-opOrqW4sDiS9lNQPABq2XMyyax4UmqX4y5CB_bt-dxALf5SOBVPXKk43qHdpUR2rzFnA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

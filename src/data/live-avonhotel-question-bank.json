@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T02:54:17.975Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "군산 1박 2일 여행 가는데 위치 좋고 깔끔한 호텔 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "군산 시외버스터미널 근처에서 걸어갈 수 있는 깔끔한 숙소 어디가 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "군산 가족 여행 숙박으로 묵기 좋은 3~4성급 호텔 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "군산 출장 갈 때 혼자 묵기 편하고 조식 나오는 비즈니스 호텔 어디 없을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "군산 근대역사박물관이랑 이성당 쪽 관광하기 편한 호텔 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "부모님 모시고 군산 여행 가려고 하는데 침구 편하고 조용한 호텔 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "군산 가성비 좋고 주차장 넓은 숙박시설 추천 부탁해.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "군산 시내에서 룸 컨디션 쾌적하고 후기 좋은 호텔 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "에이본 호텔 군산 룸 컨디션이랑 뷔페 조식 후기 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "군산 숙소 고르는 중인데 에이본 호텔이랑 라마다 호텔 중에 어디가 더 나아?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "에이본 호텔 군산 주말 1박 투숙 비용이랑 체크인 시간 알려줘.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "군산 에이본 호텔 주차장 주말에 자리 여유로운 편인지 궁금해.",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    }
+  ]
+}

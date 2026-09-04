@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T02:56:16.165Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "군산 1박 2일 여행 가는데 깔끔하고 위치 좋은 숙소 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "군산으로 출장 갈 때 묵기 좋은 비즈니스 호텔 어디가 괜찮아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "전북 군산 가족 여행 숙소로 주차 편하고 침구 깨끗한 호텔 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "군산 관광지 둘러보기 편한 가성비 좋은 호텔 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "군산에서 조식 잘 나오는 호텔 찾고 있는데 추천해줄 만한 곳 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "군산 산업단지나 새만금 쪽에 일정이 있는데 근처 머물기 좋은 호텔 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "군산에서 시설 쾌적하고 피트니스나 부대시설 갖춰진 호텔 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "부모님 모시고 군산 여행 가는데 조용하고 서비스 평 좋은 호텔 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "베스트웨스턴 플러스 군산호텔 객실 컨디션이랑 시설 전반적인 후기 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "군산 라마다호텔이랑 베스트웨스턴 플러스 군산호텔 중에 비즈니스 출장 숙소로 어디가 더 나아?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "베스트웨스턴 플러스 군산호텔 조식 뷔페 가격이랑 운영 시간 알려줘",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "베스트웨스턴 플러스 군산호텔 주변에 도보로 갈 만한 식당이나 편의시설 있어?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "호텔",
+      "region": "전북 군산",
+      "version": "v1"
+    }
+  ]
+}
