@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
-import { OpenAiEngineClient } from './engines/openaiEngineClient.js';
+import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 // 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
@@ -203,10 +203,10 @@ export async function inferCompetitors(
     );
   }
   if (hasOpenAi) {
-    // gpt-4o + web_search 그라운딩 — CI/로컬 전용(hasOpenAi가 !VERCEL)이라 web_search가 정상 동작하며,
-    // 실제 웹검색이라 이름이 모호한 브랜드(예: 화장품과 병원이 같은 이름)의 업종 혼동을 줄인다.
+    // gpt-4o 순수 추론(chat.completions). web_search는 US 러너(Vercel·GitHub Actions)에서 한국어 질의에
+    // 헛소리를 내므로 쓰지 않는다. 업종 혼동은 위 프롬프트의 업종 강제 앵커링으로 줄인다.
     calls.push(
-      new OpenAiEngineClient()
+      new OpenAiJudgeClient()
         .call({ system, user })
         .then((r) => parseCandidates(r.text))
         .catch(() => []),
