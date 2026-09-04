@@ -250,5 +250,115 @@
         "updatedAt": "2026-09-04"
       }
     ]
+  },
+  {
+    "tenantId": "girinps",
+    "brandName": "기린성형외과",
+    "aliases": [
+      "기린성형외과"
+    ],
+    "ownedDomains": [
+      "girinps.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "yunoprs",
+    "brandName": "유노성형외과",
+    "aliases": [
+      "유노성형외과"
+    ],
+    "ownedDomains": [
+      "yunoprs.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "sm-ps",
+    "brandName": "에스엠성형외과",
+    "aliases": [
+      "에스엠성형외과"
+    ],
+    "ownedDomains": [
+      "sm-ps.co.kr"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "vvlyps",
+    "brandName": "쁠리성형외과",
+    "aliases": [
+      "쁠리성형외과"
+    ],
+    "ownedDomains": [
+      "vvlyps.com"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "bymeps",
+    "brandName": "바이미성형외과",
+    "aliases": [
+      "바이미성형외과"
+    ],
+    "ownedDomains": [
+      "bymeps.co.kr"
+    ],
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
   }
 ]

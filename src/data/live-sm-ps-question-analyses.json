@@ -1,0 +1,3902 @@
+{
+  "tenantId": "sm-ps",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "강남역 아이리움 안과",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "• **에스엠성형외과의원 (이무영 원장)**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "에스엠성형외과 전문의 1인체제, 맞춤 상담 및 다양한 수술 기법",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4227?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/b01/1154073?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/drlist/17943?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "■ 에스엠성형외과의원 (SM Plastic Surgery)  \n• 위치: 서초구 강남대로 435, 주류성빌딩 9층 (강남역 인근) ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai))  \n• 특징: 이무영 원장이 상담부터 수술, 경과 관찰까지 1:1로 전 과정 책임지며, 쌍꺼풀·눈매교정·트임·하안검·눈밑지방재배치 등 눈 성형의 거의 모든 분야에 특화되어 있음 ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai))  \n• 경력: 원장 임상 경력 24년, 누적 수술 건수도 상당한 수준 ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai))",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- 에스엠성형외과: 1:1 책임 진료, 경력 풍부",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.sugarps.com/?utm_source=openai",
+          "domain": "sugarps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sugarps.com/?utm_source=openai",
+          "domain": "sugarps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/b01/1154073?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.ieulps.com/?utm_source=openai",
+          "domain": "ieulps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ieulps.com/?utm_source=openai",
+          "domain": "ieulps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/577796?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/577796?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/818?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/box/818?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1o0IkYZdPaNn9XkwvU3QN1xaj1ZGfuXyCYfh7FCreqW92oRlbVtscQiiuLjZy1nr-Ooy8x6GoK_yGIof-b38mfY93WAZ1TD0ZvnFNMBU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAYOZ6B_zxqKTSEHYDrSen8PgdCU1cfAEBM0otPlS81cwRde9wTV32UMZh9qBlhbjS7fBfsu1G3GQ9lV3jWhKjgGBvZbBA5OZxqTpVo74Cwsrt4w6-e1ndA9US5ex_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWRpo-LNCyfXOfM7BdV2UVDgp0Ac4ghb-wpuj58wMmh2a5xECdTFDvuP39SD6LROzgOoghxagAFRa6w5M7q8GhXBfusY2rJ66_aPw7vsAvOXFitMlPbAHR5rmtBAi-GNM1msOL6ncPa6D5SRzCsHtWDldd0kAlzrrQ2i2p8tdTpF6D52CFykgSO4E67K3Xc0sitJMY3AuKxQhLod8bowyKXBsh86oeTrJcy_KDiJu8poQCyP4dwDYYDTZaUYXQ-rUx6pQLyd2sbhyVDMdUhvec2SXmbz8v7cSszgiXFC2n6C9JJXD4WqTcduk2--9vedL33aAb2Qv2wzt-zWz9mjw8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9XzCG-O6X01F9juHsE-NLYUjESQBpdbnTHrt-F5XtKilHePeiDRkNWvcMhlMu_F3Dna5kcIPi0ao2nQAuBlrfN8nqPf26HDc4I9O5SQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE32IK2dYdYtcLO9eF577GrzRmlFz236ItwxJFcxFzBrsRBFf-lrt9_Ppe8d9jGMcZexrgA-PCJLEdoRIH9S9kv8JXiFJYxP3JcDGTXD-H4sRc7exO6aqephwivFWKy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQES1mLIAbVrnLLVUSobig8PYs8EnN3Fr0KYwjZh3qRnWB7qWVVe3_rIutyFO241_Gi13TBx2GAOI79Q91SgZAvVADy_3Zpx_-vS6naPBg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **1인 원장 중심 성형외과 (예: 리얼리성형외과, 에스엠성형외과 등 서초구 소재)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUOcH7n65-XZr6Pf-4CdqPOF0ttXgmSUoj9UBVXaVrv9HrNWnj-dzEi1ej50lIOdZkhioDdLimf1yrQugP0mtfEkXAqg0vrQhL30ECZKo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEld_s6FUKp9O30Wi88mJoMtfdy9jJWOf6NYl92CaPLiQhSgulTmfiqAJ6qHs3gXFEd9ht6CS9AKkRuwboljWCZCCvZb6UZTQ6CyLLGULPiKPjQY36R",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1qQXdV5oXQUitSM4fLRJozToYzGsvRnxFgZT95kIDuSaKCtHxLMJiSe11xzyjR0vF0_AGIgSOB8otYpahIuGsG0zhH1IHS0Ti6QJfZoCUB0LNFkqUbsvSDDxXPeDkmR0EZ6dv30FftlA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0ZgRF6nS8BXkuZdy15Q-0sWmdaR6mur3Bk66ZjeCicbHuRfIUcxV1p3Oj5A5vwbiaiGt5erFEeiV5beArB7776OGhrbMPq5p1-R4EpS-T3FScP6nzQTgPlQnevsB2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5Kq9PlkMyrAzOaw9wWb4JcRsh-hO1Z9kuOHKAvIqm0z39uvcrg35cOgjebNCJijRJ5uBMOQ1VAczI8CY8ziARSv-jIdNUR1PqVg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQ7uXHU9SC1KXrdSTA8pAxUMEidhvGaOSrOFot_OhNfGcp_hywXNGCl2zSbztUABHZlE0FeIui2o2T4s9urvJlAwQnJvtF9fd6stk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/5521?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/5521?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=104&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=104&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=104&utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://noonopiclinic.com/blog/upper-blepharoplasty?utm_source=openai",
+          "domain": "noonopiclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://noonopiclinic.com/blog/upper-blepharoplasty?utm_source=openai",
+          "domain": "noonopiclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hospitalevent.cashdoc.me/eventdetail/5696?openbrowser=true&utm_source=openai",
+          "domain": "hospitalevent.cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4167?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cashdoc.me/community/hospital_event_review/86484519?utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/697354?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cashdoc.me/community/plasticsurgery/47747024?utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hospitalevent.cashdoc.me/eventdetail/1254?utm_source=openai",
+          "domain": "hospitalevent.cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hoev.net/hospitalevent/eventdetail/6663?utm_source=openai",
+          "domain": "hoev.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://news.nate.com/view/20260206n12724?utm_source=openai",
+          "domain": "news.nate.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.gkbeauty.co.kr/pages/reviews?uid=128&utm_source=openai",
+          "domain": "gkbeauty.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cashdoc.me/community/seoul/66271946?from=seoul&page=86&utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/assistant_logs/321?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gn.branch.mimimi.co.kr/clinicInfo/lifting/lifting_87.php?code1=963&code2=900&utm_source=openai",
+          "domain": "mimimi.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.eyeskin.co.kr/feedback?utm_source=openai",
+          "domain": "eyeskin.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vannyps.com/m/htm/intro_doctor.php?utm_source=openai",
+          "domain": "vannyps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hospitalevent.cashdoc.me/eventdetail/5696?openbrowser=true&utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4167?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cashdoc.me/community/hospital_event_review/86484519?utm_source=openai",
+          "domain": "cashdoc.me",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/697354?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhg98O-BsSId_5f1-CmPsLGFwQ0JlcUYIB8a4hkdQ5uJ5OBOWDm91Y2PNt_NowQuusmz6cMUSizEkCIzl88NECcwEBjxEoi2NYj3mLHDqcFUNR_KUl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7XZTYz2ljGL3PneOHquIsVqdHiwU3TRDj5tNV0z2VitA91IJfAqtLnKcFF5xwP-1C6GHPmphK6Mri061Ntb8ivzwF8egj_3UZ6BDgifX-_kpZqaMQy42XSk2ViQug53SiqREkX68WtetaKcq0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRyH0QXOoXFuwAsF7ZLiiINQVUUEG1KG7JDOO0k3qAElx4KEL4eeZUDfo5h3wgLFO7Zu_TwlMMz4qPWfOFO0PeCBTp1ICUgdBspghfbYJME0ju-_1-XzSGpzs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMuqH4mqfD1C73NXovqRGHzURZZRoMzUSJYbKXkuJ89vMBeVmvy57tceoDQwIDQ7LtpEifvFFgOnURodhC4WJsot3JxLznBcEBDUky-LulI1rKmhi8GmCQUlG6Pp5MHo4NBSfyIdoQI64arFj5pwKu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRUEeUNwe6ZzhhzdUSzzcAwuwxmT7ioWBg5-duJSx9I9s5MbRqNaO2qAWlaA8YNlxmdWyle2MyCtBot2zgNpvyrnCl8Y8xlb6MWEPspWq0qULouGMbn686juufOBA83xoqkQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6c3QxTfJMT6o_CWpslcXHbsKzbR5u0F7SHrmC6L8xxZDLjRTmPS5ArFYL7xD5hAPY4-nvJ-vJ2WASCaspFGXS19fmbdhCPQdWqNn8N_2dVJHVLbxplVc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_zSz4Aoqlo5XyLKKGrBGLXBFWd6y4aPPCuV9DUlgQKxpAgal-yj8wI5d_Zxn3949lme7NyeMPq6F8zM9Tl9STJ6OJoxWc9rMCtpsy5_9BOEwdd6rx7CsXx95QJBwE0bGPi15LiTySU6WoKoby5etn6g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxAy-7Q8IwDImbnOf199jyofpatGZBqw6zRatJNsCnuU5qHRhUZT_NiVviMKx0LvvkfgJ0Rz81LMSK1xtTUsM4kWfi8mZZxfwCODF4YVcSpR0vLzsKdSawvKrm1Z3i4uqyhPRapAi9Dyctvs4QiE8RYBA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxhm-OwpwxmPyPxaMbBOwlo4tFu23ahsNzecyNRh3ENi98TWqEDvZWk7ETOFA6LDvEdr3eVQeTJ4i2SZSIucaaSV0LW9KSpGeBVmO6FYa-TVQIrcX7bhMsayP_f4fuY6d6DasiPydoGEo2W8q_d9VyIEPMAdwH8dpOlU6slwMTTT4HiK3ieR4NppOom3LRn0ecwUhaW9-SxwWLHWXfouoP96LO0LDj6-G3IT5b5qlEeLlFBV5rWTFTs8kIK8SEI0oBLPAqm6ylpFQLs-6WJ2aNHJDk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1JrEJlx2O4WLZGRwweVBZZu_Bf1_qcDG4RPXKeiy1W3p58fyL42dwjV2Ma-UGZOjWKKSsL95tE-O_sDGWpBYN7p6hbmkxMiAy7S2YU3He3ppiIzoI2f68SnVbE-Xifzw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvaSnp2kkJIMB44z4yVXNHdkqih90a5nFdyqgV_n0eNbyOq_vIlN4x8AyeBj2HPnrmgNy2UhK2aY_nKNXjV3EDyJAiNOT0NzfSBpmMRwuz7OvWhGJMgOIGG_Bgf99L6ey3zK0pOECNT1I8CEgco_8ZHxuoe_GuvEWqlreA5g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXFDbJRl2hT-YFCNGv_pXqlPaHRM10ITLRDTYt3E34YU0FBqwu6sqPD1hOARy2x7DfDrDaj7cMBWMYCc5r_ppvh4VQUOjRoAy9j0mM0L0dEeecvNsXld68EsYcF3tnl_U8YhYMeJLDoMs0bFy7HB98",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhRGzQFwiSOIAL3qm27lBx-psdZkHvYHZz7aXX3KZxCzURiaerQ_bFHeKKbYnVHUmYktlBaXRPRWhQl5Gg9JeNuaFLAJmeM-j5T_AO_6ZknNNB5-V4E9JG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFPZUsT9CCiyflqtz1ivDiOuP3niG2A_JBEDvpAuvscBsvnhwc7nBqXoe8C9E0nRaH3K2G0DstF36VkfQWzEn0XRi52h7ErU7QbtNsHEzVf6ya2Rvx9Nf6wDY8VDecCA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsrhA9Pxuq4S5Xj4MyC6SR8DRqCbjgKrpqziZj7LgD8Qf7dy5_AjjRYsFLDtOQQzNyTjEtBB2YyMdndx7dTLRCrYpchOPHGUQ0jGRe4Cgy4K5TbqlmQgRDcc5JPqnQP_aO7w5gG0-6ekh-O4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsxbeI3T3Xn9SSGaCQUWFt_GsrvlgjPLY3PCX1dNeorMUE0av6sqsAC2Oxl2myoDvas9M3Nlt3lLCkkpNATD-XAb_LQfX2ZN9KAn5wlFfPtP6ueHPWaOUxMG7GVJnoY3Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVpY-JvxRLxW7_r9sAoKAXyL7Tx_gX3ai9f4PtqSdz3xxzF39InQ5T6NbE5AXmjW-wqNXa7Ahh_02ZMtjjwwwZjlU9WuB9f4lmhE9vjm5ZdxyaeHi71AueZuQp6lhLDn6_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgy_3JF1F5gf8Y6_jAJtsHptI4Z2v--ILO7F04gAr8pSXVMR2qpXLYcuRAS50vWNLfqBkQaQyjsNX-LKn22Wb0GiPE6CS7aegaHEsRyLJlfNyWbknTEKboehceObejlZU83Hsqda6zkf2E5LTp8sroLuATqYGd-iur5-pjIK6lOEsXGB-stPfXbhakZp7Bm6Cp9OQrMoT-GhVivRZbRQdLAzRafSfXruInm0qx19vSwfdag-CaF90Aa2CRQ3bqptmgLfEmawQizTdObEJLZqw9aZzAnTsrAWfhDZOJnw3zFOgDp4_Tgsur7qWG7q8IEZu4q547FRdGly1AloQlxE8UiDhpsXc9Bxwwg5gkdkD-sU87",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbIXp9vZi0x8l-TcTb1DDmzdHagjLfmDykobMVNG373-m6e9LqfHBo1iu8SfXIVJ3F5TFY5u_ioKQiPisgdY7AsyL2VrG0cdnhCcM0_04tq4AtbOjjfbib3UGhuTDc7mgCvDiogQ79CWqveQED5vitUbMP4a6F4MDz2TL5hN5YoEHkoJIbQ4_O_3hvjjoN3I2L8W3GdoIaB1-2EOX5Cs8caaY6-nacsrYSl2HvZEhmSM3q_4N2qz5qRmi-kny3nZMA_8QrOs5jyklwukVWy4_3Wckw04OwGW0wrFysydm5mG3xW4-KIX3HGcpf9wiRVY3jk3RGe2u09TP513zCfkF-",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXxkGmBRNTKF05vwIgiBIrcaOkWV24_Gw6MSj1y19KrdQh0F8gQED_G3QIWQqzdBLM7QmeQKG1j6KZ_VxzxaULecqFas7UKcx3DbO0kRBt5gExC3g8IY16mUBpyMqZzzaB7DmBTKCzAK5h9igb1tiI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXY75DOKJLomes73LWjRNdLPMx_833sk4XpMwWJfZgcu5uYqc3mp6SqAlFublX-XLuoX9BCCGhhc29_nP3b9niO--DzOCCQGlgcmRjX18Ya3Zxdoy4NPaBhUn9svVM7heycA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG91b8aGQ1MOX0uAnAYeG-jCb0JdJu3a2hyNR7fQNo8kUXgKFy0mgaur6vwLtALYFnvTtbuYb6yoSJUICIDPCknRevJ3IIfm8cMKOtzWztGNr-vmmp89LWtql-CGbQ-xYZ_BuPadLUDOcgL82rajNcA_7dgubCDSYChCQd1A8qaB7NiiwzcpmjgYdV8bixcJp3CjrDTdcfCFPhpkOULn0GIcXbiGOPbcIZjVFx2H-nShSl1HrHGwrPHSukEncdLUNON-j2vwoLC_ZcmQmifBulq3D3fvQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqPDuExZKkbqOGl85neKZh-SWCTncIRehPCKvfW5nAtTqKjyvWPSbdGxOacNsf2CrWM-9UL8GcLEvZyleDGBkp4V2b9Hywd0LOauDgHSEMHG8aSfrIKk6y3lROpQNlZ5A=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSBY2YJakWuNt-34dC8YkSFbtAer8LgpPzHzXsbPFaQBdwr1D16zFa5f61JMznRNosULr6rELD43wO86Fh7VKarusG59lZ6iRGEQ0YQcZCvAnPZmGirpm5whrw9ZPtjkKHnRTd2Bp6Lb8GnG3-",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcTXklcoQ2-BknPulLmAotYk3Dun-MMidIF1N5fx-_eJORwDMia9ohFzNGKZXQpgj-sRJ583iJnFVWCeVLU9IBvY8uCoI4-cK_H54e7k8oRm2Lf_8AuJLCDPQ3A45pPgBmobZ08UJilGgV54VyBA5vHg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9NvJtOVToqIthJQifaBUczAqMrAKJ8IjjZCyNDY8j3VwVzH3XxjevJGy4ZJ_2Jr41Dey_qnnNAMF8XjYx8V9RqXim1fdvpXVVnLnWqVTwRA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgChMr-D25Y8HBWlObLlm-dc5a_v1Zr8Wnt--Futz6IuBHWHoNkP7QoMr57QugHNs2QFCJ1hDw5V4dVomXg6bxqsPbOpHnaITCmk7ddt9CRoW8spg9GLmyF_RvRoLIgbHkZ13iwytbzZEggKGHluA7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-I79ZsiAJb33yphylxO8PiJl5cCHUu1jaq5O6AHpvqDTmhhFCsopQ9NmHguKh5r8FnxKdj_P0q1AdwfSwDM6bUWUybLcNDk1K2L-xpaGDoUr2Zd4YjbI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgChMr-D25Y8HBWlObLlm-dc5a_v1Zr8Wnt--Futz6IuBHWHoNkP7QoMr57QugHNs2QFCJ1hDw5V4dVomXg6bxqsPbOpHnaITCmk7ddt9CRoW8spg9GLmyF_RvRoLIgbHkZ13iwytbzZEggKGHluA7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELLow6PQ3YVOXYcYRgTGsjiX-gX9rioqsV_QZArABKITbn7thIRd2saeuOQ4MOTbVaVG7TRqqrrpzB6LmqLgd2n-09IMWHDMvzPP4vgHzfDYmOz5ZT82o_zk_vOULRNLamj8Jt-ZK7whjOUCQVy3PgZ18=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://minops.mireene.co.kr/index.php?wv_page_id=0702&utm_source=openai",
+          "domain": "minops.mireene.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/1700010279/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/new/free/5867202?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/walk/95443?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/1660157681/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/photo/1625154?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/walk/43234?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rebeauty.vip/reviews/?babitalk_page=2&hospital=3821&sungyesa_page=2&unni_page=16&utm_source=openai",
+          "domain": "rebeauty.vip",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/free/961055?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3996?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3996?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/1660157681/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/1660157681/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rebeauty.vip/reviews/?babitalk_page=2&hospital=3821&sungyesa_page=2&unni_page=16&utm_source=openai",
+          "domain": "rebeauty.vip",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rebeauty.vip/reviews/?babitalk_page=2&hospital=3821&sungyesa_page=2&unni_page=16&utm_source=openai",
+          "domain": "rebeauty.vip",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "재돈성형외과의원",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEw8NqvjDjSMJiERrzkdXbEjO_0d-x0KoB2yC8thVDVL91TP-n8AoC54N-4mhHpEBpEaLR-600b_tsLIiSUJqCN6xTSQssPbM7iprODSG_wdcjQ90eU7jcZq2oZdibXpI0s2SzjsGCrfR5aLnkRhi23otRo9ZmgBnBrIb191cw2w0M1FMKcZoRL8GLjUKP-o5GbUguSYquuQovkr521a2WOtmalfG-8MPzZvR-jY1Q3yw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQES_6WulWRBtenjgr84kYANAjHqMRVA2iBlnY7KaMhoHN73wwpz3761NYRyaPQhzJxXf3Bci3Oz2H1pUsMfUguMZiyi3of1vpD3Dg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7_v849IHdOXcAm4DRcrav3jEJMwOIaDRJowCL407Hy6IQfm0ilkjji5fvGOzST9gQHKfz4i7gZZZYmd4RwKHZ_hn8i7NUfuLLKOtFGJ9g7XC65KsWe-dvKj26tLjYTZjlkaZJH5n2oE4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_ViZ5H7Tr1MRG_wb9-gVpYp8aDCJ6slScqGNZl6oObcZZ_9qDfJ93VaTUfRdy75IZOorNBS6NiSpGa6m1YN1eU2swISxAWu2_TeqhZikl2v-3aqeTV07M-KVL2jSCNSsjBhlfSYSfzBeC7yXZ0Guocj3OSgDBTZazDCL0awqPsVVHt6q4nA8Rgr7K8bG4kfhOohRmMa1sAcGTuRZhSXSWhxyI9ZE1HcKefUk3prgh8CAHPPYADPB_c88I7mkXR3H0r_MJPw7LStEKg-JJnnInZDsQ4Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoyVmk3PavuN0tqiMrF1P17k8RxpEtEWFNIEfZnLj7dfjpEVY-B0Qm8lC3YUufdNYzLgjMkANeLGsDeimwp2faMPoQiSskCqBei6MqtCzSoE_DcuS_lK_z6HG0-xbBRPblZteGUI0qUPtKoxxtwo10LNWoYR1cIi__PGdFeZBjmemNbLvwXVgAwxg8kC2_qdWMYjrOc7VE5tUkNEnTw0QbsgUIKe9lTZ9crzDU-vg48YB815g2RSQHi14JWdizcPsva_Gz1hdkRs1UIV6nO0S_96LXFmoTzRdgAyAtCeKo1s3_w-AHPetqmEjW_A0JAg0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmEDUuDK6fbIZx2b32yGzM3EuamsmjtOsyDuRzqd1RkQGH_TLYSU81f-ROw3uu3FTiU6-iFI9R5zvN06WV2kO6oehGIell-UuS02viUlsLVR4gkfsgZ0OoE3nMTCTFoEthd7l5vXe_wIQw4aBGSKBD0VJ8SmRFBtD3Roqc9SkdzpYM5OULduJA6UJjNqO7EpBlQJxgjZdTj8SK0sM1jf6MHZeTWrmm1fsVEccUm8K1qzhTLGXZ9tysebpNg96ZbEjmjDRIsjk_69UAfvUVMaQ8eTgKpnHeTZwNtbQo72HBGJaP74LyEtwpeXtn5c-smJku7ZBolc1Vq_tE8QGfaAyqox75",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGjiH23DdjDkD67MfMRmVdtLEO0ZOZNqdQ1QDYvbKpYwABkqYzdx64RpOy7r0jtsRaqYIF0A4DjWUxw3N3hNJPr4jJpiRqdYkFOm4Ll-rD8Eoyao7UFWnuO8KLLXbN1vcb9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGjiH23DdjDkD67MfMRmVdtLEO0ZOZNqdQ1QDYvbKpYwABkqYzdx64RpOy7r0jtsRaqYIF0A4DjWUxw3N3hNJPr4jJpiRqdYkFOm4Ll-rD8Eoyao7UFWnuO8KLLXbN1vcb9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFCgSqQriFxXtyaJgY8mcpRmoq2crqvSWNZAqic_9IjpoYINzzzPFapEp4QEL5LNKDcFnPG9Ogrh19TzUcql6b2gGFICTZs7GqL2lxRJhZa1C9M7Zf_8PizC7S8M4XFUFdAidtWYhDTRS_JInoUD1rxmzEPY9np1xr-EvyokLM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEr1e7rdY9mCjL6MYGMwDsBaaxy7ynwJJFZlGIK4M2GFl2OL1mnI40bb98mGxQNW3Kh7Ca1qoqCLVNKVQ0EidIv0_clS46s1l4AZrbo-ACbcp8D-05YhAxvlE8ufyHlS5z4UykdyXCJFzOFCEkt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz2jy07Hw9YJNH5p7C3Tj_zR6YhegngfKKI6UOnvKZxJGYCLHZfVCNQTnFoloBjJ-C6I90AHsAptF1HyTmCOF0w9r_t-k1_3Pp6Bg5pVWKaJT1A6QkxFX3KC7kj8YQ8w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS5UL5Sjd_-qBphd4P0V4aiu-AT0pyvjCWkUoWvavRrv2lED_RePk9DO7F6Y_9sAsY0OYQkugi5Ng6rrEmGsp7w7kMHzmNUPr6Lqwyf6a5A-C7usMWK-fL17V313UWYT5zxwo1MHyhA8kjC3Mg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQGKKSOV9M5MKMz2pR1H6lf5-lmwu8Gy1K8jtcCSPdR4DW_ccSdgFuuPoo3rXwUNuBqls6nf0jIVlRlZPxpN6rV1rs76ziHvuXNY5hgSd3VGtCg_pLunPFkiQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVkx-MzFoS1n75Ms_IohPL1Vy8TranJ4_XluTVXp6EMo0xmI_CC9_OHC53No-HsbrWtuUXYd3aFkLzr0dOlKQQUfUrCWv2ju2kTUTYMy4oiD7X5kT-sQ5x2YViZ5i4fPs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGB9XSozaioXJh_jgS9yUysc2OpzCjtdtMxqIlVPbHz8Apt17DYiNEnu9mrbXpjoLuJNeiXG3fRNyDNgoQVpgysCMPkNAY2j-7ecJs2eqsV8gIoNBt5MhK81nztIteWi28g3z5kb3k5P-GH6whhX7KKVc62kk0azgLxLSSH85_6I5Xa-taZ-nMFvXz1lLHTEArev2DgIipLE-t_gCMEAS5_9qrpSh9oVxZ24yA_tliHvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzuiDbJ_OjwE9dZDIm0Yg5i0hdm2Hd2OkEQyDD4UhezrYxfeEZneeB4ojt1wa4PDg4HzEu8Q3XN-84SmceOrOlNLOn9VK0VI2PATj1Avu7Zq7rjoO7gB0VCIU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdeUpqwudFaGE_n6legxMCHSNH0CdwrB3nhj9JdwR0y_Uj_f0i5VuBJTif76Wau5BlSsgOcZ1gFTDW56v0xzhwJ0pFVAMxxzZu7PF6ah3nhLZtHtv0Yimi3r_pwthzhD8zuyFqazO6J4Rv7hlKjYvPKfPDZTIssCHPVxnhZZW6atfBeha22xn8UZpyiDM0uzprfqJdKoTk-LdpOc7OElUkiR0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtiFYUpBqv4M0nd18Yaz7CLNWBZo1O7rA6YzKgkoRedgFnaUChl0CXDgaHt_D6sDK3_kDdMTzw3XEDk8qBsuGHz865YYGd0uuXOmE9h_UdqN5WZxMOQNHfq1O_ji85aux_SqbPmWzPnf6B06MHLBeZeU41-m1txNM6pqxYQExu7EgXuagzxR65_8Wf87Muddj47TW1G798sDuc-upzrKBFObv3XCMKkckgXGihgrN3clTo4-A3mKDq3AkY1JS6SKovfhrpayMFDfpU40A0CgaueojnRRwCNiwbP7jJtsJS8h_6q_L0Q7IhD_KsEp6eAeMKmXmfA0s1XxHhG8h-g1PwMg0t",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHc-CaM12R2Bb8DT5uJ_bowjzQpZsqZQDwzkGQZ8hKjK6iLZi5YbxcbMkPm4xWJWkKkCbhdfYuPg6MzpdTPqv3nNSTk5hSG8X1GXocg_-h3z1P0FYxJvg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzuiDbJ_OjwE9dZDIm0Yg5i0hdm2Hd2OkEQyDD4UhezrYxfeEZneeB4ojt1wa4PDg4HzEu8Q3XN-84SmceOrOlNLOn9VK0VI2PATj1Avu7Zq7rjoO7gB0VCIU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUg8iOsO3Gw5jlpghYy4upBFOSqctTaqXwPnQ33F4rhEu9dUaxOZoQDHgg8NEuxOz6160M7EzqrP-Ad4w4oPolUq7Mr42nJnxRMJBH3eKR04AH_vlllZNxM-RwOaO9vqsZOVzKB0gSmcrbpItWAnRNUU2S",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGe7jgbBJZneS85rdgz-nfgq-RvRQ9JWf7BwtomKKaSv1kF0XPAFJnJ7zzX0XhzGlbx3rGTSCRP6qTRHh2sEXsvbpa3aMASdqaf8xT624d2FTED_UXz1YNAFxgfq-53Zs4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCGnXeJDc03AuADfbGM2HTPu-pZcd7uR_PGMAZSpE8Zr23l_ROYe8sAKK2XZBsgL0FkZ2HaSMWNCvLmIw4rn2eEvPDXCCecNqVWkhXb6ucdUlEKDGIdhCeD_R3hBeNc8E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFg5gnpDSNpiwssB-9bhSeKP2oO3YGj2XJsr-s3E98XNtUKwhPnpvSkNCrYBDDTc01iDm5zApkz98R6JbFj_rR5bByuhk8_JK2-abVmJMZutu6um4Hh3qb_Zp97euzYK64=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://inflo.kr/service/hospital_view.php?idx=42&utm_source=openai",
+          "domain": "inflo.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/community?bn_id=1681031&utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://aging.girinps.com/about?utm_source=openai",
+          "domain": "aging.girinps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.braunps.co.kr/bbs/page.php?hid=m01_01&utm_source=openai",
+          "domain": "braunps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.etonne.kr/breast_revision?utm_source=openai",
+          "domain": "etonne.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ieuleye.com/html/171?utm_source=openai",
+          "domain": "ieuleye.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://unni.app/hospitals/3505?utm_source=openai",
+          "domain": "unni.app",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://khealthhub.com/article/articles/964?utm_source=openai",
+          "domain": "khealthhub.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://ps.lienjang.net/sub/sillifting?utm_source=openai",
+          "domain": "ps.lienjang.net",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ps.lienjang.net/sub/sillifting?utm_source=openai",
+          "domain": "ps.lienjang.net",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bone.grandsurgery.com/about/meet-our-doctors.php?utm_source=openai",
+          "domain": "bone.grandsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bone.grandsurgery.com/about/meet-our-doctors.php?utm_source=openai",
+          "domain": "bone.grandsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://breast.banobagiprs.com/content/center_system?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://breast.banobagiprs.com/content/center_system?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.vbeauty.co.kr/vps/nav_02_02?utm_source=openai",
+          "domain": "www.vbeauty.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://unni.app/hospitals/108?tabindex=2&utm_source=openai",
+          "domain": "unni.app",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://unni.app/hospitals/108?tabindex=2&utm_source=openai",
+          "domain": "unni.app",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://aging.girinps.com/about?utm_source=openai",
+          "domain": "aging.girinps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.abps.co.kr/page/safety?utm_source=openai",
+          "domain": "abps.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://inflo.kr/service/hospital_view.php?idx=42&utm_source=openai",
+          "domain": "inflo.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bone.grandsurgery.com/anti-aging/thermage.php?utm_source=openai",
+          "domain": "bone.grandsurgery.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://aging.girinps.com/about?utm_source=openai",
+          "domain": "aging.girinps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/community?bn_id=1681031&utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "에이비(AB) 성형외과",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFH2QnPFasyjIJ30jbUQzukKvrUBn5wgSVS5L7uEDrCGPkiuZuaSffMIQ0CHyKyBcGqCRLmIFUfRaviBbyiI9hmEYGRoaLRC08I2t1UBuU71Zd7vYmUcmJ6e_zQZ7mpzzZWVQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFH2QnPFasyjIJ30jbUQzukKvrUBn5wgSVS5L7uEDrCGPkiuZuaSffMIQ0CHyKyBcGqCRLmIFUfRaviBbyiI9hmEYGRoaLRC08I2t1UBuU71Zd7vYmUcmJ6e_zQZ7mpzzZWVQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGV508DKtxXwaympJz_mpldUKGwHs0xjUbzHtY64tl1dA3GZMWMPcZkaUszdxcbWFh3dQ4-FuJ_jxXv8Wv-ENtRzFSJNUmWX9RokqofIyDBg04tqPAB3_DTYL_nzvKdU99OVnKLK14pF6uI3JjRfBcECZ_suYw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtCbb84CHQ8X8xbeabkV6D-57L0JVLuVg21ZF0cxoSYasIcqNUMBb1qiCQSyK3XbuBLjih7asBmumlPA3ViDrshM1-yeJdZKQk1Ew4ixkmehNX6ZokfaT0lxO4rxoQ1kpm",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqEBrG6RqCBgt6I2jzfBf3zLeG1cK3K3_WspEZ99Zcz4UIxR3zqnbvYBUF6KSavjstV4n8hzjspi58oWONJMTPcfdDeCGWvXsD_uYnmgmxjYWviItviMyRS159Tw0wL_YLw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkWg7veYYvATSe_qnd7tw48hYLt7LJe-RxAYzo4BSjl34h13qK8i12bgf_SJZNSRcYzT1PQgxa_9F8TeAzHr1Li64BSsm4sf0WUOB7I8wiradLcLbXW9uIz5YZv6xHnkUXp1YjA6-C3xWT8he8HxPS96uGY9VBcD4aA5m4RYF2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAP7T5Wad_K1wY3W-pBRVzCKbwnJn3-ZHNZWhqV5RTrXsXjxH_WuDy8o6SWn9zmiw1JgFGFC0z32OgtFgriV6ppRpDK2l_Nre9EwPBR8h2BYcM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXRmenO7Bvui0ExJ4SYLKDNSpZK-TzzjZ2BLhTIRlg9MvBE8Wi9T92DjvAr8A6Fvg8ssNGJOBKEktvxRdI2uGt0KZssePvqcUlj-Xm5pKve2iu1LyHckm_koIXVoAIH8gCVcH0ftRI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxaxkI7b2qDFmxkYLvJcsUyeNIuLUV2JzVntfOdF4QOgHfMqckwEKdFpPXM6Zy8RIVTWMWdTeBZPkuvwxkaynXZNaJaoBDkHsx7ogy8kmhMdq6DunkbMBLV8Cr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBxU9U5gleaSQO2PKSN8NJqdWGjXJXBqJUSIjTMvnZZYYWJDmFfD_RBsPfhzo97qSQoJqaHl5tdPNLMqwZ8nVU7AzIiDqJ633L5N4lDBKbn9rj_oZ19O_IPVBnh7pd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCkAlsXgNzgF44VGkEzWnAlZ44y6Qov9kF0XfVT6RXmyIiwZyE3iI8rO1zl5H8-tu6ja9IW21-PHjgN0dJTJtXUJxJ2iXFTksPaz05XwCaq51zr9470394",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtcA70mfC1R3XxQCdvcRDmWakkiNMjxA77EAA8GFuoCe3VXMwdZnSDmPcmd6rkEF8fUCgOSI4QE-OgBEhcTPzE7-GMF0fPVDM240SDtwE08YK5eqytQSF4R-NM75NEK30_Cw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHdy_UcUSyNNYKXYeV-zb5kSLqSzYzrdhMaDP8vZGmyDRoq41_ipVitXJIEQTrpB7MmYlSPVRIbnUl-PlRcphEjDYCzoZJ3cd70obzurFV5Ji1wNrtjCltryTN4di2-Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTBszMlaA1P5ZbEGHy9d9D4ev6MTi1kHV8D1ZSOFVsBZMvATd_sTd5WTp1bh75zmzCn6bmJbJ9LFlZTS9brCs-v6TYNIVQOtjWL3Uk1aM2uKltdxqSX7pzqnYlqrWuPNCX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCuQmeAZtdVkyA5iozYtusDd0-EHDaQufr5Ave6xuwsoD8wsdiNUHSjH6GOINDIuEpjYFvNa9bJwy46_rP6Nq1wfMhFZcKRAy7j2RzW6PsB3BMXRNIR9J8pwTax98=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGao45ddWhGrn8xdBVCY-ON-lY5R-JYDl-NerLD_vzycitNcKXAKn9A_MdPrlArDVHVqwmibHK8LpBGACpie5mxsYvHjlxyQnzs3BcyzEOSo4IioDz_hoRagix91ti8gJBZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnPF0nq50g2gyHkgCqeqLfMUY3FjsP3I0WiFVU4AqzmRZjBNQnIqHAPMnqEA3IqKjRaViMog65E4rJK9TrVXaOGpRjOrVUgWrZz_inya34XQLEI_2WfqnWV3MEOtZaLcLeU7RoZUXYsE2itwK0kbKPwA_hiA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeHWjVrzJ95xK1m-d9x6MswRSHX5jXHOLLHb4nQdq6Iv9aIxz2mDrzhbFAFYoApbOAFmGxYXSn_jLhdE9QEuu2ywiDrHS5UJ5-a5azkWgGJY-j0Y_hCPOLYVnojZ2JJ3cHW-u4PlGAVR3sBJ6KU_YhDx6XAw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdWd1ZeZ0_oWsOuSeW24jpu0wx1-tJXjuLuIWlkleiAWJILoQjRXHgaYYjAHnmXGhjcTOWbhGDN0E5BML7fGiJOjlm0TnUtOnUdqx7S7ECucMXeNEYpQr-dCgw7glLUoZNicxP1PwWm2scNzmKF3VjXw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuBsGvm5qK2iPDBtwbeFjJHT5Dblt_VvKC5ocl6joJ5e-zaZoPYFu0LJBDH4-YG4nHieucWNeWuqfLtbVPKbQst33Vgrw2HHhKvRlXWqzXwedvxuJc-J2UhUG-8ozZy0A-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHALGJRY6peS7T3FiZD7vEpC-PVrL0wdnq1WUDwUpIH-4z7XXbESBDkKKPxzfS21Ls9I1oRrlbm3Kx_2AWEIBWP1Iftfib7ZoouXGrB0p8cMJGFAgIiXJ3f4zgcdH1-WcM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFixI3ZiqCjMOsdMwMHaX_W-zJiiQOIEBFg8dna-J-5T2tWxyOtBNy6j7u-lnDnw1gV9A8OtxpSkZO_K2g6SWNLlRHHqw0eakbPdlUxzihnB4Bo1Dr6qjcuDWaN-A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.lcps.co.kr/?utm_source=openai",
+          "domain": "lcps.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeoshin.co.kr/event/mobile/26055?utm_source=openai",
+          "domain": "yeoshin.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lcps.co.kr/?utm_source=openai",
+          "domain": "lcps.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://iroplasticsurgery.com/index.php/html/33?utm_source=openai",
+          "domain": "iroplasticsurgery.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://iroplasticsurgery.com/index.php/html/33?utm_source=openai",
+          "domain": "iroplasticsurgery.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://timetox.kr/ponyuplifting-heer/index.html?utm_source=openai",
+          "domain": "timetox.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://timetox.kr/ponyuplifting-heer/index.html?utm_source=openai",
+          "domain": "timetox.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://timetox.kr/ponyuplifting-heer/index.html?utm_source=openai",
+          "domain": "timetox.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "5. **에스엠성형외과** (서초구 강남대로 435, 서초동)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 에스엠성형외과 | 24년 경력 원장 직접 집도, 동안성형 중심 리프팅 전문 |",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://enterplasticsurgery.com/ps/facelift/?utm_source=openai",
+          "domain": "enterplasticsurgery.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.etonne.kr/anti-aging_facelift?utm_source=openai",
+          "domain": "etonne.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kmediarods.com/fileUpload/bulletins/news_pdf_2025-01-31.pdf?utm_source=openai",
+          "domain": "kmediarods.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/gangnam-seocho-facelift-smas-lifting-guide?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 5,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3996?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gangnamunni.com/events/39202?optionId=6590ede4-c599-11ee-982f-0a5164a62f36&utm_source=openai",
+          "domain": "gangnamunni.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://iroplasticsurgery.com/index.php/html/33?utm_source=openai",
+          "domain": "iroplasticsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://iroplasticsurgery.com/index.php/html/33?utm_source=openai",
+          "domain": "iroplasticsurgery.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.systemps.co.kr/sub/sub-8/sub-2?utm_source=openai",
+          "domain": "systemps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.systemps.co.kr/sub/sub-8/sub-2?utm_source=openai",
+          "domain": "systemps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rnmeskin.com/clinic/laser/eravity.php?utm_source=openai",
+          "domain": "rnmeskin.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rnmeskin.com/clinic/laser/eravity.php?utm_source=openai",
+          "domain": "rnmeskin.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDRB8dCTKGe95KE1o1REMIxJYChC2QUrpYwtJikNP64YcvjRzm_gav0beN7Wo788TXwbT38AIwD1l7rdyomndPl1RJB0_UHTgvApwtXt7CkimmYcn-D50FaJbE94Tk_-Ah",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGu87-AekBw9iVypYUiljUcGV5wxYV_4MKf8RBOGgc8ARd2KPrKsiabdBwc4ihKUmbAXed-rZ89dqbDYS1uvbFsgSjQySJliOV6Nb2qxPcbCEbW-tu1VsteZlt8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFd0leYSBcxB22qWp-gNCBYdxmMRCIyY1jRS3q4yH0_eZ8CPVCYEVKIIwh2EQ93ZA0B83ljjK9cwhUJZc9pKOUX89asgVczOCd-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEC4bz90WcXFgSIoEQ-Uxji3VURC3uABZGusrx4kJtFASb8avx4QDtjOmtCmq5AaKF_MtdBlJWopWBik8vFcOOuj5TKaGV4p5SkSX60CX1z27ruRe0TEeQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzxfoiHOoJvvHaWXE7qF8MGec6DZjFwxmdVGpxdP45_9m54kokeYNeWHsAx2PC1pUe5euJj0LOZizfYQ6qVsgmTepfeQ7DiEBiiuumHHX5PsSEyEs5z5AAgndx52POxTo5Zsai6MZu4sIXJDIY9S8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAq06g7r1n_NXUtD7zUP_s8WBxX4tq1gSd84Nt1lTq-2vYE3RlC09wRY62IzAlrPKFmbt8slV2-e5JfXG4zHlwPRyliD1-Z5MWbNsJOQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSrL4zuqr_d53H2TSf_1Xab-WKTjNTkbtaeAanC8YiMdrx-zoCK7zBdz2RaYIBtlvI8FtqJwd_ciFZF0dZ0t-QdF7-xkXSMC-VyhAr8g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMjpGnGi-glRAmYO9l61IWJweQdsh-PYz1f8ie1ZTE3d9Op8XI7ApjWLtAoQLUagkGVeP-3AGfsx9f56YDwHFlEu4QISvNqbv5RRcJuPr0nTlBrRnkLhLEy9IgXHHeUo70",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsjBEj1pta9I8UZY-FiakFHcBEBiUEvm0nWonFOgnrcvag2X9-lnk2sSu2_7Hzi398dhXVtCKTScx5mRDwWAQL8k_WtsJP5P51nk3tmoTqoIY7oh2XWkMHJiBG5WNYBMlv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtXhEljRFeOqRQ02SBcRz81uQby8AEvHYDesW0T7Eb5Lje8q99c48QaoeWJrVAiqtrXcQ8rK_0BBxYv9XkRmx6lyWCbdQxgKRxlOA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0sBMAdYQnkP5Gg8sflABiEhHdF9iMG7mHfzN10CEIjbJh5YmVls9zL6rbY86GThVuwKch55kWl5MVWUU6skVr2HmNkme9MCYSWoLybnIjuFv0817RUX_MCxO2uAUcbaNANMZpJI17c3DXWVYok1xtcm4KW9cmbeYepSuKrBdfe9kPsgpZd9fWlaq-cuEAe-6NMXqM0l3YMTvONwFu8HSNirtdfVzWn9shPmLbxU34_Kz05iT9yi_7ZJVo0Hy9bzBlVf1GJcp-XG353epajD5foLjFpqs1DUewpaouzg7SKk11cSBXCP4jq2gO7G990huxf8iFPzwERgela67CnUYgYS9E4PB58FbmGAfdyjbmfFw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnqaxJNCoi7h6ULbu0E2t3FSp9aO9OGoczda0Rsc69HDjmkf06gKGVVwQQZPmhqn9MWEA_ZyZJpcMFhj2E81v_Qb3SAxeP9E3XuCoeipFpjpdAxTyfylglZF6-m-fRfE7pI6knUUA9kg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdsn8kRD9foQcHdmFy9TQnPFIFKxUQJ6TEFoGXl8LYQonWiUB4yOCntwj5t8phFSHTVowTdykgzf-ff1BLGXvqfF3GXGR7LlQmvOEs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBTdOvUdQLyLZ8Gm-0wS-anv-vNYmMsoeaE-9onNs_iu1BrKrthR8rRndt8VlftkBo_4KUJ_Bl-apywY2CCQZatQLkJKgkOkXsA1f93tO0PP_e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzQ2q-vHMgWWOiTn4RHyiZj0hz4Rh51vxoImIjCq6Wzd4PytOZhXiDHIuKbw_h6bX-28opZbbmO8NRUtJSKazfmNlUhY3WXzjvVzyLGsdk1yTHko2-zLxMxXGG0v7YGyA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEA7R177WaAwEOpA3gbs8Cc6o3yLPqbMfQ9fhR-pjdxblrHZs6MKEjMZO2IXoYRikEmQ969DBmnI1gNWeYoowON8xWNM2tHYr8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCWSPGy-398BJMcEuRwagswY2WRf43zjNGON5-bknntcm68-ztiW4xiIuCPGb81OF_5kNU-M_W8tRDcHtPW6zf7JMCleVee_hG8vhr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiujHTuyBjT9n87XqclOpC1DIfqIsqZnVq7JNp6SmH0rm3riIib27z1Iuj3XS6zR_zAWpkF2ZjdEYVZbWauljcUBydW_wRXVgtXkRjqAOgxrjT5DVAgIVm12B9LDhdbL3kVZQtfzFGplOssGl21j0_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYuTgLXUwNDlc6Z9jIQQtuNiB5KXQ61dpqqoOhHgR19kqTgzk_mpId13by7UyEOUsW8OqLtAVJTNXEsMdsxjCAR9gAEvtJKRrif90RJ6axcwk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFuSwuLVyKO8lC8MFvtSyctuhbeXVVnmUU7OS0IwUlaEl0qEMkXJ_1Q4yqreZgGGiwGL_3XKyvkkGjs584gYVFocBgJaVkV20q8BA9aNXDNm2ZBA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJUoiO3EXpD7GB_RHyquPpR9kQmsTcn4a8JvR8aM1ECIWwty6q8o1R5W0So6bUHrD6io7l3NBEW4kGcqxnclQKS_IwTNPdayipNkV1p2ews3tPM0cPqgS2iA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZRR9beLcmPuN4f2GXYD_uA40xCKgxRWrPSD-jW8ZV0boehj4kr5DabcvajOMtKx-S8GmQA-7fShUn8ShMbU9NmI5ScxjoFMmgRmkkFA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7e5z5vjZ8JCzM1eihW-3ZabDarljVHG4yvozZ3FLSM8opfPlyjOe-wvlnbKwMw-O5-Nvqrzw6Q25f7KU_WmJKq-8WLAzctPE0",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEl22fOd9nCYEVucNc4zBBKuchxxuXVmhV4ydX1Cyzwlhih-eZ18nXIF8NU3g1o-IU-oPxbeK_GFyo_klT1_QBSh2rwlFQCID73oVFPVhLdH1pLAivID-fTpsUnsuo1Lvm7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhQfRiHvA1zw1fhsIKNYyo_uFhHZDicrxJheJUjm_PUpgXo-KZlc5H7n4WXtwT569Z_8El-1viWuI1vM2DN77xsEz8mtgw8B5rRn-tt7UFgqOPN17aUjEmNlMhrd36hW_z1YNnVYyeS9U=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZn5nzvyvEZ12CmLQovI7VB9rxskuZgXX1BzLJyFnALBIyMYVwnvzOAvZF3qHqMrwMA0DW7YgD6Ulsyu-s-XmtcsU_UTQmhgjN_fo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoOcnHuODnxK3VcULpFuv8GXDCH9gm65iOgjOLnBVAAYqxLrIKAIBugT6zdoCTOeQ0VtJ6_GxgSX_czFqewhsWJ3heimWqNvnbxczQBw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGu8B98BH6Nwo28TDfWgRG1veMfoN4rABOrJUhp6MAez3DLE0qeRAJ0KfBE5WD31WwSh5TAc-_lg_pIN0aR2I2DQJNkT27nhpChgT_klhGaIUto9t1D-Up8LOl1iYBnYWvijFISMKQyj6_EM-Ym_HHrv2UZ81BCyHabWye0BYQ81V-4Q_z5ApL80DTnB2vGD4Bpn3BVH3koMEIlZwaT5owVhpGcm089lg1mypgZ-e0alz9bRPzgIPNYTaPDw1-WBCEL-Vbsrci26A8Ajm7bCFTpVUN1Nmdtf8G6fqTj1FppTZtmdg0gXbtmKYt0YmOfN9i3UKNprNnu3J2X2cHzcUaROZfj15fD6-d-pkVzo6kNLOx3",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYX5_JObZKgg3cRRlywHnB3qmqbdjIxZPF6GrWbAVdoUo3B2BX_YMWTz1CyWN6nL3Mo68qQ6VwUXJewO44GfkimIv9Bf-iD-hbzde_brjs8dJT_t7dGCLSPwSs2DLLNrgPhpqI6XRQDuKROTCDUho=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiHDT-eGw5jpFaJlXad27Sv65n2tCfJyS_VIesDtrkK1YuaWaUfQPTlhLJDA0d3ku2uWa9gXB4oGvK4eBz28_NBjE3dJjJFJcdd9dqMQUYhrk85FpOf-7ytC6hZ7R5V9SJ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCh2mnB3rHIs6DOY2dQF2IHU7_XlOEK3iLv5aFMrEPNUvius4jKmKGg7SqCLERnPWKiD-gVYlwlFef3QbZ4-N6YmJu1aIx28QZJ5_nAGZMCbfCymD5vXGLp3FZ5GIq48Ss3h6qj0syjmY7ZgwKlg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초 에스엠성형외과(에스엠성형외과의원, SM Plastic Surgery, 서초 SM성형외과)는 다음과 같은 진료 분야를 전문으로 하는 클리닉이며, 대표원장님의 경력 또한 아래와 같이 정리됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "정리하자면, 에스엠성형외과는 눈·코·가슴 성형을 중심으로 한 다양한 성형 분야와 피부 리프팅, 쁘띠 시술 등을 두루 제공하는 클리닉이며, 이무영 대표원장은 서울대 의료 배경과 오랜 임상 경력을 바탕으로 직접 상담부터 수술, 사후관리까지 책임지는 1:1 체제를 강조하는 전문의입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초 에스엠성형외과(강남역 인근, 서초구 강남대로 435 주류성빌딩 9층)에 대해 정리해 보았습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 눈성형, 코성형, 가슴성형, 리프팅, 바디성형, 피부 시술 등을 폭넓게 다루는 종합 성형외과이지만, 특히 **눈성형과 코성형에 특화된 클리닉**이라고 볼 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초에 있는 에스엠성형외과(서초 SM성형외과)의 주요 수술 분야와 대표원장님 경력에 대해 알려드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 다음과 같은 수술과 시술을 특히 전문으로 합니다 ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai)):",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(강남역·신논현역 인근)에 위치한 **에스엠(SM)성형외과**의 주요 진료 분야와 대표원장 약력 정보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 눈·코·가슴 성형 및 동안 안티에이징 분야를 중심으로 중점 진료를 시행하고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrKgNg1NyIse4sxhGKsp5DEAbD24WsO-N1BDeXMRQlDW6EWbL_hWyiSQByGd6aEbEOy-0qccTXtBQfIl6KZGgP4gp6pa9NIxkgg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsszCAjcqxF-DyQZiHLXuD-XCvkuetOzj-MhVvdSACNyKyT1E5WiULmhMTNzAiCs4XfAOYa2ovwPNRHW0VccfYh48dGCcEJUPHgI70T4ZZ_g-QjTpXE8xJe4RHZOYQbNcn53S1-eTZhwydOFWl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3FXuVhlR7yxSVwzq_qErq3JO4zm4lylFM_2UpNf96_8eX_xulQgSGzyXdg-CA-wvuwL87oUXquTIL6O6n7nfVFJzeOCCOdRRifRZ5GmZ8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlN4s93xDrXL8Zs-LoJATwucCW0Qau2bTsdL4P4y-5fRcS-ZMx3k-YbBmmCEOkdLiCDIOyiuQi4wihyLdEOz0DboGpw6AFl0A3d4uQoZFfpQaIRFuVSozJSHxnKVIzdpE9uVn_Tt_lb_QO4Q2Jv4jAkRpJCoi9AIBPWhzbYHE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrpdtQ9eu4i98BDzg7eaGWXiwmzL9TV66C8zp4U7oE-GJmwuTIBJNRi4zqNc5O_ePc9dCtD9lOgZD6VtIKK2X1Vn-gu17A7ie4mfDl0N_OuFw0lsLrYZfFR8Ot2A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrKgNg1NyIse4sxhGKsp5DEAbD24WsO-N1BDeXMRQlDW6EWbL_hWyiSQByGd6aEbEOy-0qccTXtBQfIl6KZGgP4gp6pa9NIxkgg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXxS4k1AHDQsMzQV5B-mtd_xyksiHNUMKZotzj7JtaUusFkf12UxqvY2YSnFy1JMGEpJa8kF347ROvf6QOOeR7dNbV5hE9XwP0hjgNh1K8N3_uw6y6CSFXVCNarA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrKgNg1NyIse4sxhGKsp5DEAbD24WsO-N1BDeXMRQlDW6EWbL_hWyiSQByGd6aEbEOy-0qccTXtBQfIl6KZGgP4gp6pa9NIxkgg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrKgNg1NyIse4sxhGKsp5DEAbD24WsO-N1BDeXMRQlDW6EWbL_hWyiSQByGd6aEbEOy-0qccTXtBQfIl6KZGgP4gp6pa9NIxkgg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkL9ZR7cPKobXkRFwX_A81jHOEsN_r8-eI5xZPcB1BpIVN21XD780cHxkpFMRLGn9L6Tmo0BmIRKYtpayhKX7bfFxcZIGTARQjzCu2HJCZ3r1Y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초동(강남역·신논현역 인근)에 위치한 **에스엠성형외과(SM성형외과의원)**의 전문 수술 분야와 대표원장님 경력 정보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 주로 **눈·코·가슴성형 및 안티에이징(동안/리프팅)** 분야에 특화되어 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMTDZnRQskgXPqrs5i5K3KoUVa-wEriGyUw9UE0RCLofa1PsZR0mSxX4F43ojjj1-xiII0QqKIShtELPqO_r6XWdYDY2PDvpgH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFO6Cpbci_QJOtfrxaVW9bZ0ir-rRfStCQ3Y8YboWl6aAG4GvBKn_0GMe6LF8ZrrZ65-BcSQCzJClM4dJRQvgSFZpxocmworizcD_kJ0QSbFnCrGeBP_iGduOi8-ujvTFTKDpDWzWDMfK6V0ZBHZ7ieaB7kf6SpTRT4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMTDZnRQskgXPqrs5i5K3KoUVa-wEriGyUw9UE0RCLofa1PsZR0mSxX4F43ojjj1-xiII0QqKIShtELPqO_r6XWdYDY2PDvpgH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3_qNMVrkqIWkPpd611jT-JgKyuw9WawrgL_saoGwyL9WtfzRUiMzNXC-uraC1oarlHr1_SlBp8aGExqWsEpUb3cQ4-bL4B0AH61PeVIPcl_0vwhvbcRYNhyyUZCQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8OHyib0sHqIT6A_mlrlTtJoytakE6G48k9nuDY466SFRgMGWOVFoNVPpDGYpM3FizkqQ3g2EfjytYw-3uiLnbjAqdgl3TaC1vLhO-odIAUQXXa5uaaUouxosi",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEymG1ycmJsH-u2Nz4cvb9ZPg6eJNRi5mV6dz4ASKfjkDVc3Qr3tTzUT5kZcemYVh9EhKtUycww4cQ9NigRh9l4_qmc7NUHjS2KcinwYcVWVOY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구 강남대로(강남역·신논현역 인근)에 위치한 **에스엠(SM)성형외과**의 주요 전문 수술 분야와 대표원장님 경력은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 이목구비 수술부터 체형 및 안티에이징까지 폭넓게 다루고 있으며, 특히 **눈·코·가슴 성형** 중심의 임상 케이스를 보유하고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECUNGziw99Vyz4sbJnJuU1lDBL6y-ZaVe4Sd7Kjq02_MDSFOFEbwExoJNFwE2Inv0O-vdfTn37l205ezkdsks_ytC__U7qG3WZFwCJtZBqEIVFdI3agirGJ7thp9pZG3m6SH0CThmofJoXqHmgn1JSV91b-fQmPp0zR_TXtMY0Miz-KDafPQ_LynIkV0vunfLZfEuzZp9esAO0HehgIpkHwqhjADa2nmfPX5AROgjuEwUlUR1UJDe6Sj445vywMqSId9rLAayC7zi6rpgcveKI7J_i4aspmrpdw644TFu-KIiPXFyMBodr44NlwYfabzZRGJ8f8tLklJvtY-TqV64S7Wx4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG713oLvTf_OGHnNnDNlnNJQx7mCtTLAwxSmlI7TqwBxtFflR0xBbtThx7GU1YBt1r3uu5LaHWhMVvZK0-5UbX_2o52eaOnWkVaJFg7THZHKjMxbT0gJ_tvNaAt_7kvtgqr0t7LAWQiQ9JnsIjwiZhCQdjt9ze5MS1ZOA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWL61rR9tTCwmbE5k8PIi3x2dIo7EPgtm2srKsezWN1PzDs-wILZdSEreVXwzc7X8ZTQ9xy_CTkDsc17GaK4ZRqTuHMueSoL3YKA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1NDxheBf7-BTWLNXej7VqYkCHJLbSkqAdBm5i6_lsfvYuQ21Vp_lllSYib3H4Xk7kGG1aFf5pj13ZQu8amSQGgOuY2gNkMWfPmwiRi7w6JRuQ-CCslfFAJOiE77p5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSAMe_XdYX7qNJzIzrz1w-bMWqgfeJaPcuJ0q68alpubUi-1v3TNNghgPOADFO1GNPkZcMrQY3aefdW-Q2XtwZ7P2o9sCBFNJcTzAIkuNKMwmr9S4bgUrjdC18tg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2qnigdZS4bd-_kwnxGrV60VqyxsMGgdLNAMh4_fm-c0I6UNIqPQ48BCtB5VTKx4D206qwiiHXv86Rt79QojkiEp2R8ChRfL62FQ2rqi_mDaefaSfXPLeb9pBRfMSLxZdDg9upgSo2YyvtRBM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWL61rR9tTCwmbE5k8PIi3x2dIo7EPgtm2srKsezWN1PzDs-wILZdSEreVXwzc7X8ZTQ9xy_CTkDsc17GaK4ZRqTuHMueSoL3YKA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSAMe_XdYX7qNJzIzrz1w-bMWqgfeJaPcuJ0q68alpubUi-1v3TNNghgPOADFO1GNPkZcMrQY3aefdW-Q2XtwZ7P2o9sCBFNJcTzAIkuNKMwmr9S4bgUrjdC18tg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpPkb8C1XwZ6HuOHrxqK6DSbclXpUQAQqiSBmlaTNK-ka-TpS2J4tCtGXTikoeygtYQu70umRrlo-lodT9O2Suyr353GiF0vLEX3N0aiF7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "에스엠성형외과(이무영 원장)의 실제 방문 후기와 수술 후 사후관리 평가에 대해 아래와 같이 정리해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "여러 후기들은 에스엠성형외과 상담 및 수술에 대해 긍정적인 경험을 전하고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bbunni.tistory.com/entry/%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%84%A0%ED%83%9D-%EC%8B%9C-%EC%A3%BC%EC%9D%98%ED%95%A0-%EC%A0%90-5%EA%B0%80%EC%A7%80-%EB%A6%AC%EC%96%BC-%ED%9B%84%EA%B8%B0-%EA%B8%B0%EB%B0%98?utm_source=openai",
+          "domain": "bbunni.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.meconomynews.com/news/articleView.html?idxno=45521&utm_source=openai",
+          "domain": "meconomynews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bbunni.tistory.com/entry/%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%84%A0%ED%83%9D-%EC%8B%9C-%EC%A3%BC%EC%9D%98%ED%95%A0-%EC%A0%90-5%EA%B0%80%EC%A7%80-%EB%A6%AC%EC%96%BC-%ED%9B%84%EA%B8%B0-%EA%B8%B0%EB%B0%98?utm_source=openai",
+          "domain": "bbunni.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "에스엠성형외과(강남역 소재, 대표원장 이무영)의 실제 방문 후기와 사후 관리 평가는 전반적으로 매우 긍정적인 편입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "에스엠성형외과는 전문성을 기반으로 재수술 케이스도 다수 경험하며 정밀 진단 후 맞춤형 교정을 진행하고 있다는 공식 안내가 있습니다 ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai)).",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "요약하자면, 에스엠성형외과는:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "에스엠성형외과의원에 대해 실제 이용자들의 후기와 수술 후 사후 관리를 중심으로 정리해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "웹 기반 의료 후기 플랫폼 성예사에 따르면, 최근(2026년 기준) 에스엠성형외과의 주요 평점은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 **평범한 수준의 만족과 중립적 평가**를 기반으로, **자연스러운 결과와 빠른 회복**을 중요시하는 분들에게 적절할 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1621?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남역 인근에 위치한 **에스엠성형외과(대표원장 이무영)**는 대형 병원과 달리 **1인 원장 책임 진료 체제**를 중심으로 운영되는 병원으로, 주요 성형 커뮤니티와 실제 방문 후기에서 다음과 같은 평가를 받고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5QK5vYo-mPczVi-QCbu2fw2el5HcH6s8AGuo9kg_llzjLmMSkuoGoZxXR28fPLfPK8zAsZNxtUsYyYC_tdVtA3tJ941N8YlCgz2ADm6NbkH8FlHM8Li26WtzMWtqqMShFoCOmamDoWj1zdQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxnZEMvfK5D79qviW_gBYB4uVxwYjGeGIx2u0aFoNyejYM2T8zSdUsNhbRjIJtpsxDUf0sBAwPaDjoeQIs59dNpw8EsXsn7bwvBg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9u11PA7r6FJYWBNELkFXzF_pdgk0fYyZytaiPvxzCOzPbUxNdBxxQwTB851SZclpfsJo5x6vPsrY1g3lCM-pITF1-3_qqTcqbWjilRZtlcYyDRs76angTY8PbLw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcsFwejHcJqWHIDEL6EiZuk87Y9ZYbcXl6KTcc2Pn_VvwgwaL8Rl6JGkpslNmvi_wkCC9p5A9xiajz1W4VChx1RHWBhp2ExBlBS8RGQWa4ZCaIV6us0nb9drnZtRd0Pj41W_8nwi2JlbrELB0W6z7b6_TcJ7dnGLj2b3qJ0oTlsF_jSSrIfeck845bEN83v2AiYzJtHOkK73buNAjSss2UfJqdQ2AHGKS2zYbD97Y-th1XApk8w8eDcDwwKS7C0YHf8rmPxOpV29zmT4Zxa44h-zmmaPPggWFxeCrl5mRdpIbrgjl-caam59suK20JDvSbgBa7mECd_-qxejA0ohXk0q2hGjtKBbWVEEmTXGADV54cwRSWkEsePHp-rwqq2LYZp-KZyp7K1HQwUgtAkSq9dg7ZR-2a7AUCpMYC3DWtNy4Z6bOt7wgzuDBvkrY0KEnl2SetIaPEW-YUXL34OeoQoKYCOMBZCQbEveqz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**에스엠성형외과의원(서초/강남, 대표원장 이무영)**에 대해 실제 방문자 후기 및 커뮤니티(바비톡, 강남언니, 성형 커뮤니티 등)에서 나타나는 주요 평가와 사후관리 특징을 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZWc63YFWqNHrd90h1dnyF6LqIIIOm59JZ3EPTpfeZKFeMRznCeMnC0nfW8eMx7vMsweu0Dg3xcOVxZ51Xr4d30mAi1Qq7CCcD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG16sH2YCG8lzpLmCPrYc_xEVobBZui7WjQ_sFL6Yaj4SZR-2PizmwLzkJb1HMy0VdWPyqnwEkeBFtMOBeE1I0RCa1Ee1U7dAKnGmljokwCCg-BYh3wMiXZY3IucfCV-yWS6RoY819_Dmyl3wJ81lNST17S3vJ3pg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmGMXq7039Obwp6maWecHZw_s9UayXjAle968ZXMCEHq9DqfOdKPYlaTwaSrEQlHLhrM7JgzG_qvxaYOHg246kkKO2GnpneoPcjJTBnZR7G1RROLWe3XiAid7v",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남·신논현 인근에 위치한 **에스엠성형외과(SM성형외과의원)**를 다녀온 실제 환자들의 커뮤니티 및 방문 리뷰를 종합해 보면, 전반적으로 **‘과잉 진료 없는 꼼꼼한 1:1 진료’**와 **‘자연스러운 결과’**에 대한 만족도가 높게 나타납니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaquEIbkYzKV0nQMqZC5DKpQwCP_DXnYHV9RnvfnuJD4Z7DVUFqO3Y8I9-e7-diBN4_d1jcg_vHKy2hAREapHwc2bXdCbN_TK3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJxyDCXE59YRhopzTdYR-pcq3BSJt_hVelQ7IlEH88OodKxTD12xzeK6-LaeTHDQIjTSr5AmCFVRveKf_3rsH93aAyqFIZIJ087exUkiBBQdjTeANYMINoMNPx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2DDIWAzZh8pJezXITqbwPuRzWFHhuNKS4tcKdtHvU7yY3j20KYQvWq7DjikNHLi69rr0dePrKruCvy0VMLmxPI5hueIViIqd8g_WrrfyMiE9OLwiX92d8cX6RWmQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaOx-ZrGe3bsgqibpfuYgUUclAakErrbK9PyflX2IftYSOvW5LWxHTtwQHM14Qlo39GZyEP8dZj4UWf-42PLNsDkeAdJ9ZLcrygugwQEVmJYXdsNjnR7WanjPn6as--dR2cywDLbdZqMePerGmYaS-WcaBpeIm9HPQ1qfsyw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwaNFu3tqOix8z4_tVeKtl21DiPAxpbUeVUUM0S8zZFtfXyvuyfVLKNWEGDX4AkwvTNuY0gQGD34zcORk0w8YkpkCQC8haVeOX_8G3-uIPIjwLWImfTl45TNDjQBxKSvimOl9_zUIQ1Dz5u14MtCel5Rw64zwhPTwOExnXeeFLJUni0aEEgoK-FePAJjYgGU9pIi_3wWr5PZz95Ixuv5R2nHJKdkrY6Bvpkyo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/413?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/413?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/448?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/448?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/399?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초구에 위치한 에스엠성형외과(강남역 인근, 서초동 1305‑5 주류성빌딩 9층)의 눈 성형(쌍꺼풀·눈매교정 등) 및 코 성형 비용과 상담 예약 방법에 대해 안내드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "###  에스엠성형외과는 홈페이지에서 구체적인 금액을 공개하지 않으며, “수술 범위와 사용하는 재료에 따라 개인별로 다르므로, 대면 상담 후 정확한 비용을 안내해드린다”고 안내하고 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "실제 에스엠성형외과의 비용은 이와 다를 수 있으므로, 참고 용도로 활용해주세요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과에서는 다음과 같은 방법으로 상담 및 예약이 가능합니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- **에스엠성형외과 본원**은 명확한 비용을 미리 공개하지 않으며, **상담 후 맞춤 견적을 제공**합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/399?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/413?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초구 강남역 인근에 위치한 “에스엠성형외과”(서초 SM성형외과)의 눈·코 성형 관련, 비용 안내와 상담 예약 방법에 대해 안내드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**1. 에스엠성형외과 공식 안내**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과의 정확한 가격은 웹에 공개되어 있지 않지만, 서초구 내 다른 성형외과들의 최근 비용 정보를 통해 대략적인 예상 가능 범위를 참고할 수 있습니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "이러한 정보를 종합하면, 에스엠성형외과에서도 눈성형은 **100만 원대 중반에서 수백만 원대**, 코성형은 **수백만 원에서 천만 원 가까이** 형성될 수 있을 것으로 예상됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과에서 상담 예약하는 방법은 아래와 같습니다:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/448?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/399?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/413?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty6.tistory.com/387?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/448?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구에 위치한 **에스엠성형외과의원(대표원장 이무영)**의 눈·코 성형 대략적인 비용대와 상담 예약 방법은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 1:1 맞춤 진료를 진행하므로 사전 예약 후 방문하시는 것이 원활합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "카카오톡 검색창에 **‘에스엠성형외과’** 검색 후 채널 추가.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrF7WcPVE9sw3OlrsMuwUo-U0zUFb5UZP4K34quTQV7dW1y4aUtdP5wDMwasv4b1ndFckEwMdGsFZOoAZZnChaS6Bmo6ANFsQTXH_MXTA7YvFOqMgQWvLWV9zW1RaajWkyAuQKFZ313LUaBNx2mU7Yhf5WpnwKA7I2umx2Ims=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl-SxospPFAl3NcXteCW4dLWfWCsmP_V2qiD98LZnBdzpuprDPuE74XpUi0QnEmlKFQ17LKnYDktvUEhuTl53bAsb79piG41gb7OuUWfDQTiJghQntpVA8eAqZiTUc",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIyUHn945Y_rCwZf53wYye9A1vIkME-qEcew2YPsmnNNo069yFTolvKoEojIfgy5ElDktPSxJDLpI9ZMeopDsblBAdSiy7vgsZK4q42myHkfEWxSOrpAzJN8K6vLfevsIjDJkAyAZUKsNFhEap1TNUvyNxfSas3CO_RLOzVXoMew_nGxMD6XGkp5nxfmV7zMqNPuTmpsb-oAdHWDjmtuoMqkbt-r5Fovr62mBzVtmg3XyNvEqRHNHo3N9bT3Iie09HUmWj5yOBa9PCIgC0H5WNYcUp_mNKGZkVDS570K_3MTn1hdHJZMjkJX4WuGMjVVhhChNS-nZw2GC6z-YF-nv3hsRP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmnlM32fZFKrWpsFeDSxVhpdE_JQtT_D-eRTcg9_udeMAounxjDtu8V3VCPeCQJaqU2vhjunSvuVRKx61UA_9d8tCPjwF6bJ3p7308emul_48gZxYI4DkMMfn93JYLgC7QtomTH54tv1qidcuJi96hWMSKR02dnrJfh3wKfHV3bi_T_VB5mELFuiBgd8BldrrJ-4rFd_QAKsys_xRzIELHfQWZFi2zCcEClvxyrx2htFzLOAI3_-RV76KpE7t50EU0JJPI63jORvdkW6kduBh8jsEwme6mmWfdZoKrG-O7AgKy_kdAhkTT6zmC6M3G5zkSYcufJhvm9okEMNs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDxVT6oMzE1Tg-OtASlU_vvsZTFD537PW-0izwLKF91I-Vs3kfU9asu_79-AOssWkxgatIXSMLdWorCYZtjxsCf6ZnHpUkw02iTmbSicFUvgcoJkxpBGvIqY5Dog==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg9RMBjmb6bLgsMbcWyK0EQeYOb9frWto3Xq8AQxVN_IL86-gROvUF4vHulI72frQY8PKK1jKljEQniSuQZeE-MIy3qVZ2TuRLPoRsscvqwloFAxBSC1XwpRqE0w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErf0AEvOlL5iLnrmAOUryR9jHj4ghx9lUradTBvhOCLP6SuIy_G-cjitw6VimngtfvP9hKVCzz6SKz8KFZHll9dGwkN3q8JYCgcqxh-ZAYLMG5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_Rvyl3Q1DN2LOkfh6WjlL3pNgG4Z2lhu7A9VQ3Xg7Br_IEEyVkNrPJ6fQxCvjVT0eLwC5VdBYtD4Ez8UfqQ2VT3HQ5rh-EmmTTrBelk957-HWJaukgbZpA49zsMXoUSRlZsES-FeR4yzEHQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlUJNWv1UyDGh6CfL5APlE_s4Tp6voCfgLJ6AAJkzGVufWjrxTZdcYYMEMDnH2P7czAeOCthhNmtAi9TRyR814DrWrCbmsBo2Z_JfAv3N2f3rwrgwTc6GMAHG-44Y-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(신논현역·강남역 인근)에 위치한 **에스엠성형외과(SM성형외과의원)**의 눈·코 성형 대략적인 비용대와 상담 예약 방법은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* 카카오톡 검색창에 **`에스엠성형외과의원`** 검색",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* 에스엠성형외과 공식 홈페이지(`sm-ps.co.kr`) 접속",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKCzR3_Shnl7GfezxKu0vodn5kesyZMsvQ__K4GLSqg2w-M6XyeOs0PtvBlsETZlWdoCkimIkM2aOJP7ExbWGPiMbpaK9GIJS7aRwiso5ga-Y0SRqkZzDY7GKSgQtDRBnWskDJfOd09Z3OO-OuLg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxUW-G7a5VOF4miFspO_MNQCtykmlRXSD7NfFhibw7VT8cc9eV_NPjA4yH4QkSWOzub7h6-q79zgziZn94mjgTVwRm0ZiH1CXJFnCsew2RyfT36eKQRYZWMUBR8M1HhUcUD5v1SkgCvX7uF-2oDR1on32mnlVEwYin9ALuT5H00VxQyd4mhxfIC77H88CkXipx9yXpGy46L10TqY3stVaCInSdTOHb9NC4J5Q=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsafD9wAUUP6ozkIeVRmUcxP6g7y3wYIrRujB4gnyNTuZ6hRyyhEcB2wlj4oBElUc1a0vt3Z4hC_s7FF9neg0bqK3no5xc8S1t6MHJ17CUvFP3Gw968lCmXxUG_dlqTcDW0xpStBdmj3aA4QAculsuquoUdpitFE_CAWlavYFoXPsLyl5oe_TjzgiAyADkZJz8hzfAkCsf4qCimhT0q13whQbVeuDAHsq4Wig10mnsE6W4j7jH5NUIBby3s4Odunj2mxClsRsG851JRDJ0QAS8F4AkFJDiBvz7HR5_osYbRvlwJ-S7Pu9cfpYnA9UXErsrnUUnJU-PXbiGt7EA9DejsjM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEch98ob5X4W1FROc8TE0h9aifzFlZZAmBZXw0ibkLKhg5kZd7OTzZE0b8kzA5qtNtfLMI6hSPjbD88Z8_U2Ei3PQjqGLJiTLMpyaSZd-4mV5NyyK9jptOWJYFI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQQdxk-rhGv0NBg1DKUbnVMgSGt8x6d9ChckJvjRmD4HG1UWYMuChJdxTSQXVNZWSJVP4ruH4wFeQKJtPs8xsvuX1nfOMiZjzOewEd8zDQkh0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFG3SjZ8k3tcs2ymjjrrmQ-ub2fds9eXmqQBvQVzsRBHiUVv2bR_gboSxv4-uTiOJ_oGoox4fxjiEirEW1lSeliL70vRBezUZjO",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwZsqQWh0Ki1AvdEV18uqqrOfTgbU9dVvWu5-oYHhdKsijklUM_j1Wrh7MGkLaHsQ7XHcqOeOmA33qt4hsMuzxlwFgGZP3EVNYXsrtfleo7BAC8zUduQa-rRhUcJab8kVT5XJKrEWjti4ZEUDCANs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(신논현역·강남역 인근)에 위치한 **에스엠성형외과의원**의 눈·코 성형 대략적인 비용대와 상담 예약 방법 안내입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "카카오톡 검색창에 **'에스엠성형외과의원'** 검색",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4hvBA-nSrBCSkZ18-1NVQPVRuGKx7N-CzOXNegM_G8lMDbxK7JeeuYctGaZpgYuc9fZ_q5IvYwRYgVzd96fsyFhSgrkLDHJ5zhAwmg_nwE3ijoOg9d_0ekWDQL3rKvP0Vw2seLiTEDXb4RV5PD_bz2hXCxyI5IWk3VHo03HisxMKMG8TfaWhG5Qh9X82_gE1mSR4CvtnmhZPR1_ozOZ3rS_OpqG-NL15ZaLRPJsw8zdUPcBnzKATMnAnmRIrD4IBUe-fmmGgUrFP4YVskbCiQ7WnF6ZFFTaLHHtEroGT8-bEdMDdLRdhNAFDDqdLs_UW6kOBie_u5qgeZAU7CRY7XUec=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkFwbOsFXeli8tIj1zoB0dAqJIpe_RJv_feJUhjZyrn7pZBZKwvRqp7TGx8p55bm5-cmfxBoPvcHgvgek2IFYakD66K95jnL4F3CrKW7OJMB6ygTJct1jqhH71-1Z7j6nNQGrRrTgRL4RSFcFc1I-51viPcRmBijEc",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0jmLGbRR0d30Gb25dXg7tdcYsAtwyi9esKE7kXOrWuqOAtyx3iK8v-TeO7lCJsq5bUQDKMWblq3nkqwLBSfw7Pu3lwuUo_QVLsshxp6ZRiMQ-cELWM4XKas7I",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6lzShwbOfUA5atJPKVBrk7CF5hwcoS-OoshkmIHQT80sCPQfzjzSkxe7RFEU5qB8tHV3_Jt-P8JbwEp-jvC8NYxaJkijkuGl5OZHxKhcKOhioL5fAwg-urHS4Ucm0-_Lgsbj0uHN5DV8o45h5SID6X07Hr-jJt7LINRHLmw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAct_w2MX83txozvpdIacBsNTc4_sE2dzcfI0fwYlreSr0BXMUF1qRcSLlaWnybJStqGjvMfCCjqc-PuqkpFUehb1zxbuDvEG6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초 지역에 있는 에스엠성형외과(에스엠성형외과의원, SM성형외과)의 특징과 강점을 아래와 같이 정리해 드릴게요.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "정리하자면, 에스엠성형외과는 강남역 인근의 뛰어난 접근성과, 풍부한 임상 경험을 갖춘 이무영 대표원장의 ‘1:1 진료 체제’, 특히 코 재수술 분야의 정밀 진단·자가조직 재건 역량, 다양한 성형 및 시술 항목과 외국인 대응 시스템, 그리고 실제 후기에서 드러나는 만족도 등에서 강점을 가지고 있는 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4220?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초 지역에 있는 에스엠성형외과(서초구 강남대로 435, 주류성빌딩 9층)의 특징과 강점을 아래와 같이 정리해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "에스엠성형외과는 특히 눈성형(쌍꺼풀, 눈매교정, 앞뒤트임 등)과 코성형(매부리코, 코끝, 기능 개선, 재수술 등)을 중심으로 다양한 세부 시술을 제공합니다 ([sm-ps.co.kr](https://sm-ps.co.kr/?utm_source=openai)).",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "종합적으로, 에스엠성형외과는 오랜 경력의 1인 원장 체제를 바탕으로 눈·코 성형에 특화된 맞춤 진료를 제공하며, 수술 전후 관리와 외국어 지원에 강점이 있는 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서초 지역에 위치한 에스엠성형외과(서초구 강남대로 435, 주류성빌딩 9층)는 여러 특징과 강점을 갖고 있어, 관심 있는 분들께 참고가 될 만한 정보를 정리해 드릴게요.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "에스엠성형외과는 이무영 대표원장이 상담, 수술, 그리고 회복 경과 관찰까지 직접 일괄적으로 진행하는 ‘1인 원장 체제’를 운영합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "요약하자면, 에스엠성형외과는 경력 있는 1인 원장 체제에서 상담부터 회복까지 책임지고, 눈·코·가슴 성형 등 다양한 시술을 정밀하게 제공하며, 외국인을 포함한 고객 편의와 만족도를 높이는 데 중점을 두고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_JLxofl/43099494?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sm-ps.co.kr/?utm_source=openai",
+          "domain": "sm-ps.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "에스엠성형외과",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(강남대로/신논현역 인근)에 위치한 **에스엠(SM)성형외과**는 오랜 임상 경험을 가진 성형외과 전문의가 직접 진료하는 병원으로, 주로 다음과 같은 특징과 강점을 가지고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**요약하자면**, 에스엠성형외과는 화려한 마케팅 위주의 대형 병원보다는 **오랜 경력의 전문의가 직접 상담부터 수술, 사후관리까지 꼼꼼히 책임지는 '자연스럽고 안전한 성형(특히 눈·눈재수술 및 코성형)'**을 선호하는 분들에게 적합한 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmlzHTEFVVuUZWn5XpkAGg-nbdO4VOH7BKYLL20tqKEe36uynP49wNEbtDJbCJ_SMY9fnH362Wxnbu3PtLVLNYMSS08hXcYyZD8J30PPQxHxZ2Yz0NmlNIqr-3EoETJr7CFR0Mh1z1ND_4EoGP3ZULP791Q8dLldLhxm12YLzxrqCDnP2hADWVhzV_7QJgoq76_B0DR8z8tISSfR1LIrKm5Bhg8-3mi9ya8BbgCVPjdfz-91b90HzXLOfM-lxOm03dEDkFB8gf-AQdzxwVBK210jGtzllLqiF_vJ3Fg_azG1IHZAKDsqRN4YD3L3GZZnx_AsY0MY8gQh_5LVY-ie3TZZQa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7uIJSccCMuyABI48DFWVqJ_GfB-8rwwqpo5AKSEhgKI9h-eg2v5cn8VEX2f1BG4onPuqQZpFS2fAXtUHkZb1JYk-rAlQ6yqwqPg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7uIJSccCMuyABI48DFWVqJ_GfB-8rwwqpo5AKSEhgKI9h-eg2v5cn8VEX2f1BG4onPuqQZpFS2fAXtUHkZb1JYk-rAlQ6yqwqPg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDtMc498C2FERRKXdFMKuISEXtv7MAAlK9FnlDuLudD1ZwVmoqJjZRE-gx0NP8pnD-LYxyHmgrgcymzOdTszBOrlqe5vcMwThIj9kjqT1JsJl5ock20Gv8j3ir7w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdBFwpvnmg6nVZxuJ3q_Xon2wJpTGYK4l6xH4ZzR17ct0KIqlCx5G2FcHoWfU40Jlvuyu1oBQ2WNtjT-2LmlQSZQhM9yiLr4TaneblxjensiODvuCUOGV-kcLwFGDG3FRCUDfYYT203RewocU5hF-tdOt0XiMKjzKmBg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaiGboHR_zOGtE7Ynx3OPgvkurHHpqt6Hr4uj4IvYbjuPNTHFANk6oN8ksOf_k2twoVMXLoJgV6UIThGnJXizmDur2X8cHFLjZ5ZA9Xf6XiMAz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(신논현역·강남역 인근)에 위치한 **에스엠성형외과(SM성형외과)**는 오랜 임상 경험과 1:1 책임 진료를 핵심 강점으로 내세우는 곳입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "서초·강남 일대의 수많은 성형외과 중 에스엠성형외과가 가지는 주요 특징과 강점은 다음과 같습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**요약하자면,** 에스엠성형외과는 대형 병원의 공장형 시스템보다는 **오랜 경력의 성형외과 전문의가 직접 1:1로 밀착 상담하고 자연스러운 결과를 이끌어내는 안정적인 병원**을 찾는 분들에게 적합한 곳으로 평가받고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHO971u3Qerk5Jx1_6Q4sOuPt1roVYT8aEhrmm2yisU_h11SilOIZfHvzuS6b1Xs0FuJ5pSrzr1-DvTLdSEjwFFGx8ZNihNGvbu0DOtoBBqcRicCZrmNxh35A9UWoRT5SkS75mZVTuhBZDFS0PpebjQwAxvoKabwcUX4-IpYqm3kslM8N1F8T_Dy5rhNg7F7Mcyb6FA-UmQ5XPqINrsp0n9DMdn914oVHwahQ5FB34qRt1zaQy5XITCyVKbN3e-C4MhpGQn5EgzYAaWS5gRbgkW8CJ8MRCd9fyi4HRfBIgQi0wSxtUUS8Sa9m6K819-yRw-FgI4EnSd_kg-tFlB8FytJmQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmMJFkVMhdvNcDdbSNfuyo1F0YDKmEc8VdvmY-94ZNbNLlMIThiUtu9tQOZpibYGDxWcS8XG72uAIbJeHwpCVInML49ihLEU6W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqzT16Gw1yXwsMX_lHBe0werkX9QMAZ_ibgoXVhFkrxqcWMvX24P0BYZYbSAe3lnq4fa_oA_SM-zLIn27awzAmz6Mkxq9BTUQXF4knuvmGM2u9ppg-rbP55fG0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "에스엠성형외과",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "서울 서초구(강남대로 신논현역~강남역 인근)에 위치한 **에스엠성형외과**의 주요 특징과 강점은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**요약하자면,** 에스엠성형외과는 화려함보다는 **오랜 경력의 전문의가 직접 진행하는 안정적이고 자연스러운 수술 결과**, 그리고 **과잉 진료 없는 1:1 맞춤 케어**를 중요하게 생각하는 분들에게 적합한 병원입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtrg_Ho66loonWTFvR8bc_enR07_ZB4suN4d9WE400RC5xGNSz2dMENWEcvmWbc49i-bOmz7g7irPtfvjlrKFfHPnipK6_BU0Ou8JJSGcy4l8cR9bt9BzfYgAjp8ru1vnGWcQ-heznK1DmPBjnxvj6o9XMDZwe-CE-Bc0c-shzaDGZKnuXC4gQA0rNy-iFR_PMmARnOkA5dloH0mxV7cF0xdZk-s2BbhhA3oldVgTVtV9XVEU00mBxG9N-xqikSxQRi2-ZtRheMfWca-UhtDzgZFKPIsW9soI7H98TVkzfBpruM-2QEYNa3KtBiXc9kr_ypNSwfdOhxJfY9iuYpJRO64qo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGpSKpRisC_JiFDQ0j3vH3qF_AjXS5G3c7u8GkRZ9xIRXMWLdmOxq2LaZbhQCBlfYAgNQyFlk8034HGq_85QDr0xmu51WRFIrS7jQ43YlrtEEQ02WCR2QMuy0sxNE4e4A-pojM447NzxLpm0eWqj0CQ6V2KCZKQR9m21v_Tc_hneO4GDE06MAG1z50JRgDT_C1RRi3pGXGYhQW7NzYtMtqL_Evan01E9KrNe4-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSom5GjJARAlJibKgPWKOX47zCkPycIAMbclluQnOEa8FKoClxVgyvVn4Whrh6yuUsr2LZeW-HYdFEU5p5UBcZpghN3tpL7O0kieQ22yIlm7fX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyWst9-Ei8GvqHocJzd0PkRb8EDGns2xRqCJEVOpRAEbTp7-KCaaFd7G11r1YNLiRrbXs3BlDCEkRkWwSeI6gwNMJrrb46LXpfiA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGW-7zXCFczVyvu7ZoyGBK-rH6e-CrJ6P-FT_LqWJP3gaUbbxg6N6vQ_wQxLQuFTCE50qQ3rLQrlkrgvfVZKfCkAlFMc3q4ZuXSBywpklwXG0-y8Pfj15oXXxQIr9LUWilwhKDZxEOtLDgXE95keoAPimA0XCePPSMEKg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEit6kR-VFA3QpUsrJyjxx3iapcXnIi9cXKCst_f6ZJFxyKO4lCywpX0Mfl9abagGA9LYJ47F5XESaRU6osWjXoPbXKOVe1SbMRxqw0qU9-QT_tOSJ4RXP9oLT4bg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyWst9-Ei8GvqHocJzd0PkRb8EDGns2xRqCJEVOpRAEbTp7-KCaaFd7G11r1YNLiRrbXs3BlDCEkRkWwSeI6gwNMJrrb46LXpfiA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYiweLdlz7m8Bs3q4xTP9U9Ct4O8USQmw5-7yZEF73PJfcsXXyUt9_rB7NGXSqBxoE9-Q4V33b3mBg_qsWxN05dYGdiNYIRlMce2DaiheMqfp_EzTqy4WG30y9ITUr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
