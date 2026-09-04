@@ -128,7 +128,8 @@ export default function BrandManageList() {
       <h3>등록된 브랜드 관리</h3>
       <p className="hint" style={{ marginTop: 0 }}>
         오버레이로 등록한 브랜드는 즉시 삭제됩니다. 커밋된(베이크된) 브랜드는 삭제 시 GitHub Actions가 데이터·점수까지 완전
-        삭제하고 자동 배포합니다(수 분 소요). 로컬에서는 <code>scripts/delete-tenant.ts</code>로 삭제합니다.
+        삭제하고 자동 배포합니다(수 분 소요). 이때 <b>다른 브랜드가 참조하지 않는 고아 경쟁사도 함께 정리</b>됩니다(공유 중인
+        경쟁사는 보존). 로컬에서는 <code>scripts/delete-tenant.ts</code>로 삭제합니다.
       </p>
 
       {message && (
