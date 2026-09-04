@@ -21,8 +21,6 @@ import bank_h_eunpapalace from '../src/data/live-h-eunpapalace-question-bank.jso
 import analyses_h_eunpapalace from '../src/data/live-h-eunpapalace-question-analyses.json' with { type: 'json' };
 import bank_idhospital from '../src/data/live-idhospital-question-bank.json' with { type: 'json' };
 import analyses_idhospital from '../src/data/live-idhospital-question-analyses.json' with { type: 'json' };
-import bank_jjprs from '../src/data/live-jjprs-question-bank.json' with { type: 'json' };
-import analyses_jjprs from '../src/data/live-jjprs-question-analyses.json' with { type: 'json' };
 import bank_k_wonjin from '../src/data/live-k-wonjin-question-bank.json' with { type: 'json' };
 import analyses_k_wonjin from '../src/data/live-k-wonjin-question-analyses.json' with { type: 'json' };
 import bank_ramadagunsan from '../src/data/live-ramadagunsan-question-bank.json' with { type: 'json' };
@@ -51,7 +49,6 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'gunsanstayhotel': bank_gunsanstayhotel as QuestionBank,
   'h-eunpapalace': bank_h_eunpapalace as QuestionBank,
   'idhospital': bank_idhospital as QuestionBank,
-  'jjprs': bank_jjprs as QuestionBank,
   'k-wonjin': bank_k_wonjin as QuestionBank,
   'ramadagunsan': bank_ramadagunsan as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
@@ -70,7 +67,6 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_gunsanstayhotel as LiveAnalysesFile,
   analyses_h_eunpapalace as LiveAnalysesFile,
   analyses_idhospital as LiveAnalysesFile,
-  analyses_jjprs as LiveAnalysesFile,
   analyses_k_wonjin as LiveAnalysesFile,
   analyses_ramadagunsan as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
