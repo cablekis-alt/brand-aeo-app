@@ -10,6 +10,12 @@ interface BrandRow {
   competitors?: string[]
 }
 
+function fmtElapsed(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const m = Math.floor(s / 60)
+  return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
+}
+
 export default function BrandManageList() {
   const { reloadTenants } = useTenant()
   const [rows, setRows] = useState<BrandRow[]>([])
@@ -17,6 +23,9 @@ export default function BrandManageList() {
   const [busyId, setBusyId] = useState<string | null>(null)
   // GitHub Actions 완전 삭제가 진행 중인 tenantId — 실제로 사라질 때까지 행을 "삭제 중"으로 잠근다.
   const [deletingIds, setDeletingIds] = useState<string[]>([])
+  // 삭제 시작 시각·워크플로우 링크 — "N분 M초 경과" 진행 표시용.
+  const [deleteInfo, setDeleteInfo] = useState<Record<string, { at: number; htmlUrl?: string }>>({})
+  const [nowTs, setNowTs] = useState(() => Date.now())
   const [message, setMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -38,6 +47,13 @@ export default function BrandManageList() {
     void load()
   }, [load])
 
+  // 삭제 진행 중이면 1초마다 경과 시간을 갱신한다.
+  useEffect(() => {
+    if (deletingIds.length === 0) return
+    const iv = window.setInterval(() => setNowTs(Date.now()), 1000)
+    return () => window.clearInterval(iv)
+  }, [deletingIds])
+
   // 삭제 진행 중인 브랜드가 있으면, 실제로 목록에서 사라질 때까지 주기적으로 확인한다.
   useEffect(() => {
     if (deletingIds.length === 0) return
@@ -53,6 +69,11 @@ export default function BrandManageList() {
         const gone = deletingIds.filter((id) => !freshIds.has(id))
         if (gone.length > 0) {
           setDeletingIds((prev) => prev.filter((id) => freshIds.has(id)))
+          setDeleteInfo((prev) => {
+            const next = { ...prev }
+            for (const id of gone) delete next[id]
+            return next
+          })
           setMessage(`✓ ${gone.length}개 브랜드 완전 삭제가 반영됐습니다.`)
           void reloadTenants()
         }
@@ -83,9 +104,10 @@ export default function BrandManageList() {
       } else if (body.dispatched) {
         // 베이크된 브랜드 — GitHub Actions가 완전 삭제 실행 중. 사라질 때까지 "삭제 중"으로 잠근다.
         setDeletingIds((prev) => (prev.includes(row.tenantId) ? prev : [...prev, row.tenantId]))
+        setDeleteInfo((prev) => ({ ...prev, [row.tenantId]: { at: Date.now(), htmlUrl: body.htmlUrl } }))
+        setNowTs(Date.now())
         setMessage(
-          `'${row.brandName}' 완전 삭제를 GitHub Actions에서 실행 중입니다. 완료되면 목록에서 자동으로 사라집니다(수 분 소요).` +
-            (body.htmlUrl ? ` 진행 상황: ${body.htmlUrl}` : ''),
+          `'${row.brandName}' 완전 삭제를 GitHub Actions에서 실행 중입니다. 완료되면 목록에서 자동으로 사라집니다(보통 3~5분).`,
         )
       } else {
         // 베이크됐지만 원격 트리거 불가(토큰 없음) — 로컬 CLI 안내.
@@ -156,10 +178,29 @@ export default function BrandManageList() {
                         <span className="muted">측정 후 자동 채움</span>
                       )}
                     </td>
-                    <td>
-                      <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy}>
-                        {busy ? '삭제 중…' : '삭제'}
-                      </button>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      {deleting ? (
+                        <span style={{ display: 'inline-flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start' }}>
+                          <span className="hint" style={{ margin: 0 }}>
+                            삭제 중… ({fmtElapsed(nowTs - (deleteInfo[row.tenantId]?.at ?? nowTs))} 경과 · 보통 3~5분)
+                          </span>
+                          {deleteInfo[row.tenantId]?.htmlUrl && (
+                            <a
+                              href={deleteInfo[row.tenantId]!.htmlUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hint"
+                              style={{ margin: 0 }}
+                            >
+                              진행 상황 보기 ↗
+                            </a>
+                          )}
+                        </span>
+                      ) : (
+                        <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy}>
+                          삭제
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )
