@@ -124,9 +124,9 @@ export default function BrandManageList() {
           <table>
             <thead>
               <tr>
-                <th>브랜드</th>
-                <th>tenantId</th>
-                <th>업종 · 지역</th>
+                <th style={{ whiteSpace: 'nowrap' }}>브랜드</th>
+                <th style={{ whiteSpace: 'nowrap' }}>tenantId</th>
+                <th style={{ whiteSpace: 'nowrap' }}>업종 · 지역</th>
                 <th>경쟁사</th>
                 <th></th>
               </tr>
@@ -137,17 +137,17 @@ export default function BrandManageList() {
                 const busy = busyId === row.tenantId || deleting
                 return (
                   <tr key={row.tenantId} style={deleting ? { opacity: 0.55 } : undefined}>
-                    <td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
                       {row.brandName}
                       {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
                     </td>
-                    <td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
                       <code>{row.tenantId}</code>
                     </td>
-                    <td className="judgment">
+                    <td className="judgment" style={{ whiteSpace: 'nowrap' }}>
                       {row.industry} · {row.region}
                     </td>
-                    <td className="judgment">
+                    <td className="judgment" style={{ minWidth: '260px' }}>
                       {row.cohortOnly ? (
                         <span className="muted">—</span>
                       ) : row.competitors && row.competitors.length > 0 ? (
