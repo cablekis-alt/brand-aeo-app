@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T04:16:32.820Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "서울 강남 쪽에 눈 재수술 안전하게 잘하는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "강남에서 응급 의료 시스템 잘 갖춰진 안전한 성형외과 찾으려면 어디로 가야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "외상 후 흉터 복원이나 재건 성형 전문으로 다루는 강남권 성형외과 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "강남에서 안면윤곽 수술할 때 부작용 걱정 없이 믿고 갈 만한 병원 고르는 팁 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "서울 강남 쪽에 마취과 전문의 항상 상주하고 수술 잘하는 성형외과 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "중년 상안검이나 눈밑지방재배치 자연스럽게 잘하는 강남 성형외과 추천 부탁해.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "강남역이나 신사역 근처에서 코 재수술 후기 좋고 신뢰도 높은 병원 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "구순구열이나 안면 비대칭 치료 잘하는 서울 유명 성형외과 어디 있는지 궁금해.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "강남세브란스성형외과 진료 예약하려고 하는데 미용 성형이랑 재건 성형 둘 다 진료 보나요?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "흉터 복원 수술할 때 강남세브란스성형외과 같은 대학병원이랑 일반 로컬 성형외과 중 어디가 더 나아?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "강남세브란스성형외과에서 흉터 제거 수술이나 눈 수술 받아보신 분들 실제 후기 어떤가요?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "강남세브란스성형외과에서 수술받으면 일반 개인 성형외과보다 비용이나 특진비가 많이 비싼 편인가요?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}
