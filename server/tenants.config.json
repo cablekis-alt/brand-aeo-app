@@ -88,28 +88,6 @@
     "cohortOnly": true
   },
   {
-    "tenantId": "bymeps",
-    "brandName": "바이미성형외과",
-    "aliases": [
-      "바이미성형외과"
-    ],
-    "ownedDomains": [
-      "bymeps.co.kr"
-    ],
-    "industry": "성형외과",
-    "region": "서울 서초",
-    "engines": [
-      "openai",
-      "gemini"
-    ],
-    "questionBankSize": 12,
-    "questionBankVersion": "v1",
-    "repeatsPerQuestion": 3,
-    "competitors": [],
-    "factGraph": [],
-    "cohortOnly": true
-  },
-  {
     "tenantId": "k-wonjin",
     "brandName": "WJ 원진성형외과",
     "aliases": [
