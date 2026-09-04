@@ -120,5 +120,125 @@
     "hallucinationFlags": [
       "openai / v1-009 #1: 사실성 불일치 1건"
     ]
+  },
+  {
+    "tenantId": "banobagi",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "바노바기성형외과",
+    "aeoScore": {
+      "current": 44,
+      "ma4": 44,
+      "previousWeek": 44,
+      "ciLow": 36.9,
+      "ciHigh": 51.1
+    },
+    "mentionRate": 0.3333333333333333,
+    "shareOfMention": null,
+    "avgRecommendationRank": 4,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.050397877984084884,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 5
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "idhospital",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "아이디성형외과",
+    "aeoScore": {
+      "current": 27,
+      "ma4": 27,
+      "previousWeek": 27,
+      "ciLow": 20,
+      "ciHigh": 34
+    },
+    "mentionRate": 0.020833333333333332,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.055415617128463476,
+    "cohortRank": {
+      "position": 4,
+      "totalTenants": 5
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "daprs",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "디에이성형외과",
+    "aeoScore": {
+      "current": 31,
+      "ma4": 31,
+      "previousWeek": 31,
+      "ciLow": 23.8,
+      "ciHigh": 38.2
+    },
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.05084745762711865,
+    "cohortRank": {
+      "position": 3,
+      "totalTenants": 5
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "bkhospital",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "BK성형외과",
+    "aeoScore": {
+      "current": 26,
+      "ma4": 26,
+      "previousWeek": 26,
+      "ciLow": 19.8,
+      "ciHigh": 32.2
+    },
+    "mentionRate": 0.020833333333333332,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 5,
+      "totalTenants": 5
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "jjprs",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "제이준성형외과",
+    "aeoScore": {
+      "current": 35,
+      "ma4": 35,
+      "previousWeek": 35,
+      "ciLow": 27.2,
+      "ciHigh": 42.8
+    },
+    "mentionRate": 0,
+    "shareOfMention": 0.5673076923076923,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.036057692307692304,
+    "cohortRank": {
+      "position": 2,
+      "totalTenants": 5
+    },
+    "hallucinationFlags": []
   }
 ]

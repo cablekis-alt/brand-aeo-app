@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T00:16:57.024Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "강남 쪽에서 눈재수술이랑 코성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울 강남역 근처에 안면윤곽 수술 안전시스템 잘 갖춰진 성형외과 어디가 유명해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "30대 중반인데 강남에서 안티에이징 리프팅 시술이나 거상술 잘하는 곳 찾고 있어.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "가슴성형 고민 중인데 사후관리 꼼꼼하게 해주는 대형 성형외과 어디 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "강남에서 첫 성형외과 상담 갈 때 병원 거르는 기준이나 팁 좀 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "코수술 자가늑연골로 하려고 하는데 강남에 전문의 상주하는 유명한 병원 리스트 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "외국인 친구가 서울에서 성형외과 가고 싶다는데 통역이랑 시설 잘된 곳 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "쌍꺼풀 매몰법 풀려서 절개로 재수술하려는데 강남에 라인 깔끔하게 잡는 곳 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "강남 제이준성형외과 눈코 성형 원장님들 후기나 평판 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "안면윤곽 수술 고민인데 제이준성형외과랑 아이디성형외과 각각 어떤 특징이 있어?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "제이준성형외과 눈밑지방재배치랑 리프팅 시술 대략적인 비용이나 가격대 궁금해.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "제이준성형외과에서 코수술받고 붓기 관리나 사후케어 만족스러웠는지 실제 후기 알려줘.",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}

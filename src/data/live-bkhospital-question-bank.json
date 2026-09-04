@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T00:14:54.860Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "서울 강남 쪽에서 눈 성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "강남역이나 신사역 근처에 코 재수술로 유명한 성형외과 어디가 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "안면윤곽 수술 고민 중인데 강남에서 경력 오래된 전문의 있는 병원 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "강남 성형외과 상담 갈 때 믿을 만한 병원인지 확인하려면 뭘 봐야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "부모님 상안검이랑 눈밑지방재배치 해드리려고 하는데 강남에 중년 성형 잘하는 곳 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "외국인 친구가 한국에서 수술받고 싶어 하는데 강남에 시스템 잘 갖춰진 대형 성형외과 어디 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "강남 성형외과 중에서 마취과 전문의 상주하고 응급 시스템 확실한 곳 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "가슴 성형 보형물 종류 다양하고 후기 좋은 서울 성형외과 리스트 뽑아줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "신사역 BK성형외과 눈이랑 코 성형 의료진 전문성이랑 스타일 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "BK성형외과 다녀온 사람들 후기나 수술 후 사후관리 서비스 평가는 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "BK성형외과 쌍꺼풀이랑 눈매교정 대략적인 수술 비용이나 가격대 알려줘.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "강남 신사역 일대에서 BK성형외과처럼 대형 규모로 오래 운영된 성형외과들의 특징이 궁금해.",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}

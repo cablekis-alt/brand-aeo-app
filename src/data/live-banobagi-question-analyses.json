@@ -1,0 +1,3745 @@
+{
+  "tenantId": "banobagi",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog.21ps.co.kr/gangnam-facial-contouring-3-plastic-surgery?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "www.mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "www.mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "www.mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "www.mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://expathealthseoul.com/forum%2Clisting%2Chealth-blog%2Ckorea-clinic-promotions/dentists-in-seoul-gangnam%2Cfacial-contouring?sort=popular&utm_source=openai",
+          "domain": "expathealthseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=141&utm_source=openai",
+          "domain": "www.localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/list?treatment=141&utm_source=openai",
+          "domain": "www.localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bntnews.co.kr/article/view/bnt201105200347?utm_source=openai",
+          "domain": "www.bntnews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/failure/117951?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 바노바기 성형외과 (Banobagi)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 바노바기 성형외과 | 안정적인 모니터링 시스템, 변화 중심 접근 |",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?cid=408&lang=ko&medical_seq=812&mid=403-408&utm_source=openai",
+          "domain": "medicaltour.gangnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/review/let-me-tell-you-the-cost-of-facial-contouring-at-apgujeong-seoul-plastic-surgery?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/treatment?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cdups.co.kr/index.php/html/279?utm_source=openai",
+          "domain": "cdups.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/new/agreephoto/6063?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ru/facial-contouring-surgery-types-cost-recovery-side-effects-guide?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/treatment?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ru/facial-contouring-surgery-types-cost-recovery-side-effects-guide?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "• 바노바기 성형외과",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기         강남              정밀 3D기술, 변화 중심",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tullove4.tistory.com/entry/2025-%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%B6%94%EC%B2%9C-%EB%B3%91%EC%9B%90-%EB%B9%84%EA%B5%90-%ED%9B%84%EA%B8%B0-%EC%8B%9C%EC%88%A0%EB%B3%84-%EC%84%A0%ED%83%9D%EB%B2%95%EA%B9%8C%EC%A7%80-%ED%95%9C%EB%88%88%EC%97%90-%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "tullove4.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tullove4.tistory.com/entry/2025-%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%B6%94%EC%B2%9C-%EB%B3%91%EC%9B%90-%EB%B9%84%EA%B5%90-%ED%9B%84%EA%B8%B0-%EC%8B%9C%EC%88%A0%EB%B3%84-%EC%84%A0%ED%83%9D%EB%B2%95%EA%B9%8C%EC%A7%80-%ED%95%9C%EB%88%88%EC%97%90-%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "tullove4.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/deflection?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/gangnam-facial-contouring-3-plastic-surgery?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-facial-contouring-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/deflection?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼역)**: 오랜 기간 윤곽 및 양악 수술을 집중적으로 진행해 온 곳으로, 체계적인 안전 시스템과 정밀 진단 시스템으로 유명합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsKlWCxTHW_3qMZOfAEfTF_pENvtyTZZovMJAE5gfyBcJimAa60OnofAszj7aGJb8nrrO6xMUfs0cmBALGib8qCNtlk8lDLwPzF7uiagKy9eZWp9NSzADEMXpu-w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsKlWCxTHW_3qMZOfAEfTF_pENvtyTZZovMJAE5gfyBcJimAa60OnofAszj7aGJb8nrrO6xMUfs0cmBALGib8qCNtlk8lDLwPzF7uiagKy9eZWp9NSzADEMXpu-w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1Tp8d5hM3wWCLmRhVseY5xHvhaP4bsImIlfd-g5kYakmkmnqQxeaIt4FtTP-rXCTj70GKDRnpK5_37btXvQcSXfyxg-UeabZxUD3hXL_Ok3k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEidai6s0_FGv_L1-wlzMsOVjjJ0KeqH0OnlpC_AUvE2-gO-Uro2DH01IiOJzcZUoi6Fo4zJm0VnspogPazIJLmTjQANRoIvfuYbWKtswIMQ_c0uDeivHtu0RvjQQsDBLwLsW7TvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-nhEdJ04FN7cHgVAUkkWzUKHqjLnVPPOpE7Sp-QUuSxqtBDbgFVLwEXA92WObGEW2pW0jb5eq7GBSWuiqXF6hRusUxAfcqTJznA9nVJF1mlU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyp_4_bc1JgkH6n0-xH4OsRjCBfmiDWgytTPvX4lHuuwa5yg9k1bP2tNkclU68dCAYA3oA8aMPnFWViKXOjXP_-J2P-FaqrRvW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0RBZKzOe8XN1NxYCvwXL5Yh7BTQ4uoS3QaZnuZRrNedpkwjHZUZEQqZWIFZkTdfQn1RiloOTGT4cJtEmvW28wFu7VzQhH7fQ3AN9hm_oOz4ZXxX-ARmJd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3zdwCa7pCnkon3uU4m-0GNrw13eyUQ0TUljHmfPZzmk68M04AIoobMnlLBkXDyx4V6KJtgqdsmuLkRkJgJOf14B_SzbbCl_U5gTLbmJUfQaD5kybgL9Q-o9AK4ngqVaWR44q4M1xgMez7Egg4DFOFRRQdlrHg40Pe5PHYAHI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼)**\n  * 안면윤곽 분야에서 20년 이상 긴 역사와 방대한 수술 데이터를 보유하고 있으며, 자연스러운 밸런스를 중시합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2HJEB7rmgHLRnYMjk9Uh3dTQyN4t8yW24INPuymJwVdZDPZ6nsLdyIN_TzW-FjvC43T7_IUzFeMopwAbMtFOBu3NXLSxZJxKio4AYNYg7Z3VfKq-_ur4AeEpfs4Ta3bbwn-KFXs3De1BmlgJXWU6isWSYjg4Fg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXt0xkmAYWcjHYPjOBC-G2K9FUxBYKe6Nz_nCSeZb5zTZFOt2sdHuXkgFvsu5xqezdbumeMWqg7BCcNC-kyq-gy2ullb6ro7uQ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHW-dqDH6Kzty48UE35EAAFy4R--KOFiljTivSFux-bEuezD1X2VNAaawUL8R1HgT7L6cbAuEI8qyjfEyJjteEutKNNB2sk1yX3c6IZvVufnGu-oBjRTZ3U",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsEXVxPE9C13G4Dgji5UIL-pKk4T74BPU7l5xCLKegZ__p3X6wi95aYaaWtj5Tic8QNt5Se6VemwWaCnWR_DJw2wmMkMbBtGoGVIUJGgnyiClRxC7eiNNffh5lMQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDjOZaEsj3pYTWNXfqO_1v41xMS1rvXWujfDCT0eG03AIwPY01Z9A3qxRfc0RGSd2b_tLuPYySl2fvwF7NMqKSvfXPf5FL4tHvlCFq1cRrPo59jPRk_GzOE8t7viEA5Uy3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx7oz6LmDD7XgMPSI8BnxhdzAY6YsjTXDjiiOZ9IDbnIVs1UGrhAkEC7g1UdKZUkDsSuA2FdXBcf4-zYV1ruMAvhucBMzcdRUTL4BsFRqVj-o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTKkq9T6q4781Lk7N4F4Ezuuxuv4JaL9caooMStBfhDLuEKna7Ety8Gov11jUz_KznaDDW04ER6cs9DJfyJrZ_zJqiv-wlHCH8JwsoGfW555OVLTztMExyYqvYM11R8NOpH9QVzg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼/강남)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.medicalkoreaguide.com/ko/dermatology/eb8bb5ec8badeba6aceb8f99-lifting?utm_source=openai",
+          "domain": "medicalkoreaguide.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalkoreaguide.com/ko/dermatology/eb8bb5ec8badeba6aceb8f99-lifting?utm_source=openai",
+          "domain": "medicalkoreaguide.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reberryclinic.com/%EB%A6%AC%ED%94%84%ED%8C%85-%EC%B6%94%EC%B2%9C-%EC%84%9C%EC%9A%B8/?utm_source=openai",
+          "domain": "reberryclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reberryclinic.com/%EB%A6%AC%ED%94%84%ED%8C%85-%EC%B6%94%EC%B2%9C-%EC%84%9C%EC%9A%B8/?utm_source=openai",
+          "domain": "reberryclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3939?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.klineps.com/faceliftcenter?utm_source=openai",
+          "domain": "klineps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.klineps.com/faceliftcenter?utm_source=openai",
+          "domain": "klineps.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gongganprs.com/page/sub05_03?utm_source=openai",
+          "domain": "gongganprs.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medseoul.com/clinics/pac1f95o5p/naver-blog/noteprs01/224154612613?utm_source=openai",
+          "domain": "medseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.onlif.co.kr/blog/%EC%95%88%EB%A9%B4%EA%B1%B0%EC%83%81/%EC%84%9C%EC%9A%B8-%EC%95%88%EB%A9%B4%EA%B1%B0%EC%83%81-%EC%9E%98%ED%95%98%EB%8A%94-%EB%B3%91%EC%9B%90-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B3%A0%EB%A5%BC%EA%B9%8C-%EC%8B%A4%EC%A0%84-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
+          "domain": "blog.onlif.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pspskorea.com/ko/pages/mini-lift.html?utm_source=openai",
+          "domain": "pspskorea.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.1mmps.com/lifting/mini-facelift/?utm_source=openai",
+          "domain": "1mmps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cellup-ps.com/145?utm_source=openai",
+          "domain": "cellup-ps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.bongbongclinic.com/home/homepage.php?homefile=s0403.html&utm_source=openai",
+          "domain": "m.bongbongclinic.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kmediarods.com/fileUpload/bulletins/news_pdf_2025-01-31.pdf?utm_source=openai",
+          "domain": "kmediarods.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/gangnam-seocho-facelift-smas-lifting-guide?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.21ps.co.kr/gangnam-seocho-facelift-smas-lifting-guide?utm_source=openai",
+          "domain": "blog.21ps.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cellup-ps.com/145?utm_source=openai",
+          "domain": "cellup-ps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/ko/gangnam-facelift-clinic-top3-2026?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://medical.visitseoul.net/organization/hospital/hospitalDetail/2300?utm_source=openai",
+          "domain": "medical.visitseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.815clinic.co.kr/body_type5.php?utm_source=openai",
+          "domain": "815clinic.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.thepride.co.kr/lifting/non_surgical?utm_source=openai",
+          "domain": "thepride.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lieulseoul.com/index.php?utm_source=openai",
+          "domain": "lieulseoul.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://woorips.vizensoft.com/antiaging/mint/index.php?utm_source=openai",
+          "domain": "woorips.vizensoft.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.liveyoungclinic.kr/treatment/lifting?utm_source=openai",
+          "domain": "liveyoungclinic.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reev-gangnam.firstreview.co.kr/?utm_source=openai",
+          "domain": "reev-gangnam.firstreview.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.prettykeep.com/ko/api/hospitals/pitangui-clinic-2110949305?utm_source=openai",
+          "domain": "prettykeep.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2MvNI-Rw6AJFPLW9M-T3KHh321uoCK8ZrDN1CUcYwCQYUVKJP53OfUvG7FcXfzs8QGDpHB17RF8gZCmDSZ5V8BT7XJgpJmdF8j4CqLM0YfRQoarXcHCnjyiGHkuTdRTg94sBeqkhYtAc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMu721d9RwCFfrCNqtnXzpRx8OOiBtou0f4SUjbDA-wRZVGOcuQqKRHKk3GNLDtZ4Bw3qSpIn8lYaqd6Mz71LuUl-up9WFrrBAfPygkxtpJ4FEk3HSyXBoE1FRe_-YezVZqUY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwu9zvjtqF1D_jZIWqLMMxnEi_LRw4a1vpSwCgwoy7xpNRyPRHtPZIJeZ-ohFBfNkv_SmoNzXd0Evn8sBnh_poyzC5I9SWfhTg_tfsMg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxPk20Jm14Hh4l_f5dWNUY79JztpXG-TIQ3IelbL7DoH_fxoYHSjfB9PK072oO5qzQgS0dW4Fmq7e_dCN8Ha8IkQl3auY6YT48",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2bvA9X7n1IOHHsWNJprGsIz93e-_3cdbp6wy8OD8dtupSdIV3wRo8QzbxBfSnqupeEmdeRRMtH6jKPkULbvmoquL92dRj7LvKasHOqA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5ZcbCRvuKxly_t2Cmmq_S1gGqZCpZOjAJTb0tO_S_pC5XNoHznjQFTgwM-w6SNMNeWe7ocEvHzu1f74YMOIroWi8Z5FOOW42dQ9LESEC_aAfU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxuS7i144K2KkloIn9hp0uo8-hK2pJ_Vd6MbHhMbYrY39cDTTxNFX9TEOTTCSz2kpKMBXRnjJ9Ef50BVXIUSSFL7FYr4UnXXKCH1LpYF0DneaxaKZJMSHhE5iypTIooktY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeruB4_fFRO0wx6AIlBBL9qKAeLm5mmVMwfVivuneOVouEf6RWlrPwokfkfQIy6vCY616ZoMjbFNpQgYTYT5x93rSX3ALxq83ouz2D9CIjYiL4--l2cE3h0oLg9PNkPnBHReFMSY_BbpaFB2u4hg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기 / 디에이(DA) / 아이디 등 대형 안티에이징 센터**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2bfTlAe0kpSUGwbT6U0zK3lQLc7TESjWZLepRJFTbYaT1v3rmXJ69Rqy4OG8J8GUKNppSFRUx1v1cot3_K1Ga6vKUoBB-9s8IRKKaf14SvGIEjMcdmNsK7FhcqigytN6g5xPsLek=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDSNacRPKbQvrHu6aKYzM-eZtivK1WpWfYkVF1-IK6PsY-HVBDLw5z1cbKLm_8m5eoKXXDrtELUGsxxOhuT65lSk2H50DcnbTSy11Q7RQaYe8C_AYTzHnJ9TT91VR62otGxlsvFCRU6Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGi200SQHI6io1MSSZJbUaxKIpVFUdpGUNXChgDMRV5N5u7eL7dUb3zXcsfZ6ohfAfqXkBh_6rT-3jJiL6gpja2E_TdmYTyR5W496TpatMqTzCcOkq9FW8rNHk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-uEQqTCCt1SGtFrzVAG2V-C_-R8J2rRXzzJWkjT-XfbOtrcY66tLACf1yd_XiLaXHhd4_34_zHxRs-p29FcAam5YSK16_i7yNTtmq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFq-e2nuaCb5RpdIXH49e-6a9ASjNjhDoNVlTI_NdJ8MOv6qAVwKdPTR3u-2biq7FdR_6W97L6SmMDu2GiwSrrVvCGtAbDAMqQgzfrx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbn71TimMX_0pTLR6qziN2gGJC_y9EiwZ2cY0WyKldVmufGn8jP7f4ZRZn0QzBIpDhFzLDHhLCrni3QIMuGma0TV0QTk3xr_DxISsnh5hqoAn6zO3wXXRHzld3h_5W7cct",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxQUbNpcXUV-_pRY3RnSyNtnd_RhC7eY5qT1sDi0ZYmDkt1YXEngb07Z-wlgli5MtGt5N-QeQNn_NNioryrbQcH1LT4JMtrW-Lc6o9vlAPBLRGWPMVx4_N0jw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2NtEdRwhKTysBMdsLxsvuDquE1CQV0y3exOQ6WJly5Im11JdVHkUxNZf93mXIudMUb3UJry8g0GakHCb5WPWRr0apgsTWzo6N9xHnhWWJ3eo-kNnoT4I2THvhbRlSpfDvw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHdaXdN64iwpQpehlNshlsI0Sc7hseq99mQMOc2vkJo01xO3FUumKJ8o8kC66pa7oIZSEN2teYAPLr93IXNNj4wDnliMIVMPldpNvX5W9Cd0vW7C067cIjxg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEf9cFIWthLTaxCeqgPVDadNR31eHtp3JjMU9cmTea55KA-Uj5QSUgY7kuMSikXn2Cs6yEXnNU-5emRMTHAybrIhOz3dCN6Z9FphifnJwbJRtpaRydS_5f1O684ovMd0df4tLj5KhLyjODzJRuwUHGmUwFY0Rn3U7jxBn3h7aA9b_N3oZrtgfhG4jhu5rvVVoOgqv4IMepT3dm8NKPabZ0CTr95HHrUFEPDWW1j0z_JviI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHihTIR5WLlJajUzqWhj8O-GNKotw4lJ8Pg7XzSOrKsTAajzFY4-jIjoDaizXk6FxauZ5ZXRcsMrx93e3vr-G97Jj-DH5UhHN2z-w7MifyTHn2lo-Z9VYoLZCO2I3ciXNfPYg45uKsmYelCTqMU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **JW정원성형외과 / 바노바기성형외과 (압구정/역삼)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "- **바노바기성형외과 (압구정 인근)**  \n  • 유방성형과 바디 성형 분야에서 기술력을 인정받으며, **24시간 의료진 모니터링 시스템**을 통해 수술 안전성을 강화하고 있습니다 ([mediqueen.net](https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai)).",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 바노바기성형외과      | 24시간 의료진 모니터링 |",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://clinicinkor.com/kr/gangnam-plastic-surgery-3-clinics-guide/?utm_source=openai",
+          "domain": "clinicinkor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jwbeauty.com/03_breast/breast08.html?utm_source=openai",
+          "domain": "jwbeauty.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jwbeauty.com/03_breast/breast08.html?utm_source=openai",
+          "domain": "jwbeauty.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.bongbongclinic.com/home/m_view.php?ps_boid=86&ps_db=media&utm_source=openai",
+          "domain": "bongbongclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.bongbongclinic.com/home/m_view.php?ps_boid=86&ps_db=media&utm_source=openai",
+          "domain": "bongbongclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mokwon.ac.kr/kr/html/sub07/0705.html?file_id=742113&mode=D&no=2b4de618c9199d4f5b62b1d8af37fc18&utm_source=openai",
+          "domain": "mokwon.ac.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://clinicinkor.com/kr/gangnam-plastic-surgery-3-clinics-guide/?utm_source=openai",
+          "domain": "clinicinkor.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.bongbongclinic.com/home/m_view.php?ps_boid=86&ps_db=media&utm_source=openai",
+          "domain": "bongbongclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jwbeauty.com/03_breast/breast08.html?utm_source=openai",
+          "domain": "jwbeauty.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.bongbongclinic.com/home/m_view.php?ps_boid=86&ps_db=media&utm_source=openai",
+          "domain": "bongbongclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wuneprs.com/blog/171-seoul-breast-augmentation-hospital-guide/?utm_source=openai",
+          "domain": "wuneprs.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://ps.lienjang.net/sub/breast06?utm_source=openai",
+          "domain": "ps.lienjang.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ps.lienjang.net/sub/breast06?utm_source=openai",
+          "domain": "ps.lienjang.net",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.girinpscn.com/172?utm_source=openai",
+          "domain": "girinpscn.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.girinpscn.com/172?utm_source=openai",
+          "domain": "girinpscn.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?cid=408&medical_seq=199&utm_source=openai",
+          "domain": "medicaltour.gangnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?cid=408&medical_seq=199&utm_source=openai",
+          "domain": "medicaltour.gangnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://rebeauty.co.kr/clinic?utm_source=openai",
+          "domain": "rebeauty.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://expatguidekorea.com/forum%2Cseoul%2Carticle%2Cbest/%EC%83%81%EC%95%88%EA%B2%80%EC%88%98%EC%88%A0?sort=distance&utm_source=openai",
+          "domain": "expatguidekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://onyoops.com/breast-revision-surgery/?utm_source=openai",
+          "domain": "onyoops.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://onyoops.com/breast-revision-surgery/?utm_source=openai",
+          "domain": "onyoops.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://breast.banobagiprs.com/content/center_system?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gangnam.skin-review.store/cheongdam-reduction-safety/?utm_source=openai",
+          "domain": "gangnam.skin-review.store",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.laprin.co.kr/img/menu/e-laprin.pdf?utm_source=openai",
+          "domain": "laprin.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ksn.kahp.or.kr/user/bbs/BD_selectBbsList.do?q_bbsCode=1099&utm_source=openai",
+          "domain": "ksn.kahp.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "바노바기 가슴센터",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 바노바기성형외과 (역삼역)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **바노바기성형외과 (역삼역/강남역)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFV0tUM4YEapoBB4O_tmr0Li2dv2bhJURsI9vTUwHEF6QfiuBkx0EVY7wP4GJ3Sz2XYwiC-A5DVopWG6swXNMefoVo6q68d2j_0NflciHbQJ7WGIPfjdsaemFbsENjtBOl1EGSB9I7BtVtB8DSGyTneuKjmFpMZyTnlnLCrI20=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvkR6Ybwu-_WsbrqLUv2n8elopzYs3QUctOeLgvN9IWDE0E7STYfncvDSuxYsosRmQxdF0UU5vlOupXXpe63ANgegVuPKAlJuetgN1QBDO9GN3pQxReVo8nXrZbKIubXGr-USOC-pZvVLL0EBNnPB2cu2jK0UzyXL2akBEJ2NepU8HmXJGeWO67q29A8o79lnLsg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZLWHFH5YCl3DDA4Kc6thWcduWKSOdyPvwKZcPDsiGiuP-kb1_wghIKiOkUf8KKr3mCuXXM_Se9btjiLD0Zj4YJ2qKSEoMVjZXsq1EP2YyjDgBwFzZXTOTCc-eXSY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYO2J2zdK9_N7IkLpR3xgL4NdkaLyChw7OX0uCgQiV_gsFAJVoBjhqTRGIwHk8XMBbP8mlLFdyvs4BC7yLcCVRGxqTBaCAOSYJJXQpXUr3-2__s4ahD9MntQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEn_VD80ZsJy-dY0ul7m8jDnnhtbyisZtsfmdPh-gJtJJ8n54ThKv9vCh9LrhQKnW_MQyt9AW_16k-Ac59lohdymNWXt_LOw_rnGdJifgaMOmTdHiWy9eZgZUzMivTife-VhcOM865IzshCt3IENKJ9ulo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgWS17gbws5psrHOhQTdpCsHccKyUIMWeUzQLY3UTpLat-7eoTT8jM6Gn1CeWbWo4J7TLy6samWrRD1C8QAfT8TFnvZNdSH47ZsJwEPwZn-shyh7hh-OEI-zxMYIWFcx62_Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkTUsak8XpeQ4QbEszxBHiCHtVjODMu8prLQYcn1199zR0S9Rp9lM6bMr-wbtXwYYiDNh9cTDd-PUQsIKEI8uLAGGBWC_g9GbJilG2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcPQNM0s0Mm-hrUADwiPO3RFBvSirz3_tcVjzV7nC15-qnjcz-M11EKbGTWaDykIVhVdy9eerRTC1qhJ4bJFdfjABYbwmkpM3bULjXlj_9UDB5ZqAXraL5FCDYBCNEA3SgbYJkSkJAuVhN3QkD5ISr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvy_om5r0VHRuATfcPa8qXGj3GIW7qX_Akv7YffHzBV0oxIdjR9mlHIjQOfZAIthf0-ewbQmbJrWEflJXvCuKbz3v05-0RWbpZR_EM-jdWpwZzxGm0OwiNry1z5EsBM9Mg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-jWaNicnQBJNpxlsSNMzmpfJQqwpyfZX4DBnRa-PcWRPS5ry54DfO0IfCBJre00CqtP9rBEEubiOnvDAsM_V_VoR21q8FV_CbFg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 바노바기성형외과 (역삼역 인근)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.kmib.co.kr/article/view.asp?arcid=0004790438&utm_source=openai",
+          "domain": "kmib.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jobploy.kr/ko/company/girin-plastic-surgery-clinic?utm_source=openai",
+          "domain": "jobploy.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tullove4.tistory.com/entry/2025-%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%B6%94%EC%B2%9C-%EB%B3%91%EC%9B%90-%EB%B9%84%EA%B5%90-%ED%9B%84%EA%B8%B0-%EC%8B%9C%EC%88%A0%EB%B3%84-%EC%84%A0%ED%83%9D%EB%B2%95%EA%B9%8C%EC%A7%80-%ED%95%9C%EB%88%88%EC%97%90-%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "tullove4.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tullove4.tistory.com/entry/2025-%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%B6%94%EC%B2%9C-%EB%B3%91%EC%9B%90-%EB%B9%84%EA%B5%90-%ED%9B%84%EA%B8%B0-%EC%8B%9C%EC%88%A0%EB%B3%84-%EC%84%A0%ED%83%9D%EB%B2%95%EA%B9%8C%EC%A7%80-%ED%95%9C%EB%88%88%EC%97%90-%EC%A0%95%EB%A6%AC?utm_source=openai",
+          "domain": "tullove4.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.startrealty.kr/p/clinic/oriental/gangnam?utm_source=openai",
+          "domain": "startrealty.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hankyung.com/article/2012081763011?utm_source=openai",
+          "domain": "hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "1. **바노바기 성형외과**: 외국인 환자들이 많이 찾는 곳으로 유명합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "바노바기 성형외과",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.startrealty.kr/p/clinic/plastic-surgery/gangnam?utm_source=openai",
+          "domain": "startrealty.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.startrealty.kr/p/clinic/plastic-surgery/gangnam?utm_source=openai",
+          "domain": "startrealty.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://levertool.tistory.com/1564?utm_source=openai",
+          "domain": "levertool.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.restoryps.com/?utm_source=openai",
+          "domain": "restoryps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.restoryps.com/?utm_source=openai",
+          "domain": "restoryps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pspskorea.com/ko/pages/location.html?utm_source=openai",
+          "domain": "pspskorea.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pspskorea.com/ko/pages/location.html?utm_source=openai",
+          "domain": "pspskorea.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.etoday.co.kr/news/view/2550541?utm_source=openai",
+          "domain": "etoday.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hankyung.com/article/2012081763011?utm_source=openai",
+          "domain": "hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 바노바기성형외과 (Banobagi Plastic Surgery)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz0XnpIZZW_4JsAd3yKouRITnT4nqvBzYhu2IGLkVdCaXJYwpoCKflzdwlimv80hZ-L7f-jz_Iazy0gdV1Xj6vEvNCTNN9mraPH8IykXObqAc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcQKMRL1j8nCB7ZAFav_wRjpainQ442tjB4OI1lDeaEJzAR7aMbmS0Wake2HbAOLC3tWiqn7A1kQiVsrR09oJiGxCKWGg0RAnmNCoItGJ-b2fHAuNYudsIi4so0PPS2PkJXg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjuTSuL_LKbpQEx8ZBOqfTAlsdvELk0Eu8T-X1PFIoMfUcwGUEyHeM6Lr2WnRFh2nc3rg34YcGXiERdOKx50W5yVo4QqWo0NBtuZV0dSi4AzL_gjj_emsPulNluL0D9csT-ovcn3pt9Y7m4JrAHGvZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJbM3ZEjfZfKX25SxlH4eLTdFscCwVFiEJqm7eP32_zIjOrK8G1u_8O9iWrJOeICbEseJ07AJfMPfeRkV0uqDc6Uu50ZCyfUwU24wvuaYIcXaTW3mi_9ZwXY6IvtNT-0E8l8Xw-ZjkHydhBQkLcqAPkA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 바노바기(BANOBAGI)성형외과 (강남/역삼 라인)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTru28dvsGDPGA3terxYIup_B54XMlOF2DbTyJd997BoHHXs2OsSN03IGv3TPRGnbvToopDbjTO8SKiZT6zXMgLXz4W336Ri9Q2qP6KA8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHADOjVBcFFcjppEjLZJ_5FMltDFjmYfq0yNENkJkIyGoQ3RWFyIJgsodnQImxzHLoR0M58HqNajNLac92RZZJU8Bj4gU641tKVmoBL85aMFqwhlQhGTrv7PLt8OsusKL1dlW5ORoEewV-v_juPd-wk3DkSlscOValnWMk_svpyyOn438-xME2IqBj8Uc4gv_x7F-4qSI2xX-6pB_PNZZ6xqo-0OgZDZIBmIKJEp35dZ7d2Vfand01_gnwyXMiF67CHS55003ivqhNqPJvRmJBiD-qFFaEtXQ3Zcj3kKQgpfrIxgtdtRYpYBBAT85twFTjmt_r1BQOFThqJWEtE08RvpEQ2H-SfEdEETL-Wqwy-u_QhAKZUoUT8XG7usfKsRkGHFqbAS0jXaTEsT6hgQuQRVopS9TGEYfFtWSTC_9d_icuVBuOVUVxxT7kbjOUNeuKF0pPbpL2zapDPDtSx5T9Zpo2Qgyl5VJWLKJCyKTLGGsBbypdvq_8Z5TnflqxiyV1nsKKvy4YNYCZXmREwiWNVCWLfphY0zrv692fWMXMiVAZ1KMOfMI-gPMDpHbRkrapOsXBcUX6_u5AQ-rHxv7Bqq8_GtkEmg3OCCwQBiNpX7WSWtzuziGxZtpyXu0NJpD2_gffvnJWi9WiZakrnESTFADy7MvnJUFx-THu9ql5ykEtww2oLACvyyqxkWy4Hp6BehqxltWM5baOlfs3cdDxHEIT87fQJUQl1h5fccIhvPSrZh0kG2dhgJZKQjhKfoDHDi0Q07hhwRAczGQtdHHpENneKrFfQlHQTHshO12mkLrz5TftGNBZ58d9Z_1XBP3K0Qe7vtgGyh0XT6ez1NRkgFAkpiTC78yV5huunMzO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8KGPpns9CDI17ADkDMovJwWj8VZc5iJ1qdPC1MFrUKGdVvN3SHhm9viNmZJf00VtcmRcA-BATRn5pTSyba1yj3RP7iw2qvmawW6bhIMASvR1YZ_-obTqQ2Ck=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoHDNF_4BInQg9KqS88Sf9tz4lIdhJ5vi4QXDJXWusSgoPi2MQaX845uN5_nSR_dTewUsGzleNGmIF5EEFvlidxyAg78qAxC-doZLEn2glu95lSfr9aFxniva9QV54MeXmRyqyqs0h",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz85uN0a0IQqR50HXg7d8beHDD_fCoiHGU_ztUG7IsP4l5xADgu5AAOs8l-X_quRtz-2xAzXvvQjLhxqlK_s3wet3SduYd5Ao9mPAv1H9FKeRSbpiwgPIhKAxKdRxi0D7vIA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGD5wdsQQbO3QvddzKpCNqMG_3D2rBu56rlA_zWOLP11X4x-AnAIYt0Pr_Y_KrTIKNjvaFSTXUGxRV6pqQjTXLxubpi0EzHngAboV7EA23CIwZBh-u8TrxyTDZkztCyR7dX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFksLOv1k-mls46ZH7mqY6LIAswT8whl-e-hlpv5elClcRxPCoCrpfnyQUHPYV1BIFk1WWxKFz76edye-U7oyomuqPcvh4GGEcnYpJgje3QX8koxpgJZYwWFKzdyLQu9jud_ncsimeFh8yfZBQBLtX-TSzQSoXOppgzXHgPDb7yvHGJ4sCILvRYNIRI0qYUFHGA36YnIAMedZZlt3Irawa3FxzKFSX_QHr9atDBLtLImg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHng6OF15xbdxehRz_fW1sD0VwJvGmTmRsfwQwpTh1rAJ7vb-QkZ9rWB8-TUj1JuSpIjkak8gDJ0J4BVWWFj1QSj2d39vdTzUVPGpp7vmk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFosLXyUbLTGMUV2jnUy4I9luOO-679ZItpwPxzQCsoScqBWjhQdMv5emML0NPXVdKA78IYRzKCrva2_rvow_gBmHTLQ1M-0Agu3jaxL8oYuZBYHvNJCoQw1149jBFfcTk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJF48kKcz8_dqjlALlQf5QazQReB-20sw0_aLqXnkfU4KonCis7Vi-X04y9XPsVkxnLCbBKJL-c_-I_ThObQQU6vvV1LZb41oeCrGLUWlcLH1LQxlbOhucGUc-7EQIKrCvd959P10=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUnhjBmUUW_pbzn3BcWPwo1vppqCDldj65veWXaZl8jx_b6mYQdZ1NDXD5G7FS1P5aYcDvoS16KxOBR0XINCoyYYGGPLdI27O6x4j6yhQkptTZDQb9vzMgqIdQiQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYh1aiuDEbVlUVM0lCB7MPTs6u867OycUI_2rTNhHeaQO4LiZQAoEc91RWttIYn0QS9TqBGAxpiuq-Uy8h4EeZzWLVjBnx0sMSI_pbGevQIuR0m_clfDJfqojspJr1N5-hck_9cFNWgRPaBOZFrsUB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVn4rLyLks_lrg6WisV689fXKYmgFXLf2FdTRJr8oIQ_pp5c1Od2L9n5GSTYsW8nwxGi-eVbOtKsS_9CSQjc4RUnjk1EVz22oNdFwDzI0GGts5Re7CRqnK7wTmKQplbX0O7pjPyHFyG8ZOSDinLrDEuJud3jintTjhxhCs1p9z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGszt__FmC36GuKBR7ITNDgVRCcIh6zba8J5lKliPVJ-jVFJWgATer1P4eaiMuE0Ly-IwzadNK9SCzVQlrRDjGpQiMm1BEVTooQEzVdj6jHl4_RQ9rngsB28L0rWg7dMMLKtVVvyS3l8ImFKem4WhADBU3_1K53fvvDLq9paOIB791_6w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzvAJviC5DjotWB55Cdx4QneBy67Syige5ktjy7Dto00MfQf5nxpkSk7TvebGiezjlSEyf9e8awuykMHJNc8cEgw4JVOH2i3Uo4nzy9FoByXm0yJOW4OIZtA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 바노바기 성형외과 (프리미엄급)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-eye-surgery-2026-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-eye-surgery-2026-best5?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/d03/735916?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4272?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/en/assistant_logs/192?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/specialties/plastic-surgery?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mohazi.net/magazine/nose-surgery-best-clinics/?utm_source=openai",
+          "domain": "mohazi.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/gangnam-plastic-surgery-guide/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/4272?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "4. **바노바기성형외과 / 미인성형외과 / 스타성형외과**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "• 바노바기 성형외과는 안전한 수술 시스템으로, 미인성형외과는 3D 시뮬레이션으로 시술 전 결과를 확인할 수 있으며, 스타성형외과는 V라인, 안면윤곽, 눈매교정 등 다양한 시술 경험이 풍부합니다([mediqueen.net](https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai)).",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://knsy.co.kr/ko/?utm_source=openai",
+          "domain": "knsy.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://knsy.co.kr/ko/?utm_source=openai",
+          "domain": "knsy.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pf.kakao.com/_GxbxaZE/945158?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/vanny-plastic-surgery-gangnam/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.iedunote.com/vanny-plastic-surgery-gangnam/?utm_source=openai",
+          "domain": "iedunote.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/catalogs/best/gangnam-rhinoplasty-best7?utm_source=openai",
+          "domain": "mediqueen.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3293?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.allkbrands.com/en?utm_source=openai",
+          "domain": "allkbrands.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/en/assistant_logs/192?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/en/assistant_logs/192?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://cfile3.uf.tistory.com/attach/99D657425A4F09E52F5665?utm_source=openai",
+          "domain": "cfile3.uf.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/faq?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.viewclinic.com/gangnam-rhinoplasty-safe-hospital-guide?utm_source=openai",
+          "domain": "blog.viewclinic.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHA2_16FX6btj7PPr-JvIfYRvLp7cEvRdxbyKDgYhIj5SQCTYcHouyApsqLTIMcb6VUFfgwAt4RVroKHEsEKAAgEAzueyKE6xeBzNG-_Lgai1bahC5ea3ejxqg7AM7zslCxjLLrxuPIFoygyqW1NNKujsqv8XCIKxymFPu3hn6zZEF561H4dzfc7UTGjRRGRI7nOhPvFMdQ-huwq-ZQNqsj1YKCn0k0k4nGjkqfmPvZJ4S44el6FJ0P9Nm7WZyxOxNWZI2zGBS3i2BDfoR5Oa8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeTz3QweeWAukU7E4o-N64FmuInhP-P7pLPNIVYdiM6aVBC4nti7A8Y_MlgU1TJihs5NNVsVbS9IAdftAjcYcgmQxNBJCBZBnd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcaAoPfvQJcnzV_Qe9Ty7ucS6KZDtTZSGBvq-SW0rrGNnJiEwprW79zKeKwQP4JhGT3GtuPyz0C1BAiCLdgvbHIBaVXo_vo6qXpodt2V7vYvX1stD6Xqcqrd0qIo7zp2SPtgOn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEs2MdUafhRcNOqJFfwOFW5nFEkVPBG4b75vS9eIIEzTCsxN_YiTHFcf_t_MSb3yi39r93mvE-fa6lr3H3qNkjr-rYgvQvCM6R-tCVLbOjhrZKj2tqHposa4VC9CDUm",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcYQcpgTz8S9K_1d8DR8tTNTqXF_l_bYo5ZPdBq3vzdqVwUjZn-XIHrFRWeS9dCrQSGYv-4wvfV94SuYK0IQch5SjAaXDKMvnu9Sbjcgw3TrQOmtw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkLHIo04ioLHcG52oQ1NEY6ca_7i4_pq8K0njeVs2ZI5Sohd3ivlv_YdjNSQhcU2RWccqUt3li-ZxYySt3FSC1l5rPUNa61wHvNEoz3-TZpYqAad0O9GkcsHfU4Ia27O9MbrVzc2AXts_ssH4oFKThtJ3z2yG1wHGNADADxwHj4rvXXOjEw8M_O3zlvBl25bhq_umXOkV3FJytx_8F-eahDcfpbF_WSw-Sr6ciZnSqBoU6DErnG-noRV4nM0IrPRC94pe4ll8iwgwo5KsvLVzKJzaH_Qan8gfmF1bcdMF34LbI3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFqJGgk20eTmII6C2QanFNoY1qJKDr7arAusGNI-dI4vP9aaW7EbyAGnTB-0hfGd03kdvEb8YZv0IL_WKV_LtI3_FOdASAcPCg-YNuUQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZv2AJEohQvilJcQd1lCRh0jX08RMTM6-9Co1_4f5DQbt5jpomhwxaZovHlstImcDTjWj-HfyQ5aefvK5yo25daLZfbvW6GLgWu6-frW4JtFuL0fNYLhHaGcD9cHpLZD-lOkhCKBsag0UDtaq6hYYXBv6FPWMMe8_jN1AJSKqC4xCL_aPp6s-9PBbbfiAmpoWxOwsY5LfE1wlw05eBluw-HHiS34HoBHOCsI59tD0OyfNxiBGAotkl3p-OSDcOn8QCOK5J6qjc-w4qBMGLDQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCFbEsyt86fB4A-zu1wShCIR4VAOPj2QEK9WrKS_lRLyYDBtYH8riuIAi_l0ueH33GWoxh1b8uFOXn07dySgZsSUO6a9Uke_MfB7k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4XQUU5Cvv8ljDYnoiaCFbFLAVC1cPgUpOrvPwhK5cvEW3avzLETwZ7zK-5q1P8X4MTQIhPXTXnmOrRdTRagJnAt52bpx-WF4Bvw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8Dyz0qWS11iY6WlzURYx1LMPHbAPj5Y_8blc1Wpk2eUZvdGWXHoak0nHDhlm7cZ-fNTZqSb44gUYcpGxZtddONzUoeaC-sPiQl7yn6gK6d7h-s23NG_dqwqKwyU3syUoUg1lXGCMNvGlvRvAWzQl9GaCDkeAjAfu7h5hvjN_dhLMZ-3hln_vBZfXQwE2ilK1crZgjIaZb3jlU0eA79ilg94qblIRIXyGAo5l9RcxtsVn__8-cqUMro30ZdD399r7OwEOKZoyFLDVj_ox01UH70Fp-XIjvmELxiodkSGs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과에서 윤곽수술(광대·턱 라인 등) 또는 양악수술을 받은 분들이 남긴 후기와 전반적인 만족도는 긍정적인 면과 주의할 점이 함께 확인됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "바노바기성형외과에서 윤곽수술이나 양악수술을 받은 분들의 전반적인 후기는 대체로 높은 만족도를 공유합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.realself.com/practices/banobagi-plastic-surgery-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.realself.com/practices/banobagi-plastic-surgery-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.medicaldepartures.com/clinic/banobagi-plastic-surgery-aesthetics?utm_source=openai",
+          "domain": "medicaldepartures.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.medicaldepartures.com/clinic/banobagi-plastic-surgery-aesthetics?utm_source=openai",
+          "domain": "medicaldepartures.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://indonesiabanobagi.com/client-review/jinkyungs-plastic-surgery-real-review/?utm_source=openai",
+          "domain": "indonesiabanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://indonesiabanobagi.com/client-review/jinkyungs-plastic-surgery-real-review/?utm_source=openai",
+          "domain": "indonesiabanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://clinicsoncall.com/en/clinics/country-south-korea/city-seoul/plastic-surgery/procedure-face-contouring-surgery/?utm_source=openai",
+          "domain": "clinicsoncall.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gangnampick.com/en/hospital/90?utm_source=openai",
+          "domain": "gangnampick.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.reddit.com/r/KoreaSeoulBeauty/comments/1owlmgf/banobagi_plastic_surgery_reviews_for_square_jaw/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1u1zbxt/surgery_korea/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/en/d04/331863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1gu20bj?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.realself.com/practices/banobagi-plastic-surgery-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://indonesiabanobagi.com/client-review/jinkyungs-plastic-surgery-real-review/?utm_source=openai",
+          "domain": "indonesiabanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.reddit.com/r/KoreaSeoulBeauty/comments/1owlmgf/banobagi_plastic_surgery_reviews_for_square_jaw/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/en/d04/331863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과에서 윤곽 수술(V라인, 광대·턱 수술)이나 양악 수술을 받은 분들의 후기를 종합하면, 만족도와 경험이 긍정적인 사례가 다수 있으나, 일부에서는 병원 규모나 상담 방식에 대한 우려도 함께 언급되고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.realself.com/practices/banobagi-plastic-surgery-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.realself.com/practices/banobagi-plastic-surgery-seoul?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.clinicseoul.net/banobagi-plastic-surgery/?utm_source=openai",
+          "domain": "clinicseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/photo/1002730?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.reddit.com/r/KoreaSeoulBeauty/comments/1owlmgf/banobagi_plastic_surgery_reviews_for_square_jaw/?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.clinicseoul.net/banobagi-plastic-surgery/?utm_source=openai",
+          "domain": "clinicseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/b06/66625?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/photo/1002730?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과에서 윤곽수술이나 양악수술을 받은 분들의 후기와 전반적인 만족도를 정리해 드릴게요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.seoulvera.com/en/clinic/banobagi-plastic-surgery-gangnam?utm_source=openai",
+          "domain": "seoulvera.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.tripinfo.co.kr/info.html?content_id=2893888&content_type_id=38&utm_source=openai",
+          "domain": "m.tripinfo.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/photo/1002730?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub02_08_b?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/prg_contou?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mt.co.kr/future/2015/01/13/2015011219512157532?utm_source=openai",
+          "domain": "mt.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.seoulvera.com/en/clinic/banobagi-plastic-surgery-gangnam?utm_source=openai",
+          "domain": "seoulvera.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 과거 메이크오버 프로그램(‘렛미인’ 등)을 통해 대중적으로 널리 알려졌으며, 안면윤곽 및 양악수술 분야에서 오랜 임상 경험과 데이터를 축적해 온 대형 병원 중 하나입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGk2cmFE-juIlX-mZJQ3AI6uzb4Pi4JW6aE05CfbbkkhHLVHtJhvDWEEmv8GqCRHDhsJCAKFwSZRXbucX9fqXz5XYITvupVpnr4A3WaTqhdQt98WS6OBDjvE0HVO_uH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfHLCDXw6GO_y_ku6413UIliVNw2cuIElSR7koICxsA4R6dklAtwfzSvl0XUvtl0AHPYu0ZlZyfFM734LkStUQLKtFKLit9cH9qCiVDOedDIOdbw1zR_JuWfm1CZWyLzL8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdE5hEYm7yngjkw0hoBZd6RTB6U05KwnxE9pefRdhNFTugujOHL2TsdnSwxEAWESvhV7-S-jc3tlBlrZKSXf9ziSrg21e-N13vzniZbLtj08nbLt8oTJMrCkpxl1ewI4URf3CLyhm54nCC0E99-pkVqDVbwJwys2wFDGzIa7wk9dB8tF_aUIU3u_AUi6xckQXLqNL07rwaIj2lvj_j68Hf0zp5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRh8k8IDnUIGPE2ev0luH38L_WnOBuRVQdJR8iWx_u-uZn1kfIA5gbqEDFWSfW5X9im0R8eRF6NPtQbRQVW_KcYPKmnNDU5Zv-uR-0bC3FhQ5otrbZ1o1Rlx5JviHanIgfix66xE0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiDISbPBVO0iyn5jTVWE_nmiKYzd91dpknnF3B4b1xLU1qpREzvR9WxgUojjFcv6CZpJWBj3d46Km5kSe_c62iY8J7o6i9bxlYnjoPdnKxLgceHS8RrezcnUU8joGZ3T54aY0vrNzYaO7Rc_Vtx6b1N9czwPuqyMg6-P9dOHOrPCEym0NA9FonEMXEbWgigWGHzjwSxStLHM1UYqdCzc41Evbitc9wnDneOqA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgp8zNbGtzHwuZL8EPLp8nqVM8QI-qOfemco27vUB7L2J1mdiKAOoyYkRBUsbHVBLrjW3KGlrFJGWIzR5di5suHI_eo-T1-Ub05pjfuV_jSSAH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 과거 방송(렛미인 등)부터 윤곽·양악 분야에서 오랫동안 인지도를 쌓아온 대형 성형외과 중 하나입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkBHXhhWnBHpEVqcDvSn8CHYmJHVmuzBTscz4faGZiI8ptO33Ae0ksEoQGoDPlhSUIj44i17NE6Evp-pMcm-VyoCTSVbKP2NYwuql4m6okEVUwDh0CjAETjnvWPRFImTSfdLABFY8Wrko0csoYnjF_HdC-JcaYSpJgoI3Eq6dxLXtaBDEJDbzAebk0YpLmFekU5wsU_7vIFmTBZDHXlH8PwQkte8iS9IaBH0M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsMIzk45Xe_cHqhIj8i5MI_LdNpEZPXhAvwtXmUMIiy1QgqA23xnQ7xBT0RAmfa2ntewEXxhJGkEK6NVVuftRyyAEdHMRjrbZRtbR4kXUonDn3eHNUvRS0QO_W9FSh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsMIzk45Xe_cHqhIj8i5MI_LdNpEZPXhAvwtXmUMIiy1QgqA23xnQ7xBT0RAmfa2ntewEXxhJGkEK6NVVuftRyyAEdHMRjrbZRtbR4kXUonDn3eHNUvRS0QO_W9FSh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYkj6udY1M_DcgjN_jzAF_0GQBT_LrafUV7YrJGTkspHlqz_egoYuX81UFa3zp2iMKDN0RJ0zMNWs96qR6KVWd9v_-C2kB9eNmBVOxY9KqQ0v1vVAlge-eMRI5NNJ_5JGM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPzZXzp0idCpxxCCa38zdeAHwVqiojf2vWia--0gIDhiU8367OgxZYe4YokMsreLiouCiNBd--cen3h-_CbDZkSrt-UJCVS5-txUq34RHmNAlwLlvlnKPt4f7A3tuVaB7SbU3MiayLFDviFgN8ieA29_oKvY8Xs9jdquaTjM54DvvKHKsWJ5bVES0YSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENkhxNLTHwqrcfsjyuuqlteJ0OqwflwSXvKMkdbDiossErCqxta040acZCNVtTdujxktt3Yw7LJ7pdZV3L3AVvlLLFcExmqTkqJy9OkpxvNbinEPDTCyQ8bSPXlzjDwv7Y8pimSaRWFJeVOQvW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의 **안면윤곽 및 양악수술**은 성형 커뮤니티(바비톡, 강남언니, 성예사 등)에서 오랜 기간 꾸준히 언급되는 편입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFW0_JYpkYM8frmrmDw2bi2bbWb4b4ehZOlkT8YPynqDAmaeqqkNbQ3paxIXawHRE6FfLJyvEqU0XtpriP_OMrMEZjJB0-GjGOu6LHbM91m9i8a3jMdY4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGP_Gn7nIS0i-vGYHe7GtYFF5_yXyF-nJOLbFKDwwvGHAMKUi38n_wAFi7T1KyvBIxa1Z6TcZjXE7l5nuU3NXi4xz9bLt3Tu4QKQxOdjRPXXSSgHUwAb-Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEnz3Tm-cs7754tT7m_Qfrk2j703DQKETSNo9HlOyc3AiyIfuBN_caaYn1m4PbFEvLlbeOEdr-bZ3Yeou8kdxONVuFzlFeRFGLABE_Iue9tKz4twUlR-SiPlHJ6wbSSJg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzu1pot0pIlFjPzwQYKFvQtzOxfdhJ7j3V5R2i312KdDP647GvyKqftNPH3tEQlj17r7-k3b9HGzM1UgZ6Sd4zvrH1GlNH1wIwYeQzSSmRfmYedPK1TyBGmJiG23TVraRq9ieH6Bon7Lmkra__tpEnEragBYdCkksLpvGOqF891Uf7utZKX7tHW8qiK3tGpzPaUAdkXwcuBkrSZZUA6WrY9lPcHhWRJ0gR6A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1LpUmawymmzyB409_834pPi5OEUJYd8y4-QP5n79qwwmNCzJ1mzyM15KfZCkiXvYn2f-ZL5cqihFbAXhmTljwx_1x2lKxsMFtIlYATWaTq2UHzE7w3bPKx_eTyik=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQg8KAP6RZhe_AgIMUEmJW9au7d74jIFsMXqO0D_xK-Mxuced3ZHepijMCBqfDZU5UHu-ON3b71x_Qzkc5adTZOTV5o9GAitKAqoJYYhvwG1w6_xmoAsvly2EevZbF23v_W_GEEshs1OdruwoxW-JpBMVdjy4J0KmZJemYZMQoqhuxqmlmKzxZ5MWkgE8NI9L_QhTqZgt16hSUxCJzIXmEaus=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEfUb3omXKZG8CLS5xKVfZw5Lf2RIwUZR_HK0PMqYWkg2bb7foLqiyJCnnqU07XtuzhL85HyRK8j27Khu7GtYKzi1tAV2AiQfDJDs_LCEpT4FGHP495XAL4hxFZyrfgvOtOdbncMliwfpvMEdvr0yqJ0c86PmML_YDPnZkaApzq1a1O3SlIbtoc39pbKcIjrg8GAnjpVTCK49vN0WZ4df1VKKd4Rrqh9KC4KwrDGG7EUEk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 다양한 분야의 수술로 유명하지만, 특히 얼굴윤곽, 가슴 성형, 쌍꺼풀 및 코 수술에서 높은 평판을 얻고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 주로 얼굴 윤곽, 눈성형, 코성형 분야에서 유명합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 주로 얼굴 성형, 특히 안면 윤곽 및 눈과 코 성형으로 유명해요.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "역삼역 인근에 위치한 **바노바기성형외과**는 서울대 출신 전문의들이 설립한 대형 성형외과로, 과거 메이크오버 프로그램(《Let Me In》 등) 출연을 계기로 대중적인 인지도를 크게 높인 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIU0ed9k4H9VLUy2e-B1UA8bb8iLaWPQ_MD2-4hyQcaCgCSAVhO92hvUqPrZodX-OTicZOT6PFXKwSc7Uw-tz0tTFfc9XbaNpJ4AqE-nJYmftxatstbnZ6O1ARQQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUnvmJg8LLhP5VQJ9Q93sPTck97juHfrFFMi0lIICjRHCRFD7_tuKa4Dy2Gmv1Y2DEfXEpkX7TeYUEQDWKFjnqJSYz2xx50nNoD5EHKaT17ecjSBGmbMio1hYMUBgI52_SSdtUHNNR6gNLamXafvzuSYamukc_RKK_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzOYJLNWVJTkjNcZh1-EbduiC3aCKc3-ANVshN97DqhqhMtwfCof70zLWU6uXPVl4nS93GJMmy7HnUXT0rPw9vTmE6b72rknNPRHyRbXYEr04z0-2ElXOsri5Ga4ZpgdHQRuwYUXtJ7kIUMQqG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHo7JOozW6ahDzyWUTyWSwNSzEy17VOXQ2oDxSyf6Uxmwwlxq0MStjGnWwycMO-8zIWvugKMGaZxEr4GGg5MMniPSR_uwy1XzVZZVLucSnF_wrdV9vL9nmh2dmJKxMO4en1pFtu4gnaFBcBAhKIDS8uPVogKrcfN8R561O0CIltg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgGjd6PdRyIYwV9xwOoEcCT68OQbXJZeyIxa4tCfnB-P2JltymhsETh36hrhQKkEL2CfNgX9-RaBrZtEVookW64kjS8d7uYTjmg0HOQB5fpJphZkr8IwkqOujUF5c1Ow==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERBdbclvhV9_xNbCml-0YklR1i4732a2Je2kY6-vxNpZQabGdDlSPtC3dVpvqqpr8XbRRf4R5vAP3i9fvbxWYEN3cA4gihH19xAsTxFeiyhaMP_SMpsaSRBuOjAJOIiHcwUVndN64Ll5rOJUIbJ_ZysLno96YacOgEk_pjGEn1kNDf-lhMHYczmOrt5mv3JIAaAz9wAvdeFoommMidYEbA_ctOztY_77mWudwhTO5oW9J5Ez2Pkcsx0cUeuPEUrtglQ0PNepNQ2y9T1OcRzzWfeoCZWEfeTwzt0YZQtO455V5toWIflsBHwp3JvH_5_XetwZpA0yvoo3HUWRyJa9E2UN9eodm2KnwYEoLJnYwYDbtPKZs51XAMqsM9Rb2pDNjLNQYVnHvKMy1zbs1boIhDHDz2Pfw-_McsLDC3myF3YfN5y5w1X9E_Jdmy7aZN0uTzJUNm3WP6TNatsM8vU5PE91c_TOGe_EcpkURo3uJapv3HcA_ZfI09OOkhb2bmef6Pp9j-HM16z0_fP57Y-qAraxBPlkFsrKA8bEGJ7tI6OJO32Tg-ORfQ3HZKx5-v71wBM071jLneNoUnKVa_6XEJ7m2wzoSPiE31FDUXB1pU-L3i0w9jIpGQpdjGSSazEu6puJ_QoMoiS4c0lmH6WHdcqUVT0XGXVuTUizVLdMRH0nSvR9J82OLb2EtG5ctNaAxGpEhKJzpE-PsTcjlnM_0IGewTSZnchhu_1GO2QqMFvY4_AwihM5IUyzR-iJb4eVOq7iia8hacUnRBIU5vBVhzoAyGRK9TOJkcAPNBViJ4sQbhesFxHd-lyd20aYXEvZiZgQquLO5LquIOrL2d6sMvzFds2to6Ghf8BI28sHj8DHWjB3lkk6hnQvW62eFSVlyqrFE0nwBR1D9Ncbxep1pgxpaT1fIycmtUCQlxZ0j86csxjKRiFTe57B77CqgmcgE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbeTEgunAWjJqPjGB0KE4HdncGN-T7jMz3eboxkjkUGzLQPiyi6BWsQAKJZgsrNOUDro6iBb0wcZmEOl7WogNi4IFuY0XNfe8-wbjZJKPl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMf18jkR2zpUXg9a1F4l5RCRP7WDJh7pUmelHYfE4JxcOyh3BJhHmz5VJOjcYwdfyTn2UvtkKf62QXsZ6dFSAYCgDVPio_wHLsSOlCC-Gb8BglY6sSbBsbIQ33fnEYfrJ1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHx1S8g4oGFmaLtxw5N6moF9YlfIXCrcs6aeNtsjmC-STlxtfOofJmDxQLlgkgiRrwqiWomj9YCeKSXF1-ZEn6fAFrhiP-2_sIgDns6Zd66nDZkzmM2wfihAcX62-OiAPFi",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "역삼역 인근에 위치한 **바노바기성형외과**는 서울대 출신 전문의들이 설립한 대형 성형외과로, 과거 메이크오버 프로그램(《렛미인》 등) 집도의로 대중적 인지도를 쌓은 곳입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기성형외과는 **'안면윤곽/양악수술'**과 **'가슴성형'**, 그리고 **'안티에이징(거상·리프팅)'** 분야에서 가장 강세를 보이며, 수술별 전담 의료진 시스템과 마취통증의학과 전문의 상주 시스템을 바탕으로 대규모 수술 환자가 많이 찾는 병원입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg0k1T-DcGuzwULyq_-ZonNKXhBReTNp8mBstpu-2tHKEGTbjl2OMNwpK-dpzJsUGckwdWwWhOZ02p4viHDD6eNZbzSfrzGvvvPJua_O9Hx9ox",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0H1H2eTEg_TAmLwW_qNDcs6DZvCMMMKvruPVRbY489y96rtWM9hB59P_4PGof3f7oSXHBIs2YZHXWUV0GRZHf4tY7Gu-1kkaEnzdg5EvQAVEnRelGqTNLrnAVIEaabSpWuXik0fXdehZRlZOCqpfSadZv5dfFj6Fv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxLm87gerwFegCBsP_y1YoRAyvY7xqjBPCYEwpz1cmeDIUzG0C-kPVQbGlQmJPQRv0MdGaqVpr6SyHcgW_H4tPMN6G8jLMj-C7Ff7b2BHxJPmO0LMQNZQsyqEjlj2v",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0yl6Bgk5tZJh90IIP52wsE8vX7mtQla9c5ttSdi6uv-ujRmNsa3F-qiDkbSMoaKIWTdvlCPltfWv-D6Gig767vAbx7RgzZQ_DR-7kEFTvFaP5UXOiy48SMmWchlmjlobCJGqsfPX78WuQO78dMwMtDA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFk0Bdzkfwd5a76fppg5qFKV_rqZ76yGUeTiyeS0vMBADU_vIgAMHEZv-bYG24_ad0X2FFhabHaFTjpw4q3i4_96aqm3i3v7WwOAYgjp79Nlckk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzhuLLHzSaVt_b-NXEhREV2MWT4p3pIpKMmx065EduGRQ-ZMMYDNhFY3B4svYHEFNoMubwU-uLPdWeG9wiVc0AXfmqKF3oxVdgvBuyM-9GT8j-2V5_0hWVaHfbp9gGJsHwmfy2JP8VVvJrb8E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrv9krKbCvWUZ1SG-Xz6BZV6uUYipdNm0cb-GlNXkZ8nCgh0JfTHOZHtOj1Lr76WFEMwL9cRzGqTildfeNW-5vZCO5JpRsB1wA3bMjyCtZYeX5EDiWvQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkYJceVcj_iuE9rB_fMeYViKx25BXF-DPaKnLgTq_3QWTyexsv_-N1VaGRgNXD45O21wi4lbDN4hUBbSUjbI35NiCGHT-xWlXMojNdA9cO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvivczU1PkPAsW-KfbVXJQulAhmLUIBh99IblwZti0cT1MjWDny7-ksSP_x3MRuPEukBIWRaKySbXcC3Hnw_Y2aCd-ACxXgp1HPI8ZdR9Fv0vI41xulwScomHbqN0MazXi",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "역삼역 인근에 위치한 **바노바기성형외과**는 서울대 출신 성형외과 전문의들이 설립한 대형 성형외과로, 전반적인 성형 분야를 다루지만 특히 **난이도가 높은 고난도 수술 분야**에서 인지도가 높습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYdD-OUAl8NAGz19TZDf0oW7WjnId4sBjpQdZcUJgJg09krxYuVFyLX9w7rp3th-FL-i4kpz02ThpDphVj1uYAkBhdgJZcF1vidGDu2rgbEhfb9shptvAc8bU8fGBi",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFt2aqMxA5jD4RwZ7-vZrIVBUjfj3rm162J8gbnAgiHyJQCWoRvbyR3V_Ww6Xt3v2Iq4xGmf4wSzWtRPslCGYOO74kiIfOu7FyuEqiQxz3q90Od",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4P3xWG8btNaV-R3CUydwnBCeWEWPVyyHpDhAfpsq_2ZU9BAelbSvqrPI8HLakceO6I5ychf1Aq0LDRgbpdXEwtbDkKHAuN9iv7t46mfua2MmTV8ogYmRv8uNHpg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbdCOj-S3F9m0uY1M30P5rA-iDeKiJ8JsJPwOGCuKwC7pnSpzXk5msV0ClwB8DxdRnXR6HtNu4m4-TEuhMLfWvg8c6LbjTIzJniTNBcyGu2nXlzjGKuxmiTMyzxo3CfzQ0jLG9bAJr5gqQzftI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoCBX7uQ0Bi6gWRqYlSoebV8yGeo3L0k57gNGOn4Ir5jvH2pk6XUd-xxyhCN3tYqnhRzufIKbMrkQoWWYCrP4QIodjH2-C-MkPIU5qtzU9jX9TyEnL2AVJJGB7TCKbYPMw0DworGSohjeHvLB9RkJ1socjg04n-1eYe00X2uhQaw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzr26-cvGyXhhASwOpyCJRNQL1BCAQ0-WFlbEaUB8Hn15J6p09yBzO9OsMQNX0nTlFHnOdpE-FsSK5xVQ7FyaPLqsGCSB7DBjAnhtGCuX1DJ6QNLnM1yX0Yiilak-MmA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHY268cXIVjBa5ydybVDgLjPRQa-sreM7N6cY7SIp2uWOxgFO4fcsjl5mOeHO1qaEzdALLWQKCKC4ssWR-pdvELFwOQ4LHUeKVz5eHURepgdT0NNNEgULP0pDzQBetB784_DL1UhZL6Wnqn66DzG3XtkFxEPMcoIzKLOWRz0a9Dz0If1i_Fq3Pz36rgMwLC0BJbDkeV3A8ojTItPjKdogHjycVFmAUnpNtoBRprH_8AIQEUsVxc",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFt2aqMxA5jD4RwZ7-vZrIVBUjfj3rm162J8gbnAgiHyJQCWoRvbyR3V_Ww6Xt3v2Iq4xGmf4wSzWtRPslCGYOO74kiIfOu7FyuEqiQxz3q90Od",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과는 강남의 다른 대형 성형외과들과 비교해도 특히 안전 관리와 사후 케어 체계에서 강점이 두드러집니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "■ 바노바기성형외과의 안전 관리 및 사후 케어 특징",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "GetCareKorea 자료에 따르면 바노바기성형외과는 JCI(국제의료기관 기준) 인증을 보유하고 있으며, 수술실 전체에 CCTV 모니터링을 적용하고 있는 등 안전을 최우선으로 운영됩니다([getcarekorea.com](https://getcarekorea.com/ko/hospitals/banobagi-plastic-surgery?utm_source=openai)).",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기성형외과는 안전성과 사후 케어 면에서 매우 체계적인 시스템을 갖춘 병원입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://breast.banobagiprs.com/content/augmentation_tech?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://health.chosun.com/site/data/html_dir/2026/01/08/2026010801961.html?utm_source=openai",
+          "domain": "health.chosun.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://health.chosun.com/site/data/html_dir/2026/01/08/2026010801961.html?utm_source=openai",
+          "domain": "health.chosun.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://getcarekorea.com/ko/hospitals/banobagi-plastic-surgery?utm_source=openai",
+          "domain": "getcarekorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bst-ps.com/?idx=ct_5c6e0edc12b15%2Fct_5c6e0f1b12b35&utm_source=openai",
+          "domain": "bst-ps.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sswan.co.kr/firsteye/under?utm_source=openai",
+          "domain": "sswan.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/lips/asymmetry-correction?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://medseoul.com/clinics/pac1f95o5p/naver-blog/noteprs01/223555800258?utm_source=openai",
+          "domain": "medseoul.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.xn--c79a279ap3a6a384a.com/%E1%84%8C%E1%85%AE%E1%86%BC%E1%84%82%E1%85%A7%E1%86%AB/%E1%84%82%E1%85%A9%E1%84%92%E1%85%AA-%E1%84%82%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%BC%E1%84%92%E1%85%A7%E1%86%BC?utm_source=openai",
+          "domain": "xn--c79a279ap3a6a384a.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 강남 지역 내 다른 대형 성형외과들을 비교할 때, 안전 관리 및 사후 케어 시스템 측면에서 각각 어떤 차이점이 있는지 아래와 같이 정리해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "■ 바노바기성형외과 (BANOBAGI)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 항목              | 바노바기성형외과                                                                 | 다른 강남 성형외과 (예: 현대미학, 바바)                                                       |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "정리하면, 바노바기성형외과는 특히 가슴 성형과 윤곽 성형에 특화된 사후 케어 시스템이 매우 체계적이고 다양한 기술적 장비 및 협진 구조를 갖추고 있다는 점이 강점입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://breast.banobagiprs.com/content/augmentation_tech?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://breast.banobagiprs.com/content/augmentation_tech?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://breast.banobagiprs.com/content/augmentation_tech?utm_source=openai",
+          "domain": "breast.banobagiprs.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.btsbanobagi.com/page/sub01_02?utm_source=openai",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub02_08_b?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub03_00?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/clown?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/clown?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.h-mihak.com/contour/clown?utm_source=openai",
+          "domain": "h-mihak.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vavaps.com/index.php?utm_source=openai",
+          "domain": "vavaps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vavaps.com/index.php?utm_source=openai",
+          "domain": "vavaps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 지역 주요 대형 성형외과들, 특히 바노바기성형외과와 다른 병원 간의 **안전 관리**나 **사후 케어 시스템** 비교에 대해 말씀드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "##  바노바기성형외과의 특징",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 바노바기성형외과         | 1:1 전담 의료진, 수술실 실명제, JCI 인증, CCTV     | 체계적 주 단위 케어(부기·라인·탄력 등), 보형물 리워드 시스템 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "바노바기성형외과는 다른 강남의 대형 성형외과에 비해 **안전 시스템이 국제적 인증 수준(JCI)**이며, **체계적이고 세분화된 사후 관리 프로그램**이 강점입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.mokwon.ac.kr/kr/html/sub07/0705.html?file_id=742113&mode=D&no=2b4de618c9199d4f5b62b1d8af37fc18&utm_source=openai",
+          "domain": "mokwon.ac.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub02_08_b?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://getcarekorea.com/ko/hospitals/banobagi-plastic-surgery?utm_source=openai",
+          "domain": "getcarekorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tjorthop.org/?utm_source=openai",
+          "domain": "tjorthop.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jeju-sp.com/notifications/cnotice.htm?act=download&no=1&page=15&seq=38903&utm_source=openai",
+          "domain": "jeju-sp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jeju-sp.com/notifications/cnotice.htm?act=download&no=1&page=15&seq=38903&utm_source=openai",
+          "domain": "jeju-sp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gangnampedia.com/ko/wiki/gangnam-news3-20260116194931?utm_source=openai",
+          "domain": "gangnampedia.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ymzine.com/%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%88%9C%EC%9C%84/?utm_source=openai",
+          "domain": "ymzine.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 일반적인 강남 대형 성형외과들의 주요 차이점을 정리하면 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 바노바기성형외과 | 일반 강남 대형 성형외과 |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 바노바기성형외과 | 타 대형 성형외과 (유형별) |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEtGwsCadBtuOP7n_B2nj7DtjYoGwYgEVI8M3SU4_cwov7KgRFLs_g96JArJABaz2kA00JQT-X5Pp7cg1sQ2YihBqmrv0bErOuEsdNneHhpskbY8E3sdKGbQUD0Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEib35UT3ENAnDZZF4D3sK3OJqo6qVGNfPVz41GLL8VcjgpP0aMlHBBwHtdJSHXzYZVBBk7BMsbPXYpCKvJ8-ciRM3keZm1sYV6tdyGjV2X30f3Mrz8Le00wjyg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmc-fil3_gJHtnHW2tPPp9Jble0j0WnalyMF1159_iRbRab4Gg2iXsBGjvqRWOwl4Nb3Cl2WLIWgJ6b5jcZGLxK5kzHH_Y9SB-HK685qU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAY0l6-1c5s5OU0TVtXwC-MK04X3y_gENP1psNDsSyUxzZv_Yb_UfNAMG1fufs8BrD8K_HBhsp5OAG_6vR-l67QWicOHYNw9O4PRF1Fd5yV2Ot6xY6AuX-hBni",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJrRfMz0yOk9Sjr4jnaJur1ubO6KrH-QfOJAog05iRVtNs62W0VrhK8slDp-QN3V_gIWy7luF0gId8AtgzCazxQmCLjIqeb2CWXcKccl5z2E3RaheXr3UPlDWF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9wL-A7cw26TwPW7HEV2h80sraaUDOQ9W2kpLY07JPYoqVIWAg_6CsQIdRrJ4HOIPU-Q6ehrr_j8jVpFfW8UL6irU4jxF54bOaIy6qdFMDojU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 강남권 주요 대형 성형외과들은 전반적으로 높은 수준의 안전 인프라를 갖추고 있으나, **세부적인 안전 장치 운영, 사전 검진 프로세스, 연계 사후 케어 방식**에서 몇 가지 차별점과 공통점이 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | 강남 대형 성형외과 공통 특징 | 바노바기성형외과의 특징 및 차이점 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsb_3rnTKtVhuznPIc41S-8Hy0te98fWsl9XeZNgVAj1xuS8uFHq1pZCqEgDtHjVp_ApUCsfAnuptdAg0rvtmy_WsHhUkeq588p0KTRIHX5PmuwnW1n1Xm7PRQsGc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6S-sjIQ45zZPps2-7LVEJOkq-u3qjgVGJbmYFd0u-fCEXCLaEeCxuPzFzwZxt5tmg6b0STqgyIHgRFcVWSoo4eLJQGwvVBKqcd1prKh0tTdojd7qw_PO4Azcb4Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExfJbGM7TfdgByFpkSqM44a31b7xL8U5k52ofe6RzzMaORn6yZBWzNgqM-4-506pZSZ4ONeMtPAnIZwFLtkWwbATrEckvr1dE8hLdMxR1nTJUtSDKU3YihP9NBt6xz4lWaOT4Ovhs_MQrlZEPPKTb7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ4uDo1iz3bl4Jjfp5yOdx9QdeyC7mX9iwCBKmGnnTUvt2huR2Dq3Fia82ZRhpC-fM0RTy5WUx9Gbka_2A9mU--_CM9fc-TnnfHoCAXdkEx15mEy7jmxnfe5FyWUgNMhfjL3ZHWg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ4uDo1iz3bl4Jjfp5yOdx9QdeyC7mX9iwCBKmGnnTUvt2huR2Dq3Fia82ZRhpC-fM0RTy5WUx9Gbka_2A9mU--_CM9fc-TnnfHoCAXdkEx15mEy7jmxnfe5FyWUgNMhfjL3ZHWg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExYjc6QwnX_ruBSitneyBsNOCknYnGMIU-4aWyDPOiSg1B2zadDd695EhgfLwmJwY85-XRSHHrfGv1QdEZ-17SlGQcrr8_ZdGgRNuh0Wfu5vID6-trZBlKP6KrBHNA8flyML3jCUxICpfO7zNlcTWs65S2Yg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdj20kULMP1-1kmftlj1N3MXlSIjfiRxB0ykfvxbtTcj0D47WMWNtO9CuGBRGgvy12NrvexWtMgK17MwO9K_FPj0noz3x0RIFSdPfCQUW6okRy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsvQioKoIG4txNJUcFrjVU_3Fr17iyUCm-2-CoqtcrsN4zolDObMrk1zXvw7XyGi2-Z9oKgGYgZba-gWaNqlSrGbLApJIPCKG4p7r0L4dH3VxUUkwOMWJUAPVoHFE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-dtD7UUdP82O29C_OO60Mu4FkBpHQB3W9g03kw8YNXrxIasirSD1ixomzLdTrl1whZtSfYQCxIx-VpOUqaojtwZmT8nXqcywjDt9rAFI-Jnk48Xpu7jnYTDFUwngZQ8nD0eUNv6ybrAtQL2dWNDvdVE0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과와 강남권의 다른 대형 성형외과들은 전반적으로 높은 수준의 안전 인프라와 사후 관리 시스템을 구축하고 있으나, 세부적인 운영 방식과 중점 분야에서 몇 가지 차이점이 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGY6lyFAuGiyRQcOYx4vowsqg_x4_v5yCIOLE9nXPbThYT5PN3f9kXCxLql-fI1A5zTzmGO_7UwR0uaieOgVjQRHPEK232Ch56nUn3IWLwKOVGEVWEj4G96IROm2Js=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXeWO9v6By_yNyxU4bK1eSlArv8SnworKp41vAhH__KFhka2STHIV_bn-M7L3_EINp-xPle0sv5tXqusvQXnoR59bOiblgw3P1GC7Zfr2luSYfQqo1p1gS23mSjg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMss_9kt2oWfFAak9WrpsW86iIZpMN6yUGxY3p4QHxaNaYFlp2dtuZdMqzP1ZZeJT7LDu1Nek8FBBILysxy-HG4Ez_ie5eMV0DPZzLfM-BcvSlGcerJIpR5a6gYw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcmZjJFcMhPx-rPIUhIln5VvloSzO6U0w_2TCHaWSpFpwMoIrEpT-vPNY8CO2DzTvMujzWOvfQjgyTJA2qiN1WTRtvqiObdmqdfY0Q6lvtKPVh0xLX4HALZbLf3w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의 안면윤곽 3종(광대·사각턱·턱끝) 및 가슴성형의 대략적인 비용 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- 바노바기 성형외과에서 제공하는 ‘가슴성형 멘토스무스’ 프로그램은 정상가 약 500만 원, 우대가 약 299만 원부터 시작하는 것으로 확인됩니다 (단, 마취비 및 보형물 비용 별도) ([jeju-sp.com](https://www.jeju-sp.com/notifications/cnotice.htm?act=download&no=1&page=15&seq=38903&utm_source=openai)).",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/d04/331863?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://medi-map.co.kr/event?department=%EC%84%B1%ED%98%95+%EC%88%98%EC%88%A0&subDepartment=%EC%95%88%EB%A9%B4%EC%9C%A4%EA%B3%BD&utm_source=openai",
+          "domain": "medi-map.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.beauty.optislab.io/face/?utm_source=openai",
+          "domain": "beauty.optislab.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jeju-sp.com/notifications/cnotice.htm?act=download&no=1&page=15&seq=38903&utm_source=openai",
+          "domain": "jeju-sp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.co.kr/?utm_source=openai",
+          "domain": "banobagi.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과에서의 **안면윤곽 3종 수술**과 **가슴성형**의 대략적인 비용 정보를 다음과 같이 정리했습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "‘beauty6’ 블로그에서 정리된 최근 정보에 따르면, 바노바기성형외과의 가슴성형 종류별 대체적인 비용 범위는 다음과 같습니다 ([beauty6.tistory.com](https://beauty6.tistory.com/987?utm_source=openai)):",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.banobagi.com/page/price_test?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1406?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/987?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의 안면윤곽 3종(‘윤곽 3종’)과 가슴성형에 대한 대략적인 비용은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.banobagi.com/page/price_test?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/price_test?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/price_test?utm_source=openai",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/987?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://beauty6.tistory.com/987?utm_source=openai",
+          "domain": "beauty6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과를 비롯한 강남권 대형 성형외과 기준 **안면윤곽 3종** 및 **가슴성형**의 대략적인 예상 비용 견적은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCha0Nm_YMg_zZMoSZE5njAgiQmfWzK09YGPQevcK3WiUYQ3olQY-_UZk8Ytu-_6w5K8qUK_OmMYoqiGjxAcNtgYgd48XeiLYL0Nf5VQ9NOyLwDeoTaZbbjJDJbA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEw9fdemXukhFYHhHHhDIgmoMuinj1cFu2qcAT0NTQJK9jl-RxxbuspXvCBpn--yeelYB2OiV2HrvYwbZfAYtCReeFi6jfmfUc--b33cumfYUkSDPV_zWrOByDtZCOc8A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWkxlLc3YMoGXKu5xV1Z16O2FItxSR_F6huCY13fQdKGQZcqAEwibtoyy9ailLjvK5ta2VTNnsuOCMUGEyMdGg0jXKS4KztqpZpxvQfrcwq56TxjDMvVacNbna_jNM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUWUb0EBgdIsh9vsKdylVktbn-PgZ2Uip3T0BlKRLE4Oly0LaUEQeiZ5D2vYajklgbjypaaox6tD03F5eQ3VgpDvw4d6WfyoSamED45yKPfeA3blLGu7XnuDghXHI3_eJIw0bECqznqFFh2NwxRIRFB7-fBYhgI8ByAbyA_XNrDlp5366t",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJs3O6TmkBDX0Z-KiNFEC1rEj6qpHg84xnCGTjQy5HBCGtB8XsmRXltpQWk02Lcn5B8HgavllmLOiejRCkKmryJq5jWIPjSiXOUZYGncc-C6D9x3vhSwEbCIgUrrjlBbwvHcsPMIsCVyoMOmov",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의 **안면윤곽 3종** 및 **가슴성형** 대략적인 비용 견적은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHReUwkO-bwKo3hH0nA001WU7kQ3Y6rO7QxYAVgNR1khSfxGCYh7oZC7NACEiiB9gjpyWlUU5H6WUtoCqcsuFqR_0rPwMlK_9AD_HdLCzjDe3vM1t7dahE_CIJtIfKpLMP15A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlGbeKyR-2Cw8UOyxrJS1utqDw4xFgSzzjd4E56egaaL1T5PnNjeioMwFZHp--HNs8awjLee8IimPc1UmAbpRgvVkxHMdoZEjLNekhWIVn7JEEDpBv08q-PD3EsQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGl7puk5OZykVlgsfIbuU-kSsQBc7DbLaYBXj9ZNBCXohGqo6Np3tTdNvMtdC7OZdT94Z9QD9EHenKzzr8yD8g-Yc2OYp0NuegwTODpxfuisEKdDHFK7vRIp44Hjab9kQB1yC5_qRyLAY7jqHMvjD2on99xNMwultndSDUvC-JboIH3Fe-w",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHReUwkO-bwKo3hH0nA001WU7kQ3Y6rO7QxYAVgNR1khSfxGCYh7oZC7NACEiiB9gjpyWlUU5H6WUtoCqcsuFqR_0rPwMlK_9AD_HdLCzjDe3vM1t7dahE_CIJtIfKpLMP15A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9jx67QUy3EmyHrReC4Iv_82jy1x75E89g91ETTdGy0iFF8Oi8B_iydP9Gj-pEDXvjm8CQKYfJIzDhuWiJa-PjVZ3rCyaUExNNJRwjz-ZT5oLtuM4Jx8U0wuQFX9WxBNxbSmLHonCsOUiH0kNxw-pQJmzstxNTt_KbRh-mbyRyDAhWhkd2M48V12X-7jN0zU351l-Bk3scvxrMdduV4F0GxkLVKR2fPPzMhG89nVzH9mFDaZ488b0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPHUYC-hiAZ1xr5EQBLZ6by1Y8CNzkD6Ynt5xkcPAeWkMC5n5k6SFXhCvkoW_7cL207Et8IWmdsCPuOYTS4FpaKrGSIaxzBremuJaKluwwklNEupF3P9bT8KJLXhqEz2kYowDDUJc0Ab43AyjP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnbUt8iYzJXBEvpPl6Y2zPC1c6h8zmMdYGkUb_FCakZWxR692aB3g8J_B3LyvSFk8iEk0s_uqrSD67BtyXG49BA2Bbl6X3ALytFsTwhR4hrwk_qlLU4ZlKDZLYdKnj3SBm2O3635ps9MWgp6hu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7oCrDeeHUHI5Q5lCGajftFR-pbWXH7dKnYDt_7QLN7eQhKfvolLxv2L6Ru6HHFvG7JiB-B0oLIEFVr1QMe2aH72LzrxuGZpal7pTT5hvQ9CH8DCLCTslUZPT3oPk5KQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxma66TEkg4fBhVL9ttkwHep9tLjeS6YRf8OmoD9rhc-wFeCWpEpm1azlEZ1g0HDHmqXVGb0xDijxs1hVOeJPL03vP_rCB8OmPkxdZFkERM3K2y7iWKxoyC5zrVIC-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIpI_MTnIyCC5wdDNAr9Q9ejvfgDbHGwOKk4z8LSx9T0C03z17DkbR09R0cpY3EBot0KcPX4BYFARoOn4IophPsVdnxAuuv5Emxy86eDObvqC5CkZJoUzA5pAVO4sqFQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOcvmRZ8U0KuX_71E-US82uXDpdp0lqeCkHjBX0c0_4i0nd_4WTJn1CeEASyvue4flK3gqa5D77Zoq_y6IyfYMWh1mRad1rGi7EQQe2Zjqpz-yv6RYeMqtNXzrPuHsTWhmHSuJJtwue4ALkstqSuvPHNMJT5lotT5XMK_3TbEuO5szReGmDm8ziwLlz3_H5AT3AWKjR5ma4gQr-Zj2wHTGP5msWCXyOynb-CqzoL9FVkn_ITTsnavbC2A_By04VFCm3B1UW_UQTBhPLPi7AecZWaiPS7A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqiWQzXhqjWpzKRVz9BEOmJUBomNxzXvUVmwiIPOfOj_5JOOJ8sAXR7qEE1Jy2WbMC5GpTnbexPFWJoI5vEgYRztXhJu0myfb0RONHaUfNf3nkpqzbl503UwGuVPNd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과의 **안면윤곽 3종** 및 **가슴성형** 대략적인 비용 견적입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMFbcdQUsFpvRhJn3jeO99UgDGu1Uf4pPd0yvd89v5yKI-vdygLjE1jmxQQuw8W78G50UJufEPxYP_4Blp2TPzyTg8GrbGALCcOMw3341Du1tcW3uIwrMOSgPKWYMidvcWKA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyLBy72Ww7tmbNEmzz2lbwFcVnWwS2CYTwnqoXFbxLfjJHluxN031rnlEbyivt1jagNSigJZhZsMea5IIarsz2exGTRDNoJqsxd3UNK9btSQMW9F8O8Wc-ds6Y4wC4rT1viYPvG1WBqj34AjYi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqiRjVQOTrTQH55eQpnGO9oqQKUDKwlx3KBYi3CXmplwRpILyOp-CpXgx3MtJo_6aJu_-hiO443spn0bc8ifU9X3-L7pVBe6F1InMwOHTsJ9bCVfbU5I51HfOoStnm",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHX-FKW0ceWvv6u3Uoq3VsY43AyA5Pxo8djqG3HwS7Xifu3z0xo2Wcn5hyyE3DzT7fXoZs93R8n9bSiaDD4MO6Me3zvSUsbLIwDNAfLxdQkWQx9t6eFowVqvoHC0QIkoLIgrjJ-hHvjuC8e8CDm91DTGyjNUUYowpTu4IuXWwSZvV4xe8XR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnl2vbqSA9HdDx1i1b6Y8uX9QatnJKfX0lUAc4lM5eZYR_F-_BYp1emXjDknjXqGCFyzrXrMEBtgdrD9pj3dhNHE7lmFSiNEj_pICeXPmGk7jKlg-HXLEQ8i5ztuRXyIBfldtC-7UPTjel",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHK4Jt_31k9HCOG2bfSOOYQGYTfLND38I9rIYTAVmt7Av7CkrBp4aZXHncbDWNTfNoHbJSb0GLbmtuWPgsKoyCZ3HqGNdS0Y3hWKE-P3x9oR5cLqjj4-zEo46LKsFbDH99B8M7vL5h4ax-43Y6DnvMFIU01W1Mzxji8frvZoBH-QR6MQQaN1VxSfGax",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRPyOnueGvoowSEQbVrkufBr8kjSOYizmaqNq1S7S6DI-kfbPOkJJR3b7GnFDyOVuPUjsGL6hCwmj_djKNHD0WXeagqBzJy6itjd7lK-kxw9uMUwGIJTY_lBU88Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVPBZMxI0iiuxsXzrPrYBqepo4N31gW_BrG4Bkw6HxkNXJE0smAXM-XDQuy6WlpYmd3wjSogeA9nzKxzscEiub2lhjSn50LdWty1H_veAAznmhFlHM2RT4O3BimCeY4ZLNYQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEX2i_liKGjmCo4L9dGqyZ-XDhzs-fNKpPcy8FoAC5P8R0g5L9qZE1MfxY9WQURnBk5JNncI0GqxgTFhURHktVIgk38YoV-yS4bneqnVFmXkMRsRUuwkLCU_MLsl_Nq",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuxpP8qK-DjPLYz-7Hu1fPijeoegU_3Ph_W9NAf2wHiyBjjZHKde_i0b-lrM69iTDH68py9zmtHk-B-OIYdrZdYgFmdtF4loBDe7nqPQcrtQslvxvpNzXaHawQPhxu",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1dWiyU2mPP12R-a6pT1SdsQXYIve5zHyJZo3BoSGdCbJV1kevq0dK-p78zib38j-O2yVB3MYvemQfqB02HDRVZn8q8oHPZUQIZJy72BBJQy0s1TkuIhqMV8VS3yGKlspe2vZ_zDTC",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

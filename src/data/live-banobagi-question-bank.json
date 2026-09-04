@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T00:09:03.488Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "서울 강남 쪽에서 안면윤곽 수술로 유명하거나 잘하는 성형외과 추천해줄 수 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "강남에서 눈재수술이나 코성형 잘하는 병원 찾고 있는데 어떤 기준으로 골라야 할까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "40대 후반 엄마 안면거상술 해드리려고 하는데 서울에서 리프팅 잘하는 성형외과 어디가 괜찮아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "가슴성형 고민 중인데 강남권 성형외과 중에 안전 시스템 잘 갖춰진 대형병원 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "렛미인 같은 방송에 나왔던 실력 있는 성형외과 전문의 병원 찾으려면 어떻게 검색해야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "강남역이나 신논현역 근처에서 외국인 환자도 많이 찾고 규모 큰 성형외과 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "성형외과 수술 상담받으러 갈 때 페이닥터나 대리수술 걱정 없는 병원 구별하는 팁이 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "쌍꺼풀이랑 코 수술 같이 하려고 하는데 강남 쪽에서 자연스럽게 잘하는 곳 후기 좋은 병원 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "바노바기성형외과에서 윤곽수술이나 양악수술 받아본 사람들 전반적인 후기나 만족도 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "역삼역 쪽에 있는 바노바기성형외과는 주로 어떤 수술 분야로 유명해?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "바노바기성형외과랑 다른 강남 대형 성형외과들 비교했을 때 안전 관리나 사후 케어 시스템 차이가 있어?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "바노바기성형외과 안면윤곽 3종이나 가슴성형 대략적인 비용 견적이 어떻게 되는지 알 수 있을까?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}

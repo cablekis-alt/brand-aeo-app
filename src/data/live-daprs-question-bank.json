@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T00:13:00.842Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "강남역이나 신논현 근처에서 눈성형 라인 자연스럽게 잘 잡아주는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울 강남에서 안면윤곽 수술 안전 시스템 잘 갖춰진 대형 성형외과 어디가 유명해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "강남 쪽에서 코 재수술 잘하는 성형외과 고를 때 어떤 점을 제일 중요하게 봐야 할까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "가슴 성형 고민 중인데 강남에서 사후관리랑 체형 맞춤 플랜 잘해주는 병원 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "강남에서 리프팅이랑 안티에이징 수술로 40-50대 후기 좋은 성형외과 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "쌍꺼풀이랑 트임 수술 같이 하려고 하는데 요즘 강남에서 평점 높은 성형외과 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "성형외과 첫 상담 가는데 대형병원이랑 개인병원 각각 장단점이 뭐야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "강남 성형외과 상담 돌 때 마취과 전문의 상주 여부나 안전시설은 어떻게 확인해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "디에이성형외과 안면윤곽 수술 원장님 상담 스타일이랑 전반적인 병원 분위기 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "디에이성형외과에서 눈이나 코 성형 수술받은 사람들 사후관리나 후기 만족도 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "디에이성형외과 가슴성형이나 윤곽수술 대략적인 비용대랑 상담 예약 팁 알려줘.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "강남 대형 성형외과 중에서 디에이성형외과랑 같이 상담 리스트에 많이 올리는 병원 어디 있어?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}
