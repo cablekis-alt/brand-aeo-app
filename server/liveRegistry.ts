@@ -7,20 +7,12 @@ import bank_bkhospital from '../src/data/live-bkhospital-question-bank.json' wit
 import analyses_bkhospital from '../src/data/live-bkhospital-question-analyses.json' with { type: 'json' };
 import bank_daprs from '../src/data/live-daprs-question-bank.json' with { type: 'json' };
 import analyses_daprs from '../src/data/live-daprs-question-analyses.json' with { type: 'json' };
-import bank_girinps from '../src/data/live-girinps-question-bank.json' with { type: 'json' };
-import analyses_girinps from '../src/data/live-girinps-question-analyses.json' with { type: 'json' };
 import bank_idhospital from '../src/data/live-idhospital-question-bank.json' with { type: 'json' };
 import analyses_idhospital from '../src/data/live-idhospital-question-analyses.json' with { type: 'json' };
 import bank_jjprs from '../src/data/live-jjprs-question-bank.json' with { type: 'json' };
 import analyses_jjprs from '../src/data/live-jjprs-question-analyses.json' with { type: 'json' };
 import bank_k_wonjin from '../src/data/live-k-wonjin-question-bank.json' with { type: 'json' };
 import analyses_k_wonjin from '../src/data/live-k-wonjin-question-analyses.json' with { type: 'json' };
-import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 'json' };
-import analyses_sm_ps from '../src/data/live-sm-ps-question-analyses.json' with { type: 'json' };
-import bank_vvlyps from '../src/data/live-vvlyps-question-bank.json' with { type: 'json' };
-import analyses_vvlyps from '../src/data/live-vvlyps-question-analyses.json' with { type: 'json' };
-import bank_yunoprs from '../src/data/live-yunoprs-question-bank.json' with { type: 'json' };
-import analyses_yunoprs from '../src/data/live-yunoprs-question-analyses.json' with { type: 'json' };
 
 export interface LiveAnalysesFile {
   tenantId: string;
@@ -32,24 +24,16 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'banobagi': bank_banobagi as QuestionBank,
   'bkhospital': bank_bkhospital as QuestionBank,
   'daprs': bank_daprs as QuestionBank,
-  'girinps': bank_girinps as QuestionBank,
   'idhospital': bank_idhospital as QuestionBank,
   'jjprs': bank_jjprs as QuestionBank,
   'k-wonjin': bank_k_wonjin as QuestionBank,
-  'sm-ps': bank_sm_ps as QuestionBank,
-  'vvlyps': bank_vvlyps as QuestionBank,
-  'yunoprs': bank_yunoprs as QuestionBank,
 };
 
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_banobagi as LiveAnalysesFile,
   analyses_bkhospital as LiveAnalysesFile,
   analyses_daprs as LiveAnalysesFile,
-  analyses_girinps as LiveAnalysesFile,
   analyses_idhospital as LiveAnalysesFile,
   analyses_jjprs as LiveAnalysesFile,
   analyses_k_wonjin as LiveAnalysesFile,
-  analyses_sm_ps as LiveAnalysesFile,
-  analyses_vvlyps as LiveAnalysesFile,
-  analyses_yunoprs as LiveAnalysesFile,
 ];
