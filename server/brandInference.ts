@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
-import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
+import { OpenAiEngineClient } from './engines/openaiEngineClient.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 // 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
@@ -173,7 +173,8 @@ export async function inferCompetitors(
 
   const system =
     '당신은 한국 시장 리서처입니다. 반드시 JSON 배열만 반환하세요. 도메인은 확실할 때만 적고, 모르면 빈 문자열("")로 두세요. 도메인을 지어내지 마세요.';
-  const user = `"${brandName}"(업종: ${industry}${region ? `, 지역: ${region}` : ''})와 실제로 경쟁하는 같은 업종·지역 브랜드 3~5곳을 추천하세요.
+  const user = `"${brandName}"와 직접 경쟁하는 ${region ? `${region} 지역의 ` : ''}같은 "${industry}" 업종 브랜드 3~5곳을 추천하세요.
+매우 중요: 반드시 실제 "${industry}" 업종의 업체/브랜드만 포함하세요. "${brandName}"와 이름이 비슷하더라도 다른 업종(예: 화장품·카페·차·식당·쇼핑몰 등)은 절대 포함하지 마세요.
 "${brandName}" 자신은 제외합니다.
 각 항목: {"name": 브랜드명(한국어), "domain": 공식 웹사이트 도메인(예: "example.com"), 확실하지 않으면 ""}
 스키마: [{"name": string, "domain": string}]
@@ -202,9 +203,10 @@ export async function inferCompetitors(
     );
   }
   if (hasOpenAi) {
-    // gpt-4o 순수 추론(chat.completions, web_search 없음) — Vercel에서 web_search/약한 모델이 헛소리를 내는 걸 피한다.
+    // gpt-4o + web_search 그라운딩 — CI/로컬 전용(hasOpenAi가 !VERCEL)이라 web_search가 정상 동작하며,
+    // 실제 웹검색이라 이름이 모호한 브랜드(예: 화장품과 병원이 같은 이름)의 업종 혼동을 줄인다.
     calls.push(
-      new OpenAiJudgeClient()
+      new OpenAiEngineClient()
         .call({ system, user })
         .then((r) => parseCandidates(r.text))
         .catch(() => []),
