@@ -306,6 +306,7 @@ export default function BrandOnboarding() {
       const pagePlain = htmlToPlain(payload.html || '')
       let resolvedAddr = firstKrAddress(s.mainText || '') || firstKrAddress(pagePlain)
       let resolvedRegion = regionFromAddress(resolvedAddr) || region
+      let resolvedIndustry = industry
       // 서초구 강남대로/강남역 병원은 기존 코호트가 "서울 강남"인 경우가 많다.
       if (
         resolvedRegion === '서울 서초' &&
@@ -333,7 +334,10 @@ export default function BrandOnboarding() {
           if (res.ok) {
             const inferred = (await res.json()) as { brandName?: string; industry?: string; region?: string; address?: string }
             if (inferred.brandName) setBrandName((prev) => prev || inferred.brandName!)
-            if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
+            if (inferred.industry) {
+              resolvedIndustry = resolvedIndustry || inferred.industry
+              setIndustry((prev) => prev || inferred.industry!)
+            }
             if (inferred.region) {
               resolvedRegion = resolvedRegion || inferred.region
               setRegion((prev) => prev || inferred.region!)
@@ -359,7 +363,10 @@ export default function BrandOnboarding() {
           })
           if (res.ok) {
             const inferred = (await res.json()) as { industry?: string; region?: string; address?: string }
-            if (inferred.industry) setIndustry((prev) => prev || inferred.industry!)
+            if (inferred.industry) {
+              resolvedIndustry = resolvedIndustry || inferred.industry
+              setIndustry((prev) => prev || inferred.industry!)
+            }
             if (inferred.region) {
               resolvedRegion = resolvedRegion || inferred.region
               setRegion((prev) => prev || inferred.region!)
@@ -452,6 +459,70 @@ export default function BrandOnboarding() {
           }
         } catch {
           // 무시 — 직접 입력하면 된다.
+        }
+      }
+
+      // 경쟁사 자동 채우기 — 비어 있고 브랜드·업종·도메인이 있으면. 로컬은 즉시 추론, 배포는 CI에 맡기고 폴링해 채운다.
+      if (!competitorsRaw.trim() && guessedName && resolvedIndustry && finalDomain) {
+        const fill = (list: { name: string; domain?: string }[]) =>
+          setCompetitorsRaw(list.map((c) => (c.domain ? `${c.name}, ${c.domain}` : c.name)).join('\n'))
+        if (addrLookupOn) {
+          // 로컬 — 그라운딩 추론이 동기로 동작한다.
+          try {
+            setCompMsg('경쟁사 추론 중…')
+            const r = await fetch('/api/infer?kind=competitors', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ brandName: guessedName, industry: resolvedIndustry, region: resolvedRegion }),
+            })
+            const list = r.ok ? ((await r.json()) as { name: string; domain?: string }[]) : []
+            if (Array.isArray(list) && list.length) {
+              fill(list)
+              setCompMsg(`✓ 경쟁사 ${list.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
+            } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
+          } catch {
+            setCompMsg(null)
+          }
+        } else {
+          // 배포 — Vercel은 추론이 안 되므로 CI 러너에 맡기고 결과를 폴링한다(~1-2분).
+          try {
+            const dsp = await fetch('/api/infer?kind=competitors-dispatch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ brandName: guessedName, industry: resolvedIndustry, region: resolvedRegion, domain: finalDomain }),
+            })
+            const dj = (await dsp.json().catch(() => ({}))) as { dispatched?: boolean }
+            if (dj.dispatched) {
+              setCompMsg('경쟁사 추론 중… (CI, ~1-2분) 완료되면 3.경쟁사에 자동 표시됩니다.')
+              const dom = finalDomain
+              void (async () => {
+                for (let i = 0; i < 26; i++) {
+                  await new Promise((r) => setTimeout(r, 7000))
+                  try {
+                    const pr = await fetch('/api/infer?kind=competitors-result', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ domain: dom }),
+                    })
+                    if (!pr.ok) continue
+                    const pj = (await pr.json()) as { pending: boolean; competitors: { name: string; domain?: string }[] }
+                    if (!pj.pending) {
+                      if (pj.competitors.length) {
+                        fill(pj.competitors)
+                        setCompMsg(`✓ 경쟁사 ${pj.competitors.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
+                      } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
+                      return
+                    }
+                  } catch {
+                    // 다음 주기에 재시도
+                  }
+                }
+                setCompMsg('경쟁사 추론이 지연됩니다 — 직접 입력하거나 잠시 후 다시 시도하세요.')
+              })()
+            }
+          } catch {
+            // 무시 — 직접 입력하면 된다.
+          }
         }
       }
     } catch (err) {
@@ -784,20 +855,13 @@ export default function BrandOnboarding() {
             rows={4}
             value={competitorsRaw}
             onChange={(e) => setCompetitorsRaw(e.target.value)}
-            placeholder={'예) 경쟁사A, competitor-a.com\n경쟁사B, competitor-b.co.kr\n(비워 두면 측정 시 자동 추론)'}
+            placeholder={'예) 경쟁사A, competitor-a.com\n경쟁사B, competitor-b.co.kr'}
           />
           <span className="hint">
             경쟁사를 넣으면 Share of Mention·순위 비교가 가능합니다.{' '}
-            {addrLookupOn ? (
-              <>
-                자동 추천은 <b>이름 위주 best-effort</b>이며 도메인은 실재 확인된 것만 채웁니다 — 직접 검토하세요.
-              </>
-            ) : (
-              <>
-                비워 두면 <b>측정 시점(GitHub Actions)에 경쟁사가 자동 추론</b>되어 채워집니다. 배포 환경에서는 직접
-                추천이 부정확해 버튼을 숨겼습니다.
-              </>
-            )}
+            <b>URL에서 자동 채우기</b>를 하면 경쟁사도 자동 추론되어 이 칸에 채워집니다
+            {addrLookupOn ? ' (로컬: 즉시).' : ' (배포: CI에서 ~1-2분 뒤 자동 표시).'} 결과는 <b>best-effort</b>이니 직접
+            검토·수정하세요. 비워 두면 측정 시 다시 추론합니다.
           </span>
           {compMsg && (
             <span className={compMsg.startsWith('✗') ? 'error' : 'hint'} role="status">

@@ -1,0 +1,57 @@
+name: Infer competitors
+
+run-name: infer ${{ inputs.domain }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      brandName:
+        description: brand name
+        required: true
+        type: string
+      industry:
+        description: industry
+        required: true
+        type: string
+      region:
+        description: region
+        required: false
+        type: string
+      domain:
+        description: brand domain (used as result key)
+        required: true
+        type: string
+
+# 도메인별로 최신만 유지 — 같은 브랜드 재추론 시 이전 실행은 취소. 커밋/push가 없어 병렬 실행이 안전하다.
+concurrency:
+  group: brand-aeo-infer-${{ inputs.domain }}
+  cancel-in-progress: true
+
+# 이 워크플로우는 커밋하지 않는다(Blob에만 결과 저장).
+permissions:
+  contents: read
+
+jobs:
+  infer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      INFER_BRAND: ${{ inputs.brandName }}
+      INFER_INDUSTRY: ${{ inputs.industry }}
+      INFER_REGION: ${{ inputs.region }}
+      INFER_DOMAIN: ${{ inputs.domain }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Infer competitors (grounding) → Blob
+        run: npx tsx scripts/infer-competitors.ts

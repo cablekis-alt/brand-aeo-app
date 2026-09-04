@@ -1,4 +1,6 @@
 import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferCompetitors } from '../server/brandInference.js';
+import { canTriggerRemoteMeasure, triggerGithubInfer } from '../server/githubMeasure.js';
+import { markInferPending, readInferResult, slugFromDomain } from '../server/inferResults.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
 
@@ -44,6 +46,36 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
         return;
       }
       sendJson(res, 200, await inferCompetitors(brandName, industry, str(body.region)));
+      return;
+    }
+    if (kind === 'competitors-dispatch') {
+      // 자동 채우기용 — Vercel에선 추론이 안 되므로 CI 러너에 추론을 맡기고, 폼은 결과를 폴링한다.
+      const brandName = str(body.brandName);
+      const industry = str(body.industry);
+      const domain = str(body.domain);
+      if (!brandName.trim() || !industry.trim() || !domain.trim()) {
+        sendJson(res, 400, { error: 'brandName, industry, domain이 필요합니다.' });
+        return;
+      }
+      if (!canTriggerRemoteMeasure()) {
+        sendJson(res, 200, { dispatched: false, reason: 'no-token' });
+        return;
+      }
+      const slug = slugFromDomain(domain);
+      await markInferPending(slug); // 이전 결과를 지워 stale 반환 방지.
+      const { htmlUrl } = await triggerGithubInfer({ brandName, industry, region: str(body.region), domain });
+      sendJson(res, 200, { dispatched: true, slug, htmlUrl });
+      return;
+    }
+    if (kind === 'competitors-result') {
+      const domain = str(body.domain);
+      if (!domain.trim()) {
+        sendJson(res, 400, { error: 'domain이 필요합니다.' });
+        return;
+      }
+      const result = await readInferResult(slugFromDomain(domain));
+      // null = 아직 시작 안 됨(대기), pending=true = 추론 중, pending=false = 완료.
+      sendJson(res, 200, result ?? { pending: true, competitors: [], at: '' });
       return;
     }
     if (kind === 'address') {

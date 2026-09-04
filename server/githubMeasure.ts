@@ -53,6 +53,21 @@ export async function triggerGithubDelete(tenantId: string): Promise<{ htmlUrl: 
   return dispatchWorkflow('delete.yml', { tenantId });
 }
 
+/** 자동 채우기용 경쟁사 추론을 GitHub Actions(그라운딩 정상 동작)에서 실행하도록 트리거한다. 커밋 없이 Blob에만 결과 저장. */
+export async function triggerGithubInfer(inputs: {
+  brandName: string;
+  industry: string;
+  region: string;
+  domain: string;
+}): Promise<{ htmlUrl: string }> {
+  return dispatchWorkflow('infer.yml', {
+    brandName: inputs.brandName,
+    industry: inputs.industry,
+    region: inputs.region,
+    domain: inputs.domain,
+  });
+}
+
 export interface MeasureRunInfo {
   runNumber: number;
   title: string; // "measure <tenantId>" | "measure __queue__" | (구버전) 워크플로우명
