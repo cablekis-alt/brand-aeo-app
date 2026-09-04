@@ -22,10 +22,10 @@ export default function BrandManageList() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/tenants?all=1')
+      // all=1을 빼면 서버가 cohortOnly(자동 생성 코호트 경쟁사)를 제외하고 내가 등록한 브랜드만 준다.
+      const res = await fetch('/api/tenants')
       const list = res.ok ? ((await res.json()) as BrandRow[]) : []
-      // 내가 등록한 브랜드를 위로, 자동 생성된 코호트 경쟁사(cohortOnly)를 아래로 묶는다.
-      list.sort((a, b) => Number(Boolean(a.cohortOnly)) - Number(Boolean(b.cohortOnly)) || a.brandName.localeCompare(b.brandName))
+      list.sort((a, b) => a.brandName.localeCompare(b.brandName))
       setRows(list)
     } catch {
       setRows([])
@@ -44,10 +44,10 @@ export default function BrandManageList() {
     let alive = true
     const tick = async () => {
       try {
-        const res = await fetch('/api/tenants?all=1')
+        const res = await fetch('/api/tenants')
         const fresh = res.ok ? ((await res.json()) as BrandRow[]) : []
         if (!alive) return
-        fresh.sort((a, b) => Number(Boolean(a.cohortOnly)) - Number(Boolean(b.cohortOnly)) || a.brandName.localeCompare(b.brandName))
+        fresh.sort((a, b) => a.brandName.localeCompare(b.brandName))
         setRows(fresh)
         const freshIds = new Set(fresh.map((r) => r.tenantId))
         const gone = deletingIds.filter((id) => !freshIds.has(id))
