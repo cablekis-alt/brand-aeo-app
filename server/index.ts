@@ -6,6 +6,7 @@ import { appendTenant, loadTenants } from './config.js';
 import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
 import { canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
+import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
@@ -81,7 +82,9 @@ app.delete('/api/tenants', async (req, res) => {
     let htmlUrl: string | undefined;
     if (stillBaked && canTriggerRemoteMeasure()) {
       try {
-        ({ htmlUrl } = await triggerGithubDelete(tenantId));
+        // 큐에 누적하고 큐 모드로 트리거 — 여러 개를 빠르게 삭제해도 concurrency로 run이 취소되지 않게.
+        await addDeleteRequest(tenantId);
+        ({ htmlUrl } = await triggerGithubDelete(DELETE_QUEUE_SENTINEL));
         dispatched = true;
       } catch {
         dispatched = false;

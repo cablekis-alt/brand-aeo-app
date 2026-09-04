@@ -23,7 +23,10 @@ export default function BrandManageList() {
     setLoading(true)
     try {
       const res = await fetch('/api/tenants?all=1')
-      setRows(res.ok ? ((await res.json()) as BrandRow[]) : [])
+      const list = res.ok ? ((await res.json()) as BrandRow[]) : []
+      // 내가 등록한 브랜드를 위로, 자동 생성된 코호트 경쟁사(cohortOnly)를 아래로 묶는다.
+      list.sort((a, b) => Number(Boolean(a.cohortOnly)) - Number(Boolean(b.cohortOnly)) || a.brandName.localeCompare(b.brandName))
+      setRows(list)
     } catch {
       setRows([])
     } finally {
@@ -44,6 +47,7 @@ export default function BrandManageList() {
         const res = await fetch('/api/tenants?all=1')
         const fresh = res.ok ? ((await res.json()) as BrandRow[]) : []
         if (!alive) return
+        fresh.sort((a, b) => Number(Boolean(a.cohortOnly)) - Number(Boolean(b.cohortOnly)) || a.brandName.localeCompare(b.brandName))
         setRows(fresh)
         const freshIds = new Set(fresh.map((r) => r.tenantId))
         const gone = deletingIds.filter((id) => !freshIds.has(id))

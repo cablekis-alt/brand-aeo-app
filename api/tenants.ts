@@ -1,6 +1,7 @@
 import { canPersistTenants, isBakedTenant, loadRuntimeTenants, normalizeTenantDraft, registerTenant, removeOverlayTenant, toTenantSummary } from '../server/tenantRegistry.js';
 import { canTriggerRemoteMeasure, triggerGithubDelete } from '../server/githubMeasure.js';
 import { removeMeasureRequest } from '../server/measureRequests.js';
+import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from '../server/deleteRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
 
@@ -40,11 +41,13 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
       await removeMeasureRequest(tenantId);
       const stillBaked = isBakedTenant(tenantId);
       // 베이크된 브랜드는 커밋된 데이터까지 지워야 하므로 GitHub Actions 삭제 워크플로우를 트리거한다.
+      // 여러 개를 빠르게 삭제해도 concurrency로 run이 취소되지 않도록, 큐에 누적하고 큐 모드로 트리거한다.
       let dispatched = false;
       let htmlUrl: string | undefined;
       if (stillBaked && canTriggerRemoteMeasure()) {
         try {
-          ({ htmlUrl } = await triggerGithubDelete(tenantId));
+          await addDeleteRequest(tenantId);
+          ({ htmlUrl } = await triggerGithubDelete(DELETE_QUEUE_SENTINEL));
           dispatched = true;
         } catch {
           dispatched = false;

@@ -52,7 +52,7 @@ jobs:
             echo "삭제 결과 변경 없음 (이미 없는 브랜드일 수 있음)"
             exit 0
           fi
-          git commit -m "data: delete ${{ inputs.tenantId }}"
+          git commit -m "data: delete tenant(s) (${{ inputs.tenantId }})"
           git pull --rebase origin "${{ github.ref_name }}"
           git push
 
