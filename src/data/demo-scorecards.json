@@ -19,7 +19,7 @@
     "brandOwnedCitationRate": 0.050397877984084884,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -43,7 +43,7 @@
     "brandOwnedCitationRate": 0.055415617128463476,
     "cohortRank": {
       "position": 5,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -67,31 +67,7 @@
     "brandOwnedCitationRate": 0.05084745762711865,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 7
-    },
-    "hallucinationFlags": []
-  },
-  {
-    "tenantId": "bkhospital",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "BK성형외과",
-    "aeoScore": {
-      "current": 26,
-      "ma4": 26,
-      "previousWeek": 26,
-      "ciLow": 19.8,
-      "ciHigh": 32.2
-    },
-    "mentionRate": 0.020833333333333332,
-    "shareOfMention": null,
-    "avgRecommendationRank": null,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
-    "cohortRank": {
-      "position": 6,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -381,7 +357,7 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -405,7 +381,7 @@
     "brandOwnedCitationRate": 0.047311827956989246,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 7
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   },
@@ -428,8 +404,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.023195876288659795,
     "cohortRank": {
-      "position": 7,
-      "totalTenants": 7
+      "position": 6,
+      "totalTenants": 6
     },
     "hallucinationFlags": []
   }

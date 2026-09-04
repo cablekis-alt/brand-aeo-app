@@ -5,8 +5,6 @@ import bank_avonhotel from '../src/data/live-avonhotel-question-bank.json' with 
 import analyses_avonhotel from '../src/data/live-avonhotel-question-analyses.json' with { type: 'json' };
 import bank_banobagi from '../src/data/live-banobagi-question-bank.json' with { type: 'json' };
 import analyses_banobagi from '../src/data/live-banobagi-question-analyses.json' with { type: 'json' };
-import bank_bkhospital from '../src/data/live-bkhospital-question-bank.json' with { type: 'json' };
-import analyses_bkhospital from '../src/data/live-bkhospital-question-analyses.json' with { type: 'json' };
 import bank_bymeps from '../src/data/live-bymeps-question-bank.json' with { type: 'json' };
 import analyses_bymeps from '../src/data/live-bymeps-question-analyses.json' with { type: 'json' };
 import bank_daprs from '../src/data/live-daprs-question-bank.json' with { type: 'json' };
@@ -47,7 +45,6 @@ export interface LiveAnalysesFile {
 export const LIVE_BANKS: Record<string, QuestionBank> = {
   'avonhotel': bank_avonhotel as QuestionBank,
   'banobagi': bank_banobagi as QuestionBank,
-  'bkhospital': bank_bkhospital as QuestionBank,
   'bymeps': bank_bymeps as QuestionBank,
   'daprs': bank_daprs as QuestionBank,
   'girinps': bank_girinps as QuestionBank,
@@ -68,7 +65,6 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_avonhotel as LiveAnalysesFile,
   analyses_banobagi as LiveAnalysesFile,
-  analyses_bkhospital as LiveAnalysesFile,
   analyses_bymeps as LiveAnalysesFile,
   analyses_daprs as LiveAnalysesFile,
   analyses_girinps as LiveAnalysesFile,

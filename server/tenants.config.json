@@ -148,28 +148,6 @@
     "cohortOnly": true
   },
   {
-    "tenantId": "bkhospital",
-    "brandName": "BK성형외과",
-    "aliases": [
-      "BK성형외과"
-    ],
-    "ownedDomains": [
-      "bkhospital.com"
-    ],
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "engines": [
-      "openai",
-      "gemini"
-    ],
-    "questionBankSize": 12,
-    "questionBankVersion": "v1",
-    "repeatsPerQuestion": 3,
-    "competitors": [],
-    "factGraph": [],
-    "cohortOnly": true
-  },
-  {
     "tenantId": "girinps",
     "brandName": "기린성형외과",
     "aliases": [
