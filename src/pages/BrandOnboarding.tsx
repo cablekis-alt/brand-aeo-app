@@ -130,35 +130,6 @@ function findContactUrl(html: string, baseUrl: string): string | null {
   }
 }
 
-// 경쟁사를 cohortOnly 테넌트 초안으로 변환한다(랭킹 분모용). 도메인이 있어야 안정적 tenantId를 만들 수 있어,
-// 도메인 없는 경쟁사는 측정 대상에서 제외한다(이름은 SoM 감지에 그대로 쓰인다).
-function cohortDraftsFrom(tenant: TenantDraft): TenantDraft[] {
-  const seen = new Set<string>([tenant.tenantId])
-  const out: TenantDraft[] = []
-  for (const c of tenant.competitors) {
-    const domain = c.domains[0]
-    if (!domain) continue
-    const id = slugFromDomain(domain)
-    if (!id || seen.has(id)) continue
-    seen.add(id)
-    out.push({
-      tenantId: id,
-      brandName: c.name,
-      aliases: c.aliases.length ? c.aliases : [c.name],
-      ownedDomains: [domain],
-      industry: tenant.industry,
-      region: tenant.region,
-      engines: tenant.engines,
-      questionBankSize: tenant.questionBankSize,
-      questionBankVersion: tenant.questionBankVersion,
-      repeatsPerQuestion: tenant.repeatsPerQuestion,
-      competitors: [],
-      factGraph: [],
-      cohortOnly: true,
-    })
-  }
-  return out
-}
 
 /** "강남언니, gangnamunni.com" 형식 줄들을 경쟁사 배열로. */
 function parseCompetitors(raw: string): CompetitorDraft[] {
@@ -230,7 +201,6 @@ export default function BrandOnboarding() {
   const [extracted, setExtracted] = useState(false)
   const [copied, setCopied] = useState(false)
   const [canRegister, setCanRegister] = useState(false)
-  const [canMeasure, setCanMeasure] = useState(false)
   // 측정 경로: local(=/run 로컬 측정) | github(=GitHub Actions dispatch) | none(=대기열만).
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   // 로컬 백엔드에서만 주소 조회(Gemini)가 동작한다 — Vercel(미국 리전)에선 "모름"이라 버튼을 숨긴다.
@@ -270,15 +240,11 @@ export default function BrandOnboarding() {
       .then((d) => {
         if (!alive || !d) return
         setCanRegister(Boolean(d.canRegister))
-        setCanMeasure(d.canMeasure !== false)
         setMeasureVia(d.measureVia === 'local' || d.measureVia === 'github' ? d.measureVia : 'none')
         setAddrLookupOn(typeof d.backend === 'string' && d.backend !== 'vercel')
       })
       .catch(() => {
-        if (alive) {
-          setCanRegister(false)
-          setCanMeasure(false)
-        }
+        if (alive) setCanRegister(false)
       })
     return () => {
       alive = false
@@ -554,7 +520,6 @@ export default function BrandOnboarding() {
   }
 
   const ready = Boolean(tenant.brandName && tenant.ownedDomains.length && tenant.industry && tenant.region)
-  const cohortCount = cohortDraftsFrom(tenant).length
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
 
@@ -607,8 +572,8 @@ export default function BrandOnboarding() {
     }
   }
 
-  // 등록 후 드롭다운에 바로 보이게 한다. 측정은 로컬 백엔드가 있을 때만 이어서 돈다.
-  async function registerAndMeasure() {
+  // 등록만 한다 — 등록 후 드롭다운에 바로 보인다. 측정은 STAGE 4 "랭킹 분석"의 "이 브랜드 측정"에서 별도로.
+  async function registerBrand() {
     setRegistering(true)
     setRegisterMsg('브랜드를 등록하는 중…')
     try {
@@ -623,129 +588,17 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
-      // 경쟁사를 cohortOnly로 함께 측정하면 코호트 랭킹이 1/N으로 채워진다(도메인 있는 경쟁사만).
-      const cohort = withCohort ? cohortDraftsFrom(tenant) : []
-
-      // 배포(Vercel)는 서버리스라 측정을 함수에서 못 돌린다 → GitHub Actions로 트리거(자동 반영).
-      if (measureVia === 'github') {
-        if (cohort.length > 0) {
-          setRegisterMsg(`등록 완료 · 본 브랜드 + 경쟁사 ${cohort.length}곳을 측정 큐에 넣는 중…`)
-          for (const t of [tenant, ...cohort]) {
-            await fetch('/api/measure-requests', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(t),
-            })
-          }
-          const res = await fetch('/api/measure-requests', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'run-queue' }),
-          })
-          const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
-          if (!res.ok) {
-            throw new Error(`등록은 됐지만 측정 트리거 실패: ${body.error || `HTTP ${res.status}`}. 측정 대기열에서 재시도하세요.`)
-          }
-          setRegisterMsg(
-            `✓ 등록 완료 · GitHub Actions가 본 브랜드 + 경쟁사 ${cohort.length}곳(총 ${cohort.length + 1}개)을 순차 측정 중입니다. 완료 시 자동 반영되고 코호트 랭킹이 채워집니다.` +
-              (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
-          )
-          return
-        }
-        const res = await fetch('/api/measure-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'run', tenantId: tenant.tenantId }),
-        })
-        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
-        if (!res.ok) {
-          throw new Error(
-            `등록은 됐지만 측정 트리거 실패: ${body.error || `HTTP ${res.status}`}. 테넌트 골라 측정에서 재시도하세요.`,
-          )
-        }
-        setRegisterMsg(
-          `✓ 등록 완료 · GitHub Actions 측정 시작 — ${tenant.brandName}. 수 분 뒤 이 사이트에 자동 반영됩니다.` +
-            (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
-        )
-        // 경쟁사가 비어 자동 추론되는 경우, 러너가 추론 결과를 오버레이에 반영하면 3.경쟁사 란에 채워 진행 상황을 보여준다.
-        if (tenant.competitors.length === 0) {
-          const targetId = tenant.tenantId
-          const htmlUrl = body.htmlUrl
-          void (async () => {
-            for (let i = 0; i < 24; i++) {
-              await new Promise((r) => setTimeout(r, 12000))
-              try {
-                const poll = await fetch('/api/tenants?all=1')
-                if (!poll.ok) continue
-                const list = (await poll.json()) as Array<{ tenantId: string; competitors?: string[] }>
-                const names = list.find((t) => t.tenantId === targetId)?.competitors ?? []
-                if (names.length > 0) {
-                  setCompetitorsRaw(names.join('\n'))
-                  setRegisterMsg(
-                    `✓ 경쟁사 ${names.length}곳 자동 추론됨 — 3.경쟁사 란에 표시했습니다. 측정은 계속 진행 중입니다.` +
-                      (htmlUrl ? ` 진행: ${htmlUrl}` : ''),
-                  )
-                  return
-                }
-              } catch {
-                // 무시 — 다음 주기에 재시도
-              }
-            }
-          })()
-        }
-        return
-      }
-      // 로컬 백엔드 — 즉시 측정·baking.
-      if (measureVia === 'local') {
-        if (cohort.length > 0) {
-          setRegisterMsg(`등록 완료 · 본 브랜드 + 경쟁사 ${cohort.length}곳 측정 중… (브랜드당 수 분) 이 탭을 열어 두세요.`)
-          for (const t of [tenant, ...cohort]) {
-            await fetch('/api/measure-requests', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(t),
-            })
-          }
-          const res = await fetch('/api/measure-requests/process', { method: 'POST' })
-          if (!res.ok) {
-            const body = (await res.json().catch(() => ({}))) as { error?: string }
-            throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${res.status}`}.`)
-          }
-          const data = (await res.json()) as { results?: { ok: boolean }[] }
-          const done = (data.results ?? []).filter((r) => r.ok).length
-          setRegisterMsg(`✓ 완료 — ${done}개 측정·publish됨 (본 브랜드 + 경쟁사). 코호트 랭킹이 채워집니다. 이후 git commit + 배포하세요.`)
-          return
-        }
-        setRegisterMsg(
-          `등록 완료 · 측정 시작 (질문 ${tenant.questionBankSize} × ${tenant.repeatsPerQuestion}회, 수 분 소요)… 이 탭을 열어 두세요.`,
-        )
-        const run = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/run`, { method: 'POST' })
-        if (!run.ok) {
-          const body = (await run.json().catch(() => ({}))) as { error?: string }
-          throw new Error(`등록은 됐지만 측정 실패: ${body.error || `HTTP ${run.status}`}. 나중에 CLI로 재시도할 수 있습니다.`)
-        }
-        const result = (await run.json()) as { aeoScore?: number }
-        setRegisterMsg(
-          `✓ 완료 — ${tenant.brandName} 등록·측정됨 (AEO Score ${result.aeoScore ?? '?'}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`,
-        )
-        return
-      }
-      // 측정 경로 없음 — 측정 요청만 대기열(Blob)에 쌓는다.
-      let queued = false
-      try {
-        const q = await fetch('/api/measure-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: json,
-        })
-        queued = q.ok
-      } catch {
-        queued = false
-      }
+      // 등록만 한다 — 측정은 STAGE 4 "랭킹 분석"의 "이 브랜드 측정" 버튼에서 별도로 실행한다.
+      // 그 측정이 경쟁사 자동 추론·SoM·코호트(1/N)까지 채운다. 경쟁사를 직접 입력해 두면 그대로 쓰인다.
+      const measureHint =
+        measureVia === 'github'
+          ? 'GitHub Actions가 경쟁사 SoM·코호트까지 채웁니다.'
+          : measureVia === 'local'
+            ? '로컬에서 즉시 측정됩니다.'
+            : '측정은 로컬/CI에서 실행하세요.'
       setRegisterMsg(
-        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 메뉴에서 선택할 수 있습니다. ` +
-          (queued ? '측정 대기열에 추가됐습니다 — ' : '') +
-          `측정은 로컬에서 npx tsx scripts/measure-requests.ts 로 대기열을 확인해 실행하세요.`,
+        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ` +
+          `측정하려면 STAGE 4 "랭킹 분석"에서 "이 브랜드 측정"을 누르세요 — ${measureHint}`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -961,15 +814,14 @@ export default function BrandOnboarding() {
             <label className="onboard-cohort">
               <input type="checkbox" checked={withCohort} onChange={(e) => setWithCohort(e.target.checked)} />
               <span>
-                경쟁사도 코호트로 함께 측정{cohortCount > 0 ? ` (${cohortCount}곳)` : ''} — 코호트 랭킹(1/N)을 채웁니다.
-                {cohortCount === 0 && ' 도메인이 있는 경쟁사가 있어야 측정됩니다.'}
+                측정 시 경쟁사도 코호트로 함께 측정 — 코호트 랭킹(1/N)을 채웁니다. 해제하면 본 브랜드만 측정합니다.
               </span>
             </label>
           )}
           <div className="onboard-register-actions">
             {canRegister && (
-              <button type="button" className="primary" onClick={registerAndMeasure} disabled={!ready || registering}>
-                {registering ? '진행 중…' : canMeasure ? '브랜드 등록 & 측정' : '브랜드 등록'}
+              <button type="button" className="primary" onClick={registerBrand} disabled={!ready || registering}>
+                {registering ? '등록 중…' : '브랜드 등록'}
               </button>
             )}
             <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
@@ -980,11 +832,8 @@ export default function BrandOnboarding() {
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
         {canRegister ? (
           <p className="hint">
-            {measureVia === 'github'
-              ? '등록 후 GitHub Actions가 측정을 실행하고, 끝나면 이 사이트에 자동 반영됩니다.'
-              : measureVia === 'local'
-                ? '로컬 백엔드가 감지됐습니다 — 등록과 측정을 한 번에 실행합니다.'
-                : '프로덕션에 브랜드를 바로 등록합니다. 측정은 테넌트 골라 측정에서 GitHub Actions로 실행하세요.'}
+            등록만 합니다. 이후 STAGE 4 <b>"랭킹 분석"</b>에서 <b>"이 브랜드 측정"</b>을 누르면 경쟁사 자동 추론·SoM·코호트
+            순위까지 채워집니다{measureVia === 'github' ? ' (GitHub Actions).' : measureVia === 'local' ? ' (로컬 즉시).' : '.'}
           </p>
         ) : (
           <p className="hint">
