@@ -408,5 +408,101 @@
       "totalTenants": 6
     },
     "hallucinationFlags": []
+  },
+  {
+    "tenantId": "bdnewdental",
+    "weekOf": "2026-W36",
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "brandName": "분당새로이치과의원",
+    "aeoScore": {
+      "current": 45,
+      "ma4": 45,
+      "previousWeek": 45,
+      "ciLow": 37.8,
+      "ciHigh": 52.2
+    },
+    "mentionRate": 0.14583333333333334,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1.5,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.03333333333333333,
+    "cohortRank": {
+      "position": 2,
+      "totalTenants": 4
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "hushubundang",
+    "weekOf": "2026-W36",
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "brandName": "분당내이치과의원",
+    "aeoScore": {
+      "current": 46,
+      "ma4": 46,
+      "previousWeek": 46,
+      "ciLow": 39.3,
+      "ciHigh": 52.7
+    },
+    "mentionRate": 0.125,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 4
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "ilovebrace",
+    "weekOf": "2026-W36",
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "brandName": "일리노이치과의원",
+    "aeoScore": {
+      "current": 43,
+      "ma4": 43,
+      "previousWeek": 43,
+      "ciLow": 36.6,
+      "ciHigh": 49.4
+    },
+    "mentionRate": 0.0625,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 4,
+      "totalTenants": 4
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "maum-dream",
+    "weekOf": "2026-W36",
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "brandName": "마음드림치과",
+    "aeoScore": {
+      "current": 45,
+      "ma4": 45,
+      "previousWeek": 45,
+      "ciLow": 37.6,
+      "ciHigh": 52.4
+    },
+    "mentionRate": 0.08333333333333333,
+    "shareOfMention": 0.46846846846846846,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.0035587188612099642,
+    "cohortRank": {
+      "position": 2,
+      "totalTenants": 4
+    },
+    "hallucinationFlags": []
   }
 ]

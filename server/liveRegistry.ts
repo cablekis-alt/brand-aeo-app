@@ -5,6 +5,8 @@ import bank_avonhotel from '../src/data/live-avonhotel-question-bank.json' with 
 import analyses_avonhotel from '../src/data/live-avonhotel-question-analyses.json' with { type: 'json' };
 import bank_banobagi from '../src/data/live-banobagi-question-bank.json' with { type: 'json' };
 import analyses_banobagi from '../src/data/live-banobagi-question-analyses.json' with { type: 'json' };
+import bank_bdnewdental from '../src/data/live-bdnewdental-question-bank.json' with { type: 'json' };
+import analyses_bdnewdental from '../src/data/live-bdnewdental-question-analyses.json' with { type: 'json' };
 import bank_bymeps from '../src/data/live-bymeps-question-bank.json' with { type: 'json' };
 import analyses_bymeps from '../src/data/live-bymeps-question-analyses.json' with { type: 'json' };
 import bank_daprs from '../src/data/live-daprs-question-bank.json' with { type: 'json' };
@@ -19,12 +21,18 @@ import bank_gunsanstayhotel from '../src/data/live-gunsanstayhotel-question-bank
 import analyses_gunsanstayhotel from '../src/data/live-gunsanstayhotel-question-analyses.json' with { type: 'json' };
 import bank_h_eunpapalace from '../src/data/live-h-eunpapalace-question-bank.json' with { type: 'json' };
 import analyses_h_eunpapalace from '../src/data/live-h-eunpapalace-question-analyses.json' with { type: 'json' };
+import bank_hushubundang from '../src/data/live-hushubundang-question-bank.json' with { type: 'json' };
+import analyses_hushubundang from '../src/data/live-hushubundang-question-analyses.json' with { type: 'json' };
 import bank_idhospital from '../src/data/live-idhospital-question-bank.json' with { type: 'json' };
 import analyses_idhospital from '../src/data/live-idhospital-question-analyses.json' with { type: 'json' };
+import bank_ilovebrace from '../src/data/live-ilovebrace-question-bank.json' with { type: 'json' };
+import analyses_ilovebrace from '../src/data/live-ilovebrace-question-analyses.json' with { type: 'json' };
 import bank_jjprs from '../src/data/live-jjprs-question-bank.json' with { type: 'json' };
 import analyses_jjprs from '../src/data/live-jjprs-question-analyses.json' with { type: 'json' };
 import bank_k_wonjin from '../src/data/live-k-wonjin-question-bank.json' with { type: 'json' };
 import analyses_k_wonjin from '../src/data/live-k-wonjin-question-analyses.json' with { type: 'json' };
+import bank_maum_dream from '../src/data/live-maum-dream-question-bank.json' with { type: 'json' };
+import analyses_maum_dream from '../src/data/live-maum-dream-question-analyses.json' with { type: 'json' };
 import bank_ramadagunsan from '../src/data/live-ramadagunsan-question-bank.json' with { type: 'json' };
 import analyses_ramadagunsan from '../src/data/live-ramadagunsan-question-analyses.json' with { type: 'json' };
 import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 'json' };
@@ -45,6 +53,7 @@ export interface LiveAnalysesFile {
 export const LIVE_BANKS: Record<string, QuestionBank> = {
   'avonhotel': bank_avonhotel as QuestionBank,
   'banobagi': bank_banobagi as QuestionBank,
+  'bdnewdental': bank_bdnewdental as QuestionBank,
   'bymeps': bank_bymeps as QuestionBank,
   'daprs': bank_daprs as QuestionBank,
   'girinps': bank_girinps as QuestionBank,
@@ -52,9 +61,12 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'gunsanhotel': bank_gunsanhotel as QuestionBank,
   'gunsanstayhotel': bank_gunsanstayhotel as QuestionBank,
   'h-eunpapalace': bank_h_eunpapalace as QuestionBank,
+  'hushubundang': bank_hushubundang as QuestionBank,
   'idhospital': bank_idhospital as QuestionBank,
+  'ilovebrace': bank_ilovebrace as QuestionBank,
   'jjprs': bank_jjprs as QuestionBank,
   'k-wonjin': bank_k_wonjin as QuestionBank,
+  'maum-dream': bank_maum_dream as QuestionBank,
   'ramadagunsan': bank_ramadagunsan as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
   'viewplasticsurgery': bank_viewplasticsurgery as QuestionBank,
@@ -65,6 +77,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
 export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_avonhotel as LiveAnalysesFile,
   analyses_banobagi as LiveAnalysesFile,
+  analyses_bdnewdental as LiveAnalysesFile,
   analyses_bymeps as LiveAnalysesFile,
   analyses_daprs as LiveAnalysesFile,
   analyses_girinps as LiveAnalysesFile,
@@ -72,9 +85,12 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_gunsanhotel as LiveAnalysesFile,
   analyses_gunsanstayhotel as LiveAnalysesFile,
   analyses_h_eunpapalace as LiveAnalysesFile,
+  analyses_hushubundang as LiveAnalysesFile,
   analyses_idhospital as LiveAnalysesFile,
+  analyses_ilovebrace as LiveAnalysesFile,
   analyses_jjprs as LiveAnalysesFile,
   analyses_k_wonjin as LiveAnalysesFile,
+  analyses_maum_dream as LiveAnalysesFile,
   analyses_ramadagunsan as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
   analyses_viewplasticsurgery as LiveAnalysesFile,

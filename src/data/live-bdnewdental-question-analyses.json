@@ -1,0 +1,4310 @@
+{
+  "tenantId": "bdnewdental",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://consumption-1.tistory.com/92?utm_source=openai",
+          "domain": "consumption-1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/27819?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.dailydental.co.kr/data/pdf/2631/60.pdf?utm_source=openai",
+          "domain": "dailydental.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://consumption-1.tistory.com/92?utm_source=openai",
+          "domain": "consumption-1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://consumption-1.tistory.com/92?utm_source=openai",
+          "domain": "consumption-1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=2135235&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "서울바를정치과",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=3509846&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3629129&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://consumption-1.tistory.com/92?utm_source=openai",
+          "domain": "consumption-1.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTeZslIW_AmGXegPB74q0KvHl_sd4wSpjvQTnbUASw_056QI8SZFFuKdJI1HzsXSaNHpSVglf8d7Q1nyJ2lg-MziW2lWrHvNTWt533Ny30Uw_I",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTeZslIW_AmGXegPB74q0KvHl_sd4wSpjvQTnbUASw_056QI8SZFFuKdJI1HzsXSaNHpSVglf8d7Q1nyJ2lg-MziW2lWrHvNTWt533Ny30Uw_I",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHE3KRodB7wOz0p31eCFumjeQ0I1W1iuKeSF-nqkEn7n0zbQE7wyWzWkzmKvjlro6t0JkdXTxXo3WI5dY8N4Pdrkw2pqN_c3w6uFPWqyEwqooJDzrA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEpAYPtHEkH_Vcp23mpyvKItKOTq6grjMCuhEG9C9OcGXwrGb1NiuPPkdkeIefCzA4J4J7hNLnU4igRHMOjxNwXAVH5V0161pfV6ec4D4p1cBxg0ddTrSMTP9nS_Is4yQfHfAxdIuo4vodK6IDtrh4--5yqENMjeEROCgKiCTpwS05WLQ-BJeKf3H9wVaAudl7vjJbhRNGOvjnSUTCUGjnkG7Wh0HmX7dyA424YYHGvwdPrSVVs18nWrOvvgNle1oAHTKKLMgIt5Y2ECCis3sjVBiAwQ3b",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGd5BUxJb3BQRBl1zZnmwBScp-dST0s8rxQ1O0bMgRCsBEfoMyufdt2HTxDG2axaQpdgyF0zwlg7kulivXG6sFigLoyhsulzSxisn7lOzxIIez8BYU05dV3pbP2EQWujccC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5JBTpX12FNkndjKd968kN_WRAfUq-MqWdpQj_I2HRd5JjKf7HS7jLy9MhZNYlm8bWpXC2hY-Lg8BtcdwK8SJL_VwmtSnT4Jdy9jigpgvCckKh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBvzmOvzWALJQewMPZx74IOytbSGHWV9V-9zjSbf7VMORVyPI893tqOTGokN9mNwefZpmtyNZ_qeb2TQL6GDEBINzKvjRyTqZHvoyihEygwltD_inpFQsh-YYu93W4YGCVv6C_xz00o4OwWM-B9lg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnadAA4oWwTqFbyy7rSD-GRQEAueJ4YRBlNLA5yMVtvnRDHByyuGpiA1oExn9kl9C06LQZ5evg2jReW8sLvyY9fLSUitAdKWAF_P2y4_6vU_2qTVdOPkQehb0s1PjWZD5N",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmDVi-GkAfYUF1q8L4E49ajVL9rEJxI7V__AnicBcrwEiKoL5S5BW5d2I3bangWF2vMWwxqD5AjRx1Ldrvrl6QuEjSBaRRYFfemE5Y02W6gV7dfMbPIMquJQ4DNWNaxERu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFd_o9DFnxksgsXP5ZgtSgfT8wLCaLHAxS81ZBgQqFr2l2M4_Uya7Q16rB2ByxNYHzVKRqe-PWbfGj3F4GTRMj8yqzGPB5zQEUG6JQUYvEqla_k7VrTeBiw_0T5m0PyLp-X",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFd_o9DFnxksgsXP5ZgtSgfT8wLCaLHAxS81ZBgQqFr2l2M4_Uya7Q16rB2ByxNYHzVKRqe-PWbfGj3F4GTRMj8yqzGPB5zQEUG6JQUYvEqla_k7VrTeBiw_0T5m0PyLp-X",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoCjxBr9Ol9pYoYxXtsCtEZeAz8LxuPJRPt02WD0xdS0pBR0Gvq5tFJYbsmhNLNs9IKf0-cmJR3TD0XU3aCBPRSPpUjSnf3pfHaa0I_84bykAIF-XltiGU-etNWSSWikU9vGmFLpXlTQvz2LvUtxSQX2RAcXFmFaFgFene_F33FVzMGZ3XzVjMTPScxhQWusrgnTu_Lq_5jzaQvi6EQpADyTHE2w2SUZxyGStaQbVMq8wlB4-IvTYrb00cZ61p47pjt9B6ZFrdyNXfxLTS4TKcH1ppcxZ-OWOviO2sDXqlN8k45R33JT3Zt11P81mrsth4v-G9NUZXz-ZpUeKEpGq-Gkx7Bc0jodU367Mc-yXVmXw5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCk5I8sLexPFrLbtJh190osZ3Op-dyBvkQ9YoAIybuCcBuZ2W-t_DKAJRMwCvbIIvJmUrVi2BLj1DcOG45U97Sc8OHAXXsK5yRPvTLGFzQDrLIkkc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXPrgQx9mmvxtdvb4lloXoiN9svVrst3siUJF2L6ov1o7z3BBGk_gwvEYdyxmweuM3nTf4eyuuo2O2UJChh4GU8dHWL9AO3sQ0h3o3v_ZFr7TZ4Jug1VqGJuYncFVLXQll8Jtmg4YKtfIY0bP1nf2oR9bVf0Oh5VcHoB-2x--M7H2kTmFLgV-qKPn0RHSyuIaV9x1oRUGIHWDMQ-BW2DGJl1kT1asnY1TMOZizjfcw9clRwCmxgSMXxudYmcRrmOVOPJ_akhOjCXc4_iyuN8VZqdig2pK0aPM2iDEG3WNJRc90kxX_KJSpcSVynkR3q1tgmZBGoN2rqRN8pS8BXG--f4y5J_iRk0kgs5IwQh5MUQTO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJI5R2s3xxtQbCJLRimnC1MH78JAlhe-NfO8eMSKJfrJyZjsyKqKwdfYGs3fbBW09Lybw0XEvoE413RNrfWG0qrz2pN9FB9onn8byGsIWnZgOl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHV81boTD1sHWdTfo_kxn_oTaxnXfoHTVlYzL_mxaFjcgAph2dhemcCRHZuiTsPYrnLDnOeY3c0nbJFThlcmaGFVg1FVGVwnkON3beoVlUPVG9PeyAClcy9vLGD7i_Ex-VTY_l8cI45u4dP4cDK1vUJkmV5Z1ppTA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqnheEbAzXy2L7ldtiYS2jkLiUlJrl6CVjNntZrlG1khyEt3JFb9ChfgFrtp5cz1IzsOMxgI6cTPraRbaUJo_5outpPC_btpWnrzKukcQXul2wo2hO16Xrsc1zpdCqW60RDE4yTyAjnTm_lhv_3_r85pQmfoqVLF-98_YKEIT_1Yi41zBJUq0MTYwm_tgYqFEh0j1P_2IgBMej9AiikqzZtTH4RU7iAKRts_Hxyz4G_qvIFe_zQIjMfpWvoKV5rcI9PaUuzX2lhtKMYLG288XMsroTIt0MFP1bKcxk2zz6P1ZaaQ-an4gbMAh_mwHV3I2328xoeKNP8Tj28sqWBjpC2KUbadks5y5TOaKc-A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4JtiImFUR2flsfDuLRmnUNMYjvRX4Rec2F3O-B1bYzQe7XbFCfPYqo_oyeDB8paH9QQrW9NgOmnwIlT5X4afIXVx9RYc0r7eEtM4xYh1lPqVKzMjGtGxteru9EHCrJBVU9gD5n-C5_c1ulgL0l5UEK4hg7dZy5RN7_d5boau0ukNZxzwCyxUdc-jfOhn4DTZEu7M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGpW58WMLf93SARCCu2a2i_3oxVljbHD1rtDOuV7eCWuPnL3cfZQDIgesAE7to-CIEoPLeIL9ksFw5x6_CW3v3AuBxKjILhnYoQfKcPZvWSjz8x8Gg4weXUEshR9iEgQzubnErr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnBBiqrr0Sa3n3-FYIHA9QFOxSzBUXS_fgP09HHvvSzvYbxr-dF5bW844lDGcaJIUzsMNm70fbKnqEYGcH3JlbkMdBIoMfN026JEXRQ0dqUzVZOzSseuAZw1WABBu0X9dphcNYy5NcXHFEkEJ495jU24iTX-uHzMm3C6ee_SyFbvoWUyx0y8TOfvYE55VrJ_fLKYHKN2UXf5lY5TDUG1p_zKA98I-GjaHjz7-ZnfTu0d04NIRbC0xIn0x3yj9fg5h9qp6diCys-twa-IwFU1TlJYBuf5w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/clinic/%EB%B0%B8%EB%9F%B0%EC%8A%A4%EC%B9%98%EA%B3%BC%EB%B3%91%EC%9B%90-gyeonggi-seongnam-bundang?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://busancambus.com/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8/?utm_source=openai",
+          "domain": "busancambus.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://busancambus.com/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8/?utm_source=openai",
+          "domain": "busancambus.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://busancambus.com/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8/?utm_source=openai",
+          "domain": "busancambus.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.infomedical.kr/seongnam-implant-gideon-dental-clinic-guide?utm_source=openai",
+          "domain": "infomedical.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://busancambus.com/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8/?utm_source=openai",
+          "domain": "busancambus.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "‘분당새로이치과’는 통합치의학과 전문의가 5,000건 이상 누적 식립 경험을 가지고 있으며, 대학병원급 디지털 장비(3D 스캐너, 네비게이션 임플란트 등)를 갖추어 고난이도 시술에 특화되어 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**기술 중심 / 고난이도 시술**: 분당새로이치과, 기드온치과",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://teeth8282.tistory.com/105?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.infomedical.kr/seongnam-implant-gideon-dental-clinic-guide?utm_source=openai",
+          "domain": "infomedical.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.theseoul.org/?utm_source=openai",
+          "domain": "theseoul.org",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.daangn.com/kr/local-profile/?in=%EC%9D%B4%EB%A7%A4%EB%8F%99-4507&search=%EC%B9%98%EA%B3%BC&utm_source=openai",
+          "domain": "daangn.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant/seohyeon?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://theseoul.org/?utm_source=openai",
+          "domain": "theseoul.org",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "밸런스치과병원",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnAaSt8XI-eKU4U__SHjKDy8TclUviGji5dTr1a3Nsfw-GWkRT3KUQpNQCwr4IQyT6CltJ6E9t32NQ9eNh44GW1dLm4pwXZFlFtnbVLDoY3CbatRdqTkRdwowQzSzsooLPmxyjnod8jkti5Fu2zzf-tZ-r4XMYSUrJ97BfQBU3SmVnqrtVz9D3vT_G1SbdAT3p-A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFptmXpD9tykeCLFr8BsJT4o60whIXoaaznc_PRH_rcUm72S9n9QyQ7hxfyRii18SZHdqr-36jF8XUOpc0fHIZyw-V1yIZUq2vmGCBNdf3kzm2zS5xO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHuKm9QOxG66oDlmntaIfKxU-iytF0Ny3NnvMxxs_OmXbs4mE7uSLnyiHqZtvJsSHBOcCLZaJct3gbASU3QHwxDmDlQBStsF7AY5WFpva5DWlAMQSx2JQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH60iNpthX4zRsuSmzkU1UoOUg6CmoWt2s79Mji7LNsXKaAieeIekacL41hbGs5xQgpqFwdRvXy9S-km0MLTKq2uW67GUaSRncbsJ5OkrggWW4BiX4maB4mw25XNqmexEKZwvFy16JMBhon_rAifOe9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeQAkPnLWPuINQiXWThynnt83-HMOvZtbcuhIMFCJeOyIBOmAavceZQGASlBgSKWtcSWeJ4M58dEb5Y3OtNxcKj3Rv3mY735S_Cy-Kt1kMUBjN4zTm8PorFmLkYraIkmqR1i8S2lAjNWZMPohAPz2FM1F7m2nn5g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKhFKXYPTQOWGEj84hVVZ5FGMJFLDKE7lS3XuQlf9GXSLMZuLebHX7yaSJ_GUOHMZVA60i0zNNRBSPe-XCzvccvDcPl1gmzmITuIh0j5HYg2S9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJFdiDvY_eBN-Dx4sMnRpGTzeJex1Ex2WRiSMcxZEtGUuJZPiEEp1iuagsUTDvYH_rXR9NWt4ASk9VPXnR6fU92wzU3Y1SuyGPfVIfRdwkjOOdRK072Pxw-g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvwejT5O-cf9e2JxNPRE2T_vNEl0b5DL0SBh-WdovlTI5pOSEQuim2Q4d93jzwLOoA0Nh6_CW7rX9DbRgap5Bu2RJXT3Mn5hKVndnnS2L6SGR_m787TWxyCM4Xq0AY6c6PRt9QkFSJwVktePPlT3j5F0gT5m5-7yRkHy4gOxUKW6N42TvJ49t9SMJwOecXtSJmUlGxCMjKfsBmkKRnOUX4WL6evKzks97fhM1AOW7KdJu02gtpkcMeO-MhaCdUEiNa4mA3dg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJWuXwUzXu4kb3k2mP4a9jfZhmg47EIMDIGgity0L_A3vkr7KQJr1R96ki3PC2o0Vr2Jt4I0SA3Hlv_Tt9WLue8CD1I11YnRWQTw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuWjiXv28zy_aWLuyv3EMmyVESjqddGgKSbD-bPir3O7BL30P_KDAko9HvIYsdBZL4PFpF3PHi09x-II3OSV6fDVippXoHJ7D3YrsPgCD60g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEw1_69duR7qK-RBTrbiFMaHsNxhrDicEO2qArl7HlG2FNMq1QqtZREHvxU1_wu_Mo-rBNK1OpNVJR1BJz_CuVzMXYzzg2XENMYJc-vjcDad54VXHYaQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgvhs04LhdcxhQdHJMuzXOVSd9hxOhLwFEpSDY9bPTV97f3NNKsYMFE5GY6qUog9RpSEloN06JhA3Yh9_bRte-LhvCCzQjkBo3pemsgnmPvUinqSaq1Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-eWMakOsbbUUMbxuzmAzjYjlAwSTrRqwainbGUF8KklXcg6lsg-fZNZVH1AWwTDGafZdvCQvHDt1GxMglZ23nks0EML4lE3mzzD2lFZPH1JY3XngxCklTkTEq_CC8Zko3pmXKRK0Pvrk2VFn_q54y-MTVl9XJeCgRqmOaZcJhj3AV6jLZtXkzkTLUhPbB-Gj6kJmTzq-zUZ6lj039fFuC0tPye2qZ5nEFGqwYkxHCq6J8NzwbIEDY7lcOAFCtxeXOWuIAPaQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7u2JuKxXnL63RYLkyq9PjHFN7A1Xy4fhOjRYimZY3q-nXlXNTcQMRZn9i6EfTgjf0lhXZrjYWdHASKx5eTcl1drD9vVnS5pF8xILHVsagOb5b5t3Zlbg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEp_O8bEX8d-DM08dOvtLzVqnKJHNyyKa2Yru6pW4R4Z3Hacnngq2AhAJFdi4oOjM_xSmSnKi0PZH6INFyahTbYxG1vX8Zrqt6dZHY4X8iScxof5Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOP5Z_FVw1keV0RlLq3CV0EU_AQ4f5YKxTj2j6Fsr1-592hf06oM6ARrgzMyvw9rgJNNklHuUc7gk3y4gINU5CEvj0V7HBLI32M9eUTC0CxpHH5pqWjhNtYRbw2nVlpBP0QO8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhcw_f01Fde6s1tnnpjqj30zEyf3lSzvd0kj6n8oX8BnUd9BQdj2trkb-x4XMtnqX2N4oM41wYsF5FrNy08V5J3v3ckpZTb26e-chKEMM6u4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsJ6FP_mSeN3tm41yPxnoeeIhArgBpChOZdZMF431EuoF0sisZdFFW945yOJiB3_a0B2PDxAtwoYdVyiMm_vvOSVr_1nrwFeqbetERFVndqn51_THGjzuSiuI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsJ6FP_mSeN3tm41yPxnoeeIhArgBpChOZdZMF431EuoF0sisZdFFW945yOJiB3_a0B2PDxAtwoYdVyiMm_vvOSVr_1nrwFeqbetERFVndqn51_THGjzuSiuI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgi4ML_RjOByTMl7-V_2uY6dZTULasFkCDua42OoeNtCuHbch5v6dT8FP4gYxSLdAW8LV0lGTMbr3um5ZDSo1VC87Rp_UqepRHdaWvZInyfhxEdvJVkTWDahT2HMI_sflUT_gIlqYRGUMi8THyfcngnw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9KF90ewJm8kPneac2085n6SQFmhJR_-21EPsLjW6ho1p9iffous0_pUVqF98S48LoGGONCscndbz4GdDHzKXdD2fEJRKh4iQWhXOAxuFpyVc9efgsOOw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7MxeVnwbn8TTmrwrWWyqrVxDCbmXswp0LpS4qvwULIWomsALuyU9L_ndP06rxh_uS1dJCV8fEsCrqIn_YPanebtaJjf9H7C4M6Oanx3A7tqay6_W_2njnhmlK-8s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4rYf37JheQ-kw_YwySNUN1jiFqee4s7QqyZ_ou9bNyTKAE1S3vlyTAf3nPcNeFt1mgOZ01LEm5QET6_1fxnNqpMNKtZadtRypVqwqtIhh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXqYuYoBAFtaDBLV-OZF7WVKViVai0ZyNYotwOOXgrtelwZU_Mt7x0F0A3SsAVQO3ssqyYVB4KDwkS0ijwGVWULytow-mKcNvVpJnI3XfBKSo8am_PZQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjSoKtyKyANohkueSZtRCphJ1blrhA2MgfKAJXzYV3ZfetlND7YAaqbHj7Frnf4sQNM2GIiSb7MX0YRW7oLTI1Gpvv3_7vQwHPZJ8j807dSv_A0Nb5TT96Uwc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRw-ExhuAd06uyn65iV3bLv9cV2O62f7ct-0P9WB8EMLoiF7dYndRDxnwP7Hq-c4dEwHL5IqPqBLm411LGaT6AZhOsBtM00m8VpCeAps4QlWhUiw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuiEhJ1jC2cOW4IjbfW6A_7QgQcSbPY0EU499APcyOo8Igxwxk7hSiI0fPKND-8jW-aq6E0DHpeWrlI6LTAtkbqXwFbVz5CSD0oME1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeETilQp4JRf6eLX94rVLDsGRDcb9PysWL1lq40vbnG-hQIp456hXxfnbbqkgCUYBTHODsKCJeYG1GMowWvkPLkgeA4K5_gO7eb7nIsiWJ0SsGFFDAWoVkCUXF7t5naKmTcZwfyOtQ_O1p2C940hwxwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEScAAhZW1p5jNiWsaCjd6KWE8gz_QmJhwaXb0PGDUKlglF2s9vvDLAWcbfqKImjzaLvgviAH-Vk1CNhVHgsKd3cEeSzsSVaH1WASFSMsSON8q_Hgw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/20260212092337263?utm_source=openai",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/20260212092337263?utm_source=openai",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/20260212092337263?utm_source=openai",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wonjindental.com/magazine/wisdom-tooth-extraction-guide?utm_source=openai",
+          "domain": "wonjindental.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "찬스플란트치과",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/42?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://althathatha.tistory.com/132?utm_source=openai",
+          "domain": "althathatha.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongmodental.com/guide/wisdom-tooth/?utm_source=openai",
+          "domain": "seongmodental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.wooridc.kr/treatments/wisdom-tooth?utm_source=openai",
+          "domain": "www.wooridc.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://doctorjaeil.com/dentalinfo/?bmode=view&idx=173335047&utm_source=openai",
+          "domain": "doctorjaeil.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://modoowisdomteeth.com/?utm_source=openai",
+          "domain": "modoowisdomteeth.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://modoowisdomteeth.com/?utm_source=openai",
+          "domain": "modoowisdomteeth.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://modoowisdomteeth.com/?utm_source=openai",
+          "domain": "modoowisdomteeth.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://yonseibarunorth.com/general/wisdom-tooth/?utm_source=openai",
+          "domain": "yonseibarunorth.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://yonseibarunorth.com/general/wisdom-tooth/?utm_source=openai",
+          "domain": "yonseibarunorth.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://galleriadental.co.kr/news/wisdom-tooth-simultaneous-extraction?utm_source=openai",
+          "domain": "galleriadental.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wonjindc.com/magazine/wisdom-tooth-extraction-guide?utm_source=openai",
+          "domain": "wonjindc.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUcMekyrZ4DdTGb71lPfGyy7jddz9l-LFkodL9Mn1js_Xyz9zyNXu8sOix-XZn6X5A8GQpN_ziaXA9csCMwE5Dd5GH1wDl22jrukRZArpmHPOjtPztPq4zqTAYdw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAv9JitpezAhnKNS5Ooym9JvtrYuNhaKasmerknZM4ODUdDDg9Fal8yw8HDlyJtbKbexHF4OFj07iVlkPJktRWgoSW9fPazSCB9aMCnDlbX6WpvkbZQ1Q5nLT73LzA7ZE5Ro8TOHONtvNtrn3OlhknTISCInvn_Gr-Z-MRuCMZhQI1OSeqNHgvkEjKd8RWn_Glf5vKlTMYcnX7pzgEovHrGEWxofzgMYNziXk5Da9Yda05_BVchNx_AhLcrHI2ttYbriMnpQuYK1GnS5CkYxZzJRsUTko_2gJ6iAs12S2BTB9JDKB7j6qWz6nD_kTZRXr8NaXRSGOdpl8ZOqC7xnQCpoIobVfRlg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLLlhgtpxpTqtOrk98h9dsqHbbxWgEf8nLBfpTwekROytVvaLjOzcDfMF83PfvAnmOIKy5icJokErC5QYRWl8cMQUzAR9yzBLTnH45RA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCNkjC526ShF-qAl9Pa19Hb5DyOMrc4FjbA9KIzYfmy3_eL-JQ0SxonHXRDpSkzoXw6FOjpYwgR4SiV2obQg-awoUUWcnulJ6emhEPIap8Q6jQFRZLiz4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyzmtYE4K3OsV3GC8tuIAd63tAua0CId8c92zvodQTvtnLE8Q7uHD61HvNAAVkqqHaUWvbhaeZeldY9KqvjlRYAT2juIcNpXgst-PqMNw-Mp663XgxHInJYEYe5gGD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6_xnT-ExTnEr9LRTSeDNn6__rZbhzYlszKotnlqxRI3kjH_FdBq3_rec_2l8nIIT-J2y3T0DHGXQQo_w5bVDjgSKwe-IN-ADeo8HOj17bwMuM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFlNIhhAsKZosYo87-qra2kPe5KCWwC8t-hBSEQf-AF_heQw9SiXX2gcaG-bEVRBwNwJ5UnGv5lalBVRZmn9V3jf_NSu7swEDEzWZ-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMzSVjW8TdM_Z_kSAZSFZN8FzUW_6_tEA3vNOsRwZr-K7-gfrb6LOG-5Iqo1D-2slR1k8cbQAvx-Wx1ql07zxV2dCa7LXJu3JPrlvPeZgoyoNtoA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZUoGMURFf0nMjHIY6t6IAXm7CYrzkxU9fDLWDXjYRAX8eBTbN-49HFBiYbfaUkMQqy9mpHjWvApms00_E8WG7y9fa4Kvw-9JZhlL8-s6iBf4HZWpzukl5ydc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVVjHwH6ruDMGiStfGIVHxBethfZ29RyO84VLnuHOjg0hjtThnNaCz30qEHqkeulucmrSLA5jNHhk9rIXHYaTljHq1QUEBidEVRpvEmi6RYFMtA_WPz17eUXikhz8eWB29isXM-K2pRnTfk4mSJWhqk60Fm0xYtXbVqR17bkPC-nmtPKKXVzxSFnmD5Ni9df0JY8CY-KLQ0b6aREjT59SYQ2JiqkJ2r_FWWILHKdo_sYUucu2RzPJHHKHG0yRe4xa-GT1GIBJcOoFJ4zz6vlDJTnn8dA3sJ-3JfjRWRgXhXfOOOoXa-CiiuqEyVgrVRA-czNLE7QA3dml-DB3PV-Aymy2QBT0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5nNJbzf9ZBIkbY6uVzyYb5X09k4_unIXWS_dHPcQnw5Blp4fT45jlCODZ3MRYNQTqZde92znj-BCLtsTdo_sh3GadUMpniLgvzg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZZ5FUV42jBlcEfzGyn5bjEdw2xhYAKxCcbfw9sF4NYgC3VZgdyeNRcyKAuINjM03VBb24VQ3n70EPJD7MtsdTSspVPsJFqQdskdI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqhB0J0rWNvLIBodPeWP4uJ97vQVWtaTpAEP-gISktAnl9Gf0hfNjstLHQ5P8o8eR_KzgmWrYt5DNnpIOqdSLLP0EaRhoqhw8QYAQs9j3YA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqhB0J0rWNvLIBodPeWP4uJ97vQVWtaTpAEP-gISktAnl9Gf0hfNjstLHQ5P8o8eR_KzgmWrYt5DNnpIOqdSLLP0EaRhoqhw8QYAQs9j3YA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOWlkhrC93wJTs-NVFqVQJHpR48rIdxUUYVU0QTzGGd7gdahUWV3P9T7zQdB-PkXlO9kM-Zpui5HVv59QuN9mRjXpMX8vB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1U1Z5aN6l25zBVNoyQjAg2_Mn04maNJT5luv3KxwxgGJK4D8eISPLgNy012vhyMen7Em4MqFDfMLdvuyZYjm1suWYJwr2ulJh6ouC2W1vRX1_cs3Z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5nNJbzf9ZBIkbY6uVzyYb5X09k4_unIXWS_dHPcQnw5Blp4fT45jlCODZ3MRYNQTqZde92znj-BCLtsTdo_sh3GadUMpniLgvzg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4CtwnW2ECAtkODV4u4HKr6-0mvA2Cajk8VHJeVYWZKeXa1M16LFZpZGNM_tuRk95SivMz7DdYkFroIPPLWISFSZkwp2OrAP8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLbn9CYR07O2pU0r2dMNeIhDkDxgsqC5D96l6RrGRJGBXBpy_0r8Euz4RdhZLEbKL_3yx2jIsPe8hybumnmY5mxres8vuB5uEn4oHIfhAAsxqp4RWyBJh9Y_h4cHIwHcF3DHn2aIkJGZLmz19CF17FghYei23MAUAiwbkek6LcEGpm4NxEAoI7wjUjLNUjIYgl0M90LGtNfHBxf0remxuPWabgzZPl3LiV2FmEX1j8qx6GM1nAVUnzSSM9hUcCU7vdNDXMZFkNr-O0V_LCTedEnze41NaMFj6Q2laMZntdUlxr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG50RY7DBGUZcXjeM5eax9Tb_sdpMQpRyetEQuPSIfGxpmsP2Oho8HG0OD6RSBC_9VS4H_ay3zaUPG2YEB1MoHx5re0kTqudpzf_0eGCFuNRYm2TNC9SY4RsrhI_e1dooVcw4iy0nbXmX4HQ2nwM18=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 분당새로이치과 (서현동)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 분당새로이치과      | 서현동     | 월·수 20:30까지       | 첨단 장비, 통증관리, 치료 보증제도 운영 |",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.ys-top.co.kr/?utm_source=openai",
+          "domain": "ys-top.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ys-top.co.kr/?utm_source=openai",
+          "domain": "ys-top.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ys-top.co.kr/?utm_source=openai",
+          "domain": "ys-top.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.lifeisegg.kr/gyeonggi/bundang/dentist?utm_source=openai",
+          "domain": "lifeisegg.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lifeisegg.kr/gyeonggi/bundang/dentist?utm_source=openai",
+          "domain": "lifeisegg.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "연세으뜸치과",
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "■ **분당새로이치과의원 (서현동)**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.ys-top.co.kr/?utm_source=openai",
+          "domain": "ys-top.co.kr",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://my-doctor.io/hospital/deptHub/list/subway/%EC%B9%98%EA%B3%BC-%EC%A0%84%EC%B2%B4-%EC%88%98%EB%8F%84%EA%B6%8C-%EC%88%98%EB%82%B4%EC%97%AD?utm_source=openai",
+          "domain": "my-doctor.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://soul.pitapatmyday.com/entry/%EC%A0%95%EC%9E%90%EB%8F%99-%EC%B9%98%EA%B3%BC-%EC%95%BC%EA%B0%84%EC%A7%84%EB%A3%8C-%EB%B3%91%EC%9B%90-%EC%B6%94%EC%B2%9C-19%EC%8B%9C-%EC%9D%B4%ED%9B%84-%EC%A7%84%EB%A3%8C-%EA%B0%80%EB%8A%A5?utm_source=openai",
+          "domain": "soul.pitapatmyday.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chronicles7of7small7things.tistory.com/639?utm_source=openai",
+          "domain": "chronicles7of7small7things.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/19?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.kda.or.kr/kda/findDentalTransparent/findDentalTransparentList/findDentalTransparent_list.kda?contTab=3&page=17&utm_source=openai",
+          "domain": "kda.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chronicles7of7small7things.tistory.com/639?utm_source=openai",
+          "domain": "chronicles7of7small7things.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **분당새로이치과의원**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHe_JPq_nWKW00lJxD9XLNERRiWNtpkeZ-IMDVdIEVRJgHa_VH7TXCi5nAeA0xoPCVVNAvBox0n-RafdLWVqCdzzuruSOk_uqJOj6am00as-DD1NYSibrU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-6bi9xnFOMT_D1LOPaqLatlSYjWY9ppHj-_SjzwRnSbMMEOEzZ9Xo7unWhMITCGGLQXycr2neQ3NlRXDioLh-nJwOCOsVUh8jjkK-KGL-DXw2hUWRD7Lw2mq-B7rHcOCxOshhKK9CZ-9kOeo5LyicQutT-gk4fSsEZ_ycPHaWPS-aFbQaSPbBblZ7jpT3EcZ7oCbLx_uex45wNzFmF2yFNJWDJ1otSwpNx-ikda87W6OxHrgJbg5jbPaEkeWyddfP73MMWCkON8uxVjw-T0b14MpB9h4hAe_d1s9fS8vhJnbi8f2c71FqPsjGp8YeDpCfHwLGSze7SUwqNFi50rJW1NWzvheyxFR_81LLRqG_UAsXSQOOcjOwwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLXmpQpIv7l4Zcvg33I9jgJ0BNunXNh7S407wPuq9_lEtEw0zRzgJMiq87dDR_8XJCjfBwhMGNuVp5s8h-3HGWx27ienproN3ubuNwURMDKOHMtfaP2LgXJRLgmsbi2VwSAf5N2oG1CIU9J9wK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGG_iU3g_l51N-zCUxIbn3fsZQ3ai3QXOZagunS4ufygTwfpQ9fNLGbMbpIWTKmqJ-AnKgIhF6DW1zPe7tS3rSH39pR008VplkOMQybqw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeQTU9llt6tlDNp5qp2SX3q5fnfMCuIDi1rEUz9iIqlc542HhsY8TyYqx0VgZ0quzV9QxQORSyiK09dmNtL0xJclagNwiGQIdjXBPiQlW2Y2Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEG50NWINXoAqcUc0HMNXo2Ik0IvFGvkP7WMl43qKwBAPDxlARR6EIjkZlk9Moq-MM-yOWym0IZcw3_350lJ0dxV2lPH-lDe07UdEFNklbBrRsl6g28Ax8ZhNP_ZljBov3VcAOcKMEG54SZ2InS1vnB18vLbQBGpiOnx5ZVWNrBAiktkO2A9UyY6EmzA0EFWPI3ksRbpUj362NyByLoB1T02UOnDdbOKm0coU3nTSLScMYRTgTj0eijMf0cj59MU1VuYrjmY4tv7gxKEVKh07mNlikN5cHmoE35rNu2U6BHjjFT-Y6LVq3uGdTZcLQi2OBrE_N1hyLOWXUoW_mWJ5n3P269TyPCqaUakD11NeGUeYx8UXQMEjlsRgrpIIEvpkBH4y0KruSbTvk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKZdoaGdPjx974b3RaEp5oOINeyxVP5VBxH0PB2aEEpx9UphI0nsvqP2qLy93XlViEOn-KowyPt4Wj2zIAa8_QNF2ccGay9j5nmF_PD3tcVy56wdPC5biVIsyOkJvyCMQPCh9UxlFVB4jILvikWnbpG5zFcFv7h8Ld9Pp3YBtsvA0Kd3N3eGgfNveEfbWOYzyWXUpPK_0im0k4N3swdpcHIIWVlyULwDVjUVHQp2ONPFCC_nrdz-bdiZ-4ZPfytlY83Z9oQyD1PsCIB-hR9wALQS6gLu37RhA0wAw8ELANT2VwJ-hYVmGn7fVTjOryVikcJelraCmZIAtiEd4xkPFukTpY-wur0ODopZKR1u1LJ-vEN2_QsdZO6u9PqLw2HTXkxkPt-lt9FpOJq7eUErZ6Qtos_0vlm01BQgxaLqVfXL1S-WQ18c90jO9Pk0ph6LpRcA0NaYkPAay94lR1cVrn22ssmURVJYyybnQqQONrxLvoIX_Te2sFfzfDuk9uDr2TYCJAGgdcq-bHqoQBLuGkpEyMXHL1A4jFxF41irp8xMjoDWF7uTomgOYHxGCvCHykqJA3AOZ16NhWZA6KafPX6AOQPrQR_S3iv4tSusuWdk5zXTyPRG2f4GrlEWj7uJEXcKIhq7wZFvlamXZvXIJ_OQFEefXSPSiNUjW9uXZlmJDolkgKuZWgem5NHniIhb45zMXUvoX7IivG4gLV_jXErkNhgeIWtqnewz74b58ENcf5RtZGFHxB7Sjyss7drc-pHhpHG8qucVEGxjAXDX1pv_LCjiPe9WiD5yDTpkRfOD_cMFj81jR_d2cg5AFrIqfgTn2tthPXqgiTrdxwNnQIfjLIkrNT-3ctzpvotZ-BQ28nTqlv7jfWNTWe_ki7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFY-FdDEtjuG_ROReGzxE-qENQ93RVlmeRFq1OKvyjukV2FWKqpRxJtT7bgIU9cdQh3cd4-83p-MbhXWblSN-9CSEVYRZqbWYJca_mRa-SAZxIQ3nJHViQMRb_xRgKqF1QQUBQwC3t4wGHVN49tI2KvhYG78OObWwx0mnTZv5e1mZEr80va9OcIYUznfd6vimrhWiG-ZCZVXLcFNnlSGfVQkBwGr9VC-bsH5wnOqgaIG1Gc1ftaG4IbjrT2WzCVnGHKNUR0U51hgMIqS1rMkDCg7opTis0uksdkImW3oE2VYEaVXiDzRBRyLMWdvgExF7IBxPjMc4KtRfkl5GOVsQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEG50NWINXoAqcUc0HMNXo2Ik0IvFGvkP7WMl43qKwBAPDxlARR6EIjkZlk9Moq-MM-yOWym0IZcw3_350lJ0dxV2lPH-lDe07UdEFNklbBrRsl6g28Ax8ZhNP_ZljBov3VcAOcKMEG54SZ2InS1vnB18vLbQBGpiOnx5ZVWNrBAiktkO2A9UyY6EmzA0EFWPI3ksRbpUj362NyByLoB1T02UOnDdbOKm0coU3nTSLScMYRTgTj0eijMf0cj59MU1VuYrjmY4tv7gxKEVKh07mNlikN5cHmoE35rNu2U6BHjjFT-Y6LVq3uGdTZcLQi2OBrE_N1hyLOWXUoW_mWJ5n3P269TyPCqaUakD11NeGUeYx8UXQMEjlsRgrpIIEvpkBH4y0KruSbTvk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsqBnbAD91sgeZb21W2T00pSf_GRrZ7-J0LG-815SxZWnpHAxTkthSgtwTJfd8F8f2SA_1RHA1RuljFzb4QYMzb9oC5sK6PBY35ZIA3wSZKBUdshO2jV6zYuq6Bmj2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJk5PcSYn88jksX9PqVeYtBIJ5Gz9qC2YcWtSt8vDjlTzrtiBCpZY2jyI89R-5i4LXZ80R70L11O6fBQyfxabiXJrXpay5FaiRigYitHOKs3EXzd53aHyGFqA8MxyAH1E9ICwkmy1EQ9Zyn0g6nTEpqcKvaUn6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuJsEDJPRCzpJ-u7qLOPqUT3xLetrJgc_1kjap7D_ZQGc_Rf9wTdTVambUuq4ud2kgLrhzRtazum-8pakvZ_g47YDCML6pltmLZ_1li8v5aMS-gv_s8VGntoLZDFywku5ejY_fZpKL631WcqNYd1C_T-rWE9jx3EVSWin8vHWez29IVW6c2d-JL7y4yEzkTwiKWgJjGcnYzbq4PrDikU95Etushkb3ZMNX-n8NXdiBHzcL32zxVlSy6uh7laZj4oApkhGuWEtQoUJsFvmXJRxUsxW8Rzy2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **분당새로이치과의원**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGa9H2SuNanWyapJGqG6R5xjJ9ddWbbfMmEPCFPLrRCwBThmxWAifv-1-1F6dHdqI3X-aZ4G-UKtMpaUWJBBwYELc-zlT2w52F1zSNzb12xS-r7SuQ4BCLvzGghUjSaY7pOnpGr9WuEb84h94j5UK_20VmOiZKTJ8PuKn2yPjVVkKwEt5pfpwBI94n6jnpLSSCKhltPKIJEv45X2_kxJpNh0DYzVex2B-7tPhM9AEsfGlseKcV3ZMrRk45x1O0b2cHZ9M-MpEHRhpHJ7vnrmjBNnpApV8CpsxfnVkU0z-m6fws=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYz4a6lw7PuZ5uFVJaL5VxyGSPWLkpQ5Yemcu-9fEgwNSeeUH6CN7lFQ0qMU1JLqlG3LukgDkktDDgIywy0BoAPX93JliUHW_G434gcN3M-ZGMLV41GBPh2wN4D3qxVvJ_fl5iMcak2N7JbMCiRJ0f6C79CCOYc6wl_DZngW-zkFlKh3wZ9QSOWk0bdSUinGb0wuTcbjyXfll5kbZTMbU6J92VoJaMcnjtFllVrkiOG8LM7RxmkegAZ3kKWrd_vE1s163BXSTyxwqA7opt5Pilu3Za9AXkdl5leGAoXAJoiCYIQNLWU5E-5TY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFv3FVBHMWIei_7Wkbp8I1-OcUT04Yoikhkh06jlW1lSK1te5H5Bk_o2ke0_RnVwwrmwRJulq3iVfMd-_L3ncSQ66biJhm_sgWy_UAIgNZki9hR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWnhCEAO0UXx6WW0Q3d1BnTSyfWzqv0eK1VtOW4uPLZKp8360dFkJJ93nZkLLtQQ1OQ5JDlr9APcc_nXSNG52PNYs2gd3e2ZkF1z2k4CZuXlXRzYDWemg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKN2xqonqbzwUrTtUlr_I_1Wwhvn89-fqK2aMU7AoV0NyVN9xigdhmRGQpydXW6uyaXMpwGq5NPWkt_nFuvTCqNqBh9ELeQCBMsNTjWG8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-8AIKHw6CqQpQzsYTzh0MP-jCGs-EvR92-OIh6pZaoHhTUubime2qHXHMJ4_QaIBIenBs7VZB2G4QUU58YoTnBFDFrnLxeM-c35i8e0lzrntm6hfu2BNo_wIyhQ1bbGaqPQabJqzzURJ0PwJoPNRWfvaZvoTdb87ZuWMy0q6ys-WXmyhflMrMJPaGrbs5nHJg3fDt4-DjgI4pYrzoHxhm-KqaieS8dW79S1o8hkPKzZEKE-lyf5zTxS4TjKyfSmoLzqA4LjnEJ771HG9Bvn8K5-R4cFCyay0apVJG1FhaBDEfGJLtgIkgmPj94AD5SzoVG677Uo30VpzT0FdLb0__12Aio7JcHUgyFPjZU4NbxZD6Q14dvAYjtA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6SyTOq4lfoNPjFclvOlAVFKSWNDrP-RQ8lgC6JZHDuwQMEU3vnWHwD11110rHvCRAhtoOtB08FNW6cFxap_A3qS6wpOuvWfgiPr8JnwtN-XVH1mLqLkt3m5966E9qeJXTJAizFS6pgXVnXlrCBCb_CjgvNj6lvgQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIKh8dAxbLOaZwSXVPptLB088dbjXtg-tbyZA64ig3ylKchenvdM9GG7SRonDAc-ADreH4GkGm5COwXHqpPICOeTS9kQFoN8aKg8-hPw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaCoMK3z3JwXxGf5B_uX4gByTPssAYDlKEe2_XTMLB-PpbXAd_h190LEmfIRNY_Ee5ECuVdCYCOfFbsUWm1HJ4J3SRNFN2AE6u0HHsC9PGjoh8avKOBBKFLfEY14X-DzvNfNcDLALRvSGxN2o77v4Q4_Bo4neLJyOJQZDc__kYKdqjCi3_5GdAsMDmeiD-yfRevoGGYpwPgK2gmf-dqEyB6lJxr5JeE8GfeHXDLEh1UMmirX55dL_khP8mTNqpx1MDOs_ByiKa32hIoZMHLxjW8aTORqHL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIyOAY9y7uCKo_iEAUesJWP6b916CeOOP0Ku-8iBXh0duzbA2vlmxR3l1ydl-deQMZSa0apEiyShlGCAlS2eHkHUGJL779WBALhJQJyTUB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **분당새로이치과의원**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5TS9MmzqeOfrQJizf1fEBF6PfOasPPPFaD4Ak3Cln7HpX56UsqDSRWbHxbwjFOzUy5VfAE_j9bxD_KlaQnQWeOtUjqC0e1Ps9wZuTdvq3YceAhu09RQKJxizIxetNPJX3K2ksiDnlJfZ4xAX1IZGyT0YUSe5vDgem1UWbnjgZqFLlw4Ky-SVSrxJE4ViurFC2aG-gfw8QGcSuMw_vFEA3gjOVFGE3bw30Y67gZN3N33MCIbSlzpvFicXHw-66C8eq9PgvyD3m2RLmuE2NHA9vVF_9f_gCRG5zi8g8Fg7gxQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBwc4CnyJTs6qlFn8isJj7uvMQapKUYMTfIDF0AqajrO3wXCTI4FMElpZsy5N0is_hbh-YSjLMpjtbOdiK5YBmVNB8r__dhjntZG7buwS6dU4AsT_tt_u2WbgHpZIFGXc-zcTRLPS5JN0q4Wi2kh-7RDQXA3Wd6ymcUauioYwYMJP4pcEDrfKOZyB_u8vKgC4CKna8jW3IKzME7uv8i9aVW6RXmdDQ4_xjhEwXuYsy8k4hAr_EuNSBz05HlGLwviCfaB7ncI40Y3-jvviF4flHiYNXwny2iR94R7FHR8ZLDgqyUIbJPYHgmavv0x9WWnqoQBnwalQAjYaUa9pnuTfm8lRPm_5qTOAVaaCVoTD-6QuPQF74rKPl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsN7s4WoUv0r6dAN6k36daTw3nmLy0I0ga9BcoX8p_oIIi7Ve0d9FRyTutfTAvBoARUoz32QNzDNhDFI99sOFX-7vncNM5nCDj0v8IPE85J1t_iju7oC5_RiV0vqyR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnoG2TX0jRV4kPe1D3GI7HLN0VYilF_hDwK2G6ddzm8VRAXzpcSxM3jHQSGF7v2SzTgG8R87QTV0RmiZI4W1g1bPN0aSm35dSQYs4hQ-J3AB9YHxv0Og==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmYXJTG7v0zGLMcUNSTRY9AurhuBXLNdFzpS02c4oqJ85kpOTLCXT27Nxhx6GvgY5W6xhImaysijNMvfp8pzCBmstRUca2_OfP-FAYGQMnIL5_Tp4xKA8CWSIZ8iLO4I9vCQfpKAVgkg1oGrhbBZ5vMzA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSYIiV4wS1QnquYorQPwidrr2xpkclhH8_vmv6aPLrl2wKEUWkyOTqE84Ix41tF32am6N1dS1gW_i_CigGQ_fEe_kK1XqYU74GImg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRg14u18USfZKx-66NOlolGgbvx1iA5QlXdsAK93frXpWL3mFaTNK0w32XRlpzmYzUiMm5YL9LqggtOAl_XAFKMKb1ZEG8nGsboTQvCu_enoQ8nwr_0OJykKXKYjt3iw-NitXg-XXBey8QkQE73ypvYzkVg_YPWAw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkmr1sSnHg9XdWZMdtpD2RvqcFCDTuzYNjqMhEKiyyohKvTvfuoKrytaSGhBnLqdyjVU8tckCeFjfyCTTk8M5CuKPjO9kmvMlX60_AdU7vcj9hkeUJXHthy1v_NhMVLHSs8tlBGFgCqvdGrESC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8odnHUoJzbh3kNZDjNurSLa2WQ6RCgsQmeLfcT6ChbheIjAOn1df3AktXZYnwFqk0rro4SlEDDLpEwvHggl21sL2cpMYSsegVINSQo7Xi5Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqLY5C5SZpbXg0DpgxfK7w6oNWuXdIrGbrcpwqYeRMu3d1s08YJZjw_9mi30M_rE-UXDDOhFBV2pY6cuh6b6T3TFAE8fES2aVwM72XOe580s5siIerzgOeMHQwbyFpsqIz9JNMVdMbidZ9SmvB3r5hkkmvAzShxzg6zpzlOqt_jFnEtniVeCHxfF-pCWOt8in-8o1p2nJjUqiB2ora9rUtfcdiuD1SvZq1yIZkDTWZOU9af1akoHdrFcrCk3b6gZWBfAySIDfuyy4JZpSjsbj1v14aq737bqb7r2cz_PWfd_p1mC9m2x5mZnHGmNE8CvQToDtJT2RtcDbTmehLlXslGmoyYQZTOyNnHtnl55ZlQyyjUFL9wubnmQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGF9fuc30nA-DLD-nGkmT0CmMnUvhVNpvDUMm7btHs_n8FmPm56KcXqt7AIlqjOriVFHgzjpICd47LoT8DG0qq1D-a_nnc4jMVy9xL5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEy0e3IZknjHfBc8VjijsqUVEgEDYhDMR9Z8K62XQi2NSmHJ0VpTLw9DJbX96qV6oY2OwMKwMhwsEgapokBSQ92i1HMvvhrUIbpojOwlk_HWDhT1U8MFCE9doqnEsBc_TzxQPEnlDsH9gXpLR_rQb08Oh_iIWbto65HNuHgpYn_Q-9g8yxHDVO2BtGnPE635xb4LfEO5rc3bHRW3jDyTRIJQYc-lWoFXxX7bSrW8ECVQWQu5tJ7n40q0gVrwt8d1xDi-d0W8GBhHAYTPq-mH8Qme0q4E6s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpq5w51HUcw6R9c3JanPK_vLH2DjDYhr92e-l4EWcwLzZSVy7DVpz0Fw2hSjKlzQ27JL-H2XGeoJe117MRY2ZUmNhPOKuixS5LAcy-NYvx6ozhklcleAjmdjGXPS1Y_ad-f0NiLOigXcFKdFdnhfafq_XREoIF-g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUDskY_SeslNor7ZM-2rFs85v0c3G948D0Ts6aJO8OBbPPwrnf12PaUICja6oQv2lzG9BHTYF3Xf6kF1s0qJUdglQBox3OPGT6rXhZKH3F3mLAfC-QMhBaeuLgYq7Qi2mMt5OQsvbr-PVIH6eV4ZUxocms-kcOUjY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmt6KElrny0NljZiesWsGRJB49yknA6pyxCsWlKE6S0ekln3Z5vGFVGfi9Dwc55pMfJz5yyZqWJerMaBuikDbwBcNzPUkLIg-fLZ4Y9kGsfYpiFgOzdx-xmPx5N1_0ZbdmAQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEo4xOo2VWnLnl2IGxYNkAQ0KXP1s_9FArSlgh1Y5jwMtyHBKnmtLkZV8sKKnC0BVEYphhjAb1_fAvLc7du-dd3FAKSAjgWm_c-CH2KyUfwkZVf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/jaw.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/jaw.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.xn--9i1bt4g1tjk9q.com/?utm_source=openai",
+          "domain": "xn--9i1bt4g1tjk9q.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.xn--9i1bt4g1tjk9q.com/?utm_source=openai",
+          "domain": "xn--9i1bt4g1tjk9q.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.xn--9i1bt4g1tjk9q.com/?utm_source=openai",
+          "domain": "xn--9i1bt4g1tjk9q.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/blog/tmj-korean-treatment?lang=ko&utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/blog/tmj-korean-treatment?lang=ko&utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/blog/tmj-korean-treatment?lang=ko&utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/programs/tmj?utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.thegentledent.com/tmj?utm_source=openai",
+          "domain": "thegentledent.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://snubh.org/dh/main/index.do?DP_CD=DS&MENU_ID=005014&utm_source=openai",
+          "domain": "snubh.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.jawwell.com/html/sub/tmj-info.html?utm_source=openai",
+          "domain": "jawwell.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/programs/tmj?utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/programs/tmj?utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/programs/tmj?utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allbomclinic.com/programs/tmj?utm_source=openai",
+          "domain": "allbomclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWf7xTvwydpfEYbWc7g35GlooKbZTrJPLHXo_BmRFgT9zffZp6ZcD7umCkTaYu9AkpqcuR2WTMU_D19Gh3H2Wn3KJuWApiB69Qcaw0gJt25jiLvtVvPH9R-vAMb3rnKGsm0wel_l47NnakNRDfHrqahSfvRg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaIfxf2HfLeiGA_WH8aBF161qWvmapipr7cyheqle8uREQHfrOI1JtIMUI2vZxtSry9As0a3QCTVX9uFxFgEMswLx2d5EVjj78UXgWvz3ghhAD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXg9QYZzIpG6_ceGWocVqqNWKAS7A4eokztggiB63E0Y78IWwJN76KImrHPauYbO1lj3Nqt3d0epRxS63UycMMZ0hdGfR4Fm7_nTQcCts=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEamSp06a1rZfng3jPyHFbb8qxghmeG7-fzRGy25rqRWmKmaxJbRvyjzSfCvrKfWaAqdzgKJxRdHX5VIVTchVP73WPPv0NFLPE3K4C1LrPxFGIZ6hFhI9FHaX2AaAh4FQVdM9_lNh1M",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1irBc_xawphiMYO8IPfh8wLdl4-lE7tNETIWaRk9_VG1_nZdHUQWwEwJ7qQ76luxi_IPtKjBV5TXoUe_z6xECyzpHBGEFklb8ibcVkeODZsPsLizgPendMgurORFyZgTw68GZpHVhwi9Gmh6ZXcQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWQX_iIf0D4bc-U5fBxwCTOx-Ze2fTJ8vcfW3pDuBSIkHkdOItKEtkjrlKfZdTOhi6foPiYGNeVTfIDJmdSPUoaxN1jk_OAgE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0Xz_I9C6kLsdax5H6vPaVAMoLM5TW16ovEnjG1x4bFcs-tpty0awq3_jtPUmmA64_l3BCofR0d8CNW7uaVJQb_1nWmlVTRk8OqGd1oEk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqPBJwRMoKVpePNu0dp_3RT2O3YV91YyVZDCVcvpG2c7waPDeGc-4UshCEe193nblX_NpNpw4rMSOtdL4RJgjQMO7dhwXWkNA5labgTfQ6-b5j",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqPBJwRMoKVpePNu0dp_3RT2O3YV91YyVZDCVcvpG2c7waPDeGc-4UshCEe193nblX_NpNpw4rMSOtdL4RJgjQMO7dhwXWkNA5labgTfQ6-b5j",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzN00BONz4xJx45Y-1UAst6yw43Wo3GitJU-kOghIdzeUdHd22cvYF9tvdANNcyTDSL4PCBgtKWzBL9pmkeQLzfn93wt8bkVc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrNnfJ0TLAL2m6cyK8yV9LT_VSXe1QGLXDM-vkrsKR4zrUFClfOOsv_RFQQlKmUD_IM_ekBXkTpqoubdHHYlQlrMHD8RrP6eJS-Dds9YZ5bmaq0io14249Gg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH3Djy6RXoiwe-F19ewwQA4bK6cLzLhbphqvPVz6wx3WCHoLYaLhaTwON6eRw7kxQEqiKXFdtGTdGWKuTUKz_xWDtBziPJlYxrkMfMBvj6FE3wM8WYgyg0HUS5yqt3RXBd4IlMO3Hnr70l9W96j8M_O_CDcCA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCD37y1E5xGJ2ITJkhdt56rI1cwfNwdZvfOgCBYTjBED4u5J3cM5lqCBCljFqwXqZA3Zbjr7PH_SUbgYkty4a73tSIE4vqqFx0BYhuqlTctTerH2um8zFD33ILzk4xj4Z97uBpr3kX2y4OuLg0R30HYN4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF51v3Jwuc3-f0NQR6-T8I_a4SjdVHpOMOVNdc4geb7MIOkJbp5YWgIaSgjYq5saxPJq1f8O0yIns9GEsKzeHK_Mm6YNYsZa5ezR1LWLmLmXnVrNvjkh19yrG8kXgM9_09otZREIUWoFSjV428Uxt0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbdeDVJnQjZJpFvIhooA6wTxPMHZKB8y8mflnQq_CFBUP8K-QWJsc_AEPmyVtwDkSwGc0wmROFv8LSzIulC0-zgWfYcfaWDYi7lxGFal8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF57SCo9kGQ_t_J4_hWqDmu2lDNs7qBzrNTI0VCHn5q3Og-oRGyQZd_7a2arP96US95dDrn2q4kGtwK-wkKBJJfCQJxp66OiKi7lnVTrBFX7KPg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkXWoe5bQmkPNk7hds7EWTD4f13T7BIcVKtRKfmoX-ysiTyngLbpmeBIKJRPIskkzB-ey0uvEm4F2Xm3rS8nrjTuH_5qqaLjbXTVXpYi7m8L6xXt1OlM7-9vZs_II8QKtp_QifH3PZB9iTsjo1Oiubv2qA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEow2FOIirs30HtWbYHpuym-gEKW-jEl-1epODBKEidaI_ypeefLKik9mgaOKj-k54cN5hGvh8xQW4Zi9ZjUZijJTS2ESdyNvHEo3oWsIYqTBzrxSZeM1NA8hUbNQY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEntSSiClAyBnIuiltdsIEXOKh2xLb9rSnsdqfl3JocUUzoN_3E9gVl8nMZrSpyB4wV4kvz77uTJ7diHIGczXFcy38sc-MbmrrI1Eegk5V6YMzMX1_g6Afc96Y7FLAbJMbXZt9Zs3jbMA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbIkZc_6U_dSxob8M1kePLGzeVJeoXM5OEGZXcpjv7qX83FjGxm9kj1Z3tNc4uh1D5rz1PkXLXbgJZdJ_kspbzG4j5i4Fm_sVs3xJ__4Sq1CD-QdUqjj4Phlka0fZ6xmD_wRQb88FUhu2IYzB7vA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCBhYBiif7MDMryAeIAToFemLFzhTLqn5Z5uisvpXIwep-05elPgW-7P3EmoH3Kh8n5pkaAgxZcopZdXz1UgcbGt_tI8eS1OYe4fmaWadEuxuq8oDeEUYQ9wR7ftnI7-g9TIw=Raw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGcaMpj1v46bWCkdNcHES2yUvjPfNKAXTtiNFRptzbyJ7vMFhfZpM7gGl3AenTfqFWJm7eKKoaIOWY_ZPua4AqRNYJ052aoognXLlAokjEn8tRXKSsd5DUdNBjZn-ZWjOiKFzHpRMPQ2HbAXYF-Yz-SGuk3Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEihSE2u38QRC8auM1Pz8RhpmyWA5iM5iu_zuTSVT_NcLYEms1EOBjxM3vRCzOwrkYB_QQog6mIj1iHFGfmnDqMj7kIPIcHY66R19-Y2er3zd9UFSX4_x9BPSslGrVFd-G2aZDSv2P5L1COa3M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://bundang.m.chamc.co.kr/medical/department/Dentistry/guide.cha?utm_source=openai",
+          "domain": "bundang.m.chamc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bundang.m.chamc.co.kr/medical/department/Dentistry/guide.cha?utm_source=openai",
+          "domain": "bundang.m.chamc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulbrsdc.com/page/dental/nerve.html?utm_source=openai",
+          "domain": "seoulbrsdc.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulbrsdc.com/page/dental/nerve.html?utm_source=openai",
+          "domain": "seoulbrsdc.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.khnmc.or.kr/resources/webzine/2018/foryou_20180506.pdf?utm_source=openai",
+          "domain": "www.khnmc.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://barunchoice.com/care.php?utm_source=openai",
+          "domain": "barunchoice.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://bundang.m.chamc.co.kr/medical/department/Dentistry/guide.cha?utm_source=openai",
+          "domain": "bundang.m.chamc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/26?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam-clinic.tistory.com/26?utm_source=openai",
+          "domain": "seongnam-clinic.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://miraeysdent.com/nerve?utm_source=openai",
+          "domain": "miraeysdent.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.dmedinews.com/news_gisa/gisa_view.htm?date_m=&date_y=&gisa_category=04000000&gisa_idx=163891&utm_source=openai",
+          "domain": "dmedinews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://bundang.m.chamc.co.kr/medical/department/Dentistry/guide.cha?utm_source=openai",
+          "domain": "bundang.m.chamc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulsdc.co.kr/?utm_source=openai",
+          "domain": "seoulsdc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.digitalsmiledc.com/?utm_source=openai",
+          "domain": "www.digitalsmiledc.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ssbrdent.kr/treatments/endo?utm_source=openai",
+          "domain": "ssbrdent.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9aOsqgUXp8oIgHG84jVZ9HlHIT8bkdpiz6E1-3I-QlifkW46uZn1Dk4wCGV6omjb-V6mD_WiKi4CTZMdTiECd_BOHKPZ41hj3ZF0bbvulTA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEldyYPUv4M8Fk58XHLzrcciexG14t_TPzXwCKxni51hYSGkRv51kwUNJDZfmUT1zra7qQadt6DlkBZLW065l4UJ77geJni6vBBtD9wd61A6WeVS-RElYQvBMlPk6XiVINb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHYLzyy1q0mAb_PnUt4_ffAv8zdqkYNBSAQVqddRklde0MJ1KuRNAgVf6GxrhjCknaUGHmBL8LU81Gd0otaRmQkxLMY3dbaQFiMceITX_qU2_j4B5ofGnwQwoGFxqv5l6a8pcuGXpRxp58SZUnGTAFNSEPAtg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGO9LAEA3ZXOvWdfxAE0HgEVNUreDcAwYchDAVnlnPs-IyriJSxqDr9xiQiHMcSBVyuIt0yB1IDftTlu0Y18k5znYKLFhXuSBcUCkW-_rT2UQUrYvxbSinOcTWACLM3z7YLtJg31zKM_s_JOSkyaUIrzgo-Ww==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8QSuOz5xKUHmTUsAhk7MwYKQ-JevM1Yggy-MaoLzCM7TxAJdGCgAwosMDc1szRNVb4Ed1AWDBVxrF1HQ8XfDUg41RA7zBo1MnK8snTluqvneuHPQwAfIVOUPlIBvapZ4TqY81zdDNzxjDwZbFvyzswmlywCE-ixcp_oma03JvsCwdCwNCD7UOvWxx4-dHQFaq1_E2PrXRZqGSooWybUqmObNaGruNjlCUHJUYcw2OyndBTymHwRcgUsFxPA_CJerMJrJ9Ed2ptx6lOItemJebeZzuCY5F5EW2tA9TL2_WS8trdy7-3sum3hTOrnigko5t-q54wxkNIMUE2nEo0eBQYeHkus4030UuO722OqWy-ESDwMuIyc0CrJ3Qt6CVAwsqaoTzrz5Adc3qeHz63HK-3nQE8iEvzPGz47ObVUYl3Lxjx-tfK0KT5nIlWgJCfgtZVLzuDAhRGYXDw4NTpBWVJOxKOOUJaIHtkCPNNPTLqcBrvHItdoOsOvr0e1jz9qctDFH-yarD9k8BZQnhENmQ_NypQn-B7EYeRtUTR25cF07dAm7V_Qsu3ETaEStTzR290ynPwlecQu_L51YYH9-1F3R7JNcyjt5Ueyok4ZEuR_7EGXR_-pLAvKezC2vQU0u2h8A_ns3cHmfg2wj3M60fsm6MNLAdTZ5-BbV0wW--ZCVebFAsZB6VMXIMvqGk1dp8HYKxq-vfYAAa4MgvVEmKw2PuJBTMqbuLms0Z3pOMvMWU_WeINY8KsPNFzztQPtTTuF7BuI4lqHmPCOcA-gtuRpl_IS0XwnI5xVdhitVYkVpuzQsWmI8XHtEUDAhPPDLvp5Jq4rF5p9gNCr-y080vSQqLpvmuU-t3OHAwP9ST-5D2CHPeU4fpQGOyEY9kXhKCf4AFNk-Sa1X0pZ7S5bo82KdymHXAAoD37gGyLzUJ_sg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHfjTQ4o0KqNOtG-VWAUhknzoDCaAozjbKL4FJwZdCI53VGZ8kqV8Txl5JbpXKUwTx5N2NuO8HeOWeNl3Xwm9b6pttRGgGclhxe30=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcLHYZQv34h_MdcSuTjHHr6EcKLNRRnQSbTSC3TsHEv3GdbL3ooWUY3ir79tg7QAFjOxQv4ijLqDrMXBXIHj5A7k3Ze8G1KgkGldHywx6E-Sut2JxPzU82xXELDRNvrKWn-sZ4Jg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBSrgBK7tjvnN7b3PDKC61_TYo5LKO_SkS87JwCo0xw_vM0nvV4Xjn4H2B2K-xpOrAQJm1Q2SAbyEoo8gNq1j7iUzqB5KWrWe5m_7u705Cy9w25kkH7EgtXnQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **분당새로이치과의원 (서현역 인근)**\n  * **특징:** 자연치아 보존 원칙을 내세우며 정밀 진단 장비와 무통마취 시스템을 갖추고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH11P9Z757i6yoFI5842TTyCCG6QRTBB9VHnlp3g00eqyqUiCaCLSyk_VK-UNzPhrLFsEygEkrxOOaUWnzJy2b00HY2FuWdDWcKAnXm57RpjDSYWcX9v4_CCw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2G39SZWzgzWLjy3MqcAZ47-fAs_RnKYG3rX3QDxiH_knUSs-Aeb37qx_B0t9qu6lpxRAAQcj9_RFILDxMT2S3G2693DUIR28ImtlAQTSo5lOEq0QEcs0bEb90r706fC5g",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLNn-XkT6tUGSbjH7P9gONCbp0UT7xMElUcgWQ4bocRMfg3dxZHdiDwISHuk-Yp1ZZEQ_pcrcI42UMu9NxzmzHPC9yYdtCd1wcwsOnN9BHqDbr9YAivkA5dpoJJcgQcWxbqkSDZoLR93mwaQYKGFWM38xMymlR2NWvKgY1jr8fZpwNDHgxlyqT0Ou9DY0fhK-iEjRgGR7zheAlCqkqwoBCJdVAYPdt1CILkjhwbY8tb7ZC1dQmpV30gmucTuKvQjuWnqy_FvAxiQfn4FwHMe6SuaUaNmdVDRAsaP6IwPmyK4Zu0UqE5O4PyuHW3ohq1acuqKD_HruHRuu9qE0FLGnFea8XmOODZ3jkeiUIhXc54GWZfFq5DY_cpu5xYV2zgI9561InYtRxOoscXrasMBJAGo1Eq1IgCHZVy0i5QbOmR9mBjUPnT-XA9Hb-VMnK31W9GYX-Omtc-leozi5MAdHI_G5i9oz2nxLquWZs9eMP2SoLf-AXV_2d7_V7GpCS_4ZrfmC2maC0I6Ct36D95fkIv6YrNzSGfgIFc77se1YacYTrhwQKNEWjWLCbEha-UL6P7eLOdPcT3IAWuk0sHIFTEwYrYiCprVgZty5iyF4BUrQHxL4CaLFNFK_4iYz-a8xVa0hYZIsFsSC72se_STTDuXe6iy1oHSfjSiXEEWkOP8ZGFGSgEOGoP7Q7tnYUvAwrjoGXYgFxnqmB_-E4pIWpBEDoWjpnWDdgAxGc8l2j7e8oD1XVS8MTd3W3QQFixU6v1b6yUgD8IdrqOaW3DiQtehXuZpeZqAo0-5pV1uWX-OwaWp5tb46ot0wPmmzXD-c3Ur0ZSpSMi6tZbZlsfJ3UsOcAUD0mLgece3dSTTA507PzoXH0dXEeD2UI-ws45BN4pFxy20HvR5O3fGtWOp_PxiI6XIXsNqDIY4JW1MxvNGI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH335PI2lrA0tii1Wf6i-76NllAw9VRxD3rhN6FP5xcvUwNPInQqLu2kggEArNEqSVuGizN9l6O467maUiHZe9PvdN_CwOSKh79dkLU6X1Myz7hBJ71CsLcd8uAKeToyYzoBF97wz8qaMdu8JBi8ziBEsG5cA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkFwpFwjNG-PfAcpwBKXNOzrnWAStlqSWKLIS0Kppas5uUKi2NRGc0bT21eJAj9zzez_RKy8d3uDCrLTvNjjR97vDuKr68wdUBZoeKW67Dib2Zno9XtAolfb04_UqET-jGOvwkjX_OxdUJAvgwdDJjtqTbFA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6MnqAcZKGmUfNLRhb-mXPfnOmMqk6NUszL57_K0eccNzbp1AsqGPC2tkWn1tXAitMgRR-aXGHMeX-alwal-VyBBDaTGBGYJhoKu4iwOlK3DURFYmKqL67mrxBV5BinoNJDvw8KH_r0Iv2yjPpRAUnVWo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7z7aaAn_8MEc6P9yc2aYXA5YRAdTtAz-2pf1_Ae54m12JgHcBRFh_84sb9w9oz2kZ3BZLqaDQQ1eFYyrOBlopYmyk0--llWVRDvDKWQlqAtoc7qoWHpZo_0ue36Ml_80MgZvUxg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlyqH4x-FpfgKyC_PuGkk63katjiR458z4EeJdn088gqHkCzXeq9eXu-ZjQIsUJYM7GiBT4Jn3djvctCGhGqX-AYegUKSlguqyXVs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuRRbBWE5x9myB4qqKpWnEyGAlalRP-qypK38n-hT-JRuFxBB0qz2bMbbQF0I5usJ0SH26pyQuh-d2x1A7vhsnpDaPFRKeoHdHXKFmgNIY9TT8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFa1FWkYmvsvSyNWoOG4R9__RsZofWfl0xdulSH1u2ro9P1sIGf47geVTnJnpTFQJLDUL8cnlFO73xKCi19gCcmVucxl4VEiO1NH3Y2tBURfhTOUL5LP--kQU_BvQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-FHkL7IKBEkhVky_g0Rn-NnCzzsZ9V4pwwQ75zss284JUq6sZd0_7Vj7ijTym9EziJkjyoFoqTGvYBHUu-8buXIZMF4Se-iWr-x7qkD9fvD1-dbs0lqJ4YeEl7SKwR2hpj8lxVRguR3KhDbpzHNIKZ2CgzQ6t",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYTsF8tfedxE2LXsV7cYj8XwHr0UZiIsL3-VkIv0wj7aC7csyLqYKtPqNcioXYYiENtbf3yK147DruAEciSsn4pnx_aGQOBJx1ugjTOQxHXRMvvpor25xvGKM0cWwTwKM-GfUa6j_hcu8axW-bXdHDfpSKSg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmBfJpnoTm4SLEWxw2_0PWcSUoWOoJSh87v2EMHoFti6HljZpymsZkJelt836ADfh1h2No_ttHy_YayVojXGbH1MgSfo2rhHgQ8favhNryzJQc2y3er978Po-z7fEogxFwB9kAXoWsrwJVLKJ6XW2WsZDnqA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9yOBwb39tn-joIqaeia_KZJTvqYgbxpyeMtRHIk81lg5E5t0p8ckZmE2Twjt0eHa3DmYnJjwAli2nAOSx5CIAoifRDyQUm4aIkpuoh5di-TLPCGMpVVqqKJkNc72beyhxjafScw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZ4ivrAwyrD4Ca7_UgTPh9y-qpGYLOScS55DBjGlejfqMgAYlEPu44DR2_-Uap9xMkBUJqE0GKosBVxoIJ75JCm939bwy5UNEDbfE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0kCgTy_-OoGQdlbfblTiWl7aTTOAtz3PYFZBv-BYwq5MfY3DUFfYfkgRFAuzLYp-_THmBjn6w2V25r_uluh_TlkBbC7ydvl2ZaF6_BUvO9kfhhEuemPCJfXWi7eKxvrEfT-XlFIi0PTXw7a-jvXvgM2wt3mmiZet8Gtf-cZmeiWXvCk3UIavbLX0Iw7XycjLsMdwwxCe3yicdnWuDxL7Evn5RMMJrPkq1VOslETp_2gJQazBQEuMzl9Av2Sf5Nuh_ENpgUdDExaC6phW2gUz6_f-IVlm12vHiaPHf37DC6oWVJg_w3Pskmq2e5E2bQ2X0dhVQWWuL0lCMTNkuqjilcMvmnSYJS9rF1shwZnomvEW3XIKnEkpxLKP54lkUIIFHXdNqMh0Udo9tYD4m7_dB_WZ13QTKuLZD8C0HRgICkvlgZTuRPsCCkFhh48uLZ4fbM2Yu09oGIBJLvXTCoVEGpGPbWHItpOmdT8gZA0xFVsRl7O7llLsItRuJn7RQW17_FyhOb5omZt1Ynwn_fM3Y4g62Z8bS71Cy8FhyE6mKzcx7VHkKUQX6CDVz0gXA_E1dyCtUtejBscz-GmjKzXH5P3smPJstdnKrUpLQn2y__7yTLV3zYA5zThRXO5-QwWStimaxQbopfpyLZXGagoPnEcxe3v8I_woPphWqQDmdJNnEeJX-xZtNMeEHkU-jn91Z926CnJCAu9ktaMhS9tTLlYhZ1rZxGFga343DUwJl06451uGANNwUNmxmqQzIJE15STrn2UMnL0cm_MICHkU88fCnLR0cesb_PqtJzEkKa0w6cUFdELgNg4Kk7CGsFnt9vF3NruUsF1KVJplkmJwH0TdNb1aH_48oCYjl1CVp3cqZQWJ9jvNR57nj4Q9FBPuTTwsimYKXwQzlMXiEbGD5c54NcfabZSuheZct3W0XOQ4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ-hJjeYB9ho9j5vagMVbn25wFodCDGEQ3qHD4nJpORicWbeh3x7DAN-jgM2JBlyTu5mLehDV41m_gKoQcZHRQ2YvL2MqDFrLSS08oB0064ttonwwq_BEWU4UvgOjPawuJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFM06tMSP26hU1oQDz4LVMlYbwurpoqk2M4cJI2nJ2GMiqjcd4q5gdujZGOjT2xyBorBf60taHkMIOfpYNy3IX2--ko0jJoUdRSVdYYntSRbA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGpVHPjPLlMTWHH1PWTDEE1ggZANYqm9VlMMVxOSB6jPchxQ1tyXiAm_pzU-1GDU4AvQXFubebIdfvQMUD-pF5fG0SVlKw6fmfRs_skYN49xsdKHGaA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsI6ETXEbz-JCyOzebjVJM0IDnDOEsDQ3k8_5uOJGIcd9MlXPr-2o_ZWAYVnq5vFn62S654WybIpH59xB12DyMjKfDDsxdAWtbFQC8OvZYcPpSNt6UKFYSPK1JzRY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFD-28o_Vrjue01lj-cAOwKd3kVtPkRDQjq1f7S5wwrcOCx7n9C5au9Zj58jrggVTnlco5dVaPMXaWriDre4PMlbg-MpGdV7BqiRrYGCm6rNSewA4QeAfxopp7RppEsVzXpfSt60L_jMQz18imdnpHQ0MpO1V7sabevA_Ktl4nrNgOvY4luSf-t_6BjJIhn-K8AmX58jySOpMjYLmqxxK_pMD6yAc9D3KMvtBQQNOM3EnFOzt8v6SrFPQrfu9U=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chansplant.com/?utm_source=openai",
+          "domain": "chansplant.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://baruljungdent.com/?utm_source=openai",
+          "domain": "baruljungdent.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/106?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/106?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/106?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/106?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kamj.org/uploaded/board/photo/_4d78ad4584b8ac801c7523ce28e638b50.pdf?utm_source=openai",
+          "domain": "kamj.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental-health9.com/bundang-implant/?utm_source=openai",
+          "domain": "dental-health9.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental100.tistory.com/entry/%EB%B6%84%EB%8B%B9-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8-%EC%8B%BC-%EA%B3%B3-%ED%9B%84%EA%B8%B0?utm_source=openai",
+          "domain": "dental100.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam.go.kr/contents/down/welfare_service_2025.pdf?utm_source=openai",
+          "domain": "seongnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?num=3513261&utm_source=openai",
+          "domain": "82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://singilplant.com/?utm_source=openai",
+          "domain": "singilplant.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seongnam.go.kr/contents/down/welfare_service_2025.pdf?utm_source=openai",
+          "domain": "seongnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://theseoul.org/?utm_source=openai",
+          "domain": "theseoul.org",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental100.tistory.com/entry/%EB%B6%84%EB%8B%B9-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8-%EC%B9%98%EA%B3%BC-1?utm_source=openai",
+          "domain": "dental100.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental100.tistory.com/entry/%EB%B6%84%EB%8B%B9-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8-%EC%B9%98%EA%B3%BC-1?utm_source=openai",
+          "domain": "dental100.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jongjinwoo3548.tistory.com/608?utm_source=openai",
+          "domain": "jongjinwoo3548.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental100.tistory.com/entry/%EB%B6%84%EB%8B%B9-%EC%9E%84%ED%94%8C%EB%9E%80%ED%8A%B8-%EC%B9%98%EA%B3%BC-1?utm_source=openai",
+          "domain": "dental100.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://today-dental.com/gyeonggi/seongnam-bundang/implant?utm_source=openai",
+          "domain": "today-dental.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.seongnam.go.kr/contents/down/welfare_service_2025.pdf?utm_source=openai",
+          "domain": "seongnam.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwAbvjTWpJGkM_A9QyZenSWQONK3v-aMBmP_kb7LunYH53PNx1aNdhew4J3SkP3Yu2kbeAkWGf-lod5kL3TbKCT0Jf51yHeXINys-_CnFMibHHLNASVAm2dRu9V9ETeqUYFZ_O4Jqk-KbB_1szORa-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGE_UajWepeNXv0eFR7WxFl1RTq7INtYrLm-yWQq3dZwX2gDn4RkYQ0eszQ98u1BUbuTs0uCwfXD4bart-hQyJXOykaCD3VDPASf1sjyFzJO9iJKmqk5HDRMB5nDO4DXwFIvsuWrtKlat5n",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGE_UajWepeNXv0eFR7WxFl1RTq7INtYrLm-yWQq3dZwX2gDn4RkYQ0eszQ98u1BUbuTs0uCwfXD4bart-hQyJXOykaCD3VDPASf1sjyFzJO9iJKmqk5HDRMB5nDO4DXwFIvsuWrtKlat5n",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLwVcFPl8aZ8T-y8GwFCzdz4JPeFXlCrOySJjdBtPvc6oQWeEHrCK4NR6PN6iDT64yMw25vqq_ENlHScWw8KSNTtO9Tz0dWu24A3WooXj9ftzuDPIL03jEwVzsc4RYgsG5YL1wLLWvsUckFrZj7EKfO48f5bT4ivFBmG7IT_v6Atoe4AbDbUpOD7IEeb2nr63vuGJ0Sjk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpJF13g7zJgC7BW6bXOQI3Rl66dsIAGiDNufSXgQGx-HqC4Jx2gDDFCnbjirH5NMmh_PcX3RgA7yG9hqi7AQR5jW5WG5oNSXhvAVcKe1tDV3qwfRRiTwDE7Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlx01LaOnzmAlmQ1pyFiAt8m1LOvPbmuc_M34G0nL55fAZORt-vEJjidX5RER1yzudYXmr1mJKlE5blD9TrZ05IW2NQNet9H1DQlJC65aKHmSW_FiF7EbM-oTu29Xu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlx01LaOnzmAlmQ1pyFiAt8m1LOvPbmuc_M34G0nL55fAZORt-vEJjidX5RER1yzudYXmr1mJKlE5blD9TrZ05IW2NQNet9H1DQlJC65aKHmSW_FiF7EbM-oTu29Xu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6eGEZX71h2M1Xj3o18GhDj3-UYO3gT1B4VXKsij3E9eCn2wG4FYHmsq55T7CogxBmrWoszG2hVc8wgGexc2ULmhLzVZMayVr21p0QaRuhGKornp5PwA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQR4ZbGID7zFdH8Je4CeECDLnSl2gINtzOjPZrpQ0Tz0uwB3JIuTKcssX4z6r_nMucmY7DdxEyhbaGVa1EuLglbeqIBPiZI-5K06JB5JyQNT6EH2m3TMGsFlDVQ2y7LAphopZzegzyYJU0Ic1bnSptErh9GjtnBOiOxQRMjxNckvMBKZqdglxlspW97c7lsAzwUmTce_aF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5UB3IHkFo4RLiGlWaIddjx6cSvSCEbKcb3pJL1v3ynNpUYOPqhnTbp7CnvguRoHXzEiZExXGNQ8IepaFDf_WwMirDmsVKhIDuZEYolmTi5NSmKBPln6eDVn-WPBK1gufpc-BSrXYzmaUcGBh5jAyh2YGAvo75C7sO28VNxLC_pJmqBPo5Gw_ILXkJk_8-_1wz98ohWHO5g3OkmmQOJcAClK9LSUjz5PdKinCdx7_GUgS9L5TfSUF1XQVBNZ_h_UaVBYO2H8BN8g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRATIUyJIRpXj7vAhDkN7EpzdjYNAYMF53VuoYPBFgf4NXIfrbk6jFVGNWp-aGwzH0S-4jpyfI2zRLW4f35UvTeVaFvlU5RRj6CpGfNJ_0Fii9VPtACoo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnMKAPZr6tyojQV20jp72Dp2ZL9ezrDOXHwcbE4iycNqlRuMRCgqTYOwpWzILqSWUVPcURV6DP8c_CZXom6-A-UdndfsxhwqNReQQJvJuM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmMymKuIyFWWSvvIRZis-qKcfb7Z-Kr0yfQWJf7eqHrpdLV20T_nvFNrcJNuZvmEmZqcHcpbEbaBsjBfo3sygcxVG7XgSF63D2YeCaHo7HDijzLzxuPCzyC6Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYqsH_-wPeltYvPGX8w7C2ULBNmIWVKGxHOoN41CJe84-gxLuAaSKbwETrYRIRogrule9wJ1VqLyYRVDDYk6Jca4eq5Bo2n7IuWjmu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHuHFH0k-bo9BRld1KqSLEzhfr2c0u1zopBcmoS3Jy_c8E5gr3S3lWg5XDBROFj_tT0MT0iMLz4jRMVuZ741LD4mXvHznpxg6hVrw1EdZnEe-KYLXUxRKW9Mr8tHQo6DG_pgIr2Hnt0yq2DrsjGtE1sWQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdEvA8b9e3g22vHsZEgVJoT4YY5FhdgscFotslWi-wPK4kZBQaLOeb7VQq9JD8TJ0-9ILJYt9UkkLwIYVPJ4Hu4zqpNRzxx1H8TUe7xFOUzc5POuQjeStUZvhdWOVK51mYfwuQJxodML1S7Jz-Wzwq1P4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg80jhk1SiZpNvQvFJvoPDwBMN89ALwjgLQc7bKoxs--slw_8JHGXgw_S0zYE8x4VRaNC2emHgwiSOuQvrF7eqfUhmLEdkcohNLwNCN--O-yLku6su4VTY_3wPjs9nwwuoBpA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdcjnM-c7R9Grhz1WFV0dMWQL7b7WJ-Lw_ytpqZOBcxZWyu065YEYpmFYaaVIC8BX44xOmzeG5GNAJDVvZu68E2DqLWce2OxtYI0rLtiYvMCSuR9-2N0dBCK8vbMxnavqyMHg1T6QBxXAOQ8q9bZBCzg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFo4LnuSKxIno4b2UG5Q4q-mKm89C8bTHVU2-ISPfgWCiNmA44un6hwDAf85ow6IN4UTuxap3moFrkKGmB4DWwpofq3o1RRCLpREgxdKFANaib1GWsXdHk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDv9timW9JK5pGVrhtnZZ-7-39zqmhN9p-zZ6PdJBkn82xIKzuouDNs-oAJ6KSrK2jTNYNIgtNQ-jg2SZOxmASIBZ0m9mx3pLRt3MWojoGBL3AzBp-9b7soW0YIrgfLZIXOOZwpdqtdGvNbtUqssdIrGAconNlro9qfIQR_bbgfLU8mdUoWKQdUEj7hTd9lZ-b1on7zpbH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENgVyVFKO9N_xQ0xEWW-5JkcU9-AkWo2_cDmOB2gGxkEQqvDgT6IqDLwiW3IDDd1GGlgUp-xkRjgnJ0_3NL6d2VSBq5DRi-X0TzVxAmMSA0ZTudP3B2gxSacqii3fNEmlm3uxnhuFFIqnMHg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiK2hEKTMh4CoKbebcYe2EVUr6nTu-Y1U0KEOLnnf6BgO4OS8pv_yU8Uszc7N7RfE-Ncxp38aC8QZ4yZ1UEgxEMYtljZEhSMlKkRSB2_X0w0Tsr0nkFVhV_F8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_LQt67kGIJ-STcEVfFsuZh7h7swZ6Q7tqSFDbeFFBPtLNY0z3Qp58SJgmMq9qBKIlYUXw3zqhCCxZr0DPM2XmbwjhwTGModzfDAffgxwcwi3WZIyvFs2VXGltecfLQA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHP8B7PrQUK4i9b9eyFYSIAQKqnuqly3nkpn5VCZpiXLr9WwWdxEXGab2xoidtH1rgrRHnw5LkIbdHshp7DgsUW5atXTaw4cpyCSJSb1yHtUQULegweL6nIe8_g5QjqNaE1t2gEVr6xmZlbaf5EsuoxA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원(경기도 성남시 분당구)에서 **임플란트 진료를 잘하는지, 실제 평판은 어떤지** 궁금하신 점에 대해 정리해드리겠습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "분당새로이치과의원은 **통합치의학과 전문의**가 시술하며, 지금까지 **누적 5,000건 이상의 임플란트 시술 경험**을 바탕으로 운영되고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "안타깝게도, 현재(2026년 9월 기준) 다양한 리뷰 플랫폼—예: 네이버, 맘카페, 블로그—에서는 **분당새로이치과의원에 대한 실질적인 진료 후기나 평점이 거의 확인되지 않습니다**.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "분당 지역에서는 **임플란트 잘하는 치과 TOP10** 추천 리스트들이 존재하지만, **분당새로이치과의원은 이들 리스트에서 언급되지 않는 편입니다**.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "또 “가격·품질 비교 리스트”에도 분당새로이치과의원은 빠져 있으며 주로 비용 저렴하거나 후기 많은 병원이 선정되어 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "분당새로이치과의원은 **병원 자체의 장비와 전문성 측면에서는 상당히 수준 높은 임플란트 서비스를 제공할 가능성**이 높지만, **아직 환자 경험에 대한 객관적인 리뷰가 부족한 상태**입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?m=subject&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bdnewdental.com/index.asp?m=subject&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/308207?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/2028426966/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/105?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://teeth8282.tistory.com/106?utm_source=openai",
+          "domain": "teeth8282.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원(분당 새로이 치과)의 임플란트 진료에 대한 평판은 현재 온라인에서는 리뷰나 평점이 거의 확인되지 않는 상태입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/2028426966/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/308207?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://news.nate.com/view/20250904n35166?utm_source=openai",
+          "domain": "news.nate.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://news.nate.com/view/20250904n35166?utm_source=openai",
+          "domain": "news.nate.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://news.nate.com/view/20250904n35166?utm_source=openai",
+          "domain": "news.nate.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원에 대한 임플란트 진료 평판을 중심으로 정리해 드리겠습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "`병원찾아삼만리` 사이트에서는 분당새로이치과의원에 대해 **평점**이 0.0으로 표시되어 있으며, **리뷰 참여 건수도 없는 상태**입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "1. 분당새로이치과의원 임플란트 진료에 대한 **공개된 환자 후기나 평점이 현재 거의 없습니다**.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "- 네이버 플레이스, 카카오맵, 맘카페 등지에서 **“분당새로이치과의원 임플란트 후기”** 등의 키워드로 재검색해 보시고, 실제 환자들이 남긴 소소한 언급이라도 참고해 보시는 것이 좋습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sungyesa.com/hlist/308207?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/2028426966/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "경기도 성남시 분당구 서현동에 위치한 **분당새로이치과의원**의 임플란트 진료 특징과 전반적인 평판에 대해 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyCs0WBRd4yqcBZ_HCvTA9rJuDPoUbVg_hTO24uiaC26-Bwc1Qnt4OkLQ0IyBJyUUP4g7x3p3NwRBKrQnuAgrJDWlbsOEtzksGR4jh8f9DF6Ret3_Nh14=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtlVOtVi9lZ0QbRTezwqSGgoKwDdRYF9NO34etSAHkZhM_eaJCajcj2fK8o2Opuy3W_BJX2czMBV_6r4q3J-_yCsr3gpy1N3ePJ_JwuYwb2htjckrpS-ZJ56Kldlil9sryhACupmlZ2JsjHmOs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPZO9B0_Q6_oF77DNLoLFhkY5iT5DwmVa1EgyUJlcZdMxKDaHAFkjaT8CB87Z-_uzqMpVFbZd00HSO4hgZkcP1SeWcnApsoMcDsKNQMpFmPw-P8l45OO_2LDpMdERoFgrRzXByTZ6k5-jzRBUDwBFxADEZYgE5tuTaScqTQ5Ok_TVULqBOwoBWfCNivgiHpLERRJmRyqJUPbuXSRMgt6I5udS077M00KsOCw0ADxNauEIaHuCGr7nCcUPD5kTbZrn-yQ58bp0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzZKBMwv38-5tIs-rIkBCEAdFO9RtXgS-zBxwZ930K4PBIgoPHmgdVXf89BL5Ta09QxxrjLe1SGqc2gEDkCKFQpBB4BF6HycoKJDJ3W0BZiZdu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyNjhQL-JREyII6-NJL2x_H4uMIrKza5DTXJ328LGjuJ132FABRUJST35jMmmOZarL9yert3Zt10dUo7YeKwcsf16qdVAndmyutUkng7hAMUNJUwmMIsn5wnw8qdsL3PoKNs50uLMg7qXyj5byPLxKt6Xl_JCkv5Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당 서현동(효자촌/서현역 인근)에 위치한 **분당새로이치과의원**의 임플란트 진료 특징과 전반적인 평판을 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXhgoCLFk3lZDpHJTlI50vOJas795FdXDEITFY0cnxNWYHfJEEFnfcz5-cdZ2I3Jp6w7x-rDtBE0t_EnKyUof97_W_vcEfnR5PZiySV4nxq3j0AEXkaw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoRfzFjacx3qq1mJmA2PaAe0EDJPM4vT-eqCLoTnLm8j71HB3917nYPstPXPkPrEf5Q5kDyBKEsQsGIxOTyPtd3Xc7yAdkEiGJECd2P7lZFFw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "분당새로이치과의원",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원(성남시 분당구 서현동 소재)**의 임플란트 진료 특징과 전반적인 평판 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvJ75o10O4J3Uq1CrEOIcTioG5NhZ7gGw4HA-FcENd5i9UOD8T2HdKyeMSHV3ug65qCXDyeGmwXAWu3EiF21KnrshbD4wLRNzsXwOo21npL1f_48VIIQCRebuVntCy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFrUrf3brGE1ZS8O0EOBdLJKimwxhBjrU0kxLqLVDf1JXP3ukIQfUjIKuXIrxGHmTBEG2KoNajdHIgPAiwJxE3v_tXd2j2bbxM943eL4S-Zc4a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzU8FNXNiTrGpR390w6_ArXxRImwBEpegkWGDRnZ8K55rVKlyCWVFiolyLGrQ_mmzvT6AWMaFzugjmZBkEZ2SdBOE2QEnGtRFwY6C59-kRvTpl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5DeDlpfU6TgQyBd8hhGG0nokFFuZ-eCVncpavJwH5S7VHY-9JNFtVmPMXfP1T_C6IOrckb3ewfMAKE6Y9GlKuHt-2RNTPpjfFFGTGH5j1kQaFzCJKtlHkcPyYOaZoz23VPJ5PWz7wg0B4Zm0MDIO6G5CxZRPvvCHgdMVR6jjzgVHE72PrTQnLP6BCzihT4-83VoXYiFdZ2vuSVMWeN1UEo9dzOtc486DZwdeUzcq5YJ50HycJej7_mMXitZzB5hrvgTk5P9zzfXr0bo0F9_qcxw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqv05AQ1BdTpaKbPC7ODMlIM8wGwm9VefTByQyr_lr-eG0Je3nkaS9a70I8iGugzTi5XpxS0JoUFI3KK7o41htktoAhKEUMUlyU919MAZo6SNCjxNtoDm-XUmV49uksGzJriSaxbKVYHM-x995",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzU8FNXNiTrGpR390w6_ArXxRImwBEpegkWGDRnZ8K55rVKlyCWVFiolyLGrQ_mmzvT6AWMaFzugjmZBkEZ2SdBOE2QEnGtRFwY6C59-kRvTpl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmwS9A1d2j0DCHDvK97WszGVK0IGzJn_afn093pDBgyEZehvlnEEEqsOBGmcLG7mhQmNEd3q0hyjhVj7wR_wlRU_GpYycFuKvAd6VS6P4aY8og1KRvMDHLxEjzNCvr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbTpxYbTihooyrktlrmhlED4aLUfN_lVmVdxzWyQhrqhGc27uwa07UjeJ13Eu68KJpr3kX5fO75EcCifhBbJjVpKVPxPMvj7a5eI2o6f_DyrT3YLmJcIxJBKm9xWkIPlU_JKJWAW3auGPNBGWWzto2Y8i-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXw5WcXJN1Q4L8eq1B_IbQLw2bkV_Lwhj5ypUg_gv5raE4w5z_mcSAD2O4KIInc_sK2LqbemXmDqxJ_cITSVKs-8cZszKx8cil_Y0_AyC_gs_wTnd7jQdnLWfKcrgdKLsPogPgQGy0oatf8bDhaZzz4A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송하지만, 현재 웹 검색 결과에서는 \"분당새로이치과의원\"에 대한 이용자 후기나 평가를 확인할 수 없었습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://bukangdental2.wixsite.com/bukang?utm_source=openai",
+          "domain": "bukangdental2.wixsite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bukangdental2.wixsite.com/bukang?utm_source=openai",
+          "domain": "bukangdental2.wixsite.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원에 대한 환자 후기가 현재까지는 웹상에서 거의 확인되지 않아 직접적인 평가를 제공하기 어려운 상태입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.localpricekorea.com/ko/clinic/2028426966/consult?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송하지만, 현재 웹상에서는 **‘분당새로이치과의원’**에 대한 실제 환자 후기—특히 과잉진료 여부나 친절도에 초점을 둔 리뷰—를 찾을 수 없었습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://news.nate.com/view/20250904n35166?utm_source=openai",
+          "domain": "news.nate.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**(성남시 분당구 서현동)에 다녀온 환자들의 주요 후기와 평가는 다음과 같이 요약할 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFabnleBOpurOn-5WXWl2IDvTEiBVhAJKhKkJ3l_71UpSK1gYmkdQBMMSnbmnSPcb10H3i2h5m5lcVaExi9NZkQb3Yv3u2JgXltOUP17Pzvj1pEs3VcPviBVhovMTbL-lQYoreRO16WqUdrgjK4tcri_ZgfqhyHZgSGLuA5Pe1h-54Cug-cHHovdiUuBdgA2zGgBos63gwwd0wkT6IoaUbZZK4TO9sBbu0mu0N-Cg8oykfXVCvXjKS-3de-W_A7brVu2T32ij8mq7nRo0TeuIzmXjJcEIiZDn-LPPY23D9zNuJBPd5oiU8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQ0DTGpmd8sWqiErDzpzjYyjtU7TLhQ-GGCpDhmaZJWqTLkNkLi61bnmZdVNk3t42nfWGM8VXXrmPA15m1BSoqJBPoy_4lR14OtZmIlrbjUtwRSCuXpg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-gk_MVBGyXZHpNzYLydTzyb3M2SLeV8noFuuQ6ksjafWPBdeGBgINKGdwFlJSNAXIXRqwQNz3aobg2mpy_3ffPZOFaXA3M_JE8w4y25PnWXjK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEue0NmrhVrxPeKftCmfkIAncXc-NT-XMXqqhGpNPw31khe8ZknJCQQm9wyULV9kwwDgxIV_jkoGKkd5duLtlXbSJIIj3AKcehErqAT_1hlM8LGfndPwtdLHHgV9giUT9Ly8XvR7a4-B0s2Pqm1dETmNVsIt1HeuqQilGMeJ-BjWe290oHCWdnJ1y9CGJRvH-asTfJOPMA33BaBHHRfTrLZNT55cCNwm3_S39KCHW3YJAABGgCk2SOQcBAWEYOl2RNxpOARZ4npNl8leenV6ov24g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**(성남시 분당구 서현동 소재)에 대해 후기 및 이용자 평가를 종합해 보면 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOHWyiWhZzydnv5yx1ghtcZYjs9OL3aCu4L8ZFPJSgk0L3yy08pT5H928nl_Y3AW0NuRs2vXViXAgioD_zCg-diGv6wKVA56sXjOrFWiGszGZ2TLDm1LF1GyZ-ztbPNXGOiu68pBO0ReDAthk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGizjJzkh-_gqGPxAhEeVHjHgIf7-gCWt4CuOwpfamz-3iYeqPXStSj-8UmU3_WAdUV93qRBEll86dyFzQm8D_cm4sSifZcXhJT7USxiws7uOs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFthfeP3eMrzrjB-CH4QyIH-Uls0bg0ntRrYoCXaYRedSn5tgU0mD5X73A10jWeRUhJg86e4ITcPCCcvyfCSSZDxNPx2OZaspnYd887LqXfCFlo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFthfeP3eMrzrjB-CH4QyIH-Uls0bg0ntRrYoCXaYRedSn5tgU0mD5X73A10jWeRUhJg86e4ITcPCCcvyfCSSZDxNPx2OZaspnYd887LqXfCFlo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMK3amRQm06phRS6VFWzLd2J4aOAy_8ReocXnHDRbiZRvTSILbrhuuPq4C0BO443oy_fw7wRztjhGzl9KfXd3_9H8awvLyM5--XqkDZ1KisITFz4U2Gr5dWmbkM0zI9Zm6ZS9895wazpxO_cBVuiOvxFdIkc_txPM_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFp6MAzy5ATr-lG9B6rNf4vftw0GU4YaJ0bPgkXS3h9MdPq-mss_G_y_1FWY27yUp88e8oNpy5gZH285H3olqQ5-Ide21mdSRVeayFk441GxV5ePbC4FXIGsCueN6qmcKTDPAzlpWCq3JykKd0YIZz1IWdHQrKfGw9qcF3mRzqUEYQOSY_UVYW2-KUy_4A8mFuiZa0YoVb35xUyxg_mJ1KF_IOX1kqw8V8hjc6ii7pyLnBAEjJ_lm75jcE45RaetA1fW4PlUNbTFhD3p9095dSm0Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFthfeP3eMrzrjB-CH4QyIH-Uls0bg0ntRrYoCXaYRedSn5tgU0mD5X73A10jWeRUhJg86e4ITcPCCcvyfCSSZDxNPx2OZaspnYd887LqXfCFlo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "경기도 성남시 분당구 서현동(불정로376번길)에 위치한 **분당새로이치과의원**의 진료 평가와 방문 후기 특징은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKRHvrB40OeIdzSH7BkZKpugcKZOKvFIO3rFN2JMFwfYpxk5A69VsC-CJPFtndaNTt4NAR8shC0G_cAQrhj0Z0oHslxLZEVxEfNB79TvaPdGXWCZV-kLboOpDn0sW-7kZet8Q48TgreOuOif2ofQhyttHMx1x26STBDNkaqGrp3tpnrKF_WQtF24PfoJ7-Gs2Cl31FZNcvouSRPPtxjidFeDKmuXOilIGR6UJjQ9kRXS-STN42So9I5O-wH37evw9PkXFjDZD-NzQbCtPx76mTyLfO4HUnuyUOlhx1cGXpdF5tDJBhMCuJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7iE2rYtR-kIJxSwrsoy7YfgABjD_-qn_LAeZger2ai5ikMZz73YM_tbbqh0JxnRRbSV44Hzv5cce29PR7MM3VHmfvhe7AUQLyIUuB1YmA15mSOndhxEICRQ-wSnF0QZ5QPtDFzP4jobY8AhkK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG0huS7cK5pz5fIxYfT36EeQXbgXRs_EfsEYGCcDRnlxsq3j5voFa2P1whw7AoHNw7Ca8YhYvqebbvNqZJ1TEGLfwELKvTmHGpqumo2vW4virP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSoS6ik17wBl0bF3F1K8AUZapy5VHdCwTDyrWEbif18hsuGeR5Y7MCVOUeK4btffNgzpxJUWGJMi1ajXhl6o5matJMZa3R_pUNWmwoFpa1-_o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG0huS7cK5pz5fIxYfT36EeQXbgXRs_EfsEYGCcDRnlxsq3j5voFa2P1whw7AoHNw7Ca8YhYvqebbvNqZJ1TEGLfwELKvTmHGpqumo2vW4virP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFa9UV8F65sSnLkvDSqgWip9S5jTkcLCVAqkW0-xL-dkV7wzyoT0fzTX5PGwE40A0PoGwPeADIW6WMyetckETAQjfZ9SazcCEuFdnoECV5MDv7OiHlm3s0kiRBPHtTUNVYHKcqUpbrkp4XqjsWgGxsRwLYQv4_ZMHzMdFBb7ouyNouBfE79w0ywUHFHHOij0DTzUu2hsxSqOfUyk2zSmNwBYPaRgzEZC3_kOocIizWb2IIutfVRhSuCmxT2ZhXghkk3p2M0FpYP_aWJduLTJ-VYVM95VDa8M-xzC18rZpwxQXHbEzQ9nVE-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원의 정확한 최신 가격정보를 확인한 결과, 2026년 여름방학 이벤트(6월 29일 ~ 8월 31일)에 한해 특별 혜택이 제공되었던 것으로 확인됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "현재 분당새로이치과의원의 최신 정식 가격은 공개되어 있지 않으며, 이벤트 가격도 종료되었습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://pf.kakao.com/_DaqzX/113807126?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdbddc.com/encyclopedia/%EC%B9%98%EA%B3%BC%20%EB%B9%84%EC%9A%A9?utm_source=openai",
+          "domain": "bdbddc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ko.buildfigure.org/info/dental-insurance-guide?utm_source=openai",
+          "domain": "ko.buildfigure.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ysbsdc.com/price?utm_source=openai",
+          "domain": "ysbsdc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ko.buildfigure.org/info/dental-insurance-guide?utm_source=openai",
+          "domain": "ko.buildfigure.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ttecase.com/pricing?utm_source=openai",
+          "domain": "www.ttecase.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의 정확한 충치 치료나 임플란트 비용은 공식 홈페이지나 직접 병원에 문의하시는 것이 가장 확실합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**분당새로이치과**의 구체적인 비용은, 해당 치과에 진료 상담 또는 전화 문의를 통해 확인하시는 것이 가장 정확합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulbardi.com/notice/?sb_doc=51226&utm_source=openai",
+          "domain": "seoulbardi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chronicles7of7small7things.tistory.com/639?utm_source=openai",
+          "domain": "chronicles7of7small7things.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://chronicles7of7small7things.tistory.com/639?utm_source=openai",
+          "domain": "chronicles7of7small7things.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ttecase.com/pricing?utm_source=openai",
+          "domain": "ttecase.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dental-health9.com/bundang-implant/?utm_source=openai",
+          "domain": "dental-health9.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당 지역의 **새로이치과의원**에서의 충치 치료 및 임플란트 비용은 병원마다, 또 치료 방식과 사용하는 재료에 따라 크게 달라질 수 있으므로, 아래는 **2026년 기준 전국 평균 수준**과 **경기도·수도권 지역 특성**을 바탕으로 대략적인 안내 드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**정확한 비용 확인**을 원하시면, 분당 새로이치과의원에 직접 문의하셔서 본인 치아 상태와 필요한 치료 항목을 기준으로 견적을 받아보시기를 추천드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://trendmetriclab.com/guides/dental-care-cost-guide/?utm_source=openai",
+          "domain": "trendmetriclab.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://trendmetriclab.com/guides/dental-care-cost-guide/?utm_source=openai",
+          "domain": "trendmetriclab.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.koreadentalinfo.com/pricing?utm_source=openai",
+          "domain": "koreadentalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://trendmetriclab.com/guides/dental-care-cost-guide/?utm_source=openai",
+          "domain": "trendmetriclab.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.koreadentalinfo.com/pricing?utm_source=openai",
+          "domain": "koreadentalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.koreadentalinfo.com/pricing?utm_source=openai",
+          "domain": "koreadentalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.koreadentalinfo.com/pricing?utm_source=openai",
+          "domain": "koreadentalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://theseoul.org/index.php?device=mobile&utm_source=openai",
+          "domain": "theseoul.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.medicalguide.co.kr/ko/dental/pricing?utm_source=openai",
+          "domain": "medicalguide.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ko.buildfigure.org/info/dental-insurance-guide?utm_source=openai",
+          "domain": "ko.buildfigure.org",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.koreadentalinfo.com/pricing?utm_source=openai",
+          "domain": "koreadentalinfo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dentalcost.co.kr/?utm_source=openai",
+          "domain": "dentalcost.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원(성남시 분당구 서현동 위치)**의 충치치료 및 임플란트 비용은 사용되는 재료와 치아 상태에 따라 대략 아래와 같은 수준으로 형성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8b_7-6fHU1oIdNuWLk2KmM3NlgjGkmDSgoBy_SUYjYKsvJfahR6jo2J96KFKmSxAtR6lNAVVN9bTwMsKrCRz_J9X5tf8pJyAIkcjRT_mG-gA4l-yBWBC8dKefrOQk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVhegZHaT7hcIJe11UQI0g_-bJ8gr5bYNhAp_NiHkTQ3yy0YFEz8tPF1UnSB-I26EYJomSuAw16rjnG5A5k5jjPqs-7u21DWm4n1Gkc2cfYvKkKA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHokBA7jLJ4n82u3bn_8tZSiXwBX2uOyttrdpsTTPkdS-EoP4h-SEXkhWB3x2hcuBM15ELIzhG-dhbALxPJb3kuREO627QbQtk3cQ3S3tXqrw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQJz6JqAumdtQJW8hXYLrlbMIV6pZACJQu0P6ydVPszYV0bPJ4NNbu_mS8_rOVpJlS4z4yKKCD-BVKzXqS8n1RdrYJRgUb_-slbDRI5gJZE5luVOjUkN0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoetEPcWrQZhe4bIIgDnFPN_9cr3AVyX05ywja6yRu0fOn1AHj4tAHolUzDioUpVvgeU516pZdhjiYayX1120BuFuHbfy7sSHp8ijwq0BawcFN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTjlI2Y6Ih-EHMq_dAJqLbP5fppqa1sn3Z7HZr4h0hpJLxrQxLVkAvIGQTXudIgjLekscZT5TA69eGij5aTiZz1vdBPPj7WBXjaxnp8Rxx4ocClMWeDXSlcc5MJPnWkCbVjvsEsL9kBvOfHdhOvT7U1bairr6tMY9HJsAnvCnIEFboHnWlar8o8rbGbnq1bRToHVnXL3lk5S-0ezgoxEIGCVN8Nw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGp6MFSnwV8S6D47ka6uRiQsMfmSJdrxhFLV6VhZKjUU4jls5CiodaBidHM63J7zABFruWoO0Xt0tQqR8JKB6CpSLnkfyjtFT1E93ksG1vrCKw9fvnuZgOTc7TFhyW2xC1sY5OK416UfmGdkqB-ILueydeU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**(성남시 분당구 서현동)의 비급여 진료비 고지 기준 대략적인 충치치료 및 임플란트 비용은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9JLQpuuOfp1DA5zXwF3Zz4mzMiNQ9RAFlHGLYeBM2sWyZwn67h7m791jWLEMFJ7z-zQXrsCL1BYAIVZtVk9oH0RvyJ3LB9CfZM_XbmD797G05HQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgTUZPAkUgYGTiNYmFVEvRfEFOBsBxKaou7I5xGTMyhaxvVsczMf40ICzFherjDW2H9YDdYGcBuMyTgrg90291QppoHjJPfFsSbYVImVuYcgy4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGguXme8g0Fhntu83DxSSonjtiT61-f1TdzC4UOA-_Qykx0l3M8n2k9uNdHkUb87xx85Fxf5EiA1FURxIUadTJVAgAZxqAY4u3J2Sm-OCNKKw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**(성남시 분당구 서현동)을 비롯한 인근 치과의 비급여 수가 및 일반적인 진료 비용은 대략 다음과 같이 형성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoI72pTeAXwUJNYLe_LUhRifyMZq7ecn54Jxgfyp_OX6WgPmB3_POTAypN4sZAieb5CyLuoCicWzzLr9v_6URq6tB2OmRU3GYZ5dkd_2Xo9TS8LYUr7Iq3JgEBSm_6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECbr8mUQIFQWa-udwpTJ2eHCNjpPXXD0ITvwK2xhhHNvGLQdKyCx4tEbTF__-8LYAPkeMDLXNqQH9Jl2dkKmcsjjXEXfG9qLZC4YPUIwM1CxqjYw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "정자동에 위치한 “분당새로이치과의원”은 아래와 같은 위치 및 교통 정보를 가지고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "정자동 “분당새로이치과의원”의 위치와 접근성에 대해 정리해 드릴게요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sj.hospitalk.net/workplace_detail.php?id=1541159&utm_source=openai",
+          "domain": "sj.hospitalk.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kr.object.iwinv.kr/niceauction/gongmae/2025/20250705/attach_1895860_1.pdf?utm_source=openai",
+          "domain": "kr.object.iwinv.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kr.object.iwinv.kr/niceauction/gongmae/2025/20250705/attach_1895860_1.pdf?utm_source=openai",
+          "domain": "kr.object.iwinv.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kr.object.iwinv.kr/niceauction/gongmae/2025/20250705/attach_1895860_1.pdf?utm_source=openai",
+          "domain": "kr.object.iwinv.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://myteatime.kr/education/?bmode=view&idx=171141745&utm_source=openai",
+          "domain": "myteatime.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.82cook.com/entiz/read.php?bn=15&num=2990161&utm_source=openai",
+          "domain": "www.82cook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "분당새로이치과의원(정자동)의 위치와 교통 접근성, 주차 편의에 대해 아래와 같이 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://sj.hospitalk.net/workplace_detail.php?id=1541159&utm_source=openai",
+          "domain": "sj.hospitalk.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bdnewdental.com/index.asp?m=location&utm_source=openai",
+          "domain": "bdnewdental.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**은 정자동이 아닌 **서현동(효자촌 상가 일대)**에 위치해 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIwdMqlPdVf9hXbNcgEkRkBU7vONU1MXZnriEbolhH4stnnVAMD6L1XxtZXksAyhZMHvknXDB3F6hqZ_O1dG_qSQCW7epOq2Xq6zljg5lwxaQERtX1dg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElr-CEkxT6RFtxll7VgHALpQqNpDBtlaeaztQL1k-bZjw9KFZT0GR6hgkN6hSG-W-RdS8WUyKsRBX4hrnuF07VwB5BHGEGmU4n9jzxdvWhsgcO3x52x4Lp3q5OJah-SJi3E3IXNBuQkrT8BJU5XCOjTQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE39337Lbp5OS85PxcZk8PV7uZGY_7IF8ndO2JJBk5-XqiFg5V0DIblRpreYNCcNylYZng-pSwCnl6bwYPSIBdBDZX7Br1_L2R6Qbyn6ArSMPlAm1_lhQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZJsQKkmzHwe8Km8rGfLZRy8bShXePtpuOrA47USV3bVa67Ovkp9Vfv231XWBkupXpNlJ-tUVAgqFBQEdNHkxdi9Ss5P9fMgkDA-MMVI-ODLegTFrFeK_n1utkFHM==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**의 정확한 위치와 주차, 대중교통 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCKkV6suvGiKMD9slm2OjOVkmUMgy4NX-GntAusRXo-ezAR6Ty2ER1Ta1Lecojq67542q1DOCqm_L166Qu7D0YC39r8_lbFZPGDkCe0x-vVvTzrdBNMTc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFePcqNTFrzvBzGB7xpTtA200G_MV7iRRODjyOs5vVf4k-ZFZvD4d-cTX3I7LOCeT5qTdUdrYCbcTdZWcyBf9F9X5lHj2LMyGD7VwgP26xZGfBvYPxzl_5tcoBiDR1hWru_-tBlKU8VlcrIVFEuLdzW4Nh5K358AIfVMKNz9xNhyNiBSXRzV5HdQ3qM6-1aB7EN91NtcUY8DiuzxHjhOAe0-CQolnzJ4soUOTNElpFl4fTO_XesaU_D0GYym8cGy9E46E6wTWaGKLpQD5pmcPQz9QQraYsL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGx9qo5NDqci4Mp7gS6X8xwA425ScSizFSFPWjQGY-iQtHR4XfPOcYN7AHSPLDBLxODP8Vmq2-3IuIR3wh1T11oB97_w2RM-P-gBGealkddr88s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**분당새로이치과의원**은 정자동이 아닌 **서현동(효자촌/미래상가 인근)**에 위치해 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG29Hiw-XJcdsJxyfK1bD8l2_5nnuYPGEVcHPzXP9qannJb2V3SbU2DqSS36Uw9FZwYZvGFEE-ZuYK2aYShbahDlRDpIXQ50XyXP_d51hjM7vE1LYwVcz8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjRF3DcK7lv8SDesnuuaHDIACvqP3UHc37-7pcyl7uUhopwF9fi2FrnvsSJSBJEj2ozM5OjYUVgNb1lDQcPmJvWXwpYJdOsWO-K5hyH0CkrTAT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

@@ -552,5 +552,149 @@
         "updatedAt": "2026-09-04"
       }
     ]
+  },
+  {
+    "tenantId": "bdnewdental",
+    "brandName": "분당새로이치과의원",
+    "aliases": [
+      "분당새로이치과의원"
+    ],
+    "ownedDomains": [
+      "bdnewdental.com"
+    ],
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "hushubundang",
+    "brandName": "분당내이치과의원",
+    "aliases": [
+      "분당내이치과의원"
+    ],
+    "ownedDomains": [
+      "hushubundang.com"
+    ],
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "ilovebrace",
+    "brandName": "일리노이치과의원",
+    "aliases": [
+      "일리노이치과의원"
+    ],
+    "ownedDomains": [
+      "ilovebrace.com"
+    ],
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "maum-dream",
+    "brandName": "마음드림치과",
+    "aliases": [
+      "마음드림치과"
+    ],
+    "ownedDomains": [
+      "maum-dream.com"
+    ],
+    "industry": "치과",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "분당새로이치과의원",
+        "aliases": [
+          "분당새로이치과의원"
+        ],
+        "domains": [
+          "bdnewdental.com"
+        ]
+      },
+      {
+        "name": "분당내이치과의원",
+        "aliases": [
+          "분당내이치과의원"
+        ],
+        "domains": [
+          "hushubundang.com"
+        ]
+      },
+      {
+        "name": "일리노이치과의원",
+        "aliases": [
+          "일리노이치과의원"
+        ],
+        "domains": [
+          "ilovebrace.com"
+        ]
+      },
+      {
+        "name": "미금세브란스치과의원",
+        "aliases": [
+          "미금세브란스치과의원"
+        ],
+        "domains": []
+      },
+      {
+        "name": "21세기치과의원",
+        "aliases": [
+          "21세기치과의원"
+        ],
+        "domains": []
+      },
+      {
+        "name": "수미르치과",
+        "aliases": [
+          "수미르치과"
+        ],
+        "domains": []
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "brand-address",
+        "type": "location",
+        "claim": "주소",
+        "value": "경기도 성남시 분당구 성남대로 926, 메트로빌딩 7층",
+        "updatedAt": "2026-09-04"
+      }
+    ]
   }
 ]

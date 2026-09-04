@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T04:33:01.294Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "분당 쪽에서 임플란트 잘하고 과잉진료 없는 치과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "성남 분당에서 충치 치료 안 아프게 꼼꼼히 봐주는 치과 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "경기 분당에서 스케일링이랑 구강검진 친절하게 잘해주는 치과 찾고 있어",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "분당에서 자연치아 최대한 살려서 신경치료 해주는 치과 추천 좀 해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "성남 분당 근처에 매복 사랑니 안전하게 잘 뽑는 치과 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "분당 치과 중에서 시설 깨끗하고 진료 설명 자세히 해주는 곳 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "분당에서 잇몸 치료랑 치주염 관리 전문적으로 잘하는 치과 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "경기 성남 분당 주민들이 자주 찾는 믿을만한 동네 치과 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "분당내이치과의원 진료 후기나 환자 평점 어떤 편이야?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "분당내이치과의원 임플란트나 보철 치료 비용 대략 어느 정도 해?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "분당내이치과의원에서 신경치료나 충치치료 받아본 사람 어땠어? 안 아프게 잘해?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "성남 분당 쪽에 있는 분당내이치과의원 위치랑 주차하기 편한지 알려줘",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    }
+  ]
+}

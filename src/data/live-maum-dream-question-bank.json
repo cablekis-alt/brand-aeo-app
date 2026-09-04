@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-04T04:37:04.743Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "분당에서 과잉진료 없이 양심적으로 진료하는 치과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "성남 분당 쪽에 임플란트 잘하고 안 아프게 치료해주는 치과 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "분당에서 턱관절 치료나 신경치료 꼼꼼하게 봐주는 치과 찾고 있어",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "경기 성남 분당에서 자연치아 최대한 보존하면서 충치 치료하는 치과 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "분당 지역 잇몸치료랑 스케일링 아프지 않게 잘하는 치과의원 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "분당에서 야간진료나 토요일 진료 편하게 받을 수 있는 치과 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "성남 분당에서 치아교정 상담받으려고 하는데 괜찮은 치과 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "분당 미금이나 정자 쪽에서 부모님 틀니랑 전체 임플란트 잘하는 병원 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "분당 마음드림치과 진료 받아보려는데 의료진 경력이랑 후기 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "분당에서 마음드림치과랑 분당새로이치과의원 중에 임플란트 어디가 더 꼼꼼해?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "마음드림치과 지르코니아 크라운이나 레진 치료 대략적인 가격대가 어떻게 돼?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "분당 마음드림치과 매복 사랑니 발치할 때 통증이나 당일 진료 후기 궁금해",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "치과",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    }
+  ]
+}
