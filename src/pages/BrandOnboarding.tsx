@@ -199,7 +199,6 @@ export default function BrandOnboarding() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [extracted, setExtracted] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [canRegister, setCanRegister] = useState(false)
   // 측정 경로: local(=/run 로컬 측정) | github(=GitHub Actions dispatch) | none(=대기열만).
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
@@ -633,17 +632,7 @@ export default function BrandOnboarding() {
     }
   }
 
-  async function copyJson() {
-    try {
-      await navigator.clipboard.writeText(json)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      setError('클립보드 복사에 실패했습니다. JSON을 직접 선택해 복사하세요.')
-    }
-  }
-
-  // 등록만 한다 — 등록 후 드롭다운에 바로 보인다. 측정은 STAGE 4 "랭킹 분석"의 "이 브랜드 측정"에서 별도로.
+  // 등록만 한다 — 등록 후 드롭다운에 바로 보인다. 측정은 STAGE 1 "브랜드·경쟁사 측정"에서 별도로.
   async function registerBrand() {
     setRegistering(true)
     setRegisterMsg('브랜드를 등록하는 중…')
@@ -882,9 +871,6 @@ export default function BrandOnboarding() {
                 {registering ? '등록 중…' : '브랜드 등록'}
               </button>
             )}
-            <button type="button" className="ghost" onClick={copyJson} disabled={!ready}>
-              {copied ? '복사됨 ✓' : 'JSON 복사'}
-            </button>
           </div>
         </div>
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
