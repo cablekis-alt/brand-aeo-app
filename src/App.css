@@ -40,19 +40,19 @@
 }
 
 .brand-monogram {
-  height: 34px;
-  padding: 0 11px;
+  height: 37px;
+  padding: 0 13px;
   flex: none;
   display: grid;
   place-items: center;
-  border-radius: 9px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  border-radius: 10px;
+  /* 채움형 강조 — 글자색은 var(--paper)라 라이트/다크 모두 accent와 대비가 유지된다. */
+  background: var(--accent);
+  color: var(--paper);
   font-family: var(--serif);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
