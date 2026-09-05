@@ -2,6 +2,24 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
 import measureLogRaw from '../data/measure-log.json'
+import scorecardsRaw from '../data/demo-scorecards.json'
+
+// best-effort — tenantId → 최신 스코어카드(주차·AEO). 성공 run의 주차·AEO 열에 붙인다.
+interface ScRow {
+  tenantId: string
+  weekOf: string
+  aeoScore: { current: number }
+}
+const latestByTenant: Record<string, { weekOf: string; aeo: number }> = {}
+for (const c of scorecardsRaw as ScRow[]) {
+  const prev = latestByTenant[c.tenantId]
+  if (!prev || c.weekOf > prev.weekOf) latestByTenant[c.tenantId] = { weekOf: c.weekOf, aeo: c.aeoScore.current }
+}
+function runTenantId(title: string): string | null {
+  const m = title.match(/^measure\s+(.+)$/)
+  const id = m?.[1]?.trim()
+  return !id || id === '__queue__' ? null : id
+}
 
 // 로컬 측정 기록(measure:local이 커밋). GitHub Actions 실행 목록과 별도로 표시한다.
 interface LocalMeasureLog {
@@ -160,6 +178,9 @@ export default function MeasureStatus() {
 
       <section style={{ marginTop: '8px' }}>
         <h3>GitHub Actions 측정 실행</h3>
+        <p className="hint" style={{ marginTop: 0 }}>
+          주차·AEO는 성공 run에 한해 해당 브랜드의 <b>최신 스코어카드</b>를 붙인 best-effort 값입니다(실패·미매칭은 <code>-</code>).
+        </p>
         {!enabled ? (
           <p className="muted">
             배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 아래 로컬 측정 기록은 토큰 없이도 보입니다.
@@ -176,6 +197,8 @@ export default function MeasureStatus() {
                 <tr>
                   <th>상태</th>
                   <th>대상</th>
+                  <th>주차</th>
+                  <th>AEO</th>
                   <th>측정시간</th>
                   <th>경과</th>
                   <th></th>
@@ -184,12 +207,16 @@ export default function MeasureStatus() {
               <tbody>
                 {runs.map((run) => {
                   const badge = statusBadge(run)
+                  const id = runTenantId(run.title)
+                  const sc = run.conclusion === 'success' && id ? latestByTenant[id] : undefined
                   return (
                     <tr key={run.runNumber}>
                       <td>
                         <span className={`status-pill ${badge.cls}`}>{badge.label}</span>
                       </td>
                       <td>{targetLabel(run.title, nameMap)}</td>
+                      <td>{sc?.weekOf ?? '-'}</td>
+                      <td className="num">{sc?.aeo ?? '-'}</td>
                       <td className="num">{duration(run)}</td>
                       <td>{timeAgo(run.createdAt)}</td>
                       <td>
