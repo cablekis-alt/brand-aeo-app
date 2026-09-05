@@ -111,6 +111,10 @@ async function createWindow() {
   // 패키징: vite 없이 번들된 서버(dist-electron/server.cjs)를 인프로세스로 띄우고,
   // 그 서버가 dist(정적 UI)+/api를 같은 오리진(:4000)에서 서빙한다. 창은 그 URL을 로드.
   loadEnvForPackaged()
+  // 로컬(한국) 측정은 Gemini grounding이 기준 — judge/수집 기본을 Gemini로(OpenAI 크레딧 비의존).
+  // .env에서 명시하면 그 값을 존중한다. CI(measure.yml)의 기본값과 일치.
+  if (!process.env.JUDGE_ENGINE) process.env.JUDGE_ENGINE = 'gemini'
+  if (!process.env.GEMINI_MODEL) process.env.GEMINI_MODEL = 'gemini-3.7-flash'
   process.env.PORT = API_PORT
   process.env.ELECTRON_STATIC_DIR = path.join(__dirname, '..', 'dist') // asar 내부 dist
   // 측정 데이터·오버레이·큐는 쓰기 가능한 userData로(asar은 읽기전용). server/appPaths.ts가 참조.
