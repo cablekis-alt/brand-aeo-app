@@ -31,8 +31,8 @@ icon: electron/build/icon.png
 win:
   icon: electron/build/icon.png
   target:
-    - nsis
-    - portable
+    - nsis # 설치본(.exe)
+    - zip # 포터블(압축본) — 압축 풀어 exe 실행, 설치 불필요
   artifactName: ${productName}-${version}-${arch}.${ext}
   # 코드 서명: 인증서를 저장소에 굽지 않는다. 아래 env가 있으면 electron-builder가 자동 서명한다.
   #   CSC_LINK=<.pfx 경로 또는 base64>  CSC_KEY_PASSWORD=<비밀번호>

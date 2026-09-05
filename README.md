@@ -129,9 +129,11 @@ npm run electron:dev
 ### 설치본(.exe) 빌드
 
 ```bash
-npm run electron:pack        # NSIS 설치본 + 포터블 .exe → dist-electron/out/
+npm run electron:pack        # NSIS 설치본(.exe) + 포터블(.zip) → dist-electron/out/
 npm run electron:pack:dir    # 설치 파일 없이 앱 폴더만(빠른 확인)
 ```
+
+- **설치본(.exe)**: 설치 마법사로 설치. **포터블(.zip)**: 압축 풀어 `Web4AI Brand AEO.exe` 실행(설치 불필요). 릴리스 페이지에서 원하는 쪽을 받으세요.
 
 빌드 순서: `vite build`(dist) → 서버 번들(esbuild) → electron-builder.
 
