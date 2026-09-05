@@ -5,7 +5,7 @@ import express from 'express';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
-import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
+import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferCompetitors } from './brandInference.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -253,6 +253,16 @@ app.post('/api/infer', async (req, res) => {
         return;
       }
       res.json({ address: await inferAddressViaSearch(brandName, region) });
+      return;
+    }
+    if (kind === 'domain') {
+      // 도메인만으로 브랜드명·업종·지역·주소 추론(그라운딩). 배포 api/infer.ts와 동일 계약.
+      const domain = typeof req.body?.domain === 'string' ? req.body.domain : '';
+      if (!domain.trim()) {
+        res.status(400).json({ error: 'domain이 필요합니다.' });
+        return;
+      }
+      res.json(await inferBrandFromDomain(domain));
       return;
     }
     const text = typeof req.body?.text === 'string' ? req.body.text : '';
