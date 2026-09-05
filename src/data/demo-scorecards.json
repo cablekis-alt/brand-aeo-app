@@ -502,5 +502,29 @@
       "totalTenants": 6
     },
     "hallucinationFlags": []
+  },
+  {
+    "tenantId": "web4ai",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "스테이,머뭄",
+    "aeoScore": {
+      "current": 37,
+      "ma4": 37,
+      "previousWeek": 37,
+      "ciLow": 30.2,
+      "ciHigh": 43.8
+    },
+    "mentionRate": 0.0625,
+    "shareOfMention": 0.20100502512562815,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 1
+    },
+    "hallucinationFlags": []
   }
 ]

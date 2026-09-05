@@ -696,5 +696,77 @@
         "updatedAt": "2026-09-04"
       }
     ]
+  },
+  {
+    "tenantId": "web4ai",
+    "brandName": "스테이,머뭄",
+    "aliases": [
+      "스테이,머뭄"
+    ],
+    "ownedDomains": [
+      "web4ai.o2osolution.ai"
+    ],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "brand-address",
+        "type": "location",
+        "claim": "주소",
+        "value": "전북 군산시 절골길 18",
+        "updatedAt": "2026-09-05"
+      }
+    ]
   }
 ]

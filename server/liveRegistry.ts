@@ -41,6 +41,8 @@ import bank_viewplasticsurgery from '../src/data/live-viewplasticsurgery-questio
 import analyses_viewplasticsurgery from '../src/data/live-viewplasticsurgery-question-analyses.json' with { type: 'json' };
 import bank_vvlyps from '../src/data/live-vvlyps-question-bank.json' with { type: 'json' };
 import analyses_vvlyps from '../src/data/live-vvlyps-question-analyses.json' with { type: 'json' };
+import bank_web4ai from '../src/data/live-web4ai-question-bank.json' with { type: 'json' };
+import analyses_web4ai from '../src/data/live-web4ai-question-analyses.json' with { type: 'json' };
 import bank_yunoprs from '../src/data/live-yunoprs-question-bank.json' with { type: 'json' };
 import analyses_yunoprs from '../src/data/live-yunoprs-question-analyses.json' with { type: 'json' };
 
@@ -71,6 +73,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'sm-ps': bank_sm_ps as QuestionBank,
   'viewplasticsurgery': bank_viewplasticsurgery as QuestionBank,
   'vvlyps': bank_vvlyps as QuestionBank,
+  'web4ai': bank_web4ai as QuestionBank,
   'yunoprs': bank_yunoprs as QuestionBank,
 };
 
@@ -95,5 +98,6 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_sm_ps as LiveAnalysesFile,
   analyses_viewplasticsurgery as LiveAnalysesFile,
   analyses_vvlyps as LiveAnalysesFile,
+  analyses_web4ai as LiveAnalysesFile,
   analyses_yunoprs as LiveAnalysesFile,
 ];
