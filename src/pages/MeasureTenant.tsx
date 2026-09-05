@@ -101,8 +101,8 @@ export default function MeasureTenant() {
       <p className="brand">STAGE 1</p>
       <h1>브랜드·경쟁사 측정</h1>
       <p className="lead">
-        <b>브랜드 하나 또는 경쟁사</b>를 골라 개별 측정합니다. 상단 브랜드 선택과 무관하게 원하는 대상을 고를 수 있어,{' '}
-        <b>특정 경쟁사 스코어카드만 갱신</b>할 때도 씁니다(경쟁사는 상단 브랜드 메뉴에 없어 여기서만 측정 가능). 배포에서는
+        측정할 대상을 골라 실행합니다. <b>본 브랜드</b>를 고르면 <b>경쟁사·코호트까지 함께</b> 측정하고(랭킹 분석의 "이 브랜드
+        측정"과 동일), <b>경쟁사</b>를 고르면 그 경쟁사 <b>하나만</b> 측정합니다(특정 경쟁사 스코어카드만 갱신). 배포에서는
         GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.
       </p>
 
@@ -138,12 +138,28 @@ export default function MeasureTenant() {
             onClick={() => void measureOne()}
             disabled={locked || !pickedTenant || measuring}
           >
-            {measuring ? '진행 중…' : canMeasure ? '측정 시작' : '로컬에서만 측정 가능'}
+            {measuring
+              ? '진행 중…'
+              : !canMeasure
+                ? '로컬에서만 측정 가능'
+                : picked?.cohortOnly
+                  ? '이 경쟁사만 측정'
+                  : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
           </button>
         </div>
         {picked && (
           <p className="hint" style={{ marginTop: '10px' }}>
-            CLI: <code>npx tsx scripts/ci-measure.ts {picked.tenantId}</code>
+            {picked.cohortOnly ? (
+              <>
+                <b>{picked.brandName}</b> 경쟁사 하나만 측정합니다.
+              </>
+            ) : (
+              <>
+                <b>{picked.brandName}</b> + 경쟁사(도메인 없어도 이름 기준으로 코호트 측정)까지 함께 측정 → 코호트 순위 1/N이
+                채워집니다.
+              </>
+            )}{' '}
+            로컬 CLI: <code>npm run measure:local -- {picked.tenantId}</code>
           </p>
         )}
         {message && (
