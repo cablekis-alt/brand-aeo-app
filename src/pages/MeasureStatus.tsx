@@ -43,12 +43,13 @@ function statusBadge(run: MeasureRunInfo): { label: string; cls: string } {
   }
 }
 
-// run-name "measure <tenantId>"(소문자) → 대상 라벨. 구버전 실행명 "Measure tenant"(대문자)는 그대로 둔다.
-function targetLabel(title: string): string {
+// run-name "measure <tenantId>"(소문자) → 대상 라벨. tenantId는 nameMap으로 실제 브랜드명으로 치환.
+function targetLabel(title: string, nameMap: Record<string, string>): string {
   const m = title.match(/^measure\s+(.+)$/)
   if (!m) return title
   const id = m[1].trim()
-  return id === '__queue__' ? '대기열 전체' : id
+  if (id === '__queue__') return '대기열 전체'
+  return nameMap[id] || id // 삭제됐거나 미매칭이면 tenantId 그대로
 }
 
 function timeAgo(iso: string): string {
@@ -79,6 +80,7 @@ export default function MeasureStatus() {
   const [error, setError] = useState<string | null>(null)
   const [auto, setAuto] = useState(true)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [nameMap, setNameMap] = useState<Record<string, string>>({})
   const timer = useRef<number | null>(null)
 
   const load = useCallback(async () => {
@@ -98,6 +100,23 @@ export default function MeasureStatus() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // tenantId → 브랜드명 매핑(GitHub 표 "대상"에 실제 이름 표시). 경쟁사 포함(all=1).
+  useEffect(() => {
+    let alive = true
+    fetch('/api/tenants?all=1')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => {
+        if (!alive || !Array.isArray(list)) return
+        const map: Record<string, string> = {}
+        for (const t of list) if (t?.tenantId) map[t.tenantId] = t.brandName || t.tenantId
+        setNameMap(map)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // 진행 중인 실행이 있으면 자동 새로고침을 계속한다.
   useEffect(() => {
@@ -170,7 +189,7 @@ export default function MeasureStatus() {
                       <td>
                         <span className={`status-pill ${badge.cls}`}>{badge.label}</span>
                       </td>
-                      <td>{targetLabel(run.title)}</td>
+                      <td>{targetLabel(run.title, nameMap)}</td>
                       <td className="num">{duration(run)}</td>
                       <td>{timeAgo(run.createdAt)}</td>
                       <td>
