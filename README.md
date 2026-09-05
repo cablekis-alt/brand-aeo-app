@@ -7,6 +7,8 @@
 ChatGPT·Gemini 같은 **답변 엔진(AI)에서 브랜드가 얼마나 노출·인용되는지**를 주간으로 측정하는 콘솔입니다.
 같은 질문을 반복 호출해 언급률·Share of Mention·추천 순위·사실성·EEAT·인용 출처를 집계하고 AEO Score로 요약합니다.
 
+![대시보드 — 측정 파이프라인 개요와 AEO Score](docs/screenshot-dashboard.png)
+
 ![랭킹 분석 — 같은 업종·지역 코호트 순위와 경쟁사 비교](docs/screenshot-ranking.png)
 
 - **프론트/배포**: Vite + React → Vercel (Hobby, 무료).
