@@ -99,15 +99,17 @@ export default function MeasureTenant() {
   return (
     <>
       <p className="brand">STAGE 1</p>
-      <h1>테넌트 골라 측정</h1>
+      <h1>브랜드·경쟁사 측정</h1>
       <p className="lead">
-        대기열과 무관하게 테넌트 하나를 골라 측정합니다. 로컬에서는 이 탭에서 바로 돌리고, 배포에서는 GitHub Actions가
-        측정한 뒤 결과를 커밋·배포합니다.
+        <b>브랜드 하나 또는 경쟁사</b>를 골라 개별 측정합니다. 상단 브랜드 선택과 무관하게 원하는 대상을 고를 수 있어,{' '}
+        <b>특정 경쟁사 스코어카드만 갱신</b>할 때도 씁니다(경쟁사는 상단 브랜드 메뉴에 없어 여기서만 측정 가능). 배포에서는
+        GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.
       </p>
 
       <section className={`panel${locked ? ' measure-local-only' : ''}`}>
-        <h3>테넌트 선택</h3>
+        <h3>측정할 대상 선택</h3>
         <p className="muted">
+          목록에는 내 브랜드와 경쟁사(<code>· 경쟁사</code> 표시)가 모두 있습니다.{' '}
           {!healthReady
             ? '환경을 확인하는 중…'
             : measureVia === 'local'
