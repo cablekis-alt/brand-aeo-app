@@ -85,6 +85,52 @@
   border-top: 1px solid var(--line);
 }
 
+.app-version {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.app-version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-version .ver {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-version button {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.app-version button:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.app-version button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.app-version .upd-status {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .theme-toggle {
   display: inline-flex;
   border: 1px solid var(--line);

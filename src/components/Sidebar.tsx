@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import AppVersion from './AppVersion'
 import ThemeToggle from './ThemeToggle'
 
 interface MenuItem {
@@ -97,6 +98,7 @@ export default function Sidebar() {
         <p className="sidebar-group-title">테마</p>
         <ThemeToggle />
       </div>
+      <AppVersion />
     </nav>
   )
 }

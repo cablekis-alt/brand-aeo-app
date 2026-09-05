@@ -1,8 +1,7 @@
-// 렌더러(React)와 안전하게 통신하기 위한 최소 preload.
-// contextIsolation=true 하에서 window.electron으로 몇 가지 정보만 노출한다.
-// 지금은 스캐폴딩이라 최소한만 — 이후 로컬 측정 트리거·파일 경로 열기 등을 여기에 추가한다.
+// 렌더러(React)와 안전하게 통신하기 위한 preload.
+// contextIsolation=true 하에서 window.electron으로 최소 API만 노출한다.
 
-const { contextBridge } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electron', {
   isElectron: true,
@@ -11,5 +10,13 @@ contextBridge.exposeInMainWorld('electron', {
     electron: process.versions.electron,
     node: process.versions.node,
     chrome: process.versions.chrome,
+  },
+  // 자동 업데이트
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  quitAndInstall: () => ipcRenderer.invoke('update:quitAndInstall'),
+  onUpdateStatus: (cb) => {
+    const listener = (_e, status) => cb(status)
+    ipcRenderer.on('update:status', listener)
+    return () => ipcRenderer.removeListener('update:status', listener)
   },
 })

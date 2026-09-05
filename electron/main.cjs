@@ -10,7 +10,7 @@
 //
 // 패키징(electron-builder + 정적 dist 서빙 + 컴파일된 서버)은 다음 단계 — electron/README.md 참고.
 
-const { app, BrowserWindow, Menu, MenuItem, shell } = require('electron')
+const { app, BrowserWindow, Menu, MenuItem, ipcMain, shell } = require('electron')
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -19,6 +19,9 @@ const IS_WINDOWS = process.platform === 'win32'
 const API_PORT = process.env.PORT || '4000'
 const DEV_SERVER_URL = process.env.DEV_SERVER_URL || 'http://localhost:5173'
 const PROJECT_ROOT = path.resolve(__dirname, '..')
+
+/** 업데이트 상태를 렌더러로 보낼 때 쓰는 현재 창 참조. */
+let mainWindow = null
 
 /** 자식 프로세스 핸들 — 종료 시 정리한다. */
 const children = []
@@ -79,6 +82,7 @@ async function createWindow() {
       sandbox: false, // preload에서 contextBridge 쓰기 위해
     },
   })
+  mainWindow = win
 
   // 렌더러 안의 외부 링크(GitHub Actions 로그 등)는 기본 브라우저로 연다.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -162,24 +166,51 @@ async function createWindow() {
 
 /**
  * 자동 업데이트 — GitHub Releases의 latest.yml을 확인해 새 버전을 내려받고, 다음 실행 시 설치한다.
- * 패키징 빌드에서만 동작(app-update.yml 필요). 저장소가 private인 동안은 다운로드가 실패하지만
- * 앱 동작에는 영향이 없도록 오류를 조용히 무시한다(공개 전환 시 자동으로 동작).
+ * 패키징 빌드에서만 동작(app-update.yml 필요). 상태는 렌더러(update:status)로 통지해 UI가 표시한다.
  */
+let autoUpdater = null
+
+function sendUpdateStatus(status) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:status', status)
+}
+
 function initAutoUpdater() {
   if (!app.isPackaged) return
-  let autoUpdater
   try {
     ;({ autoUpdater } = require('electron-updater'))
   } catch {
+    autoUpdater = null
     return // 의존성 없음 — 무시
   }
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
-  autoUpdater.on('update-available', (info) => console.log('[updater] 새 버전 발견:', info?.version))
-  autoUpdater.on('update-downloaded', (info) => console.log('[updater] 다운로드 완료(다음 실행 시 설치):', info?.version))
-  autoUpdater.on('error', (err) => console.log('[updater] 확인 실패(무시):', err instanceof Error ? err.message : err))
-  autoUpdater.checkForUpdates().catch((err) => console.log('[updater] checkForUpdates 실패(무시):', err?.message || err))
+  autoUpdater.on('checking-for-update', () => sendUpdateStatus({ state: 'checking' }))
+  autoUpdater.on('update-available', (info) => sendUpdateStatus({ state: 'available', version: info?.version }))
+  autoUpdater.on('update-not-available', (info) => sendUpdateStatus({ state: 'not-available', version: info?.version }))
+  autoUpdater.on('download-progress', (p) => sendUpdateStatus({ state: 'downloading', percent: Math.round(p?.percent || 0) }))
+  autoUpdater.on('update-downloaded', (info) => sendUpdateStatus({ state: 'downloaded', version: info?.version }))
+  autoUpdater.on('error', (err) => sendUpdateStatus({ state: 'error', message: err instanceof Error ? err.message : String(err) }))
+  autoUpdater.checkForUpdates().catch(() => {}) // 시작 시 1회(조용히)
 }
+
+// 렌더러의 "업데이트 확인" 버튼 → 수동 확인. 현재 버전과 진행 상태를 반환한다.
+ipcMain.handle('update:check', async () => {
+  const version = app.getVersion()
+  if (!app.isPackaged) return { state: 'dev', version }
+  if (!autoUpdater) return { state: 'error', version, message: '업데이터를 사용할 수 없습니다.' }
+  try {
+    const r = await autoUpdater.checkForUpdates()
+    const latest = r?.updateInfo?.version
+    if (latest && latest !== version) return { state: 'available', version: latest }
+    return { state: 'not-available', version }
+  } catch (err) {
+    return { state: 'error', version, message: err instanceof Error ? err.message : String(err) }
+  }
+})
+
+ipcMain.handle('update:quitAndInstall', () => {
+  if (app.isPackaged && autoUpdater) autoUpdater.quitAndInstall()
+})
 
 /** 설치본에 키를 굽지 않는다 — 실행파일 옆 또는 userData의 .env를 읽는다. */
 function loadEnvForPackaged() {
