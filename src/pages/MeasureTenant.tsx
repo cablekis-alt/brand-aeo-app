@@ -20,6 +20,8 @@ export default function MeasureTenant() {
   const [pickedTenant, setPickedTenant] = useState('')
   const [measuring, setMeasuring] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // 서버에서 실제로 진행 중인 측정(페이지를 벗어났다 와도 상태 유지). measureVia=local 전용.
+  const [serverActive, setServerActive] = useState<{ tenantId: string; brandName: string }[]>([])
 
   useEffect(() => {
     let alive = true
@@ -54,6 +56,25 @@ export default function MeasureTenant() {
       alive = false
     }
   }, [currentTenantId])
+
+  // 서버의 진행 중 측정을 폴링 — 다른 페이지 갔다 와도 "측정 중"이 유지된다.
+  useEffect(() => {
+    let alive = true
+    const poll = () => {
+      fetch('/api/measure-status')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (alive && d) setServerActive(Array.isArray(d.active) ? d.active : [])
+        })
+        .catch(() => {})
+    }
+    poll()
+    const t = window.setInterval(poll, 5000)
+    return () => {
+      alive = false
+      window.clearInterval(t)
+    }
+  }, [])
 
   async function measureOne() {
     if (!pickedTenant || !canMeasure) return
@@ -96,6 +117,8 @@ export default function MeasureTenant() {
 
   const picked = tenants.find((t) => t.tenantId === pickedTenant)
   const locked = healthReady && !canMeasure
+  // 로컬 측정은 앱 전체에서 한 번에 하나씩 순차 실행되므로, 서버에 진행 중이 있으면 측정 중으로 본다.
+  const isMeasuring = measuring || (measureVia === 'local' && serverActive.length > 0)
 
   return (
     <>
@@ -125,7 +148,7 @@ export default function MeasureTenant() {
           <select
             value={pickedTenant}
             onChange={(e) => setPickedTenant(e.target.value)}
-            disabled={locked || measuring}
+            disabled={locked || isMeasuring}
             aria-label="측정할 테넌트"
           >
             <option value="">테넌트 선택…</option>
@@ -139,10 +162,10 @@ export default function MeasureTenant() {
             type="button"
             className="primary"
             onClick={() => void measureOne()}
-            disabled={locked || !pickedTenant || measuring}
+            disabled={locked || !pickedTenant || isMeasuring}
           >
-            {measuring
-              ? '진행 중…'
+            {isMeasuring
+              ? '측정 중…'
               : !canMeasure
                 ? '로컬에서만 측정 가능'
                 : picked?.cohortOnly
@@ -150,6 +173,12 @@ export default function MeasureTenant() {
                   : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
           </button>
         </div>
+        {isMeasuring && serverActive.length > 0 && (
+          <p className="hint" style={{ marginTop: '10px', fontWeight: 500 }} role="status">
+            측정 중: <b>{serverActive.map((a) => a.brandName || a.tenantId).join(', ')}</b> …{' '}
+            <Link to="/measure-status">측정 상태에서 진행 보기</Link>
+          </p>
+        )}
         {picked && (
           <p className="hint" style={{ marginTop: '10px' }}>
             {picked.cohortOnly ? (
