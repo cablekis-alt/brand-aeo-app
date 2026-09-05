@@ -489,20 +489,22 @@
       "current": 48,
       "ma4": 48,
       "previousWeek": 48,
-      "ciLow": 41,
-      "ciHigh": 55
+      "ciLow": 40.9,
+      "ciHigh": 55.1
     },
     "mentionRate": 0.0625,
-    "shareOfMention": 0.7090909090909091,
+    "shareOfMention": 0.7415730337078652,
     "avgRecommendationRank": 1,
-    "factualityScore": 0.8888888888888888,
-    "brandOwnedCitationRate": 0.01932367149758454,
+    "factualityScore": 0.7857142857142857,
+    "brandOwnedCitationRate": 0.06315789473684211,
     "cohortRank": {
       "position": 1,
       "totalTenants": 6
     },
     "hallucinationFlags": [
-      "openai / v1-010 #3: 사실성 불일치 1건"
+      "gemini / v1-004 #3: 사실성 불일치 1건",
+      "gemini / v1-010 #1: 사실성 불일치 1건",
+      "openai / v1-012 #2: 사실성 불일치 1건"
     ]
   }
 ]
