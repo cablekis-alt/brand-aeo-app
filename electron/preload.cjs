@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electron', {
   // 자동 업데이트
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   quitAndInstall: () => ipcRenderer.invoke('update:quitAndInstall'),
+  openReleases: () => ipcRenderer.invoke('update:openReleases'),
   onUpdateStatus: (cb) => {
     const listener = (_e, status) => cb(status)
     ipcRenderer.on('update:status', listener)

@@ -131,6 +131,16 @@
   line-height: 1.4;
 }
 
+.app-version .linklike {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .theme-toggle {
   display: inline-flex;
   border: 1px solid var(--line);

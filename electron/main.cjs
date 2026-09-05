@@ -201,11 +201,18 @@ ipcMain.handle('update:check', async () => {
   try {
     const r = await autoUpdater.checkForUpdates()
     const latest = r?.updateInfo?.version
-    if (latest && latest !== version) return { state: 'available', version: latest }
-    return { state: 'not-available', version }
+    // electron-updater의 자체 판정(isUpdateAvailable)을 우선 신뢰하고, 없으면 버전 문자열 비교로 폴백.
+    const isAvail = typeof r?.isUpdateAvailable === 'boolean' ? r.isUpdateAvailable : Boolean(latest && latest !== version)
+    if (isAvail) return { state: 'available', version: latest }
+    return { state: 'not-available', version, latest }
   } catch (err) {
     return { state: 'error', version, message: err instanceof Error ? err.message : String(err) }
   }
+})
+
+// 자동 업데이트가 불안정할 때의 수동 폴백 — 릴리스 페이지를 기본 브라우저로 연다.
+ipcMain.handle('update:openReleases', () => {
+  void shell.openExternal('https://github.com/cablekis-alt/brand-aeo-app/releases/latest')
 })
 
 ipcMain.handle('update:quitAndInstall', () => {

@@ -15,6 +15,7 @@ type UpdateState =
 interface UpdateStatus {
   state: UpdateState
   version?: string
+  latest?: string
   percent?: number
   message?: string
 }
@@ -33,6 +34,8 @@ interface ElectronBridge {
   apiKeyStatus: () => Promise<{ status: Record<string, boolean>; envPath: string }>
   /** API 키를 userData/.env에 저장하고 즉시 적용. */
   setApiKey: (name: string, value: string) => Promise<{ ok: boolean; error?: string }>
+  /** 릴리스 페이지를 기본 브라우저로 연다(수동 다운로드용). */
+  openReleases: () => Promise<void>
 }
 
 interface Window {

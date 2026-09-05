@@ -36,7 +36,9 @@ export default function AppVersion() {
       case 'downloaded':
         return `새 버전 ${status.version ?? ''} 준비됨`
       case 'not-available':
-        return '최신 버전입니다.'
+        return status.latest && status.latest !== __APP_VERSION__
+          ? `현재 v${__APP_VERSION__} · 최신 v${status.latest} (아래 링크로 수동 설치)`
+          : '최신 버전입니다.'
       case 'dev':
         return '개발 모드'
       case 'error':
@@ -62,6 +64,13 @@ export default function AppVersion() {
           ))}
       </div>
       {isElectron && label && <p className="upd-status">{label}</p>}
+      {isElectron && (
+        <p className="upd-status">
+          <button type="button" className="linklike" onClick={() => void bridge?.openReleases()}>
+            릴리스 페이지 열기(수동 다운로드)
+          </button>
+        </p>
+      )}
     </div>
   )
 }
