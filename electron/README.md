@@ -65,23 +65,41 @@ npx electron-builder --dir -c.directories.output=%TEMP%/eb-out
 | `electron/main.cjs` | 메인 프로세스 — 창 생성, (dev) API·vite 자식 프로세스 / (패키징) 번들 서버 인프로세스 기동, 외부 링크 처리 |
 | `electron/preload.cjs` | 렌더러에 `window.electron`(플랫폼·버전) 최소 노출 (contextIsolation) |
 | `scripts/build-electron-server.mjs` | `server/index.ts` → `dist-electron/server.cjs` 단일 CJS 번들(esbuild, node_modules는 external) |
-| `electron-builder.yml` | 패키징 설정(appId·타깃·asar·파일 포함 규칙) |
+| `electron-builder.yml` | 패키징 설정(appId·타깃·asar·아이콘·파일 포함 규칙) |
+| `electron/build/icon.png` | 앱 아이콘 소스(512px). electron-builder가 각 크기·.ico로 변환 |
 
 정적 서빙은 `server/index.ts`가 `ELECTRON_STATIC_DIR` 환경변수가 있을 때만 `dist/`를 서빙(웹/dev에선 no-op).
 
 보안 기본값: `contextIsolation: true`, `nodeIntegration: false`.
+
+### 코드 서명
+
+인증서는 **저장소에 굽지 않습니다**. electron-builder는 아래 환경변수가 있으면 빌드 시 **자동 서명**합니다(별도 설정 불필요):
+
+```bash
+# Windows 예 (PowerShell)
+$env:CSC_LINK="C:\path\to\cert.pfx"   # 또는 .pfx의 base64 문자열
+$env:CSC_KEY_PASSWORD="<인증서 비밀번호>"
+npm run electron:pack
+```
+
+- env가 없으면 **미서명**으로 빌드됩니다 — 설치 시 Windows SmartScreen 경고가 뜹니다(기능은 정상).
+- 경고를 없애려면 **OV/EV 코드서명 인증서**(신뢰 CA 발급)가 필요합니다. EV는 즉시 평판이 붙고, OV는 초기 다운로드 수가 쌓이며 경고가 줄어듭니다.
+- 비밀번호는 셸 히스토리에 남지 않도록 CI 시크릿/환경변수로 주입하세요.
 
 ## 완료
 
 - [x] 개발 모드 셸 (`npm run electron:dev`)
 - [x] electron-builder 패키징(설치본/포터블) + 번들 서버 + 정적 서빙
 - [x] **패키징 모드 측정** — userData에 저장·조회, git·tsx 없이 로컬 완결(위 "데이터 위치" 참고)
+- [x] **첫 실행 시드** — 설치 직후 커밋 데이터(코호트·분석)를 userData로 시드(`server/seedFirstRun.ts`)
+- [x] **앱 아이콘** — AIO2O 모노그램(`electron/build/icon.png` 512px → electron-builder가 .ico 변환)
+- [x] **코드 서명 지원** — CSC_LINK/CSC_KEY_PASSWORD env로 자동 서명(위 참고)
 
 ## 아직 안 된 것 (다음 단계)
 
-- [ ] **첫 실행 시드** — 설치 직후 userData/data가 비어 있어 코호트가 빈 상태. 커밋된 스코어카드를 첫 실행에 시드하면 기존 코호트가 바로 보임(선택).
+- [ ] **실제 인증서 서명** — 신뢰 CA 인증서 확보 후 위 env로 빌드(현재는 미서명)
 - [ ] **로컬 측정 UX** — preload로 측정 진행률·완료 알림을 네이티브하게 연결
-- [ ] **앱 아이콘** — 현재 기본 Electron 아이콘
-- [ ] **코드 서명** — 미서명(설치 시 SmartScreen 경고)
+- [ ] **자동 업데이트** — electron-updater(선택)
 
 파이프라인 코드(`server/`)는 웹과 단일 소스로 공유하므로, master의 측정 개선이 그대로 반영됩니다.
