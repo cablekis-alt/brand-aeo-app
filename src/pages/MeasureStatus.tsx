@@ -29,7 +29,7 @@ interface LocalMeasureLog {
   aeoScore: number
   at: string
   durationSec?: number
-  source: string
+  source?: string
 }
 const localLog = measureLogRaw as LocalMeasureLog[]
 
@@ -100,20 +100,37 @@ export default function MeasureStatus() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [nameMap, setNameMap] = useState<Record<string, string>>({})
   const [cancelling, setCancelling] = useState<number | null>(null)
+  // 이 앱이 직접 돌린 로컬 측정(진행 중 + 완료). /api/measure-status에서 폴링.
+  const [localActive, setLocalActive] = useState<{ tenantId: string; brandName: string; startedAt: string }[]>([])
+  const [localDone, setLocalDone] = useState<LocalMeasureLog[]>([])
   const timer = useRef<number | null>(null)
 
   const load = useCallback(async () => {
+    // GitHub Actions 실행 목록(배포 토큰 필요) — 실패해도 로컬 상태는 계속 본다.
     try {
       const data = await loadMeasureRuns()
       setEnabled(data.enabled)
       setRuns(data.runs)
       setError(null)
-      setUpdatedAt(new Date())
     } catch (err) {
       setError(err instanceof Error ? err.message : '상태를 불러오지 못했습니다.')
-    } finally {
-      setLoading(false)
     }
+    // 앱의 로컬 측정 상태(진행 중 + 완료)
+    try {
+      const r = await fetch('/api/measure-status')
+      if (r.ok) {
+        const d = (await r.json()) as {
+          active?: { tenantId: string; brandName: string; startedAt: string }[]
+          completed?: LocalMeasureLog[]
+        }
+        setLocalActive(Array.isArray(d.active) ? d.active : [])
+        setLocalDone(Array.isArray(d.completed) ? d.completed : [])
+      }
+    } catch {
+      /* 로컬 상태 엔드포인트 없음(배포 등) — 무시 */
+    }
+    setUpdatedAt(new Date())
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -149,7 +166,21 @@ export default function MeasureStatus() {
     }
   }, [auto, load])
 
-  const active = runs.some((r) => r.status !== 'completed')
+  const active = runs.some((r) => r.status !== 'completed') || localActive.length > 0
+
+  // 로컬 완료 기록: 앱이 방금 돌린 것(API, userData) + 커밋된 CLI 기록(정적). tenantId+at로 중복 제거, 최신순.
+  const localRows: LocalMeasureLog[] = (() => {
+    const seen = new Set<string>()
+    const all = [...localDone, ...localLog]
+    const out: LocalMeasureLog[] = []
+    for (const e of all) {
+      const key = `${e.tenantId}-${e.at}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(e)
+    }
+    return out.sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 50)
+  })()
 
   async function onCancel(run: MeasureRunInfo) {
     if (!run.id) return
@@ -259,11 +290,11 @@ export default function MeasureStatus() {
         )}
       </section>
 
-      {localLog.length > 0 && (
+      {(localActive.length > 0 || localRows.length > 0) && (
         <section style={{ marginTop: '24px' }}>
-          <h3>로컬 측정 기록 (measure:local)</h3>
+          <h3>로컬 측정 (이 앱)</h3>
           <p className="hint" style={{ marginTop: 0 }}>
-            로컬 PC에서 측정한 뒤 배포에 반영된 기록입니다(최신 순, 최대 50건). 진행 중 상태는 없으며 완료 시점에 기록됩니다.
+            이 앱에서 직접 실행한 측정입니다(진행 중은 실시간, 완료는 이 PC에 기록). CLI(<code>measure:local</code>)로 커밋한 기록도 함께 표시됩니다.
           </p>
           <div className="table-wrap">
             <table>
@@ -278,7 +309,19 @@ export default function MeasureStatus() {
                 </tr>
               </thead>
               <tbody>
-                {localLog.map((e, i) => (
+                {localActive.map((a) => (
+                  <tr key={`active-${a.tenantId}`}>
+                    <td>
+                      <span className="status-pill st-warn">진행 중</span>
+                    </td>
+                    <td>{a.brandName || a.tenantId}</td>
+                    <td>-</td>
+                    <td className="num">-</td>
+                    <td className="num">-</td>
+                    <td>{timeAgo(a.startedAt)} 시작</td>
+                  </tr>
+                ))}
+                {localRows.map((e, i) => (
                   <tr key={`${e.tenantId}-${e.at}-${i}`}>
                     <td>
                       <span className="status-pill st-good">로컬 완료</span>

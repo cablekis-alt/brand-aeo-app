@@ -12,6 +12,7 @@ import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
+import { appendLocalMeasure, readLocalMeasures } from './localMeasureLog.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -99,6 +100,14 @@ app.delete('/api/tenants', async (req, res) => {
   }
 });
 
+// 앱에서 진행 중인 로컬 측정 추적(측정 상태 화면의 "진행 중" 표시용).
+const activeMeasures = new Map<string, { tenantId: string; brandName: string; startedAt: string }>();
+
+// 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중 + 완료 기록. GitHub Actions 실행과 별개.
+app.get('/api/measure-status', (_req, res) => {
+  res.json({ active: [...activeMeasures.values()], completed: readLocalMeasures() });
+});
+
 // "테넌트 골라 측정" — 지정 테넌트 하나를 측정하고 곧바로 baking까지 한다 (로컬).
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
@@ -106,11 +115,27 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
+  const startedMs = Date.now();
+  activeMeasures.set(tenant.tenantId, {
+    tenantId: tenant.tenantId,
+    brandName: tenant.brandName,
+    startedAt: new Date().toISOString(),
+  });
   try {
     const result = await measureAndBake(tenant, store);
+    appendLocalMeasure({
+      tenantId: result.tenantId,
+      brandName: result.brandName,
+      weekOf: result.weekOf,
+      aeoScore: result.aeoScore,
+      durationSec: Math.round((Date.now() - startedMs) / 1000),
+      at: new Date().toISOString(),
+    });
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    activeMeasures.delete(tenant.tenantId);
   }
 });
 
