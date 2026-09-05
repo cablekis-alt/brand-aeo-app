@@ -9,6 +9,7 @@
  */
 import 'dotenv/config'
 import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { measureAndBake } from '../server/measureAndBake'
 import { FileResultStore } from '../server/store'
 import { loadRuntimeTenants } from '../server/tenantRegistry'
@@ -17,7 +18,24 @@ const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { stdio: 'i
 const capture = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding: 'utf8' })
 
 // 측정이 만드는 git 추적 산출물만 반영한다(.env·overlay·/data 등은 gitignore라 애초에 제외).
+// measure-log.json은 src/data 아래라 함께 스테이징된다.
 const BAKE_PATHS = ['src/data', 'server/liveRegistry.ts', 'server/tenants.config.json']
+
+// 측정 상태 화면이 로컬 측정도 보여주도록, 커밋되는 로그 파일에 최근 기록을 남긴다(최대 50건, 최신 우선).
+const LOG_PATH = 'src/data/measure-log.json'
+interface LogEntry { tenantId: string; brandName: string; weekOf: string; aeoScore: number; at: string; source: 'local' }
+function appendMeasureLog(entries: LogEntry[]): void {
+  let log: LogEntry[] = []
+  try {
+    if (existsSync(LOG_PATH)) {
+      const parsed: unknown = JSON.parse(readFileSync(LOG_PATH, 'utf8'))
+      if (Array.isArray(parsed)) log = parsed as LogEntry[]
+    }
+  } catch {
+    log = []
+  }
+  writeFileSync(LOG_PATH, JSON.stringify([...entries, ...log].slice(0, 50), null, 2) + '\n')
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
@@ -39,6 +57,7 @@ async function main(): Promise<void> {
   console.log(`\n[measure-local] 측정 대상 ${ids.length}개: ${ids.join(', ')}\n`)
   const store = new FileResultStore()
   const done: string[] = []
+  const logEntries: LogEntry[] = []
   for (const id of ids) {
     const tenant = tenants.find((t) => t.tenantId === id)
     if (!tenant) {
@@ -49,12 +68,14 @@ async function main(): Promise<void> {
     const r = await measureAndBake(tenant, store)
     console.log(`✓ ${id} — ${r.weekOf} · AEO ${r.aeoScore}`)
     done.push(id)
+    logEntries.push({ tenantId: id, brandName: r.brandName, weekOf: r.weekOf, aeoScore: r.aeoScore, at: new Date().toISOString(), source: 'local' })
   }
 
   if (done.length === 0) {
     console.log('\n측정된 브랜드가 없습니다.')
     return
   }
+  appendMeasureLog(logEntries) // 측정 상태 화면용 로컬 기록.
   if (noPush) {
     console.log(`\n측정 완료(${done.join(', ')}). --no-push → git 반영 생략. 결과는 로컬(src/data)에만 있습니다.`)
     return

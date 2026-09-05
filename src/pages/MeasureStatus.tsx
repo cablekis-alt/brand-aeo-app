@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
+import measureLogRaw from '../data/measure-log.json'
+
+// 로컬 측정 기록(measure:local이 커밋). GitHub Actions 실행 목록과 별도로 표시한다.
+interface LocalMeasureLog {
+  tenantId: string
+  brandName: string
+  weekOf: string
+  aeoScore: number
+  at: string
+  source: string
+}
+const localLog = measureLogRaw as LocalMeasureLog[]
 
 // GitHub Actions 실행 상태 → 한국어 배지 + B9에서 쓰는 status-pill 색상 클래스.
 function statusBadge(run: MeasureRunInfo): { label: string; cls: string } {
@@ -97,7 +109,7 @@ export default function MeasureStatus() {
       <p className="brand">STAGE 2</p>
       <h1>측정 상태</h1>
       <p className="lead">
-        측정 대기열·테넌트 골라 측정에서 시작한 GitHub Actions 측정 실행의 진행 상태입니다. 완료되면 결과가 이 사이트에 자동 반영됩니다.
+        GitHub Actions 측정 실행의 진행 상태와, 로컬(<code>npm run measure:local</code>)에서 측정한 기록입니다. 완료되면 결과가 이 사이트에 자동 반영됩니다.
       </p>
 
       <div className="filters no-print" style={{ alignItems: 'center' }}>
@@ -118,22 +130,18 @@ export default function MeasureStatus() {
         </p>
       )}
 
-      {!enabled ? (
-        <section className="panel">
+      <section style={{ marginTop: '8px' }}>
+        <h3>GitHub Actions 측정 실행</h3>
+        {!enabled ? (
           <p className="muted">
-            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 로컬에서는 이 탭에서
-            바로 측정하므로 별도 상태 조회가 필요 없습니다.
+            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 아래 로컬 측정 기록은 토큰 없이도 보입니다.
           </p>
-        </section>
-      ) : !loading && runs.length === 0 ? (
-        <section className="panel">
+        ) : !loading && runs.length === 0 ? (
           <p className="muted">
-            최근 측정 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link> 또는{' '}
-            <Link to="/measure-queue">측정 대기열</Link>에서 측정을 시작하세요.
+            최근 GitHub Actions 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link> 또는{' '}
+            <Link to="/measure-queue">측정 대기열</Link>에서 시작하거나, 로컬에서 <code>npm run measure:local</code>을 쓰세요.
           </p>
-        </section>
-      ) : (
-        <section>
+        ) : (
           <div className="table-wrap">
             <table>
               <thead>
@@ -166,6 +174,41 @@ export default function MeasureStatus() {
                     </tr>
                   )
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {localLog.length > 0 && (
+        <section style={{ marginTop: '24px' }}>
+          <h3>로컬 측정 기록 (measure:local)</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            로컬 PC에서 측정한 뒤 배포에 반영된 기록입니다(최신 순, 최대 50건). 진행 중 상태는 없으며 완료 시점에 기록됩니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>상태</th>
+                  <th>대상</th>
+                  <th>주차</th>
+                  <th>AEO</th>
+                  <th>시각</th>
+                </tr>
+              </thead>
+              <tbody>
+                {localLog.map((e, i) => (
+                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
+                    <td>
+                      <span className="status-pill st-good">로컬 완료</span>
+                    </td>
+                    <td>{e.brandName || e.tenantId}</td>
+                    <td>{e.weekOf}</td>
+                    <td className="num">{e.aeoScore}</td>
+                    <td>{timeAgo(e.at)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
