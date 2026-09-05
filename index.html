@@ -9,6 +9,13 @@
       content="ChatGPT, Gemini, Claude, Perplexity에서 브랜드가 얼마나 보이는지 주간 AEO 점수로 측정합니다."
     />
     <title>Web4AI Brand AEO — 답변 엔진 브랜드 가시성</title>
+    <script>
+      // 첫 페인트 전에 저장된 테마를 적용해 깜빡임(FOUC)을 막는다. 'system'이면 미적용 → prefers-color-scheme 폴백.
+      try {
+        var t = localStorage.getItem('brand-aeo-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

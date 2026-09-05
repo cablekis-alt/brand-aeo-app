@@ -14,8 +14,9 @@
   --serif: 'Fraunces', Georgia, serif;
 }
 
+/* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --ink: #f4efe6;
     --muted: #b7aea2;
     --paper: #161410;
@@ -26,6 +27,19 @@
     --good: #bef264;
     --bad: #fda4af;
   }
+}
+
+/* 사용자가 다크를 명시하면 OS가 라이트여도 다크 적용 */
+:root[data-theme='dark'] {
+  --ink: #f4efe6;
+  --muted: #b7aea2;
+  --paper: #161410;
+  --card: #1e1b17;
+  --line: #3a342c;
+  --accent: #fdba74;
+  --accent-soft: #3b2718;
+  --good: #bef264;
+  --bad: #fda4af;
 }
 
 * {

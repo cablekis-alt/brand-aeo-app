@@ -17,6 +17,9 @@
   gap: 22px;
   position: sticky;
   top: 32px;
+  /* 사이드바가 뷰포트보다 길면 내부 스크롤 — 짧은 페이지에서도 하단 테마 토글에 닿게. */
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 }
 
 @media (max-width: 760px) {
@@ -76,6 +79,42 @@
   color: var(--ink);
   letter-spacing: -0.01em;
   margin-top: 2px;
+}
+
+.sidebar-theme {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.theme-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.theme-toggle button + button {
+  border-left: 1px solid var(--line);
+}
+
+.theme-toggle button:hover {
+  background: var(--accent-soft);
+}
+
+.theme-toggle button.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* 구버전 마크(호환용) */
