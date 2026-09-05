@@ -37,24 +37,22 @@ export async function inferBrandFields(pageText: string, brandName = ''): Promis
 --- 페이지 텍스트 ---
 ${text.slice(0, 4000)}`;
 
-  // Gemini(gemini-3.7-flash)가 동일 입력에도 간헐적으로 빈값을 반환하므로, 결과가 비면
-  // 몇 번 더 시도해 non-empty를 채택한다(자동채우기 일관성 — 환경별 결과 차이의 주원인이었음).
+  // Gemini(gemini-3.7-flash)가 동일 입력에도 간헐적으로 "부분"·빈 응답을 주므로, 각 필드의 첫
+  // non-empty 값을 여러 시도에서 누적(merge)한다. 업종이 채워지면 조기 종료(자동채우기 일관성).
   const judge = new GeminiJudgeClient();
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  const merged: InferredBrandFields = { industry: '', region: '', address: '' };
+  for (let attempt = 1; attempt <= 3 && !merged.industry; attempt += 1) {
     try {
       const result = await judge.call({ system, user });
       const parsed = parseJsonLoose<Partial<InferredBrandFields>>(result.text);
-      const out: InferredBrandFields = {
-        industry: typeof parsed?.industry === 'string' ? parsed.industry.trim() : '',
-        region: typeof parsed?.region === 'string' ? parsed.region.trim() : '',
-        address: typeof parsed?.address === 'string' ? parsed.address.trim() : '',
-      };
-      if (out.industry || out.region || out.address) return out;
+      merged.industry ||= typeof parsed?.industry === 'string' ? parsed.industry.trim() : '';
+      merged.region ||= typeof parsed?.region === 'string' ? parsed.region.trim() : '';
+      merged.address ||= typeof parsed?.address === 'string' ? parsed.address.trim() : '';
     } catch (err) {
       console.error('[inferBrandFields] Gemini 호출 실패:', err instanceof Error ? err.message : err);
     }
   }
-  return EMPTY;
+  return merged;
 }
 
 /**
@@ -118,25 +116,31 @@ brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧
       address: typeof parsed?.address === 'string' ? parsed.address.trim() : '',
     };
   };
-  const nonEmpty = (o: { brandName: string; industry: string; region: string; address: string }) =>
-    Boolean(o.brandName || o.industry || o.region || o.address);
-
-  // Gemini가 간헐적으로 빈값을 주므로 그라운딩→추론을 최대 2회씩 시도해 non-empty를 채택한다.
-  for (let round = 0; round < 2; round += 1) {
+  // Gemini가 간헐적으로 "부분" 응답(예: 지역·주소만 주고 업종은 빈값)을 주므로, 각 필드의 첫 non-empty
+  // 값을 여러 시도에서 누적(merge)한다. 특히 업종이 빠지기 쉬워 industry가 채워질 때까지 재시도한다.
+  const merged = { ...EMPTY_DOMAIN };
+  const absorb = (o: typeof EMPTY_DOMAIN) => {
+    merged.brandName ||= o.brandName;
+    merged.industry ||= o.industry;
+    merged.region ||= o.region;
+    merged.address ||= o.address;
+  };
+  // 업종을 핵심으로 본다(자동채우기에서 업종이 비면 경쟁사 추론까지 막힘).
+  const enough = () => Boolean(merged.industry && merged.region);
+  for (let round = 0; round < 3 && !enough(); round += 1) {
     try {
-      const grounded = await attempt(new GeminiEngineClient()); // 웹검색 그라운딩(정확)
-      if (nonEmpty(grounded)) return grounded;
+      absorb(await attempt(new GeminiEngineClient())); // 웹검색 그라운딩(정확)
     } catch (err) {
       console.error('[inferBrandFromDomain] 그라운딩 실패:', err instanceof Error ? err.message : err);
     }
+    if (enough()) break;
     try {
-      const reasoned = await attempt(new GeminiJudgeClient()); // 순수 추론 폴백
-      if (nonEmpty(reasoned)) return reasoned;
+      absorb(await attempt(new GeminiJudgeClient())); // 순수 추론 폴백
     } catch (err) {
       console.error('[inferBrandFromDomain] 추론 실패:', err instanceof Error ? err.message : err);
     }
   }
-  return EMPTY_DOMAIN;
+  return merged;
 }
 
 export interface InferredCompetitor {
