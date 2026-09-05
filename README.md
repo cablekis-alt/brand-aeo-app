@@ -3,9 +3,10 @@
 [![최신 릴리스](https://img.shields.io/github/v/release/cablekis-alt/brand-aeo-app?label=%EC%B5%9C%EC%8B%A0%20%EB%A6%B4%EB%A6%AC%EC%8A%A4&sort=semver)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest) [![라이선스](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-%EB%8F%85%EC%A0%90%20All%20Rights%20Reserved-555)](LICENSE) [![다운로드](https://img.shields.io/badge/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-Windows%20%EC%84%A4%EC%B9%98%EB%B3%B8-9a3412?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest)
 
 > **데스크톱 앱 다운로드**: 위 **다운로드** 버튼 → 릴리스 페이지에서 `Web4AI Brand AEO-<버전>-x64.exe` 받기.
-> **미서명 빌드**라 안전 경고가 두 번 뜨는데 정상입니다(파일이 안 받아지는 게 아님):
+> **미서명 빌드**라 안전 경고가 뜨는데 정상입니다(파일이 안 받아지는 게 아님):
 > 1. 브라우저 다운로드 경고("일반적으로 다운로드되지 않습니다") → **`유지`/`계속`** 클릭
 > 2. 실행 시 Windows SmartScreen → **`추가 정보`** → **`실행`**
+> 3. **"스마트 앱 컨트롤이 차단했습니다"** 창이 뜨면(확인/스토어 버튼만 있고 실행 버튼 없음) → [Smart App Control 안내](electron/README.md#windows-스마트-앱-컨트롤smart-app-control-차단) 참고. 이건 SmartScreen보다 강력해 **우회 실행이 없고, 끄거나 코드 서명이 필요**합니다.
 
 ChatGPT·Gemini 같은 **답변 엔진(AI)에서 브랜드가 얼마나 노출·인용되는지**를 주간으로 측정하는 콘솔입니다.
 같은 질문을 반복 호출해 언급률·Share of Mention·추천 순위·사실성·EEAT·인용 출처를 집계하고 AEO Score로 요약합니다.

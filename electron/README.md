@@ -50,6 +50,17 @@ npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠�
 
 패키징 앱은 판정·수집 기본을 **Gemini**로 두므로(로컬 한국 측정이 가장 정확, OpenAI 크레딧 비의존) `GEMINI_API_KEY`만 있어도 측정됩니다. `OPENAI_API_KEY`·`ANTHROPIC_API_KEY`는 해당 엔진을 함께 쓸 때만 필요합니다. `.env`에서 `JUDGE_ENGINE`을 명시하면 그 값을 우선합니다.
 
+### Windows 스마트 앱 컨트롤(Smart App Control) 차단
+
+실행 시 **"스마트 앱 컨트롤이 안전하지 않을 수 있는 앱을 차단했습니다"** 창이 뜨고 `확인`/`Microsoft Store` 버튼만 있다면(=실행 버튼 없음), 이는 SmartScreen보다 강력한 Windows 11 보호 기능입니다. **미서명 앱을 우회 없이 차단**하며, 자체서명으로도 통과되지 않습니다.
+
+해결(택1):
+
+1. **스마트 앱 컨트롤 끄기** — 설정 → 개인정보 및 보안 → **Windows 보안** → **앱 및 브라우저 컨트롤** → **스마트 앱 컨트롤** → **끄기**.
+   - ⚠️ **한 번 끄면 다시 켜려면 Windows 재설치가 필요**합니다. 신중히 결정하세요. 끈 뒤에는 일반 SmartScreen 경고만 뜨고 `추가 정보 → 실행`으로 실행됩니다.
+2. **SAC가 없는 PC/계정에서 실행** (회사 표준 PC 등).
+3. **코드 서명(근본 해결)** — 신뢰 CA의 **EV 코드서명 인증서**면 SAC를 즉시 통과합니다. OV는 초기엔 SAC에서 막힐 수 있어 SAC 대응은 EV 권장. 인증서가 준비되면 아래 "코드 서명" 절차대로 `CSC_LINK`/`CSC_KEY_PASSWORD`를 주고 다시 빌드하면 됩니다.
+
 ### Windows EPERM(rename) 오류 시
 
 프로젝트 폴더에서 빌드가 `EPERM: operation not permitted, rename ... win-unpacked` 로 실패하면(백신 실시간 검사/가상 FS), 출력 경로를 프로젝트 밖으로 돌리세요:
