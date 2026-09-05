@@ -52,7 +52,7 @@ const MENU: MenuGroup[] = [
     range: 'B8–B9',
     items: [
       { label: '브랜드 AEO 퍼포먼스', to: '/performance', b: 'B8' },
-      { label: '랭킹 분석', to: '/ranking', b: 'B8' },
+      { label: '랭킹 분석 및 브랜드 측정', to: '/ranking', b: 'B8' },
       { label: '정기진단 보고서', to: '/report', b: 'B9' },
     ],
   },
