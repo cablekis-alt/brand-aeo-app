@@ -93,6 +93,19 @@ function slugFromDomain(domain: string): string {
   return label.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '') || 'brand'
 }
 
+// 한국 상호는 업종을 포함하는 경우가 많다("바노바기성형외과의원"→"성형외과"). AI 추론이 업종을
+// 누락할 때의 결정적 폴백. 더 구체적인 키워드를 앞에 둔다(치과의원이 치과보다 먼저 매치되도록).
+const INDUSTRY_KEYWORDS = [
+  '성형외과', '피부과', '치과의원', '치과병원', '치과', '안과', '이비인후과', '정형외과', '재활의학과',
+  '산부인과', '비뇨기과', '신경외과', '마취통증의학과', '가정의학과', '한의원', '한방병원', '내과', '외과',
+  '의원', '병원', '약국', '동물병원', '카페', '펜션', '게스트하우스', '호텔', '모텔', '리조트',
+  '미용실', '헤어', '네일', '피부관리', '필라테스', '요가', '헬스', '피트니스', '학원', '어학원',
+  '유치원', '어린이집', '베이커리', '제과', '안경원', '안경', '레스토랑', '식당', '부동산',
+]
+function industryFromName(name: string): string {
+  return INDUSTRY_KEYWORDS.find((k) => name.includes(k)) ?? ''
+}
+
 // 주소가 홈페이지 본문에 없을 때, 같은 도메인의 "오시는 길·연락처" 링크를 찾아 한 번 더 수집한다.
 const CONTACT_KEYWORDS = [
   '오시는', '찾아오시', '오시는길', '연락처', '위치', '약도', '지도',
@@ -490,6 +503,17 @@ export default function BrandOnboarding() {
           }
         } catch {
           // 무시 — 사용자가 직접 채우면 된다.
+        }
+      }
+
+      // D) 업종이 끝까지 비면 브랜드명에서 직접 추출한다(결정적·환경 무관 폴백).
+      //    한국 상호는 업종을 포함하는 경우가 많다("바노바기성형외과의원"→"성형외과"). AI 그라운딩이
+      //    간헐적으로 업종을 누락해도 이름으로 확실히 채워, 경쟁사 자동추론까지 이어지게 한다.
+      if (!resolvedIndustry && guessedName) {
+        const fromName = industryFromName(guessedName)
+        if (fromName) {
+          resolvedIndustry = fromName
+          setIndustry((prev) => prev || fromName)
         }
       }
 
