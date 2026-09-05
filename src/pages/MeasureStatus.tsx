@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
 import measureLogRaw from '../data/measure-log.json'
 
@@ -76,7 +77,7 @@ export default function MeasureStatus() {
   const [enabled, setEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [auto, setAuto] = useState(false)
+  const [auto, setAuto] = useState(true)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const timer = useRef<number | null>(null)
 
@@ -117,8 +118,20 @@ export default function MeasureStatus() {
       <p className="brand">STAGE 2</p>
       <h1>측정 상태</h1>
       <p className="lead">
-        로컬(<code>npm run measure:local</code>)에서 측정한 기록입니다. 측정은 로컬 PC에서 실행하며, 완료·배포 후 새로고침하면 결과가 반영됩니다.
+        GitHub Actions 측정 실행의 진행 상태와, 로컬(<code>npm run measure:local</code>)에서 측정한 기록입니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.
       </p>
+
+      <div className="filters no-print" style={{ alignItems: 'center' }}>
+        <button type="button" className="ghost" onClick={() => void load()} disabled={loading}>
+          {loading ? '불러오는 중…' : '새로고침'}
+        </button>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+          자동 새로고침(8초)
+        </label>
+        {updatedAt && <span className="hint">마지막 갱신 {updatedAt.toLocaleTimeString()}</span>}
+        {active && <span className="status-pill st-warn">진행 중인 측정 있음</span>}
+      </div>
 
       {error && (
         <p className="error" role="alert">
@@ -126,7 +139,7 @@ export default function MeasureStatus() {
         </p>
       )}
 
-      {localLog.length > 0 ? (
+      {localLog.length > 0 && (
         <section style={{ marginTop: '8px' }}>
           <h3>로컬 측정 기록 (measure:local)</h3>
           <p className="hint" style={{ marginTop: 0 }}>
@@ -161,31 +174,19 @@ export default function MeasureStatus() {
             </table>
           </div>
         </section>
-      ) : (
-        <p className="muted" style={{ marginTop: '8px' }}>
-          아직 로컬 측정 기록이 없습니다. 로컬에서 <code>npm run measure:local</code>을 실행하세요.
-        </p>
       )}
 
-      <details className="gh-runs">
-        <summary>GitHub Actions 측정 실행 (기록 보기)</summary>
-        <div className="filters no-print" style={{ alignItems: 'center', marginTop: '12px' }}>
-          <button type="button" className="ghost" onClick={() => void load()} disabled={loading}>
-            {loading ? '불러오는 중…' : '새로고침'}
-          </button>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
-            자동 새로고침(8초)
-          </label>
-          {updatedAt && <span className="hint">마지막 갱신 {updatedAt.toLocaleTimeString()}</span>}
-          {active && <span className="status-pill st-warn">진행 중</span>}
-        </div>
+      <section style={{ marginTop: localLog.length > 0 ? '24px' : '8px' }}>
+        <h3>GitHub Actions 측정 실행</h3>
         {!enabled ? (
           <p className="muted">
-            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 측정은 로컬에서 하므로 보통 비어 있습니다.
+            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 위 로컬 측정 기록은 토큰 없이도 보입니다.
           </p>
         ) : !loading && runs.length === 0 ? (
-          <p className="muted">최근 GitHub Actions 실행이 없습니다(측정은 로컬에서 실행).</p>
+          <p className="muted">
+            최근 GitHub Actions 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link>에서 시작하거나, 로컬에서{' '}
+            <code>npm run measure:local</code>을 쓰세요.
+          </p>
         ) : (
           <div className="table-wrap">
             <table>
@@ -223,7 +224,7 @@ export default function MeasureStatus() {
             </table>
           </div>
         )}
-      </details>
+      </section>
     </>
   )
 }

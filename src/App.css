@@ -81,22 +81,6 @@
   margin-top: 2px;
 }
 
-.gh-runs {
-  margin-top: 24px;
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-.gh-runs > summary {
-  cursor: pointer;
-  font-family: var(--serif);
-  font-size: 16px;
-  color: var(--muted);
-}
-.gh-runs[open] > summary {
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-
 .sidebar-theme {
   padding-top: 18px;
   border-top: 1px solid var(--line);
