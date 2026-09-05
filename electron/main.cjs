@@ -10,7 +10,7 @@
 //
 // 패키징(electron-builder + 정적 dist 서빙 + 컴파일된 서버)은 다음 단계 — electron/README.md 참고.
 
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, Menu, MenuItem, shell } = require('electron')
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -87,6 +87,25 @@ async function createWindow() {
       return { action: 'deny' }
     }
     return { action: 'allow' }
+  })
+
+  // 우클릭 컨텍스트 메뉴 — Electron은 기본 제공하지 않으므로 직접 붙인다(입력창 복사/붙여넣기 등).
+  win.webContents.on('context-menu', (_e, params) => {
+    const { editFlags, isEditable, selectionText } = params
+    const menu = new Menu()
+    if (isEditable) {
+      menu.append(new MenuItem({ label: '실행 취소', role: 'undo', enabled: editFlags.canUndo }))
+      menu.append(new MenuItem({ label: '다시 실행', role: 'redo', enabled: editFlags.canRedo }))
+      menu.append(new MenuItem({ type: 'separator' }))
+      menu.append(new MenuItem({ label: '잘라내기', role: 'cut', enabled: editFlags.canCut }))
+      menu.append(new MenuItem({ label: '복사', role: 'copy', enabled: editFlags.canCopy }))
+      menu.append(new MenuItem({ label: '붙여넣기', role: 'paste', enabled: editFlags.canPaste }))
+      menu.append(new MenuItem({ label: '모두 선택', role: 'selectAll' }))
+    } else if (selectionText && selectionText.trim()) {
+      menu.append(new MenuItem({ label: '복사', role: 'copy' }))
+      menu.append(new MenuItem({ label: '모두 선택', role: 'selectAll' }))
+    }
+    if (menu.items.length) menu.popup({ window: win })
   })
 
   if (!app.isPackaged) {
