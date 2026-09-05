@@ -193,17 +193,34 @@ function initAutoUpdater() {
   autoUpdater.checkForUpdates().catch(() => {}) // 시작 시 1회(조용히)
 }
 
-// 렌더러의 "업데이트 확인" 버튼 → 수동 확인. 현재 버전과 진행 상태를 반환한다.
+/** "1.2.3" 형식 비교 — a가 b보다 높으면 true. */
+function isNewerVersion(a, b) {
+  const pa = String(a).split('.').map((n) => parseInt(n, 10) || 0)
+  const pb = String(b).split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true
+    if ((pa[i] || 0) < (pb[i] || 0)) return false
+  }
+  return false
+}
+
+// 렌더러의 "업데이트 확인" — GitHub API로 최신 릴리스를 직접 조회한다(electron-updater의 캐싱/판정
+// 이슈로 새 버전을 못 잡는 경우가 있어, 감지는 API로 확실히 하고 다운로드만 electron-updater/수동에 맡긴다).
 ipcMain.handle('update:check', async () => {
   const version = app.getVersion()
   if (!app.isPackaged) return { state: 'dev', version }
-  if (!autoUpdater) return { state: 'error', version, message: '업데이터를 사용할 수 없습니다.' }
   try {
-    const r = await autoUpdater.checkForUpdates()
-    const latest = r?.updateInfo?.version
-    // electron-updater의 자체 판정(isUpdateAvailable)을 우선 신뢰하고, 없으면 버전 문자열 비교로 폴백.
-    const isAvail = typeof r?.isUpdateAvailable === 'boolean' ? r.isUpdateAvailable : Boolean(latest && latest !== version)
-    if (isAvail) return { state: 'available', version: latest }
+    const res = await fetch('https://api.github.com/repos/cablekis-alt/brand-aeo-app/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Web4AI-Brand-AEO' },
+    })
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`)
+    const data = await res.json()
+    const latest = String(data.tag_name || '').replace(/^v/, '')
+    if (latest && isNewerVersion(latest, version)) {
+      // 새 버전 있음 — electron-updater 자동 다운로드도 시도(되면 '재시작하여 설치'까지). 안 되면 수동 링크.
+      if (autoUpdater) autoUpdater.checkForUpdates().catch(() => {})
+      return { state: 'available', version: latest }
+    }
     return { state: 'not-available', version, latest }
   } catch (err) {
     return { state: 'error', version, message: err instanceof Error ? err.message : String(err) }

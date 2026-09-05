@@ -30,7 +30,7 @@ export default function AppVersion() {
       case 'checking':
         return '업데이트 확인 중…'
       case 'available':
-        return `새 버전 ${status.version ?? ''} 발견 — 내려받는 중…`
+        return `새 버전 v${status.version ?? ''} 있음 — 아래 링크로 받으세요(자동 다운로드도 시도 중).`
       case 'downloading':
         return `내려받는 중… ${status.percent ?? 0}%`
       case 'downloaded':
