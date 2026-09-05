@@ -87,6 +87,14 @@ npm run electron:pack
 - 경고를 없애려면 **OV/EV 코드서명 인증서**(신뢰 CA 발급)가 필요합니다. EV는 즉시 평판이 붙고, OV는 초기 다운로드 수가 쌓이며 경고가 줄어듭니다.
 - 비밀번호는 셸 히스토리에 남지 않도록 CI 시크릿/환경변수로 주입하세요.
 
+### 자동 업데이트 (electron-updater)
+
+패키징 앱은 실행 시 GitHub Releases의 최신 버전을 확인해, 새 버전이 있으면 백그라운드로 내려받고 **다음 실행 때 설치**합니다(`electron-builder.yml`의 `publish: github` → 앱에 `app-update.yml` 임베드, `main.cjs`의 `initAutoUpdater`).
+
+- **저장소가 private인 동안은 다운로드에 토큰이 필요해 조용히 실패**합니다(앱 동작엔 영향 없음). 저장소를 public으로 전환하면 코드 변경 없이 바로 동작합니다.
+- 새 버전 배포: `package.json` 버전을 올리고 `npm run electron:pack` → 생성된 `설치본.exe`·`.blockmap`·`latest.yml`을 해당 태그의 GitHub Release에 올리면, 설치된 앱들이 자동 감지합니다.
+- `latest.yml`이 업데이트 판단 기준이므로 릴리스에 **반드시 함께 업로드**하세요.
+
 ## 완료
 
 - [x] 개발 모드 셸 (`npm run electron:dev`)
@@ -96,10 +104,12 @@ npm run electron:pack
 - [x] **앱 아이콘** — AIO2O 모노그램(`electron/build/icon.png` 512px → electron-builder가 .ico 변환)
 - [x] **코드 서명 지원** — CSC_LINK/CSC_KEY_PASSWORD env로 자동 서명(위 참고)
 
+- [x] **자동 업데이트** — electron-updater(GitHub provider). 저장소 공개 시 실동작
+
 ## 아직 안 된 것 (다음 단계)
 
 - [ ] **실제 인증서 서명** — 신뢰 CA 인증서 확보 후 위 env로 빌드(현재는 미서명)
+- [ ] **저장소/릴리스 공개** — 자동 업데이트 실제 동작 전제(또는 generic 공개 호스트)
 - [ ] **로컬 측정 UX** — preload로 측정 진행률·완료 알림을 네이티브하게 연결
-- [ ] **자동 업데이트** — electron-updater(선택)
 
 파이프라인 코드(`server/`)는 웹과 단일 소스로 공유하므로, master의 측정 개선이 그대로 반영됩니다.
