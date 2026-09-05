@@ -65,7 +65,7 @@ export default function Sidebar() {
         <div className="brand-lockup">
           <span className="brand-monogram" aria-hidden="true">AIO2O</span>
           <span className="brand-names">
-            <span className="brand-eyebrow">WEB4AI</span>
+            <span className="brand-eyebrow">Web4AI</span>
             <span className="brand-title">Brand AEO</span>
           </span>
         </div>
