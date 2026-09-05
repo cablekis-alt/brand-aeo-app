@@ -70,6 +70,7 @@ async function createWindow() {
     width: 1360,
     height: 900,
     title: 'Web4AI Brand AEO',
+    icon: path.join(__dirname, 'build', 'icon.png'), // dev 창/작업표시줄 아이콘(패키징은 exe에 내장)
     backgroundColor: '#f4f1ea',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

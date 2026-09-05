@@ -17,11 +17,19 @@ files:
 
 asar: true
 
+# 앱 아이콘 — 512x512 PNG 하나면 electron-builder가 각 크기·.ico로 변환한다.
+# buildResources(electron/build)에 icon.png가 있으면 자동 인식되지만 명시해 둔다.
+icon: electron/build/icon.png
+
 win:
+  icon: electron/build/icon.png
   target:
     - nsis
     - portable
   artifactName: ${productName}-${version}-${arch}.${ext}
+  # 코드 서명: 인증서를 저장소에 굽지 않는다. 아래 env가 있으면 electron-builder가 자동 서명한다.
+  #   CSC_LINK=<.pfx 경로 또는 base64>  CSC_KEY_PASSWORD=<비밀번호>
+  # env가 없으면 미서명 빌드(설치 시 SmartScreen 경고). 자세한 내용은 electron/README.md.
 
 nsis:
   oneClick: false
