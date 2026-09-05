@@ -21,12 +21,20 @@ npm run electron:dev
 ## 패키징 (설치형 빌드)
 
 ```bash
-npm run electron:pack        # 설치본(NSIS .exe) + 포터블 .exe 생성
+npm run electron:pack        # 설치본(.exe) + 포터블(.zip) + 설치본 ZIP 생성
 npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠른 검증용)
 ```
 
 동작 순서: `vite build`(dist/) → 서버 번들(`dist-electron/server.cjs`, esbuild) → `electron-builder`.
-산출물: `dist-electron/out/`.
+산출물(`dist-electron/out/`) — 릴리스에 아래 + `latest.yml`·`.blockmap`을 모두 업로드:
+
+| 파일 | 용도 |
+|---|---|
+| `Web4AI-Brand-AEO-<ver>-x64.exe` | NSIS 설치본(자동 업데이트 지원) |
+| `Web4AI-Brand-AEO-<ver>-installer.zip` | 설치본 exe를 압축 — 브라우저가 .exe 다운로드를 막을 때(`afterAllArtifactBuild` 훅이 자동 생성) |
+| `Web4AI-Brand-AEO-<ver>-x64.zip` | 포터블(설치 없이 실행, 자동 업데이트 미지원) |
+
+> 파일명은 공백 없이 고정(`Web4AI-Brand-AEO-...`). 공백이 있으면 GitHub 업로드 시 `.`으로 바뀌어 `latest.yml`과 불일치 → 자동 업데이트 다운로드가 실패한다.
 
 패키징 모드에서는 vite 없이 **번들된 서버가 인프로세스로 떠서** `dist/`(정적 UI)와 `/api`를 같은 오리진(`:4000`)에서 서빙합니다.
 

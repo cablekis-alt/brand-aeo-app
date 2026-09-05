@@ -17,6 +17,9 @@ files:
 
 asar: true
 
+# 빌드 후 NSIS 설치본(.exe)을 ZIP으로 감싼 "설치본 ZIP"을 자동 생성한다(.exe 다운로드 차단 우회용).
+afterAllArtifactBuild: electron/after-all-artifact-build.cjs
+
 # 자동 업데이트 소스 — app-update.yml에 임베드되어 electron-updater가 여기서 새 버전을 확인한다.
 # 저장소가 private인 동안은 실제 다운로드에 토큰이 필요해 조용히 실패한다(공개 전환 시 바로 동작).
 publish:
