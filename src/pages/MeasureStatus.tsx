@@ -10,9 +10,18 @@ interface LocalMeasureLog {
   weekOf: string
   aeoScore: number
   at: string
+  durationSec?: number
   source: string
 }
 const localLog = measureLogRaw as LocalMeasureLog[]
+
+// 초 → "N분 M초" / "N초"
+function fmtSec(sec?: number): string {
+  if (typeof sec !== 'number' || !Number.isFinite(sec)) return '-'
+  const s = Math.max(0, Math.round(sec))
+  const m = Math.floor(s / 60)
+  return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
+}
 
 // GitHub Actions 실행 상태 → 한국어 배지 + B9에서 쓰는 status-pill 색상 클래스.
 function statusBadge(run: MeasureRunInfo): { label: string; cls: string } {
@@ -130,11 +139,48 @@ export default function MeasureStatus() {
         </p>
       )}
 
-      <section style={{ marginTop: '8px' }}>
+      {localLog.length > 0 && (
+        <section style={{ marginTop: '8px' }}>
+          <h3>로컬 측정 기록 (measure:local)</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            로컬 PC에서 측정한 뒤 배포에 반영된 기록입니다(최신 순, 최대 50건). 진행 중 상태는 없으며 완료 시점에 기록됩니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>상태</th>
+                  <th>대상</th>
+                  <th>주차</th>
+                  <th>AEO</th>
+                  <th>측정시간</th>
+                  <th>경과</th>
+                </tr>
+              </thead>
+              <tbody>
+                {localLog.map((e, i) => (
+                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
+                    <td>
+                      <span className="status-pill st-good">로컬 완료</span>
+                    </td>
+                    <td>{e.brandName || e.tenantId}</td>
+                    <td>{e.weekOf}</td>
+                    <td className="num">{e.aeoScore}</td>
+                    <td className="num">{fmtSec(e.durationSec)}</td>
+                    <td>{timeAgo(e.at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <section style={{ marginTop: localLog.length > 0 ? '24px' : '8px' }}>
         <h3>GitHub Actions 측정 실행</h3>
         {!enabled ? (
           <p className="muted">
-            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 아래 로컬 측정 기록은 토큰 없이도 보입니다.
+            배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 위 로컬 측정 기록은 토큰 없이도 보입니다.
           </p>
         ) : !loading && runs.length === 0 ? (
           <p className="muted">
@@ -179,41 +225,6 @@ export default function MeasureStatus() {
           </div>
         )}
       </section>
-
-      {localLog.length > 0 && (
-        <section style={{ marginTop: '24px' }}>
-          <h3>로컬 측정 기록 (measure:local)</h3>
-          <p className="hint" style={{ marginTop: 0 }}>
-            로컬 PC에서 측정한 뒤 배포에 반영된 기록입니다(최신 순, 최대 50건). 진행 중 상태는 없으며 완료 시점에 기록됩니다.
-          </p>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>상태</th>
-                  <th>대상</th>
-                  <th>주차</th>
-                  <th>AEO</th>
-                  <th>시각</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localLog.map((e, i) => (
-                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
-                    <td>
-                      <span className="status-pill st-good">로컬 완료</span>
-                    </td>
-                    <td>{e.brandName || e.tenantId}</td>
-                    <td>{e.weekOf}</td>
-                    <td className="num">{e.aeoScore}</td>
-                    <td>{timeAgo(e.at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </>
   )
 }

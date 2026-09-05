@@ -23,7 +23,7 @@ const BAKE_PATHS = ['src/data', 'server/liveRegistry.ts', 'server/tenants.config
 
 // 측정 상태 화면이 로컬 측정도 보여주도록, 커밋되는 로그 파일에 최근 기록을 남긴다(최대 50건, 최신 우선).
 const LOG_PATH = 'src/data/measure-log.json'
-interface LogEntry { tenantId: string; brandName: string; weekOf: string; aeoScore: number; at: string; source: 'local' }
+interface LogEntry { tenantId: string; brandName: string; weekOf: string; aeoScore: number; at: string; durationSec: number; source: 'local' }
 function appendMeasureLog(entries: LogEntry[]): void {
   let log: LogEntry[] = []
   try {
@@ -65,10 +65,12 @@ async function main(): Promise<void> {
       continue
     }
     console.log(`\n===== 측정: ${tenant.brandName} (${id}) =====`)
+    const startedAt = Date.now()
     const r = await measureAndBake(tenant, store)
-    console.log(`✓ ${id} — ${r.weekOf} · AEO ${r.aeoScore}`)
+    const durationSec = Math.round((Date.now() - startedAt) / 1000)
+    console.log(`✓ ${id} — ${r.weekOf} · AEO ${r.aeoScore} · ${durationSec}초`)
     done.push(id)
-    logEntries.push({ tenantId: id, brandName: r.brandName, weekOf: r.weekOf, aeoScore: r.aeoScore, at: new Date().toISOString(), source: 'local' })
+    logEntries.push({ tenantId: id, brandName: r.brandName, weekOf: r.weekOf, aeoScore: r.aeoScore, at: new Date().toISOString(), durationSec, source: 'local' })
   }
 
   if (done.length === 0) {
