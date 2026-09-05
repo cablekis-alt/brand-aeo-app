@@ -659,17 +659,11 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
-      // 등록만 한다 — 측정은 STAGE 4 "랭킹 분석"의 "이 브랜드 측정" 버튼에서 별도로 실행한다.
-      // 그 측정이 경쟁사 자동 추론·SoM·코호트(1/N)까지 채운다. 경쟁사를 직접 입력해 두면 그대로 쓰인다.
-      const measureHint =
-        measureVia === 'github'
-          ? 'GitHub Actions가 경쟁사 SoM·코호트까지 채웁니다.'
-          : measureVia === 'local'
-            ? '로컬에서 즉시 측정됩니다.'
-            : '측정은 로컬/CI에서 실행하세요.'
+      // 등록만 한다 — 측정은 STAGE 1 "브랜드·경쟁사 측정"에서 별도로 실행한다.
+      // 본 브랜드를 고르면 경쟁사 자동 추론·SoM·코호트(1/N)까지 함께 측정한다.
       setRegisterMsg(
         `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ` +
-          `측정하려면 STAGE 4 "랭킹 분석"에서 "이 브랜드 측정"을 누르세요 — ${measureHint}`,
+          `측정하려면 STAGE 1 "브랜드·경쟁사 측정"에서 이 브랜드를 골라 "브랜드 전체 측정"을 누르세요 — 경쟁사·코호트까지 함께 채워집니다.`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -896,8 +890,8 @@ export default function BrandOnboarding() {
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
         {canRegister ? (
           <p className="hint">
-            등록만 합니다. 이후 STAGE 4 <b>"랭킹 분석"</b>에서 <b>"이 브랜드 측정"</b>을 누르면 경쟁사 자동 추론·SoM·코호트
-            순위까지 채워집니다{measureVia === 'github' ? ' (GitHub Actions).' : measureVia === 'local' ? ' (로컬 즉시).' : '.'}
+            등록만 합니다. 이후 STAGE 1 <b>"브랜드·경쟁사 측정"</b>에서 이 브랜드를 골라 <b>"브랜드 전체 측정"</b>을 누르면
+            경쟁사 자동 추론·SoM·코호트 순위까지 채워집니다{measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'}
           </p>
         ) : (
           <p className="hint">
@@ -911,9 +905,7 @@ export default function BrandOnboarding() {
           </p>
         )}
         <p className="hint onboard-cli">
-          측정 CLI: <code>npx tsx scripts/run-pipeline.ts {tenant.tenantId || '<tenantId>'}</code>
-          {' · '}
-          점수 반영: <code>npx tsx scripts/publish-tenant.ts {tenant.tenantId || '<tenantId>'}</code>
+          로컬 측정 CLI: <code>npm run measure:local -- {tenant.tenantId || '<tenantId>'}</code> (경쟁사·코호트 포함, baking·배포까지)
         </p>
       </StageShell>
 
