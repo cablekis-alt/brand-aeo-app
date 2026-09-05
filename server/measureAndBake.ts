@@ -29,14 +29,25 @@ function slugFromDomain(domain: string): string {
   return label.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '') || 'brand';
 }
 
-/** 본 테넌트의 (도메인 있는) 경쟁사를 cohortOnly 테넌트 초안으로 변환한다 — 코호트 랭킹 분모용. */
+/** 도메인 없는 경쟁사용 안정 ID — 이름(한글 등 비ASCII 포함) 해시. */
+function slugFromName(name: string): string {
+  let h = 2166136261 >>> 0; // FNV-1a
+  for (let i = 0; i < name.length; i++) {
+    h ^= name.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return 'comp-' + h.toString(36);
+}
+
+/** 본 테넌트의 경쟁사를 cohortOnly 테넌트 초안으로 변환한다 — 코호트 랭킹 분모용.
+ *  도메인이 있으면 도메인 slug, 없으면 이름 해시로 안정 ID를 만든다(도메인 없는 업종=펜션 등 지원). */
 function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
   const seen = new Set<string>([tenant.tenantId]);
   const out: TenantConfig[] = [];
   for (const competitor of tenant.competitors) {
+    if (!competitor.name) continue;
     const domain = competitor.domains?.[0];
-    if (!domain) continue; // 도메인 없으면 안정적 tenantId를 못 만든다(이름은 SoM에만 쓰임).
-    const id = slugFromDomain(domain);
+    const id = domain ? slugFromDomain(domain) : slugFromName(competitor.name);
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(
@@ -44,7 +55,7 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
         tenantId: id,
         brandName: competitor.name,
         aliases: competitor.aliases?.length ? competitor.aliases : [competitor.name],
-        ownedDomains: [domain],
+        ownedDomains: domain ? [domain] : [], // 도메인 없으면 빈 배열 — brandOwnedCitation만 null 처리됨
         industry: tenant.industry,
         region: tenant.region,
         engines: tenant.engines,

@@ -25,12 +25,13 @@ function asEngineList(value: unknown): Engine[] {
 export function normalizeTenantDraft(raw: unknown): TenantConfig {
   const d = (raw ?? {}) as Partial<TenantConfig> & { ownedDomains?: string[] };
   const missing: string[] = (['tenantId', 'brandName', 'industry', 'region'] as const).filter((key) => !d[key]);
-  if (!d.ownedDomains?.length) missing.push('ownedDomains');
+  // cohortOnly(경쟁사 분모) 테넌트는 도메인이 없어도 허용한다(펜션 등). 본 브랜드는 도메인 필수.
+  if (!d.cohortOnly && !d.ownedDomains?.length) missing.push('ownedDomains');
   if (missing.length) {
     throw new Error(`필수 항목 누락: ${missing.join(', ')}`);
   }
 
-  const ownedDomains = d.ownedDomains!.map((domain) => domain.replace(/^www\./, ''));
+  const ownedDomains = (d.ownedDomains ?? []).map((domain) => domain.replace(/^www\./, ''));
   const owned = new Set(ownedDomains);
   // 경쟁사도 방어적으로 정규화한다 — aliases/domains가 비면 파이프라인이 깨진다(competitor.aliases 순회 등).
   const competitors = (d.competitors ?? [])
