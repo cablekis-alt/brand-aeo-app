@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ApiKeySettings from '../components/ApiKeySettings'
 import { useTenant } from '../context/useTenant'
 
 interface MeasureTenantOption {
@@ -105,6 +106,8 @@ export default function MeasureTenant() {
         측정"과 동일), <b>경쟁사</b>를 고르면 그 경쟁사 <b>하나만</b> 측정합니다(특정 경쟁사 스코어카드만 갱신). 배포에서는
         GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.
       </p>
+
+      <ApiKeySettings />
 
       <section className={`panel${locked ? ' measure-local-only' : ''}`}>
         <h3>측정할 대상 선택</h3>

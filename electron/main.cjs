@@ -212,6 +212,47 @@ ipcMain.handle('update:quitAndInstall', () => {
   if (app.isPackaged && autoUpdater) autoUpdater.quitAndInstall()
 })
 
+// ── API 키 설정(앱 내 입력) ──────────────────────────────────────────────
+// userData/.env에 저장하고 process.env에 즉시 반영한다. 패키징은 서버가 인프로세스라
+// 재시작 없이 다음 측정부터 적용된다(dev는 서버가 자식 프로세스라 재시작 필요).
+const API_KEY_NAMES = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY']
+
+function userEnvPath() {
+  return path.join(app.getPath('userData'), '.env')
+}
+
+ipcMain.handle('settings:apiKeyStatus', () => {
+  const status = {}
+  for (const n of API_KEY_NAMES) status[n] = Boolean(process.env[n])
+  return { status, envPath: userEnvPath() }
+})
+
+ipcMain.handle('settings:setApiKey', (_e, payload) => {
+  const name = payload?.name
+  const value = String(payload?.value ?? '').trim()
+  if (!API_KEY_NAMES.includes(name)) return { ok: false, error: '허용되지 않은 키 이름입니다.' }
+  try {
+    // 1) 즉시 적용(인프로세스 서버가 다음 호출부터 사용)
+    if (value) process.env[name] = value
+    else delete process.env[name]
+    // 2) userData/.env에 병합 저장(다른 키·변수 보존)
+    const file = userEnvPath()
+    let lines = []
+    try {
+      lines = fs.readFileSync(file, 'utf8').split(/\r?\n/)
+    } catch {
+      lines = []
+    }
+    lines = lines.filter((l) => l.trim() && !l.startsWith(`${name}=`))
+    if (value) lines.push(`${name}=${value}`)
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8')
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+})
+
 /** 설치본에 키를 굽지 않는다 — 실행파일 옆 또는 userData의 .env를 읽는다. */
 function loadEnvForPackaged() {
   const candidates = [

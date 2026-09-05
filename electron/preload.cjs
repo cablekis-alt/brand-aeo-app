@@ -19,4 +19,7 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('update:status', listener)
     return () => ipcRenderer.removeListener('update:status', listener)
   },
+  // API 키 설정
+  apiKeyStatus: () => ipcRenderer.invoke('settings:apiKeyStatus'),
+  setApiKey: (name, value) => ipcRenderer.invoke('settings:setApiKey', { name, value }),
 })
