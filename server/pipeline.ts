@@ -146,24 +146,52 @@ async function collectRawCalls(
     ),
   );
 
-  return mapWithConcurrency(jobs, COLLECTION_CONCURRENCY, async (job): Promise<RawCallRecord> => {
-    const client = getEngineClient(job.engine);
-    const prompt = buildEngineCallPrompt(job.engine, job.question.text);
-    const result = await client.call(prompt);
-    return {
-      tenantId: tenant.tenantId,
-      weekOf,
-      engine: job.engine,
-      questionId: job.question.questionId,
-      callIndex: job.callIndex,
-      rawText: result.text,
-      citations: result.citations,
-      usedWebSearch: result.usedWebSearch,
-      tokenUsage: result.tokenUsage,
-      latencyMs: result.latencyMs,
-      calledAt: new Date().toISOString(),
-    };
-  });
+  // 엔진 하나가 죽어도(예: OpenAI 크레딧 소진 429) 측정 전체를 중단하지 않는다.
+  // 실패한 호출은 건너뛰고 성공한 엔진의 응답만으로 진행한다(부분 저하 > 전면 실패).
+  const failuresByEngine = new Map<string, number>();
+  const settled = await mapWithConcurrency(
+    jobs,
+    COLLECTION_CONCURRENCY,
+    async (job): Promise<RawCallRecord | null> => {
+      const client = getEngineClient(job.engine);
+      const prompt = buildEngineCallPrompt(job.engine, job.question.text);
+      try {
+        const result = await client.call(prompt);
+        return {
+          tenantId: tenant.tenantId,
+          weekOf,
+          engine: job.engine,
+          questionId: job.question.questionId,
+          callIndex: job.callIndex,
+          rawText: result.text,
+          citations: result.citations,
+          usedWebSearch: result.usedWebSearch,
+          tokenUsage: result.tokenUsage,
+          latencyMs: result.latencyMs,
+          calledAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
+        console.warn(
+          `[B3] ${job.engine} 호출 실패(건너뜀) q=${job.question.questionId} #${job.callIndex}: ` +
+            (err instanceof Error ? err.message : String(err)),
+        );
+        return null;
+      }
+    },
+  );
+
+  const calls = settled.filter((r): r is RawCallRecord => r !== null);
+  if (failuresByEngine.size > 0) {
+    const summary = [...failuresByEngine.entries()].map(([e, n]) => `${e} ${n}건`).join(', ');
+    console.warn(`[B3] 엔진 호출 실패 요약 (tenant=${tenant.tenantId}): ${summary} — 성공 ${calls.length}/${jobs.length}건으로 진행`);
+  }
+  if (calls.length === 0) {
+    throw new Error(
+      `[B3] 모든 엔진 호출 실패 — 수집된 응답이 없습니다 (tenant=${tenant.tenantId}). 엔진 API 키·크레딧을 확인하세요.`,
+    );
+  }
+  return calls;
 }
 
 /**
