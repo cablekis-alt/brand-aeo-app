@@ -600,5 +600,105 @@
         "updatedAt": "2026-09-05"
       }
     ]
+  },
+  {
+    "tenantId": "comp-mhxthx",
+    "brandName": "스테이 골목집",
+    "aliases": [
+      "스테이 골목집"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "comp-1lz1vi2",
+    "brandName": "스테이옥도",
+    "aliases": [
+      "스테이옥도"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "comp-rorko6",
+    "brandName": "초원고택",
+    "aliases": [
+      "초원고택"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "comp-1j0j0pl",
+    "brandName": "스테이 선연",
+    "aliases": [
+      "스테이 선연"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "comp-fjgq11",
+    "brandName": "라엘펜션",
+    "aliases": [
+      "라엘펜션"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
   }
 ]

@@ -384,27 +384,151 @@
     "hallucinationFlags": []
   },
   {
+    "tenantId": "comp-mhxthx",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "스테이 골목집",
+    "aeoScore": {
+      "current": 47,
+      "ma4": 47,
+      "previousWeek": 47,
+      "ciLow": 40.2,
+      "ciHigh": 53.8
+    },
+    "mentionRate": 0.14583333333333334,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 2,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "comp-1lz1vi2",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "스테이옥도",
+    "aeoScore": {
+      "current": 40,
+      "ma4": 40,
+      "previousWeek": 40,
+      "ciLow": 34,
+      "ciHigh": 46
+    },
+    "mentionRate": 0,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 5,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "comp-rorko6",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "초원고택",
+    "aeoScore": {
+      "current": 51,
+      "ma4": 51,
+      "previousWeek": 51,
+      "ciLow": 44.2,
+      "ciHigh": 57.8
+    },
+    "mentionRate": 0.25,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1.2,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "comp-1j0j0pl",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "스테이 선연",
+    "aeoScore": {
+      "current": 42,
+      "ma4": 42,
+      "previousWeek": 42,
+      "ciLow": 35.7,
+      "ciHigh": 48.3
+    },
+    "mentionRate": 0.041666666666666664,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 4,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "comp-fjgq11",
+    "weekOf": "2026-W36",
+    "industry": "펜션",
+    "region": "전북 군산",
+    "brandName": "라엘펜션",
+    "aeoScore": {
+      "current": 40,
+      "ma4": 40,
+      "previousWeek": 40,
+      "ciLow": 34.1,
+      "ciHigh": 45.9
+    },
+    "mentionRate": 0,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 5,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": []
+  },
+  {
     "tenantId": "web4ai",
     "weekOf": "2026-W36",
     "industry": "펜션",
     "region": "전북 군산",
     "brandName": "스테이,머뭄",
     "aeoScore": {
-      "current": 37,
-      "ma4": 37,
-      "previousWeek": 37,
-      "ciLow": 30.2,
-      "ciHigh": 43.8
+      "current": 44,
+      "ma4": 44,
+      "previousWeek": 44,
+      "ciLow": 37.4,
+      "ciHigh": 50.6
     },
     "mentionRate": 0.0625,
-    "shareOfMention": 0.20100502512562815,
+    "shareOfMention": 0.684931506849315,
     "avgRecommendationRank": 1,
-    "factualityScore": 1,
+    "factualityScore": 0.6666666666666666,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 1,
-      "totalTenants": 1
+      "position": 3,
+      "totalTenants": 6
     },
-    "hallucinationFlags": []
+    "hallucinationFlags": [
+      "openai / v1-001 #3: 사실성 불일치 1건",
+      "openai / v1-012 #1: 사실성 불일치 1건",
+      "openai / v1-012 #2: 사실성 불일치 1건"
+    ]
   }
 ]

@@ -1,0 +1,2393 @@
+{
+  "tenantId": "comp-fjgq11",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/gunsan-si-south-korea/stays/pensions?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/rooms/1215788658127492218?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2153?utm_source=openai",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
+          "domain": "travel.allthatreview.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
+          "domain": "travel.allthatreview.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
+          "domain": "travel.allthatreview.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
+          "domain": "travel.allthatreview.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "us.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "us.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/hotel/kr/gunsan-seongsanae-pension.ja.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/gunsan-gunsan-bed-amp-breakfast-pension/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.keyzard.cc/woniovehotwo/nb/224094835194?utm_source=openai",
+          "domain": "keyzard.cc",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGT-MycVrUu3bWiM5g3Ysx6vLu7fDGPYU2bXBA7Hfjw2Ryqd2jc7nq08Ww2qchnsbLeCE6-3XLHLgtj9C1j-27_srOHLTasgxT09Tk9v7Kz_Va38VaNYmO8HqRT0_FgoIZ7-HTm69mmiJYUZSnBhMFEGgcTmSOwWAK_6xCmsHLBew-ircCVfQV_B3SzNqwaK_ajmyPV6NKW3sutbI5Sf0uPBRxflfxDM4T6pMwLsyqKD7sekymrK6uH3o6WB-sZleAiydk8IvCMhaHXlfjme0cD-ad5nkrtT7Cz9HfsM3Z90O-6CqaCz2prhj9l3bT8GH0LtlzottvwWhSiydMElxJDyYU1I7IlwuOB8JNCETaqS-DYt5TnPaPsab26jtgvCYqOCQ1GzI1LsZo38IdhbKk5sdRdtgkN9JBs1KLwpaoR8S5aTSE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdQUx4Ee9PotRHlGO2z0vwCPfRJGh8xYJ9S8IgKUXP0dC2i5wXffDzVx7RSi3T7H1Y8b3_9KCFlxls3NYq_7X75iFAPYVGBzh2w2LJwDsljPDj3tiCWXSN6jjLMyu2uBmh44o-VCUToSoDN-DdZ_mSUQoZLQ8ZxKrPsosYgUdDV8jZiWdfefrz3IlQRhPyJyLO4xIXBBIczr6Ds83jP_y4BedT62h2",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGymy0Z3SOstNHV_iFsym6pqxCEuHlRkYUGcVPAi46AIdScvYEF7MLEB-VbAn9Rg9PDeRZ692-BhfrpDjrkj3SrhoWOCU6azY6dtsBlaXf0wFXorg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzaOcmZT9BUsj6KX_IFTqoDtO7GiGxhseJAjNetDE6fquG_gXRSqeTpdsT7LgyF5E6Uk3_8fqCcoS9JvqRb_1ban4MecTtHf-FY96A5DyAKMaLbiMkN0KMel1FWHDird3yl4uEaZrbBllBiaS7X592nra3gJdZacP8SYw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZUVuiaD96Wiy1dUI0uQZDgsj79-YUFjcEj8zJeuRd5BhY3bcFW8H6zKKv3L8hAZKMvhTdClgYNjmJWI8-uhJjMxtUyi_Zz1waU4RCb2USsbqYYtsUobK-V_dGcPeFPmOwcahOtF8SkNGR-lx-PMYhDOpJMDWoQxjh788Rxg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0AeJ-EHDlXnjZSCncu5ZXKJB0dMX136Msmax0BperbJ0SkD9xlRej5IaJKdKMCueS4K9SHNC7Treefmj37RqaNMmCm7a0NrpvOKjUqQf0xqxEW9Go5gs3Gu8nT-sbXQ8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBqEsmsBIF3RpIv2tBAt7Rsg4x_9Bnu4kwTnMVked65F9FNmMKl3uc-ktLsIEfGR1-qg-u34ygtmhpXvEt7vJmLsMoLBpQeyNWyL4AnWwSfavn0lHuzDg1_v9flvd0jTcSLkhv34LT1lbwBOCDYMsAqZd-XE8oTaI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqRiFosXuslUkFUblD5tx2mJrpMV26PfWUyWOShh_WDcLdwG7hgQn2OV4ZxpC_Aw2-VhrKEzfQU6un7pk2_ESoxmwiHwdKEWVsXUc2IiJnGUWBThUIaa6ECKMxJMgBQd0W",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "선유도 씨에스타 펜션 & 풀빌라",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDRWswPFWzsEOA5Hz4SozswAjIziCF6pC4HOzFf8OwBPT9hjAvr27qw1FaVazdbSd6dnj93aI_xOKlJv90yUOjjwXTeREBOZXcEsgQrnmJHIsFHlm86hXv-tDtmOJWDZNZNEIVwSvY73dJIW1qBC4GmmxGfNbNNrivQZco1u6z_hJbm9mmLB-kSlzJhyHpc_0o_kkCBgOHHLwLWbphNoVEYyphqFi5eK46G_vasMoRacpGXirUM0lce_ztZ3CfPAyZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoPoY19J1di_SBnGZ7AkBE356Zrwv3Jl6iDa4MdWk2M2qHEh6eadTnmiwzqUPbLLIdPCphmbFcCE3vDOcBj1ga3BxlTiaF926uHHdBFlyVpfBvCQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGK6K1-fLcCWvswijv0-vCXrckpnd62BXct_AQVPolHDay1q-g24bnWY9ob0jPjw9qN2V_fBYeslSOAPATbD7eIdPWGXsaoZ002tWJNu4_4UoJP_0VfpQ72wFKI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyXUnthBiUh8ttWbW1Zp2NN-KY5n-UX_3x1NNqjvae-afk6X3QOT-spmedg9l3qDwAbO4ujNXJpeC3Aj9M7yscI9KTw9LdTr4KXj6J2z0Djwmwwx6i3g==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoJ12fcByuISmwzIszAD7en24kBtH_kTP-LvSKLRVVRLibVwKdbdvpQTxZQfYtC5h3fqo3Fu9doMG69Mm8ckAPmB7uZim3V504j4kvC_xxv6sZYjVJinVftBwdqs3_XbDrzZRqg9CQZbeAMIfkzLUN8s6U4cE3Ilb9ofY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoDoQs1d1n_gcq5WxWRBNCGsVKfXW6Nn1SK5ZnBpNJTWQY40CkOzzEdpq1dA9H0JgUJgYlH4Mcz5bQZEFeG68-oC0ww2I_g-I6EXApu4CiRj7inx5OYANT_Z-L-bSN1YCbiAhobwPuNBlPW0ln0o42m5FETz1hWrhMsEa0ow==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkHXGb6Ec3HTwDkB4xTzw4eavWCtgldP2z78BDUaKCeEluVBjlLB494eE0jXK0s10EAIiDo7t9Xn98UV0etkMuXETt3yIHTn1hlIytdQ9DWS6mUKk_6kO1BiP8Hshu45A=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpKnEangdI9mP0BuDK2gI97OMuGkgknJx4gmqp8ddY41pySB-7cNR4OU9azwVgvtPiCUO08UQvbJHNwq5r6XTDx8ZtHbcjT79eQyM6TI1yR3IXZ7gm5HHQYyIg1isKdIaWhYDD2XSCBpKiRaBen8MzHcF0uwG00ukPDKtNXNgpxBTvDLLqxsXTNEozxcODUTyuS_ee4VQa9btyD-dArjCNtVylZU8_",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFLH4jPSk3Z-ogaNiy1qjcMEbmQbHzCbmPl7SpjzhsBo3afxNMU4hR71fE9qT_Ov_GimyR8lcTIUdiJLvMTY_n-L3h5mSRL7ZThVGZ_JJ1UGo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjnEtnk9oV1Ckgn2jWSDF19-e6RhRonQyq_sMBMg5Fp8iO_E67S7xyNNhtblt4ffAH0zA5bT6CNgEKaSNbNfk7P9-Awt9595NjAOl23uYciHYHtw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVYx-qHoKVIWX781vKo-HyqDI3Xvfi_zLFyqUg1TUIlkFb9VvRBgfiVcoQkshQEvUqA4pM1sxT-MzPKvfm_woAyZ2P84-dYRrqcFwmQ8Y59R67pMQo9EUr-fJqGxMTipwczORc3ZURvXwSewmWlL8T59kZB2uBO_I6OFE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGciXSjV1Y4s1xWlhDP8zRIjHV3fE_1f_dvAl3VnqqgmAQWE0QyDyOP4RfTHOhOILddZc7VugQsbKuYzdPG64XdF8lqzbXjPvLfDyTIrTXwW-ZxTxNd8O-Bmkhmte0QAT3l",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFN_ago72ijxmI_9Hcif3DuyoUJemDLHLoXSEqd1regomhlEIVHaAnF47v2C5laCCtjTq8TIhoownRQdeCnawabB6tQzUdXSHANznM1epC8f23dfHOhnHbnkodsxxoVo11f2C26A4-TxTghLFNvDww1",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpKnEangdI9mP0BuDK2gI97OMuGkgknJx4gmqp8ddY41pySB-7cNR4OU9azwVgvtPiCUO08UQvbJHNwq5r6XTDx8ZtHbcjT79eQyM6TI1yR3IXZ7gm5HHQYyIg1isKdIaWhYDD2XSCBpKiRaBen8MzHcF0uwG00ukPDKtNXNgpxBTvDLLqxsXTNEozxcODUTyuS_ee4VQa9btyD-dArjCNtVylZU8_",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "예약 플랫폼",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdS7YGnrsP3JWTY6A-maFtO7HaqXBcu9zD60bkmhH5U_08Smn5xCzKvKZCdtXls5ve5rz15nHxaT9tTiv66G0rsnQg-j-cKgUv4pIC575QdSNq4jkni-r6_homxRcZeVK0NZ4asx63sFRaa61Kk9ehMu7gPHCXWynZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEM5oH8VqaGzfKeD30smtdtyzJQfWIZCWWs5aF_DmKoSaOMi4NA1nzD1Vobg1pQ16VAek4JApN4snIrb8p5shbOW5d2PTNBCwruz_du0g0s0j_xkDzO6JU9FdaBbi1veAHC5danvj2I96py96x8uPgQwIs0FZX81SM3avdIs9ip5CfTOE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDH9wBotYgzcAq-kXPHEX6ktxZxJDR5-Mx9X6Kci8UjOWiwqOTR-bRkNpKr6sDzbxitfNuhzKiUQ3626nBODwSGUbRqMHfv4bJhJd60AbEWEEs02Ni4MkmQCPwP9E0_w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqEj7QqQN0FFQygGEFVxa9dUWJqgmTVztsXKRNE6szUVXfSv0xUF4uO61UPDW1EJyIB1dtmWSayjXeXjZv64ObV8AaUiBR2eQL-oLxgf0f-33e7Nh_7Ftec4gBzcj5hawhTcgCpwxg47YGVuNPKRaaOykgpeq10o8nuf_0z9SPGr6FpjNcXgFh4S_rW3YirMgG7U3sIaiUu2vXYS4=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTvaLE4yyy_mBFuDJ0Aun1N2GPlBrCt0IsVIYJXLTDly8vLriZJP6orNP02qcPz6vr8RpiQ3aX58piJe_5UqWl3gJiccJorZg9QuN4yVI-s-sbgWByVjpLmEkKs_fZZD7JLhZcTlCCQmI0vtaIfadebVe_zwDkDq_9prD50bpwCl5eSvntVwaLvtQbXv7iFqXu_DCdnw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIjH4ocVOkNB1oZu6QiTtewfOF3DZgKfqTXC5Mi41piYUkSrDOt9zSE17WMjTf2OyveVHI2JTWqmOOD4UZvn7HiwmmKMBK3e7CzoL7zC9I_8Es3VofBCzCPswYLEQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbeOFDMDx7IgWaf2vxiQEM3wGMgqDmpQ4yZQVbQdVC7HSWRlGxNGjBuRIG1O2-lMyYfIwli6PmSN-Ap_Emy2SdU2OA1ziDZiJF7c9kTn1ejZOK_Mn6AC2UWlpdFDQDjosNV83p0bhgzIzCt93j8nHfEROoQ73yvYjGxkrJUQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiqc0e4LDcEnJGEOEQHQsI55ZUXOSQ6mdax5oNr1eG-JQ5kUsOeMhAYcmlIlGlYi3meJtjTPDo4gZ1g15_k5Cu1XRIGD-bbfSMMb4rix9jwUBSpAW1e2eIg16sbCuBNiPnri0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMHB2s9PaHfdJXrmsxQBwa38VTx6nd81g7BYIOGptwJ_B1kz1oGAKBoPw8nI8yJF3Fqb-KnXWe_05K-t13_y3Efr4Ak8T3znthW2ofM-47sFaGzixx2ESChLm30gaq2f8FHCkVLMpChPhWIvAoByIM",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_tj0W8X6nSP2JEtSE3jo5cSolRP_w33v-WIxZdNwYwqAP01wgKqOLUibvVZQ2rfN5rR1LIqziCIijNED9Tez2_QQsn5TQf8oZDnk8jau5IcoK",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGiqkoG0VFP1nddzRu7TIc8-BWQJxuMGQFTDMQZJ_sKO2Rr1jgvTVACMkBpFzp3yTKv2UFJaob_Ygh2NF0pjVgseaESMt-nGopTuPdU7Ihi6sOMZt3pJEOMag7FXc1HdoWXtcBDKiwSrBmlx4JbXYr7zHgYny0tEHkTug-qSQme4y0xSJi2mggrLzn0QnrEPkcpY6I5t-FQ9fRZ7ekrza8ZxNrtjfQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFecvsyS8pSyRF-e6OmQUdGnqSppQ_nl0EbYv0KXe75O8NxvTzmik4LlIx6TE3-i-PPxGd4NMF0FHu_kPOcGjptLFte86_kZuS9Eos6HR6GYzysymdrwIfDXjvppbamlAh7odMO6TXCxrXvHmkjI0_8YfGlWhLPCdZKrxja0lmaMlxJv6TPSEGf",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyfrqZINYwCwilTvgkOyycIeNjLAu-IWroPACpE4jcsHUTp89Wdi60289xvwpIURvmsmwH3uDXsZXoQKREoQSklRXyRA9FUIpe7n_pYmzTbZ565qUV_pv_wfIzLUYS8wLGRu2HtyjVfLy1K_r1ULq6cXeLQcK1ALPWAqrjJuAZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeZuCOwaqnABTP9d5TkJwWn9W1_MXCD03JYY44BmanErDapA_omAf4X_hqfdrn7GrFxfsuZ8iIn9fBvoc-U-uosE13ZgT7Y9r35nb6_fdifyfXPf8AfsHZ0XOSdI9Wr1h2mpZQAei4VYyspmV9kAb7FSoV2uqTptEG15gAmS_-poi1Xz99_BP02dNkQZhHGc7TZV2vsAmKE-OQ69BWsYro6vKkH363884WhvfqBArl-YLcB9Avv_gmI6f16BPOf4SNuBfGaxkJWvbf4DNfclzL1Ax4PswxKLuJpe5EiEOTC6XYtBCF_YBy5_4_HVT6r9eMBzIKaGJK4P5SQhx_litLNDXsDfAiCB8SSiWHMje75epYUF70h-jzaXQoh3LyXXp6-_YFTvBHMAXBHeD2GCQa2A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELM74c2TDsSJ4YXfOlit-9qBI33tAgRSI8Hl8fhAZr0IxVCZ5Rg7_uibsNLUdJmjsTCWoyL4E9sC72w-bojdFzkkK5bpNnxphSgy8Drf5aIBSHDx8vfKQREYR26yc88sMBIuKYdFqh2l3olpTlWPlQr4Qx1HfcKlrhb3Q7oeaXtLPWXQGiGC5fSfCU4FvW9Ri1Jkw2gIAGIEs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4NGYjparggHaPnANmtWe8o_t5fy_uuwlGKjp4-V2BGTpupsy6rLy17U93JgXj7reZNNJHR-GqNNfolFu5glDiBNzOvsOnBJZQ_Q15hHqGWTd0BbslrjzBalwPtMx6Qky_JUP01GnmZtnhCEh92VEFnMRzareJ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqpMo4bOSFQFgKVsUpPuY68TUbJIvimAiJRbAv1oflDFuReN8oBq11sBE1vhYs2k25oOJdHDO5Hsn2Ha9Ycc59gJOas8XpEtBsRk8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGx-Jjp3A5zfaDBtHlKeE3TJyrQMc0YO5FcrKAdCSuWRWBHCzFS4K4fnaQeFWU3-zqh-zA9fq4-6U1d4QvABtXklsfvyhdlaHr1kq5VHrnSvLbqFbZh480=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFq7WrkHpWPlKJJw2Q0WBmnz4tQopWfa-rA_VdUKdnwT9KgAfVhAXJ4nhc3ROZqkLLHOVJ4kWVneibLjOHnYcUklQMcJs6Ou1-23wrH2Zh_eSXNpogEC6Dz_-5im5dXVhs-Z4uGbz9_Efj2J-FVV5EZr_OUa65P",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZCWk_ISgVpHgqNcC-AOgaU1_7UZFRZsCjvggdFsjR2EsevKQUBDabSD6dCsN0NnI071TInVpKryE1XhWIAwHEnynhcvq6SPQKP5GjXrIw5-whZ6KXxh2r0D2_xVZZ0WMJWWdqd_fOCWyKglqfaHSg-RMbrSSbMlgv-vzegGvTvBonASX6y91CMGDiye-vUogj3v71IpQLNXWsBS1n1DgGr9_2-QVm5NPs36_FK92UE3T7zK3FNTnoHv_4QTkvupAcurDvySEo0WJSQlFQysG9YgAqFQoM6KJqA3MyNjzCrk8uI6TvB79qhCUwAWZr73OvYmOnWXQFKmTT231AUbF54XlUgTwZoCNX9e7wf4HPRA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUwa73kK3anhryJGxiz0Z4tDsuMbQSucOw7b02_m3M0680ZVW0---IyHQTUQB7d7O-6lIMgpOVjiUdg8SoF7hNwVMMBcEXQvUbn0XmlUutispqbfkIMJFhjyidPGTbe2RQC_vHPbrMTeB9EHiKlkJDIqlA8LjxbGsJtOW3ZUgaOG5LWH0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELIIggp4y8LhBqLwPbt1vYBEW23r98MH_BhRKoIokzZQxFfNBh7acsrfwRKo0M-jNpL4AYyepI5YcoQHKHRY5tAAR4v6ieYtxAGQUfHDr6c3j-hmqZK1yDmHHEiIRhSECVUSShsBiS1CTf_VJJsJtItKDqL_13rFQNMYpahfmPAXidUVXbMS8He3K-EzXmVZlqsBZZBwaNZcoowAE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgWBbKCwAglBRxtrsaZfc8whCL-Bw4vI0vD2gSVOo5ZysnJKAn2E2oUXag4w5H7FvS_ApaPgrJSRsoItp73_tVaxO1nkAkfs2k40sW8mK9rmLnGPQbkfUm6UM3SwZ3ZFpdP_GxEX81mf_RWB2T-KwZpg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPyJYs7qyQbMSrg-TbD3Zqfwrpsb5DkX91ZN_5j_h-7_r3Akt2g4rLu4AZVXhbMv1Zb-0OYCVzyj9BLQ1JnDskdnesPGi-zA53jFqRe04zHfK-bldTddav4TyxR4vDNu0T1CoCljQCqgK1bNyjK5fJtVT7zjSXlgnooF-je-JTUFqlnLud5yQCntxo81ynnWLQfmonslUNloajnNyREGvkF5ZuALtgNe4Z0muAjO9EoV8IQ18fJgW4oQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmXsGKJMj7Ksb6OxGXUoGOhgTSsLYJnmbDp5Tzt1CdNrvh-HpjV5gLcMTPq2ADqOzPU8wkEWGlVNMf4fxhJTp2Wdoku3lZXHDsWvCaPWvS-tztRgpj-vINtQ0FzxXXA6z3SGiNns9LJbwilo2okO6WHHc3DQlu0zzzxpqlY51I75kotB4EY-VK_RPiTJxmTtyv1vBMV-U6yYSSpLV9F_FvDQeAk42isL72A_NGQqJ_9FGlKl4IED_uXDko72F8jw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_QSMk2xAYcqw2Z90FBAvU2QCKD6vBIslM8fzpLsxGR5HJQZRNHq1myYYcnR1yGM0FMcjKuirTnetGa_JZhxWjECU29W_B2esHTHbC_XEcUVOgCoAQqYxdTjg29fjMu_P-",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2BurIlkAbooXPysMSKx98BtXo-Rac42zxRYOU5zJ9NKitQ09Jz-GM3xi6ZftPNt8aNDrGCHdKfbMwsDIRznJb-w_8dbKW1kuaTKQJ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNH4BqoJg7U6y9ST7cz8ACkOmi1StDxKbca14BJKXJbA933T7wnLPZ8eT6vmXAcG6gwZoHwu3aZbTVL2NumQIRamlu_zzHQctUAC5NANn7oPIml4qoFisJ9J6uycuOYQLSvAolYkTZXQxD6LxYg6p0SxXfgXHncYkZfPoa0TQE3tcb4YmnTJVCPHr8RwGECmgCij_S4rN1IF4kZRpOoNsgHmPNBGZo",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuItB6EWtIQbVGnq3xVLU_tWJKpMILWVfGNuOA7m6vAujkZE1VNE8BbzGE_lqx-rEh5JtMgC140cVatxDR3PqJcTKkZsUoV4ey4rqom5oCcNue-urgwYP9hDWgTpSE",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHiqu3McABBm6UwdhKzXl22BdEc5fXzUNRWDnDepUpjfPc2cFBy52Rzo5VmDKtOkX4W0xnNel6Q9argiLtUF7I0zsgckOJgzrQkdWZjzkc7EE4YtG4aquoTzYJKPqxDViLMicRgIgYITJ8Ybjq2-Nh5BTCO8j3DCAKe",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeWzN6AzcRA6Ho22deTwyoofkfjvZ9OtJRZXVu7qqKrcJ3t4qP1BoO-GrnS4tsKf-qGspIaS1vZoLh22_dlyLF-uMud7DFg3HJuOvSGTtsby3qZKDRz9wYC53nYE79sOooVim8QAI6iUTz_BJ6CY_w_UNHJXtSONciuwXsLUIay-YqlCTWSiL2FzpLP1RyraQIsjN9pBFdIlGODU_zgXotVFO-anrYS1-_Aexy13Pn3A3I2CzejQ9iOq1Z4ehqgmgX",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "계곡 펜션",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpuitgcHdVS5KQALxg7G1xF8HfBCd1Kl6tIlM08-66CXi5ILvHiAEsoR2gooddmr641MFSBJPVNrpDsXy1a_aIh2Es6l7K5UuUDN0JYLHk0Sb4ugkg2k49nnidYDiXXGkwVBlstBMIqtR_mAFQGGhb3zBUWKGgqkZrfw9CYC9mu01gajN4lgHmCI22IhN6-QVPHwSpNx01OHjIc6yYGfPS-uKQDBEnBnXrD3a7AZ-H",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2qx07uQ1KeiwNhHDeFe9EpsInWdaol7JXJMdHV8uULstI9OkSvRBUFlInVmtU1pqugnWtK3mA1TPRWyRW3FH61586897aKJ1HJi0IB-8fP_ifS6iJ-TZTXFFF-iUHkPFg8Hbsl-Z_8ClcwuopOuoiSXKd0GSUFQ-Mo9QcAD92txwgkQLPVOoGQk8p7Pe_2BKlbsuJTLmPvQ_KYQ93-K_s8kAjknoDpZJu2TiGLjrnC6HCmwVC-S-3fOZKzgOPOBungNvYuLBIwAHsteBbmh05bsdpaJjRaKhCeFwcZOXF_tX7WFb91-6tauqQHnRBIJP38xGoGs0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGx9m1ILR37e0XOWYK_mxxHLj7_hkkxiao0IgqcLoyZU2vrST8slcU6l62RXMaIlLYuvCfJeb_yNUDstE9Hc5bO5U61eRY2BqzIuGgfCJcXt6tlyflCdW_VDCDIUyeQswYQoVEIBXxvK6UqkMinSNIibzqhAew3kwIKxZF85mH4-Jd08qivNH8i-p46dVcM6qIhSrBwh5TnwxlixU4qmQj6YjcgeRoD1HtMr0kIyC0a",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGg51TdS3_iUhbe7z644uxfSFPMOMMbC1H0aLRdIgAiyaAMVYI8gfsdIbap4cQyXUgBfUQhcsbPrgpxmMemogrcvW4Zv0TgQJUSKIHHORs09uPXQojWJoO_zqc3rE3dklrCLnWN-YaXC32IO3Baexs9HVWD0tOF_yzCPbdR_4TJNldKPDl1HFbQusWKB8PjFqLPXD4MA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaJqfUjMPUsEcaiAnLQ33pcuoRUd7zVdWLF2XqFVKjMU_0l-VxCF02ztxKaLimBuR_qPi2buVtVkNzT77pPImG3ckTslH2rkNc7AQcyRjdPgc7sBwnp_blqSQGhfaDk8iWVMF-2Cll3mIX5sPFPBbf5wX3fRV21ZFXJ5FbEjUK595M0KVz",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3YzLhO6U6QZ3CTA-GejJ5rs1IJh6S9_nP3_GUg25eG0xrLuw9FBJtLrzlKwbXmqQEwSICXwXQzBaUcWU2VF0wiTCs3lqE8bXsht_bwxagF2Wj7OFaul5baF0VRsHM0oY9m6iuKid4OqUg9Jw6Gw32BHxu_Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPCAJdcyO6UVnZeK27IYT31a_bWhDMYUTCWQQbA5ySL28r112CTI1XB46xDAzAY6bEgGTHrNpHk_8_1Hu7ZzupDYzvOTvGGWU8T1CVJsGSC9UyrmlXd8RYee02u0l62XVsiBD5e48=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4xpRnQlzOnlV6WISqb6u9R30RozfbH2xemr0mZT-l5QTbusbOB7xBHVIXehAesf3ZIe06HdAr__h2jHAFI7wpMkIurDRZpxsskSim",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBbg-KGN7_PGkcjGXLXT-q8gIHqVlkJTmLiMkG67SIFNjHDoSxLmnorDzuP8Csk6jqw6wjWU19hLIiEn0ekbciwk0PbG2wsRI4XecKbjP9gOv9P-wSR84k8RN5J-VwuLqa0n0SSAlR9a81ED3x4kS8nijo-pu1FbajQtJE9MDY5dFZl3W1YGHLc1CtddE1rZoOXxxNUI7H4BnIM8wNsknelMRCAwHweUJC4vuQ4PnEqCMgrDtY1IZ-Ozpb342KeGWoz0ee29r6uqsmMg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFV56h0wvRlHoLh5zeIUivYwjsyNq4bnyOl2GfQ349O5CLGMxWQKIVBH8I3rl65lzTa8JdTfJ2bfY0Yc5aVN40TL9cVrcq6NfSWWhqS5fZr4r1vrr71eiIVkPdAw8AQdM-s-oSnS1Cx3t9OlgAyV7LKGUyYj4GZOGXZsqd9KcR8CE2m7w2YENztMgl4pP6TVtatTnEYZt8iiS-LFDVA5VxnLYgfiq_5OD2MYxdqLbRHk60_1zYAyT5Ep0fVaRsvovOr4RNVnMiMhnYApEja4N6Cjbz1UeMoXkpPP1eJ9AwRApKOQyuKv0QM-voZGNeUtzKj6TDx0mwqtjZZddo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFL8ok0iTDXyyQt9fGc1jkWnw4IRxIwCgA1wyLanErZRdzk7XccG6-oh8P6sAaaD3K4zhXJEyJhOftU8NAzY10zfkhqlb4_WwQ8VDWwrf2GBr-W2741hy8b3tY-gq0KG6BZBFcAZnbKys4o_6rl2MW4OsybFsM7boGb",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTVePlfewxDdHZgZC9Ey9pVKsiKe_CJUz5mO3PUh0jXOuzooIuR0W9ZgzWclApLG1zRhLDD-H_TBWDxl2g3xOt1jJ-195vVotINu4VyAl3doZXNrrxB8A3AreqMZoIqxrYCykriDRwfXCXR_D6emtqcV4etRGFj1ry3uQrWMh9FUfp6zboIj7K",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVMdUwfTRuUSaXYzw4Y2BTtveoJOF3_VIJk_W3Ud-yZbtSSSOkM2z0bPY-wUYeYmq53ZTHRBLppEMo6PDkBncHX8bNCAwLS1Xqi7X-yLk3tXLkhW4PzXkFnYM_ClnV",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEF2iUTj9IqxDaTjNf317XCt_zw9kvSPXbaqTzt0-tQItL5wyf4evN8hK7aNOdmjYQde7Si1bSZtV9mfz1tTbkwWVqEiFUO-LjWauOVUWuw2O5BDieVMfUmlD8RXE6sw9srOkURQkS8vCUYIT_Kui3Nv0nyHgY7x5Rxkb7m54PcNqk3W1A=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFITtzOTXhBDJCZ2ZSiDmDARnpgPoeeSt2JEDxbX5bz_ruqUjGP84LX0Un9ykWtofDyTQR_MP90xI9_tIo5jSx9TYPWD2eKfOY5DVrwA4kBA2Dydjz_cZrv44ilIiLhKt4Bw84BjfbNQw7gUeMzrgiVGOeJv3W-_yDfqne4mzMR6CJsG7p2fPU2y_hynIrP_CQIG0bseFngwNREj0uP0O455sHceS-akTZu6mMmDI7K",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF8XNOemxFHB26QBOe4Nz0upkg7cr6t0JwqoEAbJMAut_SCvZmR2LF3BvLZfIhNkS0c5mXCTHWT8gFDvL1Ghtw4D33zrx9OsH-e-5CczUeIrX2w2a04fPF3rPOmhbZM6LQ48VuWgwmsIVKrdQN4I7cjxPQ93DcoCedkycJA33cw_Anbu-iy_uu4R12rd-Qs6tt7PGqPVRUQFfAWqU=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF8XNOemxFHB26QBOe4Nz0upkg7cr6t0JwqoEAbJMAut_SCvZmR2LF3BvLZfIhNkS0c5mXCTHWT8gFDvL1Ghtw4D33zrx9OsH-e-5CczUeIrX2w2a04fPF3rPOmhbZM6LQ48VuWgwmsIVKrdQN4I7cjxPQ93DcoCedkycJA33cw_Anbu-iy_uu4R12rd-Qs6tt7PGqPVRUQFfAWqU=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlLH7tG3Bp35S1AxGLGDRoYa2DOiQwybwJSiIzErCirAKSbr9CUFHGngdhvAsENLCNt0J0hsTKh9s7gCmNnNog49nNku9-Jsf_Pr86IpPsiWtU1YcPLQa6FnUqgdWfmhLQxpuEAqfAiDwTg6mFfBpC0SWHe0i7uILJUY-O5kVBO6vGXAJjVUICOnvqTbHGmri5g14gEjPBP4O67Sr9bJkeuLAsawofuEdbafaRgbw7skISK5cW4T2ZFcwh8_e9vQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeuQnzfjByXMLxjYKh3ATXPC-XGTuXehCTwJEknF2wA1AImUW81A30RsKxBoHoodjqNKnfAPzJ4hVmSTZPzBkQC8NJUAoSeNgypqpcZM1LMlj1TRmXKQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaMOfr2fy0M3xZI0rfXh2Rr-gzqO5YANcjJnKEHMhJ5MAFpcwbU_MJhdTbrmwni-0BjNrDjLcLzfTI8r0o7h3m8lL68LQBDSLpLePwK98sXzLqP3M_mt9ZS0CXaoSLQLmmpiPCSkzmgifE3HdwbX4dJtM_CAySaF668JO8YgYN0letEdzmnjlzFNk6MFeU0yWAlWTpL9IHixT5yRl2Qw4AvuTm3ADTd-TQiBTykrUeRm8SxaRt25YupcXDsm6PJoiirgR8_dzaanumcIAitJiKnilf274hvKVGYRG6--VszSLQX1cmdVsbKjoj3iQBrCDh5-SA9zMz5KDXRXmb8KWh8j3OzapNh6wTEtdWi0VjlZUQFEGMQqSrWQD0AbIVg4OoVKVe6WlW0QxV0YlxUuC1-XqvcjmhlZAZ3QbScW1kVw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6dFlE8IbYPgh6uVUgdBC1warLpnlqJhePBGlrQplcFflJEGGPm07cLsMSk-N9ezBYCOHXfmYRCqTWkGFccgiruqixOsd9BFOKk5wVIXE62smkO4Uw5KsShbwAGxvZEoYRqT613sPbkV9S9X6tV5F1jm1eGA436jgA7U5fOFNFsmy_rJwFet3NMze5FIUkXnD2UdBDyvz4V-RzjAYNs6E2GlQ21osdyYa4kzMEfaDZzny3Z_1KVP4qHfOwH8KWAnLAnWRVIvz3M6fsyRVsLk3t77rA-FlkjtFmBGQ-1sWNJ2cteqD2_uVuq_373oivqVsPLkwnR26jBCI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrqc_ob-snlW0DtJsjkyPujMS5icubk30WMNgpc8xrQ_800ZAh8V6QdBFe26Yfn31Ybt2jNRSMr6st8t2oXTXuDDkQM2mvC_2IiMiz_JMXGQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjrqc_ob-snlW0DtJsjkyPujMS5icubk30WMNgpc8xrQ_800ZAh8V6QdBFe26Yfn31Ybt2jNRSMr6st8t2oXTXuDDkQM2mvC_2IiMiz_JMXGQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8Lb6kEX85s7-XIJ8LeQF4mLRaIgnZRzM2y_cdEPUrvZ3UsC4hAbljOEL1GRvQUBqcs_XtcxlvPqKFb6u_NOa3skdscjDgLLdXd9z5Fo5asBu6CIwW22Pbxw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjGRVQuoAQZYVG9hpTQWn2HfiwOn9rscDp6rwy6sO7oBptbIj2VRQyeBzxrrUcXkzeGkDWI9eM9bBXgTdgZWdukptIeV2L1lA1O9u7BrlWoS2Sc-VNM0c5_fZrHyv1tRyTU3dhI6DAuUc=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELdrzSLfY9RMBLwk1jJ_3ksiBTo3Ar1j2Pw2NdsCCCsuKjZtBAVx9JDQ1mrtqCicln5hWpF3FQvRSwt8EjO9NxWp-njudW_M3w-oGm9rkEwDBRr9voMLoL2Lq0KaZT2v_xdnfm0PTsScFLe5Z6ZceuHzxi8zGIFFNK_FpmjQj_atoO4FI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "전화 직접 문의(다이렉트 예약)",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "라엘펜션",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "야놀자",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEU0hHTht7W5pGwVjX_yf9ERyZvxut9Jic9HejvA_U_CKT2Hx6h7M8gbRrtzj4Tf28u9QngJ98d3QFuNhc04AZUNNkf2A9ouUQisRahaWJP5X39TUZL0y0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF988CfMm8XG79uxcEwah8WrMURhLK2Vl9PvVoxrj-XxGrmBwQ3F7TKT5nvNoaOWrnp37iBvnDMUUVvetMe0blVNfTslIZ_6i1qzjLMNgU1lIHjex90Zfp5mmUOnc8YkQr9rAQOp6rWdnqhAkBcgPwg8UUIFVFHrq5bB3eXVFfFZMeaAV-6dsejaSriN1HUCGPGAMWWumaOlCCiiEkMAro32Djk9ncV-0LSq7wAwyIAYChbCjbJlA-h8HyrwXSM7gGhcc6etnesoijc_9AhW_DVVYYtBhGS9xzARyqGRZ60qZ8rVYLOC82oxF3Fkh7XqlX_Xa2bADBFtpuuNBZFBH0j6oUseHSwhutAvdufonHp0dHwWN8p6RMI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7VQwH7FGJG1KFkdVuKDABfDM6UVF7BLV0OJfGKFRUJgZ4mVFes1tF-EbAswByB_q-UFk5bShCntxO50YvlVmIjjd5UjBmLXqI1V-peBHxwUdiIy_jvvHKvuGJC1VzthpcPCEhgZpaB_fVDLiitIAKkIV1-MOJDSq2l3TdqK2IFeSekOULyoWfu_V9xzwfOtZxl6y9zhH3OZraT6UyLRp-pmc0-rpnCnKMCABJtQU5aXjdXcu4pcfOiv-upwTU7kmjT4uit4OYjkicGmFTmIwCS2Iop9gbQj7c3o_E8b9yUPLRmh7_JMMqBgRmUhPuzaDe17mVPEvRGtGYhRXjXTzJDQRCWzAmrVMA4JrrRP5YTGuemI1AVqgR02SeL9EfnnDfxc_Ed-KihV_cDHMUOUek8w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF988CfMm8XG79uxcEwah8WrMURhLK2Vl9PvVoxrj-XxGrmBwQ3F7TKT5nvNoaOWrnp37iBvnDMUUVvetMe0blVNfTslIZ_6i1qzjLMNgU1lIHjex90Zfp5mmUOnc8YkQr9rAQOp6rWdnqhAkBcgPwg8UUIFVFHrq5bB3eXVFfFZMeaAV-6dsejaSriN1HUCGPGAMWWumaOlCCiiEkMAro32Djk9ncV-0LSq7wAwyIAYChbCjbJlA-h8HyrwXSM7gGhcc6etnesoijc_9AhW_DVVYYtBhGS9xzARyqGRZ60qZ8rVYLOC82oxF3Fkh7XqlX_Xa2bADBFtpuuNBZFBH0j6oUseHSwhutAvdufonHp0dHwWN8p6RMI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEl0lGYY-PgZzGnP0r7cU_hTYVia0IWzMrArS5amPhctqfhNouzWqOi8yT5daTn1XLiSl9hVxQcbwDBbdz8eq1LiYlRqmU8p_y_vLwD5X_has39MhszcqULwhrf37JeU4g=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxX3CBtx_efaFgYls3Y-Uc0RGz4893XhTZcy_mC8fvRLtd7dOmNTRut3YXRnDMvFBSts5FgRH_WovehnliguRETbga0cemjtVf6_S5L7QmEAj9HA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEf8pUojWzGZVbBvd-bFLEUrc9Zple5klCPuSFgkUZZCR5DOiZEzocWidM9HPucnWp_UN-gm5rSsm9i4HZHwn6bozxzMoxyLrVyPQr7-qgSMY-ZgCY2di3pCtteSg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6XWUOV90RHXQbNJyvR4xI2hHE5Uw5RCZn3cXBJ6D7vSjKz21agz0a88G7q1MXm7ovIIsj_JrzAaSmusC51fN4G2Z9R3okMdP5QiJwh4B8AQZw8qN-XFlEL8vVdCF5yrPaxbuR5acQXf2akas1zR0YW5ByXDHKr1u5",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqQ9G8wf48_AiFt0ES3hrekQ2zd-97uUWplTBURlzvW5c5qZvlRdOb7IRF2or7MsS6Wu01NC_VO_fWTAHDyd1scl3JyGVhX3ZBha8b4oxXQJU9V9Xht_Dvb_XQhfV8pJk7nWrzrrfGHqgeF6oJs9PCEjgLAwRfmzla-C_j-7Oz0TXkLCQ3Dwsyrl9SzSOTSiZZd2ntRwADC-P-JwaCXSwc7Kyd6mCuKibnncmdA4LVwTxZBguON427844asYTphw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGG0KsdE-6He_paGpHrAf8qKmPBa6CQ-wvT9GlOtvNVnUnyqbmywUrABPaPAUq7V_zoCYZJpg9-cvBDnYjwCcXCbaMhn4p31WYrZNaa05QDMYyP_TccSYH6",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHENtexMd8ySyv2Cyx3bWcTRW8uXXQCzBqiQvsfmOBTHup9XzCYGvmxihVSNUBoQrYC75moJjXecBKKS_YxedPrVe6LcQuq5KKGabYoVFGXoKs0h5ZAnYphw31mtCNl7YDkE8kvfj4IbXbRCo_esvZ3iMu_gRGShyrCyv5-WqODtvzHUXlnMpEFwnxYbTZzNHIGX625vLU4OD18_q0i_S_XgVrpy7MHF2Us0lCQs6g4zcPOH1bEBqFbWR_6nUthQR5E0eEI3cB-HIF8FoSyibt2iN-K6ecbGfGhWqwrVgg3dUSkSn41fZAMhWoGcvUg1hiUmIy2AMspg_2LrNvIHHFl3ESzJt85Gq0szGCkGtHcF623RkxfQB940A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "'라엘펜션'에 대한 구체적인 정보가 검색 결과에 나타나지 않아, 해당 시설에 관한 공식 웹사이트나 상세한 이용 후기 자료를 찾지 못했습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "혹시 '라엘펜션'이 다른 이름으로 알려져 있거나, 지역(예: 강원도, 전라남도 등)이나 숙소 타입(예: 펜션, 리조트 등)을 함께 알려주실 수 있다면 더 정확한 정보를 찾아보는 데 도움이 될 것 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "원하시면 '라엘펜션'이 위치한 지역이나 특정 특징(예: 바닷가, 숲속, 수영장 있음 등)을 알려주시면, 해당 지역 내 유사한 숙소 추천이나 시설 조사를 도와드릴 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션(또는 로엘펜션으로 표기되는 경우도 있습니다)에 대한 시설 및 이용 후기 정보를 정리해 드릴게요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션의 시설은 주로 자연 속에서의 편안한 휴식을 제공하는 데 초점을 맞추고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "혹시 찾으시는 **라엘펜션의 정확한 지역(예: 사천, 양평, 원주, 가평 등)**이 따로 있으시다면 말씀해 주세요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOMpcMCzUrUHpxf3cFyoWs_NkSOobM98XofR9Mz_gCW6lGfPDpQB0Ru9MmYynl9-e2BAuRQ5pCjIdUUTmj8aq23bJCKFvigufnVzsKfoZtrymm8bPBVs2eHdKB1ad462wrFdi0",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZbFi3lCKYGQVQMhJdHZsJ5WYXngSJIjyEp3vFvWV7IJ-Jw2DaKBYMj3NiO_KjPrqJdiO2fgjd7KthWK0Rt0Pu0zrl0FGEyYl60m0GZqcQIif8DpwJATrGPCNLZZwS35Y1P3Y=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtd4nsHqboWDNR9CcL-bnPj1ipIwVfW7gGqoLDOTJgk-Noewt05_EYoqdpyK7SuriPdaaOPBMH9n3OxKkneG9TfbMLPaAf5UIQYsnmRDfaJ3qbPYFhXdXdfkE0LNz5SmEKCXX0740E2w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9LaviV2FL5y1i26ZQN0L_6qpiIXFO7G2tP6JmWCFSTRkg7uWPqieyUjhHDDlsg5Y_RzZU2MztAanunZ8TCL2a2NvX_OVaKvaZpl1BjnypKxI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDWhyKbz4wz0Tz2pQzVHiUnOKXWX7RG9hhoEdf95MkjJlAD8mBeFcL96aISxZnb0ov8O_-LrygL7dxdk82fRt5HGvYbcPcPpZp0EFTbEeMyzMS8WveBV2jPihKcNCYgnttE9k=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 '라엘펜션'이 대표적인 독채 풀빌라인 **양평 ‘빌라엘라(Villa Ella)’**를 의미하시는 경우, 주요 시설과 특징은 다음과 같습니다:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4Yp8g2rwSHpHW7Pj6C51SiFJjMflq97qYHVr99zQ_iZghAz-zByBpokFBuV708GCUL9lJhOWuH7p3BbfDWX2eySmhM_qavhJUQ0GB7Ay2abtpk5b-8ZOmAw7lvlinA88S2oEfRYNjqws=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhlMiHz9u0MfpEV2OVwY1mMQkZP75aYQ-t-1NqBhZtXr7HkpBEGRd3is2YWfxr3XRl8YC__A6_9wKkbSEEWRCEB2BvYAMhHJBQVuXffLbK6F2z9DYxxX6I-z32",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ7WpUR--znE1JXCZojK-MYVP-g4OwcfZYgtagvIaqQjphCQBtBSDc3csqJrkMQU596zp1H4sysRj_ypUl9xJRvpMgnI1FKpzf4Z8SHBTtte2mCmXuVQViGmFsE4jUoK3Zx3fO",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ7WpUR--znE1JXCZojK-MYVP-g4OwcfZYgtagvIaqQjphCQBtBSDc3csqJrkMQU596zp1H4sysRj_ypUl9xJRvpMgnI1FKpzf4Z8SHBTtte2mCmXuVQViGmFsE4jUoK3Zx3fO",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHY_NtBYaXKMEvc_rmCRHN1DFTdK61lCRAPBBgg7TZrIYIz_n0vg4P_RrNE_2_n9GFSRCqWmIR4u8GrTnFuRW-dZGSgH6dD-LRFYb2GqvViFVACw-dC9V_3_2vHHOdSt-BEPSHgiGbowyQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-dlTj9tUr631z1yF8cCuWz4d8Hpd73htx2e2LXNi7QkWOKm2y3xyDSmTGVsK-dPb-stIBKJg6CDhCWjFZfBbw7OfAhUVtKcI9T_bOLcgMl4dWChpgezU4VDI_dhfihAhLoCEjFA-iuyrBdEjWEoCS8nLVd49uQQ7HcHb2NNE-MZq2Pq7pSHT9ByBhzT3jXjwSQTEQCwnjShrW2aX4XSwcHtAkUc0Hc3Ldg8tiSL0x",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLCc_BdKyl9gv8_uvlppUNOukNiKAM9GhbLBf-Xy9lFxYYYevRtI00pW9yIQeCfLMMay8qQeKvJzMZXKQiIgU14ouiSpHUfshc-55X_6_tdyreoPrkhShVnq0Ba6Rp-_317ofj",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZ6EPycHoI3fOlf3pyS2BkCBbYzT8oX8A4nGdfJmEA_z-u9Ne5desZNeIqcRC6-WzQ-Rad9VL3sUBK2Lf1d3bAWeTh2F7Ovw4_20IRonFN2Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "'라엘펜션'은 지역이나 정확한 상호에 따라 유사한 이름의 숙소들이 여러 곳 있어 주요 시설에 차이가 있을 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEv4McVJEqnFeQWIQtKye3RlxMXLpQmJXPMaTF8UAJO46St75RUVLN5VhZ8vmhclOFTL8y3oHbmzgnS98eWAFc0Z6You8S3qL3AraOWOySU-GMyB9WI7Z5tKjKumyyLwFdSrCYc",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3kpHAPE28sXMatgUlE31ugI-EmkbgYkLwSlTWTWeMMrmRPDxTeGDQfN0JYOVc3662WjSVKF3io8_8V3GmOg-oj55d1KIRkSC5BBv-gZSfBYBUs3I=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFX7PhdIF3cSH3Ow-yBiq33jSLMZFf3yhMSZEkrIBJ7XPe9VKq68KjVMeIfc9k9eAmlQbYHvEqqc249apIcjlIq79_2I-xJJ0BZ6SiSoznREPQ-I_HDnUx1TwhJZIN6IRzeejIh0JJzUDq2dpqg2QtI8tUGPCPLQk8UT1qNLR7_7S8M1J0YG9IJlotzFItgohR-QDlrbyYOFwNqxcc=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz07bNYWja9CO_m_IbkEGOWoUzZDhQULxUBZC162MMsi2P6iKCwYso17__lrpNdwwDAjifWDh51-bxxu5LH7rn1ZAQKq6RSuo7omDuAuNsNXRAJydcY2vHdK3HlAROoXQctf0I1rGhfdI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFU_iHS_d_H-uqraZ3nSJBZZ-b4LVTSKFJVzDpphGfyPrO1RRqHTZim1fzx7lD16SovuBajsSXzFLbz2rSti4yoXI6I8sDXmrG00N8gj9lQT1qHzxgz_tEivcF",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLxAV5UO41LJVtLh55vR46TQnoka5ATuZBGVIVuHT65unYC0rzIzVDtXoRkjrZyIKBNfeX8pOSLhUpTZdrW2RQqBBKzsXK6rAn6xogU_OAby774CijZQtMEHW2ioMFay7eSMs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6DW8FQ1NKeo0ku91HFkp84StooiMismRaZoD2xxm3GsAtKztRcJkQrGF7TsSKr7eJSQWJ3SVQlkXyhu3wxbmjoxCimGONn4LgsHUNI7BcdgZuuc1q79gUZ_1af2_SvqJadz7bRUdrtWM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션과 다른 펜션을 비교할 때 고려해야 할 몇 가지 중요한 요소는 다음과 같습니다:",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션과 다른 후보 펜션들을 비교할 때는 숙소의 형태(풀빌라, 독채 여부)와 여행 목적(커플, 가족, 모임 등)에 맞춰 아래의 핵심 기준들을 체크해 보시는 것이 좋습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션을 포함해 다른 숙소 후보들과 꼼꼼히 비교할 때 살펴보면 좋은 핵심 체크포인트는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션을 포함해 후보에 둔 여러 펜션을 비교할 때는 여행 목적(커플, 가족, 친구 모임 등)에 맞춰 다음과 같은 핵심 포인트들을 중점적으로 살펴보는 것이 좋습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "특정 지역(가평, 거제 등)의 라엘펜션과 비교하고 계신 다른 펜션명이 있다면 함께 알려주시면 구체적인 차이점을 비교해 드릴 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "개별 바비큐 여부",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "'라엘펜션'이라는 이름의 숙소에 대한 검색 결과가 현재 확인되지 않습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "“라엘펜션”이라는 이름을 가진 숙소가 여러 지역에 있을 수 있어서 정확한 장소를 알 수 없지만, 일반적인 펜션 예약 시 가격대를 기반으로 설명드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "특정 “라엘펜션”의 정확한 위치나 공식 사이트, 예약 플랫폼을 알려주시면 해당 숙소의 최신 요금 정보를 좀 더 정확하게 안내해드릴 수 있어요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
+          "domain": "jik3253.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
+          "domain": "jik3253.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
+          "domain": "jik3253.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.myrealtrip.com/union/products/3190304?adultCount=2&checkIn=2026-07-24&checkOut=2026-07-25&childCount=0&isDomestic=true&providerRoomId=&roomCount=1&segment=&utm_source=openai",
+          "domain": "myrealtrip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.expedia.co.kr/Gapyeong-Hotels-Gapyeong-Leupuang-Pension.h73664695.Hotel-Information?utm_source=openai",
+          "domain": "expedia.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "\"라엘펜션\"이라는 숙소에 대한 구체적인 정보나 요금 관련 검색 결과가 현재까지 확인되지 않습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "정확한 요금 안내를 원하시면, 아래 정보를 알려주세요: - 라엘펜션의 위치 (예: 강원도, 경기 가평 등)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/78706?utm_source=openai",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.ssg.com/item/itemView.ssg?itemId=1000564498952&utm_source=openai",
+          "domain": "ssg.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyG9y9bAOv2QxvmRVoriq9LrTOE_0z0qonA9aw-RIwTlkoswAsrZgdu34ZezlfjFQ6VDS1P4a3XZBXLaPgFTjbeC-6dj-maJnGVxw_BK0BrOFZHWhZk48snBJ8b_ApeX2vQIEjfg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIParaGdomM14lodB59QFlvn104ktndmxSDT6ExHfi1NOwsGWx3V4oZNE_oPTJ3Niz5GkhiYY6PdIj2qbfvyUfrE0eVkll9Kuz1HZfXpUxfo_q0of_R-clMDvvLAM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHv_XbntHKzbFZ4C3DFJ0ypNtvS1ETQdPqLDnHyZd5p-TN_0XGADCUHpukRHzN3iyGn8awAOMxiquVZCNYDCLHgaryHgxRPIAFDnPHh3vntARsjDeta9GN66F039efxx01SdN1ZJAJuI1w=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_TkFfRlKAzT7-bbq1kykXdmz5gqKwNcFkaxmhqeAoWIij3CQxQvPEYrxjxg4Mtm0AXTsbo7VaGNPFaabwF5sQpoSQW7zJamYNepAPDoccSeRC73mfMn7yTO2wQUe-6fvF895ECeYCjg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIParaGdomM14lodB59QFlvn104ktndmxSDT6ExHfi1NOwsGWx3V4oZNE_oPTJ3Niz5GkhiYY6PdIj2qbfvyUfrE0eVkll9Kuz1HZfXpUxfo_q0of_R-clMDvvLAM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGm7mQfBYc9HBZTxVJwm2B1_Dgv0qODZjdoGxR2jw6-MhiAGAa5lSxw-iM-AsCwvNvcF914F0dCMQhJcp-QjWWtsulropx14XQksEVZDJxf_dAb44-qxakLp6oOOjX4tuDNu2DL",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "'라엘펜션'이라는 이름은 여러 지역에 유사한 명칭(예: 양평 빌라엘라, 원주 루엘라, 사천 아르떼리조트 라엘 객실 등)으로 존재하거나 일반 감성 펜션 형태가 많습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBkyaR9gOcr9usj5ZscKXkdKZaEMaRUaep3fLj6kyg83gT7RJ47cJ9ebSf_m-seuKTHO-oMpvDEWJpjwlwUdsjhFIj1N9mUMpaJdwb-t2Db1AQDunVsQ_745sjqt4hkes2lfm4P4IyKWQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFf4estz1sNcWDyPPb5EhfFF1HoCA86xBeHkpRGrx7FSEhH60VFAbc0KLwARmksfDdIbW4pGBjx-AobT016b-7TtRUrYp9i6Z3maq0aRHskHtGn2zvXAhReXvv0zFFfD2EUIyn8",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGN7BtHF47Wqm2qPIZFIK9gTuZORKBPAgSQYLo9KYETpl3_u3OP9Mi00a_PaSmE5dkOYNW-g8SO2Of_20rIC1MHsljVCiNhuzAvpU8HsjaQzP6buM8CcinsfIjP8hSzH8wUl2dk",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGh11PEiqj1QHQnD2quGDSVf8LbakfEG2tGKd4JJWOJWYyIgowm0AbGYe_7ynOz02DBumRZ_CutvltgDK7IghIiv9m4IolOS3_ZYnHKuE2cXXP-VXFEbmOwe-pRuOjR3DTYj9ZcsaeWQUd3jf3mNwrLdKkBpjYnhcmWQT2F_aGfMDj5Uq5BU1P8ISFpgFzMI06GxC4OzslI0kqUd6d5hBMMW27t5Q4JBw54tJz4fQQ7LHR7n-CIeZAUalJVsA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGAqjPUC0SrX76Q_-pUknlERJBwyTt61rklXuejid2tLEkL40zzLvaWCTulTQeLnI1j9h2L0IGKVhUzxU-g_o-RimCq6epfG7gHVfBU9QEegEpuUpQvVdqu8XIL0xCrGXh",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFI3TXHumDlS4N2A2QgMcRT8qVpeJNtC_yeDM-jefXArj3mgWrn6whWsg7PUEVzZpjkLAEyf-veeMShUNmyR0zRdFW8ahhd1hzw6Ytu0G-pPn_RRqGQh56OIOlM0-ebw2IBVIuoc1hE9DY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFR5xdj5a9LZ97RH0qjPVEHhWouUZgDLidTF_7FUsJpsY6a0hh2zsg1JjYfHal-k9fC5UFmQSuJCmP8Y1FPAkA3v-RNRSYZK6G5-LUMDjXZ7ZvIkYqX_A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션이 좋은 후기를 받는 이유는 여러 가지가 있을 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션의 후기가 좋은 이유는 여러 가지가 있을 수 있어요.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션이 좋은 후기를 받는 이유는 주로 다음과 같은 점들 때문입니다:",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**라엘펜션**은 방문객들의 실제 이용 후기에서 높은 만족도를 얻고 있으며, 후기에서 공통적으로 자주 언급되는 주요 장점들은 다음과 같습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "> **참고:** 방문하시려는 '라엘펜션'의 특정 지역(예: 가평, 남해, 양평, 제주 등)이나 정확한 지점명을 알려주시면 해당 숙소의 상세한 객실 타입, 부대시설 및 리뷰 포인트를 더 구체적으로 확인해 드릴 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "‘라엘펜션’(또는 빌라엘라 등 유사 이름의 독채/풀빌라 숙소)의 후기를 살펴보면 방문객들이 공통적으로 만족하는 몇 가지 주요 이유가 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBJjBRr9r-Flro1HR9ko39RIAY2z7dBPoHc83diAhKL4cz3qsdjZaetN8hS3IVU9oiZfHbr4VxL62N45JXKsVqI2uaUKO9oAv7a8swPp6DNVro5aROvwgjah3bHMxKRfgzmWAi7m4LjdA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7dooeJky7AYZUKNou_rVhMT9HWbVflZKdN8uKO_TpT_nHiF3ouyWuOegvfu3yAOKJKjla9iGJEWjEVGpjL8OesMLBZOYsfo1C9qOdUFrQdMTaC31vjlSyLaMEpkSWvBtmPeqJ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "라엘펜션",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGL9BfbElNlh9q2btbu0WN0MLzAuBKJVm3MDLAatamtbCe3AxDg22uTkZmxKleXI1XiUOO3hBMaY_L0flyr27siflxe84sdUEGa3SKS6D35qtrk8BGFwdDPsz5xQI-mdmfV0fVWkjN0O4E=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEsmmuxQFNRDdxBWYJt31b5l_VvHGlGG0i0Buh2ug__tJ0L149pulmDGQK89RW_16oAd6DW0l353UpM7NwVYUTJhPwacuQCtJD1TKzfdB8MaQO3Frz4ZU35ueZdxqYNFpWfgeCLWtiNvqYD_O4UeKdTlEtxPtMhotbfcWOicgLwkiSoxOMvqb8v30aNlb5Csncc5dzQJcKu9p8POLneZkY1is1lYSe2tSoQMoQI3k-",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESU5bqiDu27ag-42VwkP_U4Bp2C0yE3tKA1H63FBbubxZCx0kkeew7xhkPe_wDHiAO6u3exnSJTJ_B2R_-1TC0cWjPVfFwgcy3QAKEH1LqO80QTKquqmh2OdVLXx4_1mPrXUya9w51ccFxPoJmzY_ptw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFNQQCp6cLGtRRTVF-vB3FH2WqV-QqwnDcDFMxIkXRoHUZ_RTuajPhhSTBPhVByypBaFPvb1Pc1DIe0oINS2Gvq3kvAu1XHwqIhLjA-YuYSwif0hwc-1FVa2rwxx0kE7I54uCwysAVVmmy_2Ci9HDc3mjEWpz7AwlcnWx7PApZ37bn8PYezeYZ1iprtJIyGPSIclMxa6ej3gJGTtH2o5MRQ9aJUHkb",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGK1OnLOa7yIbFYM2dvr4w1m0BTgBCEZEsCbmF26Qlhixjy3JFisQXzYjNyUF53SYVhCgKyKYc2FfRgvd9P3DvoEOzX88v2oacCPwo4xEKimuDppcaS",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "라엘펜션",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

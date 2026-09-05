@@ -1,0 +1,2649 @@
+{
+  "tenantId": "comp-1j0j0pl",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연 (한옥 독채)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "시내 관광 중심, 감성 숙소 선호 | 초원고택, 스테이 선연, 초원포레, 초원고택 테라스",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://dh8wt6.tistory.com/1458?utm_source=openai",
+          "domain": "dh8wt6.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.keyzard.cc/woniovehotwo/nb/224094835194?utm_source=openai",
+          "domain": "keyzard.cc",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-104456818/star-pension-at-gunsan-sun-judo-c/?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.com/gunsan-si-south-korea/stays/pensions?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "2. 스테이 선연 (한옥독채) - 위치: 초원사진관에서 도보 1분, 일본식 근대 건축들 인근 - 분위기 포인트: 1930년대 한옥 보존, 온돌 + 침실 구조, 75인치 TV, 커피 머신 등 현대적 편의시설 겸비 - 역사적 감성과 현대적 쾌적함을 동시에 누리고 싶은 분에게 추천 ([cozycozy.com](https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai)).",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.daangn.com/kr/local-profile/?in=%EC%9B%94%EB%AA%85%EB%8F%99-2539&search=%ED%8E%9C%EC%85%98&utm_source=openai",
+          "domain": "daangn.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.keyzard.cc/woniovehotwo/nb/224094835194?utm_source=openai",
+          "domain": "keyzard.cc",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-hotel-detail-104456818/star-pension-at-gunsan-sun-judo-c/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAhM78LgunJdj8ghel6If1QP5SXHOQBmJpMItiXPYpY_yq3tZIhUDPxtiWj7nPnfrI49rKk4fhJjVU6Siuo_8S8gCKNfl84unftK32jrdkc1XJR3PliM3I8Uh00t3IaFI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfLWL2p7OWuOo19Huyc-uxhFt4n1i6_GGR2aZTdlqhXLnOp8y7mFiq30bQntzdt5TKaivtlXS5gMHJ95hxehIuaju58J3Uzv5qnoUlfdudjdGeSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdy-DIBmgjXRvoAIi_3mev866UEvmoq504XACbNnw8KlKkG8YYWVgcPB6pR6GNm9LA3Uaea4n-t42et54RvcWj6I9_76qLBHVehHmqjUGgz-DR0oTsvCyzvYhI_kV34BMTzF_ir5jepPhA2ws=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMG1erFuOJMpdFKW0Yn8fw5j2BG9wXUEuVfWTvYFIq7qsUQVPph-Vb-fMhbDF9OBbWD91jUJIpmQ572lzO7srzqT0SZEDrq4lPDH2wlHGUtWsmFw7M3TOOXqh0m6iDcm8Sw8ClXyvFK8_WTBfEEAwSDf7syM1IPWrSE82XmmY-BU6VHz_d2kXfjs59chFhpfJ6sE_eNkfxf0k1xb4jYhz0PEQuhuateMeU44tb61vATeycv11oo-PexoOSbhk_7QXKXJvqSydE",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfLWL2p7OWuOo19Huyc-uxhFt4n1i6_GGR2aZTdlqhXLnOp8y7mFiq30bQntzdt5TKaivtlXS5gMHJ95hxehIuaju58J3Uzv5qnoUlfdudjdGeSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpsUcyDiZavv8hwjlOpn2tbIvONbiIRcXGEnnye2YIDhO92hzEPWScg3Fulz20gKNKz_l-glx_IoL6SOIK6AGejJTZNV_lmGwkCMZnfwzgVGoIGXzPyVeYimuIiirDPpDDrQV0-3kxYT7c8ApgsNSM_7Mv5PGzOM9v0ZQB_sNeYQbGRiBjwA7qbHnThMvS6J59dn69TR15TfGVd1za1oNcqN0NHSqxeYLn_AeQarqZ8wBU4Q05y14e06Cl1judAWrk2TX-_StXaaG3SOzDeViYWIrcARw5DtA_4gXJNFCzs70vuJFVuL9q4B0_1ilQkrG_-PmiRIHLNJD8-c_xSYukq4dulcUE5mk22tYJ9PxwZhg45RNb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzADG9UQtYvo3zPzmRr132HcAWAvX8jGBEWzJwglaBpbCNzvu_wzQVtoWxYzmIP1s8R6lOyBqbF_bz117v3vt1Gg7LVPQDDMrVg5wSOnIausVf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRvay0CgWL1AdyhtryhE63XuFQf5JlhHkm9N8v4dE0knZwCkQGvbMhFlaDrE_4pVgxyCQYM94Zw4WpwzhqC6DTtJfZJPhqrbRUofmgJZ5Fu9xhsN2ill_EI-w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbFzL2zTRXS86_gWzMiSmYj5hhmRe3OJRyfizFWs-pM9byn4BkEJ5Wajq_RQh3d_Mh22_hp2A4hfZDeN9ihk6rsm3KrUneS9HkCjjhReAE1ObdpLx4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUwCfzmucQvsRttp-buRQGc0_4bmJTD-44uOPB4bG4mQwaMMAXfKTQp2R1fx0GcAKPHyHLZo78j5X63Ly4QH1tw7acgaT2TLkS3PEWn_YBbL2UyElzOtuEjBAjBfy79w3jX27Ter24jXv-50d3-VzEsRqLBoWr-IC2bQEVt3kIg4vQn4c2dY5FgmlAfbGyG0ZQiOkwDjl_IojkCzXldL4BIh61dec=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLQei6Hgut_g4HS7tHvQW06lgTIdYhETHL349Z5Qd5dNPxcJZgtch7XnrCIBHLZ-Dq_nNDW4A1vORIl4DE3iuzE6UlE_qdNLkZSdVIF2CnaG9A-D8bgm4PsZElERTJew==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHh9S8yN-G7of_ZNG4j3jpfxZg1ZzUh3ztJw-3V8LMn0wbzy6PslRICJnQQRHlua98M_rNUWWOI2CP2DzODQCB5c1IzjQkn34PIee5ehVQNMOYH_ij6KdW_B8xDwWgsplt_fsNEXWJUKs5DdmJi-MnlumYQ67eqgqTfXPdpjoVpP1Le1WX5rqecc5GnLn1rCbvBc18YLnUSAHIFh8qOqalySN_EAoU8HRgJdEz2ZiVCErhgO4lTAmcO-yWHhTQWpE45hYQ7U2kozLQnvc5_VmZbpF8Hr9IWgU3fttx-50Q8hGEBM0W8cD75CjEiJLxtqHOfL-1poVeLJnkLqp6Ow52ToCbdp9uR-F7C3Jt79orJnGK16Bo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLIiU1ehN8pe34T3_RLZXRnLk3n26Sk5_xcGZyDdyTftHtdUBHDGtm6lpDG2oUXV0ElnDALR9-Q1WedsAJmRw9uxEJ2kH2SPYa_XwKb9gl2mm4W50dZnfeDC2aqQEYXDkjQLHoK1nrrzTmhBBPsr1x2XcZfgprxUjqZnXS_iWGlw1oB0P7hEJR0B0QvJoBKG0GZw_8Ru4aVfg-O_71aRPPfmjXPf-6Kr0inUKCE5xdnXvzXL3jS4ljWg3SCaeax9tL6hMOC4c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlLFF-m0D_1jgrwEi4AkQVWMKMMmv-G1CZhxPclyAhVu0i0zrXhciQGfsLPd8EaIiuLBJ4IzrxvnDbaYm6NEpidXxxfivY8F37zuxYgUTw36LgmQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2ywBi9WjZKUctfpXnRy2Ja46qfvPi_eROWp1dAUO1k5GoF2ExBBoHI6CV_x8ZehIIinD17ZyPVZ3HFcDbXBx2O29BUuOJV-Q5-rRDtkuzwfyragozAHLA33NopMv47YHyIe0l8Zxf8KOmPOY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlLFF-m0D_1jgrwEi4AkQVWMKMMmv-G1CZhxPclyAhVu0i0zrXhciQGfsLPd8EaIiuLBJ4IzrxvnDbaYm6NEpidXxxfivY8F37zuxYgUTw36LgmQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHia2e9iF7TNzAMj1kbKFOfLUlCTPasL5lAaITyScTTcj16FsYlrI4yY8QZEbn5qCnQKv_JSE4T8AQrQvttwhi8uAUEiCfqiF8AB5b7VzV9MHUrnZs3bp4yehngzrpsBSY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2ywBi9WjZKUctfpXnRy2Ja46qfvPi_eROWp1dAUO1k5GoF2ExBBoHI6CV_x8ZehIIinD17ZyPVZ3HFcDbXBx2O29BUuOJV-Q5-rRDtkuzwfyragozAHLA33NopMv47YHyIe0l8Zxf8KOmPOY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz0PRAwhcjR5-0JSUCy3mm6Pq70hG-VeOYxhhNubnULJjpkhtzSaqRucr-hf-zafp9jWGHejB4nPRupetmivzvkXdQ-8bRdaTjEiUKCQNhz_QHHBPKCi_VJnqTSqHgDxisqwZTa2LPfzakI2WIH2M=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBf37W6mcpvR75RH6WZgN0sObfdNDJbj-Wo080ZHlBQo5HeRYNgRbsFVEKDKmObXsKiwaAfHEM_VkisjElZNYU6Ys08x4S_Gu4r7c-MR2U02ICTp25wThfVbvyJH9DfT8z7_ytIaZjV0Ya9WGhj4-f3KSukRBNxWGHTkkbQMF2wth6D08Az1MVlMjxU-b9GGeEl_s=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "팔레드군산",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzH4CCaBWNXSS6yq1e_EQyYTr0Sm-w3iDISVJVesBWnRwwZozlgPNX_tNjUrfhFy1P6Z-luMODUqFrOOlAg8Jx5vXe3ZjwLLf9fhjwB6gfWqs4r_VyG3XdmiZJKTNtC-cCgy6KaNNesyVpkMTp39mr-mcmmRB1px33of7Lz7R2ydPR7dy6nsMqInp5doO7JRH9eet90Y_aLs6704fllogSOFdVl48mESabolTmZ8NqOLldDHyauMnGt0IUz0z9ICEqDGYQ4IBzd7gv9MKyxQ9lLwh4",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8cxdfLGaGdsQa-Vk2g5-Lmkf7c6hdfwnuouIdd36KYuu4bSywbfW_5KLd5OWqG6lmcem_OcRW_jc7TJQTpRDAtnA05TuaUWZkrfMDOaBg3GnRTGm4Z5pohIwD-fJTE3RBvTuZKnfwdYz5uMCUr9Tqkid5XdCPIv9pLYOUIZ7mnQCDS946Styt9FufkKRdYuqr44XMFNvzGxrR8GdhlN3WtgaQCCrgp56UstX69nCKA4veZnbqqwG7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9trLKEY6edSUbjosHMJfY5AOHp_Qs9zte_bBC1Dy1-y88OrSTiqwWeRZUC0z6VSlqTOVE9zsYVjS_Qdjdng_zfh6GrfcyYkLn9xCMj01ZoAR8dT7AShjLo3bhH-jSwNsxuf5FBYdzqhrdP5weDLN01ukdUv1erhDfuqXKFWS-8Uwk_vK2bQP1fRnpgLsAIODSVgir_wrAzOUBlJx_g2h4VBAzDwQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEP2ESWzDDXYhwZbM4ghQ7MNfcy8bJY3_AroYE1sJzztXqPx29c8gtf9pFNv6lxp8ucwVkXqnh_HkbnU47t-GaJJXTgiKwvkmDASmvMO-oXfORbLAAZk0MmnrI6hmtpdb4tMLopgLIRZ40scomKTOqc4RkSwy0_8i4wcGgCBLKU9PTOSVLSCt2Zd5had3pwcjDlcLVawoVCqAr9mnLcqDZUgxArYA2DUTbkEHqYZEyff5VpVt3_LYb4FO4eZIGhg-nWMztsfLxDRYuQhnV3J_pp_EFMhTIaO45Zp_g5dDCf4OAMsXB_qA4l60ISQb96JlnmBO8l_xO5rkBHsYLhWH7_0AbcaaG_8MvKOiWIWx82UQBe1gY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL5OR5iWLVyEOBH2wo5urKE6JKq4Jbn83HgLwUnsIAwYos-GcecT9cOfIvsyrr4jPedkCW8NQGrCTDrwxim3YvrZSDKJe8pYvOpYsa5cm1pllFiGoR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwjVJB_fSzA_AJn9Y0pYhdkENIGD27GIEBWCcW3Z94gj92mC3u5kqo2NfTifTXJro_WbzmF7NpSOd9C2vm-4od7EIGmR0kBhe6B6jkiD35Pzhq",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgAj9gsz_LyU6YRNSsk_A-azTk5q20sCsaKoQ-v8PSI8SzYCZbKtJRWmhVJ3oz5WZjGiiQnqKBfeqdtoYuNmxYLtWBfHPJ4AlOuMq68gODXBr2CrxFdeYCSueeWpX-bw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlPGTo0S3RsPA7n-g__G6gQKzqf6JiNSwOj3jca10DIHKCmwFhRU_3DkiEoJ7nlQ3zMSyV5lAHtNnMfekG8h4Q1YooYSf82yd-Sb5V2o_LF8w5oefN5J2cP8RZDWHAjB7mV-4ARltF3lvKjw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsPzeuzBaiscXWl0Y-ugGt-QjlzjfuCktFajyQtJtboHgfeWxZ123myVFHIkPimcXYeMSWTA635i5zwaRICR9UxJMx85RhnWLiuzfBbfm8-4YbBq1nrRLG0mE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "선유도/장자도 오션뷰 펜션",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "강원도 평창",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "기억의 사원",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQX_6A__dLSJTSr_MYPrWJoCt1agmb6PPXxPby45FuAO9oaC519qU54G7qE9jJIg7RcdCpF8goYTTd1lwF_2amsIa3WHc_GAXEzmRYIwieQUpYuwo1xgg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeW9gBaIVsA1JbqSw4QZhnsclQhw6WRIhdA6wdaC3SebzLSVlLAwrxJxggGZ9KBQVX-i20jRZwrR4ONA68Zxh78UJWqM576Qx--qgyUFrmDUeZtGtnRio=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPVHvqJt2jNQNs93KH96ZeaKFMBTQyocnK9r4hlRwXyewrDm-jUq0EqS9mOAh1bXPNH7VYK3Mh5ABdrZLnW_TiHfah5S6bZ9LGgRHjYEHg5eOR8ds2S_B9qIDjbWMnggU=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAYo84FAPgxEUgWSgMKv3dhm3PuYtvXuNrynoAfRWVi-251qKrppm9er8cd_KZhPRe0sZA7fs-j0fmJrtqK8ifd_tidydN40j9fFqd2NDgyNPw8ak=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkc7EJBSEvcDyeC55snQ_KsHvz31R4_rdUFMQHiprKNmQlIakLPt95YKBnSBft0B5zhErzSfcHRm6QHBdr9PhU1ceJKROmqXNtdQWhf2RgF4gWxGSZaINkn7ATlhq5BmquE_SZLW8PE6QMJxQ2Cd8Jc-I4LZZG8QISDB--xQYETQjHQE_xEBZN-oqw8yIeZ8GgmLWyTq0h1ibkFtswfbNH667W60xO8MjrJy79LKeX2YJzf3VKoumXpsv4eMXU0Lkvhhhh8ic1U3SLT6suQt_Zv8Ha9lyeYtbhxhaVNxPDtDIt4VqKCWYeT0QpCeBGowxh1JdxK9SK89JzQaZa1X4EEucaIvgKt4fpEHGdBuhaqi5HYNpI-5wYX7V1_GGyvGXMV4tGRKu937P-MDIePfVzJA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1ELAJ1KMj9Y9Grw00tMRwL8nrleQXsk-SLtnqsVpmMxGKBDgOAv2NhOyDl39mx-SXejbyWbWMzHpwTCxxXrgpUqQzyE70gjQleXGtNOn3LmqlrUxarPUToRUX3_zlJxrYq2LjTMMki1rWWoJ-qXgn",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVUJ7NomAOfZpKPzqJb7uV3k84fU6v5jHSvksJ53cblMDYrTfZ7tQUHolj1UkYPhxB6aiY3Fz80jn76a6uDsqsJhbZrb3rQKaLrUKjeIMkwnAydQBXAVETpXtUubwdIKLjQ5G-jtOJIO3oyW9QgtPR6ErEdu9wk1heH_S7nqpAVGdyJJECFGvgPYIOYCcc7rZlE0MUlRRzgz15HuowsrbfITZgi3QF-PGPwkWLeGVPYZdibXFwf0Ld411qUUtozwIEC665Cks1dA8UFOLDt62o2y7W_KEuxmr1onluEPKXz7BMAFL0LC1lIBtk3ymHpYF1IMdvJOshKFaUkXCM1yCPy92gT2K-dsvqVrmpMMRDj-fwJiYe0ECV",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGeaGFfpy8cPKnfd4-p0MBNQN3bpeji4zAK0lKDMRwujNHb5zzA4b93arASiUs1KogEyfxSi7pl7j4UQshfRRak0WFwv4uy_GqWGOrPDFo4DL4iKA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBTLYDiP3oso30jFru3u-IYIExwYtsA5F2Mw_JUmqhZ8dd3uVikPSgOjdeWGhhePYwy-AIM_Hb0pcn0dJ1y2ctdJYISenA69OB8TXnx3cx5rdHTDdC-cP4_eMVb3Se4DmJZCpOcBKDQXtbtP6jMZjPQTn-mq61E2r_A6DtyxAOgyJiZCqdKitbKAyvHk13j2Q5KDyVAX1EV1sOMnn08LVMUZDO99Zl4gLtHpJgGHmsdngwoKmgu1qtEgD3OaA-RvRUttbMUXjCNJZMEBgIGMWrVA7foeyCrEMwjXXwmyATUdG0guZAY5FmUR7sONeOXUgi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyM_2TNNvq-9CHYIysBE1AUDM8iMdbB3uY8QZrxlhtbaaN5RkoTae72HaTN1l-nAg8ZIquYz73DiLHOLL1T2k3D5Qv6QqmmajS4RHCk64gPYMqQJV46FQdn8D7r51uiSHkvKSqCISd2zSNYLls_aXsM0vHyY1CTa4GvC1pLXGUIA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFAODL0BH60k3pRgnmyuhZrQRTSrFZzYe6uiNg6kMK-12TBqtO_wu6mYJoLkYjsav_tXKHfnfYp5hO7H21CN9I62HjrTbPW76id-s3dtAOl4rVtpoIrQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLOuegXVPEm75j4MKOH-8p-OcPmnICbQpCEzNVRV5_f-CIT3IbYkjyfdiYqSxzE7bOqrznMu0MXQdwkIisbd9PaVKP2Ndq7-kUGGHw8sJD154a99aW-ktO",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSTSJUTgHz7-3XCmMzWCkeCH0InoiA8QC2S-NONoGRCarVrofGViSP7Es201mnsmZUZN30YmIoBA-67vy8FZP2Snie3zMkvMyYN_ynO7KFri62G4bLkgPN_WASTzKDbsNqHIDhg7ZJbDlFqa0xKotnLixBptW_XL1lEMdg_msnt6-dCFwMYjNsGC_w8nCUz15yeox-wRHKEqaKgv9oNmKeh5R4HDY_rUlxTjFasULZr4fGW392LhzeATXRoI8Avg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnQOGt8TwLGcBVDTQ0Mo44GiqE52HNFNlYbyNbULzzDJLGUlL7pP4Unh9_lAI8vz_qGVHx0MEnyf8qePbcwJ7qfBKzUwzzBp9Gol1HidYBhuUcWSg5SpcEslT9mfn203NT",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoBycrW9lzIAxYT3Ur33Xvbchhb0FSEC9QzMSxE3_mYSNgAbKg2e8juEf6oSNEKMiISQ7MyccVBiyFGtL9pF-YZ_1cW9TTly3Px98tqt9mzQACjF_nRXbetpQ2HgaWdlKof2O3OfvMZVrV9O_ozQyJ-DmdUjmtbIvY2A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKjAWOHw-kGT1ZU97Y5v59kJRi1cLWb7_cuZGSEe1EZWZk-SvemghCKTTe-J0J_n88N__57Y70RH4fh3Hu4HlqsWIwWfE476T422Z4HqhX0_bbdmaEcMaN_2F3qOPWkmxzRQG6DpxhuXMNE0eOm-X5YA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsSLzdTRp7Y1y0m68zhUjgK5YWu4ENCA7fK4-NMwySh1narYtYQlPczXXPQyYNkyK3TD-xKB6G3GAmhHLYi0sun0Ql24HY16yCQfFbZbx1Uu4biR6JQgxYd0-pw8cYdbg4yxoqve3wQ8pbW3y1_SZDB_GiiOdw2OfjA3urzXjTQaHRelEkEcCVtd1_YNlIcc4uIyD9xIQUOLVz2r49rpw7R1ycE34PoM77PqeQGX9E6wNMLWx0JPw0fpd9jF56TBJlO5vnUldb8JXJW08ZQKzmC_FgurTV8ltFbb1BT_0diDRrW8Hqhm6UMLUL4wnKAofH8KT893y-YJkC9x_V13ZDgT2fDmh8jryMLVrUg1heIU8OFv5q6b7riAMMxB3KwkU00tXdBm4JiSliE5OXMcd2F3E=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcbuAHDg5P9KZH0ztp33RRJbcwuGAO4IX9vcGiaqgoNEt6ezrbOfI2zGaj_-CRmeChgLybsYg2O6JtwdvHYO1VLuzmcJAApL0mt9_2vQHnxNk_OfdWo_2S562a2ou5xrzEkqmVvqYcCmO5ro-hvMzkCKmJJ_n5TRr1",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0Q9D4OaZPc_8kjm0YuxgDEh_JJZEghcKLPWyHacpSzsZuJAiskY2o2KAMumXevO8Lbe50OO-mOQclibxcUbDin7264tIVN4dV4IrPRa4RSAwAsx8TbwsWpIEWtV-oib-4",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "강릉 라미아까사 / 나로부터 풀빌라",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "개별 테라스 / 실내 바베큐",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": "스테이폴리오",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연 펜션에 대한 정보를 찾아봤지만, 현재까지 웹에서 눈에 띄는 후기를 찾거나 공식적인 소개 페이지를 발견하지 못했어요.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://lacsosicktvclips.tistory.com/3084?utm_source=openai",
+          "domain": "lacsosicktvclips.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.stayfolio.com/findstay/jeju-stay-hwium/gallery?utm_source=openai",
+          "domain": "stayfolio.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연 펜션은 아름다운 자연 속에서 편안하게 쉴 수 있는 곳으로 평가됩니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "\"스테이 선연 펜션\"에 대한 정보를 제공하려면 위치나 제공 서비스 등에 대해 더 구체적으로 알려주시면 좋겠습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**스테이 선연(善緣)**은 전북 군산시 신창동(시간여행마을 내)에 위치한 **한옥 독채 감성 숙소**입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPJClsAM58TfMntPum0kswI5QTcYnaPI3R0rX97Iie6YUfWsy_luT7zqHXEbhXAuFmQuDOykA-m2qR9d-QH81gWu50fHz2DsObuRds2oWGea07E834d6wXeA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFM9qzBetvkHfn9milU6SjpXTZZrMnMAAs2P2xNAT4YdtRDxX5fiM3v7wh-KjhIU2CNfJMyhkZPeha6Tlgk94ZvVKgg4NvOUw2WzElKyfJo1KkDlQEvxr_C_LRws7xFts1CJ3PutmR8k3W7pHCFo2F-efOg_A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "‘스테이 선연’은 전북 군산시 신창동(시간여행마을 중심지)에 위치한 1930년대 한옥을 리모델링한 감성 독채 숙소입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFmTyEJFpiQgqF9SMip09-DCmPNnWC17ycNsulEwCtHSnXjJjP2o3xSxH81pV2V-3oPI_cLi3hecVjWIz9jYGrIxQcHnZOp-J4hBbCx6RES4yByzDTgezlDAvz3s0t_37hl90Twal67uAgH-b4fLKqt1UQ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFo16-p1EJXMLYMgwZ3Qd-8FtKOkBR1wvs_MnlsnBymseEyFrv9stMoSZX6rql_IkoXo-ffKna82NJe5b0WARnHyfufRNwChiKMkfnRv8gC6WB8H41RPBp72lOinUdPWwL5wvy70A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrCVewtF_iuezb3zkQeYrpiGMYewZ2tJbtT7Ka8PsplTq10BOCskXwcdHx96GFAZfW1Dardow3P9yDC7DRYocZT-2SUcE9DF5sDT5oGu5HBYGXy67iEa_NOs6hPp9DjNMDM1kPLqOcITgIbVdfv4BQagj_j6WyAA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_ZTDBohzwyGVeIkt5iGTQmYS6z0OypGMdrCoSPkL3Za_BeNHYXXzGNzMhc3yPhSn4dbYA_Sgods_TnRbHYiTtew4tFyN-BLMx8j43lyv7Xis8_s7qFKMDaaIL_cedNzJAWCfjXRBjGInnuSkmmMg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_ZTDBohzwyGVeIkt5iGTQmYS6z0OypGMdrCoSPkL3Za_BeNHYXXzGNzMhc3yPhSn4dbYA_Sgods_TnRbHYiTtew4tFyN-BLMx8j43lyv7Xis8_s7qFKMDaaIL_cedNzJAWCfjXRBjGInnuSkmmMg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHs1AZZUH-_q4ubIfORT_bdtAtuAq0ihWM-qoj483NaCUl9AbHvZjz9FdQKutQPT6bFOIbaThqQY8MP6FI3kbxIQ-OLGpArnFTXuosSLHjSBi2GtIa8AKtQgTjd_hTbW--p-5sAz9g72D429EYU-5EwSjmeCXcH7P6NHz4v4MBFGXOhmiUmcAe7fSBddF8AVQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFccFQVVrh0BwiwC32nQh8Dz3MfiVzgwGNzchS5dcP8u0v1VTDRNIubrLx2_JQ0d8ZGIn4UD5mFn88l05qMx7p4gA8VIMhYBjAjH6JiCqN8rFvqLY_stdd-PaAIkRQ_v6_zDhIiIYOqdr92-J2oXz3_jFA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연(善緣)은 전북 군산시 구영5길(신창동/월명동 일대)에 위치한 감성 한옥 독채 숙소입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8X0ESeRAECJh4i7pGqlJlp2ftFMELU43QDwiD6VkhzSTkVDxLUC7cTfUYGxRDlKDXq9UiFTb6lVidlkNfHCvTxTeL4JRE_DbDIuzFn1hNNyBwlLBIAcEN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAcmLYa5SVi-1bOogtj9dhAdU48UvSXy8s4Nc555L1x0Zpl67enBAeaA0wnb6h94HBYGyelcQXssO-qDvqYGbKYb0q6YobfkiDGdHx3Veq2W5q-dZl8x6r2PUnjCHAiCatwKr_d8wIV9feYwvztJnFHPal",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvhGAJdeeMJB_a3tplVVg9uNQXzAl7kqmruiNUeGiZ12MineFoA-9s659u58vb9R74O0KaHGLlU1wsDbhOPozqjHv8MuupBcni7At7geGvlgqpD444Ien9xpKXB1N9jXs1S3MCQA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연에 대한 정보는 주로 평화롭고 자연 친화적인 환경을 제공하는 점에서 인기가 있다고 알려져 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 선연(제주스테이 휘움의 ‘선연’ 룸)과 주변 또는 비슷한 느낌의 펜션 몇 곳을 살펴보며 비교해드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 선연이 매력적입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://web.33m2.co.kr/guest/room/58886?utm_source=openai",
+          "domain": "web.33m2.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://web.33m2.co.kr/guest/room/58886?utm_source=openai",
+          "domain": "web.33m2.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://benefitview.co.kr/%EC%A0%9C%EC%A3%BC%EB%8F%84-%EA%B0%90%EC%84%B1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EA%B0%80%EC%A1%B1-%EB%8F%85%EC%B1%84-3%EC%84%A0-%ED%9B%84%ED%9A%8C-%EC%97%86%EB%8A%94-%EC%84%A0%ED%83%9D/?utm_source=openai",
+          "domain": "benefitview.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://benefitview.co.kr/%EC%A0%9C%EC%A3%BC%EB%8F%84-%EA%B0%90%EC%84%B1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EA%B0%80%EC%A1%B1-%EB%8F%85%EC%B1%84-3%EC%84%A0-%ED%9B%84%ED%9A%8C-%EC%97%86%EB%8A%94-%EC%84%A0%ED%83%9D/?utm_source=openai",
+          "domain": "benefitview.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://benefitview.co.kr/%EC%A0%9C%EC%A3%BC%EB%8F%84-%EA%B0%90%EC%84%B1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EA%B0%80%EC%A1%B1-%EB%8F%85%EC%B1%84-3%EC%84%A0-%ED%9B%84%ED%9A%8C-%EC%97%86%EB%8A%94-%EC%84%A0%ED%83%9D/?utm_source=openai",
+          "domain": "benefitview.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://files.monthler.kr/programs/3097/1757575811516.pdf?utm_source=openai",
+          "domain": "files.monthler.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "스테이 *선연*(정확히는 “제주 스테이 휘움”의 `선연 룸`)과 주변의 다른 펜션들을 비교해 드릴게요.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "##  스테이 선연 (제주 스테이 휘움 – 선연 룸)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 스테이 선연 (선연 룸) | 제주 한경면        | 감성적, 프라이빗 자쿠지 포함          | 커플 & 감성 휴식 원하는 분 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "- **스테이 선연**은 은은한 조명과 자쿠지가 어우러진 감성적인 커플 전용 공간입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://gtour.gmarket.co.kr/TourV2/Item?goodscode=4410961985&utm_source=openai",
+          "domain": "gtour.gmarket.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://site.onda.me/138530?utm_source=openai",
+          "domain": "site.onda.me",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://peaceteam9494.tistory.com/446?utm_source=openai",
+          "domain": "peaceteam9494.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://peaceteam9494.tistory.com/446?utm_source=openai",
+          "domain": "peaceteam9494.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://peaceteam9494.tistory.com/446?utm_source=openai",
+          "domain": "peaceteam9494.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "‘스테이 선연’은 전북 군산시 시간여행마을(신창동/월명동 일대)에 위치한 한옥 감성 독채 숙소입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "하루 한 팀만 머무는 프라이빗 독채",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "스테이 선연과의 차이: ‘선연’이 고즈넉한 전통 한옥 감성이라면, ‘초원고택’은 실내 자쿠지/욕조와 세련된 무드를 강조한 현대식 리노베이션 숙소입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 선연과의 차이: 정적인 휴식과 다도 문화를 즐기고 싶다면 도월재가 좋고, 가성비와 따뜻한 가정집 같은 편안함을 원한다면 선연이 더 잘 맞습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 선연과의 차이: 여미랑은 여러 객실이 모여 있는 대형 숙소라 방음이나 프라이빗함은 다소 떨어질 수 있으나, 독채 스테이에 비해 숙박비가 저렴하고 가성비가 좋습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "스테이 선연과의 차이: 2인 위주의 콤팩트한 객실이 많아 커플/나홀로 여행객에게 적합하며, 취사나 넓은 공간이 필요한 가족 단위에는 ‘스테이 선연’ 같은 독채가 더 유리합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "전통 한옥의 아늑함 + 가족/커플 프라이빗 독채: ➡️ 스테이 선연",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "‘선연’이 고즈넉한 전통 한옥 감성이라면, ‘초원고택’은 실내 자쿠지/욕조와 세련된 무드를 강조한 현대식 리노베이션 숙소입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "도월재",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "정적인 휴식과 다도 문화를 즐기고 싶다면 도월재가 좋고, 가성비와 따뜻한 가정집 같은 편안함을 원한다면 선연이 더 잘 맞습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "여미랑",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "여미랑은 여러 객실이 모여 있는 대형 숙소라 방음이나 프라이빗함은 다소 떨어질 수 있으나, 독채 스테이에 비해 숙박비가 저렴하고 가성비가 좋습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "소설여행",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "스테이 선연과의 차이: 2인 위주의 콤팩트한 객실이 많아 커플/나홀로 여행객에게 적합하며, 취사나 넓은 공간이 필요한 가족 단위에는 ‘스테이 선연’ 같은 독채가 더 유리합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.6363636363636364,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwAZnETDi-gDQd1uu3csavEnnvrEMquQbC8yaMDHPNirZ9LlfGo96bAjmkWBIbYx1hJDqI44l85Ra4A1qarSsecMRYXoZUm3iBYBbsO9YxwKiAAEeNOIQD6Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFwzmC5muv25O9Cn8TENEVk3MzDUN_caduHgFrL82dxXX8gwxngLUTG3HwDJvECo1sh_L-8atNcJn8DRLnZy4pS48sVdEnTvFBjArVtlkdiZinlzb5iY4Kyh4YJHz4WL7EI4nqU5nJecaKDvL7c6p7s25Jqw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkQ9UxRC4cQrktjijSCMDJ6CL_gaxmL5ST8bV4Nvl1hH67fTWFb7tmdARd26lMoFzKg8a8k6RLXgURnB3-rStz4F64XUkjCB8ivyU9R63BbpqdwSBdcyMFVeuURKxvtyyQd9Ilp5gQCOnUggR2pzWi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "전북 군산 시간여행마을(신창동·월명동) 중심에 위치한 ‘스테이 선연’과 인근의 주요 인기 독채·감성 숙소들을 비교해 드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 스테이 선연 (Stay Sunyeon)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "고즈넉한 한옥 감성을 선호하는 커플, 부모님 동반 여행, 조용히 힐링하고 싶은 소규모 가족.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "비교 포인트: 스테이 선연이 '원형 한옥의 차분한 분위기'라면, 초원고택은 ‘자쿠지 스파 + 유아 편의시설’에 강점이 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "비교 포인트: 스테이 선연이 조용한 실내 쉼터라면, 초원포레는 ‘아이들이 뛰어놀 수 있는 액티비티·촌캉스 바비큐’ 중심 숙소입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "한옥 본연의 고즈넉함과 편안한 쉼: 스테이 선연",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOzLy8VagHJCULenP12lDc7XKbCZrEJZ80vLzchhM6iXawTkpitiTWRKH_Hg6-_w93BB-fjSNB87CKow8qLCByFS254PUz4_MTO7exVTfx0d4__3y9RriM",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEX4alAnNBFWE4aQH1uS6PYc6OKQLLLxwpStJTFhVCJbUEPOvd04_WlGLEzmxoHi1z3k5TX2FvrGygUKng0w4W11JmZS9lSFOFp953INDGPkM4CdCvdRU_k_dAOdNOcKFNMvzAzw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGleTUjvnPeSrDTQ2MqVmp6SlMyJCbHy__OLDmg5-z3B1FV8GlXujxwZ1mCP9Fcy5ftk4OmjU5ZTgfdFKD901xjOZKlU5aJvgeEkCmmFzsJTajE9aDDEb8jg5FCIRWof8e6nhofE6X_mzbX_DcevaLz5GNy",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjljApDl0pVPBuv_X_MIYTlGHFqFQnLwMlHn8Qx7gcUpft-8Q1EGk2gJm2vQTXT53zivjy5p8p9kMU4ZdWMyY4Q2rpxEvslI50KEL2FKZ3D3XNtV30jVKG9GIwtFsiLAoQRzIkTptxvhA9aPLQzuo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkkCi5UunIk7XU1l4tSf2wuEVWWrwEwm1lt7nn7Tn3Is44Xc6TpggBJbMlQJXjKBygkiSNRLTEH_PnUYc8KZN13qqG_LViEzyTyP2MgrNxafhWx-c7x5wUJz8-YvqOTQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvo-f2adUwO0sA7THp8moWd8Bv-tUu3ih8TyDje7wqj5uTU3X2HpIsRPZgWbtPDIdZgmUmHpzL9LIuLT9AWaKqIVFkVqrWADvlcl6wuFMdSfJT",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOXJCdKzlkmAGIGtSE3__kunmhz1Aypp_7YgUxBUBSKJ1NOZ51XU7TfQixF7jZTzp0Mv0_mZ6LsOtkSXmB1FQinkyhcVqalPz6LQ1VYfrDvxrEuHRbetU9tI7LrD5z7gmd4VXwKD6rJMoXO8CTmoebr01RCFuHdw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOXd5nIiLSC5HxjQsDau5HaP_Fcz5ndyWzadgdyHbZSRSXIso62vkvxH79B05LDqBsHJW2AkxFr2-SN1T3IrKOQNo-yaBGGYIx0lMXGmA9UEzdPYh2B_ON45p_zSWhBuRVpgGKAiZpIFOzjZAD3-uwSDQSZfQlyksR_OKhsM0Xxf3A2cW_-GRTP6EpmCbCziYBlG3-0kB7lEFzIhkTHQLCvvMQVR6T1OsBUE8qg7TqHYo8maj3th0_Ho4dGmoJXOkqEswBArgJeooioGeF-EIT2uLGwAdrc3lNML7Zt76cED6T75XsR126H2qT2YGGFEAvG4BsMNyybSD_14mKDpT_c9L5dw1-YYHSOuKUvbyK_YpAQXg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**스테이 선연**은 전북 군산 시간여행마을(신창동·월명동 일대)에 위치한 **1930년대 구옥을 현대적으로 리모델링한 한옥 독채 숙소**입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**스테이 선연** | 1930년대 고택 리모델링<br>(한옥 독채) | • 고즈넉한 한옥 서까래와 안락한 현대 시설의 조화<br>• 침대방+온돌방(방 2개), 아담한 마당<br>• 초원사진관 도보 1분 초근접 위치<br>• 간단한 조식 제공 | 고즈넉한 한옥 감성을 선호하는 커플 및 가족",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**조용하고 아늑한 한옥 감성을 원한다면 ➔ `스테이 선연`**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEA6pNtp5g2DVx5meDi3Cw96idfEZ-yPh2S9xAUGEZwMHh0W7mnkPhODr0pDVzrU2z8txxmYxnMG8Xq6fDnp7HSdr3gPM_-mNyE_Zo0jYerXmeCoquS_b0E",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8u9rX8So3Pv5S3-yXQ3kyym6uErPuD6-D9epidqwLufSv1_0aH67A-dw_gzYGHwKRVbeVVFU8jBJblGped0lfE6rGAcdTK4z9KOAF5n395Vw0HMQjebhJZl3ttv-8C2CrkBM4ASIEWNo5eTDwdzIHIEiy",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgmPB9k7G6PQFms8BJ2TVWcMCS-XTSpbNqcGDmsQ8aSxz6nUeXndvkRTOWL7SHtv141_By2x7DTT9IbFbH-0gz0zAU1IT1k_C5giOBo0W1btQMr7OoZycJU_sGzhPPRMs_mMCfjQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_QKaNYpzMTKCGGs3-wSa6lWzo1ykmciJJTM27AkBTlYRYdK_PROQumQ0TxrgKM_rR8qkgQ592TCOifg_YgJmaT4IiX7wv0aCv1_2ML9AYcQ-bMwfh2CJ6ZIpMFDQ_Nah0JCbS4s4R0ZcL53o4k40=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_QKaNYpzMTKCGGs3-wSa6lWzo1ykmciJJTM27AkBTlYRYdK_PROQumQ0TxrgKM_rR8qkgQ592TCOifg_YgJmaT4IiX7wv0aCv1_2ML9AYcQ-bMwfh2CJ6ZIpMFDQ_Nah0JCbS4s4R0ZcL53o4k40=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6kcaaHiCJC4O4c5xX_CdnBBclU2M9JgfShaH_Yhj4r-WDb3KAzww_HdOBvn_V6cXId1WLcTxD-dhXixjZA1uy8KSdvCdwulgLC33Ix-ZglQwgnL77EhUVZ-Wxvek4qA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL9CiSIQ3PlfUfeKumATkTvlxXJS3_lBIiET8f_jR5xT70PC_A1PEAQ6xw9BUnp9nNsOtcJyRApS4tCJVjRxnbIZPwVZFNCeRdidL5BV5anotScPe_kRlgVIaeoMR-q30EGqOtpTKFW44SzIpK1OFg3FLBnsTIVg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEE2a8lNCHSyEs_vhOTJH3aNUtHyEAG-zBYFcc7t_tTSA2sIB1w3DgOiBkvGPDoGu4CfSGSiq5jxW04tdNmUNlS6FJUAVitVTnz9a30-wuvVPwRM2QBtPG4x8n84SLHtqRla1xV09y9lvGoFO3wTGxrxIGw",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송하지만, “스테이 선연 펜션”에 대한 정확한 가격 정보를 웹에서 찾을 수 없었습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "“스테이 선연” 펜션의 예약 가격을 확인해 보았으나, 현재 검색에서는 해당 펜션의 구체적인 요금 정보를 확인할 수 없었습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "하지만 같은 이름이라도 실제로는 다른 위치나 업체일 가능성이 높으므로, 정확한 요금 확인을 위해선 다음과 같은 방법을 추천드립니다:",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "결론적으로, “스테이 선연 펜션”의 정확한 가격을 알고 싶으시다면 예약 플랫폼이나 공식 채널을 통한 직방 확인이 가장 확실합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.stayfolio.com/en/findstay/stay-inyeon/room?check_in=&check_out=&identifier=stay-inyeon&room_id=3279&utm_source=openai",
+          "domain": "stayfolio.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.stayfolio.com/en/findstay/stay-inyeon/room?check_in=&check_out=&identifier=stay-inyeon&room_id=3279&utm_source=openai",
+          "domain": "stayfolio.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/Living_in_Korea/comments/1l20dty?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.reddit.com/r/Living_in_Korea/comments/1l20dty?utm_source=openai",
+          "domain": "reddit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "예약 플랫폼",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "죄송하지만 “스테이 선연 펜션”이라는 이름의 숙소는 현재 제가 확인할 수 있는 웹 검색 결과에서는 가격 정보를 찾을 수 없습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "다시 한 번, “스테이 선연 펜션”이라는 이름의 숙소가 정확히 맞다면, 혹시 다른 이름이나 예약 채널(예: 네이버 예약, 에어비앤비 등)을 통해 검색해 보실 수 있을까요?",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://web.33m2.co.kr/guest/room/58886?utm_source=openai",
+          "domain": "web.33m2.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **'스테이 선연'**은 주로 알려진 두 곳(군산 도심 속 한옥 독채, 제주 프라이빗 독채 펜션의 '선연' 객실) 중 한 곳일 가능성이 높습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 군산 한옥 독채 '스테이 선연'",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtG_KgOhQ0aVt9nsHNjjhAp6s_o_53Yky9NQTEjH3SNXZNXQobsZGFx12BvVP9FtnyDBZ9_GxBsnQjP7E08Y-3q1etRhotlPHJAySgeOaeqf-FRDkuHgQnGyfYfsKW5RSfW99kMEvAcFR5e26v89Ukoy4w6Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPcoOD_qf-oP2HHdbei-N2xGs_hWdcLQ04YRgYUpXmqMwHwS7zMJxnqt5hiR6ELU1KwfD2fHBGeWB--0sKV9iO7wsYorNr7Gtk5s8NYDFpCI1mRTGmc2QShP7hEGJ-GLjqo0zqUgw_-FrH90PW",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4Ws9XWiLDo9NRGsThrLOseYwT8JfoePBJ0MlfX4ITGgeVKrzpQlvG66m_hSLfbfZbDdCfIathJvze9CDkulEXmFRXGyh1FPXljGEyHUFMVsblAoFQDtv4RgRiV3z8rg7GgELn",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2cgZ6qMjlffDbkiq_WUf3cvKhcfHH7kw-0yHO-KkLTZn7cvyjdjDvRCor4lPIWZNlRlJWzPfJh7O8qoQhoH7aA6MRGVLvZfUSlwGpoejQLCe2W048OHJ9V_cKNnseCiwGjTUzpu7VNEMh",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhy7UyvvrYL3EVnnqQlult0hkdDfeSfwRcCoZdMP2xOSsBRShZXIKC0IqgSCEonAVlH0fV3DBc0k3Oz2MkFwXU7_Khq_l4OpyFLH3vhiuEVQY9nlqiQSRopRHQ9toNG7IFXH_p",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhy7UyvvrYL3EVnnqQlult0hkdDfeSfwRcCoZdMP2xOSsBRShZXIKC0IqgSCEonAVlH0fV3DBc0k3Oz2MkFwXU7_Khq_l4OpyFLH3vhiuEVQY9nlqiQSRopRHQ9toNG7IFXH_p",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_KTCzmTf3qUOY0lEWHKnBUHE4Ut-KfS4a_jsH6pREOLcQv_YzsoD-JQveVvgtO-K4TZzBi9tgT3URke-LjfVexZwdqWwkGT6vGZHUGRqtqhI53lZttf4xs1qLsaSFr6fi6VAm2TotL0Hu6OjSCdpcYIrNh8Up5tPlUbmibsNNFK23e2-3FUAbul6b6dR1PzX5tQ55sFIsUlQ4e_2dUrKN8ak=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpbBIMiJTuTHS4aGCww8Vs5lvLKC-k4fzcUlwgC81nD3Ni0xMIn9W1fG9oE_6pDg_XzIGHNiyGQ-WprbmeZQcj87z3Y42Yiks8LnmCUM3Vv9MAvKXDf0IJbc_zZ0yQEO9eeeFHI1Fv67CvL0FN1FMC5zuVdotgDGD1n-G-IWa-Z34TSqPvZpmIcqtUmhRCF8uS7-m9dMPNjK_8j28qLdS1T92zgTMEN230Z518xRj4z2W0ZR2QN7tD4MOIun_LtmrM_88ONySU_qAPjWSHdcMPLi3qUzy2iuLsOZs0eNuwNOwuOB6JLOsCb_ELFYz77CbkxmTFrsQZDEiqFSyJeNeT7CX2AL7O",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "전북 군산 시간여행마을(초원사진관 인근)에 위치한 한옥 독채 숙소 ‘스테이 선연(善緣)’의 예약 가격대 및 숙소 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmXX_rfSmKztDMMSCP-XWqESjAHQBir1q75H3A1zPnsUnA1clLXqgVTWtJrSgX6Q0jUFoyj2mNMwt4U_uTrPXqcGuJi2QmoDD_z9_z_WS1dfdJHVP_xjCL7ofCKBwD-OIqmwzVSYWwv2ttsVZd1Cy0ShN9uw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEveZ3S54d1m5w8vEU842IcyXmcu1dbgkHjSHA2vyifWzO37kKYloefqujx65Ue_WXl88WH25fn-ixRY7Gl0xoFC9HYGiglO8BAu2LUskN6kr2oUjwbGfP4gFY4hQSIJw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcAk-nhIkl_Ah5tXWnSctX-uBpP2yAiV3WOju0KvmDDiV65hD0K6CQayYCMuSHX7cJqhW6y5TSN7RwKaNBW3Lr-kZcA8oL5m7zrKKlgjQBxBjyWpS47P7iXiDi-5fmU9x4sKwCqZ48pnMjKkcj0-s=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvv74HrjlgHjFKdtXhSHQ-3JhRY1wnCYfqnyohA_8R5Tn8PjCNcg15GzFHnejL_0093Rt7B-pDUjR8mDYd_cUDbRXFKC2tGevoGjVKHDA8igthzVDRakBdhw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhxD2HOHH65nJ6uf5dsMgE96YlXCrib9nR3GHU2V3vC0ES8dfcTCSJRdaEDAtfiou8rQpHJV_m-unbSkpUbOuYXJQQk4ttoQSQ8xkmh3BmWumZ-CrtGYYmAM4hcqeeC5_7TlmtmA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJrHU415EDiSMtehwXIhowzb9jgzbiLptd_R_vNoXKhDElrnZatWE2_a8abOOULVlabq8tXwcrCPgUSfel8Rhtax1ajS97NKPXNjiP6GdNMwFOesQo4utIGz-GrzR1SzSKlJ2MgPv1IoQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaLkKYQxWRwl-MNpVoZCdfE8jrEpFa5KsC_rODP0dKMs3RkJiR5Rq5nAkIDZ6x-rFUlzdH1RXDc1JgOfi2nk1Lu87FJgyW_qppKI8RKOJa6BWz4MPGkMY_AhYdXg9qrbV1QsFPTn65H_goQ9y8DXc6OXFB95VsLru9aI_RMkkoB25w4iSbhqu-o_0rBZMqbibPmzGhNvoTOb2C0yEsYWudxhaHL9SjH_Cg1dkmDateiIspnQaUiNs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**스테이 선연**(군산 시간여행마을 위치)은 1930년대 한옥을 리모델링한 감성 독채 한옥 숙소로, 에어비앤비 및 숙박 예약 플랫폼 기준 대략적인 가격대는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGST4pHEO-st9bb1URai2NPyigCh4wnKJ15n2IuSrhGc8DONfIMqo7GNM7SwLowXSqbzVcPc80iWUtiylvXhc5QJV3F1bY0GF5Mnov_KVsCGuaq9GzLi-cXn7tMFm7H2lfXUb3GZeyiDn849kVhQNbDtJ6Wsg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBNIhvkYxVxcrZM_nAfhninzM_kmjEXyD8TeMyWeTA7iFK0j5N7ge6aqj_W0TFwK7Mx2ctGrX6qL30XdwYROwCQj1sMFL7WRQqjpAS3bmnK39b1sjOTbn_kYcHp-n8Fw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5UoJHLFGZlfcTX9yLkQK_8AuhkfSxXLlnbKzuaIxZWW4hF3tnjXxWqS-BlAkaDy_lZnQyXr_toOtKSnFitZZZ8kN2iuxn-wIiiryU0oEWYPDzcMYkuvYk2Ian-TBTsrzSRSNZ1w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhnI0HZlnQaTyLvIgnjYHPA4xa5VNDJ98jpnADdZH-phc6yU9EY4D-GyQemGoqZ4n9K1-8CCW9b21cOX4yZKW0rUjAtWjObyN3jurvc0-GqBzS-IrvZDNg0A==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeK5fBR41RsQTJvKS2PGr9d3-SL8cdVukOTxSxqlSLtgR8F_fIfTKe6Wah4cj1v14z26RjP6JJC_apfW-_EdlJhawLuGEoWOYTIda9zR_TvVQ-GMPOxk31tVWZekSuipauzDFgxleLpIY=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXiFJjyWLdnWA1T5PSbPj8dl4DAQmJopr32fwY-lbHXLyAvR9O6XoqIDNxeEosOUFTjTpvXbsnBY_smR6RuSEePx6PfvseMeT_VHxmKRznSmNw4xdm1-2CpBpVJRaXDpbwDlLv_V5kr1-an8o4UI40Ih0VZw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPwTWYIp6L_BlFzh6R0QWpSx8EVGWI928w_HQJ6kRstuJAAlenjxRAdjd6TlmJJuF9MW3HEZIEULuNF7Co7CvZu2ofLQX6shr-Xn2582sgwUdccTrjXpzvoJ4RFsCG7jl7mlavLBNtq-BLYo-P8_E=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.agoda.com/en-in/gunsan-seongsanae-pension/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/en-in/gunsan-seongsanae-pension/hotel/gunsan-si-kr.html?utm_source=openai",
+          "domain": "agoda.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
+          "domain": "booking.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ae.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ae.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ae.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ae.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/gunsan-si-south-korea/stays/pensions?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.com/gunsan-si-south-korea/stays/pensions?utm_source=openai",
+          "domain": "airbnb.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "Gunsan Seongsanae Pension",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/hotels/seocheon-gun-hotel-detail-110266372/gunsan-seongsanae-pension/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/seocheon-gun-hotel-detail-110266372/gunsan-seongsanae-pension/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/seocheon-gun-hotel-detail-110266372/gunsan-seongsanae-pension/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotel-iu.tistory.com/645?utm_source=openai",
+          "domain": "hotel-iu.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hotel-iu.tistory.com/645?utm_source=openai",
+          "domain": "hotel-iu.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/category?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/category?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "성산애 펜션",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://sohengsongz.tistory.com/271?utm_source=openai",
+          "domain": "sohengsongz.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sohengsongz.tistory.com/271?utm_source=openai",
+          "domain": "sohengsongz.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/seocheon-gun-hotel-detail-110266372/gunsan-seongsanae-pension/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/seocheon-gun-hotel-detail-110266372/gunsan-seongsanae-pension/?utm_source=openai",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/1000105055?roomTypeId=291909&utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/1000105055?roomTypeId=291909&utm_source=openai",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://dongy5266.tistory.com/365?utm_source=openai",
+          "domain": "dongy5266.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.diningcode.com/profile.php?rid=jnTfgybC56CZ&utm_source=openai",
+          "domain": "diningcode.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tdugod.tistory.com/category?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tdugod.tistory.com/category?utm_source=openai",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "선유도 씨에스타 펜션",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOWTCrwQGdUoKNpS2BMEtYwts7b1z40wsBQeuKDaPyNJgyv6XzhNyDZWqu4Y5xk8ko2S-zuJiS4tqfFejqyLpJqWE3f_W6tPQs9Qzg8_H5nNbI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrgFk_VN5FBHYVjXujICfPDye0vMVPiQ0looNyofCqkrpUtH0vbj7Ze6a39toLShyZdq-dZIx1SrQXzcvhXT4v7PG6bpDcchBbADQGs40niBSpw31Sv6wtObHM_oRvXisbw3MsHRiT-hK1T1OtzDMSD7Z7z7gm5Rqq0clq-3ZUW5lsCVHPb5XNTBBGnJZDfScO7MZR0KPf0JVm1OM3zTDtQ60dxGLe-36Q5vLF8Enn7NAd83F8J_nfnrarbdWp1bjfBw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOWTCrwQGdUoKNpS2BMEtYwts7b1z40wsBQeuKDaPyNJgyv6XzhNyDZWqu4Y5xk8ko2S-zuJiS4tqfFejqyLpJqWE3f_W6tPQs9Qzg8_H5nNbI",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZjMeb3waXMkLDbPChZbTyekxK57jRiABs6cL-d2OcI6zvZfPimDLnazqD3bbAMAXzvW9rFT4xUd-BGxrBdQbTFpg-QpUrBN2oSNmPrQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEPXp1Cfg02D_8rfhKdiLHx08B3ZngdxM6FqE8VjF2FGrxxX3qDVRED2GrbsC2s76K1VAFsma-iTn5oEnD_rSJVdAawHaky8L7tocfadbsBroJ3B-rcM5ohYU2tPQQ1vsScgFkK3MS3AFLdSkP_kHCi8dDPZLDR3T8peBzWT_3r2iwo25P84hqMGasJuDfRv0lQaRTCwLgCjRt2NedLg9ynB28Ho8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSGiNEMnQaP2Q_mLyXIWLOdpyDJv-VcEaICCADT1HZTLAPy52mISWVaZ2fMWd02LejEXXHcKk9C1UP_7eRpHk9m8Cgde5-wwV8UZZ3_XGv72-XJrpICGVtJ26gIarIunuBskA-pGY-nk6E9y21IyFbiTqTrCUgYMWUuA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFZ_tOcd_P6PKciWPxFH3Fv0Cv9zksrK-ZByroJMAUyfYUErDs7Lx83u1nWhTPORr5Fpidni9G0YHUWzB_7Z6rW3kIb2ECEM1PxYPmRkCKFu8KLffktGendpgUvIN7eQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdTfAjN9JA16PzAMN0eh1YtzMxdtZ4H0-qgwFJMfCqKrBantzAnzxsu0njtr6aBDCHMvVwmAQfNMPyFKEbWC_7fzt7Nnz8IVGuUvLlILM-heaiZYd5Q_V-uDKEXbeoVmWUfFwe2jYu97DHTo-aLvUTIC2gkx9l2p11Op98Lp79ZO76RgvoSbFfQvZNZO2_QBcmag==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "선유도 씨에스타 펜션",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhQqo00fpDZJaqLHh-uoMESUSrSbqCL1JuIOd3LYOHXAxxNo5BqEqq5soeGVraCeF4-YnPOD4EDZRA7w0ee2FZ5SoLxnTxI32yF-26qxDrkYmj2TX11AiCdU7fHQeleYQUhz_o9YaFGE-lOA6bK2QNVJUf_92lBf2IiibjkdLvEjnaBvigSQLCYx6FaRnM_VqOuQX1OWUscib3p4HThC0goMFm3yLmKE8ZZITn9xprBEsqOh2vuwpZ6z_lUfhrdWYP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_f2NLOlkkuPy5TT-VfIFSD5qJpbvvwVMoEKVYoIOns8wyg4CKpK-WPwlyt1ZSVHLzbuQvC9X1_k1l9kCQU5VhPoh799zElrpJ0oHXafhtPdv8XHJRDee9smIsK3l2rPU=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEzTzKsGH5A4tUf2WxPb6sa42joxPqYMippkUBVA6MpfR4YNY9kgoiDopHBASdaoWNzoz9uPrux8W2gtfe-3lEZCnc9WBRXvwBP68NHp7-wKCjn-RM2MDINRFxlq_dro5B8TUdTv3NL69u8QAbsfQd2q7GybE1H48MPRQSSsz4hMv-9TEcvU14bgWDx2LrJga1WJtBsyfYEsa5yucYYTXjhIj22mtN",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx3eIH45q9VBu9GEkaWcxkuHp5B0jHSVSWeLNySnlpH13AOPTJyEVi9nMcT7BHuY0tIXFFDLHe5Pf97bQmA4vqe88nod7EJGCBBzZZ_y1FY_TKhQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHObIF-CzbeQ9_7_HFfv97li7BjCc9Hwk996MliYlu8jKUYenOPKcaZ0xltTSyoceql7VKsWyC8zf0meiV51gTsD1pKtEWcAwXndJv636sLNZzS6Yh47I7cDuTD",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0OikLLO_H7gtPjD98NqASjJu4ejvE-CpyiOwJ0ouL7ZmR5aBUVbA10toTECV6i3hwbWVg_nnkct0wp_m8xp4RXPw0GH1cQU_oPYI-M-EtQiXB5G9ue6QiXEkALOcIg2SWwdfFxJTeQuyqrHwRcqEsjmb4kfe_8eLqPaM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx3eIH45q9VBu9GEkaWcxkuHp5B0jHSVSWeLNySnlpH13AOPTJyEVi9nMcT7BHuY0tIXFFDLHe5Pf97bQmA4vqe88nod7EJGCBBzZZ_y1FY_TKhQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJQ9P87qnFmEXbRHu5fMsUVF86Vm7obimY8YneISvyoAKorkoXb4XEmJkvpcArQ0-GbS-L9H8UnYhAScAGHgf14EHVNGR1CwcIzpnOiLEq-8VHSwfjlA0YTiKHxEd4mMGKWbV0wV1lGj_mPXQopGFU",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdcXAZRjLuphqyJ2Kf18dPLI1j9MNlEmldPDkS7Ei-doLeBlt7hkCUB5kxjiQZWr9vSWqR2DgFdYWmjDUrvKoXeig4CDmT8vKPp2lUvMDZKr3dIM2xVa8oqwzh46BkH2l5Zp34I2j2DoTaGoTqEBw_lBaXzyFuFnvmZ0lRpSzoR7BnnZgzIUkjAVA8b-VNNINin70i9cwKXw1W3XdIQAE07HN5yYiNvuId5sMEj1aLT3R_KD7Rm1V6SSjuyNNfgha0Pa6s9vCaWH26DJHKogeMQFz3WVhkPGzCfHGTHJwMJXqlGZ_G0PMgExpoFkh5vSPWURbNlIzVhexGYbON43wbYBNaZutiaMA5Z2nOjHDVOhdeOXeN",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**스테이 선연**\n  * **특징:** 1930년대 고택의 골조를 살려 현대적으로 리모델링한 한옥 독채입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **시내 관광(이성당, 맛집, 근대골목) 위주:** 월명동 일대 감성 독채(초원고택, 스테이 선연, 초원포레)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8AHSgMZ4CTlV5RulpxyE31koDh1h6PBiM_gQ-tWKIFLPn0WUEO6BaEhqGiWWiLJ6RZeRTLCFz-Q1i6n6vMbsKKqh7hTHCb32aYzsCTExf5twWFg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOHHEBvK_mF3EQBooEKU2jDvbGHEzcmbKsRwjAgXdWZ9bCi40ZYrsaLNVcEXQC3mV_6uCeAb4g5eJwU48XW94tCC0bC_WvqmbUdohFrgO69WExNDDBcnPfM6Or",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaQpemdcRZdqTtizftQ6JX1a5DHODnYiL4BT7rHef0Pw3oqJG3USgO2pmQsVaB21cnBwklO2Tc1w0sEWn4l0QCSPKASIdbrtBd6770WKxr_9_i56roY2r9VsqXmtriwSOn",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYQSmjKeub3Hl6Nibd_NVsTvDt8hIme_MXe5e2nc7UTPWHH7QftUVJKB1lKt8K0T2eQuDb4D7pJ6ZA2o8-dzGKUI7y_MczX5hI1sgKZFR05QyDoPEOIkaulh6AZd943gA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLgqQXFQbmIvU3Z1hnPOjMCmQxyUPsZez9jg_NpQYSeh4M1iv0QhVYXn98LylPyJI8wrVeqz3xhA4T5ybx0OBLVy77HMmCNl2jyYWIN1tfxcn1mRbhEoaO4ARtFw51qDtY3zIjk4-_UUTAE46f3eWC",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHq0BOaoOZnBPKRrd_V_dEq4HTuRHGQhudjVQURbZfyga2e2KQiWMY7VtOr89C6JYKRe3Zi_l0OgaUzVGpKnKcnEqQfiCxJ9v1dueQZR1Wj2wSc_OoBlEAYRN8--jfGDbn6vpTKiV3-J9PgHtF7Tnf7nAqDhunvwo6gua__Yy2QJkmEzflyuXKWkqn79sByeCeAtzYoG7DsxCmHTJ-w_ILX5Xw5iGkeIV7G77VaUjVJr1TD0p8O8ePMYJ4zhH5q0fHGbkE5vJe6u7O0_OrAWaeaINbKf8UXWY9yoFIt6PFl74Yr9hXn2wVqLiJAl74acwsfz-HDMc8sWnF4BVi2zwWw1XtpBqsRy77FzUuJQkpH4ioe9Lzo",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "스테이 선연",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

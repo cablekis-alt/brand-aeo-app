@@ -7,6 +7,16 @@ import bank_bdnewdental from '../src/data/live-bdnewdental-question-bank.json' w
 import analyses_bdnewdental from '../src/data/live-bdnewdental-question-analyses.json' with { type: 'json' };
 import bank_bymeps from '../src/data/live-bymeps-question-bank.json' with { type: 'json' };
 import analyses_bymeps from '../src/data/live-bymeps-question-analyses.json' with { type: 'json' };
+import bank_comp_1j0j0pl from '../src/data/live-comp-1j0j0pl-question-bank.json' with { type: 'json' };
+import analyses_comp_1j0j0pl from '../src/data/live-comp-1j0j0pl-question-analyses.json' with { type: 'json' };
+import bank_comp_1lz1vi2 from '../src/data/live-comp-1lz1vi2-question-bank.json' with { type: 'json' };
+import analyses_comp_1lz1vi2 from '../src/data/live-comp-1lz1vi2-question-analyses.json' with { type: 'json' };
+import bank_comp_fjgq11 from '../src/data/live-comp-fjgq11-question-bank.json' with { type: 'json' };
+import analyses_comp_fjgq11 from '../src/data/live-comp-fjgq11-question-analyses.json' with { type: 'json' };
+import bank_comp_mhxthx from '../src/data/live-comp-mhxthx-question-bank.json' with { type: 'json' };
+import analyses_comp_mhxthx from '../src/data/live-comp-mhxthx-question-analyses.json' with { type: 'json' };
+import bank_comp_rorko6 from '../src/data/live-comp-rorko6-question-bank.json' with { type: 'json' };
+import analyses_comp_rorko6 from '../src/data/live-comp-rorko6-question-analyses.json' with { type: 'json' };
 import bank_daprs from '../src/data/live-daprs-question-bank.json' with { type: 'json' };
 import analyses_daprs from '../src/data/live-daprs-question-analyses.json' with { type: 'json' };
 import bank_girinps from '../src/data/live-girinps-question-bank.json' with { type: 'json' };
@@ -46,6 +56,11 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'banobagi': bank_banobagi as QuestionBank,
   'bdnewdental': bank_bdnewdental as QuestionBank,
   'bymeps': bank_bymeps as QuestionBank,
+  'comp-1j0j0pl': bank_comp_1j0j0pl as QuestionBank,
+  'comp-1lz1vi2': bank_comp_1lz1vi2 as QuestionBank,
+  'comp-fjgq11': bank_comp_fjgq11 as QuestionBank,
+  'comp-mhxthx': bank_comp_mhxthx as QuestionBank,
+  'comp-rorko6': bank_comp_rorko6 as QuestionBank,
   'daprs': bank_daprs as QuestionBank,
   'girinps': bank_girinps as QuestionBank,
   'gsplasticsurgery': bank_gsplasticsurgery as QuestionBank,
@@ -66,6 +81,11 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_banobagi as LiveAnalysesFile,
   analyses_bdnewdental as LiveAnalysesFile,
   analyses_bymeps as LiveAnalysesFile,
+  analyses_comp_1j0j0pl as LiveAnalysesFile,
+  analyses_comp_1lz1vi2 as LiveAnalysesFile,
+  analyses_comp_fjgq11 as LiveAnalysesFile,
+  analyses_comp_mhxthx as LiveAnalysesFile,
+  analyses_comp_rorko6 as LiveAnalysesFile,
   analyses_daprs as LiveAnalysesFile,
   analyses_girinps as LiveAnalysesFile,
   analyses_gsplasticsurgery as LiveAnalysesFile,

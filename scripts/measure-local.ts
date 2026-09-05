@@ -15,7 +15,9 @@ import { FileResultStore } from '../server/store'
 import { loadRuntimeTenants } from '../server/tenantRegistry'
 
 const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { stdio: 'inherit' })
-const capture = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding: 'utf8' })
+// git diff는 측정 파일이 많으면 커질 수 있어 버퍼를 넉넉히(기본 1MB → 64MB) 준다(ENOBUFS 방지).
+const capture = (cmd: string, args: string[]) =>
+  execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
 
 // 측정이 만드는 git 추적 산출물만 반영한다(.env·overlay·/data 등은 gitignore라 애초에 제외).
 // measure-log.json은 src/data 아래라 함께 스테이징된다.

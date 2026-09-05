@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "generatedAt": "2026-09-05T05:52:26.834Z",
+  "generatedAt": "2026-09-05T05:43:11.381Z",
   "questions": [
     {
       "questionId": "v1-001",
-      "text": "군산에서 인기 있는 펜션 예약하려면 어디가 좋아?",
+      "text": "군산에서 분위기 좋고 편한 펜션 어디가 괜찮아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v1-002",
-      "text": "펜션 고를 때 중요한 점은 뭐야?",
+      "text": "전북 군산에서 가족 여행 갈 만한 펜션 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v1-003",
-      "text": "전북 군산에서 가족끼리 머물기 좋은 펜션 추천해줘.",
+      "text": "펜션 예약할 때 고려해야 할 것들 뭐가 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v1-004",
-      "text": "펜션 예약할 때 주의해야 할 점이 있을까?",
+      "text": "군산에서 조용히 쉴 수 있는 펜션 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v1-005",
-      "text": "군산 지역에서 저렴한 펜션 찾는 방법 알려줘.",
+      "text": "펜션 후기에서 어떤 점을 주의 깊게 봐야 할까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -49,7 +49,7 @@
     },
     {
       "questionId": "v1-006",
-      "text": "여행객들한테 인기 있는 펜션은 어떤 곳이야?",
+      "text": "전북 군산에서 가성비 좋은 펜션 찾아줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v1-007",
-      "text": "군산에서 경치 좋은 펜션 없을까?",
+      "text": "펜션의 편의 시설은 어떤 게 중요한가?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -67,7 +67,7 @@
     },
     {
       "questionId": "v1-008",
-      "text": "휴가철에 이용하기 좋은 펜션은 어디야?",
+      "text": "군산 펜션들 중에 바베큐 시설 좋은 곳 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
@@ -76,8 +76,8 @@
     },
     {
       "questionId": "v1-009",
-      "text": "스테이랑 머뭄 중 어디가 더 나을까?",
-      "category": "comparison",
+      "text": "스테이 골목집 펜션은 어떤 점이 특별해?",
+      "category": "brand-direct",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
@@ -85,8 +85,8 @@
     },
     {
       "questionId": "v1-010",
-      "text": "최근에 스테이에서 문제 있었던 사람 있어?",
-      "category": "troubleshooting-review",
+      "text": "스테이 골목집과 다른 군산 펜션의 차이점이 뭐야?",
+      "category": "comparison",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
@@ -94,7 +94,7 @@
     },
     {
       "questionId": "v1-011",
-      "text": "머뭄 펜션 가격대가 어떻게 돼?",
+      "text": "스테이 골목집에서 즐길 수 있는 시설이나 서비스는 뭐가 있어?",
       "category": "price-spec",
       "containsBrandName": true,
       "industry": "펜션",
@@ -103,8 +103,8 @@
     },
     {
       "questionId": "v1-012",
-      "text": "군산의 머뭄 펜션 특징 좀 알려줘.",
-      "category": "local-regional",
+      "text": "스테이 골목집에 대한 최근 이용자 후기가 어때?",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
