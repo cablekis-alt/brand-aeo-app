@@ -51,14 +51,16 @@ npm run dev
 ### 한 방에 측정 + 반영
 
 ```bash
-npm run measure:local all
+npm run measure:local
 ```
 
 | 명령 | 동작 |
 |---|---|
-| `npm run measure:local all` | 등록된 **모든 본 브랜드** 측정 후 Vercel 반영 |
-| `npm run measure:local <tenantId>` | **한 브랜드**(+ 경쟁사 코호트) 측정 후 반영 |
-| `npm run measure:local <tenantId> --no-push` | **측정만** — 로컬 `src/data`에만, git 반영 안 함 |
+| `npm run measure:local` | 등록된 **모든 본 브랜드** 측정 후 Vercel 반영(인자 없으면 all) |
+| `npm run measure:local -- <tenantId>` | **한 브랜드**(+ 경쟁사 코호트) 측정 후 반영 |
+| `npm run measure:local -- <tenantId> --no-push` | **측정만** — 로컬 `src/data`에만, git 반영 안 함 |
+
+> `npm`은 스크립트에 인자를 넘길 때 `--` 구분자가 필요합니다. 인자 없이 `npm run measure:local`만 실행하면 전체 측정입니다.
 
 동작 순서:
 1. `measureAndBake`로 PC에서 측정 — 경쟁사가 비면 **자동 추론**하고, 도메인 있는 경쟁사는 코호트로 함께 측정(최대 5곳).
@@ -70,7 +72,7 @@ npm run measure:local all
 ### 전체 흐름
 
 ```
-브랜드 등록(웹 또는 로컬)  →  npm run measure:local all  →  Vercel 무료 사이트에서 열람·공유
+브랜드 등록(웹 또는 로컬)  →  npm run measure:local  →  Vercel 무료 사이트에서 열람·공유
 ```
 
 ### 비용
@@ -106,7 +108,7 @@ npm run measure:local all
 | 스크립트 | 용도 |
 |---|---|
 | `npm run dev` / `npm run server:dev` | 프론트 / 백엔드 로컬 실행 |
-| `npm run measure:local <target>` | 로컬 측정 + Vercel 반영 |
+| `npm run measure:local [-- <target>]` | 로컬 측정 + Vercel 반영(인자 없으면 all) |
 | `npm run build` | 프로덕션 빌드 |
 | `npm run typecheck:server` | 서버 타입 체크 |
 | `npm run lint` | ESLint |
