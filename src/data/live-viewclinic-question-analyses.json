@@ -1,0 +1,2387 @@
+{
+  "tenantId": "viewclinic",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **뷰 성형외과 (강남/신논현)**\n  * 대형급 성형외과 중 가슴 보형물 집도 건수가 많고, 마취과 전문의 상주 및 흉터·초음파 사후관리 패키지가 체계적으로 운영되는 곳입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기 성형외과 (역삼/강남)**\n  * 디테일한 체형 비율 분석과 첨단 가상성형(3D 가상 시뮬레이션)을 통해 수술 전후 결과를 비교 예측하는 시스템이 잘 갖추어져 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGxCvngdsF72s7vLiIf1wDqP-z51VtcpOLWdSriJCzMv3YkIKawsylbHMeaz6TGDjcsjxlKOQ2_ZhDZD_0C4T25oEoBaNbTtAvT4jAsNlIUUdIc5niBNs5n62w3YP62bHYfWpB2CZZ_cNBI312xw1-KynSjqK_J9SZqcnXCsHrG8UDDIgJdGev4-JP",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZBwZm2VONDSHFTiJVhzjAdw3yOyfoTYvRsooqLX_JjWCVvghAKfzhJ4DACCZMXpWRAbVH3lcYdCUuXPdE3Ei1oAxcKBKthYlrcM93",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKsM7y5JiZW8GvPn-LNzHvIHJojO9Tm3OSsRC1NJHE75VNaDaXCSL77fVSw18kFJ_hGIlxuUgq6tdYkwa_5QjFpI45RnD56t0-YOanRtL6PlN6gDdUjZ4U_OK5lBujqllxUx7TkeRHwvzRq_lRKqj-C15VnkyLaxPM4x9h2fWwlwpt_22LBmaGaX5NXFOj4cMl",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQlSJIXSNr6SSigy-zpZ2kKwnssz8uXZ7dHEloqyhrEOircguaxVacsYNBW1xkb0IjN1hc25SqDbCpsgd7VBdR6ww9pmfAXBlutzVyvT8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQER7mcP5Ptq7uwEqd-9tsoUh0gGijSs5N8FwZ199WSK_zQJ63yYJzZ9voch6QtjcW_VJJxwJygjE-GnnZ0IMDuVhE8DSP102iIqVzbi8Qo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtIgV0iKL2SSevzuJfEiLzBIwHZGWr6EAU8FGXXI5IHDT7fES6nMsPnpSVmUpjndSGndddVJNb1GJMnkJ8z_H080EGbvjQOjMo7wrE_Qu-myI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPbirGfGXKwEkSNKoUXmp9f0IN2qrkB3vvL83Bh_me_c6ONl7u1Sn7vjuZ79T5LFLWwZs336bLYkgIwShAAJ-YxPyoccN_vzWdSlTDfxdrJVBcWg0Ij9r2kA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWp5gIPcmTLOwAuLPj6FwXWW8wzbss3AvWN9R4RGniDBgofBvmJO9zr07J6e2PaGtKXbW6Exin5wDC347MnwBto3UIY2gwiu6zCOaVq1c=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnPqgeUYU2xySII0ZQpRg9F2UXGeD-dvsJTJ5irhCtHXlzxIEZJNfPENX4h-t4kIOMtcki-9toDE-8bsmE-GrA8NtlT9Qskyj_SR76mx8gPe-bwxe0_U0TuzEmSaM-zwtebUYdl-NMa368GsGxlHDK6iAGckS9OjhguO_J_dy6hd1i8Q_4FNr8XBGTYRlNZgIXcHpl",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰 성형외과는 강남/신논현에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남/신논현",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰 성형외과는 마취과 전문의가 상주하고 흉터·초음파 사후관리 패키지를 체계적으로 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **뷰성형외과 (신논현역 인근)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과 (역삼역 인근)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVEICCh67imlvcRPxxQgkO3KH-cXKvEB2tfVvpUxnATv8L78IwOGihuoWCc8Oz07gobOBxfZ92ewMayaLfWMXGhW4CHgqRczTSnoN__rE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEDlRPwyG8YqwjblvpsXQh0zlz9U-8o952Yym-x6JTAqcVSfCnyDaDrdQdRIlgJINh0SixEMU3E4Keiuq22puc7ZhjYuij0FATrj_o",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF3oagGD7bmCP6oKqRD_ZbKhFVmBbaF27GCeaAef5D-9_wHCBw9tT6m4F7Kkp7JjB0hpUwX4N8GYZ6Ienr1lCOOM-6wD9klDZSGNpx8YSAByluPIkJtqM4poecCCsfL80Ya8U-tM5Si8aGo-96-iz60wSNjl-HqqIEzS5a5OKDfXxIAhDdlymyu9cuXb7sVkoa",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKkOKNO0XznhrO6GGqhTe1iGejib0wALPONTQGV-X6KhMECdroscFJxPwlZq266aV7m2hyac41_nq3JNqzKUV5hx7UUtNho49I8JNEmVtf2Vr6QTM6wZ_Ik0e4UUo8aX_j",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_-BrcKgEBQKcG81lZqDMFTLayH4WaKw5HmvQYdLBR8UAZuqT8O0ol8uMxrbEoeAo1h4YdmINGw-oNQnD1WGmrWsrOzmYyauoukWJkeaU=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH861kZ2W0ULOwvQXeIaRKiXhsG1lSxQ6GnwP1nW7Itk_PJQIiD1te3XDbguxM-41rMMYZkF6MQexGbINqqa5By1nUYxhpL9tzcvI9pVpn340ZBlBI9rnSaX8Q_5Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQfzsmcUYp8JCaPo5FbVyOmgrK5vY7G3iK9786_YeqbUicPKyh5cLw-FO2kBlVUx75DXqOAW5Z3GzehI7QNz6gTKZRVp23iHGoo3GPVfwb-HM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaddrfJM0GZ7NZCpetjDJ2E1QE4ip9xNwTGuLDK7d4yn5pMCcnfi4Vn1jhBt6m-GYS6WwzXo-M4ztWKapOmW0CSoNKFSbDwvInR3WK7j3D4i7TR-Qm-aIWsmGeApHuMkwZz60UABpVcMoB70yU4pG3h17-_ybzBkPn6Efo8UvtZj_YWfxuRCVfGMKLpn3db0-C8wSi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 신논현역 인근에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "신논현역 인근",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰성형외과는 가슴 전담 의료진과 마취과 협진 시스템을 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과는 수술실 CCTV 안심존 및 보형물 정품 인증 등록 시스템을 갖추고 있다.",
+          "claimType": "certification",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **나나성형외과 / 바노바기성형외과 / JK성형외과 (신논현/강남/압구정 대형급)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "드림성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 1. 드림성형외과 (Dream Plastic Surgery)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. 바노바기성형외과 (Banobagi Plastic Surgery)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 디에이성형외과 (DA Plastic Surgery)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 5. 아이디성형외과 (ID Hospital)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 뷰성형외과 (신논현/강남)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "드림성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 1. 드림성형외과 (압구정/신사)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. 바노바기성형외과 (역삼/강남)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 디에이(DA)성형외과 (신논현/강남)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과 (신논현/강남)",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "신논현/강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 1. 디에이성형외과 (DA)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. 드림성형외과 (DREAM)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 바노바기성형외과 (BANOBAGI)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과 (반재상 대표원장)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOevH5jphudrjKRJk2uIgWeZE_XGp50OWknvuIFt7qZXnnG82ZGv5mERuXF413xTpZlcs18KV0Pfcif-ZZghTrMAhSIZJYpBspKpx5Sw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHB1XPD-kNFtJiOgHBSrfjwT6QBuKHVxj4klCpDxzKmxXnBfZRMpJUxNmJNISN3B-j_mROy98msXwaCfHdAu0Y4Kxj_3tyZLuPVkxdbVkuXxAp7FCFHJzVCJIvpia-xd1S3eeHl5BzgEaC5V7Nmaig=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGckFHAodWvwbSGIN6_Te3T1A9uoLhinAWJ3L1YGjEt_j0ipGkRyIOZqR-pEF4S9YuTe7tfByzjMyv59Qhhwzn3ukDhb7X2Wan0naae5ir5UGJDTJ-OXVSFDkHOl_yFQYkb",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiJPX8OHSp1OS6_mTrS9HFfAYhhLMefF68aOeIP2HDPDeR3aO22FQnex2mmVANBbaQ7JUXo-ppnkqB74-70K_-sIpD3NeN2A0XzbE3pQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFWc8GOG3qalzu8yymNlP8Jsgi3OZTbjoIBsFt-3coCHS6mISUtuQUm6UbGprarC8u8wmkdSawCc4o07_tsX3ggg2FLT_W4FGsjYUr3zEGcYD5eBE7wU21",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKvm02ZroMU5gh26s8QwcQZ7juShRZvZTrzVMJ1TRRkc6XBKIHxbrojTz77t6MYyhtCB0ZU7tAmsqwC_Bf7teh15tkrmgceFoR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHodFywOlb8VA10eC3yxTXUo-cYM8WsgXvBAj4DgqXFvGp-O9H79dHs-r7jHd_NdD90Q-MFVvgmXCXDysGyhhPqnWkRWmpi1J_WhlOB3JqJ7Q4i6i_ISSHXKQbFUAYV5Hi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGprx6t1l5Hd__-HHJ9CRCzOtrISkMt1P3HmcbQEE5JDAezhdZQSOe4WH8IO3jwl7YXdY0hvDuGREDc9d6xqYbVsJBT-N3oPllmPQ-YQg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtsrxXojQ4QFY-j70VCEsz6l5U4rhcivijZSvJ78WzciV2_5IPu11CD6qjYBmuoUy_B6g43elpP7zA38lvo-M7agAoceUCIh2L1cZNoVec3mK8q0YcVvJYIsSwLYRk-ngdmq3q5KhN_Dg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHs04kqxYUDjmVQtc5ZwSUO60rmGQGKTSwaKE1ugZGomNh8hrJZZZRcKcT-3OFLq3ZDysvhoPDLFmbEUFtWHXOQ6Knyps6k7hAktUCarHpJny_wUefCEwUH09cEAvtDOO5TX6g_7_IHrmd-amAyEA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과 (반재상 원장)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3cVb00Yd35RFXaXXM74O_TyElBGc48yI25tAAR5YUISQWlpXL9Ojh24LACpvkx7Cb4s_kMMpxh-83E20Uq3v238jDAaKWy6akM2z3Afe3NTyse9BmLIN6OEW69VlVy050sFBJkb9bXCOru5Q0ja0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMtqQssQtWj2X82Ii0Yd6Ddc06FB3TUBtBva3smZGFez4ROvzz5YVqxE4CCmPWKc5JjXZYXNIsNSOkQpIuMRuxQ8It2iDgvGuuiM4y2AaNQ4JoskxFRg2sSiM3-c4N41JhX20=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG88TnRUzDfGcHm_utPTaKMf-B7vii0tFSlNaBUBJ1mlxpWOVSIInnF3j1Lq-C2GYBNeVy0pUgDJIh6rrA6tkdbZJa3qB2AkcdP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEI5xABspeEYKtOVx54d8B21pShFt0XSpxoaUH3gU5JrNG2R48JVbGQQk6oLTxhvZMPoPDfJ9PILsaVBvBJ9VkBoCmGwnvOaHe4-LosAQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4pyRqvacp7651ab5zzVEaLO7p4g1sBzSr8qjJMKdkFdydtI7joXXzJhtpwsTVa8C0gZvumaA6ThxOMbquXlKKgfKAk7pC8qh2LoxZTrATevFMxnMD9AWqHFBi852kSKrf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwwLXK2Br8daNcquBDa6mx4Ya0J8uoH6QEH2qXj2-T82o9NTUEhBKgWJboseTOmuPtGYNmaJ4lRZqD-KY88y6I8WsUb_QaC4h-Vp8cRw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEScbuen_W7h_V9fZelVUEEl7_8vlftJwFO7LZpUXxcbK1Mv1cas6fJXU-ABvd6OgDWJuInMEKmjk-V8QczkBpM1zx9iVHj6gjfN8LJKKCB2iya",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH3m8jF9NF7V0BiUiHrofIFVsEcdrIevLoy6EkcrZ88O5lwklZuX3R1zI6hWHKW7amALd_to2IdoMz9jbcAJiCzBS_0Vi7fNyPKUx_jo7q1EE1BuUueFdPOgqFLKhRJvTuv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgjk2Tac4j4Zu0d_QXtNi9imTDQ1E6Njs-i0ub2Yy8VRRcl-CT9XXZfIu1Uw6tfs0wQDEWxbEuGXDfUkw-A6Xnh2WbTasvagTXtzPaSW8UyyzghRljSMd74KgBWhbp9jLeyzORqIBklQSSsDgbAw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEoiCVKvS2M03EIXxsT66Zt5KqnaWrx1XB4lFp45swVL4PsApByOFROpzcGP_5eKHjGLAC4wP4QuxhY2ulf6K4GtD0-MFNmevz8Is9hA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElsg7Vwkhhg8XVQH4M1Xl3zvXkueXjWfA4-vqpP9Beu7khcX30MbSz0oXvelg5cA1eumWNYpAfXc8BzyH3LHNo0y0wLFA6LAlgBANK1b0Gz-palglPMSeduyv0iQEmg2wA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjd6lkVBwEid4BqUz63Fd3gKpfWZdCj4gTRrmQB8EPyZ6FUX0Dbkom8uQ65bwTCK7iVDbLvtRdXTMi1fRC4JabLf_esvkHTU2Rqs5RzQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEUkSHDSirHg4SWa6qwT6lffVfKqArUZHgyChxrxHgtSWYDj-_pDmCgwyTj2jw_5RKxOemn0Mfnx4HD--w3iFqT0SBcIdTpGLq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEneu2ySLinqu_FHoRXl3_3Ye43-YGUAUjgriAfel9SctScmjGThPvDeQHh5gCH1vfKCuyQ1xq4n62NEszmfnMtfzODeJ5Xi4dEB3Djw9TX6dqLFnKJWdJcUYtkvypVu8Gujqxmlw8VK5I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF06DHyBr2NBlnMVRpN3DJCKRehyKZknNnEJAJj8r3sqnqYi54vvuF4w5NyMFhw_Vo77iYf6pt1suqYNENbCogoezR6KjFzw8vdlDOIM1Yit3DhzSuRh3HVwax1I5_vh6-hlitdSKX8_855FqIaycpls4XAlqjeQ9dmfK9yZSrX2Z00uNCS3ssZP8aXo9bv_ln3axRyk9aw6UE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXDYYFWkrnFYc4m3cRbhXS9Ahzhk6U8x1rzwkvyQXzbOvLmpC0KxSj48eepJ90Ylj8hHVPWyeNmTto0jAIi9WxeGfPxEmNTFoNcWE4jJBQ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhAJjcwxqUhiy1lcskB3ZROG_vk889h0kFtOO7Za0l_0Vi6xz8SfYCtak0HsZHo-SRrdk1Du9J1AYU4OKH1v3SmsoNSG3u1d72gsf7hIkq1-f1T66ywL0XSaZ1J5D_2hT-HcgRas1iFvZKrA5KsQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과 (역삼)**: 성형외과 전문의와 구강악안면외과·교정과·마취과 전문의가 상주 협진하며, 뼈 수술 후 연부조직(피부·근육) 변화까지 고려한 수술 계획을 세웁니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMnHoLoQUKPQRZHyuJm3REK41VV0mPbab304IXdvkboz3XPywUDOxBe2Xrhonsnzi7Me0RF4eDqgAZN3gv4FByYnjPz23nKiExFBzAk-mlvtU72Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnQ4bl8fZeS0H3e1O_PfLCqn6rGoS8hDJUy7XTJda60g7T89wyHD-ZJvs7Pt4460Uav-XY_46NKCLpwOvqSPwz2d1a761Tp3JFB9KO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWx-m-Xm4vZecrIRL7M3qyapkSfSROOz0A1kd-bizfU-2k-WyI72cMbdCUMEklZBKtjy0CDFW1X1YC0lzm2ZNodIrdXR1CA1mwnxBgpxTgeJECOFMdpQ6BQzX5BAL5F3OkPW2ZNP3bZkagFWzRztWY0dDF2sLQf2FuIoOAa44R6TE7wgNOq8kyBFI2DhNFs3c7bXXO7tqoHGbYY3lhKf62ggABjeun4k_-fp66l0w16KLqzYxB06RICAm20-YI8uT_FUcx35FuFa_EpJ9bjSFgwKKVW6AP1H9sQKPvd_2HW8Uxj6QWUeQqD-3TNmV2Lnu1mYOPkWjNELcgAhNg7vU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS9g1ND9a4mBhnehk7kSHEjIUZIzuUktVVRACc5-odICWH1k6YCYfT-53jt9Y84PET4yxdK6yEA6iZ1sgYspai0spX6DOjlcP988HUrNV0NaptS5iaULKtub6xK7vZic-aBhaMOfitBqXJnf8gSLH_a5bGdLwQWUomIvODZa-6nHUw7-gH_ntd7lF1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTb3NUvMrbU7xRxgk7n6cIo7W1XpLYQuliXiN6yfEm4yt24-lQYLaFrBX3HQF3PpFxThBYX0LEvxWraMXjlhnne3EKXBm1XH2WHs3FeMALb-84auTsFLcJpDlRUIHLFhM-BJWmcvXzhCqHQradjn5wIqCL82HPDaa75MeDyTwuC35necM45Qkf4aew5XWvq0jJR38=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "*   **바노바기 성형외과 (강남 역삼)**\n    *   **특징**: 서울대 출신 의료진 중심의 대형 성형외과로, 안면윤곽 및 양악 전담팀이 분과별로 구축되어 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "*   **아이디병원 (강남 신사)**\n    *   **특징**: 대학병원급 규모와 안전 설비를 갖춘 병원급 의료기관입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "*   **DA(디에이) 성형외과 (강남역)**\n    *   **특징**: 안면윤곽 및 양악 분야에서 트렌디한 디자인과 정밀한 수술 플랜으로 인지도가 높습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과 (역삼)**\n  * 서울대 출신 의료진 중심의 협진 시스템을 갖추고 있으며, 과도한 절제보다는 안전성과 자연스러운 얼굴 비율을 중시하는 수술 계획으로 알려져 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyGHCuaWikWVtliRB-cSbrVv-coAhUFsLx1sBMPeTk9ZJVuXmemyi8IsUYCiARB-Lg4N3oIYG4f1pewQ9Yh1cXm6NpWglNE-vTy6d6BrnECwzUH8k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGg7_6GBwCRsrK1hzgc-wV6QGGVjyE268Tz2CuC-J9r-mRWSO5_OH4ZrwckJlT2VKICyJ7gqQ9cbwvc-NcGG2BpnnS7Q-SfqJ7MOsHWcbImSadL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9C0_gCFS9Wp5QXZopXAKc51g0CuzweP6_wwngutFuTXRfPeNSBnP44zjv0h4HJl-tpdilyqiJWrdyowLxYS4AEgZR6GuaHyQWF585Wg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyow5T9GfxpTG3n_2zNIt6wVBvYLZQvrXIJJBBjxZWNb3u-umH9zTlbKlcf6MvVhQFhYZXG4fLIxpdiH765Weki3Byp77Ybd_Bp_gal-hgkxmbJkEQxY7V4CYLe41u86QW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5UHKjc6JvyYIN1DlTbX6S_UqbcoBxs59gEcrhyHepbo8-QPeu_zUJ6oeQ2XCWp4NfkZEHw0fFAK-RRbS2tFlnv9bW1yuV_SisSzIh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgyWpyCBTAFxzgk0J1j_d7hYOxppaOUgO_4SPXPcQhFKcOKEB19uKzfN84qxrAku6bviE-tFA0Hb-m7HUtv2ZS7_J61j2R5006BTRBGz5dKWQ-H6D2FplWgUr7Tc5Qs89O",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **뷰성형외과**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **디에이성형외과(DA)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **바노바기성형외과**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5OFolz8jlxRDaKplKNxpMlanu4eDAGFfQ8iAG8NuC2076XvWQacKciE-a1cp7G8CZmqJDI_LGbVC9FXZfGIhTGWR2sbSe1ZMg2Meu2LzE6vdDY3ZRXhhdtuJe",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTVavD5sY0APZjVOh78RdJFSeTa095oXkSA_J4P4A3ivHkaDNo-_M2K7JOFh_TOYGxlotg7rCIhb31oAeX4H75GJCaLF799jBohplCN4NcNuBpcEgoEzjmmShvuH-FuRv5T5IH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhIcg2Oa2l2HKclSwycW4d9wF3nGaKC6PAU7_l5RzkpPVeKX8yCt6Q92WHFoQcQkWMIucsLcqF2WrM8qbwtk6nSWGRRu3ZKRsNeugplg54y8_qCqtYyY8Rc_Cm3b09YoWbP3UfzBtdl8-Z2vRLkUY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOGqHjF0WN6VoYRu-KRBaTwH0fAWLPcxbSuaIHla62omqrqaahWIMSdFK3tHUb9ie1XCvTuuK9hoNz1Ni7LGkp-6CueiSZdGv2BYzVcLH2LqH9ZeB8Yl-2rjWXRkg16njpkO8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOGqHjF0WN6VoYRu-KRBaTwH0fAWLPcxbSuaIHla62omqrqaahWIMSdFK3tHUb9ie1XCvTuuK9hoNz1Ni7LGkp-6CueiSZdGv2BYzVcLH2LqH9ZeB8Yl-2rjWXRkg16njpkO8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3xNnOQAzEo-ognfxhkioZEId0m3xQ_lUGP0s264ZX3N209ybmCk2pSjD9Y40JpRXYZ9tOPWE751FNdd2z72x7-4ru9nJiWRPJ4ub4LK8KZMMG2yK9TvI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUeKJsrmM1ch0G61XE6MUZIgREufYLd_vC6VJLFcbKDy9CTqlsROv6wEHOa3LoknCYD4MOcYPHPOpL2cuRWJjJlwlJemSdP2yRHyTtWfBKZ0iwcmxcxIbXqgi9888=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 수술 부위별 맞춤 애프터케어 센터를 별도로 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과는 붓기 레이저(APL/힐라이트), 고압산소 챔버 치료, 샴푸 서비스 및 각질/피부 재생 케어를 주기별로 세분화해 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과 / 뷰성형외과: 수술별 전담 회복 프로그램(림프 순환 마사지, 초음파·고주파 관리, 스마트룩스, 흉터 집중 케어)을 별도 관리 센터에서 단계별로 진행합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "바노바기성형외과 / 뷰성형외과: 수술별 전담 회복 프로그램(림프 순환 마사지, 초음파·고주파 관리, 스마트룩스, 흉터 집중 케어)을 별도 관리 센터에서 단계별로 진행합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "아이디성형외과 / 디에이(DA)성형외과: 윤곽이나 큰 수술 후 붓기 완화 앰플 관리, 쿨링·진정 팩, 림프 드레니쥐 등 피부과 연계 회복 프로그램을 단계별로 제공합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "아이디성형외과 / 디에이(DA)성형외과: 윤곽이나 큰 수술 후 붓기 완화 앰플 관리, 쿨링·진정 팩, 림프 드레니쥐 등 피부과 연계 회복 프로그램을 단계별로 제공합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxArZkDzFK2JA7Ka9Z_lc1nVFJONohVT3kWjU3vzCrr1nDJIy7CU_tiekuNv0qP0o9UhN7cpkcmsoUN8oykksAflpv5QE-_zmYdoce8-6ybCEa0CWeRvEHsJIFFTkG_8Ampj8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-GpZZkwJKwhJN6cS30eWhexAc6jx5A1Sto38Aa_LUwCdXtAFgEP4E95ppE9OE9YEUbNZ-pr3kdZlnjkJnYOrMe2MjRIrAOEPFsmkKKnOZM7G6D1uZxuEYBcswbTbp-n89spp14fCENlKtxKXtxg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVs2gX8A_4H4N0gHV-zM2-plJZWGYj-cIwXvL_ZpTeNR4CmfF1RSgxRmnhTWIXu-lap8iij87LYyWtrjzUvuGzM5XBsbwRTbhjPGJpbHpcBTidWZCsrBhGZjWaf73Ac-s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFd7tQ5SAqSHpFFBlgEkICmpQ60DNi1ISaQqjARTDxM6OlCDRrzu8CaUChP26Gbr7IzknY4EIoZ-q3v2Aq3MH3L2mXjWixJ8C4W7GmYgow=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuQnCnDFRi3AFoFiwFjxAZsVmBDWmGl18-RhYZKZ9mI3NSIPkXjZ9gTWyGhOG1Ou9i8c7nbI4N2ypzawOK4AM_F0m7PVS-vfuH69l_Tfk_V2-0N7Q9hzRypXlBbua8yFA_ZjWZ6flyh2znYpcoEot2Jyi6WCP9SWExJHtp-Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 원내 에스테틱·애프터케어 전담 센터를 보유하고 수술별 전담 회복 프로그램(림프 순환 마사지, 초음파·고주파 관리, 스마트룩스, 흉터 집중 케어)을 별도 관리 센터에서 단계별로 진행한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **DA성형외과 / 바노바기성형외과 / 아이디성형외과 등 (대형 메디컬 센터형)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **DA성형외과 / 바노바기성형외과 / 아이디성형외과 등 (대형 메디컬 센터형)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "뷰성형외과는 오랜 업력을 가진 대형 성형외과 중 하나로, 특히 **가슴성형**과 **안면윤곽(양악 포함)** 분야에서 누적된 수술 케이스가 많은 곳으로 꼽힙니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiB-GswVsEhYuJWsjMyF27-ifvQiT1PigFh-TiURmQ6_aaJuQE2M3A1PqpISDvv1vb7gEZWd0PLZwteyynTsQGoxtTwEZZbZoQ9rz0QYJi2cq5dPM_sM-1Nfg2B23a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiB-GswVsEhYuJWsjMyF27-ifvQiT1PigFh-TiURmQ6_aaJuQE2M3A1PqpISDvv1vb7gEZWd0PLZwteyynTsQGoxtTwEZZbZoQ9rz0QYJi2cq5dPM_sM-1Nfg2B23a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESj--RS7VcB-gm0i6ZGigZmSW0G3DX546n6T8sHFa9tQu7ki1IQz_4Q3ViDsyEpAQf7leWfHMDAvTKt-JuZWjKkDA9DUyUxaRXyW-zgK_EY-pYPLcmI0cL96sT7iSImhA3uE5s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcjQ4xztORihVHQ6lHfR0LQikjDVZTIQ5ON2fLQ5XE4x0e_GME9DB7QA3CTe025wZ5Jd7e1n_Qe8J8eidwi4eH7l8HhhGeorZ134V6wgkDp3hVGn_En26NuS7mca4MjVCW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESj--RS7VcB-gm0i6ZGigZmSW0G3DX546n6T8sHFa9tQu7ki1IQz_4Q3ViDsyEpAQf7leWfHMDAvTKt-JuZWjKkDA9DUyUxaRXyW-zgK_EY-pYPLcmI0cL96sT7iSImhA3uE5s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGj1IBansIfOMP5pcoqQzjP39yUcpqAXDrX7h-9wgNhm6C9OYveolD7x6oUt9ihHdWfhJbT2tHtZZCdeNad_ot_rguO4v0DpzMe7neYw8VLwsG5lLCzI78c-wSXTVdHcypqAz_jFAmXseALRYOJAEqxdIRapGwlnqRWgjNRrlrR65umb16pw3j6OBlz7hVN7gjEydIvL1KeAjnq4KX--w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "마취통증의학과 전문의가 상주하여 1:1 모니터링을 진행한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "수술 집도의 실명제를 운영하고 있다.",
+          "claimType": "certification",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "3D-CT를 통한 정밀 진단 시스템을 갖추고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "유방 초음파 등 수술 전후 정밀 검진 및 사후관리 프로그램을 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "뷰성형외과는 강남/신논현 일대에서 대형 빌딩 규모로 오랜 기간 운영되어 온 종합 성형외과로, **가슴성형**과 **안면윤곽(양악 포함)**이 대표적인 주력 분야 중 하나입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGl7sW9QBFel5-3PLQ1ZoqxkXHtgieOjiSh4_CtfwDvXKN0a8o9UTBKXKtdZsrbmpn7ndj0ntZAAn-6B9JO61rcDaV4aWCuHX8JhSHIxKSgahkzHkQCOWpgkxMvhv8rRgQX_303A3T5gvR7_AZxZSo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEM3KpijCOHTstlKTLkT-zejXfOoq9FF7RA6veEuP4nAxMR8FmP7G_rdOVVCH6HNsSlDDQl5Gb9vhO9z2wYcMKeY4czDFEPp5iEkzQb64uZjkxVU2Jp23Lz_HF_hUif1Rs1EZo5Q412nwRNu2p6BxI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDkC3CUBjHMih6mNrm0KtRgVaUOm8s_jaT_Isgg5WKkZ6eZfwsb0O0msFQ1I3_7VpNotgti77XWF7dAiL2d-NjWgKF0YsS9wBxPdMS85iKi9dTVTBw_sikBpbZUI1kNU1MeRG91s8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEp1ydGImwgjOS6ijxamx9ASOqbmkUGLMKtgxIGMfE__Nfy8SQuFx0R3gWQLVt9wQ7ul9ujXtnT-UKuDTIQVFZtg7dQ4OKwsmtUY0xCQj_XQEyGglmbu5SodRM7gNpDG2DRP2TALUGEVdbpXQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFwDhSclJbCo9SQvMo3xQGpE6XzBxlV5Eq52VOvE_GGQ4XWKO27Mde4wfBYr29RXMpsU-o4xRSuZqh0oZxgw6rTF2Jw-OZdqNLJx63OB8zvlHbW2bgJMfWjl7cT8Grmin8ebOzWGFrmYxpAgqHGlPA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtLttWvE0ynYuQIGt_NteZEJI6cE1-Cfho5ska1fZ8GInGYfggGpb2q2qoJL85KAE3gQ4bJHg8rrC22EiyanTU_EG1LktfjhfAfnPB4ADsmoAY8osDLVwFQy8FpgHT1yXQbdL05qM7A8obYMJb8pw2yRYGl5Ng3FdloDD-uvddWpHh3eih6G5b2Q5QXFp5TvVf1Cm2j2NOolq9xBpLmndTZ0DF26QVNGgs7YLQKHTXYYU7OhojYV1v4poMQ5GSNbDxBvp946a4DnpJpnNwRQXwYAXXhc1PqHRvMUWppkh0wG6rAswJDX0gYK5pXoonherNGqjysLl-AVIG40fcUdYUjQk9zUCs1VBz-V4Ad3bdFw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYniEO6AnA-0nPBUWH1yln8AJgKAD_pkWOmyWfSponT1PU-gdXBtBKzI5-sT3U_6qrnB0LQ6bhLd7cqGaCyiTY2ju8QJIkKVvsFt7EheXVFB1kVwiR60u2O16mNW5_AIwy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남/신논현 일대에 위치한다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "최순우가 뷰성형외과의 대표원장이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "윤창운, 이동찬이 뷰성형외과의 윤곽/양악 전담팀 원장이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과에 마취과 전문의가 상주하며 무정전 전원장치(UPS) 및 수술실명제 시스템을 갖추고 있다.",
+          "claimType": "certification",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "뷰성형외과의 가슴성형과 안면윤곽 수술은 병원의 대표적인 주력 분야로, 성형 커뮤니티(바비톡, 강남언니, 성예사 등)와 실제 이용자들 사이에서 비교적 후기가 많이 누적되어 있는 편입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXZWc7tDh2f1JA8ylOn7d1Wib5PaKWKUOZIVP5DSl8oaUwOQ2izG8EzJx3YnDOfc7zU-dhv2NKRFhZ8GfXcm-vhxRJlRxhQtUVIEQ2LJCnymu0MkjAqr1jaKDu6c-fizn04AjjNe0ddvGA9ohbDYJ3o60zuUs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEn2dzIgk8tdy69PIdotpJ2HUm9Bjzc_Yu-W2txffhhMaDar8sZffX1in8GVDXGz4iZpL9fXXy9txSD6H0Td-gsmHU8LneEvboDV53iLOCJoYK391m5wwBAbmZ7Q0SZs5dfOd9QwVyu3kpHBNtOffOIy-T5Z50=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLT5xgvY8TfJHrYHMjeCIcZqIVbY05onhggkj5CWcIoX1Ag7T9NIu1u344re-me1FD1yXzkkAcju5bCEH5uF5CgU2PAlv7llDPTqEuMsbAZfaEE8Q4YLBI-GtTt-5LirBAhDutuF7etjqWok0AmEIPBh-NA13SEQy3iCurGfJKVYiff_wQcg0CNqgOGQRGZ1TKAp1VprQzjiqFGvN5_oUpI2wuIke4jle3Vu7UP50dQiShWWrs_Kropru5xR2CFQqrxRHPA5EE2hhcNhgYjW8ooiBYIbpt6733VxqYoq_DJUOje0osOEY6x76M01xLLpPHnJob0VOU5uIYQV7CVFdI9NTQ-YGWOvML6CyYjZBX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDTDEs0AQxkZhtI00OdW8VT8rx8C7eLrJZW97Epj71GRVYYfA9Dwq4KeOdcLDAR7ybXa2RM5FhoqjqptsmQlVnOv-bLniVd2UJiDgyZ638CN8Iqgh3KuH5q9Cjqy_9GO0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과에 유방외과 협진 및 외과적 검진 시스템이 구축되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과에 마취통증의학과 전문의가 상주하고 수술 실명제가 도입되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "고주파, 흉터 관리, 캡스 등 가슴성형 사후관리 프로그램을 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남의 대형 성형외과 중 안면윤곽 수술로 자주 비교되는 **뷰성형외과**, **아이디성형외과**, **디에이성형외과**는 모두 풍부한 임상 경험과 대형 시스템을 갖추고 있지만, **추구하는 디자인 스타일, 수술 접근법, 병원의 주력 강점**에서 뚜렷한 차이가 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 뷰성형외과 (View)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남의 대형 성형외과 중 안면윤곽 수술로 자주 비교되는 **뷰성형외과**, **아이디성형외과**, **디에이성형외과**는 모두 풍부한 임상 경험과 대형 시스템을 갖추고 있지만, **추구하는 디자인 스타일, 수술 접근법, 병원의 주력 강점**에서 뚜렷한 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 아이디성형외과 (ID)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남의 대형 성형외과 중 안면윤곽 수술로 자주 비교되는 **뷰성형외과**, **아이디성형외과**, **디에이성형외과**는 모두 풍부한 임상 경험과 대형 시스템을 갖추고 있지만, **추구하는 디자인 스타일, 수술 접근법, 병원의 주력 강점**에서 뚜렷한 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 3. 디에이성형외과 (DA)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlaok9RZUQjMkvwgpG1Zkpg1FtJS4NDyrDWbcKAZ4FQ4v0y32G9rETYNjI3sdsygOjd5NkDrbP3NZH5ejqvzt-Yi2gS0KTBnMUFlj4118MKrIQy-7niSNbMzXESSVCbpJWTG0gJQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmi0e1AG_PpWegBKM_GOfHK7MSl71n7QVModfog4BLyGYNw3cfe4N2KaKSzfS7cpwzSc1w0N2zYwEeotYDqKPzKTzoWJ0s8pkmwn51bGejRynRASwf7O2Lx_y2ekvRGgjK17qL6P09W4tuRHo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuXUIPBgjyK-dP9unAm4UVDfNSmKFNJkPqJIG_5jT7WrVyNfVJoLMi6a7BeJzZCZZxY4VutUUwhwxmpi0nkx4bibE5c1vEk0Lg2RcSZslWXtH6uNwcF6_7s4wWwO7p6e1pKqil4GAyIgXyvZ_7dd0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEm4XvEXFdfGhhVSo1yGMwvGA3g4mhDCgPlpj6OpgPG7KYh_7juW4ci8Qeyl3-_lQDskBcd1J3eyg6CTHeeSOlZvelSbjp42lpedOd8NOVuuck3_BsF6DsUf9SaZIdzcyB_3KZOQgk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKay44QdFzhfTrGREpb2NB0swP0XXANE-VUanaAEXUoB9NgYqMJvA5FfSO-opWpbW8nmtoOROhkQGneBrDWPKibaFQTucTKGCO3ocCsujlDQhKb7sDSqSirLp-XzUBL-c0",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkWIYeOrfplptBQpdHMQ1AIi-H5EbVfaU6pw7tqcak6loCPDRJnnmpL_Ho6QKDxKuZRV2jbz59NFyxEe-Xbjr9sIDN8otvC5lOc15IbdRMzu19oD5J4kthWfP7wZFyyWWeBy1eUUCrJAHXw_M=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE607xPuV4rcyH2BBwOkxqcn193EsdHBR4F8QdRXXYGgu0sPJKBAK1Hnb24WA0svHM4qcpN1jiG6SvW_mBY62WFtIjSaV8kZYkZ6AP8Fa3BA0TFHWUamK_RDFjBmvM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHD17WL-6yY2SGGu8OKW1ESHl-1y_apWywcH0_u_jHDB6m4QOBqyM46U25PjEqLw_JarTGh5yJWoFR20oW29SrC_gj2tPDbwEZ7RtfUE0rtaWF9r4pQw8AXMZSpTRYeHTs",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbZwUbg-oGZ3lvJOjsExP8YZ5TBsLo4pb-o10u7R4LHbLKO-tLGvn_pMkcF8M5voS6jrdGzd1cFt9wvamIRh4XpUNkG0NVxGUAboYI0KJTc7ZzVwEtioVzOGIxZIAgvI_T",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEW9WYpNQ8Imt68YP5pTpGxYmCFXkWHFaxniikCM4F6fPzKnGRxVlwDeYY_2er0uCQNThfcY01HXdOH-cQvnr23QxXNoc1sOJEuyKmR-ezEu8WfJd1TvL9OWzoKyTc5HBT",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEdygTvSYBHFmrKRkDCxncfm6e1gIWPCy8thpc-fj9-sfMiEToCDbKKtjsrQcckZifr1yXcDUZ7pLMltrRFUzASAbNuR6gkn2iUxujXVPPsBuoyAxjfIwmWIM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치한 대형 성형외과이다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과는 마취과 전문의가 상주하고 수술 실명제를 시행하고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남에서 안면윤곽(사각턱, 광대, 턱끝)으로 인지도가 높은 **뷰성형외과, 아이디성형외과, 디에이성형외과**는 모두 풍부한 임상 경험과 원내 안전 시스템(마취과 상주, 3D-CT 정밀 진단 등)을 갖춘 대형 병원이지만, 추구하는 라인의 스타일과 수술 철학, 시스템적 강점에서 차이가 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 뷰성형외과 (View)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남에서 안면윤곽(사각턱, 광대, 턱끝)으로 인지도가 높은 **뷰성형외과, 아이디성형외과, 디에이성형외과**는 모두 풍부한 임상 경험과 원내 안전 시스템(마취과 상주, 3D-CT 정밀 진단 등)을 갖춘 대형 병원이지만, 추구하는 라인의 스타일과 수술 철학, 시스템적 강점에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 아이디성형외과 (ID)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남에서 안면윤곽(사각턱, 광대, 턱끝)으로 인지도가 높은 **뷰성형외과, 아이디성형외과, 디에이성형외과**는 모두 풍부한 임상 경험과 원내 안전 시스템(마취과 상주, 3D-CT 정밀 진단 등)을 갖춘 대형 병원이지만, 추구하는 라인의 스타일과 수술 철학, 시스템적 강점에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 3. 디에이성형외과 (DA)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰성형외과는 성형외과, 구강악안면외과, 마취통증의학과 전문의 협진 시스템을 갖추고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남에서 안면윤곽 수술로 인지도가 높은 **뷰성형외과**, **아이디병원(아이디성형외과)**, **디에이성형외과**는 모두 대형 규모와 체계적인 안전 시스템을 갖추고 있지만, 추구하는 디자인 스타일과 기술적 특징에서 차이가 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 뷰성형외과 (VIEW)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남에서 안면윤곽 수술로 인지도가 높은 **뷰성형외과**, **아이디병원(아이디성형외과)**, **디에이성형외과**는 모두 대형 규모와 체계적인 안전 시스템을 갖추고 있지만, 추구하는 디자인 스타일과 기술적 특징에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 아이디성형외과 (ID병원)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "강남에서 안면윤곽 수술로 인지도가 높은 **뷰성형외과**, **아이디병원(아이디성형외과)**, **디에이성형외과**는 모두 대형 규모와 체계적인 안전 시스템을 갖추고 있지만, 추구하는 디자인 스타일과 기술적 특징에서 차이가 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 3. 디에이성형외과 (DA)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | 뷰성형외과 | 아이디성형외과 | 디에이성형외과 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFH6NDxge3gHXWLIxSPeJMGMapQJ9MznQ6BHIj7HlIiCKO0AZNWoiPs77cdYk8_HKbvm5-SSDz6iSPld6KHloo1keDIWjyTukGMdmQxGrS6gu3ZDsv1TGVPsZVqAIim17sijRli",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9xtA55JmdrJKAPOmfp1QA4Zvojdnn2sZS3l83BofyegI_zwkZ2hkVwlEi8BF4gl4l9HXLJ7NE_Kar0ZR8B0SqUWKW5S2jgEvMlnbLMWmor7Hqh1uJSV-gM85oZXxbmjtNur7y9rzE_roUI7vhCHIlDyBS",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXOgMxEjoPpdexu5IAMYyrUXDuGuhuH7wlwZyk5gnJQZCmvkpeS_DXuy1gTr20wsBmekAIT2eCmNbMevapJGHOMK6eDzx_raChsfByxhMtrxXOlXRDfVLjZiRrPpsdtVQ=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnYiYIEMqGwsoPcfGXgtV8qSTegmpWAXzogFEo13JSEnagr0raommQzG04uTs4RA8WKTWnWydxXhvILheTDsKXtsfJq8pkKrJI9r3ZkgiVWvwaynSANwz_bflVXRxl4AQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAv47T6CAzpSKhQt6q0Az4Ota82YY9iKFpzGZ2bltghf7uNEpKa5wwq8CrUS9k19Oc0M4UKr3epBbkg4a0sx9ZxlewGYMY_DTjM-0Bm64QTjgDwdvSKa50g24C1lxKTgA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_kQLWGHVSLwZzCe9IPoU7Zq2iknpfWg8KZAslxR-5g-TFpV3q8BLch35RvMSfpT2e0tjbNwTAcRCdoxvdF-HDmyNopUxDOgb9EmbYs3A_j7GRERrljLWdmfNMcSIC_kLncXFaku3EL6rTXw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrR5rqDwPWF4EHzUqYMJVo0ELSt7k1Jq_GW0cHeErXHS3RTCnmbJCHUaNKkMpPTxLNps-JbCcxJ3bcvu4DXjV7BVf47bHiK3GkXOBW2Qx5Jom9GiSonwYjHg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgvyuEiQqndfDIC3VvAxlt8MXbGq-JKY8ymfUlv_-rlH7oqSsPjwWfdvcB-BFJmk0JWFSpka2yvHjKo0oCJRhV6Un1WGCEsS4U1BIHrnr3l7II5DEgKSsQc0YNt9XycuI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVqjGu-BzcZdlRoLo_Eg9HYrmPTuQ3U_xvXXBWj-so73gf46vausXP7tBgFQazfjgLduWlhBo4w7fE1IFtlAcP2xETfKxKKze0L5qKj_ezVZoON84GpDopqNxqGg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXqfVYkCcWyVh2Gb9FB6-CsA92QFafxSjykf7gHXZ7iPujYCbGF4t0bAZu4qGsSMQwtBnIaxYOrEMRxsjCUFTJCuto95IlyYkMh_obVsueJT2g7RrYg2PBYQ892YVo7os=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDLXmxuUb8pAdw9KYVPoiU6RF-BYty-6NygmDHqhpKi6dKhzHBDGYq2gulOOC6Md18CGZ4B9UlT6ZUOPf3ztIPjrPV44XT_ZgfgkoRwir-ji0Rk7r1G81_OcgGDEG1TOs=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5SP3LCBMTYbwXmcgC4-L3tYeM3m0tdvs6HTCaYDAVmx-rPDjNaLBGo7Vre17iuxObW-3sNIACKdmTm3ZB_VIPAozDpu5PvlYmdpqcNLv2NNXBsicKb8Cr128bo18eHN8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0wa-oL_TL0vg7mk6Txew0MDWI1QG0-AtMm0xpdYtUB0PZShBAdLHOJMfQ-Z-xSpb6RJ_bXZbQ7WT-Yrn7QFidocS6jipYyxNf2pZWA_wD6YPTHrZXZUSFknQEhRa_",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰성형외과는 성형외과 전문의, 마취통증의학과 전문의, 전담 관리팀의 전담 드림팀 시스템을 운영하며 3D-CT 정밀 계측을 진행한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 뷰성형외과의 **모티바(Motiva) 보형물 가슴 성형 수술 비용과 예상 부가 비용**은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "뷰성형외과는 일정 기간(보통 3개월 내외) 사후관리(고주파, 캡슐러티스, 기본 흉터 케어 등)를 패키지에 포함해 제공하는 편이지만, 기본 제공 횟수 이후 추가 관리를 받을 경우 회당 관리비가 발생할 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKA-BNPzfdI2CuorbiDiXSmy2fOVLaQh9TWmycrVBjUswQaOcv6kTXyI5G4f7m-mSvdi2kUhtDDy3FXLaoQsdLAgxhqHWYbQFguTlyXNVD0ok_AjvbOAzg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQTYMXrQ60y1lulAAk-ljSvKI9E3OZ80lafNENFXoMMflYUEidR8iEO7AV35gkNtcGrfmSui1qXjcybGSy8bo6iyVESHTLkaAWlF4KZuAKue3SdLaXjBvGRJBLVYfXP9kZXhPR2O33__qcWKrMpGMN2hCD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2y5L9DF-1dO8i51hqXRibivmyv3xN5ulaNghCVMMhUgW_1hy2dPS333RJdgN-xeLpGAo3TnSKFEXQ4Gv3jOsv-n78f3MJmAVjN3kC0kKm8yC-CRfwUURJDSHjlzvmrU36wjpMiDk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUx2oOQetRwo0_8p4ZUDAT3qvvONNgjmRqcUP71neDX7fixinyra8vS7htFCkHDbk60DE72PKZAQ1cibxcc9jwkjnnA5fAy25uBOn8Z6nEn50dGisgJWcyuteDWp56zG0YGoyCG4UX_6jc",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHqQqXAUk50eEYA65WT1WZq1bkmENQ4aUt-od4Swwq8KnT3FpslElkVQcJlf1rr678EQlYrrcLHJSFojoj2VxbFbUKzciGrUr5YfqGEJddoUUHWcQeJlKTx7FSlJb50Qqn4sJSzb5AEBTzaHKzssjXSu5cbCHY5lzHDOLdLWHyL1AaKe3XWlunEeb6F_LiLv01B4eE8_QKo1qo-0WUxaDU9Wl-eLrmQFElRVjSzWm-U_8ZhSizjzi90CikbxaLB1Jcy5lb4tA_on3HkDhSmw-UGG-3_Wpm",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuqq5fUVjtFtBzTSEP7fOM_3gNpxNB79-khkKVBJbP4tu6V-_sdUkByQ8Ax9AkguOrvhqKw2GLJSM3cKTukb3XHlveU8raT1JQukdkYQ2cTcphrS1gv2Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErGx23rYAAIT19m6NduC5XHKjhhfxE8sXH9MakXEk5aXhAj0BaD67HXdUf46Uh7Fl_5nwU4ltcOagxeJLSVvOPA_h6bSY_gViaebAbzB3g-Z6KvGtwlWSchezke3H9Vo1p",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQTYMXrQ60y1lulAAk-ljSvKI9E3OZ80lafNENFXoMMflYUEidR8iEO7AV35gkNtcGrfmSui1qXjcybGSy8bo6iyVESHTLkaAWlF4KZuAKue3SdLaXjBvGRJBLVYfXP9kZXhPR2O33__qcWKrMpGMN2hCD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL7c5h_AG0wQKXpJ7NGWvbBoq8mdjiWSrYRNvecMLnXXDhce6PZRpkDvNGgfdb01cuxTV8MPIBQTTRqjG-dU_qMgj8IaDRfzXyzH0h00oKqeJohvrQ8VjDtw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQTYMXrQ60y1lulAAk-ljSvKI9E3OZ80lafNENFXoMMflYUEidR8iEO7AV35gkNtcGrfmSui1qXjcybGSy8bo6iyVESHTLkaAWlF4KZuAKue3SdLaXjBvGRJBLVYfXP9kZXhPR2O33__qcWKrMpGMN2hCD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰성형외과의 모티바 가슴 성형 기본 수술 비용은 이벤트 기준 약 1,050만 원 ~ 1,200만 원 선, 정가 기준 1,000만~1,400만 원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과는 일정 기간(보통 3개월 내외) 사후관리(고주파, 캡슐러티스, 기본 흉터 케어 등)를 패키지에 포함해 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 뷰성형외과의 모티바(Motiva) 가슴 보형물 수술 비용 및 예상 부가 비용 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUF48Ywl5iWePa5BMHLHLTbe6bz_yIMrZ2qvHhMcw90GVz_dO9QAKi5Sot1TcC3wBK2vbt08WUFgnupGsdvfrTRMrf5r4YayO5acdaBfI6fVoOy_6fiLI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcM4v_JF2s8OLiUH3rWJf8Y2twwLAqXzNnR4Lg_Ms24rFQqxyth9DrkU9zXqFriGGoXBKoF1K7V8xgfiV8m9nZ2zuD5ky3LbEjer98Hj0qCJdKOvVN-OKIGKYRXVVp6p1b0YyW3lKRDbKrP9fO_16fYvw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-zCp3oC3ccKlUZDdDHEa6g-erOtDYSiifk_PspOlb0FrLT0gYOlv8eS5uEeA4BaP3gLUcEB6LZLGH062JhDvlo0V7vRKZpN3ES_ud-Zgzl0slGqB6Rk-x90eum5qRqQI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTC26K5O8Yf0Qkkp91f_1OAPHsSpCLn4poY9dmFUWBH7n0LW-nrSyrtVU5T1RoPB2raefjjfy2hGH1Yu3JFmwh_PvjFZ9n626nc-YbkIzbChCPSfIjrzCOK7KPq3mu9IZg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELU0jda_EvBbGAulS-sgiXDlsDuOFKzD4GnYPdkzjUiKRcnP9zbENy773ZmU-Mm2J3J_DfPqegrwPn-dpoZX_9Mnf0txVgopXnnClOeRee8VH9nWpWudXVH1fJ-1IGJvItSmxf7j1EfUzOMYQALeVxnzuFMvRuknl9_e7d6w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcM4v_JF2s8OLiUH3rWJf8Y2twwLAqXzNnR4Lg_Ms24rFQqxyth9DrkU9zXqFriGGoXBKoF1K7V8xgfiV8m9nZ2zuD5ky3LbEjer98Hj0qCJdKOvVN-OKIGKYRXVVp6p1b0YyW3lKRDbKrP9fO_16fYvw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVwGVDLzu3KtaWD07UT12YJB7cbMCsjNACn7UL9fkWp_uBHSSzMwjfsySIsQqHFwB9sGIdAU4XPG47W1pJoPYey-8r4ZpP2o8c8xhyMTqMT-vjgNrs2t75wMsmTyW9HIg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "뷰성형외과의 모티바 가슴 보형물 첫 수술 기본 비용은 대략 900만 원 ~ 1,100만 원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "뷰성형외과의 모티바 프리저베 기법 및 재수술 비용은 1,200만 원 ~ 1,800만 원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남 뷰성형외과의 모티바(Motiva) 보형물 가슴성형 수술 비용과 추가로 발생할 수 있는 부가 비용은 대략 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCXSlzNfg1T8ujqCG2fLQozGLykfo-hJS65TFbRrCxK3_CSv4hAwu1BziPs6891p15Fv4cwIdjDoBlMpw-ztprvxDKWkDS44U7H_BrzDb25baLKuZyWJ8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJLc-poAVoiweJBa4adO21bgFUapGM__UD8NYMTEoHCMZnXjcczTxaq2-wjRifiBH3zb78lbteraryiWb6OpwnqNrmciOgKLloEvCemleJdh0Q_IqEXsI5gWAbU6hnjA8c0UMb7g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwkZ8UJj3T69JR4B5pdozrciWCvj00k-XcOVrsjJ3YgTmYj3HzQPdZRyo1R9YnL6Gql-_yKtM5lwF9vyMqfE2vPpLzvIfsNLniI4UZJf8hxA46n9eFdivRgPpHKQeYHyOaZHhYF1Kuhdo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnrHPtvKTsCrWOsukDhs_7zjl32rh8y01ZNKY-Q_2xmZB0esAtD8ZxmJRxJhw-oAp91FhsSRNYoYYWSthT2ma_71vUh9m6rPnpR4oYh9u-B1BQY2Hh7w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-1p9-JmEdh62d_1NTObGaGDVgPDpFL643xFOQPmqMtdhcMy1TUKsvHwmtwj-S6Yv4A_F1Uj6eg7F7471lLUHKkZR-RMsXnMlOvH9NEGWlGl5PZZhDwsPSjyplilAY6tLrl2ZrRo4pHR7e4TPHckQFFSY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVAzAHjzGvIWVwlRhNYi1Q3roGua9aSdlXsPLJZ88cB6ZZp_S1lyJljGiSdE6H92Zwtt91g2AfcRrZUN1VSsXvR9EKDnYqwGjckMvJDVFpO9BRikyazZvL46L9pOHMcCaA6ZvLzz5LOdq_NbhMtz06Z0wBOwS6eE0mm5tZ2g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECblTIpgQVwZlYo5Tji0sFEiOiJvlpBcVS18xopUiRTWqvAGfyjillJJN77sCO-_1NGZyirzd1mLHB0pBztn9DmVuMOoLlqdt5v6UZKBsvkw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhduJAxrTr0qTois6kvNd9Hr-8d-VA9roVKOsld8gM9woT2JqXXJb7ikJx3dhuJYQQ1mAHVWtg0BKuJI6DcYfpU4dt8AY2Wca7JNOzXV0fDr6hlunLs4nr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "뷰성형외과는 강남에 위치하고 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "강남",
+          "factGraphValue": "서울 강남구 봉은사로 107"
+        },
+        {
+          "claimText": "모티바 가슴 성형 수술 비용은 이벤트/프로모션가 기준 약 1,050만 원 ~ 1,200만 원 안팎, 정가 기준 약 1,200만 원 ~ 1,800만 원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "수술 전 검사비는 약 10만 원 ~ 20만 원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "보정 속옷 및 윗밴드 비용은 약 10만 원 ~ 20만 원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "처방약 및 사후 흉터 관리 제품 비용은 약 5만 원 ~ 15만 원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기, 뷰성형외과를 비롯한 대형 성형외과에서 수술 후 불만족이나 부작용이 발생했을 때 사후 처리는 일반적으로 병원의 자체 AS 프로토콜을 거쳐 진행됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기성형외과나 뷰성형외과 같은 대형 성형외과에서 수술 후 불만족이나 부작용이 발생했을 때의 사후 처리는 병원의 **책임 진료 시스템, 부작용의 의학적 판단 여부, 자체 AS(재수술) 규정**에 따라 단계별로 진행됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "바노바기성형외과나 뷰성형외과 같은 대형 성형외과에서 수술 후 불만족이나 부작용이 발생했을 때의 사후 처리는 병원의 **책임 진료 시스템, 부작용의 의학적 판단 여부, 자체 AS(재수술) 규정**에 따라 단계별로 진행됩니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZSJwE0OMeLlQOXJIBkcEsuS-Km6knO2-KZEtWUaBlAPY-YJhRjPzKJUUoHFW81fXH4clluav9jbLcXVuZ6tLdXwNAJ3_q1xn8NbOfR5CGe6cj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFICF-TIJeyzeTDqP3FiSMdz80GopOBSPAHzlTj2mI2_ypP-hIwHMTqSCXsqnSQ57KKmnt499wXOfNA0Jdch8pGze_oRXvENs2NEG7mHExZa1WgSVla3TtURkoYyCkUpNDp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFA8Qd8yYXG_DE0yyj9dmOHibVYIUGVyS1L10wqS4OrkJXjWb8YhDNnotR58LEEy_RgOxsqIYotfjoxqK7rfYsWKMepyUTAdsq5jF0B4Y7ndvqkdBVrU18Ixj-cfaNRInRdLwg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmAfS0s91oRq9lTIP5xHaV4CVRlYh7lkS1g8sjFOzcapx8r9paPbxP9AM2Avfvljrqgif2BlxUHYlPXNyLSEJqTfiw8kAxWlsp7AL39xBXTt0BWje0jczu5AYID3k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQ7TASG9Ie8RZ58uUhQTVCrPCL_IukfdluvdNvGqICESadvNSxyShLYzqao_8n5IR2tRMK8uQ1lujXTMzKcuJAMCj4iwFMEyhiNChWNzPr9yoVZru4hPJKPQfJmg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGakKTzsFYE_xtqRXOjsVB2wrNOF1CWjBTIJTVDEu1hWAgkIeTeGNp3ghqwcL5EKlZqVQw11MqyT2GXTc71hxbhzzEb3ioMAUr6aQuwJpGlEIBvqVdg-d7kNGaWMhuKqQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "바노바기, 뷰성형외과 등 국내 대형 성형외과는 체계적인 사후관리 및 고객 관리(CS) 시스템을 갖추고 있어, 불만족이나 부작용 발생 시 일반적으로 아래와 같은 단계로 사후 처리가 진행됩니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "바노바기성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "바노바기, 뷰성형외과 등 국내 대형 성형외과는 체계적인 사후관리 및 고객 관리(CS) 시스템을 갖추고 있어, 불만족이나 부작용 발생 시 일반적으로 아래와 같은 단계로 사후 처리가 진행됩니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "아이디성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "디에이성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "드림성형외과",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

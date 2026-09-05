@@ -1,0 +1,1670 @@
+{
+  "tenantId": "e-dream",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbE4334BOcEJqSJ3YbO1xK-q5dx8u8O07erlxQqmM5NHEli_pxiJlKmJ_qLyjCgIwwUy0DN1of7dF5xV-utl0K7iVIPF0VTmVG0w_LVvm3jR0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcTLhDWKk8EMpA0sdpAYNAFiOxfBqZtynSBYYGAnJ2IdPhQnouQtv8TqlySBHwxSp2RtErS9_XYqly3xJYRdmIUCElECCxl6ggs-5uX62e3co_jPK8xlXLTLyUbGxg6m4OE_K8aEAtkpQQmgVu95MsGjHGMNvvC-sDdqqV2C8j9C1c1PsYMXXPp-dmK4twVkj25_6u4ef2cNChetRhRtExhCAxLGbjO0AVwEk9xqQZ6Eh4kSrBADu9ZI_6buzn7v4RclHDDGIiMO2SHRr1",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFINWCB8fD0ZqDnOLKdLF0rYBw1mY9f68GnZO_XCfO7UncXGR8_Lp9oWAJMPM5kMo1cSU0mVfQqmNwiwPO6ji5di3lsjmIn0cKmi6lWhpb9emXYciErPxgG8XjttILLc699D_y-SeekSn3gqDwmqQYPbUG8yX1gzL9q8_6LucXH6rl4l7mV-ijqY0e_21jeCzw0yQtY0AGQuhPu8kjXFBV99nGx354OqJwpGxI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF0pzui3FUIV-qrKFJo1vWeVhXprfyihHyVz4EbMzTrLYu23u4gh1ZxYbsx16p2ojgqldgo6EbNz685r12_4gtAgF2v8wu1uB3pxxiMmUnAN4uKks=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvTrkyIalHa-_bquVwbCTBj13YUVv9ZPOXvxX2L4cQm_-ugD8Ar3XHzcKrkPs7DKIBhdlKqCbfRs8Vhg649QJ81XFwC_v0gTGOflbJCnCEqCXGH3frIU2bOfUjvZ-y05-XcnBi",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3l2d6hGz1uLn7oqXy1RB-gp7TKmv3KMrtl7Ry9lpJQkRzF1w943mB9imaDvgUJc9woUHSICBEnUhZqhQh9EwB8YLdomPqqo0ehWtz0pvupn1kbRhjA3_iVpxbyoWBZl5X",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJm24rPt91FfVbt_O2lGMB2w7ckdlsDadaU72420Pxdp77IpoggrS4A5OyBrBwOF2637W2VcrnMbvtzHgubZIYfuIwGNyzsXtxp8DZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdToscnuqMpUFIDYfY-rxPbrN20W331-yKBTSGksREAs_S61QPh29BD37iCHFZZIrGhpizX1_dN9OB4L1MZUwg8iiU5h4lzDLRtgNqa49302AZG2p7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGspwyCQEjCL-GvPwKPWSzcG-mdsyrNUjgM9EA70ZT4hUyvJ6CtRAWcWdPhhYFWMJ0vfeQuFnNZjP92msG7eL-ef2vMlsgSuMCl8kF2q5goVWb2i-fEWtt9f1jxvg_kNg0mPZXZym4Psy8G_3iQX_vR7o-I4BsYZA3rL9zbldvD9Q2PK-W94BWnUN_tCyWzOFLYbUYmk-mHhgddY6NiPoKB9q6catxb5zfa-KU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0vxj1zJuCHzy2rM_jyr284cPkDhdJlwhZ4QfcKtF49__lqMNh9D8L5vCIcA3jBT7Jj1V_llSyKUzwuXl38I0zd8G8ZK6OD_SpM50qkT5BGu2EETQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBrC-m-w_VYM-n08y3_gIs50KJfL6Zm83DxuBdXbADfjp9iqlmqe-Eeeu3mzRfqI-ZMVWbvL-0STobrBz-XkaJCjXDTeFygNh8p0Dzioix8v5LVS6G",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGf3Sp0sQB7OOkvms7Ek1SkVEhtW43Oxn0_siiIWelEcy7sffjCYHakQZL2cjp7x4SnUoSGCBbqWNSHXSZ_yLvHAZ0-jlQUNY0EXF0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF33eqnCWrB2_zRPzhuooiipqWyWM28CixxpRzVFnZcyNyOeAHBMxl_UbNpsc0I2G9DAwLGyyHmPmQkboDgECMwFes93BbawvF2eNs5APRLLr-3jpyikt3-9jdLhA3wkYM6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHp7TEfDM_WGuG8fR-nRcc3tdaWj883NjIv7FxkcaTBosr0zLu9SvNY2pIo0DWkAu0BX7QNVwgZWbXb2DHoJhvbCemGIBgdxPQzP7wAdOq4mjQS2T9zdqcHNPJQcu4771bk-SIMk_RzPe5F4aXmpZcyXjY8bvb57eCO2DFPVtkE5VdUXsegP66hLI-L3EXlUtcRzFWDkBtd-UW7GxUyJn9NYGQdqg-9d3_XxSY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaowBscfQ_RAx8N6SNEewxabo-jmc35nrm_GzqYwQIxJmwxm99ZU0kLeuDhNX36z-YxvQTsZ8TthTD_Mph6fJlIJh3cvGnA__si3c9a6UDjY1gc5Vm",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmHGZvAbNCgFrbg22hwdwfE6Bc_XM2JdXwBgfcJK_lSZPc-Lhs-10NOiuY6O1w3aw6OslRfgpnDazclIh9uK_GLuHnJ93IckBVMmgQ44k0Ess=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEb-VNm3Cw8228kt5F-lYTgCCjcvwmFSeZA7hSDP6dPUBprVB5lXMZhyX2GLVsnJ58OPtOuqPvop7DD7EPgzKP7fkaVJebe7P9-lxkNOTApCTTzjpBNnmMtNABmkwRQL5E7lwqg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzkLiHCdhKgqMJ5Pgn_mE_gsRz4N3RjtJqB5uVxWciFsHVI9H2eWd-zNi1SZktFEUWm63gGAn0AIWebE042y6i-0PaK931oHX0e2w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEERVj0ylJIRVN9BP5GFvGYH6sTiIfYDKK_qY5gggoY6xmmMWcaleSzPPj1yvX5P25M0z5V128C2R4B7qgXkl3oJPlfI7rjZjk3Ekk9_-eHZLe_KD0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEERVj0ylJIRVN9BP5GFvGYH6sTiIfYDKK_qY5gggoY6xmmMWcaleSzPPj1yvX5P25M0z5V128C2R4B7qgXkl3oJPlfI7rjZjk3Ekk9_-eHZLe_KD0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLlyTNPFJmgHjhHN7l3tpf7vndCtU3tmulGM3kjitvjz73i9pvfaEHUS3O4LivFKRgEsfw2d_WGV-8ftrob97V1E7UWqSb9v6k7JPV7OJwosd63uWJLHb6gRrMr9Rj654W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdUlc1_KFcAR7-taOATHm0X1R6PnMVHEs55LFkaud-0bLn5wjJhq4t_YtOLMzOPJwTZp6AaWnNJcX3C2uEJYWAkSrf7-aX30rAwPcp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3-Iw8XPo9yZL6EGSqwDw8vEkMYvOzTcd-s9ZL5q_EqA4NZO1RwZLqulY5Lj4dLjG7joXY-HINhhImUh3bviG_JvN23A0StkjoswbG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEf_ISai50fUDvEoZBV8J14gUwOtLFAqN9k5nsgPmIJdbTX7V26hJWHclNyMyQDpSdzfCdZfphIh-f_hPVleWyTRlIC9u9jVAIRWFUe",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8CgbRGxIk0ILRREEpc5V4mhyzHxUBCe_jH8MJtBFDwZzfOfd_dpkKW-OhwhyNMtPkWn25VpEsjbhb0TMMXK_gkEZ5rXuoUKalgFp6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGd3QEPkJal5mzzAjDSeWKxe4c7v_jQXIbFlaystdla82Qp8Aab1C9t4Zq6mewZeFvi22k4U9dHk7FJ-PS_6YZPWjSpdupdenEQWNB-v-4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH75ZJss7cgIvCaAhg9DiotGuycOcbnuQSYr7taHH1li9yxch3WSae2AvcGOb-rJ6_Coxw8g0lWO6KCMVO_0GdOnd6voaCaDV6psl3k7JglDIux1Fdkz0enQrc2YQcdmwD6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr8vi54asTi-iW6rUowJBHlfmGN0g2VxT3JPUvyXzpS0bg6IHcPgnNj-E8QgDoV-vvXpPqOhUBoPe-YYhQh5Bsnwy7lbvwI8WgqDHgLjhm2ZNvFItCctgZM5X5nW8VyqRY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPuCl9yu7zA98kM9ZD4JW7dVeduR-8j9oNC8ngviOdhkxTnFdythd5tCR5HiXt3ao-mtQXW6KTviubG8olahYQb_KAtxzA_DRact9cTVkp9WAc6oHVXEVw_xj3ZOtlKWaY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhIuw78dl1sf9Cc45YVnff66vwFODwGgbZ9m-mjmPFk79LMAY0N6N1xJk78DsJPCvKVh7n5C_-4kfDdYqyNn5DCJURUxlThyxq3Uz_ouiJv_DsE1N3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLdnR9wQT5X39-5TLRprehIyzTq-OevD59r4pYVAEUb8LGsWBBk-UWEtLW3f_QkUgT0ziY9Uv3c70EGjeESZp4OYyj9tw4GmgrB8U3mHA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGH4hk7p53xVULpqz9-xAoKGzv1oF7kZDBbt0zjX9pQTp7fyry3KmyLZiEOgdlrwwu9Y2NpUkp-i5bJqf70ZTfsXWoeHU0BIMHj9d1wtI9SNUHvIlcTriNk_LyPiuVwSW2wFSPJo57r7-LRHXvuBANqG-voy6VhAFiBpVNmQp1L7UKy6xBx6Pv86Q0UyRtX_WqQnYqdTz_89y921CsSbOgVBWFeenAx2OQWnDl6SJiN7Tz_EFm_BBPT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLdnR9wQT5X39-5TLRprehIyzTq-OevD59r4pYVAEUb8LGsWBBk-UWEtLW3f_QkUgT0ziY9Uv3c70EGjeESZp4OYyj9tw4GmgrB8U3mHA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGpy0d-bXmrMnMozyDgsgKqiDKdeRav3zP72BtkqsLQL7QALWwxhoTMdpE0Y94MN19UFSOmn0tGwbcMFjU25G6FWJuzpE78aJdZWtvREVsCoLC3oHkBot73ELizQTHWvTXK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFngMZcCAUaf3X2asNkMuEYiQTzvmStC5IB_ZX51jArD_y73-TAudKq_KTeHT1fHK4COHRzXEs-nSLFjzfVgVXHDRZL6Z9YtFvZ_ywGoF3Sqo1_Myjm2SMLL9c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxTjQEAD1wR_ZNCrHZb0VE17linrKbsasa9sbi7wW1jPJkb2um7qUQoMkgyQc2k58CGwH0qR-8mC5tWB0MVtoaM8py0c587n7x5wwJXCQ5PxxHbcT4k5q5NIGHsAY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEb_LggGfbVFh0YF9-hk5oW3fdfpkI9qMPQN8VCMDOh4kxmalmeNlFe-b7MuQKnTqXip11uuIlRkbLCZ_PlaK8plUtYthGkTRWwcjUw8bzy7O3Op7INCYlZpA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9HZAHWnGjNNNfrS254pmxjmw-JLwyjsulvx8xZVsLSvkhp_cJEB07T7FW7GpXQ__47xQl1cl_rsVYLORBbt0RL0GjS85qHg6uMnrhofGgiCt3XgCW2OYEmywb-x5M9RwM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXstbpDeMdA5MdNAo094QUW820e4VG0cRp6vBMjUVgF9hHtaGHfDWxSHjc72IIs9t3Kj_s4HjZLOrdOVbehP66EeT9mbDoY6SAzYDTbWLNpVYvvratwq0HJOXV2CyF7gIs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrF1lYIjjuxpukoweGno5ZfvF2NcyyMFHqt5EsCJTy1FskM6N5cRsm4sOBNRSG6AH6ZD8G2Hl_6a6T8ouxbN-e4PSetTGq2_mr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGpz8Iu54jOVRIIc4kwE2qUJA_jp2x6UVyJh8vqq-ds_ZpE4_k9wCE42NzhFWdiPExWq74sp-wXjwQ-LAHDUrpC2hsr1EJBUMYIh9IBCH2wQZhDNVbN9fF_VvLSUlmpDVqH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVTKxdLh5on3xuhW0nc4YJVkzY1MTgwTJyeSiAVc4K5x0fP1ZZ2EVvXu-W2qsi4kKgPDHDKChzT_JQJcsH7a6yxxoojZ59Jq4rr3QXwsNj8DChiYZ3_HNnv_ntcRE1ZmDOsBEQyGK22EEaT_RskHfXrsez6fpTESv3z1vygG9kDTcl7GOTHnGgVMVVNKW--R3-eeHG8eQFuLYUQ6O0_47NB4Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH35F3MDU1e4nHMvSJBmoC_hEdRUzEtMKlZfG-N9wbK5xMLJ07d0MJMhaP5BUte0LPV8fpQQg0N75DqE13maLrVvPoKxnk_DbmBQYkDYeMuWbU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKed8FDbOcVGT0laU6Ag5DIS35E2q_jwVut9mP2eVrPOan1qEwr8Ek6ljme2-No1iWSK34BYCJrIOVnvm-4YKALffBGmAO80PKSoaq2PUNL81MzgDocXJ1kwDOvtsRnG7m",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7jk0jS4Xml6BVvVFKESKZZgJeZbiiBTngcgSG440geBk6g5Amf6gOPX-eVV8uX26lhXiaPOx61d779E6pLBNQZzXX31d6IZPu8Dkb_WjRiR9aj-krTN1ylg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAe2OQmRNohGSMyD27WuXgp8xpFp5QFWn9BOPn3KALjK91Wdr4XM_N7dom2V7XlgsVtNNTqQ3w4coxX2kYGGNrLPvP7jeFrQa7i52i",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEN4nKnD_E26gNJCQnxyHyr5t_mZymUHM4OVVq8Mx7LWsDYBdUGuROJUNq62z5SMyfQBXOtHmZQfu9mVhuZlPB0fS3nbaDIAooTWwGyADsIgG6Gu3D2SZe93UeRmTB_1LzT18cGdBDbzP_5EZvtcJpVt4EnwpOKk04yCf-yMC1Xi8hM-saiRD-SLM5eVxJxMFC1C_93FtoGnDWc5vBpg7Xa7OMHM_NuMFV1axuLR-ug6w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj_SoKjJYkLHLQTIzhljNf-EdndiYSDQBQbSO5D5Sne7LysRuVcio7Bd6G-mtkCt89IMISi5Wz4p0lmvwGSDMxFl9JqCV7bQYX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-RZboRY6dfZQ_KlCIzKk5IvKMUolbUtxU2-_Z4FZhXYGAPsLH-KhnRL91b2bsAmNKL_E19IxanJKi4o-GaC94-PJW56USpV75fb2QyYzg6o388cbJpDeAL5mekIrmDBKo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQEQrftMBTDUHNs4xm9cXwzDeGOIUYJD95PmyhGCh_ZlF0c5FpKWh__gBALJeyhKSVFuQjOwxVRyOdUoTEBLxuFsj2n6KXqb_uR2neHV79pmur7FKC2uxkzIQvaLeUdOXfgY1vfxjzjKWrnVV2POQ1CNI0peTHbIwAkAiMCLVqaTSyrd854ZHfp3YQ95-wihNnN1Bonj37sHGmvPFV6o4FEEzAZ8d-30izSF4TxVjHoqZE9oySK0iUku2plmTXEMjgFJv0e26-7iz3DEwkNTL5JQLH-4yrB3i50uJ4rlFEthzvZqGVvbWUR7bbS77kCq9EGSrXjLAHGcK8IhDkcBjY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCFT1_6keoLIqHHs30fnhEOah4cikqUe7ipv-yRryq-Jthi5TZk7EGSuhFeo-I2VpQrpPEQVi3XEKsctOrXqWv3tsQBcBM491RmAd4l5FzS0L9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5rvnNgC2L5HkH5Ng0YROjDB69sIyX-4TX3RVPjcFt-_OStIKQRtzty7pHIszdew_VW0N1ij88sntZL-TlMDluGVUoJ63Wb_aYGBfV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2awW9P5lDwwKyusiMageQVqTGjb1qde8QAsKTdTetVWVJaCH7nStmOEdBqTvu61vnJDI0UDWo6XBvVcA5fFrH4RaKl0A50CM-SmILXQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhAKbdldy-3SsGu29rZiPqc6hiwD635prWkOgVDDpio5QuQMIPB4tfLWkltjWdoZim6aHBS9CmHuwbSaF71i33dEkr6SMqQEeQNStq--tWhkM2vMEFZHwtQ6_-lOMlgYOIvZ8d",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiBuDJ7QwMk7VaUjh39v5XtXbUVApHBirkHlMaLbEcaUn4wrpNbDBfSWMAPC2VMSYRIwasxG41GFPKa79aD-P8Rj-p-r6wyyeZBL0ZIAlhgoGhpK8_qwxK5M1FRlRRNDV5IkyTliZr",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXyVAERu3KvYZgmh_-ZmeOEPWnEkEybCJFR-MOOyW7sVWGiPt6RH-GoDY4Hc-FLQ70T5WzAFXj0-XNrXIpTSatBQi0VmF9TthQyxZ-ieWCKUdO9VI_13wsXw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHYQviMPuprpqFmc-DOPVS7tdV9s51ZH79xxQEB9RajCRaUHzI4GMdfYvLR1oEyNBW9CdKGPZvzBRYOKKNCq0LUoI5mLqGv0gB4HCiTpPe7pSreLRhDY_XX1g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1UT5VXj_WguTcRSIhnB9R4PZrq3cf-P7A2MWe41umvYW4aRPfxVpp5TmSHhdCn8-64m0f2d6VJPASfuszrYhw08coSwGcP_EmDJ8gIPia4xUMNlRI43Xeeq5BOmKvVsKyYOMt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6fYDtfq9DeAIv-zqRMyrV-Yx4Lv2lQy0jUDiNG9dp5uk7zLht1usIJ2vc6fmKshASa9x8TQup17O7kTwX7buZaZpxSC-kqg1NvVo2iDjmZi7WnnssKiFvHnA_uec=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF32UdOx-fC4Z2rSTXZJWIWcI6842QZj4txbb05J_cfy9Pxp69kKOdJhv7XAirPbLKHBGRSrD29SyGIACc5YzaFjmlDApk42mJN00TBbZDZDz4DqnXMiy0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsanngudmqTlQ1C16wKNALzldnvKLvO4K8hhu0RoucacCIJaYoAW-L--5-yeDJznhX7DJ8REG7m1V2V8kgPeVgGKWKaJdYqfJQG9k1IBu212qjKlC7L2_0ai5nBHM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpSWfCuAE1IWE5i-kYR1nalTCauAI_Z6qwnI8eI3JO1IOb0QGmvXyN5CgRzUrUFhTfq0ChYh6_JC-hxq9zJJRRBq36WEke7e5XnQGjHdmCtPeE8VVWTDIDolkFyZ7sGU7Pcj1aMooN7JhsoRQ4gNVxXlhRO83qcBM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFM1L6F8FIBctF_-ZX6nkSjZIcDYCQkQriIcqPYVg11V9xR0c404X5azifBStfsBS5NhL_GZfQkXZX1Uh1ki0MWweFbEWUTH7osAi4cCX2ZyxjkC2A1bcaHMa6o2BCow3ufmes=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSpoJQ4w6Yf7s8vlcTZaN_eyWx4mQ-cYdFU2tQClQWPtskeSTb_u0R6h_x_E1d18DXaCKtMQz0v8KAjzDwZrsiskkltoitQ00yx9kAgLggGafGIQX5WbgHPbt5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7hyko-Fxe9MhgFRlnDnSiRiiiKggJuY8DPQlY5lrJaP2adKLdza_ow7RqiSWF5-OnTtWSuMBbH2rhEXsDrxCtiYR6cUI24ytwASGMkStzA_R0_5qnztmaXYPo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKnF1ctrjINHj4iqRoEEh3sLUIq-2l8oj9Q4MHiKJWY7DFfPvz4Y3f8rN6A-kO4V6xeQqsEJD96JHoN1rCfOdbHNDmDEMP0LmGq8MW8qh5szo1Vdozmlc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFC6PJkxV3iT9u4VWMdWVKWC31nNzHCm04FXCBTDJaCPA1MEKtigdEQaAMYmshA67GOhyj4q_QEAqcMwSVE9enQiv-xqggZttYUSCOIUb_R98vV9UxW9xkpWAXVGSI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoqax8Uq2sNtF8ii0iX4Nh56jO6MPqc62GVBnGeDT8OAEJS256_B2NsBMq4m91UaQDZhq1Z3JnIXGreDzCUMwAAqz0LkJpYVkQ17cDgWYP2y-gE5Si98OJ4wqn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDgGACFB8hqavai42sTZtWfKEXCuAmZxViYLkUVRAnS-nvLmi37T7uXNGlp8lSD84ObaNNYMkOtvmP_2rBWVCAWYmkVmunL0Oh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYXNwZ1EPdn8EYRZxffeKp084RLvDryJ9P7lZeKrTVdoV6mHU2cwL8ceadBIAlDr4wzmTBKpYA8XcVGsfJi34NJ54nlRnWK5VwS0BQALVOGkIB_Zw9GsjHON7yc3My04XywlJv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5bXqHALtxWDYwsa1UQbUwntj2-q1tP88fV8pXRKYC9Zut3ZPUmvg2rjGMEMY_7F9J6kRCEdDsNLM4GhiBU84Eb4hFDJmye8frnwUYkDA0Dw3IWv4ldr8MS5BDIqgiB9rd3BQsrvze1H9203nfKbBQgdCn-eST4GB8UHFGfJy_Izc7gy68uQ4XR-deRgLU6QYGPwYKWHdNa5jY3IxQuIsJEXxmsYVNUv2G2a4fFWdXQ78Id1SVwWI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfJBjAOWbtFO0b-5L6nnUz6s3JjWIOpHaBBgckORpR49A9C_NfsKbENXXY5kFhLlvR_FqHt_NtzgrYRLlbqt8aoWA1Dt38ux6mjga8T-YkRsT6S7D0Na6rCxvK70-K0erw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9B_OBtX8eYc8yFUS8tYvmU9-yHxEne1ELGtdsv7r0tG_bBMu1xsnUXgmt-ydkbiHFYDEYpb6MnyKxkQ8c06Tia6MuyDIIfTMtAXFfshOD1QltwAuMojIYMq7cejKd9t6Q",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFOVtu41aJw73VujjcE2kveaLle-9jrkyZfqE76Yni77MKzyNCIM9IZpO_Ln0zJVxi8IJ09MtZMdstA9nG-omCaTfRy1i7wE8Vf3SLtSU9BMzWZTWrFnrXW02w_N0mAO3tXzcSxF0An5w2C6DibpGw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMNMB046Mgti96Q56k9iK-QeuWI9EkMgeZvj3fIk4hAhBeKYWeqEZvJnc4zqKBPJN-EqrhwW_jA9fJiKk_EyumTMrxuxo-FpjPzyVNdVG9VXeg9NWL71tVPz_QLE1z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRitzaDdpybloIIgZ70QCrasY0SBnpq7PTxZl2GE2lTE5DRWv-k0_5_d6hsfW4qbf15mzs6mNCEHKLAOhrvBZh8N9WT9pAtzrlPECZq3qhCP9g2pYM4hYaJizc_3h14rC226Ow",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgcj3Kc8uf2iphg3vVCc8JyAGPQmw3JzFaTRBx7D2WN6ixcR-uO2__CJ83fg7hsKeE0od5kzYrknUrgyWNBdMyzkh2Qxb1uKZfz00Sqmmo3In5oUSwmxnlc46ZuC6MYWvPmTb4QVd6Lc9IwuI4Qn3glRJThGBdHQ85HSWRlHvzS4Vh2_I6CL4r6i8RAwxD5PKv49f59Un-TQ5WBB_ul9Jp3JyQ8yJkkjw8nvdKNGv5T0MSfS1WirQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo-apJWfWfKwu0zdNbe9x-gyLPpdJQlxvBspSFKhVw2gNToEnaYub3RAvJgQXVorCdwwBu7w0ez3m6oKH617Ckks8nE1WiQaIW4rVMomgjYiXN5IK3pSVun7Q-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAQtvh0glLS4WIDq1chEBWxYfTP5q7TMzaV5SB7QMk7BZ7dfs8VsdLtwVAIJID7dpEwIaJaJXamj2x0ODdb4I-e0-sWqeG3zoq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvn-LwlABMYlhSWXCTqm1rdOwU8d9gyZa-G8X9OUjse-pvvk-M3kmQPSRUYTKNUiAyeJ-y6JnApRUWy5E8NJ4HCe-sU4Pr_5TBvfIr48l1ELs6JyL1BTTUc3BwvvDPV5Zks7vadWni6GGFocb-PMhH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHH9Z2sXoWH9XUWQvIVzhxpDiARSD6aSS_ZCMGBZGY_yzY2YUZ7Fd20Y2DLKxqskAbOTVwVXY_u2dA8ubH6m8Bkz2DatNi5yLMx8MuHPaWbKIDJ2tUuMvzK4NHRUGjGNhI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJYB85V-Fp41NO51PWWq52qDi314VAqdsQSrY-5iMxcP0OfTXhXzLt7dS4UptRv9SAv-wK2Lqp-pijkEp2uQVYQ8mwR1PlWfEFJyXpHAeCMk71xcYjMpt-TPexI5Td8ddFU8RGMDBGMpbssfnI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGo9CvESRRVz3fSDavCI3SrPGN_hgUqw9rj7v1SZN92au4wvtfHuq3Okg7ACpUodHgqCF3pjyLQu2013ND0RRjlzOoedIAzD6I0zv9f0KHpGjnjaBftjeMgtRaNZ6SYKisa1gNU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHv3ca6h3xH9bcxmA_AJAxyqKEKyBPV1g7cum-thiyuzesP42ySzIUBQU9kWCHdzAFdpcfPp5dPEKygiBnkO9pqSa3cyQQpwPehI-N54AJeUsTbfrBD0HZY-xD5kV2VNTge",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGhJT25ltPNVMupYpVM0wWnvGmi3T2YzZwZr7G8VFicqGavdwF3yYh4rEPrnntY4mi9tRg7FmOFVTLedIGXJOhqHjbam-dcriIxVSLw9JEi-SzyjmlqMBdiXVRkDWmB52ATcnUQm19AE-j11bvU-VqLXEpeJlm8x6I5fvHLrbPkT1NNCDYaSwPf-0a13A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGhJT25ltPNVMupYpVM0wWnvGmi3T2YzZwZr7G8VFicqGavdwF3yYh4rEPrnntY4mi9tRg7FmOFVTLedIGXJOhqHjbam-dcriIxVSLw9JEi-SzyjmlqMBdiXVRkDWmB52ATcnUQm19AE-j11bvU-VqLXEpeJlm8x6I5fvHLrbPkT1NNCDYaSwPf-0a13A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGhJT25ltPNVMupYpVM0wWnvGmi3T2YzZwZr7G8VFicqGavdwF3yYh4rEPrnntY4mi9tRg7FmOFVTLedIGXJOhqHjbam-dcriIxVSLw9JEi-SzyjmlqMBdiXVRkDWmB52ATcnUQm19AE-j11bvU-VqLXEpeJlm8x6I5fvHLrbPkT1NNCDYaSwPf-0a13A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF01-cfwDz3hjrQbgV8NIRMRM9LCBsWuoyF4H6wKddL2W1RJUHwEBCisTu-QRNkla-sf9X9xQ_n6uPzp1RTqeaiZP5v1aqkSaW9FPjvlO1mmeea-eKWJhkQXwphErt4Vv8fu1LkKklJEfRibi6BvNDcPLhAHmttBe2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhLH4Su-8qhVAsHiM9WI1XdJ4C4LbsyX6HJRae0APyqZI3mKoLVJxKEgpor-0kNes5n7vHTcO4RNWsGFA9CjTbYG-x6D4bkwZ8LuIKzRv6SzBUbG8jy1yru88kCL-nH2N0sGW_5G46RqpoNZ0w8XaU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFEmjtWbOUYOxyoiv0HDdpHQgOximNQxLBhX8efgSAkAqvnTyIEBckDytaUY1cDeIOF1KPnvobkFOSKP9RrIsAPfe-b0yEgT3yWmjHU4xTgprxTptCYXzo89gQmNiqXSnXmz2ePWLsDvpqKmGmxTCmWpwwsDEsVdtVM8DvuOM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4KVD4YObnsW-ezIRUbSHAxfbMo9mL8ayRzLd2mnGCnWYYhJqjoQvZGpnvVLXgQRGWk25O8_oVjgfxOVcPciFa7weLJRwZVJwFZTMmfAv-LWmx-6IuSbtLjLjZ2MHOp7JrZ24aAUmR6ocRwkg2UtlAHVA223ibB9ufvuHb-FoftHo9Iyg9neoVCO3ERcy00QMhZw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmQHyJo7fMZO-mawah-arK5MIR7TTK2xZI1Ko3S1xwgLzioFDgFwXIvrCI_ZF1dRS8tR07G17suGTtNUd_Ioy9YiLHLGrIMpFTlFlmGqsag6TpOzjscRLTxJXtcJv3KMRAndjViPUaRYYIqnUW1IS1aVilcRWkURTibGkhTeKR8BHEBsjRuAv-gCC94RU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxcEtuoHzFW62vj_ePYW64DWYgIP_9Kc3t8LVbm9EmqNa242oXyu0dWpPtE0e0kJ97DkH4zKZJF8RLBoO7pzQHfsOJSK11EXGxqdpYUQaC175gU-ufvBJU3rnNEMPbhaLYNZO0NCzpWSH7ERVMobdofg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkZ_CxxJXKUQYunipflQfhgvFSVtIhrAXpdJI9LjVUg3hMFQsA9Svb9fCquSysQUwNB-OSZ64VuO5yEDjpcDEugHAXLEIau4c3q7OV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFXzypIMkwdV_aVvh-lXmWQigY_dz5SjiVzy2Kxma1nBpM1-3qt3nCiyAnFr3hk27y2WZZkIdneF625BFkP7Qkc7lj9UbN-hAogGwtUxqozjDidKqPjQhdGNTNWuhGo0WT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEh3YYSyPb1b9HcNc8-NfL9zX71f4UIjjF-sgAZje2GFQBMyidibSQj-HwfXGK3YtP5Th3vppqNYe9djRK0ZHFbqzMZmsHw7H9F6sXlJvb5miQI_tkuQuEMWyFsiyj5z4WWVctyHkaUQTkclb_OIM_KQA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEj4vDDhzwA7fGUeH4a7mlXyTZ2nvBtHcsoJf8Lzb3VygFe-ylNPhe08gaz2VXyV6Dfor3Mlnkh2cK_kNTWpzPtvDX21fYl6Q9fu3NH0A4vqEwcujJtfKietvYScX6Sqj1WRPHE2Pnt7Rt2vsv3sK4OHP_AWZkDm-YVqeSe4kTuqWgZ6mqo0W0khMVT9Jk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnQaKbvePT8NJALXfxFqxNglhm5d8or9isQEJGN_mBMuVlEh6k7rq6XpaN9XAj5nysGvThXXYlSp2wSTPxY93LM4GL2pS2XqqIuHbn4_ovBXLTnO9176X32OWM5NMeOuam4b4lp5XpkFM_nynFQQydLdIEvg3NImXkRYvy6VEKKLIODlfhd73KoVWveuCY4AxIZQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiRBGJARVGUVOuJpRJ_uY3PDT-oiy7YhO_oMZ6DNXdw4I7mJo8En0IcXu8JlWNciPwbAIScu_h8nQoxqNHNBivvUkHBc4CAS7_sQnk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 드림성형외과(대표원장 박양수)는 오랜 기간 강남권에서 인지도를 유지해 온 병원으로, 눈성형과 코성형 모두 전반적으로 **‘과하지 않고 자연스러운 조화’**를 최우선으로 두는 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5QuIq3PY6I5-IHD_ZHRHajKkxUuBAWar2qCQwwIIZ95FWD_8tXK_dOakdAIu85NMEZhcbTcYZDjLaZIFySRgVJzodJuHvn6fT-_OJXyMpMiydj55rYP4wkzgTT_3XtBs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-NPJymjC3YzIwhCKNXNU12WBVYfn77_-SX_wTahrmWgTMF4ilbMRV7E_XQtgRS3iFBHB5QBwCZV_fuMAWg77kDdkFc8CA0b7PpjHcxwzOxMGaR88LTVNW6HjaKMaZ1PJd73lPvK9GVNJliSDtVIi0HI1dKW2U3aWslhLxMbE7H6EK-46FiYin1uMgp_vs9Uykn9LVZAQISY4PLHklTNoPLskiawZwEttHfb2wckW2ChN723dHqDjO_h5aLdfiZGLSTSXNH8xxZ5AStbRrCzeVZVITIQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGje7dNN618k2Web_72KxKEGnAzjpGTcb1XrN0H2sO-cP5jR4Eg2_FMR3LG8UorIvdqtS_v1X03m2XtrxlH8ud1bcM0VS_pGFbLF-dsY-HQqrpvh7mvNYcWvldc-DltEspmGoBy7YujAkWW1125GfAiMI4XB3oorxdc78-nKmuwcqfDHUWbWp4pTfDTZJkF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 드림성형외과는 성형외과 커뮤니티와 후기 전반에서 **'자연주의'와 '안전성'을 최우선으로 두는 병원**으로 널리 알려져 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwqyUXVd2FUP7WMou9s_xbwjHWL02V9pshSM4RmAclwrLxCwpUwihNmSG9VxGRdmrUqPd1M-EhPezR01eKzpdnq3waEuzAA1lRrwA9s8IoePe9Zln7NJrHtzFeVPBQ3KyEgcT5J1_pQ1iAZdmYjBzYSDySzvXd-HjapScH2ea3T_lMHBmw4cZM4l8fCiB84zZCB0u9vjgmmS6gYhMQAaj5LKORgfO0jWiuN-frbzhXhMIho4Xtrb6gGaY8i36DjfHZYkH99XGVZx4M98xsP1G4zX6U",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGJHP-AorS6N5PJzeHrozowBibuJY-raUEZvyh9ycorjkdFHop8hkzEKGiakH5z88pLeror80Dip3n99t7_RJDxj9RdfKqvru6ksXhjmznGLtFe2eDD9Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4xElqt4xFE3HaavS1L5oT2R_Ixfz805Wr6xKBvAFJeViVYvykgGpqisZlO8vsATegleF5i3JyWZG8g3-lFLtd2Ra980GP_c701LFLERw8sZpJafgPYh-25G62pnGsOVKRpWrsgv8Wk2H27xoujfZCsqy2FIIo5R_DqhuCJElpDr-LgImWXVVfCFhP-TY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCAap09zJtGzNV21Z0TOwOLUkjb8Ud8zE6MlfvYfm8mW1I_7DdrqDYIllkSqkNGtd3AHVXdyQWUOXJ_YF9E3r4qvt6T5kRVHXLtOaPEi6eBa-NncOe1YapwdrLxbqi7ojo8dVB5BoWJ70ZEKXIjsA4AJDtjxHIhiWb_tbZFy9Y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMG4jKmG8ka_mC2-wJEVsaVK7WFb5x25f29o_WBc5nWNMl8uOxB4Ub-sn5lVp4Odc7blsPQLS0vzlk1FH0OdX8F1gT8-1atGC-MgbQElDThrYyEFLRhCubhHPn1rw46lw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 **드림성형외과**의 대표원장님(박양수 대표원장, 송홍식 대표원장 등) 라인은 성형 커뮤니티와 실제 후기에서 공통적으로 **‘과하지 않고 자연스러운 조화로움’**을 추구하는 것으로 잘 알려져 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9nGJavnAux3juCMN4e-Zvz_WSXRp12mRKn05tmIpECtZr-gZCntPCUnKPZ7l0SMydP4-Ce-ZjSe0DphvCmhd5hahAr586YlTQVrY_y7OnCXX88GyFs_vxgWDJWgZo",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo13z8KQdM7oOUlML4QX_TqlgJUZc2nKAnFNhSNLNabEIYauANCHMOZWV4LnWljhZysLQ_c8t7z5vqodzK-g-LR_QpNua8kaeEOTmrg6z1yvsziNsYCfpy1pZOQwHnowxFQxEgK8DYiHr9voE4OICv9mThYh-nK1FOHjApEW522QmE1e07zSNMp2gqm9lVDAcqE7fGURQddOlLUH5mlFRjgIBV_TtKOTDD6ClPS8erzdbA1c0QqB-zXLTG2PQLAjolMIEZmFPqrYkHHut8sIO2pT7g",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLANURLm5vsUDnVhFly0NhUqbpSR5CU12VIQgbcf2QPg6Afm76buSF62uSlKs71tolIPebSmNcdrSl2nXWtNS_kFZ-xjupQGUTZZFBLAg3H2ieLOD3qqbmNYno3sZGVJc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-BYlUYARGFQijOQ9FEd7msKTC4moTPA7FMPw4PFT9HLIVS9EbRtcq5mmVkbPIqh1z6TeVcJKDY7uGcL9VGrnZG_pF91DfOhocN4SGvooGzYyARt7lxFdXpxh-vschboMyS3ZAMr3QcdqI33vmfh4IXfmvgoUtGjssrHhRXouqy8BI1riMt7p3a-BNltc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcC-Yw5m5X9CPZN5lYtRrwWaZOAxOZ9FQV9gJcg83xDHGdDQmld_t5vHpGWrkDCpQlmFqUlLh4Wc7j00J0FRCZw73cw8_z7rb_KxcleXeReyM04_Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVy8okh9SRp_Ui5rrEoe077U4j09AmBu-5GQzNR6-q5_g-NIr2ibRjEkYFfM0n9ZTn2e12cTiwiPKV2WR29hpA5mOoBHiw1mhHVEyt8HQorXehWG0SqhLcrdxgU3kTlIxTdVpV13me0wswFKedSwaTwBT5k3HWFXV2Y7oc1LExE4hOQK0kLVGw5O8kKjzDH6PBH3XqlDs-O301A4Jp0ni-OW4LcpHdHIIT1hEEBFPy8fAzDLC7QvYR775GjY8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDSO7UfvECnSptEn5X9mK72VaZNLU2ewZIKAOEs-9NQ7xxcHZH-OdMoUbnNleC3lU_v769Byk5kc-rUuQUMnWxwspp9EIQW5AAA0cuFKVSFzj1VfOGM_AK2NXvkxh_TgVAQxR7PpHB9fATENh_DYmDP822bGT64DA0kQJQCljklt4AZU2Ep9zu13yXM3fx4z7B65biBWD-RjMA7Za6fItIFma5bEwaZwju9KzdSio3cjunFaPWFuCqm80knjT1EvTIWqM5JvFYscJgWHDdXlJ8uH_MiuD8At010ayj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWQhRfxXavsoKXQTNrYEfJ7IQPzfWRGEc056P1LLMg8sraBCwH6_QjhSI6vAqISGHQOkDqMhE_EBRfcQ_2ACUHB9kCWsoeWs7DfUaRDhmX7xtUC15XktLTg-xVwGjqB6OdfRpcrm1y6hS_nJc5aSRdfBR0EyUDXD14htgRw14C",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGslq6es8_8XM50IVa1518SO0p1a3hRoaRxFnh3GYodlL5xp0fNL67LvlG03PX2MvOzBuu369a1_vWeL5smLPkeVrKzk_uMO8xnEwdcO6-zg45LpNBb-R8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남의 **드림성형외과**와 다른 **주요 대형 성형외과(아이디, 디에이, 바노바기 등)**는 규모, 추구하는 디자인 스타일, 진료 시스템 등에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 드림성형외과",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **자연스럽고 세련된 느낌:** 드림성형외과, 바노바기성형외과",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **드림성형외과:** 대형 병원의 인프라를 갖추었으나, 개별 원장의 맞춤형 상담과 집도 책임제를 강조하여 상대적으로 집중도 높은 진료를 제공합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* 본래 이목구비의 장점을 살려 **자연스럽고 고급스러운 변화**나 **재수술**을 원한다면 **드림성형외과** 계열이 잘 맞습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2ieJCTjUgpwzrdn8KIEJAl70VyaOEi2T6zpTrlEsVnVvowcGZVyDXavaeirBtZkqWcOLrAb5Xx13SdESgoQtG40e1tFxLQj5D-keusxfHB98AvxlwbzoFaVOS34HGvOc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8wukm9RWExUMXj5X89HYFQ5lcQTmuvzzOVNdG2Ej8IPMUrjfObBr23VgVqpRlEIUNUgn0XVSjD354_l2rMjiC4nu35KPEIptllhBD1x_9bXPL7v3X8eWIpRzcuifs2l7RO-3ABPP_KKB-8Gjc2Lw9j3xTTDoe8Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOEJXu3PXpTxYArAj0MDIJNpFVvFKWuaEga3mE_TemHyqvpcRcngKAtha1uGcjheqJ9JPzF709hdIi0uskCVkaJbSmNZEoVbqUjRzbEXXItNzPdgaO53bQj54EfRUCTaNKSpQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGV9T9dj6LYmSzSDymqxV1bIuh46p5180_ljjkKEac7vYb3semZvxlANrn4bzWmQs5_fTojIxxHAkNZxh-tRw9DhNxvLWBm4FwNdzP6uY9vJVN5J4ShOed53gSbsXtUFHzFE8HJAdcll0obWozy1InuzHCq6rPCdqyMIULv_0d3IQrpgOIs5-dWmA565A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVq4ozDTYMVfBWxf7uGQcnFKrA9_9E1zCMaFPYoSc1E-MIVvA0TilinxNvY_aTCpyB_AUF0bjEc3n8jIcbvfuv0U7IzsG_5lsf-u4Rr44sBaZTNVImwtxgZgf4_u5xEpr8jQrNc2cqdLTQADR2M89CqfO-jCRZ5TDLQR1_kY1RBES7DmxX5j_dF6um6RKaI9lJ8jfqKZ7C8PVkLQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRcSDLOMftkHwaa98iJ2TkcAd_O9KLfeyM4bRsjF6ApyB6yFMykgCQjYzU8HvwGC_dtux2iERW5Y_YyU1r2Am7IwHQ7LshvWr0fmFQgddjIuEIFM8TUPuvwW0xjArp6Hs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_bo6S4S6jAZumbwqVnmEJUhM4EI2jgWgBH4kDNOimWKPvnsRFxCNTDU6BOPfW34203YyPxhKXLUrvSOXkFL1WEOy_4sc0bf3f-srw5LB6KKvEiPPMHi0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGjs8rMIzKymVM5XLKI-3MzovlmtIIjhqrILdOI8MN6pMYy1r0uio4js10y42_iYejoZbFXWutQNNS41AQrHXCdBJMer5gkQsZAmmwvhMPWR0U=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**드림성형외과**를 중심으로 강남의 대표적인 대형/유명 성형외과들의 주요 특징을 비교해 드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 드림성형외과 (Dream Plastic Surgery)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | **드림성형외과** | **아이디병원** | **원진성형외과** | **바노바기성형외과** | **DA성형외과** |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "강남의 대표적인 성형외과 중 하나인 **드림성형외과**와 다른 주요 대형 성형외과들(아이디, 바노바기, 디에이, 원진 등)은 병원의 규모, 추구하는 스타일, 주력 분야, 진료 시스템에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 드림성형외과의 주요 특징",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| **드림성형외과** | 눈·코(재수술), 안면윤곽 | 자연스러움, 조화로운 라인 | 연예인/셀럽 선호도 높음, 1:1 맞춤형 하이엔드 케어 중심 |",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-jAO3KfaYQqKzUbphAl-m5_Los0rA-2CI15Z1GCjwxct4_ecLLw1tdwS0lMj4NGcDq61KqwQYG9SrD-mZb9Uzdj_aQdgXwSAUNcAIn0WzP2r0JR-n66Wi9eVHyenJPCY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaXs4rOz9M02aockUVZ-wVC_5rMGGjihmP41ZzOd0c8BHIGPmE122Y1nN0JSjr56-db4HSSsSYPZfD6AaE-dw3OAVW4b1YaSh4BtXJ1q1BhAKIwfXgIpvzp87Px13FoHtS4yo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfcsVsaYe6vwEzFSUwT25j9OXXU0jXHXD03Mdk-NFDayIhLhh4FU7h3MpUUXAq2r8feC8gHc1txcWPjF8WcPwzzbcIznmm-7vBXS-MtMgruQE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfA_8L7HjRiqTZtbMlnrUDSBOAN1irGLW9e1E4znJNnuJvWFc1JR5lP1ChovcuelxmJB-f5mjSEjH-rKozNlU0c_MfWmdORq1dnTrxCWM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 드림성형외과의 **눈 재수술**과 **코 재수술** 대략적인 비용 시세는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_lLj6h9-rFwUOJH-h-yJN1L4f4N5ZJt5i5PkeHYGSM8IHDTjyyt5HznZ0_OW2duGychWZoltooUQoHWxMSMHZxA0C29dujcYWbU8ydIAX5ry1XuMdtWLntmvfW_8J8rJ-t6arRKKEYk0vZ-m_nuGFA7ywTA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNDFs1awyQrfkomKxQz8OqpIWLff4tmZFVXI1s5MJT1uqp91r34c1H2NRkW8uqfh4vxvPhnxT37BLPoyGbpKv9YXoVfxxFpJpTkxkdOzDKp6QKz_-Kdw07xRL0IGSl8bR4Oc71uCYBgLnUPJkU7gix1PW-iW03",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElBYgg6dtJLBirqZhZgB05R1U5i_-PMXcHHU2tKJgMuEK4APAYY9NFiM1i67fvH5fZEpQZq_4to3ncoAH4xpD5fA72JYCOS10IPUb9m7u4zxv6ZdPOJiH0CAm61U_FpmhRn0vYpVix513b7jelMGKUrfwI3M4YHTon0jpliQ5hxG7Ze4Do8a1XBJfuO4WJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHK6LlCVFYGViIWjRO-iu9UKkcDXj-UWiMzu-CyD7feB6CklQRS32Tv-EVhtC9KY9ZfmvUqr-m2LJySx9O4qGI-MVhVWjtDcTE5WXIKCnG1s2Lyg5eOwLU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUq3geSxOvmAs3kCa66Hw44KWglY2W_Ng5VYnWQPjfFgnwKZHod9dYw6czfo1zsFU3rGRSWK__MVtGpMFgDtwIUGhNCMt3-lxqh5Paxg9lXcbA-dNI5UnIP0hPIWSgDKFB8A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErDLZ6ZChHBDzP1IMf79vcb8pNDGWyj2hNh6cdbdC8BxLPuYnUtSBkWmRAm5k7gmcCvp1lvGV7c1s0Lk8wxS6wcDYHJs3-pntfHBT7ELF9k-CDjwE37L2sRdMgd3UsQsKNnjkKpd4FJV2xnFyVb1JQYAoCej8Pn6qdfCKD_a4IZ7OgD9ZOLnh93VvBMZ8mr8SPOawvlwMYLf05CQyWWFM8eMZOwb1HJ1CXUKxrEjEboC5Nz4F3f40M8-3LirfHxWnL8Bwh_TDPT_Rvkzf695hh2ww03evm5ALP_3T6PYaqTMJoF7rXhW_acyeL3xtqwD25u0OD-Hbg8fz8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSXNXl2SEFvGjEFqXHFtq17ujt6I_JB7XUgqzJYKtruL33CZAJFQPFC2b3IVRCthe2Q6Oc4zHb9fKkh51mqRgLLSECVxi7JKvJsqPH0WUbDWSgWASq45KF51isICDBDzg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcpPvAzKBaE5nUG0ntaBclYCI3D_6sHtBvXrpDZ2h7RXuE_lZmQt_urVim5xjXH76D0muvrVkvyUgnrtDJDKXZMIh1TxYt3IUQMCLwQrAoZyX2OOPg50mzHUFmJNHgnefgl81D61fRFh-TsKJ4nT5yg7Sc4GD7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "드림성형외과의 눈·코 재수술 비용은 이전 수술의 상태, 부작용 여부, 사용되는 재료 및 수술 난이도에 따라 편차가 큰 편입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "드림성형외과는 원장별 전담 분야가 나뉘어 있어, 대표원장 지정 여부나 담당 집도의에 따라 기본 견적에 차이가 있을 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPBpAMx-J6t_TP0f4sPehZcoGFDC6BxnWhTJVf1a3shid1RGFweFJG7x6weH42HOdNmc0V3xkVK4vuqY7ts1vKdI483IKINI1qyCQJD--n6ug-5ZA64MTJhLm7Sdnd7UKwdjQIc6VbGPcNNpsN2PXXKSqYYg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyWm1O0qFieJlW4o7tSqyQYP_j3CvdHyxZPs_jcv_vMS99HPeDVnmJpQUc4qpwCmgUkSifxAsN3KXjmDg8OU7lxMetW8lSEd5RLr5kqNLEbTbHqkBA0vjDokFtxyCbTg1JCZb2aW1jRGHzZkPaw27BZGGqAaw7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5ZdrTiaoZWKDxL3RmjTIjAQDYeJR_Lu-Jd_MdtxKFPmU8I4KQgnYeXwYy6oDi8zbg4GO_u_xX2pqY6jEBBvCSdVPBz1Dpj5yD2lTAgjVSh45iyVe1xdrCSyXqAAzF8nxUVIcuhyKf0hsOi3r4YflbwecIe225jRUpTze5iJRTA1xOxc9Mo2X_mK4P68LF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHP40xsEv8tIh2tRy4zQ_oEFg-0t0HXs4MIQ3FiEXrPFVQqVF0Jzq2-pYEP8A-tgvZXitxtJMFWp-p1xINXdiUztd1kM-VhSzlwQGfmKgq-9NJBx-daPdc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwOC7ZTbj_-0TG8RGCCVOv-Bje2gUi_Z42pUrXH2JTNqq3uUmrJrqboDqqY_Yf88XClGkY7tkIsbDCciRFkaRXHkruQjEpSySsjlULp6uI1FpBRX3RCm86AeYsJHfbrK8L8ZKUkAUXwll6mIMebe4xrQRaLTor",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXZmK18s_6YyR-s-y0jwbjz469Z5fsYMPK1L2ID3qcqyKCOfam320zXFFyzZrqpDkUoxVlpB_zgVkZipSEYBzfa9JmPP76L4kCNTKxSgfmNB_O3BdGUcgSY0Y5_9atwRDaRJ2cpLSJr6v_yJQCr7B1RSvm2BVkdQPo-qiDy7cyNyw7uzqqotc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTFBhQK8nEA8Bd5UewPRqVR7D2J4fUhqTq6RzidT3KcuHslJNQh_pw2-NNFEsDzD-BqR_uspTu_j9ONl9fHhYYFY-wCHUszrM57nZoYseyAG76gkfyXK2ZSo7PIeuqQ1TBNpzDy1p3ikUDL85amdEVDNrB9xxpaAlbL9wXbORCg4lr5ayywojtC5fPySNneAZX7i0UNLmgxpPkGYNk6475ZwBCMsRSqIw1anFg0QzF6oYAN7tbrCvy34BNtHiVChWJpgSM5_28eFCiSpGUONttk0alRe3VxbJO_uEAFZG8_z-aeS0GrrUETpyHgnUbD3kal8JtwVosj3Rp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdnNR7Jiu5cmT61f-dbImGQdXS6XKwp1ozLDqtzqboIgslejLc_LfCL5JJvpqv1XfN7QaCIIh_8Tc6ZfAnqYCcuzlgmly64EjYM3CxoQRPe_rZm4-ub1wnMNAlFrt5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJeGr103PABtcnPYAmodzUazEE0iUn2bPgAgIDmJCQJdDRUuH6aWmGX75YLr1w69C8et4g1NA6UAZpvuihia40rVUVBF491HRTCrDXaIbcbYg5MXIjFQv7o9syAo64Ng9nwGjPbPvRUAd3MZ8XGbq512FamXM0xPzNHXL7th_Hk4L33Y-73jEENfuiowQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 **드림성형외과**의 눈·코 재수술 비용은 이전 수술 상태, 유착 정도, 사용하는 재료(자가연골/늑연골 등), 병행 시술 여부에 따라 차이가 있으나 대략적인 가격대는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXI1VsGAwGUdga-DWPrcTZaQaFsyX2mT-_2QGAHVf07Dn1OqsASLtymZxirN5QeySsYjE5-DDCGnkb8j2cu28Lr9BoKSoTzCmzmLs04aT88i7iT_Hhty6G9Yl41tcIwVqcYUumA10WYmcXa2XmwSXLjFzvxj2pJaoMq2YYnp3p6IUB9NfLnxTxv4Y9Rznt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTKYtKeCHQU5vrBG8tIrdgrP6uC4muNMMBHiIAsc9w9nrNw8ieOVtaK_bBlOm4wi4KFk2lLNHsUeNdSsXcJDhH2hxDWDB86obSDdUHgDqYmy0QPYdhbK1XuLosmm_nInAmNLWj_ULvFG6KcLUuFquiCKTUnzEDu64OZT6nckagVnp6QQFhpytD2zoiG4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAsbZSVyAP7Y1HWg2J_35JpN2uVnTLmh7n4bD9JA8Ye5LW8FjeOcWzunH7bPrflUfLk0FNciH8PyfwcFsUyQTyZU5oaLZ34toYtFuUF5NVlrul3h7Xp2g=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUulth-f_CXyACFMSyMhgGfBsCQAWHSfTPDGlwPlveEAsX79Roxk3W8B0aRF-YgHOeaT0E9yXkMd5IcXtPAOfvyBoMIC-P6lWHWWqhP3-kVuB0SjGA0EqUXSLGDhPsgGRDsmWtgLxBnpb68NK1ypN1XEP9qg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH295mRh85oF9PU8a7TiT8Z_qOM9YftILvJEw2KX2mAD4aPBumZoZDqm3Ln_alzw6EdeQb8QQCPWPtDDyLK79VJviRJDGTYCdY7_R0HfyyY_TQnoC9QPUjGaUgHfm-fCXe2CeLQRJomktfijUIe6MRpY-fzlpHmRPJwi9TMpYu5CDpOz1zIzddbrKKcDLGda7tA9ENf79bWHE2P_qY4x_EVqbDIbzFk9KNKKy_LFWyLx2l3SRmXVBtnHyP8ZpAlVdjNFF7m70vcSzKOnLkouDK1JfAO_BeUBVXokaLa_55X4mBJn9Uy-5Pz3giPBuMpz5f3RNugERfS08E6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH295mRh85oF9PU8a7TiT8Z_qOM9YftILvJEw2KX2mAD4aPBumZoZDqm3Ln_alzw6EdeQb8QQCPWPtDDyLK79VJviRJDGTYCdY7_R0HfyyY_TQnoC9QPUjGaUgHfm-fCXe2CeLQRJomktfijUIe6MRpY-fzlpHmRPJwi9TMpYu5CDpOz1zIzddbrKKcDLGda7tA9ENf79bWHE2P_qY4x_EVqbDIbzFk9KNKKy_LFWyLx2l3SRmXVBtnHyP8ZpAlVdjNFF7m70vcSzKOnLkouDK1JfAO_BeUBVXokaLa_55X4mBJn9Uy-5Pz3giPBuMpz5f3RNugERfS08E6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 **드림성형외과**는 오랜 기간 인지도를 유지해 온 대형 성형외과 중 하나로, 성형 커뮤니티와 후기 플랫폼에서 언급되는 전반적인 특징과 상담 분위기는 다음과 같습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW1TPULyrBZguVHn2AUI-I8dq99l8lbhcxwSK9kK1HCBbdNV_RCfevttw9emt6rRr3i974tX0Ou27AkFzY9Kf_L7f5AZkpVrcCaZKZlSDP0KXUrOH8Zw8bE2DwlTg_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrEBYZnMLe7nQ4p7YhKDyxCUPy8aTWumz5MqpHhptaDyg6ERKbtwgPDYoqu79iET627lqlCLyfkqjpm2KLyf2scPxGN_fgfJ0mjHoc-0JyXYFsJ8dm5WSnWikVcHr_FzepgXpP1VR_p_ctfmldS9OGYFHO7Kb8y3zf2QieqT6JhpGqFSNENoARXDov8gK0phd9Mx4Hdc2y09notFQP4tpGAE2EhfWGfqksC1NoRe-nTmN_aMK_gzD7XokiYPTC4eSRAJvpXvDPofRmPZVuaP6FWuw1Ig==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9jEcusSRbc3YSPUMr1XZ1eZU795TobWguqpY0d22b64cO5rbVXEXhbQNeQKnJ_N_mR-blgxtvPs1vRt7Tr2xjyMO-wY67HqpamBrEnDg8qXqY4FB1xioEpx1mtcKhsotofqK_SCdHGGniF2Qz3wzBDYR_67qLiAs8G7jHsAUdTIBrJdCMWZDru8vdjIUV_bzV-wGM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPE-gYDduDqLY9TTEax1j0q3O1-6y5xScr49_nanpLcbAsztOh6vPYrzA3Fjw1wF76TKFqSPUvxtA1CcnF0CBO9aA3WX56BzF3HbWpZe6OeQEN283sr9B4FL8StVHH4hTnO7_Nm5nndON_vjuNPT1aIY5leQWnDblFvP21HDX3PJvkfeHJkDa12AbqTHsZ6h94yk9MHXyNLerli4Yv19YRolD95trVz3kXdPGa22DTJ-4c89j58wlFzvN4gJ9-fh4o9ccp4hmSSkrVDnfhCtZ9iahNn3CuLh7Fxp_8MN5kUqAI8BdteVc0iHC2_81eH36L193EUIh5u76D50qTlVPfWn7IIER7rA4xROdDY9uuDGw5e7Jfl91PhuyNxAiq5Fq9bIl737v9DjoIOnY2JrHCVLBHqs5zgjRd-KNRPh_0Sag6NNBspByExtV4Yfl_F8AT3XpMYONdn00zSz1-mUn9dNZpC-l6VAUQK56llJ81m8fGlqhn1aaoqiBjbBBZQ9zhPJljSAhNQEEBMT8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqbzFMjz8j-U0O0aarsuTvLnrhm5O42Lr3APeA0Xkp5OgKw0inlHOFPNzthCqwJbukUzMwoqQz33GxsCtP-DkXbHNUlau2gH_bVZtvfHJah0puHYDIop2mANMbWs-DMKj3yHD0S-Gvn5k98bN6oHlIn934VcrKSd3vWXtABGlbwbP7JhMSfA1RI34BHbmEDymA5ZqTOucYyE3vkplPanbcmUaSK2Zkyob8XFjthu2L0DjYN484F7fgIWcl_7WTFw6PCgk8ThyUUy-MIsse3Cet6ggzGg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPwGHw9uCl4f0gXlgR8mXGknkmPs_ggosj1iAmKCEYhveO9bDTDULBh2ugTmD4Aq4MhbpIv9rsxk2284DpzgYoHqr8GmxqUB4lxZVVep49f8F1sw2UsB6cjt-0lr3l",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnoD2opl7XxhJ8BhnYHjvkEHmmn2sZKQ89P2hUyua83Rqs8rrt6xQry1jxz2PNjb0OVRHyOFEGEh5PJEpzsKC1scHFBJmdaH6fn5LPHe-qSMZ03Dcbe9lN1-oDnJq4rAalqJS4K3XsbdEWZ6xE9_ZZGmHuJxq77hGtTcJ7gHiGmjaRxSyaGmSqpY-os8FdPYJSg48L7htZGcPI-4b-TaWyx3gKKDCyZzgn01T5Tc0_RDzhlxtJlYsyCRHLXWmoLu4ZT2jUYM1HLIMNjbPLm16u2dYmRayPb0j_LTOZpLc-i88s5Z_8hHNEK414qEqG2xEAKXDHi17a1m9F",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 드림성형외과는 오랜 업력과 인지도를 가진 대형 성형외과로, 성형 커뮤니티 및 실제 방문자들의 후기에서 공통적으로 언급되는 상담 분위기와 특징은 다음과 같습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "압구정 **드림성형외과**의 실제 상담 및 수술 후기에서 공통적으로 언급되는 주요 특징과 분위기는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJhFvgwzLL5g-ZLrKJwkg0_rtLp8vAxYj7lnsLZUv51j9z1cnEjZ7EtL7E4xivQvi3ZhtOYmXZZ6FubLNZ9rJ29uHZAsflKiXU17gtf8Ck81EDLhdTzp8gjnUQzF7a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZ9VTg2eLFoUWLAxhzqEIpd9Anb-7EE-RhFFiouEY_uqLDY5ztmIUaRQE5dc7GxQy-aJ7thHbtnku52r6qzAd8EzTDLntOsPqcGcFTPZssTxhnfy1__qgDQuevBIqp7zS7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXiirnYNJZ-WnO00_kydCI4YxIsON1I4uPTRGnFdnNzJ_5uNwj5WzfPIFyu4CEmOEtF63e6XE4Vo2XM-x8QF9vgl8jt0iPdgFNkUl8KEHtNsSeyYXI-zC0GMQe0bXBW55kzno20piG-jrSnIXcpiQSNdweiXeNNSWCDJui0ZlCpyBBj2OYM4SAgc8W1FWE",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

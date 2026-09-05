@@ -19,6 +19,8 @@ import bank_comp_rorko6 from '../src/data/live-comp-rorko6-question-bank.json' w
 import analyses_comp_rorko6 from '../src/data/live-comp-rorko6-question-analyses.json' with { type: 'json' };
 import bank_daprs from '../src/data/live-daprs-question-bank.json' with { type: 'json' };
 import analyses_daprs from '../src/data/live-daprs-question-analyses.json' with { type: 'json' };
+import bank_e_dream from '../src/data/live-e-dream-question-bank.json' with { type: 'json' };
+import analyses_e_dream from '../src/data/live-e-dream-question-analyses.json' with { type: 'json' };
 import bank_girinps from '../src/data/live-girinps-question-bank.json' with { type: 'json' };
 import analyses_girinps from '../src/data/live-girinps-question-analyses.json' with { type: 'json' };
 import bank_gsplasticsurgery from '../src/data/live-gsplasticsurgery-question-bank.json' with { type: 'json' };
@@ -37,6 +39,8 @@ import bank_maum_dream from '../src/data/live-maum-dream-question-bank.json' wit
 import analyses_maum_dream from '../src/data/live-maum-dream-question-analyses.json' with { type: 'json' };
 import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 'json' };
 import analyses_sm_ps from '../src/data/live-sm-ps-question-analyses.json' with { type: 'json' };
+import bank_viewclinic from '../src/data/live-viewclinic-question-bank.json' with { type: 'json' };
+import analyses_viewclinic from '../src/data/live-viewclinic-question-analyses.json' with { type: 'json' };
 import bank_viewplasticsurgery from '../src/data/live-viewplasticsurgery-question-bank.json' with { type: 'json' };
 import analyses_viewplasticsurgery from '../src/data/live-viewplasticsurgery-question-analyses.json' with { type: 'json' };
 import bank_vvlyps from '../src/data/live-vvlyps-question-bank.json' with { type: 'json' };
@@ -62,6 +66,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'comp-mhxthx': bank_comp_mhxthx as QuestionBank,
   'comp-rorko6': bank_comp_rorko6 as QuestionBank,
   'daprs': bank_daprs as QuestionBank,
+  'e-dream': bank_e_dream as QuestionBank,
   'girinps': bank_girinps as QuestionBank,
   'gsplasticsurgery': bank_gsplasticsurgery as QuestionBank,
   'hushubundang': bank_hushubundang as QuestionBank,
@@ -71,6 +76,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'k-wonjin': bank_k_wonjin as QuestionBank,
   'maum-dream': bank_maum_dream as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
+  'viewclinic': bank_viewclinic as QuestionBank,
   'viewplasticsurgery': bank_viewplasticsurgery as QuestionBank,
   'vvlyps': bank_vvlyps as QuestionBank,
   'web4ai': bank_web4ai as QuestionBank,
@@ -87,6 +93,7 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_comp_mhxthx as LiveAnalysesFile,
   analyses_comp_rorko6 as LiveAnalysesFile,
   analyses_daprs as LiveAnalysesFile,
+  analyses_e_dream as LiveAnalysesFile,
   analyses_girinps as LiveAnalysesFile,
   analyses_gsplasticsurgery as LiveAnalysesFile,
   analyses_hushubundang as LiveAnalysesFile,
@@ -96,6 +103,7 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_k_wonjin as LiveAnalysesFile,
   analyses_maum_dream as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
+  analyses_viewclinic as LiveAnalysesFile,
   analyses_viewplasticsurgery as LiveAnalysesFile,
   analyses_vvlyps as LiveAnalysesFile,
   analyses_web4ai as LiveAnalysesFile,

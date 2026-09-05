@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-05T11:29:11.027Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "서울 강남 쪽에서 코 성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "강남역이나 압구정 성형외과 발품 팔 때 보통 어떤 기준으로 병원 정해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "눈 재수술로 유명하고 후기 좋은 강남 성형외과 어디가 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "서울에서 안면윤곽이나 양악 수술 안전하게 잘하는 병원 리스트 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "성형외과 첫 상담 갈 때 대리수술 없는지 확인하려면 뭘 물어봐야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "강남에 있는 성형외과 중에서 수술 후 사후관리 꼼꼼하게 해주는 곳 찾고 싶어.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "중년 상안검이랑 눈밑지방재배치 잘하는 성형외과 어디 추천해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "외국인 환자도 많이 찾고 통역이랑 시스템 잘 갖춰진 강남 대형 성형외과 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "압구정 드림성형외과 눈성형이나 코성형 대표 원장님 스타일이 어때?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "강남에서 유명한 드림성형외과랑 다른 대형 성형외과들 주요 특징 비교해줘.",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "드림성형외과 눈 재수술이나 코 재수술 비용 대략 어느 정도야?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "드림성형외과 실제로 다녀온 사람들 후기나 상담 분위기 어떤지 궁금해.",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 강남",
+      "version": "v1"
+    }
+  ]
+}

@@ -19,7 +19,7 @@
     "brandOwnedCitationRate": 0.050397877984084884,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 6
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -42,8 +42,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.055415617128463476,
     "cohortRank": {
-      "position": 5,
-      "totalTenants": 6
+      "position": 6,
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -66,8 +66,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.05084745762711865,
     "cohortRank": {
-      "position": 3,
-      "totalTenants": 6
+      "position": 4,
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -210,8 +210,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 4,
-      "totalTenants": 6
+      "position": 5,
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -235,7 +235,7 @@
     "brandOwnedCitationRate": 0.047311827956989246,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 6
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -258,8 +258,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.023195876288659795,
     "cohortRank": {
-      "position": 6,
-      "totalTenants": 6
+      "position": 7,
+      "totalTenants": 8
     },
     "hallucinationFlags": []
   },
@@ -530,5 +530,53 @@
       "openai / v1-012 #1: 사실성 불일치 1건",
       "openai / v1-012 #2: 사실성 불일치 1건"
     ]
+  },
+  {
+    "tenantId": "e-dream",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "드림성형외과",
+    "aeoScore": {
+      "current": 25,
+      "ma4": 25,
+      "previousWeek": 25,
+      "ciLow": 15.9,
+      "ciHigh": 34.1
+    },
+    "mentionRate": 0,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 7,
+      "totalTenants": 8
+    },
+    "hallucinationFlags": []
+  },
+  {
+    "tenantId": "viewclinic",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 강남",
+    "brandName": "뷰성형외과",
+    "aeoScore": {
+      "current": 36,
+      "ma4": 36,
+      "previousWeek": 36,
+      "ciLow": 25.9,
+      "ciHigh": 46.1
+    },
+    "mentionRate": 0.20833333333333334,
+    "shareOfMention": 0.3380281690140845,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0,
+    "cohortRank": {
+      "position": 3,
+      "totalTenants": 8
+    },
+    "hallucinationFlags": []
   }
 ]
