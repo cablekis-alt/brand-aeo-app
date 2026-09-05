@@ -32,8 +32,8 @@ export default function Ranking() {
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && !ranking && (
         <>
-          <p className="muted">이 주차에 랭킹 데이터가 없습니다. 아래에서 측정하면 순위·SoM이 채워집니다.</p>
-          <MeasureBrandButton tenantId={tenant.tenantId} />
+          <p className="muted">이 주차에 랭킹 데이터가 없습니다. 아래 버튼으로 측정하면 순위·SoM이 채워집니다.</p>
+          <MeasureBrandButton tenantId={tenant.tenantId} brandName={tenant.brandName} />
         </>
       )}
 
@@ -50,7 +50,7 @@ export default function Ranking() {
             <p className="muted">추천 1순위로 뽑힌 비율 {formatPct(ranking.topRecommendationRate)}</p>
           </section>
 
-          <MeasureBrandButton tenantId={tenant.tenantId} />
+          <MeasureBrandButton tenantId={tenant.tenantId} brandName={tenant.brandName} />
 
           <section>
             <h3>코호트 순위</h3>

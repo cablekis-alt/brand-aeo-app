@@ -8,10 +8,12 @@ interface MeasureTenantOption {
   cohortOnly?: boolean
 }
 
+type MeasureVia = 'local' | 'github' | 'none'
+
 export default function MeasureTenant() {
   const { tenantId: currentTenantId } = useTenant()
-  // 측정은 로컬에서만 실행한다. localMode(로컬 백엔드)일 때만 버튼을, 배포 웹에선 로컬 실행 명령을 안내한다.
-  const [localMode, setLocalMode] = useState(false)
+  const [canMeasure, setCanMeasure] = useState(false)
+  const [measureVia, setMeasureVia] = useState<MeasureVia>('none')
   const [healthReady, setHealthReady] = useState(false)
   const [tenants, setTenants] = useState<MeasureTenantOption[]>([])
   const [pickedTenant, setPickedTenant] = useState('')
@@ -24,11 +26,17 @@ export default function MeasureTenant() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!alive || !d) return
-        setLocalMode(d.measureVia === 'local')
+        const via = d.measureVia === 'local' || d.measureVia === 'github' ? (d.measureVia as MeasureVia) : 'none'
+        setMeasureVia(via)
+        setCanMeasure(Boolean(d.canMeasure) || via !== 'none')
         setHealthReady(true)
       })
       .catch(() => {
-        if (alive) setHealthReady(true)
+        if (alive) {
+          setCanMeasure(false)
+          setMeasureVia('none')
+          setHealthReady(true)
+        }
       })
     fetch('/api/tenants?all=1')
       .then((r) => (r.ok ? r.json() : []))
@@ -47,17 +55,37 @@ export default function MeasureTenant() {
   }, [currentTenantId])
 
   async function measureOne() {
-    if (!pickedTenant || !localMode) return
+    if (!pickedTenant || !canMeasure) return
     setMeasuring(true)
-    setMessage(`${pickedTenant} 측정 중… (수 분). 이 탭을 열어 두세요.`)
+    setMessage(
+      measureVia === 'github'
+        ? `${pickedTenant} GitHub Actions 측정 요청 중…`
+        : `${pickedTenant} 측정 중… (수 분). 이 탭을 열어 두세요.`,
+    )
     try {
+      if (measureVia === 'github') {
+        const res = await fetch('/api/measure-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'run', tenantId: pickedTenant }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
+        if (!res.ok) throw new Error(body.error || `측정 요청 실패 (HTTP ${res.status})`)
+        setMessage(
+          `✓ GitHub Actions가 시작됐습니다. 수 분~수십 분 뒤 이 사이트에 점수가 반영됩니다.` +
+            (body.htmlUrl ? ` 진행 상황: ${body.htmlUrl}` : ''),
+        )
+        return
+      }
       const res = await fetch(`/api/tenants/${encodeURIComponent(pickedTenant)}/measure`, { method: 'POST' })
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
       }
       const d = (await res.json()) as { brandName: string; aeoScore?: number }
-      setMessage(`✓ ${d.brandName} 측정·baking 완료 (AEO Score ${d.aeoScore ?? '?'}). 새로고침하면 반영됩니다.`)
+      setMessage(
+        `✓ ${d.brandName} 측정·baking 완료 (AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
+      )
     } catch (err) {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
     } finally {
@@ -66,6 +94,7 @@ export default function MeasureTenant() {
   }
 
   const picked = tenants.find((t) => t.tenantId === pickedTenant)
+  const locked = healthReady && !canMeasure
 
   return (
     <>
@@ -73,25 +102,27 @@ export default function MeasureTenant() {
       <h1>브랜드·경쟁사 측정</h1>
       <p className="lead">
         <b>브랜드 하나 또는 경쟁사</b>를 골라 개별 측정합니다. 상단 브랜드 선택과 무관하게 원하는 대상을 고를 수 있어,{' '}
-        <b>특정 경쟁사 스코어카드만 갱신</b>할 때도 씁니다(경쟁사는 상단 브랜드 메뉴에 없어 여기서만 선택 가능).{' '}
-        <b>측정은 로컬 PC에서만</b> 실행합니다 — 배포 웹에서는 아래 명령을 로컬 터미널에서 실행하세요.
+        <b>특정 경쟁사 스코어카드만 갱신</b>할 때도 씁니다(경쟁사는 상단 브랜드 메뉴에 없어 여기서만 측정 가능). 배포에서는
+        GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.
       </p>
 
-      <section className="panel">
+      <section className={`panel${locked ? ' measure-local-only' : ''}`}>
         <h3>측정할 대상 선택</h3>
         <p className="muted">
           목록에는 내 브랜드와 경쟁사(<code>· 경쟁사</code> 표시)가 모두 있습니다.{' '}
           {!healthReady
             ? '환경을 확인하는 중…'
-            : localMode
-              ? '로컬 백엔드가 감지됐습니다. 선택 후 "측정 시작"을 누르면 PC에서 측정·baking까지 실행합니다.'
-              : '배포 환경입니다. 측정은 로컬에서만 하므로, 대상을 고른 뒤 아래 명령을 로컬 터미널에서 실행하세요.'}
+            : measureVia === 'local'
+              ? '로컬 백엔드가 감지됐습니다. 선택 후 측정하면 baking까지 이어서 실행합니다.'
+              : measureVia === 'github'
+                ? '배포 환경입니다. 버튼은 GitHub Actions 측정을 시작하고, 완료·배포 후 새로고침하면 결과가 반영됩니다.'
+                : '로컬에서만 측정 가능 — 배포에서 켜려면 Vercel에 GH_MEASURE_TOKEN을 넣으세요.'}
         </p>
         <div className="measure-pick">
           <select
             value={pickedTenant}
             onChange={(e) => setPickedTenant(e.target.value)}
-            disabled={measuring}
+            disabled={locked || measuring}
             aria-label="측정할 테넌트"
           >
             <option value="">테넌트 선택…</option>
@@ -101,16 +132,18 @@ export default function MeasureTenant() {
               </option>
             ))}
           </select>
-          {localMode && (
-            <button type="button" className="primary" onClick={() => void measureOne()} disabled={!pickedTenant || measuring}>
-              {measuring ? '진행 중…' : '측정 시작'}
-            </button>
-          )}
+          <button
+            type="button"
+            className="primary"
+            onClick={() => void measureOne()}
+            disabled={locked || !pickedTenant || measuring}
+          >
+            {measuring ? '진행 중…' : canMeasure ? '측정 시작' : '로컬에서만 측정 가능'}
+          </button>
         </div>
         {picked && (
           <p className="hint" style={{ marginTop: '10px' }}>
-            {localMode ? '로컬 CLI(선택): ' : '로컬 터미널에서: '}
-            <code>npm run measure:local -- {picked.tenantId}</code>
+            CLI: <code>npx tsx scripts/ci-measure.ts {picked.tenantId}</code>
           </p>
         )}
         {message && (
@@ -118,9 +151,11 @@ export default function MeasureTenant() {
             {message}
           </p>
         )}
-        <p className="hint" style={{ marginTop: '10px' }}>
-          측정 기록은 <Link to="/measure-status">측정 상태</Link>에서 볼 수 있습니다.
-        </p>
+        {measureVia === 'github' && (
+          <p className="hint" style={{ marginTop: '10px' }}>
+            진행 상태는 <Link to="/measure-status">측정 상태</Link>에서 실시간으로 볼 수 있습니다.
+          </p>
+        )}
       </section>
     </>
   )
