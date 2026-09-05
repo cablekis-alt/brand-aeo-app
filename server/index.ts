@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import express from 'express';
 import { packagedDataMode } from './appPaths.js';
+import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -389,6 +390,7 @@ if (STATIC_DIR) {
 }
 
 app.listen(PORT, () => {
+  seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
   console.log(`[server] listening on :${PORT}`);
   startScheduler(store);
 });

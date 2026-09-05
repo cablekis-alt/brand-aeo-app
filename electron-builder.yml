@@ -12,6 +12,7 @@ files:
   - electron/**/*
   - dist/**/*
   - dist-electron/server.cjs
+  - src/data/**/* # 첫 실행 시드 소스(커밋된 스코어카드·분석·질문은행)
   - package.json
 
 asar: true
