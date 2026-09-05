@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
+import { cancelMeasureRun, loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
 
@@ -99,6 +99,7 @@ export default function MeasureStatus() {
   const [auto, setAuto] = useState(true)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [nameMap, setNameMap] = useState<Record<string, string>>({})
+  const [cancelling, setCancelling] = useState<number | null>(null)
   const timer = useRef<number | null>(null)
 
   const load = useCallback(async () => {
@@ -149,6 +150,20 @@ export default function MeasureStatus() {
   }, [auto, load])
 
   const active = runs.some((r) => r.status !== 'completed')
+
+  async function onCancel(run: MeasureRunInfo) {
+    if (!run.id) return
+    if (!window.confirm(`'${targetLabel(run.title, nameMap)}' 측정을 취소할까요?`)) return
+    setCancelling(run.id)
+    try {
+      await cancelMeasureRun(run.id)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '취소 실패')
+    } finally {
+      setCancelling(null)
+    }
+  }
 
   return (
     <>
@@ -219,7 +234,18 @@ export default function MeasureStatus() {
                       <td className="num">{sc?.aeo ?? '-'}</td>
                       <td className="num">{duration(run)}</td>
                       <td>{timeAgo(run.createdAt)}</td>
-                      <td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {run.status !== 'completed' && (
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => void onCancel(run)}
+                            disabled={cancelling === run.id}
+                            style={{ marginRight: '8px' }}
+                          >
+                            {cancelling === run.id ? '취소 중…' : '취소'}
+                          </button>
+                        )}
                         <a href={run.htmlUrl} target="_blank" rel="noreferrer" className="rec-link">
                           로그 →
                         </a>

@@ -126,6 +126,7 @@ export async function loadRanking(tenantId: string, weekOf: string): Promise<Ran
 
 // 측정 상태 — 최근 GitHub Actions 측정 실행 목록.
 export interface MeasureRunInfo {
+  id: number
   runNumber: number
   title: string
   status: string
@@ -139,4 +140,17 @@ export interface MeasureRunInfo {
 export async function loadMeasureRuns(): Promise<{ enabled: boolean; runs: MeasureRunInfo[] }> {
   const remote = await getJson<{ enabled: boolean; runs: MeasureRunInfo[] }>('/api/measure-requests?view=runs')
   return remote ?? { enabled: false, runs: [] }
+}
+
+/** 진행 중인 GitHub Actions 측정 run을 취소한다. */
+export async function cancelMeasureRun(runId: number): Promise<void> {
+  const res = await fetch('/api/measure-requests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'cancel', runId }),
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error || `취소 실패 (HTTP ${res.status})`)
+  }
 }

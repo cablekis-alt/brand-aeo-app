@@ -53,6 +53,26 @@ export async function triggerGithubDelete(tenantId: string): Promise<{ htmlUrl: 
   return dispatchWorkflow('delete.yml', { tenantId });
 }
 
+/** 진행 중인 측정 run을 취소한다(GitHub Actions cancel API). */
+export async function cancelMeasureRun(runId: number): Promise<void> {
+  const token = process.env.GH_MEASURE_TOKEN;
+  if (!token) throw new Error('GH_MEASURE_TOKEN이 필요합니다.');
+  const { owner, repo } = repoParts();
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs/${runId}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  // 취소 요청 성공은 202 Accepted. 이미 끝난 run은 409.
+  if (res.status !== 202) {
+    const text = await res.text();
+    throw new Error(`취소 실패 (HTTP ${res.status}): ${text.slice(0, 200)}`);
+  }
+}
+
 /** 자동 채우기용 경쟁사 추론을 GitHub Actions(그라운딩 정상 동작)에서 실행하도록 트리거한다. 커밋 없이 Blob에만 결과 저장. */
 export async function triggerGithubInfer(inputs: {
   brandName: string;
@@ -69,6 +89,7 @@ export async function triggerGithubInfer(inputs: {
 }
 
 export interface MeasureRunInfo {
+  id: number; // GitHub run databaseId — 취소 API에 사용
   runNumber: number;
   title: string; // "measure <tenantId>" | "measure __queue__" | (구버전) 워크플로우명
   status: string; // queued | in_progress | completed
@@ -102,6 +123,7 @@ export async function listMeasureRuns(limit = 15): Promise<{ enabled: boolean; r
   if (!res.ok) return { enabled: true, runs: [] };
   const data = (await res.json()) as { workflow_runs?: Record<string, unknown>[] };
   const runs: MeasureRunInfo[] = (data.workflow_runs ?? []).map((r) => ({
+    id: Number(r.id) || 0,
     runNumber: Number(r.run_number) || 0,
     title: (typeof r.display_title === 'string' && r.display_title) || String(r.name ?? '측정'),
     status: String(r.status ?? ''),

@@ -4,7 +4,7 @@ import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
 import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
-import { canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
+import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
@@ -327,6 +327,17 @@ app.post('/api/measure-requests/process', async (_req, res) => {
 });
 app.post('/api/measure-requests', async (req, res) => {
   try {
+    const body = (req.body ?? {}) as { action?: string; runId?: number };
+    if (body.action === 'cancel') {
+      const runId = Number(body.runId);
+      if (!runId) {
+        res.status(400).json({ error: 'runId가 필요합니다.' });
+        return;
+      }
+      await cancelMeasureRun(runId);
+      res.status(202).json({ ok: true, cancelled: runId });
+      return;
+    }
     const tenant = normalizeTenantDraft(req.body);
     const list = await addMeasureRequest(tenant);
     res.status(201).json({ ok: true, pending: list.length });

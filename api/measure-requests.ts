@@ -1,4 +1,4 @@
-import { listMeasureRuns, triggerGithubMeasure, triggerGithubQueueMeasure } from '../server/githubMeasure.js';
+import { cancelMeasureRun, listMeasureRuns, triggerGithubMeasure, triggerGithubQueueMeasure } from '../server/githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from '../server/measureRequests.js';
 import { sendJson } from '../server/httpJson.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
@@ -39,7 +39,21 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   }
 
   if (req.method === 'POST') {
-    const body = readBody(req) as { action?: string; tenantId?: string };
+    const body = readBody(req) as { action?: string; tenantId?: string; runId?: number };
+    if (body?.action === 'cancel') {
+      const runId = Number(body.runId);
+      if (!runId) {
+        sendJson(res, 400, { error: 'runId가 필요합니다.' });
+        return;
+      }
+      try {
+        await cancelMeasureRun(runId);
+        sendJson(res, 202, { ok: true, cancelled: runId });
+      } catch (err) {
+        sendJson(res, 503, { error: err instanceof Error ? err.message : String(err) });
+      }
+      return;
+    }
     if (body?.action === 'run-queue') {
       const pending = await readMeasureRequests();
       if (pending.length === 0) {
