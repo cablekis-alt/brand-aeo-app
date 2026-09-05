@@ -1,6 +1,6 @@
 # Brand AEO — 답변 엔진 브랜드 가시성 콘솔
 
-[![최신 릴리스](https://img.shields.io/github/v/release/cablekis-alt/brand-aeo-app?label=%EC%B5%9C%EC%8B%A0%20%EB%A6%B4%EB%A6%AC%EC%8A%A4&sort=semver)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest) [![다운로드](https://img.shields.io/badge/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-Windows%20%EC%84%A4%EC%B9%98%EB%B3%B8-9a3412?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest)
+[![최신 릴리스](https://img.shields.io/github/v/release/cablekis-alt/brand-aeo-app?label=%EC%B5%9C%EC%8B%A0%20%EB%A6%B4%EB%A6%AC%EC%8A%A4&sort=semver)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest) [![라이선스](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-%EB%8F%85%EC%A0%90%20All%20Rights%20Reserved-555)](LICENSE) [![다운로드](https://img.shields.io/badge/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-Windows%20%EC%84%A4%EC%B9%98%EB%B3%B8-9a3412?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest)
 
 > **데스크톱 앱 다운로드**: 위 **다운로드** 버튼 → 릴리스 페이지에서 `Web4AI Brand AEO-<버전>-x64.exe` 실행. (미서명이라 SmartScreen 경고 시 "추가 정보 → 실행")
 
