@@ -103,6 +103,7 @@ export default function MeasureStatus() {
   // 이 앱이 직접 돌린 로컬 측정(진행 중 + 완료). /api/measure-status에서 폴링.
   const [localActive, setLocalActive] = useState<{ tenantId: string; brandName: string; startedAt: string }[]>([])
   const [localDone, setLocalDone] = useState<LocalMeasureLog[]>([])
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const timer = useRef<number | null>(null)
 
   const load = useCallback(async () => {
@@ -165,6 +166,13 @@ export default function MeasureStatus() {
       if (timer.current) window.clearInterval(timer.current)
     }
   }, [auto, load])
+
+  // 진행 중 측정의 경과시간을 1초마다 갱신(리얼타임 표시).
+  useEffect(() => {
+    if (localActive.length === 0) return
+    const t = window.setInterval(() => setNowMs(Date.now()), 1000)
+    return () => window.clearInterval(t)
+  }, [localActive.length])
 
   const active = runs.some((r) => r.status !== 'completed') || localActive.length > 0
 
@@ -317,7 +325,7 @@ export default function MeasureStatus() {
                     <td>{a.brandName || a.tenantId}</td>
                     <td>-</td>
                     <td className="num">-</td>
-                    <td className="num">-</td>
+                    <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
                     <td>{timeAgo(a.startedAt)} 시작</td>
                   </tr>
                 ))}

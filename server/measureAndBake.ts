@@ -2,6 +2,8 @@ import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
 import { inferCompetitors } from './brandInference.js';
+import { appendLocalMeasure } from './localMeasureLog.js';
+import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
@@ -102,21 +104,26 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
       }
     }
 
-    // 2) 경쟁사(추론됐든 직접 입력했든, 도메인 있는 것)를 코호트로 함께 측정 → 본 브랜드 스코어카드의 코호트 순위(1/N)가 채워진다.
-    //    본 브랜드보다 "먼저" 측정해 같은 주차 코호트에 포함시킨다. cohortOnly 초안이라 재귀로 더 퍼지지 않는다.
-    //    이미 존재하는 테넌트는 건너뛰므로, 재측정 시엔 빠진 경쟁사만 다시 채워진다(self-healing). autoCohort=false면 생략.
+    // 2) 경쟁사를 코호트로 함께 측정 → 본 브랜드 스코어카드의 코호트 순위(1/N)가 채워진다.
+    //    "브랜드 전체 측정"은 경쟁사도 최신 키로 재측정한다: 이미 등록된 경쟁사(본 테넌트)는 그대로
+    //    재측정(단, 그 경쟁사의 코호트로 더 퍼지지 않게 autoCohort=false), 없으면 cohortOnly로 새로 측정.
+    //    본 브랜드보다 "먼저" 측정해 같은 주차 코호트에 포함시킨다.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
-      const existingIds = new Set((await loadRuntimeTenants()).map((item) => item.tenantId));
-      const cohortDrafts = cohortOnlyDraftsFrom(tenant)
-        .filter((draft) => !existingIds.has(draft.tenantId))
-        .slice(0, MAX_AUTO_COHORT);
-      for (const draft of cohortDrafts) {
+      const existingById = new Map((await loadRuntimeTenants()).map((item) => [item.tenantId, item]));
+      const drafts = cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT);
+      const done = new Set<string>([tenant.tenantId]);
+      for (const draft of drafts) {
+        if (done.has(draft.tenantId)) continue;
+        done.add(draft.tenantId);
+        const existing = existingById.get(draft.tenantId);
+        // 기존 경쟁사면 본 테넌트로 재측정(코호트 재확장 없이), 없으면 cohortOnly 초안.
+        const target: TenantConfig = existing ? { ...existing, autoCohort: false } : draft;
         try {
-          console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${draft.brandName} (${draft.tenantId})`);
-          await measureAndBake(draft, store);
+          console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
+          await measureAndBake(target, store);
         } catch (err) {
           console.error(
-            `[measureAndBake] 코호트 경쟁사 측정 실패 ${draft.tenantId}: ${err instanceof Error ? err.message : err}`,
+            `[measureAndBake] 코호트 경쟁사 측정 실패 ${target.tenantId}: ${err instanceof Error ? err.message : err}`,
           );
         }
       }
@@ -125,9 +132,26 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
 
   await persistTenantForRuntime(tenant);
 
-  const { scorecard } = await runWeeklyPipeline(tenant, store);
+  // 이 브랜드의 파이프라인 실행을 진행중/완료로 추적한다(측정 상태 화면 표시용).
+  const startedMs = Date.now();
+  setActiveMeasure({ tenantId: tenant.tenantId, brandName: tenant.brandName, startedAt: new Date().toISOString() });
+  let pipeline;
+  try {
+    pipeline = await runWeeklyPipeline(tenant, store);
+  } finally {
+    clearActiveMeasure(tenant.tenantId);
+  }
+  const { scorecard } = pipeline;
   const weekOf = scorecard.weekOf;
   const id = tenant.tenantId;
+  appendLocalMeasure({
+    tenantId: id,
+    brandName: tenant.brandName,
+    weekOf,
+    aeoScore: scorecard.aeoScore.current,
+    durationSec: Math.round((Date.now() - startedMs) / 1000),
+    at: new Date().toISOString(),
+  });
 
   // 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽는다.
   // dev 체크아웃에서만 src/data로 baking(웹 배포용) + git 반영을 한다. tsx/git이 없는
