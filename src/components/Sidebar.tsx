@@ -28,7 +28,6 @@ const MENU: MenuGroup[] = [
     items: [
       { label: '질문 프롬프트 빌더', to: '/questions', b: 'B1' },
       { label: '테넌트 골라 측정', to: '/measure-tenant', b: 'B2' },
-      { label: '측정 대기열', to: '/measure-queue', b: 'B2' },
     ],
   },
   {

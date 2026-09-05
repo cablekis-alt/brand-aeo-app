@@ -138,8 +138,8 @@ export default function MeasureStatus() {
           </p>
         ) : !loading && runs.length === 0 ? (
           <p className="muted">
-            최근 GitHub Actions 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link> 또는{' '}
-            <Link to="/measure-queue">측정 대기열</Link>에서 시작하거나, 로컬에서 <code>npm run measure:local</code>을 쓰세요.
+            최근 GitHub Actions 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link>에서 시작하거나, 로컬에서{' '}
+            <code>npm run measure:local</code>을 쓰세요.
           </p>
         ) : (
           <div className="table-wrap">

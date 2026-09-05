@@ -5,7 +5,7 @@ import Sidebar from './Sidebar'
 
 // 선택 브랜드와 무관한 관리·측정 화면 — 상단 브랜드 박스를 숨기고, 브랜드 0개여도 그대로 연다
 // (브랜드 추가는 첫 등록 통로, 측정 대기열·상태는 전역, 테넌트 골라 측정은 자체 드롭다운).
-const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-queue', '/measure-tenant', '/measure-status'])
+const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status'])
 
 export default function Layout() {
   const { tenants, tenant, setTenantId, loading, error } = useTenant()

@@ -7,7 +7,6 @@ import CitationSources from './pages/CitationSources'
 import Citations from './pages/Citations'
 import Dashboard from './pages/Dashboard'
 import Eeat from './pages/Eeat'
-import MeasureQueue from './pages/MeasureQueue'
 import MeasureStatus from './pages/MeasureStatus'
 import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
@@ -34,7 +33,6 @@ export default function App() {
             <Route path="ranking" element={<Ranking />} />
             <Route path="report" element={<PeriodicReport />} />
             <Route path="brand-onboarding" element={<BrandOnboarding />} />
-            <Route path="measure-queue" element={<MeasureQueue />} />
             <Route path="measure-tenant" element={<MeasureTenant />} />
             <Route path="measure-status" element={<MeasureStatus />} />
           </Route>
