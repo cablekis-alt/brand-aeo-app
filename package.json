@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Web4AI Brand AEO — 답변 엔진 브랜드 가시성 콘솔",
   "author": "O2O",
+  "license": "UNLICENSED",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {

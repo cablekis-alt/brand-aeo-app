@@ -172,3 +172,13 @@ npm run electron:pack:dir    # 설치 파일 없이 앱 폴더만(빠른 확인)
 | `npm run build` | 프로덕션 빌드 |
 | `npm run typecheck:server` | 서버 타입 체크 |
 | `npm run lint` | ESLint |
+
+---
+
+## 라이선스
+
+**독점 소프트웨어 — © 2026 O2O. All rights reserved.**
+
+이 저장소의 소스·에셋·문서는 O2O의 독점·기밀 자산입니다. 저작권자의 사전 서면 허가 없이 **복제·수정·배포·2차적저작물 작성·상업적 이용을 금지**합니다. 저장소를 public으로 공개한 것은 **Web4AI Brand AEO 데스크톱 앱 배포와 참고 목적**일 뿐, 어떠한 사용 권리도 부여하지 않습니다.
+
+전문은 [LICENSE](LICENSE) 참고. 라이선스 문의는 O2O로 연락하세요.
