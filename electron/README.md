@@ -32,7 +32,7 @@ npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠�
 
 ### 데이터 위치 (측정 결과·등록 브랜드)
 
-설치본은 asar(읽기전용)를 피해 **사용자 데이터 폴더**(`app.getPath('userData')`, Windows는 `%APPDATA%/Web4AI Brand AEO/`)에 씁니다:
+설치본은 asar(읽기전용)를 피해 **사용자 데이터 폴더**(`app.getPath('userData')`, Windows는 `%APPDATA%/brand-aeo-app/`)에 씁니다:
 
 | 항목 | 경로 |
 |---|---|
@@ -46,9 +46,9 @@ npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠�
 
 키는 **설치본에 굽지 않습니다**(보안). 패키징 앱은 아래 순서로 `.env`를 찾습니다:
 1. 실행파일과 같은 폴더의 `.env`
-2. 사용자 데이터 폴더(`%APPDATA%/Web4AI Brand AEO/.env`)의 `.env`
+2. 사용자 데이터 폴더(`%APPDATA%/brand-aeo-app/.env`)의 `.env`
 
-측정하려면 `OPENAI_API_KEY`·`GEMINI_API_KEY`·`ANTHROPIC_API_KEY`가 담긴 `.env`를 위 위치에 두세요.
+패키징 앱은 판정·수집 기본을 **Gemini**로 두므로(로컬 한국 측정이 가장 정확, OpenAI 크레딧 비의존) `GEMINI_API_KEY`만 있어도 측정됩니다. `OPENAI_API_KEY`·`ANTHROPIC_API_KEY`는 해당 엔진을 함께 쓸 때만 필요합니다. `.env`에서 `JUDGE_ENGINE`을 명시하면 그 값을 우선합니다.
 
 ### Windows EPERM(rename) 오류 시
 
