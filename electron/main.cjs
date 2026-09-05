@@ -12,6 +12,7 @@
 
 const { app, BrowserWindow, shell } = require('electron')
 const { spawn } = require('node:child_process')
+const fs = require('node:fs')
 const path = require('node:path')
 
 const IS_WINDOWS = process.platform === 'win32'
@@ -107,14 +108,46 @@ async function createWindow() {
     return
   }
 
-  // 패키징: 아직 미구현(정적 dist 서빙 + 컴파일 서버 필요). electron/README.md 참고.
+  // 패키징: vite 없이 번들된 서버(dist-electron/server.cjs)를 인프로세스로 띄우고,
+  // 그 서버가 dist(정적 UI)+/api를 같은 오리진(:4000)에서 서빙한다. 창은 그 URL을 로드.
+  loadEnvForPackaged()
+  process.env.PORT = API_PORT
+  process.env.ELECTRON_STATIC_DIR = path.join(__dirname, '..', 'dist') // asar 내부 dist
+  try {
+    require(path.join(__dirname, '..', 'dist-electron', 'server.cjs')) // app.listen 실행
+  } catch (err) {
+    await win.loadURL(
+      'data:text/html,' +
+        encodeURIComponent(`<h2 style="font-family:sans-serif;padding:2rem">서버 기동 실패</h2><pre style="padding:0 2rem">${String(err)}</pre>`),
+    )
+    return
+  }
+  const ready = await waitForUrl(`http://localhost:${API_PORT}/health`)
   await win.loadURL(
-    'data:text/html,' +
-      encodeURIComponent(
-        '<h2 style="font-family:sans-serif;padding:2rem">패키징 빌드는 아직 준비 중입니다.</h2>' +
-          '<p style="font-family:sans-serif;padding:0 2rem">현재는 개발 모드(npm run electron:dev)만 지원합니다.</p>',
-      ),
+    ready
+      ? `http://localhost:${API_PORT}`
+      : 'data:text/html,' + encodeURIComponent('<h2 style="font-family:sans-serif;padding:2rem">로컬 서버(:' + API_PORT + ') 시작 대기 시간 초과.</h2>'),
   )
+}
+
+/** 설치본에 키를 굽지 않는다 — 실행파일 옆 또는 userData의 .env를 읽는다. */
+function loadEnvForPackaged() {
+  const candidates = [
+    path.join(path.dirname(app.getPath('exe')), '.env'),
+    path.join(app.getPath('userData'), '.env'),
+  ]
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) {
+        require('dotenv').config({ path: p })
+        console.log('[env] loaded', p)
+        return
+      }
+    } catch {
+      /* 무시 */
+    }
+  }
+  console.log('[env] .env 없음 — 측정에는 API 키가 필요합니다(실행파일 옆에 .env 배치).')
 }
 
 app.whenReady().then(() => {

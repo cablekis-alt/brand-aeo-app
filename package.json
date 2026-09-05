@@ -2,6 +2,8 @@
   "name": "brand-aeo-app",
   "private": true,
   "version": "0.0.0",
+  "description": "Web4AI Brand AEO — 답변 엔진 브랜드 가시성 콘솔",
+  "author": "O2O",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -13,7 +15,10 @@
     "server:start": "tsx server/index.ts",
     "measure:local": "tsx scripts/measure-local.ts",
     "typecheck:server": "tsc --noEmit -p tsconfig.server.json",
-    "electron:dev": "electron ."
+    "electron:dev": "electron .",
+    "electron:server": "node scripts/build-electron-server.mjs",
+    "electron:pack:dir": "npm run build && npm run electron:server && electron-builder --dir",
+    "electron:pack": "npm run build && npm run electron:server && electron-builder"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -40,6 +45,8 @@
     "@vitejs/plugin-react": "^6.1.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "electron": "^44.2.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "eslint": "^10.9.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { execSync } from 'node:child_process';
+import path from 'node:path';
 import express from 'express';
 import { collectPage } from './aeo/collectPage.js';
 import { appendTenant, loadTenants } from './config.js';
@@ -369,6 +370,22 @@ app.post('/pipeline/run/:tenantId', async (req, res) => {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
+
+// Electron 패키징 모드: vite 없이 빌드된 정적 UI(dist)를 같은 오리진에서 서빙한다.
+// 웹(Vercel)·dev에서는 ELECTRON_STATIC_DIR 미설정이라 아래 블록은 실행되지 않는다(공유 코드 안전).
+const STATIC_DIR = process.env.ELECTRON_STATIC_DIR;
+if (STATIC_DIR) {
+  const staticRoot = path.resolve(STATIC_DIR); // sendFile은 절대경로 필요
+  app.use(express.static(staticRoot));
+  // SPA 폴백 — API/데이터 라우트가 아닌 GET은 index.html로 넘겨 클라이언트 라우팅이 처리하게 한다.
+  const NON_SPA = ['/api', '/scorecards', '/pipeline', '/health'];
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || NON_SPA.some((p) => req.path === p || req.path.startsWith(p + '/'))) {
+      return next();
+    }
+    res.sendFile(path.join(staticRoot, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);
