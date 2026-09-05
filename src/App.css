@@ -40,8 +40,8 @@
 }
 
 .brand-monogram {
-  width: 34px;
   height: 34px;
+  padding: 0 11px;
   flex: none;
   display: grid;
   place-items: center;
@@ -52,7 +52,8 @@
   font-family: var(--serif);
   font-weight: 600;
   font-size: 14px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .brand-names {

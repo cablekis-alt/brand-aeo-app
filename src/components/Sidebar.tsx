@@ -62,7 +62,7 @@ export default function Sidebar() {
     <nav className="sidebar" aria-label="Web4AI Brand AEO 메뉴">
       <header className="sidebar-brand">
         <div className="brand-lockup">
-          <span className="brand-monogram" aria-hidden="true">W4</span>
+          <span className="brand-monogram" aria-hidden="true">AIO2O</span>
           <span className="brand-names">
             <span className="brand-eyebrow">WEB4AI</span>
             <span className="brand-title">Brand AEO</span>
