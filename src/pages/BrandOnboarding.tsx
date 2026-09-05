@@ -659,17 +659,14 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
-      // 등록만 한다 — 측정은 STAGE 4 "랭킹 분석"의 "이 브랜드 측정" 버튼에서 별도로 실행한다.
-      // 그 측정이 경쟁사 자동 추론·SoM·코호트(1/N)까지 채운다. 경쟁사를 직접 입력해 두면 그대로 쓰인다.
+      // 등록만 한다 — 측정은 로컬 PC에서 실행한다(경쟁사 자동 추론·SoM·코호트까지 채움).
+      // 로컬 백엔드(localhost)면 STAGE 4 "랭킹 분석" 버튼으로, 배포 웹이면 터미널 명령으로.
       const measureHint =
-        measureVia === 'github'
-          ? 'GitHub Actions가 경쟁사 SoM·코호트까지 채웁니다.'
-          : measureVia === 'local'
-            ? '로컬에서 즉시 측정됩니다.'
-            : '측정은 로컬/CI에서 실행하세요.'
+        measureVia === 'local'
+          ? 'STAGE 4 "랭킹 분석"에서 "이 브랜드 측정"을 누르면 로컬에서 측정됩니다.'
+          : `측정은 로컬 터미널에서: npm run measure:local -- ${tenant.tenantId}`
       setRegisterMsg(
-        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ` +
-          `측정하려면 STAGE 4 "랭킹 분석"에서 "이 브랜드 측정"을 누르세요 — ${measureHint}`,
+        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ${measureHint}`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -896,8 +893,9 @@ export default function BrandOnboarding() {
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
         {canRegister ? (
           <p className="hint">
-            등록만 합니다. 이후 STAGE 4 <b>"랭킹 분석"</b>에서 <b>"이 브랜드 측정"</b>을 누르면 경쟁사 자동 추론·SoM·코호트
-            순위까지 채워집니다{measureVia === 'github' ? ' (GitHub Actions).' : measureVia === 'local' ? ' (로컬 즉시).' : '.'}
+            등록만 합니다. <b>측정은 로컬 PC</b>에서 실행하면 경쟁사 자동 추론·SoM·코호트 순위까지 채워집니다
+            {measureVia === 'local' ? ' — STAGE 4 "랭킹 분석"의 "이 브랜드 측정" 버튼.' : ' — 터미널: '}
+            {measureVia !== 'local' && <code>npm run measure:local</code>}
           </p>
         ) : (
           <p className="hint">
