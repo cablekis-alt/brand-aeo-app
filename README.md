@@ -7,15 +7,24 @@
 ChatGPT·Gemini 같은 **답변 엔진(AI)에서 브랜드가 얼마나 노출·인용되는지**를 주간으로 측정하는 콘솔입니다.
 같은 질문을 반복 호출해 언급률·Share of Mention·추천 순위·사실성·EEAT·인용 출처를 집계하고 AEO Score로 요약합니다.
 
-![대시보드 — 측정 파이프라인 개요와 AEO Score](docs/screenshot-dashboard.png)
+라이트/다크/시스템 테마를 지원합니다. (왼쪽 라이트 · 오른쪽 다크)
 
-![랭킹 분석 — 같은 업종·지역 코호트 순위와 경쟁사 비교](docs/screenshot-ranking.png)
+<table>
+  <tr>
+    <th>라이트</th>
+    <th>다크</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshot-dashboard.png" alt="대시보드 (라이트)" width="420"></td>
+    <td><img src="docs/screenshot-dashboard-dark.png" alt="대시보드 (다크)" width="420"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshot-ranking.png" alt="랭킹 분석 (라이트)" width="420"></td>
+    <td><img src="docs/screenshot-ranking-dark.png" alt="랭킹 분석 (다크)" width="420"></td>
+  </tr>
+</table>
 
-라이트/다크/시스템 테마를 지원합니다 (다크 모드):
-
-![대시보드 — 다크 모드](docs/screenshot-dashboard-dark.png)
-
-![랭킹 분석 — 다크 모드](docs/screenshot-ranking-dark.png)
+<sub>위: 대시보드(측정 파이프라인 개요·AEO Score) · 아래: 랭킹 분석(코호트 순위·경쟁사 비교)</sub>
 
 - **프론트/배포**: Vite + React → Vercel (Hobby, 무료).
 - **측정 파이프라인**: `server/`의 B1~B9 로직(질문 생성 → 엔진 수집 → 정규화 → 다차원 분석 → 스코어).
