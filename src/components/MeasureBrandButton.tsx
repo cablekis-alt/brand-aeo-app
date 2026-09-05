@@ -44,7 +44,7 @@ export default function MeasureBrandButton({ tenantId, brandName }: { tenantId: 
         const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
         if (!res.ok) throw new Error(body.error || `측정 요청 실패 (HTTP ${res.status})`)
         setMessage(
-          `✓ GitHub Actions 측정 시작 — ${brandName}. 경쟁사가 없으면 자동 추론해 함께 측정하고, 완료되면 이 화면에 순위·SoM이 채워집니다(수 분).` +
+          `✓ GitHub Actions 측정 시작 — ${brandName}. 경쟁사가 없으면 자동 추론해 함께 측정합니다. 완료·배포 후(수 분) 새로고침하면 순위·SoM이 반영됩니다.` +
             (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
         )
         return
@@ -75,7 +75,7 @@ export default function MeasureBrandButton({ tenantId, brandName }: { tenantId: 
           {!ready
             ? '환경 확인 중…'
             : measureVia === 'github'
-              ? 'GitHub Actions가 측정하고 완료 시 이 화면에 자동 반영됩니다.'
+              ? 'GitHub Actions가 측정하고, 완료·배포 후 새로고침하면 이 화면에 반영됩니다.'
               : measureVia === 'local'
                 ? '로컬에서 즉시 측정·반영합니다.'
                 : '로컬에서만 측정 가능 — 배포는 Vercel에 GH_MEASURE_TOKEN 필요.'}

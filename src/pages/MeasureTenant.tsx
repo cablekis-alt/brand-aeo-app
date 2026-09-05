@@ -115,7 +115,7 @@ export default function MeasureTenant() {
             : measureVia === 'local'
               ? '로컬 백엔드가 감지됐습니다. 선택 후 측정하면 baking까지 이어서 실행합니다.'
               : measureVia === 'github'
-                ? '배포 환경입니다. 버튼은 GitHub Actions 측정을 시작하고, 끝나면 이 사이트에 자동 반영됩니다.'
+                ? '배포 환경입니다. 버튼은 GitHub Actions 측정을 시작하고, 완료·배포 후 새로고침하면 결과가 반영됩니다.'
                 : '로컬에서만 측정 가능 — 배포에서 켜려면 Vercel에 GH_MEASURE_TOKEN을 넣으세요.'}
         </p>
         <div className="measure-pick">
