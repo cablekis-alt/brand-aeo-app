@@ -2,8 +2,8 @@ import 'dotenv/config';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import express from 'express';
+import { packagedDataMode } from './appPaths.js';
 import { collectPage } from './aeo/collectPage.js';
-import { appendTenant, loadTenants } from './config.js';
 import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -20,6 +20,7 @@ import {
   isBakedTenant,
   loadRuntimeTenants,
   normalizeTenantDraft,
+  persistTenantForRuntime,
   registerTenant,
   removeOverlayTenant,
   toTenantSummary,
@@ -306,10 +307,10 @@ app.post('/api/measure-requests/process', async (_req, res) => {
       try {
         // 큐에 저장된 시점의 정규화가 오래됐을 수 있으니 측정 직전 한 번 더 정규화한다.
         const t = normalizeTenantDraft(item.tenant);
-        const existing = await loadTenants();
-        if (!existing.some((x) => x.tenantId === t.tenantId)) await appendTenant(t);
+        await persistTenantForRuntime(t);
         const { scorecard } = await runWeeklyPipeline(t, store);
-        execSync(`npx tsx scripts/publish-tenant.ts ${t.tenantId}`, { stdio: 'inherit' });
+        // dev 체크아웃에서만 src/data baking(웹 배포용). 패키징 설치본은 store가 곧 데이터.
+        if (!packagedDataMode()) execSync(`npx tsx scripts/publish-tenant.ts ${t.tenantId}`, { stdio: 'inherit' });
         await clearQueue(t.tenantId);
         results.push({ tenantId: t.tenantId, brandName: t.brandName, aeoScore: scorecard.aeoScore.current, ok: true });
       } catch (err) {

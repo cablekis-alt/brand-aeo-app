@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { PIPELINE_DATA_DIR } from './appPaths.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
 import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
@@ -22,7 +23,7 @@ export interface ResultStore {
   getCohortScorecards(industry: string, region: string, weekOf: string): Promise<WeeklyScorecard[]>;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DATA_DIR = PIPELINE_DATA_DIR;
 
 async function ensureDir(dir: string) {
   await mkdir(dir, { recursive: true });

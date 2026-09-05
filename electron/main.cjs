@@ -113,6 +113,9 @@ async function createWindow() {
   loadEnvForPackaged()
   process.env.PORT = API_PORT
   process.env.ELECTRON_STATIC_DIR = path.join(__dirname, '..', 'dist') // asar 내부 dist
+  // 측정 데이터·오버레이·큐는 쓰기 가능한 userData로(asar은 읽기전용). server/appPaths.ts가 참조.
+  process.env.APP_DATA_DIR = app.getPath('userData')
+  console.log('[data] APP_DATA_DIR =', process.env.APP_DATA_DIR)
   try {
     require(path.join(__dirname, '..', 'dist-electron', 'server.cjs')) // app.listen 실행
   } catch (err) {

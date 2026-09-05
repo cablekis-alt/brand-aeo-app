@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { appendTenant, loadTenants } from './config.js';
+import { packagedDataMode } from './appPaths.js';
 import { inferCompetitors } from './brandInference.js';
 import { runWeeklyPipeline } from './pipeline.js';
-import { normalizeTenantDraft } from './tenantRegistry.js';
+import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
 import type { FileResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
@@ -106,7 +106,7 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
     //    본 브랜드보다 "먼저" 측정해 같은 주차 코호트에 포함시킨다. cohortOnly 초안이라 재귀로 더 퍼지지 않는다.
     //    이미 존재하는 테넌트는 건너뛰므로, 재측정 시엔 빠진 경쟁사만 다시 채워진다(self-healing). autoCohort=false면 생략.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
-      const existingIds = new Set((await loadTenants()).map((item) => item.tenantId));
+      const existingIds = new Set((await loadRuntimeTenants()).map((item) => item.tenantId));
       const cohortDrafts = cohortOnlyDraftsFrom(tenant)
         .filter((draft) => !existingIds.has(draft.tenantId))
         .slice(0, MAX_AUTO_COHORT);
@@ -123,20 +123,25 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
     }
   }
 
-  const inConfig = (await loadTenants()).some((item) => item.tenantId === tenant.tenantId);
-  if (!inConfig) await appendTenant(tenant);
+  await persistTenantForRuntime(tenant);
 
   const { scorecard } = await runWeeklyPipeline(tenant, store);
   const weekOf = scorecard.weekOf;
   const id = tenant.tenantId;
-  const seed = SEED_LIVE[id];
-  if (seed) {
-    writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
-    const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
-    writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
-    execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
-  } else {
-    execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
+
+  // 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽는다.
+  // dev 체크아웃에서만 src/data로 baking(웹 배포용) + git 반영을 한다. tsx/git이 없는
+  // 설치본에서는 이 단계를 건너뛴다.
+  if (!packagedDataMode()) {
+    const seed = SEED_LIVE[id];
+    if (seed) {
+      writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
+      const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
+      writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
+      execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
+    } else {
+      execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
+    }
   }
 
   return {

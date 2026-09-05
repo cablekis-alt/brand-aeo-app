@@ -30,6 +30,18 @@ npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠�
 
 패키징 모드에서는 vite 없이 **번들된 서버가 인프로세스로 떠서** `dist/`(정적 UI)와 `/api`를 같은 오리진(`:4000`)에서 서빙합니다.
 
+### 데이터 위치 (측정 결과·등록 브랜드)
+
+설치본은 asar(읽기전용)를 피해 **사용자 데이터 폴더**(`app.getPath('userData')`, Windows는 `%APPDATA%/Web4AI Brand AEO/`)에 씁니다:
+
+| 항목 | 경로 |
+|---|---|
+| 측정 파이프라인 데이터 | `<userData>/data/<tenantId>/...` |
+| 등록 브랜드(오버레이) | `<userData>/tenants.overlay.json` |
+| 측정·삭제 대기열 | `<userData>/measure-requests.json`, `delete-requests.json` |
+
+측정하면 결과가 여기에 저장되고 앱이 곧바로 읽어 대시보드·랭킹에 반영합니다. **git·tsx 없이** 로컬에서 완결됩니다(웹처럼 src/data baking·배포를 하지 않음). 이 경로 분기는 `server/appPaths.ts`(`APP_DATA_DIR`)가 담당하며, dev·웹에서는 미설정이라 기존 저장소 경로를 그대로 씁니다.
+
 ### API 키(.env)
 
 키는 **설치본에 굽지 않습니다**(보안). 패키징 앱은 아래 순서로 `.env`를 찾습니다:
@@ -59,10 +71,16 @@ npx electron-builder --dir -c.directories.output=%TEMP%/eb-out
 
 보안 기본값: `contextIsolation: true`, `nodeIntegration: false`.
 
+## 완료
+
+- [x] 개발 모드 셸 (`npm run electron:dev`)
+- [x] electron-builder 패키징(설치본/포터블) + 번들 서버 + 정적 서빙
+- [x] **패키징 모드 측정** — userData에 저장·조회, git·tsx 없이 로컬 완결(위 "데이터 위치" 참고)
+
 ## 아직 안 된 것 (다음 단계)
 
-- [ ] **로컬 측정 UX** — preload로 측정 트리거·진행률·git 반영을 네이티브하게 연결
-- [ ] **패키징 모드 측정 경로** — 현재 `measureAndBake`는 `npx tsx scripts/...`를 execSync로 부르고 `src/data`에 써서 dev 체크아웃을 전제. 설치본에서 측정하려면 데이터 경로(userData)와 publish 방식을 재설계해야 함. **패키징 앱은 지금은 조회·대시보드 중심, 측정은 dev 셸(`npm run electron:dev`)에서.**
+- [ ] **첫 실행 시드** — 설치 직후 userData/data가 비어 있어 코호트가 빈 상태. 커밋된 스코어카드를 첫 실행에 시드하면 기존 코호트가 바로 보임(선택).
+- [ ] **로컬 측정 UX** — preload로 측정 진행률·완료 알림을 네이티브하게 연결
 - [ ] **앱 아이콘** — 현재 기본 Electron 아이콘
 - [ ] **코드 서명** — 미서명(설치 시 SmartScreen 경고)
 

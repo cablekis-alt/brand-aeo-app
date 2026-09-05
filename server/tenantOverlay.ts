@@ -1,9 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { get, put } from '@vercel/blob';
+import { stateFilePath } from './appPaths.js';
 import type { TenantConfig } from './types.js';
 
-const LOCAL_PATH = path.resolve(process.cwd(), 'server/tenants.overlay.json');
+const LOCAL_PATH = stateFilePath('tenants.overlay.json');
 const BLOB_PATHNAME = 'tenants-overlay.json';
 
 export function blobStoreEnabled(): boolean {
