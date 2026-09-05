@@ -59,9 +59,17 @@ const MENU: MenuGroup[] = [
 
 export default function Sidebar() {
   return (
-    <nav className="sidebar" aria-label="Brand AEO 메뉴">
-      <p className="sidebar-mark">Brand AEO</p>
-      <p className="sidebar-scope">Site SEO와 별도로 운영되는 답변엔진 가시성 콘솔</p>
+    <nav className="sidebar" aria-label="Web4AI Brand AEO 메뉴">
+      <header className="sidebar-brand">
+        <div className="brand-lockup">
+          <span className="brand-monogram" aria-hidden="true">W4</span>
+          <span className="brand-names">
+            <span className="brand-eyebrow">WEB4AI</span>
+            <span className="brand-title">Brand AEO</span>
+          </span>
+        </div>
+        <p className="sidebar-scope">Site SEO와 별도로 운영되는 답변엔진 가시성 콘솔</p>
+      </header>
       {MENU.map((group) => (
         <div className="sidebar-group" key={group.title}>
           <p className="sidebar-group-title">
