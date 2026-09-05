@@ -37,18 +37,24 @@ export async function inferBrandFields(pageText: string, brandName = ''): Promis
 --- 페이지 텍스트 ---
 ${text.slice(0, 4000)}`;
 
-  try {
-    const result = await new GeminiJudgeClient().call({ system, user });
-    const parsed = parseJsonLoose<Partial<InferredBrandFields>>(result.text);
-    if (!parsed) return EMPTY;
-    return {
-      industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
-      region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
-      address: typeof parsed.address === 'string' ? parsed.address.trim() : '',
-    };
-  } catch {
-    return EMPTY;
+  // Gemini(gemini-3.7-flash)가 동일 입력에도 간헐적으로 빈값을 반환하므로, 결과가 비면
+  // 몇 번 더 시도해 non-empty를 채택한다(자동채우기 일관성 — 환경별 결과 차이의 주원인이었음).
+  const judge = new GeminiJudgeClient();
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const result = await judge.call({ system, user });
+      const parsed = parseJsonLoose<Partial<InferredBrandFields>>(result.text);
+      const out: InferredBrandFields = {
+        industry: typeof parsed?.industry === 'string' ? parsed.industry.trim() : '',
+        region: typeof parsed?.region === 'string' ? parsed.region.trim() : '',
+        address: typeof parsed?.address === 'string' ? parsed.address.trim() : '',
+      };
+      if (out.industry || out.region || out.address) return out;
+    } catch (err) {
+      console.error('[inferBrandFields] Gemini 호출 실패:', err instanceof Error ? err.message : err);
+    }
   }
+  return EMPTY;
 }
 
 /**
@@ -102,32 +108,35 @@ export async function inferBrandFromDomain(
 brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧은 명사(예: "성형외과"), region은 시+구(예: "서울 강남"), address는 도로명 주소(예: "서울 서초구 강남대로 419")
 설명 없이 JSON만 반환하세요.`;
 
-  try {
-    // 웹검색 그라운딩 우선 시도
-    const result = await new GeminiEngineClient().call({ system, user });
+  const attempt = async (client: GeminiEngineClient | GeminiJudgeClient) => {
+    const result = await client.call({ system, user });
     const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string; address: string }>>(result.text);
-    if (!parsed) return EMPTY_DOMAIN;
     return {
-      brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
-      industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
-      region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
-      address: typeof parsed.address === 'string' ? parsed.address.trim() : '',
+      brandName: typeof parsed?.brandName === 'string' ? parsed.brandName.trim() : '',
+      industry: typeof parsed?.industry === 'string' ? parsed.industry.trim() : '',
+      region: typeof parsed?.region === 'string' ? parsed.region.trim() : '',
+      address: typeof parsed?.address === 'string' ? parsed.address.trim() : '',
     };
-  } catch {
+  };
+  const nonEmpty = (o: { brandName: string; industry: string; region: string; address: string }) =>
+    Boolean(o.brandName || o.industry || o.region || o.address);
+
+  // Gemini가 간헐적으로 빈값을 주므로 그라운딩→추론을 최대 2회씩 시도해 non-empty를 채택한다.
+  for (let round = 0; round < 2; round += 1) {
     try {
-      const result = await new GeminiJudgeClient().call({ system, user });
-      const parsed = parseJsonLoose<Partial<{ brandName: string; industry: string; region: string; address: string }>>(result.text);
-      if (!parsed) return EMPTY_DOMAIN;
-      return {
-        brandName: typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '',
-        industry: typeof parsed.industry === 'string' ? parsed.industry.trim() : '',
-        region: typeof parsed.region === 'string' ? parsed.region.trim() : '',
-        address: typeof parsed.address === 'string' ? parsed.address.trim() : '',
-      };
-    } catch {
-      return EMPTY_DOMAIN;
+      const grounded = await attempt(new GeminiEngineClient()); // 웹검색 그라운딩(정확)
+      if (nonEmpty(grounded)) return grounded;
+    } catch (err) {
+      console.error('[inferBrandFromDomain] 그라운딩 실패:', err instanceof Error ? err.message : err);
+    }
+    try {
+      const reasoned = await attempt(new GeminiJudgeClient()); // 순수 추론 폴백
+      if (nonEmpty(reasoned)) return reasoned;
+    } catch (err) {
+      console.error('[inferBrandFromDomain] 추론 실패:', err instanceof Error ? err.message : err);
     }
   }
+  return EMPTY_DOMAIN;
 }
 
 export interface InferredCompetitor {
