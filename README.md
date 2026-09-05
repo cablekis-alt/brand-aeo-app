@@ -11,6 +11,10 @@ ChatGPT·Gemini 같은 **답변 엔진(AI)에서 브랜드가 얼마나 노출·
 
 ![랭킹 분석 — 같은 업종·지역 코호트 순위와 경쟁사 비교](docs/screenshot-ranking.png)
 
+라이트/다크/시스템 테마를 지원합니다 (다크 모드):
+
+![대시보드 — 다크 모드](docs/screenshot-dashboard-dark.png)
+
 - **프론트/배포**: Vite + React → Vercel (Hobby, 무료).
 - **측정 파이프라인**: `server/`의 B1~B9 로직(질문 생성 → 엔진 수집 → 정규화 → 다차원 분석 → 스코어).
 - **측정 실행 위치**: 로컬 PC(권장) 또는 GitHub Actions. Vercel 서버리스는 실행 시간·리전 제약으로 측정을 직접 돌리지 않습니다.
