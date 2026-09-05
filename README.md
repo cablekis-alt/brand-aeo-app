@@ -1,5 +1,7 @@
 # Brand AEO — 답변 엔진 브랜드 가시성 콘솔
 
+[![최신 릴리스](https://img.shields.io/github/v/release/cablekis-alt/brand-aeo-app?label=%EC%B5%9C%EC%8B%A0%20%EB%A6%B4%EB%A6%AC%EC%8A%A4&sort=semver)](https://github.com/cablekis-alt/brand-aeo-app/releases/latest)
+
 ChatGPT·Gemini 같은 **답변 엔진(AI)에서 브랜드가 얼마나 노출·인용되는지**를 주간으로 측정하는 콘솔입니다.
 같은 질문을 반복 호출해 언급률·Share of Mention·추천 순위·사실성·EEAT·인용 출처를 집계하고 AEO Score로 요약합니다.
 
