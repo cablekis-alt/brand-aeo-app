@@ -138,7 +138,7 @@ export default function MeasureTenant() {
             onClick={() => void measureOne()}
             disabled={locked || !pickedTenant || measuring}
           >
-            {measuring ? '진행 중…' : measureVia === 'github' ? 'GitHub에서 측정' : canMeasure ? '선택 측정' : '로컬에서만 측정 가능'}
+            {measuring ? '진행 중…' : canMeasure ? '측정 시작' : '로컬에서만 측정 가능'}
           </button>
         </div>
         {picked && (
