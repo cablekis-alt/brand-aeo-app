@@ -234,50 +234,7 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.medifinder.com/en/lists/plastic-surgery/top-5-plastic-surgery-clinics-in-south-korea/?utm_source=openai",
-          "domain": "medifinder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.realself.com/find/South-Korea/Plastic-Surgeon?utm_source=openai",
-          "domain": "realself.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gangnambeautyguide.com/en/?utm_source=openai",
-          "domain": "gangnambeautyguide.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://us-uk.bookimed.com/clinics/country%3Drepublic-of-korea/direction%3Dplastic-surgery/best/?utm_source=openai",
-          "domain": "us-uk.bookimed.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://s24.q4cdn.com/622300748/files/doc_news/The-Largest-Plastic-Surgery-Information-Platform-in-South-Korea-Launches-UNNI-a-Global-K-Medical-Information-App-for-Foreigners-2023.pdf?utm_source=openai",
-          "domain": "s24.q4cdn.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/KoreaSeoulBeauty/comments/1n127oa?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1vkjov6/i_have_a_personal_vendetta/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -339,97 +296,26 @@
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
+      "competitorMentions": [
         {
-          "sentence": "원진성형외과 (강남): 오랜 역사와 많은 케이스를 보유한 대형 병원",
-          "sentiment": "neutral"
+          "name": "강남세브란스성형외과",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "강남세브란스병원 성형외과 - 강남 중심에 위치해 있으며, 신뢰도 높은 의료진과 시설이 갖추어져 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
         }
       ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
+      "shareOfMention": 0,
       "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "원진성형외과 (강남): 오랜 역사와 많은 케이스를 보유한 대형 병원",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": "강남",
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "원진성형외과 (강남) – 대형 규모의 종합 성형외과",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "원진성형외과 (강남) – 대형 규모의 종합 성형외과",
-          "claimType": "location",
+          "claimText": "3. **원진성형외과** - 오랜 역사와 경험을 바탕으로 많은 사람들에게 추천되고 있습니다.",
+          "claimType": "other",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
@@ -441,25 +327,143 @@
     },
     {
       "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
         {
-          "sentence": "* **원진성형외과** (강남역): 눈, 코, 체형 등 다양한 분야",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "강남세브란스성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "raw": "https://wellmap.co/blog/cosmetic-surgery-seoul-guide?utm_source=openai",
+          "domain": "wellmap.co",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
         },
         {
+          "raw": "https://koreaexperience.com/blog/best-plastic-surgery-clinics-for-foreigners-in-seoul?utm_source=openai",
+          "domain": "koreaexperience.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://koreaexperience.com/blog/best-plastic-surgery-clinics-for-foreigners-in-seoul?utm_source=openai",
+          "domain": "koreaexperience.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.realself.com/find/South-Korea/Seoul/Plastic-Surgeon?utm_source=openai",
+          "domain": "realself.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wellmap.co/blog/cosmetic-surgery-seoul-guide?utm_source=openai",
+          "domain": "wellmap.co",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulmirror.com/?utm_source=openai",
+          "domain": "seoulmirror.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kclinichelp.com/?utm_source=openai",
+          "domain": "kclinichelp.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kclinichelp.com/?utm_source=openai",
+          "domain": "kclinichelp.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://us-uk.bookimed.com/clinics/country%3Drepublic-of-korea/city%3Dseoul/direction%3Dplastic-surgery/best/?utm_source=openai",
+          "domain": "us-uk.bookimed.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulrhinoplasty.net/?utm_source=openai",
+          "domain": "seoulrhinoplasty.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://khunkim.com/en/hospitals/directory?utm_source=openai",
+          "domain": "khunkim.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "원진성형외과 (강남역): 오랜 전통의 대형 성형외과",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "강남역",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
           "name": "기린성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **눈 성형 / 눈 재수술**: 자연주의, 아이큐, 시선, 기린 등",
+              "sentiment": "neutral"
+            }
+          ]
         },
         {
           "name": "유노성형외과",
@@ -480,18 +484,23 @@
           "name": "바이미성형외과",
           "mentionCount": 0,
           "sentences": []
+        },
+        {
+          "name": "강남세브란스성형외과",
+          "mentionCount": 0,
+          "sentences": []
         }
       ],
-      "shareOfMention": 1,
+      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHF8K4zM6lvbhJU-LaZFceLzxFodjxs1KaPQvJiliKZlss2tvAIFBG5JRHdv7vY5hb-lrB5xGrZL8ngzPa-5lNHRRD5b8e4QvEjyCVXzEf-AB1ivA==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHu3_dU6vOmgmBeEGa5KPmwXxCU8mfYnHBSgYPlzI2XX2EEpe-LiTRUKRRumDtqWRMrOMjJeHMQLMuG1tob0kWxL6ewvrq6Y54QqE2dFaEws31MRGIB1vxlvjMKrBkSmGCooSCGDYIFjkwqbZ23wf0TcPa0sMs=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuu4_dQaSzPJz6rJRSHagvn4Fsy_qzeXvbXWF3gJ4qi5KcguMMheEQeA4Hm7V0Mf3Gab2GO9F427vCK3Ezrpr-c-vakdv6ztg4_hsm9XTnUELtXx3RvlgBHNVWspWcaXqicGPZ",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEr6NIUEz-IYwqEkHKkygjGIozVcrs1UST4_aH0FGAohtXSNQ1aYQ7jHqIQj27QWgZTwyxZ2PJpV1yae3RPAaAs9s_KylktQ9fxEK74",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -501,15 +510,44 @@
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "원진성형외과 (강남역)",
+          "claimText": "원진성형외과 (강남): 대규모 시설과 다양한 진료 과목 보유",
           "claimType": "location",
-          "verdict": "contradicted",
+          "verdict": "supported",
+          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **원진성형외과** (강남역): 규모가 매우 크고 국내외 인지도가 높은 대표적인 대형 성형외과 중 하나입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "원진성형외과 (강남역): 규모가 매우 크고 국내외 인지도가 높은 대표적인 대형 성형외과 중 하나입니다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
           "responseValue": "강남역",
           "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
         }
       ],
       "factualitySupported": 0,
-      "factualityContradicted": 1,
+      "factualityContradicted": 0,
       "brandOwnedCitation": false
     },
     {
@@ -714,222 +752,8 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://truemoney.kr/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EB%B9%84%EC%9A%A9-%EC%B4%9D%EC%A0%95%EB%A6%AC-%EC%8B%9C%EC%88%A0%EB%B3%84-%ED%8F%89%EA%B7%A0-%EA%B0%80%EA%B2%A9%EA%B3%BC/?utm_source=openai",
-          "domain": "truemoney.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
-          "domain": "seouljsai.cloud",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
-          "domain": "seouljsai.cloud",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/seoul-double-eyelid?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/seoul-double-eyelid?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/seoul-double-eyelid?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/seoul-double-eyelid?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/66529?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://skinpro.cceeo.com/ko/korean-dermatology-clinic/seoul-sinsa-ts-plastic-surgery-eye-nose-contour-price-review-2026/?utm_source=openai",
-          "domain": "skinpro.cceeo.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://unni.app/hospitals/2098?tabindex=2&utm_source=openai",
-          "domain": "unni.app",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
-          "domain": "seouljsai.cloud",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://unni.app/hospitals/2098?tabindex=2&utm_source=openai",
-          "domain": "unni.app",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.miclick.co.kr/%EC%84%B1%EB%8F%99%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EB%B3%91%EC%9B%90/?utm_source=openai",
-          "domain": "miclick.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
-          "domain": "beauty.cceeo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
-          "domain": "seouljsai.cloud",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
-          "domain": "plasticsurgeryko.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.miclick.co.kr/%EC%84%B1%EB%8F%99%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EB%B3%91%EC%9B%90/?utm_source=openai",
-          "domain": "miclick.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.miclick.co.kr/%EC%84%B1%EB%8F%99%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EB%B3%91%EC%9B%90/?utm_source=openai",
-          "domain": "miclick.co.kr",
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
@@ -940,21 +764,21 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "raw": "https://www.mowatool.com/calculators/health/plastic-surgery-cost?utm_source=openai",
+          "domain": "mowatool.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beauty-cost-lab.tistory.com/11?utm_source=openai",
+          "domain": "beauty-cost-lab.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/seoul-double-eyelid?utm_source=openai",
           "domain": "plasticsurgeryko.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
-          "domain": "seouljsai.cloud",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.modoodoc.com/hospitals/category-search?city=%EC%84%9C%EC%9A%B8&district=%EC%84%9C%EC%B4%88%EA%B5%AC&major=%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC&sub_tc=%EC%8C%8D%EA%BA%BC%ED%92%80%EC%88%98%EC%88%A0&tab=&tc=%EB%88%88%EC%84%B1%ED%98%95&utm_source=openai",
-          "domain": "modoodoc.com",
-          "ownerType": "third-party-ugc",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -966,29 +790,161 @@
       ],
       "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
         {
-          "claimText": "서초구 쌍꺼풀 수술 병원의 실비 견적과 후기들을 확인할 수 있습니다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
+          "raw": "https://seoulbeautytalk.com/blog/how-much-does-plastic-surgery-cost-in-seoul?utm_source=openai",
+          "domain": "seoulbeautytalk.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         },
         {
-          "claimText": "베리굿성형외과의원 쌍꺼풀 수술은 약 42만 9,000원에 진행된 사례도 있습니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
+          "raw": "https://www.clinicseoul.net/korea-plastic-surgery-price-list/?utm_source=openai",
+          "domain": "clinicseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         },
         {
-          "claimText": "‘순플러스성형외과의원’에서는 눈밑지방재배치 시술에 이벤트가 적용된 실제 시술가격 119만 원 (VAT 포함)을 확인할 수 있습니다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
+          "raw": "https://seoulclinics.io/data?utm_source=openai",
+          "domain": "seoulclinics.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wellmap.co/blog/cosmetic-surgery-seoul-guide?utm_source=openai",
+          "domain": "wellmap.co",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulmirror.com/?utm_source=openai",
+          "domain": "seoulmirror.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/en/?utm_source=openai",
+          "domain": "localpricekorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seoulclinics.io/clinics?type=surgical&utm_source=openai",
+          "domain": "seoulclinics.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kclinichelp.com/?utm_source=openai",
+          "domain": "kclinichelp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.clinicseoul.net/korea-plastic-surgery-price-list/?utm_source=openai",
+          "domain": "clinicseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://wellmap.co/blog/cosmetic-surgery-seoul-guide?utm_source=openai",
+          "domain": "wellmap.co",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         }
       ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "openai",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://beauty.cceeo.com/ko/by-area/2928.html?utm_source=openai",
+          "domain": "beauty.cceeo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://seouljsai.cloud/seoul-rhinoplasty-clinic-guide-cost-revision?utm_source=openai",
+          "domain": "seouljsai.cloud",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.miclick.co.kr/%EC%84%B1%EB%8F%99%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EB%B3%91%EC%9B%90/?utm_source=openai",
+          "domain": "miclick.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://unni.app/hospitals/2098?tabindex=2&utm_source=openai",
+          "domain": "unni.app",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://skinpro.cceeo.com/ko/korean-dermatology-clinic/seoul-sinsa-ts-plastic-surgery-eye-nose-contour-price-review-2026/?utm_source=openai",
+          "domain": "skinpro.cceeo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.miclick.co.kr/%EC%84%B1%EB%8F%99%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EB%B3%91%EC%9B%90/?utm_source=openai",
+          "domain": "miclick.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://skinpro.cceeo.com/ko/korean-dermatology-clinic/seoul-sinsa-ts-plastic-surgery-eye-nose-contour-price-review-2026/?utm_source=openai",
+          "domain": "skinpro.cceeo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
@@ -1001,38 +957,7 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNO3dAH5sp2YM-LmsZLje4Z_GWLarOEYkWZHBgmr5mVsVd9txApwuxIY5cpV3gx4r_lnKXxKPM6m03WDy8-bgZr4X6yR87obleq4q_fGja6XIa20mZ4VvQ_xv-oXn2DQfv",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHC3o0bjRl4WEs0z4cOF16xt_oOAaS6NUO37JbbMvV1-6dC8hXZDE6cEbAJ0bZROAKx097-X9MAgmK6eSmhfLrBrWDMkSFPxio7lQ-P_a57m0gJKPN-dnjpyyQFnWjs-PcHSHcceS5w_LjGrWfbODDj_3Jco32LgSc=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsLN-B90MFZnLhhaDgfC8Jkk62H31aO4sxNhWcjzlZtZvcFqrG1s1Rmsebo1_lJsYs13BGW964ow9QXmfX8dMyqeq636W0jUIu5375aND7O4PxdBLAjtrVDAuh6QscKV1Oa1jLQtHiewjcJwMO0LTNyTEb0woUy33Jb_QhKhB9w_u8NUX5H_w=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGpKF-us7zWd3Mqtdczwvxz5krcoG__AMA83Pojh460gHq7g1bzqFT8s7owwCL9ZIcZnKD0NL7JnSRjBcJQ89pYOAHhaayf84fGZk7-2jAOMFgsHDLr5qYqkP7bFtkeuImtem7AsoeAMcbvj5XOP3ca45JRojHvPO4QfXaTpGue_Uxj9ipTvywgVxoSBiSPY_QryBiB2TxfojTQcXAq1aS33WgXFDizNqWfmDSn0qaB_CfZi25ED8HAH90rQ8olZ5c29A3UYPHqS9NYc_tswFCa4g==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOKik1wawix7AhHbwcz0QrUEhx1IO_y3FZxJ320QyTFgS2zBd2GIp5vhmziSEqmEWBjX1drePSY04kXGMnl_p4snZYuW1eq2LKOQZIhXbQy4VA_LOr07sOl6rux11fw69w",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -1048,68 +973,7 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoTTroEBtrrpDG24vV65-ODy6KNA3lq-sJOke3WLjOZ16OAuH9LfxmbUevM3RX-gNEZMC-EmvEQbjpZeMwIct8AYUUDk15S8xuzydS1Uj9nLa9xC9m3dcM",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWQ4QtM_jWTFLnWWGmW_DRwUP1RsqE1LHPsJm45WqCnHfMiyjjeDs8hcPVAPkJbcIK1ArgFij57z0zwHyHiUv9KPmEsiyCtJw0K3QETxzo9cdG8hU5CuthUPIfWg-W25BAtaBpkET1pjiUYgvBR7yLyE0ut-0Vx05zXlUeenYoC-smdGmcJ-5lQcbxWKaWPsAxFV5D25JEkc-8OOMo5iieLt8vf9N3UfHRGb6ES49Ro8jMMUUfYCret7MjPOjL3CNH0NIbzNE3eHA81x7FLtFAUYXb74JJOrDtUHMISuCQlB9f1SFzshSYINlH5o-iVcoy5_vTBjww4sZ-o8u2PiWhzJlhpKW-rC18Zogaf7DLmDufTVTLmKUyaBmyljLM93XlQ0Nw-DHQVaqQ_vJTsKC09sbRr8mKqoNZkJ1FJACbArlRIZ3TAOtzYVOARqlexPi7RNKEYP7SRLKEXJaVQvVwlKxau4ew-yHkvGmyobV-tjY=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_T584OTF2gjoACgW23itHSAwaaelAnRBO8eq_3aGCZ0A8ypZHQr8nKiTFP9kl7nskxROYE6xt5CEJJ942N1pc2SHqz23s6gZMvtB-Atz4rdq8PKE9IML_8-H7OzREvtzj3zbnqt1YbMtOczX_V3CgrvOHMg==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOV8CHHC2Ju2oiSh5VL802MAAKOXxHj56K5YoIO7uBXUnXHwpnO13mI0LPIlcHwuBv8cdn2-4Z3CRzpoRLzx7S5gusLt3dzJl7m_rNgRNURPWSfG3Yc_tQ0CPvtNdv6qW_hFP7uB3bFhMHyVXNnkuyDmtNcEgyXBOqp3-2RaP84gwOHLe1c11s-0NhyUk1Ge1u_sfrIw==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnmbhuPuqCsij_7Hvo0z7CEXuuqqdWyhtXk2L6w8ZXJN5TrwsV_bB8SJfasj9u3m6cLU7DD2D0Gc8X2GSYhus-1u_pBy9CiAeknw3v9MMShKQQM_KUlX722KbH8T4lMFLq",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6bKisYroVNBr9Dai5Sl4vX1lhB1ZcJyQfgkXUIyHG4RavKf56FAtMe-ZPT8h_hiT18h3DijluZmZF8cXDTlkhypPE0UodwMi-qWeAvMT0k1JMhUs=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwnDSobMl29CizlubgzBinenuS_iMwI4aoN9WcbSw-nGaPuhFb9znSMkJPSyGnp14nb_hNZ6PO_8WHP5cnIXgZHvQN8iGbnV1c0Tfs2cCvzjmExB1R-5xCsg==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmVHv9VO0etBu_XAucSQk6Ik1O1v5lwSfbOnB0fI2Tr4qrvb4DhwmKoPbSQcttK3mf_q5KSg-FSbv-DHZ7mp2EY2J7723vErJXtzLbntFzkPBhYXvGA9cRiDB1KVpBpBLY",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmaJ9Q2c5fNFDWGaJROYK2MowIPX7rhtsS3w3sc4I9xgWDVAezqyahm2U2tdo5I6STBBC_Ee72vXAaUuWKTxa5tUGJT5ZUrc8dE2nrrJtviGEVX8hCtN84DIRfJyqANFUi",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkm7TzmtgdJAgdb615XahhRawlf8LHjEreZKpmVTly_y2lY9VKmT0GlGTpaGtjuHlMIpUsCWwttaBVWtS8_qzxbIVKEE0PlSSng8-Y636BZwQJhPjc0Afx_G-gODanydE-",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -1236,15 +1100,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "원진성형외과에서 수술 스케줄을 잡으려면 보통 다음 단계를 따라야 합니다:",
+          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡으려면 다음 절차를 따르시면 됩니다:",
           "sentiment": "neutral"
         },
         {
-          "sentence": "상담 예약: 먼저 온라인이나 전화로 상담 예약을 합니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "구체적인 과정이나 예약 방법은 병원마다 차이가 있을 수 있으니, 직접 원진성형외과에 문의하는 것이 가장 정확합니다.",
+          "sentence": "1. **상담 예약**: 원진성형외과의 공식 웹사이트나 전화로 상담을 예약합니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1262,18 +1122,26 @@
       "questionId": "v1-009",
       "engine": "openai",
       "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "openai",
+      "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과에서 수술 스케줄을 예약하시려면 아래와 같은 방법을 이용하실 수 있습니다:",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "WJ 원진성형외과 공식 홈페이지에서는 ‘AI 상담’, ‘카카오톡 상담’, ‘빠른 비용 상담’, ‘바로 예약’ 등 다양한 온라인 예약 방법을 제공하고 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "성형외과 진료 및 수술 관련 예약은 대표전화 02-3477-3300으로 문의하시면 됩니다.",
+          "sentence": "WJ 원진성형외과(서울 서초구 강남대로 419, 파고다타워 12~18층)에 수술 스케줄을 예약하는 방법은 아래와 같습니다:",
           "sentiment": "neutral"
         }
       ],
@@ -1287,70 +1155,38 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
-          "domain": "m.k-wonjin.co.kr",
+          "raw": "https://pf.kakao.com/_bxflzE/97821857?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/?utm_source=openai",
+          "domain": "k-wonjin.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog.k-wonjin.co.kr/?utm_source=openai",
-          "domain": "blog.k-wonjin.co.kr",
-          "ownerType": "brand-owned",
+          "raw": "https://pf.kakao.com/_bxflzE/97821857?utm_source=openai",
+          "domain": "pf.kakao.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
-        },
-        {
-          "raw": "https://academy.winner797.kr/attach/contents/%5B%EA%B5%90%EC%9C%A1%EC%9E%90%EB%A3%8C%5D%20NCS%EA%B8%B0%EB%B0%98%20%EB%B3%91%EC%9B%90%EC%BD%94%EB%94%94%EB%84%A4%EC%9D%B4%ED%84%B0%EB%A5%BC%20%EC%9C%84%ED%95%9C%20%ED%95%B5%EC%8B%AC%EC%A7%81%EB%AC%B4%EB%8A%A5%EB%A0%A5.pdf?utm_source=openai",
-          "domain": "academy.winner797.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
         }
       ],
-      "topRecommendation": "WJ 원진성형외과",
+      "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "WJ 원진성형외과에서 수술 스케줄을 예약하시려면 아래와 같은 방법을 이용하실 수 있습니다:",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "전화 예약... 성형외과 진료 및 수술 관련 예약은 대표전화 02-3477-3300으로 문의하시면 됩니다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
+          "claimText": "WJ 원진성형외과(서울 서초구 강남대로 419, 파고다타워 12~18층)",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
         }
       ],
-      "factualitySupported": 0,
+      "factualitySupported": 1,
       "factualityContradicted": 0,
       "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "먼저 WJ 원진성형외과의 공식 홈페이지나 전화로 상담 예약을 하세요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "구체적인 정보나 상담 예약을 원하시면 WJ 원진성형외과 공식 웹사이트나 고객센터로 직접 문의하시기 바랍니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
     },
     {
       "questionId": "v1-009",
@@ -1359,7 +1195,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡는 과정은 일반적으로 **[상담 예약 ➔ 내원 및 집도의 1:1 상담 ➔ 수술 일정 조율 및 예약금 결제]** 순서로 진행됩니다.",
+          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡는 전반적인 절차는 다음과 같습니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1367,43 +1203,31 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHYwCaC0tmp3tQNp8D4qLU-Our7fVYANjCvAG8aifHtmW6tzGOSyng8mrOhLoFX_5wLjCluZE6wUFhIf2lRRiBud_sIqdFrz-K1eYZucZG3dLCNH8du9jy1zqZ3mC8=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4Y_7Bfu7Ntn8WUYcTj4hWhrHrbek7gpmq6_qCZCoDWed9FJKyQOg1zgl_YlrkLtnwaWfuJDUFs3TIlTvMMNxUS0n09LM58M6OJxPimBuTclChDruM6RJnh9rREXKso1Y=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEj14kt1krp7_APoxNfuwetG-RLu0CXtoeRHt7hLC0C6lYbUCgtuM0Qy42BptUKxyynvbZY8L_iR_vNL1ms12DydbICDHJ6IeOZRp3Qd2KbtAIwML4msS0Cp0iq",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhFbSdrq-IU4EIaH6ytC-EUBc0RBgGdzEMsOwvEUWN5EFKj5IDmVahmVq85HSkEmAPo6tdVNcCah8hwViXbMpX5x5516-rCS31xG6K_TsgDMYi3PI4qTe6dxMFlg==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENt1KoT4k5ZZOLoDU7nuq940gToeeoordSM-IiM52HzzqIPeylKyOLGnHjDpBWru-2oa-ha_JRV9U_xb9hqTLCkLUM6XCb4RVv2Ju0R7pixLo=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5I1Oa36Qtc-8Vou8alDc-yYObklcP039FQzDUxuD19uqRY7B8c93RkYp7UueXA4AsBpyWCvN2rQdTyr4ySVlvLbsLamSgAFAUKI07mXb-sVBbRMbx8N-PHlo=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgMWOzFBp7pPpQ0fDX2uLsVzNuq6MLebY7Wj6O1seLyOoDGoPWvDppjTMcqreYEzoxcYSJ458bXpvrIynG_MQ_iwdug2p6n-NKojxiM7ilyy-Z",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3p7nQzyUkDaTSRaLNI3waeGUX4l4pTjhCqiHhv8QZ6GJ_ao4mzE28sZVzjVPSZbv5ICOuaXnIwArcKSNmam8B-_l_urDJBUCLzd_I46XO-88=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoSc62TwtLpcokHbcON0_3IaHRevUJBuRaGXgJQs_y0guFUcQFMumMRmhZlfUmQ3Ew1-6w9p7Lz_qnJIima40glTptkOTrtV8GgWePC5MYTtpwmO1LaQP6Vr8WoF0qfX2O9A==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFcKEtPYKG7_xtp-G1FYBqn-Diicj7b7qLQsj2ncVtHDd2G0HLH4poS8bFVAJ2zxnNg6JTqLDpZNPFCygkV3ViYR8jYDmjz1zcL7H9tdx0JeHMxXqWnQVjYnydSbYqfQ==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgMWOzFBp7pPpQ0fDX2uLsVzNuq6MLebY7Wj6O1seLyOoDGoPWvDppjTMcqreYEzoxcYSJ458bXpvrIynG_MQ_iwdug2p6n-NKojxiM7ilyy-Z",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0nBA_HQ6GOj97GMeaGsjFsqq_pMUaPTPBfDrnQq9PQwjML0alvsRNLndytYvM_B74XqShtgvoG7Ipr180YM-VH0FX9eDnkkeePAugaiAiNw==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -1413,11 +1237,11 @@
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "위치: 서울 서초구 강남대로 419 파고다타워 (강남역 10번 출구 인근)",
+          "claimText": "병원에 방문하여(강남역 10번 출구 인근 파고다타워)",
           "claimType": "location",
           "verdict": "supported",
-          "responseValue": "서울 서초구 강남대로 419 파고다타워 (강남역 10번 출구 인근)",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+          "responseValue": "파고다타워",
+          "factGraphValue": "파고다타워"
         }
       ],
       "factualitySupported": 1,
@@ -1431,15 +1255,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡는 과정은 보통 **[상담 예약 ➔ 내원 및 1:1 진료 상담 ➔ 수술 일정 확정 및 예약금 납부]** 순서로 진행됩니다.",
+          "sentence": "WJ 원진성형외과에서 수술 일정을 잡으려면 기본적으로 **‘상담 예약 ➔ 내원 및 전문의 상담 ➔ 수술 일정 조율 및 예약금 결제’** 단계를 거치게 됩니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": " * **카카오톡 상담**: 카카오톡 플러스친구에서 `WJ원진성형외과의원` 또는 `원진성형` 채널 검색 후 1:1 채팅",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 수술 날짜가 확정되면 병원에서 금식 시간(수면/전신마취 여부에 따라 다름), 복용 중단 약물(아스피린, 영양제 등), 당일 복장 및 준비물에 대한 안내를 전달받게 됩니다.",
+          "sentence": "* **카카오톡 상담:** 카카오톡 채널에서 **‘원진성형외과의원’** 검색 후 1:1 채팅 상담",
           "sentiment": "neutral"
         }
       ],
@@ -1447,49 +1267,43 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbduKAN_lFS74EyWp5ygCQGg4w47cgDSk7II-Lfup7m11-glHSu7-N3D7diPN6zl1aPBH_dOkg0HQwYjsTOQhLaCuwypWsmVlS7WDowBCxdseZD0sgCBxedGT619o=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9VQks5Lw4my-c2zixRP5ItURj5Hu5d8dj5tKkykkYkQyBZfybNGPUqDR6m_Wi96R2Od6IFcSawAWADABdB3mp_ot7ydX2de_8YZYvD9pADX5xqHNZESRQJS0=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFY-852e59K3QashgQSDXIbVtd-4sJc7DqX__yS4VAdWJOqf8wxVh8qgAcmoMC7Ipk4CWRHKIF5TndViciMaN0N8fz0ceJ_6IsHc8waP_wlVKfrkflzTaBxoJ-PtOk=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHv8k9gH5M5I9b0ocTtt9fsUFueaDQ_-McaWrjioZ2W44b-F_wfC5dQLtKvFw0W0zIjQSdDHAQBlJ3_oUfhclv-X4j6MSVf9TrHPUVGYH9P9A==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF2oVAdpmULEeH3ZDTF-OEBqfo_tCVq3uFM0_GsiTCzV94NcGsBo03osmC2VdKY6m2dpHP_tRuMOcbYdHMP9x2F_hRiMyJDYtDCSAzThBXs22GcLUmGZh_jQy4Yw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVheW97djo8yp4BfiGf0KY8YhsHtt3WQxcy19OVmuX7iIKK3dcRakjpMsdcNW2GZeCH_UzbrG20OCdOyVzxW-qJ73ABWF_MSRsVXf7heLoiKRKDDskMfciwQkIHw==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-4WsiOt-AaFFnGTn7SMkLDUb8jPsRUKDG2H_EsFn4or4YYWRISMEEvggvWHb_SeHip7dMNRJ8Le2_WbiQgjaz8Iq_fw0pbh0irhEC_MkjjbSLaJjmPNHeWXBZrEnwQReAmTqesyfTkW34OWlfYvyerG78kFDH0fKMzgEjLCHnPATP9_mwICpl-T0OBy7CDFmn5er-NOm07aSN_gsUEYpeDKEgmai0BqIwakU-BTSthhX9V64jGreMd8E0pffKvODQkTBIVGVuvMWMb9BrZI4zvk0LoZ0M2sG_gO6iLsTnQC8kcmDOQKwaaFthJkEqYp7teGh98WYq3RsvfdHHGnNhabV2ETuGbpWuhRWs8s85S2pKf1njBCVPQ_VoSg2DYT0JBStGiSOLmet1B97-O9A7r1-9fw2JfBlJ6dohEdmCHHW4WabreRFz2Az5vdOuFfRi-BtRrBWMzZoaUW93KJGmZyCzPFfpCFBaz5FeCTH0iiAt7zk1HUlzaxQlahOLUlysHSHnqtEVTY7pcVeFZvJXtUa1V1l7GYg4Z7a8ozUOf4jK7SdRmFXjMxoZ5ik87i4xAwLH6rX9rPeaVYnwOyEMdAalRnk7LOXrZiHwMVuN7AxlF7GANW7YadiOa4ObkaSh4BEgi4d3YreO8TaFRJA_ilTptLwvKvoEwucLjosFRbHxUxIeKH2WKZgBaCbkO1Xvt1kZO3XBNrfDyukVFTxCP0NFsgcT9SxDPdIRktaTRB8lzgxb-zYUy85sx4ED6bqCu4ObRzYI93MUu-wOQylO4R7mF_v4siaGs9yt8_nz1xyRVr-V9Ro8wCZEh9DwPGgopgSllcL88176cFsZvK3QNwxmoh1GJ-MobtEtE0awvBTebJuG2knpfSsZfoQTdaS6pgrQ7a6641pGuQ==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGNglfDFSjy6pafnl4j6THkTbOSJPdIwhbUCmAHRW5ER3HQfV4QfBdGzhjrHGsa_svuWnNPionCfWg26D7iMu8Jg2wg8bb2voDQoJDjGXTub0TeKb7rFxB1Ycq",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbLCWht69XajQBgmVbKqiSyDoByafnxq6BTKWVtseXA_GEo8fTQkI_taBB1bCrBzVn8OKm-xZT8oPlGxAer_Q8c38uHPrKasMNu6h7K7XgVgc=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDuEBcJBxG7MMV1r0NTM82pO6r4_FCUKGDij97t5tPfpVGD3HJKbgLaDDRH7tGpA6k9fpObVNJ_9i27F0-spolOY9A-3g8fDaxPBQ0BmfaF1Wyo4cYUFO7xeW8us8I",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtpkJAhcqdpzhLxWRpJ3uy2lgxuQxd5MUyupwPYqdgtMo_g5Anl8aHsWDgFks81d1edy2BRm_ArPJIpBl42hy9_ngM8tsh260QdI6fqrXESgUtq78cYMNC28aH",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl6XlLbP40lZGoMsAAPZAOrH29at3197vj33cA1oPTAnUlEDIumIoABT0TQOU1BliSOfIib5EjNIjvtSfRL5B8vP1S0Nhta8RWhZsVgyjgLP6vAOru7xeKmNuUFQI=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEioW7FfM2D3n4pwjkIB1iJlvtC_KcVFgWc1IlT1xmSur8vqXYA0sn7HOTNHBcWhePGv7rlusW_X1cQQi4Y03cQHTD5xPWf9TIel5yd6cHmwJXO2aJIEA5bF5VUugBgow==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyx28P8vlLXw8ANZ7RAiJQrb3KhR51aRaayGOSEi0qLImaemamFu6AuGLckxCkd3r4UBA3_HTKjbROWddCBNJkh7ldM-OgLcH9doReM0UzhfM5",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL6c_jClEz0d0BHrPlyKBg9-F9HdNt6TpozOlGsYfdQs7y6Jk13oDC3aWnJ2UrVS8b73hw2Ez92lpirpY1Mw1nJOx_9z8IcNX482_saA0N6ks=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -1499,10 +1313,10 @@
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "위치: 서울 서초구 강남대로 419 파고다타워 12~18층",
+          "claimText": "위치: 서울 서초구 강남대로 419 파고다타워 (강남역 10번 출구 인근)",
           "claimType": "location",
           "verdict": "supported",
-          "responseValue": "서울 서초구 강남대로 419 파고다타워 12~18층",
+          "responseValue": "서울 서초구 강남대로 419 파고다타워",
           "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
         }
       ],
@@ -1517,23 +1331,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡으려면 일반적으로 **[상담 예약 ➔ 내원 및 집도의 진료 상담 ➔ 수술 날짜 조율 및 예약금 결제]** 순서로 진행됩니다.",
+          "sentence": "WJ 원진성형외과에서 수술 스케줄을 잡는 과정은 일반적으로 ‘사전 상담 예약 ➔ 내원 및 1:1 상담 ➔ 수술 일정 확정 및 예약금 결제 ➔ 수술 전 검사 및 안내’ 순서로 진행됩니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "원진성형외과는 100% 예약제로 운영되기 때문에, 먼저 대면 상담 일정을 잡아야 합니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **카카오톡 상담**: 카카오톡 채널에서 **'원진성형외과의원'** 검색 후 실시간 채팅으로 예약",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 상담 후 수술을 결정하면, **원장님의 수술 스케줄과 본인이 원하는 날짜(회복 기간 등 고려)를 맞춰 최종 수술 날짜와 시간을 픽스**합니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 일정을 확정하기 위해 **수술 예약금(계약금)**을 결제합니다.",
+          "sentence": "카카오톡에서 'WJ원진성형외과' 검색 후 1:1 채팅으로 상담 희망 일시 접수",
           "sentiment": "neutral"
         }
       ],
@@ -1541,62 +1343,50 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBkfNHUiqC2xCBO1vtHj54YnYEgOvByKwKLD-ZTwTrm3WQ1fqLMX_b2Y7uL1gCBVSW_9_le0EzIC_WmoHeIkY_S9ed-kV_dJO6YSwtSFBVz5xDZybq0exY6c8yPw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETRxIFn53qgaX5PeFyeyEYMQaysoWAPO5Vs9JKiIDWqoVYyVpftIMklVG0ZShLPN5qSyOlG5VAeMmfDfYXkyMpFTHJTeiz8qvm_-l4ZbSXxtd7YKlpKnGvHPeO",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPQZVy6DbPU4loywEcNQjb1Qsx3xIv0mAk9yixd1JzReLvaVni-Nl8hDXmuDz3Ql6nbLepo9fSihaLOxmGUbHHIpgOkw4BWvBHfALxyS1OgaS-Qo2eRwlCO3I=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmTvU_J_SiZkdeY442tAxRKc4FzqxhgzaPKOQAxAJ_MRQb84Qd-bMkclzKuiELYeGAzEPcIzFex-eufnCT5JDhDa1FgLuo6R_EpgzWFhLpceJNbQE9GHyJ-XZo",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH611Z-VgVAqS6HGKxYVn2Q8tNHLI5w5OC4KtgkSPbZ1ojzrdiXa7zOmVFn_MIklLWIJnoqIwR3joxx1tUm4o-BAoBiM6ninUhf3jwV_GJcvA==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGU0y1a9B0htOS0P_1ezmyb0zXeQChh_L2dJ7QN9KFa1VBnizuuDQ8Z7aCXKuibbtkOseUL4ywEx1wt62XkDGhF7AzE488Y-5o9oh2oipr-O46G943bISkTORJJDg=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEpiPwmGZFOAcVP5dgx5JdtoOx9u4vrm9ZZ8w_BBTOtPysLRqtYrPex9Y3dwB6qlTwQ_Kv-0X-7Z4wkCj-d6Tbc2vYw5ssOeK6z5Z7CUHZ2GQ=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQn4bAGD_Xfx9YJX8QXUXhkRNY2qVPpWJU3-2NURh9iiJa3_0HwUfNtF461jVnUUX2oVzbUUxBbnzfbaeeWoy_ThP-HyHN0jqsAs1eyZhOMj8IL72PvT9Pf_5RY_s=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7xI_I5KFpWdV8YzF4tW5gmOzwR7GWcv1nL-w0XdVxr22lRRMaer-cW3laezHVXvNhC03ZbsbYwwunuqK_UVxEwb0xuvO19Wwt9ECVE2mdShWA3JN6E4bn",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETRxIFn53qgaX5PeFyeyEYMQaysoWAPO5Vs9JKiIDWqoVYyVpftIMklVG0ZShLPN5qSyOlG5VAeMmfDfYXkyMpFTHJTeiz8qvm_-l4ZbSXxtd7YKlpKnGvHPeO",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyExUe-s-yriECRvmBH65LEA9JcuSS2BQNEC2pzYZMJiWiHOJXWR_AVa5HZeS6gl8JuoT5lOn52lSdv6mJx9u4W_ono2QSOIQYSBU6T95bNj5Zk4IiQ3c33Q3D5Q==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3LtXOhUgN9iETW_PqmuyWOj5PKHQRqijaYtb-BeBMN1F40Tr-u6iles9KLCmyK7F-VyADLaDBkPtKJRJMoCcw5Qmn-s-3Y92Vgq51aIE=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEr8Xm2RwZMN0zufW6H4GMsYKhyZ2xjzKsPXUk_jsNgYWncHtia-WwxOSuv6j7yZHjOV8SVNzLvwTPOlhFwjCcAe67iIUFFQSKZ99by10LXx81vixKOfUVxK_wRvYuO",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFj1lcu5bm0HUqXVjhXSKAh0oM8QVj4G4Waz1VlAxL6j6Uf-zi-Of3rR-OcRbA4wl3typ_B3XDyrfV0pYCeMlLBWJOn262sU1v6NLBc21D66zjI4Eed9ByilKOoTCBU6A7pzg==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": null,
+      "topRecommendation": "WJ 원진성형외과",
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "강남역 10번 출구 파고다타워에 내원하여 상담실장 및 전담 원장님과 1:1 맞춤 상담을 진행합니다.",
+          "claimText": "* **위치**: 서울 서초구 강남대로 419 파고다타워 (강남역 10번 출구 인근)",
           "claimType": "location",
           "verdict": "supported",
-          "responseValue": "강남역 10번 출구 파고다타워",
+          "responseValue": "서울 서초구 강남대로 419 파고다타워",
           "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
         }
       ],
@@ -1631,6 +1421,58 @@
       "citations": [],
       "topRecommendation": null,
       "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "서울 중심부에 위치하여 접근성이 좋습니다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": null,
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "openai",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "WJ 원진성형외과와 기린성형외과는 각각의 장점과 특징을 가지고 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**전문성 및 경험**: 다양한 진료 과목과 전문성을 가지고 있으며, 다수의 경험 많은 전문의가 포진해 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**평판**: 국내외로 많은 환자들이 방문하는 곳이라 전반적인 평판이 좋은 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "기린성형외과",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "WJ 원진성형외과와 기린성형외과는 각각의 장점과 특징을 가지고 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "**개별 맞춤형 상담**: 환자 개개인에 대한 맞춤형 상담과 치료를 강조합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.6,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
@@ -1639,335 +1481,23 @@
     {
       "questionId": "v1-010",
       "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "아래는 WJ 원진성형외과와 기린성형외과(기린성형외과의원)를 비교한 내용입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "서울 서초구 강남대로 419 파고다타워 12–18층에 위치하며, 깔끔하고 세련된 환경에서 정밀 진료 시스템을 갖춘 병원입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "눈·코 성형, 리프팅, 윤곽/양악, 체형성형, 줄기세포 시술, 가슴 성형, 남자 성형, 재건 성형 등 다양한 분야를 전문적으로 다룹니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "프라이빗한 진료 환경, VIP 룸, 전담 플래너 및 관리자 체계, 전문 바리스타가 있는 카페, 전용 치료실 등 환자 중심의 편의 시스템을 제공합니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "약 30여 명의 전문 의료진이 분야별 협진 체계를 이루며, 25년 이상의 헤리티지와 전문성을 강조하고 있습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "기린성형외과",
-          "mentionCount": 5,
-          "sentences": [
-            {
-              "sentence": "아래는 WJ 원진성형외과와 기린성형외과(기린성형외과의원)를 비교한 내용입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "서울 서초구 서초대로77길 54 서초 W타워 7–8층에 위치하며, 개원 12년차에 등록의료진 31명이 활동 중입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "코, 눈, 가슴 성형 및 지방흡입/이식 등을 주요 진료 분야로 표기하고 있으며 ",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "병원 만족도는 상담 전문성 3.5점, 스태프 친절도 3.5점, 병원 시설 3.9점, 수술 기대치 3.3점, 종합 평점 3.6점(평가 참여 881건)을 기록하고 있어, 중간 정도 수준의 평가로 보입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "2015년 개원 이후 12년차로, 등록 의료진 31명이라는 규모를 갖추고 있습니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
-          "domain": "m.k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1206?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://k-wonjin.co.kr/?utm_source=openai",
-          "domain": "k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.k-wonjin.co.kr/Contents/nose/nose?utm_source=openai",
-          "domain": "m.k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://k-wonjin.co.kr/contents/facial/facial?utm_source=openai",
-          "domain": "k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://k-wonjin.co.kr/contents/skin/skin?utm_source=openai",
-          "domain": "k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1206?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1206?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
-          "domain": "m.k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1206?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
-          "domain": "m.k-wonjin.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://sungyesa.com/hlist/1206?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "WJ 원진성형외과",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "서울 서초구 강남대로 419 파고다타워 12–18층에 위치하며...",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "서울 서초구 강남대로 419 파고다타워 12–18층",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "openai",
       "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과와 기린성형외과는 각각의 특성과 장점이 있는 병원입니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "기린성형외과",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "WJ 원진성형외과와 기린성형외과는 각각의 특성과 장점이 있는 병원입니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "서울 강남에 위치해 있어 접근성이 좋습니다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "서울 강남",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남·신논현 권역에서 인지도가 높은 대형 성형외과이지만, 병원의 규모, 주력 분야, 분위기 등에서 차이가 있습니다.",
+          "sentence": "다음은 **서울 서초구**에 위치한 두 성형외과—**WJ 원진성형외과**와 **기린성형외과**—의 비교 안내입니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "WJ 원진성형외과",
+          "sentence": "##  WJ 원진성형외과",
           "sentiment": "neutral"
         },
         {
-          "sentence": "특징 및 규모: 국내 대표적인 초대형 종합 성형외과 중 하나로, 30여 명 규모의 분야별 전문의와 자체 검진센터, 마취통증의학과 상주 시스템을 갖추고 있습니다.",
+          "sentence": "광범위한 수술 분야와 체계적 시스템을 중요시한다면 → WJ 원진성형외과가 적합합니다.",
           "sentiment": "positive"
         },
         {
-          "sentence": "주요 강점 부위: 눈/코/가슴/윤곽/양악/리프팅 전 분야 균형",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "기린성형외과",
-          "mentionCount": 4,
-          "sentences": [
-            {
-              "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남·신논현 권역에서 인지도가 높은 대형 성형외과이지만, 병원의 규모, 주력 분야, 분위기 등에서 차이가 있습니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "기린성형외과",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "특징 및 규모: 신논현역 인근에 위치한 대형 성형외과로, 약 10여 명 이상의 전문의가 진료하고 있습니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "주요 강점 부위: 눈(트임), 안면윤곽, 가슴, 쁘띠/체형",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGt8keN5nZz2CcRSy5kMq3UpHFkw2BP_39E1uDFOuPG-uPbBj0Gg2W_f4bx-iRMKVjyH9RwziIkeYZ_3VDBlaal1aCRur6N8Hwj-tNbDmuI_5zy0kXGCO3c6syc-kAe4ms",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_jVf0WNtceeuuER6e79PS6g6NlNxM_a-J1LLxagpAUoJojxNIn5jymVsAVXWc-HkfvacBmXamfpEEwTNNkYogbKxtaUpYbuq6pGknXIZ9oUOejwO4UDX1lobwei7UYDUm0A==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEwpiNf2XVzAE0pzMUevktkYwx5Wq7ca4rugurY7JHC53BnH0iheCP2lXilYYnmYa45RnKmjYTfUtJwaf9_Hq3Q3CeYhqmWM0Fym0asiQX",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDj9Pk2EWFMraOCcnzabF3E7Sujv46ontL-rGgiOaZsd-bPXukd-2ggQgF_BddMaHqedTU9XoCLn90Sjwz_z8MdNvH7yY2ZAJEZCjf4Fv4sz9d8MaXEmXOQj3t9qLxNHHm",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGll9-QWxNlfFfey75BVACYKzLfo_YqOCO9wNql9BheEFkUBwwaj_j4RS89bzcXUrrc_pW5DBCsg9Uu8_he764-drMuBXtTaV_FGbAiK_wAT6wuSaRLrSzTUJ7iN3Tg",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGp6C9JkyyXVYYWu5bmY6xUs88eQr7HCYThN39Sl3uPvR5TK_d7ss9UBo90hFZhktiG33kInwxU6vg1qW-Ma8h8fpDQmaAw0aEM9L1TmudPjCjWYkxwrt5NQA==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPplSyfrPnyvC7Iir6WNULBglAkotG7bvLvNH5CQpQuYPlLWuLF-ZWQJeHnsd_nqyNTs5IuwLcEyJqio97egzNtJ6Qflipkm1gIg==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDiB1znjjA-WVZFORrQBSrGZrI7fPdek-MFtdRvP0ua_KyQCFXadNQz9pudlihEYV3GcknkrxfR7xBnlLkxQwi_NlRQbnNKOdRzWQtKGCluB03NgF8bpQETT_H",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJh4EErTvDaE3I5Tg6jeqAognc83dq7l6H6bcLnOwrlWi4Q46aJ9Oa2xuhqQ4fzQRU42XHXuhYqiVzQ53DWve8Q0N--INAvaP3Wpd84_W62ClYYZ_VYdA=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "WJ 원진성형외과는 강남역에 위치하고 있다.",
-          "claimType": "location",
-          "verdict": "contradicted",
-          "responseValue": "강남역",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 1,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 높은 인지도와 오랜 임상 경험을 가진 대표적인 성형외과이지만, 병원의 규모와 운영 시스템, 주력 분야 및 추구하는 스타일에 차이가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "WJ 원진성형외과",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "WJ 원진성형외과",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "WJ 원진성형외과",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "WJ 원진성형외과",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "WJ 원진성형외과를 추천하는 경우",
+          "sentence": "장기 노하우와 환자 중심 관리 체계가 강점입니다.",
           "sentiment": "positive"
         }
       ],
@@ -1977,82 +1507,217 @@
           "mentionCount": 7,
           "sentences": [
             {
-              "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 높은 인지도와 오랜 임상 경험을 가진 대표적인 성형외과이지만, 병원의 규모와 운영 시스템, 주력 분야 및 추구하는 스타일에 차이가 있습니다.",
+              "sentence": "다음은 **서울 서초구**에 위치한 두 성형외과—**WJ 원진성형외과**와 **기린성형외과**—의 비교 안내입니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "기린성형외과",
+              "sentence": "##  기린성형외과",
               "sentiment": "neutral"
             },
             {
-              "sentence": "기린성형외과",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "기린성형외과",
+              "sentence": "특화된 성형 분야, 특히 외상 응급 대응이나 줄기세포·리프팅 등에 관심 있다면 → 기린성형외과를 고려해보세요.",
               "sentiment": "positive"
             },
             {
-              "sentence": "기린성형외과",
+              "sentence": "안전 시스템과 실제 후기 만족도가 높은 편입니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "기린성형외과",
+              "sentence": "줄기세포, 동안·노화 예방, 양악·윤곽, 눈·코 성형, 가슴성형, 체형 관리 등을 폭넓게 다룹니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "기린성형외과를 추천하는 경우",
+              "sentence": "대학병원급 안전 시스템, 마취과 전문의 실시간 모니터링, 1인 수술 제도, 수술 중 보호자 실시간 CCTV 참관 등 환자 안전을 위한 체계를 갖추고 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "‘미용외상클리닉 결’을 통해 얼굴·이마 상처 응급 봉합을 야간·주말·공휴일에도 진행하며 연중무휴로 운영합니다.",
               "sentiment": "positive"
             }
           ]
         }
       ],
-      "shareOfMention": 0.46153846153846156,
+      "shareOfMention": 0.36363636363636365,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZxl_qMu34DsvmldjOl3FdDBibN9sCyeDcRC6CahFoMeDIPrB9tQ5e1jP5TZUSQxd-vhuuieQjVBU7LeizxNDBgiq3Q5RcOU7Zb5FY9NPNUppaF_HiRY_wk4PVKRbkx8c=",
+          "raw": "https://www.k-wonjin.co.kr/?utm_source=openai",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/?utm_source=openai",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://girinps.com/?utm_source=openai",
+          "domain": "girinps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://girinps.com/body-type?utm_source=openai",
+          "domain": "girinps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://gyeol.girinps.com/?utm_source=openai",
+          "domain": "gyeol.girinps.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://reviewed.co.kr/ko/hospital/3293?utm_source=openai",
+          "domain": "reviewed.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://meinhi.com/item.php?it_id=1572573532&utm_source=openai",
+          "domain": "meinhi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/drlist/73135?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "WJ 원진성형외과",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "서울 서초구에 위치한 두 성형외과, WJ 원진성형외과와 기린성형외과",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "서울 서초구",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남/신논현 상권에서 높은 인지도를 가진 병원이지만, 병원의 규모와 주력 스타일, 운영 시스템에서 차이점이 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "국내 대표적인 대형 종합 성형외과로, 오랜 업력과 대규모 인프라를 바탕으로 체계적인 시스템을 갖추고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "누적된 수술 데이터와 임상 경험이 방대합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "여러 부위를 한 번에 진행하거나 고난도 복합 수술(양악+윤곽, 가슴, 거상 등)을 체계적으로 진행하기에 적합합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "원장단이 다양하여 화려한 라인부터 자연스러운 라인까지 의료진 선택의 폭이 넓습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "대형 병원 특성상 원장님별 수술 스타일과 진료 편차가 있을 수 있으므로 부위별 전담 원장님을 지정해 상담받는 것이 중요합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "기린성형외과",
+          "mentionCount": 6,
+          "sentences": [
+            {
+              "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남/신논현 상권에서 높은 인지도를 가진 병원이지만, 병원의 규모와 주력 스타일, 운영 시스템에서 차이점이 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "2012년 개원 이후 특히 2030 세대와 성형 커뮤니티(바비톡, 강남언니 등)를 중심으로 인기를 얻고 있는 중대형 성형외과입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "전문의 전담 진료와 안전 시스템(CCTV, 모니터링 등)을 강조하는 병원입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "트렌디하고 또렷하며 세련된 라인을 잘 잡는 것으로 입소문이 나 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "특히 안면윤곽과 이목구비(눈·코)를 조화롭게 다듬는 디자인 선호도가 높습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "대기 시간이 길어질 수 있으며, 성수기에는 예약 및 사후 경과 체크 일정을 꼼꼼히 확인하는 것이 좋습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB6XrYYSGSTKg2iNvDsO7-xzfpU_3kl662tBG7I1APu3iq3mUkpBuPhFKQNGdUVvrtVYEUaUBnd5rv0Ee5JO3jY7buhFHuiTcgjZEZ7PivfZaIz2zCFoek5Q==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3uoOQHXfP8oarCF5l6X1UyWDcsW2n7_rH2Elna47W_GFTewrB8f8nHd0PyIpS8UXXsR4utAMhboBmC8ShzSzTodJT-YjC49UPhm2mRJDfOuJz2qJxEssdkHw=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8bzwum49XICqVeL2kOdtyEGJIYn1xpGfgQan8QMDWXIc5c93bcJM_7bc48Wqxv3q6YpDSgpe3Po2rSfqEBQ2pSrbqlO6MJ_HljjFIs_6dOQLc",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8RGuHb9hWbV7SEfE0K80EzuCId12ai-L6YYuL3YUtVW5vhhWXzeV6cMCxbZeoPkN8RnNhnUx6xb2-iSyS4IgdfT-wnUOmbXqfDRpXEykJqvCVlFF2xvSYFsqgcnkdjyTrXw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTlRx77vKGJC4ZFTw1UHaI0ecQzv1a66GbpUUL1oAbeMjWg020nittyZ1V68fSHOEUMk0wSzm_ykQs7yrZlNrKa2Pa_UYOxjDrhZhSWjnr",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFImJW8ldF8WOWpVScY3F_qQicYjuKWWRvPlLRy9doQfp_D5rPEfEff5eJAfWOMUtoQmE4BZkHtsO-k5tL81mMsbeQMQDIk_CehdS9YUGZ2jIBEGcvFUg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbEYOZpiaBOFL6TqOgL0kbrklZpdMD6dOoqa8slDRvxMoDwirYwjdX83wep6TVbApBgP4gzLf0rw6p1FfOT1eD1awEPiOL3n7ZnZqadDok4xqJOIZXTWiR9U-gJOUnAAuj",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOQ4MoSu68-lxZ-q5nS1FBAcX5eUdIlsQR8AMBD3VATaw4X1F1UK0p5_U1O4kjgVDarGnpdRJr9vx5KEUkw8ZNUcXHOJ34sCTlS_vwUr8=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAFjQ9W62v3JJz7CaOxqKLFt7xCVbeCR1e4CbLR1-TBfRYWQgELD0__X1E1s44ccIQGa-wT-SCXgcZIsAcaVj4YYJ4Im3aeZ16Ng==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErIuZn9BXQfEucWHHwApnZyIDJgTvqHl0BFc6MG-rQW4TT7VLE6pdq6Lj7FkQvQNcVqSOIX4FGRXbj9ba3Prfmj8HCAGPeXyLzgJ_Ds4b8jydEb84ltHjyOt5WiqYJzhw=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaTkBzPd9OLZxMhCsnLN2V4SrCW9dQtWZckgaEe0EfaLq2YKAKb1mq4I_2CCJSWTGK6TGxlvxnLH-sSwB8tdTxiTgfgDwFQ5Vo",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdeP3UIo91GOXJxXhKuMPd_tbMuWYVWRnl77Jq3OeRc4pEbpQdak5JM2Cbn6VWwdwDD45jgl7kPzqel7Bqoeg8dZHEulLPINfELnWm0kBcNobJFN5YKNP70OBzy2mCXlI=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvaA6hWhFtaN_HwpLQl4egBMj0aI-xMhARlvG4ZbplD3HlzM4nfTUUG63qGiVnYLpt6q_hr_4uX6SHyyYzjuzO8VzNWYZSeBzXKZOFIFqRjgsP9Tlw",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -2062,14 +1727,100 @@
       "brandRank": 1,
       "factualityClaims": [
         {
-          "claimText": "WJ 원진성형외과는 초대형급 성형외과 (단독 빌딩/다층 운영)입니다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
+          "claimText": "WJ 원진성형외과는 서울시 서초구 강남대로 419 파고다타워 12-18층에 위치합니다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 인지도가 높고 수술 데이터가 풍부한 병원들이지만, 병원의 규모와 운영 방식, 주로 찾는 환자층의 니즈에서 차이가 있습니다.",
+          "sentiment": "neutral"
         },
         {
-          "claimText": "WJ 원진성형외과의 주소는 서울시 서초구 강남대로 419 파고다타워 12-18층입니다.",
+          "sentence": "병원 기본 정보 및 규모 비교 | 구분 | WJ 원진성형외과 | 기린성형외과 |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "WJ 원진성형외과 추천 대상: 대학병원급 대규모 시설과 마취·검진 원스톱 시스템을 중요하게 생각하는 경우",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "기린성형외과",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 인지도가 높고 수술 데이터가 풍부한 병원들이지만, 병원의 규모와 운영 방식, 주로 찾는 환자층의 니즈에서 차이가 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "병원 기본 정보 및 규모 비교 | 구분 | WJ 원진성형외과 | 기린성형외과 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "기린성형외과 추천 대상: 안면윤곽, 양악, 눈·코 성형 등에서 뚜렷하고 트렌디한 이미지 변화를 원하는 경우",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2P9US0UGHTDUlvfICYDXLUngqbpm9tHFlIv8Hb4A5MuO54N9qMQJ7zXUzde5_ccE8Ysd4BeU-rvg9QSA6_Z-GzRazLIbcZUAd6lxrJPNY",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgdnnP9E120vyuideDJQUo4XjLOOec63R4l9PRxKHz7cpTtwtoQkBa7JfQ8DzIgzHQxm6ifN7ZRNxZFrG6R72e7jpqmFq6yXG8Wg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFh744XU7DEumeVw3gYvSD-o6qawbz2Qq-KWz0LBeVGjp_35EKYMGe1m_V99BoiOCwvGp4InlPRHJeWGPlcPFQUiioZHjPJEEea_lXAT0DBSYb8ph83gLiLax7e",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg0SCBb8xSuDlrcyj7ZJSsKPuKB5ix4Mi0yz_KE5Jqkk7y4N3njFw-onxoTxZt-kEtyrDx8udES3iukWGDIaC1lW7OTlT_oLesclJ0BicYD0GRvFeoWDmcSFIJ85tIA-31",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLbulq3v_JZ6ecvVqiXp3QJ0GdnAQZDFi0eUGmdmd996ulICCg2-JU665zrt5t3khBDlXkovWI7TyR2rAUsqgBEK_dE2VOY9t9DK50Iec0byiJ0HYFeqJKmFalLw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKQuyO7a2nKLxbNtGWRLKf25mdZv9vDTuxNrYn69A-4uFn4VylRUPJnMLcWutpW7bQvmmmxIAajwGcor-6le-ap2Ag7GyalYmxf7yB0yZ3e5ryhzAMDhE=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "WJ 원진성형외과",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "위치: 강남역 인근",
           "claimType": "location",
           "verdict": "supported",
           "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
@@ -2087,20 +1838,16 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 인지도가 높고 수술 케이스가 많은 대형·중대형 성형외과입니다.",
+          "sentence": "**WJ 원진성형외과**와 **기린성형외과**는 모두 강남/신논현 상권에서 인지도가 높은 대형 성형외과입니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "국내 대표적인 대형 성형외과 중 하나로, 오랜 업력과 분야별 세분화된 진료 시스템을 갖추고 있습니다.",
+          "sentence": "**특징 및 규모:** 강남 성형외과 중에서도 가장 오래되고 규모가 큰 종합 성형외과 중 하나입니다.",
           "sentiment": "positive"
         },
         {
-          "sentence": "대형 병원인 만큼 방대한 임상 데이터와 수술 사례를 보유하고 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "양악·윤곽 등 뼈 수술뿐만 아니라 가슴, 재수술, 복합 수술 등 고난도 케이스의 인프라가 강점입니다.",
-          "sentiment": "positive"
+          "sentence": "| **병원 성격** | 전통적인 초대형 종합 성형센터 | 트렌디한 대형 전문 성형외과 |",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [
@@ -2109,82 +1856,89 @@
           "mentionCount": 3,
           "sentences": [
             {
-              "sentence": "WJ 원진성형외과와 기린성형외과는 모두 강남권에서 인지도가 높고 수술 케이스가 많은 대형·중대형 성형외과입니다.",
+              "sentence": "**WJ 원진성형외과**와 **기린성형외과**는 모두 강남/신논현 상권에서 인지도가 높은 대형 성형외과입니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "트렌디한 수술 기법과 뚜렷한 이미지 변화로 젊은 층과 외국인 환자 사이에서 인지도가 높은 병원입니다.",
+              "sentence": "**특징 및 규모:** 신논현역 인근에 위치하며, 2030 세대와 온라인 커뮤니티(바비톡 등)에서 입소문과 트렌디한 후기로 인기가 많은 대형 병원입니다.",
               "sentiment": "positive"
             },
             {
-              "sentence": "전반적으로 또렷하고 화려하며 입체적인 라인(인형 라인, 세련된 V라인 등)에 강점이 있습니다.",
-              "sentiment": "positive"
+              "sentence": "| **병원 성격** | 전통적인 초대형 종합 성형센터 | 트렌디한 대형 전문 성형외과 |",
+              "sentiment": "neutral"
             }
           ]
         }
       ],
-      "shareOfMention": 0.5714285714285714,
+      "shareOfMention": 0.5,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIA9v4jdThzVh-Vg7tb76INT-AAQ2BKdjjO21nm7K75ZZyWGMPDDIL-xuCLdd5-MDwk3T3EX7kSqSuxFkL0msrfGYlozVbcLMDus4ldIAzWXk=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1IWlJUxwMXfa_T1cAX7p14rMqS05sjXU4WUYeha0ZqaMZ2fmAxQzN71ohkqL1MDiHJxfeA7JyaT89M95-fqEGPFLoH6Ptonw5svLL2FhtDG0=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnyvj3BiYOHcEVaLJUt3_3YI_qsnPGBm_bmrmrkq1bXaCRupa4KE5cOTIzAkv6Emmr0eKJB-q80Wj65Ve1uevaYG4e6Eswqjx0CaOkjpvQtvz_qoJv1NkmYIvyymgthTqI",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuJ2qtT-_FBLW8f2wZXf2GUupZwmJji-8Xsmw_SDe-VSuCcNEH8pnm-Q-hOP7o9GppHOldivD3mVJ3hVi2kNQauGqczKZqXu3BN-flmSVIbnoJdyPf5HNsYUumjFeMxsr_6vW-C8O-uxeYY73UKW2adA==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHYqKgRsi1IyaUlnaTi3I7egQiG9d7qIWp_s8Gfo366PmKnU-0tHLSE_DFHDu6dfgKlUCJSS7v40v1ouzL7tKLGtyWvjf13cReQH5DiAznDvnBRB7kYlOBx6KC8Wj9JVZvf_oQO",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB4aeGaGbkd0dvnGRUpy1o_6CLt6PT8fNSbj0khKdC3FAF30j7HnkF_dRnAn3NuiM3vtqxL-MEcR97SGgmgkNgH0mbtE_1w0PlKnbOzbI4264lZkFd9epQWQ==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvW71H8ODD4-sOCNAemRK7rJ7R56jmWvv7up5O4H0886896exd3q9l_KlXBw1CctOeYr4ZZuZff7kG-V3YTytT7t2l6KD8YGVmCZvERHz1207axEYTFQdnLLK0kBb-cw2HFbNGWk3Xk0eZYTRBVkhuobIlJhNBRM4q_OLqYouQSzetTcXCVjHSBOctsmqDFwaYuuxWict4TQx8H4hfjg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB4aeGaGbkd0dvnGRUpy1o_6CLt6PT8fNSbj0khKdC3FAF30j7HnkF_dRnAn3NuiM3vtqxL-MEcR97SGgmgkNgH0mbtE_1w0PlKnbOzbI4264lZkFd9epQWQ==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtVqxp9XvZiR-ht_VwIJeABIxLlfHEYxFX4OWr5yTRPW91OVQCajJsSX6tIXA56qUnZbuqxAzTMnrIK8Tt3X6_uvRsjuPWCyGVsA==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8ykvLcByZw4-fpL5e3KvPgxwVFsRl6sUy67m8onpntQeilBIXcb_2Nu0YcM38PlszknoQRl6INsQ6Qu-8hpxNBv0jO4xrCP-loNvGyG0w04i2JMRtGSGz6WtF_g==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFP_DQsX_jRddRD5B6bQFT-IqB7BEev7Xra2NVDvtgujeajGBYs_FVbi3eVder1fp8L6c_5pCiz1is2XSUfZ9LqrPg0NHoCiJJqEXH3KlnPcYxUqNaeAjdsCNbd",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElD_zACncliMWGrbHJjV9BnHmFbCzuIYqCiYV4DMQd_9Qlq1rtATCDiUQhdUV-NC7FxJDSb-glDCZrhZS72q0ZDRVRbma10NDT5g==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmxKShv9G78uVf6vdAU_wYJBr4xJAZmm0oyqxLieJI-1GJHBrWNyCzqosiyVg0aLBCvsbWM6sxgNmpgpFvDcBKTWj0XGNuq1DfGINJsjQyK2NI_AdQ6Pk=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhqTyg9_6AmFOcC85EwonkLuM7bn73A0N6oQc0JuMr_zIM0_knBz1PuRmjGoe8VfYD90VytZ9CIbnlE6yLiKrgqAbfcxS0pt3Sds8Vmut2Bn14eTBYTHo=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCH2Gi9100biCBfPMaKKmQ85IUh9jjqqxfZaer-LrcD-WQmQZyhygL91IUoyEnmkWxAuKkmrRK5O4ElGiNoUvaRz07063M61V6ASi1rFHMaXskKPqofuarZKWgz_s1jj3INsEFqbMgs06hU27j1-09djwXStiRawAnpmu8SXsG5b-Qlhl7X119zfnKSEDnRF2-24fMtf3orNXt4LPvbYgnhHWDbiPoCn-iGdRMZnAP40mnEISeBJ_mRKvRQmqnx2_ds8XeiJNRj7oOjS4YQ1ZVCg4paNn5Cq-1UAA78717",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIHwA5FzdnlOXzhwAee3mUKf40uJxVjCmR6bYNW-QryqkYF3ygLivayQw7Ugd0h5u6nPdMLvfB1cRkWRhY5VDn5JSyyQF0SgOiEYwSn-EYVTCuWlbO_yHjb9r5HqA=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZ2ZMVwP1rQkXmTuBMPXIFTADxJRGmyg_wGfg_GZcncS86NeoGGYIHMA9xPaMXfeTR3kEqBomEZpxU15OeygUb0bIeF9h0BY6hBYPu_-aShEpUyQDCoS32is6EpGT3C0LMSQ1PucsVWiQH2n3K128vWppFdmfWmCTOuGmFFNuzhcBRKjwSmSKhHw7lX7zDeI_hge-34JqDjSCdKw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWeBkxZjjz8Q53MY0_bfeDeuLBVloVq8dHktF9pjhhEDeVmrswjcUcszfQ3M0bb6sflvQKAbTf4njkNKr5yeRVGCvRw2TWQfgzjvVKYyC6JbUvaCo4x4mszJfL8o0NLduBYj0c3p0xMdO50H3IvERBsZfFGn6S0dV4sLrozpQepXYu_VI64aS8QsDqZA2SBWUYM9Kzm9_f5iXNVr-VRclqL8qJJMZ8Yjj7OA==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
+      "topRecommendation": "WJ 원진성형외과",
+      "brandRank": 1,
       "factualityClaims": [
         {
-          "claimText": "두 곳 모두 강남역 인근에 위치해 있어 동선이 가깝습니다.",
+          "claimText": "두 병원이 강남대로 인근에 가까이 위치해 있으므로…",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "WJ 원진성형외과는 강남대로 인근에 위치해 있다.",
           "claimType": "location",
           "verdict": "supported",
           "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
@@ -2205,38 +1959,62 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://beauty6.tistory.com/501?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://seoulclinics.io/data?utm_source=openai",
+          "domain": "seoulclinics.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.seoulplasticsurgeon.com/blog/how-to-verify-plastic-surgery-cost-in-seoul?utm_source=openai",
+          "domain": "seoulplasticsurgeon.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.clinicseoul.net/korea-plastic-surgery-price-list/?utm_source=openai",
+          "domain": "clinicseoul.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.whatclinic.com/cosmetic-plastic-surgery/south-korea/seoul/seocho-gu/ab-plastic-surgery?utm_source=openai",
+          "domain": "whatclinic.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.localpricekorea.com/en/list?region=%EC%84%9C%EC%9A%B8+%EC%84%9C%EC%B4%88%EA%B5%AC&treatment=273&utm_source=openai",
+          "domain": "localpricekorea.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://sungyesa.com/hlist/165512?utm_source=openai",
-          "domain": "sungyesa.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://seoulclinics.io/clinics/bio_plastic_surgery?utm_source=openai",
+          "domain": "seoulclinics.io",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/500?utm_source=openai",
-          "domain": "beauty6.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://seoulclinics.io/data?utm_source=openai",
+          "domain": "seoulclinics.io",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/376?utm_source=openai",
-          "domain": "beauty6.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.seoulplasticsurgeon.com/blog/how-to-verify-plastic-surgery-cost-in-seoul?utm_source=openai",
+          "domain": "seoulplasticsurgeon.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/376?utm_source=openai",
-          "domain": "beauty6.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://seoulbeautytalk.com/blog/how-much-does-plastic-surgery-cost-in-seoul?utm_source=openai",
+          "domain": "seoulbeautytalk.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/501?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1mpwh7z?utm_source=openai",
+          "domain": "reddit.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
@@ -2254,61 +2032,79 @@
       "callIndex": 2,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
         {
-          "name": "기린성형외과",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "- Girin, Braun Plastic Surgery, Bio Plastic Surgery 등:",
-              "sentiment": "neutral"
-            }
-          ]
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "name": "유노성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "name": "에스엠성형외과",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "- Sm Clinic: 쌍꺼풀 수술 약 ₩1,200,000 ~ ₩6,700,000",
-              "sentiment": "neutral"
-            }
-          ]
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "name": "쁠리성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "name": "바이미성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         },
         {
-          "name": "강남세브란스성형외과",
-          "mentionCount": 0,
-          "sentences": []
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/9923?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.plasticsurgeryko.com/pricing?utm_source=openai",
+          "domain": "plasticsurgeryko.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         }
       ],
-      "shareOfMention": 0,
-      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "서울시 서초구 강남대로 419 파고다타워 12-18층",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
+      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
@@ -2323,56 +2119,62 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://beauty6.tistory.com/500?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://koreaplasticsurgerycost.com/korea-plastic-surgery-cost-all-inclusive/?utm_source=openai",
+          "domain": "koreaplasticsurgerycost.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/500?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://www.modoodoc.com/hospitals/category-search?city=%EC%84%9C%EC%9A%B8&district=%EC%84%9C%EC%B4%88%EA%B5%AC&major=%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC&sub_tc=%EC%8C%8D%EA%BA%BC%ED%92%80%EC%88%98%EC%88%A0&tab=&tc=%EB%88%88%EC%84%B1%ED%98%95&utm_source=openai",
+          "domain": "modoodoc.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/500?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://koreaplasticsurgerycost.com/korea-plastic-surgery-cost-all-inclusive/?utm_source=openai",
+          "domain": "koreaplasticsurgerycost.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/500?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://korearly.com/blog/ab-plastic-surgery-mohw-certified-clinic-in-seocho-full-english-support-084?utm_source=openai",
+          "domain": "korearly.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/396?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://koreaplasticsurgerycost.com/korea-plastic-surgery-cost-all-inclusive/?utm_source=openai",
+          "domain": "koreaplasticsurgerycost.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beauty6.tistory.com/396?utm_source=openai",
-          "domain": "beauty6.tistory.com",
+          "raw": "https://www.localpricekorea.com/en/list?region=%EC%84%9C%EC%9A%B8+%EC%84%9C%EC%B4%88%EA%B5%AC&treatment=273&utm_source=openai",
+          "domain": "localpricekorea.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://sungyesa.com/hlist/165512?utm_source=openai",
-          "domain": "sungyesa.com",
+          "raw": "https://koreaplasticsurgerycost.com/korea-plastic-surgery-cost-all-inclusive/?utm_source=openai",
+          "domain": "koreaplasticsurgerycost.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://sungyesa.com/hlist/165512?utm_source=openai",
-          "domain": "sungyesa.com",
+          "raw": "https://korearly.com/blog/ab-plastic-surgery-mohw-certified-clinic-in-seocho-full-english-support-084?utm_source=openai",
+          "domain": "korearly.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.mowatool.com/calculators/health/plastic-surgery-cost?utm_source=openai",
-          "domain": "mowatool.com",
+          "raw": "https://koreaplasticsurgerycost.com/korea-plastic-surgery-cost-all-inclusive/?utm_source=openai",
+          "domain": "koreaplasticsurgerycost.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://korearly.com/blog/ab-plastic-surgery-mohw-certified-clinic-in-seocho-full-english-support-084?utm_source=openai",
+          "domain": "korearly.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
@@ -2394,61 +2196,67 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsMd3L07RjP9V5ZTwhRsMasGyLXn1BprJc3pa-wC5qVR6gPbDDY7SDrCAQf5ItjRcyQq3zQ4VyaHAKizY1jAkwDM_pt7KkaoENzGc4Q7z9fnbB8hZEpg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGONrLMqQmkryRKXSYKRAqeYe5YznD1tILJnV7gApUXecOyJwYaAUy2gT8Tx5YPQdjnHfTO4sPOAL8BRnTRkaRASDonHhsRtrLhbFSbJRgRemzWg7a2aYjxZICMxc36xlhpQoq13il4",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1NBtnSRDAHiDZaCimrI2D5UqZaMKUSs9MEwjSaUGxm5_wGkXgO1kzZ8XSqvSjjBd_Wm0lEMjgKDLALFOhJP0It0Gt_MRr43-K2WwZLtKV-ynnarLL41ieDtn2QNesOKJML2bQWCI=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGF3Sd9WBdrry9TCbasAyKzJvh9ErDX9k0ZtwIu1Y4pOQ9-2XTxA375CPUncRXBvheC49Y4ShNZAEdgBfVTIOVvN4nTY1RYEAfcvQX77nBEvm_zA==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVuBIrWIdM-uKXnC0eHRTx5IuthBn7edFgVc-UqyKPz8Imou98hAksneKqQpwJFtpbsCnuljF_Q83PMFUauzPZvGJCeKmJnQCZijA6Eank0x9IX7I=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnzaahC4FSmdb0amfrPnYjEnih7qielpcXO4hrcBd9m88hnBNHMYTQLSAMd1jtRF4mo5tlt16nAyt4bHBNqY0mee8owfKm5YMwic5eXobYFLnnWoV2",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8j_ITptHld12a0drsILSxunZwnPsFjRa6Ej51vwA0FO2hqLlWEJJM6JDS9D3hRyq83-uIENpIbxHJe9pDzf6h04zCNb-vrmJ975CoIBF5HkhPMKR3cij5RxeO",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqn-RoKk_An7n-LLPD9kxFQEELmS448XhJnp78tWrPKOk7cI4wr8PMbDS-tHmPz9AZ84nyg-96fW_6hJziyVO_YB4unMSLinyTYIJhGeLkkRJ06WOnsUClyOej",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBSWpoxK8ow7vcAioKJHSggzStwZYc2g42qPHaVluEiwSFe5SFTwedY3kOPtOOSOvlIGp7BqXFADgxhp4qAmSUVbR9UCOS8sQXekOvjCGXMspzoeuU6kWXnkjtHR3e6oqb3ab5GRM=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_VO1Y2iK6a5tNliPv80utpBdq2ZmCLTD6EeZu1-IoPYUWnVIW19pSW0dFEE8rRZYdQGQHaBGWpOTxLsEqlsvmeHPrQby5miSl7_0tSNNJ07K-huTF3inLwnZyJJItZHe51XifqZx7SNumOg==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEX749PDpbksDl2l12dEGEfvDtFVcb0a8Rx7UHBSmYqQn3BNp_qnvb7jHjiZBgJAZGgSxV7Ge--mCqi8NncTsUK-S5c_xDh3lDIxXFgvvwPXF2Nng==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKswhUe58HzeZRS_oSfh2VzWsqwU2OGmtS7xgqH6yKvdJrEjPDm4R4jxItEb4vX_vT6MkPr63VS4F-QmnaNj81UocSIerheAuJJZ72ftQP8l7o7NO1AyELnbzMTMiOKw==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1DUvShKlP5xu8L8Xp_1C4zXHqlMFodbIasR77-w2F9HCTJgPrjB2ewyos1dtgT2wlTA_lvweJGmbSSMQQ0iQyX2T-thAw38HwbWyBj608ZcpVwIN55-oIhVSg",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyG8i23cRnM3dd0nXMWI5DiaDUsPdkDQeu0nulYPw0gcm8CChI5w-Y4XBI3iJ6pghFkmUbSNf6vYYd1jl1LESkLk9_FG-_sdQjUPwiDoF3WMgLIqCPgftq5RxbQA==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEq0xOO_9-iyApq_mtICXgZ3luBzMetO9vkmc9SVURtAHbpkqX4atPUmTM1JthLYLzfMDIvbC8IvyI7mOcSn1J1TqAe92TxdLEgoMfMoe9yyZCAKrb68GGgX2c_TeUgWVrZ-f_WaO4=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlbrU5ohocvq2tW-MY3o7hpApeOm03qpBBtr4C4jefPqmN5fCeCun_iTm2bo-qeqnetRX27jjU4caBsWY2AZ1ys7vrMptDHQhi3-_vV-apz3Irxxw=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqwI3BFFfOVOzmpA6KWtE51vPhvCEjwH8DZ1EoqHVaeRdSFoGwY6bZZ1REdynPO02ckECWRHiY-nFC8JpVrbRaGIuSkGb0J3cNI_ssZXFe5Q_17rD1F8UKCxlgAzS-",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGd2-VfsOwVh0LAYCDJQ3h1Euz-rAA_FmrAjHhUT2rzdZ307An9q6JUh94LO8TpCnNK4aSiL0xBnRkEXq4V7jz1TzuV6y_maN6shMT_7KW8LdKeK3161u79G3JgAUmIp3g=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnXfdmM646zP1DMiLKcA1ErTF1lW1UGRQXcJ8O0hWSrqbOxne0YbQMVTMWkTj5-YN3DE-TQxrcUjZ-9llJk1t8DcZepOsU9Vburggi2BoHMKxpxFQQ1AxsrUVmvT7a8fXEXE0G2cck_mZHWPHZIlNfGkKplZRCOMwtSxeTIM7b1sHFFGQ=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNmbEqch0UJJEU6-gAYwXxZRMNoogBqOJn4sqHZNGhc8CWoj4c6516_PRUfb6R84PesLJZd6fk-6YS6dwbYLkd-mcRLI0KvSJFLGMLgT3Ix7CmskPwrXBN6BZ7MJS8htf_MiBwaJ-la__NLFSauGEopmc1TOcb-gbhkDhMSDUgKTAf_EDqOWIM0pCobhHpHSL8EIUjrzEKWnD4qBTEBsYvFjTv8igYZnY0l2jRyuTCMyLAeTQ1o5K0IDzr3PgNCjjEwwbZcit_WwUeeKGLdxAiq1tHSnTtGok5jXhY5O7_qAUSbv1SQcPVBarL4YaKEX9dRS1_jMfB8vFyxijFhO8fQXSfnJ3hWymos98=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMHoegOgcU3IFuTpT7r8e5nDy_U4rQQe1AIRyFGiS2GZPGsMb-puFXPUNTxt5DNPuHSyUYSSDHcjTOS4EKGnF_LtqoWjWcgj4yvl_sv1km8Dfttlne3CQ5EJfTVfByBK31ta5boo2WN7g=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -2469,18 +2277,53 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
+      "citations": [
         {
-          "claimText": "서울 서초구(강남역·신논현역 서초 방면, 고속터미널 일대 등) 성형외과의 주요 부위별 평균 수술 가격대입니다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNv1gKzIGhgz1CCaJ7O1hixfeQkMoZ9O0WTdHejOCwsLM4PnGsym-AUUgM7iVyS881ID4yC9Gzx5b4g07JE9BnsIJAEcz4ejv8P-1uY-NjXL1iA_Nj",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-z0c41MDyJ1MZ6cUpld3fHIr6d5nHPGNSF6VPdpkPRXfDNEII0p1gIAaz7f6i5Htx5ynObMo1cYbst88lxlWPMVw3MIJGzMmmHYQF_8i-afGPOZE-PQ3jYtAtZIKOoqYBg4fa2zCa",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzD-GDYcE6ZYnDUWik4VZ2tvTOAe23C9FMNIgThjp689HTLSTFuyrsCw1M0QSEolQRnK1bnsMyGhhQiNDOMXtAhwR-MAAcYgfZYnf9NxbVDv_anSsPcGHJ-BKr",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOQJt8dZ1tEGlYYvcDxhJTaNo3D_fnXsUilWkeO2S1obc6AIwCW4frmq77cQcxn-FlmkFXQElJu3v78gWxQE_2wFx-HiYz3prD27ABpeWMBZGTx3MgvcHPGicx0JaZOaqXimgxgldk3ZjqJZtoAiNb7MvLiVBMkQtAT0s6SBxZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEScvO_qxP0lRZ9XuNiQo3zHub1ncbdAyQIOSV2Vt6Q-HPakwXyRWke1at-YKpjifHVMYav0VNh3pqviwthzOoOty31o6or79QSUy-LtSrrEp6uYB4=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGZePjr0YU8MHda0CU_c92DDKHE7nTTwY-TLNAh5GTvGJJhMVi3N3C-zlwm3y7KHwwi2TkFL7wMTiRr5EpFQCG52OrIpBqZDApBCFD01OY5gqUkH4z",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTTUa5B98GmXppN7Jxr0Z8Xy1_IAQTGl08syZEqwdKbZFPZQJPiJB5Giwyex-TZ6r_4hayscFXYVQpIajVKWLMt7kmhAliu9jfZ1gReg34VPPDhes3I_11gpSOCg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
         }
       ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
@@ -2495,49 +2338,85 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQJgVa1LSvMP6JsaKsyGjFRPwGpMsja0Z9Fh9ZBKeJu2rKM1T7jrbeMiffvXZbn_-Dd16TkPPqUd4J56kMSil0AXfA72KX3qlHjOeuZqCdlNPBwHSa5-6F5XXTw7pP5es-JM-SVAzPoB-fwXuj6_Yk7zg8OTCsT_ZbDHHoIEXO6C5Uk6EOycq4RZATJjm81iwNu1cK26vUnGD9HK-aHCl8GQ0DhQUC8YakG-DfQa4kWyV6g0u-LgplVD7t1jfJ6uBT-OoVq8Q5jRqgF-K_I5hkbYbsJZpzsWisnnhyW1yE",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7RhEFc6oTqLrKAe7EhB7cegRlCEMrKVYVeWwLakx3XCvziyOUJjSZTrZcYb2Gq3wcwsJpvq0tpM-CiNuZeT85xvBW3aeijgM0yy-PdKWPKNeRwsHHaZQINqUgozc=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcFNOq9rpPBROd60knwd02puj1GYk3woPNFpzUeZhNskJE8ijmTbBS5xmDOLDdEVjXm9U9727HVTmgRh_GUoytQ4GNduhMz62opzRTVDNNCVrPEJJKL29sgw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOFL2hcf8w8q8GsR3pT3gFUbregc0CQRDFjxJTB8o6R0QADijYjNmNRax1B2lWuOJ1U3KIBQNGS-VnEAvojdxt8zriWz0nYHwrNXMm",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH3y4uGcKJCMYNyAr8pf3eSNOmd2XvTBVVKXCWHwUR_69iMo9oA0DPS6aYQ04zIyu-aOpmAs9Ulkqb4qDhAE429yNAqmaYJiksWKC164ZrZ7FIBZyo=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXdtaL1u9wpfKBbENe_O_fXvxL4JM9Xqa_RaLLiYSzYl2TABgpzzU-4lN3uzZ2wQSiFQuivH0BbXsHr8WYC-Ge96NZ2BXrehnRTfGvn-_EeNQ0Lvvj5MpLGxV0fbDGLDqAZzk_D7i_nlIxLKbVLcb5U-o3T_GB4o1O0GC7Idubf6U04wyHqbVKnP0Q_lFH9Lu03AFM04lGUaGpgBUvSQ==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdiHd2vgjGiCr6_ctr4mGPKj9SfZ57COY5vUyeBxouMmMtrFJDZPpCUvEPFJxpiYdQoAsbdbgutpYzODkwlDZWYe_P7FmFJ7wvmLPZEIVbbkbXK0EBmO7G3rAcC4VP",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFK-do6LdJdUuUaf-OWvyA9Sl-YyEWlczI1NbxxoSLACWR_WC71yJ41Mk05ftWXGBt_ZvC-18Uq25fCjzSU_PW7Z3UR9MUXjX-uuxm5cvmgNie7ZTQfwRn57YFDaUqhMyZgF_84KY5_Lnj9PG4GyLnd790c1PH0SZ28bcLAJxR-V5jggXuHQLwAmH9IYeTJTKPeRiyhUOyi0kAq4IfJD1CID3fg1Zm1iH533-p-flyczRD73e0M",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGynOtA_6Oyxsz1LOfWRJkqCbCt_hUozvd7IMAgspGlWtol_Zwl_Yga0C6xin5D2A9ytH1S1cFNfT5fRHrnbnVbIOOfx04C8s5heIw_Ll7r-H8nZDrsb6nIqRPhJg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaaR54-sZUovW5qDIVI8FQi0xNFBZD09s-FbaPH3NYGY4rctkylQln6OlWD583zD5QXELVlrALbarQs_cvUuaccfm430-nS8vDTurCzm_w-3ZVgdw=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJw8-MxZhD9ifjEGYLiDlUCjbAFvn-zjWu1oYuBBQhnzvVW2wbu3z5l_yoRQLb4uW8etup91UuyuWhzkM1Brg2Js9QZcG5D0Z2GmMSGk7ehRvjOZtCUJsh",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG36vmxQFyIrKL2T_BaPpDTazxtneAUaIP4TPcH3fIvYr756b-qvNAkD0rMLH7y1nqWEsDZEjSYv-M1HgcDQsCpF1HnqMDEmulDgjctraOHjKy2-fBNVWZzX8GaGk1yoAjrtBI=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjZFN5LAUCQxoXJ50moUJ59OmlaGQfSUTaIrau72XJzIpFO1lbiU5xi6n5KZQ4aDzsfZRjKvAj05wv89cA4JuUT4WklB7q6jn11v3N8U_ByG_MJfxAIuoFBxYVSw==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxZG3lcKB0rqlkBn9pWI_C-KkE9Xqv7MZYLu84I4L8U5amLz-wZPkhmn0121pOqc_9UOhx5HGo5njeqTbzS70o2tLduk0henTKJt28cCDL4zdDWvmCJ8rmalWdf_w-",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEDUdSSqhUetei4pi4dIgEOydXXg59mrY4s9mcn-ifPuvZtx_mINusaRtl1t4u-jkJGMXazj_xt-r_VwW_fmWZSgxd14DiNZzcGm3ltcqNdilSMUDtfIFK6XM3jyotm78lMATzkeJWz59P5MPfTPOF7_MtEdkd7rEsSfyU5PKtEGXzWQzIsITM8UaGJg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXjiea2_g2UWOOtJulu2MYNVru3ttStNu4QHKzAx4qkJcHwoGTJYqhiJQYwc3pEqV-ztE7lZXV-82qFpiBW8kVTos6p7F_twz26RRCz16dc3nIMycoXjeM",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHU1jzGbkd0Cff2iQla1p9DXxtEeuwx_v0Kh9NaGcnzYIcKnhieNOanEip_QFu4kgZ_DLVDd-Kp3CXc46FLca0eWDIQMVOZzx4JJL5eJTo4egl2IDJwsADfjva1rA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEheBqXsXSwoNvqmdT3p5NsQGMU2lQVSQoukclGenBW2-FYo0uh7CwHvXPl8yl0ZIF_LVpzNJ7UsyrRQNOpIHS8ESVHj9vh2FJPlGG8agtFWLQrd7SB-5fQ83dQkkGjl6CZ",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7zNGilyrcigwcD4N8pMr9C15_gNC7DSqCs8-R0I-ilYA0uccLWZbbOr6trrm_18l07JKd5-YaaCUYjBm6gg53t0xJD2BggM8BxbZEiHTCMc76J1APSqHAHzOwcNR0aHo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvhdv1e6KYR4R8TUbDmBQu7ALBN6s7ApMHXP5iOR0sujW-z6JdNqzXGMWkZV_JdKoX9S-JA-YSM2em4jdG3O1WonEXCFd__V20kW7KdMyKPoeSr-nV",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHiFJR4LRinY8btgol2gkT8GkxzRj1ijXHZJVX7ukt1kAw5ZRHR2Wgkihu4nrxhkCLzoltzIM4stdt8raeLA_LRv3I-CaeNccU9DoJfCjNpvxIsmi5n32mlv6w13vdwB_hqt1-5LC2",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwCd9zMiJOuwd6SqIU-i8FprxPmZ3imz3MvJkJ5qoV5Udv6hqRrwS0Ib9-9qOBzdiIN0zXmGN_UejmrBwO2HVGH7feBt3XhTSnfYOsXcX67JJdvyVhKN_YsX4eWg==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -2557,53 +2436,59 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과(서울 서초구 강남대로 소재)에 대한 상담 후기와 관련 정보를 아래 정리했습니다.",
+          "sentence": "WJ 원진성형외과(WJ Wonjin Plastic Surgery)에 대한 상담 후기에 대해 찾아본 결과, 일부 온라인 커뮤니티에서 확인한 일반 후기들을 아래에 정리해 드립니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "##  공식 블로그 후기(원진성형외과 운영)",
+          "sentence": "WJ 원진성형외과 공식 홈페이지에는 “당신만 봅니다”라는 코너를 통해 다양한 시술 관련 Before & After 사진, 시술 과정 설명, 전문적인 시스템 등을 안내하고 있습니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "- 2026년 8월 3일, 공식 블로그에서는 가슴 성형 상담부터 수술 후기까지 Q&A 형식으로 자세히 소개했습니다.",
-          "sentiment": "positive"
+          "sentence": "WJ 원진성형외과 공식 홈페이지에는 “당신만 봅니다”라는 코너를 통해 다양한 시술 관련 Before & After 사진, 시술 과정 설명, 전문적인 시스템 등을 안내하고 있습니다.",
+          "sentiment": "neutral"
         },
         {
-          "sentence": "- 8월 4일에는 수술 후 회복을 돕기 위한 '여우티' 제공 서비스(무카페인·무칼로리 등)가 소개되었습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "- 성예사 커뮤니티에 올라온 후기(약 3년 전 기준)에서는 “손유리 원장님 상담비 없음.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "비절개 앞트임 추천.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "반면, 또 다른 사용자 후기에서는 코 재수술 경험이 자세히 기록되어 있는데, 1차 수술 후 실리콘 이동 및 재수술, 비용 문제, 수술 방식 변경 등에 대한 실패 경험이 공유되어 있습니다.",
-          "sentiment": "negative"
+          "sentence": "공식 웹사이트는 상담부터 수술 이후 관리까지 체계적인 시스템과 환경, 전문 인력 구성 등을 강조하고 있지만, 환자 개개인의 실제 후기보다 홍보 중심의 정보를 제공하고 있으므로 후기의 참고용으로만 활용하실 것을 권장드립니다.",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://k-wonjin.tistory.com/?utm_source=openai",
-          "domain": "k-wonjin.tistory.com",
+          "raw": "https://sungyesa.com/walk/38333?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/walk/38333?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/b01/951635?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://k-wonjin.co.kr/contents/lift/facelift?utm_source=openai",
+          "domain": "k-wonjin.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://k-wonjin.tistory.com/?utm_source=openai",
-          "domain": "k-wonjin.tistory.com",
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://wonjinplasticsurgery2.tistory.com/?page=3&utm_source=openai",
-          "domain": "wonjinplasticsurgery2.tistory.com",
-          "ownerType": "unknown",
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about?utm_source=openai",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
@@ -2623,14 +2508,35 @@
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "WJ 원진성형외과(서울 서초구 강남대로 소재)",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "서울 서초구 강남대로 소재",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+          "claimText": "WJ 원진성형외과(WJ Wonjin Plastic Surgery)에 대한 상담 후기에 대해 찾아본 결과, 일부 온라인 커뮤니티에서 확인한 일반 후기들을 아래에 정리해 드립니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "공식 웹사이트에는 상담 후기란 형태의 직접적인 게시물은 없었으며, 병원에서 공개한 Before & After 사례와 의학적 설명 중심의 콘텐츠가 주를 이루고 있었습니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "손유리 원장님이 매우 유명하다는 이유로 방문했다는 언급이 있습니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "첫 상담 당시 약속한 두께(4 mm)가 아닌 6.5 mm 삽입이 이루어진 점에 대한 불만이 있었다고 합니다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
         }
       ],
-      "factualitySupported": 1,
+      "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": true
     },
@@ -2641,135 +2547,12 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "WJ 원진성형외과(“Wonjin Plastic Surgery Clinic”)에 대한 상담 후기와 실제 환자 경험을 정리해드릴게요.",
+          "sentence": "WJ 원진성형외과 상담 후기들을 살펴보았습니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "최근(2026년 8월) 후기에서는 “상담부터 수술 후 관리까지 매우 긍정적이었다”고 평가한 사례가 다수 보입니다.",
+          "sentence": "공식 블로그 ‘당신만 봅니다’에서는 상담 과정이 Q&A 형식으로 자세히 소개된 사례들이 다수 올라와 있습니다.",
           "sentiment": "positive"
-        },
-        {
-          "sentence": "환자 입장에서 가격, 시술 결과 예측을 솔직히 설명해 주고, 회복실 관리도 편안했다”는 후기도 있었죠.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "2025년에서 2026년 사이 사용자 후기에서는 리프팅, 쌍꺼풀 수술, 지방 흡입 등 다양한 시술에 대해 “자연스럽고 만족스러운 결과”, “상담이 과하지 않고 본인에게 맞춤형이었다”는 반응이 많습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "국제 환자 리뷰에서는 영어, 태국어, 러시아어 등 여러 언어로 소통 가능한 점, 그리고 번역 서비스와 친절한 스태프 덕분에 만족도가 높다는 반응이 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "사이트 기준 평균 점수는 5.0/5.0 (45건 리뷰)로 매우 높은 만족을 나타내고 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "한 사용자는 몇 년 전 원진에서 시술받아 만족했지만, 최근 방문 시 병원 소유권 변화로 인해 분위기와 서비스가 좋지 않았다며 “직원들이 최소한의 설명만을 주었고 상담부터 시술까지 전반적으로 노력이 부족해 보였다”고 비판했습니다.",
-          "sentiment": "negative"
-        },
-        {
-          "sentence": "2026년 5월에는 한 환자가 상·하 쌍꺼풀 수술을 받은 뒤 “의사가 시술 계획이나 위험성을 충분히 설명하지 않았고, 결과에 대해 책임도 지지 않으며 연락을 끊었다”고 심각한 불만을 제기했습니다.",
-          "sentiment": "negative"
-        },
-        {
-          "sentence": "일부 환자는 마취가 충분치 않아 통증이 매우 심했다고도 언급했습니다.",
-          "sentiment": "negative"
-        },
-        {
-          "sentence": "상담 과정에서 고가의 즉시 할인 제안을 받았고, 응대가 다소 혼란스러웠다는 과거 경험도 있었습니다.",
-          "sentiment": "negative"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://seoulclinics.io/clinics/wonjin_gangnam?utm_source=openai",
-          "domain": "seoulclinics.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://seoulclinics.io/clinics/wonjin_gangnam?utm_source=openai",
-          "domain": "seoulclinics.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.seoulvera.com/zh/clinic/wonjin-plastic-surgery-seocho?utm_source=openai",
-          "domain": "seoulvera.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://bookclinics.com/republic-of-korea/seoul/wonjin-plastic-surgery-clinic?utm_source=openai",
-          "domain": "bookclinics.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.seoulmedicalguide.com/clinics/120/?utm_source=openai",
-          "domain": "seoulmedicalguide.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.realself.com/review/double-eyelid-surgery-lip-filler-restylane-asymmetry-drooping-upper-eyelid-hooding-crease?utm_source=openai",
-          "domain": "realself.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.reddit.com/r/KoreaSeoulBeauty/comments/1tidv66/when_cosmetic_surgery_abroad_goes_wrong_my/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1t5oxod/black_list_of_lipo_clinics_and_doctors_to_avoid/?utm_source=openai",
-          "domain": "reddit.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://beautyhacker.com/topic/964445-clinic-consultation-review-wonjin-jk-item-jw/?utm_source=openai",
-          "domain": "beautyhacker.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "Wonjin Plastic Surgery Clinic 지점은 Gangnam에 있다.",
-          "claimType": "location",
-          "verdict": "contradicted",
-          "responseValue": "Gangnam",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        },
-        {
-          "claimText": "주소는 '서울시 서초구 강남대로 419 파고다타워 12-18층'이다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 1,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "WJ 원진성형외과에 대한 상담 후기나 체험담을 알아본 결과, 온라인상에는 일부 유익한 정보가 발견되었지만, 최근 업데이트된 리뷰는 많지 않았습니다.",
-          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
@@ -2782,14 +2565,14 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://sungyesa.com/walk/38333?utm_source=openai",
-          "domain": "sungyesa.com",
+          "raw": "https://k-wonjin.tistory.com/?utm_source=openai",
+          "domain": "k-wonjin.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://sungyesa.com/d03/242898?utm_source=openai",
-          "domain": "sungyesa.com",
+          "raw": "https://wonjinplasticsurgery2.tistory.com/?utm_source=openai",
+          "domain": "wonjinplasticsurgery2.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
@@ -2803,28 +2586,40 @@
     },
     {
       "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 1,
+      "engine": "openai",
+      "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**WJ 원진성형외과**의 상담 후기를 종합해 보면, 대형 성형외과 특유의 체계적인 시스템과 전문성에 대한 만족도가 높은 반면, 대기 시간이나 담당자에 따른 편차 등 주의해야 할 점도 함께 언급됩니다.",
+          "sentence": "WJ 원진성형외과(강남역 인근)의 상담 후기를 정리해 드릴게요.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "--snip--",
+          "sentence": "모발이식 상담 평가에서는 대화가 잘 통하고 디자인에 대한 피드백을 충분히 반영해 자연스러운 결과를 제안했다는 긍정적인 후기도 있었습니다 ([daedamo.com](https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90?utm_source=openai)).",
           "sentiment": "positive"
         },
         {
-          "sentence": "* **과잉 진료 없는 의사 상담 (원장별 차이 있음)**: 필요한 수술과 불필요한 시술을 명확하게 구분해 주는 원장님들에 대한 만족도가 높습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "--snip--",
+          "sentence": "후기 중에는 “공장형 병원의 표본 같은 느낌”이라며 대규모 병원의 절차가 다소 기계적이고 인스턴트한 분위기라는 평가도 있습니다 ([sungyesa.com](https://sungyesa.com/hlist/1699?utm_source=openai)).",
           "sentiment": "negative"
         },
         {
-          "sentence": "### 4. 원진성형외과 상담 시 팁",
+          "sentence": "“데스크 스텝은 놀라울 정도로 불친절했다”는 의견도 있는데, 스텝의 응대 방식 때문에 전체 분위기에서 감점 요소로 작용했다는 내용입니다 ([sungyesa.com](https://sungyesa.com/hlist/1699?utm_source=openai)).",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "“쌍커풀 상담 시 코수술까지 함께 권유받았다”거나, “쌍커풀이 작다고 거상 시술까지 추천했다”는 식의 과도한 시술 권유가 불편했다는 후기들도 일부 있습니다 ([sungyesa.com](https://sungyesa.com/hlist/1699?utm_source=openai)).",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "공식 블로그 \"당신만 봅니다\"에는 눈·코·가슴 등의 다양한 수술 케이스 후기가 이미지와 함께 게시되고 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "눈 재수술, 코성형, 이마거상, 가슴수술 1년 경과 후기 등이 상세히 소개되어 있습니다 ([k-wonjin.tistory.com](https://k-wonjin.tistory.com/3?utm_source=openai)).",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "‘리얼 셀피그램’ 같은 시술 전후 후기 콘텐츠도 제공되고 있습니다 ([k-wonjin.co.kr](https://www.k-wonjin.co.kr/?utm_source=openai)).",
           "sentiment": "neutral"
         }
       ],
@@ -2832,32 +2627,108 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIeqa8yq0AIbwKzhYJ5GIvyX5zEeaOfAWPTLt53AOgFgKJOPnuQoRff4Yj_RE4oGn0roQAYQ7zyrKGTF_1x-wEkN5f_bJ9cNKzOxSYQ6QbqgbcPbG4ouOl_MICr2cuqaTIreZy-T6lnbmbto4mYCfghtbbb-jc8SYTEG-OCVDzSJYUO87TlnyDPRqQqxfuE3_eT5MQ42JjipzA",
+          "raw": "https://sungyesa.com/hlist/1699?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1699?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90?utm_source=openai",
+          "domain": "daedamo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1699?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1699?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sungyesa.com/hlist/1699?utm_source=openai",
+          "domain": "sungyesa.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://k-wonjin.tistory.com/3?utm_source=openai",
+          "domain": "k-wonjin.tistory.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/?utm_source=openai",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "WJ 원진성형외과",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**WJ 원진성형외과**의 실제 상담 후기들을 종합해 보면, 대형 병원 특유의 체계적인 시스템과 전문성에 대한 만족도가 높은 편이지만 대기 시간이나 상담 스타일에 따른 개인차도 존재합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-d5ezc-E1vOODv2Oq3VZWq6ijN0BCgSjGCwrMOe7lgEJq-jkvlW9uBvs4qu0VoRDdwAS60rZupzzLMqOHJITJATQV6q4kOchPPB78FyZCurgjU1_UPm0fOkbc2538vKKAoHzJEQ4VUllxCd3z640vZ_1qrYZe1Chw5s0SIgbn1zEhXqt9q5WX7OK6KqqNRkp-T403L8MM7cQ1tA==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEqM6BPNmlVbQ-rQa0GvYqM-giEBXH-j3XM6-iOfAU7X7-LrfBNxGcT_SW7b-pt1MS11Dk4tcQAjMEWOujoB0H7DPO-O5oluwv4_caWzh_ruaShBHRgxWzb8pEIJARamw2jnA=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgLf2PKY1WLjR6JD77LxNpK2M0H-STLA20xAUJnBEX5SM1q7-n5SInQuyc70oG6Z8VUOzqXkFsxi2xV4-FBvHq14bE5lM-aANh1dZ_IT77Li94OgBgBI53p15SAExV8rdo",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETXYaB8M9OBC8oZMz2c_n4Dy2CiAC4ddQz_pCJyxdUB0Uj1rUyxCJr0w4Eo3zszc23k8kNqmLHxaThw0koZAwngT0MimtOQoBguMkAiQA=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE09XsdQbsrCXrthxPiJMCKA34OVVIkXlNiIUGQC3XK6AO3C6LaeyV1od3ipw2TPdBSqk9wW2DkQIoc1BHY_Gt7R-e1o2_Mb26gEiBN9R3qwYKw3-DLXb8QwYxiE99LTCPZnO64",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTbsi80qT7MpJGJIFu-w5JR5PjZJzc28OvFv4MiseuCa3Wk4tOkWdtSAiL59G5a8qWjYq7wxMpLy5ZkJP-SiZs9r4chKtaqbJrk6RXs6vOOvu00Jah_QhTWYhN82KR7RlrM87umF0GnQYJrR89HZutAplgq2HVSUkl5Z9cyaFQi8dsKx-nXNJG2tlFSlHcv3_7keyD6Uu_As9AMpsOh1qu5nsvT2rK6LkiTIsB4E0k4EKrXTdCsPXNbWrLKeLB84JRkkFaEbWkfNqU1Bx4dsdvHtsXIPwphZvSgsp_86MQPL3UMrNphKSR44TctT9ERws3Gz15eUyTOvbmzB4ZVqhJVuiAR-p4RJiS3JiJm6r0egbuT5tvviXyhye2NWsuE0VNoAC0utLNc8CNR6t3QVaN8YC9mOD97p-EZibUkHHWMcZoik6r0J068HttW73JWJ4lExWVK3SjahBCcN4bFBI8PAZCf2C8GjR1IhA_0Bx5O1pB8YU04VzXnEyrheEkUmd-IsTFCa4zUQXaLYkU4SIu-Y3eB7liaU39BvxDljI2641rpD_quCX1DoUYAilBg29cNErV7crSQsTCXaxN5Rds0DozfS51inJmb92FHb4zH5SPBa_GLyQiOKSwKKH3-732kgsMHSsOAI2uaHZEFCcGU6s368jKU1Ekc8vw-u1Yx-q3r6PcwLIB4TQ0eTUS1Ltea_R_HLQ1aG5J9ZfTqI79rA3EgSqFXwlu_FdGgrNd2M4OdMYCMgyt_6exQG_z72qDj87fJLVb7KUiCT7RRKesnYhpDSoXEyLwIJ-L82VAU_4mngYeLzmJ0bkH2RNfAtkGHYoXoXYjOfQeaFFAWxVVsfdpODMUvY0rGt9SM65aESn5zOBPt3kj1QXf9Y-DyP8J7HfI4U7r5A_3hbQsh320a2zFdjL0trwVqTE=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
+      "topRecommendation": "WJ 원진성형외과",
+      "brandRank": 1,
       "factualityClaims": [
         {
-          "claimText": "서울시 서초구 강남대로 419 파고다타워 12-18층에 위치",
+          "claimText": "강남역 인근(파고다타워)에 위치해 있어 지하철/버스 등 대중교통으로 방문하기 매우 수월합니다.",
           "claimType": "location",
           "verdict": "supported",
-          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
+          "responseValue": "서울시 서초구 강남대로 419 파고다타워",
           "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
         }
       ],
@@ -2872,7 +2743,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**WJ 원진성형외과**는 강남역 인근의 대표적인 대형 성형외과로, 성형 커뮤니티(바비톡, 강남언니, 성예사, 블로그 등)에서 상담 관련 후기가 매우 많은 편입니다.",
+          "sentence": "**WJ 원진성형외과**의 실제 상담 후기들을 종합해 보면, 대형 병원 특유의 체계적인 시스템과 전문성에 대한 만족도가 높은 편이지만, 대형 병원이 갖는 일반적인 특징(대기 시간, 상담 진행 방식)에 대한 호불호도 함께 나타납니다.",
           "sentiment": "neutral"
         }
       ],
@@ -2880,54 +2751,34 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2G4qZYTR2T_odzGLi2sl15i04XOfiT089PHCGbW31JSXPdyGUXjehwjBxs0hSBRsjHZKceA6DJCO72S1VJyC-4pm78KyykK8c8DJhRNOwlf1lby3mqZI25fVUYpbK82HafJO-4rxpyVqAbBlT0jg0oum_Xy8ypuBbZJDNhvcnS4KhIyXI_YPYPCNUf4cqiF4N7wOuB_886-ei",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG14x7Lh6wKXTiHrpI3kHCiqks9YNo-vjVACoLn2yXUkRe7qzOj0bZHTfJyvVkUQyO5MMYPAThhi8c8ua0v1NlO99KqTyfGL4r7BxY1qUZf",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYv2AJ5AGVbNMrYFCmbF2vWjkYx_0IM52pYa9aHImjKteO2zc7QCslzyn5pFoKx9RP7hz_iYweDWdNp1C246FIxWuh6xKX8xWVrMdGPYQ2SUD3eVZBDlRh",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGt1iIPiT0gnDBoSiABC_VZ_VibMdwQvcugQCn8nYQsGaiLUdlqJ62KF6g-tmHoqHFX4h24Y5DKF68sk5RgQ62IC7nvNalc2vXGS2B8OmCC3aV6yCa4AsE5GodCJW8=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGF5pgtMUxo3YJBcTq5kISBBVbIsN3tNKH0jQzGVyf1UtlCx28jY2OJ_zqbtdZyXGqIhPHij51VSUVgeHkQaDhnqbYyI-HuxNfIaS7PBxF7a5xYnzGbQfCFkvsYwMC7v-lsPec=",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvJFUH6gvQ8zmEhSZJf1TufroG9Ek_PoIqQv-zB68TkSbvQMjr7b2_naXLiXvJF_8qyBecBT2E_RPm0Td6wcRDYMcOCwBUtxX3NG4arUhT1u2jEUeWvxFEnw==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKDosnM1RQmn2_wLmZ4Gv1_gYKwnrkjmPDeSJJH-Ox4sohzTQPgUtIEoiVnaz7Zb1p3Blubo0Tf8MdO5EwQvnSKIAfiCQaCZQWinYFAdsx1RoQHugVjwmiTfEXFA==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwaFM9rUbBgQooWfQgvMqry2VLm8_TLORTzpMce6CXnbYd-02eT-EFC1FBSD-zEhvW-H-GFFXewJjjdPS5SVBdBN1RxbxrNo2axHVoz64=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz-SIeVY76xsXcOdSYwzk1C3I9bUA3QBFVtQ1g1T7yrKvlbkttVCSoVh0STRR6Xw4GYnu4-6P8rwcrBYPUi34VU0Jp-0Esz0i7mah9jAOWvYbjfMD7iZ8HJn5s871erBthhw0ZObX8frOpKlO-o-vp9GRNUdaj5sXCzz1jsCeAK-mJ9ezbFZWDbCEZi_AJrelV3c8SGthYYZ_3Rg_DMp79cGJRJT6n3cwUtkOHL3gEWJvlIlGyUI4MbGL6WOhMiqiziHJv6LG57ghA4w7txlEoK0kfeb9by35HrY7XuJDcmbk7acBsKqy3XKL1-6FR_55GyCaSQc0nSdKzwgB4pX8Lf-ri2rUQWXPexVPoPBd7X4OkbW0FUzMKeP6lE8vT4B4i82YdvJkNEciae0CitT8RlKDtq8zG5458kp4tGm9xUzfLcCL--0Pp5aCPNhvI-zsEl6F70uuHyWcN79EGooV051b9jvPMAKRiRlPtAIP88WaM8ldEov88nvKIPVMxOwwwQlHGZEatZuLnusQO8clHY4tuNzH3pd8JLx2jax3eann0395xtbU9lZn0jm1XXE7Vy9Meu8vMqSGpjuS6oAK_bMBLbg59OPsrnPLBf_UDh4h534WyjRwlCW7mYh-WHfjzpqeZkQH9JrYS7UHfFThKizACUQl9JDFLJ0tIEPwfTqfLh4JY_A857SzHTkbrWQWxl3_4d03cCpYf9VyeHduNR9kQO2WpMcrGP4xW6t-vreAPbvybx-IpIWEQ30HMC1eyBO6D2uZ63jx12mYCBxIMm6YFAXqcmTrD0YV390hOFgZnT9B4ggpHYqlI4-aM9Hpp6pj9kcc_rv8KapI7pE8OZgnuQhdKNDeh3BSkn06loFTD3FvIxaTGVYgj8C5BDkzTZPp24odWPFDpXPH6lqMyzQ8oxdcGK_FZfA==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIBBWsgleNhys5tnZzmfIFQAucgZcXZxJCB5szgT8LplH-BNFj_b3cQoXY9kWnuswdGoCXqyCrA1euKtc5HjAaQtptBWk5Buwzp1VydUqpXT8y2Iqo4s15Njh4msjUXrdtFdr9Is8eAs27yVJnCXScsscp_NTjQwzP6bjp5HX-HSgFFH6CvEGSsKBqT734I3LL7r9NQZ8uNstWLg==",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": "WJ 원진성형외과",
+      "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "WJ 원진성형외과는 강남역 인근의 대표적인 대형 성형외과로",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "서울시 서초구 강남대로 419 파고다타워 12-18층",
-          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
-        }
-      ],
-      "factualitySupported": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
     },
@@ -2938,7 +2789,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**WJ 원진성형외과**의 상담 후기와 실제 방문자들의 전반적인 평가를 정리해 드립니다.",
+          "sentence": "**WJ 원진성형외과**의 상담 관련 주요 특징과 방문자들의 실제 후기를 요약해 드리겠습니다.",
           "sentiment": "neutral"
         }
       ],
@@ -2946,37 +2797,25 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFeGvgkFkMmai8A8557FaqLAgfu2N4ym_dtoJlkW_YE0RWiSfFVHbJTmrITzldAfV7VrFvr92p81L5A5FMKqEuuWtFiXaJdcPM6G0BF_IgxVKm5_89NLlpaVuAgKa1UuTN6Ai8ek0_Dek-wzaKWtaSk8iktTFyKM3IBCY9TSI2fPfytc5MHLYy2vZKAl7d81-nNdZv0hbO9LQJGg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFs6GAyX_KM3aM9Lceqop5Q2awQyPmHDsBpGEmi1NCbapvr21t6Rxxz2KpTWSReK5L-WkntZIYhOLyPTWeFkpxOwmmcao9V78ECo2mElvj1QsCunLVejwkeeBf3EISQu54e59brMg9IBzfDXjPtQvoLhxLnUEgQDQRf3egL33w66v5HsqN1YDr4gMxT1jTbX7QqHrtlcK6P7vn",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFeGvgkFkMmai8A8557FaqLAgfu2N4ym_dtoJlkW_YE0RWiSfFVHbJTmrITzldAfV7VrFvr92p81L5A5FMKqEuuWtFiXaJdcPM6G0BF_IgxVKm5_89NLlpaVuAgKa1UuTN6Ai8ek0_Dek-wzaKWtaSk8iktTFyKM3IBCY9TSI2fPfytc5MHLYy2vZKAl7d81-nNdZv0hbO9LQJGg==",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFs6GAyX_KM3aM9Lceqop5Q2awQyPmHDsBpGEmi1NCbapvr21t6Rxxz2KpTWSReK5L-WkntZIYhOLyPTWeFkpxOwmmcao9V78ECo2mElvj1QsCunLVejwkeeBf3EISQu54e59brMg9IBzfDXjPtQvoLhxLnUEgQDQRf3egL33w66v5HsqN1YDr4gMxT1jTbX7QqHrtlcK6P7vn",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxc0wwuu7HGcTW55fy6GFyr3jSY_Hf-dgLEjcSfM8QHQyP_zG8S2WEC3TfCgSTFQMXEwiTwJy3hF5zJrlAXVKb6_iz74oQKzwzN_MwwgpJ",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlWG0tgdhIfDTiXQw0Z3XTiDuvN236Mot2KWXZHEkBmY2IDdo6nsyb107AlvY2xbAYBvw0jR2AHdlmMNCWDcX7izFBr5WMkx-QfoRfNQ84GDfQqkbtoU7c6ah7GvW8VeOnZSc=",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuVFoEEWTCc44rG42IQjfqzLEKx-4X_YkSiACVKd624uuRGgxR-DNiDXrl4xs0mz_RFNLaqYKa6VCN49eB6_LF9AsN5nOcx09Ez7f9HjZ4O0Ix1O-KW4pxGw==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvHqB2BLZ2t_Gi8SKD6Zdfvd8rS85XTqdQctTFoHY_89wtxysIBzpZ5t1WWKQ982Tah51DPricJ6Nhyvg2hkvRaQ-TPDKeLXD5vjfd7P2I2X_mPLVOFf8d2QBDUHNjbenssCSK",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvHqB2BLZ2t_Gi8SKD6Zdfvd8rS85XTqdQctTFoHY_89wtxysIBzpZ5t1WWKQ982Tah51DPricJ6Nhyvg2hkvRaQ-TPDKeLXD5vjfd7P2I2X_mPLVOFf8d2QBDUHNjbenssCSK",
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGuyi1msSurkFe-8mmyZtVQmVb_xzBLS5CI4UGFmPTnguxjJvxemNcjqPHBVNV2XrafCUI_2_R4TR_t4POaqqzpNdnhLm212o0yKdbt3f7WCv08Wi3HtHK",
           "domain": null,
           "ownerType": "unknown",
           "supportsBrandMention": false
@@ -2984,8 +2823,16 @@
       ],
       "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
+      "factualityClaims": [
+        {
+          "claimText": "강남역 인근(파고다타워)에 위치하여 대중교통 접근성이 뛰어나고 원내 시설이 쾌적하다는 평가가 많습니다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "서울시 서초구 강남대로 419 파고다타워",
+          "factGraphValue": "서울시 서초구 강남대로 419 파고다타워 12-18층"
+        }
+      ],
+      "factualitySupported": 1,
       "factualityContradicted": 0,
       "brandOwnedCitation": false
     }
