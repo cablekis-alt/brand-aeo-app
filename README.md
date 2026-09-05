@@ -88,6 +88,41 @@ npm run measure:local
 
 ---
 
+## 데스크톱 앱 (Electron) 🖥️
+
+한국 PC에서 **정확한 측정을 앱 하나로** 하기 위한 데스크톱 버전입니다. 웹과 **동일한 React UI**에 로컬 측정 백엔드가 내장되어, 터미널 없이 등록·측정·조회를 한 창에서 합니다. 측정 결과는 사용자 PC(`userData`)에 저장되며 git·서버가 필요 없습니다.
+
+### 개발 모드로 실행
+
+```bash
+npm run electron:dev
+```
+
+- API 서버 + vite를 자동 기동하고 앱 창이 UI를 로드합니다. 루트 `.env`의 키를 그대로 씁니다.
+
+### 설치본(.exe) 빌드
+
+```bash
+npm run electron:pack        # NSIS 설치본 + 포터블 .exe → dist-electron/out/
+npm run electron:pack:dir    # 설치 파일 없이 앱 폴더만(빠른 확인)
+```
+
+빌드 순서: `vite build`(dist) → 서버 번들(esbuild) → electron-builder.
+
+### 설치본 사용
+
+1. `dist-electron/out/`의 설치본 실행 → 설치.
+2. **API 키**: `GEMINI_API_KEY`가 담긴 `.env`를 실행파일과 같은 폴더 또는 `%APPDATA%\brand-aeo-app\`에 둡니다. (판정·수집 기본이 Gemini라 GEMINI 키만으로 측정됩니다.)
+3. 첫 실행 시 커밋된 코호트 데이터가 **자동 시드**되어 대시보드가 바로 채워집니다. 이후 앱에서 측정하면 로컬에 누적됩니다.
+
+- **데이터 위치**: `%APPDATA%\brand-aeo-app\`(측정 데이터·등록 브랜드·큐). 완전 초기화는 이 폴더 삭제.
+- **코드 서명**: 미서명이라 설치 시 SmartScreen 경고가 뜹니다. 인증서가 있으면 `CSC_LINK`/`CSC_KEY_PASSWORD` env로 자동 서명됩니다.
+- **Windows EPERM(rename) 빌드 오류** 시: `npx electron-builder --dir -c.directories.output=%TEMP%/eb-out`.
+
+자세한 내용(구조·데이터 레이아웃·서명 절차)은 [electron/README.md](electron/README.md).
+
+---
+
 ## 배포 (Vercel)
 
 `master`에 push하면 Vercel Git 연동이 자동 배포합니다. 측정 데이터 커밋(`data: measure ...`)도 동일하게 자동 배포됩니다.
@@ -109,6 +144,8 @@ npm run measure:local
 |---|---|
 | `npm run dev` / `npm run server:dev` | 프론트 / 백엔드 로컬 실행 |
 | `npm run measure:local [-- <target>]` | 로컬 측정 + Vercel 반영(인자 없으면 all) |
+| `npm run electron:dev` | 데스크톱 앱 개발 모드 실행 |
+| `npm run electron:pack` / `electron:pack:dir` | 데스크톱 설치본 / 앱 폴더 빌드 |
 | `npm run build` | 프로덕션 빌드 |
 | `npm run typecheck:server` | 서버 타입 체크 |
 | `npm run lint` | ESLint |
