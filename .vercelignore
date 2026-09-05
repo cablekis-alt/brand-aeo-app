@@ -3,3 +3,5 @@
 !.env.example
 /data
 agent-transcripts
+electron
+dist-electron
