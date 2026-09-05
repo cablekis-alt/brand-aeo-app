@@ -17,6 +17,13 @@ files:
 
 asar: true
 
+# 자동 업데이트 소스 — app-update.yml에 임베드되어 electron-updater가 여기서 새 버전을 확인한다.
+# 저장소가 private인 동안은 실제 다운로드에 토큰이 필요해 조용히 실패한다(공개 전환 시 바로 동작).
+publish:
+  provider: github
+  owner: cablekis-alt
+  repo: brand-aeo-app
+
 # 앱 아이콘 — 512x512 PNG 하나면 electron-builder가 각 크기·.ico로 변환한다.
 # buildResources(electron/build)에 icon.png가 있으면 자동 인식되지만 명시해 둔다.
 icon: electron/build/icon.png

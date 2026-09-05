@@ -138,6 +138,28 @@ async function createWindow() {
       ? `http://localhost:${API_PORT}`
       : 'data:text/html,' + encodeURIComponent('<h2 style="font-family:sans-serif;padding:2rem">로컬 서버(:' + API_PORT + ') 시작 대기 시간 초과.</h2>'),
   )
+  initAutoUpdater()
+}
+
+/**
+ * 자동 업데이트 — GitHub Releases의 latest.yml을 확인해 새 버전을 내려받고, 다음 실행 시 설치한다.
+ * 패키징 빌드에서만 동작(app-update.yml 필요). 저장소가 private인 동안은 다운로드가 실패하지만
+ * 앱 동작에는 영향이 없도록 오류를 조용히 무시한다(공개 전환 시 자동으로 동작).
+ */
+function initAutoUpdater() {
+  if (!app.isPackaged) return
+  let autoUpdater
+  try {
+    ;({ autoUpdater } = require('electron-updater'))
+  } catch {
+    return // 의존성 없음 — 무시
+  }
+  autoUpdater.autoDownload = true
+  autoUpdater.autoInstallOnAppQuit = true
+  autoUpdater.on('update-available', (info) => console.log('[updater] 새 버전 발견:', info?.version))
+  autoUpdater.on('update-downloaded', (info) => console.log('[updater] 다운로드 완료(다음 실행 시 설치):', info?.version))
+  autoUpdater.on('error', (err) => console.log('[updater] 확인 실패(무시):', err instanceof Error ? err.message : err))
+  autoUpdater.checkForUpdates().catch((err) => console.log('[updater] checkForUpdates 실패(무시):', err?.message || err))
 }
 
 /** 설치본에 키를 굽지 않는다 — 실행파일 옆 또는 userData의 .env를 읽는다. */
