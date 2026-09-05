@@ -49,8 +49,13 @@ export function getJudgeClient(): EngineClient {
   if (USE_MOCK) return new MockJudgeClient();
   if (!judgeClient) {
     const preferred = process.env.JUDGE_ENGINE?.trim().toLowerCase();
+    // 명시값 우선. 없으면 키가 실제로 있는 엔진을 고른다(키 없는 클라이언트는 생성자가 throw하므로).
     if (preferred === 'gemini') judgeClient = new GeminiJudgeClient();
-    else judgeClient = process.env.ANTHROPIC_API_KEY ? new ClaudeJudgeClient() : new OpenAiJudgeClient();
+    else if (preferred === 'claude') judgeClient = new ClaudeJudgeClient();
+    else if (preferred === 'openai') judgeClient = new OpenAiJudgeClient();
+    else if (process.env.ANTHROPIC_API_KEY) judgeClient = new ClaudeJudgeClient();
+    else if (process.env.OPENAI_API_KEY) judgeClient = new OpenAiJudgeClient();
+    else judgeClient = new GeminiJudgeClient(); // GEMINI_API_KEY만 있는 흔한 경우(로컬·데스크톱) 폴백
   }
   return judgeClient;
 }

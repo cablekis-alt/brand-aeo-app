@@ -14,6 +14,7 @@ import {
   type QuestionSpec,
   type WeeklyScorecard,
 } from '../src/prompts/index.js';
+import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -140,8 +141,28 @@ async function collectRawCalls(
   questions: QuestionSpec[],
   weekOf: string,
 ): Promise<RawCallRecord[]> {
+  // API 키가 있는 엔진만 사용한다. 키 없는 엔진(예: OPENAI_API_KEY 미설정)은 클라이언트 생성자가
+  // throw하므로, 미리 걸러 Gemini 단독 등으로 측정이 진행되게 한다(설계상 Gemini만으로 동작 가능).
+  const ENGINE_ENV: Record<Engine, string> = {
+    openai: 'OPENAI_API_KEY',
+    gemini: 'GEMINI_API_KEY',
+    claude: 'ANTHROPIC_API_KEY',
+    perplexity: 'PERPLEXITY_API_KEY',
+  };
+  const useMock = process.env.USE_MOCK_ENGINES === 'true';
+  const availableEngines = useMock ? tenant.engines : tenant.engines.filter((e) => process.env[ENGINE_ENV[e]]);
+  if (availableEngines.length === 0) {
+    throw new Error(
+      `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${tenant.engines.join(', ')}).`,
+    );
+  }
+  if (availableEngines.length < tenant.engines.length) {
+    const skipped = tenant.engines.filter((e) => !availableEngines.includes(e));
+    console.warn(`[B3] 키 없는 엔진 건너뜀: ${skipped.join(', ')} → ${availableEngines.join(', ')}(으)로 측정`);
+  }
+
   const jobs = questions.flatMap((question) =>
-    tenant.engines.flatMap((engine) =>
+    availableEngines.flatMap((engine) =>
       Array.from({ length: tenant.repeatsPerQuestion }, (_, i) => ({ question, engine, callIndex: i + 1 })),
     ),
   );
@@ -153,9 +174,9 @@ async function collectRawCalls(
     jobs,
     COLLECTION_CONCURRENCY,
     async (job): Promise<RawCallRecord | null> => {
-      const client = getEngineClient(job.engine);
       const prompt = buildEngineCallPrompt(job.engine, job.question.text);
       try {
+        const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
         const result = await client.call(prompt);
         return {
           tenantId: tenant.tenantId,
