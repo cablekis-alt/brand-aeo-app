@@ -280,28 +280,6 @@
     "cohortOnly": true
   },
   {
-    "tenantId": "viewplasticsurgery",
-    "brandName": "뷰성형외과",
-    "aliases": [
-      "뷰성형외과"
-    ],
-    "ownedDomains": [
-      "viewplasticsurgery.com"
-    ],
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "engines": [
-      "openai",
-      "gemini"
-    ],
-    "questionBankSize": 12,
-    "questionBankVersion": "v1",
-    "repeatsPerQuestion": 3,
-    "competitors": [],
-    "factGraph": [],
-    "cohortOnly": true
-  },
-  {
     "tenantId": "jjprs",
     "brandName": "제이준성형외과",
     "aliases": [

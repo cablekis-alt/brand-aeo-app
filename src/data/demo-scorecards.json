@@ -19,7 +19,7 @@
     "brandOwnedCitationRate": 0.050397877984084884,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 8
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -42,8 +42,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.055415617128463476,
     "cohortRank": {
-      "position": 6,
-      "totalTenants": 8
+      "position": 5,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -66,8 +66,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.05084745762711865,
     "cohortRank": {
-      "position": 4,
-      "totalTenants": 8
+      "position": 3,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -210,32 +210,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 5,
-      "totalTenants": 8
-    },
-    "hallucinationFlags": []
-  },
-  {
-    "tenantId": "viewplasticsurgery",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 강남",
-    "brandName": "뷰성형외과",
-    "aeoScore": {
-      "current": 42,
-      "ma4": 42,
-      "previousWeek": 42,
-      "ciLow": 34.5,
-      "ciHigh": 49.5
-    },
-    "mentionRate": 0.20833333333333334,
-    "shareOfMention": null,
-    "avgRecommendationRank": 3,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0.047311827956989246,
-    "cohortRank": {
-      "position": 2,
-      "totalTenants": 8
+      "position": 4,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -258,8 +234,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.023195876288659795,
     "cohortRank": {
-      "position": 7,
-      "totalTenants": 8
+      "position": 6,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -550,8 +526,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 7,
-      "totalTenants": 8
+      "position": 6,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   },
@@ -574,8 +550,8 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
-      "totalTenants": 8
+      "position": 2,
+      "totalTenants": 7
     },
     "hallucinationFlags": []
   }

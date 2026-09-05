@@ -41,8 +41,6 @@ import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 
 import analyses_sm_ps from '../src/data/live-sm-ps-question-analyses.json' with { type: 'json' };
 import bank_viewclinic from '../src/data/live-viewclinic-question-bank.json' with { type: 'json' };
 import analyses_viewclinic from '../src/data/live-viewclinic-question-analyses.json' with { type: 'json' };
-import bank_viewplasticsurgery from '../src/data/live-viewplasticsurgery-question-bank.json' with { type: 'json' };
-import analyses_viewplasticsurgery from '../src/data/live-viewplasticsurgery-question-analyses.json' with { type: 'json' };
 import bank_vvlyps from '../src/data/live-vvlyps-question-bank.json' with { type: 'json' };
 import analyses_vvlyps from '../src/data/live-vvlyps-question-analyses.json' with { type: 'json' };
 import bank_web4ai from '../src/data/live-web4ai-question-bank.json' with { type: 'json' };
@@ -77,7 +75,6 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'maum-dream': bank_maum_dream as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
   'viewclinic': bank_viewclinic as QuestionBank,
-  'viewplasticsurgery': bank_viewplasticsurgery as QuestionBank,
   'vvlyps': bank_vvlyps as QuestionBank,
   'web4ai': bank_web4ai as QuestionBank,
   'yunoprs': bank_yunoprs as QuestionBank,
@@ -104,7 +101,6 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_maum_dream as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
   analyses_viewclinic as LiveAnalysesFile,
-  analyses_viewplasticsurgery as LiveAnalysesFile,
   analyses_vvlyps as LiveAnalysesFile,
   analyses_web4ai as LiveAnalysesFile,
   analyses_yunoprs as LiveAnalysesFile,
