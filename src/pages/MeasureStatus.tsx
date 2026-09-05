@@ -157,8 +157,7 @@ export default function MeasureStatus() {
                 <tr>
                   <th>상태</th>
                   <th>대상</th>
-                  <th>실행</th>
-                  <th>시작</th>
+                  <th>측정시간</th>
                   <th>경과</th>
                   <th></th>
                 </tr>
@@ -172,9 +171,8 @@ export default function MeasureStatus() {
                         <span className={`status-pill ${badge.cls}`}>{badge.label}</span>
                       </td>
                       <td>{targetLabel(run.title)}</td>
-                      <td className="num">#{run.runNumber}</td>
-                      <td>{timeAgo(run.createdAt)}</td>
                       <td className="num">{duration(run)}</td>
+                      <td>{timeAgo(run.createdAt)}</td>
                       <td>
                         <a href={run.htmlUrl} target="_blank" rel="noreferrer" className="rec-link">
                           로그 →
