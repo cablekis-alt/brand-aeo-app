@@ -33,3 +33,5 @@ server/tenants.overlay.json
 .env.*
 !.env.example
 server/measure-requests.json
+server/delete-requests.json
+dist-electron

@@ -3,6 +3,7 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm install",
   "functions": {
     "api/infer.ts": {
       "includeFiles": "{server/tenants.config.json,src/data/*.json}",

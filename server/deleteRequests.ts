@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { get, put } from '@vercel/blob';
+import { stateFilePath } from './appPaths.js';
 import { blobStoreEnabled } from './tenantOverlay.js';
 
 // 삭제 대기열 — tenantId 목록만 담는다. 여러 번 빠르게 삭제해도 concurrency로 run이 취소되는 문제를,
@@ -8,7 +8,7 @@ import { blobStoreEnabled } from './tenantOverlay.js';
 // delete.yml에 이 값을 tenantId로 넘기면 delete-tenant.ts가 큐 전체를 삭제한다.
 export const DELETE_QUEUE_SENTINEL = '__queue__';
 
-const LOCAL_PATH = path.resolve(process.cwd(), 'server/delete-requests.json');
+const LOCAL_PATH = stateFilePath('delete-requests.json');
 const BLOB_PATHNAME = 'delete-requests.json';
 
 async function readFromBlob(): Promise<string[]> {

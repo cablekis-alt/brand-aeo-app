@@ -1,5 +1,6 @@
 import rawTenants from './tenants.config.json' with { type: 'json' };
-import { appendTenant } from './config.js';
+import { packagedDataMode } from './appPaths.js';
+import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
@@ -78,18 +79,32 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   return [...map.values()];
 }
 
+/**
+ * 테넌트를 런타임에 영속화한다.
+ * - dev 체크아웃: base config(tenants.config.json)에 append.
+ * - Vercel / Electron 패키징: base config는 읽기전용이므로 오버레이(쓰기 가능)에 저장.
+ * 이미 있으면 조용히 넘어간다(중복 append 방지).
+ */
+export async function persistTenantForRuntime(tenant: TenantConfig): Promise<void> {
+  if (process.env.VERCEL || packagedDataMode()) {
+    const overlay = await readOverlay();
+    if (!overlay.some((item) => item.tenantId === tenant.tenantId)) {
+      overlay.push(tenant);
+      await writeOverlay(overlay);
+    }
+    return;
+  }
+  // dev 체크아웃 — base config에 없을 때만 append(중복이면 append가 throw하므로 방어).
+  const tenants = await loadTenants();
+  if (!tenants.some((item) => item.tenantId === tenant.tenantId)) await appendTenant(tenant);
+}
+
 export async function registerTenant(tenant: TenantConfig): Promise<void> {
   const existing = await loadRuntimeTenants();
   if (existing.some((item) => item.tenantId === tenant.tenantId)) {
     throw new Error(`이미 존재하는 tenantId입니다: ${tenant.tenantId}`);
   }
-  if (process.env.VERCEL) {
-    const overlay = await readOverlay();
-    overlay.push(tenant);
-    await writeOverlay(overlay);
-    return;
-  }
-  await appendTenant(tenant);
+  await persistTenantForRuntime(tenant);
 }
 
 export function toTenantSummary(tenant: TenantConfig) {

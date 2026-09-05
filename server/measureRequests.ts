@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { get, put } from '@vercel/blob';
+import { stateFilePath } from './appPaths.js';
 import { blobStoreEnabled } from './tenantOverlay.js';
 import type { TenantConfig } from './types.js';
 
@@ -10,7 +10,7 @@ export interface MeasureRequest {
   requestedAt: string;
 }
 
-const LOCAL_PATH = path.resolve(process.cwd(), 'server/measure-requests.json');
+const LOCAL_PATH = stateFilePath('measure-requests.json');
 const BLOB_PATHNAME = 'measure-requests.json';
 
 async function readFromBlob(): Promise<MeasureRequest[]> {

@@ -1,8 +1,10 @@
 import 'dotenv/config';
 import { execSync } from 'node:child_process';
+import path from 'node:path';
 import express from 'express';
+import { packagedDataMode } from './appPaths.js';
+import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
-import { appendTenant, loadTenants } from './config.js';
 import { inferAddressViaSearch, inferBrandFields, inferCompetitors } from './brandInference.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -19,6 +21,7 @@ import {
   isBakedTenant,
   loadRuntimeTenants,
   normalizeTenantDraft,
+  persistTenantForRuntime,
   registerTenant,
   removeOverlayTenant,
   toTenantSummary,
@@ -305,10 +308,10 @@ app.post('/api/measure-requests/process', async (_req, res) => {
       try {
         // 큐에 저장된 시점의 정규화가 오래됐을 수 있으니 측정 직전 한 번 더 정규화한다.
         const t = normalizeTenantDraft(item.tenant);
-        const existing = await loadTenants();
-        if (!existing.some((x) => x.tenantId === t.tenantId)) await appendTenant(t);
+        await persistTenantForRuntime(t);
         const { scorecard } = await runWeeklyPipeline(t, store);
-        execSync(`npx tsx scripts/publish-tenant.ts ${t.tenantId}`, { stdio: 'inherit' });
+        // dev 체크아웃에서만 src/data baking(웹 배포용). 패키징 설치본은 store가 곧 데이터.
+        if (!packagedDataMode()) execSync(`npx tsx scripts/publish-tenant.ts ${t.tenantId}`, { stdio: 'inherit' });
         await clearQueue(t.tenantId);
         results.push({ tenantId: t.tenantId, brandName: t.brandName, aeoScore: scorecard.aeoScore.current, ok: true });
       } catch (err) {
@@ -370,7 +373,24 @@ app.post('/pipeline/run/:tenantId', async (req, res) => {
   }
 });
 
+// Electron 패키징 모드: vite 없이 빌드된 정적 UI(dist)를 같은 오리진에서 서빙한다.
+// 웹(Vercel)·dev에서는 ELECTRON_STATIC_DIR 미설정이라 아래 블록은 실행되지 않는다(공유 코드 안전).
+const STATIC_DIR = process.env.ELECTRON_STATIC_DIR;
+if (STATIC_DIR) {
+  const staticRoot = path.resolve(STATIC_DIR); // sendFile은 절대경로 필요
+  app.use(express.static(staticRoot));
+  // SPA 폴백 — API/데이터 라우트가 아닌 GET은 index.html로 넘겨 클라이언트 라우팅이 처리하게 한다.
+  const NON_SPA = ['/api', '/scorecards', '/pipeline', '/health'];
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || NON_SPA.some((p) => req.path === p || req.path.startsWith(p + '/'))) {
+      return next();
+    }
+    res.sendFile(path.join(staticRoot, 'index.html'));
+  });
+}
+
 app.listen(PORT, () => {
+  seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
   console.log(`[server] listening on :${PORT}`);
   startScheduler(store);
 });

@@ -1,0 +1,29 @@
+# Web4AI Brand AEO 데스크톱 패키징 설정 (electron-builder)
+appId: kr.o2o.web4ai.brandaeo
+productName: Web4AI Brand AEO
+copyright: © O2O
+
+directories:
+  output: dist-electron/out
+  buildResources: electron/build
+
+# 앱에 포함할 파일 — 프로덕션 node_modules는 electron-builder가 자동 포함한다.
+files:
+  - electron/**/*
+  - dist/**/*
+  - dist-electron/server.cjs
+  - src/data/**/* # 첫 실행 시드 소스(커밋된 스코어카드·분석·질문은행)
+  - package.json
+
+asar: true
+
+win:
+  target:
+    - nsis
+    - portable
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
