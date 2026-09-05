@@ -138,7 +138,7 @@
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.15920398009950248,
     "cohortRank": {
-      "position": 1,
+      "position": 2,
       "totalTenants": 6
     },
     "hallucinationFlags": []
@@ -190,32 +190,6 @@
       "totalTenants": 6
     },
     "hallucinationFlags": []
-  },
-  {
-    "tenantId": "k-wonjin",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 서초",
-    "brandName": "WJ 원진성형외과",
-    "aeoScore": {
-      "current": 35,
-      "ma4": 35,
-      "previousWeek": 35,
-      "ciLow": 27.2,
-      "ciHigh": 42.8
-    },
-    "mentionRate": 0.020833333333333332,
-    "shareOfMention": 0.5897435897435898,
-    "avgRecommendationRank": null,
-    "factualityScore": 0.9285714285714286,
-    "brandOwnedCitationRate": 0.04883720930232558,
-    "cohortRank": {
-      "position": 2,
-      "totalTenants": 6
-    },
-    "hallucinationFlags": [
-      "gemini / v1-003 #3: 사실성 불일치 1건"
-    ]
   },
   {
     "tenantId": "ramadagunsan",
@@ -504,5 +478,31 @@
       "totalTenants": 4
     },
     "hallucinationFlags": []
+  },
+  {
+    "tenantId": "k-wonjin",
+    "weekOf": "2026-W36",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "WJ 원진성형외과",
+    "aeoScore": {
+      "current": 48,
+      "ma4": 48,
+      "previousWeek": 48,
+      "ciLow": 41,
+      "ciHigh": 55
+    },
+    "mentionRate": 0.0625,
+    "shareOfMention": 0.7090909090909091,
+    "avgRecommendationRank": 1,
+    "factualityScore": 0.8888888888888888,
+    "brandOwnedCitationRate": 0.01932367149758454,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 6
+    },
+    "hallucinationFlags": [
+      "openai / v1-010 #3: 사실성 불일치 1건"
+    ]
   }
 ]

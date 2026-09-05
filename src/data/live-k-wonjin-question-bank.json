@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "generatedAt": "2026-09-04T01:50:42.387Z",
+  "generatedAt": "2026-09-05T02:16:34.640Z",
   "questions": [
     {
       "questionId": "v1-001",
-      "text": "강남이나 서초 쪽에서 눈재수술로 유명하고 안전한 성형외과 추천해줄 수 있어?",
+      "text": "성형외과 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v1-002",
-      "text": "서울에서 안면윤곽 수술 잘하는 곳 찾고 있는데 병원 고를 때 어떤 점을 우선으로 봐야 해?",
+      "text": "서울 서초에서 성형외과 고를 때 뭘 봐야 해?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v1-003",
-      "text": "서초구 일대 성형외과 중에서 마취과 전문의가 상주하고 응급 시스템 잘 갖춰진 곳 어디야?",
+      "text": "성형외과 후기 좋은 곳 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v1-004",
-      "text": "코성형 첫 수술 생각 중인데 자연스러운 라인으로 후기 좋은 성형외과 알려줘.",
+      "text": "서울에서 유명한 성형외과 어디야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v1-005",
-      "text": "강남역~신논현역 부근 성형외과 중에 가슴성형 수술 경험 많고 사후관리 꼼꼼한 병원 추천해줘.",
+      "text": "여름철 성형외과 방문할 때 주의할 점이 뭐야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -49,7 +49,7 @@
     },
     {
       "questionId": "v1-006",
-      "text": "중년 눈밑지방재배치랑 상안검 수술 자연스럽게 잘하는 서울 성형외과 어디 있을까?",
+      "text": "성형 수술 후 회복에 좋은 팁 있어?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v1-007",
-      "text": "양악이나 턱 수술 고려 중인데 수술실 CCTV 참관 가능하고 무사고 경력 긴 병원 어디야?",
+      "text": "서울에서 비용 효율 좋은 성형외과 찾고 싶어",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -67,7 +67,7 @@
     },
     {
       "questionId": "v1-008",
-      "text": "안면거상술이랑 미니리프팅 전문으로 하는 서초 성형외과 추천 부탁해.",
+      "text": "성형외과 선택 시 중요하게 봐야 할 점은 뭐야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "성형외과",
@@ -76,7 +76,7 @@
     },
     {
       "questionId": "v1-009",
-      "text": "강남역 WJ원진성형외과 눈성형이랑 코성형 전반적인 후기나 원장님 평판이 어때?",
+      "text": "WJ 원진성형외과 수술 스케줄 어떻게 잡아?",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "성형외과",
@@ -85,7 +85,7 @@
     },
     {
       "questionId": "v1-010",
-      "text": "눈재수술 상담 가보려는데 WJ원진성형외과랑 기린성형외과 스타일 차이가 어떻게 돼?",
+      "text": "WJ 원진성형외과랑 기린성형외과 추천 비교해줘",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "성형외과",
@@ -94,16 +94,16 @@
     },
     {
       "questionId": "v1-011",
-      "text": "WJ원진성형외과 안면윤곽 3종 대략적인 비용대랑 회복 기간 궁금해.",
+      "text": "서울 서초에서 성형 수술 가격대 알려줘",
       "category": "price-spec",
-      "containsBrandName": true,
+      "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
       "version": "v1"
     },
     {
       "questionId": "v1-012",
-      "text": "서초동 원진성형외과에서 수술받고 나서 붓기 레이저나 사후관리 케어 잘 챙겨주는 편이야?",
+      "text": "WJ 원진성형외과에서 상담 후기에 대해 알아보고 싶어",
       "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "성형외과",
