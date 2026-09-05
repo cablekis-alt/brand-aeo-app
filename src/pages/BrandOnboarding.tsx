@@ -461,6 +461,38 @@ export default function BrandOnboarding() {
         }
       }
 
+      // C) 업종·지역·주소가 아직 비어 있으면 도메인 그라운딩으로 최종 보강한다.
+      //    JS 렌더링 사이트(예: banobagi.com)는 정적 수집 텍스트가 비거나 빈약해, 위 텍스트 추론이
+      //    업종을 못 채우는 경우가 있다. 그러면 환경(Vercel/로컬)마다 페이지 수집 결과가 달라 결과가
+      //    엇갈리고, 업종이 비면 아래 경쟁사 자동추론까지 건너뛴다. 도메인 추론으로 빈 칸만 메워
+      //    두 환경이 같은 결과로 수렴하게 한다. (사용자가 등록 전 확인하므로 안전한 폴백)
+      if ((!resolvedIndustry || !resolvedRegion || !resolvedAddr) && finalDomain) {
+        try {
+          const rd = await fetch('/api/infer?kind=domain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: finalDomain }),
+          })
+          if (rd.ok) {
+            const jd = (await rd.json()) as { industry?: string; region?: string; address?: string }
+            if (jd.industry) {
+              resolvedIndustry = resolvedIndustry || jd.industry
+              setIndustry((prev) => prev || jd.industry!)
+            }
+            if (jd.region) {
+              resolvedRegion = resolvedRegion || jd.region
+              setRegion((prev) => prev || jd.region!)
+            }
+            if (jd.address && !resolvedAddr) {
+              resolvedAddr = jd.address
+              setAddress((prev) => prev || jd.address!)
+            }
+          }
+        } catch {
+          // 무시 — 사용자가 직접 채우면 된다.
+        }
+      }
+
       // 경쟁사 자동 채우기 — 비어 있고 브랜드·업종·도메인이 있으면. 로컬은 즉시 추론, 배포는 CI에 맡기고 폴링해 채운다.
       if (!competitorsRaw.trim() && guessedName && resolvedIndustry && finalDomain) {
         const fill = (list: { name: string; domain?: string }[]) =>
