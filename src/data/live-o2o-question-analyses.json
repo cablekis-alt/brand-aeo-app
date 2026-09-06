@@ -1,0 +1,2168 @@
+{
+  "tenantId": "o2o",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiiPGkYfZNAlzcRgmX9GSJCruHXofblrUffdhpe53Ki6Iunb2cFMQ897WrZ1j0FM8UweB1G3EyySK4_-ZlQ7WBAyHIYWI_tljMmvUuVNHCbI6G8jLaCIPMiqmR6BgWrorZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFI-b2dSpXEpZ6vCYZq09L2ZAoOUTgz55P3fAt60u9VoNpLtnF0vTsCuh2tU0kOFT3kPl0TrJIwOzGnl4E6GsdzEhJ0-GCcOyW9Ovl6I6ArmDxyseO7bIkUX2XaKW1E_Sn8Vp3-EO78i1tWukMxhnHbH8PWW-32oBFpwLz4xWYPvBLi2wgdFbXE6FkM11Kaqg52rzR9vl44xTY_7um2NAYXyfd97FdTea0XbQz3YqoWvPp2hfvsAO49hC2ikX4m7NtuCVy3DvdaWBXpH_BDC6NFOpk00rI_6dQQNSmloM9Qxpx6AyZpcDiIMWaRCkCsWsaHIEI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENcQ-o1iQlDvyyPNKKHSWwhY_nlQmkrB1TYFGbIGBzIrcHh_URjGeLSfhf-ee8Y8PwrUKsn-uIyn1EPO4pBFrMWdcICMWDYr9WOZ8z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIaEF8wZPL-6aiGy12ONLNzKhETA6RJTV-VhcrPU0cLHWpZa_YRGhQZEVbBjlPHMcchcaepADVg9iE0oiSedX0u_A0pI_aufpmn11Gc80GaO1omBfD174mLiTINnwqcn7dnJKe7HBUDA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFz5P3xF68PkrArID2wSo1tvgMGRWU6u8JIaGGnYKDuSDnIUSX0U1nZJzQ8EwVLr5r2QLds7I2NqMrVvCzK_GsBPp9cXkpfjXjwSGuNmbQmOQAMGlI8PSdtQoHlcRhCFakQwmuGAJx-EZCYkWeFS6R6zBXohyUbifAuKI0OEhODJK1oISkClQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-xsfLPuwrpvkm0pRYH_hEsJgBDIVQA6FcY7E4mM4aAkPprzSWgtV8NdAqmjamY4fVolVGEtlnoPf5ANaa7K31j96wGD2sJj1_GpLeOWnWzWV8F892entpvXeniepJkhUu0iI3UTxtzFln1vCIqNp4jWRNwPb1pNy8WixAahoAwjFdrKPF-dBvoZaQhS_RSg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFq6IVImhTWTLne6rajpSn2DcsgeMMwCGHN6GW3-hmL1dxTGo-xOZDdijFYdKCRkeeeZiPRzmXJ8asNs0ybC0R82_riPAj8MpJ8izsxjmY9qUYJ9vQP2tKjJYj6Dg7XKBTsPeY5sXgM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8k23LRUenFbz_Pn7hSXbxvd_MLljCWwrsI2UBVxEybytMvISwjsBmoXLKJsyoQHysrXdNosqWKU_c43cIZFRKO7NrIA6TcahIAVekacMMfyeeegfoBrTcSoULXBwy1ohVVwH7IWm_49v4OC7muFQ-u7WteqSLQ4YSOPJ6--zFvn3cIDJMR7PTCXoG7c4jIgFAXYsUzXrk2dZXtT68uqRTd-B4Qmxt3c-ITMhmI4Isf2Z4jDF01JJY4Aq-Iogi7K47ZdLCG9m-A0vOaxc4uNx-DRoIUbOrWsv7OhgHh0cgtwzkb0u8Yhd5fHmaXOrkBhsofeU_ckK5lXUCMNMI2L7mjNjRFYD3r1shGTWwKDYONfjs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRIQ3G8tkmZr8e9LocXJ1a0NDq4QPb8HzFxTdSgRnbgbgbzMzIE-1EpzVPzeTtigxGiAaF11C4aL13G39vhC5mMAN2lr4gPhLH4wt3zTZ6KZ1Oy6EIegsMdiPUkyyvW6Fcak_DiqQjT6-zz3cr-sJYJAG24C0f5sqLb4L5ihNB7yuaKbnY6a5gYJx2CtKfNbyO6pAPXR5ANWFiVOllwZKdIrNacVdDqnYjqBiWZ__hwJXJRDI_f8T3c8HOtW7q",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNj7mboTg-ZnUEsnry21yUOO9Ixd9edtCwJi26uNFHI8DwxTsQUf4lM4nA_BM0ASwGUgKZkIqkxCgDGHGjOQkMYHYBlXDbzxS-rB1_G6sZogtXtykHooq1WSMcuFIXhi7tUZXgEdp8IZ0A1tsPycTrRs1uWuXC-pJ2gaYCxaoDVJ6LWwmIcn2sqK4UWWDeAYe70H1xnK1HLQc3XKOr9PCIzk0VGkjQXEeENwmOE5gijubO7m_ueXDm4uccnTEWOJxLeaqVqQs3J8jlGWcgkyK5Nc_tlh-NZ9zyMSDg9whIixr5-cW2IzniK4jQv-afKHCzLZB-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdd6HVMwoCVplvIZ-i2NmdN-5NztBVCijHc0qJ6j8uQvGDz3hV4vWUCMIE0gJwdA1Lbx-Ap9T1sI6qr_N-6t28egrs3xg-nonRK0-SukSUkyC2X210bmIX60Z_lPhKcLoybg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCKiM3qrL420HWNDyijTiLTWRjXXqN12c_7t7YpSGsM9O3QP0gMxAY1FWLrMy2WnxlmvbRAEeN9WLpzVlwhMaS8ajzu0GWvrxvGa13CaJlpdLpp8i8FrwyaBvOVXj0y07YUto4xnK28Xoyv_VJPNzis6uki1i7NTvkOC1xLz1341SQXuLk8Fw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_4goT4QA_HjxCuu5_CwngE_Njr4Dr8HA1RmXaEfjETJwP6CkyZZgux_SkdrFZRlyo3rlLvacEvlMDXCYYUdnIsuCNztcxRY3CVLlOd9ccxA0QknZlcQtJUSLELx_tv5P65cu8dJ1Ru32OWkYdQKTZlcMbLDHJmdRSaRraydfCHzSWqffO0MxD4Mr6LjZDBto=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcw3B-KwS28AnDp8as4Y_2XyNY4_T5cuUTD4z6pXza7eacrOubnflOeRE8snHob0HW_BMgY14arQy_luGnb9dhFUWZLxMDG0eoB_iCsy6p-Gu7GRYJFwdyCrnwboCdAEfY1JpkeMSqNw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZQaMELBwqWbYLw_ASd2QQavyFbu4J4q2EWQUtG6RDv60_ThavKYmXGoKSkXxSqaXZt5hqFRhojANVRA74FiD73zCo_sKSZMM2lveyTauxn-iFtjoOoSeILmXai1-bGtp9e9apQNQrmyJzUTdb-ZUMtAH7riPaqUcfpjg1wdyUL1IHggOvo5jD91D10PWd3LkNzpaVsdZ-iP1nkBw8i9y3pBPBuhsHirGbvDrOP7WzmG17lgZkq8WEN1PRCl-iaBGTcsflZs_h-NJlpWmZ9sMPAmedcEpvZ4KxLsTiBWKCW3zVrJv_YXw0sDmnDbppJi_Hhj0irksGcduPYDpKSnns4P6wuCbTzmNtdgfe9dAciU6fIA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFI2Xi1Fg5NpRbH9IJiH28yYfNkcZ3haOAlI2qEjvLw-77n1eHrH2HDDs-wjvz2IgfgceWtAm2ZDaTR_2U7TStn_klt8P9YTeE-0lIT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8nIUecVvB1PhIrudVY-mOs8jxM_cXc4aeHh8lGcj6HjyLDhmy9L5G0_Fe-Pq6gaoed3n6evOX5pVreU1XCRtk5q9utveA4sr7_927IiDz6KAZuig=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6iq3DTN5hSw9LEPXmsUzMts7Udp23r7rg37aKfvei1tpMLeOSCJBNLK3r56bSWQ8TDqH708SbqwN3YbazLDK2RilYAE-2Bg30p-1WyYpI_1WzGb_X05C7uk4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUkaYsjudh94RzeTdrg7lBAjv2Ms9O-z5wDxw5owxR6_iK-XUQ0sdVIUfmPPDcO3nxhlXIh8UaFD9CbDD6im6N0nB577djWjR2y199_wZ7ig6S9SAUD3IXa24iegMLaaik",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB3Hcc8reUXyDh2Yj-XPN3oSi-uQh-fgdqcWPFTvhgMNEPO2SFl5w3qReUiLS2RupKW_Mwy_YwfXTN25onSTGXlu2g4BbzmyKjRgDw3YodY-grDZMt4Y7iRA0elDSqXeden1NtD11lDhi91jwd1YHuCelN19jpO57myWGMsg_iIM4Bsg2Py5UfraDTLLpUvHC1LItK36MWUiCdaGNq9F4CcgANwl6xBYuxmy-gI6AjJvf809DYtZSAsznAAfY0QtfH0408ZXr3C5JLRONO-r0OSMY4Bk8_fdw2P25sMDKdfC6oDaLaEbufqgkjcSrMjOfBAhI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNzvIyWJgjIi3wbK5kLv4_P0wm06XL0BQWVa-3KO0yomkEIrnee7QLRqO6FNaywo6ECKeO24yUpfMKHKn8sjIiqYDgnwHLq4q04ycHX81HjENR4U2Tkfl608adLHydOTfBmAY6MZLXmztglPuGYJI68gn2f1-0aXBSBCdq5Ib6qo-cDRESQGz31fQghJNWMg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHui_gviejxibxejkl-aakwILSJLZmLXIc6FeI_V5jHbIAb1uxyjUnImvwfxnpZXa2c93p5QQpwoOo9qnzDTwGAiaCPlIdRKGbc0wegZTARyXrtENw6SY5tzIkhGyGnYUj2ffNFI9xVbB5EbNe4s7YOBbtEeZvnjuM-4mel5CgLq0WZdammNA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExbj5ZGrZvnBWXk2XVk3gfzpeZoETNDv3jiIPZ8oOeCcfpkLC4cjz1Idzk5NiyorEIX9NV7oTz8Nk0TLIk4ylpMb4Qzb5Ga1dsrPgl-wBOvNL2zciejqrrZ_ME2qKyCqs8j0GJsYW9H-fFlhoGICOGh9ksk_g1pDYKS8pQCvLSGkyZm6LURQBHwrfD0EJ9dcR7SCenUKaqRGXnfeqaCEB3ecyPxyX3fikvNSTm7o5QyHyg3kdTrI96p99owl7eCOWX5V_GyTAVXSGW5n3prAZbhTRk13RlyYTS6ofGrZDvSbOvdhCrrpBc7AEox1fs3_V1qcVgKfLBkD8XFLyADZV4ZGFymlb7R1e4r1LhmtLfR3xS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEykyZJS0H2k_Ap0JSP3nmPcayiskCm_cy7P0Rj0upFC33x0kl8-Plm-YpZ5M-8A2bap_PElOmTAsUNb6C85B-ltJUKkjxQBQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTJT32uBjCim5P7nrOnO02DeVS2ZcvtVat00okCPudoctByQwzZOYGRLIq5lvF6AlXp_LeE-QYgLLsGNIVnsVGNX0nhd5rqTWsHZWBICXwH7hwqV9HrTfbiAxSptwPbKM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEX5v4TGwsyyOEkLUTDg8VNN8lt5_c5P5EyhHAjcnaaKPAKGFmmB0Tvgxj65vTSoKnrIEPV4Ono5z5t9t7-GTqupGGOrMXk_kwis-FIUglorjaH56TmjANMysoZWu_fqsG9P8ELWEeYc18rNNd080Z3t79mkgBfr7RhZvSvQw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJ0oBcv1o4MWyMzWZ6ukGsPdlZnz5tXMEAaF7p7y4nMcHLN2UE2pT5NvBVbGc4I9yspsWVql-RZFQL7Bxa2kdIKkmSiL59CVfEZdznDsW0mJrUPL22256c5A12hESNbRpwXs2x8iFc7KIOOzqvfX-u9tcKB3ITeG6njUCcg2Xsk3TpMD52KMn2DXs-VSChd6lXNlr-vVo7XM-sXlyaJpqwu24wUeIKqaN3yJ1xx3TPWb1VvUGd_d8_ozY66067juzFNGUAMwmbXNeETHLEbivk63DCIp9JwpT8pQdYC7RYoies4yqZVnrdn1XgU_t2zKumjAB_sCsX8nazF4KbzDpelb9gIVRZPQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0qYhWnr42R7l-5OydovNe-KjR8qOs1VUDH9CBCxWXZK1OqRe9ghB8qGXrhETB6dhLAwqAn3dqlD53uJC22AY6pfc3u3pFNrPp6jPrA3kl0yXelpyOlGLk1J1Y7uYHq9kmww==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtcPPTowhgMeOk8P4WrM_KW2NVmbk1Vt_FD7dTJWYUkmfXpSz5Rbm7Rqo1H5Rh_cItsSVWxroCBoCmD8dJlydHM6_J02mHeaoEsvTdYDGs9AF5VSqcWEST8K8dBUUPu9kTpj0Ciq6k1st6nJuV-BGhYXCMRDCwJi4ScvK9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4dfZUxv-AfA0xunu-uduqT6XYcGMS11_crA2vrifKRsZj2eY2376uS7UNsXZv1Gcj5ZlfziVw92CdbCawAlhX4PysgH2t1OGvvF2tSRutOz4JRihnZh_f-QfwOp_72XVm9k42MQup1aewwgmW-Nkbjifl8hU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIo6AsETJB3hwn2gyaydIRE5FklDRyHxn6563GfStNbRLKiS6R6jBqwFsWDsY5GajFXzJYVMmnDOmd1-twmTRJWmq9Js8uXV4G5Nm4ZgVYYbPmtptSFpiOn2uzguzUD1LeMwWoPEK6qVsstzULkZ1psCL3azJI9zOvNgjhGGWKxZDFUDUPYeB_VuuzjByu8nuISR9x1kSbFfbdRNYXVLnrwWDXox8rJ7n6qWkAdBnfrfYAnxUsIZr_dTPj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_sUIAXmxAzM4i-7O0W_DTx3XrDW0cU0Bk99TQhXDGQHAJfEWY6Z7CG4qMOU43xAeqhuqjlSyNce4ZxF65AQ-jcr7miTQuzlnJ5tDGEqLKhrzdH8R1E69GXh8fDy_lcA6mIYJtsFXuG-s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-2QQlE8WtTNTuAEdLSxX-C9FqtKDz1bdMVKAkilq3sQbpqIM3XKvbbqWLwBpitkyQJFYAvZ0SacosQ5mTacZKudW4bJcCJHBFmJls",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFc-Yau4DK5N99y3qLYp0R7L3pZ8XpWz6qChkuj0hJepi7J5Qh8WrNwlmLEnevjJyF3tQT_dQIh1mOT7K5Ny8TFKuf_q71Jp2AyT4-hQC9Jteu0e_yKnNWnRIg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOUlWDFQWgHvP0r4t6Rk_RRkvaNlp9HN6i9e9bafNmIw9AaqulmLP-2L-MmeRZ7Q89SnsbN1BmxFKjQ4VBljN1z7jYBqbTI4uqaBW4S8WWf5iG141Ql7k6WTsh7FKJWjyzQQclidgQoRFnm1_LpsLlOnIsj0R-UOuaqqXz5mx6-dDdv-VT5jG8K7XjrkqVwKTFejr6oci0uWUuH-8U4v4aTmiG_VsIjN8Ip3ImiBdrNB_lpfd2qLZyOdu6IMz5wGNXE1E7-tAkNS4nOHxTrdK5pbDfjPoBP5AsDqMiEqc4CU13_AMWHyjdKoBwj94T4yWnoS52",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHMtxpAMX5dIcLlkNrmWMIL2vh4XF4BcRJeKbJIQITZ_w2TViMI5rYmBcF1rpR_tqo689uVbyEE3x6jZ3syKikE2r3Q_g0J2eRIxgpUjn0T5Z4bUKmgzU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEfQxaZ81_yjGOnnkYU5igfRVWS7vx6YljSOf8OSC5reTe4XpGYyZej6WVCnrBnm2DVx5cb0i9RVtW49HSdro4hdw73w_JZqSpc0SDQcoX9cw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZIt9uGlxKE5Gp6HoBbG6nkB87yGSQMQjxxLWykUKoPdIttRlTyS3vK-Zh68HElsFZv0IsOca6kBmj9dOORU5QteySpB9KPefmwh8Bh3bpptggtouU6zrEKQy7Vy3iIgYtf5q8T0ccHJ4fK3c0hmn6UIFnZ4c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFn_4vxE50PMG7XUkbCyUdtqnV96zX9FnwChKum-omfjJCJEJBFylO9cgOXwqvp7U32p_NvXNPrD1TODCZ31EEluS5OB8uaOPEGSjZULFlQ1iOd3u8gt2weQkh2H6tapg1j4VxDAkCEBKDaIRLXn6uFCE6bKuh7wR0AZnHhrLLMXeRuxpaBVJBgWywcJ4-MntTJI95o2YOn7wq-fww5MURbGKeFTjlxrS9JVGWB45NTOztrYD5mEfY9se2b",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZHk8UfmStuoXxeIysIZh_CC9uRDTI9kU8I1ZXzgrHYnjxduAwNJchxFgQiN-vlimw8vRZRNXqpwhwPtdu5YXQYMSloynAMrkKrGP-cDCzcA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFxjqXiqBr0nJjcpe0kFt86ucL64bVEStc2roZLYwkYRJiMR0FXyplbZkTEUKtj8ohwb_YzTSmUecSfLN7e2OLwO2ej7sDtJyGQXWVurM03Huk0hujp3P3cy6kVCF_intbogfkrBs_SP2Vx2_Vl2axyVm1Mgiuod9y_4587d7DqX2B8M3UVLLRE5T-79bSEYgkdpC2wJ2iNY4K71Sj3G6nvpd2DH0mEAi1Ha3g0mKzK1r2NYONwlB-bCho0v7boqaonNntIYU8YSWJ4yHcIrb9-WnSwOg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_FbIJoAxEadVpi7RgLFlIPMW2UCruJVUb5L2GDHOEMgkm2cd-pBUd7ESQviMXHDrPv0jQqD0axvCWMHRSnNS4xsOPDwjZAgRCaQ7XPnWPZ9p6KZ2e77tWAnFyMRiLbr3Q-J8qC_VPGsq4moGS5S7g",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqrjNvfNPluzUCpVhvoG0mLPRC3k9i2BlbvJQ5LMgqouaOmYqFj0MajgIqVIW1N4Fswo9Q8pk8lMxh08ykEdIfPz5yk0Zwd40zDkvX4wdHY7E47JYOrVMpOdVAlMaYioK2vyefSsVvCHm7BC-DizRqTQVo9C0UEy3S6myy582kv4ZrRQUkAc6VCEspX3HE98okgaqKiDCXSn4ftW78SD1FPTakbkwlMX6WtZlhLaUU_MxzcGPmLDtP0JRuNCO7lPCOxlZZiYks4ciVQKpQv1gL1SWsene9gT4fdemhtIx-frBlblo11Y5zaSnjCEQmk2yCRyeM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHH5aWASsW7zRaxsqxPuuk6eVJavOHbr7k16acOPiUUWX3mC1lieef6WQPAoPdSybvujGo6z1kL_Vtfk2RbI1tnBbWQH3vBJP6lr40lCARaBGGwwIghkqpHEk05wINlr829bbOmca2I9PkXH-yft1D0kC5P2FFMWfOnwjTDw59imKg27qc31K3_UEXoSVMOzRLG8qvH4DARQj148rJ5xUjeIMCE4VgKk5sDbVHbgzXKXF26GJlHaTZzz4ErLQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtv9S2oXQVqHpVN42fY9JDJKnGMewSvPV5JisRs9XlOgC9QOgTyjAKUIOa348-73yC4aAWamrOQjtXZ_oyjafwIhRuLDiuTVndX1PYvuCUHe8iKcCWJW8XLVNTUsYRag2gQTn46qewid-nhIOaJOIj20OrhY2ItUciE-PNREY-e2GbGhd087_qMz1o4X6fmvc2jnfoU6V_kz0t42y8j3nDYZ23L_uuJKERGJjueJD_waQosRLWkc2FUYahuK6WsaEQEC-4Ugr3dgcyMf35NxYxq7MeskA896tgHFReknseBJd3RVx3nF8o2vGM0Jc4VuhdZdRVTKUr9V6XSRZgOC2JdfpvJCzd0UI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-vD2WZVoyYK5Tal92VBaigzcmyt20s6dZG28pvb1uoqxUd8s72xSVR9-G96AchSfJYi8xzcIDZM8c64opI6vcQGRR2eWD3GyUW9bTiHmpir8Jb3YWKBd3_EoTmPFvR2kXiXH0uTGe5zIX_IlJulaFhHhyVSw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoqdTRqOiXzmS8R5JTUXbXRLX1RzX-4cYLXDGzDErLWSlnI-wbZ7Ve1ogQVJpM5hOvH49L1s_PCHF08yCU80DF02vADuqzAWZ82yNWaCNezF7_sGXgVSNHX_5aOYOYxx-ouao2YfsmCdRyzZo_U_7R-D-QQGlNANE_vGzWqZ_0q9Ebto9OBhXhNWN0Nkg89Y8G_TrVBVSe8wzh3c7STZiaiw7ppv8Rk-CeROC8zYGi6AwUpeFWuDaZcB4nSnTzqmw2p4MVAq6KbQwJi0h8ONwgghNkI0DWg-EP5tZlKPJwKNor8viaZWFdvabG4uiNLF8zowdz",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPNU12qWd2vpnFVvETgNSiC_ig23JPA99IE2OibShkMQpXMR7hOIKeVI6IXsu8YyQ31S_CLD5QfXovC8yH-EVpLzHIQDrqiFxfbq7D7JOLzy_Y3fQBGJbSCQk=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3lf4SgBJ4VIIdqH1LuyLFdQeK9OaaEOyMVf5IiBfxkxq25s1W0l_cnhEPxZLgACBDf2Di2TOvng5x-g4CtPEcN3V02fkfkTYs1gcLE75K2boyuGcr_xqKlXp4xOiX1RsO8sxWeQMAhfc4t9nF9JqFKburLwmZVrtCCne3oMxqkN_QvLsF8I3j4TYcO7mVkUdKJ7xi_ldPP2aGyjkaHjuaMDHkyIv5mN99WMJcgy96ZEJDKFRaJMEwW32vGxQTg7nRQYMaucsbKL5V3BSuV7U-7Bn7mMhRx0A-jHNIgNyDRKlZb2lVHzcr5gFzB2dLQ2qb67vkiDtYMwQVjwdRNTs8PtgOKKePaegfV9MihIzQ6ExBSg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGia7NYGx4X4N-DN1KuRTEUBCquD8H9VWx6QUvMQLD_9KZpwLUk5-oAHpXhhdmOKzyvWprbe9DkIssVxjDeoBvEAwf7HmBhstZrNtFlVY6W3Nh2GiUbZSbRjU6YfGFlYmL5ixRdKv3Bqq0f",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUOGNSXEYROdk23ebb4c1ZDuhaM9Q8_yBRiV-BwW_aY77ShebHeSJaw_IIsND4LN1vJYNgC5fZzo13jM01xtoZZA2EEasi3qEDvQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-IZ6GaqDdlaP7pTzYnHvT3vumoHbHjmFxysV4ts0XonI56ZBhjqxM6bt2Y8HJuOwXNbwm7Ezuht1E9J1c5MiGsFZIXFUkzpd9M0kHBGw-8QhrrDY9ywZKjQ8Fe2VD5N6NUsZ7p1suk4BaiGv44zBQIjRDEcb6-hNRH0nvW-V2kHwEItDWI7NwxTSXzbXJzvcVdSnxl-bQElkG5WclvRwtmMakhGfBMwygvLHysZOyOlVuNOHKbU4_sxlwpERVHd4h3NAxF76g8mda5onZ9UoC9WmAEpha250x5TfT1Tii3-8t-DUxZPMK-lFQLZCakeR9jR5W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAYwwMkRxZG7pYzwo2eknCWNh0z3mE3FcdVYt8uKWRV4p0qFFSo-1-IPWNdIggM1EmsbNKYnDigkSg_zsanHY7f9a5yRIjTQ71DjY2xKSg5uYTMyM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4lI0ql1Bd4kKrNiRq1MZJ0KykLvvRuTUzJ3Gy7l3n8dADC63OmkMMFM2VMSg_G8K0th7b1YDgpQqv___g6rMZCgtIfPMZ0JddY0bTfkGQlvU59q9A0DUTZz2n3mhCtgDYmPM5zqP6UzHzz4qHn-emw30SzE4brqtdLLJAYMTgYUUq4cmD9bwLriwgx2ACAWfisJELnge3ri3KcSB4t_DM7fjVxMSC8CSRZOzn9-LinQr2FI-mD11j0q7O",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNDGCrqbr-ETZdEz4ZB5-BRMHGWfoyYGDfKS-2vqBOqqDEL1Kf-CaWQTlVFhHgTYNq6rNqi5ShXw2cqnkbmH6a8430gfrvmvgX_Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXVs-o5OYMMBBNlkHXwvQs2Vk7WVHim3yH-KUzK9RB9ZKndB5pC3mkYJmS5K7zBLPEK1EkpS-lRthed-myaGhP9LzNi4FnAl4KqRq-n_oa4cm0llhQJoXVQDGzn4Nc60fwh9GL6kY2WrluGTEJp6V-1EYIqis0iQg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH3qf8m3EaZtP8Vgg8EkNBl7II0t4Apugno7xrspV1DFpVrBfNMkHg2Wx32HxhYVSsLiNhG_pPELRTwVJEMi6MztXwHI0w4KWeZ0chXQsVW4O72EnaN4WpJ8-pKrtrbNLao9NhzN3fZvK9z",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMmyhBEfJHIr41yORg3oOygaFnQZLJ9EoKnGH-PRvngk-0aQZB8xlet8gxQlMtIwGKuMZ8ZtbZJbYTHOCg0pFosedmlMKAW6lukRslcnbffb33vb9UVuH0YXls3oEbPzG3iDPfTfdD6kWFVk437SspuWKjHLxbDYvcC0vjECT2T4jcSKVmv4DYz5tmrsNY6rVSNI94lm5qgx1L-RUq2BEGN9fxoQTqwky2veUtwiV-m9O9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqwqLld5eCoFrkBevJElJot20AoZkRQOWBk_KQl2xltqXzrWnEKulAREBhOV6ouSnIArW_OMlxT8Yvuqk4nFIRufWnwWp0kxRdm2QQsQ5WJLDF7-T5yQtEgsRYTLWKcif7NX_AIWZwg4jOh4Y4-q8a2fX3kL3GyigLxKN5kIi1tsqGaiusjjJjKCHmJWr_VkovqO_aTCegHWgoYijYFDSivRBX7depvktmZtX0CUyHE4kq_hy4GR9ARQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHg-lNsFYb31QH1ffzf_3RuxBtT07vqD6_Ztrde4d3hpRgqIVsTyjDjBJuKgwIbZzlfj0Ehv8jTtwsQtXA4Je5TlmYAixLPyBkI9xzb9KkNAV-rTcL8f3ZWob7byWSWrRNyKcSPAJfev3ZK14ulfhu2vQ419CSJI9HK9uUHHHZxRa4xXs0pQz0VKGGcNf22s8S9mdgj8f1ULzT655Cf7smMSh1Tvpxr-zrgbgYoZhxzvDwyopIdT8-dlGeci7Gyp3Zv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTZafxTXZmp2pFpaAu4ogVdwCLGaAZ_5Z-7R8ckYuTKCCHj1SJpTiistHPJZXLP_sgJ0X1zOYgW64OiJgIQTbcCGf1nM1zIW989q3NtY6LprO5HSAcfAxiSvNwS7ah8lWriWvSmH4WHGCygtAwIb0hD45Qeme0kuq8gZvYxlVkj-5sI8G0vm0jvqltcO9q3NngL2wWbd2sJ2qMhEcNMSUmDw7JwmtjhYUxDKx72a_iG9eQSSdup44CUZl8tX_C1GwmTOKbagPdMBkfnmtSRc7AP_NcKoDB69H_YA72",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyyQVJRDBStRqL95F5Mmwx6-s2C2BvcqwOympm0iEMb7KW16q_OY16l3lqu-ZRAH0nmfn4bXnJIZIMsdEetqHLveunb_VSYW93TD4fUIMc_809GGuNwANMYks77oT3maqaqbGvXCWRHWDVMJLYIz9woYkhL0TQbl0dbZ7ZVcpeKSvJq8KbDjFZstCgrLcN9_zZrlN3B1tj0jCe1THON_jaCUk119tVjgQR48MvuYeE2FsV9oECfZeUZCljztXVoCiAmttqPm4TxGMmWIRamJEYpCBqSPboCn3A0Y8rUryMUbBQd4Fvj3l70VuVc3FModcXfIY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0lOc7_YwrikJPg11-iesCEoB2e_Qmw3ZIYsj3vgFffjCU8BKTHpZ8t4r_IUdTjfdd1u1qetZxVebDVcLRCYQmyg8ml5jzO8U42gXCl8eFjShiokpvXu1_q7bC_H9F8MxOEfc4QEnviu7vWekojsxq7woZuKKK4Hn4BTtbQxhfuPCWmXxWjXLyyTSCVmVuyI70wjXqVo261wVaFNQUgNoywToUH2VDMCwWHLrwidrhOMoQ0FeznWYM1oI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgmErRcIM818aZNDKCC7seS3TmisYzVM2spccoZ82BELFotm-FRsnKb7ayIN0YU4huKRZEi78CTYFLDVw_nkZDrc8ph2bAYtnu7fyik2DeBEtaxxHGj2L-bVe3meGYy4hmMMesf9iLUc5hQsB_swciaCqI8l2MT9WYJpUtTMKT_gOT0oBFN84KmUIaTfD51l2dQk_kUDh3r_F9sA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQI91Fe6qiJc_CQt5IZ7VsECAxmIsxB_PMMfWx7-9jtsgqo7VsdFM9Tt1wWv3_6hFkrpipkPrAP6i8O_tZ-kI-2FQd73RWW5N1db_qx8VMzwjWTDZEFlMOrDBzvmQYYToUvoB1RlRuDGc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVyt1teb6qUGQbQ1qWr9zoU1J3yS_sUJqIFTte3BVrQUmM-HvSjdyBMnXY_cClo8L9Ato7nEyc1CQOH-df3uSyl7aLBRS3JF6s7qq_v6s3D3WB2OycleYGEXZ9RY0G9ZyZJl8Bu_mYu-P7p8PUpbFH60OMm1sM9ReCU6jI0ddsqchxSsX7e5KzsYVN7uG9hlaSoNuhA8ZymZEjHFDCunlKc74gKjnDAkv65v0G30xp170PFHA_FQGZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyNzHMRUEAUGPFD8H4cSSIrv9T00YYETgrffFI6az8hHfhwakxPdNjOj-7dPfqH4FutLdB5AKghOBTHqEHqwfivf1ZrNkF3_xANmyU0se6yGYYPbSEnVX24wYuXr6RJmxkk31ustVCzQ87aqEO5IADS5C6lYJzr0dMIOiHYowj4lIqeTmQ_6pd6ubYwjPQ-jiuRp9Plgl7EgchO8F0qjud0TmCxro=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGklJjAHCwQLcCdrjl1igi6dc-vm9OUCvhZSR31oGKqbQe_xa_qmZvf8brNFSNEbMsB2N_0x0a_RqYnqRjrJykO184ocRnLHOemmG0JsrUk--BEF_gnwUP9AIsHpip7agoP_ch7e4I46IWESH6ziiwQFZyYo6nKmVuXMYg6nqaG8pbrpWTJKp7Hjm0OKVdR-wAna9givNq_Kn6tUV242kQTrLKk5LrjpHhb72V4kDJomq-_DzcCXK08zZUbc8qVn1vkeeWfUdOSfUxRb_WfeOzcn9elc2kWe41QwLtYxIBqjaurcGD6W7CEWSn6wIJbRb1GXU3G",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7B7nMrzVgDSsP6nnufYab6oBlZA5yX97yIpH75YS_9sxPEvy6hyMr6jRmzDDQr6WRJ3XAXjQ2z86qYJphlYyV0xLMVFVPYJ1JSfa-eg1t-WTaAw7oBSBrrh9Yzc4542LRaoxMWdezWz-YT588zWesmQM83BzTuREtmt3OYUV-raUWFKqosm2C8Vc3xycd5apq9DuDqDgn2xnN5kw4Bd6QbcFOUfErnxBtqLlKCi5d9bgnuYHlyIReMtIR2eLnYO0WDVmlRn0z8uPPov8xybbJmfg-HO8eOZnKWDyt5pZbj68QJsH_DAlFZQGJJItzFJF4-ctrliOVrA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW6I8gXoqEE-dRnTyXcPDqz_74yfu-7dste1P5IkdTFa1-EYE1u_b6il1n6uJrVuEuybznNbma0vmuZ2ziCU4pUxqMajP0BSob5A73gh2JphkCykE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRoahQvv1oG-4vVCUtC331dddUFfjUp_K_eoK8VGvsFHhoDDtp3Eh3KgFKjhGsF5FsDszPA6oNrpGok80bR-4p0vneFynpGPDi733hVqLBMQJL1HUm-i_vKsGjp0HitdLKKCpRr-WWrS3h3jlpifmxrqFP3TshwZ6W_iSkc7r16QcZHZy6lT7J-7bTzF12VDn59BqegZrOduB54NJWRWY8tSYvW-XoEse5OqJ9ieig57-2xWtkIudVbjcj33jdl-PYfg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWoG7yqhrMBden_K8-CGhS4cquiG0Mvb_DSmBshFWJfX6v2tuCbXkdqA038yBywgRbRZ1-71ae-YdgVwIe9IbJbGAeKVMQpkJcVLxJHEZLMSergPdFt-kzN-wd0sCS4XRoZNZPy7FPUA7LUuYCbe4PomFmU82PGWJoX7DpMcevlVq7sjL49Jg2yPYAEh6PzfCsQUq0Se5aogS41a8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVHhymuHPPcjgXS9vrfh_d7hcCI0Tj3vZWeCXFkPGKzK1LFgse1OvhRPr0Y4WzZ8BmlgvrxCR-IcH2MzhUnyC7_Qevyb3bt2I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKEdQeE6yZGvctgAtVBDnYYB2RdnUyeNHs5SE0j-IBXAJs5LHBsBS10wmRq3FvdmK7DkQzOgm1nXQU1bHYWKyx3tEKT5gV0_HPC9Bsyoy0EhxyKLUttQtiIbaLF8mP4041",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtZ4wIFHb9qC1-jUiivyvGpYuCUgbSSMe2I86Dru0rudMizhMBhkFbbSepSHr2r8mCPDtKTBkoCj7of5SWHg5EKR6jNZ5nba8-bhUcWVtHx_wWe9xUk2g1jWabEWSzHcAcrQL9k4fCPmH84Bv5Dy0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_tRVLHdLtGwi2gg-Tm4Qa2kE-2jIINPCo12_TZ3VgzMR6iAsAs8ZJqahvUh8_wp3Ic5E3ZtWuinMXn8qU8EH6V1f7QXb4koHTYOPeICJ3wjghpkI_woE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQVZtDAsCUfQvjsEG_kVLXSZEi3iOT7SqZ8yJ_jYBnzwwE6yYoy0JGG9_JF272daRgieo8wFFN5m2OwZLreHTPjs-W5qdR9kQeVn00PnuR-rndsftIQGuFWcP7artOf5-wwp9dEhRHbjfyZRoj5g0wimmapUN_qA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZyliYtgLFJ4ntH8NW8OSBlS1ILI6iVYMQjqvHVwtoOIzocT5YKbKHco0PlRgghq8CJg6XXwinNdRtlp96rMdUmO4Zam1XFUza-iv8mEp59P2c1bq4eoFZxLFcpQmnnroXDEVeDkL_DdvnXbuv_x4auo32zITNpjnpj8t6_lQa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIK5MRzZUYZfL8ydGiaJH4M2PD24WinFI_QVs5uzSPsSZS5zdaZMaj8fZgN2kp3ZKvhv-PoEJMDQIGldqJ6d5HflpExmG4im7s5wmDxvXZI3BK-ErvmP1txIQlvJ9I6az0eWPvLKocMEw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEymB4c-JsCNB7q_T3YZRfK3ybIKbDwFxKhqnzt9hqPBv0JHTlihy_-5O1Ahb7i-r8tN51jTW5sKw06OqGykTCKG0sy4Gdz0EXSji0suAo_ifAWwQaSbX40vk3KXx2g_jNXBnCxQU2sYvjmkGNrKTh-MHK3UhbL1U5Dq2Grh-lDocGBuBnVN7ZCWOBU0A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG63WUNgwYGRsz8Z-YD_t2U7BUOzbg-La0_RA6Dbkriza0ogW_rD5zPOIhugwbxNSqAOT7h8w9IQkDC8IzDiTyxMJrlkvHS7f0zBc0sjpBfRn5XrUQ6-tVDUJgnrQjrcQJrJ3Bz7W37hFfT9rYnp7LTuMwDniuWKt_9jnIdevpSSWfKUY1jifu5sPROn_rPxhngxxP-ljQNuWtjNzdRX6mr_P0NA7zFLw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-xBhYN9tatGCNiM8rEXkvqW78dpCB7YhCtmB4rnwrajQeYDtUOlzmBy_nsbO1Q3QEuN9_K2TghPfVJKnl1UOKaVBGDhPoQiOhe4Yeq7xEGA_xO13oXFD6mANAyJIE74mprFGN52R9pg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwBlBxhrkKwG1VMa1RXW9IVaffM7FanQq_Du0XZZnD0UaBiF1i-f_WCThvgKDK8DSYC3NeUrOTW5sj23n_vlrjNE-3-SraopO-i_ow8c3SWoHYBTJ0IOyqulUlo8j8nYtKC4sT8c0kN1W5mcN-Wmc_0RfkL3NLxLyCXgaprjKjjxVvtzn0cMhhLur6sDIv3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpllbbwkDHnfNXxuLRiquYQtg6eznXqhinYmBmS76zkeKZtkdIuPeIp2F68Gb7K9DFdGNtqzYkUKNaWWEiZcvRHykkn7y78iiUNUiewKkt_0IsqDt4Q_vK15mJL-n-Z55ghDQAx8jvmvtcxhji",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5meUE8XfztX5PL8dB30EMeGaRcYjmm054qLekxpklVvph6JoP4wgaC0CdLP1_2Xq0ERjr4QI3OMB7DiAUU-6kIuaUEWWEf1GqpIbiYfvW7PcacQV1KRqVzCaNO5enEhefgqmvsnpBxA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMx_s0KY3MFVE1iaPBVxbGpTgVXQ6i0zsuDm9Ua4X_WKleWV1DkCqStdRw2e4ZhoNemU1xrlj7tXTbqIjrNV8GdnO2qNH1zPqbzNG2uHoCGdKVuKPtlfWAIwm6ug==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4MVfGWtiSrLQETBUTJOCsloCjDpm7nW-EZP43Af7bTz6D-_-iuYBvm2hiks8kAuLO-xs4AptZlY2rA9c5cL_iDKjZz40Ub4J0zNl2l-WVe9BiRKw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHObMjVs1UC2ndGm7EnmVaAL3m0o8el1MC02ASQmhTVUgLpsfBVu8OPr_pMbEXNqot7BorTo3xmsPY-eA6yeY9hFH09xQAsB6NIdqO64csq09jqx-yE92oyHf8hQRqsgPdjG6v3ZhZdBX8qesRQSxONRBXOxcwA8S_luK7tgxrrQ83J8vW6HcbM46W7Vuy0fKofNM5cxbREsf-ct2zZ8An9Kp_nXlqbMGRBB45L_SGRgLcDO-Q7_P2uHwwY9QJI2cYeyCKakr5k2F5gyw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEejd3ao-aYlpM6YFflIp9fNQfG1JRextpXOl4AyTLbEf3DEJ_c4lNu_sEEA20FujyxQAsNUnKU4MFvoKHNqrINURTzYTUJFqwZWZbpqBqIYtsDJFDtVxKiqe2GKoVXaj8JMy1xjR0Gpu7ov-dzcQKM_0Go30tD_2L1GB8zgTWViLli633PFbsk_JH4cNdGJ8ohGXuVVN-UOKeTIETwELHAvgEwny2z6LPuIUoaKH7KNziXspCJMlP8A_HuljnJMVpCug==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoL3N3m9e7wBGx8vhJRrpQI32i2fbmzDdFfmhZlFb648gwpkXsPUvgoXJaFnqd749Xp7Zh4uAdgoW2XzIsWzRLWTdVK0-ZOyz0q8AIsYXuXkKnP1Mc-Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGP3TpDKRQdxbhuITl_uewzLHEZYgucgTH-olsGjIlvswiwMWDl42Xv2pnowdHcF664Y6DSHY927UpotjEMPzpc1CHJ-ljy26cV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzsvdExHrgdt5YCYnoiaA4rgpeXx9yfpKxUQ25ejEWwJx45VumKE62FG3NoQyq9r_07jYtCgbRuWs7Go9pRJv5OIpaeUzUHWMFQYMt5vEcWzC8zXq99VtilkN7yGvC1paLyK-bnYFKcLc4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_UzDQvDdZgcCLuOFzd3rBbd0ll4CvWfvL_IkOQzc89fc4wuweaixWbl4y6vgRcPWzUzowezwOKBONc8CMYtFbzlcDhTsBKgAHBTXS0SXUmzqioRpaEDXxsbIcbaOwYn0_uPHOQReB-SLHyQ-fZk8Tbw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwEnZmUgbmYq7E-wzk1MhKOLjSbr_JX-golgysNkh33RztzpPKkqcQBYf5hS83ZrRUH2W1EwRIE2H2MqtUFOG9jExSNvtK99EZUuxQtaXpJhhEuLxD5uSKF_XV9rFpE5iT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuRef5CDmwGP7T5hQhZpzYbsES1lwl9Cf24J3QeHbAqgUiWJEoBaThS4gK8_llVNsvuj19bwd_YaSAd4qYxc26mMdeMMzxWEYyNwElJ3ekfS0LQHA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEty_PlSbBZWg5jjOSUgEyLyqBtRtD_T_wbiIj42lHA-Jlu7ssB6ifvC__fKRYkdHsZ24c7Lon1TCtiHGo742r23apurvXhAfhyn8ep",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFF94zVQtrjiyVm5bQoBTypmmO7UV-5jg-6lO17_KoBvzErFb3ksx5atT5MqwTOmSrjcWOLCujDf-_JkajlK7i3I8HpU6pS1egeFeBoIbLucS2wWq1eSY97c2s8Tz5jI3OyeY1gd6oem9RoDMm9Xl-gKgVf1sC7roNm9MeJgofhf-yglUYL0Rt6P6rKEq1sNTbnCTAApG555YDEN4ozvRYXOCyYbQ5CRHgE8QPwKVE1pc448hkOxlbNaNVYKv6OCe6dHgR7rgBFY0wOqK4JCVUp-1gnWbC8OVaBDcmFzQ531sDx2B3OyFZtRI2fhx3W2a0DGm1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGALaE4ZXr6fKUmgfYFkqXVXlVlUAeNNNKWbxKvwVR92GD8zVtgTpIc5jlBcmaMHTf-swbzrYvg2l601kjuwWlRNQIJoPRwnJCFQ664nbBC8lYvKqWm5bc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhr-0Nkq9NYmPh7xnnEkPS4MJlc5ib6zjABk_a0da7Es6_yXOQacF7hM8uWDB0y2Zav4DWm20Kj8OnWpd6ldWzJF-SX4q4r4jXzqELrPi98v0-uPcPhDBH9Z6Jrp_HtFCOalk3pTb7OhfIvU4ojf7QLnrzHTetzBT2drsX4wb5F_QE8O-NtJiVgn-EtqcOYkI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFebEXup_fBGndqGtYaq_6BKFnI6BAQp1q2eOXZ9Ey12_FGD-3Y6lWQ-bDujlvrdhAlPi2ua_zX7DpkkbHNF1LVsDZBeGt1blH58Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6xGwBDZZ56tkYWGSzw7cCcTCeoVgr1GG_-y0uEe6g3xO0YxEXMYH2fZhnKiXfsEzk7-WfMa1xX_x07kwCGgyY0ckWEg9xFm73V2zk92ywxoX4vaKLmw667Hhgn4GifADTxTeDoUzxVxhvQK7EyoJJWb519ELIkIJqy92Eygj0qLBopwTJzZ3rO0g7xwLqnK7V7ireXyyF0PoTTQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFiKfRl_H4hctL6lmy-SjPTVqbI3JxVSg8i4iEUPBQU3hoaRMT0FMssLaYT6DsSpM8H9AaeSZ2gLvYNfKftvOXZWU0NHIg2PbhBoSf3hNt0AVC_i7j72v_J-R-auFpSAXJXvSYaNk-xH_3UKajRZn_gaE2yRG0ZTNFOFWDl7lYuTara3l7gBlhYN4hY8Llovma2n5DMMqWmlf2cgv6eudJ6UwgoeGbl9bRSupqcX_-MYodb_bpLveXJ7WHg8J3wkSHxlhH4N8vSDLulPJiLGL6HlfGqbE-obgbSmHaMp9CUElNlC7UEibRYMYArXsqdTAxiXHI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwc2AcjE7Z3hH0oafRpCpd4d8WcJQ0TGDiXAzuHf7xuRSQvpDn0w4CnLIuXTWeyWsiTfkAAcr8pmTrn5oL3m_AW6qhXeXxgKbVZUIdExNxTOK4ScZYppaJ6Mc11cxtRepXluTweQBvNObhzcaGJuQRgwL4V1ipDxtG_9i9IGTNtROcLV0KPNW4dkCTXEiGTU7sw8O6S48hn1-4tg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRwKOrveiRKBacewssdSotuPyNrV_7wEH_3xK50LyfGA14LQeK0KPM1Svqbc-MIGvADPPD9D_Nb3QH10unwxVmJST7BH7o73K68MvO5drqX-ODLQiOGEy6adfUbjVK9Cw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVyKZ79gHW90xFGKGyhh1JP13rGhbmnpcRQ-K0Utwro1VLe9OEjzfM2dkXS4iH3V4W_QULQ4kGDlrk_EH_dyc87zQVGrOTDMb7qXY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkak2xuW1ZRc-65h9CDKo4NdNiblyhrd_9NYSubNyjC6JLGTOWzPRNm2uDTLEhAnTCNT5tbDbMl-R1HxMe9DA0NuUbFFIBqu-0z98=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtgNSI6vT4y50RII7n3E0MNE8c8t-P-2nmQxncdtui1ErKhljl7DpzMHuA4KnOfOXMl8K0H2HcRkcst5wSxFKoJVCxa3KVafzT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1F-5oL3fxxMuVBB8C7-berudWpSxdl0xLamEgstTEeb6zHk9oVk-rzJFyrmx7Q_OfT3YqrOwX2fxYuOQFIa3BswK-582-EEkfcYIYE52b54M65sf6FQEi6E7FanyMgjD0qQvjwe3LThGGT_hlGA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6qeOj0o0IcNRHTYcCe9JlBMBCEwpjYXjCTkUWOH50SueOatefr5ne4IRt8ZiNHliD7AMAbQvzNl4xl5ZynDZeiLdU8ZghHOwG1p3OplUYJd0HpzeFOwW8l5WZZFxXRIKDL7zeQJTCmbKoUNjLSvQzg5JVvxDmVTJN4nY61-P5EYm7YN2a5OxUsSY6yBfe3og32L86PV5Lc4rerNpyadKGlfs9xoOjfv6fv7v-P2oGryrc9vRznWeL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwbmqpRw_LMtqlmXpnH260TKqxK0_4sOiQqWFceOJ_FCCxIgYvreS7M91Z8xMiGFn7wlqCcZTPt1DASjz5jL1hC-78w_J3Vz9-LcYWs8zUSDv1Anmqpet70mxBJd8Wp-C2x3jV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYDk6QZkZGx5hmsciMFEBSJp8ZremyqOFDs9qMgMIl1gejIF23DFI6kQXjeP8XzoySj6L2CNAPdhvvfhkmBXFEsnm3iYo9z7Nv0xXV4uMR7XvnRv-Je42XORzjjaf97Op4nm8Jxzn03zn7hyvsaxkCZg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLhKdw7VGl0ZNHnOloiit0c5YxewV0b3PQJ7MSfGFU_mPqlPYTvzQxzga0TxsDMMi6wmmx3Q6gLrkJ-DV6E20UnGDiy6nNuM8ytyq4pj_SO-wM7Jw2AhORYsjv8hdL-4yrl3ZGmM1w5_JkXiwf00SFUa4m0tS8tAe1wE4_HJeUwn8dxYaYe5iaf3BMRlMPFj55lbXPqVREAocn1Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSeaiyXLhbmo16NRlDqYrB-ucH0gkMHHMOz135cRAZhHNR4PE5ACBUQRseBvLSULh2ymN46TTgLPlnvjDAqeLjWrK00Og2DRjxnUMfwNgucIHS0Um6rloVkXBLXIpm5SmS9W-x-oyBsyc2K2diksuoSrrqbuTIIiD8DomicA01",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlA6jP9SAN7wcrwFrd2Qcx7Nsd6rMTat2Ve7HTmp6CgiSsIrNs85Q7-2Jg5_EuwDSrhOp0HzvWDlBBkBgnnRzSj3A3NAewwoIZyvXGMqFjl-AuzwOCUw9FdV4VVyv02svWuD0ikifnt4Iz_55OfQcM4g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUQAxTVSSMRy3im47HLSalsksWjaBI60MkoKregGYy_R3jcSdxJGoklCpsF7OWlSSjV0-cknXOLXqhNow6_hAO7q9OmqkoKzLLeAdICl2Toi2ELDO3YRZ1TOEhovYEdF-bkQy2-IMlBc4GhmEuXaxUdeCvp5JftQj5Y4T1Ci1WMLBv6YttITHejiFT9Lg7DMDwWhY05UTQCeLVtFu2Eib7krLb9P5__ajQ0KJKTjsUwMXXls2woxPWImRDxCtl93LpFG-HSEY-LY8zWLRwaP-eO2GwIB-D8pJ8ZoP8Ywljzfet7hxC783fPYGkAyOjvoYkT2FFwu-hs3YizXh6TRr-VuCvw9UsmFOQiy-wQPlcC3I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsiM3a-bQ51Zkdj_x8IpaKGP2OFHvKgqRU7iEDZ773TsWzX_4_GV1rb91fjgOByHUlp-4tZIxqJkZnHsJsJaeks6FbOzYR54jb3-xK62I2yPsOXxhpAZURWpRWWydAu-Vy18HEacb2mEoBim1A6NXhvK0_EsYMx5kWkLWvF2ov4NTZQgIO4UjbsIOpbhbB6p_pYGNssz5ACZvawHkMn44zWWCwZl5qmKQA7CMrYpO9VB0j66TGNbAxslYpaIiUzJOVdOLxgncSkANzeazrMhbxL0p0Z27CV9WSBqq_nWLw-q5MOUgJLCXSUDAO5Kj3J6axPBg6oR9_jsPOi_c9iL283PHuCCMQNV56NA34-LspzKRejB-mNuvwtdoaJPcPiBYHTSZRY8elggYq04_RlKZ78g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfz70ALHvmffQfq5QjaqkIgVaV3Urb6Wo1rMTGtmc5dpx7URu71YyW8DxaU-J6DaTN1yMF_tVq0p9D5JjVD9e8XPLJGUgDAKm1h_CVPc2s-H296VOpuM2ShTkwDhMeX8kVotLGNBMlaX6I2fDtNvVmatrqX8q9ChIk1NtkScrSq3rRMHnhrmmXXMnO6kcCxvhviSeI2OlRRslU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJLAAVM4FLGgT0KzG0aeQkl20Urqa_UJh6GKwCtIO_avPQGQ60rFD5Es8mlC336fnq5lkL3IUh1kEfK2vsxX3uOY2YfWWWIaYXMBITLoP0Yazwwfzbqa3q37s2f4iFeN4KBo71lgriQUKrPJwv21LouLGU3Q2GsJ2nEPYNHTjKyZzFnpIF83KlPoJ3l8w-K1LoPLpPDFujphc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_bEig87EaYERK41pVQWMH4wxWKFRqWmeoQb4YAXiEqzX5divHJtRoIfPIMMrp3XratnfpZY8s0YoCErcauJ3Ywe4gd96wXhx49FvetDT81fMzWTxOFWsHzFm-cx1f33Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE_bEig87EaYERK41pVQWMH4wxWKFRqWmeoQb4YAXiEqzX5divHJtRoIfPIMMrp3XratnfpZY8s0YoCErcauJ3Ywe4gd96wXhx49FvetDT81fMzWTxOFWsHzFm-cx1f33Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6wUUM10QX1GfE3-EpErgHPJWTHn43mHVS1v7_QsL-rnP669aKOohcpaapRNEPKAF0HWfQgP1DmQD3whHH21Q0m9o-UojsmuP2coV1m4oG50A1U4pxedW9iRq3bdUTsfXtrLF4onTicbcl_agqUdSE4aJhy_UVcYNqBSnnl5opoHKYaMuD6sqpNp9vkNRBQIgVEjKQ4JJqq2Gk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQNklrcouwL9R8_GCd4a71IOMXnzeEe68a0uHStl0jV22QveAlBJUyghhjCM-zPWCvV1gqLbC1eNe7jdYyk9h_II-3uNfeNAVxeTfHg9J4xnlNufzLzaEF5KFMDPEA7NRF9Ur1ire2Adx39_nD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_4kPj_epjiS5MEKUXFuknLAKqeEE6VhE3teMU-Q6_Qxt2m-xJ-IdNVBFA_bB-xf4ZciMny5ZPnBFwBCneLO-V24Ot43lZSwpuyyOOcQZf4DCETql1_nXy-ioNRjQIemf66suN298GHN0qEiYMyHuY-bMHXf8UUgoS7b0KXOA2K1kE-AgzTJhzodaakT1FWnbISDLrsQx--vNqRTuJXyDCkJXUF83wxeknVMTYcmFpR1RAvnEhHqJQ4Y1JxtDECY7Np2DFPUgAL7PuyQLuFNEaVaKLjKkYOzKEasW5ceQLdadvqozBpr0ReAiVX3JlxKwwHOk-O5vThdY3sHvkUCwz4LdSf9GPha3BKdwo7boN4ei3PvFtpAHBMPXFo4A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwyKuG-SYU9e82IHAMgDaqxlPe1FVTdwEY0NbS8ulC6eU1sARaMupAEU_YEypSqIhE8QK8Pj1iLhZCpsvUOTHh2S_U2iNtIc54LSRyjaoMYM4VTrqoVQkep5aqvob0sjjirDRTChkME9HLgX8tcPJJVLsrYWuwsUdmBSI1Lui79Mwwb4BrOYVyN3_vzlHvH-wKIM3eEeoB5rAw-eg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBT_7i2sTyPiZ-RGFzYr-K7eht5NXMeppBedjEjoOdWKu4CpN6WxkIF794N-FiD7lgNEtOZtL38czZ2x15nmng2s_WZo1YbZ0qaTlDJGfGPiD90ARsj2RSHx9jTDC_N6I3aoywC5jRg4eS2MI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEv6TYskbhrY28JNHSxgb8ukwvF7LJMAn4sAzlUE7ACD4NnAIoMnDIpXaOy_s2mA2JVoQW9W8jcrXzBhJnrCLJXewwyzsV_ayQuc1mozDvU9qCarMelLlY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-WVjnaa_YBazGQp8bZihyNZAtA3em9wQmZjEgpv4RpnptICN1LT0PovTJLDuT1HoUPi1nchwkcjvkguYRMVefmTyUMqyytRxr2ZasfNd84NNITOe8Dsc4L0k0oEoFf0AzjSeyUMXSFNfvGEwNsuNLprnpJnhnJhxXGb1Ywp-mwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcGzNK9DPC7b0ZxafXzqvxVahOTQb_5PBkx2T_fogPt-u0q4lZxVUl3tqtfDjULDr_iRizb1UxmrJvKpj02unI7ieV1nDpOhee4OTjhPmzhabeCTUebGBhK7o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_jDU_edQhCB47CdorU27K4onEN5duX0QGjMfP9AOVkWqKe_xZWCBU9SnqTQOGec_fAiEtj3IoqQv4HrryqaWVgU2VT0qxqiyoG4lNyfw8MDFv0jGEslanORY7p1bk2mLRmKYZBAR6fIrhg_5ShWobJ63MBAuHVjov4lY7myqhErHnk5CBDS16tnJqjHvKpsVN7HvavldTc-Nvv_pOzalOyxmRuK8eCGHKXLBBRkpM7O_6IxDPCR7X2s1tn_GbtftsNJ4hos9EfV6BuuTaf1a2U7LIR_frh9tPMAkL1coNdAkYMVZxrcfNke9-ypThkqE3f-witXDOIg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFnqW8jrY5d9fIctP4OY7Bq-Dj2mCawSCxtt9agtBzTtPPEb8eCGmWJ0oTYngK-dmQLEGhWTp2B-BZdw_mFnuaJHeW4rn6ImGWfr6U5Cmk72KgVCLc_-yr-uo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmPR1iYgOi1ysHz6OgArlgPV3XFxuJed7tC0zqFP1_zL6DOmAx3ky5GpVOyi_pCbSmwrwzwGVyj6e67a7fIwpf-TCVc48_JsHeXPXugOz7-UeUvoUhVGrsgue5biVw09og3iUADa8nt5awbrPt_gMnm6I0ekTjCIU-FWU0B5uGwufsMgEsuH01aI88zN7EJ7nwc1P2xQSbEEvG-GmlBtlMf3ru9SQrpQALQEVQLl7DVJie1e9fl3Z_sSsElqyt6NPtM00fmSEJ6ScsFdORqXb-A8P1aIhKD2XpmSn5sXpirEgzl48gKbg_ir7YcjYnx-4ia74wfg3jdfoUOi6CpgQ2HtJH3ItcK3dDq5OwmF0zS3zinvQ1MBJCbxTYHEAxzqcjFuIVPO1BOjHPjh4AoCAIOTE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrw14m-K33LpmhTEMPxmz58c4MJbUpdMnpsfwo9Hbh4xZwpEQ8mt51JvPNDgHEytxrOY57KOpeoqCaBJm4kQdjfYQHQzY0gjfPMCpsYszI7mdtDGUQbhFcfpYO9FGbeoqwKSOlO9DlM7FtkCjXJKw8sK--SbiQn6_QwKdM7TVPFuFqR1TD7dIJ17XrZNCvaCE-3oJUj1OP5k2qdIN_aosE_hllHTPaKAGt9a0tOsk90ViohH7d13g-oWoV6Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT7ID0h8OeKmJ3qMVUJok3x2Kc6sAgzQLZgTjNO1-HwLeEb7yxXz6HkKYi9JVC971ouhtwDkDAsDfuU6k3GogqR0Xocb20I38EzOth7BMGTRK1rznQ_l2mhV5aS3v_iR16YN3CIqWvCobAV48uZ7TzXBTekUGzgzknNPjWQRiHJJpekwf505Hv6rZLgQrvvESJpfg8muN8zn0PE1w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGy8KbJBxaDeLZWEbtMW4I_XTKKuPW34klvMKDV0sDHXLh3usBrYRu9BEuomBqAbB0QrjYcTKIFqCtIB-qb5S8BWqwzynkTDs7jWuYiE7Cv9Ks=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHONpZgI9U04nJRtPBc8CUt1h4B89poWt45ZBsui-ZPEf7FQ8zx2ODJqdw8PDkPHHws5nsAM3ujFJt5ZtI0jY6L8R_MscArLiCrgZeY9USCxClNCIegVrhgqFa-8X4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHV0VvXmsSQbWrhU4DEDahGTcvxPmeouVOQ0MCB9dYN6UkaMey-mJST-0ynu9zKsjZxCQLG0UCLhAWIIW8TOHQxAYl8NIRxU9hNJy4BcQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDOZL3z26Iy3Ie8AwU7uRqJaLTzBoGANt1dropDBGpXZGkDurqx--ACxnYyft32oeQP55ld3MTC3NDo2-tuZ0M-sI0MjIKOBY9ueiETvXZP3guLRCjsyP35i0IqYfzEC7TmZkbtpZQUeshYuWvlg0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZXlRWI4Vp_VwmHgmOgqDfhEw7lnStD_4K_Zx-UFvJfg9ZSmfEdRM8dLzqx6eueXxo9vfrpe_gJgbVoUYOCYE_84BBS_CLnbBwoc_GoHjQghYBrYrAhxn8VMyUHQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGQFpj2ateq3gFiqPxaeC1n1r-TLFJsyVGKUgPVz_PNd1UJQh2aBYjWBS05NXy5X2phmnMVhGghKhxywfeb1oMfcpGPIsx29P5BWwEb6img_g=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXR5ANNngq1Ft4G0uRdziUxGTCBbzNuy9XFbFclBYFhJhhcbkEk5jsHg4OAaplAzaeH0m2wxJFpp1lFYddokTspBhHFEJ7RHUZbOBcVeLrHG8kbU29KyJqQySzVN0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4zLT2kZEg_5UBmCa6Vxyf9yAzTNP7atQEUPSLOO_O0I1Nyi1BryMHOoN2ZgkLUYW8MPVf4WOd597JlfhgI9OPgl4z_0joBZDorV296vq1yGmZpziej8V0qwx7xUs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFevEbuaRWdfP8rcKFYQ5a0AWKcgPN9FfYMMfrpgrI3DDb0TElA7NnHj1poVdK_fqlAJG3yOfBRH0sQI-wODBZe1yNc8DA8VrNn-hS56-UemmcZAhYkq7qQyo4TEOgj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBY5ergMS3jBNhSJyslOL0z-bl9SaBuPfOMoLm4bEo6HtOY9C8T3andn9DgpfhCfpSnoC9NE7YdEY367Zi6mNmYD_Yed_Qvc9kNmVOiTkR9X0QYRCLNr-TgB1BnSE0M7LRxmWPK6VM8qKm9rm78cA40w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHn-6Ac84ty3SW7HwkCy-VU4xeQSs0oFiRjFiVOvJopZBa4kb8_8NKN1nPLosO6tCSToT-J-cPIOYjgO9Yazgj7KbJMqfgWJheicmIE2SaZmzTKBUni",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4e1XHKZUQ2c0oZK9ZNxXSDjh_B7iiGtChYWxAAIeFn-swz-kZ58Kdr5DTmQaQCZnS0FpNGAU862DZWDIMYu2RMOYaOR-WAWJmjv7Tc699euhuBNTshsB145uAl7ZC6esbULMVWw7BDVk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHk3UYU2_rKAlwQNt11blG1ecVAFtLG4zJfTDnoGi0Lr3cRJeN4biW_HtKpPjdar9CRu8DDoitev4gYKs2RpXg8HBFwYOeNUZNqpLodteHCHj4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNCrj4IUGV2ZKVaVB1fKO2j-yK-XgO6E34-JRfQlfmam4GM-FYJbMe7WsGWh3andLYMwTsGf3Yiz786-Q9RoWIQkaHsgCZY-T7hh-FbxLTfTAWURuN-jJLjFIBOc00BmphSBXjLG7v8GCw0oq6Oig=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdpw0NYA9jv6YzPBAMGsbAub2PuWrC8CS68-xMT7pgSpMRE2vhjXqPB34ttrDV3RUsvc8s_c95fGKkSvC9Kom4W-eWqizIs0Dmhcu_zYjvPPjeE60NgTPhbPrikAmp7_Ny9CmsdZIhu-V5ouV-EHUaJxSo08GWcUYzWwLAFaBSVi2qv2I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWcn_AtapL9Xigp1qwGwxRFHg08bhdiTZbu3Z207LP3-NXU6XpUJ5-qapcFKZkVJtT2oqbgmpCVeSR12ElvyO8xqdHLpy6KklAYlOJTf5ZVbigbKDSVuCyH2s7yQEC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXCYuEpOCX-HB8tb4-myov7WTah2qZuEJvhisTqIJ0LD3dq7d-1fCgCW3r8bd9cdvEzN1UvdkbL9sKJw5WBKLkBwIzrqlAmM_uMIwp5a1R5Qs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFT52I9goL3rBd18cp8LxCt4U-vpb7BgytaVgJ_C1AhTZy-KZ4NsbtNl-rU0dsWiVePZgyX29ReXMSlOJqoH1LHBIfMwKSjlWnqRDI9mQHnVbdENO2DDNlozS7PgaQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyIaxAAftSVxCZ6MKdPb-72OcfHU8-g3827E_dJ8DdtyIuEHPm2YQnvax56Wf00GXDLU6CGjBLhr2FbQ6s7iIWackiipXjjpHGXLC0joEe8NyaKxv9U8WNvri-UOw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEG-bsGxS2fxjnY2CCy52xQJkAP_0jvOyrwVRM7oZgiWpBW1Eu-kfbq82VvvOZXcFHgwIOpXZ6Y67qJqIljETJpX-6yg-4_c5rwmQvjZuFZ93Gh8wAB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBLI5MKT6Ds5e8Oo3YyInirCUjWoBix51BhPLXG621xTGPzwwmtrmbkJbLP3pNpyRfCYLaWJhwQ0X_XjJBKUwQYkeFs4bCAfZqwDYN2J5IRjVLkUFiR79A1TIJStC7oFqMrgAHALooLsdxCVX8r46JZGwx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwfUyNgCzmFS6B6e4Mt43x7ss6g67VFdlfcAcRu2WD3NDu7By249yyAh_qq0lNQ0nkeC9lcWiMSD5Ef_D4HCh1om8MC_Btypg9KVCG-HBaFon-5BNzrO71u6NhHy5aDyPk-P_0xlCGGmyX3JeEX8qcKeOFkfh2m8mPl-sr9V76MiU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETHIKBuBvGL_4zWjdU8i3sdXHcWKFzxM6wX5fVq-vDbnVGhXjra9T_i9hdh8omLOZnrZ01yBlG2Q9gkxsKey1z2owzo7XG-jEVPNpuwO-GsoApNi5rxGFP0x6JdCFxzfHCYr59S5CYVnYJoAj9rW0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF70f8MobZEZLYUFCqyDI2bdUoM_JTapj7z-DzJV3cC6Msqd_vEaKGA5M0pg_1W05aLBQKU-YT-SG4XLI8Jc3oSbpDGSWIpf26SRgp0mQGun_31SyzwPkzEpW33tw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **‘ado2 펜션’**은 실제 존재하는 숙소명이 아닙니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**'ADO2(ado2.ai)'**는 펜션 및 숙박업소의 홍보 영상과 음악을 자동으로 제작해 주는 **AI 마케팅 플랫폼**입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "유튜브 쇼츠나 SNS 등에서 다양한 펜션 소개 영상에 `#ADO2` 태그나 출처 표기가 포함되어 있어 숙소 이름으로 혼동되는 경우가 많습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEeHuBPukhkVR_Xk4xm1tPU_XgLlapRbObk6q1KHGOF9Wh9nt0zMd6B1PjUs8wr92Dujde1YUZfkQsccdlJARnTJViSSMJ7MBV-fz8PeiqLLijcRyMnOz19LyyKrn0nEM80hQLqy6QidsdkNAEObYigGZYkLfjOnYC1-BMTEAYlTmV_gOdLEku5Kl8QF3IwfqjNXaATdTgB8asgUkJdawIAIDxMoiySmUV-M9cvxfEHmU-0U0VzfRBLhqWeyBAbkmHs2iDQZVkIViIYYUOU73AkuSs4N89fq3IldXPIMTwvjL8Q9MA2w8NyCms4QnjR58ylvMO2lzxlva9PEvBzQpLCoWRKsigdSLfVaHu2y7tciWfTIpgziED_RBDLKn1KlPGUC2mJ9uDbZoQWahoBBKFZKvZG3rkVMjYztsRno1DGPeU3UOpWLEdoY1ffkiAOxlMoEMIH_g4Vwoo5H2sz6hESBcp5TPh9_OYddz1N4gTmpeSQb2trCSPktYvyYAAxMWj_xBpSp1FCcFll7UgaD8xAbfEUfAgfouDeuD9BNkUsm1pyzcNSn2InPHzDJyjysvZ94vVDLVBSQmpmgPgn2o0bz8eC8GTFppQDadRpbD83naO5p3qrF73zyjQA5WP2Jvy3QQl4QZpkQ4fs-uamwb2wYEs5l7DDAGzfHoD8FSiCIAN0xr0zGY7X9-PjwmEtpPf-ARsMBwGXhccHZ_Ks-c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUrnYc7LOWRilDO1leHbWp7447J6lJkXLqDe_Jbvf5eBACA25zWqJN47gO6Iar_hXWd2Nhsf4lvVgxhh3KmgFnoXJ5L9bekWTIgdcMJjq_DyM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFH51SaIFPLaEGSd_dgO774KnLn0BCus1M-X2BZZEmJmXjRskXMtX5G_C5Akm-cckw7ul9I48UirUJ3DBUDnZPm_3VdquK6HXyrcyWpACg62bsbIq4YTcq-Pby_s8DS8l_T",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH39DeFG5Oqi7bAtS7OohowkqRhf4zdRBqKANEpvF1mfZLEE1oXljPGAPdzJFuiELA-2sJkgndTC0gLcfEcMvitP0p3Yg6qbVMmrKHon00b_UXKtyMTaGdqRqYt2UYy9l0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "'ADO2(ado2.ai)'는 펜션 및 숙박업소의 홍보 영상과 음악을 자동으로 제작해 주는 AI 마케팅 플랫폼이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "현재 성남시 분당구 지역 내에는 **'ado2 펜션'**이라는 명칭으로 등록되어 운영 중인 숙소/펜션 정보가 확인되지 않습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "참고로 **ADO2**는 숙박업소(펜션, 풀빌라 등) 홍보 영상 제작 등에 활용되는 AI 마케팅 솔루션 플랫폼 명칭으로 주로 알려져 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeWbeRQ7uAWpUSMUs8QGHDMjZXZicxfg3sr2YHkaNo0a4wZsz8UDrL1tgzsroKoCWA94U0wj7GKV8r2iiBGGc2Gu_k2DCmkrYQUn6VYs7kqT1kJR46n4kh4FVCAtxLi7AA9L0fNx_USqI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeWbeRQ7uAWpUSMUs8QGHDMjZXZicxfg3sr2YHkaNo0a4wZsz8UDrL1tgzsroKoCWA94U0wj7GKV8r2iiBGGc2Gu_k2DCmkrYQUn6VYs7kqT1kJR46n4kh4FVCAtxLi7AA9L0fNx_USqI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMEkDQEK6iiNdbAfKmEBLEGOdVfkMABJGO_ZnQoXeL2_Mjz18bfYuTho2UV4hJX35NJzQygZmyH13rmDpfNTjlCHFIJZtNfsSi9AW5mg9dwvPRMxpmm-rtaa1cnD5EUCIVil2yqzl4fp8KzBr0uZBDbddxq6UwUTHLpl1dVb6RPSQO0A-Nz4cuM2R_f2S_TWrcJIxWbg9FGn4eOabYZCjiUdqY3NlDZojFkjoxEsc8jK2MV9UxHIPQZ8tpvKRQxj6Ru1AY8TduK7r1JdiX32Jn1kKZ0dz0wQNf-_yg6OF-V8EURO9LWKdk_bBk8rTK9J6SbLQ4Yana89b3z5YG_vJOyMvspE4-i_sVMPksCRpLEa6xMUgL0e3VAdx4Q6Y8Ygvj9uiXpOSXmT105G5xjJNabEw5KbZyOQTbXjV5PQhbzq-WKpXkHEY0mkIGXkcMT_WTStSfADLcjEzEcZa_JQoyCveA9okgZSZbagErgTJkLDNxTB1XJrU8bAd-EMIb-zblzJZFFdFI0xcLp5XHKTlFUqeit55ZKjt10jyCHz9Q-e4OxNYe8kuG6P0KoGi9CDghNJICFL6St-4t4TMuqQnh4IJk83w04LrjeUCTZxJ_8ph5DGtjbYIoizZLiC98pfr6NR2voZEKDcpJW8v4rpXGa6XEp_G3uUWjImdSdC0lTiA5xsH_ZThd5F8FG4BuN6J5d2sbZv1iW0IBtQ1VpLg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk3kZyGHzlOulWPnci9fGIjK84am0bOkHNmoH05SU4gtD5XPSp4aaCa4cP8xYUNvqKS_LePraeYf0ARKIKoZbG8byedoc6lTr-1hVkbuzqBe0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvsW58vSthUwkbSYHp8HW00TafMx8iqcJEC1mZ0jYzuPLbOQfRKamqTlmeXyyqGeL4eVhq6Xnb8wktaQyOxFtBa-WyyQm-h6Shdc4LJxESM4AUQeP5WkAEVg1XB03WQPs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "현재 성남시 분당구 지역 내에는 'ado2 펜션'이라는 명칭으로 등록되어 운영 중인 숙소/펜션 정보가 확인되지 않습니다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "ADO2는 숙박업소 홍보 영상 제작 등에 활용되는 AI 마케팅 솔루션 플랫폼이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "현재 분당 지역에는 **'ado2'**라는 이름의 등록된 펜션이나 숙박시설이 확인되지 않습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "만약 인스타그램, 유튜브 쇼츠 등 숏폼 영상에서 해당 이름을 보셨다면, 영상에 표시된 **'ADO2'**는 숙소 이름이 아닌 **숙소 홍보 영상 자동 생성 AI 마케팅 솔루션(ADO2.AI)**의 표기였을 가능성이 높습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdu5EvR5BC9XudNXJothIo3vHywZprMu8mNvszeLN7alUEgAN45_yS61G3-3LXrdV34_PRMm8rm55qb2AVSAZjtKW7itf88BZJbx3mt3krDYJQc-E0Evc0F4B2POUV_VlgCXJFWw7AOYbXNlr8qzv1dG7_RZHH4zxD7tbJ-KMPJ7nWbvaWmx6Yd_aPFcxVd7D1P1ijnA2S5vgZZu4wyIsom73VVjBIrUTACFuKEwTXQAuY0nxkD9yqjb4DIWW7TtXbHdbGKY6dHOyjFmpxrfwC4lkgSpFWtf1WpNtW90zGoqLyeepUZmBWI1Ic8ATBIE-S2h4nsKxXfQb8zKcjts49I48iVX5G5dk5fmaypSBzNs-qWs3gYkc100Itm7kElzt3Zy1Ct98DTXQkObBtfjYbK19YUiFpf7Hk6f7PI05PHM1jpW3HIh9-EqXF_Nl11OLh7iNJ1RhaRfbF2jt5JIORkRsLp6vLbhQlOFMo9KlsjqPETFHgdRBp7iHTPbnOX1kFaq3mJ1qnWGJMmDgyCCfR8rjKeDfIoDdLEtfBZGVLscPaRmnpRArNN54WPhdDVNZ8IIZfN_NZmmW1DEAfHP-X1wR3AM1lELiPDWzVEKQiEbpG1e9m6f5sOAKsOufJzpIHVOhCtqzOJfwdrr09-8D8I8GXL1ycVKpUAo_8KiXqvzPfGq2dZ4FZidv5wTSSIT8CloVa7pVo0PzGj9w8KI4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGDeV8rdt1GyIDmmLx5WcOL1V5wjH-_j0IjCedtBpJywBIPmKtM8RSN0UFkqWWi2LTM-pFWnraTR-1Jy9-t3K5fOlqL0PgGibS0MwUjeGRjxXPTSLFgeN3JmPRwU1qe4kbFtOhIXJcF1MkECv8OjqQjTPz-CRzVrZjB-FZ5BW6WAmhBDnk_-qAiOsqOWtkXDkpprnyR75K7-kHJjErackQVfWUZ53ays2XKmKNwTHvScHmFVqvFFjG9eyQbLK2v3uytMtBiqYJoarXTh58ZsdI19ENNi6V_nV8hKxV15nUy4gZuOcFTpMf9js1fOujaVstPfiKGhxQr5G4E7HuL6aU0iSuVhETAukErKzfZSL9IiUdGFrlA4n8vMJ3J0DOogGqi7qtMup6MldaL9qiMhZpQ61_fXyaihSuxPK_FR4kkQkM08_8zY7u7Xu53LAOpSRBMLYatpnT-RIzMr9yNUxGTMUwnAvja_JVCWtDN6yzgd-MMXSUpZOP4Cysxl0WW6rSJ16Hs7CiYym5MOE-P9wWCoRwKXDKbOMurPO5tz9JN3_Jk8PT1hDDTfD817flwoNNm2UDUZn3Nf1fypyzbAvSpVTpWp-JlnyNFVyKyLlPpdoBVGKMVt_uRSXIlY_xjXBPDG8W_b9eESRnK9dFCCOkkZDWWGawIi5Dsk0AifHKEGlFlJkoLfqhadHK7OQM96EbYpvIWY5Cds7vVwBvYd0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "현재 분당 지역에는 'ado2'라는 이름의 등록된 펜션이나 숙박시설이 확인되지 않는다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "ADO2는 숙소 홍보 영상 자동 생성 AI 마케팅 솔루션(ADO2.AI)이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "질문해주신 **‘ado2’**와 **‘kt.com’**은 분당에 위치한 펜션이나 숙박시설이 아닙니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **ado2** 역시 분당 내에 등록된 펜션이나 숙소 정보가 확인되지 않습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "질문해주신 **‘ado2’**와 **‘kt.com’**은 분당에 위치한 펜션이나 숙박시설이 아닙니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **kt.com**은 통신 기업 KT의 공식 웹사이트 도메인(KT 본사가 분당 정자동에 위치해 있으나 숙박시설은 아님)이며,",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ado2는 분당에 위치한 펜션이나 숙박시설이 아니다",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **`ado2`**와 **`kt.com`**은 분당 지역의 펜션이나 숙박 시설이 아닙니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **ado2**: 분당 내 등록된 펜션이나 숙박업소 상호가 아닙니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "문의하신 **`ado2`**와 **`kt.com`**은 분당 지역의 펜션이나 숙박 시설이 아닙니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **kt.com**: 통신사 KT의 공식 웹사이트입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFw4LxHuKW2gpwqsbn8WvrT30M4RPG4Cbwxd_eaDDuMTwW-8efB-pLnH_wzy_WDYDBD5AIUQaK8rygGlqlCZmf_04Dv4irKZ9xipuMBnP0MT-A8xZVSeA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ado2는 분당 지역의 펜션이나 숙박 시설이 아니며, 분당 내 등록된 펜션이나 숙박업소 상호가 아니다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": "분당 내 등록된 펜션이나 숙박 시설이 아님",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "질문해주신 **‘ado2’**와 **‘kt.com’**은 분당에 위치한 숙박시설(펜션)이 아닙니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **ado2**: 분당 내 등록된 펜션이나 일반 숙박시설로 확인되지 않는 명칭입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "질문해주신 **‘ado2’**와 **‘kt.com’**은 분당에 위치한 숙박시설(펜션)이 아닙니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **kt.com**: 통신사 KT의 공식 홈페이지 도메인입니다. (KT 본사가 분당 정자동에 위치해 있으나 숙박업소는 아닙니다.)",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ado2는 분당에 위치한 숙박시설(펜션)이 아니며 등록된 숙박시설로 확인되지 않는 명칭이다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "현재 성남시 분당구 일대에는 **'ado2'**라는 이름의 등록된 실제 펜션은 확인되지 않습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "*(참고로 'ADO2'는 여러 숙소 및 펜션의 홍보 영상 콘텐츠를 생성하는 AI 마케팅 솔루션 플랫폼 명칭으로 자주 사용되고 있어 혼동이 발생했을 수 있습니다.)*",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEihtCar-VKsK3fgyk32Ntw32sj4qu_C6qTNsE5W5gTWGq9Vve4kWace-qca8HZfO9BCuM8EDsE4pVsW-BWLzwnX_9eWmJHl4CVOokC9cVIBd_czR-u8xjY5ZudGva8il6mLaH9oWrHR9c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEihtCar-VKsK3fgyk32Ntw32sj4qu_C6qTNsE5W5gTWGq9Vve4kWace-qca8HZfO9BCuM8EDsE4pVsW-BWLzwnX_9eWmJHl4CVOokC9cVIBd_czR-u8xjY5ZudGva8il6mLaH9oWrHR9c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl1uMqsko2oWH67dUERZOAOTsSCmDAICP-5rn8wSQtZers-DTY7ZASuyqf1tFRT1nSYJ0kdWMgoVw8HYk4BIwGZN15vGaYtejM3bLA1wK-dG9gd1Z2v4dBjuyLptORJRhrt-VYKI088WKt6fktjtlE7VR6Whno6CpDW4OT1ndwAut8ZnQA-4fsgD7jaKZmOTLG0YRzQbUHRmmpUIX3raVBkXKld6HiTuA28o8-JUBSt1S3MuHwe6GRdL-23Ce1_4heWeLUNYC4G6hFZx_weB8Cl6zaMnkotHnN6ALYCEPnVVhOEHl6kT5Rp-oPVBDlG9QZsyfYZ6FRviz2uLpVle6fV30XGF8f2TfeseWdUzeVvuCIBzqLNI4eR5G3DDqzZyrcmIGUaDYhf0EqbBTOWQO2evQmJlxPBkopPM31PxJUhisnPDuB_zXaR-yQNLChMznhKI2Elxqxk4E0jxDQ7YijSlu4QJk0t_3PEhdbblAYXenojwIJBT3peETvpGzyTzl4QKLkxwvXPEA91DAuEjh6x5hbfFdvzvqpWIwH614dqiHg2jD9Y0-wmkVpbAUF0o9wfTOlRkg5UwSELK4b5ZtISlJLvtbXgaEH3i207JC6WWoTZW3mFeUYz32omAkcwl4dBMX4gaaGtxJv5CE0uOoUdpD8DKTV8Mi4w-9Ig_h4MFbboWjFtyph9nKM4MttakM51fycdgQ__QmK8pR4F5U=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOEKxLexIYJFWKNxkBg3gg29KcpVc_j7Gx74I0fPaULJFB74DBfdXv5w4zW62hwjTfDg-3A_wue7apeVxY654jRkqfAGC8YDY-VlZ-4Zg8gKY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "현재 성남시 분당구 일대에는 'ado2'라는 이름의 등록된 실제 펜션은 확인되지 않는다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "'ADO2'는 여러 숙소 및 펜션의 홍보 영상 콘텐츠를 생성하는 AI 마케팅 솔루션 플랫폼 명칭이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **'성남 분당 ado2 펜션'이라는 실제 숙박 시설은 존재하지 않습니다.**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **ADO2(애드오투)**는 펜션 상호가 아니라, 성남 판교에 소재한 AI 기업(AI오투오)이 운영하는 **'소상공인 및 숙박업소를 위한 AI 홍보 마케팅 솔루션'**입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* 인스타그램 릴스, 유튜브 쇼츠, 페이스북 등에서 전국의 펜션·풀빌라를 소개하는 AI 제작 영상에 **\"ADO2\"** 문구나 링크(`ado2.o2osolution.ai`)가 포함되어 있어, 이를 펜션 이름으로 오인하시는 경우가 많습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKVwyzjKBKNdd90wGZ-1wit-ev06R0pJPRnHoe5tbyVZW_JzCOyklQh8kCAkxeNQ8RT7wAJYRpBz8KRWtWFLzV1FhHLtAgjwXVZ7lHWZx-BCt9Zrp3pHiarvobuP--wfp1me_-FyJ-_L4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGa0b_Wvmo04tfz0mS9CaaclvhMHo3eCkhHYSQpNiNNj_XvBaz7klHQN_7V9xN05Uucuuvwk1MIWxADod8-sjz27RUMNJKWesBs03dCsbxzbX_aJNwf-90tQyLgRg2sx7oZQhH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWVh-SAoSzfPYQJOIkx4gecdm_cfJMJno7gURspQqiK8eS1SGCFCD08K1F_BHGZY3RREn6tWnAF0PJArrewJmWVhiCj-a9yO0PLtUwfun-_IBTRX0vKyxNwWDQ5Ok_2zYF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHESDh90X-6WntGw-7zAJxUZcAmbOItl3Jyl1J2TdOIK264sTcKNkzqMrABZrVwvPZezSKBQRGsSEUJmZxbwXgH-QCnw4XL93D0ispPr4BrgMvhUBTrohN62UKNP7-d3ySqw85TqJLIoiQXDO1vWbl-C3TRZrMOFIg4Z7f4ImS0RJK8xioqIuhRlD0ZQMY4j2NeV5_h3NS50RDp17JC2IsmL00pSwdZ2Qu1sKehqEc2lCIUY9HljPBqwNnI1e4ZPmhyKHlzRxilW1uz2FdD1ytx9vjVIVrJkLL6S2pmKsBl6QuduWt8xOz2urSrR7h73pef8kcOXNRXdsBdupXmaLF_GJpcdl2BlmVFxTrVCl7l_KGDAH6NkAZRqGw7vO8rka4TIZg74Mn1iM1CVh4ryMEYxnuJmSgYBSgMeOOpYFeWz5nzqkSbxITQXA93li6JkvQ-s6wxv3pVfzjIjjalOLr3s7_A1ZcuVBVs8BK7fVc-iVMAhN6h_EXqeFu5N1dAye9CLpBtzgSKmbflJhoY2U-T6VhzLaOCTzVHN6xKUnfBabma9ePGzH09W3Jp7gpdHBEK45Vl9pysFfMTrtPzOgcDo_PLMiYCiwiDbQlkcO8g5Gk0CeqXGP70laiLEecOpWmUlHKkfAH4sqBqwNHgciQPpi_iyumZe8eZ-3Ewlk_JfABa_YKVvHZv_bhfo0W3e4-Tvy3pLH7v1qKS3UK0WU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGwIyukkGAHb8XTgk2F0wROH8uEeoFvWpLSFvPT5DyV_tlHdQYU71letr1EsrTZ1GsW3ojDtE6kHHvnx3FQrEzb8teHhKpJ75w3YGn8co1UphV9fRn0UOdw55xct8uO4qI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ADO2(애드오투)는 성남 판교에 소재한 기업이 운영한다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "ADO2(애드오투)는 소상공인 및 숙박업소를 위한 AI 홍보 마케팅 솔루션이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **‘ado2 펜션’은 성남/분당 지역에 실제로 존재하는 숙박업소가 아닙니다.**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**ADO2(애드오투)**는 성남시 판교에 위치한 AI 기업((주)AI오투오)이 운영하는 **‘펜션·소상공인용 AI 마케팅/홍보 영상 자동 생성 솔루션’**입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "SNS나 유튜브 숏폼 등에서 여러 지역의 펜션 홍보 영상에 ‘ADO2’ 로고나 태그가 포함되어 있어 펜션 이름으로 혼동하셨을 가능성이 큽니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIU_eJZ2QCcGLowE6ZOR8Tz2ahbu_cetEC4mn07UPqsjXbQZ3_BLsOCuPMN9DUZTaXdyz6skzxnUXKYLpeXFU0jc5YDNZN3eWUwzJnKoB3Ar4KYGx9wOiLT-Ls_bk040RzBbDEfXxwYf_hF18ynMg0ferUtT7nz_jB1R2bd77BG-ciecEOfC2uV1Ft2kMwlni2KLReO2YGw7mdMQnAwCLasWQ-THbA0C_6he_Fjw56ir3zKeQpjYLYC0Wf4a84QqDzQS28Dcfgp81zg77Rwl_-1vb0pttjGSfS-om1ChM5ZqIwRwYYr85A1eqbrmmOEy7M63aEfRaXVhc5y5FbnlZUhPnQRNNWutYHmxPUr_rhSVaLOCDVKrlnMRreow74BDV4AV17wMJnTHxWSPpAGOGQz3z1PAU5Kj0DAJz8c8tYWyWbX1F4DMhRNK6drO-rajnF5Pi-9GhmIvJE6oX737qhKAAQVZDXN1KtgzCFL1O6wnSgHzYoUhu4AzAX7tJVR5DpdmVBLwHFVL2-5mlB8tEvwf0y569Ti-9RBoXvZQV_PUE3aQ53vPhAv6D_XTTbT2Wz4L6J_4hQn7jkvO1yeLwk3Y7C8GxzI49jlAICP1tO7qbDOsiAEUx1_deX_zSLFVO4Gv_xskPt2Ftyq-uxFKnKkMRBy4swdtukZXG0eveMNW3uPXcR11nbMR1caexqfndiqY6nfquI102tYGhQzt0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE68VE1RutaEJPuNHzNERV4N8im-sF_g1ZwDst3pN9gnb7fL5CKGqqSzjAcgMTE1q9biR1ub6tWfMdjbPUtN90qK2w4zgN0LshPQugKhRJvMkKTGrhh7fD0GychiegmhjAXkRmnmtu8IfY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcOGTNA6x87Xkt8zI013gj4cVj9foDSpvBghBb2co-xwA0PR0nmqXPmUcqdBAXTYgiCKNfi6M_Fgtnb5CToAHaKXKVh6aZwlSMoS4Zkjm1kq9mijRMELoseGFtdqSzi9aC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbPTM48EdII0Vfc8O5lV3RCTCP9_N11xSsB7ZOYpHfOWM9ZJfJG9tWGy-PGSJIUGlhTKYsyPxXiqOyAQsVM0kRqkd_3RDobIy28iP7JkKbcNwnfzQndGFpju20Xl3ik3M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ADO2(애드오투)는 성남시 판교에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "성남시 판교",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "ADO2는 (주)AI오투오가 운영하는 펜션·소상공인용 AI 마케팅/홍보 영상 자동 생성 솔루션이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **'ado2'**라는 이름의 국내 단독 펜션은 정식 등록 숙소로 확인되지 않습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "만약 인스타그램 릴스나 유튜브 숏폼, 네이버 지도 등에서 'ado2'라는 문구를 보셨다면, 숙박업소 자체가 아니라 **숙소 홍보 영상 및 쇼츠를 자동 생성해 주는 AI 마케팅 솔루션 브랜드('ADO2 / ado2.ai')**의 태그·워터마크일 가능성이 높습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE50VdfnuRNeF7-jFeFpRrqwtAIfbwDORKgUfqVMDGh3PP4c0qABcrR4Nyh3WnJVdWNiy2W8995WGLqRwUGfM3eQ2qWXCaJcknSPJ6qxqi_OGVFdBfQqFCSVbYBFVOHWIgrsxeLFW1oLVY_Mi4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSp2vIu0dSwLgAYJKmOI2bL-a_oprkAy_jCs0ZrvZHRSVfYFLlzbVf2qJMGh0ofUEclF5XKmxb989BY84ELLV64AG_vve5GycfOgqW_rIFnx-4xjTWx_sYxT-0dtuz7wByuVTudNHABmmOj_8sXZxxIIP-KBIVKTIvOwXWsmELLiaXnxNVRzGzEQslKqzT-pAeEEySv-QyDEdK92apxo7n1TJjIBSksIA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGc2bAYsighXef23tFjTmab_TM4l8nNGoiav9Wgx02I7NKuQDB2OVJhFjRkQWjzpXK6WeDPAWJVsmDRrdN2RzdwSiiYKtD9A2WwFR5K2Sf3saWl8PDxVUNBugPvFrhm53FO2E6oC0btiH2ttRvcrhCQYTGbCFlELny4SBisPpKNVEEeAWYv6Md2d9AKMtfcac3LHNO9YyYb_hKXbM7xBpZgoRLHerxTR11KQLC9din71QnookynF4cAwiLwJaDoMMUJ83XTzPlow_BC2Hru4yHRH9_hY6USk5rPLSdxJ1-OHih2epeL2vV4qupb0zHx98Ir2Qdjf4RxWgyOUzSScoDRaB2MBlmKPrkQUiy-j7xqH9FXz9ssGhN36qisrdUuCPpFaAJQLh6I6tMifk-KSS4VBl25vMt3ixKQQW4qXVexYIjWK6jYj9-Lb4-_EwszX4ohjOoTqd9upg6a2ZVDET62WbcZgz9j2Y41UAaPp2kdnhcvQJRCP9o6h0T6Gug6kTcP2XfNvDYvja9LLSMPzTwF_DwmIfStfeS6RKzkHdyeigtd5Kwqx3GxiiKwOxqzUlw4u0b-nqaj11p5BC9a6YKGnsVXoJW8plY-2cFAgu02xUYgiCvxh2KmZ3E-9bc07uWstTCU0dvZotPEC4X7i5XwtM2-za00rUVhiNc8hmvxJOn8DEhmVFhI6N2njR9GAU_98tIstPlL5i_J4rkpStY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx49Zm4GvD_bij6yIFoOaG1X1HIxmjUl_tzhp6Bp9PcFdg3Vecs0rSuVHB57y-evlz0Aa-P0ZSYEvG_73CHePe5zWRC3eXnQNDMWIWdjHVs5s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCwcV5BC62E2y32ScZgfcbv-vzGk9fBpaa4dNA2GHf1M25tG-i869jAyjWYesVNone8vMbOGZmXCkQwr1J-RsuE89MLPyt1M1fQmhHbZ9ehAqxjEG0P18Ipc9sldQmRJU23AUZZaeq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJsyzp5S3RjbaROBa403tA2wc6ZwjOZjNF86MBGXi9MZ4uhTYTsOX2WExRrVZI1s9osoI6s-NIYU33Sw1PlziwSNKlTL1-ZkTOHgvXeOqMhLfuc9mRjOY3mPB38kDMFjdN3YBQVIken4erNakWQyF2JlIFOh5HTuUwqQVWveBOCOsWLTE_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGoNs2zhegmoXjd5rAaefOtwPkVP71_-GQe4RKiBPXyCvMFg1ScM6NLMJMp4gwdr3t3MmQlq_TNGfRMx9aL89bu_iqmAJpq1Szda1kyRk48pyB54H40dqbPHycX3yowykXif9Y_vlpV4_OjFmWqQIlh9BoMIhlHoAD32IkAvFCztQ2H3KOSzYoIlDmIAZZdno=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "'ado2'는 숙소 홍보 영상 및 쇼츠를 자동 생성해 주는 AI 마케팅 솔루션 브랜드이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": "숙소 홍보 영상 및 쇼츠를 자동 생성해 주는 AI 마케팅 솔루션 브랜드",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "질문하신 **'ado2 펜션'**의 경우, 현재 국내에서 단독으로 등록된 특정 펜션 이름이라기보다는 **SNS·숏폼 영상 등에서 펜션 홍보물에 표기된 마케팅 솔루션 브랜드(ADO2) 태그**이거나 유사한 상호명을 혼동하셨을 가능성이 높습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "만약 유튜브나 인스타그램 릴스 등에서 'ADO2' 해시태그가 달린 영상을 보고 숙소를 찾으셨다면 해당 영상에 소개된 실제 펜션명(예: 어거스트 청평, 아르츠 풀빌라, 웨스트힐스 등)을 확인해보시는 것이 좋습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "kt.com",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHf28Wh07RYyZoGwDZJYrmdeH-ejbLmaG4QKejGWBtl4SJ5hOh_RyAlsYZs0j5d-iZrDkTrVhjh0DIGc8vfe8iUZlUwes95a98e7GK8kiTXp9kSyNI_euJpic8Xq_n0AwTC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJ9beIBoXSDCoN-lBPDbXECQg7i41Bv8EGLXYVfmwl0WhyzVRInYlZ1WYfPUOy2N5PUklewMz1eYH7RF_4u_Da08BJBvg_vP15-gR0f0WJVcsB5oa8Ht-f2URvMSyFGUdWRpekiGcajgvJknk-3lPYQn3ic8OAljZdeIcCasvS2aDlsgUXF4piczDStEiIWr964rCfCEW2g8gaEf9MFwGk-qcLi2bloi-TqIKZbBpO3M7HmEFAaJDvOUK7aqIBzy6Ux-pCZce0nLfFIRtFez1DcqrGcuDTKftWvWy1FsQtRE2AB9Ror6nYyDGWLIyuAvzxusCFR2ls7FXX-6MwmrEdk_F12YQkRhDoGpZSBuhCxhimansE6fkC3wFPFKJCtaRerlIy-VEK_MBwhBXNmfyhJssqEN5lGE9rcltFHba2TIqfQFyM0VEYR41-IHFB77gSO253eRkIE3mgsBueCuxkDZAXZe1SDrTBKqHN3vyDeHWVmnACl7QcckMGS1-j5RoEvqTtVOVJLWu264qpiD1veCK3Dk5CZRm0gaxcMsbV8W-SDb2p-szMJenpbcCoUXODIlTU5Peo_RW5sYeimzZ0z5rl7-lofL85xu7_TWaS2fSqAMMbDrbiWgN6JQkoX14H6CskDj4BtD2Z-k0OMeTogZG81TeW81zFZsryGyUl-JMaBNaqpIL8Dd31KNit7ZNI7IXJ7ciThYVkrLtyoHQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH43CQ5sMUWHp-19aDp4wgKWAW3NCNC6vpwDStz3Qlii67-GvI6ZfT7IQaXbW14YaTYtCoplsrL7GDbg-danbOeeJPx-lLDVeFuAUjMKKX0fDUsknquJQcfx-GCXDXoMFte",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4F1Y9kfdDP6wGkmjieE-_nCcXjQIDc4TEXT5fej8KJAT7hwVah52qqy668mE42mlfLg-tz34OuvfamJl_Yj70EuRLGVRnHqrILZ3Z6AbxovPVguLwOpJI5EhibDH-v78=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXgoF_frzUtdkafXuciBZv6OlXvSRe8vMcLZooi7hcDa6AMWcNnzQSoNI0YxLq97rcYR89uG0ylCkARqYvl6FpNjInbf78t5DE24LCmntDR9u6Vbb12kglgnYc3nc5pz_gWMwWjA8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvo8LvsHsJ-R-qWtIxw5yjtdw8U09UAqK-4q0orE3tqR-hi31w7dC1P3jPIylN1mMsJ6Yh9F-e2rLkYj-ALkXcx0ZfgaRXYiy5uAQ3yvM5fxYje-b1fzZNTk5geugdKwj2V1MunUoRADsjq55WH5Q=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9PLrujr0I45ifQrnW-qx0TuQZ8P4HHPdKLtEQTlxHLwjKe8-4Cmc3OXPE1Tx_50mr_2bwrPj9XyvC4c1K5TNgvqTRboQXwtEJTBuFcGpNF_3hQWPT9Bkqlc6kkOs8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ado2는 SNS·숏폼 영상 등에서 펜션 홍보물에 표기된 마케팅 솔루션 브랜드이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "문의하신 **‘ADO2’는 실제 펜션 이름이 아니라 숙박업체 홍보 영상 및 마케팅 콘텐츠를 자동으로 제작해 주는 AI 서비스(ADO2.AI)**일 가능성이 높습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "최근 인스타그램 릴스나 유튜브 쇼츠 등에서 다양한 펜션 홍보 영상 하단에 `#ADO2` 태그나 링크가 함께 노출되면서, 이를 숙소명으로 오인하는 경우가 종종 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoA04eHHZ3zmuUsGZEoHNp-5sEdTc-OAmvnaX8zABXE1bFLS2Tdcsc-gO9nu0_OtwV2DYjLOtiZqyRyDBun6IXZhN5sQRMYCXSxPnPuFBwIa_rtCsKeu-zB9zehZltMPTe-LXWv4Bvm41TeHJX-a0sJ1txiLkv0h3JgqrpxTS6oaj69QXD5nZYPXDwuyULaK9wH5x0LI2gaG5vi-x4rw7RpDpy8Ex7T86StZrQ4ltX1gLdi9bDispzzx7ql0uvxybAkmH0lE6bo_oQpgpwlr3YqwRS0c-q14rSP0e8DQsCQYJHinRyaL8jqoLTOm9yYi9ESfNpyjrUN1II-UCVEfvXJqibyf9R7-UmVTeB6jPCSygm2tE8VgLQXrTeFubKOmcn3rU4wWPSG8I1JX1ajOijgcPUoKzlEfNrFlHnYT9qMb0AgPPnrElsAjwQ_LfUY9H5kmyqwCdHSNK0AnG5fD2y2jSJVHnn3CsdhIN3y3lp9yKXeMMYxoYQHn0CAdLkqd858-r3OEs4T7lc66wqtldqxhu74OrPyQT4iTvOp0TbfWCmu4GVZXZISNZ8xWaB90wOBLVdRGZg2S1BLc2W_eXclZkYbTbLSuXEAg_qQmHZI2yKWj-vaCxLY_KCqIVePV7ymFHGxVmjGSRfgyMRegFu3LMdcEChCcZEzK-akYVXR9vcW_I101al-qGIlcJUFCnU9e33HqeOnyeA78me7b8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENRniw6aZ4h3IJ8J7yBqR4oInRfyc2luH3HZv6YPZ8md6iRcLkSPe1HO6KlOIa3kLz1wiUr-m8oKQYChjPV_keDa8DuS6VCMswnINa8ucW8Ho=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJd9VMS1Ni4FewB8fPBa9fVoqAHd32OelOkdYEjEk1QuyK0iAAuunwcKAh7omkV8_wYZdqNcKGECA_0RdhZElE91ZsNbJWXd_7gJ_LBrdyiFz-4wOD2k3sxmL5tdpzYZg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0uh2o0bJHTh-rflfCyK9M8XXNHXY9lH2cabDgNfUvXTJi7EOApeiC2CRL3AnA75dCUx6Rf93TObwakp4JSXThW3gyZO3swb6Rc_h6G3pXoKCpjgC5Tua9V6vmRZgnoZPbeMDlMnSt64NkuHVRgF6HRsMoQLRACQLT-RncIUzOLY7nZjT7ZWp_KVDjB4Dd5VLzB-sIgOGfx3LlwhqSlSgFvgfB1cttmcXldB6sFNJxUREufBoimk7Vcf5-pGUuFjxoG7ZsJdxEO4tAzgCNkGR9pq_iEMj8gqKu6aAUsBryPLbO4quGGtpMbaDcEFKF67hMPXDzAH0-3yCkfAoANucDO8yYkF2MkcNRJen0405A4mM6OcV_H8FyotcBosGnUG1pPZ38GQk7hl5f3mnBdbybyoYHEB9GETnq2DpV4VoGGeJ3_vyBjsyr25F7sMazU7MfKGaOzzht-qylK2H69ez6EBZG0QyXyMByBsVaSl1YOALsOR880eC7OGXL7FP7LrFQs7IQxcrPzU-JZLVaOLeO1WcZJkijyRrkxsWb4Ah4d6DPnXYVf8CMkU3I2Y7YdEmQzbQNI1C8-a21uut0c5Nio2-EUl_7sGzwj8_60Qe8Z3ZX55Wt4faoSRqYJ5WSAieolX7szERnHZsFDxxUNrZ3Lcjb6vC5KmQvKWJ_4Jc7UNmLKFFPW4tqmH631nfODDHjAehylCx39II0vjaRkV8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkCkCLqVpUwtUhSuc1PqCm-9Xau8vnnrZL06MKSwNjkTOltmdul5Csapf3U4F2qscpkdyeJ5VgPD-GVoUr_6zQZcV7dYwbb7UVSskwQ92OnD8VjX2Q0sL5kyY4ZVApxYhlE4WQsRm1jTnnirHtnRqo-KT-8Wt4SPkpDHTxL10TjrfXpg==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqP7ktB8ow87N96RXipN5WtToQ9LDCekXfZYWFmOAJTb7-Iuk7jxRLwnsRaV1GGNQsozK3NMYKkLUMRvtAEgkqnYJyFmtOjFroawKrFch8LJkbWvc2spujGMUM17DHC3gfV1mW-7d8",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqP7ktB8ow87N96RXipN5WtToQ9LDCekXfZYWFmOAJTb7-Iuk7jxRLwnsRaV1GGNQsozK3NMYKkLUMRvtAEgkqnYJyFmtOjFroawKrFch8LJkbWvc2spujGMUM17DHC3gfV1mW-7d8",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwn9zKbowKt3zwWe1ky46H-J3WzLPFi_heFa94rWGiuWK62APfL89TU6cenJMPGY8tRTTId3JmI3by2vvbwrwwODKPmP-cyNzzQI9SyD7WpzrFgyw4-_haGosDNM7cnpZlNOrQlJYmg5IEb9iYRt0aoOldbwX2Q_ZMKPw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaBLVBapyjQRJKyY11pqEjS2gF4ArGBXDFQ4XI3TcN1tvzVDdea4b-u78TpE988RUvGqROgD67s7yridJhSxVpEiBvO8L9iKlbY9ajoPsihekNv-nRS8p_6aFi96uQ-C8Jfy1GCUUtnOqbVmecNHg=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "ADO2는 숙박업체 홍보 영상 및 마케팅 콘텐츠를 자동으로 제작해 주는 AI 서비스이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "숙박업체 홍보 영상 및 마케팅 콘텐츠 자동 제작 AI 서비스",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

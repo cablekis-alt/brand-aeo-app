@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-06T13:48:13.048Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "성남 분당 근처로 주말에 1박 2일 쉬러 갈 만한 독채 펜션 추천해줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "분당에서 차로 가기 편하고 바베큐 가능한 감성 펜션 어디가 괜찮아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "경기 남부나 분당 근교로 가족 여행 갈 때 펜션 고르는 기준 좀 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "분당 주변에 스파나 자쿠지 시설 갖춰진 힐링 펜션 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "소규모 워크샵이나 모임 하려고 하는데 성남 분당 인근 펜션 괜찮은 곳 있나요?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "분당 근처 반려견 동반 가능한 펜션 후기 좋은 곳 어디예요?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "이번 주말에 성남 쪽 펜션 예약하려는데 가성비 좋은 숙소 찾는 팁 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "성남 분당에서 가까운 수영장 딸린 풀빌라 펜션 추천해줄 수 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "kt.com에서 펜션 할인 혜택이나 제휴 숙소 예약할 수 있는 서비스가 있어?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "kt.com 멤버십으로 펜션 예약하는 거랑 일반 숙박 예약 플랫폼 이용하는 것 중 어디가 더 저렴해?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "kt.com 포인트나 멤버십 할인 적용되는 경기 근교 펜션 가격대랑 예약 조건 알려줘",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "kt.com 제휴 혜택으로 펜션 예약했을 때 취소 환불 규정이나 실제 이용 후기 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    }
+  ]
+}

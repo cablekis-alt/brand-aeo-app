@@ -1,0 +1,2001 @@
+{
+  "tenantId": "comp-7ulalt",
+  "weekOf": "2026-W36",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFQUhjzmJpPA_rzV2DUP4Byrg7eAv4Lh8oMIks7Y8Bf6Uk95xCjkBWJomWJR54gxrLxl0GPj71K8z88OfZgBgS-NE4EdBKbTPFlRSDWufpvApVOxMIqOCdjxmeGXxbN1v6ng==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGw8mduuse5TvkmfV3TlRu4VWgG_KuxfeeQL758Uj3CCyldgfiBjYZHcgMe1Re92blOnM840HJGkH8YWFQp_gLuL8Yf_kp8nyPLJyb9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH79e5CP1BtRVHZJpE7S_GeFsp5T3CVYa5fE7Ss588JzzcIPsZ_ctyTZqTCWEEItjPVL5M9bejM9WBtOxuTA4ENLfulvwHErkn-AE53WjOhMQT5T7KDNHZcHnMFRflnOZE_XYjkMKLBp7M4WHzTjtwyr-hfuL_s4n3ZhjjQ9tnCOQiX75hTQHzlcepWR-FwTwsAYar21jDAK2gL1_Ul6ItcZeddk_SIqYtB68iVPX9TTtUw6xvsZ0FGPS3ru9llemj10w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcKOQAa9KbzkKII4k6sD0req18iQO_cySuqHB-1lNjoTKydyEZdcKua-BObU82b4tYuTTiQ8mxdcKtI0vLuS5swK0CbgIGcCZNuNJC_AHpLCykEgk6xAtg1W2iJOdvnZ2_bHSOyGQjwNZ7PsPkg0tu5s2W4eZCSS7-qt22yAR8POUbCwPo3Ed661SXUNnCpIDirXgGMdJwvS311pDuC3X31Uk2tNuwCv6cfmx7y8U-gGsi_vWex6L9DCk1gu39ysmJNPpFbGgnUMJG46wB88w7FcQs6i__gr4Hf8GGg6ATWDwYtFIlNv4Ql2b2BF03Jf1eiVZ9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG5d6_Jb6PD70JuNZ2fh1ZnoP3AFhF2u5DdVf0ZBAbHqt_z_tXslX2yCE8TvdtfjlSL8yUVy4gLwMyHi4SpU5yBcxoucowWalwrjNaBUbv3w7vtnSGdkYlqljnlEaqrr8WosQtQgAlV2sECZK3igEQdr_RsLZWpCWJpWGFuibuvJHyh3AXumBLVJcQK5iCBljVSxt6Jn-yI7OSjiGLs-Coz9PMvQ-YVISnVPTOcfjs4gXGx4XdF3laksXjHl5x7tPFcZ-7DPXdQwj6GiozSOkCvxm7ZSxqwStVj1qxqA73eng8gyylpgYIs8GdKlIDLcNClGyXyUJRNLvo5FeC5ffueH76PEmwSeEeIexCoeoqlNxUTtQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7fm4JtLCGdVJU9BL2tqlsfdjMAHE6a20tIq2L9I-fmoXkM-wDDwS4tzkTm_J-cImcIMA60d4AOjcc4s5Wj_pWgtnDXr8ke9gHEg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgdJp58Eozy5IEZYxA77mHXmeuS4DYj97K3OGkKVtwlXmJofS4UowKijaTVsFNclpmSHN3oQPs9dU_Tids5eT9YUzeuww8r8pFxFEWhq_gWcjelRDxcYeJlaMkR9ZeIiyRxxg7kj1aYJ3o_7A00T0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUTskHCqbrw_640L0sUITIURCDwMItFsHYTwf5TOzo8EOQBZ-UFlmYNNSEamkk4ulQXXc3QN5edRa5WD4QyYK2e8k_rRcfyoCT38S6Pp-14x4zo39C7Gi9ZDdCorP_LOWC4f21CdNmWV_pGEf__ihjZd2UJkQkGAracoxNLwC7JfL-S9hAUtEdMZoSkQrso75wQDb2SHjEjHd5Q4EETkL-bSzMGBoYhy_UEY0qdA4Xe0nm52lO8nrK9SX8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3tsYO8GaUUAeT72svTLf3yeemyu46oC5QQE55PIXPZg-X3I35ry85vd6JPN-PMzoIzNh-tmPMnWqjebteWLVaTnEw20I18FbnAqr72J-AjJbX7ReZSW31dERKEm2V1so5wBFBIgwk65nhffx6ceWXupj4E8J8oj8oyhKzNMB-kTcQeGNZoCE1TBf18fqXm18=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoo1H9gCdaqFVtEwdCx_yt33uGvJTdnX339SJox9o8BsHxhlCaLVUfHJikQKkWYlY8I9kFon1D5beHzOmK3SzkaAefINMZ72Byxl4W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlM1aIggq9XgFsDcLorMlObldU_CtmIuXztkFTI1tgeBxFcrsMjGl4Xnjx8A5RQWxq75_liqoHa0cOE5mEsO30VyjmwnGODwZKvC9C6QLSS-RxeqPhZvbzoYVOxDSZ2pOGgNXM3RSzboY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaKysyzGD2SY_BIDxs7bXbz3bAk2sh5G_SeRlUkpo_InZ8YhWmUUq_mhoadPOyWPkwIoCa_CP2UAmPO64-liLoC9nJ3VL5tZ39WMmHs5LBuxvJMNNGByBBTTrJy6q3kT7f-Hvz-Y901SEs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZVwFV53aJdBx8231XTAQ6NK1qEn7zZEKu3OkxUCwvTbmWsJ-t3RAE6umIBrcpmwK8uLT6Kru_H5goIkBIqUOxBy-VoqY35aU2LA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6KEfZPLou07tloHNwvTQPdd23LOM7tnVQ2Dqtp_Xepxj8ppyfStM890iKRpz3bDfl0vcQ6Tjis5_O9Is2j3qCCp3vwyECWozeEcMgvGf5o62ZSNsvj5ZEC5UFCFlGOEGFUP822i2mpM5qUtkqFj2rdGJ3KrZzcYRdrTUoJBW4M6LWXsHBBHj7oPIilCxpRY8cxGpaPytCA9H6R4oj3lcBAj2ugG2loRGDdva4T3puRxgSH60HaB5oZ3xXWJ7zyK71nt9F_R64W_FjAYGMsbWnODzYN6wgaV1_qAI9b-xrtYal12BU540laLrwYGBeC_0lfzit",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERk5jrkEIxPy3Rx9KfVZzHAF_0qYRiLdiThDduwq6p-gZTG2f555vsfGhzUsHE255JaDFXmbeywzcthoRM6SQbeubamm4YlUjn9Hwfvu37bmHqijnOIP8cLjgKffwS9Txzw3nKw_LotPq4TX3SbhhoPIzN4Yi3BFcSmc-VcLHamZ42DDRmgPFBoYZEUL0pnG6W9MtcMzmzi_esaDZvfRuHmolMrVUDFrDuK-MqodaTLEPvfxIvpGjr4SrNMD6zRSg0fU-BPuDYf8XWjfd2kg0AMZ77BAltiqpoeRPdlSOp8FPcUZ4C5Cg_JNrhAX_gZ-OtLKajv8s3WQgudCCC6G_zqCxfNzSr7Kc26vSqcQtMBifaWQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgscyk1iNSVVewxedEIAa1ryNJQsxGXvhGJXDM3cXnM_1NLv5FGmt31dFnrVjvmhk4FvnYHbxg0gFnkA3u1LH5IemburDp-I36nBpMo9cVypZVXFj_qpt4zVXCAXvw8WXYOhvYygiIYrYXw6IRDTXQFREQpdmkBLHqKeaB-R-tMZPCJ_y9VpAvp7S1Z7HZsuYXE27fuKhmklF1hj-E4SeTiIk--xUVMGL0iA84OqUB5bzczoinSW2NfyeZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4vDfZZ-upkYLNp-7LEyAf4Cls9UDEDvTQ2K_amhu7YaUAkQYTrmVt1vxKLYL_d8WKpe70ZRCfhoF6LGoi0qBkRcsuqQrmwaGfX-NBehjCQBdh6dnGj6R8l675GEtn4eSXUSPFRBXO9jbhf3GdsmFpIQyTdE4dq4zpI-AqhlRvDVm3Pc4Rn5tKupBhNPLgr_zQJDp69yrFzIBN6pG4NgKBA5chRqHhK0EqRhxdTbw2RbgHa8CwRpOoTy0wyEXQKXJGMLmtcgk_m-9DFnm7QOCg66qo3Oi5zp3r976lhM-htx4hG_ean0PY_EByq0CNnPYMm_UA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFefjpGBiF1mR3QozbsgUdbELNt52okLzLwKQG277Ok_mN4yGGuMZzuEV7T2AftlhPoSZ7-dOQCp5m_BUTRGNjlQpgjFCoR-07guzounv6Xkl3P_5yqavZ7BbU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9negPfkKRhqRcb5ABfgOsoJWDDmhgso6mugvZ1zxPRRSQ3BBusFns2IQ1vDsTZ6C2MqEjYGnG-2RLE5sxOXnsSmeC99gZJHNz-O2eh2sYgPEHBl80h3pnWh3J6bRHVl70Yegn6l7nfnuJcTiL7kE_CYMft-uOiA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGuyIbUJX86Vk_chVmwJhibmV1M3wMWQEi104DXaDylM3fpXrVJ9MiaV6QvyJass_YVEObdS3YLN5S80RzClsTDWVsSKB6XEQ-3RcO01FQMtGuvStdRDdELEpGNWyFCa2sIcO7KAw80Qn4Dbf4UV-W3BHOa1i4_9-ZMoo7031TbI3I0jjRRD5QA5HsmWZ8QMd1PGCSdTa-A01Oz27RCsV1hQYZuXP0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpfVZu_3sRekMdFSf-b7fUqiuIxiM6vwXBS4JNmnL-KdVHpOIcNu5obsx6d1jOJ1G_mWIYCN50Zf-17ZGhvYLWaUwYQVNTs-E8qmrMuB406M1YLDo4nW4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCzaucPO2zaxVrw_Sl9N63PJ7aqnvX5yzpUCFejMxvD090eB_vwDhLJgAlHuPm8ivTt5sqIVwi2F03y4SDepJgclzKaRi1qi2IFIBAHw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZuK0HSka51_yJyg8QZMzY9xXfw3UCbkOD1bmwgvOakTvJNLNq-j-zcnw3mrFeqdA9TZyqrUU6w4CmybwKTALRpSTtbtbVKye-pkNlVfEDt6zXf1EyHlsVeUDY9WoPVM7uyZe5Y3ray04RrH5Wai0Hg9BXR_Mt7P16F9065JfGM_yWeVYkl4US1zfgHL-f",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-hm1XDIBYyY3XPAdSsIZ9bg5ifeSx4wSlxm3_q_r01CkDbliekoicGcbHVbQjvYqkys6hfp0oShxuNmQEF8-Ezz9uMeI2-HjoXdj4frsJfONw0zQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz3TFwd6sFzSNmDL4IyQ6mmvTYVAhO3d4JMZnAQHQr5wtCTle_yguH1tP1GVari8mjOBMuHZNHppTqpasFLSTqtXQNtvRf1RUgG-o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQP-huLpM425UF2X17stIiBI5ng5gkat_CMZOkLwmWLBYUBERU12vx3fg8IKpby_1neFTpRVLbP0HfVY5zsHdm_YJATCTqBiCLhAAiU_LsVoIg01a4U2wmIoj3T1KZlIhWWOaVejaU0Yly3S68BK4Utqkev_8jHRUBlCAMQhPUj0VG8dh2YxGRkSJ1jqmR0TbizThXeSIROqFmXJT1_BwWDrjyDUGiVZIC-d83Fd-3wR0rph6nqmDc_9XKZkCtDpM4szQPYMRFiqYrUPNiW_6lFCmLnKWo9eQKTrJmYdwiXv-l3CpPtE8w2Tw972xmHFO8SSE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGq77mMXSgf1QLRXfLWnGGxCs1FVML55XBfWV7t6gsPVeXw1GwM1hd2kNTciaNgmlwvetVx-Wu_rlt7eQv-kUtt_3VzanKWWzTnIMNXVXhdzATupeLGkv_9Cr_JWCWadAqJXfhWv8GHa3N9ZtTsBzrqKpz84yGlzusGdnGYommZ2UMRYxip7poeN-f4gtlAnZCDpcmeogOP11IHgtPNOt98Mr4rAnjtt8-QpKkMOfiSCzmmheRukRMzgm6oisNbmwxYj359CDg7G4dKPlALJyEKown-xajVGUrM0F7YoqjzQZd_-wWCnbr-dMq0E5cHj0_xEzuiatShEtObhk89RjHUHf9szaQJMHn6fN7NZxbmUrb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyX1PdvxPdrT_HapnpcPVAXIYFFztoi_G1fsRsXsD2xHkjGfL-Y8ubmsVAmrCOnNQc8lslCcI4YfbMB1fDRLkOyqCE-CbnsLbR4hexk-FW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEo3IGoMcJ-gdQ2fDVL_DPTahicdlGTBZ4X3wJIJ7c7od1DynjL9OpU99wYy-YPaYntiUvSCRWnQk5ZL9xswTFMCdLP4QtwuuyPjtdaeLjj9WYpCJigHBPCgpEqQxSkAtHcWfI4Sncz8ttMBltG0w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZIS4D3NaX-BE70UlEI2HZCylht-X94xhpmj0DAiFWwIOeoYaw9FjJ5tVBgujXU0KVsdh2UmMt0UxLxOaz_fRH2NypgWLTcqREI4uU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIjSh41MvkPaKMxrRy308Aaw1XOHBYao_qqkVAMrkZ28Y0C4EqMjp2dTbMHUW4WlCoflZt7-3qPZR5_Fgze4s20mRCdOoGXeHblP8sjoDHsbv4RMPcubQhEHfxhm0QzQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-sY4aQRw2CjO8xtsOdiCOzgQ0XrUEUjB7xOMrLQ7Yl5Grrk7Ff9gTHtvbbdzAg9ftAOTs_hCl42OF9KXvDBi5I72oYTKyT4INuyFBSw2uL3SEwe6KeJcfBbCXtBhWdMO9_fpFcRf7sM8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMndWGJvPECjFr12wcj6WTWGPxiGd-Ys0Gvbd9naG1_1Q_kTCslxyaVnGSCNm5BvVMmm7izDJ-dLyadYySQTKAHodfBu4nxNSooHLx-JgSYa9D1F_oVBApNdZmjJSHxRrgR3e6RJkcpjxjSAAadeR8HKP6TA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGX3tCsKcj1iTpzyVsqoKHhS29ABlq24iDieJspspkLVwU-dBha5liPShGlTeGS66mIt3l307MncgbezoYhMOpqk6ZFMhU7mOiH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyyVky-pnDP9f7cv3mcr3zSPxh8LibIrZYWm2OkaqjXObRwntL6Ibh_KujvD267WgbLD0yOPiNJCy4Zx6zwTk_BQo4Wlurgw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDj1YEMUXgPBV5a7ZeWS5fGE2-22N0a7PVs9_BVLkOTzfjKuX6iAjw6UVhePc6E-4S8bI3Hx7dTX_-g9PB-PziqXa7YdZuYvsFwkizrA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEguDJFCv5GekaTijuFD5pPz9y9C5EZYrcTzhTG_OCEfSRWbnbhXjHik2WdwXFUi4Vudy3qI5J7XYraLPKkuZRw1D0GOY7q3Vku8Vuv59ePGFIVoYmJCtTs4oLCkTcp9N6FOhdZboLATU8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErNnbxy6R614D2MVQTn3pm5NPDtZjkhbvyVgSr8NptHfkEjNCp7bhnKoMm1jXGsne2sMTV3TV3paho8WjxOAS3dcBVk6zSE0jViHnqgAOQ3fK9x5Sbf812-Zv2UgEtc4kXNs9EbYFmBTpam6MVB6oSI5Rc0D0AYVNBSTvQyziev0k3mIrijeU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1eI1qnWNfiXfa9LVS8ySdRwO1ATLES8XuzqyxQ-pDPkmcJFSCbxFKxUd0tVhaITDKj3hpKdcZGdKE_KatT3RehXRC2ANxAzs-pBGE231Kel4HcvIpS3JwcEYJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEi4CrGRcxAWzC7iynQRX94NN3gcuPJJhDCZQKNjDdHj7v828Q6aPWuX2lozrzLEqNcvkisDkO1U3V9QXwcnoKvkGMbxSp1fFFOcweoMHGxHY8fctetMjHiFTrcjghZRmwA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnXhOgoiMpMhVvZEUMYuDyLmMaSMiUTTpoDNhEDZPsASHT9DLgFIubAHWyJrXow8WqYaATIUqmU3aVrofwYZzlGQsAtBuBTa1ut9isEQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnXhOgoiMpMhVvZEUMYuDyLmMaSMiUTTpoDNhEDZPsASHT9DLgFIubAHWyJrXow8WqYaATIUqmU3aVrofwYZzlGQsAtBuBTa1ut9isEQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGb5RaFLFzoxGNr9bivY7vCohBo45s9JemN_Ey412Q2WX2AeMgTG3er-W0FbpSySRlI-4wqhzs-nKF0T0P_SP8mmXMVFOv6je0RGr142TPVRZB9Bofuag814oK1pKYgMczRMYhlek_B5s5DY9p0QD3M0pALgn_bbg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDoYW5qW73QIfad5O1_g9U5vNGODLS25m54-oFvCN4Wnd3djz_9VNCHVDR1lJK3EH1t2BWca4uNOlK8m03qLGf2gsCxAJ-PDInzZ2cHPk6XUPslC70NDpWD0i97ZDcC53hkd0vxClZsH8r7lh68h9wAWpJrbcwk4aGhHRKsGXQy_LYvdW4HlVx_A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgkUgwlqDsN3FWGk_sJagRnGnJHol26K00wxwIJhvcr4tzJMSC0obEuisSc52KXz2hU89dt7FyC1-ggNOHLlbYLTMz4l2HghVYgyR4R8WwfPEH_tFbTg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKx1XHIpRxQglq5cqf7wNdrNDEc41tkiPRWP6cURGPbvmC7ir1J3MLiXe2sMdeYzJrW3dPf74urhILyz58n8j4WzsyeepzInMgj0KbLlAT6NUZfzPZKqrsRbxnazGQxAgExjnxBYzhpGo2z_yEMoKoW_3787xUH6B2u-NPZsoRiaTaW2maiM93uJ_H89OaHkcghlrY3KrltdSuSQdLctGP3Egq1FvTQNuogitSc9vMFsgn_pLGJajhyuc0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcOHDlNwTqAiUHpkIMbx8ByD9NJQIpCIOM3bgTTX71G5b6P-5mnFMfUjqu5RpAc2_VyuG-EWG68LpM90NWdwMa9XAmkyTwAVAhw6AQYeRy6oG96f_cmazw1tvtH-BuyT5VL0GB2IaSI_ZufaddX2e9ZBw3cbpaDMEwEwtk6s5zFKi6IW5hkEgIw0gHB6mWyalHN6sOvU9EUoTYQSO1lHuADAk-LwhzKtudr-kY-YXdi03reGcQAT-pzAfF5AK2ZN9YGsRoWT-CT5ZSkK4l-Bxr-6atjKBcWOFJqfwjm8Rjmgd01ms_SZO7IzhpqlFl2n6NQ4eQL0BgwHrQfs1Fr4DTwSVdDXpLYyIdE02WEnWP1PgQO_E3Dm0RIaFB3QQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRlmN4OWsQJCXMvm1HiliYPbNaicBUzTJjI9aN3ah6pKxiEtH5X5zUi3u504bE9-4YwERNHw2cQouc4aC07sZtNb-_fKpjvcawwoQ-48oRIlZvSelLEYPhI8aTWKWtlefc6ktxy_NssfiOB5Kt7MeJIaukCxOFeE8XKeZByjzIZf8zW3qSy3K1YR6YxLdbcc_6yfzvi1w2Gj1sjQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBVjx6FSWkk2cZ8bE9bCMfjwLg6uhi_wSdD3O9As_tj5SyUvdoyOOWD5dFDbRt5HdbAHHTyfvuP6MTlYDXVoJSDErqzatemNPa_C7Wn0QWGf1Puzql8XMtdctM-9vd5kYYrPPhMy9m-GOKN0BVi5hz1VEo_hSLEH1Fw8ek6iqHtQSWguW93Y_Tls5hlwEfJKYs48LsNHPxc0s0SE-z3gXWCA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdQRqkCJQ4wWgCmTFXZQWcaxd3730lP_2krCGL7yt-Q69_iav4v60vmUBj-Qsbk5pqa1SlCQpB9kiFpZHwr9jirdIOh0FD0gSnG9j0H9MVDVjsog4xpK48oeGMkxVeZwW6mrmaCoXyJg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYhCVU5obRkLZDpJJhom8bHb54jgSoIZDMReFVlVvjr4UxTNsfUTXhXKymxG_U2sNpf6jCkgcGl_SPp3TcotC3CX_-d1XpJyw7cbxqbR1A5Ym6Xv8YeE1pwBz5aiAD7jneww==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjAM-R-I0LH1nf4YYoX1ebN46hs6hIG6ZWxQDpEpVoj_D4Hv5WhkYBm9Ama2g7MMPqfGQbVOVhfNUoRTSxujGiCbxuj-6lSo1hN0v6Ct-Pqz6Tllf0Ln4lMJ1r1TGbeCGWHOimiXcVFMUdLDnRdYfsnwzNVpLl45CrGOBVDjDXaeEgG9fkDJ1qSV4y2qG4B8WcuAJnsHZlpjx_PAs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDTCE1z9C05APZHE_bHqDhSHdwCTf8kyEyRcNG25e-GQywO5Uk0aPuZAYy4Sg9y5G3W4KXI7ch3fFngos4fsQ85CIRZ4UyiYm7L15zuGsB_MyjmyBmIZss0Txp2BHR2z9-CVyZz5s5c6rMMmf6MtNTwCjPaaig4_RXt5TWNyk9usmyvgRB2rywOwvdpoB2siuaml6fxKnxfyfMTrc5Jefasgq0Y6gHrus3sueCrYsQj7a66DmtMkFdgd94YHxMzQI3WG0dirBmN7mUcW4JeuDquRHOV0Vgn3JAt_lABXWolP0zT-t0efNUywIxzf9drSnVl8d5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2Ge0hjwakESPQTZDkC1GhIpUkL13zu2pRJn6n2zEIMGI8MmdJPed_WOh9Bj779iADM7hOfSRcG7zCgfT70t7q7pERWpwE8PlErXl69J4muFbbGIRuCSPWrXRGwthxZOZa-dQ5UySjJfzh1PLGKmpLfJWqhxOdSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEvu9FbATA_ZazDueY00g3f50QNiNXk-m3f6Ay3PwEtwPRyQ92iFMksxbg1y0JlAKjDYyF-LVqzI32cjqhaeCx3ZAXgJdnbX_tnq7EyPpcDvp6wQJ3f6MEAQuohTjTpkZOwIrHI-fwqvf_JHjBv2fdqRrvk3eiSX253oZtCJqk4Nn0VRXxq4ckqfTZZ7XTTv0GfZR2t2zzujl-rKCRBh9BSqabDONBLNCP0oDAaZ5H4cdh-FquMwIDSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaEOvYZMW58iv7mY-Qp8IOVOrJ4ev-Anjq8FTGdFoAzhb5YrzEW9BBrMoGYtH1QBAxUbTbRt7LUnxmRutTuigxObVEXwpettICeEdyilbLR45pPI-6B5z2vUUf6HncGH0bPQOZc3jzljcH6orG8rDpT38jmuVh2k-Hk0xIyU31_LY1mLS1l2kgsURfFCNDTMCK03WhAArwIHNX1Nk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSx39GHztk2_VxOZWMjIlsEBzxz6s_Hkf-7CfPteOwnHPl81DZhR3Ey7eRWOEd65nZ-qYroPHZ59wneLJkQLTxPfAjUb3Q6-aaUA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2T7Szsj1FOHHvVzGYgc8Wy1SS-MTKYI2TC2kGbnTgGCWs1n1mUR-w_gg9s6ZAXHPVOf5orBZClykepp6I2kcsR8KOkZUsrHkadcyCxk95bHLVbol8k92fcQG8viEcQnqeLFmFfy2gEcpGgujRpGA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0P-Rz3pjq1HJtKAkJmU3og1Bk3SrgJtY0P2v2cMkLNEgFQ8FxyBxrjsufw4j3J4srEnDNk2Mb4AypQOvQ7p8LgRE8ILyMKQn7aBDmW6QaqHtztfmWiPXMdiKpTCb54kjs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0MK-_V9w6fUecVh3UUW-rpdwDAusc7WNzA7JhExhW2n0n-8AHwUNW9FXxPbtse2WASE_6Ub3BCBPfKDDfd2mZLWVlwkBTr8rmBpxqiL8nFZlsj6O0mWsPjMfstqrhwQaXMtTmROWf6Qg-6-MPNxzKhqSAPCBGsnGVoREKpPCsEhHYTqDgp0v9_e00SoeYzlDX782I9PQBmYng2fuemKHpryyuYXX7dqGygAnu-pOORSAQvYFMhmkxpRK7jPxvcCoWJKFVqemgPY5skvMSqfitaOfRKB2r9OyIh23AZtqlJsXxnZYlB_zrH8xND-UIvQOiLSI4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGokG3FxzJU2J4Ud7H0ZcWbcTS7K6QkIHGtBNziWuzsx97ZMdOOz4PvUBMQ_odjfHVEc3HEalB8yHSPHWmX8A2WpE4SBdbqk89q6vwHoyMpQE7BqUFwbPTnVxAByWNnRaYf434qab71jMO7zNj4pZoHo_AsoZ4dA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFExrGqQooZ7b9hToCg8xb8AGzxAbxmczpybEiZqpYHnWarGvagOi27rfTOf5M9RIIjys1MLqSzL_d8rbBiMiOx1KWZ8Iat1zPzs9fLstVLPaBI1cuh1-X0KajHtLDLMtTHcFfhPdLIO54AkGaBom09uaoKJVl88b3-nPtAHqLtjbeW6bNl1_8K6KbgYRaz17Yevplp_voG4odNg_zVbxpP2UOw5eKFJbwafaRLg2bUvPkiNBzrTh3hqqen0AG_wn8NqQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBkUDk0T1LQGHqHMwJhXHwdQZclX29U4QtCMFtiQIKldhJXBmqL9uPamoxVlVVseQPiYgMUfiv8yJa_dEl6COUTTkCnj4mcoXloRGoiLePPFmEWxvBcRg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1HI0-JBbDXVv7Ibln_R6nysJ9rrpQHTXsptNsn5CyubE3Kx88p-080iwR24bhYlRw8ybOkRPRX3R5J83SiBbOnzfSsmN0sCCIWlJa1FDKrJ2xH8MDo4EbBxTaX4I4I9HvitqoOrGKoY4sor2sSiyGyrp6xBZAqlO4sW8Fyymm8qVlqk1FJkTdsZ3K2dpfmsRJ7OjN25WwdxB-4Uqs30MwqU3YES4xrvFu0jlb9FMMg0FXRgFkpVQNR_Nuxw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHK_GT0YvPofoTHbuZlaeIhPeBgLxHrBJdz_N2JUvqqEF1P0X9MVw6J8y2ECWL5nzzKGTnc1SmZie-DqjI2SdO3twvhJ95ovoBuES77tg3FZWf52ImlwD9MdYLRvF-BpOLB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdp4rVpWodcJProKM63G0xTch4EuPjjqCQm2BsMIhfhFGrh7LNgh7Uzo58SR1SDUDsHoyHl9q49VUQ0HilKeIZMku_2XE4sWQLX1-9GRhn0vGjRbxbwA3yDhP7oGnKWCtlXm57jjj9Hai1t3Uo5OMD2WLfzhU4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaP5oO7c9c6LX0T5gHz5rC1buHJbMv4912F-wc-ta5oskDvqS1I5GvBo_1BvP1XMxtscD3fq3qzRAAb5iEbtprkUJOvpiE9rG1rSDiEg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF97fnbMU-z3OlzKkgO_9zInZZ6eAHm46YpHBfvbwRs9GAzgikRv7xF9D1RUF2uOxglWEvvBCOb8-BbDM_KdWaoa0MVOvjEJSgDU_j8p-yuurUYsT6f1GO39tIZFQO4U_A1fZJ-dOb55t09SIZ-ebYgw9P9Xda87eyTs_fzxct8kbOP1qHD9mIjnsWSF3lxmdjVtyZ78_FaqqlCOxvE-IA_HEzOtn_77Qf7HATkWULRbhySoHAn0shYx4o5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHpeGcPRaicQYMsMvI_9Z0DgdYzIUB7TAMvnz0bhHtH0_gihnN-u2ycdL5kMX2PmHbd32pKeu-3SIQhSONP2oDL443qjALGcKbLrhpotRZCguvY0Dgdy0bCjwsD95WjKfbeW9RXtrd5U5C_IkZVw7_XapKG7FE61IadYhh8kp22GSElykupb2nrlOBr9JTk_8GNYJImZx688iVD23AkUOMABiiEy_62Q5g2lEwLcL0lsaI6Vuvbzdqwxy4GIPm-957gkdpTy8PO0LPDrS959FaApj6Gw7EKp9RymZmNh-5XLTgLA2W1xBrXEIbhjpW-HUs0wPdg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqIaq-M-YRC-wfgTA2rZiTNyX9cxcDQqdbSjc_v0L6JxHLFYeZZcenFuh-pXV0abyj-JHk2akDp4YyY-2D0noYRTKB2vkygMZtwdxhO-jGUMa0Mpo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETJvM9iJFxKbblNItdmkaycuYV3Eyn1R8Qh5PX-AAkmjXvQKbXVdOwPGXjA6pyOhdpbW9vp1hUsp4i-5OXqU1E7lMWT4a04etw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEABvcJpcK_zROr7nXZXRriKHp1qZOl1m_Yr1tWwYRtsvjq_-4GuBZtnqFxln7BDJ5GcvpMKw8IuWsnyae-TzAQhGewodwutuRvZA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGjt78GYVlfVu85K23e9mezJ20LApXBvpi27Fo6kmfVXBkxOKIXdh5HFuE-koofQa8h98eOIGMEySs0sl3lTQN41qAAEcuCavc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFE-q0DsWoNzdEeg2nOkoa6VtGzfDIcHDek8B8eRcUQvamKaB3XtpRYalC_uxL4yy9vj6Iken2YKUAZdX3hNH8UaCjCcNfU6vBFbnYVL8N3jru4os1fxX2l6q6d3OSEDw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1LPQsNgqZPBBdPs2os7_EajoDbBM7oS_r96dVsZnSiVnkzsqqVLTCh5Z8NSabmaV9S-Zp58dOwv6iURawY0RHUfmC9Nmx7DzlnhmrggJfJiF8qVq4o8fmrBe4cBPdKrXHaUE5Lm4DRSRYj6FjnXtRlhYeKBRFkYPJgCKb5LXJkdMWuTdQJu3xAPPksJ56Ro3zUkBL9bfQKMXfxmoqHZQv4UqG3QYTSjxwzbRNawd0kky60y-2Pmg0J6s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvQXoB4CkToaxkZ0ntz6l4TfPO7ZtcbNDzzS1CcIL41aQ117N1h5xsnlTF32gruPX6U54H-JZQkx_Iz5PQocF-5H2_HT3LFFWJDfD9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOzW7MWwW-Ab1qwvewayIbqegQHzaGbzCSNMPuvsKJ4U-l5G9R-t9E4BJxES9A1SFMQqjhN-Dh6PWoJSr61sgAhc6GFYIfEM4LrTxw1FarVxZKTrriYPfmkwLUArnJtks8eMfapfa-FJua78PmRqah_2ziYZ_sElvE8msNzkIl5TOogtNwkje_PT4tcKVvYkHEl8wtnPuis4LcWW_J3TYEJczWyRwRmnEZPMX2-pI4pxxMhECcPQ7_yvduIswrm0Ty_6TpdpnvyleOtqcmtC7nD-M9Wl4mcOkeQwhmv3eZWH8AntwMRM2etYms6tszOuFzDRpwwf6Js5bcVBTPKFd9IKaeDSUWJEKiv-tRXtGth-GAvYXGgCNaThEm9Plpf2WpOwQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQl6li1Sjee-mOz-KVPEQTged3fU1ZmVGW0DmnhNFBvfeW9ylX-_-k7mbiS2Xg524pauxMAq1t3pdPA4Obcd9ktJioemp4YhoD06eOmoU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7rrTWecb3BDdB056hQ4-DLfVHqV_O5jMUSL0MEHfgtq8VEE_ekTrkh5_g_z7_Jf6iOCnoDy0pyz89XJXcSFIYRSwAyZe3gK5quHxSUsMR2vCP9cZJbJ8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpGvpyXqYaWK51C0aIybiXAiFL6T6dYe03-ibW4eDNWK9dEoMU_XsZbFsiHU26t3DjHsOJErR2b2cu_tE7g_YG6jRKSwLy-PuuglBL0fN01UlNXHptc5nqj8D7B8AWcQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5mcdRuR__5kg7PR2Ijv1Dc1qL9kh5z05SHRFQQSZl8DEO1gncIRoIlI3WiZfI9-o5vLfu8uMdl8i3D-vGKlO9ARcgeEltuyGDar0fqfpaPKHCZJuZZBJhACT9Q8Ro0VPQiCH3uO8hcpjCYmoyVBt8qUd0la_dmggytsZM7kUGr7pXtULTjUqDPg_LWNI4jg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGqc5EJRnF8YmX8o29w09oBZkKNaymRr_MEZeQtB1Fl2R2wlQeaXOkFUjOWOSYzEC8nLuuhwhkzeimlNICPUD9Mk_-NiJPmJsrs7TRfSHq8MkBMh3rjTV6vtnE2ZLewDNfHGBR-Wl-jeACa3oYOaOjk4Hr_9lmavT9RqW_MV_WZUVxez3-7aDCJhTFKoq5qSYk3w9fno3xHoc6LW9Y810hbTF18LhL9CL7IyVBROsCqEh2VqI42uW3NhJ8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUIC8ME9dVcIf8QAxOjOLf5uLB1WsbdehZKKcuvZ-K7i0AKNxIYsAoEcom41FMttL3aLPXKU7P8U5fQMu7X2kpaB8Qcm8sGjIBJLzw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr1GYZW8EqevbVlQnzscf46CBHtmS3X3qaCrP4CQUXCtANljnGTbA8CD15itPchFly9PLp-rov96IZyWcMkdhbPJhVPpU2nTIYjEkJXWA5GXlLf-J8sSAJ00uhQPv7QayGY0-rKPNMmKOOea0sBXnIkkCUfuaQWnUKwCP9CY9P6xHSKlVB7iwLzSd3ek_v8njrPFBGkyoX1ThWq3AV04qWKSFnE2njwYi9O4BUbqQwYH1WuyR9TaAR1PCLGnpnUWZtaDT-EZWq-VxpUJMwxXBmOd7M1oB-KUBruULkaOq8_1YYXEXDqUTg-4xiPUv8Jn-UQY9JR4mJYM316aIhJpPe8s34kG5Ks1ho4V9Vhun2Tyx2L5ihPfEbIn3A6fjKYUb5A-0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwFiAoyTAHKIPwDi2n5zqF_rsgN6BPeZLOmG4K9B7aAjXXDPzGsxz61I9RO543CSBrg58Zp9z8zq_QE7UnsbthRx2uHsUouJWPazKCoXhVapmTdQ9yan2G7ei_vtYJ1DM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoWveAZ4ryExZS5xEvuQFF2D1JzMumzGP1DdRJAhwaz5WW9XLJ6r984n1yhJDaFEBBBRIzUHVHVGdW4732jJ5E3oJ2OyHB4ELpw5ohID8PUx15cA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFslPhKyhqNQFUButQfvnvDRy55YeXHvD6LQPC1lDi_Wu6SLe0EKBOODUwj96HQxrJcspMyedyis_960bEvYhK-stKN7rsUxvQ= ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtMP0CzmB85xhWpCCrt751uuUq0UscsGSG_MH7NNDWbk6z2dRxN_UQbDKhOE7hZFQJDMiGzaL1uGv89s2nsp_-axqpHCT_VgEaQAZDe2eLta0r9bZ4CTXsDYo0zy_75hXW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQoI2Vy7Dk4QuZsWAjbU9WikIT8OEHRY5QtCA_pVDA114V2v_jQQ2oQZJpGX1ffkEbzBG-v7gXyxehxk1HAzk7kDHNDNnMYL5OoVE84DlnCIcMxMpE-l5xl_5kNjo738-84el9S3p6TMZrngj1z6XFEqhBM6tHwq2trMnE86k2FhJ8vnQ3qCZV4znKIxuV170Cq3eZ8HUYASyYAAhKo567IQxkUdmPaBZyeGittFExzCd2Xv1iRTS2cEzq7DWlHCaDqIIMXceyUB8qd00dCAeJlUbQcDB1KOXrfgJlwOmWq5TJcEtmFesTxZaVsWygbrsdTjQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJyEXdxBYbrF8BBmwFTv-vAjtTwKUHPqSNP8AAEMy2u2cC5ck83PfLeI-72PxHrrHMdRS1w3S8DTYnwKGVkMH6TtRSluY6Hi5V6jeIEJi-LUxn54OoDiuzfOChzbvpb9rd9SxE0TrKPu9mrwWA52wciMBUew==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFL88ItFh8-7BmSLO2dZrjd_WbG7Z-0eDA62cOO6YbnUEr-8m1Bab-Kn7HhdqaJkH__642gdDkNd6sfjeocKSI-_SbBMnijXAcS0NU_GIoqBsWB6iSnFSelRb_euAuPKX4DeMlNHE4DtYYqsck2xBOYPO_x",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4mT1Xf5RUG-MwNS6PiKxJOOjoMHSujxFbspiEnLbURWMgZk5ETTHpqK0LAGswG1vdY9d8vknO9tkOliU1ESwVipe7wBM-3wfw-jIrzUQheekhuvAokojEkO0v",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERQrcY4_txgE3xjsB9g1SDSHN15XVD7bDNrqnRogYq2Aq-Y9ySNExsUXpoMRB64j_BFvkuzK5cZ5L12X9HM1oOJEienD63JWQAv-7j36nyWmFXh0N3rSK31MLQXs81Y416v2Gs438fuLc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUjWh6eN4lw8t3J7ydmM8tH8hKRqmImuflszfpkAEoT1ViOB7if2bh2buLVRv0o6uE69HGpnsRCLNFR85tS026paIaFiMhGr2_nAmsNyc3yPk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEI5Kkv9sZwYxsE5i_J84CtrLNAltLJnm_5T7di0PDz2NpXjTXtz6QITIrRUcats42dzyPRgVKYQZxNmWMm0QP6z4Ag0AyMej0lzri5C8DPho5KwR5hadDkB8FYABg0FNZ_MWPnZaHp41cIBc08f1hi3rRBc8-56j7FNCA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpZMIsyP-HvWNpq-GaUgHxqRPalWKv5PmFlTlhpyN5N7RoBj2XcdkSy3mAoTJirVYAyzcpvIkrGjej6_VMYkgiESIQq5e0F6knPTkjlq2wMqz7KmlwMAz2PTUPq6LSacRzdsdY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQELP_G7vLcYN1W3mOzMNLQPssHUW87nxzCY-0zcJymw81Y1LO7slVoW7wMy5SqTnOveuCvwF_xDB2ONrAhll60pyiRXrTTT4kCiBcXqGvNId1313Wob84l5_EsGHoNf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8xK6bb1kHdYNGXibLwWBX0z-8UEiJsNgOgIs_C5OJjoKQSh7c8IgJhxKyr3EiRvIIgq0yBPiuF3xV9iA-lTlxGHJsWTftPa8NLMIoJX42VAqOxlZYYKHydP2_d__78HP6IViGFT6WRuH4q_s9d5CtYDCUL2ZrO3uQqGCdn94Iie_2ApY2DBxABj0FpmBGkZJngPnGdEcfhgh-dsRFSgRSIpje-aa8f9kuEcMVEvH6Q1vTvwRtCz3aO-i7vGAZQKkEbqpsA4mdCLMVGG-2BxkD3MCmVvTeqBzTdoJieSCxrHoShyPTYl2FE9rAZErSQmwcvY7WZdXrgNu4FL7bZT1bAqT-U9c4wcyjWgzRDTNK_Am16HEfRhQsdYCWu8kAbX44H3tksZbujAO0e80VvIKuNqov3y_P",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoK7tuTwGm5zRsnJn4v2o142GYL-6h2Z-RQhcHclplL6-Iude6gxTHmFAWGWqj-vpAlgoyM6tBAaULpqXSOx8EZSwAaG2gaVbTIrGLVSsRZHWTpCgJXuT2FytDqngmOTRtneFTq_SOYgZIeehF7g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz8n4NHWiURR5wDl0Dp3bmTo5ddNnA-ciqtAZgOet-BMVp8QxSKi4zcM1y6tu2Zpg2ZIVuAOLyh3cwcewAq2N8nO12K2knbqagC8M9-euyTTe0rldRpFFHSMs_miumevOwPq5-GFy9nmrRbCewtfhpOfIehXaUhnQt1tWhhf5I_7nibi18BwtTAyqy6q83ng==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-1LA4HHa9NCkBa7t49VavhoimktrDcWuC2Jp9kP1YGZ_gd-QLWUJ2qnZOTzpzUmVgz6TEXABGZiP2gjTout1ctsK5-aikg1KWbn35l2_Da9GeGcRIAK2g_euyzfYzzqQy9HsCXhGIYLP8WR0OoQvA6iCQ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWyqdG-nhFwXmS5timaKYz4DhcigEOPGXeDVkf13Eco8a4qCI7cYI2ksD2YNfANHBxEkHyM5Y1cy327sfp4fp3gsfrT3VPywUoFDgAv1qeN5y843JbOMGBwjkxy65unaqaJ6OuT8hvpzDVDX4H7cEjfRsKsWXw2TBuvLInyYZemA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxr8-rV_ZuZULS30JOhkfymricbuMQaLUgiIF3NaauJofF9QWJ5NYeE7UWWaKcsK2zTK5hlMC7oSSku25gAQ5CujW5ADyhYv14L-UO45A=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVf5l7Ja_jap8wEuTD5AwelnNuZhi7j9mFH4sA2s3Ciq6JiUwwkMG-yB1ITZhACk49XBd0IGDYf1Kond_s7-01VI7ZDq7Uh3utvcXwoKcyR0S-SXtT0Xt_k9pveODCS_ZBkFXGY7sWo4X8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHiyhBI-BTXbC7hgHVGZYQE_nx7kAFa8fhB4ChcTDkBFLv58w2W3YULuTZJTCtIRSEnEiSDQdIqmpZHTnYhnrM-Y78uMmGQwBVYUnSJz6IHTi_U8vXreb4eLka8L_3qEyL66UhWZHH39Mth1gaTggS1d3lKRMMl8BzCNOFVxWlN2L-mb1zy1Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdb-mjhZA1BNHR4gZYVj-FvnRp4f0Rl-cpzdHhMz0zr54VLLEmEx_ylWW-vl9lTza9SQH_yJzdOnGrdYXZ8t_Og_o21G9Y5mHefbbmSgl5NSRlq9dDdgcMgc0JQh32Fu7SvlWNRU2OoVWHEiwe1JWjp0I12AofZDfOEgNzMdpHQYpcnGA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpsukqRle993vPDnwr5aUqjMplktIBj0Wf5CciA8KHIvpIAVCGXK-RRYdGdQdXIVAhrcrcrKnCCb-ZNraIW4EZaS4eiBJmukdLwHP9oeNy-7kgZ6v9CCYNM6aL3VLLoAyQHgLerzJPWTQdTBuroEXUhmlCe1rgbyWXanBX8HZ_9tY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEAjWQM4OMLsr3f9xlBX0DjxZrulsa-QdRZ56wxau9gfFM_fK55MlIjuWGH8LgQyWl6Awp7IHSLsEcaGEHckaPrwcBhc2kwKvJj1DCKsB_vfWxbwVvMPD6iuezynKJEHBTokSfVMCKm-aNkbx5XPY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEOfE3uNbFJTuSeyGiwRQryiUAJId0a8fc611g8jtG7QtKEsSuT0UOsJv3_fY-vqgfvClfuoiHQhFKeF22ShoQ2mwCOjhF4DjDvMBA4lQGP-iGrzajHjPq7Vss3crhglGvCBHdmZ3lZb_k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEAjWQM4OMLsr3f9xlBX0DjxZrulsa-QdRZ56wxau9gfFM_fK55MlIjuWGH8LgQyWl6Awp7IHSLsEcaGEHckaPrwcBhc2kwKvJj1DCKsB_vfWxbwVvMPD6iuezynKJEHBTokSfVMCKm-aNkbx5XPY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbmORY2r-fdfzCSgZMFiEBeqQnOwwArK235XDWIyPQH24K4kIMMA6DmuDoqfLRuRC4qHxDH15vs_UeG_EK65gHD_QHFKZ_IZIh_kwkTYNAlnKzWUPE3OHEyqtqNa7QCtlXGQwDAcI1rDnBA5lK-YXjgw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGioPPH9w_zqyJPELE0ud2UXDgpKm-hBk8PcNkAwXIRj01pl3DuQEO9gBaAsvCFpLWvV4_ULg98jGcaRQumUeFHBdbu5VPsK4HwUicCXVH2GrYvzCxTFAhs7f9k-_90Jia1wtwxAOxtH6pFE7EX62IUsSyDhPtsW-_wyV76jQ2ZVwwmSWjmhBg68tQ1Y1-NuDwuocxFupnIXRyEySA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSWBnnYjHF8cRyYxSJBPVTzBlfSsNK1qfkZ7JDdOUMhYxXvYhXQJurI5S5MCjqhoyFBoI3ml1JwpbxW8RugLhs2BzP3fijVa_TotT-bCDUcvm0Q5oK8isfmU2rENYiWqJ7ldk2zBNTEPNfFqVho4autiYj-g1vvhIc2_BICEY_WoX__BkOlFNKZ1ys5AEN6wCnvvDCCBx3N02cOJU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEU_xXuPl319tCL6TRLfqVgWdorO8YC8snyxY7nrP278UZT11o06hl8Y2SUlQuvz6tJd2iH7lO0yxYOUY5ezBZix-KxRt9-GgDQKoteSsCApXo5m6McGh5cv4tIzsjpZPKsXrU88mO28AGbqwc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgE90y7MtnLeZPUcU67FRJyXUSXN4NEdmvdUfg_c1dajO7H-CrgSqzIsNq5emFNf7lsCfBMDLC_MIEfFnUt8xechVGAGTC7FWKGmN5vBbfVvpm3vr5IMjibfVgzNIvzd4LUK0rEgebfPFIYYOn0CveWgyFpsoi6i3Lxa0ZbSZfmxKpapLH0oLCCzwngvuk06wH5jr0In0k3u0OeG4ISLkDhq1avhDBbacKEEmUD04DCnK11y07J2rvGWMXmjMo23gi-9RVDxt1VJ1fV0OnIw1bRO8YSJ0fnEdgg67M84-Uxtbyn511dw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7GSnfbEnw1373bULEsE83BeUdjjY1LgdSNB1uuEtHgbrV3yHQz3_5kwGbatIJosfMqsBUpphOKoDBBUXVqKkoIbbtm2e0hpsMEiv0A8-9TYlyuzxJWU4wGKc51uup9265BXU9ZOZlR2nYOf9A2O4i18jx4eAp3OWtbQNwPDpJuw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGomjRDtuItnHNuFIm5n7s1wJDmr7i9VWrnZx6owzziTbKO6dkXVt6a1hQnbpWDDNCHw3GJdXZcxAG3r9ZjfvqfBRHXlD-qjq0v1aOHgWnAUN_0ltqxVdgxP2TyXGxt9xbz9syhWIyY9ENoMXOVig1x4BhGREPsepIgCujPMnF_-IpThCueGPU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEGdSG9bFPIOcuQ1t6oqy8kvpHFTSa6yrv3xeJyeYTKMNU6bIRk-PoapPr2t7LjwHopLgfS-flxdO5BkuXW9lKCV7FsL15r25Cs3AQYmTU0zVKLhDtuXw5JHDUW6WNl8Q4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1MieQ1nPyyM-smiU_bvKDihSjfNECV0KCrJIfLoEi0EJ7sLOs0pPgyHzYajWrHXrEFDHmQjtB7leFmMWbgdft9s4WauQVD5CvcaUf9y1Q3MI1Clc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzXWW8M_Tlq5pJ8Iuz5hMF7V6748sb2mhYg5MaElx0hoRMuExkRvN8HqydTJd2YIGlFY7RvRKQjzRFUyIQyh69yBr3K7cAt1aYLu17RjoXaUtcO8PYDmfdhzn5YfUyePEs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAK8AM_mCMteYX4C17eyqusF2ANpriQ0NNjPvt70CIsK8DTADPiozIAOXV_lt52a7-wIsjsAU6fnJ27Mz_gOP_RrMeJ-d4Y31XDseXvX3yIeBfvnBAyaU8aiX6J6JLXQWYKcyMncreEx-AMRjOMOijKT-OJWxSB5JzNeywySr12WEFRwYN0o2eOnjuQfkU-HMo3g9ktyoLAZjTEXfkqvF-CZnj-vXp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE24pclKqecQsXeLT_zJboxeC03qVd8LElwzhOTxfoPrC4ayDvMcKutx_3tynX94DzhGCKxJuksBJ_lrHNi4Kbes2qN9VDBzzIqQdNz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHM1mhiLjPtBNZKho9AUETH8ekhzk-5dWftq65E1ew7QLjh3zhC06ueQLprb2YabGbQjsT3POBkRr7eJ8ANHF03SL1XySs4wYbMMrix",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtMljdk9O5u1mTfj5lCbZBr6UuKnhEKHUcc8rPhzMOXiT3pYP5yyf7cLHBRgzpqxb554699-QiK6W_Xt-zU-EIhqpgCoQKPYZ6BVJYnArBvqkh4RcSgOQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPqCORED1Kg_GIsaSEYwjyd4WPtKlgk8uObVljRFf0_Oem_L2VFXUKt3jeRaVo5HEYWpjQpXdDd2Yl4RlOWuakmnArgcqgTgpOKw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTkfDjyNTe2su8zjmN-HTgiedQbcIV5wJ_NMpWTEsYOuuYLeGF1VQLyS_kKeQu6C1P-Bxomio0q820p_LtEfuB0UWGLDVVSt8aXrnR9xLAWgCdY3-sGNUJzsKFqedYgl3bCawb3etESwKJEfRwQKo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkZ6u9MBjfAuwgxlGQjJIQyYecWDoClpKLACR6KYSONCzPG3DeSpbluf1bbayfIEjFeAkWpSzWusAJ7DmfnFxbUEB5mr4npmo0O6jWjA8R8R0nYVOh69somDsqoxXl6lvxD7bAg1wH1pLq52GeXl3h2wdcRp4KgpcNWNBgPuuDAwNOKFEi2-u4oD44UooPS3gXd-xlfxl6okhDeyxaQ5YUjS5OSwbtc969eFV2ZkW0pvfpGXHlkHcfcdXWGbNJjDoL6cs8ke6INfVihhxcp3HQes2BMWycW6XuA3Y1IpnZo-kT_rW-yLJslmp-JQx8BqYXtiDI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLDM3kZG7gJWdbv40t3qTQUNV1C3iYFqD4JiFa4RVYwMJlwqC8jM63HiOFJWCEheMcKBtITKETwxl5bbNUegdBzaIM2UDTTtqTgCo_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxgs6UvfUlZ43RdMaBUkNo48sXW-qT_4NyxHp3IcQxLpzhm4MrHOFE4FdMNRrNJYe4baVjQhywRgtK65xv3OnSKPjHB15E8_T0_ztl2CnlqaMttWDPSTpOS_-seJctYLGnGWKnlL5Hjsm2uDdoViG076OjNIRDtryVr4oEVVUzgVMF0pc0J5Y2ZFKmA0Chs9oLJzFDHBLe--YYOyCx8g7bcTjRIENw6uWzdJApbnM1hAsJWehyfxc0UEr_9I4fXLjJOQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHG625ruxrbygcS_yA1R70LPvycwDTfayQowi4mNGFS0B2_rsu5xgOqok1Ibk3WrexDQunyZbJBMgCojo29CwYod2uw5BjwHCO3QkBsXVdU_-d5Qn7n9xVueo3G0cvluJiSQGAFAsFL91YwR27PQAo26r3c95aDvnlH4V6K_tks_1jq_goTmOwoGVYMcMtVmGbhWYiSr2R2XM4XkkMWp2QIyg91H6A-mXHmYagtJZXf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnJEXsSOj0MCVa84iaOxgkfrO536oVvceywIYCbPzbwu4Dhd3nLAso6RwU53V02W3GzzsgiYM804JuSMNer7p5qJ4TAe4o2W2yldMy9MbNhCH1Wa0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuOvPrcRHrQetlo--tqpIBCMTACO5dLb0pm7NLd3oOc16nRLWEukGav2CmyUmmGaHHPppvz-mxuDybsQZ2vCQpYM7ZALL448l8jrVOUsNlKwer9x8qUw-_4VNd-3QNU_IH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrAxESGJ2Wceh5V0tJh68VwQzKPxffTBxto_9AyrZqVxioH_kMPMrrmSqrLJ5cNgBXhQumjrwCwqGTJ7Pulxiq-VQM1ahXTuuAMiUx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE56xwB2d83i7V93Yy3Xz-3PVLO1KEFnwvLlda1Bb6V1ARjr5Kc2YBLBETvhe8zlD6HtfVvZOY6fGMYAxSOULfiVkVUneLZZgpm0JyxNl1ZX743sWED-1E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQHeR2YFa6RAu5sBmE7Xaa2w8y1MuLRqERHZU5eRNTMOxnE37ubU7HRmUBBizRsM1dUfqKVGif0TaKrrKmq5rYGXFVYE4d6lt4EusR1BDScGjLl1CH2af3OhOpUPf7z2pnSdCoDf4A2vxMTjq45CzYdEsSVp536dt9G2VHq9O3UgJNE2W0SCyOxlsHgMzq_1Uk73dRLIvImw7wo6MyGHqyM3Lv-fj8ps6ffmbPzDZcMegqVnpxGNheWyrm4ugMDoBVcgI__iz4DXw-1KZMjSD8MhuxyxZ1cSg1IgyZCrLVAf9UnJKZc7u1p-294yHdCyyv5x5cAM0EsB-elEVSRhuODYtdYYGpN32o-slY1tObSqEzKA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxWDEz961edAwMfxc7mexv3Tq3Hx9pzGYzvhdiLnQ84eopi4cuYCgOcbOD7UZMTgQs1yKna8D6NsnlA5y5Sc873ZHXmjg_3AQWYA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGTyNY75Lye2LaLm-EI077P9hAb5mI5dfo_uL0VX_QrMV4eoqLZEnIT7BFr2ODAPMrjA3HXkrGpgPXhxuFSGLZYjZ2vTNZnEICP737TPaCvl-hXDp9uOs2VP3oItRfLgaRl2dt7fpkNaDFWWwyPZo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6-4EwrG27fo0k7WX8fJ1s3I3mEur-uNoDPD5rkKboE1bMG_k2nLiPhb0EkuqAhycCV7-a9sy5QyWJC7YpzYNgiamFF3YRChEp5JDoUy_natsVmTNreQzPS9Xxpdvm5QkEycXIVm3vHGz73mjJ7Dtz4JY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaGuqePjxUbIPjNYrFaNqf2Ai8Y7rzytyLWyXEPzfStyrxIxh_ur3WgEc8U38r0Cta60DMTvn5EB68MpIAMn39Rx7fG-rWQJqSxIVHlJnCtFMS7YCxjjWhFfXg6aNG_z6xr3UkZVa_LfhWB109cDDXqwQUSdf_cGA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHR0zWyoY_V9o-FKePSKyRGs-XY-A7pNaST_4sLFWJiP6y8uUbNqpZQLBqINc-_v5pTyOk4HhtkXAzAygXXD7EJ3bTSWaD2pQTEvvHGwgAQz6JOJfOcgwt26X_uWRfkIOu1fsSaAWqqCozCsKnM_e-4gZH-gFshqZmcsVuS1trGub836pfs9n-rKE9e6-8UImYU62NOOhZefJgIZ_J4_LCNCNhyKqDs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9W15OGV8YBjVsPogZekxe_ZTqXR48pSWmtEwo9LOd-U3aPyV9keFElbyFRHc7-p0HazUsn9W53HAhHhCNtqKKhLbfofhWjxulItzUNQ9LJyNQ_44-u3wrq9XJ_3uOLmNg9GFFq0B2mc8yAMFBMSZLhq0LH9mP4ehFv2sqA6WvE8lFoDKBBayweaj9AFTT4_zoZrne7pkHKmgJ9RiEZOdwrFckwz2BqGMXiCbBC33S",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfCfEloyUGY4KDkQDs2AynYtJboDmgi1o6M-Xu6-QLurwSr7bzYK9-Ot1mYhu0lSXU_qGSYqG62evcjgAbKHIb42e0a0Usq4XBjonDKrUQHrGJ3Dw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhbUMOOwgPRNdzzFVkp6ZQ3aaprkG5RniagC9ku8TatB8cVazdOUW86KpODkkpB_9GtB6gBH7EmzT_E9LHhd3J74oQovKTl4OnSkVpylRXA4OjO3jlwOsOoIidB0vtBOiJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGVp7WiNQGRHTy1csEA3_ga1pRuhDFUXDRrvv-d-p8f4E-owY5G_MaAD5a_uJN5WU6MhP5wloKO1B5X1EpaHiorga24nQ-qoENcl2NuryfTEb1ZH20oLiZr5r9BonTnlq-zvRnmjjB_UdTuYWfq7QSfQ3Tnqgb-vQlRwQHNL3t7EklJluWyKmK9q7obwxLRT-I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8RU6XrYXUD89koD1gK6ZblEn1Se5EkeexLPB2eER4GTZu9JqlQdf62ljz2jU3u7pgEOXyewu7gxjVn8erBAtM4dFoaQnCNJqexkzB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIhEeJ2jSqtz5fLo3MzWeY_l6BA1jgPziVQWkPDc4sDnYFkx0jQ0lxzWldM9M3e_F3z5wbLXaSjRud7sp4AHRImIBEU2aJpJMKsMjLbLxdiOnZVYcMISmsVj3BeCUdxjk-lQ33CB9DBj2bwF1R1Xw6g6RVtgc3jOtyZumPzG8SSqSf5FmxZ-TZZcQHJpFyPq-MDE7U_LxCCFTpy4s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGzNFilMWjMnmk_r6P6sjcy0Nu5XhDvyB5ucW6QUzGOymO1n2_aj-g9wg_3Pwjo8NpIksuc55wtL-qGeLMI6e3aLEIEw5h123ho7qRZp_396MmVsFmZqM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2PFGKCJKbyRIFh3tdb8w07CUrrhUrCvbSOPQuY_mW3jnH56wGtsDDeH9xhcb-Vi_SzIdlE9T9D3RSaaArHbN4Mn48tJzEFfQOpSNO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlfRnntGpyK7Ft6z9PjqjJujRgCr28ocTn7XCWE0B3cNM18EucitghepcNCDHjMzGvJLaoWzeD0H2mlv9XSAj6jqtT3HCCd68XKew_Vk0wlqUe-39-aM-0X3v9hXvS0L-ppgUWVpVvmVPTZ4DsQMZ-s_t2X69cvnWeuvNsmx3alB2BHFTWZnFT1LR6FP1w5T8cfTwTd5amaPOKfi-g1B6AEjtG_Nh0yd5SN7qm2Pa1sSJcaOv5OuBWkUjMAiVEXgtlLXkAbqEQ636U8Z1H4rsSTZ4wRPzPWOGEFzBuai57VXVJvpsGp0JbQgRXyKoNqBlApkveDieIeD6MR3Qf_FP9YaC8vKp1XWCN5xS4r3HIB5KnOQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErtHFgHKeWkUNf6orT0oq-sMG_55vB2KS0TVZ3mo0aO_wjWVTrdhT-ogFLrv1hRRRPDVhfzrhI2zYFzm8CKxdSA0MRyXK2KUxugEeixQQ2NoS5RQryqElTOvdkEbVjKHuGbJedpoTD7VsRAj0Utag=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6Rml6C5G-OVE1r6cOVTuA63YkvcrhoQxnm2ge0v-0OS-G1702WkORYnuw5U9C5VoXiE3_-X9kOKRDTKQv-STqi-RNgK8My6pXrA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEN6YU0dYFbib2nv3m-_2xE0wZtU5Ncd6gOCWIcQ6vayAzkHefFXin1S6jEW0NJVdQEaUU4dKIbenKPTokNLHzIi0PVdjneg1IavUeqKSrm_Mr5pF2sGauv44cfMGOmk701Ys8wEfc6LDGXCqKTOj6PkA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIa6GS4EdVWvTG2BLXBUbcmaDEZKgX4UjMm7bN28v7Zsn-LpUt5VUbMwzz0plVFI3mGvQaC6jR0TokUSW9QpE0yWzLOeL2jiHCZgVKa9aZAd4ERTZ3_gygG0G19e6vRcfDWitdjhA_LdtXZMr7ZQfupoXLtWBDRm5qsbWFZvaWlhNupvInOBeQ1UuDbWgzew0NVpwX3wfqeD5h1mAJEYB_qppAsOD2TducdjOm8v-B15PrbzSpYOzWmvs611yKTULox5WvXV7-mbenMB6iGVadAmEQSb5lfAt6GXOWqs7CqwJOLpa3b1cdHi6dN2GrWcNMcQS3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "kt.com 자체에서 개별 펜션을 직접 운영하거나 판매하는 단독 예약 시스템은 없지만, **KT 멤버십 제휴 혜택을 통해 펜션 및 숙소를 할인받아 예약**할 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **PC (kt.com)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "1. `kt.com` 접속 후 로그인",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPf4L4i9_RF6iLHlh6ARsmb1gePbceEadzFqOlIZo8e_P2UGKqI9Of2QMVW6SxM_OLeRyAGUC34La-b7MZYvvIp7euh91juWN0EbXbYLnwT0PEGAQO61SpWSGrQ6C3DJEVWXzpm5GTb1Dh1-eA0qOsuLjBh3Xo1O1y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwdJvVrO5C8HCckaL3N4HJrGduHB2DboIG8e1ipGhvk_NXDiJFv8F961tiYwEGPUCqy07tsPYh7-eTdlu82qNylAeJk0g5WQZwn1WE4nj264YhdbmkbRc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECxusMuuNIvax69GH0DeryMPslhykpEFuNe6ceua2yYBHbjsLbPDo3vAZzVjtY4es5DjlbZOrlgSr0MH5yLHePQGKEl-qsO9Pe-TmZO6CuFpOdQi_Xy8i5HZsnmIgaL5pW5kaRDbAbDFf4u-B_x1UqrMxCj813GkgM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgW-F37uBnuTKW-8ocWZ1RaIM8IF2HqoWO3Ozwgq7nTlbKjrmGigdnZUNrXTC7OBhAPmuFXv-WZ3ethypQp2qmwHuE8pdwo2yjbjyQwiMKHdlU9G6HfuKnOfdigzq_hB-YArTxc2YIo5v7mYL881SZ0Oo_SO67-_RKZlW1zS8QX7PjiSibop5nEtae8ycZZQ6gbjd_MRGw4T37F3aQh7ja2s9DoANiwI7WdOEVCs9REtyvd1A_Z3ZVGPb7ShRcSXpirOSbyqbvX3A_COF7HAWu263bHjLMWq0n7_NTNpj8FFfsFokCL8eUW_vY3Ray_5fNPVd-ACyhKLnKVOuWOhQw0G_PZXlvP-d_XPV0Ew==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvdNt7UI0VsFgsP_bLH4XANxzdrszvvCURuYhL5rtCF5StZYLH9Db4QvDRcJ_E0J_YG27SDow8ToleryCb8oxU9Yc9QruOo4XMne-i6Htq4EQTHPWtW8PPeIMOK3z-HssSnVtB9ymWvkYrkZqPnMP7yXLpVNIMmtPBbU6Y98tvBUcXCgXixaMiyQD9JCdw4GTzJfwpgdN_UfU5GuZqk3bGG0h-Em7hSTpQ0bybe2l8-Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "kt.com 자체에서 직접 펜션을 운영하거나 단독 예약 시스템을 운영하는 것은 아니지만, **KT 멤버십 제휴 서비스**를 통해 펜션 및 숙소를 할인 예약할 수 있는 다양한 혜택을 제공하고 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "1. **kt.com 접속 시:**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "`kt.com` 접속 → 상단 메뉴 **[멤버십/혜택]** → **[제휴 브랜드]** (또는 '여행/레저' 카테고리) 이동",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "제휴 내용 및 할인율은 시즌이나 제휴사 정책에 따라 변동될 수 있으므로, 예약 전 kt.com 멤버십 페이지나 KT 멤버십 앱의 최신 안내를 확인하시는 것을 권장합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsEZ5W_n0iNz66Fj5ezhkXDTgPm9kNmXaO3suUs3oMNwO-ycfsTth3IcG7Hp7uyhqCrmCiEN30WMd87Nc_3j6sPHVV6C4xnQ_ndQ7BLWTHELgkYHyKfZfOTZR7-UWyyBKDR9x4YnohD2XjQUo-921BOYmMXZ1O2JEZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJw3Zv4OQPExNyZV32d3rKfvBkxnLyY2pjmTKtGZ2lCHtTxXGesJApGv9Nl7dTH5q3LcJ7NgWraWAFUoJ_UMvLYcbysw3O_vyfja8Tnh3JdnW6fm2WRXj6XqgIJQgB0-HgmNaNzuEY4d-DriQwIPXqP_mQoaY50w47",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3c-f3at0XRGrmd5Wz7ZZI8zKskYB_h8vrpV_5yre-Ia9aIbRt9C0YtS7rpc7b7F-EdHCSbWryGOLnAwr3GSxug2O5u2rDW1NEv6mXKSB9cM8eDuYUlOM2hNPaaGXKhJ7xlthACqtb2l3FWUPHnPpo4A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgtwitacvpzjP8LxIAQS42KG6h5579yW5CWFqxbCZKYXiNNESeVJkPj6UcPpylAqInQRPNsuFbIYs_nKN80xIYlUkyzuMhdvcid_-8cSnW_oT28_g=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESZKCdUvcHBO5ikxHBi9Ae3UsP-aK5j99ahE_MCHyZallXDMUNhoYsJL8P4Bgmyvrkxz_z4RGBN0VjUDiOegqHGEBMpeFjihFw_et5XxNY60JR-lHHapudT3BSXNAhiPRnxo4NbPjCJQRRqbFX398qzko=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwxIjz_TnIfNGXe0F0kgUPYXkoD52Je6MJxnam3vwI83PUWKOO_yPUxSRaX_VixTHsIhDkRAAOTRqSGv2athROfWBBRlE3nPZb7tQYDBnaCXRwqippv8E6_-A5OgHvHebofYW0XhR1hoRxhnhOxoe0B2R6DNlmnvhrELVeYU-2HSQA_R1OjD1OC16e2765Yycyl4gIHpJ_urKK58m0992uKa8zaEqsGS2hdX0e8hj73g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1scb6ytSelTpyyTYvJgDvdOzatrTEb9kWRmdtln9aWFh5eSn1G9LIw-OLHayui3SZ958B01L84GN5LTgR3PGNrrRzj6sx8pC1qx-rOtOQtHCavEZg1yDaPlJIkGdm",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGMe74VvGEzMuyOZUBzyXSePfDV1n8ZGKaXV2Cy1yov9A061TA9D48ZDEZlxqoPh_5Jz7VttvllK9TsN25u3_7VKIIjYqA3i9BK7D2IEVnVMFGxfBXpbyIAjW7G44MK-1iazIAk-c-xKKEoqT6YiTeMQbfxWG4alT36Tca59H9xuuKzrHGgKhhN02K9hE8W1-w8od-eupAIIUMaZH10A2hvFvKsjHvvQk4fDNc-JKhY_2w7tHjcHbMkDRzFuKSkHX-kTG5UQow2Zxnjjj3WVLI5ckTWsM7D_NjXLXH9twzW4ibSpauJJI2tfqIuU9JSIAjG28LAsu0qYxrmmqZW8D-qS_QkXUqsjUOLFbO1Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 공식 홈페이지(kt.com) 및 KT 멤버십 앱**을 통해 펜션과 호텔 등 숙소 예약 시 할인 혜택을 받을 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "1. **KT 멤버십 앱** 실행 (또는 **kt.com** 접속 후 [혜택/멤버십] > [제휴 브랜드])",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgxNstCQdnjarkR5PGb3OWnO_8diDbI-QHpdcNXsV_peJkKvNcuqNzdVdZpE708aRMR96EtCi4jh000UvcBN0pmhqGXJwDW_PTz5Sog5WwdNUnUnsg5iryizQE721i1PK6h1zF4FkF6WSwl6HUgi-9rYbHhN8S2oBQm2CVZRv_QjAdppZqMmKKLtJWIaO-xVQysxybXN0LCk-zIgaZJLrCgA-PzQfMnOVI2BzQUFtv3A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElFQ7gdulr-7mc1S1vOeKzK-EbcuT14PkEMPEw0IXQmMIP9ZAShqr1vvBd7k0QhehcB9PHB5CtYP-2DmwDM4uE8_hfJE0PzZh0BIwoVC3Th50Wq7PmKNysQEEd9ywbl2KHPpRMPcQKen3qkOed6v527bFoscGdXIlg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHROWnuVO-pT_t51vx-R-UD0Po5_hlM9KQwoSjGIug8Neu4f_u2gMsDKiQ8X0DLxG6DtkuSHDV10yIT8uorrsQ8kTZTypsEeSrV7_kaXFFyqNghdS3JfPkQABB2tv1OYfR9BEKh_Gptvtc8ryrXqM_5RUglIiQjmDg2jdGyeng=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaBWP2Zvj59s4GN82zaGb_v0qJxwQ2IMPHd8emhItTq_8uhiceGOUS8VQRPE3i3jq4J3iTjEJqccWbU4SBxmzOrPug1xXb8CUjnX2EwhpU8CgFOS8AGsP_a9UQ5rkbCmx5yBBO6JSSVnfDlc_hvXc6DgW4Yptm6I44",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXri1GD3prcA8VC0eeoqliardwkMaCy17yTu-TG-9Km1VlFyaF-4kMDQiigLO28pF3YiZS43oG3aGhkLNXa0u4AgtEERl4zZuAnGHeuM-eGE0bPCo0hZ66ZyAOrDFwyt-E3O9RxNcwumm1iIFS9QVTEw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGyY_SAQASMi3M-tj4N-JvLtD-ebJxeHMtcIukfCkOTvs3CKqAjAvhMCz2BBCSy_SIx2iX0jC7pfUsRgAq-ht7ia_5RFy48V06YeLB1qZqlMVTd79CytgDmOPW95AO37q1KI0zIkkyMYqueY0Hfzz2IYvEX6TPCa3_ZFxOP3vRCLoKUNz889iY7ozVEtMlpojdX2qHtz3jT_YnhhWyIGtmdIAWSvwtfrpS8AD5gYKktUNdR4maLmHGegQJo-5R4fbbg8rtBS5GuP2C1x59ARpRQ56mY_RWNnApQ0XSTC15PoiMQ-jDu7Yykcn8Q6CB2_iORxyHU2vmx9oDwk9PMsR30vtJTl98I_Slytvv3g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGa7fj_Jw86XNfR_Od5bJ7ueRTlOZxnNbvJQZYhc7LnNBA0BrOjDg0zJ1lCVe5IA2Qm8lpzOCIk0Lbswjm2h-s-Wjxyo7bc_9AESuoGfBxcYEMNigL3ZZHxp0BR1RQqznj0INjb7YOD1uXPHtBhlYmRkaBTAg9AeGs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAppAHUhtiugidTqC0T9RBmc-4Oyc0NxYKtxBrCc6b41gQMByrTF3rgtd7o7_EPLQId178dJMyy6CJsu3yGPzN8bzyGUdYua6yrXfE_ghzQZ9HtZ-6KjBpHDHwc6o9kdHAEHfrposFkJLFyE6MstW_lkcZA__FKrQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGod8ux8N_FeMloJnCtED-U1-5oavvAfFau7U885-h7An8wXWw9pkxH0JRbvfgnh23DtA1DUmwNC961t3FzM8qi4Kca88soylzcRBCCtA2974mQfNK7qinbqLj8pDogMYzub7aHWZsh2iqKaqLYgew=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8ptqrwiLLm3bTzjt-vhmlfh52R5p2wq5oa89mx0eXGIiHF9EZf_bXrX4NRwB7rD8zE0g-emuy285hcLbqXtl9VayEUf_iv9vmPPNbebYTvYbhP0LO8w7SdkTWuUzS8eJAoL5VdV_K2hbQD6Sc11Wshl7-gnmBo0dILT4pim5ixHuRQt9ONVU-V3rmfXbXIK4aA3mo5uh4SLQTTBAPzXc8ipsNm9mUgH0Xy4bkdea_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHiDgl7ghXq_kzeKjWlLYsUNdwqmCqxs5E4LiJzWo0m0MybINwyukzWbnsAwFW3CCt0Yeq-z8Yt33-5g_-fcBex-YbTu_9PqdQ-riwyDxg5FaLbz2Lq143uNtZyKDA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 3,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9MO9n2nQzme_fj_fzxkCbSZzgNW4nM0x0doGrfi2LUmMgYsltbcVe6h6LcTFzGFecVX7rIIz9O_V8cz1FSX3JN_LbWUAn7puPfgFf-bB5n47rvAhg8Tp-N5O8NxhHa2AjWuqvSqEnZP9q-UxFsvfIFRcvcWmewEPgaBuoW4VnGxUL6ZRKewvF7KRluW_RRJWx5t17I2Wsm55Opx3z2bzqFQLojl7dWaH61_Y5jG6eqQO06AGiO65oBQQl1GjfrkLlTQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxIm_iMOp9pk_yKDveDLsoQAnFXulcCiy_cokr9xT8mDJFAqiuUD7j0dnVMUzgvgf72NbIaHMqfVv5cBYZatFu5tCHTmv-krVvVdFDkaX42en1Q-1TeQETTlDRz46b_Dk_uCP94Hme2p9a",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHyHZYQRpEbRe-G_CuVLYf--gNDC9LxghcM849MtMlgxaxiYXwpEhc7pJ5gVEo-f90MYi_Z1QXzTE5A4kYSwoyjwYYtTF3vdq13yEN4WenrUcprP6LycvXt-HCWalxb72rk_cnqgsyAK-1s3XEXxeFG8nzIVcil3He3Ql6K6Al8GcnMQUk2SllO5S511A271OcWKbjOeUJ5CRhSplvLIL007aVzOxbsnlggmeaVo3KqQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8Tw-JrInvP8nJKclVQyAIreHTjq-9aWPxzjcCzi9BI2j0svI58-YPzyB5dICaNST5zsJ0viDkF5U6UgeWblF8F5XDBhL5Nht87mFMdEgNp4iTiH09Wqe0BweDZF4E-pC9PxvdYF6tsoUQMcA-uajl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGW3A6sRUa60RuDgTTGR-NpkXpu_7C8VxOwJSnSybrYy0_Q_--BdF55_XuQRRcWMRs9p4XIJqmkMK9EXvOgzH4FIgFDmOW9NKVawJCeDz3g-I8D7TScseP3xZoNbQislXzpIjjU0_USFHi_6eWzvZcLxC1169vjMWcToDkNaQZvzJKLwRPnPfmqBpSKVOrgMPH2EEaP4dsqQQQyq7X53AVjakaijIIJcORzZ7sTT_Dk_zyFUNczSm4Mo992jv_pvH0D_4vAEIL8HiGYci0L-Li3awBJW7MLL0yIngvsA_9bsyrICJAV5nrXlQJp1AhtkGyfABfQLWzgliz1DysduAmkjGs6FK3B4UOZq6ILjLQee5wB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGO0wWW9_nfUfJw9HKW8L7PdwbpjKulLmoFFKjAgAFktIQBm2P9XLuV0P5TuaoucpIu2EdJRc_TP5lf983jFuMU3_7EV5metHj4r9leaZTQo1pM7OYB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFFJQiQvpn-Dvu4yh7UNRxKiN0GRJKlkUBb2b19MR1mFGC-PmS3ViHO1XPenLXMxBiMH5J4IVJ8mBOlyN-bw69yJ14kHXP-9GDpamXio1OubD1k1Wm-Av56PIR5gNxJDCD_Pn2z8fkrtuF1d-FXbrA2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHW6WonFXKnYi6M8H2LLrFAcqMlBB5BS_Igy3T4rI3FTFWUsiIFKAnApeHvx6mMVjoSy6s18YbXd-GcDuTMhwdplNuCP4oYJVNwhS1Elc_KLSiEOj1Czk49avRe54vwi211cnIDEAIbrzqWK2_82QPZLMuGXlHRgLofl1uAo38UseQrvgbthyt-XKY1CeEDpmn0FBxefkHMdBvDHdPDzrKjVSSDX_mZVKnhJ9XrC4ToCQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtOOMZB_BErs6QHEUQCiapO_OkOHJsmLUjbFSnGKOkfWPfD9BeBP2upsKJwOgokz4h7QjRdYCwA7DmmBxLyk6X5nYwFe8j3B2uSx7zu3gWhUpGQhCL-vV4h4cjYCsUdwEPO5-olcFU-jGEyw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "일반 숙박 플랫폼(야놀자, 여기어때 등)",
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAkKjKqOhOD0hLjIdKdQg9aQUQ-2mflfCgLScYCu-a4m7nY6Wtpb5Aaq31GXXkTTrpDC9xBlAuNPKSMi_Znayh83zsRheyHvc0CweMnECaz2EBpBqoyOOa1ncfCe3pbTS1I9z5nbB3V93FZTpMsbR934ZzB-1QnrPg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlh7FlmNAR_fINoSg49LARuJ9IGiWJlvRYjcMpmasQKpyKvAuh-m51ECYhPNWDH76IjEghlgrY7b9KGO_OgZaJAl6cXTINahaNOKEElzI6yNiuMr2r-e_IEsIJIPvkDoia7Zd5xHgqZ-YjltM0kCrd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNLeJHS-heVbyX5qogLcpF5HDoquB7r89p2oL8MkTLgjtjUiWF1tk41Q0F34E-kk4fAwVlXfwvXANjrMGQhgCwdGe_fl9Ksr8pzWzZXwA-oe-ca6xVwKW8MQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6uapF6zfdzmt5Y20FVBbkT1_Z1YYmFQaXUEvqHsOTC71_UXTBSTpinKFqfIUmUZzjqJiVDd8hzb8spr6zOv2ei0rJe93BjEo79bY1xR24yOnip7C5zw9l0d159dIi1ZTppimkWF-P9DqAdyt9rfi4hiYPcbAvgW5JieXWNWjVK9-HLQAuGw_Fm2l-pMiRlYkOjBnVd58LeE2RAVtvHmhtB8vZD4tUYHXGvc6J8i205w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGslouQ-YfMOl0lXw_cqTs4vH7nq5pJy_56bB7C25eRhV8so6-AW5ZHkyKN-B36LfIrHTX3K03g5g4epOHVzFs6_QSG7mCyKJkSnTNePwTOxNbW-8xfzhNuLJoG_Dlkd6O86ZMrXAai2_N--u5W3ye9ag==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhMn-Ou7PmMLGl1fSD4c-qWurVF8RndrYQpd1evEmHEN67Dq84OkxegPa3zxO2_EZKP05_o7xBSFytbGBBgku5BETcRG3tmXn0vil4_FZ1Z9QFdG7ue6kgkFDAXjsj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFluDyT-f851WnWJPzfWYgIaJ8VJrfn2hFxVcZ0ksVc9-DAWauvwokoW_40Som_sUCKrYld02GaZACVnyAKKgcN035oWaDGbooe4qxxFs8WejyorZYxp4oOlg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF10Pf40nkERrGXTdQBq9r2J4dTJKL4-ucdm2ABDjk0hQtepBeFQCLrZFeFgKpvUJiApMcwfIuw_vxmu22xsbvckgzcGpImokmo4St3cAM8plR4YFrFl4SVcf7pT1kqTQR73WDQAXAWdZrBqn6ke54=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuNSQNkVbjgEXxNSlW_ytPUOvQGe16RkwCwL8Zp9vyJMPzX7mCZJTHukmpsItos69_Tl3UDlG9BMyCqT7xC9QBFYHOFWmxl-wL9Mo2TKFCLkMJAJagE7PEDlwtI9zq1HdQWMgMX3VWuufuczQkUjGUBBEemyTzv3c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4z_rsCZY_vQp8PlVCjinQspfjawuN3A8uUP80VrGTP4Vf7h1FZYmMvsqXW92nDgD0Acmq88jjJCbQYOmZ9gMhz016HrDx8UYqwRwnIBPdSZBjXuxZRuq80p8TbFk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8-zuuz85viNuiA7vlw2zE-FvsRLIaqlu57cP-GFrzQwVY2jceLa5uDbYmt7Zl1-CTWG9s2lAItcFXCHggOp3Kd_7zFqWNVuxgDarfVu3Rc6XM2GCE_vmSrj9Lk_iKHb8qdOm4809a3m-DeYy3JSgZigTC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5xy5XIws-u-elfl2tKUwNBOiQ1KWm4AhrIE7eaMwu-az_xEaYhoEzg-uhc4dhLdPfvnUnqgMAldnVaY7_c2lABk2FCsRhbVFE3Z1t2OaqLjylSDZ7g1mL8FzeBGwrpdb40VlBinDu8ax9pa67dt9H",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4z_rsCZY_vQp8PlVCjinQspfjawuN3A8uUP80VrGTP4Vf7h1FZYmMvsqXW92nDgD0Acmq88jjJCbQYOmZ9gMhz016HrDx8UYqwRwnIBPdSZBjXuxZRuq80p8TbFk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-Qu8RskWtLP4Q30H6p5ytfkBR23EeEuPaeMqB7z8YsSgUuBBj-SlHpIsP6HNyMqNGxZM62KO9nMpyvqSRz7sWg3k6kLNBlnAFNUBVbkT7Um5q1FlmSmN2goz1XqM_YxI_pFUKNZA5cBYbvVT0OUBTbKfEjiW11Evb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXgLCpauyj5YVq2LvWK1lC4-rGgRtYmAEo7483FgvO4dVAaN8E-MjX8k2srACLnLFockaD8nMqX78q0xFrAU1YM1MIbr-g7DUN5Wj-Sa4Iz2zLg-whjAAGJOYRoB6sagmQXAqjFokclx_oJGhK8eiCji3eodgPMZYy0_NN5vQwaof7LscDphXgdaIhyE3hGdfvgNUF-RRuvnA-uRg5DnlFCHOYg_5tJY1Cn5K8DvcEmpkP6zWN2xGWinROEDV4eAaZcUaUJMrLHXSLSOTCj8EF26OSBoR5EIQpUdIWnH84JSsWRtZo03dW46wjB8P-9-zsT5mwSfiVpTt7qao_21RbN-CWRUA9EU1f9jopdNUUbVPa7rhP9gyyDQQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-Vu6q6TcD9aLYl6o8WlR_TksF9tfXwooOtw7r2QBmc6GFss750FLi744lKsv0Lg99AJk56W9KHkbXmZJaa8PO3oI28Lyy-kHSUHxfUs7D4qipvQ0Ze498lkyY_-ot2mDgWKAzkBnCPraFkbky0Khbyg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkoH3ZWDSwgy5UBHE9BYwrXYStC3XUxr9twfqxKu6qj-hxgZaA45C2OzejoPZmrW1QyiUCingXqWw15oOalVf2YtZPJZf6KTWata4w71rqqt49UyRkK2yxwVDqSEoRsrKpPpBmbnTF_riwnAwNsMDeOwb1VsqynA01Bt6wojKqm1gkDXYfrVCfpxtYFnafiD7daaQj8rVJ00sPeEa0qLWonzncEvAfdvBIxpnMxWDTjg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFj0KpGCzm7DhlyK8Z02G292dyN5xEpG46pVmiA85ezRGBfuO1fHxoDhCu-_5vAZXqbVInKHnZIo0i1xSAx0TwhrCskYHNnULEBqEjeV2kH_21SP-08skVuHYkk5lNe",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "KT 멤버십 및 kt.com 제휴 혜택을 통해 펜션을 예약할 때 적용되는 **취소·환불 규정**과 **실제 이용자들의 후기 및 팁**은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "kt.com 제휴 숙소 예약은 KT가 직접 숙박을 운영하는 것이 아니라, **제휴 플랫폼(야놀자, 여기어때, 아고다 등) 및 개별 펜션의 정책**을 따릅니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkUImvVmAiReeJ3BtIQKg_ospNsgLl9FGCTGDkcDM-mIkdNDj77kp0yNpe29bMs0WUDk0hNCF4JssYajHfs_03V0Bia_NwZJpnzdFENBTJ4GAK3L5Bu743QA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErwfJ5oImZROheAih8eSLeyd-2g8oQhKukYckujDRVyxMV679Ev8g9N58_RRiDCb9fwYfxabrYeKHCId6I6egK-vvHUjbMJADnLvz0aBewZX3nl-_dYMfMOZ50Tph5E8SYHlnDUa8W22Kz1mGEkgdL4LM6fQm4Dw4TjS8fFQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRCShL_YjIzqU7f1lYjsZxsYj0T_M6ZJ2zjr7UUtUX_Gg0MQxvr8GEOHOvYBbPTiBkbkb-y2vgpkevJ9PwCem3nZTML78mqe8Zj_bHM7NpNwE_Hwmvunuy9zetKAQ9iS8L",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeQW7_9REjHYHxylSJt2eYMLvyw4URPXgHQ5gGI6rXVYCKJBGoODhnLjn5lH5-NnX9PLGpE8vfORsbL1AyfqC36QBQ9KOrT4EcGFMONso8PF8O9KKXRknK52CJ7BhxxC5y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXIujih6ZSnPARN5JsBV43n2gENn7SNKvT2U1JxV5raur-fdmmEQanes_HYSg63hpgDGXwN6Sz8te8IPKQlhqfuoYW1Kfq9G5oG452NEaDxmOqvaS8Mtyaeo3jzrmLQDz75VsPfTiaHNHyAbjlOUGwzT7BXOP33GE-5Fhs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "kt.com(KT 멤버십 등) 제휴 혜택을 통해 펜션을 예약할 때 적용되는 취소·환불 규정과 실제 이용자들의 후기 및 주의점은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "kt.com에서 제공하는 펜션 예약 혜택은 자체 운영 숙소가 아니라 야놀자, 여기어때, 트립닷컴, 호텔패스 등 제휴 숙박 플랫폼과의 연동으로 진행됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFGmVlP1OcDmUtO0Z-01od3R8HOh-g26lGyJxFRaGTmCfUXxr6QdqnftM5YMBJAB2fX0yCvLL-BBDLogeZAXIx8Cv6ihiQU48azEYht3LyPaZ2-eRohPvyt8u_FVcG4VpFd76xqbEoTj95BV3UCIaLtHwiPDo=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0oRxtHT17AtaxfRZYphOOn1BDiwo7yYeubuyKM4xHVc-iRghR2HS6YXxxGgsC6AWDUY6Jtv47lZ60AebYhYNKpqmktRSc1LjriJzuP0wM",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQntx2wKTURYorpbjKtjTKTYMjJxZ02xpP5dNW2S0Omt-y9qUi249wXNzbeFUKn927VLL3SJSAeP5teeqtPVUcdqjbIG1s3BPK7uHAA_OtuZRpy5j7OkClSNi7ZYlhib4GuP4lZB0upSILTA0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGutX5yjx2eSx_93efCyPZipqnYeE8vOPchyiQwc_RUq6V_t_ln_wXrphkIE7_WVx2syXvSvSmFIRkGNi4uyiWEml0uQUyoOSR6ctC6E6p3uLm9xFBvko0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQntx2wKTURYorpbjKtjTKTYMjJxZ02xpP5dNW2S0Omt-y9qUi249wXNzbeFUKn927VLL3SJSAeP5teeqtPVUcdqjbIG1s3BPK7uHAA_OtuZRpy5j7OkClSNi7ZYlhib4GuP4lZB0upSILTA0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhjymtV0CcRItNocgfLxTGrb-e0FJAj1GJfuJIPFTYJMRmbo-HGklgz2mwXt1K9d5qfOpkDYh7dswmr8UHn36voOwzBz1e4ZPQSnbYtPFA9sZXdUr1dxdRuQSewgSm66wtIlAedWfjqpYxR1Zl9fcT4UTm0mAq0zq6DA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRw6xVl1fez7WTcznPQc_i0hBM8TAFaYvuulWf8LtWPhAEc5e1ErPY_L0bQ3gYVP9Xb_RLbKIrHQf4sm8vIs9KPm5-nWWkxwSiutcpvSLa45ykpGJk_UzWpKPD5PI26xGDqVe8tK44rjd2rGSoazHR",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHLTWNeZ6mnFCO4Ni_KnnY1MZiajtOwYAGCnJXNhXKmRPGmsq3mHdAATZooMyrMfdCNIP-NNTL7I-3kaVcy-8jbayTjU7BxMbFiMBsx1isLnDQ_TpZ7XJPBkrq-XovqMZlSS2e1jQD",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOvX647ZVjpNOtmw5_4BXDGxcyK5X5ozsyf8emefhCRmLhcnbtyxoqAK2w0aY-ZSKtEd9u_wBcNBwNS2X8WHC1hweEjj-MTGCRvai03dKlujbsmos3qdQv7rI5qh8mGnfuHzBZOZKs4haa2GE78WdUCeYW1rsTN00zo4StRgU_CYY-IpEEqw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "kt.com(KT 멤버십) 제휴 혜택을 통해 펜션이나 숙소를 예약할 때 적용되는 **취소·환불 규정**과 **실제 이용자들의 후기 및 주의점**은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFs-MjiUIXgjQ-1V7jgwYzYWoN3quOjx2QT0Ih-u0ymZQMTpwXfdpCT0pgEeRvAs4pNVbc1YKoIQOKh835xeIpizdmPdlNPvVm8krgpTGeH7JPZBvfnIgL-rz5xKaIURlxzEg3v4vdvCmPAgCNMW1SNfAleAKWAWXoyWqe7SSjdTwaJqscv-AawNqjSLYdGjkyWeVEGzYAsmIPnutS4WWfRweHA1FbGBMZj-tNJtFGF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWO5yKE9ZVTtpx2k8ZNpU4_T5BLU75DIrq-jpdKQIJANgI9fSvGO34xJ4gNLzd6k_hjoAq9f6RJ_ndWNw8cWVZZ2EVC-JTjgcIOzTnDl4YdSUgw48Uvt90-9ucpbQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8p7jNrSu5NeQWgnfEczfLF72AvoUUz4BvKMqYesQLSbLT6INTIooYnDsRRbpopyKrw2Y_nDTnkgrEMbrBW0N_JsgkoflS0Ibp_VCCHNtWmozT2rqsufT6rzibqLEK8b37xXIyl-QwTBVwtEcygQ86rr-JSEE-CI0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

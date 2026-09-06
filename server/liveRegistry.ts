@@ -11,6 +11,8 @@ import bank_comp_1j0j0pl from '../src/data/live-comp-1j0j0pl-question-bank.json'
 import analyses_comp_1j0j0pl from '../src/data/live-comp-1j0j0pl-question-analyses.json' with { type: 'json' };
 import bank_comp_1lz1vi2 from '../src/data/live-comp-1lz1vi2-question-bank.json' with { type: 'json' };
 import analyses_comp_1lz1vi2 from '../src/data/live-comp-1lz1vi2-question-analyses.json' with { type: 'json' };
+import bank_comp_7ulalt from '../src/data/live-comp-7ulalt-question-bank.json' with { type: 'json' };
+import analyses_comp_7ulalt from '../src/data/live-comp-7ulalt-question-analyses.json' with { type: 'json' };
 import bank_comp_fjgq11 from '../src/data/live-comp-fjgq11-question-bank.json' with { type: 'json' };
 import analyses_comp_fjgq11 from '../src/data/live-comp-fjgq11-question-analyses.json' with { type: 'json' };
 import bank_comp_mhxthx from '../src/data/live-comp-mhxthx-question-bank.json' with { type: 'json' };
@@ -37,6 +39,8 @@ import bank_k_wonjin from '../src/data/live-k-wonjin-question-bank.json' with { 
 import analyses_k_wonjin from '../src/data/live-k-wonjin-question-analyses.json' with { type: 'json' };
 import bank_maum_dream from '../src/data/live-maum-dream-question-bank.json' with { type: 'json' };
 import analyses_maum_dream from '../src/data/live-maum-dream-question-analyses.json' with { type: 'json' };
+import bank_o2o from '../src/data/live-o2o-question-bank.json' with { type: 'json' };
+import analyses_o2o from '../src/data/live-o2o-question-analyses.json' with { type: 'json' };
 import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 'json' };
 import analyses_sm_ps from '../src/data/live-sm-ps-question-analyses.json' with { type: 'json' };
 import bank_viewclinic from '../src/data/live-viewclinic-question-bank.json' with { type: 'json' };
@@ -60,6 +64,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'bymeps': bank_bymeps as QuestionBank,
   'comp-1j0j0pl': bank_comp_1j0j0pl as QuestionBank,
   'comp-1lz1vi2': bank_comp_1lz1vi2 as QuestionBank,
+  'comp-7ulalt': bank_comp_7ulalt as QuestionBank,
   'comp-fjgq11': bank_comp_fjgq11 as QuestionBank,
   'comp-mhxthx': bank_comp_mhxthx as QuestionBank,
   'comp-rorko6': bank_comp_rorko6 as QuestionBank,
@@ -73,6 +78,7 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'jjprs': bank_jjprs as QuestionBank,
   'k-wonjin': bank_k_wonjin as QuestionBank,
   'maum-dream': bank_maum_dream as QuestionBank,
+  'o2o': bank_o2o as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
   'viewclinic': bank_viewclinic as QuestionBank,
   'vvlyps': bank_vvlyps as QuestionBank,
@@ -86,6 +92,7 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_bymeps as LiveAnalysesFile,
   analyses_comp_1j0j0pl as LiveAnalysesFile,
   analyses_comp_1lz1vi2 as LiveAnalysesFile,
+  analyses_comp_7ulalt as LiveAnalysesFile,
   analyses_comp_fjgq11 as LiveAnalysesFile,
   analyses_comp_mhxthx as LiveAnalysesFile,
   analyses_comp_rorko6 as LiveAnalysesFile,
@@ -99,6 +106,7 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_jjprs as LiveAnalysesFile,
   analyses_k_wonjin as LiveAnalysesFile,
   analyses_maum_dream as LiveAnalysesFile,
+  analyses_o2o as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
   analyses_viewclinic as LiveAnalysesFile,
   analyses_vvlyps as LiveAnalysesFile,

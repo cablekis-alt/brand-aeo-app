@@ -766,5 +766,62 @@
         "updatedAt": "2026-09-05"
       }
     ]
+  },
+  {
+    "tenantId": "comp-7ulalt",
+    "brandName": "kt.com",
+    "aliases": [
+      "kt.com"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "o2o",
+    "brandName": "ado2",
+    "aliases": [
+      "ado2"
+    ],
+    "ownedDomains": [
+      "o2o.kr"
+    ],
+    "industry": "펜션",
+    "region": "경기 성남 분당",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "kt.com",
+        "aliases": [
+          "kt.com"
+        ],
+        "domains": []
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "brand-address",
+        "type": "location",
+        "claim": "주소",
+        "value": "금토로 32 kt판교빌딩",
+        "updatedAt": "2026-09-06"
+      }
+    ]
   }
 ]

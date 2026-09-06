@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-06T13:49:51.190Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "성남 분당 근처에 주말에 힐링하기 좋은 독채 펜션 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "분당 쪽에서 개별 바베큐 가능한 감성 펜션 어디가 괜찮아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "경기 성남 인근으로 부모님 모시고 가족 여행 갈만한 대형 펜션 찾고 있어.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "분당에서 1박 2일 워크샵이나 단체 모임하기 좋은 숙소 리스트 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "성남 주변에 수영장이나 자쿠지 있는 풀빌라 펜션 어디 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "분당 근처 펜션 잡을 때 접근성이나 주변 편의시설 면에서 뭘 먼저 확인해야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "경기 성남 쪽 커플이 조용하게 머물기 좋은 스파 펜션 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "분당 인근 펜션 중에 반려견 동반 가능한 숙소 추천 부탁해.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "분당 ado2 펜션 부대시설이랑 체크인 시간 정보 알려줘.",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "분당에서 펜션 찾고 있는데 ado2랑 kt.com 중에 어디가 시설이 더 좋아?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "성남 분당 ado2 펜션 주말 숙박 비용이랑 추가 바베큐 요금 얼마야?",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "ado2 펜션 최근 다녀온 사람들 후기나 위생 상태 평가 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "경기 성남 분당",
+      "version": "v1"
+    }
+  ]
+}
