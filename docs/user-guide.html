@@ -1,0 +1,534 @@
+<title>Brand AEO 사용 설명서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --ink: #1c1916;
+    --muted: #5c564e;
+    --paper: #f6f1e8;
+    --card: #fffdf8;
+    --line: #d9d0c3;
+    --accent: #9a3412;
+    --accent-soft: #f4e4d8;
+    --good: #3f6212;
+    --bad: #9f1239;
+    --warn-bg: #fbe7cf;
+    --warn-line: #d99a3a;
+    --shadow: 0 1px 2px rgba(28, 25, 22, .06), 0 8px 24px rgba(28, 25, 22, .05);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --sans: "Noto Sans KR", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #f4efe6;
+      --muted: #b7aea2;
+      --paper: #161410;
+      --card: #1e1b17;
+      --line: #3a342c;
+      --accent: #fdba74;
+      --accent-soft: #3b2718;
+      --good: #bef264;
+      --bad: #fda4af;
+      --warn-bg: #2a2113;
+      --warn-line: #a9772b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #f4efe6;
+    --muted: #b7aea2;
+    --paper: #161410;
+    --card: #1e1b17;
+    --line: #3a342c;
+    --accent: #fdba74;
+    --accent-soft: #3b2718;
+    --good: #bef264;
+    --bad: #fda4af;
+    --warn-bg: #2a2113;
+    --warn-line: #a9772b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.7;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 980px) {
+    .wrap { grid-template-columns: 220px minmax(0, 1fr); gap: 56px; align-items: start; }
+  }
+
+  /* Masthead */
+  header.masthead {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid var(--ink);
+    padding: 40px 0 22px;
+    margin-bottom: 4px;
+  }
+  .brand-lockup { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .monogram {
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    font-size: 13px;
+    color: var(--paper);
+    background: var(--accent);
+    padding: 7px 10px;
+    border-radius: 6px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 42px);
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    margin: 14px 0 8px;
+    text-wrap: balance;
+  }
+  .masthead .lead { color: var(--muted); max-width: 62ch; margin: 0; font-size: 17px; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px;
+  }
+  .pill {
+    font-size: 12.5px; font-weight: 500;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 12px; color: var(--muted); background: var(--card);
+  }
+  .pill b { color: var(--ink); font-weight: 700; }
+
+  /* Table of contents */
+  nav.toc {
+    grid-column: 1;
+    position: sticky; top: 20px;
+    align-self: start;
+    font-size: 14px;
+  }
+  nav.toc .toc-title {
+    text-transform: uppercase; letter-spacing: 0.16em; font-size: 11px;
+    font-weight: 700; color: var(--muted); margin-bottom: 12px;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  nav.toc a {
+    display: flex; gap: 9px; align-items: baseline;
+    color: var(--muted); text-decoration: none;
+    padding: 5px 10px; border-radius: 7px; border-left: 2px solid transparent;
+    transition: background .12s, color .12s;
+  }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--ink); }
+  nav.toc a .n { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 15px; }
+  @media (max-width: 979px) {
+    nav.toc { position: static; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 16px; }
+  }
+
+  main { grid-column: 1; min-width: 0; }
+  @media (min-width: 980px) { main { grid-column: 2; } nav.toc { grid-column: 1; grid-row: 2; } }
+
+  section { padding-top: 8px; margin-bottom: 52px; scroll-margin-top: 18px; }
+  section > .sec-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 20px; }
+  section .sec-n {
+    font-weight: 900; font-size: 15px; color: var(--paper); background: var(--accent);
+    width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+    font-variant-numeric: tabular-nums; flex: none; align-self: center;
+  }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  h3 { font-size: 18px; font-weight: 700; margin: 30px 0 8px; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .muted { color: var(--muted); }
+  strong, b { font-weight: 700; }
+  a.inline { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+
+  kbd, code {
+    font-family: var(--mono); font-size: 0.86em;
+    background: var(--accent-soft); color: var(--ink);
+    padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .path { font-family: var(--mono); font-size: 0.86em; color: var(--accent); word-break: break-all; }
+
+  ul.clean { margin: 0 0 14px; padding-left: 20px; }
+  ul.clean li { margin-bottom: 7px; max-width: 66ch; }
+  ul.clean li::marker { color: var(--accent); }
+
+  /* Steps (genuinely sequential) */
+  ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  ol.steps > li {
+    counter-increment: step;
+    position: relative; padding: 18px 20px 18px 62px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  }
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute; left: 16px; top: 16px;
+    width: 32px; height: 32px; border-radius: 9px;
+    background: var(--accent); color: var(--paper);
+    display: grid; place-items: center; font-weight: 900; font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  ol.steps h3 { margin: 0 0 6px; font-size: 16.5px; }
+  ol.steps p:last-child { margin-bottom: 0; }
+
+  /* Callouts */
+  .note {
+    border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    background: var(--card); border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow);
+  }
+  .note.warn { border-left-color: var(--warn-line); background: var(--warn-bg); }
+  .note.danger { border-left-color: var(--bad); }
+  .note .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 4px;
+  }
+  .note.warn .tag { color: var(--warn-line); }
+  .note.danger .tag { color: var(--bad); }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* Menu map — mirrors the app sidebar */
+  .menu-map { display: grid; gap: 14px; }
+  @media (min-width: 620px) { .menu-map { grid-template-columns: 1fr 1fr; } }
+  .menu-group { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .menu-group .g-title { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .menu-group .g-title .range { font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-weight: 500; }
+  .menu-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .menu-group li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 14.5px; }
+  .menu-group li .bcode { font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; flex: none; }
+  .menu-group li .desc { color: var(--muted); font-size: 12.5px; }
+
+  /* Score category grid */
+  .cats { display: grid; gap: 10px; margin: 8px 0 18px; }
+  @media (min-width: 560px) { .cats { grid-template-columns: 1fr 1fr; } }
+  .cat { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .cat .w { font-weight: 900; font-size: 18px; color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
+  .cat .nm { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+  .cat .nm small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; margin-top: 1px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--card); min-width: 460px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: var(--accent-soft); font-weight: 700; font-size: 13px; letter-spacing: 0.01em; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td b { color: var(--ink); }
+  .grade-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+
+  footer { grid-column: 1 / -1; border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+
+  .lede-card { grid-column: 1 / -1; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: grid; gap: 14px; }
+  @media (min-width: 700px) { .lede-card { grid-template-columns: repeat(3, 1fr); } }
+  .lede-card .kv .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); font-weight: 700; margin-bottom: 3px; }
+  .lede-card .kv .v { font-size: 14.5px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---- 인쇄(PDF) ---- : 라이트 고정, 단일 컬럼, 색 유지, 자연스러운 페이지 나눔 */
+  @media print {
+    :root {
+      --ink: #1c1916; --muted: #5c564e; --paper: #ffffff; --card: #ffffff;
+      --line: #d9d0c3; --accent: #9a3412; --accent-soft: #f4e4d8;
+      --good: #3f6212; --bad: #9f1239; --warn-bg: #fbe7cf; --warn-line: #d99a3a;
+      --shadow: none;
+    }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html { scroll-behavior: auto; }
+    body { font-size: 10.6pt; line-height: 1.6; background: #fff; }
+    .wrap { display: block; max-width: none; margin: 0; padding: 0; gap: 0; }
+    header.masthead { padding: 0 0 14px; margin-bottom: 20px; }
+    h1 { font-size: 24pt; }
+    .masthead .lead { font-size: 11pt; }
+    nav.toc { position: static; break-inside: avoid; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 26px; }
+    nav.toc ol { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
+    main { display: block; }
+    section { break-inside: avoid; margin-bottom: 22px; padding-top: 0; }
+    section:nth-of-type(n+4) { break-before: page; }
+    .sec-head { break-after: avoid; }
+    h3 { break-after: avoid; }
+    ol.steps > li, .menu-group, .cat, .note, .table-wrap, .lede-card { break-inside: avoid; box-shadow: none; }
+    tr, .cat, .menu-group { break-inside: avoid; }
+    a.inline, nav.toc a { color: var(--ink); text-decoration: none; }
+    nav.toc a .n { color: var(--accent); }
+    .pill { box-shadow: none; }
+    footer { margin-top: 24px; }
+  }
+  @page { margin: 16mm 15mm; }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand-lockup">
+      <span class="monogram">AIO2O</span>
+      <span class="eyebrow">Web4AI · 사용 설명서</span>
+    </div>
+    <h1>Brand AEO 데스크톱 앱 사용 설명서</h1>
+    <p class="lead">답변 엔진(ChatGPT·Gemini·Claude·Perplexity)에서 내 브랜드가 얼마나 보이는지 측정·관리하는 콘솔입니다. 이 문서는 설치부터 브랜드 등록·측정·진단까지 전 과정을 안내합니다.</p>
+    <div class="meta-row">
+      <span class="pill">버전 <b>v0.1.21</b></span>
+      <span class="pill">플랫폼 <b>Windows 데스크톱</b></span>
+      <span class="pill">측정 엔진 <b>Gemini(설치본 동봉)</b></span>
+      <span class="pill">채점 기준 <b>AEO 6영역 · 100점</b></span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="목차">
+    <div class="toc-title">목차</div>
+    <ol>
+      <li><a href="#intro"><span class="n">1</span><span>이 앱은 무엇인가</span></a></li>
+      <li><a href="#install"><span class="n">2</span><span>설치와 첫 실행</span></a></li>
+      <li><a href="#layout"><span class="n">3</span><span>화면 구성 · 메뉴 지도</span></a></li>
+      <li><a href="#apikey"><span class="n">4</span><span>API 키</span></a></li>
+      <li><a href="#quickstart"><span class="n">5</span><span>빠른 시작: 등록 → 측정</span></a></li>
+      <li><a href="#checker"><span class="n">6</span><span>Site AEO Checker</span></a></li>
+      <li><a href="#features"><span class="n">7</span><span>분석·리포트 메뉴</span></a></li>
+      <li><a href="#manage"><span class="n">8</span><span>브랜드 관리</span></a></li>
+      <li><a href="#update"><span class="n">9</span><span>자동 업데이트</span></a></li>
+      <li><a href="#trouble"><span class="n">10</span><span>문제 해결</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="intro">
+      <div class="sec-head"><span class="sec-n">1</span><h2>이 앱은 무엇인가</h2></div>
+      <p><strong>Web4AI Brand AEO</strong>는 <strong>AEO(Answer Engine Optimization, 답변 엔진 최적화)</strong> 관점에서 브랜드의 가시성을 진단하는 콘솔입니다. 기존 검색엔진 SEO와 달리, ChatGPT·Gemini·Claude·Perplexity 같은 <strong>AI 답변 엔진</strong>이 내 브랜드를 얼마나 알고 인용하는지를 다룹니다.</p>
+      <p>측정은 매주 같은 질문을 답변 엔진에 반복해 물어, 브랜드가 언급되는 정도(Share of Mention)·순위·인용 출처를 집계하는 <strong>B1–B9 파이프라인</strong>으로 이뤄집니다.</p>
+      <div class="note">
+        <span class="tag">데스크톱 앱인 이유</span>
+        <p>경쟁사·주소 같은 <strong>한국 로컬 정보</strong> 회상은 실행 리전에 따라 정확도가 크게 달라집니다. 이 데스크톱 앱은 <strong>한국에서 Gemini로 직접 측정</strong>하도록 만들어져, 클라우드(미국 리전) 대비 국내 브랜드 회상이 정확합니다.</p>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="sec-head"><span class="sec-n">2</span><h2>설치와 첫 실행</h2></div>
+      <ol class="steps">
+        <li>
+          <h3>설치본 내려받기</h3>
+          <p>GitHub Releases의 최신 버전에서 <code>Web4AI-Brand-AEO-0.1.21-installer.zip</code>을 받습니다. 일부 환경에서 <code>.exe</code> 직접 다운로드가 막히므로 <strong>ZIP</strong>으로 제공합니다.</p>
+        </li>
+        <li>
+          <h3>압축 해제 후 설치</h3>
+          <p>ZIP을 풀면 나오는 <strong>설치본(.exe)</strong>을 실행합니다. 설치 위치는 바꿀 수 있습니다.</p>
+        </li>
+        <li>
+          <h3>첫 실행</h3>
+          <p>처음 실행하면 필요한 데이터(질문 은행·스코어카드 등)가 자동으로 준비됩니다. 측정 데이터는 사용자 폴더(<span class="path">%APPDATA%/brand-aeo-app</span>)에 저장되어 업데이트에도 보존됩니다.</p>
+        </li>
+      </ol>
+      <div class="note warn">
+        <span class="tag">Windows 보안 경고가 뜨면</span>
+        <p>서명되지 않은 앱이라 <strong>SmartScreen</strong> 경고가 나올 수 있습니다 — <b>추가 정보 → 실행</b>으로 진행합니다. <strong>Smart App Control(SAC)</strong>이 켜져 있으면 우회가 불가하니, 신뢰하는 환경에서 SAC를 끄거나 관리자에게 문의하세요.</p>
+      </div>
+    </section>
+
+    <section id="layout">
+      <div class="sec-head"><span class="sec-n">3</span><h2>화면 구성 · 메뉴 지도</h2></div>
+      <p>왼쪽 사이드바가 측정 파이프라인(B1–B9)의 흐름을 그대로 따릅니다. <strong>시작</strong>에서 브랜드를 추가하고, <strong>STAGE 1 → 4</strong> 순서로 측정·분석·리포트로 이어집니다.</p>
+      <div class="menu-map">
+        <div class="menu-group">
+          <div class="g-title"><span>시작</span></div>
+          <ul>
+            <li><span>＋ 브랜드 추가</span><span class="desc">진입점</span></li>
+            <li><span>대시보드 · 파이프라인</span><span class="desc">전체 현황</span></li>
+          </ul>
+        </div>
+        <div class="menu-group">
+          <div class="g-title"><span>STAGE 1 · 질문 생성 &amp; 스케줄</span><span class="range">B1–B3</span></div>
+          <ul>
+            <li><span>질문 프롬프트 빌더</span><span class="bcode">B1</span></li>
+            <li><span>브랜드 · 경쟁사 측정</span><span class="bcode">B2</span></li>
+            <li><span>Site AEO Checker</span><span class="desc">단일 URL 진단</span></li>
+          </ul>
+        </div>
+        <div class="menu-group">
+          <div class="g-title"><span>STAGE 2 · 엔진 연동 &amp; 정규화</span><span class="range">B4</span></div>
+          <ul>
+            <li><span>측정 상태</span><span class="bcode">B4</span></li>
+          </ul>
+        </div>
+        <div class="menu-group">
+          <div class="g-title"><span>STAGE 3 · 다각도 분석</span><span class="range">B5–B7</span></div>
+          <ul>
+            <li><span>브랜드 종합 진단</span><span class="bcode">B5</span></li>
+            <li><span>URL 상세 분석</span><span class="bcode">B5</span></li>
+            <li><span>AI 인용출처 분석</span><span class="bcode">B7</span></li>
+            <li><span>EEAT 분석</span><span class="bcode">B6</span></li>
+          </ul>
+        </div>
+        <div class="menu-group">
+          <div class="g-title"><span>STAGE 4 · 스코어 &amp; 리포트</span><span class="range">B8–B9</span></div>
+          <ul>
+            <li><span>브랜드 AEO 퍼포먼스</span><span class="bcode">B8</span></li>
+            <li><span>랭킹 분석</span><span class="bcode">B8</span></li>
+            <li><span>정기진단 보고서</span><span class="bcode">B9</span></li>
+          </ul>
+        </div>
+        <div class="menu-group">
+          <div class="g-title"><span>하단 · 테마 &amp; 버전</span></div>
+          <ul>
+            <li><span>테마(라이트 · 다크 · 시스템)</span><span class="desc">화면 색상</span></li>
+            <li><span>버전 · 업데이트 확인</span><span class="desc">v0.1.21</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted">상단 <strong>브랜드 선택 메뉴</strong>에서 측정할 대상을 고르면, 모든 화면이 그 브랜드 기준으로 표시됩니다.</p>
+    </section>
+
+    <section id="apikey">
+      <div class="sec-head"><span class="sec-n">4</span><h2>API 키</h2></div>
+      <p>측정에는 <strong>Gemini API 키</strong>가 필요합니다. v0.1.16부터 <strong>키가 설치본에 기본 포함</strong>되어, 보통은 별도 설정 없이 바로 측정할 수 있습니다. STAGE 1 <strong>브랜드·경쟁사 측정</strong> 화면 상단에 상태가 표시됩니다.</p>
+      <ul class="clean">
+        <li><strong>GEMINI 설정됨</strong> 표시 — 그대로 사용하면 됩니다. (입력창 없이 상태만 보입니다.)</li>
+        <li>키를 바꾸려면 <strong>"키 변경"</strong>을 눌러 입력창을 펼치고, 새 키를 붙여넣어 <strong>저장</strong>합니다. 키는 <strong>이 PC에만</strong> 저장됩니다(<span class="path">%APPDATA%/brand-aeo-app/.env</span>).</li>
+        <li>미설정 상태라면 <a class="inline" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio에서 발급</a>받아 입력합니다.</li>
+      </ul>
+      <div class="note">
+        <span class="tag">Tip</span>
+        <p>동봉 키의 사용량이 소진되면 측정이 실패할 수 있습니다. 이때 <strong>"키 변경"</strong>으로 본인 키를 넣으면 즉시 복구됩니다.</p>
+      </div>
+    </section>
+
+    <section id="quickstart">
+      <div class="sec-head"><span class="sec-n">5</span><h2>빠른 시작: 등록 → 측정</h2></div>
+      <p>가장 핵심적인 흐름입니다. 브랜드를 한 번 등록하면, 이후에는 목록에서 버튼 하나로 측정합니다.</p>
+      <ol class="steps">
+        <li>
+          <h3>브랜드 추가 — URL로 자동 채우기</h3>
+          <p><strong>＋ 브랜드 추가</strong>에서 브랜드 홈페이지 URL을 넣고 <strong>URL에서 자동 채우기</strong>를 실행하면, 브랜드명·도메인·업종·주소·경쟁사가 자동 추론되어 채워집니다. 결과는 초안이니 <strong>직접 검토·수정</strong>하세요.</p>
+        </li>
+        <li>
+          <h3>정보 · 경쟁사 확인 후 등록</h3>
+          <p>업종·지역·경쟁사를 확인하고 <strong>브랜드 등록</strong>을 누릅니다. 경쟁사를 넣으면 코호트 순위(1/N) 비교가 가능합니다. 등록하면 상단 브랜드 메뉴에서 바로 선택됩니다.</p>
+        </li>
+        <li>
+          <h3>전체 측정 시작</h3>
+          <p>등록 완료 단계의 <strong>"이 브랜드 전체 측정 시작"</strong> 버튼, 또는 아래 <strong>등록된 브랜드 관리</strong> 목록의 <strong>"전체 측정"</strong> 버튼을 누릅니다. 경쟁사·코호트까지 함께 측정합니다(수 분 소요). <strong>STAGE 1로 이동하지 않아도</strong> 됩니다.</p>
+        </li>
+        <li>
+          <h3>진행 확인 · 결과 보기</h3>
+          <p>측정은 서버에서 추적되어, 다른 화면으로 이동해도 유지됩니다. <strong>측정 상태</strong>에서 진행을 보고, 완료되면 <strong>대시보드 · 랭킹 · 퍼포먼스</strong>에 점수가 반영됩니다.</p>
+        </li>
+      </ol>
+      <div class="note">
+        <span class="tag">본 브랜드 vs 경쟁사</span>
+        <p><strong>본 브랜드</strong>를 측정하면 경쟁사·코호트까지 함께 채워집니다. 목록에서 특정 경쟁사만 갱신하려면 STAGE 1 <strong>브랜드·경쟁사 측정</strong>에서 그 경쟁사를 골라 측정합니다.</p>
+      </div>
+    </section>
+
+    <section id="checker">
+      <div class="sec-head"><span class="sec-n">6</span><h2>Site AEO Checker</h2></div>
+      <p>주간 파이프라인과 별개로, <strong>지금 이 페이지의 HTML을 직접 수집해 즉시 채점</strong>하는 단일 URL 진단입니다. 실제 인용·노출·순위를 예측하는 것이 아니라, <strong>AI 검색 대응 준비도</strong>를 봅니다. <code>aeocheck.co.kr</code>과 동일한 6개 영역·100점 체계를 씁니다.</p>
+      <p class="muted">수집은 <strong>JS 렌더링 전 원본 HTML</strong> 기준입니다 — JS를 실행하지 않는 AI 크롤러가 보는 상태와 같습니다.</p>
+      <h3>6개 평가 영역과 배점</h3>
+      <div class="cats">
+        <div class="cat"><div class="w">26</div><div class="nm">AI 크롤러 접근·색인<small>robots · noindex · 응답</small></div></div>
+        <div class="cat"><div class="w">22</div><div class="nm">콘텐츠 구조·인용 친화도<small>H1/H2 · 질문형 · 표 · 직접답변</small></div></div>
+        <div class="cat"><div class="w">18</div><div class="nm">E-E-A-T · 최신성 · 신뢰<small>저자 · 수정일 · 연락처</small></div></div>
+        <div class="cat"><div class="w">15</div><div class="nm">구조화 데이터 (JSON-LD)<small>Organization · Breadcrumb</small></div></div>
+        <div class="cat"><div class="w">12</div><div class="nm">기술 기본기<small>canonical · HTTPS · 메타 · OG · alt</small></div></div>
+        <div class="cat"><div class="w">7</div><div class="nm">에이전트 접근성<small>링크 · 명칭 일관성 · 시맨틱</small></div></div>
+      </div>
+      <h3>총점 등급</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>총점</th><th>등급</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td><b>85–100</b></td><td><span class="grade-dot" style="background:var(--good)"></span>AI 인용 준비도가 높음</td><td>중요한 결함이 거의 없음</td></tr>
+            <tr><td><b>70–84</b></td><td>양호하지만 보완 필요</td><td>일부 영역 개선 여지</td></tr>
+            <tr><td><b>50–69</b></td><td>부분적으로 준비됨</td><td>여러 영역 개선 필요</td></tr>
+            <tr><td><b>30–49</b></td><td>주요 개선 필요</td><td>핵심 결함 존재</td></tr>
+            <tr><td><b>0–29</b></td><td><span class="grade-dot" style="background:var(--bad)"></span>기초부터 재정비 필요</td><td>크롤러 접근·콘텐츠 부재 등</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>영역 카드를 펼치면 <strong>구체적인 감점 항목·근거·개선 작업</strong>이 나옵니다. 예: "robots.txt가 일부 AI 답변 크롤러를 차단", "작성자·전문가 바이라인이 없습니다(조직명만 있음)".</p>
+    </section>
+
+    <section id="features">
+      <div class="sec-head"><span class="sec-n">7</span><h2>분석·리포트 메뉴</h2></div>
+      <p>측정이 끝나면 아래 메뉴들이 각 관점의 결과를 보여줍니다.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>메뉴</th><th style="white-space:normal">무엇을 보나</th></tr></thead>
+          <tbody>
+            <tr><td><b>대시보드 · 파이프라인</b></td><td>전체 브랜드의 측정 현황과 파이프라인(B1–B9) 단계 요약.</td></tr>
+            <tr><td><b>질문 프롬프트 빌더</b> <span class="pill">B1</span></td><td>답변 엔진에 반복해 물을 질문(프롬프트)을 설계·관리.</td></tr>
+            <tr><td><b>브랜드 · 경쟁사 측정</b> <span class="pill">B2</span></td><td>테넌트(브랜드/경쟁사)를 골라 측정 실행. 본 브랜드는 경쟁사·코호트까지 함께.</td></tr>
+            <tr><td><b>측정 상태</b> <span class="pill">B4</span></td><td>진행 중·완료된 측정을 실시간으로 확인.</td></tr>
+            <tr><td><b>브랜드 종합 진단</b> <span class="pill">B5</span></td><td>브랜드의 AEO 상태를 다각도로 종합.</td></tr>
+            <tr><td><b>URL 상세 분석</b> <span class="pill">B5</span></td><td>인용된 URL 단위의 상세 분석.</td></tr>
+            <tr><td><b>AI 인용출처 분석</b> <span class="pill">B7</span></td><td>답변에서 어떤 출처가 인용되는지 집계.</td></tr>
+            <tr><td><b>EEAT 분석</b> <span class="pill">B6</span></td><td>전문성·권위·신뢰(E-E-A-T) 신호 점검.</td></tr>
+            <tr><td><b>브랜드 AEO 퍼포먼스</b> <span class="pill">B8</span></td><td>AEO Score와 시계열 추이.</td></tr>
+            <tr><td><b>랭킹 분석</b> <span class="pill">B8</span></td><td>코호트 내 순위(1/N)와 경쟁사 비교.</td></tr>
+            <tr><td><b>정기진단 보고서</b> <span class="pill">B9</span></td><td>주기적으로 발행되는 종합 리포트.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="manage">
+      <div class="sec-head"><span class="sec-n">8</span><h2>브랜드 관리</h2></div>
+      <p><strong>＋ 브랜드 추가</strong> 화면 아래 <strong>등록된 브랜드 관리</strong> 목록에서 등록한 브랜드를 한눈에 보고 관리합니다.</p>
+      <ul class="clean">
+        <li><strong>전체 측정</strong> — 각 브랜드 행의 버튼으로 <strong>바로 측정</strong>합니다(경쟁사·코호트 포함). STAGE 1로 갈 필요가 없습니다.</li>
+        <li><strong>삭제</strong> — 데스크톱 앱에서는 <strong>즉시 완전 삭제</strong>되어 목록·선택 메뉴에서 바로 사라집니다. 이때 다른 브랜드가 참조하지 않는 <strong>고아 경쟁사</strong>도 함께 정리됩니다(공유 중인 경쟁사는 보존).</li>
+      </ul>
+      <div class="note">
+        <span class="tag">참고</span>
+        <p>배포(웹) 환경에서는 삭제가 GitHub Actions로 커밋 데이터·점수까지 정리하며 수 분이 걸립니다. 데스크톱 앱은 로컬에서 즉시 처리됩니다.</p>
+      </div>
+    </section>
+
+    <section id="update">
+      <div class="sec-head"><span class="sec-n">9</span><h2>자동 업데이트</h2></div>
+      <p>사이드바 하단에 현재 <strong>버전</strong>이 표시됩니다. <strong>업데이트 확인</strong>을 누르면 새 버전 여부를 확인하고, 있으면 자동으로 내려받습니다.</p>
+      <ul class="clean">
+        <li>새 버전이 준비되면 <strong>"재시작하여 설치"</strong> 버튼이 나타납니다 — 누르면 앱이 재시작되며 설치됩니다.</li>
+        <li>측정 데이터·등록 브랜드·API 키는 사용자 폴더에 있어 <strong>업데이트해도 보존</strong>됩니다.</li>
+      </ul>
+    </section>
+
+    <section id="trouble">
+      <div class="sec-head"><span class="sec-n">10</span><h2>문제 해결</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>증상</th><th style="white-space:normal">해결</th></tr></thead>
+          <tbody>
+            <tr><td>설치본 <code>.exe</code>가 다운로드되지 않음</td><td><b>installer.zip</b>을 받아 압축을 푼 뒤 실행하세요.</td></tr>
+            <tr><td>Windows가 앱을 차단함</td><td>SmartScreen: <b>추가 정보 → 실행</b>. Smart App Control이 켜져 있으면 우회 불가 — SAC를 끄거나 관리자에게 문의.</td></tr>
+            <tr><td>측정이 실패함 / "측정 가능한 엔진이 없습니다"</td><td>API 키 상태를 확인하세요. <b>키 변경</b>으로 유효한 Gemini 키를 넣으면 복구됩니다.</td></tr>
+            <tr><td>측정 시간이 오래 걸림</td><td>정상입니다(수 분). <b>측정 상태</b>에서 진행을 확인하고, 완료까지 앱을 켜 두세요.</td></tr>
+            <tr><td>"브랜드 전체 측정"인데 경쟁사가 안 채워짐</td><td>본 브랜드로 측정했는지 확인하세요. 경쟁사가 비어 있으면 이름 기준으로 코호트를 다시 추론합니다.</td></tr>
+            <tr><td>업데이트가 최신인데도 안 바뀜</td><td>"업데이트 확인"을 다시 누르고, 준비되면 <b>재시작하여 설치</b>를 누르세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note danger">
+        <span class="tag">보안 · 개인정보</span>
+        <p>API 키와 측정 데이터는 <strong>이 PC(사용자 폴더)에만</strong> 저장됩니다. 설치본을 외부에 재배포하면 동봉된 키가 노출될 수 있으니, <strong>내부 배포</strong> 용도로 사용하고 필요 시 키에 사용량·도메인 제한을 두세요.</p>
+      </div>
+    </section>
+
+    <footer>
+      <span>Web4AI · Brand AEO — Site SEO와 별도로 운영되는 답변 엔진 가시성 콘솔</span>
+      <span>사용 설명서 · v0.1.21 기준</span>
+    </footer>
+  </main>
+</div>
