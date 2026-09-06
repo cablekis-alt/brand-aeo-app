@@ -537,6 +537,46 @@ function scoreStructure(
         after: null,
       },
     })
+  } else {
+    // JSON-LD가 있어도 완성도를 본다(aeocheck 구조화 데이터: Organization·Breadcrumb).
+    const hasOrg = s.jsonLdTypes.some((t) => /organization|localbusiness|medicalclinic|dentist|hospital|store/i.test(t))
+    const hasBreadcrumb = s.jsonLdTypes.some((t) => /breadcrumb/i.test(t))
+    if (!hasOrg) {
+      bad.push({
+        severity: 'medium',
+        title: 'Organization/LocalBusiness 구조화 데이터가 없습니다',
+        evidence: `JSON-LD 유형: ${s.jsonLdTypes.join(', ') || '없음'} — 발행 주체 엔터티 타입이 없습니다.`,
+        aiImpact: '이름·주소·전화·URL을 조직 엔터티로 묶지 못해 브랜드 연결이 약합니다.',
+        quote: null,
+        points: 3,
+        rec: {
+          workType: 'dev',
+          task: '푸터에 이미 있는 이름·주소·전화·URL로 Organization(또는 LocalBusiness) JSON-LD를 추가하세요.',
+          expectedEffect: '발행 주체가 엔터티로 식별됩니다.',
+          difficulty: '낮음',
+          before: s.jsonLdTypes.join(', ') || 'Organization 없음',
+          after: null,
+        },
+      })
+    }
+    if (!hasBreadcrumb) {
+      bad.push({
+        severity: 'low',
+        title: 'BreadcrumbList 구조화 데이터가 없습니다',
+        evidence: '탐색 경로(BreadcrumbList) 마크업이 확인되지 않았습니다.',
+        aiImpact: '페이지의 사이트 내 위치·계층을 기계가 파악하기 어렵습니다.',
+        quote: null,
+        points: 2,
+        rec: {
+          workType: 'dev',
+          task: '주요 페이지에 BreadcrumbList JSON-LD로 탐색 경로를 표기하세요.',
+          expectedEffect: '사이트 계층과 페이지 맥락이 기계에 전달됩니다.',
+          difficulty: '낮음',
+          before: 'Breadcrumb 없음',
+          after: null,
+        },
+      })
+    }
   }
   if (s.h2s.length + s.h3s.length < 2 && s.wordCount > 200) {
     bad.push({
@@ -590,35 +630,54 @@ function scoreTrust(
   }
 
   const reference = isReferenceHost(s.finalUrl || s.requestedUrl)
-  const productLike = s.pageType === 'product' || s.pageType === 'saas_home'
-  const hasPublisher = Boolean(s.authorCandidates.length || s.orgCandidates.length || s.ogSiteName)
+  // E-E-A-T는 aeocheck처럼 엄격히 본다: 저자(바이라인)·수정일·연락처를 각각 요구한다.
+  // 조직명(ogSiteName)만으로는 "저자"를 대체하지 않는다.
+  const hasAuthor = s.authorCandidates.length > 0
+  const hasOrgName = s.orgCandidates.length > 0 || Boolean(s.ogSiteName)
 
-  if (!hasPublisher) {
+  if (!hasAuthor && !hasOrgName) {
     bad.push({
       severity: 'high',
       title: '작성자·발행 주체가 본문 상단에 없습니다',
-      evidence: 'author/Person 마크업과 바이라인 후보가 비어 있습니다.',
+      evidence: 'author/Person 마크업, 바이라인, 조직명 후보가 모두 비어 있습니다.',
       aiImpact: '누가 말했는지 몰라 근거로 쓰기 꺼려집니다.',
       quote: null,
-      points: 4,
+      points: 7,
       rec: {
         workType: 'content',
-        task: '페이지에 조직명과 (있다면) 작성자·역할을 텍스트로 명시하세요.',
+        task: '페이지에 조직명과 작성자·역할(전문 자격 포함)을 텍스트로 명시하세요.',
         expectedEffect: '인용 시 출처 주체가 분명해집니다.',
         difficulty: '낮음',
         before: null,
         after: null,
       },
     })
+  } else if (!hasAuthor) {
+    bad.push({
+      severity: 'high',
+      title: '작성자·전문가 바이라인이 없습니다 (조직명만 있음)',
+      evidence: `조직명(${s.orgCandidates[0] || s.ogSiteName})은 있으나 저자·검토자·역할 표기가 없습니다.`,
+      aiImpact: 'E-E-A-T의 핵심인 "누가 쓴 정보인가"가 약해 근거 채택이 꺼려집니다.',
+      quote: null,
+      points: 4,
+      rec: {
+        workType: 'content',
+        task: '작성자 또는 검토 전문가의 이름·역할·자격을 본문/푸터에 명시하세요(의료라면 담당 전문의).',
+        expectedEffect: '전문성·신뢰 신호가 생겨 인용 후보가 됩니다.',
+        difficulty: '낮음',
+        before: null,
+        after: null,
+      },
+    })
   }
-  if (!s.dates.length && !productLike) {
+  if (!s.dates.length) {
     bad.push({
       severity: 'medium',
       title: '게시일·수정일이 없습니다',
       evidence: 'time 요소, article:published_time, 본문 날짜 패턴이 없습니다.',
       aiImpact: '최신성을 판단할 수 없어 시의성 있는 답에서 밀릴 수 있습니다.',
       quote: null,
-      points: 3,
+      points: 6,
       rec: {
         workType: 'content',
         task: 'visible한 게시일/수정일을 넣고 datetime 속성을 주세요.',
@@ -636,7 +695,7 @@ function scoreTrust(
       evidence: `본문에 숫자 패턴이 있으나 외부 링크 ${s.externalLinkCount}개.`,
       aiImpact: '검증 가능한 근거로 보기 어렵습니다.',
       quote: null,
-      points: 3,
+      points: 2,
       rec: {
         workType: 'content',
         task: '수상, 통계, 파트너십은 1차 자료 또는 보도 원문에만 링크하세요. 없는 수치는 삭제하세요.',
@@ -647,14 +706,14 @@ function scoreTrust(
       },
     })
   }
-  if (!s.phoneOrEmail && !s.addressLike && !reference && !productLike) {
+  if (!s.phoneOrEmail && !s.addressLike && !reference) {
     bad.push({
       severity: 'medium',
       title: '연락처·회사 정보 투명성이 약합니다',
       evidence: '이메일/전화/주소형 텍스트가 추출되지 않았습니다.',
       aiImpact: '실제 조직인지 확인하는 신호가 부족합니다.',
       quote: null,
-      points: 3,
+      points: 4,
       rec: {
         workType: 'content',
         task: '푸터에 법인명, 주소, 이메일, 전화를 텍스트로 두세요. 이미지 로고만으로 대체하지 마세요.',

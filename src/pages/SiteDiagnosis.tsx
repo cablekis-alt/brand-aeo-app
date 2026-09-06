@@ -85,7 +85,7 @@ export default function SiteDiagnosis() {
   return (
     <>
       <p className="brand">STAGE 1</p>
-      <h1>사이트 종합 진단</h1>
+      <h1>Site AEO Checker</h1>
       <p className="lead">
         단일 페이지 URL의 AI 검색 대응 준비도를 6개 영역, 100점 만점으로 진단합니다. 브랜드 가시성(주간 파이프라인)과
         달리, 지금 이 페이지의 HTML을 직접 수집해 즉시 채점합니다. 실제 인용·노출·순위를 예측하지 않습니다.

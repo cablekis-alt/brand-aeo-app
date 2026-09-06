@@ -80,6 +80,11 @@ const YMYL_PRIMARY =
 const YMYL_ADVICE_BODY =
   /치료법|복용법|부작용|처방전|진료과|법률\s*효력|이자율\s*보장|수익률\s*보장|이\s*글을\s*의학적/
 
+// 의료기관 자체 사이트(제목·H1 기준) — 성형외과·치과 등은 YMYL. 본문에서 "고객사"로 언급되는
+// 경우와 구분하기 위해 primary(title+h1)에서만 검사한다.
+const MEDICAL_ESTABLISHMENT =
+  /성형외과|피부과|치과|한의원|정형외과|안과|산부인과|이비인후과|비뇨기과|신경외과|재활의학과|가정의학과|(?:^|\s)의원(?:\s|$)|의료법인|병(?:\s|·)?의원/
+
 const CUSTOMER_VERTICAL =
   /고객사|도입 사례|업종 예시|버티컬|솔루션을 제공|예약 안내 챗봇|B2B|자동화합니다|소프트웨어|플랫폼|산업군/
 
@@ -305,6 +310,8 @@ export function detectYmyl(title: string, h1s: string[], firstText: string, page
     return false
   }
   if (englishAdvice || ADVICE_TITLE.test(primary) || YMYL_PRIMARY.test(primary)) return true
+  // 의료기관 자체 사이트(제목·H1에 진료과/의원 표기) — YMYL로 본다.
+  if (MEDICAL_ESTABLISHMENT.test(primary)) return true
   return YMYL_ADVICE_BODY.test(firstText)
 }
 

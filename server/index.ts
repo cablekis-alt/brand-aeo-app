@@ -20,6 +20,7 @@ import { startScheduler } from './scheduler.js';
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
+  deleteTenantLocally,
   isBakedTenant,
   loadRuntimeTenants,
   normalizeTenantDraft,
@@ -82,12 +83,17 @@ app.delete('/api/tenants', async (req, res) => {
   try {
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
-    const stillBaked = isBakedTenant(tenantId);
+    const baked = isBakedTenant(tenantId);
     let dispatched = false;
     let htmlUrl: string | undefined;
-    if (stillBaked && canTriggerRemoteMeasure()) {
+    let locallyDeleted = false;
+    if (baked && !process.env.VERCEL) {
+      // 로컬/패키징(Electron) — 베이크된 브랜드도 툼스톤으로 즉시 완전 삭제(GitHub Actions 불필요).
+      await deleteTenantLocally(tenantId);
+      locallyDeleted = true;
+    } else if (baked && canTriggerRemoteMeasure()) {
       try {
-        // 큐에 누적하고 큐 모드로 트리거 — 여러 개를 빠르게 삭제해도 concurrency로 run이 취소되지 않게.
+        // 배포(Vercel) — 커밋 데이터까지 지우려면 GitHub Actions. 큐에 누적하고 큐 모드로 트리거.
         await addDeleteRequest(tenantId);
         ({ htmlUrl } = await triggerGithubDelete(DELETE_QUEUE_SENTINEL));
         dispatched = true;
@@ -95,7 +101,8 @@ app.delete('/api/tenants', async (req, res) => {
         dispatched = false;
       }
     }
-    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl });
+    const stillBaked = baked && !locallyDeleted;
+    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl, locallyDeleted });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

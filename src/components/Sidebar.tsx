@@ -30,7 +30,7 @@ const MENU: MenuGroup[] = [
     items: [
       { label: '질문 프롬프트 빌더', to: '/questions', b: 'B1' },
       { label: '브랜드·경쟁사 측정', to: '/measure-tenant', b: 'B2' },
-      { label: '사이트 종합 진단', to: '/site-diagnosis' },
+      { label: 'Site AEO Checker', to: '/site-diagnosis' },
     ],
   },
   {

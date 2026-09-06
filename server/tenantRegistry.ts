@@ -2,6 +2,7 @@ import rawTenants from './tenants.config.json' with { type: 'json' };
 import { packagedDataMode } from './appPaths.js';
 import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
+import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
@@ -9,6 +10,14 @@ const BASE_TENANTS = rawTenants as TenantConfig[];
 const ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
 
 export { canPersistTenants, blobStoreEnabled, removeOverlayTenant };
+
+/**
+ * 베이크된 테넌트를 로컬/패키징에서 즉시 완전 삭제한다(툼스톤 추가).
+ * loadRuntimeTenants가 이 목록을 걸러내므로, GitHub Actions 없이 목록·선택지에서 바로 사라진다.
+ */
+export async function deleteTenantLocally(tenantId: string): Promise<void> {
+  await addDeletedTenant(tenantId);
+}
 
 /** 커밋된(베이크된) 테넌트인지 — 삭제 시 오버레이 제거만으로는 사라지지 않아 CLI+배포가 필요하다. */
 export function isBakedTenant(tenantId: string): boolean {
@@ -70,12 +79,14 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
 }
 
 export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
-  const overlay = await readOverlay();
+  const [overlay, deleted] = await Promise.all([readOverlay(), readDeletedTenants()]);
   const map = new Map<string, TenantConfig>();
   for (const tenant of BASE_TENANTS) map.set(tenant.tenantId, tenant);
   for (const tenant of overlay) {
     if (!map.has(tenant.tenantId)) map.set(tenant.tenantId, tenant);
   }
+  // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
+  for (const id of deleted) map.delete(id);
   return [...map.values()];
 }
 
@@ -104,6 +115,8 @@ export async function registerTenant(tenant: TenantConfig): Promise<void> {
   if (existing.some((item) => item.tenantId === tenant.tenantId)) {
     throw new Error(`이미 존재하는 tenantId입니다: ${tenant.tenantId}`);
   }
+  // 이전에 삭제(툼스톤)된 tenantId를 다시 등록하는 경우, 툼스톤을 걷어내 다시 보이게 한다.
+  await removeDeletedTenant(tenant.tenantId);
   await persistTenantForRuntime(tenant);
 }
 

@@ -35,4 +35,5 @@ server/tenants.overlay.json
 electron/build/bundled.env
 server/measure-requests.json
 server/delete-requests.json
+server/tenants.deleted.json
 dist-electron
