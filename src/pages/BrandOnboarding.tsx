@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import BrandManageList from '../components/BrandManageList'
 import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
@@ -219,6 +220,10 @@ export default function BrandOnboarding() {
   const [addrLookupOn, setAddrLookupOn] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
+  // 등록 완료 시 true — 등록 완료 단계에서 "이 브랜드 전체 측정"을 바로 실행할 수 있게 한다.
+  const [registered, setRegistered] = useState(false)
+  const [measuring, setMeasuring] = useState(false)
+  const [measureMsg, setMeasureMsg] = useState<string | null>(null)
   // 경쟁사도 cohortOnly로 함께 측정 → 코호트 랭킹이 1/N으로 채워진다(기본 켬).
   const [withCohort, setWithCohort] = useState(true)
   const [suggestingComp, setSuggestingComp] = useState(false)
@@ -704,16 +709,53 @@ export default function BrandOnboarding() {
       }
       await reloadTenants()
       setTenantId(tenant.tenantId)
-      // 등록만 한다 — 측정은 STAGE 1 "브랜드·경쟁사 측정"에서 별도로 실행한다.
-      // 본 브랜드를 고르면 경쟁사 자동 추론·SoM·코호트(1/N)까지 함께 측정한다.
-      setRegisterMsg(
-        `✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다. ` +
-          `측정하려면 STAGE 1 "브랜드·경쟁사 측정"에서 이 브랜드를 골라 "브랜드 전체 측정"을 누르세요 — 경쟁사·코호트까지 함께 채워집니다.`,
-      )
+      setRegistered(true)
+      // 등록 완료 — 아래 "이 브랜드 전체 측정 시작" 버튼으로 바로 측정할 수 있다(경쟁사·코호트 포함).
+      setRegisterMsg(`✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`)
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
     } finally {
       setRegistering(false)
+    }
+  }
+
+  // 등록한 본 브랜드를 바로 전체 측정한다(경쟁사·코호트 포함) — STAGE 1로 이동하지 않고 여기서 실행.
+  // 로컬은 이 탭에서 즉시 측정(서버가 진행 상태를 추적), 배포는 GitHub Actions를 트리거한다.
+  async function measureRegisteredBrand() {
+    const id = tenant.tenantId
+    if (!id || measuring) return
+    setMeasuring(true)
+    setMeasureMsg(
+      measureVia === 'github'
+        ? `${tenant.brandName} GitHub Actions 측정 요청 중…`
+        : `${tenant.brandName} 측정 중… (수 분). 완료되면 결과가 반영됩니다.`,
+    )
+    try {
+      if (measureVia === 'github') {
+        const res = await fetch('/api/measure-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'run', tenantId: id }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
+        if (!res.ok) throw new Error(body.error || `측정 요청 실패 (HTTP ${res.status})`)
+        setMeasureMsg(
+          `✓ GitHub Actions가 시작됐습니다. 수 분~수십 분 뒤 결과가 반영됩니다.` +
+            (body.htmlUrl ? ` 진행: ${body.htmlUrl}` : ''),
+        )
+        return
+      }
+      const res = await fetch(`/api/tenants/${encodeURIComponent(id)}/measure`, { method: 'POST' })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
+      }
+      const d = (await res.json()) as { brandName?: string; aeoScore?: number }
+      setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}). 대시보드·랭킹에서 확인하세요.`)
+    } catch (err) {
+      setMeasureMsg(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+    } finally {
+      setMeasuring(false)
     }
   }
 
@@ -922,18 +964,29 @@ export default function BrandOnboarding() {
             </label>
           )}
           <div className="onboard-register-actions">
-            {canRegister && (
+            {canRegister && !registered && (
               <button type="button" className="primary" onClick={registerBrand} disabled={!ready || registering}>
                 {registering ? '등록 중…' : '브랜드 등록'}
+              </button>
+            )}
+            {registered && measureVia !== 'none' && (
+              <button type="button" className="primary" onClick={() => void measureRegisteredBrand()} disabled={measuring}>
+                {measuring ? '측정 중…' : '이 브랜드 전체 측정 시작'}
               </button>
             )}
           </div>
         </div>
         {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
-        {canRegister ? (
+        {registered ? (
           <p className="hint">
-            등록만 합니다. 이후 STAGE 1 <b>"브랜드·경쟁사 측정"</b>에서 이 브랜드를 골라 <b>"브랜드 전체 측정"</b>을 누르면
-            경쟁사 자동 추론·SoM·코호트 순위까지 채워집니다{measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'}
+            등록됐습니다. <b>"이 브랜드 전체 측정 시작"</b>을 누르면 여기서 바로 경쟁사 자동 추론·SoM·코호트 순위까지 함께
+            측정합니다{measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'} 다른 테넌트(경쟁사 등)를 개별 측정하려면
+            STAGE 1 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>을 쓰세요.
+          </p>
+        ) : canRegister ? (
+          <p className="hint">
+            브랜드를 등록하면 <b>바로 이 자리에서</b> 전체 측정(경쟁사·코호트 포함)을 실행할 수 있습니다
+            {measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'}
           </p>
         ) : (
           <p className="hint">
@@ -944,6 +997,11 @@ export default function BrandOnboarding() {
         {registerMsg && (
           <p className={registerMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
             {registerMsg}
+          </p>
+        )}
+        {measureMsg && (
+          <p className={measureMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
+            {measureMsg} {measuring && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
           </p>
         )}
         <p className="hint onboard-cli">
