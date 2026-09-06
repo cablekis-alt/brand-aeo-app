@@ -17,6 +17,13 @@ files:
 
 asar: true
 
+# 설치본 동봉 기본 API 키 — scripts/prepare-bundled-env.mjs가 빌드 머신 로컬 .env에서 생성.
+# resources/bundled.env 로 복사되며, 패키징된 앱이 "기본 키"로 로드한다(사용자 .env가 있으면 우선).
+# gitignore 되어 공개 소스에는 키가 없다.
+extraResources:
+  - from: electron/build/bundled.env
+    to: bundled.env
+
 # 빌드 후 NSIS 설치본(.exe)을 ZIP으로 감싼 "설치본 ZIP"을 자동 생성한다(.exe 다운로드 차단 우회용).
 afterAllArtifactBuild: electron/after-all-artifact-build.cjs
 

@@ -32,6 +32,7 @@ server/tenants.overlay.json
 .env
 .env.*
 !.env.example
+electron/build/bundled.env
 server/measure-requests.json
 server/delete-requests.json
 dist-electron

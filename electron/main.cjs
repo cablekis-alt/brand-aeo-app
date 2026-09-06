@@ -279,22 +279,29 @@ ipcMain.handle('settings:setApiKey', (_e, payload) => {
 
 /** 설치본에 키를 굽지 않는다 — 실행파일 옆 또는 userData의 .env를 읽는다. */
 function loadEnvForPackaged() {
+  // 우선순위(높은 순): 실행파일 옆 .env → userData/.env → 설치본 동봉 기본 키(bundled.env).
+  // dotenv는 이미 설정된 값을 덮어쓰지 않으므로, 위 순서대로 로드하면 키 단위로 앞이 우선한다.
   const candidates = [
     path.join(path.dirname(app.getPath('exe')), '.env'),
     path.join(app.getPath('userData'), '.env'),
-  ]
+    // extraResources로 복사된 기본 키 — resources/bundled.env. 사용자 .env가 있으면 그쪽이 이긴다.
+    process.resourcesPath ? path.join(process.resourcesPath, 'bundled.env') : null,
+  ].filter(Boolean)
+  let loaded = 0
   for (const p of candidates) {
     try {
       if (fs.existsSync(p)) {
         require('dotenv').config({ path: p })
         console.log('[env] loaded', p)
-        return
+        loaded++
       }
     } catch {
       /* 무시 */
     }
   }
-  console.log('[env] .env 없음 — 측정에는 API 키가 필요합니다(실행파일 옆에 .env 배치).')
+  if (!loaded) {
+    console.log('[env] .env 없음 — 측정에는 API 키가 필요합니다(실행파일 옆에 .env 배치 또는 앱에서 입력).')
+  }
 }
 
 app.whenReady().then(() => {

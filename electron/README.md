@@ -52,11 +52,20 @@ npm run electron:pack:dir    # 설치 파일 없이 언팩된 앱 폴더만(빠�
 
 ### API 키(.env)
 
-키는 **설치본에 굽지 않습니다**(보안). 패키징 앱은 아래 순서로 `.env`를 찾습니다:
+패키징 앱은 아래 순서(높은 우선순위 → 낮은)로 키를 찾습니다. 키 단위로 앞이 우선합니다:
 1. 실행파일과 같은 폴더의 `.env`
-2. 사용자 데이터 폴더(`%APPDATA%/brand-aeo-app/.env`)의 `.env`
+2. 사용자 데이터 폴더(`%APPDATA%/brand-aeo-app/.env`)의 `.env` — 앱 안 "API 키" 박스가 여기에 저장
+3. **설치본 동봉 기본 키**(`resources/bundled.env`) — 빌드 시 자동 생성(아래)
 
 패키징 앱은 판정·수집 기본을 **Gemini**로 두므로(로컬 한국 측정이 가장 정확, OpenAI 크레딧 비의존) `GEMINI_API_KEY`만 있어도 측정됩니다. `OPENAI_API_KEY`·`ANTHROPIC_API_KEY`는 해당 엔진을 함께 쓸 때만 필요합니다. `.env`에서 `JUDGE_ENGINE`을 명시하면 그 값을 우선합니다.
+
+#### 설치본에 기본 키 굽기(머신마다 수동 입력 없이 바로 동작)
+
+`npm run electron:pack` 은 패키징 전에 `scripts/prepare-bundled-env.mjs` 를 실행해 **빌드 머신의 로컬 `.env`** 에서 화이트리스트 키(`GEMINI/OPENAI/ANTHROPIC_API_KEY`)만 뽑아 `electron/build/bundled.env` 로 굽고, electron-builder가 이를 `resources/bundled.env` 로 동봉합니다. 설치한 앱은 이 키를 **기본값**으로 로드하므로, 사용자가 앱에서 키를 입력하지 않아도 바로 측정됩니다. 특정 머신에서 다른 키를 쓰려면 앱 "API 키" 박스(→ userData `.env`)나 실행파일 옆 `.env`가 동봉 기본값을 덮어씁니다.
+
+- 로컬 `.env` 에 키가 없으면 빈 `bundled.env` 를 만들어 동작을 그대로 둡니다(사용자가 앱에서 입력).
+- `.env` 와 `bundled.env` 는 **gitignore** 되어 공개 소스에는 키가 없습니다.
+- ⚠ **주의:** 굽힌 키는 설치본 안에 들어갑니다. 이 설치본을 **공개** 릴리스로 배포하면 내려받은 누구나 설치본에서 키를 추출할 수 있습니다. 내부 배포에만 쓰거나, 굽힌 키에 사용량/도메인 제한을 두세요. 공개 배포용 빌드에서 기본 키를 빼려면 빌드 전에 로컬 `.env` 의 키를 비우면 됩니다.
 
 ### Windows 스마트 앱 컨트롤(Smart App Control) 차단
 

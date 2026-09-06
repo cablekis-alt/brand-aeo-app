@@ -294,7 +294,8 @@ function scoreAccessibility(
     })
   }
 
-  const start = s.status >= 200 && s.status < 400 ? 13 : 4
+  // 감점 전용(deduct-only): 정상 응답이면 만점에서 시작해 결함만큼 깎는다(aeocheck 방식). 오류 응답은 낮은 하한.
+  const start = s.status >= 200 && s.status < 400 ? 15 : 4
   return finish('accessibility', good, bad, start, recs)
 }
 
@@ -394,7 +395,8 @@ function scoreAnswer(
     })
   }
 
-  const start = s.wordCount >= 80 ? 16 : 8
+  // 감점 전용: 본문이 충분하면 만점에서 시작, 지나치게 짧으면 낮은 하한.
+  const start = s.wordCount >= 80 ? 20 : 8
   return finish('answer_content', good, bad, start, recs)
 }
 
@@ -555,7 +557,7 @@ function scoreStructure(
     })
   }
 
-  const start = 12
+  const start = 15 // 감점 전용: 만점에서 시작해 구조 결함만큼 깎는다.
   return finish('structure', good, bad, start, recs)
 }
 
@@ -685,7 +687,7 @@ function scoreTrust(
     }
   }
 
-  const start = 16
+  const start = 20 // 감점 전용: 만점에서 시작해 신뢰·최신성 결함만큼 깎는다.
   return finish('trust', good, bad, start, recs)
 }
 
@@ -777,7 +779,7 @@ function scoreCitability(
     })
   }
 
-  const start = 15
+  const start = 20 // 감점 전용: 만점에서 시작해 인용 가능성 결함만큼 깎는다.
   return finish('citability', good, bad, start, recs)
 }
 
@@ -862,7 +864,7 @@ function scoreEntity(
     })
   }
 
-  const start = 8
+  const start = 10 // 감점 전용: 만점에서 시작해 엔터티 결함만큼 깎는다.
   return finish('entity', good, bad, start, recs)
 }
 
