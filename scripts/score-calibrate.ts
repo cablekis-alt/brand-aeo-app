@@ -28,24 +28,20 @@ const API = process.env.AEO_API ?? 'http://localhost:4000';
 const BASELINE: Record<string, number> = {
   'k-wonjin.co.kr': 78,
   'www.viewclinic.com': 81,
+  'gunsanstayhotel.com': 54,
+  'www.gangnamunni.com': 79,
+  'maum-dream.com': 61,
 };
 
-const CATEGORY_ORDER = [
-  'accessibility',
-  'answer_content',
-  'structure',
-  'trust',
-  'citability',
-  'entity',
-] as const;
+const CATEGORY_ORDER = ['crawler', 'content', 'eeat', 'structured', 'technical', 'agent'] as const;
 
 const SHORT: Record<string, string> = {
-  accessibility: '접근성',
-  answer_content: '콘텐츠',
-  structure: '구조',
-  trust: '신뢰',
-  citability: '인용',
-  entity: '엔터티',
+  crawler: '크롤러',
+  content: '콘텐츠',
+  eeat: 'EEAT',
+  structured: '구조화',
+  technical: '기술',
+  agent: '에이전트',
 };
 
 interface Row {
@@ -104,7 +100,13 @@ async function scoreUrl(url: string): Promise<Row> {
 
 const urls = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ['https://k-wonjin.co.kr', 'https://www.viewclinic.com'];
+  : [
+      'https://k-wonjin.co.kr',
+      'https://www.viewclinic.com',
+      'https://gunsanstayhotel.com',
+      'https://www.gangnamunni.com',
+      'https://maum-dream.com',
+    ];
 
 const rows: Row[] = [];
 for (const url of urls) {

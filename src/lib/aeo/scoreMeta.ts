@@ -1,12 +1,13 @@
 import type { CategoryId } from './types.ts'
 
+// aeocheck.co.kr의 공개 가중치와 동일한 6개 영역·배점(합 100).
 export const CATEGORY_DEFS: { id: CategoryId; name: string; max: number }[] = [
-  { id: 'accessibility', name: '접근성과 수집 가능성', max: 15 },
-  { id: 'answer_content', name: '질문 대응력과 콘텐츠 완결성', max: 20 },
-  { id: 'structure', name: '구조와 기계 가독성', max: 15 },
-  { id: 'trust', name: '신뢰성·전문성·최신성', max: 20 },
-  { id: 'citability', name: '인용 가능성과 정보 고유성', max: 20 },
-  { id: 'entity', name: '엔터티·브랜드 명확성과 연결성', max: 10 },
+  { id: 'crawler', name: 'AI 크롤러 접근·색인', max: 26 },
+  { id: 'content', name: '콘텐츠 구조·인용 친화도', max: 22 },
+  { id: 'eeat', name: 'E-E-A-T·최신성·신뢰', max: 18 },
+  { id: 'structured', name: '구조화 데이터 (JSON-LD)', max: 15 },
+  { id: 'technical', name: '기술 기본기', max: 12 },
+  { id: 'agent', name: '에이전트 접근성', max: 7 },
 ]
 
 export function scoreBand(total: number | null): string | null {

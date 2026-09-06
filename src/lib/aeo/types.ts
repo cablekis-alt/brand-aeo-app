@@ -7,13 +7,14 @@ export type Priority = (typeof Priorities)[number]
 export const WorkTypes = ['dev', 'content'] as const
 export type WorkType = (typeof WorkTypes)[number]
 
+// aeocheck.co.kr의 6개 영역 체계에 맞춘 카테고리(각 영역이 같은 것을 측정하도록 재설계).
 export const CategoryIds = [
-  'accessibility',
-  'answer_content',
-  'structure',
-  'trust',
-  'citability',
-  'entity',
+  'crawler', // AI 크롤러 접근·색인 (robots·noindex·status)
+  'agent', // 에이전트 접근성 (링크·버튼·폼 라벨·시맨틱·alt)
+  'structured', // 구조화 데이터 (JSON-LD·Organization·Breadcrumb)
+  'content', // 콘텐츠 구조·인용 친화도 (H1/H2·질문형·표·직접답변)
+  'eeat', // E-E-A-T·최신성·신뢰 (저자·수정일·연락처)
+  'technical', // 기술 기본기 (canonical·HTTPS·메타·OG)
 ] as const
 export type CategoryId = (typeof CategoryIds)[number]
 

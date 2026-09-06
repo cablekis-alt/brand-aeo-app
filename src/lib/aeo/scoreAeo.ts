@@ -15,7 +15,7 @@ import { DEFAULT_AUDIT_CONTEXT, DISCLAIMER } from './types.ts'
 import { clip } from './clip.ts'
 import { isBoilerplateText, isPlaceholderHost, isReferenceHost } from './extractPage.ts'
 import { PAGE_TYPE_WEIGHTS } from './pageType.ts'
-import { robotsBlocksPath } from './robots.ts'
+import { robotsAiAccess } from './robots.ts'
 import { areaQuality, CATEGORY_DEFS, scoreBand } from './scoreMeta.ts'
 
 interface Deduction {
@@ -54,10 +54,14 @@ function finish(
   deductions: Deduction[],
   start: number,
   recs: RecBag,
+  internalMax?: number,
 ): CategoryResult {
   const meta = CATEGORY_DEFS.find((c) => c.id === id)!
+  // 감점은 함수 내부 스케일(internalMax, 기본=카테고리 만점)로 매겨지고, 여기서 카테고리 만점으로 환산한다.
+  // 이렇게 하면 기존에 튜닝된 감점 크기를 유지한 채 aeocheck 가중치(26/22/18/15/12/7)로 재배점할 수 있다.
+  const cap = internalMax && internalMax > 0 ? internalMax : meta.max
   const lost = deductions.reduce((sum, d) => sum + d.points, 0)
-  const score = clamp(start - lost, 0, meta.max)
+  const score = clamp((Math.max(0, start - lost) / cap) * meta.max, 0, meta.max)
   const topIssue = deductions[0]
   for (const d of deductions) {
     if (d.rec) recs.push({ rec: d.rec, severity: d.severity, points: d.points })
@@ -125,22 +129,13 @@ function definitionSentences(s: PageSignals): string[] {
     .slice(0, 8)
 }
 
-function isHomePage(s: PageSignals): boolean {
-  try {
-    const path = new URL(s.finalUrl || s.requestedUrl).pathname.replace(/\/+$/, '') || '/'
-    return path === '/' || /^\/index\.(html?|php)$/i.test(path) || /^welcome to\b/i.test(s.title)
-  } catch {
-    return /^welcome to\b/i.test(s.title)
-  }
-}
-
 function scoreAccessibility(
   s: PageSignals,
   recs: RecBag,
 ): CategoryResult {
   const good: Finding[] = []
   const bad: Deduction[] = []
-  const robotsHit = robotsBlocksPath(s.robotsTxt, s.finalUrl || s.requestedUrl)
+  const aiAccess = robotsAiAccess(s.robotsTxt, s.finalUrl || s.requestedUrl)
 
   if (s.status >= 200 && s.status < 400) {
     good.push({
@@ -201,21 +196,34 @@ function scoreAccessibility(
       },
     })
   }
-  if (robotsHit?.blocked) {
+  if (aiAccess && (aiAccess.searchBlocked.length || aiAccess.trainingBlocked.length)) {
+    // 답변·검색 봇 차단은 무겁게(각 1.5점), 학습 봇 차단은 가볍게(각 0.4점) 감점. aeocheck의 완만한 감점과 정렬.
+    const pts = Math.min(9, Math.max(1, Math.round(aiAccess.searchBlocked.length * 1.5 + aiAccess.trainingBlocked.length * 0.4)))
+    const allSearch = aiAccess.searchBlocked.length >= aiAccess.searchTotal - 1
+    const severity: Severity = allSearch ? 'critical' : aiAccess.searchBlocked.length ? 'high' : 'medium'
+    const title = allSearch
+      ? 'robots.txt가 AI 답변 크롤러를 전면 차단합니다'
+      : aiAccess.searchBlocked.length
+        ? 'robots.txt가 일부 AI 답변 크롤러를 차단합니다'
+        : 'robots.txt가 AI 학습 크롤러를 차단합니다'
     bad.push({
-      severity: 'critical',
-      title: 'robots.txt가 경로를 차단합니다',
-      evidence: `${robotsHit.agent}: ${robotsHit.rule}`,
-      aiImpact: '해당 크롤러가 본문에 접근하지 못합니다.',
-      quote: robotsHit.rule,
-      points: 8,
+      severity,
+      title,
+      evidence: `답변·검색봇 차단: ${aiAccess.searchBlocked.join(', ') || '없음'} · 학습봇 차단: ${aiAccess.trainingBlocked.join(', ') || '없음'}`,
+      aiImpact: aiAccess.searchBlocked.length
+        ? '차단된 답변엔진이 이 페이지를 인용·노출 후보로 가져가지 못합니다.'
+        : '학습 크롤러만 막혀 라이브 인용에는 영향이 작지만, 일부 엔진 커버리지가 줄 수 있습니다.',
+      quote: null,
+      points: pts,
       rec: {
         workType: 'dev',
-        task: `robots.txt에서 ${robotsHit.agent}에 대한 해당 경로 Disallow를 Allow로 바꾸세요.`,
-        expectedEffect: 'AI·검색 크롤러가 페이지를 읽을 수 있습니다.',
+        task: aiAccess.searchBlocked.length
+          ? `robots.txt에서 답변·검색 크롤러(${aiAccess.searchBlocked.slice(0, 4).join(', ')} 등)의 이 경로 Disallow를 Allow로 바꾸세요.`
+          : '라이브 인용이 필요하면 답변·검색 크롤러는 허용을 유지하세요(학습봇 차단은 선택).',
+        expectedEffect: 'AI 답변엔진이 페이지를 읽어 인용·추천 후보로 삼을 수 있습니다.',
         difficulty: '낮음',
-        before: robotsHit.rule,
-        after: 'User-agent: GPTBot\nAllow: /',
+        before: `답변봇 차단 ${aiAccess.searchBlocked.length} / 학습봇 차단 ${aiAccess.trainingBlocked.length}`,
+        after: 'User-agent: OAI-SearchBot\nAllow: /',
       },
     })
   }
@@ -296,7 +304,7 @@ function scoreAccessibility(
 
   // 감점 전용(deduct-only): 정상 응답이면 만점에서 시작해 결함만큼 깎는다(aeocheck 방식). 오류 응답은 낮은 하한.
   const start = s.status >= 200 && s.status < 400 ? 15 : 4
-  return finish('accessibility', good, bad, start, recs)
+  return finish('crawler', good, bad, start, recs, 15)
 }
 
 function scoreAnswer(
@@ -418,7 +426,7 @@ function scoreAnswer(
 
   // 감점 전용: 본문이 충분하면 만점에서 시작, 지나치게 짧으면 낮은 하한.
   const start = s.wordCount >= 80 ? 20 : 8
-  return finish('answer_content', good, bad, start, recs)
+  return finish('content', good, bad, start, recs, 20)
 }
 
 function scoreStructure(
@@ -445,116 +453,22 @@ function scoreStructure(
     })
   }
 
-  if (!s.title || s.title.length < 8) {
-    bad.push({
-      severity: 'high',
-      title: '페이지 제목이 주제를 말하지 않습니다',
-      evidence: s.title ? `title 길이 ${s.title.length}자.` : 'title이 비어 있습니다.',
-      aiImpact: '스니펫과 엔터티 라벨이 빈약해집니다.',
-      quote: s.title || null,
-      points: 3,
-      rec: {
-        workType: 'content',
-        task: 'title에 브랜드와 제공 가치를 함께 넣으세요. 음차 단독 제목은 피하세요.',
-        expectedEffect: '수집기가 페이지 목적을 첫 필드에서 읽습니다.',
-        difficulty: '낮음',
-        before: s.title || '(없음)',
-        after: null,
-      },
-    })
-  }
-  if (!s.metaDescription) {
-    bad.push({
-      severity: 'medium',
-      title: 'meta description이 없습니다',
-      evidence: 'description 메타가 비어 있습니다.',
-      aiImpact: '요약 후보가 title·서두에만 의존합니다.',
-      quote: null,
-      points: 1,
-      rec: {
-        workType: 'content',
-        task: '120~160자의 정의형 description을 추가하세요. 확인된 사실만 쓰세요.',
-        expectedEffect: '요약·스니펫 품질이 올라갑니다.',
-        difficulty: '낮음',
-        before: '없음',
-        after: null,
-      },
-    })
-  }
-  const h1 = s.h1s[0] ?? ''
-  const h1TopicOk = Boolean(h1) && !looksLikeLogoH1(h1) && (topicsAlign(s.title, h1) || topicsAlign(s.ogTitle, h1))
-  // H1이 하나여도 주제와 무관한 캠페인·슬로건 토큰이면(예: title은 진료 안내인데 H1은 "VIEW SELFIE")
-  // 문서 제목으로서 기능하지 못하므로 같은 결함으로 본다.
-  if (s.h1s.length !== 1 || looksLikeLogoH1(h1) || !h1TopicOk) {
-    if (h1TopicOk && s.h1s.length > 1) {
-      bad.push({
-        severity: 'medium',
-        title: '마케팅 섹션에 H1이 반복됩니다',
-        evidence: `문서 주제는 「${clip(h1, 40)}」로 읽히지만 H1이 ${s.h1s.length}개입니다.`,
-        aiImpact: '섹션 카드 제목이 문서 제목과 같은 무게로 읽힙니다.',
-        quote: h1,
-        points: 1,
-        rec: {
-          workType: 'dev',
-          task: '페이지 주제는 H1 하나, 나머지 섹션은 H2로 두세요.',
-          expectedEffect: '기계가 문서 제목과 하위 섹션을 구분합니다.',
-          difficulty: '낮음',
-          before: h1,
-          after: null,
-        },
-      })
-    } else {
-      bad.push({
-        severity: 'high',
-        title: 'H1이 페이지 주제를 담지 않습니다',
-        evidence: s.h1s.length === 0 ? 'H1이 없습니다.' : `H1 ${s.h1s.length}개, 첫 값 「${clip(h1, 60) || '(빈 값)'}」.`,
-        aiImpact: '헤딩 트리가 회사 로고에서 시작해 섹션 의미가 흐려집니다.',
-        quote: h1 || null,
-        points: 3,
-        rec: {
-          workType: 'dev',
-          task: '로고는 링크로 두고, H1에는 텍스트 주제를 넣으세요. 첫 H2가 CMS 잔여물(팝업 알림 등)이면 삭제하세요.',
-          expectedEffect: '기계가 문서 제목과 섹션을 구분합니다.',
-          difficulty: '낮음',
-          before: h1 || s.h2s[0] || '(없음)',
-          after: null,
-        },
-      })
-    }
-  }
-  if (/팝업|알림이 없습니다/i.test(s.h2s.join(' '))) {
-    bad.push({
-      severity: 'medium',
-      title: 'CMS 잔여 헤딩이 계층을 오염시킵니다',
-      evidence: 'H2에 팝업/알림 같은 인터페이스 문구가 있습니다.',
-      aiImpact: '첫 섹션 제목이 콘텐츠가 아닌 UI 잔여물로 읽힙니다.',
-      quote: s.h2s.find((h) => /팝업|알림/i.test(h)) ?? null,
-      points: 2,
-      rec: {
-        workType: 'dev',
-        task: '빈 팝업 레이어 제목을 DOM에서 제거하세요.',
-        expectedEffect: 'H2가 실제 섹션만 가리킵니다.',
-        difficulty: '낮음',
-        before: s.h2s[0] ?? null,
-        after: null,
-      },
-    })
-  }
   if (
     !s.jsonLdTypes.length &&
     !(isReferenceHost(s.finalUrl || s.requestedUrl) && (s.ogSiteName || s.ogTitle))
   ) {
+    // JSON-LD가 전혀 없으면 구조화 데이터 영역의 핵심이 비는 것 — aeocheck의 "구조화 데이터"도 이 경우 0점에 가깝다.
     bad.push({
-      severity: 'medium',
+      severity: 'high',
       title: 'Schema.org 구조화 데이터가 없습니다',
-      evidence: 'JSON-LD/microdata 유형이 확인되지 않았습니다. 이 항목만으로 과감점하지 않습니다.',
-      aiImpact: '조직·기사 엔터티를 기계가 필드 단위로 붙이기 어렵습니다.',
+      evidence: 'JSON-LD/microdata 유형이 전혀 확인되지 않았습니다 — 엔터티를 기계 필드로 전달할 수단이 없습니다.',
+      aiImpact: '조직·기사·FAQ 등 엔터티를 기계가 필드 단위로 붙이지 못해, 구조화 신호가 사실상 0입니다.',
       quote: null,
-      points: 2,
+      points: 15,
       rec: {
         workType: 'dev',
-        task: '푸터에 이미 있는 이름·주소·전화·URL만으로 Organization JSON-LD를 추가하세요. 없는 FAQ/평점은 마크업하지 마세요.',
-        expectedEffect: '발행 주체가 엔터티로 식별됩니다.',
+        task: '푸터에 이미 있는 이름·주소·전화·URL만으로 Organization JSON-LD를 추가하세요(가능하면 BreadcrumbList도). 없는 FAQ/평점은 마크업하지 마세요.',
+        expectedEffect: '발행 주체가 엔터티로 식별되고 구조화 신호가 생깁니다.',
         difficulty: '낮음',
         before: 'JSON-LD 없음',
         after: null,
@@ -570,7 +484,7 @@ function scoreStructure(
         evidence: '구조화 데이터 스크립트 중 JSON 파싱에 실패한 블록이 있습니다.',
         aiImpact: '파서가 해당 블록을 통째로 버려, 표기한 엔터티 정보가 전달되지 않습니다.',
         quote: null,
-        points: 3,
+        points: 7,
         rec: {
           workType: 'dev',
           task: '구조화 데이터 테스트 도구로 JSON-LD를 검증해 문법 오류(따옴표·쉼표·주석)를 고치세요.',
@@ -620,48 +534,8 @@ function scoreStructure(
       })
     }
   }
-  if (s.h2s.length + s.h3s.length < 2 && s.wordCount > 200) {
-    bad.push({
-      severity: 'medium',
-      title: '긴 본문 대비 헤딩이 부족합니다',
-      evidence: `단어 ${s.wordCount}, H2 ${s.h2s.length}, H3 ${s.h3s.length}.`,
-      aiImpact: '정보 관계를 섹션 단위로 쪼개기 어렵습니다.',
-      quote: null,
-      points: 2,
-      rec: {
-        workType: 'content',
-        task: '의미 단위마다 H2/H3를 넣고 한 문단은 3~5문장으로 나누세요.',
-        expectedEffect: '부분 인용이 쉬워집니다.',
-        difficulty: '중간',
-        before: null,
-        after: null,
-      },
-    })
-  }
-
-  // 이미지가 본문의 큰 비중인데 대체 텍스트가 비면 그만큼의 내용이 기계에 전달되지 않는다.
-  const altMissingRatio = s.imageCount >= 20 ? s.emptyAltCount / s.imageCount : 0
-  if (altMissingRatio > 0.15) {
-    bad.push({
-      severity: 'medium',
-      title: '이미지 대체 텍스트가 상당수 비어 있습니다',
-      evidence: `이미지 ${s.imageCount}개 중 ${s.emptyAltCount}개(${Math.round(altMissingRatio * 100)}%)에 alt가 없습니다.`,
-      aiImpact: '이미지로만 표현된 시술·가격·절차 정보를 기계가 읽지 못합니다.',
-      quote: null,
-      points: 2,
-      rec: {
-        workType: 'dev',
-        task: '정보를 담은 이미지에 내용을 설명하는 alt를 넣으세요(장식용은 alt="" 유지).',
-        expectedEffect: '이미지 안의 정보가 텍스트로 수집됩니다.',
-        difficulty: '낮음',
-        before: `alt 없는 이미지 ${s.emptyAltCount}개`,
-        after: null,
-      },
-    })
-  }
-
-  const start = 15 // 감점 전용: 만점에서 시작해 구조 결함만큼 깎는다.
-  return finish('structure', good, bad, start, recs)
+  const start = 15 // 감점 전용: JSON-LD 완성도만 본다(aeocheck 구조화 데이터). 제목·헤딩·alt는 콘텐츠·기술에서 평가.
+  return finish('structured', good, bad, start, recs, 15)
 }
 
 function scoreTrust(
@@ -722,7 +596,7 @@ function scoreTrust(
       evidence: `조직명(${s.orgCandidates[0] || s.ogSiteName})은 있으나 저자·검토자·역할 표기가 없습니다.`,
       aiImpact: 'E-E-A-T의 핵심인 "누가 쓴 정보인가"가 약해 근거 채택이 꺼려집니다.',
       quote: null,
-      points: 4,
+      points: 6,
       rec: {
         workType: 'content',
         task: '작성자 또는 검토 전문가의 이름·역할·자격을 본문/푸터에 명시하세요(의료라면 담당 전문의).',
@@ -810,99 +684,91 @@ function scoreTrust(
   }
 
   const start = 20 // 감점 전용: 만점에서 시작해 신뢰·최신성 결함만큼 깎는다.
-  return finish('trust', good, bad, start, recs)
+  return finish('eeat', good, bad, start, recs, 20)
 }
 
-function scoreCitability(
-  s: PageSignals,
-  recs: RecBag,
-): CategoryResult {
+// 기술 기본기(aeocheck 대응): canonical·HTTPS·메타·OG·alt. 정적 HTML에서 확인 가능한 항목만.
+function scoreTechnical(s: PageSignals, recs: RecBag): CategoryResult {
   const good: Finding[] = []
   const bad: Deduction[] = []
-  const defs = definitionSentences(s)
-  const hasNumbers = NUMBER_RE.test(s.mainText)
-  if (defs.length) {
-    good.push({
-      title: '독립적으로 읽히는 정의형 문장이 있습니다',
-      evidence: `후보 ${defs.length}개.`,
-      quote: clip(defs[0], 110),
-    })
-  }
-  if (hasNumbers) {
-    good.push({
-      title: '구체적인 수치가 본문에 있습니다',
-      evidence: '숫자·단위 패턴이 확인되었습니다. 출처 여부는 신뢰 영역에서 별도 평가합니다.',
-      quote: quoteFrom(s, NUMBER_RE),
-    })
-  }
-  if (s.tableCount || s.faqLike) {
-    good.push({
-      title: '재사용 가능한 정보 단위가 있습니다',
-      evidence: `표 ${s.tableCount}, FAQ형 ${s.faqLike ? '있음' : '없음'}.`,
-      quote: null,
-    })
-  }
+  const url = s.finalUrl || s.requestedUrl
+  const isHttps = /^https:/i.test(url)
+  const hasOg = Boolean(s.ogTitle || s.ogSiteName)
+  const altMissingRatio = s.imageCount >= 10 ? s.emptyAltCount / s.imageCount : 0
 
-  if (!defs.length) {
-    const home = isHomePage(s)
+  if (isHttps) good.push({ title: 'HTTPS로 제공됩니다', evidence: url, quote: null })
+  if (s.canonical) good.push({ title: 'canonical이 지정되어 있습니다', evidence: s.canonical, quote: s.canonical })
+  if (s.metaDescription) good.push({ title: 'meta description이 있습니다', evidence: clip(s.metaDescription, 80), quote: null })
+  if (hasOg) good.push({ title: 'Open Graph 메타가 있습니다', evidence: [s.ogTitle, s.ogSiteName].filter(Boolean).join(' · '), quote: null })
+
+  if (!isHttps) {
     bad.push({
-      severity: home ? 'medium' : 'high',
-      title: '한두 문장으로 자를 명확한 답이 약합니다',
-      evidence: home
-        ? '홈·허브 페이지라 기사형 정의 단문이 적습니다.'
-        : '정의형·완결형 단문이 본문에서 거의 잡히지 않았습니다.',
-      aiImpact: '모델을 일반론으로 요약하게 만들고 출처 필요성이 줄어듭니다.',
-      quote: clip(s.firstText, 90) || null,
-      points: home ? 2 : 5,
-      rec: {
-        workType: 'content',
-        task: '각 핵심 질문에 대해 주어+서술어가 완전한 40~90자 문장을 섹션 첫머리에 두세요.',
-        expectedEffect: '문장 단위 인용이 가능해집니다.',
-        difficulty: '낮음',
-        before: clip(s.firstText, 70),
-        after: null,
-      },
-    })
-  }
-  if (!hasNumbers && s.wordCount > 80) {
-    bad.push({
-      severity: 'medium',
-      title: '검증 가능한 고유 수치가 없습니다',
-      evidence: '본문에 단위를 가진 숫자가 거의 없습니다.',
-      aiImpact: '어디서나 볼 수 있는 일반론으로 분류되기 쉽습니다.',
+      severity: 'high',
+      title: 'HTTPS가 아닙니다',
+      evidence: `최종 URL이 http로 제공됩니다: ${url}`,
+      aiImpact: '보안 경고·신뢰 저하로 크롤러·사용자 모두에서 불리합니다.',
       quote: null,
       points: 4,
-      rec: {
-        workType: 'content',
-        task: '이미 확인된 운영 수치·사례만 출처와 함께 넣으세요. 없는 통계는 만들지 마세요.',
-        expectedEffect: '페이지가 다른 요약과 구별됩니다.',
-        difficulty: '중간',
-        before: null,
-        after: null,
-      },
+      rec: { workType: 'dev', task: 'TLS 인증서를 발급하고 HTTP→HTTPS 301 리다이렉트를 거세요.', expectedEffect: '보안·신뢰 신호가 갖춰집니다.', difficulty: '낮음', before: 'http', after: 'https' },
     })
   }
-  if (!s.tableCount && !s.faqLike && s.listCount < 2) {
+  if (!s.canonical) {
     bad.push({
-      severity: 'low',
-      title: '비교표·체크리스트·절차 블록이 부족합니다',
-      evidence: '표·FAQ·목록이 적어 재사용 단위가 약합니다.',
-      aiImpact: '답변에 표나 단계로 붙일 조각이 없습니다.',
+      severity: 'medium',
+      title: 'canonical이 없습니다',
+      evidence: 'link[rel=canonical]과 og:url이 모두 비어 있습니다.',
+      aiImpact: 'www/비www·중복 URL이 있으면 신호가 분산됩니다.',
+      quote: null,
+      points: 3,
+      rec: { workType: 'dev', task: `canonical을 ${url} 한 주소로 고정하세요.`, expectedEffect: '수집 신호가 한 URL로 모입니다.', difficulty: '낮음', before: 'canonical 없음', after: `<link rel="canonical" href="${url}">` },
+    })
+  }
+  if (!s.metaDescription) {
+    bad.push({
+      severity: 'medium',
+      title: 'meta description이 없습니다',
+      evidence: 'description 메타가 비어 있습니다.',
+      aiImpact: '요약 스니펫 후보가 title·서두에만 의존합니다.',
       quote: null,
       points: 2,
-      rec: {
-        workType: 'content',
-        task: '제품 비교 또는 도입 절차를 3~5단계 목록으로 정리하세요. 있는 사실만 쓰세요.',
-        expectedEffect: '답변이 구조화된 조각을 가져갈 수 있습니다.',
-        difficulty: '낮음',
-        before: null,
-        after: null,
-      },
+      rec: { workType: 'content', task: '120~160자의 정의형 description을 추가하세요(확인된 사실만).', expectedEffect: '요약·스니펫 품질이 올라갑니다.', difficulty: '낮음', before: '없음', after: null },
+    })
+  }
+  if (!hasOg) {
+    bad.push({
+      severity: 'medium',
+      title: 'Open Graph 메타가 없습니다',
+      evidence: 'og:title·og:site_name이 비어 있습니다.',
+      aiImpact: '공유·카드·일부 수집기에서 제목·발행처를 못 읽습니다.',
+      quote: null,
+      points: 2,
+      rec: { workType: 'dev', task: 'og:title, og:site_name, og:url, og:description을 추가하세요.', expectedEffect: '공유·수집 메타가 채워집니다.', difficulty: '낮음', before: 'OG 없음', after: null },
+    })
+  }
+  if (altMissingRatio > 0.5) {
+    bad.push({
+      severity: 'medium',
+      title: '이미지 대체 텍스트가 대부분 비어 있습니다',
+      evidence: `이미지 ${s.imageCount}개 중 ${s.emptyAltCount}개(${Math.round(altMissingRatio * 100)}%)에 alt가 없습니다.`,
+      aiImpact: '이미지로만 표현된 정보를 기계가 읽지 못합니다.',
+      quote: null,
+      points: 2,
+      rec: { workType: 'dev', task: '정보를 담은 이미지에 설명 alt를 넣으세요(장식용은 alt="").', expectedEffect: '이미지 안 정보가 텍스트로 수집됩니다.', difficulty: '낮음', before: `alt 없는 이미지 ${s.emptyAltCount}개`, after: null },
+    })
+  }
+  if (!s.title || s.title.length < 8) {
+    bad.push({
+      severity: 'medium',
+      title: 'title 태그가 빈약합니다',
+      evidence: s.title ? `title 길이 ${s.title.length}자.` : 'title이 비어 있습니다.',
+      aiImpact: '스니펫·엔터티 라벨이 약해집니다.',
+      quote: s.title || null,
+      points: 2,
+      rec: { workType: 'content', task: 'title에 브랜드와 제공 가치를 함께 넣으세요.', expectedEffect: '수집기가 페이지 목적을 첫 필드에서 읽습니다.', difficulty: '낮음', before: s.title || '(없음)', after: null },
     })
   }
 
-  const start = 20 // 감점 전용: 만점에서 시작해 인용 가능성 결함만큼 깎는다.
-  return finish('citability', good, bad, start, recs)
+  return finish('technical', good, bad, 12, recs, 12)
 }
 
 function scoreEntity(
@@ -986,8 +852,8 @@ function scoreEntity(
     })
   }
 
-  const start = 10 // 감점 전용: 만점에서 시작해 엔터티 결함만큼 깎는다.
-  return finish('entity', good, bad, start, recs)
+  const start = 10 // 감점 전용: 만점에서 시작해 엔터티·에이전트 접근 결함만큼 깎는다.
+  return finish('agent', good, bad, start, recs, 10)
 }
 
 // 조직명처럼 보이는 후보만 셈한다 — 시술·섹션 라벨("눈성형(쌍꺼풀)", "리프팅", "윤곽·양악" 등)이
@@ -1252,9 +1118,9 @@ function crawlerBlockedReport(
   },
 ): AeoReport {
   const mode = o.mode ?? 'floor0'
-  const accMeta = CATEGORY_DEFS.find((c) => c.id === 'accessibility')!
+  const accMeta = CATEGORY_DEFS.find((c) => c.id === 'crawler')!
   const accessibility: CategoryResult = {
-    id: 'accessibility',
+    id: 'crawler',
     name: accMeta.name,
     score: mode === 'unknown' ? 'unknown' : 0,
     maxScore: accMeta.max,
@@ -1265,7 +1131,7 @@ function crawlerBlockedReport(
     positives: [],
     issues: [{ severity: 'critical', title: o.problem.title, evidence: o.problem.evidence, aiImpact: o.problem.aiImpact, quote: null }],
   }
-  const others = CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) =>
+  const others = CATEGORY_DEFS.filter((c) => c.id !== 'crawler').map((c) =>
     unknownCategory(c.id, '본문 미확인 — 채점 불가'),
   )
   return {
@@ -1294,7 +1160,7 @@ function crawlerBlockedReport(
       {
         rank: 1,
         severity: 'critical',
-        categoryId: o.problem.categoryId ?? 'accessibility',
+        categoryId: o.problem.categoryId ?? 'crawler',
         title: o.problem.title,
         evidence: o.problem.evidence,
         aiImpact: o.problem.aiImpact,
@@ -1394,7 +1260,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
         title: '공식 사이트에 실제 콘텐츠가 없습니다 (웹서버 기본 페이지)',
         evidence: s.serverDefaultPageEvidence || '“It works” 류의 서버 기본 페이지가 반환됩니다.',
         aiImpact: '브랜드를 설명·인용할 1차 출처가 존재하지 않아, AI는 제3자에 의존하거나 다른 상호와 혼동합니다.',
-        categoryId: 'answer_content',
+        categoryId: 'content',
       },
       rec: {
         workType: 'content',
@@ -1413,7 +1279,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
   const recs: RecBag = []
   const accessibility = scoreAccessibility(s, recs)
   if (httpFail || noBody) {
-    const others = CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) =>
+    const others = CATEGORY_DEFS.filter((c) => c.id !== 'crawler').map((c) =>
       unknownCategory(c.id, '본문을 신뢰할 수 없어 채점하지 않음'),
     )
     return {
@@ -1444,7 +1310,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       problems: accessibility.issues.slice(0, 5).map((issue, i) => ({
         rank: i + 1,
         severity: issue.severity,
-        categoryId: 'accessibility',
+        categoryId: 'crawler',
         title: issue.title,
         evidence: issue.evidence,
         aiImpact: issue.aiImpact,
@@ -1546,7 +1412,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
     const categories = applyTypeWeights(
       [
         access,
-        ...CATEGORY_DEFS.filter((c) => c.id !== 'accessibility').map((c) => unknownCategory(c.id, contentJudgment)),
+        ...CATEGORY_DEFS.filter((c) => c.id !== 'crawler').map((c) => unknownCategory(c.id, contentJudgment)),
       ],
       s.pageType,
     )
@@ -1600,7 +1466,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
         {
           rank: 1,
           severity: mode === 'jsRendered' ? 'medium' : 'high',
-          categoryId: mode === 'jsRendered' ? 'accessibility' : 'answer_content',
+          categoryId: mode === 'jsRendered' ? 'crawler' : 'content',
           title: blocker,
           evidence: problemEvidence,
           aiImpact: problemAiImpact,
@@ -1651,7 +1517,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
       scoreAnswer(s, recs),
       scoreStructure(s, recs),
       scoreTrust(s, recs),
-      scoreCitability(s, recs),
+      scoreTechnical(s, recs),
       scoreEntity(s, recs),
     ],
     s.pageType,
@@ -1667,7 +1533,7 @@ export function evaluateAeo(s: PageSignals, context: AuditContext = DEFAULT_AUDI
   const problems: TopIssue[] = issues.slice(0, 5).map((issue, i) => ({
     rank: i + 1,
     severity: issue.severity,
-    categoryId: categories.find((c) => c.issues.includes(issue))?.id ?? 'structure',
+    categoryId: categories.find((c) => c.issues.includes(issue))?.id ?? 'structured',
     title: issue.title,
     evidence: issue.evidence,
     aiImpact: issue.aiImpact,

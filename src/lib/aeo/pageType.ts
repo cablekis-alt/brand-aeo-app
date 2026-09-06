@@ -13,89 +13,29 @@ export const PAGE_TYPE_KO: Record<PageType, string> = {
 }
 
 /**
- * Category max scores by page type. Each row sums to 100.
- * 기본 분포는 aeocheck.co.kr의 공개 가중치에 정렬한다:
- *   AI 크롤러 접근·색인 26(=accessibility), 콘텐츠 구조 22(=answer_content),
- *   E-E-A-T·최신성 18(=trust), 구조화 데이터 15(=structure),
- *   기술 기초 12(=citability로 매핑), 에이전트 접근성 7(=entity로 매핑).
- * 페이지 유형별로 성격을 반영해 조정하되(예: 로컬은 entity, YMYL은 trust 가중),
- * aeocheck와 근접하도록 편차를 과도하게 두지 않는다.
+ * 영역별 배점 — aeocheck.co.kr은 페이지 유형과 무관하게 고정 가중치를 쓰므로,
+ * 모든 유형이 동일한 분포(합 100)를 쓴다. 유형(pageType)은 EEAT 전문성 요구·콘텐츠 임계 등
+ * 감점 판단에만 쓰이고, 영역 배점 자체는 바꾸지 않는다.
  */
+const AEOCHECK_WEIGHTS: Record<CategoryId, number> = {
+  crawler: 26,
+  content: 22,
+  eeat: 18,
+  structured: 15,
+  technical: 12,
+  agent: 7,
+}
+
 export const PAGE_TYPE_WEIGHTS: Record<PageType, Record<CategoryId, number>> = {
-  other: {
-    accessibility: 26,
-    answer_content: 22,
-    structure: 15,
-    trust: 18,
-    citability: 12,
-    entity: 7,
-  },
-  saas_home: {
-    accessibility: 24,
-    answer_content: 24,
-    structure: 14,
-    trust: 13,
-    citability: 15,
-    entity: 10,
-  },
-  article: {
-    accessibility: 22,
-    answer_content: 20,
-    structure: 15,
-    trust: 20,
-    citability: 15,
-    entity: 8,
-  },
-  news: {
-    accessibility: 22,
-    answer_content: 18,
-    structure: 14,
-    trust: 22,
-    citability: 16,
-    entity: 8,
-  },
-  product: {
-    accessibility: 24,
-    answer_content: 22,
-    structure: 16,
-    trust: 14,
-    citability: 16,
-    entity: 8,
-  },
-  local_business: {
-    accessibility: 24,
-    answer_content: 16,
-    structure: 13,
-    trust: 18,
-    citability: 11,
-    entity: 18,
-  },
-  // YMYL(의료·법률·금융): E-E-A-T를 아주 살짝만 가중하고(trust 20 vs aeocheck 18) 나머지는
-  // aeocheck 기본 분포에 맞춘다 — 클리닉 등 YMYL 사이트 결과가 aeocheck과 근접하도록.
-  medical: {
-    accessibility: 24,
-    answer_content: 20,
-    structure: 14,
-    trust: 20,
-    citability: 14,
-    entity: 8,
-  },
-  legal: {
-    accessibility: 24,
-    answer_content: 20,
-    structure: 14,
-    trust: 20,
-    citability: 14,
-    entity: 8,
-  },
-  finance: {
-    accessibility: 24,
-    answer_content: 20,
-    structure: 14,
-    trust: 20,
-    citability: 14,
-    entity: 8,
-  },
+  other: AEOCHECK_WEIGHTS,
+  saas_home: AEOCHECK_WEIGHTS,
+  article: AEOCHECK_WEIGHTS,
+  news: AEOCHECK_WEIGHTS,
+  product: AEOCHECK_WEIGHTS,
+  local_business: AEOCHECK_WEIGHTS,
+  medical: AEOCHECK_WEIGHTS,
+  legal: AEOCHECK_WEIGHTS,
+  finance: AEOCHECK_WEIGHTS,
 }
 
 /**
