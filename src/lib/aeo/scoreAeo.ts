@@ -504,7 +504,7 @@ function scoreStructure(
         evidence: `JSON-LD 유형: ${s.jsonLdTypes.join(', ') || '없음'} — 발행 주체 엔터티 타입이 없습니다.`,
         aiImpact: '이름·주소·전화·URL을 조직 엔터티로 묶지 못해 브랜드 연결이 약합니다.',
         quote: null,
-        points: 3,
+        points: 6,
         rec: {
           workType: 'dev',
           task: '푸터에 이미 있는 이름·주소·전화·URL로 Organization(또는 LocalBusiness) JSON-LD를 추가하세요.',

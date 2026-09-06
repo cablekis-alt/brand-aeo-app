@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 
 interface BrandRow {
@@ -27,6 +28,57 @@ export default function BrandManageList() {
   const [deleteInfo, setDeleteInfo] = useState<Record<string, { at: number; htmlUrl?: string }>>({})
   const [nowTs, setNowTs] = useState(() => Date.now())
   const [message, setMessage] = useState<string | null>(null)
+  // 측정 경로(local/github/none)와 진행 중인 측정 — 등록된 브랜드를 목록에서 바로 측정한다.
+  const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
+  const [measuringId, setMeasuringId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/health')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d) return
+        setMeasureVia(d.measureVia === 'local' || d.measureVia === 'github' ? d.measureVia : 'none')
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  async function measureRow(row: BrandRow) {
+    if (measuringId || measureVia === 'none') return
+    setMeasuringId(row.tenantId)
+    setMessage(
+      measureVia === 'github'
+        ? `${row.brandName} GitHub Actions 측정 요청 중…`
+        : `${row.brandName} 측정 중… (수 분). 완료되면 대시보드·랭킹에 반영됩니다.`,
+    )
+    try {
+      if (measureVia === 'github') {
+        const res = await fetch('/api/measure-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'run', tenantId: row.tenantId }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
+        if (!res.ok) throw new Error(body.error || `측정 요청 실패 (HTTP ${res.status})`)
+        setMessage(`✓ ${row.brandName} GitHub Actions 측정 시작 — 수 분 뒤 반영됩니다.`)
+        return
+      }
+      const res = await fetch(`/api/tenants/${encodeURIComponent(row.tenantId)}/measure`, { method: 'POST' })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
+      }
+      const d = (await res.json()) as { brandName?: string; aeoScore?: number }
+      setMessage(`✓ ${d.brandName ?? row.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}).`)
+    } catch (err) {
+      setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+    } finally {
+      setMeasuringId(null)
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -127,14 +179,14 @@ export default function BrandManageList() {
     <section className="panel" style={{ marginTop: '28px' }}>
       <h3>등록된 브랜드 관리</h3>
       <p className="hint" style={{ marginTop: 0 }}>
-        브랜드를 삭제하면 목록·선택지에서 즉시 사라집니다. <b>데스크톱·로컬 앱</b>에서는 바로 완전 삭제되고,{' '}
-        <b>배포 환경</b>에서는 GitHub Actions가 커밋된 데이터·점수까지 정리·자동 배포합니다(수 분 소요, 이때 다른 브랜드가
-        참조하지 않는 고아 경쟁사도 함께 정리 — 공유 중인 경쟁사는 보존).
+        각 브랜드는 <b>"전체 측정"</b>으로 여기서 바로 경쟁사·코호트까지 함께 측정할 수 있습니다(STAGE 1로 갈 필요 없음).
+        삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 바로 완전 삭제, <b>배포 환경</b>은 GitHub Actions가
+        커밋 데이터·점수까지 정리·자동 배포합니다(고아 경쟁사도 함께 정리, 공유 중인 경쟁사는 보존).
       </p>
 
       {message && (
         <p className={message.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
-          {message}
+          {message} {measuringId && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
         </p>
       )}
 
@@ -198,9 +250,21 @@ export default function BrandManageList() {
                           )}
                         </span>
                       ) : (
-                        <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy}>
-                          {busyId === row.tenantId ? '삭제 중…' : '삭제'}
-                        </button>
+                        <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                          {measureVia !== 'none' && !row.cohortOnly && (
+                            <button
+                              type="button"
+                              className="primary"
+                              onClick={() => void measureRow(row)}
+                              disabled={busy || measuringId !== null}
+                            >
+                              {measuringId === row.tenantId ? '측정 중…' : '전체 측정'}
+                            </button>
+                          )}
+                          <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy || measuringId !== null}>
+                            {busyId === row.tenantId ? '삭제 중…' : '삭제'}
+                          </button>
+                        </span>
                       )}
                     </td>
                   </tr>

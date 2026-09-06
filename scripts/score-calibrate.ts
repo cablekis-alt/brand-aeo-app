@@ -31,6 +31,8 @@ const BASELINE: Record<string, number> = {
   'gunsanstayhotel.com': 54,
   'www.gangnamunni.com': 79,
   'maum-dream.com': 61,
+  'www.banobagi.com': 66,
+  'www.jjprs.com': 59,
 };
 
 const CATEGORY_ORDER = ['crawler', 'content', 'eeat', 'structured', 'technical', 'agent'] as const;
