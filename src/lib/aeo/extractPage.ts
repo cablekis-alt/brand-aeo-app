@@ -1,6 +1,8 @@
 import type { HeadingItem, JsonLdEntity, PageSignals } from './types.ts'
 import { clip, unique } from './clip.ts'
-import { inferPageType } from './pageType.ts'
+// 의료기관 자체 사이트(제목·H1 기준) — 성형외과·치과 등은 YMYL. 본문에서 "고객사"로 언급되는
+// 경우와 구분하기 위해 primary(title+h1)에서만 검사한다. 유형 분류와 정의를 공유한다.
+import { inferPageType, MEDICAL_ESTABLISHMENT } from './pageType.ts'
 
 function attr(el: Element | null, name: string): string {
   return el?.getAttribute(name)?.trim() ?? ''
@@ -79,11 +81,6 @@ const YMYL_PRIMARY =
 
 const YMYL_ADVICE_BODY =
   /치료법|복용법|부작용|처방전|진료과|법률\s*효력|이자율\s*보장|수익률\s*보장|이\s*글을\s*의학적/
-
-// 의료기관 자체 사이트(제목·H1 기준) — 성형외과·치과 등은 YMYL. 본문에서 "고객사"로 언급되는
-// 경우와 구분하기 위해 primary(title+h1)에서만 검사한다.
-const MEDICAL_ESTABLISHMENT =
-  /성형외과|피부과|치과|한의원|정형외과|안과|산부인과|이비인후과|비뇨기과|신경외과|재활의학과|가정의학과|(?:^|\s)의원(?:\s|$)|의료법인|병(?:\s|·)?의원/
 
 const CUSTOMER_VERTICAL =
   /고객사|도입 사례|업종 예시|버티컬|솔루션을 제공|예약 안내 챗봇|B2B|자동화합니다|소프트웨어|플랫폼|산업군/
@@ -301,8 +298,11 @@ export function detectYmyl(title: string, h1s: string[], firstText: string, page
   const englishAdvice =
     EN_MEDICAL_URL.test(pageUrl) ||
     (EN_CONDITION_IN_TITLE.test(primary) && EN_ADVICE_FRAME.test(primary))
+  // SaaS 고객사 소개처럼 의료를 "예시"로만 언급하는 페이지는 YMYL이 아니다.
+  // 단, 제목·H1이 진료과를 말하는 병원 자체 사이트는 본문에 솔루션·플랫폼 같은 말이 섞여도 YMYL이다.
   if (
     CUSTOMER_VERTICAL.test(blob) &&
+    !MEDICAL_ESTABLISHMENT.test(primary) &&
     !ADVICE_TITLE.test(primary) &&
     !YMYL_PRIMARY.test(primary) &&
     !englishAdvice
@@ -434,6 +434,12 @@ export function extractPage(input: {
   clone.querySelectorAll(JUNK_SELECTOR).forEach((n) => n.remove())
   collapseCarousels(clone)
   pruneHiddenAndFallback(clone)
+
+  // 사업자 주소·대표전화는 관행상 푸터에 있는데 JUNK_SELECTOR가 footer·nav를 지운다.
+  // 연락처 투명성만은 지우기 전의 전체 본문에서 판단해야 실제로 있는 정보를 놓치지 않는다.
+  const contactScope = doc.body ? (doc.body.cloneNode(true) as HTMLElement) : document.createElement('div')
+  contactScope.querySelectorAll('script, style, noscript, template').forEach((n) => n.remove())
+  const contactText = textOf(contactScope)
 
   const ogTitle = metaContent(doc, 'og:title')
   const ogSiteName = metaContent(doc, 'og:site_name')
@@ -604,8 +610,8 @@ export function extractPage(input: {
     authorCandidates,
     orgCandidates,
     dates,
-    phoneOrEmail: looksLikeOfficialContact(base, contentRoot, mainText),
-    addressLike: ADDRESS_RE.test(mainText),
+    phoneOrEmail: looksLikeOfficialContact(base, contactScope, contactText),
+    addressLike: ADDRESS_RE.test(contactText),
     reviewOrDisclaimer,
     noindex: /\bnoindex\b/.test(robotsJoined),
     nofollow: /\bnofollow\b/.test(robotsJoined),

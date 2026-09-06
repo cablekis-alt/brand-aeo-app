@@ -395,6 +395,27 @@ function scoreAnswer(
     })
   }
 
+  // YMYL(의료·법률·금융)은 방문자가 조건·부작용·비용을 질문 형태로 찾는다.
+  // 홍보 섹션만 나열되고 Q&A가 없으면 실제 질문에 답하는 블록이 없다는 뜻이다.
+  if (s.ymyl && !s.faqLike && s.wordCount >= 120) {
+    bad.push({
+      severity: 'high',
+      title: '이용자 질문에 답하는 Q&A 블록이 없습니다',
+      evidence: `YMYL(${s.pageType}) 페이지인데 FAQ·Q&A 형태의 문답 구조가 확인되지 않았습니다.`,
+      aiImpact: '부작용·비용·회복기간 같은 실제 질문에 붙일 답 조각이 없어 인용되지 않습니다.',
+      quote: null,
+      points: 3,
+      rec: {
+        workType: 'content',
+        task: '실제로 많이 받는 질문 5~10개를 질문 제목 + 2~4문장 답변으로 정리하고 FAQPage 마크업을 붙이세요.',
+        expectedEffect: '질문 단위로 답이 추출돼 인용 후보가 됩니다.',
+        difficulty: '중간',
+        before: 'FAQ·Q&A 없음',
+        after: null,
+      },
+    })
+  }
+
   // 감점 전용: 본문이 충분하면 만점에서 시작, 지나치게 짧으면 낮은 하한.
   const start = s.wordCount >= 80 ? 20 : 8
   return finish('answer_content', good, bad, start, recs)
@@ -462,7 +483,9 @@ function scoreStructure(
   }
   const h1 = s.h1s[0] ?? ''
   const h1TopicOk = Boolean(h1) && !looksLikeLogoH1(h1) && (topicsAlign(s.title, h1) || topicsAlign(s.ogTitle, h1))
-  if (s.h1s.length !== 1 || looksLikeLogoH1(h1)) {
+  // H1이 하나여도 주제와 무관한 캠페인·슬로건 토큰이면(예: title은 진료 안내인데 H1은 "VIEW SELFIE")
+  // 문서 제목으로서 기능하지 못하므로 같은 결함으로 본다.
+  if (s.h1s.length !== 1 || looksLikeLogoH1(h1) || !h1TopicOk) {
     if (h1TopicOk && s.h1s.length > 1) {
       bad.push({
         severity: 'medium',
@@ -539,6 +562,25 @@ function scoreStructure(
     })
   } else {
     // JSON-LD가 있어도 완성도를 본다(aeocheck 구조화 데이터: Organization·Breadcrumb).
+    // 파싱 실패한 블록은 수집기가 통째로 버리므로, 유형이 있어도 실제로는 전달되지 않는다.
+    if (s.jsonLdTypes.some((t) => /invalidjson/i.test(t))) {
+      bad.push({
+        severity: 'high',
+        title: 'JSON-LD 블록에 문법 오류가 있습니다',
+        evidence: '구조화 데이터 스크립트 중 JSON 파싱에 실패한 블록이 있습니다.',
+        aiImpact: '파서가 해당 블록을 통째로 버려, 표기한 엔터티 정보가 전달되지 않습니다.',
+        quote: null,
+        points: 3,
+        rec: {
+          workType: 'dev',
+          task: '구조화 데이터 테스트 도구로 JSON-LD를 검증해 문법 오류(따옴표·쉼표·주석)를 고치세요.',
+          expectedEffect: '표기한 조직·탐색 경로 정보가 실제로 파싱됩니다.',
+          difficulty: '낮음',
+          before: 'JSON 파싱 실패 블록 있음',
+          after: null,
+        },
+      })
+    }
     const hasOrg = s.jsonLdTypes.some((t) => /organization|localbusiness|medicalclinic|dentist|hospital|store/i.test(t))
     const hasBreadcrumb = s.jsonLdTypes.some((t) => /breadcrumb/i.test(t))
     if (!hasOrg) {
@@ -592,6 +634,27 @@ function scoreStructure(
         expectedEffect: '부분 인용이 쉬워집니다.',
         difficulty: '중간',
         before: null,
+        after: null,
+      },
+    })
+  }
+
+  // 이미지가 본문의 큰 비중인데 대체 텍스트가 비면 그만큼의 내용이 기계에 전달되지 않는다.
+  const altMissingRatio = s.imageCount >= 20 ? s.emptyAltCount / s.imageCount : 0
+  if (altMissingRatio > 0.15) {
+    bad.push({
+      severity: 'medium',
+      title: '이미지 대체 텍스트가 상당수 비어 있습니다',
+      evidence: `이미지 ${s.imageCount}개 중 ${s.emptyAltCount}개(${Math.round(altMissingRatio * 100)}%)에 alt가 없습니다.`,
+      aiImpact: '이미지로만 표현된 시술·가격·절차 정보를 기계가 읽지 못합니다.',
+      quote: null,
+      points: 2,
+      rec: {
+        workType: 'dev',
+        task: '정보를 담은 이미지에 내용을 설명하는 alt를 넣으세요(장식용은 alt="" 유지).',
+        expectedEffect: '이미지 안의 정보가 텍스트로 수집됩니다.',
+        difficulty: '낮음',
+        before: `alt 없는 이미지 ${s.emptyAltCount}개`,
         after: null,
       },
     })
@@ -927,8 +990,13 @@ function scoreEntity(
   return finish('entity', good, bad, start, recs)
 }
 
+// 조직명처럼 보이는 후보만 셈한다 — 시술·섹션 라벨("눈성형(쌍꺼풀)", "리프팅", "윤곽·양악" 등)이
+// 서로 다른 "브랜드 명칭"으로 오인돼 명칭 분열 오탐이 나던 문제를 막는다. ogSiteName은 선언된 사이트명이라 항상 포함.
+const ORG_NAME_HINT =
+  /성형외과|정형외과|병원|의원|치과|한의원|피부과|클리닉|clinic|hospital|주식회사|\(주\)|유한회사|\binc\b|\bcorp\b|\bltd\b|\bllc\b/i
+
 function uniqueNames(s: PageSignals): string[] {
-  const raw = [s.ogSiteName, ...s.orgCandidates]
+  const raw = [...(s.ogSiteName ? [s.ogSiteName] : []), ...s.orgCandidates.filter((v) => ORG_NAME_HINT.test(v))]
     .map((v) => v.replace(/\s+/g, ' ').trim())
     .filter((v) => v.length >= 2 && v.length <= 40)
   const set = new Set<string>()

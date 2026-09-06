@@ -98,6 +98,14 @@ export const PAGE_TYPE_WEIGHTS: Record<PageType, Record<CategoryId, number>> = {
   },
 }
 
+/**
+ * 의료기관 자체 사이트(성형외과·치과 등)를 제목·H1에서 식별한다.
+ * 본문에 "고객사"·"보험" 같은 말이 섞여도 발행 주체가 병원임을 판별하는 기준이라
+ * YMYL 판정(extractPage)과 유형 분류(여기)가 같은 정의를 공유해야 한다.
+ */
+export const MEDICAL_ESTABLISHMENT =
+  /성형외과|피부과|치과|한의원|정형외과|안과|산부인과|이비인후과|비뇨기과|신경외과|재활의학과|가정의학과|(?:^|\s)의원(?:\s|$)|의료법인|병(?:\s|·)?의원/
+
 function primaryText(s: Pick<PageSignals, 'title' | 'h1s'>): string {
   return `${s.title} ${s.h1s.join(' ')}`
 }
@@ -135,8 +143,11 @@ export function inferPageType(s: PageSignals): PageType {
   const path = pagePath(s)
 
   if (s.ymyl) {
-    if (/법률|변호사|소송|legal|attorney|lawyer/i.test(blob)) return 'legal'
-    if (/대출|보험|투자|세무|finance|\bloan\b|investment advice/i.test(blob)) return 'finance'
+    // 병원 사이트는 본문에 "보험 임플란트"처럼 금융 낱말이 섞여도 의료로 본다.
+    if (MEDICAL_ESTABLISHMENT.test(primary)) return 'medical'
+    // 법률·금융 판정은 제목·H1(primary)에서만 본다 — 본문 낱말로는 업종이 뒤집히기 쉽다.
+    if (/법률|변호사|소송|legal|attorney|lawyer/i.test(primary)) return 'legal'
+    if (/대출|보험|투자|세무|finance|\bloan\b|investment advice/i.test(primary)) return 'finance'
     return 'medical'
   }
 
