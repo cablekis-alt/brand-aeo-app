@@ -151,6 +151,7 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
     aeoScore: scorecard.aeoScore.current,
     durationSec: Math.round((Date.now() - startedMs) / 1000),
     at: new Date().toISOString(),
+    engines: pipeline.enginesUsed,
   });
 
   // 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽는다.

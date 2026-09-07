@@ -397,6 +397,7 @@ function aggregateScorecard(
 export interface PipelineRunResult {
   scorecard: WeeklyScorecard;
   reportMarkdown: string;
+  enginesUsed: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 크레딧 소진 등으로 실패한 엔진은 빠진다.
 }
 
 /** 파이프라인 진입점. 스케줄러(B2)가 테넌트별로 주 1회 이 함수를 호출한다. */
@@ -410,6 +411,8 @@ export async function runWeeklyPipeline(
   const questions = await ensureQuestionBank(tenant, store);
   const rawCalls = await collectRawCalls(tenant, questions, weekOf);
   await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
+  // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
+  const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
 
   const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, (call) => analyzeRawCall(tenant, call));
   await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
@@ -427,5 +430,5 @@ export async function runWeeklyPipeline(
   const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
   await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
 
-  return { scorecard, reportMarkdown: reportResult.text };
+  return { scorecard, reportMarkdown: reportResult.text, enginesUsed };
 }

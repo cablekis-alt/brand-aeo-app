@@ -30,6 +30,19 @@ interface LocalMeasureLog {
   at: string
   durationSec?: number
   source?: string
+  engines?: string[]
+}
+
+// 엔진 코드 → 표시 라벨. 수집에 실제 성공한 엔진만 기록되므로, 예: ['gemini'] → "Gemini".
+const ENGINE_LABEL: Record<string, string> = {
+  openai: 'ChatGPT',
+  gemini: 'Gemini',
+  claude: 'Claude',
+  perplexity: 'Perplexity',
+}
+function fmtEngines(engines?: string[]): string {
+  if (!engines || engines.length === 0) return '-'
+  return engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
 }
 const localLog = measureLogRaw as LocalMeasureLog[]
 
@@ -310,6 +323,7 @@ export default function MeasureStatus() {
                 <tr>
                   <th>상태</th>
                   <th>대상</th>
+                  <th>측정 엔진</th>
                   <th>주차</th>
                   <th>AEO</th>
                   <th>측정시간</th>
@@ -323,6 +337,7 @@ export default function MeasureStatus() {
                       <span className="status-pill st-warn">진행 중</span>
                     </td>
                     <td>{a.brandName || a.tenantId}</td>
+                    <td className="muted">측정 중…</td>
                     <td>-</td>
                     <td className="num">-</td>
                     <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
@@ -335,6 +350,7 @@ export default function MeasureStatus() {
                       <span className="status-pill st-good">로컬 완료</span>
                     </td>
                     <td>{e.brandName || e.tenantId}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
                     <td>{e.weekOf}</td>
                     <td className="num">{e.aeoScore}</td>
                     <td className="num">{fmtSec(e.durationSec)}</td>

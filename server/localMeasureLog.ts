@@ -12,6 +12,7 @@ export interface LocalMeasureRun {
   aeoScore: number;
   durationSec: number;
   at: string; // ISO 완료 시각
+  engines?: string[]; // 실제로 수집에 성공한 엔진(예: ['gemini'] 또는 ['gemini','openai'])
 }
 
 const FILE = stateFilePath('measure-runs.json');
