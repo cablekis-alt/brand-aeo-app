@@ -6,11 +6,11 @@ import { useWeekSelection } from '../lib/useWeekSelection'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 
 const WEIGHTS = [
-  { label: '카테고리 무관 언급률', weight: '35%' },
-  { label: 'Share of Mention', weight: '25%' },
+  { label: '카테고리 무관 언급률 (감성 가중)', weight: '25%' },
+  { label: 'Share of Mention (감성 가중)', weight: '25%' },
+  { label: '브랜드 소유 출처(인용)', weight: '20%' },
   { label: '추천 순위', weight: '15%' },
   { label: '사실성', weight: '15%' },
-  { label: '브랜드 소유 출처', weight: '10%' },
 ]
 
 function maxScore(history: WeeklyScorecard[]): number {
@@ -114,7 +114,9 @@ export default function Performance() {
           <section>
             <h3>측정 방식</h3>
             <p className="muted">
-              AEO Score는 아래 가중치의 가중합(0–100)이며, 리포트 단계에서 다시 계산하지 않습니다.
+              AEO Score는 아래 가중치의 가중합(0–100)입니다. 언급·SoM에는 감성 계수(positive 1.0 / neutral 0.7 / negative
+              0.2)를 곱하고, 경쟁사·추천 문맥이 없어 SoM·순위를 못 재면 그 가중치를 빼고 재정규화합니다. EEAT는 별도 진단 축이라
+              점수에는 포함하지 않으며, 리포트 단계에서 다시 계산하지 않습니다.
             </p>
             <ul className="weights">
               {WEIGHTS.map((item) => (

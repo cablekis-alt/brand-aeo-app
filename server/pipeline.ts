@@ -22,7 +22,7 @@ import { getEngineClient, getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { analyzeCitationSources } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
-import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4 } from './scoring.js';
+import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4, sentimentWeight } from './scoring.js';
 import type { ResultStore } from './store.js';
 import type {
   CompetitorMentionDetail,
@@ -329,13 +329,19 @@ function aggregateScorecard(
   );
   const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
 
-  // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치).
+  // 자사 언급의 감성 계수(0.2~1.0) — 전체 언급 문장의 sentiment 가중 평균. 언급이 없으면 1.0(중립 취급).
+  // Mention·SoM 성분에만 곱해 "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다(원시 비율은 화면 표시용으로 유지).
+  const brandMentionSentiments = analyses.flatMap((a) => a.mentionSentences.map((m) => sentimentWeight(m.sentiment)));
+  const mentionSentiment = brandMentionSentiments.length > 0 ? mean(brandMentionSentiments) : 1.0;
+
+  // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치, 감성 계수만 추가 반영).
   const currentScore = computeAeoScore({
     mentionRate,
     shareOfMention,
     avgRecommendationRank,
     factualityScore,
     brandOwnedCitationRate,
+    mentionSentiment,
   });
 
   // CI 폭은 반복 호출 1건마다의 점수 분포에서 낸다(동일 질문 3회 반복의 분산). 중심은 위 결정적 점수.
@@ -344,12 +350,15 @@ function aggregateScorecard(
       a.factualitySupported + a.factualityContradicted > 0
         ? a.factualitySupported / (a.factualitySupported + a.factualityContradicted)
         : 1;
+    const perCallSentiment =
+      a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
       shareOfMention: hasCompetitors ? a.shareOfMention : null,
       avgRecommendationRank: a.brandRank,
       factualityScore: perCallFactuality,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
+      mentionSentiment: perCallSentiment,
     });
   });
   const scoreCi = meanWithConfidenceInterval(perCallScores.length > 0 ? perCallScores : [0]);

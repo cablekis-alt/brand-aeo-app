@@ -51,20 +51,32 @@ export function movingAverage4(weeklyScoresOldestFirst: number[]): number {
 }
 
 export interface AeoScoreInputs {
-  mentionRate: number; // 0~1, category-agnostic 질문 중 언급 비율
+  mentionRate: number; // 0~1, category-agnostic 질문 중 언급 비율(원시 비율 — 화면 표시값과 동일)
   shareOfMention: number | null; // 0~1. 경쟁사가 없으면 측정 불가(null)
   avgRecommendationRank: number | null; // 1이 최상위, null이면 순위 데이터 없음
   factualityScore: number; // 0~1
   brandOwnedCitationRate: number; // 0~1
+  // 자사 언급의 감성 계수(positive 1.0 / neutral 0.7 / negative 0.2의 평균, 0.2~1.0). 언급이 없으면 1.0(중립 취급).
+  // 점수 계산 시 Mention·SoM 성분 값에 곱해, "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다.
+  // 원시 비율(mentionRate·shareOfMention)은 화면 표시용으로 그대로 두고, 감성은 여기서만 반영한다.
+  mentionSentiment?: number;
 }
 
-// 가중치는 초기값이며 테넌트/업종별로 조정 가능하도록 상수로 분리해둔다.
+/** 감성 → 가중치. positive 1.0 · neutral 0.7 · negative 0.2 (미상은 중립 0.7). */
+export function sentimentWeight(s: 'positive' | 'neutral' | 'negative' | string): number {
+  return s === 'positive' ? 1.0 : s === 'negative' ? 0.2 : 0.7;
+}
+
+// AVS(Brand AEO Score) 가중치 — 권장 하이브리드(합 1.0).
+//   Mention 0.25 · Share of Mention 0.25 · Citation 0.20 · Position 0.15 · Factuality 0.15
+//   · Mention/SoM에는 감성 계수를 곱한다  · EEAT는 점수에 넣지 않고 별도 진단 축으로 둔다
+//   · SoM/순위가 null(경쟁사·추천문맥 없음)이면 그 가중치를 빼고 남은 합으로 재정규화.
 export const AEO_SCORE_WEIGHTS = {
-  mentionRate: 0.35,
+  mentionRate: 0.25,
   shareOfMention: 0.25,
+  brandOwnedCitation: 0.2,
   recommendationRank: 0.15,
   factuality: 0.15,
-  brandOwnedCitation: 0.1,
 };
 
 /** 순위(1=최상위)를 0~1 스코어로 변환. */
@@ -80,8 +92,10 @@ function normalizeRank(rank: number, maxRank = 5): number {
  * 남은 항목의 가중치 합으로 나눠 비례 재정규화한다.
  */
 export function computeAeoScore(inputs: AeoScoreInputs): number {
+  // 감성 계수: Mention·SoM 성분에만 곱한다(0.2~1.0). 미지정이면 1.0(중립적 취급 — 원시 비율 그대로).
+  const s = inputs.mentionSentiment ?? 1.0;
   const components: { value: number; weight: number }[] = [
-    { value: inputs.mentionRate, weight: AEO_SCORE_WEIGHTS.mentionRate },
+    { value: inputs.mentionRate * s, weight: AEO_SCORE_WEIGHTS.mentionRate },
     { value: inputs.factualityScore, weight: AEO_SCORE_WEIGHTS.factuality },
     { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitation },
   ];
@@ -92,7 +106,7 @@ export function computeAeoScore(inputs: AeoScoreInputs): number {
     });
   }
   if (inputs.shareOfMention !== null) {
-    components.push({ value: inputs.shareOfMention, weight: AEO_SCORE_WEIGHTS.shareOfMention });
+    components.push({ value: inputs.shareOfMention * s, weight: AEO_SCORE_WEIGHTS.shareOfMention });
   }
   const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);
   const composite = components.reduce((sum, c) => sum + c.value * (c.weight / totalWeight), 0);
