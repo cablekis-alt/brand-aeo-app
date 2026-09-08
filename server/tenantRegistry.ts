@@ -9,6 +9,23 @@ import type { Engine } from '../src/prompts/types.js';
 const BASE_TENANTS = rawTenants as TenantConfig[];
 const ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
 
+/**
+ * base config(tenants.config.json)를 읽는다.
+ *
+ * 정적 JSON import는 모듈 로드 시 **한 번만** 평가된다. dev 체크아웃에서는 브랜드 등록이
+ * 이 파일에 append되므로(persistTenantForRuntime), 정적 import만 쓰면 새 브랜드가 서버를
+ * 재시작할 때까지 목록에 나타나지 않는다. 그래서 dev에서는 매번 디스크에서 새로 읽는다.
+ * 패키징/Vercel은 base config가 읽기전용 번들이고 등록이 오버레이로 가므로 정적 import가 맞다.
+ */
+async function baseTenants(): Promise<TenantConfig[]> {
+  if (process.env.VERCEL || packagedDataMode()) return BASE_TENANTS;
+  try {
+    return await loadTenants();
+  } catch {
+    return BASE_TENANTS; // 파일을 못 읽으면 번들된 값으로 강등한다.
+  }
+}
+
 export { canPersistTenants, blobStoreEnabled, removeOverlayTenant };
 
 /**
@@ -19,9 +36,13 @@ export async function deleteTenantLocally(tenantId: string): Promise<void> {
   await addDeletedTenant(tenantId);
 }
 
-/** 커밋된(베이크된) 테넌트인지 — 삭제 시 오버레이 제거만으로는 사라지지 않아 CLI+배포가 필요하다. */
-export function isBakedTenant(tenantId: string): boolean {
-  return BASE_TENANTS.some((tenant) => tenant.tenantId === tenantId);
+/**
+ * 커밋된(베이크된) 테넌트인지 — 삭제 시 오버레이 제거만으로는 사라지지 않아 툼스톤/CLI가 필요하다.
+ * dev에서 갓 등록된 브랜드도 base config에 들어가므로 baseTenants()로 최신 목록을 봐야 한다
+ * (정적 목록만 보면 baked=false로 오판해 삭제해도 목록에 계속 남는다).
+ */
+export async function isBakedTenant(tenantId: string): Promise<boolean> {
+  return (await baseTenants()).some((tenant) => tenant.tenantId === tenantId);
 }
 
 function asEngineList(value: unknown): Engine[] {
@@ -79,9 +100,9 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
 }
 
 export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
-  const [overlay, deleted] = await Promise.all([readOverlay(), readDeletedTenants()]);
+  const [base, overlay, deleted] = await Promise.all([baseTenants(), readOverlay(), readDeletedTenants()]);
   const map = new Map<string, TenantConfig>();
-  for (const tenant of BASE_TENANTS) map.set(tenant.tenantId, tenant);
+  for (const tenant of base) map.set(tenant.tenantId, tenant);
   for (const tenant of overlay) {
     if (!map.has(tenant.tenantId)) map.set(tenant.tenantId, tenant);
   }

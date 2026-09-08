@@ -39,7 +39,7 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
     try {
       const { removed } = await removeOverlayTenant(tenantId);
       await removeMeasureRequest(tenantId);
-      const baked = isBakedTenant(tenantId);
+      const baked = await isBakedTenant(tenantId);
       // 베이크된 브랜드는 커밋된 데이터까지 지워야 한다.
       // - 로컬/패키징(Electron): 툼스톤으로 즉시 완전 삭제(GitHub Actions 불필요).
       // - 배포(Vercel): GitHub Actions 삭제 워크플로우 트리거(큐에 누적해 concurrency 취소 방지).

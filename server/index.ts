@@ -84,7 +84,7 @@ app.delete('/api/tenants', async (req, res) => {
   try {
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
-    const baked = isBakedTenant(tenantId);
+    const baked = await isBakedTenant(tenantId);
     let dispatched = false;
     let htmlUrl: string | undefined;
     let locallyDeleted = false;
