@@ -218,6 +218,9 @@ export default function BrandOnboarding() {
   const [url, setUrl] = useState('')
   const [industry, setIndustry] = useState('')
   const [region, setRegion] = useState('')
+  // STAGE 1 상호 검색의 '지역 힌트'는 결과 지역(region)과 분리한다. 힌트는 사용자가 명시적으로 넣은 값만 담아,
+  // 브랜드를 바꿔 재검색할 때 이전 브랜드의 결과 지역이 힌트로 새어들어가 오답을 유발하지 않게 한다.
+  const [regionHint, setRegionHint] = useState('')
   const [brandName, setBrandName] = useState('')
   const [domain, setDomain] = useState('')
   const [address, setAddress] = useState('')
@@ -536,8 +539,8 @@ export default function BrandOnboarding() {
         }
       }
 
-      // 경쟁사 자동 채우기 — URL·상호 두 진입 경로가 공유한다.
-      await autoFillCompetitors(guessedName, resolvedIndustry, resolvedRegion, finalDomain)
+      // 경쟁사 자동 채우기 — URL·상호 두 진입 경로가 공유한다. URL 경로는 사용자가 이미 넣은 경쟁사는 보존.
+      await autoFillCompetitors(guessedName, resolvedIndustry, resolvedRegion, finalDomain, true)
     } catch (err) {
       setError(err instanceof Error ? err.message : '수집 중 오류가 발생했습니다.')
     } finally {
@@ -547,8 +550,15 @@ export default function BrandOnboarding() {
 
   // 경쟁사 자동 채우기 — 경쟁사 칸이 비어 있고 브랜드·업종이 있으면 추론한다(URL·상호 공용).
   // 로컬은 즉시 추론, 배포는 도메인이 있으면 CI에 맡기고 폴링, 도메인이 없으면 직접 입력을 안내한다.
-  async function autoFillCompetitors(name: string, industryVal: string, regionVal: string, domainVal: string) {
-    if (competitorsRaw.trim() || !name || !industryVal) return
+  async function autoFillCompetitors(
+    name: string,
+    industryVal: string,
+    regionVal: string,
+    domainVal: string,
+    skipIfFilled: boolean,
+  ) {
+    if (!name || !industryVal) return
+    if (skipIfFilled && competitorsRaw.trim()) return
     const fill = (list: { name: string; domain?: string }[]) =>
       setCompetitorsRaw(list.map((c) => (c.domain ? `${c.name}, ${c.domain}` : c.name)).join('\n'))
     if (addrLookupOn) {
@@ -624,12 +634,24 @@ export default function BrandOnboarding() {
       setError('상호(브랜드명)를 입력하세요.')
       return
     }
+    // 재검색(다른 브랜드 조회 후 재실행) 시 이전 결과가 남지 않도록 파생 필드를 먼저 비운다.
+    // 상호(입력)와 지역 힌트(regionHint)만 유지하고, 아래에서 새 결과로 덮어쓴다.
+    const hint = regionHint.trim()
+    setDomain('')
+    setIndustry('')
+    setRegion('')
+    setAddress('')
+    setCompetitorsRaw('')
+    setCompMsg(null)
+    setRegistered(false)
+    setRegisterMsg(null)
+    setMeasureMsg(null)
     setBusy(true)
     try {
       const res = await fetch('/api/infer?kind=identify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandName: name, region: region.trim() }),
+        body: JSON.stringify({ brandName: name, region: hint }),
       })
       const info = (res.ok ? await res.json() : {}) as {
         brandName?: string
@@ -638,26 +660,20 @@ export default function BrandOnboarding() {
         region?: string
         address?: string
       }
-      if (info.brandName) setBrandName(info.brandName) // 공식 상호로 정규화
-      if (info.domain) setDomain((prev) => prev || info.domain!)
-      if (info.industry) setIndustry((prev) => prev || info.industry!)
-      if (info.region) setRegion((prev) => prev || info.region!)
-      if (info.address) setAddress((prev) => prev || info.address!)
+      const resolvedName = info.brandName || name
+      // 업종이 비면 상호에서 결정적으로 보강(경쟁사 추론까지 이어지게).
+      const resolvedIndustry = info.industry || industryFromName(resolvedName)
+      const resolvedRegion = info.region || hint
+
+      // 새 결과로 덮어쓴다(값이 없으면 비운다 — 이전 브랜드 값 잔존 방지).
+      setBrandName(resolvedName)
+      setDomain(info.domain || '')
+      setIndustry(resolvedIndustry)
+      setRegion(resolvedRegion)
+      setAddress(info.address || '')
       setExtracted(true)
 
-      // 업종이 끝까지 비면 상호에서 결정적으로 추출(경쟁사 추론까지 이어지게).
-      const resolvedName = info.brandName || name
-      let resolvedIndustry = info.industry || industry
-      if (!resolvedIndustry) {
-        const fromName = industryFromName(resolvedName)
-        if (fromName) {
-          resolvedIndustry = fromName
-          setIndustry((prev) => prev || fromName)
-        }
-      }
-      const resolvedRegion = info.region || region
-
-      await autoFillCompetitors(resolvedName, resolvedIndustry, resolvedRegion, info.domain || '')
+      await autoFillCompetitors(resolvedName, resolvedIndustry, resolvedRegion, info.domain || '', false)
 
       if (!info.domain) {
         setError(
@@ -905,8 +921,8 @@ export default function BrandOnboarding() {
                 type="text"
                 list="cohort-regions"
                 placeholder="예: 서울 강남"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
+                value={regionHint}
+                onChange={(e) => setRegionHint(e.target.value)}
               />
             </label>
           </div>
