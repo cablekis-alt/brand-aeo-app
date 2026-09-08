@@ -1,0 +1,114 @@
+{
+  "version": "v1",
+  "generatedAt": "2026-09-08T01:59:43.578Z",
+  "questions": [
+    {
+      "questionId": "v1-001",
+      "text": "식당 테이블오더 시스템 도입하려고 하는데 요즘 어디가 제일 괜찮아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-002",
+      "text": "서울 영등포에서 고깃집 오픈 준비 중인데 테이블오더 설치할 때 어떤 점을 비교해야 할까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-003",
+      "text": "테이블오더 렌탈이랑 구매 중에 보통 식당 사장님들은 뭘 더 선호하나요?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-004",
+      "text": "요즘 식당에 태블릿으로 주문받는 기계 설치 비용 대략 얼마 정도 드는지 궁금해",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-005",
+      "text": "식당 테이블오더 설치하면 포스기 연동이나 오류 났을 때 AS 지원은 보통 어떻게 되나요?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-006",
+      "text": "술집 운영 중인데 인건비 줄이려고 무인 주문 태블릿 알아보고 있거든. 추천해줄 만한 서비스 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-007",
+      "text": "테이블오더 업체 고를 때 위약금이나 월 관리비 같은 숨겨진 비용 확인하는 팁 알려줘",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-008",
+      "text": "실제 요식업 매장에서 테이블오더 써본 사람들 후기나 장단점이 궁금해",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-009",
+      "text": "티오더 테이블오더 설치하려고 하는데 월 이용료랑 기본 스펙이 어떻게 되나요?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-010",
+      "text": "티오더랑 메뉴잇 둘 중에 식당 테이블오더로 비교하면 각각 장단점이 뭐야?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-011",
+      "text": "페이히어나 티오더 피크 시간대에 주문 누락이나 기기 먹통 같은 오류 잦은 편인가요?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    },
+    {
+      "questionId": "v1-012",
+      "text": "영등포 상권에서 티오더 설치하면 현장 방문 AS나 기기 관리가 빠르게 잘 되는 편인가요?",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "테이블오더",
+      "region": "서울 영등포",
+      "version": "v1"
+    }
+  ]
+}

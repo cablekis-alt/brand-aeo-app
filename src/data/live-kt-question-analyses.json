@@ -1,0 +1,2094 @@
+{
+  "tenantId": "kt",
+  "weekOf": "2026-W37",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ② KT 하이오더 – *통신 대기업 인프라 및 결합 혜택*",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 결합 할인과 대기업 사후 관리:** **KT 하이오더**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEL2AQezqZ--vYG48-2aKwr6tyyGPDMFyVzETUStpK9oXddI026AT2VwS7U2T0QCmRj4OEDXuL98BpM8eGxq_pl3T5qclFTsJWml9S08TW7on6_2fBUTHhVy82wlH6He7w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKxnbyPEOaz8UIt2yPOKbIDFUIxEQNrT1OvbP5hGkcYDSiHzwerFOkaCThI0E8yjTuP4X0Y2NPbtaRW78R2NjA3M-R0YUC3LbBFpGpWmgaKHNJ1F73R-SDp4SK3tomvYlGWd-1WQui55N1XTX4ZXysx_pwbywiyCHNMw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJrbVyD8eo7aGnDPr-3OZ1pjFLe-wGdx0QjovtQtPJNddp9-y2mdyvREAxRWU93MY54RYx0VihR23tzNhkqTqWrsHVuitS4V03_XFmaf4Mv4BomjhL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGR8uoCxWzVKbr8no6mjTusqSk4QupF94JbYTBAMlsH9PrTYWg1FSKio8WjzjgjHObHlsw4rSJ4PLXQ9bqUrQl7GfOv3s_OrJOMRvbE699hZVXmTZx1aLPcebV2zbUd9Zv3KWRJQ34vgzRWXz8e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaLDMOBVNIAFfsNnLdE50SAp0ruAXLzj-iZAXkaULeyhpA3hHtr7usV6GZeWaVS7XkLuqthQYRjK0Le-9n-RIq4Rd8CvNq2JUHnsUOmhDEtUStl3xKHY0t2_i_fkHeeIQd",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHURvWCIrljDamrWHZhKobdNWS0V8vnrNg5j_MqAZgt-4IrNE6EiQe8bHRhzziKU3SrLEuynXWsqNu-FORWLGldlfcYWDbl_jQNSlNrqD-WrdkIKgmqgs7eIQwFEqMTdFv6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. KT 하이오더 – 안정적인 대기업 네트워크 & A/S",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "> **한 줄 요약**: 가장 무난하고 기능이 많은 것을 원하시면 **티오더**, A/S와 네트워크 안정성이 우선이라면 **KT 하이오더**, 매장 관리 시스템 전반을 깔끔하게 통합하고 싶다면 **페이히어**를 추천합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpGTWfM-UMvrFBqfJiIaDGwf-P8WjVlOLhSUQ0P3IotSeFW_ODocT_truaIWQ6VKQyVLFbtq_nxsz7_RfT24LhQgE9J5sk-9_l1T8qhsb9zOqc27SzfJGh8JZwnMV-CpPaRVbH1VBLK8MPIyzoNE1h9ejS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFWNw0vLheavSSI_QXQrBByJ6MzX8rOQtVyBo8S6tZmJCvO2cn7QhwbbalsdY5zJtx8hPHQUMpXd_MUQHvNIgoQY_Pf6tZGzMoCIGAG_Zzrk9HrEB7BrEkgNDji6tDVpMCD616CfaoaKpcUrBG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZ6U-yBzXkyevY0Zbob_Ppv-QMYJ-vO72cx0MwKdWHPhHOxvDCwR7pQL8c2ynwFL4HUPOk0WXlb0411fo1kHkgRuVaBxHY2-4I-KPzKjY0zTtxTVIolnEIuOPNGGAOpwiy-bgdO_NyHIlRSoEokuWEiNR2Riz4jFcd9A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERWXCRNbPvonfe60fxgZyhwKfxM_qzzSzCykumx07_PAxgqwYeIfvI-FwyfPCuduwSCcyXvnTy9Wf6_GEEb_oFmT-sBO6Da3GJE0mUnfmp4SOgJei1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGjMtb_HOwa1H7A2iCey0DRbBkFlncicVVXePNQS3MTI3GKTmNRHQhbxVygM24YG7F-Wr3en5MQXdxjHt_2fu-9s6RZ8EaI6C3G8XRovi8GgNUnc4JF4yWSeOHuK2LAGiuT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjmvifjumozxf_KVR976Bb9D_QlFmRSYokscuiHcAwandlzbGg0VhWyryL3dV_ltbIxoyrziv_Gj3HUep681__JEqcAWlh2DJ6UmvrIEu2BcyNjb0qhIN1StmBc4zBIwoz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECoTrBPCnhBpW1hSfZP6dNR5KxtO2waNx6KM-sSBnIXuy0QwZ2RQaRypw185LTK9-gMXOeQeJPVVRIqKHQ__x9JR_rZ4WxtiRcEjQI4G--XvBaDcoGs1TZbE6sHw60GV5J",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB14lt8ICGrklm91HvUEOWeAUy6bvxUHQbn-1y107Q5wGNCBkIkyEbnOYJvqhScbXeADXCxEM7PLPsROWWd6e49xQO5cQJNjiTOWUOQLFBGcNDxTZJLWAiLcX83NJftgw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. KT 하이오더",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVNdfQU_Veuqd66AwGPLxwL8HBtJcZTJeJosD32--WhG62UrFffyDDnFuD9q0w6OTddLyLfTfN9k93Rwmd0lmtbDhLRWlM8LmYQWO12ycN053VPOvA",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHd3ih99quLNzDiMXmm8iczu8SIF0PIfP6ExHh3OYgJy4vVOz3m7_aRQkkg-LOMVn3JniB-H2mM5sA7B9osbsvVGsui8Ak9OmQu1ZXmr7VflvZi8fllxxqEdAYQsPCTkuI=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZSwLIyMLK1UqAP23Z0BdviFtQ8qfe4ZcUn_d4AH6VJwXojYP_pcrWoTbfA5ZZ8lWYeXs_n1HconWg4FTCiZfGAomFXSbM-DJBRbqHi0gpygCL5R0NPVh9smYawZiBeguul9Z6yqy0gD93gwErZ9gwOJex",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyZ1GQlNN9a2KumoLo89szYpdAMseSneKKx3qyCXe-rq7oL__tVHzuBJhgcfIWIgu2nRPEQNUcmhi9LZ7enzvlnf327gTO28AZHQW7I838FBiLC3Gt3la6mFI2wVSCkDUh7aMxFrj33l69IEw3qnjIrf2pS4LhI04fqw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrYvRHpOT1TNzzfHUw9-lf2AhTaAXLziDAQi8zjyM3YEIsUo1POOn5l4bcOTM4iDRGQF7HV3Cq6NlUjxj1pbvV1QcKuPsSYJX1F77UK4nr3p-8MHfczBHVsPAUf-JFr4Ch20DhPUUIhnMxHds=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESVC0eHC8nrTYc-BYnM4UrbcyOSQyoOSOdWmY2mcEracaCvgRXApQm6Idwx_rQdjGDDlvQU58WYwy7IDaGc9NmfYJfYehhx9gfGj6ubYl1gvm5R8l4ZErkobJq468Ekm6E",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7bCaHpaCcrzWot0QkNxRJrfLwrbX-kej2CXwZbUSUmPYxUmoKiusyvyjFNF5Sa4cGtLLAvatz46E6nZi3AmmqW3gb1WUDyWCKrc9IaHQC9-hoQA_nWPk3Hfro3JKji7Y-k68vu93tFOXWcW_mfXckqCx2Jelv",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZHQQ3tFrPtXqpxBEL-eOga_-eO9zkZSsvZ-yjyIN5KubzzvkWrO8GDNo2RDmmoZ1eoTxBWv-NW5nRclf8xyUrWgAVNVdNgh8iC5UM8ZGDBQbw3DPR35gOA8ihhkdaDr14",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGs0TM0LFlbAiSNhGl97eO_24kZZKTsDPcaErooa73vAR-sytcYyG3gr3y9YNUn_ajaOTmduydBu_Z0bdOGn-AkhreLsuTrbLsndKqrFR_phSD_g_f_OBYJm7exyEq1MHAe0y1UnTIFMIhG55K0gdmtoUNe8w==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGw363U6o0xTwOXncRhc-2Idh-3iR1V-aVCkEyEj2jVYCI1xQWlKxbfzUaLqnjta1UGPcyy5eu4r3tKppDhVkSxf8-NENzYIahKZjpODw3TBz_biRDIhGvJmtPLdCj56z9PYMJ3wduQudtiAwsPujdf9YtM6GBPBDeyUTA=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 기준의 대략적인 시장 시세는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8phblB7B-jNp3kaIdqa6hy9MrMIiF0lWu5r2EGsm2kf05B1_Z4ZuW7Ot4fWw819svriq5y3hzWESzlRXBmT4BSb6iuSn-tcRTRpl3KNvVwuSeGb0CzINtzuuax-KimlnN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGInZnf7efCk6He8bMKTnggscT-O9XdHSMB4-pD_0uysw-TmgcG9Of9FU31bxN0Fx0MqF84Hi9qJB6qIaVt4XFER6ZL0y82hWEounh6dUWYw-EbcPV1Ur3QQX75nRJlVXUDpdMkDOjqKmgXLuQJYg8eqKauxuMI-WoPyoI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFm7uI0idqqX0k-ISdwGrY49No02D_n6Maswxw7SwmRnfLFc7EWLOl_IzZStyouIDLPeAgON46yv1iqiDhw3jdQsOK8twTHITpxNf10ggbGTXzl9E3PBnxX6R1lfgtBVUhZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1QCD8Jntx8O9MCR20zxwnY3XqiA4hTUzUItnMvn_D3lnPWzoHFtrMjxpQM_bf7ZaLQ5EtLNbzH6PjxHAuvXk2dYJthrwildgmx6dWCjZEPT_iBccRbTD6eJycz89XCdjP6DAPOA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0_p1PrcADvGS5Wfd5TGOre7wFxFUCjmmFfFnzuOZ-f5Oz6afRr0i1FBuJGS1AMH_x09uHyVzdoqAvMKv85ZychKzwH0xRJFkXtqGOiABgxXByZa2I",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsJ_JDaxg-WzKeDjPptMseZV7PSxYh3vn4ntzf45-HClm3LCP8B8CRTqPRdGzLQlndkMRScM_-QEzWyfpdjpAUq7mzNsp1Z6r2mmvJvRzUq1wFHpgQh3mUr9Bu06dJBuE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsJ_JDaxg-WzKeDjPptMseZV7PSxYh3vn4ntzf45-HClm3LCP8B8CRTqPRdGzLQlndkMRScM_-QEzWyfpdjpAUq7mzNsp1Z6r2mmvJvRzUq1wFHpgQh3mUr9Bu06dJBuE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoPnp1hQiZ_WbhGx8eqYCYMOfP0lqRHtZicW_taj_lQjt1kezpuRecE1mEiBBuLEuOyrG8K7ja2_-xBewMoemZOcR2Fxhdf6vacDQIwRV-n_tdL6W0I2b-YuMJs92DElT4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS_kUz9s7zOVUJleUZwqZvtv_sCoWKjRMRYO-E4WEtq2c8dKHG4o9JK8vD2ENvxnu9khPyxEQnSEJtjwcwCpM75owoR9jNXM9hUaATWj2Cb1PB_3gbb3Vkqd9rXx9v3rrN_AOA",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9IOp7q5M7Nysl0pYWh3NnU1Hubp8xUYYOda6xmi3tjHYOZ1PqCsXba2rg4FK5EBgHZsq-al28I8XfiI8818AVpdIIWgylOWnyLsZExoROYf9uPkNYZRbrGH0a7t5VAk_w_It4ka4kYZXVz5Q2prcX0T0m6Qxx5GDehA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHOWMn5RWV6D3C3moJjVIHKVtpolzqvH5lND2VYZ9BmxwbJjTYgCIeAK-JtmA-qrJ2jHWFhVftSI9-oqKhGr9BKcJscq5OClKi5fnCmcaf77cTNq3krK1yttp4C6Yc07LdWPjMvsKggkTmT6pO9fa1HgJztV7NPV-CTnMkttU9RbfF3RQe4cvq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7rIMgGApPpdHwh1ju8AURZXbHIy85yeR6PLq6KTrkVUW2Yp3m-3_AGu8sJxjpIJFB4O-qzCjI5aYpH-WzQoI9nBWgO94sYtnf7dwOO2KUsPMgZr5UzwDxHyyNpejjZz2r",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbnX5-go_nzaZQ4rII-6g9-dzQJUmi_lMFal-6FSZGOjSE_RDXr5reEt3lmmFFvYcHP8vV7jV5Kny3pjrQk8Xrtsxtih07km2fo8R6H_5noAVSJI8mTqoJoh63",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "업체(티오더, 페이히어, KT 하이오더, 메뉴잇 등)와 결제 방식에 따라 차이가 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECMfEaZOmAi-B-_OpIjXgYpW0sMaO5imAdmJdLfLEHGK-6yHbVoN8C6_mkavKR_qLcFhMTvIJJxOoxVW3mmg4PUcYmbmZlH5a9SVgRATwq8we3ie1I9LXk6YREjBRcf8w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGFOfIL1cxsxTy2pWkjtO52yWNczeRQQsKu_mF__lzhAvYTgPDBZila_A8jP-alqwUwlAWCFJdCS3hwuAeI4hJXlquGmH-wO3sYsJwFrCGTADr8PFjp8J-NXJtf12XFhTd4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0VvtISaOwrQuIi6-QKqCaL9v8PIIHGLE1pw1NBsQ1BbKMRSBseAB1e7dvmHqD2jnJXUS9iECj9ELr36n5Yv4iAJ8egc9TdMLfZjh5Ou_hzLgqHH0Xp5rHcng4o8VB-DSkGxrtOe1LhYw3mNRggqmZdVhNKoGx0nPUWCmml1ZXrs8Oa8N0AQOj8qzvI7ncpXXi_aiTLlUvSNgvU91jy6q5SdQh9D0FDkypTnTHJGTOiqJj_efkK7S6lsFylwj8lVXtqkanQmpr0bY7UNdHdVZVn-cVI1-dvoAPz2j4o8ggVIY_-_yqbqY4C6usd00qFNsEjaaMGzUbS-OgoK03FG5coP9_cQkjxkQhUu2lUW4c18zdvtGqkIlljmnmXMUR5GxDyFIhre28h3hBtOBLgUlRw7nwjlxzyZvyGf90d1E299rSsJxd2yVVQA173hlGHoS-TlHkI3XV0QFjOICg0T145MSzeJ3GZpt_SYO08gUH880r8A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeIMUFJ8nBJwXnPNokynO16h9Tdze6YMEeleJ32vCmyxTWabHU87im6RNrBi8Xz6WPmJqEq0VBqb3BrCsY1r4iiT8IGsoWq1ITrY3bCMRXpRuQmNgsOQKqv8FtbLhICL7qQW1dCie5gxg3KZIwcvMXgNewLtZiyXC4Olk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECMfEaZOmAi-B-_OpIjXgYpW0sMaO5imAdmJdLfLEHGK-6yHbVoN8C6_mkavKR_qLcFhMTvIJJxOoxVW3mmg4PUcYmbmZlH5a9SVgRATwq8we3ie1I9LXk6YREjBRcf8w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHANlczn0dGEl9bzhOn_NYqvdndN0dqtPltQlkLpj1RmfGoAcWd1p3XWTzlxAZf9TQvgxLUY7glGdGg1Tum_Y9xoNJn2vwGNrugXrO3UTaXoMzkmvyJE_Wj497pB2HdOXET71DD0yjKqZwYCvIM4FNcEhICR8wNPFRkOg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuNb6zVa6c6KzWnmb23LASU72K0Qk9IJTkoaoNQa6r_nR7l0CtJ51YhJ0kAFLSJOhRkL-q9en7o2IT05iz_msJAQd34PTW5_Nm2KtaW2lQx87P9PtG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5VqR3AVuYBzCpMjNzdhcNSYk2jJUpuarNbBwOiEP75o370LyN0sTIVQ3mxJqFBf0KGSWhE96J0HRlJQeeYlYfQqQdU1lm3Sl59uKtmXiLutLhdBWmhW0pyThN7SUlUmS2",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEn9PbA5UW3CMKZ5KexDsqiBwZpap2g7fcnM4KZ4SINi4Arxaa2R3Rgs-0Qppluy3viJhvqF_PcbYzytktUJVgyGeTAA8oCQA5Jy_24hcjkkWqhdL_L7n-QmPYFItyu7twZ_-Aa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZVlkz3T7M5hpIsVtETUFcHM_NWNEOlZ9F7HvsZXh4pp3rpOPG5zHwuPG3z-pCqeNJvrDI6omjxigsNfhtSyZ9nmJJWWpDi16FfV4xZhAWLy4OlupnanH2rBZlfcybanoTX9O4QHYS3kKAeljLKYQsaQZ1jRfhUhBWXjwvd0Y-TvTUzS5Kiw4D",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8TDWv1IHwZT27UdO8_FuW-s6L_7lUwkBWFe6x10HEuhBrLHbpBjkSEII-V6TmfehlFKn6jG6irY6LacsyxCN4zcEHo4T1I-KlzYet7J_aB_WKYeu4UCszJuffRGDWvqNVYQMedQBiT_Z_k89gTHR_qDKQpR_tADo0-g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9IyUvbTQ0l1yymxI0jUtLZ9Mv_0zNOq4fLpnveUY8GEcxx4pALLnN4LIYLw_SOhyTDc-qFw-7_igqdFGaJWR6f4PPwBTD0Htxdn1zXWTK0zjlYyOWHlPnLkDBRiC7YcMIWcVJI0-6PQ4uxQZWY-mH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "기기 렌탈료를 정찰제로 내는 주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등)가 주로 이 방식을 씁니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEw_pytDSVuEJ7g26iZ2-AcfH7eMlYYsqHU7iaGcppup-MCCl4Of9dAtapeY4pQrpnRIU0KxK67XBSixfuTlhwHCD7QVuykDqfTJ2CF2jqm8AfJLcqQHXMv9lbj_9NAQ3ks",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9Fa4gyOkfr-0eVwMSr9n-2dpk1T-qMKWoCBnIE0-THBv0lVp1Vvs-I49EVgVBMlq-nsiT9KGj7HhE1jtnB6lz7z1-EhOF2hFl9SOzGWoHWQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEL1tQsk28Q_OTJ0mlnH_aB1ZdhAytCQgqS62tseQjQ3ZO3P79a0LImTGqIlPPtebntIPAskmcdfYn_PLCnGNzf8VvIcIu3GoG7pZ6gtfqLX0THyArY3OXhBjmqJvA-quY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6HxV9-nB01Hi1GTiMGQhYVKz-z5J5nZZQfPivdEp0k6p_MEPKGmt6NmPT4-hv1hGaxK7npS3leV86yUHR41XG-pysQlrka63T3Ppn9loV_wHFedbxBwlb0X0D9qGO3qqIj4y0pE6VxClP294L6bEI0MRLs6Yv582u3jI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEL1tQsk28Q_OTJ0mlnH_aB1ZdhAytCQgqS62tseQjQ3ZO3P79a0LImTGqIlPPtebntIPAskmcdfYn_PLCnGNzf8VvIcIu3GoG7pZ6gtfqLX0THyArY3OXhBjmqJvA-quY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRq862G4TOjPbUamlVbM_uB0OW44buwOcQ-hqlv2CQswA47PSHmphU8d9zr7eEZZVvr3fUY8tj0ghzrp5YA2ECUgJkPNtWGNeLxrgz3dCP3SpPDUJdrFuOaYo4m4ntnTud",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHamM2b_PRwpupo_SX97T8DuHvFoEydIy2qHsqLmr9ccbemqvVI4RynWwIZUhJ8B7KKlfM3A7Xyh44GbjF5TROhUSfFLg7ryF8D3ev_IQmiM_1SMwINHmccyTmfuFZoD_wnBvfhzcKV42FNS3rY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQIn8jImkouhDy_A4WoNgk9i6JU_9k9rKo5AOL41EBEO_lT2Ve07R5jBu36wBgo3DIloQbRbma96drflcYqe1hM7I5ndT2V2NOoD3ph5BSgAOOO5PcMB3WAIx4eGo6BpROqP_94OldBR6TbhM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHpaFjTUpBA6X6BeC4GTik2Uj6LCziEKKKu3YYXnOkHw-kiPHFLJc-1Jr3OsvxcxbAlhKQXdrPXW1xtKIDtDEgpkRPXMk3oNDYQdTQ52xu0R9bB2JkgYtJ4uYR4Zq1HDwas0pqee3x60jrW3DdvsV8RtDqxCENGD9I7YQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKePwjCqck43liDmvw94B_ja0OoHBuNbvDLZ_tfw7AGvrY5tVs96Gy9Hvng78Fa0-k8JrSzcKCH6-9u1UPjrjF9CPzNNmllSRAmXO8p63R76k1Grbj5WquMAUIIxzh98ajYNY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ② KT 하이오더",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### **③ KT 하이오더** — *통신망 안정성 및 대기업 A/S망*",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHiTfrlX86DTT79MMhkOfA-tVlnTtiWOG9mIDjoT8AVfhns_gvw53m2ep687fXNN_yXuUYZZXPr9qrOA04mkuKuO9F67ZAA7wr1p8KzV38QW9mf6SwFbJr07xbQ03mvKTBM6W8gD1P0V5ixiUHZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhdedlKteYKAmEDQlEtaYZp4SXt3rcYkIpuWSaUMYGLB6zjGbItR3dFiU6j9rdLk-1I52fIJEFh74zuXGOTYyIsB9t7DKLvVChZHoy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIVHz-5WC2mWbJve1XVmb-yCaSiKXsfdp2ttIxkh-psuCCR81yM9B-3v955H-LmoaMGEST2ThDqdqxavr6Byqg2p2MxTWkGrP0fqVSCE1Xi0dOVObfpvtaA5hIYdtXIasDHvnm__Pq9jKafTzmu_PZFQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3bj0N-r46pd66AI2I7fwD0n8sw-gcgG0Dg2tJ5x_O3ZgJrY7_KVfRMaidHVfZ-M5nl3ux0sGIo_nwcJFLSR0ctgymbaUSTlZ-A_RhBrHuzxMPB9ip8AuWFOQ8M52vlKo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhA6CjHjZ6gGD53hs0YInaKJbGdYA38m1mIKB5jwZ-usHLCG4_-I21fySzTw_GIjBEVRwoDJtir-KtEsyF84Du5cydHkIR9yt97r1j_cg_6ht5s3DcPPOT8_xesOHnk0oOl24NgN709mU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ② **KT 하이오더 (KT Hi-Order)** — *통신 안정성과 대기업 AS 중시*",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* 통신 끊김 없는 안정성과 인터넷 결합 할인을 원한다면 ➡️ **KT 하이오더**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2dpI3jAZ8vyvCOFtgnlc0pm0FIDqaiC3AzCeS62vr8-c2ESPeXNrK6XCD7KAd5-MubsW6THcdM3esBfC7hk6nOGVcvihsnBtnudXCF170hmyeFkAkUy1iIDUoK3qeeYk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFg29sRf1gtJLo1xMW8vLsfKzli0oryGpnmwtfohZYPdKqPJfHZAw_a1oRoAqUjWvv6MMMLAcoTQ6t0j89D09D7Yw9UNfpB3lTRp9qLdDE2B5I4N_HPqP1K9ebX00MyW0Wx34zwge2RKTWScq8Q6e8_lAAF0IOFL2FG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYXs2FuJuQsC8EWwveary8CwkaLn6_u3gGu6stD0O75G6UTDLImqqTTtXvyfblMmI8WJDQu4Nt3MmBD8_yinY66tcl8ZplO4_lkcvy3UV5RGALwWBOYPMjJ0JI9XviQPY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4RWiPgF3T6F1fZbCt0XoeBD4_-hsrEM-a1ayg50kMxYocaTJqzNah--VXMzKyIZa4m8HBm9BOBYjrCc5oVD7tSgs7ESwOCJIsQJmvGOscmPe86CKZ1jipNONZVrbUmIwsE4DWRrINpv4P1A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFpOQgJEA5j9A0yALQMvZ2mWddHtmMyLwtzElbmyJzVRbw_HGwRZ44jx3MtAoyAv2Cud5yoiOnO7T7yR8WFsZMpcfcXS78ssirWBVpNeP1AhuaU7aaqQvCzokKCufqBX7PyYN_QRi1e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 통신사 기반 테이블오더 (KT 하이오더, LG U+ 등)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "KT 하이오더",
+      "brandRank": 1,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ① KT 하이오더 (네트워크 안정성·전국망 AS 강점)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **지방 매장이거나 대기업 통신망 기반의 안정적인 전국 AS**를 원하신다면 **KT 하이오더**가 유리합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXjFtkSHtYf8M3s0EJNH8gKgeyKMfp8g7WVwQ5WrxwZuiuelM2eDJgl5uiYkGdMjVucvd8bruTg66O8sy9CMiZtzk7PYicExtDLx70Rr4fhnaaYtFSUgBiBKcCWOHd2Cl4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJYF75V-U4mhJpnUqo7jlxJlPaUexiKHC95VckPDnRAQt6VJ0NEDa8Ob40JwijmNY54avbh7rMFJv7XXXO7X5svSbEM5kiTgYYPyTyq2cNx3v8GS1Cfa3CuVcRZEO4Zi7YNM2hERB08t0vrPVg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUW4ics3uFqvKr3g2yODJ8izmLITYD0VXYmMdLWPOtGpUQoV95O2A1Bys3FWFplg28Ivj0igoh9dt7Qq7CulXg6lpcn3v4eyFysUsL0T5fuas3u4ys0b8hJTc63fY9-wHX5qZ2od-eK8OwAT9xKKVZ4GFe",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHF8m5UmxRWxcuRBBt5KtutRs74KAh0YcjnnTVfO_72nyw8FTjVHahIhLOOU4IxE6qN-HIihNBAUArboI0t6N4LmqvUVjKtkUXmzDqbxaOq-i0G6DZT11qqnReDGRnO3VwI94ZO41vzb_ofQe23v0HnEhmjEXDopvoyYQyG7VM7UYc3yphD5Dsz_wEJFSK1IjdujA-JZEhOUqoWQCiZuhuslzbuNVUWFgDOBfENYoZyJwGwKWzCCgRpdPkAbYocB6kysoQqN0lbnVg6TEIj0oOZXnqnkUL4un1QkvOu0lcbQMbfSTkrM-VFMqc4zyNi6AcL2oD_xtL9bg_POckMGT4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "테이블오더 선택 시 **AS(사후 관리)**와 **네트워크 안정성(통신 끊김)**을 최우선으로 본다면 시장에서 가장 많이 언급되고 검증된 브랜드는 **KT 하이오더**와 **티오더(t'order)**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "#### ① KT 하이오더 (네트워크 안정성 및 전국망 현장 AS 최우선일 때)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **\"인터넷 끊김 없는 확실한 통신 + 전국 어디서나 빠른 기사 방문\"**이 목표라면 👉 **KT 하이오더**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0TrkHfIfcs3O0gfheNxrHWYbKXvk5cpIUkNWcbMY4smR4yp6Ky4OnwJkTj0OBElUAkWBAAU1kuLF-tSqW0zmSrXpCP_BirTzvzvbjq1G4LslwxExQ674Bvdedek3aqu8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvs_x7GfOQfMLQPY0jZvaE_Ma-aomcHfM9PYSzoCXktuTDXm4w7doLRujmfMm2acAxeI0sQG1BSmavuZmPEUrlCvjxVu6u3lNu5lb-xm8EW7_KyLHbvU64dJKEHnfGnZdcNv44vZdEdFFBMRIW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKqdXyRJaqfZjwnq_Q_3ilOb7C9iK5AffPXRSHlFGidPRI4EiHAV8H7m1u8z-p05ipXYWLLFi0a6IgeNOumuWRLakUZ_DRLw7ZyxdtbUxJL9BDFkchWJD___vAHCpwX9z_nuU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElGa42h3U4u3iD_RPOHLsZrQkzCQEbwjUaK8wbF5bxEvTY-fbyTE6XVJV6czYo1lSkRkGNIxy7wV5im4S7-JreQGhaGOB9ehQzMgTRqqSRLuVUJnjUdf9pzT2i",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFybSl_0cOHatDEPjF_DMpRFhCzzWjbS0tzTr2iFzKEWpW2_kfE6WuKfGsBcnhhocdPVko7VcRosgubaQAcHTCmpmzQ6MEpbUNHMH2p_gXd-LESKHLHpwsgTCQzT1WIZTWE6NxdhrEzdC5-DcYpiM_2e_I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1OnPcWQPslmiQG-Y1Wdls7cfMEELwULBb5nW67rM-65kUcL1ReoK1T0HJ0tXtOg2J3hxXGWvIwgeL6A9OpZpg8Q7tyvZ-N6Sko02fnwmrTCoAPaM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. KT 하이오더",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**결론적으로**, 기존 포스기 기종을 그대로 유지하면서 도입하려면 호환 범위가 가장 넓은 **티오더**나 **KT 하이오더**에 현재 포스 프로그램 명을 알려주고 상담받아 보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFqvkEXWBIp2ywTM9t4RLNsEXWOmoZwa7YB1M2D4mfiFHlRNv-TVZLVCCOY_D4EZPdV7l6JUOgVLYSOwPYpdAs5mV89NwdM4FTJqe_0srnlFWB_H2Jia2JC_NtWYJbxtij74cSiLtHCz-Ob8LBCM2EKwF_zrBSTWLxUQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGctwS6mwC09zJYcT2t8SnRdROhs4N3IEsoNOf1vU9cW62G9maULuHdhqiIt2_7fYVZ__gt0lREehXD56pStX0gdO42ryNA7kqzbQwCFbFLkcB9OP1LHSP2Rk6b95imDOPXNvFiJZris4o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwD5NC7AOUuxjD4cF6XytkhouYS89HArhssQzXvU0AKvLMczoMwCBQVkP9lLMZJXQI0tgk4nf4WutMqPYH7xsUAQ3sltUe2PwlR4JKF7sZWWqKBh7IsEU_mNWg3xHzmzLA_EEEN1BwHjiYR4Uv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUUY0dyB_bo-BNQXIeEns8_A7Fl9v-ePL_oaeUPRm359AZdz6B0ExWledWu7uc-xOLUZmhGL1hy9rRC8Z6kns_4yVnv6ut8XgjUOi_b9C81q0G1-e3jpw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaIXO8mUQOx_FqYlHMhTb78P7X2eQ7QRaEsBA2H2Ai-KVcuugQ1-Vy-GNVvRz5G11ycnbsW6EyTV0pguMSVMTnKSYiWJWLBBl9aGS4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHuQzo352CuLU_67grzrkls13pUJqCYCeznwpA2L7T6VoZJCnfq_K4Pn7xcEfwqZRpLsyG-S_Is4zl7p787-fKpsuHvENC6Qd5K6KTVDNTB0phB3ADiwTI9vP3bcaX6Us82sesA-ziIU8_3yA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhKQvhQt4VV3o4e8QUu3xmsQ3jcnVxnHsNEV3VezU9tAEzWW-i1gNILctfeTeuan8jHpsU33PzpAITac_TmYcFHWHN1FPJQf5rWdaLDmbgeqiVgiFR0b90T9k4a1MEIlDZw2lV_Chu7Z2ivxYI_bPttA_-aPiGMos_BWk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3nAgP4JHFzuDy4BwknJMLnOhyEIjXPW161ZUsZJZ_z2-lhOEgT4qukItdROOVkrJ4Pi7v45SgHLWqObBn5acflQdEZ8qoV1YuQyOhRKizy8f1cX40A59_kibZSJVT5_8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1hgCohxTAiig99DY6f-gpAM50Q1FCST95Q8JSTbf3xbo3r9W5NJFhn7J9Ew93wjQkGN1Py9UV9Xc3fT_Aipkxy8jO9PEaX-ycQBRIACL8QejG7oVo2g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuFVXtRm82cgUd_3JtHIRcS-YaHOrUEMkcAs8k95svIBayt6HMjzzhR0TemnZM9dYyPf7zHuhfVg3fN10pSQ0yWGz118ClNDE9TYmAcDZmZecAq51s",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 3,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. KT 하이오더 (KT Hi-Order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHe4yqI4oY9stTCWpjZYGl2aVupgOHf7riQKecpweg0Cp27Ns_qMSNKocil2Wot9qdPOoJXgm8J27jkFfWn8ulUoBgNrSJMg8aQQhIX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-bTkUYQgGBv_85yePeWTzxfsMlbNNGNmz4qsMCQwsiScptj3eMhWCeVwu9Z1teJDPsL1o94Fm3wAfWLGZlMLcgBq27mlyr1vs4a5QykY83_lDKFlPNJteADr8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUN41ZPG6OeaeYoakpN5f_Jo-3d4sriA5z3WE-GZd_TiHz1aOcYJzMwligOLdcTwUn9j4jUdJ5Z3X-6Tf9PjrirBAdPoe9qQNcYi1cnenJ2BQTp9fuSURrPV48o35rQCKKacDXBnmWov-2Qp-K-SROjM2hTZXNzJ4-FA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSx5z1Wug3m8uWxFEzvwowwSNBt9A44J7JXt5tJoO-WPVehMlFJDR8ntCzXWwt-p4lBAtazl27Ilg42u0yzx3a_6Q0dIMUdK6IuxmSPG52kIupgt7od6OS268D4jtqLdI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBMxLaRik4p4in7KaRfwTDpnycA5G58OkSJoYhHfize2EZNLaJTz19QG8UpZ66SeoRK9WyHbq40bO9hJJXcIy5LMnskl9WHQBVyNqY76a6rQwreUQFQ-cysa_ohrf6U4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBSgS_yyO7l7E8TGHzH3eb1cAy-vUErjYVi7P0F0XutcpcI0MKXGPM8uDMnf6jxlitPyjdMqzW1bvVsh_87wKN4g6wj6lTbSB3qBViMztxyVZPDgfOnIO8_AGue42rRSms0BENJvQzYycQLWz5Lx8usbi5Nl2W5YjGZou4Rt3LbU5R1mBYGCxGF0Bo4l4Z8759d-ut-FBNl-vPVsjaJiDqulzW80KdAPsmSCN7zbImGvZqYU_iSRvrDOeygJcJc2yLkUphxXbzfuO3Ynyrgl6fdLEBLXJ-OWE2z9lJSK5WwG5BFmpB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 3,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFavEZ7DZmG-fHA9hDhrRDVYhIHMkV3nzGLbaVykrv8_sisWk8xHv2lnn98mcR7y_6pdcXv9XJm1YcuO4zxzuDejljoXqDPskBgMhndxqnEoaxNFWj4lyuM__ETnlEC2_t0Ir9h8QkpNf37OeW-DTkmXZhD7NJXSD5u1w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0r7eUsVtce2_4t7j3BxCeHGFD3ZmtOhBZFX-yVZVihRxvxJyC_Ahcj2iVrcPARJFvMt0UJiwP5WLdx7yKoMeS3pNY3k48RQ-EM6UjJw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLSh1pdt9vQsfqHMcllEa9298jyCeJOSxQJD_MKyz5rPSu60p6cedEzmxYXrMwiTey6UE_vYWcyGbhbihRz4YQQGvehJjrkQj4TbionVilFT4dmhhWqZc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCmp35NS0B-AC4kd5W12HkD8DyYh3yrzyv1dXJIhulQNHPTz4y_MhxAB1Pshc4mMGxtzm6eNLwxSdib90mlojWRN2_5_pmC7k8BuatC61pxfZDzvhCKH1cP2zWRu_BuQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfaESAqP9_a8k3colSJ2ooLo26vx9JSOBvsriKTZn4KJ8VLQU9yGn8sptE7zmJAp39tuT9eeFEOvt8_yp0PAbUqn3c4MKkcm9MfStxwb15-HMUURcqXjqHnvwpZfPlMDjf_itp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJUmVEaZZdpm6ckD047TxBWnb-jUKBpl9V196qjFSTsnrqV3l9RY9IY3nzQVSgtej7vowEcUBWzwae5XrWxQFpMixDZh786HNC79KYPrHW-Cdawg6jfmTFX96JbnakvEgp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1V4_Dk5PPlQlsR8PBbiHbWXrOlj0dKROJypwx62rNHKkergkWWRyZJeAk_NKAfMiuQjJ42vZ8h14lxKxl0gXOWwJxpMm-AdvKrtzXk9rCT-KH668Os824ahf-K3mU2a6LRwpWlvjBmbSkywatckCiIJE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPqwbPjbOAdJVTV3Ru5DjrxRz6R8HP5HKdsAKgndEajFc_c0fGv4oovpk6Nm6YV2F-ihswCnN6LiN_2Q0BlUrlnAy_BzbWNq3SQBcA-OwTYorcGTDc8bf33YY_gp0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEv-meLF8J3UR9kmVzRwL-tl4VQmCa-5q7OlbwI45yDVntm2bAjbYaQgjmyWFL1Sqvn34zD9AlXkwxn2Mz5xKL3L3Q57HMwZ2T-1-4iCS4kKRvNQv565Y2EaiA2HA91TS0GmP8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **KT 하이오더 / LG U+ 테이블오더**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 통신 결합 할인형: **KT 하이오더**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFphB6ldN6ildTCG9-sr22fRQ2v1RvszzIQiIG1RZMo4_WzdACtASyKNpsf3sMdLDMYQ-fgwXu06hR2lG01EMD4ReLC9XZ-K3DrUWzf6DR5cdXprnZF-NbRDgrSxIjubAXl1QYLQ-RtHTNqH08HhwBC3ALID7kD6OkdpoA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHs5mL9igfDYvOMJfnPF_-SXqrW6qs3435sfQBQNASZTmG1dnkmCA7RQVZwow6EB9T0uDrmyFnYF0Qd2cm1m5PZ7x_HBBzpoYJ9j56vD7OH6y0E4EQVCHxz6UfEbLlCx9wT-dK4g74t8YhYFq_C6M6OswFJ05kDXcY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgT3ibPscjFWM_s-4FsFnBOEp6eDVuXM-dXxN7ExmesqapTSe79xe28wZR2izZHp-nJpDZrOVVlKP9C8kfPGyiEa_ZKFfQmBLnxra8J_tFJWIARJLvBWiYUbKLDhOA-G2b8AyiuwY5FeyjyOCYzei6KfYk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtd8nbtUU6F-V9fE0a25UgchuMx4bOBwOqX_XqnYhu7fUBiSLOXSjUg40UeQt_XFVfnM9TEwNiF_trLmwSd1zySuqdgcTZk_gzngMqlFcLixFSqEdG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxIVFAqPyG_7OE8Kbx4lEyMfbLW8UcFI7BPVjEjYvMFtTrdq5xCON55Cvu5B-xw4WRraLkmgSN1TFdxDWYjiPryaRooFmatYdXx86ApBi6a5GlWTCDg-PIk1VsYXgDgeAkABa6xRWlJadwoPlN6WXZBTBdmma4w2k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9WVWStU4FRenjkk8y2lbHflGRX4unPtXJhCNMqm1dvVqxDSZ2Wk6F_SLv8qOZnd4G-q2Uzkkpv78Cdl1IKOZlQ5qIF11w7b-8xAe0757AVECPQgxiYgR3MFlgRDw5mHlG7SlqgBwRkGNDRQns",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEd5D4DZazS93ONOMiGxT07WJTudyO11tF0BxUquX5hgWSBwURKTFZ5UKaOyN4c04R4IMaV4sJn7mJ11gadMwLm-N7qQw5l_gXgWCArMZZnPUn0jPf0K93Sdw4-g7aT84Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFo3RgQSK0qxuHmC3y6SfZjPQqF9JPRDNNmdoVRsf96KE8wXOEKXMjYWIfvXoTWptUoGlyaZjCf0VW7Qa6oFofrsGXUyEY8UKW2ICBX-w8xnHyepDsenIss7Z0uaiKdL0BcAL63",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoAICyCgJO5K5XGBcY3b1o3TacCl854QNEIlrTEORTohZDeMJuOTC53j_z8DwrJl8R1gV-YMG0GBhDzkB7tce9Zv7I5KmJS3e88XcBmNb5aSk9iSpi8_6kNp5bovj7zIbOyrNR-PT760OMHhMv",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEll5c6q0ZtFlhjdN2t0aQq-1Xz6OHrLRgSLw8LOo89-TCs_5CN-_x5JwFCoBkuHZuWUT3cnJR6NTSc3mchLxlhBgQAQtIoaT4t8F0JCg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1-xuyIfDUpAjFooR1Pf-IuNZBKJIAMCprR7tHN6VI2KQiwBi-izROySZ8DUP2UHBNK0xNd3fvTTnoHw7kYaXSGQqttwlm-rsOi-KhCezuf-7P8H-NfJOGbieJ9CSNDtft",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### **③ KT 하이오더**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNMSLY8KXPw22QbZ3VMWQtR3cJmpMBAL1rRCFIhQHRUmSIUchnCX13AFznSvLI5sV9ND8jPwKhWccV_i9268br2_j1fyo5L6a8eDEFkgbWKyzi14xL0pDS6zj9ddflm2mVqPqBbUrPKo7naSSPjoaq4XutzER_1A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG85f73hjwbJRYqZnNWduIVsHBwYxhAI-P4bi_zWcv48mCqMZuKcdkJ0cA-_EYvEM8CnrCNrxMuG3KcLRbtBm30SqasRpU-ZncnHsD9HEvzjRhpQZsTcCwtF_kOeUzr91e0fotuTb1zzMSprPltkxAd9ibX-PVwGw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfJBwSNyhwxEMOHRZlhqkEAGtKx5R8xFIVdyRPzzHnuiLVpGcg0qOGJr4oTaoWoQ7xfa0dlmj6gFMzavcEHVpIkIlOip6ll7eVKWBAvGS3vUnRDzj1qWzkLawYzYKwnAd55YpD1oN8h_W-i2E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGH11OOm4heoVF-gJ72HsVNjEEwpIXAsDtuJRN5ozY-VwAg8_f3h_x13zkd2pkFSpbrUyJ30hFpdaswQwRhixyc1Wz6erv7IjB2gF9e2CV8bryoGGxS18bxJYucwEzVmI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVOcECQlBvdPMeAgv8wdDA6k9S7IMZFm34mY3qcZZs4VhGtDOc2PFQwWs2AFvmEThYG_MTPcrtmp7VW1NYIyAsn_ltwxppC7Gsd4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIupMX-1j-bMqRc4DN92wSkX6gZxOt-khSLf3LPWmVLMopCtBKxgTKs7POVrqnBRwr5EwDcmGlzenOZ0Ps2fFQ0qauXMel8EMyUiFr7UxSi5pFP7cns719Gq6lAM61sLWGKTLjdTkhCIUKqr0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVYEHgIm0HdPnlogPAyzqe-XX0nJzmlNtVu-zumQ8EVszgFv9Ad9P6XKL3B5WoSuaNZwDuotfkf2UZDaA9kCn7ZiK-08665mb-EOfQ4M1O_JKR0BBzRG4CvsqR62Dm5_E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx23Wz1tG0AZIrXHu9gOLdgH8Ihb6Pka4kHpgXobbkwW6y0vCWsrAsn56kzcwH_Q4K_DLmTWDeuNSv5aK8SvOvPxGZiZjKhGIY30UL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSIYTlp30YB3yPXf6d0x9-rWFmL5RvcO4tkO8xYi8ByzkBE8HjLI0tNm891QUICZpWAZ_MHBF-Tm5-u3Km_qa7GALplpGC9XEAdv6p7SaXLYhygKYwoeGxsWvdsoDSmP8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더**는 대기업 통신망과 체계적인 A/S를 무기로 점유율을 빠르게 늘리고 있지만, 자영업자 커뮤니티(아프니까 사장이다 등)나 실제 매장 운영자들 사이에서 호불호와 뚜렷한 단점들이 언급됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdEI5-9R0zSK5QZCtVp7RKts--wS0PC7763ruSonF6_d2vzwXUtQc8VprbLCBN90kxXueJBO0XVWoFDmujz_0tQRmLpvcjCCEccTRXqvUvJeijZ92B8ZhRssDAwgEajm1e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdEI5-9R0zSK5QZCtVp7RKts--wS0PC7763ruSonF6_d2vzwXUtQc8VprbLCBN90kxXueJBO0XVWoFDmujz_0tQRmLpvcjCCEccTRXqvUvJeijZ92B8ZhRssDAwgEajm1e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdEI5-9R0zSK5QZCtVp7RKts--wS0PC7763ruSonF6_d2vzwXUtQc8VprbLCBN90kxXueJBO0XVWoFDmujz_0tQRmLpvcjCCEccTRXqvUvJeijZ92B8ZhRssDAwgEajm1e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSd8uj-StCVqGN9iMUnMZaAs2ImzcqL1MJwnkUHzcmWBORNlot4rdoHy5T91NdsOTjWScgL5Qd36iHkUtnR56nAA2_0wJA7vjYVq8LIs5OhlY2X-aNq9j27KkNqjjQn5OB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGeuF6XMtljkP194lfxgqQe_BBGGAdzO_BjKWI_kn_7j3dRsNoOr-DiL-cKtvgDP413ZO1WN6BqRQ-jk91LBMuR5qMZnR1P9umzfDv3zuo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdEI5-9R0zSK5QZCtVp7RKts--wS0PC7763ruSonF6_d2vzwXUtQc8VprbLCBN90kxXueJBO0XVWoFDmujz_0tQRmLpvcjCCEccTRXqvUvJeijZ92B8ZhRssDAwgEajm1e",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnTmH4wVM17JLB5eMC7t0QO9jLoKsU_A3-YXTjQ2Kq1L9GS3X1AL3shfstMigboRa_WEhSefeyC3b7Y2B_hAAoCmC1RF_lmOK9Wzz-utj0olpYuL6VCxnx-yGkHfyBOPZBUD0h",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4YImBNDA2R5S2X2MHZlP0HXVYzNYFsYBS-4Hlztin0HEFaEuiokmq2RBADvBJLezWm9AnLcX815GkdZKRN4uYDL1HNz92wV6Tjx1LFR49W9RYE8-v",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "자영업 커뮤니티(아프니까 사장이다 등) 및 실제 현장에서 KT 하이오더를 도입해 사용 중인 자영업자들의 현실적인 후기와 장단점입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEVd1f7HB4TUSP2AklVpntnbhovZTVPU9_u8i3ZIft8HTyS1l6HvoCgdqYuTzhvjwA_Ti_Ghs3p00hFTrwR8QRwcOmiWOqtYMaLx1hSCayW94JmeBk_3xb9Y8hImpKpn9oO_Eqk2Y_ZIu8c7-40DtnLKRLqA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGRXWbPSCBklr52CLr9PKEnPcKlLZeyt1HuFN46f4gc04RcGyeL6rXk4jFP3b31XWVNtQmsORLaotydzX9koXXld6acvWCnRVXhIV8O4jY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGu3Gy2T12Ui7LSqKMbJyrajBSfEiKI7p8yiqpJP9GSGmWfcEualXxVxM9VBOehN8yuf6sWms7lJggbkiD_puQTT2JQgvrN9xrOmMZJSOv4KjlkP3WQHgKj6lp2zhfRTr1zhYLT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwWG336XCsEt2koF7ImggIgtxNx_aRJmvOper3IsaNyWWhCj-FyXbR3n4OQl8Y_svt1mawYp0H-bqZ8ifDzbEk0QjssJHgChWPD3DmlNTduj1NG8ummK74",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "자영업자 커뮤니티(아프니까 사장이다 등) 및 실제 현장에서 KT 하이오더를 도입한 점주들의 후기를 종합해보면, **대기업 기반의 안정적인 A/S와 네트워크**에 만족하는 반응이 있는 반면, **약정·위약금 구조와 운영상 번거로움**에 대한 불만도 분명히 존재합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgfVFrExACTtRehKdU3RQJWtKHEFV8yM8KTqu7s4-s5wTEknA3mjGa-tKNP9GYwbs59pgsz5XfuhquwzRjU6GYFMZWE-tUlHUbbmwX5ck88YNyG73xYGjT9m3HdWf064kh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgfVFrExACTtRehKdU3RQJWtKHEFV8yM8KTqu7s4-s5wTEknA3mjGa-tKNP9GYwbs59pgsz5XfuhquwzRjU6GYFMZWE-tUlHUbbmwX5ck88YNyG73xYGjT9m3HdWf064kh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElTOOiSzI3DZDT74jwmgEN9EJE6FrZ4xjV7ZH3NVCGcefSDHVReCZITNIyScUJZcSBZinniSbPxvF6kWNjp5syW5uuhD46GBllxb8wcxfs0ekRyEwh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH24F82b1Acdp1eSUKSdz-0l3F1qvIK9x2TjAbH8YdJ6VpJDc1g0VDDV8Od3BBjneWI-5aRm6Ee64ljr7c-uw6aGkPtaH19Yeq1BzPLgX8dqWLGZtiLBUtj0l5Wjaewu2-NCpbD36lS1mwh0PA6EyMWzkSrgzjDA4e9X3NGX_9HPUVEgKaDhw6nztrmOmEBKMk0oU5H",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgfVFrExACTtRehKdU3RQJWtKHEFV8yM8KTqu7s4-s5wTEknA3mjGa-tKNP9GYwbs59pgsz5XfuhquwzRjU6GYFMZWE-tUlHUbbmwX5ck88YNyG73xYGjT9m3HdWf064kh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF7kViXLeTxid-DFVKboQfXrktld-OvYBvaDqGp3UQ3yn2LyQ5ZyBj8kU2DNPqmd32v_rFOWzqDNC2tSypYrHx8lae1AWI5dWq0KXHV95Qq4S1IS6DR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhM-FbmRIOrUfsEU0bKvJnAv48SyG2j5gD5Berg5_VjcOVCaZM4fpYneSNa6CXLZjalYHPpywTM3ibDBTHwBNFOyhByrPM2WP-koAPdvdIDJz1M_pbCuZtTY2DYnB-oGYmWuMCEALDgBtHlnXGDesasXxSvg5gjthdz7f3SrAPwcnBc38Wfz4aR6Hg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더**와 **타사 테이블오더(티오더, 메뉴잇, 페이히어 등)**는 기본적인 주문·결제 기능은 유사하지만, **인프라(네트워크/AS), 결합 혜택, 하드웨어 및 수수료 정책**에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. KT 하이오더만의 강점",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **KT 하이오더** | **일반/전문 테이블오더 (티오더, 메뉴잇 등)** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더 추천**: \n  인터넷 끊김이나 기기 고장 등 **'장애 없는 안정성'과 '확실한 대기업 A/S'**를 가장 우선시하는 매장, 이미 KT 인터넷을 사용 중이거나 통신 상품과 함께 묶어 비용을 절감하고 싶은 매장에 적합합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDXTmUT9szyNxSaDPJgMvMaFAPSPEQXq1rqA_fvmpcQbsGqQRaU3vtp-RTPJHv_w38qie5exbFcjqUvrYP7bGTIvFne3fUB8ajvHFeQPxBMPuxjmZjjCkZSBnNcmwjv0pH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGogVDnlS6SkC3WPAhcCne5T5uRN_BKnMHKH4aDWlHsV0c6WAPBd5ac2e2ly6GHayHgphqjNby07wsCkEjlBhj8GOnXJ7Slkz6zW-ZnhlUqQOe-gsMsRH-uHRWLH8s7YuAJQc9WHmJa936698B_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJhiOpzpjLA7bYcJSns6YIPAi1qROZkt-pm22hb0FICa4CLGOvv135mrHBA3YUrM7cwZrNjHQxaUdc1ZnP9DjUu7W9Z4-CuoItTYq6z54wLO2-vgxcMjUNUnnceKPL7bivmQ2gBLypKtgyfz9Bqxce6unTfS_rN9oLRDhIxlfmRxB33spb938uaileo_azUb1O_e19",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXd8dn03DcTnmAcr1RXSy384VrSNJko7VTvVolikOFdl5jtlmFYb5m70a5BSR3gpFWXsZtfQ6OWbFb9E1xOCIzXciUcTkTpHZXYfKsEWO2xnFssUCAEZaM1HQzuzJGo3C1K0kD",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAKuTekXMHLi1LaJv8Im-pChP2juKiglyRDNIPM0XHmirOs2o32pTqXWfooWVS1AEytWJubOpv--dsvLRewKqn-MpLUWMkLUwExjeg0WpSnuc36dJWUW9o9Ky8CsepaIfP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE14c2QBqiKeoJdV4q5eJfssI8-nrl4-Oq5_aNwo6M09LIc8TZ6cMNwS-7lyjy-rxj5zM84rlWpGOvPkoSA4iADOWSFHDRWHUI2-OheTkI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPW0Mw-SgH9v8_Tc7XG_INcM2LDUAcI4t6qmYycqHSikkUPhSVuwU5FGePF2szz0EErrAGrGZ5NVXKSaP8DSEKGyDaZ_0a_wD0GgtVZVCH-DqTjotC",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrw-Q0lU3MUvD6h4CQIfy3rPSWzlX2HAxnACMqPUAXTd1cnn4UaZQjRSFMslFZ9Pr-TeMKgMb-AUw0Z41uOheTWeG1_j3j5rwh9FWswoX0-Oeplg2s3q1WQmc1KhpHsBQHwDKf4kKExY2cHGOEPd0PcPMjkfo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEidEWNwmCYqa7CqVD49INf6U6ZSZihJqscGc_ITMIzs7f5Ut8gsOZ2_QEbRSsS_gnAe71AxGLrkA57Ml5U2oQlMlVyjLG9Hfzapl3SsR1ktJrQkCNeykJsIR7dskMyskM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZrTxAFk6ueUFYLoOx5B5Y1gYYBmwAtL9QF_XAM4N1NVbViDbTMKWOnpiLbtB3ME_uVqYGP7TZJOgm626vCbg5IxhAlPAieY0TkXMGCupf6oL5_1E=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNP-AbT8bCP1fZR0j-XUkwagugN5olzQLJ0JR30dtnvFUiZGz3bed4jlprH1grVED7gwfUAatq7OZg793glMPuhLyZAR74ZR6vzlqcZGHsvUqmtk1c6HX-Vdhvtime5t969db465Xifv_7afh6SXkvtwX-BwdpehR-AFoizLoSsnlvCAixcDijMUQ4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더**와 **타사 테이블오더(티오더, 메뉴잇, 페이히어 등)**의 차이는 주로 **‘대기업 통신사 기반 인프라’**와 **‘테이블오더 전문 스타트업의 소프트웨어/기능 다양성’** 간의 차이에서 비롯됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 통신 대기업 제품인 만큼 매장 내 전용 Wi-Fi(AP) 환경 구축 및 주문 누락 방지 기술이 잘 갖춰져 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 전국 KT 지사 및 직영 엔지니어 망을 활용해 방문 설치 및 고장 시 신속한 현장 출동 A/S가 가능합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 매장에서 기존에 **KT 인터넷, 전화, CCTV, POS, 서빙로봇** 등을 사용 중이거나 함께 가입할 경우 통신 결합 할인을 받아 월 비용을 낮출 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 주요 포스와 연동을 지원하며 UI 디자인이 깔끔하지만, 특수한 사설 포스를 사용하는 매장의 경우 타 전문 업체에 비해 사전 호환성 확인이 더 필요할 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 유선 거치형 및 탁상형 위주로 깔끔한 배선 마감과 안정적인 전원 공급에 초점을 맞추고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더를 추천하는 경우:**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoaht9_UkPMQvKAG7SigYLhokoO7FM7SCsRVgjK8QYQ4jghqtwS6aK06_tmgqerLP6MakEnlzTJWFR4aY13sG5YMt7Z2oVs5i30iP7kLH9AyCsqBF18bdQHBBJ7EE-7DPwu7Rs0m2MgyByV3vL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGT6AvEsr4e7JODlSNzlaiMF07cIYuN-cbBihpyhHbMjsisYORoxUCEa1UyvGIFPcJhDDwUsCjbG4Pmk1Yormrx2r7jeAoe5XBn7rb0-tRYHTypnLWlNgFNAh8IwlbczGLbtyNW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOfW6SV23AL5CLRLvScgosTqo5HcVymCAelkVVHnFkoRCzdppp4I6hVxACLahc9IIt_DOxT4JbNbHEspq0AFr50-P9Ak_rPjcUL4hup748r5jSrN1l99jCTA8aWMoi-INn56pGZ35atp61wOq7Hyp6NweSYWgY",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAMFNY42zWRuyryw8FPMizqb1iBzHFCt8eT2y2EztZkThquweGn7eVfTLbXRH382Q73Q6TUHm3RP_caNvu4zEkoBVmvLDh58_XcbNZnOCC1WTN0DxiYTSYm8qlQvi-d7UXcPKQEImN7NBMKSwU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwJNnzxgUYs17cvwYVQUIvnSHyUOA5T1MybuymY2hZfjalgSKttHNgt4EVwxFd-hjZFr7AqZby03ha-bUuyBHMQyIys5yCZV3JTrAHiXJNmaCux-c_UVITlJp4tDWpWFnw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHp7KbD4E31F7wIFY7Azcn9fdKV_qIyLoGBIC0M1ieJMogX6gB2StKIKR-jdxtEGuWZmohaTkFpDHXoS20OuQpGU7fcIUaUf7d8kgiwkRGLoOL44Jg2HukBzhhZufUYX18l5PnXW-wCBmk-wyAtr0j6fNkRdSZ-pwr4Sw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB_ad3smDH4Oxw0Een58s9wbGf3fzlpSMJGuCsyFYZneaGiiKJMAJvzWxt12_l0ymxAlgFWqyLzVEi2TlBnMGVwZkETRVJEE5srMIuJ-5TK7gPDhq6jZT7NcMGHk1OOltxydhW5Pi2D2PQ_ShPmnYR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더**와 **타 테이블오더(티오더, 메뉴잇, 페이히어 등)**는 각각 ‘통신 대기업 인프라 기반’과 ‘외식업 전문 솔루션 스타트업/PG사 기반’이라는 출발점 차이에서 비롯되는 뚜렷한 특징이 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더 (강점):** 통신사 자체 서비스인 만큼 **전용 Wi-Fi 공유기(AP)와 매장 전용망 분리 세팅**을 기본 제공합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더 (강점):** 대기업의 전국 직영 기사망과 **365일 전담 고객센터**를 운영합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더:** KT 인터넷, CCTV, POS, 전화, **KT 서빙로봇** 등과 함께 패키지로 묶어 결합 할인을 받을 수 있어, 신규 창업 시 매장 통신 인프라를 한 번에 구성하기에 편리합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 주문 및 결제(선불/후불)의 핵심 기능에 집중되어 있으며 깔끔한 기본 UI를 제공합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더:** 통신사 상품과 동일하게 **3년 약정 렌탈 체계**가 일반적입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더 추천:**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyFt6ai7CHle_IGEjOt_fhUL4xY2lz8-NQkqkNziSDi1ukGc83VLoFt7RkvMBNvLKzlObeVK40Cb4pHblw5_wcz6qS0ofVyUaxpOaSwYSCNY42UwY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo1ggYnMGQaaQqITiy2Sp2JQMT7IVf9wG8HbQ-XfDmcfa2UJNUDpRXhBl-eyYD1HBN67_Hn6QT_2fRZhLY8eaahezbMIqMJw55LBzn-R3qGpx6fg4pOh4XMxtnPMCvBktX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHLma5Z_JAXgI7xs2mkJ84XoNUcYXBO0feu3QeaCRCwFYrmfhV60ZIa7ljyt6F7fCecA0sWSUbRq52gggjZ9bQ3y2r1Mmgb06oaeMPqqel48ufj6R01Vr-SNUeLiKu73G9WNwG9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzSMc3uwOfVheASle66SZAAo6uuvEtmqeh7e4Ui2lu162DqR4haNcbssAYA-TFIw_8BE5ym7j-dp9v88KAumJGqmRLvo_1cj20SatnD4_9kHE6nofuORmoGQqLvQiSeTvpEyxuzuUokozvC4mq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2l25v-_pazX2LblpBG4eS9NFgf5kesOBnAQsp53X4_8us02nwHRtE42JtZsUoCE8_zzbgj8pOrkuOi1gMPrf-8xf9Ja72teF5yIo19LgY126PrCX3aq4hCy0ojNDIRyBO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo1ggYnMGQaaQqITiy2Sp2JQMT7IVf9wG8HbQ-XfDmcfa2UJNUDpRXhBl-eyYD1HBN67_Hn6QT_2fRZhLY8eaahezbMIqMJw55LBzn-R3qGpx6fg4pOh4XMxtnPMCvBktX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLpsL78Ei3qcvTkNcyIKYS0mbp7NJ5IokgboUltIyjwJVsVKtebfUYpPu2xw0a_ajUBNN_wdCOHPVnputgZIm0V8ZT3kAyfhvxFMCJz5J-okpOiAuR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuOtTiGLS87IUJNAx5OOZ5cfp9aOaUJdPKFo_w5yEBuSt2-NW4RFDLwhE4UNHNQL5P3W9TBBtMREywH2zfQnzXeAH4IBIWdxd3w-97ApmWkzEgY5l6gOl2LdAu8EETIj0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "KT의 테이블 오더 서비스인 **KT 하이오더**의 설치 비용, 약정 조건, 월 이용료 상세 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmI0xnDzTuQAtrZWo3nYssjnjNiEPh5gLmmwpffWDVuKsJ_5HWZMlxlK5usRYUIeJ6iKkvn7AlqC0EISAcNK5GBwl5U8_ryuV1V6Umj5uc9L5PABUMceMJrBy-Z5qu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHR4PJsqMBF_2QboJuODXsQOJzRPsL3qmKrEgDbCzNHU33pW1cUWxvOPnTNXosqHHHrU6HkqUamrR-EqyP2DQIK7qLF69nJrtOVEGEVOq7pS7eLlzZy3gz9sf8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWxTAnQiFeS4TUHyY1Hu0S5_vtz6NfuCFoa4ueHfECVH9a0FSmbOQo1xtfhSNdUM1_cQV-mb897XO2STdgTt5KhsPFaQeIBgGt3UaW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_wf5Pvxrb_TWytUhS4b3hlbkKxRvWDSmKpJqcZupOVaZk6GU-qUSYel1zG8eCxXOBxuB8Xj1ld47yHvTp9yzti-gpK96zybPEmOjm-ecLSE60M2L_Ox-aMRcitqzqPmM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHP0dAN66fYu-81vSILoDmg5sWdNd9nGQABfjm-rWNyBv5h6BQcilJk8n-1K2jPwjvBgayHr1vYh_fIAdoQq9HbCOI-6U5132k8-uqUk2pdxa0zH4Ay4w5EFOD4erqe87vrckf1vcLfhtyALw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0yz2btiODaijsmspCT7Q04pIt_RklBQIai1OgEGEk6yi9TmLtfc_EB0x-8sVuvJawfNK4CCRYYn8TlEae5wEkqbtVzPbHKrXlPrpCGHW53MTQPKHd17VKf-aVcGpLqsw8mry7VWz4W9OCl3v8iG1rGqW6prj3NFSOJfzslI9dv7s1-_eGifRHGPXHdFvyDQ6OpxrXf4QK_FYBxV5EJ5Sdcu18tbWjxJPDgmGUpttstF2k2xMt6tb4MeeLRiUfGfPbe6zWLkfRNfP-_VAhORQGCFMNQ2FIYLzWuV62OFc_RlSjE3Y0BIQQAn_tTZOS5dhOFy2IPhhHaDrtwiUAHfCAkkpDUEP5pEGKSsNiwDvFZ-I4rrUAC7f7JsRa785gKunMkvlNnLgUwN2MwmeqD9MT7k103XIXxGvv_0NgRt9dzEx-Hk1qvg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGV7DGfikMkOj1h1K53xswMYa3o-Q9eD1CrxGlni2Z7hNBMxUgBZKBrHmXZHr577AZdjGv63ycakOQsCRRdP9omN6nSpBBreuZr42qzwGi-fkenQGxlBF7f_acjkvut50mAiqB9HzBo9ii_fjwMfgyj1YeE",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9VOLv48OAuMSu6PP-QFr82wdcamnfxkPySYZrnMuFtDTckVUhhmjguSFT8A_FhwfTku7RJliBVQKZfnFJIrcRmRFk6AeWG9vVcaJI5g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGe2kQV9BdhAwUkFRObb5uAk9PpC9-NEmPCNTwiF7Y4OqyAPmtgPhc9J2N1oUiBInScFPtLZvVZpJXnmu7u8zZPfqArDZmcrAftl2nYI7rpte_nL3lF6AEjuIzk_751H2l7Eg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더(테이블오더)**의 설치 비용, 약정 조건, 월 이용료 구성은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGiAFR1-VGNCRvaaIk7er8Q4Yiev2pLgVfAT3HiN0Vl7_EE3k2bKCyrqufOzatMpjgWlKyuS5YgK7cfKDsv_XOtiko9HDNCBvm1I2HzL9KhgMI5RvRK564pXCksuvPn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFQGDYGAN5Wyu-nKwJ1kjFaILk7ctc-SRJYpbW8vi2--rohECvfRzu97Un01PHWPXQm6JEUYeiGT7c3ig2vBydwA-HSQkjErxKq5R9j12rhu6HtzWkoXZlkIR6Y6XwWUtLKfanoK_ldarpwQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFb5Pa4WUzdbEH2e2Nyah__4mSse8ObTUIoedtW4iQsYGngIFs0L5rXCUZ6cjquNXRYTtUwkuMnGproDoIZsUDe38ZtKvc_ojN46o6gKxUNgtIUTYXMY_jkBugDA8Z-Rcc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZv9uzniswMO9a9tKf7PsqNtH8o1sQDzoIjouUv9M_dRFvPj_Rn8zeB24OHaYjIcvEU9oaNig8Wk20aiWC7C7Y5Sjz-kfvn1cQtaGF3l_ou2jY-XDPRo_HxfcO3b8nfq0tZQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEF992a6HOI5kNjwWbNZPY2OHC5-FeFX1jNHT-7tLcofiWX47TpBeBTCo9RpSmED-OQcrae0RT3Y3gQ31sCZjINhiTIMO8PZhZQt3F9QEbAv01B0fu7j1j2X64=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDm2D5olLXSi0-TJ9_ef1zM84RSSte5GgG3ivq5YUtvre9IHi8PEzbd1VHzosixdJtoa4Ihb-Y6cEWwPBI5i0E22toMA88A9qu6vNOanzfhVenuiQzO2tlugPIN3XydqF1Y3838d-noW0n_WChggRooC1a5Gc214D71Ck4e55t-xT0wGsSbK5T66y3MXr6Hfp5Qrd-GkE1utLLW0FWp-S8fkb25MsDYp0Q1oPfx2HFHiKZ0w-yQVZg6-VKPKAIZnk5Z4zw5TPzV3ZJ0615nTAy6nBsv-f4tZceKNOCYn77k0j_IZiJVRZb9REt6kmA9_uKOMxCpPMS9s6QkmnDlLScANEHpruRDXrmUpoSOZCx2KuSL8texlBAlcbP7UL1aTFWqU4NrmizjN_4qrfFMZUXJC5hqCjIbeKQsSht5Bwo7C5-eYUSBw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBm7p8IODiQ2Ye3P1j6E0WiWXpBNtRDZE4cObSkjPwC3FMzWNF428GF4BM7aL6HZFSPt1EhBcbMa_FgZ58ARicdwtkzpG84PtemzAW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFi-fCvFgRuLZ-DJL3UO8zNnKY7F5S0BB8ywv_H1KjHnG2JIopXFYv9ihGYb3g5bD0UpQBrvMCLKZjlR7rQxiYeNueszEMGOLN-VSl--w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더(테이블 오더)**의 설치 비용, 약정 조건, 월 이용료 구성은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSk1tug9Q0IAw_p_KlYhD6KwKpnii5nrqfT7CjSSpySzhIVPm5N8GdHEl1os5dAK9-kUjGOxG-RCzzLGYI4l13uJy2Qo0FGie2tcOW1YHagPaua-AFTInK78wXvc9EHpLHmxgEipTBwY6mAn67WgDQamZvxTENcQb14o9dRroaqHq8ngsbreLpkDu01FJPnt4yY6mUcfPTXTyEb6CIDGkIWXRqIoCX2gfUdwbOPWtAWpgtFNR8pOLCoQY3WkYnlYYhKDs7d86IBS0xY5gGBtZ_mEc2PMFLZMvVABd6FuNhoV0otSaFUUgOxz7-bdwmFhKRCOYgkRxO__e8fC7B3r7ZZB-hmCafcRgKdAVr0JamaQQh6HsP9L5HbV7sysd4plxWe1y6zNlIT7fvxU7UXm8ZVd2mhm5oyyORS-_U1-DY0TIdXHH_oA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4yTzJ1W51t3ovG5h2pfpiyQpKTOyklcWW0SnWXnnnAdWIPbmkvhQwcKjUxthD1tSj8mz7tW887nr2o8ECNPdZqD1GPr9p-pPAN2IyOrzqmhvPWewiZWe294CfKNN3MPPFCKqGExlv3z2xxDy__r42BvYz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcF_ViVtpgeh_13DHlOGzLeqnntBiX0pTpWs1pu_FjSFnoDYYYbPZKg2HNMPPOLwKAn0GO1lP2LQF1OI4Z4SulZGvxURE6nQF2Al8jk8LCYt64CZra0HnVoeGu4wdk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnsuMSPR6wYUmunl6XggVKzBQhuiuGaBVryGjjRKiONQakN0ZXjaTd9OyVPH9bfl4CvWeBfXMh1EcJCr4pLG2q8NfRHbXjxrTLT1Cc0sZMVYVpd59Ht4OEoJA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4yTzJ1W51t3ovG5h2pfpiyQpKTOyklcWW0SnWXnnnAdWIPbmkvhQwcKjUxthD1tSj8mz7tW887nr2o8ECNPdZqD1GPr9p-pPAN2IyOrzqmhvPWewiZWe294CfKNN3MPPFCKqGExlv3z2xxDy__r42BvYz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWFOXiUmtUgQSDqNCT7INOsY91Da6Yo3l0t3zngQFRCJLKNIVmt-M-Uyjsbf8NHcffq4KOklaOR9EyPkm33SuiGpuon3Y58fY_Hty0yiqkc_9yAeb9Wt3A-gle_WWF4EIsB3nt7_7CnJetJ25H6InxSDbnDqE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB4XvMWshMGAl_BEuiSEwMcmmC3jpvYv7nIUxQL71joPw2w6-NM8lgRUiZB6UYYyeMYAY7yReb96ULVPe6Mk75vN-DlAtVU7DF3Ab7_64IUV5kAna8VscwqgXrBgx9gqM0Ybf0",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGY7fRBqI5ktjXbDOMpC0koBxbf-bITybbRIsAVnXH0l19ic4ZiRRSgjy1UrUuTAIS12mOjpVlgSOofrvI7lYYWcPEMEK58DiF-_5EYm1ZSaScKJ5j1bE9oc9IO41zcbrsvCgA4ryTgRq_5Og==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuXNt3H1jrVHBBypNyn6KJ3Whv5v96xB8PMXjJQ_6jmR22wFHjdgg3uAYcy2WR-RvPMVSLn5uMb271Sty7ssj-93PLb5uRnX3pF_ia7JsdF9fWGyO5_OH5dm8wgjUrYmVh5w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuXNt3H1jrVHBBypNyn6KJ3Whv5v96xB8PMXjJQ_6jmR22wFHjdgg3uAYcy2WR-RvPMVSLn5uMb271Sty7ssj-93PLb5uRnX3pF_ia7JsdF9fWGyO5_OH5dm8wgjUrYmVh5w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjUjvHvHxQoBx07jrLEgDlEWesMG-6eUaDTnu47C2FKS5tmyCYE_YifhYkuyLJk9eft3sPUGhbyP02oKCFG0N55-4ZKGyJ645MAC_tL6M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 지역 매장에 **KT 하이오더(테이블오더)** 설치 상담을 받으시려면 아래의 경로를 통해 신청하실 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 지역 매장에 **KT 하이오더(테이블오더)** 설치 상담을 받으시려면 아래 경로를 통해 문의하실 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 2. KT 하이오더 온라인 상담 신청",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEq3vwn9HklpOBrmcm7r-xDT7loO_WZz1YpdAPFvNeylau8MoOkYNMaLlQ6ECBjoDTkzeTFJ4hyi9z24jx7u66l6NqTp8SkbA16WvHauiYrc36fFCPAUQB0GxqGhuI-zQTeUg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEQGmp5NW57hk3uk89qFG48VfZkHFZD0pChb6Su5vwTJCLotiT65HTEzc0Rervp7BBjEL0fFkapHHLCl9jr4mRvAtoF-5t6Vb5xQmohcP04Ecr5eE1xb5fVfBM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE27r47u9jRejQfrPHuGFVpmf1F2HeupfBT4l7X4An0atTXjZTd5GVld-UE59mEKotTVOJN5Goe-TSbz2tyE9013JKPzuyNO9MOvBgSe5MgK2gBIU-nskTurOQlq4nj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHI4kG5ovGhgmC7L7aqJ3_e_fDIOfC994Ys4ewNhNEfhuKgzu5PZwk3NDNpsyvRiSYCj0BHu9KLqCRqQKNwQ6RFftWnf4aCaIELKhKEhR8NP3PtfDp-Jphp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEH3496F9LW8rhyf1Xss-7HKqZa9ljag6N0Z_uS239GEZ-p1i2_cCXHtT83xuYuIs7b9xTbU-SJ0ouriWvskasM55DPgzf6Ly3BLSJ4MaP6C_9JY0bkdMKccgtulY1V_YI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 지역 매장에서 KT 하이오더(테이블오더) 도입 상담을 받으시려면 다음과 같은 경로를 통해 문의하실 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXt_NvrPtFoSTXzKzywRLpVaxvJfn9r6DbLPW_EJv6OWN7MoabGVC-9wnTPWGP05NRWJxagWr86gb50GTAxEyYce29dbIswFXSzaG17Ihn-Ba-IZ5gAbD2xYA2Jchf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDDVIVxaPHJLwjAFtZN9KCoD7D2bYbz2trTXI-94N-VnYThMGAFH2MKK22Ozv0rvJ8EEUL4Eb1Ow8C5TEdQMKJFw8xLwCGTUjhjKWYdUjyOZObfcD9Nrk3h4R2VVu-HJW0Iq07-9HGsvzQGyHi-Y9dPZ5USjh_U-Hw_w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOvOzqzvXH03DG0UYVFisPHtY6nUgws9woI6vq9IF5BYnmX3clEtVrZjRL4DRku5W-3gQNGrWrmWditDiV0Hc2IKFkAcHo-uMcypKb2RzXUaugdPHaOs9VAIvrGREAwQvrdjUxMoZ48BmClFDDhn7jW0TQUk0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFl-5Fmk5pBvPRGtWe7dkC_f4fMya-FBV0eChN1c7zUcUIYBzyusiy_14cdcHy7WKoZBiVUevtclSzG844lHQBPGAZvGO71jDptxNRQjBS_nnVigbNZAMgJpKikGCgdPiokZQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqXdIvOSxgAuAuMKrmAPTEieol2X6YeSxVSBXYz3_fhOx5GqmzkddyKosBL-qyfj5XQRgZK98hmq4488oW-SqJYClcEX0ZMmWFHLN-_Fi_IlkV",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDz_uAWJlj4G-2TU2AMAryJQgu8skvlcIm5-PS9urnltzKbHsYEHd0vwkn3E3ylhZiQfjthw6WrM2A_BZEVco9aIz1_5drqwrhHXYpxXCblrB-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

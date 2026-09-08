@@ -823,5 +823,159 @@
         "updatedAt": "2026-09-06"
       }
     ]
+  },
+  {
+    "tenantId": "menuit",
+    "brandName": "메뉴잇",
+    "aliases": [
+      "메뉴잇"
+    ],
+    "ownedDomains": [
+      "menuit.io"
+    ],
+    "industry": "테이블오더",
+    "region": "서울 영등포",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "payhere",
+    "brandName": "페이히어",
+    "aliases": [
+      "페이히어"
+    ],
+    "ownedDomains": [
+      "payhere.in"
+    ],
+    "industry": "테이블오더",
+    "region": "서울 영등포",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "vdcompany",
+    "brandName": "브이디메뉴",
+    "aliases": [
+      "브이디메뉴"
+    ],
+    "ownedDomains": [
+      "vdcompany.co.kr"
+    ],
+    "industry": "테이블오더",
+    "region": "서울 영등포",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "kt",
+    "brandName": "KT 하이오더",
+    "aliases": [
+      "KT 하이오더"
+    ],
+    "ownedDomains": [
+      "kt.com"
+    ],
+    "industry": "테이블오더",
+    "region": "서울 영등포",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
+    "tenantId": "torder",
+    "brandName": "t'order",
+    "aliases": [
+      "t'order"
+    ],
+    "ownedDomains": [
+      "torder.com"
+    ],
+    "industry": "테이블오더",
+    "region": "서울 영등포",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 12,
+    "questionBankVersion": "v1",
+    "repeatsPerQuestion": 3,
+    "competitors": [
+      {
+        "name": "메뉴잇",
+        "aliases": [
+          "메뉴잇"
+        ],
+        "domains": [
+          "menuit.io"
+        ]
+      },
+      {
+        "name": "페이히어",
+        "aliases": [
+          "페이히어"
+        ],
+        "domains": [
+          "payhere.in"
+        ]
+      },
+      {
+        "name": "브이디메뉴",
+        "aliases": [
+          "브이디메뉴"
+        ],
+        "domains": [
+          "vdcompany.co.kr"
+        ]
+      },
+      {
+        "name": "KT 하이오더",
+        "aliases": [
+          "KT 하이오더"
+        ],
+        "domains": [
+          "kt.com"
+        ]
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "brand-address",
+        "type": "location",
+        "claim": "주소",
+        "value": "서울특별시 영등포구 여의대로 108",
+        "updatedAt": "2026-09-08"
+      }
+    ]
   }
 ]

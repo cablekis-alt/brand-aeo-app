@@ -1,0 +1,2068 @@
+{
+  "tenantId": "payhere",
+  "weekOf": "2026-W37",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **페이히어 (Payhere)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZuFOWGU3UEKva4jRExR7LK3ojp13lyB0fcxXk8blTP17HBUeMtKG_oyQZ17uqEMZJWQR2_0tN_DDb_tp2E5oIx8ORgIyK7YLW-Joj15ojKJ-BMsuXETRxwnNjKNxuZngu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1L1v5ZxN3DjxyW6VrbZL3-sXl-DP_QeeJutPw33ewko_Ok7GwOrZJCOrkBLjDBoZ6mZH8-6IiIl7EEAqTqRkV6NBoU7nTAJESHCYrI1kOKHQ579OWJ4UwWqWbhsMt7EPz1kjOSL64-zKLR27i",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7v7CdJ1ycRmOypfiEp68poQxiyC7zLlaRLEXUvkijljIFDGCxELlJwKublYm3f_TaZiRrtp_DmFhQnEsUpV1xKQMntyj2UDSMKqeeuadBzL2CaxWdulY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcoQ-J5Qm57p199mkQ-W8jSIqetK5cqyoxXg8-BKzAFZj1okwhU0jmzfW_ugRBc5D9yQxtDmOqESVImOFRvHM39oumm2zhkcekATqsLU8b3b_f-hRxvLhzFfrtU4dZSfwd8l-I2MdRiLBa3w1FFfZewhf7176d_Vrh4w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTOzkKvY366Lgb_QSJrQ9Rgk8an_3bfkDd55NQX0KXYSI2m7zDhhokaMzxZaMeWn3lfVBuvMqwQlxtk1zg-Y-ud_ze5vYmEhwkQyZS3swg5DUt1v_BiP_0z-epRcap2DE8PmYmnssNEVMzZmSzLLs4QYk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSGNh0kGl-X67VwjrFoG44fpoA3gD4A9SDYqbOKKxw6Q1b4NaJH7kzKQCWyvD3VZkK0dMqGFrjooiZ35scrkPhaDSG4rLTFKE9l8UxVYkDe_ByuvRU8hH-s7Q5fx1GL0nu",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGg39ZFWQHPoMGGsecf15bec2U66hUigYnK3vOhZ9tuMPNlQH83xl4G4g8Gn6B0Fu4DnXos1rpMSeV63lii4m6CKXoSYoERBms6chG4jIdV_d2j78zLkzR1xl0KS2JIPy4stzub-PI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHya4u4B8ZX7PoPRi35xUH7t8U2gy2zqwP6xMoGIAeYlUu2knhOAXDa4N6DTtcyDRFJJXIDH89DHWOtNgy-vygnLQGAB29P5bwA3w_QE0jr0h_qA4U_MAEFGgpupOOMGAQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGO-vUx692blL41tCI5NM0sWyer-QYc2daNXRb9kFsl4lptGV2fTIU78sY9L4pim2xhniqt6c1Q2_LdyaL6L8BG63kBtkS8Cu7LWun6zW_HDEkQ1TzUvCeIWAEe_Q_dj6MKwNgh5pGL4Tijd47OLxtxfktKP1eFO60tDWw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdtRIGR58bwlZ4hMuDrmtzBbeUM04z_GHfd7nVZ-JIhqFXVg-QSB2h--fFPNIrb_dXylNLq6-O22Uje438Y1zYobq_VO6UBnHSRba38K_9pCccnlXB3V0_LU490hp0ut-d",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ④ **페이히어 (Payhere) / 토스오더 (토스플레이스)** — *가성비 & 핀테크 연동*",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "가장 무난하고 호환성 높은 것을 원하시면 **티오더**, A/S와 결합 할인을 원하시면 **KT 하이오더**, 배선 공사 없는 무선을 원하시면 **메뉴잇**, 소자본/가성비를 원하시면 **페이히어**나 **토스**를 중심으로 견적을 받아보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnXyEQFJGoikJc9aiKfh_3dBvhw3vxWVx6PWLRU6YwYh35Xo0LzHcmjfvTztDHb3SMMqggQnL6TU3fFLt7D4sFa9oYWKqxIocTNryMOlnHivO82w0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcY2Lomb6i9YtFD6T0uF-mSYtuMC7OGaRA_kQj5837S9hglBS6hRXQxaVHic8zIu1RkuPJPSYLIESysiKIvQxI4BDsvYbdiHbTI4_zpvb-ekAKa1fY2k9dXz5TSfobqrNI8q9mWhGNjKMEoQU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERUOaiGo-C09TxvMgH_K-8A_MYlsPXNrNaTmKW7B7Z8CgXNtNyKZBdwdVhJ2RnR3B3ALrwm2LuxswN1Omh352NChliv_4RdYYnfJKgcGxIERa1nv30KV2WvlxczYUUrRY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEmswNeegAQNqvRstdVOBKOpUUVFbTH3gHDtFKSD55w9ZksG6LrtCHeC8a6Db6XwnNT0fvh5ZtnU5__f6rj6DUB5-mIOe5Ls_iDsFfuJEAaiWiA57FQtiS5bKpG",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_cf-hZXEA8cdeCX1VGP_aiq4hPqRx-1yISqJdXa9g2aomuU62oKtEPBFMO33YiGYkCJ7HnbLU-lweeiY5C2tHhEmn2RNd7R9paW1KWZSVfSZlLdQ1FEOOEOVWz7x5BBhOmtMQ-hT0jBNjIHyFSH_m",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHh4h3hK6gjHLU3U63gX5dwtLOFTrsr04IpehSD13Zd10YPuhNlcql_Q5xBX8LwVa70sKN-VwJRxFkrVe4QOYGi0tnp9GjXAj6neb6q_71Hb89I1_-jFbZ7jfd76WhzpFRw6c_X9PvhSVZ2bFzrkiHx-dcdknKOtA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHiYBfOy-8jETJjHTInOoQJfI7s-L811lSrwjqTFJnrCvlngwaM7DMghKrp4yyehzlwvpjXAmEOlEBSb1SFtsoJ01jyhSwbtdz1rYtoHhRhMNE6tA1s3m4MtdVifdCYNQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHpu4DYqxVayFTrlm3LgSQugZSxrdLmEu4QYGHf1Tl0lb-M6Oy58pMyaQWPvPgiW5kJHHtHo4hkMORnY9ztEFyWyECtE2WlSKl-7km840kfNS-B11aTGwL60oV5Z6Gy6zCSyEl8IO1Zkkpd40rfj4QU5DE7kllWg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9UzHI88S16FCZaltcHf_8a1GnENFN5EADQkmXR5rQ5CCbr5sDM7bmYaxeNJBuEBGLa0ya1srMSUYw0TO--KmtfBwqm4AgCFGjN7gqoK27O14vHvhoJEYoLXOLHZbG7Dg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **페이히어 (Payhere) / 토스오더 (Toss Place)**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "무난하고 검증된 것을 선호하신다면 **티오더**나 **KT 하이오더**를, 배선 공사 없이 깔끔한 설치를 원하시면 **메뉴잇 무선형**을, 포스와 연동된 심플한 올인원 시스템을 원하시면 **페이히어** 견적을 받아 비교해 보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWBz_mJ3tGMnTrUSwKu_Y9eldZj_6-5qp7xVvNABtUB-RLGN-j5zc6EmW28KYIT1rRSXsJOdso2IFtE5lUGSgUyUGF6Y6IjIdea5N2mRZ-pmvSRr8l_plR0k9cH2xB11IL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEqGEgLANq5CPR34tG5A6oqUKnUuWB1y_O_wy6E0E7UOlzSpITk_CU3YZC0_n-7b3S4ZF-V1Sz_ofzFDlUN8N0Z1yT41_Oq55B-igB-deU-sI0sutTlvtmYzXWL6r8y2UdqFrFrLxJlctwm4B1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxms-EFXHhUEJPuPBw321Ir7dY1jfptpNO1hl5zpuMnrNoiwVMCme4W9_SweEZbgKKKBfLD-FCP-xfCfFBMjwS6_-1qpZen79xBcpGixMKDU2NgRvfM6oq56PrVcG2jJW1821IQzlnTcMMq-Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmjZ-jerRZXOzuBSl5yP8QMhZknnACIANaeiGPu3G5-c0Nl2pT67DEqYILse6li9BufxvIv-Ypz7XEMphx5ekU4i4m_qF1aztZVnsWy9-vPMD2dWToN28vdmj87n_UcpOw8ispEZyvKwrBmem75p_cF70vfP9NgNoPTQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMIecs_QwNcKNczE6499RZgCPdeNEJUyY87d9C3W0t8I8PUw3kJJ-KzgPtSTHvT6vR6r-Bi2n_wWgntYM7dZYUwvLLdnVj6IzunFJTtZX-SCmMnE4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOjXJfPVoK2YoiL3T7xQRvrdsEgo2Y7_NxyizZUrH9t53xG9xingG-tQ1H1g2_FJk1FbT_ye63DA24Ax_pW7COi9IDs1m0Ph1CaTs30-Z1H6493q0TokKvC9I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERbcr-bE6hubErZPKvDPE_uie4ZpK5cTtq_a_dvxYc-dFYycR8mK-f_XrKJglwAxkN2RsPiPS8dm7aosGfxfLplm6b_25vy9kIZslfj9vjUpHF_uuO",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ④ 페이히어 (Payhere) – 클라우드 포스 일체형, 비용 절감",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **포스기 포함 초기 창업 비용/월 유지비 최적화:** **페이히어**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKrEXzWxnIqEUPGRZbh4oaubMHfVl7l9xa5EIIuxYwEibK3S8uzefEu0Q7m5HVvgCfUlXxgogvs0w9e1DhhB9WaW2fvxtdPic9-l6FcYrE9xTAtNssmwslaMlVD7Y72oi9SuWem3l9hfgE2z0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgu1SmdZDsWrfAKVBzs-HHLeG7Q86TxzRGjwtwUEbHeMMHvy3yy2hpTSZS11jqVvDy7hd2Hqjpq2U93Fqe2tq7OH8eUB19a3ss9wbSef1kZLgJrYoVkM3wL-0GTnqJz8DQSifklMagz-Qojx_F2EtLEWkGZ851MuM7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHcDaFrKqt45nNOCj766jT6sc6yjZD2B__7w-QLUudVvf61A8VNSVDatytlPoWjlweloy9l_G-g41btYKF7c8RAt_YyGkmOqJIZ8f7uLYSXHMhj1E19pvLJdxH1wBRdzJA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoIojZuCZvwgjeNQ0PssAifL1xtI2JJQiMOEiSB0TzcqwJGnWvfl7iy7GIs6iLqK9BEXo2bl0I2JBfgiEEC95X74N5NJ7nD2JxSutWFPeEmkgCM9PyK94BQEkjIs-z1nE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPbMkZKLa5sgNmjuRXsQ54SpTipbdg76uvIBf6WUlYQf-z8x-UNwyoUdaGp8e4n-jTQohucla7XsD3lqz41lLs-lR1FJBcwPqjGti3ngY5PVkVLn8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHwCQIC9_zfXvN0oCMkg0WDFXSfEsTc2WCFDQoJabbkVEaXqpnpRPOLj4YFhVg6AjJBx_AzNf2jYP2uYPs7bZ4B90qTU7fP-biPp9x1lqjPkSNLQWP3S9dyxIF3MzaoQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ④ **페이히어 (Payhere) / 토스 플레이스** — *트렌디한 UI와 일체형 생태계*",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "티오더",
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 페이히어 (Payhere) — 올인원 클라우드 포스 & 깔끔한 인테리어",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": "티오더, 메뉴잇",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEkOKxtZHE9-s0iR2mCPDFfW5AFAbnABxDxRGsOPD5XzLuGZ1-4wlie-nd3QpCiAl7PYSkCJ5-ssbMRACh1E78I6u766XLVFXMTwSqHfsZgcFAKn2zkFZ2BWU052n2fel4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJlB9Nl-zIw-Qunkx5KtmRUyn8uDe9MCut52FGNiKLpaykazXU0lUBaBpGKo6-ie2xqlKzNO4A4sPPKFO7vtuYja2u0BE4J-jl-bfGDt2R",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXYXbIjw-1eGe6o0vMNDO7KinFrXAKxUPo5-_b5i6x8eIftqR1iVofFvsRmK8k5R3V0-nrKXej8-tu6i-Kmi-wDp3gDuE9VlqIIbTywgmwT7DwzkELFLg89HNvwyOQyFdg_0QmjPQsqk_gSstrc7woPrDxJN1XS8S8qLn5RUX12_7qslPKanDZI1XdnCe4mUVo35OkA0ttqi6nwcdgFV-Dj7Cmfm7O4WyFqjGl2WFgbz0jWOXdARG80RdwZMs-vlxN5rNUzW3rFswDzDkw6EV5MF71AuCxC54vYD3v0_9dWh0jwnFm2L9YEDNw5NPZq6arqOMUD0DM8O5eVfy1roeAPxIwtp0WYCmvFiJtw0ZGO2c_qEAKpYV8l_3KlhoUrT_IM_N0aiYlCCh-ZNRhA7BFJAiXrqsNi5a6ykFWvGMWv8MacizXGJRID1mh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIPFYA0Ns6_Rq6IsnUncvRkc3eDxzCIabqImY6LWqByqx28YOeiZ-0mqqSTznKoXbFyr-1wTej99STf-Kc5aeixP_Nwm_eHfTBA_Kx8-nkgkUBcBDegmJLZUra8lIUV-Nt_GqA2gi4zCuErP7Fsx8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGYNOLGbJp4m54GPK-qwlgshglafTJ71sMXP9lEPByGjZag2WrorxC2LUBvN87KgZXci8BtfJ-Y0XCseJqpUVXIFrtZDYViAp0eMcCRRsNXMkIXPLTied-22MGpYz6i_ZUNm4uxpz-k_Q87CjPEB0wASEJsvqJdy18xdTOHiNiikYOO0a_8DM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQdoBGtGJQHg0D2ZyFcZkOaAVJocCC7LRXX9npt7Z_P219nW_6fm4HUSxphUxwbZWt8NUq4CUtOnYTAgw4jtoYePjYt3TXHEBQo8DYJR2wElaimyDlC6rduGsQ2TtrqC1piTv6vxmFnh2PNG_wCY0TtsfI8Oml1eq7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCxBYibdB5omooY18Ow0LKrGBefjfLacB_6ZHskmx_F2wrqWO_gJn3IWNyFq2ayQ3-OTEprTFj_9GWRcYltO8qhvRuh1CMNdzTN99JnYWkhoypyParXpl0zmzqYbdukbgcVXcTMoiGTRv9i7hIqlVmUsu_7-bfna9-Uw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "VAN 방식: 월 이용료만 고정으로 내고 카드 수수료는 기존과 동일합니다 (티오더, KT 하이오더, 페이히어 등 주요 업체 방식).",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1ik9pyPSd8ygbNzbCdoZTIcx_6GNGOdFA1vcVAi50eGY1zPuyapVN4d5gV2TsIqPl_vtZHSVpdWLuKqrf7crHDoEiCnZw1WvBO7dpiAho1gbW8kDo8xxpDY9avnCBKkEh",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgVeAl7cSK23xRhhMhjwM_sc_yMiKR_3Xs2sPQRS3MkLBcrKCsDviCo0EY6gC_VD3NtAen-zcwKrpAQ0RYOoar5U8MdmHEVfHptmYdptWJvIBjMDX-fruhSC09JEbyJz_AXyhFjU8KF5fuT03iXghnHTk8QyMS_oA84bSeAR9l4r7GVZ-uV3VK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErZbeO-8Uqnows8myggs7_R2H0HIkxK3urxjaCjv8pvuqSRHDqLInGZJxf9qci2NK8XC0jkuj3XOlBetZfX_gWm210z7wjchZ_WYxQBdt9gtzR_x35nnICSSJNxfgHPrKGSXttl4DgLXBr6lO_GHfep_linpcy_eUd8ABDsGtbI0FwL-zHtONfFdvOQZcB-lQ-z3KGYkKuZv_3DFn8QNRyXG6qgZgs5U6JNq6oGphYtpw3QQFaQldJKLzWFyOgj-OpNlaC0D5CRV-nnPdgNlwouVfZaIZmoJLEchq4y-zD8ybFTvE7m_HvSux_vS_gDY62cecrG9uITvJCu-fFm1T00YA-zK8_4xuD2FIFr_JkSYt6GTiHFipggLERBuxvewtEcVIyRthJKfIH6yZ0hVZA90jmK9Sco8TCjaOnHfCMM3fi-IU6Z2z_xL-cWg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNbxv6oZREZ-_yDBvA89AGHcnp2ObJLAEVIEwd_z20xBeFW7L4yBvkKpOQp1XbkZxQFjKYw6yKmOuP1fqOztXEdYRB-iqNdDjFuAMaKk8iCQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWF0oLXAwCOyNDCAXeSfRl7SVtXDpzOzv2Gaz8rshltZEy4Yc21j3ch8swXGn_p4erEPFL2C5oNXNULh2fUUW8oWO2TSuw9U0XwCB3ncuOV9IvVYESWnByuMjkoSXdtJO0XsSTgiIPc2ooPGVwfCWD3riy7I7x6Yai-z8gvbE4BrOIVpqu2KU38ofkMRieXBJlCJU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMlReYTnEa10M7dtCZyqzjq1L72CCjW8pbNR3KjkKW-iGGU8eEaXsB9KjxSGs4BE8jUsycRcrL3-V_LZiG5D__YFe_Y04Psdjt6qREWbM_0KvsqZsPBxR61r6Q-VXsLhOmIikSMiuqfnqECUx-wo7iUe2qP9-C_Af3NabNssknwOCwMjTHptFCOzTTsuYS_I6jHtTdXlf1WIt_cy74Rll1uT93bvTa6oU-4KWuiXwGNCT1LwPslCJKKRWpyKHL8MO6nlXARCy2bCx0jI5W9dS5-iQaOjl3zt75pH7lwV2UvX6IdOnFlghsX6SEuV9D2yDr_PYR_KslS3kS_l-kNYLxn30SPlazoY5iO9IE3RBI8UUyQp7MPJ77W93FnyJUrfrvyfzSr__YiMMxPF4lFBvX-G7oSgZyOMOD0MiX18ohDqA6hCB6__E-LpZF-Qzw4PfrZaof1V87OMrzaGpceobCEC14TT40NGg6zaKe6-SNeNXkUhUP_12oxvbhHDp_",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnR4l34w_w9RKeik1Z7gmbmJweYX6ZmOH5jRyUPd0h1GzTmwLfTXGcoA96b6UGN9xXMQc5hHQ3Pnj6HxtbFvr3nVsjPw_k6LYa6l6YMSUuePE6Jcopr_WHMY8AvjqoacvaLTrSTn1JHOpIqzqqXCCIjfs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9nt2Fe_HdhL-KcOvKMxilaYoCubcLSetXs8HnzU_TgRlk_nDmCbJkbKYFu4fpJSdTimW7R8baR_MPz9wzuakrrdkF6ZMIqwX8uZbeZtIUCeRg3XqT45DzQ0OQwGVPwxCy59Tm3o3G3gbDvaXSupwDhMDgB4hx7ELlfA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9JTDQka2HwWuAKclaXQwQecB5WsbBwGZ00DeEpoDKF3Wk6HNlIm4nFEVfsyXHEzKnIE3M-West9if5ktUyLKovuEiBZjhNML7cig270uOLkniI-QABGgUrkBYnstvrHDhS1VNMq-XEBbnUKYDab7uGno=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE11l20FkjMPt7VYO38-uhwhbQJsR05q9Ev91FEZfBDZNG33aeD0a6Hg5bD6phPBFWi_lwgfnU3b73ygLVj0A5U58ysUPvM20CQGw5h4O7-jdCNAuhhw9lDtZxgr4hwXXtX7Ha8zpBuTGbpKP7VEoJITU74I7v4iIQTTCg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "일반적인 프랜차이즈 및 주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 기준 대략적인 비용은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0NBR67TqhABtJUjOfCslNOWZ22WN3lqvYRLLVMy0OOzNVxKkztkPqE20q22BdXO1FiVn6jud68Fs4EnPxiSvwxalV_xN1x9r4nFwq-11I9FWwl7ErMGVGYXHWn4Vi9Dci",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGM7Z4xel1g4U2gRjhZAz771o5SfiZkD8WgnNc5Va0N8QgUwGhmhMgtlF0Y8MG6zpfObbv-npTJO7RSkIZGN30DO14GUHqYaG3NGMfTofisb8Y6S56vnA2cMN-hGsRz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHB-6oOcXwOEUup58XWsmRz2BRSYn1C8hIfY7R0DS3ZrWyDY5HN4ZqTcYqv3Iui4vL8DOUEYu5gAiy0JJs-6Ol8_BQNdtIDPfTvC10cmRlnj3hdsE8U0OwyVp9ebLZb3HETN8YPS8pa3UeZbWegUv-nxvyfYy7cbBMKuhcgQFRTK3cMESMVAMwDZl-EzlCadLs_zxMENTDmQ0DRi_taewo273amF7VwAZAFVzCMeDKQ1KnTHAVFFDap9l4CeKzCEYGZF0Xoa5XvtL_QHgRgNjlanh52Jz-avuGoDwJVL_BXIib9AnovAkXaBZdKBNr7ZEdTwoXTK2ucF8wkDbU1l1suoehIGeKEm4caZDVRUYnRjoJTWzrn1BIFc-HR1UFkZUxMKrrDkcbOs7bR515s5mqpDc6kArUSfSZM5KKWTQRi0FoqqUphYGzwvTMsQVur3ZYtQ8NBo0LHq6XktcyKVUIOV5xb1UlR4MYcCmbSnTrFj1B4g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUZEHxrlUSAF8XRVE7Fz5eaPAJvL_uoC1Y3ojDGj1q1a3IzIczlixJpLrLJx0yaGewZNCEvWn3r89zV06J6f8N63ztNHrDT0xv-mJPxEmMiikpQLnOxRScqbjZyPQK26tjRLX2nGjumxBxAB3eFb8D",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIdDgdx-0JkdIBLElq2L1fzYsg5sT02ylDMZM-peghlCuE1dm9LNFH3c6ROpTggnhJy2wC-1VwwSNzrf0j9yQdi95r799oSpvi1DFltVXEgKW8lv6fhv8kIpKEC6uwR__zSu16X05WbGzP6sFb8aldyeql7NZPIQnOGl94w-Yt1uAL9Uw9DTh9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 페이히어 (Payhere) – **포스-오더 일체형으로 연동 오류 최소화**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "2. **포스기 변경이 가능하고, 프로그램 충돌 없는 완벽한 일체형을 원하신다면:**\n   → **페이히어**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPqrfNhRweFvidbEyNwb5uBjeANSdiEesYUonG8SzWdV6uuSs8yHwtiS0_MhHi1I87FNSibejR4QoEmz6bk3hBSUAgmP4M-DLQnpBTXr-fD1fWTl9DgoMAT0RwtILnUZ0s2jEx7oSTj29JoNAVn8qwIpHKDBDjs4rEow==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQRkGtKOkZQeYdy02vqcgoH6WzPWIBrRV4Xvqz7gdSMiOBDJa_PvZMSp9RuF99qfGhDauyKHNWQB6q5yQk-LC16X0s88awWI9Pz4CXvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-1Zu0PuLSVlvDwetbm5PeN_XBE3ua2MlZsVFPf2TQCmZ2znDscEz2lV1fkYb4u3kZ0l07cS2V3rTMdPst7ZsydzxWoRkJptWetLrcR7PcwTjQrf32",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSxAN9F9XtBigZ7CwXApywB_2exRxpyHnHCWuIQ-8npzJTprtwp3ByVDpy6AQgtOd3ULnCEXFt5_EyzPIphvSn5EtfS01getHXJ4bx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 페이히어 (Payhere)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "기존 포스를 유지하는 방식이 아니라, 페이히어 포스 + 테이블오더를 세트로 도입하는 방식입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl0A-k-icV3T6DqZwzNut6HfEB-LbwJppERvi8hwYJRGciiASkRmu-x-FKbWfdFKHrb-qCoP_7P07WoD_EwF_ha1pvcdZ-GyUBiO0Bsd0y9lAjg-mQ7boI7R-cj8Rx2n-zLauiY3YWWAKUqKsdKMwJHZB726utUDwXRA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_YL5esqDrseRgCF_52MGHMxxa0z8ZoCsj_8ufQRrpsO8Z5-oyOnkgcKh16mNaXXtFMQn0yqGvalGSmJOBpKytrjwA7pmlerNm5I4ExjZfDMiBxbGKuGBFoH5UvlSRhwMsvplYIuqmPlvkEvMb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeSJWAqib1cU-AXwma-cJAvzMKWU5GbDpCPv4o6jshmymIpW2erXoT2Tf-2XLTAMFolwy_jzZDWXXcLWqVdknYDyj0RAzUEcz1w9PW",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPnu94gtiNWQdkJWig6DxZc-4-whOJggs_vaSbnBpYutLrKDnJMu6RdTpdAJxFR_LxFpPQXTA2MpoznzLm3mg4dQySRW6Q0XG9NjALQVyorHvgPi_W",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5tv9sqmgS4F-nIbqzUa6zbnMvCmMHTEP3i3YwoAoOGo2n7BUUYKzPNl3N2ongLLLwRyTvb4Cjy1utHn8EWt7BI9DVXWEP0VZJKqphP_wyfbnyHjW9oN6mharTkf2q0DFrLlill2aXdlSz8P6xDtIJ8FxU7sd7AKIO8UA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl0A-k-icV3T6DqZwzNut6HfEB-LbwJppERvi8hwYJRGciiASkRmu-x-FKbWfdFKHrb-qCoP_7P07WoD_EwF_ha1pvcdZ-GyUBiO0Bsd0y9lAjg-mQ7boI7R-cj8Rx2n-zLauiY3YWWAKUqKsdKMwJHZB726utUDwXRA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 페이히어 (Payhere)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8flbiOSm1ukz2JReGPIn_2kcTPcM4_cky8D8px_MkPH22AxGGM4ejnIRyUxebB5CtUR3qL2G9tZmH08XBHvnAY7xBua8OyRSLEhoGH6e3RXcGUkCx0zL7QY_N_EppkWq3I4ZIX-2VS7qL7eM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6hcyGOe6QiPujNnVqS9zW_PKmQSi3qJRZjxEMJyKRp05rXDqsj9t9IPCLe1gN4qQrJwy_VQVOh7SMPZp6A9u7pgLs_wkMYNM4xPMbLWUyHZyg9k6C4vawbLSDRijHFm4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6YnlW0aGZJQDqur8QPFG0ZTSnbhVnjlqZJ2A2qGYg0ysXXHsaABkZDQHfpOxxsjh1E5DnyT747LR0rVGPvd1LeBJHkSlNUNgJ4SH4mYEIQhMUqhNzlA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHlSDoZHzZiR2cutHMCd9Uyp9oeRJATeM1IWQEEFS6oWWB_pQGXadyhtANo5YIGxqNJ-a1rQ4jMRPJVAsBMBCzYeg_XAhxrj5vSQ5fVPSFRsqDUldkgJYHTXp5BIddrZzpV4S5MBEaMrdISmSrgPcDPQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKAJr-5_85oDQhV9EEURXOOUMO2oQ4pMAlvFFKH6ZedfiJbpQk20nQ_nJXAUnFzP-cC92JIn6lqQ2nfBLD9Du4PplEyUr4LA1Jg3LTqr7suyw3jngmspGVQR_bymLA1SkLmRYSjW0KrYkXtZdWb1M=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXduC4GbXG7VwPsYHZ9L9A7Krpnj5TKCL3Qx8S_Oarm6jspEyxypMay4BOdqKy8pX7vMKS_-GL8j7SzAHMDIYoGN4n8bv0x49Y96Qfi6l_Ee1oUlov",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEU_Fsy9qaCgWI_F0eIkziSJwSzC5vKXVjekMn74YZ4T7J4SPwmNwOCPMZc54wqxd0ey8creFhXXvCicbAs0ESJJqFDf3xUnV_qPmPSc1DW5kGi65S61yTX2uTFL7_ZbwRTs4j5ZA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVhJD0nx3gB9uecQQ3CjRvBNBwG7c61TABOiKt-JUC2_RUmp2IHiK9wqkPFaB8mrzBT4dE2afpaJg1DZIQHVA_Q-4D64p7oLLoYZZsBWc6_tjW5MaTMaajJuU19v4EU2ru",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVZ49Dv-1xGvYA4wc3Jm-bS8Gxx97xo_pLGwNJ1OJUla5OsrFMQzm3q7J3jWxrs_F3YrPYQv-iB-717eGTJRlBmyrwWsKjiI2ZR8UYakXfAdX4kW4JybACIMSypuoddpQD7wcccMQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeritza6PkM0BS-LlyAs5GnRHDVeUMGybpMysoZ4XgeD2HVP2PwGeEWldqqtjZL_-IKQ9u3hLZGB2yAwwpaSrZdRfQBDrhwzEM72KOxCNISqUDtJBEppp3h7vNWqrilR6haIu6EPRdzxqli3spj7RczqXeWggAWWj8Yg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3G2rVn4D32eYLmXs8isIZxBTQM_42tyAAwUapjs7gQGuhjZzlJgA9ldWuja8lC98Xa8Km0-1LTGwwMrGq5hS20L-GHlEh7Taq1OG6Yys6K_ZTKj_2-f_EC5Uu5bLm5CPExTnLh8eswf1qVp5-nBcOJ7vgF5MxrkhnoiSPsk0kxnz3TIOpkUhLAalZe6SeSTRH4FLYjVvQcNpIol-_Z6wPQH6A9f3FYtJ7CKou3v__HsiOmQUYFYK10h4BBQncAE1y3SpGZNV_jDYEWNdMxOzdev6tlQ2yJBZB9lEKmMaBeEGlvQ8wiNQuPSo-ssxvHe_gx_O_RkX7VeEmSL-ckFQXSUNJtpAmYMgi6-X1Pw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYGM31Zbj2zSPOy5nASDICGsVA4goifpoJAHRWY6dv7gL6Dc3_uridt-9wZuwdaSo8aMBap4OTa1bO11LjmmAp-9BHEWQckr0LpxhzOYzNuGSURPHDEB972SPy2cf5wlGBEYctJ6_3bIEF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHczgiBY9Tek3HRnLG9n3lm3XzGMGo89ufqMiyUwVbtOmHOa-Fks7zpaoXeZW3zXjP48Pr5PDv6pCDxy3hObG2qgtoEMyPJzAyuAnNK_nimO4mrg7lNzLEkotcI8Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. 페이히어 (Payhere)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnaoSFpJ8IiSTHJx06FhFaWsfVxyKf_vTD6Pqm-ifR8TcPW50aYh0ZWZVnjfjp9V8fw2nlQ8AB_t_F12UDz6p3yYQ6jSr9Ze_EsNAZmx2J110VzH0zZ9sx8cHaUs6KAaNw",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoBEoykCctB7qbn1KDUjRhxLohKa_NEucaY7HJeVe_2-War4oH10RG2pHBQNrvxSm1YNyjjHJsg1jqIqzaMJ1KNe_y2KvzSY3OZvPplSLu0WyXzCGx1PvYcRwTF2hcpPqxCNWMaTQ1w1ENW6fisRxOBnv8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFX96r283Nrjg_vsx0oVJSHLYyuWt8XMgfR62D3XVWXBem92CMcADiuAc16nEeXu5IfxNudWbdQSaMU4dlYDCEG6aNZL7XbWKY2m34I3a91ys297MuZxlQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnBx8VebY85hewRjDONtVzM_qhZ_PUzlj3Q2Nfol0GA6S3xL3Tx3c-10YEF1cDtdGoDq6I_9Nzi9DYawTREPE2xcuvejhgN5-930Ql7WqY5-jwoQBWk2ZzeOgJ64aFkA1_6avuKuO6HJ3lOh2H66QX8qjhLfebNWDfIGhCthRUsTWXV2yrdo_sy-w1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_d-nbPilMkC2rE27LYgUkprmhKGZ69EDoxvAh6qYmwxv-9qaSPGxybiCa-EomyjvVd_ZzrlS7lvtF-xhbkLakyMfjmLWYnwtPx5FwkIDeEwdwSPo0QaBqZsojLHWjLyqf",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMWIuy8y4Fcl9rfZC2lA7Ig5IyKcWneTsv8H98uW3n0V-Ol6H7RnTdoibScf1Iiwr3mnHKIqB2nw73ElPFWH-51KRcZ7wybyJQ_jSgpriordls7_jZ65p2AMMZyrCQTy_37DqK7idmxiN5Mj2QwAFy07IFZJg-E_w=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1kcTW2Aj_8MLAKa5eLzP4lBwTJrBba8ddxPFvTtbeDIMgdJnQd8PJdhSefZzS0irOsthhCddVxr18Mpoup73LOyOcH79CT3ZabzjctmIe9XuLedcR7feAzLO6eEAbzNopHl_yal0sVi0b_RtMa5S1tx5qcI4HdF0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG01yC__otUo0gUzltFB3xhq8i5ZZD1jb4pvKIMy-6hiIQmwNytBhFrFYkWK4VcnotaRZSqqHkDqRSnL9qG5b3jYbuvjQtfxBaj6mI2iW8yinjHEOjNXbt6oMC9o_SEdGWN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHonhMNn-WDRiQHUEpoCgl-gHxYJpxs0MjA2XOTDHleLM-vkz-67l2vz4TbmdnNKwUvZjhf_Jd7O8Wdf3mV-eXblQwxyNFlCVGtrj8XcMvIvCFH6tA_Kp4ZolhRaUDjWER1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcrVvFg9ROQqqrdnaTKdMeyGIexyZ6O_3BYN5aGazQCvaCodovh-pPpyJkr3Uj1Cof0fT0xpiDv6oIJZdC8wlnmghxRwbFo97611iHR65WxCCLnToK1oMIp5Qy_uiWcDjJG1CvdXCm5wI7qOfiQ_WOKU5F",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUbMUX3ALRpHqjQRuEBnvbPtviAYw_piJcyL8E9ki9iNp4nSPjBMJaGNE8T9An01kIJHAFch2nVQgMYtnix7r0HpsVsQqDtPMNr47WyHPyS7m5QGo4lhJb_V1iM7AmBhw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHN84K-G5IVxQdGxJ6UShX30GrWEQNqSMGhW2Tx9P8Ve4zmDh9Wpwx8y4j7Ze6Njjl1b1bm6WgC2OLcPx6k4GdHz28013h2RM_Xvawf772NiJOEjZACZRpsvA63rYWTEQ6GjR9nypAFwcm1FFuspk_XsKnPNuW00XaVlg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 페이히어 (Payhere)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlfrGRTS3XKIJgGNboRG_lSNIoNM5QDXy6xBLltUfCND8jHRTiGMIWAZZ9gs2nxnsNyXBYzJCWwqkO-dxPaISbJAEIfhuY_rFHuQjMu_cwHsMoeLoktH-mCdiGOkq06Lk7Cq6nwXoabKgOiQ3yiT3pl6ZN4lGuzOM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHg2Ar4HwO5Kws6UaQvlKBbO11onMQjhmmJ5E5PZduIPaFv17z1Ml2qXwYxhFcThn1zDXorK2gcI78dbCG0frRHOs5jwuSABbaF0e_vMnMVXyQ3fpn53LuB58wxRNKeAFEqvKkTge0pYxFm0V7mxiJJaFQb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrMumXjHKsab8gfXblKm99SZrRWfqYo-5H5OkzJaqoUnxZfgKGmY5tuhOqqoNeY9om7V4Op18z8lXnBUPbz3sDOOauMoI0wLi0H0gjpLmm3vkV8Lev",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHM-H3iJ4RFDJHhSMT9Tdc7FTOXdaRAWSRCz_aO9haBC1Ed_NJoa83D0Obp6C3tEg87gdcdtQG2HSWbdBAObghEEPzU0pkwfi43ybFi44Rzg1ojzowjV7R0uy3c",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8iHTbylFI9517dpeqzHIqFGZYgV9DNmbpRoEtsWNP20oX9Jlkf9UgWHK7jgny215nM1h_M_nulFW8umhpkAKOr-pxPoVTVQGhCjAxJ_mTixtnxGyhOqxFsS_LnEzT5bzFAkmfmw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOjylBiQvHG-T3wSgAgHBCPYAkJNt60UT2k3m4r7X1ULimZZFu7apnp9kS4Ie9dlRSfrrrIpuTPvo9ra2eQFqhESO2msBCKR6tpXGDF6A-6Uu3m6aygsvkix_PNEPI8ancvB9ODP5b5DyULQlQ4WXLe5u3EvpdMls=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8wmvg82-ZGpjZU5itcAFBeM4dY1PXAb9LW2N0mthvG30knBtw2rHtPX52at3s6plaB_nqUB5hs_RMkosoStcYKQmwoQu0X-QVcgH7ORIO5i2rJnj6vyjU5Lm6tRKfsL2vbQTaVOImMxDHsKuIAg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOoFX6TZyriRxaAsPKb1DrdpePnH7kvSrQO_d8SbqZaHkr4VNrYewLDoCpfMWPflgWUdaxOo5hnTNdgPVFKrPQ_WR1MfRqpsNbBWNNcZOVeuZUXjalx8C6Q40hyS94bNQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFs8POH3H5LGZwLh1BNnMVfaD4DRUAJ8ORwSihQYjt20avecV7K24VMy-PaOgJbJD1VMSk4PBc1EzDgULslOyjmH1O0qWQzs7qCkWtZtBl3V6Y8B0WhX-SwbxogNrClM8OT",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWuKCOfYBnmpHZaCIrHt-uIIVGCRHcHR77AXw9Ps2j2nrmpuha_i38kT-oEq1ZcKRRaqGFO-im1zGFvnDTdc_Uy_tgFUD4q6-LK70scqRVEycEOl_CQdlhxORirrxjk6zU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfOQQEH7t0IuxWN3ViXCzK7xFuWYTgBHOIdSOSYvyiLwHXsMaHh9QbFAdtdfbIuCgYjOQIh5t_D2rh-f34mjEb-DUumEDIO5Xu13wjyRu5yqh93hYe9p8z_EPrk8xtx0tS",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 페이히어 (Payhere)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdSDFILMlwsmmcB4IWfzW5EYBhcOYwuLpzu8k6QwpkPcsLVxELMvpcPgRXRZvkRlwRhkGo-R73qMYGg_bkErq-uLM--nxK0ZGOSufVuBTtDVTZGHbxfdouymo3i9jEs6UyowublL-qCsoHBmvp3YBecmHj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGLZRMFXGJXl-SZN0qP1bO1Rfmgy27xQGTwswDGXVFq2vGIC_Xjxcapl9vWmS6CTW80RkzZZ2qBkgqvgiXCMLZSFueo_N0vJ8w7ERn08UhFJw6gIdzRqz5Hu-hQJFnboLdorPNSjsvyiAfDZa5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwtXEZkHQUIA-OBn57Ew7HQgRmAEUBuiKpCX8woZgSdxEumdyM9HMKbinfCq2xXNTEIim9vJWzjM4Q8Ya1twCCgR8ANzNeBFpa6M7XqbcPJA4irSp6Hm9aauAQ2w-FgPwPxv9SXKqbqqZlPfD1hgqq78YrBEScHsy9rQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWX64sPs6eukBC4ShRJUtpZNxxdEyQAXM403VC-AtsWz2IQVDq62F79z1ItyxLtUTIOkNwsixVDTbqaUSbr1oV6NanmHbY7n53WejOmWChVXhMm6r2jeCHhkCwPgGLLt92J5V8xsXzDRnzjKDbpgJlSGQfgTP5aPQD0Xy858mbk9m9UI0cVIkPK98xfEQZ-dU4Mpo0ZOu6U9zN6B-zbxgSTcz_GAsxJH6Xqra4cp0OJwF3iZ9XQ5oXpug7ascOHJUokKp2j8N7s7OJ2RzurkA1Ys6CbNNGhUtghm4UAfHtNBPaXaRCgFBWkn1uZ70VeHVLjo_WkOovUZgne12b-TQbs-R0y082EAf544qfab4yjuC1xGo_ZyOnOAIpttEk3cZQAKquO0XXTbf2a2o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk0HENz-_bd7Xw6qGZck1i8fIAqFzvn0S47XnKU_LslcxHEJ6bGQLRrhE_wFXyCUxyEsI6jnCDw_sUBcY_XKEctljYsusg5zPRE4ESofcCF6QW89dzdJn0UCGXzzuMcnYE",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwtXEZkHQUIA-OBn57Ew7HQgRmAEUBuiKpCX8woZgSdxEumdyM9HMKbinfCq2xXNTEIim9vJWzjM4Q8Ya1twCCgR8ANzNeBFpa6M7XqbcPJA4irSp6Hm9aauAQ2w-FgPwPxv9SXKqbqqZlPfD1hgqq78YrBEScHsy9rQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExWzGMUyCWeTZDR7-Y8K4o1UwY4y2kKyygNHXhN6bGUQI0nWK7ekwQUeuqhjutEDrYWTWpogZeaz_vDnJt645-6HT4Hho8wHj-2jRnaAWcKdUaJbPlOmjY1aTUuYCAmSE_q4lJzSe0N-FNmaXdepc05pfptKQhxkj6TMA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0_dXGUZPVwJ540HdMXPqsD0-yCCavOk6Ex6vbB1tU9zFq_yvIpz_zZjA6JgK-3eBkVSVw4DcJt0IS3_5LoMorFPSGnaJAaC5Iq0CIPEB9yMLMoqOGcQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "페이히어 테이블오더의 비용 구조(결제 수수료, 월 이용료 등)는 다음과 같이 구성되어 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **포스(POS) 연동**: 페이히어 포스 프로그램과 무상 연동되어 별도의 포스 월 사용료가 추가되지 않습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGJe8Bci7yWnEeLh0SzcIhPs4iePu0lpm7rR5PA70jqJKY7SA_jClenqW7emdjTDS7qn0J5fRQ31lN2w8SjLySdaLa2z_c_dXajux21U6xKYzLAS1CJB3Q7OuiTaP9WMF7",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSDRyzkVezUMwYmc5XNJ0PVD4Dj6_fNkTBnSxreA9akQDXeaDONfZiyUrELr4w1YBW7bPn7_v2hxKvqr2iPY7hQh8AfSwPVYcQq4I8qkLBUMyxH8d-2PymZjFozqeMMY6_1ZCi5Kg9FAwDxlQxLg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEppbojbj4eDTo-Xm4I7MBZwgKK34dYcuswyUIkNeNHalxtnT1-3ObXR5jOw4cl-mCNRyrRulVqHqifs-XHzQyxVx5ZUdm52yW__xIbEQwenCHrisToRpp6g247fTKxwIaCsuHlosQ-KXUZ1LjN9glflZKd-Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGiM82ZgQNMkCJMjvQ0OjEw_lRgMq9Fd8JLSDXOef8UMS717Ee6W1FRECxH8APZt2X9Q12AngP-o5frOfVq4wGVUfrz9zhz1GERdFDv8WIz9UBZVacOteJ-vO80arDv111rqNH5cqo2N7DXD21u37Ib",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHm7aofjK9mHJxpuIUcUeeup6NwZbZtJ-hbY1yDZE-5py8mciqaUVJCrWDvzAd7yV8XPPJxmZ0_McN9MhYQJPKqchJy7bUNSoSiw6Hvw2Nrw3znuGPb6hdlmgD37C9tGz2I-t-dH61TT62XBQUjLXyz2guEinQEEVpseBs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtdAhhQqvlQPuwrz0vYzAzH9HNhFGThwCl_feZvHj4WR6UiCMFdu716RZt0D6dBAZb8x7PKi-vkGtQfHImD2Eewht3ss8rKcb4wmRr7nDNtCO5-axx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "페이히어 테이블오더의 비용 체계는 결제 수수료, 월 이용료, 기타 부대비용으로 나누어 정리할 수 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일부 테이블오더 업체(PG 기반)는 카드 수수료 외에 약 2~3%대의 결제 대행 수수료(PG 수수료)를 추가로 떼어 가지만, 페이히어는 VAN사 기반 방식을 사용합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "포스(POS) 연동: 페이히어 포스 프로그램 및 메뉴 연동 이용료 무료",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "요약하자면, 페이히어는 \"매출에 따른 추가 결제 수수료 없이, 태블릿 대당 월 1만 원대 정액 이용료만 부담하는 구조\"로 운영됩니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4uebtUbRSvDyMpG53T0yIjJ16aIVUr5aaiPgu66b5joLeB6G7-4zzinVBWfUxzuzQXxa9KvhVRT7ZaA32EBbTM4IQMp3oPYmIThxrIOoEZdrDlSWq1mrRmn9hbY1-glf-690rfzmXhSqU2BuFJXRWX_qbFQ==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGapY9Bjjsaqg0BhKOyPwYlUbSccETH0o9rT-V3lCYzlKW_A_BrknKjBkxIpJ2KA6Ajmy609niEDsyO09a2X9h5bBO47XG8sFAMFBkgwoQXoV1O1MVZEoqCJyjO3c5WwZNk",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGDYiAvusnVMx_s0f2yd2Q6UF6aBuwxdyjwGOAW6NM-aN-3ZE6C3iecEPwV8CdVdmXTYQ9O30XWzTswD-Vcqeo4nPcWoBQCwISWUUufa9gGyevkXPX3Yhcn2rUTe3RZOi8DZztgD4E6ytZAoZScl1c",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFm91sUEoq-QgXkjzW0g8qRFuGBfypjJ1AjY5VWBbNd6pB-KWlNJPutjYE0jZXgKfL48L6Mv4O7ONEIpTT00czWkG5nmA3seyTxZ0O2wg8PLhHpbxi5",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1pw502Izzw8NhY0WNoI0x-JczCPTQ9PM6aqXDZtaEXqfB6Lh2qos5eT5YO7-TWAqF_lRizFtC4LyBOjMeoRNRZnK3UA4efKfEpBVCgmnvJIxJhiQh",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNjzU0LiWl7NqhvZ-Y5sMXCryYc2Ca_p62Vupx51ZJneaVvzYyWOqK8hG-EjQOOKH2vkd8rxmZa6dPOGUws4cklZi-6_MiozEf7kPp4fMtMWgW9P1kWb68YQ6zgpHREulRHXxEBnVeyQMVazkBvw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGIVeCid-Xmj5SzkIAvb0MTgCl9L6-lVrofyjpcb0zeHoGF_6BoPXN3n-_zscChsv64fjM54XS4-4_dpSp5WO4zksYe5KzauoR8SUvIcEnO4RvhJrcE79-U-EJivy21K4XtMFMqwIWadQ_1aTK21XZYWx8=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBmcCLU-741P5ip2P--HNmKkLE6VYNx1oR5Z1Q7ZZVKh-7sPUwNJP62nqybmezfHjDFoyfYjlr8zNBHzX6ObnpN3VqnboJ7EOHBH64Radk2vLzXKErWYpb5ByobOTdlJAZPZ7SL5U=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "페이히어 테이블오더의 비용 구조는 크게 **결제 수수료**와 **기기/소프트웨어 월 이용료**로 나뉩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일부 테이블오더 업체는 결제 대행(PG) 방식을 사용하여 결제 건당 약 2~3.5% 안팎의 별도 PG 수수료를 떼어가지만, 페이히어는 **VAN 기반 구조**를 사용합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **포스(POS) 연동**: 페이히어는 자체 클라우드 POS 프로그램을 무료로 제공하여 테이블오더와 실시간 주문·메뉴 연동이 가능합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "정확한 월 납부액은 테이블 수(태블릿 대수) 및 선·후불 옵션에 따라 달라지므로 페이히어 공식 홈페이지를 통해 매장 맞춤 견적을 받아보시는 것을 권장합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEm7lwjMkHEZNcCSITLc7FOOeS1MCAtyvcudiGOF68XqxRC46jWxnHz7V9O6qGUV8HYl_5-6MTfDVuKp59iWmb1Ll49ZW1iM6PQrVAwga3fu3Z1MNH8SypeK-0-j-6GQXJ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1-aDBgez8Cs3EnNIddxxMK0Ng3BPICB7A07_T4VaUnzamnKs1KjmNrdvz2uGVdzYKQQRuyBpuE2WvopgfCJNIiR6kiHs8sOj3wbHqh66nnpdUkSrE450YuuumVtO3TKotBo2EZmAA59FWU8_r8S5EZI_JwYskobP621nNyGl6bJRTt5lYv0i-tezpw7z8nBq9PV6TqHyyMvuQngV2F-mGn6T4JPKmLPIh10QoyYmuCjpSxcP8TA-gSP87_SlVOFnQ55wfKFRKMKD_J6j4ZMR8qWMdUJL9x8ai7A9DBgd_a_aHh7KzsjjGpwzMc_lp5qK086Q-vGRfx52qc25ofhnGspcjQQ59Q4xergCY-ls0rsVq-xSF60bhRGDrQs6HgpMM89XMq08ykiBBk6iX34k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhIBzfEcNM_FopmeJpLZeJTdsKijxB5Vo-q9liNwpkOK6XQeX3iZarEucclpKWQNfnCOeJu1dCQUlK2GD11_WfuAn7voE2ff_L654eBKAvuJW2vrbQlQDjFumCf6N2D3M55Krih5GIKom3qEFiN5U6",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFQMvcvZ7pPWbnHkUtpL_oB9y4Mv8sib1KnjTRykp-6gNPHk_NIYlUiKNMV70WeOrRjBXX2uAQbs5GNwJCZu9CNtS_uWwqVuF0U2pKRZL6BSKrG_jNN9ptUZ4aFiEOcOhaws7ZQuZWBuQfpRkt7NNp9BV-IQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElu3hvGV48eBSkgxnS-EwXNOS6qctdbVSHcOjoJt64TI5AfMz9jod32uUcXqCDMac1t9NiEhiCkQ46pDcWcU1IJBphxHBhqBSwdCmS48nFzmTKIq-3Ln0_6xBTPnpeQWIbgVVuNfdyiGAS18vb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG0_nSaD7ntM5KE0FkmffhFsEms1xmKKWJDIp_VZ_fSIPzs3JqbdlRPFRbFvOu1NfL0cDTOm4MMfC4uiPSIYW9L0E-Bsa64suxqeHVx9ffeXieZ-LTj",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8Qf4GHZ5qLUTRJ_yRVS7lk4ZB5NewSs0AXONgk_zNErUHWEsPba-7sjeDootUfqwCOUOchvbS0foams9YD-zFiKYseJy0ASbOfudQpbMNBkqkFam5NPvxmwR7giEoK7xtPbfolPEBPnkKCawYYw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWMKSGu1KL6qUWlEfj2zBtOoQDLYc4SP9W7Z4W0ZqNOLMtFCyRu9X8nF2MJImfrA1lDvBdunbN3GqCdsWXLGBO1m7bZiQVtzyW6ymdNF4sSWmQjG-Pv65B3LyIQoT2OwG1raVJBfS8YD8ignWCVBLoNmU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "페이히어(Payhere)와 타 테이블오더(티오더, 메뉴잇, KT 하이오더 등)를 비교했을 때, 손님이 화면을 터치해 주문하고 결제하는 **기본적인 기능 자체는 큰 차이가 없습니다.**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**페이히어:** 기기 구매형과 월 구독/렌탈 방식을 선택할 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "페이히어와 티오더 등 주요 브랜드는 **VAN 기반**으로 가맹점 카드 수수료 외에 추가 수수료가 붙지 않습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | 페이히어 (Payhere) | 티오더 / 메뉴잇 등 전문 브랜드 | KT 하이오더 등 통신사형 |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **페이히어를 추천하는 매장**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE37mlTobGhBumXorkQfqzdanlRWLCudnDcYeFAkkPiiDpLLRSRrWvJVbG_AM-98caF2Gjaq7kQ4wV7BzRLQPxBtWqf53AFV3-24DRCMQB7DQ1m-G0ysDfgeOc9oRcmVuw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2gOW4cR6BHyhJn-uRVt03HsUxMaEjj9K6MaL9RwcztcN0n7wdk6Uv-199uJztpxs46WWfKK51yIIw6ISnLMaIr7dwK3p_K_izb-F-ASAj65umcOn4nC6FrJVSOlt7kGQ6JRctzBI4WMmoNHG4dqYgKU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKceyc8HdgwHYdONaxdhxDu14O7ZQyiRva6ntYZ-IPGBmaqOACsLm55BADiwyIncNh7BiuzFdm8aC7wqqoFIqLUkq3Xev9UQz1HoxKfBy01YJevkxumDZ1wQWI8iToKvsGnr3HHz1nSN81Xu23",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzdmI0KPPRsZfptQWseDfHHxRf7QU5TtPcYazhT6DrxO-LKF9V9_sHvXy1CIvFkskph_K9pePLraBD9wa9UY85ASg752MgajOg4QDluSawC-sr_DmiZLAXzPc0hmo9B5zyTJs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbA8X2PlsnYbdDCDsllib1LqbwQFkKzCq0nexdJChp0mg2DXTE26kjnt9SpAOHD1KseQp88bq4FiE6j-vX-Jk8ajMVCiRcbA5DD4R00HJmROxfww_Ev0yW8m3Y7p8ixcc8Ow==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlW0DFWargN3kDtrLSD7NePf0ean_8tZGK4PIdeUTsUZg5QgTTyaGAeTRyNAL1emeu0-AjxWNLTjQ1D-NG3_B0R-lm2ioSiuj3Wu6Z2mYFxqSWOWvN--7oUUZxgyKZ4poSd36FPDIUgVkcOjOCrO92JWnvfxldSji3",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHr2dFgZnhORHvUPbdOQhkOAx7MzST2SpQVfPkT0VRxFWTMo1MVipd06bSlGuI9UL7obYyAVa7591gV_RGaMInPEZRSdqkHErVkZIy-N_jwTSNGS8lUp_UiqwK1wf30yRw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**페이히어(Payhere)**와 **티오더, 메뉴잇, KT 하이오더 등 기존 주요 테이블오더 브랜드**는 단순 주문 기능을 넘어서 **시스템 연동 방식(생태계), POS 호환성, 계약 및 과금 구조**에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | **페이히어 (Payhere)** | **타사 (티오더 / 메뉴잇 / 하이오더 등)** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| **POS 연동** | 페이히어 자체 포스와 100% 실시간 연동 (주문·결제·주방 출력 일원화) | OK포스, 포스뱅크 등 **시중의 다양한 기존 POS 기기와 폭넓게 호환** |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| **메뉴·매장 관리** | 사장님 스마트폰 앱(페이히어 셀러)에서 메뉴/가격 수정 시 태블릿에 **즉시 반영** | 관리자 페이지 또는 고객센터/대리점을 통해 세팅하는 구조가 일반적 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **페이히어의 강점:** 매장 시스템(포스+테이블오더+웨이팅)을 하나의 브랜드로 통합해 오류나 주문 누락 가능성을 낮추고 스마트폰으로 실시간 관리가 편리합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **페이히어:** 단말기 구매 또는 렌탈 형태로 제공되며, 자체 포스 사용 시 별도의 포스 월 사용료가 거의 들지 않아 초기/유지비 구조가 단순합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "페이히어를 비롯한 대형사들은 대부분 VAN 방식을 지원하지만, 일부 업체는 PG 수수료가 추가될 수 있어 확인이 필수적입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **페이히어가 유리한 매장:**",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGk-0ZucfW5UyHDt1epsBr4suflBAYHRq2l30mPw2Ln2LBFw1sMFAl5674YAfOilKXa5u9-O3h6VH4w8jO1V1oiiXgmFJM2SAdXMQINsXtcKI6nxdlGuyJaSqYjAwvmgtZg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6bWpUHb9A9VYA3250XGJLt5I2V1NgqA-s335lFJouvqfub4qSFYOM58M0NKKKFRV6G2CQ4lKAVaWcJTjgxXtR6l1Kxj9pEWKc6P33dDmlDwa7iZCbLiSiKh9v3SXHdkf5FlPt-zGXdbDKoCIFnoQjcImR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8_jVpIFpx5_t5fJL6WPn-_1Olm2A_oRBvLv30YjMpIRc_Rxn45LLhQEZJt1EqPlWqmdhwVfPknsVppc4UTji0EXieRZIG6vrAt_F6zsnQXJiUG11qFmKq9YOwAezDPumU0cIwiZfEsnI5P428fhgRKMWkFV3l21Y=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAfFet6kqPGDlByW-SpkjU25zgKMYZ6-XVQsQuYRmgovCudWxJdlBFYnAYvheadsMnDPlrlbGFWtu1pdn3BdNgBovRFStwuxpraeldMFfRQdJpZLGmYIOpolaqstzLCKuXzhBy0R_0UFxxyqrl6D0fgrx8B-oSV2-LlQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHmwDBA7qirSlDWaMOFdpcqxDegLDY_i7zsZzC1XQSIBmvpX7wdZFdhFOyUH5JekrvQCFjfvNkMHD9XjUc1VtNthAK3xbrw-lyK7TlIPx_BuEV3LftDnCR5K4Hwm60VC7J",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAfFet6kqPGDlByW-SpkjU25zgKMYZ6-XVQsQuYRmgovCudWxJdlBFYnAYvheadsMnDPlrlbGFWtu1pdn3BdNgBovRFStwuxpraeldMFfRQdJpZLGmYIOpolaqstzLCKuXzhBy0R_0UFxxyqrl6D0fgrx8B-oSV2-LlQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0frJh20kbdS5Fsxky_cUiC_jhk0c53-TM6bGZuU1Av6u6nR89IALB1mK0t1fkcz1C_JNnDNnSC8zPePNactoc6OcpjBsAqy8ETXZzfB3bxcX-kMEyiROcBBLJ-VYZ2nWGYCFpXD_dY39x6PxWmZA7SLfXpcueerQiKQPVTVY0wpvq102kKYryReQlwAddjsLoRhSsXRrkECY2iAyoQv3D7duCh47qCo7lFE2c-e59MmhLXt1HUdZ1x9n1r3ghCPBwXBcCONGb-Rn13EhwVZ33FBT5mO8CuZ4Ah0p7VdA0jEigIw7oiMT4u6q2VUSVW7oKpIejvW7lmBaJTEyWsKhxn4b_5Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLdlEWu2OFDsOAAhiRBUmVz2f66SNpt44M0ik-5WmijcjvrDILDiHD89ERa_ovUHv_w30zRz8i-oN0KE13KfKmDR90LQNp13Nl5Kc_bL-OEccdbQPpnH3RScvRY99wzm3dx5RvFXiIJ5_yr_o02BFy_5qwfQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**페이히어(Payhere)**와 **티오더, 메뉴잇, KT 하이오더, 토스** 등 다른 주요 테이블오더 브랜드를 비교했을 때, 기본적인 태블릿 주문 기능 자체는 유사하지만 **'포스(POS) 연동 방식', '결제/수수료 구조', '소프트웨어 생태계'**에서 뚜렷한 차이가 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "**페이히어**: 일반 오프라인 카드 결제 방식인 **VAN 기반**으로 동작해 일반 카드 수수료 외에 별도의 '테이블오더 전용 PG 결제 대행 수수료'가 붙지 않습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **페이히어 (Payhere)** | **티오더 / 메뉴잇 등 전문 테이블오더** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| **포스(POS) 연동** | **페이히어 자체 클라우드 포스**와 100% 실시간 연동 (메뉴 수정, 품절 처리 즉시 반영) | OK포스, 포스뱅크, 이지포스 등 **기존에 쓰던 다양한 타사 포스기와 연동 가능** |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| **부가 기능 연계** | 웨이팅, KDS(주방 화면), 키오스크, 포인트 적립, 배달앱 등이 **하나의 페이히어 관리자 화면에 통합** | 서빙로봇 연동, 다양한 제휴 마케팅 기능, 매장별 커스텀 UI 등에 강점 |",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **페이히어가 유리한 경우**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**결론적으로**, 대당 월 이용료는 비슷하지만 **\"기존 포스기를 유지할 것인가(티오더 등)\"** vs **\"포스부터 테이블오더·웨이팅까지 페이히어 하나로 일원화할 것인가(페이히어)\"**가 가장 결정적인 차이입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFAw_2bY1BHvkpBR6MTDp72mLdG_UC9jdjBaktAoEi4BmZQB6ZWN78Ys_gff6J0nvQYP5SUuVonouAAea9e2OzvUbNm8ju6MH85DydtxI30XPveTgcosdmm4oNL8p1CfwI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrWFT9IP2RTyHrGoCcuR2rrLAIJza7XBP5prEuGJ6EGCBkk7fq0BtxpL5dfS5iDMO5sekkj3EzKpaHGYMN4so9onoAvrW64DXw8oOCxUeMUTdYXnQ1CWpC-A0QTi1pE3xCPDDPyn4mu2t3Ctr5vMLkNZY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGCWPNTMqHRxOUzNHEFX4fpJVxNl6OUAT5dPQOyHvM_xcYtCPqNbEvBMCTCa6oJEme0hIdA-vSmvj7X5vdOT8QQ9WtEjUtwdZakzL0uedUtXK7FmoBpVhPNq-KPtOyhB5obrowlS16DTArzPLNLiZ53sUenlTHruxR",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfomu9Yxu6TpRsR6PVP4AoC2N3ed0fNSqb447l1d2UjgudX9lr73CFPQuPh5a5DkDcoIh0szMbNltJjE1D5FSGWPPXOatE01NRsez1FDE4xgE1noSimmFSer5zGUhjuo0hVvx1zKQGtwvta-VjhQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJQ5zUTybjV7O66FZdoJY1eKmMqzPH9Uaq8K1R9H9KSCFq2TA4x9lGMgbmwFvTiZuQj_J0urHLgGzwDsosudqL1dcghqUEg_YEihTaD7GHqeeldeo1siL7hbJbUWUvbyGQEA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzhvVph1IM_ruB0nezw5RaM1aIMHhQjmS4uRO5d_CfY23y14yAUvF_vq_wOXWX3fFuqKXYoGQkp9WBgEIWFJRNozmrKKxwA7WZBFIprx3XXVkhpkxiPRWqq5fPxNicYyv6Zzw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhh-Z8nhBueAmlE-oqZEABVR94KBG0SQkZNboZ01_15G_xJn7CR85_I6vwIzRAYMdMHw-0zE4cq1ftOobC94HQwALmPSXrT5BKUx9GEBzvmCWpFNtIgVSjsMa2i3tYrbBi_jd9hLZTvjekbH0uh9a-6UP3YCmpVqbjGjMu8FsZZpwM_tYyRY20Eof1EImerO3X590RUtoEF9bVHhdS_z44Gd59C-OdUuGzpXrYVkl5Pd2RUuR_tiAWBoPACZLtShcCUQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENbce4Nj66YoNdYqHHbCf55JrKrkfn0q0XuZq1FTlS5DzgWczT_MJ5C1Zy2gNDchg1Nv83AAMoxpUPirgB_rfNGw87FTz3xT5FHj2EbQkgWXA7CxvjMH-llgMvvVkyMJB2EKNBlDhZ8ZFhrZ4y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZHhvNBzDw1_SJ9AKAqpWYF7LsPGTYG3m6dcTprAS3RGc3SxKmVk4EYPWr_hjfLQtxe6tiX-eNBn9MdL0Yk_ThOX13xUUGt7TjNeBCrDS2VI2pI2qZSrM4Nom_IF6HJeo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**페이히어(Payhere) 테이블오더**를 실제로 도입해 사용 중인 사장님들의 평가를 종합해보면, **통합 연동성과 수수료 구조 측면에서는 높은 만족도**를 보이는 반면 **네트워크 의존도나 생태계 종속성 측면에서는 아쉬운 점**이 공통적으로 지적됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **페이히어 포스(POS) 종속성**",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "기존에 사용하던 타사 포스(OKPOS, 이지포스 등)와의 호환성이 낮아, 페이히어 테이블오더를 제대로 활용하려면 **매장의 포스 시스템 자체를 페이히어로 교체**해야 하는 부담이 있습니다.",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "* **추천 매장:** 이미 페이히어 포스를 쓰고 있거나 변경 의향이 있는 매장, 피크 타임에 직무 동선을 줄이고 싶은 홀 중심 식당·주점·카페, 추가 결제 수수료(PG)가 부담스러운 매장.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj5gccO2La7ESuZjwFWQrk2V_2KXkZYq3o7yPjZRkv-0sBaYcSlfF0NYxdqNv57FkpbglghtjqJjHxI4DThFX5NyGJGpzsr86LAeYgJExWaJhOjEdF1BIeSYp3IqJ69aDarA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESWVPTlJliUP7zsx32Q6ot4cZxZLEZwMqWQ0aCS4VK-AfewCxU57wJeD6HTgK80a0Rzgo7VfkeZpFS_1R06BX3c-9z06axWr7bZm-huGFpTDWZmWkLdX5-bQPFfBNkpf1UKlwpnbWxGW2WNE-vO3Dno9s=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5n4iML4pa4yrKaRTv3KDlKa6FGIC0RqFlMrMzZr7HE0Ul2mzMM3KBV7QnP2ynGmxyjBgy_9C70tcNC7l4Vg1FK3Y_tbWVSSgHtn4BvGL2BFxn7fleiYQTAOnL",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6rLRmC7--BAGFkWUQJgBUPkrFPBBtJcIs4rDRlp5q1hN632QH537eZ9weR_7JMhfjpl8Ff5b73cKXfg2mmabYc2YKvzLmNjRGVorpvtgVCQWuJtl7Jo-o3QdbImzU3vk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHRaUH2tcnvcItXmUFsOp3Oj6REBzrorPrVAoPegk4u7MK8VDRhQE5tXtZGe-ZSMUrxWFTE7BePN4E9mLpTK5j9fvBL4mhhcVGxum-k8GsfHTFq09xYuYMDJrw7Ktib1p6qoq8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFg1p7SH2YBo3lPO8x3yXt-aL5U0y9uzuPI1rfERDhUV0YCR1soO6VJWdf5XPUv33fXzAiPIoK3NfT5q8nVexcHKXv2JzNY2B7sl1tun40RE2jzWmAD2yJsU8wOjlFS6zCg2FYlM7_NHGVJMnYLjO9Mi00aiQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9aPV_03yH9T_DdJjRC68zNof3kmOqWSTDZJazLC3uPtdEJxhHwx_xuXEkctCRJS0HBg5-SOlDyJEudO4lzTI6ZdQv6IIlaLvJK3FvvmfKhC3rglowHfOQxEC9Nrx0n79ZtItp3rbeBgBJnPqVk2sJiiI9ZjHFRA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGK-DeXICqv3IlZQPM_LDWZ_9PuxV5nwnVs7z631LTlTxwG4evQtUs6SrsJ0RPU_6NgzL8Yik69IV_zheLcDvsgP14YfcsWuUOo32uuFzoubqCiR1HM-etkX9NxnTAMLRAwIcp2GUBthfhCrRgGrTBv8tj7giYDiJLAe5b8SMSbvInyN1StAUCEXxxcfO0IZKHUar-baYN1cy20kUDIAMv5aYirqlycCvxMa2bxS0b9nt3xKmBWsqy3gUsd6RGFKU0ZXA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGB79yVlfuXGcIs95CSqzLpT8HV_FJfGaELhnDNEAOLMxdPvmBy7yvUnL03woSgniTL5I_eqLOfycCykMQ3umIWsHTerTDx78oDjhU7dbUEKmYJqD9dxr_StKyEDYFMsEbEgkFI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHfOOIF1nl-oXwW2P1-5IkXlZZVliVfMRGrAdF4AAHits3hnsrXas6cGsnRP3Oi6nPrMIhiu2-MFwbGKFO5bfwCvC83nzh56W3A5IwvobAI2HwSn2rViIgaRHiXFOoSw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**페이히어(Payhere) 테이블오더**를 실제로 도입해 운영 중인 자영업자들의 후기와 체감되는 단점, 주의사항을 정리해 드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "페이히어는 VAN 기반 결제 방식을 지원하여 별도의 불필요한 결제 중개 수수료가 붙지 않아 비용 방어에 유리하다는 평이 많습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "1. **페이히어 포스 생태계 종속**",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "페이히어 테이블오더는 자사 포스 시스템과의 연동을 기본으로 합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "기존에 쓰던 타사 포스(오케이포스 등)를 그대로 유지하면서 테이블오더만 붙여 쓰기에는 호환성이나 기능 활용 면에서 제약이 있어, 포스기 자체를 페이히어로 변경해야 하는 경우가 많습니다.",
+          "sentiment": "negative"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQES8oOr7mrpBCjbwlodmop_RnbkxoEaQ4SNae5MeGI4FRX9jkbEaLiw3W5qkcUV4cnn5g6q7-sDOiMO9L8BSRrP_ZBuL8B34869IPiQDrzjBrTPaUIwMS-cCNTJIX-WkokyMgyt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQtNAG6Fr-htRowiLnxpjw1Xb8ksJr8Um0ohrGAApSsUXySzwcIkkVYS9FHa3M3fzBtseAbgnpQLNPjfZ3udViSv6PGWPl0Dv8e6H5TUOVnDT87SRlfFkWZnKOkS-_BM0V",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzAh4LMk_EurI-RGdS7z53Wo0fngwyhBjP-39UwBu0X-hWMhDuDa_odklEQkCiKEhzRRHF1NkGkTwZ-MGVJYye1OZMcHugSB-tX6CY1g49qjeCdOaf4ToL0_7h2p71YNAoiqrgD54z3_D3IvDmc5Yc6QGwh1Oj5Jk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEe-PSGlYbOvMfmVclqeyXs4jHzs9aoTomblrQvUbkgrCN9IhLFOn5vm2E-KF2Yep06Gxv7rb3wIVTjwod3pE3ZlKCLGlqxAmfM7AC1iexlFCbTu6QH1rxq2b3w8DbMYYmkI1-Q-foShYsI36Cp1yRowzYgZjk=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvoeRhvW3NnJWi0fXD8zqYyokX3Eneo74mB02VzHPvgaTgdbmRW8oG_OeXPA0egWNvN_hiZt63ZARrDPAtPBV8YENIXI85qO9alJKeKX4vuRCu-Fhha3agzQyVj4bFby7VVWBFB8LNkDNkPhDF7K0iXhwTQmkilA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtvao5BaT1jy2HP4DpqhSca3We5bmAfIcOg76OoHLDfy-HgmcQH3gPjO2OAKvO4vv-gyqoqAP5wvxRvFGg2Ddz-ZAnXOX6bOEI4DBsExyIB8Vg-ZbboHwokhi61BWgUPE3aiG_XzRZZbgsFj8a-A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETY9GP1-J_E7ScQf3Z1Gmbr_oYG9m5HdfUW2E0vukFCIRFa5vlN9MBZhahEH9vflpr_DXi6ZotnNi6eCtXoOCS81vTTi8L7jkc1-msrbqyB8xIs__XKLOapD-TbEYYslI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "실제 자영업자 커뮤니티와 현장 후기를 종합해 보면, 페이히어(Payhere) 테이블오더는 **'포스-테이블오더 자체 연동'**과 **'수수료 구조'** 면에서 높은 평가를 받는 반면, **'클라우드/와이파이 의존도'**나 **'기존 포스 교체 부담'** 같은 명확한 단점도 존재합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일부 테이블오더 업체는 온라인 결제 대행(PG) 방식을 써서 카드 수수료 외에 별도 결제 수수료(건당 2~3%대)를 떼어 가지만, 페이히어는 일반 오프라인 카드 단말기와 동일한 VAN 방식을 사용해 **매출이 늘어도 추가 결제 수수료가 발생하지 않는다**는 점이 큰 호평을 받습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "반면 페이히어는 포스, 테이블오더, 주방 모니터(KDS), 웨이팅까지 자체 개발 시스템이라 **관리자 앱에서 메뉴나 품절 처리를 바꾸면 테이블 태블릿에 즉시 실시간 반영**됩니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **페이히어 포스(POS) 도입이 사실상 필수**",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "기존에 쓰던 일반 포스(오케이포스 등)를 그대로 유지하면서 테이블오더만 페이히어로 쓰기에는 호환성이나 관리 편의성이 떨어집니다.",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "**기존 포스 시스템 전체를 페이히어로 교체해야 100% 성능을 발휘**하기 때문에, 이미 다른 프랜차이즈 전용 포스를 써야 하는 매장에는 도입이 까다롭습니다.",
+          "sentiment": "negative"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7X88kgS4-WpqkgoAxg1bdk1zVS9uKdyWG0dJnnrTCcUH5a8cBM7kfkSMws9NuPATvjLkkc-RM2JYmwk2VtU52PnIFKQ1e_EtuuLN4635ulymSMQQZmcnudXp4DZHB981HfVuPwxZll5C5ol6kj3Na18k6yWxBPA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEfAM3tSOcXI-yp0-6QG-YQblM1tTFXfHYwEC9jpBBNpPFi0ReZdGxlxsORajyP4-A2m9_iYXpH5vAF_kZ-iHd5nVxw7aNV1kvv-HHwah3hPBQWajPSXhWxpuRAIKW-qgpT0Q==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdoLRHYkjzpLq11TrSeTnbK_W4_vmY5w6f0ssJV_6dBw-0i82BiC3xJLvgHaP2L4EBwuNb-237IISMSrV47KHyRbtzGKc84X1R0AuubxvOHWN8kiHoI4j12l0oqXTY2VWCuYmH_6rguMAJCpgc",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZFIMfL0CPbifBsJ640T00lzW5D4EzUt55G9qghNa8gdJcmZLx6hy-AZjU8HpIf62UNKWkOTD-6yOYoSjtQFhWudREZw1ceC703whgtFd4pSzKt75qsa-cCV6-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8cpQlujNvBT_DaTH-_9ZCqXx1bOx1OA2Ngkd5-GIJLEsaozxFLI_PG5dfYgT-j_l5xXo6nJzwvDdvpktZynvJRQNxOXi38S-jz7_D_5jcURSAdKoFyWGm0xyd3sgCZ-tYyH0qk3bdPZY8H5rhN5xS9JdwYtLscc1tqteJelKLOWsVzvSfdXOCY3sqKeI96US3sB75E0NddL6nmfzzls4Y-WqQt041Mqs1PoOH9pezDyxmFF4xJOfIsf-uhoUohYCmQCn5N8A0R4uc8JX033FHLL2xG9J5XZrwd4TfE40Oyf2QLVK7jc4LLFRZYG36FDx78EDOim5cSExQhizhk_ORuDoEWncZ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDqmad1DxT1or0ooWNneiDfyINyi5A1JhHGySoAWm3-gYGPxe06Gl2vrXz9zQLowAWsFE1ssFAItoRl_dtTGGkNx1cS1DAekpgLEi_hVkgkfaJ3zpCNLPeHEg33H7W2H_SPf67UyafQiMVlGeNx1qVYEAJ-W4chLo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHtDZoG8VrySnwosQRSK23c8qwu6nhGhWcMEA_6BchcNM6iUUpDXjdv0VQIr-IpVL_jPFhGvKAo9dFWDqmNhn1D4LMBi5lz1qPdVv_k010X7hUOCeGdzSjorsMctTEGXlFDChyx77hUIyRCFcv9B0yBS7CrSA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 상권 매장에 **페이히어 테이블오더**를 도입하실 경우, **방문 설치와 AS(사후관리) 모두 수월하게 지원**받으실 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3xGi_jyG61EYlj0sstrDVTIfSLc3ZOpgiBQtjqMb515OKpQF4HYCkNxwBJuuu3tCUb8txbjF-UiCVUqgE7QG0sTTb4v3kWGJBS-ZV8XocPUT1J5uS3KCDUyv2T6AUaV-Xa_0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLUgRwUlGuo49EpfihzUAM1CMIjsEPOdO2IW93ehtfz-KuAlCQsRcCXyeRRK8z213SYlUAwkEkqt-7c4aN9_aEuDlsY3b4kCxGSv6wbAO-_Hwa_S2iUohUHA76HiYxkOIOg7E7m9qTywH_Jn5kvA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG73fxKeoXCqFqUa7iyhsi4DEVcrExQdW-ShYevAP50OBB7gdOgV_KzZK54fXYcqPQecVSvzFztHFm_XuSd7DjCBpGdRUjcm_htLuSl2X9BWBdYMOM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**서울 영등포 상권**은 수도권 핵심 권역에 해당하여 **페이히어 테이블오더의 방문 설치와 사후 A/S 지원이 매우 원활하게 이루어지는 지역**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **백업 편의성**: 페이히어는 클라우드 기반 솔루션으로 특정 태블릿 1대가 고장 나더라도 사장님 휴대폰이나 예비 태블릿으로 즉시 포스/주문 관리 대체가 가능해 영업 공백을 최소화할 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAJiOQNxn5Wz8-rC0DvkZjmaMKAa058YqQDS0T-EkWICBiLbfnT92MJFYoGpeT0bP7i7NaU0XXinHfxrq8_oEmmU-5fMYtEaouSlntfAjyff0bmbk15q3j6dC7blIzBqF8qiUVP3F1bdeRV2XTSg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAJiOQNxn5Wz8-rC0DvkZjmaMKAa058YqQDS0T-EkWICBiLbfnT92MJFYoGpeT0bP7i7NaU0XXinHfxrq8_oEmmU-5fMYtEaouSlntfAjyff0bmbk15q3j6dC7blIzBqF8qiUVP3F1bdeRV2XTSg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDiKV3keYVBYfH7XT4sKMeRrGNER5RScq-S1DJle2Nr9dMRTMTU5cr6RE9Gu3PsC5LnG0r2-W-ZNaJA93Q3A-BCIoslsLwhI5GyLd5v-DheIC0uNzOSXIvkg3b20_qbKi0tpKNPvjIbOjy6Fdr1JH2o5_XbUAu_Ylg",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVKkADL_38_u9tylwSW-8f1g_9sDnJaMMxLXZybP4Ptg7-M2wr1xeavnD4yekrZzDmFLJMtDdzzwKGY43nS0gZ01nearreRICansmca4pR152Ny4I=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**서울 영등포 상권**은 주요 핵심 상권이자 수도권 중심 지역에 해당하므로, 페이히어의 **방문 설치 및 A/S 지원을 가장 신속하게 받을 수 있는 권역**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **전문 기사 무료 방문 설치**: 페이히어 테이블오더는 계약 시 본사 전문 설치팀이 매장으로 직접 방문하여 무료로 세팅을 진행합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJMr3xmoKRdPKNXqofd8vlPVtwD7YStb-6htHqF9E1iibS1YtCN1qeQbSin9rqSot5O-0okE5CFOEKuRVCJ3aMmnu-FCE2__L_1SrCLcAl1om8lNA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFD-NNQfwves3J46Ad3ualJntkmJvxtV0WQEC9oOr0dW9tZXLGN9VVJjAal42FCd2WNzZsDUOpunxz3Ogm08rTIvQRmKplwzTagFxCR92Ia__aJZySm3QqA0YjfAlUmqCRFyQO4-hNO-x1V9ukI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJMr3xmoKRdPKNXqofd8vlPVtwD7YStb-6htHqF9E1iibS1YtCN1qeQbSin9rqSot5O-0okE5CFOEKuRVCJ3aMmnu-FCE2__L_1SrCLcAl1om8lNA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFruDOF5OFjrCx1_JCElIm_iZiV0D6d6lcujfSBeJSQgLxGjYiHWf-Z7BPUrfYBjMN4EVWBcJS0esL21JeNGoO1Wj4E0_uzIkMJq7Iwqca2buYcAAzuTalFlbhAHci0_jfFUPoxYXW-uFvmJwDpLUEtSaaJVntkkNY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0ZjHc4AJac3xeGztfTqRbHK2vmlbgoNw1fb5Jw3TwKVwNGFBGbvfdou5zR3Lp_6FPvVQrSz1lglL_ySUqr09UzOJmAJflBr6xepJ5qU2HrkaYmF7CWNcbIIiYYeKUUxI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZ-cCW2uI5woNwEgFZ-KEn1UJe3zcp5nzcgsDUEiYnSDmkoA5eKZQmncb9cCxWKrm_T8twqVcZoyDSGysxiduMGmKOxN0SCv4zdMMAbarrFDuvCy7nNekiM5GuCn1bHfLHAD_28xrlp5q_2_KK90sNXB1-hXiSWQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-CcLPabK0nKn3XNdrqr4uN2PzrqPwMyyCYvDcQ5h0R9-vsRHOxFR4iHTwB2_mIqD75S0FMUwEkx04hwdwWswEwcrmOsRAxjoCO2dAa8-9TB9ZGw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGD1LrhBVoTHxWf2p_repU7H1wcm_NFEgtUlitvV9GsTXxuyGvcHe2mVPBg_ckFy6TKCoyIfIXOuQBubCGDEaUOuflh78ibsMECCynixHRb0Al9m8_yH5z8jrzJT_AaHCGySw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}

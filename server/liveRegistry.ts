@@ -37,12 +37,22 @@ import bank_jjprs from '../src/data/live-jjprs-question-bank.json' with { type: 
 import analyses_jjprs from '../src/data/live-jjprs-question-analyses.json' with { type: 'json' };
 import bank_k_wonjin from '../src/data/live-k-wonjin-question-bank.json' with { type: 'json' };
 import analyses_k_wonjin from '../src/data/live-k-wonjin-question-analyses.json' with { type: 'json' };
+import bank_kt from '../src/data/live-kt-question-bank.json' with { type: 'json' };
+import analyses_kt from '../src/data/live-kt-question-analyses.json' with { type: 'json' };
 import bank_maum_dream from '../src/data/live-maum-dream-question-bank.json' with { type: 'json' };
 import analyses_maum_dream from '../src/data/live-maum-dream-question-analyses.json' with { type: 'json' };
+import bank_menuit from '../src/data/live-menuit-question-bank.json' with { type: 'json' };
+import analyses_menuit from '../src/data/live-menuit-question-analyses.json' with { type: 'json' };
 import bank_o2o from '../src/data/live-o2o-question-bank.json' with { type: 'json' };
 import analyses_o2o from '../src/data/live-o2o-question-analyses.json' with { type: 'json' };
+import bank_payhere from '../src/data/live-payhere-question-bank.json' with { type: 'json' };
+import analyses_payhere from '../src/data/live-payhere-question-analyses.json' with { type: 'json' };
 import bank_sm_ps from '../src/data/live-sm-ps-question-bank.json' with { type: 'json' };
 import analyses_sm_ps from '../src/data/live-sm-ps-question-analyses.json' with { type: 'json' };
+import bank_torder from '../src/data/live-torder-question-bank.json' with { type: 'json' };
+import analyses_torder from '../src/data/live-torder-question-analyses.json' with { type: 'json' };
+import bank_vdcompany from '../src/data/live-vdcompany-question-bank.json' with { type: 'json' };
+import analyses_vdcompany from '../src/data/live-vdcompany-question-analyses.json' with { type: 'json' };
 import bank_viewclinic from '../src/data/live-viewclinic-question-bank.json' with { type: 'json' };
 import analyses_viewclinic from '../src/data/live-viewclinic-question-analyses.json' with { type: 'json' };
 import bank_vvlyps from '../src/data/live-vvlyps-question-bank.json' with { type: 'json' };
@@ -77,9 +87,14 @@ export const LIVE_BANKS: Record<string, QuestionBank> = {
   'ilovebrace': bank_ilovebrace as QuestionBank,
   'jjprs': bank_jjprs as QuestionBank,
   'k-wonjin': bank_k_wonjin as QuestionBank,
+  'kt': bank_kt as QuestionBank,
   'maum-dream': bank_maum_dream as QuestionBank,
+  'menuit': bank_menuit as QuestionBank,
   'o2o': bank_o2o as QuestionBank,
+  'payhere': bank_payhere as QuestionBank,
   'sm-ps': bank_sm_ps as QuestionBank,
+  'torder': bank_torder as QuestionBank,
+  'vdcompany': bank_vdcompany as QuestionBank,
   'viewclinic': bank_viewclinic as QuestionBank,
   'vvlyps': bank_vvlyps as QuestionBank,
   'web4ai': bank_web4ai as QuestionBank,
@@ -105,9 +120,14 @@ export const LIVE_ANALYSES: LiveAnalysesFile[] = [
   analyses_ilovebrace as LiveAnalysesFile,
   analyses_jjprs as LiveAnalysesFile,
   analyses_k_wonjin as LiveAnalysesFile,
+  analyses_kt as LiveAnalysesFile,
   analyses_maum_dream as LiveAnalysesFile,
+  analyses_menuit as LiveAnalysesFile,
   analyses_o2o as LiveAnalysesFile,
+  analyses_payhere as LiveAnalysesFile,
   analyses_sm_ps as LiveAnalysesFile,
+  analyses_torder as LiveAnalysesFile,
+  analyses_vdcompany as LiveAnalysesFile,
   analyses_viewclinic as LiveAnalysesFile,
   analyses_vvlyps as LiveAnalysesFile,
   analyses_web4ai as LiveAnalysesFile,

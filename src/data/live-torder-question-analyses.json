@@ -1,0 +1,2883 @@
+{
+  "tenantId": "torder",
+  "weekOf": "2026-W37",
+  "analyses": [
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **티오더 (t'order)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **KT 하이오더**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **안정성과 넓은 호환성**을 원하시면 **티오더**나 **KT 하이오더**,",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **페이히어 (Payhere)**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **포스/웨이팅/통합 관리**의 편의성을 원하시면 **페이히어**,",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **메뉴잇 (menuit)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.16666666666666666,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBk-K7Z-JqGItIikJ_inhY5jEUJ0qjngtXtFfYMmubo6rZ1urWg-oi9SgsSmeHHIhXlowjt61fQdFTP6T6t65UMhtkp_cOqH_7k4auGvldpTgWuDF50W-iMBV69GBVlzya",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSoen03zUSZyVamVLK1ntUINRd-oV10WIpedioT22CyIHvkRe_K8iCTvWGtbORWCsfjVkzrKilRduY0w8KbKWaqBMMUlG1JXuu_ZL2gucLjvV0CJrgd64PbbEyCNSfvzojkfB4RfTYLtpKOgsp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWoAXh9_SoFIv9O1aHx-Vev9YDiImlCCNdViyNiP5fuEZVBTL312s_akp8LuxhUpnQU3ryINrkeAy-FvCBs-EBa68NSpgiJqf8V15b3jlU9GVsuc-mnupZdGLEu2Grjdyq5sRWpHIFKxGKHCa_nTEMUzxI",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMJh5rIffhMbObYr2_xlpvVt3V84OURhc3DLCormMHkgK0WZtFGIxxmVooIjhhLoBqOsM-1cGCgC2TQBqETmLIqTTpV3UBLalpc9k75cgUVyqpMLnrSGuPkNbeCHjpUvEdCiAw4Z1JPpQKb-RFqPgjeP6MR1yQDWWMhg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZnCloVZ5JTLgStwuc0aLuKJ5TYYQ2xN2agZED_eCNht66kYw0q9ncoVNV0HtHYKH6O4MtIXaa6CmtrvaBVF-4egIgy0NyNr_M6vgoXGSyUfW4A8AcqSubO4zPOXzbBo1G",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyOAz5pH7uWVOnjsuqphvjt_Sik_CX07HlK_teCef0ZrMSOFCQFRNpXO9kwJ9yBEXk2Xgi3GhwabhwTRXeVDXfIp4th5SLknsvFNQCmz6CgRlkqnrJHcy8vzV-t90Vac8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvvSdWzPx8eENKsy-8DLxldBJpnGu6MzMhZgAaRI38xwQfN4y_Jy9wdQT7XouAO7SbhMfv9Rnv0Snz1Y9VuJWzFgNlm3UdpHmhgB7eUrfVwWPAXeuxxENsoLp5gfztAkAUQ6adCB3g-OmmVgshEAfe2rfU9DGww0t8Aqo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxYwQIaiYCHmiL4dHvtOoIgVm-gklQEMz0FpYoNPjFLkaO3NzochdtuCj6poYR1UiRSbil0RDlw0kZSAGgLfaM-sd8cHiyqokQaFh6anrRfhPWJeGF",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 브랜드이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 대부분의 기존 POS 시스템과 호환(연동)이 가능하다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "#### ① 티오더 (t order) — *시장 점유율 1위, 검증된 기능*",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **대형 매장 / 회식·주류 위주 매장 (추가 주문이 많은 곳)**  \n  👉 **티오더** or **KT 하이오더** (안정적인 유선 거치형 태블릿 + 익숙한 인터페이스)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "#### ② KT 하이오더 — *통신 결합 할인과 안정적인 A/S*",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **대형 매장 / 회식·주류 위주 매장 (추가 주문이 많은 곳)**  \n  👉 **티오더** or **KT 하이오더** (안정적인 유선 거치형 태블릿 + 익숙한 인터페이스)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **기존에 KT 인터넷/통신 상품을 사용 중인 매장**  \n  👉 **KT 하이오더** (결합 할인 혜택 극대화)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "#### ③ 메뉴잇 (Menu-it) — *무선 설치(배터리형)와 완성도 높은 소프트웨어*",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **인테리어가 중요하거나 배선 공사가 불가능한 매장**  \n  👉 **메뉴잇** (무선 배터리형 오더패드)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "#### ④ 토스플레이스 / 페이히어 (QR 또는 미니 태블릿) — *초기 비용 절감*",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* 토스나 페이히어 포스를 신규 도입하는 경우 연동이 매끄럽고 디자인이 깔끔합니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **테이블 수가 10개 미만인 소규모 매장 / 1인 운영 식당**  \n  👉 **토스 / 페이히어 (QR 오더 또는 클라우드 포스 결합)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.21428571428571427,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOULa4YmC5DT8Old7Q05aR5RjPtPqZNAmq3MXu1zWbDFtG3vsixnS8Eu428zyekPlD6YtJ08rSGHUQ9eZFq5zYLokYLk8XHA9Jk4Eh239o9ReE3xmVtCrwfEFJpEOnKQr4x1kx7x_4AHCcrDw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8XLHEl3XyTSy7VR9I-z1iQdZVvmHlMjnAA9MttRsz-gVWX3HWbj_iSrCJnVro_BmEOGAWQNVtVjvL_MWDX-vrB7Kq6c88mmM6DyJYptkGmX1ON2OamuW5-lVeHtyOb5ULXJGpW1ZPzmdHR4gnpcXaKIvnb6aa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyVKE0lU553GiQ5F3SkLff8qImMj2gN1fUemAfgDtcPJFqqr0fqwjre1_rpynKLdRYrC-EyFLGmiyO98iyqHXfkhYeCUkxJZX74geej6PgSEZDbjOOkiUpAQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-psfdeUcwSoz_IioiaZpVxT6uUnuhH7unK1sYPQu0-8DWDJUT5k4fnYlvWLw7H5f-KH3aTij1dXx3CTFcFy6eDlg6Ea-By6swNZKEALf2jAMptD6EBXPCjSUbSGqoaV0K0zpoMPR9Hm9_X76EVsMBfTYBFFLhdPI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGp_G6sM1YKf1KQyX6cml6iy7DuhUXFs-WPXedzajy6vpS3wmJ7vVvLOje7wUhCw5EOa5VEt3egIU9Jhh9IuvdFQk6G08LI7D9UzlsVhgfD2oTQVHo8EeFSYC7IDOGaxWy4-Ft3l4MlhuX0scVQ-4fhc0bPVdgQv9mz",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF50NYX6A3Ek90Y-k6POawaI6TYHNIrTSk1mOurWQGIGqN7odfIXA6o7_CWqGe8KXkCNPMnTZJbVJ5EW5Bka4fRTXRtqsAOAANQzCjw0k8phRcufDw_gWO6A_Vkri6N4FUjRICxv8ulYJeDoK6zFCyl",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2qP5hj13RLnlgN56APTZFwKkI08FEf5BaMfJP-CjRUzxUkMg1-pCQu7bzEk__DmUm6Er8CSgIehxHFWqH7BWZNfdWQwlI0btEITARM2lBN_-_ztXP1XE6qSofDk0raQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 거의 모든 기존 포스(OK포스, 이지포스 등)와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 AI 기반 매출 분석 및 부가 기능(호출, 광고, 더치페이 등)을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ① 티오더 (t'order) – 시장 점유율 1위 & 안정성",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "#### ② 페이히어 (Payhere) – 가성비 & 클라우드 포스 일체형",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **포스 연동 가성비와 투명한 수수료를 원한다면:** **페이히어**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "#### ④ KT 하이오더 – 대기업 인프라 & 통신 결합 할인",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **통신 결합 할인과 확실한 A/S를 원한다면:** **KT 하이오더**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "#### ⑤ 메뉴잇 (Menuit) – 배터리 무선형 거치 & 외식업 특화",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.16666666666666666,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_wO6-ZIdQzRZtss-4_27reXOYQHVtSyjyDARtI1kdW1ZPLvoX_eBpRDoI5jOE-LicmFVBiGVEH4o8BwTUm6ZAAYVgFzzBeu5bSpazhf0mu2e7ovcT",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFl04NKILxSYCX-32xvCNKj1ADRjeJFCIgK8cn_JgerW-rREoipKRxDkO9fyw2zinL4k7SuFoShLvptPCqNErknpOQh0rPYaW2uXj5JG2a4Gqeni83P7aGpULH8TIRjoMp683v3Q8sJoQYWzslSsZUHSWr7CYV4Mg3e2g==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxneO7ygQiNHn_eSCiq7Q-nPc1hKAnNJapN6PDRdCvPldrdrC-hJgjBhM9YmrU5cO-wXy3HII3oEqd29PSdE4W5THbSxZa86ItZ05k2ECAbxc3yefYGYeWC6kSoDdr450jFcCN",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzCiG1q9i6WLWDagEsyFhGZeFuSEBzut4rNY8YsoU0Q4DY6RFfe5onZUGMYHv-8XhFDPOAeH39oDqV-RDU7QL1reRlD15RBhA87wRdptVaD5pPOYM5FU2OIPqzFr-FsHJ0UXrON-nLEqbzsTJK5fWm_cLXzZ24KEc=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmJ41Wey8af_sWPDHcf2MbF-Aw0vjIvtuYQrUS5_fNAS5gsNtdUOrqZXUSZRrM8cqy9kswXc0aeuL9FZPRzmIQ52pJXARti7zDxa2dTUgOlG28KfJqww_CtWgSo4gtcoz_",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbtABHQ-wiFd92sLbVBmQvB9OHaOtXg2eXwIB__Pajd-1Xb5PmSaFvpZpNZSNzdpoYdPRBE20PgdcEKkyFwvreol_pfTyVqqOhvFGwG5pZaJn5-Ss5N7eB8AHYgNr9BX0=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMUcDu_KuYT6z9IsNVDEBq9V280VxU0S_sS1zGAXGR7VEprD0Xg0HMRvJXAkBdt30QKgFQM3I0j2Cf8Z_sSI1YzT49Asz0aezMOiRC7SaaKHHVCn5c",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_BOxvb2qqt7EjW-ghNgt5iAr3PzxS-2gM8iSfmf_h7UOw6QA2CUUb1gV-ldxMLhPDfyL5L-FghpYINnhUpikMqziD8QGXIpl2gTbullHDkfZ9DF2YzRUuuAUsO6X9aUQzFg_4sFZDXpp3ugKX2h6aczt3b_DpIm0Oj9ZRZs0qZXHOpqfHnefFklmDJWAFZRWnAK85-gzxXqChdS0MpNcwUSAXbutwmVkLMJ_nSgkuy5ijoY2bXCw=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCNW1ycuw9_kGIHCTxC0_U5BaTZZ7vmha36nU-1_7aDi3m_rUu793yw3r6BX47dFSNc4bFT46kJfDoZLAfn6ecrrVplumLi_4bt8ZtOcTNYtxaZKu3pjGKYbXaZ0rN0WnX",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQNwsX1nahxuP_Tf0ZwbyWPK3XBQ9H1pWcUOUGx43HJ89AAMZAlEbBy-SRsEqbg3HyQN6SmjzKut7Oq71q4TTtYTNClT2IYbBTWnK2Xf5H7YtsiPSK8S_9lTDRNe9Gp63wgJFO8MqJ3cGr-L3R",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErongzus-yQ6-npesn8lBpj47UymvCedpEjfHhVO3LDi37K0iuDxmzSJ3viEWAM5ppTFXkvZ6tWFJKJcdmfO2zInZRJqBNun3UJF4cLTeJnlU2nMKpFRjSdEc8ECpI4MAYSfBj_-b6CaCvq4I=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 국내 시장 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": "시장 점유율 1위",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 기존 대부분의 포스기와의 연동 호환성 및 전국 A/S 지원망을 갖추고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "대부분의 포스기 연동 호환 및 전국 A/S 지원망 보유",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, 페이히어, 토스오더 등) 2~3곳의 견적과 데모 시연을 받아보고 비교해 보시길 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, 페이히어, 토스오더 등) 2~3곳의 견적과 데모 시연을 받아보고 비교해 보시길 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "매장에서 사용할 POS 프로그램(오케이포스, 포스뱅크, 페이히어, 토스 등)과 완벽하게 연동되는지가 매우 중요합니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "사용하려는 POS 프로그램(오케이포스, 포스뱅크, 페이히어 등)과 완벽 호환되는지, 주문 누락이나 딜레이 이슈가 없는지 확인하세요.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH73wsuLcLk_inPvEtewDbVjn0GIoKOBUN1DzTEchgde_n1QKqkwKgeNyWO1_nceAMdN0YyJfvp1XQBtm-P1sDG_-i5RcUdQ_VqnLaHd3vj0GX5nOcNHcszfKMOQIVqAg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIhNkN-WJndatsXMQ3gMW5cbepu1r-TnNTvBz8pTNtyU4lO3cFxzWYufT-r1DUyx1wXQ9-dVTIXhPaimcHMckDvEl2tbib-hUTgF33UoCc79ER1p8t9OF9qvhqTQRfrdw-A50BatP1BT_rMYrq19jWfFCdXzwCLkI-7w==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDMDvwTZqAwDx-Tpn5Kh65i9yKy5KdXESsTYSfr5gNfXB36VGUuURMUncE1uO2FvGPs9nQFFoA0kPqLqMLTd1Ia7QBTaDCk9LCCTX-U1vMbDXt0BuxbkfEXj1eGUs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDjdR40dvVYzBQ8iDGmiwC3PnsN3k3AGL9TATUfEBjtQm3u1IOKAfK2mstphd5XJ7U3klaRGmQyvLPSMnOr4aeGmadwLkx8WWjVhHPiB7wLV7E0FdYVjoP4mPgfEEx1vXxfVH_VCIIEJjHWY0W4nQ0irVfMyLZ4_0yBfI=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcmrP-Pmy6ZZPPpIQJk-pGSwaqhmMECkbrKOXDnbvVNSmr3qUB_hs_hWxJAheRMc8KnINwctYXTPV2G4LVGQLiAQEeAAnt8Hy9KgZcg2Q_8qt-8s9RzA2zYOeRGL30Yjo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNx6PsaI2coZQbWwdO_tkhhAHmQT-n-oZAy5FCPolnUxCmP5-c-1OHoRm29eEbqCIuiKB4Rjwu0yUh6r1xsWeO2uMu0IxLN235BB8L5yPgNI4s8bYPh2BLfbc0kRDkuKYlbju7_SR0i1ieatJkBHfSR-vC8lsSaKpI4UZpLUgbPMFGQxpNp-ne",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlCYZ9FRFmKzRcvVQ3v9mChSpM3pSrzEDEcD1M78piMjzyUKziTxKTjAwMezdQkTd3EaB4xJuibhxCQdbkJPTpiM7w-nr-c32JIvj2JzaArS8GPWRRtpTKBZKK2ZPq9xZmialhu8gQ_MXDZ8D28W2djUA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCQ5rKhunA2SZh4sg9puqT2QyOqRUv-manoIsPfPDn8o_UmUl3cf2LoZqY06m0IHWsqFU9Y6bHL6hN_4tD9aRL3cHPG4PbCtoM-XjRzSYvQKceCK3lzkYSZ3TqpfU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBq04bHOgS7XjEVdLRokMQxGWksxVWeyiG19zjw8ARv-wbFpdp6Xzj96cg0ORkm0aqjXmVsrFLMYNsUFSbV8yIztZcMbpDmFibOL3QTlR2lJiwE39Uqb4cpxczqy29g4o=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHuifVqca7E-qDcjQCF3JYM3wloV6eVSv4_8tWbpMa9EfOY4EweaEiCsuk2jMNYZUT5jnvICdJQRX_J2Aleyfe85fYxcQU9hGKEx5IwS-0tSRkcs5pH",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfjciM0i_s1mmeg78zMWJ_7kYrjQTG3JAYE9ud4wTsztWdmS9KlbrcLXZvFUWVoGNcPWejSEhmbXW7lnffs3DA5Nd41trOv6JJ37A1IM-Fc9gtHBG4FAXfMsCMJ3T6ZZPN",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT_Zhq-rpnIxY4N4l1SbIKNRGz1PL-wHsv9g1TWM0spZ3BVe1GgK4Jv7OceAktjZz3QQjwbLSFhCFqN2t4CCQvHzjV6l1YimrxxHK_MQYckhMwTROrQIketOapFXD16XxNOmiQC0ZqwNxB2ufZDb8HwvGa1oo4UkQdmQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdQYNEWn2MQnkJ5oq34RXbRVE9idr6jMEND09ZjdPE7fWCMIVkKolMXXMq9Ye-tZ6kHpCOKgq2NcI3ojV3q78aiD1rEyyz6b3Hn6mD3wyyQpQUjAqWAicQbSs=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-x4a0uqO-4Po_AZYHh_-yEyFcwI60rQ8o_KQziMEddPwSvBSlsI4mcjhCkILwfc6DWfTsZy0XEReCHwTzNEiIDUd4NAFqIrv26_tor11uJuHETDjU5Es3jkaXARPlPrXTR8fOHKKFQBdiws1UY2E31sc78PwfRKJluYQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHs8iUTPlI6ikJ9ubdRDzTbo5cMyIZ6KWrjo7KroF--7KdPcoPjRCR4wtfOn8eyDRrr09C0a4fLsP02acTh6HhszLDUV9QRPMO-_6FRxICNQbUNtbgSwwMnOIjancDN1Y6Sahc-nJLuCAOSvteYLC8QJYPIfrVoU4z8mjgnqSfo2WP68StwoWwYw03LSx77sdqG_FKcSUHThQQClh42ecAW65GepRvi2Z-NdOG_2f3Y0g79iqv6TnB0pnwnQJd8jLGc7t3xkcliO_cvS_zckcHib-5FVxo4NpJRUTbXtSHOC05X6ArOD4wZFvY3frelxPbFFB-k0GqAf2OjMbYvO4PK4PYT4uRr9g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkGfNwQC53ux44Q5l-FTuQ5DSToYHuausmH-H4QaR2FA0VyU9ZTVpl6P-Ye9MWL99ao4GdY9w61V3kDijv-MVFPMEAJr8UdnfeDnxhNZr2rQPNZkoSNQsiRlR7GNda_mQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_yJe-KA4SSc6oyWMM76PKWBe02jkCi3cPhsQR847CdoTmbcOUIHPf8gfQ52gsCe8VFzTBJ6IGqkPdMuI_qJLdzW9FGZNHfBpTbUaEGlraKs9LI_4fbmcqu9W_si2If_-hb7mrH-tMeXFX3T6lhl1jreek1jUdwU5BLmDB4mPqHe5v3iTiKQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEax4boqhBQB5Nx-XhD2pA8nfddO0-wZAb7XaWApceRNJeKxUdgEKpnoeidKUBlPLqYVBhTryAICDmrFvWM7Pbt2jNN0zg4UPke2h4bz2SBfqFYXDpzwzTuCNRvtA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVZKW0yexB-ooNLjEzMkgpn-D3xpb4m2SAe1tbxmN_dBlRjTZQ-EXUHR3tyWaTuAPmsBOLnCm0GUvsxDkkkn4HleUTrdKvkgbHfR5_ed-IzSsSUws=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrhKc9q0wi0JKoCIPmU-xAPoH4vTCY5OgTXJ9hNXQhMOyJsmtydLVNr_8Ura27MgaDkeLopw-xIj-_PPST57Kh-lrMsUjet5a0p36TdWcDe-E7S2WoSDRWBhSjkKxeaaIhIDQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwPjN8H7-HndH83KYLfY2rCiBS06BSjfQ4q8XHA_4RzPZP-pT81hzEpB1ugT_Q7PyLEnCVp0jf-G4U_x1sfLr2tPbRZF1Q2kmGVjqs1uRu2i2Pv8CS136xtSRHaZw7t0WeGgyDDx-5xZVp-aKFF8VcIZH4r5j67UWp",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGM_eAtlYUop1pdTFQjrMQ8NdMDYOcvtlO9aV5rpH0cPuf6QM-MiTM6q5ZSgjE-gxJ_LYVHRpqNANW2H2okc3SUIrAwF_WaTBYzmpTLzExnmeZDFR8F0RO_vsFK2tn2bufRbe1-_W-ow7-jOa_8K9BFaHpkUJHEo7cx3g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRydQA6VOAU-VFrMJxUcsJ1_GdaAFuhnbteKS585DGQDlfDmDmwFmWd6nM0k836D9biKA-STbMyo5ZtRz8N-ef67ZXa3gSW-BOnFlyZOECSFd3UhUMA6hosQDhPr-lwg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHu39sFlzL0VFyUf_lfavSZK0sf6x7fOpPXpT3sqjWDtPodqk7-4rDy4hDavo2nggvW_ld3xMi21KSKCah3vKuMS_VClpnocy-MmFZSlLuVeQVBNL87haBvDujmvdlIIcs4",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdRdhnk9CUGcv_fBlckhVeNP6Syyk-pHgk8kNMC66YEqmHWhWLj_b8S_RnYGz7Tlh0quXk9OJNTTxLw_41IEOzXbJmEs3NyYBxPHV2K6ui3XCfxF4gB4-5KsvdKztP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEl33N8M4QwFAP7Px6HYq_puuD9RpLMKVLQuYhlbTDcmzrBsqvYrqQ0UH2Ur1whQYafMoqk6qaM0CnpTs_dV_HPc3YLFM5WwzkPsLaMQuAWa5hJd7s9i4F1ouTQ6zvIDEFiyPZGeHkEcp_4U5N4K0bd1_mt2gHWVf7Nuow2QpbypftoKwhvyuALMEEmUNTabOW-2muj_o68rFhMeI55FWG-kljeaBSQcP_5A6DlROo2n7VGz7GQ3oYwAa87lmC5_fogT-0_8xwFLdDCEuLYjWx894YGdTxbhq076G9rUVvgXbgq7Sxdubp5MElWLLQryqKU6z4dHzTRPceKwUu-ZC6c6uh014GBAzxn2elaU6bRv3Egj52GFvgBgbTFpAXy7xH00vIyF48p3KGF8hrhXd07nog2Dw3YavcRpyB58tgN9NUPiA5lFUFyNeQlR8hKOVeeRNxqLZCT5lrkqV7HLfnESuuiWKcCnn5Gb581CZWxwUDRvw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfNM8XsgYupNc7Jcua7F5fmSn6FqEPCEWaXDPPjZeRXcJVLwOBqA1rQ-48pXEuuTD1C-jDH0vhOrKWi99D7qZDQYvUK2xPjOr070oypd7-PEAii3vEeU_cLr3A30kX6qTDbzkaJ6M4p1BolV9JeerR4ew4dy8V2-ZxoRLLNMVdea_HaIdxql2iTMCFQMvnSeaJngD7Ml0UWlGtNEeiMQ7Y6zWcZotWt95QuUnGlDyWsB6BZOC0TQ7y3n6XxpuSJuA1WJ_8iSbl859ax_qKn1Om6ADDBZ98Gfyfn7hcRQsVK8c9BgBRl5VfHa73MGAamwz9KteIWqGeWoctvEQHm9eaZQQuxzUmdiNSZEGBgb8G6Mb1fqdzHHwrmqq5FXDjNwQaHNwGS_Gmfn5-Vt_we2C3bJfrfPST9rqo-9Lek3CTAqLutMXza6mR4B3XiQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ2oy_UxGsBoPxe7F15dGRpHuEGt2UpCiQ_kewwavXGtqZV8kln7_hfQoNxjU0CfhahUnWDkYD4Da0egrWlnWKPcXBVncPC3RgaaPjGPFklngw03yt",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvNgSLs2F_3ZBlGzzZR9jdwrAYc7e6vsznVjpZooTOynRfvnwzvyeoBCTHaxzwRAeyZ4GHjc_kILAEiAS0DNMRTaT-iH-in6PH3aPBmx0zRu6X4WpZ8vFwTrNMxdRmvXU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW7lRZn4UYo9ey_hcBC_WrFhU_bIDw7P36hHE73f-gQRSm7sxBLSXnn_e6-dvS4c41HFU0o8vzWRz6L22UC0bFhT9bI4bYsr8sOIvvqtU3jnNWML3wbQvrpG9emn3u3XCvx-3JAVOx_ufwMuNn6iC169LijzUSPkQIe-SX1BZvaepWmr7KJRRP",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVspSCNYmj6vq3DRORq1Qkz6BqB77lP5UHiwcTern4_ijvL69vgc-LcAR99Tc4dkzOlXMTIEKJxH-ItmDdRxaiUpH-y6pTmNPPgVzukweBZdx9lJR3stSWMRQVzN5XRTD3GiwOxpbNB9z8V0vXluyLg5lSZ1m8dAt8Zc4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeQtFom6HzmwjnuQONSx9LKHpKgvjHD9rb8OXJ7FEeIEBdm-IOXT_HZuJybTPUc4A6d2hwVV32lJV7-QdbsnHr4LoDzYxxOGBrhDqQ7ZIhSnppI5yLVg44KYO6KE1x6bE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMVjC1WmXOwp1tDakEX5EbD7Neg4b7qdnKCLU0TbrzBl6KhmFZMa8EpumR9TxlIY3rjBHWoZdQZXJPOiR0fxCNnXGh_w0xmEYb2FGW9C1imCkeUyn69FSEx6g5ZSbGmsqO5tRuN5DWg3qh8Ag7sm-O7H6J13nnjgkRg12mIVZFrFp1iZ_BEzE=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHi14OhMnRflySVpkQR05VXIMKXy6awPfQa8YoLBxg7ravryINKKwtx9bq-m3lnrGX2QAU3LJ6As3u_6sQIXJBgXKcO3aWlVh5YCdgOr61qI6i_FwYWZ9TfJBH6Ms13SA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHz7rDnqLGg6EJvN_EkdG1Rbh5x-RqpL-yeGFPWth3_MYRBhzv7T3btmfrdbMiRN7WoltyNP8fp0jjqpMv6GCWJPIizh4LTQ9BROVLc3ZdzPGcqhvFSEvtMDAq3oEK7ilf3jNXLn-JzHJNRS5Jb1kbnjfXMMDKbhqpjrA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvZvqBbeTe6RlkKJWRpOgU_Bx2ylUyXQZs3O3J8He9JACt7-Krv77UxcqPq_CRw09F-8zCS4PHQ3f92K2_ZBsaNEFokoM6wxmVcNcg8znXmY3McToPzyVrIDgg5eP3cDGJ4tDNLDS36nqRbdg553R4utm159wd-y4Y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_6T9tRC71e8Q8kxAb9n1n53HZctXWtXaC_aE8fTucRK8dYTIfTGxFBgbKxAIRfSpIgMq69fMkiaE9obujzD94uwvQKyKHU9HU43tbDOfw85Ol1IhN3p4oOlyuPzaq-Oo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "기존 포스기 연동형 (티오더, 메뉴잇, KT하이오더 등)",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "기존 포스기 연동형 (티오더, 메뉴잇, KT하이오더 등)",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "자체 포스 일체형 (페이히어, 토스플레이스 등)",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 기존 포스기(오케이포스, 아임유, 포스뱅크, 하나시스 등)와 연동 프로그램을 설치하여 연결하는 기존 포스기 연동형 방식을 사용한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전국 대리점망이나 직영 엔지니어 네트워크를 보유하여 원격으로 해결되지 않는 장애 시 현장 출동 A/S(전문 기사 매장 방문 점검)를 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "대부분의 테이블오더 업체(티오더, 메뉴잇, 페이히어 등)는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 대부분 연동을 지원합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "대부분의 테이블오더 업체(티오더, 메뉴잇, 페이히어 등)는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 대부분 연동을 지원합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 연동을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "식당에 테이블오더(티오더, 메뉴잇, 페이히어, 토스오더 등)를 도입할 때 **포스기 연동**과 **오류 발생 시 AS 지원 방식**은 매장 운영과 직결되는 가장 중요한 부분입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "식당에 테이블오더(티오더, 메뉴잇, 페이히어, 토스오더 등)를 도입할 때 **포스기 연동**과 **오류 발생 시 AS 지원 방식**은 매장 운영과 직결되는 가장 중요한 부분입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 메뉴잇 (menuit)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "매장 테이블 수, 기존 포스기 기종, 인터넷 환경에 따라 비용 견적과 추천 방식이 달라지므로, 2~3곳(티오더, 메뉴잇, 페이히어 등)에 무료 견적 및 상담을 요청해 보신 후 결정하시는 것을 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 3. 페이히어 (Payhere)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "매장 테이블 수, 기존 포스기 기종, 인터넷 환경에 따라 비용 견적과 추천 방식이 달라지므로, 2~3곳(티오더, 메뉴잇, 페이히어 등)에 무료 견적 및 상담을 요청해 보신 후 결정하시는 것을 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 통신사 결합형 (KT 하이오더, LG U+ 테이블오더 등)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.16666666666666666,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 테이블 간 게임, 채팅, 경매 등 엔터테인먼트 기능 옵션을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. KT 하이오더",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "보통 2~3곳(예: 티오더, KT 하이오더 등)에 매장 규모(테이블 수)와 현재 사용 중인 포스 모델을 알려주고 견적 및 프로모션을 비교해 보신 후 결정하는 것을 권장합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 메뉴잇 (menu it)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 4. 페이히어 (Payhere) 테이블오더",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "페이히어 포스를 함께 사용할 경우 태블릿-포스-주방프린터 연동이 매우 매끄러움.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.16666666666666666,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 국내 시장 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기존에 사용 중인 거의 모든 포스(POS) 기기와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "경매, 테이블 간 메시지/게임, 룰렛 이벤트 등 엔터테인먼트 기능이 탑재되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "물/얼음/소주잔/직원만 호출 등 세분화된 호출 기능이 갖춰져 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 메뉴잇 (Menuit) — 뛰어난 안정성과 직영 A/S",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "**티오더**나 **메뉴잇** 등 2~3개 업체를 골라 무료 방문 상담 및 견적을 받아보신 후, 매장 인테리어와 테이블 배치, 결제 방식(선불/후불)에 맞춰 최종 결정해 보시길 권해드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. KT 하이오더 — 통신사 결합 할인 & A/S 신뢰도",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 페이히어 (Payhere) — 올인원 클라우드 POS & 합리적 비용",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 테이블 간 채팅, 경매, 게임 등 엔터테인먼트 기능을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 대부분의 주요 포스(POS) 기기와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRWf3mNozSWE3CL-QTe4IO7JE5zkL-pQb3JU-iX9_S4UIuMJrpm2umWUJpPd44bt9jYVubqGhAajmI52b3Cx0u1tVNWed5EwNCyN_If3AilX7oCLfhVLvdZoaGQKuOXJTuSdM7hlAz-WgFTREZldaRKZ9N0KjrrZeBVem8dBXle4oOIw0XKEyxagJs0EZ80gZakbiUnXP51Uqc4xuUcLracs7QAYT_B-jUM3Mrsx6goYmmfbTblnd0HYdZwHL6X8reWSlrgpaiJh3DG_oXRhpC1enzabJC9e4H6RKs5UFZrZ6DPbHNL6UjN51DTOplFKM=",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEib8LbGx7crH3PFKVwwRecrtDyVEM4fhgrMqFCsHMr20Nj9RR1A1qtO-KUbho0-3EUPzQ0uFWVr7fC51CHsN_8Mqk5WoFpWlbznMYlzYxvXVMhUSkjq6htvOOVktTKX8qc0hUHPt5o-cDtXa9SleHIrDXSSTOpaA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEc9mDCSVD9vTET8naaBN2wbchhqUoVaRjcHyNTTM5XdNcRXPmtuK-3XkJlvzc38BcdXU3HptgADLG-JgHCzm4UMBgCn6MgLPuniPXqEWBtkNSKEiZ7Rey0jKiayg690mWpfKFqxfvA5OsLZqaKqyUQFY3Z3Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvEJYFC7188P9gEXupPfqXxc9rrPuENQP2YCxvVfxPaXobC3FB3dLVnmxVys1ApmMkRl6P5MI9qizX_7MSfUTH0YPt_kyNH2Q8xBiLGl9HPX1XP9y3r4PLa1tkKdsGrUkX6GacxO58Jshm2r1rWV1lgUxXnsDLAFrBMw==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlCE5ze7yjG7Y_krnbICIyCuRL7au8nhoDDyXmig2KuJAHJUjKFd_lx3qBgOwGw95lEFMffaMiqrsYm0uSH5ejYxNJrT5l-Ua0AFWWR-A5pO1tzes5Oh-VMzhrHYRm5BflLzpwuA==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjkpW6eeBnwYTleq0DQsADab3Rw-rGf9kvG7g0nF9fwP45opA2krsGuBkT-ArlORXCLV1_-ymAZYvjDOSPpjwznVSWiY98T1GuCPgGeqNhZx2UIGZ5stcAV5CScqLnlCQLbhLW7ib1kmtCGbW7",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH93rz7gWPWYlBd-vCF9gRWnPSWGd1Ykoixk-e4H44u8Acoh_LZ3NhrV48BpQbmtqZS72zwkFkfEXmLaejWE76cJMpP8vPtAYQ7TsTbeRgUvbidOfTfu0Cow6tqLa9MTB8bbapuoMyHCqnAetMyrZf3MBC7Xjod8_H31Q==",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIIa23qKfUWrbkX1IW8aB6tHeAzHy09jLsA-BKZfbFnXP2BfWCk0qEadgA-SWMp79REpDaaScnoW594vlKW-5LDtAfM-YW1mpEG9Z0ANS2IbcUd-659zuroVQ3DEhYP-1FoUeIi64BRO3h",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT5kRAOCSMW6WQ8t3CIN2BJ6G_D7G0hOabJ2vSOU0pF5SEGlY7oNCmg5HB8fV9ZuokohjhaYrQP8UHQW3BcqwyPVJcU61yPhJl_eZhSW_sNNDc14Ik",
+          "domain": null,
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNGzxYkwsfXWdAone3IoF3RRxz8x1FV72hM0XGGCFhezfMdwYSHpUCnsaSKFKclTUKNGyWqEKyHXXQ1sNcS14kMd1d7XQbXnQ1msmRANbOSVvGz9chvXxNWYUcrndHadz7S1hrrpbntWDeaXKiF1kH_7gxohkubQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHz42Hovr8IwdthvsUXrd260tyOjEgxzou5tNWuNuXELKHLQACgy5AIM0vdpV8ocUHqsjC8prXU0GiPpr5h8SBo46k8_Qm9WJKY0vjFgNX1dUw2M8e-RB_O8L_azoEUon_3AfwH9BmELUkeC3YI1wPa",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKB5mBh6JJb7tp5FvNrx2HE7YhIso03Er1Zy-VSXOkRHNaZNCsuu_tNlvuCggS67gZoNWQbWTJJucJVF8dNkOy_R2s9Ghb1b0LJKbzK94RN0cZ4g3pLz106sUFq4bXdUg8m0oq2EWROVLzJ1ZvbZ10fwORGGupSRee4HzCzPFRZVWJ4k2PNJdltxceDvykfDrRzDGg0xwuvtPEdtP-aNaiv-BPLFl3bjTu1S1IRoFN2ydMVQRJwyYWbhaNciwiCsVVvUEdv-18H9tv8q3wxlrYvKTfg3nc8CzDkpK8EyxvHmdHUDXSfbOjkSbY5F5WNn5squ0N-yb6hH-iemLa63xB0LcALjd7MidUCCs6DNjBGqDUq5iuzeSEkkiE8NcCOFfUJkJBZIAcc0HIBrg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzocAF9WJ1AmrJmCaOGQwmsPcZbRNHAJxOWQQGFjW8l_pYoJGAj0PsaRngavt2Qy5DxwJlLnRfluIYSZYpDyERntDVu0xFiPOmvnFXOmu7nMQlQGnbX0yZek2a3_T5Rxfq",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzoNFz1el4zwMnQfGKQa05rvwHrVONzNSXdd7OneAeFD2y4ECqMwojqkZ0_v-lqbZ7_bbMnDg1T6awbyNVpull74BGdrS-LUB2CXQDxAYRX3g7VgDR8WN8G_6_89_SD9WsbnGWvlnn3wOZNrOj1t24bFL91eHa2zfIpg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSA9gLWFn8YJIRP-W7vOFeVOn6JFOtdlarlLDotlxrDF8sXzfAaxhgUjCoLy43YuUJuTeCrUray3WcIjogSRZSEDEsvrOS3KgiIf0O3TGyD3XBs_Ayteh1iDLJtdbsqxA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr0ahWmzJPvlEwbp708o7g2jYX9U_l3j2HP8s4B0AjlgqbkATe8BKTkquh3YnFaD3thZr0OctynyK-Z88EbEgeANZAbQqG2-u3crFCczFlz3vRHXgoSTt5j75ekWLPVeeYWEmUmkOprGKXymMmpX1bDQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH38yT50Ftz-IafP2lFlXXvIOhVg5wQ9RJtwv1iPm3NNvDEyVsv_MZQQUezup4ZsVTVmUH8YCo0OqCB4UMNqo27YbCeuVB5zOxWaE8uDSY2Z7bYgfDAtV1qg1oKGONSIKDXtUdWlAkQaZE7GAfxQ4M3oaOGuJu59NBMgd8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**티오더(t'order)** 테이블오더의 월 이용료와 기본 기기 스펙 및 사양은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6wUqNiZaAQxl5DG2aOWfBFyudgmHt8S-bOOW5mwqZZEiC9EeH4g2nHOHIAUV5Yq2Pwm2sn0aXacLgqr0WAf6bqtsXeyO40TUIrJM0xnK2Pc7fsvdo-99Vq6n6k0n5AFG-",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQpl_q6Xx0Lcaah_I29kfVTBZStcaCwFuLUoMRHtZNRq2SMHtaezRwSd7MKqudTDTCvyxPGJNgCwgXcYzniStfYH-hBCU0PVBcXrajqqp2jA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWolIEPrEqy9NOOTl9P15YToxyh0Q43UtKWvbgOS_X92S8A1GTSP3EgX2otrgwG_Ux-efjNl0yfN27NySld5CkSM_-51lGD3Toj6Mgnt76gnMOGuiYkyrpXnBm8e0VCsEAt_RcLZeg2cY4e-k=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAcAqJGxi77WT2QsC0Y4UF0hW42s5PfoyLe2g0G8VDJBtMyoWGoGu0_B6Ix090DeQoo3vuxhcIbhD62q0k0WhNnrShwfrUT6sJTWhQjZoAjp9oQYWBQpVpuQNUNLzaONw=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr-IsbWyXR8O2AUOydjek8NwUhOu6eUB74j0rv5O2HQbgUaLUFwMnq7y7NKToPp8SURcoKPGiM-6wy61K7JhmooBDpIMpkKv8J05KOXYnZtLmT9tYHmXnutD8V5S1nIUFcxK4NQH4bnk-XHC0SexzxqMpYY-4chx6kirtn2GHK",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-wFP7mj7XWI7NZ83r0KfqUuBtyImmGEgH_DxtFV5HGKAHCqcq4PBt7wGRzQ9x98BM8RG6VwZr7SFPscO3RUhiDM5AgzKjjtqdxnB8lw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIu2C3AVX_tPkqb6AD-6JWUeS2bWBIqajO75ZhgjJdJ4JTjZBu8y-ZSC48VmA6lEazfzdx3EqTyyAJ8uRD1imPp0-8aaufMJKxv12NPgWYI2YJiSeGPG1xeDXoEOZJZYw9",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 통상 3년(36개월) 약정 기준으로 요금이 책정된다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "후불형 월 이용료는 태블릿 1대당 월 약 18,000원 ~ 20,000원(부가세 별도)이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 월 이용료는 태블릿 1대당 월 약 20,000원 ~ 22,000원(부가세 별도)이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "디스플레이는 10.1인치 ~ 10.5인치급 IPS 디스플레이가 탑재된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기기 색상 라인업은 블랙과 화이트로 구성된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "국내 주요 25개 이상의 POS 프로그램과 실시간 양방향 연동을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "티오더(t'order) 테이블오더의 월 이용료와 주요 기본 스펙 안내입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbSFoAEix-oC9c-Wqt3OsG98ZdnYujTUlwumVXHCO7BkmZh1t7s9uEd_Z3jJlDKuZoOXNzt6gWCTH8O8tO8WYREZ3Vv9C7DgfxIqnn",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZ-WwnetZQ2uVzGmRdKtH-GG2-FOfmc5Xocc3edCPG_AoY95sTMsrI-qoZn3prxp50dplAV2vgPoKtQBSenximnUEXpxkEPN_iXBKsIBUDA6sCGk0xwEkwNT3_RVYd3Vg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0jkL6gKDd5G7n90qDtCgxdfPKpqwmMWCQs0RdXpvasNSrvZhxqNGOFvrE5Yq0rfhNw2_NJRXntMFBMQ4qAUbFfdHdOW9_mj9ROJONN6Y7VwCDY6nQJIvJOEU=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBJT_Myec_LSo4p2BUlrzvSJsPXx8AHsLZesa9NjaV6XjGYGsB_mcDXSf3uZ8BaKZglcbJV1GTY_fqpu4BqYNkcjhAN7E0iFvn--hfaA8xl0J-bw74",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdzpN-Gx8UvsLhQ-Kd22G8Hno9t0PTU9caoyk3fC3BqoxZlIdu-4RrsBz3UG7k9TDV89bjceEOXGYRyTPU4J-KK0Z-Z7pNarqFrkGE3qLy",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVCPkc2kF1yj4W62jcgzodyzUeLiyXnyGqVJGa6a67VMBrjjeTHBLlTQVXHaJWSlW3dgJ_IgnjqIDP-oDXc-qY_op9t_ijIISY53O_iygTlG5fevpbOlZPIwyeZt7rhCEe2uQHRQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ-8yMgNebfQM1FXBmcU34e1ngbeNZEi3Ea15lPSE1VioYq6vydg2kAD5VFmRiXnt7uPfLe2cAgFjTi_ja44sbcXcUBrI2G9sTuCXKwQFiqFdhrpA36_X2MAXg358qxZ_UqmPMXOc2YlBd_do_xY_7HRE7BXhLwsWZNhm3W6c=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEr4KDy-9ucnBzpFLnw0PZONuRrE2TWQWCVOs84sRAncAGWNps2EqEvpWiqijGO633U_3jpbygwtQwKFvHrDx9xwD_oaeOfyKJoRD4A1lb15djO1uk6I8uSFiiqix3-CBRnicHAfe0ahLkOV0Q_sgtP3RydhJCpAb1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeEmkJtyZKj3DLMYEmTmS9K1jLOCB3zVXbDgcEXwrwE6wClBVlK67SraSRxId20IwwaXsbNrDYPKrmoS2PveU03EjKLWH-OzcunZWzN1dsTaLokeJjZwkk0ON6AfIwIa0=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "후불형 월 이용료는 대당 월 18,000원 ~ 20,000원 선이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 월 이용료는 대당 월 20,000원 ~ 22,000원 선이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "마스터 태블릿은 대당 월 약 18,000원 선이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "10인치형 전용 터치스크린 태블릿(전용 기기 또는 삼성 갤럭시탭 기반)을 사용한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 기준 IC카드, MS 마그네틱 결제 및 삼성페이, 애플페이, 더치페이 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "국내 30여 개 주요 포스 프로그램(OKPOS, 이지포스, 유니온포스 등)과 직접 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "영어, 일본어, 중국어 등 다국어 언어 전환을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "365일 심야 고객센터(새벽 2시까지) 운영 및 전국 거점 방문 AS를 지원한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**티오더(t'order)**의 월 이용료와 기기 및 시스템 기본 스펙은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2X_ISMYUVeLc9iW1K21SZKKHt91UVhWMznkDUYnd0Iidtu0uJaHQrEPaIUv6dYwbuxi17aKhVJY8q9OCmVnY2tR6HO4WnUtPkWwoygRPFxmtG0nnDHR0mwB2k9G0S2lAs",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrBwvM96ly05nVWakmn6tJWpH7oqae4lBpID74Xe7jgrziGNU2-Ym5jKR9aiViknlWcbg0mKf1wUFXi8FT3ZOTW9npjyr-15chuVfwhOQIpvGqJf83Lw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlRVTDjBPfsk95zVzihV7ItcLIpP-2Kqh5mokBicAd2jB-y44Sq5Z4C7F6MAqzdvyJIlMY8QQN-PnthTz6RIZSFAXwXWKUDm5bDjXTRk5ugQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE362wzCrxBVMMv7mCbi0fUuYei_M5vh_jGfgYKlOZPN4UalIRN027_qEb4QeTst-H6o1-Lz7uCANZD-9L8uEWa-zqilYAwP9JUV2OYgu_fwHvZD3VFSAY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1LhfBruT8a9HYnTFHeiOS3i1Y80s8Dg0KxDOQQf-kOQJTvQVVIiUJP5jo7DdZqjZuFr41Ev25K04CwXGhc1ArxNmrccb4VmPA2fDakTd-WVKn-cf3CZ68_eT8",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9t6yndMTV6hLOMbmyr8eihSo3nbBfqzgUrD-q9qCi1lFcYuetqTx_o6wGEnPTw8Mu1ujHkwCLwmyd3sTe2lV3pKlXL9uyWd6FgTBivjcMWKYYD0OhWH8RwRW68wc_OgJerfy6bDbCtOVVtd4=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwvxApV0KVSEzwaJrcoszmT7yP4HzlSnc42wgNAqtjbivZZ3uUfdu34wPPVEIBu8wPrsO9TpBU-hZbI6AE3H3eT-fnHgnDNo5N_yroPjWrIg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE362wzCrxBVMMv7mCbi0fUuYei_M5vh_jGfgYKlOZPN4UalIRN027_qEb4QeTst-H6o1-Lz7uCANZD-9L8uEWa-zqilYAwP9JUV2OYgu_fwHvZD3VFSAY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlRVTDjBPfsk95zVzihV7ItcLIpP-2Kqh5mokBicAd2jB-y44Sq5Z4C7F6MAqzdvyJIlMY8QQN-PnthTz6RIZSFAXwXWKUDm5bDjXTRk5ugQ==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "후불형(주문 전용) 월 이용료는 대당 월 18,000원 ~ 20,000원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형(주문 + 테이블 결제) 월 이용료는 대당 월 20,000원 ~ 22,000원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "마스터 태블릿 월 이용료는 대당 월 18,000원 선이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "하드웨어 디스플레이로 10인치형 산업·매장용 태블릿이 적용된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 결제 리더기는 IC칩, 마그네틱(MS), 삼성페이, 애플페이, QR/바코드 간편결제를 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "국내 주요 20~25개 이상 POS/VAN사와 연동을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "한국어, 영어, 일본어, 중국어 등 다국어 언어 전환을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "식당 테이블오더 시장의 대표 주자인 **티오더**와 **메뉴잇**은 각각 뚜렷한 특징과 강점을 가지고 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 메뉴잇 (menuit)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **POS 연동 범위:** 주요 POS는 지원하지만, 티오더에 비해 비주류 POS사와의 연동 폭은 다소 좁을 수 있어 사전 확인이 필수입니다.",
+              "sentiment": "negative"
+            },
+            {
+              "sentence": "* **메뉴잇을 추천하는 경우**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.2,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6RtaYPgJ2nIPAAIzZF5k1V8flDoJ8lA0df3JYJhizp9x0D0iaY8BpuJjIX3Hm2OdkrnhtEGPf-u4cvPlzwBH-qsmwGrwNDJykfbb_dkQfnLr8ne-qDaUzt_V93BureWBsYJkIYhAhhIcbsWM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEY5xR_uh-68f6vGGkoEx6AaDfyM_F3NHZjF9LFJxd-0u0mw0vKaeu4CJ3w1xL02BYG5qp6ZEHFRY-ajbsCeeiUQlM7fhYgn1tSWN7n11Vnj-UlDLVU37NRgV-EPJHo2zTTodPVMRLpChyOJM0dluJU",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUbU2epbRHlRf2NNn9sp9Cc7ElwN681e2Q8bK8efmS_jqIz6xC8dqBrxwLqr6loS8U8Z0c4rpAGGlNKmlvP8A9j_Ure5n58Fbin9qdcVFb",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVxBeinNTIkTTUMsECzAHOFWqmZ6vTrCuwLDhcbemDcu4dll5OhmKnZyA0cXCdsbWuXSDwWXzhZwq7I2ej3hJONpKGKpRSI1vC_k3wmAtmsQvlkh-_00M-M1aEGB5L69hmofxeMtYs21GIPWG8zLCLvfsI3BrOVa5m",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDumivuQbTRKr8kR-k5DPN9pQxt2Xmj7g5eErfkmoPHx-qfk8-cdCDHRl6MPpEm2rj6TDh3fEIvi4EuSESEi2ES2oaxY9LJqt_w9twIhibUrZYyW36oNfgx70VVVnvVWo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjXNE0GbSdywTfUSW09Oc6aMnzJyJu9bmOPtIhXIk7gbsdLao2btvQ0sLWs0n2CTvX_1-AumGN8MtcL3OC_HBgCcYHde2AzCdWuITi4jEhAftebR3iwiFJGAgOkfOjvpsriypbZCSfbi_O01U=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXZdhz0VPmq1qOTJnM64vmYmepw1_qNdpp_NMdT0jQ3Uqao4F2vSxzMJMuEcJuOxlFBDwr3w-pHL-8ZDpFurV-At8FVIWOlMR8jAZ6bFL-mY34up68sxEhStFra_p4VP2zN4rZW_5l75aYfmzk0pOwiKvk",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 기업이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 국내 대부분의 기존 POS 프로그램 및 최다 POS/PG사와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전국 A/S망과 심야 고객센터를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 더치페이(분할결제), 다국어 지원, 이벤트/룰렛 기능, 주류 광고 연계 등의 부가 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**티오더(T-order)**와 **메뉴잇(Menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 솔루션입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 티오더 (T-order)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **POS 연동 범위 사전 확인 필요:** 주요 포스는 대부분 지원하지만, 티오더에 비해 특정 비주류 포스기와의 호환성 여부를 사전에 미리 체크해야 합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **티오더를 추천하는 매장**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "**티오더(T-order)**와 **메뉴잇(Menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 솔루션입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 메뉴잇 (Menuit)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **POS 연동 범위 사전 확인 필요:** 주요 포스는 대부분 지원하지만, 티오더에 비해 특정 비주류 포스기와의 호환성 여부를 사전에 미리 체크해야 합니다.",
+              "sentiment": "negative"
+            },
+            {
+              "sentence": "* **메뉴잇을 추천하는 매장**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2nypva6TSMYFehiv2LH-yt0YXCESv7FydoiTEBFZtryKXVBPZqzmSRtyDzF5_fM3hzqXfx-6NHDxqoXirRmMtRiJAAC_2BSVpg4SKtH_cI-7uDWi3jTPglXElaaPD19nbdzb6jGJXpkSYi6ie",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEG4HLMuGbds2KTwYZq_zOazg7JY2yqQnO9nWVer4lKCSVQ0vJddQ03u5KA5foF3QWjNAumshnzDF78XZ3umu4prI4NeGTRwHTaahgB_xbZICi2UZhjznq8yGK37IHmpoRSYJyNnoN3Ku0aMQt9Ugj3Kf6w",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgCIn-aEoJ0SLub15MLjEEZp5ulXmjCQLdDVbfS5XZbGDDavrZYlQSGukCtgZ4XnAnyX-eWySG2sOW_dv-oMNtOsy4RRg6o4PJ_4-zv2ofmXe53BUSQFS9dbVBQebav0Thx1nNUtBPIPLfrgrCGLUfglvjGWkRopDbow==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvLwbDYMKs8vqC2y-LDN3AWCgkallmVsDj_VbuCRQz7rZEJM7zggebmXzjUwCCdn04pAJTvjuG04gq0ufhE8aPXu6foul1bEmOCF_V1Y5_8A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGocWypoacGpDYwTra3t5AMm7Xik_oqoGSbmGvCX2s36UXi_uKkQWpYe7VCVD0eeLKjLWXycGu4BCecdHsNDlqAoTNYOnDTbolJlcrVHjXUjYaJe6dVy8YG6NZV0Pb-PN63O_h4z1M_4ob1XjAzAyghHZxhWg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 30개 이상의 주요 POS(오케이포스, 이지포스 등)와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 야간/심야 고객센터를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 통상 3년 안팎의 약정 계약이 기본이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 대표하는 양대 브랜드입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 대표하는 양대 브랜드입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 메뉴잇 (menuit)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **점유율 및 인지도:** 티오더 대비 매장 점유율이 낮아 손님에게 브랜드 자체는 덜 익숙할 수 있습니다.",
+              "sentiment": "negative"
+            },
+            {
+              "sentence": "| 구분 | 티오더 | 메뉴잇 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **메뉴잇 추천:**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.2857142857142857,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcWSCGcDSRkfnASOCLHRbbMj5flsGH1__kAFUNgjsUfsE0mt1tZaGs8rNdF3O2MBWLJRzbLzEtbuFON8I3aQ6JMizjVK-fLhc03V4I9zblrn_AsVhMuM2UlqpnYu6k8lzff6IOiT8AezMY-ZFQ",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmWn0eg922uCoRI2rNvKp51gmRu9HQtC2mRpeCLGElRxPOrVOHu9oLEAlWaUzpg3VpGKpmPV4_iUl0HVj9B8g9wLhTZYqFwUaxN8Xg28_i0iuQZ8X-eFNtlFUsuL4RCDFxkl6SG_wNxW9NkfKRL4cQcg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDhX4-XqvXucvqZgfhN2XCaL95imOWiRExU0hRdfjc0S-lFza0dja5NLBcV-wg722NSwKY-VlmwavT2KML1DGum6zKmuLrv3lnIGFvfrQR7g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzruK5vqdNthSeapSv9FJ3HBpEGSmS16kMtW4OW2cGois5S9Hm0Pl-mkP6dMaH61Pz_6EB6lJ4ZU3TtHFmQlN1W8AT43sQk5PWK2LXzpP4pIYd0rCsx2DgzRDVfcdqwr-550S5FZN-SLhIGbA0Oc0psPnLFZOTvbY=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2aVOyrdrmUo9bnu2wHC00FRcvykf2ZQi1EV3Aybl0klPg6xQCVHzMXfc7tuOBC1Ll8eAFnvNfFdG3VKMlIicbxhXSkJy3DAi0aBVYeGTdBcGUOTj-47pe9HsVwzlJZjtlGU9RQOcrD6OPtxkeO2T1O3Wd6g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 국내 대다수 주요 POS 기기와의 연동을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 선불/후불 결제, 더치페이, 다국어 지원, 직원 호출 세분화 기능을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전국 현장 출동망과 야간/심야 고객센터를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더 태블릿 대기 화면에 외부 광고가 송출된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 유선 거치 및 보조배터리형 설치 방식을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**페이히어**와 **티오더** 모두 업계 대표 솔루션인 만큼 기본적인 시스템 완성도는 높지만, **피크 시간대에 주문 누락이나 기기 멈춤(먹통) 현상이 완전히 없지는 않으며 자영업자 커뮤니티 등에서 관련 불편 사례가 종종 언급**됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "#### 🔹 티오더 (T-order)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **기존 포스와의 연동 문제**: 티오더는 매장에서 기존에 쓰던 다양한 포스(OKPOS 등)와 프로그램을 연동해 사용하는 경우가 많습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "피크 시간대에 주문이 동시다발적으로 몰리면 **티오더 태블릿 → 티오더 서버 → 매장 포스 프로그램**으로 이어지는 신호 전달 과정에서 병목이 생겨 주문이 누락되거나 늦게 찍히는 현상이 발생할 수 있습니다.",
+          "sentiment": "negative"
+        },
+        {
+          "sentence": "* 기존 포스기를 그대로 유지한 채 테이블오더만 붙여 쓰려면 **티오더** 같은 전문 테이블오더가 적합하지만 연동 안정성을 꼼꼼히 점검해야 합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "**페이히어**와 **티오더** 모두 업계 대표 솔루션인 만큼 기본적인 시스템 완성도는 높지만, **피크 시간대에 주문 누락이나 기기 멈춤(먹통) 현상이 완전히 없지는 않으며 자영업자 커뮤니티 등에서 관련 불편 사례가 종종 언급**됩니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "#### 🔹 페이히어 (Payhere)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **올인원 구조의 장단점**: 페이히어는 포스, 테이블오더, 주방 디스플레이(KDS) 등을 자체 시스템으로 일원화하여 개발했기 때문에 기기 간 호환 및 누락 문제는 상대적으로 덜한 편입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* 포스부터 테이블오더까지 하나로 통합해 기기간 연동 충돌을 줄이고 싶다면 **페이히어** 같은 올인원 시스템이 유리합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5555555555555556,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwueAtcGF7AgvVVQ-FyPBjiWVjwJUAydYB-hkaGFn9JfdaZRj6uQZukyAycP-oov_SI61iuo9Uk-79DXvpkPi1rbP7sZX71WOjpmC54GyvUT_EHP47Av8lQZYFw9He6Yc_kM3LPA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwueAtcGF7AgvVVQ-FyPBjiWVjwJUAydYB-hkaGFn9JfdaZRj6uQZukyAycP-oov_SI61iuo9Uk-79DXvpkPi1rbP7sZX71WOjpmC54GyvUT_EHP47Av8lQZYFw9He6Yc_kM3LPA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwEkykrwYEP6Z9i3ASoe-xrkukeQtaK6amwVYvnJtuMDQ1bRtJuM7RzMbdxLf9-zNUo7GZHePQAz3XoMpZ0JQh79GtUPxYkUeC6B5d-0Ei9EqObaQpm-TWaA5IqOfKVTNUWCn-NgIJxBC6NAcVdZC7WT1fmZcazOc=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDv0oJp_mFEUXwSt7flwY1NdqC4ADQRCu074vE_kwmwG1MX_WVQbgJs2Xif4DLF2FdIxPhuN3QcVe-Ub5vZgTkrmrMHguG2gPWc_4aVSsVloDrzYyvi68YwxF8nSY27Tv9V4uPM0UtZrZXanxZKikx",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHumJ_XqETcVFIxYxAudr1etCvyLilPsrej_IlWmHj8twtAWW2_6-xvV_4dPivc_LTHahaE6vgHkV2eBhPteDTTDEFR8WcEPqHiSO3lCOfg8Byv6_w4Cw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfLEgDYs8xr7QoyGvThaSBYF7jeJDyV7aLoBmWNW_lXSbYqTybwgBthjWPRrXnbYl0WeQP4pndxQhJSTicNr-GovleMAAe3aR1qQhkcMOm9eXKF229w6oNqp-yl0UmrvFq-jMAAaf3KjTWBvA=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 매장에서 기존에 쓰던 다양한 포스(OKPOS 등)와 프로그램을 연동해 사용한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "**페이히어**와 **티오더** 모두 업계에서 널리 쓰이는 대표적인 시스템으로, 소프트웨어 자체 결함으로 인한 **심각한 주문 누락이나 기기 먹통이 일상적으로 빈번하게 발생하는 편은 아닙니다.**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **페이히어 (Payhere)**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "기존에 쓰던 포스 프로그램을 그대로 유지해야 한다면 연동 안정성이 검증된 **티오더**, 포스부터 테이블오더까지 전체 시스템을 하나로 통일해 연동 오류 가능성을 줄이고 싶다면 **페이히어**가 적합한 선택이 될 수 있습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyMLexZ8DoEVyoKgFyfrrG6rQxQ9zBVZRCba7rP7e9q9uYPZglKyXVfoWkG-8jMx0IKe-seaM4Cib2sZLfevV96hXXB87qJcPGRlaPT5MT5-MLW7-sFhJ7z-cXB3aNeaVQdHhBr7Oltyl7LmdxIaiwoAa8FP0M8DQ=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcjeOgGDQ4wUfi9eqov_oe1Ypa8ErdYx7dh7pfW137SInKCUhRePgugjFip1Z1QTbUcl_rsrCEi_hgIgZN_SjSrl2Gxqi1_ETlzOWz6A==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj0vQvvFTZd4lqPzmSRsoSsomsNxZli-v8VC7UQzHtUwRO1uNj1ASLNIuzkTIx1dGASHQr0nDFOepp6DP_2cdNN7YNbCKqpV1GS-YZMfz7jxJ5",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 자체 포스 외에도 타사 포스기(오케이포스, 이지포스 등)와 연동해 사용한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "* **티오더 (t'order)**\n  * 테이블오더 전용으로 시스템이 비교적 안정적이고 점유율이 높지만, 테이블 수가 많은 대형 매장일수록 **매장 내 Wi-Fi AP(공유기) 세팅이 부실할 경우 특정 구석 자리 테이블에서 멈춤 현상**이 발생하기 쉽습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "**페이히어나 티오더 모두 정상적인 환경에서는 안정적으로 작동하지만, 피크 시간대 매장 환경(네트워크)이나 일시적인 서버 이슈에 따라 간헐적인 먹통·지연 현상을 겪는 매장들이 있습니다.**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "페이히어처럼 모바일/태블릿과 카드 리더기·프린터가 블루투스로 연결되는 경우, 피크 시간대 신호 간섭이나 거리 문제로 연결이 튀는 경우가 있습니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **페이히어 (Payhere)**\n  * 스마트폰이나 태블릿을 활용하는 클라우드 포스라 초기 비용과 사용 편의성은 높지만, **기기 간 무선(Wi-Fi/블루투스) 연결 상태에 영향**을 많이 받습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENzEbRfI8maBt9_g8OonfngEiuzJ7oHqmhNBl-LJDFvh20pE2JQi2r7psVu7sKOM_apf6PZCS5FQjWjiMcR-8CTJr-nFN8GYBMdd4rBFK-woZw_KG_uw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkyxddUofx0huFTDrfNUkFZlGhp1K2Bl9CJ2CdJC27yP-jhkb7vEG8ahpIDUgcr2Z6udieQ69CnoPWorA51J9XkAoHW2VrHIfZ5C89dQDOvHvoK--NjHlnY4wSBS1riPJ0M1Se1g==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 클라우드/인터넷 기반으로 데이터를 처리하는 테이블오더 시스템이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 상권에서 티오더를 설치할 경우, **현장 방문 A/S 및 기기 관리는 매우 빠르고 안정적으로 이루어지는 편**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **본사 및 거점 인근 권역**: 티오더 본사(여의도 파크원)와 구로 오피스, 수도권 서부 거점 센터(부천 센터 등)가 영등포와 바로 인접해 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* 티오더는 **365일 연중무휴 및 심야 시간대 고객센터(유선/채팅)**를 운영하고 있어, 피크타임에 기기 오류나 주문 누락 이슈가 발생했을 때 원격 제어 및 긴급 조치가 빠르게 가능합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGceil_bEq0LvklWqufqfJf3ULYczUuK8rTtEkIZLvzhfQmkJDwXgo3sc_cZro-x5rZgtC1q_ph4q7tH-y7t_B4FmxmfxuiYWGZSYdYqraxV2bhlMvrLKakMFm_172BF_0lLjM=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6vE72ockxJla71xfMnm5T9IzHT550TR1vp40DbP9gh8PEiDloaOzXczNfM57pKlVGaU-EMRBPsdLOO9oFYXjEYEkZx_ioGTuqYraGtLZ8ep3_p6gCHZRFpMbKGceGp_bZSXPmmOYLaN6wuFtlLG8nb_n93JUORcd_-CFKQyfH3--UqG1Y",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxcq9r0iVOW2ah9NPKw7vsqmPGRvUCenDmHVqqn9vlXfj7OasbmuqAHAl3UwVfkcjS0FzEj1ZZKKK5oxZk8QaHPBT9xErRY3bUJZ8Eb19dGS8CtWo=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrHpXmmcxVkTXRUuy-6AIyl1e7NBvKZQjyIoDnWZxupJFlnj0nGMDibZE1pmHcW3TSUFmV4MNGV7x5HshmGYqrYgkltbExF2mWz6wUvMtKgpVHHgN8=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더 본사는 여의도 파크원에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "여의도 파크원",
+          "factGraphValue": "서울특별시 영등포구 여의대로 108"
+        },
+        {
+          "claimText": "티오더는 구로 오피스와 수도권 서부 거점 센터(부천 센터 등)를 두고 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "신규 설치 매장의 경우 초기 30일 집중 케어를 지원한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 365일 연중무휴 및 심야 시간대 고객센터(유선/채팅)를 운영한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**영등포 상권에서 티오더를 도입할 경우 현장 AS 및 기기 관리 대응은 매우 빠르고 원활한 편**에 속합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "수도권 핵심 상권이자 티오더의 주요 관리 권역인 만큼 다음과 같은 인프라와 관리 시스템이 갖추어져 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**본사 및 수도권 엔지니어 거점 근접:** 티오더 본사(여의도 파크원)와 구로 오피스 등 핵심 지원 인프라가 인근에 밀집해 있어 영등포구 일대(영등포역, 문래동, 당산, 여의도 등)는 기사 배정 및 이동 동선 면에서 최우선 대응 권역입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "티오더는 **365일 심야 시간대까지 고객지원센터와 비상 대응망을 운영**하고 있어, 피크타임에 주문 오류나 결제 불량이 발생해도 즉각적인 원격 제어 및 긴급 기술 지원을 받을 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**원격/AI 즉각 조치:** 단순 메뉴 오류, 포스 연동 끊김, 배너 수정 등은 고객센터나 '티오더AI/사장님 앱'을 통해 수 분 내에 원격으로 즉시 해결됩니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**요약하자면**, 영등포 지역은 티오더의 직영 및 기술 지원망 접근성이 가장 좋은 지역 중 하나이므로, 타사나 비수도권 지역 대비 현장 방문 조치 및 주기적인 기기 관리가 신속하게 이루어지는 편입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGa2yn_Wou2vA1iGraKsDVrYXC2_Xhqjoi-l6wqdhKluAYDSgVEqpy7BcI0KbWYfsJtLaLt12Dc-to3-dNpHhq-l5O_7IKMW_ZMTdYftDDPQWnyBeKLTqMW_ntRyK-zmBZ2mjg=",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF6GtTPWqPPlsFbKaD5oXNma5Ljc1LkBVL2KEiu_cVOv_6YX180BKR51m7eLY4jndhMjDpKLtsZotdkTsWH3JOh82iRWBIoJpq9rKPl0jX",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-vhpTcntKS0-r5YQ2-Pn64Jixlv8VrTTPjbJZHCgeAA7JYU47QrUZvWRUFdtRMDAyP84TLk_BaxKwQhkDDeBQTHzVpmn1GEAPT7Jd-iYWw7XZXtfM",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWe9DRzoG5u7womRO7lm7TiGIsPco3Ziw3AxMUCrcGzpArogPAZBWkt3iltvzcRYXxrhTAfPKr8MO8V7SRccfZgcH0RHLXfM3I45DlgkDb7PeYp3YEaE2QAF5cvknagUHe0cDB",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoshDM5nbM3ve4xrJxc-vJ8IDfLoUawxKs5nfTV7WtcawijRaeub-MsA_UnYT64b0xaE7WcV39KHQWmQxhv_ESqGj6mLxzLnucleTGbk45FpG37ny39DHoSoh_Ynl4eg==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더 본사가 여의도 파크원에 위치한다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "여의도 파크원",
+          "factGraphValue": "서울특별시 영등포구 여의대로 108"
+        },
+        {
+          "claimText": "티오더가 구로 오피스를 두고 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 AS 접수 시 통상 1일 이내(당일 또는 익일) 방문 조치 서비스를 제공한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 365일 심야 시간대까지 고객지원센터와 비상 대응망을 운영한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전담 매니저가 정기 방문해 액정 보호필름 무상 교체 등을 제공하는 '케어서비스'를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "하드웨어 불량 발생 시 엔지니어가 방문해 1:1 맞손 교체를 진행한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "영등포 상권은 티오더의 현장 방문 AS 및 기기 관리 대응이 전국에서 가장 빠르고 수월한 지역 중 하나입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "본사 및 수도권 거점 인접: 티오더 본사(여의도) 및 주요 오피스(구로)가 영등포 권역에 직접 맞닿아 있고, 수도권 서남부 전담 설치·AS 인력이 집중 배치되어 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGuYXzRQZlMyYoa8_NL4eiCEMrDLXcPwEDxAF7knU9BjjAtzzpwXNCuqFNlt9qh8HmDzOQvxjuIPXVHK2vsUVoxV3ar5vuPHVvQiKanA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbW-7bbw4d3ahTSrI6NvEahbhi8UgDYupl4T81kU_dUCqV0BuXA7aaYOCPgTT7ji-Wal1A0-grgg60uaV_-NhyJCkt-wzvdOTpiowxluiqAJa3k4aeGCOAhE9C99WveR0BJpP1",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7jd8pmEroVIAde8bF2SqRhstGl2BJWAZN4_SR8y15VVr4g1N4Carty37yPFMX7HrUqHf8y_COwyokTy1KUAznVxCHw2y7s85wx4w2FkWvCvFdib2EUA==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEOysEQ84gV8zNpUR9MGh3s6si66fYiUm9GW4JCi7tKPAPd2J0kD_837ndK1pIZGepFOuXjDh3fpDcRDGsuJ1GwfcxOexSHrzVO848LrUrczsJFYllmZwJ8eBLVoi9K5nm5WrPiw==",
+          "domain": "vertexaisearch.cloud.google.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "t'order",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "티오더 본사는 여의도에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "여의도",
+          "factGraphValue": "서울특별시 영등포구 여의대로 108"
+        },
+        {
+          "claimText": "티오더 주요 오피스가 구로에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "하드웨어 파손이나 기기 불량 시 당일 또는 익일(평균 1일 이내) 방문 처리가 이루어진다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "연중무휴 심야(새벽 2시까지) 고객센터를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "설치 후 초기 30일 이내에 점주 요청 시 우선 방문 점검을 진행한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false
+    }
+  ]
+}
