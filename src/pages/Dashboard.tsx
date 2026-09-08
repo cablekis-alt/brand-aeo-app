@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
@@ -69,6 +70,8 @@ export default function Dashboard() {
         </p>
       )}
       {loading && !card && <p className="muted">불러오는 중…</p>}
+
+      {tenant && history.length > 0 && <ChangeAlerts history={history} />}
 
       {tenant && card && (
         <>

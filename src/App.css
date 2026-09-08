@@ -1326,7 +1326,62 @@ tbody tr.selected {
 .status-pill.st-ok { color: var(--muted); }
 .status-pill.st-warn { color: var(--accent); }
 .status-pill.st-bad { color: var(--bad); }
+.status-pill.st-info { color: var(--muted); }
 .status-pill.st-unknown { color: var(--muted); }
+
+/* 질문별 승패 */
+.winloss-tally {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+p.hint {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* 주간 변화 알림 (대시보드) */
+.alerts {
+  margin: 18px 0 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.alerts-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.alerts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alert-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.alert-detail {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
 
 .strength-list { margin: 0; padding-left: 18px; }
 .strength-list li { margin: 4px 0; }

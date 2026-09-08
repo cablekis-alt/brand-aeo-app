@@ -12,6 +12,7 @@ import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
 import Performance from './pages/Performance'
 import QuestionBank from './pages/QuestionBank'
+import QuestionWinLoss from './pages/QuestionWinLoss'
 import Ranking from './pages/Ranking'
 import SiteDiagnosis from './pages/SiteDiagnosis'
 import './App.css'
@@ -24,6 +25,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="diagnosis" element={<BrandDiagnosis />} />
+            <Route path="question-winloss" element={<QuestionWinLoss />} />
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />
             <Route path="citations" element={<Citations />} />
