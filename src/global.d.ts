@@ -31,7 +31,12 @@ interface ElectronBridge {
   /** 업데이트 상태 변화 구독. 해제 함수를 반환. */
   onUpdateStatus: (cb: (status: UpdateStatus) => void) => () => void
   /** 현재 설정된 API 키 상태(값은 노출 안 함, 존재 여부만). */
-  apiKeyStatus: () => Promise<{ status: Record<string, boolean>; envPath: string }>
+  apiKeyStatus: () => Promise<{
+    status: Record<string, boolean>
+    envPath: string
+    judgeEngine?: string
+    collectEngines?: string[] | null
+  }>
   /** API 키를 userData/.env에 저장하고 즉시 적용. */
   setApiKey: (name: string, value: string) => Promise<{ ok: boolean; error?: string }>
   /** 릴리스 페이지를 기본 브라우저로 연다(수동 다운로드용). */

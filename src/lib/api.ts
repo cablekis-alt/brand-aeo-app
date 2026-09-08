@@ -3,7 +3,13 @@ import type { Engine } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
-import type { CitationBreakdown, QuestionBank, QuestionRepeatAnalysis, RankingView } from './types'
+import type {
+  AiReferralReport,
+  CitationBreakdown,
+  QuestionBank,
+  QuestionRepeatAnalysis,
+  RankingView,
+} from './types'
 
 export interface TenantSummary {
   tenantId: string
@@ -122,6 +128,24 @@ export async function loadCitationSources(tenantId: string, weekOf: string): Pro
 // 랭킹 분석.
 export async function loadRanking(tenantId: string, weekOf: string): Promise<RankingView | null> {
   return getJson<RankingView>(`/api/ranking/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`)
+}
+
+// AI 리퍼럴 트래픽(GA4) — 로컬/데스크톱 백엔드에만 라우트가 있다.
+// 404(웹 배포)와 "GA 미설정"을 구분해 화면에서 다른 안내를 띄운다.
+export async function loadAiReferrals(tenantId: string, days = 28): Promise<AiReferralReport> {
+  const remote = await getJson<AiReferralReport>(
+    `/api/ga-referrals/${encodeURIComponent(tenantId)}?days=${days}`,
+  )
+  return (
+    remote ?? {
+      configured: false,
+      reason: 'unavailable',
+      rows: [],
+      totalAiSessions: 0,
+      totalSessions: 0,
+      aiShare: 0,
+    }
+  )
 }
 
 // 측정 상태 — 최근 GitHub Actions 측정 실행 목록.

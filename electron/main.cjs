@@ -239,16 +239,35 @@ ipcMain.handle('update:quitAndInstall', () => {
 // ── API 키 설정(앱 내 입력) ──────────────────────────────────────────────
 // userData/.env에 저장하고 process.env에 즉시 반영한다. 패키징은 서버가 인프로세스라
 // 재시작 없이 다음 측정부터 적용된다(dev는 서버가 자식 프로세스라 재시작 필요).
-const API_KEY_NAMES = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY']
+const API_KEY_NAMES = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']
 
 function userEnvPath() {
   return path.join(app.getPath('userData'), '.env')
 }
 
+// server/engines/index.ts의 getJudgeClient()와 동일한 우선순위로 "실제" 판단 엔진을 해석한다.
+// UI가 '항상 Gemini' 같은 고정 문구 대신 실제 동작을 표시하도록(키 조합에 따라 달라진다).
+function resolveJudgeEngine() {
+  const explicit = (process.env.JUDGE_ENGINE || '').trim().toLowerCase()
+  if (explicit === 'gemini' || explicit === 'claude' || explicit === 'openai') return explicit
+  if (process.env.GEMINI_API_KEY) return 'gemini' // 기본 고정(비교가능성)
+  if (process.env.ANTHROPIC_API_KEY) return 'claude'
+  return 'openai'
+}
+
 ipcMain.handle('settings:apiKeyStatus', () => {
   const status = {}
   for (const n of API_KEY_NAMES) status[n] = Boolean(process.env[n])
-  return { status, envPath: userEnvPath() }
+  const collect = (process.env.COLLECT_ENGINES || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+  return {
+    status,
+    envPath: userEnvPath(),
+    judgeEngine: resolveJudgeEngine(),
+    collectEngines: collect.length > 0 ? collect : null, // null = 테넌트별 설정 사용
+  }
 })
 
 ipcMain.handle('settings:setApiKey', (_e, payload) => {

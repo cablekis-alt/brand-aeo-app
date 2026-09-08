@@ -10,9 +10,10 @@ export default function Dashboard() {
   const card = history.at(-1) ?? null
   const delta = card ? formatDelta(card.aeoScore.current, card.aeoScore.previousWeek) : null
 
-  // 안내문은 실제 수집 엔진에서 파생한다(하드코딩 금지 — 엔진이 바뀌면 함께 바뀌어야 함).
+  // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
+  // (키가 설정돼도 크레딧 소진 등으로 실패하면 빠진다), 구버전 스코어카드는 tenant.engines로 폴백한다.
   const ALL_ENGINES = ['openai', 'gemini', 'claude', 'perplexity'] as const
-  const usedEngines = tenant?.engines ?? []
+  const usedEngines: string[] = card?.enginesUsed?.length ? card.enginesUsed : (tenant?.engines ?? [])
   const usedLabels = usedEngines.map((e) => ENGINE_LABEL[e] ?? e)
   const excludedLabels = ALL_ENGINES.filter((e) => !usedEngines.includes(e)).map((e) => ENGINE_LABEL[e] ?? e)
 
@@ -140,7 +141,7 @@ export default function Dashboard() {
             <article>
               <h2>수집 엔진</h2>
               <p className="engines">
-                {tenant.engines.map((engine) => (
+                {usedEngines.map((engine) => (
                   <span key={engine}>{ENGINE_LABEL[engine] ?? engine}</span>
                 ))}
               </p>

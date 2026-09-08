@@ -81,6 +81,30 @@ export interface CitationBreakdown {
   brandOwnedCitationRate: number
 }
 
+// AI 리퍼럴 트래픽(GA4) — server/gaReferrals.ts의 응답 계약.
+// 클라이언트가 server/를 직접 import하면 google-auth-library가 번들에 섞이므로 형만 따로 둔다.
+export interface AiReferralRow {
+  engine: string
+  label: string
+  sessions: number
+  activeUsers: number
+  engagedSessions: number
+  share: number
+  sources: string[]
+}
+
+export interface AiReferralReport {
+  configured: boolean
+  reason?: string
+  propertyId?: string
+  startDate?: string
+  endDate?: string
+  rows: AiReferralRow[]
+  totalAiSessions: number
+  totalSessions: number
+  aiShare: number
+}
+
 // 랭킹 분석.
 export interface RankingView {
   cohort: {

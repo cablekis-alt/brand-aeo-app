@@ -725,7 +725,8 @@ export default function BrandOnboarding() {
     ownedDomains: domain ? [domain] : [],
     industry: industry.trim(),
     region: region.trim(),
-    engines: ['openai', 'gemini'],
+    // 4개 엔진을 모두 등록한다 — 키가 없는 엔진은 측정 시 자동으로 걸러지므로(부분 저하) 안전하다.
+    engines: ['openai', 'gemini', 'claude', 'perplexity'],
     questionBankSize: 12,
     questionBankVersion: 'v1',
     repeatsPerQuestion: 3,

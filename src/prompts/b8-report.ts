@@ -16,6 +16,7 @@ export interface WeeklyScorecard {
   brandOwnedCitationRate: number;
   cohortRank: { position: number; totalTenants: number };
   hallucinationFlags: string[]; // B5-D contradicted 주장 요약
+  enginesUsed?: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 구버전 스코어카드엔 없을 수 있어 선택.
 }
 
 /**

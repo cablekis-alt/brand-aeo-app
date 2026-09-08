@@ -149,15 +149,27 @@ async function collectRawCalls(
     claude: 'ANTHROPIC_API_KEY',
     perplexity: 'PERPLEXITY_API_KEY',
   };
+  // COLLECT_ENGINES(쉼표 구분)를 설정하면 모든 테넌트의 수집 엔진을 전역으로 덮어쓴다.
+  // 기존 테넌트 30개가 모두 ['openai','gemini']로 저장돼 있어, 엔진 커버리지를 넓힐 때
+  // 설정 파일을 일괄 수정하지 않고 환경변수 하나로 전환할 수 있게 한다(미설정 시 기존 동작 그대로).
+  const ALL_ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
+  const override = (process.env.COLLECT_ENGINES ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s): s is Engine => (ALL_ENGINES as string[]).includes(s));
+  const configuredEngines = override.length > 0 ? override : tenant.engines;
+
   const useMock = process.env.USE_MOCK_ENGINES === 'true';
-  const availableEngines = useMock ? tenant.engines : tenant.engines.filter((e) => process.env[ENGINE_ENV[e]]);
+  const availableEngines = useMock
+    ? configuredEngines
+    : configuredEngines.filter((e) => process.env[ENGINE_ENV[e]]);
   if (availableEngines.length === 0) {
     throw new Error(
-      `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${tenant.engines.join(', ')}).`,
+      `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${configuredEngines.join(', ')}).`,
     );
   }
-  if (availableEngines.length < tenant.engines.length) {
-    const skipped = tenant.engines.filter((e) => !availableEngines.includes(e));
+  if (availableEngines.length < configuredEngines.length) {
+    const skipped = configuredEngines.filter((e) => !availableEngines.includes(e));
     console.warn(`[B3] 키 없는 엔진 건너뜀: ${skipped.join(', ')} → ${availableEngines.join(', ')}(으)로 측정`);
   }
 
@@ -371,6 +383,15 @@ function aggregateScorecard(
     .filter((a) => a.factualityContradicted > 0)
     .map((a) => `${a.engine} / ${a.questionId} #${a.callIndex}: 사실성 불일치 ${a.factualityContradicted}건`);
 
+  // 실제로 응답을 수집한 엔진 — 분석(=성공 호출)에 등장한 엔진만. 크레딧 소진 등으로 실패한 엔진은 빠진다.
+  // 표시 일관성을 위해 표준 순서(ChatGPT·Gemini·Claude·Perplexity)로 정렬한다.
+  const engineOrder = ['openai', 'gemini', 'claude', 'perplexity'];
+  const engineSet = new Set(analyses.map((a) => a.engine));
+  const enginesUsed = [
+    ...engineOrder.filter((e) => engineSet.has(e as (typeof analyses)[number]['engine'])),
+    ...[...engineSet].filter((e) => !engineOrder.includes(e)),
+  ];
+
   return {
     tenantId: tenant.tenantId,
     weekOf,
@@ -391,6 +412,7 @@ function aggregateScorecard(
     brandOwnedCitationRate,
     cohortRank: computeCohortRank(currentScore, cohortScorecards),
     hallucinationFlags,
+    enginesUsed,
   };
 }
 

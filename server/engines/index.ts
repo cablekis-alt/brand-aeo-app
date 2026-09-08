@@ -43,19 +43,24 @@ let judgeClient: EngineClient | undefined;
 
 /**
  * B5 분석(심판) 전용 클라이언트. 수집용 엔진과 분리된 고정 모델이어야 한다.
- * Anthropic 키가 있으면 Claude를 쓰고, 없으면 OpenAI 키로 폴백한다 (웹 검색 없음).
+ *
+ * 판단 엔진은 "측정 도구"이므로 그때그때 존재하는 키에 따라 바뀌면 주차 간 비교가 깨진다.
+ * 따라서 기본값을 Gemini로 고정한다 — 파이프라인이 최소 요구하는 키가 GEMINI_API_KEY이고,
+ * 문서·UI도 판단을 Gemini로 안내해 왔다. 수집 엔진을 늘려도(Claude·Perplexity 키 추가)
+ * 판단은 그대로 유지된다. 바꾸려면 JUDGE_ENGINE으로 명시한다.
  */
 export function getJudgeClient(): EngineClient {
   if (USE_MOCK) return new MockJudgeClient();
   if (!judgeClient) {
     const preferred = process.env.JUDGE_ENGINE?.trim().toLowerCase();
-    // 명시값 우선. 없으면 키가 실제로 있는 엔진을 고른다(키 없는 클라이언트는 생성자가 throw하므로).
+    // 명시값 우선.
     if (preferred === 'gemini') judgeClient = new GeminiJudgeClient();
     else if (preferred === 'claude') judgeClient = new ClaudeJudgeClient();
     else if (preferred === 'openai') judgeClient = new OpenAiJudgeClient();
+    // 기본: Gemini 고정. 키가 없을 때만 다른 엔진으로 폴백한다(키 없는 클라이언트는 생성자가 throw).
+    else if (process.env.GEMINI_API_KEY) judgeClient = new GeminiJudgeClient();
     else if (process.env.ANTHROPIC_API_KEY) judgeClient = new ClaudeJudgeClient();
-    else if (process.env.OPENAI_API_KEY) judgeClient = new OpenAiJudgeClient();
-    else judgeClient = new GeminiJudgeClient(); // GEMINI_API_KEY만 있는 흔한 경우(로컬·데스크톱) 폴백
+    else judgeClient = new OpenAiJudgeClient();
   }
   return judgeClient;
 }

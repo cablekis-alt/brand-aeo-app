@@ -6,6 +6,7 @@ import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
+import { fetchAiReferrals } from './gaReferrals.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -223,6 +224,24 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
 });
 
 // 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.
+// AI 리퍼럴 트래픽(GA4) — 로컬/데스크톱 전용. Vercel은 Hobby 함수 한도(12개) 여유가 1개뿐이라
+// 별도 서버리스 함수를 만들지 않았다(웹에서도 필요해지면 api/ga-referrals.ts로 승격).
+app.get('/api/ga-referrals/:tenantId', async (req, res) => {
+  try {
+    const tenants = await loadRuntimeTenants();
+    const tenant = tenants.find((t) => t.tenantId === req.params.tenantId);
+    if (!tenant) {
+      res.status(404).json({ error: '테넌트를 찾을 수 없습니다.' });
+      return;
+    }
+    const daysRaw = Number(req.query.days);
+    const days = Number.isFinite(daysRaw) && daysRaw >= 1 && daysRaw <= 365 ? Math.floor(daysRaw) : 28;
+    res.json(await fetchAiReferrals(tenant, days));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {

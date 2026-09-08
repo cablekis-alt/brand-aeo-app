@@ -58,6 +58,7 @@ const MENU: MenuGroup[] = [
       { label: '브랜드 AEO 퍼포먼스', to: '/performance', b: 'B8' },
       { label: '랭킹 분석', to: '/ranking', b: 'B8' },
       { label: '경쟁 시계열', to: '/competitor-trends', b: 'B8' },
+      { label: 'AI 리퍼럴 트래픽', to: '/ai-referrals' },
       { label: '정기진단 보고서', to: '/report', b: 'B9' },
     ],
   },

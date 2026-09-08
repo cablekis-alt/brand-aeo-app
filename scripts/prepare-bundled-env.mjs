@@ -10,7 +10,11 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-const WHITELIST = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY']
+const WHITELIST = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']
+// 비밀값이 아닌 운영 설정 — 설치본이 빌드 머신과 같은 엔진 구성으로 측정하도록 함께 굽는다.
+// COLLECT_ENGINES: 수집 엔진 전역 지정, JUDGE_ENGINE: 판단(심판) 엔진 고정(측정 비교가능성 유지),
+// GA4_PROPERTY_ID / GOOGLE_SERVICE_ACCOUNT_JSON: AI 리퍼럴 트래픽(GA4) 연동.
+const CONFIG_WHITELIST = ['COLLECT_ENGINES', 'JUDGE_ENGINE', 'GA4_PROPERTY_ID', 'GOOGLE_SERVICE_ACCOUNT_JSON']
 const OUT = join('electron', 'build', 'bundled.env')
 
 function parseEnv(text) {
@@ -46,15 +50,23 @@ for (const name of WHITELIST) {
     baked++
   }
 }
+let config = 0
+for (const name of CONFIG_WHITELIST) {
+  const v = source[name]
+  if (v) {
+    lines.push(`${name}=${v}`)
+    config++
+  }
+}
 
 mkdirSync(dirname(OUT), { recursive: true })
 writeFileSync(OUT, lines.join('\n') + '\n', 'utf8')
 
 if (baked > 0) {
   console.log(
-    `[prepare-bundled-env] ${OUT} 생성 — 기본 키 ${baked}개 동봉.\n` +
+    `[prepare-bundled-env] ${OUT} 생성 — 기본 키 ${baked}개 + 설정 ${config}개 동봉.\n` +
       '  ⚠ 이 설치본을 공개 배포하면 다운로드한 누구나 키를 추출할 수 있습니다(내부 배포/사용량 제한 권장).',
   )
 } else {
-  console.log(`[prepare-bundled-env] ${OUT} 생성 — 동봉할 기본 키 없음(사용자가 앱에서 입력).`)
+  console.log(`[prepare-bundled-env] ${OUT} 생성 — 동봉할 기본 키 없음(설정 ${config}개).`)
 }

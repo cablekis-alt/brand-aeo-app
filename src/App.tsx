@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import { TenantProvider } from './context/TenantContext'
 import BrandDiagnosis from './pages/BrandDiagnosis'
 import BrandOnboarding from './pages/BrandOnboarding'
+import AiReferrals from './pages/AiReferrals'
 import CitationGap from './pages/CitationGap'
 import CitationSources from './pages/CitationSources'
 import Citations from './pages/Citations'
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="performance" element={<Performance />} />
             <Route path="ranking" element={<Ranking />} />
             <Route path="competitor-trends" element={<CompetitorTrends />} />
+            <Route path="ai-referrals" element={<AiReferrals />} />
             <Route path="report" element={<PeriodicReport />} />
             <Route path="brand-onboarding" element={<BrandOnboarding />} />
             <Route path="measure-tenant" element={<MeasureTenant />} />

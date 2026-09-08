@@ -12,6 +12,9 @@ export interface TenantConfig extends BrandContext {
   cohortOnly?: boolean;
   // false면 측정 시 자동 추론된 경쟁사를 코호트로 함께 측정하지 않는다(기본 = 측정함).
   autoCohort?: boolean;
+  // GA4 속성 ID — AI 리퍼럴 트래픽(실제 유입) 조회용. 자사 사이트처럼 GA 접근 권한이 있는
+  // 브랜드에만 설정한다(경쟁사 테넌트는 보통 없음). 미설정 시 GA4_PROPERTY_ID 환경변수로 폴백.
+  ga4PropertyId?: string;
 }
 
 export interface RawCallRecord {

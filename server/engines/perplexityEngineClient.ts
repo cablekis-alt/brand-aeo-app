@@ -33,9 +33,12 @@ export class PerplexityEngineClient implements EngineClient {
     };
 
     const citations = completion.search_results?.map((r) => r.url) ?? completion.citations ?? [];
+    const text = (completion.choices?.[0]?.message?.content ?? '').trim();
+    // 빈 답변을 "브랜드 미언급" 데이터로 저장하면 언급률이 왜곡되므로 실패로 올려 파이프라인이 건너뛰게 한다.
+    if (!text) throw new Error('Perplexity 응답 본문이 비었습니다.');
 
     return {
-      text: completion.choices[0].message.content ?? '',
+      text,
       citations,
       usedWebSearch: citations.length > 0,
       tokenUsage: completion.usage?.total_tokens,
