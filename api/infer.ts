@@ -1,4 +1,4 @@
-import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferCompetitors } from '../server/brandInference.js';
+import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from '../server/brandInference.js';
 import { canTriggerRemoteMeasure, triggerGithubInfer } from '../server/githubMeasure.js';
 import { markInferPending, readInferResult, slugFromDomain } from '../server/inferResults.js';
 import { sendJson } from '../server/httpJson.js';
@@ -95,6 +95,16 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
         return;
       }
       sendJson(res, 200, await inferBrandFromDomain(domain));
+      return;
+    }
+    if (kind === 'identify') {
+      // 상호(브랜드명) 기반 진입 — 이름만으로 도메인·업종·지역·주소를 역추론한다.
+      const brandName = str(body.brandName);
+      if (!brandName.trim()) {
+        sendJson(res, 400, { error: 'brandName이 필요합니다.' });
+        return;
+      }
+      sendJson(res, 200, await inferBrandFromName(brandName, str(body.region)));
       return;
     }
     // 기본: 브랜드 필드 추론

@@ -470,6 +470,41 @@
   margin-bottom: 28px;
 }
 
+/* 상호 진입의 보조 옵션(URL로 시작) — 접을 수 있는 섹션 */
+.onboard-alt {
+  max-width: 620px;
+  margin: 4px 0 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.onboard-alt > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  list-style: none;
+  user-select: none;
+}
+.onboard-alt > summary::-webkit-details-marker {
+  display: none;
+}
+.onboard-alt > summary::before {
+  content: '▸ ';
+  color: var(--accent);
+}
+.onboard-alt[open] > summary::before {
+  content: '▾ ';
+}
+.onboard-alt > summary:hover {
+  color: var(--ink);
+}
+.onboard-alt .site-form {
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+.onboard-alt .site-form .ghost {
+  align-self: flex-start;
+}
+
 .site-form .field {
   display: flex;
   flex-direction: column;

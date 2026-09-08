@@ -94,6 +94,20 @@ function slugFromDomain(domain: string): string {
   return label.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '') || 'brand'
 }
 
+// 도메인이 없는 브랜드(상호 기반, 홈페이지 없음)의 tenantId. ASCII 상호는 그대로 슬러그화하고,
+// 한글 등 비ASCII 상호는 결정적 짧은 해시로 고유 id를 만든다(여러 무도메인 브랜드가 'brand'로 충돌 방지).
+function slugFromName(name: string): string {
+  const ascii = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  if (ascii && ascii !== '-') return ascii
+  let h = 0
+  for (let i = 0; i < name.length; i += 1) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return `brand-${h.toString(36)}`
+}
+
+function makeTenantId(domain: string, brandName: string): string {
+  return domain ? slugFromDomain(domain) : brandName.trim() ? slugFromName(brandName) : 'brand'
+}
+
 // 한국 상호는 업종을 포함하는 경우가 많다("바노바기성형외과의원"→"성형외과"). AI 추론이 업종을
 // 누락할 때의 결정적 폴백. 더 구체적인 키워드를 앞에 둔다(치과의원이 치과보다 먼저 매치되도록).
 const INDUSTRY_KEYWORDS = [
@@ -194,7 +208,7 @@ function StageShell({
         {status === 'done' && <span className="onboard-stage-mark">완료</span>}
         {status === 'current' && <span className="onboard-stage-mark on">진행</span>}
       </header>
-      {locked ? <p className="onboard-lock">URL에서 자동 채우기를 먼저 실행하세요.</p> : children}
+      {locked ? <p className="onboard-lock">상호 또는 URL로 자동 채우기를 먼저 실행하세요.</p> : children}
     </section>
   )
 }
@@ -522,71 +536,136 @@ export default function BrandOnboarding() {
         }
       }
 
-      // 경쟁사 자동 채우기 — 비어 있고 브랜드·업종·도메인이 있으면. 로컬은 즉시 추론, 배포는 CI에 맡기고 폴링해 채운다.
-      if (!competitorsRaw.trim() && guessedName && resolvedIndustry && finalDomain) {
-        const fill = (list: { name: string; domain?: string }[]) =>
-          setCompetitorsRaw(list.map((c) => (c.domain ? `${c.name}, ${c.domain}` : c.name)).join('\n'))
-        if (addrLookupOn) {
-          // 로컬 — 그라운딩 추론이 동기로 동작한다.
-          try {
-            setCompMsg('경쟁사 추론 중…')
-            const r = await fetch('/api/infer?kind=competitors', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ brandName: guessedName, industry: resolvedIndustry, region: resolvedRegion }),
-            })
-            const list = r.ok ? ((await r.json()) as { name: string; domain?: string }[]) : []
-            if (Array.isArray(list) && list.length) {
-              fill(list)
-              setCompMsg(`✓ 경쟁사 ${list.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
-            } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
-          } catch {
-            setCompMsg(null)
-          }
-        } else {
-          // 배포 — Vercel은 추론이 안 되므로 CI 러너에 맡기고 결과를 폴링한다(~1-2분).
-          try {
-            const dsp = await fetch('/api/infer?kind=competitors-dispatch', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ brandName: guessedName, industry: resolvedIndustry, region: resolvedRegion, domain: finalDomain }),
-            })
-            const dj = (await dsp.json().catch(() => ({}))) as { dispatched?: boolean }
-            if (dj.dispatched) {
-              setCompMsg('경쟁사 추론 중… (CI, ~1-2분) 완료되면 3.경쟁사에 자동 표시됩니다.')
-              const dom = finalDomain
-              void (async () => {
-                for (let i = 0; i < 26; i++) {
-                  await new Promise((r) => setTimeout(r, 7000))
-                  try {
-                    const pr = await fetch('/api/infer?kind=competitors-result', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ domain: dom }),
-                    })
-                    if (!pr.ok) continue
-                    const pj = (await pr.json()) as { pending: boolean; competitors: { name: string; domain?: string }[] }
-                    if (!pj.pending) {
-                      if (pj.competitors.length) {
-                        fill(pj.competitors)
-                        setCompMsg(`✓ 경쟁사 ${pj.competitors.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
-                      } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
-                      return
-                    }
-                  } catch {
-                    // 다음 주기에 재시도
-                  }
-                }
-                setCompMsg('경쟁사 추론이 지연됩니다 — 직접 입력하거나 잠시 후 다시 시도하세요.')
-              })()
-            }
-          } catch {
-            // 무시 — 직접 입력하면 된다.
-          }
-        }
-      }
+      // 경쟁사 자동 채우기 — URL·상호 두 진입 경로가 공유한다.
+      await autoFillCompetitors(guessedName, resolvedIndustry, resolvedRegion, finalDomain)
     } catch (err) {
       setError(err instanceof Error ? err.message : '수집 중 오류가 발생했습니다.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // 경쟁사 자동 채우기 — 경쟁사 칸이 비어 있고 브랜드·업종이 있으면 추론한다(URL·상호 공용).
+  // 로컬은 즉시 추론, 배포는 도메인이 있으면 CI에 맡기고 폴링, 도메인이 없으면 직접 입력을 안내한다.
+  async function autoFillCompetitors(name: string, industryVal: string, regionVal: string, domainVal: string) {
+    if (competitorsRaw.trim() || !name || !industryVal) return
+    const fill = (list: { name: string; domain?: string }[]) =>
+      setCompetitorsRaw(list.map((c) => (c.domain ? `${c.name}, ${c.domain}` : c.name)).join('\n'))
+    if (addrLookupOn) {
+      // 로컬 — 그라운딩 추론이 동기로 동작한다.
+      try {
+        setCompMsg('경쟁사 추론 중…')
+        const r = await fetch('/api/infer?kind=competitors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal }),
+        })
+        const list = r.ok ? ((await r.json()) as { name: string; domain?: string }[]) : []
+        if (Array.isArray(list) && list.length) {
+          fill(list)
+          setCompMsg(`✓ 경쟁사 ${list.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
+        } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
+      } catch {
+        setCompMsg(null)
+      }
+      return
+    }
+    // 배포 — Vercel은 추론이 안 되므로 CI 러너에 맡기고 결과를 폴링한다(~1-2분). 폴링 키가 도메인이라 도메인이 필요.
+    if (!domainVal) {
+      setCompMsg('도메인이 없어 경쟁사 자동 추론을 건너뜁니다 — 직접 입력하거나 측정 시 다시 추론합니다.')
+      return
+    }
+    try {
+      const dsp = await fetch('/api/infer?kind=competitors-dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal, domain: domainVal }),
+      })
+      const dj = (await dsp.json().catch(() => ({}))) as { dispatched?: boolean }
+      if (dj.dispatched) {
+        setCompMsg('경쟁사 추론 중… (CI, ~1-2분) 완료되면 3.경쟁사에 자동 표시됩니다.')
+        void (async () => {
+          for (let i = 0; i < 26; i++) {
+            await new Promise((r) => setTimeout(r, 7000))
+            try {
+              const pr = await fetch('/api/infer?kind=competitors-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain: domainVal }),
+              })
+              if (!pr.ok) continue
+              const pj = (await pr.json()) as { pending: boolean; competitors: { name: string; domain?: string }[] }
+              if (!pj.pending) {
+                if (pj.competitors.length) {
+                  fill(pj.competitors)
+                  setCompMsg(`✓ 경쟁사 ${pj.competitors.length}곳 자동 추론됨 — 검토 후 수정하세요.`)
+                } else setCompMsg('경쟁사 자동 추론 결과가 없습니다 — 직접 입력하세요.')
+                return
+              }
+            } catch {
+              // 다음 주기에 재시도
+            }
+          }
+          setCompMsg('경쟁사 추론이 지연됩니다 — 직접 입력하거나 잠시 후 다시 시도하세요.')
+        })()
+      }
+    } catch {
+      // 무시 — 직접 입력하면 된다.
+    }
+  }
+
+  // 상호(브랜드명) 기반 진입 — 이름만으로 도메인·업종·지역·주소를 역추론해 폼을 채운다.
+  async function handleIdentify(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setExtracted(false)
+    const name = brandName.trim()
+    if (!name) {
+      setError('상호(브랜드명)를 입력하세요.')
+      return
+    }
+    setBusy(true)
+    try {
+      const res = await fetch('/api/infer?kind=identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: name, region: region.trim() }),
+      })
+      const info = (res.ok ? await res.json() : {}) as {
+        brandName?: string
+        domain?: string
+        industry?: string
+        region?: string
+        address?: string
+      }
+      if (info.brandName) setBrandName(info.brandName) // 공식 상호로 정규화
+      if (info.domain) setDomain((prev) => prev || info.domain!)
+      if (info.industry) setIndustry((prev) => prev || info.industry!)
+      if (info.region) setRegion((prev) => prev || info.region!)
+      if (info.address) setAddress((prev) => prev || info.address!)
+      setExtracted(true)
+
+      // 업종이 끝까지 비면 상호에서 결정적으로 추출(경쟁사 추론까지 이어지게).
+      const resolvedName = info.brandName || name
+      let resolvedIndustry = info.industry || industry
+      if (!resolvedIndustry) {
+        const fromName = industryFromName(resolvedName)
+        if (fromName) {
+          resolvedIndustry = fromName
+          setIndustry((prev) => prev || fromName)
+        }
+      }
+      const resolvedRegion = info.region || region
+
+      await autoFillCompetitors(resolvedName, resolvedIndustry, resolvedRegion, info.domain || '')
+
+      if (!info.domain) {
+        setError(
+          '공식 도메인을 찾지 못했습니다. 홈페이지가 있으면 아래 “대표 도메인”에 직접 넣으면 측정 정확도(브랜드 소유 인용)가 올라갑니다. 없어도 등록·측정은 가능합니다.',
+        )
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '상호 조회 중 오류가 발생했습니다.')
     } finally {
       setBusy(false)
     }
@@ -624,7 +703,7 @@ export default function BrandOnboarding() {
   }
 
   const tenant: TenantDraft = {
-    tenantId: slugFromDomain(domain),
+    tenantId: makeTenantId(domain, brandName),
     brandName: brandName.trim(),
     aliases: brandName.trim() ? [brandName.trim()] : [],
     ownedDomains: domain ? [domain] : [],
@@ -650,7 +729,8 @@ export default function BrandOnboarding() {
     ...(withCohort ? {} : { autoCohort: false }),
   }
 
-  const ready = Boolean(tenant.brandName && tenant.ownedDomains.length && tenant.industry && tenant.region)
+  // 도메인은 선택 — 홈페이지 없는 브랜드(상호 기반)도 등록·측정할 수 있게 한다(브랜드 소유 인용률만 0이 됨).
+  const ready = Boolean(tenant.brandName && tenant.industry && tenant.region)
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
 
@@ -775,14 +855,17 @@ export default function BrandOnboarding() {
         <div>
           <p className="brand">시작 · 진입점</p>
           <h1>브랜드 추가</h1>
-          <p className="lead">URL을 넣으면 브랜드명·도메인·주소를 채웁니다. 업종·지역·경쟁사만 확인하면 테넌트가 만들어집니다.</p>
+          <p className="lead">
+            상호(브랜드명)만 넣으면 도메인·업종·지역·주소·경쟁사까지 자동으로 채웁니다. 확인 후 등록하면 테넌트가
+            만들어집니다. 홈페이지 URL로도 시작할 수 있습니다.
+          </p>
         </div>
       </header>
 
       <nav className="onboard-steps" aria-label="브랜드 추가 단계">
         {(
           [
-            [1, '1', 'URL', s1],
+            [1, '1', '상호', s1],
             [2, '2', '정보', s2],
             [3, '3', '경쟁사', s3],
             [4, '4', '등록', s4],
@@ -803,26 +886,62 @@ export default function BrandOnboarding() {
         ))}
       </nav>
 
-      <StageShell id="stage-1" code="1" title="URL 수집" status={s1}>
-        <form className="site-form" onSubmit={handleExtract}>
-          <label className="field">
-            <span>브랜드 URL</span>
-            <input
-              type="text"
-              inputMode="url"
-              placeholder="https://www.example.com"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-            />
-            <span className="hint">
-              공개 HTTPS 페이지만 읽습니다. 봇 차단·JS 렌더링 사이트는 자동 추출이 제한될 수 있으니 아래에서 직접 보완하세요.
-            </span>
-          </label>
+      <StageShell id="stage-1" code="1" title="상호로 시작" status={s1}>
+        <form className="site-form" onSubmit={handleIdentify}>
+          <div className="onboard-grid">
+            <label className="field">
+              <span>상호 (브랜드명) *</span>
+              <input
+                type="text"
+                placeholder="예: 원진성형외과"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                required
+              />
+            </label>
+            <label className="field">
+              <span>지역 (선택 · 정확도↑)</span>
+              <input
+                type="text"
+                list="cohort-regions"
+                placeholder="예: 서울 강남"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+              />
+            </label>
+          </div>
+          <span className="hint">
+            상호만 넣으면 공식 도메인·업종·지역·주소·경쟁사까지 AI가 자동으로 채웁니다. 같은 이름이 여러 곳이면 지역을 함께
+            넣으세요. 홈페이지가 없어도 등록·측정할 수 있습니다.
+          </span>
           <button type="submit" className="primary" disabled={busy}>
-            {busy ? '페이지를 읽는 중…' : 'URL에서 자동 채우기'}
+            {busy ? '조회 중…' : '상호로 자동 채우기'}
           </button>
         </form>
+
+        <details className="onboard-alt">
+          <summary>또는 홈페이지 URL로 시작</summary>
+          <form className="site-form" onSubmit={handleExtract}>
+            <label className="field">
+              <span>브랜드 URL</span>
+              <input
+                type="text"
+                inputMode="url"
+                placeholder="https://www.example.com"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <span className="hint">
+                공개 HTTPS 페이지만 읽습니다. 봇 차단·JS 렌더링 사이트는 자동 추출이 제한될 수 있으니 아래에서 직접
+                보완하세요.
+              </span>
+            </label>
+            <button type="submit" className="ghost" disabled={busy || !url.trim()}>
+              {busy ? '페이지를 읽는 중…' : 'URL에서 자동 채우기'}
+            </button>
+          </form>
+        </details>
+
         {error && (
           <p className="error" role="alert">
             {error}
@@ -837,8 +956,9 @@ export default function BrandOnboarding() {
             <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="예: 뷰성형외과" />
           </label>
           <label className="field">
-            <span>대표 도메인 *</span>
+            <span>대표 도메인 (선택)</span>
             <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="예: viewclinic.com" />
+            <span className="hint">홈페이지가 있으면 넣으세요 — 브랜드 소유 인용률 측정에 쓰입니다. 없어도 등록됩니다.</span>
           </label>
           <label className="field">
             <span>업종 *</span>
@@ -976,7 +1096,7 @@ export default function BrandOnboarding() {
             )}
           </div>
         </div>
-        {!ready && <p className="hint">* 브랜드명·도메인·업종·지역을 모두 채우면 등록할 수 있습니다.</p>}
+        {!ready && <p className="hint">* 브랜드명·업종·지역을 채우면 등록할 수 있습니다 (도메인은 선택).</p>}
         {registered ? (
           <p className="hint">
             등록됐습니다. <b>"이 브랜드 전체 측정 시작"</b>을 누르면 여기서 바로 경쟁사 자동 추론·SoM·코호트 순위까지 함께

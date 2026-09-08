@@ -143,6 +143,75 @@ brandName은 공식 한국어 브랜드명(예: "뷰클리닉"), industry는 짧
   return merged;
 }
 
+/**
+ * 온보딩 진입(상호 기반) — 브랜드명(상호)만으로 공식 도메인·업종·지역·주소를 추론한다.
+ * 한국 소상공인·병원은 자사 홈페이지가 없거나 약한 경우가 많아, URL보다 상호가 더 자연스러운 씨앗이다.
+ * inferBrandFromDomain과 같은 방식(웹검색 그라운딩 + 순수 추론 폴백을 필드별로 누적)이며,
+ * 도메인은 DNS로 실재 확인해 환각을 거른다. 주소가 비면 기존 주소 그라운딩으로 한 번 더 보강한다.
+ */
+export async function inferBrandFromName(
+  brandName: string,
+  region = '',
+): Promise<{ brandName: string; domain: string; industry: string; region: string; address: string }> {
+  const seed = { brandName: brandName.trim(), domain: '', industry: '', region: region.trim(), address: '' };
+  if (!process.env.GEMINI_API_KEY || !brandName.trim()) return seed;
+
+  const system =
+    '당신은 한국 상호(브랜드명)로 그 사업체의 공식 정보를 찾아주는 도우미입니다. 반드시 JSON만 반환하고, 확실하지 않은 값은 ""로 두세요. 도메인·주소를 지어내지 마세요.';
+  const user = `상호(브랜드명): "${brandName}"${region ? ` (${region})` : ''}
+이 한국 사업체의 공식 정보를 아는 경우 JSON으로 답하세요. 모르면 각 값을 ""로 두세요.
+스키마: {"brandName": string, "domain": string, "industry": string, "region": string, "address": string}
+- brandName: 공식 한국어 상호로 정규화 (예: "원진성형외과의원")
+- domain: 공식 웹사이트 도메인만 (예: "wonjin.co.kr"). 네이버 블로그·플레이스·인스타 등 자사 도메인이 아니면 "".
+- industry: 짧은 한국어 명사 (예: "성형외과", "치과", "카페")
+- region: 시/도 + 시군구 (예: "서울 강남")
+- address: 도로명 주소 (예: "서울 강남구 강남대로 419"). 없으면 "".
+설명·마크다운·코드블록 없이 JSON만 반환하세요.`;
+
+  const attempt = async (client: GeminiEngineClient | GeminiJudgeClient) => {
+    const result = await client.call({ system, user });
+    const parsed = parseJsonLoose<Partial<typeof seed>>(result.text);
+    return {
+      brandName: typeof parsed?.brandName === 'string' ? parsed.brandName.trim() : '',
+      domain: typeof parsed?.domain === 'string' ? parsed.domain.trim() : '',
+      industry: typeof parsed?.industry === 'string' ? parsed.industry.trim() : '',
+      region: typeof parsed?.region === 'string' ? parsed.region.trim() : '',
+      address: typeof parsed?.address === 'string' ? parsed.address.trim() : '',
+    };
+  };
+  const merged = { ...seed };
+  const absorb = (o: typeof seed) => {
+    merged.brandName ||= o.brandName;
+    merged.domain ||= o.domain;
+    merged.industry ||= o.industry;
+    merged.region ||= o.region;
+    merged.address ||= o.address;
+  };
+  // 업종·지역이 채워지면 충분(경쟁사 추론까지 이어짐). 도메인·주소는 있으면 좋지만 필수는 아니다.
+  const enough = () => Boolean(merged.industry && merged.region);
+  for (let round = 0; round < 3 && !enough(); round += 1) {
+    try {
+      absorb(await attempt(new GeminiEngineClient())); // 웹검색 그라운딩(정확)
+    } catch (err) {
+      console.error('[inferBrandFromName] 그라운딩 실패:', err instanceof Error ? err.message : err);
+    }
+    if (enough()) break;
+    try {
+      absorb(await attempt(new GeminiJudgeClient())); // 순수 추론 폴백
+    } catch (err) {
+      console.error('[inferBrandFromName] 추론 실패:', err instanceof Error ? err.message : err);
+    }
+  }
+  // 도메인 환각 방지 — DNS로 실재 확인. 안 뜨면 비운다(사용자가 직접 보완).
+  if (merged.domain) merged.domain = await verifiedDomain(merged.domain);
+  // 주소가 끝까지 비면 기존 주소 그라운딩으로 한 번 더 시도한다.
+  if (!merged.address) {
+    const addr = await inferAddressViaSearch(merged.brandName || brandName, merged.region || region);
+    if (addr) merged.address = addr;
+  }
+  return merged;
+}
+
 export interface InferredCompetitor {
   name: string;
   domain: string;
