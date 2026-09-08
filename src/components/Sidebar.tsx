@@ -44,8 +44,10 @@ const MENU: MenuGroup[] = [
     items: [
       { label: '브랜드 종합 진단', to: '/diagnosis', b: 'B5' },
       { label: '질문별 승패', to: '/question-winloss', b: 'B5' },
+      { label: '감성 분석', to: '/sentiment', b: 'B5' },
       { label: 'URL 상세 분석', to: '/citations', b: 'B5' },
       { label: 'AI 인용출처 분석', to: '/citation-sources', b: 'B7' },
+      { label: '인용 갭 분석', to: '/citation-gap', b: 'B7' },
       { label: 'EEAT 분석', to: '/eeat', b: 'B6' },
     ],
   },
@@ -55,6 +57,7 @@ const MENU: MenuGroup[] = [
     items: [
       { label: '브랜드 AEO 퍼포먼스', to: '/performance', b: 'B8' },
       { label: '랭킹 분석', to: '/ranking', b: 'B8' },
+      { label: '경쟁 시계열', to: '/competitor-trends', b: 'B8' },
       { label: '정기진단 보고서', to: '/report', b: 'B9' },
     ],
   },
