@@ -57,13 +57,16 @@ async function sourceFor(tenant: TenantConfig, weekOf: string) {
   return stored.length > 0 ? store : new DemoResultStore([tenant]);
 }
 
+// 앱(Electron)이 "이 포트의 서버가 정말 내 인프로세스 서버인가"를 확인하는 서명 엔드포인트.
+// servesUi는 ELECTRON_STATIC_DIR이 설정돼 정적 UI를 서빙하는 서버에서만 true다 — 같은 포트를
+// 다른 프로세스(개발용 dev 서버 등)가 점유하면 앱이 조용히 그쪽에 붙어 "Cannot GET /"가 뜬다.
 app.get('/health', (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, servesUi: Boolean(process.env.ELECTRON_STATIC_DIR), pid: process.pid });
 });
 
 // 로컬 백엔드 감지용. 배포(Vercel)는 api/health.ts가 같은 계약을 제공한다.
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true, measureVia: 'local' });
+  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true, measureVia: 'local', servesUi: Boolean(process.env.ELECTRON_STATIC_DIR) });
 });
 
 app.get('/api/tenants', async (req, res) => {

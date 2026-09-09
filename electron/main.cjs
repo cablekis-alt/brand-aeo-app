@@ -14,6 +14,7 @@ const { app, BrowserWindow, Menu, MenuItem, ipcMain, shell } = require('electron
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
+const net = require('node:net')
 
 const IS_WINDOWS = process.platform === 'win32'
 const API_PORT = process.env.PORT || '4000'
@@ -51,6 +52,81 @@ function killChildren() {
       }
     }
   }
+}
+
+/**
+ * 포트가 이미 점유돼 있는지 "연결"로 판별한다.
+ *
+ * 바인딩 시도로 검사하면 안 된다 — 127.0.0.1에만 바인딩해 보면 모든 인터페이스(::)에 붙은
+ * 다른 프로세스와의 충돌을 놓치고, Windows에서는 두 프로세스가 같은 포트를 동시에 바인딩하는
+ * 경우까지 있다. 우리가 알고 싶은 것은 "localhost:port에 이미 응답하는 소켓이 있는가"이고,
+ * 그건 앱이 나중에 접속할 대상과 정확히 같은 조건이므로 연결로 확인한다.
+ */
+function isPortOccupied(port) {
+  return new Promise((resolve) => {
+    const sock = net.connect({ port: Number(port), host: 'localhost' })
+    const finish = (occupied) => {
+      sock.destroy()
+      resolve(occupied)
+    }
+    sock.setTimeout(1000)
+    sock.once('connect', () => finish(true))
+    sock.once('timeout', () => finish(false))
+    sock.once('error', () => finish(false)) // ECONNREFUSED = 비어 있음
+  })
+}
+
+/** OS가 배정한 빈 포트를 얻는다. 0이면 실패. */
+function freePort() {
+  return new Promise((resolve) => {
+    const srv = net.createServer()
+    srv.once('error', () => resolve(0))
+    srv.listen(0, () => {
+      const chosen = srv.address().port
+      srv.close(() => resolve(chosen))
+    })
+  })
+}
+
+/**
+ * 인프로세스 서버가 쓸 포트를 고른다.
+ *
+ * 기본 포트를 다른 프로세스(개발용 dev 서버 등)가 점유하면, 예전에는 우리 서버가 바인딩에
+ * 실패해도 /health가 그 남의 서버로 응답해 앱이 조용히 그쪽을 로드했다(정적 UI가 없어
+ * "Cannot GET /"). 이제 미리 빈 포트를 찾아 충돌 자체를 피한다.
+ */
+async function pickApiPort(preferred) {
+  const wanted = Number(preferred) || 4000
+  if (!(await isPortOccupied(wanted))) return String(wanted)
+  const free = await freePort()
+  if (free) {
+    console.warn(`[server] :${wanted}이 이미 사용 중 — :${free}으로 대체합니다.`)
+    return String(free)
+  }
+  return String(wanted)
+}
+
+/**
+ * 해당 포트의 서버가 '우리 인프로세스 서버'인지 서명(servesUi)으로 확인한다.
+ * 'ok' = 우리 서버 · 'foreign' = 응답은 오지만 남의 서버 · 'timeout' = 무응답.
+ */
+async function waitForOwnServer(port, timeoutMs = 30000) {
+  const start = Date.now()
+  let sawForeign = false
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const res = await fetch(`http://localhost:${port}/health`)
+      if (res.ok) {
+        const body = await res.json().catch(() => null)
+        if (body && body.servesUi === true) return 'ok'
+        sawForeign = true // 응답은 오는데 UI를 서빙하지 않는 서버 = 우리 것이 아니다
+      }
+    } catch {
+      /* 아직 안 뜸 */
+    }
+    await new Promise((r) => setTimeout(r, 500))
+  }
+  return sawForeign ? 'foreign' : 'timeout'
 }
 
 /** URL이 200을 줄 때까지 폴링한다(vite 준비 대기). */
@@ -139,7 +215,9 @@ async function createWindow() {
   // .env에서 명시하면 그 값을 존중한다. CI(measure.yml)의 기본값과 일치.
   if (!process.env.JUDGE_ENGINE) process.env.JUDGE_ENGINE = 'gemini'
   if (!process.env.GEMINI_MODEL) process.env.GEMINI_MODEL = 'gemini-3.7-flash'
-  process.env.PORT = API_PORT
+  // 기본 포트가 점유돼 있으면 빈 포트로 대체한다 — 남의 서버에 붙는 사고를 원천 차단.
+  const apiPort = await pickApiPort(API_PORT)
+  process.env.PORT = apiPort
   process.env.ELECTRON_STATIC_DIR = path.join(__dirname, '..', 'dist') // asar 내부 dist
   // 측정 데이터·오버레이·큐는 쓰기 가능한 userData로(asar은 읽기전용). server/appPaths.ts가 참조.
   process.env.APP_DATA_DIR = app.getPath('userData')
@@ -155,12 +233,24 @@ async function createWindow() {
     )
     return
   }
-  const ready = await waitForUrl(`http://localhost:${API_PORT}/health`)
-  await win.loadURL(
-    ready
-      ? `http://localhost:${API_PORT}`
-      : 'data:text/html,' + encodeURIComponent('<h2 style="font-family:sans-serif;padding:2rem">로컬 서버(:' + API_PORT + ') 시작 대기 시간 초과.</h2>'),
-  )
+  // 그 포트의 서버가 정말 우리 것인지 서명으로 확인한다(servesUi). 남의 서버면 로드하지 않는다.
+  const health = await waitForOwnServer(apiPort)
+  if (health === 'ok') {
+    await win.loadURL(`http://localhost:${apiPort}`)
+  } else {
+    const detail =
+      health === 'foreign'
+        ? `포트 ${apiPort}을 다른 프로그램이 사용하고 있어 앱 화면을 열 수 없습니다.` +
+          ` 개발용 서버(npm run server:dev)가 떠 있으면 종료한 뒤 앱을 다시 실행하세요.`
+        : `로컬 서버(:${apiPort}) 시작을 기다리다 시간이 초과됐습니다.`
+    await win.loadURL(
+      'data:text/html;charset=utf-8,' +
+        encodeURIComponent(
+          `<h2 style="font-family:sans-serif;padding:2rem">앱을 시작할 수 없습니다</h2>` +
+            `<p style="font-family:sans-serif;padding:0 2rem;line-height:1.6">${detail}</p>`,
+        ),
+    )
+  }
   initAutoUpdater()
 }
 
