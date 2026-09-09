@@ -165,8 +165,20 @@ export interface PageSignals {
   tableCount: number
   faqLike: boolean
   internalLinkCount: number
-  externalLinkCount: number
-  aboutOrContactLinks: string[]
+  externalLinkCount: number  aboutOrContactLinks: string[]
+  /**
+   * 에이전트 조작성 신호 — AI 에이전트가 페이지를 "읽고 조작"할 수 있는지.
+   * 폼 입력에 라벨이 붙어 있는지, 버튼·링크에 접근 가능한 이름이 있는지, 본문 랜드마크가 있는지.
+   * (내비게이션도 에이전트가 조작해야 하므로 JUNK 제거 이전의 전체 DOM에서 센다.)
+   */
+  agentAccess: {
+    formCount: number
+    inputCount: number
+    labeledInputCount: number
+    controlCount: number
+    namedControlCount: number
+    hasMainLandmark: boolean
+  }
   authorCandidates: string[]
   orgCandidates: string[]
   dates: string[]

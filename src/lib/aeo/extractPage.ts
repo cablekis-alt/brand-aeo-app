@@ -117,6 +117,27 @@ const JUNK_SELECTOR = [
   'link',
   'nav',
   'footer',
+  'header',
+  '[role="navigation"]',
+  '[role="banner"]',
+  '[role="menubar"]',
+  '[role="dialog"]',
+  '[role="alertdialog"]',
+  // 국내 CMS는 의미 태그 없이 클래스/아이디로 GNB·팝업을 만든다(팝업레이어·오늘 하루 보지 않기 등).
+  '.gnb',
+  '#gnb',
+  '.lnb',
+  '#lnb',
+  '.popup',
+  '.popup-layer',
+  '.popupLayer',
+  '#popup',
+  '.modal',
+  '.layer-popup',
+  '.layerPopup',
+  '.skip-nav',
+  '.language',
+  '.lang-select',
   '[hidden]',
   '[aria-hidden="true"]',
   '.sr-only',
@@ -244,6 +265,112 @@ export function purifyBody(text: string): string {
   return out.join(' ')
 }
 
+// 내비게이션·메뉴 라벨처럼 보이는 조각 — 짧고, 서술어가 없고, 메뉴성 토큰이 섞여 있다.
+const NAV_LABEL_RE =
+  /(로그인|회원가입|마이페이지|장바구니|고객센터|사이트맵|바로가기|메뉴|검색|닫기|보지\s?않기|팝업|이벤트|공지사항|예약문의|상담신청|home|login|sign\s?up|language|menu|search|close)/i
+
+/**
+ * 본문의 "리드 산문"만 뽑는다.
+ *
+ * 이전에는 firstText = mainText.slice(0, 800)이라, 내비·팝업 텍스트가 본문 앞에 남은 사이트에서
+ * 서두 판단 신호가 메뉴 라벨을 읽었다(예: 메뉴 항목 "미니쉬 솔루션"을 정의문으로 오인).
+ * 그래서 앞쪽의 메뉴성 조각을 버리고 실제 서술 문장부터 취한다.
+ * DOM이 없는 렌더 경로(rendered.mainText)에서도 동작하도록 텍스트 수준에서 처리한다.
+ */
+export function leadProse(text: string, limit = 800): string {
+  const t = (text ?? '').replace(/\s+/g, ' ').trim()
+  if (!t) return ''
+  const segs = t.split(/(?<=[.。!?]|다\.|요\.)\s+/).filter(Boolean)
+  const navRe = new RegExp(NAV_LABEL_RE.source, 'gi')
+  const isProse = (seg: string): boolean => {
+    const x = seg.trim()
+    if (x.length < 30) return false
+    const navHits = (x.match(navRe) ?? []).length
+    const hasPredicate = /(입니다|합니다|드립니다|됩니다|했습니다|이며|하며)/.test(x) || /[.。!?]/.test(x)
+    // 메뉴 라벨이 여러 개 이어붙은 조각은 서술어가 없다.
+    if (navHits >= 2 && !hasPredicate) return false
+    return hasPredicate || /[가-힣]{20,}/.test(x.replace(/\s+/g, ''))
+  }
+  const start = segs.findIndex(isProse)
+  const body = (start >= 0 ? segs.slice(start) : segs).join(' ')
+  return body.slice(0, limit)
+}
+
+
+/** 요소의 접근 가능한 이름(계산 근사) — aria-label, aria-labelledby, title, 보이는 텍스트, 이미지 alt. */
+function accessibleName(el: Element, root: ParentNode): string {
+  const aria = (el.getAttribute('aria-label') ?? '').trim()
+  if (aria) return aria
+  const ref = (el.getAttribute('aria-labelledby') ?? '').trim()
+  if (ref) {
+    const named = ref
+      .split(/\s+/)
+      .map((id) => {
+        try {
+          return textOf((root as Document | Element).querySelector(`#${CSS.escape(id)}`))
+        } catch {
+          return ''
+        }
+      })
+      .filter(Boolean)
+      .join(' ')
+    if (named) return named
+  }
+  const own = textOf(el)
+  if (own) return own
+  const title = (el.getAttribute('title') ?? '').trim()
+  if (title) return title
+  const alt = [...el.querySelectorAll('img[alt]')].map((i) => attr(i, 'alt')).filter(Boolean).join(' ')
+  if (alt) return alt
+  const value = (el.getAttribute('value') ?? '').trim()
+  return value
+}
+
+/**
+ * 에이전트 조작성 신호를 센다. JUNK 제거 이전의 전체 DOM(scope)에서 세는 것이 맞다 —
+ * 에이전트는 내비게이션·헤더도 조작해야 하므로, 본문만 보면 실제 접근성을 과대평가한다.
+ */
+function collectAgentAccess(scope: Element): PageSignals['agentAccess'] {
+  const forms = [...scope.querySelectorAll('form')]
+
+  // 사용자가 값을 넣는 입력만 센다(hidden·submit·button 제외).
+  const inputs = [...scope.querySelectorAll('input, select, textarea')].filter((el) => {
+    const type = (el.getAttribute('type') ?? '').toLowerCase()
+    return !['hidden', 'submit', 'button', 'image', 'reset'].includes(type)
+  })
+  let labeledInputCount = 0
+  for (const el of inputs) {
+    const id = (el.getAttribute('id') ?? '').trim()
+    let labeled = Boolean((el.getAttribute('aria-label') ?? '').trim() || (el.getAttribute('aria-labelledby') ?? '').trim())
+    if (!labeled && id) {
+      try {
+        labeled = Boolean(scope.querySelector(`label[for="${CSS.escape(id)}"]`))
+      } catch {
+        labeled = false
+      }
+    }
+    if (!labeled) labeled = Boolean(el.closest('label'))
+    // placeholder만 있는 입력은 라벨로 보지 않는다(값을 넣으면 사라져 에이전트가 문맥을 잃는다).
+    if (labeled) labeledInputCount += 1
+  }
+
+  const controls = [...scope.querySelectorAll('button, a[href], [role="button"], [role="link"]')]
+  let namedControlCount = 0
+  for (const el of controls) {
+    if (accessibleName(el, scope).length >= 2) namedControlCount += 1
+  }
+
+  const hasMainLandmark = Boolean(scope.querySelector('main, [role="main"]'))
+
+  return {
+    formCount: forms.length,
+    inputCount: inputs.length,
+    labeledInputCount,
+    controlCount: controls.length,
+    namedControlCount,
+    hasMainLandmark,
+  }
+}
 function usableHydratedString(value: string): boolean {
   const s = value.replace(/\s+/g, ' ').trim()
   if (s.length < 16 || s.length > 2500) return false
@@ -470,7 +597,7 @@ export function extractPage(input: {
     mainText = purifyBody(`${mainText} ${hydrated}`.trim())
   }
   const words = mainText.split(/\s+/).filter(Boolean)
-  const firstText = mainText.slice(0, 800)
+  const firstText = leadProse(mainText)
 
   const { entities: jsonLdEntities, dates: jsonLdDates } = collectJsonLd(doc)
   const jsonLdTypes = unique(jsonLdEntities.flatMap((e) => e.types))
@@ -612,6 +739,8 @@ export function extractPage(input: {
     dates,
     phoneOrEmail: looksLikeOfficialContact(base, contactScope, contactText),
     addressLike: ADDRESS_RE.test(contactText),
+
+    agentAccess: collectAgentAccess(contactScope),
     reviewOrDisclaimer,
     noindex: /\bnoindex\b/.test(robotsJoined),
     nofollow: /\bnofollow\b/.test(robotsJoined),

@@ -100,15 +100,13 @@ async function scoreUrl(url: string): Promise<Row> {
   };
 }
 
-const urls = process.argv.slice(2).length
-  ? process.argv.slice(2)
-  : [
-      'https://k-wonjin.co.kr',
-      'https://www.viewclinic.com',
-      'https://gunsanstayhotel.com',
-      'https://www.gangnamunni.com',
-      'https://maum-dream.com',
-    ];
+// 기본 실행 = 기준선이 있는 사이트 **전체**. 목록을 하드코딩하면 BASELINE에 기준선을 추가해도
+// 실행에서 빠져 편차가 드러나지 않는다 — 실제로 banobagi·jjprs가 누락된 채 'MAD 2.4'를 보고
+// 있었고, 두 사이트는 각각 +12·+22였다(과적합이 가려졌다).
+const urls =
+  process.argv.slice(2).length > 0
+    ? process.argv.slice(2)
+    : Object.keys(BASELINE).map((host) => `https://${host}/`);
 
 const rows: Row[] = [];
 for (const url of urls) {

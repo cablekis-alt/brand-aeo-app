@@ -98,8 +98,33 @@ function unknownCategory(id: CategoryId, judgment: string): CategoryResult {
   }
 }
 
+const H1_NAV_TOKEN_RE =
+  /(로그인|회원가입|마이페이지|장바구니|고객센터|사이트맵|바로가기|메뉴|검색|닫기|언어|home|login|sign\s?up|language|menu|search)/gi
+
+/**
+ * H1이 "답의 시작"이 아니라 로고·내비게이션 크롬인지 판별한다.
+ *
+ * 이전 구현은 `!text || text.length < 2`로 **빈 H1만** 잡아, 이름과 달리 실제 로고성 H1을
+ * 통과시켰다. 그래서 H1이 내비 바 전체인 사이트(jjprs)나 브랜드명뿐인 사이트(maum-dream
+ * "마음드림치과")가 "서두에 답이 없음" 감점을 피해 콘텐츠 점수가 과대평가됐다.
+ * 이 판정은 항상 `&& !hasDefinition`과 함께 쓰이므로, 서두에 진짜 정의문이 있으면 감점되지 않는다.
+ */
 function looksLikeLogoH1(text: string): boolean {
-  return !text || text.length < 2
+  const t = (text ?? '').replace(/\s+/g, ' ').trim()
+  if (!t || t.length < 2) return true
+
+  const navHits = (t.match(H1_NAV_TOKEN_RE) ?? []).length
+  const hasPredicate = /(입니다|합니다|드립니다|됩니다|이다|이며)/.test(t) || /[.。!?]/.test(t)
+
+  // 내비게이션 라벨이 이어붙어 H1으로 잡힌 경우 — 서술 구조가 없다.
+  if (navHits >= 2 && !hasPredicate) return true
+  if (t.length > 80 && navHits >= 1 && !hasPredicate) return true
+
+  // 브랜드명·상호만 있는 H1(로고 대체 텍스트) — 토큰 2개 이하이고 서술어가 없다.
+  const tokens = t.split(/\s+/).filter(Boolean)
+  if (t.length <= 25 && tokens.length <= 2 && !hasPredicate) return true
+
+  return false
 }
 
 function isHubChrome(text: string): boolean {
@@ -314,7 +339,13 @@ function scoreAnswer(
   const good: Finding[] = []
   const bad: Deduction[] = []
   const first = s.firstText
-  const hasDefinition = /입니다|제공|솔루션|란 |is a |we (help|provide|build)/i.test(first)
+  // 서두에 "무엇을 하는 곳인지" 서술이 있는지. 이전에는 `입니다|제공|솔루션|란 ` 같은 맨
+  // 부분문자열이라 메뉴 항목("미니쉬 솔루션")이나 내비 텍스트에 걸려 오탐이 났다.
+  // 이제 문장 종결 서술어 또는 정의 구문(…이란 …입니다)을 토큰 경계에서 요구한다.
+  const DEF_KO = /(?:입니다|합니다|드립니다|됩니다|말합니다|뜻합니다)(?:[.。!?]|\s|$)/
+  const DEF_KO_DEFN = /(?:이란|란)\s+\S{2,}[\s\S]{0,40}?(?:입니다|말합니다|뜻합니다)/
+  const DEF_EN = /\b(?:is|are)\s+(?:a|an|the)\b|\bwe\s+(?:help|provide|build|offer|specialize)\b/i
+  const hasDefinition = DEF_KO.test(first) || DEF_KO_DEFN.test(first) || DEF_EN.test(first)
   if (hasDefinition && s.wordCount >= 120) {
     good.push({
       title: '서두에 역할 설명이 있습니다',
@@ -851,6 +882,70 @@ function scoreEntity(
       },
     })
   }
+  // ── 에이전트 조작성 — 폼 라벨·컨트롤 이름·랜드마크.
+  // 이전에는 이 카테고리가 엔터티 신호만 봐서 7개 기준 사이트 전부 만점(상수항)이었다.
+  const a = s.agentAccess
+  const labelRatio = a.inputCount > 0 ? a.labeledInputCount / a.inputCount : 1
+  const namedRatio = a.controlCount > 0 ? a.namedControlCount / a.controlCount : 1
+  const unnamed = a.controlCount - a.namedControlCount
+
+  if (a.inputCount >= 2 && labelRatio < 0.6) {
+    bad.push({
+      severity: 'high',
+      title: '폼 입력에 라벨이 연결되지 않았습니다',
+      evidence: `입력 ${a.inputCount}개 중 라벨 연결 ${a.labeledInputCount}개(${Math.round(labelRatio * 100)}%).`,
+      aiImpact: '에이전트가 어떤 칸에 무엇을 넣어야 하는지 판단할 수 없어 예약·문의를 대신 수행하지 못합니다.',
+      quote: null,
+      points: 2,
+      rec: {
+        workType: 'dev',
+        task: '각 입력에 label[for] 또는 aria-label을 붙이세요(placeholder는 값 입력 시 사라져 라벨 대체가 안 됩니다).',
+        expectedEffect: '에이전트가 폼을 이해하고 채울 수 있습니다.',
+        difficulty: '낮음',
+        before: `라벨 없는 입력 ${a.inputCount - a.labeledInputCount}개`,
+        after: null,
+      },
+    })
+  }
+
+  if (a.controlCount >= 5 && namedRatio < 0.8) {
+    bad.push({
+      severity: 'medium',
+      title: '이름 없는 버튼·링크가 있습니다',
+      evidence: `조작 요소 ${a.controlCount}개 중 이름 없음 ${unnamed}개(${Math.round((1 - namedRatio) * 100)}%).`,
+      aiImpact: '아이콘만 있는 컨트롤은 에이전트가 용도를 알 수 없어 탐색·조작이 끊깁니다.',
+      quote: null,
+      points: 1,
+      rec: {
+        workType: 'dev',
+        task: '아이콘 버튼·이미지 링크에 aria-label 또는 보이는 텍스트를 주세요.',
+        expectedEffect: '에이전트가 각 컨트롤의 목적을 식별합니다.',
+        difficulty: '낮음',
+        before: `이름 없는 컨트롤 ${unnamed}개`,
+        after: null,
+      },
+    })
+  }
+
+  if (!a.hasMainLandmark) {
+    bad.push({
+      severity: 'low',
+      title: '본문 랜드마크(main)가 없습니다',
+      evidence: '<main> 또는 role="main" 요소가 없습니다.',
+      aiImpact: '에이전트가 본문과 껍데기(내비·배너)를 구분하기 어렵습니다.',
+      quote: null,
+      points: 1,
+      rec: {
+        workType: 'dev',
+        task: '본문 영역을 <main>으로 감싸세요(내비·푸터는 제외).',
+        expectedEffect: '본문 추출 정확도가 올라갑니다.',
+        difficulty: '낮음',
+        before: null,
+        after: null,
+      },
+    })
+  }
+
 
   const start = 10 // 감점 전용: 만점에서 시작해 엔터티·에이전트 접근 결함만큼 깎는다.
   return finish('agent', good, bad, start, recs, 10)
