@@ -17,6 +17,7 @@ import {
 import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
+import { resolveCitationUrls } from './citationResolve.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { getEngineClient, getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
@@ -432,6 +433,16 @@ export async function runWeeklyPipeline(
 
   const questions = await ensureQuestionBank(tenant, store);
   const rawCalls = await collectRawCalls(tenant, questions, weekOf);
+
+  // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
+  // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(AVS 20%)과
+  // 인용출처·인용 갭 분석이 무의미해진다. 해소 실패분은 원본을 그대로 둔다.
+  const resolvedCitations = await resolveCitationUrls(rawCalls.flatMap((c) => c.citations));
+  if (resolvedCitations.size > 0) {
+    for (const call of rawCalls) {
+      call.citations = call.citations.map((u) => resolvedCitations.get(u) ?? u);
+    }
+  }
   await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
   // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
