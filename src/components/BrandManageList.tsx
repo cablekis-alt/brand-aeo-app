@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
+import { measureTenantAll } from '../lib/api'
 
 interface BrandRow {
   tenantId: string
@@ -66,12 +67,7 @@ export default function BrandManageList() {
         setMessage(`✓ ${row.brandName} GitHub Actions 측정 시작 — 수 분 뒤 반영됩니다.`)
         return
       }
-      const res = await fetch(`/api/tenants/${encodeURIComponent(row.tenantId)}/measure`, { method: 'POST' })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
-      }
-      const d = (await res.json()) as { brandName?: string; aeoScore?: number }
+      const d = await measureTenantAll(row.tenantId)
       setMessage(`✓ ${d.brandName ?? row.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}).`)
     } catch (err) {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)

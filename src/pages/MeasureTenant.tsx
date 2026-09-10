@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ApiKeySettings from '../components/ApiKeySettings'
 import { useTenant } from '../context/useTenant'
+import { measureTenantAll } from '../lib/api'
 
 interface MeasureTenantOption {
   tenantId: string
@@ -19,6 +20,9 @@ export default function MeasureTenant() {
   const [tenants, setTenants] = useState<MeasureTenantOption[]>([])
   const [pickedTenant, setPickedTenant] = useState('')
   const [measuring, setMeasuring] = useState(false)
+  // 이번 주 카드가 이미 있는 경쟁사를 다시 재지 않는다. 주차 카드는 주차당 하나라 같은 주에
+  // 다시 재면 앞선 측정을 덮어쓴다 — 데이터가 늘지 않고 표본만 바뀐다. 기본은 끔(현재 동작 유지).
+  const [reuseCohort, setReuseCohort] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   // 서버에서 실제로 진행 중인 측정(페이지를 벗어났다 와도 상태 유지). measureVia=local 전용.
   const [serverActive, setServerActive] = useState<{ tenantId: string; brandName: string }[]>([])
@@ -99,12 +103,7 @@ export default function MeasureTenant() {
         )
         return
       }
-      const res = await fetch(`/api/tenants/${encodeURIComponent(pickedTenant)}/measure`, { method: 'POST' })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
-      }
-      const d = (await res.json()) as { brandName: string; aeoScore?: number }
+      const d = await measureTenantAll(pickedTenant, reuseCohort)
       setMessage(
         `✓ ${d.brandName} 측정·baking 완료 (AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
       )
@@ -173,6 +172,24 @@ export default function MeasureTenant() {
                   : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
           </button>
         </div>
+        {!picked?.cohortOnly && (
+          <label
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '0.9em' }}
+          >
+            <input
+              type="checkbox"
+              checked={reuseCohort}
+              onChange={(e) => setReuseCohort(e.target.checked)}
+              disabled={locked || isMeasuring}
+            />
+            <span>
+              이번 주에 이미 측정한 경쟁사는 건너뛰기
+              <span className="hint" style={{ marginLeft: '6px' }}>
+                (수집·판단 엔진이 그때와 같을 때만 재사용합니다. 경쟁사 하나당 2분 가까이 걸립니다.)
+              </span>
+            </span>
+          </label>
+        )}
         {isMeasuring && serverActive.length > 0 && (
           <p className="hint" style={{ marginTop: '10px', fontWeight: 500 }} role="status">
             측정 중: <b>{serverActive.map((a) => a.brandName || a.tenantId).join(', ')}</b> …{' '}

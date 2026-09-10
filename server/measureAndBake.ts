@@ -6,7 +6,9 @@ import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
 import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
-import { runWeeklyPipeline } from './pipeline.js';
+import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
+import { resolveJudgeEngineId } from './engines/index.js';
+import { getIsoWeekString } from './dateUtil.js';
 import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
 import type { FileResultStore } from './store.js';
@@ -111,6 +113,53 @@ function bakeForWeb(tenant: TenantConfig, weekOf: string): void {
 interface MeasureOptions {
   /** baking을 호출자에게 미룬다 — 코호트 병렬 측정 중 execSync로 이벤트 루프를 막지 않기 위해. */
   deferBake?: boolean;
+  /**
+   * 이번 주 카드가 이미 있는 경쟁사는 다시 재지 않는다(기본 false = 항상 재측정).
+   *
+   * 주차 카드는 주차당 하나라, 같은 주에 다시 재면 앞선 측정을 **덮어쓴다** — 데이터가
+   * 늘지 않고 표본만 바뀐다. 그래서 재사용은 손실이 아니다. 다만 "전체 측정"의 현재 의도가
+   * "경쟁사도 최신 키로 재측정"이라 기본값은 바꾸지 않고 호출자가 켜도록 둔다.
+   */
+  reuseCohort?: boolean;
+}
+
+/**
+ * 이 경쟁사의 이번 주 카드를 재사용해도 되는가.
+ *
+ * 카드가 있다는 것만으로는 부족하다 — 수집 엔진이나 판단 엔진이 그때와 다르면 그 카드는
+ * 지금 측정과 같은 도구로 잰 값이 아니다(엔진 키를 추가한 직후가 정확히 그 경우다).
+ * 그래서 enginesUsed·judgeEngine이 지금 쓸 것과 같을 때만 재사용한다.
+ *
+ * 내부용이지만 export한다 — "왜 재측정했는가"를 직접 확인할 수 있어야 한다
+ * (거절 이유가 조용히 틀리면 다른 엔진으로 잰 카드를 재사용하게 된다).
+ */
+export async function reusableThisWeek(
+  tenant: TenantConfig,
+  store: FileResultStore,
+  weekOf: string,
+): Promise<{ ok: boolean; reason?: string }> {
+  const history = await store.getScorecardHistory(tenant.tenantId, 12);
+  const card = history.find((item) => item.weekOf === weekOf);
+  if (!card) return { ok: false, reason: '이번 주 카드 없음' };
+
+  const judgeNow = resolveJudgeEngineId();
+  if (card.judgeEngine && card.judgeEngine !== judgeNow) {
+    return { ok: false, reason: `판단 엔진 다름(${card.judgeEngine} → ${judgeNow})` };
+  }
+  if (!card.judgeEngine) return { ok: false, reason: '판단 엔진 기록 없음(v0.1.38 이전)' };
+
+  let enginesNow: string[];
+  try {
+    enginesNow = [...resolveCollectionEngines(tenant)].sort();
+  } catch {
+    return { ok: false, reason: '수집 엔진 확인 불가' };
+  }
+  const enginesThen = [...(card.enginesUsed ?? [])].sort();
+  if (enginesThen.length === 0) return { ok: false, reason: '수집 엔진 기록 없음' };
+  if (enginesThen.join(',') !== enginesNow.join(',')) {
+    return { ok: false, reason: `수집 엔진 다름(${enginesThen.join('+')} → ${enginesNow.join('+')})` };
+  }
+  return { ok: true };
 }
 
 /** 이 브랜드 자신의 측정 — 등록·파이프라인·완료 기록까지. 코호트 측정과 병렬로 돈다. */
@@ -148,7 +197,7 @@ export async function measureAndBake(
   store: FileResultStore,
   options: MeasureOptions = {},
 ): Promise<MeasureBakeResult> {
-  const cohortTargets: TenantConfig[] = [];
+  let cohortTargets: TenantConfig[] = [];
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
@@ -193,6 +242,27 @@ export async function measureAndBake(
         cohortTargets.push(existing ? { ...existing, autoCohort: false } : draft);
       }
     }
+  }
+
+  // 2-b) reuseCohort면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사를 제외한다.
+  //      경쟁사 하나당 2분 가까이 걸리므로, 같은 주에 다른 브랜드를 측정할 때 겹치는 경쟁사를
+  //      다시 재지 않는 것이 가장 큰 절약이다.
+  if (options.reuseCohort && cohortTargets.length > 0) {
+    const weekOf = getIsoWeekString(new Date());
+    const checks = await Promise.all(
+      cohortTargets.map(async (target) => ({ target, verdict: await reusableThisWeek(target, store, weekOf) })),
+    );
+    const reused = checks.filter((c) => c.verdict.ok);
+    for (const { target, verdict } of checks) {
+      if (!verdict.ok) console.log(`[measureAndBake] 코호트 재측정 ${target.tenantId}: ${verdict.reason}`);
+    }
+    if (reused.length > 0) {
+      console.log(
+        `[measureAndBake] 이번 주(${weekOf}) 카드 재사용 ${reused.length}개: ` +
+          reused.map((c) => c.target.tenantId).join(', '),
+      );
+    }
+    cohortTargets = checks.filter((c) => !c.verdict.ok).map((c) => c.target);
   }
 
   // 3) 본 브랜드와 경쟁사를 **함께** 측정한다.

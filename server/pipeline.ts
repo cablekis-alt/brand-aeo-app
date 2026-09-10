@@ -151,14 +151,17 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
   return questions;
 }
 
-/** B3 — 4개 엔진 × 반복 호출. 동일 질문 원문을 그대로 전달한다 (엔진 간 비교 가능성 유지). */
-async function collectRawCalls(
-  tenant: TenantConfig,
-  questions: QuestionSpec[],
-  weekOf: string,
-): Promise<RawCallRecord[]> {
-  // API 키가 있는 엔진만 사용한다. 키 없는 엔진(예: OPENAI_API_KEY 미설정)은 클라이언트 생성자가
-  // throw하므로, 미리 걸러 Gemini 단독 등으로 측정이 진행되게 한다(설계상 Gemini만으로 동작 가능).
+/**
+ * 이 측정에서 실제로 쓸 수집 엔진.
+ *
+ * 두 곳에서 필요하다 — 실제 수집(collectRawCalls)과, "이번 주 카드를 재사용해도 되는가"
+ * 판단(measureAndBake의 코호트 재사용). 규칙을 복제하면 저장된 카드의 enginesUsed와
+ * 비교 기준이 갈려 다른 엔진으로 잰 카드를 재사용해 버린다. 그래서 여기 한 곳에 둔다.
+ *
+ * API 키가 있는 엔진만 남긴다. 키 없는 엔진(예: OPENAI_API_KEY 미설정)은 클라이언트 생성자가
+ * throw하므로, 미리 걸러 Gemini 단독 등으로 측정이 진행되게 한다(설계상 Gemini만으로 동작 가능).
+ */
+export function resolveCollectionEngines(tenant: TenantConfig): Engine[] {
   const ENGINE_ENV: Record<Engine, string> = {
     openai: 'OPENAI_API_KEY',
     gemini: 'GEMINI_API_KEY',
@@ -173,21 +176,29 @@ async function collectRawCalls(
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter((s): s is Engine => (ALL_ENGINES as string[]).includes(s));
-  const configuredEngines = override.length > 0 ? override : tenant.engines;
+  const configured = override.length > 0 ? override : tenant.engines;
 
   const useMock = process.env.USE_MOCK_ENGINES === 'true';
-  const availableEngines = useMock
-    ? configuredEngines
-    : configuredEngines.filter((e) => process.env[ENGINE_ENV[e]]);
-  if (availableEngines.length === 0) {
+  const available = useMock ? configured : configured.filter((e) => process.env[ENGINE_ENV[e]]);
+  if (available.length === 0) {
     throw new Error(
-      `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${configuredEngines.join(', ')}).`,
+      `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${configured.join(', ')}).`,
     );
   }
-  if (availableEngines.length < configuredEngines.length) {
-    const skipped = configuredEngines.filter((e) => !availableEngines.includes(e));
-    console.warn(`[B3] 키 없는 엔진 건너뜀: ${skipped.join(', ')} → ${availableEngines.join(', ')}(으)로 측정`);
+  if (available.length < configured.length) {
+    const skipped = configured.filter((e) => !available.includes(e));
+    console.warn(`[B3] 키 없는 엔진 건너뜀: ${skipped.join(', ')} → ${available.join(', ')}(으)로 측정`);
   }
+  return available;
+}
+
+/** B3 — 4개 엔진 × 반복 호출. 동일 질문 원문을 그대로 전달한다 (엔진 간 비교 가능성 유지). */
+async function collectRawCalls(
+  tenant: TenantConfig,
+  questions: QuestionSpec[],
+  weekOf: string,
+): Promise<RawCallRecord[]> {
+  const availableEngines = resolveCollectionEngines(tenant);
 
   const jobs = questions.flatMap((question) =>
     availableEngines.flatMap((engine) =>

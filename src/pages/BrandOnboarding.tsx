@@ -5,6 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
+import { measureTenantAll } from '../lib/api'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
 const KR_ADDRESS =
@@ -842,12 +843,7 @@ export default function BrandOnboarding() {
         )
         return
       }
-      const res = await fetch(`/api/tenants/${encodeURIComponent(id)}/measure`, { method: 'POST' })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string }
-        throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
-      }
-      const d = (await res.json()) as { brandName?: string; aeoScore?: number }
+      const d = await measureTenantAll(id)
       setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}). 대시보드·랭킹에서 확인하세요.`)
     } catch (err) {
       setMeasureMsg(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)

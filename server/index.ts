@@ -126,7 +126,9 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
     return;
   }
   try {
-    const result = await measureAndBake(tenant, store);
+    // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
+    const reuseCohort = (req.body as { reuseCohort?: unknown } | undefined)?.reuseCohort === true;
+    const result = await measureAndBake(tenant, store, { reuseCohort });
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });

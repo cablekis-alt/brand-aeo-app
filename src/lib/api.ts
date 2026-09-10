@@ -227,3 +227,27 @@ export async function cancelMeasureRun(runId: number): Promise<void> {
     throw new Error(body.error || `취소 실패 (HTTP ${res.status})`)
   }
 }
+
+/**
+ * 브랜드 전체 측정(경쟁사·코호트 포함)을 로컬 백엔드에 요청한다. 수 분 걸린다.
+ *
+ * 세 화면(측정·브랜드 관리·온보딩)이 같은 엔드포인트를 각자 fetch하고 있었다 —
+ * reuseCohort 같은 옵션이 늘면 한 곳만 빠뜨리게 되므로 여기로 모은다.
+ *
+ * @param reuseCohort 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
+ */
+export async function measureTenantAll(
+  tenantId: string,
+  reuseCohort = false,
+): Promise<{ brandName?: string; aeoScore?: number; weekOf?: string }> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/measure`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reuseCohort }),
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
+  }
+  return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string }
+}
