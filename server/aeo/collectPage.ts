@@ -37,8 +37,9 @@ interface FetchResult {
   body: string;
 }
 
-async function readLimited(res: Response): Promise<string> {
-  if (!res.body) return '';
+/** 응답 본문 바이트. 크기 한도를 넘으면 즉시 끊는다. */
+async function readLimitedBytes(res: Response): Promise<Uint8Array> {
+  if (!res.body) return new Uint8Array(0);
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
   let received = 0;
@@ -58,7 +59,60 @@ async function readLimited(res: Response): Promise<string> {
     merged.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder('utf-8', { fatal: false }).decode(merged);
+  return merged;
+}
+
+// TextDecoder가 받지 않는 표기 → WHATWG 라벨. ks_c_5601-1987·windows-949는 그대로 통한다.
+const CHARSET_ALIASES: Record<string, string> = {
+  cp949: 'euc-kr',
+  ksc5601: 'euc-kr',
+  ks_c_5601: 'euc-kr',
+  ms949: 'euc-kr',
+  uhc: 'euc-kr',
+};
+
+function normalizeCharset(label: string): string | null {
+  const key = label.trim().toLowerCase().replace(/^["']|["']$/g, '');
+  if (!key) return null;
+  const mapped = CHARSET_ALIASES[key] ?? key;
+  try {
+    new TextDecoder(mapped);
+    return mapped;
+  } catch {
+    return null; // 알 수 없는 표기는 무시하고 다음 단서로 넘어간다
+  }
+}
+
+/** Content-Type 헤더의 charset. */
+function charsetFromContentType(contentType: string): string | null {
+  const m = /charset\s*=\s*([^;\s]+)/i.exec(contentType);
+  return m ? normalizeCharset(m[1]) : null;
+}
+
+/** HTML 앞부분의 <meta charset> · <meta http-equiv="Content-Type">. 바이트를 latin1로 훑는다. */
+function charsetFromMeta(bytes: Uint8Array): string | null {
+  const head = new TextDecoder('latin1').decode(bytes.slice(0, 4096));
+  const m = /<meta[^>]+charset\s*=\s*["']?([\w-]+)/i.exec(head);
+  return m ? normalizeCharset(m[1]) : null;
+}
+
+/**
+ * 본문을 올바른 문자셋으로 디코딩한다.
+ *
+ * 한국 사이트는 Content-Type에 charset을 빼고 <meta charset="EUC-KR">만 두는 경우가 흔하다.
+ * UTF-8로 고정 디코딩하면 본문 전체가 깨져 콘텐츠·EEAT 채점이 무의미해진다(실측: 삼성서울병원).
+ * 단서 우선순위: 헤더 charset → meta charset → UTF-8 엄격 디코딩 성공 여부.
+ * 마지막 단계에서 UTF-8이 아니면 euc-kr로 본다 — 한국 사이트에서 압도적으로 흔한 대안이다.
+ */
+function decodeBody(bytes: Uint8Array, contentType: string): string {
+  if (bytes.byteLength === 0) return '';
+  const declared = charsetFromContentType(contentType) ?? charsetFromMeta(bytes);
+  if (declared) return new TextDecoder(declared, { fatal: false }).decode(bytes);
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder('euc-kr', { fatal: false }).decode(bytes);
+  }
 }
 
 async function fetchOnce(url: string, method: 'GET' | 'HEAD' = 'GET'): Promise<FetchResult> {
@@ -81,7 +135,7 @@ async function fetchOnce(url: string, method: 'GET' | 'HEAD' = 'GET'): Promise<F
       }
       const contentType = res.headers.get('content-type') ?? '';
       const xRobots = res.headers.get('x-robots-tag') ?? '';
-      const body = method === 'HEAD' ? '' : await readLimited(res);
+      const body = method === 'HEAD' ? '' : decodeBody(await readLimitedBytes(res), contentType);
       return { status: res.status, finalUrl: current, contentType, xRobots, body };
     } finally {
       clearTimeout(timer);
