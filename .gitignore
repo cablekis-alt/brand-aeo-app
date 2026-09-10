@@ -36,4 +36,5 @@ electron/build/bundled.env
 server/measure-requests.json
 server/delete-requests.json
 server/tenants.deleted.json
+server/measure-runs.json
 dist-electron
