@@ -200,7 +200,7 @@ for (const t of loaded) {
       }
     }
     // 자사 인용 포함 여부는 인용 소유권에서 파생되므로 다시 계산한다.
-    a.brandOwnedCitation = (a.citations ?? []).some((c) => c.ownerType === 'brand-owned')
+    a.brandOwnedCitation = ((a.citations ?? []) as CitationDetail[]).some((c) => c.ownerType === 'brand-owned')
   }
   citationsFixed += fixed
   brandOwnedAdded += owns
