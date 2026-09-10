@@ -23,4 +23,6 @@ contextBridge.exposeInMainWorld('electron', {
   // API 키 설정
   apiKeyStatus: () => ipcRenderer.invoke('settings:apiKeyStatus'),
   setApiKey: (name, value) => ipcRenderer.invoke('settings:setApiKey', { name, value }),
+  // 수집 엔진 전역 지정. null/빈 배열이면 브랜드별 설정으로 되돌린다.
+  setCollectEngines: (engines) => ipcRenderer.invoke('settings:setCollectEngines', { engines }),
 })

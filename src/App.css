@@ -787,6 +787,48 @@
   cursor: not-allowed;
   color: var(--muted);
 }
+/* 수집 엔진 선택(API 키 패널) — 라디오 한 줄씩, 체크박스는 가로로 흘린다. */
+.apikey-panel h4 {
+  margin: 18px 0 6px;
+  font-family: var(--serif);
+  font-weight: 560;
+  font-size: 17px;
+}
+.engine-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.engine-pick-boxes {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 10px;
+}
+.engine-pick label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.engine-pick label.disabled,
+.engine-pick input:disabled + * {
+  cursor: not-allowed;
+}
+.engine-pick input:disabled {
+  cursor: not-allowed;
+}
+.engine-pick label:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.engine-pick input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
 .panel.measure-local-only {
   opacity: 0.72;
 }

@@ -434,29 +434,69 @@ ipcMain.handle('settings:apiKeyStatus', () => {
   }
 })
 
+/**
+ * userData/.env의 한 줄을 갱신한다(다른 키·변수는 보존).
+ *
+ * keepEmpty=true면 빈 값도 `NAME=`으로 남긴다. 설치본 동봉 bundled.env보다 userData/.env가
+ * 먼저 로드되고 dotenv는 이미 설정된 값을 덮어쓰지 않으므로, 줄을 아예 지우면 다음 실행에서
+ * 굽힌 기본값이 되살아난다 — "전역 지정 해제"가 재시작 후 풀리는 걸 막으려면 빈 줄이 필요하다.
+ */
+function writeUserEnvLine(name, value, keepEmpty = false) {
+  const file = userEnvPath()
+  let lines = []
+  try {
+    lines = fs.readFileSync(file, 'utf8').split(/\r?\n/)
+  } catch {
+    lines = []
+  }
+  lines = lines.filter((l) => l.trim() && !l.startsWith(`${name}=`))
+  if (value || keepEmpty) lines.push(`${name}=${value}`)
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8')
+}
+
+/** 메인·서버 양쪽에 값을 반영한다. 반환값은 서버 프로세스로 전달됐는지 여부. */
+function applyEnv(name, value) {
+  if (value) process.env[name] = value
+  else delete process.env[name]
+  return sendEnvToServer(name, value)
+}
+
 ipcMain.handle('settings:setApiKey', (_e, payload) => {
   const name = payload?.name
   const value = String(payload?.value ?? '').trim()
   if (!API_KEY_NAMES.includes(name)) return { ok: false, error: '허용되지 않은 키 이름입니다.' }
   try {
-    // 1) 즉시 적용 — 메인(설정 화면 표시용)과 서버 프로세스(측정에서 실제 사용) 양쪽.
-    if (value) process.env[name] = value
-    else delete process.env[name]
-    const forwarded = sendEnvToServer(name, value)
-    // 2) userData/.env에 병합 저장(다른 키·변수 보존)
-    const file = userEnvPath()
-    let lines = []
-    try {
-      lines = fs.readFileSync(file, 'utf8').split(/\r?\n/)
-    } catch {
-      lines = []
-    }
-    lines = lines.filter((l) => l.trim() && !l.startsWith(`${name}=`))
-    if (value) lines.push(`${name}=${value}`)
-    fs.mkdirSync(path.dirname(file), { recursive: true })
-    fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8')
+    const forwarded = applyEnv(name, value)
+    writeUserEnvLine(name, value)
     // forwarded=false면 서버 프로세스가 없다(dev 또는 기동 실패) — 재시작 후 .env에서 읽힌다.
     return { ok: true, needsRestart: !forwarded }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+})
+
+// 수집 엔진 전역 지정(COLLECT_ENGINES). 빈 배열/null이면 "브랜드별 설정 사용"으로 되돌린다.
+// 판단 엔진(JUDGE_ENGINE)은 의도적으로 여기서 바꾸지 않는다 — 판단이 바뀌면 같은 원문에서 다른
+// 판정이 나와 주차 간 비교가 깨지고, 스코어카드에 판단 엔진이 기록되지 않아 사후 설명도 불가능하다.
+const COLLECT_ENGINE_IDS = ['openai', 'gemini', 'claude', 'perplexity']
+
+ipcMain.handle('settings:setCollectEngines', (_e, payload) => {
+  const raw = Array.isArray(payload?.engines) ? payload.engines : null
+  try {
+    if (raw === null || raw.length === 0) {
+      const forwarded = applyEnv('COLLECT_ENGINES', '')
+      writeUserEnvLine('COLLECT_ENGINES', '', true)
+      return { ok: true, engines: null, needsRestart: !forwarded }
+    }
+    const picked = [...new Set(raw.map((e) => String(e).trim().toLowerCase()))]
+    const bad = picked.filter((e) => !COLLECT_ENGINE_IDS.includes(e))
+    if (bad.length > 0) return { ok: false, error: `알 수 없는 엔진: ${bad.join(', ')}` }
+    // 표준 순서로 정렬해 저장한다(화면 표시·로그 일관성).
+    const engines = COLLECT_ENGINE_IDS.filter((e) => picked.includes(e))
+    const forwarded = applyEnv('COLLECT_ENGINES', engines.join(','))
+    writeUserEnvLine('COLLECT_ENGINES', engines.join(','), true)
+    return { ok: true, engines, needsRestart: !forwarded }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }

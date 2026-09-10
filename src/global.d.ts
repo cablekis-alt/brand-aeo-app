@@ -39,6 +39,13 @@ interface ElectronBridge {
   }>
   /** API 키를 userData/.env에 저장하고 즉시 적용. */
   setApiKey: (name: string, value: string) => Promise<{ ok: boolean; error?: string }>
+  /**
+   * 수집 엔진 전역 지정(COLLECT_ENGINES)을 저장하고 즉시 적용.
+   * null 또는 빈 배열이면 "브랜드별 설정 사용"으로 되돌린다.
+   */
+  setCollectEngines: (
+    engines: string[] | null,
+  ) => Promise<{ ok: boolean; engines?: string[] | null; needsRestart?: boolean; error?: string }>
   /** 릴리스 페이지를 기본 브라우저로 연다(수동 다운로드용). */
   openReleases: () => Promise<void>
 }
