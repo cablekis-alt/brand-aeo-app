@@ -116,10 +116,10 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       status: s,
       note:
         v === null
-          ? '경쟁사가 설정되지 않아 점유율을 측정할 수 없습니다.'
+          ? '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 측정할 수 없습니다.'
           : s === 'good'
-            ? '경쟁 브랜드 대비 언급 점유가 높습니다.'
-            : '경쟁사가 함께 언급되는 질문에서 점유가 낮습니다.',
+            ? '브랜드명을 넣지 않은 질문에서 경쟁 브랜드 대비 언급 점유가 높습니다.'
+            : '브랜드명을 넣지 않은 질문에서 경쟁사에 점유를 내주고 있습니다.',
       delta: pctDelta(v, prev?.shareOfMention),
     })
   }
@@ -247,13 +247,16 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
     const isUnknown = m.status === 'unknown'
     recs.push({
       id: 'som',
-      title: isUnknown ? '경쟁사 설정으로 점유율 측정 시작' : '경쟁 대비 언급 점유 강화',
+      title: isUnknown ? '점유율 측정 조건 만들기' : '경쟁 대비 언급 점유 강화',
       priority: priorityOf(m.weight, m.status),
       basis: isUnknown
-        ? '경쟁사가 설정되지 않아 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).'
-        : `현재 SoM ${m.valueText} — 경쟁사가 함께 언급되는 질문에서 밀리고 있습니다.`,
+        ? '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).'
+        : `현재 SoM ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`,
       actions: isUnknown
-        ? ['브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.']
+        ? [
+            '브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.',
+            '경쟁사를 이미 등록했다면 그 업종·지역 질문 자체에 브랜드가 전혀 등장하지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 합니다.',
+          ]
         : [
             '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
             '후기·평점 플랫폼과 지역 커뮤니티에서의 노출·언급을 늘려 비교 문맥에서 우위를 확보합니다.',

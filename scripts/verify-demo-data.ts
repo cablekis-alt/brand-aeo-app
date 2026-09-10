@@ -43,8 +43,9 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
 
     const derivedMention = mean(agnosticRecords.map((a) => (a.mentioned ? 1 : 0)));
     // SoM은 횟수 기준(Share of Voice): 내 언급 총합 / (내 + 경쟁사 언급) 총합.
-    const brandMentions = analyses.reduce((s, a) => s + a.mentionSentences.length, 0);
-    const compMentions = analyses.reduce(
+    // 모집단은 언급률과 같은 카테고리 무관 질문 응답이다 — server/mentionScope.ts.
+    const brandMentions = agnosticRecords.reduce((s, a) => s + a.mentionSentences.length, 0);
+    const compMentions = agnosticRecords.reduce(
       (s, a) => s + a.competitorMentions.reduce((t, c) => t + c.mentionCount, 0),
       0,
     );
@@ -71,9 +72,15 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     // SoM은 경쟁사가 없으면 스코어카드에서 null이다. 그 경우 검증 대상에서 제외한다.
     if (card.shareOfMention !== null) {
       checks.push(['SoM', derivedSom, card.shareOfMention]);
+      // 랭킹 분석 화면의 자사 언급 점유는 같은 모집단에서 나오므로 스코어카드 SoM과 같아야 한다.
+      const brandShare = ranking.competitorShareOfMention.find((e) => e.name === tenant.brandName)?.share ?? 0;
+      checks.push(['랭킹 자사 점유', brandShare, card.shareOfMention]);
     }
-
     const bad = checks.filter(([, got, want]) => Math.abs(got - want) > TOLERANCE);
+    // 질문 은행을 못 읽으면 랭킹 화면이 전체 응답으로 폴백해 자사 점유가 부풀려진다.
+    if (ranking.mentionScope !== 'category-agnostic') {
+      bad.push([`랭킹 모집단(${ranking.mentionScope}) — 질문 은행 분류 실패`, 0, 1]);
+    }
     // 순위는 추천 문맥이 없으면 null이다. 그 경우 파생값도 순위 레코드가 없어야 정합이다.
     if (card.avgRecommendationRank === null) {
       if (ranks.length > 0) bad.push(['순위(null 기대)', derivedRank, 0]);

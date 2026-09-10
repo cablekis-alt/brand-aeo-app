@@ -22,9 +22,10 @@ import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { getEngineClient, getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
+import { aggregateWeeklyMetrics } from './aggregate.js';
 import { analyzeCitationSources } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
-import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval, movingAverage4, sentimentWeight } from './scoring.js';
+import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { ResultStore } from './store.js';
 import type {
   CompetitorMentionDetail,
@@ -302,7 +303,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
   };
 }
 
-/** B8 — 결정적 집계. LLM은 여기서 계산된 수치를 재계산하지 않고 해석만 한다. */
+/** B8 — 결정적 집계. 지표 계산은 server/aggregate.ts 한 곳에만 두고 여기서는 카드를 조립한다. */
 function aggregateScorecard(
   tenant: TenantConfig,
   weekOf: string,
@@ -311,89 +312,10 @@ function aggregateScorecard(
   history: WeeklyScorecard[],
   cohortScorecards: WeeklyScorecard[],
 ): WeeklyScorecard {
-  const questionById = new Map(questions.map((q) => [q.questionId, q]));
+  const m = aggregateWeeklyMetrics(tenant, questions, analyses);
 
-  const categoryAgnostic = analyses.filter((a) => questionById.get(a.questionId)?.category === 'category-agnostic');
-  const mentionRate = mean(categoryAgnostic.map((a) => (a.mentioned ? 1 : 0)));
-
-  // SoM(Share of Voice) = 표준 정의인 "횟수 기준": 내 언급 총합 / (내 언급 + 경쟁사 언급) 총합.
-  // 응답별 비율을 단순 평균하면 언급이 적은 응답이 과대 반영되므로, 횟수 기준으로 집계한다
-  // (랭킹 분석 화면과 동일). 경쟁사가 없거나 아무 언급도 없으면 측정 불가(null).
-  const hasCompetitors = tenant.competitors.length > 0;
-  const brandMentionTotal = analyses.reduce((sum, a) => sum + a.mentionSentences.length, 0);
-  const competitorMentionTotal = analyses.reduce(
-    (sum, a) => sum + a.competitorMentions.reduce((t, c) => t + c.mentionCount, 0),
-    0,
-  );
-  const shareTotal = brandMentionTotal + competitorMentionTotal;
-  const shareOfMention = hasCompetitors && shareTotal > 0 ? brandMentionTotal / shareTotal : null;
-
-  const ranked = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
-  const avgRecommendationRank = ranked.length > 0 ? mean(ranked) : null;
-
-  const totalSupported = analyses.reduce((sum, a) => sum + a.factualitySupported, 0);
-  const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
-  const factualityScore = totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : 1;
-
-  // 브랜드 소유 출처 = "인용 단위"(전체 인용 중 자사 도메인 비중, URL 상세 분석 화면과 동일).
-  // 이전의 "자사 인용을 포함한 응답 비율"과 달리 라벨("인용이 자사 도메인으로 연결된 비율")과 일치한다.
-  const totalCitations = analyses.reduce((sum, a) => sum + a.citations.length, 0);
-  const brandOwnedCitations = analyses.reduce(
-    (sum, a) => sum + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
-    0,
-  );
-  const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
-
-  // 자사 언급의 감성 계수(0.2~1.0) — 전체 언급 문장의 sentiment 가중 평균. 언급이 없으면 1.0(중립 취급).
-  // Mention·SoM 성분에만 곱해 "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다(원시 비율은 화면 표시용으로 유지).
-  const brandMentionSentiments = analyses.flatMap((a) => a.mentionSentences.map((m) => sentimentWeight(m.sentiment)));
-  const mentionSentiment = brandMentionSentiments.length > 0 ? mean(brandMentionSentiments) : 1.0;
-
-  // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치, 감성 계수만 추가 반영).
-  const currentScore = computeAeoScore({
-    mentionRate,
-    shareOfMention,
-    avgRecommendationRank,
-    factualityScore,
-    brandOwnedCitationRate,
-    mentionSentiment,
-  });
-
-  // CI 폭은 반복 호출 1건마다의 점수 분포에서 낸다(동일 질문 3회 반복의 분산). 중심은 위 결정적 점수.
-  const perCallScores = analyses.map((a) => {
-    const perCallFactuality =
-      a.factualitySupported + a.factualityContradicted > 0
-        ? a.factualitySupported / (a.factualitySupported + a.factualityContradicted)
-        : 1;
-    const perCallSentiment =
-      a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
-    return computeAeoScore({
-      mentionRate: a.mentioned ? 1 : 0,
-      shareOfMention: hasCompetitors ? a.shareOfMention : null,
-      avgRecommendationRank: a.brandRank,
-      factualityScore: perCallFactuality,
-      brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
-      mentionSentiment: perCallSentiment,
-    });
-  });
-  const scoreCi = meanWithConfidenceInterval(perCallScores.length > 0 ? perCallScores : [0]);
-  const ciMargin = scoreCi.high - scoreCi.mean;
-
-  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : currentScore;
-  const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), currentScore]));
-
-  const hallucinationFlags = analyses
-    .filter((a) => a.factualityContradicted > 0)
-    .map((a) => `${a.engine} / ${a.questionId} #${a.callIndex}: 사실성 불일치 ${a.factualityContradicted}건`);
-
-  // 실제로 응답을 수집한 엔진 — 분석(=성공 호출)에 등장한 엔진만. 크레딧 소진 등으로 실패한 엔진은 빠진다.
-  // 표시 일관성을 위해 표준 순서(ChatGPT·Gemini·Claude·Perplexity)로 정렬한다.
-  const engineOrder = ['openai', 'gemini', 'claude', 'perplexity'];
-  const engineSet = new Set(analyses.map((a) => a.engine));
-  const enginesUsed = [
-    ...engineOrder.filter((e) => engineSet.has(e as (typeof analyses)[number]['engine'])),
-    ...[...engineSet].filter((e) => !engineOrder.includes(e)),
-  ];
+  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score;
+  const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]));
 
   return {
     tenantId: tenant.tenantId,
@@ -402,20 +324,20 @@ function aggregateScorecard(
     region: tenant.region,
     brandName: tenant.brandName,
     aeoScore: {
-      current: currentScore,
+      current: m.score,
       ma4,
       previousWeek,
-      ciLow: Math.round((currentScore - ciMargin) * 10) / 10,
-      ciHigh: Math.round((currentScore + ciMargin) * 10) / 10,
+      ciLow: Math.round((m.score - m.ciMargin) * 10) / 10,
+      ciHigh: Math.round((m.score + m.ciMargin) * 10) / 10,
     },
-    mentionRate,
-    shareOfMention,
-    avgRecommendationRank,
-    factualityScore,
-    brandOwnedCitationRate,
-    cohortRank: computeCohortRank(currentScore, cohortScorecards),
-    hallucinationFlags,
-    enginesUsed,
+    mentionRate: m.mentionRate,
+    shareOfMention: m.shareOfMention,
+    avgRecommendationRank: m.avgRecommendationRank,
+    factualityScore: m.factualityScore,
+    brandOwnedCitationRate: m.brandOwnedCitationRate,
+    cohortRank: computeCohortRank(m.score, cohortScorecards),
+    hallucinationFlags: m.hallucinationFlags,
+    enginesUsed: m.enginesUsed,
   };
 }
 

@@ -1,144 +1,95 @@
 /**
- * 저장된 실측 분석으로부터 등록된 모든 테넌트의 스코어카드를 새 점수식으로 재계산한다 (새 API 호출 없음).
- * computeAeoScore가 바뀔 때(예: 순위 null 재정규화) 반영용.
- *   - 브랜드(example-brand, stay-meomum): src/data/live-*-question-analyses.json + live-*-question-bank.json
- *   - 경쟁사(cohortOnly): data/<tenant>/2026-W36/question-analyses.json + data/<tenant>/question-bank/<ver>.json
- * 결과를 src/data/demo-scorecards.json에 반영하고 코호트 순위를 재계산한다.
+ * 저장된 실측 분석(src/data/live-*-question-analyses.json)으로부터 모든 테넌트의 스코어카드를
+ * 현재 점수식으로 재계산한다 (새 API 호출 없음). 집계 규칙이 바뀔 때 저장된 카드를 맞추는 용도다.
+ *   - 소스: server/liveRegistry.ts의 LIVE_BANKS·LIVE_ANALYSES (publish-tenant.ts가 자동 갱신)
+ *   - 결과: src/data/demo-scorecards.json 갱신 + 코호트 순위 재계산
+ *
+ * 집계는 파이프라인과 같은 server/aggregate.ts를 쓴다 — 새 측정과 저장된 측정의 정의가 갈리지 않는다.
  *   npx tsx scripts/rescore-all.ts
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { computeAeoScore, computeCohortRank, mean, meanWithConfidenceInterval } from '../server/scoring'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { aggregateWeeklyMetrics } from '../server/aggregate'
+import { LIVE_ANALYSES, LIVE_BANKS } from '../server/liveRegistry'
+import { computeCohortRank, movingAverage4 } from '../server/scoring'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
 import type { QuestionSpec } from '../src/prompts/types'
 import type { QuestionRepeatAnalysis, TenantConfig } from '../server/types'
 
-const WEEK = '2026-W36'
 const read = <T,>(p: string): T => JSON.parse(readFileSync(p, 'utf8')) as T
 
 const tenants = read<TenantConfig[]>('server/tenants.config.json')
 const cards = read<WeeklyScorecard[]>('src/data/demo-scorecards.json')
 
-const BRAND_SOURCES: Record<string, { bank: string; analyses: string }> = {
-  'example-brand': {
-    bank: 'src/data/live-question-bank.json',
-    analyses: 'src/data/live-question-analyses.json',
-  },
-  'stay-meomum': {
-    bank: 'src/data/live-stay-question-bank.json',
-    analyses: 'src/data/live-stay-question-analyses.json',
-  },
+/** 테넌트·주차의 (은행 질문, 판정 레코드). 실측 산출물이 없으면 null. */
+function loadSource(
+  tenantId: string,
+  weekOf: string,
+): { questions: QuestionSpec[]; analyses: QuestionRepeatAnalysis[] } | null {
+  const bank = LIVE_BANKS[tenantId]
+  const file = LIVE_ANALYSES.find((f) => f.tenantId === tenantId && f.weekOf === weekOf)
+  if (!bank || !file || !Array.isArray(file.analyses) || file.analyses.length === 0) return null
+  return { questions: bank.questions, analyses: file.analyses as QuestionRepeatAnalysis[] }
 }
 
-/** 테넌트의 (은행 질문, 분석)을 읽는다. 브랜드는 src/data live-*, 경쟁사는 data/. */
-function loadSource(tenant: TenantConfig): { questions: QuestionSpec[]; analyses: QuestionRepeatAnalysis[] } | null {
-  const brand = BRAND_SOURCES[tenant.tenantId]
-  if (brand) {
-    const bank = read<{ questions: QuestionSpec[] }>(brand.bank)
-    const wrapped = read<{ analyses: QuestionRepeatAnalysis[] }>(brand.analyses)
-    return { questions: bank.questions, analyses: wrapped.analyses }
-  }
-  const bankPath = `data/${tenant.tenantId}/question-bank/${tenant.questionBankVersion}.json`
-  const anPath = `data/${tenant.tenantId}/${WEEK}/question-analyses.json`
-  if (!existsSync(bankPath) || !existsSync(anPath)) return null
-  const bank = read<{ questions: QuestionSpec[] }>(bankPath)
-  const analyses = read<QuestionRepeatAnalysis[]>(anPath) // data/는 순수 배열
-  return { questions: bank.questions, analyses }
-}
-
-function recompute(prev: WeeklyScorecard, tenant: TenantConfig): WeeklyScorecard {
-  const src = loadSource(tenant)
+function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyScorecard[]): WeeklyScorecard {
+  const src = loadSource(tenant.tenantId, prev.weekOf)
   if (!src) {
-    console.warn(`  ${tenant.tenantId}: 분석 소스 없음 — 기존 카드 유지`)
+    console.warn(`  ${tenant.tenantId} ${prev.weekOf}: 분석 소스 없음 — 기존 카드 유지`)
     return prev
   }
-  const { questions, analyses } = src
-  const catOf = new Map(questions.map((q) => [q.questionId, q.category]))
-
-  const agnostic = analyses.filter((a) => catOf.get(a.questionId) === 'category-agnostic')
-  const mentionRate = mean(agnostic.map((a) => (a.mentioned ? 1 : 0)))
-
-  const hasCompetitors = tenant.competitors.length > 0
-  const brandMentionTotal = analyses.reduce((s, a) => s + a.mentionSentences.length, 0)
-  const competitorMentionTotal = analyses.reduce(
-    (s, a) => s + a.competitorMentions.reduce((t, c) => t + c.mentionCount, 0),
-    0,
-  )
-  const shareTotal = brandMentionTotal + competitorMentionTotal
-  const shareOfMention = hasCompetitors && shareTotal > 0 ? brandMentionTotal / shareTotal : null
-
-  const ranks = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null)
-  const avgRecommendationRank = ranks.length > 0 ? mean(ranks) : null
-
-  const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0)
-  const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0)
-  const factualityScore = supported + contradicted > 0 ? supported / (supported + contradicted) : 1
-
-  const totalCitations = analyses.reduce((s, a) => s + a.citations.length, 0)
-  const brandOwnedCitations = analyses.reduce(
-    (s, a) => s + a.citations.filter((c) => c.ownerType === 'brand-owned').length,
-    0,
-  )
-  const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0
-
-  const currentScore = computeAeoScore({
-    mentionRate,
-    shareOfMention,
-    avgRecommendationRank,
-    factualityScore,
-    brandOwnedCitationRate,
-  })
-
-  const perCallScores = analyses.map((a) => {
-    const f =
-      a.factualitySupported + a.factualityContradicted > 0
-        ? a.factualitySupported / (a.factualitySupported + a.factualityContradicted)
-        : 1
-    return computeAeoScore({
-      mentionRate: a.mentioned ? 1 : 0,
-      shareOfMention: hasCompetitors ? a.shareOfMention : null,
-      avgRecommendationRank: a.brandRank,
-      factualityScore: f,
-      brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
-    })
-  })
-  const ci = meanWithConfidenceInterval(perCallScores)
-  const margin = ci.high - ci.mean
-
-  // 파이프라인과 동일하게 실측 분석에서 다시 만든다 (이전 카드 값을 재사용하면 stale해진다).
-  const hallucinationFlags = analyses
-    .filter((a) => a.factualityContradicted > 0)
-    .map((a) => `${a.engine} / ${a.questionId} #${a.callIndex}: 사실성 불일치 ${a.factualityContradicted}건`)
+  const m = aggregateWeeklyMetrics(tenant, src.questions, src.analyses)
+  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score
+  const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]))
 
   return {
     ...prev,
     aeoScore: {
-      current: currentScore,
-      ma4: currentScore,
-      previousWeek: currentScore,
-      ciLow: Math.round((currentScore - margin) * 10) / 10,
-      ciHigh: Math.round((currentScore + margin) * 10) / 10,
+      current: m.score,
+      ma4,
+      previousWeek,
+      ciLow: Math.round((m.score - m.ciMargin) * 10) / 10,
+      ciHigh: Math.round((m.score + m.ciMargin) * 10) / 10,
     },
-    mentionRate,
-    shareOfMention,
-    avgRecommendationRank,
-    factualityScore,
-    brandOwnedCitationRate,
-    hallucinationFlags,
+    mentionRate: m.mentionRate,
+    shareOfMention: m.shareOfMention,
+    avgRecommendationRank: m.avgRecommendationRank,
+    factualityScore: m.factualityScore,
+    brandOwnedCitationRate: m.brandOwnedCitationRate,
+    hallucinationFlags: m.hallucinationFlags,
+    enginesUsed: m.enginesUsed,
   }
 }
 
 const byId = new Map(tenants.map((t) => [t.tenantId, t]))
-const next = cards.map((c) => {
-  const tenant = byId.get(c.tenantId)
-  if (!tenant) return c
-  const updated = recompute(c, tenant)
-  const fmt = (r: number | null) => (r === null ? 'null' : r.toFixed(2))
-  console.log(
-    `${c.tenantId.padEnd(16)} Score ${c.aeoScore.current}→${updated.aeoScore.current}` +
-      `  (순위 ${fmt(updated.avgRecommendationRank)}${updated.avgRecommendationRank === null ? ' → 재정규화 제외' : ''})`,
-  )
-  return updated
-})
+const ordered = [...cards].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
+const historyByTenant = new Map<string, WeeklyScorecard[]>()
+
+const updatedById = new Map<string, WeeklyScorecard>()
+const pctOrNull = (v: number | null) => (v === null ? '측정불가' : `${(v * 100).toFixed(1)}%`)
+
+for (const card of ordered) {
+  const tenant = byId.get(card.tenantId)
+  const key = `${card.tenantId}::${card.weekOf}`
+  if (!tenant) {
+    updatedById.set(key, card)
+    continue
+  }
+  const history = historyByTenant.get(card.tenantId) ?? []
+  const updated = recompute(card, tenant, history)
+  historyByTenant.set(card.tenantId, [...history, updated])
+  updatedById.set(key, updated)
+
+  const scoreMoved = updated.aeoScore.current !== card.aeoScore.current
+  const somMoved = updated.shareOfMention !== card.shareOfMention
+  if (scoreMoved || somMoved) {
+    console.log(
+      `${card.tenantId.padEnd(18)} ${card.weekOf}  Score ${card.aeoScore.current}→${updated.aeoScore.current}` +
+        (somMoved ? `  SoM ${pctOrNull(card.shareOfMention)}→${pctOrNull(updated.shareOfMention)}` : ''),
+    )
+  }
+}
+
+const next = cards.map((c) => updatedById.get(`${c.tenantId}::${c.weekOf}`) ?? c)
 
 // 코호트 순위 재계산 (업종·지역·주차 그룹).
 for (const card of next) {
@@ -153,7 +104,9 @@ console.log('\ndemo-scorecards.json 갱신 완료')
 for (const [key, list] of groupByCohort(next)) {
   console.log(`\n[${key}]`)
   for (const c of [...list].sort((a, b) => b.aeoScore.current - a.aeoScore.current)) {
-    console.log(`  ${c.cohortRank.position}/${c.cohortRank.totalTenants}  Score ${String(c.aeoScore.current).padStart(3)}  ${c.brandName}`)
+    console.log(
+      `  ${c.cohortRank.position}/${c.cohortRank.totalTenants}  Score ${String(c.aeoScore.current).padStart(3)}  ${c.brandName}`,
+    )
   }
 }
 

@@ -2,11 +2,12 @@ import type { EeatAnalysis } from '../src/prompts/b6-eeat.js';
 import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
 import { analyzeCitationSources } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
+import { agnosticAnalyses } from './mentionScope.js';
 import type { ResultStore } from './store.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
 type CitationSource = Pick<ResultStore, 'getQuestionAnalyses'>;
-type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards'>;
+type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank'>;
 
 export interface CitationBreakdownRow {
   domain: string;
@@ -62,6 +63,9 @@ export interface RankingView {
     peers: { tenantId: string; brandName: string; aeoScore: number }[];
   };
   competitorShareOfMention: { name: string; mentionCount: number; share: number }[];
+  // 언급 점유를 어느 질문 집합에서 냈는지. 'category-agnostic'이 정상이고, 질문 은행을 못 읽어
+  // 분류가 불가능하면 'all'로 폴백한다(그 경우 브랜드명 질문이 자사 점유를 부풀린다).
+  mentionScope: 'category-agnostic' | 'all';
   topRecommendationRate: number; // 순위 판정이 있었던 응답 중 자사가 1위로 뽑힌 비율
 }
 
@@ -71,6 +75,7 @@ export interface RankingTenant {
   brandName: string;
   industry: string;
   region: string;
+  questionBankVersion: string;
 }
 
 /** 랭킹 분석 — 업종·지역 코호트 순위 + 테넌트 내부 경쟁사 언급 점유율을 한 번에 내려준다. */
@@ -79,10 +84,17 @@ export async function getRankingView(
   tenant: RankingTenant,
   weekOf: string,
 ): Promise<RankingView> {
-  const [cohortScorecards, analyses] = await Promise.all([
+  const [cohortScorecards, allAnalyses, bank] = await Promise.all([
     store.getCohortScorecards(tenant.industry, tenant.region, weekOf),
     store.getQuestionAnalyses(tenant.tenantId, weekOf),
+    store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion),
   ]);
+
+  // 언급 점유는 스코어카드 SoM과 같은 모집단(카테고리 무관 질문)에서 낸다 — server/mentionScope.ts.
+  // 두 화면이 같은 개념을 다른 모집단으로 보여주면 사용자가 값을 대조할 수 없다.
+  const scoped = bank ? agnosticAnalyses(allAnalyses, bank.questions) : [];
+  const useScoped = bank !== null && scoped.length > 0;
+  const analyses = useScoped ? scoped : allAnalyses;
 
   const peers = cohortScorecards
     .map((card) => ({ tenantId: card.tenantId, brandName: card.brandName, aeoScore: card.aeoScore.current }))
@@ -106,12 +118,15 @@ export async function getRankingView(
     }))
     .sort((a, b) => b.mentionCount - a.mentionCount);
 
-  const withRanking = analyses.filter((analysis) => analysis.topRecommendation !== null);
+  // 순위 지표는 스코어카드의 avgRecommendationRank와 같이 전체 응답 기준을 유지한다
+  // (모집단을 좁힌 것은 언급률·SoM 계열뿐이다).
+  const withRanking = allAnalyses.filter((analysis) => analysis.topRecommendation !== null);
   const topForBrand = withRanking.filter((analysis) => analysis.topRecommendation === tenant.brandName).length;
 
   return {
     cohort: { position, totalTenants: peers.length, peers },
     competitorShareOfMention,
+    mentionScope: useScoped ? 'category-agnostic' : 'all',
     topRecommendationRate: withRanking.length > 0 ? topForBrand / withRanking.length : 0,
   };
 }

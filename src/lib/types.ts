@@ -115,5 +115,7 @@ export interface RankingView {
     peers: { tenantId: string; brandName: string; aeoScore: number }[]
   }
   competitorShareOfMention: { name: string; mentionCount: number; share: number }[]
+  /** 언급 점유의 모집단. 'all'은 질문 은행을 못 읽어 전체 응답으로 폴백한 경우. */
+  mentionScope: 'category-agnostic' | 'all'
   topRecommendationRate: number
 }

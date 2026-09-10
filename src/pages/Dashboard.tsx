@@ -119,8 +119,8 @@ export default function Dashboard() {
               <p>{formatPct(card.shareOfMention)}</p>
               <span>
                 {card.shareOfMention === null
-                  ? '경쟁사를 설정해야 측정됩니다'
-                  : '경쟁 브랜드 대비 언급 점유'}
+                  ? '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가'
+                  : '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'}
               </span>
             </article>
             <article>

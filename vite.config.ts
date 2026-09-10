@@ -16,7 +16,9 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': 'http://localhost:4000',
+      // 데스크톱 앱이 :4000을 잡고 있으면 dev API를 다른 포트로 띄우고
+      // API_PROXY_TARGET으로 가리킨다 (PORT=4100 npm run server:start 등).
+      '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:4000',
     },
   },
 })

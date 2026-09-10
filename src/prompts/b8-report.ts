@@ -10,7 +10,9 @@ export interface WeeklyScorecard {
   brandName: string;
   aeoScore: { current: number; ma4: number; previousWeek: number; ciLow: number; ciHigh: number };
   mentionRate: number; // category-agnostic 질문 중 언급 비율
-  shareOfMention: number | null; // 경쟁사가 없으면 측정 불가(null)
+  // 언급률과 같은 모집단(category-agnostic 질문)에서 낸 횟수 기준 점유율.
+  // 경쟁사가 없거나 그 모집단에 아무 언급도 없으면 측정 불가(null).
+  shareOfMention: number | null;
   avgRecommendationRank: number | null;
   factualityScore: number; // supported / (supported+contradicted)
   brandOwnedCitationRate: number;
@@ -59,7 +61,7 @@ export function buildWeeklyReportPrompt(
   const user = `주간 스코어카드 (${card.weekOf} / ${card.industry} / ${card.region} / ${card.brandName}):
 - AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
-- Share of Mention: ${card.shareOfMention === null ? '경쟁사 미설정으로 측정 불가' : `${(card.shareOfMention * 100).toFixed(1)}%`}
+- Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준): ${card.shareOfMention === null ? '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가' : `${(card.shareOfMention * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성 점수: ${(card.factualityScore * 100).toFixed(1)}%
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%

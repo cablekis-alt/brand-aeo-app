@@ -67,6 +67,11 @@ export default function Ranking() {
 
           <section>
             <h3>경쟁사 Share of Mention</h3>
+            <p className="hint" style={{ marginTop: 0 }}>
+              {ranking.mentionScope === 'category-agnostic'
+                ? '브랜드명을 넣지 않은 질문(카테고리 무관)의 응답만 셉니다 — 대시보드의 Share of Mention과 같은 모집단입니다.'
+                : '질문 은행을 읽지 못해 전체 응답으로 집계했습니다 — 브랜드명이 들어간 질문이 자사 점유를 부풀릴 수 있습니다.'}
+            </p>
             {ranking.competitorShareOfMention.filter((e) => e.name !== tenant.brandName).length === 0 ? (
               <p className="muted">
                 경쟁사가 설정되지 않아 언급 점유를 비교할 수 없습니다. 실제 경쟁 브랜드를 등록하면 측정됩니다.

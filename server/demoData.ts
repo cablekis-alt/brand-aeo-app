@@ -232,19 +232,18 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
 
   const mentionedCount = mentioned.filter(Boolean).length;
 
-  // 2) Share of Mention — 스코어카드 값은 전체 레코드 평균이므로, 언급된 레코드의 평균이
-  //    target / (언급 비율)이 되도록 경쟁사 언급 수를 인접한 두 단계로 섞는다.
-  const mentionedRatio = mentionedCount / slots.length;
-  // 합성 데이터 경로. 스코어카드 SoM이 null(경쟁사 없음)이면 경쟁사 언급도 0으로 둔다.
+  // 2) Share of Mention — 스코어카드 SoM은 카테고리 무관 질문 응답에서 횟수 기준으로 낸다
+  //    (server/mentionScope.ts). 그래서 역산도 그 부분집합에서만 한다: 자사 언급이 M건일 때
+  //    경쟁사 언급 총합을 R = M(1/target − 1)로 두면 M/(M+R) = target이 정확히 맞는다.
+  //    브랜드명이 들어간 질문의 경쟁사 언급은 SoM 모집단 밖이므로 기본 개수만 붙인다.
+  //    스코어카드 SoM이 null(경쟁사 없음)이면 경쟁사 언급도 0으로 둔다.
+  //    R이 정수라 자사 언급 M이 아주 작으면 target을 정확히 못 맞춘다(M=1이면 1 또는 0.5뿐).
+  //    실측 산출물이 있는 테넌트는 이 경로를 타지 않으므로 그 오차는 감수한다.
   const cardShareOfMention = card.shareOfMention ?? 0;
-  const targetWhenMentioned = mentionedRatio > 0 ? Math.min(1, cardShareOfMention / mentionedRatio) : 0;
-  const rivalFloor = Math.max(0, Math.floor(1 / Math.max(targetWhenMentioned, 1e-6)) - 1);
-  const shareHigh = 1 / (1 + rivalFloor);
-  const shareLow = 1 / (2 + rivalFloor);
-  const highShareCount =
-    shareHigh === shareLow
-      ? mentionedCount
-      : Math.round((mentionedCount * (targetWhenMentioned - shareLow)) / (shareHigh - shareLow));
+  const agnosticRivalTotal =
+    cardShareOfMention > 0 ? Math.round(agnosticMentions * (1 / cardShareOfMention - 1)) : 0;
+  const rivalBase = agnosticMentions > 0 ? Math.floor(agnosticRivalTotal / agnosticMentions) : 0;
+  const rivalExtra = agnosticRivalTotal - rivalBase * agnosticMentions;
 
   // 3) 인용 — 언급된 응답은 2건, 아닌 응답은 1건의 출처를 남긴다고 본다.
   const totalCitations = mentionedCount * 2 + (slots.length - mentionedCount);
@@ -264,7 +263,7 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
   const rankBase = Math.max(1, Math.floor(restMean));
   const rankUpperCount = Math.round(restTotal * Math.max(0, Math.min(1, restMean - rankBase)));
 
-  let mentionedSeen = 0;
+  let agnosticMentionedSeen = 0;
   let citationSeen = 0;
   let factualSeen = 0;
   let rankedSeen = 0;
@@ -281,20 +280,32 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
 
     let rivalCount = 0;
     if (isMentioned) {
-      rivalCount = evenCount(mentionedSeen, mentionedCount, highShareCount) ? rivalFloor : rivalFloor + 1;
-      mentionedSeen += 1;
+      if (slot.question.category === 'category-agnostic') {
+        rivalCount = rivalBase + (evenCount(agnosticMentionedSeen, agnosticMentions, rivalExtra) ? 1 : 0);
+        agnosticMentionedSeen += 1;
+      } else {
+        rivalCount = rivalBase;
+      }
     }
 
-    const competitorMentions: CompetitorMentionDetail[] = [];
+    // 경쟁사 수보다 언급 수가 많을 수 있으므로 이름별로 합친다(실제 판정 결과와 같은 모양).
+    const rivalByName = new Map<string, CompetitorMentionDetail>();
     for (let r = 0; r < rivalCount; r += 1) {
       const name = competitorNames[(i + r) % Math.max(competitorNames.length, 1)];
       if (!name) break;
-      competitorMentions.push({
-        name,
-        mentionCount: 1,
-        sentences: [competitorSentence(name, slot.question.topic)],
-      });
+      const entry = rivalByName.get(name);
+      if (entry) {
+        entry.mentionCount += 1;
+        entry.sentences.push(competitorSentence(name, slot.question.topic));
+      } else {
+        rivalByName.set(name, {
+          name,
+          mentionCount: 1,
+          sentences: [competitorSentence(name, slot.question.topic)],
+        });
+      }
     }
+    const competitorMentions: CompetitorMentionDetail[] = [...rivalByName.values()];
 
     const brandMentionCount = mentionSentences.length;
     const rivalMentionCount = competitorMentions.reduce((sum, c) => sum + c.mentionCount, 0);
