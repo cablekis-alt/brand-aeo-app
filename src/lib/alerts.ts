@@ -12,6 +12,40 @@ export interface Alert {
 
 const pct = (n: number) => `${(n * 100).toFixed(0)}%`
 
+/** 점수 목록 안에서의 경쟁 랭킹 위치(server/scoring.ts의 computeCohortRank와 같은 규칙). */
+const rankIn = (score: number, scores: number[]) => scores.filter((s) => s > score).length + 1
+
+/**
+ * 주차 간 코호트 순위 변화 — **두 주에 모두 측정된 브랜드끼리만** 비교한다.
+ *
+ * 저장된 position을 그대로 비교하면 안 된다. 주차마다 측정한 경쟁사 구성이 달라져
+ * 내 점수가 그대로여도 순위가 움직인다. 나보다 점수 높은 경쟁사가 코호트에서 빠지면
+ * 그 아래 모든 브랜드가 공짜로 한 계단 올라간다.
+ *
+ * 실측(2026-W36 → W37, 성형외과·서울 강남이 7개 → 5개):
+ *   idhospital 4/7 → 2/5 인데 점수는 30 → 28로 **떨어졌다**. 옛 로직은 "순위 상승"을 알렸다.
+ *
+ * @returns 비교 가능한 순위 변화. members가 없는 옛 카드나 공통 브랜드가 2개 미만이면 null.
+ */
+function comparableRankChange(
+  prev: WeeklyScorecard,
+  cur: WeeklyScorecard,
+): { from: number; to: number; total: number } | null {
+  const prevMembers = prev.cohortRank.members
+  const curMembers = cur.cohortRank.members
+  if (!prevMembers?.length || !curMembers?.length) return null
+
+  const prevScoreById = new Map(prevMembers.map((m) => [m.tenantId, m.aeoScore]))
+  const shared = curMembers.filter((m) => prevScoreById.has(m.tenantId))
+  if (shared.length < 2) return null
+
+  return {
+    from: rankIn(prev.aeoScore.current, shared.map((m) => prevScoreById.get(m.tenantId) as number)),
+    to: rankIn(cur.aeoScore.current, shared.map((m) => m.aeoScore)),
+    total: shared.length,
+  }
+}
+
 export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   if (!history || history.length === 0) return []
   const sorted = [...history].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
@@ -57,12 +91,17 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
     }
   }
 
-  // 코호트 순위 변화(position 증가 = 하락)
-  const rankDelta = cur.cohortRank.position - prev.cohortRank.position
-  if (rankDelta >= 1) {
-    alerts.push({ level: 'warn', title: `코호트 순위 하락 ${prev.cohortRank.position}위 → ${cur.cohortRank.position}위`, detail: `${cur.cohortRank.totalTenants}개 브랜드 중. 경쟁사에 자리를 내줬습니다.` })
-  } else if (rankDelta <= -1) {
-    alerts.push({ level: 'good', title: `코호트 순위 상승 ${prev.cohortRank.position}위 → ${cur.cohortRank.position}위`, detail: `${cur.cohortRank.totalTenants}개 브랜드 중.` })
+  // 코호트 순위 변화(position 증가 = 하락). 비교 가능한 집합이 없으면 알리지 않는다 —
+  // 틀린 방향의 경고보다 침묵이 낫다(comparableRankChange 주석 참고).
+  const rankChange = comparableRankChange(prev, cur)
+  if (rankChange && rankChange.to !== rankChange.from) {
+    const basis = `두 주에 모두 측정된 ${rankChange.total}개 브랜드 기준.`
+    const title = `코호트 순위 ${rankChange.to > rankChange.from ? '하락' : '상승'} ${rankChange.from}위 → ${rankChange.to}위`
+    alerts.push(
+      rankChange.to > rankChange.from
+        ? { level: 'warn', title, detail: `${basis} 경쟁사에 자리를 내줬습니다.` }
+        : { level: 'good', title, detail: basis },
+    )
   }
 
   // 사실성 점수 하락

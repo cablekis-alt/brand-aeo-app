@@ -1,4 +1,4 @@
-import { computeCohortRank } from './scoring.js';
+import { computeCohortRank, sameCohortRank } from './scoring.js';
 import type { ResultStore } from './store.js';
 
 /**
@@ -26,8 +26,7 @@ export async function reconcileCohortRanks(
   let updated = 0;
   for (const card of cards) {
     const next = computeCohortRank(card.aeoScore.current, cards);
-    const prev = card.cohortRank;
-    if (prev && prev.position === next.position && prev.totalTenants === next.totalTenants) continue;
+    if (sameCohortRank(card.cohortRank, next)) continue;
     // saveScorecard는 주차 카드와 히스토리를 함께 갱신한다 — 화면은 히스토리를 읽는다.
     await store.saveScorecard({ ...card, cohortRank: next });
     updated += 1;

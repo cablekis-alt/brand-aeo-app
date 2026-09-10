@@ -113,11 +113,50 @@ export function computeAeoScore(inputs: AeoScoreInputs): number {
   return Math.round(composite * 100);
 }
 
+/**
+ * 코호트 순위 — 표준 경쟁 랭킹(1-2-3-4-4: 동점은 같은 번호, 그 다음 번호를 건너뛴다).
+ *
+ * position은 "내 점수보다 엄격히 높은 브랜드 수 + 1"이라 동점 위/아래 브랜드의 순위가
+ * 흔들리지 않는다. 동점을 소수점으로 깨지 않는 것은 의도다 — aeoScore.current는 정수로
+ * 반올림된 값이고 신뢰구간이 ±3~6점이라, 0.4점 차이로 서열을 매기면 화면에 같은 숫자가
+ * 보이는 두 브랜드에 설명할 수 없는 우열이 생긴다.
+ *
+ * members에 비교 대상을 남긴다 — 순위 숫자만으로는 주차 간 비교가 성립하지 않는다
+ * (측정한 경쟁사 구성이 주차마다 달라진다).
+ */
+/**
+ * 두 코호트 순위가 같은지 — 저장을 건너뛸지 판단할 때 쓴다.
+ * members가 비어 있으면 "다르다"로 본다(v0.1.44 이전 카드를 backfill해야 alerts가 주차 간
+ * 비교를 할 수 있다).
+ */
+export function sameCohortRank(
+  a: WeeklyScorecard['cohortRank'] | undefined,
+  b: WeeklyScorecard['cohortRank'],
+): boolean {
+  if (!a || !a.members?.length) return false;
+  return (
+    a.position === b.position &&
+    a.totalTenants === b.totalTenants &&
+    (a.tiedCount ?? 1) === (b.tiedCount ?? 1) &&
+    a.members.length === (b.members?.length ?? 0) &&
+    a.members.every((m, i) => m.tenantId === b.members?.[i]?.tenantId && m.aeoScore === b.members?.[i]?.aeoScore)
+  );
+}
+
 export function computeCohortRank(
   tenantScore: number,
   cohortScorecards: WeeklyScorecard[],
-): { position: number; totalTenants: number } {
-  const scores = cohortScorecards.map((s) => s.aeoScore.current).sort((a, b) => b - a);
+): NonNullable<WeeklyScorecard['cohortRank']> {
+  const scores = cohortScorecards.map((s) => s.aeoScore.current);
   const position = scores.filter((s) => s > tenantScore).length + 1;
-  return { position, totalTenants: Math.max(scores.length, 1) };
+  return {
+    position,
+    totalTenants: Math.max(scores.length, 1),
+    tiedCount: Math.max(scores.filter((s) => s === tenantScore).length, 1),
+    // tenantId로 정렬해 둔다 — 저장 순서가 readdir 순서에 흔들리지 않아야 sameCohortRank가
+    // "달라졌다"고 오판해 매번 다시 쓰지 않는다.
+    members: cohortScorecards
+      .map((s) => ({ tenantId: s.tenantId, aeoScore: s.aeoScore.current }))
+      .sort((a, b) => a.tenantId.localeCompare(b.tenantId)),
+  };
 }

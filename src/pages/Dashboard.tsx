@@ -102,6 +102,7 @@ export default function Dashboard() {
               <div>
                 <dt>업종·지역 코호트</dt>
                 <dd>
+                  {(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}
                   {card.cohortRank.position} / {card.cohortRank.totalTenants}
                 </dd>
               </div>

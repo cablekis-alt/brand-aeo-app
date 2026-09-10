@@ -16,7 +16,21 @@ export interface WeeklyScorecard {
   avgRecommendationRank: number | null;
   factualityScore: number; // supported / (supported+contradicted)
   brandOwnedCitationRate: number;
-  cohortRank: { position: number; totalTenants: number };
+  cohortRank: {
+    position: number;
+    totalTenants: number;
+    /** 이 순위를 공유하는 브랜드 수(자신 포함). 1이면 단독. 경쟁 랭킹이라 동점 뒤 번호는 건너뛴다. */
+    tiedCount?: number;
+    /**
+     * 이 순위를 매길 때 비교한 브랜드와 그 점수.
+     *
+     * 순위 숫자만 남기면 "무엇과 비교한 순위인지"가 지워진다. 주차마다 측정한 경쟁사가 달라
+     * (실측: 성형외과·서울 강남이 W36 7개 → W37 5개) 순위만으로는 주차 간 비교가 성립하지 않는다.
+     * 두 주에 모두 있는 브랜드끼리만 비교하려면 이 목록이 필요하다(src/lib/alerts.ts).
+     * v0.1.44 이전 카드엔 없어 선택 필드다.
+     */
+    members?: { tenantId: string; aeoScore: number }[];
+  };
   hallucinationFlags: string[]; // B5-D contradicted 주장 요약
   enginesUsed?: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 구버전 스코어카드엔 없을 수 있어 선택.
   // 이 주차를 판정한 엔진('gemini'|'claude'|'openai'|'mock'). 판단 엔진이 바뀌면 같은 응답에서
@@ -69,7 +83,7 @@ export function buildWeeklyReportPrompt(
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성 점수: ${(card.factualityScore * 100).toFixed(1)}%
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%
-- 업종·지역 코호트 순위: ${card.cohortRank.position} / ${card.cohortRank.totalTenants}
+- 업종·지역 코호트 순위: ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position} / ${card.cohortRank.totalTenants}
 - 사실성 위반 사례: ${card.hallucinationFlags.join(' / ') || '없음'}${eeatLines}${citationLines}`;
 
   return { system, user };
