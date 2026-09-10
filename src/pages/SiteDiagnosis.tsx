@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
+import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -21,11 +23,14 @@ export default function SiteDiagnosis() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<AeoReport | null>(null)
+  // 엔티티 일치는 총점과 분리해 따로 담는다 — scoreAeo를 거치지 않으므로 배점에 영향이 없다.
+  const [entity, setEntity] = useState<EntityMatchReport | null>(null)
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
   useEffect(() => {
     setUrl(brandSiteUrl(tenant?.ownedDomains))
     setReport(null)
+    setEntity(null)
     setError(null)
   }, [tenant?.tenantId])
 
@@ -33,6 +38,7 @@ export default function SiteDiagnosis() {
     e.preventDefault()
     setError(null)
     setReport(null)
+    setEntity(null)
 
     const parsed = parsePublicHttpUrl(url)
     if (!parsed.ok) {
@@ -75,6 +81,8 @@ export default function SiteDiagnosis() {
         renderWarning: payload.renderWarning,
       })
       setReport(evaluateAeo(signals, context))
+      // 선택된 브랜드의 상호·별칭으로만 판정한다(새 입력창 없음). 브랜드가 없으면 섹션을 띄우지 않는다.
+      setEntity(checkEntityMatch(signals, tenant?.brandName ?? '', tenant?.aliases ?? []))
     } catch (err) {
       setError(err instanceof Error ? err.message : '진단 중 오류가 발생했습니다.')
     } finally {
@@ -128,6 +136,7 @@ export default function SiteDiagnosis() {
         </p>
       )}
       {report && <SiteReportView report={report} />}
+      {report && entity && <EntityMatchPanel report={entity} />}
     </>
   )
 }
