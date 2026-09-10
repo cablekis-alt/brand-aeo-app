@@ -12,26 +12,20 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.wanted.co.kr/events/article_241028",
-          "domain": "wanted.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://demoday.tistory.com/396",
-          "domain": "demoday.tistory.com",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
+          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
+          "domain": "newsprime.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -42,33 +36,27 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://badapayment.co.kr/%EB%84%A4%EC%9D%B4%EB%B2%84%EC%A3%BC%EB%AC%B8-%ED%86%A0%EC%8A%A4%EC%98%A4%EB%8D%94-%EB%B9%84%EA%B5%90/",
-          "domain": "badapayment.co.kr",
+          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://alzzasoft.tistory.com/m/6",
-          "domain": "alzzasoft.tistory.com",
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=fkKwh5T35vM",
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "isentoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
           "domain": "youtube.com",
           "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/tableorder-atoz",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -88,7 +76,50 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
+      "citations": [
+        {
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-2026wage/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/table-order/demo/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -104,8 +135,8 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "#### **④ 브이디컴퍼니 (브이디메뉴) — 서빙로봇 연동 & 무인화 특화**",
-          "sentiment": "positive"
+          "sentence": "#### ⑤ 브이디컴퍼니 (브이디메뉴)",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
@@ -129,51 +160,57 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youthdaily.co.kr/news/article.html?no=178670",
-          "domain": "youthdaily.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.xn--3e0b17iq4obzcszak7bow8a60h.kr/blog/table-order-labor-cost-2026",
           "domain": "xn--3e0b17iq4obzcszak7bow8a60h.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-minimum-wage-labor-savings/",
           "domain": "payhere.in",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ceo.baemin.com/knowhow/12768",
+          "domain": "ceo.baemin.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://menuforma.com/blog/korea-restaurant-table-order-kiosk-adoption-2025",
+          "domain": "menuforma.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://www.e2news.com/news/articleView.html?idxno=317879",
+          "domain": "e2news.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.franchisesetec.co.kr/content/view.php?type=guide&slug=blog-20240825-serving-robot-table-order-restaurant-automation",
+          "domain": "franchisesetec.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
           "domain": "youtube.com",
           "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/mynameis_sindang",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
-          "domain": "bloter.net",
-          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -196,49 +233,31 @@
       "citations": [
         {
           "raw": "https://www.xn--3e0b17iq4obzcszak7bow8a60h.kr/blog/table-order-labor-cost-2026",
-          "domain": "www.xn--3e0b17iq4obzcszak7bow8a60h.kr",
+          "domain": "xn--3e0b17iq4obzcszak7bow8a60h.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.meconomynews.com/news/articleView.html?idxno=108565",
-          "domain": "www.meconomynews.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://busan.fnnews.com/news/202507281822191356",
-          "domain": "busan.fnnews.com",
+          "domain": "meconomynews.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
           "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ceo.baemin.com/knowhow/12768",
-          "domain": "ceo.baemin.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://firstorder.tistory.com/m/7",
-          "domain": "firstorder.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
           "domain": "payhere.in",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youthdaily.co.kr/news/article.html?no=178670",
+          "domain": "youthdaily.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -249,15 +268,9 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
-          "domain": "www.bloter.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
-          "domain": "www.bloter.net",
-          "ownerType": "third-party-authority",
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -285,9 +298,9 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://21pos.tistory.com/28",
-          "domain": "21pos.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.fnnews.com/news/202507281822191356",
+          "domain": "fnnews.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -297,33 +310,27 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.news1.kr/industry/sb-founded/5481035",
-          "domain": "news1.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.franchisesetec.co.kr/content/view.php?type=guide&slug=blog-20240825-serving-robot-table-order-restaurant-automation",
-          "domain": "franchisesetec.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
           "domain": "payhere.in",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://21pos.tistory.com/28",
+          "domain": "21pos.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -333,9 +340,15 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://biz.heraldcorp.com/article/10471898",
+          "domain": "biz.heraldcorp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -351,20 +364,15 @@
       "questionId": "v1-003",
       "engine": "gemini",
       "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "* **브이디메뉴 (VD컴퍼니)**\n  * 서빙로봇(브이디봇)과 테이블오더를 함께 연동해 풀 무인화/자동화 매장을 구축하려는 대형 식당에서 주로 도입합니다.",
-          "sentiment": "neutral"
-        }
-      ],
+      "mentioned": false,
+      "mentionSentences": [],
       "competitorMentions": [],
-      "shareOfMention": 1,
+      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://demoday.co.kr/bm-analysis/200",
-          "domain": "demoday.co.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -374,8 +382,26 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
+          "raw": "https://mobile.newsis.com/view/NISX20260114_0003476448",
+          "domain": "mobile.newsis.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=GXD6EOtZX-s",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog.torder.com/torder_7_trillion_won/",
+          "domain": "blog.torder.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
+          "domain": "meatlovernews.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -386,26 +412,20 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
-          "domain": "newsprime.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/food/restaurant/",
-          "domain": "payhere.in",
+          "raw": "https://m.thebigdata.co.kr/view.php?ud=2025022010062932156cf2d78c68_23",
+          "domain": "m.thebigdata.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -414,15 +434,9 @@
           "domain": "isentoday.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
         }
       ],
-      "topRecommendation": null,
+      "topRecommendation": "티오더, KT 하이오더",
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
@@ -440,95 +454,17 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://blog.torder.com/torder_7_trillion_won/",
-          "domain": "blog.torder.com",
+          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
+          "domain": "meatlovernews.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
-          "domain": "mstacc.com",
+          "raw": "https://m.ekn.kr/view.php?key=20260412021375388",
+          "domain": "m.ekn.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
-        {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tnnews.co.kr/archives/229090",
-          "domain": "tnnews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://demoday.tistory.com/385",
-          "domain": "demoday.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "www.smedaily.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hankyung.com/article/2024072465981",
-          "domain": "www.hankyung.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://isentoday.tistory.com/29",
-          "domain": "isentoday.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
-          "domain": "www.torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
         {
           "raw": "https://mobile.newsis.com/view/NISX20260114_0003476448",
           "domain": "mobile.newsis.com",
@@ -536,8 +472,20 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://news.bizwatch.co.kr/article/consumer/2025/02/07/0044",
-          "domain": "news.bizwatch.co.kr",
+          "raw": "https://www.ajunews.com/view/20241018091444552",
+          "domain": "www.ajunews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hyohyo-7.tistory.com/2",
+          "domain": "hyohyo-7.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -548,21 +496,45 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://zdnet.co.kr/view/?no=20260114085947",
-          "domain": "zdnet.co.kr",
+          "raw": "https://m.thebigdata.co.kr/view.php?ud=2025022010062932156cf2d78c68_23",
+          "domain": "m.thebigdata.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
-          "domain": "www.torder.com",
-          "ownerType": "competitor-owned",
+          "raw": "https://www.1conomynews.co.kr/news/articleView.html?idxno=50252",
+          "domain": "1conomynews.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
@@ -572,20 +544,20 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
+          "raw": "https://www.pressman.kr/news/articleView.html?idxno=103268",
+          "domain": "pressman.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_3",
-          "domain": "tossplace.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47292",
+          "domain": "eroun.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -606,7 +578,62 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
+      "citations": [
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/tableorder-atoz",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://studio.jector.ai/intro/foodstyler/tableorder",
+          "domain": "jector.ai",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -625,45 +652,39 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
-          "domain": "mstacc.com",
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
+          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         }
       ],
@@ -683,56 +704,7 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.a-ha.io/questions/421c26a7c914c72694159733694c0043",
-          "domain": "a-ha.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://core.asiae.co.kr/article/2024062815334733122",
-          "domain": "core.asiae.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -751,9 +723,9 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%C2%B7%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9-%EA%B5%AC%EC%A1%B0%EC%99%80-%ED%8C%90%EB%8B%A8-%EA%B8%B0%EC%A4%80",
-          "domain": "beenhna.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -765,25 +737,19 @@
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://bizhankook.com/articles/30313.html",
-          "domain": "bizhankook.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-authority",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -805,68 +771,20 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=154078",
-          "domain": "dailysecu.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%C2%B7%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9-%EA%B5%AC%EC%A1%B0%EC%99%80-%ED%8C%90%EB%8B%A8-%EA%B8%B0%EC%A4%80",
-          "domain": "tistory.com",
+          "domain": "beenhna.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tnnews.co.kr/archives/229090",
-          "domain": "tnnews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/sk98dLRW2O4",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=154078",
-          "domain": "dailysecu.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -877,14 +795,68 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/tableorder-preference",
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%C2%B7%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9-%EA%B5%AC%EC%A1%B0%EC%99%80-%ED%8C%90%EB%8B%A8-%EA%B8%B0%EC%A4%80",
+          "domain": "beenhna.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://damdaamall.com/category/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94/68/",
+          "domain": "damdaamall.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bilrigo.com/model/compare.php?model_idx=11985",
+          "domain": "bilrigo.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -907,59 +879,11 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.getnews.co.kr/news/articleView.html?idxno=693935",
-          "domain": "getnews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
         {
           "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
           "domain": "blog-genieone.com",
@@ -967,20 +891,26 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
           "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sorder.io/page/type2",
+          "domain": "sorder.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -991,7 +921,49 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/toss-tableorder-updates",
+          "raw": "https://xn--9m1bt45assat92a.com/%EC%A3%BC%EC%A0%90%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94",
+          "domain": "xn--9m1bt45assat92a.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://xn--9m1bt45assat92a.com/%EC%A3%BC%EC%A0%90%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94",
+          "domain": "xn--9m1bt45assat92a.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=oHFSLY_EdZk",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
           "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
@@ -1003,14 +975,20 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tsposys.com/equipment/table-order/",
-          "domain": "tsposys.com",
+          "raw": "https://we-az.com/blog-22/",
+          "domain": "we-az.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -1031,56 +1009,7 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kt-hiorder.co.kr/benefits",
-          "domain": "kt-hiorder.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://xn--9m1bt07agwh.com/tableorder",
-          "domain": "xn--9m1bt07agwh.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/tableorder-qna",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
-          "domain": "hello.matetech.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -1150,39 +1079,27 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
-          "domain": "chosun.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9%C2%B7%EC%88%98%EC%88%98%EB%A3%8C%C2%B7%ED%9A%A8%EA%B3%BC-%EC%86%94%EC%A7%81%ED%95%98%EA%B2%8C-%EB%94%B0%EC%A0%B8%EB%B3%B4%EA%B8%B0",
-          "domain": "beenhna.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://whereisyourwork.com/work-t-order-price/",
-          "domain": "whereisyourwork.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://bizhankook.com/articles/30313.html",
-          "domain": "bizhankook.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pincetlife.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-vs-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%A0%8C%ED%83%88-%EB%B9%84%EC%9A%A9-%EB%B0%8F-%EC%97%85%EC%A2%85%EB%B3%84-%EB%8F%84%EC%9E%85-%EA%B0%80%EC%9D%B4%EB%93%9C",
+          "domain": "pincetlife.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -1195,6 +1112,36 @@
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mumujam.com/%EC%8B%9D%EB%8B%B9-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98%EB%B9%84-%EC%9B%94-%EC%82%AC%EC%9A%A9%EB%A3%8C/",
+          "domain": "mumujam.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://edulink000036.tistory.com/m/49",
+          "domain": "edulink000036.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -1216,9 +1163,87 @@
       "shareOfMention": 0,
       "citations": [
         {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://edulink000036.tistory.com/m/49",
+          "domain": "edulink000036.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -1234,33 +1259,21 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://nxt-rental.com/html/dh_prod/prod_list/10-1326",
+          "domain": "nxt-rental.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=fkKwh5T35vM",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.newsbrite.net/news/articleView.html?idxno=192220",
-          "domain": "newsbrite.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://damdaamall.com/product/%EB%A0%8C%ED%83%88-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EA%B0%84%ED%8E%B8%EA%B2%B0%EC%A0%9C-%ED%83%9C%EB%B8%94%EB%A6%BF%EC%A3%BC%EB%AC%B8-%EB%AC%B4%EC%9D%B8%EC%A3%BC%EB%AC%B8%EA%B8%B0-%EB%AC%B4%EC%9D%B8%EA%B2%B0%EC%A0%9C%EA%B8%B0/11071/",
           "domain": "damdaamall.com",
-          "ownerType": "third-party-authority",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -1268,88 +1281,10 @@
           "domain": "consumernews.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
+        },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://bizhankook.com/articles/30313.html",
-          "domain": "bizhankook.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9%C2%B7%EC%88%98%EC%88%98%EB%A3%8C%C2%B7%ED%9A%A8%EA%B3%BC-%EC%86%94%EC%A7%81%ED%95%98%EA%B2%8C-%EB%94%B0%EC%A0%B8%EB%B3%B4%EA%B8%B0",
-          "domain": "beenhna.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.sbiz.or.kr/smst/bbs/view.do?key=2111306039167&bbsSn=6840",
-          "domain": "sbiz.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://poseygc53.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94-%ED%85%8C%EC%9D%B4%EB%B2%84-%EC%84%A4%EC%B9%98%EB%B9%84-%EC%9B%94-%EB%A0%8C%ED%83%88%EB%A3%8C-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AA%A8%EB%93%A0-%EB%B9%84%EC%9A%A9-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AC%B4%EC%83%81-AS-%EA%B0%80%EB%8A%A5-%EB%AC%B4%EB%A3%8C-%EC%83%81%EB%8B%B4-%EC%9E%90%EC%98%81%EC%97%85%EC%9E%90-%EC%9A%94%EC%8B%9D%EC%97%85-%EC%B0%BD%EC%97%85-%EC%8B%9D%EB%8B%B9-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EC%A3%BC%EB%AC%B8",
-          "domain": "poseygc53.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/xtqTRkPKme?f=p",
-          "domain": "v.daum.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hantoday.net/news/articleView.html?idxno=44957",
-          "domain": "hantoday.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -1369,13 +1304,25 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "브이디컴퍼니의 테이블오더 솔루션인 **'브이디메뉴(VD메뉴)'**는 특히 **자체 POS 및 서빙로봇과의 연동성**을 강점으로 내세우는 서비스입니다.",
-          "sentiment": "positive"
+          "sentence": "**브이디메뉴(VD메뉴)**는 서빙로봇 분야로 잘 알려진 브이디컴퍼니(브이디로보틱스)의 테이블오더 솔루션입니다.",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.recatch.cc/ko/blog/crm-success-story-vdroborics/",
+          "domain": "recatch.cc",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
         {
           "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
           "domain": "vdrobotics.co.kr",
@@ -1383,9 +1330,9 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
+          "raw": "https://www.youtube.com/watch?v=wZd8O1mzsuc",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
@@ -1395,79 +1342,10 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vds-organization.gitbook.io/vd/intro/admin/vdmenu/using-store",
-          "domain": "vds-organization.gitbook.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "브이디컴퍼니의 테이블오더 시스템인 **‘브이디메뉴(VD Menu)’**는 서빙로봇 및 포스(POS) 솔루션과 연계해 매장을 자동화하려는 사장님들이 많이 검토하는 제품입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "기존에 사용 중인 타사 포스(POS)와 브이디메뉴가 원활히 연동되는지, 아니면 포스기를 브이디포스로 교체해야 하는지 사전에 확인하세요.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.etnews.com/20240208000041",
-          "domain": "etnews.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.aitimes.kr/news/articleView.html?idxno=31911",
-          "domain": "aitimes.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
         },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
@@ -1476,362 +1354,15 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167102024",
-          "domain": "xn--9m1bt07agwh.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
-          "domain": "dxchanguptown.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
-        },
-        {
-          "raw": "https://infonewwws.com/comparison-limitations-2/",
-          "domain": "infonewwws.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**브이디메뉴(VD컴퍼니)** 테이블오더를 도입한 외식업 사장님들의 실제 사용 후기와 전반적인 장단점을 정리해 드립니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "브이디컴퍼니는 서빙로봇 시장 점유율이 높은 기업인 만큼, **서빙로봇 + 브이디포스 + 브이디메뉴(테이블오더)**를 원스톱으로 연동해 쓸 때 시너지가 매우 큽니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
-          "domain": "dxchanguptown.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
         },
         {
           "raw": "https://vds-organization.gitbook.io/vd/intro/admin/vdmenu/using-store",
           "domain": "gitbook.io",
           "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
-          "domain": "torder.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "브이디컴퍼니(VD Company)의 테이블오더 솔루션인 **브이디메뉴(VD Menu)**의 월 렌탈료, 설치비, 기기 스펙 및 주요 기능은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vdrobotics.co.kr/menu",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it.chosun.com/news/articleView.html?idxno=2023092109632",
-          "domain": "it.chosun.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.huborn-biz.co.kr/product/%EB%A0%8C%ED%83%88-%EB%B8%8C%EC%9D%B4%EB%94%94-%EC%BB%B4%ED%8D%BC%EB%8B%88-%EB%A9%94%EB%89%B4%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%B8%8C%EC%9D%B4%EB%94%94-%EB%A9%94%EB%89%B4-vd-menu/47185/",
-          "domain": "m.huborn-biz.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "브이디컴퍼니(VD Company)의 테이블오더 솔루션인 **브이디메뉴(VD Menu)**의 월 렌탈료, 설치 비용, 주요 기기 스펙 및 기능은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://jejufoodtech.com/tableorder/",
-          "domain": "jejufoodtech.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://poseygc53.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94-%ED%85%8C%EC%9D%B4%EB%B2%84-%EC%84%A4%EC%B9%98%EB%B9%84-%EC%9B%94-%EB%A0%8C%ED%83%88%EB%A3%8C-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AA%A8%EB%93%A0-%EB%B9%84%EC%9A%A9-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AC%B4%EC%83%81-AS-%EA%B0%80%EB%8A%A5-%EB%AC%B4%EB%A3%8C-%EC%83%81%EB%8B%B4-%EC%9E%90%EC%98%81%EC%97%85%EC%9E%90-%EC%9A%94%EC%8B%9D%EC%97%85-%EC%B0%BD%EC%97%85-%EC%8B%9D%EB%8B%B9-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EC%A3%BC%EB%AC%B8",
-          "domain": "tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://soomgo.com/portfolio/detail/69086956d16fbb3fbe95748d",
-          "domain": "soomgo.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://the-tech.co.kr/news/article.html?no=33427",
-          "domain": "the-tech.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "브이디컴퍼니의 테이블오더 솔루션 **'브이디메뉴(VD Menu)'**의 월 렌탈료, 설치 비용 및 주요 스펙 정보입니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vdcrux.co.kr/products/qrnfc-order",
-          "domain": "vdcrux.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://jejufoodtech.com/tableorder/",
-          "domain": "jejufoodtech.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.huborn-biz.co.kr/product/%EB%A0%8C%ED%83%88-%EB%B8%8C%EC%9D%B4%EB%94%94-%EC%BB%B4%ED%8D%BC%EB%8B%88-%EB%A9%94%EB%89%B4%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%B8%8C%EC%9D%B4%EB%94%94-%EB%A9%94%EB%89%B4-vd-menu/47185/ ",
-          "domain": "m.huborn-biz.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it.chosun.com/news/articleView.html?idxno=2023092109632",
-          "domain": "it.chosun.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://poseygc53.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94-%ED%85%8C%EC%9D%B4%EB%B2%84-%EC%84%A4%EC%B9%98%EB%B9%84-%EC%9B%94-%EB%A0%8C%ED%83%88%EB%A3%8C-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AA%A8%EB%93%A0-%EB%B9%84%EC%9A%A9-%EC%A0%84%EC%95%A1-%EC%A7%80%EC%9B%90-%EB%AC%B4%EC%83%81-AS-%EA%B0%80%EB%8A%A5-%EB%AC%B4%EB%A3%8C-%EC%83%81%EB%8B%B4-%EC%9E%90%EC%98%81%EC%97%85%EC%9E%90-%EC%9A%94%EC%8B%9D%EC%97%85-%EC%B0%BD%EC%97%85-%EC%8B%9D%EB%8B%B9-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EC%A3%BC%EB%AC%B8",
-          "domain": "poseygc53.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**브이디메뉴(VD메뉴)**와 **티오더, 메뉴잇** 등 주요 테이블오더 서비스는 기본적인 테이블 주문·결제 기능을 공통으로 제공하지만, **시스템 연동 범위, 하드웨어 특성, 주력 생태계**에서 뚜렷한 차이가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "### 1. 브이디메뉴 (브이디컴퍼니)의 차별화 기능",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 구분 | **브이디메뉴** | **티오더** | **메뉴잇** |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **브이디메뉴 추천:** 서빙로봇을 이미 사용 중이거나 함께 도입할 계획이 있는 대형 매장, 포스부터 웨이팅·오더까지 한 회사 제품으로 묶어 관리하고 싶은 매장.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
-          "domain": "torder.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
@@ -1841,48 +1372,6 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://platum.kr/archives/198744",
-          "domain": "platum.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.snven.co.kr/kwa-954502-37?PB_1543309847=4",
-          "domain": "snven.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&sod=asc&sop=and&page=3",
-          "domain": "dxchanguptown.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://magazine.hankyung.com/job-joy/article/202409207706d",
-          "domain": "magazine.hankyung.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.menuit.io/company",
-          "domain": "menuit.io",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.etnews.com/20240208000041",
           "domain": "etnews.com",
           "ownerType": "third-party-authority",
@@ -1898,29 +1387,13 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-011",
+      "questionId": "v1-009",
       "engine": "gemini",
       "callIndex": 2,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**브이디메뉴(브이디컴퍼니)**와 **티오더, 메뉴잇, 페이히어, KT 하이오더** 등 주요 테이블오더 업체를 비교했을 때 나타나는 핵심 기능 및 시스템적 차이점입니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "### 1. 브이디메뉴(VD메뉴)의 핵심 차별화 기능",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "타사 테이블오더가 기존 외부 포스(OKPOS 등)에 연동 프로그램을 얹는 방식이 많은 반면, 브이디메뉴는 **자체 클라우드 포스(브이디포스), 웨이팅, 키오스크, 배달 연동**을 하나의 시스템으로 묶어 지원합니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "| 구분 | **브이디메뉴** | **티오더 (t'order)** | **메뉴잇 (Menuit)** | **페이히어 (Payhere)** | **KT 하이오더** |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **브이디메뉴 추천 매장**",
+          "sentence": "브이디컴퍼니(VD Company)의 **‘브이디메뉴’**는 서빙로봇과 함께 매장 자동화 솔루션으로 많이 도입되는 테이블오더 시스템입니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1928,9 +1401,9 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
@@ -1938,12 +1411,6 @@
           "domain": "vdrobotics.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
         },
         {
           "raw": "https://www.aitimes.kr/news/articleView.html?idxno=31911",
@@ -1952,21 +1419,305 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
+          "raw": "https://vds-organization.gitbook.io/vd/intro/admin/vdmenu/using-store",
+          "domain": "gitbook.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167102024",
+          "domain": "xn--9m1bt07agwh.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
+          "domain": "dxchanguptown.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
           "domain": "torder.com",
           "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**브이디메뉴(VD메뉴)**는 서빙로봇으로 잘 알려진 브이디컴퍼니의 테이블오더 솔루션입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.aitimes.kr/news/articleView.html?idxno=31911",
+          "domain": "aitimes.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
+          "domain": "dxchanguptown.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
+          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167102024",
+          "domain": "xn--9m1bt07agwh.com",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
+          "domain": "dxchanguptown.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "브이디컴퍼니(VD Company)의 테이블오더 솔루션인 ‘브이디메뉴(VD Menu)’의 월 렌탈료, 설치 비용, 기기 스펙 정보입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.irobotnews.com/news/articleView.html?idxno=30293",
+          "domain": "irobotnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://jejufoodtech.com/tableorder/",
+          "domain": "jejufoodtech.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20240814140302",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it.chosun.com/news/articleView.html?idxno=2023092109632",
+          "domain": "it.chosun.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://soomgo.com/portfolio/detail/69086956d16fbb3fbe95748d",
+          "domain": "soomgo.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/menu",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://huborn.co.kr/product/%EB%A0%8C%ED%83%88-%EB%B8%8C%EC%9D%B4%EB%94%94-%EC%BB%B4%ED%8D%BC%EB%8B%88-%EB%A9%94%EB%89%B4%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%B8%8C%EC%9D%B4%EB%94%94-%EB%A9%94%EB%89%B4-vd-menu/47185/",
+          "domain": "huborn.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "브이디컴퍼니의 테이블오더 솔루션인 **‘브이디메뉴(VD Menu)’**의 월 렌탈료, 설치 비용, 기기 스펙 및 주요 특징은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "브이디컴퍼니의 테이블오더 솔루션인 **‘브이디메뉴(VD Menu)’**의 월 렌탈료, 설치비, 주요 스펙 및 특징은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://figmapedia.notion.site/VD-1e5fdea80034806cb62bf61d0c45836f",
+          "domain": "figmapedia.notion.site",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
+          "domain": "sbiz.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.scribd.com/document/898551200/Samilpwc-Paradigm-Shift-October2022",
+          "domain": "scribd.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         }
       ],
@@ -1981,106 +1732,23 @@
     {
       "questionId": "v1-011",
       "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**브이디메뉴(VD메뉴)**와 국내 주요 테이블오더(티오더, 메뉴잇, 페이히어 등)를 비교했을 때 나타나는 핵심 기능 차이는 **‘서빙로봇 및 매장 자동화 시스템과의 연동성’**과 **‘소프트웨어 생태계’**에서 두드러집니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 구분 | **브이디메뉴 (VD컴퍼니)** | **티오더 (t'order)** | **메뉴잇 (Menuit)** |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "### 2. 브이디메뉴만의 두드러진 기능 차이",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "브이디메뉴의 가장 큰 무기는 국내 1위 서빙로봇(브이디봇) 플랫폼과의 연계입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "반면 브이디메뉴는 브이디 전용 포스를 함께 도입할 때 시너지가 가장 큽니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "티오더 등 대형 플랫폼은 화면 내 경품 룰렛, 대리운전 부르기, 광고 노출 등 매장 외적인 부가 서비스가 활성화되어 있는 반면, 브이디메뉴는 식당 운영 효율과 자동화 프로세스에 초점이 맞춰져 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **서빙로봇 도입을 고려 중이거나 대형 매장의 완전 자동화**를 원한다면 ➡️ **브이디메뉴**",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://magazine.hankyung.com/job-joy/article/202409207706d",
-          "domain": "magazine.hankyung.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.snven.co.kr/kwa-954502-37?PB_1543309847=4",
-          "domain": "snven.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
-          "domain": "torder.com",
-          "ownerType": "competitor-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.recatch.cc/ko/blog/crm-success-story-vdroborics/",
-          "domain": "recatch.cc",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
       "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "서울 영등포구 매장에 브이디컴퍼니의 **브이디메뉴(VD메뉴)**를 설치할 경우, **신속한 AS와 사후 관리가 원활하게 지원**됩니다.",
+          "sentence": "**브이디메뉴(VD메뉴)**와 **티오더, 메뉴잇, 페이히어, KT 하이오더** 등 주요 테이블오더 업체를 비교했을 때 가장 두드러지는 기능 및 구조적 차이는 **'매장 자동화 생태계(서빙로봇·자체POS 연동)'**와 **'연동 생태계의 유연성'**에 있습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 브이디메뉴만의 핵심 차별점",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | 브이디메뉴 | 티오더 | 메뉴잇 | 페이히어 |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **서빙로봇을 함께 도입하거나, 웨이팅-포스-주문을 단일 브랜드로 통일해 안정적인 무인화**를 원한다면 **`브이디메뉴`**가 가장 적합합니다.",
           "sentiment": "positive"
         }
       ],
@@ -2088,20 +1756,20 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20250422090157",
-          "domain": "zdnet.co.kr",
+          "raw": "https://m.etnews.com/20221213000163?obj=Tzo4OiJzdGRDbGFzcyI6Mjp7czo3OiJyZWZlcmVyIjtOO3M6NzoiZm9yd2FyZCI7czoxMzoid2ViIHRvIG1vYmlsZSI7fQ%3D%3D",
+          "domain": "m.etnews.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vdcrux.co.kr/products/admin-service",
-          "domain": "vdcrux.co.kr",
+          "raw": "https://www.mt.co.kr/industry/2022/12/13/2022121316353762612",
+          "domain": "www.mt.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
@@ -2112,7 +1780,314 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vdrobotics.co.kr/FAQ",
+          "raw": "https://economist.co.kr/article/view/ecn202502120004",
+          "domain": "economist.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
+          "domain": "www.torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "www.100ssd.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
+          "domain": "www.youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**브이디메뉴(VD컴퍼니)**와 **티오더, 메뉴잇, 하이오더(KT)** 등 주요 테이블오더 서비스들은 기본 주문·결제 기능 외에 **생태계 연동 방식, 하드웨어 편의성, POS 호환성** 등에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 브이디메뉴 (브이디컴퍼니)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 비교 항목 | 브이디메뉴 | 티오더 | 메뉴잇 |",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.aitimes.kr/news/articleView.html?idxno=31911",
+          "domain": "aitimes.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
+          "domain": "dxchanguptown.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.epnc.co.kr/news/articleView.html?idxno=304393",
+          "domain": "epnc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=113387",
+          "domain": "100ssd.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://magazine.hankyung.com/job-joy/article/202409207706d",
+          "domain": "magazine.hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tnnews.co.kr/archives/229090",
+          "domain": "tnnews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.etnews.com/20240208000041",
+          "domain": "etnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "브이디컴퍼니의 **‘브이디메뉴’**와 시장 점유율이 높은 주요 테이블오더 업체들(**티오더, 메뉴잇, KT 하이오더, 페이히어** 등)은 기본적인 주문·결제 기능 외에 **‘생태계 연동 방식’과 ‘하드웨어/부가 기능’**에서 뚜렷한 차이를 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 1. 브이디메뉴만의 핵심 차별점 및 기능",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **브이디메뉴 (브이디컴퍼니)** | **티오더 (t'order)** | **메뉴잇 (menuit)** | **KT 하이오더** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "### 3. 어떤 매장에 브이디메뉴가 더 유리할까?",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **브이디메뉴가 유리한 경우:**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.irobotnews.com/news/articleView.html?idxno=30293",
+          "domain": "irobotnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686703",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdcrux.co.kr/products/qrnfc-order",
+          "domain": "vdcrux.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.etnews.com/20240208000041",
+          "domain": "etnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.dxchanguptown.com/bbs/board.php?bo_table=group1_1&wr_id=1813&sst=wr_good&page=1",
+          "domain": "dxchanguptown.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.epnc.co.kr/news/articleView.html?idxno=304393",
+          "domain": "epnc.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "브이디메뉴(브이디컴퍼니/브이디로보틱스)는 서울 및 수도권 중심의 유지보수 인프라를 잘 갖추고 있어 다음과 같은 방식으로 즉각적인 관리를 받을 수 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "브이디메뉴는 자체 포스(POS) 연동 및 통합 솔루션을 지원하기 때문에, 기기 간 충돌이나 주문 누락 문제가 발생했을 때 POS 업체와 테이블오더 업체 간 ‘책임 떠넘기기’ 없이 한 창구에서 한 번에 AS를 접수·처리할 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://app.rndcircle.io/company/755f1561-122f-531c-bd58-bcb4112d2c17",
+          "domain": "rndcircle.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.irobotnews.com/news/articleView.html?idxno=37416",
+          "domain": "irobotnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
+          "domain": "sbiz.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://platum.kr/archives/198744",
+          "domain": "platum.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
           "domain": "vdrobotics.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
@@ -2133,12 +2108,8 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**서울 영등포구는 수도권 핵심 권역에 해당하므로, 브이디메뉴(브이디컴퍼니)의 사후관리(AS) 및 기술 지원을 매우 빠르고 원활하게 받을 수 있는 지역입니다.**",
+          "sentence": "브이디메뉴는 자체 소프트웨어와 브이디포스(또는 서빙로봇) 솔루션을 함께 운영하는 기업이므로, 기기 업체와 프로그램 업체 간 책임 떠넘기기(핑퐁) 없이 원스톱으로 문제 해결이 가능합니다.",
           "sentiment": "positive"
-        },
-        {
-          "sentence": "브이디메뉴의 AS 및 유지관리 체계는 문제 유형에 따라 다음과 같이 운영됩니다.",
-          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
@@ -2151,21 +2122,21 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "raw": "https://www.youtube.com/watch?v=s1XoBLjJjyU",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://vdrobotics.co.kr/FAQ",
           "domain": "vdrobotics.co.kr",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.baroder.co.kr/",
-          "domain": "baroder.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.kdfnews.com/news/articleView.html?idxno=175806",
-          "domain": "kdfnews.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
+          "domain": "vdrobotics.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -2184,35 +2155,29 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "영등포구 매장에 브이디메뉴(테이블오더)를 설치할 경우 AS 및 관리는 다음과 같이 지원됩니다.",
-          "sentiment": "neutral"
+          "sentence": "브이디컴퍼니(브이디메뉴)는 전국 단위의 사후관리 인프라를 운영하고 있으며, 특히 서울 영등포구는 수도권 핵심 권역에 해당하여 다음과 같은 체계로 지원됩니다.",
+          "sentiment": "positive"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://app.rndcircle.io/company/755f1561-122f-531c-bd58-bcb4112d2c17",
-          "domain": "app.rndcircle.io",
+          "raw": "https://www.irobotnews.com/news/articleView.html?idxno=30293",
+          "domain": "irobotnews.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
           "raw": "https://vdrobotics.co.kr/FAQ",
           "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vdrobotics.co.kr/news/?bmode=view&idx=166686671",
-          "domain": "vdrobotics.co.kr",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.unicornfactory.co.kr/article/2023021414053716536",
-          "domain": "unicornfactory.co.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.youtube.com/watch?v=s1XoBLjJjyU",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
       ],
@@ -2221,7 +2186,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true,
+      "brandOwnedCitation": false,
       "clarifying": false
     }
   ]

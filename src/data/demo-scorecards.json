@@ -19,7 +19,38 @@
     "brandOwnedCitationRate": 0.16445623342175067,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -47,7 +78,38 @@
     "brandOwnedCitationRate": 0.12342569269521411,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -75,7 +137,38 @@
     "brandOwnedCitationRate": 0.11299435028248588,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -103,7 +196,34 @@
     "brandOwnedCitationRate": 0.05387205387205387,
     "cohortRank": {
       "position": 6,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -131,7 +251,34 @@
     "brandOwnedCitationRate": 0.09655172413793103,
     "cohortRank": {
       "position": 5,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -159,7 +306,34 @@
     "brandOwnedCitationRate": 0.3034825870646766,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -187,7 +361,34 @@
     "brandOwnedCitationRate": 0.1342281879194631,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -215,7 +416,34 @@
     "brandOwnedCitationRate": 0.11409395973154363,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -243,7 +471,38 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 5,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -271,7 +530,38 @@
     "brandOwnedCitationRate": 0.023195876288659795,
     "cohortRank": {
       "position": 7,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -299,7 +589,26 @@
     "brandOwnedCitationRate": 0.10416666666666667,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 4
+      "totalTenants": 4,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bdnewdental",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "hushubundang",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "ilovebrace",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "maum-dream",
+          "aeoScore": 35
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -327,7 +636,26 @@
     "brandOwnedCitationRate": 0.07983193277310924,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 4
+      "totalTenants": 4,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bdnewdental",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "hushubundang",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "ilovebrace",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "maum-dream",
+          "aeoScore": 35
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -355,7 +683,26 @@
     "brandOwnedCitationRate": 0.04535637149028078,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 4
+      "totalTenants": 4,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bdnewdental",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "hushubundang",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "ilovebrace",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "maum-dream",
+          "aeoScore": 35
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -383,7 +730,26 @@
     "brandOwnedCitationRate": 0.07295373665480427,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 4
+      "totalTenants": 4,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bdnewdental",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "hushubundang",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "ilovebrace",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "maum-dream",
+          "aeoScore": 35
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -411,7 +777,34 @@
     "brandOwnedCitationRate": 0.1711229946524064,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 29
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 42
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 46
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 28
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -439,7 +832,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -467,7 +887,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 2,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -495,7 +942,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -523,7 +997,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -551,7 +1052,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 2,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -579,7 +1107,34 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 6,
-      "totalTenants": 6
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-1j0j0pl",
+          "aeoScore": 41
+        },
+        {
+          "tenantId": "comp-1lz1vi2",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-fjgq11",
+          "aeoScore": 40
+        },
+        {
+          "tenantId": "comp-mhxthx",
+          "aeoScore": 45
+        },
+        {
+          "tenantId": "comp-rorko6",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "web4ai",
+          "aeoScore": 30
+        }
+      ]
     },
     "hallucinationFlags": [
       "openai / v1-001 #3: 사실성 불일치 1건",
@@ -611,7 +1166,38 @@
     "brandOwnedCitationRate": 0.012422360248447204,
     "cohortRank": {
       "position": 6,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -638,7 +1224,38 @@
     "brandOwnedCitationRate": 0.18705035971223022,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 7
+      "totalTenants": 7,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "banobagi",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "daprs",
+          "aeoScore": 32
+        },
+        {
+          "tenantId": "e-dream",
+          "aeoScore": 25
+        },
+        {
+          "tenantId": "gsplasticsurgery",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "idhospital",
+          "aeoScore": 30
+        },
+        {
+          "tenantId": "jjprs",
+          "aeoScore": 18
+        },
+        {
+          "tenantId": "viewclinic",
+          "aeoScore": 33
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -665,7 +1282,18 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 2
+      "totalTenants": 2,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-7ulalt",
+          "aeoScore": 34
+        },
+        {
+          "tenantId": "o2o",
+          "aeoScore": 25
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -692,7 +1320,18 @@
     "brandOwnedCitationRate": 0,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 2
+      "totalTenants": 2,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "comp-7ulalt",
+          "aeoScore": 34
+        },
+        {
+          "tenantId": "o2o",
+          "aeoScore": 25
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -706,20 +1345,43 @@
     "region": "서울 영등포",
     "brandName": "메뉴잇",
     "aeoScore": {
-      "current": 46,
-      "ma4": 46,
+      "current": 39,
+      "ma4": 43,
       "previousWeek": 46,
-      "ciLow": 36.6,
-      "ciHigh": 55.4
+      "ciLow": 29.5,
+      "ciHigh": 48.5
     },
-    "mentionRate": 0.375,
+    "mentionRate": 0.2916666666666667,
     "shareOfMention": null,
-    "avgRecommendationRank": 3,
+    "avgRecommendationRank": 4,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.08849557522123894,
+    "brandOwnedCitationRate": 0.06967213114754098,
     "cohortRank": {
       "position": 4,
-      "totalTenants": 5
+      "totalTenants": 5,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "kt",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "menuit",
+          "aeoScore": 39
+        },
+        {
+          "tenantId": "payhere",
+          "aeoScore": 61
+        },
+        {
+          "tenantId": "torder",
+          "aeoScore": 52
+        },
+        {
+          "tenantId": "vdcompany",
+          "aeoScore": 29
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -734,20 +1396,43 @@
     "region": "서울 영등포",
     "brandName": "페이히어",
     "aeoScore": {
-      "current": 62,
+      "current": 61,
       "ma4": 62,
       "previousWeek": 62,
-      "ciLow": 53.1,
-      "ciHigh": 70.9
+      "ciLow": 52.5,
+      "ciHigh": 69.5
     },
-    "mentionRate": 0.625,
+    "mentionRate": 0.5833333333333334,
     "shareOfMention": null,
     "avgRecommendationRank": 2,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.2717948717948718,
+    "brandOwnedCitationRate": 0.3051948051948052,
     "cohortRank": {
       "position": 1,
-      "totalTenants": 5
+      "totalTenants": 5,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "kt",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "menuit",
+          "aeoScore": 39
+        },
+        {
+          "tenantId": "payhere",
+          "aeoScore": 61
+        },
+        {
+          "tenantId": "torder",
+          "aeoScore": 52
+        },
+        {
+          "tenantId": "vdcompany",
+          "aeoScore": 29
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -762,20 +1447,43 @@
     "region": "서울 영등포",
     "brandName": "브이디메뉴",
     "aeoScore": {
-      "current": 31,
-      "ma4": 31,
+      "current": 29,
+      "ma4": 30,
       "previousWeek": 31,
-      "ciLow": 20.9,
-      "ciHigh": 41.1
+      "ciLow": 19,
+      "ciHigh": 39
     },
-    "mentionRate": 0.08333333333333333,
+    "mentionRate": 0.041666666666666664,
     "shareOfMention": null,
     "avgRecommendationRank": null,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.08713692946058091,
+    "brandOwnedCitationRate": 0.08333333333333333,
     "cohortRank": {
       "position": 5,
-      "totalTenants": 5
+      "totalTenants": 5,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "kt",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "menuit",
+          "aeoScore": 39
+        },
+        {
+          "tenantId": "payhere",
+          "aeoScore": 61
+        },
+        {
+          "tenantId": "torder",
+          "aeoScore": 52
+        },
+        {
+          "tenantId": "vdcompany",
+          "aeoScore": 29
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -790,20 +1498,43 @@
     "region": "서울 영등포",
     "brandName": "KT 하이오더",
     "aeoScore": {
-      "current": 48,
+      "current": 47,
       "ma4": 48,
       "previousWeek": 48,
       "ciLow": 39.1,
-      "ciHigh": 56.9
+      "ciHigh": 54.9
     },
     "mentionRate": 0.375,
     "shareOfMention": null,
-    "avgRecommendationRank": 2,
+    "avgRecommendationRank": 2.5,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.0481283422459893,
+    "brandOwnedCitationRate": 0.02197802197802198,
     "cohortRank": {
       "position": 3,
-      "totalTenants": 5
+      "totalTenants": 5,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "kt",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "menuit",
+          "aeoScore": 39
+        },
+        {
+          "tenantId": "payhere",
+          "aeoScore": 61
+        },
+        {
+          "tenantId": "torder",
+          "aeoScore": 52
+        },
+        {
+          "tenantId": "vdcompany",
+          "aeoScore": 29
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [
@@ -821,17 +1552,40 @@
       "current": 52,
       "ma4": 52,
       "previousWeek": 52,
-      "ciLow": 45.6,
-      "ciHigh": 58.4
+      "ciLow": 44.5,
+      "ciHigh": 59.5
     },
     "mentionRate": 0.625,
-    "shareOfMention": 0.18072289156626506,
+    "shareOfMention": 0.2191780821917808,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0.09216589861751152,
+    "brandOwnedCitationRate": 0.08898305084745763,
     "cohortRank": {
       "position": 2,
-      "totalTenants": 5
+      "totalTenants": 5,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "kt",
+          "aeoScore": 47
+        },
+        {
+          "tenantId": "menuit",
+          "aeoScore": 39
+        },
+        {
+          "tenantId": "payhere",
+          "aeoScore": 61
+        },
+        {
+          "tenantId": "torder",
+          "aeoScore": 52
+        },
+        {
+          "tenantId": "vdcompany",
+          "aeoScore": 29
+        }
+      ]
     },
     "hallucinationFlags": [],
     "enginesUsed": [

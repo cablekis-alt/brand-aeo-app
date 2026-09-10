@@ -9,64 +9,70 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "#### ① **KT 하이오더**",
-          "sentiment": "positive"
+          "sentence": "### 2. KT 하이오더 (High Order)",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.wanted.co.kr/events/article_241028",
-          "domain": "wanted.co.kr",
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47292",
-          "domain": "eroun.net",
+          "raw": "https://m.ekn.kr/view.php?key=20260412021375388",
+          "domain": "ekn.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://demoday.co.kr/bm-analysis/200",
-          "domain": "demoday.co.kr",
+          "raw": "https://zdnet.co.kr/view/?no=20240430171856",
+          "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.meconomynews.com/news/articleView.html?idxno=108565",
+          "domain": "meconomynews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://www.1conomynews.co.kr/news/articleView.html?idxno=50252",
           "domain": "1conomynews.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://mobile.newsis.com/view/NISX20260114_0003476448",
-          "domain": "mobile.newsis.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "third-party-authority",
+          "raw": "https://payhere.in/blog/solo-restaurant-startup-with-table-order/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
+          "raw": "https://m.thebigdata.co.kr/view.php?ud=2025022010062932156cf2d78c68_23",
+          "domain": "thebigdata.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://biz.chosun.com/topics/topics_social/2023/05/17/V45SX5MQYJH67OMVJPTY6FPMNY/",
+          "domain": "biz.chosun.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         }
       ],
-      "topRecommendation": null,
-      "brandRank": null,
+      "topRecommendation": "티오더",
+      "brandRank": 2,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
@@ -80,11 +86,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "현재 시장 점유율 1위인 티오더 외에도 매장 형태나 결제 방식, 포스(POS) 연동 편의성에 따라 **메뉴잇, 페이히어, KT 하이오더, 토스플레이스** 등이 주요 선택지로 많이 쓰이고 있습니다.",
-          "sentiment": "neutral"
+          "sentence": "현재 국내 외식업계에서 자영업자들이 가장 많이 도입하고 인지도가 높은 테이블오더 브랜드는 **티오더, 메뉴잇, KT 하이오더** 3강 구도이며, 최근에는 **페이히어**와 **토스** 등 핀테크 기반 솔루션도 빠르게 늘고 있습니다.",
+          "sentiment": "positive"
         },
         {
-          "sentence": "#### ④ KT 하이오더 – 대기업 통신 결합형",
+          "sentence": "* **KT 하이오더 (KT Hi-Order)**",
           "sentiment": "neutral"
         }
       ],
@@ -92,64 +98,46 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://demoday.co.kr/bm-analysis/200",
-          "domain": "demoday.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
-          "domain": "newsprime.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
-          "domain": "mstacc.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20240430171856",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
           "domain": "eroun.net",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://core.asiae.co.kr/article/2024062815334733122",
-          "domain": "asiae.co.kr",
+          "raw": "https://www.job-post.co.kr/news/articleView.html?idxno=114482",
+          "domain": "job-post.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
+          "raw": "https://demoday.co.kr/bm-analysis/200",
+          "domain": "demoday.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
+          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
+          "domain": "meatlovernews.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
-          "domain": "payhere.in",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mk.co.kr/news/business/11235296",
+          "domain": "mk.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
@@ -167,11 +155,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "그 뒤를 이어 통신사 기반의 **KT 하이오더**, 자체 하드웨어 경쟁력을 갖춘 **메뉴잇**, 클라우드 포스 연동에 강한 **페이히어** 등이 주요 브랜드로 많이 쓰입니다.",
+          "sentence": "* **KT 하이오더 (Hi-Order)**",
           "sentiment": "positive"
         },
         {
-          "sentence": "### 2. KT 하이오더 – 대기업 통신 결합 및 안정성",
+          "sentence": "가장 무난한 선택지는 **티오더**나 **하이오더**이며, 포스까지 새로 맞추신다면 **페이히어**를 함께 견적 받아 비교해 보시는 것을 권장합니다.",
           "sentiment": "positive"
         }
       ],
@@ -191,14 +179,26 @@
           "supportsBrandMention": true
         },
         {
+          "raw": "https://www.1conomynews.co.kr/news/articleView.html?idxno=50252",
+          "domain": "1conomynews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
           "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
           "domain": "eroun.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.job-post.co.kr/news/articleView.html?idxno=114482",
-          "domain": "job-post.co.kr",
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.newstomato.com/ReadNews.aspx?no=1287824",
+          "domain": "newstomato.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
@@ -209,16 +209,22 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://zdnet.co.kr/view/?no=20240430171856",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
@@ -245,26 +251,68 @@
           "supportsBrandMention": false
         },
         {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
           "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
           "domain": "kt-b2b.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
+          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
+          "domain": "ktbizone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-authority",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://whee.kr/product/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%ED%85%8C%EC%9D%B4%EB%B8%94%EC%A3%BC%EB%AC%B8-%EA%B2%B0%EC%A0%9C%EC%9B%A8%EC%9D%B4%ED%8C%85%ED%85%8C%EB%B8%94%EB%A6%BF%EB%A0%8C%ED%83%88%EB%B0%A9%EC%8B%9D%EA%B5%AD%EB%82%B4%EC%B5%9C%EC%A0%80%EA%B0%80%EC%A0%84%EA%B5%AD%EB%AC%B4%EB%A3%8C%EC%84%A4%EC%B9%98/124/ ",
-          "domain": "whee.kr",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
@@ -287,14 +335,26 @@
       "shareOfMention": 0,
       "citations": [
         {
+          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%C2%B7%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9-%EA%B5%AC%EC%A1%B0%EC%99%80-%ED%8C%90%EB%8B%A8-%EA%B8%B0%EC%A4%80",
+          "domain": "beenhna.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
+          "raw": "https://www.lg.co.kr/media/release/27659",
+          "domain": "www.lg.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -305,21 +365,57 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://eoskorea.kr/category/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94/27/",
-          "domain": "eoskorea.kr",
+          "raw": "https://damdaamall.com/product/%EB%A0%8C%ED%83%88-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EA%B0%84%ED%8E%B8%EA%B2%B0%EC%A0%9C-%ED%83%9C%EB%B8%94%EB%A6%BF%EC%A3%BC%EB%AC%B8-%EB%AC%B4%EC%9D%B8%EC%A3%BC%EB%AC%B8%EA%B8%B0-%EB%AC%B4%EC%9D%B8%EA%B2%B0%EC%A0%9C%EA%B8%B0/11071/",
+          "domain": "damdaamall.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "third-party-ugc",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "www.consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -335,62 +431,21 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "대부분의 주요 업체(티오더, KT 하이오더, 페이히어, 메뉴잇 등) 기준 테이블 1대당 월 비용입니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://whee.kr/product/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%ED%85%8C%EC%9D%B4%EB%B8%94%EC%A3%BC%EB%AC%B8-%EA%B2%B0%EC%A0%9C%EC%9B%A8%EC%9D%B4%ED%8C%85%ED%85%8C%EB%B8%94%EB%A6%BF%EB%A0%8C%ED%83%88%EB%B0%A9%EC%8B%9D%EA%B5%AD%EB%82%B4%EC%B5%9C%EC%A0%80%EA%B0%80%EC%A0%84%EA%B5%AD%EB%AC%B4%EB%A3%8C%EC%84%A4%EC%B9%98/124/ ",
-          "domain": "whee.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
-          "domain": "kairosre.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://nxt-rental.com/html/dh_prod/prod_list/10-1326",
-          "domain": "nxt-rental.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -400,20 +455,8 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -433,51 +476,272 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "#### ③ KT 하이오더 (Hi-order)",
+          "sentence": "#### ② KT 하이오더 (Hi-Order)",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. KT 하이오더 – 대기업 통신망 기반 & 안정적인 AS",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "보통 **티오더**와 **KT 하이오더** 2~3곳에 동시 견적 및 방문 실측을 요청하시면 테이블 형태(닥트 위치, 전선 매립 가능 여부)를 보고 최적의 설치 방식과 프로모션 단가를 비교해 주니 실측 상담을 먼저 받아보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. KT 하이오더 – 대기업 A/S 및 통신 안정성",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**추천 진행 팁**: 보통 2~3개 업체(예: 티오더, KT 하이오더, 메뉴잇)에 무료 견적 및 방문 실측을 요청하시면, 매장 테이블 수에 따른 월 렌탈료와 지원 프로모션(단말기 무료 지원, 인터넷 결합 등)을 비교해 보고 결정하시기 좋습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
+          "raw": "https://tossplace.com/story/mynameis_sindang",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
-          "domain": "torder.com",
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "domain": "payhere.in",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "raw": "https://ceo.baemin.com/knowhow/12768",
+          "domain": "ceo.baemin.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://guseol.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94/",
+          "domain": "guseol.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
           "domain": "youtube.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/mynameis_sindang",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
           "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
+          "supportsBrandMention": false
         },
         {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/blog/tableorder-interview-daehojung/",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=F-drtqeMJOI",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://honeybee-home.tistory.com/entry/%EC%86%90%EB%8B%98-%EC%9E%85%EC%9E%A5%EC%97%90%EC%84%9C-%EB%B3%B8-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%82%AC%EC%9A%A9%ED%95%9C-%EC%8B%9D%EB%8B%B9-%EC%9E%A5%EC%A0%90%EA%B3%BC-%EB%8B%A8%EC%A0%90",
+          "domain": "honeybee-home.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
           "domain": "payhere.in",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
@@ -488,295 +752,6 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "#### ② **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "영등포 지역은 2~3개 주요 업체(티오더, KT 하이오더, 메뉴잇)에 실측 및 견적 문의를 넣으면 영업 담당자가 매장 도면을 보고 유선 배선 견적과 대당 렌탈료(또는 구매가)를 바로 안내해 주므로, 무료 방문 상담을 받아보신 후 결정하시는 것을 권장합니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://whereisyourwork.com/work-t-order-price/",
-          "domain": "whereisyourwork.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=8GncZrfW5h8",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://isentoday.tistory.com/29",
-          "domain": "isentoday.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=uttyMLwojv8",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=uITLkiBcNvU",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "#### ② KT 하이오더 - *대기업 A/S 인프라 & 통신 결합 할인*",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "기본기가 탄탄하고 빠른 안정성을 원하시면 **티오더**나 **KT 하이오더**, 웨이팅·예약과 포스 연동의 일체감을 원하시면 **페이히어**를 먼저 견적 비교해 보시는 것을 권장합니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.siksinhot.com/theme/magazine/6687",
-          "domain": "siksinhot.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://core.asiae.co.kr/article/2024062815334733122",
-          "domain": "core.asiae.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
-          "domain": "hello.matetech.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://gogoido.com/community/tips/info_128",
-          "domain": "gogoido.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://posdoc.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EA%B5%AC%EC%84%B1-%EC%8B%9C-%ED%95%84%EC%88%98-%EC%A3%BC%EC%9D%98%EC%82%AC%ED%95%AD",
-          "domain": "posdoc.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kisdevice.gitbook.io/web/pos-kiosk/plus-order/undefined-1/wi-fi",
-          "domain": "kisdevice.gitbook.io",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
       "brandOwnedCitation": false,
       "clarifying": false
     },
@@ -784,146 +759,39 @@
       "questionId": "v1-006",
       "engine": "gemini",
       "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "* **대형 통신사(KT 하이오더, LG유플러스 등):** 통신 약관 기준을 따라 위약금 산식이 명확(잔여 이용료 약 50% + 잔여 단말대금 등)하지만, 약정 기간 내 해지 시 할인 반환금이 큽니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/Yh5dLkvmOS",
-          "domain": "v.daum.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
-          "domain": "imaeil.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/oI42Z6baciA",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://support.thegrowing.co/growing-sales/policy/policy/merchants/menuorder-policy",
-          "domain": "support.thegrowing.co",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
-          "domain": "bloter.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://the-rental.kr/FQA/?bmode=view&idx=1620671",
-          "domain": "the-rental.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pincetlife.tistory.com/entry/%ED%8F%AC%EC%8A%A4POS-%EC%97%B0%EB%8F%99-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%B8%8C%EB%9E%9C%EB%93%9C-3%EC%82%AC-%EB%A0%8C%ED%83%88-%EB%B9%84%EC%9A%A9-%EB%B0%8F-%EC%9C%84%EC%95%BD%EA%B8%88-%EC%B4%9D%EC%A0%95%EB%A6%AC",
-          "domain": "pincetlife.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.hi-order.kr/myboard/myboard1/818781",
-          "domain": "hi-order.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 2,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://v.daum.net/v/Yh5dLkvmOS",
           "domain": "v.daum.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
-          "domain": "sajangnimlife.com",
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
-          "domain": "sajangnimlife.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
-          "domain": "www.imaeil.com",
+          "raw": "https://www.lawsee.com/case_detail?id=202303086740710&source=auction",
+          "domain": "www.lawsee.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/shorts/oI42Z6baciA",
-          "domain": "www.youtube.com",
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.hi-order.kr/myboard/myboard1/818781",
-          "domain": "www.hi-order.kr",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "www.bloter.net",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -933,9 +801,9 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.krlaw.kr/business/corporate?id=1845",
-          "domain": "www.krlaw.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.hi-order.kr/myboard/myboard1/818781",
+          "domain": "www.hi-order.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -945,9 +813,99 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%9B%84-%ED%9B%84%ED%9A%8C%ED%95%98%EB%8A%94-5%EA%B0%80%EC%A7%80-%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0%EC%B1%85/",
+          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
+          "domain": "www.imaeil.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
           "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.lawsee.com/case_detail?id=202303086740710&source=auction",
+          "domain": "lawsee.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/oI42Z6baciA",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hi-order.kr/myboard/myboard1/818781",
+          "domain": "hi-order.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/Yh5dLkvmOS",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
+          "domain": "ekn.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
+          "domain": "imaeil.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -969,45 +927,69 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
-          "domain": "bloter.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
           "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://100sajang.com/article/?idx=170545979&bmode=view",
-          "domain": "100sajang.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/GDC2uPV7CG",
+          "raw": "https://v.daum.net/v/Yh5dLkvmOS",
           "domain": "v.daum.net",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%9B%84-%ED%9B%84%ED%9A%8C%ED%95%98%EB%8A%94-5%EA%B0%80%EC%A7%80-%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0%EC%B1%85/",
-          "domain": "blog-genieone.com",
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/shorts/p0JTnGz9toY",
+          "raw": "https://www.lawsee.com/case_detail?id=202303086740710&source=auction",
+          "domain": "lawsee.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/oI42Z6baciA",
           "domain": "youtube.com",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
+          "domain": "imaeil.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://pdf.gwangnam.co.kr/sectionpdf/202602/20260219-05.pdf",
+          "domain": "pdf.gwangnam.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.the-pr.co.kr/news/articleView.html?idxno=60203",
+          "domain": "the-pr.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
+          "domain": "m.ekn.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -1023,60 +1005,20 @@
       "questionId": "v1-007",
       "engine": "gemini",
       "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
+      "mentioned": true,
+      "mentionSentences": [
         {
-          "raw": "https://infonewwws.com/comparison-limitations-2/",
-          "domain": "infonewwws.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
+          "sentence": "### 1. KT 하이오더",
+          "sentiment": "positive"
         },
         {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
-          "domain": "torder.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.hankyung.com/article/2024072465981",
-          "domain": "hankyung.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=oHFSLY_EdZk",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
+          "sentence": "안정적인 통신 환경과 빠른 AS를 원하시면 **KT 하이오더**, 주점 특화 기능과 직관적인 손님 UX를 원하시면 **티오더**를 우선적으로 견적 상담받아 보시는 것을 추천합니다.",
+          "sentiment": "positive"
         }
       ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -1089,13 +1031,18 @@
       "questionId": "v1-007",
       "engine": "gemini",
       "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 3. **KT 하이오더 / LG U+ 테이블오더** - *대기업 통신망 안정성 & 결합 혜택*",
+          "sentiment": "positive"
+        }
+      ],
       "competitorMentions": [],
-      "shareOfMention": 0,
+      "shareOfMention": 1,
       "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
+      "topRecommendation": "티오더",
+      "brandRank": 3,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
@@ -1109,15 +1056,15 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "### 2. KT 하이오더 – *통신망 안정성 & 삼성 태블릿 내구성*",
+          "sentence": "### 2. KT 하이오더 (KT HiOrder) — *통신망 안정성 & 대기업 A/S*",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [],
-      "topRecommendation": "티오더",
-      "brandRank": 2,
+      "topRecommendation": null,
+      "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
@@ -1166,7 +1113,38 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
+      "citations": [
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/tableorder-qna",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.a-ha.io/questions/421c26a7c914c72694159733694c0043",
+          "domain": "a-ha.io",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
@@ -1182,15 +1160,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "KT 하이오더(테이블오더)의 설치 비용과 월 이용료, 주요 약정 조건은 다음과 같습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "KT 하이오더의 월 납부 금액은 [서비스 이용료 + 단말기 할부금]으로 구성됩니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 위약금 구조: KT 하이오더는 약관상 중도 해지 시 다음 항목이 청구됩니다.",
+          "sentence": "KT 하이오더(테이블오더)의 설치 비용, 월 이용료, 주요 조건 등을 정리해 드립니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1198,20 +1168,14 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
-          "domain": "kt-b2b.com",
+          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
+          "domain": "ktbizone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
+          "raw": "https://blog-genieone.com/kt-highorder-faq/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1222,65 +1186,26 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
-          "domain": "m.ktbizone.com",
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "http://www.kt-center.co.kr/new6/sub_business/order.php",
-          "domain": "www.kt-center.co.kr",
+          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
+          "domain": "ktmit.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
           "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "www.consumernews.co.kr",
+          "domain": "consumernews.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog-genieone.com/kt-highorder-faq/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://product.kt.com/static/etc/download/HighOrderClause.pdf",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "KT의 테이블오더 서비스인 **‘KT 하이오더’**의 설치비, 월 이용료, 주요 약정 조건은 다음과 같습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "KT 하이오더 요금은 **[단말기 할부금 + 서비스(솔루션) 이용료]**가 합산되어 청구됩니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
-          "domain": "kt-b2b.com",
+          "raw": "http://www.kt-center.co.kr/new6/sub_business/order.php",
+          "domain": "kt-center.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1291,14 +1216,106 @@
           "supportsBrandMention": true
         },
         {
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "KT 하이오더(HiOrder)의 설치 비용과 월 이용료, 약정 조건은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
+          "domain": "ktmit.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
           "raw": "http://m.ktbizone.com/pay13_highorder.asp",
           "domain": "ktbizone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/kt-highorder-faq/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
           "raw": "https://bizkt.net/sub_order/order.php",
           "domain": "bizkt.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더(Hi-Order)**의 설치 비용과 월 이용료, 계약 조건은 다음과 같습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일부 테이블오더 업체의 경우 PG 결제 대행을 통해 2~3%대의 높은 결제 수수료를 떼어가지만, KT 하이오더는 기존 매장의 **VAN 가맹점 카드 수수료율(0.5%~1.5% 영세/중소 우대 수수료율)이 그대로 적용**되어 추가 수수료 부담이 없습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
+          "domain": "ktmit.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1309,49 +1326,8 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://product.kt.com/static/etc/download/HighOrderClause.pdf",
-          "domain": "kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "KT 하이오더의 설치 비용과 월 이용료, 약정 조건은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
-          "domain": "kt-b2b.com",
+          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
+          "domain": "ktbizone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1362,38 +1338,38 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog-genieone.com/kt-highorder-faq/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
           "raw": "http://m.ktbizone.com/pay13_highorder.asp",
-          "domain": "m.ktbizone.com",
+          "domain": "ktbizone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://bizkt.net/sub_order/order.php",
+          "domain": "bizkt.net",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
           "raw": "https://product.kt.com/static/etc/download/HighOrderClause.pdf",
-          "domain": "product.kt.com",
+          "domain": "kt.com",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://kt-hiorder.co.kr/faq",
-          "domain": "kt-hiorder.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.kt-center.co.kr/new6/sub_business/order.php",
-          "domain": "www.kt-center.co.kr",
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
@@ -1413,99 +1389,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "KT 하이오더와 같은 **통신사 기반 테이블오더**와 티오더, 메뉴잇, 페이히어 등 **테이블오더 전문업체** 제품은 각각의 강점과 운영 방식에서 뚜렷한 차이가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 (통신사 기반)**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 추천 매장:**",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "KT 하이오더와 같은 통신사 기반 테이블오더와 티오더·메뉴톡 등 전문 테이블오더 업체 제품은 핵심 기능(주문 및 결제)은 유사하지만, 인프라, A/S망, 요금 결합, 소프트웨어 특화도에서 뚜렷한 차이가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 (통신사):**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 (통신사):**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 (통신사):**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더 (통신사):**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **KT 하이오더:** 주요 대형 POS(오케이포스, 아임유 등)와 안정적으로 연동되지만, 일부 비주류 소형 POS와는 연동이 제한될 수 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 구분 | **KT 하이오더** 추천 매장 | **일반 전문업체** 추천 매장 |",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "통신사 기반의 **KT 하이오더**와 **일반 테이블오더 전문업체(티오더, 메뉴잇 등)** 제품은 하드웨어와 기본적인 주문 기능은 비슷하지만, **네트워크 인프라, A/S 체계, 결합 할인, 소프트웨어 유연성** 등에서 뚜렷한 차이가 있습니다.",
+          "sentence": "KT 하이오더(통신사 기반)와 티오더·메뉴잇 등 일반 테이블오더 전문업체 제품은 각각 **네트워크/인프라 안정성**과 **소프트웨어 기능/유연성** 측면에서 뚜렷한 차이를 보입니다.",
           "sentiment": "neutral"
         },
         {
@@ -1525,11 +1409,142 @@
           "sentiment": "neutral"
         },
         {
-          "sentence": "* **KT 하이오더:** 통신 상품 형태로 **3년 약정** 구조가 일반적이며, 통신사 가입 기준에 따른 위약금 규정이 명확합니다.",
+          "sentence": "* **KT 하이오더:**",
           "sentiment": "neutral"
         },
         {
-          "sentence": "* **KT 하이오더 추천:**",
+          "sentence": "* **KT 하이오더가 유리한 매장**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**KT 하이오더(통신사 기반)**와 **일반 테이블오더 전문업체(티오더, 메뉴잇, 페이히어 등)**는 각각 인프라 안정성과 소프트웨어 유연성 측면에서 뚜렷한 차이점을 보입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더**: 통신사 자체 서비스인 만큼 **전용 Wi-Fi AP(공유기) 및 망 최적화 솔루션**을 함께 구성합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더**: 전국에 촘촘하게 구축된 **KT 직영 A/S망 및 출동 엔지니어 인프라**를 활용합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더**: 매장 인터넷, 매장 전화, CCTV(기가아이즈), POS, 서빙로봇 등 **KT의 매장용 통신·보안 상품들과 결합해 요금 할인**을 받을 수 있고, 통신 요금 청구서로 통합 관리가 가능합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더**: 주문, 선/후불 결제, 직원 호출, 13개 다국어 지원 등 **필수 기능과 안정성에 집중된 표준형 시스템**을 제공합니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **KT 하이오더**: 국내 주요 POS 프로그램(오케이포스, 토스포스 등)과 연동을 지원하지만, 일부 마이너한 자체 포스 프로그램을 쓰는 매장은 사전 연동 확인이 필요합니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더가 적합한 경우**: 매장 내 인터넷 끊김 없는 안정적인 통신이 최우선이거나, 전국 단위 A/S의 빠른 출동 신뢰도가 중요하고 KT 인터넷·CCTV 등을 함께 묶어 관리하고 싶은 매장",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.foodingfactory.com/service/kt_table_order.php",
+          "domain": "foodingfactory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=Zgyw9XXbAqo",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "KT 하이오더와 일반 테이블오더 전문업체(티오더, 메뉴잇 등) 제품의 차이는 크게 **네트워크/통신 인프라, A/S 및 사후관리, 결합 혜택, 소프트웨어 기능/유연성**에서 나타납니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더 (통신사 기반)**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더**",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **KT 하이오더가 유리한 경우**:",
           "sentiment": "positive"
         }
       ],
@@ -1551,78 +1566,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "실제 자영업자 커뮤니티나 매장에서 KT 하이오더를 도입해 사용 중인 점주들의 현실적인 후기와 아쉬운 점을 정리해 드리겠습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kt-highorder.kr/",
-          "domain": "kt-highorder.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.a-ha.io/questions/4197dbede779bc1bab3172d82551325e",
-          "domain": "a-ha.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.a-ha.io/questions/4197dbede779bc1bab3172d82551325e",
-          "domain": "a-ha.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/reviews/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://megatelecom.co.kr/business/highorder",
-          "domain": "megatelecom.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/tableorder-downsides-before-installation/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/reviews/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "KT 하이오더를 실제 매장에 도입한 자영업자들의 후기와 평가를 종합해보면, **'대기업 망을 통한 안정성과 A/S'**에 만족하는 반면 **'비용과 약정 부담'**을 아쉬운 점으로 꼽는 경우가 많습니다.",
+          "sentence": "실제 외식업·주점 등을 운영하는 매장 사장님들의 후기를 종합해보면, KT 하이오더는 **“대기업 망 기반의 안정성과 A/S”**에서 높은 평가를 받는 반면, **“고정 비용과 매장 특성에 따른 운영 부담”**이 아쉬운 점으로 자주 언급됩니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1642,32 +1586,32 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.a-ha.io/questions/4197dbede779bc1bab3172d82551325e",
-          "domain": "a-ha.io",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kt-highorder.kr/",
-          "domain": "kt-highorder.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
           "raw": "https://blog-genieone.com/reviews/",
           "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.youtube.com/watch?v=ux8d0KhBuNI",
-          "domain": "youtube.com",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
-          "domain": "kt-biz.co.kr",
+          "raw": "https://blog-genieone.com/tableorder-downsides-before-installation/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.foodingfactory.com/service/kt_table_order.php",
+          "domain": "foodingfactory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
@@ -1683,11 +1627,11 @@
     {
       "questionId": "v1-011",
       "engine": "gemini",
-      "callIndex": 3,
+      "callIndex": 2,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "실제 매장에서 **KT 하이오더**를 도입해 사용 중인 자영업자·사장님들의 후기를 종합해보면, 운영 효율 면에서는 만족도가 높은 편이지만 비용과 현장 운영 방식에 따른 아쉬운 점도 분명히 존재합니다.",
+          "sentence": "KT 하이오더를 매장에 도입해 사용 중인 자영업자 분들의 실제 후기를 종합해보면, **통신 안정성과 사후관리(A/S)**에서는 높은 만족도를 보이는 반면, **비용 구조나 테이블오더 특유의 환경적 한계**에서는 아쉬운 점이 언급됩니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1701,20 +1645,77 @@
           "supportsBrandMention": true
         },
         {
+          "raw": "https://blog-genieone.com/torder-real-downside-switch/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/kt-highorder-real-reviews-27/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newstomato.com/ReadNews.aspx?no=1221713",
+          "domain": "newstomato.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://product.kt.com/sohostatic/marketing/mrktgScrnType11/pc-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%9E%A5%EC%A0%90_20250109201006.html",
+          "domain": "product.kt.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
           "raw": "https://blog-genieone.com/reviews/",
           "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
-          "domain": "blog-genieone.com",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "실제 자영업 커뮤니티 및 현장 후기에서 **KT 하이오더**를 사용하는 사장님들이 꼽는 주요 장점과 아쉬운 점(단점)을 정리해 드립니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "일부 테이블오더는 선불 결제 시 높은 PG(결제대행) 수수료를 부과하는 반면, KT 하이오더는 일반 VAN사 카드 결제 연동 방식을 주로 사용하여 **결제 수수료 부담이 적은 편**입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.a-ha.io/questions/4197dbede779bc1bab3172d82551325e",
+          "domain": "a-ha.io",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
-          "domain": "kt-b2b.com",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1725,8 +1726,8 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
@@ -1746,7 +1747,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "서울 영등포구 매장에 **KT 하이오더(KT Table Order)**를 도입할 경우, KT의 직영 통신 인프라와 유지보수망을 통해 다음과 같이 A/S 및 현장 관리가 진행됩니다.",
+          "sentence": "서울 영등포구 매장에 **KT 하이오더(Hi-Order)**를 도입하실 경우, A/S 및 현장 관리는 KT의 전국 직영 인프라와 전담 지원 체계를 통해 다음과 같이 진행됩니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "KT 하이오더는 **KT 인터넷 회선, 전용 Wi-Fi 공유기(AP), 태블릿 단말기, 관리자 프로그램**을 모두 KT 망에서 일원화하여 관리하기 때문에, “통신사 탓·기기 업체 탓” 공방 없이 한 번 접수로 원인을 파악해 일괄 조치합니다.",
           "sentiment": "positive"
         }
       ],
@@ -1756,55 +1761,37 @@
         {
           "raw": "https://www.hi-order.com/",
           "domain": "hi-order.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.aitimes.com/news/articleView.html?idxno=150912",
-          "domain": "aitimes.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/kt-highorder-installation-review/",
-          "domain": "blog-genieone.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.kt-hi-order.com/kt-%ED%95%98%EC%9D%B4%EC%98%A4%EB%8D%94-1",
-          "domain": "kt-hi-order.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kt-highorder.kr/",
-          "domain": "kt-highorder.kr",
-          "ownerType": "third-party-ugc",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
           "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
           "domain": "kt-b2b.com",
-          "ownerType": "third-party-ugc",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "third-party-ugc",
+          "raw": "https://product.kt.com/sohostatic/marketing/mrktgScrnType11/pc-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%9E%A5%EC%A0%90_20250109201006.html",
+          "domain": "kt.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
+          "domain": "ktmit.co.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-highorder.kr/",
+          "domain": "kt-highorder.kr",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
+          "ownerType": "unknown",
           "supportsBrandMention": true
         }
       ],
@@ -1823,7 +1810,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "서울 영등포구 매장에 KT 하이오더를 설치하실 경우, A/S 및 현장 방문 관리는 KT의 자체 통신·유지보수 인프라를 바탕으로 체계적으로 진행됩니다.",
+          "sentence": "서울 영등포구 매장에 KT 하이오더를 도입하실 경우, A/S 및 사후 관리는 중소형 테이블오더 업체와 달리 KT의 통신 인프라와 직영 엔지니어 네트워크를 기반으로 진행됩니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "KT 하이오더는 매장 인터넷, 전용 와이파이(AP), 태블릿 단말기, 알림판까지 KT가 원스톱으로 관리하므로 한 창구에서 네트워크와 하드웨어를 함께 점검받을 수 있습니다.",
           "sentiment": "positive"
         }
       ],
@@ -1831,33 +1822,21 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.aitimes.com/news/articleView.html?idxno=150912",
-          "domain": "aitimes.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
           "raw": "https://www.hi-order.com/",
           "domain": "hi-order.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
-          "domain": "kt-b2b.com",
+          "raw": "https://blog-genieone.com/kt-highorder-installation-review/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "brand-owned",
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
@@ -1867,8 +1846,14 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog-genieone.com/tableorder-as-service/",
-          "domain": "blog-genieone.com",
+          "raw": "http://www.hi-order.kr/",
+          "domain": "hi-order.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1883,12 +1868,6 @@
           "domain": "kt-highorder.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
-          "domain": "kt-biz.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
@@ -1896,7 +1875,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true,
+      "brandOwnedCitation": false,
       "clarifying": false
     },
     {
@@ -1906,7 +1885,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "서울 영등포구 매장에 **KT 하이오더**를 설치할 경우, KT의 통신망 유지보수 인프라를 바탕으로 원격 지원과 현장 출동 A/S가 다음과 같이 진행됩니다.",
+          "sentence": "서울 영등포구 매장에 KT 하이오더를 설치할 경우, KT의 전국 직영 A/S 인프라를 통해 **원격 지원부터 관할 지사 엔지니어의 현장 출동까지 일원화된 사후관리**가 진행됩니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "KT 하이오더는 설치 시 일반 손님용 Wi-Fi와 분리된 **하이오더 전용 AP를 구축**해 주며, 통신망 장애가 발생하더라도 인터넷 회선과 테이블오더를 한 번에 점검받을 수 있습니다.",
           "sentiment": "positive"
         }
       ],
@@ -1920,14 +1903,14 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://blog-genieone.com/tableorder-as-service/",
-          "domain": "blog-genieone.com",
+          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
+          "domain": "ktmit.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "http://www.hi-order.kr/",
-          "domain": "hi-order.kr",
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
@@ -1938,20 +1921,14 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://ktmit.co.kr/shop_owner/high_order.php",
-          "domain": "ktmit.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
           "raw": "https://kt-highorder.kr/",
           "domain": "kt-highorder.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
-          "domain": "m.ktbizone.com",
+          "raw": "https://blog-genieone.com/tableorder-as-service/",
+          "domain": "blog-genieone.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         }
