@@ -3,14 +3,18 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 // 질문(프롬프트) 단위 승패 집계 — 이번 주 응답(질문 × 엔진 × 반복)에서
 // 어떤 질문에서 브랜드가 언급되고(승), 경쟁사에 밀리거나 미언급인지(패)를 본다.
 // 새 데이터 수집 없이 기존 판정(QuestionRepeatAnalysis)만으로 계산한다.
-export type WinLossVerdict = 'win' | 'even' | 'loss'
+// 'unanswered' = 엔진이 답 대신 되물어(예: "어느 지역을 찾으시나요?") 브랜드가 언급될 기회
+// 자체가 없었던 질문. "경쟁에서 밀림(패)"과 진단이 다르므로 분리한다 — 이쪽은 질문 설계 문제다.
+export type WinLossVerdict = 'win' | 'even' | 'loss' | 'unanswered'
 
 export interface WinLossRow {
   questionId: string
   text: string
   category: string
   responses: number // 이 질문에 대한 응답(엔진×반복) 수
-  mentionedRate: number // 0~1, 브랜드가 언급된 응답 비율
+  clarifying: number // 그중 되물은 응답 수(답을 내놓지 않음)
+  answered: number // 실제로 답을 내놓은 응답 수 = responses - clarifying
+  mentionedRate: number // 0~1, **답한 응답 중** 브랜드가 언급된 비율(되물은 응답은 분모에서 제외)
   brandMentions: number // 브랜드 언급 문장 총합
   topCompetitor: { name: string; mentions: number } | null // 이 질문에서 가장 많이 언급된 경쟁사
   avgRank: number | null // 추천 순위 평균(1=최상위)
@@ -18,7 +22,13 @@ export interface WinLossRow {
   verdict: WinLossVerdict
 }
 
-function verdictOf(mentionedRate: number, brandMentions: number, topCompetitor: WinLossRow['topCompetitor']): WinLossVerdict {
+function verdictOf(
+  answered: number,
+  mentionedRate: number,
+  brandMentions: number,
+  topCompetitor: WinLossRow['topCompetitor'],
+): WinLossVerdict {
+  if (answered === 0) return 'unanswered' // 전부 되물음 — 언급될 기회가 없었다
   if (mentionedRate === 0) return 'loss' // 아예 언급 안 됨
   if (topCompetitor && topCompetitor.mentions > brandMentions) return 'loss' // 경쟁사가 더 많이 언급됨
   if (mentionedRate >= 0.5 && (!topCompetitor || brandMentions >= topCompetitor.mentions)) return 'win'
@@ -40,7 +50,11 @@ export function computeQuestionWinLoss(
   const rows: WinLossRow[] = []
   for (const [questionId, list] of byQuestion) {
     const responses = list.length
-    const mentionedCount = list.filter((a) => a.mentioned).length
+    // 되물은 응답은 "답한 것"이 아니므로 언급률 분모에서 뺀다(0%로 깎지 않는다).
+    const answeredList = list.filter((a) => !a.clarifying)
+    const clarifying = responses - answeredList.length
+    const answered = answeredList.length
+    const mentionedCount = answeredList.filter((a) => a.mentioned).length
     const brandMentions = list.reduce((s, a) => s + a.mentionSentences.length, 0)
 
     const compTotals = new Map<string, number>()
@@ -64,23 +78,25 @@ export function computeQuestionWinLoss(
       }
     }
 
-    const mentionedRate = responses > 0 ? mentionedCount / responses : 0
+    const mentionedRate = answered > 0 ? mentionedCount / answered : 0
     const spec = textById.get(questionId)
     rows.push({
       questionId,
       text: spec?.text ?? questionId,
       category: spec?.category ?? '',
       responses,
+      clarifying,
+      answered,
       mentionedRate,
       brandMentions,
       topCompetitor,
       avgRank,
       sentiment,
-      verdict: verdictOf(mentionedRate, brandMentions, topCompetitor),
+      verdict: verdictOf(answered, mentionedRate, brandMentions, topCompetitor),
     })
   }
 
-  // 패 → 무 → 승 순으로(개선이 필요한 질문을 위로), 같은 등급이면 언급률 낮은 순.
-  const order: Record<WinLossVerdict, number> = { loss: 0, even: 1, win: 2 }
+  // 패 → 무응답 → 무 → 승 순으로(개선이 필요한 질문을 위로), 같은 등급이면 언급률 낮은 순.
+  const order: Record<WinLossVerdict, number> = { loss: 0, unanswered: 1, even: 2, win: 3 }
   return rows.sort((a, b) => order[a.verdict] - order[b.verdict] || a.mentionedRate - b.mentionedRate)
 }

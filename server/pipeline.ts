@@ -18,6 +18,7 @@ import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { resolveCitationUrls } from './citationResolve.js';
+import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { getEngineClient, getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
@@ -297,6 +298,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
     factualitySupported: factualityClaims.filter((c) => c.verdict === 'supported').length,
     factualityContradicted: factualityClaims.filter((c) => c.verdict === 'contradicted').length,
     brandOwnedCitation: citation?.citations.some((c) => c.ownerType === 'brand-owned') ?? false,
+    clarifying: isClarifyingResponse(call.rawText),
   };
 }
 

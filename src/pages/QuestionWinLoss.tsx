@@ -12,6 +12,7 @@ const VERDICT: Record<WinLossRow['verdict'], { label: string; cls: string }> = {
   win: { label: '승', cls: 'st-good' },
   even: { label: '무', cls: 'st-warn' },
   loss: { label: '패', cls: 'st-bad' },
+  unanswered: { label: '무응답', cls: 'st-info' },
 }
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
@@ -35,7 +36,7 @@ export default function QuestionWinLoss() {
 
   const rows = useMemo(() => computeQuestionWinLoss(analyses, questions), [analyses, questions])
   const tally = useMemo(() => {
-    const t = { win: 0, even: 0, loss: 0 }
+    const t = { win: 0, even: 0, loss: 0, unanswered: 0 }
     for (const r of rows) t[r.verdict] += 1
     return t
   }, [rows])
@@ -64,6 +65,9 @@ export default function QuestionWinLoss() {
             <span className="status-pill st-good">승 {tally.win}</span>
             <span className="status-pill st-warn">무 {tally.even}</span>
             <span className="status-pill st-bad">패 {tally.loss}</span>
+            {tally.unanswered > 0 && (
+              <span className="status-pill st-info">무응답 {tally.unanswered}</span>
+            )}
             <span className="muted"> · 총 {rows.length}개 질문</span>
           </div>
 
@@ -91,7 +95,14 @@ export default function QuestionWinLoss() {
                         {r.questionId} · 응답 {r.responses}건
                       </span>
                     </td>
-                    <td className="num">{pct(r.mentionedRate)}</td>
+                    <td className="num">
+                      {r.answered > 0 ? pct(r.mentionedRate) : '—'}
+                      {r.clarifying > 0 && (
+                        <span className="sentence-meta" style={{ display: 'block' }}>
+                          되물음 {r.clarifying}/{r.responses}
+                        </span>
+                      )}
+                    </td>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>
                       {r.brandMentions}
                       {r.topCompetitor ? ` / ${r.topCompetitor.mentions} (${r.topCompetitor.name})` : ' / -'}
@@ -109,7 +120,9 @@ export default function QuestionWinLoss() {
           </div>
           <p className="hint" style={{ marginTop: 10 }}>
             <b>승</b> = 브랜드가 과반 응답에서 언급되고 경쟁사보다 우위 · <b>무</b> = 언급되나 경쟁사와 대등/약함 ·{' '}
-            <b>패</b> = 미언급이거나 경쟁사가 더 많이 언급. "브랜드/최다 경쟁사"는 언급 문장 수 비교입니다.
+            <b>패</b> = 미언급이거나 경쟁사가 더 많이 언급 · <b>무응답</b> = 엔진이 답 대신 되물어(예: "어느
+            지역을 찾으시나요?") 언급될 기회가 없었음 — 질문을 더 구체적으로 바꾸면 해소됩니다. 되물은 응답은
+            언급률 분모에서 제외합니다. "브랜드/최다 경쟁사"는 언급 문장 수 비교입니다.
           </p>
         </>
       )}

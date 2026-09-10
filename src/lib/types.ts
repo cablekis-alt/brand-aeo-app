@@ -49,6 +49,8 @@ export interface QuestionRepeatAnalysis {
   factualitySupported: number
   factualityContradicted: number
   brandOwnedCitation: boolean
+  /** 답 대신 사용자에게 되물은 응답 — "미언급"과 구분한다. 구버전 데이터엔 없다. */
+  clarifying?: boolean
 }
 
 export interface QuestionSpec {

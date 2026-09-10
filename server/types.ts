@@ -74,4 +74,7 @@ export interface QuestionRepeatAnalysis {
   factualitySupported: number;
   factualityContradicted: number;
   brandOwnedCitation: boolean;
+  // 답을 내놓지 않고 사용자에게 되물은 응답("어느 지역을 찾으시나요?"). 브랜드가 언급될
+  // 기회 자체가 없었으므로 "미언급"과 구분한다. 구버전 데이터엔 없어 선택 필드.
+  clarifying?: boolean;
 }
