@@ -30,7 +30,12 @@ const MAX_AUTO_COHORT = 5;
 // 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
 // "브랜드 전체 측정"이 8분을 넘었다. 호출 총량은 여기가 아니라 전역 LLM 슬롯(concurrency.ts)이
 // 잡으므로, 이 값을 올려도 쿼터에 몰리는 양은 늘지 않는다(대기 큐만 길어진다).
-const COHORT_CONCURRENCY = Math.max(1, Number(process.env.COHORT_CONCURRENCY) || 3);
+//
+// 기본값은 MAX_AUTO_COHORT와 같게 둔다 — 경쟁사가 한 파도에 다 들어가야 한 개가 남아
+// 혼자 도는 두 번째 파도가 생기지 않는다(torder 실측: 3개 병렬 91초 뒤 KT 1개만 또 한 파도).
+// 3개 병렬에서 366호출을 91초(4.0호출/초)에 처리해, 수집 호출의 천장 2.8호출/초에 걸리지
+// 않는 것도 확인했다 — 판정 호출은 그라운딩 검색이 없어 더 싸다.
+const COHORT_CONCURRENCY = Math.max(1, Number(process.env.COHORT_CONCURRENCY) || MAX_AUTO_COHORT);
 
 function slugFromDomain(domain: string): string {
   const label = domain.split('.')[0] || 'brand';
