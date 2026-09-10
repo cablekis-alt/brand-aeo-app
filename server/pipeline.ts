@@ -35,8 +35,19 @@ import type {
   TenantConfig,
 } from './types.js';
 
-const COLLECTION_CONCURRENCY = 8;
-const ANALYSIS_CONCURRENCY = 8;
+// 파이프라인 한 벌이 동시에 띄우는 호출 수. 총량 상한은 여기가 아니라 전역 LLM 슬롯
+// (concurrency.ts의 LLM_CONCURRENCY)이 잡으므로, 이 값은 "얼마나 파이프를 채울지"만 정한다.
+//
+// 실측(scripts/quota-probe.ts, gemini-3.7-flash + 그라운딩, 48회):
+//   동시성  8 → 25.1초 · 429 0건 · 0.96/초
+//   동시성 16 → 15.2초 · 429 0건 · 1.58/초
+//   동시성 24 → 17.3초 · 429 0건 · 2.77/초   (48회 기준)
+//   동시성 48 → 17.2초 · 429 0건 · 2.79/초   ← 더 안 빨라지고 p95만 9.3→10.8초
+// 즉 키 하나의 처리량 천장이 약 2.8호출/초이고 동시성 24에서 이미 닿는다. 그 위로 올리면
+// 서버가 429 대신 큐에 세워 지연만 길어진다. 그래서 수집을 전역 상한과 같은 24로 맞춘다.
+// 분석은 항목당 판정 호출이 3~4개라 8 × 3~4 = 24~32로 이미 천장에 닿는다(그대로 둔다).
+const COLLECTION_CONCURRENCY = Math.max(1, Number(process.env.COLLECTION_CONCURRENCY) || 24);
+const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 8);
 
 function toBrandContext(tenant: TenantConfig): BrandContext {
   return {
