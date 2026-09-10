@@ -2,9 +2,8 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationBreakdown } from '../lib/api'
 import { formatPct } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import type { CitationBreakdown } from '../lib/types'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const OWNER_TYPE_LABEL: Record<string, string> = {
   'brand-owned': '자사',
@@ -16,9 +15,13 @@ const OWNER_TYPE_LABEL: Record<string, string> = {
 
 export default function Citations() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: breakdown, loading } = useWeeklyData(loadCitationBreakdown, tenant?.tenantId ?? '', weekOf, {
+  const {
+    weeks,
+    weekOf,
+    setWeekOf,
+    data: breakdown,
+    loading,
+  } = useWeeklyPage<CitationBreakdown>(loadCitationBreakdown, tenant?.tenantId ?? '', {
     rows: [],
     brandOwnedCitationRate: 0,
   })
@@ -32,7 +35,7 @@ export default function Citations() {
       <p className="lead">응답에 실제로 인용된 URL을 소유권 기준으로 분류해, 자사 도메인이 얼마나 노출되는지 봅니다.</p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}

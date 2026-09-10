@@ -2,9 +2,7 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadEeat } from '../lib/api'
 import { EEAT_PILLAR_LABEL, formatPct } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { EeatPillarId } from '../prompts/b6-eeat'
 
 const PILLARS: EeatPillarId[] = ['experience', 'expertise', 'authoritativeness', 'trustworthiness']
@@ -21,13 +19,14 @@ const EMPTY = {
 
 export default function Eeat() {
   const { tenant } = useTenant()
-  const { history, loading: historyLoading } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data, loading } = useWeeklyData(loadEeat, tenant?.tenantId ?? '', weekOf, EMPTY)
+  const { weeks, weekOf, setWeekOf, data, loading: pending } = useWeeklyPage(
+    loadEeat,
+    tenant?.tenantId ?? '',
+    EMPTY,
+  )
 
   if (!tenant) return null
 
-  const pending = historyLoading || (history.length > 0 && (!weekOf || loading))
   const empty = !pending && data.totalCallCount === 0
 
   return (
@@ -40,7 +39,7 @@ export default function Eeat() {
       </p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {pending && <p className="muted">불러오는 중…</p>}

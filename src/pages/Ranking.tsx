@@ -3,16 +3,19 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadRanking } from '../lib/api'
 import { formatPct } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { RankingView } from '../lib/types'
 
 export default function Ranking() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: ranking, loading } = useWeeklyData<RankingView | null>(loadRanking, tenant?.tenantId ?? '', weekOf, null)
+  const {
+    weeks,
+    weekOf,
+    setWeekOf,
+    data: ranking,
+    loading,
+    neverMeasured,
+  } = useWeeklyPage<RankingView | null>(loadRanking, tenant?.tenantId ?? '', null)
 
   if (!tenant) return null
 
@@ -26,14 +29,16 @@ export default function Ranking() {
       <p className="lead">같은 업종·지역의 다른 브랜드와 비교해 몇 위인지, 추천 우선순위에서 얼마나 앞서는지 봅니다.</p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && !ranking && (
         <p className="muted">
-          이 주차에 랭킹 데이터가 없습니다. <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 이 브랜드를 측정하면
-          순위·SoM이 채워집니다.
+          {neverMeasured
+            ? '이 브랜드는 아직 측정된 적이 없습니다. '
+            : '이 주차에 랭킹 데이터가 없습니다. '}
+          <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 이 브랜드를 측정하면 순위·SoM이 채워집니다.
         </p>
       )}
 

@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { readDeletedTenants } from './tenantTombstone.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
 import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
@@ -106,9 +107,13 @@ export class FileResultStore implements ResultStore {
 
   async getCohortScorecards(industry: string, region: string, weekOf: string): Promise<WeeklyScorecard[]> {
     await ensureDir(DATA_DIR);
-    const tenantDirs = await readdir(DATA_DIR);
+    // 코호트는 디렉터리 목록으로 만든다. 브랜드를 삭제해도 이미 측정한 data/<tenant>/는 남으므로
+    // (측정 결과는 지우지 않는다), 삭제된 브랜드가 순위표에 계속 끼는 것을 여기서 걸러낸다.
+    const [tenantDirs, deleted] = await Promise.all([readdir(DATA_DIR), readDeletedTenants()]);
+    const deletedIds = new Set(deleted);
     const results: WeeklyScorecard[] = [];
     for (const tenantId of tenantDirs) {
+      if (deletedIds.has(tenantId)) continue;
       const historyPath = path.join(DATA_DIR, tenantId, 'scorecard-history.json');
       const history = await readJsonArray<WeeklyScorecard>(historyPath);
       const match = history.find((s) => s.industry === industry && s.region === region && s.weekOf === weekOf);

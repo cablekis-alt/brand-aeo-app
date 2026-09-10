@@ -9,10 +9,8 @@ import {
   posRate,
   type SentimentCounts,
 } from '../lib/sentiment'
-import type { QuestionSpec } from '../lib/types'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
@@ -29,9 +27,11 @@ function StackedBar({ c }: { c: SentimentCounts }) {
 
 export default function SentimentDashboard() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: analyses, loading } = useWeeklyData(loadQuestionAnalyses, tenant?.tenantId ?? '', weekOf, [])
+  const { weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
+    loadQuestionAnalyses,
+    tenant?.tenantId ?? '',
+    [],
+  )
 
   const [questions, setQuestions] = useState<QuestionSpec[]>([])
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function SentimentDashboard() {
       </p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}

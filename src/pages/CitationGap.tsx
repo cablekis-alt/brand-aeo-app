@@ -4,9 +4,7 @@ import { useTenant } from '../context/useTenant'
 import { loadCitationSources } from '../lib/api'
 import { computeCitationGap, type GapRow } from '../lib/citationGap'
 import { ENGINE_LABEL, SOURCE_KIND_LABEL } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
 const EMPTY: CitationSourceAnalysis = {
@@ -58,14 +56,13 @@ function GapTable({ rows }: { rows: GapRow[] }) {
 
 export default function CitationGap() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: analysis, loading } = useWeeklyData<CitationSourceAnalysis>(
-    loadCitationSources,
-    tenant?.tenantId ?? '',
+  const {
+    weeks,
     weekOf,
-    EMPTY,
-  )
+    setWeekOf,
+    data: analysis,
+    loading,
+  } = useWeeklyPage<CitationSourceAnalysis>(loadCitationSources, tenant?.tenantId ?? '', EMPTY)
 
   const gap = useMemo(() => computeCitationGap(analysis), [analysis])
 
@@ -82,7 +79,7 @@ export default function CitationGap() {
       </p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}

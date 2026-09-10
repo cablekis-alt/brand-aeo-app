@@ -3,18 +3,19 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadQuestionAnalyses } from '../lib/api'
 import { ENGINE_LABEL } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
+import type { QuestionRepeatAnalysis } from '../lib/types'
 import type { Engine } from '../prompts/types'
 
 const SENTIMENT_LABEL: Record<string, string> = { positive: '긍정', neutral: '중립', negative: '부정' }
 
 export default function BrandDiagnosis() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: analyses, loading } = useWeeklyData(loadQuestionAnalyses, tenant?.tenantId ?? '', weekOf, [])
+  const { weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
+    loadQuestionAnalyses,
+    tenant?.tenantId ?? '',
+    [],
+  )
 
   const [engineFilter, setEngineFilter] = useState<Engine[]>([])
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function BrandDiagnosis() {
       <p className="lead">이번 주 응답(질문 × 엔진 × 반복 3회) 중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.</p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
         <fieldset className="engine-filter">
           <legend>엔진</legend>
           {tenant.engines.map((engine) => (

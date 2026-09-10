@@ -2,9 +2,7 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources } from '../lib/api'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, SOURCE_KIND_LABEL, formatPct } from '../lib/format'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const EMPTY = {
   totalCitations: 0,
@@ -19,13 +17,14 @@ const EMPTY = {
 
 export default function CitationSources() {
   const { tenant } = useTenant()
-  const { history, loading: historyLoading } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data, loading } = useWeeklyData(loadCitationSources, tenant?.tenantId ?? '', weekOf, EMPTY)
+  const { weeks, weekOf, setWeekOf, data, loading: pending } = useWeeklyPage(
+    loadCitationSources,
+    tenant?.tenantId ?? '',
+    EMPTY,
+  )
 
   if (!tenant) return null
 
-  const pending = historyLoading || (history.length > 0 && (!weekOf || loading))
   const empty = !pending && data.totalCitations === 0
 
   return (
@@ -38,7 +37,7 @@ export default function CitationSources() {
       </p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {pending && <p className="muted">불러오는 중…</p>}

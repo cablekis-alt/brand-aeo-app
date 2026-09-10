@@ -3,10 +3,8 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadQuestionAnalyses, loadQuestionBank } from '../lib/api'
 import { computeQuestionWinLoss, type WinLossRow } from '../lib/questionWinLoss'
-import type { QuestionSpec } from '../lib/types'
-import { useScorecards } from '../lib/useScorecards'
-import { useWeekSelection } from '../lib/useWeekSelection'
-import { useWeeklyData } from '../lib/useWeeklyData'
+import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
+import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const VERDICT: Record<WinLossRow['verdict'], { label: string; cls: string }> = {
   win: { label: '승', cls: 'st-good' },
@@ -18,9 +16,11 @@ const pct = (n: number) => `${Math.round(n * 100)}%`
 
 export default function QuestionWinLoss() {
   const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: analyses, loading } = useWeeklyData(loadQuestionAnalyses, tenant?.tenantId ?? '', weekOf, [])
+  const { weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
+    loadQuestionAnalyses,
+    tenant?.tenantId ?? '',
+    [],
+  )
 
   const [questions, setQuestions] = useState<QuestionSpec[]>([])
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function QuestionWinLoss() {
       </p>
 
       <div className="filters">
-        <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+        <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}
