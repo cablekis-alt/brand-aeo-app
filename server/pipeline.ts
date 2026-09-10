@@ -45,9 +45,11 @@ import type {
 //   동시성 48 → 17.2초 · 429 0건 · 2.79/초   ← 더 안 빨라지고 p95만 9.3→10.8초
 // 즉 키 하나의 처리량 천장이 약 2.8호출/초이고 동시성 24에서 이미 닿는다. 그 위로 올리면
 // 서버가 429 대신 큐에 세워 지연만 길어진다. 그래서 수집을 전역 상한과 같은 24로 맞춘다.
-// 분석은 항목당 판정 호출이 3~4개라 8 × 3~4 = 24~32로 이미 천장에 닿는다(그대로 둔다).
+// 판정은 검색이 없어 더 싸고 예산도 따로다(48). 항목당 판정 호출이 평균 2.6개라
+// 16 × 2.6 ≈ 42로 그 예산을 채운다 — 8이면 브랜드 하나만 돌 때 21개밖에 못 띄워
+// 파이프가 반만 찬다(실측: 단독 브랜드 2.75호출/초 vs 코호트 병렬 5.2호출/초).
 const COLLECTION_CONCURRENCY = Math.max(1, Number(process.env.COLLECTION_CONCURRENCY) || 24);
-const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 8);
+const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 16);
 
 function toBrandContext(tenant: TenantConfig): BrandContext {
   return {

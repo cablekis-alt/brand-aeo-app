@@ -11,20 +11,30 @@
  *   npx tsx scripts/quota-probe.ts                 # 8 · 16 · 24 · 32, 단계별 24회 호출
  *   npx tsx scripts/quota-probe.ts 8,16            # 단계 지정
  *   npx tsx scripts/quota-probe.ts 8,16 12         # 단계 지정 + 단계별 호출 수
+ *   npx tsx scripts/quota-probe.ts 24,48 48 --judge  # 판정 호출(그라운딩 없음)의 천장
  *
- * 주의: 실제 Gemini 호출이다(기본 4단계 × 24회 = 96회, 그라운딩 검색 포함).
+ * --judge를 붙이면 수집 대신 **판정 호출**을 잰다. 두 호출은 성질이 달라 천장도 다르다 —
+ * 수집은 googleSearch 그라운딩이 붙어 한 번에 7~8초가 걸리고 서버가 큐에 세우지만,
+ * 판정은 검색이 없다. 같은 슬롯을 다투게 두면 수집이 막혀 있는 동안 판정도 함께 대기한다.
+ * 예산을 나눌지 판단하려면 판정 쪽 천장을 따로 알아야 한다.
+ *
+ * 주의: 실제 Gemini 호출이다(기본 4단계 × 24회 = 96회).
  */
 import 'dotenv/config';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { GeminiEngineClient } from '../server/engines/geminiEngineClient.js';
+import { GeminiJudgeClient } from '../server/engines/geminiJudgeClient.js';
 import { mapWithConcurrency } from '../server/concurrency.js';
-import { buildEngineCallPrompt } from '../src/prompts/index.js';
+import { buildBrandMentionPrompt, buildEngineCallPrompt } from '../src/prompts/index.js';
+import type { PromptMessage } from '../src/prompts/types.js';
 
-const levels = (process.argv[2] ?? '8,16,24,32')
+const judgeMode = process.argv.includes('--judge');
+const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const levels = (positional[0] ?? '8,16,24,32')
   .split(',')
   .map((s) => Number(s.trim()))
   .filter((n) => Number.isFinite(n) && n > 0);
-const callsPerLevel = Number(process.argv[3] ?? 24);
+const callsPerLevel = Number(positional[1] ?? 24);
 
 if (levels.length === 0) {
   console.error('단계를 파싱할 수 없습니다. 예: npx tsx scripts/quota-probe.ts 8,16,24')
@@ -63,10 +73,42 @@ function percentile(sorted: number[], p: number): number {
   return sorted[idx];
 }
 
-const questions = loadQuestions();
-const client = new GeminiEngineClient(); // 전역 슬롯을 우회한다(위 주석 참고)
+/**
+ * 판정 프롬프트 — 저장된 실제 응답으로 만든다. 짧은 더미 텍스트로는 입력 토큰이 달라
+ * 지연·처리량이 실제 측정과 어긋난다(판정 입력은 응답 전문 1~2KB다).
+ */
+function loadJudgePrompts(): PromptMessage[] {
+  const brand = {
+    brandName: "t'order",
+    aliases: ['티오더', 'torder'],
+    ownedDomains: ['torder.co.kr'],
+    competitors: [{ name: '페이히어', aliases: ['페이히어'], domains: ['payhere.in'] }],
+    industry: '테이블오더',
+    region: '서울 영등포',
+  };
+  const file = 'data/torder/2026-W37/raw-calls.json';
+  if (!existsSync(file)) return [];
+  const calls = JSON.parse(readFileSync(file, 'utf8')) as { rawText?: string }[];
+  return calls
+    .map((c) => c.rawText)
+    .filter((t): t is string => Boolean(t))
+    .map((rawText) => buildBrandMentionPrompt(brand, rawText));
+}
+
+const prompts: PromptMessage[] = judgeMode
+  ? loadJudgePrompts()
+  : loadQuestions().map((text) => buildEngineCallPrompt('gemini', text));
+
+if (prompts.length === 0) {
+  console.error('프롬프트를 만들 재료가 없습니다(--judge는 data/torder/2026-W37/raw-calls.json이 필요).');
+  process.exit(1);
+}
+
+// 전역 슬롯을 우회하려고 클라이언트를 직접 만든다(위 주석 참고).
+const client = judgeMode ? new GeminiJudgeClient() : new GeminiEngineClient();
 console.log(
-  `모델 ${process.env.GEMINI_MODEL ?? 'gemini-3.7-flash'} · 단계 ${levels.join(', ')} · 단계별 ${callsPerLevel}회\n`,
+  `${judgeMode ? '판정' : '수집'} 호출 · 모델 ${process.env.GEMINI_MODEL ?? 'gemini-3.7-flash'} · ` +
+    `단계 ${levels.join(', ')} · 단계별 ${callsPerLevel}회 · 프롬프트 ${prompts.length}종\n`,
 );
 
 interface LevelResult {
@@ -82,16 +124,16 @@ interface LevelResult {
 const rows: LevelResult[] = [];
 
 for (const level of levels) {
-  const jobs = Array.from({ length: callsPerLevel }, (_, i) => questions[i % questions.length]);
+  const jobs = Array.from({ length: callsPerLevel }, (_, i) => prompts[i % prompts.length]);
   const started = Date.now();
   let quota = 0;
   let other = 0;
   const latencies: number[] = [];
   const otherMessages: string[] = [];
 
-  await mapWithConcurrency(jobs, level, async (text) => {
+  await mapWithConcurrency(jobs, level, async (prompt) => {
     try {
-      const result = await client.call(buildEngineCallPrompt('gemini', text));
+      const result = await client.call(prompt);
       latencies.push(result.latencyMs ?? 0);
     } catch (err) {
       if (isQuotaError(err)) quota += 1;
