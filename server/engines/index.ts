@@ -40,6 +40,35 @@ export function getEngineClient(engine: Engine): EngineClient {
 }
 
 let judgeClient: EngineClient | undefined;
+/** 이번 프로세스에서 실제로 생성된 판단 클라이언트의 id. 스코어카드에 기록한다. */
+let judgeEngineId: JudgeEngineId | undefined;
+
+export type JudgeEngineId = 'gemini' | 'claude' | 'openai' | 'mock';
+
+/**
+ * 설정으로부터 판단 엔진 id를 해석한다. getJudgeClient()가 이 결과로 클라이언트를 만들므로
+ * 둘이 갈릴 수 없다 — 규칙을 두 곳에 복제하면 스코어카드에 기록된 판단 엔진이 거짓이 된다.
+ */
+export function resolveJudgeEngineId(): JudgeEngineId {
+  if (USE_MOCK) return 'mock';
+  const preferred = process.env.JUDGE_ENGINE?.trim().toLowerCase();
+  // 명시값 우선.
+  if (preferred === 'gemini' || preferred === 'claude' || preferred === 'openai') return preferred;
+  // 기본: Gemini 고정. 키가 없을 때만 다른 엔진으로 폴백한다.
+  if (process.env.GEMINI_API_KEY) return 'gemini';
+  if (process.env.ANTHROPIC_API_KEY) return 'claude';
+  return 'openai';
+}
+
+/**
+ * 이 측정에서 실제로 쓴 판단 엔진 id.
+ *
+ * 해석값을 다시 계산하지 않고 "만들어진 클라이언트"의 id를 돌려준다 — 클라이언트는 프로세스
+ * 수명 동안 캐시되므로, 도중에 JUDGE_ENGINE이 바뀌면 해석값과 실제 사용 엔진이 달라진다.
+ */
+export function usedJudgeEngineId(): JudgeEngineId {
+  return judgeEngineId ?? resolveJudgeEngineId();
+}
 
 /**
  * B5 분석(심판) 전용 클라이언트. 수집용 엔진과 분리된 고정 모델이어야 한다.
@@ -50,17 +79,17 @@ let judgeClient: EngineClient | undefined;
  * 판단은 그대로 유지된다. 바꾸려면 JUDGE_ENGINE으로 명시한다.
  */
 export function getJudgeClient(): EngineClient {
-  if (USE_MOCK) return new MockJudgeClient();
+  if (USE_MOCK) {
+    judgeEngineId = 'mock';
+    return new MockJudgeClient();
+  }
   if (!judgeClient) {
-    const preferred = process.env.JUDGE_ENGINE?.trim().toLowerCase();
-    // 명시값 우선.
-    if (preferred === 'gemini') judgeClient = new GeminiJudgeClient();
-    else if (preferred === 'claude') judgeClient = new ClaudeJudgeClient();
-    else if (preferred === 'openai') judgeClient = new OpenAiJudgeClient();
-    // 기본: Gemini 고정. 키가 없을 때만 다른 엔진으로 폴백한다(키 없는 클라이언트는 생성자가 throw).
-    else if (process.env.GEMINI_API_KEY) judgeClient = new GeminiJudgeClient();
-    else if (process.env.ANTHROPIC_API_KEY) judgeClient = new ClaudeJudgeClient();
-    else judgeClient = new OpenAiJudgeClient();
+    const id = resolveJudgeEngineId();
+    // 키 없는 클라이언트는 생성자가 throw한다 — 그때는 id도 기록하지 않는다.
+    if (id === 'claude') judgeClient = new ClaudeJudgeClient();
+    else if (id === 'openai') judgeClient = new OpenAiJudgeClient();
+    else judgeClient = new GeminiJudgeClient();
+    judgeEngineId = id;
   }
   return judgeClient;
 }

@@ -20,7 +20,7 @@ import { mapWithConcurrency } from './concurrency.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
-import { getEngineClient, getJudgeClient } from './engines/index.js';
+import { getEngineClient, getJudgeClient, usedJudgeEngineId } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { analyzeCitationSources } from './citationSources.js';
@@ -338,6 +338,9 @@ function aggregateScorecard(
     cohortRank: computeCohortRank(m.score, cohortScorecards),
     hallucinationFlags: m.hallucinationFlags,
     enginesUsed: m.enginesUsed,
+    // 판단 엔진은 지표 집계(aggregate.ts)가 아니라 여기서 붙인다 — 재계산 스크립트는 저장된
+    // 카드를 그대로 물려받아야 한다. 다시 해석하면 "그때 무엇으로 판정했는지"가 지워진다.
+    judgeEngine: usedJudgeEngineId(),
   };
 }
 

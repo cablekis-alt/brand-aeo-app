@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTenant } from '../context/useTenant'
-import { formatPct, formatRank, weekLabel } from '../lib/format'
+import { formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import type { WeeklyScorecard } from '../prompts/b8-report'
@@ -27,6 +27,12 @@ export default function Performance() {
     [history, selectedWeek],
   )
   const chartMax = maxScore(history)
+  // 판단 엔진이 주차마다 다르면 점수 차이를 "변화"로 읽을 수 없다. 기록이 없는 구버전 카드는
+  // 무엇으로 판정했는지 알 수 없으므로 섞였는지 판단에서 제외한다(추측하지 않는다).
+  const mixedJudges = useMemo(
+    () => [...new Set(history.map((item) => item.judgeEngine).filter((v): v is string => Boolean(v)))],
+    [history],
+  )
 
   return (
     <>
@@ -77,6 +83,7 @@ export default function Performance() {
                     <th>순위</th>
                     <th>사실성</th>
                     <th>인용</th>
+                    <th>판단</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -93,11 +100,19 @@ export default function Performance() {
                       <td>{formatRank(item.avgRecommendationRank)}</td>
                       <td>{formatPct(item.factualityScore)}</td>
                       <td>{formatPct(item.brandOwnedCitationRate)}</td>
+                      <td>{judgeLabel(item.judgeEngine)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {mixedJudges.length > 1 && (
+              <p className="hint" style={{ marginTop: 10 }}>
+                <b>주의</b> — 이 브랜드의 주차들이 서로 다른 판단 엔진으로 측정됐습니다(
+                {mixedJudges.map((j) => judgeLabel(j)).join(' · ')}). 판단 엔진은 언급·인용·순위·사실성을 모두 판정하므로,
+                엔진이 다른 주차끼리는 점수 차이를 <b>변화로 해석할 수 없습니다</b>.
+              </p>
+            )}
           </section>
 
           {card.hallucinationFlags.length > 0 && (

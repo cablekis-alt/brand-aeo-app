@@ -25,6 +25,13 @@ export const ENGINE_LABEL: Record<string, string> = {
   gemini: 'Gemini',
   claude: 'Claude',
   perplexity: 'Perplexity',
+  mock: '목(테스트)', // USE_MOCK_ENGINES로 돌린 측정 — 실제 응답이 아니다
+}
+
+/** 스코어카드의 judgeEngine 표시. 기록이 없는 구버전 카드는 그렇게 밝힌다(추측하지 않는다). */
+export function judgeLabel(id: string | undefined): string {
+  if (!id) return '기록 없음'
+  return ENGINE_LABEL[id] ?? id
 }
 
 export const OWNER_TYPE_LABEL: Record<string, string> = {

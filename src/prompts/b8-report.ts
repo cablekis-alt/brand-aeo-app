@@ -19,6 +19,10 @@ export interface WeeklyScorecard {
   cohortRank: { position: number; totalTenants: number };
   hallucinationFlags: string[]; // B5-D contradicted 주장 요약
   enginesUsed?: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 구버전 스코어카드엔 없을 수 있어 선택.
+  // 이 주차를 판정한 엔진('gemini'|'claude'|'openai'|'mock'). 판단 엔진이 바뀌면 같은 응답에서
+  // 다른 판정이 나오므로, 주차 간 점수 비교가 유효한지 확인하려면 이 값이 필요하다.
+  // v0.1.38 이전 스코어카드엔 없어 선택 필드다(= 기록 없음, 사실상 Gemini 고정 시기).
+  judgeEngine?: string;
 }
 
 /**

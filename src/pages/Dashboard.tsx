@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
-import { ENGINE_LABEL, formatDelta, formatPct, formatRank, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 
 export default function Dashboard() {
@@ -145,7 +145,9 @@ export default function Dashboard() {
                   <span key={engine}>{ENGINE_LABEL[engine] ?? engine}</span>
                 ))}
               </p>
-              <span>질문 {tenant.questionBankSize}개 · 엔진당 3회 반복</span>
+              <span>
+                질문 {tenant.questionBankSize}개 · 엔진당 3회 반복 · 판단 {judgeLabel(card.judgeEngine)}
+              </span>
             </article>
           </section>
 
