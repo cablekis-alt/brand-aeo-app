@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "generatedAt": "2026-09-08T01:56:18.671Z",
+  "generatedAt": "2026-09-10T11:28:56.122Z",
   "questions": [
     {
       "questionId": "v1-001",
-      "text": "식당에 테이블오더 도입하려고 하는데 요즘 어디 제품 많이 써요?",
+      "text": "식당에 테이블오더 설치하려고 하는데 요즘 제일 많이 쓰는 거 추천해줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v1-002",
-      "text": "서울 영등포에서 고깃집 오픈 준비 중인데 쓸만한 테이블오더 추천해줘.",
+      "text": "서울 영등포에서 고깃집 오픈 준비 중인데 테이블오더 어떤 게 괜찮아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v1-003",
-      "text": "테이블오더 태블릿 10대 정도 놓으려면 월 렌탈료나 초기비용이 대략 얼마예요?",
+      "text": "테이블오더 월 렌탈 비용이랑 설치비 보통 얼마 정도 드는지 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v1-004",
-      "text": "포스기랑 연동 잘되고 잔고장 없는 테이블오더 업체 알려주세요.",
+      "text": "선불형이랑 후불형 테이블오더 중에 매장 운영할 때 어떤 방식이 더 편해?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v1-005",
-      "text": "주점 운영 중인데 선불형 테이블오더랑 후불형 중에 뭐가 더 관리가 편한가요?",
+      "text": "소규모 매장인데 기존 포스기랑 연동 잘되는 테이블오더 고르는 팁 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -49,7 +49,7 @@
     },
     {
       "questionId": "v1-006",
-      "text": "소규모 식당에 테이블오더 설치했을 때 장단점 정리해줘.",
+      "text": "테이블오더 쓰다가 주문 누락이나 기기 멈춤 오류 적은 업체 어디야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v1-007",
-      "text": "테이블오더 도입할 때 위약금이나 약정 조건에서 꼭 확인해야 할 점이 뭐야?",
+      "text": "홀 직원 줄이려고 테이블오더 도입 고민 중인데 실제로 인건비 절감 효과 커?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -67,7 +67,7 @@
     },
     {
       "questionId": "v1-008",
-      "text": "요즘 음식점에서 쓰는 태블릿 무인 주문기 후기 좋은 브랜드 리스트 뽑아줘.",
+      "text": "테이블오더 계약할 때 위약금이나 약정 조건에서 주의해야 할 점 알려줘",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -76,7 +76,7 @@
     },
     {
       "questionId": "v1-009",
-      "text": "페이히어 테이블오더 쓰면 수수료나 월 이용료가 어떻게 되나요?",
+      "text": "페이히어 테이블오더 쓰면 태블릿 가격이랑 월 이용료 어떻게 돼?",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -85,7 +85,7 @@
     },
     {
       "questionId": "v1-010",
-      "text": "페이히어랑 다른 테이블오더 브랜드들 비교했을 때 기능이나 가격 차이가 커?",
+      "text": "페이히어랑 티오더 비교했을 때 소상공인 식당에 뭐가 더 나아?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -94,7 +94,7 @@
     },
     {
       "questionId": "v1-011",
-      "text": "페이히어 테이블오더 실제로 써본 사장님들 후기나 단점 궁금해요.",
+      "text": "페이히어 테이블오더 포스기 연동해서 써본 사람들 실제 후기나 단점 궁금해",
       "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -103,7 +103,7 @@
     },
     {
       "questionId": "v1-012",
-      "text": "영등포 상권 매장에 페이히어 테이블오더 설치하면 방문 설치랑 AS 지원 잘 되나요?",
+      "text": "영등포 여의도 쪽 식당에서 페이히어 테이블오더 설치 지원이나 A/S 잘 되는 편이야?",
       "category": "local-regional",
       "containsBrandName": true,
       "industry": "테이블오더",

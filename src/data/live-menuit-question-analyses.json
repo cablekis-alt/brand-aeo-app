@@ -9,11 +9,11 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "* **메뉴잇 (Menuit)**",
-          "sentiment": "neutral"
+          "sentence": "* **메뉴잇 (무선 배터리 강점)**",
+          "sentiment": "positive"
         },
         {
-          "sentence": "**일반적으로는 티오더, KT 하이오더, 메뉴잇 3곳에서 무료 방문 실측 및 견적 상담을 받아보고 비교한 뒤 결정하시는 경우가 가장 많습니다.**",
+          "sentence": "**요약하자면**, 가장 대중적이고 안정적인 시스템을 원하시면 **티오더**, 배선 없는 깔끔한 설치를 원하시면 **메뉴잇**, 포스부터 웨이팅까지 통합 관리를 원하시면 **페이히어**, 통신 결합 할인을 노리신다면 **KT 하이오더** 쪽으로 2~3곳 비교 견적을 받아보시는 것을 추천합니다.",
           "sentiment": "positive"
         }
       ],
@@ -21,553 +21,70 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://core.asiae.co.kr/article/2024062815334733122",
-          "domain": "core.asiae.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://www.srtimes.kr/news/articleView.html?idxno=168489",
-          "domain": "srtimes.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
           "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
-          "domain": "meatlovernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.getnews.co.kr/news/articleView.html?idxno=693147",
-          "domain": "getnews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://news.bizwatch.co.kr/article/consumer/2025/02/07/0044",
-          "domain": "news.bizwatch.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://help-center.payhere.in/68af7348-1afe-4205-9398-04020110e35a",
-          "domain": "help-center.payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=uttyMLwojv8",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-001",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 4. 메뉴잇 (Menuit)",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://isentoday.tistory.com/29",
-          "domain": "isentoday.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://v.daum.net/v/20260114123804190",
           "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
-          "domain": "newsprime.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
           "domain": "smedaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_3",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/blog/tableorder-tip-2026wage/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-001",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "* **메뉴잇 (menuit)**",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* **기존 포스를 그대로 쓰면서 안정성을 원할 때:** `티오더`, `메뉴잇`",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
           "domain": "newsprime.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/20260114123804190",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 3. 메뉴잇 (Menuit) — *자체 개발 솔루션 & 부드러운 UI*",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": 3,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "http://jaypos.kr/zb41pl8/bbs/zboard.php?id=tableorder&page=1&sn1=&divpage=1&sn=off&ss=on&sc=on&select_arrange=headnum&desc=asc&no=14&PHPSESSID=967324f7c5dddfe62f4a398340e24aaa",
-          "domain": "jaypos.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/blog/payhere-table-order-launch/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20250116105920",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/toss-tableorder-updates",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://netpay.kr/goods/goods_list?cate=005005",
-          "domain": "netpay.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.meconomynews.com/news/articleView.html?idxno=83221",
-          "domain": "meconomynews.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://product.kt.com/wDic/soho/marketing.do?ItemCode=highorder",
-          "domain": "product.kt.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "* **대표 업체:** **티오더(t'order)**, **메뉴잇(Menuit)**, **KT 하이오더**",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| **메뉴잇 (Menuit)** | • 자체 개발 연동 모듈, 직영 설치 및 CS | • 음식점 환경에 최적화된 빠른 UI와 신속한 현장 대응을 원할 때 |",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "http://jaypos.kr/zb41pl8/bbs/zboard.php?id=tableorder&page=1&sn1=&divpage=1&sn=off&ss=on&sc=on&select_arrange=headnum&desc=asc&no=14&PHPSESSID=967324f7c5dddfe62f4a398340e24aaa",
-          "domain": "jaypos.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.wanted.co.kr/events/article_241028",
-          "domain": "wanted.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pf.kakao.com/_eVBxoC/114241412",
-          "domain": "pf.kakao.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://moneygamoneyda.tistory.com/entry/%ED%83%9C%EB%B8%94%EB%A6%BF-%EA%B8%B0%EB%B0%98-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%A3%BC%EB%AC%B8-%EC%8B%9C%EC%8A%A4%ED%85%9C-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%EC%A0%84-%EA%BC%AD-%EC%95%8C%EC%95%84%EC%95%BC-%ED%95%98%EB%8A%94-%EA%B2%83%EB%93%A4",
-          "domain": "moneygamoneyda.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://help-center.payhere.in/e7c974a8-8dc9-409b-abc5-7ef5d87ff9dc",
-          "domain": "help-center.payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://demoday.tistory.com/396",
-          "domain": "demoday.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.lg.co.kr/media/release/27659",
-          "domain": "lg.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.daenews.co.kr/24208",
-          "domain": "daenews.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.youtube.com/watch?v=fkKwh5T35vM",
           "domain": "youtube.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
-          "domain": "chosun.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://bizbible.net/pos-comparison-guide-2026/",
+          "domain": "bizbible.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167102024",
+          "domain": "xn--9m1bt07agwh.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
@@ -575,75 +92,21 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-005",
+      "questionId": "v1-001",
       "engine": "gemini",
       "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://m.ktbizone.com/pay13_highorder.asp",
-          "domain": "m.ktbizone.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.daenews.co.kr/24208",
-          "domain": "daenews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등)를 기준으로 한 평균적인 비용 구조는 다음과 같습니다.",
+          "sentence": "현재 테이블오더 시장에서 가장 많이 쓰이고 검증된 주요 업체는 **티오더, KT 하이오더, 페이히어, 메뉴잇** 등입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **메뉴잇 (메뉴 연출 및 이미지 지원)**",
           "sentiment": "neutral"
         }
       ],
@@ -653,37 +116,37 @@
         {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.munhwa.com/article/11429094",
-          "domain": "munhwa.com",
-          "ownerType": "unknown",
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
-          "ownerType": "unknown",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         }
       ],
@@ -692,10 +155,556 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-006",
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/tableorder-atoz",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://badapayment.co.kr/%EB%84%A4%EC%9D%B4%EB%B2%84%EC%A3%BC%EB%AC%B8-%ED%86%A0%EC%8A%A4%EC%98%A4%EB%8D%94-%EB%B9%84%EA%B5%90/",
+          "domain": "badapayment.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://edulink000054.tistory.com/m/17",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### ③ 메뉴잇 (menuit)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**Tip**: 현재 인테리어 및 테이블 배치가 확정된 상태라면, **티오더**나 **KT 하이오더**, **메뉴잇** 2~3곳에 영등포 매장 실측 및 무료 견적 상담을 동시에 받아보시고 프로모션(설치비 면제, 렌탈료 지원 등)을 비교해 결정하시는 것을 추천합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/about/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-meat-interview-kkulbok/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://thesavekiosk.com/table-order/biz/bbq/",
+          "domain": "thesavekiosk.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 메뉴잇 (Menuit)",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "각 업체마다 렌탈/구매 조건, 약정 기간, 태블릿 지원 프로모션이 다르므로 **티오더, 메뉴잇, KT 하이오더 2~3곳에 무료 실측 견적**을 받아보시고 매장 테이블 구조에 맞는 거치 방식과 견적을 비교해 보시는 것을 권장합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-002",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 2. 메뉴잇 (Menuit) – *직영 A/S & 안정적인 자체 소프트웨어*",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=154078",
+          "domain": "dailysecu.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.snaporder.fun/blog/kiosk-vs-table-order-comparison?group=%EC%8A%A4%EB%83%85%EC%98%A4%EB%8D%94&tag=%EC%B0%BD%EC%97%85%EC%A4%80%EB%B9%84",
+          "domain": "snaporder.fun",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tonto-grato.com/smart-store/",
+          "domain": "tonto-grato.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%C2%B7%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9-%EA%B5%AC%EC%A1%B0%EC%99%80-%ED%8C%90%EB%8B%A8-%EA%B8%B0%EC%A4%80",
+          "domain": "beenhna.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://biz.heraldcorp.com/article/3385889",
+          "domain": "biz.heraldcorp.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.snaporder.fun/blog/kiosk-vs-table-order-comparison?group=%EC%8A%A4%EB%83%85%EC%98%A4%EB%8D%94&tag=%EC%B0%BD%EC%97%85%EC%A4%80%EB%B9%84",
+          "domain": "snaporder.fun",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://dreamcometrue-realy2021.tistory.com/33",
+          "domain": "dreamcometrue-realy2021.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/GDC2uPV7CG",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 4. 메뉴잇 (Menuit) – 감성적인 디자인과 메뉴 연출",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/P5r0Hp8tWa",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### 4) **메뉴잇 (menuit) / 메뉴톡 (menutok) - 가성비와 외식업 특화 기능**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://core.asiae.co.kr/article/2024062815334733122",
+          "domain": "core.asiae.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20260412021375388",
+          "domain": "m.ekn.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/20260114123804190",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "www.torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.mk.co.kr/news/business/11235296",
+          "domain": "www.mk.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "isentoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "www.torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 4,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### **2. 메뉴잇 (menuit) - 프랜차이즈 선호 & 배터리 기술력**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
+          "domain": "newsprime.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "티오더",
+      "brandRank": 2,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
@@ -708,57 +717,99 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-006",
+      "questionId": "v1-005",
       "engine": "gemini",
       "callIndex": 2,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://docs.channel.io/0614/ko/articles/%EA%BC%AC%EC%B9%98%EB%8F%84-%EB%A9%94%EB%89%B4%ED%8C%90-%EA%B7%B8-%EC%9D%B4%EC%83%81%EC%9D%98-%EA%B0%80%EC%B9%98%EB%A5%BC-%EC%96%BB%EC%9D%84-%EC%88%98-%EC%9E%88%EA%B3%A0-%EC%9D%B8%EA%B1%B4%EB%B9%84%EB%8F%84-30%EC%9D%B4%EC%83%81-%EC%A0%88%EC%95%BD%ED%96%88%EC%96%B4%EC%9A%94-d54f402a",
-          "domain": "docs.channel.io",
-          "ownerType": "unknown",
+          "raw": "https://www.youthdaily.co.kr/news/article.html?no=178670",
+          "domain": "youthdaily.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.meconomynews.com/news/articleView.html?idxno=108565",
-          "domain": "meconomynews.com",
-          "ownerType": "unknown",
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.m-i.kr/news/articleView.html?idxno=1145488",
-          "domain": "m-i.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.xn--3e0b17iq4obzcszak7bow8a60h.kr/blog/table-order-labor-cost-2026",
+          "domain": "xn--3e0b17iq4obzcszak7bow8a60h.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.munhwa.com/article/11429094",
-          "domain": "munhwa.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
+          "raw": "https://ceo.baemin.com/knowhow/12768",
+          "domain": "ceo.baemin.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_1",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.snaporder.fun/blog/kiosk-vs-table-order-comparison?group=%EC%8A%A4%EB%83%85%EC%98%A4%EB%8D%94&tag=%EC%B0%BD%EC%97%85%EC%A4%80%EB%B9%84",
+          "domain": "snaporder.fun",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-downsides-before-installation/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -767,7 +818,110 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
+          "domain": "hello.matetech.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleView.html?idxno=673083",
+          "domain": "www.bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ceoportal.co.kr/service/table-order",
+          "domain": "ceoportal.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kingorderbrandfactory.com/kingorderbrandfactory",
+          "domain": "kingorderbrandfactory.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/tableorder-qna",
+          "domain": "www.torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.captainm.co.kr/guide/store-table-order-guide",
+          "domain": "www.captainm.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "www.torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
+          "domain": "hello.matetech.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-006",
@@ -783,7 +937,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-007",
@@ -793,67 +948,47 @@
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%9B%84-%ED%9B%84%ED%9A%8C%ED%95%98%EB%8A%94-5%EA%B0%80%EC%A7%80-%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0%EC%B1%85/",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
           "domain": "blog-genieone.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9%C2%B7%EC%88%98%EC%88%98%EB%A3%8C%C2%B7%ED%9A%A8%EA%B3%BC-%EC%86%94%EC%A7%81%ED%95%98%EA%B2%8C-%EB%94%B0%EC%A0%B8%EB%B3%B4%EA%B8%B0",
+          "domain": "beenhna.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/van-pg-credit-card-settlement-structure/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=260&prdtSn=4&storeSn=&itemSn=&key=2303236167053&viewType=list&pageIndex=1&_bsnsYrs=on&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&sc=CMPN_NM&sw=%EC%95%84%EC%9E%84%EC%9C%A0&orderBy=CMPNNM+ASC&maxList=10",
-          "domain": "sbiz.or.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h6o5HG8YB00",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -862,7 +997,170 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.news1.kr/industry/sb-founded/5713724",
+          "domain": "news1.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.chungoose.kr/blog/https-www.chungoose.kr-blog-pg-payment-gateway-fee-comparison",
+          "domain": "chungoose.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfee/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://edulink000036.tistory.com/m/49",
+          "domain": "edulink000036.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfee/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=JDzKDCgcwt0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bizhankook.com/articles/30313.html",
+          "domain": "bizhankook.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfees/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-008",
@@ -878,7 +1176,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-008",
@@ -887,117 +1186,96 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "### 5. 메뉴잇 (Menuit)",
+          "sentence": "### 3. 메뉴잇 (menuit) (자체 개발 H/W & S/W 최적화)",
           "sentiment": "positive"
+        },
+        {
+          "sentence": "3. **현재 사용 중인 포스 확인**: 티오더나 메뉴잇 등을 선택할 경우, 매장에서 현재 쓰고 있는 포스 프로그램과 **‘공식 API 직접 연동’**이 지원되는지 사전에 반드시 확인하세요.",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=uttyMLwojv8",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://posdoc.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EA%B5%AC%EC%84%B1-%EC%8B%9C-%ED%95%84%EC%88%98-%EC%A3%BC%EC%9D%98%EC%82%AC%ED%95%AD",
+          "domain": "posdoc.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=KBlrpglgQDs",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://okpos.gitbook.io/okpos/table_qr_pay/okpos",
+          "domain": "okpos.gitbook.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": 3,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
       "citations": [],
       "topRecommendation": null,
-      "brandRank": 5,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 4. **메뉴잇 (Menuit)**",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* **가족 단위 / 중장년층이 많은 식당**: **티오더**, **메뉴잇** (큰 글씨, 익숙한 조작 방식, 디테일한 호출 버튼)",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/blog/table-order-foreign-customer-multilingual/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.wanted.co.kr/events/article_241028",
-          "domain": "wanted.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/tableorder_new",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/P5r0Hp8tWa",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/blog/qr-order-vs-table-order-comparison/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-009",
@@ -1006,47 +1284,13 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**메뉴잇(Menuit)**은 티오더와 함께 국내 테이블오더 시장에서 높은 점유율을 차지하고 있는 대표적인 무인 주문·결제 솔루션입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "### 1. 메뉴잇의 주요 장점",
-          "sentiment": "positive"
+          "sentence": "자영업자 커뮤니티(아프니까 사장이다 등) 및 실제 매장 운영 점주들의 후기를 종합한 **메뉴잇(menuit) 테이블오더의 장단점과 실제 사용 평가**입니다.",
+          "sentiment": "neutral"
         }
       ],
       "competitorMentions": [],
       "shareOfMention": 1,
       "citations": [
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nbntv.co.kr/news/articleView.html?idxno=3038017",
-          "domain": "nbntv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
         {
           "raw": "https://www.menuit.io/company",
           "domain": "menuit.io",
@@ -1054,351 +1298,15 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.menuit.io/company",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**메뉴잇(Menuit) 테이블오더**는 티오더, 하이오더 등과 함께 국내 외식업계에서 널리 쓰이는 대표적인 무인 주문·결제 시스템입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
-          "domain": "gpkorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/company",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nbntv.co.kr/news/articleView.html?idxno=3038017",
-          "domain": "nbntv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**메뉴잇(Menuit)**은 티오더와 함께 국내 테이블오더 시장을 이끌고 있는 대표적인 1세대 솔루션 업체입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://weekly.donga.com/3/all/11/3979555/1",
-          "domain": "weekly.donga.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/company",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
-          "domain": "gpkorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nbntv.co.kr/news/articleView.html?idxno=3038017",
-          "domain": "nbntv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/tableorder-atoz",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "국내 테이블오더 시장의 대표적인 두 업체인 티오더(t'order)와 메뉴잇(menuit)은 각각의 강점과 시스템 구성에서 차이가 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 구분 | 티오더 (t'order) | 메뉴잇 (menuit) |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 메뉴잇 (무선 배터리 및 디자인 강점)",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* 메뉴잇 (자체 소프트웨어 최적화 및 올인원 관리)",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* 메뉴잇을 추천하는 매장",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "테이블오더와 함께 자체 POS 및 웨이팅 시스템을 하나로 통합 관리하고 싶은 매장",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
-          "domain": "gpkorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.etnews.com/20250728000074",
-          "domain": "etnews.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=uITLkiBcNvU",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
-          "domain": "kairosre.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "국내 테이블오더 시장의 대표적인 양대 업체인 티오더와 메뉴잇의 비용 구조, 하드웨어 및 기능, 사후관리 차이를 비교 정리해 드립니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 항목 | 티오더 (t'order) | 메뉴잇 (MENU.IT) |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* 메뉴잇 (무선 배터리 & 디자인 강점)",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "메뉴잇: 주요 외식업 포스와 연동을 지원하며, 자체 개발한 메뉴잇 POS 및 무료 웨이팅 시스템과의 일체형 연동 기능도 강점입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "메뉴잇: 직관적이고 깔끔한 메뉴판 UI, 텍스트 가독성 중심 화면 구성, 무료 웨이팅 솔루션 탑재.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "메뉴잇: 전문 보안/AS 네트워크(ADT캡스 등) 연계 및 자체 케어 프로그램(‘새로바꿈케어’)을 통해 기기 노후 배터리 무상 교체, 파손·침수 시 교체 지원 등 기기 수리 및 교체 보장 정책을 적극 지원합니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* 메뉴잇 추천 매장:",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
+          "raw": "https://www.job-post.co.kr/news/articleView.html?idxno=114482",
+          "domain": "job-post.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
           "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=113387",
           "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
-          "domain": "gpkorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         }
       ],
@@ -1407,264 +1315,21 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**메뉴잇**과 **티오더**는 국내 테이블오더 시장을 이끄는 대표적인 브랜드로, 핵심 기능은 비슷하지만 **하드웨어 방식(유·무선), 연동성, 운영 편의성** 등에서 뚜렷한 차이가 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "| 항목 | 티오더 (t'order) | 메뉴잇 (menuit) |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "| 구분 | 티오더 | 메뉴잇 |",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **메뉴잇 (빠른 성장세와 케어 서비스)**",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* **메뉴잇 추천:**",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
-          "domain": "gpkorea.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://v.daum.net/v/P5r0Hp8tWa",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.ksilbo.co.kr/news/articleView.html?idxno=1004462",
-          "domain": "ksilbo.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**메뉴잇(Menuit) 테이블오더**의 태블릿 렌탈(이용) 비용과 중도 해지 시 위약금 조건은 다음과 같습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "메뉴잇은 주문만 가능한 **'후불형(주문형)'**과 결제 리더기가 부착된 **'선불형(결제형)'** 모델로 나뉘며, 일반적으로 **3년(36개월) 약정** 기준으로 계약됩니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
-          "domain": "m.ekn.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://v.daum.net/v/20260118120247746?f=p",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
+      "questionId": "v1-009",
       "engine": "gemini",
       "callIndex": 2,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "메뉴잇(Menuit) 테이블오더의 태블릿 렌탈 비용 및 위약금 조건은 도입 모델(선결제/후결제)과 프로모션에 따라 차이가 있을 수 있으나, 일반적으로 아래와 같이 구성되어 있습니다.",
+          "sentence": "자영업자 커뮤니티(아프니까 사장이다 등) 및 실제 외식업 매장에서 **메뉴잇(Menuit)** 테이블오더를 도입해 사용 중인 점주들의 실사용 후기와 장단점을 정리해 드립니다.",
           "sentiment": "neutral"
         },
         {
-          "sentence": "계약 형태(직접 렌탈 vs 캐피탈 리스): 캐피탈사를 통한 리스/할부 금융 계약의 경우 중도 해지 시 잔여 기기 대금을 전액 물어야 할 수 있으므로 계약서의 주체(메뉴잇 본사 직접 계약 여부)를 확인하세요.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://mobile.newsis.com/view/NISX20260117_0003480453",
-          "domain": "mobile.newsis.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
-          "domain": "m.ekn.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**메뉴잇(menuit) 테이블오더**의 태블릿 렌탈 비용과 중도 해지 시 위약금 조건은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
-          "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**네, 서울 영등포구 문래동 지역은 메뉴잇(Menuit) 테이블오더의 방문 설치와 A/S 지원이 매우 원활하게 이루어지는 지역입니다.**",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "문래동 및 영등포 일대 식당에서 메뉴잇 도입 시 제공되는 지원 및 특징은 다음과 같습니다.",
+          "sentence": "메뉴잇의 가장 큰 차별점으로 꼽히는 부분은 **탈부착형 무선 배터리(오더패드)** 시스템입니다.",
           "sentiment": "positive"
         }
       ],
@@ -1672,21 +1337,27 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "http://www.sisunnews.co.kr/news/articleView.html?idxno=184746",
-          "domain": "sisunnews.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=157499",
+          "domain": "dailysecu.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=113387",
+          "domain": "100ssd.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.menuit.io/orderpad",
+          "raw": "https://www.menuit.io/",
           "domain": "menuit.io",
           "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://talk.cashnote.kr/article/CONTENT/35051",
+          "domain": "talk.cashnote.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
@@ -1696,15 +1367,21 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.getnews.co.kr/news/articleView.html?idxno=682160",
-          "domain": "getnews.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://impacty.tistory.com/665",
+          "domain": "impacty.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://skmenuit.com/",
-          "domain": "skmenuit.com",
-          "ownerType": "unknown",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.nbntv.co.kr/news/articleView.html?idxno=3038017",
+          "domain": "nbntv.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         }
       ],
@@ -1713,56 +1390,17 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "네, **서울 영등포구 문래동 일대는 메뉴잇의 방문 설치와 A/S 지원이 매우 원활하게 이루어지는 핵심 서비스 권역**입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://skmenuit.com/",
-          "domain": "skmenuit.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.menuit.io/company",
-          "domain": "menuit.io",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-012",
+      "questionId": "v1-009",
       "engine": "gemini",
       "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**네, 서울 영등포구 문래동 일대는 메뉴잇 테이블오더의 방문 설치와 A/S 지원이 매우 잘 이루어지는 지역입니다.**",
+          "sentence": "**메뉴잇(menuit)**은 티오더와 함께 국내 테이블오더 시장에서 널리 쓰이는 대표적인 솔루션 중 하나입니다.",
           "sentiment": "positive"
         }
       ],
@@ -1770,15 +1408,21 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "http://www.sisunnews.co.kr/news/articleView.html?idxno=184746",
-          "domain": "sisunnews.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "100ssd.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.youtube.com/watch?v=uITLkiBcNvU",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
+          "raw": "https://talk.cashnote.kr/article/CONTENT/35051",
+          "domain": "talk.cashnote.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         },
         {
@@ -1790,7 +1434,25 @@
         {
           "raw": "https://www.dailysecu.com/news/articleView.html?idxno=157499",
           "domain": "dailysecu.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.nbntv.co.kr/news/articleView.html?idxno=3038017",
+          "domain": "nbntv.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         }
       ],
@@ -1799,7 +1461,727 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "테이블오더 도입 시 가장 많이 비교하는 **메뉴잇**과 주요 경쟁사(**티오더, KT 하이오더, 페이히어**)의 비용 구조, 기능, 특징을 비교한 내용입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | **메뉴잇 (Menuit)** | **티오더 (t'order)** | **KT 하이오더** | **페이히어 (Payhere)** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "#### 1) 메뉴잇 (Menuit)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **테이블 배선 공사가 부담스럽고, 무선 배터리 관리 편의성 + 렌탈 A/S 관리를 원할 때** ➔ **메뉴잇**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.etnews.com/20250728000074",
+          "domain": "etnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.tistory.com/385",
+          "domain": "demoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sbiz.or.kr/smst/bsns/product/view.do?cmpnSn=593&prdtSn=1&storeSn=&itemSn=&key=2111306033994&viewType=thumbnail&pageIndex=1&_bsnsYrs=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scOrdrCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scTechCateIdArr=on&_scSocCateIdArr=on&_scSocCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scAllCateIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scPosIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scVanIdArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scSidoNmArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr=on&_scPriceIdArr2=on&_preSupplyYn=on&sc=CMPN_NM&sw=%ED%8B%B0%EC%98%A4%EB%8D%94&orderBy=PRESUPPLY+ASC&maxList=10",
+          "domain": "sbiz.or.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "isentoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**메뉴잇**과 주요 경쟁사(**티오더, 페이히어, KT 하이오더 등**)의 기능, 비용 및 수수료 구조를 비교한 내용입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "*(메뉴잇, 티오더, 페이히어 등 주요 상위 브랜드는 대부분 VAN 기반을 지원해 추가 결제 수수료가 없거나 최소화되어 있습니다.)*",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **메뉴잇 (Menuit)** | **티오더 (t'order)** | **페이히어 (Payhere)** | **KT 하이오더** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "#### ① 메뉴잇 (Menuit)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **선 없는 깔끔한 인테리어와 배터리 교체형 무선 설치, 기기 파손/침수 보장을 원한다면:** ➔ **메뉴잇**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
+          "domain": "gpkorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://demoday.tistory.com/385",
+          "domain": "demoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
+          "domain": "newsprime.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "국내 테이블오더 시장을 대표하는 **메뉴잇**과 주요 경쟁사(**티오더**, **KT 하이오더**, **페이히어**)의 비용 구조, 결제 수수료, 주요 기능 특징을 비교한 내용입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "| 구분 | **메뉴잇 (Menuit)** | **티오더 (t'order)** | **KT 하이오더** | **페이히어 (Payhere)** |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "#### 1) 메뉴잇 (Menuit)",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "인테리어상 테이블마다 전선 연결이 어렵다면 **메뉴잇**과 같은 무선 배터리 탈부착 방식을 우선 고려하는 것이 좋습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://v.daum.net/v/9H745Iqya1?f=p",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=128422",
+          "domain": "gpkorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "메뉴잇(menuit) 테이블오더는 기기를 직접 구매(금융 할부)하는 방식이 아닌 **3년 약정 렌탈(임대) 방식**을 기본으로 운영됩니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "정확한 견적은 매장 테이블 수와 환경에 맞춰 메뉴잇 공식 고객센터나 홈페이지를 통해 무료 상담을 받아보시는 것을 권장합니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
+          "domain": "kairosre.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/orderpad",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.job-post.co.kr/news/articleView.html?idxno=145749",
+          "domain": "job-post.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://damdaamall.com/product/%EB%A0%8C%ED%83%88-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EA%B0%84%ED%8E%B8%EA%B2%B0%EC%A0%9C-%ED%83%9C%EB%B8%94%EB%A6%BF%EC%A3%BC%EB%AC%B8-%EB%AC%B4%EC%9D%B8%EC%A3%BC%EB%AC%B8%EA%B8%B0-%EB%AC%B4%EC%9D%B8%EA%B2%B0%EC%A0%9C%EA%B8%B0/11071/",
+          "domain": "damdaamall.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**메뉴잇(Menuit) 테이블오더**는 기기를 직접 구매하는 할부 방식보다는 주로 **3년 약정 렌탈(임대) 방식**으로 도입됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
+          "domain": "kairosre.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%88%98%EC%88%98%EB%A3%8C-%ED%95%A8%EC%A0%95-%EC%95%8C%EA%B3%A0%ED%95%98%EB%A9%B4-%EC%88%98-%EB%B0%B1%EB%A7%8C%EC%9B%90-%EC%A0%88%EC%95%BD/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://v.daum.net/v/9H745Iqya1?f=p",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.job-post.co.kr/news/articleView.html?idxno=145749",
+          "domain": "www.job-post.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
+          "domain": "kairosre.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**메뉴잇(Menuit) 테이블오더**는 기기를 구매하는 할부 구매 방식이 아닌, **3년(36개월) 약정 렌탈 방식**을 기본으로 운영하고 있어 초기 기기 구입 비용에 대한 부담을 낮춘 구조를 취하고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "메뉴잇은 월 렌탈료 안에 **하드웨어 렌탈비 + 솔루션(소프트웨어) 이용료**가 포함되어 있어, 별도의 대당 태블릿 기기 구입비가 일시불로 청구되지 않습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
+          "domain": "kairosre.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://sajangnimlife.com/restaurant-table-order-price-contract-checklist/",
+          "domain": "sajangnimlife.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "isentoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tnnews.co.kr/archives/229090",
+          "domain": "tnnews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://v.daum.net/v/9H745Iqya1?f=p",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/kt-highorder-faq/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "메뉴잇(Menuit)의 결제 오류나 기기 고장 시 고객센터 및 A/S 대응은 업계 전반과 비교했을 때 **원격 지원과 기기 교체 정책 측면에서 비교적 빠르고 체계적인 편**입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "메뉴잇은 기기 이상 시 복잡한 수리 절차 대신 **새 기기 맞손 교체(새로바꿈 케어 등 무상 교체 지원)** 시스템을 운영하고 있습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "**💡 팁:** 운영 중 오류가 발생하면 전화 연결을 기다리는 동시에 **메뉴잇 카카오톡 채널**로 매장명과 오류 화면 사진을 남겨두시면 훨씬 빠른 피드백과 원격 지원을 받으실 수 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.kbsm.net/news/view.php?idx=440039",
+          "domain": "kbsm.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=117104",
+          "domain": "gpkorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.adtcaps.co.kr/caps-story/blog/tablet-ordering-smartorder-service",
+          "domain": "adtcaps.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://skmenuit.com/",
+          "domain": "skmenuit.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/company",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_xnekpC",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "메뉴잇(menuit)의 결제 오류 및 기기 고장 시 고객센터 대응과 AS 속도는 **테이블오더 업계 전반과 비교했을 때 인프라가 잘 갖춰져 있어 비교적 빠른 편**으로 평가받고 있습니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_xnekpC",
+          "domain": "kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.jeonmin.co.kr/news/articleView.html?idxno=415740",
+          "domain": "jeonmin.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "메뉴잇의 결제 오류 및 기기 고장 발생 시 A/S 대응 속도와 지원 체계는 다음과 같이 운영되고 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://pf.kakao.com/_xnekpC",
+          "domain": "pf.kakao.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/document/web/terms",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://skmenuit.com/",
+          "domain": "skmenuit.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.menuit.io/company",
+          "domain": "menuit.io",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
     }
   ]
 }

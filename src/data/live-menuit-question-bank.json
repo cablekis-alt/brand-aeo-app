@@ -1,10 +1,10 @@
 {
   "version": "v1",
-  "generatedAt": "2026-09-08T01:55:10.146Z",
+  "generatedAt": "2026-09-10T11:28:55.280Z",
   "questions": [
     {
       "questionId": "v1-001",
-      "text": "식당에 테이블오더 도입하려고 하는데 요즘 어디꺼 많이 쓰나요?",
+      "text": "식당에 테이블오더 도입하려고 하는데 요즘 어디 업체 쓰는 게 제일 좋아요?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -13,7 +13,7 @@
     },
     {
       "questionId": "v1-002",
-      "text": "테이블오더 렌탈이랑 구매 중에 보통 어떤 방식으로 계약하는 게 유리한가요?",
+      "text": "서울 영등포에서 고깃집 오픈 준비 중인데 테이블오더 기기 괜찮은 곳 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -22,7 +22,7 @@
     },
     {
       "questionId": "v1-003",
-      "text": "영등포에서 고깃집 오픈 준비 중인데 테이블오더 추천 좀 해주세요.",
+      "text": "테이블오더 렌탈이랑 구매 중에 보통 식당에서는 어떤 방식을 더 많이 하나요?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -31,7 +31,7 @@
     },
     {
       "questionId": "v1-004",
-      "text": "테이블오더 설치하면 포스기랑 연동 잘 되나요? 오류 적은 업체 찾고 있어요.",
+      "text": "요즘 식당 테이블오더 시스템 후기 좋고 인기 많은 업체들 순위 좀 알려줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -40,7 +40,7 @@
     },
     {
       "questionId": "v1-005",
-      "text": "테이블오더 월 이용료나 수수료 보통 얼마나 나오는지 궁금해요.",
+      "text": "소규모 식당에 테이블오더 설치하면 인건비 절감 효과가 실제로 있나요?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -49,7 +49,7 @@
     },
     {
       "questionId": "v1-006",
-      "text": "소규모 이자카야인데 테이블오더 도입하면 인건비 절감 효과가 실제로 큰가요?",
+      "text": "테이블오더 고를 때 AS나 사후관리 잘해주는 업체는 어떻게 구별하나요?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -58,7 +58,7 @@
     },
     {
       "questionId": "v1-007",
-      "text": "테이블오더 업체 고를 때 AS나 사후관리 측면에서 꼭 체크해야 할 점이 뭔가요?",
+      "text": "식당 테이블오더 도입할 때 월 비용이랑 결제 수수료 대략 얼마나 드나요?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -67,7 +67,7 @@
     },
     {
       "questionId": "v1-008",
-      "text": "손님들이 쓰기 편한 UI 잘 되어 있는 테이블오더 시스템 있을까요?",
+      "text": "주문 누락이나 통신 오류 적은 안정적인 테이블오더 프로그램 추천해주세요.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "테이블오더",
@@ -76,7 +76,7 @@
     },
     {
       "questionId": "v1-009",
-      "text": "메뉴잇 테이블오더 장단점이랑 실제 매장 사용 후기 궁금합니다.",
+      "text": "메뉴잇 테이블오더 자영업자 실제 사용 후기랑 장단점 알려줘.",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -85,7 +85,7 @@
     },
     {
       "questionId": "v1-010",
-      "text": "메뉴잇이랑 티오더 테이블오더 비교했을 때 비용이나 기능 차이가 어떻게 되나요?",
+      "text": "메뉴잇이랑 다른 테이블오더 브랜드들 기능이나 수수료 비교해줘.",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -94,7 +94,7 @@
     },
     {
       "questionId": "v1-011",
-      "text": "메뉴잇 테이블오더 태블릿 렌탈 비용이랑 위약금 조건이 어떻게 되나요?",
+      "text": "메뉴잇 테이블오더 신규 설치할 때 기기 가격이랑 월 이용료가 얼마인가요?",
       "category": "price-spec",
       "containsBrandName": true,
       "industry": "테이블오더",
@@ -103,8 +103,8 @@
     },
     {
       "questionId": "v1-012",
-      "text": "서울 영등포 문래동 쪽 식당들에서 메뉴잇 테이블오더 AS나 방문 설치 지원 잘 되나요?",
-      "category": "local-regional",
+      "text": "메뉴잇 쓰다가 결제 오류나 기기 고장 났을 때 고객센터 AS 빠른가요?",
+      "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "테이블오더",
       "region": "서울 영등포",

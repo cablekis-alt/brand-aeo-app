@@ -9,21 +9,17 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "* **티오더 (t'order)**",
+          "sentence": "#### ① 티오더 (t'order)",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [
         {
           "name": "KT 하이오더",
-          "mentionCount": 2,
+          "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "* **KT 하이오더**",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **안정성과 넓은 호환성**을 원하시면 **티오더**나 **KT 하이오더**,",
+              "sentence": "#### ② KT 하이오더",
               "sentiment": "positive"
             }
           ]
@@ -33,12 +29,12 @@
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "* **페이히어 (Payhere)**",
+              "sentence": "#### ③ 페이히어 (PayHere)",
               "sentiment": "positive"
             },
             {
-              "sentence": "* **포스/웨이팅/통합 관리**의 편의성을 원하시면 **페이히어**,",
-              "sentiment": "positive"
+              "sentence": "보통 3년 약정 렌탈로 진행되므로, 매장의 회전율과 테이블 수에 맞춰 최소 2~3곳(티오더, 하이오더, 페이히어 등)의 견적과 프로모션 조건을 비교해 보시는 것을 권장합니다.",
+              "sentiment": "neutral"
             }
           ]
         },
@@ -47,7 +43,7 @@
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "* **메뉴잇 (menuit)**",
+              "sentence": "#### ④ 메뉴잇 (Menuit)",
               "sentiment": "positive"
             }
           ]
@@ -58,54 +54,282 @@
           "sentences": []
         }
       ],
-      "shareOfMention": 0.16666666666666666,
+      "shareOfMention": 0.2,
       "citations": [
         {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newsprime.co.kr/news/article.html?no=649689",
+          "domain": "newsprime.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
-          "domain": "smedaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "raw": "https://www.torder.com/ceoGuide/post/torder-pro",
           "domain": "torder.com",
           "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "isentoday.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 국내 테이블오더 시장 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 다국어 지원 및 직원 호출 세분화 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전원선 공사가 필요 없는 무선 배터리 교체형(티오더 프로 등)을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. KT 하이오더",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 페이히어 (Payhere)",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 메뉴잇 (Menuit) / 메뉴톡 (Menutok)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
           "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
+          "raw": "https://www.youtube.com/watch?v=8GncZrfW5h8",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 시장 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 더치페이, 직원 호출 세분화, 이벤트 게임 등의 부가 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-001",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 메뉴잇 (Menuit)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "*보편적인 안정성과 기능 연동을 원하시면 **티오더**나 **KT 하이오더**, 배선 공사 부담 없는 무선형을 원하시면 **메뉴잇**, 가성비와 모바일 연동성을 원하시면 **토스**나 **페이히어**를 중심으로 상담받아 보시는 것을 추천합니다.*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 3. KT 하이오더",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "*보편적인 안정성과 기능 연동을 원하시면 **티오더**나 **KT 하이오더**, 배선 공사 부담 없는 무선형을 원하시면 **메뉴잇**, 가성비와 모바일 연동성을 원하시면 **토스**나 **페이히어**를 중심으로 상담받아 보시는 것을 추천합니다.*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 5. 페이히어 (Payhere)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "*보편적인 안정성과 기능 연동을 원하시면 **티오더**나 **KT 하이오더**, 배선 공사 부담 없는 무선형을 원하시면 **메뉴잇**, 가성비와 모바일 연동성을 원하시면 **토스**나 **페이히어**를 중심으로 상담받아 보시는 것을 추천합니다.*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.14285714285714285,
+      "citations": [
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://studio.jector.ai/intro/foodstyler/tableorder",
+          "domain": "studio.jector.ai",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/product/toss-order/table",
+          "domain": "tossplace.com",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         }
       ],
@@ -120,7 +344,14 @@
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 대부분의 기존 POS 시스템과 호환(연동)이 가능하다.",
+          "claimText": "티오더는 주요 포스(POS) 프로그램, 서빙로봇, 웨이팅 기기와의 연동을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 선불형(결제기 일체형) 및 후불형(주문 전용) 라인업을 갖추고 있다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
@@ -129,89 +360,49 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-001",
+      "questionId": "v1-002",
       "engine": "gemini",
-      "callIndex": 2,
+      "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "#### ① 티오더 (t order) — *시장 점유율 1위, 검증된 기능*",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* **대형 매장 / 회식·주류 위주 매장 (추가 주문이 많은 곳)**  \n  👉 **티오더** or **KT 하이오더** (안정적인 유선 거치형 태블릿 + 익숙한 인터페이스)",
+          "sentence": "#### ① 티오더 (T'order)",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [
         {
           "name": "KT 하이오더",
-          "mentionCount": 4,
+          "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
+              "sentence": "#### ② KT 하이오더 (KT HiOrder)",
               "sentiment": "positive"
             },
             {
-              "sentence": "#### ② KT 하이오더 — *통신 결합 할인과 안정적인 A/S*",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **대형 매장 / 회식·주류 위주 매장 (추가 주문이 많은 곳)**  \n  👉 **티오더** or **KT 하이오더** (안정적인 유선 거치형 태블릿 + 익숙한 인터페이스)",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **기존에 KT 인터넷/통신 상품을 사용 중인 매장**  \n  👉 **KT 하이오더** (결합 할인 혜택 극대화)",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "메뉴잇",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "#### ③ 메뉴잇 (Menu-it) — *무선 설치(배터리형)와 완성도 높은 소프트웨어*",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **인테리어가 중요하거나 배선 공사가 불가능한 매장**  \n  👉 **메뉴잇** (무선 배터리형 오더패드)",
+              "sentence": "영등포 지역은 대형 프랜차이즈 및 유통 대리점 영업망이 잘 갖춰져 있어, **티오더**와 **KT 하이오더** 두 곳 정도에 무료 방문 실측 및 견적을 요청해 보시는 것을 추천합니다.",
               "sentiment": "positive"
             }
           ]
         },
         {
           "name": "페이히어",
-          "mentionCount": 4,
+          "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "테이블오더 시장은 현재 **티오더, KT 하이오더, 메뉴잇** 3사가 주도하고 있으며, 비용 절감을 원하거나 소규모 매장의 경우 **토스(토스오더)나 페이히어** 같은 클라우드/QR 기반 서비스도 많이 찾는 추세입니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "#### ④ 토스플레이스 / 페이히어 (QR 또는 미니 태블릿) — *초기 비용 절감*",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* 토스나 페이히어 포스를 신규 도입하는 경우 연동이 매끄럽고 디자인이 깔끔합니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **테이블 수가 10개 미만인 소규모 매장 / 1인 운영 식당**  \n  👉 **토스 / 페이히어 (QR 오더 또는 클라우드 포스 결합)**",
+              "sentence": "#### ④ 페이히어 (Payhere)",
               "sentiment": "positive"
             }
           ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
         },
         {
           "name": "브이디메뉴",
@@ -219,70 +410,27 @@
           "sentences": []
         }
       ],
-      "shareOfMention": 0.21428571428571427,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
-          "domain": "meatlovernews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tnnews.co.kr/archives/229090",
-          "domain": "tnnews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
-          "domain": "donga.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
+      "shareOfMention": 0.25,
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
+          "claimText": "티오더는 국내 시장 점유율 1위 업체이다.",
           "claimType": "other",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 거의 모든 기존 포스(OK포스, 이지포스 등)와 연동된다.",
+          "claimText": "대다수 POS(OKPOS, 이지포스 등)와 완벽 연동된다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 AI 기반 매출 분석 및 부가 기능(호출, 광고, 더치페이 등)을 제공한다.",
+          "claimText": "직원 호출 커스텀('불판 교체', '숯 추가', '소주/맥주 주문' 등) 기능을 제공한다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
@@ -291,54 +439,55 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-001",
+      "questionId": "v1-002",
       "engine": "gemini",
-      "callIndex": 3,
+      "callIndex": 2,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "#### ① 티오더 (t'order) – 시장 점유율 1위 & 안정성",
+          "sentence": "#### ① 티오더 (t'order)",
           "sentiment": "positive"
         }
       ],
       "competitorMentions": [
         {
-          "name": "페이히어",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "#### ② 페이히어 (Payhere) – 가성비 & 클라우드 포스 일체형",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **포스 연동 가성비와 투명한 수수료를 원한다면:** **페이히어**",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
           "name": "KT 하이오더",
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "#### ④ KT 하이오더 – 대기업 인프라 & 통신 결합 할인",
+              "sentence": "#### ② KT 하이오더",
               "sentiment": "positive"
             },
             {
-              "sentence": "* **통신 결합 할인과 확실한 A/S를 원한다면:** **KT 하이오더**",
+              "sentence": "오픈 일정이 정해지셨다면 인테리어 배선 공사 전에 **티오더, KT 하이오더, 메뉴잇** 2~3곳에 무료 상담 및 견적을 신청해 보세요.",
               "sentiment": "positive"
             }
           ]
         },
         {
           "name": "메뉴잇",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "#### ③ 메뉴잇 (Menuit)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "오픈 일정이 정해지셨다면 인테리어 배선 공사 전에 **티오더, KT 하이오더, 메뉴잇** 2~3곳에 무료 상담 및 견적을 신청해 보세요.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "#### ⑤ 메뉴잇 (Menuit) – 배터리 무선형 거치 & 외식업 특화",
+              "sentence": "#### ④ 페이히어 (Payhere) / 토스오더",
               "sentiment": "positive"
             }
           ]
@@ -350,207 +499,52 @@
         }
       ],
       "shareOfMention": 0.16666666666666666,
-      "citations": [
-        {
-          "raw": "https://demoday.tistory.com/396",
-          "domain": "demoday.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.wanted.co.kr/events/article_241028",
-          "domain": "wanted.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/yzCvUa2XlK",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://badapayment.co.kr/%EB%84%A4%EC%9D%B4%EB%B2%84%EC%A3%BC%EB%AC%B8-%ED%86%A0%EC%8A%A4%EC%98%A4%EB%8D%94-%EB%B9%84%EA%B5%90/",
-          "domain": "badapayment.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/card-terminal-pos",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "티오더(t'order)는 국내 시장 점유율 1위 업체이다.",
+          "claimText": "티오더는 국내 시장 점유율 1위 업체이다.",
           "claimType": "other",
           "verdict": "unverifiable",
-          "responseValue": "시장 점유율 1위",
+          "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 기존 대부분의 포스기와의 연동 호환성 및 전국 A/S 지원망을 갖추고 있다.",
+          "claimText": "티오더는 대부분의 기존 POS 기기와 호환성이 높다.",
           "claimType": "spec",
           "verdict": "unverifiable",
-          "responseValue": "대부분의 포스기 연동 호환 및 전국 A/S 지원망 보유",
+          "responseValue": null,
           "factGraphValue": null
         }
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "주요 업체(티오더, 메뉴잇, 페이히어, 토스오더 등) 2~3곳의 견적과 데모 시연을 받아보고 비교해 보시길 권장합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "주요 업체(티오더, 메뉴잇, 페이히어, 토스오더 등) 2~3곳의 견적과 데모 시연을 받아보고 비교해 보시길 권장합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "페이히어",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "매장에서 사용할 POS 프로그램(오케이포스, 포스뱅크, 페이히어, 토스 등)과 완벽하게 연동되는지가 매우 중요합니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등) 최소 2~3곳에서 영등포 매장 방문 실사 및 무료 견적을 받아보시고, 테이블 배치에 맞는 견적을 비교해 보시는 것을 추천합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-002",
       "engine": "gemini",
       "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "| **티오더 (t'order)** | 업계 점유율 1위, 가장 대중적인 솔루션 | • 거의 모든 POS기와 호환<br>• 전국 A/S망 및 신속한 고객센터 지원<br>• 고깃집 맞춤형 UI/기능 풍부 | 시장 검증된 안정성과 빠른 A/S가 최우선인 매장 |",
+          "sentiment": "positive"
+        }
+      ],
       "competitorMentions": [
         {
-          "name": "메뉴잇",
-          "mentionCount": 1,
+          "name": "KT 하이오더",
+          "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
+              "sentence": "| **KT 하이오더** | KT 대기업 통신망 기반 서비스 | • KT 인터넷/결합 할인 가능<br>• 대기업 기반의 안정적인 인프라 및 A/S<br>• Wi-Fi 끊김 방지 최적화 | 인터넷/통신사 결합 혜택을 원하고 통신 안정성을 중시하는 매장 |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "영등포 상권은 외식업 경쟁이 치열하고 테이블 회전이 중요한 곳이므로, **2~3개 업체(티오더, KT 하이오더, 페이히어 등)**에 무료 견적 및 실측 상담을 동시에 신청해 보세요.",
               "sentiment": "neutral"
             }
           ]
@@ -560,44 +554,57 @@
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
-              "sentiment": "neutral"
+              "sentence": "| **페이히어 (Payhere)** | POS와 테이블오더를 원스톱으로 제공하는 핀테크형 | • 태블릿 POS와 완벽 연동<br>• 약정 및 위약금 부담이 상대적으로 적음<br>• 깔끔하고 트렌디한 디자인 | 초기 비용을 낮추고, POS까지 한 번에 맞추고 싶은 매장 |",
+              "sentiment": "positive"
             },
             {
-              "sentence": "사용하려는 POS 프로그램(오케이포스, 포스뱅크, 페이히어 등)과 완벽 호환되는지, 주문 누락이나 딜레이 이슈가 없는지 확인하세요.",
+              "sentence": "영등포 상권은 외식업 경쟁이 치열하고 테이블 회전이 중요한 곳이므로, **2~3개 업체(티오더, KT 하이오더, 페이히어 등)**에 무료 견적 및 실측 상담을 동시에 신청해 보세요.",
               "sentiment": "neutral"
             }
           ]
         },
         {
-          "name": "KT 하이오더",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
-              "sentiment": "neutral"
-            }
-          ]
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
         },
         {
           "name": "브이디메뉴",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "테이블오더 업체(티오더, 메뉴잇, 페이히어, KT 하이오더, 브이디메뉴 등)를 비교하실 때 중점적으로 확인해야 할 7가지 포인트를 정리해 드립니다.",
-              "sentiment": "neutral"
-            }
-          ]
+          "mentionCount": 0,
+          "sentences": []
         }
       ],
-      "shareOfMention": 0,
+      "shareOfMention": 0.2,
       "citations": [],
       "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [],
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 업계 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 거의 모든 POS기와 호환된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전국 A/S망 및 신속한 고객센터를 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-003",
@@ -609,174 +616,81 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.munhwa.com/article/11429094",
-          "domain": "munhwa.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
-          "domain": "chosun.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=154078",
-          "domain": "dailysecu.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.munhwa.com/article/11429094",
-          "domain": "munhwa.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/yzCvUa2XlK",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
           "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tnnews.co.kr/archives/229090",
-          "domain": "tnnews.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://new-m2m.tistory.com/entry/%EA%B3%B5%EB%B6%80%ED%95%A9%EC%8B%9C%EB%8B%A4-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%EB%8A%94-%EC%A2%8B%EC%9D%80%EA%B1%B4%EA%B0%80-%EB%82%98%EC%81%9C%EA%B1%B4%EA%B0%80",
-          "domain": "new-m2m.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://damdaamall.com/category/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94/68/",
-          "domain": "damdaamall.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.munhwa.com/article/11429094",
-          "domain": "munhwa.com",
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
           "raw": "https://payhere.in/table-order/",
           "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tsposys.com/equipment/table-order/",
+          "domain": "tsposys.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/blog/tableorder-tip-pgfees/",
-          "domain": "payhere.in",
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
+          "domain": "hello.matetech.co.kr",
           "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-003",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hello.matetech.co.kr/news/?bmode=view&idx=172937438",
+          "domain": "hello.matetech.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kt-biz.co.kr/board_intro/intro_hi.asp",
+          "domain": "kt-biz.co.kr",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
@@ -786,15 +700,57 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.foodingfactory.com/service/kt_table_order.php",
+          "domain": "m.foodingfactory.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.a-ha.io/questions/421c26a7c914c72694159733694c0043",
+          "domain": "a-ha.io",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/tableorder_new",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/tableorder_prepay",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -803,33 +759,137 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-004",
+      "questionId": "v1-003",
       "engine": "gemini",
-      "callIndex": 2,
+      "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
         {
+          "raw": "https://isentoday.tistory.com/29",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.munhwa.com/article/11429094",
+          "domain": "munhwa.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.a-ha.io/questions/421c26a7c914c72694159733694c0043",
+          "domain": "a-ha.io",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등)에 동시 견적을 요청하면 **설치비 면제, 인터넷/공유기 지원, 주방 프린터 무상 제공** 등의 프로모션을 비교해 더 저렴하게 도입할 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등)에 동시 견적을 요청하면 **설치비 면제, 인터넷/공유기 지원, 주방 프린터 무상 제공** 등의 프로모션을 비교해 더 저렴하게 도입할 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "주요 업체(티오더, 메뉴잇, KT 하이오더, 페이히어 등)에 동시 견적을 요청하면 **설치비 면제, 인터넷/공유기 지원, 주방 프린터 무상 제공** 등의 프로모션을 비교해 더 저렴하게 도입할 수 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
           "raw": "https://zdnet.co.kr/view/?no=20241206173523",
           "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pincetlife.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-vs-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%EB%A0%8C%ED%83%88-%EB%B9%84%EC%9A%A9-%EB%B0%8F-%EC%97%85%EC%A2%85%EB%B3%84-%EB%8F%84%EC%9E%85-%EA%B0%80%EC%9D%B4%EB%93%9C",
+          "domain": "pincetlife.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://whee.kr/product/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%ED%85%8C%EC%9D%B4%EB%B8%94%EC%A3%BC%EB%AC%B8-%EA%B2%B0%EC%A0%9C%EC%9B%A8%EC%9D%B4%ED%8C%85%ED%85%8C%EB%B8%94%EB%A6%BF%EB%A0%8C%ED%83%88%EB%B0%A9%EC%8B%9D%EA%B5%AD%EB%82%B4%EC%B5%9C%EC%A0%80%EA%B0%80%EC%A0%84%EA%B5%AD%EB%AC%B4%EB%A3%8C%EC%84%A4%EC%B9%98/124/",
+          "domain": "whee.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tossplace.com/story/kiosk-atoz-2",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
-          "domain": "kairosre.tistory.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -839,27 +899,27 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/table-order/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
-          "domain": "chosun.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
           "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.bloter.net/news/articleViewAmp.html?idxno=673083",
+          "domain": "bloter.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://beenhna.tistory.com/entry/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EB%8F%84%EC%9E%85-%EB%B9%84%EC%9A%A9%C2%B7%EC%88%98%EC%88%98%EB%A3%8C%C2%B7%ED%9A%A8%EA%B3%BC-%EC%86%94%EC%A7%81%ED%95%98%EA%B2%8C-%EB%94%B0%EC%A0%B8%EB%B3%B4%EA%B8%B0",
+          "domain": "beenhna.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -868,7 +928,100 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-004",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **페이히어:** 후불형 월 14,000원대 중반부터",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **KT 하이오더:** 기기값+이용료 포함 월 18,000원 ~ 22,000원 수준",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **메뉴잇 / 브이디메뉴:** 월 16,000원 ~ 20,000원 수준",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **메뉴잇 / 브이디메뉴:** 월 16,000원 ~ 20,000원 수준",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더의 3년 약정 기준 대당 단가는 후불형 월 18,000원 수준이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": "후불형 월 18,000원 수준",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더의 3년 약정 기준 대당 단가는 선결제형 월 20,000원 수준이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": "선결제형 월 20,000원 수준",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
       "questionId": "v1-004",
@@ -876,567 +1029,60 @@
       "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "태블릿 기기 렌탈 비용(월 30만 원 안팎)이 부담스러우시다면, 테이블에 QR 스티커나 미니 거치대만 두고 손님 스마트폰으로 주문받는 **'QR 테이블오더(토스, 페이히어 등)'** 방식을 쓰시면 기기 비용 없이 월 수만 원대 혹은 무료로도 운영이 가능합니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.lg.co.kr/media/release/27659",
+          "domain": "lg.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
-          "domain": "chosun.com",
-          "ownerType": "unknown",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=uITLkiBcNvU",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "기존 포스기 연동형 (티오더, 메뉴잇, KT하이오더 등)",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "기존 포스기 연동형 (티오더, 메뉴잇, KT하이오더 등)",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "자체 포스 일체형 (페이히어, 토스플레이스 등)",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 기존 포스기(오케이포스, 아임유, 포스뱅크, 하나시스 등)와 연동 프로그램을 설치하여 연결하는 기존 포스기 연동형 방식을 사용한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 전국 대리점망이나 직영 엔지니어 네트워크를 보유하여 원격으로 해결되지 않는 장애 시 현장 출동 A/S(전문 기사 매장 방문 점검)를 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "대부분의 테이블오더 업체(티오더, 메뉴잇, 페이히어 등)는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 대부분 연동을 지원합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "대부분의 테이블오더 업체(티오더, 메뉴잇, 페이히어 등)는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 대부분 연동을 지원합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 OKPOS, 이지포스, 솔비포스 등 국내 주요 외식업 POS 프로그램과 연동을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "식당에 테이블오더(티오더, 메뉴잇, 페이히어, 토스오더 등)를 도입할 때 **포스기 연동**과 **오류 발생 시 AS 지원 방식**은 매장 운영과 직결되는 가장 중요한 부분입니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "식당에 테이블오더(티오더, 메뉴잇, 페이히어, 토스오더 등)를 도입할 때 **포스기 연동**과 **오류 발생 시 AS 지원 방식**은 매장 운영과 직결되는 가장 중요한 부분입니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 1. 티오더 (t'order)",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "### 2. 메뉴잇 (menuit)",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "매장 테이블 수, 기존 포스기 기종, 인터넷 환경에 따라 비용 견적과 추천 방식이 달라지므로, 2~3곳(티오더, 메뉴잇, 페이히어 등)에 무료 견적 및 상담을 요청해 보신 후 결정하시는 것을 권장합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "### 3. 페이히어 (Payhere)",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "매장 테이블 수, 기존 포스기 기종, 인터넷 환경에 따라 비용 견적과 추천 방식이 달라지므로, 2~3곳(티오더, 메뉴잇, 페이히어 등)에 무료 견적 및 상담을 요청해 보신 후 결정하시는 것을 권장합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "### 4. 통신사 결합형 (KT 하이오더, LG U+ 테이블오더 등)",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0.16666666666666666,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 국내 점유율 1위이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 테이블 간 게임, 채팅, 경매 등 엔터테인먼트 기능 옵션을 제공한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 1. 티오더 (t'order)",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "### 2. KT 하이오더",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "보통 2~3곳(예: 티오더, KT 하이오더 등)에 매장 규모(테이블 수)와 현재 사용 중인 포스 모델을 알려주고 견적 및 프로모션을 비교해 보신 후 결정하는 것을 권장합니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "메뉴잇",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "### 3. 메뉴잇 (menu it)",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "### 4. 페이히어 (Payhere) 테이블오더",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "페이히어 포스를 함께 사용할 경우 태블릿-포스-주방프린터 연동이 매우 매끄러움.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0.16666666666666666,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더(t'order)는 국내 시장 점유율 1위이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "기존에 사용 중인 거의 모든 포스(POS) 기기와 연동된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "경매, 테이블 간 메시지/게임, 룰렛 이벤트 등 엔터테인먼트 기능이 탑재되어 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "물/얼음/소주잔/직원만 호출 등 세분화된 호출 기능이 갖춰져 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 2,
-          "sentences": [
-            {
-              "sentence": "### 2. 메뉴잇 (Menuit) — 뛰어난 안정성과 직영 A/S",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "**티오더**나 **메뉴잇** 등 2~3개 업체를 골라 무료 방문 상담 및 견적을 받아보신 후, 매장 인테리어와 테이블 배치, 결제 방식(선불/후불)에 맞춰 최종 결정해 보시길 권해드립니다.",
-              "sentiment": "neutral"
-            }
-          ]
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "### 3. KT 하이오더 — 통신사 결합 할인 & A/S 신뢰도",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "### 4. 페이히어 (Payhere) — 올인원 클라우드 POS & 합리적 비용",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 테이블 간 채팅, 경매, 게임 등 엔터테인먼트 기능을 제공한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 대부분의 주요 포스(POS) 기기와 연동된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
-          "domain": "blog-genieone.com",
-          "ownerType": "unknown",
+          "raw": "https://damdaamall.com/product/%EB%A0%8C%ED%83%88-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EA%B0%84%ED%8E%B8%EA%B2%B0%EC%A0%9C-%ED%83%9C%EB%B8%94%EB%A6%BF%EC%A3%BC%EB%AC%B8-%EB%AC%B4%EC%9D%B8%EC%A3%BC%EB%AC%B8%EA%B8%B0-%EB%AC%B4%EC%9D%B8%EA%B2%B0%EC%A0%9C%EA%B8%B0/11071/",
+          "domain": "damdaamall.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
           "domain": "consumernews.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://payhere.in/blog/table-order-commission-fee-comparison/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
-          "domain": "m.ekn.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://100sajang.com/article/?idx=170545979&bmode=view",
-          "domain": "100sajang.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.lawsee.com/case_detail?id=202511117214049&source=auction",
-          "domain": "lawsee.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
-          "domain": "imaeil.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://v.daum.net/v/GDC2uPV7CG",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -1445,10 +1091,401 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-008",
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "포스기(POS) 연동 호환성과 A/S 신속성을 최우선으로 고려하신다면, 시장 점유율과 전국 서비스망을 갖춘 **티오더**, **KT 하이오더**, **페이히어** 3개 업체가 대표적입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. KT 하이오더",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "3. **영업 시간대:** 주점, 고깃집 등 야간 피크타임 매출 비중이 높다면 24시간 또는 심야 A/S 콜센터/현장 대응이 가능한 곳(KT 하이오더, 티오더 등)을 선택하시는 것을 권장합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "포스기(POS) 연동 호환성과 A/S 신속성을 최우선으로 고려하신다면, 시장 점유율과 전국 서비스망을 갖춘 **티오더**, **KT 하이오더**, **페이히어** 3개 업체가 대표적입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 3. 페이히어 (Payhere)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **포스 연동성:** 타사 포스에 얹는 방식이 아니라 **‘페이히어 클라우드 POS + 테이블오더’를 원스톱으로 구성**할 때 연동 오류가 거의 없고 데이터가 실시간으로 동기화됩니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.14285714285714285,
+      "citations": [
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://product.kt.com/sohostatic/marketing/mrktgScrnType11/pc-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%9E%A5%EC%A0%90_20250109201006.html",
+          "domain": "kt.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://tossplace.com/story/pos_torder",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://help-center.payhere.in/e7c974a8-8dc9-409b-abc5-7ef5d87ff9dc",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 오케이포스(OKPOS), 이지포스(EasyPOS), 포스뱅크, 토스포스 등 국내 30여 개 이상의 주요 포스 프로그램과 공식 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 전국 단위 지사 및 직영 A/S망을 운영하며, 야간 및 주말 고객센터와 카카오톡 기반 1:1 대응/원격 지원을 운영한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order) – *기존 포스 연동성 & 시장 점유율 1위*",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. KT 하이오더 – *대기업 전국망 A/S & 통신 안정성*",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| **지방 매장이거나 확실한 당일 방문 AS**가 필요할 때 | **KT 하이오더** | 대기업 전국 직영 AS망 및 통신 안정성 |",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "### 3. 페이히어 (Payhere) – *포스+테이블오더 자체 통합형 (연동 오류 최소화)*",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **포스기 연동:** 별도 외부 포스 연동 방식이 아니라 **‘페이히어 클라우드 포스 + 테이블오더’가 자체 원스톱으로 작동**합니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "(※ 단, 기존 구형 포스를 유지하기보다 포스 시스템 전체를 페이히어로 전환할 때 가장 유리합니다.)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| **포스기까지 새로 맞추며 연동 오류를 없애고** 싶을 때 | **페이히어** | 포스-테이블오더 일체형으로 실시간 동기화 우수 |",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 메뉴잇 (Menuit) – *자체 하드웨어·소프트웨어 개발 기반 안정성*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.125,
+      "citations": [
+        {
+          "raw": "https://tossplace.com/story/pos_torder",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/food/all/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://www.itdaily.kr/news/articleView.html?idxno=219716",
+          "domain": "itdaily.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=oHFSLY_EdZk",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 시장 점유율 1위이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "오케이포스(OKPOS), 이지포스, 포스뱅크, 토스포스 등 국내 주요 POS 30여 종 이상과 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "전국망 AS 인프라와 365일 고객센터를 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 티오더 (t'order) – 시장 점유율 및 호환성 1위",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. KT 하이오더 – 대기업 인프라 기반의 전국 A/S망",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 페이히어 (Payhere) – 자체 포스+테이블오더 일체형 솔루션",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://xn--9m1bt07agwh.com/service",
+          "domain": "xn--9m1bt07agwh.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.wanted.co.kr/events/article_241028",
+          "domain": "wanted.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://product.kt.com/sohostatic/marketing/mrktgScrnType11/pc-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%9E%A5%EC%A0%90_20250109201006.html",
+          "domain": "kt.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/payhere-table-order-launch/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "국내에서 가장 많은 포스사(이지포스, 오케이포스, 유니온포스 등)와 정식 연동되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "전국 단위의 직영 및 협력 지사망을 갖추고 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "야간 매장 대응을 위한 고객센터를 운영하고 있다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
@@ -1461,10 +1498,11 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-008",
+      "questionId": "v1-006",
       "engine": "gemini",
       "callIndex": 2,
       "mentioned": false,
@@ -1472,6 +1510,24 @@
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
+        {
+          "raw": "https://tossplace.com/story/mynameis_sindang",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.chosun.com/economy/tech_it/2024/04/02/AML6RTBZLVC57MLN6YS4ZT4WBE/",
+          "domain": "chosun.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
           "domain": "torder.com",
@@ -1479,45 +1535,33 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.hantoday.net/news/articleView.html?idxno=44957",
-          "domain": "hantoday.net",
-          "ownerType": "unknown",
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://honeybee-home.tistory.com/entry/%EC%86%90%EB%8B%98-%EC%9E%85%EC%9E%A5%EC%97%90%EC%84%9C-%EB%B3%B8-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%82%AC%EC%9A%A9%ED%95%9C-%EC%8B%9D%EB%8B%B9-%EC%9E%A5%EC%A0%90%EA%B3%BC-%EB%8B%A8%EC%A0%90",
-          "domain": "honeybee-home.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tossplace.com/story/tableorder-atoz",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tossplace.com/story/sales_recipe_2",
           "domain": "tossplace.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167174496",
-          "domain": "xn--9m1bt07agwh.com",
-          "ownerType": "unknown",
+          "raw": "https://honeybee-home.tistory.com/entry/%EC%86%90%EB%8B%98-%EC%9E%85%EC%9E%A5%EC%97%90%EC%84%9C-%EB%B3%B8-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%82%AC%EC%9A%A9%ED%95%9C-%EC%8B%9D%EB%8B%B9-%EC%9E%A5%EC%A0%90%EA%B3%BC-%EB%8B%A8%EC%A0%90",
+          "domain": "honeybee-home.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
-          "domain": "ishopcare.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -1526,410 +1570,89 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-008",
+      "questionId": "v1-006",
       "engine": "gemini",
       "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**티오더(t'order)** 테이블오더의 월 이용료와 기본 기기 스펙 및 사양은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%9D%B8%EA%B1%B4%EB%B9%84-%EB%B0%98%EC%9C%BC%EB%A1%9C-%EC%A4%84%EC%9D%B4%EB%8A%94-%EC%8B%A4%EC%A0%84-%EB%B9%84%EB%B2%95-3%EB%8B%A8%EA%B3%84/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
         },
         {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.sentv.co.kr/article/view/sentv202503100044",
-          "domain": "sentv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/sales_recipe_2",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://web.sosangspace.com/products/47fe651c-017b-4d89-8397-9eecf1e30139",
-          "domain": "web.sosangspace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 통상 3년(36개월) 약정 기준으로 요금이 책정된다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "후불형 월 이용료는 태블릿 1대당 월 약 18,000원 ~ 20,000원(부가세 별도)이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "선불형 월 이용료는 태블릿 1대당 월 약 20,000원 ~ 22,000원(부가세 별도)이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "디스플레이는 10.1인치 ~ 10.5인치급 IPS 디스플레이가 탑재된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "기기 색상 라인업은 블랙과 화이트로 구성된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "국내 주요 25개 이상의 POS 프로그램과 실시간 양방향 연동을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "티오더(t'order) 테이블오더의 월 이용료와 주요 기본 스펙 안내입니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.torder.com/",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.etnews.com/20250728000074",
-          "domain": "etnews.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://parkk3962.tistory.com/39",
-          "domain": "parkk3962.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.news1.kr/industry/sb-founded/5502720",
+          "raw": "https://www.news1.kr/industry/sb-founded/5498722",
           "domain": "news1.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
         },
         {
-          "raw": "https://web.sosangspace.com/products/47fe651c-017b-4d89-8397-9eecf1e30139",
-          "domain": "web.sosangspace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
+          "raw": "https://ceo.baemin.com/knowhow/12768",
+          "domain": "ceo.baemin.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_1",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.munhwa.com/article/11429094",
+          "domain": "munhwa.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cstimes.com/news/articleView.html?idxno=548960",
+          "domain": "cstimes.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.bobaedream.co.kr/view?code=strange&No=6031331",
+          "domain": "bobaedream.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=8fGvZEGNvm0",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
         },
         {
           "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
           "ownerType": "brand-owned",
-          "supportsBrandMention": true
+          "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=MJs4W0pQVgY",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
+          "raw": "https://payhere.in/blog/tableorder-Tonkatsu-interview-verso/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
         }
       ],
       "topRecommendation": null,
       "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "후불형 월 이용료는 대당 월 18,000원 ~ 20,000원 선이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "선불형 월 이용료는 대당 월 20,000원 ~ 22,000원 선이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "마스터 태블릿은 대당 월 약 18,000원 선이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "10인치형 전용 터치스크린 태블릿(전용 기기 또는 삼성 갤럭시탭 기반)을 사용한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "선불형 기준 IC카드, MS 마그네틱 결제 및 삼성페이, 애플페이, 더치페이 기능을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "국내 30여 개 주요 포스 프로그램(OKPOS, 이지포스, 유니온포스 등)과 직접 연동된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "영어, 일본어, 중국어 등 다국어 언어 전환을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "365일 심야 고객센터(새벽 2시까지) 운영 및 전국 거점 방문 AS를 지원한다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
+      "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
     },
     {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**티오더(t'order)**의 월 이용료와 기기 및 시스템 기본 스펙은 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
-          "domain": "zdnet.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://parkk3962.tistory.com/39",
-          "domain": "parkk3962.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.etnews.com/20250728000074",
-          "domain": "etnews.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.sentv.co.kr/article/view/sentv202503100044",
-          "domain": "sentv.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it16.tistory.com/2",
-          "domain": "it16.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/tableOrder",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "후불형(주문 전용) 월 이용료는 대당 월 18,000원 ~ 20,000원대이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "선불형(주문 + 테이블 결제) 월 이용료는 대당 월 20,000원 ~ 22,000원대이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "마스터 태블릿 월 이용료는 대당 월 18,000원 선이다.",
-          "claimType": "price",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "하드웨어 디스플레이로 10인치형 산업·매장용 태블릿이 적용된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "선불형 결제 리더기는 IC칩, 마그네틱(MS), 삼성페이, 애플페이, QR/바코드 간편결제를 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "국내 주요 20~25개 이상 POS/VAN사와 연동을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "한국어, 영어, 일본어, 중국어 등 다국어 언어 전환을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-010",
+      "questionId": "v1-007",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": true,
@@ -1942,30 +1665,35 @@
       "competitorMentions": [
         {
           "name": "메뉴잇",
-          "mentionCount": 4,
+          "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "식당 테이블오더 시장의 대표 주자인 **티오더**와 **메뉴잇**은 각각 뚜렷한 특징과 강점을 가지고 있습니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "### 2. 메뉴잇 (menuit)",
+              "sentence": "### 2. 메뉴잇 (Menuit)",
               "sentiment": "neutral"
             },
             {
-              "sentence": "* **POS 연동 범위:** 주요 POS는 지원하지만, 티오더에 비해 비주류 POS사와의 연동 폭은 다소 좁을 수 있어 사전 확인이 필수입니다.",
-              "sentiment": "negative"
-            },
-            {
-              "sentence": "* **메뉴잇을 추천하는 경우**",
+              "sentence": "* 안정적인 주문 처리, 튼튼한 하드웨어, 빠른 A/S를 원하시면 **메뉴잇**",
               "sentiment": "positive"
             }
           ]
         },
         {
           "name": "페이히어",
-          "mentionCount": 0,
-          "sentences": []
+          "mentionCount": 3,
+          "sentences": [
+            {
+              "sentence": "### 3. 페이히어 (Payhere)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **포스-테이블오더 일체형:** 별도 포스 연동 이슈 없이 페이히어 포스 하나로 테이블 관리, 매출 분석, 재고 관리가 한 번에 가능합니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* 포스기까지 한 번에 바꾸며 깔끔한 가성비 세팅을 원하시면 **페이히어**",
+              "sentiment": "positive"
+            }
+          ]
         },
         {
           "name": "브이디메뉴",
@@ -1978,77 +1706,27 @@
           "sentences": []
         }
       ],
-      "shareOfMention": 0.2,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
-          "domain": "nextdaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
+      "shareOfMention": 0.16666666666666666,
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 기업이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 국내 대부분의 기존 POS 프로그램 및 최다 POS/PG사와 연동된다.",
+          "claimText": "티오더는 테이블 간 1:1 채팅, 경품 게임, 더치페이 계산기 등 엔터테인먼트 기능을 지원한다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 전국 A/S망과 심야 고객센터를 운영한다.",
+          "claimText": "티오더는 직원호출 버튼 커스텀(세분화) 기능을 지원한다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "티오더는 더치페이(분할결제), 다국어 지원, 이벤트/룰렛 기능, 주류 광고 연계 등의 부가 기능을 지원한다.",
+          "claimText": "티오더는 다크 테마 및 고화질 메뉴 UI를 지원한다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
@@ -2057,16 +1735,986 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-010",
+      "questionId": "v1-007",
       "engine": "gemini",
       "callIndex": 2,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "**티오더(T-order)**와 **메뉴잇(Menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 솔루션입니다.",
+          "sentence": "### 1. 티오더 (t'order) — 가장 대중적이고 기능이 풍부한 솔루션",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. KT 하이오더 — 심야 영업 및 안정적인 A/S가 최우선인 경우",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 메뉴잇 (Menuit) — 인테리어를 해치지 않는 깔끔한 무선 설치",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 페이히어 (Payhere) / 토스 플레이스 — 소규모·가성비 중심",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://docs.channel.io/0614/ko/articles/maem_maem_-3b292914",
+          "domain": "docs.channel.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.qplace.kr/guides/%EC%9D%B4%EC%9E%90%EC%B9%B4%EC%95%BC-%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4-%EB%B9%84%EC%9A%A9-%ED%95%84%EC%88%98-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8",
+          "domain": "qplace.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "t'order",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 다크 모드 및 이자카야 감성 테마를 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 하이볼 베이스 변경, 토닉/진저에일 선택, 샷 추가, 얼음컵/물/앞접시 등 직원 호출 세분화 옵션 설정 기능을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 테이블 간 더치페이 계산서 확인 및 룰렛/경매 등 이벤트 기능을 제공한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "#### **① 티오더 (t'order)**",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "#### **② KT 하이오더**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "요약하자면, 규모가 있고 객단가 상승 옵션을 적극 활용하고 싶다면 **티오더**, 새벽 영업 비중이 높아 야간 장애 대응과 대기업 A/S가 중요하다면 **KT 하이오더**, 깔끔한 인테리어와 포스 일체형을 원한다면 **페이히어**를 우선적으로 비교 상담받아 보시는 것을 권장합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "#### **③ 페이히어 (Payhere) / 토스플레이스**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "요약하자면, 규모가 있고 객단가 상승 옵션을 적극 활용하고 싶다면 **티오더**, 새벽 영업 비중이 높아 야간 장애 대응과 대기업 A/S가 중요하다면 **KT 하이오더**, 깔끔한 인테리어와 포스 일체형을 원한다면 **페이히어**를 우선적으로 비교 상담받아 보시는 것을 권장합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.2,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/torder-tips",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241223093839",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://payhere.in/blog/qr-order-vs-table-order-comparison/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://docs.channel.io/0614/ko/articles/sasanohah-df7e6e0c",
+          "domain": "channel.io",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.qplace.kr/guides/%EC%9D%B4%EC%9E%90%EC%B9%B4%EC%95%BC-%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4-%EB%B9%84%EC%9A%A9-%ED%95%84%EC%88%98-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8",
+          "domain": "qplace.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 국내 점유율 1위 브랜드이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 주류 페어링 및 유도형 옵션 설정 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 선·후불 결제 전환 운영 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 메뉴판 커스텀 및 다크 테마 화면 테마를 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "국내 테이블오더(무인 주문 시스템) 시장 점유율 1위 업체는 **티오더(t'order)**입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **통신사:** KT(하이오더)",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **플랫폼/핀테크:** 페이히어, 토스플레이스, 우아한형제들(배민오더), 야놀자에프앤비솔루션(나우웨이팅·도도포인트) 등",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.co.kr/bm-analysis/200",
+          "domain": "demoday.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mobile.newsis.com/view/NISX20260114_0003476448",
+          "domain": "newsis.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.tistory.com/396",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20240430171856",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newstomato.com/ReadNews.aspx?no=1287824",
+          "domain": "newstomato.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://hyohyo-7.tistory.com/2",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위(약 50~60% 안팎)이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "누적 태블릿 설치 대수 30만 대 이상, 누적 결제액 10조 원 안팎을 기록하고 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "2019년에 시장에 진입/선점하였다.",
+          "claimType": "date",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "현재 국내 테이블오더(태블릿 무인 주문) 시장 점유율 1위 업체는 **티오더(t'order)**입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **경쟁 구도:** 티오더가 선두를 달리는 가운데 **메뉴잇, 페이히어**, 통신 대기업 서비스인 **KT 하이오더**, 플랫폼 기업 기반의 **배민오더·토스플레이스** 등이 추격하며 경쟁하고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **경쟁 구도:** 티오더가 선두를 달리는 가운데 **메뉴잇, 페이히어**, 통신 대기업 서비스인 **KT 하이오더**, 플랫폼 기업 기반의 **배민오더·토스플레이스** 등이 추격하며 경쟁하고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **경쟁 구도:** 티오더가 선두를 달리는 가운데 **메뉴잇, 페이히어**, 통신 대기업 서비스인 **KT 하이오더**, 플랫폼 기업 기반의 **배민오더·토스플레이스** 등이 추격하며 경쟁하고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://www.newstomato.com/ReadNews.aspx?no=1287824",
+          "domain": "newstomato.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20260412021375388",
+          "domain": "ekn.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mstacc.com/blog/columns/business-analysis/torder-financial-analysis",
+          "domain": "mstacc.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.co.kr/bm-analysis/200",
+          "domain": "demoday.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mobile.newsis.com/view/NISX20260114_0003476448",
+          "domain": "newsis.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.tistory.com/396",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20240430171856",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더(t'order)는 국내 테이블오더 시장 점유율 약 50~60% 이상을 차지하는 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더(t'order)는 누적 30만 대 이상의 태블릿을 보급했다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-008",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "국내 테이블오더(태블릿 무인 주문) 시장 점유율 1위 업체는 **'티오더(t'order)'**입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **주요 경쟁 구도:** 메뉴잇, 페이히어 등 전문 스타트업뿐만 아니라 KT(하이오더), 배달의민족(배민오더), 토스(토스플레이스) 등 통신사 및 대형 IT 플랫폼들이 시장에 진입해 경쟁하고 있으나, 티오더가 초기 선점 효과와 높은 POS 연동성을 바탕으로 1위를 지키고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **주요 경쟁 구도:** 메뉴잇, 페이히어 등 전문 스타트업뿐만 아니라 KT(하이오더), 배달의민족(배민오더), 토스(토스플레이스) 등 통신사 및 대형 IT 플랫폼들이 시장에 진입해 경쟁하고 있으나, 티오더가 초기 선점 효과와 높은 POS 연동성을 바탕으로 1위를 지키고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **주요 경쟁 구도:** 메뉴잇, 페이히어 등 전문 스타트업뿐만 아니라 KT(하이오더), 배달의민족(배민오더), 토스(토스플레이스) 등 통신사 및 대형 IT 플랫폼들이 시장에 진입해 경쟁하고 있으나, 티오더가 초기 선점 효과와 높은 POS 연동성을 바탕으로 1위를 지키고 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.25,
+      "citations": [
+        {
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20260412021375388",
+          "domain": "ekn.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://stibee.com/api/v1.0/emails/share/nt5iOLAtQaKU3KbKIm1Q1l1UCDa8q5g",
+          "domain": "stibee.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.co.kr/bm-analysis/200",
+          "domain": "demoday.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://v.daum.net/v/20260114123804190",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://hyohyo-7.tistory.com/2",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://demoday.co.kr/bm-analysis/200",
+          "domain": "demoday.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "국내 테이블오더(태블릿 무인 주문) 시장 점유율 1위 업체는 티오더(t'order)이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 국내 테이블오더 시장에서 약 60% 안팎의 점유율을 차지하고 있다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더의 전국 식당 및 서비스 매장 누적 설치 태블릿 대수가 30만 대 이상이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "티오더(t'order)의 설치비용과 월 이용료, 주요 계약 조건은 다음과 같이 구성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.newsbrite.net/news/articleView.html?idxno=188758",
+          "domain": "newsbrite.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sentv.co.kr/article/view/sentv202503100044",
+          "domain": "sentv.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://parkk3962.tistory.com/39",
+          "domain": "parkk3962.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://whereisyourwork.com/work-t-order-price/",
+          "domain": "whereisyourwork.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "기본 설치비는 프로모션 적용 시 무료(0원)로 지원된다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "후불형 주문 전용 태블릿 이용료는 1대당 월 18,000원 안팎이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 테이블 결제 단말기 이용료는 1대당 월 20,000원 안팎이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "마스터 태블릿 월 이용료는 18,000~20,000원 선이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "3년 약정 만료 후 솔루션 유지관리 비용은 월 대당 약 12,000~13,000원대이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기본 계약 기간은 3년(36개월) 약정이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "결제 수수료는 일반 카드 단말기와 동일한 VAN 방식을 사용하여 별도의 PG 추가 수수료를 부과하지 않는다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "티오더(t'order)의 설치비용과 월 이용료, 약정 조건은 일반적으로 다음과 같이 구성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://parkk3962.tistory.com/39",
+          "domain": "parkk3962.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it16.tistory.com/2",
+          "domain": "it16.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://outstanding.kr/press/1051/20250312",
+          "domain": "outstanding.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://whereisyourwork.com/work-t-order-price/",
+          "domain": "whereisyourwork.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "초기 설치비는 신규 계약 프로모션 적용 시 무료이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "전원 방식은 유선 방식과 보조배터리 교체형 무선 방식을 선택할 수 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "후불형 주문 전용 태블릿의 월 이용료는 3년 약정 기준 대당 월 18,000원 ~ 20,000원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 결제 단말기 일체형 태블릿의 월 이용료는 3년 약정 기준 대당 월 20,000원 ~ 22,000원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기본 약정 기간은 3년(36개월)이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "3년 약정 만료 시 유지보수비 명목으로 요금이 대당 약 12,000원~13,000원대로 인하된다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "PG 수수료 없이 일반 VAN 방식으로 결제된다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-009",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "티오더(t'order)의 설치 비용과 월 이용료, 주요 계약 조건은 다음과 같습니다. *(부가세 별도 기준)*",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://outstanding.kr/press/1051/20250312",
+          "domain": "outstanding.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it16.tistory.com/2",
+          "domain": "it16.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.unicornfactory.co.kr/article/2025031015253655900",
+          "domain": "unicornfactory.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://parkk3962.tistory.com/39",
+          "domain": "parkk3962.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://whereisyourwork.com/work-t-order-price/",
+          "domain": "whereisyourwork.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-pricing-complete/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "설치비/공사비(기본 설치비, 테이블 전기 배선 공사비, 거치대 및 부속품)를 무료 지원한다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "후불형 태블릿 월 이용료는 3년 약정 기준 대당 월 18,000원 ~ 20,000원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "선불형 태블릿 월 이용료는 3년 약정 기준 대당 월 20,000원 ~ 22,000원 내외이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "마스터 태블릿 이용료는 월 약 18,000원 ~ 19,800원이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "36개월 약정 만료 후 요금은 대당 월 약 12,000원 ~ 14,000원 수준으로 인하된다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "온라인 PG 결제 수수료 없이 VAN 방식을 사용해 추가 수수료가 없다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기본 계약 약정 기간은 36개월(3년)이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "국내 테이블오더 시장의 양대 산맥인 **티오더(T-order)**와 **메뉴잇(menuit)**은 모두 검증된 솔루션이지만, 운영 방식과 강점에서 뚜렷한 차이가 있습니다.",
           "sentiment": "positive"
         },
         {
@@ -2074,11 +2722,19 @@
           "sentiment": "neutral"
         },
         {
-          "sentence": "* **POS 연동 범위 사전 확인 필요:** 주요 포스는 대부분 지원하지만, 티오더에 비해 특정 비주류 포스기와의 호환성 여부를 사전에 미리 체크해야 합니다.",
-          "sentiment": "positive"
+          "sentence": "* **합리적인 가격/프로모션:** 티오더 대비 가성비 좋은 견적이나 수수료/단말기 프로모션을 제공하는 경우가 많습니다.",
+          "sentiment": "neutral"
         },
         {
-          "sentence": "* **티오더를 추천하는 매장**",
+          "sentence": "* **점유율:** 티오더에 비해 브랜드 인지도나 설치 매장 수 자체는 적은 편입니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "| 구분 | 티오더 (T-order) | 메뉴잇 (menuit) |",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **티오더를 추천하는 매장:**",
           "sentiment": "positive"
         }
       ],
@@ -2088,123 +2744,7 @@
           "mentionCount": 4,
           "sentences": [
             {
-              "sentence": "**티오더(T-order)**와 **메뉴잇(Menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 솔루션입니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "### 2. 메뉴잇 (Menuit)",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "* **POS 연동 범위 사전 확인 필요:** 주요 포스는 대부분 지원하지만, 티오더에 비해 특정 비주류 포스기와의 호환성 여부를 사전에 미리 체크해야 합니다.",
-              "sentiment": "negative"
-            },
-            {
-              "sentence": "* **메뉴잇을 추천하는 매장**",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "페이히어",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0.5,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.seoultimes.news/mobile/article.html?no=2000058774",
-          "domain": "seoultimes.news",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
-          "domain": "nextdaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 국내 30개 이상의 주요 POS(오케이포스, 이지포스 등)와 연동된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 야간/심야 고객센터를 운영한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 통상 3년 안팎의 약정 계약이 기본이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 대표하는 양대 브랜드입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "### 1. 티오더 (t'order)",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 5,
-          "sentences": [
-            {
-              "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 대표하는 양대 브랜드입니다.",
+              "sentence": "국내 테이블오더 시장의 양대 산맥인 **티오더(T-order)**와 **메뉴잇(menuit)**은 모두 검증된 솔루션이지만, 운영 방식과 강점에서 뚜렷한 차이가 있습니다.",
               "sentiment": "positive"
             },
             {
@@ -2212,170 +2752,17 @@
               "sentiment": "neutral"
             },
             {
-              "sentence": "* **점유율 및 인지도:** 티오더 대비 매장 점유율이 낮아 손님에게 브랜드 자체는 덜 익숙할 수 있습니다.",
-              "sentiment": "negative"
-            },
-            {
-              "sentence": "| 구분 | 티오더 | 메뉴잇 |",
+              "sentence": "| 구분 | 티오더 (T-order) | 메뉴잇 (menuit) |",
               "sentiment": "neutral"
             },
             {
-              "sentence": "* **메뉴잇 추천:**",
+              "sentence": "* **메뉴잇을 추천하는 매장:**",
               "sentiment": "positive"
             }
           ]
         },
         {
           "name": "페이히어",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "브이디메뉴",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "KT 하이오더",
-          "mentionCount": 0,
-          "sentences": []
-        }
-      ],
-      "shareOfMention": 0.2857142857142857,
-      "citations": [
-        {
-          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
-          "domain": "eroun.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
-          "domain": "100ssd.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://it14.tistory.com/4",
-          "domain": "it14.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
-          "domain": "nextdaily.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 업체이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 국내 대다수 주요 POS 기기와의 연동을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 선불/후불 결제, 더치페이, 다국어 지원, 직원 호출 세분화 기능을 제공한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 전국 현장 출동망과 야간/심야 고객센터를 운영한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더 태블릿 대기 화면에 외부 광고가 송출된다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 유선 거치 및 보조배터리형 설치 방식을 지원한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**페이히어**와 **티오더** 모두 업계 대표 솔루션인 만큼 기본적인 시스템 완성도는 높지만, **피크 시간대에 주문 누락이나 기기 멈춤(먹통) 현상이 완전히 없지는 않으며 자영업자 커뮤니티 등에서 관련 불편 사례가 종종 언급**됩니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "#### 🔹 티오더 (T-order)",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "* **기존 포스와의 연동 문제**: 티오더는 매장에서 기존에 쓰던 다양한 포스(OKPOS 등)와 프로그램을 연동해 사용하는 경우가 많습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "피크 시간대에 주문이 동시다발적으로 몰리면 **티오더 태블릿 → 티오더 서버 → 매장 포스 프로그램**으로 이어지는 신호 전달 과정에서 병목이 생겨 주문이 누락되거나 늦게 찍히는 현상이 발생할 수 있습니다.",
-          "sentiment": "negative"
-        },
-        {
-          "sentence": "* 기존 포스기를 그대로 유지한 채 테이블오더만 붙여 쓰려면 **티오더** 같은 전문 테이블오더가 적합하지만 연동 안정성을 꼼꼼히 점검해야 합니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "페이히어",
-          "mentionCount": 4,
-          "sentences": [
-            {
-              "sentence": "**페이히어**와 **티오더** 모두 업계 대표 솔루션인 만큼 기본적인 시스템 완성도는 높지만, **피크 시간대에 주문 누락이나 기기 멈춤(먹통) 현상이 완전히 없지는 않으며 자영업자 커뮤니티 등에서 관련 불편 사례가 종종 언급**됩니다.",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "#### 🔹 페이히어 (Payhere)",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "* **올인원 구조의 장단점**: 페이히어는 포스, 테이블오더, 주방 디스플레이(KDS) 등을 자체 시스템으로 일원화하여 개발했기 때문에 기기 간 호환 및 누락 문제는 상대적으로 덜한 편입니다.",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* 포스부터 테이블오더까지 하나로 통합해 기기간 연동 충돌을 줄이고 싶다면 **페이히어** 같은 올인원 시스템이 유리합니다.",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "메뉴잇",
           "mentionCount": 0,
           "sentences": []
         },
@@ -2391,49 +2778,19 @@
         }
       ],
       "shareOfMention": 0.5555555555555556,
-      "citations": [
-        {
-          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
-          "domain": "menumon.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
-          "domain": "menumon.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.pressman.kr/news/articleView.html?idxno=103268",
-          "domain": "pressman.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://yodamoney.tistory.com/98",
-          "domain": "yodamoney.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
-          "domain": "tossplace.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
+      "citations": [],
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "티오더는 매장에서 기존에 쓰던 다양한 포스(OKPOS 등)와 프로그램을 연동해 사용한다.",
+          "claimText": "티오더는 OK포스, 포스뱅크 등 국내 주요 POS기와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 리뷰 이벤트, 더치페이, 직원 호출 세분화, 광고 플랫폼 연계 등의 부가 기능을 제공한다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
@@ -2442,356 +2799,50 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-011",
+      "questionId": "v1-010",
       "engine": "gemini",
       "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [
-        {
-          "name": "페이히어",
-          "mentionCount": 3,
-          "sentences": [
-            {
-              "sentence": "**페이히어**와 **티오더** 모두 업계에서 널리 쓰이는 대표적인 시스템으로, 소프트웨어 자체 결함으로 인한 **심각한 주문 누락이나 기기 먹통이 일상적으로 빈번하게 발생하는 편은 아닙니다.**",
-              "sentiment": "positive"
-            },
-            {
-              "sentence": "* **페이히어 (Payhere)**",
-              "sentiment": "neutral"
-            },
-            {
-              "sentence": "기존에 쓰던 포스 프로그램을 그대로 유지해야 한다면 연동 안정성이 검증된 **티오더**, 포스부터 테이블오더까지 전체 시스템을 하나로 통일해 연동 오류 가능성을 줄이고 싶다면 **페이히어**가 적합한 선택이 될 수 있습니다.",
-              "sentiment": "positive"
-            }
-          ]
-        }
-      ],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://payhere.in/food/all/",
-          "domain": "payhere.in",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위이다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 자체 포스 외에도 타사 포스기(오케이포스, 이지포스 등)와 연동해 사용한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 3,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "* **티오더 (t'order)**\n  * 테이블오더 전용으로 시스템이 비교적 안정적이고 점유율이 높지만, 테이블 수가 많은 대형 매장일수록 **매장 내 Wi-Fi AP(공유기) 세팅이 부실할 경우 특정 구석 자리 테이블에서 멈춤 현상**이 발생하기 쉽습니다.",
+          "sentence": "### 1. 티오더 (t'order)",
           "sentiment": "neutral"
         }
       ],
       "competitorMentions": [
         {
-          "name": "페이히어",
-          "mentionCount": 3,
+          "name": "메뉴잇",
+          "mentionCount": 6,
           "sentences": [
             {
-              "sentence": "**페이히어나 티오더 모두 정상적인 환경에서는 안정적으로 작동하지만, 피크 시간대 매장 환경(네트워크)이나 일시적인 서버 이슈에 따라 간헐적인 먹통·지연 현상을 겪는 매장들이 있습니다.**",
+              "sentence": "테이블오더 시장의 대표 주자인 **티오더**와 **메뉴잇**은 각각 뚜렷한 강점과 특징이 있어 매장의 업종, 인테리어 구조, 운영 방식에 따라 적합한 선택이 달라집니다.",
               "sentiment": "neutral"
             },
             {
-              "sentence": "페이히어처럼 모바일/태블릿과 카드 리더기·프린터가 블루투스로 연결되는 경우, 피크 시간대 신호 간섭이나 거리 문제로 연결이 튀는 경우가 있습니다.",
+              "sentence": "### 2. 메뉴잇 (menuit)",
               "sentiment": "neutral"
             },
             {
-              "sentence": "* **페이히어 (Payhere)**\n  * 스마트폰이나 태블릿을 활용하는 클라우드 포스라 초기 비용과 사용 편의성은 높지만, **기기 간 무선(Wi-Fi/블루투스) 연결 상태에 영향**을 많이 받습니다.",
+              "sentence": "자체 소프트웨어 개발과 감각적인 하드웨어/UI 디자인으로 빠르게 성장하며 외식업계에서 높은 선호도를 얻고 있습니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | **티오더 (T-order)** | **메뉴잇 (Menuit)** |",
               "sentiment": "neutral"
+            },
+            {
+              "sentence": "2. **메뉴잇을 추천하는 경우:**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* 일부 특수 POS 호환 확인 필요: 대다수 주요 POS는 지원하지만, 티오더에 비해 비주류/구형 로컬 POS의 경우 호환 여부를 사전에 미리 점검해야 합니다.",
+              "sentiment": "negative"
             }
           ]
-        }
-      ],
-      "shareOfMention": 0.25,
-      "citations": [
-        {
-          "raw": "https://yodamoney.tistory.com/98",
-          "domain": "yodamoney.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
-          "domain": "menumon.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더는 클라우드/인터넷 기반으로 데이터를 처리하는 테이블오더 시스템이다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "영등포 상권에서 티오더를 설치할 경우, **현장 방문 A/S 및 기기 관리는 매우 빠르고 안정적으로 이루어지는 편**입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* **본사 및 거점 인근 권역**: 티오더 본사(여의도 파크원)와 구로 오피스, 수도권 서부 거점 센터(부천 센터 등)가 영등포와 바로 인접해 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "* 티오더는 **365일 연중무휴 및 심야 시간대 고객센터(유선/채팅)**를 운영하고 있어, 피크타임에 기기 오류나 주문 누락 이슈가 발생했을 때 원격 제어 및 긴급 조치가 빠르게 가능합니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.hankyung.com/article/2026011651456",
-          "domain": "hankyung.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://plus.hankyung.com/apps/newsinside.view?aid=2024020711315&category=&sns=y",
-          "domain": "plus.hankyung.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/partners",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrHpXmmcxVkTXRUuy-6AIyl1e7NBvKZQjyIoDnWZxupJFlnj0nGMDibZE1pmHcW3TSUFmV4MNGV7x5HshmGYqrYgkltbExF2mWz6wUvMtKgpVHHgN8=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더 본사는 여의도 파크원에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "여의도 파크원",
-          "factGraphValue": "서울특별시 영등포구 여의대로 108"
-        },
-        {
-          "claimText": "티오더는 구로 오피스와 수도권 서부 거점 센터(부천 센터 등)를 두고 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "신규 설치 매장의 경우 초기 30일 집중 케어를 지원한다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 365일 연중무휴 및 심야 시간대 고객센터(유선/채팅)를 운영한다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**영등포 상권에서 티오더를 도입할 경우 현장 AS 및 기기 관리 대응은 매우 빠르고 원활한 편**에 속합니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "수도권 핵심 상권이자 티오더의 주요 관리 권역인 만큼 다음과 같은 인프라와 관리 시스템이 갖추어져 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "**본사 및 수도권 엔지니어 거점 근접:** 티오더 본사(여의도 파크원)와 구로 오피스 등 핵심 지원 인프라가 인근에 밀집해 있어 영등포구 일대(영등포역, 문래동, 당산, 여의도 등)는 기사 배정 및 이동 동선 면에서 최우선 대응 권역입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "티오더는 **365일 심야 시간대까지 고객지원센터와 비상 대응망을 운영**하고 있어, 피크타임에 주문 오류나 결제 불량이 발생해도 즉각적인 원격 제어 및 긴급 기술 지원을 받을 수 있습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "**원격/AI 즉각 조치:** 단순 메뉴 오류, 포스 연동 끊김, 배너 수정 등은 고객센터나 '티오더AI/사장님 앱'을 통해 수 분 내에 원격으로 즉시 해결됩니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "**요약하자면**, 영등포 지역은 티오더의 직영 및 기술 지원망 접근성이 가장 좋은 지역 중 하나이므로, 타사나 비수도권 지역 대비 현장 방문 조치 및 주기적인 기기 관리가 신속하게 이루어지는 편입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.hankyung.com/article/2026011651456",
-          "domain": "hankyung.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/faq",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.torder.com/franchise",
-          "domain": "torder.com",
-          "ownerType": "brand-owned",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://m.ekn.kr/view.php?key=20240207001425123",
-          "domain": "m.ekn.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://v.daum.net/v/20260622103023823?f=p",
-          "domain": "v.daum.net",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "티오더 본사가 여의도 파크원에 위치한다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "여의도 파크원",
-          "factGraphValue": "서울특별시 영등포구 여의대로 108"
-        },
-        {
-          "claimText": "티오더가 구로 오피스를 두고 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 AS 접수 시 통상 1일 이내(당일 또는 익일) 방문 조치 서비스를 제공한다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 365일 심야 시간대까지 고객지원센터와 비상 대응망을 운영한다.",
-          "claimType": "other",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "티오더는 전담 매니저가 정기 방문해 액정 보호필름 무상 교체 등을 제공하는 '케어서비스'를 운영한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "하드웨어 불량 발생 시 엔지니어가 방문해 1:1 맞손 교체를 진행한다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": true
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "영등포 상권은 티오더의 현장 방문 AS 및 기기 관리 대응이 전국에서 가장 빠르고 수월한 지역 중 하나입니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "본사 및 수도권 거점 인접: 티오더 본사(여의도) 및 주요 오피스(구로)가 영등포 권역에 직접 맞닿아 있고, 수도권 서남부 전담 설치·AS 인력이 집중 배치되어 있습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [
-        {
-          "name": "메뉴잇",
-          "mentionCount": 0,
-          "sentences": []
         },
         {
           "name": "페이히어",
@@ -2809,75 +2860,766 @@
           "sentences": []
         }
       ],
-      "shareOfMention": 1,
+      "shareOfMention": 0.14285714285714285,
       "citations": [
         {
-          "raw": "https://www.torder.com/",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.hankyung.com/article/2026011651456",
-          "domain": "hankyung.com",
-          "ownerType": "unknown",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://www.torder.com/franchise",
+          "raw": "https://magazine.hankyung.com/job-joy/article/202409207706d",
+          "domain": "magazine.hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
           "domain": "torder.com",
           "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://m.ekn.kr/view.php?key=20240207001425123",
-          "domain": "m.ekn.kr",
-          "ownerType": "unknown",
+          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=118567",
+          "domain": "gpkorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "100ssd.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
+          "domain": "nextdaily.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": true
         }
       ],
-      "topRecommendation": "t'order",
-      "brandRank": 1,
+      "topRecommendation": null,
+      "brandRank": null,
       "factualityClaims": [
         {
-          "claimText": "티오더 본사는 여의도에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "여의도",
-          "factGraphValue": "서울특별시 영등포구 여의대로 108"
-        },
-        {
-          "claimText": "티오더 주요 오피스가 구로에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "하드웨어 파손이나 기기 불량 시 당일 또는 익일(평균 1일 이내) 방문 처리가 이루어진다.",
+          "claimText": "티오더는 국내 테이블오더 시장 점유율 1위 기업이다.",
           "claimType": "other",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "연중무휴 심야(새벽 2시까지) 고객센터를 운영한다.",
+          "claimText": "티오더는 OKPOS, 포스뱅크 등 국내 대부분의 주요 POS 프로그램과 호환/연동된다.",
           "claimType": "spec",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         },
         {
-          "claimText": "설치 후 초기 30일 이내에 점주 요청 시 우선 방문 점검을 진행한다.",
+          "claimText": "티오더는 야간/심야 시간대 고객센터를 운영한다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 더치페이, 직원 호출 세분화, 이벤트 룰렛, 서빙로봇 연동 등의 부가 기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더의 약정 기간은 보통 3년이다.",
           "claimType": "other",
           "verdict": "unverifiable",
           "responseValue": null,
           "factGraphValue": null
         }
       ],
-      "factualitySupported": 1,
+      "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": true
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 업체입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "### 1. 티오더 (t'order)",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "메뉴잇",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "**티오더(t'order)**와 **메뉴잇(menuit)**은 국내 테이블오더 시장을 이끄는 대표적인 두 업체입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "### 2. 메뉴잇 (menuit)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | **티오더** | **메뉴잇** |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "**메뉴잇 추천:** 테이블에 전선이 보이는 것을 원치 않아 무선 설치를 선호하거나, 음식 사진과 매장 인테리어의 비주얼을 중요하게 생각하는 경우.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.3333333333333333,
+      "citations": [
+        {
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "www.eroun.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://magazine.hankyung.com/job-joy/article/202409207706d",
+          "domain": "magazine.hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "www.torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gpkorea.com/news/articleView.html?idxno=118567",
+          "domain": "www.gpkorea.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "www.100ssd.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "www.torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 업계 점유율 1위 기업이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 국내 대부분의 메이저 POS사와 연동된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 심야 고객센터 및 전국 단위 AS 망을 운영한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 더치페이, 다국어 지원, 직원 호출 세분화, 매장 이벤트/게임 등의 부가기능을 지원한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "티오더는 일부 요금제나 기기 설정에 따라 대기 화면 등에 제휴 광고가 송출될 수 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": true,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "실제 외식업 자영업자 커뮤니티나 매장 운영 현장에서 나오는 티오더 사용 후기를 종합해 보면, **\"기기 자체의 치명적인 결함보다는 매장 네트워크 환경과 관리 방식에 따라 오류 빈도 차이가 크다\"**는 평가가 많습니다.",
+          "sentiment": "neutral"
+        },
+        {
+          "sentence": "* **해결 팁:** 일반 손님용 와이파이와 분리된 **티오더 전용 무선 공유기(AP)**를 설치하고, 매장 평수나 벽 구조에 맞춰 통신 음영 지역이 없도록 세팅해야 끊김을 최소화할 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.ntoday.co.kr/news/articleView.html?idxno=110931",
+          "domain": "ntoday.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.ntoday.co.kr/news/articleView.html?idxno=110931",
+          "domain": "ntoday.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-downsides-before-installation/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "티오더는 국내 테이블오더 점유율 1위 업체이다.",
+          "claimType": "other",
+          "verdict": "unverifiable",
+          "responseValue": "국내 테이블오더 점유율 1위 업체",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 4,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 모두 테이블에서 주문 및 결제를 돕는 솔루션이지만, **운영 기반(인프라), POS 연동 방식, 결합 생태계**에서 뚜렷한 차이를 보입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | **KT 하이오더** | **페이히어 테이블오더** |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "#### 1) KT 하이오더의 특징",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **KT 하이오더 추천:**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 9,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 모두 테이블에서 주문 및 결제를 돕는 솔루션이지만, **운영 기반(인프라), POS 연동 방식, 결합 생태계**에서 뚜렷한 차이를 보입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | **KT 하이오더** | **페이히어 테이블오더** |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| **강점** | 전국 A/S망, 안정적인 전용 Wi-Fi, 통신 결합 | 페이히어 POS 생태계와의 일체감, 간편한 UI/UX |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| **POS 연동** | 기존 매장에서 쓰던 다양한 타사 POS 연동 용이 | **페이히어 클라우드 POS**와 최적화된 연동 |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| **결합 상품** | KT 인터넷, CCTV, AI 통화비서, 서빙로봇 등 | 페이히어 키오스크, 대기(웨이팅), 마케팅 솔루션 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "#### 2) 페이히어 테이블오더의 특징",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **클라우드 POS와의 강력한 일체화:** 페이히어 POS 프로그램과 태블릿이 실시간으로 동기화되어 메뉴 추가, 품절 처리, 가격 변경, 테이블 이동/합석 관리가 매우 직관적입니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **매장 올인원 솔루션:** 포스기, 카드단말기, 키오스크, 웨이팅(줄서기), 고객 포인트 적립/마케팅까지 페이히어 단일 브랜드로 매장 전체를 세팅하기 편리합니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **페이히어 추천:**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "메뉴잇",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "브이디메뉴",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://month.foodbank.co.kr/m/section/section_view.php?secIndex=6959&page=58&section=001&back=S&section_list=&PHPSESSID=c771fb1ee6c472bbe6bc8cb9c9441ebc",
+          "domain": "month.foodbank.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kt-b2b.com/sub/content?menu=hiorder",
+          "domain": "kt-b2b.com",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=FmRuKM5yk0Y",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfees/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 6,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 모두 테이블에서 손님이 직접 주문·결제하는 시스템이지만, **인프라 기반(통신 대기업 vs 핀테크/클라우드 포스)**의 차이로 인해 핵심 강점과 운영 방식에서 차이가 납니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "### 1. KT 하이오더: 통신 인프라와 결합 혜택, 안정적인 A/S 중심",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "KT 하이오더는 KT의 유무선 통신망과 하드웨어 인프라를 기반으로 구축된 솔루션입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | KT 하이오더 | 페이히어 테이블오더 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **KT 하이오더가 적합한 곳:**",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* 매장 인터넷, CCTV 등 통신 상품을 KT로 묶어 결합 할인을 받고자 하는 매장",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 7,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 모두 테이블에서 손님이 직접 주문·결제하는 시스템이지만, **인프라 기반(통신 대기업 vs 핀테크/클라우드 포스)**의 차이로 인해 핵심 강점과 운영 방식에서 차이가 납니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "### 2. 페이히어 테이블오더: 클라우드 POS 일체화 및 마케팅 연동 중심",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "페이히어는 모바일·클라우드 기반 포스(POS) 솔루션으로 성장한 핀테크 기업의 테이블오더입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **POS와의 완벽한 일체화:** 페이히어 자체 포스(태블릿/스마트폰/PC)와 실시간으로 연동되어, 포스에서 메뉴나 가격을 수정하거나 품절 처리하면 테이블오더 태블릿에 즉시 반영됩니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| **POS 연동** | 기존 주요 서드파티 포스와 연동 | 페이히어 클라우드 포스 일체형 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| **결합 혜택** | KT 인터넷/CCTV/전화 패키지 할인 | 페이히어 포스/웨이팅/키오스크 생태계 연동 |",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **페이히어 테이블오더가 적합한 곳:**",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "http://month.foodbank.co.kr/m/section/section_view.php?secIndex=6959&page=58&section=001&back=S&section_list=&PHPSESSID=c771fb1ee6c472bbe6bc8cb9c9441ebc",
+          "domain": "month.foodbank.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/payhere-table-order-cost-review/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=oHFSLY_EdZk",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.etnews.com/20250908000095?obj=Tzo4OiJzdGRDbGFzcyI6Mjp7czo3OiJyZWZlcmVyIjtOO3M6NzoiZm9yd2FyZCI7czoxMzoid2ViIHRvIG1vYmlsZSI7fQ%3D%3D",
+          "domain": "m.etnews.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfees/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/blog/table-order-commission-fee-comparison/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "KT 하이오더",
+          "mentionCount": 5,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 타깃 매장의 성격과 운영 방식에 따라 뚜렷한 차이점을 보입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "### 1. KT 하이오더 (대기업 인프라 및 네트워크 안정성 중심)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "KT 하이오더는 **통신 대기업인 KT의 인프라와 전국 A/S망을 기반으로 한 하드웨어 중심형 솔루션**입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| 구분 | KT 하이오더 | 페이히어 테이블오더 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **결론적으로,** 기존 포스를 유지하면서 **안정적인 통신 환경과 즉각적인 방문 A/S**가 필요하다면 **KT 하이오더**가 유리하며, 포스 교체를 포함해 **웨이팅·포인트까지 하나의 시스템으로 깔끔하게 통합 운영**하고 싶다면 **페이히어**가 적합합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "페이히어",
+          "mentionCount": 6,
+          "sentences": [
+            {
+              "sentence": "**KT 하이오더**와 **페이히어(Payhere) 테이블오더**는 타깃 매장의 성격과 운영 방식에 따라 뚜렷한 차이점을 보입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "### 2. 페이히어 테이블오더 (클라우드 기반 올인원 매장 관리 솔루션)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "페이히어는 **모바일/클라우드 POS를 중심으로 웨이팅, 키오스크, 테이블오더를 하나로 묶은 소프트웨어 중심형 솔루션**입니다.",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **올인원 매장 관리 생태계:** 포스, 테이블오더, 주방 디스플레이(KDS), 웨이팅 시스템, 고객 포인트/마케팅 기능이 페이히어 단일 계정으로 통합 연동됩니다.",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | KT 하이오더 | 페이히어 테이블오더 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "| **연동 환경** | 기존 레거시 POS(오케이포스 등) 다수 지원 | 페이히어 자체 클라우드 POS 중심 |",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **결론적으로,** 기존 포스를 유지하면서 **안정적인 통신 환경과 즉각적인 방문 A/S**가 필요하다면 **KT 하이오더**가 유리하며, 포스 교체를 포함해 **웨이팅·포인트까지 하나의 시스템으로 깔끔하게 통합 운영**하고 싶다면 **페이히어**가 적합합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://blog-genieone.com/tableorder-recommendation-by-store-type/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://blog-genieone.com/tyder-vs-kt-highorder/",
+          "domain": "blog-genieone.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://month.foodbank.co.kr/m/section/section_view.php?secIndex=6959&page=58&section=001&back=S&section_list=&PHPSESSID=c771fb1ee6c472bbe6bc8cb9c9441ebc",
+          "domain": "month.foodbank.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hankyung.com/article/2025032690151",
+          "domain": "hankyung.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://megatelecom.co.kr/business/highorder",
+          "domain": "megatelecom.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/tableorder-kt-highorder",
+          "domain": "ishopcare.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
+          "ownerType": "competitor-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     }
   ]
 }
