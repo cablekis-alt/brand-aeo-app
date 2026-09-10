@@ -10,7 +10,7 @@
 //
 // 패키징(electron-builder + 정적 dist 서빙 + 컴파일된 서버)은 다음 단계 — electron/README.md 참고.
 
-const { app, BrowserWindow, Menu, MenuItem, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, MenuItem, ipcMain, shell, utilityProcess } = require('electron')
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -51,6 +51,68 @@ function killChildren() {
         /* 이미 종료 */
       }
     }
+  }
+  stopServerProcess()
+}
+
+// ── 번들 서버(utilityProcess) ────────────────────────────────────────────
+// 서버를 메인 프로세스에서 require하면 측정(수집·판정 각 8병렬, 브랜드당 60~140초)이 메인의
+// 이벤트 루프를 포화시켜 창 입력이 멈춘다 — 네이티브 <select> 팝업은 메인이 그리므로 브랜드
+// 드롭다운이 측정 내내 "안 눌리는" 상태가 된다. 그래서 별도 프로세스로 분리한다.
+let serverProcess = null
+let serverExit = null // { code } — 헬스체크 실패 시 원인 표시용
+const serverLog = [] // stderr/stdout 최근 줄(기동 실패 진단용)
+
+function rememberServerLog(chunk) {
+  for (const line of String(chunk).split(/\r?\n/)) {
+    if (!line.trim()) continue
+    serverLog.push(line)
+    if (serverLog.length > 40) serverLog.shift()
+  }
+}
+
+function startServerProcess(env) {
+  const entry = path.join(__dirname, 'server-entry.cjs')
+  const child = utilityProcess.fork(entry, [], {
+    serviceName: 'brand-aeo-api',
+    env,
+    stdio: 'pipe',
+  })
+  child.stdout?.on('data', (d) => {
+    rememberServerLog(d)
+    process.stdout.write(`[api] ${d}`)
+  })
+  child.stderr?.on('data', (d) => {
+    rememberServerLog(d)
+    process.stderr.write(`[api] ${d}`)
+  })
+  child.on('exit', (code) => {
+    serverExit = { code }
+    serverProcess = null
+    console.log(`[api] utilityProcess 종료 (code ${code})`)
+  })
+  serverProcess = child
+  return child
+}
+
+function stopServerProcess() {
+  if (!serverProcess) return
+  try {
+    serverProcess.kill()
+  } catch {
+    /* 이미 종료 */
+  }
+  serverProcess = null
+}
+
+/** 앱에서 바꾼 API 키를 서버 프로세스에 전달한다(프로세스가 분리돼 env가 자동 공유되지 않는다). */
+function sendEnvToServer(name, value) {
+  if (!serverProcess) return false
+  try {
+    serverProcess.postMessage({ type: 'set-env', name, value })
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -208,8 +270,9 @@ async function createWindow() {
     return
   }
 
-  // 패키징: vite 없이 번들된 서버(dist-electron/server.cjs)를 인프로세스로 띄우고,
-  // 그 서버가 dist(정적 UI)+/api를 같은 오리진(:4000)에서 서빙한다. 창은 그 URL을 로드.
+  // 패키징: vite 없이 번들된 서버(dist-electron/server.cjs)를 별도 프로세스(utilityProcess)로
+  // 띄우고, 그 서버가 dist(정적 UI)+/api를 같은 오리진(:4000)에서 서빙한다. 창은 그 URL을 로드.
+  // 메인에서 require하지 않는 이유는 startServerProcess()의 주석 참고(측정 중 UI 멈춤).
   loadEnvForPackaged()
   // 로컬(한국) 측정은 Gemini grounding이 기준 — judge/수집 기본을 Gemini로(OpenAI 크레딧 비의존).
   // .env에서 명시하면 그 값을 존중한다. CI(measure.yml)의 기본값과 일치.
@@ -217,15 +280,20 @@ async function createWindow() {
   if (!process.env.GEMINI_MODEL) process.env.GEMINI_MODEL = 'gemini-3.7-flash'
   // 기본 포트가 점유돼 있으면 빈 포트로 대체한다 — 남의 서버에 붙는 사고를 원천 차단.
   const apiPort = await pickApiPort(API_PORT)
-  process.env.PORT = apiPort
-  process.env.ELECTRON_STATIC_DIR = path.join(__dirname, '..', 'dist') // asar 내부 dist
-  // 측정 데이터·오버레이·큐는 쓰기 가능한 userData로(asar은 읽기전용). server/appPaths.ts가 참조.
-  process.env.APP_DATA_DIR = app.getPath('userData')
-  // 첫 실행 시드 소스 — asar에 동봉된 커밋 데이터(src/data).
-  process.env.SEED_DATA_DIR = path.join(__dirname, '..', 'src', 'data')
-  console.log('[data] APP_DATA_DIR =', process.env.APP_DATA_DIR)
+  // 서버 프로세스에 넘길 환경 — 프로세스가 분리되므로 여기서 명시적으로 전달해야 한다.
+  // (loadEnvForPackaged()가 메인의 process.env에 올려둔 API 키도 이 스프레드로 함께 간다.)
+  const serverEnv = {
+    ...process.env,
+    PORT: apiPort,
+    ELECTRON_STATIC_DIR: path.join(__dirname, '..', 'dist'), // asar 내부 dist
+    // 측정 데이터·오버레이·큐는 쓰기 가능한 userData로(asar은 읽기전용). server/appPaths.ts가 참조.
+    APP_DATA_DIR: app.getPath('userData'),
+    // 첫 실행 시드 소스 — asar에 동봉된 커밋 데이터(src/data).
+    SEED_DATA_DIR: path.join(__dirname, '..', 'src', 'data'),
+  }
+  console.log('[data] APP_DATA_DIR =', serverEnv.APP_DATA_DIR)
   try {
-    require(path.join(__dirname, '..', 'dist-electron', 'server.cjs')) // app.listen 실행
+    startServerProcess(serverEnv)
   } catch (err) {
     await win.loadURL(
       'data:text/html,' +
@@ -238,16 +306,21 @@ async function createWindow() {
   if (health === 'ok') {
     await win.loadURL(`http://localhost:${apiPort}`)
   } else {
-    const detail =
-      health === 'foreign'
+    // 서버 프로세스가 죽었으면 그 사실과 마지막 로그를 보여준다(인프로세스일 때는 예외로 잡혔지만
+    // 별도 프로세스는 조용히 종료될 수 있어, 원인을 화면에 남겨야 진단이 된다).
+    const crashed = serverExit !== null
+    const detail = crashed
+      ? `로컬 서버 프로세스가 시작 직후 종료됐습니다(code ${serverExit.code}).`
+      : health === 'foreign'
         ? `포트 ${apiPort}을 다른 프로그램이 사용하고 있어 앱 화면을 열 수 없습니다.` +
           ` 개발용 서버(npm run server:dev)가 떠 있으면 종료한 뒤 앱을 다시 실행하세요.`
         : `로컬 서버(:${apiPort}) 시작을 기다리다 시간이 초과됐습니다.`
+    const logTail = serverLog.length > 0 ? `<pre style="padding:0 2rem;white-space:pre-wrap">${serverLog.slice(-12).join('\n')}</pre>` : ''
     await win.loadURL(
       'data:text/html;charset=utf-8,' +
         encodeURIComponent(
           `<h2 style="font-family:sans-serif;padding:2rem">앱을 시작할 수 없습니다</h2>` +
-            `<p style="font-family:sans-serif;padding:0 2rem;line-height:1.6">${detail}</p>`,
+            `<p style="font-family:sans-serif;padding:0 2rem;line-height:1.6">${detail}</p>${logTail}`,
         ),
     )
   }
@@ -327,8 +400,9 @@ ipcMain.handle('update:quitAndInstall', () => {
 })
 
 // ── API 키 설정(앱 내 입력) ──────────────────────────────────────────────
-// userData/.env에 저장하고 process.env에 즉시 반영한다. 패키징은 서버가 인프로세스라
-// 재시작 없이 다음 측정부터 적용된다(dev는 서버가 자식 프로세스라 재시작 필요).
+// userData/.env에 저장하고 process.env에 즉시 반영한다. 패키징은 서버가 별도 프로세스라
+// env가 자동 공유되지 않으므로 같은 변경을 서버 프로세스에도 postMessage로 보낸다
+// (그래서 재시작 없이 다음 측정부터 적용된다). dev는 서버가 자식 프로세스라 재시작 필요.
 const API_KEY_NAMES = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']
 
 function userEnvPath() {
@@ -365,9 +439,10 @@ ipcMain.handle('settings:setApiKey', (_e, payload) => {
   const value = String(payload?.value ?? '').trim()
   if (!API_KEY_NAMES.includes(name)) return { ok: false, error: '허용되지 않은 키 이름입니다.' }
   try {
-    // 1) 즉시 적용(인프로세스 서버가 다음 호출부터 사용)
+    // 1) 즉시 적용 — 메인(설정 화면 표시용)과 서버 프로세스(측정에서 실제 사용) 양쪽.
     if (value) process.env[name] = value
     else delete process.env[name]
+    const forwarded = sendEnvToServer(name, value)
     // 2) userData/.env에 병합 저장(다른 키·변수 보존)
     const file = userEnvPath()
     let lines = []
@@ -380,7 +455,8 @@ ipcMain.handle('settings:setApiKey', (_e, payload) => {
     if (value) lines.push(`${name}=${value}`)
     fs.mkdirSync(path.dirname(file), { recursive: true })
     fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8')
-    return { ok: true }
+    // forwarded=false면 서버 프로세스가 없다(dev 또는 기동 실패) — 재시작 후 .env에서 읽힌다.
+    return { ok: true, needsRestart: !forwarded }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
