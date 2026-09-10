@@ -53,13 +53,37 @@ async function getJson<T>(path: string): Promise<T | null> {
   }
 }
 
-export async function loadTenants(): Promise<TenantSummary[]> {
-  const remote = await getJson<TenantSummary[]>('/api/tenants')
-  // API가 응답하면 빈 배열도 그대로 신뢰한다 — "브랜드 0개"와 "API 미도달"을 구분해야
-  // 브랜드가 없을 때 더미(example-brand) 대신 빈 상태 화면을 보여줄 수 있다.
-  if (Array.isArray(remote)) return remote
-  return FALLBACK_TENANTS // 로컬 개발 등 API 미도달 시에만 데모 폴백.
+/**
+ * 브랜드 목록 — 실패하면 throw한다. 호출부(TenantProvider)가 이전 목록을 지키고 재시도하려면
+ * "빈 목록"과 "조회 실패"를 반드시 구분해야 한다. 서버가 실제로 준 빈 배열은 "브랜드 0개"로
+ * 그대로 믿는다(그래야 브랜드가 없을 때 더미 대신 빈 상태 화면이 나온다).
+ *
+ * 응답이 없어도 무한정 기다리지 않는다 — 기다리는 동안 화면에 브랜드 선택 드롭다운 자체가
+ * 없어서 "눌러도 안 눌리는" 상태로 보이기 때문이다.
+ */
+export async function fetchTenants(timeoutMs = 5000): Promise<TenantSummary[]> {
+  let res: Response
+  try {
+    res = await fetch('/api/tenants', { signal: AbortSignal.timeout(timeoutMs) })
+  } catch (err) {
+    // AbortSignal.timeout은 "signal timed out"이라는 영문 DOMException을 던진다 — 화면에
+    // 그대로 노출되지 않도록 우리 문구로 바꾼다.
+    const timedOut = err instanceof DOMException && err.name === 'TimeoutError'
+    throw new Error(
+      timedOut
+        ? `브랜드 목록이 ${timeoutMs / 1000}초 안에 응답하지 않았습니다.`
+        : '브랜드 목록을 불러오지 못했습니다(서버 연결 불가).',
+      { cause: err },
+    )
+  }
+  if (!res.ok) throw new Error(`브랜드 목록 조회 실패 (HTTP ${res.status})`)
+  const data: unknown = await res.json()
+  if (!Array.isArray(data)) throw new Error('브랜드 목록 형식이 올바르지 않습니다.')
+  return data as TenantSummary[]
 }
+
+/** 재시도까지 실패했을 때 쓰는 데모 목록(백엔드 없이 UI만 보는 로컬 개발용). */
+export const DEMO_TENANTS: TenantSummary[] = FALLBACK_TENANTS
 
 export async function loadScorecards(tenantId: string): Promise<WeeklyScorecard[]> {
   const remote = await getJson<unknown>(`/api/scorecards/${encodeURIComponent(tenantId)}`)

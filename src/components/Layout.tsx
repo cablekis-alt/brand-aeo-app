@@ -8,10 +8,11 @@ import Sidebar from './Sidebar'
 const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status'])
 
 export default function Layout() {
-  const { tenants, tenant, setTenantId, loading, error } = useTenant()
+  const { tenants, tenant, setTenantId, loading, error, reloadTenants } = useTenant()
   const { pathname } = useLocation()
   const isManagement = MANAGEMENT_ROUTES.has(pathname)
   const noBrands = !loading && tenants.length === 0
+  const loadingBrands = loading && tenants.length === 0
   const showBrandPicker = Boolean(tenant) && !isManagement
 
   return (
@@ -33,14 +34,30 @@ export default function Layout() {
           )}
           {error && (
             <p className="error" role="alert">
-              {error}
+              {error}{' '}
+              <button type="button" className="ghost" onClick={() => void reloadTenants()}>
+                다시 시도
+              </button>
             </p>
           )}
-          {loading && tenants.length === 0 && <p className="muted">불러오는 중…</p>}
         </header>
 
-        {/* 브랜드가 0개면 분석 화면 대신 빈 상태를 보여준다(관리·측정 화면은 그대로 열림). */}
-        {noBrands && !isManagement ? <EmptyBrands /> : (tenant || isManagement) && <Outlet />}
+        {/*
+          브랜드 목록을 불러오는 동안에는 화면을 비우지 않고 로딩임을 명시한다.
+          이전에는 아무것도 렌더하지 않아, 목록 조회가 느리면 브랜드 드롭다운조차 없는 상태가
+          되어 "눌러도 안 눌린다"로 보였다. 0개면 빈 상태, 관리·측정 화면은 브랜드와 무관하게 열린다.
+        */}
+        {isManagement ? (
+          <Outlet />
+        ) : loadingBrands ? (
+          <p className="muted" style={{ marginTop: 24 }}>
+            브랜드 목록을 불러오는 중…
+          </p>
+        ) : noBrands ? (
+          <EmptyBrands />
+        ) : (
+          tenant && <Outlet />
+        )}
       </div>
     </div>
   )
