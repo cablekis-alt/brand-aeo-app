@@ -3,7 +3,7 @@ import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
 import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
-import { resolveWithoutNetwork, toHttpsUrl, type ResolvedTarget } from '../lib/aeo/resolveTarget'
+import { resolveWithoutNetwork, subjectBrand, toHttpsUrl, type ResolvedTarget } from '../lib/aeo/resolveTarget'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -106,8 +106,10 @@ export default function SiteDiagnosis() {
         renderWarning: payload.renderWarning,
       })
       setReport(evaluateAeo(signals, context))
-      // 선택된 브랜드의 상호·별칭으로만 판정한다(새 입력창 없음). 브랜드가 없으면 섹션을 띄우지 않는다.
-      setEntity(checkEntityMatch(signals, tenant?.brandName ?? '', tenant?.aliases ?? []))
+      // 판정 기준은 **진단한 페이지의 주체 브랜드**다. 드롭다운 선택을 그대로 쓰면 상호를 넣거나
+      // 남의 URL을 넣었을 때 짝이 어긋난다(뷰성형외과 페이지를 t'order 기준으로 판정하는 일).
+      const subject = subjectBrand(target, tenants, tenant)
+      setEntity(subject ? checkEntityMatch(signals, subject.brandName, subject.aliases) : null)
     } catch (err) {
       setError(err instanceof Error ? err.message : '진단 중 오류가 발생했습니다.')
     } finally {

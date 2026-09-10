@@ -17,8 +17,10 @@ export interface ResolvedTarget {
   /** 진단할 https URL. */
   url: string
   source: TargetSource
-  /** ②·③에서 확정된 브랜드명 — 화면에 "무엇으로 찾았는지" 보여주는 데 쓴다. */
+  /** ②·③에서 확정된 브랜드명 — 화면 표시와 엔티티 일치 판정의 기준이 된다. */
   brandName?: string
+  /** ②에서 맞은 등록 브랜드의 id — 별칭까지 쓰려면 필요하다. */
+  tenantId?: string
 }
 
 /**
@@ -86,7 +88,56 @@ export function resolveWithoutNetwork(input: string, tenants: TenantSummary[]): 
   const tenant = findTenantByName(s, tenants)
   if (tenant) {
     const url = tenantSiteUrl(tenant)
-    if (url) return { url, source: 'tenant', brandName: tenant.brandName }
+    if (url) return { url, source: 'tenant', brandName: tenant.brandName, tenantId: tenant.tenantId }
   }
   return null
+}
+
+/** URL의 호스트를 소유한 등록 브랜드. 서브도메인도 인정한다(m.k-wonjin.co.kr → k-wonjin). */
+export function findTenantByDomain(url: string, tenants: TenantSummary[]): TenantSummary | null {
+  let host: string
+  try {
+    host = new URL(toHttpsUrl(url)).hostname.replace(/^www\./, '').toLowerCase()
+  } catch {
+    return null
+  }
+  for (const t of tenants) {
+    for (const raw of t.ownedDomains ?? []) {
+      const d = raw
+        .trim()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/.*$/, '')
+        .toLowerCase()
+      if (d && (host === d || host.endsWith(`.${d}`))) return t
+    }
+  }
+  return null
+}
+
+/**
+ * 엔티티 일치 판정의 **주체 브랜드**를 정한다 — 진단한 페이지가 "누구의 것인지"와 짝이 맞아야 한다.
+ *
+ * 드롭다운에서 고른 브랜드를 그대로 쓰면 안 된다. 입력이 다른 브랜드로 해석될 수 있어서
+ * (상호를 넣거나 남의 URL을 넣는 경우) 뷰성형외과 페이지를 t'order 기준으로 판정하는 일이 생긴다.
+ *
+ *   ② 등록 브랜드명으로 찾음 → 그 브랜드(별칭 포함)
+ *   ③ 상호 추론            → 추론된 상호(별칭 없음)
+ *   ① URL 입력             → 그 호스트를 소유한 등록 브랜드, 없으면 현재 선택 브랜드
+ */
+export function subjectBrand(
+  target: ResolvedTarget,
+  tenants: TenantSummary[],
+  selected: TenantSummary | undefined,
+): { brandName: string; aliases: string[] } | null {
+  if (target.source === 'tenant') {
+    const t = tenants.find((x) => x.tenantId === target.tenantId)
+    if (t) return { brandName: t.brandName, aliases: t.aliases ?? [] }
+  }
+  if (target.source === 'infer' && target.brandName) {
+    return { brandName: target.brandName, aliases: [] }
+  }
+  const owner = findTenantByDomain(target.url, tenants)
+  if (owner) return { brandName: owner.brandName, aliases: owner.aliases ?? [] }
+  return selected ? { brandName: selected.brandName, aliases: selected.aliases ?? [] } : null
 }
