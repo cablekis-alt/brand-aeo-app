@@ -1,0 +1,128 @@
+name: Release desktop app
+
+# 데스크톱 설치본(NSIS .exe + 포터블 zip + latest.yml)을 CI에서 빌드해 릴리스에 올린다.
+#
+# 왜 CI인가: 개발 PC에 Windows Smart App Control이 켜지면 NSIS 단계가 실패한다. NSIS는
+# 설치본을 만들며 "방금 만든 미서명 uninstaller.exe"를 실행해야 하는데 SAC가 그 실행을
+# 거부해 `spawn UNKNOWN`으로 죽는다(SAC는 한 번 끄면 Windows 재설치 전까지 다시 켤 수 없어
+# 로컬에서 끄는 대신 러너에서 빌드한다). windows-latest 러너에는 SAC가 없다.
+#
+# 키: 이미 등록된 시크릿을 러너의 .env에 써서 scripts/prepare-bundled-env.mjs가 설치본에
+# 굽는다 — 로컬 빌드와 동일한 동작이다. 설치본에 키가 들어가므로 내부 배포 전용이며,
+# 저장소·릴리스가 private인 동안에만 유효한 전제다. 로그에는 키를 출력하지 않는다.
+
+run-name: release ${{ inputs.tag || github.event.release.tag_name }}
+
+on:
+  # 릴리스를 publish하면 자동으로 빌드·업로드한다.
+  release:
+    types: [published]
+  # 실패한 빌드를 태그만 지정해 다시 돌릴 수 있게 한다.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and upload (e.g. v0.1.38)'
+        required: true
+        type: string
+
+concurrency:
+  group: brand-aeo-release-${{ inputs.tag || github.event.release.tag_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 릴리스 태그의 커밋을 그대로 빌드한다(master가 앞서 나가 있어도 태그 기준).
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # package.json의 version과 태그가 어긋나면 latest.yml과 산출물 이름이 갈려
+      # 자동 업데이트가 조용히 깨진다. 빌드 전에 막는다.
+      - name: Check version matches tag
+        shell: bash
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          want="${TAG#v}"
+          echo "package.json=$pkg  tag=$TAG"
+          if [ "$pkg" != "$want" ]; then
+            echo "::error::package.json 버전($pkg)과 태그($want)가 다릅니다."
+            exit 1
+          fi
+
+      # prepare-bundled-env.mjs가 읽는 .env를 시크릿으로 만든다(값은 출력하지 않는다).
+      - name: Write .env from secrets
+        shell: bash
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          # 설치본 기본 설정. 수집 엔진은 앱에서 바꿀 수 있으므로 기존과 같은 기본값을 굽는다.
+          COLLECT_ENGINES: ${{ secrets.COLLECT_ENGINES || 'gemini' }}
+          JUDGE_ENGINE: ${{ secrets.JUDGE_ENGINE || 'gemini' }}
+          GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          : > .env
+          for name in GEMINI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY PERPLEXITY_API_KEY \
+                      COLLECT_ENGINES JUDGE_ENGINE GA4_PROPERTY_ID GOOGLE_SERVICE_ACCOUNT_JSON; do
+            value="${!name}"
+            if [ -n "$value" ]; then
+              printf '%s=%s\n' "$name" "$value" >> .env
+              echo "  $name 설정됨"
+            else
+              echo "  $name 없음 — 건너뜀"
+            fi
+          done
+
+      # --publish never: electron-builder의 자동 publish를 끈다. CI에서는 기본 정책이
+      # 릴리스에 바로 올리려 해서, 아래 명시적 업로드 스텝과 이중으로 동작할 수 있다.
+      - name: Build installer
+        run: npm run electron:pack -- --publish never
+
+      - name: List artifacts
+        shell: bash
+        run: ls -la dist-electron/out | grep -E "${TAG#v}" || true
+
+      # electron-builder의 publisher를 쓰지 않고 직접 올린다 — 로컬 릴리스와 같은 자산 구성을
+      # 유지하고(afterAllArtifactBuild가 만드는 installer.zip 포함), latest.yml을 확실히 넣는다.
+      - name: Upload to release
+        shell: bash
+        run: |
+          ver="${TAG#v}"
+          files=(
+            "dist-electron/out/Web4AI-Brand-AEO-${ver}-x64.exe"
+            "dist-electron/out/Web4AI-Brand-AEO-${ver}-installer.zip"
+            "dist-electron/out/Web4AI-Brand-AEO-${ver}-x64.zip"
+            "dist-electron/out/Web4AI-Brand-AEO-${ver}-x64.exe.blockmap"
+            "dist-electron/out/latest.yml"
+          )
+          missing=0
+          for f in "${files[@]}"; do
+            if [ ! -f "$f" ]; then echo "::error::산출물 없음: $f"; missing=1; fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          gh release upload "$TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          echo "업로드 완료: $TAG"
+
+      # 키가 들어간 파일을 러너에 남기지 않는다(자산 업로드 실패 시에도 실행).
+      - name: Remove secrets from runner
+        if: always()
+        shell: bash
+        run: rm -f .env electron/build/bundled.env
