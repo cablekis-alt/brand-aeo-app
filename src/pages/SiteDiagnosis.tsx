@@ -3,7 +3,13 @@ import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
 import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
-import { resolveWithoutNetwork, subjectBrand, toHttpsUrl, type ResolvedTarget } from '../lib/aeo/resolveTarget'
+import {
+  looksLikeUrl,
+  resolveWithoutNetwork,
+  subjectBrand,
+  toHttpsUrl,
+  type ResolvedTarget,
+} from '../lib/aeo/resolveTarget'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -22,6 +28,7 @@ export default function SiteDiagnosis() {
   const { tenant, tenants } = useTenant()
   // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
+
   const [url, setUrl] = useState('')
   const [topic, setTopic] = useState('')
   const [busy, setBusy] = useState(false)
@@ -31,6 +38,10 @@ export default function SiteDiagnosis() {
   const [entity, setEntity] = useState<EntityMatchReport | null>(null)
   // 입력을 무엇으로 해석했는지(URL/등록 브랜드/추론) — 추론 결과를 조용히 진단하지 않기 위해 표시한다.
   const [resolved, setResolved] = useState<ResolvedTarget | null>(null)
+  // 입력 옆에 보여줄 해석 미리보기. 등록 브랜드는 호출 없이 즉시 알 수 있어 타이핑 중에 보여준다.
+  // 렌더마다 계산하는 파생값이다(effect로 저장하면 한 박자 늦게 따라온다).
+  const typed = url.trim()
+  const preview = typed && !looksLikeUrl(typed) ? resolveWithoutNetwork(typed, tenants) : null
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
   useEffect(() => {
@@ -65,8 +76,6 @@ export default function SiteDiagnosis() {
         target = { url: toHttpsUrl(inferred.domain), source: 'infer', brandName: inferred.brandName || url.trim() }
       }
       setResolved(target)
-      // 해석된 URL을 입력 칸에도 반영한다 — 무엇을 진단했는지 남고, 바로 고쳐 다시 돌릴 수 있다.
-      if (target.url !== url) setUrl(target.url)
 
       const parsed = parsePublicHttpUrl(target.url)
       if (!parsed.ok) {
@@ -135,9 +144,37 @@ export default function SiteDiagnosis() {
             autoComplete="url"
             placeholder={isElectron ? 'https://example.com 또는 삼성서울병원' : 'https://example.com'}
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value)
+              // 입력이 바뀌면 앞선 결과는 다른 URL의 것이다 — 남겨두면 입력과 결과가 어긋난다
+              // (해석 줄이 옛 도메인을 가리키거나, 옛 리포트가 새 입력 아래 남는다).
+              if (report || resolved || error) {
+                setReport(null)
+                setEntity(null)
+                setResolved(null)
+                setError(null)
+              }
+            }}
             required
           />
+          {isElectron && typed && !looksLikeUrl(typed) && (
+            <span className="resolve-line">
+              {resolved && resolved.source !== 'url' ? (
+                <>
+                  <b>→ {resolved.url}</b>{' '}
+                  {resolved.source === 'tenant'
+                    ? `· 등록 브랜드 「${resolved.brandName}」`
+                    : `· 「${resolved.brandName}」로 찾은 도메인 (추론값이므로 맞는 사이트인지 확인하세요)`}
+                </>
+              ) : preview ? (
+                <>
+                  <b>→ {preview.url}</b> · 등록 브랜드 「{preview.brandName}」 — 추가 호출 없이 바로 진단합니다
+                </>
+              ) : (
+                <>→ 진단할 때 공식 도메인을 찾습니다 (판단 엔진 호출 1회)</>
+              )}
+            </span>
+          )}
           <span className="hint">
             선택한 브랜드의 소유 도메인이 자동 입력됩니다 — 다른 페이지를 진단하려면 URL을 바꾸세요.
             {isElectron && (
@@ -167,13 +204,6 @@ export default function SiteDiagnosis() {
       {error && (
         <p className="error" role="alert">
           {error}
-        </p>
-      )}
-      {resolved && resolved.source !== 'url' && (
-        <p className="hint" role="status" style={{ marginTop: 4 }}>
-          {resolved.source === 'tenant'
-            ? `등록된 브랜드 「${resolved.brandName}」의 소유 도메인으로 진단했습니다 — ${resolved.url}`
-            : `「${resolved.brandName}」의 공식 도메인을 찾아 진단했습니다 — ${resolved.url} (추론값이므로 맞는 사이트인지 확인하세요)`}
         </p>
       )}
       {report && <SiteReportView report={report} />}

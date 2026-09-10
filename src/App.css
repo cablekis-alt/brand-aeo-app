@@ -787,6 +787,19 @@
   cursor: not-allowed;
   color: var(--muted);
 }
+/* Site AEO 입력 아래 해석 줄 — "상호 → 어떤 URL로 진단하는가"를 클릭 전에 보여준다. */
+.site-form .resolve-line {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.site-form .resolve-line b {
+  color: var(--ink);
+  font-weight: 560;
+}
+
 /* 수집 엔진 선택(API 키 패널) — 라디오 한 줄씩, 체크박스는 가로로 흘린다. */
 .apikey-panel h4 {
   margin: 18px 0 6px;
