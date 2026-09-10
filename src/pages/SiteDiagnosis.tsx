@@ -3,9 +3,11 @@ import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
 import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
+import { resolveWithoutNetwork, toHttpsUrl, type ResolvedTarget } from '../lib/aeo/resolveTarget'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
+import { inferBrandDomain } from '../lib/api'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import type { AeoReport, AuditContext } from '../lib/aeo/types'
 
@@ -17,7 +19,9 @@ function brandSiteUrl(ownedDomains: string[] | undefined): string {
 }
 
 export default function SiteDiagnosis() {
-  const { tenant } = useTenant()
+  const { tenant, tenants } = useTenant()
+  // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
+  const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   const [url, setUrl] = useState('')
   const [topic, setTopic] = useState('')
   const [busy, setBusy] = useState(false)
@@ -25,12 +29,15 @@ export default function SiteDiagnosis() {
   const [report, setReport] = useState<AeoReport | null>(null)
   // 엔티티 일치는 총점과 분리해 따로 담는다 — scoreAeo를 거치지 않으므로 배점에 영향이 없다.
   const [entity, setEntity] = useState<EntityMatchReport | null>(null)
+  // 입력을 무엇으로 해석했는지(URL/등록 브랜드/추론) — 추론 결과를 조용히 진단하지 않기 위해 표시한다.
+  const [resolved, setResolved] = useState<ResolvedTarget | null>(null)
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
   useEffect(() => {
     setUrl(brandSiteUrl(tenant?.ownedDomains))
     setReport(null)
     setEntity(null)
+    setResolved(null)
     setError(null)
   }, [tenant?.tenantId])
 
@@ -39,15 +46,33 @@ export default function SiteDiagnosis() {
     setError(null)
     setReport(null)
     setEntity(null)
-
-    const parsed = parsePublicHttpUrl(url)
-    if (!parsed.ok) {
-      setError(parsed.error)
-      return
-    }
+    setResolved(null)
 
     setBusy(true)
     try {
+      // ①URL → ②등록 브랜드명 → ③추론. 앞의 둘은 호출이 없다.
+      let target = resolveWithoutNetwork(url, tenants)
+      if (!target) {
+        if (!isElectron) {
+          setError('URL을 입력하세요. 상호로 도메인을 찾는 기능은 데스크톱 앱에서만 동작합니다(웹에서는 결과를 신뢰할 수 없습니다).')
+          return
+        }
+        const inferred = await inferBrandDomain(url.trim(), tenant?.region ?? '')
+        if (!inferred?.domain?.trim()) {
+          setError(`「${url.trim()}」의 공식 도메인을 찾지 못했습니다. URL을 직접 입력하세요.`)
+          return
+        }
+        target = { url: toHttpsUrl(inferred.domain), source: 'infer', brandName: inferred.brandName || url.trim() }
+      }
+      setResolved(target)
+      // 해석된 URL을 입력 칸에도 반영한다 — 무엇을 진단했는지 남고, 바로 고쳐 다시 돌릴 수 있다.
+      if (target.url !== url) setUrl(target.url)
+
+      const parsed = parsePublicHttpUrl(target.url)
+      if (!parsed.ok) {
+        setError(parsed.error)
+        return
+      }
       const context: AuditContext = { topicOrQuery: topic.trim(), audience: '', competitorUrls: [] }
       const payload = await fetchPage(parsed.href)
       if (payload.fetchError && !payload.html) {
@@ -101,19 +126,26 @@ export default function SiteDiagnosis() {
 
       <form className="site-form" onSubmit={handleSubmit}>
         <label className="field">
-          <span>분석 URL</span>
+          <span>{isElectron ? '분석 URL 또는 브랜드명' : '분석 URL'}</span>
           <input
             type="text"
             inputMode="url"
             autoComplete="url"
-            placeholder="https://example.com"
+            placeholder={isElectron ? 'https://example.com 또는 삼성서울병원' : 'https://example.com'}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
           />
           <span className="hint">
-            선택한 브랜드의 소유 도메인이 자동 입력됩니다 — 다른 페이지를 진단하려면 URL을 바꾸세요. 공개 HTTPS
-            페이지만 수집하며, 사설 IP·로그인 페이지는 진단할 수 없습니다.
+            선택한 브랜드의 소유 도메인이 자동 입력됩니다 — 다른 페이지를 진단하려면 URL을 바꾸세요.
+            {isElectron && (
+              <>
+                {' '}
+                <b>상호를 넣어도 됩니다</b> — 등록된 브랜드면 그 도메인을 바로 쓰고, 아니면 공식 도메인을 찾습니다(판단
+                엔진 호출 1회).
+              </>
+            )}{' '}
+            공개 HTTPS 페이지만 수집하며, 사설 IP·로그인 페이지는 진단할 수 없습니다.
           </span>
         </label>
         <label className="field">
@@ -133,6 +165,13 @@ export default function SiteDiagnosis() {
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+      {resolved && resolved.source !== 'url' && (
+        <p className="hint" role="status" style={{ marginTop: 4 }}>
+          {resolved.source === 'tenant'
+            ? `등록된 브랜드 「${resolved.brandName}」의 소유 도메인으로 진단했습니다 — ${resolved.url}`
+            : `「${resolved.brandName}」의 공식 도메인을 찾아 진단했습니다 — ${resolved.url} (추론값이므로 맞는 사이트인지 확인하세요)`}
         </p>
       )}
       {report && <SiteReportView report={report} />}

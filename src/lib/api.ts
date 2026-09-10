@@ -154,6 +154,31 @@ export async function loadRanking(tenantId: string, weekOf: string): Promise<Ran
   return getJson<RankingView>(`/api/ranking/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`)
 }
 
+/**
+ * 상호(브랜드명)로 공식 도메인을 역추론한다 — Site AEO 진단 대상 결정용.
+ * 판단 엔진(Gemini) 호출 1회가 든다. 확실하지 않으면 서버가 domain을 ""로 돌려준다
+ * (프롬프트가 도메인을 지어내지 못하게 막아 둔다).
+ *
+ * 주의: 한국 사업체의 도메인·주소 회상은 Vercel 리전에서 신뢰할 수 없다 — 호출부가
+ * 데스크톱 앱에서만 쓰도록 게이트한다.
+ */
+export async function inferBrandDomain(
+  brandName: string,
+  region = '',
+): Promise<{ brandName: string; domain: string; industry: string; region: string; address: string } | null> {
+  try {
+    const res = await fetch('/api/infer?kind=identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandName, region }),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as { brandName: string; domain: string; industry: string; region: string; address: string }
+  } catch {
+    return null
+  }
+}
+
 // AI 리퍼럴 트래픽(GA4) — 로컬/데스크톱 백엔드에만 라우트가 있다.
 // 404(웹 배포)와 "GA 미설정"을 구분해 화면에서 다른 안내를 띄운다.
 export async function loadAiReferrals(tenantId: string, days = 28): Promise<AiReferralReport> {

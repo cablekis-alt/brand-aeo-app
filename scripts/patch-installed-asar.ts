@@ -91,7 +91,7 @@ function assertAppClosed(): void {
     console.warn('⚠ 실행 파일을 찾지 못해 실행 여부를 확인하지 못했습니다. 앱이 꺼져 있는지 직접 확인하세요.')
     return
   }
-  let out = ''
+  let out: string
   try {
     out = execFileSync('tasklist', ['/FI', `IMAGENAME eq ${exe}`, '/NH', '/FO', 'CSV'], { encoding: 'utf8' })
   } catch {
