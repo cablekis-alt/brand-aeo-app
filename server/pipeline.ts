@@ -238,27 +238,33 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
   const judge = getJudgeClient();
   const brand = toBrandContext(tenant);
 
-  const [mentionRaw, citationRaw, rankRaw] = await Promise.all([
+  // 판정 호출은 한 번의 왕복으로 모은다.
+  //  - 사실성 호출을 Promise.all 밖에서 await하면 raw call마다 왕복이 2번이 된다(factGraph가 있는
+  //    테넌트에서 판정 구간이 두 배로 늘어난다). 결과값은 같으므로 같이 묶는다.
+  //  - 인용이 0건이면 분류할 URL이 없다. 실측 raw call의 40%가 그렇다. 호출을 건너뛰어도
+  //    아래 citation?.citations ?? [] 경로가 "인용 없음"으로 같은 값을 만든다.
+  const citationPrompt =
+    call.citations.length > 0
+      ? buildCitationClassificationPrompt(
+          brand,
+          call.rawText,
+          call.citations.map((url): CitationCandidate => ({ url })),
+        )
+      : null;
+
+  const [mentionRaw, citationRaw, rankRaw, factRaw] = await Promise.all([
     judge.call(buildBrandMentionPrompt(brand, call.rawText)),
-    judge.call(
-      buildCitationClassificationPrompt(
-        brand,
-        call.rawText,
-        call.citations.map((url): CitationCandidate => ({ url })),
-      ),
-    ),
+    citationPrompt ? judge.call(citationPrompt) : Promise.resolve(null),
     judge.call(buildRecommendationOrderPrompt(brand, call.rawText)),
+    tenant.factGraph.length > 0
+      ? judge.call(buildFactCheckPrompt(brand, call.rawText, tenant.factGraph))
+      : Promise.resolve(null),
   ]);
 
   const mention = parseJsonLoose<BrandMentionResult>(mentionRaw.text);
-  const citation = parseJsonLoose<CitationResult>(citationRaw.text);
+  const citation = citationRaw ? parseJsonLoose<CitationResult>(citationRaw.text) : null;
   const rank = parseJsonLoose<RecommendationOrderResult>(rankRaw.text);
-
-  let fact: FactCheckResult | null = null;
-  if (tenant.factGraph.length > 0) {
-    const factRaw = await judge.call(buildFactCheckPrompt(brand, call.rawText, tenant.factGraph));
-    fact = parseJsonLoose<FactCheckResult>(factRaw.text);
-  }
+  const fact = factRaw ? parseJsonLoose<FactCheckResult>(factRaw.text) : null;
   const factualityClaims: FactClaimDetail[] = (fact?.claims ?? []).map((c) => ({
     claimText: c.claimText,
     claimType: c.claimType,

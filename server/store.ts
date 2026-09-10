@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { readDeletedTenants } from './tenantTombstone.js';
@@ -28,6 +28,20 @@ const DATA_DIR = PIPELINE_DATA_DIR;
 
 async function ensureDir(dir: string) {
   await mkdir(dir, { recursive: true });
+}
+
+/**
+ * 임시 파일에 쓰고 rename으로 갈아끼운다 — 부분적으로 쓰인 파일이 읽히지 않게.
+ *
+ * scorecard-history.json은 **다른 테넌트가 읽는** 유일한 파일이다(getCohortScorecards).
+ * 코호트를 병렬로 측정하면 A가 쓰는 중에 B가 읽을 수 있고, readJsonArray는 파싱 실패를
+ * 조용히 []로 삼키므로 그 브랜드가 코호트 순위 분모에서 소리 없이 빠진다.
+ * rename은 같은 볼륨에서 원자적이다(Windows도 MoveFileEx 대체 의미).
+ */
+async function writeJsonAtomic(filePath: string, value: unknown): Promise<void> {
+  const tmp = `${filePath}.${process.pid}.tmp`;
+  await writeFile(tmp, JSON.stringify(value, null, 2), 'utf-8');
+  await rename(tmp, filePath);
 }
 
 async function readJsonArray<T>(filePath: string): Promise<T[]> {
@@ -96,7 +110,7 @@ export class FileResultStore implements ResultStore {
     const withoutSameWeek = history.filter((s) => s.weekOf !== scorecard.weekOf);
     withoutSameWeek.push(scorecard);
     await ensureDir(path.dirname(historyPath));
-    await writeFile(historyPath, JSON.stringify(withoutSameWeek, null, 2), 'utf-8');
+    await writeJsonAtomic(historyPath, withoutSameWeek);
   }
 
   async getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]> {

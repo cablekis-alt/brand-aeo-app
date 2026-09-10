@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
+import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
 import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
@@ -25,6 +26,11 @@ export interface MeasureBakeResult {
 
 // 자동 추론된 경쟁사를 코호트로 함께 측정할 때 최대 개수(측정량·시간 제한).
 const MAX_AUTO_COHORT = 5;
+
+// 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
+// "브랜드 전체 측정"이 8분을 넘었다. 호출 총량은 여기가 아니라 전역 LLM 슬롯(concurrency.ts)이
+// 잡으므로, 이 값을 올려도 쿼터에 몰리는 양은 늘지 않는다(대기 큐만 길어진다).
+const COHORT_CONCURRENCY = Math.max(1, Number(process.env.COHORT_CONCURRENCY) || 3);
 
 function slugFromDomain(domain: string): string {
   const label = domain.split('.')[0] || 'brand';
@@ -73,8 +79,40 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
   return out;
 }
 
+/**
+ * 측정 결과를 배포용 src/data로 baking한다.
+ *
+ * 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽으므로 아무것도 안 한다.
+ * dev 체크아웃에서만 baking(웹 배포용) + git 반영을 한다 — tsx/git이 없는 설치본에서는 건너뛴다.
+ *
+ * execSync는 이벤트 루프를 통째로 막는다. 그래서 코호트 병렬 측정 중에는 호출하지 않고
+ * (형제 브랜드의 진행 중인 HTTP 요청이 타임아웃 타이머째로 멈춘다) 병렬 구간이 끝난 뒤 모아 실행한다.
+ */
+function bakeForWeb(tenant: TenantConfig, weekOf: string): void {
+  if (packagedDataMode()) return;
+  const id = tenant.tenantId;
+  const seed = SEED_LIVE[id];
+  if (seed) {
+    writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
+    const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
+    writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
+    execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
+  } else {
+    execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
+  }
+}
+
+interface MeasureOptions {
+  /** baking을 호출자에게 미룬다 — 코호트 병렬 측정 중 execSync로 이벤트 루프를 막지 않기 위해. */
+  deferBake?: boolean;
+}
+
 /** 한 테넌트를 측정한 뒤 배포용 src/data에 baking한다. GitHub Actions·로컬 단건 측정이 같이 쓴다. */
-export async function measureAndBake(tenant: TenantConfig, store: FileResultStore): Promise<MeasureBakeResult> {
+export async function measureAndBake(
+  tenant: TenantConfig,
+  store: FileResultStore,
+  options: MeasureOptions = {},
+): Promise<MeasureBakeResult> {
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
   if (!tenant.cohortOnly) {
@@ -110,20 +148,44 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
     //    본 브랜드보다 "먼저" 측정해 같은 주차 코호트에 포함시킨다.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
       const existingById = new Map((await loadRuntimeTenants()).map((item) => [item.tenantId, item]));
-      const drafts = cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT);
-      const done = new Set<string>([tenant.tenantId]);
-      for (const draft of drafts) {
-        if (done.has(draft.tenantId)) continue;
-        done.add(draft.tenantId);
+      const seen = new Set<string>([tenant.tenantId]);
+      const targets: TenantConfig[] = [];
+      for (const draft of cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT)) {
+        if (seen.has(draft.tenantId)) continue;
+        seen.add(draft.tenantId);
         const existing = existingById.get(draft.tenantId);
         // 기존 경쟁사면 본 테넌트로 재측정(코호트 재확장 없이), 없으면 cohortOnly 초안.
-        const target: TenantConfig = existing ? { ...existing, autoCohort: false } : draft;
+        targets.push(existing ? { ...existing, autoCohort: false } : draft);
+      }
+
+      // 경쟁사끼리는 서로를 참조하지 않으므로 병렬로 측정한다. 실패한 브랜드는 건너뛰고
+      // 나머지로 코호트를 만든다(경쟁사 하나의 실패가 본 브랜드 측정을 막지 않는다).
+      const measured = await mapWithConcurrency(
+        targets,
+        COHORT_CONCURRENCY,
+        async (target): Promise<{ tenant: TenantConfig; weekOf: string } | null> => {
+          try {
+            console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
+            const result = await measureAndBake(target, store, { deferBake: true });
+            return { tenant: target, weekOf: result.weekOf };
+          } catch (err) {
+            console.error(
+              `[measureAndBake] 코호트 경쟁사 측정 실패 ${target.tenantId}: ${err instanceof Error ? err.message : err}`,
+            );
+            return null;
+          }
+        },
+      );
+
+      // 미뤄 둔 baking — 병렬 구간이 끝나 진행 중인 호출이 없을 때 순서대로 실행한다.
+      // 본 브랜드보다 먼저 해야 본 브랜드 baking이 코호트 순위를 최신 값으로 다시 계산한다.
+      for (const item of measured) {
+        if (!item) continue;
         try {
-          console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
-          await measureAndBake(target, store);
+          bakeForWeb(item.tenant, item.weekOf);
         } catch (err) {
           console.error(
-            `[measureAndBake] 코호트 경쟁사 측정 실패 ${target.tenantId}: ${err instanceof Error ? err.message : err}`,
+            `[measureAndBake] 코호트 baking 실패 ${item.tenant.tenantId}: ${err instanceof Error ? err.message : err}`,
           );
         }
       }
@@ -154,20 +216,7 @@ export async function measureAndBake(tenant: TenantConfig, store: FileResultStor
     engines: pipeline.enginesUsed,
   });
 
-  // 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽는다.
-  // dev 체크아웃에서만 src/data로 baking(웹 배포용) + git 반영을 한다. tsx/git이 없는
-  // 설치본에서는 이 단계를 건너뛴다.
-  if (!packagedDataMode()) {
-    const seed = SEED_LIVE[id];
-    if (seed) {
-      writeFileSync(seed.bank, readFileSync(`data/${id}/question-bank/${tenant.questionBankVersion}.json`, 'utf8'));
-      const analyses = JSON.parse(readFileSync(`data/${id}/${weekOf}/question-analyses.json`, 'utf8')) as unknown;
-      writeFileSync(seed.an, JSON.stringify({ tenantId: id, weekOf, analyses }, null, 2) + '\n');
-      execSync('npx tsx scripts/rescore-all.ts', { stdio: 'inherit' });
-    } else {
-      execSync(`npx tsx scripts/publish-tenant.ts ${id}`, { stdio: 'inherit' });
-    }
-  }
+  if (!options.deferBake) bakeForWeb(tenant, weekOf);
 
   return {
     ok: true,

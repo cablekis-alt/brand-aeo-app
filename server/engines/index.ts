@@ -1,4 +1,5 @@
 import type { Engine } from '../../src/prompts/types.js';
+import { withLlmSlot } from '../concurrency.js';
 import { ClaudeEngineClient } from './claudeEngineClient.js';
 import { ClaudeJudgeClient } from './claudeJudgeClient.js';
 import { GeminiEngineClient } from './geminiEngineClient.js';
@@ -15,6 +16,18 @@ import type { EngineClient } from './types.js';
 const USE_MOCK = process.env.USE_MOCK_ENGINES === 'true';
 
 const engineClients = new Map<Engine, EngineClient>();
+
+/**
+ * 모든 실제 LLM 호출을 전역 슬롯 안에서 실행하게 감싼다 — 동시 호출 상한을 한 곳에서만 잡는다.
+ * 수집·판정·사실확인·브랜드 추론이 전부 이 경로를 지나므로, 코호트를 병렬로 측정해도
+ * 쿼터에 몰리는 총량은 LLM_CONCURRENCY를 넘지 않는다.
+ *
+ * latencyMs는 클라이언트 내부에서 재므로 슬롯 대기 시간은 포함되지 않는다 —
+ * 저장된 지연값은 여전히 "호출 자체가 걸린 시간"이다(대기까지 섞으면 엔진 비교가 망가진다).
+ */
+function limited(client: EngineClient): EngineClient {
+  return { call: (prompt) => withLlmSlot(() => client.call(prompt)) };
+}
 
 function createEngineClient(engine: Engine): EngineClient {
   switch (engine) {
@@ -33,7 +46,7 @@ export function getEngineClient(engine: Engine): EngineClient {
   if (USE_MOCK) return new MockEngineClient();
   let client = engineClients.get(engine);
   if (!client) {
-    client = createEngineClient(engine);
+    client = limited(createEngineClient(engine));
     engineClients.set(engine, client);
   }
   return client;
@@ -86,9 +99,9 @@ export function getJudgeClient(): EngineClient {
   if (!judgeClient) {
     const id = resolveJudgeEngineId();
     // 키 없는 클라이언트는 생성자가 throw한다 — 그때는 id도 기록하지 않는다.
-    if (id === 'claude') judgeClient = new ClaudeJudgeClient();
-    else if (id === 'openai') judgeClient = new OpenAiJudgeClient();
-    else judgeClient = new GeminiJudgeClient();
+    if (id === 'claude') judgeClient = limited(new ClaudeJudgeClient());
+    else if (id === 'openai') judgeClient = limited(new OpenAiJudgeClient());
+    else judgeClient = limited(new GeminiJudgeClient());
     judgeEngineId = id;
   }
   return judgeClient;

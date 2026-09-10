@@ -112,12 +112,30 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
 }
 
 /**
+ * 오버레이·설정 파일 갱신을 프로세스 내에서 직렬화한다.
+ *
+ * 아래 영속화는 read-modify-write다. 코호트를 병렬로 측정하면 두 브랜드가 같은 스냅샷을
+ * 읽고 각자 push한 뒤 덮어써, 먼저 쓴 등록이 조용히 사라진다.
+ * (파일 잠금이 아니다 — 이 파일들을 쓰는 건 서버 프로세스 한 곳뿐이라는 전제에 기댄다.)
+ */
+let persistChain: Promise<unknown> = Promise.resolve();
+function serializePersist<T>(task: () => Promise<T>): Promise<T> {
+  const run = persistChain.then(task, task); // 앞선 작업이 실패해도 줄은 계속 흐른다
+  persistChain = run.catch(() => undefined);
+  return run;
+}
+
+/**
  * 테넌트를 런타임에 영속화한다.
  * - dev 체크아웃: base config(tenants.config.json)에 append.
  * - Vercel / Electron 패키징: base config는 읽기전용이므로 오버레이(쓰기 가능)에 저장.
- * 이미 있으면 조용히 넘어간다(중복 append 방지).
+ * 이미 있으면 조용히 넘어간다(중복 append 방지). 호출은 서로 직렬화된다.
  */
-export async function persistTenantForRuntime(tenant: TenantConfig): Promise<void> {
+export function persistTenantForRuntime(tenant: TenantConfig): Promise<void> {
+  return serializePersist(() => persistTenantForRuntimeUnlocked(tenant));
+}
+
+async function persistTenantForRuntimeUnlocked(tenant: TenantConfig): Promise<void> {
   if (process.env.VERCEL || packagedDataMode()) {
     const overlay = await readOverlay();
     if (!overlay.some((item) => item.tenantId === tenant.tenantId)) {
