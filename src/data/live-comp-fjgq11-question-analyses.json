@@ -1,57 +1,9 @@
 {
   "tenantId": "comp-fjgq11",
-  "weekOf": "2026-W36",
+  "weekOf": "2026-W37",
   "analyses": [
     {
       "questionId": "v1-001",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-001",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-001",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-001",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
@@ -64,7 +16,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-001",
@@ -80,7 +33,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-001",
@@ -96,250 +50,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.com/gunsan-si-south-korea/stays/pensions?utm_source=openai",
-          "domain": "airbnb.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.com/rooms/1215788658127492218?utm_source=openai",
-          "domain": "airbnb.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gunsan.go.kr/tour/m2153?utm_source=openai",
-          "domain": "gunsan.go.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://travel.allthatreview.com/%EA%B5%B0%EC%82%B0%EA%B0%80%EC%A1%B1%ED%8E%9C%EC%85%98top3-2/?utm_source=openai",
-          "domain": "travel.allthatreview.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://us.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
-          "domain": "us.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://us.trip.com/hotels/pension/city/kr/gunsan.html?utm_source=openai",
-          "domain": "us.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/guest-house/city/kr/kunsan.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/theme/homestay/city/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.booking.com/hotel/kr/gunsan-seongsanae-pension.ja.html?utm_source=openai",
-          "domain": "booking.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.agoda.com/gunsan-gunsan-bed-amp-breakfast-pension/hotel/gunsan-si-kr.html?utm_source=openai",
-          "domain": "agoda.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension?utm_source=openai",
-          "domain": "cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://tdugod.tistory.com/33?utm_source=openai",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.keyzard.cc/woniovehotwo/nb/224094835194?utm_source=openai",
-          "domain": "keyzard.cc",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-002",
@@ -350,61 +62,80 @@
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
-        {
-          "raw": "https://movemecompar5008.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EC%97%AC%ED%96%89-%EC%98%A4%EC%85%98%EB%B7%B0-%EC%88%99%EC%86%8C%EC%99%80-%EA%B0%80%EC%84%B1%EB%B9%84-%EC%A2%8B%EC%9D%80-%ED%98%B8%ED%85%94-%ED%8A%B9%EC%A7%95-%EB%B0%8F-%EC%82%AC%EC%A7%84-%EC%A0%95%EB%A6%AC",
-          "domain": "movemecompar5008.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
         {
           "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
           "domain": "yeogi.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tdugod.tistory.com/33",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "unknown",
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
+          "raw": "https://hotel-iu.tistory.com/1320",
+          "domain": "hotel-iu.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
           "domain": "kr.trip.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "cozycozy.com",
-          "ownerType": "unknown",
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
-          "domain": "airbnb.co.kr",
-          "ownerType": "unknown",
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
           "domain": "youtube.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
+          "domain": "site.onda.me",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": "선유도 씨에스타 펜션 & 풀빌라",
+      "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-002",
@@ -416,45 +147,33 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://tdugod.tistory.com/33",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "unknown",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://shyness-crown.tistory.com/316",
-          "domain": "shyness-crown.tistory.com",
-          "ownerType": "unknown",
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://hotel-iu.tistory.com/645",
-          "domain": "hotel-iu.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
+          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EB%AC%B4%EB%85%80%EB%8F%84%E2%80%A7%EC%84%A0%EC%9C%A0%EB%8F%84",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
-          "domain": "kr.trip.com",
-          "ownerType": "unknown",
+          "domain": "trip.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "cozycozy.com",
-          "ownerType": "unknown",
+          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
+          "domain": "onda.me",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -463,7 +182,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-002",
@@ -477,43 +197,37 @@
         {
           "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
           "domain": "yeogi.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "http://sunyudosiesta.co.kr/",
           "domain": "sunyudosiesta.co.kr",
-          "ownerType": "unknown",
+          "ownerType": "competitor-owned",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tdugod.tistory.com/33",
           "domain": "tdugod.tistory.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
           "domain": "allstay.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
           "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/pools",
-          "domain": "airbnb.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -522,55 +236,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-003",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-003",
@@ -581,12 +248,13 @@
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [],
-      "topRecommendation": "예약 플랫폼",
+      "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-003",
@@ -602,7 +270,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-003",
@@ -618,55 +287,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-004",
@@ -682,7 +304,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-004",
@@ -694,134 +317,63 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-poolvilla-pensions-best-5",
-          "domain": "kr.hotels.com",
+          "raw": "https://www.youtube.com/watch?v=NafIQ7sY_OE",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://xn--9b2ba68dm5s36o86jwxg.kr/",
+          "domain": "xn--9b2ba68dm5s36o86jwxg.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/alltrip/post/5-best-private-pensions-for-family-staycation",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
+          "raw": "https://www.mk.co.kr/news/economy/9813560",
+          "domain": "mk.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/blog/private-pension/",
-          "domain": "kr.trip.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EA%B8%B0%EB%8F%84/%EA%B0%80%ED%8F%89%EA%B5%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=c25a9111-7584-40ca-b65b-c73fe61e3de2",
-          "domain": "korean.visitkorea.or.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pzip.kr/family-hanok-poolvilla/",
-          "domain": "pzip.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.gyeongju.go.kr/tour/page.do?mnu_uid=2340&con_uid=7511&cmd=2",
-          "domain": "gyeongju.go.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pzip.kr/summer-village-resort-best10/",
-          "domain": "pzip.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/south-korea/stays/family-friendly",
-          "domain": "airbnb.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://goldvalley.co.kr/186",
+          "raw": "https://goldvalley.co.kr/236",
           "domain": "goldvalley.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EC%83%81%EB%82%A8%EB%8F%84/%EB%82%A8%ED%95%B4%EA%B5%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/guide/stay/%EB%82%A8%ED%95%B4+%ED%92%80%EB%B9%8C%EB%9D%BC.html",
-          "domain": "kr.trip.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://allstay.com/alltrip/post/5-best-kids-friendly-pensions-near-seoul",
-          "domain": "allstay.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
           "raw": "https://tournwine.com/entry/%EC%84%9C%EC%9A%B8-%EA%B7%BC%EA%B5%90-%EA%B0%80%EC%A1%B1-%EC%97%AC%ED%96%89%EC%9D%80-%EC%97%AC%EA%B8%B0-%EB%8C%80%EB%B6%80%EB%8F%84-%EC%9D%B8%EA%B8%B0-%ED%82%A4%EC%A6%88%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-Best-7",
           "domain": "tournwine.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://pzip.kr/%EA%B0%80%EC%A1%B1%EB%8B%A8%EC%B2%B4-%ED%82%A4%EC%A6%88%ED%92%80%EB%B9%8C%EB%9D%BC/",
-          "domain": "pzip.kr",
-          "ownerType": "unknown",
+          "raw": "https://kr.trip.com/blog/private-pension/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/alltrip/post/best-5-yangpyeong-accommodation",
+          "raw": "https://allstay.com/alltrip/post/5-best-private-pensions-for-family-staycation",
           "domain": "allstay.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "http://www.staytp.kr/",
-          "domain": "staytp.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://oneulbamn.com/category/17",
-          "domain": "oneulbamn.com",
-          "ownerType": "unknown",
+          "raw": "https://pzip.kr/poolvilla8-12/",
+          "domain": "pzip.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://kr.hotels.com/go/south-korea/blog-kids-poolvillas-best-5",
           "domain": "kr.hotels.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.hotels.com/go/south-korea/blog-private-poolvilla-pensions-best-5",
+          "domain": "kr.hotels.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
@@ -830,43 +382,12 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-005",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "openai",
+      "questionId": "v1-004",
+      "engine": "gemini",
       "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
@@ -878,166 +399,13 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-005",
       "engine": "gemini",
       "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://tournwine.com/entry/%EC%97%AC%EB%A6%84%EC%97%90-%EC%97%AC%ED%96%89%EA%B0%80%EA%B8%B0-%EC%A2%8B%EC%9D%80-%EC%B6%98%EC%B2%9C-%EA%B3%84%EA%B3%A1-%EA%B0%90%EC%84%B1-%ED%8E%9C%EC%85%98-5%EA%B3%B3-%EC%B6%94%EC%B2%9C",
-          "domain": "tournwine.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-gangneung-ocean-view-pensions-best-4",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EA%B8%B0%EB%8F%84/%EA%B0%80%ED%8F%89%EA%B5%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://jinitrip.com/yangpyeong-watchflower-family-pension/",
-          "domain": "jinitrip.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B0%80%ED%8F%89%EA%B5%B0%ED%99%94%EC%95%85%EC%82%B0%EA%B3%84%EA%B3%A1",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pzip.kr/%EA%B2%BD%EA%B8%B0%EA%B0%95%EC%9B%90-%EA%B0%90%EC%84%B1%EC%88%99%EC%86%8C-%EB%8F%85%EC%B1%84%ED%92%80%EB%B9%8C%EB%9D%BC/",
-          "domain": "pzip.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=sJ2-o0_lIbk",
-          "domain": "youtube.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://oneulbamn.com/",
-          "domain": "oneulbamn.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B0%95%EB%A6%89%EC%8B%9C%EA%B0%95%EB%A6%89%ED%95%AD",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/exhibition/10445",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-poolvilla-pensions-best-5",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B0%95%EB%A6%89%EC%8B%9C",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "계곡 펜션",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B0%80%ED%8F%89%EA%B5%B0%EC%9C%A0%EB%AA%85%EA%B3%84%EA%B3%A1",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://bravomidlife.tistory.com/entry/%EC%97%AC%EB%A6%84%ED%9C%B4%EA%B0%80-%ED%95%84%EC%88%98-2025-%EA%B0%80%ED%8F%89-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-BEST-7-%EC%B4%9D%EC%A0%95%EB%A6%AC",
-          "domain": "bravomidlife.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B0%80%ED%8F%89%EA%B5%B0%EC%96%B4%EB%B9%84%EA%B3%84%EA%B3%A1",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=04120812-f2c9-4396-863a-8d56dc877337",
-          "domain": "korean.visitkorea.or.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/alltrip/post/the-5-best-private-pool-villas-for-family-trip",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-pool-pensions-best-5",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/1000088348",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://oneulbamn.com/",
-          "domain": "oneulbamn.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
@@ -1046,329 +414,61 @@
         {
           "raw": "https://trends.yanolja.com/trends/%EC%84%9C%EC%9A%B8-%EA%B7%BC%EA%B5%90-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EC%97%AC%EB%A6%84-%ED%9C%B4%EA%B0%80/",
           "domain": "trends.yanolja.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tournwine.com/entry/%EC%97%AC%EB%A6%84%EC%97%90-%EA%B0%80%EA%B8%B0-%EC%A2%8B%EC%9D%80-%EC%A0%84%EB%82%A8-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EA%B0%80%EC%9D%B4%EB%93%9C",
+          "raw": "https://coolr.tistory.com/entry/%EA%B2%BD%EA%B8%B0%EB%8F%84-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-%EC%A1%B0%EC%9A%A9%ED%95%9C-%EA%B3%84%EA%B3%A1%EC%97%90%EC%84%9C-%ED%9E%90%EB%A7%81-%EB%82%A8%EC%96%91%EC%A3%BC-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-%EB%B2%A0%EC%8A%A4%ED%8A%B8-5",
+          "domain": "coolr.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://bravomidlife.tistory.com/entry/%EC%97%AC%EB%A6%84%ED%9C%B4%EA%B0%80-%ED%95%84%EC%88%98-2025-%EA%B0%80%ED%8F%89-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-BEST-7-%EC%B4%9D%EC%A0%95%EB%A6%AC",
+          "domain": "bravomidlife.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tournwine.com/entry/%EC%97%AC%EB%A6%84%EC%97%90-%EC%97%AC%ED%96%89-%EA%B0%80%EA%B8%B0-%EC%A2%8B%EC%9D%80-%EC%96%91%ED%8F%89-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-7",
           "domain": "tournwine.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-poolvilla-pensions-best-5",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/guide/stay/%EB%82%A8%ED%95%B4+%ED%92%80%EB%B9%8C%EB%9D%BC.html",
-          "domain": "kr.trip.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/exhibition/10445",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-gangneung-ocean-view-pensions-best-4",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B0%80%ED%8F%89%EA%B5%B0%EC%9C%A0%EB%AA%85%EA%B3%84%EA%B3%A1",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EA%B8%B0%EB%8F%84/%EA%B0%80%ED%8F%89%EA%B5%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EA%B8%B0%EB%8F%84/%EA%B0%80%ED%8F%89%EA%B5%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://pzip.kr/%EA%B2%BD%EA%B8%B0%EA%B0%95%EC%9B%90-%EA%B0%90%EC%84%B1%EC%88%99%EC%86%8C-%EB%8F%85%EC%B1%84%ED%92%80%EB%B9%8C%EB%9D%BC/",
-          "domain": "pzip.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://schan1701.tistory.com/29",
-          "domain": "schan1701.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://ace333.tistory.com/entry/%ED%98%B8%EA%B0%B1-%ED%83%88%EC%B6%9C-%EA%B2%BD%EC%A0%9C%EC%A0%81%EC%9D%B4%EA%B3%A0-%EC%95%88%EB%9D%BD%ED%95%9C-%ED%8E%9C%EC%85%98-%EA%B3%A0%EB%A5%B4%EB%8A%94-%EB%B9%84%EB%B2%95%EA%B3%BC-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8",
-          "domain": "ace333.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://jungkm20.tistory.com/entry/%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%8B%9C-%ED%95%A0%EC%9D%B8%EB%B0%9B%EB%8A%94-%EB%B0%A9%EB%B2%95%EA%B3%BC-%EA%BF%80%ED%8C%81-%EC%B4%9D%EC%A0%95%EB%A6%AC",
-          "domain": "jungkm20.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr",
-          "domain": "cozycozy.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr",
-          "domain": "cozycozy.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://sellonessoul.tistory.com/38",
-          "domain": "sellonessoul.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/south-korea/stays/pensions",
-          "domain": "airbnb.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://lasblancas.kr/blog/pension-by-price-recommendation-complete-guide-info",
-          "domain": "lasblancas.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": "전화 직접 문의(다이렉트 예약)",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": "라엘펜션",
-      "brandRank": 1,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": "야놀자",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.waug.com/ko/themes/661",
-          "domain": "waug.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/playwings/magazine/%EB%B7%B0%EC%99%80-%EA%B0%80%EC%84%B1%EB%B9%84%EB%A5%BC-%EB%AA%A8%EB%91%90-%EC%9E%A1%EC%9D%80-10%EB%A7%8C%EC%9B%90%EB%8C%80-%EA%B5%AD%EB%82%B4-%ED%8E%9C%EC%85%98-5__1qsyxLb0Bi2x4YUEzENPXa",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hakoplan.tistory.com/entry/%EC%84%9C%EC%9A%B8-%EA%B7%BC%EA%B5%90-%EA%B0%90%EC%84%B1-%ED%92%80%EB%B9%8C%EB%9D%BC-BEST-3-30%EB%8C%80-%EC%BB%A4%ED%94%8C-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EC%8A%A4%ED%8C%8C-%EC%88%99%EC%86%8C-%EC%B6%94%EC%B2%9C",
-          "domain": "hakoplan.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/playwings/magazine/%EB%B7%B0%EC%99%80-%EA%B0%80%EC%84%B1%EB%B9%84%EB%A5%BC-%EB%AA%A8%EB%91%90-%EC%9E%A1%EC%9D%80-10%EB%A7%8C%EC%9B%90%EB%8C%80-%EA%B5%AD%EB%82%B4-%ED%8E%9C%EC%85%98-5__1qsyxLb0Bi2x4YUEzENPXa",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://pzip.kr/forest-view-accommodations/",
           "domain": "pzip.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://jik3253.tistory.com/21",
-          "domain": "jik3253.tistory.com",
-          "ownerType": "unknown",
+          "raw": "https://allstay.com/alltrip/post/the-5-best-private-pool-villas-for-family-trip",
+          "domain": "allstay.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.myrealtrip.com/contents/136",
-          "domain": "myrealtrip.com",
-          "ownerType": "unknown",
+          "raw": "https://kr.hotels.com/go/south-korea/blog-poolvilla-pensions-best-5",
+          "domain": "kr.hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B0%95%EC%9B%90%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pzip.kr/%EA%B2%BD%EA%B8%B0%EA%B0%95%EC%9B%90-%EA%B0%90%EC%84%B1%EC%88%99%EC%86%8C-%EB%8F%85%EC%B1%84%ED%92%80%EB%B9%8C%EB%9D%BC/",
+          "domain": "pzip.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tournwine.com/entry/%ED%9A%A1%EC%84%B1-%EA%B3%84%EA%B3%A1-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-5-%EC%88%98%EC%98%81%EC%9E%A5-%ED%8E%9C%EC%85%98%EB%B6%80%ED%84%B0-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%8F%85%EC%B1%84%ED%8E%9C%EC%85%98%EA%B9%8C%EC%A7%80",
+          "domain": "tournwine.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -1377,7 +477,189 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-005",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-006",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://v.daum.net/v/KVvv9mEQJZ",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tourtoctoc.com/news/articleView.html?idxno=3173",
+          "domain": "www.tourtoctoc.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/QTZbXMhLop",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.hotels.com/go/south-korea/blog-private-poolvilla-pensions-best-5",
+          "domain": "kr.hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.hotels.com/go/south-korea/blog-private-poolvilla-pensions-best-5",
+          "domain": "kr.hotels.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-007",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://hakoplan.tistory.com/entry/%EC%84%9C%EC%9A%B8-%EA%B7%BC%EA%B5%90-%EA%B0%90%EC%84%B1-%ED%92%80%EB%B9%8C%EB%9D%BC-BEST-3-30%EB%8C%80-%EC%BB%A4%ED%94%8C-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EC%8A%A4%ED%8C%8C-%EC%88%99%EC%86%8C-%EC%B6%94%EC%B2%9C",
+          "domain": "hakoplan.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pzip.kr/%EA%B2%BD%EA%B8%B0%EA%B0%95%EC%9B%90-%EA%B0%90%EC%84%B1%EC%88%99%EC%86%8C-%EB%8F%85%EC%B1%84%ED%92%80%EB%B9%8C%EB%9D%BC/",
+          "domain": "pzip.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.waug.com/ko/themes/661",
+          "domain": "waug.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/QTZbXMhLop",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.tourtoctoc.com/news/articleView.html?idxno=4241",
+          "domain": "tourtoctoc.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-007",
@@ -1389,27 +671,57 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://kr.hotels.com/go/south-korea/blog-poolvilla-pensions-best-5",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
+          "raw": "https://www.tourtoctoc.com/news/articleView.html?idxno=4241",
+          "domain": "tourtoctoc.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://v.daum.net/v/QTZbXMhLop",
+          "domain": "v.daum.net",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://pzip.kr/%EA%B2%BD%EA%B8%B0%EA%B0%95%EC%9B%90-%EA%B0%90%EC%84%B1%EC%88%99%EC%86%8C-%EB%8F%85%EC%B1%84%ED%92%80%EB%B9%8C%EB%9D%BC/",
           "domain": "pzip.kr",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allstay.com/alltrip/post/best-5-gangneung-pool-villa-pension",
+          "domain": "allstay.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EA%B2%BD%EA%B8%B0%EB%8F%84/%EA%B0%80%ED%8F%89%EA%B5%B0",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://allstay.com/alltrip/post/namhae-pool-villa-top-5-for-couples",
+          "domain": "allstay.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.waug.com/ko/themes/661",
           "domain": "waug.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/playwings/magazine/%EB%B7%B0%EC%99%80-%EA%B0%80%EC%84%B1%EB%B9%84%EB%A5%BC-%EB%AA%A8%EB%91%90-%EC%9E%A1%EC%9D%80-10%EB%A7%8C%EC%9B%90%EB%8C%80-%EA%B5%AD%EB%82%B4-%ED%8E%9C%EC%85%98-5__1qsyxLb0Bi2x4YUEzENPXa",
-          "domain": "allstay.com",
-          "ownerType": "unknown",
+          "raw": "https://1percentclub.kr/%EA%B5%AD%EB%82%B4-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%8F%85%EC%B1%84-%EC%9E%90%EC%BF%A0%EC%A7%80-%EA%B0%90%EC%84%B1-%EC%88%99%EC%86%8C-best-3/",
+          "domain": "1percentclub.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pzip.kr/tea-and-jacuzzi/",
+          "domain": "pzip.kr",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -1418,55 +730,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-008",
@@ -1482,7 +747,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-008",
@@ -1498,7 +764,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-008",
@@ -1514,157 +781,8 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "'라엘펜션'에 대한 구체적인 정보가 검색 결과에 나타나지 않아, 해당 시설에 관한 공식 웹사이트나 상세한 이용 후기 자료를 찾지 못했습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "혹시 '라엘펜션'이 다른 이름으로 알려져 있거나, 지역(예: 강원도, 전라남도 등)이나 숙소 타입(예: 펜션, 리조트 등)을 함께 알려주실 수 있다면 더 정확한 정보를 찾아보는 데 도움이 될 것 같습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "원하시면 '라엘펜션'이 위치한 지역이나 특정 특징(예: 바닷가, 숲속, 수영장 있음 등)을 알려주시면, 해당 지역 내 유사한 숙소 추천이나 시설 조사를 도와드릴 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션(또는 로엘펜션으로 표기되는 경우도 있습니다)에 대한 시설 및 이용 후기 정보를 정리해 드릴게요.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/3002945?utm_source=openai",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션의 시설은 주로 자연 속에서의 편안한 휴식을 제공하는 데 초점을 맞추고 있습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-009",
@@ -1673,59 +791,7 @@
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "혹시 찾으시는 **라엘펜션의 정확한 지역(예: 사천, 양평, 원주, 가평 등)**이 따로 있으시다면 말씀해 주세요.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://kr.object.iwinv.kr/etc/45365/0329.html",
-          "domain": "kr.object.iwinv.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10050101",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://luela.co.kr/f_bbq.php",
-          "domain": "luela.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10051255",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "문의하신 '라엘펜션'이 대표적인 독채 풀빌라인 **양평 ‘빌라엘라(Villa Ella)’**를 의미하시는 경우, 주요 시설과 특징은 다음과 같습니다:",
+          "sentence": "만약 위 숙소 외에 **특정 지역(예: 제주, 가평, 강화 등)**에 있는 다른 '라엘 펜션'을 찾으신다면, 지역명을 함께 말씀해 주시면 더 정확한 시설 정보를 안내해 드릴 수 있습니다.",
           "sentiment": "neutral"
         }
       ],
@@ -1735,50 +801,32 @@
         {
           "raw": "https://www.yeogi.com/domestic-accommodations/87172",
           "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.facebook.com/villaella88/",
-          "domain": "facebook.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10050101",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10050101",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EC%96%91%ED%8F%89%EA%B5%B0%EC%84%9C%ED%9B%84%EB%A6%AC%EC%88%B2",
           "domain": "yeogi.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
           "raw": "https://kr.object.iwinv.kr/etc/45365/0329.html",
-          "domain": "kr.object.iwinv.kr",
+          "domain": "iwinv.kr",
           "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://www.arteresort.com/",
-          "domain": "arteresort.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "supportsBrandMention": true
         }
       ],
       "topRecommendation": null,
@@ -1786,384 +834,64 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-009",
       "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "'라엘펜션'은 지역이나 정확한 상호에 따라 유사한 이름의 숙소들이 여러 곳 있어 주요 시설에 차이가 있을 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
+      "callIndex": 2,
+      "mentioned": false,
+      "mentionSentences": [],
       "competitorMentions": [],
-      "shareOfMention": 1,
+      "shareOfMention": 0,
       "citations": [
         {
           "raw": "https://nol.yanolja.com/stay/domestic/10050101",
           "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.lecielpension.com/",
-          "domain": "lecielpension.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.hue.oneulbamn.com/service/list_detail?p_id=vivas&startdate=20260725&enddate=20260726&ppnum=2",
-          "domain": "m.hue.oneulbamn.com",
-          "ownerType": "unknown",
+          "raw": "https://www.youtube.com/watch?v=7mxn7-juJ04",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.yeogi.com/domestic-accommodations/87172",
           "domain": "yeogi.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.lecielpension.com/rooms/5",
-          "domain": "lecielpension.com",
-          "ownerType": "unknown",
+          "raw": "https://kr.hotels.com/ho1184392352/leusielpensyeon-gapyeong-hangug/",
+          "domain": "kr.hotels.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://priviatravel.com/hotel/view/155308",
+          "domain": "priviatravel.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://nol.yanolja.com/stay/domestic/3015576",
           "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/54756",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션과 다른 펜션을 비교할 때 고려해야 할 몇 가지 중요한 요소는 다음과 같습니다:",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션과 다른 후보 펜션들을 비교할 때는 숙소의 형태(풀빌라, 독채 여부)와 여행 목적(커플, 가족, 모임 등)에 맞춰 아래의 핵심 기준들을 체크해 보시는 것이 좋습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션을 포함해 다른 숙소 후보들과 꼼꼼히 비교할 때 살펴보면 좋은 핵심 체크포인트는 다음과 같습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션을 포함해 후보에 둔 여러 펜션을 비교할 때는 여행 목적(커플, 가족, 친구 모임 등)에 맞춰 다음과 같은 핵심 포인트들을 중점적으로 살펴보는 것이 좋습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "특정 지역(가평, 거제 등)의 라엘펜션과 비교하고 계신 다른 펜션명이 있다면 함께 알려주시면 구체적인 차이점을 비교해 드릴 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": "개별 바비큐 여부",
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "openai",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "'라엘펜션'이라는 이름의 숙소에 대한 검색 결과가 현재 확인되지 않습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "“라엘펜션”이라는 이름을 가진 숙소가 여러 지역에 있을 수 있어서 정확한 장소를 알 수 없지만, 일반적인 펜션 예약 시 가격대를 기반으로 설명드릴게요.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "특정 “라엘펜션”의 정확한 위치나 공식 사이트, 예약 플랫폼을 알려주시면 해당 숙소의 최신 요금 정보를 좀 더 정확하게 안내해드릴 수 있어요.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
-          "domain": "jik3253.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
-          "domain": "jik3253.tistory.com",
+          "raw": "https://tourvis.com/hotel/hotels/155308",
+          "domain": "tourvis.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://jik3253.tistory.com/entry/%EB%8B%A8%EC%96%91-%ED%8E%9C%EC%85%98-%EC%98%88%EC%95%BD-%EC%99%84%EB%B2%BD-%EA%B0%80%EC%9D%B4%EB%93%9C?utm_source=openai",
-          "domain": "jik3253.tistory.com",
+          "raw": "https://kr.trip.com/hotels/yeosu-hotel-detail-54642531/le-ciel-pool-villa-pension/",
+          "domain": "kr.trip.com",
           "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.myrealtrip.com/union/products/3190304?adultCount=2&checkIn=2026-07-24&checkOut=2026-07-25&childCount=0&isDomestic=true&providerRoomId=&roomCount=1&segment=&utm_source=openai",
-          "domain": "myrealtrip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.expedia.co.kr/Gapyeong-Hotels-Gapyeong-Leupuang-Pension.h73664695.Hotel-Information?utm_source=openai",
-          "domain": "expedia.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "\"라엘펜션\"이라는 숙소에 대한 구체적인 정보나 요금 관련 검색 결과가 현재까지 확인되지 않습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "정확한 요금 안내를 원하시면, 아래 정보를 알려주세요: - 라엘펜션의 위치 (예: 강원도, 경기 가평 등)",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/78706?utm_source=openai",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.ssg.com/item/itemView.ssg?itemId=1000564498952&utm_source=openai",
-          "domain": "ssg.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "http://rajeps.co.kr/sub/reservation1.php?page=3",
-          "domain": "rajeps.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://xn--oi2b90bk8d.com/?page_id=1303",
-          "domain": "xn--oi2b90bk8d.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/83071",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://xn--oi2b90bk8d.com/?page_id=1303",
-          "domain": "xn--oi2b90bk8d.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10045710",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "'라엘펜션'이라는 이름은 여러 지역에 유사한 명칭(예: 양평 빌라엘라, 원주 루엘라, 사천 아르떼리조트 라엘 객실 등)으로 존재하거나 일반 감성 펜션 형태가 많습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10051255",
-          "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
@@ -2171,30 +899,6 @@
           "domain": "kr.object.iwinv.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
-        },
-        {
-          "raw": "https://m.shoppinghow.kakao.com/m/search/q/%EC%96%91%ED%8F%89%20%ED%92%80%EB%B9%8C%EB%9D%BC%20%EB%8F%85%EC%B1%84%20%ED%8E%9C%EC%85%98",
-          "domain": "m.shoppinghow.kakao.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.waug.com/ko/accommodations/9979",
-          "domain": "waug.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "http://luela.co.kr/reserinfo.php",
-          "domain": "luela.co.kr",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
         }
       ],
       "topRecommendation": null,
@@ -2202,120 +906,17 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
-      "questionId": "v1-011",
+      "questionId": "v1-009",
       "engine": "gemini",
       "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "openai",
-      "callIndex": 1,
       "mentioned": true,
       "mentionSentences": [
         {
-          "sentence": "라엘펜션이 좋은 후기를 받는 이유는 여러 가지가 있을 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "openai",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션의 후기가 좋은 이유는 여러 가지가 있을 수 있어요.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "openai",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "라엘펜션이 좋은 후기를 받는 이유는 주로 다음과 같은 점들 때문입니다:",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "**라엘펜션**은 방문객들의 실제 이용 후기에서 높은 만족도를 얻고 있으며, 후기에서 공통적으로 자주 언급되는 주요 장점들은 다음과 같습니다.",
-          "sentiment": "positive"
-        },
-        {
-          "sentence": "> **참고:** 방문하시려는 '라엘펜션'의 특정 지역(예: 가평, 남해, 양평, 제주 등)이나 정확한 지점명을 알려주시면 해당 숙소의 상세한 객실 타입, 부대시설 및 리뷰 포인트를 더 구체적으로 확인해 드릴 수 있습니다.",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "‘라엘펜션’(또는 빌라엘라 등 유사 이름의 독채/풀빌라 숙소)의 후기를 살펴보면 방문객들이 공통적으로 만족하는 몇 가지 주요 이유가 있습니다.",
+          "sentence": "'라엘펜션'이라는 명칭은 유사한 이름을 가진 숙소가 여럿 있어, 주로 찾으시는 대표적인 숙소들의 시설 정보를 안내해 드립니다.",
           "sentiment": "neutral"
         }
       ],
@@ -2323,71 +924,343 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
+          "raw": "https://kr.object.iwinv.kr/etc/45365/0329.html",
+          "domain": "kr.object.iwinv.kr",
           "ownerType": "unknown",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.lecielpension.com/",
+          "domain": "www.lecielpension.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/54756",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.lecielpension.com/rooms/5",
+          "domain": "www.lecielpension.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://nol.yanolja.com/stay/domestic/10050101",
           "domain": "nol.yanolja.com",
-          "ownerType": "unknown",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
       ],
-      "topRecommendation": "라엘펜션",
-      "brandRank": 1,
+      "topRecommendation": null,
+      "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**라엘펜션**과 다른 후보 펜션들을 비교할 때, 후회 없는 선택을 위해 확인해야 할 **핵심 비교 기준 6가지**입니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "라엘펜션과 다른 펜션들을 비교할 때, 여행 인원과 목적(커플, 가족, 친구 모임 등)에 맞춰 아래 기준들을 중점적으로 살펴보시면 실패 없는 선택을 하실 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-010",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**라엘펜션**과 다른 후보 펜션을 비교할 때 여행 목적과 동행자에 맞춰 다음 핵심 포인트들을 순서대로 확인해 보시면 만족스러운 숙소를 고르는 데 도움이 됩니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "국내에 위치한 '라엘펜션' 또는 유사 명칭의 펜션들은 **시즌(비수기·성수기), 요일(평일·주말), 객실 타입(원룸·복층·스파·풀빌라)**에 따라 가격대가 다르게 형성되어 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "> 💡 **참고:** 방문하고자 하는 '라엘' 펜션의 정확한 지역(예: 가평, 양평, 제주, 남해 등)이나 객실 형태에 따라 요금 편차가 큽니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EC%96%91%ED%8F%89%EA%B5%B0%EB%8C%80%EB%B6%80%EC%82%B0",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://jfeeling.tistory.com/m/152",
+          "domain": "jfeeling.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-011",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "'라엘펜션'이라는 상호는 유사한 이름을 가진 여러 숙소가 있어, 찾으시는 숙소의 정확한 명칭이나 지역에 따라 가격대가 다릅니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://kr.object.iwinv.kr/etc/45365/0329.html",
+          "domain": "kr.object.iwinv.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "http://xn--oi2b90bk8d.com/?page_id=1303",
+          "domain": "xn--oi2b90bk8d.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "http://xn--oi2b90bk8d.com/?page_id=1303",
+          "domain": "xn--oi2b90bk8d.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     },
     {
       "questionId": "v1-012",
       "engine": "gemini",
-      "callIndex": 3,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.yeogi.com/domestic-accommodations/87172",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://nol.yanolja.com/stay/domestic/3010765",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EC%96%91%ED%8F%89%EA%B5%B0%EC%84%9C%ED%9B%84%EB%A6%AC%EC%88%B2",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://www.booking.com/hotel/kr/arte-resort-spa-pool-villa.ko.html",
+          "domain": "www.booking.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://kr.hotels.com/ho1082716928/billa-ellai-kasyu-teoki/",
-          "domain": "kr.hotels.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "http://www.hotellink.co.kr/main/lodging/view.php?cidx=C161579406433",
+          "domain": "www.hotellink.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EC%96%91%ED%8F%89%EA%B5%B0%EB%8C%80%EB%B6%80%EC%82%B0",
-          "domain": "yeogi.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://www.yeogi.com/domestic-accommodations/47431",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         },
         {
-          "raw": "https://tripnote.tistory.com/23",
-          "domain": "tripnote.tistory.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
+          "raw": "https://www.yeogi.com/domestic-accommodations/47431",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
         }
       ],
-      "topRecommendation": "라엘펜션",
-      "brandRank": 1,
+      "topRecommendation": null,
+      "brandRank": null,
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 2,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**라엘펜션**은 방문객들 사이에서 주로 다음과 같은 점들 덕분에 만족도가 높고 좋은 후기가 이어지는 편입니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "> **참고:** 방문을 고려 중이신 **특정 지역의 라엘펜션**(예: 가평, 태안, 남해 등)이 있으시다면, 해당 지점의 구체적인 부대시설이나 실제 방문객 후기 포인트를 추가로 확인해 드릴 수 있습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v1-012",
+      "engine": "gemini",
+      "callIndex": 3,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**라엘펜션**의 후기에서 투숙객들이 공통적으로 꼽는 만족 포인트와 평점이 높은 이유는 대체로 다음과 같습니다.",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "*※ 방문하고자 하는 특정 지역(가평, 태안, 남해 등)의 라엘펜션 지점에 따라 세부 시설(스파, 독채, 온수풀 유무 등)은 차이가 있을 수 있으니, 예약 전 원하시는 객실 옵션을 한 번 더 확인하시는 것을 권장합니다.*",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
     }
   ]
 }

@@ -1,5 +1,14 @@
 [
   {
+    "tenantId": "web4ai",
+    "brandName": "스테이,머뭄",
+    "weekOf": "2026-W37",
+    "aeoScore": 30,
+    "at": "2026-09-10T23:50:52.288Z",
+    "durationSec": 109,
+    "source": "local"
+  },
+  {
     "tenantId": "torder",
     "brandName": "t'order",
     "weekOf": "2026-W37",
