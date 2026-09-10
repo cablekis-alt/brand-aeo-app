@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
+import { reconcileCohortRanks } from './cohortRank.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
@@ -220,6 +221,18 @@ export async function measureAndBake(
     at: new Date().toISOString(),
     engines: pipeline.enginesUsed,
   });
+
+  // 코호트 순위를 완성된 집합으로 맞춘다 — 파이프라인은 자기 카드가 저장되기 전에 순위를
+  // 계산해 분모가 측정 순서에 따라 달라진다(cohortRank.ts 참고). 본 브랜드가 마지막에
+  // 측정되므로 여기가 모든 형제 카드가 저장된 시점이다. 실패해도 측정 자체는 살린다.
+  if (!tenant.cohortOnly) {
+    try {
+      const updated = await reconcileCohortRanks(store, tenant.industry, tenant.region, weekOf);
+      if (updated > 0) console.log(`[measureAndBake] 코호트 순위 재계산 — 카드 ${updated}개 갱신`);
+    } catch (err) {
+      console.error(`[measureAndBake] 코호트 순위 재계산 실패: ${err instanceof Error ? err.message : err}`);
+    }
+  }
 
   if (!options.deferBake) bakeForWeb(tenant, weekOf);
 
