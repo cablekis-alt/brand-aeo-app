@@ -61,50 +61,50 @@
       "shareOfMention": 0.16666666666666666,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBk-K7Z-JqGItIikJ_inhY5jEUJ0qjngtXtFfYMmubo6rZ1urWg-oi9SgsSmeHHIhXlowjt61fQdFTP6T6t65UMhtkp_cOqH_7k4auGvldpTgWuDF50W-iMBV69GBVlzya",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSoen03zUSZyVamVLK1ntUINRd-oV10WIpedioT22CyIHvkRe_K8iCTvWGtbORWCsfjVkzrKilRduY0w8KbKWaqBMMUlG1JXuu_ZL2gucLjvV0CJrgd64PbbEyCNSfvzojkfB4RfTYLtpKOgsp",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWoAXh9_SoFIv9O1aHx-Vev9YDiImlCCNdViyNiP5fuEZVBTL312s_akp8LuxhUpnQU3ryINrkeAy-FvCBs-EBa68NSpgiJqf8V15b3jlU9GVsuc-mnupZdGLEu2Grjdyq5sRWpHIFKxGKHCa_nTEMUzxI",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.smedaily.co.kr/news/articleView.html?idxno=320482",
+          "domain": "smedaily.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMJh5rIffhMbObYr2_xlpvVt3V84OURhc3DLCormMHkgK0WZtFGIxxmVooIjhhLoBqOsM-1cGCgC2TQBqETmLIqTTpV3UBLalpc9k75cgUVyqpMLnrSGuPkNbeCHjpUvEdCiAw4Z1JPpQKb-RFqPgjeP6MR1yQDWWMhg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZnCloVZ5JTLgStwuc0aLuKJ5TYYQ2xN2agZED_eCNht66kYw0q9ncoVNV0HtHYKH6O4MtIXaa6CmtrvaBVF-4egIgy0NyNr_M6vgoXGSyUfW4A8AcqSubO4zPOXzbBo1G",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyOAz5pH7uWVOnjsuqphvjt_Sik_CX07HlK_teCef0ZrMSOFCQFRNpXO9kwJ9yBEXk2Xgi3GhwabhwTRXeVDXfIp4th5SLknsvFNQCmz6CgRlkqnrJHcy8vzV-t90Vac8=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvvSdWzPx8eENKsy-8DLxldBJpnGu6MzMhZgAaRI38xwQfN4y_Jy9wdQT7XouAO7SbhMfv9Rnv0Snz1Y9VuJWzFgNlm3UdpHmhgB7eUrfVwWPAXeuxxENsoLp5gfztAkAUQ6adCB3g-OmmVgshEAfe2rfU9DGww0t8Aqo=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxYwQIaiYCHmiL4dHvtOoIgVm-gklQEMz0FpYoNPjFLkaO3NzochdtuCj6poYR1UiRSbil0RDlw0kZSAGgLfaM-sd8cHiyqokQaFh6anrRfhPWJeGF",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -129,7 +129,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-001",
@@ -222,44 +222,44 @@
       "shareOfMention": 0.21428571428571427,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOULa4YmC5DT8Old7Q05aR5RjPtPqZNAmq3MXu1zWbDFtG3vsixnS8Eu428zyekPlD6YtJ08rSGHUQ9eZFq5zYLokYLk8XHA9Jk4Eh239o9ReE3xmVtCrwfEFJpEOnKQr4x1kx7x_4AHCcrDw=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE8XLHEl3XyTSy7VR9I-z1iQdZVvmHlMjnAA9MttRsz-gVWX3HWbj_iSrCJnVro_BmEOGAWQNVtVjvL_MWDX-vrB7Kq6c88mmM6DyJYptkGmX1ON2OamuW5-lVeHtyOb5ULXJGpW1ZPzmdHR4gnpcXaKIvnb6aa",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.meatlovernews.co.kr/news/articleView.html?idxno=10514",
+          "domain": "meatlovernews.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyVKE0lU553GiQ5F3SkLff8qImMj2gN1fUemAfgDtcPJFqqr0fqwjre1_rpynKLdRYrC-EyFLGmiyO98iyqHXfkhYeCUkxJZX74geej6PgSEZDbjOOkiUpAQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tnnews.co.kr/archives/229090",
+          "domain": "tnnews.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-psfdeUcwSoz_IioiaZpVxT6uUnuhH7unK1sYPQu0-8DWDJUT5k4fnYlvWLw7H5f-KH3aTij1dXx3CTFcFy6eDlg6Ea-By6swNZKEALf2jAMptD6EBXPCjSUbSGqoaV0K0zpoMPR9Hm9_X76EVsMBfTYBFFLhdPI=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.donga.com/news/Economy/article/all/20260118/133178399/1",
+          "domain": "donga.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGp_G6sM1YKf1KQyX6cml6iy7DuhUXFs-WPXedzajy6vpS3wmJ7vVvLOje7wUhCw5EOa5VEt3egIU9Jhh9IuvdFQk6G08LI7D9UzlsVhgfD2oTQVHo8EeFSYC7IDOGaxWy4-Ft3l4MlhuX0scVQ-4fhc0bPVdgQv9mz",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "100ssd.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF50NYX6A3Ek90Y-k6POawaI6TYHNIrTSk1mOurWQGIGqN7odfIXA6o7_CWqGe8KXkCNPMnTZJbVJ5EW5Bka4fRTXRtqsAOAANQzCjw0k8phRcufDw_gWO6A_Vkri6N4FUjRICxv8ulYJeDoK6zFCyl",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2qP5hj13RLnlgN56APTZFwKkI08FEf5BaMfJP-CjRUzxUkMg1-pCQu7bzEk__DmUm6Er8CSgIehxHFWqH7BWZNfdWQwlI0btEITARM2lBN_-_ztXP1XE6qSofDk0raQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -291,7 +291,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-001",
@@ -352,69 +352,69 @@
       "shareOfMention": 0.16666666666666666,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_wO6-ZIdQzRZtss-4_27reXOYQHVtSyjyDARtI1kdW1ZPLvoX_eBpRDoI5jOE-LicmFVBiGVEH4o8BwTUm6ZAAYVgFzzBeu5bSpazhf0mu2e7ovcT",
-          "domain": null,
+          "raw": "https://demoday.tistory.com/396",
+          "domain": "demoday.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFl04NKILxSYCX-32xvCNKj1ADRjeJFCIgK8cn_JgerW-rREoipKRxDkO9fyw2zinL4k7SuFoShLvptPCqNErknpOQh0rPYaW2uXj5JG2a4Gqeni83P7aGpULH8TIRjoMp683v3Q8sJoQYWzslSsZUHSWr7CYV4Mg3e2g==",
-          "domain": null,
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.wanted.co.kr/events/article_241028",
+          "domain": "wanted.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxneO7ygQiNHn_eSCiq7Q-nPc1hKAnNJapN6PDRdCvPldrdrC-hJgjBhM9YmrU5cO-wXy3HII3oEqd29PSdE4W5THbSxZa86ItZ05k2ECAbxc3yefYGYeWC6kSoDdr450jFcCN",
-          "domain": null,
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzCiG1q9i6WLWDagEsyFhGZeFuSEBzut4rNY8YsoU0Q4DY6RFfe5onZUGMYHv-8XhFDPOAeH39oDqV-RDU7QL1reRlD15RBhA87wRdptVaD5pPOYM5FU2OIPqzFr-FsHJ0UXrON-nLEqbzsTJK5fWm_cLXzZ24KEc=",
-          "domain": null,
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmJ41Wey8af_sWPDHcf2MbF-Aw0vjIvtuYQrUS5_fNAS5gsNtdUOrqZXUSZRrM8cqy9kswXc0aeuL9FZPRzmIQ52pJXARti7zDxa2dTUgOlG28KfJqww_CtWgSo4gtcoz_",
-          "domain": null,
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbtABHQ-wiFd92sLbVBmQvB9OHaOtXg2eXwIB__Pajd-1Xb5PmSaFvpZpNZSNzdpoYdPRBE20PgdcEKkyFwvreol_pfTyVqqOhvFGwG5pZaJn5-Ss5N7eB8AHYgNr9BX0=",
-          "domain": null,
+          "raw": "https://v.daum.net/v/yzCvUa2XlK",
+          "domain": "v.daum.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMUcDu_KuYT6z9IsNVDEBq9V280VxU0S_sS1zGAXGR7VEprD0Xg0HMRvJXAkBdt30QKgFQM3I0j2Cf8Z_sSI1YzT49Asz0aezMOiRC7SaaKHHVCn5c",
-          "domain": null,
+          "raw": "https://badapayment.co.kr/%EB%84%A4%EC%9D%B4%EB%B2%84%EC%A3%BC%EB%AC%B8-%ED%86%A0%EC%8A%A4%EC%98%A4%EB%8D%94-%EB%B9%84%EA%B5%90/",
+          "domain": "badapayment.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH_BOxvb2qqt7EjW-ghNgt5iAr3PzxS-2gM8iSfmf_h7UOw6QA2CUUb1gV-ldxMLhPDfyL5L-FghpYINnhUpikMqziD8QGXIpl2gTbullHDkfZ9DF2YzRUuuAUsO6X9aUQzFg_4sFZDXpp3ugKX2h6aczt3b_DpIm0Oj9ZRZs0qZXHOpqfHnefFklmDJWAFZRWnAK85-gzxXqChdS0MpNcwUSAXbutwmVkLMJ_nSgkuy5ijoY2bXCw=",
-          "domain": null,
+          "raw": "https://www.youtube.com/watch?v=b-02OoxM2l0",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCNW1ycuw9_kGIHCTxC0_U5BaTZZ7vmha36nU-1_7aDi3m_rUu793yw3r6BX47dFSNc4bFT46kJfDoZLAfn6ecrrVplumLi_4bt8ZtOcTNYtxaZKu3pjGKYbXaZ0rN0WnX",
-          "domain": null,
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQNwsX1nahxuP_Tf0ZwbyWPK3XBQ9H1pWcUOUGx43HJ89AAMZAlEbBy-SRsEqbg3HyQN6SmjzKut7Oq71q4TTtYTNClT2IYbBTWnK2Xf5H7YtsiPSK8S_9lTDRNe9Gp63wgJFO8MqJ3cGr-L3R",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQErongzus-yQ6-npesn8lBpj47UymvCedpEjfHhVO3LDi37K0iuDxmzSJ3viEWAM5ppTFXkvZ6tWFJKJcdmfO2zInZRJqBNun3UJF4cLTeJnlU2nMKpFRjSdEc8ECpI4MAYSfBj_-b6CaCvq4I=",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/ceoGuide/post/card-terminal-pos",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         }
       ],
@@ -438,7 +438,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-002",
@@ -609,14 +609,14 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH73wsuLcLk_inPvEtewDbVjn0GIoKOBUN1DzTEchgde_n1QKqkwKgeNyWO1_nceAMdN0YyJfvp1XQBtm-P1sDG_-i5RcUdQ_VqnLaHd3vj0GX5nOcNHcszfKMOQIVqAg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIhNkN-WJndatsXMQ3gMW5cbepu1r-TnNTvBz8pTNtyU4lO3cFxzWYufT-r1DUyx1wXQ9-dVTIXhPaimcHMckDvEl2tbib-hUTgF33UoCc79ER1p8t9OF9qvhqTQRfrdw-A50BatP1BT_rMYrq19jWfFCdXzwCLkI-7w==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -638,26 +638,26 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDMDvwTZqAwDx-Tpn5Kh65i9yKy5KdXESsTYSfr5gNfXB36VGUuURMUncE1uO2FvGPs9nQFFoA0kPqLqMLTd1Ia7QBTaDCk9LCCTX-U1vMbDXt0BuxbkfEXj1eGUs=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.munhwa.com/article/11429094",
+          "domain": "munhwa.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDjdR40dvVYzBQ8iDGmiwC3PnsN3k3AGL9TATUfEBjtQm3u1IOKAfK2mstphd5XJ7U3klaRGmQyvLPSMnOr4aeGmadwLkx8WWjVhHPiB7wLV7E0FdYVjoP4mPgfEEx1vXxfVH_VCIIEJjHWY0W4nQ0irVfMyLZ4_0yBfI=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcmrP-Pmy6ZZPPpIQJk-pGSwaqhmMECkbrKOXDnbvVNSmr3qUB_hs_hWxJAheRMc8KnINwctYXTPV2G4LVGQLiAQEeAAnt8Hy9KgZcg2Q_8qt-8s9RzA2zYOeRGL30Yjo=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNx6PsaI2coZQbWwdO_tkhhAHmQT-n-oZAy5FCPolnUxCmP5-c-1OHoRm29eEbqCIuiKB4Rjwu0yUh6r1xsWeO2uMu0IxLN235BB8L5yPgNI4s8bYPh2BLfbc0kRDkuKYlbju7_SR0i1ieatJkBHfSR-vC8lsSaKpI4UZpLUgbPMFGQxpNp-ne",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
+          "domain": "chosun.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -679,56 +679,56 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlCYZ9FRFmKzRcvVQ3v9mChSpM3pSrzEDEcD1M78piMjzyUKziTxKTjAwMezdQkTd3EaB4xJuibhxCQdbkJPTpiM7w-nr-c32JIvj2JzaArS8GPWRRtpTKBZKK2ZPq9xZmialhu8gQ_MXDZ8D28W2djUA=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.dailysecu.com/news/articleView.html?idxno=154078",
+          "domain": "dailysecu.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHCQ5rKhunA2SZh4sg9puqT2QyOqRUv-manoIsPfPDn8o_UmUl3cf2LoZqY06m0IHWsqFU9Y6bHL6hN_4tD9aRL3cHPG4PbCtoM-XjRzSYvQKceCK3lzkYSZ3TqpfU=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.munhwa.com/article/11429094",
+          "domain": "munhwa.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFBq04bHOgS7XjEVdLRokMQxGWksxVWeyiG19zjw8ARv-wbFpdp6Xzj96cg0ORkm0aqjXmVsrFLMYNsUFSbV8yIztZcMbpDmFibOL3QTlR2lJiwE39Uqb4cpxczqy29g4o=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHuifVqca7E-qDcjQCF3JYM3wloV6eVSv4_8tWbpMa9EfOY4EweaEiCsuk2jMNYZUT5jnvICdJQRX_J2Aleyfe85fYxcQU9hGKEx5IwS-0tSRkcs5pH",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://v.daum.net/v/yzCvUa2XlK",
+          "domain": "v.daum.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfjciM0i_s1mmeg78zMWJ_7kYrjQTG3JAYE9ud4wTsztWdmS9KlbrcLXZvFUWVoGNcPWejSEhmbXW7lnffs3DA5Nd41trOv6JJ37A1IM-Fc9gtHBG4FAXfMsCMJ3T6ZZPN",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT_Zhq-rpnIxY4N4l1SbIKNRGz1PL-wHsv9g1TWM0spZ3BVe1GgK4Jv7OceAktjZz3QQjwbLSFhCFqN2t4CCQvHzjV6l1YimrxxHK_MQYckhMwTROrQIketOapFXD16XxNOmiQC0ZqwNxB2ufZDb8HwvGa1oo4UkQdmQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tnnews.co.kr/archives/229090",
+          "domain": "tnnews.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdQYNEWn2MQnkJ5oq34RXbRVE9idr6jMEND09ZjdPE7fWCMIVkKolMXXMq9Ye-tZ6kHpCOKgq2NcI3ojV3q78aiD1rEyyz6b3Hn6mD3wyyQpQUjAqWAicQbSs=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-x4a0uqO-4Po_AZYHh_-yEyFcwI60rQ8o_KQziMEddPwSvBSlsI4mcjhCkILwfc6DWfTsZy0XEReCHwTzNEiIDUd4NAFqIrv26_tor11uJuHETDjU5Es3jkaXARPlPrXTR8fOHKKFQBdiws1UY2E31sc78PwfRKJluYQ=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHs8iUTPlI6ikJ9ubdRDzTbo5cMyIZ6KWrjo7KroF--7KdPcoPjRCR4wtfOn8eyDRrr09C0a4fLsP02acTh6HhszLDUV9QRPMO-_6FRxICNQbUNtbgSwwMnOIjancDN1Y6Sahc-nJLuCAOSvteYLC8QJYPIfrVoU4z8mjgnqSfo2WP68StwoWwYw03LSx77sdqG_FKcSUHThQQClh42ecAW65GepRvi2Z-NdOG_2f3Y0g79iqv6TnB0pnwnQJd8jLGc7t3xkcliO_cvS_zckcHib-5FVxo4NpJRUTbXtSHOC05X6ArOD4wZFvY3frelxPbFFB-k0GqAf2OjMbYvO4PK4PYT4uRr9g==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://new-m2m.tistory.com/entry/%EA%B3%B5%EB%B6%80%ED%95%A9%EC%8B%9C%EB%8B%A4-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94%EB%8A%94-%EC%A2%8B%EC%9D%80%EA%B1%B4%EA%B0%80-%EB%82%98%EC%81%9C%EA%B1%B4%EA%B0%80",
+          "domain": "new-m2m.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -738,7 +738,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-004",
@@ -750,50 +750,50 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkGfNwQC53ux44Q5l-FTuQ5DSToYHuausmH-H4QaR2FA0VyU9ZTVpl6P-Ye9MWL99ao4GdY9w61V3kDijv-MVFPMEAJr8UdnfeDnxhNZr2rQPNZkoSNQsiRlR7GNda_mQ=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_yJe-KA4SSc6oyWMM76PKWBe02jkCi3cPhsQR847CdoTmbcOUIHPf8gfQ52gsCe8VFzTBJ6IGqkPdMuI_qJLdzW9FGZNHfBpTbUaEGlraKs9LI_4fbmcqu9W_si2If_-hb7mrH-tMeXFX3T6lhl1jreek1jUdwU5BLmDB4mPqHe5v3iTiKQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://damdaamall.com/category/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94/68/",
+          "domain": "damdaamall.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEax4boqhBQB5Nx-XhD2pA8nfddO0-wZAb7XaWApceRNJeKxUdgEKpnoeidKUBlPLqYVBhTryAICDmrFvWM7Pbt2jNN0zg4UPke2h4bz2SBfqFYXDpzwzTuCNRvtA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.munhwa.com/article/11429094",
+          "domain": "munhwa.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVZKW0yexB-ooNLjEzMkgpn-D3xpb4m2SAe1tbxmN_dBlRjTZQ-EXUHR3tyWaTuAPmsBOLnCm0GUvsxDkkkn4HleUTrdKvkgbHfR5_ed-IzSsSUws=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrhKc9q0wi0JKoCIPmU-xAPoH4vTCY5OgTXJ9hNXQhMOyJsmtydLVNr_8Ura27MgaDkeLopw-xIj-_PPST57Kh-lrMsUjet5a0p36TdWcDe-E7S2WoSDRWBhSjkKxeaaIhIDQ=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/blog/tableorder-tip-pgfees/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwPjN8H7-HndH83KYLfY2rCiBS06BSjfQ4q8XHA_4RzPZP-pT81hzEpB1ugT_Q7PyLEnCVp0jf-G4U_x1sfLr2tPbRZF1Q2kmGVjqs1uRu2i2Pv8CS136xtSRHaZw7t0WeGgyDDx-5xZVp-aKFF8VcIZH4r5j67UWp",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGM_eAtlYUop1pdTFQjrMQ8NdMDYOcvtlO9aV5rpH0cPuf6QM-MiTM6q5ZSgjE-gxJ_LYVHRpqNANW2H2okc3SUIrAwF_WaTBYzmpTLzExnmeZDFR8F0RO_vsFK2tn2bufRbe1-_W-ow7-jOa_8K9BFaHpkUJHEo7cx3g==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRydQA6VOAU-VFrMJxUcsJ1_GdaAFuhnbteKS585DGQDlfDmDmwFmWd6nM0k836D9biKA-STbMyo5ZtRz8N-ef67ZXa3gSW-BOnFlyZOECSFd3UhUMA6hosQDhPr-lwg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -803,7 +803,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-004",
@@ -815,50 +815,50 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHu39sFlzL0VFyUf_lfavSZK0sf6x7fOpPXpT3sqjWDtPodqk7-4rDy4hDavo2nggvW_ld3xMi21KSKCah3vKuMS_VClpnocy-MmFZSlLuVeQVBNL87haBvDujmvdlIIcs4",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEdRdhnk9CUGcv_fBlckhVeNP6Syyk-pHgk8kNMC66YEqmHWhWLj_b8S_RnYGz7Tlh0quXk9OJNTTxLw_41IEOzXbJmEs3NyYBxPHV2K6ui3XCfxF4gB4-5KsvdKztP",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/kiosk-atoz-2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEl33N8M4QwFAP7Px6HYq_puuD9RpLMKVLQuYhlbTDcmzrBsqvYrqQ0UH2Ur1whQYafMoqk6qaM0CnpTs_dV_HPc3YLFM5WwzkPsLaMQuAWa5hJd7s9i4F1ouTQ6zvIDEFiyPZGeHkEcp_4U5N4K0bd1_mt2gHWVf7Nuow2QpbypftoKwhvyuALMEEmUNTabOW-2muj_o68rFhMeI55FWG-kljeaBSQcP_5A6DlROo2n7VGz7GQ3oYwAa87lmC5_fogT-0_8xwFLdDCEuLYjWx894YGdTxbhq076G9rUVvgXbgq7Sxdubp5MElWLLQryqKU6z4dHzTRPceKwUu-ZC6c6uh014GBAzxn2elaU6bRv3Egj52GFvgBgbTFpAXy7xH00vIyF48p3KGF8hrhXd07nog2Dw3YavcRpyB58tgN9NUPiA5lFUFyNeQlR8hKOVeeRNxqLZCT5lrkqV7HLfnESuuiWKcCnn5Gb581CZWxwUDRvw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://kairosre.tistory.com/entry/%EB%A9%94%EB%89%B4%EC%9E%87-%ED%85%8C%EC%9D%B4%EB%B8%94-%EC%98%A4%EB%8D%94%EB%8A%94-%EB%A0%8C%ED%83%88-1%EC%9C%84-%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC-%ED%83%9C%EB%B8%94%EB%A6%BF-%EB%A9%94%EB%89%B4%ED%8C%90-%EC%84%A4%EC%B9%98-%EC%88%98%EC%88%98%EB%A3%8C-%EB%B9%84%EC%9A%A9%EC%9D%80",
+          "domain": "kairosre.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfNM8XsgYupNc7Jcua7F5fmSn6FqEPCEWaXDPPjZeRXcJVLwOBqA1rQ-48pXEuuTD1C-jDH0vhOrKWi99D7qZDQYvUK2xPjOr070oypd7-PEAii3vEeU_cLr3A30kX6qTDbzkaJ6M4p1BolV9JeerR4ew4dy8V2-ZxoRLLNMVdea_HaIdxql2iTMCFQMvnSeaJngD7Ml0UWlGtNEeiMQ7Y6zWcZotWt95QuUnGlDyWsB6BZOC0TQ7y3n6XxpuSJuA1WJ_8iSbl859ax_qKn1Om6ADDBZ98Gfyfn7hcRQsVK8c9BgBRl5VfHa73MGAamwz9KteIWqGeWoctvEQHm9eaZQQuxzUmdiNSZEGBgb8G6Mb1fqdzHHwrmqq5FXDjNwQaHNwGS_Gmfn5-Vt_we2C3bJfrfPST9rqo-9Lek3CTAqLutMXza6mR4B3XiQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://damdaamall.com/product/%EB%A0%8C%ED%83%88-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EA%B0%84%ED%8E%B8%EA%B2%B0%EC%A0%9C-%ED%83%9C%EB%B8%94%EB%A6%BF%EC%A3%BC%EB%AC%B8-%EB%AC%B4%EC%9D%B8%EC%A3%BC%EB%AC%B8%EA%B8%B0-%EB%AC%B4%EC%9D%B8%EA%B2%B0%EC%A0%9C%EA%B8%B0/11071/",
+          "domain": "damdaamall.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ2oy_UxGsBoPxe7F15dGRpHuEGt2UpCiQ_kewwavXGtqZV8kln7_hfQoNxjU0CfhahUnWDkYD4Da0egrWlnWKPcXBVncPC3RgaaPjGPFklngw03yt",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/table-order/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvNgSLs2F_3ZBlGzzZR9jdwrAYc7e6vsznVjpZooTOynRfvnwzvyeoBCTHaxzwRAeyZ4GHjc_kILAEiAS0DNMRTaT-iH-in6PH3aPBmx0zRu6X4WpZ8vFwTrNMxdRmvXU=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW7lRZn4UYo9ey_hcBC_WrFhU_bIDw7P36hHE73f-gQRSm7sxBLSXnn_e6-dvS4c41HFU0o8vzWRz6L22UC0bFhT9bI4bYsr8sOIvvqtU3jnNWML3wbQvrpG9emn3u3XCvx-3JAVOx_ufwMuNn6iC169LijzUSPkQIe-SX1BZvaepWmr7KJRRP",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
+          "domain": "chosun.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVspSCNYmj6vq3DRORq1Qkz6BqB77lP5UHiwcTern4_ijvL69vgc-LcAR99Tc4dkzOlXMTIEKJxH-ItmDdRxaiUpH-y6pTmNPPgVzukweBZdx9lJR3stSWMRQVzN5XRTD3GiwOxpbNB9z8V0vXluyLg5lSZ1m8dAt8Zc4=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -880,38 +880,38 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFeQtFom6HzmwjnuQONSx9LKHpKgvjHD9rb8OXJ7FEeIEBdm-IOXT_HZuJybTPUc4A6d2hwVV32lJV7-QdbsnHr4LoDzYxxOGBrhDqQ7ZIhSnppI5yLVg44KYO6KE1x6bE=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMVjC1WmXOwp1tDakEX5EbD7Neg4b7qdnKCLU0TbrzBl6KhmFZMa8EpumR9TxlIY3rjBHWoZdQZXJPOiR0fxCNnXGh_w0xmEYb2FGW9C1imCkeUyn69FSEx6g5ZSbGmsqO5tRuN5DWg3qh8Ag7sm-O7H6J13nnjgkRg12mIVZFrFp1iZ_BEzE=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.chosun.com/economy/market_trend/2024/10/16/NRQMOG5UGFBNRFTPFMZ7DW3OAE/",
+          "domain": "chosun.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHi14OhMnRflySVpkQR05VXIMKXy6awPfQa8YoLBxg7ravryINKKwtx9bq-m3lnrGX2QAU3LJ6As3u_6sQIXJBgXKcO3aWlVh5YCdgOr61qI6i_FwYWZ9TfJBH6Ms13SA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHz7rDnqLGg6EJvN_EkdG1Rbh5x-RqpL-yeGFPWth3_MYRBhzv7T3btmfrdbMiRN7WoltyNP8fp0jjqpMv6GCWJPIizh4LTQ9BROVLc3ZdzPGcqhvFSEvtMDAq3oEK7ilf3jNXLn-JzHJNRS5Jb1kbnjfXMMDKbhqpjrA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvZvqBbeTe6RlkKJWRpOgU_Bx2ylUyXQZs3O3J8He9JACt7-Krv77UxcqPq_CRw09F-8zCS4PHQ3f92K2_ZBsaNEFokoM6wxmVcNcg8znXmY3McToPzyVrIDgg5eP3cDGJ4tDNLDS36nqRbdg553R4utm159wd-y4Y",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_6T9tRC71e8Q8kxAb9n1n53HZctXWtXaC_aE8fTucRK8dYTIfTGxFBgbKxAIRfSpIgMq69fMkiaE9obujzD94uwvQKyKHU9HU43tbDOfw85Ol1IhN3p4oOlyuPzaq-Oo=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=uITLkiBcNvU",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -921,7 +921,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-005",
@@ -1386,56 +1386,56 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRWf3mNozSWE3CL-QTe4IO7JE5zkL-pQb3JU-iX9_S4UIuMJrpm2umWUJpPd44bt9jYVubqGhAajmI52b3Cx0u1tVNWed5EwNCyN_If3AilX7oCLfhVLvdZoaGQKuOXJTuSdM7hlAz-WgFTREZldaRKZ9N0KjrrZeBVem8dBXle4oOIw0XKEyxagJs0EZ80gZakbiUnXP51Uqc4xuUcLracs7QAYT_B-jUM3Mrsx6goYmmfbTblnd0HYdZwHL6X8reWSlrgpaiJh3DG_oXRhpC1enzabJC9e4H6RKs5UFZrZ6DPbHNL6UjN51DTOplFKM=",
-          "domain": null,
+          "raw": "https://blog-genieone.com/%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%84%A4%EC%B9%98-%ED%95%A8%EB%B6%80%EB%A1%9C-%ED%95%98%EB%A9%B4-%EC%9C%84%EC%95%BD%EA%B8%88-%ED%8F%AD%ED%83%84/",
+          "domain": "blog-genieone.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEib8LbGx7crH3PFKVwwRecrtDyVEM4fhgrMqFCsHMr20Nj9RR1A1qtO-KUbho0-3EUPzQ0uFWVr7fC51CHsN_8Mqk5WoFpWlbznMYlzYxvXVMhUSkjq6htvOOVktTKX8qc0hUHPt5o-cDtXa9SleHIrDXSSTOpaA==",
-          "domain": null,
+          "raw": "https://www.consumernews.co.kr/news/articleView.html?idxno=744862",
+          "domain": "consumernews.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEc9mDCSVD9vTET8naaBN2wbchhqUoVaRjcHyNTTM5XdNcRXPmtuK-3XkJlvzc38BcdXU3HptgADLG-JgHCzm4UMBgCn6MgLPuniPXqEWBtkNSKEiZ7Rey0jKiayg690mWpfKFqxfvA5OsLZqaKqyUQFY3Z3Q==",
-          "domain": null,
+          "raw": "https://payhere.in/blog/table-order-commission-fee-comparison/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvEJYFC7188P9gEXupPfqXxc9rrPuENQP2YCxvVfxPaXobC3FB3dLVnmxVys1ApmMkRl6P5MI9qizX_7MSfUTH0YPt_kyNH2Q8xBiLGl9HPX1XP9y3r4PLa1tkKdsGrUkX6GacxO58Jshm2r1rWV1lgUxXnsDLAFrBMw==",
-          "domain": null,
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20250419026428807",
+          "domain": "m.ekn.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlCE5ze7yjG7Y_krnbICIyCuRL7au8nhoDDyXmig2KuJAHJUjKFd_lx3qBgOwGw95lEFMffaMiqrsYm0uSH5ejYxNJrT5l-Ua0AFWWR-A5pO1tzes5Oh-VMzhrHYRm5BflLzpwuA==",
-          "domain": null,
+          "raw": "https://100sajang.com/article/?idx=170545979&bmode=view",
+          "domain": "100sajang.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHjkpW6eeBnwYTleq0DQsADab3Rw-rGf9kvG7g0nF9fwP45opA2krsGuBkT-ArlORXCLV1_-ymAZYvjDOSPpjwznVSWiY98T1GuCPgGeqNhZx2UIGZ5stcAV5CScqLnlCQLbhLW7ib1kmtCGbW7",
-          "domain": null,
+          "raw": "https://www.lawsee.com/case_detail?id=202511117214049&source=auction",
+          "domain": "lawsee.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH93rz7gWPWYlBd-vCF9gRWnPSWGd1Ykoixk-e4H44u8Acoh_LZ3NhrV48BpQbmtqZS72zwkFkfEXmLaejWE76cJMpP8vPtAYQ7TsTbeRgUvbidOfTfu0Cow6tqLa9MTB8bbapuoMyHCqnAetMyrZf3MBC7Xjod8_H31Q==",
-          "domain": null,
+          "raw": "https://www.imaeil.com/page/view/2024090516382458244",
+          "domain": "imaeil.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIIa23qKfUWrbkX1IW8aB6tHeAzHy09jLsA-BKZfbFnXP2BfWCk0qEadgA-SWMp79REpDaaScnoW594vlKW-5LDtAfM-YW1mpEG9Z0ANS2IbcUd-659zuroVQ3DEhYP-1FoUeIi64BRO3h",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHT5kRAOCSMW6WQ8t3CIN2BJ6G_D7G0hOabJ2vSOU0pF5SEGlY7oNCmg5HB8fV9ZuokohjhaYrQP8UHQW3BcqwyPVJcU61yPhJl_eZhSW_sNNDc14Ik",
-          "domain": null,
+          "raw": "https://v.daum.net/v/GDC2uPV7CG",
+          "domain": "v.daum.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1445,7 +1445,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-008",
@@ -1473,50 +1473,50 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNGzxYkwsfXWdAone3IoF3RRxz8x1FV72hM0XGGCFhezfMdwYSHpUCnsaSKFKclTUKNGyWqEKyHXXQ1sNcS14kMd1d7XQbXnQ1msmRANbOSVvGz9chvXxNWYUcrndHadz7S1hrrpbntWDeaXKiF1kH_7gxohkubQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-necessity",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hantoday.net/news/articleView.html?idxno=44957",
+          "domain": "hantoday.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHz42Hovr8IwdthvsUXrd260tyOjEgxzou5tNWuNuXELKHLQACgy5AIM0vdpV8ocUHqsjC8prXU0GiPpr5h8SBo46k8_Qm9WJKY0vjFgNX1dUw2M8e-RB_O8L_azoEUon_3AfwH9BmELUkeC3YI1wPa",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://honeybee-home.tistory.com/entry/%EC%86%90%EB%8B%98-%EC%9E%85%EC%9E%A5%EC%97%90%EC%84%9C-%EB%B3%B8-%ED%85%8C%EC%9D%B4%EB%B8%94%EC%98%A4%EB%8D%94-%EC%82%AC%EC%9A%A9%ED%95%9C-%EC%8B%9D%EB%8B%B9-%EC%9E%A5%EC%A0%90%EA%B3%BC-%EB%8B%A8%EC%A0%90",
+          "domain": "honeybee-home.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKB5mBh6JJb7tp5FvNrx2HE7YhIso03Er1Zy-VSXOkRHNaZNCsuu_tNlvuCggS67gZoNWQbWTJJucJVF8dNkOy_R2s9Ghb1b0LJKbzK94RN0cZ4g3pLz106sUFq4bXdUg8m0oq2EWROVLzJ1ZvbZ10fwORGGupSRee4HzCzPFRZVWJ4k2PNJdltxceDvykfDrRzDGg0xwuvtPEdtP-aNaiv-BPLFl3bjTu1S1IRoFN2ydMVQRJwyYWbhaNciwiCsVVvUEdv-18H9tv8q3wxlrYvKTfg3nc8CzDkpK8EyxvHmdHUDXSfbOjkSbY5F5WNn5squ0N-yb6hH-iemLa63xB0LcALjd7MidUCCs6DNjBGqDUq5iuzeSEkkiE8NcCOFfUJkJBZIAcc0HIBrg=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/tableorder-atoz",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzocAF9WJ1AmrJmCaOGQwmsPcZbRNHAJxOWQQGFjW8l_pYoJGAj0PsaRngavt2Qy5DxwJlLnRfluIYSZYpDyERntDVu0xFiPOmvnFXOmu7nMQlQGnbX0yZek2a3_T5Rxfq",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzoNFz1el4zwMnQfGKQa05rvwHrVONzNSXdd7OneAeFD2y4ECqMwojqkZ0_v-lqbZ7_bbMnDg1T6awbyNVpull74BGdrS-LUB2CXQDxAYRX3g7VgDR8WN8G_6_89_SD9WsbnGWvlnn3wOZNrOj1t24bFL91eHa2zfIpg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://xn--9m1bt07agwh.com/blog1/?bmode=view&idx=167174496",
+          "domain": "xn--9m1bt07agwh.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHSA9gLWFn8YJIRP-W7vOFeVOn6JFOtdlarlLDotlxrDF8sXzfAaxhgUjCoLy43YuUJuTeCrUray3WcIjogSRZSEDEsvrOS3KgiIf0O3TGyD3XBs_Ayteh1iDLJtdbsqxA=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr0ahWmzJPvlEwbp708o7g2jYX9U_l3j2HP8s4B0AjlgqbkATe8BKTkquh3YnFaD3thZr0OctynyK-Z88EbEgeANZAbQqG2-u3crFCczFlz3vRHXgoSTt5j75ekWLPVeeYWEmUmkOprGKXymMmpX1bDQ==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH38yT50Ftz-IafP2lFlXXvIOhVg5wQ9RJtwv1iPm3NNvDEyVsv_MZQQUezup4ZsVTVmUH8YCo0OqCB4UMNqo27YbCeuVB5zOxWaE8uDSY2Z7bYgfDAtV1qg1oKGONSIKDXtUdWlAkQaZE7GAfxQ4M3oaOGuJu59NBMgd8=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://ishopcare.co.kr/story/table-order-system-small-business-guide",
+          "domain": "ishopcare.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1526,7 +1526,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-008",
@@ -1559,63 +1559,63 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6wUqNiZaAQxl5DG2aOWfBFyudgmHt8S-bOOW5mwqZZEiC9EeH4g2nHOHIAUV5Yq2Pwm2sn0aXacLgqr0WAf6bqtsXeyO40TUIrJM0xnK2Pc7fsvdo-99Vq6n6k0n5AFG-",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQpl_q6Xx0Lcaah_I29kfVTBZStcaCwFuLUoMRHtZNRq2SMHtaezRwSd7MKqudTDTCvyxPGJNgCwgXcYzniStfYH-hBCU0PVBcXrajqqp2jA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.sentv.co.kr/article/view/sentv202503100044",
+          "domain": "sentv.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWolIEPrEqy9NOOTl9P15YToxyh0Q43UtKWvbgOS_X92S8A1GTSP3EgX2otrgwG_Ux-efjNl0yfN27NySld5CkSM_-51lGD3Toj6Mgnt76gnMOGuiYkyrpXnBm8e0VCsEAt_RcLZeg2cY4e-k=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/sales_recipe_2",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAcAqJGxi77WT2QsC0Y4UF0hW42s5PfoyLe2g0G8VDJBtMyoWGoGu0_B6Ix090DeQoo3vuxhcIbhD62q0k0WhNnrShwfrUT6sJTWhQjZoAjp9oQYWBQpVpuQNUNLzaONw=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://web.sosangspace.com/products/47fe651c-017b-4d89-8397-9eecf1e30139",
+          "domain": "web.sosangspace.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFr-IsbWyXR8O2AUOydjek8NwUhOu6eUB74j0rv5O2HQbgUaLUFwMnq7y7NKToPp8SURcoKPGiM-6wy61K7JhmooBDpIMpkKv8J05KOXYnZtLmT9tYHmXnutD8V5S1nIUFcxK4NQH4bnk-XHC0SexzxqMpYY-4chx6kirtn2GHK",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-wFP7mj7XWI7NZ83r0KfqUuBtyImmGEgH_DxtFV5HGKAHCqcq4PBt7wGRzQ9x98BM8RG6VwZr7SFPscO3RUhiDM5AgzKjjtqdxnB8lw==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIu2C3AVX_tPkqb6AD-6JWUeS2bWBIqajO75ZhgjJdJ4JTjZBu8y-ZSC48VmA6lEazfzdx3EqTyyAJ8uRD1imPp0-8aaufMJKxv12NPgWYI2YJiSeGPG1xeDXoEOZJZYw9",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGYSgY_JnMCAcqnzhz0VbVfwvSDwOqc9zj5IXtYMdfTnSFFzqGsPZciQBkwmipIb0adiTSrcRLj9IjQYRG4zvDPlO5Cab1PSjYlmGyOejFQhEZ9Ls-mII=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -1667,7 +1667,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -1684,56 +1684,56 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbSFoAEix-oC9c-Wqt3OsG98ZdnYujTUlwumVXHCO7BkmZh1t7s9uEd_Z3jJlDKuZoOXNzt6gWCTH8O8tO8WYREZ3Vv9C7DgfxIqnn",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZ-WwnetZQ2uVzGmRdKtH-GG2-FOfmc5Xocc3edCPG_AoY95sTMsrI-qoZn3prxp50dplAV2vgPoKtQBSenximnUEXpxkEPN_iXBKsIBUDA6sCGk0xwEkwNT3_RVYd3Vg=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.etnews.com/20250728000074",
+          "domain": "etnews.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0jkL6gKDd5G7n90qDtCgxdfPKpqwmMWCQs0RdXpvasNSrvZhxqNGOFvrE5Yq0rfhNw2_NJRXntMFBMQ4qAUbFfdHdOW9_mj9ROJONN6Y7VwCDY6nQJIvJOEU=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://parkk3962.tistory.com/39",
+          "domain": "parkk3962.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHBJT_Myec_LSo4p2BUlrzvSJsPXx8AHsLZesa9NjaV6XjGYGsB_mcDXSf3uZ8BaKZglcbJV1GTY_fqpu4BqYNkcjhAN7E0iFvn--hfaA8xl0J-bw74",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGdzpN-Gx8UvsLhQ-Kd22G8Hno9t0PTU9caoyk3fC3BqoxZlIdu-4RrsBz3UG7k9TDV89bjceEOXGYRyTPU4J-KK0Z-Z7pNarqFrkGE3qLy",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.news1.kr/industry/sb-founded/5502720",
+          "domain": "news1.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVCPkc2kF1yj4W62jcgzodyzUeLiyXnyGqVJGa6a67VMBrjjeTHBLlTQVXHaJWSlW3dgJ_IgnjqIDP-oDXc-qY_op9t_ijIISY53O_iygTlG5fevpbOlZPIwyeZt7rhCEe2uQHRQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://web.sosangspace.com/products/47fe651c-017b-4d89-8397-9eecf1e30139",
+          "domain": "web.sosangspace.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ-8yMgNebfQM1FXBmcU34e1ngbeNZEi3Ea15lPSE1VioYq6vydg2kAD5VFmRiXnt7uPfLe2cAgFjTi_ja44sbcXcUBrI2G9sTuCXKwQFiqFdhrpA36_X2MAXg358qxZ_UqmPMXOc2YlBd_do_xY_7HRE7BXhLwsWZNhm3W6c=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEr4KDy-9ucnBzpFLnw0PZONuRrE2TWQWCVOs84sRAncAGWNps2EqEvpWiqijGO633U_3jpbygwtQwKFvHrDx9xwD_oaeOfyKJoRD4A1lb15djO1uk6I8uSFiiqix3-CBRnicHAfe0ahLkOV0Q_sgtP3RydhJCpAb1",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeEmkJtyZKj3DLMYEmTmS9K1jLOCB3zVXbDgcEXwrwE6wClBVlK67SraSRxId20IwwaXsbNrDYPKrmoS2PveU03EjKLWH-OzcunZWzN1dsTaLokeJjZwkk0ON6AfIwIa0=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=MJs4W0pQVgY",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -1800,7 +1800,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -1817,56 +1817,56 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2X_ISMYUVeLc9iW1K21SZKKHt91UVhWMznkDUYnd0Iidtu0uJaHQrEPaIUv6dYwbuxi17aKhVJY8q9OCmVnY2tR6HO4WnUtPkWwoygRPFxmtG0nnDHR0mwB2k9G0S2lAs",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://zdnet.co.kr/view/?no=20241206173523",
+          "domain": "zdnet.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrBwvM96ly05nVWakmn6tJWpH7oqae4lBpID74Xe7jgrziGNU2-Ym5jKR9aiViknlWcbg0mKf1wUFXi8FT3ZOTW9npjyr-15chuVfwhOQIpvGqJf83Lw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://parkk3962.tistory.com/39",
+          "domain": "parkk3962.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlRVTDjBPfsk95zVzihV7ItcLIpP-2Kqh5mokBicAd2jB-y44Sq5Z4C7F6MAqzdvyJIlMY8QQN-PnthTz6RIZSFAXwXWKUDm5bDjXTRk5ugQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE362wzCrxBVMMv7mCbi0fUuYei_M5vh_jGfgYKlOZPN4UalIRN027_qEb4QeTst-H6o1-Lz7uCANZD-9L8uEWa-zqilYAwP9JUV2OYgu_fwHvZD3VFSAY=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.etnews.com/20250728000074",
+          "domain": "etnews.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1LhfBruT8a9HYnTFHeiOS3i1Y80s8Dg0KxDOQQf-kOQJTvQVVIiUJP5jo7DdZqjZuFr41Ev25K04CwXGhc1ArxNmrccb4VmPA2fDakTd-WVKn-cf3CZ68_eT8",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.sentv.co.kr/article/view/sentv202503100044",
+          "domain": "sentv.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG9t6yndMTV6hLOMbmyr8eihSo3nbBfqzgUrD-q9qCi1lFcYuetqTx_o6wGEnPTw8Mu1ujHkwCLwmyd3sTe2lV3pKlXL9uyWd6FgTBivjcMWKYYD0OhWH8RwRW68wc_OgJerfy6bDbCtOVVtd4=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it16.tistory.com/2",
+          "domain": "it16.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwvxApV0KVSEzwaJrcoszmT7yP4HzlSnc42wgNAqtjbivZZ3uUfdu34wPPVEIBu8wPrsO9TpBU-hZbI6AE3H3eT-fnHgnDNo5N_yroPjWrIg==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/tableOrder",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE362wzCrxBVMMv7mCbi0fUuYei_M5vh_jGfgYKlOZPN4UalIRN027_qEb4QeTst-H6o1-Lz7uCANZD-9L8uEWa-zqilYAwP9JUV2OYgu_fwHvZD3VFSAY=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlRVTDjBPfsk95zVzihV7ItcLIpP-2Kqh5mokBicAd2jB-y44Sq5Z4C7F6MAqzdvyJIlMY8QQN-PnthTz6RIZSFAXwXWKUDm5bDjXTRk5ugQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -1926,7 +1926,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -1981,44 +1981,44 @@
       "shareOfMention": 0.2,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6RtaYPgJ2nIPAAIzZF5k1V8flDoJ8lA0df3JYJhizp9x0D0iaY8BpuJjIX3Hm2OdkrnhtEGPf-u4cvPlzwBH-qsmwGrwNDJykfbb_dkQfnLr8ne-qDaUzt_V93BureWBsYJkIYhAhhIcbsWM=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEY5xR_uh-68f6vGGkoEx6AaDfyM_F3NHZjF9LFJxd-0u0mw0vKaeu4CJ3w1xL02BYG5qp6ZEHFRY-ajbsCeeiUQlM7fhYgn1tSWN7n11Vnj-UlDLVU37NRgV-EPJHo2zTTodPVMRLpChyOJM0dluJU",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "100ssd.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUbU2epbRHlRf2NNn9sp9Cc7ElwN681e2Q8bK8efmS_jqIz6xC8dqBrxwLqr6loS8U8Z0c4rpAGGlNKmlvP8A9j_Ure5n58Fbin9qdcVFb",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVxBeinNTIkTTUMsECzAHOFWqmZ6vTrCuwLDhcbemDcu4dll5OhmKnZyA0cXCdsbWuXSDwWXzhZwq7I2ej3hJONpKGKpRSI1vC_k3wmAtmsQvlkh-_00M-M1aEGB5L69hmofxeMtYs21GIPWG8zLCLvfsI3BrOVa5m",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=h2n10aCZ5sg",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDumivuQbTRKr8kR-k5DPN9pQxt2Xmj7g5eErfkmoPHx-qfk8-cdCDHRl6MPpEm2rj6TDh3fEIvi4EuSESEi2ES2oaxY9LJqt_w9twIhibUrZYyW36oNfgx70VVVnvVWo=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=46587",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjXNE0GbSdywTfUSW09Oc6aMnzJyJu9bmOPtIhXIk7gbsdLao2btvQ0sLWs0n2CTvX_1-AumGN8MtcL3OC_HBgCcYHde2AzCdWuITi4jEhAftebR3iwiFJGAgOkfOjvpsriypbZCSfbi_O01U=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXZdhz0VPmq1qOTJnM64vmYmepw1_qNdpp_NMdT0jQ3Uqao4F2vSxzMJMuEcJuOxlFBDwr3w-pHL-8ZDpFurV-At8FVIWOlMR8jAZ6bFL-mY34up68sxEhStFra_p4VP2zN4rZW_5l75aYfmzk0pOwiKvk",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
+          "domain": "nextdaily.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2057,7 +2057,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -2124,32 +2124,32 @@
       "shareOfMention": 0.5,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2nypva6TSMYFehiv2LH-yt0YXCESv7FydoiTEBFZtryKXVBPZqzmSRtyDzF5_fM3hzqXfx-6NHDxqoXirRmMtRiJAAC_2BSVpg4SKtH_cI-7uDWi3jTPglXElaaPD19nbdzb6jGJXpkSYi6ie",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEG4HLMuGbds2KTwYZq_zOazg7JY2yqQnO9nWVer4lKCSVQ0vJddQ03u5KA5foF3QWjNAumshnzDF78XZ3umu4prI4NeGTRwHTaahgB_xbZICi2UZhjznq8yGK37IHmpoRSYJyNnoN3Ku0aMQt9Ugj3Kf6w",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.seoultimes.news/mobile/article.html?no=2000058774",
+          "domain": "seoultimes.news",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgCIn-aEoJ0SLub15MLjEEZp5ulXmjCQLdDVbfS5XZbGDDavrZYlQSGukCtgZ4XnAnyX-eWySG2sOW_dv-oMNtOsy4RRg6o4PJ_4-zv2ofmXe53BUSQFS9dbVBQebav0Thx1nNUtBPIPLfrgrCGLUfglvjGWkRopDbow==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-choice-guide",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvLwbDYMKs8vqC2y-LDN3AWCgkallmVsDj_VbuCRQz7rZEJM7zggebmXzjUwCCdn04pAJTvjuG04gq0ufhE8aPXu6foul1bEmOCF_V1Y5_8A==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGocWypoacGpDYwTra3t5AMm7Xik_oqoGSbmGvCX2s36UXi_uKkQWpYe7VCVD0eeLKjLWXycGu4BCecdHsNDlqAoTNYOnDTbolJlcrVHjXUjYaJe6dVy8YG6NZV0Pb-PN63O_h4z1M_4ob1XjAzAyghHZxhWg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
+          "domain": "nextdaily.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2181,7 +2181,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -2244,32 +2244,32 @@
       "shareOfMention": 0.2857142857142857,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcWSCGcDSRkfnASOCLHRbbMj5flsGH1__kAFUNgjsUfsE0mt1tZaGs8rNdF3O2MBWLJRzbLzEtbuFON8I3aQ6JMizjVK-fLhc03V4I9zblrn_AsVhMuM2UlqpnYu6k8lzff6IOiT8AezMY-ZFQ",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eroun.net/news/articleView.html?idxno=47021",
+          "domain": "eroun.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmWn0eg922uCoRI2rNvKp51gmRu9HQtC2mRpeCLGElRxPOrVOHu9oLEAlWaUzpg3VpGKpmPV4_iUl0HVj9B8g9wLhTZYqFwUaxN8Xg28_i0iuQZ8X-eFNtlFUsuL4RCDFxkl6SG_wNxW9NkfKRL4cQcg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.100ssd.co.kr/news/articleView.html?idxno=114019",
+          "domain": "100ssd.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFDhX4-XqvXucvqZgfhN2XCaL95imOWiRExU0hRdfjc0S-lFza0dja5NLBcV-wg722NSwKY-VlmwavT2KML1DGum6zKmuLrv3lnIGFvfrQR7g==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://it14.tistory.com/4",
+          "domain": "it14.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzruK5vqdNthSeapSv9FJ3HBpEGSmS16kMtW4OW2cGois5S9Hm0Pl-mkP6dMaH61Pz_6EB6lJ4ZU3TtHFmQlN1W8AT43sQk5PWK2LXzpP4pIYd0rCsx2DgzRDVfcdqwr-550S5FZN-SLhIGbA0Oc0psPnLFZOTvbY=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/ceoGuide/post/knowhow-tableorder-difference",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2aVOyrdrmUo9bnu2wHC00FRcvykf2ZQi1EV3Aybl0klPg6xQCVHzMXfc7tuOBC1Ll8eAFnvNfFdG3VKMlIicbxhXSkJy3DAi0aBVYeGTdBcGUOTj-47pe9HsVwzlJZjtlGU9RQOcrD6OPtxkeO2T1O3Wd6g==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.nextdaily.co.kr/news/articleView.html?idxno=230390",
+          "domain": "nextdaily.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2322,7 +2322,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -2393,38 +2393,38 @@
       "shareOfMention": 0.5555555555555556,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwueAtcGF7AgvVVQ-FyPBjiWVjwJUAydYB-hkaGFn9JfdaZRj6uQZukyAycP-oov_SI61iuo9Uk-79DXvpkPi1rbP7sZX71WOjpmC54GyvUT_EHP47Av8lQZYFw9He6Yc_kM3LPA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
+          "domain": "menumon.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwueAtcGF7AgvVVQ-FyPBjiWVjwJUAydYB-hkaGFn9JfdaZRj6uQZukyAycP-oov_SI61iuo9Uk-79DXvpkPi1rbP7sZX71WOjpmC54GyvUT_EHP47Av8lQZYFw9He6Yc_kM3LPA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
+          "domain": "menumon.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwEkykrwYEP6Z9i3ASoe-xrkukeQtaK6amwVYvnJtuMDQ1bRtJuM7RzMbdxLf9-zNUo7GZHePQAz3XoMpZ0JQh79GtUPxYkUeC6B5d-0Ei9EqObaQpm-TWaA5IqOfKVTNUWCn-NgIJxBC6NAcVdZC7WT1fmZcazOc=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDv0oJp_mFEUXwSt7flwY1NdqC4ADQRCu074vE_kwmwG1MX_WVQbgJs2Xif4DLF2FdIxPhuN3QcVe-Ub5vZgTkrmrMHguG2gPWc_4aVSsVloDrzYyvi68YwxF8nSY27Tv9V4uPM0UtZrZXanxZKikx",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.pressman.kr/news/articleView.html?idxno=103268",
+          "domain": "pressman.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHumJ_XqETcVFIxYxAudr1etCvyLilPsrej_IlWmHj8twtAWW2_6-xvV_4dPivc_LTHahaE6vgHkV2eBhPteDTTDEFR8WcEPqHiSO3lCOfg8Byv6_w4Cw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://yodamoney.tistory.com/98",
+          "domain": "yodamoney.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfLEgDYs8xr7QoyGvThaSBYF7jeJDyV7aLoBmWNW_lXSbYqTybwgBthjWPRrXnbYl0WeQP4pndxQhJSTicNr-GovleMAAe3aR1qQhkcMOm9eXKF229w6oNqp-yl0UmrvFq-jMAAaf3KjTWBvA=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://tossplace.com/story/prevent-tableorder-missing",
+          "domain": "tossplace.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2473,20 +2473,20 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFyMLexZ8DoEVyoKgFyfrrG6rQxQ9zBVZRCba7rP7e9q9uYPZglKyXVfoWkG-8jMx0IKe-seaM4Cib2sZLfevV96hXXB87qJcPGRlaPT5MT5-MLW7-sFhJ7z-cXB3aNeaVQdHhBr7Oltyl7LmdxIaiwoAa8FP0M8DQ=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/blog/table-order-provider-comparison-checklist/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcjeOgGDQ4wUfi9eqov_oe1Ypa8ErdYx7dh7pfW137SInKCUhRePgugjFip1Z1QTbUcl_rsrCEi_hgIgZN_SjSrl2Gxqi1_ETlzOWz6A==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHj0vQvvFTZd4lqPzmSRsoSsomsNxZli-v8VC7UQzHtUwRO1uNj1ASLNIuzkTIx1dGASHQr0nDFOepp6DP_2cdNN7YNbCKqpV1GS-YZMfz7jxJ5",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://payhere.in/food/all/",
+          "domain": "payhere.in",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2511,7 +2511,7 @@
       ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -2547,14 +2547,14 @@
       "shareOfMention": 0.25,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENzEbRfI8maBt9_g8OonfngEiuzJ7oHqmhNBl-LJDFvh20pE2JQi2r7psVu7sKOM_apf6PZCS5FQjWjiMcR-8CTJr-nFN8GYBMdd4rBFK-woZw_KG_uw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://yodamoney.tistory.com/98",
+          "domain": "yodamoney.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkyxddUofx0huFTDrfNUkFZlGhp1K2Bl9CJ2CdJC27yP-jhkb7vEG8ahpIDUgcr2Z6udieQ69CnoPWorA51J9XkAoHW2VrHIfZ5C89dQDOvHvoK--NjHlnY4wSBS1riPJ0M1Se1g==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://menumon.kr/assets/pdf/menumon_guide.pdf",
+          "domain": "menumon.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2597,21 +2597,21 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGceil_bEq0LvklWqufqfJf3ULYczUuK8rTtEkIZLvzhfQmkJDwXgo3sc_cZro-x5rZgtC1q_ph4q7tH-y7t_B4FmxmfxuiYWGZSYdYqraxV2bhlMvrLKakMFm_172BF_0lLjM=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.hankyung.com/article/2026011651456",
+          "domain": "hankyung.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6vE72ockxJla71xfMnm5T9IzHT550TR1vp40DbP9gh8PEiDloaOzXczNfM57pKlVGaU-EMRBPsdLOO9oFYXjEYEkZx_ioGTuqYraGtLZ8ep3_p6gCHZRFpMbKGceGp_bZSXPmmOYLaN6wuFtlLG8nb_n93JUORcd_-CFKQyfH3--UqG1Y",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://plus.hankyung.com/apps/newsinside.view?aid=2024020711315&category=&sns=y",
+          "domain": "plus.hankyung.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxcq9r0iVOW2ah9NPKw7vsqmPGRvUCenDmHVqqn9vlXfj7OasbmuqAHAl3UwVfkcjS0FzEj1ZZKKK5oxZk8QaHPBT9xErRY3bUJZ8Eb19dGS8CtWo=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/partners",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
@@ -2655,7 +2655,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -2692,32 +2692,32 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGa2yn_Wou2vA1iGraKsDVrYXC2_Xhqjoi-l6wqdhKluAYDSgVEqpy7BcI0KbWYfsJtLaLt12Dc-to3-dNpHhq-l5O_7IKMW_ZMTdYftDDPQWnyBeKLTqMW_ntRyK-zmBZ2mjg=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.hankyung.com/article/2026011651456",
+          "domain": "hankyung.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF6GtTPWqPPlsFbKaD5oXNma5Ljc1LkBVL2KEiu_cVOv_6YX180BKR51m7eLY4jndhMjDpKLtsZotdkTsWH3JOh82iRWBIoJpq9rKPl0jX",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/faq",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.torder.com/franchise",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://m.ekn.kr/view.php?key=20240207001425123",
+          "domain": "m.ekn.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-vhpTcntKS0-r5YQ2-Pn64Jixlv8VrTTPjbJZHCgeAA7JYU47QrUZvWRUFdtRMDAyP84TLk_BaxKwQhkDDeBQTHzVpmn1GEAPT7Jd-iYWw7XZXtfM",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHWe9DRzoG5u7womRO7lm7TiGIsPco3Ziw3AxMUCrcGzpArogPAZBWkt3iltvzcRYXxrhTAfPKr8MO8V7SRccfZgcH0RHLXfM3I45DlgkDb7PeYp3YEaE2QAF5cvknagUHe0cDB",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoshDM5nbM3ve4xrJxc-vJ8IDfLoUawxKs5nfTV7WtcawijRaeub-MsA_UnYT64b0xaE7WcV39KHQWmQxhv_ESqGj6mLxzLnucleTGbk45FpG37ny39DHoSoh_Ynl4eg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://v.daum.net/v/20260622103023823?f=p",
+          "domain": "v.daum.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2770,7 +2770,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -2812,26 +2812,26 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGuYXzRQZlMyYoa8_NL4eiCEMrDLXcPwEDxAF7knU9BjjAtzzpwXNCuqFNlt9qh8HmDzOQvxjuIPXVHK2vsUVoxV3ar5vuPHVvQiKanA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.torder.com/",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.hankyung.com/article/2026011651456",
+          "domain": "hankyung.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbW-7bbw4d3ahTSrI6NvEahbhi8UgDYupl4T81kU_dUCqV0BuXA7aaYOCPgTT7ji-Wal1A0-grgg60uaV_-NhyJCkt-wzvdOTpiowxluiqAJa3k4aeGCOAhE9C99WveR0BJpP1",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.torder.com/franchise",
+          "domain": "torder.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7jd8pmEroVIAde8bF2SqRhstGl2BJWAZN4_SR8y15VVr4g1N4Carty37yPFMX7HrUqHf8y_COwyokTy1KUAznVxCHw2y7s85wx4w2FkWvCvFdib2EUA==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEOysEQ84gV8zNpUR9MGh3s6si66fYiUm9GW4JCi7tKPAPd2J0kD_837ndK1pIZGepFOuXjDh3fpDcRDGsuJ1GwfcxOexSHrzVO848LrUrczsJFYllmZwJ8eBLVoi9K5nm5WrPiw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://m.ekn.kr/view.php?key=20240207001425123",
+          "domain": "m.ekn.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2877,7 +2877,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     }
   ]
 }

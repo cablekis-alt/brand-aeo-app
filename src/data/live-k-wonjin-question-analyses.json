@@ -494,14 +494,14 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHu3_dU6vOmgmBeEGa5KPmwXxCU8mfYnHBSgYPlzI2XX2EEpe-LiTRUKRRumDtqWRMrOMjJeHMQLMuG1tob0kWxL6ewvrq6Y54QqE2dFaEws31MRGIB1vxlvjMKrBkSmGCooSCGDYIFjkwqbZ23wf0TcPa0sMs=",
-          "domain": null,
+          "raw": "https://medieus.com/sub_detail/hospital_detail.asp?hos_num=23770",
+          "domain": "medieus.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEr6NIUEz-IYwqEkHKkygjGIozVcrs1UST4_aH0FGAohtXSNQ1aYQ7jHqIQj27QWgZTwyxZ2PJpV1yae3RPAaAs9s_KylktQ9fxEK74",
-          "domain": null,
+          "raw": "https://www.dm-prs.com/",
+          "domain": "dm-prs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1203,33 +1203,33 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4Y_7Bfu7Ntn8WUYcTj4hWhrHrbek7gpmq6_qCZCoDWed9FJKyQOg1zgl_YlrkLtnwaWfuJDUFs3TIlTvMMNxUS0n09LM58M6OJxPimBuTclChDruM6RJnh9rREXKso1Y=",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/Consult/Baro",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/Consult/Baro",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pf.kakao.com/_bxflzE",
+          "domain": "pf.kakao.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEhFbSdrq-IU4EIaH6ytC-EUBc0RBgGdzEMsOwvEUWN5EFKj5IDmVahmVq85HSkEmAPo6tdVNcCah8hwViXbMpX5x5516-rCS31xG6K_TsgDMYi3PI4qTe6dxMFlg==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5I1Oa36Qtc-8Vou8alDc-yYObklcP039FQzDUxuD19uqRY7B8c93RkYp7UueXA4AsBpyWCvN2rQdTyr4ySVlvLbsLamSgAFAUKI07mXb-sVBbRMbx8N-PHlo=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3p7nQzyUkDaTSRaLNI3waeGUX4l4pTjhCqiHhv8QZ6GJ_ao4mzE28sZVzjVPSZbv5ICOuaXnIwArcKSNmam8B-_l_urDJBUCLzd_I46XO-88=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0nBA_HQ6GOj97GMeaGsjFsqq_pMUaPTPBfDrnQq9PQwjML0alvsRNLndytYvM_B74XqShtgvoG7Ipr180YM-VH0FX9eDnkkeePAugaiAiNw==",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://www.k-wonjin.co.kr/",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         }
       ],
@@ -1246,7 +1246,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -1267,44 +1267,44 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9VQks5Lw4my-c2zixRP5ItURj5Hu5d8dj5tKkykkYkQyBZfybNGPUqDR6m_Wi96R2Od6IFcSawAWADABdB3mp_ot7ydX2de_8YZYvD9pADX5xqHNZESRQJS0=",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/Consult/Baro",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.k-wonjin.co.kr/Consult/Baro",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pf.kakao.com/_bxflzE/108765563",
+          "domain": "pf.kakao.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHv8k9gH5M5I9b0ocTtt9fsUFueaDQ_-McaWrjioZ2W44b-F_wfC5dQLtKvFw0W0zIjQSdDHAQBlJ3_oUfhclv-X4j6MSVf9TrHPUVGYH9P9A==",
-          "domain": null,
+          "raw": "https://wonjinplasticsurgery.tistory.com/",
+          "domain": "wonjinplasticsurgery.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVheW97djo8yp4BfiGf0KY8YhsHtt3WQxcy19OVmuX7iIKK3dcRakjpMsdcNW2GZeCH_UzbrG20OCdOyVzxW-qJ73ABWF_MSRsVXf7heLoiKRKDDskMfciwQkIHw==",
-          "domain": null,
+          "raw": "https://www.youtube.com/@wjwonjin/videos",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGNglfDFSjy6pafnl4j6THkTbOSJPdIwhbUCmAHRW5ER3HQfV4QfBdGzhjrHGsa_svuWnNPionCfWg26D7iMu8Jg2wg8bb2voDQoJDjGXTub0TeKb7rFxB1Ycq",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDuEBcJBxG7MMV1r0NTM82pO6r4_FCUKGDij97t5tPfpVGD3HJKbgLaDDRH7tGpA6k9fpObVNJ_9i27F0-spolOY9A-3g8fDaxPBQ0BmfaF1Wyo4cYUFO7xeW8us8I",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl6XlLbP40lZGoMsAAPZAOrH29at3197vj33cA1oPTAnUlEDIumIoABT0TQOU1BliSOfIib5EjNIjvtSfRL5B8vP1S0Nhta8RWhZsVgyjgLP6vAOru7xeKmNuUFQI=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHL6c_jClEz0d0BHrPlyKBg9-F9HdNt6TpozOlGsYfdQs7y6Jk13oDC3aWnJ2UrVS8b73hw2Ez92lpirpY1Mw1nJOx_9z8IcNX482_saA0N6ks=",
-          "domain": null,
+          "raw": "https://pf.kakao.com/_bxflzE",
+          "domain": "pf.kakao.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1322,7 +1322,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -1343,38 +1343,38 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETRxIFn53qgaX5PeFyeyEYMQaysoWAPO5Vs9JKiIDWqoVYyVpftIMklVG0ZShLPN5qSyOlG5VAeMmfDfYXkyMpFTHJTeiz8qvm_-l4ZbSXxtd7YKlpKnGvHPeO",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/Consult/Baro",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://pf.kakao.com/_bxflzE/93380279",
+          "domain": "pf.kakao.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmTvU_J_SiZkdeY442tAxRKc4FzqxhgzaPKOQAxAJ_MRQb84Qd-bMkclzKuiELYeGAzEPcIzFex-eufnCT5JDhDa1FgLuo6R_EpgzWFhLpceJNbQE9GHyJ-XZo",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://www.k-wonjin.co.kr/Consult/Baro",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEGU0y1a9B0htOS0P_1ezmyb0zXeQChh_L2dJ7QN9KFa1VBnizuuDQ8Z7aCXKuibbtkOseUL4ywEx1wt62XkDGhF7AzE488Y-5o9oh2oipr-O46G943bISkTORJJDg=",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://www.k-wonjin.co.kr/consult/cost",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQn4bAGD_Xfx9YJX8QXUXhkRNY2qVPpWJU3-2NURh9iiJa3_0HwUfNtF461jVnUUX2oVzbUUxBbnzfbaeeWoy_ThP-HyHN0jqsAs1eyZhOMj8IL72PvT9Pf_5RY_s=",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://m.k-wonjin.co.kr/Consult/Baro",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETRxIFn53qgaX5PeFyeyEYMQaysoWAPO5Vs9JKiIDWqoVYyVpftIMklVG0ZShLPN5qSyOlG5VAeMmfDfYXkyMpFTHJTeiz8qvm_-l4ZbSXxtd7YKlpKnGvHPeO",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFj1lcu5bm0HUqXVjhXSKAh0oM8QVj4G4Waz1VlAxL6j6Uf-zi-Of3rR-OcRbA4wl3typ_B3XDyrfV0pYCeMlLBWJOn262sU1v6NLBc21D66zjI4Eed9ByilKOoTCBU6A7pzg==",
-          "domain": null,
+          "raw": "https://www.yeoshin.co.kr/event/mobile/22616",
+          "domain": "yeoshin.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1392,7 +1392,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -1687,38 +1687,38 @@
       "shareOfMention": 0.5,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFB6XrYYSGSTKg2iNvDsO7-xzfpU_3kl662tBG7I1APu3iq3mUkpBuPhFKQNGdUVvrtVYEUaUBnd5rv0Ee5JO3jY7buhFHuiTcgjZEZ7PivfZaIz2zCFoek5Q==",
-          "domain": null,
+          "raw": "https://babitalk.com/hospitals/2279",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8bzwum49XICqVeL2kOdtyEGJIYn1xpGfgQan8QMDWXIc5c93bcJM_7bc48Wqxv3q6YpDSgpe3Po2rSfqEBQ2pSrbqlO6MJ_HljjFIs_6dOQLc",
-          "domain": null,
+          "raw": "https://blog.k-wonjin.co.kr/",
+          "domain": "blog.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=td2MPFEwysw",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTlRx77vKGJC4ZFTw1UHaI0ecQzv1a66GbpUUL1oAbeMjWg020nittyZ1V68fSHOEUMk0wSzm_ykQs7yrZlNrKa2Pa_UYOxjDrhZhSWjnr",
-          "domain": null,
+          "raw": "https://girinps.com/",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEbEYOZpiaBOFL6TqOgL0kbrklZpdMD6dOoqa8slDRvxMoDwirYwjdX83wep6TVbApBgP4gzLf0rw6p1FfOT1eD1awEPiOL3n7ZnZqadDok4xqJOIZXTWiR9U-gJOUnAAuj",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAFjQ9W62v3JJz7CaOxqKLFt7xCVbeCR1e4CbLR1-TBfRYWQgELD0__X1E1s44ccIQGa-wT-SCXgcZIsAcaVj4YYJ4Im3aeZ16Ng==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvaA6hWhFtaN_HwpLQl4egBMj0aI-xMhARlvG4ZbplD3HlzM4nfTUUG63qGiVnYLpt6q_hr_4uX6SHyyYzjuzO8VzNWYZSeBzXKZOFIFqRjgsP9Tlw",
-          "domain": null,
+          "raw": "https://aging.girinps.com/about",
+          "domain": "aging.girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1736,7 +1736,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -1780,38 +1780,38 @@
       "shareOfMention": 0.5,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2P9US0UGHTDUlvfICYDXLUngqbpm9tHFlIv8Hb4A5MuO54N9qMQJ7zXUzde5_ccE8Ysd4BeU-rvg9QSA6_Z-GzRazLIbcZUAd6lxrJPNY",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://girinps.com/",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgdnnP9E120vyuideDJQUo4XjLOOec63R4l9PRxKHz7cpTtwtoQkBa7JfQ8DzIgzHQxm6ifN7ZRNxZFrG6R72e7jpqmFq6yXG8Wg==",
-          "domain": null,
+          "raw": "https://girinps.com/about/brand-story",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFh744XU7DEumeVw3gYvSD-o6qawbz2Qq-KWz0LBeVGjp_35EKYMGe1m_V99BoiOCwvGp4InlPRHJeWGPlcPFQUiioZHjPJEEea_lXAT0DBSYb8ph83gLiLax7e",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/about",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://girinps.com/about/introduction",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg0SCBb8xSuDlrcyj7ZJSsKPuKB5ix4Mi0yz_KE5Jqkk7y4N3njFw-onxoTxZt-kEtyrDx8udES3iukWGDIaC1lW7OTlT_oLesclJ0BicYD0GRvFeoWDmcSFIJ85tIA-31",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFLbulq3v_JZ6ecvVqiXp3QJ0GdnAQZDFi0eUGmdmd996ulICCg2-JU665zrt5t3khBDlXkovWI7TyR2rAUsqgBEK_dE2VOY9t9DK50Iec0byiJ0HYFeqJKmFalLw==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKQuyO7a2nKLxbNtGWRLKf25mdZv9vDTuxNrYn69A-4uFn4VylRUPJnMLcWutpW7bQvmmmxIAajwGcor-6le-ap2Ag7GyalYmxf7yB0yZ3e5ryhzAMDhE=",
-          "domain": null,
+          "raw": "https://linkonbiz.com/seller/5192",
+          "domain": "linkonbiz.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1829,7 +1829,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -1873,56 +1873,56 @@
       "shareOfMention": 0.5,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1IWlJUxwMXfa_T1cAX7p14rMqS05sjXU4WUYeha0ZqaMZ2fmAxQzN71ohkqL1MDiHJxfeA7JyaT89M95-fqEGPFLoH6Ptonw5svLL2FhtDG0=",
-          "domain": null,
+          "raw": "https://www.k-wonjin.co.kr/",
+          "domain": "k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://m.k-wonjin.co.kr/hospitalinfo/doctor/dr_won_kijeung",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://babitalk.com/hospitals/2279",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGuJ2qtT-_FBLW8f2wZXf2GUupZwmJji-8Xsmw_SDe-VSuCcNEH8pnm-Q-hOP7o9GppHOldivD3mVJ3hVi2kNQauGqczKZqXu3BN-flmSVIbnoJdyPf5HNsYUumjFeMxsr_6vW-C8O-uxeYY73UKW2adA==",
-          "domain": null,
+          "raw": "https://babitalk.com/hospitals/2279",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB4aeGaGbkd0dvnGRUpy1o_6CLt6PT8fNSbj0khKdC3FAF30j7HnkF_dRnAn3NuiM3vtqxL-MEcR97SGgmgkNgH0mbtE_1w0PlKnbOzbI4264lZkFd9epQWQ==",
-          "domain": null,
+          "raw": "https://girinps.com/about/introduction",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEB4aeGaGbkd0dvnGRUpy1o_6CLt6PT8fNSbj0khKdC3FAF30j7HnkF_dRnAn3NuiM3vtqxL-MEcR97SGgmgkNgH0mbtE_1w0PlKnbOzbI4264lZkFd9epQWQ==",
-          "domain": null,
+          "raw": "https://girinps.com/",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8ykvLcByZw4-fpL5e3KvPgxwVFsRl6sUy67m8onpntQeilBIXcb_2Nu0YcM38PlszknoQRl6INsQ6Qu-8hpxNBv0jO4xrCP-loNvGyG0w04i2JMRtGSGz6WtF_g==",
-          "domain": null,
+          "raw": "https://babitalk.com/events/57084",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElD_zACncliMWGrbHJjV9BnHmFbCzuIYqCiYV4DMQd_9Qlq1rtATCDiUQhdUV-NC7FxJDSb-glDCZrhZS72q0ZDRVRbma10NDT5g==",
-          "domain": null,
+          "raw": "https://girinps.com/before-after/review",
+          "domain": "girinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhqTyg9_6AmFOcC85EwonkLuM7bn73A0N6oQc0JuMr_zIM0_knBz1PuRmjGoe8VfYD90VytZ9CIbnlE6yLiKrgqAbfcxS0pt3Sds8Vmut2Bn14eTBYTHo=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIHwA5FzdnlOXzhwAee3mUKf40uJxVjCmR6bYNW-QryqkYF3ygLivayQw7Ugd0h5u6nPdMLvfB1cRkWRhY5VDn5JSyyQF0SgOiEYwSn-EYVTCuWlbO_yHjb9r5HqA=",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFWeBkxZjjz8Q53MY0_bfeDeuLBVloVq8dHktF9pjhhEDeVmrswjcUcszfQ3M0bb6sflvQKAbTf4njkNKr5yeRVGCvRw2TWQfgzjvVKYyC6JbUvaCo4x4mszJfL8o0NLduBYj0c3p0xMdO50H3IvERBsZfFGn6S0dV4sLrozpQepXYu_VI64aS8QsDqZA2SBWUYM9Kzm9_f5iXNVr-VRclqL8qJJMZ8Yjj7OA==",
-          "domain": null,
+          "raw": "https://www.reddit.com/r/SeoulPlasticSurgery/comments/1l3pzu3/girin_plastic_surgery_clinic_feedback_or_review/?tl=ko",
+          "domain": "reddit.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1947,7 +1947,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -2196,68 +2196,68 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGONrLMqQmkryRKXSYKRAqeYe5YznD1tILJnV7gApUXecOyJwYaAUy2gT8Tx5YPQdjnHfTO4sPOAL8BRnTRkaRASDonHhsRtrLhbFSbJRgRemzWg7a2aYjxZICMxc36xlhpQoq13il4",
-          "domain": null,
+          "raw": "https://www.3dfit.co.kr/page.php?pageIndex=910160",
+          "domain": "3dfit.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGF3Sd9WBdrry9TCbasAyKzJvh9ErDX9k0ZtwIu1Y4pOQ9-2XTxA375CPUncRXBvheC49Y4ShNZAEdgBfVTIOVvN4nTY1RYEAfcvQX77nBEvm_zA==",
-          "domain": null,
+          "raw": "https://editionps.com/pricing",
+          "domain": "editionps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnzaahC4FSmdb0amfrPnYjEnih7qielpcXO4hrcBd9m88hnBNHMYTQLSAMd1jtRF4mo5tlt16nAyt4bHBNqY0mee8owfKm5YMwic5eXobYFLnnWoV2",
-          "domain": null,
+          "raw": "https://beauty6.tistory.com/372",
+          "domain": "beauty6.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqn-RoKk_An7n-LLPD9kxFQEELmS448XhJnp78tWrPKOk7cI4wr8PMbDS-tHmPz9AZ84nyg-96fW_6hJziyVO_YB4unMSLinyTYIJhGeLkkRJ06WOnsUClyOej",
-          "domain": null,
+          "raw": "https://www.mylineps.com/policy/price",
+          "domain": "mylineps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_VO1Y2iK6a5tNliPv80utpBdq2ZmCLTD6EeZu1-IoPYUWnVIW19pSW0dFEE8rRZYdQGQHaBGWpOTxLsEqlsvmeHPrQby5miSl7_0tSNNJ07K-huTF3inLwnZyJJItZHe51XifqZx7SNumOg==",
-          "domain": null,
+          "raw": "https://liting.co.kr/bbs/content.php?co_id=nonbenefit",
+          "domain": "liting.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEKswhUe58HzeZRS_oSfh2VzWsqwU2OGmtS7xgqH6yKvdJrEjPDm4R4jxItEb4vX_vT6MkPr63VS4F-QmnaNj81UocSIerheAuJJZ72ftQP8l7o7NO1AyELnbzMTMiOKw==",
-          "domain": null,
+          "raw": "http://laprinps.com/page/no_pay_robot.php",
+          "domain": "laprinps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyG8i23cRnM3dd0nXMWI5DiaDUsPdkDQeu0nulYPw0gcm8CChI5w-Y4XBI3iJ6pghFkmUbSNf6vYYd1jl1LESkLk9_FG-_sdQjUPwiDoF3WMgLIqCPgftq5RxbQA==",
-          "domain": null,
+          "raw": "https://www.seoulips.com/surgery/price",
+          "domain": "seoulips.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlbrU5ohocvq2tW-MY3o7hpApeOm03qpBBtr4C4jefPqmN5fCeCun_iTm2bo-qeqnetRX27jjU4caBsWY2AZ1ys7vrMptDHQhi3-_vV-apz3Irxxw=",
-          "domain": null,
+          "raw": "https://ygpark.com/m/sub04.php",
+          "domain": "ygpark.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGd2-VfsOwVh0LAYCDJQ3h1Euz-rAA_FmrAjHhUT2rzdZ307An9q6JUh94LO8TpCnNK4aSiL0xBnRkEXq4V7jz1TzuV6y_maN6shMT_7KW8LdKeK3161u79G3JgAUmIp3g=",
-          "domain": null,
+          "raw": "https://www.doctorsmi.com/base/sub1/10.php",
+          "domain": "doctorsmi.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNmbEqch0UJJEU6-gAYwXxZRMNoogBqOJn4sqHZNGhc8CWoj4c6516_PRUfb6R84PesLJZd6fk-6YS6dwbYLkd-mcRLI0KvSJFLGMLgT3Ix7CmskPwrXBN6BZ7MJS8htf_MiBwaJ-la__NLFSauGEopmc1TOcb-gbhkDhMSDUgKTAf_EDqOWIM0pCobhHpHSL8EIUjrzEKWnD4qBTEBsYvFjTv8igYZnY0l2jRyuTCMyLAeTQ1o5K0IDzr3PgNCjjEwwbZcit_WwUeeKGLdxAiq1tHSnTtGok5jXhY5O7_qAUSbv1SQcPVBarL4YaKEX9dRS1_jMfB8vFyxijFhO8fQXSfnJ3hWymos98=",
-          "domain": null,
+          "raw": "https://plastic1.tistory.com/entry/%EC%84%B1%ED%98%95%EC%88%98%EC%88%A0-%EB%B9%84%EC%9A%A9-%ED%8F%89%EA%B7%A0-%ED%9A%A8%EA%B3%BC%EC%A0%81%EC%9D%B8-%EC%98%88%EC%82%B0-%EA%B4%80%EB%A6%AC-%EA%B0%80%EC%9D%B4%EB%93%9C",
+          "domain": "plastic1.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMHoegOgcU3IFuTpT7r8e5nDy_U4rQQe1AIRyFGiS2GZPGsMb-puFXPUNTxt5DNPuHSyUYSSDHcjTOS4EKGnF_LtqoWjWcgj4yvl_sv1km8Dfttlne3CQ5EJfTVfByBK31ta5boo2WN7g=",
-          "domain": null,
+          "raw": "https://pop-ps.com/magazine/sili-lifting-cost-guide",
+          "domain": "pop-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2279,44 +2279,44 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNv1gKzIGhgz1CCaJ7O1hixfeQkMoZ9O0WTdHejOCwsLM4PnGsym-AUUgM7iVyS881ID4yC9Gzx5b4g07JE9BnsIJAEcz4ejv8P-1uY-NjXL1iA_Nj",
-          "domain": null,
+          "raw": "https://beauty6.tistory.com/379",
+          "domain": "beauty6.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-z0c41MDyJ1MZ6cUpld3fHIr6d5nHPGNSF6VPdpkPRXfDNEII0p1gIAaz7f6i5Htx5ynObMo1cYbst88lxlWPMVw3MIJGzMmmHYQF_8i-afGPOZE-PQ3jYtAtZIKOoqYBg4fa2zCa",
-          "domain": null,
+          "raw": "https://www.3dfit.co.kr/page.php?pageIndex=910160",
+          "domain": "3dfit.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzD-GDYcE6ZYnDUWik4VZ2tvTOAe23C9FMNIgThjp689HTLSTFuyrsCw1M0QSEolQRnK1bnsMyGhhQiNDOMXtAhwR-MAAcYgfZYnf9NxbVDv_anSsPcGHJ-BKr",
-          "domain": null,
+          "raw": "https://www.mylineps.com/policy/price",
+          "domain": "mylineps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOQJt8dZ1tEGlYYvcDxhJTaNo3D_fnXsUilWkeO2S1obc6AIwCW4frmq77cQcxn-FlmkFXQElJu3v78gWxQE_2wFx-HiYz3prD27ABpeWMBZGTx3MgvcHPGicx0JaZOaqXimgxgldk3ZjqJZtoAiNb7MvLiVBMkQtAT0s6SBxZ",
-          "domain": null,
+          "raw": "https://www.edhacare.com/ko/blogs/cost-of-plastic-surgery-in-south-korea/",
+          "domain": "edhacare.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEScvO_qxP0lRZ9XuNiQo3zHub1ncbdAyQIOSV2Vt6Q-HPakwXyRWke1at-YKpjifHVMYav0VNh3pqviwthzOoOty31o6or79QSUy-LtSrrEp6uYB4=",
-          "domain": null,
+          "raw": "https://ygpark.com/m/sub04.php",
+          "domain": "ygpark.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGZePjr0YU8MHda0CU_c92DDKHE7nTTwY-TLNAh5GTvGJJhMVi3N3C-zlwm3y7KHwwi2TkFL7wMTiRr5EpFQCG52OrIpBqZDApBCFD01OY5gqUkH4z",
-          "domain": null,
+          "raw": "https://beauty6.tistory.com/372",
+          "domain": "beauty6.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTTUa5B98GmXppN7Jxr0Z8Xy1_IAQTGl08syZEqwdKbZFPZQJPiJB5Giwyex-TZ6r_4hayscFXYVQpIajVKWLMt7kmhAliu9jfZ1gReg34VPPDhes3I_11gpSOCg==",
-          "domain": null,
+          "raw": "http://m.vlinesline.co.kr/page/pay.php",
+          "domain": "m.vlinesline.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2338,86 +2338,86 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7RhEFc6oTqLrKAe7EhB7cegRlCEMrKVYVeWwLakx3XCvziyOUJjSZTrZcYb2Gq3wcwsJpvq0tpM-CiNuZeT85xvBW3aeijgM0yy-PdKWPKNeRwsHHaZQINqUgozc=",
-          "domain": null,
+          "raw": "https://www.yeoshin.co.kr/hospitals/144",
+          "domain": "yeoshin.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOFL2hcf8w8q8GsR3pT3gFUbregc0CQRDFjxJTB8o6R0QADijYjNmNRax1B2lWuOJ1U3KIBQNGS-VnEAvojdxt8zriWz0nYHwrNXMm",
-          "domain": null,
+          "raw": "https://www.1mmps.com/",
+          "domain": "1mmps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXdtaL1u9wpfKBbENe_O_fXvxL4JM9Xqa_RaLLiYSzYl2TABgpzzU-4lN3uzZ2wQSiFQuivH0BbXsHr8WYC-Ge96NZ2BXrehnRTfGvn-_EeNQ0Lvvj5MpLGxV0fbDGLDqAZzk_D7i_nlIxLKbVLcb5U-o3T_GB4o1O0GC7Idubf6U04wyHqbVKnP0Q_lFH9Lu03AFM04lGUaGpgBUvSQ==",
-          "domain": null,
+          "raw": "https://cashdoc.me/hospital/list/%EA%B0%95%EB%82%A8%EC%97%AD-%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC?page=3",
+          "domain": "cashdoc.me",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFK-do6LdJdUuUaf-OWvyA9Sl-YyEWlczI1NbxxoSLACWR_WC71yJ41Mk05ftWXGBt_ZvC-18Uq25fCjzSU_PW7Z3UR9MUXjX-uuxm5cvmgNie7ZTQfwRn57YFDaUqhMyZgF_84KY5_Lnj9PG4GyLnd790c1PH0SZ28bcLAJxR-V5jggXuHQLwAmH9IYeTJTKPeRiyhUOyi0kAq4IfJD1CID3fg1Zm1iH533-p-flyczRD73e0M",
-          "domain": null,
+          "raw": "https://www.modoodoc.com/blog/price-detail?tc=%EB%88%88%EC%84%B1%ED%98%95&sub_tc=%EC%8C%8D%EA%BA%BC%ED%92%80%EC%88%98%EC%88%A0&",
+          "domain": "modoodoc.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaaR54-sZUovW5qDIVI8FQi0xNFBZD09s-FbaPH3NYGY4rctkylQln6OlWD583zD5QXELVlrALbarQs_cvUuaccfm430-nS8vDTurCzm_w-3ZVgdw=",
-          "domain": null,
+          "raw": "https://ygpark.com/m/sub04.php",
+          "domain": "ygpark.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG36vmxQFyIrKL2T_BaPpDTazxtneAUaIP4TPcH3fIvYr756b-qvNAkD0rMLH7y1nqWEsDZEjSYv-M1HgcDQsCpF1HnqMDEmulDgjctraOHjKy2-fBNVWZzX8GaGk1yoAjrtBI=",
-          "domain": null,
+          "raw": "https://doctorsmi.com/base/mobile/sub1/10.php",
+          "domain": "doctorsmi.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxZG3lcKB0rqlkBn9pWI_C-KkE9Xqv7MZYLu84I4L8U5amLz-wZPkhmn0121pOqc_9UOhx5HGo5njeqTbzS70o2tLduk0henTKJt28cCDL4zdDWvmCJ8rmalWdf_w-",
-          "domain": null,
+          "raw": "http://www.caraclinic.co.kr/?page_id=808",
+          "domain": "caraclinic.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXjiea2_g2UWOOtJulu2MYNVru3ttStNu4QHKzAx4qkJcHwoGTJYqhiJQYwc3pEqV-ztE7lZXV-82qFpiBW8kVTos6p7F_twz26RRCz16dc3nIMycoXjeM",
-          "domain": null,
+          "raw": "https://knsy.co.kr/ko/pricing.html",
+          "domain": "knsy.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHU1jzGbkd0Cff2iQla1p9DXxtEeuwx_v0Kh9NaGcnzYIcKnhieNOanEip_QFu4kgZ_DLVDd-Kp3CXc46FLca0eWDIQMVOZzx4JJL5eJTo4egl2IDJwsADfjva1rA==",
-          "domain": null,
+          "raw": "https://www.seoulips.com/surgery/price",
+          "domain": "seoulips.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEheBqXsXSwoNvqmdT3p5NsQGMU2lQVSQoukclGenBW2-FYo0uh7CwHvXPl8yl0ZIF_LVpzNJ7UsyrRQNOpIHS8ESVHj9vh2FJPlGG8agtFWLQrd7SB-5fQ83dQkkGjl6CZ",
-          "domain": null,
+          "raw": "https://www.viewclinic.com/npay/category01/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7zNGilyrcigwcD4N8pMr9C15_gNC7DSqCs8-R0I-ilYA0uccLWZbbOr6trrm_18l07JKd5-YaaCUYjBm6gg53t0xJD2BggM8BxbZEiHTCMc76J1APSqHAHzOwcNR0aHo=",
-          "domain": null,
+          "raw": "https://plasticsurgeryguide.tistory.com/36",
+          "domain": "plasticsurgeryguide.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvhdv1e6KYR4R8TUbDmBQu7ALBN6s7ApMHXP5iOR0sujW-z6JdNqzXGMWkZV_JdKoX9S-JA-YSM2em4jdG3O1WonEXCFd__V20kW7KdMyKPoeSr-nV",
-          "domain": null,
+          "raw": "https://beauty6.tistory.com/372",
+          "domain": "beauty6.tistory.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHiFJR4LRinY8btgol2gkT8GkxzRj1ijXHZJVX7ukt1kAw5ZRHR2Wgkihu4nrxhkCLzoltzIM4stdt8raeLA_LRv3I-CaeNccU9DoJfCjNpvxIsmi5n32mlv6w13vdwB_hqt1-5LC2",
-          "domain": null,
+          "raw": "https://www.3dfit.co.kr/page.php?pageIndex=910160",
+          "domain": "3dfit.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEwCd9zMiJOuwd6SqIU-i8FprxPmZ3imz3MvJkJ5qoV5Udv6hqRrwS0Ib9-9qOBzdiIN0zXmGN_UejmrBwO2HVGH7feBt3XhTSnfYOsXcX67JJdvyVhKN_YsX4eWg==",
-          "domain": null,
+          "raw": "http://m.vlinesline.co.kr/page/pay.php",
+          "domain": "m.vlinesline.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2697,26 +2697,26 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-d5ezc-E1vOODv2Oq3VZWq6ijN0BCgSjGCwrMOe7lgEJq-jkvlW9uBvs4qu0VoRDdwAS60rZupzzLMqOHJITJATQV6q4kOchPPB78FyZCurgjU1_UPm0fOkbc2538vKKAoHzJEQ4VUllxCd3z640vZ_1qrYZe1Chw5s0SIgbn1zEhXqt9q5WX7OK6KqqNRkp-T403L8MM7cQ1tA==",
-          "domain": null,
+          "raw": "https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90",
+          "domain": "daedamo.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgLf2PKY1WLjR6JD77LxNpK2M0H-STLA20xAUJnBEX5SM1q7-n5SInQuyc70oG6Z8VUOzqXkFsxi2xV4-FBvHq14bE5lM-aANh1dZ_IT77Li94OgBgBI53p15SAExV8rdo",
-          "domain": null,
+          "raw": "https://www.joongang.co.kr/article/13860168",
+          "domain": "joongang.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE09XsdQbsrCXrthxPiJMCKA34OVVIkXlNiIUGQC3XK6AO3C6LaeyV1od3ipw2TPdBSqk9wW2DkQIoc1BHY_Gt7R-e1o2_Mb26gEiBN9R3qwYKw3-DLXb8QwYxiE99LTCPZnO64",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://m.k-wonjin.co.kr/Community/BeforeAfter",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTbsi80qT7MpJGJIFu-w5JR5PjZJzc28OvFv4MiseuCa3Wk4tOkWdtSAiL59G5a8qWjYq7wxMpLy5ZkJP-SiZs9r4chKtaqbJrk6RXs6vOOvu00Jah_QhTWYhN82KR7RlrM87umF0GnQYJrR89HZutAplgq2HVSUkl5Z9cyaFQi8dsKx-nXNJG2tlFSlHcv3_7keyD6Uu_As9AMpsOh1qu5nsvT2rK6LkiTIsB4E0k4EKrXTdCsPXNbWrLKeLB84JRkkFaEbWkfNqU1Bx4dsdvHtsXIPwphZvSgsp_86MQPL3UMrNphKSR44TctT9ERws3Gz15eUyTOvbmzB4ZVqhJVuiAR-p4RJiS3JiJm6r0egbuT5tvviXyhye2NWsuE0VNoAC0utLNc8CNR6t3QVaN8YC9mOD97p-EZibUkHHWMcZoik6r0J068HttW73JWJ4lExWVK3SjahBCcN4bFBI8PAZCf2C8GjR1IhA_0Bx5O1pB8YU04VzXnEyrheEkUmd-IsTFCa4zUQXaLYkU4SIu-Y3eB7liaU39BvxDljI2641rpD_quCX1DoUYAilBg29cNErV7crSQsTCXaxN5Rds0DozfS51inJmb92FHb4zH5SPBa_GLyQiOKSwKKH3-732kgsMHSsOAI2uaHZEFCcGU6s368jKU1Ekc8vw-u1Yx-q3r6PcwLIB4TQ0eTUS1Ltea_R_HLQ1aG5J9ZfTqI79rA3EgSqFXwlu_FdGgrNd2M4OdMYCMgyt_6exQG_z72qDj87fJLVb7KUiCT7RRKesnYhpDSoXEyLwIJ-L82VAU_4mngYeLzmJ0bkH2RNfAtkGHYoXoXYjOfQeaFFAWxVVsfdpODMUvY0rGt9SM65aESn5zOBPt3kj1QXf9Y-DyP8J7HfI4U7r5A_3hbQsh320a2zFdjL0trwVqTE=",
-          "domain": null,
+          "raw": "https://www.facebook.com/KwonjinPS/videos/%EC%9A%B8%ED%89%81%EB%B6%88%ED%89%81-%EC%96%BC%EA%B5%B4%ED%98%95-%EC%BD%A4%ED%94%8C%EB%A0%89%EC%8A%A4%EC%97%90-%EC%B2%AB%EC%BD%94%EC%88%98%EC%88%A0-%EA%B9%8C%EC%A7%80-%EB%A7%9D%ED%95%A8%E3%85%A0%EC%9E%AC%EC%88%98%EC%88%A0%EB%A1%9C-%EC%BD%A7%EB%8C%80%EB%8A%94-%EB%82%AE%EC%B6%94%EA%B3%A0-%EC%BD%94%EB%81%9D%EC%9D%84-%EB%86%92%EC%97%AC%EC%84%9C%EC%9E%90%EC%97%B0%EC%8A%A4%EB%9F%AC%EC%9A%B0%EB%A9%B4%EC%84%9C%EB%8F%84-%ED%99%94%EB%A0%A4%ED%95%9C-%EC%9E%90%EB%A0%A4%ED%95%9C-%EB%9D%BC%EC%9D%B8-%EC%99%84%EC%84%B1-%EC%BD%94%EC%9E%AC%EC%88%98%EC%88%A0-%EC%9C%A4%EA%B3%BD3%EC%A2%85-%EC%85%80/1471934177375182/",
+          "domain": "facebook.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2734,7 +2734,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -2751,26 +2751,26 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG14x7Lh6wKXTiHrpI3kHCiqks9YNo-vjVACoLn2yXUkRe7qzOj0bZHTfJyvVkUQyO5MMYPAThhi8c8ua0v1NlO99KqTyfGL4r7BxY1qUZf",
-          "domain": null,
+          "raw": "https://m.k-wonjin.co.kr/",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeoshin.co.kr/hospitals/141",
+          "domain": "yeoshin.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGt1iIPiT0gnDBoSiABC_VZ_VibMdwQvcugQCn8nYQsGaiLUdlqJ62KF6g-tmHoqHFX4h24Y5DKF68sk5RgQ62IC7nvNalc2vXGS2B8OmCC3aV6yCa4AsE5GodCJW8=",
-          "domain": null,
+          "raw": "https://babitalk.com/hospitals/3143",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvJFUH6gvQ8zmEhSZJf1TufroG9Ek_PoIqQv-zB68TkSbvQMjr7b2_naXLiXvJF_8qyBecBT2E_RPm0Td6wcRDYMcOCwBUtxX3NG4arUhT1u2jEUeWvxFEnw==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEIBBWsgleNhys5tnZzmfIFQAucgZcXZxJCB5szgT8LplH-BNFj_b3cQoXY9kWnuswdGoCXqyCrA1euKtc5HjAaQtptBWk5Buwzp1VydUqpXT8y2Iqo4s15Njh4msjUXrdtFdr9Is8eAs27yVJnCXScsscp_NTjQwzP6bjp5HX-HSgFFH6CvEGSsKBqT734I3LL7r9NQZ8uNstWLg==",
-          "domain": null,
+          "raw": "https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90",
+          "domain": "daedamo.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2780,7 +2780,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -2797,26 +2797,26 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFs6GAyX_KM3aM9Lceqop5Q2awQyPmHDsBpGEmi1NCbapvr21t6Rxxz2KpTWSReK5L-WkntZIYhOLyPTWeFkpxOwmmcao9V78ECo2mElvj1QsCunLVejwkeeBf3EISQu54e59brMg9IBzfDXjPtQvoLhxLnUEgQDQRf3egL33w66v5HsqN1YDr4gMxT1jTbX7QqHrtlcK6P7vn",
-          "domain": null,
+          "raw": "https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90",
+          "domain": "daedamo.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFs6GAyX_KM3aM9Lceqop5Q2awQyPmHDsBpGEmi1NCbapvr21t6Rxxz2KpTWSReK5L-WkntZIYhOLyPTWeFkpxOwmmcao9V78ECo2mElvj1QsCunLVejwkeeBf3EISQu54e59brMg9IBzfDXjPtQvoLhxLnUEgQDQRf3egL33w66v5HsqN1YDr4gMxT1jTbX7QqHrtlcK6P7vn",
-          "domain": null,
+          "raw": "https://daedamo.com/hospital/%EC%9B%90%EC%A7%84%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90",
+          "domain": "daedamo.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlWG0tgdhIfDTiXQw0Z3XTiDuvN236Mot2KWXZHEkBmY2IDdo6nsyb107AlvY2xbAYBvw0jR2AHdlmMNCWDcX7izFBr5WMkx-QfoRfNQ84GDfQqkbtoU7c6ah7GvW8VeOnZSc=",
-          "domain": null,
-          "ownerType": "unknown",
+          "raw": "https://m.k-wonjin.co.kr/Community/BeforeAfter",
+          "domain": "m.k-wonjin.co.kr",
+          "ownerType": "brand-owned",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGuyi1msSurkFe-8mmyZtVQmVb_xzBLS5CI4UGFmPTnguxjJvxemNcjqPHBVNV2XrafCUI_2_R4TR_t4POaqqzpNdnhLm212o0yKdbt3f7WCv08Wi3HtHK",
-          "domain": null,
+          "raw": "https://babitalk.com/hospitals/3143",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2834,7 +2834,7 @@
       ],
       "factualitySupported": 1,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     }
   ]
 }

@@ -278,50 +278,50 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsKlWCxTHW_3qMZOfAEfTF_pENvtyTZZovMJAE5gfyBcJimAa60OnofAszj7aGJb8nrrO6xMUfs0cmBALGib8qCNtlk8lDLwPzF7uiagKy9eZWp9NSzADEMXpu-w==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/sub02_07",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub02_07",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.idhospital.com/",
+          "domain": "idhospital.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEsKlWCxTHW_3qMZOfAEfTF_pENvtyTZZovMJAE5gfyBcJimAa60OnofAszj7aGJb8nrrO6xMUfs0cmBALGib8qCNtlk8lDLwPzF7uiagKy9eZWp9NSzADEMXpu-w==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/facial-contour/main/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1Tp8d5hM3wWCLmRhVseY5xHvhaP4bsImIlfd-g5kYakmkmnqQxeaIt4FtTP-rXCTj70GKDRnpK5_37btXvQcSXfyxg-UeabZxUD3hXL_Ok3k=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEidai6s0_FGv_L1-wlzMsOVjjJ0KeqH0OnlpC_AUvE2-gO-Uro2DH01IiOJzcZUoi6Fo4zJm0VnspogPazIJLmTjQANRoIvfuYbWKtswIMQ_c0uDeivHtu0RvjQQsDBLwLsW7TvA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://345-ps.com/",
+          "domain": "345-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH-nhEdJ04FN7cHgVAUkkWzUKHqjLnVPPOpE7Sp-QUuSxqtBDbgFVLwEXA92WObGEW2pW0jb5eq7GBSWuiqXF6hRusUxAfcqTJznA9nVJF1mlU=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://345-ps.com/sub/sub-2/sub-3",
+          "domain": "345-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyp_4_bc1JgkH6n0-xH4OsRjCBfmiDWgytTPvX4lHuuwa5yg9k1bP2tNkclU68dCAYA3oA8aMPnFWViKXOjXP_-J2P-FaqrRvW",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0RBZKzOe8XN1NxYCvwXL5Yh7BTQ4uoS3QaZnuZRrNedpkwjHZUZEQqZWIFZkTdfQn1RiloOTGT4cJtEmvW28wFu7VzQhH7fQ3AN9hm_oOz4ZXxX-ARmJd",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3zdwCa7pCnkon3uU4m-0GNrw13eyUQ0TUljHmfPZzmk68M04AIoobMnlLBkXDyx4V6KJtgqdsmuLkRkJgJOf14B_SzbbCl_U5gTLbmJUfQaD5kybgL9Q-o9AK4ngqVaWR44q4M1xgMez7Egg4DFOFRRQdlrHg40Pe5PHYAHI=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?medical_seq=802",
+          "domain": "medicaltour.gangnam.go.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -331,7 +331,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-001",
@@ -348,44 +348,44 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2HJEB7rmgHLRnYMjk9Uh3dTQyN4t8yW24INPuymJwVdZDPZ6nsLdyIN_TzW-FjvC43T7_IUzFeMopwAbMtFOBu3NXLSxZJxKio4AYNYg7Z3VfKq-_ur4AeEpfs4Ta3bbwn-KFXs3De1BmlgJXWU6isWSYjg4Fg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/facial-contour/face-contouring-3types/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXt0xkmAYWcjHYPjOBC-G2K9FUxBYKe6Nz_nCSeZb5zTZFOt2sdHuXkgFvsu5xqezdbumeMWqg7BCcNC-kyq-gy2ullb6ro7uQ",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://345-ps.com/",
+          "domain": "345-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHW-dqDH6Kzty48UE35EAAFy4R--KOFiljTivSFux-bEuezD1X2VNAaawUL8R1HgT7L6cbAuEI8qyjfEyJjteEutKNNB2sk1yX3c6IZvVufnGu-oBjRTZ3U",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://345-ps.com/sub/sub-2/sub-6",
+          "domain": "345-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsEXVxPE9C13G4Dgji5UIL-pKk4T74BPU7l5xCLKegZ__p3X6wi95aYaaWtj5Tic8QNt5Se6VemwWaCnWR_DJw2wmMkMbBtGoGVIUJGgnyiClRxC7eiNNffh5lMQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/sub02_07",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=lQ6dPLHnFsY",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDjOZaEsj3pYTWNXfqO_1v41xMS1rvXWujfDCT0eG03AIwPY01Z9A3qxRfc0RGSd2b_tLuPYySl2fvwF7NMqKSvfXPf5FL4tHvlCFq1cRrPo59jPRk_GzOE8t7viEA5Uy3",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.idhospital.com/",
+          "domain": "idhospital.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEx7oz6LmDD7XgMPSI8BnxhdzAY6YsjTXDjiiOZ9IDbnIVs1UGrhAkEC7g1UdKZUkDsSuA2FdXBcf4-zYV1ruMAvhucBMzcdRUTL4BsFRqVj-o=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTKkq9T6q4781Lk7N4F4Ezuuxuv4JaL9caooMStBfhDLuEKna7Ety8Gov11jUz_KznaDDW04ER6cs9DJfyJrZ_zJqiv-wlHCH8JwsoGfW555OVLTztMExyYqvYM11R8NOpH9QVzg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/facial-contour/main/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -395,7 +395,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-001",
@@ -749,50 +749,50 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2MvNI-Rw6AJFPLW9M-T3KHh321uoCK8ZrDN1CUcYwCQYUVKJP53OfUvG7FcXfzs8QGDpHB17RF8gZCmDSZ5V8BT7XJgpJmdF8j4CqLM0YfRQoarXcHCnjyiGHkuTdRTg94sBeqkhYtAc=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.woori-ps.com/facelifting/face/index.jsp",
+          "domain": "woori-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMu721d9RwCFfrCNqtnXzpRx8OOiBtou0f4SUjbDA-wRZVGOcuQqKRHKk3GNLDtZ4Bw3qSpIn8lYaqd6Mz71LuUl-up9WFrrBAfPygkxtpJ4FEk3HSyXBoE1FRe_-YezVZqUY=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.h-mihak.com/baby-face/face-collar",
+          "domain": "h-mihak.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHwu9zvjtqF1D_jZIWqLMMxnEi_LRw4a1vpSwCgwoy7xpNRyPRHtPZIJeZ-ohFBfNkv_SmoNzXd0Evn8sBnh_poyzC5I9SWfhTg_tfsMg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://planetps.co.kr/",
+          "domain": "planetps.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxPk20Jm14Hh4l_f5dWNUY79JztpXG-TIQ3IelbL7DoH_fxoYHSjfB9PK072oO5qzQgS0dW4Fmq7e_dCN8Ha8IkQl3auY6YT48",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://vlif.co.kr/",
+          "domain": "vlif.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2bvA9X7n1IOHHsWNJprGsIz93e-_3cdbp6wy8OD8dtupSdIV3wRo8QzbxBfSnqupeEmdeRRMtH6jKPkULbvmoquL92dRj7LvKasHOqA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.zell.co.kr/",
+          "domain": "zell.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5ZcbCRvuKxly_t2Cmmq_S1gGqZCpZOjAJTb0tO_S_pC5XNoHznjQFTgwM-w6SNMNeWe7ocEvHzu1f74YMOIroWi8Z5FOOW42dQ9LESEC_aAfU",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.synergyps.co.kr/",
+          "domain": "synergyps.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxuS7i144K2KkloIn9hp0uo8-hK2pJ_Vd6MbHhMbYrY39cDTTxNFX9TEOTTCSz2kpKMBXRnjJ9Ef50BVXIUSSFL7FYr4UnXXKCH1LpYF0DneaxaKZJMSHhE5iypTIooktY",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=Uq9isr2fnvY",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeruB4_fFRO0wx6AIlBBL9qKAeLm5mmVMwfVivuneOVouEf6RWlrPwokfkfQIy6vCY616ZoMjbFNpQgYTYT5x93rSX3ALxq83ouz2D9CIjYiL4--l2cE3h0oLg9PNkPnBHReFMSY_BbpaFB2u4hg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://korea-plastic-surgery-database.com/for/face-lift",
+          "domain": "korea-plastic-surgery-database.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -819,68 +819,68 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2bfTlAe0kpSUGwbT6U0zK3lQLc7TESjWZLepRJFTbYaT1v3rmXJ69Rqy4OG8J8GUKNppSFRUx1v1cot3_K1Ga6vKUoBB-9s8IRKKaf14SvGIEjMcdmNsK7FhcqigytN6g5xPsLek=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.vlif.co.kr/02_facelift/facelift01.php",
+          "domain": "vlif.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHDSNacRPKbQvrHu6aKYzM-eZtivK1WpWfYkVF1-IK6PsY-HVBDLw5z1cbKLm_8m5eoKXXDrtELUGsxxOhuT65lSk2H50DcnbTSy11Q7RQaYe8C_AYTzHnJ9TT91VR62otGxlsvFCRU6Q==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.woori-ps.com/facelifting/mini/index.jsp",
+          "domain": "woori-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGi200SQHI6io1MSSZJbUaxKIpVFUdpGUNXChgDMRV5N5u7eL7dUb3zXcsfZ6ohfAfqXkBh_6rT-3jJiL6gpja2E_TdmYTyR5W496TpatMqTzCcOkq9FW8rNHk=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://vlif.co.kr/01_vlif/vlif05.php",
+          "domain": "vlif.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-uEQqTCCt1SGtFrzVAG2V-C_-R8J2rRXzzJWkjT-XfbOtrcY66tLACf1yd_XiLaXHhd4_34_zHxRs-p29FcAam5YSK16_i7yNTtmq",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://planetps.co.kr/",
+          "domain": "planetps.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFq-e2nuaCb5RpdIXH49e-6a9ASjNjhDoNVlTI_NdJ8MOv6qAVwKdPTR3u-2biq7FdR_6W97L6SmMDu2GiwSrrVvCGtAbDAMqQgzfrx",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.zell.co.kr/",
+          "domain": "zell.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbn71TimMX_0pTLR6qziN2gGJC_y9EiwZ2cY0WyKldVmufGn8jP7f4ZRZn0QzBIpDhFzLDHhLCrni3QIMuGma0TV0QTk3xr_DxISsnh5hqoAn6zO3wXXRHzld3h_5W7cct",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.1mmps.com/lifting/smas-facelift/",
+          "domain": "1mmps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxQUbNpcXUV-_pRY3RnSyNtnd_RhC7eY5qT1sDi0ZYmDkt1YXEngb07Z-wlgli5MtGt5N-QeQNn_NNioryrbQcH1LT4JMtrW-Lc6o9vlAPBLRGWPMVx4_N0jw=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://www.bon-ps.com/sub/sub0101.php",
+          "domain": "bon-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS2NtEdRwhKTysBMdsLxsvuDquE1CQV0y3exOQ6WJly5Im11JdVHkUxNZf93mXIudMUb3UJry8g0GakHCb5WPWRr0apgsTWzo6N9xHnhWWJ3eo-kNnoT4I2THvhbRlSpfDvw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.h-mihak.com/baby-face/face-collar",
+          "domain": "h-mihak.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHdaXdN64iwpQpehlNshlsI0Sc7hseq99mQMOc2vkJo01xO3FUumKJ8o8kC66pa7oIZSEN2teYAPLr93IXNNj4wDnliMIVMPldpNvX5W9Cd0vW7C067cIjxg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.mulyps.com/page/sub03_01",
+          "domain": "mulyps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEf9cFIWthLTaxCeqgPVDadNR31eHtp3JjMU9cmTea55KA-Uj5QSUgY7kuMSikXn2Cs6yEXnNU-5emRMTHAybrIhOz3dCN6Z9FphifnJwbJRtpaRydS_5f1O684ovMd0df4tLj5KhLyjODzJRuwUHGmUwFY0Rn3U7jxBn3h7aA9b_N3oZrtgfhG4jhu5rvVVoOgqv4IMepT3dm8NKPabZ0CTr95HHrUFEPDWW1j0z_JviI=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.expathealthseoul.com/listing/%EA%B0%95%EB%82%A8%EC%97%AD-%EC%95%88%EB%A9%B4%EA%B1%B0%EC%83%81-%EC%A0%84%EB%AC%B8",
+          "domain": "expathealthseoul.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHihTIR5WLlJajUzqWhj8O-GNKotw4lJ8Pg7XzSOrKsTAajzFY4-jIjoDaizXk6FxauZ5ZXRcsMrx93e3vr-G97Jj-DH5UhHN2z-w7MifyTHn2lo-Z9VYoLZCO2I3ciXNfPYg45uKsmYelCTqMU",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://korea-plastic-surgery-database.com/for/face-lift",
+          "domain": "korea-plastic-surgery-database.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1171,62 +1171,62 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFV0tUM4YEapoBB4O_tmr0Li2dv2bhJURsI9vTUwHEF6QfiuBkx0EVY7wP4GJ3Sz2XYwiC-A5DVopWG6swXNMefoVo6q68d2j_0NflciHbQJ7WGIPfjdsaemFbsENjtBOl1EGSB9I7BtVtB8DSGyTneuKjmFpMZyTnlnLCrI20=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?medical_seq=802",
+          "domain": "medicaltour.gangnam.go.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvkR6Ybwu-_WsbrqLUv2n8elopzYs3QUctOeLgvN9IWDE0E7STYfncvDSuxYsosRmQxdF0UU5vlOupXXpe63ANgegVuPKAlJuetgN1QBDO9GN3pQxReVo8nXrZbKIubXGr-USOC-pZvVLL0EBNnPB2cu2jK0UzyXL2akBEJ2NepU8HmXJGeWO67q29A8o79lnLsg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://medicaltour.gangnam.go.kr/medical/clinic/view.do?medical_seq=726&mid=403-408&cid=408",
+          "domain": "medicaltour.gangnam.go.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZLWHFH5YCl3DDA4Kc6thWcduWKSOdyPvwKZcPDsiGiuP-kb1_wghIKiOkUf8KKr3mCuXXM_Se9btjiLD0Zj4YJ2qKSEoMVjZXsq1EP2YyjDgBwFzZXTOTCc-eXSY=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://man.daprs.com/board/safety/view",
+          "domain": "man.daprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYO2J2zdK9_N7IkLpR3xgL4NdkaLyChw7OX0uCgQiV_gsFAJVoBjhqTRGIwHk8XMBbP8mlLFdyvs4BC7yLcCVRGxqTBaCAOSYJJXQpXUr3-2__s4ahD9MntQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/sub03",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://www.economytalk.kr/news/articleView.html?idxno=107135",
+          "domain": "economytalk.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEn_VD80ZsJy-dY0ul7m8jDnnhtbyisZtsfmdPh-gJtJJ8n54ThKv9vCh9LrhQKnW_MQyt9AW_16k-Ac59lohdymNWXt_LOw_rnGdJifgaMOmTdHiWy9eZgZUzMivTife-VhcOM865IzshCt3IENKJ9ulo=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.woori-ps.com/emergency/index.jsp",
+          "domain": "woori-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHgWS17gbws5psrHOhQTdpCsHccKyUIMWeUzQLY3UTpLat-7eoTT8jM6Gn1CeWbWo4J7TLy6samWrRD1C8QAfT8TFnvZNdSH47ZsJwEPwZn-shyh7hh-OEI-zxMYIWFcx62_Q==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.bust1.com/",
+          "domain": "bust1.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFkTUsak8XpeQ4QbEszxBHiCHtVjODMu8prLQYcn1199zR0S9Rp9lM6bMr-wbtXwYYiDNh9cTDd-PUQsIKEI8uLAGGBWC_g9GbJilG2",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.grandsurgery.com/about/grand-safety-system.php",
+          "domain": "grandsurgery.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcPQNM0s0Mm-hrUADwiPO3RFBvSirz3_tcVjzV7nC15-qnjcz-M11EKbGTWaDykIVhVdy9eerRTC1qhJ4bJFdfjABYbwmkpM3bULjXlj_9UDB5ZqAXraL5FCDYBCNEA3SgbYJkSkJAuVhN3QkD5ISr",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=NH4wMKSe5L4",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvy_om5r0VHRuATfcPa8qXGj3GIW7qX_Akv7YffHzBV0oxIdjR9mlHIjQOfZAIthf0-ewbQmbJrWEflJXvCuKbz3v05-0RWbpZR_EM-jdWpwZzxGm0OwiNry1z5EsBM9Mg",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-jWaNicnQBJNpxlsSNMzmpfJQqwpyfZX4DBnRa-PcWRPS5ry54DfO0IfCBJre00CqtP9rBEEubiOnvDAsM_V_VoR21q8FV_CbFg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://wuneprs.com/",
+          "domain": "wuneprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1236,7 +1236,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-004",
@@ -1515,26 +1515,26 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz0XnpIZZW_4JsAd3yKouRITnT4nqvBzYhu2IGLkVdCaXJYwpoCKflzdwlimv80hZ-L7f-jz_Iazy0gdV1Xj6vEvNCTNN9mraPH8IykXObqAc=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcQKMRL1j8nCB7ZAFav_wRjpainQ442tjB4OI1lDeaEJzAR7aMbmS0Wake2HbAOLC3tWiqn7A1kQiVsrR09oJiGxCKWGg0RAnmNCoItGJ-b2fHAuNYudsIi4so0PPS2PkJXg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/viewis/direction/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjuTSuL_LKbpQEx8ZBOqfTAlsdvELk0Eu8T-X1PFIoMfUcwGUEyHeM6Lr2WnRFh2nc3rg34YcGXiERdOKx50W5yVo4QqWo0NBtuZV0dSi4AzL_gjj_emsPulNluL0D9csT-ovcn3pt9Y7m4JrAHGvZ",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.k-health.com/news/articleView.html?idxno=93729",
+          "domain": "k-health.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJbM3ZEjfZfKX25SxlH4eLTdFscCwVFiEJqm7eP32_zIjOrK8G1u_8O9iWrJOeICbEseJ07AJfMPfeRkV0uqDc6Uu50ZCyfUwU24wvuaYIcXaTW3mi_9ZwXY6IvtNT-0E8l8Xw-ZjkHydhBQkLcqAPkA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.mt.co.kr/society/2025/12/17/2025121714294466577",
+          "domain": "mt.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1561,68 +1561,68 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTru28dvsGDPGA3terxYIup_B54XMlOF2DbTyJd997BoHHXs2OsSN03IGv3TPRGnbvToopDbjTO8SKiZT6zXMgLXz4W336Ri9Q2qP6KA8=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://m.k-wonjin.co.kr/",
+          "domain": "m.k-wonjin.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHADOjVBcFFcjppEjLZJ_5FMltDFjmYfq0yNENkJkIyGoQ3RWFyIJgsodnQImxzHLoR0M58HqNajNLac92RZZJU8Bj4gU641tKVmoBL85aMFqwhlQhGTrv7PLt8OsusKL1dlW5ORoEewV-v_juPd-wk3DkSlscOValnWMk_svpyyOn438-xME2IqBj8Uc4gv_x7F-4qSI2xX-6pB_PNZZ6xqo-0OgZDZIBmIKJEp35dZ7d2Vfand01_gnwyXMiF67CHS55003ivqhNqPJvRmJBiD-qFFaEtXQ3Zcj3kKQgpfrIxgtdtRYpYBBAT85twFTjmt_r1BQOFThqJWEtE08RvpEQ2H-SfEdEETL-Wqwy-u_QhAKZUoUT8XG7usfKsRkGHFqbAS0jXaTEsT6hgQuQRVopS9TGEYfFtWSTC_9d_icuVBuOVUVxxT7kbjOUNeuKF0pPbpL2zapDPDtSx5T9Zpo2Qgyl5VJWLKJCyKTLGGsBbypdvq_8Z5TnflqxiyV1nsKKvy4YNYCZXmREwiWNVCWLfphY0zrv692fWMXMiVAZ1KMOfMI-gPMDpHbRkrapOsXBcUX6_u5AQ-rHxv7Bqq8_GtkEmg3OCCwQBiNpX7WSWtzuziGxZtpyXu0NJpD2_gffvnJWi9WiZakrnESTFADy7MvnJUFx-THu9ql5ykEtww2oLACvyyqxkWy4Hp6BehqxltWM5baOlfs3cdDxHEIT87fQJUQl1h5fccIhvPSrZh0kG2dhgJZKQjhKfoDHDi0Q07hhwRAczGQtdHHpENneKrFfQlHQTHshO12mkLrz5TftGNBZ58d9Z_1XBP3K0Qe7vtgGyh0XT6ez1NRkgFAkpiTC78yV5huunMzO",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.facebook.com/daprs2/posts/%EC%95%84%EC%95%84-%EB%94%94%EC%97%90%EC%9D%B4%EC%97%90%EC%84%9C-%EC%95%8C%EB%A6%BD%EB%8B%88%EB%8B%A4%EA%B0%95%EB%82%A8%EC%97%AD-%EB%8F%84%EB%B3%B4-3%EB%B6%84-%EB%94%94%EC%97%90%EC%9D%B4%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EC%A0%84%EC%A7%81%EA%B5%B0-%EC%9D%B8%EC%9E%AC-%EC%B1%84%EC%9A%A9-%EC%A4%91-%EB%B3%B5%EC%A7%80%EC%A0%9C%EB%8F%84-%EC%9E%84%EC%A7%81%EC%9B%90-%EC%A0%84%EC%9A%A9-%ED%9C%B4%EC%8B%9D-%EA%B3%B5%EA%B0%84-%EB%B6%84%EA%B8%B0-%EB%B3%84-%EC%9A%B0%EC%88%98%EC%82%AC%EC%9B%90-%ED%98%B8%ED%85%94-%EC%88%99%EB%B0%95%EA%B6%8C-%EB%B0%8F-/1244664314364451/",
+          "domain": "facebook.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8KGPpns9CDI17ADkDMovJwWj8VZc5iJ1qdPC1MFrUKGdVvN3SHhm9viNmZJf00VtcmRcA-BATRn5pTSyba1yj3RP7iw2qvmawW6bhIMASvR1YZ_-obTqQ2Ck=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://daprs.com/nose/cartilage.php",
+          "domain": "daprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoHDNF_4BInQg9KqS88Sf9tz4lIdhJ5vi4QXDJXWusSgoPi2MQaX845uN5_nSR_dTewUsGzleNGmIF5EEFvlidxyAg78qAxC-doZLEn2glu95lSfr9aFxniva9QV54MeXmRyqyqs0h",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.nursevillage.com/job/job-posting/8887",
+          "domain": "nursevillage.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEz85uN0a0IQqR50HXg7d8beHDD_fCoiHGU_ztUG7IsP4l5xADgu5AAOs8l-X_quRtz-2xAzXvvQjLhxqlK_s3wet3SduYd5Ao9mPAv1H9FKeRSbpiwgPIhKAxKdRxi0D7vIA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://skin.daprs.com/skin-booster/stemcell",
+          "domain": "skin.daprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGD5wdsQQbO3QvddzKpCNqMG_3D2rBu56rlA_zWOLP11X4x-AnAIYt0Pr_Y_KrTIKNjvaFSTXUGxRV6pqQjTXLxubpi0EzHngAboV7EA23CIwZBh-u8TrxyTDZkztCyR7dX",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/viewis/direction/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFksLOv1k-mls46ZH7mqY6LIAswT8whl-e-hlpv5elClcRxPCoCrpfnyQUHPYV1BIFk1WWxKFz76edye-U7oyomuqPcvh4GGEcnYpJgje3QX8koxpgJZYwWFKzdyLQu9jud_ncsimeFh8yfZBQBLtX-TSzQSoXOppgzXHgPDb7yvHGJ4sCILvRYNIRI0qYUFHGA36YnIAMedZZlt3Irawa3FxzKFSX_QHr9atDBLtLImg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://bgn.medi-map.co.kr/event?department=%EC%84%B1%ED%98%95+%EC%88%98%EC%88%A0&subDepartment=%EC%9E%AC%EC%88%98%EC%88%A0",
+          "domain": "bgn.medi-map.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHng6OF15xbdxehRz_fW1sD0VwJvGmTmRsfwQwpTh1rAJ7vb-QkZ9rWB8-TUj1JuSpIjkak8gDJ0J4BVWWFj1QSj2d39vdTzUVPGpp7vmk=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=IxWlUy4-cKc",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFosLXyUbLTGMUV2jnUy4I9luOO-679ZItpwPxzQCsoScqBWjhQdMv5emML0NPXVdKA78IYRzKCrva2_rvow_gBmHTLQ1M-0Agu3jaxL8oYuZBYHvNJCoQw1149jBFfcTk=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://jkplastic.com/about-us/our-way/safety.asp",
+          "domain": "jkplastic.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJF48kKcz8_dqjlALlQf5QazQReB-20sw0_aLqXnkfU4KonCis7Vi-X04y9XPsVkxnLCbBKJL-c_-I_ThObQQU6vvV1LZb41oeCrGLUWlcLH1LQxlbOhucGUc-7EQIKrCvd959P10=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUnhjBmUUW_pbzn3BcWPwo1vppqCDldj65veWXaZl8jx_b6mYQdZ1NDXD5G7FS1P5aYcDvoS16KxOBR0XINCoyYYGGPLdI27O6x4j6yhQkptTZDQb9vzMgqIdQiQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://pf.kakao.com/_ZxgKUC/112330028",
+          "domain": "pf.kakao.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -1632,7 +1632,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-006",
@@ -1644,26 +1644,26 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYh1aiuDEbVlUVM0lCB7MPTs6u867OycUI_2rTNhHeaQO4LiZQAoEc91RWttIYn0QS9TqBGAxpiuq-Uy8h4EeZzWLVjBnx0sMSI_pbGevQIuR0m_clfDJfqojspJr1N5-hck_9cFNWgRPaBOZFrsUB",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.clinicseoul.net/gangnam-plastic-surgery-guide/",
+          "domain": "clinicseoul.net",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVn4rLyLks_lrg6WisV689fXKYmgFXLf2FdTRJr8oIQ_pp5c1Od2L9n5GSTYsW8nwxGi-eVbOtKsS_9CSQjc4RUnjk1EVz22oNdFwDzI0GGts5Re7CRqnK7wTmKQplbX0O7pjPyHFyG8ZOSDinLrDEuJud3jintTjhxhCs1p9z",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://gangnam.clinic/patient-resources/international-patients-services/",
+          "domain": "gangnam.clinic",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGszt__FmC36GuKBR7ITNDgVRCcIh6zba8J5lKliPVJ-jVFJWgATer1P4eaiMuE0Ly-IwzadNK9SCzVQlrRDjGpQiMm1BEVTooQEzVdj6jHl4_RQ9rngsB28L0rWg7dMMLKtVVvyS3l8ImFKem4WhADBU3_1K53fvvDLq9paOIB791_6w==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://english.visitkorea.or.kr/svc/contents/infoHtmlView.do?vcontsId=139792",
+          "domain": "english.visitkorea.or.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzvAJviC5DjotWB55Cdx4QneBy67Syige5ktjy7Dto00MfQf5nxpkSk7TvebGiezjlSEyf9e8awuykMHJNc8cEgw4JVOH2i3Uo4nzy9FoByXm0yJOW4OIZtA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewplasticsurgery.com/",
+          "domain": "viewplasticsurgery.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2062,38 +2062,38 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHA2_16FX6btj7PPr-JvIfYRvLp7cEvRdxbyKDgYhIj5SQCTYcHouyApsqLTIMcb6VUFfgwAt4RVroKHEsEKAAgEAzueyKE6xeBzNG-_Lgai1bahC5ea3ejxqg7AM7zslCxjLLrxuPIFoygyqW1NNKujsqv8XCIKxymFPu3hn6zZEF561H4dzfc7UTGjRRGRI7nOhPvFMdQ-huwq-ZQNqsj1YKCn0k0k4nGjkqfmPvZJ4S44el6FJ0P9Nm7WZyxOxNWZI2zGBS3i2BDfoR5Oa8=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.yunoprs.com/shop_contents/myboard_list.htm?page=356&myboard_code=postscript&load_type=&page_idx=0&me_popup=&h_search_c=0&h_search_v=&tag_on=",
+          "domain": "yunoprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEeTz3QweeWAukU7E4o-N64FmuInhP-P7pLPNIVYdiM6aVBC4nti7A8Y_MlgU1TJihs5NNVsVbS9IAdftAjcYcgmQxNBJCBZBnd",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://pop-ps.com/",
+          "domain": "pop-ps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEcaAoPfvQJcnzV_Qe9Ty7ucS6KZDtTZSGBvq-SW0rrGNnJiEwprW79zKeKwQP4JhGT3GtuPyz0C1BAiCLdgvbHIBaVXo_vo6qXpodt2V7vYvX1stD6Xqcqrd0qIo7zp2SPtgOn",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://m.naturalface.co.kr/eye/twin/index.php",
+          "domain": "m.naturalface.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEs2MdUafhRcNOqJFfwOFW5nFEkVPBG4b75vS9eIIEzTCsxN_YiTHFcf_t_MSb3yi39r93mvE-fa6lr3H3qNkjr-rYgvQvCM6R-tCVLbOjhrZKj2tqHposa4VC9CDUm",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/51707",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcYQcpgTz8S9K_1d8DR8tTNTqXF_l_bYo5ZPdBq3vzdqVwUjZn-XIHrFRWeS9dCrQSGYv-4wvfV94SuYK0IQch5SjAaXDKMvnu9Sbjcgw3TrQOmtw=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.naturalface.co.kr/",
+          "domain": "naturalface.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkLHIo04ioLHcG52oQ1NEY6ca_7i4_pq8K0njeVs2ZI5Sohd3ivlv_YdjNSQhcU2RWccqUt3li-ZxYySt3FSC1l5rPUNa61wHvNEoz3-TZpYqAad0O9GkcsHfU4Ia27O9MbrVzc2AXts_ssH4oFKThtJ3z2yG1wHGNADADxwHj4rvXXOjEw8M_O3zlvBl25bhq_umXOkV3FJytx_8F-eahDcfpbF_WSw-Sr6ciZnSqBoU6DErnG-noRV4nM0IrPRC94pe4ll8iwgwo5KsvLVzKJzaH_Qan8gfmF1bcdMF34LbI3A==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.dotps.co.kr/%EC%9E%90%EC%97%B0%EC%9C%A0%EC%B0%A9-%EB%B9%84%EC%A0%88%EA%B0%9C-%EC%8C%8D%EA%BA%BC%ED%92%80-%EC%9E%98%ED%95%98%EB%8A%94%EA%B3%B3-%EA%B0%95%EB%82%A8",
+          "domain": "dotps.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2115,32 +2115,32 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFqJGgk20eTmII6C2QanFNoY1qJKDr7arAusGNI-dI4vP9aaW7EbyAGnTB-0hfGd03kdvEb8YZv0IL_WKV_LtI3_FOdASAcPCg-YNuUQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.yunoprs.com/",
+          "domain": "yunoprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZv2AJEohQvilJcQd1lCRh0jX08RMTM6-9Co1_4f5DQbt5jpomhwxaZovHlstImcDTjWj-HfyQ5aefvK5yo25daLZfbvW6GLgWu6-frW4JtFuL0fNYLhHaGcD9cHpLZD-lOkhCKBsag0UDtaq6hYYXBv6FPWMMe8_jN1AJSKqC4xCL_aPp6s-9PBbbfiAmpoWxOwsY5LfE1wlw05eBluw-HHiS34HoBHOCsI59tD0OyfNxiBGAotkl3p-OSDcOn8QCOK5J6qjc-w4qBMGLDQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.yunoprs.com/shop_contents/myboard_list.htm?page=364&myboard_code=postscript&load_type=&page_idx=0&me_popup=&h_search_c=0&h_search_v=&tag_on=",
+          "domain": "yunoprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCFbEsyt86fB4A-zu1wShCIR4VAOPj2QEK9WrKS_lRLyYDBtYH8riuIAi_l0ueH33GWoxh1b8uFOXn07dySgZsSUO6a9Uke_MfB7k=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://editionps.com/",
+          "domain": "editionps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4XQUU5Cvv8ljDYnoiaCFbFLAVC1cPgUpOrvPwhK5cvEW3avzLETwZ7zK-5q1P8X4MTQIhPXTXnmOrRdTRagJnAt52bpx-WF4Bvw==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://realeeps.com/",
+          "domain": "realeeps.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8Dyz0qWS11iY6WlzURYx1LMPHbAPj5Y_8blc1Wpk2eUZvdGWXHoak0nHDhlm7cZ-fNTZqSb44gUYcpGxZtddONzUoeaC-sPiQl7yn6gK6d7h-s23NG_dqwqKwyU3syUoUg1lXGCMNvGlvRvAWzQl9GaCDkeAjAfu7h5hvjN_dhLMZ-3hln_vBZfXQwE2ilK1crZgjIaZb3jlU0eA79ilg94qblIRIXyGAo5l9RcxtsVn__8-cqUMro30ZdD399r7OwEOKZoyFLDVj_ox01UH70Fp-XIjvmELxiodkSGs=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.modoodoc.com/hospital/11523/%EC%B0%A8%EC%9D%B4%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90-%EC%84%9C%EC%9A%B8%EC%8B%9C-%EA%B0%95%EB%82%A8%EA%B5%AC",
+          "domain": "modoodoc.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -2439,39 +2439,39 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGk2cmFE-juIlX-mZJQ3AI6uzb4Pi4JW6aE05CfbbkkhHLVHtJhvDWEEmv8GqCRHDhsJCAKFwSZRXbucX9fqXz5XYITvupVpnr4A3WaTqhdQt98WS6OBDjvE0HVO_uH",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHfHLCDXw6GO_y_ku6413UIliVNw2cuIElSR7koICxsA4R6dklAtwfzSvl0XUvtl0AHPYu0ZlZyfFM734LkStUQLKtFKLit9cH9qCiVDOedDIOdbw1zR_JuWfm1CZWyLzL8",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=pnbxPEIm5X0",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdE5hEYm7yngjkw0hoBZd6RTB6U05KwnxE9pefRdhNFTugujOHL2TsdnSwxEAWESvhV7-S-jc3tlBlrZKSXf9ziSrg21e-N13vzniZbLtj08nbLt8oTJMrCkpxl1ewI4URf3CLyhm54nCC0E99-pkVqDVbwJwys2wFDGzIa7wk9dB8tF_aUIU3u_AUi6xckQXLqNL07rwaIj2lvj_j68Hf0zp5",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.reddit.com/r/PlasticSurgery/comments/1im2tpf/review_of_plastic_surgery_at_banobagi_plastic/?tl=ko",
+          "domain": "reddit.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRh8k8IDnUIGPE2ev0luH38L_WnOBuRVQdJR8iWx_u-uZn1kfIA5gbqEDFWSfW5X9im0R8eRF6NPtQbRQVW_KcYPKmnNDU5Zv-uR-0bC3FhQ5otrbZ1o1Rlx5JviHanIgfix66xE0=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/nose6.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEiDISbPBVO0iyn5jTVWE_nmiKYzd91dpknnF3B4b1xLU1qpREzvR9WxgUojjFcv6CZpJWBj3d46Km5kSe_c62iY8J7o6i9bxlYnjoPdnKxLgceHS8RrezcnUU8joGZ3T54aY0vrNzYaO7Rc_Vtx6b1N9czwPuqyMg6-P9dOHOrPCEym0NA9FonEMXEbWgigWGHzjwSxStLHM1UYqdCzc41Evbitc9wnDneOqA=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?myboard_code=epilogue_w&keyfield=s_v41&key=%EC%9C%A4%EA%B3%BD",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgp8zNbGtzHwuZL8EPLp8nqVM8QI-qOfemco27vUB7L2J1mdiKAOoyYkRBUsbHVBLrjW3KGlrFJGWIzR5di5suHI_eo-T1-Ub05pjfuV_jSSAH",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.btsbanobagi.com/",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -2480,7 +2480,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -2497,38 +2497,38 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkBHXhhWnBHpEVqcDvSn8CHYmJHVmuzBTscz4faGZiI8ptO33Ae0ksEoQGoDPlhSUIj44i17NE6Evp-pMcm-VyoCTSVbKP2NYwuql4m6okEVUwDh0CjAETjnvWPRFImTSfdLABFY8Wrko0csoYnjF_HdC-JcaYSpJgoI3Eq6dxLXtaBDEJDbzAebk0YpLmFekU5wsU_7vIFmTBZDHXlH8PwQkte8iS9IaBH0M=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?myboard_code=epilogue_w&keyfield=s_v41&key=%EC%9C%A4%EA%B3%BD",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsMIzk45Xe_cHqhIj8i5MI_LdNpEZPXhAvwtXmUMIiy1QgqA23xnQ7xBT0RAmfa2ntewEXxhJGkEK6NVVuftRyyAEdHMRjrbZRtbR4kXUonDn3eHNUvRS0QO_W9FSh",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsMIzk45Xe_cHqhIj8i5MI_LdNpEZPXhAvwtXmUMIiy1QgqA23xnQ7xBT0RAmfa2ntewEXxhJGkEK6NVVuftRyyAEdHMRjrbZRtbR4kXUonDn3eHNUvRS0QO_W9FSh",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=62kBtGVHW5U",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYkj6udY1M_DcgjN_jzAF_0GQBT_LrafUV7YrJGTkspHlqz_egoYuX81UFa3zp2iMKDN0RJ0zMNWs96qR6KVWd9v_-C2kB9eNmBVOxY9KqQ0v1vVAlge-eMRI5NNJ_5JGM",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?page=4&myboard_code=epilogue_w",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPzZXzp0idCpxxCCa38zdeAHwVqiojf2vWia--0gIDhiU8367OgxZYe4YokMsreLiouCiNBd--cen3h-_CbDZkSrt-UJCVS5-txUq34RHmNAlwLlvlnKPt4f7A3tuVaB7SbU3MiayLFDviFgN8ieA29_oKvY8Xs9jdquaTjM54DvvKHKsWJ5bVES0YSw==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENkhxNLTHwqrcfsjyuuqlteJ0OqwflwSXvKMkdbDiossErCqxta040acZCNVtTdujxktt3Yw7LJ7pdZV3L3AVvlLLFcExmqTkqJy9OkpxvNbinEPDTCyQ8bSPXlzjDwv7Y8pimSaRWFJeVOQvW",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2538,7 +2538,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-009",
@@ -2555,45 +2555,45 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFW0_JYpkYM8frmrmDw2bi2bbWb4b4ehZOlkT8YPynqDAmaeqqkNbQ3paxIXawHRE6FfLJyvEqU0XtpriP_OMrMEZjJB0-GjGOu6LHbM91m9i8a3jMdY4=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://babitalk.com/hospitals/440",
+          "domain": "babitalk.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGP_Gn7nIS0i-vGYHe7GtYFF5_yXyF-nJOLbFKDwwvGHAMKUi38n_wAFi7T1KyvBIxa1Z6TcZjXE7l5nuU3NXi4xz9bLt3Tu4QKQxOdjRPXXSSgHUwAb-Y=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/vlog",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=62kBtGVHW5U",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEnz3Tm-cs7754tT7m_Qfrk2j703DQKETSNo9HlOyc3AiyIfuBN_caaYn1m4PbFEvLlbeOEdr-bZ3Yeou8kdxONVuFzlFeRFGLABE_Iue9tKz4twUlR-SiPlHJ6wbSSJg=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?myboard_code=epilogue_w&keyfield=s_v41&key=%EC%9C%A4%EA%B3%BD",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzu1pot0pIlFjPzwQYKFvQtzOxfdhJ7j3V5R2i312KdDP647GvyKqftNPH3tEQlj17r7-k3b9HGzM1UgZ6Sd4zvrH1GlNH1wIwYeQzSSmRfmYedPK1TyBGmJiG23TVraRq9ieH6Bon7Lmkra__tpEnEragBYdCkksLpvGOqF891Uf7utZKX7tHW8qiK3tGpzPaUAdkXwcuBkrSZZUA6WrY9lPcHhWRJ0gR6A==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.reddit.com/r/PlasticSurgery/comments/1im2tpf/review_of_plastic_surgery_at_banobagi_plastic/?tl=ko",
+          "domain": "reddit.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF1LpUmawymmzyB409_834pPi5OEUJYd8y4-QP5n79qwwmNCzJ1mzyM15KfZCkiXvYn2f-ZL5cqihFbAXhmTljwx_1x2lKxsMFtIlYATWaTq2UHzE7w3bPKx_eTyik=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHQg8KAP6RZhe_AgIMUEmJW9au7d74jIFsMXqO0D_xK-Mxuced3ZHepijMCBqfDZU5UHu-ON3b71x_Qzkc5adTZOTV5o9GAitKAqoJYYhvwG1w6_xmoAsvly2EevZbF23v_W_GEEshs1OdruwoxW-JpBMVdjy4J0KmZJemYZMQoqhuxqmlmKzxZ5MWkgE8NI9L_QhTqZgt16hSUxCJzIXmEaus=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEfUb3omXKZG8CLS5xKVfZw5Lf2RIwUZR_HK0PMqYWkg2bb7foLqiyJCnnqU07XtuzhL85HyRK8j27Khu7GtYKzi1tAV2AiQfDJDs_LCEpT4FGHP495XAL4hxFZyrfgvOtOdbncMliwfpvMEdvr0yqJ0c86PmML_YDPnZkaApzq1a1O3SlIbtoc39pbKcIjrg8GAnjpVTCK49vN0WZ4df1VKKd4Rrqh9KC4KwrDGG7EUEk=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?page=2&myboard_code=epilogue_w&keyfield=s_v41&key=%EC%9C%A4%EA%B3%BD",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -2602,7 +2602,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -2682,56 +2682,56 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIU0ed9k4H9VLUy2e-B1UA8bb8iLaWPQ_MD2-4hyQcaCgCSAVhO92hvUqPrZodX-OTicZOT6PFXKwSc7Uw-tz0tTFfc9XbaNpJ4AqE-nJYmftxatstbnZ6O1ARQQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/sub07_01",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.hotelrestaurant.co.kr/news/articleView.html?idxno=20214",
+          "domain": "hotelrestaurant.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUnvmJg8LLhP5VQJ9Q93sPTck97juHfrFFMi0lIICjRHCRFD7_tuKa4Dy2Gmv1Y2DEfXEpkX7TeYUEQDWKFjnqJSYz2xx50nNoD5EHKaT17ecjSBGmbMio1hYMUBgI52_SSdtUHNNR6gNLamXafvzuSYamukc_RKK_",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHzOYJLNWVJTkjNcZh1-EbduiC3aCKc3-ANVshN97DqhqhMtwfCof70zLWU6uXPVl4nS93GJMmy7HnUXT0rPw9vTmE6b72rknNPRHyRbXYEr04z0-2ElXOsri5Ga4ZpgdHQRuwYUXtJ7kIUMQqG",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://health.chosun.com/site/data/html_dir/2026/01/08/2026010801961.html",
+          "domain": "health.chosun.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEHo7JOozW6ahDzyWUTyWSwNSzEy17VOXQ2oDxSyf6Uxmwwlxq0MStjGnWwycMO-8zIWvugKMGaZxEr4GGg5MMniPSR_uwy1XzVZZVLucSnF_wrdV9vL9nmh2dmJKxMO4en1pFtu4gnaFBcBAhKIDS8uPVogKrcfN8R561O0CIltg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.btsbanobagi.com/page/sub03_01",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.facebook.com/BanobagiPlasticSurgery/videos/20%EB%85%84-%EB%84%98%EA%B2%8C-%EA%B0%80%EC%8A%B4%EC%84%B1%ED%98%95%EC%9D%84-%EC%A7%91%EB%8F%84%ED%95%9C-%EB%B0%94%EB%85%B8%EB%B0%94%EA%B8%B0%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC-%EB%B0%98%EC%9E%AC%EC%83%81%EC%9B%90%EC%9E%A5%EB%8B%98%EA%BB%98%EA%B5%AC%ED%98%95%EA%B5%AC%EC%B6%95-%EC%97%AD%ED%98%95%EC%84%B1-%EB%8C%80%EC%84%B8%ED%8F%AC%EB%A6%BC%ED%94%84%EC%A2%85-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EB%B3%B4%ED%98%95%EB%AC%BC%EC%A0%9C%EA%B1%B0-%EC%8B%9C-%ED%94%BC%EB%A7%89%EC%A0%9C%EA%B1%B0%EC%97%90-%EB%8C%80%ED%95%9C-%EC%A7%84%EC%8B%A4%EC%9D%84-%EC%97%AC%EC%AD%A4%EB%B4%A4%EC%8A%B5%EB%8B%88%EB%8B%A4/3006193616152000/",
+          "domain": "facebook.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgGjd6PdRyIYwV9xwOoEcCT68OQbXJZeyIxa4tCfnB-P2JltymhsETh36hrhQKkEL2CfNgX9-RaBrZtEVookW64kjS8d7uYTjmg0HOQB5fpJphZkr8IwkqOujUF5c1Ow==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.joongang.co.kr/article/15361072",
+          "domain": "joongang.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERBdbclvhV9_xNbCml-0YklR1i4732a2Je2kY6-vxNpZQabGdDlSPtC3dVpvqqpr8XbRRf4R5vAP3i9fvbxWYEN3cA4gihH19xAsTxFeiyhaMP_SMpsaSRBuOjAJOIiHcwUVndN64Ll5rOJUIbJ_ZysLno96YacOgEk_pjGEn1kNDf-lhMHYczmOrt5mv3JIAaAz9wAvdeFoommMidYEbA_ctOztY_77mWudwhTO5oW9J5Ez2Pkcsx0cUeuPEUrtglQ0PNepNQ2y9T1OcRzzWfeoCZWEfeTwzt0YZQtO455V5toWIflsBHwp3JvH_5_XetwZpA0yvoo3HUWRyJa9E2UN9eodm2KnwYEoLJnYwYDbtPKZs51XAMqsM9Rb2pDNjLNQYVnHvKMy1zbs1boIhDHDz2Pfw-_McsLDC3myF3YfN5y5w1X9E_Jdmy7aZN0uTzJUNm3WP6TNatsM8vU5PE91c_TOGe_EcpkURo3uJapv3HcA_ZfI09OOkhb2bmef6Pp9j-HM16z0_fP57Y-qAraxBPlkFsrKA8bEGJ7tI6OJO32Tg-ORfQ3HZKx5-v71wBM071jLneNoUnKVa_6XEJ7m2wzoSPiE31FDUXB1pU-L3i0w9jIpGQpdjGSSazEu6puJ_QoMoiS4c0lmH6WHdcqUVT0XGXVuTUizVLdMRH0nSvR9J82OLb2EtG5ctNaAxGpEhKJzpE-PsTcjlnM_0IGewTSZnchhu_1GO2QqMFvY4_AwihM5IUyzR-iJb4eVOq7iia8hacUnRBIU5vBVhzoAyGRK9TOJkcAPNBViJ4sQbhesFxHd-lyd20aYXEvZiZgQquLO5LquIOrL2d6sMvzFds2to6Ghf8BI28sHj8DHWjB3lkk6hnQvW62eFSVlyqrFE0nwBR1D9Ncbxep1pgxpaT1fIycmtUCQlxZ0j86csxjKRiFTe57B77CqgmcgE=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbeTEgunAWjJqPjGB0KE4HdncGN-T7jMz3eboxkjkUGzLQPiyi6BWsQAKJZgsrNOUDro6iBb0wcZmEOl7WogNi4IFuY0XNfe8-wbjZJKPl",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMf18jkR2zpUXg9a1F4l5RCRP7WDJh7pUmelHYfE4JxcOyh3BJhHmz5VJOjcYwdfyTn2UvtkKf62QXsZ6dFSAYCgDVPio_wHLsSOlCC-Gb8BglY6sSbBsbIQ33fnEYfrJ1",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHx1S8g4oGFmaLtxw5N6moF9YlfIXCrcs6aeNtsjmC-STlxtfOofJmDxQLlgkgiRrwqiWomj9YCeKSXF1-ZEn6fAFrhiP-2_sIgDns6Zd66nDZkzmM2wfihAcX62-OiAPFi",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.youtube.com/watch?v=aYQT7T2NrPU",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2741,7 +2741,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -2762,56 +2762,56 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEg0k1T-DcGuzwULyq_-ZonNKXhBReTNp8mBstpu-2tHKEGTbjl2OMNwpK-dpzJsUGckwdWwWhOZ02p4viHDD6eNZbzSfrzGvvvPJua_O9Hx9ox",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://banobagigroup.co.kr/",
+          "domain": "banobagigroup.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0H1H2eTEg_TAmLwW_qNDcs6DZvCMMMKvruPVRbY489y96rtWM9hB59P_4PGof3f7oSXHBIs2YZHXWUV0GRZHf4tY7Gu-1kkaEnzdg5EvQAVEnRelGqTNLrnAVIEaabSpWuXik0fXdehZRlZOCqpfSadZv5dfFj6Fv",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.hotelrestaurant.co.kr/news/articleView.html?idxno=20214",
+          "domain": "hotelrestaurant.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxLm87gerwFegCBsP_y1YoRAyvY7xqjBPCYEwpz1cmeDIUzG0C-kPVQbGlQmJPQRv0MdGaqVpr6SyHcgW_H4tPMN6G8jLMj-C7Ff7b2BHxJPmO0LMQNZQsyqEjlj2v",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0yl6Bgk5tZJh90IIP52wsE8vX7mtQla9c5ttSdi6uv-ujRmNsa3F-qiDkbSMoaKIWTdvlCPltfWv-D6Gig767vAbx7RgzZQ_DR-7kEFTvFaP5UXOiy48SMmWchlmjlobCJGqsfPX78WuQO78dMwMtDA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.mediup.co.kr/board/index.html?id=sell&no=111071",
+          "domain": "mediup.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFk0Bdzkfwd5a76fppg5qFKV_rqZ76yGUeTiyeS0vMBADU_vIgAMHEZv-bYG24_ad0X2FFhabHaFTjpw4q3i4_96aqm3i3v7WwOAYgjp79Nlckk",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.btsbanobagi.com/",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.mediqueen.net/ko/hospitals/banobagi-clinic",
+          "domain": "mediqueen.net",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFzhuLLHzSaVt_b-NXEhREV2MWT4p3pIpKMmx065EduGRQ-ZMMYDNhFY3B4svYHEFNoMubwU-uLPdWeG9wiVc0AXfmqKF3oxVdgvBuyM-9GT8j-2V5_0hWVaHfbp9gGJsHwmfy2JP8VVvJrb8E=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.liftingbanobagi.com/",
+          "domain": "liftingbanobagi.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrv9krKbCvWUZ1SG-Xz6BZV6uUYipdNm0cb-GlNXkZ8nCgh0JfTHOZHtOj1Lr76WFEMwL9cRzGqTildfeNW-5vZCO5JpRsB1wA3bMjyCtZYeX5EDiWvQ==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkYJceVcj_iuE9rB_fMeYViKx25BXF-DPaKnLgTq_3QWTyexsv_-N1VaGRgNXD45O21wi4lbDN4hUBbSUjbI35NiCGHT-xWlXMojNdA9cO",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvivczU1PkPAsW-KfbVXJQulAhmLUIBh99IblwZti0cT1MjWDny7-ksSP_x3MRuPEukBIWRaKySbXcC3Hnw_Y2aCd-ACxXgp1HPI8ZdR9Fv0vI41xulwScomHbqN0MazXi",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.joongang.co.kr/article/15361072",
+          "domain": "joongang.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -2821,7 +2821,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-010",
@@ -2838,51 +2838,51 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYdD-OUAl8NAGz19TZDf0oW7WjnId4sBjpQdZcUJgJg09krxYuVFyLX9w7rp3th-FL-i4kpz02ThpDphVj1uYAkBhdgJZcF1vidGDu2rgbEhfb9shptvAc8bU8fGBi",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFt2aqMxA5jD4RwZ7-vZrIVBUjfj3rm162J8gbnAgiHyJQCWoRvbyR3V_Ww6Xt3v2Iq4xGmf4wSzWtRPslCGYOO74kiIfOu7FyuEqiQxz3q90Od",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.btsbanobagi.com/",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub02_07",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4P3xWG8btNaV-R3CUydwnBCeWEWPVyyHpDhAfpsq_2ZU9BAelbSvqrPI8HLakceO6I5ychf1Aq0LDRgbpdXEwtbDkKHAuN9iv7t46mfua2MmTV8ogYmRv8uNHpg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://health.chosun.com/site/data/html_dir/2026/01/08/2026010801961.html",
+          "domain": "health.chosun.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbdCOj-S3F9m0uY1M30P5rA-iDeKiJ8JsJPwOGCuKwC7pnSpzXk5msV0ClwB8DxdRnXR6HtNu4m4-TEuhMLfWvg8c6LbjTIzJniTNBcyGu2nXlzjGKuxmiTMyzxo3CfzQ0jLG9bAJr5gqQzftI",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.btsbanobagi.com/page/sub03_01",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://cashdoc.me/hospital/A1106666/%EB%B0%94%EB%85%B8%EB%B0%94%EA%B8%B0%EC%84%B1%ED%98%95%EC%99%B8%EA%B3%BC%EC%9D%98%EC%9B%90",
+          "domain": "cashdoc.me",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHoCBX7uQ0Bi6gWRqYlSoebV8yGeo3L0k57gNGOn4Ir5jvH2pk6XUd-xxyhCN3tYqnhRzufIKbMrkQoWWYCrP4QIodjH2-C-MkPIU5qtzU9jX9TyEnL2AVJJGB7TCKbYPMw0DworGSohjeHvLB9RkJ1socjg04n-1eYe00X2uhQaw==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzr26-cvGyXhhASwOpyCJRNQL1BCAQ0-WFlbEaUB8Hn15J6p09yBzO9OsMQNX0nTlFHnOdpE-FsSK5xVQ7FyaPLqsGCSB7DBjAnhtGCuX1DJ6QNLnM1yX0Yiilak-MmA==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHY268cXIVjBa5ydybVDgLjPRQa-sreM7N6cY7SIp2uWOxgFO4fcsjl5mOeHO1qaEzdALLWQKCKC4ssWR-pdvELFwOQ4LHUeKVz5eHURepgdT0NNNEgULP0pDzQBetB784_DL1UhZL6Wnqn66DzG3XtkFxEPMcoIzKLOWRz0a9Dz0If1i_Fq3Pz36rgMwLC0BJbDkeV3A8ojTItPjKdogHjycVFmAUnpNtoBRprH_8AIQEUsVxc",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFt2aqMxA5jD4RwZ7-vZrIVBUjfj3rm162J8gbnAgiHyJQCWoRvbyR3V_Ww6Xt3v2Iq4xGmf4wSzWtRPslCGYOO74kiIfOu7FyuEqiQxz3q90Od",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.btsbanobagi.com/",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -2891,7 +2891,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -3186,38 +3186,38 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFEtGwsCadBtuOP7n_B2nj7DtjYoGwYgEVI8M3SU4_cwov7KgRFLs_g96JArJABaz2kA00JQT-X5Pp7cg1sQ2YihBqmrv0bErOuEsdNneHhpskbY8E3sdKGbQUD0Q==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/aftercare",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/anesthes",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://skinbanobagi.com/",
+          "domain": "skinbanobagi.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEib35UT3ENAnDZZF4D3sK3OJqo6qVGNfPVz41GLL8VcjgpP0aMlHBBwHtdJSHXzYZVBBk7BMsbPXYpCKvJ8-ciRM3keZm1sYV6tdyGjV2X30f3Mrz8Le00wjyg",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/sub03_10",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmc-fil3_gJHtnHW2tPPp9Jble0j0WnalyMF1159_iRbRab4Gg2iXsBGjvqRWOwl4Nb3Cl2WLIWgJ6b5jcZGLxK5kzHH_Y9SB-HK685qU=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/sub07_02",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHAY0l6-1c5s5OU0TVtXwC-MK04X3y_gENP1psNDsSyUxzZv_Yb_UfNAMG1fufs8BrD8K_HBhsp5OAG_6vR-l67QWicOHYNw9O4PRF1Fd5yV2Ot6xY6AuX-hBni",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJrRfMz0yOk9Sjr4jnaJur1ubO6KrH-QfOJAog05iRVtNs62W0VrhK8slDp-QN3V_gIWy7luF0gId8AtgzCazxQmCLjIqeb2CWXcKccl5z2E3RaheXr3UPlDWF",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9wL-A7cw26TwPW7HEV2h80sraaUDOQ9W2kpLY07JPYoqVIWAg_6CsQIdRrJ4HOIPU-Q6ehrr_j8jVpFfW8UL6irU4jxF54bOaIy6qdFMDojU=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://banobagigroup.co.kr/",
+          "domain": "banobagigroup.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -3227,7 +3227,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -3248,56 +3248,56 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsb_3rnTKtVhuznPIc41S-8Hy0te98fWsl9XeZNgVAj1xuS8uFHq1pZCqEgDtHjVp_ApUCsfAnuptdAg0rvtmy_WsHhUkeq588p0KTRIHX5PmuwnW1n1Xm7PRQsGc=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/aftercare",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/sub07_00",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.grandsurgery.com/about/grand-safety-system.php",
+          "domain": "grandsurgery.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6S-sjIQ45zZPps2-7LVEJOkq-u3qjgVGJbmYFd0u-fCEXCLaEeCxuPzFzwZxt5tmg6b0STqgyIHgRFcVWSoo4eLJQGwvVBKqcd1prKh0tTdojd7qw_PO4Azcb4Q==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/system/safe-surgery/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExfJbGM7TfdgByFpkSqM44a31b7xL8U5k52ofe6RzzMaORn6yZBWzNgqM-4-506pZSZ4ONeMtPAnIZwFLtkWwbATrEckvr1dE8hLdMxR1nTJUtSDKU3YihP9NBt6xz4lWaOT4Ovhs_MQrlZEPPKTb7",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.viewclinic.com/system/safe-surgery/",
+          "domain": "viewclinic.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ4uDo1iz3bl4Jjfp5yOdx9QdeyC7mX9iwCBKmGnnTUvt2huR2Dq3Fia82ZRhpC-fM0RTy5WUx9Gbka_2A9mU--_CM9fc-TnnfHoCAXdkEx15mEy7jmxnfe5FyWUgNMhfjL3ZHWg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://toptierprs.co.kr/safe-surgical-care/aftercare-program/",
+          "domain": "toptierprs.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ4uDo1iz3bl4Jjfp5yOdx9QdeyC7mX9iwCBKmGnnTUvt2huR2Dq3Fia82ZRhpC-fM0RTy5WUx9Gbka_2A9mU--_CM9fc-TnnfHoCAXdkEx15mEy7jmxnfe5FyWUgNMhfjL3ZHWg==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://banobagigroup.co.kr/",
+          "domain": "banobagigroup.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExYjc6QwnX_ruBSitneyBsNOCknYnGMIU-4aWyDPOiSg1B2zadDd695EhgfLwmJwY85-XRSHHrfGv1QdEZ-17SlGQcrr8_ZdGgRNuh0Wfu5vID6-trZBlKP6KrBHNA8flyML3jCUxICpfO7zNlcTWs65S2Yg==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/knowledge",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdj20kULMP1-1kmftlj1N3MXlSIjfiRxB0ykfvxbtTcj0D47WMWNtO9CuGBRGgvy12NrvexWtMgK17MwO9K_FPj0noz3x0RIFSdPfCQUW6okRy",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsvQioKoIG4txNJUcFrjVU_3Fr17iyUCm-2-CoqtcrsN4zolDObMrk1zXvw7XyGi2-Z9oKgGYgZba-gWaNqlSrGbLApJIPCKG4p7r0L4dH3VxUUkwOMWJUAPVoHFE=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-dtD7UUdP82O29C_OO60Mu4FkBpHQB3W9g03kw8YNXrxIasirSD1ixomzLdTrl1whZtSfYQCxIx-VpOUqaojtwZmT8nXqcywjDt9rAFI-Jnk48Xpu7jnYTDFUwngZQ8nD0eUNv6ybrAtQL2dWNDvdVE0=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.newstap.co.kr/news/articleView.html?idxno=115710",
+          "domain": "newstap.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -3307,7 +3307,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-011",
@@ -3324,27 +3324,27 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGY6lyFAuGiyRQcOYx4vowsqg_x4_v5yCIOLE9nXPbThYT5PN3f9kXCxLql-fI1A5zTzmGO_7UwR0uaieOgVjQRHPEK232Ch56nUn3IWLwKOVGEVWEj4G96IROm2Js=",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/aftercare",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXeWO9v6By_yNyxU4bK1eSlArv8SnworKp41vAhH__KFhka2STHIV_bn-M7L3_EINp-xPle0sv5tXqusvQXnoR59bOiblgw3P1GC7Zfr2luSYfQqo1p1gS23mSjg==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/sub07_00",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMss_9kt2oWfFAak9WrpsW86iIZpMN6yUGxY3p4QHxaNaYFlp2dtuZdMqzP1ZZeJT7LDu1Nek8FBBILysxy-HG4Ez_ie5eMV0DPZzLfM-BcvSlGcerJIpR5a6gYw==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/sub03_10",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGcmZjJFcMhPx-rPIUhIln5VvloSzO6U0w_2TCHaWSpFpwMoIrEpT-vPNY8CO2DzTvMujzWOvfQjgyTJA2qiN1WTRtvqiObdmqdfY0Q6lvtKPVh0xLX4HALZbLf3w==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.banobagi.com/page/sub07_02",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         }
       ],
@@ -3353,7 +3353,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -3522,32 +3522,32 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCha0Nm_YMg_zZMoSZE5njAgiQmfWzK09YGPQevcK3WiUYQ3olQY-_UZk8Ytu-_6w5K8qUK_OmMYoqiGjxAcNtgYgd48XeiLYL0Nf5VQ9NOyLwDeoTaZbbjJDJbA==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/p2022_03",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.btsbanobagi.com/page/sub03_01",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.skinbanobagi.com/noinsuPrice",
+          "domain": "skinbanobagi.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEw9fdemXukhFYHhHHhDIgmoMuinj1cFu2qcAT0NTQJK9jl-RxxbuspXvCBpn--yeelYB2OiV2HrvYwbZfAYtCReeFi6jfmfUc--b33cumfYUkSDPV_zWrOByDtZCOc8A==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.eightprs.com/shop_contents/myboard_list.htm?myboard_code=pay&page=5",
+          "domain": "eightprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWkxlLc3YMoGXKu5xV1Z16O2FItxSR_F6huCY13fQdKGQZcqAEwibtoyy9ailLjvK5ta2VTNnsuOCMUGEyMdGg0jXKS4KztqpZpxvQfrcwq56TxjDMvVacNbna_jNM",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHUWUb0EBgdIsh9vsKdylVktbn-PgZ2Uip3T0BlKRLE4Oly0LaUEQeiZ5D2vYajklgbjypaaox6tD03F5eQ3VgpDvw4d6WfyoSamED45yKPfeA3blLGu7XnuDghXHI3_eJIw0bECqznqFFh2NwxRIRFB7-fBYhgI8ByAbyA_XNrDlp5366t",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJs3O6TmkBDX0Z-KiNFEC1rEj6qpHg84xnCGTjQy5HBCGtB8XsmRXltpQWk02Lcn5B8HgavllmLOiejRCkKmryJq5jWIPjSiXOUZYGncc-C6D9x3vhSwEbCIgUrrjlBbwvHcsPMIsCVyoMOmov",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": false
         }
@@ -3557,7 +3557,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -3574,63 +3574,63 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHReUwkO-bwKo3hH0nA001WU7kQ3Y6rO7QxYAVgNR1khSfxGCYh7oZC7NACEiiB9gjpyWlUU5H6WUtoCqcsuFqR_0rPwMlK_9AD_HdLCzjDe3vM1t7dahE_CIJtIfKpLMP15A==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/u_price_241212",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/p2022_03",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.eightprs.com/shop_contents/myboard_list.htm?myboard_code=pay&page=5",
+          "domain": "eightprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlGbeKyR-2Cw8UOyxrJS1utqDw4xFgSzzjd4E56egaaL1T5PnNjeioMwFZHp--HNs8awjLee8IimPc1UmAbpRgvVkxHMdoZEjLNekhWIVn7JEEDpBv08q-PD3EsQ==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.banobagi.com/page/u_price_241212",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://medi-map.co.kr/event?department=%EC%84%B1%ED%98%95+%EC%88%98%EC%88%A0&subDepartment=%EC%95%88%EB%A9%B4%EC%9C%A4%EA%B3%BD",
+          "domain": "medi-map.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGl7puk5OZykVlgsfIbuU-kSsQBc7DbLaYBXj9ZNBCXohGqo6Np3tTdNvMtdC7OZdT94Z9QD9EHenKzzr8yD8g-Yc2OYp0NuegwTODpxfuisEKdDHFK7vRIp44Hjab9kQB1yC5_qRyLAY7jqHMvjD2on99xNMwultndSDUvC-JboIH3Fe-w",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHReUwkO-bwKo3hH0nA001WU7kQ3Y6rO7QxYAVgNR1khSfxGCYh7oZC7NACEiiB9gjpyWlUU5H6WUtoCqcsuFqR_0rPwMlK_9AD_HdLCzjDe3vM1t7dahE_CIJtIfKpLMP15A==",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary2.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9jx67QUy3EmyHrReC4Iv_82jy1x75E89g91ETTdGy0iFF8Oi8B_iydP9Gj-pEDXvjm8CQKYfJIzDhuWiJa-PjVZ3rCyaUExNNJRwjz-ZT5oLtuM4Jx8U0wuQFX9WxBNxbSmLHonCsOUiH0kNxw-pQJmzstxNTt_KbRh-mbyRyDAhWhkd2M48V12X-7jN0zU351l-Bk3scvxrMdduV4F0GxkLVKR2fPPzMhG89nVzH9mFDaZ488b0=",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.btsbanobagi.com/page/sub03_01",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.skinbanobagi.com/noinsuPrice",
+          "domain": "skinbanobagi.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPHUYC-hiAZ1xr5EQBLZ6by1Y8CNzkD6Ynt5xkcPAeWkMC5n5k6SFXhCvkoW_7cL207Et8IWmdsCPuOYTS4FpaKrGSIaxzBremuJaKluwwklNEupF3P9bT8KJLXhqEz2kYowDDUJc0Ab43AyjP",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnbUt8iYzJXBEvpPl6Y2zPC1c6h8zmMdYGkUb_FCakZWxR692aB3g8J_B3LyvSFk8iEk0s_uqrSD67BtyXG49BA2Bbl6X3ALytFsTwhR4hrwk_qlLU4ZlKDZLYdKnj3SBm2O3635ps9MWgp6hu",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE7oCrDeeHUHI5Q5lCGajftFR-pbWXH7dKnYDt_7QLN7eQhKfvolLxv2L6Ru6HHFvG7JiB-B0oLIEFVr1QMe2aH72LzrxuGZpal7pTT5hvQ9CH8DCLCTslUZPT3oPk5KQ==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxma66TEkg4fBhVL9ttkwHep9tLjeS6YRf8OmoD9rhc-wFeCWpEpm1azlEZ1g0HDHmqXVGb0xDijxs1hVOeJPL03vP_rCB8OmPkxdZFkERM3K2y7iWKxoyC5zrVIC-",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFIpI_MTnIyCC5wdDNAr9Q9ejvfgDbHGwOKk4z8LSx9T0C03z17DkbR09R0cpY3EBot0KcPX4BYFARoOn4IophPsVdnxAuuv5Emxy86eDObvqC5CkZJoUzA5pAVO4sqFQ==",
-          "domain": "vertexaisearch.cloud.google.com",
-          "ownerType": "unknown",
+          "raw": "https://www.btsbanobagi.com/page/sub02_05",
+          "domain": "btsbanobagi.com",
+          "ownerType": "brand-owned",
           "supportsBrandMention": true
         },
         {
@@ -3640,8 +3640,8 @@
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqiWQzXhqjWpzKRVz9BEOmJUBomNxzXvUVmwiIPOfOj_5JOOJ8sAXR7qEE1Jy2WbMC5GpTnbexPFWJoI5vEgYRztXhJu0myfb0RONHaUfNf3nkpqzbl503UwGuVPNd",
-          "domain": "vertexaisearch.cloud.google.com",
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -3651,7 +3651,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     },
     {
       "questionId": "v1-012",
@@ -3668,68 +3668,68 @@
       "shareOfMention": 1,
       "citations": [
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFMFbcdQUsFpvRhJn3jeO99UgDGu1Uf4pPd0yvd89v5yKI-vdygLjE1jmxQQuw8W78G50UJufEPxYP_4Blp2TPzyTg8GrbGALCcOMw3341Du1tcW3uIwrMOSgPKWYMidvcWKA==",
-          "domain": null,
+          "raw": "https://www.banobagi.com/page/u_price_241212",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "http://tcation.co.kr/banobagi/landing/bimaxillary1.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHyLBy72Ww7tmbNEmzz2lbwFcVnWwS2CYTwnqoXFbxLfjJHluxN031rnlEbyivt1jagNSigJZhZsMea5IIarsz2exGTRDNoJqsxd3UNK9btSQMW9F8O8Wc-ds6Y4wC4rT1viYPvG1WBqj34AjYi",
-          "domain": null,
+          "raw": "https://www.goodoc.co.kr/hospitals/47307",
+          "domain": "goodoc.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqiRjVQOTrTQH55eQpnGO9oqQKUDKwlx3KBYi3CXmplwRpILyOp-CpXgx3MtJo_6aJu_-hiO443spn0bc8ifU9X3-L7pVBe6F1InMwOHTsJ9bCVfbU5I51HfOoStnm",
-          "domain": null,
+          "raw": "https://www.eightprs.com/shop_contents/myboard_list.htm?myboard_code=pay&page=5",
+          "domain": "eightprs.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHX-FKW0ceWvv6u3Uoq3VsY43AyA5Pxo8djqG3HwS7Xifu3z0xo2Wcn5hyyE3DzT7fXoZs93R8n9bSiaDD4MO6Me3zvSUsbLIwDNAfLxdQkWQx9t6eFowVqvoHC0QIkoLIgrjJ-hHvjuC8e8CDm91DTGyjNUUYowpTu4IuXWwSZvV4xe8XR",
-          "domain": null,
+          "raw": "https://www.youtube.com/watch?v=7A0Oogb-X_w&vl=en-US",
+          "domain": "youtube.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnl2vbqSA9HdDx1i1b6Y8uX9QatnJKfX0lUAc4lM5eZYR_F-_BYp1emXjDknjXqGCFyzrXrMEBtgdrD9pj3dhNHE7lmFSiNEj_pICeXPmGk7jKlg-HXLEQ8i5ztuRXyIBfldtC-7UPTjel",
-          "domain": null,
+          "raw": "https://www.banobagi.com/shop_contents/myboard_list.htm?page=2&myboard_code=promotion",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.banobagi.com/page/p2022_03",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeoshin.co.kr/event/mobile/25192",
+          "domain": "yeoshin.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHK4Jt_31k9HCOG2bfSOOYQGYTfLND38I9rIYTAVmt7Av7CkrBp4aZXHncbDWNTfNoHbJSb0GLbmtuWPgsKoyCZ3HqGNdS0Y3hWKE-P3x9oR5cLqjj4-zEo46LKsFbDH99B8M7vL5h4ax-43Y6DnvMFIU01W1Mzxji8frvZoBH-QR6MQQaN1VxSfGax",
-          "domain": null,
+          "raw": "https://www.banobagi.com/page/app_motiva",
+          "domain": "banobagi.com",
+          "ownerType": "brand-owned",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.skinbanobagi.com/noinsuPrice",
+          "domain": "skinbanobagi.com",
           "ownerType": "unknown",
           "supportsBrandMention": true
         },
         {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRPyOnueGvoowSEQbVrkufBr8kjSOYizmaqNq1S7S6DI-kfbPOkJJR3b7GnFDyOVuPUjsGL6hCwmj_djKNHD0WXeagqBzJy6itjd7lK-kxw9uMUwGIJTY_lBU88Q==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVPBZMxI0iiuxsXzrPrYBqepo4N31gW_BrG4Bkw6HxkNXJE0smAXM-XDQuy6WlpYmd3wjSogeA9nzKxzscEiub2lhjSn50LdWty1H_veAAznmhFlHM2RT4O3BimCeY4ZLNYQ==",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEX2i_liKGjmCo4L9dGqyZ-XDhzs-fNKpPcy8FoAC5P8R0g5L9qZE1MfxY9WQURnBk5JNncI0GqxgTFhURHktVIgk38YoV-yS4bneqnVFmXkMRsRUuwkLCU_MLsl_Nq",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuxpP8qK-DjPLYz-7Hu1fPijeoegU_3Ph_W9NAf2wHiyBjjZHKde_i0b-lrM69iTDH68py9zmtHk-B-OIYdrZdYgFmdtF4loBDe7nqPQcrtQslvxvpNzXaHawQPhxu",
-          "domain": null,
-          "ownerType": "unknown",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1dWiyU2mPP12R-a6pT1SdsQXYIve5zHyJZo3BoSGdCbJV1kevq0dK-p78zib38j-O2yVB3MYvemQfqB02HDRVZn8q8oHPZUQIZJy72BBJQy0s1TkuIhqMV8VS3yGKlspe2vZ_zDTC",
-          "domain": null,
+          "raw": "http://tcation.co.kr/banobagi/landing/chest6.html",
+          "domain": "tcation.co.kr",
           "ownerType": "unknown",
           "supportsBrandMention": true
         }
@@ -3739,7 +3739,7 @@
       "factualityClaims": [],
       "factualitySupported": 0,
       "factualityContradicted": 0,
-      "brandOwnedCitation": false
+      "brandOwnedCitation": true
     }
   ]
 }
