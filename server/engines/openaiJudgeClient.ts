@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
 import { withOpenAiRetry } from './retry.js';
+import { judgeTemperature } from './judgeSampling.js';
 
 /**
  * B1/B5/B8 심판용. 수집 엔진(웹 검색)과 달리 순수 텍스트 추론만 한다.
@@ -33,6 +34,9 @@ export class OpenAiJudgeClient implements EngineClient {
         model: MODEL,
         instructions: prompt.system,
         input: prompt.user,
+        // 판정 온도 고정(judgeSampling.ts). gpt-4o 계열은 받지만 추론 모델(o-시리즈·gpt-5)은
+        // 거부하므로, 그런 모델로 판정할 때는 JUDGE_TEMPERATURE=none으로 빼야 한다.
+        ...(judgeTemperature() === undefined ? {} : { temperature: judgeTemperature() }),
       }),
     );
     return {

@@ -20,6 +20,10 @@ export class ClaudeJudgeClient implements EngineClient {
 
   async call(prompt: PromptMessage): Promise<EngineCallResult> {
     const start = performance.now();
+    // temperature를 보내지 않는다 — 현행 Claude 모델(Opus 5·4.8·4.7, Sonnet 5, Fable 5 계열)은
+    // temperature·top_p·top_k를 400으로 거부한다. 기본 JUDGE_MODEL이 claude-opus-5라
+    // 넣으면 판정이 전부 실패한다. 자세한 사정은 engines/judgeSampling.ts 주석 참고.
+    // 결과적으로 판단 엔진을 Claude로 두면 판정 노이즈를 고정할 수 없다(기본은 Gemini).
     const response = await this.client.messages.create({
       model: JUDGE_MODEL,
       max_tokens: 4096,

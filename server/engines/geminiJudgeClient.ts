@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
+import { judgeTemperature } from './judgeSampling.js';
 
 /**
  * B1/B5/B8 심판용 Gemini 클라이언트. 수집 엔진과 달리 웹 검색 없이 순수 텍스트 추론만 한다.
@@ -23,7 +24,9 @@ export class GeminiJudgeClient implements EngineClient {
       const response = await this.ai.models.generateContent({
         model: MODEL,
         contents: prompt.user,
-        config: { systemInstruction: prompt.system },
+        // 온도를 0으로 고정한다 — 판정은 측정 도구이므로 같은 입력에 같은 답이 나와야 한다
+        // (judgeSampling.ts의 실측 근거 참고). undefined면 파라미터를 보내지 않는다.
+        config: { systemInstruction: prompt.system, temperature: judgeTemperature() },
       });
       return {
         text: response.text ?? '',
