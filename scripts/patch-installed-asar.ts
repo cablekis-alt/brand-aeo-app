@@ -163,6 +163,12 @@ if (restore) {
   }
   assertAppClosed()
   copyFileSync(pick.file, asarPath)
+  // asar과 함께 구워졌던 bundled.env도 같은 버전으로 되돌린다(있을 때만).
+  const envBackup = path.join(path.dirname(asarPath), `bundled.env.v${pick.version}.bak`)
+  if (existsSync(envBackup)) {
+    copyFileSync(envBackup, path.join(path.dirname(asarPath), 'bundled.env'))
+    console.log(`bundled.env도 v${pick.version}로 되돌렸습니다.`)
+  }
   console.log(`✓ 되돌림 완료 — 현재 ${asarVersion(asarPath) ?? '?'}`)
   process.exit(0)
 }
@@ -255,6 +261,19 @@ try {
   const newAsar = path.join(out, 'resources', 'app.asar')
   if (!existsSync(newAsar)) fail('zip에서 resources/app.asar을 찾지 못했습니다.')
 
+  // bundled.env도 같이 꺼낸다 — asar **밖**(extraResources)에 있어서 asar만 바꾸면 영원히 옛 값이
+  // 남는다. 실제로 겪었다: GitHub 시크릿의 OpenAI 키를 갱신하고 릴리스를 여러 번 냈는데도
+  // 설치본은 최초 설치 때 구워진 401 키를 계속 써서 "[B3] 모든 엔진 호출 실패"가 났다.
+  // 사용자 .env(실행파일 옆·userData)가 있으면 그쪽이 우선하므로 덮어써도 사용자 설정은 안 깨진다.
+  let newBundledEnv: string | null = null;
+  try {
+    execFileSync(bsdtar, ['-xf', zip, '-C', out, 'resources/bundled.env'], { cwd: tmpDir, stdio: 'pipe' });
+    const candidate = path.join(out, 'resources', 'bundled.env');
+    if (existsSync(candidate)) newBundledEnv = candidate;
+  } catch {
+    // 이 릴리스 zip에 없을 수 있다(키 없이 빌드된 경우) — 그러면 기존 파일을 그대로 둔다.
+  }
+
   // 3) 꺼낸 asar이 정말 목표 버전인지 확인한다(엉뚱한 zip을 넣는 사고 방지).
   const newVersion = asarVersion(newAsar)
   if (newVersion !== targetVersion && !force) {
@@ -277,6 +296,17 @@ try {
   if (applied !== targetVersion) {
     copyFileSync(backup, asarPath)
     fail(`교체 후 버전이 ${applied ?? '알 수 없음'}입니다. 백업으로 되돌렸습니다.`)
+  }
+
+  // 5) bundled.env 교체(있을 때만). 내용은 API 키라 절대 출력하지 않는다 — 크기만 알린다.
+  if (newBundledEnv) {
+    const envPath = path.join(path.dirname(asarPath), 'bundled.env')
+    const envBackup = path.join(path.dirname(asarPath), `bundled.env.v${installedVersion}.bak`)
+    if (existsSync(envPath) && !existsSync(envBackup)) copyFileSync(envPath, envBackup)
+    copyFileSync(newBundledEnv, envPath)
+    console.log(`bundled.env 교체 (${statSync(envPath).size}바이트) — 빌드 시 시크릿에서 구워진 기본 키`)
+  } else {
+    console.log('bundled.env zip에 없음 — 기존 파일 유지')
   }
 
   console.log('')
