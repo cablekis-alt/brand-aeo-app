@@ -1639,3 +1639,85 @@ p.hint {
   font-size: 0.86em;
   color: var(--muted);
 }
+
+/* 가시성 격차 분석 — 카테고리·엔진 묶음 카드 */
+.gap-summary {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.gap-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.gap-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.gap-name {
+  font-weight: 600;
+}
+.gap-rate {
+  margin-left: auto;
+  font-size: 0.86em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.gap-rate b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+/* 승·무·패·무응답 비율 띠 — 숫자와 같은 순서로 읽히게 */
+.gap-bar {
+  display: flex;
+  height: 6px;
+  background: var(--line);
+  overflow: hidden;
+}
+.gap-bar i {
+  display: block;
+  height: 100%;
+}
+.gap-bar .w { background: var(--good); }
+.gap-bar .e { background: var(--muted); }
+.gap-bar .l { background: var(--bad); }
+.gap-bar .u { background: var(--line); }
+.gap-tally {
+  margin: 0;
+  font-size: 0.84em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.gap-worst {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.86em;
+}
+.gap-worst li {
+  color: var(--ink);
+}
+.gap-q {
+  display: block;
+}
+.gap-who {
+  display: block;
+  color: var(--bad);
+  font-size: 0.92em;
+}

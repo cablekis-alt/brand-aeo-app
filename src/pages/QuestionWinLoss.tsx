@@ -5,6 +5,7 @@ import { loadQuestionAnalyses, loadQuestionBank } from '../lib/api'
 import { computeQuestionWinLoss, type WinLossRow } from '../lib/questionWinLoss'
 import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
+import { resolveBankVersion } from '../lib/bankVersion'
 
 const VERDICT: Record<WinLossRow['verdict'], { label: string; cls: string }> = {
   win: { label: '승', cls: 'st-good' },
@@ -16,23 +17,26 @@ const pct = (n: number) => `${Math.round(n * 100)}%`
 
 export default function QuestionWinLoss() {
   const { tenant } = useTenant()
-  const { weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
+  const { history, weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
     loadQuestionAnalyses,
     tenant?.tenantId ?? '',
     [],
   )
 
+  // 이 주차를 측정한 은행 버전으로 불러온다 — 현재 버전으로 부르면 옛 주차의 질문 id가
+  // 맞지 않아 텍스트·카테고리가 빈 값이 된다(화면에 v1-001 같은 id가 뜬다).
+  const bankVersion = resolveBankVersion(history, weekOf, analyses)
   const [questions, setQuestions] = useState<QuestionSpec[]>([])
   useEffect(() => {
     if (!tenant?.tenantId) return
     let alive = true
-    void loadQuestionBank(tenant.tenantId).then((bank) => {
+    void loadQuestionBank(tenant.tenantId, bankVersion).then((bank) => {
       if (alive) setQuestions(bank?.questions ?? [])
     })
     return () => {
       alive = false
     }
-  }, [tenant?.tenantId])
+  }, [tenant?.tenantId, bankVersion])
 
   const rows = useMemo(() => computeQuestionWinLoss(analyses, questions), [analyses, questions])
   const tally = useMemo(() => {

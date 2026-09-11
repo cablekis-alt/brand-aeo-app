@@ -44,6 +44,7 @@ const MENU: MenuGroup[] = [
     items: [
       { label: '브랜드 종합 진단', to: '/diagnosis', b: 'B5' },
       { label: '질문별 승패', to: '/question-winloss', b: 'B5' },
+      { label: '가시성 격차 분석', to: '/gap-analysis', b: 'B5' },
       { label: '감성 분석', to: '/sentiment', b: 'B5' },
       { label: 'URL 상세 분석', to: '/citations', b: 'B5' },
       { label: 'AI 인용출처 분석', to: '/citation-sources', b: 'B7' },

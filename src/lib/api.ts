@@ -102,8 +102,17 @@ export async function loadQuestionAnalyses(tenantId: string, weekOf: string): Pr
 }
 
 // 질문 프롬프트 빌더 — version을 생략하면 서버가 테넌트의 현재 버전을 반환한다.
-export async function loadQuestionBank(tenantId: string): Promise<QuestionBank | null> {
-  return getJson<QuestionBank>(`/api/question-bank/${encodeURIComponent(tenantId)}`)
+/**
+ * 질문 은행. **주차의 은행 버전을 넘겨야 한다.**
+ *
+ * 버전을 빼면 서버가 테넌트의 **현재** 버전을 준다. 그러면 옛 주차를 볼 때 질문 id가 맞지
+ * 않아 질문 텍스트·카테고리가 조용히 빈 값이 된다(화면에 빈 줄이 뜨고 카테고리가 뭉친다).
+ * 주차 버전은 스코어카드의 questionBankVersion에 있다 — v0.1.49 이전 카드엔 없으므로,
+ * 없으면 버전 없이 요청해 현재 은행으로 폴백한다.
+ */
+export async function loadQuestionBank(tenantId: string, version?: string): Promise<QuestionBank | null> {
+  const path = `/api/question-bank/${encodeURIComponent(tenantId)}`
+  return getJson<QuestionBank>(version ? `${path}?version=${encodeURIComponent(version)}` : path)
 }
 
 // URL 상세 분석.

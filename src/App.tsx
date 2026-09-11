@@ -16,6 +16,7 @@ import PeriodicReport from './pages/PeriodicReport'
 import Performance from './pages/Performance'
 import QuestionBank from './pages/QuestionBank'
 import QuestionWinLoss from './pages/QuestionWinLoss'
+import GapAnalysis from './pages/GapAnalysis'
 import Ranking from './pages/Ranking'
 import SentimentDashboard from './pages/SentimentDashboard'
 import SiteDiagnosis from './pages/SiteDiagnosis'
@@ -30,6 +31,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="diagnosis" element={<BrandDiagnosis />} />
             <Route path="question-winloss" element={<QuestionWinLoss />} />
+            <Route path="gap-analysis" element={<GapAnalysis />} />
             <Route path="sentiment" element={<SentimentDashboard />} />
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />
