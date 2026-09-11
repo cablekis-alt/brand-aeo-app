@@ -1612,3 +1612,30 @@ p.hint {
   .shell { grid-template-columns: 1fr; gap: 0; }
   .rec-card, .report-verdict, .panel { break-inside: avoid; }
 }
+
+/* 측정 상태 화면의 실행 문서 링크 — 측정 결과로 만든 작업 지시서. */
+.doc-links {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.doc-links li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.doc-links a {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.doc-links .doc-meta {
+  font-size: 0.86em;
+  color: var(--muted);
+}

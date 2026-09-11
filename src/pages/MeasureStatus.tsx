@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { cancelMeasureRun, loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
+import { BRAND_DOCS } from '../lib/brandDocs'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
 
@@ -241,6 +242,28 @@ export default function MeasureStatus() {
         <p className="error" role="alert">
           {error}
         </p>
+      )}
+
+      {BRAND_DOCS.length > 0 && (
+        <section style={{ marginTop: '8px' }}>
+          <h3>실행 문서</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            측정이 찾아낸 문제를 실제로 고치는 작업 목록입니다. 체크한 결과가 저장돼 다음에 열 때
+            이어서 볼 수 있습니다. <b>비공개 페이지</b>라 다른 분에게 보낼 때는 공유가 필요합니다.
+          </p>
+          <ul className="doc-links">
+            {BRAND_DOCS.map((doc) => (
+              <li key={doc.url}>
+                <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                  {doc.title} ↗
+                </a>
+                <span className="doc-meta">
+                  {doc.brandName} · {doc.moves}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section style={{ marginTop: '8px' }}>
