@@ -108,14 +108,36 @@ export interface AiReferralReport {
 }
 
 // 랭킹 분석.
+export interface MentionShare {
+  name: string
+  mentionCount: number
+  share: number
+}
+
+/** 한 수집 엔진만 놓고 본 지표. 코호트 순위는 엔진별로 나눌 수 없어 여기 없다. */
+export interface EngineRanking {
+  engine: string
+  competitorShareOfMention: MentionShare[]
+  topRecommendationRate: number
+  mentionCalls: number
+  rankedCalls: number
+}
+
 export interface RankingView {
   cohort: {
     position: number
     totalTenants: number
     peers: { tenantId: string; brandName: string; aeoScore: number }[]
   }
-  competitorShareOfMention: { name: string; mentionCount: number; share: number }[]
+  competitorShareOfMention: MentionShare[]
   /** 언급 점유의 모집단. 'all'은 질문 은행을 못 읽어 전체 응답으로 폴백한 경우. */
   mentionScope: 'category-agnostic' | 'all'
   topRecommendationRate: number
+  /**
+   * 수집 엔진별 분해. 엔진이 하나면 길이 1이라 화면에서 감춘다.
+   *
+   * 선택 필드다 — 아직 갱신되지 않은 백엔드(설치본 앱, 재배포 전 Vercel)는 이 필드 없이
+   * 응답한다. 있다고 단정하면 그 조합에서 랭킹 화면이 통째로 깨진다.
+   */
+  byEngine?: EngineRanking[]
 }

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadRanking } from '../lib/api'
-import { formatPct } from '../lib/format'
+import { ENGINE_LABEL, formatPct } from '../lib/format'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { RankingView } from '../lib/types'
 
@@ -95,6 +95,54 @@ export default function Ranking() {
               </ul>
             )}
           </section>
+
+          {(ranking.byEngine?.length ?? 0) > 1 && (
+            <section>
+              <h3>수집 엔진별</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                같은 브랜드라도 엔진마다 언급·추천이 다릅니다. 위 요약은 모든 엔진을 합친 값입니다.
+                <br />
+                <b>코호트 순위는 엔진별로 나누지 않습니다</b> — 주차 스코어카드가 브랜드당 하나라
+                "이 엔진 기준 순위"는 저장된 적이 없습니다. 없는 값을 만들어 보여주지 않습니다.
+              </p>
+              <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>엔진</th>
+                    <th style={{ textAlign: 'right' }}>자사 언급 점유</th>
+                    <th style={{ textAlign: 'right' }}>1위 추천률</th>
+                    <th style={{ textAlign: 'right' }}>가장 많이 언급된 곳</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(ranking.byEngine ?? []).map((row) => {
+                    const self = row.competitorShareOfMention.find((e) => e.name === tenant.brandName)
+                    const leader = row.competitorShareOfMention[0]
+                    return (
+                      <tr key={row.engine}>
+                        <td>{ENGINE_LABEL[row.engine] ?? row.engine}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          {self && self.mentionCount > 0 ? formatPct(self.share) : '언급 없음'}
+                          <span className="muted"> · 응답 {row.mentionCalls}건</span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {row.rankedCalls > 0 ? formatPct(row.topRecommendationRate) : '순위 판정 없음'}
+                          {row.rankedCalls > 0 && <span className="muted"> · {row.rankedCalls}건 중</span>}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {leader && leader.mentionCount > 0
+                            ? `${leader.name} ${formatPct(leader.share)}`
+                            : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              </div>
+            </section>
+          )}
         </>
       )}
     </>
