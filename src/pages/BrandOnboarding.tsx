@@ -73,9 +73,17 @@ interface TenantDraft {
   industry: string
   region: string
   engines: string[]
-  questionBankSize: number
-  questionBankVersion: string
-  repeatsPerQuestion: number
+  /**
+   * 질문 배분(문항 수 · 반복 수 · 은행 버전)은 **보내지 않는다** — 서버의
+   * normalizeTenantDraft가 정한다. 여기서 값을 정하면 기본값이 두 곳에 생겨 갈린다.
+   *
+   * 실제로 갈렸다. 서버 기본을 36문항 × 1회 · v3으로 올렸는데 이 화면이 12문항 × 3회를
+   * 하드코딩한 채 버전만 v3으로 바꿔서, **v3 딱지가 붙은 12문항 은행**이 만들어졌다 —
+   * 버전 표시가 거짓이 되는, 버전을 안 올린 것보다 나쁜 상태였다.
+   */
+  questionBankSize?: number
+  questionBankVersion?: string
+  repeatsPerQuestion?: number
   competitors: CompetitorDraft[]
   factGraph: { id: string; type: string; claim: string; value: string; updatedAt: string }[]
   cohortOnly?: boolean
@@ -728,9 +736,7 @@ export default function BrandOnboarding() {
     region: region.trim(),
     // 4개 엔진을 모두 등록한다 — 키가 없는 엔진은 측정 시 자동으로 걸러지므로(부분 저하) 안전하다.
     engines: ['openai', 'gemini', 'claude', 'perplexity'],
-    questionBankSize: 12,
-    questionBankVersion: 'v3',
-    repeatsPerQuestion: 3,
+    // 질문 배분은 서버가 정한다(위 TenantDraft 주석 참고).
     competitors: parseCompetitors(competitorsRaw),
     factGraph: address.trim()
       ? [
