@@ -3,18 +3,103 @@
   "weekOf": "2026-W37",
   "analyses": [
     {
-      "questionId": "v1-001",
+      "questionId": "v3-001",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
         {
+          "name": "스테이 선연",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **스테이 선연**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **맛집·카페 투어가 메인이라면**: 이성당·초원사진관이 있는 **신흥동/월명동 원도심 독채**(*팔레드군산, 스테이 선연 등*)를 추천합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
           "name": "스테이옥도",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **스테이옥도**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **조용한 풍경과 물멍/자쿠지 힐링이 메인이라면**: 차량으로 이동해 들어가는 **고군산군도 독채 스테이**(*스테이옥도, 신시담 등*)를 추천합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "해오름펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://shyness-crown.tistory.com/316",
+          "domain": "shyness-crown.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-002",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "* **스테이옥도 (옥도면)**\n  * **특징**: 고즈넉한 어촌 마을 풍경을 내려다보는 감성 독채 스테이입니다.\n  * **장점**: 넓은 정원과 프라이빗 자쿠지가 마련되어 있어 조용한 힐링 여행에 최적화되어 있습니다.",
+              "sentence": "* **초원포레 / 초원고택 (에어비앤비 계열 독채)**",
               "sentiment": "positive"
             }
           ]
@@ -23,21 +108,57 @@
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
+        {
+          "raw": "https://www.youtube.com/watch?v=N8xUh3yqWL8",
+          "domain": "www.youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/hot/%EA%B5%B0%EC%82%B0+%EC%9D%B8%EA%B8%B0+%ED%98%B8%ED%85%94+10%EC%9C%84/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.agoda.com/ko-kr/city/gunsan-si-kr.html",
+          "domain": "www.agoda.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-003",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
         {
           "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "www.cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
-          "ownerType": "third-party-authority",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
@@ -47,38 +168,38 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://shyness-crown.tistory.com/316",
-          "domain": "shyness-crown.tistory.com",
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
-          "domain": "allstay.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "www.youtube.com",
+          "raw": "https://alwright.tistory.com/33",
+          "domain": "alwright.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
-          "domain": "www.airbnb.co.kr",
-          "ownerType": "third-party-authority",
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-120217582/",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
-          "domain": "www.yeogi.com",
+          "raw": "https://www.airbnb.co.kr/naun-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2221",
+          "domain": "gunsan.go.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -92,29 +213,136 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-001",
+      "questionId": "v3-004",
       "engine": "gemini",
-      "callIndex": 2,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **초원고택**\n  * **특징**: 초원사진관 및 이성당 인근 골목에 위치한 고택 리모델링 감성 숙소입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스테이옥도",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스테이 선연",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "해오름펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
-          "domain": "allstay.com",
+          "raw": "https://www.telltrip.com/hotel-food/hotel/%EC%A0%81%EC%82%B0%EA%B0%80%EC%98%A5%EC%9D%98-%EB%8F%84%EC%8B%9C-%EA%B7%BC%EB%8C%80-%EC%9D%BC%EB%B3%B8-%EC%88%99%EC%86%8C%EB%A5%BC-%EA%B2%BD%ED%97%98%ED%95%A0-%EC%88%98-%EC%9E%88/",
+          "domain": "telltrip.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tdugod.tistory.com/33",
-          "domain": "tdugod.tistory.com",
+          "raw": "https://www.wedding21.co.kr/news/articleView.html?idxno=303041",
+          "domain": "wedding21.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/qbZUKnIfNPY",
+          "domain": "youtube.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://hotel-iu.tistory.com/1320",
-          "domain": "hotel-iu.tistory.com",
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-14713874/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1109280688958278464",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/port-of-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/houses",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/port-of-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/guesthouse/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B5%B0%EC%82%B0%EC%8B%A0%ED%9D%A5%EB%8F%99%EC%9D%BC%EB%B3%B8%EC%8B%9D%EA%B0%80%EC%98%A5+%ED%9E%88%EB%A1%9C%EC%93%B0%EA%B0%80%EC%98%A5",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-005",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이옥도",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **스테이옥도 (독채)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://shyness-crown.tistory.com/316",
+          "domain": "shyness-crown.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
@@ -125,86 +353,14 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "www.youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/pools",
-          "domain": "www.airbnb.co.kr",
+          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EB%AC%B4%EB%85%80%EB%8F%84%E2%80%A7%EC%84%A0%EC%9C%A0%EB%8F%84",
+          "domain": "www.yeogi.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "raw": "https://nol.yanolja.com/stay/domestic/10051813",
           "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
-          "domain": "site.onda.me",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
-          "domain": "www.airbnb.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EB%AC%B4%EB%85%80%EB%8F%84%E2%80%A7%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-001",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/alltrip/post/gunsan-seonyudo-hotel-recommendation",
-          "domain": "allstay.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EB%AC%B4%EB%85%80%EB%8F%84%E2%80%A7%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "yeogi.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -215,9 +371,15 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tdugod.tistory.com/33",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
+          "domain": "www.cozycozy.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
@@ -227,14 +389,8 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10041593",
-          "domain": "nol.yanolja.com",
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "www.yeogi.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -248,58 +404,7 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-002",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-003",
+      "questionId": "v3-006",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
@@ -307,10 +412,14 @@
       "competitorMentions": [
         {
           "name": "스테이옥도",
-          "mentionCount": 1,
+          "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "**② 스테이 옥도 (구공스테이)**",
+              "sentence": "### 2. 스테이옥도 (구 공스테이 옥도)",
+              "sentiment": "neutral"
+            },
+            {
+              "sentence": "* **오션뷰 & 한적한 자연 휴양**: 선유도 방면의 **스테이옥도** 추천",
               "sentiment": "positive"
             }
           ]
@@ -320,107 +429,58 @@
           "mentionCount": 2,
           "sentences": [
             {
-              "sentence": "**① 초원고택 / 스테이 선연**",
-              "sentiment": "positive"
+              "sentence": "### 3. 초원고택 / 초원포레",
+              "sentiment": "neutral"
             },
             {
-              "sentence": "* **도심 위주 관광(빵지순례, 역사거리):** 원도심 독채 숙소(초원고택 등)를 거점으로 잡는 것이 주차와 이동 면에서 편합니다.",
+              "sentence": "* **도보 관광 & 맛집 투어 중심**: 초원사진관/이성당 인근의 **팔레드군산**, **초원고택** 추천",
               "sentiment": "positive"
             }
           ]
-        },
-        {
-          "name": "스테이 선연",
-          "mentionCount": 1,
-          "sentences": [
-            {
-              "sentence": "**① 초원고택 / 스테이 선연**",
-              "sentiment": "positive"
-            }
-          ]
-        },
-        {
-          "name": "스테이 골목집",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "라엘펜션",
-          "mentionCount": 0,
-          "sentences": []
-        },
-        {
-          "name": "해오름펜션",
-          "mentionCount": 0,
-          "sentences": []
         }
       ],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
-          "domain": "www.yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
           "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "www.cozycozy.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotel-iu.tistory.com/645",
-          "domain": "hotel-iu.tistory.com",
+          "domain": "cozycozy.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://nol.yanolja.com/stay/domestic/10062454",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-13258339/",
-          "domain": "kr.trip.com",
+          "raw": "https://pandarank.net/contents/68f37302af60b5bdd84a25b0",
+          "domain": "pandarank.net",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://shyness-crown.tistory.com/316",
-          "domain": "shyness-crown.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "www.youtube.com",
+          "domain": "tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/houses",
-          "domain": "www.airbnb.co.kr",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sukbakmagazine.com/news/articleView.html?idxno=68796",
+          "domain": "sukbakmagazine.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
-          "domain": "site.onda.me",
-          "ownerType": "third-party-authority",
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-13258339/",
+          "domain": "trip.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
       ],
@@ -433,26 +493,31 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-003",
+      "questionId": "v3-007",
       "engine": "gemini",
-      "callIndex": 2,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
         {
-          "name": "스테이옥도",
+          "name": "스테이 골목집",
           "mentionCount": 1,
           "sentences": [
             {
-              "sentence": "**스테이옥도**",
+              "sentence": "* **스테이 골목집 / 군산 휴가펜션**",
               "sentiment": "positive"
             }
           ]
         },
         {
-          "name": "스테이 골목집",
-          "mentionCount": 0,
-          "sentences": []
+          "name": "스테이옥도",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **스테이 옥도 (옥도면)**",
+              "sentiment": "positive"
+            }
+          ]
         },
         {
           "name": "초원고택",
@@ -478,8 +543,361 @@
       "shareOfMention": 0,
       "citations": [
         {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://shyness-crown.tistory.com/316",
+          "domain": "shyness-crown.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/houses",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-008",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 1. 초원포레 & 초원고택",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/accommodation/private-villa/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B0%84%EC%97%AC%ED%96%89%EB%A7%88%EC%9D%84",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/42389506",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10051790",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
+          "domain": "www.cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-120345955/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/naun-dong-gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "초원고택",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-009",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "http://www.sinsidam.com/",
+          "domain": "www.sinsidam.com",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/pools",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
+          "domain": "site.onda.me",
+          "ownerType": "unknown",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-010",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. 스테이 머뭄 (Stay Meomum)",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/712638863783300845",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/houses",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.wedding21.co.kr/news/articleView.html?idxno=303041",
+          "domain": "wedding21.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "스테이,머뭄",
+      "brandRank": 1,
+      "factualityClaims": [
+        {
+          "claimText": "스테이 머뭄은 100년 고택을 리모델링한 스테이이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "100년 고택을 리모델링",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이 머뭄의 위치는 군산시 신흥동 (말랭이마을 인근)이다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "군산시 신흥동 (말랭이마을 인근)",
+          "factGraphValue": "전북 군산시 절골길 18"
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-011",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-012",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
           "raw": "https://hotel-iu.tistory.com/645",
           "domain": "hotel-iu.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://www.sinsidam.com/",
+          "domain": "www.sinsidam.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
+          "domain": "www.youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-013",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이옥도",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **스테이옥도 (옥도면/선유도 인근)**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **탁 트인 바다와 노을 중심의 힐링**: 신시담, 스테이옥도",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **초원고택 / 초원포레 (월명동·신흥동 인근)**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **군산 맛집 탐방과 자쿠지/고즈넉한 감성**: 팔레드군산, 초원고택",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
@@ -490,32 +908,14 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "www.youtube.com",
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-13258339/",
+          "domain": "kr.trip.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
-          "domain": "site.onda.me",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
-          "domain": "www.airbnb.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "www.cozycozy.com",
+          "raw": "https://www.wedding21.co.kr/news/articleView.html?idxno=303041",
+          "domain": "www.wedding21.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -535,9 +935,9 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-003",
+      "questionId": "v3-014",
       "engine": "gemini",
-      "callIndex": 3,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [
@@ -550,6 +950,214 @@
               "sentiment": "positive"
             }
           ]
+        },
+        {
+          "name": "스테이 선연",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **스테이 선연 (한옥 독채)**",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스테이옥도",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "해오름펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-13258339/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/private-villa/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/houses",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-015",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 2. 스테이골목집 — *프라이빗한 한옥 독채 펜션*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 초원고택 / 스테이 고즈넉 — *옛 가옥의 멋을 살린 감성 독채*",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이옥도",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스테이 선연",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "해오름펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/873596271923579216",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/592372544975159812",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/gunsan-pension",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10065978",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2221",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2221",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-016",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "해오름펜션",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 3. 군산 해오름펜션",
+              "sentiment": "positive"
+            }
+          ]
         }
       ],
       "shareOfMention": 0,
@@ -561,32 +1169,14 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-13258339/",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/pools",
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
           "domain": "www.airbnb.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tdugod.tistory.com/33",
-          "domain": "tdugod.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://art.happyuj.com/entry/gunsan-pool-villa-guide/",
-          "domain": "art.happyuj.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "www.airbnb.co.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -594,11 +1184,83 @@
           "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
           "domain": "www.yeogi.com",
           "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/1000105055",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-017",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/712638863783300845",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/naun-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
           "raw": "https://www.cozycozy.com/kr/gunsan-pension",
-          "domain": "www.cozycozy.com",
+          "domain": "cozycozy.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -612,190 +1274,78 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-004",
+      "questionId": "v3-018",
       "engine": "gemini",
       "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-004",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-005",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-006",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-007",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "### 4. 원도심 독채 한옥/감성 숙소 (예: 구영주택, 초원고택 등)",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B3%A0%EA%B5%B0%EC%82%B0%EA%B5%B0%EB%8F%84",
-          "domain": "yeogi.com",
+          "raw": "https://www.booking.com/placestostay/city/kr/kunsan.ko.html",
+          "domain": "booking.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://hotel-iu.tistory.com/645",
-          "domain": "hotel-iu.tistory.com",
+          "raw": "https://www.avonhotel.co.kr/on",
+          "domain": "avonhotel.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mom-mom.net/travel/curations/65436304f72c2b42c0756033",
+          "domain": "mom-mom.net",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://allstay.com/alltrip/post/sunyudotrip-together-withgunsan",
-          "domain": "allstay.com",
-          "ownerType": "third-party-authority",
+          "raw": "https://mom-mom.net/travel/places/6579102760cc972845b90990",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
+          "raw": "https://www.youtube.com/watch?v=N8xUh3yqWL8",
           "domain": "youtube.com",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/family-friendly",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/naun-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mom-mom.net/travel/map/places/67a40e0ef45aa02b66d42c16",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
         }
       ],
       "topRecommendation": null,
@@ -807,23 +1357,71 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-007",
+      "questionId": "v3-019",
       "engine": "gemini",
-      "callIndex": 2,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
       "competitorMentions": [],
       "shareOfMention": 0,
       "citations": [
         {
-          "raw": "https://movemecompar5008.tistory.com/entry/%EA%B5%B0%EC%82%B0-%EC%97%AC%ED%96%89-%EC%98%A4%EC%85%98%EB%B7%B0-%EC%88%99%EC%86%8C%EC%99%80-%EA%B0%80%EC%84%B1%EB%B9%84-%EC%A2%8B%EC%9D%80-%ED%98%B8%ED%85%94-%ED%8A%B9%EC%A7%95-%EB%B0%8F-%EC%82%AC%EC%A7%84-%EC%A0%95%EB%A6%AC",
-          "domain": "movemecompar5008.tistory.com",
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.yeogi.com/accommodation/pension/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EC%84%A0%EC%9C%A0%EB%8F%84",
-          "domain": "www.yeogi.com",
+          "raw": "https://www.airbnb.co.kr/rooms/712638863783300845",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mom-mom.net/travel/places/69301375262f69d00dd5c169",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/873596271923579216",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.sukbakmagazine.com/news/articleView.html?idxno=68796",
+          "domain": "sukbakmagazine.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-020",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -834,14 +1432,8 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
-          "domain": "kr.trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://allstay.com/alltrip/post/3-best-gunsan-accommodation",
-          "domain": "allstay.com",
+          "raw": "http://www.sinsidam.com/",
+          "domain": "www.sinsidam.com",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
@@ -852,8 +1444,83 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "www.youtube.com",
+          "raw": "https://nol.yanolja.com/programmatic/domestic-accommodation/%EC%A0%84%EB%B6%81-%EA%B5%B0%EC%82%B0%EC%8B%9C-%EA%B7%BC%EC%B2%98-%ED%8E%9C%EC%85%98-%ED%92%80%EB%B9%8C%EB%9D%BC-%EC%B6%94%EC%B2%9C-%EB%B2%A0%EC%8A%A4%ED%8A%B8-10",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
+          "domain": "site.onda.me",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-021",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이옥도",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 고즈넉한 감성과 풀옵션 주방: **스테이옥도**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **오션뷰와 자쿠지/수영장 휴양**을 원하시면 **풀빌라 신시담**이나 **스테이옥도**를 추천합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://tdugod.tistory.com/33",
+          "domain": "tdugod.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://shyness-crown.tistory.com/316",
+          "domain": "shyness-crown.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelpkg.com/m/goods/view.php?customer_id=16198",
+          "domain": "www.hotelpkg.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://site.onda.me/%EA%B5%B0%EC%82%B0-%EC%84%B1%EC%82%B0%EC%95%A0-%ED%8E%9C%EC%85%98-136575",
+          "domain": "site.onda.me",
           "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         }
@@ -867,14 +1534,51 @@
       "clarifying": false
     },
     {
-      "questionId": "v1-007",
+      "questionId": "v3-022",
       "engine": "gemini",
-      "callIndex": 3,
+      "callIndex": 1,
       "mentioned": false,
       "mentionSentences": [],
-      "competitorMentions": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 선연",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "* **스테이 선연 (신창동/월명동)**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* 뚜벅이 여행이거나 주변 근대문화거리 산책과 함께 고즈넉함을 느끼고 싶다면 **월명동·신창동 일대의 고택/한옥 스테이(여미랑, 스테이 선연 등)**를 선택하시는 것을 추천합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "* **초원고택 (신창동)**",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
       "shareOfMention": 0,
       "citations": [
+        {
+          "raw": "https://www.facebook.com/gunsansister/posts/%EA%B5%B0%EC%82%B0%EC%97%90-%EC%9E%88%EB%8A%94-%EA%B0%AC%EC%84%B1%EB%82%AD%EB%82%AD%ED%95%9C-%EC%9D%B4%EC%83%89%ED%9E%90%EB%A7%81-%EC%B4%8C%EC%BA%89%EC%8A%A4-%EC%88%99%EC%86%8C%ED%95%98%EB%A3%A8%EC%97%90-%EC%98%A4%EC%A7%81-%ED%95%9C%ED%8C%80%EB%A7%8C-%EC%A6%90%EA%B8%B8%EC%88%98%EC%9E%88%EB%8A%94-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%ED%95%9C%EA%B3%B3%EC%9D%B4%EC%95%BC-%EC%82%AC%EB%B0%A9%EA%B3%B3%EA%B3%B3%EC%9D%B4-%EC%B4%88%EB%A1%9D%EB%B7%B0%EB%9D%BC-%EC%88%A8%EB%A7%8C-%EC%89%AC%EC%96%B4%EB%8F%84-%ED%9E%90%EB%A7%81%EC%9D%B8%EB%8D%B0%EB%8B%A4-%EC%86%A5%EB%9A%9C%EA%BB%91%EC%97%90-%EC%82%BC/1064862014997245/",
+          "domain": "facebook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.youtube.com/watch?v=09rqIcnTLAI",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
         {
           "raw": "https://www.yeogi.com/accommodation/pension/kr/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84/%EA%B5%B0%EC%82%B0%EC%8B%9C",
           "domain": "yeogi.com",
@@ -882,453 +1586,1137 @@
           "supportsBrandMention": false
         },
         {
-          "raw": "https://tdugod.tistory.com/33",
-          "domain": "tistory.com",
+          "raw": "https://www.telltrip.com/hotel-food/hotel/%EC%A0%81%EC%82%B0%EA%B0%80%EC%98%A5%EC%9D%98-%EB%8F%84%EC%8B%9C-%EA%B7%BC%EB%8C%80-%EC%9D%BC%EB%B3%B8-%EC%88%99%EC%86%8C%EB%A5%BC-%EA%B2%BD%ED%97%98%ED%95%A0-%EC%88%98-%EC%9E%88/",
+          "domain": "telltrip.com",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/port-of-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2221",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.facebook.com/gunsansister/posts/%EB%8F%84%EC%8B%AC%EC%86%8D-%ED%9E%90%EB%A7%81-%ED%95%98%EA%B8%B0-%EC%A2%8B%EC%9D%80-%EA%B5%B0%EC%82%B0-%ED%95%9C%EC%98%A5-%EB%8F%85%EC%B1%84-%EC%88%99%EC%86%8C%EB%A7%88%EC%B9%98-%EC%8B%9C%EA%B3%A8%EC%97%90-%EC%98%A8%EB%93%AF%ED%95%9C-%EA%B3%A0%EC%9A%94%ED%95%98%EA%B3%A0-%EC%95%84%EB%8A%91%ED%95%9C-%EB%B6%84%EC%9C%84%EA%B8%B0%EB%B6%80%ED%84%B0-%ED%95%A9%EA%B2%A9%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%ED%95%98%EA%B2%8C-%EC%A6%90%EA%B8%B8%EC%88%98-%EC%9E%88%EB%8A%94-%EC%9E%90%EC%BF%A0%EC%A7%80%EB%B6%80%ED%84%B0-%EC%9D%B8%EC%83%9D%EC%83%B7-%EA%B1%B4%EC%A7%80%EA%B8%B0-/1363812711768839/",
+          "domain": "facebook.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-023",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "**군산 ‘스테이, 머뭄’**은 1925년에 지어진 100년 된 적산가옥 고택을 감각적으로 리노베이션한 독채형 감성 펜션입니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://roomingofficial.com/hotels/180",
+          "domain": "roomingofficial.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
+          "domain": "yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/1baZI59P3jo",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "군산 ‘스테이, 머뭄’은 1925년에 지어진 100년 된 적산가옥 고택을 리노베이션한 독채형 펜션이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "신흥동 일본식 가옥(히로쓰 가옥) 후문 및 말랭이마을 인근에 위치한다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "A동과 B동 2가지 타입의 독채로 운영된다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "A동은 침실, 거실, 개별 욕실, 주방, 전용 정원/마당, 실내 자쿠지 공간 등으로 구성되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "B동은 침실, 거실, 개별 욕실 및 주방 공간 등으로 구성되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "부대 공간으로 독립된 마당/정원과 창고형 카페 공간이 마련되어 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-024",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 신흥동(말랭이마을 인근)에 위치한 독채 감성 숙소 **‘스테이,머뭄’(전북 군산시 절골길 18)**의 주차 및 체크인 정보는 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://roomingofficial.com/hotels/180",
+          "domain": "roomingofficial.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "‘스테이,머뭄’의 주소는 전북 군산시 절골길 18이다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "전북 군산시 절골길 18",
+          "factGraphValue": "전북 군산시 절골길 18"
+        },
+        {
+          "claimText": "체크인 시간은 오후 3시(15:00)부터이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "체크아웃 시간은 오전 11시(11:00)까지이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "체크인 방식은 비대면 셀프 체크인이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "주차 요금은 무료이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "숙소 건물 자체 전용 주차장은 없으며 인근 무료 실외 주차장 또는 주변 골목 노상 주차 구역을 이용한다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-025",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "초원고택",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "**군산 ‘초원고택’**은 군산 주요 관광지 중심에 자리한 감성 독채 숙소로, 에어비앤비 및 주요 예약 플랫폼에서 **평점 4.9점대 후반**을 기록할 정도로 만족도가 매우 높은 편입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/758524383874762775",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/port-of-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-123175852/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-123175852/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": "초원고택",
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-026",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "### 1. **스테이, 머뭄**",
+          "sentiment": "positive"
+        },
+        {
+          "sentence": "* **감성 숙소 본연의 인테리어, 자쿠지, 아늑하고 정적인 무드**를 가장 중요하게 본다면 **👉 [스테이, 머뭄]**을 더 추천합니다.",
+          "sentiment": "positive"
+        }
+      ],
+      "competitorMentions": [
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. **스테이 골목집**",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "* **마당 바비큐/캠핑 감성, 관광지 접근성(도보 핫플 투어)**을 더 중요하게 본다면 **👉 [스테이 골목집]**이 더 잘 맞습니다.",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "스테이옥도",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "스테이 선연",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 0,
+          "sentences": []
+        },
+        {
+          "name": "해오름펜션",
+          "mentionCount": 0,
+          "sentences": []
+        }
+      ],
+      "shareOfMention": 0.5,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://roomingofficial.com/hotels/180",
+          "domain": "roomingofficial.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/1baZI59P3jo",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1484772498669550470",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/89181",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://mom-mom.net/travel/properties/68dd51afc93093071cd19974",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "스테이, 머뭄은 독채 형태의 숙소이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이, 머뭄은 100년 된 적산가옥 고택을 리노베이션한 숙소이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이, 머뭄에는 자쿠지(욕조), 마당, 전기 벽난로, 카페형 공간이 갖춰져 있다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "스테이, 머뭄은 신흥동 말랭이마을 골목 안쪽에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-027",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 선연",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 1. 스테이 선연 (Stay Seonyeon)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | 스테이 선연 | 초원고택 |",
+              "sentiment": "neutral"
+            }
+          ]
+        },
+        {
+          "name": "초원고택",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 초원고택 (Chowon Gotaek)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "| 구분 | 스테이 선연 | 초원고택 |",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://kr.trip.com/moments/detail/gunsan-14766-123175852/",
+          "domain": "kr.trip.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/naun-2-dong-pension",
+          "domain": "www.cozycozy.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/breakfast",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/port-of-gunsan-south-korea/stays",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/758524383874762775",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/758524383874762775",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-028",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "해오름펜션",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 1. 군산 해오름펜션 (개정면 독채 전원주택형)",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "👉 **해오름펜션** 선택을 추천합니다 (대가족·단체 모임에 최적).",
+              "sentiment": "positive"
+            }
+          ]
+        },
+        {
+          "name": "라엘펜션",
+          "mentionCount": 2,
+          "sentences": [
+            {
+              "sentence": "### 2. 군산 라엘(라온)펜션 / 펜션호텔",
+              "sentiment": "positive"
+            },
+            {
+              "sentence": "👉 **라엘(라온)** 스타일의 숙소를 추천합니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10041215",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10041215",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-029",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "전북 군산시 절골길(신흥동)에 위치한 독채 펜션 **‘스테이, 머뭄’**의 숙박 요금 및 인원 추가 정책은 다음과 같습니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "‘스테이, 머뭄’은 전북 군산시 절골길(신흥동)에 위치해 있다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "전북 군산시 절골길(신흥동)",
+          "factGraphValue": "전북 군산시 절골길 18"
+        },
+        {
+          "claimText": "1박 기본 숙박 요금은 평일 기준 약 198,000원부터 시작한다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "객실 구성은 A동(일본식 고택 컨셉)과 B동(현대식 모던 컨셉)으로 나뉜다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "투숙 가능 인원은 기준 2인 / 최대 4인이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "기준 인원 초과 시 인원 추가 요금은 1인당 20,000원(1박 기준)이다.",
+          "claimType": "price",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "체크인 시간은 15:00, 체크아웃 시간은 11:00이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "전 구역 절대 금연이며 반려동물 동반이 불가하다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-030",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이옥도",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 무녀도에 위치한 독채 감성 숙소 **‘스테이옥도(구 구공스테이 옥도)’**의 기준 인원 및 주요 스펙, 가격대 정보입니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://shyness-crown.tistory.com/316",
+          "domain": "shyness-crown.tistory.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://story900.com/entry/%EB%AC%B4%EB%85%80%EB%8F%84-%ED%8E%9C%EC%85%98-%EC%B6%94%EC%B2%9C-TOP-3",
+          "domain": "story900.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.telltrip.com/hotel-food/hotel/%EC%A0%81%EC%82%B0%EA%B0%80%EC%98%A5%EC%9D%98-%EB%8F%84%EC%8B%9C-%EA%B7%BC%EB%8C%80-%EC%9D%BC%EB%B3%B8-%EC%88%99%EC%86%8C%EB%A5%BC-%EA%B2%BD%ED%97%98%ED%95%A0-%EC%88%98-%EC%9E%88/",
+          "domain": "www.telltrip.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-031",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 선연",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 신창동(시간여행마을 내, 초원사진관 도보 1분 거리)에 위치한 한옥 독채 숙소 **‘스테이 선연(善緣)’**의 주말 요금 및 실내 편의시설·어메니티 구성은 다음과 같습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays/breakfast",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/naun-2-dong-pension",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2153",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/seonyudo-gunsan-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.cozycozy.com/kr/naun-2-dong-pension",
+          "domain": "cozycozy.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.hotelscombined.co.kr/Hotel/Gunsan_Stay_Tourist_Hotel.htm",
+          "domain": "hotelscombined.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/sinchang-dong-gunsan-si-south-korea/stays",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-032",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": true,
+      "mentionSentences": [
+        {
+          "sentence": "군산 신흥동(말랭이마을 인근)에 위치한 100년 된 적산가옥 리노베이션 독채 숙소 **‘스테이, 머뭄’**의 청결도와 방음 관련 후기 특징을 정리해 드립니다.",
+          "sentiment": "neutral"
+        }
+      ],
+      "competitorMentions": [],
+      "shareOfMention": 1,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/1baZI59P3jo",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "군산 신흥동(말랭이마을 인근)에 위치",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": "군산 신흥동(말랭이마을 인근)",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "100년 된 적산가옥 리노베이션 독채 숙소",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "100년 된 적산가옥 리노베이션 독채 숙소",
+          "factGraphValue": null
+        },
+        {
+          "claimText": "독채 형태(A동/B동 분리)",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": "A동/B동 분리 독채",
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-033",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "해오름펜션",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 개정면 발산리에 위치한 독채 숙소인 **군산 해오름펜션**은 전반적으로 청결도와 호스트 친절도, 독채 공간의 편의성 측면에서 평점이 매우 높은 편입니다.",
+              "sentiment": "positive"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/548040773340259232",
+          "domain": "www.airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-034",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "스테이 골목집",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "군산 월명동(시간여행마을) 인근에 위치한 독채 한옥 숙소인 **‘스테이 골목집’**의 주차 및 주변 소음 관련 특징과 투숙 후기를 정리해 드립니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.youtube.com/shorts/Azv6Z13Rtyg",
+          "domain": "youtube.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1484772498669550470",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://mom-mom.net/travel/properties/68dd51afc93093071cd19974",
+          "domain": "mom-mom.net",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/domestic-accommodations/89181",
+          "domain": "yeogi.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10065978",
+          "domain": "yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [],
+      "factualitySupported": 0,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-035",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.gunsan.go.kr/tour/m2221",
+          "domain": "gunsan.go.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.wedding21.co.kr/news/articleView.html?idxno=303041",
+          "domain": "wedding21.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://www.airbnb.co.kr/rooms/712638863783300845",
+          "domain": "airbnb.co.kr",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        },
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-ugc",
+          "supportsBrandMention": true
+        }
+      ],
+      "topRecommendation": null,
+      "brandRank": null,
+      "factualityClaims": [
+        {
+          "claimText": "숙소가 신흥동(절골길)에 위치한다.",
+          "claimType": "location",
+          "verdict": "supported",
+          "responseValue": "신흥동(절골길)",
+          "factGraphValue": "전북 군산시 절골길 18"
+        },
+        {
+          "claimText": "신흥동 일본식 가옥(히로쓰 가옥)까지 도보 약 2~3분 거리이다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "이성당까지 도보 약 8~10분(차량 2~3분) 거리이다.",
+          "claimType": "location",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        },
+        {
+          "claimText": "1925년에 지어진 적산가옥 고택을 리노베이션한 독채 숙소이다.",
+          "claimType": "spec",
+          "verdict": "unverifiable",
+          "responseValue": null,
+          "factGraphValue": null
+        }
+      ],
+      "factualitySupported": 1,
+      "factualityContradicted": 0,
+      "brandOwnedCitation": false,
+      "clarifying": false
+    },
+    {
+      "questionId": "v3-036",
+      "engine": "gemini",
+      "callIndex": 1,
+      "mentioned": false,
+      "mentionSentences": [],
+      "competitorMentions": [
+        {
+          "name": "라엘펜션",
+          "mentionCount": 1,
+          "sentences": [
+            {
+              "sentence": "선유도 및 고군산군도 인근에는 **‘라엘펜션’이라는 상호로 등록된 숙소가 확인되지 않거나**, 이름이 유사한 다른 숙소(예: 군산 ‘라온’, 부안 ‘라보떼/라벤더’ 등)와 혼동되었을 가능성이 있습니다.",
+              "sentiment": "neutral"
+            }
+          ]
+        }
+      ],
+      "shareOfMention": 0,
+      "citations": [
+        {
+          "raw": "https://nol.yanolja.com/stay/domestic/10051813",
+          "domain": "nol.yanolja.com",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://coralia.infotown.kr/tour.php",
+          "domain": "coralia.infotown.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://www.sunyudo.co.kr/sunyudo.htm",
+          "domain": "www.sunyudo.co.kr",
+          "ownerType": "third-party-authority",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "http://hdmpension.co.kr/?page_id=1796",
+          "domain": "hdmpension.co.kr",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://hotel-iu.tistory.com/1320",
-          "domain": "tistory.com",
+          "domain": "hotel-iu.tistory.com",
           "ownerType": "third-party-ugc",
+          "supportsBrandMention": false
+        },
+        {
+          "raw": "https://www.yeogi.com/accommodation/kr/attraction/%EA%B5%B0%EC%82%B0%EC%8B%9C%EA%B3%A0%EA%B5%B0%EC%82%B0%EA%B5%B0%EB%8F%84",
+          "domain": "www.yeogi.com",
+          "ownerType": "third-party-authority",
           "supportsBrandMention": false
         },
         {
           "raw": "https://kr.trip.com/hotels/gunsan-seonyudo-beach/hotels-c7254m24519374/",
-          "domain": "trip.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://hotel-iu.tistory.com/645",
-          "domain": "tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10041593",
-          "domain": "yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=4BO4aFQHPrk",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/watch?v=ekGVu2DSbMA",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-008",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "국내 여러 지역(군산, 강릉, 제주 등)에 '스테이 OO', '머뭄 OO' 또는 '스테이, 머뭄'이라는 이름의 감성 독채/풀빌라가 많이 운영되고 있습니다.",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "> *※ 만약 **특정 지역(예: 군산 '스테이, 머뭄', 강릉 '머뭄 풀빌라' 등)**의 특정 객실이나 숙소를 고민 중이시라면, 지역이나 숙소 전체 이름을 알려주시면 더 정확하게 비교해 드릴 수 있습니다.*",
-          "sentiment": "neutral"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://meomoom-poolvilla.kr/meomoom-poolvilla",
-          "domain": "meomoom-poolvilla.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://stayinmeomum.com/",
-          "domain": "stayinmeomum.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://meomum.kr/",
-          "domain": "meomum.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://meomoom-poolvilla.kr/meomoom-poolvilla",
-          "domain": "meomoom-poolvilla.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "'스테이, 머뭄'은 군산에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "군산",
-          "factGraphValue": "전북 군산시 절골길 18"
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "### 1. 군산 '스테이, 머뭄' 숙소의 객실(동)을 고민 중이신 경우",
-          "sentiment": "neutral"
-        },
-        {
-          "sentence": "군산의 유명 독채 감성숙소인 **‘스테이, 머뭄’**의 객실을 고민 중이시라면 컨셉 취향에 따라 선택하시는 것을 추천합니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://roomingofficial.com/hotels/180",
-          "domain": "roomingofficial.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://meomum.kr/",
-          "domain": "meomum.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nolbal.com/stay/detail/92089",
-          "domain": "nolbal.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10061639",
-          "domain": "yanolja.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://stayinmeomum.com/",
-          "domain": "stayinmeomum.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "'스테이, 머뭄'은 군산에 위치한 숙소이다.",
-          "claimType": "location",
-          "verdict": "supported",
-          "responseValue": "군산",
-          "factGraphValue": "전북 군산시 절골길 18"
-        },
-        {
-          "claimText": "'스테이, 머뭄'은 100년 된 적산가옥 기반의 일본식 우디 컨셉인 A동과 모던 스타일인 B동 객실로 구성되어 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 1,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-009",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://apps.apple.com/us/app/%EC%96%B4%EB%B0%98%EC%8A%A4%ED%85%8C%EC%9D%B4/id1664059073?l=ko&platform=watch",
-          "domain": "apps.apple.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.busanhotelsweb.com/ko/theme/central-hotels-8/",
-          "domain": "busanhotelsweb.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/78142",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://travelwithrak6.tistory.com/832",
-          "domain": "travelwithrak6.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://blog24406.tistory.com/entry/%EC%8B%A4%ED%8C%A8-%EC%97%86%EB%8A%94-%EA%B0%95%EB%A6%89-%EC%97%AC%ED%96%89%EC%9D%84-%EC%9C%84%ED%95%9C-%EB%9F%AD%EC%85%94%EB%A6%AC-%ED%92%80%EB%B9%8C%EB%9D%BC%EC%99%80-%EB%8F%84%EC%8B%AC-%ED%95%98%EC%9A%B0%EC%8A%A4-%EC%A0%84%EA%B2%A9-%EB%B9%84%EA%B5%90",
-          "domain": "blog24406.tistory.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/jeonju-si-hotel-detail-6467500/the-mumum-hanok-guesthouse-jeonju/",
           "domain": "kr.trip.com",
           "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.thescoop.co.kr/news/articleView.html?idxno=306282",
-          "domain": "thescoop.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.chosun.com/national/national_general/2025/06/18/SJLOSV2DYBAKFFVPL5FW36A3YQ/",
-          "domain": "chosun.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://namu.wiki/w/%EC%97%90%EC%96%B4%EB%B9%84%EC%95%A4%EB%B9%84/%EB%B9%84%ED%8C%90%20%EB%B0%8F%20%EB%85%BC%EB%9E%80",
-          "domain": "namu.wiki",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/ManV9mzmxGE",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://namu.wiki/w/STAY(Stray%20Kids)",
-          "domain": "namu.wiki",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.timespread.co.kr/community/straykids/128351302",
-          "domain": "timespread.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.mk.co.kr/news/musics/10527498",
-          "domain": "mk.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://biz.chosun.com/entertainment/tv/2026/09/11/MY4DCZRQMQ3WENZQGMYTMNZXMU/",
-          "domain": "biz.chosun.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-010",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.timespread.co.kr/community/straykids/128351302",
-          "domain": "timespread.co.kr",
-          "ownerType": "third-party-ugc",
           "supportsBrandMention": false
         },
         {
-          "raw": "https://www.imbc.com/broad/enews/view.html?idx=488615",
-          "domain": "imbc.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/ZCSui1R4j7U",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": false
-        },
-        {
-          "raw": "https://biz.chosun.com/entertainment/tv/2026/09/11/MY4DCZRQMQ3WENZQGMYTMNZXMU/",
-          "domain": "biz.chosun.com",
+          "raw": "https://www.buan.go.kr/board/view.buan?boardId=BBS_0000246&menuCd=&dataSid=301907",
+          "domain": "www.buan.go.kr",
           "ownerType": "third-party-authority",
           "supportsBrandMention": false
         }
@@ -1336,492 +2724,6 @@
       "topRecommendation": null,
       "brandRank": null,
       "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://oneulbamn.com/service/list_detail?p_id=stayp&startdate=20260901&enddate=20260902",
-          "domain": "oneulbamn.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.agoda.com/ko-kr/gangneung-meomum-pool-villa/hotel/gangneung-si-kr.html",
-          "domain": "agoda.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.jeju.to/CS/DetailPopup/Lodge.aspx?cid=8116",
-          "domain": "jeju.to",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.stay-house.kr/bbs/board.php?bo_table=table57",
-          "domain": "stay-house.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.agoda.com/ko-kr/meomum/hotel/chuncheon-si-kr.html",
-          "domain": "agoda.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.waug.com/ko/accommodations/38777",
-          "domain": "waug.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tourvis.com/hotel/hotels/235452",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10061639",
-          "domain": "yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://mom-mom.net/travel/places/6908780549f3a3ebe64753f0",
-          "domain": "mom-mom.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.waug.com/ko/accommodations/38777",
-          "domain": "waug.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.hotelscombined.co.kr/Hotel/The_Mumum_Pension.htm",
-          "domain": "hotelscombined.co.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10061639",
-          "domain": "yanolja.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tourvis.com/hotel/hotels/235452",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.stay-house.kr/bbs/board.php?bo_table=table57",
-          "domain": "stay-house.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/pyeongchang-gun-hotel-detail-105262749/pyeongchang-the-meomum-pension/",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-011",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": false,
-      "mentionSentences": [],
-      "competitorMentions": [],
-      "shareOfMention": 0,
-      "citations": [
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://oneulbamn.com/service/list_detail?p_id=stayp&startdate=20260901&enddate=20260902",
-          "domain": "oneulbamn.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://meomum.kr/contents/room.html?rno=2&rsvt_rids=41497",
-          "domain": "meomum.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://mom-mom.net/travel/places/6908780549f3a3ebe64753f0",
-          "domain": "mom-mom.net",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.waug.com/ko/accommodations/38777",
-          "domain": "waug.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://tourvis.com/hotel/hotels/235452",
-          "domain": "tourvis.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "http://www.stay-house.kr/bbs/board.php?bo_table=table57",
-          "domain": "stay-house.kr",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.yeogi.com/domestic-accommodations/76599",
-          "domain": "yeogi.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://kr.trip.com/hotels/ansan-hotel-detail-52542757/daebudo-the-meomum-pool-villa-pension/",
-          "domain": "trip.com",
-          "ownerType": "third-party-authority",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 1,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "군산 신흥동에 위치한 **'스테이, 머뭄(Stay, 머뭄)'**은 100년 된 고택을 감성적으로 리모델링한 프라이빗 독채 펜션입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://roomingofficial.com/hotels/180",
-          "domain": "roomingofficial.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/1baZI59P3jo",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": "스테이,머뭄",
-      "brandRank": 1,
-      "factualityClaims": [
-        {
-          "claimText": "스테이, 머뭄은 군산 신흥동에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "1925년에 지어진 100년 된 적산가옥 고택을 리모델링한 프라이빗 독채 펜션이다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "A동(일본식 우디 컨셉)과 B동(모던 컨셉)의 2가지 컨셉 독채로 구성되어 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "신흥동 일본식 가옥(히로쓰 가옥) 바로 옆에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "프라이빗 마당, 창고형 카페 공간, 독립형 욕조, 전기벽난로 등의 부대시설 및 편의시설을 갖추고 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 2,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "군산의 **‘스테이, 머뭄(머뭄 펜션)’**은 군산 원도심의 역사적 정취와 현대적인 감성이 잘 어우러진 프리미엄 독채 감성 숙소입니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "www.youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "www.airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://roomingofficial.com/hotels/180",
-          "domain": "roomingofficial.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "www.airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/1baZI59P3jo",
-          "domain": "www.youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "스테이, 머뭄은 1925년에 지어진 100년 고택을 리모델링한 숙소이다.",
-          "claimType": "date",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "A동(일본식 감성)과 B동(모던 스타일)의 2가지 타입 독채 객실로 구성되어 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "내부에 독립형 욕조(자쿠지), 전기 벽난로 등의 부대시설을 갖추고 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "신흥동 말랭이마을 입구이자 신흥동 일본식 가옥(히로쓰 가옥) 바로 인근에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
-      "factualitySupported": 0,
-      "factualityContradicted": 0,
-      "brandOwnedCitation": false,
-      "clarifying": false
-    },
-    {
-      "questionId": "v1-012",
-      "engine": "gemini",
-      "callIndex": 3,
-      "mentioned": true,
-      "mentionSentences": [
-        {
-          "sentence": "군산의 감성 독채 숙소인 **'스테이, 머뭄'**의 주요 특징은 다음과 같습니다.",
-          "sentiment": "positive"
-        }
-      ],
-      "competitorMentions": [],
-      "shareOfMention": 1,
-      "citations": [
-        {
-          "raw": "https://www.airbnb.co.kr/rooms/1178852768125280389",
-          "domain": "airbnb.co.kr",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/CX-umCRuLlI",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://nol.yanolja.com/stay/domestic/10068088",
-          "domain": "nol.yanolja.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://roomingofficial.com/hotels/180",
-          "domain": "roomingofficial.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        },
-        {
-          "raw": "https://www.youtube.com/shorts/jPVNOwGSMXQ",
-          "domain": "youtube.com",
-          "ownerType": "third-party-ugc",
-          "supportsBrandMention": true
-        }
-      ],
-      "topRecommendation": null,
-      "brandRank": null,
-      "factualityClaims": [
-        {
-          "claimText": "1925년에 지어진 약 100년 된 적산가옥 고택을 리모델링한 프리미엄 독채 펜션이다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "독채 객실은 A동과 B동으로 구성되어 있다.",
-          "claimType": "spec",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        },
-        {
-          "claimText": "군산 신흥동 일본식 가옥(히로쓰 가옥) 후문 바로 옆, 말랭이마을 골목길(절골길 일대)에 위치해 있다.",
-          "claimType": "location",
-          "verdict": "unverifiable",
-          "responseValue": null,
-          "factGraphValue": null
-        }
-      ],
       "factualitySupported": 0,
       "factualityContradicted": 0,
       "brandOwnedCitation": false,

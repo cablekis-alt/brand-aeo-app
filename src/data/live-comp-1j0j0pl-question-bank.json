@@ -1,114 +1,330 @@
 {
-  "version": "v1",
-  "generatedAt": "2026-09-05T05:48:58.292Z",
+  "version": "v3",
+  "generatedAt": "2026-09-11T14:35:41.154Z",
   "questions": [
     {
-      "questionId": "v1-001",
-      "text": "군산에서 분위기 좋은 펜션 추천해줘",
+      "questionId": "v3-001",
+      "text": "군산에서 커플이 가기 좋은 감성 숙소나 펜션 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-002",
-      "text": "전북 군산에서 펜션 고를 때 뭘 봐야 해?",
+      "questionId": "v3-002",
+      "text": "전북 군산 독채 펜션 중에 인테리어 예쁘고 조용한 곳 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-003",
-      "text": "펜션 예약할 때 가격 말고 뭐가 중요해?",
+      "questionId": "v3-003",
+      "text": "군산 여행 가는데 1박 2일 묵기 좋은 깔끔한 펜션 알려줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-004",
-      "text": "한적한 펜션 찾는 방법 알려줘",
+      "questionId": "v3-004",
+      "text": "군산 시내나 관광지랑 가까운 감성 펜션 어디가 괜찮아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-005",
-      "text": "커플 여행에 좋은 펜션 어디 있을까?",
+      "questionId": "v3-005",
+      "text": "군산에 자쿠지나 스파 있는 힐링 펜션 추천 부탁해.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-006",
-      "text": "펜션 예약할 때 꼭 확인해야 할 것 좀 알려줘",
+      "questionId": "v3-006",
+      "text": "군산 근대화거리 주변에 분위기 좋은 한옥 느낌이나 감성 스테이 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-007",
-      "text": "펜션에서 바베큐 파티 할 수 있는 곳 많아?",
+      "questionId": "v3-007",
+      "text": "친구들이랑 군산 여행 가는데 4명 정도 머물기 좋은 펜션 어디야?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-008",
-      "text": "가족 여행에 적합한 펜션 찾으려면 어떻게 해야 해?",
+      "questionId": "v3-008",
+      "text": "군산 신축 펜션 중에 사진 잘 나오는 숙소 찾아줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-009",
-      "text": "스테이 선연 펜션 어떤가요?",
+      "questionId": "v3-009",
+      "text": "군산 독채 숙박 어디가 평점 제일 높아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-010",
+      "text": "부모님 모시고 군산 1박 여행 가는데 편안하고 조용한 펜션 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "군산에서 바베큐나 취사 편하게 할 수 있는 펜션 어디 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "군산 여행 숙소 고를 때 펜션이랑 호텔 중에 보통 어디 많이 가?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-013",
+      "text": "전북 군산 촌캉스나 한옥 감성 느낄 수 있는 숙소 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-014",
+      "text": "군산 철길마을 근처에 도보로 이동 가능한 괜찮은 펜션 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-015",
+      "text": "군산 1박 2일 힐링 코스로 묵을 만한 조용한 독채 펜션 리스트 뽑아줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-016",
+      "text": "군산 감성 스테이 중에서 재방문율 높은 곳 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-017",
+      "text": "군산 펜션 예약할 때 위치는 보통 어느 동네로 잡는 게 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-018",
+      "text": "군산 오션뷰 펜션이나 바다 가까운 숙박 시설 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-019",
+      "text": "군산 가성비 좋은 독채 펜션이나 에어비앤비 스타일 숙소 알려줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-020",
+      "text": "군산 뚜벅이 여행객이 대중교통으로 찾아가기 쉬운 펜션 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-021",
+      "text": "군산에서 기념일이나 생일파티 하기 좋은 예쁜 펜션 어디 없을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-022",
+      "text": "전라북도 군산에서 인테리어 트렌디하고 후기 좋은 숙박업소 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-023",
+      "text": "군산 스테이 선연 펜션 객실 분위기랑 특징이 어때?",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-010",
-      "text": "스테이 선연이나 주변 다른 펜션 비교해줄래?",
+      "questionId": "v3-024",
+      "text": "스테이 선연 예약 방법이랑 주차 가능한지 알려줘.",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-025",
+      "text": "군산 숙소 스테이 선연 체크인 시간과 체크아웃 시간 어떻게 돼?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-026",
+      "text": "군산 스테이 선연이랑 다른 군산 독채 감성 숙소들 비교하면 장단점이 뭐야?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-011",
-      "text": "스테이 선연 펜션 예약하려면 가격대가 어떻게 되나요?",
+      "questionId": "v3-027",
+      "text": "군산에서 커플 숙소로 스테이 선연이랑 일반 호텔 중 어디가 더 나을까?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-028",
+      "text": "군산 스테이 선연 1박 숙박 요금이랑 주말 평일 가격대 알려줘.",
       "category": "price-spec",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-012",
-      "text": "군산 펜션 중에서 후기 좋은 곳 좀 알려줘",
-      "category": "local-regional",
-      "containsBrandName": false,
+      "questionId": "v3-029",
+      "text": "스테이 선연 최대 수용 인원이랑 침실 구조 어떻게 구성되어 있어?",
+      "category": "price-spec",
+      "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-030",
+      "text": "군산 스테이 선연 내부에 자쿠지나 조리 시설 구비되어 있는지 궁금해.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-031",
+      "text": "군산 스테이 선연 다녀온 사람들 실투숙 후기나 만족도 어때?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-032",
+      "text": "스테이 선연 주변 소음이나 방음 상태 괜찮은 편이야?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-033",
+      "text": "군산 스테이 선연 예약 마감 빠른 편이야? 꿀팁 있을까?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-034",
+      "text": "군산 근대역사박물관이나 초원사진관에서 스테이 선연까지 차로 얼마나 걸려?",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-035",
+      "text": "스테이 선연 근처에 걸어서 갈 수 있는 군산 맛집이나 카페 추천해줘.",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-036",
+      "text": "군산 월명동 일대 여행할 때 스테이 선연 묵으면 동선 짜기 괜찮아?",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
     }
   ]
 }

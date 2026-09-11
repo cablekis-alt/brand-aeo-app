@@ -1600,29 +1600,29 @@
     "region": "전북 군산",
     "brandName": "스테이 골목집",
     "aeoScore": {
-      "current": 40,
+      "current": 43,
       "ma4": 43,
-      "previousWeek": 45,
-      "ciLow": 33.1,
-      "ciHigh": 46.9
+      "previousWeek": 40,
+      "ciLow": 36.7,
+      "ciHigh": 49.3
     },
-    "mentionRate": 0,
+    "mentionRate": 0.18181818181818182,
     "shareOfMention": null,
-    "avgRecommendationRank": 1,
+    "avgRecommendationRank": 1.6666666666666667,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 3,
+      "position": 4,
       "totalTenants": 6,
-      "tiedCount": 2,
+      "tiedCount": 1,
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1630,15 +1630,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1646,7 +1646,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   },
   {
     "tenantId": "comp-1lz1vi2",
@@ -1655,29 +1656,29 @@
     "region": "전북 군산",
     "brandName": "스테이옥도",
     "aeoScore": {
-      "current": 40,
-      "ma4": 40,
-      "previousWeek": 40,
-      "ciLow": 33.8,
-      "ciHigh": 46.2
+      "current": 45,
+      "ma4": 44,
+      "previousWeek": 48,
+      "ciLow": 38.1,
+      "ciHigh": 51.9
     },
-    "mentionRate": 0,
+    "mentionRate": 0.13636363636363635,
     "shareOfMention": null,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
-    "brandOwnedCitationRate": 0,
+    "brandOwnedCitationRate": 0.004329004329004329,
     "cohortRank": {
       "position": 3,
       "totalTenants": 6,
-      "tiedCount": 2,
+      "tiedCount": 1,
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1685,15 +1686,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1701,7 +1702,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   },
   {
     "tenantId": "comp-rorko6",
@@ -1710,13 +1712,13 @@
     "region": "전북 군산",
     "brandName": "초원고택",
     "aeoScore": {
-      "current": 41,
-      "ma4": 44,
-      "previousWeek": 47,
-      "ciLow": 35.1,
-      "ciHigh": 46.9
+      "current": 54,
+      "ma4": 51,
+      "previousWeek": 51,
+      "ciLow": 47.4,
+      "ciHigh": 60.6
     },
-    "mentionRate": 0.041666666666666664,
+    "mentionRate": 0.4090909090909091,
     "shareOfMention": null,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
@@ -1724,15 +1726,15 @@
     "cohortRank": {
       "position": 1,
       "totalTenants": 6,
-      "tiedCount": 2,
+      "tiedCount": 1,
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1740,15 +1742,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1756,7 +1758,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   },
   {
     "tenantId": "comp-1j0j0pl",
@@ -1765,29 +1768,29 @@
     "region": "전북 군산",
     "brandName": "스테이 선연",
     "aeoScore": {
-      "current": 41,
-      "ma4": 41,
-      "previousWeek": 41,
-      "ciLow": 35,
-      "ciHigh": 47
+      "current": 48,
+      "ma4": 45,
+      "previousWeek": 47,
+      "ciLow": 41.5,
+      "ciHigh": 54.5
     },
-    "mentionRate": 0.041666666666666664,
+    "mentionRate": 0.22727272727272727,
     "shareOfMention": null,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
     "cohortRank": {
-      "position": 1,
+      "position": 2,
       "totalTenants": 6,
-      "tiedCount": 2,
+      "tiedCount": 1,
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1795,15 +1798,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1811,7 +1814,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   },
   {
     "tenantId": "comp-fjgq11",
@@ -1821,10 +1825,10 @@
     "brandName": "라엘펜션",
     "aeoScore": {
       "current": 25,
-      "ma4": 33,
-      "previousWeek": 40,
-      "ciLow": 20.5,
-      "ciHigh": 29.5
+      "ma4": 30,
+      "previousWeek": 25,
+      "ciLow": 20.3,
+      "ciHigh": 29.7
     },
     "mentionRate": 0,
     "shareOfMention": null,
@@ -1838,11 +1842,11 @@
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1850,15 +1854,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1866,7 +1870,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   },
   {
     "tenantId": "web4ai",
@@ -1875,14 +1880,14 @@
     "region": "전북 군산",
     "brandName": "스테이,머뭄",
     "aeoScore": {
-      "current": 30,
-      "ma4": 30,
-      "previousWeek": 30,
-      "ciLow": 23.8,
-      "ciHigh": 36.2
+      "current": 32,
+      "ma4": 31,
+      "previousWeek": 32,
+      "ciLow": 26,
+      "ciHigh": 38
     },
-    "mentionRate": 0,
-    "shareOfMention": 0,
+    "mentionRate": 0.045454545454545456,
+    "shareOfMention": 0.03333333333333333,
     "avgRecommendationRank": 1,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0,
@@ -1893,11 +1898,11 @@
       "members": [
         {
           "tenantId": "comp-1j0j0pl",
-          "aeoScore": 41
+          "aeoScore": 48
         },
         {
           "tenantId": "comp-1lz1vi2",
-          "aeoScore": 40
+          "aeoScore": 45
         },
         {
           "tenantId": "comp-fjgq11",
@@ -1905,15 +1910,15 @@
         },
         {
           "tenantId": "comp-mhxthx",
-          "aeoScore": 40
+          "aeoScore": 43
         },
         {
           "tenantId": "comp-rorko6",
-          "aeoScore": 41
+          "aeoScore": 54
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 30
+          "aeoScore": 32
         }
       ]
     },
@@ -1921,6 +1926,7 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
   }
 ]

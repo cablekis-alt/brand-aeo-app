@@ -1,114 +1,330 @@
 {
-  "version": "v1",
-  "generatedAt": "2026-09-05T05:47:02.202Z",
+  "version": "v3",
+  "generatedAt": "2026-09-11T14:35:42.129Z",
   "questions": [
     {
-      "questionId": "v1-001",
-      "text": "군산에서 펜션 예약할 때 어떤 기준으로 선택해야 할까?",
+      "questionId": "v3-001",
+      "text": "군산 여행 가려고 하는데 감성 숙소나 예쁜 펜션 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-002",
-      "text": "여름 휴가로 군산 펜션 가려고 하는데 추천해줘",
+      "questionId": "v3-002",
+      "text": "전북 군산에서 부모님 모시고 가기 좋은 조용하고 고즈넉한 펜션 있을까?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-003",
-      "text": "군산에 가족끼리 갈 만한 펜션 어디가 좋아?",
+      "questionId": "v3-003",
+      "text": "군산 시내 관광지랑 가까운 독채 펜션 어디가 괜찮아?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-004",
-      "text": "군산의 펜션 숙박비는 대략 얼마 정도 할까?",
+      "questionId": "v3-004",
+      "text": "군산 한옥 느낌 나는 전통 가옥 펜션이나 숙박 시설 알려줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-005",
-      "text": "군산에서 조용하고 분위기 좋은 펜션 알아?",
+      "questionId": "v3-005",
+      "text": "커플이 1박 2일로 군산 놀러갈 때 묵기 좋은 분위기 좋은 숙소 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-006",
-      "text": "군산 펜션 예약 가능한 사이트 추천해줘",
+      "questionId": "v3-006",
+      "text": "군산에서 사진 찍기 좋고 인테리어 깔끔한 펜션 어디 있어?",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-007",
-      "text": "가을에 군산 여행 가는데 펜션 괜찮은 곳 추천 부탁해",
+      "questionId": "v3-007",
+      "text": "군산 가족 여행용 독채 숙소 찾고 있는데 후기 좋은 곳 알려줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-008",
-      "text": "군산 펜션 후기 볼 수 있는 곳 있어?",
+      "questionId": "v3-008",
+      "text": "군산 근대화거리나 월명동 근처에 걸어 다닐 만한 위치의 펜션 추천해줘.",
       "category": "category-agnostic",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-009",
-      "text": "초원고택 펜션 예약하려면 어디서 해야 해?",
+      "questionId": "v3-009",
+      "text": "전북 군산 힐링하기 좋은 조용한 촌캉스나 고택 펜션 추천 부탁해.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-010",
+      "text": "군산 펜션 예약하려는데 주차 편하고 시설 깨끗한 곳 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "군산 뚜벅이 여행자한테 위치상 가장 편리한 펜션이나 게스트하우스 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "군산에서 마당 있고 고즈넉한 한옥 독채 펜션 찾으려면 어디로 가야 해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-013",
+      "text": "군산 1박 여행 숙소로 호텔 말고 감성 펜션 가고 싶은데 어디가 유명해?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-014",
+      "text": "군산 신흥동 일본식 가옥이나 초원사진관 근처 숙박하기 좋은 펜션 있어?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-015",
+      "text": "군산에서 다도나 차 마시면서 쉴 수 있는 힐링 숙소 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-016",
+      "text": "전북 군산 에어비앤비나 펜션 중에 독채로 프라이빗하게 쓸 수 있는 곳 어디야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-017",
+      "text": "군산 레트로 감성 잘 살린 숙소나 리모델링된 고택 펜션 있을까?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-018",
+      "text": "군산 펜션 고를 때 위치나 주변 편의시설 면에서 꼭 체크해야 할 점이 뭐야?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-019",
+      "text": "군산 친구 3~4명이랑 묵기 좋은 깔끔하고 감각적인 독채 펜션 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-020",
+      "text": "군산 여행 갈 때 평점 높은 감성 숙소 리스트 좀 뽑아줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-021",
+      "text": "군산 구도심 골목 분위기를 제대로 느낄 수 있는 숙박 명소 추천해줘.",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-022",
+      "text": "군산 겨울 여행에 어울리는 따뜻하고 아늑한 온돌방 펜션 어디가 좋아?",
+      "category": "category-agnostic",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-023",
+      "text": "군산 초원고택 펜션 어떤 스타일이야? 분위기랑 시설 소개해줘.",
       "category": "brand-direct",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-010",
-      "text": "초원고택과 다른 펜션들 비교해 보면 차이점이 뭐야?",
+      "questionId": "v3-024",
+      "text": "군산 초원고택 예약 방법이랑 체크인 시간 어떻게 돼?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-025",
+      "text": "초원고택 군산 주요 관광지에서 걸어갈 수 있는 위치에 있어?",
+      "category": "brand-direct",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-026",
+      "text": "군산 초원고택이랑 다른 월명동 한옥 감성 숙소들의 차이점이 뭐야?",
       "category": "comparison",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-011",
-      "text": "초원고택 리뷰가 궁금해, 어땠어?",
+      "questionId": "v3-027",
+      "text": "군산에서 초원고택 같은 독채 고택 숙소랑 시내 비즈니스 호텔 중 어디가 더 여행하기 편해?",
+      "category": "comparison",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-028",
+      "text": "군산 초원고택 1박 숙박 요금이랑 기준 인원이 어떻게 되는지 알려줘.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-029",
+      "text": "군산 초원고택 취사 가능한지랑 구비된 비품 목록 궁금해.",
+      "category": "price-spec",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-030",
+      "text": "군산 감성 독채 펜션들 보통 주말 1박 가격대가 어느 정도 해?",
+      "category": "price-spec",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-031",
+      "text": "군산 초원고택 다녀온 사람들 솔직한 후기나 단점 있어?",
       "category": "troubleshooting-review",
       "containsBrandName": true,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-012",
-      "text": "군산 지역 펜션 중에서 전통 한옥 스타일인 곳 있어?",
+      "questionId": "v3-032",
+      "text": "군산 초원고택 주변에 늦게까지 하는 맛집이나 카페 많아?",
+      "category": "troubleshooting-review",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-033",
+      "text": "군산 고택이나 한옥 펜션 묵을 때 방음이나 난방 문제 괜찮은 편이야?",
+      "category": "troubleshooting-review",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-034",
+      "text": "전북 군산 월명동 일대에서 한옥이나 고택 느낌 펜션 잡으면 도보 관광 코스로 어디 갈 수 있어?",
       "category": "local-regional",
       "containsBrandName": false,
       "industry": "펜션",
       "region": "전북 군산",
-      "version": "v1"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-035",
+      "text": "군산 초원고택에서 이성당이랑 초원사진관까지 도보로 몇 분 걸려?",
+      "category": "local-regional",
+      "containsBrandName": true,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-036",
+      "text": "군산 시간여행마을 권역 펜션 중에 주변 골목 산책하기 제일 좋은 곳 추천해줘.",
+      "category": "local-regional",
+      "containsBrandName": false,
+      "industry": "펜션",
+      "region": "전북 군산",
+      "version": "v3"
     }
   ]
 }
