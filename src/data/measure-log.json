@@ -1,5 +1,14 @@
 [
   {
+    "tenantId": "skhynix",
+    "brandName": "SK하이닉스",
+    "weekOf": "2026-W37",
+    "aeoScore": 62,
+    "at": "2026-09-11T15:25:07.211Z",
+    "durationSec": 138,
+    "source": "local"
+  },
+  {
     "tenantId": "web4ai",
     "brandName": "스테이,머뭄",
     "weekOf": "2026-W37",
