@@ -12,8 +12,12 @@ function stddev(values: number[]): number {
   return Math.sqrt(variance);
 }
 
-// n이 작을 때(설계상 반복 3회) z=1.96을 쓰면 구간이 실제보다 좁게 나온다.
+// n이 작을 때 z=1.96을 쓰면 구간이 실제보다 좁게 나온다.
 // df=1~29 구간은 t-분포 임계값을 쓰고, 그 이상은 정규분포로 수렴한다고 보고 z=1.96을 쓴다.
+//
+// 주의: 스코어카드 CI의 표본은 "반복 3회"가 아니다. aggregate.ts가 호출 전체(18문항 × 2회
+// = 36건)의 점수를 넣으므로 df=35 → z=1.96이 쓰인다. 즉 그 폭은 반복 간 노이즈만이 아니라
+// 질문 간 편차까지 섞인 값이다. t 표는 표본이 적은 다른 호출부를 위해 남겨 둔다.
 const T_TABLE_95: Record<number, number> = {
   1: 12.71, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
   6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
@@ -35,7 +39,7 @@ export interface ConfidenceInterval {
   high: number;
 }
 
-/** 반복 호출(설계상 엔진당 3회) 결과의 평균과 95% 신뢰구간을 계산한다. */
+/** 주어진 값들의 평균과 95% 신뢰구간. 호출부가 표본을 정한다(위 주석 참고). */
 export function meanWithConfidenceInterval(values: number[]): ConfidenceInterval {
   const m = mean(values);
   if (values.length < 2) return { mean: m, low: m, high: m };

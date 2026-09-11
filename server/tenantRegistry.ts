@@ -89,9 +89,21 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     industry: d.industry!,
     region: d.region!,
     engines: asEngineList(d.engines),
-    questionBankSize: d.questionBankSize ?? 12,
-    questionBankVersion: d.questionBankVersion ?? 'v1',
-    repeatsPerQuestion: d.repeatsPerQuestion ?? 3,
+    // 문항 18 × 반복 2 — 같은 36호출 예산 안에서 정밀도가 가장 나은 배분이다.
+    //
+    // 저장된 측정 1,376개 셀(브랜드×주차×엔진×질문)로 분산을 분해한 결과:
+    //   질문 간 분산 σ²_b = 0.1671 · 반복 내 분산 σ²_w = 0.0383 → ICC 0.814
+    // 분산의 81%가 질문 간이라 반복으로는 줄지 않는다. 호출 1개를 반복에 쓰면 언급률
+    // 표준오차가 0.017%p 줄고, 질문에 쓰면 0.245%p 줄었다(14배 차이).
+    // 같은 36호출에서 12×3은 SE 14.99%p, 18×2는 13.01%p다.
+    //
+    // 반복을 1로 없애지 않은 이유: 반복은 비결정성 측정 장치이기도 하다(실측 표준편차
+    // 19.6%p — 다섯 번에 한 번은 판정이 뒤집힌다). 질문별 화면도 관측 2개는 있어야 한다.
+    questionBankSize: d.questionBankSize ?? 18,
+    // v2 = 18문항 체계. 문항 수를 바꾸면 질문 집합이 달라지므로 버전을 올려 옛 집합(v1,
+    // 12문항)을 보존한다. 같은 버전에 덮어쓰면 "그때 무엇으로 쟀는지"가 지워진다.
+    questionBankVersion: d.questionBankVersion ?? 'v2',
+    repeatsPerQuestion: d.repeatsPerQuestion ?? 2,
     competitors,
     factGraph: d.factGraph ?? [],
     ...(d.cohortOnly ? { cohortOnly: true } : {}),

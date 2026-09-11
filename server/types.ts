@@ -3,9 +3,13 @@ import type { BrandContext, Engine, FactGraphNode } from '../src/prompts/types.j
 export interface TenantConfig extends BrandContext {
   tenantId: string;
   engines: Engine[]; // 이 테넌트가 수집 대상으로 쓰는 엔진 목록 (기본 4개)
-  questionBankSize: number; // 예: 100
+  // 문항 수. 기본 18 — 반복보다 문항에 예산을 쓰는 게 정밀도에 14배 효율적이다
+  // (tenantRegistry.normalizeTenantDraft의 분산 분해 주석 참고).
+  questionBankSize: number;
   questionBankVersion: string; // 버저닝 태그. 질문 은행을 새로 생성하려면 이 값을 바꾼다.
-  repeatsPerQuestion: number; // 예: 3 — 설계 원칙: 비결정성 대응
+  // 같은 질문 반복 횟수. 기본 2 — 비결정성 측정을 유지하는 최소값이다
+  // (실측: 재질의 시 판정이 뒤집힐 표준편차 19.6%p).
+  repeatsPerQuestion: number;
   factGraph: FactGraphNode[];
   // true면 코호트 비교용 경쟁사 테넌트. 파이프라인·코호트 랭킹에는 들어가지만
   // 브랜드 선택 드롭다운(/api/tenants)에는 노출하지 않는다.
