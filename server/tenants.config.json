@@ -14,9 +14,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "기린성형외과",
@@ -96,9 +96,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -118,9 +118,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -140,9 +140,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -162,9 +162,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -184,9 +184,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -206,9 +206,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -228,9 +228,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -250,9 +250,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -272,9 +272,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -294,9 +294,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "아이디성형외과",
@@ -378,9 +378,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -400,9 +400,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -422,9 +422,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -444,9 +444,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "분당새로이치과의원",
@@ -522,9 +522,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "스테이 골목집",
@@ -592,9 +592,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -612,9 +612,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -632,9 +632,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -652,9 +652,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -672,9 +672,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -694,9 +694,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -716,9 +716,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "아이디성형외과",
@@ -780,9 +780,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -802,9 +802,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "kt.com",
@@ -839,9 +839,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -861,9 +861,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -883,9 +883,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -905,9 +905,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
     "cohortOnly": true
@@ -927,9 +927,9 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 18,
-    "questionBankVersion": "v2",
-    "repeatsPerQuestion": 2,
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
     "competitors": [
       {
         "name": "메뉴잇",

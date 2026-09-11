@@ -729,7 +729,7 @@ export default function BrandOnboarding() {
     // 4개 엔진을 모두 등록한다 — 키가 없는 엔진은 측정 시 자동으로 걸러지므로(부분 저하) 안전하다.
     engines: ['openai', 'gemini', 'claude', 'perplexity'],
     questionBankSize: 12,
-    questionBankVersion: 'v2',
+    questionBankVersion: 'v3',
     repeatsPerQuestion: 3,
     competitors: parseCompetitors(competitorsRaw),
     factGraph: address.trim()
