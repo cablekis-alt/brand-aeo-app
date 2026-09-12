@@ -1,4 +1,5 @@
-import type { QuestionRepeatAnalysis, WeeklyScorecard } from './types'
+import type { WeeklyScorecard } from '../prompts/b8-report'
+import type { QuestionRepeatAnalysis } from './types'
 
 /**
  * 이 주차를 측정한 질문 은행 버전을 정한다.
