@@ -1,0 +1,262 @@
+import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
+import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
+
+/**
+ * 격차 → 실행 항목.
+ *
+ * 격차 분석은 "어디가 비어 있나"까지 말한다. 그 다음 질문은 늘 같다 — **그래서 뭘 하지?**
+ * 여기서 그 답을 목록으로 만든다. 새 수집·판정 호출 없이, 이미 저장된 분석(B5)과
+ * 인용 출처(B7)를 조인해서 계산한다.
+ *
+ * 두 종류만 낸다. 데이터가 그 둘만 뒷받침하기 때문이다.
+ *
+ *   listing  AI가 답을 찾으러 가는 **외부 도메인인데 우리가 없는** 곳 → 등재·기고.
+ *            출처: B7 인용 URL. 실측(k-wonjin 2026-W37): 인용 49건 / 도메인 33개 중
+ *            우리 것은 k-wonjin.co.kr 하나뿐이고 나머지는 커뮤니티·블로그였다.
+ *   content  **밀린 질문 유형** → 그 주제를 다루는 우리 콘텐츠가 없다는 뜻이다.
+ *            출처: B5 질문별 승패의 '패' 판정.
+ *
+ * ── 완료를 저장하지 않는 이유 ────────────────────────────────────────────────
+ * 완료는 사람이 체크하는 값이 아니라 **데이터에서 읽는 값**이다. 등재가 실제로 되면
+ * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다(supportingBrandMentionCount > 0).
+ * 그래서 satisfied는 매번 계산한다. 사람이 적어 넣은 '완료'와 실제 노출이 어긋나는
+ * 상태를 아예 만들지 않는다.
+ *
+ * 굳이 이렇게 하는 건 언급률로는 개별 조치를 평가할 수 없기 때문이다. 측정 하나의
+ * 표준오차가 9.66%p(36문항×1회)라 두 주차 차이의 표준오차는 약 13.7%p다. 조치 하나가
+ * 그만큼 움직일 리 없으니 "이 조치가 효과 있었나"를 언급률로 물으면 영원히 답이 안 나온다.
+ * 인용 획득은 이진값이라 그 문제가 없다 — URL이 뜨면 된 것이다.
+ */
+
+export type ActionKind = 'listing' | 'content'
+
+export interface GapAction {
+  /**
+   * 주차가 바뀌어도 **같은 조치는 같은 id**를 갖는다. 진행 상태를 여러 주에 걸쳐
+   * 붙들려면 안정적인 키가 있어야 한다. 질문 집합은 주마다 달라지므로 키에 넣지 않는다.
+   */
+  id: string
+  kind: ActionKind
+  title: string
+  /** 왜 이게 목록에 올라왔는지 — 화면이 근거를 그대로 보여줄 수 있게 문장으로. */
+  evidence: string
+  /** 등재형일 때 목표 도메인. 완료 판정의 대상이다. */
+  targetDomain?: string
+  /** 이 조치가 겨냥하는 밀린 질문들(최대 5개까지 텍스트를 함께 싣는다). */
+  questionIds: string[]
+  questionTexts: string[]
+  /** 우선순위 근거 — 등재형은 그 도메인 인용 수, 콘텐츠형은 밀린 질문 수. */
+  reach: number
+  /** 데이터가 이미 충족했다고 말하는가. true면 사람이 할 일이 남지 않았다. */
+  satisfied: boolean
+  /** 무엇이 관측되면 완료인지 — 화면과 사람이 같은 기준을 보게 한다. */
+  doneSignal: string
+}
+
+export interface GapActionPlan {
+  actions: GapAction[]
+  /** 아직 남은 것 / 데이터가 충족을 확인한 것. 화면 요약용. */
+  openCount: number
+  satisfiedCount: number
+  /**
+   * 경쟁사 소유라 등재 대상이 될 수 없는 도메인 수. 실행 항목에서 빠지지만
+   * "왜 저 도메인은 목록에 없나"에 답해야 해서 센다.
+   */
+  competitorDomainCount: number
+  /**
+   * 분류를 믿을 수 없어 뺀 도메인 수(news·blog·other). 인용은 많지만 그 라벨이
+   * 폴백에서 왔을 수 있어 등재 제안을 하지 않는다 — LISTABLE_KINDS 주석 참고.
+   */
+  excludedLowConfidence: number
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  'category-agnostic': '카테고리 무관',
+  'brand-direct': '브랜드 직접',
+  comparison: '비교',
+  'price-spec': '가격·사양',
+  'troubleshooting-review': '문제해결·후기',
+  'local-regional': '지역',
+}
+
+/**
+ * 등재를 제안해도 되는 출처 종류 — **허용 목록**이다. 금지 목록이 아니다.
+ *
+ * 이유가 있다. `classifyCitationSourceKind`(server/citationSources.ts)에는 폴백이 있다:
+ *
+ *     if (citation.ownerType === 'third-party-authority') return 'news';
+ *     if (citation.ownerType === 'third-party-ugc') return 'blog';
+ *
+ * 즉 판정이 "권위 있어 보인다"고만 해도 news가 된다. 실측(k-wonjin 2026-W37): news 라벨이
+ * 붙은 153개 도메인 중 **카탈로그가 실제로 아는 언론사는 13개**뿐이고 나머지 140개(인용 292건)는
+ * 이 폴백으로 news가 됐다 — seoulorthoclinic.com, isclinic.co.kr 같은 **다른 성형외과 홈페이지**다.
+ * 거기엔 등재할 수 없다. news/blog/other를 믿고 목록을 만들면 291건짜리 쓰레기 목록이 나온다
+ * (실제로 처음 돌렸을 때 그렇게 나왔다).
+ *
+ * 아래 네 종류는 폴백 경로가 없다. 전부 호스트 카탈로그로만 붙는다:
+ *   wiki   WIKI_HOSTS
+ *   review REVIEW_HOSTS
+ *   forum  FORUM_HOSTS
+ *   social SOCIAL_HOSTS
+ * 그래서 이 라벨이 붙었다면 그 종류가 맞다. 적게 내놓더라도 **틀린 걸 내놓지 않는다.**
+ *
+ * gov는 라벨이 정확한데도 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
+ * pubmed.ncbi.nlm.nih.gov, health.gangnam.go.kr에 "등재"가 떴는데 보건복지부나 PubMed에
+ * 병원이 등재할 방법은 없다. AI가 공공 지침을 참고한다는 사실은 정보지만 그건 "그 지침에
+ * 콘텐츠를 맞춰라"는 **콘텐츠형** 지시이지 등재형이 아니다. 할 수 없는 일이 목록에 섞이면
+ * 목록 전체를 안 믿게 된다.
+ *   대가: medicaltour.gangnam.go.kr(강남구 의료관광, 이미 등재됨)도 함께 빠진다.
+ *   실행 가능한 .go.kr 디렉터리를 되살리려면 그런 호스트만 모은 카탈로그가 따로 필요하다.
+ *
+ * news·blog를 다시 쓰려면 폴백을 고쳐야 한다. 그건 qualityRate·EEAT 계산도 함께 움직이므로
+ * 별도 결정이 필요하다(excludedLowConfidence로 몇 개가 빠졌는지 화면에 밝힌다).
+ */
+const LISTABLE_KINDS = new Set(['wiki', 'review', 'forum', 'social'])
+
+/** 등재를 제안할 수 없는 출처. 경쟁사 사이트에는 우리가 실릴 수 없다. */
+function isCompetitorOwned(kind: string, ownerType: string): boolean {
+  return kind === 'competitor' || ownerType === 'competitor-owned'
+}
+
+/** 우리가 이미 가진 자산. 갭이 아니라 유지 대상이다. */
+function isBrandOwned(kind: string, ownerType: string): boolean {
+  return kind === 'brand-official' || ownerType === 'brand-owned'
+}
+
+/**
+ * 등재형 항목. B7 인용 URL을 **도메인 단위로 접어서** 판단한다.
+ *
+ * URL 단위로 보면 안 된다. 한 도메인에 우리를 인용하는 URL과 아닌 URL이 섞여 있을 때
+ * URL만 보면 "우리가 없는 곳"으로 잘못 잡힌다. 이미 실려 있는 도메인에 "등재하세요"를
+ * 띄우는 건 목록의 신뢰를 깎는다. 그래서 도메인의 **모든** URL을 모아 지원 여부를 센다.
+ */
+function listingActions(citations: CitationSourceAnalysis | null): {
+  actions: GapAction[]
+  competitorDomainCount: number
+  excludedLowConfidence: number
+} {
+  if (!citations || citations.urls.length === 0) {
+    return { actions: [], competitorDomainCount: 0, excludedLowConfidence: 0 }
+  }
+
+  interface DomainRoll {
+    domain: string
+    kind: string
+    ownerType: string
+    citationCount: number
+    supporting: number
+    engines: Set<string>
+    sampleUrl: string
+  }
+  const byDomain = new Map<string, DomainRoll>()
+  for (const u of citations.urls) {
+    const roll = byDomain.get(u.domain) ?? {
+      domain: u.domain,
+      kind: u.kind,
+      ownerType: u.ownerType,
+      citationCount: 0,
+      supporting: 0,
+      engines: new Set<string>(),
+      sampleUrl: u.raw,
+    }
+    roll.citationCount += u.citationCount
+    roll.supporting += u.supportingBrandMentionCount
+    for (const e of u.engines) roll.engines.add(e)
+    byDomain.set(u.domain, roll)
+  }
+
+  const rolls = [...byDomain.values()]
+  const competitorDomainCount = rolls.filter((r) => isCompetitorOwned(r.kind, r.ownerType)).length
+  const listable = rolls.filter(
+    (r) => !isCompetitorOwned(r.kind, r.ownerType) && !isBrandOwned(r.kind, r.ownerType) && LISTABLE_KINDS.has(r.kind),
+  )
+  const excludedLowConfidence =
+    rolls.length - listable.length - competitorDomainCount - rolls.filter((r) => isBrandOwned(r.kind, r.ownerType)).length
+
+  const actions = listable
+    .sort((a, b) => b.citationCount - a.citationCount)
+    .map<GapAction>((r) => {
+      const satisfied = r.supporting > 0
+      const engines = [...r.engines].join('·')
+      return {
+        id: `listing:${r.domain}`,
+        kind: 'listing',
+        title: `${r.domain}에 등재`,
+        evidence: satisfied
+          ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
+          : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.`,
+        targetDomain: r.domain,
+        questionIds: [],
+        questionTexts: [],
+        reach: r.citationCount,
+        satisfied,
+        doneSignal: `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
+      }
+    })
+
+  return { actions, competitorDomainCount, excludedLowConfidence }
+}
+
+/**
+ * 콘텐츠형 항목. 밀린 질문을 카테고리로 묶는다.
+ *
+ * 질문 하나에 항목 하나를 만들면 36줄짜리 할 일 목록이 나오는데, 그건 격차 분석 이전으로
+ * 돌아가는 것이다. 카테고리는 "같은 글 한 편으로 덮을 수 있는 묶음"에 가깝다.
+ */
+function contentActions(rows: WinLossRow[]): GapAction[] {
+  const byCategory = new Map<string, WinLossRow[]>()
+  for (const r of rows) {
+    if (r.verdict !== 'loss') continue
+    const list = byCategory.get(r.category) ?? []
+    list.push(r)
+    byCategory.set(r.category, list)
+  }
+
+  return [...byCategory.entries()]
+    .map<GapAction>(([category, list]) => {
+      // 언급률이 낮은 질문이 먼저 — 아예 안 나오는 주제가 가장 급하다.
+      const worst = [...list].sort((a, b) => a.mentionedRate - b.mentionedRate)
+      const label = CATEGORY_LABEL[category] ?? category
+      const zero = list.filter((r) => r.mentionedRate === 0).length
+      return {
+        id: `content:${category}`,
+        kind: 'content',
+        title: `${label} 질문 콘텐츠 보강`,
+        evidence:
+          zero > 0
+            ? `${label} 질문 ${list.length}개에서 밀리고, 그중 ${zero}개는 언급이 아예 0건입니다.`
+            : `${label} 질문 ${list.length}개에서 경쟁사에 밀립니다.`,
+        questionIds: worst.map((r) => r.questionId),
+        questionTexts: worst.slice(0, 5).map((r) => r.text),
+        reach: list.length,
+        // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
+        satisfied: false,
+        doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
+      }
+    })
+    .sort((a, b) => b.reach - a.reach)
+}
+
+export function computeGapActions(
+  analyses: QuestionRepeatAnalysis[],
+  questions: QuestionSpec[],
+  citations: CitationSourceAnalysis | null,
+): GapActionPlan {
+  const rows = computeQuestionWinLoss(analyses, questions)
+  const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(citations)
+  const content = contentActions(rows)
+
+  // 남은 일이 위로. 같은 상태면 닿는 범위가 큰 순.
+  const actions = [...listing, ...content].sort(
+    (a, b) => Number(a.satisfied) - Number(b.satisfied) || b.reach - a.reach,
+  )
+
+  return {
+    actions,
+    openCount: actions.filter((a) => !a.satisfied).length,
+    satisfiedCount: actions.filter((a) => a.satisfied).length,
+    competitorDomainCount,
+    excludedLowConfidence,
+  }
+}
