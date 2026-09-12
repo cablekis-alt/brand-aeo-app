@@ -9,20 +9,17 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
-const KIND_LABEL: Record<GapAction['kind'], { text: string; cls: string }> = {
-  listing: { text: '외부 등재', cls: 'st-warn' },
-  content: { text: '콘텐츠', cls: 'st-info' },
-}
+// 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
+const KIND_CLASS: Record<GapAction['kind'], string> = { listing: 'st-warn', content: 'st-info' }
 
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
 function ActionCard({ action }: { action: GapAction }) {
-  const kind = KIND_LABEL[action.kind]
   return (
     <article className="gap-card">
       <div className="gap-card-head">
         <span className="gap-name">{action.title}</span>
-        <span className={`status-pill ${action.satisfied ? 'st-good' : kind.cls}`}>
-          {action.satisfied ? '충족' : kind.text}
+        <span className={`status-pill ${action.satisfied ? 'st-good' : KIND_CLASS[action.kind]}`}>
+          {action.satisfied ? '충족' : action.badge}
         </span>
         <span className="gap-rate">
           영향 <b>{action.reach}</b>

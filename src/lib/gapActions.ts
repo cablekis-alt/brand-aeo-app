@@ -39,6 +39,11 @@ export interface GapAction {
   id: string
   kind: ActionKind
   title: string
+  /**
+   * 화면 배지에 쓸 짧은 말. listing이라고 다 같은 일이 아니다 — 언론사에 "등재"할 수는 없다.
+   * 출처 종류마다 실제로 하는 일이 달라서 그 말을 여기서 정한다.
+   */
+  badge: string
   /** 왜 이게 목록에 올라왔는지 — 화면이 근거를 그대로 보여줄 수 있게 문장으로. */
   evidence: string
   /** 등재형일 때 목표 도메인. 완료 판정의 대상이다. */
@@ -65,8 +70,8 @@ export interface GapActionPlan {
    */
   competitorDomainCount: number
   /**
-   * 분류를 믿을 수 없어 뺀 도메인 수(news·blog·other). 인용은 많지만 그 라벨이
-   * 폴백에서 왔을 수 있어 등재 제안을 하지 않는다 — LISTABLE_KINDS 주석 참고.
+   * 등재 제안을 하지 않은 도메인 수(other·blog·gov). 알려진 호스트 목록에 없거나,
+   * 있어도 우리가 글을 올릴 수 없는 곳이다 — LISTING_PLAY 주석 참고.
    */
   excludedLowConfidence: number
 }
@@ -81,33 +86,43 @@ const CATEGORY_LABEL: Record<string, string> = {
 }
 
 /**
- * 등재를 제안해도 되는 출처 종류 — **허용 목록**이다. 금지 목록이 아니다.
+ * 출처 종류별로 **실제로 하는 일**과 그 말 — 그리고 이게 곧 등재 제안 **허용 목록**이다.
+ * 금지 목록이 아니다. 할 말이 정해진 종류만 목록에 올린다(LISTABLE_KINDS = 이 표의 키).
  *
- * 아래 다섯 종류는 전부 호스트 카탈로그로만 붙는다. 라벨이 붙었다면 그 종류가 맞다:
- *   news   NEWS_HOSTS
- *   wiki   WIKI_HOSTS
- *   review REVIEW_HOSTS
- *   forum  FORUM_HOSTS
- *   social SOCIAL_HOSTS
+ * ── 왜 종류마다 말이 다른가 ──────────────────────────────────────────────────
+ * 전부 "등재"로 적었더니 health.chosun.com에 등재하라는 카드가 나왔다. 언론사에 등재하는
+ * 방법은 없다 — 보도자료를 내거나 기고를 한다. 나무위키는 등재가 아니라 문서를 고치는
+ * 일이고, 디시·더쿠는 그 판에서 언급되게 만드는 일이다. 같은 단어를 쓰면 목록을 받은
+ * 사람이 무엇을 해야 할지 다시 생각해야 한다.
  *
- * news는 한동안 뺐었다. `classifyCitationSourceKind`에 폴백이 있어서 판정이 "권위 있어
+ * ── 왜 이 다섯 종류만인가 ────────────────────────────────────────────────────
+ * 전부 호스트 카탈로그로만 붙는 라벨이다(NEWS_HOSTS·WIKI_HOSTS·REVIEW_HOSTS·
+ * FORUM_HOSTS·SOCIAL_HOSTS). 라벨이 붙었다면 그 종류가 맞다.
+ *
+ * news는 한동안 뺐었다. classifyCitationSourceKind에 폴백이 있어 판정이 "권위 있어
  * 보인다"고만 해도 news가 붙었고, 그대로 쓰면 다른 성형외과 홈페이지에 "등재하세요"가 떴다
- * (처음 돌렸을 때 291건짜리 목록이 그렇게 나왔다). 그 폴백을 없앴으므로 이제 news는 믿을 수 있다.
+ * (처음 돌렸을 때 291건짜리 목록이 그렇게 나왔다). 그 폴백을 없앴으므로 이제 news는 믿는다.
  *
- * blog는 여전히 뺀다. 폴백은 사라졌지만 `host.startsWith('blog.')` 규칙이 남아 있어
+ * blog는 여전히 뺀다. 폴백은 사라졌지만 host.startsWith('blog.') 규칙이 남아 있어
  * blog.21ps.co.kr 같은 **업체 자체 블로그 서브도메인**이 걸린다. 남의 회사 블로그에는
- * 등재할 수 없다. 티스토리·네이버 블로그처럼 실제로 글을 올릴 수 있는 플랫폼만 따로
- * 추려내려면 그 호스트만 모은 카탈로그가 필요하다.
+ * 글을 올릴 수 없다. 티스토리·네이버 블로그처럼 실제로 쓸 수 있는 플랫폼만 추려내려면
+ * 그 호스트만 모은 카탈로그가 따로 필요하다.
  *
- * gov도 라벨이 정확한데 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
- * pubmed.ncbi.nlm.nih.gov, health.gangnam.go.kr에 "등재"가 떴는데 보건복지부나 PubMed에
- * 병원이 등재할 방법은 없다. AI가 공공 지침을 참고한다는 사실은 정보지만 그건 "그 지침에
- * 콘텐츠를 맞춰라"는 **콘텐츠형** 지시이지 등재형이 아니다. 할 수 없는 일이 목록에 섞이면
- * 목록 전체를 안 믿게 된다.
+ * gov는 라벨이 정확한데도 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
+ * pubmed.ncbi.nlm.nih.gov에 "등재"가 떴는데 보건복지부나 PubMed에 병원이 등재할 방법은 없다.
+ * AI가 공공 지침을 참고한다는 사실은 정보지만 그건 "그 지침에 콘텐츠를 맞춰라"는 **콘텐츠형**
+ * 지시이지 등재형이 아니다. 할 수 없는 일이 섞이면 목록 전체를 안 믿게 된다.
  *   대가: medicaltour.gangnam.go.kr(강남구 의료관광, 이미 등재됨)도 함께 빠진다.
- *   실행 가능한 .go.kr 디렉터리를 되살리려면 그런 호스트만 모은 카탈로그가 따로 필요하다.
+ *   실행 가능한 .go.kr 디렉터리를 되살리려면 그런 호스트만 모은 카탈로그가 필요하다.
  */
-const LISTABLE_KINDS = new Set(['news', 'wiki', 'review', 'forum', 'social'])
+const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
+  news: { verb: '보도·기고', badge: '언론' },
+  wiki: { verb: '문서 보완', badge: '위키' },
+  review: { verb: '등재', badge: '후기 플랫폼' },
+  forum: { verb: '커뮤니티 노출', badge: '커뮤니티' },
+  social: { verb: '채널 콘텐츠', badge: '소셜' },
+}
+const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
 
 /** 등재를 제안할 수 없는 출처. 경쟁사 사이트에는 우리가 실릴 수 없다. */
 function isCompetitorOwned(kind: string, ownerType: string): boolean {
@@ -174,10 +189,12 @@ function listingActions(citations: CitationSourceAnalysis | null): {
     .map<GapAction>((r) => {
       const satisfied = r.supporting > 0
       const engines = [...r.engines].join('·')
+      const play = LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' }
       return {
         id: `listing:${r.domain}`,
         kind: 'listing',
-        title: `${r.domain}에 등재`,
+        title: `${r.domain} ${play.verb}`,
+        badge: play.badge,
         evidence: satisfied
           ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
           : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.`,
@@ -218,6 +235,7 @@ function contentActions(rows: WinLossRow[]): GapAction[] {
         id: `content:${category}`,
         kind: 'content',
         title: `${label} 질문 콘텐츠 보강`,
+        badge: '콘텐츠',
         evidence:
           zero > 0
             ? `${label} 질문 ${list.length}개에서 밀리고, 그중 ${zero}개는 언급이 아예 0건입니다.`
