@@ -11,7 +11,7 @@
 // 패키징(electron-builder + 정적 dist 서빙 + 컴파일된 서버)은 다음 단계 — electron/README.md 참고.
 
 const { app, BrowserWindow, Menu, MenuItem, ipcMain, shell, utilityProcess } = require('electron')
-const { spawn } = require('node:child_process')
+const { spawn, execFileSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const net = require('node:net')
@@ -45,6 +45,11 @@ function spawnChild(command, args, label) {
 function killChildren() {
   for (const child of children) {
     if (child.exitCode === null) {
+      // 개발 모드는 shell:true로 띄운다(npx.cmd·npm.cmd). child.pid는 cmd 껍데기라
+      // kill()은 껍데기만 죽이고 그 아래 node(tsx 서버·vite)는 부모를 잃은 채 살아남아
+      // :4000/:5173을 계속 물고 있다(실측). 그래서 **먼저** 트리째 끊는다 —
+      // kill()을 먼저 하면 껍데기가 사라져 트리를 찾을 수 없게 된다.
+      if (IS_WINDOWS) forceKillPid(child.pid)
       try {
         child.kill()
       } catch {
@@ -95,14 +100,40 @@ function startServerProcess(env) {
   return child
 }
 
+/**
+ * PID를 프로세스 트리째 강제 종료한다.
+ *
+ * Windows에서는 살아있음 검사를 하지 않는다 — 껍데기(cmd)가 이미 죽고 손자만 남은 경우가 바로
+ * 우리가 잡으려는 상황인데, 껍데기 기준으로 검사하면 거기서 빠져나가 버린다. taskkill은 없는
+ * PID에 대해 조용히 실패하므로 그냥 부른다.
+ */
+function forceKillPid(pid) {
+  if (!pid) return
+  try {
+    if (IS_WINDOWS) {
+      execFileSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore' })
+    } else {
+      process.kill(pid, 0) // 살아 있는지 확인 — 죽었으면 throw
+      process.kill(pid, 'SIGKILL')
+    }
+  } catch {
+    /* 이미 종료됐거나 트리가 없다 */
+  }
+}
+
 function stopServerProcess() {
   if (!serverProcess) return
+  // kill() 뒤에는 핸들이 사라지므로 PID를 먼저 붙잡아 둔다.
+  const pid = serverProcess.pid
   try {
     serverProcess.kill()
   } catch {
     /* 이미 종료 */
   }
   serverProcess = null
+  // utilityProcess는 메인 프로세스를 살려두므로, kill()이 듣지 않으면 앱이 통째로 남는다.
+  // 실측(v0.1.73): 창을 닫았는데 프로세스 5개가 남아 :4000이 계속 응답했다.
+  forceKillPid(pid)
 }
 
 /** 앱에서 바꾼 API 키를 서버 프로세스에 전달한다(프로세스가 분리돼 env가 자동 공유되지 않는다). */
@@ -222,6 +253,19 @@ async function createWindow() {
   })
   mainWindow = win
 
+  // 본 창이 닫히면 그것으로 종료를 시작한다.
+  //
+  // window-all-closed에만 맡기면 안 된다 — 이 앱에는 본 창 말고도 창이 생긴다(개발 모드의
+  // 분리형 DevTools). 실측: 창이 화면에서 하나도 안 보이는데 window-all-closed가 끝내 불리지
+  // 않아 프로세스 4개와 :4111/:5173이 그대로 살아 있었다. 사용자가 겪은 증상이 이것이다 —
+  // 창을 닫았는데 앱이 남아 다음 릴리스의 asar 교체가 "앱이 실행 중입니다"로 막혔다.
+  //
+  // 본 창 하나가 이 앱의 수명이므로 그 창의 closed에 직접 건다. 창이 무엇이 더 있든 상관없다.
+  win.on('closed', () => {
+    mainWindow = null
+    if (process.platform !== 'darwin') beginQuit()
+  })
+
   // 렌더러 안의 외부 링크(GitHub Actions 로그 등)는 기본 브라우저로 연다.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http')) {
@@ -258,6 +302,15 @@ async function createWindow() {
     if (ready) {
       await win.loadURL(DEV_SERVER_URL)
       win.webContents.openDevTools({ mode: 'detach' })
+      // 분리된 DevTools는 **별개의 창**이다. 본 창만 닫으면 그게 남아 window-all-closed가
+      // 끝내 불리지 않고, 창은 사라졌는데 앱은 살아 있는 상태가 된다(실측). 같이 닫는다.
+      win.on('close', () => {
+        try {
+          win.webContents.closeDevTools()
+        } catch {
+          /* 이미 닫힘 */
+        }
+      })
     } else {
       await win.loadURL(
         'data:text/html,' +
@@ -536,9 +589,40 @@ app.whenReady().then(() => {
   })
 })
 
-app.on('window-all-closed', () => {
+/**
+ * 종료 절차.
+ *
+ * app.quit()은 "정상 종료를 시도"할 뿐이다. 열린 핸들이 남아 있으면 프로세스가 그대로 살아서
+ * 창만 사라진 상태가 된다 — 실측(v0.1.73): 창을 닫았는데 프로세스 5개가 남아 :4000이 계속
+ * 응답했고, 다음 릴리스의 asar 교체가 "앱이 실행 중입니다"로 막혔다.
+ *
+ * 그래서 정상 종료를 시도하되, 정해진 시간 안에 끝나지 않으면 app.exit()으로 끊는다.
+ * 이 시점엔 창이 모두 닫혔고 측정은 서버 프로세스에서 도니 메인에 지킬 상태가 없다.
+ */
+let quitting = false
+
+function beginQuit() {
+  if (quitting) return
+  quitting = true
   killChildren()
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
+  const timer = setTimeout(() => {
+    console.warn('[quit] 정상 종료가 끝나지 않아 강제 종료합니다.')
+    app.exit(0)
+  }, 4000)
+  timer.unref?.() // 정상적으로 끝나면 이 타이머가 종료를 붙잡지 않도록
+}
+
+// 보조 경로 — 본 창의 closed가 주 경로다(createWindow 참고). beginQuit은 한 번만 돈다.
+app.on('window-all-closed', () => {
+  // macOS는 창을 다 닫아도 앱이 남는 것이 규약이다(activate로 다시 연다).
+  if (process.platform === 'darwin') {
+    killChildren()
+    return
+  }
+  beginQuit()
 })
 
+// 메뉴·단축키·업데이트 설치 등 다른 경로로 종료가 시작돼도 자식은 정리한다.
 app.on('before-quit', killChildren)
+app.on('will-quit', killChildren)
