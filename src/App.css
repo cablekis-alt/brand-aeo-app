@@ -1781,3 +1781,53 @@ p.hint {
 }
 .ci-sync button:disabled { opacity: 0.6; cursor: default; }
 .ci-sync .error, .ci-sync .hint { flex-basis: 100%; }
+
+/* 사이드바 — 접히는 그룹과 배지. 그룹 제목은 질문(측정 / 어디가 비어 있나 / 그래서 뭘 하나 / 보고). */
+.sidebar-fold {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+.sidebar-fold:hover { color: var(--ink); }
+.sidebar-fold .chev {
+  display: inline-block;
+  transition: transform 120ms ease;
+  font-size: 13px;
+  line-height: 1;
+}
+.sidebar-fold .chev.open { transform: rotate(90deg); }
+.sidebar-fold .fold-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.sidebar-badge {
+  margin-left: auto;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sidebar-badge.live { background: var(--accent-soft); color: var(--accent); }
+.sidebar-badge.todo { background: var(--card); color: var(--bad); border: 1px solid var(--bad); }
+.sidebar-group a.on .sidebar-badge.todo { background: transparent; }
+.sidebar-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px;
+}
+@media (prefers-reduced-motion: reduce) { .sidebar-fold .chev { transition: none; } }
