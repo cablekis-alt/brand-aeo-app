@@ -14,7 +14,7 @@ export function useWeeklyData<T>(
   fallback: T,
 ) {
   const [loaded, setLoaded] = useState<{ key: string; data: T } | null>(null)
-  // 구분자는 눈에 보이는 문자로 둔다. 원래 NUL()이었는데 git이 파일을 바이너리로 취급해 diff가 사라졌다.
+  // 구분자는 눈에 보이는 문자로 둔다. 원래 NUL 문자(코드 0)였는데 git이 파일을 바이너리로 취급해 diff가 사라졌다.
   const key = `${tenantId}|${weekOf}`
   const enabled = Boolean(tenantId && weekOf)
 
