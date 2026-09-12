@@ -29,7 +29,7 @@ function briefToMarkdown(title: string, b: StoredBrief['brief']): string {
   if (b.audience) L.push('## 독자', b.audience, '')
   if (b.questionsToAnswer.length) L.push('## 답해야 할 질문', ...b.questionsToAnswer.map((q) => `- ${q}`), '')
   if (b.mustIncludeFacts.length) L.push('## 반드시 넣을 사실(팩트 그래프)', ...b.mustIncludeFacts.map((x) => `- ${x}`), '')
-  if (b.doNotClaim.length) L.push('## 쓰면 안 되는 것 / 확인 필요', ...b.doNotClaim.map((x) => `- ${x}`), '')
+  if (b.doNotClaim.length) L.push('## 확인 필요한 사실(팩트 그래프에 없음)', ...b.doNotClaim.map((x) => `- ${x}`), '')
   if (b.structure.length) L.push('## 구조', ...b.structure.map((s) => `- **${s.heading}** (${s.format}) — ${s.answers}`), '')
   if (b.citableSentences.length) L.push('## 인용용 문장', ...b.citableSentences.map((x) => `- ${x}`), '')
   if (b.channelNotes.length) L.push('## 채널 메모', ...b.channelNotes.map((x) => `- ${x}`), '')
@@ -152,7 +152,7 @@ function BriefPanel({
           </section>
           {b.doNotClaim.length > 0 && (
             <section>
-              <h4>쓰면 안 되는 것 · 확인 필요</h4>
+              <h4>확인 필요한 사실 <span className="muted">(팩트 그래프에 없음)</span></h4>
               <ul>{b.doNotClaim.map((x) => <li key={x}>{x}</li>)}</ul>
             </section>
           )}

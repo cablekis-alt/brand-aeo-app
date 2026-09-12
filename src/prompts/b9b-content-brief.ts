@@ -20,7 +20,7 @@ export interface ContentBrief {
   questionsToAnswer: string[];
   /** 팩트 그래프에서 가져온, 반드시 들어가야 할 사실 */
   mustIncludeFacts: string[];
-  /** 팩트 그래프에 없어 쓰면 안 되거나 확인이 필요한 것 */
+  /** 팩트 그래프에 없어 이 글에 쓰기 전에 확인이 필요한 **사실**. 문체 규칙은 여기 오지 않는다 */
   doNotClaim: string[];
   /** 인용되기 쉬운 구조 — H2 단위. 각 절이 어느 질문에 답하는지 */
   structure: { heading: string; answers: string; format: 'paragraph' | 'faq' | 'table' | 'list' }[];
@@ -53,8 +53,10 @@ export function buildContentBriefPrompt(req: ContentBriefRequest): PromptMessage
 
 절대 규칙:
 1. 사실(가격·수치·주소·인증·연혁·의사 수 등)은 아래 "팩트 그래프"에 있는 것만 mustIncludeFacts에 넣는다.
-   거기 없는 사실은 만들어내지 말고 doNotClaim에 "확인 필요: …" 형태로 적는다.
+   거기 없는데 이 글에 필요한 사실은 만들어내지 말고 doNotClaim에 "확인 필요: <무엇>" 형태로 적는다.
+   doNotClaim에는 그런 **사실 항목만** 넣는다. 작성 규칙·문체 지침·일반 조언은 넣지 않는다.
 2. "최고·유일·1위·완벽" 같은 과장 표현은 어디에도 쓰지 않는다. 인용용 문장은 검증 가능한 사실만 담는다.
+   이 문체 규칙 자체를 출력에 적지 마라 — doNotClaim은 **사실 항목**만 담는 자리다.
 3. questionsToAnswer는 제공된 질문을 **그대로** 먼저 넣고, 그 질문에 답하려면 꼭 필요한 하위 질문만 보탠다.
 4. 구조는 답변 엔진이 추출하기 쉬운 형태를 우선한다 — 질문형 H2, 첫 문장에 직접 답, FAQ, 비교표.
 5. 출력은 아래 JSON 하나만. 설명·마크다운·코드블록 금지.

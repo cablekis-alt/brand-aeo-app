@@ -62,7 +62,8 @@ function normalize(raw: unknown): ContentBrief | null {
     audience: typeof r.audience === 'string' ? r.audience : '',
     questionsToAnswer: isStrArr(r.questionsToAnswer) ? r.questionsToAnswer : [],
     mustIncludeFacts: isStrArr(r.mustIncludeFacts) ? r.mustIncludeFacts : [],
-    doNotClaim: isStrArr(r.doNotClaim) ? r.doNotClaim : [],
+    // 문체 규칙("과장 표현 금지" 등)이 사실 자리에 섞여 오면 걸러낸다 — 프롬프트가 금지하지만 어길 때가 있다.
+    doNotClaim: isStrArr(r.doNotClaim) ? r.doNotClaim.filter((x) => !/(표현|문체|어투|톤).*(금지|피하|사용하지)|과장 표현/.test(x)) : [],
     structure,
     citableSentences: isStrArr(r.citableSentences) ? r.citableSentences.slice(0, 5) : [],
     channelNotes: isStrArr(r.channelNotes) ? r.channelNotes : [],
