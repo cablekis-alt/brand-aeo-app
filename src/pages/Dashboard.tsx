@@ -167,7 +167,8 @@ export default function Dashboard() {
 
       <p className="disclaimer">
         현재 점수는 {usedLabels.join(' · ') || '설정된 엔진'} 엔진으로 {card ? weekLabel(card.weekOf) : '해당 주'}에 측정한
-        값입니다. 질문 {tenant?.questionBankSize ?? 12}개 × 3회 반복입니다.
+        값입니다. 질문 {tenant?.questionBankSize ?? '—'}개
+        {card?.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''} 기준입니다.
         {excludedLabels.length > 0 && ` ${excludedLabels.join('·')}는 포함하지 않았습니다.`} 실제 인용·노출을 보장하지 않습니다.
       </p>
     </>

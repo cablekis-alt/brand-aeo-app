@@ -17,10 +17,25 @@ export default function BrandDiagnosis() {
     [],
   )
 
+  // 엔진 목록은 **이 주차에 실제로 응답한 엔진**에서 뽑는다. 테넌트 설정(tenant.engines)은
+  // COLLECT_ENGINES 오버라이드로 실측과 갈릴 수 있다 — 실제로 설정은 openai·gemini인데 측정은
+  // 3엔진이어서 Perplexity가 체크박스에 없고 그 문장들이 필터에 걸려 조용히 빠졌다.
+  const presentEngines = useMemo(() => {
+    const order: Engine[] = ['openai', 'gemini', 'claude', 'perplexity']
+    const set = new Set(analyses.map((a) => a.engine))
+    return [...order.filter((e) => set.has(e)), ...[...set].filter((e) => !order.includes(e))] as Engine[]
+  }, [analyses])
   const [engineFilter, setEngineFilter] = useState<Engine[]>([])
   useEffect(() => {
-    if (tenant) setEngineFilter(tenant.engines)
-  }, [tenant])
+    setEngineFilter(presentEngines)
+  }, [presentEngines])
+
+  // 문구도 데이터로 말한다. "반복 3회"를 박아 두면 36문항×1회로 바뀐 뒤에도 그대로 거짓말을 한다.
+  const shape = useMemo(() => {
+    const questions = new Set(analyses.map((a) => a.questionId)).size
+    const repeats = analyses.reduce((m, a) => Math.max(m, a.callIndex ?? 1), 0)
+    return { questions, repeats, engines: presentEngines.length, total: analyses.length }
+  }, [analyses, presentEngines])
 
   const filtered = useMemo(() => analyses.filter((a) => engineFilter.includes(a.engine)), [analyses, engineFilter])
 
@@ -49,13 +64,19 @@ export default function BrandDiagnosis() {
     <>
       <p className="brand">STAGE 3</p>
       <h1>브랜드 종합 진단</h1>
-      <p className="lead">이번 주 응답(질문 × 엔진 × 반복 3회) 중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.</p>
+      <p className="lead">
+        이번 주 응답
+        {shape.total > 0
+          ? ` ${shape.total}건(질문 ${shape.questions}개 × 엔진 ${shape.engines}개 × 반복 ${shape.repeats}회)`
+          : '(질문 × 엔진 × 반복)'}{' '}
+        중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.
+      </p>
 
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
         <fieldset className="engine-filter">
           <legend>엔진</legend>
-          {tenant.engines.map((engine) => (
+          {presentEngines.map((engine) => (
             <label key={engine}>
               <input type="checkbox" checked={engineFilter.includes(engine)} onChange={() => toggleEngine(engine)} />
               {ENGINE_LABEL[engine] ?? engine}
