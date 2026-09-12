@@ -175,7 +175,7 @@ export default function BrandManageList() {
     <section className="panel" style={{ marginTop: '28px' }}>
       <h3>등록된 브랜드 관리</h3>
       <p className="hint" style={{ marginTop: 0 }}>
-        각 브랜드는 <b>"전체 측정"</b>으로 여기서 바로 경쟁사·코호트까지 함께 측정할 수 있습니다(STAGE 1로 갈 필요 없음).
+        각 브랜드는 <b>"전체 측정"</b>으로 여기서 바로 경쟁사·코호트까지 함께 측정할 수 있습니다(측정 화면으로 갈 필요 없음).
         삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 바로 완전 삭제, <b>배포 환경</b>은 GitHub Actions가
         커밋 데이터·점수까지 정리·자동 배포합니다(고아 경쟁사도 함께 정리, 공유 중인 경쟁사는 보존).
       </p>

@@ -1120,7 +1120,7 @@ export default function BrandOnboarding() {
           <p className="hint">
             등록됐습니다. <b>"이 브랜드 전체 측정 시작"</b>을 누르면 여기서 바로 경쟁사 자동 추론·SoM·코호트 순위까지 함께
             측정합니다{measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'} 다른 테넌트(경쟁사 등)를 개별 측정하려면
-            STAGE 1 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>을 쓰세요.
+            <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>을 쓰세요.
           </p>
         ) : canRegister ? (
           <p className="hint">

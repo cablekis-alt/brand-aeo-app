@@ -47,7 +47,7 @@ export default function QuestionBankPage() {
     <>
       <p className="brand">설정</p>
       <h1>질문 프롬프트 빌더</h1>
-      <p className="lead">B1 질문 은행을 확인합니다 — 카테고리 분포를 점검해 브랜드명 없이도 언급되는지를 측정합니다.</p>
+      <p className="lead">질문 은행을 확인합니다 — 카테고리 분포를 점검해 브랜드명 없이도 언급되는지를 측정합니다.</p>
 
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && !bank && <p className="muted">아직 생성된 질문 은행이 없습니다.</p>}
