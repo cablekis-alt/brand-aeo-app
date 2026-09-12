@@ -1,4 +1,5 @@
 import demoScorecards from '../data/demo-scorecards.json'
+import { noteDataSource } from './dataSource'
 import type { Engine } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
@@ -47,6 +48,8 @@ async function getJson<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(path)
     if (!res.ok) return null
+    // 서버가 측정 전 주차를 데모로 바꿔 줬는지 — 화면 배너의 유일한 근거다(dataSource.ts).
+    noteDataSource(path, res.headers.get('X-Data-Source') === 'demo')
     return (await res.json()) as T
   } catch {
     return null
@@ -90,6 +93,8 @@ export async function loadScorecards(tenantId: string): Promise<WeeklyScorecard[
   if (Array.isArray(remote) && remote.every(isScorecard) && remote.length > 0) {
     return remote
   }
+  // 서버가 없거나(웹) 응답이 비면 번들된 데모 스코어카드 — 이것도 데모다.
+  noteDataSource(`/api/scorecards/${encodeURIComponent(tenantId)}`, true)
   return (demoScorecards as WeeklyScorecard[]).filter((card) => card.tenantId === tenantId)
 }
 

@@ -44,18 +44,34 @@ async function findTenant(tenantId: string): Promise<TenantConfig | undefined> {
   return tenants.find((tenant) => tenant.tenantId === tenantId);
 }
 
-async function scorecardsFor(tenantId: string): Promise<WeeklyScorecard[]> {
+/**
+ * 데모 데이터를 내려줄 때 응답에 표시한다. 화면(src/lib/dataSource.ts)이 이 헤더로 배너를 띄운다.
+ *
+ * 왜 필요한가. 아래 두 함수는 측정 전 주차를 조용히 데모로 바꿔 준다. 화면은 그걸 몰라서 데모
+ * 숫자를 실제처럼 보여 줬고, 하루에 두 번 사람이 그걸 진짜로 읽었다. 오류가 아니라 "그럴듯한
+ * 숫자"라서 더 위험하다. 데모 자체는 유지한다(빈 화면보다 낫다) — 대신 정직하게 표시한다.
+ */
+function markDemo(res: import('express').Response): void {
+  res.setHeader('X-Data-Source', 'demo');
+}
+
+async function scorecardsFor(tenantId: string, res?: import('express').Response): Promise<WeeklyScorecard[]> {
   const history = await store.getScorecardHistory(tenantId, 12);
-  return history.length > 0 ? history : demoScorecardHistory(tenantId);
+  if (history.length > 0) return history;
+  if (res) markDemo(res);
+  return demoScorecardHistory(tenantId);
 }
 
 /**
  * 파이프라인을 아직 돌리지 않은 주차는 파일 스토어가 비어 있다. 그럴 때만 데모 스토어로 넘겨서
- * 화면이 빈 상태로 남지 않게 한다 (배포 환경의 서버리스 함수와 같은 규칙).
+ * 화면이 빈 상태로 남지 않게 한다 (배포 환경의 서버리스 함수와 같은 규칙). res를 주면 데모일 때
+ * 헤더를 붙인다 — 모든 라우트가 넘기는 게 맞다.
  */
-async function sourceFor(tenant: TenantConfig, weekOf: string) {
+async function sourceFor(tenant: TenantConfig, weekOf: string, res?: import('express').Response) {
   const stored = await store.getQuestionAnalyses(tenant.tenantId, weekOf);
-  return stored.length > 0 ? store : new DemoResultStore([tenant]);
+  if (stored.length > 0) return store;
+  if (res) markDemo(res);
+  return new DemoResultStore([tenant]);
 }
 
 // 앱(Electron)이 "이 포트의 서버가 정말 내 인프로세스 서버인가"를 확인하는 서명 엔드포인트.
@@ -165,11 +181,11 @@ app.post('/api/tenants/:tenantId/run', async (req, res) => {
 });
 
 app.get('/api/scorecards/:tenantId', async (req, res) => {
-  res.json(await scorecardsFor(req.params.tenantId));
+  res.json(await scorecardsFor(req.params.tenantId, res));
 });
 
 app.get('/scorecards/:tenantId', async (req, res) => {
-  res.json(await scorecardsFor(req.params.tenantId));
+  res.json(await scorecardsFor(req.params.tenantId, res));
 });
 
 // 브랜드 종합 진단 — 해당 주차의 문장 단위 판정 원본(언급/인용/순위/사실성)을 그대로 내려준다.
@@ -179,7 +195,7 @@ app.get('/api/question-analyses/:tenantId/:weekOf', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const source = await sourceFor(tenant, req.params.weekOf);
+  const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await source.getQuestionAnalyses(tenant.tenantId, req.params.weekOf));
 });
 
@@ -193,6 +209,7 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
   const version = typeof req.query.version === 'string' ? req.query.version : tenant.questionBankVersion;
   const bank = await store.getQuestionBank(tenant.tenantId, version);
   const latestWeek = (await scorecardsFor(tenant.tenantId)).at(-1)?.weekOf ?? '2026-W36';
+  if (!bank) markDemo(res);
   res.json(bank ?? demoQuestionBank(tenant, latestWeek));
 });
 
@@ -203,7 +220,7 @@ app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const source = await sourceFor(tenant, req.params.weekOf);
+  const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf));
 });
 
@@ -214,7 +231,7 @@ app.get('/api/eeat/:tenantId/:weekOf', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const source = await sourceFor(tenant, req.params.weekOf);
+  const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await getEeatAnalysis(source, tenant.tenantId, req.params.weekOf));
 });
 
@@ -225,7 +242,7 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const source = await sourceFor(tenant, req.params.weekOf);
+  const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
 });
 
@@ -288,7 +305,7 @@ app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const source = await sourceFor(tenant, req.params.weekOf);
+  const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await getRankingView(source, tenant, req.params.weekOf));
 });
 

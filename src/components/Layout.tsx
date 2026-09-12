@@ -1,4 +1,6 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { clearDataSource, useDemoData } from '../lib/dataSource'
 import { useTenant } from '../context/useTenant'
 import EmptyBrands from './EmptyBrands'
 import Sidebar from './Sidebar'
@@ -14,6 +16,11 @@ export default function Layout() {
   const noBrands = !loading && tenants.length === 0
   const loadingBrands = loading && tenants.length === 0
   const showBrandPicker = Boolean(tenant) && !isManagement
+  // 데모 응답이 섞여 있으면 배너. 화면·브랜드가 바뀌면 이전 표시를 비운다(주차 변경은 useWeeklyData가 비운다).
+  const demo = useDemoData()
+  useEffect(() => {
+    clearDataSource()
+  }, [pathname, tenant?.tenantId])
 
   return (
     <div className="shell">
@@ -41,6 +48,13 @@ export default function Layout() {
             </p>
           )}
         </header>
+
+        {demo && !isManagement && (
+          <p className="notice" role="status">
+            <b>측정 전 예시 데이터입니다.</b> 이 브랜드·주차는 아직 측정되지 않아 화면의 숫자는 데모입니다.{' '}
+            <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 측정하면 실제 값으로 바뀝니다.
+          </p>
+        )}
 
         {/*
           브랜드 목록을 불러오는 동안에는 화면을 비우지 않고 로딩임을 명시한다.
