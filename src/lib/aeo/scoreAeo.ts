@@ -327,6 +327,30 @@ function scoreAccessibility(
     })
   }
 
+  // llms.txt — 서버가 /llms.txt를 수집해 왔지만(collectPage) 지금까지 채점·리포트 어디에도 쓰지 않았다.
+  // 점수에는 넣지 않는다(배점 튜닝은 끝났고, 답변 엔진이 이 파일을 읽는다는 공식 확인이 없다).
+  // 있으면 강점으로 적고, 없으면 감점 0의 선택 권고로만 낸다 — "필수"처럼 보이게 하지 않는다.
+  if (s.llmsTxtFound) {
+    good.push({
+      title: 'llms.txt가 있습니다',
+      evidence: '/llms.txt가 200으로 응답합니다. AI 도구용 사이트 안내 파일이 준비돼 있습니다.',
+      quote: null,
+    })
+  } else if (s.status >= 200 && s.status < 400) {
+    recs.push({
+      severity: 'low',
+      points: 0,
+      rec: {
+        workType: 'dev',
+        task: '선택 사항: 루트에 llms.txt를 두고 핵심 페이지(정의·가격·FAQ) 목록과 한 줄 설명을 적으세요. 답변 엔진이 이 파일을 읽는다는 공식 확인은 아직 없어 점수에는 넣지 않습니다.',
+        expectedEffect: '일부 AI 도구·크롤러가 사이트 구조를 빨리 파악합니다. 인용·노출에 미치는 효과는 확인되지 않았습니다.',
+        difficulty: '낮음',
+        before: '/llms.txt 없음',
+        after: '# 브랜드명\n> 한 줄 소개\n\n## 핵심 페이지\n- [가격](https://…/pricing): 요금 안내',
+      },
+    })
+  }
+
   // 감점 전용(deduct-only): 정상 응답이면 만점에서 시작해 결함만큼 깎는다(aeocheck 방식). 오류 응답은 낮은 하한.
   const start = s.status >= 200 && s.status < 400 ? 15 : 4
   return finish('crawler', good, bad, start, recs, 15)
