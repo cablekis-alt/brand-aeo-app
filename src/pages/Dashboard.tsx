@@ -3,6 +3,8 @@ import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
+import { isOpenAction } from '../lib/gapActions'
+import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 export default function Dashboard() {
   const { tenant } = useTenant()
@@ -16,6 +18,9 @@ export default function Dashboard() {
   const usedEngines: string[] = card?.enginesUsed?.length ? card.enginesUsed : (tenant?.engines ?? [])
   const usedLabels = usedEngines.map((e) => ENGINE_LABEL[e] ?? e)
   const excludedLabels = ALL_ENGINES.filter((e) => !usedEngines.includes(e)).map((e) => ENGINE_LABEL[e] ?? e)
+  // 실행 항목 남은 건수 — 사이드바 배지·실행 항목 화면과 같은 훅, 같은 정의(isOpenAction).
+  const { plan: actionPlan, loading: actionsLoading } = useGapActionPlan(tenant?.tenantId ?? '')
+  const openActions = !actionsLoading && tenant ? actionPlan.actions.filter(isOpenAction).length : null
 
   return (
     <>
@@ -34,33 +39,53 @@ export default function Dashboard() {
         </span>
       </Link>
 
-      <section className="pipeline" aria-label="Visibility 측정 파이프라인">
-        <p className="pipeline-kicker">Visibility 측정 파이프라인 B1–B9</p>
-        <p className="pipeline-flow">질문 생성 → 엔진 연동 → 다각도 분석 → 스코어·리포트</p>
+      {/*
+        사이드바와 같은 순서·같은 말로 묶는다 — 측정 → 어디가 비어 있나 → 그래서 뭘 하나 → 보고.
+        예전에는 여기 "Visibility 측정 파이프라인 B1–B9 / STAGE 1~4" 카드가 있었다. 사이드바에서
+        지운 바로 그 언어가 첫 화면에 남아 있으면 두 곳이 다른 지도를 보여 주는 셈이다.
+        카드마다 그 단계의 현재 값을 하나씩 얹어, 읽는 게 아니라 훑어서 상태를 알게 한다.
+      */}
+      <section className="pipeline" aria-label="이 브랜드를 보는 순서">
+        <p className="pipeline-kicker">이 브랜드를 보는 순서</p>
+        <p className="pipeline-flow">측정 → 어디가 비어 있나 → 그래서 뭘 하나 → 보고</p>
         <div className="pipeline-grid">
           <article>
-            <p className="pipeline-stage">STAGE 1</p>
-            <h2>질문 생성 &amp; 스케줄</h2>
-            <p>B1 질문 프롬프트 빌더 · B2 스케줄러 · B3 모델별 어댑터</p>
-            <Link to="/questions">질문 빌더 →</Link>
+            <p className="pipeline-stage">측정</p>
+            <h2>같은 질문을 엔진마다 묻는다</h2>
+            <p>
+              {card
+                ? `${weekLabel(card.weekOf)} · ${usedLabels.join(' · ') || '엔진 기록 없음'}`
+                : '아직 측정한 주차가 없습니다'}
+            </p>
+            <Link to="/measure-tenant">브랜드·경쟁사 측정 →</Link>
           </article>
           <article>
-            <p className="pipeline-stage">STAGE 2</p>
-            <h2>엔진 연동 &amp; 정규화</h2>
-            <p>ChatGPT · Gemini · Claude · Perplexity · B4 응답 정규화 (엔진당 3회)</p>
-            <Link to="/measure-status">측정 상태 →</Link>
+            <p className="pipeline-stage">어디가 비어 있나</p>
+            <h2>밀리는 질문 유형·엔진·경쟁사</h2>
+            <p>{card ? `카테고리 무관 언급률 ${formatPct(card.mentionRate)}` : '측정 후 채워집니다'}</p>
+            <Link to="/gap-analysis">가시성 격차 분석 →</Link>
           </article>
           <article>
-            <p className="pipeline-stage">STAGE 3</p>
-            <h2>다각도 분석</h2>
-            <p>B5 언급·SoM·순위·사실성 · B6 EEAT · B7 AI 인용출처</p>
-            <Link to="/diagnosis">브랜드 진단 →</Link>
+            <p className="pipeline-stage">그래서 뭘 하나</p>
+            <h2>격차를 할 일로</h2>
+            <p>
+              {openActions === null
+                ? '측정 후 채워집니다'
+                : openActions === 0
+                  ? '남은 실행 항목 없음'
+                  : `남은 실행 항목 ${openActions}건`}
+            </p>
+            <Link to="/gap-actions">실행 항목 →</Link>
           </article>
           <article>
-            <p className="pipeline-stage">STAGE 4</p>
-            <h2>스코어 &amp; 리포트</h2>
-            <p>B8 AEO Score · B9 정기진단 보고서</p>
-            <Link to="/report">정기진단 →</Link>
+            <p className="pipeline-stage">보고</p>
+            <h2>점수와 코호트 순위</h2>
+            <p>
+              {card
+                ? `AEO Score ${card.aeoScore.current} · 코호트 ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position}/${card.cohortRank.totalTenants}`
+                : '측정 후 채워집니다'}
+            </p>
+            <Link to="/report">정기진단 보고서 →</Link>
           </article>
         </div>
       </section>
@@ -147,7 +172,8 @@ export default function Dashboard() {
                 ))}
               </p>
               <span>
-                질문 {tenant.questionBankSize}개 · 엔진당 3회 반복 · 판단 {judgeLabel(card.judgeEngine)}
+                질문 {tenant.questionBankSize}개
+                {card.questionBankVersion ? ` · 은행 ${card.questionBankVersion}` : ''} · 판단 {judgeLabel(card.judgeEngine)}
               </span>
             </article>
           </section>
