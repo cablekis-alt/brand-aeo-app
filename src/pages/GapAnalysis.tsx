@@ -103,6 +103,7 @@ export default function GapAnalysis() {
         어떤 <b>유형의 질문</b>에서, 어떤 <b>엔진</b>에서, <b>누구에게</b> 밀리는지를 봅니다.
         질문 하나하나의 승패는 <Link to="/question-winloss">질문별 승패</Link>에서 보세요 — 여기는 그 위층입니다.
         어떤 <b>출처</b>가 우리를 인용하지 않는지는 <Link to="/citation-gap">인용 갭 분석</Link>이 따로 다룹니다.
+        여기서 나온 격차를 할 일로 바꾼 것이 <Link to="/gap-actions">실행 항목</Link>입니다.
       </p>
 
       <div className="filters">
