@@ -22,7 +22,6 @@ import ThemeToggle from './ThemeToggle'
 interface MenuItem {
   label: string
   to: string
-  accent?: boolean
   badge?: 'measuring' | 'actions'
 }
 interface MenuGroup {
@@ -35,11 +34,8 @@ interface MenuGroup {
 
 const MENU: MenuGroup[] = [
   {
-    id: 'top',
-    items: [
-      { label: '브랜드 추가', to: '/brand-onboarding', accent: true },
-      { label: '대시보드', to: '/' },
-    ],
+    id: 'home',
+    items: [{ label: '대시보드', to: '/' }],
   },
   {
     id: 'measure',
@@ -156,8 +152,8 @@ export default function Sidebar() {
     })
 
   const badgeOf = (item: MenuItem): { text: string; cls: string } | null => {
-    if (item.badge === 'measuring' && measuring > 0) return { text: `진행 ${measuring}`, cls: 'live' }
-    if (item.badge === 'actions' && openActions > 0) return { text: `남은 ${openActions}`, cls: 'todo' }
+    if (item.badge === 'measuring' && measuring > 0) return { text: String(measuring), cls: 'live' }
+    if (item.badge === 'actions' && openActions > 0) return { text: String(openActions), cls: 'todo' }
     return null
   }
 
@@ -165,66 +161,82 @@ export default function Sidebar() {
     <nav className="sidebar" aria-label="Web4AI Brand AEO 메뉴">
       <header className="sidebar-brand">
         <div className="brand-lockup">
-          <span className="brand-monogram" aria-hidden="true">AIO2O</span>
+          <span className="brand-monogram" aria-hidden="true">
+            AIO2O
+          </span>
           <span className="brand-names">
-            <span className="brand-eyebrow">Web4AI</span>
             <span className="brand-title">Brand AEO</span>
+            <span className="brand-eyebrow">Web4AI · 가시성 콘솔</span>
           </span>
         </div>
-        <p className="sidebar-scope">Site SEO와 별도로 운영되는 답변엔진 가시성 콘솔</p>
       </header>
 
-      {MENU.map((group) => {
-        const inside = group.items.some((i) => i.to === pathname)
-        const open = !group.foldable || folds[group.id] || inside
-        return (
-          <div className={`sidebar-group${group.foldable ? ' foldable' : ''}`} key={group.id}>
-            {group.title &&
-              (group.foldable ? (
-                <button
-                  type="button"
-                  className="sidebar-fold"
-                  aria-expanded={open}
-                  onClick={() => toggle(group.id)}
-                >
-                  <span className={`chev${open ? ' open' : ''}`} aria-hidden="true">›</span>
-                  {group.title}
-                  {!open && <span className="fold-count">{group.items.length}</span>}
-                </button>
-              ) : (
-                <p className="sidebar-group-title">{group.title}</p>
-              ))}
-            {open && (
-              <ul>
-                {group.items.map((item) => {
-                  const badge = badgeOf(item)
-                  return (
-                    <li key={item.to}>
-                      <NavLink
-                        to={item.to}
-                        end={item.to === '/'}
-                        className={({ isActive }) =>
-                          [item.accent ? 'accent' : undefined, isActive ? 'on' : undefined].filter(Boolean).join(' ') || undefined
-                        }
-                      >
-                        <span className="label">{item.accent ? `＋ ${item.label}` : item.label}</span>
-                        {badge && <span className={`sidebar-badge ${badge.cls}`}>{badge.text}</span>}
-                      </NavLink>
-                    </li>
-                  )
-                })}
-                {group.id === 'settings' && (
-                  <li className="sidebar-theme-row">
-                    <span className="sidebar-group-title" style={{ margin: 0 }}>테마</span>
-                    <ThemeToggle />
-                  </li>
-                )}
-              </ul>
-            )}
-          </div>
-        )
-      })}
-      <AppVersion />
+      <div className="sidebar-scroll">
+        <NavLink
+          to="/brand-onboarding"
+          className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
+        >
+          <span className="sidebar-cta-mark" aria-hidden="true">
+            +
+          </span>
+          브랜드 추가
+        </NavLink>
+
+        {MENU.map((group) => {
+          const inside = group.items.some((i) => i.to === pathname)
+          const open = !group.foldable || folds[group.id] || inside
+          return (
+            <div className={`sidebar-group${group.foldable ? ' foldable' : ''}${group.id === 'home' ? ' is-home' : ''}`} key={group.id}>
+              {group.title &&
+                (group.foldable ? (
+                  <button
+                    type="button"
+                    className="sidebar-fold"
+                    aria-expanded={open}
+                    onClick={() => toggle(group.id)}
+                  >
+                    <span className="sidebar-group-label">{group.title}</span>
+                    <span className="sidebar-rule" aria-hidden="true" />
+                    {!open && <span className="fold-count">{group.items.length}</span>}
+                    <span className={`chev${open ? ' open' : ''}`} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <p className="sidebar-group-title">
+                    <span className="sidebar-group-label">{group.title}</span>
+                    <span className="sidebar-rule" aria-hidden="true" />
+                  </p>
+                ))}
+              {open && (
+                <ul>
+                  {group.items.map((item) => {
+                    const badge = badgeOf(item)
+                    return (
+                      <li key={item.to}>
+                        <NavLink
+                          to={item.to}
+                          end={item.to === '/'}
+                          className={({ isActive }) => (isActive ? 'on' : undefined)}
+                        >
+                          <span className="label">{item.label}</span>
+                          {badge && <span className={`sidebar-badge ${badge.cls}`}>{badge.text}</span>}
+                        </NavLink>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <footer className="sidebar-foot">
+        <div className="sidebar-theme-row">
+          <span className="sidebar-foot-label">테마</span>
+          <ThemeToggle />
+        </div>
+        <AppVersion />
+      </footer>
     </nav>
   )
 }
