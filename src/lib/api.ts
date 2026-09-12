@@ -345,3 +345,30 @@ export async function tagQuestionBankStages(
   if (!res.ok) throw new Error(body.error || `단계 매기기 실패 (HTTP ${res.status})`)
   return body
 }
+
+/** 콘텐츠 브리프(데스크톱·로컬 전용). null = 라우트 없는 환경(웹) → 화면은 버튼을 숨긴다. */
+export type { ContentBrief } from '../prompts/b9b-content-brief'
+export interface StoredBrief {
+  actionId: string
+  generatedAt: string
+  brief: import('../prompts/b9b-content-brief').ContentBrief
+  reused?: boolean
+}
+export async function loadContentBriefs(tenantId: string): Promise<Record<string, StoredBrief> | null> {
+  return getJson<Record<string, StoredBrief>>(`/api/content-brief/${encodeURIComponent(tenantId)}`)
+}
+/** 실패하면 throw — 브리프가 조용히 비면 사용자가 "없는 게 정상"으로 읽는다. */
+export async function generateContentBrief(
+  tenantId: string,
+  input: { actionId: string; kind: 'listing' | 'content'; title: string; targetDomain?: string; questionTexts: string[]; evidence: string },
+  force = false,
+): Promise<StoredBrief> {
+  const res = await fetch(`/api/content-brief/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const body = (await res.json().catch(() => ({}))) as StoredBrief & { error?: string }
+  if (!res.ok) throw new Error(body.error || `브리프 생성 실패 (HTTP ${res.status})`)
+  return body
+}

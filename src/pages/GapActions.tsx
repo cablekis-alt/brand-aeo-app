@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import type { ActionStatus } from '../lib/api'
+import { useEffect, useState } from 'react'
+import { generateContentBrief, loadContentBriefs, type ActionStatus, type StoredBrief } from '../lib/api'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
@@ -21,15 +22,185 @@ const STATUS_CHOICES: { value: ActionStatus; label: string; title: string }[] = 
   { value: 'skip', label: '보류', title: '하지 않기로 함 — 목록 아래로 내린다' },
 ]
 
+/** 브리프를 마크다운으로 — 문서 도구에 붙여 넣기용. 본문이 아니라 뼈대다. */
+function briefToMarkdown(title: string, b: StoredBrief['brief']): string {
+  const L: string[] = [`# 브리프 · ${title}`, '']
+  if (b.titles.length) L.push('## 제목 후보', ...b.titles.map((t) => `- ${t}`), '')
+  if (b.audience) L.push('## 독자', b.audience, '')
+  if (b.questionsToAnswer.length) L.push('## 답해야 할 질문', ...b.questionsToAnswer.map((q) => `- ${q}`), '')
+  if (b.mustIncludeFacts.length) L.push('## 반드시 넣을 사실(팩트 그래프)', ...b.mustIncludeFacts.map((x) => `- ${x}`), '')
+  if (b.doNotClaim.length) L.push('## 쓰면 안 되는 것 / 확인 필요', ...b.doNotClaim.map((x) => `- ${x}`), '')
+  if (b.structure.length) L.push('## 구조', ...b.structure.map((s) => `- **${s.heading}** (${s.format}) — ${s.answers}`), '')
+  if (b.citableSentences.length) L.push('## 인용용 문장', ...b.citableSentences.map((x) => `- ${x}`), '')
+  if (b.channelNotes.length) L.push('## 채널 메모', ...b.channelNotes.map((x) => `- ${x}`), '')
+  return L.join('\n')
+}
+
+/**
+ * 콘텐츠 브리프 패널. 글을 써 주지 않는다 — 무엇에 답하고, 어떤 사실만 쓰고, 어떤 구조가
+ * 인용되기 쉬운지까지다. 사실은 팩트 그래프에서만 오고, 없는 것은 "확인 필요"로 남는다.
+ * 한 번 만든 브리프는 저장되어 다음 주에도 그대로 열린다(판정 호출은 처음 한 번).
+ */
+function BriefPanel({
+  tenantId,
+  action,
+  stored,
+  onStored,
+}: {
+  tenantId: string
+  action: GapAction
+  stored: StoredBrief | undefined
+  onStored: (s: StoredBrief) => void
+}) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const make = async (force: boolean) => {
+    setBusy(true)
+    setError(null)
+    try {
+      const s = await generateContentBrief(
+        tenantId,
+        {
+          actionId: action.id,
+          kind: action.kind,
+          title: action.title,
+          targetDomain: action.targetDomain,
+          questionTexts: action.questionTexts,
+          evidence: action.evidence,
+        },
+        force,
+      )
+      onStored(s)
+      setOpen(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const copy = async () => {
+    if (!stored) return
+    try {
+      await navigator.clipboard.writeText(briefToMarkdown(action.title, stored.brief))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setError('클립보드에 복사하지 못했습니다.')
+    }
+  }
+  const b = stored?.brief
+  return (
+    <div className="brief">
+      <div className="brief-bar">
+        {!stored ? (
+          <button type="button" onClick={() => void make(false)} disabled={busy}>
+            {busy ? '브리프 만드는 중…' : '브리프 만들기 (판정 1회)'}
+          </button>
+        ) : (
+          <>
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+              {open ? '브리프 접기' : '브리프 보기'}
+            </button>
+            <button type="button" className="ghost" onClick={() => void copy()}>
+              {copied ? '복사됨' : '마크다운 복사'}
+            </button>
+            <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
+              {busy ? '다시 만드는 중…' : '다시 만들기'}
+            </button>
+            <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
+          </>
+        )}
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {open && b && (
+        <div className="brief-body">
+          {b.titles.length > 0 && (
+            <section>
+              <h4>제목 후보</h4>
+              <ul>{b.titles.map((t) => <li key={t}>{t}</li>)}</ul>
+            </section>
+          )}
+          {b.audience && (
+            <section>
+              <h4>독자</h4>
+              <p>{b.audience}</p>
+            </section>
+          )}
+          {b.questionsToAnswer.length > 0 && (
+            <section>
+              <h4>답해야 할 질문</h4>
+              <ul>{b.questionsToAnswer.map((q) => <li key={q}>{q}</li>)}</ul>
+            </section>
+          )}
+          <section>
+            <h4>
+              반드시 넣을 사실 <span className="muted">(팩트 그래프에서만)</span>
+            </h4>
+            {b.mustIncludeFacts.length > 0 ? (
+              <ul>{b.mustIncludeFacts.map((x) => <li key={x}>{x}</li>)}</ul>
+            ) : (
+              <p className="muted">등록된 사실이 없습니다 — 브랜드 설정의 팩트 그래프를 채우면 여기 들어옵니다.</p>
+            )}
+          </section>
+          {b.doNotClaim.length > 0 && (
+            <section>
+              <h4>쓰면 안 되는 것 · 확인 필요</h4>
+              <ul>{b.doNotClaim.map((x) => <li key={x}>{x}</li>)}</ul>
+            </section>
+          )}
+          {b.structure.length > 0 && (
+            <section>
+              <h4>구조</h4>
+              <ol>
+                {b.structure.map((s) => (
+                  <li key={s.heading}>
+                    <b>{s.heading}</b> <span className="muted">({s.format})</span> — {s.answers}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+          {b.citableSentences.length > 0 && (
+            <section>
+              <h4>인용용 문장</h4>
+              <ul>{b.citableSentences.map((x) => <li key={x}>{x}</li>)}</ul>
+            </section>
+          )}
+          {b.channelNotes.length > 0 && (
+            <section>
+              <h4>채널 메모</h4>
+              <ul>{b.channelNotes.map((x) => <li key={x}>{x}</li>)}</ul>
+            </section>
+          )}
+          <p className="gap-tally">본문은 쓰지 않습니다. 이 뼈대로 사람이 쓴 글이 인용됩니다 — 사실은 팩트 그래프 밖으로 나가지 않게.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
 function ActionCard({
   action,
   canSaveStatus,
   onStatus,
+  tenantId,
+  briefs,
+  onBrief,
 }: {
   action: GapAction
   canSaveStatus: boolean
   onStatus: (id: string, status: ActionStatus) => void
+  tenantId: string
+  /** null이면 이 환경(웹)에 브리프 라우트가 없다 — 버튼을 숨긴다. */
+  briefs: Record<string, StoredBrief> | null
+  onBrief: (s: StoredBrief) => void
 }) {
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
@@ -95,6 +266,9 @@ function ActionCard({
           ))}
         </div>
       )}
+      {briefs !== null && !action.satisfied && (
+        <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
+      )}
     </article>
   )
 }
@@ -103,6 +277,20 @@ export default function GapActions() {
   const { tenant } = useTenant()
   const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError } =
     useGapActionPlan(tenant?.tenantId ?? '')
+  // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
+  const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
+  useEffect(() => {
+    if (!tenant?.tenantId) return
+    let alive = true
+    setBriefs(null)
+    void loadContentBriefs(tenant.tenantId).then((m) => {
+      if (alive) setBriefs(m)
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
 
   const open = plan.actions.filter(isOpenAction)
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
@@ -175,7 +363,7 @@ export default function GapActions() {
             ) : (
               <div className="gap-grid">
                 {open.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
                 ))}
               </div>
             )}
@@ -190,7 +378,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
                 ))}
               </div>
             </section>
@@ -205,7 +393,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
                 ))}
               </div>
             </section>

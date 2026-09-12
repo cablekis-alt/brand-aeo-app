@@ -1843,3 +1843,14 @@ p.hint {
   gap: 8px;
 }
 @media (prefers-reduced-motion: reduce) { .sidebar-fold .chev { transition: none; } }
+
+/* 콘텐츠 브리프 — 실행 항목 카드 안의 접히는 패널. 본문이 아니라 뼈대라는 점이 문구에 드러난다. */
+.brief { border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 2px; }
+.brief-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.brief-bar button { font: inherit; font-size: 0.8em; padding: 4px 10px; border: 1px solid var(--ink); background: var(--ink); color: var(--card); cursor: pointer; }
+.brief-bar button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.brief-bar button:disabled { opacity: 0.6; cursor: default; }
+.brief-body { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; font-size: 0.86em; }
+.brief-body h4 { margin: 0 0 4px; font-size: 0.95em; }
+.brief-body ul, .brief-body ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.brief-body p { margin: 0; }

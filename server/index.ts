@@ -9,6 +9,7 @@ import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBra
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
+import { generateBrief, readBriefs } from './contentBrief.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -284,6 +285,66 @@ app.post('/api/question-bank/:tenantId/tag-stages', async (req, res) => {
     const after = questions.filter((q) => q.stage).length;
     if (after > before) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
     res.json({ tenantId: tenant.tenantId, version, total: questions.length, taggedBefore: before, taggedAfter: after });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 콘텐츠 브리프 — 실행 항목 하나를 "무엇을 써야 하나"로. 본문은 만들지 않는다(b9b-content-brief).
+// 데스크톱·로컬 전용. GET은 저장된 브리프, POST는 생성(있으면 재사용, force=1이면 다시 만든다).
+app.get('/api/content-brief/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.json(await readBriefs(tenant.tenantId));
+});
+
+app.post('/api/content-brief/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const actionId = typeof b.actionId === 'string' ? b.actionId : '';
+  const kind = b.kind === 'listing' || b.kind === 'content' ? b.kind : null;
+  if (!actionId || !kind || typeof b.title !== 'string') {
+    res.status(400).json({ error: 'actionId, kind, title이 필요합니다.' });
+    return;
+  }
+  const force = req.query.force === '1';
+  try {
+    if (!force) {
+      const existing = (await readBriefs(tenant.tenantId))[actionId];
+      if (existing) {
+        res.json({ ...existing, reused: true });
+        return;
+      }
+    }
+    const stored = await generateBrief(
+      tenant.tenantId,
+      actionId,
+      {
+        brandName: tenant.brandName,
+        industry: tenant.industry,
+        region: tenant.region,
+        competitorNames: tenant.competitors.map((c) => c.name),
+        factGraph: tenant.factGraph ?? [],
+        action: {
+          kind,
+          title: b.title,
+          targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
+          questionTexts: Array.isArray(b.questionTexts)
+            ? (b.questionTexts as unknown[]).filter((x): x is string => typeof x === 'string')
+            : [],
+          evidence: typeof b.evidence === 'string' ? b.evidence : '',
+        },
+      },
+      getJudgeClient(),
+    );
+    res.json({ ...stored, reused: false });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
