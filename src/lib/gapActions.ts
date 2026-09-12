@@ -1,5 +1,7 @@
 import type { ActionStateMap, ActionStatus } from './api'
 import { blogPlatformOf } from './blogPlatforms'
+import { objectParticle, subjectParticle } from './korean'
+import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
@@ -232,8 +234,10 @@ function listingActions(
   const byDomain = new Map<string, DomainRoll>()
   for (const u of citations.urls) {
     // 블로그는 발행 가능한 플랫폼만, 그것도 플랫폼 단위로 묶는다. 업체 자체 블로그는 키가 없어 빠진다.
+    // 나머지는 **사이트 단위**(등록가능 도메인)로 묶는다 — nol.yanolja.com·place-site.yanolja.com·
+    // yanolja.com이 세 카드로 쪼개져 '충족'과 "등재하세요"가 같이 뜨던 문제(siteGroup 주석 참고).
     const platform = u.kind === 'blog' ? blogPlatformOf(u.domain) : null
-    const key = u.kind === 'blog' ? platform?.key : u.domain
+    const key = u.kind === 'blog' ? platform?.key : siteGroupKey(u.domain)
     if (!key) continue
     const roll = byDomain.get(key) ?? {
       domain: key,
@@ -250,6 +254,16 @@ function listingActions(
     roll.citationCount += u.citationCount
     roll.supporting += u.supportingBrandMentionCount
     for (const e of u.engines) roll.engines.add(e)
+    // 한 사이트 안에서 종류가 갈리면 **등재 가능한 쪽**을 택한다. 일부 페이지만 카탈로그에 걸리는
+    // 경우(yanolja.com은 other, nol.yanolja.com은 review)에 사이트 전체를 놓치지 않기 위해서다.
+    // 단 경쟁사·자사 소유는 한 멤버만 그래도 전체를 그렇게 본다 — 거기엔 실릴 수 없거나 이미 우리 것이다.
+    if (isCompetitorOwned(u.kind, u.ownerType) || isBrandOwned(u.kind, u.ownerType)) {
+      roll.kind = u.kind
+      roll.ownerType = u.ownerType
+    } else if (!LISTABLE_KINDS.has(roll.kind) && LISTABLE_KINDS.has(u.kind)) {
+      roll.kind = u.kind
+      roll.ownerType = u.ownerType
+    }
     byDomain.set(key, roll)
   }
 
@@ -306,7 +320,7 @@ function listingActions(
 
       const share = r.citationCount > 0 ? Math.round((r.supporting / r.citationCount) * 100) : 0
       const platformEvidence =
-        `AI가 ${name}을(를) ${r.citationCount}회 인용했고(${engines}) 그중 우리를 뒷받침하는 대목은 ` +
+        `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 그중 우리를 뒷받침하는 대목은 ` +
         `${r.supporting}회(${share}%)입니다. 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
         (r.platform ? ` ${r.platform.note}` : '')
 
@@ -318,8 +332,9 @@ function listingActions(
         evidence: isPlatform
           ? platformEvidence + citedNote
           : satisfied
-            ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
-            : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+            ? `${subjectParticle(name)} 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.` +
+              (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
+            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
               citedNote,
         targetDomain: r.domain,
         questionIds: picked.map((row) => row.questionId),
@@ -330,7 +345,7 @@ function listingActions(
         ...(isPlatform ? { progress: { supporting: r.supporting, total: r.citationCount } } : {}),
         doneSignal: isPlatform
           ? `${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${r.supporting}/${r.citationCount})`
-          : `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
+          : `${name} 인용이 우리 언급을 뒷받침하면 완료`,
       }
     })
 
