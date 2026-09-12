@@ -1,13 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources, loadQuestionAnalyses, loadQuestionBank } from '../lib/api'
-import { resolveBankVersion } from '../lib/bankVersion'
-import { computeGapActions, type GapAction } from '../lib/gapActions'
-import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
-import { useWeeklyPage } from '../lib/useWeeklyPage'
-import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { GapAction } from '../lib/gapActions'
+import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
 const KIND_CLASS: Record<GapAction['kind'], string> = { listing: 'st-warn', content: 'st-info' }
@@ -44,49 +39,8 @@ function ActionCard({ action }: { action: GapAction }) {
 
 export default function GapActions() {
   const { tenant } = useTenant()
-  const {
-    history,
-    weeks,
-    weekOf,
-    setWeekOf,
-    data: analyses,
-    loading,
-    neverMeasured,
-  } = useWeeklyPage<QuestionRepeatAnalysis[]>(loadQuestionAnalyses, tenant?.tenantId ?? '', [])
+  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
 
-  // 격차 분석과 같은 규칙으로 은행 버전을 맞춘다 — 옛 주차를 현재 은행으로 부르면
-  // 질문 id가 어긋나 텍스트·카테고리가 빈 값이 된다.
-  const bankVersion = resolveBankVersion(history, weekOf, analyses)
-  const [questions, setQuestions] = useState<QuestionSpec[]>([])
-  const [citations, setCitations] = useState<CitationSourceAnalysis | null>(null)
-
-  useEffect(() => {
-    if (!tenant?.tenantId) return
-    let alive = true
-    void loadQuestionBank(tenant.tenantId, bankVersion).then((bank) => {
-      if (alive) setQuestions(bank?.questions ?? [])
-    })
-    return () => {
-      alive = false
-    }
-  }, [tenant?.tenantId, bankVersion])
-
-  useEffect(() => {
-    if (!tenant?.tenantId || !weekOf) return
-    let alive = true
-    setCitations(null)
-    void loadCitationSources(tenant.tenantId, weekOf).then((data) => {
-      if (alive) setCitations(data)
-    })
-    return () => {
-      alive = false
-    }
-  }, [tenant?.tenantId, weekOf])
-
-  const plan = useMemo(
-    () => computeGapActions(analyses, questions, citations),
-    [analyses, questions, citations],
-  )
   const open = plan.actions.filter((a) => !a.satisfied)
   const satisfied = plan.actions.filter((a) => a.satisfied)
   const ready = !loading && plan.actions.length > 0

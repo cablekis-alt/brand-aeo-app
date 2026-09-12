@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { cancelMeasureRun, loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
 import { BRAND_DOCS } from '../lib/brandDocs'
+import { useTenant } from '../context/useTenant'
+import { useGapActionPlan } from '../lib/useGapActionPlan'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
 
@@ -103,6 +105,56 @@ function duration(run: MeasureRunInfo): string {
   const s = Math.max(0, Math.round((end - start) / 1000))
   const m = Math.floor(s / 60)
   return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
+}
+
+/**
+ * 이 브랜드의 실행 항목 요약 — 측정이 끝난 직후 "그래서 뭘 하지"에 바로 답한다.
+ *
+ * 예전에는 여기 손으로 적은 문서 링크 배열(brandDocs)이 있었다. 브랜드가 늘 때마다 사람이
+ * 줄을 추가해야 했고, 실제로 k-wonjin 하나만 채워져 있었다. 지금은 저장된 측정에서 계산해
+ * 모든 브랜드가 자동으로 목록을 갖는다.
+ */
+function ActionSummary() {
+  const { tenant } = useTenant()
+  const { plan, weekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
+  if (!tenant) return null
+
+  const open = plan.actions.filter((a) => !a.satisfied)
+  return (
+    <section style={{ marginTop: '8px' }}>
+      <h3>실행 항목</h3>
+      <p className="hint" style={{ marginTop: 0 }}>
+        측정이 찾아낸 격차를 할 일로 바꾼 목록입니다. <b>{tenant.brandName}</b>
+        {weekOf && ` · ${weekOf}`} 기준이며, 저장된 측정에서 계산합니다.
+      </p>
+      {loading ? (
+        <p className="muted">불러오는 중…</p>
+      ) : plan.actions.length === 0 ? (
+        <p className="muted">
+          {neverMeasured ? '아직 측정된 적이 없습니다.' : '이 주차에 분석 데이터가 없습니다.'}
+        </p>
+      ) : (
+        <>
+          <ul className="doc-links">
+            {open.slice(0, 4).map((a) => (
+              <li key={a.id}>
+                <Link to="/gap-actions">{a.title}</Link>
+                <span className="doc-meta">
+                  {a.badge} · 영향 {a.reach}
+                  {a.questionTexts[0] && ` · ${a.questionTexts[0]}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="hint">
+            남은 {open.length}건 중 {Math.min(4, open.length)}건입니다 ·{' '}
+            <Link to="/gap-actions">실행 항목 전체 보기</Link>
+            {plan.satisfiedCount > 0 && ` (데이터가 충족을 확인한 항목 ${plan.satisfiedCount}건은 따로 표시됩니다)`}
+          </p>
+        </>
+      )}
+    </section>
+  )
 }
 
 export default function MeasureStatus() {
@@ -244,12 +296,15 @@ export default function MeasureStatus() {
         </p>
       )}
 
+      <ActionSummary />
+
       {BRAND_DOCS.length > 0 && (
         <section style={{ marginTop: '8px' }}>
-          <h3>실행 문서</h3>
+          <h3>직접 작성한 문서</h3>
           <p className="hint" style={{ marginTop: 0 }}>
-            측정이 찾아낸 문제를 실제로 고치는 작업 목록입니다. 체크한 결과가 저장돼 다음에 열 때
-            이어서 볼 수 있습니다. <b>비공개 페이지</b>라 다른 분에게 보낼 때는 공유가 필요합니다.
+            측정에서 자동으로 나오지 않는 작업을 사람이 정리한 문서입니다(사이트 구조 감점 등).
+            체크한 결과가 저장돼 다음에 열 때 이어서 볼 수 있습니다. <b>비공개 페이지</b>라 다른
+            분에게 보낼 때는 공유가 필요합니다.
           </p>
           <ul className="doc-links">
             {BRAND_DOCS.map((doc) => (
