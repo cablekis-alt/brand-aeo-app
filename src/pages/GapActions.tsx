@@ -174,6 +174,14 @@ function BriefPanel({
               <ul>{b.citableSentences.map((x) => <li key={x}>{x}</li>)}</ul>
             </section>
           )}
+          {b.guardNotes && b.guardNotes.length > 0 && (
+            <section>
+              <h4>
+                검증에서 뺀 것 <span className="muted">(사실을 요약·격상했거나 출처 없는 수치)</span>
+              </h4>
+              <ul className="muted">{b.guardNotes.map((x) => <li key={x}>{x}</li>)}</ul>
+            </section>
+          )}
           {b.channelNotes.length > 0 && (
             <section>
               <h4>채널 메모</h4>

@@ -28,6 +28,12 @@ export interface ContentBrief {
   citableSentences: string[];
   /** 채널 메모(등재형): 그 플랫폼에서 지켜야 할 것 */
   channelNotes: string[];
+  /**
+   * 서버 검증이 걸러낸 것에 대한 설명(있을 때만). 판정이 사실을 요약·격상하면("의료진 30명" →
+   * "전문의 30명") 그 문장을 버리고 여기 이유를 적는다 — 조용히 지우면 사용자가 "문장이 왜 3개뿐이지"
+   * 하고 판정을 의심하게 된다.
+   */
+  guardNotes?: string[];
 }
 
 export interface ContentBriefRequest {
@@ -55,6 +61,9 @@ export function buildContentBriefPrompt(req: ContentBriefRequest): PromptMessage
 1. 사실(가격·수치·주소·인증·연혁·의사 수 등)은 아래 "팩트 그래프"에 있는 것만 mustIncludeFacts에 넣는다.
    거기 없는데 이 글에 필요한 사실은 만들어내지 말고 doNotClaim에 "확인 필요: <무엇>" 형태로 적는다.
    doNotClaim에는 그런 **사실 항목만** 넣는다. 작성 규칙·문체 지침·일반 조언은 넣지 않는다.
+1-1. 사실은 **요약하거나 바꿔 쓰지 않는다.** mustIncludeFacts 원소는 팩트 그래프의 "<주장>: <값>"을 글자
+   그대로 옮긴다. 인용용 문장에 사실을 담을 때도 값 문자열을 그대로 포함시킨다. 특히 명사를 격상하지
+   마라 — "의료진 30명"을 "전문의 30명"으로, "약 20만원"을 "20만원"으로 바꾸는 것은 새 사실을 만드는 것이다.
 2. "최고·유일·1위·완벽" 같은 과장 표현은 어디에도 쓰지 않는다. 인용용 문장은 검증 가능한 사실만 담는다.
    이 문체 규칙 자체를 출력에 적지 마라 — doNotClaim은 **사실 항목**만 담는 자리다.
 3. questionsToAnswer는 제공된 질문을 **그대로** 먼저 넣고, 그 질문에 답하려면 꼭 필요한 하위 질문만 보탠다.
