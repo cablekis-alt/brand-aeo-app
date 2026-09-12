@@ -124,6 +124,44 @@ const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
 }
 const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
 
+/**
+ * 도메인 표기를 맞춘다.
+ *
+ * 인용 출처 집계(server/citationSources.ts의 hostOf)와 **같은 규칙**이어야 한다. 한쪽이
+ * `www.`를 떼고 다른 쪽이 안 떼면 도메인↔질문 조인이 조용히 빈 배열을 낸다 — 오류가 아니라
+ * "이 도메인을 인용한 질문이 없다"는 거짓말로 나온다. 그래서 규칙을 여기 그대로 적어 둔다
+ * (src는 server를 import하지 않는다).
+ */
+function normalizeHost(raw: string, fallbackDomain: string | null): string {
+  if (fallbackDomain) return fallbackDomain.replace(/^www\./, '').toLowerCase()
+  try {
+    return new URL(raw).hostname.replace(/^www\./, '').toLowerCase()
+  } catch {
+    return (raw.split('/')[0] ?? raw).replace(/^www\./, '').toLowerCase()
+  }
+}
+
+/**
+ * 도메인 → 그 도메인을 인용한 질문들.
+ *
+ * 등재 항목이 "reddit.com 커뮤니티 노출"까지만 말하면 받은 사람이 **무슨 내용을** 올려야
+ * 할지 모른다. AI가 그 도메인을 꺼내 든 질문이 곧 그 답이다 — 저장된 분석에 질문별 인용이
+ * 그대로 있으니 역인덱스만 만들면 새 호출 없이 나온다.
+ */
+function questionsByDomain(analyses: QuestionRepeatAnalysis[]): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>()
+  for (const a of analyses) {
+    for (const c of a.citations ?? []) {
+      const host = normalizeHost(c.raw, c.domain)
+      if (!host) continue
+      const set = map.get(host) ?? new Set<string>()
+      set.add(a.questionId)
+      map.set(host, set)
+    }
+  }
+  return map
+}
+
 /** 등재를 제안할 수 없는 출처. 경쟁사 사이트에는 우리가 실릴 수 없다. */
 function isCompetitorOwned(kind: string, ownerType: string): boolean {
   return kind === 'competitor' || ownerType === 'competitor-owned'
@@ -141,7 +179,11 @@ function isBrandOwned(kind: string, ownerType: string): boolean {
  * URL만 보면 "우리가 없는 곳"으로 잘못 잡힌다. 이미 실려 있는 도메인에 "등재하세요"를
  * 띄우는 건 목록의 신뢰를 깎는다. 그래서 도메인의 **모든** URL을 모아 지원 여부를 센다.
  */
-function listingActions(citations: CitationSourceAnalysis | null): {
+function listingActions(
+  citations: CitationSourceAnalysis | null,
+  domainQuestions: Map<string, Set<string>>,
+  rows: WinLossRow[],
+): {
   actions: GapAction[]
   competitorDomainCount: number
   excludedLowConfidence: number
@@ -184,12 +226,34 @@ function listingActions(citations: CitationSourceAnalysis | null): {
   const excludedLowConfidence =
     rolls.length - listable.length - competitorDomainCount - rolls.filter((r) => isBrandOwned(r.kind, r.ownerType)).length
 
+  // 질문 쪽 색인 — 도메인에 붙일 질문을 고를 때 쓴다. 밀린 질문이 먼저다.
+  const rowById = new Map(rows.map((r) => [r.questionId, r]))
+
   const actions = listable
     .sort((a, b) => b.citationCount - a.citationCount)
     .map<GapAction>((r) => {
       const satisfied = r.supporting > 0
       const engines = [...r.engines].join('·')
       const play = LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' }
+
+      // 이 도메인을 꺼내 든 질문들 = 여기 올릴 글이 답해야 할 것. 우리가 밀린 질문을
+      // 앞에 두고 언급률 낮은 순으로 정렬한다 — 가장 비어 있는 주제가 먼저 보이게.
+      const cited = [...(domainQuestions.get(r.domain) ?? [])]
+        .map((id) => rowById.get(id))
+        .filter((row): row is WinLossRow => row !== undefined)
+      const lost = cited
+        .filter((row) => row.verdict === 'loss')
+        .sort((a, b) => a.mentionedRate - b.mentionedRate)
+      const picked = lost.length > 0 ? lost : cited
+      // 밀린 질문이 없으면 "그중 N개는…" 절이 통째로 빠진다. 앞 절을 "꺼냈고,"로 두면
+      // 문장이 잘린 채 끝난다 — 이어질 말이 있을 때만 연결형을 쓴다.
+      const citedNote =
+        cited.length === 0
+          ? ''
+          : lost.length > 0
+            ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 우리가 밀린 질문입니다.`
+            : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
+
       return {
         id: `listing:${r.domain}`,
         kind: 'listing',
@@ -197,10 +261,11 @@ function listingActions(citations: CitationSourceAnalysis | null): {
         badge: play.badge,
         evidence: satisfied
           ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
-          : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.`,
+          : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+            citedNote,
         targetDomain: r.domain,
-        questionIds: [],
-        questionTexts: [],
+        questionIds: picked.map((row) => row.questionId),
+        questionTexts: picked.slice(0, 5).map((row) => row.text),
         reach: r.citationCount,
         satisfied,
         doneSignal: `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
@@ -257,7 +322,11 @@ export function computeGapActions(
   citations: CitationSourceAnalysis | null,
 ): GapActionPlan {
   const rows = computeQuestionWinLoss(analyses, questions)
-  const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(citations)
+  const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
+    citations,
+    questionsByDomain(analyses),
+    rows,
+  )
   const content = contentActions(rows)
 
   // 남은 일이 위로. 같은 상태면 닿는 범위가 큰 순.
