@@ -85,8 +85,12 @@ export default function GapAnalysis() {
 
   const gap = useMemo(() => computeGapAnalysis(analyses, questions), [analyses, questions])
   const worstCategory = gap.byCategory.find((g) => g.verdict === 'gap') ?? null
-  const worstEngine = gap.byEngine.find((g) => g.verdict === 'gap') ?? null
+  // 엔진이 하나뿐이면 엔진 격차를 말할 수 없다 — "엔진마다 다르다"는 비교 대상이 있을 때만 참이다.
+  const worstEngine = gap.byEngine.length > 1 ? (gap.byEngine.find((g) => g.verdict === 'gap') ?? null) : null
   const topCompetitor = gap.competitors[0] ?? null
+  // 표가 비는 이유는 둘이고 뜻이 정반대다. 밀린 질문이 아예 없으면 좋은 소식이고,
+  // 밀렸는데 경쟁사가 안 잡혔다면 그 자리를 아무도 못 가져간 것이다(= 선점 여지).
+  const lossQuestions = gap.byCategory.reduce((sum, g) => sum + g.loss, 0)
   const ready = !loading && gap.totalQuestions > 0
 
   if (!tenant) return null
@@ -191,7 +195,11 @@ export default function GapAnalysis() {
               주제입니다.
             </p>
             {gap.competitors.length === 0 ? (
-              <p className="muted">밀린 질문이 없거나, 경쟁사가 설정되지 않았습니다.</p>
+              <p className="muted">
+                {lossQuestions === 0
+                  ? '밀린 질문이 없습니다 — 이번 주차는 어떤 질문에서도 경쟁사에 뒤지지 않았습니다.'
+                  : `밀린 질문 ${lossQuestions}개에서 추적 중인 경쟁사가 한 곳도 언급되지 않았습니다 — 우리가 진 게 아니라 그 자리를 아직 아무도 가져가지 않았습니다. 먼저 등재되면 선점할 수 있는 질문들입니다.`}
+              </p>
             ) : (
               <div className="table-wrap">
                 <table>
