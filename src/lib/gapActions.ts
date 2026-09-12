@@ -83,36 +83,31 @@ const CATEGORY_LABEL: Record<string, string> = {
 /**
  * 등재를 제안해도 되는 출처 종류 — **허용 목록**이다. 금지 목록이 아니다.
  *
- * 이유가 있다. `classifyCitationSourceKind`(server/citationSources.ts)에는 폴백이 있다:
- *
- *     if (citation.ownerType === 'third-party-authority') return 'news';
- *     if (citation.ownerType === 'third-party-ugc') return 'blog';
- *
- * 즉 판정이 "권위 있어 보인다"고만 해도 news가 된다. 실측(k-wonjin 2026-W37): news 라벨이
- * 붙은 153개 도메인 중 **카탈로그가 실제로 아는 언론사는 13개**뿐이고 나머지 140개(인용 292건)는
- * 이 폴백으로 news가 됐다 — seoulorthoclinic.com, isclinic.co.kr 같은 **다른 성형외과 홈페이지**다.
- * 거기엔 등재할 수 없다. news/blog/other를 믿고 목록을 만들면 291건짜리 쓰레기 목록이 나온다
- * (실제로 처음 돌렸을 때 그렇게 나왔다).
- *
- * 아래 네 종류는 폴백 경로가 없다. 전부 호스트 카탈로그로만 붙는다:
+ * 아래 다섯 종류는 전부 호스트 카탈로그로만 붙는다. 라벨이 붙었다면 그 종류가 맞다:
+ *   news   NEWS_HOSTS
  *   wiki   WIKI_HOSTS
  *   review REVIEW_HOSTS
  *   forum  FORUM_HOSTS
  *   social SOCIAL_HOSTS
- * 그래서 이 라벨이 붙었다면 그 종류가 맞다. 적게 내놓더라도 **틀린 걸 내놓지 않는다.**
  *
- * gov는 라벨이 정확한데도 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
+ * news는 한동안 뺐었다. `classifyCitationSourceKind`에 폴백이 있어서 판정이 "권위 있어
+ * 보인다"고만 해도 news가 붙었고, 그대로 쓰면 다른 성형외과 홈페이지에 "등재하세요"가 떴다
+ * (처음 돌렸을 때 291건짜리 목록이 그렇게 나왔다). 그 폴백을 없앴으므로 이제 news는 믿을 수 있다.
+ *
+ * blog는 여전히 뺀다. 폴백은 사라졌지만 `host.startsWith('blog.')` 규칙이 남아 있어
+ * blog.21ps.co.kr 같은 **업체 자체 블로그 서브도메인**이 걸린다. 남의 회사 블로그에는
+ * 등재할 수 없다. 티스토리·네이버 블로그처럼 실제로 글을 올릴 수 있는 플랫폼만 따로
+ * 추려내려면 그 호스트만 모은 카탈로그가 필요하다.
+ *
+ * gov도 라벨이 정확한데 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
  * pubmed.ncbi.nlm.nih.gov, health.gangnam.go.kr에 "등재"가 떴는데 보건복지부나 PubMed에
  * 병원이 등재할 방법은 없다. AI가 공공 지침을 참고한다는 사실은 정보지만 그건 "그 지침에
  * 콘텐츠를 맞춰라"는 **콘텐츠형** 지시이지 등재형이 아니다. 할 수 없는 일이 목록에 섞이면
  * 목록 전체를 안 믿게 된다.
  *   대가: medicaltour.gangnam.go.kr(강남구 의료관광, 이미 등재됨)도 함께 빠진다.
  *   실행 가능한 .go.kr 디렉터리를 되살리려면 그런 호스트만 모은 카탈로그가 따로 필요하다.
- *
- * news·blog를 다시 쓰려면 폴백을 고쳐야 한다. 그건 qualityRate·EEAT 계산도 함께 움직이므로
- * 별도 결정이 필요하다(excludedLowConfidence로 몇 개가 빠졌는지 화면에 밝힌다).
  */
-const LISTABLE_KINDS = new Set(['wiki', 'review', 'forum', 'social'])
+const LISTABLE_KINDS = new Set(['news', 'wiki', 'review', 'forum', 'social'])
 
 /** 등재를 제안할 수 없는 출처. 경쟁사 사이트에는 우리가 실릴 수 없다. */
 function isCompetitorOwned(kind: string, ownerType: string): boolean {

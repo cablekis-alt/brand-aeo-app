@@ -180,10 +180,9 @@ export default function GapActions() {
                 없습니다.
               </li>
               <li>
-                출처 분류를 믿을 수 없어 보류 <b>{plan.excludedLowConfidence}개</b> — 인용 판정이 "권위
-                있어 보인다"고만 해도 <code>news</code>가 붙습니다. 그대로 쓰면 다른 병원 홈페이지에
-                "등재하세요"가 뜹니다. 호스트 목록으로만 분류가 정해지는 출처(위키·후기·커뮤니티·소셜)만
-                남겼습니다.
+                분류가 <code>other</code>라 보류 <b>{plan.excludedLowConfidence}개</b> — 알려진 호스트
+                목록에 없는 도메인입니다. 대부분 같은 업종의 다른 업체 홈페이지라 등재할 수 없습니다.
+                업체 자체 블로그 서브도메인이 섞이는 <code>blog</code>도 함께 뺐습니다.
               </li>
               <li className="muted">
                 공공기관(<code>.go.kr</code>) 출처도 뺐습니다. 분류는 정확하지만 보건복지부나 PubMed에

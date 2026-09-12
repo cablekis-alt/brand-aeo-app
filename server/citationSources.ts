@@ -98,6 +98,34 @@ function hostMatches(host: string, catalog: Set<string>): boolean {
   return false;
 }
 
+/**
+ * 인용 출처의 종류를 정한다. **카탈로그에 없으면 other다.** 추측해서 채우지 않는다.
+ *
+ * 예전에는 마지막에 두 줄이 더 있었다:
+ *
+ *     if (citation.ownerType === 'third-party-authority') return 'news';
+ *     if (citation.ownerType === 'third-party-ugc') return 'blog';
+ *
+ * 판정이 "권위 있어 보인다"고만 대답해도 news가 됐다. 저장된 인용 31,839건 전수 확인 결과
+ * **9,888건(31.1%)** 이 이 폴백에서 온 라벨이었다(news→other 6,751 · blog→other 3,137).
+ * 성형외과 홈페이지가 언론사로 둔갑했고, k-wonjin 2026-W37의 news 라벨 153개 도메인 중
+ * 카탈로그가 아는 진짜 언론사는 13개뿐이었다.
+ *
+ * 그래서 '고품질 출처 비율'은 실제 출처 품질이 아니라 **판정이 권위 있다고 답한 비율**을
+ * 재고 있었다. 전체 평균 31.3% → 12.3%. 반도체·B2B 테넌트는 더 심해서 photomask는
+ * 92.2% → 11.3%였다 — 거의 전부가 폴백 라벨이었다.
+ *
+ * 점수는 움직이지 않는다. qualityRate는 화면·B8 리포트 문구 전용이고 EEAT는 설계상
+ * 점수에 넣지 않는다(scoring.ts 참고). 바뀌는 것은 진단 지표뿐이다:
+ *   고품질 출처 비율   평균 31.3% → 12.3%
+ *   EEAT A(권위) 필러  보통 −1점, photomask는 40.2 → 20.1
+ *   EEAT E(경험) 필러  −0.3~−1.2점
+ *
+ * 수치가 내려가는 건 나빠진 게 아니라 부풀어 있던 값이 제자리로 온 것이다. 과거 주차도
+ * 같은 코드로 다시 계산되므로 추세 비교는 그대로 성립한다.
+ *
+ * 분류를 넓히려면 폴백을 되살리지 말고 위 호스트 카탈로그에 도메인을 추가한다.
+ */
 export function classifyCitationSourceKind(citation: Pick<CitationDetail, 'raw' | 'domain' | 'ownerType'>): CitationSourceKind {
   if (citation.ownerType === 'brand-owned') return 'brand-official';
   if (citation.ownerType === 'competitor-owned') return 'competitor';
@@ -110,8 +138,6 @@ export function classifyCitationSourceKind(citation: Pick<CitationDetail, 'raw' 
   if (hostMatches(host, FORUM_HOSTS)) return 'forum';
   if (hostMatches(host, SOCIAL_HOSTS)) return 'social';
   if (hostMatches(host, BLOG_HOSTS) || host.includes('.tistory.com') || host.startsWith('blog.')) return 'blog';
-  if (citation.ownerType === 'third-party-authority') return 'news';
-  if (citation.ownerType === 'third-party-ugc') return 'blog';
   return 'other';
 }
 
