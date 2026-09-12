@@ -1,3 +1,4 @@
+import type { ActionStateMap, ActionStatus } from './api'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
@@ -30,6 +31,7 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
  */
 
 export type ActionKind = 'listing' | 'content'
+export type { ActionStatus }
 
 export interface GapAction {
   /**
@@ -55,6 +57,14 @@ export interface GapAction {
   reach: number
   /** 데이터가 이미 충족했다고 말하는가. true면 사람이 할 일이 남지 않았다. */
   satisfied: boolean
+  /**
+   * 사람이 적은 **집행 상태**. satisfied와 다른 질문에 답한다 —
+   * status는 "내가 그 일을 했나", satisfied는 "AI가 우리를 거기서 보나".
+   * 둘을 갈라 두면 **집행했는데 몇 주째 충족이 안 되는 항목**이 저절로 드러난다.
+   */
+  status: ActionStatus
+  /** status를 정한 시점의 주차 — 집행 후 얼마나 지났는지 세는 데 쓴다. */
+  markedWeek?: string
   /** 무엇이 관측되면 완료인지 — 화면과 사람이 같은 기준을 보게 한다. */
   doneSignal: string
 }
@@ -64,6 +74,10 @@ export interface GapActionPlan {
   /** 아직 남은 것 / 데이터가 충족을 확인한 것. 화면 요약용. */
   openCount: number
   satisfiedCount: number
+  /** 집행했다고 적었는데 데이터가 아직 확인하지 못한 항목 수. */
+  awaitingCount: number
+  /** 보류로 내려둔 항목 수 — 목록에서 사라진 게 아니라 아래로 내려갔음을 밝히려고 센다. */
+  skippedCount: number
   /**
    * 경쟁사 소유라 등재 대상이 될 수 없는 도메인 수. 실행 항목에서 빠지지만
    * "왜 저 도메인은 목록에 없나"에 답해야 해서 센다.
@@ -268,6 +282,7 @@ function listingActions(
         questionTexts: picked.slice(0, 5).map((row) => row.text),
         reach: r.citationCount,
         satisfied,
+        status: 'todo',
         doneSignal: `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
       }
     })
@@ -310,16 +325,45 @@ function contentActions(rows: WinLossRow[]): GapAction[] {
         reach: list.length,
         // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
         satisfied: false,
+        status: 'todo',
         doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
       }
     })
     .sort((a, b) => b.reach - a.reach)
 }
 
+/**
+ * '아직 할 일'의 정의 — **한 곳에서만 정한다.**
+ *
+ * 실행 항목 화면과 측정 상태 화면이 각자 필터를 쓰면 한쪽만 고쳐져 같은 브랜드·같은 주차인데
+ * 남은 건수가 다르게 뜬다. 그러면 둘 다 못 믿게 된다. openCount도 이 함수로 센다.
+ */
+export function isOpenAction(a: GapAction): boolean {
+  return !a.satisfied && a.status !== 'skip'
+}
+
+/**
+ * 정렬 순위. 작을수록 위.
+ *
+ * 보류(skip)는 데이터가 뭐라 하든 맨 아래다 — 안 하기로 한 일이 매주 맨 위에 뜨면
+ * 목록을 닫아 버리게 된다. 충족된 항목도 아래로 내린다(할 일이 아니다). 나머지 중에서는
+ * **집행했는데 아직 충족이 안 된 것**을 가장 위에 둔다. 그게 지금 확인이 필요한 유일한
+ * 상태이기 때문이다 — 올렸는데 AI가 아직 우리를 못 보고 있다는 뜻이라, 방식이 틀렸는지
+ * 시간이 더 필요한지 판단해야 한다.
+ */
+function rank(a: GapAction): number {
+  if (a.status === 'skip') return 4
+  if (a.satisfied) return 3
+  if (a.status === 'done') return 0
+  if (a.status === 'doing') return 1
+  return 2
+}
+
 export function computeGapActions(
   analyses: QuestionRepeatAnalysis[],
   questions: QuestionSpec[],
   citations: CitationSourceAnalysis | null,
+  states: ActionStateMap = {},
 ): GapActionPlan {
   const rows = computeQuestionWinLoss(analyses, questions)
   const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
@@ -329,15 +373,21 @@ export function computeGapActions(
   )
   const content = contentActions(rows)
 
-  // 남은 일이 위로. 같은 상태면 닿는 범위가 큰 순.
-  const actions = [...listing, ...content].sort(
-    (a, b) => Number(a.satisfied) - Number(b.satisfied) || b.reach - a.reach,
-  )
+  const actions = [...listing, ...content]
+    .map((a) => {
+      const saved = states[a.id]
+      return saved ? { ...a, status: saved.status, markedWeek: saved.markedWeek } : a
+    })
+    .sort((a, b) => rank(a) - rank(b) || b.reach - a.reach)
 
+  const open = actions.filter(isOpenAction)
   return {
     actions,
-    openCount: actions.filter((a) => !a.satisfied).length,
+    openCount: open.length,
     satisfiedCount: actions.filter((a) => a.satisfied).length,
+    /** 집행했다고 적었는데 데이터가 아직 확인하지 못한 항목. 가장 먼저 봐야 할 줄이다. */
+    awaitingCount: actions.filter((a) => a.status === 'done' && !a.satisfied).length,
+    skippedCount: actions.filter((a) => a.status === 'skip').length,
     competitorDomainCount,
     excludedLowConfidence,
   }

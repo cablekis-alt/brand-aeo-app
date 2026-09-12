@@ -260,3 +260,43 @@ export async function measureTenantAll(
   }
   return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string }
 }
+
+/**
+ * 실행 항목의 집행 상태 — 데스크톱·로컬 전용이다.
+ *
+ * 웹(Vercel)에는 이 라우트가 없다(Hobby 함수 한도를 새로 쓰지 않으려고 만들지 않았다).
+ * 그래서 **null은 오류가 아니라 "이 환경에는 저장 기능이 없다"** 는 뜻이다. 호출부는 이걸로
+ * 컨트롤을 숨긴다 — 저장되지 않는 버튼을 보여 주는 것보다 아예 없는 편이 정직하다.
+ */
+export type ActionStatus = 'todo' | 'doing' | 'done' | 'skip'
+export interface ActionStateEntry {
+  status: ActionStatus
+  updatedAt: string
+  markedWeek?: string
+  note?: string
+}
+export type ActionStateMap = Record<string, ActionStateEntry>
+
+export async function loadActionStates(tenantId: string): Promise<ActionStateMap | null> {
+  return getJson<ActionStateMap>(`/api/action-states/${encodeURIComponent(tenantId)}`)
+}
+
+/** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */
+export async function saveActionState(
+  tenantId: string,
+  actionId: string,
+  status: ActionStatus,
+  markedWeek?: string,
+): Promise<ActionStateMap | null> {
+  try {
+    const res = await fetch(`/api/action-states/${encodeURIComponent(tenantId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actionId, status, markedWeek }),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as ActionStateMap
+  } catch {
+    return null
+  }
+}

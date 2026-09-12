@@ -18,6 +18,7 @@ import { listActiveMeasures } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
+import { isActionStatus, readActionStates, writeActionState } from './actionStates.js';
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
@@ -226,6 +227,40 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
   }
   const source = await sourceFor(tenant, req.params.weekOf);
   res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
+});
+
+// 실행 항목의 집행 상태 — 데스크톱·로컬 전용(Vercel 함수를 새로 만들지 않는다).
+// 여기 저장하는 건 '집행함'이지 '충족'이 아니다. 충족은 인용 데이터에서 매번 계산한다.
+app.get('/api/action-states/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.json(await readActionStates(tenant.tenantId));
+});
+
+app.put('/api/action-states/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const { actionId, status, markedWeek, note } = (req.body ?? {}) as Record<string, unknown>;
+  if (typeof actionId !== 'string' || actionId.length === 0) {
+    res.status(400).json({ error: 'actionId가 필요합니다.' });
+    return;
+  }
+  if (!isActionStatus(status)) {
+    res.status(400).json({ error: `status가 올바르지 않습니다: ${String(status)}` });
+    return;
+  }
+  const next = await writeActionState(tenant.tenantId, actionId, {
+    status,
+    markedWeek: typeof markedWeek === 'string' ? markedWeek : undefined,
+    note: typeof note === 'string' ? note : undefined,
+  });
+  res.json(next);
 });
 
 // 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.

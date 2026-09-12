@@ -1,5 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
-import { loadCitationSources, loadQuestionAnalyses, loadQuestionBank } from './api'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  loadActionStates,
+  loadCitationSources,
+  loadQuestionAnalyses,
+  loadQuestionBank,
+  saveActionState,
+  type ActionStateMap,
+  type ActionStatus,
+} from './api'
 import { resolveBankVersion } from './bankVersion'
 import { computeGapActions, type GapActionPlan } from './gapActions'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
@@ -56,10 +64,63 @@ export function useGapActionPlan(tenantId: string) {
     }
   }, [tenantId, weekOf])
 
-  const plan: GapActionPlan = useMemo(
-    () => computeGapActions(analyses, questions, citations),
-    [analyses, questions, citations],
+  // 집행 상태. null은 오류가 아니라 **이 환경에 저장 기능이 없다**는 뜻이다(웹에는 라우트가
+  // 없다). 그 구분을 그대로 넘겨서 화면이 저장되지 않는 버튼을 띄우지 않게 한다.
+  const [states, setStates] = useState<ActionStateMap | null>(null)
+  const [statesReady, setStatesReady] = useState(false)
+  useEffect(() => {
+    if (!tenantId) return
+    let alive = true
+    setStatesReady(false)
+    void loadActionStates(tenantId).then((map) => {
+      if (!alive) return
+      setStates(map)
+      setStatesReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenantId])
+
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const setStatus = useCallback(
+    async (actionId: string, status: ActionStatus) => {
+      if (!tenantId) return
+      const before = states
+      // 낙관적 반영 — 클릭이 먹었는지 기다리게 하지 않는다. 실패하면 되돌리고 말한다.
+      setStates((prev) => {
+        const next = { ...(prev ?? {}) }
+        if (status === 'todo') delete next[actionId]
+        else next[actionId] = { status, updatedAt: new Date().toISOString(), markedWeek: weekOf }
+        return next
+      })
+      setSaveError(null)
+      const saved = await saveActionState(tenantId, actionId, status, weekOf)
+      if (saved) setStates(saved)
+      else {
+        setStates(before)
+        setSaveError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    },
+    [tenantId, weekOf, states],
   )
 
-  return { plan, history, weeks, weekOf, setWeekOf, loading, neverMeasured }
+  const plan: GapActionPlan = useMemo(
+    () => computeGapActions(analyses, questions, citations, states ?? {}),
+    [analyses, questions, citations, states],
+  )
+
+  return {
+    plan,
+    history,
+    weeks,
+    weekOf,
+    setWeekOf,
+    loading,
+    neverMeasured,
+    /** 상태를 저장할 수 있는 환경인가(웹에서는 false). 화면은 이걸로 컨트롤을 숨긴다. */
+    canSaveStatus: statesReady && states !== null,
+    setStatus,
+    saveError,
+  }
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { cancelMeasureRun, loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { useTenant } from '../context/useTenant'
+import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
@@ -119,7 +120,7 @@ function ActionSummary() {
   const { plan, weekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
   if (!tenant) return null
 
-  const open = plan.actions.filter((a) => !a.satisfied)
+  const open = plan.actions.filter(isOpenAction)
   return (
     <section style={{ marginTop: '8px' }}>
       <h3>실행 항목</h3>

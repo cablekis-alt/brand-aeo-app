@@ -1,14 +1,38 @@
 import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import type { GapAction } from '../lib/gapActions'
+import type { ActionStatus } from '../lib/api'
+import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
 const KIND_CLASS: Record<GapAction['kind'], string> = { listing: 'st-warn', content: 'st-info' }
 
+/**
+ * 집행 상태 버튼 — '완료'가 아니라 '집행함'이다.
+ *
+ * 사람이 충족(satisfied)을 직접 켤 수는 없다. 그건 데이터가 정한다. 여기서 고르는 건
+ * "내가 그 일을 했는가"뿐이고, 그래서 집행했는데 아직 인용이 안 잡힌 항목이 드러난다.
+ */
+const STATUS_CHOICES: { value: ActionStatus; label: string; title: string }[] = [
+  { value: 'todo', label: '안 함', title: '아직 손대지 않음' },
+  { value: 'doing', label: '진행 중', title: '작업하고 있음' },
+  { value: 'done', label: '집행함', title: '올렸음 — 인용이 잡히면 자동으로 충족이 된다' },
+  { value: 'skip', label: '보류', title: '하지 않기로 함 — 목록 아래로 내린다' },
+]
+
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
-function ActionCard({ action }: { action: GapAction }) {
+function ActionCard({
+  action,
+  canSaveStatus,
+  onStatus,
+}: {
+  action: GapAction
+  canSaveStatus: boolean
+  onStatus: (id: string, status: ActionStatus) => void
+}) {
+  // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
+  const awaiting = action.status === 'done' && !action.satisfied
   return (
     <article className="gap-card">
       <div className="gap-card-head">
@@ -33,16 +57,41 @@ function ActionCard({ action }: { action: GapAction }) {
         </ul>
       )}
       <p className="gap-tally">완료 조건 · {action.doneSignal}</p>
+      {awaiting && (
+        <p className="gap-tally" style={{ color: 'var(--accent)' }}>
+          집행했다고 표시했지만 아직 인용에서 우리를 못 찾았습니다
+          {action.markedWeek && ` (${action.markedWeek}에 표시)`}. 다음 측정에서도 그대로면 등재
+          방식을 다시 보세요.
+        </p>
+      )}
+      {canSaveStatus && (
+        <div className="action-status" role="group" aria-label={`${action.title} 집행 상태`}>
+          {STATUS_CHOICES.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              title={c.title}
+              className={action.status === c.value ? 'on' : undefined}
+              aria-pressed={action.status === c.value}
+              onClick={() => onStatus(action.id, c.value)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
     </article>
   )
 }
 
 export default function GapActions() {
   const { tenant } = useTenant()
-  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
+  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError } =
+    useGapActionPlan(tenant?.tenantId ?? '')
 
-  const open = plan.actions.filter((a) => !a.satisfied)
-  const satisfied = plan.actions.filter((a) => a.satisfied)
+  const open = plan.actions.filter(isOpenAction)
+  const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
+  const skipped = plan.actions.filter((a) => a.status === 'skip')
   const ready = !loading && plan.actions.length > 0
 
   if (!tenant) return null
@@ -59,6 +108,12 @@ export default function GapActions() {
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
       </div>
+
+      {saveError && (
+        <p className="error" role="alert">
+          {saveError}
+        </p>
+      )}
 
       {loading && <p className="muted">불러오는 중…</p>}
 
@@ -79,7 +134,14 @@ export default function GapActions() {
               <li>
                 남은 항목 <b>{open.length}건</b>
                 {satisfied.length > 0 && <> · 데이터가 충족을 확인한 항목 {satisfied.length}건</>}
+                {plan.skippedCount > 0 && <> · 보류 {plan.skippedCount}건</>}
               </li>
+              {plan.awaitingCount > 0 && (
+                <li>
+                  <b>집행 확인 대기 {plan.awaitingCount}건</b> — 했다고 표시했지만 아직 인용에서 우리를
+                  못 찾은 항목입니다. 맨 위에 모아 뒀습니다.
+                </li>
+              )}
               <li className="muted">
                 완료는 사람이 체크하지 않고 <b>데이터에서 읽습니다.</b> 등재가 실제로 되면 그 도메인의
                 인용이 우리 언급을 뒷받침하기 시작하고, 그때 자동으로 충족으로 넘어갑니다.
@@ -98,7 +160,7 @@ export default function GapActions() {
             ) : (
               <div className="gap-grid">
                 {open.map((a) => (
-                  <ActionCard key={a.id} action={a} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
                 ))}
               </div>
             )}
@@ -113,7 +175,22 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {skipped.length > 0 && (
+            <section>
+              <h3>보류</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                하지 않기로 한 항목입니다. 지운 게 아니라 내려 둔 것이라, 생각이 바뀌면 여기서 되돌릴
+                수 있습니다.
+              </p>
+              <div className="gap-grid">
+                {skipped.map((a) => (
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} />
                 ))}
               </div>
             </section>
