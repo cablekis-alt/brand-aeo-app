@@ -171,17 +171,18 @@ export default function Sidebar() {
         </div>
       </header>
 
-      <div className="sidebar-scroll">
-        <NavLink
-          to="/brand-onboarding"
-          className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
-        >
-          <span className="sidebar-cta-mark" aria-hidden="true">
-            +
-          </span>
-          브랜드 추가
-        </NavLink>
+      {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
+      <NavLink
+        to="/brand-onboarding"
+        className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
+      >
+        <span className="sidebar-cta-mark" aria-hidden="true">
+          +
+        </span>
+        브랜드 추가
+      </NavLink>
 
+      <div className="sidebar-scroll">
         {MENU.map((group) => {
           const inside = group.items.some((i) => i.to === pathname)
           const open = !group.foldable || folds[group.id] || inside
