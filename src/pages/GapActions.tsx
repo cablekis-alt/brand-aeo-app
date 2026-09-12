@@ -113,7 +113,7 @@ export default function GapActions() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">그래서 뭘 하나</p>
       <h1>실행 항목</h1>
       <p className="lead">
         <Link to="/gap-analysis">가시성 격차 분석</Link>이 "어디가 비어 있나"를 말한다면, 여기는{' '}

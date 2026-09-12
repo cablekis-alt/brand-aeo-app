@@ -65,7 +65,7 @@ export default function CompetitorTrends() {
 
   return (
     <>
-      <p className="brand">STAGE 4</p>
+      <p className="brand">상세 분석</p>
       <h1>경쟁 시계열</h1>
       <p className="lead">
         코호트 경쟁사와 우리 브랜드의 주간 AEO Score 추이를 한 축에서 비교합니다. 리더 대비 격차가 벌어지는지 좁혀지는지를

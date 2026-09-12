@@ -872,7 +872,7 @@ export default function BrandOnboarding() {
     <>
       <header className="onboard-masthead">
         <div>
-          <p className="brand">시작 · 진입점</p>
+          <p className="brand">시작</p>
           <h1>브랜드 추가</h1>
           <p className="lead">
             상호(브랜드명)만 넣으면 도메인·업종·지역·주소·경쟁사까지 자동으로 채웁니다. 확인 후 등록하면 테넌트가

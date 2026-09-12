@@ -62,7 +62,7 @@ export default function BrandDiagnosis() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">어디가 비어 있나</p>
       <h1>브랜드 종합 진단</h1>
       <p className="lead">
         이번 주 응답

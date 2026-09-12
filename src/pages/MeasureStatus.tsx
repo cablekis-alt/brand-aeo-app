@@ -339,7 +339,7 @@ export default function MeasureStatus() {
 
   return (
     <>
-      <p className="brand">STAGE 2</p>
+      <p className="brand">측정</p>
       <h1>측정 상태</h1>
       <p className="lead">
         GitHub Actions 측정 실행의 진행 상태와, 로컬(<code>npm run measure:local</code>)에서 측정한 기록입니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.

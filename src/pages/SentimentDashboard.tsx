@@ -52,7 +52,7 @@ export default function SentimentDashboard() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">상세 분석</p>
       <h1>감성 분석</h1>
       <p className="lead">
         AI 답변이 이 브랜드를 <b>어떤 어조</b>로 말하는지 봅니다 — 언급 문장의 긍정·중립·부정 분포와 엔진·질문별 편차,

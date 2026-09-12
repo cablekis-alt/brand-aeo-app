@@ -49,7 +49,7 @@ export default function QuestionWinLoss() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">상세 분석</p>
       <h1>질문별 승패</h1>
       <p className="lead">
         이번 주 응답(질문 × 엔진 × 반복)에서 <b>질문마다</b> 브랜드가 언급됐는지, 경쟁사에 밀리는지를 봅니다. 개선이 필요한

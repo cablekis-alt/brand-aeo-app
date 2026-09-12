@@ -97,7 +97,7 @@ export default function GapAnalysis() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">어디가 비어 있나</p>
       <h1>가시성 격차 분석</h1>
       <p className="lead">
         어떤 <b>유형의 질문</b>에서, 어떤 <b>엔진</b>에서, <b>누구에게</b> 밀리는지를 봅니다.

@@ -121,7 +121,7 @@ export default function MeasureTenant() {
 
   return (
     <>
-      <p className="brand">STAGE 1</p>
+      <p className="brand">측정</p>
       <h1>브랜드·경쟁사 측정</h1>
       <p className="lead">
         측정할 대상을 골라 실행합니다. <b>본 브랜드</b>를 고르면 <b>경쟁사·코호트까지 함께</b> 측정하고(랭킹 분석의 "이 브랜드

@@ -71,7 +71,7 @@ export default function CitationGap() {
 
   return (
     <>
-      <p className="brand">STAGE 3</p>
+      <p className="brand">어디가 비어 있나</p>
       <h1>인용 갭 분석</h1>
       <p className="lead">
         AI가 답을 만들 때 인용하지만 <b>우리 브랜드는 없는</b> 출처를 찾습니다. 이 도메인들이 곧 콘텐츠·PR·제휴로

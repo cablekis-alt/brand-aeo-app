@@ -35,7 +35,7 @@ export default function AiReferrals() {
 
   return (
     <>
-      <p className="brand">STAGE 4</p>
+      <p className="brand">상세 분석</p>
       <h1>AI 리퍼럴 트래픽</h1>
       <p className="lead">
         AI 답변에서 <b>실제 방문으로 이어진</b> 세션을 자사 GA4에서 확인합니다. 가시성 측정(언급·인용)이 "보이는가"라면,
