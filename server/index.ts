@@ -7,6 +7,7 @@ import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
 import { fetchAiReferrals } from './gaReferrals.js';
+import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -244,6 +245,21 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
   }
   const source = await sourceFor(tenant, req.params.weekOf, res);
   res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
+});
+
+// CI 측정 결과 동기화 — GitHub repo의 src/data(measure.yml이 굽는 곳)에서 로컬에 없는 (브랜드, 주차)만
+// 채운다. 데스크톱 전용(웹은 번들이 곧 src/data다). 비공개 repo라 GH_MEASURE_TOKEN이 있어야 한다.
+app.get('/api/ci-sync', (_req, res) => {
+  res.json({ enabled: ciSyncEnabled(), repo: describeRepo() });
+});
+
+app.post('/api/ci-sync', async (_req, res) => {
+  try {
+    const tenants = await loadRuntimeTenants();
+    res.json(await syncFromCi(store, tenants));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // 실행 항목의 집행 상태 — 데스크톱·로컬 전용(Vercel 함수를 새로 만들지 않는다).

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { cancelMeasureRun, loadMeasureRuns, type MeasureRunInfo } from '../lib/api'
+import { cancelMeasureRun, loadCiSyncStatus, loadMeasureRuns, runCiSync, type CiSyncSummary, type MeasureRunInfo } from '../lib/api'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { useTenant } from '../context/useTenant'
 import { isOpenAction } from '../lib/gapActions'
@@ -155,6 +155,72 @@ function ActionSummary() {
         </>
       )}
     </section>
+  )
+}
+
+/**
+ * CI 결과를 이 앱으로 끌어오는 버튼. 데스크톱에서만 의미가 있다(웹은 번들이 곧 CI 결과).
+ *
+ * 왜 여기 있나. GitHub Actions 실행 목록 바로 옆이다 — "CI가 측정했는데 앱에 왜 없지"가
+ * 생기는 자리에서 바로 해결한다. 토큰이 없으면 무엇을 어디에 넣어야 하는지 그 자리에서 말한다.
+ */
+function CiSyncPanel({ onSynced }: { onSynced: () => void }) {
+  const [status, setStatus] = useState<{ enabled: boolean; repo: string } | null | undefined>(undefined)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<CiSyncSummary | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    void loadCiSyncStatus().then(setStatus)
+  }, [])
+  if (status === undefined || status === null) return null // 웹(라우트 없음)이거나 아직 모름
+
+  const run = async () => {
+    setBusy(true)
+    setError(null)
+    setResult(null)
+    try {
+      const r = await runCiSync()
+      setResult(r)
+      if (r.cardsAdded + r.analysesAdded + r.banksAdded > 0) onSynced()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="ci-sync">
+      {!status.enabled ? (
+        <p className="muted" style={{ margin: 0 }}>
+          CI 결과를 이 앱으로 가져오려면 <code>%APPDATA%\brand-aeo-app\.env</code>에{' '}
+          <code>GH_MEASURE_TOKEN=…</code>(GitHub PAT, 이 저장소 <b>contents 읽기</b> 권한)을 한 줄 넣고 앱을 다시
+          켜세요. 토큰은 이 PC 밖으로 나가지 않습니다.
+        </p>
+      ) : (
+        <>
+          <button type="button" onClick={() => void run()} disabled={busy}>
+            {busy ? '가져오는 중…' : 'CI 결과 가져오기'}
+          </button>
+          <span className="doc-meta">
+            {status.repo}의 <code>src/data</code>에서 이 앱에 <b>없는 주차만</b> 채웁니다. 이미 있는 주차는 덮지
+            않습니다.
+          </span>
+        </>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {result && (
+        <p className="hint" style={{ marginBottom: 0 }}>
+          {result.cardsAdded + result.analysesAdded + result.banksAdded === 0
+            ? `새로 가져올 것이 없습니다 — 이미 있는 주차 ${result.skippedExisting}건은 건너뛰었습니다.`
+            : `스코어카드 ${result.cardsAdded} · 분석 ${result.analysesAdded} · 질문 은행 ${result.banksAdded} 추가, 순위 ${result.ranksUpdated}건 재계산 (${result.tenantsTouched.join(', ')}). 이미 있던 주차 ${result.skippedExisting}건은 그대로 뒀습니다.`}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -327,6 +393,7 @@ export default function MeasureStatus() {
         <p className="hint" style={{ marginTop: 0 }}>
           주차·AEO는 성공 run에 한해 해당 브랜드의 <b>최신 스코어카드</b>를 붙인 best-effort 값입니다(실패·미매칭은 <code>-</code>).
         </p>
+        <CiSyncPanel onSynced={() => window.location.reload()} />
         {!enabled ? (
           <p className="muted">
             배포 환경에서 <code>GH_MEASURE_TOKEN</code>이 설정되어야 실행 상태를 볼 수 있습니다. 아래 로컬 측정 기록은 토큰 없이도 보입니다.

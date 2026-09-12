@@ -1762,3 +1762,22 @@ p.hint {
   font-size: 0.92em;
 }
 .notice b { color: var(--accent); }
+
+/* CI 결과 동기화 — 버튼과 설명을 한 줄에. */
+.ci-sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 6px 0 10px;
+}
+.ci-sync button {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--card);
+  cursor: pointer;
+}
+.ci-sync button:disabled { opacity: 0.6; cursor: default; }
+.ci-sync .error, .ci-sync .hint { flex-basis: 100%; }

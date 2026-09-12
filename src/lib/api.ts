@@ -305,3 +305,28 @@ export async function saveActionState(
     return null
   }
 }
+
+/**
+ * CI 측정 결과 동기화 — 데스크톱 전용. GET은 가능 여부(토큰·repo), POST는 실제 동기화.
+ * null은 라우트가 없는 환경(웹)이다 — 화면은 이 경우 섹션 자체를 숨긴다.
+ */
+export interface CiSyncSummary {
+  enabled: boolean
+  repo: string
+  cardsAdded: number
+  analysesAdded: number
+  banksAdded: number
+  ranksUpdated: number
+  skippedExisting: number
+  tenantsTouched: string[]
+}
+export async function loadCiSyncStatus(): Promise<{ enabled: boolean; repo: string } | null> {
+  return getJson<{ enabled: boolean; repo: string }>('/api/ci-sync')
+}
+/** 실패하면 throw — 동기화가 조용히 "0건"으로 끝나면 사용자가 성공으로 읽는다. */
+export async function runCiSync(): Promise<CiSyncSummary> {
+  const res = await fetch('/api/ci-sync', { method: 'POST' })
+  const body = (await res.json().catch(() => ({}))) as CiSyncSummary & { error?: string }
+  if (!res.ok) throw new Error(body.error || `동기화 실패 (HTTP ${res.status})`)
+  return body
+}

@@ -5,9 +5,14 @@ export function canTriggerRemoteMeasure(): boolean {
   return Boolean(process.env.GH_MEASURE_TOKEN);
 }
 
-function repoParts(): { owner: string; repo: string; ref: string } {
-  const owner = process.env.GITHUB_MEASURE_OWNER || process.env.VERCEL_GIT_REPO_OWNER || '';
-  const repo = process.env.GITHUB_MEASURE_REPO || process.env.VERCEL_GIT_REPO_SLUG || '';
+// 데스크톱에는 Vercel Git env가 없다. 이 앱은 곧 이 저장소이므로 마지막 폴백으로 박아 둔다 —
+// 없으면 CI 결과 동기화가 "repo 미설정"으로 막힌다. 포크·이전 시에는 GITHUB_MEASURE_OWNER/REPO로 덮는다.
+const DEFAULT_OWNER = 'cablekis-alt';
+const DEFAULT_REPO = 'brand-aeo-app';
+
+export function repoParts(): { owner: string; repo: string; ref: string } {
+  const owner = process.env.GITHUB_MEASURE_OWNER || process.env.VERCEL_GIT_REPO_OWNER || DEFAULT_OWNER;
+  const repo = process.env.GITHUB_MEASURE_REPO || process.env.VERCEL_GIT_REPO_SLUG || DEFAULT_REPO;
   const ref = process.env.GITHUB_MEASURE_REF || process.env.VERCEL_GIT_COMMIT_REF || 'master';
   if (!owner || !repo) {
     throw new Error('GitHub 저장소 정보가 없습니다. GITHUB_MEASURE_OWNER / GITHUB_MEASURE_REPO 를 넣거나 Vercel Git 연동을 확인하세요.');
