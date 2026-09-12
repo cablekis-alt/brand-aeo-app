@@ -3,7 +3,7 @@ name: Measure tenant
 # Actions 등록 트리거용 (repo에서 Actions를 켠 뒤 재스캔 유도).
 
 # 실행 목록·측정 상태 화면(S-14)에서 무엇을 측정 중인지 보이도록 실행 이름에 tenantId를 넣는다.
-run-name: measure ${{ inputs.tenantId }}
+run-name: measure ${{ inputs.tenantId || 'k-wonjin' }}
 
 on:
   workflow_dispatch:
@@ -12,6 +12,12 @@ on:
         description: tenantId to measure (e.g. example-brand), or __queue__ to process the whole measure queue
         required: true
         type: string
+  # 주간 자동 측정 — 루프("집행함 → 다음 측정에서 확인")의 심장 박동. 사람이 누르지 않아도 돈다.
+  # GitHub cron은 UTC다. 일요일 19:00 UTC = 월요일 04:00 KST. 스케줄 실행에는 inputs가 없으므로
+  # 아래 스텝들이 `inputs.tenantId || 'k-wonjin'`으로 폴백한다. 대상을 늘리려면 여기 줄을 추가하지 말고
+  # 폴백 값을 __queue__로 바꾸고 대기열에 브랜드를 넣는 편이 낫다(한 run에 순차 처리).
+  schedule:
+    - cron: '0 19 * * 0'
 
 concurrency:
   group: brand-aeo-measure
@@ -29,6 +35,9 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+      # 수집 엔진 — 데스크톱 설치본(release-desktop.yml)과 같은 시크릿을 읽어 같은 구성으로 측정한다.
+      # 빠져 있으면 테넌트 설정의 ['openai','gemini']로 돌아 데스크톱(3엔진) 데이터와 비교가 어긋난다.
+      COLLECT_ENGINES: ${{ secrets.COLLECT_ENGINES || 'gemini' }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       # 현재 OpenAI 크레딧이 없어 판정도 Gemini로 돌린다(secret로 덮어쓰기 가능).
       JUDGE_ENGINE: ${{ secrets.JUDGE_ENGINE || 'gemini' }}
@@ -51,7 +60,7 @@ jobs:
       - run: npm ci
 
       - name: Run pipeline and bake
-        run: npx tsx scripts/ci-measure.ts "${{ inputs.tenantId }}"
+        run: npx tsx scripts/ci-measure.ts "${{ inputs.tenantId || 'k-wonjin' }}"
 
       - name: Commit baked scores
         run: |
@@ -62,8 +71,10 @@ jobs:
             echo "baking 결과 변경 없음"
             exit 0
           fi
-          MSG="data: measure ${{ inputs.tenantId }}"
-          if [ "${{ inputs.tenantId }}" = "__queue__" ]; then MSG="data: measure queued brands"; fi
+          TARGET="${{ inputs.tenantId || 'k-wonjin' }}"
+          MSG="data: measure $TARGET"
+          if [ "$TARGET" = "__queue__" ]; then MSG="data: measure queued brands"; fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then MSG="$MSG (weekly)"; fi
           git commit -m "$MSG"
           git pull --rebase origin "${{ github.ref_name }}"
           git push
