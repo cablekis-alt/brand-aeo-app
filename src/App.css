@@ -108,18 +108,21 @@
   gap: 8px;
   margin: 0 2px;
   padding: 8px 12px;
-  border: 1px solid transparent;
+  /* 테두리형 — 활성 메뉴 항목의 연한 채움과 경쟁하지 않는다. 호버·활성에서만 채운다. */
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   border-radius: 8px;
-  background: var(--accent-soft);
+  background: transparent;
   color: var(--accent);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .sidebar-cta:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 
 .sidebar-cta.on {
@@ -247,77 +250,17 @@
 }
 
 /* 구버전 마크(호환용) */
-.sidebar-mark {
-  font-family: var(--serif);
-  font-size: 20px;
-  margin: 0;
-}
-
-.sidebar-scope {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--muted);
-  margin: 0;
-}
 
 .sidebar-group-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  margin: 0 0 5px;
+  margin: 0 0 4px;
   padding: 0 4px;
   line-height: 1.3;
-}
-.sidebar-stage {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-  margin-bottom: 2px;
-}
-.sidebar-top {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.sidebar-add,
-.sidebar-home {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 10px;
-  text-decoration: none;
-  color: var(--ink);
-  font-size: 14px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-}
-.sidebar-add {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  font-weight: 600;
-}
-.sidebar-add:hover,
-.sidebar-home:hover {
-  background: var(--accent-soft);
-}
-.sidebar-add.on,
-.sidebar-home.on {
-  color: var(--accent);
-}
-.sidebar-add .code,
-.sidebar-home .code {
-  font-family: var(--serif);
-  font-size: 11px;
-  color: var(--muted);
-  min-width: 28px;
-}
-.sidebar-add.on .code,
-.sidebar-home.on .code {
-  color: var(--accent);
 }
 
 .sidebar-group ul {
@@ -337,72 +280,38 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: 7px;
   text-decoration: none;
-  color: var(--muted);
+  /* 항목은 잉크, 그룹 라벨만 회색 — 둘이 같은 회색이면 위계가 사라진다. */
+  color: var(--ink);
   font-size: 13px;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
   word-break: keep-all;
+  transition: background-color 120ms ease, color 120ms ease;
 }
 
 .sidebar-group a:hover {
-  color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
 }
 
 .sidebar-group a.on {
   background: var(--accent-soft);
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.sidebar-group a .code {
-  font-family: var(--serif);
-  font-size: 11px;
-  color: var(--muted);
-  min-width: 28px;
-}
-
-.sidebar-group a.on .code {
   color: var(--accent);
+  font-weight: 600;
+  /* 왼쪽 2px 표시선 — 채움만으로는 CTA·호버와 구분이 약하다. */
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.sidebar-group a:focus-visible,
+.sidebar-fold:focus-visible,
+.sidebar-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .sidebar-group a .label {
   flex: 1;
-}
-
-.sidebar-group-title .range {
-  font-family: var(--mono, ui-monospace, monospace);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--accent);
-  margin-left: 7px;
-}
-
-.sidebar-group a .bstage {
-  font-family: var(--mono, ui-monospace, monospace);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--accent);
-  opacity: 0.85;
-}
-
-.sidebar-group a.accent {
-  background: var(--accent);
-  margin-bottom: 4px;
-}
-.sidebar-group a.accent .label {
-  color: var(--paper);
-  font-weight: 600;
-}
-.sidebar-group a.accent .code {
-  color: color-mix(in srgb, var(--paper) 70%, transparent);
-}
-.sidebar-group a.accent:hover {
-  background: var(--accent);
-  filter: brightness(1.06);
 }
 
 .filters {
@@ -1881,7 +1790,7 @@ p.hint {
   background: transparent;
   font: inherit;
   font-size: 11px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   color: var(--muted);
   cursor: pointer;
   text-align: left;
@@ -1915,12 +1824,16 @@ p.hint {
   text-align: center;
 }
 .sidebar-badge.live {
+  background: var(--accent);
+  color: var(--paper);
+}
+.sidebar-badge.todo {
+  /* 할 일 건수는 오류가 아니다 — 빨강(--bad)은 사실성 리스크·실패에만 쓴다. */
   background: var(--accent-soft);
   color: var(--accent);
 }
-.sidebar-badge.todo {
-  background: color-mix(in srgb, var(--bad) 12%, transparent);
-  color: var(--bad);
+.sidebar-group a.on .sidebar-badge.todo {
+  background: var(--card);
 }
 .sidebar-theme-row {
   display: flex;
