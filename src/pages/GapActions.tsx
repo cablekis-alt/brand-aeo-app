@@ -58,10 +58,25 @@ function ActionCard({
       )}
       <p className="gap-tally">완료 조건 · {action.doneSignal}</p>
       {awaiting && (
+        // 종류마다 확인 방법이 다르다. 등재형은 인용 데이터가 자동으로 충족을 켜지만,
+        // 콘텐츠형은 자동 충족이 없다 — 우리 사이트 글은 인용 갭이 아니라 '패가 줄어드는 것'으로
+        // 나타난다. 같은 문구를 쓰면 콘텐츠 카드가 "인용에서 못 찾았다·등재 방식을 보라"는
+        // 해당 없는 말을 하게 된다(실제로 그렇게 떴다).
         <p className="gap-tally" style={{ color: 'var(--accent)' }}>
-          집행했다고 표시했지만 아직 인용에서 우리를 못 찾았습니다
-          {action.markedWeek && ` (${action.markedWeek}에 표시)`}. 다음 측정에서도 그대로면 등재
-          방식을 다시 보세요.
+          {action.kind === 'listing' ? (
+            <>
+              집행했다고 표시했지만 아직 인용에서 우리를 못 찾았습니다
+              {action.markedWeek && ` (${action.markedWeek}에 표시)`}. AI가 새 페이지를 읽어 들이는 데
+              보통 몇 주가 걸립니다. 다음 측정에서도 그대로면 등재된 페이지에 브랜드명이 실제로 있는지,
+              크롤러가 읽을 수 있는 정적 페이지인지 확인하세요.
+            </>
+          ) : (
+            <>
+              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 콘텐츠는 인용이
+              아니라 <b>이 질문들의 패 판정이 줄어드는 것</b>으로 확인됩니다 — 다음 측정을 보세요.
+              자동으로 충족되지 않으므로, 효과가 보이면 직접 판단해 상태를 정리하세요.
+            </>
+          )}
         </p>
       )}
       {canSaveStatus && (
@@ -138,8 +153,8 @@ export default function GapActions() {
               </li>
               {plan.awaitingCount > 0 && (
                 <li>
-                  <b>집행 확인 대기 {plan.awaitingCount}건</b> — 했다고 표시했지만 아직 인용에서 우리를
-                  못 찾은 항목입니다. 맨 위에 모아 뒀습니다.
+                  <b>집행 확인 대기 {plan.awaitingCount}건</b> — 했다고 표시했지만 데이터가 아직 확인하지
+                  못한 항목입니다(등재형은 인용, 콘텐츠형은 패 판정으로 확인). 맨 위에 모아 뒀습니다.
                 </li>
               )}
               <li className="muted">
