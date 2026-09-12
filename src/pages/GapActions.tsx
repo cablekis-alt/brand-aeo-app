@@ -145,7 +145,9 @@ function BriefPanel({
             {b.mustIncludeFacts.length > 0 ? (
               <ul>{b.mustIncludeFacts.map((x) => <li key={x}>{x}</li>)}</ul>
             ) : (
-              <p className="muted">등록된 사실이 없습니다 — 브랜드 설정의 팩트 그래프를 채우면 여기 들어옵니다.</p>
+              <p className="muted">
+                등록된 사실이 없습니다 — <Link to="/brand-facts">브랜드 사실</Link>을 채우면 여기 들어옵니다.
+              </p>
             )}
           </section>
           {b.doNotClaim.length > 0 && (

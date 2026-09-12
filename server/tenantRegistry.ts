@@ -3,6 +3,7 @@ import { packagedDataMode } from './appPaths.js';
 import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
+import { readFactGraphFile } from './factGraphStore.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
@@ -123,7 +124,10 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  return [...map.values()];
+  // 팩트 그래프만은 앱에서 저장한 파일이 베이스·오버레이 모두를 이긴다(factGraphStore 주석 참고).
+  const tenants = [...map.values()];
+  const files = await Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId)));
+  return tenants.map((t, i) => (files[i] ? { ...t, factGraph: files[i]! } : t));
 }
 
 /**

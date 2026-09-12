@@ -10,6 +10,7 @@ import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
+import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -345,6 +346,33 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
       getJudgeClient(),
     );
     res.json({ ...stored, reused: false });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. 파일이 있으면 베이스·오버레이보다 우선한다.
+app.get('/api/tenants/:tenantId/fact-graph', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const file = await readFactGraphFile(tenant.tenantId);
+  res.json({ tenantId: tenant.tenantId, source: file ? 'file' : 'config', factGraph: file ?? tenant.factGraph ?? [] });
+});
+
+app.put('/api/tenants/:tenantId/fact-graph', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const { nodes, dropped } = normalizeFactGraph(body.factGraph);
+  try {
+    await writeFactGraphFile(tenant.tenantId, nodes);
+    res.json({ tenantId: tenant.tenantId, source: 'file', factGraph: nodes, dropped });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

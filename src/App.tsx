@@ -14,6 +14,7 @@ import MeasureStatus from './pages/MeasureStatus'
 import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
 import Performance from './pages/Performance'
+import BrandFacts from './pages/BrandFacts'
 import QuestionBank from './pages/QuestionBank'
 import QuestionWinLoss from './pages/QuestionWinLoss'
 import GapActions from './pages/GapActions'
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="sentiment" element={<SentimentDashboard />} />
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />
+            <Route path="brand-facts" element={<BrandFacts />} />
             <Route path="citations" element={<Citations />} />
             <Route path="citation-sources" element={<CitationSources />} />
             <Route path="citation-gap" element={<CitationGap />} />

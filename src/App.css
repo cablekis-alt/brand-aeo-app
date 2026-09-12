@@ -1854,3 +1854,13 @@ p.hint {
 .brief-body h4 { margin: 0 0 4px; font-size: 0.95em; }
 .brief-body ul, .brief-body ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
 .brief-body p { margin: 0; }
+
+/* 브랜드 사실 편집 표 — 입력이 셀을 채운다. */
+table.facts input, table.facts select { width: 100%; box-sizing: border-box; font: inherit; font-size: 0.92em; padding: 5px 7px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+table.facts td { vertical-align: middle; }
+table.facts button.ghost { font: inherit; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; padding: 3px 8px; }
+table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
+.facts-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.facts-bar button { font: inherit; padding: 6px 12px; border: 1px solid var(--ink); background: var(--ink); color: var(--card); cursor: pointer; }
+.facts-bar button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.facts-bar button:disabled { opacity: 0.6; cursor: default; }

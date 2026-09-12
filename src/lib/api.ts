@@ -372,3 +372,31 @@ export async function generateContentBrief(
   if (!res.ok) throw new Error(body.error || `브리프 생성 실패 (HTTP ${res.status})`)
   return body
 }
+
+/** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */
+export interface FactNode {
+  id: string
+  type: 'price' | 'spec' | 'date' | 'certification' | 'location' | 'other'
+  claim: string
+  value: string
+  sourceUrl?: string
+  updatedAt: string
+}
+export async function loadFactGraph(
+  tenantId: string,
+): Promise<{ tenantId: string; source: 'file' | 'config'; factGraph: FactNode[] } | null> {
+  return getJson(`/api/tenants/${encodeURIComponent(tenantId)}/fact-graph`)
+}
+export async function saveFactGraph(
+  tenantId: string,
+  factGraph: FactNode[],
+): Promise<{ factGraph: FactNode[]; dropped: number }> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/fact-graph`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ factGraph }),
+  })
+  const body = (await res.json().catch(() => ({}))) as { factGraph: FactNode[]; dropped: number; error?: string }
+  if (!res.ok) throw new Error(body.error || `저장 실패 (HTTP ${res.status})`)
+  return body
+}

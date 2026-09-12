@@ -89,7 +89,10 @@ const MENU: MenuGroup[] = [
     id: 'settings',
     title: '설정',
     foldable: true,
-    items: [{ label: '질문 프롬프트 빌더', to: '/questions' }],
+    items: [
+      { label: '브랜드 사실', to: '/brand-facts' },
+      { label: '질문 프롬프트 빌더', to: '/questions' },
+    ],
   },
 ]
 
