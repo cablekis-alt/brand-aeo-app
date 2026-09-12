@@ -244,7 +244,13 @@ function ActionCard({
         // 나타난다. 같은 문구를 쓰면 콘텐츠 카드가 "인용에서 못 찾았다·등재 방식을 보라"는
         // 해당 없는 말을 하게 된다(실제로 그렇게 떴다).
         <p className="gap-tally" style={{ color: 'var(--accent)' }}>
-          {action.kind === 'listing' ? (
+          {action.progress ? (
+            <>
+              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 이 플랫폼은 실렸다/아니다가
+              아니라 <b>지분</b>입니다 — 지금 인용 {action.progress.total}회 중 {action.progress.supporting}회가 우리를
+              뒷받침합니다. 다음 측정에서 이 비율이 오르는지 보세요.
+            </>
+          ) : action.kind === 'listing' ? (
             <>
               집행했다고 표시했지만 아직 인용에서 우리를 못 찾았습니다
               {action.markedWeek && ` (${action.markedWeek}에 표시)`}. AI가 새 페이지를 읽어 들이는 데
@@ -423,7 +429,8 @@ export default function GapActions() {
               <li>
                 분류가 <code>other</code>라 보류 <b>{plan.excludedLowConfidence}개</b> — 알려진 호스트
                 목록에 없는 도메인입니다. 대부분 같은 업종의 다른 업체 홈페이지라 등재할 수 없습니다.
-                업체 자체 블로그 서브도메인이 섞이는 <code>blog</code>도 함께 뺐습니다.
+                블로그는 <b>발행 가능한 플랫폼</b>(네이버 블로그·티스토리·브런치 등)만 남기고, 남의 회사 자체
+                블로그는 뺐습니다 — 거기엔 글을 올릴 수 없습니다.
               </li>
               <li className="muted">
                 공공기관(<code>.go.kr</code>) 출처도 뺐습니다. 분류는 정확하지만 보건복지부나 PubMed에

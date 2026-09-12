@@ -1,4 +1,5 @@
 import type { ActionStateMap, ActionStatus } from './api'
+import { blogPlatformOf } from './blogPlatforms'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
@@ -67,6 +68,12 @@ export interface GapAction {
   markedWeek?: string
   /** 무엇이 관측되면 완료인지 — 화면과 사람이 같은 기준을 보게 한다. */
   doneSignal: string
+  /**
+   * 지분으로 보는 항목(블로그 플랫폼)의 현재 위치. 디렉터리·위키처럼 "실렸다/안 실렸다"가
+   * 아니라 "인용 M회 중 N회가 우리를 뒷받침"인 자리라 satisfied가 켜지지 않는다 — 대신 이 값이
+   * 움직인다. 화면이 비율을 그대로 보여 준다.
+   */
+  progress?: { supporting: number; total: number }
 }
 
 export interface GapActionPlan {
@@ -117,10 +124,11 @@ const CATEGORY_LABEL: Record<string, string> = {
  * 보인다"고만 해도 news가 붙었고, 그대로 쓰면 다른 성형외과 홈페이지에 "등재하세요"가 떴다
  * (처음 돌렸을 때 291건짜리 목록이 그렇게 나왔다). 그 폴백을 없앴으므로 이제 news는 믿는다.
  *
- * blog는 여전히 뺀다. 폴백은 사라졌지만 host.startsWith('blog.') 규칙이 남아 있어
- * blog.21ps.co.kr 같은 **업체 자체 블로그 서브도메인**이 걸린다. 남의 회사 블로그에는
- * 글을 올릴 수 없다. 티스토리·네이버 블로그처럼 실제로 쓸 수 있는 플랫폼만 추려내려면
- * 그 호스트만 모은 카탈로그가 따로 필요하다.
+ * blog는 카탈로그로 걸러 되살렸다(blogPlatforms.ts). host.startsWith('blog.') 규칙 때문에
+ * blog.21ps.co.kr 같은 **업체 자체 블로그**가 같은 라벨을 다는데, 거기엔 글을 올릴 수 없다.
+ * 그래서 "누구나 계정을 만들어 발행할 수 있는 플랫폼"만 통과시키고 나머지 blog는 제외한다.
+ * 플랫폼은 도메인이 아니라 **플랫폼 단위로 묶는다** — 티스토리는 글쓴이마다 서브도메인이 달라
+ * 도메인마다 카드를 만들면 인용 1~4회짜리 목록 16줄이 된다(실측).
  *
  * gov는 라벨이 정확한데도 뺀다. 정확한 것과 실행 가능한 것은 다르다 — 실측에서 mohw.go.kr,
  * pubmed.ncbi.nlm.nih.gov에 "등재"가 떴는데 보건복지부나 PubMed에 병원이 등재할 방법은 없다.
@@ -135,6 +143,7 @@ const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
   review: { verb: '등재', badge: '후기 플랫폼' },
   forum: { verb: '커뮤니티 노출', badge: '커뮤니티' },
   social: { verb: '채널 콘텐츠', badge: '소셜' },
+  blog: { verb: '블로그 발행', badge: '블로그 플랫폼' },
 }
 const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
 
@@ -207,9 +216,14 @@ function listingActions(
   }
 
   interface DomainRoll {
+    /** 그룹 키 — 보통은 도메인, 블로그 플랫폼이면 플랫폼 키. */
     domain: string
+    /** 이 그룹에 들어온 실제 호스트들 — 질문 색인을 합칠 때 쓴다. */
+    hosts: Set<string>
     kind: string
     ownerType: string
+    /** 블로그 플랫폼이면 그 정의(표시 문구·채널 메모). */
+    platform: ReturnType<typeof blogPlatformOf>
     citationCount: number
     supporting: number
     engines: Set<string>
@@ -217,28 +231,41 @@ function listingActions(
   }
   const byDomain = new Map<string, DomainRoll>()
   for (const u of citations.urls) {
-    const roll = byDomain.get(u.domain) ?? {
-      domain: u.domain,
+    // 블로그는 발행 가능한 플랫폼만, 그것도 플랫폼 단위로 묶는다. 업체 자체 블로그는 키가 없어 빠진다.
+    const platform = u.kind === 'blog' ? blogPlatformOf(u.domain) : null
+    const key = u.kind === 'blog' ? platform?.key : u.domain
+    if (!key) continue
+    const roll = byDomain.get(key) ?? {
+      domain: key,
+      hosts: new Set<string>(),
       kind: u.kind,
       ownerType: u.ownerType,
+      platform,
       citationCount: 0,
       supporting: 0,
       engines: new Set<string>(),
       sampleUrl: u.raw,
     }
+    roll.hosts.add(u.domain)
     roll.citationCount += u.citationCount
     roll.supporting += u.supportingBrandMentionCount
     for (const e of u.engines) roll.engines.add(e)
-    byDomain.set(u.domain, roll)
+    byDomain.set(key, roll)
   }
 
+  // 제외 개수는 URL이 아니라 **도메인** 기준으로 센다(그룹 키로 접기 전 원본 도메인 수).
+  const allDomains = new Set(citations.urls.map((u) => u.domain))
   const rolls = [...byDomain.values()]
   const competitorDomainCount = rolls.filter((r) => isCompetitorOwned(r.kind, r.ownerType)).length
   const listable = rolls.filter(
     (r) => !isCompetitorOwned(r.kind, r.ownerType) && !isBrandOwned(r.kind, r.ownerType) && LISTABLE_KINDS.has(r.kind),
   )
-  const excludedLowConfidence =
-    rolls.length - listable.length - competitorDomainCount - rolls.filter((r) => isBrandOwned(r.kind, r.ownerType)).length
+  const keptHosts = new Set(listable.flatMap((r) => [...r.hosts]))
+  const competitorHosts = new Set(rolls.filter((r) => isCompetitorOwned(r.kind, r.ownerType)).flatMap((r) => [...r.hosts]))
+  const brandHosts = new Set(rolls.filter((r) => isBrandOwned(r.kind, r.ownerType)).flatMap((r) => [...r.hosts]))
+  const excludedLowConfidence = [...allDomains].filter(
+    (d) => !keptHosts.has(d) && !competitorHosts.has(d) && !brandHosts.has(d),
+  ).length
 
   // 질문 쪽 색인 — 도메인에 붙일 질문을 고를 때 쓴다. 밀린 질문이 먼저다.
   const rowById = new Map(rows.map((r) => [r.questionId, r]))
@@ -246,13 +273,22 @@ function listingActions(
   const actions = listable
     .sort((a, b) => b.citationCount - a.citationCount)
     .map<GapAction>((r) => {
-      const satisfied = r.supporting > 0
+      // 블로그 플랫폼은 "실렸다/안 실렸다"가 아니라 **지분**이다 — 네이버 블로그 62회 인용 중
+      // 1회 뒷받침을 '충족'이라 부르면 과장이다. 임의의 기준선(예: 20%)을 만드는 대신 비율을
+      // 그대로 보여 주고 자동 충족은 켜지 않는다(콘텐츠형과 같은 모양).
+      const isPlatform = Boolean(r.platform)
+      const satisfied = !isPlatform && r.supporting > 0
       const engines = [...r.engines].join('·')
-      const play = LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' }
+      const play = r.platform
+        ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
+        : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
+      const name = r.platform ? r.platform.label : r.domain
 
-      // 이 도메인을 꺼내 든 질문들 = 여기 올릴 글이 답해야 할 것. 우리가 밀린 질문을
-      // 앞에 두고 언급률 낮은 순으로 정렬한다 — 가장 비어 있는 주제가 먼저 보이게.
-      const cited = [...(domainQuestions.get(r.domain) ?? [])]
+      // 이 출처를 꺼내 든 질문들 = 여기 올릴 글이 답해야 할 것. 플랫폼이면 소속 호스트 전체를 합친다.
+      // 우리가 밀린 질문을 앞에 두고 언급률 낮은 순으로 정렬한다 — 가장 비어 있는 주제가 먼저 보이게.
+      const qids = new Set<string>()
+      for (const h of r.hosts) for (const id of domainQuestions.get(h) ?? []) qids.add(id)
+      const cited = [...qids]
         .map((id) => rowById.get(id))
         .filter((row): row is WinLossRow => row !== undefined)
       const lost = cited
@@ -268,22 +304,33 @@ function listingActions(
             ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 우리가 밀린 질문입니다.`
             : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
 
+      const share = r.citationCount > 0 ? Math.round((r.supporting / r.citationCount) * 100) : 0
+      const platformEvidence =
+        `AI가 ${name}을(를) ${r.citationCount}회 인용했고(${engines}) 그중 우리를 뒷받침하는 대목은 ` +
+        `${r.supporting}회(${share}%)입니다. 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
+        (r.platform ? ` ${r.platform.note}` : '')
+
       return {
-        id: `listing:${r.domain}`,
+        id: r.platform ? `listing:platform:${r.domain}` : `listing:${r.domain}`,
         kind: 'listing',
-        title: `${r.domain} ${play.verb}`,
+        title: `${name} ${play.verb}`,
         badge: play.badge,
-        evidence: satisfied
-          ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
-          : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
-            citedNote,
+        evidence: isPlatform
+          ? platformEvidence + citedNote
+          : satisfied
+            ? `${r.domain}이(가) 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`
+            : `AI가 ${r.domain}을(를) ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+              citedNote,
         targetDomain: r.domain,
         questionIds: picked.map((row) => row.questionId),
         questionTexts: picked.slice(0, 5).map((row) => row.text),
         reach: r.citationCount,
         satisfied,
         status: 'todo',
-        doneSignal: `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
+        ...(isPlatform ? { progress: { supporting: r.supporting, total: r.citationCount } } : {}),
+        doneSignal: isPlatform
+          ? `${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${r.supporting}/${r.citationCount})`
+          : `${r.domain} 인용이 우리 언급을 뒷받침하면 완료`,
       }
     })
 
