@@ -330,3 +330,18 @@ export async function runCiSync(): Promise<CiSyncSummary> {
   if (!res.ok) throw new Error(body.error || `동기화 실패 (HTTP ${res.status})`)
   return body
 }
+
+/**
+ * 질문 은행 구매 여정 단계 보정 — stage가 없는 문항만 판정 엔진이 매긴다(데스크톱·로컬 전용).
+ * 실패하면 throw. 조용히 0건으로 끝나면 사용자가 성공으로 읽는다.
+ */
+export async function tagQuestionBankStages(
+  tenantId: string,
+  version?: string,
+): Promise<{ total: number; taggedBefore: number; taggedAfter: number }> {
+  const q = version ? `?version=${encodeURIComponent(version)}` : ''
+  const res = await fetch(`/api/question-bank/${encodeURIComponent(tenantId)}/tag-stages${q}`, { method: 'POST' })
+  const body = (await res.json().catch(() => ({}))) as { total: number; taggedBefore: number; taggedAfter: number; error?: string }
+  if (!res.ok) throw new Error(body.error || `단계 매기기 실패 (HTTP ${res.status})`)
+  return body
+}

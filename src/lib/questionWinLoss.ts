@@ -1,3 +1,4 @@
+import { stageOf, type JourneyStage } from './journeyStage'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 // 질문(프롬프트) 단위 승패 집계 — 이번 주 응답(질문 × 엔진 × 반복)에서
@@ -11,6 +12,9 @@ export interface WinLossRow {
   questionId: string
   text: string
   category: string
+  /** 구매 여정 단계와 그것이 추정값인지. */
+  stage: JourneyStage
+  stageInferred: boolean
   responses: number // 이 질문에 대한 응답(엔진×반복) 수
   clarifying: number // 그중 되물은 응답 수(답을 내놓지 않음)
   answered: number // 실제로 답을 내놓은 응답 수 = responses - clarifying
@@ -84,6 +88,7 @@ export function computeQuestionWinLoss(
       questionId,
       text: spec?.text ?? questionId,
       category: spec?.category ?? '',
+      ...(() => { const st = stageOf({ text: spec?.text ?? '', stage: spec?.stage }); return { stage: st.stage, stageInferred: st.inferred } })(),
       responses,
       clarifying,
       answered,

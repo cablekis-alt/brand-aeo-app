@@ -166,6 +166,23 @@ export default function GapAnalysis() {
             </div>
           </section>
 
+          {gap.byStage.length > 0 && (
+            <section>
+              <h3>구매 여정별</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                탐색 → 비교 → 결정 순서입니다. <b>결정</b> 단계에서 밀리면 전환 직전 고객을 놓치는 것이라, 같은
+                패라도 먼저 봐야 합니다.
+                {gap.stageInferredCount > 0 &&
+                  ` 질문 ${gap.stageInferredCount}개는 은행에 단계 기록이 없어 문장으로 추정했습니다 — 질문 프롬프트 빌더에서 "단계 매기기"를 실행하면 판정값으로 바뀝니다.`}
+              </p>
+              <div className="gap-grid">
+                {gap.byStage.map((g) => (
+                  <GroupCard key={g.key} group={g} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {gap.byEngine.length > 1 ? (
             <section>
               <h3>엔진별</h3>

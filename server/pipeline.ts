@@ -22,6 +22,7 @@ import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { getEngineClient, getJudgeClient, usedJudgeEngineId } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
+import { tagJourneyStages } from './journeyStage.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { analyzeCitationSources } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
@@ -141,6 +142,9 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
   if (!questions) {
     throw new Error(`[B1] 질문 은행 생성 실패 (tenant=${tenant.tenantId})`);
   }
+
+  // 생성 프롬프트가 stage를 빠뜨린 문항만 한 번의 호출로 보정한다(옛 프롬프트·지시 무시 방어).
+  questions = await tagJourneyStages(questions, judge);
 
   await store.saveQuestionBank(tenant.tenantId, {
     version: tenant.questionBankVersion,

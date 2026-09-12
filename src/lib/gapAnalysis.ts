@@ -1,4 +1,5 @@
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
+import { JOURNEY_STAGES, STAGE_LABEL } from './journeyStage'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 /**
@@ -48,6 +49,14 @@ export interface CompetitorGap {
 
 export interface GapAnalysis {
   byCategory: GapGroup[]
+  /**
+   * 구매 여정 단계(탐색·비교·결정)별. 카테고리가 질문의 형태라면 단계는 고객의 위치다 —
+   * 결정 단계에서 밀리면 전환 직전 고객을 놓치는 것이라 같은 '패'라도 무게가 다르다.
+   * 순서는 여정 순서(탐색 → 비교 → 결정)로 고정한다. 아픈 순 정렬은 여기서는 의미를 해친다.
+   */
+  byStage: GapGroup[]
+  /** 단계가 은행에 기록되지 않아 문장으로 추정한 질문 수. 0이 아니면 화면이 밝힌다. */
+  stageInferredCount: number
   byEngine: GapGroup[]
   competitors: CompetitorGap[]
   /** 전체 질문 수 — 묶음 숫자의 분모를 화면에서 밝히기 위해. */
@@ -122,6 +131,12 @@ export function computeGapAnalysis(
     .map(([key, list]) => summarize(key, CATEGORY_LABEL[key] ?? key, list))
     .sort(byPain)
 
+  // ── 구매 여정 단계별 ── 여정 순서 고정. 비어 있는 단계는 넣지 않는다(은행이 그 단계를 안 만든 것).
+  const byStage = JOURNEY_STAGES.map((stage) => summarize(stage, STAGE_LABEL[stage], rows.filter((r) => r.stage === stage))).filter(
+    (g) => g.questions > 0,
+  )
+  const stageInferredCount = rows.filter((r) => r.stageInferred).length
+
   // ── 엔진별 ── 같은 판정 함수에 엔진으로 거른 분석을 넣는다(규칙 복제 없음).
   const engines = [...new Set(analyses.map((a) => a.engine))]
   const byEngine = engines
@@ -143,5 +158,5 @@ export function computeGapAnalysis(
     .map(([name, v]) => ({ name, ...v }))
     .sort((a, b) => b.questionsLost - a.questionsLost || b.mentions - a.mentions)
 
-  return { byCategory, byEngine, competitors, totalQuestions: rows.length }
+  return { byCategory, byStage, stageInferredCount, byEngine, competitors, totalQuestions: rows.length }
 }

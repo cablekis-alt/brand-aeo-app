@@ -8,6 +8,8 @@ import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
+import { tagJourneyStages } from './journeyStage.js';
+import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -257,6 +259,31 @@ app.post('/api/ci-sync', async (_req, res) => {
   try {
     const tenants = await loadRuntimeTenants();
     res.json(await syncFromCi(store, tenants));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 질문 은행 구매 여정 단계 보정 — stage가 없는 옛 은행(v1·v2·초기 v3)에 한 번의 판정 호출로 매긴다.
+// 이미 stage가 있는 문항은 건드리지 않는다. 데스크톱·로컬 전용.
+app.post('/api/question-bank/:tenantId/tag-stages', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const version = typeof req.query.version === 'string' ? req.query.version : tenant.questionBankVersion;
+  const bank = await store.getQuestionBank(tenant.tenantId, version);
+  if (!bank) {
+    res.status(404).json({ error: `question bank not found: ${tenant.tenantId}/${version}` });
+    return;
+  }
+  try {
+    const before = bank.questions.filter((q) => q.stage).length;
+    const questions = await tagJourneyStages(bank.questions, getJudgeClient());
+    const after = questions.filter((q) => q.stage).length;
+    if (after > before) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
+    res.json({ tenantId: tenant.tenantId, version, total: questions.length, taggedBefore: before, taggedAfter: after });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

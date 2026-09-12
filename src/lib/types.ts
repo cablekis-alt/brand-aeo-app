@@ -57,6 +57,8 @@ export interface QuestionSpec {
   questionId: string
   text: string
   category: QuestionCategory
+  /** 구매 여정 단계. 옛 은행에는 없다 — 화면은 stageOf()로 추정하고 그렇게 밝힌다. */
+  stage?: 'learn' | 'consider' | 'decide'
   industry: string
   region: string
   containsBrandName: boolean

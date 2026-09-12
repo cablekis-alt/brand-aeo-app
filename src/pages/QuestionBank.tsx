@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTenant } from '../context/useTenant'
-import { loadQuestionBank } from '../lib/api'
+import { loadQuestionBank, tagQuestionBankStages } from '../lib/api'
+import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
 import type { QuestionBank } from '../lib/types'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -18,6 +19,8 @@ export default function QuestionBankPage() {
   const { tenant } = useTenant()
   const [bank, setBank] = useState<QuestionBank | null>(null)
   const [loading, setLoading] = useState(true)
+  const [tagging, setTagging] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     if (!tenant) return
@@ -33,7 +36,8 @@ export default function QuestionBankPage() {
     return () => {
       cancelled = true
     }
-  }, [tenant])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant, reloadKey])
 
   const agnosticRatio = useMemo(() => {
     if (!bank || bank.questions.length === 0) return 0
@@ -72,6 +76,30 @@ export default function QuestionBankPage() {
 
           <section>
             <h3>질문 목록</h3>
+            {bank.questions.some((q) => stageOf(q).inferred) && (
+              <p className="hint" style={{ marginTop: 0 }}>
+                구매 여정 단계(탐색·비교·결정)가 기록되지 않은 질문이{' '}
+                <b>{bank.questions.filter((q) => stageOf(q).inferred).length}개</b> 있어 문장으로 추정해 보여줍니다.{' '}
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={tagging !== null}
+                  onClick={async () => {
+                    if (!tenant) return
+                    setTagging('판정 중…')
+                    try {
+                      const r = await tagQuestionBankStages(tenant.tenantId, bank.version)
+                      setTagging(`${r.taggedAfter - r.taggedBefore}개 매김 (${r.taggedAfter}/${r.total})`)
+                      setReloadKey((k) => k + 1)
+                    } catch (e) {
+                      setTagging(e instanceof Error ? e.message : String(e))
+                    }
+                  }}
+                >
+                  {tagging ?? '단계 매기기 (판정 1회)'}
+                </button>
+              </p>
+            )}
             <div className="table-wrap">
               <table>
                 <thead>
@@ -79,18 +107,31 @@ export default function QuestionBankPage() {
                     <th>질문</th>
                     <th>ID</th>
                     <th>카테고리</th>
+                    <th>단계</th>
                     <th>브랜드명 포함</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bank.questions.map((q) => (
-                    <tr key={q.questionId}>
-                      <td>{q.text}</td>
-                      <td>{q.questionId}</td>
-                      <td>{CATEGORY_LABEL[q.category] ?? q.category}</td>
-                      <td>{q.containsBrandName ? 'O' : ''}</td>
-                    </tr>
-                  ))}
+                  {bank.questions.map((q) => {
+                    const st = stageOf(q)
+                    return (
+                      <tr key={q.questionId}>
+                        <td>{q.text}</td>
+                        <td>{q.questionId}</td>
+                        <td>{CATEGORY_LABEL[q.category] ?? q.category}</td>
+                        <td>
+                          {STAGE_LABEL[st.stage]}
+                          {st.inferred && (
+                            <span className="muted" title="은행에 기록이 없어 문장으로 추정한 값">
+                              {' '}
+                              (추정)
+                            </span>
+                          )}
+                        </td>
+                        <td>{q.containsBrandName ? 'O' : ''}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

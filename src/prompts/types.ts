@@ -12,6 +12,8 @@ export interface QuestionSpec {
   questionId: string;
   text: string;
   category: QuestionCategory;
+  /** 구매 여정 단계(b1b-journey-stage). 옛 은행에는 없다 — 화면은 없으면 추정값을 쓰고 그렇게 밝힌다. */
+  stage?: 'learn' | 'consider' | 'decide';
   industry: string;
   region: string;
   containsBrandName: boolean;
