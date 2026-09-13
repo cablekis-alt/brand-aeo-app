@@ -73,8 +73,17 @@ export function findTenantByName(input: string, tenants: TenantSummary[]): Tenan
   return partial.length === 1 ? partial[0] : null
 }
 
-/** 소유 도메인 중 대표(첫) 도메인을 진단용 URL로. 없으면 null. */
-export function tenantSiteUrl(tenant: Pick<TenantSummary, 'ownedDomains'>): string | null {
+/**
+ * 브랜드의 대표 주소를 진단용 URL로. 없으면 null.
+ *
+ * 등록된 브랜드 페이지가 있으면 그쪽이 먼저다. 소유 도메인은 "누구 것인가"를 정하는 값이지
+ * "열리는 주소"가 아니다 — 가온그룹은 소유 도메인이 kaongroup.com인데 그 호스트에 A 레코드가
+ * 없다(www.kaongroup.com만 뜬다). 소유 도메인은 인용 집계의 기준이라 그대로 두고,
+ * 열어 볼 주소만 브랜드 페이지로 바로잡는다.
+ */
+export function tenantSiteUrl(tenant: Pick<TenantSummary, 'ownedDomains' | 'brandPageUrl'>): string | null {
+  const page = tenant.brandPageUrl?.trim()
+  if (page) return toHttpsUrl(page)
   const domain = tenant.ownedDomains?.[0]?.trim()
   return domain ? toHttpsUrl(domain) : null
 }

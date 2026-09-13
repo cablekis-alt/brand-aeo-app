@@ -7,21 +7,20 @@ import {
   looksLikeUrl,
   resolveWithoutNetwork,
   subjectBrand,
+  tenantSiteUrl,
   toHttpsUrl,
   type ResolvedTarget,
 } from '../lib/aeo/resolveTarget'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
-import { inferBrandDomain } from '../lib/api'
+import { inferBrandDomain, type TenantSummary } from '../lib/api'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import type { AeoReport, AuditContext } from '../lib/aeo/types'
 
-/** 선택한 브랜드의 대표 소유 도메인을 진단용 https URL로 만든다. */
-function brandSiteUrl(ownedDomains: string[] | undefined): string {
-  const domain = ownedDomains?.[0]?.trim()
-  if (!domain) return ''
-  return /^https?:\/\//i.test(domain) ? domain : `https://${domain}`
+/** 선택한 브랜드의 대표 주소를 진단용 https URL로. 등록된 브랜드 페이지가 소유 도메인을 이긴다. */
+function brandSiteUrl(tenant: TenantSummary | undefined): string {
+  return tenant ? (tenantSiteUrl(tenant) ?? '') : ''
 }
 
 export default function SiteDiagnosis() {
@@ -45,7 +44,7 @@ export default function SiteDiagnosis() {
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
   useEffect(() => {
-    setUrl(brandSiteUrl(tenant?.ownedDomains))
+    setUrl(brandSiteUrl(tenant))
     setReport(null)
     setEntity(null)
     setResolved(null)
