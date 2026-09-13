@@ -34,6 +34,16 @@ export interface ActionState {
   /** 이 상태로 바꾼 시각. */
   updatedAt: string;
   /**
+   * 집행하고 실제로 올린 글의 주소.
+   *
+   * 이게 없으면 충족 판정이 **도메인 단위**에 머문다 — 조선일보에서 우리가 인용됐을 때
+   * 그게 우리가 올린 그 글인지 그 신문의 다른 기사인지 구분할 방법이 없다. 주소를 적어 두면
+   * 다음 측정의 인용 URL과 직접 맞출 수 있고, 그제서야 "집행한 일"과 "결과"가 이어진다.
+   *
+   * 배열인 이유는 플랫폼형 항목(티스토리 발행 등) 하나에 글이 여러 편 붙기 때문이다.
+   */
+  publishedUrls?: string[];
+  /**
    * 어느 주차를 보다가 정했는지. "집행했다는데 그 뒤로 몇 주가 지났나"를 세려면 필요하다
    * — 없으면 '충족 안 됨'이 오래된 일인지 방금 한 일인지 구분할 수 없다.
    */
@@ -67,10 +77,14 @@ export async function readActionStates(tenantId: string): Promise<ActionStateMap
 export async function writeActionState(
   tenantId: string,
   actionId: string,
-  patch: { status: ActionStatus; markedWeek?: string; note?: string },
+  patch: { status: ActionStatus; markedWeek?: string; note?: string; publishedUrls?: string[] },
 ): Promise<ActionStateMap> {
   const current = await readActionStates(tenantId);
-  if (patch.status === 'todo') {
+  // 주소는 상태와 수명이 다르다 — patch에 없으면 기존 것을 그대로 둔다.
+  const urls = patch.publishedUrls ?? current[actionId]?.publishedUrls ?? [];
+  // todo는 기본값이라 지우는 게 맞지만, 적어 둔 주소까지 날리면 안 된다.
+  // 되돌렸다가 다시 집행하는 흐름에서 증거가 사라진다.
+  if (patch.status === 'todo' && urls.length === 0) {
     delete current[actionId];
   } else {
     current[actionId] = {
@@ -78,6 +92,7 @@ export async function writeActionState(
       updatedAt: new Date().toISOString(),
       ...(patch.markedWeek ? { markedWeek: patch.markedWeek } : {}),
       ...(patch.note ? { note: patch.note } : {}),
+      ...(urls.length ? { publishedUrls: urls } : {}),
     };
   }
   const target = filePathFor(tenantId);
@@ -86,6 +101,33 @@ export async function writeActionState(
   await writeFile(tmp, JSON.stringify(current, null, 2), 'utf-8');
   await rename(tmp, target);
   return current;
+}
+
+/**
+ * 저장·비교용 URL 정규화. 프로토콜·www·끝 슬래시를 떼고 소문자로 맞춘다.
+ * 질의 문자열은 **남긴다** — 기사 id가 거기 있는 사이트가 많아 지우면 서로 다른 글이 같아진다.
+ */
+export function normalizeUrl(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+}
+
+/** http(s) 주소만 받는다. 중복을 없애고 10개로 자른다. */
+export function sanitizeUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const out: string[] = [];
+  for (const v of value) {
+    if (typeof v !== 'string') continue;
+    const t = v.trim();
+    if (!/^https?:\/\/\S+$/i.test(t)) continue;
+    if (!out.some((x) => normalizeUrl(x) === normalizeUrl(t))) out.push(t);
+    if (out.length >= 10) break;
+  }
+  return out;
 }
 
 export function isActionStatus(value: unknown): value is ActionStatus {

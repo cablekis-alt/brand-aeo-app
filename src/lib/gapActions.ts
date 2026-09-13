@@ -66,6 +66,16 @@ export interface GapAction {
    * 둘을 갈라 두면 **집행했는데 몇 주째 충족이 안 되는 항목**이 저절로 드러난다.
    */
   status: ActionStatus
+  /** 집행하고 올린 글 주소(사람이 적는다). */
+  publishedUrls: string[]
+  /**
+   * 그중 이번 주 인용에 실제로 등장한 주소.
+   *
+   * 충족 판정은 도메인 단위라 "그 사이트에서 우리가 보인다"까지만 말한다. 우리가 올린 글이
+   * 인용된 건지 그 사이트의 다른 글이 인용된 건지는 구분하지 못한다. 주소를 맞추면 그제서야
+   * 집행한 일과 결과가 이어진다.
+   */
+  citedPublishedUrls: string[]
   /** status를 정한 시점의 주차 — 집행 후 얼마나 지났는지 세는 데 쓴다. */
   markedWeek?: string
   /** 무엇이 관측되면 완료인지 — 화면과 사람이 같은 기준을 보게 한다. */
@@ -342,6 +352,8 @@ function listingActions(
         reach: r.citationCount,
         satisfied,
         status: 'todo',
+        publishedUrls: [],
+        citedPublishedUrls: [],
         ...(isPlatform ? { progress: { supporting: r.supporting, total: r.citationCount } } : {}),
         doneSignal: isPlatform
           ? `${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${r.supporting}/${r.citationCount})`
@@ -388,6 +400,8 @@ function contentActions(rows: WinLossRow[]): GapAction[] {
         // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
         satisfied: false,
         status: 'todo',
+        publishedUrls: [],
+        citedPublishedUrls: [],
         doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
       }
     })
@@ -421,6 +435,20 @@ function rank(a: GapAction): number {
   return 2
 }
 
+/**
+ * 집행 주소와 인용 주소를 맞추기 위한 정규화. 서버(actionStates.normalizeUrl)와 같은 규칙이어야
+ * 한다 — 한쪽만 바꾸면 맞던 주소가 조용히 안 맞게 된다.
+ * 질의 문자열은 남긴다. 기사 id가 거기 있는 사이트가 많아 지우면 서로 다른 글이 같아진다.
+ */
+function normalizeActionUrl(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+}
+
 export function computeGapActions(
   analyses: QuestionRepeatAnalysis[],
   questions: QuestionSpec[],
@@ -435,10 +463,21 @@ export function computeGapActions(
   )
   const content = contentActions(rows)
 
+  // 이번 주 인용 주소 전부(정규화). 집행 주소와 맞추는 데만 쓴다.
+  const citedUrls = new Set<string>()
+  for (const a of analyses) for (const c of a.citations ?? []) if (c.raw) citedUrls.add(normalizeActionUrl(c.raw))
+
   const actions = [...listing, ...content]
     .map((a) => {
       const saved = states[a.id]
-      return saved ? { ...a, status: saved.status, markedWeek: saved.markedWeek } : a
+      if (!saved) return a
+      const publishedUrls = saved.publishedUrls ?? []
+      const cited = publishedUrls.filter((u) => {
+        const n = normalizeActionUrl(u)
+        // 같거나, 인용 주소가 우리 주소로 시작하면(질의·앵커가 덧붙은 경우) 같은 글로 본다.
+        return citedUrls.has(n) || [...citedUrls].some((c) => c.startsWith(n))
+      })
+      return { ...a, status: saved.status, markedWeek: saved.markedWeek, publishedUrls, citedPublishedUrls: cited }
     })
     .sort((a, b) => rank(a) - rank(b) || b.reach - a.reach)
 

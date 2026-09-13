@@ -358,6 +358,73 @@ function DraftPanel({
   )
 }
 
+/**
+ * 집행하고 올린 글 주소.
+ *
+ * 충족 판정은 도메인 단위라 "그 사이트에서 우리가 보인다"까지만 말한다. 우리가 올린 그 글이
+ * 인용된 건지, 그 사이트의 다른 글이 인용된 건지는 구분하지 못한다. 주소를 적어 두면 다음
+ * 측정의 인용 주소와 직접 맞춰서 집행한 일과 결과를 잇는다.
+ */
+function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: string[]) => void }) {
+  const [input, setInput] = useState('')
+  const urls = action.publishedUrls
+  const cited = new Set(action.citedPublishedUrls)
+  const add = () => {
+    const t = input.trim()
+    if (!/^https?:\/\/\S+$/i.test(t)) return
+    if (urls.some((u) => u.toLowerCase() === t.toLowerCase())) {
+      setInput('')
+      return
+    }
+    onSave([...urls, t])
+    setInput('')
+  }
+  return (
+    <div className="gap-urls">
+      <p className="gap-tally" style={{ marginBottom: 4 }}>
+        올린 글 주소{urls.length > 0 && ` · 인용 확인 ${cited.size}/${urls.length}`}
+      </p>
+      {urls.length > 0 && (
+        <ul style={{ margin: '0 0 6px', paddingLeft: 18 }}>
+          {urls.map((u) => (
+            <li key={u}>
+              <a href={u} target="_blank" rel="noreferrer">
+                {u.length > 64 ? `${u.slice(0, 64)}…` : u}
+              </a>{' '}
+              {cited.has(u) ? (
+                <span className="st st-ok">이번 주 인용됨</span>
+              ) : (
+                <span className="muted">아직 인용 없음</span>
+              )}{' '}
+              <button type="button" className="ghost" onClick={() => onSave(urls.filter((x) => x !== u))}>
+                빼기
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input
+          type="url"
+          value={input}
+          placeholder="https://… 올린 글 주소"
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
+            }
+          }}
+          style={{ flex: 1 }}
+        />
+        <button type="button" className="ghost" onClick={add} disabled={!/^https?:\/\/\S+$/i.test(input.trim())}>
+          추가
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
 function ActionCard({
   action,
@@ -368,6 +435,7 @@ function ActionCard({
   onBrief,
   drafts,
   onDraft,
+  onUrls,
 }: {
   action: GapAction
   canSaveStatus: boolean
@@ -379,6 +447,7 @@ function ActionCard({
   /** null이면 이 환경(웹)에 초안 라우트가 없다. */
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
+  onUrls: (id: string, urls: string[]) => void
 }) {
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
@@ -406,6 +475,9 @@ function ActionCard({
         </ul>
       )}
       <p className="gap-tally">완료 조건 · {action.doneSignal}</p>
+      {canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
+        <PublishedUrls action={action} onSave={(urls) => onUrls(action.id, urls)} />
+      )}
       {awaiting && (
         // 종류마다 확인 방법이 다르다. 등재형은 인용 데이터가 자동으로 충족을 켜지만,
         // 콘텐츠형은 자동 충족이 없다 — 우리 사이트 글은 인용 갭이 아니라 '패가 줄어드는 것'으로
@@ -468,7 +540,7 @@ function ActionCard({
 
 export default function GapActions() {
   const { tenant } = useTenant()
-  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError } =
+  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, setUrls, saveError } =
     useGapActionPlan(tenant?.tenantId ?? '')
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
@@ -570,7 +642,7 @@ export default function GapActions() {
             ) : (
               <div className="gap-grid">
                 {open.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
                 ))}
               </div>
             )}
@@ -585,7 +657,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
                 ))}
               </div>
             </section>
@@ -600,7 +672,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
                 ))}
               </div>
             </section>

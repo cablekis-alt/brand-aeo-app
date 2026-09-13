@@ -25,7 +25,7 @@ import { listActiveMeasures } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
-import { isActionStatus, readActionStates, writeActionState } from './actionStates.js';
+import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
@@ -500,7 +500,7 @@ app.put('/api/action-states/:tenantId', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const { actionId, status, markedWeek, note } = (req.body ?? {}) as Record<string, unknown>;
+  const { actionId, status, markedWeek, note, publishedUrls } = (req.body ?? {}) as Record<string, unknown>;
   if (typeof actionId !== 'string' || actionId.length === 0) {
     res.status(400).json({ error: 'actionId가 필요합니다.' });
     return;
@@ -513,6 +513,8 @@ app.put('/api/action-states/:tenantId', async (req, res) => {
     status,
     markedWeek: typeof markedWeek === 'string' ? markedWeek : undefined,
     note: typeof note === 'string' ? note : undefined,
+    // 키가 아예 없으면 건드리지 않는다(상태만 바꾸는 호출). 있으면 그 목록으로 갈아끼운다.
+    publishedUrls: publishedUrls === undefined ? undefined : sanitizeUrls(publishedUrls),
   });
   res.json(next);
 });

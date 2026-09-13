@@ -279,11 +279,34 @@ export interface ActionStateEntry {
   updatedAt: string
   markedWeek?: string
   note?: string
+  /** 집행하고 올린 글 주소. 다음 측정의 인용 주소와 맞춰 "그 글이 인용됐나"를 가린다. */
+  publishedUrls?: string[]
 }
 export type ActionStateMap = Record<string, ActionStateEntry>
 
 export async function loadActionStates(tenantId: string): Promise<ActionStateMap | null> {
   return getJson<ActionStateMap>(`/api/action-states/${encodeURIComponent(tenantId)}`)
+}
+
+/** 집행 주소만 갈아끼운다. 상태는 건드리지 않는다(서버가 status를 그대로 다시 쓴다). */
+export async function saveActionUrls(
+  tenantId: string,
+  actionId: string,
+  status: ActionStatus,
+  publishedUrls: string[],
+  markedWeek?: string,
+): Promise<ActionStateMap | null> {
+  try {
+    const res = await fetch(`/api/action-states/${encodeURIComponent(tenantId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actionId, status, markedWeek, publishedUrls }),
+    })
+    if (!res.ok) return null
+    return (await res.json()) as ActionStateMap
+  } catch {
+    return null
+  }
 }
 
 /** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */

@@ -5,6 +5,7 @@ import {
   loadQuestionAnalyses,
   loadQuestionBank,
   saveActionState,
+  saveActionUrls,
   type ActionStateMap,
   type ActionStatus,
 } from './api'
@@ -105,6 +106,27 @@ export function useGapActionPlan(tenantId: string) {
     [tenantId, weekOf, states],
   )
 
+  /** 집행 주소 저장. 상태는 그대로 두고 주소만 바꾼다. */
+  const setUrls = useCallback(
+    async (actionId: string, urls: string[]) => {
+      if (!tenantId) return
+      const before = states
+      const status = states?.[actionId]?.status ?? 'done'
+      setStates((prev) => ({
+        ...(prev ?? {}),
+        [actionId]: { ...(prev?.[actionId] ?? { status, updatedAt: new Date().toISOString() }), publishedUrls: urls },
+      }))
+      setSaveError(null)
+      const saved = await saveActionUrls(tenantId, actionId, status, urls, weekOf)
+      if (saved) setStates(saved)
+      else {
+        setStates(before)
+        setSaveError('주소를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    },
+    [tenantId, weekOf, states],
+  )
+
   const plan: GapActionPlan = useMemo(
     () => computeGapActions(analyses, questions, citations, states ?? {}),
     [analyses, questions, citations, states],
@@ -121,6 +143,7 @@ export function useGapActionPlan(tenantId: string) {
     /** 상태를 저장할 수 있는 환경인가(웹에서는 false). 화면은 이걸로 컨트롤을 숨긴다. */
     canSaveStatus: statesReady && states !== null,
     setStatus,
+    setUrls,
     saveError,
   }
 }
