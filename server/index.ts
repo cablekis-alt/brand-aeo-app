@@ -12,6 +12,7 @@ import { tagJourneyStages } from './journeyStage.js';
 import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
+import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -495,6 +496,31 @@ app.get('/api/tenants/:tenantId/fact-graph', async (req, res) => {
   }
   const file = await readFactGraphFile(tenant.tenantId);
   res.json({ tenantId: tenant.tenantId, source: file ? 'file' : 'config', factGraph: file ?? tenant.factGraph ?? [] });
+});
+
+// 브랜드 페이지에서 팩트 그래프 후보를 뽑는다. **저장하지 않는다** — 사람이 골라 넣는다.
+// 값이 페이지에 글자 그대로 없으면 버린다(factExtract 참고).
+app.post('/api/tenants/:tenantId/fact-candidates', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const given = typeof body.url === 'string' ? body.url.trim() : '';
+  const domain = (tenant.ownedDomains ?? [])[0] ?? '';
+  const url = given || (domain ? `https://${domain.replace(/^https?:\/\//, '')}` : '');
+  if (!url) {
+    res.status(400).json({ error: '읽을 주소가 없습니다. 브랜드에 자사 도메인을 등록하거나 url을 넘기세요.' });
+    return;
+  }
+  try {
+    const file = await readFactGraphFile(tenant.tenantId);
+    const existing = file ?? tenant.factGraph ?? [];
+    res.json(await extractFactCandidates(url, tenant.brandName, tenant.industry, getJudgeClient(), existing));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 app.put('/api/tenants/:tenantId/fact-graph', async (req, res) => {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { loadFactGraph, saveFactGraph, type FactNode } from '../lib/api'
+import { loadFactGraph, saveFactGraph, type FactNode, fetchFactCandidates, type FactCandidate } from '../lib/api'
 
 /**
  * 브랜드 사실(팩트 그래프) 편집.
@@ -121,6 +121,10 @@ export default function BrandFacts() {
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  // 브랜드 페이지에서 뽑은 후보. 저장하지 않고 사람이 고르게 둔다 — 긁어 온 값을 바로
+  // 사실로 만들면 팩트 그래프가 "확인된 사실"이라는 뜻을 잃는다.
+  const [finding, setFinding] = useState(false)
+  const [cands, setCands] = useState<{ candidates: FactCandidate[]; sourceUrl: string; dropped: string[] } | null>(null)
   const hints = hintsFor(tenant?.industry ?? '')
 
   useEffect(() => {
@@ -272,6 +276,32 @@ export default function BrandFacts() {
             <button type="button" className="ghost" onClick={add}>
               ＋ 사실 추가
             </button>
+            <button
+              type="button"
+              className="ghost"
+              disabled={finding}
+              title="등록된 자사 도메인을 읽어 확인 가능한 값만 후보로 가져옵니다"
+              onClick={async () => {
+                if (!tenant) return
+                setFinding(true)
+                setError(null)
+                setNotice(null)
+                setCands(null)
+                try {
+                  const r = await fetchFactCandidates(tenant.tenantId)
+                  setCands(r)
+                  if (r.candidates.length === 0) {
+                    setNotice(`${r.sourceUrl}에서 새로 넣을 만한 값을 찾지 못했습니다.`)
+                  }
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : String(e))
+                } finally {
+                  setFinding(false)
+                }
+              }}
+            >
+              {finding ? '페이지 읽는 중…' : '브랜드 페이지에서 찾기'}
+            </button>
             <button type="button" onClick={() => void save()} disabled={saving || !dirty}>
               {saving ? '저장 중…' : dirty ? '저장' : '저장됨'}
             </button>
@@ -281,6 +311,101 @@ export default function BrandFacts() {
               </span>
             )}
           </div>
+          {cands && cands.candidates.length > 0 && (
+            <section className="hero-card" style={{ marginTop: 12 }}>
+              <p className="eyebrow">페이지에서 찾은 사실 후보</p>
+              <p className="hint" style={{ marginTop: 0 }}>
+                <a href={cands.sourceUrl} target="_blank" rel="noreferrer">
+                  {cands.sourceUrl}
+                </a>
+                에서 <b>{cands.candidates.length}건</b>을 찾았습니다. 값이 페이지에 글자 그대로 있는 것만
+                남겼습니다. 넣을 것만 고르세요 — 넣어도 저장을 눌러야 확정됩니다.
+              </p>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>종류</th>
+                      <th>주장</th>
+                      <th>값</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cands.candidates.map((c) => (
+                      <tr key={`${c.claim}|${c.value}`}>
+                        <td>{TYPE_LABEL[c.type]}</td>
+                        <td>{c.claim}</td>
+                        <td>{c.value}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => {
+                              setRows((rs) => [
+                                ...rs,
+                                {
+                                  id: '',
+                                  type: c.type,
+                                  claim: c.claim,
+                                  value: c.value,
+                                  sourceUrl: c.sourceUrl,
+                                  updatedAt: '',
+                                },
+                              ])
+                              setDirty(true)
+                              setCands((p) =>
+                                p
+                                  ? { ...p, candidates: p.candidates.filter((x) => x !== c) }
+                                  : p,
+                              )
+                            }}
+                          >
+                            넣기
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="facts-bar">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRows((rs) => [
+                      ...rs,
+                      ...cands.candidates.map((c) => ({
+                        id: '',
+                        type: c.type,
+                        claim: c.claim,
+                        value: c.value,
+                        sourceUrl: c.sourceUrl,
+                        updatedAt: '',
+                      })),
+                    ])
+                    setDirty(true)
+                    setCands(null)
+                  }}
+                >
+                  전부 넣기 ({cands.candidates.length})
+                </button>
+                <button type="button" className="ghost" onClick={() => setCands(null)}>
+                  닫기
+                </button>
+              </div>
+              {cands.dropped.length > 0 && (
+                <>
+                  <h4>검증에서 뺀 것</h4>
+                  <ul className="muted">
+                    {cands.dropped.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </section>
+          )}
           {notice && (
             <p className="notice" role="status">
               {notice}

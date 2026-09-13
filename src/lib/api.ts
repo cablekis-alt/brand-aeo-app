@@ -497,6 +497,35 @@ export async function saveContentDraft(
 }
 
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */
+/**
+ * 브랜드 페이지에서 팩트 그래프 후보를 뽑는다. 저장하지 않는다 — 사람이 골라 넣는다.
+ * 값이 페이지에 글자 그대로 없으면 서버가 버리고 그 이유를 dropped에 담는다.
+ */
+export interface FactCandidate {
+  type: FactNode['type']
+  claim: string
+  value: string
+  sourceUrl: string
+}
+export async function fetchFactCandidates(
+  tenantId: string,
+  url?: string,
+): Promise<{ candidates: FactCandidate[]; sourceUrl: string; dropped: string[] }> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/fact-candidates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(url ? { url } : {}),
+  })
+  const body = (await res.json().catch(() => ({}))) as {
+    candidates?: FactCandidate[]
+    sourceUrl?: string
+    dropped?: string[]
+    error?: string
+  }
+  if (!res.ok) throw new Error(body.error || `사실 후보를 가져오지 못했습니다 (HTTP ${res.status})`)
+  return { candidates: body.candidates ?? [], sourceUrl: body.sourceUrl ?? '', dropped: body.dropped ?? [] }
+}
+
 export interface FactNode {
   id: string
   type: 'price' | 'spec' | 'date' | 'certification' | 'location' | 'other'
