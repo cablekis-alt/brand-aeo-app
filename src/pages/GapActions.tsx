@@ -265,16 +265,26 @@ function DraftPanel({
       setError('클립보드에 복사하지 못했습니다.')
     }
   }
-  // 브리프가 없으면 버튼을 내주지 않는다 — 서버도 409로 막지만, 누를 수 없는 편이 낫다.
-  if (!hasBrief && !stored) return null
+  // 브리프가 없어도 버튼은 남긴다. 숨기면 "초안이라는 단계가 있다"는 사실 자체가 안 보인다 —
+  // 실측: 실행 항목 id가 사이트 묶음으로 바뀌자 브리프가 어느 항목에도 안 붙었고, 그 순간
+  // 초안 기능이 화면에서 통째로 사라졌다. 대신 누를 수 없게 두고 무엇이 먼저인지 말한다.
   const d = stored?.draft
   return (
     <div className="brief">
       <div className="brief-bar">
         {!stored ? (
-          <button type="button" className="ghost" onClick={() => void make(false)} disabled={busy}>
-            {busy ? '초안 쓰는 중…' : '초안 만들기 (판정 1회)'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => void make(false)}
+              disabled={busy || !hasBrief}
+              title={hasBrief ? '브리프를 바탕으로 초안을 씁니다' : '브리프를 먼저 만들어야 합니다'}
+            >
+              {busy ? '초안 쓰는 중…' : '초안 만들기 (판정 1회)'}
+            </button>
+            {!hasBrief && <span className="doc-meta">브리프를 먼저 만드세요</span>}
+          </>
         ) : (
           <>
             <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
