@@ -268,14 +268,15 @@ function draftToMarkdown(d: StoredDraft['draft']): string {
  * 짓지 않고 비운 채 "무엇이 필요한가"를 적어 온다. 그 빈 자리를 눈에 띄게 보여주는 것이
  * 이 화면의 일이다 — 사람이 채울 곳이 어디인지가 결과물의 핵심이다.
  */
-/** 빈칸 채우기 한 판의 상태. 찾은 것·못 찾은 것·사람이 적어 넣은 값. */
-interface GapFillState {
-  found: GapFactHit[]
+/**
+ * 브랜드 페이지 조회 결과 — 입력칸에 미리 채워 넣고, 어디서 온 값인지 옆에 적는다.
+ * 입력 자체는 이것과 무관하게 늘 가능하다(조회는 거들 뿐이다).
+ */
+interface GapLookup {
+  byNeed: Record<string, GapFactHit>
   missing: string[]
   sourceUrl: string
   dropped: string[]
-  /** 못 찾은 빈칸에 사람이 적어 넣는 값. need → 값. */
-  typed: Record<string, string>
 }
 
 function DraftPanel({
@@ -303,7 +304,10 @@ function DraftPanel({
   const [saving, setSaving] = useState(false)
   // 빈칸 채우기 — 초안이 비워 둔 자리를 이 화면 안에서 끝낸다.
   const [filling, setFilling] = useState(false)
-  const [fill, setFill] = useState<GapFillState | null>(null)
+  // 빈칸에 적어 넣는 값. need → 값. 초안 본문의 빈칸 자리에 그대로 입력칸이 붙는다 —
+  // 문제와 해결책이 다른 자리에 있으면 사람이 눈을 왔다 갔다 해야 한다.
+  const [typed, setTyped] = useState<Record<string, string>>({})
+  const [lookup, setLookup] = useState<GapLookup | null>(null)
   const make = async (force: boolean) => {
     // 다시 만들면 손댄 글이 사라진다. 조용히 덮지 않는다.
     if (force && stored?.editedMarkdown && !window.confirm('다시 만들면 고쳐 둔 글이 사라집니다. 계속할까요?')) return
@@ -356,13 +360,15 @@ function DraftPanel({
     setError(null)
     try {
       const r = await findFactsForGaps(tenantId, needs)
-      setFill({
-        found: r.found,
+      setLookup({
+        byNeed: Object.fromEntries(r.found.map((f) => [f.need, f])),
         missing: r.missing,
         sourceUrl: r.sourceUrl,
         dropped: r.dropped,
-        typed: Object.fromEntries(r.missing.map((n) => [n, ''])),
       })
+      // 찾은 값은 입력칸에 미리 채운다. 사람이 그대로 두거나 고칠 수 있게 — 읽기만 되는
+      // 표로 보여 주면 "맞다/틀리다"를 말할 자리가 없다.
+      setTyped((prev) => ({ ...prev, ...Object.fromEntries(r.found.map((f) => [f.need, f.value])) }))
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -387,7 +393,8 @@ function DraftPanel({
       const current = (await loadFactGraph(tenantId))?.factGraph ?? []
       const merged = [...current, ...picked.map((p) => ({ id: '', updatedAt: '', ...p }) as FactNode)]
       await saveFactGraph(tenantId, merged)
-      setFill(null)
+      setTyped({})
+      setLookup(null)
       await make(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -458,21 +465,16 @@ function DraftPanel({
             </button>
             {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
             {d && d.gapCount > 0 && !stored.editedMarkdown && (
-              <>
-                <button
-                  type="button"
-                  className="ghost"
-                  disabled={filling || busy}
-                  title="브랜드 페이지에서 빈칸의 값을 찾아보고, 없으면 직접 적어 넣습니다"
-                  onClick={() => {
-                    setOpen(true)
-                    void lookUp()
-                  }}
-                >
-                  {filling ? '빈칸 채우는 중…' : `빈칸 ${d.gapCount}곳 채우기`}
-                </button>
-                <span className="st st-warn">채울 곳 {d.gapCount}</span>
-              </>
+              // 딱지 자체가 버튼이다 — 문제를 알리는 자리와 여는 자리가 같아야 한다.
+              <button
+                type="button"
+                className="st st-warn"
+                style={{ cursor: 'pointer', border: 0 }}
+                title="초안을 열어 빈칸에 값을 적습니다"
+                onClick={() => setOpen(true)}
+              >
+                채울 곳 {d.gapCount} — 채우기
+              </button>
             )}
             <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
           </>
@@ -542,106 +544,54 @@ function DraftPanel({
           <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{stored.editedMarkdown}</pre>
         </div>
       )}
-      {open && fill && !editing && (
-        <section className="hero-card" style={{ marginTop: 12 }}>
-          <p className="eyebrow">빈칸 채우기</p>
-          <p className="hint" style={{ marginTop: 0 }}>
-            <a href={fill.sourceUrl} target="_blank" rel="noreferrer">
-              {fill.sourceUrl}
-            </a>
-            에서 <b>{fill.found.length}곳</b>을 찾았고 <b>{fill.missing.length}곳</b>은 페이지에 없었습니다. 없는 것은
-            아래에 직접 적어 주세요 — 넣으면 <b>브랜드 사실</b>에 저장돼 다음 글부터 자동으로 쓰입니다.
-          </p>
-          {fill.found.length > 0 && (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>빈칸</th>
-                  <th>페이지에서 찾은 값</th>
-                </tr>
-              </thead>
-              <tbody>
-                {fill.found.map((f) => (
-                  <tr key={f.need}>
-                    <td>{f.need}</td>
-                    <td>
-                      <b>{f.value}</b> <span className="doc-meta">({f.claim})</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {fill.missing.length > 0 && (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>페이지에 없던 빈칸</th>
-                  <th>값 (아는 것만 적으세요)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {fill.missing.map((need) => (
-                  <tr key={need}>
-                    <td>{need}</td>
-                    <td>
-                      <input
-                        type="text"
-                        value={fill.typed[need] ?? ''}
-                        placeholder="예: 15:00 · 20,000원 · 주차 가능"
-                        style={{ width: '100%' }}
-                        onChange={(e) =>
-                          setFill((prev) =>
-                            prev ? { ...prev, typed: { ...prev.typed, [need]: e.target.value } } : prev,
-                          )
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          <div className="facts-bar">
-            <button
-              type="button"
-              disabled={filling || busy || (fill.found.length === 0 && !Object.values(fill.typed).some((v) => v.trim()))}
-              onClick={() =>
-                void applyFacts([
-                  ...fill.found.map((f) => ({ type: f.type, claim: f.claim, value: f.value, sourceUrl: f.sourceUrl })),
-                  ...Object.entries(fill.typed)
-                    .filter(([, v]) => v.trim())
-                    .map(([need, v]) => ({ type: 'other' as FactNode['type'], claim: need, value: v.trim() })),
-                ])
-              }
-            >
-              {filling || busy ? '반영하는 중…' : '사실로 저장하고 초안 다시 쓰기'}
-            </button>
-            <button type="button" className="ghost" onClick={() => setFill(null)}>
-              닫기
-            </button>
-          </div>
-          {fill.dropped.length > 0 && (
-            <>
-              <p className="doc-meta" style={{ marginTop: 10 }}>
-                검증에서 뺀 것
-              </p>
-              <ul className="doc-meta" style={{ margin: 0 }}>
-                {fill.dropped.map((x) => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      )}
       {open && !editing && !stored?.editedMarkdown && d && (
         <div className="brief-body">
           <p className="hint" style={{ marginTop: 0 }}>
             발행용 원고가 아니라 <b>사람이 이어받을 원고</b>입니다. 사실이 없어 쓸 수 없던 자리는 문장을
             지어내지 않고 비워 두었습니다.{' '}
-            {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다.` : '비운 자리는 없습니다.'}
+            {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다 — 아래 빈칸에 바로 적으세요.` : '비운 자리는 없습니다.'}
           </p>
+          {d.gapCount > 0 && (
+            <div className="facts-bar" style={{ marginBottom: 10 }}>
+              <button type="button" className="ghost" disabled={filling || busy} onClick={() => void lookUp()}>
+                {filling ? '페이지 읽는 중…' : '브랜드 페이지에서 찾아보기'}
+              </button>
+              <button
+                type="button"
+                disabled={filling || busy || !Object.values(typed).some((v) => v.trim())}
+                onClick={() =>
+                  void applyFacts(
+                    Object.entries(typed)
+                      .filter(([, v]) => v.trim())
+                      .map(([need, v]) => {
+                        const hit = lookup?.byNeed[need]
+                        // 조회로 찾은 값을 그대로 두었으면 그때의 항목 이름·출처를 쓴다.
+                        return hit && hit.value === v.trim()
+                          ? { type: hit.type, claim: hit.claim, value: hit.value, sourceUrl: hit.sourceUrl }
+                          : { type: 'other' as FactNode['type'], claim: need, value: v.trim() }
+                      }),
+                  )
+                }
+              >
+                {filling || busy ? '반영하는 중…' : '사실로 저장하고 초안 다시 쓰기'}
+              </button>
+              {lookup && (
+                <span className="doc-meta">
+                  <a href={lookup.sourceUrl} target="_blank" rel="noreferrer">
+                    페이지
+                  </a>
+                  에서 {Object.keys(lookup.byNeed).length}곳을 찾았습니다
+                </span>
+              )}
+            </div>
+          )}
+          {lookup && lookup.dropped.length > 0 && (
+            <ul className="doc-meta" style={{ marginTop: 0 }}>
+              {lookup.dropped.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          )}
           <section>
             <h4>{d.title}</h4>
             {d.lead && <p>{d.lead}</p>}
@@ -652,9 +602,26 @@ function DraftPanel({
               {sec.answers && <p className="doc-meta">답하는 질문 · {sec.answers}</p>}
               {sec.blocks.map((b, i) =>
                 b.kind === 'gap' ? (
-                  <p key={i} className="error" style={{ margin: '6px 0' }}>
-                    채워야 함 · {b.need}
-                  </p>
+                  // 빈칸이 곧 입력 자리다. 빨간 글씨만 남기면 "나가서 찾아오라"는 말이 된다.
+                  <div key={i} style={{ margin: '8px 0' }}>
+                    <label className="error" htmlFor={`gap-${action.id}-${sec.heading}-${i}`}>
+                      채워야 함 · {b.need}
+                    </label>
+                    <input
+                      id={`gap-${action.id}-${sec.heading}-${i}`}
+                      type="text"
+                      value={typed[b.need ?? ''] ?? ''}
+                      placeholder="아는 값을 적으세요 — 예: 도보 8분 · 180,000원 · 자쿠지 없음"
+                      style={{ width: '100%', marginTop: 4 }}
+                      onChange={(e) => setTyped((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
+                    />
+                    {lookup?.byNeed[b.need ?? ''] && (
+                      <span className="doc-meta">브랜드 페이지에서 찾은 값입니다 — 맞으면 그대로 두세요.</span>
+                    )}
+                    {lookup && lookup.missing.includes(b.need ?? '') && (
+                      <span className="doc-meta">브랜드 페이지에는 없었습니다.</span>
+                    )}
+                  </div>
                 ) : (
                   <p key={i}>{b.body}</p>
                 ),
