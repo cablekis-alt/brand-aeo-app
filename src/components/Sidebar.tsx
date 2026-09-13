@@ -97,11 +97,21 @@ const MENU: MenuGroup[] = [
 ]
 
 const FOLD_KEY = (id: string) => `sidebar.open.${id}`
-function readFold(id: string): boolean {
+
+/**
+ * 접기 상태는 **세 가지**다 — 폄(true) · 접음(false) · 정한 적 없음(null).
+ *
+ * 둘로만 두면 "정한 적 없음"과 "접음"이 구분되지 않아, 기본값을 접음으로 두든 폄으로 두든
+ * 한쪽이 틀린다. 실측으로 걸린 버그가 그것이다: 현재 페이지가 묶음 안에 있으면 무조건 펴도록
+ * 해 둬서(`folds[id] || inside`), 질문별 승패에서 「상세 분석」을 눌러도 접히지 않았다.
+ * 사용자가 고른 것이 자동 펼침을 이겨야 한다.
+ */
+function readFold(id: string): boolean | null {
   try {
-    return localStorage.getItem(FOLD_KEY(id)) === '1'
+    const v = localStorage.getItem(FOLD_KEY(id))
+    return v === null ? null : v === '1'
   } catch {
-    return false
+    return null
   }
 }
 function writeFold(id: string, open: boolean) {
@@ -144,14 +154,14 @@ export default function Sidebar() {
   const { plan, loading } = useGapActionPlan(tenant?.tenantId ?? '')
   const openActions = !loading && tenant ? plan.actions.filter(isOpenAction).length : 0
 
-  const [folds, setFolds] = useState<Record<string, boolean>>(() =>
+  const [folds, setFolds] = useState<Record<string, boolean | null>>(() =>
     Object.fromEntries(MENU.filter((g) => g.foldable).map((g) => [g.id, readFold(g.id)])),
   )
-  const toggle = (id: string) =>
+  /** 지금 보이는 상태의 반대로 뒤집는다 — 자동으로 펴져 있었다면 첫 번째 누름이 접는다. */
+  const toggle = (id: string, shown: boolean) =>
     setFolds((f) => {
-      const next = !f[id]
-      writeFold(id, next)
-      return { ...f, [id]: next }
+      writeFold(id, !shown)
+      return { ...f, [id]: !shown }
     })
 
   const badgeOf = (item: MenuItem): { text: string; cls: string } | null => {
@@ -188,16 +198,18 @@ export default function Sidebar() {
       <div className="sidebar-scroll">
         {MENU.map((group) => {
           const inside = group.items.some((i) => i.to === pathname)
-          const open = !group.foldable || folds[group.id] || inside
+          // 사용자가 정한 적 없으면 현재 페이지를 따라 펴고, 정했으면 그 선택을 따른다.
+          const open = !group.foldable || (folds[group.id] ?? inside)
           return (
             <div className={`sidebar-group${group.foldable ? ' foldable' : ''}${group.id === 'home' ? ' is-home' : ''}`} key={group.id}>
               {group.title &&
                 (group.foldable ? (
                   <button
                     type="button"
-                    className="sidebar-fold"
+                    // 접은 채로 그 안의 페이지를 보고 있으면 머리글이 현재 위치를 대신 알린다.
+                    className={`sidebar-fold${inside && !open ? ' has-current' : ''}`}
                     aria-expanded={open}
-                    onClick={() => toggle(group.id)}
+                    onClick={() => toggle(group.id, open)}
                   >
                     <span className="sidebar-group-label">{group.title}</span>
                     <span className="sidebar-rule" aria-hidden="true" />

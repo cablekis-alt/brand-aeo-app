@@ -10,7 +10,8 @@ import {
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
-import DraftPanel, { downloadMarkdown, draftToMarkdown, safeFileName } from '../components/DraftPanel'
+import DraftPanel from '../components/DraftPanel'
+import { downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 

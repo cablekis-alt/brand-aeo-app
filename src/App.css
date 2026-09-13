@@ -1807,6 +1807,11 @@ p.hint {
   transition: transform 140ms ease;
 }
 .sidebar-fold .chev.open { transform: rotate(45deg); }
+/* 접은 묶음 안의 페이지를 보고 있을 때 — 머리글이 현재 위치를 대신 알린다. */
+.sidebar-fold.has-current .sidebar-group-label {
+  color: var(--ink);
+  font-weight: 600;
+}
 .sidebar-fold .fold-count {
   font-variant-numeric: tabular-nums;
   font-size: 10px;
