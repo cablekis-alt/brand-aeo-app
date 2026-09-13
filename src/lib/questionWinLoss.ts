@@ -1,3 +1,4 @@
+import { normalizeTopic } from '../prompts/b1c-question-topic'
 import { stageOf, type JourneyStage } from './journeyStage'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -15,6 +16,8 @@ export interface WinLossRow {
   /** 구매 여정 단계와 그것이 추정값인지. */
   stage: JourneyStage
   stageInferred: boolean
+  /** 콘텐츠 주제. 은행에 없으면 undefined — 화면이 '미분류'로 묶고 그 수를 밝힌다. */
+  topic?: string
   responses: number // 이 질문에 대한 응답(엔진×반복) 수
   clarifying: number // 그중 되물은 응답 수(답을 내놓지 않음)
   answered: number // 실제로 답을 내놓은 응답 수 = responses - clarifying
@@ -89,6 +92,7 @@ export function computeQuestionWinLoss(
       text: spec?.text ?? questionId,
       category: spec?.category ?? '',
       ...(() => { const st = stageOf({ text: spec?.text ?? '', stage: spec?.stage }); return { stage: st.stage, stageInferred: st.inferred } })(),
+      topic: normalizeTopic(spec?.topic),
       responses,
       clarifying,
       answered,

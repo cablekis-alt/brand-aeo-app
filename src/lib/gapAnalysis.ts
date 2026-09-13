@@ -1,5 +1,6 @@
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import { JOURNEY_STAGES, STAGE_LABEL } from './journeyStage'
+import { TOPIC_UNSET } from '../prompts/b1c-question-topic'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 /**
@@ -9,6 +10,7 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
  * 무엇을 보강할지 정하려면 묶어서 봐야 한다. 여기서는 세 축으로 묶는다:
  *
  *   카테고리  어떤 **유형의 질문**에서 밀리나 (가격 질문? 비교 질문?)
+ *   주제      어떤 **내용**에서 밀리나 (눈 성형? 회복·부작용?) — 보강할 콘텐츠가 여기서 나온다
  *   엔진      어떤 **엔진**에서 안 나오나 (실측: 원진은 ChatGPT 0% · Gemini 50%)
  *   경쟁사    **누가** 우리 자리를 가져갔나
  *
@@ -57,6 +59,14 @@ export interface GapAnalysis {
   byStage: GapGroup[]
   /** 단계가 은행에 기록되지 않아 문장으로 추정한 질문 수. 0이 아니면 화면이 밝힌다. */
   stageInferredCount: number
+  /**
+   * 콘텐츠 주제별. 카테고리가 질문의 **형태**, 단계가 고객의 **위치**라면 주제는 **내용**이다.
+   * 카테고리 무관 22문항이 한 덩어리로 보이면 보강할 콘텐츠를 정할 수 없다 — 그 안을
+   * 눈·코·가격·회복으로 쪼개야 "무엇을 쓸지"가 나온다. 아픈 순 정렬(byPain).
+   */
+  byTopic: GapGroup[]
+  /** 은행에 주제가 없어 묶이지 못한 질문 수. 0이 아니면 화면이 밝히고 매기기를 권한다. */
+  topicMissingCount: number
   byEngine: GapGroup[]
   competitors: CompetitorGap[]
   /** 전체 질문 수 — 묶음 숫자의 분모를 화면에서 밝히기 위해. */
@@ -137,6 +147,22 @@ export function computeGapAnalysis(
   )
   const stageInferredCount = rows.filter((r) => r.stageInferred).length
 
+  // ── 주제별 ── 주제는 업종마다 달라 고정 목록이 없다. 은행에 기록된 값만 쓰고, 없는 것은
+  // 추정하지 않고 '미분류'로 모아 둔다 — 잘못 묶은 주제는 없는 것만 못하다.
+  const byTop = new Map<string, WinLossRow[]>()
+  for (const r of rows) {
+    const key = r.topic ?? TOPIC_UNSET
+    const list = byTop.get(key) ?? []
+    list.push(r)
+    byTop.set(key, list)
+  }
+  const topicMissingCount = byTop.get(TOPIC_UNSET)?.length ?? 0
+  // 미분류는 묶음 카드로 내보내지 않는다 — 그건 주제가 아니라 '아직 안 매긴 것'이다.
+  const byTopic = [...byTop.entries()]
+    .filter(([key]) => key !== TOPIC_UNSET)
+    .map(([key, list]) => summarize(key, key, list))
+    .sort(byPain)
+
   // ── 엔진별 ── 같은 판정 함수에 엔진으로 거른 분석을 넣는다(규칙 복제 없음).
   const engines = [...new Set(analyses.map((a) => a.engine))]
   const byEngine = engines
@@ -158,5 +184,5 @@ export function computeGapAnalysis(
     .map(([name, v]) => ({ name, ...v }))
     .sort((a, b) => b.questionsLost - a.questionsLost || b.mentions - a.mentions)
 
-  return { byCategory, byStage, stageInferredCount, byEngine, competitors, totalQuestions: rows.length }
+  return { byCategory, byStage, stageInferredCount, byTopic, topicMissingCount, byEngine, competitors, totalQuestions: rows.length }
 }

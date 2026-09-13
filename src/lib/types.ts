@@ -59,6 +59,8 @@ export interface QuestionSpec {
   category: QuestionCategory
   /** 구매 여정 단계. 옛 은행에는 없다 — 화면은 stageOf()로 추정하고 그렇게 밝힌다. */
   stage?: 'learn' | 'consider' | 'decide'
+  /** 콘텐츠 주제. 추정 폴백이 없다 — 없으면 '미분류'로 세고 그 수를 화면이 밝힌다. */
+  topic?: string
   industry: string
   region: string
   containsBrandName: boolean

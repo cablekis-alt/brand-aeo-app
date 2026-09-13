@@ -346,6 +346,27 @@ export async function tagQuestionBankStages(
   return body
 }
 
+/**
+ * 질문 은행 콘텐츠 주제 배정 — topic이 없는 문항만 판정 엔진이 매긴다(데스크톱·로컬 전용).
+ * 이미 있는 주제는 재사용하게 서버가 프롬프트에 넣는다 — 주차마다 이름이 바뀌면 추이를 못 본다.
+ */
+export async function tagQuestionBankTopics(
+  tenantId: string,
+  version?: string,
+): Promise<{ total: number; taggedBefore: number; taggedAfter: number; topics: string[] }> {
+  const q = version ? `?version=${encodeURIComponent(version)}` : ''
+  const res = await fetch(`/api/question-bank/${encodeURIComponent(tenantId)}/tag-topics${q}`, { method: 'POST' })
+  const body = (await res.json().catch(() => ({}))) as {
+    total: number
+    taggedBefore: number
+    taggedAfter: number
+    topics: string[]
+    error?: string
+  }
+  if (!res.ok) throw new Error(body.error || `주제 매기기 실패 (HTTP ${res.status})`)
+  return body
+}
+
 /** 콘텐츠 브리프(데스크톱·로컬 전용). null = 라우트 없는 환경(웹) → 화면은 버튼을 숨긴다. */
 export type { ContentBrief } from '../prompts/b9b-content-brief'
 export interface StoredBrief {

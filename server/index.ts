@@ -9,6 +9,7 @@ import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBra
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
+import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { getJudgeClient } from './engines/index.js';
@@ -286,6 +287,32 @@ app.post('/api/question-bank/:tenantId/tag-stages', async (req, res) => {
     const after = questions.filter((q) => q.stage).length;
     if (after > before) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
     res.json({ tenantId: tenant.tenantId, version, total: questions.length, taggedBefore: before, taggedAfter: after });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 질문 은행 주제 배정 — 주제가 없는 문항에 한 번의 판정 호출로 콘텐츠 주제를 매긴다.
+// 이미 있는 주제는 그대로 두고 재사용하게 한다(주차 간 비교). 데스크톱·로컬 전용.
+app.post('/api/question-bank/:tenantId/tag-topics', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const version = typeof req.query.version === 'string' ? req.query.version : tenant.questionBankVersion;
+  const bank = await store.getQuestionBank(tenant.tenantId, version);
+  if (!bank) {
+    res.status(404).json({ error: `question bank not found: ${tenant.tenantId}/${version}` });
+    return;
+  }
+  try {
+    const before = bank.questions.filter((q) => q.topic).length;
+    const questions = await tagQuestionTopics(bank.questions, getJudgeClient(), tenant.industry);
+    const after = questions.filter((q) => q.topic).length;
+    if (after > before) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
+    const topics = [...new Set(questions.map((q) => q.topic).filter(Boolean))];
+    res.json({ tenantId: tenant.tenantId, version, total: questions.length, taggedBefore: before, taggedAfter: after, topics });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

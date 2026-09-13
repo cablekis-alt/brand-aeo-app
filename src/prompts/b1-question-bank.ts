@@ -82,7 +82,10 @@ category-agnostic = 브랜드명(${brandName})도, 어떤 경쟁사명도, 특�
 7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn(탐색: 기준·개념을 묻는다),
    consider(비교: 후보를 고르거나 비교한다, 추천·순위·A vs B), decide(결정: 가격·예약·후기 등 선택 직전 확인).
    브랜드명 포함 여부와 무관하게 문장의 의도로 판단한다. 세 단계가 모두 나오게 한다.
-8. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
+8. 각 질문에 콘텐츠 주제 topic을 하나 매긴다 — 질문의 **내용**으로 묶는 이름이다(형태가 아니다).
+   전체가 4~7개 주제로 묶이게 하고, 한국어 명사구로 12자 이내로 쓴다. 예: "눈 성형", "가격·비용", "회복·부작용".
+   "기타"·"일반"처럼 뭉뚱그린 이름과 질문 하나짜리 주제는 만들지 마라.
+9. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
 
 JSON 스키마 (배열의 각 원소):
 {
@@ -90,6 +93,7 @@ JSON 스키마 (배열의 각 원소):
   "text": string,
   "category": "category-agnostic" | "brand-direct" | "comparison" | "price-spec" | "troubleshooting-review" | "local-regional",
   "stage": "learn" | "consider" | "decide",
+  "topic": string,             // 콘텐츠 주제(4~7개 안에서 재사용)
   "containsBrandName": boolean
 }`;
 

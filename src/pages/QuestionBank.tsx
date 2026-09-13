@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTenant } from '../context/useTenant'
-import { loadQuestionBank, tagQuestionBankStages } from '../lib/api'
+import { loadQuestionBank, tagQuestionBankStages, tagQuestionBankTopics } from '../lib/api'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
 import type { QuestionBank } from '../lib/types'
 
@@ -20,6 +20,7 @@ export default function QuestionBankPage() {
   const [bank, setBank] = useState<QuestionBank | null>(null)
   const [loading, setLoading] = useState(true)
   const [tagging, setTagging] = useState<string | null>(null)
+  const [topicTagging, setTopicTagging] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
@@ -100,12 +101,38 @@ export default function QuestionBankPage() {
                 </button>
               </p>
             )}
+            {bank.questions.some((q) => !q.topic) && (
+              <p className="hint" style={{ marginTop: 0 }}>
+                콘텐츠 주제가 없는 질문이 <b>{bank.questions.filter((q) => !q.topic).length}개</b> 있습니다. 주제를
+                매기면 격차 분석이 "어떤 <b>내용</b>에서 밀리는지"를 보여줍니다 — 카테고리는 질문의 형태라
+                보강할 콘텐츠를 정해 주지 못합니다.{' '}
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={topicTagging !== null}
+                  onClick={async () => {
+                    if (!tenant) return
+                    setTopicTagging('판정 중…')
+                    try {
+                      const r = await tagQuestionBankTopics(tenant.tenantId, bank.version)
+                      setTopicTagging(`${r.taggedAfter - r.taggedBefore}개 매김 · 주제 ${r.topics.length}개`)
+                      setReloadKey((k) => k + 1)
+                    } catch (e) {
+                      setTopicTagging(e instanceof Error ? e.message : String(e))
+                    }
+                  }}
+                >
+                  {topicTagging ?? '주제 매기기 (판정 1회)'}
+                </button>
+              </p>
+            )}
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>질문</th>
                     <th>ID</th>
+                    <th>주제</th>
                     <th>카테고리</th>
                     <th>단계</th>
                     <th>브랜드명 포함</th>
@@ -118,6 +145,7 @@ export default function QuestionBankPage() {
                       <tr key={q.questionId}>
                         <td>{q.text}</td>
                         <td>{q.questionId}</td>
+                        <td>{q.topic ?? <span className="muted">미분류</span>}</td>
                         <td>{CATEGORY_LABEL[q.category] ?? q.category}</td>
                         <td>
                           {STAGE_LABEL[st.stage]}

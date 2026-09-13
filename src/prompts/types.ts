@@ -14,6 +14,8 @@ export interface QuestionSpec {
   category: QuestionCategory;
   /** 구매 여정 단계(b1b-journey-stage). 옛 은행에는 없다 — 화면은 없으면 추정값을 쓰고 그렇게 밝힌다. */
   stage?: 'learn' | 'consider' | 'decide';
+  /** 콘텐츠 주제(b1c-question-topic). 업종마다 달라 고정 목록이 없다. 없으면 화면은 '미분류'로 센다. */
+  topic?: string;
   industry: string;
   region: string;
   containsBrandName: boolean;

@@ -183,6 +183,27 @@ export default function GapAnalysis() {
             </section>
           )}
 
+          {(gap.byTopic.length > 0 || gap.topicMissingCount > 0) && (
+            <section>
+              <h3>주제별</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                카테고리가 질문의 <b>형태</b>, 여정이 고객의 <b>위치</b>라면 주제는 <b>내용</b>입니다. 보강할
+                콘텐츠를 정하는 축이라 아픈 순으로 놓았습니다.
+                {gap.topicMissingCount > 0 &&
+                  ` 질문 ${gap.topicMissingCount}개는 은행에 주제가 없어 어느 묶음에도 들어가지 않았습니다 — 질문 프롬프트 빌더에서 "주제 매기기"를 실행하세요.`}
+              </p>
+              {gap.byTopic.length > 0 ? (
+                <div className="gap-grid">
+                  {gap.byTopic.map((g) => (
+                    <GroupCard key={g.key} group={g} />
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">아직 주제가 매겨진 질문이 없습니다.</p>
+              )}
+            </section>
+          )}
+
           {gap.byEngine.length > 1 ? (
             <section>
               <h3>엔진별</h3>
