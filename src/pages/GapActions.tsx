@@ -474,6 +474,82 @@ function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: s
   )
 }
 
+/**
+ * 열린 항목의 브리프를 한 번에 만든다.
+ *
+ * 한 주치 작업을 준비하려면 카드마다 버튼을 눌러야 했다. 항목이 여섯이면 여섯 번이다.
+ *
+ * 순차로 돈다. 판정 엔진에 한꺼번에 던지면 처리량 천장에 걸려 오히려 느려지고, 무엇이
+ * 어디까지 됐는지도 알 수 없다. 한 건 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지
+ * 만든 것은 남는다.
+ *
+ * 실패는 삼키지 않는다. 오늘 측정에서 절반만 성공한 작업이 조용히 성공으로 끝난 일이 있었다 —
+ * 몇 건이 왜 실패했는지 끝에 그대로 보여 준다.
+ */
+function BulkBriefs({
+  tenantId,
+  actions,
+  briefs,
+  onBrief,
+}: {
+  tenantId: string
+  actions: GapAction[]
+  briefs: Record<string, StoredBrief>
+  onBrief: (s: StoredBrief) => void
+}) {
+  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState('')
+  const [result, setResult] = useState<string | null>(null)
+  const todo = actions.filter((a) => !briefs[a.id])
+  if (todo.length === 0) return null
+  const run = async () => {
+    setBusy(true)
+    setResult(null)
+    const failed: string[] = []
+    let ok = 0
+    for (const [i, a] of todo.entries()) {
+      setProgress(`${i + 1}/${todo.length} · ${a.title}`)
+      try {
+        const s = await generateContentBrief(
+          tenantId,
+          {
+            actionId: a.id,
+            kind: a.kind,
+            title: a.title,
+            targetDomain: a.targetDomain,
+            questionTexts: a.questionTexts,
+            evidence: a.evidence,
+          },
+          false,
+        )
+        onBrief(s)
+        ok += 1
+      } catch (e) {
+        failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)
+      }
+    }
+    setProgress('')
+    setBusy(false)
+    setResult(
+      failed.length === 0
+        ? `${ok}건 만들었습니다.`
+        : `${ok}건 성공 · ${failed.length}건 실패\n${failed.join('\n')}`,
+    )
+  }
+  return (
+    <div className="brief-bar" style={{ marginBottom: 10 }}>
+      <button type="button" onClick={() => void run()} disabled={busy}>
+        {busy ? `브리프 만드는 중… ${progress}` : `브리프 없는 ${todo.length}건 한꺼번에 만들기 (판정 ${todo.length}회)`}
+      </button>
+      {result && (
+        <span className={result.includes('실패') ? 'error' : 'doc-meta'} style={{ whiteSpace: 'pre-line' }}>
+          {result}
+        </span>
+      )}
+    </div>
+  )
+}
+
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
 function ActionCard({
   action,
@@ -686,6 +762,9 @@ export default function GapActions() {
               영향 숫자는 등재형이면 그 도메인의 인용 수, 콘텐츠형이면 밀린 질문 수입니다. 큰 것부터
               하시면 됩니다.
             </p>
+            {briefs !== null && open.length > 0 && (
+              <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
+            )}
             {open.length === 0 ? (
               <p className="muted">남은 항목이 없습니다.</p>
             ) : (
