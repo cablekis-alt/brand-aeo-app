@@ -68,6 +68,20 @@ function normalize(
   const r = raw as Record<string, unknown>;
   const { canonicalFacts, guardSentence, notes } = createFactGuard(facts, questionTexts);
 
+  // 팩트 그래프의 **항목 이름**이 문장에 그대로 박힌 경우를 찾는다.
+  //
+  // 값을 글자 그대로 쓰라는 규칙을 판정이 과하게 적용해 "마취과 전담 원장 수: 3명이 상주하며"처럼
+  // 쓴다(실측). 문장을 버리지는 않는다 — 내용은 맞고 어투만 어색하며, 여기서 이름을 기계적으로
+  // 지우면 "3명이 상주하며"가 되어 뜻을 잃는다. 대신 기록에 남겨 사람이 다듬을 곳을 알려 준다.
+  const noteLabelLeak = (sentence: string): void => {
+    for (const f of facts) {
+      if (!f.claim) continue;
+      if (sentence.includes(`${f.claim}: ${f.value}`) || sentence.includes(`${f.claim}:${f.value}`)) {
+        notes.push(`"${sentence.slice(0, 60)}…" — 사실 항목 이름 "${f.claim}"이 문장에 그대로 들어갔습니다. 우리말로 풀어 쓰세요.`);
+      }
+    }
+  };
+
   const cleanBlocks = (input: unknown): DraftBlock[] => {
     if (!Array.isArray(input)) return [];
     const out: DraftBlock[] = [];
@@ -82,6 +96,7 @@ function normalize(
       const body = String(o.body ?? '').trim();
       if (!body) continue;
       const kept = splitSentences(body).filter(guardSentence);
+      for (const s of kept) noteLabelLeak(s);
       if (kept.length === 0) {
         out.push({ kind: 'gap', need: '이 문단의 문장이 모두 사실 확인에 걸렸습니다 — 아래 검증 기록 참고' });
         continue;
