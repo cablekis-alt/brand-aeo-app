@@ -57,6 +57,17 @@ export interface GapAction {
   questionIds: string[]
   questionTexts: string[]
   /** 우선순위 근거 — 등재형은 그 도메인 인용 수, 콘텐츠형은 밀린 질문 수. */
+  /**
+   * **밀린 질문 수.** 이 조치로 되찾을 수 있는 질문이 몇 개인가.
+   *
+   * 전에는 등재형이 인용 횟수(160회), 콘텐츠형이 질문 수(17개)였다. 단위가 다른데 화면은
+   * 둘 다 "영향"으로 적고 큰 것부터 하라고 안내했다 — 160과 17을 견주게 만든 셈이다.
+   * 사용자가 바로 걸렸다: "영향 160이 제일 우선순위 높은건가요?"
+   *
+   * 인용 횟수는 그 플랫폼이 얼마나 자주 쓰이는지일 뿐 우리 몫이 아니다. 우리 몫은 그 출처를
+   * 꺼낸 질문 중 **우리가 밀린 것**이다(네이버 블로그: 인용 163회이지만 밀린 질문은 25개).
+   * 두 종류를 같은 단위로 맞춰야 정렬이 실제 우선순위가 된다.
+   */
   reach: number
   /** 데이터가 이미 충족했다고 말하는가. true면 사람이 할 일이 남지 않았다. */
   satisfied: boolean
@@ -294,6 +305,8 @@ function listingActions(
   // 질문 쪽 색인 — 도메인에 붙일 질문을 고를 때 쓴다. 밀린 질문이 먼저다.
   const rowById = new Map(rows.map((r) => [r.questionId, r]))
 
+  // 인용 수로 먼저 줄을 세운 뒤 reach(밀린 질문 수)로 다시 세운다 — 밀린 질문이 같으면
+  // 자주 인용되는 출처가 먼저다.
   const actions = listable
     .sort((a, b) => b.citationCount - a.citationCount)
     .map<GapAction>((r) => {
@@ -349,7 +362,7 @@ function listingActions(
         targetDomain: r.domain,
         questionIds: picked.map((row) => row.questionId),
         questionTexts: picked.slice(0, 5).map((row) => row.text),
-        reach: r.citationCount,
+        reach: lost.length,
         satisfied,
         status: 'todo',
         publishedUrls: [],
@@ -361,7 +374,7 @@ function listingActions(
       }
     })
 
-  return { actions, competitorDomainCount, excludedLowConfidence }
+  return { actions: [...actions].sort((a, b) => b.reach - a.reach), competitorDomainCount, excludedLowConfidence }
 }
 
 /**

@@ -761,7 +761,7 @@ function bundleToMarkdown(
   ]
   for (const [i, a] of actions.entries()) {
     L.push('---', '', `## ${i + 1}. ${a.title}`, '')
-    L.push(`- 종류 · ${a.badge}`, `- 영향 · ${a.reach}`, `- 완료 조건 · ${a.doneSignal}`)
+    L.push(`- 종류 · ${a.badge}`, `- 밀린 질문 · ${a.reach}개`, `- 완료 조건 · ${a.doneSignal}`)
     if (a.publishedUrls.length) {
       L.push(
         `- 올린 글 · ${a.publishedUrls
@@ -894,7 +894,7 @@ function ActionCard({
           {action.satisfied ? '충족' : action.badge}
         </span>
         <span className="gap-rate">
-          영향 <b>{action.reach}</b>
+          밀린 질문 <b>{action.reach}</b>개
         </span>
       </div>
       <p className="gap-tally" style={{ color: 'var(--ink)' }}>
@@ -1081,8 +1081,10 @@ export default function GapActions() {
           <section>
             <h3>할 일</h3>
             <p className="hint" style={{ marginTop: 0 }}>
-              영향 숫자는 등재형이면 그 도메인의 인용 수, 콘텐츠형이면 밀린 질문 수입니다. 큰 것부터
-              하시면 됩니다.
+              숫자는 <b>이 조치로 되찾을 수 있는 질문 수</b>입니다 — 종류가 달라도 같은 단위라
+              그대로 견주시면 됩니다. 큰 것부터 하시면 됩니다. 등재형과 콘텐츠형은 경쟁하는 일이
+              아닙니다: 콘텐츠형이 <b>무엇을 쓸지</b>, 등재형이 <b>어디에 올릴지</b>라서, 한 편을 써서
+              그 채널에 올리면 둘 다 진척됩니다.
             </p>
             {briefs !== null && open.length > 0 && (
               <>
