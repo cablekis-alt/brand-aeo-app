@@ -434,6 +434,7 @@ function ActionCard({
   drafts,
   onDraft,
   onUrls,
+  coveredBy,
 }: {
   action: GapAction
   canSaveStatus: boolean
@@ -446,7 +447,10 @@ function ActionCard({
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
   onUrls: (id: string, urls: string[]) => void
+  /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
+  coveredBy: { titles: string[]; covered: number; total: number } | null
 }) {
+  const [channelDraft, setChannelDraft] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
   return (
@@ -520,10 +524,29 @@ function ActionCard({
           ))}
         </div>
       )}
-      {briefs !== null && !action.satisfied && (
+      {briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
         <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
       )}
-      {briefs !== null && drafts !== null && !action.satisfied && (
+      {coveredBy && (
+        // 등재형은 "새로 쓸 글"이 아니다. 같은 질문을 이미 덮는 글이 위에 있다는 걸 먼저 말한다.
+        <div className="brief">
+          <p className="hint" style={{ margin: '6px 0 0' }}>
+            이 채널이 걸린 질문 {coveredBy.total}개 중 <b>{coveredBy.covered}개</b>를 위의 글이 이미 덮습니다
+            — <b>{coveredBy.titles.join(' · ')}</b>. <b>새로 쓸 글이 아닙니다.</b> 그 글을 여기에 올리면 이 항목도
+            함께 진척됩니다.
+          </p>
+          <button
+            type="button"
+            className="ghost"
+            style={{ marginTop: 6 }}
+            onClick={() => setChannelDraft((v) => !v)}
+            aria-expanded={channelDraft}
+          >
+            {channelDraft ? '채널용 초안 접기' : '이 채널 문체로 따로 쓰기'}
+          </button>
+        </div>
+      )}
+      {briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft) && (
         <DraftPanel
           tenantId={tenantId}
           action={action}
@@ -582,6 +605,20 @@ export default function GapActions() {
   const onDraft = (s: StoredDraft) => setDrafts((m) => ({ ...(m ?? {}), [s.actionId]: s }))
 
   const open = plan.actions.filter(isOpenAction)
+  // 「쓸 글」과 「올릴 곳」을 나눈다. 둘은 같은 질문을 다르게 자른 것이지 서로 다른 일이 아니다 —
+  // 한 줄에 섞어 놓으면 15장이 15편으로 읽힌다(실측: 콘텐츠형 6 + 등재형 9가 같은 질문 26개를 가리킨다).
+  const openContent = open.filter((a) => a.kind === 'content')
+  const openListing = open.filter((a) => a.kind === 'listing')
+  const coveredByContent = new Set(openContent.flatMap((a) => a.questionIds))
+  /** 이 등재 항목의 질문을 이미 덮는 콘텐츠 항목들 — 카드가 "새로 쓸 글이 아니다"를 말하는 근거. */
+  const coverageOf = (a: GapAction) => {
+    const qs = new Set(a.questionIds)
+    const hit = openContent
+      .map((c) => ({ title: c.title, n: c.questionIds.filter((q) => qs.has(q)).length }))
+      .filter((c) => c.n > 0)
+      .sort((x, y) => y.n - x.n)
+    return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
+  }
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
   const skipped = plan.actions.filter((a) => a.status === 'skip')
   const ready = !loading && plan.actions.length > 0
@@ -672,11 +709,38 @@ export default function GapActions() {
             {open.length === 0 ? (
               <p className="muted">남은 항목이 없습니다.</p>
             ) : (
-              <div className="gap-grid">
-                {open.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
-                ))}
-              </div>
+              <>
+                {openContent.length > 0 && (
+                  <>
+                    <h4 className="gap-subhead">
+                      쓸 글 {openContent.length}편{' '}
+                      <span className="muted">
+                        — 밀린 질문 {coveredByContent.size}개를 주제별로 나눈 것입니다. 겹치지 않습니다.
+                      </span>
+                    </h4>
+                    <div className="gap-grid">
+                      {openContent.map((a) => (
+                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                      ))}
+                    </div>
+                  </>
+                )}
+                {openListing.length > 0 && (
+                  <>
+                    <h4 className="gap-subhead">
+                      올릴 곳 {openListing.length}곳{' '}
+                      <span className="muted">
+                        — 위에서 쓴 글을 어디에 올릴지입니다. 새로 쓸 글이 아닙니다.
+                      </span>
+                    </h4>
+                    <div className="gap-grid">
+                      {openListing.map((a) => (
+                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
             )}
           </section>
 
@@ -689,7 +753,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
                 ))}
               </div>
             </section>
@@ -704,7 +768,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
                 ))}
               </div>
             </section>

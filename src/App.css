@@ -1869,3 +1869,12 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .facts-bar button { font: inherit; padding: 6px 12px; border: 1px solid var(--ink); background: var(--ink); color: var(--card); cursor: pointer; }
 .facts-bar button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .facts-bar button:disabled { opacity: 0.6; cursor: default; }
+
+/* 실행 항목 구역 제목 — 「쓸 글」과 「올릴 곳」을 가른다. */
+.gap-subhead {
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.gap-subhead .muted { font-weight: 400; font-size: 12.5px; }
