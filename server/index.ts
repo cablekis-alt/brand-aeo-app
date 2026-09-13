@@ -15,6 +15,7 @@ import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
+import { findFactsForGaps } from './factForGaps.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -521,6 +522,37 @@ app.post('/api/tenants/:tenantId/fact-candidates', async (req, res) => {
     const file = await readFactGraphFile(tenant.tenantId);
     const existing = file ?? tenant.factGraph ?? [];
     res.json(await extractFactCandidates(url, tenant.brandName, tenant.industry, getJudgeClient(), existing));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 초안의 빈칸 → 브랜드 페이지에서 그 값 찾기. 사실 추출과 같은 가드를 쓰고, 저장하지 않는다.
+app.post('/api/tenants/:tenantId/fact-for-gaps', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const needs = Array.isArray(body.needs)
+    ? body.needs.filter((n): n is string => typeof n === 'string' && n.trim().length > 0).map((n) => n.trim())
+    : [];
+  if (!needs.length) {
+    res.status(400).json({ error: '찾을 항목(needs)이 비어 있습니다.' });
+    return;
+  }
+  const given = typeof body.url === 'string' ? body.url.trim() : '';
+  const domain = (tenant.ownedDomains ?? [])[0] ?? '';
+  const url = given || tenant.brandPageUrl || (domain ? `https://${domain.replace(/^https?:\/\//, '')}` : '');
+  if (!url) {
+    res.status(400).json({ error: '읽을 주소가 없습니다. 브랜드 페이지 주소를 등록해 주세요.' });
+    return;
+  }
+  try {
+    const file = await readFactGraphFile(tenant.tenantId);
+    const existing = file ?? tenant.factGraph ?? [];
+    res.json(await findFactsForGaps(url, tenant.brandName, tenant.industry, needs, getJudgeClient(), existing));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

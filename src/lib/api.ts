@@ -528,6 +528,44 @@ export async function fetchFactCandidates(
   return { candidates: body.candidates ?? [], sourceUrl: body.sourceUrl ?? '', dropped: body.dropped ?? [] }
 }
 
+export interface GapFactHit {
+  need: string
+  type: FactNode['type']
+  claim: string
+  value: string
+  sourceUrl: string
+}
+
+/**
+ * 초안의 빈칸을 브랜드 페이지에서 찾아본다. **저장하지 않는다** — 사람이 확인하고 넣는다.
+ * 페이지에 없으면 missing으로 돌아오고, 화면은 그 자리에 입력칸을 띄운다.
+ */
+export async function findFactsForGaps(
+  tenantId: string,
+  needs: string[],
+  url?: string,
+): Promise<{ found: GapFactHit[]; missing: string[]; sourceUrl: string; dropped: string[] }> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/fact-for-gaps`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ needs, ...(url ? { url } : {}) }),
+  })
+  const body = (await res.json().catch(() => ({}))) as {
+    found?: GapFactHit[]
+    missing?: string[]
+    sourceUrl?: string
+    dropped?: string[]
+    error?: string
+  }
+  if (!res.ok) throw new Error(body.error || `빈칸을 채우지 못했습니다 (HTTP ${res.status})`)
+  return {
+    found: body.found ?? [],
+    missing: body.missing ?? needs,
+    sourceUrl: body.sourceUrl ?? '',
+    dropped: body.dropped ?? [],
+  }
+}
+
 /** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
 export async function saveBrandPageUrl(tenantId: string, url: string): Promise<string> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/brand-page`, {

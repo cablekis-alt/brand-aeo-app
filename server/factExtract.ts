@@ -54,7 +54,7 @@ export function htmlToText(html: string): string {
 }
 
 /** 값이 페이지에 그대로 있는지. 공백만 무시한다 — 숫자·단위·어미는 그대로여야 한다. */
-function appearsVerbatim(value: string, pageText: string): boolean {
+export function appearsVerbatim(value: string, pageText: string): boolean {
   const squash = (s: string) => s.replace(/\s+/g, '');
   return squash(pageText).includes(squash(value));
 }
@@ -81,7 +81,7 @@ const MAX_VALUE_LENGTH = 70;
  * 종결어미와 마침표로 잡는다. "주차 가능"·"반려동물 동반 불가"·"숙박요금의 100%"처럼
  * 어미가 없는 구는 그대로 통과한다.
  */
-function looksLikeSentence(value: string): boolean {
+export function looksLikeSentence(value: string): boolean {
   if (value.length > MAX_VALUE_LENGTH) return true;
   if (/[.!?。][\s"'”’)\]]*$/.test(value)) return true; // 마침표로 끝남
   // 한국어 종결어미 — 문장 끝이든 중간이든(여러 문장을 이어 붙인 경우) 설명이다.

@@ -3,12 +3,17 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
 import {
+  findFactsForGaps,
   generateContentBrief,
   generateContentDraft,
   loadContentBriefs,
   loadContentDrafts,
+  loadFactGraph,
   saveContentDraft,
+  saveFactGraph,
   type ActionStatus,
+  type FactNode,
+  type GapFactHit,
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
@@ -263,6 +268,16 @@ function draftToMarkdown(d: StoredDraft['draft']): string {
  * 짓지 않고 비운 채 "무엇이 필요한가"를 적어 온다. 그 빈 자리를 눈에 띄게 보여주는 것이
  * 이 화면의 일이다 — 사람이 채울 곳이 어디인지가 결과물의 핵심이다.
  */
+/** 빈칸 채우기 한 판의 상태. 찾은 것·못 찾은 것·사람이 적어 넣은 값. */
+interface GapFillState {
+  found: GapFactHit[]
+  missing: string[]
+  sourceUrl: string
+  dropped: string[]
+  /** 못 찾은 빈칸에 사람이 적어 넣는 값. need → 값. */
+  typed: Record<string, string>
+}
+
 function DraftPanel({
   tenantId,
   action,
@@ -283,6 +298,9 @@ function DraftPanel({
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+  // 빈칸 채우기 — 초안이 비워 둔 자리를 이 화면 안에서 끝낸다.
+  const [filling, setFilling] = useState(false)
+  const [fill, setFill] = useState<GapFillState | null>(null)
   const make = async (force: boolean) => {
     // 다시 만들면 손댄 글이 사라진다. 조용히 덮지 않는다.
     if (force && stored?.editedMarkdown && !window.confirm('다시 만들면 고쳐 둔 글이 사라집니다. 계속할까요?')) return
@@ -316,6 +334,58 @@ function DraftPanel({
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setSaving(false)
+    }
+  }
+  /** 빈칸의 need 목록 — 초안이 "무엇이 필요한가"를 이미 적어 두었다. */
+  const needsOf = (draft: StoredDraft['draft']): string[] =>
+    draft.sections.flatMap((sec) => sec.blocks.filter((b) => b.kind === 'gap').map((b) => b.need ?? '')).filter(Boolean)
+
+  /** 브랜드 페이지를 읽어 빈칸을 메워 본다. 찾은 것은 후보로만 두고, 사람이 넣어야 저장된다. */
+  const lookUp = async () => {
+    if (!stored) return
+    const needs = needsOf(stored.draft)
+    if (!needs.length) return
+    setFilling(true)
+    setError(null)
+    try {
+      const r = await findFactsForGaps(tenantId, needs)
+      setFill({
+        found: r.found,
+        missing: r.missing,
+        sourceUrl: r.sourceUrl,
+        dropped: r.dropped,
+        typed: Object.fromEntries(r.missing.map((n) => [n, ''])),
+      })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setFilling(false)
+    }
+  }
+
+  /**
+   * 고른 사실을 팩트 그래프에 넣고 초안을 다시 쓴다.
+   *
+   * 두 걸음을 하나로 묶는 이유: 사실만 저장하고 끝내면 사람이 "다시 만들기"를 또 눌러야 하고,
+   * 안 누르면 초안은 그대로 빈칸이다. 빈칸을 메우는 목적이 초안을 끝내는 것이므로 여기까지가
+   * 한 동작이다.
+   */
+  const applyFacts = async (
+    picked: Array<{ type: FactNode['type']; claim: string; value: string; sourceUrl?: string }>,
+  ) => {
+    if (!picked.length) return
+    setFilling(true)
+    setError(null)
+    try {
+      const current = (await loadFactGraph(tenantId))?.factGraph ?? []
+      const merged = [...current, ...picked.map((p) => ({ id: '', updatedAt: '', ...p }) as FactNode)]
+      await saveFactGraph(tenantId, merged)
+      setFill(null)
+      await make(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setFilling(false)
     }
   }
   const copy = async () => {
@@ -375,7 +445,23 @@ function DraftPanel({
               {busy ? '다시 쓰는 중…' : '다시 만들기'}
             </button>
             {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
-            {d && d.gapCount > 0 && !stored.editedMarkdown && <span className="st st-warn">채울 곳 {d.gapCount}</span>}
+            {d && d.gapCount > 0 && !stored.editedMarkdown && (
+              <>
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={filling || busy}
+                  title="브랜드 페이지에서 빈칸의 값을 찾아보고, 없으면 직접 적어 넣습니다"
+                  onClick={() => {
+                    setOpen(true)
+                    void lookUp()
+                  }}
+                >
+                  {filling ? '빈칸 채우는 중…' : `빈칸 ${d.gapCount}곳 채우기`}
+                </button>
+                <span className="st st-warn">채울 곳 {d.gapCount}</span>
+              </>
+            )}
             <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
           </>
         )}
@@ -443,6 +529,99 @@ function DraftPanel({
           </p>
           <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{stored.editedMarkdown}</pre>
         </div>
+      )}
+      {open && fill && !editing && (
+        <section className="hero-card" style={{ marginTop: 12 }}>
+          <p className="eyebrow">빈칸 채우기</p>
+          <p className="hint" style={{ marginTop: 0 }}>
+            <a href={fill.sourceUrl} target="_blank" rel="noreferrer">
+              {fill.sourceUrl}
+            </a>
+            에서 <b>{fill.found.length}곳</b>을 찾았고 <b>{fill.missing.length}곳</b>은 페이지에 없었습니다. 없는 것은
+            아래에 직접 적어 주세요 — 넣으면 <b>브랜드 사실</b>에 저장돼 다음 글부터 자동으로 쓰입니다.
+          </p>
+          {fill.found.length > 0 && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>빈칸</th>
+                  <th>페이지에서 찾은 값</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fill.found.map((f) => (
+                  <tr key={f.need}>
+                    <td>{f.need}</td>
+                    <td>
+                      <b>{f.value}</b> <span className="doc-meta">({f.claim})</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {fill.missing.length > 0 && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>페이지에 없던 빈칸</th>
+                  <th>값 (아는 것만 적으세요)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fill.missing.map((need) => (
+                  <tr key={need}>
+                    <td>{need}</td>
+                    <td>
+                      <input
+                        type="text"
+                        value={fill.typed[need] ?? ''}
+                        placeholder="예: 15:00 · 20,000원 · 주차 가능"
+                        style={{ width: '100%' }}
+                        onChange={(e) =>
+                          setFill((prev) =>
+                            prev ? { ...prev, typed: { ...prev.typed, [need]: e.target.value } } : prev,
+                          )
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <div className="facts-bar">
+            <button
+              type="button"
+              disabled={filling || busy || (fill.found.length === 0 && !Object.values(fill.typed).some((v) => v.trim()))}
+              onClick={() =>
+                void applyFacts([
+                  ...fill.found.map((f) => ({ type: f.type, claim: f.claim, value: f.value, sourceUrl: f.sourceUrl })),
+                  ...Object.entries(fill.typed)
+                    .filter(([, v]) => v.trim())
+                    .map(([need, v]) => ({ type: 'other' as FactNode['type'], claim: need, value: v.trim() })),
+                ])
+              }
+            >
+              {filling || busy ? '반영하는 중…' : '사실로 저장하고 초안 다시 쓰기'}
+            </button>
+            <button type="button" className="ghost" onClick={() => setFill(null)}>
+              닫기
+            </button>
+          </div>
+          {fill.dropped.length > 0 && (
+            <>
+              <p className="doc-meta" style={{ marginTop: 10 }}>
+                검증에서 뺀 것
+              </p>
+              <ul className="doc-meta" style={{ margin: 0 }}>
+                {fill.dropped.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
       )}
       {open && !editing && !stored?.editedMarkdown && d && (
         <div className="brief-body">
