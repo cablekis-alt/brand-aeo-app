@@ -611,7 +611,10 @@ function DraftPanel({
                       id={`gap-${action.id}-${sec.heading}-${i}`}
                       type="text"
                       value={typed[b.need ?? ''] ?? ''}
-                      placeholder="아는 값을 적으세요 — 예: 도보 8분 · 180,000원 · 자쿠지 없음"
+                      // 안내문에 **그 브랜드에 그럴듯하게 들어맞는 값**을 쓰면 안 된다. 실측:
+                      // "예: 도보 8분 · 180,000원 · 자쿠지 없음"을 그대로 넣은 사람이 있었고,
+                      // 지어낸 숫자 3건이 팩트 그래프에 확인된 사실로 들어갔다. 형식만 보인다.
+                      placeholder="확인하신 값만 적으세요 (숫자·시각·금액처럼 대조 가능한 것)"
                       style={{ width: '100%', marginTop: 4 }}
                       onChange={(e) => setTyped((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
                     />
