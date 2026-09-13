@@ -4,6 +4,7 @@ import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import { readFactGraphFile } from './factGraphStore.js';
+import { readBrandPageUrl } from './brandPageStore.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
@@ -110,6 +111,7 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     repeatsPerQuestion: d.repeatsPerQuestion ?? 1,
     competitors,
     factGraph: d.factGraph ?? [],
+    ...(d.brandPageUrl ? { brandPageUrl: d.brandPageUrl } : {}),
     ...(d.cohortOnly ? { cohortOnly: true } : {}),
     ...(d.autoCohort === false ? { autoCohort: false } : {}),
   };
@@ -124,10 +126,18 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  // 팩트 그래프만은 앱에서 저장한 파일이 베이스·오버레이 모두를 이긴다(factGraphStore 주석 참고).
+  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소)만은 저장한 파일이 베이스·오버레이를
+  // 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지 않기 때문이다.
   const tenants = [...map.values()];
-  const files = await Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId)));
-  return tenants.map((t, i) => (files[i] ? { ...t, factGraph: files[i]! } : t));
+  const [facts, pages] = await Promise.all([
+    Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
+    Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
+  ]);
+  return tenants.map((t, i) => ({
+    ...t,
+    ...(facts[i] ? { factGraph: facts[i]! } : {}),
+    ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
+  }));
 }
 
 /**
@@ -189,5 +199,6 @@ export function toTenantSummary(tenant: TenantConfig) {
     engines: tenant.engines,
     questionBankSize: tenant.questionBankSize,
     competitors: tenant.competitors.map((competitor) => competitor.name),
+    ...(tenant.brandPageUrl ? { brandPageUrl: tenant.brandPageUrl } : {}),
   };
 }

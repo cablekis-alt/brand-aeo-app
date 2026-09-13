@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { loadFactGraph, saveFactGraph, type FactNode, fetchFactCandidates, type FactCandidate } from '../lib/api'
+import {
+  loadFactGraph,
+  saveFactGraph,
+  type FactNode,
+  fetchFactCandidates,
+  type FactCandidate,
+  saveBrandPageUrl,
+} from '../lib/api'
 
 /**
  * 브랜드 사실(팩트 그래프) 편집.
@@ -106,6 +113,12 @@ const PROFILES: { match: RegExp; hints: Partial<HintSet> }[] = [
   },
 ]
 
+/** 브랜드 페이지를 따로 등록하지 않았을 때 읽을 곳 — 소유 도메인 루트. */
+function defaultPageUrl(domains: string[] | undefined): string {
+  const d = domains?.[0]?.trim()
+  return d ? (/^https?:\/\//i.test(d) ? d : `https://${d}`) : ''
+}
+
 function hintsFor(industry: string): HintSet {
   const p = PROFILES.find((x) => x.match.test(industry))
   return p ? { ...GENERIC, ...p.hints } : GENERIC
@@ -113,7 +126,7 @@ function hintsFor(industry: string): HintSet {
 const EMPTY: FactNode = { id: '', type: 'spec', claim: '', value: '', sourceUrl: '', updatedAt: '' }
 
 export default function BrandFacts() {
-  const { tenant } = useTenant()
+  const { tenant, reloadTenants } = useTenant()
   const [rows, setRows] = useState<FactNode[]>([])
   const [source, setSource] = useState<'file' | 'config' | null>(null)
   const [loading, setLoading] = useState(true)
@@ -125,6 +138,10 @@ export default function BrandFacts() {
   // 사실로 만들면 팩트 그래프가 "확인된 사실"이라는 뜻을 잃는다.
   const [finding, setFinding] = useState(false)
   const [cands, setCands] = useState<{ candidates: FactCandidate[]; sourceUrl: string; dropped: string[] } | null>(null)
+  // 읽을 주소. 소유 도메인 루트와 사실이 적힌 페이지는 다를 수 있어 브랜드마다 따로 둔다
+  // (스테이,머뭄: 소유 도메인 루트는 콘솔 껍데기, 본문은 /s/stay).
+  const [pageUrl, setPageUrl] = useState('')
+  const [savingUrl, setSavingUrl] = useState(false)
   const hints = hintsFor(tenant?.industry ?? '')
 
   useEffect(() => {
@@ -133,6 +150,8 @@ export default function BrandFacts() {
     setLoading(true)
     setNotice(null)
     setError(null)
+    setCands(null)
+    setPageUrl(tenant.brandPageUrl ?? defaultPageUrl(tenant.ownedDomains))
     void loadFactGraph(tenant.tenantId).then((r) => {
       if (!alive) return
       if (r) {
@@ -272,6 +291,51 @@ export default function BrandFacts() {
             </table>
           </div>
 
+          <div className="facts-bar" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+            <label className="doc-meta" htmlFor="brand-page-url">
+              브랜드 페이지
+            </label>
+            <input
+              id="brand-page-url"
+              type="url"
+              value={pageUrl}
+              onChange={(e) => setPageUrl(e.target.value)}
+              placeholder="https://example.com/about"
+              style={{ flex: '1 1 320px', minWidth: 220 }}
+            />
+            <button
+              type="button"
+              className="ghost"
+              disabled={savingUrl || pageUrl.trim() === (tenant?.brandPageUrl ?? '')}
+              title="이 브랜드의 기본 주소로 저장합니다. 비우고 저장하면 소유 도메인으로 되돌아갑니다."
+              onClick={async () => {
+                if (!tenant) return
+                setSavingUrl(true)
+                setError(null)
+                try {
+                  const saved = await saveBrandPageUrl(tenant.tenantId, pageUrl.trim())
+                  await reloadTenants()
+                  setPageUrl(saved || defaultPageUrl(tenant.ownedDomains))
+                  setNotice(
+                    saved
+                      ? `이 브랜드의 기본 주소를 ${saved}로 저장했습니다.`
+                      : '기본 주소를 지웠습니다. 이제 소유 도메인을 읽습니다.',
+                  )
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : String(e))
+                } finally {
+                  setSavingUrl(false)
+                }
+              }}
+            >
+              {savingUrl ? '저장 중…' : '기본 주소로 저장'}
+            </button>
+          </div>
+          <p className="hint" style={{ marginTop: 4 }}>
+            사실이 <b>실제로 적힌 페이지</b>를 넣으세요. 회사 소개만 있는 대문보다 이용 안내·요금·
+            진료 안내 페이지에 확인 가능한 값이 많습니다.
+          </p>
+
           <div className="facts-bar">
             <button type="button" className="ghost" onClick={add}>
               ＋ 사실 추가
@@ -279,8 +343,8 @@ export default function BrandFacts() {
             <button
               type="button"
               className="ghost"
-              disabled={finding}
-              title="등록된 자사 도메인을 읽어 확인 가능한 값만 후보로 가져옵니다"
+              disabled={finding || !pageUrl.trim()}
+              title="위 주소를 읽어 값이 글자 그대로 있는 것만 후보로 가져옵니다"
               onClick={async () => {
                 if (!tenant) return
                 setFinding(true)
@@ -288,10 +352,13 @@ export default function BrandFacts() {
                 setNotice(null)
                 setCands(null)
                 try {
-                  const r = await fetchFactCandidates(tenant.tenantId)
+                  const r = await fetchFactCandidates(tenant.tenantId, pageUrl.trim())
                   setCands(r)
                   if (r.candidates.length === 0) {
-                    setNotice(`${r.sourceUrl}에서 새로 넣을 만한 값을 찾지 못했습니다.`)
+                    setNotice(
+                      `${r.sourceUrl}에는 확인 가능한 값이 없었습니다. 사실이 적힌 다른 페이지 주소를 넣어 보세요` +
+                        `(이용 안내·요금·진료 안내 등). 자바스크립트로 그리는 페이지면 본문을 못 읽습니다.`,
+                    )
                   }
                 } catch (e) {
                   setError(e instanceof Error ? e.message : String(e))

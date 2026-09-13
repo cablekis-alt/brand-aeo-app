@@ -22,6 +22,8 @@ export interface TenantSummary {
   engines: Engine[]
   questionBankSize: number
   competitors: string[]
+  /** 사실이 적힌 페이지. 없으면 소유 도메인 루트를 쓴다. */
+  brandPageUrl?: string
 }
 
 const FALLBACK_TENANTS: TenantSummary[] = [
@@ -524,6 +526,18 @@ export async function fetchFactCandidates(
   }
   if (!res.ok) throw new Error(body.error || `사실 후보를 가져오지 못했습니다 (HTTP ${res.status})`)
   return { candidates: body.candidates ?? [], sourceUrl: body.sourceUrl ?? '', dropped: body.dropped ?? [] }
+}
+
+/** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
+export async function saveBrandPageUrl(tenantId: string, url: string): Promise<string> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/brand-page`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  })
+  const body = (await res.json().catch(() => ({}))) as { brandPageUrl?: string; error?: string }
+  if (!res.ok) throw new Error(body.error || `주소를 저장하지 못했습니다 (HTTP ${res.status})`)
+  return body.brandPageUrl ?? ''
 }
 
 export interface FactNode {

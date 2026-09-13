@@ -19,6 +19,9 @@ export interface TenantConfig extends BrandContext {
   // GA4 속성 ID — AI 리퍼럴 트래픽(실제 유입) 조회용. 자사 사이트처럼 GA 접근 권한이 있는
   // 브랜드에만 설정한다(경쟁사 테넌트는 보통 없음). 미설정 시 GA4_PROPERTY_ID 환경변수로 폴백.
   ga4PropertyId?: string;
+  // 사실이 실제로 적힌 페이지. ownedDomains[0]은 "소유한 곳"일 뿐 본문이 있는 곳과 다를 수
+  // 있다(스테이,머뭄: 소유 도메인 루트는 콘솔 껍데기, 본문은 /s/stay). 사실 추출의 기본 주소.
+  brandPageUrl?: string;
 }
 
 export interface RawCallRecord {

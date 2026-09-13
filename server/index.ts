@@ -14,6 +14,7 @@ import { generateBrief, readBriefs } from './contentBrief.js';
 import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
+import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
@@ -508,10 +509,12 @@ app.post('/api/tenants/:tenantId/fact-candidates', async (req, res) => {
   }
   const body = (req.body ?? {}) as Record<string, unknown>;
   const given = typeof body.url === 'string' ? body.url.trim() : '';
+  // 등록된 브랜드 페이지 → 소유 도메인 루트 순. 루트는 회사 소개만 있거나(스테이,머뭄은 아예
+  // 콘솔 껍데기) 사실이 없는 경우가 많아, 브랜드 페이지가 있으면 그쪽이 먼저다.
   const domain = (tenant.ownedDomains ?? [])[0] ?? '';
-  const url = given || (domain ? `https://${domain.replace(/^https?:\/\//, '')}` : '');
+  const url = given || tenant.brandPageUrl || (domain ? `https://${domain.replace(/^https?:\/\//, '')}` : '');
   if (!url) {
-    res.status(400).json({ error: '읽을 주소가 없습니다. 브랜드에 자사 도메인을 등록하거나 url을 넘기세요.' });
+    res.status(400).json({ error: '읽을 주소가 없습니다. 브랜드 페이지 주소를 등록하거나 url을 넘기세요.' });
     return;
   }
   try {
@@ -520,6 +523,21 @@ app.post('/api/tenants/:tenantId/fact-candidates', async (req, res) => {
     res.json(await extractFactCandidates(url, tenant.brandName, tenant.industry, getJudgeClient(), existing));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.put('/api/tenants/:tenantId/brand-page', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    const url = normalizeBrandPageUrl((req.body as { url?: unknown } | undefined)?.url);
+    await writeBrandPageUrl(tenant.tenantId, url);
+    res.json({ ok: true, brandPageUrl: url ?? '' });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
