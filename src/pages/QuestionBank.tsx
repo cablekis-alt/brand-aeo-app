@@ -1,8 +1,52 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import DraftPanel from '../components/DraftPanel'
 import { useTenant } from '../context/useTenant'
-import { loadQuestionBank, tagQuestionBankStages, tagQuestionBankTopics } from '../lib/api'
+import {
+  generateContentBrief,
+  loadContentBriefs,
+  loadContentDrafts,
+  loadQuestionBank,
+  tagQuestionBankStages,
+  tagQuestionBankTopics,
+  type StoredBrief,
+  type StoredDraft,
+} from '../lib/api'
+import type { GapAction } from '../lib/gapActions'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
-import type { QuestionBank } from '../lib/types'
+import type { QuestionBank, QuestionSpec } from '../lib/types'
+
+/**
+ * 고른 질문을 실행 항목 모양으로 감싼다.
+ *
+ * 브리프·초안 서버 경로는 실행 항목 **객체**가 아니라 title·questionTexts만 본다. 즉 측정이
+ * 없어도 글은 쓸 수 있는데, 화면이 실행 항목에서만 시작하도록 만들어 둬서 막혀 있었다.
+ * 측정이 더해 주는 것은 "어느 질문에서 지는가"라는 **우선순위 하나뿐**이고, 그게 없으면
+ * 은행에서 고르면 된다. 우선순위를 모른다고 글까지 못 쓸 이유는 없다.
+ *
+ * id를 질문 id로 짓는 이유: 주차가 바뀌어도 같은 질문 묶음이면 같은 초안에 이어 붙어야 한다.
+ */
+function actionFromQuestions(picked: QuestionSpec[]): GapAction {
+  const ids = picked.map((q) => q.questionId).sort()
+  const head = picked[0]?.text ?? ''
+  return {
+    id: `topic:${ids.join('+')}`,
+    kind: 'content',
+    title: picked.length === 1 ? head.slice(0, 40) : `질문 ${picked.length}개 묶음 글`,
+    badge: '측정 전',
+    evidence:
+      `측정 없이 질문 ${picked.length}개를 직접 골라 만든 글입니다. ` +
+      `어느 질문에서 밀리는지는 아직 모르므로 우선순위 근거는 없습니다.`,
+    questionIds: ids,
+    questionTexts: picked.map((q) => q.text),
+    reach: picked.length,
+    satisfied: false,
+    status: 'todo',
+    publishedUrls: [],
+    citedPublishedUrls: [],
+    doneSignal: '다음 측정에서 이 질문들의 판정을 확인하세요',
+  }
+}
 
 const CATEGORY_LABEL: Record<string, string> = {
   'category-agnostic': '카테고리 무관',
@@ -15,6 +59,9 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const CATEGORY_AGNOSTIC_TARGET = 0.6
 
+/** 빈 선택 — 새 Set을 매번 만들면 파생값이 매 렌더 달라져 useMemo가 헛돈다. 읽기 전용으로 쓴다. */
+const EMPTY_PICK: Set<string> = new Set<string>()
+
 export default function QuestionBankPage() {
   const { tenant } = useTenant()
   const [bank, setBank] = useState<QuestionBank | null>(null)
@@ -22,6 +69,18 @@ export default function QuestionBankPage() {
   const [tagging, setTagging] = useState<string | null>(null)
   const [topicTagging, setTopicTagging] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  // 측정 없이 글쓰기 — 질문을 골라 바로 초안으로 간다.
+  // 고른 질문에 브랜드 id를 함께 담는다. 브랜드가 바뀌면 effect에서 비우는 대신 **어긋난 것으로
+  // 보고 무시한다** — 화면을 그리는 도중에 상태를 되돌리면 한 번 더 그려야 한다.
+  const [pick, setPick] = useState<{ tid: string; ids: Set<string> }>({ tid: '', ids: new Set() })
+  const picked = pick.tid === (tenant?.tenantId ?? '') ? pick.ids : EMPTY_PICK
+  const setPicked = (next: (prev: Set<string>) => Set<string>) =>
+    setPick((prev) => {
+      const tid = tenant?.tenantId ?? ''
+      return { tid, ids: next(prev.tid === tid ? prev.ids : EMPTY_PICK) }
+    })
+  const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
 
   useEffect(() => {
     if (!tenant) return
@@ -39,6 +98,25 @@ export default function QuestionBankPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant, reloadKey])
+
+  useEffect(() => {
+    if (!tenant) return
+    let alive = true
+    void Promise.all([loadContentBriefs(tenant.tenantId), loadContentDrafts(tenant.tenantId)]).then(([b, d]) => {
+      if (!alive) return
+      setBriefs(b ?? {})
+      setDrafts(d ?? {})
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant])
+
+  const pickedQuestions = useMemo(
+    () => (bank?.questions ?? []).filter((q) => picked.has(q.questionId)),
+    [bank, picked],
+  )
+  const action = pickedQuestions.length > 0 ? actionFromQuestions(pickedQuestions) : null
 
   const agnosticRatio = useMemo(() => {
     if (!bank || bank.questions.length === 0) return 0
@@ -140,6 +218,7 @@ export default function QuestionBankPage() {
               <table>
                 <thead>
                   <tr>
+                    <th style={{ width: 34 }}>고름</th>
                     <th>질문</th>
                     <th>ID</th>
                     <th>주제</th>
@@ -153,6 +232,21 @@ export default function QuestionBankPage() {
                     const st = stageOf(q)
                     return (
                       <tr key={q.questionId}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            aria-label={`${q.text} 고르기`}
+                            checked={picked.has(q.questionId)}
+                            onChange={(e) =>
+                              setPicked((prev) => {
+                                const next = new Set(prev)
+                                if (e.target.checked) next.add(q.questionId)
+                                else next.delete(q.questionId)
+                                return next
+                              })
+                            }
+                          />
+                        </td>
                         <td>{q.text}</td>
                         <td>{q.questionId}</td>
                         <td>{q.topic ?? <span className="muted">미분류</span>}</td>
@@ -173,6 +267,56 @@ export default function QuestionBankPage() {
                 </tbody>
               </table>
             </div>
+          </section>
+
+          <section>
+            <h3>고른 질문으로 글쓰기</h3>
+            <p className="hint" style={{ marginTop: 0 }}>
+              측정하지 않아도 글은 쓸 수 있습니다. 측정이 더해 주는 것은 <b>어느 질문에서 밀리는가</b>라는
+              우선순위 하나뿐이라, 그게 없으면 은행에서 직접 고르면 됩니다. 브랜드 사실이 채워져 있을수록
+              빈칸이 줄어듭니다 — <Link to="/brand-facts">브랜드 사실</Link>에서 브랜드 페이지로 한 번에 채울 수
+              있습니다.
+            </p>
+            {picked.size === 0 ? (
+              <p className="muted">위 표에서 함께 다룰 질문을 고르세요. 한 편의 글로 덮을 수 있는 것끼리 묶으면 됩니다.</p>
+            ) : (
+              <>
+                <div className="brief-bar" style={{ marginBottom: 8 }}>
+                  <span className="st st-info">{picked.size}개 고름</span>
+                  <button type="button" className="ghost" onClick={() => setPicked(() => new Set())}>
+                    선택 비우기
+                  </button>
+                  <span className="doc-meta">
+                    측정 전이라 우선순위 근거는 없습니다. 측정 뒤에는 <Link to="/gap-actions">실행 항목</Link>이
+                    밀린 질문부터 짚어 줍니다.
+                  </span>
+                </div>
+                <ul className="doc-meta" style={{ marginTop: 0 }}>
+                  {pickedQuestions.map((q) => (
+                    <li key={q.questionId}>{q.text}</li>
+                  ))}
+                </ul>
+                {action && briefs !== null && drafts !== null && tenant && (
+                  <DraftPanel
+                    tenantId={tenant.tenantId}
+                    action={action}
+                    hasBrief={Boolean(briefs[action.id])}
+                    stored={drafts[action.id]}
+                    onStored={(d) => setDrafts((prev) => ({ ...(prev ?? {}), [action.id]: d }))}
+                    ensureBrief={async () => {
+                      const b = await generateContentBrief(tenant.tenantId, {
+                        actionId: action.id,
+                        kind: action.kind,
+                        title: action.title,
+                        questionTexts: action.questionTexts,
+                        evidence: action.evidence,
+                      })
+                      setBriefs((prev) => ({ ...(prev ?? {}), [action.id]: b }))
+                    }}
+                  />
+                )}
+              </>
+            )}
           </section>
         </>
       )}
