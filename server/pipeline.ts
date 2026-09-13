@@ -248,14 +248,68 @@ async function collectRawCalls(
   const calls = settled.filter((r): r is RawCallRecord => r !== null);
   if (failuresByEngine.size > 0) {
     const summary = [...failuresByEngine.entries()].map(([e, n]) => `${e} ${n}건`).join(', ');
-    console.warn(`[B3] 엔진 호출 실패 요약 (tenant=${tenant.tenantId}): ${summary} — 성공 ${calls.length}/${jobs.length}건으로 진행`);
+    console.warn(`[B3] 엔진 호출 실패 요약 (tenant=${tenant.tenantId}): ${summary} — 성공 ${calls.length}/${jobs.length}건`);
   }
   if (calls.length === 0) {
     throw new Error(
       `[B3] 모든 엔진 호출 실패 — 수집된 응답이 없습니다 (tenant=${tenant.tenantId}). 엔진 API 키·크레딧을 확인하세요.`,
     );
   }
+  assertEnoughCoverage(tenant, questions, jobs.length, calls, failuresByEngine);
   return calls;
+}
+
+/** 이 비율에 못 미치면 측정을 실패로 끊는다. */
+const MIN_QUESTION_COVERAGE = 0.9; // 응답이 한 건도 없는 질문이 10%를 넘으면 안 된다
+const MIN_CALL_COVERAGE = 0.7; // 계획한 호출 중 성공 비율
+
+/**
+ * 반쪽짜리 수집을 성공으로 저장하지 못하게 막는다.
+ *
+ * 왜 필요한가. 엔진 실패는 건너뛰고 진행하는 것이 기본 설계다(부분 저하 > 전면 실패). 그런데
+ * 실패가 대부분이면 이야기가 달라진다 — 실측(2026-09-13): Gemini 할당량이 소진된 상태에서
+ * 36문항 측정이 응답 39건·질문 15개만 남기고 **HTTP 200으로 끝났고**, 그 반쪽 데이터가 이미
+ * 있던 온전한 그 주 데이터를 덮어썼다. 되돌릴 수 없었다.
+ *
+ * 여기서 끊으면 아무것도 쓰이지 않는다. 저장(saveRawCalls)은 이 함수 뒤에 온다.
+ *
+ * 두 가지를 본다. 호출 성공률만 보면 질문 절반이 통째로 비어도 통과할 수 있다 —
+ * 한 질문에 엔진×반복이 여러 건이라, 특정 질문에만 실패가 몰리면 총량은 멀쩡해 보인다.
+ * 그래서 **응답이 하나도 없는 질문 수**를 따로 센다. 그 질문은 분석에서 아예 사라진다.
+ *
+ * 부분 데이터라도 꼭 받아야 하면 ALLOW_PARTIAL_MEASURE=1로 넘긴다.
+ *
+ * 내보내는 이유는 시험 때문이다 — 실제 엔진을 소진시키지 않고 경계값을 확인할 수 있어야 한다.
+ */
+export function assertEnoughCoverage(
+  tenant: TenantConfig,
+  questions: QuestionSpec[],
+  plannedCalls: number,
+  calls: RawCallRecord[],
+  failuresByEngine: Map<string, number>,
+): void {
+  const answered = new Set(calls.map((c) => c.questionId));
+  const questionCoverage = questions.length > 0 ? answered.size / questions.length : 1;
+  const callCoverage = plannedCalls > 0 ? calls.length / plannedCalls : 1;
+  if (questionCoverage >= MIN_QUESTION_COVERAGE && callCoverage >= MIN_CALL_COVERAGE) return;
+
+  if (process.env.ALLOW_PARTIAL_MEASURE === '1' || process.env.ALLOW_PARTIAL_MEASURE === 'true') {
+    console.warn(
+      `[B3] 수집 부족하지만 ALLOW_PARTIAL_MEASURE로 진행 — 질문 ${answered.size}/${questions.length}, 호출 ${calls.length}/${plannedCalls}`,
+    );
+    return;
+  }
+
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const summary = [...failuresByEngine.entries()].map(([e, n]) => `${e} ${n}건`).join(', ') || '없음';
+  throw new Error(
+    `[B3] 수집이 너무 적어 측정을 중단했습니다 (tenant=${tenant.tenantId}). ` +
+      `응답이 있는 질문 ${answered.size}/${questions.length}(${pct(questionCoverage)}, 하한 ${pct(MIN_QUESTION_COVERAGE)}), ` +
+      `성공 호출 ${calls.length}/${plannedCalls}(${pct(callCoverage)}, 하한 ${pct(MIN_CALL_COVERAGE)}). ` +
+      `엔진 실패: ${summary}. ` +
+      `이 주 데이터는 건드리지 않았습니다 — 엔진 크레딧·할당량을 확인한 뒤 다시 실행하세요. ` +
+      `부분 데이터라도 저장하려면 ALLOW_PARTIAL_MEASURE=1로 실행합니다.`,
+  );
 }
 
 /**
