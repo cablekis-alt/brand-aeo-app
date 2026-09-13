@@ -30,6 +30,31 @@ const STATUS_CHOICES: { value: ActionStatus; label: string; title: string }[] = 
   { value: 'skip', label: '보류', title: '하지 않기로 함 — 목록 아래로 내린다' },
 ]
 
+/**
+ * 마크다운을 .md 파일로 내려받는다.
+ *
+ * 복사만 있으면 붙여 넣을 창이 열려 있을 때만 쓸모가 있다. 팀원에게 넘기거나 보관하려면
+ * 파일이 필요하고, 클립보드 접근이 막힌 환경에서는 복사 자체가 실패한다(그때 대안이 없었다).
+ * 문자열은 이미 만들고 있으므로 저장만 붙인다.
+ */
+function downloadMarkdown(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  // 즉시 해제하면 브라우저가 저장을 시작하기 전에 사라질 수 있다.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+/** 파일 이름에 쓸 수 없는 글자를 덜어낸다. 한글·숫자·점·하이픈은 남긴다. */
+function safeFileName(s: string): string {
+  return s.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '-').slice(0, 60)
+}
+
 /** 브리프를 마크다운으로 — 문서 도구에 붙여 넣기용. 본문이 아니라 뼈대다. */
 function briefToMarkdown(title: string, b: StoredBrief['brief']): string {
   const L: string[] = [`# 브리프 · ${title}`, '']
@@ -113,6 +138,18 @@ function BriefPanel({
             </button>
             <button type="button" className="ghost" onClick={() => void copy()}>
               {copied ? '복사됨' : '마크다운 복사'}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() =>
+                downloadMarkdown(
+                  `브리프-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
+                  briefToMarkdown(action.title, stored.brief),
+                )
+              }
+            >
+              .md 내려받기
             </button>
             <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
               {busy ? '다시 만드는 중…' : '다시 만들기'}
@@ -292,6 +329,18 @@ function DraftPanel({
             </button>
             <button type="button" className="ghost" onClick={() => void copy()}>
               {copied ? '복사됨' : '마크다운 복사'}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() =>
+                downloadMarkdown(
+                  `초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
+                  draftToMarkdown(stored.draft),
+                )
+              }
+            >
+              .md 내려받기
             </button>
             <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
               {busy ? '다시 쓰는 중…' : '다시 만들기'}
