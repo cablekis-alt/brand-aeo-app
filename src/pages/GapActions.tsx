@@ -284,12 +284,15 @@ function DraftPanel({
   hasBrief,
   stored,
   onStored,
+  ensureBrief,
 }: {
   tenantId: string
   action: GapAction
   hasBrief: boolean
   stored: StoredDraft | undefined
   onStored: (s: StoredDraft) => void
+  /** 브리프가 없으면 먼저 만든다. 초안 한 번 누르기로 여기까지 간다. */
+  ensureBrief: () => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -307,6 +310,10 @@ function DraftPanel({
     setBusy(true)
     setError(null)
     try {
+      // 브리프는 초안을 잘 쓰기 위한 발판이지 사람이 읽으려고 만드는 물건이 아니다. 두 번
+      // 누르게 하면 그 사이에 사람이 하는 판단이 없는데도 기다림만 두 번 생긴다.
+      // 없으면 여기서 만들고 이어서 초안까지 간다. 브리프는 따로 접혀 남아 볼 사람은 본다.
+      if (!hasBrief) await ensureBrief()
       const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
       onStored(s)
       setEditing(false)
@@ -411,12 +418,17 @@ function DraftPanel({
               type="button"
               className="ghost"
               onClick={() => void make(false)}
-              disabled={busy || !hasBrief}
-              title={hasBrief ? '브리프를 바탕으로 초안을 씁니다' : '브리프를 먼저 만들어야 합니다'}
+              disabled={busy}
+              title={hasBrief ? '브리프를 바탕으로 초안을 씁니다' : '브리프를 만든 뒤 이어서 초안까지 씁니다'}
             >
-              {busy ? '초안 쓰는 중…' : '초안 만들기 (판정 1회)'}
+              {busy
+                ? hasBrief
+                  ? '초안 쓰는 중…'
+                  : '브리프부터 쓰는 중…'
+                : hasBrief
+                  ? '초안 만들기 (판정 1회)'
+                  : '초안 만들기 (브리프까지, 판정 2회)'}
             </button>
-            {!hasBrief && <span className="doc-meta">브리프를 먼저 만드세요</span>}
           </>
         ) : (
           <>
@@ -985,6 +997,18 @@ function ActionCard({
           hasBrief={Boolean(briefs[action.id])}
           stored={drafts[action.id]}
           onStored={onDraft}
+          ensureBrief={async () => {
+            onBrief(
+              await generateContentBrief(tenantId, {
+                actionId: action.id,
+                kind: action.kind,
+                title: action.title,
+                targetDomain: action.targetDomain,
+                questionTexts: action.questionTexts,
+                evidence: action.evidence,
+              }),
+            )
+          }}
         />
       )}
     </article>
