@@ -342,7 +342,7 @@ export default function MeasureStatus() {
       <p className="brand">측정</p>
       <h1>측정 상태</h1>
       <p className="lead">
-        GitHub Actions 측정 실행의 진행 상태와, 로컬(<code>npm run measure:local</code>)에서 측정한 기록입니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.
+        이 앱에서 직접 실행한 측정을 먼저 보여주고, 그 아래에 GitHub Actions 측정 실행을 둡니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.
       </p>
 
       <div className="filters no-print" style={{ alignItems: 'center' }}>
@@ -388,7 +388,59 @@ export default function MeasureStatus() {
         </section>
       )}
 
-      <section style={{ marginTop: '8px' }}>
+      {(localActive.length > 0 || localRows.length > 0) && (
+        <section style={{ marginTop: '8px' }}>
+          <h3>로컬 측정 (이 앱)</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            이 앱에서 직접 실행한 측정입니다(진행 중은 실시간, 완료는 이 PC에 기록). CLI(<code>measure:local</code>)로 커밋한 기록도 함께 표시됩니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>상태</th>
+                  <th>대상</th>
+                  <th>측정 엔진</th>
+                  <th>주차</th>
+                  <th>AEO</th>
+                  <th>측정시간</th>
+                  <th>경과</th>
+                </tr>
+              </thead>
+              <tbody>
+                {localActive.map((a) => (
+                  <tr key={`active-${a.tenantId}`}>
+                    <td>
+                      <span className="status-pill st-warn">진행 중</span>
+                    </td>
+                    <td>{a.brandName || a.tenantId}</td>
+                    <td className="muted">측정 중…</td>
+                    <td>-</td>
+                    <td className="num">-</td>
+                    <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
+                    <td>{timeAgo(a.startedAt)} 시작</td>
+                  </tr>
+                ))}
+                {localRows.map((e, i) => (
+                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
+                    <td>
+                      <span className="status-pill st-good">로컬 완료</span>
+                    </td>
+                    <td>{e.brandName || e.tenantId}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
+                    <td>{e.weekOf}</td>
+                    <td className="num">{e.aeoScore}</td>
+                    <td className="num">{fmtSec(e.durationSec)}</td>
+                    <td>{timeAgo(e.at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <section style={{ marginTop: '24px' }}>
         <h3>GitHub Actions 측정 실행</h3>
         <p className="hint" style={{ marginTop: 0 }}>
           주차·AEO는 성공 run에 한해 해당 브랜드의 <b>최신 스코어카드</b>를 붙인 best-effort 값입니다(실패·미매칭은 <code>-</code>).
@@ -456,58 +508,6 @@ export default function MeasureStatus() {
           </div>
         )}
       </section>
-
-      {(localActive.length > 0 || localRows.length > 0) && (
-        <section style={{ marginTop: '24px' }}>
-          <h3>로컬 측정 (이 앱)</h3>
-          <p className="hint" style={{ marginTop: 0 }}>
-            이 앱에서 직접 실행한 측정입니다(진행 중은 실시간, 완료는 이 PC에 기록). CLI(<code>measure:local</code>)로 커밋한 기록도 함께 표시됩니다.
-          </p>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>상태</th>
-                  <th>대상</th>
-                  <th>측정 엔진</th>
-                  <th>주차</th>
-                  <th>AEO</th>
-                  <th>측정시간</th>
-                  <th>경과</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localActive.map((a) => (
-                  <tr key={`active-${a.tenantId}`}>
-                    <td>
-                      <span className="status-pill st-warn">진행 중</span>
-                    </td>
-                    <td>{a.brandName || a.tenantId}</td>
-                    <td className="muted">측정 중…</td>
-                    <td>-</td>
-                    <td className="num">-</td>
-                    <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
-                    <td>{timeAgo(a.startedAt)} 시작</td>
-                  </tr>
-                ))}
-                {localRows.map((e, i) => (
-                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
-                    <td>
-                      <span className="status-pill st-good">로컬 완료</span>
-                    </td>
-                    <td>{e.brandName || e.tenantId}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
-                    <td>{e.weekOf}</td>
-                    <td className="num">{e.aeoScore}</td>
-                    <td className="num">{fmtSec(e.durationSec)}</td>
-                    <td>{timeAgo(e.at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </>
   )
 }
