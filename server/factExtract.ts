@@ -59,6 +59,27 @@ function appearsVerbatim(value: string, pageText: string): boolean {
   return squash(pageText).includes(squash(value));
 }
 
+/** 값의 길이 상한. 이보다 긴 것은 사실이 아니라 설명이다. */
+const MAX_VALUE_LENGTH = 40;
+
+/**
+ * 값이 문장인지 — 사실이 아니라 설명을 가져온 것이다.
+ *
+ * 실측으로 걸린 것: 금연 규정의 값이 "건물과 객실 안은 절대 금연입니다."로 들어왔다.
+ * 페이지에 글자 그대로 있으니 verbatim 가드는 통과하지만, 값은 브리프의 인용용 문장에
+ * **그대로 박히는 자리**라 문장이 들어가면 "…는 건물과 객실 안은 절대 금연입니다입니다"가
+ * 된다. 그 자리에 맞는 것은 "절대 금연" 같은 구(句)다.
+ *
+ * 종결어미와 마침표로 잡는다. "주차 가능"·"반려동물 동반 불가"·"숙박요금의 100%"처럼
+ * 어미가 없는 구는 그대로 통과한다.
+ */
+function looksLikeSentence(value: string): boolean {
+  if (value.length > MAX_VALUE_LENGTH) return true;
+  if (/[.!?。][\s"'”’)\]]*$/.test(value)) return true; // 마침표로 끝남
+  // 한국어 종결어미 — 문장 끝이든 중간이든(여러 문장을 이어 붙인 경우) 설명이다.
+  return /(니다|세요|어요|아요|여요|해요|에요|예요|시오|십시오)/.test(value);
+}
+
 export async function extractFactCandidates(
   url: string,
   brandName: string,
@@ -94,6 +115,11 @@ export async function extractFactCandidates(
     // 이것이 이 기능의 전부다. 페이지에 없는 값은 판정이 지어냈거나 다듬은 것이다.
     if (!appearsVerbatim(value, text)) {
       dropped.push(`"${claim}: ${value}" — 페이지에 이 값이 그대로 없어 뺐습니다(요약·격상 방지).`);
+      continue;
+    }
+    // 값은 브리프 문장에 그대로 박히는 자리다. 문장이 들어가면 초안이 겹말이 된다.
+    if (looksLikeSentence(value)) {
+      dropped.push(`"${claim}: ${value}" — 문장이라 뺐습니다. 값은 "절대 금연"처럼 짧은 구여야 합니다.`);
       continue;
     }
     candidates.push({ type, claim, value, sourceUrl });
