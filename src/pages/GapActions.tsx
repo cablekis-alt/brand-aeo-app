@@ -18,6 +18,9 @@ import { useGapActionPlan } from '../lib/useGapActionPlan'
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
 const KIND_CLASS: Record<GapAction['kind'], string> = { listing: 'st-warn', content: 'st-info' }
 
+/** 카드에 보여 줄 질문 줄 수. **표시용이다** — 브리프·초안에는 항상 전부 넘어간다. */
+const PREVIEW_QUESTIONS = 5
+
 /**
  * 집행 상태 버튼 — '완료'가 아니라 '집행함'이다.
  *
@@ -468,13 +471,22 @@ function ActionCard({
         {action.evidence}
       </p>
       {action.questionTexts.length > 0 && (
-        <ul className="gap-worst">
-          {action.questionTexts.map((q) => (
-            <li key={q}>
-              <span className="gap-q">{q}</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="gap-worst">
+            {action.questionTexts.slice(0, PREVIEW_QUESTIONS).map((q) => (
+              <li key={q}>
+                <span className="gap-q">{q}</span>
+              </li>
+            ))}
+          </ul>
+          {action.questionTexts.length > PREVIEW_QUESTIONS && (
+            // 몇 줄만 보인다는 걸 밝힌다. 글은 여기 안 보이는 것까지 답한다 — 예전에는 이 자르기가
+            // 브리프에도 그대로 가서 나머지가 조용히 빠졌다.
+            <p className="doc-meta" style={{ margin: '2px 0 0' }}>
+              아픈 순으로 {PREVIEW_QUESTIONS}개만 보입니다. 글은 {action.questionTexts.length}개 전부에 답합니다.
+            </p>
+          )}
+        </>
       )}
       <p className="gap-tally">완료 조건 · {action.doneSignal}</p>
       {canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (

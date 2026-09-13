@@ -53,8 +53,18 @@ export interface GapAction {
   evidence: string
   /** 등재형일 때 목표 도메인. 완료 판정의 대상이다. */
   targetDomain?: string
-  /** 이 조치가 겨냥하는 밀린 질문들(최대 5개까지 텍스트를 함께 싣는다). */
+  /** 이 조치가 겨냥하는 밀린 질문들. 아픈 순서(언급률 낮은 순). */
   questionIds: string[]
+  /**
+   * 같은 질문들의 원문 — **전부** 싣는다. 브리프·초안이 이 배열만 보기 때문이다.
+   *
+   * 전에는 `slice(0, 5)`로 잘라 담았다. 카드에 다섯 줄까지만 보이게 하려던 자르기인데, 그게
+   * 생성 입력에도 그대로 갔다. 실측: 「카테고리 무관 질문 콘텐츠 보강」은 밀린 질문이 17개인데
+   * 브리프는 5개만 받아, 글을 써도 12개가 조용히 빠졌다. 26개 중 14개만 덮고 있었다.
+   *
+   * 화면에서 몇 줄을 보여 줄지는 **화면이 정한다**(PREVIEW_QUESTIONS). 표시용 자르기와
+   * 생성용 입력은 같은 필드를 쓰면 안 된다.
+   */
   questionTexts: string[]
   /** 우선순위 근거 — 등재형은 그 도메인 인용 수, 콘텐츠형은 밀린 질문 수. */
   /**
@@ -361,7 +371,7 @@ function listingActions(
               citedNote,
         targetDomain: r.domain,
         questionIds: picked.map((row) => row.questionId),
-        questionTexts: picked.slice(0, 5).map((row) => row.text),
+        questionTexts: picked.map((row) => row.text),
         reach: lost.length,
         satisfied,
         status: 'todo',
@@ -408,7 +418,7 @@ function contentActions(rows: WinLossRow[]): GapAction[] {
             ? `${label} 질문 ${list.length}개에서 밀리고, 그중 ${zero}개는 언급이 아예 0건입니다.`
             : `${label} 질문 ${list.length}개에서 경쟁사에 밀립니다.`,
         questionIds: worst.map((r) => r.questionId),
-        questionTexts: worst.slice(0, 5).map((r) => r.text),
+        questionTexts: worst.map((r) => r.text),
         reach: list.length,
         // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
         satisfied: false,
