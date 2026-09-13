@@ -474,6 +474,66 @@ function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: s
   )
 }
 
+/** 마크다운 제목 단계를 두 칸 내린다 — 브리프·초안을 묶음 문서 안에 넣을 때 쓴다. */
+function demote(md: string): string {
+  return md.replace(/^(#+)/gm, '$1##')
+}
+
+/**
+ * 열린 항목 전부를 한 문서로 묶는다.
+ *
+ * 항목마다 따로 내려받으면 여섯 항목이 여섯 파일이 된다. 한 주 계획은 문서 하나로 읽는 편이
+ * 낫고, 압축 파일은 라이브러리를 새로 들여야 한다.
+ *
+ * 없는 것은 이름을 적는다. 빠진 것을 숨기면 파일만 보고는 무엇을 더 해야 하는지 알 수 없다.
+ */
+function bundleToMarkdown(
+  brandName: string,
+  weekOf: string,
+  actions: GapAction[],
+  briefs: Record<string, StoredBrief>,
+  drafts: Record<string, StoredDraft>,
+): string {
+  const today = new Date().toISOString().slice(0, 10)
+  const nBrief = actions.filter((a) => briefs[a.id]).length
+  const nDraft = actions.filter((a) => drafts[a.id]).length
+  const L: string[] = [
+    `# 실행 항목 묶음 · ${brandName} · ${weekOf}`,
+    '',
+    `내보낸 날 ${today} · 항목 ${actions.length}건 · 브리프 ${nBrief}건 · 초안 ${nDraft}건`,
+    '',
+    '## 목차',
+    ...actions.map(
+      (a, i) =>
+        `${i + 1}. ${a.title} — 브리프 ${briefs[a.id] ? '있음' : '**없음**'} · 초안 ${drafts[a.id] ? '있음' : '**없음**'}`,
+    ),
+    '',
+  ]
+  for (const [i, a] of actions.entries()) {
+    L.push('---', '', `## ${i + 1}. ${a.title}`, '')
+    L.push(`- 종류 · ${a.badge}`, `- 영향 · ${a.reach}`, `- 완료 조건 · ${a.doneSignal}`)
+    if (a.publishedUrls.length) {
+      L.push(
+        `- 올린 글 · ${a.publishedUrls
+          .map((u) => `${u}${a.citedPublishedUrls.includes(u) ? ' (인용됨)' : ''}`)
+          .join(', ')}`,
+      )
+    }
+    L.push('', `> ${a.evidence.replace(/\n/g, ' ')}`, '')
+    const b = briefs[a.id]
+    L.push(b ? demote(briefToMarkdown(a.title, b.brief)) : '### 브리프\n\n아직 만들지 않았습니다.', '')
+    const d = drafts[a.id]
+    L.push(
+      d
+        ? demote(draftToMarkdown(d.draft)) +
+            (d.draft.gapCount > 0 ? `\n\n**채워야 할 자리 ${d.draft.gapCount}곳** — 위 인용 표시를 보세요.` : '')
+        : '### 초안\n\n아직 만들지 않았습니다.',
+      '',
+    )
+  }
+  return L.join('\n')
+}
+
 /**
  * 열린 항목의 브리프를 한 번에 만든다.
  *
@@ -763,7 +823,24 @@ export default function GapActions() {
               하시면 됩니다.
             </p>
             {briefs !== null && open.length > 0 && (
-              <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
+              <>
+                <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
+                <div className="brief-bar" style={{ marginBottom: 10 }}>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() =>
+                      downloadMarkdown(
+                        `실행항목-${safeFileName(tenant.brandName)}-${weekOf}.md`,
+                        bundleToMarkdown(tenant.brandName, weekOf, open, briefs, drafts ?? {}),
+                      )
+                    }
+                  >
+                    남은 {open.length}건 한 파일로 내려받기 (.md)
+                  </button>
+                  <span className="doc-meta">브리프·초안이 없는 항목은 그 사실을 적어 둡니다</span>
+                </div>
+              </>
             )}
             {open.length === 0 ? (
               <p className="muted">남은 항목이 없습니다.</p>
