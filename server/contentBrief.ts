@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildContentBriefPrompt, type ContentBrief, type ContentBriefRequest } from '../src/prompts/b9b-content-brief.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { createFactGuard } from './factGuard.js';
 import type { EngineClient } from './engines/types.js';
 import { parseJsonLoose } from './jsonParse.js';
 
@@ -41,55 +42,16 @@ async function writeBriefs(tenantId: string, map: BriefMap): Promise<void> {
 const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
 const FORMATS = ['paragraph', 'faq', 'table', 'list'] as const;
 
-/** 판정 응답을 스키마대로 다듬는다. 빠진 필드는 빈 배열로 — 화면이 "없음"으로 밝힌다. */
 /**
- * 판정이 사실을 요약·격상하는 것을 코드로 막는다. 프롬프트가 금지하지만 어길 때가 있다
- * (실측: "30명의 의료진이 직접 집도"를 "전문의 30명"으로 옮겼다 — 의료진과 전문의는 다른 주장이다).
- *
- *   mustIncludeFacts  판정이 쓴 문장을 버리고 팩트 그래프의 "<주장>: <값>" 정본으로 바꾼다.
- *                     어느 사실과도 짝이 안 되는 원소는 새로 만든 사실이므로 버린다.
- *   citableSentences  숫자를 담은 문장은 그 숫자가 어느 사실 값에서 왔는지 찾고, 그 값 문자열을
- *                     **그대로** 포함해야 남긴다. 숫자가 질문 문장에서 온 것이면 통과, 어디에도
- *                     없으면 만들어낸 수치라 버린다. 숫자 없는 문장은 그대로 둔다.
- * 걸러낸 것은 guardNotes에 이유와 함께 적는다 — 조용히 지우지 않는다.
+ * 판정 응답을 스키마대로 다듬고, 사실 가드(factGuard)를 통과한 것만 남긴다.
+ * 가드 규칙은 초안(contentDraft)과 **같은 모듈**을 쓴다 — 두 벌로 두면 한쪽만 고쳐진다.
+ * 빠진 필드는 빈 배열로 둔다. 화면이 "없음"으로 밝힌다.
  */
 function normalize(raw: unknown, facts: ContentBriefRequest['factGraph'], questionTexts: string[]): ContentBrief | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  const notes: string[] = [];
-  const questionBlob = questionTexts.join('\n');
+  const { canonicalFacts, guardSentence, notes } = createFactGuard(facts, questionTexts);
 
-  const canonicalFacts = (arr: string[]): string[] => {
-    const out: string[] = [];
-    for (const item of arr) {
-      // 값 원문 포함 → 그 사실. 아니면 주장 이름 포함 → 그 사실. 둘 다 아니면 새로 만든 사실.
-      const hit = facts.find((f) => item.includes(f.value)) ?? facts.find((f) => f.claim && item.includes(f.claim));
-      if (!hit) {
-        notes.push(`"${item}"은(는) 팩트 그래프에 없는 사실이라 넣지 않았습니다.`);
-        continue;
-      }
-      const line = `${hit.claim}: ${hit.value}`;
-      if (!out.includes(line)) out.push(line);
-    }
-    return out;
-  };
-  const guardSentence = (sentence: string): boolean => {
-    const nums = sentence.match(/\d+(?:[.,]\d+)?/g) ?? [];
-    for (const n of nums) {
-      const fromFact = facts.find((f) => f.value.includes(n));
-      if (fromFact) {
-        if (!sentence.includes(fromFact.value)) {
-          notes.push(`"${sentence}" — 사실 "${fromFact.claim}: ${fromFact.value}"의 값을 그대로 담지 않아 뺐습니다(요약·격상 방지).`);
-          return false;
-        }
-        continue;
-      }
-      if (questionBlob.includes(n)) continue;
-      notes.push(`"${sentence}" — 숫자 ${n}의 출처가 팩트 그래프에 없어 뺐습니다.`);
-      return false;
-    }
-    return true;
-  };
   const structure = Array.isArray(r.structure)
     ? (r.structure as unknown[])
         .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object')

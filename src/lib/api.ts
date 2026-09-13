@@ -395,6 +395,36 @@ export async function generateContentBrief(
   return body
 }
 
+/**
+ * 콘텐츠 초안(데스크톱·로컬 전용) — 브리프에서 한 걸음.
+ * 사실이 없는 자리는 문장을 짓지 않고 gap으로 비워 온다. null = 라우트 없는 환경(웹).
+ */
+export type { ContentDraft, DraftBlock, DraftSection } from '../prompts/b9c-content-draft'
+export interface StoredDraft {
+  actionId: string
+  generatedAt: string
+  draft: import('../prompts/b9c-content-draft').ContentDraft
+  reused?: boolean
+}
+export async function loadContentDrafts(tenantId: string): Promise<Record<string, StoredDraft> | null> {
+  return getJson<Record<string, StoredDraft>>(`/api/content-draft/${encodeURIComponent(tenantId)}`)
+}
+/** 실패하면 throw. 브리프가 없으면 409와 함께 그 사실을 알려준다. */
+export async function generateContentDraft(
+  tenantId: string,
+  input: { actionId: string; targetDomain?: string },
+  force = false,
+): Promise<StoredDraft> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
+  if (!res.ok) throw new Error(body.error || `초안 생성 실패 (HTTP ${res.status})`)
+  return body
+}
+
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */
 export interface FactNode {
   id: string

@@ -2,7 +2,15 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
-import { generateContentBrief, loadContentBriefs, type ActionStatus, type StoredBrief } from '../lib/api'
+import {
+  generateContentBrief,
+  generateContentDraft,
+  loadContentBriefs,
+  loadContentDrafts,
+  type ActionStatus,
+  type StoredBrief,
+  type StoredDraft,
+} from '../lib/api'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
@@ -195,6 +203,151 @@ function BriefPanel({
   )
 }
 
+/** 초안을 마크다운으로. 빈 자리는 표시를 남긴 채 내보낸다 — 지우면 채울 곳을 잃는다. */
+function draftToMarkdown(d: StoredDraft['draft']): string {
+  const L: string[] = [`# ${d.title}`, '']
+  if (d.lead) L.push(d.lead, '')
+  for (const sec of d.sections) {
+    L.push(`## ${sec.heading}`)
+    for (const b of sec.blocks) {
+      L.push(b.kind === 'gap' ? `> **채워야 함:** ${b.need ?? ''}` : (b.body ?? ''))
+      L.push('')
+    }
+  }
+  if (d.usedFacts.length) L.push('---', '', '**이 글이 쓴 사실**', ...d.usedFacts.map((f) => `- ${f}`), '')
+  return L.join('\n')
+}
+
+/**
+ * 초안 패널 — 브리프에서 한 걸음.
+ *
+ * 본문을 통째로 만들지 않는다. 사실이 있어야 쓸 수 있는 자리인데 그 사실이 없으면 문장을
+ * 짓지 않고 비운 채 "무엇이 필요한가"를 적어 온다. 그 빈 자리를 눈에 띄게 보여주는 것이
+ * 이 화면의 일이다 — 사람이 채울 곳이 어디인지가 결과물의 핵심이다.
+ */
+function DraftPanel({
+  tenantId,
+  action,
+  hasBrief,
+  stored,
+  onStored,
+}: {
+  tenantId: string
+  action: GapAction
+  hasBrief: boolean
+  stored: StoredDraft | undefined
+  onStored: (s: StoredDraft) => void
+}) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const make = async (force: boolean) => {
+    setBusy(true)
+    setError(null)
+    try {
+      const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
+      onStored(s)
+      setOpen(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const copy = async () => {
+    if (!stored) return
+    try {
+      await navigator.clipboard.writeText(draftToMarkdown(stored.draft))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setError('클립보드에 복사하지 못했습니다.')
+    }
+  }
+  // 브리프가 없으면 버튼을 내주지 않는다 — 서버도 409로 막지만, 누를 수 없는 편이 낫다.
+  if (!hasBrief && !stored) return null
+  const d = stored?.draft
+  return (
+    <div className="brief">
+      <div className="brief-bar">
+        {!stored ? (
+          <button type="button" className="ghost" onClick={() => void make(false)} disabled={busy}>
+            {busy ? '초안 쓰는 중…' : '초안 만들기 (판정 1회)'}
+          </button>
+        ) : (
+          <>
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+              {open ? '초안 접기' : '초안 보기'}
+            </button>
+            <button type="button" className="ghost" onClick={() => void copy()}>
+              {copied ? '복사됨' : '마크다운 복사'}
+            </button>
+            <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
+              {busy ? '다시 쓰는 중…' : '다시 만들기'}
+            </button>
+            {d && d.gapCount > 0 && <span className="st st-warn">채울 곳 {d.gapCount}</span>}
+            <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
+          </>
+        )}
+      </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {open && d && (
+        <div className="brief-body">
+          <p className="hint" style={{ marginTop: 0 }}>
+            발행용 원고가 아니라 <b>사람이 이어받을 원고</b>입니다. 사실이 없어 쓸 수 없던 자리는 문장을
+            지어내지 않고 비워 두었습니다.{' '}
+            {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다.` : '비운 자리는 없습니다.'}
+          </p>
+          <section>
+            <h4>{d.title}</h4>
+            {d.lead && <p>{d.lead}</p>}
+          </section>
+          {d.sections.map((sec) => (
+            <section key={sec.heading}>
+              <h4>{sec.heading}</h4>
+              {sec.answers && <p className="doc-meta">답하는 질문 · {sec.answers}</p>}
+              {sec.blocks.map((b, i) =>
+                b.kind === 'gap' ? (
+                  <p key={i} className="error" style={{ margin: '6px 0' }}>
+                    채워야 함 · {b.need}
+                  </p>
+                ) : (
+                  <p key={i}>{b.body}</p>
+                ),
+              )}
+            </section>
+          ))}
+          {d.usedFacts.length > 0 && (
+            <section>
+              <h4>이 글이 쓴 사실</h4>
+              <ul>
+                {d.usedFacts.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {d.guardNotes && d.guardNotes.length > 0 && (
+            <section>
+              <h4>검증이 걸러낸 것</h4>
+              <ul>
+                {d.guardNotes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
 function ActionCard({
   action,
@@ -203,6 +356,8 @@ function ActionCard({
   tenantId,
   briefs,
   onBrief,
+  drafts,
+  onDraft,
 }: {
   action: GapAction
   canSaveStatus: boolean
@@ -211,6 +366,9 @@ function ActionCard({
   /** null이면 이 환경(웹)에 브리프 라우트가 없다 — 버튼을 숨긴다. */
   briefs: Record<string, StoredBrief> | null
   onBrief: (s: StoredBrief) => void
+  /** null이면 이 환경(웹)에 초안 라우트가 없다. */
+  drafts: Record<string, StoredDraft> | null
+  onDraft: (s: StoredDraft) => void
 }) {
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
@@ -285,6 +443,15 @@ function ActionCard({
       {briefs !== null && !action.satisfied && (
         <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
       )}
+      {briefs !== null && drafts !== null && !action.satisfied && (
+        <DraftPanel
+          tenantId={tenantId}
+          action={action}
+          hasBrief={Boolean(briefs[action.id])}
+          stored={drafts[action.id]}
+          onStored={onDraft}
+        />
+      )}
     </article>
   )
 }
@@ -307,6 +474,20 @@ export default function GapActions() {
     }
   }, [tenant?.tenantId])
   const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
+  // 저장된 초안 — 브리프와 같은 방식. 라우트가 없는 환경(웹)이면 null로 남아 패널이 숨는다.
+  const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  useEffect(() => {
+    if (!tenant?.tenantId) return
+    let alive = true
+    setDrafts(null)
+    void loadContentDrafts(tenant.tenantId).then((m) => {
+      if (alive) setDrafts(m)
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const onDraft = (s: StoredDraft) => setDrafts((m) => ({ ...(m ?? {}), [s.actionId]: s }))
 
   const open = plan.actions.filter(isOpenAction)
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
@@ -379,7 +560,7 @@ export default function GapActions() {
             ) : (
               <div className="gap-grid">
                 {open.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
                 ))}
               </div>
             )}
@@ -394,7 +575,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
                 ))}
               </div>
             </section>
@@ -409,7 +590,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} />
                 ))}
               </div>
             </section>

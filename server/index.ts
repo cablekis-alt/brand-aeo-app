@@ -11,6 +11,7 @@ import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
+import { generateDraft, readDrafts } from './contentDraft.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -399,6 +400,63 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
 });
 
 // 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. 파일이 있으면 베이스·오버레이보다 우선한다.
+// 콘텐츠 초안 — 브리프에서 한 걸음. 팩트 그래프로 쓸 수 있는 문단만 채우고, 사실이 없는
+// 자리는 문장을 지어내지 않고 gap으로 비운다(b9c-content-draft). 데스크톱·로컬 전용.
+app.get('/api/content-draft/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.json(await readDrafts(tenant.tenantId));
+});
+app.post('/api/content-draft/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const actionId = typeof b.actionId === 'string' ? b.actionId : '';
+  if (!actionId) {
+    res.status(400).json({ error: 'actionId가 필요합니다.' });
+    return;
+  }
+  // 초안은 브리프에서 한 걸음이다 — 브리프 없이 만들면 구조도 사실 목록도 없는 맨글이 된다.
+  const brief = (await readBriefs(tenant.tenantId))[actionId];
+  if (!brief) {
+    res.status(409).json({ error: '이 항목의 브리프가 먼저 있어야 합니다. "브리프 만들기"를 실행하세요.' });
+    return;
+  }
+  const force = req.query.force === '1';
+  try {
+    if (!force) {
+      const existing = (await readDrafts(tenant.tenantId))[actionId];
+      if (existing) {
+        res.json({ ...existing, reused: true });
+        return;
+      }
+    }
+    const stored = await generateDraft(
+      tenant.tenantId,
+      actionId,
+      {
+        brandName: tenant.brandName,
+        industry: tenant.industry,
+        region: tenant.region,
+        factGraph: tenant.factGraph ?? [],
+        questionTexts: brief.brief.questionsToAnswer,
+        brief: brief.brief,
+        targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
+      },
+      getJudgeClient(),
+    );
+    res.json({ ...stored, reused: false });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 app.get('/api/tenants/:tenantId/fact-graph', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
