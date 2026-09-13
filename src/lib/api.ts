@@ -428,6 +428,11 @@ export interface StoredDraft {
   generatedAt: string
   draft: import('../prompts/b9c-content-draft').ContentDraft
   reused?: boolean
+  /** 사람이 고친 마크다운. 있으면 화면·내보내기가 이것을 쓴다. */
+  editedMarkdown?: string
+  editedAt?: string
+  /** 고친 글의 사실 가드 경고. 저장을 막지는 않는다. */
+  editWarnings?: string[]
 }
 export async function loadContentDrafts(tenantId: string): Promise<Record<string, StoredDraft> | null> {
   return getJson<Record<string, StoredDraft>>(`/api/content-draft/${encodeURIComponent(tenantId)}`)
@@ -445,6 +450,22 @@ export async function generateContentDraft(
   })
   const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
   if (!res.ok) throw new Error(body.error || `초안 생성 실패 (HTTP ${res.status})`)
+  return body
+}
+
+/** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
+export async function saveContentDraft(
+  tenantId: string,
+  actionId: string,
+  markdown: string,
+): Promise<StoredDraft> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actionId, markdown }),
+  })
+  const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
+  if (!res.ok) throw new Error(body.error || `초안 저장 실패 (HTTP ${res.status})`)
   return body
 }
 

@@ -20,6 +20,20 @@ export interface StoredDraft {
   actionId: string;
   generatedAt: string;
   draft: ContentDraft;
+  /**
+   * 사람이 고친 마크다운. 있으면 화면·내보내기가 이것을 쓴다.
+   *
+   * 구조화된 draft는 그대로 둔다 — 되돌릴 수 있어야 하고, 다시 만들기를 누르면 새 draft가
+   * 오면서 이 필드가 지워진다(화면이 먼저 경고한다).
+   */
+  editedMarkdown?: string;
+  editedAt?: string;
+  /**
+   * 고친 글에 대한 사실 가드 경고. **막지 않는다** — 사람이 확인한 사실일 수 있다.
+   * 다만 출처 없는 숫자가 들어왔다는 사실은 알려야 한다. 우리가 판정 엔진에 요구하는 기준을
+   * 사람에게만 면제하면 그 기준이 무의미해진다.
+   */
+  editWarnings?: string[];
 }
 type DraftMap = Record<string, StoredDraft>;
 
@@ -148,6 +162,40 @@ export async function generateDraft(
   if (draft.sections.length === 0) throw new Error('초안에 본문 절이 없습니다. 브리프를 먼저 확인하세요.');
   const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), draft };
   const map = await readDrafts(tenantId);
+  map[actionId] = stored;
+  await writeDrafts(tenantId, map);
+  return stored;
+}
+
+/**
+ * 사람이 고친 초안을 저장한다. 가드는 경고만 남기고 저장 자체는 막지 않는다.
+ * 문장 단위로 보되 마크다운 표식(제목·목록·인용)은 검사 전에 걷어낸다.
+ */
+export async function saveEditedDraft(
+  tenantId: string,
+  actionId: string,
+  markdown: string,
+  facts: ContentDraftRequest['factGraph'],
+  questionTexts: string[],
+): Promise<StoredDraft> {
+  const map = await readDrafts(tenantId);
+  const current = map[actionId];
+  if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+
+  const { guardSentence, notes } = createFactGuard(facts, questionTexts, 'warn');
+  for (const line of markdown.split(/\r?\n/)) {
+    const plain = line.replace(/^[#>\-*\s]+/, '').trim();
+    if (!plain) continue;
+    for (const sentence of splitSentences(plain)) guardSentence(sentence);
+  }
+
+  const stored: StoredDraft = {
+    ...current,
+    editedMarkdown: markdown,
+    editedAt: new Date().toISOString(),
+    ...(notes.length ? { editWarnings: notes } : {}),
+  };
+  if (!notes.length) delete stored.editWarnings;
   map[actionId] = stored;
   await writeDrafts(tenantId, map);
   return stored;

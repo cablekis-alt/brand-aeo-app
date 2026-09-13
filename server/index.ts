@@ -11,7 +11,7 @@ import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
-import { generateDraft, readDrafts } from './contentDraft.js';
+import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -400,6 +400,36 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
 });
 
 // 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. 파일이 있으면 베이스·오버레이보다 우선한다.
+// 사람이 고친 초안 저장. 사실 가드를 돌려 경고만 남기고 저장은 막지 않는다 — 사람이 확인한
+// 사실일 수 있다. 다만 우리가 판정 엔진에 요구하는 기준을 사람에게만 면제하지는 않는다.
+app.put('/api/content-draft/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const actionId = typeof b.actionId === 'string' ? b.actionId : '';
+  const markdown = typeof b.markdown === 'string' ? b.markdown : '';
+  if (!actionId || !markdown.trim()) {
+    res.status(400).json({ error: 'actionId와 markdown이 필요합니다.' });
+    return;
+  }
+  const brief = (await readBriefs(tenant.tenantId))[actionId];
+  try {
+    const stored = await saveEditedDraft(
+      tenant.tenantId,
+      actionId,
+      markdown,
+      tenant.factGraph ?? [],
+      brief?.brief.questionsToAnswer ?? [],
+    );
+    res.json(stored);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // 콘텐츠 초안 — 브리프에서 한 걸음. 팩트 그래프로 쓸 수 있는 문단만 채우고, 사실이 없는
 // 자리는 문장을 지어내지 않고 gap으로 비운다(b9c-content-draft). 데스크톱·로컬 전용.
 app.get('/api/content-draft/:tenantId', async (req, res) => {

@@ -31,7 +31,19 @@ function numberTokens(s: string): Set<string> {
   return new Set(s.match(/\d+(?:[.,]\d+)?/g) ?? []);
 }
 
-export function createFactGuard(facts: FactGraphNode[], questionTexts: string[]): FactGuard {
+/**
+ * 걸린 문장을 어떻게 하는지 — 기록 문구가 실제 동작과 맞아야 한다.
+ *   drop  생성 경로. 문장을 실제로 버린다.
+ *   warn  편집 경로. 사람이 쓴 글은 버리지 않고 알리기만 한다.
+ * 한 문구로 두면 편집 화면이 "뺐습니다"라고 거짓말을 한다(실측에서 그렇게 떴다).
+ */
+export type GuardMode = 'drop' | 'warn';
+
+export function createFactGuard(
+  facts: FactGraphNode[],
+  questionTexts: string[],
+  mode: GuardMode = 'drop',
+): FactGuard {
   const notes: string[] = [];
   const questionNums = numberTokens(questionTexts.join('\n'));
   const factNums = facts.map((f) => ({ fact: f, nums: numberTokens(f.value) }));
@@ -57,14 +69,20 @@ export function createFactGuard(facts: FactGraphNode[], questionTexts: string[])
       if (fromFact) {
         if (!sentence.includes(fromFact.value)) {
           notes.push(
-            `"${sentence}" — 사실 "${fromFact.claim}: ${fromFact.value}"의 값을 그대로 담지 않아 뺐습니다(요약·격상 방지).`,
+            mode === 'drop'
+              ? `"${sentence}" — 사실 "${fromFact.claim}: ${fromFact.value}"의 값을 그대로 담지 않아 뺐습니다(요약·격상 방지).`
+              : `"${sentence}" — 등록된 사실은 "${fromFact.claim}: ${fromFact.value}"입니다. 값을 그대로 쓰셨는지 확인하세요.`,
           );
           return false;
         }
         continue;
       }
       if (questionNums.has(n)) continue;
-      notes.push(`"${sentence}" — 숫자 ${n}의 출처가 팩트 그래프에 없어 뺐습니다.`);
+      notes.push(
+        mode === 'drop'
+          ? `"${sentence}" — 숫자 ${n}의 출처가 팩트 그래프에 없어 뺐습니다.`
+          : `"${sentence}" — 숫자 ${n}의 출처가 팩트 그래프에 없습니다. 확인하신 값이면 브랜드 사실에 넣어 두세요.`,
+      );
       return false;
     }
     return true;

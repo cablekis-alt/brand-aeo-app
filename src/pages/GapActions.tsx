@@ -7,6 +7,7 @@ import {
   generateContentDraft,
   loadContentBriefs,
   loadContentDrafts,
+  saveContentDraft,
   type ActionStatus,
   type StoredBrief,
   type StoredDraft,
@@ -279,12 +280,18 @@ function DraftPanel({
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [text, setText] = useState('')
+  const [saving, setSaving] = useState(false)
   const make = async (force: boolean) => {
+    // 다시 만들면 손댄 글이 사라진다. 조용히 덮지 않는다.
+    if (force && stored?.editedMarkdown && !window.confirm('다시 만들면 고쳐 둔 글이 사라집니다. 계속할까요?')) return
     setBusy(true)
     setError(null)
     try {
       const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
       onStored(s)
+      setEditing(false)
       setOpen(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -292,10 +299,29 @@ function DraftPanel({
       setBusy(false)
     }
   }
+  const startEdit = () => {
+    if (!stored) return
+    setText(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
+    setEditing(true)
+    setOpen(true)
+  }
+  const save = async () => {
+    if (!stored) return
+    setSaving(true)
+    setError(null)
+    try {
+      onStored(await saveContentDraft(tenantId, action.id, text))
+      setEditing(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setSaving(false)
+    }
+  }
   const copy = async () => {
     if (!stored) return
     try {
-      await navigator.clipboard.writeText(draftToMarkdown(stored.draft))
+      await navigator.clipboard.writeText(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1500)
     } catch {
@@ -336,16 +362,20 @@ function DraftPanel({
               onClick={() =>
                 downloadMarkdown(
                   `초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                  draftToMarkdown(stored.draft),
+                  stored.editedMarkdown ?? draftToMarkdown(stored.draft),
                 )
               }
             >
               .md 내려받기
             </button>
+            <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
+              {editing ? '편집 닫기' : '편집'}
+            </button>
             <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
               {busy ? '다시 쓰는 중…' : '다시 만들기'}
             </button>
-            {d && d.gapCount > 0 && <span className="st st-warn">채울 곳 {d.gapCount}</span>}
+            {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
+            {d && d.gapCount > 0 && !stored.editedMarkdown && <span className="st st-warn">채울 곳 {d.gapCount}</span>}
             <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
           </>
         )}
@@ -355,7 +385,66 @@ function DraftPanel({
           {error}
         </p>
       )}
-      {open && d && (
+      {open && editing && stored && (
+        <div className="brief-body">
+          <p className="hint" style={{ marginTop: 0 }}>
+            마크다운으로 고칩니다. 저장할 때 <b>사실 확인</b>을 한 번 돌려, 팩트 그래프에 없는 숫자가 있으면
+            알려 드립니다. 막지는 않습니다 — 직접 확인하신 사실일 수 있습니다. 다만 그런 숫자는{' '}
+            <Link to="/brand-facts">브랜드 사실</Link>에 넣어 두시면 다음 초안부터 자동으로 들어갑니다.
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={18}
+            style={{ width: '100%', fontFamily: 'ui-monospace, monospace', fontSize: 13, lineHeight: 1.6 }}
+          />
+          <div className="brief-bar">
+            <button type="button" onClick={() => void save()} disabled={saving || !text.trim()}>
+              {saving ? '저장 중…' : '저장'}
+            </button>
+            <button type="button" className="ghost" onClick={() => setEditing(false)} disabled={saving}>
+              취소
+            </button>
+            {stored.editedMarkdown && (
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setText(draftToMarkdown(stored.draft))}
+                disabled={saving}
+              >
+                생성된 원본으로 되돌리기
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {open && !editing && stored?.editWarnings && stored.editWarnings.length > 0 && (
+        <div className="brief-body">
+          <section>
+            <h4>
+              사실 확인 <span className="muted">(고친 글에서 찾은 것 — 막지 않았습니다)</span>
+            </h4>
+            <ul className="muted">
+              {stored.editWarnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+            <p className="gap-tally">
+              직접 확인하신 값이면 <Link to="/brand-facts">브랜드 사실</Link>에 넣어 두세요. 그러면 다음
+              초안부터 본문에 자동으로 들어가고, 이 경고도 사라집니다.
+            </p>
+          </section>
+        </div>
+      )}
+      {open && !editing && stored?.editedMarkdown && (
+        <div className="brief-body">
+          <p className="hint" style={{ marginTop: 0 }}>
+            고쳐 둔 글입니다({stored.editedAt?.slice(0, 10)} 저장). 복사·내려받기·묶음 내보내기 모두 이 글을 씁니다.
+          </p>
+          <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{stored.editedMarkdown}</pre>
+        </div>
+      )}
+      {open && !editing && !stored?.editedMarkdown && d && (
         <div className="brief-body">
           <p className="hint" style={{ marginTop: 0 }}>
             발행용 원고가 아니라 <b>사람이 이어받을 원고</b>입니다. 사실이 없어 쓸 수 없던 자리는 문장을
@@ -525,7 +614,7 @@ function bundleToMarkdown(
     const d = drafts[a.id]
     L.push(
       d
-        ? demote(draftToMarkdown(d.draft)) +
+        ? demote(d.editedMarkdown ?? draftToMarkdown(d.draft)) +
             (d.draft.gapCount > 0 ? `\n\n**채워야 할 자리 ${d.draft.gapCount}곳** — 위 인용 표시를 보세요.` : '')
         : '### 초안\n\n아직 만들지 않았습니다.',
       '',
