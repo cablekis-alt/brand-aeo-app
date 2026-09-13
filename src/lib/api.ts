@@ -193,6 +193,33 @@ export async function inferBrandDomain(
   }
 }
 
+/**
+ * 별칭 추론 — AI 답변이 이 브랜드를 부르는 다른 표기.
+ *
+ * 언급 판정이 브랜드명과 별칭을 그대로 쓰므로, 별칭이 비면 한국어 답변의 다른 표기를 통째로
+ * 놓친다(실측: 가온그룹이 "KAONGROUP.COM"으로 등록돼 언급 3/72). 실패하면 null —
+ * 화면은 사용자가 직접 넣도록 두고 등록을 막지 않는다.
+ */
+export async function inferBrandAliases(
+  brandName: string,
+  industry = '',
+  region = '',
+  domain = '',
+): Promise<string[] | null> {
+  try {
+    const res = await fetch('/api/infer?kind=aliases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandName, industry, region, domain }),
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { aliases?: unknown }
+    return Array.isArray(body.aliases) ? body.aliases.filter((x): x is string => typeof x === 'string') : null
+  } catch {
+    return null
+  }
+}
+
 // AI 리퍼럴 트래픽(GA4) — 로컬/데스크톱 백엔드에만 라우트가 있다.
 // 404(웹 배포)와 "GA 미설정"을 구분해 화면에서 다른 안내를 띄운다.
 export async function loadAiReferrals(tenantId: string, days = 28): Promise<AiReferralReport> {

@@ -5,7 +5,7 @@ import express from 'express';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
-import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
+import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
@@ -623,6 +623,20 @@ app.post('/api/infer', async (req, res) => {
         return;
       }
       res.json(await inferBrandFromDomain(domain));
+      return;
+    }
+    if (kind === 'aliases') {
+      // 상호의 표기 변형. 언급 판정이 이 목록을 그대로 쓰므로, 여기가 비면 한국어 답변의
+      // 다른 표기를 통째로 놓친다(실측: 가온그룹이 "KAONGROUP.COM"이라 3/72였다).
+      const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+      if (!brandName.trim()) {
+        res.status(400).json({ error: 'brandName이 필요합니다.' });
+        return;
+      }
+      const industry = typeof req.body?.industry === 'string' ? req.body.industry : '';
+      const region = typeof req.body?.region === 'string' ? req.body.region : '';
+      const domain = typeof req.body?.domain === 'string' ? req.body.domain : '';
+      res.json({ aliases: await inferAliases(brandName, industry, region, domain) });
       return;
     }
     if (kind === 'identify') {

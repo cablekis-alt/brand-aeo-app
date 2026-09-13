@@ -1,4 +1,4 @@
-import { inferAddressViaSearch, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from '../server/brandInference.js';
+import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from '../server/brandInference.js';
 import { canTriggerRemoteMeasure, triggerGithubInfer } from '../server/githubMeasure.js';
 import { markInferPending, readInferResult, slugFromDomain } from '../server/inferResults.js';
 import { sendJson } from '../server/httpJson.js';
@@ -95,6 +95,18 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
         return;
       }
       sendJson(res, 200, await inferBrandFromDomain(domain));
+      return;
+    }
+    if (kind === 'aliases') {
+      // 상호의 표기 변형. 언급 판정이 이 목록을 그대로 쓴다 — 비면 다른 표기를 통째로 놓친다.
+      const brandName = str(body.brandName);
+      if (!brandName.trim()) {
+        sendJson(res, 400, { error: 'brandName이 필요합니다.' });
+        return;
+      }
+      sendJson(res, 200, {
+        aliases: await inferAliases(brandName, str(body.industry), str(body.region), str(body.domain)),
+      });
       return;
     }
     if (kind === 'identify') {

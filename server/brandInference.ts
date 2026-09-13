@@ -324,3 +324,97 @@ export async function inferCompetitors(
   }
   return out;
 }
+
+/**
+ * 별칭 추론 — AI 답변이 이 브랜드를 부르는 다른 표기를 찾는다.
+ *
+ * ── 왜 필요한가 ────────────────────────────────────────────────────────────
+ * 브랜드 언급 판정(b5a)은 브랜드명과 별칭을 판정 프롬프트에 그대로 넣는다. 그래서 등록된 이름이
+ * 실제 답변의 표기와 어긋나면 언급이 통째로 안 잡힌다. 실측(2026-09-13): 가온그룹이
+ * "KAONGROUP.COM"으로 등록돼 있어 한국어 답변의 "가온그룹"을 한 번도 세지 못했고, 언급률이
+ * 3/72로 바닥이었다. 가시성이 낮은 게 아니라 이름이 안 맞았던 것이다.
+ *
+ * 지금까지는 별칭이 브랜드명 하나뿐이었다(온보딩이 [brandName]으로 채운다). 사람이 나중에
+ * 채워 넣기를 기대하는 설계였는데, 아무도 채우지 않았다 — 111개 브랜드 중 별칭이 둘 이상인
+ * 곳이 손에 꼽는다.
+ *
+ * ── 무엇을 거르나 ──────────────────────────────────────────────────────────
+ * 별칭은 넓을수록 좋은 게 아니다. 너무 일반적인 말이 별칭이 되면 경쟁사 문장까지 우리 언급으로
+ * 센다. 그래서 코드로 막는다:
+ *   2자 미만          한 글자는 아무 문장에나 걸린다.
+ *   업종 이름과 같음   "성형외과"가 별칭이면 모든 경쟁사가 우리가 된다.
+ *   지역 이름과 같음   "강남"도 마찬가지다.
+ *   중복(대소문자 무시)
+ * 브랜드명 자체는 항상 첫 별칭으로 남긴다(기존 데이터 규약).
+ */
+export async function inferAliases(
+  brandName: string,
+  industry = '',
+  region = '',
+  domain = '',
+): Promise<string[]> {
+  const base = brandName.trim();
+  if (!base) return [];
+  if (!process.env.GEMINI_API_KEY) return [base];
+
+  const system =
+    '당신은 한국 브랜드의 표기 변형을 찾아주는 도우미입니다. 반드시 JSON 배열만 반환하세요.';
+  const user = `브랜드: "${base}"${industry ? `\n업종: ${industry}` : ''}${region ? `\n지역: ${region}` : ''}${domain ? `\n도메인: ${domain}` : ''}
+
+AI 챗봇의 한국어 답변이 이 브랜드를 가리킬 때 실제로 쓸 법한 표기를 모두 나열하세요.
+- 공식 한국어 상호, 줄임말, 법인 접두/접미를 뗀 형태, 영문 표기, 흔한 약칭
+- 예: "WJ 원진성형외과" → ["원진성형외과", "원진", "Wonjin", "WJ원진"]
+- 업종명("성형외과")이나 지역명("강남")처럼 **이 브랜드만 가리키지 않는 일반명사는 절대 넣지 마세요.**
+- 확실하지 않으면 넣지 마세요. 적게 넣는 편이 낫습니다.
+출력: 문자열 배열 JSON만. 설명 금지. 예: ["원진성형외과","원진","Wonjin"]`;
+
+  const attempt = async (client: GeminiEngineClient | GeminiJudgeClient): Promise<string[]> => {
+    const result = await client.call({ system, user });
+    const parsed = parseJsonLoose<unknown>(result.text);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  };
+
+  let raw: string[] = [];
+  try {
+    raw = await attempt(new GeminiEngineClient()); // 웹검색 그라운딩
+  } catch (err) {
+    console.error('[inferAliases] 그라운딩 실패:', err instanceof Error ? err.message : err);
+  }
+  if (raw.length === 0) {
+    try {
+      raw = await attempt(new GeminiJudgeClient()); // 순수 추론 폴백
+    } catch (err) {
+      console.error('[inferAliases] 추론 실패:', err instanceof Error ? err.message : err);
+    }
+  }
+  return sanitizeAliases(base, raw, industry, region);
+}
+
+/** 별칭 거르기. inferAliases의 판정 없이도 쓸 수 있게 따로 둔다(시험·클라이언트 재사용). */
+export function sanitizeAliases(brandName: string, candidates: string[], industry = '', region = ''): string[] {
+  const squash = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  // 지역은 "서울 강남"처럼 붙어 오므로 토막으로도 막는다.
+  const banned = new Set(
+    [industry, region, ...region.split(/\s+/)].map(squash).filter((s) => s.length > 0),
+  );
+  const brandSquashed = squash(brandName);
+  const out = [brandName.trim()];
+  for (const c of candidates) {
+    const t = c.trim();
+    if (t.length < 2) continue; // 한 글자는 아무 문장에나 걸린다
+    const s = squash(t);
+    if (!s || banned.has(s)) continue; // 업종·지역은 우리만 가리키지 않는다
+    // 두 글자 한글은 상호명 안에 들어 있을 때만 받는다.
+    //
+    // 업종·지역을 막아도 다른 지역명이 샌다 — 실측: 서초 소재 병원에 "강남"이 별칭으로 들어왔고,
+    // 그대로 두면 강남을 말하는 경쟁사 문장까지 우리 언급으로 센다. 반면 "가온"(가온그룹),
+    // "원진"(WJ 원진성형외과)처럼 상호에서 잘라낸 약칭은 살려야 한다.
+    // 석 자 이상은 이 규칙을 걸지 않는다 — "티오더", "한국전자기술연구원"처럼 상호와 글자가
+    // 겹치지 않는 올바른 표기가 그쪽에 있다.
+    if (/^[가-힣]{2}$/.test(t) && !brandSquashed.includes(s)) continue;
+    if (out.some((x) => squash(x) === s)) continue;
+    out.push(t);
+    if (out.length >= 6) break;
+  }
+  return out;
+}

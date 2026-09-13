@@ -5,7 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
-import { measureTenantAll } from '../lib/api'
+import { inferBrandAliases, measureTenantAll } from '../lib/api'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
 const KR_ADDRESS =
@@ -234,6 +234,10 @@ export default function BrandOnboarding() {
   const [domain, setDomain] = useState('')
   const [address, setAddress] = useState('')
   const [findingAddr, setFindingAddr] = useState(false)
+  // 별칭 — 언급 판정이 이 목록을 그대로 쓴다. 비어 있으면 브랜드명 하나로만 센다.
+  const [aliases, setAliases] = useState<string[]>([])
+  const [aliasInput, setAliasInput] = useState('')
+  const [findingAliases, setFindingAliases] = useState(false)
   const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
   const [busy, setBusy] = useState(false)
@@ -730,7 +734,10 @@ export default function BrandOnboarding() {
   const tenant: TenantDraft = {
     tenantId: makeTenantId(domain, brandName),
     brandName: brandName.trim(),
-    aliases: brandName.trim() ? [brandName.trim()] : [],
+    // 브랜드명은 항상 첫 별칭. 추론·직접 입력분을 뒤에 붙인다(중복 제거는 sanitize가 한다).
+    aliases: brandName.trim()
+      ? [brandName.trim(), ...aliases.filter((a) => a.trim() && a.trim() !== brandName.trim())]
+      : [],
     ownedDomains: domain ? [domain] : [],
     industry: industry.trim(),
     region: region.trim(),
@@ -1019,6 +1026,66 @@ export default function BrandOnboarding() {
                 ⚠ 기존 코호트에 없는 지역입니다 — 새 코호트로 분리됩니다. 의도한 것이 아니면 기존 값과 맞추세요.
               </span>
             )}
+          </label>
+          <label className="field span2">
+            <span>별칭 (AI 답변에서 이 브랜드를 부르는 다른 표기)</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+              <input
+                type="text"
+                value={aliasInput}
+                onChange={(e) => setAliasInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return
+                  e.preventDefault()
+                  const t = aliasInput.trim()
+                  if (t && !aliases.includes(t) && t !== brandName.trim()) setAliases((prev) => [...prev, t])
+                  setAliasInput('')
+                }}
+                placeholder="예: 원진, Wonjin — 입력 후 Enter"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="ghost"
+                disabled={findingAliases || !brandName.trim()}
+                title="브랜드명·업종·지역으로 표기 변형을 찾습니다"
+                onClick={async () => {
+                  setFindingAliases(true)
+                  try {
+                    const found = await inferBrandAliases(brandName.trim(), industry.trim(), region.trim(), domain)
+                    if (found) {
+                      // 브랜드명은 등록 시 어차피 맨 앞에 붙으므로 여기서는 뺀다.
+                      const rest = found.filter((a) => a.trim() && a.trim() !== brandName.trim())
+                      setAliases((prev) => [...new Set([...prev, ...rest])])
+                    }
+                  } finally {
+                    setFindingAliases(false)
+                  }
+                }}
+              >
+                {findingAliases ? '찾는 중…' : '별칭 찾기'}
+              </button>
+            </div>
+            {aliases.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                {aliases.map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    className="ghost"
+                    onClick={() => setAliases((prev) => prev.filter((x) => x !== a))}
+                    title="빼기"
+                  >
+                    {a} ×
+                  </button>
+                ))}
+              </div>
+            )}
+            <span className="hint">
+              언급 판정이 이 목록을 그대로 씁니다. 비어 있으면 브랜드명 한 가지 표기로만 세기 때문에,
+              AI가 다른 이름으로 부르면 언급을 놓칩니다. 업종·지역처럼 우리만 가리키지 않는 말은
+              자동으로 걸러집니다.
+            </span>
           </label>
           <label className="field span2">
             <span>주소 (Fact Graph · 선택)</span>
