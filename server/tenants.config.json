@@ -3,7 +3,12 @@
     "tenantId": "k-wonjin",
     "brandName": "WJ 원진성형외과",
     "aliases": [
-      "WJ 원진성형외과"
+      "WJ 원진성형외과",
+      "원진성형외과",
+      "WJ원진",
+      "원진성형외과의원",
+      "WJ원진성형외과의원",
+      "Wonjin"
     ],
     "ownedDomains": [
       "k-wonjin.co.kr"
@@ -283,7 +288,10 @@
     "tenantId": "jjprs",
     "brandName": "제이준성형외과",
     "aliases": [
-      "제이준성형외과"
+      "제이준성형외과",
+      "제이준",
+      "제이준성형외과의원",
+      "JJPRS"
     ],
     "ownedDomains": [
       "jjprs.com"
@@ -433,7 +441,11 @@
     "tenantId": "maum-dream",
     "brandName": "마음드림치과",
     "aliases": [
-      "마음드림치과"
+      "마음드림치과",
+      "마음드림치과의원",
+      "마음드림",
+      "분당마음드림치과",
+      "Maum Dream"
     ],
     "ownedDomains": [
       "maum-dream.com"
@@ -511,7 +523,9 @@
     "tenantId": "web4ai",
     "brandName": "스테이,머뭄",
     "aliases": [
-      "스테이,머뭄"
+      "스테이,머뭄",
+      "스테이머뭄",
+      "군산 스테이머뭄"
     ],
     "ownedDomains": [
       "web4ai.o2osolution.ai"
@@ -705,7 +719,9 @@
     "tenantId": "viewclinic",
     "brandName": "뷰성형외과",
     "aliases": [
-      "뷰성형외과"
+      "뷰성형외과",
+      "뷰성형외과의원",
+      "뷰성형"
     ],
     "ownedDomains": [
       "viewclinic.com"
