@@ -769,8 +769,10 @@
   },
   {
     "tenantId": "comp-7ulalt",
-    "brandName": "kt.com",
+    "brandName": "KT",
     "aliases": [
+      "KT",
+      "케이티",
       "kt.com"
     ],
     "ownedDomains": [],
@@ -894,6 +896,8 @@
     "tenantId": "kt",
     "brandName": "KT 하이오더",
     "aliases": [
+      "KT",
+      "케이티",
       "KT 하이오더"
     ],
     "ownedDomains": [
@@ -916,7 +920,9 @@
     "tenantId": "torder",
     "brandName": "t'order",
     "aliases": [
-      "t'order"
+      "t'order",
+      "티오더",
+      "torder"
     ],
     "ownedDomains": [
       "torder.com"
