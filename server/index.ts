@@ -307,12 +307,32 @@ app.post('/api/question-bank/:tenantId/tag-topics', async (req, res) => {
     return;
   }
   try {
+    // 상호가 주제 이름이 되지 않게 브랜드·별칭·경쟁사명을 판정기에 넘긴다(코드로도 막는다).
+    const names = [
+      tenant.brandName,
+      ...(tenant.aliases ?? []),
+      ...tenant.competitors.flatMap((c) => [c.name, ...(c.aliases ?? [])]),
+    ].filter((n): n is string => Boolean(n));
     const before = bank.questions.filter((q) => q.topic).length;
-    const questions = await tagQuestionTopics(bank.questions, getJudgeClient(), tenant.industry);
+    const { questions, brandTopicsDropped } = await tagQuestionTopics(
+      bank.questions,
+      getJudgeClient(),
+      tenant.industry,
+      names,
+    );
     const after = questions.filter((q) => q.topic).length;
-    if (after > before) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
+    // 상호 주제를 걷어냈으면 개수가 늘지 않아도 저장해야 한다(그 자체가 고침이다).
+    if (after > before || brandTopicsDropped > 0) await store.saveQuestionBank(tenant.tenantId, { ...bank, questions });
     const topics = [...new Set(questions.map((q) => q.topic).filter(Boolean))];
-    res.json({ tenantId: tenant.tenantId, version, total: questions.length, taggedBefore: before, taggedAfter: after, topics });
+    res.json({
+      tenantId: tenant.tenantId,
+      version,
+      total: questions.length,
+      taggedBefore: before,
+      taggedAfter: after,
+      brandTopicsDropped,
+      topics,
+    });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

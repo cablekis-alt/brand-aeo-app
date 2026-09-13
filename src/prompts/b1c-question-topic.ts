@@ -40,6 +40,33 @@ export function existingTopics(questions: Pick<QuestionSpec, 'topic'>[]): string
 export const TOPIC_MIN = 4;
 export const TOPIC_MAX = 7;
 
+/** 비교용 정규화 — 공백을 없애고 소문자로. "제이준 성형외과"와 "제이준성형외과"를 같게 본다. */
+function squash(v: string): string {
+  return v.replace(/\s+/g, '').toLowerCase();
+}
+
+/**
+ * 상호가 주제 이름이 됐는지. 실측에서 제이준성형외과의 브랜드 직접 질문 3개가
+ * "제이준성형외과"라는 주제로 묶였다 — 틀린 분류는 아니지만 콘텐츠 주제로는 쓸모가 없다.
+ * 주제는 "무엇에 관한 글을 쓸까"에 답해야 하는데 상호는 그 답이 아니다.
+ *
+ * 프롬프트로만 막지 않는 이유는 판정 모델이 지시를 흘리기 때문이다(은행 생성에서 이미 겪었다).
+ * 짧은 이름은 오탐을 만든다 — 별칭 "뷰"로 "뷰티 시술"까지 걸러지면 안 되므로, 부분 일치는
+ * 양쪽 길이가 3자 이상일 때만 본다. 완전히 같은 이름은 길이와 무관하게 막는다.
+ */
+export function isBrandTopic(topic: string, names: string[]): boolean {
+  const t = squash(topic);
+  if (!t) return false;
+  for (const raw of names) {
+    const n = squash(raw ?? '');
+    if (!n) continue;
+    if (t === n) return true;
+    if (n.length >= 3 && t.includes(n)) return true; // "홈캐스트 유통 서비스"
+    if (t.length >= 3 && n.includes(t)) return true; // "제이준" ⊂ "제이준성형외과"
+  }
+  return false;
+}
+
 /**
  * 은행 하나를 한 번의 호출로 주제 배정한다. 응답은 questionId → topic 배열.
  * reuse에 든 주제가 있으면 새 이름을 만들지 말고 그것을 쓰게 한다 — 주차 간 비교를 위해서다.
@@ -48,7 +75,9 @@ export function buildQuestionTopicPrompt(
   questions: Pick<QuestionSpec, 'questionId' | 'text'>[],
   reuse: string[],
   industry: string,
+  names: string[] = [],
 ): PromptMessage {
+  const nameBlock = names.length > 0 ? `\n   주제 이름으로 쓰면 안 되는 상호: ${names.join(', ')}` : '';
   const reuseBlock =
     reuse.length > 0
       ? `\n이미 쓰고 있는 주제(가능하면 **그대로 재사용**하라. 주차 간 비교가 깨진다):\n${reuse.map((t) => `- ${t}`).join('\n')}\n새 주제는 위 목록 중 어느 것에도 들어맞지 않을 때만 만든다.`
@@ -64,7 +93,10 @@ export function buildQuestionTopicPrompt(
 3. 주제 개수는 ${TOPIC_MIN}개 이상 ${TOPIC_MAX}개 이하. 질문 하나짜리 주제를 만들지 마라 —
    가까운 주제에 합친다.
 4. "기타", "일반", "전체" 같은 뭉뚱그린 이름은 금지한다. 그런 질문은 가장 가까운 주제에 넣는다.
-5. 모든 질문에 빠짐없이 주제를 배정한다.${reuseBlock}
+5. **상호·브랜드명을 주제 이름으로 쓰지 마라.** 주제는 "무엇에 관한 글을 쓸까"에 답해야 하는데
+   상호는 그 답이 아니다. 특정 업체를 지목하는 질문도 그 질문이 **묻는 내용**으로 묶는다.
+   예: "A병원 후기 어때?" → "후기·평판"(O), "A병원"(X).${nameBlock}
+6. 모든 질문에 빠짐없이 주제를 배정한다.${reuseBlock}
 
 출력은 아래 JSON 배열만. 설명·마크다운·코드블록 금지.
 [{ "questionId": string, "topic": string }]`;

@@ -101,31 +101,41 @@ export default function QuestionBankPage() {
                 </button>
               </p>
             )}
-            {bank.questions.some((q) => !q.topic) && (
-              <p className="hint" style={{ marginTop: 0 }}>
-                콘텐츠 주제가 없는 질문이 <b>{bank.questions.filter((q) => !q.topic).length}개</b> 있습니다. 주제를
-                매기면 격차 분석이 "어떤 <b>내용</b>에서 밀리는지"를 보여줍니다 — 카테고리는 질문의 형태라
-                보강할 콘텐츠를 정해 주지 못합니다.{' '}
-                <button
-                  type="button"
-                  className="ghost"
-                  disabled={topicTagging !== null}
-                  onClick={async () => {
-                    if (!tenant) return
-                    setTopicTagging('판정 중…')
-                    try {
-                      const r = await tagQuestionBankTopics(tenant.tenantId, bank.version)
-                      setTopicTagging(`${r.taggedAfter - r.taggedBefore}개 매김 · 주제 ${r.topics.length}개`)
-                      setReloadKey((k) => k + 1)
-                    } catch (e) {
-                      setTopicTagging(e instanceof Error ? e.message : String(e))
-                    }
-                  }}
-                >
-                  {topicTagging ?? '주제 매기기 (판정 1회)'}
-                </button>
-              </p>
-            )}
+            {/* 미분류가 없어도 버튼을 남긴다 — 상호가 이름이 된 주제를 고치려면 다시 돌려야 하고,
+                그때는 모든 질문에 주제가 있어 조건부로 숨기면 손댈 방법이 없어진다. */}
+            <p className="hint" style={{ marginTop: 0 }}>
+              {bank.questions.some((q) => !q.topic) ? (
+                <>
+                  콘텐츠 주제가 없는 질문이 <b>{bank.questions.filter((q) => !q.topic).length}개</b> 있습니다. 주제를
+                  매기면 격차 분석이 "어떤 <b>내용</b>에서 밀리는지"를 보여줍니다. 카테고리는 질문의 형태라
+                  보강할 콘텐츠를 정해 주지 못합니다.{' '}
+                </>
+              ) : (
+                <>
+                  모든 질문에 콘텐츠 주제가 있습니다. 다시 돌리면 상호가 이름이 된 주제만 걷어내고 그 질문을
+                  다시 매깁니다.{' '}
+                </>
+              )}
+              <button
+                type="button"
+                className="ghost"
+                disabled={topicTagging !== null}
+                onClick={async () => {
+                  if (!tenant) return
+                  setTopicTagging('판정 중…')
+                  try {
+                    const r = await tagQuestionBankTopics(tenant.tenantId, bank.version)
+                    const dropped = r.brandTopicsDropped > 0 ? ` · 상호 주제 ${r.brandTopicsDropped}건 걷어냄` : ''
+                    setTopicTagging(`${r.taggedAfter - r.taggedBefore}개 매김 · 주제 ${r.topics.length}개${dropped}`)
+                    setReloadKey((k) => k + 1)
+                  } catch (e) {
+                    setTopicTagging(e instanceof Error ? e.message : String(e))
+                  }
+                }}
+              >
+                {topicTagging ?? '주제 매기기 (판정 1회)'}
+              </button>
+            </p>
             <div className="table-wrap">
               <table>
                 <thead>

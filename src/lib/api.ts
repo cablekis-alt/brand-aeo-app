@@ -353,13 +353,14 @@ export async function tagQuestionBankStages(
 export async function tagQuestionBankTopics(
   tenantId: string,
   version?: string,
-): Promise<{ total: number; taggedBefore: number; taggedAfter: number; topics: string[] }> {
+): Promise<{ total: number; taggedBefore: number; taggedAfter: number; brandTopicsDropped: number; topics: string[] }> {
   const q = version ? `?version=${encodeURIComponent(version)}` : ''
   const res = await fetch(`/api/question-bank/${encodeURIComponent(tenantId)}/tag-topics${q}`, { method: 'POST' })
   const body = (await res.json().catch(() => ({}))) as {
     total: number
     taggedBefore: number
     taggedAfter: number
+    brandTopicsDropped: number
     topics: string[]
     error?: string
   }
