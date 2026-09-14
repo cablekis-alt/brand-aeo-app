@@ -1919,3 +1919,13 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   font-size: 12.5px;
   font-weight: 600;
 }
+
+/* 실행 항목 — 글 한 편이 어디로 가는지. 「쓸 글」과 「올릴 곳」이 곱셈으로 읽히지 않게 한다. */
+.gap-dest {
+  margin: 6px 0 0;
+  padding: 5px 8px;
+  border-left: 2px solid var(--accent);
+  background: var(--tint, rgba(127, 127, 127, 0.06));
+  font-size: 12.5px;
+  line-height: 1.5;
+}

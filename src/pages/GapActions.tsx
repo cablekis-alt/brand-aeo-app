@@ -438,6 +438,7 @@ function ActionCard({
   onDraft,
   onUrls,
   coveredBy,
+  destinations,
 }: {
   action: GapAction
   canSaveStatus: boolean
@@ -452,6 +453,8 @@ function ActionCard({
   onUrls: (id: string, urls: string[]) => void
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
+  /** 콘텐츠형일 때, 이 글이 갈 채널들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
+  destinations: string[] | null
 }) {
   const [channelDraft, setChannelDraft] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
@@ -470,6 +473,23 @@ function ActionCard({
       <p className="gap-tally" style={{ color: 'var(--ink)' }}>
         {action.evidence}
       </p>
+      {destinations !== null && (
+        // 글 한 편이 어디로 가는지 여기서 말한다. 이 줄이 없으면 아래 「올릴 곳」 목록이
+        // "모든 글을 모든 곳에" 로 읽힌다.
+        <p className="gap-dest">
+          {destinations.length > 0 ? (
+            <>
+              올릴 곳 <b>{destinations.length}곳</b> · {destinations.join(' · ')}
+              <span className="muted"> — 우리 사이트에도 올립니다</span>
+            </>
+          ) : (
+            <>
+              올릴 곳 <b>없음</b>
+              <span className="muted"> — 우리 사이트에만 올립니다. AI가 이 질문엔 외부 출처를 안 꺼냈습니다.</span>
+            </>
+          )}
+        </p>
+      )}
       {action.questionTexts.length > 0 && (
         <>
           <ul className="gap-worst">
@@ -535,6 +555,14 @@ function ActionCard({
             </button>
           ))}
         </div>
+      )}
+      {action.kind === 'listing' && !coveredBy && !action.satisfied && (
+        // 덮는 글이 없는 채널은 사실상 「쓸 글」이다. 말해 주지 않으면 다른 등재형 카드와
+        // 똑같이 보여서 "위의 글을 여기 올리면 되는 것"으로 읽힌다.
+        <p className="gap-dest">
+          덮는 글 <b>없음</b>
+          <span className="muted"> — 위의 글로는 못 덮습니다. 이 채널용으로 한 편 따로 씁니다.</span>
+        </p>
       )}
       {briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
         <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
@@ -631,6 +659,14 @@ export default function GapActions() {
       .sort((x, y) => y.n - x.n)
     return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
   }
+  /** 이 글이 갈 채널들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
+  const destinationsOf = (c: GapAction) => {
+    const qs = new Set(c.questionIds)
+    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q))).map((l) => l.targetDomain ?? l.title)
+  }
+  // 덮는 글이 없는 채널은 사실상 한 편을 더 써야 하는 것이다 — 머리글이 그 수를 밝힌다.
+  const orphanListing = openListing.filter((l) => coverageOf(l) === null).length
+
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
   const skipped = plan.actions.filter((a) => a.status === 'skip')
   const ready = !loading && plan.actions.length > 0
@@ -732,7 +768,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openContent.map((a) => (
-                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={destinationsOf(a)} />
                       ))}
                     </div>
                   </>
@@ -742,12 +778,18 @@ export default function GapActions() {
                     <h4 className="gap-subhead">
                       올릴 곳 {openListing.length}곳{' '}
                       <span className="muted">
-                        — 위에서 쓴 글을 어디에 올릴지입니다. 새로 쓸 글이 아닙니다.
+                        — 위에서 쓴 글을 어디에 올릴지입니다. 새로 쓸 글이 아닙니다
+                        {orphanListing > 0 && (
+                          <>
+                            {' '}(단 <b>{orphanListing}곳</b>은 덮는 글이 없어 따로 써야 합니다)
+                          </>
+                        )}
+                        .
                       </span>
                     </h4>
                     <div className="gap-grid">
                       {openListing.map((a) => (
-                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} />
+                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} destinations={null} />
                       ))}
                     </div>
                   </>
@@ -765,7 +807,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
                 ))}
               </div>
             </section>
@@ -780,7 +822,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
                 ))}
               </div>
             </section>
