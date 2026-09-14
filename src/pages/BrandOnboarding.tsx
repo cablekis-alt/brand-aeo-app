@@ -384,7 +384,14 @@ export default function BrandOnboarding() {
         (s.title || '').split(/[|\-–—:·]/)[0].trim()
       const finalDomain = hostToDomain(s.finalUrl || parsed.href)
       setDomain(finalDomain)
-      setBrandName(guessedName)
+      // 사람이 친 상호가 페이지 <title>·og:site_name보다 나은 근거다 — 그 브랜드를 찾는
+      // 사람이 실제로 부르는 이름이기 때문이다. 실측: 「이디야커피」가 「Ediya」로 바뀌었고,
+      // 한국어 답변은 "이디야"라고 하므로 그대로 두면 언급 판정이 대부분을 놓친다.
+      // 뽑은 이름은 버리지 않고 별칭 후보로 넘긴다(그 표기도 답변에 나올 수 있다).
+      setBrandName((prev) => prev.trim() || guessedName)
+      if (guessedName && brandName.trim() && guessedName !== brandName.trim()) {
+        setAliases((prev) => (prev.includes(guessedName) ? prev : [...prev, guessedName]))
+      }
       // 진단용 extractPage는 footer를 버리므로, 주소는 원본 HTML 전체에서 다시 찾는다.
       const pagePlain = htmlToPlain(payload.html || '')
       let resolvedAddr = firstKrAddress(s.mainText || '') || firstKrAddress(pagePlain)
@@ -731,7 +738,12 @@ export default function BrandOnboarding() {
       const resolvedRegion = info.region || hint
 
       // 새 결과로 덮어쓴다(값이 없으면 비운다 — 이전 브랜드 값 잔존 방지).
-      setBrandName(resolvedName)
+      // 상호만 예외다: 여기 오는 입력은 사람이 친 상호 그 자체이므로 추론이 다듬은 표기로
+      // 바꾸지 않는다. 다른 표기는 별칭으로 들어간다.
+      if (info.brandName && name.trim() && info.brandName !== name.trim()) {
+        setAliases((prev) => (prev.includes(info.brandName!) ? prev : [...prev, info.brandName!]))
+      }
+      setBrandName(name.trim() || resolvedName)
       setDomain(info.domain || '')
       setIndustry(resolvedIndustry)
       setRegion(resolvedRegion)
