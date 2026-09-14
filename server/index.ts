@@ -502,6 +502,38 @@ app.get('/api/tenants/:tenantId/fact-graph', async (req, res) => {
 
 // 브랜드 페이지에서 팩트 그래프 후보를 뽑는다. **저장하지 않는다** — 사람이 골라 넣는다.
 // 값이 페이지에 글자 그대로 없으면 버린다(factExtract 참고).
+// 등록 **전** 브랜드에서 사실 후보를 뽑는다 — 온보딩용. 테넌트가 아직 없으므로 url·brandName을 직접 받는다.
+// 저장하지 않는 것은 위와 같다. 온보딩 화면이 고른 것만 테넌트 초안의 factGraph에 담아 등록한다.
+app.post('/api/fact-candidates', async (req, res) => {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const url = typeof b.url === 'string' ? b.url.trim() : '';
+  const brandName = typeof b.brandName === 'string' ? b.brandName.trim() : '';
+  if (!url || !brandName) {
+    res.status(400).json({ error: 'url과 brandName이 필요합니다.' });
+    return;
+  }
+  const industry = typeof b.industry === 'string' ? b.industry.trim() : '';
+  // 온보딩 화면은 사람이 친 값을 그대로 보낸다("example.com/a"). 스킴을 붙이고 http(s)인지 본다 —
+  // 브랜드 페이지 저장과 같은 규칙(ftp://·javascript: 거절, 점 없는 호스트 거절).
+  // **정규화 실패는 입력 잘못이므로 400이다.** try 안에 두면 서버 오류(500)로 나가 원인이 가려진다.
+  let normalized: string | null;
+  try {
+    normalized = normalizeBrandPageUrl(url);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  if (!normalized) {
+    res.status(400).json({ error: '읽을 주소가 없습니다.' });
+    return;
+  }
+  try {
+    res.json(await extractFactCandidates(normalized, brandName, industry, getJudgeClient()));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 app.post('/api/tenants/:tenantId/fact-candidates', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {

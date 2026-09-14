@@ -528,6 +528,33 @@ export async function fetchFactCandidates(
   return { candidates: body.candidates ?? [], sourceUrl: body.sourceUrl ?? '', dropped: body.dropped ?? [] }
 }
 
+/**
+ * 등록 **전** 브랜드에서 사실 후보를 뽑는다 — 온보딩용.
+ *
+ * 테넌트가 아직 없어 `/api/tenants/:id/fact-candidates`를 쓸 수 없다. 온보딩이 끝났을 때
+ * 팩트 그래프가 비어 있으면 첫 초안이 빈칸투성이가 된다 — 111개 브랜드 중 사실 2건 이상이
+ * 1곳뿐이었던 이유가 그것이다.
+ */
+export async function fetchFactCandidatesFor(
+  url: string,
+  brandName: string,
+  industry = '',
+): Promise<{ candidates: FactCandidate[]; sourceUrl: string; dropped: string[] }> {
+  const res = await fetch('/api/fact-candidates', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, brandName, industry }),
+  })
+  const body = (await res.json().catch(() => ({}))) as {
+    candidates?: FactCandidate[]
+    sourceUrl?: string
+    dropped?: string[]
+    error?: string
+  }
+  if (!res.ok) throw new Error(body.error || `사실 후보를 가져오지 못했습니다 (HTTP ${res.status})`)
+  return { candidates: body.candidates ?? [], sourceUrl: body.sourceUrl ?? '', dropped: body.dropped ?? [] }
+}
+
 export interface GapFactHit {
   need: string
   type: FactNode['type']

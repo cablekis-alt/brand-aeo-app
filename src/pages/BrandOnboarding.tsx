@@ -5,7 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
-import { inferBrandAliases, measureTenantAll } from '../lib/api'
+import { fetchFactCandidatesFor, inferBrandAliases, measureTenantAll, type FactCandidate } from '../lib/api'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
 const KR_ADDRESS =
@@ -240,6 +240,11 @@ export default function BrandOnboarding() {
   const [findingAliases, setFindingAliases] = useState(false)
   const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
+  // 3단계 사실 — 주소가 있을 때만 뽑는다. 고른 것만 테넌트 초안의 factGraph에 담긴다.
+  const [findingFacts, setFindingFacts] = useState(false)
+  const [factCands, setFactCands] = useState<FactCandidate[] | null>(null)
+  const [factsMsg, setFactsMsg] = useState<string | null>(null)
+  const [picked, setPicked] = useState<FactCandidate[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [extracted, setExtracted] = useState(false)
@@ -761,17 +766,29 @@ export default function BrandOnboarding() {
     engines: ['openai', 'gemini', 'claude', 'perplexity'],
     // 질문 배분은 서버가 정한다(위 TenantDraft 주석 참고).
     competitors: parseCompetitors(competitorsRaw),
-    factGraph: address.trim()
-      ? [
-          {
-            id: 'brand-address',
-            type: 'location',
-            claim: '주소',
-            value: address.trim(),
-            updatedAt: new Date().toISOString().slice(0, 10),
-          },
-        ]
-      : [],
+    // 주소 한 줄 + 3단계에서 고른 사실. 주소와 값이 겹치면 고른 쪽이 보통 더 자세하다.
+    factGraph: [
+      ...(address.trim()
+        ? [
+            {
+              id: 'brand-address',
+              type: 'location',
+              claim: '주소',
+              value: address.trim(),
+              updatedAt: new Date().toISOString().slice(0, 10),
+            },
+          ]
+        : []),
+      ...picked
+        .filter((f) => f.value.replace(/\s/g, '') !== address.trim().replace(/\s/g, ''))
+        .map((f, i) => ({
+          id: `fact-${i + 1}`,
+          type: f.type,
+          claim: f.claim,
+          value: f.value,
+          updatedAt: new Date().toISOString().slice(0, 10),
+        })),
+    ],
     // 경쟁사 비움+측정 시 자동 추론된 경쟁사를 코호트로 함께 측정할지. 체크 해제 시에만 false로 전달.
     ...(withCohort ? {} : { autoCohort: false }),
   }
@@ -780,6 +797,29 @@ export default function BrandOnboarding() {
   const ready = Boolean(tenant.brandName && tenant.industry && tenant.region)
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
+
+  /** 브랜드 페이지에서 사실 후보를 뽑는다. 저장하지 않는다 — 고른 것만 등록 때 함께 간다. */
+  async function findFacts() {
+    const target = url.trim() || domain.trim()
+    if (!target || !brandName.trim()) return
+    setFindingFacts(true)
+    setFactsMsg(null)
+    try {
+      const r = await fetchFactCandidatesFor(target, brandName.trim(), industry.trim())
+      setFactCands(r.candidates)
+      setPicked(r.candidates)
+      setFactsMsg(
+        r.candidates.length
+          ? `${r.sourceUrl}에서 ${r.candidates.length}건을 찾았습니다. 값이 페이지에 글자 그대로 있는 것만 남겼습니다.`
+          : `${r.sourceUrl}에는 확인 가능한 값이 없었습니다. 사실이 적힌 다른 주소(이용 안내·요금 등)를 2단계 도메인 칸에 넣어 보세요.`,
+      )
+    } catch (err) {
+      setFactsMsg(err instanceof Error ? err.message : String(err))
+      setFactCands([])
+    } finally {
+      setFindingFacts(false)
+    }
+  }
 
   // 같은 업종·지역 경쟁사를 Gemini로 추천해 경쟁사 칸에 병합한다. 도메인은 백엔드에서 DNS 검증된 것만 온다.
   async function suggestCompetitors() {
@@ -881,13 +921,16 @@ export default function BrandOnboarding() {
     }
   }
 
-  const currentStage = !extracted ? 1 : !ready ? 2 : 4
+  const currentStage = !extracted ? 1 : !ready ? 2 : 5
   const s1 = stageStatus(1, extracted, ready)
   const s2 = stageStatus(2, extracted, ready)
   const s3 = stageStatus(3, extracted, ready)
   const s4 = stageStatus(4, extracted, ready)
+  const s5 = stageStatus(4, extracted, ready)
+  /** 사실을 뽑을 주소가 있나 — 없으면 3단계는 건너뛴다. */
+  const factSource = url.trim() || domain.trim()
 
-  function goStage(n: 1 | 2 | 3 | 4) {
+  function goStage(n: 1 | 2 | 3 | 4 | 5) {
     document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -909,8 +952,9 @@ export default function BrandOnboarding() {
           [
             [1, '1', '브랜드', s1],
             [2, '2', '정보', s2],
-            [3, '3', '경쟁사', s3],
-            [4, '4', '등록', s4],
+            [3, '3', '사실', s3],
+            [4, '4', '경쟁사', s4],
+            [5, '5', '등록', s5],
           ] as const
         ).map(([n, code, label, status]) => (
           <button
@@ -1135,7 +1179,73 @@ export default function BrandOnboarding() {
         </div>
       </StageShell>
 
-      <StageShell id="stage-3" code="3" title="경쟁사" status={s3}>
+      <StageShell id="stage-3" code="3" title="사실" status={s3}>
+        {!factSource ? (
+          <p className="muted">
+            홈페이지 주소가 없어 건너뜁니다. 사실은 나중에 <b>브랜드 사실</b> 화면에서 넣거나, 초안의 빈칸에
+            바로 적어 넣을 수 있습니다.
+          </p>
+        ) : (
+          <>
+            <p className="hint" style={{ marginTop: 0 }}>
+              브랜드 페이지에서 <b>확인 가능한 값</b>만 뽑습니다 — 요금·시간·규정처럼 손님과 맺는 약속. 값이
+              페이지에 글자 그대로 있는 것만 남기고, 홍보 문구와 설명 문장은 뺍니다. 여기서 채워 두면 첫 초안의
+              빈칸이 그만큼 줄어듭니다.
+            </p>
+            <div className="brief-bar" style={{ marginBottom: 8 }}>
+              <button type="button" className="ghost" onClick={() => void findFacts()} disabled={findingFacts}>
+                {findingFacts ? '페이지 읽는 중…' : '브랜드 페이지에서 찾기'}
+              </button>
+              {factCands && factCands.length > 0 && (
+                <span className="st st-info">
+                  {picked.length}/{factCands.length}건 선택
+                </span>
+              )}
+            </div>
+            {factsMsg && <p className="doc-meta">{factsMsg}</p>}
+            {factCands && factCands.length > 0 && (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 34 }}>넣기</th>
+                    <th>주장</th>
+                    <th>값</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {factCands.map((f) => {
+                    const on = picked.some((p) => p.claim === f.claim && p.value === f.value)
+                    return (
+                      <tr key={`${f.claim}|${f.value}`}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            aria-label={`${f.claim} 넣기`}
+                            checked={on}
+                            onChange={(e) =>
+                              setPicked((prev) =>
+                                e.target.checked
+                                  ? [...prev, f]
+                                  : prev.filter((p) => !(p.claim === f.claim && p.value === f.value)),
+                              )
+                            }
+                          />
+                        </td>
+                        <td>{f.claim}</td>
+                        <td>
+                          <b>{f.value}</b>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </StageShell>
+
+      <StageShell id="stage-4" code="4" title="경쟁사" status={s4}>
         <div className="field">
           <div className="onboard-comp-label">
             <span>경쟁사 (선택 · 한 줄에 하나: 이름, 도메인)</span>
@@ -1171,7 +1281,7 @@ export default function BrandOnboarding() {
         </div>
       </StageShell>
 
-      <StageShell id="stage-4" code="4" title="등록" status={s4}>
+      <StageShell id="stage-5" code="5" title="등록" status={s5}>
         <div className="onboard-register">
           <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
           {canRegister && measureVia !== 'none' && (
