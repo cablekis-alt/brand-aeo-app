@@ -43,9 +43,12 @@ export default function BrandManageList() {
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   const [measuringId, setMeasuringId] = useState<string | null>(null)
   // 수집 엔진 — 어떤 키가 있는지(keyStatus)와 전역 지정이 켜져 있는지(globalEngines)를 알아야
-  // 체크박스가 거짓말을 안 한다. 둘 다 데스크톱 브리지에만 있다.
+  // 체크박스가 거짓말을 안 한다. 서버가 /api/health로 알려 준다(키 값이 아니라 존재 여부만).
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
   const [globalEngines, setGlobalEngines] = useState<Engine[] | null>(null)
+  // 엔진을 고칠 수 있는가 — 저장소가 data/<tenant>/engines.json(파일)이라 Vercel에서는 못 쓴다.
+  // 팩트 그래프·브랜드 페이지도 같은 제약이다. 보여는 주되 체크박스는 잠근다.
+  const [canEditEngines, setCanEditEngines] = useState(true)
   const [engineBusyId, setEngineBusyId] = useState<string | null>(null)
   const [engineMsg, setEngineMsg] = useState<string | null>(null)
 
@@ -56,20 +59,14 @@ export default function BrandManageList() {
       .then((d) => {
         if (!alive || !d) return
         setMeasureVia(d.measureVia === 'local' || d.measureVia === 'github' ? d.measureVia : 'none')
+        if (d.engineKeys) setKeyStatus(d.engineKeys as Record<string, boolean>)
+        setCanEditEngines(d.backend !== 'vercel')
+        setGlobalEngines((d.collectEngines as Engine[] | null | undefined) ?? null)
       })
       .catch(() => {})
     return () => {
       alive = false
     }
-  }, [])
-
-  useEffect(() => {
-    const bridge = typeof window !== 'undefined' ? window.electron : undefined
-    if (!bridge?.isElectron) return
-    void bridge.apiKeyStatus().then((r) => {
-      setKeyStatus(r.status)
-      setGlobalEngines((r.collectEngines as Engine[] | null | undefined) ?? null)
-    })
   }, [])
 
   /**
@@ -239,7 +236,16 @@ export default function BrandManageList() {
         </p>
       )}
 
+      {keyStatus && !canEditEngines && (
+        <p className="hint" style={{ marginTop: 0 }}>
+          <b>수집 엔진</b>은 그 브랜드에 질문을 실제로 물어볼 엔진입니다. 웹에서는 <b>보기만</b> 됩니다 — 브랜드별 설정은
+          이 PC의 파일에 저장되므로 <b>데스크톱 앱</b>에서 바꾸세요(팩트 그래프·브랜드 페이지 주소도 같습니다). 새로
+          등록하는 브랜드는 <Link to="/brand-onboarding">온보딩 5단계</Link>에서 웹에서도 고를 수 있습니다.
+        </p>
+      )}
+
       {keyStatus &&
+        canEditEngines &&
         (globalEngines ? (
           <p className="hint" style={{ marginTop: 0 }}>
             지금은 <b>전역 지정</b>이 켜져 있어 모든 브랜드가{' '}
@@ -311,19 +317,23 @@ export default function BrandManageList() {
                             return (
                               <label
                                 key={e.id}
-                                className={keyMissing || globalEngines ? 'disabled' : undefined}
+                                className={keyMissing || globalEngines || !canEditEngines ? 'disabled' : undefined}
                                 title={
-                                  globalEngines
-                                    ? '전역 지정이 켜져 있어 지금은 이 설정이 쓰이지 않습니다.'
-                                    : keyMissing
-                                      ? `${e.label} 키가 없어 이 엔진은 측정에서 빠집니다.`
-                                      : undefined
+                                  !canEditEngines
+                                    ? '웹에서는 등록된 브랜드의 엔진을 바꿀 수 없습니다 — 데스크톱 앱에서 바꾸세요.'
+                                    : globalEngines
+                                      ? '전역 지정이 켜져 있어 지금은 이 설정이 쓰이지 않습니다.'
+                                      : keyMissing
+                                        ? `${e.label} 키가 없어 이 엔진은 측정에서 빠집니다.`
+                                        : undefined
                                 }
                               >
                                 <input
                                   type="checkbox"
                                   checked={on}
-                                  disabled={busy || engineBusyId !== null || keyMissing || Boolean(globalEngines)}
+                                  disabled={
+                                    busy || engineBusyId !== null || keyMissing || Boolean(globalEngines) || !canEditEngines
+                                  }
                                   onChange={() => void toggleEngine(row, e.id)}
                                 />{' '}
                                 {e.label}

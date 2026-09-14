@@ -16,6 +16,7 @@ import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
+import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -94,7 +95,17 @@ app.get('/health', (_req, res) => {
 
 // 로컬 백엔드 감지용. 배포(Vercel)는 api/health.ts가 같은 계약을 제공한다.
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, backend: 'express', canRegister: true, canMeasure: true, measureVia: 'local', servesUi: Boolean(process.env.ELECTRON_STATIC_DIR) });
+  res.json({
+    ok: true,
+    backend: 'express',
+    canRegister: true,
+    canMeasure: true,
+    measureVia: 'local',
+    servesUi: Boolean(process.env.ELECTRON_STATIC_DIR),
+    // 엔진 선택 화면이 쓰는 값. 키는 존재 여부만 나간다 — 값은 절대 싣지 않는다.
+    engineKeys: engineKeyStatus(),
+    collectEngines: globalCollectEngines(),
+  });
 });
 
 app.get('/api/tenants', async (req, res) => {

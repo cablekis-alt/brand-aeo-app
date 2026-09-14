@@ -255,8 +255,9 @@ export default function BrandOnboarding() {
   const [findingAliases, setFindingAliases] = useState(false)
   const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
-  // 수집 엔진 — 기본값은 "이 PC에 키가 있는 엔진 전부"다. 키 없는 엔진을 기본으로 켜 두면
+  // 수집 엔진 — 기본값은 "키가 있는 엔진 전부"다. 키 없는 엔진을 기본으로 켜 두면
   // 측정에서 조용히 빠져(부분 저하) 고른 것과 실제로 잰 것이 달라진다.
+  // 키 상태는 서버가 /api/health로 알려 준다(존재 여부만) — 웹·데스크톱 모두 같은 경로.
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
   const [engines, setEngines] = useState<string[]>(['openai', 'gemini', 'claude', 'perplexity'])
   // 3단계 사실 — 주소가 있을 때만 뽑는다. 고른 것만 테넌트 초안의 factGraph에 담긴다.
@@ -315,6 +316,12 @@ export default function BrandOnboarding() {
         setCanRegister(Boolean(d.canRegister))
         setMeasureVia(d.measureVia === 'local' || d.measureVia === 'github' ? d.measureVia : 'none')
         setAddrLookupOn(typeof d.backend === 'string' && d.backend !== 'vercel')
+        if (d.engineKeys) {
+          const keys = d.engineKeys as Record<string, boolean>
+          setKeyStatus(keys)
+          const withKey = ENGINE_CHOICES.filter((e) => keys[e.key]).map((e) => e.id)
+          if (withKey.length > 0) setEngines(withKey)
+        }
       })
       .catch(() => {
         if (alive) setCanRegister(false)
@@ -819,16 +826,6 @@ export default function BrandOnboarding() {
   const ready = Boolean(tenant.brandName && tenant.industry && tenant.region)
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
-
-  useEffect(() => {
-    const bridge = typeof window !== 'undefined' ? window.electron : undefined
-    if (!bridge?.isElectron) return
-    void bridge.apiKeyStatus().then((r) => {
-      setKeyStatus(r.status)
-      const withKey = ENGINE_CHOICES.filter((e) => r.status[e.key]).map((e) => e.id)
-      if (withKey.length > 0) setEngines(withKey)
-    })
-  }, [])
 
   /** 브랜드 페이지에서 사실 후보를 뽑는다. 저장하지 않는다 — 고른 것만 등록 때 함께 간다. */
   async function findFacts() {

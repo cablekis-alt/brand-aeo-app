@@ -17,6 +17,7 @@ import {
 import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
+import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -166,24 +167,13 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
  * throw하므로, 미리 걸러 Gemini 단독 등으로 측정이 진행되게 한다(설계상 Gemini만으로 동작 가능).
  */
 export function resolveCollectionEngines(tenant: TenantConfig): Engine[] {
-  const ENGINE_ENV: Record<Engine, string> = {
-    openai: 'OPENAI_API_KEY',
-    gemini: 'GEMINI_API_KEY',
-    claude: 'ANTHROPIC_API_KEY',
-    perplexity: 'PERPLEXITY_API_KEY',
-  };
-  // COLLECT_ENGINES(쉼표 구분)를 설정하면 모든 테넌트의 수집 엔진을 전역으로 덮어쓴다.
-  // 기존 테넌트 30개가 모두 ['openai','gemini']로 저장돼 있어, 엔진 커버리지를 넓힐 때
-  // 설정 파일을 일괄 수정하지 않고 환경변수 하나로 전환할 수 있게 한다(미설정 시 기존 동작 그대로).
-  const ALL_ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
-  const override = (process.env.COLLECT_ENGINES ?? '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter((s): s is Engine => (ALL_ENGINES as string[]).includes(s));
-  const configured = override.length > 0 ? override : tenant.engines;
+  // 규칙은 engineKeys.ts 한 곳에 있다 — 엔진 선택 화면이 "키 없음"이라고 말하는 근거와
+  // 여기서 실제로 거르는 근거가 갈리면, 고른 것과 잰 것이 달라진다.
+  const override = globalCollectEngines();
+  const configured = override ?? tenant.engines;
 
-  const useMock = process.env.USE_MOCK_ENGINES === 'true';
-  const available = useMock ? configured : configured.filter((e) => process.env[ENGINE_ENV[e]]);
+  const keys = engineKeyStatus();
+  const available = configured.filter((e) => keys[e]);
   if (available.length === 0) {
     throw new Error(
       `측정 가능한 엔진이 없습니다 — 최소 GEMINI_API_KEY를 .env에 설정하세요(설정 엔진: ${configured.join(', ')}).`,
