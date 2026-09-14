@@ -230,11 +230,14 @@ function StageShell({
 }
 
 // BrandManageList·ApiKeySettings와 같은 순서·이름. 세 화면이 달라지면 같은 엔진으로 안 보인다.
-const ENGINE_CHOICES: { id: string; key: string; label: string }[] = [
-  { id: 'gemini', key: 'GEMINI_API_KEY', label: 'Gemini' },
-  { id: 'openai', key: 'OPENAI_API_KEY', label: 'ChatGPT' },
-  { id: 'claude', key: 'ANTHROPIC_API_KEY', label: 'Claude' },
-  { id: 'perplexity', key: 'PERPLEXITY_API_KEY', label: 'Perplexity' },
+// 키 상태는 /api/health가 **엔진 id**로 색인해 준다(engineKeys). 환경변수 이름은 서버 안에만
+// 있으므로 여기 두지 않는다 — 두면 그걸로 조회하게 되고, 실제로 그래서 네 엔진이 전부
+// "키 없음"으로 잠겼다(v0.1.98 회귀).
+const ENGINE_CHOICES: { id: string; label: string }[] = [
+  { id: 'gemini', label: 'Gemini' },
+  { id: 'openai', label: 'ChatGPT' },
+  { id: 'claude', label: 'Claude' },
+  { id: 'perplexity', label: 'Perplexity' },
 ]
 
 export default function BrandOnboarding() {
@@ -319,7 +322,7 @@ export default function BrandOnboarding() {
         if (d.engineKeys) {
           const keys = d.engineKeys as Record<string, boolean>
           setKeyStatus(keys)
-          const withKey = ENGINE_CHOICES.filter((e) => keys[e.key]).map((e) => e.id)
+          const withKey = ENGINE_CHOICES.filter((e) => keys[e.id]).map((e) => e.id)
           if (withKey.length > 0) setEngines(withKey)
         }
       })
@@ -1321,7 +1324,7 @@ export default function BrandOnboarding() {
               <p className="onboard-engines-title">수집 엔진</p>
               <span className="engine-cell">
                 {ENGINE_CHOICES.map((e) => {
-                  const keyMissing = !keyStatus[e.key]
+                  const keyMissing = !keyStatus[e.id]
                   return (
                     <label
                       key={e.id}

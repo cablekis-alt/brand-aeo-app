@@ -5,11 +5,13 @@ import { measureTenantAll, saveTenantEngines } from '../lib/api'
 import type { Engine } from '../prompts/types'
 
 // ApiKeySettings와 같은 순서·이름을 쓴다 — 두 화면이 다른 이름을 쓰면 같은 엔진으로 안 보인다.
-const ENGINES: { id: Engine; key: string; label: string }[] = [
-  { id: 'gemini', key: 'GEMINI_API_KEY', label: 'Gemini' },
-  { id: 'openai', key: 'OPENAI_API_KEY', label: 'ChatGPT' },
-  { id: 'claude', key: 'ANTHROPIC_API_KEY', label: 'Claude' },
-  { id: 'perplexity', key: 'PERPLEXITY_API_KEY', label: 'Perplexity' },
+// 키 상태는 /api/health가 **엔진 id**로 색인해 준다. 환경변수 이름을 여기 두면 그걸로
+// 조회하게 된다 — 실제로 그래서 네 엔진이 전부 "키 없음"으로 잠겼다(v0.1.98 회귀).
+const ENGINES: { id: Engine; label: string }[] = [
+  { id: 'gemini', label: 'Gemini' },
+  { id: 'openai', label: 'ChatGPT' },
+  { id: 'claude', label: 'Claude' },
+  { id: 'perplexity', label: 'Perplexity' },
 ]
 
 interface BrandRow {
@@ -313,7 +315,7 @@ export default function BrandManageList() {
                         <span className="engine-cell">
                           {ENGINES.map((e) => {
                             const on = (row.engines ?? []).includes(e.id)
-                            const keyMissing = !keyStatus[e.key]
+                            const keyMissing = !keyStatus[e.id]
                             return (
                               <label
                                 key={e.id}
