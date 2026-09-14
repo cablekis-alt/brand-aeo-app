@@ -240,6 +240,31 @@ const ENGINE_CHOICES: { id: string; label: string }[] = [
   { id: 'perplexity', label: 'Perplexity' },
 ]
 
+/**
+ * active인 동안 경과 초를 센다. 시작할 때 0으로 되돌린다.
+ *
+ * 진짜 진행률의 대체물이다 — 어디까지 갔는지는 못 말해도 "멈추지 않았다"는 말은 한다.
+ * 서버가 단계를 내보내게 되면 이 자리를 그것으로 바꾼다.
+ */
+function useElapsed(active: boolean): number {
+  const [sec, setSec] = useState(0)
+  useEffect(() => {
+    if (!active) return
+    // 시작 시각을 기준으로 계산한다 — 이펙트 본문에서 setState로 0을 찍으면 렌더가 한 번 더
+    // 돌고(react-hooks/set-state-in-effect), 탭이 멈춰 있던 동안의 틱도 놓친다.
+    const start = Date.now()
+    const t = window.setInterval(() => setSec(Math.floor((Date.now() - start) / 1000)), 500)
+    return () => {
+      window.clearInterval(t)
+      setSec(0)
+    }
+  }, [active])
+  return active ? sec : 0
+}
+
+/** "페이지를 읽는 중…" + 경과. 1초 미만이면 초를 숨긴다(깜빡임 방지). */
+const withElapsed = (label: string, sec: number) => (sec > 0 ? `${label} ${sec}초` : label)
+
 export default function BrandOnboarding() {
   const { reloadTenants, setTenantId } = useTenant()
   const [url, setUrl] = useState('')
@@ -287,6 +312,11 @@ export default function BrandOnboarding() {
   // 경쟁사도 cohortOnly로 함께 측정 → 코호트 랭킹이 1/N으로 채워진다(기본 켬).
   const [withCohort, setWithCohort] = useState(true)
   const [suggestingComp, setSuggestingComp] = useState(false)
+  // 오래 걸리는 작업마다 경과 초. 1단계는 실측 90초가 넘어 침묵이 가장 길다.
+  const busySec = useElapsed(busy)
+  const factsSec = useElapsed(findingFacts)
+  const compSec = useElapsed(suggestingComp)
+  const measureSec = useElapsed(measuring)
   const [compMsg, setCompMsg] = useState<string | null>(null)
   // 코호트 표기 불일치 방지 — 기존 브랜드의 업종·지역을 자동완성으로 제공한다.
   const [cohortIndustries, setCohortIndustries] = useState<string[]>([])
@@ -1068,7 +1098,7 @@ export default function BrandOnboarding() {
             홈페이지가 없어도 등록·측정할 수 있습니다 — 언급 판정은 도메인이 아니라 상호와 별칭으로 합니다.
           </span>
           <button type="submit" className="primary" disabled={busy || !brandName.trim()}>
-            {busy ? (url.trim() ? '페이지를 읽는 중…' : '조회 중…') : '자동으로 채우기'}
+            {busy ? withElapsed(url.trim() ? '페이지를 읽는 중…' : '조회 중…', busySec) : '자동으로 채우기'}
           </button>
         </form>
 
@@ -1241,7 +1271,7 @@ export default function BrandOnboarding() {
             </p>
             <div className="brief-bar" style={{ marginBottom: 8 }}>
               <button type="button" className="ghost" onClick={() => void findFacts()} disabled={findingFacts}>
-                {findingFacts ? '페이지 읽는 중…' : '브랜드 페이지에서 찾기'}
+                {findingFacts ? withElapsed('페이지 읽는 중…', factsSec) : '브랜드 페이지에서 찾기'}
               </button>
               {factCands && factCands.length > 0 && (
                 <span className="st st-info">
@@ -1304,7 +1334,7 @@ export default function BrandOnboarding() {
                 disabled={!canSuggestComp || suggestingComp}
                 title={canSuggestComp ? '' : '브랜드명·업종을 먼저 채우세요'}
               >
-                {suggestingComp ? '추천 중…' : '경쟁사 자동 추천 (ChatGPT+Gemini)'}
+                {suggestingComp ? withElapsed('추천 중…', compSec) : '경쟁사 자동 추천 (ChatGPT+Gemini)'}
               </button>
             )}
           </div>
@@ -1438,7 +1468,7 @@ export default function BrandOnboarding() {
                 onClick={() => void measureRegisteredBrand()}
                 disabled={measuring}
               >
-                {measuring ? '측정 중… (보통 3분)' : '측정 시작'}
+                {measuring ? withElapsed('측정 중… (보통 3분)', measureSec) : '측정 시작'}
               </button>
               {!measuring && !skippedMeasure && (
                 <button type="button" className="ghost" onClick={() => setSkippedMeasure(true)}>
