@@ -229,6 +229,14 @@ function StageShell({
   )
 }
 
+// BrandManageList·ApiKeySettings와 같은 순서·이름. 세 화면이 달라지면 같은 엔진으로 안 보인다.
+const ENGINE_CHOICES: { id: string; key: string; label: string }[] = [
+  { id: 'gemini', key: 'GEMINI_API_KEY', label: 'Gemini' },
+  { id: 'openai', key: 'OPENAI_API_KEY', label: 'ChatGPT' },
+  { id: 'claude', key: 'ANTHROPIC_API_KEY', label: 'Claude' },
+  { id: 'perplexity', key: 'PERPLEXITY_API_KEY', label: 'Perplexity' },
+]
+
 export default function BrandOnboarding() {
   const { reloadTenants, setTenantId } = useTenant()
   const [url, setUrl] = useState('')
@@ -247,6 +255,10 @@ export default function BrandOnboarding() {
   const [findingAliases, setFindingAliases] = useState(false)
   const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
+  // 수집 엔진 — 기본값은 "이 PC에 키가 있는 엔진 전부"다. 키 없는 엔진을 기본으로 켜 두면
+  // 측정에서 조용히 빠져(부분 저하) 고른 것과 실제로 잰 것이 달라진다.
+  const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
+  const [engines, setEngines] = useState<string[]>(['openai', 'gemini', 'claude', 'perplexity'])
   // 3단계 사실 — 주소가 있을 때만 뽑는다. 고른 것만 테넌트 초안의 factGraph에 담긴다.
   const [findingFacts, setFindingFacts] = useState(false)
   const [factCands, setFactCands] = useState<FactCandidate[] | null>(null)
@@ -771,8 +783,9 @@ export default function BrandOnboarding() {
     ownedDomains: domain ? [domain] : [],
     industry: industry.trim(),
     region: region.trim(),
-    // 4개 엔진을 모두 등록한다 — 키가 없는 엔진은 측정 시 자동으로 걸러지므로(부분 저하) 안전하다.
-    engines: ['openai', 'gemini', 'claude', 'perplexity'],
+    // 5단계에서 고른 엔진. 데스크톱이 아니면 키를 알 수 없어 4개 그대로 두고, 측정 때
+    // 키 없는 엔진이 걸러진다(부분 저하).
+    engines,
     // 질문 배분은 서버가 정한다(위 TenantDraft 주석 참고).
     competitors: parseCompetitors(competitorsRaw),
     // 주소 한 줄 + 3단계에서 고른 사실. 주소와 값이 겹치면 고른 쪽이 보통 더 자세하다.
@@ -806,6 +819,16 @@ export default function BrandOnboarding() {
   const ready = Boolean(tenant.brandName && tenant.industry && tenant.region)
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
+
+  useEffect(() => {
+    const bridge = typeof window !== 'undefined' ? window.electron : undefined
+    if (!bridge?.isElectron) return
+    void bridge.apiKeyStatus().then((r) => {
+      setKeyStatus(r.status)
+      const withKey = ENGINE_CHOICES.filter((e) => r.status[e.key]).map((e) => e.id)
+      if (withKey.length > 0) setEngines(withKey)
+    })
+  }, [])
 
   /** 브랜드 페이지에서 사실 후보를 뽑는다. 저장하지 않는다 — 고른 것만 등록 때 함께 간다. */
   async function findFacts() {
@@ -1296,6 +1319,44 @@ export default function BrandOnboarding() {
       <StageShell id="stage-5" code="5" title="등록" status={s5}>
         <div className="onboard-register">
           <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
+          {keyStatus && (
+            <div className="onboard-engines">
+              <p className="onboard-engines-title">수집 엔진</p>
+              <span className="engine-cell">
+                {ENGINE_CHOICES.map((e) => {
+                  const keyMissing = !keyStatus[e.key]
+                  return (
+                    <label
+                      key={e.id}
+                      className={keyMissing ? 'disabled' : undefined}
+                      title={keyMissing ? `${e.label} 키가 이 PC에 없습니다.` : undefined}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={engines.includes(e.id)}
+                        disabled={keyMissing || registered}
+                        onChange={() =>
+                          setEngines((prev) => (prev.includes(e.id) ? prev.filter((x) => x !== e.id) : [...prev, e.id]))
+                        }
+                      />{' '}
+                      {e.label}
+                      {keyMissing && <span className="muted"> — 키 없음</span>}
+                    </label>
+                  )
+                })}
+              </span>
+              <p className="hint" style={{ margin: '4px 0 0' }}>
+                {engines.length === 0 ? (
+                  <b style={{ color: 'var(--bad)' }}>엔진을 하나 이상 고르세요.</b>
+                ) : (
+                  <>
+                    <b>{engines.length}개</b> 선택 — 엔진 1개 기준 대비 수집·판정 호출이 약 <b>{engines.length}배</b>가 되고
+                    측정 시간도 그만큼 늘어납니다. 등록 후에는 아래 브랜드 목록에서 바꿀 수 있습니다.
+                  </>
+                )}
+              </p>
+            </div>
+          )}
           {canRegister && measureVia !== 'none' && (
             <label className="onboard-cohort">
               <input type="checkbox" checked={withCohort} onChange={(e) => setWithCohort(e.target.checked)} />
@@ -1306,7 +1367,12 @@ export default function BrandOnboarding() {
           )}
           <div className="onboard-register-actions">
             {canRegister && !registered && (
-              <button type="button" className="primary" onClick={registerBrand} disabled={!ready || registering}>
+              <button
+                type="button"
+                className="primary"
+                onClick={registerBrand}
+                disabled={!ready || registering || engines.length === 0}
+              >
                 {registering ? '등록 중…' : '브랜드 등록'}
               </button>
             )}

@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { measureTenantAll } from '../lib/api'
+import { measureTenantAll, saveTenantEngines } from '../lib/api'
+import type { Engine } from '../prompts/types'
+
+// ApiKeySettings와 같은 순서·이름을 쓴다 — 두 화면이 다른 이름을 쓰면 같은 엔진으로 안 보인다.
+const ENGINES: { id: Engine; key: string; label: string }[] = [
+  { id: 'gemini', key: 'GEMINI_API_KEY', label: 'Gemini' },
+  { id: 'openai', key: 'OPENAI_API_KEY', label: 'ChatGPT' },
+  { id: 'claude', key: 'ANTHROPIC_API_KEY', label: 'Claude' },
+  { id: 'perplexity', key: 'PERPLEXITY_API_KEY', label: 'Perplexity' },
+]
 
 interface BrandRow {
   tenantId: string
@@ -10,6 +19,7 @@ interface BrandRow {
   region: string
   cohortOnly?: boolean
   competitors?: string[]
+  engines?: Engine[]
 }
 
 function fmtElapsed(ms: number): string {
@@ -32,6 +42,12 @@ export default function BrandManageList() {
   // 측정 경로(local/github/none)와 진행 중인 측정 — 등록된 브랜드를 목록에서 바로 측정한다.
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   const [measuringId, setMeasuringId] = useState<string | null>(null)
+  // 수집 엔진 — 어떤 키가 있는지(keyStatus)와 전역 지정이 켜져 있는지(globalEngines)를 알아야
+  // 체크박스가 거짓말을 안 한다. 둘 다 데스크톱 브리지에만 있다.
+  const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
+  const [globalEngines, setGlobalEngines] = useState<Engine[] | null>(null)
+  const [engineBusyId, setEngineBusyId] = useState<string | null>(null)
+  const [engineMsg, setEngineMsg] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -46,6 +62,43 @@ export default function BrandManageList() {
       alive = false
     }
   }, [])
+
+  useEffect(() => {
+    const bridge = typeof window !== 'undefined' ? window.electron : undefined
+    if (!bridge?.isElectron) return
+    void bridge.apiKeyStatus().then((r) => {
+      setKeyStatus(r.status)
+      setGlobalEngines((r.collectEngines as Engine[] | null | undefined) ?? null)
+    })
+  }, [])
+
+  /**
+   * 엔진 하나를 켜고 끈다. 바로 저장한다 — "적용" 버튼을 따로 두면 어느 행을 고쳤는지
+   * 잊는다. 실패하면 이전 값으로 되돌린다(낙관적 갱신).
+   */
+  async function toggleEngine(row: BrandRow, id: Engine) {
+    if (engineBusyId) return
+    const before = row.engines ?? []
+    const next = before.includes(id) ? before.filter((e) => e !== id) : [...before, id]
+    if (next.length === 0) {
+      setEngineMsg('✗ 수집 엔진을 하나 이상 남겨야 합니다.')
+      return
+    }
+    setEngineBusyId(row.tenantId)
+    setEngineMsg(null)
+    setRows((prev) => prev.map((r) => (r.tenantId === row.tenantId ? { ...r, engines: next } : r)))
+    try {
+      const saved = await saveTenantEngines(row.tenantId, next)
+      setRows((prev) => prev.map((r) => (r.tenantId === row.tenantId ? { ...r, engines: saved } : r)))
+      setEngineMsg(`${row.brandName} 수집 엔진을 ${saved.map((e) => ENGINES.find((x) => x.id === e)?.label ?? e).join(' · ')}(으)로 저장했습니다.`)
+      await reloadTenants()
+    } catch (err) {
+      setRows((prev) => prev.map((r) => (r.tenantId === row.tenantId ? { ...r, engines: before } : r)))
+      setEngineMsg(`✗ ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setEngineBusyId(null)
+    }
+  }
 
   async function measureRow(row: BrandRow) {
     if (measuringId || measureVia === 'none') return
@@ -186,6 +239,27 @@ export default function BrandManageList() {
         </p>
       )}
 
+      {keyStatus &&
+        (globalEngines ? (
+          <p className="hint" style={{ marginTop: 0 }}>
+            지금은 <b>전역 지정</b>이 켜져 있어 모든 브랜드가{' '}
+            <b>{globalEngines.map((e) => ENGINES.find((x) => x.id === e)?.label ?? e).join(' · ')}</b>로 측정됩니다. 아래
+            브랜드별 설정은 저장은 되지만 쓰이지 않습니다 — 쓰려면 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>의
+            「수집 엔진」에서 <b>브랜드별 설정 사용</b>으로 바꾸세요.
+          </p>
+        ) : (
+          <p className="hint" style={{ marginTop: 0 }}>
+            <b>수집 엔진</b>은 그 브랜드에 질문을 실제로 물어볼 엔진입니다. 체크하면 바로 저장됩니다. 엔진을 늘리면
+            측정 시간과 호출 수가 거의 비례해 늘고, <b>주차마다 엔진이 다르면 점수를 나란히 비교할 수 없습니다</b>.
+          </p>
+        ))}
+
+      {engineMsg && (
+        <p className={engineMsg.startsWith('✗') ? 'error' : 'hint'} role="status">
+          {engineMsg}
+        </p>
+      )}
+
       {loading ? (
         <p className="muted">불러오는 중…</p>
       ) : rows.length === 0 ? (
@@ -199,6 +273,7 @@ export default function BrandManageList() {
                 <th style={{ whiteSpace: 'nowrap' }}>tenantId</th>
                 <th style={{ whiteSpace: 'nowrap' }}>업종 · 지역</th>
                 <th>경쟁사</th>
+                {keyStatus && <th style={{ whiteSpace: 'nowrap' }}>수집 엔진</th>}
                 <th></th>
               </tr>
             </thead>
@@ -227,6 +302,37 @@ export default function BrandManageList() {
                         <span className="muted">측정 후 자동 채움</span>
                       )}
                     </td>
+                    {keyStatus && (
+                      <td className="judgment">
+                        <span className="engine-cell">
+                          {ENGINES.map((e) => {
+                            const on = (row.engines ?? []).includes(e.id)
+                            const keyMissing = !keyStatus[e.key]
+                            return (
+                              <label
+                                key={e.id}
+                                className={keyMissing || globalEngines ? 'disabled' : undefined}
+                                title={
+                                  globalEngines
+                                    ? '전역 지정이 켜져 있어 지금은 이 설정이 쓰이지 않습니다.'
+                                    : keyMissing
+                                      ? `${e.label} 키가 없어 이 엔진은 측정에서 빠집니다.`
+                                      : undefined
+                                }
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={on}
+                                  disabled={busy || engineBusyId !== null || keyMissing || Boolean(globalEngines)}
+                                  onChange={() => void toggleEngine(row, e.id)}
+                                />{' '}
+                                {e.label}
+                              </label>
+                            )
+                          })}
+                        </span>
+                      </td>
+                    )}
                     <td style={{ whiteSpace: 'nowrap' }}>
                       {deleting ? (
                         <span style={{ display: 'inline-flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start' }}>

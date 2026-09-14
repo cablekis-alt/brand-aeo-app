@@ -15,6 +15,7 @@ import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
+import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { findFactsForGaps } from './factForGaps.js';
 import { getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
@@ -602,6 +603,30 @@ app.put('/api/tenants/:tenantId/brand-page', async (req, res) => {
     res.json({ ok: true, brandPageUrl: url ?? '' });
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 브랜드별 수집 엔진. 전역 지정(COLLECT_ENGINES)이 있으면 그쪽이 이긴다 —
+// 여기 저장한 값은 "전역 지정을 안 쓸 때" 쓰인다(resolveCollectionEngines 한 곳에서 판단).
+app.put('/api/tenants/:tenantId/engines', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  // 정규화를 try 밖에서 한다 — 입력 잘못은 400이지 500이 아니다.
+  let engines;
+  try {
+    engines = normalizeEngineList((req.body as { engines?: unknown } | undefined)?.engines);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  try {
+    await writeTenantEngines(tenant.tenantId, engines);
+    res.json({ tenantId: tenant.tenantId, engines });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 

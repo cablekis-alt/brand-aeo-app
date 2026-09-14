@@ -605,6 +605,18 @@ export async function saveBrandPageUrl(tenantId: string, url: string): Promise<s
   return body.brandPageUrl ?? ''
 }
 
+/** 브랜드별 수집 엔진을 저장한다. 전역 지정(COLLECT_ENGINES)이 켜져 있으면 그쪽이 이긴다. */
+export async function saveTenantEngines(tenantId: string, engines: Engine[]): Promise<Engine[]> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/engines`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ engines }),
+  })
+  const body = (await res.json().catch(() => ({}))) as { engines?: Engine[]; error?: string }
+  if (!res.ok) throw new Error(body.error || `엔진을 저장하지 못했습니다 (HTTP ${res.status})`)
+  return body.engines ?? engines
+}
+
 export interface FactNode {
   id: string
   type: 'price' | 'spec' | 'date' | 'certification' | 'location' | 'other'

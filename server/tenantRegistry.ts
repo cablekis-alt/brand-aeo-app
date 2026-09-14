@@ -5,6 +5,7 @@ import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, 
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
+import { readTenantEngines } from './tenantEnginesStore.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
@@ -126,17 +127,20 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소)만은 저장한 파일이 베이스·오버레이를
-  // 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지 않기 때문이다.
+  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진)만은 저장한 파일이
+  // 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
+  // 않기 때문이다.
   const tenants = [...map.values()];
-  const [facts, pages] = await Promise.all([
+  const [facts, pages, engines] = await Promise.all([
     Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
     Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
+    Promise.all(tenants.map((t) => readTenantEngines(t.tenantId))),
   ]);
   return tenants.map((t, i) => ({
     ...t,
     ...(facts[i] ? { factGraph: facts[i]! } : {}),
     ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
+    ...(engines[i] ? { engines: engines[i]! } : {}),
   }));
 }
 
