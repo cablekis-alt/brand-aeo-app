@@ -10,7 +10,17 @@ export default function Dashboard() {
   const { tenant } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
-  const delta = card ? formatDelta(card.aeoScore.current, card.aeoScore.previousWeek) : null
+  // 전주는 저장된 previousWeek가 아니라 히스토리에서 읽는다. 저장값은 측정 시점에 박제되어,
+  // 지난 주를 다시 재면 어긋난다(실측: W37 카드 33 vs 알림 42 — 같은 화면이 +2와 -7을 동시에
+  // 말했다). 알림도 히스토리를 쓰므로 이제 두 자리가 같은 값을 본다.
+  const prevCard = history.length > 1 ? history[history.length - 2]! : null
+  const prevScore = prevCard?.aeoScore.current ?? null
+  // 엔진 구성이 다르면 증감을 숫자로 내세우지 않는다. 헤드라인이 빨간 -7인데 바로 아래 알림이
+  // "그렇게 읽지 말라"고 하면 화면이 자기모순이다. 판단 규칙은 alerts.ts의 sameEngines와 같다.
+  const engineSets = [prevCard, card].map((c) => [...(c?.enginesUsed ?? [])].sort().join(','))
+  const comparable =
+    !prevCard || !card || !engineSets[0] || !engineSets[1] || engineSets[0] === engineSets[1]
+  const delta = card && prevScore !== null && comparable ? formatDelta(card.aeoScore.current, prevScore) : null
 
   // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
   // (키가 설정돼도 크레딧 소진 등으로 실패하면 빠진다), 구버전 스코어카드는 tenant.engines로 폴백한다.
@@ -112,7 +122,10 @@ export default function Dashboard() {
             <dl className="meta">
               <div>
                 <dt>전주</dt>
-                <dd>{card.aeoScore.previousWeek}</dd>
+                <dd>
+                  {prevScore ?? '—'}
+                  {!comparable && <span className="muted"> · 엔진 달라 비교 불가</span>}
+                </dd>
               </div>
               <div>
                 <dt>4주 이동평균</dt>

@@ -1,4 +1,5 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
+import { ENGINE_LABEL } from './format'
 
 // 주간 스코어카드 히스토리에서 "이번 주 vs 지난 주" 변화를 감지해 알림을 만든다.
 // 새 데이터 수집 없이 기존 스코어카드만으로 계산한다(SoM 급락·순위 하락·사실성 오류·변동성 등).
@@ -46,6 +47,31 @@ function comparableRankChange(
   }
 }
 
+/**
+ * 두 주를 견줄 수 있나 — 수집 엔진이 같아야 한다.
+ *
+ * 엔진 하나를 덜 재면 질문당 답변 수가 줄어 점수·SoM·순위가 전부 움직인다. 그 변화를
+ * "실력 변화"로 알리면 측정 도구로서 거짓말이 된다. 옛 카드는 enginesUsed가 비어 있는데,
+ * 그때는 알 수 없으므로 비교를 막지 않는다(막으면 과거 데이터의 알림이 전부 사라진다).
+ */
+/** 이번 주만으로 판단하는 알림이라 엔진 가드와 무관하다 — 두 경로에서 같이 쓴다. */
+function ciWidthAlert(cur: WeeklyScorecard): Alert | null {
+  const ciWidth = cur.aeoScore.ciHigh - cur.aeoScore.ciLow
+  if (ciWidth < 20) return null
+  return {
+    level: 'info',
+    title: `변동성 큼 (95% CI 폭 ${Math.round(ciWidth)})`,
+    detail: `이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${cur.aeoScore.ma4}) 추세로 판단하세요.`,
+  }
+}
+
+function sameEngines(a: WeeklyScorecard, b: WeeklyScorecard): boolean {
+  const x = [...(a.enginesUsed ?? [])].sort()
+  const y = [...(b.enginesUsed ?? [])].sort()
+  if (x.length === 0 || y.length === 0) return true
+  return x.length === y.length && x.every((e, i) => e === y[i])
+}
+
 export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   if (!history || history.length === 0) return []
   const sorted = [...history].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
@@ -68,6 +94,24 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
       title: '기준선 형성 중 (측정 1주차)',
       detail: '전주 데이터가 아직 없어 변화 비교를 시작하지 못했습니다. 다음 주 측정부터 변화 알림이 표시됩니다.',
     })
+    return alerts
+  }
+
+  // 엔진 구성이 다르면 측정에서 파생된 변화를 알리지 않는다. 틀린 방향의 경고보다 침묵이
+  // 낫다는 판단은 코호트 구성 가드(comparableRankChange)와 같다.
+  if (!sameEngines(prev, cur)) {
+    const label = (c: WeeklyScorecard) =>
+      (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join('·') || '알 수 없음'
+    alerts.push({
+      level: 'info',
+      title: '엔진 구성이 달라 전주와 비교할 수 없음',
+      detail:
+        `전주 ${label(prev)} → 이번 주 ${label(cur)}. 엔진 수가 달라지면 점수·점유·순위가 함께 움직이므로, ` +
+        `점수 차이(${prev.aeoScore.current} → ${cur.aeoScore.current})를 실력 변화로 읽으면 안 됩니다. ` +
+        `같은 엔진으로 두 주를 재면 비교가 살아납니다.`,
+    })
+    const ci = ciWidthAlert(cur)
+    if (ci) alerts.push(ci)
     return alerts
   }
 
@@ -111,10 +155,8 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   }
 
   // 변동성(신뢰구간 폭)이 크면 단일 변동 과잉해석 주의
-  const ciWidth = cur.aeoScore.ciHigh - cur.aeoScore.ciLow
-  if (ciWidth >= 20) {
-    alerts.push({ level: 'info', title: `변동성 큼 (95% CI 폭 ${Math.round(ciWidth)})`, detail: `이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${cur.aeoScore.ma4}) 추세로 판단하세요.` })
-  }
+  const ci = ciWidthAlert(cur)
+  if (ci) alerts.push(ci)
 
   if (alerts.length === 0) {
     alerts.push({ level: 'good', title: '특이 변화 없음', detail: `전주 대비 큰 변동이 감지되지 않았습니다 (AEO ${prev.aeoScore.current} → ${cur.aeoScore.current}).` })
