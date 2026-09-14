@@ -23,7 +23,16 @@ function GroupCard({ group, nameOf }: { group: GapGroup; nameOf?: (key: string) 
     <article className="gap-card">
       <div className="gap-card-head">
         <span className="gap-name">{nameOf ? nameOf(group.key) : group.label}</span>
-        <span className={`status-pill ${v.cls}`}>{v.label}</span>
+        {/*
+          배지는 승패로 판정한다(승이 절반을 넘으면 강점). 언급률 옆에 있어서 "강점인데 43%"가
+          모순처럼 읽히므로 근거를 붙인다 — 숫자가 아니라 무엇을 센 것인지가 빠져 있었다.
+        */}
+        <span
+          className={`status-pill ${v.cls}`}
+          title={`승 ${group.win} · 패 ${group.loss} 기준 (언급률이 아니라 승패로 판정합니다)`}
+        >
+          {v.label} {group.win}승 {group.loss}패
+        </span>
         <span className="gap-rate">
           언급률 <b>{pct(group.mentionRate)}</b>
         </span>
@@ -168,7 +177,8 @@ export default function GapAnalysis() {
 
           {gap.byStage.length > 0 && (
             <section>
-              <h3>구매 여정별</h3>
+              <details className="gap-more">
+              <summary>구매 여정별 — 탐색 · 비교 · 결정</summary>
               <p className="hint" style={{ marginTop: 0 }}>
                 탐색 → 비교 → 결정 순서입니다. <b>결정</b> 단계에서 밀리면 전환 직전 고객을 놓치는 것이라, 같은
                 패라도 먼저 봐야 합니다.
@@ -180,12 +190,14 @@ export default function GapAnalysis() {
                   <GroupCard key={g.key} group={g} />
                 ))}
               </div>
+              </details>
             </section>
           )}
 
           {(gap.byTopic.length > 0 || gap.topicMissingCount > 0) && (
             <section>
-              <h3>주제별</h3>
+              <details className="gap-more">
+              <summary>주제별 — 보강할 콘텐츠 주제</summary>
               <p className="hint" style={{ marginTop: 0 }}>
                 카테고리가 질문의 <b>형태</b>, 여정이 고객의 <b>위치</b>라면 주제는 <b>내용</b>입니다. 보강할
                 콘텐츠를 정하는 축이라 아픈 순으로 놓았습니다.
@@ -201,12 +213,14 @@ export default function GapAnalysis() {
               ) : (
                 <p className="muted">아직 주제가 매겨진 질문이 없습니다.</p>
               )}
+              </details>
             </section>
           )}
 
           {gap.byEngine.length > 1 ? (
             <section>
-              <h3>엔진별</h3>
+              <details className="gap-more">
+              <summary>엔진별 — 어느 엔진에서 밀리나</summary>
               <p className="hint" style={{ marginTop: 0 }}>
                 같은 질문이라도 엔진마다 답이 다릅니다. 한 엔진에서만 빠져 있다면 그 엔진이 참고하는
                 출처를 보강하는 것이 빠릅니다.
@@ -216,19 +230,23 @@ export default function GapAnalysis() {
                   <GroupCard key={g.key} group={g} nameOf={(k) => ENGINE_LABEL[k] ?? k} />
                 ))}
               </div>
+              </details>
             </section>
           ) : (
             <section>
-              <h3>엔진별</h3>
+              <details className="gap-more">
+              <summary>엔진별</summary>
               <p className="muted" style={{ marginTop: 0 }}>
                 이 주차는 <b>{ENGINE_LABEL[gap.byEngine[0]?.key] ?? gap.byEngine[0]?.key ?? '엔진 1개'}</b>
                 로만 측정해 엔진 간 비교가 없습니다. 설정에서 수집 엔진을 늘리면 이 자리가 채워집니다.
               </p>
+              </details>
             </section>
           )}
 
           <section>
-            <h3>우리 자리를 가져간 경쟁사</h3>
+            <details className="gap-more">
+            <summary>우리 자리를 가져간 경쟁사</summary>
             <p className="hint" style={{ marginTop: 0 }}>
               전체 언급량이 아니라 <b>우리가 밀린 질문에서 앞선 횟수</b>입니다. 그 질문들이 곧 보강할
               주제입니다.
@@ -263,6 +281,7 @@ export default function GapAnalysis() {
                 </table>
               </div>
             )}
+            </details>
           </section>
         </>
       )}
