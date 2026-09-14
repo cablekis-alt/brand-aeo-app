@@ -1929,3 +1929,20 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   font-size: 12.5px;
   line-height: 1.5;
 }
+
+/* 초안 빈칸 — 값이 적힌 페이지 주소를 칸마다 따로 넣는다. */
+.gap-url {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.gap-url input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+}
+.gap-url button {
+  flex: 0 0 auto;
+  font-size: 12px;
+  white-space: nowrap;
+}

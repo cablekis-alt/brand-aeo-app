@@ -100,25 +100,42 @@ export default function DraftPanel({
       setSaving(false)
     }
   }
+  /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
+  const [urlByNeed, setUrlByNeed] = useState<Record<string, string>>({})
+  /** 지금 조회 중인 빈칸 — 한 칸만 찾을 때 그 칸의 버튼만 "읽는 중"으로 바꾼다. */
+  const [fillingNeed, setFillingNeed] = useState<string | null>(null)
+
   /** 빈칸의 need 목록 — 초안이 "무엇이 필요한가"를 이미 적어 두었다. */
   const needsOf = (draft: StoredDraft['draft']): string[] =>
     draft.sections.flatMap((sec) => sec.blocks.filter((b) => b.kind === 'gap').map((b) => b.need ?? '')).filter(Boolean)
 
-  /** 브랜드 페이지를 읽어 빈칸을 메워 본다. 찾은 것은 후보로만 두고, 사람이 넣어야 저장된다. */
-  const lookUp = async () => {
+  /**
+   * 페이지를 읽어 빈칸을 메워 본다. 찾은 것은 후보로만 두고, 사람이 넣어야 저장된다.
+   *
+   * onlyNeed를 주면 그 칸 하나만, 그 칸에 적힌 주소로 찾는다. 빈칸마다 값이 있는 페이지가
+   * 다르기 때문이다 — 주소 하나로 전부 찾으려 하면 대개 0건이 나온다(실측: 원진성형외과
+   * 루트에서 4건 전부 실패, 페이지를 짚으니 1건 성공).
+   */
+  const lookUp = async (onlyNeed?: string) => {
     if (!stored) return
-    const needs = needsOf(stored.draft)
+    const needs = onlyNeed ? [onlyNeed] : needsOf(stored.draft)
     if (!needs.length) return
-    setFilling(true)
+    const url = onlyNeed ? urlByNeed[onlyNeed]?.trim() : undefined
+    if (onlyNeed) setFillingNeed(onlyNeed)
+    else setFilling(true)
     setError(null)
     try {
-      const r = await findFactsForGaps(tenantId, needs)
-      setLookup({
-        byNeed: Object.fromEntries(r.found.map((f) => [f.need, f])),
-        missing: r.missing,
+      const r = await findFactsForGaps(tenantId, needs, url || undefined)
+      // 한 칸만 찾았으면 나머지 칸의 이전 결과를 지우지 않는다 — 칸마다 따로 찾아 나가는
+      // 것이 이 기능의 쓰임이므로, 새 결과가 앞 결과를 덮으면 진행이 보이지 않는다.
+      setLookup((prev) => ({
+        byNeed: { ...(onlyNeed ? prev?.byNeed : {}), ...Object.fromEntries(r.found.map((f) => [f.need, f])) },
+        missing: onlyNeed
+          ? [...(prev?.missing ?? []).filter((n) => n !== onlyNeed), ...r.missing]
+          : r.missing,
         sourceUrl: r.sourceUrl,
         dropped: r.dropped,
-      })
+      }))
       // 찾은 값은 입력칸에 미리 채운다. 사람이 그대로 두거나 고칠 수 있게 — 읽기만 되는
       // 표로 보여 주면 "맞다/틀리다"를 말할 자리가 없다.
       setTyped((prev) => ({ ...prev, ...Object.fromEntries(r.found.map((f) => [f.need, f.value])) }))
@@ -126,6 +143,7 @@ export default function DraftPanel({
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setFilling(false)
+      setFillingNeed(null)
     }
   }
 
@@ -305,9 +323,15 @@ export default function DraftPanel({
             {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다 — 아래 빈칸에 바로 적으세요.` : '비운 자리는 없습니다.'}
           </p>
           {d.gapCount > 0 && (
+            <p className="doc-meta" style={{ margin: '0 0 6px' }}>
+              한 번에 찾기는 <b>브랜드 페이지 한 곳</b>만 읽습니다. 값이 상세 페이지에 흩어져 있으면 0건이 나오니,
+              빈칸마다 그 값이 적힌 주소를 넣고 <b>이 주소에서 찾기</b>를 쓰세요.
+            </p>
+          )}
+          {d.gapCount > 0 && (
             <div className="facts-bar" style={{ marginBottom: 10 }}>
               <button type="button" className="ghost" disabled={filling || busy} onClick={() => void lookUp()}>
-                {filling ? '페이지 읽는 중…' : '브랜드 페이지에서 찾아보기'}
+                {filling ? '페이지 읽는 중…' : '브랜드 페이지에서 한 번에 찾아보기'}
               </button>
               <button
                 type="button"
@@ -372,11 +396,37 @@ export default function DraftPanel({
                       onChange={(e) => setTyped((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
                     />
                     {lookup?.byNeed[b.need ?? ''] && (
-                      <span className="doc-meta">브랜드 페이지에서 찾은 값입니다 — 맞으면 그대로 두세요.</span>
+                      <span className="doc-meta">
+                        찾은 값입니다 — 맞으면 그대로 두세요.{' '}
+                        {lookup.byNeed[b.need ?? '']?.sourceUrl && (
+                          <a href={lookup.byNeed[b.need ?? '']!.sourceUrl} target="_blank" rel="noreferrer">
+                            출처 페이지
+                          </a>
+                        )}
+                      </span>
                     )}
-                    {lookup && lookup.missing.includes(b.need ?? '') && (
-                      <span className="doc-meta">브랜드 페이지에는 없었습니다.</span>
+                    {lookup && lookup.missing.includes(b.need ?? '') && !lookup.byNeed[b.need ?? ''] && (
+                      <span className="doc-meta">그 페이지에는 없었습니다 — 아래에 다른 주소를 넣어 다시 찾아보세요.</span>
                     )}
+                    {/* 빈칸마다 값이 있는 페이지가 다르다. 주소 하나로 전부 찾으려 하면 대개 0건이다. */}
+                    <div className="gap-url">
+                      <input
+                        type="text"
+                        inputMode="url"
+                        aria-label={`${b.need} 를 찾을 주소`}
+                        placeholder="이 값이 적힌 페이지 주소 (비우면 브랜드 페이지)"
+                        value={urlByNeed[b.need ?? ''] ?? ''}
+                        onChange={(e) => setUrlByNeed((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
+                      />
+                      <button
+                        type="button"
+                        className="ghost"
+                        disabled={filling || busy || fillingNeed !== null}
+                        onClick={() => void lookUp(b.need ?? '')}
+                      >
+                        {fillingNeed === (b.need ?? '') ? '읽는 중…' : '이 주소에서 찾기'}
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <p key={i}>{b.body}</p>
