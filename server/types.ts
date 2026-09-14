@@ -35,7 +35,12 @@ export interface RawCallRecord {
   usedWebSearch: boolean;
   tokenUsage?: number;
   latencyMs?: number;
+  // 호출이 **끝난** 시각. 시작이 아니다 — 응답을 받은 뒤에 찍는다.
   calledAt: string;
+  // 큐에 들어간 시각(전역 슬롯을 요청하기 직전). calledAt - startedAt - latencyMs가
+  // 슬롯 대기다. 이게 없으면 "느린 API"와 "막힌 큐"를 구분할 수 없다.
+  // 구버전 데이터엔 없어 선택 필드.
+  startedAt?: string;
 }
 
 export interface MentionSentence {
@@ -66,6 +71,30 @@ export interface FactClaimDetail {
 
 // 브랜드 종합 진단/URL 상세 분석/랭킹 분석 화면이 그대로 소비할 수 있도록
 // B5-A~D 판정 결과를 요약(mentioned, shareOfMention 등)과 원본 상세를 함께 저장한다.
+/**
+ * 판정 단계 실측. 분석 구간이 브랜드마다 왜 달랐는지 사후에 가르기 위한 기록이다.
+ *
+ * 2026-W38 화학 코호트 6곳에서 폴리미래만 분석이 203초 걸렸다(나머지 99~102초). 판정 호출
+ * 수(288건 · 한화솔루션과 동일)도, 인용 수도, 답변 길이도 그 차이를 설명하지 못했는데 남은
+ * 기록이 없어 거기서 멈췄다.
+ *
+ * 전역 슬롯은 client.call 바깥에서 잡으므로(engines/index.ts의 limited) judgeMs에는 대기가
+ * 안 들어가고 wallMs에는 들어간다. 그래서 둘의 차이가 원인을 가른다:
+ *
+ *   wallMs - max(judgeMs)가 크다   큐에서 기다린 것 — 동시성 상한 문제
+ *   max(judgeMs)가 크다            API가 느린 것 — SDK 내부 재시도·모델 지연
+ *
+ * 판정 4건은 Promise.all로 함께 돌리므로 wallMs는 넷의 합이 아니라 가장 느린 하나에 대기를
+ * 더한 값이다.
+ */
+export interface AnalysisTiming {
+  startedAt: string;
+  /** 슬롯 대기 + API 왕복. 판정 4건 병렬 전체. */
+  wallMs: number;
+  /** 슬롯을 얻은 뒤의 API 왕복만. 건너뛴 판정은 null. */
+  judgeMs: { mention: number; citation: number | null; rank: number; fact: number | null };
+}
+
 export interface QuestionRepeatAnalysis {
   questionId: string;
   engine: Engine;
@@ -84,4 +113,7 @@ export interface QuestionRepeatAnalysis {
   // 답을 내놓지 않고 사용자에게 되물은 응답("어느 지역을 찾으시나요?"). 브랜드가 언급될
   // 기회 자체가 없었으므로 "미언급"과 구분한다. 구버전 데이터엔 없어 선택 필드.
   clarifying?: boolean;
+  // 판정에 걸린 시간. 점수에는 쓰이지 않는다 — 측정 자체를 진단하기 위한 기록이다.
+  // 구버전 데이터엔 없어 선택 필드.
+  timing?: AnalysisTiming;
 }

@@ -218,6 +218,8 @@ async function collectRawCalls(
     COLLECTION_CONCURRENCY,
     async (job): Promise<RawCallRecord | null> => {
       const prompt = buildEngineCallPrompt(job.engine, job.question.text);
+      // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
+      const startedAt = new Date().toISOString();
       try {
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
         const result = await client.call(prompt);
@@ -233,6 +235,7 @@ async function collectRawCalls(
           tokenUsage: result.tokenUsage,
           latencyMs: result.latencyMs,
           calledAt: new Date().toISOString(),
+          startedAt,
         };
       } catch (err) {
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
@@ -334,6 +337,8 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
         )
       : null;
 
+  const startedAt = new Date().toISOString();
+  const wallStart = performance.now();
   const [mentionRaw, citationRaw, rankRaw, factRaw] = await Promise.all([
     judge.call(buildBrandMentionPrompt(brand, call.rawText)),
     citationPrompt ? judge.call(citationPrompt) : Promise.resolve(null),
@@ -342,6 +347,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
       ? judge.call(buildFactCheckPrompt(brand, call.rawText, tenant.factGraph))
       : Promise.resolve(null),
   ]);
+  const wallMs = Math.round(performance.now() - wallStart);
 
   const mention = parseJsonLoose<BrandMentionResult>(mentionRaw.text);
   const citation = citationRaw ? parseJsonLoose<CitationResult>(citationRaw.text) : null;
@@ -388,6 +394,16 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
     factualityContradicted: factualityClaims.filter((c) => c.verdict === 'contradicted').length,
     brandOwnedCitation: citation?.citations.some((c) => c.ownerType === 'brand-owned') ?? false,
     clarifying: isClarifyingResponse(call.rawText),
+    timing: {
+      startedAt,
+      wallMs,
+      judgeMs: {
+        mention: mentionRaw.latencyMs ?? 0,
+        citation: citationRaw?.latencyMs ?? null,
+        rank: rankRaw.latencyMs ?? 0,
+        fact: factRaw?.latencyMs ?? null,
+      },
+    },
   };
 }
 
