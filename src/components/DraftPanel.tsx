@@ -11,7 +11,14 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import type { GapAction } from '../lib/gapActions'
-import { downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import {
+  countGapNotes,
+  downloadMarkdown,
+  draftToMarkdown,
+  draftToPublishMarkdown,
+  safeFileName,
+  stripGapNotes,
+} from '../lib/markdownFile'
 
 /**
  * 초안 패널 — 브리프에서 한 걸음.
@@ -104,6 +111,10 @@ export default function DraftPanel({
   const [urlByNeed, setUrlByNeed] = useState<Record<string, string>>({})
   /** 지금 조회 중인 빈칸 — 한 칸만 찾을 때 그 칸의 버튼만 "읽는 중"으로 바꾼다. */
   const [fillingNeed, setFillingNeed] = useState<string | null>(null)
+  // 발행용에서 덜어낼 빈칸이 몇 줄인지 — 고쳐 둔 글이면 거기 남은 것을 센다.
+  const gapNotes = stored
+    ? countGapNotes(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
+    : 0
 
   /** 빈칸의 need 목록 — 초안이 "무엇이 필요한가"를 이미 적어 두었다. */
   const needsOf = (draft: StoredDraft['draft']): string[] =>
@@ -226,7 +237,29 @@ export default function DraftPanel({
                 )
               }
             >
-              .md 내려받기
+              작업용 .md
+            </button>
+            {/*
+              발행용을 따로 둔다. 하나뿐일 때는 「.md 내려받기」가 발행용 원고로 읽혔는데,
+              실제로는 `> **채워야 함:** … 팩트 그래프에 가격 항목 없음` 같은 내부 메모가
+              본문에 섞여 나갔다. 빈칸을 못 채운 채 올려야 하는 경우가 정상 경로라서,
+              "지우고 올리세요"라고 말하는 대신 지운 파일을 준다.
+            */}
+            <button
+              type="button"
+              className="ghost"
+              title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다. 그대로 올릴 수 있습니다."
+              onClick={() =>
+                downloadMarkdown(
+                  `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
+                  stored.editedMarkdown
+                    ? stripGapNotes(stored.editedMarkdown)
+                    : draftToPublishMarkdown(stored.draft),
+                )
+              }
+            >
+              발행용 .md
+              {gapNotes > 0 && <span className="muted"> — 빈칸 {gapNotes}줄 뺌</span>}
             </button>
             <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
               {editing ? '편집 닫기' : '편집'}

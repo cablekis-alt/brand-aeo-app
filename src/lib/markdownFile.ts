@@ -40,6 +40,9 @@ export function safeFileName(s: string): string {
   return s.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '-').slice(0, 60)
 }
 
+/** 본문에 남는 빈칸 표시. 발행용에서 걷어낼 때도 이 모양을 찾는다. */
+const GAP_LINE = '> **채워야 함:**'
+
 /** 초안을 마크다운으로. 빈 자리는 표시를 남긴 채 내보낸다 — 지우면 채울 곳을 잃는다. */
 export function draftToMarkdown(d: StoredDraft['draft']): string {
   const L: string[] = [`# ${d.title}`, '']
@@ -53,4 +56,45 @@ export function draftToMarkdown(d: StoredDraft['draft']): string {
   }
   if (d.usedFacts.length) L.push('---', '', '**이 글이 쓴 사실**', ...d.usedFacts.map((f) => `- ${f}`), '')
   return L.join('\n')
+}
+
+/**
+ * 발행용 마크다운 — 작업용 메모를 뺀 원고.
+ *
+ * 빈칸을 채우지 못한 채 올려야 할 때가 있다(모르는 값, 병원이 공개하지 않는 가격 등). 그때
+ * 지어내지 않고 비우는 것이 맞는데, 비운 자리 표시까지 함께 나가면 그대로 올릴 수 없다.
+ * 실제로 `> **채워야 함:** … 팩트 그래프에 가격 항목 없음`이 본문에 그대로 실려 나갔다.
+ *
+ * 빈칸만 있던 절은 제목까지 덜어낸다 — 본문 없는 h2가 남으면 글이 망가진 것처럼 보인다.
+ * 「이 글이 쓴 사실」도 뺀다. 어떤 사실을 썼는지는 우리가 검증할 때 보는 것이지 독자에게 할
+ * 말이 아니다(화면에는 그대로 남는다).
+ */
+export function draftToPublishMarkdown(d: StoredDraft['draft']): string {
+  const L: string[] = [`# ${d.title}`, '']
+  if (d.lead) L.push(d.lead, '')
+  for (const sec of d.sections) {
+    const body = sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim())
+    if (!body.length) continue
+    L.push(`## ${sec.heading}`, '')
+    for (const b of body) L.push(b.body ?? '', '')
+  }
+  return L.join('\n').trimEnd() + '\n'
+}
+
+/**
+ * 고쳐 둔 글에서 빈칸 표시 줄만 걷어낸다. 편집하면서 일부만 지웠을 수 있으므로 구조가 아니라
+ * 글자로 찾는다. 표시가 사라진 자리에 빈 줄이 겹치면 하나로 줄인다.
+ */
+export function stripGapNotes(markdown: string): string {
+  return markdown
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith(GAP_LINE))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd()
+}
+
+/** 발행용으로 내보낼 때 덜어낼 빈칸이 몇 줄인지 — 버튼 옆에 알린다. */
+export function countGapNotes(markdown: string): number {
+  return markdown.split('\n').filter((line) => line.trimStart().startsWith(GAP_LINE)).length
 }
