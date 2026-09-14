@@ -85,7 +85,7 @@ export default function Dashboard() {
                   ? '남은 실행 항목 없음'
                   : `남은 실행 항목 ${openActions}건`}
             </p>
-            <Link to="/gap-actions">실행 항목 →</Link>
+            <Link to="/gap-actions">콘텐츠 생성 →</Link>
           </article>
           <article>
             <p className="pipeline-stage">보고</p>

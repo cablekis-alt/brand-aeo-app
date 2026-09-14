@@ -18,6 +18,7 @@ import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
+import { updateActiveMeasure } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -203,6 +204,9 @@ async function collectRawCalls(
   // 엔진 하나가 죽어도(예: OpenAI 크레딧 소진 429) 측정 전체를 중단하지 않는다.
   // 실패한 호출은 건너뛰고 성공한 엔진의 응답만으로 진행한다(부분 저하 > 전면 실패).
   const failuresByEngine = new Map<string, number>();
+  // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다.
+  let collected = 0;
+  updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length });
   const settled = await mapWithConcurrency(
     jobs,
     COLLECTION_CONCURRENCY,
@@ -213,6 +217,7 @@ async function collectRawCalls(
       try {
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
         const result = await client.call(prompt);
+        updateActiveMeasure(tenant.tenantId, { done: ++collected });
         return {
           tenantId: tenant.tenantId,
           weekOf,
@@ -229,6 +234,7 @@ async function collectRawCalls(
         };
       } catch (err) {
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
+        updateActiveMeasure(tenant.tenantId, { done: ++collected });
         console.warn(
           `[B3] ${job.engine} 호출 실패(건너뜀) q=${job.question.questionId} #${job.callIndex}: ` +
             (err instanceof Error ? err.message : String(err)),
@@ -460,6 +466,7 @@ export async function runWeeklyPipeline(
   // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
   // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(AVS 20%)과
   // 인용출처·인용 갭 분석이 무의미해진다. 해소 실패분은 원본을 그대로 둔다.
+  updateActiveMeasure(tenant.tenantId, { stage: '인용 정리', done: 0, total: 0 });
   const resolvedCitations = await resolveCitationUrls(rawCalls.flatMap((c) => c.citations));
   if (resolvedCitations.size > 0) {
     for (const call of rawCalls) {
@@ -470,9 +477,16 @@ export async function runWeeklyPipeline(
   // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
 
-  const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, (call) => analyzeRawCall(tenant, call));
+  let analyzed = 0;
+  updateActiveMeasure(tenant.tenantId, { stage: '분석', done: 0, total: rawCalls.length });
+  const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, async (call) => {
+    const out = await analyzeRawCall(tenant, call);
+    updateActiveMeasure(tenant.tenantId, { done: ++analyzed });
+    return out;
+  });
   await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
 
+  updateActiveMeasure(tenant.tenantId, { stage: '집계', done: 0, total: 0 });
   const history = await store.getScorecardHistory(tenant.tenantId, 12);
   const cohortScorecards = await store.getCohortScorecards(tenant.industry, tenant.region, weekOf);
 
@@ -483,6 +497,7 @@ export async function runWeeklyPipeline(
   const citationSources = analyzeCitationSources(analyses);
 
   const judge = getJudgeClient();
+  updateActiveMeasure(tenant.tenantId, { stage: '리포트', done: 0, total: 0 });
   const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
   await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
 

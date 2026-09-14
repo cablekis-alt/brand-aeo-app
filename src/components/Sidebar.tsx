@@ -59,7 +59,10 @@ const MENU: MenuGroup[] = [
     id: 'act',
     title: '그래서 뭘 하나',
     items: [
-      { label: '실행 항목', to: '/gap-actions', badge: 'actions' },
+      // 「실행 항목」에서 이름을 바꿨다. 이 화면이 실제로 하는 일은 쓸 글을 정하고 만들어
+      // 내보내는 것이고, 고객이 찾는 말도 그쪽이다. 배지(남은 건수)는 그대로 쓴다.
+      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions' },
+      { label: '콘텐츠 보관함', to: '/content-library' },
       { label: 'Site AEO Checker', to: '/site-diagnosis' },
     ],
   },

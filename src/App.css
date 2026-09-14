@@ -1969,3 +1969,34 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 .gap-more > summary:hover { color: var(--ink); }
 .gap-more[open] > summary { margin-bottom: 4px; }
+
+/* 온보딩 6단계 — 측정 진행. 코호트를 함께 재면 브랜드마다 한 줄. */
+.measure-progress {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.measure-progress li {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 64px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12.5px;
+}
+.mp-name { font-weight: 600; }
+.mp-stage { color: var(--muted); white-space: nowrap; }
+.mp-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--tint, rgba(127, 127, 127, 0.18));
+  overflow: hidden;
+}
+.mp-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.mp-count { font-variant-numeric: tabular-nums; white-space: nowrap; }

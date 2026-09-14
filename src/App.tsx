@@ -17,6 +17,7 @@ import Performance from './pages/Performance'
 import BrandFacts from './pages/BrandFacts'
 import QuestionBank from './pages/QuestionBank'
 import QuestionWinLoss from './pages/QuestionWinLoss'
+import ContentLibrary from './pages/ContentLibrary'
 import GapActions from './pages/GapActions'
 import GapAnalysis from './pages/GapAnalysis'
 import Ranking from './pages/Ranking'
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="question-winloss" element={<QuestionWinLoss />} />
             <Route path="gap-analysis" element={<GapAnalysis />} />
             <Route path="gap-actions" element={<GapActions />} />
+            <Route path="content-library" element={<ContentLibrary />} />
             <Route path="sentiment" element={<SentimentDashboard />} />
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />
