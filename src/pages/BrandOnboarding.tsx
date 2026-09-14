@@ -201,12 +201,15 @@ function StageShell({
   title,
   status,
   children,
+  lockedHint,
 }: {
   id: string
   code: string
   title: string
   status: StageStatus
   children: ReactNode
+  /** 잠겼을 때 보여 줄 안내. 단계마다 먼저 해야 할 일이 다르다. */
+  lockedHint?: string
 }) {
   const locked = status === 'locked'
   return (
@@ -217,7 +220,11 @@ function StageShell({
         {status === 'done' && <span className="onboard-stage-mark">완료</span>}
         {status === 'current' && <span className="onboard-stage-mark on">진행</span>}
       </header>
-      {locked ? <p className="onboard-lock">상호 또는 URL로 자동 채우기를 먼저 실행하세요.</p> : children}
+      {locked ? (
+        <p className="onboard-lock">{lockedHint ?? '상호 또는 URL로 자동 채우기를 먼저 실행하세요.'}</p>
+      ) : (
+        children
+      )}
     </section>
   )
 }
@@ -258,6 +265,8 @@ export default function BrandOnboarding() {
   // 등록 완료 시 true — 등록 완료 단계에서 "이 브랜드 전체 측정"을 바로 실행할 수 있게 한다.
   const [registered, setRegistered] = useState(false)
   const [measuring, setMeasuring] = useState(false)
+  // 측정을 건너뛰었나 — 6단계를 '완료'로 보고 다음 할 일을 안내한다.
+  const [skippedMeasure, setSkippedMeasure] = useState(false)
   const [measureMsg, setMeasureMsg] = useState<string | null>(null)
   // 경쟁사도 cohortOnly로 함께 측정 → 코호트 랭킹이 1/N으로 채워진다(기본 켬).
   const [withCohort, setWithCohort] = useState(true)
@@ -927,10 +936,12 @@ export default function BrandOnboarding() {
   const s3 = stageStatus(3, extracted, ready)
   const s4 = stageStatus(4, extracted, ready)
   const s5 = stageStatus(4, extracted, ready)
+  // 6단계는 등록해야 열린다. 측정했거나 건너뛰면 완료.
+  const s6: StageStatus = !registered ? 'locked' : measuring || !skippedMeasure ? 'current' : 'done'
   /** 사실을 뽑을 주소가 있나 — 없으면 3단계는 건너뛴다. */
   const factSource = url.trim() || domain.trim()
 
-  function goStage(n: 1 | 2 | 3 | 4 | 5) {
+  function goStage(n: 1 | 2 | 3 | 4 | 5 | 6) {
     document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -955,6 +966,7 @@ export default function BrandOnboarding() {
             [3, '3', '사실', s3],
             [4, '4', '경쟁사', s4],
             [5, '5', '등록', s5],
+            [6, '6', '측정', s6],
           ] as const
         ).map(([n, code, label, status]) => (
           <button
@@ -1298,24 +1310,18 @@ export default function BrandOnboarding() {
                 {registering ? '등록 중…' : '브랜드 등록'}
               </button>
             )}
-            {registered && measureVia !== 'none' && (
-              <button type="button" className="primary" onClick={() => void measureRegisteredBrand()} disabled={measuring}>
-                {measuring ? '측정 중…' : '이 브랜드 전체 측정 시작'}
-              </button>
-            )}
+
           </div>
         </div>
         {!ready && <p className="hint">* 브랜드명·업종·지역을 채우면 등록할 수 있습니다 (도메인은 선택).</p>}
         {registered ? (
           <p className="hint">
-            등록됐습니다. <b>"이 브랜드 전체 측정 시작"</b>을 누르면 여기서 바로 경쟁사 자동 추론·SoM·코호트 순위까지 함께
-            측정합니다{measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'} 다른 테넌트(경쟁사 등)를 개별 측정하려면
-            <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>을 쓰세요.
+            등록됐습니다. 아래 <b>6 측정</b>에서 이어서 재거나, 나중으로 미룰 수 있습니다.
           </p>
         ) : canRegister ? (
           <p className="hint">
-            브랜드를 등록하면 <b>바로 이 자리에서</b> 전체 측정(경쟁사·코호트 포함)을 실행할 수 있습니다
-            {measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'}
+            등록하면 <b>6 측정</b>이 열립니다 — 경쟁사·코호트까지 함께 잽니다
+            {measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'} 지금 재지 않고 나중으로 미룰 수도 있습니다.
           </p>
         ) : (
           <p className="hint">
@@ -1328,14 +1334,56 @@ export default function BrandOnboarding() {
             {registerMsg}
           </p>
         )}
-        {measureMsg && (
-          <p className={measureMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
-            {measureMsg} {measuring && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
-          </p>
-        )}
         <p className="hint onboard-cli">
           로컬 측정 CLI: <code>npm run measure:local -- {tenant.tenantId || '<tenantId>'}</code> (경쟁사·코호트 포함, baking·배포까지)
         </p>
+      </StageShell>
+
+      <StageShell id="stage-6" code="6" title="측정" status={s6} lockedHint="먼저 5단계에서 브랜드를 등록하세요.">
+        {measureVia === 'none' ? (
+          <p className="muted">
+            이 환경에서는 측정을 실행할 수 없습니다. 로컬 앱에서 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>을
+            쓰거나 CLI로 돌리세요.
+          </p>
+        ) : (
+          <>
+            <p className="hint" style={{ marginTop: 0 }}>
+              {/* 문항 수는 서버가 정한다. 화면이 숫자를 박으면 서버 기본값과 어긋난다 — 이 파일 위쪽
+                  주석에 그 사고 기록이 있다(화면 12문항 × 3회 / 서버 36문항 × 1회). */}
+              질문 은행 전체를 엔진에 던져 <b>어느 질문에서 밀리는지</b>를 잽니다. 경쟁사까지 함께 재면
+              코호트 순위(1/N)도 나옵니다. 실측으로 본 브랜드만 약 2.7분, 경쟁사 포함 6곳이 약 3분입니다(병렬).
+            </p>
+            <div className="onboard-register-actions">
+              <button
+                type="button"
+                className="primary"
+                onClick={() => void measureRegisteredBrand()}
+                disabled={measuring}
+              >
+                {measuring ? '측정 중… (보통 3분)' : '측정 시작'}
+              </button>
+              {!measuring && !skippedMeasure && (
+                <button type="button" className="ghost" onClick={() => setSkippedMeasure(true)}>
+                  나중에 하기
+                </button>
+              )}
+            </div>
+            {skippedMeasure && !measuring && (
+              // 건너뛰어도 반쪽이 아니다 — 측정은 우선순위를 매기는 일이지 글쓰기의 전제가 아니다(v0.1.91).
+              <p className="hint">
+                측정을 미뤘습니다. <b>지금도 글은 쓸 수 있습니다</b> —{' '}
+                <Link to="/questions">질문 프롬프트 빌더</Link>에서 질문을 골라 바로 초안까지 갑니다. 측정은 그 질문
+                중 <b>어느 것에서 밀리는지</b>를 알려 주므로, 나중에 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
+                에서 돌리면 실행 항목이 아픈 순서대로 채워집니다.
+              </p>
+            )}
+            {measureMsg && (
+              <p className={measureMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
+                {measureMsg} {measuring && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
+              </p>
+            )}
+          </>
+        )}
       </StageShell>
 
       <BrandManageList />
