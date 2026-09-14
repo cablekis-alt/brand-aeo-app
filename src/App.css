@@ -1946,3 +1946,26 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   font-size: 12px;
   white-space: nowrap;
 }
+
+/* 실행 항목 카드 — 운영자용 손잡이를 여는 자리. 눈에 띄되 주된 행동을 가리지 않는다. */
+.gap-detail-toggle {
+  margin-top: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.gap-detail-toggle:hover { color: var(--ink); text-decoration: underline; }
+
+/* 실행 항목 — 접어 둔 보조 설명. 데모에서는 닫혀 있고, 필요하면 그 자리에서 편다. */
+.gap-more > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.gap-more > summary:hover { color: var(--ink); }
+.gap-more[open] > summary { margin-bottom: 4px; }

@@ -46,6 +46,7 @@ export default function DraftPanel({
   stored,
   onStored,
   ensureBrief,
+  compact = false,
 }: {
   tenantId: string
   action: GapAction
@@ -54,6 +55,15 @@ export default function DraftPanel({
   onStored: (s: StoredDraft) => void
   /** 브리프가 없으면 먼저 만든다. 초안 한 번 누르기로 여기까지 간다. */
   ensureBrief: () => Promise<void>
+  /**
+   * 데모용 축약. 「초안 보기」와 「발행용 .md」만 남기고 나머지 손잡이를 숨긴다.
+   *
+   * 카드 한 장에 버튼이 15개까지 늘어났다(상태 4 · 브리프 4 · 초안 7). 고객에게 보여 줄
+   * 이야기는 "여기서 밀린다 → 이 글을 쓰면 된다 → 초안 여기 있다" 세 걸음인데, 운영자용
+   * 손잡이가 그 위에 다 올라와 있어 세 걸음이 안 보였다. 숨길 뿐 지우지 않는다 —
+   * 카드의 「자세히」가 그대로 되살린다.
+   */
+  compact?: boolean
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -224,21 +234,25 @@ export default function DraftPanel({
             <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
               {open ? '초안 접기' : '초안 보기'}
             </button>
-            <button type="button" className="ghost" onClick={() => void copy()}>
-              {copied ? '복사됨' : '마크다운 복사'}
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() =>
-                downloadMarkdown(
-                  `초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                  stored.editedMarkdown ?? draftToMarkdown(stored.draft),
-                )
-              }
-            >
-              작업용 .md
-            </button>
+            {!compact && (
+              <>
+                <button type="button" className="ghost" onClick={() => void copy()}>
+                  {copied ? '복사됨' : '마크다운 복사'}
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() =>
+                    downloadMarkdown(
+                      `초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
+                      stored.editedMarkdown ?? draftToMarkdown(stored.draft),
+                    )
+                  }
+                >
+                  작업용 .md
+                </button>
+              </>
+            )}
             {/*
               발행용을 따로 둔다. 하나뿐일 때는 「.md 내려받기」가 발행용 원고로 읽혔는데,
               실제로는 `> **채워야 함:** … 팩트 그래프에 가격 항목 없음` 같은 내부 메모가
@@ -261,14 +275,18 @@ export default function DraftPanel({
               발행용 .md
               {gapNotes > 0 && <span className="muted"> — 빈칸 {gapNotes}줄 뺌</span>}
             </button>
-            <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
-              {editing ? '편집 닫기' : '편집'}
-            </button>
-            <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-              {busy ? '다시 쓰는 중…' : '다시 만들기'}
-            </button>
+            {!compact && (
+              <>
+                <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
+                  {editing ? '편집 닫기' : '편집'}
+                </button>
+                <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
+                  {busy ? '다시 쓰는 중…' : '다시 만들기'}
+                </button>
+              </>
+            )}
             {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
-            {d && d.gapCount > 0 && !stored.editedMarkdown && (
+            {!compact && d && d.gapCount > 0 && !stored.editedMarkdown && (
               // 딱지 자체가 버튼이다 — 문제를 알리는 자리와 여는 자리가 같아야 한다.
               <button
                 type="button"
@@ -280,7 +298,7 @@ export default function DraftPanel({
                 채울 곳 {d.gapCount} — 채우기
               </button>
             )}
-            <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
+            {!compact && <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>}
           </>
         )}
       </div>

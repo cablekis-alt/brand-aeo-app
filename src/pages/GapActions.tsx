@@ -457,6 +457,13 @@ function ActionCard({
   destinations: string[] | null
 }) {
   const [channelDraft, setChannelDraft] = useState(false)
+  /**
+   * 운영자용 손잡이를 펼쳤나. 기본은 접힘.
+   *
+   * 카드 한 장에 버튼이 15개까지 늘어 "여기서 밀린다 → 이 글을 쓰면 된다 → 초안 여기 있다"
+   * 세 걸음이 묻혔다(실측: 화면 전체 버튼 69개·4,299자). 기능을 지우지 않고 접어 둔다.
+   */
+  const [detail, setDetail] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
   return (
@@ -508,8 +515,8 @@ function ActionCard({
           )}
         </>
       )}
-      <p className="gap-tally">완료 조건 · {action.doneSignal}</p>
-      {canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
+      {detail && <p className="gap-tally">완료 조건 · {action.doneSignal}</p>}
+      {detail && canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
         <PublishedUrls action={action} onSave={(urls) => onUrls(action.id, urls)} />
       )}
       {awaiting && (
@@ -540,7 +547,7 @@ function ActionCard({
           )}
         </p>
       )}
-      {canSaveStatus && (
+      {detail && canSaveStatus && (
         <div className="action-status" role="group" aria-label={`${action.title} 집행 상태`}>
           {STATUS_CHOICES.map((c) => (
             <button
@@ -564,7 +571,7 @@ function ActionCard({
           <span className="muted"> — 위의 글로는 못 덮습니다. 이 채널용으로 한 편 따로 씁니다.</span>
         </p>
       )}
-      {briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
+      {detail && briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
         <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
       )}
       {coveredBy && (
@@ -575,15 +582,17 @@ function ActionCard({
             — <b>{coveredBy.titles.join(' · ')}</b>. <b>새로 쓸 글이 아닙니다.</b> 그 글을 여기에 올리면 이 항목도
             함께 진척됩니다.
           </p>
-          <button
-            type="button"
-            className="ghost"
-            style={{ marginTop: 6 }}
-            onClick={() => setChannelDraft((v) => !v)}
-            aria-expanded={channelDraft}
-          >
-            {channelDraft ? '채널용 초안 접기' : '이 채널 문체로 따로 쓰기'}
-          </button>
+          {detail && (
+            <button
+              type="button"
+              className="ghost"
+              style={{ marginTop: 6 }}
+              onClick={() => setChannelDraft((v) => !v)}
+              aria-expanded={channelDraft}
+            >
+              {channelDraft ? '채널용 초안 접기' : '이 채널 문체로 따로 쓰기'}
+            </button>
+          )}
         </div>
       )}
       {briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft) && (
@@ -593,6 +602,7 @@ function ActionCard({
           hasBrief={Boolean(briefs[action.id])}
           stored={drafts[action.id]}
           onStored={onDraft}
+          compact={!detail}
           ensureBrief={async () => {
             onBrief(
               await generateContentBrief(tenantId, {
@@ -607,6 +617,10 @@ function ActionCard({
           }}
         />
       )}
+      {/* 접은 것을 되살리는 자리. 기능을 지운 게 아니라는 것이 여기서 보여야 한다. */}
+      <button type="button" className="gap-detail-toggle" onClick={() => setDetail((v) => !v)} aria-expanded={detail}>
+        {detail ? '자세히 접기' : '자세히 — 상태·브리프·편집'}
+      </button>
     </article>
   )
 }
@@ -729,11 +743,16 @@ export default function GapActions() {
           <section>
             <h3>할 일</h3>
             <p className="hint" style={{ marginTop: 0 }}>
-              숫자는 <b>이 조치로 되찾을 수 있는 질문 수</b>입니다 — 종류가 달라도 같은 단위라
-              그대로 견주시면 됩니다. 큰 것부터 하시면 됩니다. 등재형과 콘텐츠형은 경쟁하는 일이
-              아닙니다: 콘텐츠형이 <b>무엇을 쓸지</b>, 등재형이 <b>어디에 올릴지</b>라서, 한 편을 써서
-              그 채널에 올리면 둘 다 진척됩니다.
+              숫자는 <b>이 조치로 되찾을 수 있는 질문 수</b>입니다. 큰 것부터 하시면 됩니다.
             </p>
+            <details className="gap-more">
+              <summary>왜 두 종류로 나뉘나</summary>
+              <p className="hint">
+                종류가 달라도 같은 단위라 그대로 견주시면 됩니다. 등재형과 콘텐츠형은 경쟁하는 일이
+                아닙니다: 콘텐츠형이 <b>무엇을 쓸지</b>, 등재형이 <b>어디에 올릴지</b>라서, 한 편을 써서
+                그 채널에 올리면 둘 다 진척됩니다.
+              </p>
+            </details>
             {briefs !== null && open.length > 0 && (
               <>
                 <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
@@ -800,7 +819,8 @@ export default function GapActions() {
 
           {satisfied.length > 0 && (
             <section>
-              <h3>이미 되어 있는 것</h3>
+              <details className="gap-more">
+              <summary>이미 되어 있는 것 {satisfied.length}건</summary>
               <p className="hint" style={{ marginTop: 0 }}>
                 이 출처들은 이미 우리 언급을 뒷받침합니다. 새로 할 일은 없지만, 다음 주차에 사라지면
                 여기서 먼저 보입니다.
@@ -810,6 +830,7 @@ export default function GapActions() {
                   <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
                 ))}
               </div>
+              </details>
             </section>
           )}
 
@@ -829,7 +850,8 @@ export default function GapActions() {
           )}
 
           <section>
-            <h3>목록에서 뺀 것</h3>
+            <details className="gap-more">
+            <summary>목록에서 뺀 것</summary>
             <p className="hint" style={{ marginTop: 0 }}>
               인용된 도메인이라고 다 등재 대상은 아닙니다. 왜 빠졌는지 밝혀 둡니다 — 목록이 짧은 것이
               데이터가 없어서가 아니라는 뜻입니다.
@@ -851,6 +873,7 @@ export default function GapActions() {
                 <Link to="/citation-gap">인용 갭 분석</Link>에서 보세요.
               </li>
             </ul>
+            </details>
           </section>
         </>
       )}
