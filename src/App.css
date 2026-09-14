@@ -1878,3 +1878,17 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   color: var(--ink);
 }
 .gap-subhead .muted { font-weight: 400; font-size: 12.5px; }
+
+/* 온보딩 1단계 — 두 진입로의 정확도 차이를 나란히 보여 준다. 지금 타는 쪽이 진해진다. */
+.onboard-paths {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 2px;
+}
+.onboard-path {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.onboard-path.is-on { color: var(--ink); }

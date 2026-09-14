@@ -638,6 +638,22 @@ export default function BrandOnboarding() {
   }
 
   // 상호(브랜드명) 기반 진입 — 이름만으로 도메인·업종·지역·주소를 역추론해 폼을 채운다.
+  /**
+   * 1단계 시작 — 주소가 있으면 페이지를 읽고(정확), 없으면 상호로 추론한다(빠름).
+   *
+   * 두 경로를 버튼 하나로 합친 이유: 접어 둔 대안은 아무도 안 쓴다. 주소를 넣으면 더 정확해지는데
+   * 그 사실이 <details> 안에 숨어 있었다.
+   */
+  async function handleStart(e: FormEvent) {
+    if (url.trim()) {
+      // URL 경로는 상호를 페이지에서 뽑지만, 사용자가 적어 넣은 상호가 더 믿을 만하다 —
+      // handleExtract가 덮어쓰지 않도록 여기서 지키지는 않는다(2단계에서 확인·수정한다).
+      await handleExtract(e)
+      return
+    }
+    await handleIdentify(e)
+  }
+
   async function handleIdentify(e: FormEvent) {
     e.preventDefault()
     setError(null)
@@ -882,8 +898,8 @@ export default function BrandOnboarding() {
           <p className="brand">시작</p>
           <h1>브랜드 추가</h1>
           <p className="lead">
-            상호(브랜드명)만 넣으면 도메인·업종·지역·주소·경쟁사까지 자동으로 채웁니다. 확인 후 등록하면 테넌트가
-            만들어집니다. 홈페이지 URL로도 시작할 수 있습니다.
+            상호만 넣으면 도메인·업종·지역·경쟁사까지 자동으로 채웁니다. 홈페이지 주소를 함께 넣으면 그 페이지를
+            읽어 더 정확해집니다. 확인 후 등록하면 테넌트가 만들어집니다.
           </p>
         </div>
       </header>
@@ -891,7 +907,7 @@ export default function BrandOnboarding() {
       <nav className="onboard-steps" aria-label="브랜드 추가 단계">
         {(
           [
-            [1, '1', '상호', s1],
+            [1, '1', '브랜드', s1],
             [2, '2', '정보', s2],
             [3, '3', '경쟁사', s3],
             [4, '4', '등록', s4],
@@ -912,8 +928,8 @@ export default function BrandOnboarding() {
         ))}
       </nav>
 
-      <StageShell id="stage-1" code="1" title="상호로 시작" status={s1}>
-        <form className="site-form" onSubmit={handleIdentify}>
+      <StageShell id="stage-1" code="1" title="브랜드" status={s1}>
+        <form className="site-form" onSubmit={handleStart}>
           <div className="onboard-grid">
             <label className="field">
               <span>상호 (브랜드명) *</span>
@@ -926,7 +942,7 @@ export default function BrandOnboarding() {
               />
             </label>
             <label className="field">
-              <span>지역 (선택 · 정확도↑)</span>
+              <span>지역 (선택 · 같은 이름이 여럿일 때)</span>
               <input
                 type="text"
                 list="cohort-regions"
@@ -936,37 +952,34 @@ export default function BrandOnboarding() {
               />
             </label>
           </div>
+          <label className="field">
+            <span>홈페이지 주소 (선택 · 넣으면 훨씬 정확합니다)</span>
+            <input
+              type="text"
+              inputMode="url"
+              placeholder="예: k-wonjin.co.kr"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </label>
+          {/* 두 길의 정확도가 다르다는 것을 화면이 말한다 — 접어 두면 아무도 모른다. */}
+          <div className="onboard-paths">
+            <p className={url.trim() ? 'onboard-path is-on' : 'onboard-path'}>
+              <b>주소를 넣으면</b> 그 페이지를 읽어 업종·지역·별칭을 채웁니다. 브랜드가 스스로 공개한 값이라
+              정확합니다. 사실(요금·시간·규정)도 여기서 가져올 수 있습니다.
+            </p>
+            <p className={url.trim() ? 'onboard-path' : 'onboard-path is-on'}>
+              <b>상호만 넣으면</b> AI가 기억으로 추론합니다. 빠르지만 한국 지역 업체에서는 틀릴 때가 있으니
+              다음 단계에서 값을 꼭 확인해 주세요.
+            </p>
+          </div>
           <span className="hint">
-            상호만 넣으면 공식 도메인·업종·지역·주소·경쟁사까지 AI가 자동으로 채웁니다. 같은 이름이 여러 곳이면 지역을 함께
-            넣으세요. 홈페이지가 없어도 등록·측정할 수 있습니다.
+            홈페이지가 없어도 등록·측정할 수 있습니다 — 언급 판정은 도메인이 아니라 상호와 별칭으로 합니다.
           </span>
-          <button type="submit" className="primary" disabled={busy}>
-            {busy ? '조회 중…' : '상호로 자동 채우기'}
+          <button type="submit" className="primary" disabled={busy || !brandName.trim()}>
+            {busy ? (url.trim() ? '페이지를 읽는 중…' : '조회 중…') : '자동으로 채우기'}
           </button>
         </form>
-
-        <details className="onboard-alt">
-          <summary>또는 홈페이지 URL로 시작</summary>
-          <form className="site-form" onSubmit={handleExtract}>
-            <label className="field">
-              <span>브랜드 URL</span>
-              <input
-                type="text"
-                inputMode="url"
-                placeholder="https://www.example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <span className="hint">
-                공개 HTTPS 페이지만 읽습니다. 봇 차단·JS 렌더링 사이트는 자동 추출이 제한될 수 있으니 아래에서 직접
-                보완하세요.
-              </span>
-            </label>
-            <button type="submit" className="ghost" disabled={busy || !url.trim()}>
-              {busy ? '페이지를 읽는 중…' : 'URL에서 자동 채우기'}
-            </button>
-          </form>
-        </details>
 
         {error && (
           <p className="error" role="alert">
