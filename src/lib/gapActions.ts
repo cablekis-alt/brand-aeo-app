@@ -170,6 +170,9 @@ const CATEGORY_LABEL: Record<string, string> = {
  *   대가: medicaltour.gangnam.go.kr(강남구 의료관광, 이미 등재됨)도 함께 빠진다.
  *   실행 가능한 .go.kr 디렉터리를 되살리려면 그런 호스트만 모은 카탈로그가 필요하다.
  */
+/** 언론사 롤을 한 장으로 접는 키. 도메인이 아니라 묶음이라는 걸 드러내려고 이름을 따로 둔다. */
+const NEWS_GROUP_KEY = '__news__'
+
 const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
   news: { verb: '보도·기고', badge: '언론' },
   wiki: { verb: '문서 보완', badge: '위키' },
@@ -268,7 +271,11 @@ function listingActions(
     // 나머지는 **사이트 단위**(등록가능 도메인)로 묶는다 — nol.yanolja.com·place-site.yanolja.com·
     // yanolja.com이 세 카드로 쪼개져 '충족'과 "등재하세요"가 같이 뜨던 문제(siteGroup 주석 참고).
     const platform = u.kind === 'blog' ? blogPlatformOf(u.domain) : null
-    const key = u.kind === 'blog' ? platform?.key : siteGroupKey(u.domain)
+    // 언론사는 매체별로 나누지 않는다. 할 일이 "보도자료 하나 돌리기"로 같아서 매체마다 카드를
+    // 만들면 같은 일이 다섯 줄이 된다(실측: W38 원진성형외과에서 yna·kmib·mt·chosun·mk).
+    // 어디에 실릴지는 우리가 고르는 것이 아니라 매체가 정한다.
+    const key =
+      u.kind === 'news' ? NEWS_GROUP_KEY : u.kind === 'blog' ? platform?.key : siteGroupKey(u.domain)
     if (!key) continue
     const roll = byDomain.get(key) ?? {
       domain: key,
@@ -329,7 +336,13 @@ function listingActions(
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
         : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
-      const name = r.platform ? r.platform.label : r.domain
+      const isNewsGroup = r.domain === NEWS_GROUP_KEY
+      // 몇 곳을 묶었는지 이름에 담는다 — "언론 기고"만 있으면 어느 매체인지 알 수 없다.
+      const name = isNewsGroup
+        ? `언론 ${r.hosts.size}곳`
+        : r.platform
+          ? r.platform.label
+          : r.domain
 
       // 이 출처를 꺼내 든 질문들 = 여기 올릴 글이 답해야 할 것. 플랫폼이면 소속 호스트 전체를 합친다.
       // 우리가 밀린 질문을 앞에 두고 언급률 낮은 순으로 정렬한다 — 가장 비어 있는 주제가 먼저 보이게.
@@ -368,8 +381,12 @@ function listingActions(
             ? `${subjectParticle(name)} 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.` +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
             : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+              // 묶음은 어느 매체인지 밝혀야 한다 — "언론 5곳"만으로는 무엇을 해야 할지 알 수 없다.
+              (isNewsGroup ? ` 인용된 매체: ${[...r.hosts].sort().join(' · ')}. 보도자료 한 건으로 함께 노립니다.` : '') +
               citedNote,
-        targetDomain: r.domain,
+        // 묶음은 도메인이 아니다. 내부 키(__news__)가 화면이나 브리프로 새면 안 되므로 비운다 —
+        // 그러면 「올릴 곳」 줄과 브리프가 제목("언론 N곳 보도·기고")을 쓴다.
+        ...(isNewsGroup ? {} : { targetDomain: r.domain }),
         questionIds: picked.map((row) => row.questionId),
         questionTexts: picked.map((row) => row.text),
         reach: lost.length,
