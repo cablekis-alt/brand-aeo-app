@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
 import { cancelMeasureRun, loadCiSyncStatus, loadMeasureRuns, runCiSync, type CiSyncSummary, type MeasureRunInfo } from '../lib/api'
 import { BRAND_DOCS } from '../lib/brandDocs'
@@ -234,7 +235,7 @@ export default function MeasureStatus() {
   const [nameMap, setNameMap] = useState<Record<string, string>>({})
   const [cancelling, setCancelling] = useState<number | null>(null)
   // 이 앱이 직접 돌린 로컬 측정(진행 중 + 완료). /api/measure-status에서 폴링.
-  const [localActive, setLocalActive] = useState<{ tenantId: string; brandName: string; startedAt: string }[]>([])
+  const [localActive, setLocalActive] = useState<ActiveMeasure[]>([])
   const [localDone, setLocalDone] = useState<LocalMeasureLog[]>([])
   const [nowMs, setNowMs] = useState(() => Date.now())
   const timer = useRef<number | null>(null)
@@ -254,7 +255,7 @@ export default function MeasureStatus() {
       const r = await fetch('/api/measure-status')
       if (r.ok) {
         const d = (await r.json()) as {
-          active?: { tenantId: string; brandName: string; startedAt: string }[]
+          active?: ActiveMeasure[]
           completed?: LocalMeasureLog[]
         }
         setLocalActive(Array.isArray(d.active) ? d.active : [])
@@ -414,7 +415,9 @@ export default function MeasureStatus() {
                       <span className="status-pill st-warn">진행 중</span>
                     </td>
                     <td>{a.brandName || a.tenantId}</td>
-                    <td className="muted">측정 중…</td>
+                    {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
+                        온보딩보다 덜 보여 주는 역전이 된다. */}
+                    <td className="muted">{measureStageLabel(a)}</td>
                     <td>-</td>
                     <td className="num">-</td>
                     <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>

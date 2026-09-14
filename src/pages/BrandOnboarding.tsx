@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import BrandManageList from '../components/BrandManageList'
+import MeasureProgress, { type ActiveMeasure } from '../components/MeasureProgress'
 import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
@@ -321,9 +322,7 @@ export default function BrandOnboarding() {
    * 서버가 보고하는 측정 진행. 경과 초는 "멈추지 않았다"까지만 말하고, 어디쯤인지는 못 말한다.
    * 코호트를 함께 재면 브랜드가 여럿이므로 목록으로 받는다.
    */
-  const [progress, setProgress] = useState<
-    { tenantId: string; brandName: string; stage?: string; done?: number; total?: number }[]
-  >([])
+  const [progress, setProgress] = useState<ActiveMeasure[]>([])
   useEffect(() => {
     if (!measuring || measureVia !== 'local') return
     let alive = true
@@ -1502,30 +1501,7 @@ export default function BrandOnboarding() {
                 </button>
               )}
             </div>
-            {measuring && progress.length > 0 && (
-              // 코호트를 함께 재면 브랜드마다 줄이 하나씩 선다. 어느 브랜드가 어느 단계인지
-              // 보이면 3분이 침묵이 아니라 진행으로 읽힌다.
-              <ul className="measure-progress">
-                {progress.map((p) => (
-                  <li key={p.tenantId}>
-                    <span className="mp-name">{p.brandName}</span>
-                    <span className="mp-stage">{p.stage ?? '준비'}</span>
-                    {p.total ? (
-                      <>
-                        <span className="mp-bar" aria-hidden="true">
-                          <i style={{ width: `${Math.round(((p.done ?? 0) / p.total) * 100)}%` }} />
-                        </span>
-                        <span className="mp-count">
-                          {p.done ?? 0}/{p.total}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="mp-count muted">…</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {measuring && <MeasureProgress active={progress} />}
             {skippedMeasure && !measuring && (
               // 건너뛰어도 반쪽이 아니다 — 측정은 우선순위를 매기는 일이지 글쓰기의 전제가 아니다(v0.1.91).
               <p className="hint">

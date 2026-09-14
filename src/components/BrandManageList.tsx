@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import MeasureProgress, { type ActiveMeasure } from './MeasureProgress'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { measureTenantAll, saveTenantEngines } from '../lib/api'
@@ -44,6 +45,8 @@ export default function BrandManageList() {
   // 측정 경로(local/github/none)와 진행 중인 측정 — 등록된 브랜드를 목록에서 바로 측정한다.
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   const [measuringId, setMeasuringId] = useState<string | null>(null)
+  // 서버가 보고하는 진행 — 목록에서 바로 측정할 때도 "측정 중…"에 머무르지 않게 한다.
+  const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
   // 수집 엔진 — 어떤 키가 있는지(keyStatus)와 전역 지정이 켜져 있는지(globalEngines)를 알아야
   // 체크박스가 거짓말을 안 한다. 서버가 /api/health로 알려 준다(키 값이 아니라 존재 여부만).
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
@@ -98,6 +101,26 @@ export default function BrandManageList() {
       setEngineBusyId(null)
     }
   }
+
+  useEffect(() => {
+    if (!measuringId || measureVia !== 'local') return
+    let alive = true
+    const poll = () => {
+      fetch('/api/measure-status')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (alive && Array.isArray(d?.active)) setServerActive(d.active as ActiveMeasure[])
+        })
+        .catch(() => {})
+    }
+    poll()
+    const t = window.setInterval(poll, 2000)
+    return () => {
+      alive = false
+      window.clearInterval(t)
+      setServerActive([])
+    }
+  }, [measuringId, measureVia])
 
   async function measureRow(row: BrandRow) {
     if (measuringId || measureVia === 'none') return
@@ -237,6 +260,7 @@ export default function BrandManageList() {
           {message} {measuringId && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
         </p>
       )}
+      {measuringId && <MeasureProgress active={serverActive} />}
 
       {keyStatus && !canEditEngines && (
         <p className="hint" style={{ marginTop: 0 }}>

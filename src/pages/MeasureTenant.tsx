@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import MeasureProgress, { type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
 import ApiKeySettings from '../components/ApiKeySettings'
 import { useTenant } from '../context/useTenant'
@@ -25,7 +26,7 @@ export default function MeasureTenant() {
   const [reuseCohort, setReuseCohort] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   // 서버에서 실제로 진행 중인 측정(페이지를 벗어났다 와도 상태 유지). measureVia=local 전용.
-  const [serverActive, setServerActive] = useState<{ tenantId: string; brandName: string }[]>([])
+  const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
 
   useEffect(() => {
     let alive = true
@@ -191,10 +192,13 @@ export default function MeasureTenant() {
           </label>
         )}
         {isMeasuring && serverActive.length > 0 && (
-          <p className="hint" style={{ marginTop: '10px', fontWeight: 500 }} role="status">
-            측정 중: <b>{serverActive.map((a) => a.brandName || a.tenantId).join(', ')}</b> …{' '}
-            <Link to="/measure-status">측정 상태에서 진행 보기</Link>
-          </p>
+          // 이름만 나열하면 "돌고 있다"까지만 말한다. 단계·건수가 있으면 어디쯤인지가 보인다.
+          <div style={{ marginTop: '10px' }} role="status">
+            <MeasureProgress active={serverActive} />
+            <p className="hint" style={{ marginTop: 6 }}>
+              <Link to="/measure-status">측정 상태에서 전체 보기</Link>
+            </p>
+          </div>
         )}
         {picked && (
           <p className="hint" style={{ marginTop: '10px' }}>
