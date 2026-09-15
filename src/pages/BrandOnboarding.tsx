@@ -288,6 +288,9 @@ export default function BrandOnboarding() {
   // 측정에서 조용히 빠져(부분 저하) 고른 것과 실제로 잰 것이 달라진다.
   // 키 상태는 서버가 /api/health로 알려 준다(존재 여부만) — 웹·데스크톱 모두 같은 경로.
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
+  // 전역 지정(COLLECT_ENGINES). 켜져 있으면 브랜드별 설정보다 이것이 이긴다
+  // (server/pipeline.ts의 resolveCollectionEngines: override ?? tenant.engines).
+  const [globalEngines, setGlobalEngines] = useState<string[] | null>(null)
   const [engines, setEngines] = useState<string[]>(['openai', 'gemini', 'claude', 'perplexity'])
   // 3단계 사실 — 주소가 있을 때만 뽑는다. 고른 것만 테넌트 초안의 factGraph에 담긴다.
   const [findingFacts, setFindingFacts] = useState(false)
@@ -377,7 +380,10 @@ export default function BrandOnboarding() {
         if (d.engineKeys) {
           const keys = d.engineKeys as Record<string, boolean>
           setKeyStatus(keys)
-          const withKey = ENGINE_CHOICES.filter((e) => keys[e.id]).map((e) => e.id)
+          // 전역 지정이 있으면 그것이 실제로 쓰일 값이다 — 체크된 것과 재는 것이 같아야 한다.
+          const global = Array.isArray(d.collectEngines) ? (d.collectEngines as string[]) : null
+          setGlobalEngines(global)
+          const withKey = (global ?? ENGINE_CHOICES.map((e) => e.id)).filter((id) => keys[id])
           if (withKey.length > 0) setEngines(withKey)
         }
       })
@@ -1415,6 +1421,16 @@ export default function BrandOnboarding() {
               <p className="hint" style={{ margin: '4px 0 0' }}>
                 {engines.length === 0 ? (
                   <b style={{ color: 'var(--bad)' }}>엔진을 하나 이상 고르세요.</b>
+                ) : globalEngines ? (
+                  // 전역 지정이 켜져 있으면 여기 고른 값은 저장만 되고 측정에는 안 쓰인다.
+                  // 그 사실을 적지 않으면 화면이 "3개로 잰다"고 거짓말을 한다.
+                  <>
+                    지금은 <b>전역 지정</b>이 켜져 있어 이 브랜드도{' '}
+                    <b>{globalEngines.map((id) => ENGINE_CHOICES.find((e) => e.id === id)?.label ?? id).join(' · ')}</b>
+                    (<b>{globalEngines.length}개</b>)로 측정됩니다. 위에서 고른 값은 저장되지만 지금 측정에는 쓰이지
+                    않습니다 — 쓰려면 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>의 「수집 엔진」에서{' '}
+                    <b>브랜드별 설정 사용</b>으로 바꾸세요.
+                  </>
                 ) : (
                   <>
                     <b>{engines.length}개</b> 선택 — 엔진 1개 기준 대비 수집·판정 호출이 약 <b>{engines.length}배</b>가 되고
