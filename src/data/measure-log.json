@@ -1,5 +1,14 @@
 [
   {
+    "tenantId": "kaongroup",
+    "brandName": "가온그룹",
+    "weekOf": "2026-W38",
+    "aeoScore": 25,
+    "at": "2026-09-15T01:42:59.961Z",
+    "durationSec": 517,
+    "source": "local"
+  },
+  {
     "tenantId": "k-wonjin",
     "brandName": "WJ 원진성형외과",
     "weekOf": "2026-W38",
