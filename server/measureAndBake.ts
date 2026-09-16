@@ -5,6 +5,7 @@ import { reconcileCohortRanks } from './cohortRank.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
+import { resetJudgeHealth } from './engines/index.js';
 import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
@@ -171,6 +172,8 @@ async function measureSelf(
 
   // 이 브랜드의 파이프라인 실행을 진행중/완료로 추적한다(측정 상태 화면 표시용).
   const startedMs = Date.now();
+  // 앞 측정의 끝자락 실패가 다음 측정을 곧바로 죽이면 안 된다.
+  resetJudgeHealth();
   setActiveMeasure({ tenantId: tenant.tenantId, brandName: tenant.brandName, startedAt: new Date().toISOString() });
   let pipeline;
   try {

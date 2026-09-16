@@ -33,6 +33,46 @@ function limited(client: EngineClient, pool: LlmPool): EngineClient {
   return { call: (prompt) => withLlmSlot(pool, () => client.call(prompt)) };
 }
 
+/**
+ * 판정이 줄줄이 빈 응답이면 던진다 — 조용한 오염을 막는 차단기.
+ *
+ * 판정 클라이언트는 실패를 빈 문자열로 강등한다(판정 한 건이 테넌트 전체를 멈추지 않게 하려는
+ * 의도이고 그건 맞다). 문제는 전부 실패할 때다. Gemini 월 지출 한도가 찼을 때 실제로 그랬다 —
+ * 모든 판정이 ''를 돌려주는데 파서가 기본값으로 흡수해서, 측정은 "성공"으로 끝나고 언급 0·
+ * 순위 없음으로 채워진 엉터리 스코어카드가 주차 이력에 남는다.
+ *
+ * 한 건 실패는 견디고 연속으로 쌓일 때만 멈춘다. 성공이 하나라도 나오면 계수를 되돌린다 —
+ * 드문 빈 응답이 누적돼 멀쩡한 측정을 죽이면 안 된다.
+ */
+const JUDGE_EMPTY_LIMIT = Math.max(1, Number(process.env.JUDGE_EMPTY_LIMIT) || 20);
+let judgeEmptyStreak = 0;
+
+/** 측정 시작마다 되돌린다 — 앞 측정의 끝자락 실패가 다음 측정을 곧바로 죽이면 안 된다. */
+export function resetJudgeHealth(): void {
+  judgeEmptyStreak = 0;
+}
+
+function guarded(client: EngineClient): EngineClient {
+  return {
+    call: async (prompt) => {
+      const result = await client.call(prompt);
+      if (result.text.trim()) {
+        judgeEmptyStreak = 0;
+        return result;
+      }
+      judgeEmptyStreak += 1;
+      if (judgeEmptyStreak >= JUDGE_EMPTY_LIMIT) {
+        throw new Error(
+          `판정 엔진이 응답하지 않습니다 — 빈 응답 ${judgeEmptyStreak}건 연속. ` +
+            `측정을 중단합니다(그대로 두면 언급 0·순위 없음으로 채워진 잘못된 점수가 저장됩니다). ` +
+            `API 키·할당량·지출 한도를 확인하세요.`,
+        );
+      }
+      return result;
+    },
+  };
+}
+
 function createEngineClient(engine: Engine): EngineClient {
   switch (engine) {
     case 'openai':
@@ -103,9 +143,10 @@ export function getJudgeClient(): EngineClient {
   if (!judgeClient) {
     const id = resolveJudgeEngineId();
     // 키 없는 클라이언트는 생성자가 throw한다 — 그때는 id도 기록하지 않는다.
-    if (id === 'claude') judgeClient = limited(new ClaudeJudgeClient(), 'judge');
-    else if (id === 'openai') judgeClient = limited(new OpenAiJudgeClient(), 'judge');
-    else judgeClient = limited(new GeminiJudgeClient(), 'judge');
+    // guarded가 안쪽 — 슬롯을 잡은 뒤의 실제 응답을 본다.
+    if (id === 'claude') judgeClient = limited(guarded(new ClaudeJudgeClient()), 'judge');
+    else if (id === 'openai') judgeClient = limited(guarded(new OpenAiJudgeClient()), 'judge');
+    else judgeClient = limited(guarded(new GeminiJudgeClient()), 'judge');
     judgeEngineId = id;
   }
   return judgeClient;
