@@ -18,8 +18,12 @@ export default function Dashboard() {
   // 엔진 구성이 다르면 증감을 숫자로 내세우지 않는다. 헤드라인이 빨간 -7인데 바로 아래 알림이
   // "그렇게 읽지 말라"고 하면 화면이 자기모순이다. 판단 규칙은 alerts.ts의 sameEngines와 같다.
   const engineSets = [prevCard, card].map((c) => [...(c?.enginesUsed ?? [])].sort().join(','))
+  // 판정 엔진도 본다 — 같은 원문이라도 판정이 바뀌면 언급·순위·사실성이 달라진다.
+  // 판단 규칙은 alerts.ts의 sameEngines·sameJudge와 같다.
+  const judges = [prevCard?.judgeEngine, card?.judgeEngine]
+  const sameJudge = !judges[0] || !judges[1] || judges[0] === judges[1]
   const comparable =
-    !prevCard || !card || !engineSets[0] || !engineSets[1] || engineSets[0] === engineSets[1]
+    !prevCard || !card || ((!engineSets[0] || !engineSets[1] || engineSets[0] === engineSets[1]) && sameJudge)
   const delta = card && prevScore !== null && comparable ? formatDelta(card.aeoScore.current, prevScore) : null
 
   // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
@@ -124,7 +128,9 @@ export default function Dashboard() {
                 <dt>전주</dt>
                 <dd>
                   {prevScore ?? '—'}
-                  {!comparable && <span className="muted"> · 엔진 달라 비교 불가</span>}
+                  {!comparable && (
+                    <span className="muted"> · {sameJudge ? '수집' : '판정'} 엔진 달라 비교 불가</span>
+                  )}
                 </dd>
               </div>
               <div>

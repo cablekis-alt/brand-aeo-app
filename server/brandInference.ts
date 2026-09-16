@@ -1,6 +1,8 @@
 import { lookup } from 'node:dns/promises';
 import { GeminiEngineClient } from './engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from './engines/geminiJudgeClient.js';
+import { OpenAiEngineClient } from './engines/openaiEngineClient.js';
+import type { EngineClient } from './engines/types.js';
 import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
 import { parseJsonLoose } from './jsonParse.js';
 
@@ -154,7 +156,8 @@ export async function inferBrandFromName(
   region = '',
 ): Promise<{ brandName: string; domain: string; industry: string; region: string; address: string }> {
   const seed = { brandName: brandName.trim(), domain: '', industry: '', region: region.trim(), address: '' };
-  if (!process.env.GEMINI_API_KEY || !brandName.trim()) return seed;
+  // 엔진이 하나라도 있으면 시도한다. 전에는 GEMINI 키가 없으면 곧바로 포기했다.
+  if ((!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) || !brandName.trim()) return seed;
 
   const system =
     '당신은 한국 상호(브랜드명)로 그 사업체의 공식 정보를 찾아주는 도우미입니다. 반드시 JSON만 반환하고, 확실하지 않은 값은 ""로 두세요. 도메인·주소를 지어내지 마세요.';
@@ -168,7 +171,8 @@ export async function inferBrandFromName(
 - address: 도로명 주소 (예: "서울 강남구 강남대로 419"). 없으면 "".
 설명·마크다운·코드블록 없이 JSON만 반환하세요.`;
 
-  const attempt = async (client: GeminiEngineClient | GeminiJudgeClient) => {
+  // call()만 쓰므로 공통 인터페이스로 받는다 — 엔진을 섞어 폴백하려면 Gemini 전용이면 안 된다.
+  const attempt = async (client: EngineClient) => {
     const result = await client.call({ system, user });
     const parsed = parseJsonLoose<Partial<typeof seed>>(result.text);
     return {
@@ -189,17 +193,41 @@ export async function inferBrandFromName(
   };
   // 업종·지역이 채워지면 충분(경쟁사 추론까지 이어짐). 도메인·주소는 있으면 좋지만 필수는 아니다.
   const enough = () => Boolean(merged.industry && merged.region);
+  /**
+   * 정확도 순으로 시도한다. 검색이 붙은 쪽이 먼저고 순수 추론이 마지막이다 — 검색 없이 답한
+   * 도메인은 환각일 확률이 높고 어차피 아래 verifiedDomain의 DNS 검증에서 걸린다.
+   *
+   * 엔진을 섞는 이유: 한 엔진이 막히면 기능이 통째로 멈추기 때문이다. 실제로 Gemini 월 지출
+   * 한도에 걸리자 이디야커피 같은 유명 브랜드도 빈 값이 나왔다. 키가 없는 엔진은 건너뛴다 —
+   * 없는 키로 만들면 생성자가 throw해 그 라운드가 날아간다.
+   */
+  const steps: { label: string; make: () => EngineClient }[] = [];
+  if (process.env.GEMINI_API_KEY) {
+    steps.push({ label: 'Gemini 그라운딩', make: () => new GeminiEngineClient() });
+  }
+  if (process.env.OPENAI_API_KEY) {
+    steps.push({ label: 'ChatGPT 그라운딩', make: () => new OpenAiEngineClient() });
+  }
+  if (process.env.OPENAI_API_KEY) {
+    // 검색 없는 OpenAI. 그라운딩 응답은 인용 표기가 섞여 JSON 파싱이 자주 실패하는데,
+    // 이쪽은 순수 텍스트라 스키마를 그대로 지킨다(실측: 그라운딩 3회 연속 파싱 실패).
+    steps.push({ label: 'ChatGPT 추론', make: () => new OpenAiJudgeClient() });
+  }
+  if (process.env.GEMINI_API_KEY) {
+    steps.push({ label: 'Gemini 추론', make: () => new GeminiJudgeClient() });
+  }
+
   for (let round = 0; round < 3 && !enough(); round += 1) {
-    try {
-      absorb(await attempt(new GeminiEngineClient())); // 웹검색 그라운딩(정확)
-    } catch (err) {
-      console.error('[inferBrandFromName] 그라운딩 실패:', err instanceof Error ? err.message : err);
-    }
-    if (enough()) break;
-    try {
-      absorb(await attempt(new GeminiJudgeClient())); // 순수 추론 폴백
-    } catch (err) {
-      console.error('[inferBrandFromName] 추론 실패:', err instanceof Error ? err.message : err);
+    // 한 라운드 안에서는 중간에 끊지 않는다. enough()는 업종·지역만 보는데, 먼저 답한 엔진이
+    // 그 둘만 주고 도메인을 비워 두면 거기서 멈춰 도메인을 영영 못 받는다(실측: ChatGPT가
+    // 업종·지역을 채우자 루프가 끝나 domain이 ''로 남았다). 엔진마다 아는 것이 달라서,
+    // 한 바퀴는 다 돌려 보고 합치는 편이 낫다.
+    for (const step of steps) {
+      try {
+        absorb(await attempt(step.make()));
+      } catch (err) {
+        console.error(`[inferBrandFromName] ${step.label} 실패:`, err instanceof Error ? err.message : err);
+      }
     }
   }
   // 도메인 환각 방지 — DNS로 실재 확인. 안 뜨면 비운다(사용자가 직접 보완).

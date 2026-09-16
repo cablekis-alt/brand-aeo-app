@@ -72,6 +72,15 @@ function sameEngines(a: WeeklyScorecard, b: WeeklyScorecard): boolean {
   return x.length === y.length && x.every((e, i) => e === y[i])
 }
 
+/**
+ * 판정 엔진이 같은가 — 같은 원문이라도 판정이 바뀌면 언급·순위·사실성 값이 달라진다.
+ * 수집 엔진만 막고 판정은 통과시키면 앞뒤가 안 맞는다.
+ */
+function sameJudge(a: WeeklyScorecard, b: WeeklyScorecard): boolean {
+  if (!a.judgeEngine || !b.judgeEngine) return true // 옛 카드는 알 수 없어 막지 않는다
+  return a.judgeEngine === b.judgeEngine
+}
+
 export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   if (!history || history.length === 0) return []
   const sorted = [...history].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
@@ -99,14 +108,19 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
 
   // 엔진 구성이 다르면 측정에서 파생된 변화를 알리지 않는다. 틀린 방향의 경고보다 침묵이
   // 낫다는 판단은 코호트 구성 가드(comparableRankChange)와 같다.
-  if (!sameEngines(prev, cur)) {
+  if (!sameEngines(prev, cur) || !sameJudge(prev, cur)) {
     const label = (c: WeeklyScorecard) =>
       (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join('·') || '알 수 없음'
+    const judge = (c: WeeklyScorecard) => ENGINE_LABEL[c.judgeEngine ?? ''] ?? c.judgeEngine ?? '알 수 없음'
+    // 무엇이 달라졌는지 밝힌다 — "엔진이 달라서"만으로는 수집인지 판정인지 알 수 없다.
+    const what = !sameEngines(prev, cur)
+      ? `수집 엔진이 ${label(prev)} → ${label(cur)}로 바뀌었습니다.`
+      : `판정 엔진이 ${judge(prev)} → ${judge(cur)}로 바뀌었습니다.`
     alerts.push({
       level: 'info',
-      title: '엔진 구성이 달라 전주와 비교할 수 없음',
+      title: '엔진이 달라 전주와 비교할 수 없음',
       detail:
-        `전주 ${label(prev)} → 이번 주 ${label(cur)}. 엔진 수가 달라지면 점수·점유·순위가 함께 움직이므로, ` +
+        `${what} 엔진이 바뀌면 점수·점유·순위가 함께 움직이므로, ` +
         `점수 차이(${prev.aeoScore.current} → ${cur.aeoScore.current})를 실력 변화로 읽으면 안 됩니다. ` +
         `같은 엔진으로 두 주를 재면 비교가 살아납니다.`,
     })
