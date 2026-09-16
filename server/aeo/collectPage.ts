@@ -174,9 +174,36 @@ function originOf(url: string): string {
   return `${parsed.protocol}//${parsed.host}`;
 }
 
+/**
+ * https로 못 붙으면 http로 한 번 더. 연결 실패일 때만이다 — 서버가 404·500으로 답했으면
+ * 프로토콜 문제가 아니므로 그대로 둔다.
+ *
+ * 실측: navion.biz는 http만 연다(https는 연결 거부). 도메인은 맞는데 https만 시도해서
+ * 사실 추출도 Site AEO Checker도 이 브랜드에서 통째로 못 돌았다.
+ */
+async function fetchWithProtocolFallback(target: string): Promise<FetchResult> {
+  try {
+    return await fetchOnce(target, 'GET');
+  } catch (err) {
+    const parsed = (() => {
+      try {
+        return new URL(target);
+      } catch {
+        return null;
+      }
+    })();
+    // http로 내려갈 수 있는 경우만. CollectorError(차단된 주소 등)는 프로토콜과 무관하니 그대로 던진다.
+    if (!parsed || parsed.protocol !== 'https:' || err instanceof CollectorError) throw err;
+    parsed.protocol = 'http:';
+    const page = await fetchOnce(parsed.href, 'GET');
+    console.warn(`[collectPage] https 연결 실패 → http로 성공: ${parsed.href}`);
+    return page;
+  }
+}
+
 export async function collectPage(target: string): Promise<FetchPayload> {
   try {
-    const page = await fetchOnce(target, 'GET');
+    const page = await fetchWithProtocolFallback(target);
     const html = page.body;
     const finalUrl = page.finalUrl;
     const status = page.status;
