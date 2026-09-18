@@ -74,10 +74,14 @@ export interface QuestionBank {
   questions: QuestionSpec[]
 }
 
+// server/queries.ts의 CitationBreakdownRow와 같은 계약. 호스트당 한 줄, 소유권은 다수결.
 export interface CitationBreakdownRow {
   domain: string
   ownerType: string
+  ownerTypeCounts?: Record<string, number>
+  mixed?: boolean
   citationCount: number
+  share?: number
   supportingBrandMentionCount: number
 }
 
@@ -85,6 +89,7 @@ export interface CitationBreakdownRow {
 export interface CitationBreakdown {
   rows: CitationBreakdownRow[]
   brandOwnedCitationRate: number
+  totalCitations?: number
 }
 
 // AI 리퍼럴 트래픽(GA4) — server/gaReferrals.ts의 응답 계약.

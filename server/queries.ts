@@ -11,25 +11,91 @@ type CitationSource = Pick<ResultStore, 'getQuestionAnalyses'>;
 type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank'>;
 
 export interface CitationBreakdownRow {
+  /** 정규화된 호스트 — www.·m. 접두를 접고 소문자로. 같은 사이트가 여러 줄로 갈라지지 않게 한다. */
   domain: string;
+  /** 이 호스트의 대표 소유권 — 인용별 판정의 다수결. 근거는 ownerTypeCounts. */
   ownerType: string;
+  /** 소유권 판정별 인용 수. 화면에서 "왜 이 소유권인가"를 보여 주는 근거. */
+  ownerTypeCounts: Record<string, number>;
+  /** unknown을 뺀 판정이 둘 이상 갈렸는가 — 같은 사이트를 판정이 경쟁사/제3자로 다르게 봤다는 뜻. */
+  mixed: boolean;
   citationCount: number;
+  /** 이 주 전체 인용 중 비중(0~1). */
+  share: number;
   supportingBrandMentionCount: number;
 }
 
 export interface CitationBreakdown {
   rows: CitationBreakdownRow[];
   brandOwnedCitationRate: number;
+  totalCitations: number;
 }
 
-/** URL 상세 분석 — 주간 응답에 등장한 인용을 도메인×소유권 기준으로 집계한다. */
+/**
+ * 인용 호스트 정규화 — 도메인별 집계의 키.
+ *
+ * `www.`와 모바일 `m.` 접두를 접고 소문자로 맞춘다. 이걸 하지 않으면 k-wonjin.co.kr /
+ * www.k-wonjin.co.kr / m.k-wonjin.co.kr 이 세 줄로 갈라져, 고객이 "우리 사이트가 몇 번
+ * 인용됐나"를 눈으로 더해야 한다(2026-09-18 원진 W38 화면에서 실제로 그랬다).
+ * `blog.`·`news.` 같은 의미 있는 서브도메인은 접지 않는다 — 다른 매체다.
+ */
+export function normalizeCitationHost(domainOrRaw: string): string {
+  let host = domainOrRaw.trim();
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(host)) {
+    try {
+      host = new URL(host).hostname;
+    } catch {
+      host = host.split('/')[0] ?? host;
+    }
+  } else {
+    host = host.split('/')[0] ?? host;
+  }
+  return host
+    .toLowerCase()
+    .replace(/\.$/, '')
+    .replace(/^(?:www|m)\./, '');
+}
+
+/**
+ * 소유권 다수결. `unknown`은 "판정 없음"이라 판정이 하나라도 있으면 표에서 빼고 센다.
+ * 동률이면 더 구체적인 쪽(자사 > 경쟁사 > 제3자 권위 > 제3자 UGC)을 택한다 —
+ * "경쟁사 3 · 제3자 권위 3"이면 경쟁사로 보는 게 브랜드 관점에서 안전한 쪽이다.
+ *
+ * `mixed`는 차순위 판정이 판정 전체의 20% 이상일 때만 켠다. blog.naver.com 이 UGC 68 · 경쟁사 1로
+ * 갈렸다고 「혼재」를 붙이면 잡음을 신호처럼 보이게 한다 — 그건 판정 1건이 튄 것이다.
+ * sswan.co.kr(경쟁사 5 · 권위 3)처럼 실제로 갈린 경우만 표시한다.
+ */
+const OWNER_TYPE_PRIORITY = ['brand-owned', 'competitor-owned', 'third-party-authority', 'third-party-ugc', 'unknown'];
+const MIXED_RUNNER_UP_SHARE = 0.2;
+function majorityOwnerType(counts: Record<string, number>): { ownerType: string; mixed: boolean } {
+  const judged = Object.entries(counts).filter(([t, n]) => t !== 'unknown' && n > 0);
+  const pool = judged.length > 0 ? judged : Object.entries(counts);
+  pool.sort((a, b) => b[1] - a[1] || OWNER_TYPE_PRIORITY.indexOf(a[0]) - OWNER_TYPE_PRIORITY.indexOf(b[0]));
+  const judgedTotal = judged.reduce((sum, [, n]) => sum + n, 0);
+  const runnerUp = judged.length > 1 ? (pool[1]?.[1] ?? 0) : 0;
+  return {
+    ownerType: pool[0]?.[0] ?? 'unknown',
+    mixed: judged.length > 1 && runnerUp / judgedTotal >= MIXED_RUNNER_UP_SHARE,
+  };
+}
+
+/**
+ * URL 상세 분석 — 주간 응답에 등장한 인용을 **호스트 기준**으로 집계한다.
+ *
+ * 이전에는 키가 `domain::ownerType`이어서 같은 호스트가 소유권별로 여러 줄이 됐다
+ * (sswan.co.kr 이 경쟁사·제3자 권위·알 수 없음 세 줄). 판정이 응답마다 흔들린 것이 그대로
+ * 표에 노출돼 "이 사이트는 경쟁사인가요, 언론인가요?"라는 질문을 낳았다. 이제 호스트당
+ * 한 줄, 소유권은 다수결로 정하고 갈린 사실(mixed)과 근거(ownerTypeCounts)를 함께 준다.
+ * brandOwnedCitationRate는 aggregate.ts와 같은 **인용 단위** 비율 그대로다.
+ */
 export async function getCitationBreakdown(
   store: CitationSource,
   tenantId: string,
   weekOf: string,
 ): Promise<CitationBreakdown> {
   const analyses = await store.getQuestionAnalyses(tenantId, weekOf);
-  const rowsByKey = new Map<string, CitationBreakdownRow>();
+  type Acc = { counts: Record<string, number>; citationCount: number; supporting: number };
+  const byHost = new Map<string, Acc>();
   let totalCitations = 0;
   let brandOwnedCitations = 0;
 
@@ -38,22 +104,34 @@ export async function getCitationBreakdown(
       totalCitations += 1;
       if (citation.ownerType === 'brand-owned') brandOwnedCitations += 1;
 
-      const key = `${citation.domain ?? citation.raw}::${citation.ownerType}`;
-      const row = rowsByKey.get(key) ?? {
-        domain: citation.domain ?? citation.raw,
-        ownerType: citation.ownerType,
-        citationCount: 0,
-        supportingBrandMentionCount: 0,
-      };
-      row.citationCount += 1;
-      if (citation.supportsBrandMention) row.supportingBrandMentionCount += 1;
-      rowsByKey.set(key, row);
+      const host = normalizeCitationHost(citation.domain ?? citation.raw);
+      const acc = byHost.get(host) ?? { counts: {}, citationCount: 0, supporting: 0 };
+      acc.counts[citation.ownerType] = (acc.counts[citation.ownerType] ?? 0) + 1;
+      acc.citationCount += 1;
+      if (citation.supportsBrandMention) acc.supporting += 1;
+      byHost.set(host, acc);
     }
   }
 
+  const rows: CitationBreakdownRow[] = [...byHost.entries()]
+    .map(([domain, acc]) => {
+      const { ownerType, mixed } = majorityOwnerType(acc.counts);
+      return {
+        domain,
+        ownerType,
+        ownerTypeCounts: acc.counts,
+        mixed,
+        citationCount: acc.citationCount,
+        share: totalCitations > 0 ? acc.citationCount / totalCitations : 0,
+        supportingBrandMentionCount: acc.supporting,
+      };
+    })
+    .sort((a, b) => b.citationCount - a.citationCount || a.domain.localeCompare(b.domain));
+
   return {
-    rows: [...rowsByKey.values()].sort((a, b) => b.citationCount - a.citationCount),
+    rows,
     brandOwnedCitationRate: totalCitations > 0 ? brandOwnedCitations / totalCitations : 0,
+    totalCitations,
   };
 }
 
