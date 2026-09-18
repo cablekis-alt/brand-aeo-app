@@ -484,6 +484,40 @@ function scoreAnswer(
   return finish('content', good, bad, start, recs, 20)
 }
 
+/**
+ * "발행 주체가 엔터티로 표기됐는가"를 판정하는 타입 목록.
+ *
+ * 이전 구현은 `/organization|localbusiness|medicalclinic|dentist|hospital|store/i`였다.
+ * 성형외과·치과 코호트를 기준으로 쓰인 목록이라, schema.org에서 LocalBusiness의 하위 타입인
+ * Hotel·Restaurant·ProfessionalService 등은 전부 빠져 있었다. 그 결과 **의미상 더 정확한**
+ * 마크업이 감점됐다 — 호텔이 `@type: "Hotel"`(LocalBusiness의 하위 타입이므로 LocalBusiness를
+ * 덧붙일 필요가 없다)만 쓰면 "Organization 없음"으로 6점을 잃었다. 군산스테이호텔로 실측:
+ * Hotel 단일 타입 7/15 → Hotel+LocalBusiness 15/15, 마크업 내용은 동일.
+ *
+ * 그래서 Organization·LocalBusiness와 함께 **실제로 쓰이는 하위 타입**을 함께 인정한다.
+ * 개별 업종을 무한정 열거하는 대신, 우리 고객군(숙박·의료·음식·전문서비스·교육·금융)을 덮는
+ * 상위 개념 위주로 적는다. 여기 없는 타입이 나오면 목록에 추가하면 된다 — 정규식을
+ * `.*business`처럼 느슨하게 풀지 않는 것은 의도다(Article·Product 등이 통과해선 안 된다).
+ */
+const ORG_ENTITY_TYPE_RE =
+  /organization|localbusiness|store|lodgingbusiness|hotel|motel|resort|hostel|bedandbreakfast|campground|restaurant|foodestablishment|cafeorcoffeeshop|bakery|bar(?:orpub)?|medicalclinic|medicalbusiness|medicalorganization|dentist|hospital|physician|pharmacy|veterinarycare|healthandbeautybusiness|beautysalon|dayspa|hairsalon|professionalservice|legalservice|attorney|notary|accountingservice|financialservice|bank(?:orcreditunion)?|insuranceagency|realestateagent|travelagency|automotivebusiness|homeandconstructionbusiness|childcare|educationalorganization|school|sportsactivitylocation|gym|entertainmentbusiness|governmentorganization|ngo|newsmediaorganization|corporation|airline/i
+
+/**
+ * 홈(루트 경로)인지 — BreadcrumbList 감점을 면제할지 판단할 때 쓴다.
+ *
+ * 홈의 탐색 경로는 「홈」 한 마디뿐이라 BreadcrumbList를 넣어도 기계에 전달되는 계층 정보가
+ * 없다. 그런데도 감점하면 "더 붙일 게 없는 페이지"에 2점을 물리는 셈이라, 고칠 방법이 없는
+ * 지적이 리포트에 남는다. 하위 페이지에서는 그대로 감점한다 — 거기서는 실제로 유효하다.
+ */
+function isHomePage(s: PageSignals): boolean {
+  try {
+    const path = new URL(s.finalUrl || s.requestedUrl).pathname.replace(/\/+$/, '')
+    return path === '' || /^\/index\.(?:html?|php|aspx?|jsp)$/i.test(path)
+  } catch {
+    return false
+  }
+}
+
 function scoreStructure(
   s: PageSignals,
   recs: RecBag,
@@ -550,7 +584,7 @@ function scoreStructure(
         },
       })
     }
-    const hasOrg = s.jsonLdTypes.some((t) => /organization|localbusiness|medicalclinic|dentist|hospital|store/i.test(t))
+    const hasOrg = s.jsonLdTypes.some((t) => ORG_ENTITY_TYPE_RE.test(t))
     const hasBreadcrumb = s.jsonLdTypes.some((t) => /breadcrumb/i.test(t))
     if (!hasOrg) {
       bad.push({
@@ -570,7 +604,7 @@ function scoreStructure(
         },
       })
     }
-    if (!hasBreadcrumb) {
+    if (!hasBreadcrumb && !isHomePage(s)) {
       bad.push({
         severity: 'low',
         title: 'BreadcrumbList 구조화 데이터가 없습니다',
