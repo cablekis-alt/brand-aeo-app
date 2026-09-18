@@ -1,114 +1,402 @@
 {
-  "version": "v1",
-  "generatedAt": "2026-09-05T02:16:34.640Z",
+  "version": "v3",
+  "generatedAt": "2026-09-18T09:58:36.928Z",
   "questions": [
     {
-      "questionId": "v1-001",
-      "text": "성형외과 추천해줘",
+      "questionId": "v3-001",
+      "text": "자연유착 쌍꺼풀이랑 절개법 차이가 뭐야?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "눈 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-002",
-      "text": "서울 서초에서 성형외과 고를 때 뭘 봐야 해?",
+      "questionId": "v3-002",
+      "text": "눈 재수술 잘하는 곳 찾을 때 어떤 기준으로 병원 골라야 해?",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-003",
-      "text": "성형외과 후기 좋은 곳 알려줘",
+      "questionId": "v3-003",
+      "text": "쌍꺼풀 수술 당일 상담받고 바로 수술 가능한 병원 있어?",
       "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "눈 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-004",
-      "text": "서울에서 유명한 성형외과 어디야?",
+      "questionId": "v3-004",
+      "text": "콧대 낮고 복코인 경우 어떤 코 성형 수술법이 제일 효과적이야?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-005",
-      "text": "여름철 성형외과 방문할 때 주의할 점이 뭐야?",
+      "questionId": "v3-005",
+      "text": "무보형물 코 성형 전문으로 잘하는 성형외과 추천해줘",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-006",
-      "text": "성형 수술 후 회복에 좋은 팁 있어?",
+      "questionId": "v3-006",
+      "text": "늑연골 코 수술 후기 좋은 병원 알아보는 팁 있어?",
       "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-007",
-      "text": "서울에서 비용 효율 좋은 성형외과 찾고 싶어",
+      "questionId": "v3-007",
+      "text": "사각턱 수술이랑 윤곽 3종 수술 차이점이 뭐야?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "안면윤곽·양악",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-008",
-      "text": "성형외과 선택 시 중요하게 봐야 할 점은 뭐야?",
+      "questionId": "v3-008",
+      "text": "안면윤곽 수술 안전하게 잘하는 대형 성형외과 어디가 있어?",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-009",
-      "text": "WJ 원진성형외과 수술 스케줄 어떻게 잡아?",
+      "questionId": "v3-009",
+      "text": "윤곽 수술할 때 마취과 전문의 상주 여부 확인하는 방법 알려줘",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-010",
+      "text": "코 실리콘 구축 왔을 때 재수술 타이밍 언제가 좋아?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "재수술·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "쌍꺼풀 소시지눈 재수술로 유명한 성형외과 리스트 있을까?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "재수술·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "성형 부작용 케어랑 사후관리 시스템 잘 갖춰진 병원 특징이 뭐야?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "재수술·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-013",
+      "text": "성형외과 상담비 보통 얼마 정도 나오고 예약금 환불 규정은 어떻게 돼?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "가격·비용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-014",
+      "text": "가슴 성형 보형물 종류별로 대략적인 가격 차이가 어떻게 돼?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "가격·비용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-015",
+      "text": "눈이랑 코 같이 수술하면 할인 많이 해주는 성형외과 찾는 법",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "가격·비용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-016",
+      "text": "대리수술이나 쉐도우 닥터 없는 안심 성형외과 구별하는 법 있어?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "병원 선택 기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-017",
+      "text": "강남역이나 신논현역 근처에서 후기 좋은 성형외과 추천해줘",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "병원 선택 기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-018",
+      "text": "성형외과 전문의인지 조회하고 병원 고르는 기준 알려줘",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "병원 선택 기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-019",
+      "text": "트임 수술이랑 눈매교정 같이 잘하는 성형외과 어디 있을까?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-020",
+      "text": "양악수술 잘하고 구강악안면외과 협진되는 병원 어떻게 찾아?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-021",
+      "text": "휜 코 교정이랑 비염 수술 동시에 해주는 이비인후과 협진 성형외과 추천",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "코 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-022",
+      "text": "성형외과 첫 상담 갈 때 꼭 물어봐야 할 질문 리스트 알려줘",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "병원 선택 기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-023",
+      "text": "서울 서초구 쪽에서 대형 성형외과 가려면 어디가 유명해?",
+      "category": "local-regional",
+      "stage": "consider",
+      "topic": "병원 선택 기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-024",
+      "text": "서초 강남역 부근에 있는 WJ 원진성형외과 위치랑 찾아가는 길 알려줘",
+      "category": "local-regional",
+      "stage": "decide",
+      "topic": "병원 선택 기준",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-025",
+      "text": "서초 강남권에서 기린성형외과랑 원진성형외과 중 윤곽 상담 어디가 나아?",
+      "category": "local-regional",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-026",
+      "text": "WJ 원진성형외과 대표원장님 상담 예약 잡기 힘든가요?",
       "category": "brand-direct",
+      "stage": "decide",
+      "topic": "병원 선택 기준",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-010",
-      "text": "WJ 원진성형외과랑 기린성형외과 추천 비교해줘",
+      "questionId": "v3-027",
+      "text": "WJ 원진성형외과 눈 성형 전담 의료진 경력이 어떻게 돼?",
+      "category": "brand-direct",
+      "stage": "learn",
+      "topic": "눈 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-028",
+      "text": "원진성형외과 안면윤곽 수술 안전 시스템 어떤 게 있어?",
+      "category": "brand-direct",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-029",
+      "text": "눈 재수술로 원진성형외과랑 유노성형외과 고민 중인데 어디가 더 나아?",
       "category": "comparison",
+      "stage": "consider",
+      "topic": "눈 성형",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-011",
-      "text": "서울 서초에서 성형 수술 가격대 알려줘",
+      "questionId": "v3-030",
+      "text": "코 성형 원진성형외과 vs 바이미성형외과 스타일 차이점 알려줘",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "코 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-031",
+      "text": "윤곽 3종 기린성형외과랑 원진성형외과 중에 어디가 후기 더 좋아?",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-032",
+      "text": "원진성형외과 코 성형 비용 대략 얼마 정도 해?",
       "category": "price-spec",
-      "containsBrandName": false,
-      "industry": "성형외과",
-      "region": "서울 서초",
-      "version": "v1"
-    },
-    {
-      "questionId": "v1-012",
-      "text": "WJ 원진성형외과에서 상담 후기에 대해 알아보고 싶어",
-      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "가격·비용",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-033",
+      "text": "에스엠성형외과랑 쁠리성형외과 눈매교정 가격대 비교해줘",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "가격·비용",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-034",
+      "text": "원진성형외과 가슴성형 모티바 보형물 수술 견적 궁금해",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "가격·비용",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-035",
+      "text": "WJ 원진성형외과에서 코 재수술 받은 실제 후기 평점 어떤 편이야?",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "재수술·부작용",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-036",
+      "text": "강남세브란스성형외과나 대형 성형외과에서 윤곽 부작용 재건 수술 후기 어때?",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "재수술·부작용",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
     }
   ]
 }

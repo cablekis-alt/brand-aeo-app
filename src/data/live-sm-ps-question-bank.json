@@ -1,114 +1,402 @@
 {
-  "version": "v1",
-  "generatedAt": "2026-09-04T01:45:17.773Z",
+  "version": "v3",
+  "generatedAt": "2026-09-18T09:58:33.226Z",
   "questions": [
     {
-      "questionId": "v1-001",
-      "text": "서울 서초 쪽에서 눈성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "questionId": "v3-001",
+      "text": "서초 쪽에서 쌍꺼풀 수술 자연스럽게 잘하는 성형외과 어디야?",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈·코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-002",
-      "text": "서초구 근처 코성형 전문의 있는 병원 찾을 때 어떤 점을 주로 봐야 할까?",
+      "questionId": "v3-002",
+      "text": "코 재수술 알아보고 있는데 병원 고를 때 어떤 점을 우선으로 봐야 해?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "재수술·후기",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-003",
-      "text": "서초나 강남 일대에서 중년 눈밑지방재배치나 상안검 수술로 후기 좋은 곳 알려줘.",
+      "questionId": "v3-003",
+      "text": "40대 안면거상술 받으려는데 흉터 덜 남고 회복 빠른 곳 추천해줘.",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "안면거상·리프팅",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-004",
-      "text": "서초역이나 교대역 주변 성형외과 중에 과잉진료 없고 친절한 병원 어디 있어?",
+      "questionId": "v3-004",
+      "text": "강남역이랑 신논현역 근처에서 눈 밑 지방 재배치 잘하는 원장님 누구 있어?",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈·코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-005",
-      "text": "자연스러운 스타일로 코 재수술하고 싶은데 병원 고를 때 팁이 있을까?",
+      "questionId": "v3-005",
+      "text": "성형외과 전문의가 직접 수술하는지 확인하려면 어디서 조회해야 돼?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "성형외과 선택기준",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-006",
-      "text": "서울 서초구 성형외과 중에 마취과 전문의 상주하고 안전 시스템 잘 갖춰진 곳 추천해줘.",
+      "questionId": "v3-006",
+      "text": "미니거상술이랑 실리프팅 효과 차이랑 지속기간 비교해줘.",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "안면거상·리프팅",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-007",
-      "text": "안면거상이나 리프팅 수술 생각 중인데 서초 쪽에서 실력 있는 원장님 누구야?",
+      "questionId": "v3-007",
+      "text": "서초구 일대 성형외과들 코성형 대략적인 평균 비용이 어떻게 돼?",
       "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-008",
-      "text": "성형외과 첫 상담 발품 팔러 다닐 때 꼭 물어봐야 하는 체크리스트 알려줘.",
+      "questionId": "v3-008",
+      "text": "첫 쌍꺼풀 수술할 때 매몰법이랑 절개법 중에 뭘로 결정해야 할까?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "눈·코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-009",
-      "text": "서초 에스엠성형외과는 주로 어떤 수술을 전문으로 하고 대표원장님 경력은 어때?",
+      "questionId": "v3-009",
+      "text": "직장인이라 휴가가 짧은데 눈성형 붓기 빨리 빼는 팁이나 사후관리 좋은 병원 있어?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "회복기간·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-010",
+      "text": "성형 상담 갈 때 견적이나 과잉진료 피하려면 어떤 질문을 해야 해?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "강남 서초 부근에서 중년 눈성형 상안검 하안검 잘하는 곳 알려줘.",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈·코 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "코끝 성형할 때 자가늑연골 쓰면 부작용이나 흡수율은 어느 정도야?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "회복기간·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-013",
+      "text": "안면거상 후기 볼 때 브로커 거르고 진짜 환자 후기 찾는 방법 있어?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "재수술·후기",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-014",
+      "text": "눈 재수술로 유명한 성형외과들 리스트랑 원장님 경력 알려줘.",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "재수술·후기",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-015",
+      "text": "CCTV 참관 가능하고 마취과 전문의 상주하는 서초 성형외과 추천해줘.",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-016",
+      "text": "비절개 눈매교정이랑 트임 성형 같이 하면 보통 얼마 정도 들어?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-017",
+      "text": "코 실리콘 제거하고 무보형물로 재수술하면 회복기간 얼마나 걸려?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "회복기간·부작용",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-018",
+      "text": "팔자주름이랑 볼처짐 리프팅 시술 중에서 가성비 제일 좋은 게 뭐야?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "안면거상·리프팅",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-019",
+      "text": "대형 성형외과랑 1인 원장 성형외과 중에 수술 결과 안정성은 어디가 나아?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-020",
+      "text": "이마거상술 내시경으로 진행하면 흉터 위치가 어디에 남아?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "안면거상·리프팅",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-021",
+      "text": "남자 무쌍 눈매교정 과하지 않고 자연스럽게 해주는 병원 어디야?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈·코 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-022",
+      "text": "성형 당일 수술 예약금 걸기 전에 환불 규정 꼭 체크해야 하는 사항 뭐야?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-023",
+      "text": "서초 에스엠성형외과 대표원장님 주요 진료 분야가 눈이랑 코 맞아?",
       "category": "brand-direct",
+      "stage": "learn",
+      "topic": "성형외과 선택기준",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-010",
-      "text": "에스엠성형외과 실제로 다녀온 사람들 후기나 수술 후 사후관리 평가는 어때?",
-      "category": "troubleshooting-review",
+      "questionId": "v3-024",
+      "text": "에스엠성형외과에서 눈 재수술 상담 받아보려는데 예약 대기 긴 편이야?",
+      "category": "brand-direct",
+      "stage": "decide",
+      "topic": "재수술·후기",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-011",
-      "text": "서초 에스엠성형외과 눈이나 코 성형 대략적인 비용대랑 상담 예약 방법 알려줘.",
+      "questionId": "v3-025",
+      "text": "에스엠성형외과 안면거상술 사후관리 프로그램 어떻게 되어 있어?",
+      "category": "brand-direct",
+      "stage": "decide",
+      "topic": "안면거상·리프팅",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-026",
+      "text": "서초동 에스엠성형외과랑 다른 강남권 중견 성형외과 비교했을 때 상담 스타일 어때?",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-027",
+      "text": "눈재수술 전문 병원들 중에 에스엠성형외과 스타일은 화려한 편이야 자연스러운 편이야?",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "눈·코 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-028",
+      "text": "에스엠성형외과 절개 쌍꺼풀이랑 눈매교정 대략적인 가격대 얼마야?",
       "category": "price-spec",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-012",
-      "text": "서초 지역에 있는 성형외과들 중에서 에스엠성형외과의 특징이나 강점은 뭐야?",
-      "category": "local-regional",
+      "questionId": "v3-029",
+      "text": "서초 에스엠성형외과 리프팅이나 미니거상 시술 비용 이벤트 하는 거 있어?",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-030",
+      "text": "에스엠성형외과 수술비 분납이나 제휴 카드 무이자 할부 혜택 어떻게 돼?",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "수술 비용·견적",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-031",
+      "text": "에스엠성형외과에서 코수술 받고 모양 불만족이나 부작용 생기면 AS 보장돼?",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "회복기간·부작용",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-032",
+      "text": "에스엠성형외과 다녀온 사람들 실밥 제거랑 붓기 레이저 관리 꼼꼼하게 해줘?",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "재수술·후기",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-033",
+      "text": "서초 에스엠성형외과 실제 환자들 후기 평점이나 불만족 리뷰는 어떤 내용이 많아?",
+      "category": "troubleshooting-review",
+      "stage": "consider",
+      "topic": "재수술·후기",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-034",
+      "text": "서초역 교대역 라인에서 에스엠성형외과 찾아가려면 몇 번 출구로 가야 해?",
+      "category": "local-regional",
+      "stage": "decide",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-035",
+      "text": "서초 에스엠성형외과 주차장 발렛파킹 되거나 무료 주차 지원 시간 얼마야?",
+      "category": "local-regional",
+      "stage": "decide",
+      "topic": "성형외과 선택기준",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-036",
+      "text": "서초구 주민들이 안면거상이나 리프팅하러 에스엠성형외과 많이 가는 편이야?",
+      "category": "local-regional",
+      "stage": "consider",
+      "topic": "안면거상·리프팅",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
     }
   ]
 }

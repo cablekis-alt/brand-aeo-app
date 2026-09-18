@@ -1,114 +1,402 @@
 {
-  "version": "v1",
-  "generatedAt": "2026-09-04T01:41:39.527Z",
+  "version": "v3",
+  "generatedAt": "2026-09-18T09:58:39.823Z",
   "questions": [
     {
-      "questionId": "v1-001",
-      "text": "서울 서초나 강남 쪽에서 눈이랑 코 성형 자연스럽게 잘하는 성형외과 추천해줘.",
+      "questionId": "v3-001",
+      "text": "자연유착 쌍꺼풀 수술 자연스럽게 잘하는 성형외과 추천해줘",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-002",
-      "text": "안면윤곽 수술 고려 중인데 서울에서 안전 시스템 잘 갖춰진 성형외과 고르는 기준이 뭐야?",
+      "questionId": "v3-002",
+      "text": "코 재수술할 때 병원 고르는 기준이 뭐야?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-003",
-      "text": "쌍꺼풀 재수술 잘하기로 유명한 성형외과 전문의 찾으려면 어디를 알아봐야 해?",
+      "questionId": "v3-003",
+      "text": "안면윤곽 3종 수술받으면 일상 복귀까지 회복기간 얼마나 걸려?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "안면윤곽·양악",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-004",
-      "text": "서초구 인근에서 안면거상이나 리프팅 시술 후기 좋은 성형외과 어디 있어?",
+      "questionId": "v3-004",
+      "text": "눈밑지방재배치 수술 후 붓기랑 멍 빨리 빼는 관리법 알려줘",
       "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "눈 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-005",
-      "text": "가슴 성형 처음인데 사후 관리 꼼꼼하고 부작용 적은 성형외과 추천해줄 수 있어?",
+      "questionId": "v3-005",
+      "text": "매부리코 교정 수술 경험 많은 전문의 있는 병원 어디야?",
       "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "코 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-006",
-      "text": "성형외과 상담 발품 팔러 다닐 때 원장님한테 꼭 확인해야 하는 필수 질문 리스트 알려줘.",
+      "questionId": "v3-006",
+      "text": "미니리프팅이랑 안면거상술 차이가 뭐야? 40대 후반 추천해줘",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "리프팅·안티에이징",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-007",
-      "text": "화려한 스타일보다 자연스러운 라인으로 코 성형 잘하는 곳 찾으려면 어떤 후기를 봐야 할까?",
+      "questionId": "v3-007",
+      "text": "사각턱 수술이랑 광대축소 같이 진행해도 안전한가요?",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "안면윤곽·양악",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-008",
-      "text": "서울에서 대리수술 걱정 없고 마취과 전문의 항상 상주하는 성형외과 어떻게 구별해?",
+      "questionId": "v3-008",
+      "text": "가슴보형물 모티바랑 멘토엑스트라 촉감이랑 모양 차이 비교해줘",
       "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "가슴·체형 성형",
       "containsBrandName": false,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-009",
-      "text": "서초동에 있는 기린성형외과 눈 성형이랑 안면윤곽 분야 실제 환자들 평판이나 후기 어때?",
+      "questionId": "v3-009",
+      "text": "첫 쌍꺼풀 수술 절개법이랑 매몰법 중에 어떤 게 흉터 덜 남아?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "눈 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-010",
+      "text": "코끝 성형할 때 자가늑연골 쓰면 부작용이나 흡수율 어때?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "코 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-011",
+      "text": "성형외과 고를 때 마취과 전문의 상주 여부를 꼭 확인해야 하는 이유가 뭐야?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "병원 선택·안전",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-012",
+      "text": "안면윤곽 수술 후 볼처짐 방지하려면 수술 직후에 뭘 해야 해?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-013",
+      "text": "내시경 이마거상술 흉터 거의 안 남고 후기 좋은 곳 알려줘",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "리프팅·안티에이징",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-014",
+      "text": "가슴 확대 수술 밑선절개랑 겨드랑이절개 장단점 알려줘",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "가슴·체형 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-015",
+      "text": "수술실 CCTV 실시간 참관 가능한 안전 시스템 갖춘 성형외과 어디야?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "병원 선택·안전",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-016",
+      "text": "쌍꺼풀 라인 짝짝이 교정 재수술은 첫 수술 후 몇 개월 뒤에 가능해?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "눈 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-017",
+      "text": "복코 교정 확실하게 얄쌍하게 만들어주는 성형외과 어디 있어?",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "코 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-018",
+      "text": "윤곽 수술 후 고정핀 제거 수술은 1년 뒤에 꼭 받아야 하나요?",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-019",
+      "text": "얼굴 처짐 심할 때 실리프팅이랑 안면거상술 중 뭐가 더 효과 오래가?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "리프팅·안티에이징",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-020",
+      "text": "성형외과 대면 상담 돌 때 필수로 체크해야 하는 질문 리스트 알려줘",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "병원 선택·안전",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-021",
+      "text": "중년 눈처짐 교정 상안검 수술 인상 안 사납게 잘하는 병원 추천해줘",
+      "category": "category-agnostic",
+      "stage": "consider",
+      "topic": "눈 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-022",
+      "text": "가슴성형 보형물 수술하고 피통 꼭 차야 하는지 당일 퇴원 가능한지 알려줘",
+      "category": "category-agnostic",
+      "stage": "decide",
+      "topic": "가슴·체형 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-023",
+      "text": "기린성형외과 눈 성형 대표원장님 상담 분위기랑 스타일 어떤 편이야?",
       "category": "brand-direct",
+      "stage": "consider",
+      "topic": "눈 성형",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-010",
-      "text": "강남·서초 쪽에서 윤곽이나 눈 재수술로 기린성형외과랑 같이 비교군에 많이 넣는 병원 어디야?",
+      "questionId": "v3-024",
+      "text": "기린성형외과 안면윤곽 수술할 때 전담 마취과 전문의랑 응급장비 잘 되어 있어?",
+      "category": "brand-direct",
+      "stage": "learn",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-025",
+      "text": "기린성형외과 코 수술 예약 잡으려는데 주말 상담 대기 기간 긴 편이야?",
+      "category": "brand-direct",
+      "stage": "decide",
+      "topic": "코 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-026",
+      "text": "기린성형외과랑 서초 대형 성형외과들 안면윤곽 수술 스타일이나 라인 차이 비교해줘",
       "category": "comparison",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-011",
-      "text": "기린성형외과 코 수술이나 눈 성형 대략적인 비용 견적이나 가격대 알고 싶어.",
+      "questionId": "v3-027",
+      "text": "강남권 성형외과들 중에 기린성형외과 눈 재수술 만족도 다른 곳이랑 비교하면 어때?",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "눈 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-028",
+      "text": "서초권 가슴성형 유명 병원들이랑 기린성형외과 사후관리 패키지 비교해줘",
+      "category": "comparison",
+      "stage": "consider",
+      "topic": "가슴·체형 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-029",
+      "text": "기린성형외과 윤곽 3종 수술 비용 대략 얼마 정도 잡아야 해?",
       "category": "price-spec",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
     },
     {
-      "questionId": "v1-012",
-      "text": "기린성형외과 상담 예약하고 가려는데 대기 시간이나 원장님 1:1 상담 꼼꼼하게 봐주는 편이야?",
-      "category": "troubleshooting-review",
+      "questionId": "v3-030",
+      "text": "서초 성형외과들 자연유착 쌍꺼풀 평균 가격이랑 기린성형외과 이벤트 비용 알려줘",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "눈 성형",
       "containsBrandName": true,
       "industry": "성형외과",
       "region": "서울 서초",
-      "version": "v1"
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-031",
+      "text": "기린성형외과 미니리프팅이나 안면거상술 수술 비용이랑 유지기간 스펙 알려줘",
+      "category": "price-spec",
+      "stage": "decide",
+      "topic": "리프팅·안티에이징",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-032",
+      "text": "기린성형외과에서 코 수술받은 사람들 부작용이나 AS 사후 대처 평가 어때?",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "코 성형",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-033",
+      "text": "기린성형외과 안면윤곽 수술받고 붓기 관리나 고압산소 치료 받아본 실제 후기 궁금해",
+      "category": "troubleshooting-review",
+      "stage": "decide",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-034",
+      "text": "서울 서초역이나 강남역 인근에서 안면윤곽 자연스럽게 잘하는 성형외과 추천해줘",
+      "category": "local-regional",
+      "stage": "consider",
+      "topic": "안면윤곽·양악",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-035",
+      "text": "서초 신논현역 근처 기린성형외과 찾아가는 길이랑 발렛 주차 편한지 알려줘",
+      "category": "local-regional",
+      "stage": "decide",
+      "topic": "병원 선택·안전",
+      "containsBrandName": true,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-036",
+      "text": "서울 서초구 부근에서 눈 재수술 전문으로 유명한 성형외과 리스트 알려줘",
+      "category": "local-regional",
+      "stage": "consider",
+      "topic": "눈 성형",
+      "containsBrandName": false,
+      "industry": "성형외과",
+      "region": "서울 서초",
+      "version": "v3"
     }
   ]
 }

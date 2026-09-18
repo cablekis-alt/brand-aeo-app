@@ -758,61 +758,6 @@
     ]
   },
   {
-    "tenantId": "k-wonjin",
-    "weekOf": "2026-W36",
-    "industry": "성형외과",
-    "region": "서울 서초",
-    "brandName": "WJ 원진성형외과",
-    "aeoScore": {
-      "current": 42,
-      "ma4": 42,
-      "previousWeek": 42,
-      "ciLow": 36,
-      "ciHigh": 48
-    },
-    "mentionRate": 0.020833333333333332,
-    "shareOfMention": 0.3333333333333333,
-    "avgRecommendationRank": 1,
-    "factualityScore": 1,
-    "brandOwnedCitationRate": 0.1711229946524064,
-    "cohortRank": {
-      "position": 2,
-      "totalTenants": 6,
-      "tiedCount": 1,
-      "members": [
-        {
-          "tenantId": "bymeps",
-          "aeoScore": 29
-        },
-        {
-          "tenantId": "girinps",
-          "aeoScore": 27
-        },
-        {
-          "tenantId": "k-wonjin",
-          "aeoScore": 42
-        },
-        {
-          "tenantId": "sm-ps",
-          "aeoScore": 46
-        },
-        {
-          "tenantId": "vvlyps",
-          "aeoScore": 30
-        },
-        {
-          "tenantId": "yunoprs",
-          "aeoScore": 28
-        }
-      ]
-    },
-    "hallucinationFlags": [],
-    "enginesUsed": [
-      "openai",
-      "gemini"
-    ]
-  },
-  {
     "tenantId": "comp-mhxthx",
     "weekOf": "2026-W36",
     "industry": "펜션",
@@ -1925,6 +1870,348 @@
     "hallucinationFlags": [],
     "enginesUsed": [
       "gemini"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "girinps",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "기린성형외과",
+    "aeoScore": {
+      "current": 43,
+      "ma4": 43,
+      "previousWeek": 43,
+      "ciLow": 36.5,
+      "ciHigh": 49.5
+    },
+    "mentionRate": 0.023809523809523808,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.10013531799729364,
+    "cohortRank": {
+      "position": 3,
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "yunoprs",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "유노성형외과",
+    "aeoScore": {
+      "current": 44,
+      "ma4": 44,
+      "previousWeek": 44,
+      "ciLow": 37.4,
+      "ciHigh": 50.6
+    },
+    "mentionRate": 0.045454545454545456,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.0847457627118644,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 6,
+      "tiedCount": 2,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "sm-ps",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "에스엠성형외과",
+    "aeoScore": {
+      "current": 44,
+      "ma4": 44,
+      "previousWeek": 44,
+      "ciLow": 36.9,
+      "ciHigh": 51.1
+    },
+    "mentionRate": 0.07317073170731707,
+    "shareOfMention": null,
+    "avgRecommendationRank": 1,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.08022130013831259,
+    "cohortRank": {
+      "position": 1,
+      "totalTenants": 6,
+      "tiedCount": 2,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "vvlyps",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "쁠리성형외과",
+    "aeoScore": {
+      "current": 27,
+      "ma4": 27,
+      "previousWeek": 27,
+      "ciLow": 21,
+      "ciHigh": 33
+    },
+    "mentionRate": 0,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.047044632086851626,
+    "cohortRank": {
+      "position": 6,
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "bymeps",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "바이미성형외과",
+    "aeoScore": {
+      "current": 28,
+      "ma4": 28,
+      "previousWeek": 28,
+      "ciLow": 21.7,
+      "ciHigh": 34.3
+    },
+    "mentionRate": 0,
+    "shareOfMention": null,
+    "avgRecommendationRank": null,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.08122503328894808,
+    "cohortRank": {
+      "position": 5,
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
+    ],
+    "judgeEngine": "gemini",
+    "questionBankVersion": "v3"
+  },
+  {
+    "tenantId": "k-wonjin",
+    "weekOf": "2026-W38",
+    "industry": "성형외과",
+    "region": "서울 서초",
+    "brandName": "WJ 원진성형외과",
+    "aeoScore": {
+      "current": 38,
+      "ma4": 38,
+      "previousWeek": 38,
+      "ciLow": 31.3,
+      "ciHigh": 44.7
+    },
+    "mentionRate": 0.046511627906976744,
+    "shareOfMention": 0.3333333333333333,
+    "avgRecommendationRank": 2,
+    "factualityScore": 1,
+    "brandOwnedCitationRate": 0.09302325581395349,
+    "cohortRank": {
+      "position": 4,
+      "totalTenants": 6,
+      "tiedCount": 1,
+      "members": [
+        {
+          "tenantId": "bymeps",
+          "aeoScore": 28
+        },
+        {
+          "tenantId": "girinps",
+          "aeoScore": 43
+        },
+        {
+          "tenantId": "k-wonjin",
+          "aeoScore": 38
+        },
+        {
+          "tenantId": "sm-ps",
+          "aeoScore": 44
+        },
+        {
+          "tenantId": "vvlyps",
+          "aeoScore": 27
+        },
+        {
+          "tenantId": "yunoprs",
+          "aeoScore": 44
+        }
+      ]
+    },
+    "hallucinationFlags": [],
+    "enginesUsed": [
+      "openai",
+      "perplexity"
     ],
     "judgeEngine": "gemini",
     "questionBankVersion": "v3"
