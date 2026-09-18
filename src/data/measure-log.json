@@ -1,5 +1,14 @@
 [
   {
+    "tenantId": "web4ai",
+    "brandName": "스테이,머뭄",
+    "weekOf": "2026-W38",
+    "aeoScore": 46,
+    "at": "2026-09-18T10:59:57.243Z",
+    "durationSec": 223,
+    "source": "local"
+  },
+  {
     "tenantId": "k-wonjin",
     "brandName": "WJ 원진성형외과",
     "weekOf": "2026-W38",
