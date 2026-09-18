@@ -172,6 +172,46 @@ const FALLBACK_RE =
 const BOILERPLATE_RE =
   /this (article|page) (needs|may not|is a stub)|additional citations for verification|from wikipedia, the free encyclopedia|please help improve this article|이 문서는|출처가 필요합니다|위키백과,\s*우리 모두의 백과사전|this page was last edited|part of a series on/gi
 
+/**
+ * "발행 주체가 엔터티로 표기됐는가"를 판정하는 JSON-LD 타입 목록 — scoreAeo의 구조화 채점과
+ * 여기 orgCandidates가 **같은 목록**을 써야 한다. 예전에는 양쪽이 각자 좁은 목록을 들고 있어,
+ * 호텔이 `@type: "Hotel"`(LocalBusiness의 하위 타입)만 쓰면 "조직 표기 없음"으로 취급됐다.
+ *
+ * 개별 업종을 무한정 열거하는 대신 우리 고객군(숙박·의료·음식·전문서비스·교육·금융)을 덮는
+ * 상위 개념 위주로 적는다. `.*business`처럼 느슨하게 풀지 않는 것은 의도다 — Article·Product가
+ * 발행 주체로 통과해선 안 된다.
+ */
+export const ORG_ENTITY_TYPE_RE =
+  /organization|localbusiness|store|lodgingbusiness|hotel|motel|resort|hostel|bedandbreakfast|campground|restaurant|foodestablishment|cafeorcoffeeshop|bakery|bar(?:orpub)?|medicalclinic|medicalbusiness|medicalorganization|dentist|hospital|physician|pharmacy|veterinarycare|healthandbeautybusiness|beautysalon|dayspa|hairsalon|professionalservice|legalservice|attorney|notary|accountingservice|financialservice|bank(?:orcreditunion)?|insuranceagency|realestateagent|travelagency|automotivebusiness|homeandconstructionbusiness|childcare|educationalorganization|school|sportsactivitylocation|gym|entertainmentbusiness|governmentorganization|ngo|newsmediaorganization|corporation|airline/i
+
+/** 기관명에 붙는 꼬리표 — 「…의원」 「…㈜」 「… Inc.」처럼 끝나면 사람 이름이 아니다. */
+const ORG_NAME_SUFFIX_RE =
+  /(의원|병원|치과|한의원|약국|클리닉|센터|센타|지점|학원|학교|대학교|교회|성당|사찰|호텔|모텔|펜션|리조트|게스트하우스|식당|카페|그룹|재단|법인|협회|조합|연구소|연구원|사무소|사무실|스튜디오|컴퍼니|주식회사|유한회사|합자회사|㈜|\(주\)|\(유\))\s*$|^\s*(주식회사|유한회사|㈜|\(주\)|\(유\))|\b(inc|corp|corporation|ltd|limited|llc|llp|co|company|clinic|hospital|group|studio|agency|institute|university|foundation|association|center|centre)\.?\s*$/i
+
+/**
+ * JSON-LD의 `Person` 이름이 실제로 사람이 아니라 **기관**인지 판별한다.
+ *
+ * 저자(바이라인) 신호는 E-E-A-T에서 6점짜리다. 그런데 이전에는 `@type: "Person"`이기만 하면
+ * 이름을 보지 않고 저자로 인정했다. 바노바기는 자기 **의원 이름**을 Person으로 표기해 두었고
+ * (`"@type":"Person","name":"바노바기성형외과의원"`), 그 결과 페이지에 저자도 검토 전문의도
+ * 없는데 "전문가 바이라인 있음"으로 6점을 받았다 — 리포트가 사실과 다른 말을 하고 있었다.
+ *
+ * 두 갈래로 거른다: 이름 자체가 기관 꼬리표로 끝나거나, 이미 조직명으로 잡힌 문자열과 같거나
+ * 그것을 품고 있으면 저자로 치지 않는다. 사람 이름을 실수로 걸러내는 쪽(거짓 음성)이
+ * 기관을 전문가로 둔갑시키는 쪽(거짓 양성)보다 낫다 — 후자는 고객에게 없는 신뢰를 있다고 말한다.
+ */
+function looksLikeOrgName(name: string, orgs: string[]): boolean {
+  const t = (name ?? '').replace(/\s+/g, ' ').trim()
+  if (!t) return true
+  if (ORG_NAME_SUFFIX_RE.test(t)) return true
+  const squash = (x: string) => x.replace(/\s+/g, '').toLowerCase()
+  const target = squash(t)
+  return orgs.some((o) => {
+    const org = squash(o)
+    return org.length >= 2 && target.includes(org)
+  })
+}
+
 export function isPlaceholderHost(url: string): boolean {
   try {
     const host = new URL(url).hostname.replace(/^www\./, '').toLowerCase()
@@ -623,16 +663,20 @@ export function extractPage(input: {
       .filter(Boolean),
   )
 
-  const authorCandidates = unique([
-    ...[...doc.querySelectorAll('[itemprop="author"], .author, .byline, [rel="author"]')].map(textOf),
-    ...jsonLdEntities.filter((e) => e.types.some((t) => /person/i.test(t))).map((e) => e.name ?? ''),
-  ]).filter(Boolean)
-
   const brand = hostBrand(base)
   const orgCandidates = unique([
     ogSiteName,
-    ...jsonLdEntities.filter((e) => e.types.some((t) => /organization|localbusiness/i.test(t))).map((e) => e.name ?? ''),
+    ...jsonLdEntities.filter((e) => e.types.some((t) => ORG_ENTITY_TYPE_RE.test(t))).map((e) => e.name ?? ''),
     brand && new RegExp(brand, 'i').test(`${title} ${ogTitle} ${ogSiteName} ${h1s.join(' ')}`) ? brand : '',
+  ]).filter(Boolean)
+
+  // Person 마크업은 이름이 사람처럼 보일 때만 저자로 친다 — 근거는 looksLikeOrgName.
+  const authorCandidates = unique([
+    ...[...doc.querySelectorAll('[itemprop="author"], .author, .byline, [rel="author"]')].map(textOf),
+    ...jsonLdEntities
+      .filter((e) => e.types.some((t) => /person/i.test(t)))
+      .map((e) => e.name ?? '')
+      .filter((name) => !looksLikeOrgName(name, orgCandidates)),
   ]).filter(Boolean)
 
   const dates = unique([

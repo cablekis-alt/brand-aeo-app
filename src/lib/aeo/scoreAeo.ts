@@ -13,7 +13,7 @@ import type {
 } from './types.ts'
 import { DEFAULT_AUDIT_CONTEXT, DISCLAIMER } from './types.ts'
 import { clip } from './clip.ts'
-import { isBoilerplateText, isPlaceholderHost, isReferenceHost } from './extractPage.ts'
+import { isBoilerplateText, isPlaceholderHost, isReferenceHost, ORG_ENTITY_TYPE_RE } from './extractPage.ts'
 import { PAGE_TYPE_WEIGHTS } from './pageType.ts'
 import { robotsAiAccess } from './robots.ts'
 import { areaQuality, CATEGORY_DEFS, scoreBand } from './scoreMeta.ts'
@@ -483,24 +483,6 @@ function scoreAnswer(
   const start = s.wordCount >= 80 ? 20 : 8
   return finish('content', good, bad, start, recs, 20)
 }
-
-/**
- * "발행 주체가 엔터티로 표기됐는가"를 판정하는 타입 목록.
- *
- * 이전 구현은 `/organization|localbusiness|medicalclinic|dentist|hospital|store/i`였다.
- * 성형외과·치과 코호트를 기준으로 쓰인 목록이라, schema.org에서 LocalBusiness의 하위 타입인
- * Hotel·Restaurant·ProfessionalService 등은 전부 빠져 있었다. 그 결과 **의미상 더 정확한**
- * 마크업이 감점됐다 — 호텔이 `@type: "Hotel"`(LocalBusiness의 하위 타입이므로 LocalBusiness를
- * 덧붙일 필요가 없다)만 쓰면 "Organization 없음"으로 6점을 잃었다. 군산스테이호텔로 실측:
- * Hotel 단일 타입 7/15 → Hotel+LocalBusiness 15/15, 마크업 내용은 동일.
- *
- * 그래서 Organization·LocalBusiness와 함께 **실제로 쓰이는 하위 타입**을 함께 인정한다.
- * 개별 업종을 무한정 열거하는 대신, 우리 고객군(숙박·의료·음식·전문서비스·교육·금융)을 덮는
- * 상위 개념 위주로 적는다. 여기 없는 타입이 나오면 목록에 추가하면 된다 — 정규식을
- * `.*business`처럼 느슨하게 풀지 않는 것은 의도다(Article·Product 등이 통과해선 안 된다).
- */
-const ORG_ENTITY_TYPE_RE =
-  /organization|localbusiness|store|lodgingbusiness|hotel|motel|resort|hostel|bedandbreakfast|campground|restaurant|foodestablishment|cafeorcoffeeshop|bakery|bar(?:orpub)?|medicalclinic|medicalbusiness|medicalorganization|dentist|hospital|physician|pharmacy|veterinarycare|healthandbeautybusiness|beautysalon|dayspa|hairsalon|professionalservice|legalservice|attorney|notary|accountingservice|financialservice|bank(?:orcreditunion)?|insuranceagency|realestateagent|travelagency|automotivebusiness|homeandconstructionbusiness|childcare|educationalorganization|school|sportsactivitylocation|gym|entertainmentbusiness|governmentorganization|ngo|newsmediaorganization|corporation|airline/i
 
 /**
  * 홈(루트 경로)인지 — BreadcrumbList 감점을 면제할지 판단할 때 쓴다.
