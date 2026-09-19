@@ -1,4 +1,4 @@
-import { assertPublicUrl, CollectorError, publicCollectorError } from './networkSafety.js';
+import { assertPublicUrl, CollectorError, describeCollectFailure } from './networkSafety.js';
 
 // 정적 수집만 수행한다. aeo-checker-app은 SPA 셸을 puppeteer로 렌더하지만,
 // 여기서는 무거운 브라우저 의존성을 추가하지 않고, SPA로 의심되면 renderWarning으로 알린다.
@@ -237,7 +237,7 @@ export async function collectPage(target: string): Promise<FetchPayload> {
       fetchErrorCode: null,
     };
   } catch (error) {
-    const safe = publicCollectorError(error);
+    const safe = await describeCollectFailure(error, target);
     return {
       requestedUrl: target,
       finalUrl: target,
