@@ -23,7 +23,16 @@ import type { StoredDraft } from './api'
  * 문자열은 이미 만들고 있으므로 저장만 붙인다.
  */
 export function downloadMarkdown(filename: string, text: string): void {
-  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
+  downloadTextFile(filename, text, 'text/markdown;charset=utf-8')
+}
+
+/** 완성된 HTML 문서를 .html로 내려받는다(src/lib/htmlFile.ts가 만든 문자열). */
+export function downloadHtml(filename: string, html: string): void {
+  downloadTextFile(filename, html, 'text/html;charset=utf-8')
+}
+
+function downloadTextFile(filename: string, text: string, mime: string): void {
+  const blob = new Blob([text], { type: mime })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

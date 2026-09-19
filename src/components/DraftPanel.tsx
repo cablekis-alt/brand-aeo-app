@@ -11,8 +11,11 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import type { GapAction } from '../lib/gapActions'
+import { buildPublishHtml } from '../lib/htmlFile'
+import { useTenant } from '../context/useTenant'
 import {
   countGapNotes,
+  downloadHtml,
   downloadMarkdown,
   draftToMarkdown,
   draftToPublishMarkdown,
@@ -65,6 +68,8 @@ export default function DraftPanel({
    */
   compact?: boolean
 }) {
+  // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
+  const { tenant } = useTenant()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -274,6 +279,29 @@ export default function DraftPanel({
             >
               발행용 .md
               {gapNotes > 0 && <span className="muted"> — 빈칸 {gapNotes}줄 뺌</span>}
+            </button>
+            {/*
+              .html은 자체 사이트·CMS용이다. <article>·<h2> 시맨틱과 <head>의 JSON-LD(Article+Organization)가
+              그대로 AEO 신호가 된다. 사실 그래프는 누를 때 읽는다 — 주소·전화가 있을 때만 Organization에 싣는다.
+            */}
+            <button
+              type="button"
+              className="ghost"
+              title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 본문만 남습니다."
+              onClick={() => {
+                if (!tenant) return
+                void loadFactGraph(tenantId)
+                  .then((fg) => fg?.factGraph ?? [])
+                  .catch(() => [] as FactNode[])
+                  .then((facts) =>
+                    downloadHtml(
+                      `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                      buildPublishHtml({ stored, brand: tenant, facts }),
+                    ),
+                  )
+              }}
+            >
+              발행용 .html
             </button>
             {!compact && (
               <>

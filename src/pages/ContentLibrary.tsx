@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { loadContentDrafts, type StoredDraft } from '../lib/api'
+import { buildPublishHtml } from '../lib/htmlFile'
+import { loadContentDrafts, loadFactGraph, type FactNode, type StoredDraft } from '../lib/api'
 import {
   countGapNotes,
+  downloadHtml,
   downloadMarkdown,
   draftToMarkdown,
   draftToPublishMarkdown,
@@ -75,7 +77,8 @@ export default function ContentLibrary() {
         <section>
           <p className="hint" style={{ marginTop: 0 }}>
             글 <b>{rows.length}편</b>. <b>발행용 .md</b>는 빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고라 그대로
-            올릴 수 있습니다.
+            올릴 수 있습니다. <b>발행용 .html</b>은 자체 사이트·CMS용 완성 문서로, JSON-LD(Article·Organization)를
+            심어 둡니다 — 네이버 블로그·티스토리는 <code>&lt;head&gt;</code>를 버리므로 그때는 본문만 남습니다.
           </p>
           <div className="gap-grid">
             {rows.map((d) => {
@@ -110,6 +113,24 @@ export default function ContentLibrary() {
                       }
                     >
                       발행용 .md{gaps > 0 && <span className="muted"> — 빈칸 {gaps}줄 뺌</span>}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다."
+                      onClick={() => {
+                        void loadFactGraph(tenant.tenantId)
+                          .then((fg) => fg?.factGraph ?? [])
+                          .catch(() => [] as FactNode[])
+                          .then((facts) =>
+                            downloadHtml(
+                              `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.html`,
+                              buildPublishHtml({ stored: d, brand: tenant, facts }),
+                            ),
+                          )
+                      }}
+                    >
+                      발행용 .html
                     </button>
                     <button
                       type="button"
