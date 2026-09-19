@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { ComparisonNote, ShareDelta, UrlLink } from '../components/CitationBits'
 import { useTenant } from '../context/useTenant'
@@ -8,6 +9,7 @@ import {
   GAP_BUCKET_ORDER,
   attachPreviousShares,
   computeCitationGap,
+  topEntryTargets,
   type CitationGapSummary,
   type GapBucket,
   type GapRow,
@@ -76,11 +78,25 @@ function GapRowView({
         </td>
         <td>{row.citationCount}</td>
         <td>{row.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
+        <td>
+          {row.actionId ? (
+            <Link
+              to={`/gap-actions?focus=${encodeURIComponent(row.actionId)}&domain=${encodeURIComponent(row.domain)}`}
+              title="콘텐츠 생성에서 이 출처에 올릴 글·등재 항목으로 이동"
+            >
+              콘텐츠 생성으로 →
+            </Link>
+          ) : row.bucket === 'competitor-cohort' || row.bucket === 'competitor-peer' ? (
+            <span className="muted" title="경쟁사 사이트에는 우리 글을 올릴 수 없습니다">등재 대상 아님</span>
+          ) : (
+            <span className="muted" title="카탈로그에 없는 종류거나 인용이 적어 실행 항목이 만들어지지 않았습니다">—</span>
+          )}
+        </td>
       </tr>
       {isOpen && (
         <tr>
           <td />
-          <td colSpan={6}>
+          <td colSpan={7}>
             <table>
               <thead>
                 <tr>
@@ -132,6 +148,7 @@ export default function CitationGap() {
   } = useWeeklyPage<CitationSourceAnalysis>(loader, tenant?.tenantId ?? '', EMPTY)
 
   const gap = useMemo(() => computeCitationGap(analysis), [analysis])
+  const targets = useMemo(() => topEntryTargets(gap, 5), [gap])
   const comparison = useMemo(
     () => (weekOf ? comparisonFromHistory(history, weekOf, engine || null) : null),
     [history, weekOf, engine],
@@ -211,6 +228,44 @@ export default function CitationGap() {
               {engine && ` · ${ENGINE_LABEL[engine] ?? engine} 응답만`}
             </p>
             <ComparisonNote comparison={comparison} />
+
+            {/* 유형별 갭 비중 — 전체 인용 대비. 한 색조에 불투명도만 달리해 두 테마에서 같이 읽힌다. */}
+            <div className="gap-bar" role="img" aria-label="유형별 갭 비중">
+              {gap.byBucket.map((b, i) => (
+                <span
+                  key={b.bucket}
+                  style={{ width: `${(b.citationCount / Math.max(1, gap.gapCitations)) * 100}%`, opacity: 0.95 - i * 0.08 }}
+                  title={`${GAP_BUCKET_LABEL[b.bucket]} ${b.citationCount}건 · 전체의 ${formatPct(b.share)}`}
+                />
+              ))}
+            </div>
+            <div className="gap-bar-legend">
+              {gap.byBucket.map((b, i) => (
+                <span key={b.bucket}>
+                  <i style={{ opacity: 0.95 - i * 0.08 }} />
+                  {GAP_BUCKET_LABEL[b.bucket]} {formatPct(b.share)}
+                </span>
+              ))}
+            </div>
+
+            {targets.length > 0 && (
+              <>
+                <p className="muted" style={{ marginTop: 12 }}>
+                  <b>먼저 뚫을 곳</b> — 인용은 많은데 우리가 없고, 실제로 들어갈 수 있는 출처. 점유율 × 유형 가중(후기·언론
+                  1.0 … 기타 0.4)으로 세웠습니다. 경쟁사 사이트는 제외.
+                </p>
+                <ol className="gap-targets">
+                  {targets.map((r) => (
+                    <li key={r.domain}>
+                      <b>{r.domain}</b> · {GAP_BUCKET_LABEL[r.bucket]} · {formatPct(r.share)} ({r.citationCount}건){' '}
+                      <Link to={`/gap-actions?focus=${encodeURIComponent(r.actionId ?? '')}&domain=${encodeURIComponent(r.domain)}`}>
+                        콘텐츠 생성으로 →
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
           </section>
 
           <section>
@@ -259,12 +314,13 @@ export default function CitationGap() {
                     <th>전주 대비</th>
                     <th>인용수</th>
                     <th>엔진</th>
+                    <th>실행</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="muted">
+                      <td colSpan={8} className="muted">
                         조건에 맞는 갭 도메인이 없습니다.
                       </td>
                     </tr>

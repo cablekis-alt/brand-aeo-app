@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
@@ -439,9 +439,12 @@ function ActionCard({
   onUrls,
   coveredBy,
   destinations,
+  focused = false,
 }: {
   action: GapAction
   canSaveStatus: boolean
+  /** 인용 갭 분석에서 「콘텐츠 생성으로」를 눌러 넘어온 카드 — 스크롤 목적지이자 강조 대상. */
+  focused?: boolean
   onStatus: (id: string, status: ActionStatus) => void
   tenantId: string
   /** null이면 이 환경(웹)에 브리프 라우트가 없다 — 버튼을 숨긴다. */
@@ -467,7 +470,7 @@ function ActionCard({
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
   return (
-    <article className="gap-card">
+    <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
         <span className="gap-name">{action.title}</span>
         <span className={`status-pill ${action.satisfied ? 'st-good' : KIND_CLASS[action.kind]}`}>
@@ -627,6 +630,10 @@ function ActionCard({
 
 export default function GapActions() {
   const { tenant } = useTenant()
+  // 인용 갭 분석에서 넘어온 목적지. focus=액션 id, domain=사람이 읽을 이름(항목이 없을 때 안내에 쓴다).
+  const [searchParams] = useSearchParams()
+  const focusId = searchParams.get('focus') ?? ''
+  const focusDomain = searchParams.get('domain') ?? ''
   const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, setUrls, saveError } =
     useGapActionPlan(tenant?.tenantId ?? '')
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
@@ -645,6 +652,13 @@ export default function GapActions() {
   const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
   // 저장된 초안 — 브리프와 같은 방식. 라우트가 없는 환경(웹)이면 null로 남아 패널이 숨는다.
   const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  // 목적지 카드가 그려진 뒤 한 번 스크롤한다. 카드가 없으면(인용이 적어 제외·경쟁사) 아래 안내가 대신 뜬다.
+  useEffect(() => {
+    if (!focusId) return
+    const el = document.getElementById(`action-${focusId}`)
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [focusId, plan])
+  const focusMissing = Boolean(focusId) && !loading && plan.actions.every((a) => a.id !== focusId)
   useEffect(() => {
     if (!tenant?.tenantId) return
     let alive = true
@@ -707,6 +721,13 @@ export default function GapActions() {
       )}
 
       {loading && <p className="muted">불러오는 중…</p>}
+
+      {focusMissing && (
+        <p className="muted" role="status">
+          인용 갭 분석에서 넘어온 「{focusDomain || focusId}」에 대한 실행 항목이 이 주차에는 없습니다 — 인용이 적어 제외됐거나
+          등재할 수 없는 출처(경쟁사·자사)입니다. <Link to="/citation-gap">인용 갭 분석으로 돌아가기</Link>
+        </p>
+      )}
 
       {!loading && plan.actions.length === 0 && (
         <p className="muted">
@@ -787,7 +808,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openContent.map((a) => (
-                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={destinationsOf(a)} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={destinationsOf(a)} />
                       ))}
                     </div>
                   </>
@@ -808,7 +829,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openListing.map((a) => (
-                        <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} destinations={null} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} destinations={null} />
                       ))}
                     </div>
                   </>
@@ -827,7 +848,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
                 ))}
               </div>
               </details>
@@ -843,7 +864,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
                 ))}
               </div>
             </section>

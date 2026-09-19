@@ -454,6 +454,23 @@ function contentActions(rows: WinLossRow[]): GapAction[] {
  * 실행 항목 화면과 측정 상태 화면이 각자 필터를 쓰면 한쪽만 고쳐져 같은 브랜드·같은 주차인데
  * 남은 건수가 다르게 뜬다. 그러면 둘 다 못 믿게 된다. openCount도 이 함수로 센다.
  */
+/**
+ * 인용 갭 분석의 한 도메인이 콘텐츠 생성에서 어느 카드로 이어지는지 — listingActions의 그룹 키 규칙을
+ * 그대로 따른다(언론은 한 묶음, 블로그는 플랫폼 단위, 나머지는 사이트 단위). 등재할 수 없는 곳
+ * (경쟁사·자사·카탈로그 밖 종류·플랫폼 아닌 블로그)은 null — 화면은 그때 버튼을 그리지 않는다.
+ * 두 화면이 각자 키를 만들면 어긋난다. 여기 한 곳에서만 만든다.
+ */
+export function listingActionIdFor(domain: string, kind: string, ownerType: string): string | null {
+  if (isCompetitorOwned(kind, ownerType) || isBrandOwned(kind, ownerType)) return null
+  if (kind === 'news') return `listing:${NEWS_GROUP_KEY}`
+  if (kind === 'blog') {
+    const platform = blogPlatformOf(domain)
+    return platform ? `listing:platform:${platform.key}` : null
+  }
+  if (!LISTABLE_KINDS.has(kind)) return null
+  return `listing:${siteGroupKey(domain)}`
+}
+
 export function isOpenAction(a: GapAction): boolean {
   return !a.satisfied && a.status !== 'skip'
 }

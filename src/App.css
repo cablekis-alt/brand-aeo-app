@@ -2000,3 +2000,46 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   transition: width 0.4s ease;
 }
 .mp-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* 인용 갭 분석에서 「콘텐츠 생성으로」로 넘어온 카드 — 스크롤 목적지 강조 */
+.gap-card.is-focused {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 인용 갭 분석 — 유형별 갭 비중 막대. 한 색조에 불투명도만 달리해 두 테마에서 같이 읽힌다. */
+.gap-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--line);
+  margin: 10px 0 6px;
+}
+.gap-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+.gap-bar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.9em;
+}
+.gap-bar-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--ink);
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.gap-targets {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+}
+.gap-targets li {
+  margin: 2px 0;
+}
