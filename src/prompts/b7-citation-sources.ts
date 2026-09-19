@@ -31,6 +31,12 @@ export interface CitationSourceUrlRow {
   citationCount: number;
   engines: string[];
   supportingBrandMentionCount: number;
+  /**
+   * 테넌트 설정의 코호트 경쟁사 도메인(또는 그 서브도메인)인가. 판정의 'competitor-owned'는 답변에
+   * 나온 아무 동종 업체에도 붙으므로, "우리가 순위를 다투는 경쟁사"와 "그냥 같은 업종"을 가른다.
+   * 설정에 경쟁사 도메인이 없으면 항상 false.
+   */
+  cohortCompetitor?: boolean;
 }
 
 export interface CitationSourceEngineRow {

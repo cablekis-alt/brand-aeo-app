@@ -16,5 +16,8 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   }
 
   const store = new DemoResultStore([tenant]);
-  sendJson(res, 200, await getCitationSourceAnalysis(store, tenantId, weekOf));
+  const engineRaw = req.query.engine;
+  const engine = typeof engineRaw === 'string' && engineRaw ? engineRaw : null;
+  const competitorDomains = tenant.competitors.flatMap((c) => c.domains ?? []);
+  sendJson(res, 200, await getCitationSourceAnalysis(store, tenantId, weekOf, { engine, competitorDomains }));
 }

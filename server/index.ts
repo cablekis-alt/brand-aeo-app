@@ -266,7 +266,9 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
     return;
   }
   const source = await sourceFor(tenant, req.params.weekOf, res);
-  res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf));
+  const engine = typeof req.query.engine === 'string' ? req.query.engine : null;
+  const competitorDomains = tenant.competitors.flatMap((c) => c.domains ?? []);
+  res.json(await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf, { engine, competitorDomains }));
 });
 
 // CI 측정 결과 동기화 — GitHub repo의 src/data(measure.yml이 굽는 곳)에서 로컬에 없는 (브랜드, 주차)만

@@ -176,8 +176,22 @@ function toMix(counts: Map<CitationSourceKind, number>, total: number): Citation
   }));
 }
 
+export interface AnalyzeCitationSourcesOptions {
+  /** 코호트 경쟁사의 소유 도메인. URL 행의 cohortCompetitor 판정에 쓴다. */
+  competitorDomains?: string[];
+}
+
 /** B7 — 한 주차 인용을 출처 유형·엔진·URL 단위로 집계한다. */
-export function analyzeCitationSources(analyses: QuestionRepeatAnalysis[]): CitationSourceAnalysis {
+export function analyzeCitationSources(
+  analyses: QuestionRepeatAnalysis[],
+  options: AnalyzeCitationSourcesOptions = {},
+): CitationSourceAnalysis {
+  const cohortDomains = new Set((options.competitorDomains ?? []).map((d) => d.replace(/^https?:\/\//, '').replace(/^www\./, '').toLowerCase()).filter(Boolean));
+  const isCohortCompetitor = (host: string): boolean => {
+    if (cohortDomains.size === 0) return false;
+    for (const d of cohortDomains) if (host === d || host.endsWith(`.${d}`)) return true;
+    return false;
+  };
   const mixCounts = new Map<CitationSourceKind, number>();
   const engineCounts = new Map<string, Map<CitationSourceKind, number>>();
   const engineTotals = new Map<string, number>();
@@ -243,6 +257,7 @@ export function analyzeCitationSources(analyses: QuestionRepeatAnalysis[]): Cita
       citationCount: row.citationCount,
       engines: [...row.engines],
       supportingBrandMentionCount: row.supportingBrandMentionCount,
+      cohortCompetitor: isCohortCompetitor(row.domain),
     }))
     .sort((a, b) => b.citationCount - a.citationCount);
 

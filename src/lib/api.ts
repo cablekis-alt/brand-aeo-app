@@ -161,10 +161,13 @@ export async function loadEeat(tenantId: string, weekOf: string): Promise<EeatAn
 }
 
 // AI 인용출처 분석.
-export async function loadCitationSources(tenantId: string, weekOf: string): Promise<CitationSourceAnalysis> {
-  const remote = await getJson<CitationSourceAnalysis>(
-    `/api/citation-sources/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
-  )
+export async function loadCitationSources(
+  tenantId: string,
+  weekOf: string,
+  engine?: string | null,
+): Promise<CitationSourceAnalysis> {
+  const base = `/api/citation-sources/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`
+  const remote = await getJson<CitationSourceAnalysis>(engine ? `${base}?engine=${encodeURIComponent(engine)}` : base)
   return remote ?? EMPTY_CITATION_SOURCES
 }
 

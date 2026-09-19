@@ -379,11 +379,21 @@ export async function getEeatAnalysis(
 }
 
 /** AI 인용출처 분석 — 소유권을 넘어 출처 유형·엔진 치우침·합의 도메인을 집계한다. */
+export interface CitationSourceOptions {
+  /** 수집 엔진 하나로 좁혀 본다. rows·mix·qualityRate 전부 그 엔진 응답만으로 낸다. */
+  engine?: string | null;
+  /** 코호트 경쟁사 소유 도메인 — URL 행의 cohortCompetitor 판정용. */
+  competitorDomains?: string[];
+}
+
 export async function getCitationSourceAnalysis(
   store: CitationSource,
   tenantId: string,
   weekOf: string,
+  options: CitationSourceOptions = {},
 ): Promise<CitationSourceAnalysis> {
-  const analyses = await store.getQuestionAnalyses(tenantId, weekOf);
-  return analyzeCitationSources(analyses);
+  const engine = options.engine?.trim() || null;
+  const all = await store.getQuestionAnalyses(tenantId, weekOf);
+  const analyses = engine ? all.filter((a) => a.engine === engine) : all;
+  return analyzeCitationSources(analyses, { competitorDomains: options.competitorDomains });
 }

@@ -2,8 +2,9 @@ import { useCallback, useState } from 'react'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationBreakdown } from '../lib/api'
+import { ComparisonNote, ShareDelta, UrlLink } from '../components/CitationBits'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
-import type { CitationBreakdown, CitationBreakdownRow, CitationBreakdownUrl, CitationComparison } from '../lib/types'
+import type { CitationBreakdown, CitationBreakdownRow, CitationBreakdownUrl } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const OWNER_TYPE_LABEL: Record<string, string> = {
@@ -38,42 +39,6 @@ function OwnerPill({ row }: { row: CitationBreakdownRow }) {
       {label}
       {row.mixed && <span className="muted"> · 혼재</span>}
     </span>
-  )
-}
-
-/**
- * 전주 대비 점유율 변화(%p). 비교 가능한 주차에서만 숫자를 그린다.
- * 일간 잡음 위에 화살표를 그리지 않는다 — 엔진이 다르면 「—」이고, 그 이유는 표 위 문구가 말한다.
- */
-function ShareDelta({ share, previousShare, comparable }: { share: number; previousShare: number | null; comparable: boolean }) {
-  if (!comparable || previousShare === null) return <span className="muted">—</span>
-  if (previousShare === 0) return <span className="status-pill st-info">신규</span>
-  const delta = (share - previousShare) * 100
-  if (Math.abs(delta) < 0.05) return <span className="muted">0.0%p</span>
-  const cls = delta > 0 ? 'st-good' : 'st-bad'
-  return (
-    <span className={`status-pill ${cls}`}>
-      {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%p
-    </span>
-  )
-}
-
-/** 표 위 한 줄 — 전주와 비교 가능한지, 아니면 왜 아닌지. */
-function ComparisonNote({ comparison }: { comparison: CitationComparison | null }) {
-  if (!comparison) return <p className="muted">전주 측정이 없어 변화는 표시하지 않습니다.</p>
-  if (comparison.comparable) {
-    return (
-      <p className="muted">
-        전주 대비는 {comparison.previousWeekOf} 기준 · 수집 엔진 동일(
-        {comparison.currentEngines.map((e) => ENGINE_LABEL[e] ?? e).join('+')})
-      </p>
-    )
-  }
-  return (
-    <p className="muted">
-      <span className="status-pill st-warn">비교 불가</span> {comparison.reason} — 엔진 필터로 한 엔진만 고르면 그 엔진이 두 주에
-      모두 있을 때 비교가 살아납니다.
-    </p>
   )
 }
 
@@ -134,9 +99,7 @@ function RowWithUrls({
                 {urls.map((u) => (
                   <tr key={u.url}>
                     <td>
-                      <a href={u.url} target="_blank" rel="noreferrer noopener" title={u.url}>
-                        {u.url.length > 90 ? `${u.url.slice(0, 90)}…` : u.url}
-                      </a>
+                      <UrlLink url={u.url} />
                     </td>
                     <td>{u.citationCount}</td>
                     <td>{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
