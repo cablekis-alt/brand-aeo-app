@@ -2043,3 +2043,52 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .gap-targets li {
   margin: 2px 0;
 }
+
+/* 브랜드 종합 진단 — 구매 여정 퍼널. 단계를 눌러 아래 목록을 좁힌다. */
+.funnel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+.funnel-step {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.funnel-step.is-on {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+}
+.funnel-label {
+  font-size: 0.9em;
+  color: var(--muted);
+}
+.funnel-rate {
+  font-size: 1.5em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.funnel-bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.funnel-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+.funnel-meta {
+  font-size: 0.85em;
+  color: var(--muted);
+}
