@@ -1,6 +1,6 @@
 import type { EeatAnalysis } from '../src/prompts/b6-eeat.js';
 import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
-import { analyzeCitationSources } from './citationSources.js';
+import { analyzeCitationSources, canonicalUrl } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
 import type { ResultStore } from './store.js';
@@ -22,6 +22,16 @@ export interface CitationBreakdownRow {
   citationCount: number;
   /** 이 주 전체 인용 중 비중(0~1). */
   share: number;
+  supportingBrandMentionCount: number;
+  /** 이 호스트에서 실제 인용된 URL — 많이 인용된 순 상위 10개. "그 블로그 글이 뭔데?"에 답한다. */
+  urls: CitationBreakdownUrl[];
+}
+
+export interface CitationBreakdownUrl {
+  /** 해시·추적 파라미터를 뗀 URL(citationSources.canonicalUrl). */
+  url: string;
+  citationCount: number;
+  engines: string[];
   supportingBrandMentionCount: number;
 }
 
@@ -94,7 +104,8 @@ export async function getCitationBreakdown(
   weekOf: string,
 ): Promise<CitationBreakdown> {
   const analyses = await store.getQuestionAnalyses(tenantId, weekOf);
-  type Acc = { counts: Record<string, number>; citationCount: number; supporting: number };
+  type UrlAcc = { citationCount: number; engines: Set<string>; supporting: number };
+  type Acc = { counts: Record<string, number>; citationCount: number; supporting: number; urls: Map<string, UrlAcc> };
   const byHost = new Map<string, Acc>();
   let totalCitations = 0;
   let brandOwnedCitations = 0;
@@ -105,10 +116,16 @@ export async function getCitationBreakdown(
       if (citation.ownerType === 'brand-owned') brandOwnedCitations += 1;
 
       const host = normalizeCitationHost(citation.domain ?? citation.raw);
-      const acc = byHost.get(host) ?? { counts: {}, citationCount: 0, supporting: 0 };
+      const acc = byHost.get(host) ?? { counts: {}, citationCount: 0, supporting: 0, urls: new Map<string, UrlAcc>() };
       acc.counts[citation.ownerType] = (acc.counts[citation.ownerType] ?? 0) + 1;
       acc.citationCount += 1;
       if (citation.supportsBrandMention) acc.supporting += 1;
+      const url = canonicalUrl(citation.raw);
+      const u = acc.urls.get(url) ?? { citationCount: 0, engines: new Set<string>(), supporting: 0 };
+      u.citationCount += 1;
+      u.engines.add(analysis.engine);
+      if (citation.supportsBrandMention) u.supporting += 1;
+      acc.urls.set(url, u);
       byHost.set(host, acc);
     }
   }
@@ -124,6 +141,15 @@ export async function getCitationBreakdown(
         citationCount: acc.citationCount,
         share: totalCitations > 0 ? acc.citationCount / totalCitations : 0,
         supportingBrandMentionCount: acc.supporting,
+        urls: [...acc.urls.entries()]
+          .map(([url, u]) => ({
+            url,
+            citationCount: u.citationCount,
+            engines: [...u.engines].sort(),
+            supportingBrandMentionCount: u.supporting,
+          }))
+          .sort((a, b) => b.citationCount - a.citationCount || a.url.localeCompare(b.url))
+          .slice(0, 10),
       };
     })
     .sort((a, b) => b.citationCount - a.citationCount || a.domain.localeCompare(b.domain));

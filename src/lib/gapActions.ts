@@ -176,7 +176,7 @@ const NEWS_GROUP_KEY = '__news__'
 const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
   news: { verb: '보도·기고', badge: '언론' },
   wiki: { verb: '문서 보완', badge: '위키' },
-  review: { verb: '등재', badge: '후기 플랫폼' },
+  review: { verb: '등재', badge: '후기·예약 플랫폼' },
   forum: { verb: '커뮤니티 노출', badge: '커뮤니티' },
   social: { verb: '채널 콘텐츠', badge: '소셜' },
   blog: { verb: '블로그 발행', badge: '블로그 플랫폼' },

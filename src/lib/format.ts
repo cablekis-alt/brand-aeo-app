@@ -48,7 +48,7 @@ export const SOURCE_KIND_LABEL: Record<string, string> = {
   news: '뉴스·언론',
   gov: '공공기관',
   wiki: '위키',
-  review: '후기 플랫폼',
+  review: '후기·예약 플랫폼',
   forum: '포럼',
   social: '소셜',
   blog: '블로그',

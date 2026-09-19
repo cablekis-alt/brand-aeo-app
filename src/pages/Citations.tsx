@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationBreakdown } from '../lib/api'
-import { formatPct } from '../lib/format'
-import type { CitationBreakdown, CitationBreakdownRow } from '../lib/types'
+import { ENGINE_LABEL, formatPct } from '../lib/format'
+import type { CitationBreakdown, CitationBreakdownRow, CitationBreakdownUrl } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const OWNER_TYPE_LABEL: Record<string, string> = {
@@ -40,6 +41,79 @@ function OwnerPill({ row }: { row: CitationBreakdownRow }) {
   )
 }
 
+/** 도메인 한 줄 + 펼침 시 그 호스트에서 실제 인용된 URL 목록. URL은 서버가 상위 10개만 준다. */
+function RowWithUrls({
+  row,
+  urls,
+  share,
+  isOpen,
+  onToggle,
+}: {
+  row: CitationBreakdownRow
+  urls: CitationBreakdownUrl[]
+  share: number
+  isOpen: boolean
+  onToggle: () => void
+}) {
+  const canOpen = urls.length > 0
+  return (
+    <>
+      <tr>
+        <td>
+          {canOpen ? (
+            <button type="button" onClick={onToggle} aria-expanded={isOpen} aria-label={isOpen ? 'URL 접기' : 'URL 펼치기'}>
+              {isOpen ? '▾' : '▸'}
+            </button>
+          ) : (
+            <span className="muted">·</span>
+          )}
+        </td>
+        <td>{row.domain}</td>
+        <td>
+          <OwnerPill row={row} />
+        </td>
+        <td>{formatPct(share)}</td>
+        <td>{row.citationCount}</td>
+        <td>{row.supportingBrandMentionCount}</td>
+      </tr>
+      {isOpen && (
+        <tr>
+          <td />
+          <td colSpan={5}>
+            <table>
+              <thead>
+                <tr>
+                  <th>URL</th>
+                  <th>인용</th>
+                  <th>엔진</th>
+                  <th>뒷받침</th>
+                </tr>
+              </thead>
+              <tbody>
+                {urls.map((u) => (
+                  <tr key={u.url}>
+                    <td>
+                      <a href={u.url} target="_blank" rel="noreferrer noopener" title={u.url}>
+                        {u.url.length > 90 ? `${u.url.slice(0, 90)}…` : u.url}
+                      </a>
+                    </td>
+                    <td>{u.citationCount}</td>
+                    <td>{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
+                    <td>{u.supportingBrandMentionCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {row.citationCount > urls.reduce((n, u) => n + u.citationCount, 0) && (
+              <p className="muted">상위 10개 URL만 표시합니다.</p>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+
 export default function Citations() {
   const { tenant } = useTenant()
   const {
@@ -53,12 +127,19 @@ export default function Citations() {
     brandOwnedCitationRate: 0,
   })
 
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState<string | null>(null)
+
   if (!tenant) return null
 
   // 구버전 서버(share·totalCitations 없음)에서도 표가 깨지지 않게 클라이언트에서 보정한다.
   const total = breakdown.totalCitations ?? breakdown.rows.reduce((sum, r) => sum + r.citationCount, 0)
   const shareOf = (row: CitationBreakdownRow) => row.share ?? (total > 0 ? row.citationCount / total : 0)
   const mixedCount = breakdown.rows.filter((r) => r.mixed).length
+
+  // 도메인 검색 — 200개 넘는 행을 스크롤로 찾게 하지 않는다. 점유율은 전체 기준 그대로 둔다(필터로 재계산하지 않음).
+  const needle = query.trim().toLowerCase()
+  const visible = needle ? breakdown.rows.filter((r) => r.domain.includes(needle)) : breakdown.rows
 
   return (
     <>
@@ -68,6 +149,13 @@ export default function Citations() {
 
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="도메인 검색 (예: naver, k-wonjin)"
+          aria-label="도메인 검색"
+        />
       </div>
 
       {loading && <p className="muted">불러오는 중…</p>}
@@ -89,11 +177,14 @@ export default function Citations() {
             <h3>도메인별 인용</h3>
             <p className="muted">
               www.·m. 접두는 같은 도메인으로 묶었습니다. 소유권은 인용별 판정의 다수결이며, 배지에 마우스를 올리면 판정별 건수가 보입니다.
+              도메인을 펼치면 실제 인용된 URL(상위 10개)이 보입니다.
+              {needle && ` · 검색 결과 ${visible.length}/${breakdown.rows.length}개`}
             </p>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
+                    <th aria-label="펼치기" />
                     <th>도메인</th>
                     <th>소유권</th>
                     <th>점유율</th>
@@ -102,17 +193,25 @@ export default function Citations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {breakdown.rows.map((row) => (
-                    <tr key={row.domain}>
-                      <td>{row.domain}</td>
-                      <td>
-                        <OwnerPill row={row} />
-                      </td>
-                      <td>{formatPct(shareOf(row))}</td>
-                      <td>{row.citationCount}</td>
-                      <td>{row.supportingBrandMentionCount}</td>
+                  {visible.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="muted">「{query}」와 일치하는 도메인이 없습니다.</td>
                     </tr>
-                  ))}
+                  )}
+                  {visible.map((row) => {
+                    const urls = row.urls ?? []
+                    const isOpen = open === row.domain
+                    return (
+                      <RowWithUrls
+                        key={row.domain}
+                        row={row}
+                        urls={urls}
+                        share={shareOf(row)}
+                        isOpen={isOpen}
+                        onToggle={() => setOpen(isOpen ? null : row.domain)}
+                      />
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

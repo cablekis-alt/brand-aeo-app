@@ -83,6 +83,14 @@ export interface CitationBreakdownRow {
   citationCount: number
   share?: number
   supportingBrandMentionCount: number
+  urls?: CitationBreakdownUrl[]
+}
+
+export interface CitationBreakdownUrl {
+  url: string
+  citationCount: number
+  engines: string[]
+  supportingBrandMentionCount: number
 }
 
 // URL 상세 분석.

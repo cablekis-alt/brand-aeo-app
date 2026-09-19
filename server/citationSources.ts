@@ -20,67 +20,78 @@ const SOURCE_KIND_ORDER: CitationSourceKind[] = [
 
 const HIGH_QUALITY = new Set<CitationSourceKind>(['brand-official', 'news', 'gov', 'wiki']);
 
+/**
+ * 출처 카탈로그. 2026-09-19에 저장된 인용 15,427건의 「기타」(52.6%)를 실측해 채웠다 —
+ * 상위는 예약·OTA 플랫폼(airbnb 1,002건·cozycozy·trip.com·allstay·expedia·onda), 의료 후기·정보
+ * 플랫폼(성예사·바비톡·여신티켓·모두닥·굿닥·캐시닥), 카탈로그에 없던 언론(다음뉴스·이데일리·
+ * ZDNet·하이닥뉴스·메디컬투데이…)이었다. 남는 「기타」의 핵심은 판정이 unknown인 동종 업체
+ * 홈페이지들이다 — 그건 카탈로그로 풀 문제가 아니라 판정(업계 사이트 분류)의 몫이다.
+ *
+ * 원칙은 그대로다: **카탈로그에 없으면 other.** 아래 휴리스틱은 전부 구조적 규칙(TLD·접두·라벨)
+ * 이고, 판정 결과("권위 있어 보인다")를 라벨로 바꾸는 폴백은 없다(classifyCitationSourceKind 주석 참고).
+ */
 const NEWS_HOSTS = new Set([
-  'bbc.com',
-  'chosun.com',
-  'donga.com',
-  'hani.co.kr',
-  'hankyung.com',
-  'imaeil.com',
-  'joongang.co.kr',
-  'jtbc.co.kr',
-  'kbs.co.kr',
-  'khan.co.kr',
-  'kmib.co.kr',
-  'mbc.co.kr',
-  'mk.co.kr',
-  'mt.co.kr',
-  'news.naver.com',
-  'news1.kr',
-  'newsis.com',
-  'nytimes.com',
-  'reuters.com',
-  'sbs.co.kr',
-  'sedaily.com',
-  'theguardian.com',
-  'yna.co.kr',
-  'yonhapnews.co.kr',
-  'ytn.co.kr',
+  // 종합·경제
+  'bbc.com', 'chosun.com', 'donga.com', 'hani.co.kr', 'hankyung.com', 'imaeil.com', 'joongang.co.kr',
+  'jtbc.co.kr', 'kbs.co.kr', 'khan.co.kr', 'kmib.co.kr', 'mbc.co.kr', 'mk.co.kr', 'mt.co.kr',
+  'news.naver.com', 'news1.kr', 'newsis.com', 'nytimes.com', 'reuters.com', 'sbs.co.kr', 'sedaily.com',
+  'theguardian.com', 'yna.co.kr', 'yonhapnews.co.kr', 'ytn.co.kr',
+  'v.daum.net', 'news.daum.net', 'news.nate.com', 'edaily.co.kr', 'seoul.co.kr', 'segye.com', 'munhwa.com',
+  'asiae.co.kr', 'fnnews.com', 'heraldcorp.com', 'newspim.com', 'wowtv.co.kr', 'kukinews.com',
+  'nocutnews.co.kr', 'ohmynews.com', 'pressian.com', 'sisain.co.kr', 'sisajournal.com', 'viva100.com',
+  'consumernews.co.kr', 'eroun.net', 'ekoreanews.co.kr', 'bntnews.co.kr', 'mediatoday.co.kr',
+  // IT·산업
+  'zdnet.co.kr', 'etnews.com', 'dt.co.kr', 'inews24.com', 'ddaily.co.kr', 'bloter.net', 'thebell.co.kr',
+  // 의료 전문지
+  'hidoc.co.kr', 'mdtoday.co.kr', 'medisobizanews.com', 'bokuennews.com', 'kormedi.com',
+  'docdocdoc.co.kr', 'doctorsnews.co.kr', 'medigatenews.com', 'dailymedi.com', 'medipana.com',
+  'whosaeng.com', 'akomnews.com', 'psychiatricnews.net', 'koreacarejournal.com',
+  // 업계 매거진
+  'sukbakmagazine.com',
 ]);
 
+/** 후기·예약 플랫폼 — 이용자 후기와 예약을 겸하는 중개 사이트. OTA와 의료 후기 플랫폼을 함께 둔다. */
 const REVIEW_HOSTS = new Set([
-  'agoda.com',
-  'booking.com',
-  'gangnamunni.com',
-  'goodchoice.kr',
-  'tripadvisor.com',
-  'yanolja.com',
-  'yeogi.com',
+  // 숙박·여행 OTA
+  'agoda.com', 'booking.com', 'goodchoice.kr', 'tripadvisor.com', 'tripadvisor.co.kr', 'yanolja.com',
+  'yeogi.com', 'airbnb.co.kr', 'airbnb.com', 'cozycozy.com', 'trip.com', 'allstay.com', 'expedia.co.kr',
+  'expedia.com', 'hotels.com', 'hotelscombined.co.kr', 'onda.me', 'telltrip.com', 'priviatravel.com',
+  'waug.com', 'mom-mom.net', 'roomingofficial.com', 'pzip.kr', 'funvillage.kr', 'koreantrip.kr',
+  'tripbtoz.com', 'yapen.co.kr', 'tourvis.com', 'triple.guide', 'myrealtrip.com', 'klook.com',
+  'dailyhotel.com', 'allthatreview.com',
+  // 의료 후기·병원 정보
+  'gangnamunni.com', 'babitalk.com', 'yeoshin.co.kr', 'sungyesa.com', 'modoodoc.com', 'goodoc.co.kr',
+  'cashdoc.me', 'my-doctor.io', 'ddocdoc.com',
 ]);
 
 const FORUM_HOSTS = new Set([
-  'clien.net',
-  'dcinside.com',
-  'fmkorea.com',
-  'instiz.net',
-  'quora.com',
-  'reddit.com',
-  'theqoo.net',
+  'clien.net', 'dcinside.com', 'fmkorea.com', 'instiz.net', 'quora.com', 'reddit.com', 'theqoo.net',
+  'cafe.naver.com', 'cafe.daum.net', 'kin.naver.com', 'chiebukuro.yahoo.co.jp', 'ppomppu.co.kr',
+  'ruliweb.com', '82cook.com', 'todayhumor.co.kr', 'bobaedream.co.kr', 'mlbpark.donga.com',
 ]);
 
 const SOCIAL_HOSTS = new Set([
-  'facebook.com',
-  'instagram.com',
-  'threads.net',
-  'tiktok.com',
-  'twitter.com',
-  'x.com',
-  'youtube.com',
+  'facebook.com', 'instagram.com', 'threads.net', 'tiktok.com', 'twitter.com', 'x.com', 'youtube.com',
+  'band.us', 'pinterest.com', 'linkedin.com',
 ]);
 
-const BLOG_HOSTS = new Set(['blog.naver.com', 'brunch.co.kr', 'medium.com', 'tistory.com', 'velog.io', 'wordpress.com']);
+const BLOG_HOSTS = new Set([
+  'blog.naver.com', 'brunch.co.kr', 'medium.com', 'tistory.com', 'velog.io', 'wordpress.com',
+  'post.naver.com', 'in.naver.com', 'blog.daum.net', 'ameblo.jp', 'note.com', 'hatenablog.com', 'blogspot.com',
+]);
 
 const WIKI_HOSTS = new Set(['namu.wiki', 'wikipedia.org']);
+
+/**
+ * 구조적 언론 휴리스틱 — 호스트 라벨 자체가 뉴스임을 말할 때만(news.·press. 접두, 첫 라벨에 news 포함).
+ * 카탈로그 뒤, 블로그 판정 뒤에 둔다: 'xxxnews.tistory.com'은 블로그다.
+ */
+function looksLikeNewsHost(host: string): boolean {
+  const labels = host.split('.');
+  if (labels.length >= 3 && /^(news|press|breakingnews)$/.test(labels[0])) return true;
+  const first = labels[0] ?? '';
+  return /news/.test(first) && !/newsletter/.test(first);
+}
 
 function hostOf(raw: string, fallbackDomain: string | null): string {
   if (fallbackDomain) return fallbackDomain.replace(/^www\./, '').toLowerCase();
@@ -133,15 +144,18 @@ export function classifyCitationSourceKind(citation: Pick<CitationDetail, 'raw' 
   const host = hostOf(citation.raw, citation.domain);
   if (host.endsWith('.go.kr') || host.endsWith('.gov') || host === 'korea.kr') return 'gov';
   if (hostMatches(host, WIKI_HOSTS)) return 'wiki';
+  // 포럼을 언론보다 먼저 본다 — mlbpark.donga.com 처럼 언론사 아래 커뮤니티가 있다.
+  if (hostMatches(host, FORUM_HOSTS)) return 'forum';
   if (hostMatches(host, NEWS_HOSTS)) return 'news';
   if (hostMatches(host, REVIEW_HOSTS)) return 'review';
-  if (hostMatches(host, FORUM_HOSTS)) return 'forum';
   if (hostMatches(host, SOCIAL_HOSTS)) return 'social';
   if (hostMatches(host, BLOG_HOSTS) || host.includes('.tistory.com') || host.startsWith('blog.')) return 'blog';
+  if (looksLikeNewsHost(host)) return 'news';
   return 'other';
 }
 
-function canonicalUrl(raw: string): string {
+/** 해시·추적 파라미터를 뗀 URL — 같은 글이 utm만 달라 다른 URL로 세지 않게. queries.ts도 쓴다. */
+export function canonicalUrl(raw: string): string {
   try {
     const url = new URL(raw);
     url.hash = '';
