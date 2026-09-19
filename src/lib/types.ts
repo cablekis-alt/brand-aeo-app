@@ -153,7 +153,14 @@ export interface EngineRanking {
   rankedCalls: number
 }
 
+export interface PromptedSplit {
+  named: { answered: number; mentioned: number; rate: number }
+  unnamed: { answered: number; mentioned: number; rate: number }
+}
+
 export interface RankingView {
+  /** 이름을 대고 물었을 때 / 대지 않고 물었을 때의 언급률. 질문 은행을 못 읽으면 null. */
+  promptedSplit?: PromptedSplit | null
   cohort: {
     position: number
     totalTenants: number

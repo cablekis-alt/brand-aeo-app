@@ -5,6 +5,7 @@ import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
 import type { ResultStore } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
+import type { QuestionCategory } from '../src/prompts/types.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
 type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory'>;
@@ -270,6 +271,26 @@ export interface RankingView {
    * 엔진이 하나뿐이면 길이 1이다(화면이 그때는 감춘다).
    */
   byEngine: EngineRanking[];
+  /**
+   * 이름을 대고 물었을 때와 대지 않고 물었을 때의 언급률.
+   *
+   * 왜 나눠 보여주나: "브랜드명을 넣은 질문에서 나왔다"는 성과가 아니다(엔진이 이름을 받으면
+   * 거의 항상 답한다). 우리 점수는 그래서 처음부터 카테고리 무관 질문만 쓴다. 그런데 화면에
+   * 그 하나만 있으면 고객은 "왜 이렇게 낮나"만 보고 이유를 모른다. 두 값을 나란히 두면
+   * **"이름을 대면 나오는데, 안 대면 안 나온다"**가 한 줄로 읽힌다 — 신규 고객이 들어오는
+   * 입구가 막혔다는 뜻이고, 구매 여정 퍼널의 탐색 구간과 같은 이야기다.
+   *
+   * 분모는 답을 내놓은 응답이다(되물은 응답 제외) — 언급률 정의와 맞춘다.
+   * 질문 은행을 못 읽으면 나눌 수 없으므로 null.
+   */
+  promptedSplit: PromptedSplit | null;
+}
+
+export interface PromptedSplit {
+  /** 브랜드명이 들어간 질문(brand-direct·comparison 등) */
+  named: { answered: number; mentioned: number; rate: number };
+  /** 브랜드명이 없는 질문(category-agnostic) — 점수에 쓰는 모집단 */
+  unnamed: { answered: number; mentioned: number; rate: number };
 }
 
 // 화면 표시 순서 고정(ChatGPT·Gemini·Claude·Perplexity) — aggregate.ts와 같은 순서.
@@ -365,6 +386,38 @@ export async function getRankingView(
     mentionScope: useScoped ? 'category-agnostic' : 'all',
     topRecommendationRate: top.rate,
     byEngine,
+    promptedSplit: bank ? promptedSplitFrom(allAnalyses, bank.questions) : null,
+  };
+}
+
+/**
+ * 브랜드명 포함 여부로 언급률을 가른다.
+ *
+ * 기준은 질문의 **카테고리**다(category-agnostic = 이름 없음). 본문에서 상호를 찾는 방식도
+ * 생각할 수 있지만, 카테고리는 은행이 이미 강제하는 값이고(enforceAgnosticQuota) 점수가 쓰는
+ * 모집단과 정확히 같은 기준이라 화면과 점수가 어긋나지 않는다.
+ *
+ * 되물은 응답(clarifying)은 답을 내놓지 않은 것이라 분모에서 뺀다 — questionWinLoss의
+ * mentionedRate와 같은 규칙이다.
+ */
+function promptedSplitFrom(
+  analyses: QuestionRepeatAnalysis[],
+  questions: { questionId: string; category: QuestionCategory }[],
+): PromptedSplit {
+  const categoryOf = new Map(questions.map((q) => [q.questionId, q.category]));
+  const tally = { named: { answered: 0, mentioned: 0 }, unnamed: { answered: 0, mentioned: 0 } };
+  for (const a of analyses) {
+    const category = categoryOf.get(a.questionId);
+    if (category === undefined) continue; // 은행에 없는 옛 질문 id — 어느 쪽인지 알 수 없다
+    if (a.clarifying) continue;
+    const bucket = category === 'category-agnostic' ? tally.unnamed : tally.named;
+    bucket.answered += 1;
+    if (a.mentioned) bucket.mentioned += 1;
+  }
+  const rate = (t: { answered: number; mentioned: number }) => (t.answered > 0 ? t.mentioned / t.answered : 0);
+  return {
+    named: { ...tally.named, rate: rate(tally.named) },
+    unnamed: { ...tally.unnamed, rate: rate(tally.unnamed) },
   };
 }
 
