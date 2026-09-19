@@ -536,7 +536,7 @@
       "openai",
       "gemini"
     ],
-    "questionBankSize": 36,
+    "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
     "competitors": [

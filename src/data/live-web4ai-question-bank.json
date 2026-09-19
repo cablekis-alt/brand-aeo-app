@@ -361,6 +361,72 @@
       "region": "전북 군산",
       "version": "v3",
       "stage": "consider"
+    },
+    {
+      "questionId": "v3-037",
+      "text": "군산 시내 쪽 펜션이랑 선유도 같은 섬 쪽 펜션은 1박 비용 차이가 얼마나 나?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "지역별 숙박 시세",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-038",
+      "text": "군산 독채 펜션 주말이나 성수기 평균 숙박비 시세가 대략 어느 정도야?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "성수기 요금 시세",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-039",
+      "text": "군산 구도심 골목에 있는 펜션 예약할 때 주차 공간이나 진입로는 어떻게 확인해야 해?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "예약 전 확인사항",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-040",
+      "text": "펜션 이용할 때 인원 추가 비용이랑 바비큐 그릴 대여료는 보통 얼마씩 받아?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "추가 요금 기준",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-041",
+      "text": "군산 한옥 스타일 펜션 묵을 때 일반 펜션이랑 비교해서 어떤 점을 주의해야 해?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "숙소 유형별 차이",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
+    },
+    {
+      "questionId": "v3-042",
+      "text": "독채 펜션 예약했다가 일정 변경하거나 취소하면 위약금 기준이 보통 어떻게 돼?",
+      "category": "category-agnostic",
+      "stage": "learn",
+      "topic": "환불 및 취소 규정",
+      "industry": "펜션",
+      "region": "전북 군산",
+      "containsBrandName": false,
+      "version": "v3"
     }
   ]
 }
