@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
+import { loadRanking } from '../lib/api'
+import type { PromptedSplit } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
@@ -10,6 +13,32 @@ export default function Dashboard() {
   const { tenant } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
+
+  /*
+   * 「이름을 대면 / 안 대면」 대비 — 스코어카드에 없는 값이라 랭킹 API를 한 번 더 부른다.
+   *
+   * 스코어카드에 넣어 저장할 수도 있지만 그러면 **다시 측정해야** 값이 생긴다. 이 계산은 이미
+   * 저장된 판정 레코드와 질문 은행만 쓰므로 지난 주차도 바로 채워진다.
+   * 실패하면 조용히 감춘다 — 대시보드 본문(AEO Score)을 막을 이유가 없다.
+   */
+  const [split, setSplit] = useState<{ key: string; value: PromptedSplit | null }>({ key: '', value: null })
+  const splitKey = card ? `${card.tenantId}|${card.weekOf}` : ''
+  useEffect(() => {
+    if (!card) return
+    let alive = true
+    void loadRanking(card.tenantId, card.weekOf)
+      .then((view) => {
+        if (alive) setSplit({ key: `${card.tenantId}|${card.weekOf}`, value: view?.promptedSplit ?? null })
+      })
+      .catch(() => {
+        if (alive) setSplit({ key: `${card.tenantId}|${card.weekOf}`, value: null })
+      })
+    return () => {
+      alive = false
+    }
+  }, [card])
+  // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
+  const promptedSplit = split.key === splitKey ? split.value : null
   // 전주는 저장된 previousWeek가 아니라 히스토리에서 읽는다. 저장값은 측정 시점에 박제되어,
   // 지난 주를 다시 재면 어긋난다(실측: W37 카드 33 vs 알림 42 — 같은 화면이 +2와 -7을 동시에
   // 말했다). 알림도 히스토리를 쓰므로 이제 두 자리가 같은 값을 본다.
@@ -196,6 +225,39 @@ export default function Dashboard() {
               </span>
             </article>
           </section>
+
+          {promptedSplit && promptedSplit.named.answered > 0 && (
+            <section>
+              <h3>이름을 대면 / 안 대면</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                브랜드명을 넣은 질문에서 나오는 것은 성과가 아닙니다 — 엔진은 이름을 받으면 거의 항상 답합니다.
+                위 점수가 쓰는 값은 <b>이름을 안 댔을 때</b>이고, 두 값의 차이가 곧 <b>아직 우리를 모르는 고객이
+                우리를 만나지 못하는 폭</b>입니다. 되물은 응답은 분모에서 빠집니다.
+              </p>
+              <div className="funnel">
+                <div className="funnel-step" title="브랜드명이 들어간 질문(브랜드 직접·비교 등)에서 언급된 비율">
+                  <span className="funnel-label">이름을 대고 물으면</span>
+                  <span className="funnel-rate">{formatPct(promptedSplit.named.rate)}</span>
+                  <span className="funnel-bar">
+                    <span style={{ width: `${Math.round(promptedSplit.named.rate * 100)}%` }} />
+                  </span>
+                  <span className="funnel-meta">응답 {promptedSplit.named.answered}건</span>
+                </div>
+                <div className="funnel-step is-on" title="브랜드명이 없는 질문(카테고리 무관)에서 언급된 비율 — 점수가 쓰는 값">
+                  <span className="funnel-label">이름 없이 물으면 · 점수 기준</span>
+                  <span className="funnel-rate">{formatPct(promptedSplit.unnamed.rate)}</span>
+                  <span className="funnel-bar">
+                    <span style={{ width: `${Math.round(promptedSplit.unnamed.rate * 100)}%` }} />
+                  </span>
+                  <span className="funnel-meta">응답 {promptedSplit.unnamed.answered}건</span>
+                </div>
+              </div>
+              <p className="muted">
+                어느 질문에서 밀리는지는 <Link to="/gap-analysis">가시성 격차 분석</Link>, 어느 여정 단계에서
+                안 보이는지는 <Link to="/diagnosis">브랜드 종합 진단</Link>에서 봅니다.
+              </p>
+            </section>
+          )}
 
           {card.hallucinationFlags.length > 0 && (
             <section className="panel warn">

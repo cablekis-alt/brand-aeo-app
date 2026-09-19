@@ -55,38 +55,6 @@ export default function Ranking() {
             <p className="muted">추천 1순위로 뽑힌 비율 {formatPct(ranking.topRecommendationRate)}</p>
           </section>
 
-          {ranking.promptedSplit && ranking.promptedSplit.named.answered > 0 && (
-            <section>
-              <h3>이름을 대면 / 안 대면</h3>
-              <p className="hint" style={{ marginTop: 0 }}>
-                브랜드명을 넣은 질문에서 나오는 것은 성과가 아닙니다 — 엔진은 이름을 받으면 거의 항상 답합니다.
-                점수에 쓰는 값은 <b>이름을 안 댔을 때</b>이고, 두 값의 차이가 곧 <b>신규 고객이 우리를 만나지 못하는 폭</b>입니다.
-              </p>
-              <div className="funnel">
-                <div className="funnel-step" title="브랜드명이 들어간 질문(브랜드 직접·비교 등)에서 언급된 비율">
-                  <span className="funnel-label">이름을 대고 물으면</span>
-                  <span className="funnel-rate">{formatPct(ranking.promptedSplit.named.rate)}</span>
-                  <span className="funnel-bar">
-                    <span style={{ width: `${Math.round(ranking.promptedSplit.named.rate * 100)}%` }} />
-                  </span>
-                  <span className="funnel-meta">응답 {ranking.promptedSplit.named.answered}건</span>
-                </div>
-                <div
-                  className="funnel-step is-on"
-                  title="브랜드명이 없는 질문(카테고리 무관)에서 언급된 비율 — 점수가 쓰는 값"
-                >
-                  <span className="funnel-label">이름 없이 물으면 · 점수 기준</span>
-                  <span className="funnel-rate">{formatPct(ranking.promptedSplit.unnamed.rate)}</span>
-                  <span className="funnel-bar">
-                    <span style={{ width: `${Math.round(ranking.promptedSplit.unnamed.rate * 100)}%` }} />
-                  </span>
-                  <span className="funnel-meta">응답 {ranking.promptedSplit.unnamed.answered}건</span>
-                </div>
-              </div>
-              <p className="muted">되물은 응답은 분모에서 빠집니다.</p>
-            </section>
-          )}
-
           <section>
             <h3>코호트 순위</h3>
             <ul className="rank-list">

@@ -97,6 +97,28 @@ export default function GapAnalysis() {
   // 엔진이 하나뿐이면 엔진 격차를 말할 수 없다 — "엔진마다 다르다"는 비교 대상이 있을 때만 참이다.
   const worstEngine = gap.byEngine.length > 1 ? (gap.byEngine.find((g) => g.verdict === 'gap') ?? null) : null
   const topCompetitor = gap.competitors[0] ?? null
+
+  /*
+   * 축별로 "가장 아픈 것" 한 줄씩.
+   *
+   * 아래 본문은 네 축이 전부 같은 모양의 카드 그리드다(원진 W38 실측: 카드 17장·3.9화면).
+   * 그러면 어느 줄이 중요한지 화면이 말해 주지 않아, 사람이 17장을 읽어 스스로 찾아야 한다.
+   * 여기서 축마다 하나씩만 뽑아 같은 형식으로 세워 둔다 — 아래 카드는 근거를 보러 가는 곳이 된다.
+   *
+   * 고르는 기준은 아래 정렬과 같다: 카테고리·엔진은 '격차'로 판정된 첫 묶음, 여정·주제는
+   * 이미 아픈 순(byPain)으로 정렬돼 있으므로 맨 앞. 여정은 순서가 여정 순(탐색→비교→결정)이라
+   * 따로 언급률 최저를 고른다 — 그 배열의 맨 앞은 '가장 아픈 것'이 아니다.
+   */
+  const worstStage = gap.byStage.length > 0
+    ? [...gap.byStage].sort((a, b) => a.mentionRate - b.mentionRate)[0]
+    : null
+  const worstTopic = gap.byTopic.find((g) => g.verdict === 'gap') ?? gap.byTopic[0] ?? null
+  const painRows: { axis: string; group: GapGroup; nameOf?: (k: string) => string }[] = [
+    worstCategory ? { axis: '질문 유형', group: worstCategory } : null,
+    worstStage ? { axis: '구매 여정', group: worstStage } : null,
+    worstTopic ? { axis: '주제', group: worstTopic } : null,
+    worstEngine ? { axis: '엔진', group: worstEngine, nameOf: (k: string) => ENGINE_LABEL[k] ?? k } : null,
+  ].filter((r): r is { axis: string; group: GapGroup; nameOf?: (k: string) => string } => r !== null)
   // 표가 비는 이유는 둘이고 뜻이 정반대다. 밀린 질문이 아예 없으면 좋은 소식이고,
   // 밀렸는데 경쟁사가 안 잡혔다면 그 자리를 아무도 못 가져간 것이다(= 선점 여지).
   const lossQuestions = gap.byCategory.reduce((sum, g) => sum + g.loss, 0)
@@ -133,28 +155,48 @@ export default function GapAnalysis() {
       {ready && (
         <>
           <section className="hero-card">
-            <p className="eyebrow">가장 큰 격차</p>
-            {worstCategory || worstEngine || topCompetitor ? (
-              <ul className="gap-summary">
-                {worstCategory && (
-                  <li>
-                    <b>{worstCategory.label}</b> 질문에서 언급률 {pct(worstCategory.mentionRate)} —
-                    {' '}{worstCategory.questions}개 중 {worstCategory.loss}개에서 밀립니다.
-                  </li>
-                )}
-                {worstEngine && (
-                  <li>
-                    <b>{ENGINE_LABEL[worstEngine.key] ?? worstEngine.key}</b>에서 언급률{' '}
-                    {pct(worstEngine.mentionRate)} — 엔진마다 결과가 다릅니다.
-                  </li>
-                )}
+            <p className="eyebrow">가장 아픈 곳</p>
+            {painRows.length > 0 ? (
+              <>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>축</th>
+                        <th>가장 아픈 묶음</th>
+                        <th>언급률</th>
+                        <th>승·패</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {painRows.map(({ axis, group, nameOf }) => (
+                        <tr key={axis}>
+                          <td className="muted">{axis}</td>
+                          <td>
+                            <b>{nameOf ? nameOf(group.key) : group.label}</b>
+                            <span className="muted"> · 질문 {group.questions}개</span>
+                          </td>
+                          <td>{pct(group.mentionRate)}</td>
+                          <td>
+                            <span className={`status-pill ${VERDICT[group.verdict].cls}`}>
+                              {group.win}승 {group.loss}패
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 {topCompetitor && (
-                  <li>
-                    <b>{topCompetitor.name}</b>이(가) 질문 {topCompetitor.questionsLost}개에서 우리 자리를
-                    가져갔습니다.
-                  </li>
+                  <p className="muted">
+                    <b>{topCompetitor.name}</b>이(가) 질문 {topCompetitor.questionsLost}개에서 우리 자리를 가져갔습니다.
+                  </p>
                 )}
-              </ul>
+                <p className="hint">
+                  네 축은 서로 다른 질문을 봅니다 — 유형은 질문의 <b>형태</b>, 여정은 고객의 <b>위치</b>, 주제는{' '}
+                  <b>내용</b>, 엔진은 <b>어디서</b>입니다. 아래에 축별 전체 묶음과 밀린 질문이 있습니다.
+                </p>
+              </>
             ) : (
               <p className="muted" style={{ margin: 0 }}>
                 격차로 판정된 묶음이 없습니다 — 이번 주차는 모든 유형·엔진에서 밀리지 않았습니다.
