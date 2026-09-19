@@ -123,10 +123,13 @@ export async function loadQuestionBank(tenantId: string, version?: string): Prom
 }
 
 // URL 상세 분석.
-export async function loadCitationBreakdown(tenantId: string, weekOf: string): Promise<CitationBreakdown> {
-  const remote = await getJson<CitationBreakdown>(
-    `/api/citations/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
-  )
+export async function loadCitationBreakdown(
+  tenantId: string,
+  weekOf: string,
+  engine?: string | null,
+): Promise<CitationBreakdown> {
+  const base = `/api/citations/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`
+  const remote = await getJson<CitationBreakdown>(engine ? `${base}?engine=${encodeURIComponent(engine)}` : base)
   return remote ?? { rows: [], brandOwnedCitationRate: 0 }
 }
 

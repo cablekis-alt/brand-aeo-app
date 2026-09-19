@@ -84,6 +84,8 @@ export interface CitationBreakdownRow {
   share?: number
   supportingBrandMentionCount: number
   urls?: CitationBreakdownUrl[]
+  /** 전주 점유율 — 비교 가능할 때만 값, 전주에 없던 도메인은 0, 비교 불가면 null. */
+  previousShare?: number | null
 }
 
 export interface CitationBreakdownUrl {
@@ -98,6 +100,17 @@ export interface CitationBreakdown {
   rows: CitationBreakdownRow[]
   brandOwnedCitationRate: number
   totalCitations?: number
+  engines?: string[]
+  engine?: string | null
+  comparison?: CitationComparison | null
+}
+
+export interface CitationComparison {
+  previousWeekOf: string
+  comparable: boolean
+  reason?: string
+  previousEngines: string[]
+  currentEngines: string[]
 }
 
 // AI 리퍼럴 트래픽(GA4) — server/gaReferrals.ts의 응답 계약.

@@ -243,7 +243,8 @@ app.get('/api/citations/:tenantId/:weekOf', async (req, res) => {
     return;
   }
   const source = await sourceFor(tenant, req.params.weekOf, res);
-  res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf));
+  const engine = typeof req.query.engine === 'string' ? req.query.engine : null;
+  res.json(await getCitationBreakdown(source, tenant.tenantId, req.params.weekOf, { engine }));
 });
 
 // EEAT 분석 — 답변에서 브랜드가 경험·전문성·권위·신뢰로 어떻게 그려지는지.

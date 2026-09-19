@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationBreakdown } from '../lib/api'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
-import type { CitationBreakdown, CitationBreakdownRow, CitationBreakdownUrl } from '../lib/types'
+import type { CitationBreakdown, CitationBreakdownRow, CitationBreakdownUrl, CitationComparison } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const OWNER_TYPE_LABEL: Record<string, string> = {
@@ -41,6 +41,42 @@ function OwnerPill({ row }: { row: CitationBreakdownRow }) {
   )
 }
 
+/**
+ * 전주 대비 점유율 변화(%p). 비교 가능한 주차에서만 숫자를 그린다.
+ * 일간 잡음 위에 화살표를 그리지 않는다 — 엔진이 다르면 「—」이고, 그 이유는 표 위 문구가 말한다.
+ */
+function ShareDelta({ share, previousShare, comparable }: { share: number; previousShare: number | null; comparable: boolean }) {
+  if (!comparable || previousShare === null) return <span className="muted">—</span>
+  if (previousShare === 0) return <span className="status-pill st-info">신규</span>
+  const delta = (share - previousShare) * 100
+  if (Math.abs(delta) < 0.05) return <span className="muted">0.0%p</span>
+  const cls = delta > 0 ? 'st-good' : 'st-bad'
+  return (
+    <span className={`status-pill ${cls}`}>
+      {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%p
+    </span>
+  )
+}
+
+/** 표 위 한 줄 — 전주와 비교 가능한지, 아니면 왜 아닌지. */
+function ComparisonNote({ comparison }: { comparison: CitationComparison | null }) {
+  if (!comparison) return <p className="muted">전주 측정이 없어 변화는 표시하지 않습니다.</p>
+  if (comparison.comparable) {
+    return (
+      <p className="muted">
+        전주 대비는 {comparison.previousWeekOf} 기준 · 수집 엔진 동일(
+        {comparison.currentEngines.map((e) => ENGINE_LABEL[e] ?? e).join('+')})
+      </p>
+    )
+  }
+  return (
+    <p className="muted">
+      <span className="status-pill st-warn">비교 불가</span> {comparison.reason} — 엔진 필터로 한 엔진만 고르면 그 엔진이 두 주에
+      모두 있을 때 비교가 살아납니다.
+    </p>
+  )
+}
+
 /** 도메인 한 줄 + 펼침 시 그 호스트에서 실제 인용된 URL 목록. URL은 서버가 상위 10개만 준다. */
 function RowWithUrls({
   row,
@@ -48,12 +84,14 @@ function RowWithUrls({
   share,
   isOpen,
   onToggle,
+  comparable,
 }: {
   row: CitationBreakdownRow
   urls: CitationBreakdownUrl[]
   share: number
   isOpen: boolean
   onToggle: () => void
+  comparable: boolean
 }) {
   const canOpen = urls.length > 0
   return (
@@ -73,13 +111,16 @@ function RowWithUrls({
           <OwnerPill row={row} />
         </td>
         <td>{formatPct(share)}</td>
+        <td>
+          <ShareDelta share={share} previousShare={row.previousShare ?? null} comparable={comparable} />
+        </td>
         <td>{row.citationCount}</td>
         <td>{row.supportingBrandMentionCount}</td>
       </tr>
       {isOpen && (
         <tr>
           <td />
-          <td colSpan={5}>
+          <td colSpan={6}>
             <table>
               <thead>
                 <tr>
@@ -116,19 +157,24 @@ function RowWithUrls({
 
 export default function Citations() {
   const { tenant } = useTenant()
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState<string | null>(null)
+  const [engine, setEngine] = useState<string>('')
+  // 엔진이 바뀌면 loader 참조가 바뀌어 useWeeklyData가 다시 불러온다.
+  const loader = useCallback(
+    (tenantId: string, weekOf: string) => loadCitationBreakdown(tenantId, weekOf, engine || null),
+    [engine],
+  )
   const {
     weeks,
     weekOf,
     setWeekOf,
     data: breakdown,
     loading,
-  } = useWeeklyPage<CitationBreakdown>(loadCitationBreakdown, tenant?.tenantId ?? '', {
+  } = useWeeklyPage<CitationBreakdown>(loader, tenant?.tenantId ?? '', {
     rows: [],
     brandOwnedCitationRate: 0,
   })
-
-  const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<string | null>(null)
 
   if (!tenant) return null
 
@@ -149,6 +195,14 @@ export default function Citations() {
 
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
+        <select value={engine} onChange={(e) => setEngine(e.target.value)} aria-label="수집 엔진 필터">
+          <option value="">전체 엔진</option>
+          {(breakdown.engines ?? []).map((e) => (
+            <option key={e} value={e}>
+              {ENGINE_LABEL[e] ?? e}
+            </option>
+          ))}
+        </select>
         <input
           type="search"
           value={query}
@@ -170,7 +224,9 @@ export default function Citations() {
             <p className="muted">
               인용 {total.toLocaleString()}건 · 도메인 {breakdown.rows.length.toLocaleString()}개
               {mixedCount > 0 && ` · 소유권 판정이 갈린 도메인 ${mixedCount}개(「혼재」 표시)`}
+              {breakdown.engine && ` · ${ENGINE_LABEL[breakdown.engine] ?? breakdown.engine} 응답만`}
             </p>
+            <ComparisonNote comparison={breakdown.comparison ?? null} />
           </section>
 
           <section>
@@ -188,6 +244,7 @@ export default function Citations() {
                     <th>도메인</th>
                     <th>소유권</th>
                     <th>점유율</th>
+                    <th>전주 대비</th>
                     <th>인용 횟수</th>
                     <th>브랜드 언급 뒷받침</th>
                   </tr>
@@ -195,7 +252,7 @@ export default function Citations() {
                 <tbody>
                   {visible.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="muted">「{query}」와 일치하는 도메인이 없습니다.</td>
+                      <td colSpan={7} className="muted">「{query}」와 일치하는 도메인이 없습니다.</td>
                     </tr>
                   )}
                   {visible.map((row) => {
@@ -209,6 +266,7 @@ export default function Citations() {
                         share={shareOf(row)}
                         isOpen={isOpen}
                         onToggle={() => setOpen(isOpen ? null : row.domain)}
+                        comparable={Boolean(breakdown.comparison?.comparable)}
                       />
                     )
                   })}

@@ -7,7 +7,7 @@ import type { ResultStore } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
-type CitationSource = Pick<ResultStore, 'getQuestionAnalyses'>;
+type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory'>;
 type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank'>;
 
 export interface CitationBreakdownRow {
@@ -25,6 +25,8 @@ export interface CitationBreakdownRow {
   supportingBrandMentionCount: number;
   /** 이 호스트에서 실제 인용된 URL — 많이 인용된 순 상위 10개. "그 블로그 글이 뭔데?"에 답한다. */
   urls: CitationBreakdownUrl[];
+  /** 전주 점유율(0~1). 비교 가능할 때만 값이 있고, 전주에 없던 도메인은 0. 비교 불가면 null. */
+  previousShare: number | null;
 }
 
 export interface CitationBreakdownUrl {
@@ -39,6 +41,26 @@ export interface CitationBreakdown {
   rows: CitationBreakdownRow[];
   brandOwnedCitationRate: number;
   totalCitations: number;
+  /** 이 주에 응답을 낸 수집 엔진(필터 전 기준). 화면의 엔진 필터 선택지. */
+  engines: string[];
+  /** 적용된 엔진 필터. 있으면 rows·share·totalCitations 전부 그 엔진 응답만으로 낸 값이다. */
+  engine: string | null;
+  /**
+   * 전주 대비. 수집 엔진이 같을 때만 비교한다 — 엔진이 다르면 출처 분포가 통째로 바뀌므로
+   * (Gemini는 예약 플랫폼, Perplexity는 네이버 블로그를 끌어온다) 변화가 아니라 잡음을 그리게 된다.
+   * 엔진 필터가 켜져 있으면 두 주가 모두 그 엔진을 썼는지만 본다 — 그래서 필터를 켜면 엔진 구성이
+   * 바뀐 주차 사이에서도 비교가 살아난다. null이면 전주 자체가 없다.
+   */
+  comparison: CitationComparison | null;
+}
+
+export interface CitationComparison {
+  previousWeekOf: string;
+  comparable: boolean;
+  /** 비교 불가 사유(화면 문구). comparable=true면 없음. */
+  reason?: string;
+  previousEngines: string[];
+  currentEngines: string[];
 }
 
 /**
@@ -98,12 +120,29 @@ function majorityOwnerType(counts: Record<string, number>): { ownerType: string;
  * 한 줄, 소유권은 다수결로 정하고 갈린 사실(mixed)과 근거(ownerTypeCounts)를 함께 준다.
  * brandOwnedCitationRate는 aggregate.ts와 같은 **인용 단위** 비율 그대로다.
  */
+export interface CitationBreakdownOptions {
+  /** 수집 엔진 하나로 좁혀 본다(예: 'openai'). */
+  engine?: string | null;
+  /** 내부용 — 전주 계산 시 재귀를 끊는다. */
+  withComparison?: boolean;
+}
+
+const distinctEngines = (analyses: QuestionRepeatAnalysis[]): string[] =>
+  [...new Set(analyses.map((a) => a.engine))].sort();
+
+const sameEngineSet = (a: string[], b: string[]): boolean => a.length === b.length && a.every((e, i) => e === b[i]);
+
 export async function getCitationBreakdown(
   store: CitationSource,
   tenantId: string,
   weekOf: string,
+  options: CitationBreakdownOptions = {},
 ): Promise<CitationBreakdown> {
-  const analyses = await store.getQuestionAnalyses(tenantId, weekOf);
+  const engine = options.engine?.trim() || null;
+  const withComparison = options.withComparison ?? true;
+  const allAnalyses = await store.getQuestionAnalyses(tenantId, weekOf);
+  const engines = distinctEngines(allAnalyses);
+  const analyses = engine ? allAnalyses.filter((a) => a.engine === engine) : allAnalyses;
   type UrlAcc = { citationCount: number; engines: Set<string>; supporting: number };
   type Acc = { counts: Record<string, number>; citationCount: number; supporting: number; urls: Map<string, UrlAcc> };
   const byHost = new Map<string, Acc>();
@@ -150,14 +189,47 @@ export async function getCitationBreakdown(
           }))
           .sort((a, b) => b.citationCount - a.citationCount || a.url.localeCompare(b.url))
           .slice(0, 10),
+        previousShare: null,
       };
     })
     .sort((a, b) => b.citationCount - a.citationCount || a.domain.localeCompare(b.domain));
+
+  let comparison: CitationComparison | null = null;
+  if (withComparison) {
+    // 전주 = 이력에서 이번 주보다 앞선 가장 최근 주차. 이력이 없거나 이번 주가 첫 주면 비교 대상 없음.
+    const history = await store.getScorecardHistory(tenantId, 104);
+    const previousWeekOf = history
+      .map((c) => c.weekOf)
+      .filter((w) => w < weekOf)
+      .sort()
+      .pop();
+    if (previousWeekOf) {
+      const prevAll = await store.getQuestionAnalyses(tenantId, previousWeekOf);
+      const previousEngines = distinctEngines(prevAll);
+      const comparable = engine
+        ? previousEngines.includes(engine) && engines.includes(engine)
+        : sameEngineSet(previousEngines, engines);
+      if (comparable) {
+        const prev = await getCitationBreakdown(store, tenantId, previousWeekOf, { engine, withComparison: false });
+        const prevShare = new Map(prev.rows.map((r) => [r.domain, r.share]));
+        for (const row of rows) row.previousShare = prevShare.get(row.domain) ?? 0;
+        comparison = { previousWeekOf, comparable: true, previousEngines, currentEngines: engines };
+      } else {
+        const reason = engine
+          ? `전주(${previousWeekOf})에 ${engine} 응답이 없어 비교 불가`
+          : `수집 엔진이 달라 비교 불가 — 전주 ${previousEngines.join('+') || '없음'} · 이번 주 ${engines.join('+') || '없음'}`;
+        comparison = { previousWeekOf, comparable: false, reason, previousEngines, currentEngines: engines };
+      }
+    }
+  }
 
   return {
     rows,
     brandOwnedCitationRate: totalCitations > 0 ? brandOwnedCitations / totalCitations : 0,
     totalCitations,
+    engines,
+    engine,
+    comparison,
   };
 }
 
