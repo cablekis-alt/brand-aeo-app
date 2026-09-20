@@ -30,6 +30,29 @@ const EMPTY: CitationSourceAnalysis = {
   consensusDomains: [],
 }
 
+/*
+ * 띠 색 — 범주형 팔레트의 고정 슬롯. 값은 src/index.css의 --bucket-* 토큰에 있다.
+ *
+ * 예전에는 한 색조에 불투명도만 달리했는데(0.95 - i*0.08) 일곱 칸이 전부 검은 계열로 보여
+ * 구분이 되지 않았다. 게다가 불투명도를 **정렬 순서(i)**로 매겨서, 데이터가 바뀌어 순서가
+ * 달라지면 같은 유형이 다른 색이 됐다 — 색은 순위가 아니라 대상을 따라가야 한다.
+ *
+ * 경쟁사 둘은 같은 빨강을 쓰고 빗금으로 나눈다. 색을 하나 더 만드는 대신 "같은 개념의 두
+ * 등급"임을 형태로 말한다(코호트에 등록된 곳 / 답변에 함께 나온 동종 업체).
+ */
+const BUCKET_FILL: Record<GapBucket, string> = {
+  'competitor-cohort': 'f-competitor',
+  'competitor-peer': 'f-competitor f-striped',
+  review: 'f-review',
+  blog: 'f-blog',
+  news: 'f-news',
+  gov: 'f-gov',
+  forum: 'f-forum',
+  social: 'f-social',
+  wiki: 'f-wiki',
+  other: 'f-other',
+}
+
 /** 버킷 배지 색 — 코호트 경쟁사만 빨강, 동종 업체는 주의색, 나머지는 유형 색을 그대로 쓴다. */
 const BUCKET_PILL: Record<GapBucket, string> = {
   'competitor-cohort': 'st-bad',
@@ -229,20 +252,21 @@ export default function CitationGap() {
             </p>
             <ComparisonNote comparison={comparison} />
 
-            {/* 유형별 갭 비중 — 전체 인용 대비. 한 색조에 불투명도만 달리해 두 테마에서 같이 읽힌다. */}
-            <div className="gap-bar" role="img" aria-label="유형별 갭 비중">
-              {gap.byBucket.map((b, i) => (
+            {/* 유형별 갭 비중 — 전체 인용 대비. 칸 사이 2px는 서페이스색이라 색이 맞닿지 않는다. */}
+            <div className="mix-bar" role="img" aria-label="유형별 갭 비중">
+              {gap.byBucket.map((b) => (
                 <span
                   key={b.bucket}
-                  style={{ width: `${(b.citationCount / Math.max(1, gap.gapCitations)) * 100}%`, opacity: 0.95 - i * 0.08 }}
+                  className={BUCKET_FILL[b.bucket]}
+                  style={{ width: `${(b.citationCount / Math.max(1, gap.gapCitations)) * 100}%` }}
                   title={`${GAP_BUCKET_LABEL[b.bucket]} ${b.citationCount}건 · 전체의 ${formatPct(b.share)}`}
                 />
               ))}
             </div>
-            <div className="gap-bar-legend">
-              {gap.byBucket.map((b, i) => (
+            <div className="mix-bar-legend">
+              {gap.byBucket.map((b) => (
                 <span key={b.bucket}>
-                  <i style={{ opacity: 0.95 - i * 0.08 }} />
+                  <i className={BUCKET_FILL[b.bucket]} />
                   {GAP_BUCKET_LABEL[b.bucket]} {formatPct(b.share)}
                 </span>
               ))}

@@ -12,6 +12,25 @@
   --bad: #9f1239;
   --sans: 'IBM Plex Sans KR', 'Segoe UI', sans-serif;
   --serif: 'Fraunces', Georgia, serif;
+
+  /*
+   * 인용 유형 색 — 범주형 팔레트. 슬롯 순서는 고정이며 데이터에 따라 돌려쓰지 않는다
+   * (필터로 항목이 줄어도 남은 항목의 색이 바뀌면 안 된다).
+   * 우리 서페이스(#f6f1e8 / #161410)에 대해 검증을 돌려 두 모드 모두 통과시켰다:
+   * 명도대·채도·CVD 분리·정상시력 분리 PASS. 라이트의 대비 경고는 범례가 색과 라벨을
+   * 함께 주므로 해소된다(색만으로 식별하게 두지 않는다).
+   * 경쟁사 둘은 같은 빨강에 빗금으로 나눈다 — 새 색을 만드는 대신 "같은 개념의 두 등급"을
+   * 형태로 말한다.
+   */
+  --bucket-review: #2a78d6;
+  --bucket-blog: #eb6834;
+  --bucket-news: #1baf7a;
+  --bucket-gov: #eda100;
+  --bucket-forum: #e87ba4;
+  --bucket-social: #008300;
+  --bucket-wiki: #4a3aa7;
+  --bucket-competitor: #e34948;
+  --bucket-other: #8d857a;
 }
 
 /* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외) */
@@ -26,6 +45,15 @@
     --accent-soft: #3b2718;
     --good: #bef264;
     --bad: #fda4af;
+    --bucket-review: #3987e5;
+    --bucket-blog: #d95926;
+    --bucket-news: #199e70;
+    --bucket-gov: #c98500;
+    --bucket-forum: #d55181;
+    --bucket-social: #008300;
+    --bucket-wiki: #9085e9;
+    --bucket-competitor: #e66767;
+    --bucket-other: #9c9287;
   }
 }
 
@@ -40,6 +68,15 @@
   --accent-soft: #3b2718;
   --good: #bef264;
   --bad: #fda4af;
+  --bucket-review: #3987e5;
+  --bucket-blog: #d95926;
+  --bucket-news: #199e70;
+  --bucket-gov: #c98500;
+  --bucket-forum: #d55181;
+  --bucket-social: #008300;
+  --bucket-wiki: #9085e9;
+  --bucket-competitor: #e66767;
+  --bucket-other: #9c9287;
 }
 
 * {

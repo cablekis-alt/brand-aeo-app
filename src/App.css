@@ -2056,33 +2056,63 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 
 /* 인용 갭 분석 — 유형별 갭 비중 막대. 한 색조에 불투명도만 달리해 두 테마에서 같이 읽힌다. */
-.gap-bar {
+/*
+ * 인용 유형 띠 — 이름이 .gap-bar였는데 가시성 격차 분석의 승패 막대와 같은 이름이라
+ * 두 컴포넌트가 서로의 높이를 덮어쓰고 있었다. 쓰는 곳이 다르니 이름을 나눈다.
+ *
+ * 칸 사이 2px는 서페이스색이다. 색끼리 맞닿으면 경계에서 서로를 밀어내 실제보다 다르게
+ * 보이고, 얇은 칸은 아예 옆 칸에 먹힌다.
+ */
+.mix-bar {
   display: flex;
+  gap: 2px;
   height: 10px;
   border-radius: 5px;
   overflow: hidden;
   background: var(--line);
   margin: 10px 0 6px;
 }
-.gap-bar > span {
+.mix-bar > span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  min-width: 2px;
 }
-.gap-bar-legend {
+.mix-bar-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
   font-size: 0.9em;
 }
-.gap-bar-legend i {
+.mix-bar-legend i {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 2px;
-  background: var(--ink);
   margin-right: 5px;
   vertical-align: -1px;
+}
+
+/* 고정 슬롯. 색은 대상을 따라가므로 정렬이 바뀌어도 같은 유형은 같은 색이다. */
+.f-review { background: var(--bucket-review); }
+.f-blog { background: var(--bucket-blog); }
+.f-news { background: var(--bucket-news); }
+.f-gov { background: var(--bucket-gov); }
+.f-forum { background: var(--bucket-forum); }
+.f-social { background: var(--bucket-social); }
+.f-wiki { background: var(--bucket-wiki); }
+.f-competitor { background: var(--bucket-competitor); }
+.f-other { background: var(--bucket-other); }
+
+/*
+ * 동종 업체 — 코호트 경쟁사와 같은 빨강에 빗금. 색맹·흑백 인쇄에서도 둘이 갈린다.
+ * 빗금 간격은 10px 범례 사각형에서도 최소 한 줄이 보이도록 잡았다.
+ */
+.f-striped {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--paper) 55%, transparent) 0 2px,
+    transparent 2px 5px
+  );
 }
 .gap-targets {
   margin: 8px 0 0;
