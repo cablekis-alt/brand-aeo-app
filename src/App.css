@@ -879,9 +879,8 @@
   overflow-wrap: anywhere;
 }
 
-.site-report td.judgment {
-  white-space: normal;
-  text-align: left;
+/* 설명 문장 칸의 색·크기. 정렬과 줄바꿈은 표 기본 규칙 다음에 오는 블록이 맡는다. */
+td.judgment {
   color: var(--muted);
   font-size: 13px;
 }
@@ -2735,14 +2734,24 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 
 /*
- * 표에서 위치가 아니라 내용으로 정렬을 정하는 칸.
+ * 글자 칸 — 위치가 아니라 내용으로 정렬을 정한다.
  *
- * 기본 규칙은 `td:not(:first-child) { text-align: right }`이라 **몇 번째 칸인지**로 정렬이
- * 정해진다. rowSpan이 있으면 줄마다 칸 개수가 달라 같은 열이 줄에 따라 좌/우로 갈린다 —
- * 엔진 사용량 표에서 주차 셀이 rowSpan이라 둘째 줄부터 엔진이 첫 칸이 되어 왼쪽으로 붙었다.
- * 글자 열에는 이 클래스를 직접 붙여 위치와 무관하게 왼쪽으로 고정한다.
+ * 표 기본 규칙이 `th:not(:first-child), td:not(:first-child) { text-align: right;
+ * white-space: nowrap }`이라 **몇 번째 칸인지**로 정렬과 줄바꿈이 정해진다. 두 가지가 깨졌다:
+ *
+ *   1) rowSpan이 있으면 줄마다 칸 개수가 달라 같은 열이 줄에 따라 좌/우로 갈린다
+ *      (엔진 사용량 표: 주차가 rowSpan이라 둘째 줄부터 엔진이 첫 칸이 됐다).
+ *   2) 긴 문장이 오른쪽 정렬에 줄바꿈까지 막혀 화면 밖으로 흘러 잘린다
+ *      (사이트 진단의 「개선 작업」, 엔티티 일치 표 10칸).
+ *
+ * 선택자를 `td.cell-text`로 쓰는 이유가 중요하다. `.cell-text`(0-1-0)는 기본 규칙의
+ * `td:not(:first-child)`(0-1-1)보다 약해서 진다 — 실측에서 text-align만 !important로 이기고
+ * white-space는 그대로 nowrap이었다. 태그를 붙여 무게를 맞추고 **기본 규칙보다 뒤에** 두어
+ * 순서로 이긴다. !important는 쓰지 않는다.
  */
-.cell-text {
-  text-align: left !important;
-  white-space: nowrap;
+th.cell-text,
+td.cell-text,
+td.judgment {
+  text-align: left;
+  white-space: normal;
 }

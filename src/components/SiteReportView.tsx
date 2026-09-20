@@ -139,7 +139,7 @@ export default function SiteReportView({ report }: { report: AeoReport }) {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>개선 작업</th>
+                  <th className="cell-text">개선 작업</th>
                   <th>기대 효과</th>
                   <th>난이도</th>
                 </tr>
@@ -148,7 +148,7 @@ export default function SiteReportView({ report }: { report: AeoReport }) {
                 {report.recommendations.map((r) => (
                   <tr key={r.priority}>
                     <td>{r.priority}</td>
-                    <td>
+                    <td className="cell-text">
                       <span className="work-tag">{r.workType === 'dev' ? '개발' : '콘텐츠'}</span> {r.task}
                     </td>
                     <td className="judgment">{r.expectedEffect}</td>
