@@ -9,6 +9,9 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import { resolveBankVersion } from '../lib/bankVersion'
 
+/** 격차를 보는 축 — 화면 탭의 키. */
+type AxisKey = 'category' | 'stage' | 'topic' | 'engine'
+
 const VERDICT: Record<GapVerdict, { label: string; cls: string }> = {
   gap: { label: '격차', cls: 'st-bad' },
   mixed: { label: '혼재', cls: 'st-warn' },
@@ -135,12 +138,35 @@ export default function GapAnalysis() {
     ? [...gap.byStage].sort((a, b) => a.mentionRate - b.mentionRate)[0]
     : null
   const worstTopic = gap.byTopic.find((g) => g.verdict === 'gap') ?? gap.byTopic[0] ?? null
-  const painRows: { axis: string; group: GapGroup; nameOf?: (k: string) => string }[] = [
-    worstCategory ? { axis: '질문 유형', group: worstCategory } : null,
-    worstStage ? { axis: '구매 여정', group: worstStage } : null,
-    worstTopic ? { axis: '주제', group: worstTopic } : null,
-    worstEngine ? { axis: '엔진', group: worstEngine, nameOf: (k: string) => ENGINE_LABEL[k] ?? k } : null,
-  ].filter((r): r is { axis: string; group: GapGroup; nameOf?: (k: string) => string } => r !== null)
+  /*
+   * 축 탭 — 한 번에 한 축만 보여 준다.
+   *
+   * 네 축이 세로로 쌓여 있으면 카드가 17장 깔려 3.6화면이 된다. 축은 서로 배타적인 관점이라
+   * (형태·위치·내용·어디서) 동시에 볼 이유가 적고, 위 요약 표가 이미 축별 결론을 한 줄씩 준다.
+   * 그래서 요약은 항상 보이고, 상세는 고른 축만 편다. 요약 표의 줄을 누르면 그 축으로 간다 —
+   * "여기가 제일 밀린다"에서 "그 축 전체를 보자"로 한 번에 이어진다.
+   */
+  const axisTabs = ([
+    { key: 'category', label: '질문 유형', count: gap.byCategory.length },
+    { key: 'stage', label: '구매 여정', count: gap.byStage.length },
+    { key: 'topic', label: '주제', count: gap.byTopic.length },
+    // 엔진은 1개여도 탭을 남긴다 — 그 자리에서 "왜 비교가 없는지"를 설명한다.
+    { key: 'engine', label: '엔진', count: gap.byEngine.length },
+  ] as { key: AxisKey; label: string; count: number }[]).filter(
+    (t) => t.count > 0 || t.key === 'category' || t.key === 'engine',
+  )
+  const [axis, setAxis] = useState<AxisKey>('category')
+
+  const painRows: { axis: string; axisKey: AxisKey; group: GapGroup; nameOf?: (k: string) => string }[] = [
+    worstCategory ? { axis: '질문 유형', axisKey: 'category', group: worstCategory } : null,
+    worstStage ? { axis: '구매 여정', axisKey: 'stage', group: worstStage } : null,
+    worstTopic ? { axis: '주제', axisKey: 'topic', group: worstTopic } : null,
+    worstEngine
+      ? { axis: '엔진', axisKey: 'engine', group: worstEngine, nameOf: (k: string) => ENGINE_LABEL[k] ?? k }
+      : null,
+  ].filter(
+    (r): r is { axis: string; axisKey: AxisKey; group: GapGroup; nameOf?: (k: string) => string } => r !== null,
+  )
   // 표가 비는 이유는 둘이고 뜻이 정반대다. 밀린 질문이 아예 없으면 좋은 소식이고,
   // 밀렸는데 경쟁사가 안 잡혔다면 그 자리를 아무도 못 가져간 것이다(= 선점 여지).
   const lossQuestions = gap.byCategory.reduce((sum, g) => sum + g.loss, 0)
@@ -191,11 +217,18 @@ export default function GapAnalysis() {
                       </tr>
                     </thead>
                     <tbody>
-                      {painRows.map(({ axis, group, nameOf }) => (
-                        <tr key={axis}>
-                          <td className="muted">{axis}</td>
+                      {painRows.map(({ axis: axisLabel, axisKey, group, nameOf }) => (
+                        <tr key={axisLabel}>
+                          <td className="muted">{axisLabel}</td>
                           <td>
-                            <b>{nameOf ? nameOf(group.key) : group.label}</b>
+                            <button
+                              type="button"
+                              className="linklike"
+                              onClick={() => setAxis(axisKey)}
+                              title={`${axisLabel} 축 전체 보기`}
+                            >
+                              <b>{nameOf ? nameOf(group.key) : group.label}</b>
+                            </button>
                             <span className="muted"> · 질문 {group.questions}개</span>
                           </td>
                           <td>{pct(group.mentionRate)}</td>
@@ -216,7 +249,7 @@ export default function GapAnalysis() {
                 )}
                 <p className="hint">
                   네 축은 서로 다른 질문을 봅니다 — 유형은 질문의 <b>형태</b>, 여정은 고객의 <b>위치</b>, 주제는{' '}
-                  <b>내용</b>, 엔진은 <b>어디서</b>입니다. 아래에 축별 전체 묶음과 밀린 질문이 있습니다.
+                  <b>내용</b>, 엔진은 <b>어디서</b>입니다. 묶음 이름을 누르면 아래에서 그 축 전체를 봅니다.
                 </p>
               </>
             ) : (
@@ -227,78 +260,95 @@ export default function GapAnalysis() {
           </section>
 
           <section>
-            <h3>질문 유형별</h3>
-            <p className="hint" style={{ marginTop: 0 }}>
-              언급률·Share of Mention은 <b>카테고리 무관</b> 질문에서 나옵니다. 브랜드명을 넣은 질문은
-              거의 항상 언급되므로 그 줄이 높은 것은 성과가 아닙니다.
-            </p>
-            <div className="gap-grid">
-              {gap.byCategory.map((g) => (
-                <GroupCard key={g.key} group={g} />
+            <div className="axis-tabs" role="tablist" aria-label="격차를 보는 축">
+              {axisTabs.map((t) => (
+                <button
+                  type="button"
+                  key={t.key}
+                  role="tab"
+                  aria-selected={axis === t.key}
+                  className={`axis-tab${axis === t.key ? ' is-on' : ''}`}
+                  onClick={() => setAxis(t.key)}
+                >
+                  {t.label}
+                  {t.count > 0 && <span className="muted"> {t.count}</span>}
+                </button>
               ))}
             </div>
-          </section>
 
-          {gap.byStage.length > 0 && (
-            <section>
-              <h3>구매 여정별</h3>
-              <p className="hint" style={{ marginTop: 0 }}>
-                탐색 → 비교 → 결정 순서입니다. <b>결정</b> 단계에서 밀리면 전환 직전 고객을 놓치는 것이라, 같은
-                패라도 먼저 봐야 합니다.
-                {gap.stageInferredCount > 0 &&
-                  ` 질문 ${gap.stageInferredCount}개는 은행에 단계 기록이 없어 문장으로 추정했습니다 — 질문 프롬프트 빌더에서 "단계 매기기"를 실행하면 판정값으로 바뀝니다.`}
-              </p>
-              <div className="gap-grid">
-                {gap.byStage.map((g) => (
-                  <GroupCard key={g.key} group={g} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {(gap.byTopic.length > 0 || gap.topicMissingCount > 0) && (
-            <section>
-              <h3>주제별</h3>
-              <p className="hint" style={{ marginTop: 0 }}>
-                카테고리가 질문의 <b>형태</b>, 여정이 고객의 <b>위치</b>라면 주제는 <b>내용</b>입니다. 보강할
-                콘텐츠를 정하는 축이라 많이 밀리는 순으로 놓았습니다.
-                {gap.topicMissingCount > 0 &&
-                  ` 질문 ${gap.topicMissingCount}개는 은행에 주제가 없어 어느 묶음에도 들어가지 않았습니다 — 질문 프롬프트 빌더에서 "주제 매기기"를 실행하세요.`}
-              </p>
-              {gap.byTopic.length > 0 ? (
+            {axis === 'category' && (
+              <>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  언급률·Share of Mention은 <b>카테고리 무관</b> 질문에서 나옵니다. 브랜드명을 넣은 질문은
+                  거의 항상 언급되므로 그 줄이 높은 것은 성과가 아닙니다.
+                </p>
                 <div className="gap-grid">
-                  {gap.byTopic.map((g) => (
+                  {gap.byCategory.map((g) => (
                     <GroupCard key={g.key} group={g} />
                   ))}
                 </div>
-              ) : (
-                <p className="muted">아직 주제가 매겨진 질문이 없습니다.</p>
-              )}
-            </section>
-          )}
+              </>
+            )}
 
-          {gap.byEngine.length > 1 ? (
-            <section>
-              <h3>엔진별</h3>
-              <p className="hint" style={{ marginTop: 0 }}>
-                같은 질문이라도 엔진마다 답이 다릅니다. 한 엔진에서만 빠져 있다면 그 엔진이 참고하는
-                출처를 보강하는 것이 빠릅니다.
-              </p>
-              <div className="gap-grid">
-                {gap.byEngine.map((g) => (
-                  <GroupCard key={g.key} group={g} nameOf={(k) => ENGINE_LABEL[k] ?? k} />
-                ))}
-              </div>
-            </section>
-          ) : (
-            <section>
-              <h3>엔진별</h3>
-              <p className="muted" style={{ marginTop: 0 }}>
-                이 주차는 <b>{ENGINE_LABEL[gap.byEngine[0]?.key] ?? gap.byEngine[0]?.key ?? '엔진 1개'}</b>
-                로만 측정해 엔진 간 비교가 없습니다. 설정에서 수집 엔진을 늘리면 이 자리가 채워집니다.
-              </p>
-            </section>
-          )}
+            {axis === 'stage' && (
+              <>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  탐색 → 비교 → 결정 순서입니다. <b>결정</b> 단계에서 밀리면 전환 직전 고객을 놓치는 것이라, 같은
+                  패라도 먼저 봐야 합니다.
+                  {gap.stageInferredCount > 0 &&
+                    ` 질문 ${gap.stageInferredCount}개는 은행에 단계 기록이 없어 문장으로 추정했습니다 — 질문 프롬프트 빌더에서 "단계 매기기"를 실행하면 판정값으로 바뀝니다.`}
+                </p>
+                <div className="gap-grid">
+                  {gap.byStage.map((g) => (
+                    <GroupCard key={g.key} group={g} />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {axis === 'topic' && (
+              <>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  카테고리가 질문의 <b>형태</b>, 여정이 고객의 <b>위치</b>라면 주제는 <b>내용</b>입니다. 보강할
+                  콘텐츠를 정하는 축이라 많이 밀리는 순으로 놓았습니다.
+                  {gap.topicMissingCount > 0 &&
+                    ` 질문 ${gap.topicMissingCount}개는 은행에 주제가 없어 어느 묶음에도 들어가지 않았습니다 — 질문 프롬프트 빌더에서 "주제 매기기"를 실행하세요.`}
+                </p>
+                {gap.byTopic.length > 0 ? (
+                  <div className="gap-grid">
+                    {gap.byTopic.map((g) => (
+                      <GroupCard key={g.key} group={g} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted">아직 주제가 매겨진 질문이 없습니다.</p>
+                )}
+              </>
+            )}
+
+            {axis === 'engine' && (
+              <>
+                {gap.byEngine.length > 1 ? (
+                  <>
+                    <p className="hint" style={{ marginTop: 0 }}>
+                      같은 질문이라도 엔진마다 답이 다릅니다. 한 엔진에서만 빠져 있다면 그 엔진이 참고하는
+                      출처를 보강하는 것이 빠릅니다.
+                    </p>
+                    <div className="gap-grid">
+                      {gap.byEngine.map((g) => (
+                        <GroupCard key={g.key} group={g} nameOf={(k) => ENGINE_LABEL[k] ?? k} />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="muted" style={{ marginTop: 0 }}>
+                    이 주차는 <b>{ENGINE_LABEL[gap.byEngine[0]?.key] ?? gap.byEngine[0]?.key ?? '엔진 1개'}</b>
+                    로만 측정해 엔진 간 비교가 없습니다. 설정에서 수집 엔진을 늘리면 이 자리가 채워집니다.
+                  </p>
+                )}
+              </>
+            )}
+          </section>
 
           <section>
             <h3>우리 자리를 가져간 경쟁사</h3>
