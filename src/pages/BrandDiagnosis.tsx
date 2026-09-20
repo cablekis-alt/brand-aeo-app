@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadQuestionAnalyses, loadQuestionBank, loadRawAnswers, type RawAnswer } from '../lib/api'
+import {
+  loadDiscoveredBrands,
+  loadQuestionAnalyses,
+  loadQuestionBank,
+  loadRawAnswers,
+  type DiscoveryResult,
+  type RawAnswer,
+} from '../lib/api'
 import { highlightAnswer, type MarkKind } from '../lib/answerHighlight'
 import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, formatPct, weekLabel } from '../lib/format'
@@ -275,6 +283,29 @@ export default function BrandDiagnosis() {
     return { ...highlightAnswer(shown.rawText, needles), needles: needles.length, judged: Boolean(judged) }
   }, [shown, analyses, activeRawQuestion, activeRawEngine])
 
+  /*
+   * 답변에 함께 나온 브랜드 — 코호트에 없는 곳을 발견하는 자리.
+   *
+   * 「경쟁사 언급 비교」는 등록된 경쟁사만 본다(판정 프롬프트에 목록을 넣어 주기 때문이다).
+   * 그래서 등록하지 않은 업체는 답변에 아무리 자주 나와도 화면에 존재하지 않았다.
+   * 여기는 원문에서 직접 뽑으므로 "우리가 모르고 있던 곳"이 드러난다.
+   */
+  const [found, setFound] = useState<{ key: string; value: DiscoveryResult | null }>({ key: '', value: null })
+  const foundKey = tenant ? `${tenant.tenantId}|${weekOf}` : ''
+  useEffect(() => {
+    if (!tenant?.tenantId) return
+    let alive = true
+    const key = `${tenant.tenantId}|${weekOf}`
+    void loadDiscoveredBrands(tenant.tenantId, weekOf).then((v) => {
+      if (alive) setFound({ key, value: v })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId, weekOf])
+  const discovery = found.key === foundKey ? found.value : null
+  const [showAllFound, setShowAllFound] = useState(false)
+
   function toggleEngine(engine: Engine) {
     setEngineFilter((current) => (current.includes(engine) ? current.filter((e) => e !== engine) : [...current, engine]))
   }
@@ -520,6 +551,72 @@ export default function BrandDiagnosis() {
                       </p>
                     </>
                   )}
+                </>
+              )}
+            </section>
+          )}
+
+          {discovery && (
+            <section>
+              <h3>답변에 함께 나온 브랜드</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                위 「경쟁사 언급 비교」는 <b>등록한 경쟁사만</b> 봅니다. 여기는 답변 원문에서 직접 뽑아, 코호트에
+                없는 곳까지 보여 줍니다. <b>판정이 아니라 후보</b>이며 등록은 사람이 확인한 뒤에 합니다.
+              </p>
+              {discovery.suffixes.length === 0 ? (
+                <p className="muted">
+                  「{tenant.industry}」는 상호에 붙는 말이 아니라서 이 방식으로는 찾을 수 없습니다 — 업종 이름이
+                  상호 끝에 붙는 경우(성형외과·치과·펜션 등)에만 동작합니다.
+                </p>
+              ) : discovery.answersScanned === 0 ? (
+                <p className="muted">이 주차에는 저장된 원문이 없어 찾을 수 없습니다.</p>
+              ) : discovery.brands.length === 0 ? (
+                <p className="muted">
+                  {discovery.suffixSource === 'fallback'
+                    ? `「${tenant.industry}」를 상호 접미사로 삼아 답변 ${discovery.answersScanned}건을 훑었지만 한 곳도 없었습니다 — 업종명이 상호 끝에 붙지 않는 업종이라 이 방식으로는 찾기 어렵습니다. "경쟁사가 없다"는 뜻이 아닙니다.`
+                    : `답변 ${discovery.answersScanned}건에서 다른 브랜드가 발견되지 않았습니다.`}
+                </p>
+              ) : (
+                <>
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>브랜드</th>
+                          <th>나온 답변</th>
+                          <th>총 등장</th>
+                          <th>엔진</th>
+                          <th>코호트</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(showAllFound ? discovery.brands : discovery.brands.slice(0, 10)).map((b) => (
+                          <tr key={b.name}>
+                            <td>
+                              <b>{b.name}</b>
+                            </td>
+                            <td>{b.answers}건</td>
+                            <td>{b.mentions}회</td>
+                            <td className="muted">{b.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
+                            <td>
+                              <span className={`status-pill ${b.registered ? 'st-good' : 'st-warn'}`}>
+                                {b.registered ? '등록됨' : '미등록'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {discovery.brands.length > 10 && (
+                    <button type="button" className="gap-more-toggle" onClick={() => setShowAllFound((v) => !v)}>
+                      {showAllFound ? '▾ 접기' : `▸ 나머지 ${discovery.brands.length - 10}개 더 보기`}
+                    </button>
+                  )}
+                  <p className="muted">
+                    미등록 브랜드를 코호트에 넣으려면 <Link to="/brand-onboarding">브랜드 추가</Link>에서 경쟁사로
+                    등록하세요 — 다음 측정부터 언급 비교·Share of Mention에 들어갑니다.
+                  </p>
                 </>
               )}
             </section>

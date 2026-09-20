@@ -18,6 +18,7 @@ import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
 import { getCohortTrend } from './cohortTrend.js';
 import { getRawAnswers } from './rawCallStore.js';
+import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
@@ -777,6 +778,25 @@ app.get('/api/ga-referrals/:tenantId', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// 답변에 함께 나온 브랜드 — 코호트에 없는 곳을 사람이 발견하도록 후보를 준다(판정이 아니다).
+app.get('/api/discovered-brands/:tenantId/:weekOf', async (req, res) => {
+  const tenants = await loadRuntimeTenants();
+  const tenant = tenants.find((t) => t.tenantId === req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const known = tenants.map((t) => ({ name: t.brandName, aliases: t.aliases ?? [] }));
+  res.json(
+    await discoverBrands(
+      tenant.tenantId,
+      req.params.weekOf,
+      { brandName: tenant.brandName, aliases: tenant.aliases ?? [], industry: tenant.industry },
+      known,
+    ),
+  );
 });
 
 // AI 답변 원문 — 질문 하나의 엔진별 응답. 한 주차 전체는 크므로 질문 단위로만 내려준다.

@@ -600,6 +600,31 @@ export async function findFactsForGaps(
 }
 
 /** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
+/** 답변에 함께 나온 브랜드 — 판정이 아니라 사람이 확인할 후보다. */
+export interface DiscoveredBrand {
+  name: string
+  mentions: number
+  answers: number
+  engines: string[]
+  questionIds: string[]
+  registered: boolean
+}
+
+export interface DiscoveryResult {
+  brands: DiscoveredBrand[]
+  /** 업종에서 쓸 이름 접미사. 비어 있으면 이 업종에서는 찾을 수 없다는 뜻이다. */
+  suffixes: string[]
+  /** 'fallback'에서 0개는 "경쟁사가 없다"가 아니라 "이 방식으로는 못 찾는다"는 뜻이다. */
+  suffixSource: 'catalog' | 'fallback' | 'none'
+  answersScanned: number
+}
+
+export async function loadDiscoveredBrands(tenantId: string, weekOf: string): Promise<DiscoveryResult | null> {
+  return getJson<DiscoveryResult>(
+    `/api/discovered-brands/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`,
+  )
+}
+
 /** 저장된 AI 답변 원문. 질문 하나 단위로만 받는다(한 주차 전체는 실측 215KB). */
 export interface RawAnswer {
   engine: string
