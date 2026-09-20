@@ -2203,17 +2203,64 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 
 /*
- * 히어로의 두 번째 스코어 — Site AEO Score.
+ * 히어로의 두 스코어 — Brand / Site를 같은 크기의 두 칸으로.
  *
- * Brand 쪽과 같은 크기로 두면 "무엇이 이 제품의 주 지표인가"가 흐려진다. 반대로 meta 줄에
- * 섞으면 대비가 사라져 나란히 둔 의미가 없어진다. 한 단계 작게 두어 둘 다 읽히게 한다.
+ * 한 줄에 이어 붙였더니 뒤쪽 숫자가 커 보여 "38 < 78이니 나쁘다"로 읽혔다. 둘은 비교
+ * 대상이 아니라 서로 다른 축이라 그 읽기가 틀렸다. 칸을 나누고 크기를 맞추면 "둘은 별개"가
+ * 형태로 먼저 전달된다. 좁은 화면에서는 세로로 쌓는다.
  */
-.total.secondary {
-  font-size: 16px;
-  margin: -8px 0 16px;
+.score-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.score-pair > article {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.score-label {
+  margin: 0;
+  font-size: 13px;
   color: var(--muted);
 }
-.total.secondary strong {
-  font-size: 32px;
-  color: var(--ink);
+
+.score-value {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 44px;
+  line-height: 1.1;
+}
+
+.score-value .delta {
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.score-value.none {
+  color: var(--muted);
+}
+
+.score-caption {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 두 점수의 관계 한 줄. 숫자만 주고 해석을 떠넘기지 않기 위한 자리다. */
+.score-reading {
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .score-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .score-value {
+    font-size: 36px;
+  }
 }

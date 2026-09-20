@@ -70,6 +70,25 @@ export default function Dashboard() {
   const sitePrev = siteWeeks.length > 1 ? (siteScores.value[siteWeeks[siteWeeks.length - 2]!] ?? null) : null
   const siteDelta = siteNow && sitePrev ? siteNow.score - sitePrev.score : null
 
+  /*
+   * 두 점수의 관계를 한 줄로 — 숫자만 주고 해석을 사람에게 맡기지 않는다.
+   *
+   * 다만 둘은 서로 다른 것을 재므로 "78-38=40점 차"처럼 뺄셈을 결론으로 내세우지 않는다.
+   * 둘 다 0~100으로 정규화돼 있어 **어느 쪽이 발목을 잡는지**를 읽는 데만 쓴다.
+   * 경계를 20점으로 크게 잡은 것도 같은 이유다 — 근소한 차는 방향을 말해 주지 않는다.
+   */
+  const scoreReading = (() => {
+    if (!card || !siteNow) return null
+    const gap = siteNow.score - card.aeoScore.current
+    if (gap >= 20) {
+      return '페이지는 인용될 준비가 됐는데 답변에는 그만큼 나오지 않습니다 — 지금 막는 것은 페이지가 아니라 권위·인용일 가능성이 큽니다.'
+    }
+    if (gap <= -20) {
+      return '답변 노출에 비해 페이지 준비가 뒤처집니다 — 페이지를 먼저 고치면 지금의 노출이 더 단단해집니다.'
+    }
+    return '두 축이 비슷한 수준입니다 — 한쪽만 손봐서는 크게 달라지지 않습니다.'
+  })()
+
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
   const promptedSplit = split.key === splitKey ? split.value : null
   // 전주는 저장된 previousWeek가 아니라 히스토리에서 읽는다. 저장값은 측정 시점에 박제되어,
@@ -181,57 +200,87 @@ export default function Dashboard() {
             <p className="eyebrow">
               {card.brandName} · {weekLabel(card.weekOf)} · {card.industry} · {card.region}
             </p>
-            <p className="total">
-              Brand AEO Score <strong>{card.aeoScore.current}</strong>
-              <span className={`delta ${delta?.tone}`}>{delta?.text}</span>
-            </p>
-            {siteNow ? (
-              <p className="total secondary">
-                Site AEO Score <strong>{siteNow.score}</strong>
-                {siteDelta !== null && (
-                  <span className={`delta ${siteDelta > 0 ? 'up' : siteDelta < 0 ? 'down' : 'flat'}`}>
-                    {siteDelta > 0 ? '+' : ''}
-                    {siteDelta} 전주 대비
-                  </span>
+            {/*
+              두 스코어는 **다른 것을 잰다**. 그래서 나란히 두되 같은 크기로 둔다.
+              앞선 판(한 줄에 꼬리표를 줄줄이 이어 붙인 형태)에서는 78이 38보다 커 보여
+              "38 < 78이니 나쁘다"로 읽혔다 — 비교 대상이 아닌 두 축인데도 그랬다.
+              칸을 나누고 각 칸에 "무엇을 재는가"를 한 줄씩 붙여 축이 다름을 먼저 보이게 한다.
+            */}
+            <div className="score-pair">
+              <article>
+                <p className="score-label">Brand AEO Score</p>
+                <p className="score-value">
+                  {card.aeoScore.current}
+                  {delta && <span className={`delta ${delta.tone}`}>{delta.text}</span>}
+                </p>
+                <p className="score-caption">답변에 얼마나 나오는가</p>
+              </article>
+              <article>
+                <p className="score-label">Site AEO Score</p>
+                {siteNow ? (
+                  <>
+                    <p className="score-value">
+                      {siteNow.score}
+                      {siteDelta !== null && (
+                        <span className={`delta ${siteDelta > 0 ? 'up' : siteDelta < 0 ? 'down' : 'flat'}`}>
+                          {siteDelta > 0 ? '+' : ''}
+                          {siteDelta}
+                        </span>
+                      )}
+                    </p>
+                    <p className="score-caption">
+                      페이지가 인용될 준비가 됐는가
+                      {siteNow.weekOf !== card.weekOf && ` · ${weekLabel(siteNow.weekOf)} 진단`}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="score-value none">—</p>
+                    <p className="score-caption">
+                      {isElectron ? (
+                        <>
+                          <Link to="/site-diagnosis">Site AEO Checker</Link>에서 진단하면 채워집니다
+                        </>
+                      ) : (
+                        '데스크톱 앱에서 진단·기록합니다'
+                      )}
+                    </p>
+                  </>
                 )}
-                <span className="muted">
-                  {' '}
-                  · {siteNow.weekOf !== card.weekOf ? `${weekLabel(siteNow.weekOf)} 진단 · ` : ''}
-                  {siteNow.grade ? `${siteNow.grade} · ` : ''}
-                  {siteDelta === null && '첫 기록 · '}
-                  브랜드 페이지 준비도
-                </span>
-              </p>
-            ) : isElectron ? (
-              <p className="muted" style={{ margin: '4px 0 0' }}>
-                Site AEO Score 없음 — <Link to="/site-diagnosis">Site AEO Checker</Link>에서 브랜드 페이지를 진단하면
-                이 자리에 주차별로 쌓입니다.
-              </p>
-            ) : (
-              <p className="muted" style={{ margin: '4px 0 0' }}>
-                Site AEO Score는 데스크톱 앱에서 진단·기록합니다 — 웹에서는 이 자리에 표시되지 않습니다.
-              </p>
-            )}
+              </article>
+            </div>
+            {scoreReading && <p className="score-reading">{scoreReading}</p>}
+            {/*
+              측정 1주차에는 전주·4주 이동평균·신뢰구간을 감춘다.
+              셋 다 "아직 비교할 게 없다"는 같은 말을 세 번 하는 자리다 — 전주는 "—",
+              이동평균은 이번 주 점수 그 자체, 신뢰구간은 표본이 하나라 넓다. 게다가 위
+              변화 알림 배너가 이미 「기준선 형성 중(측정 1주차)」이라고 말하고 있다.
+              2주차부터 저절로 다시 나타난다(prevCard가 생긴다).
+            */}
             <dl className="meta">
-              <div>
-                <dt>전주</dt>
-                <dd>
-                  {prevScore ?? '—'}
-                  {!comparable && (
-                    <span className="muted"> · {sameJudge ? '수집' : '판정'} 엔진 달라 비교 불가</span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>4주 이동평균</dt>
-                <dd>{card.aeoScore.ma4}</dd>
-              </div>
-              <div>
-                <dt>95% 신뢰구간</dt>
-                <dd>
-                  {card.aeoScore.ciLow} – {card.aeoScore.ciHigh}
-                </dd>
-              </div>
+              {prevCard && (
+                <>
+                  <div>
+                    <dt>전주</dt>
+                    <dd>
+                      {prevScore ?? '—'}
+                      {!comparable && (
+                        <span className="muted"> · {sameJudge ? '수집' : '판정'} 엔진 달라 비교 불가</span>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>4주 이동평균</dt>
+                    <dd>{card.aeoScore.ma4}</dd>
+                  </div>
+                  <div>
+                    <dt>95% 신뢰구간</dt>
+                    <dd>
+                      {card.aeoScore.ciLow} – {card.aeoScore.ciHigh}
+                    </dd>
+                  </div>
+                </>
+              )}
               <div>
                 <dt>업종·지역 코호트</dt>
                 <dd>
