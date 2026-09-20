@@ -143,7 +143,7 @@ export default function BrandManageList() {
         return
       }
       const d = await measureTenantAll(row.tenantId)
-      setMessage(`✓ ${d.brandName ?? row.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}).`)
+      setMessage(`✓ ${d.brandName ?? row.brandName} 측정 완료 (Brand AEO Score ${d.aeoScore ?? '?'}).`)
     } catch (err) {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
     } finally {

@@ -129,14 +129,14 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
     return alerts
   }
 
-  // AEO Score 변화
+  // Brand AEO Score 변화
   const aeoDelta = cur.aeoScore.current - prev.aeoScore.current
   if (aeoDelta <= -8) {
-    alerts.push({ level: 'critical', title: `AEO Score 급락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}. 4주 이동평균(${cur.aeoScore.ma4}) 추세도 함께 확인하세요.` })
+    alerts.push({ level: 'critical', title: `Brand AEO Score 급락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}. 4주 이동평균(${cur.aeoScore.ma4}) 추세도 함께 확인하세요.` })
   } else if (aeoDelta <= -4) {
-    alerts.push({ level: 'warn', title: `AEO Score 하락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
+    alerts.push({ level: 'warn', title: `Brand AEO Score 하락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
   } else if (aeoDelta >= 8) {
-    alerts.push({ level: 'good', title: `AEO Score 상승 +${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
+    alerts.push({ level: 'good', title: `Brand AEO Score 상승 +${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
   }
 
   // Share of Mention 변화(둘 다 측정된 경우만)

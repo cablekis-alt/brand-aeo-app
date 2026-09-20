@@ -59,7 +59,7 @@ export default function Ranking() {
     ]
     const worst = [...gaps].sort((a, b) => a.mine - a.theirs - (b.mine - b.theirs))[0]!
     const scoreGap = Math.round((avg(above.map((p) => p.aeoScore)) - me.aeoScore) * 10) / 10
-    const lead = `우리 위 ${above.length}곳의 평균 AVS는 우리보다 ${scoreGap}점 높습니다.`
+    const lead = `우리 위 ${above.length}곳의 평균 Brand AEO Score는 우리보다 ${scoreGap}점 높습니다.`
     /*
      * 차이가 없으면 원인이라고 말하지 않는다.
      *
@@ -118,7 +118,7 @@ export default function Ranking() {
           <section>
             <h3>코호트 리더보드</h3>
             <p className="hint" style={{ marginTop: 0 }}>
-              AVS 순입니다. 지표를 같은 줄에 두면 상위권의 공통점이 보입니다 — 순위보다 <b>그 자리에 있는 이유</b>가
+              Brand AEO Score 순입니다. 지표를 같은 줄에 두면 상위권의 공통점이 보입니다 — 순위보다 <b>그 자리에 있는 이유</b>가
               고칠 거리를 알려 줍니다.
             </p>
             <div className="table-wrap">
@@ -127,7 +127,7 @@ export default function Ranking() {
                   <tr>
                     <th>순위</th>
                     <th>브랜드</th>
-                    <th>AVS</th>
+                    <th>Brand AEO Score</th>
                     <th>언급률</th>
                     <th>인용률</th>
                     <th>변동</th>

@@ -106,7 +106,7 @@ export default function MeasureTenant() {
       }
       const d = await measureTenantAll(pickedTenant, reuseCohort)
       setMessage(
-        `✓ ${d.brandName} 측정·baking 완료 (AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
+        `✓ ${d.brandName} 측정·baking 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
       )
     } catch (err) {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)

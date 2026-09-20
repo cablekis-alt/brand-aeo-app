@@ -3,7 +3,12 @@ import type { CitationSourceAnalysis } from './b7-citation-sources.js';
 import type { PromptMessage } from './types.js';
 
 /**
- * AVS(Brand AEO Score) 가중치 — **이 값이 유일한 출처다**.
+ * Brand AEO Score 가중치 — **이 값이 유일한 출처다**.
+ *
+ * 이름은 Brand AEO Score 하나로 쓴다. 예전 설계 문서와 일부 주석이 같은 값을 AVS라고 불렀고
+ * 랭킹 화면 표 머리에도 그 약어가 남아 있었는데, 화면 어디에서도 풀어 쓰지 않아 처음 보는
+ * 사람은 뜻을 알 수 없었다. Site AEO Score와 구별해야 하므로 'AEO Score'가 아니라
+ * 'Brand AEO Score'가 정식 이름이다.
  *
  *   Mention 0.25 · Share of Mention 0.25 · Citation 0.20 · Position 0.15 · Factuality 0.15 (합 1.0)
  *   · Mention/SoM에는 감성 계수를 곱한다

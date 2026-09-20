@@ -68,7 +68,7 @@ export default function CompetitorTrends() {
       <p className="brand">상세 분석</p>
       <h1>경쟁 시계열</h1>
       <p className="lead">
-        코호트 경쟁사와 우리 브랜드의 주간 AEO Score 추이를 한 축에서 비교합니다. 리더 대비 격차가 벌어지는지 좁혀지는지를
+        코호트 경쟁사와 우리 브랜드의 주간 Brand AEO Score 추이를 한 축에서 비교합니다. 리더 대비 격차가 벌어지는지 좁혀지는지를
         추세로 봅니다.
       </p>
 
@@ -87,7 +87,7 @@ export default function CompetitorTrends() {
       {trend && trend.weeks.length > 0 && (
         <>
           <section>
-            <h3>주간 AEO Score 추이</h3>
+            <h3>주간 Brand AEO Score 추이</h3>
             {chart}
             <ul className="trend-legend">
               {trend.series.map((s, i) => (
@@ -137,7 +137,7 @@ function renderChart(trend: NonNullable<ReturnType<typeof buildCompetitorTrend>>
 
   return (
     <div className="table-wrap">
-      <svg viewBox={`0 0 ${W} ${H}`} className="trend-chart" role="img" aria-label="경쟁사 AEO Score 추이 선 그래프">
+      <svg viewBox={`0 0 ${W} ${H}`} className="trend-chart" role="img" aria-label="경쟁사 Brand AEO Score 추이 선 그래프">
         {[0, 0.25, 0.5, 0.75, 1].map((f) => {
           const val = Math.round(trend.maxScore * f)
           const yy = y(val)

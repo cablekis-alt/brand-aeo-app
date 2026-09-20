@@ -380,7 +380,7 @@ export async function getRankingView(
   const useScoped = bank !== null && scoped.length > 0;
   const analyses = useScoped ? scoped : allAnalyses;
 
-  // 전주 순위표 — 같은 규칙(AVS 내림차순)으로 세워야 비교가 성립한다.
+  // 전주 순위표 — 같은 규칙(Brand AEO Score 내림차순)으로 세워야 비교가 성립한다.
   const prevRank = new Map<string, number>();
   [...prevCohort]
     .sort((a, b) => b.aeoScore.current - a.aeoScore.current)
@@ -389,7 +389,7 @@ export async function getRankingView(
   /*
    * 리더보드에 언급률·인용률을 함께 싣는다.
    *
-   * AVS만 있으면 "우리가 몇 위인지"는 알아도 "왜 그 자리인지"를 모른다. 같은 줄에 지표를
+   * Brand AEO Score만 있으면 "우리가 몇 위인지"는 알아도 "왜 그 자리인지"를 모른다. 같은 줄에 지표를
    * 두면 상위권의 공통점(예: 인용률이 높다)이 눈에 들어와 순위표가 진단이 된다.
    * 값은 그 브랜드의 스코어카드에 이미 있으므로 새로 계산하지 않는다.
    */

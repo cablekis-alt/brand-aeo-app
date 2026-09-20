@@ -23,7 +23,7 @@ export default function Dashboard() {
    *
    * 스코어카드에 넣어 저장할 수도 있지만 그러면 **다시 측정해야** 값이 생긴다. 이 계산은 이미
    * 저장된 판정 레코드와 질문 은행만 쓰므로 지난 주차도 바로 채워진다.
-   * 실패하면 조용히 감춘다 — 대시보드 본문(AEO Score)을 막을 이유가 없다.
+   * 실패하면 조용히 감춘다 — 대시보드 본문(Brand AEO Score)을 막을 이유가 없다.
    */
   const [split, setSplit] = useState<{ key: string; value: PromptedSplit | null }>({ key: '', value: null })
   const splitKey = card ? `${card.tenantId}|${card.weekOf}` : ''
@@ -203,7 +203,7 @@ export default function Dashboard() {
             <h2>점수와 코호트 순위</h2>
             <p>
               {card
-                ? `AEO Score ${card.aeoScore.current} · 코호트 ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position}/${card.cohortRank.totalTenants}`
+                ? `Brand AEO Score ${card.aeoScore.current} · 코호트 ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position}/${card.cohortRank.totalTenants}`
                 : '측정 후 채워집니다'}
             </p>
             <Link to="/report">정기진단 보고서 →</Link>

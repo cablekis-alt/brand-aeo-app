@@ -1018,7 +1018,7 @@ export default function BrandOnboarding() {
         return
       }
       const d = await measureTenantAll(id)
-      setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정 완료 (AEO Score ${d.aeoScore ?? '?'}). 대시보드·랭킹에서 확인하세요.`)
+      setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). 대시보드·랭킹에서 확인하세요.`)
     } catch (err) {
       setMeasureMsg(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
     } finally {

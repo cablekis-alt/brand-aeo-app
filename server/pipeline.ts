@@ -464,7 +464,7 @@ export async function runWeeklyPipeline(
   const rawCalls = await collectRawCalls(tenant, questions, weekOf);
 
   // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
-  // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(AVS 20%)과
+  // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(Brand AEO Score 20%)과
   // 인용출처·인용 갭 분석이 무의미해진다. 해소 실패분은 원본을 그대로 둔다.
   updateActiveMeasure(tenant.tenantId, { stage: '인용 정리', done: 0, total: 0 });
   const resolvedCitations = await resolveCitationUrls(rawCalls.flatMap((c) => c.citations));

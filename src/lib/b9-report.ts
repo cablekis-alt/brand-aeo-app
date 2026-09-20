@@ -234,7 +234,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '"○○ 지역 추천", "○○ 잘하는 곳" 류의 제3자 비교·추천 글에 포함되도록 노출을 늘립니다.',
         '핵심 페이지에 구조화 데이터(JSON-LD)와 명확한 제목·요약을 넣어 AI가 인용하기 쉽게 만듭니다.',
       ],
-      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.mentionRate)} 지표 — 개선 시 AEO Score 상승 폭이 큽니다.`,
+      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.mentionRate)} 지표 — 개선 시 Brand AEO Score 상승 폭이 큽니다.`,
       links: [REC_LINKS.questions, REC_LINKS.sources],
     })
   }
@@ -371,7 +371,7 @@ export function buildPeriodicReport(
     tone = 'bad'
     label = '개선 필요'
   }
-  const summary = `AEO Score ${card.aeoScore.current}점(4주 이동평균 ${card.aeoScore.ma4}, ${trendText}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
+  const summary = `Brand AEO Score ${card.aeoScore.current}점(4주 이동평균 ${card.aeoScore.ma4}, ${trendText}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
 
   const ciWidth = card.aeoScore.ciHigh - card.aeoScore.ciLow
   const variabilityNote =

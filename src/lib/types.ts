@@ -165,7 +165,7 @@ export interface RankingView {
     position: number
     totalTenants: number
     /**
-     * AVS 내림차순. 지표를 함께 싣는 이유는 "몇 위인지"가 아니라 "왜 그 자리인지"를
+     * Brand AEO Score 내림차순. 지표를 함께 싣는 이유는 "몇 위인지"가 아니라 "왜 그 자리인지"를
      * 같은 줄에서 읽기 위해서다 — 상위권의 공통점이 눈에 들어와야 순위표가 진단이 된다.
      */
     peers: {

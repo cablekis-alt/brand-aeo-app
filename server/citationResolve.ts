@@ -6,7 +6,7 @@ import { mapWithConcurrency } from './concurrency.js';
  * Gemini(googleSearch 도구)는 groundingChunks[].web.uri를
  * `https://vertexaisearch.cloud.google.com/grounding-api-redirect/<token>` 형태의
  * 래퍼로 준다. 그래서 인용 도메인이 전부 구글로 보이고 다음이 모두 망가진다:
- *   - brandOwnedCitationRate: 자사 도메인 판별 불가 → AVS 20% 가중치가 0으로 잘림
+ *   - brandOwnedCitationRate: 자사 도메인 판별 불가 → Brand AEO Score 20% 가중치가 0으로 잘림
  *   - AI 인용출처 분석 / 인용 갭: 고유 도메인 1개(other 100%)로 수렴해 무의미
  * (실측: k-wonjin 2026-W36 인용 80건 전부가 이 래퍼였다.)
  *
