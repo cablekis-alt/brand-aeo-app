@@ -694,6 +694,27 @@
     "cohortOnly": true
   },
   {
+    "tenantId": "comp-1uiujof",
+    "brandName": "해오름펜션",
+    "aliases": [
+      "해오름펜션",
+      "군산 해오름펜션"
+    ],
+    "ownedDomains": [],
+    "industry": "펜션",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "gemini"
+    ],
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
+    "competitors": [],
+    "factGraph": [],
+    "cohortOnly": true
+  },
+  {
     "tenantId": "e-dream",
     "brandName": "드림성형외과",
     "aliases": [
