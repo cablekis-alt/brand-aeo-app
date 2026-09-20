@@ -18,6 +18,7 @@ import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
 import { getCohortTrend } from './cohortTrend.js';
 import { getEngineTrend } from './engineTrend.js';
+import { getUsageStats } from './usageStats.js';
 import { getRawAnswers } from './rawCallStore.js';
 import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
@@ -813,6 +814,12 @@ app.get('/api/raw-answers/:tenantId/:weekOf', async (req, res) => {
     return;
   }
   res.json(await getRawAnswers(tenant.tenantId, req.params.weekOf, questionId));
+});
+
+// 엔진 사용량 — 호출·토큰·시간. 전체 브랜드 합산이다(API 키를 같이 쓰므로).
+app.get('/api/usage', async (req, res) => {
+  const weeks = Number(req.query.weeks);
+  res.json(await getUsageStats(Number.isFinite(weeks) && weeks > 0 ? weeks : 4));
 });
 
 // 엔진별 언급률 추이 — 엔진별 종합 점수는 재정규화 분모가 달라 비교가 안 된다(engineTrend.ts).

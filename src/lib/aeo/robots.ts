@@ -72,11 +72,22 @@ function agentAllowedForPath(groups: Group[], agent: string, path: string): bool
   return Boolean(allow && allow.length >= disallow.length)
 }
 
+export interface RobotsBot {
+  name: string
+  allowed: boolean
+}
+
 export interface RobotsAiAccess {
   searchBlocked: string[]
   trainingBlocked: string[]
   searchTotal: number
   trainingTotal: number
+  /**
+   * 봇 단위 허용/차단 전체. 점수는 차단 수만 쓰지만 화면은 "무엇이 허용됐는지"도 보여 줘야 한다 —
+   * 차단 목록만 주면 "나머지는 허용"을 사람이 머리로 빼야 하고, 우리가 어떤 봇을 보는지도 안 보인다.
+   */
+  searchBots: RobotsBot[]
+  trainingBots: RobotsBot[]
 }
 
 /**
@@ -93,10 +104,14 @@ export function robotsAiAccess(robotsTxt: string, pageUrl: string): RobotsAiAcce
     path = '/'
   }
   const groups = parseRobotsTxt(robotsTxt)
+  const searchBots = SEARCH_BOTS.map((name) => ({ name, allowed: agentAllowedForPath(groups, name, path) }))
+  const trainingBots = TRAINING_BOTS.map((name) => ({ name, allowed: agentAllowedForPath(groups, name, path) }))
   return {
-    searchBlocked: SEARCH_BOTS.filter((b) => !agentAllowedForPath(groups, b, path)),
-    trainingBlocked: TRAINING_BOTS.filter((b) => !agentAllowedForPath(groups, b, path)),
+    searchBlocked: searchBots.filter((b) => !b.allowed).map((b) => b.name),
+    trainingBlocked: trainingBots.filter((b) => !b.allowed).map((b) => b.name),
     searchTotal: SEARCH_BOTS.length,
     trainingTotal: TRAINING_BOTS.length,
+    searchBots,
+    trainingBots,
   }
 }

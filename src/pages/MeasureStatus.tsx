@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
-import { cancelMeasureRun, loadCiSyncStatus, loadMeasureRuns, runCiSync, type CiSyncSummary, type MeasureRunInfo } from '../lib/api'
+import {
+  cancelMeasureRun,
+  loadCiSyncStatus,
+  loadMeasureRuns,
+  loadUsage,
+  runCiSync,
+  type CiSyncSummary,
+  type MeasureRunInfo,
+  type UsageStats,
+} from '../lib/api'
+import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { useTenant } from '../context/useTenant'
 import { isOpenAction } from '../lib/gapActions'
@@ -39,12 +49,8 @@ interface LocalMeasureLog {
 }
 
 // 엔진 코드 → 표시 라벨. 수집에 실제 성공한 엔진만 기록되므로, 예: ['gemini'] → "Gemini".
-const ENGINE_LABEL: Record<string, string> = {
-  openai: 'ChatGPT',
-  gemini: 'Gemini',
-  claude: 'Claude',
-  perplexity: 'Perplexity',
-}
+// ENGINE_LABEL은 src/lib/format.ts 것을 쓴다. 여기 사본이 따로 있었는데 mock('목(테스트)')이
+// 빠져 있어, 목 엔진으로 돌린 측정이 이 화면에서만 'mock'으로 보였다.
 function fmtEngines(engines?: string[]): string {
   if (!engines || engines.length === 0) return '-'
   return engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
@@ -230,6 +236,23 @@ export default function MeasureStatus() {
   const [enabled, setEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  /*
+   * 엔진 사용량 — 크레딧이 어디로 갔는지. 측정 실행과 같은 화면에 두는 이유는, 돌리기 직전에
+   * "지금까지 얼마나 썼는지"를 보는 자리가 여기이기 때문이다.
+   * 자동 새로고침을 타지 않는다 — 측정 중에 초 단위로 바뀌는 값이 아니고, 파일을 훑는 조회라
+   * 8초마다 부를 이유가 없다.
+   */
+  const [usage, setUsage] = useState<UsageStats | null>(null)
+  useEffect(() => {
+    let alive = true
+    void loadUsage(4).then((v) => {
+      if (alive) setUsage(v)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
   const [auto, setAuto] = useState(true)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [nameMap, setNameMap] = useState<Record<string, string>>({})
@@ -386,6 +409,60 @@ export default function MeasureStatus() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {usage && usage.weeks.length > 0 && (
+        <section style={{ marginTop: '8px' }}>
+          <h3>엔진 사용량</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            모든 브랜드를 합친 값입니다 — API 키를 브랜드마다 따로 쓰지 않으므로 크레딧이 왜 줄었는지는 전체를
+            봐야 답이 나옵니다. <b>비용은 계산하지 않습니다</b>: 모델 단가를 코드에 박으면 단가가 바뀐 뒤에도
+            그대로 거짓을 말하기 때문입니다. 토큰까지만 보여 드립니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>주차</th>
+                  <th>엔진</th>
+                  <th className="num">호출</th>
+                  <th className="num">토큰</th>
+                  <th className="num">호출당 토큰</th>
+                  <th className="num">소요</th>
+                  <th className="num">브랜드</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usage.weeks.map((w) =>
+                  w.byEngine.map((e, i) => (
+                    <tr key={`${w.weekOf}|${e.engine}`}>
+                      {i === 0 && (
+                        <td rowSpan={w.byEngine.length}>
+                          {weekLabel(w.weekOf)}
+                          <span className="sentence-meta" style={{ display: 'block' }}>
+                            합계 {w.calls.toLocaleString()}회 · {w.tokens.toLocaleString()} 토큰
+                          </span>
+                        </td>
+                      )}
+                      <td>{ENGINE_LABEL[e.engine] ?? e.engine}</td>
+                      <td className="num">{e.calls.toLocaleString()}</td>
+                      <td className="num">{e.tokens.toLocaleString()}</td>
+                      <td className="num">
+                        {e.calls > 0 ? Math.round(e.tokens / e.calls).toLocaleString() : '—'}
+                      </td>
+                      <td className="num">{(e.latencyMs / 60000).toFixed(0)}분</td>
+                      <td className="num">{e.tenants}</td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="hint">
+            「호출당 토큰」이 크레딧이 어디로 가는지 말해 줍니다 — 호출 수가 적어도 이 값이 크면 비용은 그쪽이
+            큽니다. 원문 {usage.filesRead}개 파일에서 집계했습니다.
+          </p>
         </section>
       )}
 

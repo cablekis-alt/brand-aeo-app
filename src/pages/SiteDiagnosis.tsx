@@ -14,6 +14,7 @@ import {
   type ResolvedTarget,
 } from '../lib/aeo/resolveTarget'
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
+import { robotsAiAccess, type RobotsAiAccess } from '../lib/aeo/robots'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { inferBrandDomain, saveSiteScore, type TenantSummary } from '../lib/api'
@@ -47,6 +48,16 @@ export default function SiteDiagnosis() {
    * 그래서 건너뛴 이유까지 한 줄로 남긴다.
    */
   const [saveNote, setSaveNote] = useState<{ tone: 'ok' | 'skip' | 'fail'; text: string } | null>(null)
+  /*
+   * 크롤러 접근 현황 — 점수 안에 묻혀 있던 봇 단위 판정을 밖으로 꺼낸다.
+   *
+   * 지금은 「AI 크롤러 접근·색인」 점수(26점)에 반영만 되고, 어떤 봇이 막혔는지는 지적 사항
+   * 문장에서만 스쳐 지나간다. 고객이 가장 먼저 확인해야 할 사실인데 찾아 읽어야 했다.
+   *
+   * 읽기 전용이다. 이건 **고객 사이트의 robots.txt를 읽은 결과**이고 우리가 바꿀 수 없다.
+   * 토글로 그리면 "여기서 끄면 차단된다"로 읽혀 거짓 약속이 된다.
+   */
+  const [robots, setRobots] = useState<RobotsAiAccess | null>(null)
   // 입력 옆에 보여줄 해석 미리보기. 등록 브랜드는 호출 없이 즉시 알 수 있어 타이핑 중에 보여준다.
   // 렌더마다 계산하는 파생값이다(effect로 저장하면 한 박자 늦게 따라온다).
   const typed = url.trim()
@@ -60,6 +71,7 @@ export default function SiteDiagnosis() {
     setResolved(null)
     setError(null)
     setSaveNote(null)
+    setRobots(null)
   }, [tenant?.tenantId])
 
   /**
@@ -125,6 +137,7 @@ export default function SiteDiagnosis() {
     setEntity(null)
     setResolved(null)
     setSaveNote(null)
+    setRobots(null)
 
     setBusy(true)
     try {
@@ -183,6 +196,8 @@ export default function SiteDiagnosis() {
       })
       const evaluated = evaluateAeo(signals, context)
       setReport(evaluated)
+      // 점수와 **같은 함수**로 낸다 — 화면이 따로 계산하면 점수와 다른 말을 할 수 있다.
+      setRobots(robotsAiAccess(signals.robotsTxt, signals.finalUrl || signals.requestedUrl))
       await recordWeeklyScore(target, evaluated)
       // 판정 기준은 **진단한 페이지의 주체 브랜드**다. 드롭다운 선택을 그대로 쓰면 상호를 넣거나
       // 남의 URL을 넣었을 때 짝이 어긋난다(뷰성형외과 페이지를 t'order 기준으로 판정하는 일).
@@ -286,6 +301,48 @@ export default function SiteDiagnosis() {
             </>
           )}
         </p>
+      )}
+      {report && robots && (
+        <section className="crawler-panel">
+          <h3>AI 크롤러 접근</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            이 페이지의 <code>robots.txt</code>를 읽은 결과입니다. <b>읽기 전용</b>이며 여기서 바꿀 수 없습니다 —
+            고객 사이트의 파일이므로 수정은 그쪽에서 해야 합니다. 위 점수의 「AI 크롤러 접근·색인」이 이 판정을
+            그대로 씁니다.
+          </p>
+          <div className="crawler-groups">
+            <div>
+              <p className="crawler-head">
+                답변·검색 봇
+                <span className="muted"> — 라이브 인용·노출을 만듭니다. 여기가 막히면 치명적입니다.</span>
+              </p>
+              <ul className="crawler-list">
+                {robots.searchBots.map((b) => (
+                  <li key={b.name} className={b.allowed ? 'ok' : 'no'}>
+                    <span aria-hidden="true">{b.allowed ? '✓' : '✕'}</span>
+                    {b.name}
+                    <span className="sr-only">{b.allowed ? ' 허용' : ' 차단'}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="crawler-head">
+                학습 봇
+                <span className="muted"> — 차단해도 노출에는 거의 영향이 없습니다.</span>
+              </p>
+              <ul className="crawler-list">
+                {robots.trainingBots.map((b) => (
+                  <li key={b.name} className={b.allowed ? 'ok' : 'no'}>
+                    <span aria-hidden="true">{b.allowed ? '✓' : '✕'}</span>
+                    {b.name}
+                    <span className="sr-only">{b.allowed ? ' 허용' : ' 차단'}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
       )}
       {report && <SiteReportView report={report} />}
       {report && entity && <EntityMatchPanel report={entity} />}

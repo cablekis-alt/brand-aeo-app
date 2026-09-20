@@ -646,6 +646,21 @@ export async function loadRawAnswers(
   )
 }
 
+/** 엔진 사용량(전체 브랜드 합산). 비용은 내려오지 않는다 — 단가를 코드에 박지 않기 때문이다. */
+export interface UsageStats {
+  weeks: {
+    weekOf: string
+    byEngine: { engine: string; calls: number; tokens: number; latencyMs: number; tenants: number }[]
+    calls: number
+    tokens: number
+  }[]
+  filesRead: number
+}
+
+export async function loadUsage(weeks = 4): Promise<UsageStats | null> {
+  return getJson<UsageStats>(`/api/usage?weeks=${weeks}`)
+}
+
 /** 엔진별 언급률 추이. byEngine이 비면 그 주차는 질문 은행을 읽지 못해 분류할 수 없었다는 뜻이다. */
 export interface EngineTrendPoint {
   weekOf: string
