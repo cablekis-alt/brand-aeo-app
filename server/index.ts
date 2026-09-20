@@ -16,6 +16,7 @@ import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
+import { getCohortTrend } from './cohortTrend.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
@@ -775,6 +776,17 @@ app.get('/api/ga-referrals/:tenantId', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// 주차별 코호트 평균 — 추이 그래프의 비교선. 자사는 평균에서 빠진다(cohortTrend.ts).
+app.get('/api/cohort-trend/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const weeks = Number(req.query.weeks);
+  res.json(await getCohortTrend(store, tenant, Number.isFinite(weeks) && weeks > 0 ? Math.min(weeks, 52) : 12));
 });
 
 app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {

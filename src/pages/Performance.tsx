@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { loadCohortTrend, type CohortTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
@@ -27,6 +28,37 @@ export default function Performance() {
     [history, selectedWeek],
   )
   const chartMax = maxScore(history)
+
+  /*
+   * 코호트 평균선 — 막대(자사) 위에 겹쳐 그린다.
+   *
+   * 순위("3/7")만으로는 얼마나 벌어졌는지 알 수 없고, 코호트 전체가 같이 오른 주에 우리만
+   * 제자리여도 순위는 그대로다. 평균선을 겹쳐야 "우리가 오른 것"과 "판이 오른 것"이 갈린다.
+   * 자사는 평균에서 빠진다(서버 cohortTrend.ts) — 코호트가 작아 자기 점수가 기준을 끌어당긴다.
+   */
+  const [trend, setTrend] = useState<{ key: string; value: CohortTrendPoint[] }>({ key: '', value: [] })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadCohortTrend(id).then((v) => {
+      if (alive) setTrend({ key: id, value: v ?? [] })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const cohortAvgOf = useMemo(() => {
+    const map = new Map<string, number>()
+    if (trend.key !== (tenant?.tenantId ?? '')) return map
+    for (const p of trend.value) if (p.avg !== null) map.set(p.weekOf, p.avg)
+    return map
+  }, [trend, tenant?.tenantId])
+  // 평균이 있는 주만 선으로 잇는다. 값이 없는 주를 0으로 채우면 그래프가 거짓말을 한다.
+  const avgPoints = history
+    .map((item, i) => ({ i, avg: cohortAvgOf.get(item.weekOf) }))
+    .filter((p): p is { i: number; avg: number } => p.avg !== undefined)
+  const peerCount = trend.value.find((p) => p.peerCount > 0)?.peerCount ?? 0
   // 판단 엔진이 주차마다 다르면 점수 차이를 "변화"로 읽을 수 없다. 기록이 없는 구버전 카드는
   // 무엇으로 판정했는지 알 수 없으므로 섞였는지 판단에서 제외한다(추측하지 않는다).
   const mixedJudges = useMemo(
@@ -52,22 +84,53 @@ export default function Performance() {
         <>
           <section>
             <h3>주간 추이</h3>
-            <div className="spark" role="img" aria-label="주간 AEO Score 막대 그래프">
+            <div className="spark" role="img" aria-label="주간 AEO Score 막대 그래프와 코호트 평균선">
               {history.map((item) => (
                 <button
                   key={item.weekOf}
                   type="button"
                   className={item.weekOf === card.weekOf ? 'on' : undefined}
                   onClick={() => setSelectedWeek(item.weekOf)}
+                  title={`${weekLabel(item.weekOf)} · 자사 ${item.aeoScore.current}${
+                    cohortAvgOf.has(item.weekOf) ? ` · 코호트 평균 ${cohortAvgOf.get(item.weekOf)}` : ''
+                  }`}
                 >
-                  <span
-                    className="bar"
-                    style={{ height: `${Math.max(8, (item.aeoScore.current / chartMax) * 100)}%` }}
-                  />
+                  <span className="bar-box">
+                    <span
+                      className="bar"
+                      style={{ height: `${Math.max(8, (item.aeoScore.current / chartMax) * 100)}%` }}
+                    />
+                  </span>
                   <abbr title={weekLabel(item.weekOf)}>{item.weekOf.slice(-2)}</abbr>
                 </button>
               ))}
+              {avgPoints.length > 0 && (
+                <svg className="spark-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  {/* 끊긴 구간을 잇지 않으려고 연속한 점끼리만 선분을 긋는다. */}
+                  {avgPoints.slice(1).map((p, k) => {
+                    const prev = avgPoints[k]!
+                    if (p.i !== prev.i + 1) return null
+                    const x = (n: number) => ((n + 0.5) / history.length) * 100
+                    const y = (v: number) => 100 - (v / chartMax) * 100
+                    return (
+                      <line key={p.i} x1={x(prev.i)} y1={y(prev.avg)} x2={x(p.i)} y2={y(p.avg)} className="avg-line" />
+                    )
+                  })}
+                  {avgPoints.map((p) => {
+                    const x = ((p.i + 0.5) / history.length) * 100
+                    const y = 100 - (p.avg / chartMax) * 100
+                    const half = 40 / history.length
+                    return <line key={`t${p.i}`} x1={x - half} y1={y} x2={x + half} y2={y} className="avg-tick" />
+                  })}
+                </svg>
+              )}
             </div>
+            <p className="hint">
+              막대는 <b>자사</b>, 가로선은 <b>코호트 평균</b>입니다
+              {peerCount > 0 ? ` (자사를 뺀 ${peerCount}개 브랜드)` : ''}. 평균선 위로 올라간 주가 실제로 앞선 주입니다
+              — 판 전체가 오른 주에는 점수가 올라도 선을 넘지 못합니다.
+              {avgPoints.length === 0 && ' 이 브랜드의 업종·지역 코호트에 비교할 다른 브랜드가 없어 평균선이 없습니다.'}
+            </p>
           </section>
 
           <section>

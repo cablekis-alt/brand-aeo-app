@@ -600,6 +600,17 @@ export async function findFactsForGaps(
 }
 
 /** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
+/** 주차별 코호트 평균(자사 제외). avg가 null인 주는 비교할 브랜드가 없었다는 뜻이다. */
+export interface CohortTrendPoint {
+  weekOf: string
+  avg: number | null
+  peerCount: number
+}
+
+export async function loadCohortTrend(tenantId: string, weeks = 12): Promise<CohortTrendPoint[] | null> {
+  return getJson<CohortTrendPoint[]>(`/api/cohort-trend/${encodeURIComponent(tenantId)}?weeks=${weeks}`)
+}
+
 /** Site AEO Checker의 주차별 기록. 주차 키는 서버가 정한다(클라이언트 시계를 믿지 않는다). */
 export interface SiteScoreRecord {
   weekOf: string

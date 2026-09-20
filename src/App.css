@@ -1271,11 +1271,59 @@ select {
   cursor: pointer;
 }
 
+/*
+ * 막대 영역을 따로 둔다 — 평균선 SVG를 정확히 같은 상자에 겹치기 위해서다.
+ * 예전에는 막대 높이가 "버튼 전체"의 %였는데, 버튼에는 주차 라벨도 들어 있어
+ * 기준 상자가 달랐다. 선과 막대가 같은 좌표계를 쓰지 않으면 비교가 거짓이 된다.
+ */
+.spark {
+  position: relative;
+}
+
+.spark .bar-box {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 .spark .bar {
   width: 100%;
   max-width: 36px;
   background: var(--accent-soft);
   border: 1px solid var(--line);
+}
+
+/* 라벨 높이를 고정해야 오버레이의 아래 여백(line-height 16 + gap 8)을 계산할 수 있다. */
+.spark abbr {
+  display: block;
+  line-height: 16px;
+}
+
+.spark-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8px;
+  bottom: 24px;
+  width: 100%;
+  height: calc(100% - 32px);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.spark-overlay .avg-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.spark-overlay .avg-tick {
+  stroke: var(--ink);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .spark button.on .bar {
