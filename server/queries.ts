@@ -3,6 +3,7 @@ import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.
 import { analyzeCitationSources, canonicalUrl } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
+import { previousIsoWeek } from './dateUtil.js';
 import type { ResultStore } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 import type { QuestionCategory } from '../src/prompts/types.js';
@@ -255,7 +256,21 @@ export interface RankingView {
   cohort: {
     position: number; // 0이면 해당 주차 코호트 데이터 없음
     totalTenants: number;
-    peers: { tenantId: string; brandName: string; aeoScore: number }[];
+    // 지표를 함께 싣는다 — "몇 위인지"가 아니라 "왜 그 자리인지"를 같은 줄에서 읽기 위해서다.
+    // 값은 각 브랜드의 스코어카드에 이미 있는 것이라 새로 계산하지 않는다.
+    // NOTE: 같은 모양이 src/lib/types.ts에도 있다(화면용). 둘을 함께 고쳐야 한다.
+    peers: {
+      tenantId: string;
+      brandName: string;
+      aeoScore: number;
+      mentionRate: number;
+      brandOwnedCitationRate: number;
+      shareOfMention: number | null;
+      // 전주 순위. 전주에 측정이 없거나 그때 없던 브랜드면 null — 0이나 '보합'으로 적지 않는다.
+      previousRank: number | null;
+    }[];
+    // 변동 계산에 쓴 전주. null이면 비교할 주차가 없다.
+    previousWeekOf: string | null;
   };
   competitorShareOfMention: MentionShare[];
   // 언급 점유를 어느 질문 집합에서 냈는지. 'category-agnostic'이 정상이고, 질문 은행을 못 읽어
@@ -341,8 +356,20 @@ export async function getRankingView(
   tenant: RankingTenant,
   weekOf: string,
 ): Promise<RankingView> {
-  const [cohortScorecards, allAnalyses, bank] = await Promise.all([
+  /*
+   * 전주 코호트도 함께 읽는다 — 리더보드의 순위 변동(▲▼) 때문이다.
+   *
+   * 스코어카드에 박제된 aeoScore.previousWeek로 줄을 세울 수도 있지만 그 값은 측정 시점에
+   * 굳어서, 지난 주를 다시 재면 어긋난다(대시보드에서 +2와 -7이 한 화면에 나온 적이 있다).
+   * 그 주의 카드를 직접 읽어 다시 줄 세우는 편이 정확하다. 전주에 측정이 없으면 변동은
+   * 그냥 없다 — 0으로도 "보합"으로도 적지 않는다.
+   */
+  const prevWeek = previousIsoWeek(weekOf);
+  const [cohortScorecards, prevCohort, allAnalyses, bank] = await Promise.all([
     store.getCohortScorecards(tenant.industry, tenant.region, weekOf),
+    prevWeek
+      ? store.getCohortScorecards(tenant.industry, tenant.region, prevWeek).catch(() => [])
+      : Promise.resolve([]),
     store.getQuestionAnalyses(tenant.tenantId, weekOf),
     store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion),
   ]);
@@ -353,9 +380,32 @@ export async function getRankingView(
   const useScoped = bank !== null && scoped.length > 0;
   const analyses = useScoped ? scoped : allAnalyses;
 
+  // 전주 순위표 — 같은 규칙(AVS 내림차순)으로 세워야 비교가 성립한다.
+  const prevRank = new Map<string, number>();
+  [...prevCohort]
+    .sort((a, b) => b.aeoScore.current - a.aeoScore.current)
+    .forEach((card, i) => prevRank.set(card.tenantId, i + 1));
+
+  /*
+   * 리더보드에 언급률·인용률을 함께 싣는다.
+   *
+   * AVS만 있으면 "우리가 몇 위인지"는 알아도 "왜 그 자리인지"를 모른다. 같은 줄에 지표를
+   * 두면 상위권의 공통점(예: 인용률이 높다)이 눈에 들어와 순위표가 진단이 된다.
+   * 값은 그 브랜드의 스코어카드에 이미 있으므로 새로 계산하지 않는다.
+   */
   const peers = cohortScorecards
-    .map((card) => ({ tenantId: card.tenantId, brandName: card.brandName, aeoScore: card.aeoScore.current }))
-    .sort((a, b) => b.aeoScore - a.aeoScore);
+    .map((card, i) => ({
+      tenantId: card.tenantId,
+      brandName: card.brandName,
+      aeoScore: card.aeoScore.current,
+      mentionRate: card.mentionRate,
+      brandOwnedCitationRate: card.brandOwnedCitationRate,
+      shareOfMention: card.shareOfMention,
+      previousRank: prevRank.get(card.tenantId) ?? null,
+      _i: i,
+    }))
+    .sort((a, b) => b.aeoScore - a.aeoScore)
+    .map(({ _i, ...peer }) => peer);
   const position = peers.findIndex((peer) => peer.tenantId === tenant.tenantId) + 1;
 
   const competitorShareOfMention = shareOfMentionFrom(analyses, tenant.brandName);
@@ -381,7 +431,7 @@ export async function getRankingView(
   });
 
   return {
-    cohort: { position, totalTenants: peers.length, peers },
+    cohort: { position, totalTenants: peers.length, peers, previousWeekOf: prevCohort.length > 0 ? prevWeek : null },
     competitorShareOfMention,
     mentionScope: useScoped ? 'category-agnostic' : 'all',
     topRecommendationRate: top.rate,

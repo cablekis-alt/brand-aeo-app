@@ -2470,3 +2470,32 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
     grid-column: 2 / -1;
   }
 }
+
+/*
+ * 코호트 리더보드 — 순위표가 진단이 되게.
+ *
+ * 자기 줄은 배경으로 표시한다(굵게만 하면 1위 브랜드와 헷갈린다). 숫자 열은 tabular-nums로
+ * 자릿수를 맞춰야 위아래를 눈으로 견줄 수 있다 — 이 표의 목적이 바로 그 비교다.
+ */
+.leaderboard td:nth-child(n + 3) {
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard tbody tr.self {
+  background: var(--accent-soft);
+}
+
+.move-up {
+  color: var(--good);
+}
+.move-down {
+  color: var(--bad);
+}
+
+/* 한 줄 결론 — 표 바로 아래에서 "그래서 뭘 고치나"에 답한다. */
+.rank-verdict {
+  margin: 10px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+  font-size: 14px;
+}

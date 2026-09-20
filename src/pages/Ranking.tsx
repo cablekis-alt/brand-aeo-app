@@ -19,8 +19,68 @@ export default function Ranking() {
 
   if (!tenant) return null
 
-  const maxPeerScore = Math.max(1, ...(ranking?.cohort.peers.map((p) => p.aeoScore) ?? [1]))
   const maxShare = Math.max(0.01, ...(ranking?.competitorShareOfMention.map((c) => c.share) ?? [0.01]))
+
+  /*
+   * 한 줄 결론 — 상위권과 우리 사이의 격차가 **어느 지표에서 나오는지** 짚는다.
+   *
+   * 순위표는 "우리가 4위"까지만 말한다. 그 다음 질문("그래서 뭘 고치나")에 답하려면 상위권이
+   * 우리와 무엇이 다른지를 봐야 하는데, 지금까지는 사람이 표를 읽어 스스로 찾아야 했다.
+   *
+   * 지어내지 않는다: 이미 리더보드에 있는 세 지표만 견주고, 상위권 평균과 우리 값의 차를
+   * 그대로 말한다. 우리가 1위면 격차가 없으므로 다른 문장을 쓴다.
+   */
+  const verdict = (() => {
+    const peers = ranking?.cohort.peers ?? []
+    const me = peers.find((p) => p.tenantId === tenant?.tenantId)
+    if (!me || peers.length < 2) return null
+    const above = peers.filter((p) => p.aeoScore > me.aeoScore)
+    if (above.length === 0) {
+      return { lead: '코호트 1위입니다.', detail: '격차를 좁힐 상대가 없습니다 — 지금 수준을 유지하는 것이 과제입니다.' }
+    }
+    const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+    const gaps = [
+      { label: '언급률', mine: me.mentionRate, theirs: avg(above.map((p) => p.mentionRate)) },
+      {
+        label: '브랜드 소유 출처 인용률',
+        mine: me.brandOwnedCitationRate,
+        theirs: avg(above.map((p) => p.brandOwnedCitationRate)),
+      },
+      // SoM은 null인 브랜드가 섞일 수 있다 — 그런 브랜드를 0으로 치면 평균이 거짓이 되므로 뺀다.
+      ...(me.shareOfMention !== null && above.some((p) => p.shareOfMention !== null)
+        ? [
+            {
+              label: 'Share of Mention',
+              mine: me.shareOfMention,
+              theirs: avg(above.filter((p) => p.shareOfMention !== null).map((p) => p.shareOfMention!)),
+            },
+          ]
+        : []),
+    ]
+    const worst = [...gaps].sort((a, b) => a.mine - a.theirs - (b.mine - b.theirs))[0]!
+    const scoreGap = Math.round((avg(above.map((p) => p.aeoScore)) - me.aeoScore) * 10) / 10
+    const lead = `우리 위 ${above.length}곳의 평균 AVS는 우리보다 ${scoreGap}점 높습니다.`
+    /*
+     * 차이가 없으면 원인이라고 말하지 않는다.
+     *
+     * 실측에서 이 줄이 거짓말을 했다: 원진 W38에서 "가장 벌어진 지표는 언급률 — 상위권 4.7%
+     * 대 우리 4.7%". 같은 값인데 원인으로 지목한 것이다. 리더보드는 다섯 지표 중 셋만 싣기
+     * 때문에, 셋이 비슷하면 격차는 표에 없는 곳(추천 순위·사실성)에서 나온 것이다.
+     * 3%p는 "이 정도는 원인이라 부르지 않는다"는 보수적인 선이다.
+     */
+    const MEANINGFUL_GAP = 0.03
+    if (worst.theirs - worst.mine < MEANINGFUL_GAP) {
+      return {
+        lead,
+        detail:
+          '다만 이 표의 지표에서는 뚜렷한 차이가 없습니다 — 격차는 추천 순위·사실성처럼 여기 없는 항목에서 나옵니다. 브랜드 종합 진단의 점수 구성 막대에서 확인하세요.',
+      }
+    }
+    return {
+      lead,
+      detail: `가장 벌어진 지표는 ${worst.label}입니다 — 상위권 평균 ${formatPct(worst.theirs)} 대 우리 ${formatPct(worst.mine)}.`,
+    }
+  })()
 
   return (
     <>
@@ -56,18 +116,56 @@ export default function Ranking() {
           </section>
 
           <section>
-            <h3>코호트 순위</h3>
-            <ul className="rank-list">
-              {ranking.cohort.peers.map((peer) => (
-                <li key={peer.tenantId} className={`rank-row ${peer.tenantId === tenant.tenantId ? 'self' : ''}`}>
-                  <span className="rank-name">{peer.brandName}</span>
-                  <span className="rank-track">
-                    <span className="rank-fill" style={{ width: `${(peer.aeoScore / maxPeerScore) * 100}%` }} />
-                  </span>
-                  <span className="rank-value">{peer.aeoScore}</span>
-                </li>
-              ))}
-            </ul>
+            <h3>코호트 리더보드</h3>
+            <p className="hint" style={{ marginTop: 0 }}>
+              AVS 순입니다. 지표를 같은 줄에 두면 상위권의 공통점이 보입니다 — 순위보다 <b>그 자리에 있는 이유</b>가
+              고칠 거리를 알려 줍니다.
+            </p>
+            <div className="table-wrap">
+              <table className="leaderboard">
+                <thead>
+                  <tr>
+                    <th>순위</th>
+                    <th>브랜드</th>
+                    <th>AVS</th>
+                    <th>언급률</th>
+                    <th>인용률</th>
+                    <th>변동</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranking.cohort.peers.map((peer, i) => {
+                    const rank = i + 1
+                    // 전주 기록이 없으면 변동을 만들지 않는다 — '보합'으로 적으면 없는 비교를 한 것이 된다.
+                    const move = peer.previousRank == null ? null : peer.previousRank - rank
+                    return (
+                      <tr key={peer.tenantId} className={peer.tenantId === tenant.tenantId ? 'self' : undefined}>
+                        <td>{rank}</td>
+                        <td>
+                          <b>{peer.brandName}</b>
+                        </td>
+                        <td>{peer.aeoScore}</td>
+                        <td>{formatPct(peer.mentionRate)}</td>
+                        <td>{formatPct(peer.brandOwnedCitationRate)}</td>
+                        <td className={move == null ? 'muted' : move > 0 ? 'move-up' : move < 0 ? 'move-down' : 'muted'}>
+                          {move == null ? '—' : move === 0 ? '—' : move > 0 ? `▲${move}` : `▼${-move}`}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {verdict && (
+              <p className="rank-verdict">
+                <b>{verdict.lead}</b> {verdict.detail}
+              </p>
+            )}
+            <p className="hint">
+              {ranking.cohort.previousWeekOf
+                ? `변동은 ${ranking.cohort.previousWeekOf} 대비입니다.`
+                : '전주 측정이 없어 변동을 표시하지 않습니다.'}
+            </p>
           </section>
 
           <section>

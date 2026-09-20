@@ -164,7 +164,22 @@ export interface RankingView {
   cohort: {
     position: number
     totalTenants: number
-    peers: { tenantId: string; brandName: string; aeoScore: number }[]
+    /**
+     * AVS 내림차순. 지표를 함께 싣는 이유는 "몇 위인지"가 아니라 "왜 그 자리인지"를
+     * 같은 줄에서 읽기 위해서다 — 상위권의 공통점이 눈에 들어와야 순위표가 진단이 된다.
+     */
+    peers: {
+      tenantId: string
+      brandName: string
+      aeoScore: number
+      mentionRate: number
+      brandOwnedCitationRate: number
+      shareOfMention: number | null
+      /** 전주 순위. 전주에 측정이 없거나 그때 없던 브랜드면 null — 0이나 '보합'으로 적지 않는다. */
+      previousRank?: number | null
+    }[]
+    /** 변동 계산에 쓴 전주. null이면 비교할 주차가 없다. */
+    previousWeekOf?: string | null
   }
   competitorShareOfMention: MentionShare[]
   /** 언급 점유의 모집단. 'all'은 질문 은행을 못 읽어 전체 응답으로 폴백한 경우. */
