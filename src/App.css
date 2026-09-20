@@ -2589,3 +2589,79 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .month-context tbody tr.self {
   background: var(--accent-soft);
 }
+
+/*
+ * 엔진별 언급률 — 엔진마다 칸을 나눈다(겹쳐 그리지 않는다).
+ *
+ * 선을 겹치면 교차하는 선끼리 색으로 갈라야 하는데, 검증기 기준 안전한 색은 셋까지다.
+ * 게다가 엔진이 주마다 들고 나서 선이 중간에 끊긴다 — 칸을 나누면 안 돈 주가 빈칸으로
+ * 그대로 드러나고, 칸마다 계열이 하나뿐이라 색으로 구분할 일이 없어진다.
+ */
+.engine-facets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.engine-facet {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.facet-name {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.facet-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.facet-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.facet-track {
+  width: 100%;
+  max-width: 40px;
+  height: 48px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.facet-fill {
+  width: 100%;
+  background: var(--accent);
+}
+
+/* 측정하지 않은 주 — 막대를 0으로 그리지 않고 칸을 비운다. */
+.facet-cell.is-empty .facet-track {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--line) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.facet-value {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.facet-cell abbr {
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+}

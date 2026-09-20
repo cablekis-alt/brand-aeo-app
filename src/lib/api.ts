@@ -646,6 +646,17 @@ export async function loadRawAnswers(
   )
 }
 
+/** 엔진별 언급률 추이. byEngine이 비면 그 주차는 질문 은행을 읽지 못해 분류할 수 없었다는 뜻이다. */
+export interface EngineTrendPoint {
+  weekOf: string
+  byEngine: { engine: string; mentionRate: number; answers: number }[]
+  overall: number | null
+}
+
+export async function loadEngineTrend(tenantId: string, weeks = 12): Promise<EngineTrendPoint[] | null> {
+  return getJson<EngineTrendPoint[]>(`/api/engine-trend/${encodeURIComponent(tenantId)}?weeks=${weeks}`)
+}
+
 /** 주차별 코호트 평균(자사 제외). avg가 null인 주는 비교할 브랜드가 없었다는 뜻이다. */
 export interface CohortTrendPoint {
   weekOf: string

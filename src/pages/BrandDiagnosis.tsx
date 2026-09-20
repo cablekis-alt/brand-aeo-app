@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import {
@@ -159,10 +159,19 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
 
 export default function BrandDiagnosis() {
   const { tenant } = useTenant()
+  /*
+   * 다른 화면에서 질문을 지정해 들어올 수 있다(질문별 승패의 「원문 보기」).
+   * 주차는 처음부터 그 값으로 시작하고, 질문은 사용자가 아직 고르지 않았을 때만 쓴다 —
+   * 들어온 뒤 드롭다운을 바꾸면 그 선택이 이긴다.
+   */
+  const [searchParams] = useSearchParams()
+  const paramWeek = searchParams.get('week') ?? ''
+  const paramQuestion = searchParams.get('q') ?? ''
   const { history, weeks, weekOf, setWeekOf, data: analyses, loading } = useWeeklyPage<QuestionRepeatAnalysis[]>(
     loadQuestionAnalyses,
     tenant?.tenantId ?? '',
     [],
+    paramWeek,
   )
 
   // 여정 단계는 질문 은행에 있다. 이 주차를 측정한 버전으로 불러온다 — 현재 버전으로 부르면
@@ -329,7 +338,12 @@ export default function BrandDiagnosis() {
     if (wrong) return wrong.questionId
     return analyses.find((a) => a.mentioned)?.questionId ?? askable[0]?.id ?? ''
   }, [analyses, askable])
-  const activeRawQuestion = rawQuestion && askable.some((q) => q.id === rawQuestion) ? rawQuestion : defaultRawQuestion
+  const activeRawQuestion =
+    rawQuestion && askable.some((q) => q.id === rawQuestion)
+      ? rawQuestion
+      : paramQuestion && askable.some((q) => q.id === paramQuestion)
+        ? paramQuestion
+        : defaultRawQuestion
 
   const [raw, setRaw] = useState<{ key: string; value: RawAnswer[] | null }>({ key: '', value: null })
   const rawKey = tenant && activeRawQuestion ? `${tenant.tenantId}|${weekOf}|${activeRawQuestion}` : ''

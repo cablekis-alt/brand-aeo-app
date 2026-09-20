@@ -17,6 +17,7 @@ import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './fac
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
 import { getCohortTrend } from './cohortTrend.js';
+import { getEngineTrend } from './engineTrend.js';
 import { getRawAnswers } from './rawCallStore.js';
 import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
@@ -812,6 +813,17 @@ app.get('/api/raw-answers/:tenantId/:weekOf', async (req, res) => {
     return;
   }
   res.json(await getRawAnswers(tenant.tenantId, req.params.weekOf, questionId));
+});
+
+// 엔진별 언급률 추이 — 엔진별 종합 점수는 재정규화 분모가 달라 비교가 안 된다(engineTrend.ts).
+app.get('/api/engine-trend/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const weeks = Number(req.query.weeks);
+  res.json(await getEngineTrend(store, tenant, Number.isFinite(weeks) && weeks > 0 ? Math.min(weeks, 52) : 12));
 });
 
 // 주차별 코호트 평균 — 추이 그래프의 비교선. 자사는 평균에서 빠진다(cohortTrend.ts).

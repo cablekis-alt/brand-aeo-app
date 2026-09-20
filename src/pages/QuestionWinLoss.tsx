@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadQuestionAnalyses, loadQuestionBank } from '../lib/api'
@@ -96,7 +97,16 @@ export default function QuestionWinLoss() {
                     <td style={{ maxWidth: 380 }}>
                       {r.text}
                       <span className="sentence-meta" style={{ display: 'block' }}>
-                        {r.questionId} · 응답 {r.responses}건
+                        {r.questionId} · 응답 {r.responses}건{' · '}
+                        {/*
+                          판정만 보여 주고 끝내면 "정말 그런가"를 확인할 길이 없다. 그 질문의
+                          답변 원문으로 바로 보낸다 — 브랜드 종합 진단이 주차·질문을 받아 연다.
+                        */}
+                        <Link
+                          to={`/diagnosis?week=${encodeURIComponent(weekOf)}&q=${encodeURIComponent(r.questionId)}`}
+                        >
+                          원문 보기 →
+                        </Link>
                       </span>
                     </td>
                     <td className="num">

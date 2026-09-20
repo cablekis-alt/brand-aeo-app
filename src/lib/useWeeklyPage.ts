@@ -14,9 +14,10 @@ export function useWeeklyPage<T>(
   loader: (tenantId: string, weekOf: string) => Promise<T>,
   tenantId: string,
   fallback: T,
+  initialWeek = '',
 ) {
   const { history, loading: loadingHistory, error } = useScorecards(tenantId)
-  const [weekOf, setWeekOf] = useWeekSelection(history)
+  const [weekOf, setWeekOf] = useWeekSelection(history, initialWeek)
   const { data, loading: loadingData } = useWeeklyData(loader, tenantId, weekOf, fallback)
 
   return {
