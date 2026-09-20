@@ -4,7 +4,8 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { comparisonFromHistory } from '../lib/citationView'
-import { weekLabel } from '../lib/format'
+import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
+import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
@@ -38,13 +39,59 @@ export default function PeriodicReport() {
   const { tenant } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const [weekOf, setWeekOf] = useWeekSelection(history)
-  const { data: eeat } = useWeeklyData(loadEeat, tenant?.tenantId ?? '', weekOf, EMPTY_EEAT)
 
-  const card = useMemo(() => history.find((h) => h.weekOf === weekOf) ?? history.at(-1) ?? null, [history, weekOf])
-  const report = useMemo(
-    () => (history.length ? buildPeriodicReport(history, weekOf || (history.at(-1)?.weekOf ?? ''), eeat) : null),
-    [history, weekOf, eeat],
+  /*
+   * 주간 / 월간.
+   *
+   * 한 주는 변동이 크다(신뢰구간이 넓은 이유가 그것이다). 고객에게 보내는 문서라면 달 단위가
+   * 더 맞을 때가 많아 두 보기를 둔다.
+   *
+   * 주차를 달에 묶는 기준은 **그 주의 목요일이 든 달**이다(isoWeekMonth). 한 주가 두 달에
+   * 걸칠 때 규칙 없이 나누지 않기 위해서이고, ISO가 주의 연도를 정하는 방식과 같다.
+   *
+   * 중요한 제약: 종합 판정·지표별 진단·개선제안은 **한 주차 스코어카드에서** 나온다.
+   * 지표를 평균 내 다시 판정하면 실제로 측정한 적 없는 주를 판정하는 셈이 된다. 그래서
+   * 월간에서도 판정은 그 달 마지막 주차를 쓰고, 화면이 그렇다고 밝힌다. 타일만 달 단위로
+   * 모은다(평균·합계는 측정값을 모으는 것이지 새로 만드는 것이 아니다).
+   */
+  const [period, setPeriod] = useState<'week' | 'month'>('week')
+  const months = useMemo(() => {
+    const set = new Set<string>()
+    for (const h of history) {
+      const m = isoWeekMonth(h.weekOf)
+      if (m) set.add(m)
+    }
+    return [...set].sort()
+  }, [history])
+  const [monthKey, setMonthKey] = useState('')
+  const activeMonth = monthKey && months.includes(monthKey) ? monthKey : (months.at(-1) ?? '')
+  const weeksInMonth = useMemo(
+    () => history.filter((h) => isoWeekMonth(h.weekOf) === activeMonth),
+    [history, activeMonth],
   )
+  const prevMonth = useMemo(() => {
+    const i = months.indexOf(activeMonth)
+    return i > 0 ? months[i - 1]! : ''
+  }, [months, activeMonth])
+  const weeksInPrevMonth = useMemo(
+    () => (prevMonth ? history.filter((h) => isoWeekMonth(h.weekOf) === prevMonth) : []),
+    [history, prevMonth],
+  )
+
+  /** 판정이 근거로 쓰는 주차 — 월간에서는 그 달의 마지막 주차. */
+  const judgedWeek = period === 'month' ? (weeksInMonth.at(-1)?.weekOf ?? weekOf) : weekOf
+
+  const { data: eeat } = useWeeklyData(loadEeat, tenant?.tenantId ?? '', judgedWeek, EMPTY_EEAT)
+
+  const card = useMemo(
+    () => history.find((h) => h.weekOf === judgedWeek) ?? history.at(-1) ?? null,
+    [history, judgedWeek],
+  )
+  const report = useMemo(
+    () => (history.length ? buildPeriodicReport(history, judgedWeek || (history.at(-1)?.weekOf ?? ''), eeat) : null),
+    [history, judgedWeek, eeat],
+  )
+  const mean = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null)
 
   /*
    * 맨 위 3타일 — 보고서를 판정 문장이 아니라 숫자 셋으로 연다.
@@ -83,29 +130,79 @@ export default function PeriodicReport() {
     return before.length ? (siteScores[before[before.length - 1]!] ?? null) : null
   }, [siteScores, weekOf])
 
-  // 인용 건수는 스코어카드에 없다(비율만 있다). 그 주차 인용 분석에서 총계를 읽어 온다.
+  /*
+   * 인용 건수는 스코어카드에 없다(비율만 있다). 그 주차 인용 분석에서 총계를 읽어 온다.
+   * 월간이면 그 달 주차들의 **합계**다 — 인용은 건수라 더하는 것이 자연스럽고, 평균을 내면
+   * "한 주에 몇 건이었나"가 되어 달 단위 활동량을 말해 주지 못한다.
+   */
+  // 목록을 memo로 잡아 effect 의존성에 그대로 넣는다 — 렌더마다 새 배열이면 effect가 끝없이 돈다.
+  const nowWeeks = useMemo(
+    () => (period === 'month' ? weeksInMonth.map((h) => h.weekOf) : weekOf ? [weekOf] : []),
+    [period, weeksInMonth, weekOf],
+  )
+  const prevWeeks = useMemo(
+    () =>
+      period === 'month'
+        ? weeksInPrevMonth.map((h) => h.weekOf)
+        : comparison?.previousWeekOf
+          ? [comparison.previousWeekOf]
+          : [],
+    [period, weeksInPrevMonth, comparison],
+  )
   const [citations, setCitations] = useState<{ key: string; now: number | null; prev: number | null }>({
     key: '',
     now: null,
     prev: null,
   })
-  const citationKey = tenant ? `${tenant.tenantId}|${weekOf}|${comparison?.previousWeekOf ?? ''}` : ''
+  const citationKey = tenant ? `${tenant.tenantId}|${nowWeeks.join(',')}|${prevWeeks.join(',')}` : ''
   useEffect(() => {
     const id = tenant?.tenantId
-    if (!id || !weekOf) return
+    if (!id || nowWeeks.length === 0) return
     let alive = true
-    const key = `${id}|${weekOf}|${comparison?.previousWeekOf ?? ''}`
-    void Promise.all([
-      loadCitationSources(id, weekOf),
-      comparison?.previousWeekOf ? loadCitationSources(id, comparison.previousWeekOf) : Promise.resolve(null),
-    ]).then(([now, prev]) => {
-      if (alive) setCitations({ key, now: now?.totalCitations ?? null, prev: prev?.totalCitations ?? null })
+    const key = `${id}|${nowWeeks.join(',')}|${prevWeeks.join(',')}`
+    const sum = async (weeks: string[]) => {
+      if (weeks.length === 0) return null
+      const rows = await Promise.all(weeks.map((w) => loadCitationSources(id, w)))
+      // 한 주라도 읽지 못하면 합계를 만들지 않는다 — 빠진 주를 0으로 치면 달이 작아 보인다.
+      if (rows.some((r) => r === null)) return null
+      return rows.reduce((a, r) => a + (r?.totalCitations ?? 0), 0)
+    }
+    void Promise.all([sum(nowWeeks), sum(prevWeeks)]).then(([now, prev]) => {
+      if (alive) setCitations({ key, now, prev })
     })
     return () => {
       alive = false
     }
-  }, [tenant?.tenantId, weekOf, comparison?.previousWeekOf])
+  }, [tenant?.tenantId, citationKey, nowWeeks, prevWeeks])
   const cite = citations.key === citationKey ? citations : { key: '', now: null, prev: null }
+
+  /*
+   * 월간 타일 값.
+   *
+   * Brand 점수는 **평균**이다 — 한 주는 변동이 커서 마지막 주만 보면 그 달을 대표하지 못한다.
+   * Site 점수는 평균을 내지 않는다. 그 시점 페이지 상태를 잰 값이라 평균이 뜻을 갖지 않는다 —
+   * 그 달의 **마지막 진단**을 쓴다.
+   */
+  const monthBrand = mean(weeksInMonth.map((h) => h.aeoScore.current))
+  const prevMonthBrand = mean(weeksInPrevMonth.map((h) => h.aeoScore.current))
+  const monthSite = useMemo(() => {
+    const inMonth = Object.keys(siteScores)
+      .filter((w) => isoWeekMonth(w) === activeMonth)
+      .sort()
+    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
+  }, [siteScores, activeMonth])
+  const prevMonthSite = useMemo(() => {
+    const inMonth = Object.keys(siteScores)
+      .filter((w) => isoWeekMonth(w) === prevMonth)
+      .sort()
+    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
+  }, [siteScores, prevMonth])
+
+  /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
+  const monthEngineSets = useMemo(
+    () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
+    [weeksInMonth],
+  )
 
   if (!tenant) return null
 
@@ -129,7 +226,34 @@ export default function PeriodicReport() {
       {card && report && (
         <>
           <div className="filters no-print">
-            <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+            <div className="axis-tabs" role="tablist" aria-label="보고 기간">
+              {(['week', 'month'] as const).map((k) => (
+                <button
+                  type="button"
+                  key={k}
+                  role="tab"
+                  aria-selected={period === k}
+                  className={`axis-tab${period === k ? ' is-on' : ''}`}
+                  onClick={() => setPeriod(k)}
+                >
+                  {k === 'week' ? '주간' : '월간'}
+                </button>
+              ))}
+            </div>
+            {period === 'week' ? (
+              <WeekPicker weeks={history.map((h) => h.weekOf)} value={weekOf} onChange={setWeekOf} />
+            ) : (
+              <label className="field">
+                <span>월</span>
+                <select value={activeMonth} onChange={(e) => setMonthKey(e.target.value)}>
+                  {months.map((m) => (
+                    <option key={m} value={m}>
+                      {monthLabel(m)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button type="button" className="ghost" onClick={() => window.print()}>
               인쇄 · PDF 저장
             </button>
@@ -143,41 +267,117 @@ export default function PeriodicReport() {
           */}
           <section className="report-tiles">
             <article>
-              <p className="tile-label">Brand AEO Score</p>
+              <p className="tile-label">Brand AEO Score{period === 'month' && ' 월 평균'}</p>
               <p className="tile-value">
-                {card.aeoScore.current}
-                <Delta
-                  now={card.aeoScore.current}
-                  prev={comparison?.comparable ? (prevCard?.aeoScore.current ?? null) : null}
-                />
+                {period === 'month' ? (
+                  monthBrand === null ? (
+                    <span className="muted">—</span>
+                  ) : (
+                    <>
+                      {monthBrand}
+                      <Delta now={monthBrand} prev={prevMonthBrand} />
+                    </>
+                  )
+                ) : (
+                  <>
+                    {card.aeoScore.current}
+                    <Delta
+                      now={card.aeoScore.current}
+                      prev={comparison?.comparable ? (prevCard?.aeoScore.current ?? null) : null}
+                    />
+                  </>
+                )}
               </p>
-              <p className="tile-note">답변에 얼마나 나오는가</p>
+              <p className="tile-note">
+                {period === 'month'
+                  ? `답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
+                  : '답변에 얼마나 나오는가'}
+              </p>
             </article>
             <article>
               <p className="tile-label">Site AEO Score</p>
-              <p className="tile-value">
-                {siteNow ? siteNow.score : <span className="muted">—</span>}
-                {siteNow && <Delta now={siteNow.score} prev={sitePrev?.score ?? null} />}
-              </p>
-              <p className="tile-note">
-                {siteNow
-                  ? sitePrev
-                    ? `페이지 준비도 · ${weekLabel(sitePrev.weekOf)} 대비`
-                    : '페이지 준비도 · 첫 기록'
-                  : 'Site AEO Checker에서 이 주차에 진단한 기록이 없습니다'}
-              </p>
+              {(() => {
+                const now = period === 'month' ? monthSite : siteNow
+                const prev = period === 'month' ? prevMonthSite : sitePrev
+                return (
+                  <>
+                    <p className="tile-value">
+                      {now ? now.score : <span className="muted">—</span>}
+                      {now && <Delta now={now.score} prev={prev?.score ?? null} />}
+                    </p>
+                    <p className="tile-note">
+                      {now
+                        ? prev
+                          ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단 · ${weekLabel(prev.weekOf)} 대비`
+                          : `페이지 준비도 · ${weekLabel(now.weekOf)} 진단 · 첫 기록`
+                        : period === 'month'
+                          ? '이 달에 사이트 진단 기록이 없습니다'
+                          : 'Site AEO Checker에서 이 주차에 진단한 기록이 없습니다'}
+                    </p>
+                  </>
+                )
+              })()}
             </article>
             <article>
-              <p className="tile-label">인용 건수</p>
+              <p className="tile-label">인용 건수{period === 'month' && ' 합계'}</p>
               <p className="tile-value">
                 {cite.now === null ? <span className="muted">—</span> : cite.now.toLocaleString()}
-                {cite.now !== null && <Delta now={cite.now} prev={comparison?.comparable ? cite.prev : null} />}
+                {cite.now !== null && (
+                  <Delta now={cite.now} prev={period === 'month' ? cite.prev : comparison?.comparable ? cite.prev : null} />
+                )}
               </p>
-              <p className="tile-note">엔진이 근거로 끌어온 출처 수</p>
+              <p className="tile-note">
+                엔진이 근거로 끌어온 출처 수{period === 'month' && ` · ${weeksInMonth.length}주 합계`}
+              </p>
             </article>
           </section>
-          {comparison && !comparison.comparable && (
+          {period === 'week' && comparison && !comparison.comparable && (
             <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
+          )}
+
+          {period === 'month' && (
+            <section className="month-context">
+              <p className="eyebrow">{monthLabel(activeMonth)} · 주차 {weeksInMonth.length}개</p>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>주차</th>
+                      <th>Brand AEO Score</th>
+                      <th>카테고리 무관 언급률</th>
+                      <th>수집 엔진</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weeksInMonth.map((h) => (
+                      <tr key={h.weekOf} className={h.weekOf === judgedWeek ? 'self' : undefined}>
+                        <td>{weekLabel(h.weekOf)}</td>
+                        <td>{h.aeoScore.current}</td>
+                        <td>{(h.mentionRate * 100).toFixed(1)}%</td>
+                        <td className="muted">
+                          {(h.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ') || '기록 없음'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/*
+                평균을 한 값처럼 읽으면 안 되는 경우를 밝힌다. 그 달 안에서 수집 엔진이 갈렸으면
+                주차별 점수가 같은 조건에서 나온 값이 아니다.
+              */}
+              {monthEngineSets.length > 1 && (
+                <p className="hint">
+                  ※ 이 달 안에서 수집 엔진이 달랐습니다 — 주차별 점수가 같은 조건에서 나온 값이 아니므로 평균을
+                  하나의 수치처럼 읽지 마세요.
+                </p>
+              )}
+              <p className="hint">
+                아래 <b>종합 판정 · 지표별 진단 · 개선제안</b>은 이 달의 마지막 주차(
+                {weekLabel(judgedWeek)}) 스코어카드에서 나옵니다. 지표를 평균 내 다시 판정하면 실제로 측정한 적 없는
+                주를 판정하게 되므로 그렇게 하지 않습니다.
+              </p>
+            </section>
           )}
 
           <section className={`report-verdict sev-${report.verdict.tone}`}>

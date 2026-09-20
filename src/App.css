@@ -2581,3 +2581,11 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
     font-size: 28px;
   }
 }
+
+/* 월간 보기 — 그 달에 든 주차를 펼쳐 평균이 어디서 나왔는지 보이게 한다. */
+.month-context {
+  margin: 0 0 16px;
+}
+.month-context tbody tr.self {
+  background: var(--accent-soft);
+}
