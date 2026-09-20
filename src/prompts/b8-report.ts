@@ -2,6 +2,30 @@ import type { EeatAnalysis } from './b6-eeat.js';
 import type { CitationSourceAnalysis } from './b7-citation-sources.js';
 import type { PromptMessage } from './types.js';
 
+/**
+ * AVS(Brand AEO Score) 가중치 — **이 값이 유일한 출처다**.
+ *
+ *   Mention 0.25 · Share of Mention 0.25 · Citation 0.20 · Position 0.15 · Factuality 0.15 (합 1.0)
+ *   · Mention/SoM에는 감성 계수를 곱한다
+ *   · EEAT는 점수에 넣지 않고 별도 진단 축으로 둔다
+ *   · SoM/순위가 null(경쟁사·추천문맥 없음)이면 그 가중치를 빼고 남은 합으로 재정규화한다
+ *
+ * 왜 여기(src/prompts)에 두는가 — server와 src가 둘 다 import하는 유일한 지점이기 때문이다.
+ * 예전에는 server/scoring.ts와 src/lib/b9-report.ts가 각자 표를 들고 있었고 값이 갈라졌다
+ * (보고서는 언급률 35%·인용 10%, 실제 계산은 25%·20%). 손으로 베낀 두 번째 표는 언젠가
+ * 반드시 어긋나므로, 값을 복사하지 말고 이 상수를 가져다 쓴다.
+ *
+ * 키는 WeeklyScorecard의 필드명을 따른다 — 지표와 가중치를 잇는 이름이 하나여야
+ * 중간에 손으로 만든 대응표가 끼어들지 않는다.
+ */
+export const AEO_SCORE_WEIGHTS = {
+  mentionRate: 0.25,
+  shareOfMention: 0.25,
+  brandOwnedCitationRate: 0.2,
+  avgRecommendationRank: 0.15,
+  factualityScore: 0.15,
+} as const;
+
 export interface WeeklyScorecard {
   tenantId: string;
   weekOf: string;

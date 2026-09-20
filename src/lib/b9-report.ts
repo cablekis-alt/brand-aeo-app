@@ -1,5 +1,5 @@
 import type { EeatAnalysis } from '../prompts/b6-eeat'
-import type { WeeklyScorecard } from '../prompts/b8-report'
+import { AEO_SCORE_WEIGHTS, type WeeklyScorecard } from '../prompts/b8-report'
 import { formatPct, formatRank } from './format'
 
 // B9 — 주간 스코어카드를 결정적 규칙으로 진단하고 개선제안을 도출한다.
@@ -46,14 +46,6 @@ export interface PeriodicReport {
   variabilityNote: string | null
 }
 
-// 지표별 가중치(AEO Score 계산과 동일). 개선제안 우선순위 산정에 재사용.
-const WEIGHT = {
-  mentionRate: 0.35,
-  shareOfMention: 0.25,
-  avgRecommendationRank: 0.15,
-  factualityScore: 0.15,
-  brandOwnedCitationRate: 0.1,
-}
 
 const SEVERITY: Record<MetricStatus, number> = { bad: 1, warn: 0.6, unknown: 0.5, ok: 0.25, good: 0 }
 
@@ -93,7 +85,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     out.push({
       key: 'mentionRate',
       label: '카테고리 무관 언급률',
-      weight: WEIGHT.mentionRate,
+      weight: AEO_SCORE_WEIGHTS.mentionRate,
       valueText: formatPct(card.mentionRate),
       status: s,
       note:
@@ -111,7 +103,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     out.push({
       key: 'shareOfMention',
       label: 'Share of Mention',
-      weight: WEIGHT.shareOfMention,
+      weight: AEO_SCORE_WEIGHTS.shareOfMention,
       valueText: formatPct(v),
       status: s,
       note:
@@ -132,7 +124,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     out.push({
       key: 'avgRecommendationRank',
       label: '평균 추천 순위',
-      weight: WEIGHT.avgRecommendationRank,
+      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank,
       valueText: formatRank(v),
       status: s,
       note:
@@ -152,7 +144,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     out.push({
       key: 'factualityScore',
       label: '사실성',
-      weight: WEIGHT.factualityScore,
+      weight: AEO_SCORE_WEIGHTS.factualityScore,
       valueText: formatPct(card.factualityScore),
       status: s,
       note:
@@ -171,7 +163,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     out.push({
       key: 'brandOwnedCitationRate',
       label: '브랜드 소유 출처 인용',
-      weight: WEIGHT.brandOwnedCitationRate,
+      weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
       valueText: formatPct(card.brandOwnedCitationRate),
       status: s,
       note:
@@ -212,6 +204,11 @@ const REC_LINKS = {
   onboarding: { label: '브랜드 추가', to: '/brand-onboarding' },
 }
 
+/** 가중치를 문구에 박지 않고 상수에서 만든다 — 손으로 적은 "35%"가 실제 25%와 어긋나 있었다. */
+function pctOf(weight: number): string {
+  return `${Math.round(weight * 100)}%`
+}
+
 function priorityOf(weight: number, status: MetricStatus): Priority {
   const impact = (weight || 0.1) * SEVERITY[status]
   if (impact >= 0.2) return 'high'
@@ -237,7 +234,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '"○○ 지역 추천", "○○ 잘하는 곳" 류의 제3자 비교·추천 글에 포함되도록 노출을 늘립니다.',
         '핵심 페이지에 구조화 데이터(JSON-LD)와 명확한 제목·요약을 넣어 AI가 인용하기 쉽게 만듭니다.',
       ],
-      expected: '가중치 35%로 점수 기여가 가장 큰 지표 — 개선 시 AEO Score 상승 폭이 큽니다.',
+      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.mentionRate)} 지표 — 개선 시 AEO Score 상승 폭이 큽니다.`,
       links: [REC_LINKS.questions, REC_LINKS.sources],
     })
   }
@@ -261,7 +258,9 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
             '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
             '후기·평점 플랫폼과 지역 커뮤니티에서의 노출·언급을 늘려 비교 문맥에서 우위를 확보합니다.',
           ],
-      expected: isUnknown ? '점유율 지표가 활성화되어 진단 정확도가 올라갑니다.' : '가중치 25% 지표 — 비교형 질문에서의 우위가 점수에 직접 반영됩니다.',
+      expected: isUnknown
+        ? '점유율 지표가 활성화되어 진단 정확도가 올라갑니다.'
+        : `가중치 ${pctOf(AEO_SCORE_WEIGHTS.shareOfMention)} 지표 — 비교형 질문에서의 우위가 점수에 직접 반영됩니다.`,
       links: isUnknown ? [REC_LINKS.onboarding] : [REC_LINKS.diagnosis, REC_LINKS.ranking],
     })
   }
@@ -280,7 +279,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '권위 있는 제3자 추천·수상·"1위/베스트" 신호를 확보해 AI가 상위로 인식하도록 합니다.',
         '리뷰 수·평점·최신 후기를 늘려 추천 근거를 강화합니다.',
       ],
-      expected: '가중치 15% 지표 — 추천형 질문 비중이 큰 업종에서 특히 효과적입니다.',
+      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.avgRecommendationRank)} 지표 — 추천형 질문 비중이 큰 업종에서 특히 효과적입니다.`,
       links: [REC_LINKS.ranking],
     })
   }
@@ -317,7 +316,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '인용하기 좋은 "팩트/요약" 페이지를 만들고 llms.txt·구조화 데이터로 접근성을 높입니다.',
         'AI가 실제로 인용 중인 제3자 출처를 파악해 그 출처에 자사 정보가 반영되도록 합니다.',
       ],
-      expected: '가중치 10% 지표지만, 인용 연결은 신뢰·전환에 직접 기여합니다.',
+      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.brandOwnedCitationRate)} 지표이며, 인용 연결은 신뢰·전환에 직접 기여합니다.`,
       links: [REC_LINKS.site, REC_LINKS.citations, REC_LINKS.sources],
     })
   }

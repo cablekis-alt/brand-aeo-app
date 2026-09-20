@@ -4,14 +4,21 @@ import { useTenant } from '../context/useTenant'
 import { formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
-import type { WeeklyScorecard } from '../prompts/b8-report'
+import { AEO_SCORE_WEIGHTS, type WeeklyScorecard } from '../prompts/b8-report'
 
-const WEIGHTS = [
-  { label: '카테고리 무관 언급률 (감성 가중)', weight: '25%' },
-  { label: 'Share of Mention (감성 가중)', weight: '25%' },
-  { label: '브랜드 소유 출처(인용)', weight: '20%' },
-  { label: '추천 순위', weight: '15%' },
-  { label: '사실성', weight: '15%' },
+/*
+ * 설명용 라벨만 여기서 정하고 **퍼센트는 실제 계산에서 파생한다**.
+ *
+ * 예전에는 이 표에 25%/20%를 손으로 적어 두었고, 정기진단 보고서는 자기 표에 35%/10%를
+ * 적어 두었다. 같은 앱의 두 화면이 같은 지표에 다른 가중치를 말했고 보고서 쪽이 틀렸다.
+ * 손으로 베낀 표는 언젠가 어긋나므로 숫자를 적지 않는다.
+ */
+const WEIGHTS: { key: keyof typeof AEO_SCORE_WEIGHTS; label: string }[] = [
+  { key: 'mentionRate', label: '카테고리 무관 언급률 (감성 가중)' },
+  { key: 'shareOfMention', label: 'Share of Mention (감성 가중)' },
+  { key: 'brandOwnedCitationRate', label: '브랜드 소유 출처(인용)' },
+  { key: 'avgRecommendationRank', label: '추천 순위' },
+  { key: 'factualityScore', label: '사실성' },
 ]
 
 function maxScore(history: WeeklyScorecard[]): number {
@@ -200,8 +207,8 @@ export default function Performance() {
             </p>
             <ul className="weights">
               {WEIGHTS.map((item) => (
-                <li key={item.label}>
-                  <strong>{item.weight}</strong>
+                <li key={item.key}>
+                  <strong>{Math.round(AEO_SCORE_WEIGHTS[item.key] * 100)}%</strong>
                   {item.label}
                 </li>
               ))}

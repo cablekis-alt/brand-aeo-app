@@ -1,3 +1,4 @@
+import { AEO_SCORE_WEIGHTS } from '../src/prompts/b8-report.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 
 export function mean(values: number[]): number {
@@ -71,17 +72,6 @@ export function sentimentWeight(s: 'positive' | 'neutral' | 'negative' | string)
   return s === 'positive' ? 1.0 : s === 'negative' ? 0.2 : 0.7;
 }
 
-// AVS(Brand AEO Score) 가중치 — 권장 하이브리드(합 1.0).
-//   Mention 0.25 · Share of Mention 0.25 · Citation 0.20 · Position 0.15 · Factuality 0.15
-//   · Mention/SoM에는 감성 계수를 곱한다  · EEAT는 점수에 넣지 않고 별도 진단 축으로 둔다
-//   · SoM/순위가 null(경쟁사·추천문맥 없음)이면 그 가중치를 빼고 남은 합으로 재정규화.
-export const AEO_SCORE_WEIGHTS = {
-  mentionRate: 0.25,
-  shareOfMention: 0.25,
-  brandOwnedCitation: 0.2,
-  recommendationRank: 0.15,
-  factuality: 0.15,
-};
 
 /** 순위(1=최상위)를 0~1 스코어로 변환. */
 function normalizeRank(rank: number, maxRank = 5): number {
@@ -100,13 +90,13 @@ export function computeAeoScore(inputs: AeoScoreInputs): number {
   const s = inputs.mentionSentiment ?? 1.0;
   const components: { value: number; weight: number }[] = [
     { value: inputs.mentionRate * s, weight: AEO_SCORE_WEIGHTS.mentionRate },
-    { value: inputs.factualityScore, weight: AEO_SCORE_WEIGHTS.factuality },
-    { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitation },
+    { value: inputs.factualityScore, weight: AEO_SCORE_WEIGHTS.factualityScore },
+    { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate },
   ];
   if (inputs.avgRecommendationRank !== null) {
     components.push({
       value: normalizeRank(inputs.avgRecommendationRank),
-      weight: AEO_SCORE_WEIGHTS.recommendationRank,
+      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank,
     });
   }
   if (inputs.shareOfMention !== null) {
