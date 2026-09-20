@@ -2301,3 +2301,52 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   font-size: 14px;
   color: var(--muted);
 }
+
+/*
+ * AI 인지 상태 — 브랜드 종합 진단 맨 위의 세 줄.
+ *
+ * 카드로 감싸지 않고 줄로 둔다. 아래 본문(퍼널·문장 목록·경쟁사 표)이 이미 카드 구조라,
+ * 여기까지 카드로 만들면 "요약"과 "본문"의 위계가 사라진다. 배지를 왼쪽에 세로로 맞춰
+ * 세 줄이 같은 질문("아는가 · 무엇으로 아는가 · 무엇을 틀리게 아는가")임을 형태로 보인다.
+ */
+.recognition {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+}
+
+.recog-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 8px 0;
+}
+
+.recog-row + .recog-row {
+  border-top: 1px solid var(--line);
+}
+
+.recog-row > span {
+  justify-self: start;
+  margin-top: 1px;
+}
+
+.recog-row p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.recog-detail {
+  margin-top: 3px !important;
+  font-size: 13px !important;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .recog-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}
