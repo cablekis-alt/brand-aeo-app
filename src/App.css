@@ -2153,3 +2153,19 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .linklike:hover {
   text-decoration-style: solid;
 }
+
+/*
+ * 히어로의 두 번째 스코어 — Site AEO Score.
+ *
+ * Brand 쪽과 같은 크기로 두면 "무엇이 이 제품의 주 지표인가"가 흐려진다. 반대로 meta 줄에
+ * 섞으면 대비가 사라져 나란히 둔 의미가 없어진다. 한 단계 작게 두어 둘 다 읽히게 한다.
+ */
+.total.secondary {
+  font-size: 16px;
+  margin: -8px 0 16px;
+  color: var(--muted);
+}
+.total.secondary strong {
+  font-size: 32px;
+  color: var(--ink);
+}

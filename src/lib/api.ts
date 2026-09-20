@@ -600,6 +600,47 @@ export async function findFactsForGaps(
 }
 
 /** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
+/** Site AEO Checker의 주차별 기록. 주차 키는 서버가 정한다(클라이언트 시계를 믿지 않는다). */
+export interface SiteScoreRecord {
+  weekOf: string
+  score: number
+  grade: string | null
+  url: string
+  pageTitle: string
+  collectionMode: string
+  categories: { id: string; name: string; score: number | null; maxScore: number }[]
+  measuredAt: string
+}
+
+export async function loadSiteScores(tenantId: string): Promise<Record<string, SiteScoreRecord> | null> {
+  return getJson<Record<string, SiteScoreRecord>>(`/api/site-scores/${encodeURIComponent(tenantId)}`)
+}
+
+/**
+ * 진단 결과를 이번 주 칸에 기록한다. 실패 사유를 문자열로 돌려준다 — 조용히 삼키면
+ * "저장된 줄 알았는데 추이가 안 생기는" 상태가 된다(진단 화면이 그대로 보여 준다).
+ */
+export async function saveSiteScore(
+  tenantId: string,
+  input: Omit<SiteScoreRecord, 'weekOf' | 'measuredAt'>,
+): Promise<{ weekOf: string; scores: Record<string, SiteScoreRecord> } | { error: string }> {
+  try {
+    const res = await fetch(`/api/site-scores/${encodeURIComponent(tenantId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+    const body = (await res.json().catch(() => null)) as
+      | { weekOf?: string; scores?: Record<string, SiteScoreRecord>; error?: string }
+      | null
+    if (!res.ok) return { error: body?.error ?? `저장 실패 (HTTP ${res.status})` }
+    if (!body?.weekOf || !body.scores) return { error: '서버가 저장 결과를 돌려주지 않았습니다.' }
+    return { weekOf: body.weekOf, scores: body.scores }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : '저장 중 오류가 발생했습니다.' }
+  }
+}
+
 export async function saveBrandPageUrl(tenantId: string, url: string): Promise<string> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/brand-page`, {
     method: 'PUT',

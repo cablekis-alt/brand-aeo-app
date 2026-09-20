@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
 import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
 import {
+  findTenantByDomain,
   looksLikeUrl,
   resolveWithoutNetwork,
   subjectBrand,
@@ -14,7 +16,7 @@ import {
 import { evaluateAeo, unevaluableReport } from '../lib/aeo/scoreAeo'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
-import { inferBrandDomain, type TenantSummary } from '../lib/api'
+import { inferBrandDomain, saveSiteScore, type TenantSummary } from '../lib/api'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import type { AeoReport, AuditContext } from '../lib/aeo/types'
 
@@ -37,6 +39,14 @@ export default function SiteDiagnosis() {
   const [entity, setEntity] = useState<EntityMatchReport | null>(null)
   // 입력을 무엇으로 해석했는지(URL/등록 브랜드/추론) — 추론 결과를 조용히 진단하지 않기 위해 표시한다.
   const [resolved, setResolved] = useState<ResolvedTarget | null>(null)
+  /*
+   * 주차 기록 결과 — 진단은 됐는데 기록이 안 된 경우를 화면이 말해야 한다.
+   *
+   * 남의 페이지나 미등록 주소를 진단하는 일이 흔하고(경쟁사 확인), 그건 기록하면 **안 된다**.
+   * 조용히 건너뛰면 "왜 추이가 안 생기지"가 되고, 조용히 저장하면 남의 점수가 우리 추이에 섞인다.
+   * 그래서 건너뛴 이유까지 한 줄로 남긴다.
+   */
+  const [saveNote, setSaveNote] = useState<{ tone: 'ok' | 'skip' | 'fail'; text: string } | null>(null)
   // 입력 옆에 보여줄 해석 미리보기. 등록 브랜드는 호출 없이 즉시 알 수 있어 타이핑 중에 보여준다.
   // 렌더마다 계산하는 파생값이다(effect로 저장하면 한 박자 늦게 따라온다).
   const typed = url.trim()
@@ -49,7 +59,64 @@ export default function SiteDiagnosis() {
     setEntity(null)
     setResolved(null)
     setError(null)
+    setSaveNote(null)
   }, [tenant?.tenantId])
+
+  /**
+   * 이 진단을 어느 브랜드의 이번 주 Site AEO Score로 남길지 정하고 기록한다.
+   *
+   * 주인은 **드롭다운 선택이 아니라 진단한 주소**가 정한다 — subjectBrand가 엔티티 일치에서
+   * 하는 판단과 같은 이유다. 경쟁사 URL을 넣고 진단한 값이 우리 추이에 들어가면 그래프가
+   * 조용히 거짓이 된다. 서버도 같은 검사를 한 번 더 한다(방어선 둘).
+   */
+  async function recordWeeklyScore(target: ResolvedTarget, evaluated: AeoReport) {
+    if (!isElectron) {
+      setSaveNote({ tone: 'skip', text: '주차 기록은 데스크톱 앱에서만 남습니다 — 이 진단은 저장되지 않았습니다.' })
+      return
+    }
+    const owner =
+      target.source === 'tenant' && target.tenantId
+        ? (tenants.find((t) => t.tenantId === target.tenantId) ?? null)
+        : findTenantByDomain(target.url, tenants)
+    if (!owner) {
+      setSaveNote({
+        tone: 'skip',
+        text: '등록된 브랜드의 소유 주소가 아니라 주차 기록에 남기지 않았습니다(진단 결과는 아래에 그대로 있습니다).',
+      })
+      return
+    }
+    // 총점이 없는 진단은 기록하지 않는다 — 0점으로도 중간값으로도 적지 않는다.
+    if (evaluated.overallScore === null) {
+      setSaveNote({ tone: 'skip', text: '총점이 나오지 않아 주차 기록에 남기지 않았습니다.' })
+      return
+    }
+    const saved = await saveSiteScore(owner.tenantId, {
+      score: evaluated.overallScore,
+      grade: evaluated.grade,
+      url: evaluated.url,
+      pageTitle: evaluated.pageTitle,
+      collectionMode: evaluated.collectionMode,
+      categories: evaluated.categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        score: typeof c.score === 'number' ? c.score : null,
+        maxScore: c.maxScore,
+      })),
+    })
+    if ('error' in saved) {
+      setSaveNote({ tone: 'fail', text: `주차 기록에 실패했습니다 — ${saved.error}` })
+      return
+    }
+    const weeks = Object.keys(saved.scores).sort()
+    const prev = weeks.filter((w) => w < saved.weekOf).at(-1)
+    const prevScore = prev ? saved.scores[prev]?.score : undefined
+    const delta =
+      typeof prevScore === 'number' ? ` · 전주(${prev}) ${prevScore}점 대비 ${evaluated.overallScore - prevScore >= 0 ? '+' : ''}${evaluated.overallScore - prevScore}` : ' · 첫 기록이라 비교할 전주가 없습니다'
+    setSaveNote({
+      tone: 'ok',
+      text: `${owner.brandName}의 ${saved.weekOf} Site AEO Score로 기록했습니다${delta}.`,
+    })
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -57,6 +124,7 @@ export default function SiteDiagnosis() {
     setReport(null)
     setEntity(null)
     setResolved(null)
+    setSaveNote(null)
 
     setBusy(true)
     try {
@@ -113,7 +181,9 @@ export default function SiteDiagnosis() {
         rendered: payload.rendered,
         renderWarning: payload.renderWarning,
       })
-      setReport(evaluateAeo(signals, context))
+      const evaluated = evaluateAeo(signals, context)
+      setReport(evaluated)
+      await recordWeeklyScore(target, evaluated)
       // 판정 기준은 **진단한 페이지의 주체 브랜드**다. 드롭다운 선택을 그대로 쓰면 상호를 넣거나
       // 남의 URL을 넣었을 때 짝이 어긋난다(뷰성형외과 페이지를 t'order 기준으로 판정하는 일).
       const subject = subjectBrand(target, tenants, tenant)
@@ -203,6 +273,18 @@ export default function SiteDiagnosis() {
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+      {saveNote && (
+        <p className={saveNote.tone === 'fail' ? 'error' : 'muted'} role={saveNote.tone === 'fail' ? 'alert' : undefined}>
+          {saveNote.tone === 'ok' ? '✓ ' : ''}
+          {saveNote.text}
+          {saveNote.tone === 'ok' && (
+            <>
+              {' '}
+              <Link to="/">대시보드</Link>에서 Brand AEO Score와 나란히 봅니다.
+            </>
+          )}
         </p>
       )}
       {report && <SiteReportView report={report} />}

@@ -15,6 +15,7 @@ import { generateDraft, readDrafts, saveEditedDraft } from './contentDraft.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
+import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
@@ -617,6 +618,67 @@ app.put('/api/tenants/:tenantId/brand-page', async (req, res) => {
     res.json({ ok: true, brandPageUrl: url ?? '' });
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// Site AEO Score의 주차별 기록. 진단 자체는 화면(브라우저)에서 채점하므로 여기서는 받아 적기만 한다.
+app.get('/api/site-scores/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.json(await readSiteScores(tenant.tenantId));
+});
+
+app.put('/api/site-scores/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const body = (req.body ?? {}) as {
+    score?: unknown;
+    grade?: unknown;
+    url?: unknown;
+    pageTitle?: unknown;
+    collectionMode?: unknown;
+    categories?: unknown;
+  };
+  // 총점이 없는 진단(수집 실패 등)은 기록하지 않는다. 0점으로도, 중간값으로도 적지 않는다 —
+  // 읽지 못한 주는 "그 주에 값이 없다"로 남아야 추이가 거짓말을 하지 않는다.
+  if (typeof body.score !== 'number' || !Number.isFinite(body.score)) {
+    res.status(400).json({ error: '총점이 없는 진단은 기록하지 않습니다.' });
+    return;
+  }
+  const url = typeof body.url === 'string' ? body.url.trim() : '';
+  if (!urlBelongsToTenant(url, tenant)) {
+    res.status(400).json({ error: `${tenant.brandName}의 소유 주소가 아닙니다: ${url || '(빈 주소)'}` });
+    return;
+  }
+  const categories = Array.isArray(body.categories)
+    ? body.categories.map((c) => {
+        const r = (c ?? {}) as Record<string, unknown>;
+        return {
+          id: String(r.id ?? ''),
+          name: String(r.name ?? ''),
+          score: typeof r.score === 'number' ? r.score : null,
+          maxScore: typeof r.maxScore === 'number' ? r.maxScore : 0,
+        };
+      })
+    : [];
+  try {
+    const saved = await writeSiteScore(tenant.tenantId, {
+      score: body.score,
+      grade: typeof body.grade === 'string' ? body.grade : null,
+      url,
+      pageTitle: typeof body.pageTitle === 'string' ? body.pageTitle : '',
+      collectionMode: typeof body.collectionMode === 'string' ? body.collectionMode : 'static',
+      categories,
+    });
+    res.json(saved);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 

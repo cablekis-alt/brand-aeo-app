@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
-import { loadRanking } from '../lib/api'
+import { loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import type { PromptedSplit } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -11,6 +11,9 @@ import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 export default function Dashboard() {
   const { tenant } = useTenant()
+  // Site AEO Score의 주차 기록은 로컬 서버에만 있다(Vercel에는 이 라우트가 없다).
+  // 웹에서 "진단하면 쌓입니다"라고 안내하면 지키지 못할 약속이 된다.
+  const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
 
@@ -37,6 +40,36 @@ export default function Dashboard() {
       alive = false
     }
   }, [card])
+  /*
+   * Site AEO Score — 페이지 자체의 준비도. Brand AEO Score와 **다른 것을 잰다**.
+   *
+   * Brand 쪽은 "엔진이 우리를 말하는가", Site 쪽은 "그 페이지가 인용될 만한가"다. 둘을 나란히
+   * 두는 이유는 차이 자체가 진단이기 때문이다 — Site가 높은데 Brand가 낮으면 페이지는 됐고
+   * 권위·인용이 부족한 것이고, 반대면 페이지부터 고쳐야 한다.
+   *
+   * 주차가 스코어카드와 어긋날 수 있다(사이트 진단은 아무 때나 돌린다). 맞추려고 값을
+   * 끌어다 쓰지 않고, 가장 최근 기록을 그 주차와 함께 보여 준다.
+   */
+  const [siteScores, setSiteScores] = useState<{ key: string; value: Record<string, SiteScoreRecord> }>({
+    key: '',
+    value: {},
+  })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadSiteScores(id).then((v) => {
+      if (alive) setSiteScores({ key: id, value: v ?? {} })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const siteWeeks = siteScores.key === (tenant?.tenantId ?? '') ? Object.keys(siteScores.value).sort() : []
+  const siteNow = siteWeeks.length > 0 ? (siteScores.value[siteWeeks[siteWeeks.length - 1]!] ?? null) : null
+  const sitePrev = siteWeeks.length > 1 ? (siteScores.value[siteWeeks[siteWeeks.length - 2]!] ?? null) : null
+  const siteDelta = siteNow && sitePrev ? siteNow.score - sitePrev.score : null
+
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
   const promptedSplit = split.key === splitKey ? split.value : null
   // 전주는 저장된 previousWeek가 아니라 히스토리에서 읽는다. 저장값은 측정 시점에 박제되어,
@@ -149,9 +182,36 @@ export default function Dashboard() {
               {card.brandName} · {weekLabel(card.weekOf)} · {card.industry} · {card.region}
             </p>
             <p className="total">
-              AEO Score <strong>{card.aeoScore.current}</strong>
+              Brand AEO Score <strong>{card.aeoScore.current}</strong>
               <span className={`delta ${delta?.tone}`}>{delta?.text}</span>
             </p>
+            {siteNow ? (
+              <p className="total secondary">
+                Site AEO Score <strong>{siteNow.score}</strong>
+                {siteDelta !== null && (
+                  <span className={`delta ${siteDelta > 0 ? 'up' : siteDelta < 0 ? 'down' : 'flat'}`}>
+                    {siteDelta > 0 ? '+' : ''}
+                    {siteDelta} 전주 대비
+                  </span>
+                )}
+                <span className="muted">
+                  {' '}
+                  · {siteNow.weekOf !== card.weekOf ? `${weekLabel(siteNow.weekOf)} 진단 · ` : ''}
+                  {siteNow.grade ? `${siteNow.grade} · ` : ''}
+                  {siteDelta === null && '첫 기록 · '}
+                  브랜드 페이지 준비도
+                </span>
+              </p>
+            ) : isElectron ? (
+              <p className="muted" style={{ margin: '4px 0 0' }}>
+                Site AEO Score 없음 — <Link to="/site-diagnosis">Site AEO Checker</Link>에서 브랜드 페이지를 진단하면
+                이 자리에 주차별로 쌓입니다.
+              </p>
+            ) : (
+              <p className="muted" style={{ margin: '4px 0 0' }}>
+                Site AEO Score는 데스크톱 앱에서 진단·기록합니다 — 웹에서는 이 자리에 표시되지 않습니다.
+              </p>
+            )}
             <dl className="meta">
               <div>
                 <dt>전주</dt>
