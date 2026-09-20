@@ -129,7 +129,7 @@ npm run electron:pack
 - [x] electron-builder 패키징(설치본/포터블) + 번들 서버 + 정적 서빙
 - [x] **패키징 모드 측정** — userData에 저장·조회, git·tsx 없이 로컬 완결(위 "데이터 위치" 참고)
 - [x] **첫 실행 시드** — 설치 직후 커밋 데이터(코호트·분석)를 userData로 시드(`server/seedFirstRun.ts`)
-- [x] **앱 아이콘** — AIO2O 모노그램(`electron/build/icon.png` 512px → electron-builder가 .ico 변환)
+- [x] **앱 아이콘** — AI O2O 모노그램(`electron/build/icon.png` 512px → electron-builder가 .ico 변환)
 - [x] **코드 서명 지원** — CSC_LINK/CSC_KEY_PASSWORD env로 자동 서명(위 참고)
 
 - [x] **자동 업데이트** — electron-updater(GitHub provider). 저장소 공개 시 실동작

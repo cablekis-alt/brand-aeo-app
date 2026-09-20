@@ -178,7 +178,7 @@ export default function Sidebar() {
       <header className="sidebar-brand">
         <div className="brand-lockup">
           <span className="brand-monogram" aria-hidden="true">
-            AIO2O
+            AI O2O
           </span>
           <span className="brand-names">
             <span className="brand-title">Brand AEO</span>
