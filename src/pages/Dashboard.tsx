@@ -4,6 +4,7 @@ import ChangeAlerts from '../components/ChangeAlerts'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
+import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
 import type { PromptedSplit } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -71,22 +72,47 @@ export default function Dashboard() {
   const siteDelta = siteNow && sitePrev ? siteNow.score - sitePrev.score : null
 
   /*
-   * 두 점수의 관계를 한 줄로 — 숫자만 주고 해석을 사람에게 맡기지 않는다.
+   * 「이번 주 한 줄」 — 숫자를 주기 전에 결론을 먼저 놓는다.
    *
-   * 다만 둘은 서로 다른 것을 재므로 "78-38=40점 차"처럼 뺄셈을 결론으로 내세우지 않는다.
-   * 둘 다 0~100으로 정규화돼 있어 **어느 쪽이 발목을 잡는지**를 읽는 데만 쓴다.
-   * 경계를 20점으로 크게 잡은 것도 같은 이유다 — 근소한 차는 방향을 말해 주지 않는다.
+   * 대시보드는 지금까지 값만 늘어놓고 해석을 사람에게 떠넘겼다. 38이 좋은지 나쁜지,
+   * 여섯 지표 중 어디부터 봐야 하는지는 화면이 말해 주지 않았다.
+   *
+   * 판정은 만들지 않고 **정기진단 보고서의 것을 그대로 쓴다**(buildPeriodicReport).
+   * 같은 브랜드를 두 화면이 다르게 판정하면 둘 다 못 믿게 된다. 종합 판정도, 지표별
+   * 미흡/주의 판정도, 설명 문장도 전부 거기서 온다.
+   *
+   * 'unknown'은 병목으로 내세우지 않는다 — 측정하지 못한 것과 나쁜 것은 다르다.
+   * EEAT는 이 화면에서 불러오지 않아 늘 unknown이므로 특히 그렇다.
    */
-  const scoreReading = (() => {
-    if (!card || !siteNow) return null
-    const gap = siteNow.score - card.aeoScore.current
-    if (gap >= 20) {
-      return '페이지는 인용될 준비가 됐는데 답변에는 그만큼 나오지 않습니다 — 지금 막는 것은 페이지가 아니라 권위·인용일 가능성이 큽니다.'
+  const headline = ((): { tone: MetricStatus; label: string; lead: string; detail: string } | null => {
+    if (!card) return null
+    const report = buildPeriodicReport(history, card.weekOf)
+    if (!report) return null
+    const worst = report.metrics
+      .filter((m) => m.status === 'bad' || m.status === 'warn')
+      .sort((a, b) => b.weight - a.weight)[0]
+    const rank = `코호트 ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position}/${card.cohortRank.totalTenants}`
+    const detail: string[] = []
+    if (worst) detail.push(`가장 발목을 잡는 건 ${worst.label} ${worst.valueText}입니다 — ${worst.note}`)
+    /*
+     * 두 점수의 관계. 서로 다른 것을 재므로 "78-38=40점 차"를 결론으로 내세우지 않고
+     * 어느 쪽이 막고 있는지 방향만 읽는다. 경계를 20점으로 크게 잡은 것도 같은 이유다 —
+     * 근소한 차는 방향을 말해 주지 않는다.
+     */
+    if (siteNow) {
+      const gap = siteNow.score - card.aeoScore.current
+      if (gap >= 20) {
+        detail.push(`페이지 준비도(${siteNow.score})는 충분하니, 지금 막는 것은 페이지가 아니라 권위·인용일 가능성이 큽니다.`)
+      } else if (gap <= -20) {
+        detail.push(`답변 노출에 비해 페이지 준비도(${siteNow.score})가 뒤처집니다 — 페이지를 먼저 고치면 지금의 노출이 더 단단해집니다.`)
+      }
     }
-    if (gap <= -20) {
-      return '답변 노출에 비해 페이지 준비가 뒤처집니다 — 페이지를 먼저 고치면 지금의 노출이 더 단단해집니다.'
+    return {
+      tone: report.verdict.tone,
+      label: report.verdict.label,
+      lead: `${card.aeoScore.current}점 · ${rank}`,
+      detail: detail.join(' '),
     }
-    return '두 축이 비슷한 수준입니다 — 한쪽만 손봐서는 크게 달라지지 않습니다.'
   })()
 
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
@@ -200,6 +226,16 @@ export default function Dashboard() {
             <p className="eyebrow">
               {card.brandName} · {weekLabel(card.weekOf)} · {card.industry} · {card.region}
             </p>
+            {headline && (
+              <div className={`headline st-${headline.tone}`}>
+                <p className="headline-label">이번 주 한 줄</p>
+                <p className="headline-verdict">
+                  <span className={`status-pill st-${headline.tone}`}>{headline.label}</span>
+                  <b>{headline.lead}</b>
+                </p>
+                {headline.detail && <p className="headline-detail">{headline.detail}</p>}
+              </div>
+            )}
             {/*
               두 스코어는 **다른 것을 잰다**. 그래서 나란히 두되 같은 크기로 둔다.
               앞선 판(한 줄에 꼬리표를 줄줄이 이어 붙인 형태)에서는 78이 38보다 커 보여
@@ -249,7 +285,6 @@ export default function Dashboard() {
                 )}
               </article>
             </div>
-            {scoreReading && <p className="score-reading">{scoreReading}</p>}
             {/*
               측정 1주차에는 전주·4주 이동평균·신뢰구간을 감춘다.
               셋 다 "아직 비교할 게 없다"는 같은 말을 세 번 하는 자리다 — 전주는 "—",

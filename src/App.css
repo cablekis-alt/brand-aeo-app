@@ -2264,3 +2264,40 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
     font-size: 36px;
   }
 }
+
+/*
+ * 「이번 주 한 줄」 — 숫자보다 먼저 읽히는 자리.
+ *
+ * 판정 색은 왼쪽 띠로만 준다. 배경을 칠하면 아래 두 스코어 칸과 색이 경쟁해
+ * "어디를 먼저 보라"가 다시 흐려진다. 산만함을 줄이러 넣은 자리가 산만함을 더하면 안 된다.
+ */
+.headline {
+  border-left: 3px solid var(--line);
+  padding: 2px 0 2px 12px;
+  margin: 0 0 16px;
+}
+.headline.st-good { border-left-color: var(--good); }
+.headline.st-warn { border-left-color: var(--accent); }
+.headline.st-bad { border-left-color: var(--bad); }
+
+.headline-label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.headline-verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+.headline-detail {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
