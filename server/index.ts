@@ -17,6 +17,7 @@ import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './fac
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
 import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreStore.js';
 import { getCohortTrend } from './cohortTrend.js';
+import { getRawAnswers } from './rawCallStore.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
@@ -776,6 +777,21 @@ app.get('/api/ga-referrals/:tenantId', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// AI 답변 원문 — 질문 하나의 엔진별 응답. 한 주차 전체는 크므로 질문 단위로만 내려준다.
+app.get('/api/raw-answers/:tenantId/:weekOf', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const questionId = typeof req.query.questionId === 'string' ? req.query.questionId : '';
+  if (!questionId) {
+    res.status(400).json({ error: 'questionId 쿼리가 필요합니다.' });
+    return;
+  }
+  res.json(await getRawAnswers(tenant.tenantId, req.params.weekOf, questionId));
 });
 
 // 주차별 코호트 평균 — 추이 그래프의 비교선. 자사는 평균에서 빠진다(cohortTrend.ts).

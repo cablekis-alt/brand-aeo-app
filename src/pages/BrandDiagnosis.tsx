@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadQuestionAnalyses, loadQuestionBank } from '../lib/api'
+import { loadQuestionAnalyses, loadQuestionBank, loadRawAnswers, type RawAnswer } from '../lib/api'
+import { highlightAnswer, type MarkKind } from '../lib/answerHighlight'
 import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, formatPct, weekLabel } from '../lib/format'
 import { computeGapAnalysis } from '../lib/gapAnalysis'
@@ -203,6 +204,77 @@ export default function BrandDiagnosis() {
     }
   }, [analyses, questions, presentEngines])
 
+  /*
+   * AI 답변 원문 — 판정의 근거를 통째로 보여 준다.
+   *
+   * 지금까지 화면은 판정 결과(언급률·문장 조각)만 보여 줬다. 조각만 보여 주면 "유리한
+   * 부분만 잘라 왔다"는 의심을 산다. 원문은 처음부터 raw-calls.json에 남아 있었는데
+   * 한 번도 띄우지 않았을 뿐이다.
+   *
+   * 질문 하나씩 부른다 — 한 주차 전체는 실측 215KB(71건)라 한 번에 내려받을 이유가 없다.
+   */
+  const askable = useMemo(() => {
+    const has = new Set(analyses.map((a) => a.questionId))
+    const byId = new Map(questions.map((q) => [q.questionId, q]))
+    return [...has]
+      .map((id) => ({ id, text: byId.get(id)?.text ?? id }))
+      .sort((a, b) => a.id.localeCompare(b.id))
+  }, [analyses, questions])
+
+  const [rawQuestion, setRawQuestion] = useState('')
+  // 기본 질문은 **사실 오류가 있는 질문**을 먼저 고른다. 원문을 여는 이유가 대개 그것이다.
+  const defaultRawQuestion = useMemo(() => {
+    const wrong = analyses.find((a) => a.factualityClaims.some((c) => c.verdict === 'contradicted'))
+    if (wrong) return wrong.questionId
+    return analyses.find((a) => a.mentioned)?.questionId ?? askable[0]?.id ?? ''
+  }, [analyses, askable])
+  const activeRawQuestion = rawQuestion && askable.some((q) => q.id === rawQuestion) ? rawQuestion : defaultRawQuestion
+
+  const [raw, setRaw] = useState<{ key: string; value: RawAnswer[] | null }>({ key: '', value: null })
+  const rawKey = tenant && activeRawQuestion ? `${tenant.tenantId}|${weekOf}|${activeRawQuestion}` : ''
+  useEffect(() => {
+    if (!tenant?.tenantId || !activeRawQuestion) return
+    let alive = true
+    const key = `${tenant.tenantId}|${weekOf}|${activeRawQuestion}`
+    void loadRawAnswers(tenant.tenantId, weekOf, activeRawQuestion).then((v) => {
+      if (alive) setRaw({ key, value: v })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId, weekOf, activeRawQuestion])
+  // 로딩은 상태로 들지 않고 키 불일치로 읽는다 — effect 안에서 동기로 setState 하지 않아도 된다.
+  const rawLoading = rawKey !== '' && raw.key !== rawKey
+  const rawAnswers = useMemo(() => (raw.key === rawKey ? (raw.value ?? []) : []), [raw, rawKey])
+
+  const [rawEngine, setRawEngine] = useState<string>('')
+  const rawEngines = useMemo(() => [...new Set(rawAnswers.map((a) => a.engine))], [rawAnswers])
+  const activeRawEngine = rawEngine && rawEngines.includes(rawEngine) ? rawEngine : (rawEngines[0] ?? '')
+  const shown = rawAnswers.find((a) => a.engine === activeRawEngine) ?? null
+
+  /*
+   * 칠할 구간은 전부 **이미 저장된 판정**에서 온다 — 여기서 새로 판단하지 않는다.
+   * 원문에서 그 문자열을 못 찾으면 칠하지 않고 몇 개를 못 찾았는지 화면이 밝힌다.
+   */
+  const marked = useMemo(() => {
+    if (!shown) return null
+    const judged = analyses.find(
+      (a) => a.questionId === activeRawQuestion && a.engine === activeRawEngine && a.callIndex === shown.callIndex,
+    )
+    const needles: { text: string; kind: MarkKind }[] = []
+    if (judged) {
+      for (const c of judged.factualityClaims) {
+        if (c.verdict !== 'contradicted') continue
+        needles.push({ text: c.responseValue || c.claimText, kind: 'wrong' })
+      }
+      for (const m of judged.mentionSentences) needles.push({ text: m.sentence, kind: 'mention' })
+      for (const c of judged.competitorMentions) {
+        for (const m of c.sentences) needles.push({ text: m.sentence, kind: 'competitor' })
+      }
+    }
+    return { ...highlightAnswer(shown.rawText, needles), needles: needles.length, judged: Boolean(judged) }
+  }, [shown, analyses, activeRawQuestion, activeRawEngine])
+
   function toggleEngine(engine: Engine) {
     setEngineFilter((current) => (current.includes(engine) ? current.filter((e) => e !== engine) : [...current, engine]))
   }
@@ -367,6 +439,91 @@ export default function BrandDiagnosis() {
                 )}
             </ul>
           </section>
+
+          {askable.length > 0 && (
+            <section>
+              <h3>AI 답변 원문</h3>
+              <p className="hint" style={{ marginTop: 0 }}>
+                위 문장들이 어디서 나왔는지 원문 그대로 봅니다. 칠해진 부분은 <b>이미 판정된 것만</b>이며,
+                화면이 새로 판단하지 않습니다.
+              </p>
+
+              <div className="filters">
+                <label className="field">
+                  <span>질문</span>
+                  <select value={activeRawQuestion} onChange={(e) => setRawQuestion(e.target.value)}>
+                    {askable.map((q) => (
+                      <option key={q.id} value={q.id}>
+                        {q.id} · {q.text.length > 48 ? `${q.text.slice(0, 48)}…` : q.text}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {rawLoading && <p className="muted">원문을 불러오는 중…</p>}
+              {!rawLoading && rawAnswers.length === 0 && (
+                <p className="muted">
+                  이 주차에는 저장된 원문이 없습니다 — 옛 측정이거나 데모 데이터입니다(원문은 데스크톱 앱에서만
+                  읽습니다).
+                </p>
+              )}
+
+              {rawAnswers.length > 0 && (
+                <>
+                  <div className="axis-tabs" role="tablist" aria-label="엔진">
+                    {rawEngines.map((e) => (
+                      <button
+                        type="button"
+                        key={e}
+                        role="tab"
+                        aria-selected={activeRawEngine === e}
+                        className={`axis-tab${activeRawEngine === e ? ' is-on' : ''}`}
+                        onClick={() => setRawEngine(e)}
+                      >
+                        {ENGINE_LABEL[e] ?? e}
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="legend">
+                    <span className="hl hl-wrong">사실 오류</span>
+                    <span className="hl hl-mention">브랜드 언급</span>
+                    <span className="hl hl-competitor">경쟁사 언급</span>
+                    {marked && marked.missed > 0 && (
+                      <span className="muted">
+                        · 판정 {marked.needles}건 중 {marked.missed}건은 원문에서 그 문구를 찾지 못해 칠하지
+                        않았습니다
+                      </span>
+                    )}
+                    {marked && !marked.judged && <span className="muted">· 이 회차의 판정 레코드가 없습니다</span>}
+                  </p>
+
+                  {shown && (
+                    <>
+                      <pre className="raw-answer">
+                        {marked?.segments.map((seg, i) =>
+                          seg.kind ? (
+                            <mark key={i} className={`hl hl-${seg.kind}`}>
+                              {seg.text}
+                            </mark>
+                          ) : (
+                            <span key={i}>{seg.text}</span>
+                          ),
+                        )}
+                      </pre>
+                      <p className="muted" style={{ fontSize: 13 }}>
+                        {ENGINE_LABEL[shown.engine] ?? shown.engine} · {shown.callIndex}회차
+                        {shown.usedWebSearch ? ' · 웹검색 사용' : ' · 웹검색 없음'}
+                        {typeof shown.latencyMs === 'number' && ` · ${(shown.latencyMs / 1000).toFixed(1)}초`}
+                        {shown.citations.length > 0 && ` · 인용 ${shown.citations.length}건`}
+                      </p>
+                    </>
+                  )}
+                </>
+              )}
+            </section>
+          )}
 
           <section>
             <h3>경쟁사 언급 비교</h3>

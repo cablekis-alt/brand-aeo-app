@@ -600,6 +600,27 @@ export async function findFactsForGaps(
 }
 
 /** 브랜드 페이지 주소를 저장한다. 빈 문자열을 넘기면 지워져 소유 도메인 루트로 되돌아간다. */
+/** 저장된 AI 답변 원문. 질문 하나 단위로만 받는다(한 주차 전체는 실측 215KB). */
+export interface RawAnswer {
+  engine: string
+  callIndex: number
+  rawText: string
+  citations: string[]
+  usedWebSearch: boolean
+  latencyMs?: number
+  calledAt: string
+}
+
+export async function loadRawAnswers(
+  tenantId: string,
+  weekOf: string,
+  questionId: string,
+): Promise<RawAnswer[] | null> {
+  return getJson<RawAnswer[]>(
+    `/api/raw-answers/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}?questionId=${encodeURIComponent(questionId)}`,
+  )
+}
+
 /** 주차별 코호트 평균(자사 제외). avg가 null인 주는 비교할 브랜드가 없었다는 뜻이다. */
 export interface CohortTrendPoint {
   weekOf: string

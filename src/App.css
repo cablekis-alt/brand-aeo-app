@@ -2350,3 +2350,51 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
     gap: 6px;
   }
 }
+
+/*
+ * AI 답변 원문 — 판정의 근거를 통째로 보여 주는 자리.
+ *
+ * pre를 쓰되 줄바꿈은 접는다(pre-wrap). 엔진 답변에는 마크다운 목록·줄바꿈이 그대로
+ * 들어 있어 원문 형태를 지켜야 "우리가 손대지 않았다"가 보인다. 다만 가로 스크롤은
+ * 만들지 않는다 — 긴 URL 하나 때문에 본문 전체가 옆으로 새면 읽을 수 없다.
+ */
+.raw-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  background: var(--surface-2, transparent);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 0 0 8px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+/* 하이라이트 — 범례와 본문이 같은 클래스를 쓴다(색이 갈라지지 않게). */
+.hl {
+  border-radius: 3px;
+  padding: 1px 3px;
+  color: inherit;
+}
+.hl-wrong {
+  background: color-mix(in srgb, var(--bad) 26%, transparent);
+  box-shadow: inset 0 -1px 0 var(--bad);
+}
+.hl-mention {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.hl-competitor {
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
