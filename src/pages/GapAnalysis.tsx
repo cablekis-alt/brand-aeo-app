@@ -17,8 +17,17 @@ const VERDICT: Record<GapVerdict, { label: string; cls: string }> = {
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
 /** 묶음 하나를 카드로. 카테고리·엔진이 같은 모양을 쓴다. */
+/**
+ * 묶음 카드 — 기본은 얇게, 밀린 질문은 눌러야 펼친다.
+ *
+ * 네 축이 모두 이 카드를 쓰기 때문에 한 장이 두꺼우면 화면 전체가 두꺼워진다(원진 W38 실측:
+ * 카드 17장 · 약 5화면). 위 요약 표가 "어느 축의 무엇을 볼지"를 이미 정해 주므로, 아래 카드는
+ * 눈으로 훑을 수 있을 만큼 얇아야 하고 자세한 근거는 필요한 카드에서만 열면 된다.
+ * 인용 갭 분석의 도메인 펼치기와 같은 방식이다.
+ */
 function GroupCard({ group, nameOf }: { group: GapGroup; nameOf?: (key: string) => string }) {
   const v = VERDICT[group.verdict]
+  const [open, setOpen] = useState(false)
   return (
     <article className="gap-card">
       <div className="gap-card-head">
@@ -43,11 +52,24 @@ function GroupCard({ group, nameOf }: { group: GapGroup; nameOf?: (key: string) 
         {group.loss > 0 && <i className="l" style={{ flexGrow: group.loss }} />}
         {group.unanswered > 0 && <i className="u" style={{ flexGrow: group.unanswered }} />}
       </div>
-      <p className="gap-tally">
-        질문 {group.questions}개 · 승 {group.win} · 무 {group.even} · 패 {group.loss}
-        {group.unanswered > 0 && ` · 무응답 ${group.unanswered}`}
-      </p>
-      {group.worst.length > 0 && (
+      {group.worst.length > 0 ? (
+        <button
+          type="button"
+          className="gap-more-toggle"
+          onClick={() => setOpen((v2) => !v2)}
+          aria-expanded={open}
+          title="이 묶음에서 밀린 질문과 누구에게 밀렸는지"
+        >
+          {open ? '▾' : '▸'} 질문 {group.questions}개 · 승 {group.win} 무 {group.even} 패 {group.loss}
+          {group.unanswered > 0 && ` · 무응답 ${group.unanswered}`}
+        </button>
+      ) : (
+        <p className="gap-tally">
+          질문 {group.questions}개 · 승 {group.win} · 무 {group.even} · 패 {group.loss}
+          {group.unanswered > 0 && ` · 무응답 ${group.unanswered}`}
+        </p>
+      )}
+      {open && group.worst.length > 0 && (
         <ul className="gap-worst">
           {group.worst.map((r) => (
             <li key={r.questionId}>
@@ -99,15 +121,15 @@ export default function GapAnalysis() {
   const topCompetitor = gap.competitors[0] ?? null
 
   /*
-   * 축별로 "가장 아픈 것" 한 줄씩.
+   * 축별로 "가장 많이 밀리는 것" 한 줄씩 — 언급률이 낮고 패 판정이 많은 묶음이다.
    *
    * 아래 본문은 네 축이 전부 같은 모양의 카드 그리드다(원진 W38 실측: 카드 17장·3.9화면).
    * 그러면 어느 줄이 중요한지 화면이 말해 주지 않아, 사람이 17장을 읽어 스스로 찾아야 한다.
    * 여기서 축마다 하나씩만 뽑아 같은 형식으로 세워 둔다 — 아래 카드는 근거를 보러 가는 곳이 된다.
    *
    * 고르는 기준은 아래 정렬과 같다: 카테고리·엔진은 '격차'로 판정된 첫 묶음, 여정·주제는
-   * 이미 아픈 순(byPain)으로 정렬돼 있으므로 맨 앞. 여정은 순서가 여정 순(탐색→비교→결정)이라
-   * 따로 언급률 최저를 고른다 — 그 배열의 맨 앞은 '가장 아픈 것'이 아니다.
+   * 이미 밀리는 순(byPain)으로 정렬돼 있으므로 맨 앞. 여정은 순서가 여정 순(탐색→비교→결정)이라
+   * 따로 언급률 최저를 고른다 — 그 배열의 맨 앞은 '가장 많이 밀리는 것'이 아니다.
    */
   const worstStage = gap.byStage.length > 0
     ? [...gap.byStage].sort((a, b) => a.mentionRate - b.mentionRate)[0]
@@ -155,7 +177,7 @@ export default function GapAnalysis() {
       {ready && (
         <>
           <section className="hero-card">
-            <p className="eyebrow">가장 아픈 곳</p>
+            <p className="eyebrow">가장 많이 밀리는 곳</p>
             {painRows.length > 0 ? (
               <>
                 <div className="table-wrap">
@@ -163,7 +185,7 @@ export default function GapAnalysis() {
                     <thead>
                       <tr>
                         <th>축</th>
-                        <th>가장 아픈 묶음</th>
+                        <th>가장 많이 밀리는 묶음</th>
                         <th>언급률</th>
                         <th>승·패</th>
                       </tr>
@@ -239,7 +261,7 @@ export default function GapAnalysis() {
               <h3>주제별</h3>
               <p className="hint" style={{ marginTop: 0 }}>
                 카테고리가 질문의 <b>형태</b>, 여정이 고객의 <b>위치</b>라면 주제는 <b>내용</b>입니다. 보강할
-                콘텐츠를 정하는 축이라 아픈 순으로 놓았습니다.
+                콘텐츠를 정하는 축이라 많이 밀리는 순으로 놓았습니다.
                 {gap.topicMissingCount > 0 &&
                   ` 질문 ${gap.topicMissingCount}개는 은행에 주제가 없어 어느 묶음에도 들어가지 않았습니다 — 질문 프롬프트 빌더에서 "주제 매기기"를 실행하세요.`}
               </p>

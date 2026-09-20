@@ -1524,7 +1524,7 @@ export default function BrandOnboarding() {
                 측정을 미뤘습니다. <b>지금도 글은 쓸 수 있습니다</b> —{' '}
                 <Link to="/questions">질문 프롬프트 빌더</Link>에서 질문을 골라 바로 초안까지 갑니다. 측정은 그 질문
                 중 <b>어느 것에서 밀리는지</b>를 알려 주므로, 나중에 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
-                에서 돌리면 실행 항목이 아픈 순서대로 채워집니다.
+                에서 돌리면 실행 항목이 많이 밀리는 순서대로 채워집니다.
               </p>
             )}
             {measureMsg && (

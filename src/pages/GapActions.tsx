@@ -513,7 +513,7 @@ function ActionCard({
             // 몇 줄만 보인다는 걸 밝힌다. 글은 여기 안 보이는 것까지 답한다 — 예전에는 이 자르기가
             // 브리프에도 그대로 가서 나머지가 조용히 빠졌다.
             <p className="doc-meta" style={{ margin: '2px 0 0' }}>
-              아픈 순으로 {PREVIEW_QUESTIONS}개만 보입니다. 글은 {action.questionTexts.length}개 전부에 답합니다.
+              많이 밀리는 순으로 {PREVIEW_QUESTIONS}개만 보입니다. 글은 {action.questionTexts.length}개 전부에 답합니다.
             </p>
           )}
         </>
