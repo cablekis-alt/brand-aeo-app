@@ -2733,3 +2733,16 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/*
+ * 표에서 위치가 아니라 내용으로 정렬을 정하는 칸.
+ *
+ * 기본 규칙은 `td:not(:first-child) { text-align: right }`이라 **몇 번째 칸인지**로 정렬이
+ * 정해진다. rowSpan이 있으면 줄마다 칸 개수가 달라 같은 열이 줄에 따라 좌/우로 갈린다 —
+ * 엔진 사용량 표에서 주차 셀이 rowSpan이라 둘째 줄부터 엔진이 첫 칸이 되어 왼쪽으로 붙었다.
+ * 글자 열에는 이 클래스를 직접 붙여 위치와 무관하게 왼쪽으로 고정한다.
+ */
+.cell-text {
+  text-align: left !important;
+  white-space: nowrap;
+}

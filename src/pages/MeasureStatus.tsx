@@ -425,7 +425,7 @@ export default function MeasureStatus() {
               <thead>
                 <tr>
                   <th>주차</th>
-                  <th>엔진</th>
+                  <th className="cell-text">엔진</th>
                   <th className="num">호출</th>
                   <th className="num">토큰</th>
                   <th className="num">호출당 토큰</th>
@@ -438,14 +438,14 @@ export default function MeasureStatus() {
                   w.byEngine.map((e, i) => (
                     <tr key={`${w.weekOf}|${e.engine}`}>
                       {i === 0 && (
-                        <td rowSpan={w.byEngine.length}>
+                        <td className="cell-text" rowSpan={w.byEngine.length}>
                           {weekLabel(w.weekOf)}
                           <span className="sentence-meta" style={{ display: 'block' }}>
                             합계 {w.calls.toLocaleString()}회 · {w.tokens.toLocaleString()} 토큰
                           </span>
                         </td>
                       )}
-                      <td>{ENGINE_LABEL[e.engine] ?? e.engine}</td>
+                      <td className="cell-text">{ENGINE_LABEL[e.engine] ?? e.engine}</td>
                       <td className="num">{e.calls.toLocaleString()}</td>
                       <td className="num">{e.tokens.toLocaleString()}</td>
                       <td className="num">
