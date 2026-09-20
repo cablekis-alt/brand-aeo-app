@@ -18,6 +18,7 @@ import { computeQuestionWinLoss } from '../lib/questionWinLoss'
 import { STAGE_LABEL, type JourneyStage } from '../lib/journeyStage'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { QuestionRepeatAnalysis } from '../lib/types'
+import { AEO_SCORE_WEIGHTS, normalizeRank, type WeeklyScorecard } from '../prompts/b8-report'
 import type { Engine, QuestionSpec } from '../prompts/types'
 
 const SENTIMENT_LABEL: Record<string, string> = { positive: '긍정', neutral: '중립', negative: '부정' }
@@ -61,6 +62,98 @@ function StageFunnel({
         )
       })}
     </div>
+  )
+}
+
+/**
+ * 점수 구성 막대 — 38점이 **어디서 깎였는지**를 한눈에 본다.
+ *
+ * 대시보드는 같은 값을 카드 여섯 장으로 보여 주지만, 카드는 서로 비교가 안 된다.
+ * 어느 항목이 점수를 끌어내리는지 알려면 숫자 여섯 개를 머리로 견줘야 한다. 막대는
+ * 그 비교를 눈이 대신한다.
+ *
+ * 막대 길이는 **점수에 실제로 들어가는 값**이다. 추천 순위는 비율이 아니라 낮을수록 좋아서
+ * 원값을 그대로 그리면 "6.4위"에 긴 막대가 붙는다 — 점수와 정반대 그림이 된다. 그래서
+ * 점수 계산과 같은 normalizeRank를 쓰고, 라벨에는 사람이 아는 원값(6.4위)을 적는다.
+ *
+ * 측정 불가(null)는 막대를 그리지 않는다. 0으로 그리면 "최악"으로 보이는데 실제로는
+ * 그 항목을 빼고 남은 가중치로 재정규화해 점수를 낸다 — 다른 얘기다.
+ */
+function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
+  const rows: { key: string; letter: string; label: string; weight: number; value: number | null; text: string }[] = [
+    {
+      key: 'm',
+      letter: 'M',
+      label: '카테고리 무관 언급률',
+      weight: AEO_SCORE_WEIGHTS.mentionRate,
+      value: card.mentionRate,
+      text: formatPct(card.mentionRate),
+    },
+    {
+      key: 's',
+      letter: 'S',
+      label: 'Share of Mention',
+      weight: AEO_SCORE_WEIGHTS.shareOfMention,
+      value: card.shareOfMention,
+      text: card.shareOfMention === null ? '측정 불가' : formatPct(card.shareOfMention),
+    },
+    {
+      key: 'c',
+      letter: 'C',
+      label: '브랜드 소유 출처',
+      weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
+      value: card.brandOwnedCitationRate,
+      text: formatPct(card.brandOwnedCitationRate),
+    },
+    {
+      key: 'p',
+      letter: 'P',
+      label: '평균 추천 순위',
+      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank,
+      value: card.avgRecommendationRank === null ? null : normalizeRank(card.avgRecommendationRank),
+      text: card.avgRecommendationRank === null ? '판정 불가' : `${card.avgRecommendationRank.toFixed(1)}위`,
+    },
+    {
+      key: 'f',
+      letter: 'F',
+      label: '사실성',
+      weight: AEO_SCORE_WEIGHTS.factualityScore,
+      value: card.factualityScore,
+      text: formatPct(card.factualityScore),
+    },
+  ]
+  const missing = rows.filter((r) => r.value === null)
+  return (
+    <section className="score-breakdown">
+      <p className="eyebrow">Brand AEO Score · {weekLabel(card.weekOf)}</p>
+      <p className="breakdown-total">
+        <strong>{card.aeoScore.current}</strong>
+        <span className="muted">점 — 아래 다섯 항목을 가중 평균한 값입니다</span>
+      </p>
+      <ul className="breakdown-rows">
+        {rows.map((r) => (
+          <li key={r.key}>
+            <span className="bd-letter" aria-hidden="true">
+              {r.letter}
+            </span>
+            <span className="bd-label">
+              {r.label}
+              <span className="muted"> {Math.round(r.weight * 100)}%</span>
+            </span>
+            <span className="bd-bar">
+              {r.value !== null && <span style={{ width: `${Math.round(r.value * 100)}%` }} />}
+            </span>
+            <span className={`bd-value${r.value === null ? ' muted' : ''}`}>{r.text}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="hint" style={{ marginBottom: 0 }}>
+        막대는 점수에 실제로 들어가는 값입니다 — 추천 순위는 낮을수록 좋아 0~1로 환산해 그립니다.
+        M·S에는 감성 계수가 곱해집니다.
+        {missing.length > 0 &&
+          ` ${missing.map((r) => r.letter).join('·')}는 측정할 수 없어 그 가중치를 빼고 남은 합으로 재정규화했습니다 — 0점으로 치지 않습니다.`}
+      </p>
+    </section>
   )
 }
 
@@ -305,6 +398,8 @@ export default function BrandDiagnosis() {
   }, [tenant?.tenantId, weekOf])
   const discovery = found.key === foundKey ? found.value : null
   const [showAllFound, setShowAllFound] = useState(false)
+  // 점수 구성 막대가 쓸 스코어카드 — 주차 선택과 같은 주를 본다.
+  const scoreCard = useMemo(() => history.find((h) => h.weekOf === weekOf) ?? null, [history, weekOf])
 
   function toggleEngine(engine: Engine) {
     setEngineFilter((current) => (current.includes(engine) ? current.filter((e) => e !== engine) : [...current, engine]))
@@ -323,6 +418,8 @@ export default function BrandDiagnosis() {
           : '(질문 × 엔진 × 반복)'}{' '}
         중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.
       </p>
+
+      {scoreCard && <ScoreBreakdown card={scoreCard} />}
 
       {recognition && (
         <section className="recognition" aria-label="AI 인지 상태">

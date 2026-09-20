@@ -26,6 +26,16 @@ export const AEO_SCORE_WEIGHTS = {
   factualityScore: 0.15,
 } as const;
 
+/**
+ * 추천 순위(1=최상위)를 0~1로. 점수 계산과 화면 막대가 **같은 함수**를 써야 한다.
+ *
+ * 순위는 낮을수록 좋고 비율이 아니라서, 화면이 따로 계산하면 "6.4위"에 긴 막대를 그리는
+ * 식으로 점수와 반대되는 그림이 나온다. 가중치 표가 갈라졌던 것과 같은 종류의 사고다.
+ */
+export function normalizeRank(rank: number, maxRank = 5): number {
+  return Math.max(0, (maxRank - rank + 1) / maxRank);
+}
+
 export interface WeeklyScorecard {
   tenantId: string;
   weekOf: string;

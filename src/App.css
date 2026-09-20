@@ -2398,3 +2398,75 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   margin: 0 0 8px;
   font-size: 13px;
 }
+
+/*
+ * 점수 구성 막대 — 어느 항목이 점수를 끌어내리는지 눈으로 견준다.
+ *
+ * 대시보드의 카드 여섯 장과 같은 값이지만 역할이 다르다. 카드는 값을 읽는 곳이고
+ * 여기는 비교하는 곳이라, 막대의 시작점을 세로로 정렬하는 것이 이 블록의 전부다.
+ */
+.score-breakdown {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+}
+
+.breakdown-total {
+  margin: 2px 0 12px;
+  font-size: 14px;
+}
+.breakdown-total strong {
+  font-family: var(--serif);
+  font-size: 34px;
+  margin-right: 6px;
+}
+
+.breakdown-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-rows li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) minmax(90px, 1.1fr) 74px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.bd-letter {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.bd-bar {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.bd-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.bd-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .breakdown-rows li {
+    grid-template-columns: 16px minmax(0, 1fr) 64px;
+  }
+  .bd-bar {
+    grid-column: 2 / -1;
+  }
+}

@@ -1,4 +1,4 @@
-import { AEO_SCORE_WEIGHTS } from '../src/prompts/b8-report.js';
+import { AEO_SCORE_WEIGHTS, normalizeRank } from '../src/prompts/b8-report.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 
 export function mean(values: number[]): number {
@@ -73,10 +73,6 @@ export function sentimentWeight(s: 'positive' | 'neutral' | 'negative' | string)
 }
 
 
-/** 순위(1=최상위)를 0~1 스코어로 변환. */
-function normalizeRank(rank: number, maxRank = 5): number {
-  return Math.max(0, (maxRank - rank + 1) / maxRank);
-}
 
 /**
  * B8 AEO Score. 0~100 스케일. 산식은 리포트 생성 프롬프트(b8-report.ts)에 입력으로만 전달되고, 재계산되지 않는다.
