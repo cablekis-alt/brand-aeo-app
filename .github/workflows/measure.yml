@@ -48,7 +48,7 @@ jobs:
       # 현재 OpenAI 크레딧이 없어 판정도 Gemini로 돌린다(secret로 덮어쓰기 가능).
       JUDGE_ENGINE: ${{ secrets.JUDGE_ENGINE || 'gemini' }}
       GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.7-flash' }}
-      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-4o' }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-5.6-luna' }}
       # Vercel Git 연동이 없으면(=CLI 배포) 아래 배포 스텝이 필요하다. 토큰 없으면 스킵.
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

@@ -3,8 +3,15 @@ import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
 import { withOpenAiRetry } from './retry.js';
 
-// 2026-09 기준 확인된 값은 아니며, 실제 배포 전 platform.openai.com에서 현재 모델명을 재확인할 것.
-export const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o';
+/*
+ * 기본 모델. 설치본은 이 값을 쓴다 — 모델은 bundled.env에 굽지 않으므로(prepare-bundled-env의
+ * CONFIG_WHITELIST에 없다) env로 덮지 않으면 여기가 곧 측정에 쓰이는 모델이다.
+ *
+ * gpt-4o에서 옮겼다. 2024년 모델이라 지금 ChatGPT 사용자가 보는 답과 멀어졌고, 우리 사용량
+ * 기준으로 토큰 비용이 10배 이상 비쌌다(실측 W38 추정: gpt-4o $51.9 vs luna $16.1).
+ * 웹검색 도구가 동작하는 것을 실제 호출로 확인했다.
+ */
+export const MODEL = process.env.OPENAI_MODEL ?? 'gpt-5.6-luna';
 
 export class OpenAiEngineClient implements EngineClient {
   private client: OpenAI;
