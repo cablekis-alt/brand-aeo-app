@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
+import { withOpenAiRetry } from './retry.js';
 
 /**
  * 프리셋 — Sonar Chat Completions를 대신한다.
@@ -51,7 +52,23 @@ export class PerplexityEngineClient implements EngineClient {
   constructor() {
     const apiKey = process.env.PERPLEXITY_API_KEY;
     if (!apiKey) throw new Error('PERPLEXITY_API_KEY 환경변수가 설정되지 않았습니다.');
-    this.client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai/v1' });
+    /*
+     * 타임아웃을 못 박는다. 기본값은 SDK의 10분이고 자체 재시도가 2회라, 멈춘 호출 하나가
+     * 수집 슬롯 24개 중 하나를 최대 30분 묶는다. 2026-W39에서 실제로 한 건이 179.6초를
+     * 잡아 그 테넌트만 71/72에서 홀로 남았다(중앙값 15.3초, p99 62.5초).
+     *
+     * 120초는 관측 p99의 약 두 배다 — 정상 호출은 자르지 않으면서 멈춘 호출만 끊는다.
+     * Agent API는 검색과 URL 읽기를 함께 하므로 OpenAI 쪽 90초보다 넉넉하게 둔다.
+     *
+     * 재시도는 withOpenAiRetry로 옮긴다. SDK 재시도를 그냥 끄면 429까지 같이 없어진다.
+     * 횟수는 3회로 줄인다 — 기본 6회면 최악 12분이라 캡을 둔 의미가 사라진다.
+     */
+    this.client = new OpenAI({
+      apiKey,
+      baseURL: 'https://api.perplexity.ai/v1',
+      timeout: 120_000,
+      maxRetries: 0,
+    });
   }
 
   async call(prompt: PromptMessage): Promise<EngineCallResult> {
@@ -63,8 +80,9 @@ export class PerplexityEngineClient implements EngineClient {
     if (PINNED_MODEL) body.model = PINNED_MODEL;
     else body.preset = PRESET;
 
-    const response = (await (this.client.responses.create as unknown as (b: unknown) => Promise<unknown>)(
-      body,
+    const response = (await withOpenAiRetry(
+      () => (this.client.responses.create as unknown as (b: unknown) => Promise<unknown>)(body),
+      3,
     )) as AgentResponse;
 
     const output = response.output ?? [];
