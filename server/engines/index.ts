@@ -1,3 +1,7 @@
+import { MODEL as OPENAI_MODEL } from './openaiEngineClient.js';
+import { MODEL as GEMINI_MODEL } from './geminiEngineClient.js';
+import { MODEL as PERPLEXITY_MODEL } from './perplexityEngineClient.js';
+import { MODEL as CLAUDE_MODEL } from './claudeEngineClient.js';
 import type { Engine } from '../../src/prompts/types.js';
 import { withLlmSlot, type LlmPool } from '../concurrency.js';
 import { ClaudeEngineClient } from './claudeEngineClient.js';
@@ -150,4 +154,23 @@ export function getJudgeClient(): EngineClient {
     judgeEngineId = id;
   }
   return judgeClient;
+}
+
+/**
+ * 지금 실제로 호출하는 모델 — 각 클라이언트가 쓰는 값을 그대로 모은다.
+ *
+ * 문자열을 여기서 다시 짜지 않는 이유가 중요하다. 같은 값을 두 군데에 적으면 한쪽만 바뀌어,
+ * 화면은 gpt-4o라고 말하는데 실제로는 다른 모델로 측정하는 일이 생긴다 — 오늘 가중치 표에서
+ * 겪은 것과 같은 종류다.
+ *
+ * 모델은 환경변수로만 바뀐다(OPENAI_MODEL 등). 화면에서 고를 수 없게 둔 이유는, 측정 데이터에
+ * 모델이 기록되지 않아 주차마다 모델이 달라지면 비교가 조용히 깨지기 때문이다.
+ */
+export function configuredModels(): Record<string, string> {
+  return {
+    openai: OPENAI_MODEL,
+    gemini: GEMINI_MODEL,
+    perplexity: PERPLEXITY_MODEL,
+    claude: CLAUDE_MODEL,
+  };
 }

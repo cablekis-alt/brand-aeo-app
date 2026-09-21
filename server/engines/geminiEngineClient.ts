@@ -3,7 +3,7 @@ import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
 
 // 2026-09 기준 확인된 값은 아니며, 실제 배포 전 ai.google.dev에서 현재 모델명을 재확인할 것.
-const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.7-flash';
+export const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.7-flash';
 
 export class GeminiEngineClient implements EngineClient {
   private ai: GoogleGenAI;

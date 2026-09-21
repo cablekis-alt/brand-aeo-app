@@ -691,6 +691,8 @@ export interface EnginePricing {
   currency: string
   updatedAt: string
   engines: Record<string, EngineRate>
+  /** 지금 실제로 호출하는 모델. 읽기 전용 — 모델은 환경변수로만 바뀐다. */
+  currentModels?: Record<string, string>
 }
 
 export async function loadPricing(): Promise<EnginePricing | null> {

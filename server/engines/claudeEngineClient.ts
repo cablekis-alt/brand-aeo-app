@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
 
-const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
+export const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5';
 
 export class ClaudeEngineClient implements EngineClient {
   private client: Anthropic;

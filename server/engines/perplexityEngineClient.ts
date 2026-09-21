@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import type { PromptMessage } from '../../src/prompts/types.js';
 import type { EngineCallResult, EngineClient } from './types.js';
 
-const MODEL = process.env.PERPLEXITY_MODEL ?? 'sonar-pro';
+export const MODEL = process.env.PERPLEXITY_MODEL ?? 'sonar-pro';
 
 /**
  * Perplexity API는 OpenAI 호환 스펙(base URL만 다름)이라 별도 SDK 없이 openai 패키지를 재사용한다.

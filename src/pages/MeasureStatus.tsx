@@ -252,7 +252,15 @@ export default function MeasureStatus() {
    * 비용 칸이 "단가 미설정"으로 남는다 — 틀린 기본값으로 그럴듯한 금액을 보여 주지 않는다.
    */
   const [pricing, setPricing] = useState<EnginePricing | null>(null)
-  const [priceOpen, setPriceOpen] = useState(false)
+  /*
+   * 한 번도 설정하지 않았으면 펼쳐서 시작한다.
+   *
+   * 접힌 회색 한 줄로 두었더니 처음 쓰는 사람이 못 찾았다 — 평소에 안 보이게 하려던 것이
+   * 정작 설정해야 할 때 숨긴 셈이 됐다. 저장한 뒤부터는 접힌다(updatedAt이 생긴다).
+   * null로 두는 이유는 단가를 아직 못 읽었을 때 "설정 없음"으로 단정하지 않기 위해서다.
+   */
+  const [priceOpen, setPriceOpen] = useState<boolean | null>(null)
+  const priceExpanded = priceOpen ?? (pricing !== null && !pricing.updatedAt)
   const [priceNote, setPriceNote] = useState<string | null>(null)
   // 단가를 받을 엔진 목록은 **실제로 쓴 엔진**에서 뽑는다. 안 쓰는 엔진 칸을 만들어 두면
   // 설정해야 할 것처럼 보이고, 새 엔진을 쓰기 시작하면 코드를 고쳐야 한다.
@@ -558,11 +566,11 @@ export default function MeasureStatus() {
             화면이 그대로 거짓을 말하기 때문이다. 기본값도 두지 않는다 — 비어 있으면 "미설정"이
             보이는 편이 틀린 기본값으로 그럴듯한 금액을 보여 주는 것보다 낫다.
           */}
-          <button type="button" className="gap-more-toggle" onClick={() => setPriceOpen((v) => !v)}>
-            {priceOpen ? '▾' : '▸'} 단가 설정
+          <button type="button" className="gap-more-toggle" onClick={() => setPriceOpen(!priceExpanded)}>
+            {priceExpanded ? '▾' : '▸'} 단가 설정
             {pricing?.updatedAt ? ` · 마지막 수정 ${pricing.updatedAt}` : ' · 아직 설정하지 않았습니다'}
           </button>
-          {priceOpen && (
+          {priceExpanded && (
             <div className="pricing-editor">
               <p className="hint" style={{ marginTop: 0 }}>
                 100만 토큰당 가격을 넣으세요. <b>요청당</b>은 토큰과 별개로 호출마다 붙는 고정 요금입니다(웹검색
@@ -606,7 +614,9 @@ export default function MeasureStatus() {
                           <td className="cell-text">
                             <input
                               type="text"
-                              placeholder="예: gpt-4o"
+                              /* 안내는 **지금 실제로 호출하는 모델**이다. 모든 칸에 "예: gpt-4o"를
+                                 띄우면 Gemini·Perplexity 칸에서 틀린 예시가 된다. */
+                              placeholder={pricing?.currentModels?.[id] ?? '모델 이름'}
                               value={rate.model ?? ''}
                               onChange={(e) => set({ model: e.target.value })}
                             />
@@ -668,6 +678,15 @@ export default function MeasureStatus() {
               <p className="hint">
                 ※ 단가는 벤더 콘솔에서 확인해 넣으세요. 저희가 기본값을 채워 드리지 않는 것은, 가격이 바뀐 뒤에도
                 화면이 그대로 거짓을 말하게 되기 때문입니다.
+              </p>
+              <p className="hint">
+                ※ 「모델 메모」의 흐린 글씨는 <b>지금 실제로 호출하는 모델</b>입니다
+                {pricing?.currentModels &&
+                  ` (${pricedEngines
+                    .map((id) => `${ENGINE_LABEL[id] ?? id} ${pricing.currentModels?.[id] ?? '?'}`)
+                    .join(' · ')})`}
+                . 모델은 이 화면에서 바꿀 수 없고 환경변수로만 바뀝니다 — 측정 데이터에 모델이 기록되지 않아
+                주차마다 모델이 달라지면 비교가 조용히 깨지기 때문입니다.
               </p>
             </div>
           )}

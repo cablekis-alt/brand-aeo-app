@@ -25,7 +25,7 @@ import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
-import { getJudgeClient } from './engines/index.js';
+import { configuredModels, getJudgeClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -819,7 +819,8 @@ app.get('/api/raw-answers/:tenantId/:weekOf', async (req, res) => {
 
 // 엔진 단가 — 코드에 박지 않고 파일에 둔다(pricingStore.ts). 기본값 없음 = 미설정.
 app.get('/api/engine-pricing', async (_req, res) => {
-  res.json(await readPricing());
+  // 지금 실제로 호출하는 모델을 함께 준다 — 단가가 어느 모델 기준인지 사람이 맞출 수 있어야 한다.
+  res.json({ ...(await readPricing()), currentModels: configuredModels() });
 });
 
 app.put('/api/engine-pricing', async (req, res) => {
