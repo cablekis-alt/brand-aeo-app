@@ -2756,6 +2756,19 @@ td.judgment {
   white-space: normal;
 }
 
+/*
+ * 입력 상자가 칸을 다 채우는 표의 머리글 — 상자 가운데에 세운다.
+ *
+ * 기본 규칙(td:not(:first-child))은 칸 **위치**로 정렬을 정해 오른쪽으로 민다. 값이 글자면
+ * 그래도 읽히지만, 칸 전체를 채운 input 위에 머리글만 끝에 붙으면 둘이 짝이 아닌 것처럼
+ * 보인다. 태그를 붙여 기본 규칙과 무게를 맞추고(0-1-1) 뒤에 두어 순서로 이긴다.
+ */
+th.cell-mid,
+td.cell-mid {
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* 단가 편집기 — 표 안에서 숫자를 직접 고친다. */
 .pricing-editor {
   border: 1px solid var(--line);

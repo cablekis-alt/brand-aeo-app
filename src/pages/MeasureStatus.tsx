@@ -591,11 +591,16 @@ export default function MeasureStatus() {
                 <table>
                   <thead>
                     <tr>
+                      {/*
+                        입력 상자가 칸 전체를 채우므로 머리글도 그 상자 가운데에 선다.
+                        표 기본 규칙은 칸 위치로 정렬을 정해(오른쪽) 넓은 상자 옆에 머리글만
+                        끝으로 밀려 짝이 안 맞아 보였다. 엔진 열만 글자 칸이라 왼쪽 그대로 둔다.
+                      */}
                       <th className="cell-text">엔진</th>
-                      <th className="cell-text">모델 메모</th>
-                      <th className="num">입력 / 1M</th>
-                      <th className="num">출력 / 1M</th>
-                      <th className="num">요청당</th>
+                      <th className="cell-mid">모델 메모</th>
+                      <th className="cell-mid">입력 / 1M</th>
+                      <th className="cell-mid">출력 / 1M</th>
+                      <th className="cell-mid">요청당</th>
                     </tr>
                   </thead>
                   <tbody>
