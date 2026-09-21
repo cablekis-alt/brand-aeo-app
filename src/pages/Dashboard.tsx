@@ -129,8 +129,28 @@ export default function Dashboard() {
   // 판단 규칙은 alerts.ts의 sameEngines·sameJudge와 같다.
   const judges = [prevCard?.judgeEngine, card?.judgeEngine]
   const sameJudge = !judges[0] || !judges[1] || judges[0] === judges[1]
+  /*
+   * 모델도 본다. 엔진이 같아도 모델이 다르면 같은 질문에 다른 답이 오므로, 그 차이를
+   * 브랜드의 변화로 읽으면 안 된다.
+   *
+   * **양쪽에 기록이 있을 때만** 비교한다. 기록이 없는 주차(이 기능 이전 측정)를 비교 불가로
+   * 몰면 지금까지 쌓인 증감이 전부 사라진다 — 모르는 것을 다르다고 단정하지 않는다.
+   */
+  const sameModels = (() => {
+    const a = prevCard?.modelsUsed
+    const b = card?.modelsUsed
+    if (a && b) {
+      for (const e of new Set([...Object.keys(a), ...Object.keys(b)])) {
+        if (a[e] && b[e] && a[e] !== b[e]) return false
+      }
+    }
+    if (prevCard?.judgeModel && card?.judgeModel && prevCard.judgeModel !== card.judgeModel) return false
+    return true
+  })()
   const comparable =
-    !prevCard || !card || ((!engineSets[0] || !engineSets[1] || engineSets[0] === engineSets[1]) && sameJudge)
+    !prevCard ||
+    !card ||
+    ((!engineSets[0] || !engineSets[1] || engineSets[0] === engineSets[1]) && sameJudge && sameModels)
   const delta = card && prevScore !== null && comparable ? formatDelta(card.aeoScore.current, prevScore) : null
 
   // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
@@ -300,7 +320,10 @@ export default function Dashboard() {
                     <dd>
                       {prevScore ?? '—'}
                       {!comparable && (
-                        <span className="muted"> · {sameJudge ? '수집' : '판정'} 엔진 달라 비교 불가</span>
+                        <span className="muted">
+                          {' · '}
+                          {!sameModels ? '모델' : sameJudge ? '수집 엔진' : '판정 엔진'} 달라 비교 불가
+                        </span>
                       )}
                     </dd>
                   </div>

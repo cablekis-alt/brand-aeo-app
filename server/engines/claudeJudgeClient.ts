@@ -40,6 +40,7 @@ export class ClaudeJudgeClient implements EngineClient {
       text,
       citations: [],
       usedWebSearch: false,
+      model: JUDGE_MODEL,
       tokenUsage: (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0),
       inputTokens: response.usage?.input_tokens,
       outputTokens: response.usage?.output_tokens,

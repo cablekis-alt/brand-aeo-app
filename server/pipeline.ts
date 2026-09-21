@@ -228,6 +228,7 @@ async function collectRawCalls(
           rawText: result.text,
           citations: result.citations,
           usedWebSearch: result.usedWebSearch,
+          model: result.model,
           tokenUsage: result.tokenUsage,
           inputTokens: result.inputTokens,
           outputTokens: result.outputTokens,
@@ -359,6 +360,8 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
   const judgeCalls = [mentionRaw, citationRaw, rankRaw, factRaw].filter((r) => r !== null);
   const judgeUsage: JudgeUsage = {
     engine: usedJudgeEngineId(),
+    // 판정 모델은 호출 결과가 실어 온 값을 쓴다 — 건너뛴 호출이 있어도 남은 것에서 얻는다.
+    model: judgeCalls.find((r) => r.model)?.model,
     calls: judgeCalls.length,
     tokens: judgeCalls.reduce((a, r) => a + (r.tokenUsage ?? 0), 0),
     inputTokens: judgeCalls.reduce((a, r) => a + (r.inputTokens ?? 0), 0),
@@ -432,6 +435,9 @@ function aggregateScorecard(
   analyses: QuestionRepeatAnalysis[],
   history: WeeklyScorecard[],
   cohortScorecards: WeeklyScorecard[],
+  /** 그 주차에 실제로 쓴 모델(엔진 id → 모델명). 원문 레코드에서 뽑아 넘긴다. */
+  modelsUsed: Record<string, string>,
+  judgeModel: string | undefined,
 ): WeeklyScorecard {
   const m = aggregateWeeklyMetrics(tenant, questions, analyses);
 
@@ -463,6 +469,10 @@ function aggregateScorecard(
     // 스크립트는 저장된 카드를 그대로 물려받아야 한다. 다시 해석하면 "그때 무엇으로 재고
     // 무엇으로 판정했는지"가 지워진다.
     judgeEngine: usedJudgeEngineId(),
+    // 모델도 같은 이유로 여기서 박제한다 — 설정을 나중에 읽으면 "그때 쓴 모델"이 아니라
+    // "지금 설정된 모델"이 남아, 중간에 바꾸면 과거 카드가 조용히 거짓이 된다.
+    ...(Object.keys(modelsUsed).length > 0 ? { modelsUsed } : {}),
+    ...(judgeModel ? { judgeModel } : {}),
     questionBankVersion: tenant.questionBankVersion,
   };
 }
@@ -511,7 +521,35 @@ export async function runWeeklyPipeline(
   const history = await store.getScorecardHistory(tenant.tenantId, 12);
   const cohortScorecards = await store.getCohortScorecards(tenant.industry, tenant.region, weekOf);
 
-  const scorecard = aggregateScorecard(tenant, weekOf, questions, analyses, history, cohortScorecards);
+  /*
+   * 모델은 **원문 레코드가 실어 온 값**에서 뽑는다. 설정(configuredModels)을 읽으면 측정
+   * 도중이나 이후에 바뀐 값이 들어갈 수 있다 — 기록의 뜻이 "그때 쓴 것"이어야 한다.
+   * 한 엔진이 서로 다른 모델로 응답했다면(설정을 중간에 바꾼 경우) 쉼표로 둘 다 남긴다 —
+   * 하나만 남기면 어느 쪽이 진짜인지 모르게 된다.
+   */
+  const modelsUsed: Record<string, string> = {};
+  {
+    const seen = new Map<string, Set<string>>();
+    for (const c of rawCalls) {
+      if (!c.model) continue;
+      const set = seen.get(c.engine) ?? new Set<string>();
+      set.add(c.model);
+      seen.set(c.engine, set);
+    }
+    for (const [engine, set] of seen) modelsUsed[engine] = [...set].sort().join(', ');
+  }
+  const judgeModel = analyses.find((a) => a.judgeUsage?.model)?.judgeUsage?.model;
+
+  const scorecard = aggregateScorecard(
+    tenant,
+    weekOf,
+    questions,
+    analyses,
+    history,
+    cohortScorecards,
+    modelsUsed,
+    judgeModel,
+  );
   await store.saveScorecard(scorecard);
 
   const eeat = computeEeatAnalysis(analyses);

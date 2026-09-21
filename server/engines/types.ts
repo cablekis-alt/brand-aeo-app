@@ -2,6 +2,11 @@ import type { PromptMessage } from '../../src/prompts/types.js';
 
 export interface EngineCallResult {
   text: string;
+  /*
+   * 이 호출에 실제로 쓴 모델. 나중에 조회하지 않고 호출한 쪽이 실어 보낸다 — 설정을 따로
+   * 읽으면 "측정할 때 쓴 모델"이 아니라 "지금 설정된 모델"이 기록돼, 중간에 바꾸면 어긋난다.
+   */
+  model?: string;
   citations: string[]; // 엔진 API가 구조화된 필드로 반환한 URL
   usedWebSearch: boolean;
   /** 입력+출력 합계. 아래 둘을 못 받는 엔진도 있어 합계는 그대로 남긴다. */

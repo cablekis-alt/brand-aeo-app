@@ -43,6 +43,7 @@ export class OpenAiJudgeClient implements EngineClient {
       text: response.output_text,
       citations: [] as string[],
       usedWebSearch: false,
+      model: MODEL,
       tokenUsage: response.usage?.total_tokens,
       inputTokens: response.usage?.input_tokens,
       outputTokens: response.usage?.output_tokens,

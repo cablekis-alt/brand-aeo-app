@@ -33,6 +33,13 @@ export interface RawCallRecord {
   rawText: string;
   citations: string[];
   usedWebSearch: boolean;
+  /*
+   * 이 호출에 쓴 모델. 없으면 기록 이전 데이터다.
+   *
+   * 왜 남기나 — 모델이 바뀌면 같은 질문에도 다른 답이 온다. 엔진이 바뀐 것과 같은 크기의
+   * 변화인데, 엔진은 enginesUsed로 잡히고 모델은 아무 데도 없어 주차 비교가 조용히 깨졌다.
+   */
+  model?: string;
   tokenUsage?: number;
   // 입력·출력 분리. 합계만으로는 비용을 낼 수 없다(engines/types.ts 주석 참고).
   // 구버전 데이터엔 없어 선택 필드.
@@ -133,6 +140,8 @@ export interface QuestionRepeatAnalysis {
 export interface JudgeUsage {
   /** 판정 엔진. 수집 엔진과 다를 수 있다(실측 W38: 수집 3종, 판정은 전부 gemini). */
   engine: string;
+  /** 판정 모델. 판정이 바뀌면 언급·인용·사실성 판정이 통째로 달라진다. */
+  model?: string;
   /** 실제로 부른 판정 호출 수. 인용 0건·팩트그래프 없음이면 건너뛰므로 2~4로 달라진다. */
   calls: number;
   tokens: number;

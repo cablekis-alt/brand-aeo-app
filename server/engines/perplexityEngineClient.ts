@@ -42,6 +42,7 @@ export class PerplexityEngineClient implements EngineClient {
       text,
       citations,
       usedWebSearch: citations.length > 0,
+      model: MODEL,
       tokenUsage: completion.usage?.total_tokens,
       inputTokens: completion.usage?.prompt_tokens,
       outputTokens: completion.usage?.completion_tokens,

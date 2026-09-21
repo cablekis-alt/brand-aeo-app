@@ -32,6 +32,7 @@ export class GeminiJudgeClient implements EngineClient {
         text: response.text ?? '',
         citations: [] as string[],
         usedWebSearch: false,
+        model: MODEL,
         tokenUsage: response.usageMetadata?.totalTokenCount,
         inputTokens: response.usageMetadata?.promptTokenCount,
         outputTokens: response.usageMetadata?.candidatesTokenCount,

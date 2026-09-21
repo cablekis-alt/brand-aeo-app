@@ -34,6 +34,7 @@ export class GeminiEngineClient implements EngineClient {
       text: response.text ?? '',
       citations,
       usedWebSearch: citations.length > 0 || Boolean(grounding?.webSearchQueries?.length),
+      model: MODEL,
       tokenUsage: response.usageMetadata?.totalTokenCount,
       inputTokens: response.usageMetadata?.promptTokenCount,
       outputTokens: response.usageMetadata?.candidatesTokenCount,

@@ -43,6 +43,7 @@ export class OpenAiEngineClient implements EngineClient {
       text: response.output_text,
       citations,
       usedWebSearch,
+      model: MODEL,
       tokenUsage: response.usage?.total_tokens,
       inputTokens: response.usage?.input_tokens,
       outputTokens: response.usage?.output_tokens,
