@@ -417,51 +417,86 @@ export default function MeasureStatus() {
           <h3>엔진 사용량</h3>
           <p className="hint" style={{ marginTop: 0 }}>
             모든 브랜드를 합친 값입니다 — API 키를 브랜드마다 따로 쓰지 않으므로 크레딧이 왜 줄었는지는 전체를
-            봐야 답이 나옵니다. <b>비용은 계산하지 않습니다</b>: 모델 단가를 코드에 박으면 단가가 바뀐 뒤에도
-            그대로 거짓을 말하기 때문입니다. 토큰까지만 보여 드립니다.
+            봐야 답이 나옵니다. <b>수집</b>은 엔진에 질문한 호출, <b>판정</b>은 그 답변을 읽고 언급·인용·순위·
+            사실성을 가르는 호출입니다(답변 하나마다 2~4회).
+          </p>
+          <p className="hint">
+            <b>비용은 계산하지 않습니다</b> — 모델 단가를 코드에 박으면 단가가 바뀐 뒤에도 그대로 거짓을 말하기
+            때문입니다. 대신 <b>입력·출력을 나눠</b> 드립니다: 출력 토큰이 입력보다 몇 배 비싼데 비중이 엔진마다
+            완전히 달라, 합계만으로는 환산조차 되지 않습니다.
           </p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>주차</th>
+                  <th className="cell-text">구분</th>
                   <th className="cell-text">엔진</th>
                   <th className="num">호출</th>
-                  <th className="num">토큰</th>
-                  <th className="num">호출당 토큰</th>
+                  <th className="num">입력</th>
+                  <th className="num">출력</th>
+                  <th className="num">호출당</th>
                   <th className="num">소요</th>
-                  <th className="num">브랜드</th>
                 </tr>
               </thead>
               <tbody>
-                {usage.weeks.map((w) =>
-                  w.byEngine.map((e, i) => (
-                    <tr key={`${w.weekOf}|${e.engine}`}>
+                {usage.weeks.map((w) => {
+                  const rows = [
+                    ...w.byEngine.map((e) => ({ kind: '수집', e })),
+                    ...w.judgeByEngine.map((e) => ({ kind: '판정', e })),
+                  ]
+                  return rows.map(({ kind, e }, i) => (
+                    <tr key={`${w.weekOf}|${kind}|${e.engine}`}>
                       {i === 0 && (
-                        <td className="cell-text" rowSpan={w.byEngine.length}>
+                        <td className="cell-text" rowSpan={rows.length}>
                           {weekLabel(w.weekOf)}
                           <span className="sentence-meta" style={{ display: 'block' }}>
-                            합계 {w.calls.toLocaleString()}회 · {w.tokens.toLocaleString()} 토큰
+                            수집 {w.calls.toLocaleString()}회 · {w.tokens.toLocaleString()} 토큰
+                          </span>
+                          <span className="sentence-meta" style={{ display: 'block' }}>
+                            {w.judgeCalls > 0
+                              ? `판정 ${w.judgeCalls.toLocaleString()}회 · ${w.judgeTokens.toLocaleString()} 토큰`
+                              : '판정 기록 없음'}
                           </span>
                         </td>
                       )}
+                      <td className="cell-text">
+                        <span className={`status-pill ${kind === '수집' ? 'st-info' : 'st-ok'}`}>{kind}</span>
+                      </td>
                       <td className="cell-text">{ENGINE_LABEL[e.engine] ?? e.engine}</td>
                       <td className="num">{e.calls.toLocaleString()}</td>
-                      <td className="num">{e.tokens.toLocaleString()}</td>
+                      {/* 분리 값이 없으면 합계만 있는 것이다 — 0으로 적지 않고 "—"로 둔다. */}
+                      <td className="num">
+                        {e.inputTokens > 0 ? e.inputTokens.toLocaleString() : <span className="muted">—</span>}
+                      </td>
+                      <td className="num">
+                        {e.outputTokens > 0 ? e.outputTokens.toLocaleString() : <span className="muted">—</span>}
+                      </td>
                       <td className="num">
                         {e.calls > 0 ? Math.round(e.tokens / e.calls).toLocaleString() : '—'}
                       </td>
-                      <td className="num">{(e.latencyMs / 60000).toFixed(0)}분</td>
-                      <td className="num">{e.tenants}</td>
+                      <td className="num">{e.latencyMs > 0 ? `${(e.latencyMs / 60000).toFixed(0)}분` : '—'}</td>
                     </tr>
-                  )),
-                )}
+                  ))
+                })}
               </tbody>
             </table>
           </div>
+          {usage.weeks.some((w) => w.judgeCalls === 0) && (
+            <p className="hint">
+              ※ 판정 기록이 없는 주차가 있습니다 — 그 기능이 생기기 전에 측정한 데이터입니다. 없는 것을 0으로
+              세면 「판정을 안 했다」가 되므로 비워 뒀습니다. 다음 측정부터 채워집니다.
+            </p>
+          )}
+          {usage.weeks.some((w) => [...w.byEngine, ...w.judgeByEngine].some((e) => e.inputTokens === 0)) && (
+            <p className="hint">
+              ※ 입력·출력이 「—」인 줄은 그 값을 기록하기 전에 측정한 데이터입니다. 합계(호출당)는 그대로
+              유효합니다.
+            </p>
+          )}
           <p className="hint">
-            「호출당 토큰」이 크레딧이 어디로 가는지 말해 줍니다 — 호출 수가 적어도 이 값이 크면 비용은 그쪽이
-            큽니다. 원문 {usage.filesRead}개 파일에서 집계했습니다.
+            「호출당」이 크레딧이 어디로 가는지 말해 줍니다 — 호출 수가 적어도 이 값이 크면 비용은 그쪽이 큽니다.
+            원문 {usage.filesRead}개 파일에서 집계했습니다.
           </p>
         </section>
       )}

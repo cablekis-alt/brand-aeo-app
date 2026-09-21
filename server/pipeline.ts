@@ -33,6 +33,7 @@ import type { ResultStore } from './store.js';
 import type {
   CompetitorMentionDetail,
   FactClaimDetail,
+  JudgeUsage,
   QuestionRepeatAnalysis,
   RawCallRecord,
   TenantConfig,
@@ -228,6 +229,8 @@ async function collectRawCalls(
           citations: result.citations,
           usedWebSearch: result.usedWebSearch,
           tokenUsage: result.tokenUsage,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
           latencyMs: result.latencyMs,
           calledAt: new Date().toISOString(),
           startedAt,
@@ -345,6 +348,23 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
   ]);
   const wallMs = Math.round(performance.now() - wallStart);
 
+  /*
+   * 판정 사용량 — 실제로 부른 호출만 센다.
+   *
+   * citationPrompt와 factCheck은 조건부라 건너뛸 수 있다(인용 0건이 실측 40%). 건너뛴 호출을
+   * 0으로 더하면 "부르고 0토큰 썼다"로 읽혀 호출 수가 부풀려진다 — 실제로 부른 것만 센다.
+   * 합계(tokenUsage)와 입출력을 따로 더하는 이유는, 엔진에 따라 분리 값을 못 주는 경우에도
+   * 합계는 남기기 위해서다.
+   */
+  const judgeCalls = [mentionRaw, citationRaw, rankRaw, factRaw].filter((r) => r !== null);
+  const judgeUsage: JudgeUsage = {
+    engine: usedJudgeEngineId(),
+    calls: judgeCalls.length,
+    tokens: judgeCalls.reduce((a, r) => a + (r.tokenUsage ?? 0), 0),
+    inputTokens: judgeCalls.reduce((a, r) => a + (r.inputTokens ?? 0), 0),
+    outputTokens: judgeCalls.reduce((a, r) => a + (r.outputTokens ?? 0), 0),
+  };
+
   const mention = parseJsonLoose<BrandMentionResult>(mentionRaw.text);
   const citation = citationRaw ? parseJsonLoose<CitationResult>(citationRaw.text) : null;
   const rank = parseJsonLoose<RecommendationOrderResult>(rankRaw.text);
@@ -400,6 +420,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
         fact: factRaw?.latencyMs ?? null,
       },
     },
+    judgeUsage,
   };
 }
 

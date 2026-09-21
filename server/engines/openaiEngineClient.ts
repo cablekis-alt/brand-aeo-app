@@ -44,6 +44,8 @@ export class OpenAiEngineClient implements EngineClient {
       citations,
       usedWebSearch,
       tokenUsage: response.usage?.total_tokens,
+      inputTokens: response.usage?.input_tokens,
+      outputTokens: response.usage?.output_tokens,
       latencyMs: Math.round(performance.now() - start),
     };
   }

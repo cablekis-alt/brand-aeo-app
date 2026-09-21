@@ -35,6 +35,8 @@ export class GeminiEngineClient implements EngineClient {
       citations,
       usedWebSearch: citations.length > 0 || Boolean(grounding?.webSearchQueries?.length),
       tokenUsage: response.usageMetadata?.totalTokenCount,
+      inputTokens: response.usageMetadata?.promptTokenCount,
+      outputTokens: response.usageMetadata?.candidatesTokenCount,
       latencyMs: Math.round(performance.now() - start),
     };
   }

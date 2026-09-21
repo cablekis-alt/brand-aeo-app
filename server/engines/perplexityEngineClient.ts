@@ -29,7 +29,8 @@ export class PerplexityEngineClient implements EngineClient {
       choices: { message: { content: string | null } }[];
       citations?: string[];
       search_results?: { url: string }[];
-      usage?: { total_tokens?: number };
+      // Perplexity는 OpenAI 호환 스키마라 prompt_/completion_ 이름을 쓴다.
+      usage?: { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number };
     };
 
     const citations = completion.search_results?.map((r) => r.url) ?? completion.citations ?? [];
@@ -42,6 +43,8 @@ export class PerplexityEngineClient implements EngineClient {
       citations,
       usedWebSearch: citations.length > 0,
       tokenUsage: completion.usage?.total_tokens,
+      inputTokens: completion.usage?.prompt_tokens,
+      outputTokens: completion.usage?.completion_tokens,
       latencyMs: Math.round(performance.now() - start),
     };
   }

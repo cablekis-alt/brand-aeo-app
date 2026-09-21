@@ -34,6 +34,10 @@ export interface RawCallRecord {
   citations: string[];
   usedWebSearch: boolean;
   tokenUsage?: number;
+  // 입력·출력 분리. 합계만으로는 비용을 낼 수 없다(engines/types.ts 주석 참고).
+  // 구버전 데이터엔 없어 선택 필드.
+  inputTokens?: number;
+  outputTokens?: number;
   latencyMs?: number;
   // 호출이 **끝난** 시각. 시작이 아니다 — 응답을 받은 뒤에 찍는다.
   calledAt: string;
@@ -116,4 +120,22 @@ export interface QuestionRepeatAnalysis {
   // 판정에 걸린 시간. 점수에는 쓰이지 않는다 — 측정 자체를 진단하기 위한 기록이다.
   // 구버전 데이터엔 없어 선택 필드.
   timing?: AnalysisTiming;
+  /*
+   * 이 응답을 판정하는 데 쓴 토큰. 수집 원문(raw-calls)은 분석 **전에** 저장되므로 여기 싣는다.
+   *
+   * 판정은 수집만큼, 때로는 더 많이 쓴다 — 응답 하나마다 2~4회(언급·인용·순위·사실성)를
+   * 부르고 프롬프트에 답변 원문이 통째로 들어간다. 실측 W38은 수집 4,277회에 판정이 약
+   * 1만 2천 회였는데 어디에도 기록이 없었다. 크레딧이 왜 줄었는지 답할 수 없던 이유다.
+   */
+  judgeUsage?: JudgeUsage;
+}
+
+export interface JudgeUsage {
+  /** 판정 엔진. 수집 엔진과 다를 수 있다(실측 W38: 수집 3종, 판정은 전부 gemini). */
+  engine: string;
+  /** 실제로 부른 판정 호출 수. 인용 0건·팩트그래프 없음이면 건너뛰므로 2~4로 달라진다. */
+  calls: number;
+  tokens: number;
+  inputTokens: number;
+  outputTokens: number;
 }

@@ -646,15 +646,34 @@ export async function loadRawAnswers(
   )
 }
 
-/** 엔진 사용량(전체 브랜드 합산). 비용은 내려오지 않는다 — 단가를 코드에 박지 않기 때문이다. */
+/**
+ * 엔진 사용량(전체 브랜드 합산). 비용은 내려오지 않는다 — 단가를 코드에 박지 않기 때문이다.
+ * 대신 입력·출력을 나눠 준다. 합계만으로는 환산조차 못 한다(출력이 몇 배 비싸고 비중이
+ * 엔진마다 다르다).
+ */
+export interface UsageRow {
+  engine: string
+  calls: number
+  tokens: number
+  inputTokens: number
+  outputTokens: number
+  latencyMs: number
+  tenants: number
+}
+
 export interface UsageStats {
   weeks: {
     weekOf: string
-    byEngine: { engine: string; calls: number; tokens: number; latencyMs: number; tenants: number }[]
+    byEngine: UsageRow[]
+    judgeByEngine: UsageRow[]
     calls: number
     tokens: number
+    judgeCalls: number
+    judgeTokens: number
   }[]
   filesRead: number
+  /** 판정 기록이 있는 주차. 없는 주차는 그 기능이 생기기 전에 측정한 것이다. */
+  weeksWithJudge: string[]
 }
 
 export async function loadUsage(weeks = 4): Promise<UsageStats | null> {

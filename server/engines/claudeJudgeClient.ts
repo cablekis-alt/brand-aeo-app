@@ -41,6 +41,8 @@ export class ClaudeJudgeClient implements EngineClient {
       citations: [],
       usedWebSearch: false,
       tokenUsage: (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0),
+      inputTokens: response.usage?.input_tokens,
+      outputTokens: response.usage?.output_tokens,
       latencyMs: Math.round(performance.now() - start),
     };
   }

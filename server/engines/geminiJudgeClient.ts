@@ -33,6 +33,8 @@ export class GeminiJudgeClient implements EngineClient {
         citations: [] as string[],
         usedWebSearch: false,
         tokenUsage: response.usageMetadata?.totalTokenCount,
+        inputTokens: response.usageMetadata?.promptTokenCount,
+        outputTokens: response.usageMetadata?.candidatesTokenCount,
         latencyMs: Math.round(performance.now() - start),
       };
     } catch {
