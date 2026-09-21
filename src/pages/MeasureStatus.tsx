@@ -262,6 +262,8 @@ export default function MeasureStatus() {
   const [priceOpen, setPriceOpen] = useState<boolean | null>(null)
   const priceExpanded = priceOpen ?? (pricing !== null && !pricing.updatedAt)
   const [priceNote, setPriceNote] = useState<string | null>(null)
+  // 아직 아무것도 못 읽었을 때의 바탕값. 편집 중에는 항상 이전 상태를 펼쳐 이어받는다.
+  const emptyPricing: EnginePricing = { currency: 'USD', updatedAt: '', engines: {} }
   // 단가를 받을 엔진 목록은 **실제로 쓴 엔진**에서 뽑는다. 안 쓰는 엔진 칸을 만들어 두면
   // 설정해야 할 것처럼 보이고, 새 엔진을 쓰기 시작하면 코드를 고쳐야 한다.
   const pricedEngines = useMemo<string[]>(() => {
@@ -583,7 +585,9 @@ export default function MeasureStatus() {
                   type="text"
                   value={pricing?.currency ?? 'USD'}
                   onChange={(e) =>
-                    setPricing((p) => ({ currency: e.target.value, updatedAt: p?.updatedAt ?? '', engines: p?.engines ?? {} }))
+                    // ...p로 이전 상태를 이어받는다. 필드를 일일이 옮겨 적으면 빠뜨린 것이
+                    // 조용히 사라진다 — currentModels가 그렇게 지워져 모델 안내가 없어졌다.
+                    setPricing((p) => ({ ...emptyPricing, ...p, currency: e.target.value }))
                   }
                 />
               </label>
@@ -608,8 +612,8 @@ export default function MeasureStatus() {
                       const rate = pricing?.engines[id] ?? {}
                       const set = (patch: Partial<typeof rate>) =>
                         setPricing((p) => ({
-                          currency: p?.currency ?? 'USD',
-                          updatedAt: p?.updatedAt ?? '',
+                          ...emptyPricing,
+                          ...p,
                           engines: { ...(p?.engines ?? {}), [id]: { ...rate, ...patch } },
                         }))
                       const num = (v: string) => (v.trim() === '' ? undefined : Number(v))
@@ -665,6 +669,12 @@ export default function MeasureStatus() {
                   className="primary"
                   onClick={() => {
                     if (!pricing) return
+                    /*
+                     * 저장하면 updatedAt이 생겨 자동 펼침 조건이 꺼진다. 그대로 두면 누르는
+                     * 순간 패널이 닫혀 "저장했습니다" 확인을 못 본다 — 자동 펼침은 처음 열 때만
+                     * 정하는 것이지, 저장에 반응해 닫는 장치가 아니다. 명시적으로 열어 둔다.
+                     */
+                    setPriceOpen(true)
                     setPriceNote('저장 중…')
                     void savePricing(pricing).then((r) => {
                       if ('error' in r) {

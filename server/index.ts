@@ -825,7 +825,9 @@ app.get('/api/engine-pricing', async (_req, res) => {
 
 app.put('/api/engine-pricing', async (req, res) => {
   try {
-    res.json(await writePricing(req.body));
+    // GET과 같은 모양으로 돌려준다 — 화면이 응답을 그대로 상태에 넣으므로, 여기서 빠뜨리면
+    // 저장 직후 모델 안내가 사라진다(GET에서 다시 받기 전까지).
+    res.json({ ...(await writePricing(req.body)), currentModels: configuredModels() });
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
   }
