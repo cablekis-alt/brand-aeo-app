@@ -629,8 +629,9 @@ export default function MeasureStatus() {
                           <td className="cell-text">
                             <input
                               type="text"
-                              /* 안내는 **지금 실제로 호출하는 모델**이다. 모든 칸에 "예: gpt-4o"를
-                                 띄우면 Gemini·Perplexity 칸에서 틀린 예시가 된다. */
+                              /* 안내는 **측정에 쓰는 설정값 그대로**다(측정 기록에 남는 값과 같다).
+                                 Perplexity는 모델이 아니라 프리셋이라 preset:low로 나온다 — 실제 모델은
+                                 Perplexity가 고르고 바뀔 수 있어 우리가 고정할 수 있는 이름이 프리셋이다. */
                               placeholder={pricing?.currentModels?.[id] ?? '모델 이름'}
                               value={rate.model ?? ''}
                               onChange={(e) => set({ model: e.target.value })}
@@ -701,13 +702,22 @@ export default function MeasureStatus() {
                 화면이 그대로 거짓을 말하게 되기 때문입니다.
               </p>
               <p className="hint">
-                ※ 「모델 메모」의 흐린 글씨는 <b>지금 실제로 호출하는 모델</b>입니다
+                ※ 「모델 메모」의 흐린 글씨는 <b>지금 측정에 쓰는 설정</b>이며, 측정 기록에 남는 값과 같습니다
                 {pricing?.currentModels &&
                   ` (${pricedEngines
                     .map((id) => `${ENGINE_LABEL[id] ?? id} ${pricing.currentModels?.[id] ?? '?'}`)
                     .join(' · ')})`}
-                . 모델은 이 화면에서 바꿀 수 없고 환경변수로만 바뀝니다 — 측정 데이터에 모델이 기록되지 않아
-                주차마다 모델이 달라지면 비교가 조용히 깨지기 때문입니다.
+                .
+              </p>
+              <p className="hint">
+                ※ <b>Perplexity는 모델이 아니라 프리셋</b>을 씁니다(<code>preset:low</code>). 2026년 9월 27일
+                종료된 <code>sonar-pro</code>의 공식 후속이며, 실제로 어떤 모델을 쓸지는 Perplexity가 고르고
+                바뀔 수 있어 우리가 고정할 수 있는 이름이 프리셋입니다. 그래서 기록에도 프리셋으로 남깁니다 —
+                Perplexity가 내부 모델을 바꿀 때마다 주차 비교가 막히면 안 되기 때문입니다.
+              </p>
+              <p className="hint">
+                ※ 설정은 이 화면에서 바꿀 수 없고 환경변수로만 바뀝니다. 바꾸면 그 사실이 측정 데이터에
+                기록되고, 주차 비교에서 「모델이 달라 비교 불가」로 표시됩니다.
               </p>
             </div>
           )}
