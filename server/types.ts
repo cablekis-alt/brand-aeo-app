@@ -45,6 +45,12 @@ export interface RawCallRecord {
   // 구버전 데이터엔 없어 선택 필드.
   inputTokens?: number;
   outputTokens?: number;
+  /**
+   * 엔진이 알려 준 실제 청구액(USD). 주는 엔진에서만 있다(현재 Perplexity Agent API).
+   * 있으면 단가를 곱해 추정하지 않고 이 값을 쓴다 — 추정보다 정확하고, 과금 구조가 바뀌어도
+   * 따라갈 필요가 없다.
+   */
+  billedCost?: number;
   latencyMs?: number;
   // 호출이 **끝난** 시각. 시작이 아니다 — 응답을 받은 뒤에 찍는다.
   calledAt: string;

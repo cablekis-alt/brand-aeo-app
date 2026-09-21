@@ -29,6 +29,11 @@ export interface UsageRow {
   /** 분리 값을 못 주는 엔진·구버전 데이터에서는 0으로 남는다. tokens와 합이 안 맞을 수 있다. */
   inputTokens: number;
   outputTokens: number;
+  /**
+   * 엔진이 알려 준 실제 청구액의 합(USD). null이면 그 엔진은 청구액을 주지 않아 단가로
+   * 계산해야 한다 — 0과 구분해야 한다(0은 "공짜였다"는 뜻이다).
+   */
+  billedCost: number | null;
   latencyMs: number;
   tenants: number;
 }
@@ -84,8 +89,26 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
     return { weeks: [], filesRead: 0, weeksWithJudge: [] };
   }
 
-  type Acc = { calls: number; tokens: number; input: number; output: number; latencyMs: number; tenants: Set<string> };
-  const blank = (): Acc => ({ calls: 0, tokens: 0, input: 0, output: 0, latencyMs: 0, tenants: new Set<string>() });
+  type Acc = {
+    calls: number;
+    tokens: number;
+    input: number;
+    output: number;
+    latencyMs: number;
+    cost: number;
+    costCalls: number;
+    tenants: Set<string>;
+  };
+  const blank = (): Acc => ({
+    calls: 0,
+    tokens: 0,
+    input: 0,
+    output: 0,
+    latencyMs: 0,
+    cost: 0,
+    costCalls: 0,
+    tenants: new Set<string>(),
+  });
   const toRows = (per: Map<string, Acc>): UsageRow[] =>
     [...per.entries()]
       .map(([engine, v]) => ({
@@ -94,6 +117,8 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
         tokens: v.tokens,
         inputTokens: v.input,
         outputTokens: v.output,
+        // 일부 호출만 청구액을 주면 합계가 실제보다 작아 거짓이 된다 — 전부 줄 때만 쓴다.
+        billedCost: v.costCalls > 0 && v.costCalls === v.calls ? v.cost : null,
         latencyMs: v.latencyMs,
         tenants: v.tenants.size,
       }))
@@ -136,6 +161,10 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
             if (typeof r.inputTokens === 'number') row.input += r.inputTokens;
             if (typeof r.outputTokens === 'number') row.output += r.outputTokens;
             if (typeof r.latencyMs === 'number') row.latencyMs += r.latencyMs;
+            if (typeof r.billedCost === 'number') {
+              row.cost += r.billedCost;
+              row.costCalls += 1;
+            }
             row.tenants.add(tenantId);
             collect.set(r.engine ?? 'unknown', row);
           }

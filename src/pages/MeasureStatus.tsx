@@ -520,7 +520,7 @@ export default function MeasureStatus() {
                       </td>
                       {(() => {
                         const c = rowCost(e, pricing?.engines[e.engine])
-                        if (c.reason === 'ok' && c.amount !== null) {
+                        if ((c.reason === 'ok' || c.reason === 'billed') && c.amount !== null) {
                           return (
                             <td className="num">
                               {formatMoney(c.amount, pricing?.currency ?? '')}
@@ -528,6 +528,12 @@ export default function MeasureStatus() {
                               {c.requestPart !== null && c.requestPart > 0 && (
                                 <span className="sentence-meta" style={{ display: 'block' }}>
                                   요청료 {formatMoney(c.requestPart, pricing?.currency ?? '')}
+                                </span>
+                              )}
+                              {/* 엔진이 청구액을 직접 준 경우 — 단가 추정이 아님을 밝힌다. */}
+                              {c.reason === 'billed' && (
+                                <span className="sentence-meta" style={{ display: 'block' }}>
+                                  엔진이 알려 준 실제 청구액
                                 </span>
                               )}
                             </td>

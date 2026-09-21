@@ -19,6 +19,11 @@ export interface EngineCallResult {
    */
   inputTokens?: number;
   outputTokens?: number;
+  /**
+   * 엔진이 알려 준 **실제 청구액**(USD). Perplexity Agent API만 준다.
+   * 단가를 곱해 추정할 필요가 없는 값이라, 주는 곳에서는 그대로 받아 둔다.
+   */
+  billedCost?: number;
   latencyMs?: number;
 }
 

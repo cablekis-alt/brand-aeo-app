@@ -657,6 +657,8 @@ export interface UsageRow {
   tokens: number
   inputTokens: number
   outputTokens: number
+  /** 엔진이 알려 준 실제 청구액 합. null이면 단가로 계산해야 한다(0과 다르다). */
+  billedCost: number | null
   latencyMs: number
   tenants: number
 }

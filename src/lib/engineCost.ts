@@ -14,7 +14,7 @@ import type { EngineRate, UsageRow } from './api'
  * 모르는 채 한쪽 단가를 곱하면 몇 배 틀린 금액이 나온다(실측 W38: ChatGPT는 출력이 7%,
  * Perplexity는 84%). 틀린 금액을 보여 주느니 "계산 불가"가 정직하다.
  */
-export type CostReason = 'ok' | 'noRate' | 'noSplit'
+export type CostReason = 'ok' | 'billed' | 'noRate' | 'noSplit'
 
 export interface CostResult {
   reason: CostReason
@@ -25,6 +25,14 @@ export interface CostResult {
 }
 
 export function rowCost(row: UsageRow, rate: EngineRate | undefined): CostResult {
+  /*
+   * 엔진이 실제 청구액을 알려 줬으면 그걸 쓴다 — 단가를 곱한 추정보다 정확하고, 과금 구조가
+   * 바뀌어도 따라갈 필요가 없다. Perplexity Agent API가 그렇다.
+   * 단가 설정보다 **앞서** 본다. 사람이 넣은 단가가 낡았어도 청구액은 틀리지 않는다.
+   */
+  if (typeof row.billedCost === 'number') {
+    return { reason: 'billed', amount: row.billedCost, requestPart: null }
+  }
   const hasTokenRate = rate?.inputPerM !== undefined || rate?.outputPerM !== undefined
   const hasRequestRate = rate?.perRequest !== undefined
   if (!rate || (!hasTokenRate && !hasRequestRate)) return { reason: 'noRate', amount: null, requestPart: null }

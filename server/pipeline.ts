@@ -232,6 +232,7 @@ async function collectRawCalls(
           tokenUsage: result.tokenUsage,
           inputTokens: result.inputTokens,
           outputTokens: result.outputTokens,
+          billedCost: result.billedCost,
           latencyMs: result.latencyMs,
           calledAt: new Date().toISOString(),
           startedAt,
