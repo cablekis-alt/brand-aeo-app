@@ -19,6 +19,7 @@ import { readSiteScores, urlBelongsToTenant, writeSiteScore } from './siteScoreS
 import { getCohortTrend } from './cohortTrend.js';
 import { getEngineTrend } from './engineTrend.js';
 import { getUsageStats } from './usageStats.js';
+import { readPricing, writePricing } from './pricingStore.js';
 import { getRawAnswers } from './rawCallStore.js';
 import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
@@ -814,6 +815,19 @@ app.get('/api/raw-answers/:tenantId/:weekOf', async (req, res) => {
     return;
   }
   res.json(await getRawAnswers(tenant.tenantId, req.params.weekOf, questionId));
+});
+
+// 엔진 단가 — 코드에 박지 않고 파일에 둔다(pricingStore.ts). 기본값 없음 = 미설정.
+app.get('/api/engine-pricing', async (_req, res) => {
+  res.json(await readPricing());
+});
+
+app.put('/api/engine-pricing', async (req, res) => {
+  try {
+    res.json(await writePricing(req.body));
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // 엔진 사용량 — 호출·토큰·시간. 전체 브랜드 합산이다(API 키를 같이 쓰므로).

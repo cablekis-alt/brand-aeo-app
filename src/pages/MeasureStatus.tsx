@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
 import {
   cancelMeasureRun,
   loadCiSyncStatus,
   loadMeasureRuns,
+  loadPricing,
   loadUsage,
   runCiSync,
+  savePricing,
   type CiSyncSummary,
+  type EnginePricing,
   type MeasureRunInfo,
   type UsageStats,
 } from '../lib/api'
+import { formatMoney, rowCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { useTenant } from '../context/useTenant'
@@ -243,6 +247,34 @@ export default function MeasureStatus() {
    * 8초마다 부를 이유가 없다.
    */
   const [usage, setUsage] = useState<UsageStats | null>(null)
+  /*
+   * 단가는 서버 파일에서 읽는다(server/pricingStore.ts). 기본값이 없어서, 사용자가 넣기 전에는
+   * 비용 칸이 "단가 미설정"으로 남는다 — 틀린 기본값으로 그럴듯한 금액을 보여 주지 않는다.
+   */
+  const [pricing, setPricing] = useState<EnginePricing | null>(null)
+  const [priceOpen, setPriceOpen] = useState(false)
+  const [priceNote, setPriceNote] = useState<string | null>(null)
+  // 단가를 받을 엔진 목록은 **실제로 쓴 엔진**에서 뽑는다. 안 쓰는 엔진 칸을 만들어 두면
+  // 설정해야 할 것처럼 보이고, 새 엔진을 쓰기 시작하면 코드를 고쳐야 한다.
+  const pricedEngines = useMemo<string[]>(() => {
+    const seen = new Set<string>()
+    for (const w of usage?.weeks ?? []) {
+      for (const e of w.byEngine) seen.add(e.engine)
+      for (const e of w.judgeByEngine) seen.add(e.engine)
+    }
+    for (const id of Object.keys(pricing?.engines ?? {})) seen.add(id)
+    const order = ['openai', 'gemini', 'claude', 'perplexity']
+    return [...order.filter((e) => seen.has(e)), ...[...seen].filter((e) => !order.includes(e))]
+  }, [usage, pricing])
+  useEffect(() => {
+    let alive = true
+    void loadPricing().then((v) => {
+      if (alive) setPricing(v)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
   useEffect(() => {
     let alive = true
     void loadUsage(4).then((v) => {
@@ -436,6 +468,7 @@ export default function MeasureStatus() {
                   <th className="num">입력</th>
                   <th className="num">출력</th>
                   <th className="num">호출당</th>
+                  <th className="num">비용</th>
                   <th className="num">소요</th>
                 </tr>
               </thead>
@@ -475,6 +508,27 @@ export default function MeasureStatus() {
                       <td className="num">
                         {e.calls > 0 ? Math.round(e.tokens / e.calls).toLocaleString() : '—'}
                       </td>
+                      {(() => {
+                        const c = rowCost(e, pricing?.engines[e.engine])
+                        if (c.reason === 'ok' && c.amount !== null) {
+                          return (
+                            <td className="num">
+                              {formatMoney(c.amount, pricing?.currency ?? '')}
+                              {/* 요청당 요금이 섞여 있으면 밝힌다 — 토큰만 보면 싸 보이는 엔진이 있다. */}
+                              {c.requestPart !== null && c.requestPart > 0 && (
+                                <span className="sentence-meta" style={{ display: 'block' }}>
+                                  요청료 {formatMoney(c.requestPart, pricing?.currency ?? '')}
+                                </span>
+                              )}
+                            </td>
+                          )
+                        }
+                        return (
+                          <td className="num muted" title={c.reason === 'noRate' ? '이 엔진의 단가가 설정되지 않았습니다' : '입력·출력이 기록되기 전에 측정한 주차라 계산할 수 없습니다'}>
+                            —
+                          </td>
+                        )
+                      })()}
                       <td className="num">{e.latencyMs > 0 ? `${(e.latencyMs / 60000).toFixed(0)}분` : '—'}</td>
                     </tr>
                   ))
@@ -498,6 +552,125 @@ export default function MeasureStatus() {
             「호출당」이 크레딧이 어디로 가는지 말해 줍니다 — 호출 수가 적어도 이 값이 크면 비용은 그쪽이 큽니다.
             원문 {usage.filesRead}개 파일에서 집계했습니다.
           </p>
+
+          {/*
+            단가 편집기. 코드에 박지 않고 여기서 받는 이유는, 박아 두면 벤더가 가격을 바꾼 뒤에도
+            화면이 그대로 거짓을 말하기 때문이다. 기본값도 두지 않는다 — 비어 있으면 "미설정"이
+            보이는 편이 틀린 기본값으로 그럴듯한 금액을 보여 주는 것보다 낫다.
+          */}
+          <button type="button" className="gap-more-toggle" onClick={() => setPriceOpen((v) => !v)}>
+            {priceOpen ? '▾' : '▸'} 단가 설정
+            {pricing?.updatedAt ? ` · 마지막 수정 ${pricing.updatedAt}` : ' · 아직 설정하지 않았습니다'}
+          </button>
+          {priceOpen && (
+            <div className="pricing-editor">
+              <p className="hint" style={{ marginTop: 0 }}>
+                100만 토큰당 가격을 넣으세요. <b>요청당</b>은 토큰과 별개로 호출마다 붙는 고정 요금입니다(웹검색
+                수수료 등) — 없으면 비워 두세요. 통화는 표시용 꼬리표일 뿐이며 <b>환율 환산은 하지 않습니다</b>.
+                넣으신 통화 그대로 계산합니다.
+              </p>
+              <label className="field" style={{ maxWidth: 200 }}>
+                <span>통화 표기</span>
+                <input
+                  type="text"
+                  value={pricing?.currency ?? 'USD'}
+                  onChange={(e) =>
+                    setPricing((p) => ({ currency: e.target.value, updatedAt: p?.updatedAt ?? '', engines: p?.engines ?? {} }))
+                  }
+                />
+              </label>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th className="cell-text">엔진</th>
+                      <th className="cell-text">모델 메모</th>
+                      <th className="num">입력 / 1M</th>
+                      <th className="num">출력 / 1M</th>
+                      <th className="num">요청당</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pricedEngines.map((id) => {
+                      const rate = pricing?.engines[id] ?? {}
+                      const set = (patch: Partial<typeof rate>) =>
+                        setPricing((p) => ({
+                          currency: p?.currency ?? 'USD',
+                          updatedAt: p?.updatedAt ?? '',
+                          engines: { ...(p?.engines ?? {}), [id]: { ...rate, ...patch } },
+                        }))
+                      const num = (v: string) => (v.trim() === '' ? undefined : Number(v))
+                      return (
+                        <tr key={id}>
+                          <td className="cell-text">{ENGINE_LABEL[id] ?? id}</td>
+                          <td className="cell-text">
+                            <input
+                              type="text"
+                              placeholder="예: gpt-4o"
+                              value={rate.model ?? ''}
+                              onChange={(e) => set({ model: e.target.value })}
+                            />
+                          </td>
+                          <td className="num">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={rate.inputPerM ?? ''}
+                              onChange={(e) => set({ inputPerM: num(e.target.value) })}
+                            />
+                          </td>
+                          <td className="num">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={rate.outputPerM ?? ''}
+                              onChange={(e) => set({ outputPerM: num(e.target.value) })}
+                            />
+                          </td>
+                          <td className="num">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.001"
+                              value={rate.perRequest ?? ''}
+                              onChange={(e) => set({ perRequest: num(e.target.value) })}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="filters" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    if (!pricing) return
+                    setPriceNote('저장 중…')
+                    void savePricing(pricing).then((r) => {
+                      if ('error' in r) {
+                        setPriceNote(`저장 실패 — ${r.error}`)
+                        return
+                      }
+                      setPricing(r)
+                      setPriceNote(`저장했습니다 (${r.updatedAt})`)
+                    })
+                  }}
+                >
+                  단가 저장
+                </button>
+                {priceNote && <span className="hint">{priceNote}</span>}
+              </div>
+              <p className="hint">
+                ※ 단가는 벤더 콘솔에서 확인해 넣으세요. 저희가 기본값을 채워 드리지 않는 것은, 가격이 바뀐 뒤에도
+                화면이 그대로 거짓을 말하게 되기 때문입니다.
+              </p>
+            </div>
+          )}
         </section>
       )}
 

@@ -676,6 +676,42 @@ export interface UsageStats {
   weeksWithJudge: string[]
 }
 
+/**
+ * 엔진 단가. **기본값이 없다** — 비어 있으면 "미설정"이고 화면은 비용을 만들지 않는다.
+ * 단가를 코드에 박으면 벤더가 가격을 바꾼 뒤에도 그대로 거짓을 말한다.
+ */
+export interface EngineRate {
+  model?: string
+  inputPerM?: number
+  outputPerM?: number
+  perRequest?: number
+}
+
+export interface EnginePricing {
+  currency: string
+  updatedAt: string
+  engines: Record<string, EngineRate>
+}
+
+export async function loadPricing(): Promise<EnginePricing | null> {
+  return getJson<EnginePricing>('/api/engine-pricing')
+}
+
+export async function savePricing(p: EnginePricing): Promise<EnginePricing | { error: string }> {
+  try {
+    const res = await fetch('/api/engine-pricing', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p),
+    })
+    const body = (await res.json().catch(() => null)) as (EnginePricing & { error?: string }) | null
+    if (!res.ok || !body) return { error: body?.error ?? `저장 실패 (HTTP ${res.status})` }
+    return body
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : '저장 중 오류가 발생했습니다.' }
+  }
+}
+
 export async function loadUsage(weeks = 4): Promise<UsageStats | null> {
   return getJson<UsageStats>(`/api/usage?weeks=${weeks}`)
 }

@@ -38,3 +38,4 @@ server/delete-requests.json
 server/tenants.deleted.json
 server/measure-runs.json
 dist-electron
+server/engine-pricing.json
