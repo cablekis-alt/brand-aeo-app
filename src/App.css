@@ -2027,7 +2027,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 .measure-progress li {
   display: grid;
-  grid-template-columns: minmax(90px, 1fr) 64px 1fr auto minmax(52px, auto);
+  grid-template-columns: minmax(90px, 1fr) 64px 1fr auto;
   gap: 8px;
   align-items: center;
   font-size: 12.5px;
@@ -2047,14 +2047,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   transition: width 0.4s ease;
 }
 .mp-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* 남은 시간 어림. 확정 값인 건수보다 흐리게 둬 "어림"이라는 걸 색으로도 말한다. */
-.mp-eta {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  text-align: right;
-  color: var(--muted);
-}
-/* 경과 시간 — 줄마다 반복하지 않고 목록 위에 한 번. */
+/* 경과·남은 시간 — 줄마다 반복하지 않고 목록 위에 한 번. */
 .mp-elapsed {
   margin: 10px 0 0;
   font-size: 12.5px;
