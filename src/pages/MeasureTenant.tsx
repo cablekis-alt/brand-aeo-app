@@ -87,7 +87,7 @@ export default function MeasureTenant() {
     setMessage(
       measureVia === 'github'
         ? `${pickedTenant} GitHub Actions 측정 요청 중…`
-        : `${pickedTenant} 측정 중… (수 분). 이 탭을 열어 두세요.`,
+        : `${pickedTenant} 측정 중… 이 탭을 열어 두세요. 경과·남은 시간은 아래 진행 표시에 나옵니다.`,
     )
     try {
       if (measureVia === 'github') {
