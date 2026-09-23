@@ -805,28 +805,6 @@
     ]
   },
   {
-    "tenantId": "comp-7ulalt",
-    "brandName": "KT",
-    "aliases": [
-      "KT",
-      "케이티",
-      "kt.com"
-    ],
-    "ownedDomains": [],
-    "industry": "펜션",
-    "region": "경기 성남 분당",
-    "engines": [
-      "openai",
-      "gemini"
-    ],
-    "questionBankSize": 36,
-    "questionBankVersion": "v3",
-    "repeatsPerQuestion": 1,
-    "competitors": [],
-    "factGraph": [],
-    "cohortOnly": true
-  },
-  {
     "tenantId": "o2o",
     "brandName": "ado2",
     "aliases": [
