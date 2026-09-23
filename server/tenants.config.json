@@ -813,8 +813,8 @@
     "ownedDomains": [
       "o2o.kr"
     ],
-    "industry": "펜션",
-    "region": "경기 성남 분당",
+    "industry": "AI 마케팅 자동화",
+    "region": "경기 성남 수정",
     "engines": [
       "openai",
       "gemini"
@@ -822,15 +822,7 @@
     "questionBankSize": 36,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [
-      {
-        "name": "kt.com",
-        "aliases": [
-          "kt.com"
-        ],
-        "domains": []
-      }
-    ],
+    "competitors": [],
     "factGraph": [
       {
         "id": "brand-address",
