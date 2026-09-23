@@ -808,10 +808,13 @@
     "tenantId": "o2o",
     "brandName": "ado2",
     "aliases": [
-      "ado2"
+      "ado2",
+      "ADO2",
+      "애드오투"
     ],
     "ownedDomains": [
-      "o2o.kr"
+      "o2o.kr",
+      "o2osolution.ai"
     ],
     "industry": "AI 마케팅 자동화",
     "region": "경기 성남 수정",
