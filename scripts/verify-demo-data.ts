@@ -56,7 +56,8 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     const derivedRank = mean(ranks);
     const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0);
     const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
-    const derivedFact = supported + contradicted > 0 ? supported / (supported + contradicted) : 1;
+    // 대조한 사실이 없으면 측정 불가(null)다 — 집계(server/aggregate.ts)와 같은 규칙.
+    const derivedFact = supported + contradicted > 0 ? supported / (supported + contradicted) : null;
     // 브랜드 소유 출처는 "인용 단위"(전체 인용 중 자사 도메인 비중, URL 상세 분석과 동일)로 통일됐다.
     const totalCitations = analyses.reduce((s, a) => s + a.citations.length, 0);
     const brandOwnedCitations = analyses.reduce(
@@ -68,9 +69,14 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
 
     const checks: [string, number, number][] = [
       ['언급률', derivedMention, card.mentionRate],
-      ['사실성', derivedFact, card.factualityScore],
       ['인용', brandOwnedCitationRate, card.brandOwnedCitationRate],
     ];
+    // 사실성은 측정 불가(null)일 수 있다. 한쪽만 null이면 불일치, 둘 다 값이면 차이를 본다.
+    if (derivedFact === null || card.factualityScore === null) {
+      if (derivedFact !== card.factualityScore) checks.push(['사실성(null 불일치)', derivedFact ?? -1, card.factualityScore ?? -1]);
+    } else {
+      checks.push(['사실성', derivedFact, card.factualityScore]);
+    }
     // SoM은 경쟁사가 없으면 스코어카드에서 null이다. 그 경우 검증 대상에서 제외한다.
     if (card.shareOfMention !== null) {
       checks.push(['SoM', derivedSom, card.shareOfMention]);

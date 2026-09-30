@@ -162,10 +162,11 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
     )
   }
 
-  // 사실성 점수 하락
-  const factDelta = cur.factualityScore - prev.factualityScore
-  if (factDelta <= -0.1) {
-    alerts.push({ level: 'warn', title: `사실 정확도 하락`, detail: `전주 ${pct(prev.factualityScore)} → 이번 주 ${pct(cur.factualityScore)}. AI가 틀린 정보를 말하는 비율이 늘었습니다.` })
+  // 사실 정확도 하락 — 두 주 모두 실제로 대조한 사실이 있을 때만 비교한다(측정 불가 주는 건너뜀).
+  const curFact = cur.factualityScore
+  const prevFact = prev.factualityScore
+  if (curFact !== null && prevFact !== null && curFact - prevFact <= -0.1) {
+    alerts.push({ level: 'warn', title: `사실 정확도 하락`, detail: `전주 ${pct(prevFact)} → 이번 주 ${pct(curFact)}. AI가 틀린 정보를 말하는 비율이 늘었습니다.` })
   }
 
   // 변동성(신뢰구간 폭)이 크면 단일 변동 과잉해석 주의

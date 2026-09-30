@@ -367,12 +367,12 @@ export default function Dashboard() {
             <article>
               <h2>평균 추천 순위</h2>
               <p>{formatRank(card.avgRecommendationRank)}</p>
-              <span>1이 최상위. 추천 문맥이 없으면 판정 불가</span>
+              <span>1이 최상위. 순위가 매겨진 응답이 3건 미만이면 판정 불가</span>
             </article>
             <article>
               <h2>사실성</h2>
               <p>{formatPct(card.factualityScore)}</p>
-              <span>Fact Graph와 모순되지 않은 주장 비율</span>
+              <span>Fact Graph와 모순되지 않은 주장 비율 · 점수 미포함. 팩트 그래프가 없으면 판정 불가</span>
             </article>
             <article>
               <h2>브랜드 소유 출처</h2>

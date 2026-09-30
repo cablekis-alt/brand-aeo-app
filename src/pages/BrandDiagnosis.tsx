@@ -113,14 +113,6 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       value: card.avgRecommendationRank === null ? null : normalizeRank(card.avgRecommendationRank),
       text: card.avgRecommendationRank === null ? '판정 불가' : `${card.avgRecommendationRank.toFixed(1)}위`,
     },
-    {
-      key: 'f',
-      letter: 'F',
-      label: '사실성',
-      weight: AEO_SCORE_WEIGHTS.factualityScore,
-      value: card.factualityScore,
-      text: formatPct(card.factualityScore),
-    },
   ]
   const missing = rows.filter((r) => r.value === null)
   return (
@@ -128,7 +120,7 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       <p className="eyebrow">Brand AEO Score · {weekLabel(card.weekOf)}</p>
       <p className="breakdown-total">
         <strong>{card.aeoScore.current}</strong>
-        <span className="muted">점 — 아래 다섯 항목을 가중 평균한 값입니다</span>
+        <span className="muted">점 — 아래 네 항목을 가중 평균한 값입니다</span>
       </p>
       <ul className="breakdown-rows">
         {rows.map((r) => (
@@ -152,6 +144,11 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
         M·S에는 감성 계수가 곱해집니다.
         {missing.length > 0 &&
           ` ${missing.map((r) => r.letter).join('·')}는 측정할 수 없어 그 가중치를 빼고 남은 합으로 재정규화했습니다 — 0점으로 치지 않습니다.`}
+      </p>
+      {/* 사실성은 팩트 그래프가 있는 브랜드만 잴 수 있어 코호트 안에서 같은 조건으로 비교할 수 없다 — 점수 밖에 둔다. */}
+      <p className="hint" style={{ marginBottom: 0 }}>
+        사실성(정확도) {formatPct(card.factualityScore)} — 점수에 포함되지 않습니다. 팩트 그래프(공식 사실 정보)가 있어야
+        측정되며, 없으면 판정 불가로 표시합니다.
       </p>
     </section>
   )

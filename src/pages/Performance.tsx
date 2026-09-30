@@ -18,7 +18,6 @@ const WEIGHTS: { key: keyof typeof AEO_SCORE_WEIGHTS; label: string }[] = [
   { key: 'shareOfMention', label: 'Share of Mention (감성 가중)' },
   { key: 'brandOwnedCitationRate', label: '브랜드 소유 출처(인용)' },
   { key: 'avgRecommendationRank', label: '추천 순위' },
-  { key: 'factualityScore', label: '사실성' },
 ]
 
 function maxScore(history: WeeklyScorecard[]): number {
@@ -292,9 +291,11 @@ export default function Performance() {
             <p className="muted">
               Brand AEO Score는 아래 가중치의 가중합(0–100)입니다. 언급률과 SoM은 <b>같은 모집단</b>—브랜드명을 넣지 않은
               카테고리 무관 질문의 응답—에서 냅니다. 두 값에는 감성 계수(positive 1.0 / neutral 0.7 / negative 0.2)를
-              곱하고, 경쟁사가 없거나 그 질문들에 아무 언급도 없어 SoM을 못 재거나 추천 문맥이 없어 순위를 못 재면 그
-              가중치를 빼고 재정규화합니다. EEAT는 별도 진단 축이라 점수에는 포함하지 않으며, 리포트 단계에서 다시
-              계산하지 않습니다.
+              곱합니다. 추천 순위도 같은 질문에서 내고, 순위가 매겨진 응답이 3건 미만이면 판정 불가로 둡니다. 경쟁사가
+              없거나 그 질문들에 아무 언급도 없어 SoM을 못 재거나 순위를 판정하지 못하면 그 가중치를 빼고 재정규화합니다.
+              EEAT와 사실성(정확도)은 별도 진단 축이라 점수에 포함하지 않습니다 — 사실성은 팩트 그래프가 있는 브랜드만
+              잴 수 있어 코호트 안에서 같은 조건으로 비교할 수 없기 때문입니다. 리포트 단계에서는 점수를 다시 계산하지
+              않습니다.
             </p>
             <ul className="weights">
               {WEIGHTS.map((item) => (

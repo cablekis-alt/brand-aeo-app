@@ -20,7 +20,7 @@ export interface WeeklyMetrics {
   mentionRate: number;
   shareOfMention: number | null;
   avgRecommendationRank: number | null;
-  factualityScore: number;
+  factualityScore: number | null;
   brandOwnedCitationRate: number;
   /** 감성 계수(0.2~1.0). 점수에만 반영되고 화면 지표에는 들어가지 않는다. */
   mentionSentiment: number;
@@ -39,7 +39,7 @@ const ENGINE_ORDER = ['openai', 'gemini', 'claude', 'perplexity'];
  * 않은 것으로 보고 null(재정규화로 제외)로 둔다.
  *
  * 2026-W40 기준 순위가 산출된 48곳 중 20곳이 응답 2건 이하, 14곳이 1건이었다. 1건이면 그 한 번이
- * 1위였는지만으로 가중치 0.15짜리 지표가 만점이 된다.
+ * 1위였는지만으로 추천 순위 지표가 만점이 된다.
  */
 export const MIN_RANKED_RESPONSES = 3;
 
@@ -68,8 +68,10 @@ export function aggregateWeeklyMetrics(
 
   const totalSupported = analyses.reduce((sum, a) => sum + a.factualitySupported, 0);
   const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
+  // 대조할 사실이 하나도 없으면 측정 불가다 — 100%로 채우지 않는다. 팩트 그래프가 없는 브랜드는 판정
+  // 자체가 돌지 않아 늘 이 경우다. 점수에는 들어가지 않는 정확도 지표다(b8-report.ts 가중치 주석).
   const factualityScore =
-    totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : 1;
+    totalSupported + totalContradicted > 0 ? totalSupported / (totalSupported + totalContradicted) : null;
 
   // 브랜드 소유 출처 = "인용 단위"(전체 인용 중 자사 도메인 비중, URL 상세 분석 화면과 동일).
   // 이전의 "자사 인용을 포함한 응답 비율"과 달리 라벨("인용이 자사 도메인으로 연결된 비율")과 일치한다.
@@ -93,7 +95,6 @@ export function aggregateWeeklyMetrics(
     mentionRate,
     shareOfMention,
     avgRecommendationRank,
-    factualityScore,
     brandOwnedCitationRate,
     mentionSentiment,
   });
@@ -102,17 +103,12 @@ export function aggregateWeeklyMetrics(
   // 응답별 순위도 위 지표와 같은 모집단만 쓴다 — 브랜드명 질문의 순위가 분산에 섞이지 않게.
   const agnosticSet = new Set(categoryAgnostic);
   const perCallScores = analyses.map((a) => {
-    const perCallFactuality =
-      a.factualitySupported + a.factualityContradicted > 0
-        ? a.factualitySupported / (a.factualitySupported + a.factualityContradicted)
-        : 1;
     const perCallSentiment =
       a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
       shareOfMention: hasCompetitors ? a.shareOfMention : null,
       avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
-      factualityScore: perCallFactuality,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
       mentionSentiment: perCallSentiment,
     });

@@ -250,8 +250,10 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
   const brandOwnedTarget = Math.round(totalCitations * card.brandOwnedCitationRate);
 
   // 4) 사실성 — Fact Graph 대조가 가능한 질문에만 주장을 1건씩 붙인다.
+  //    사실성이 측정 불가(null)였던 카드는 대조한 사실이 없었던 것이라 주장을 만들지 않는다.
   const factualSlots = slots.filter((slot) => slot.question.factual).length;
-  const contradictedTarget = Math.round(factualSlots * (1 - card.factualityScore));
+  const measuredFactuality = card.factualityScore;
+  const contradictedTarget = measuredFactuality === null ? 0 : Math.round(factualSlots * (1 - measuredFactuality));
 
   // 5) 추천 순위 — 평균이 avgRecommendationRank가 되도록 1위 일부와 인접한 두 순위를 섞는다.
   //    1위를 따로 떼어두지 않으면 평균만 맞고 "추천 1순위 비율"이 항상 0이 된다.
@@ -354,7 +356,7 @@ export function demoQuestionAnalyses(tenant: DemoTenant, weekOf: string): Questi
 
     // 사실성 주장 — 테넌트의 Fact Graph 첫 항목을 기준값으로 삼는다.
     const factualityClaims: FactClaimDetail[] = [];
-    if (slot.question.factual && fact) {
+    if (slot.question.factual && fact && measuredFactuality !== null) {
       const contradicted = evenCount(factualSeen, factualSlots, contradictedTarget);
       factualSeen += 1;
       factualityClaims.push(

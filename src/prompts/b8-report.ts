@@ -10,10 +10,11 @@ import type { PromptMessage } from './types.js';
  * 사람은 뜻을 알 수 없었다. Site AEO Score와 구별해야 하므로 'AEO Score'가 아니라
  * 'Brand AEO Score'가 정식 이름이다.
  *
- *   Mention 0.25 · Share of Mention 0.25 · Citation 0.20 · Position 0.15 · Factuality 0.15 (합 1.0)
+ *   Mention 25 : Share of Mention 25 : Citation 20 : Position 15 — 이 비율을 합 1로 맞춘 값이다
+ *   (29.4% · 29.4% · 23.5% · 17.6%).
  *   · Mention/SoM에는 감성 계수를 곱한다
- *   · EEAT는 점수에 넣지 않고 별도 진단 축으로 둔다
- *   · SoM/순위가 null(경쟁사·추천문맥 없음)이면 그 가중치를 빼고 남은 합으로 재정규화한다
+ *   · EEAT와 사실성은 점수에 넣지 않고 별도 진단 축으로 둔다
+ *   · SoM/순위가 null(경쟁사 없음 · 순위 응답 3건 미만)이면 그 가중치를 빼고 남은 합으로 재정규화한다
  *
  * 왜 여기(src/prompts)에 두는가 — server와 src가 둘 다 import하는 유일한 지점이기 때문이다.
  * 예전에는 server/scoring.ts와 src/lib/b9-report.ts가 각자 표를 들고 있었고 값이 갈라졌다
@@ -22,13 +23,26 @@ import type { PromptMessage } from './types.js';
  *
  * 키는 WeeklyScorecard의 필드명을 따른다 — 지표와 가중치를 잇는 이름이 하나여야
  * 중간에 손으로 만든 대응표가 끼어들지 않는다.
+ *
+ * 사실성(원래 0.15)은 2026-09-30에 뺐다. 사실성은 브랜드의 팩트 그래프와 대조해야 잴 수 있는데,
+ * 팩트 그래프는 사실상 우리 고객에게만 있다. 판정이 0건이면 100%로 채워, 측정 브랜드 139곳 중
+ * 119곳이 한 번도 재지 않은 지표에서 만점을 받았고, 팩트 그래프를 등록한 브랜드만 깎일 수 있었다.
+ * 채우지 않고 빼기만 하면(재정규화) 반대로 팩트 그래프가 있는 브랜드만 사실성을 가져 코호트에서
+ * 유리해진다(펜션 W40 스테이,머뭄 5위 → 2위). 코호트 안에서 같은 조건으로 잴 수 없는 지표라
+ * 점수에서 빼고 정확도로 따로 보여준다.
  */
+const WEIGHT_RATIO = {
+  mentionRate: 25,
+  shareOfMention: 25,
+  brandOwnedCitationRate: 20,
+  avgRecommendationRank: 15,
+} as const;
+const WEIGHT_TOTAL = Object.values(WEIGHT_RATIO).reduce((sum, w) => sum + w, 0);
 export const AEO_SCORE_WEIGHTS = {
-  mentionRate: 0.25,
-  shareOfMention: 0.25,
-  brandOwnedCitationRate: 0.2,
-  avgRecommendationRank: 0.15,
-  factualityScore: 0.15,
+  mentionRate: WEIGHT_RATIO.mentionRate / WEIGHT_TOTAL,
+  shareOfMention: WEIGHT_RATIO.shareOfMention / WEIGHT_TOTAL,
+  brandOwnedCitationRate: WEIGHT_RATIO.brandOwnedCitationRate / WEIGHT_TOTAL,
+  avgRecommendationRank: WEIGHT_RATIO.avgRecommendationRank / WEIGHT_TOTAL,
 } as const;
 
 /**
@@ -53,7 +67,9 @@ export interface WeeklyScorecard {
   // 경쟁사가 없거나 그 모집단에 아무 언급도 없으면 측정 불가(null).
   shareOfMention: number | null;
   avgRecommendationRank: number | null;
-  factualityScore: number; // supported / (supported+contradicted)
+  // supported / (supported+contradicted). 사실 판정이 0건이면 측정 불가(null) — 팩트 그래프가 없는
+  // 브랜드는 늘 그렇다. Brand AEO Score에는 들어가지 않는 정확도 지표다(AEO_SCORE_WEIGHTS 주석).
+  factualityScore: number | null;
   brandOwnedCitationRate: number;
   cohortRank: {
     position: number;
@@ -138,7 +154,7 @@ export function buildWeeklyReportPrompt(
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
 - Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준): ${card.shareOfMention === null ? '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가' : `${(card.shareOfMention * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
-- 사실성 점수: ${(card.factualityScore * 100).toFixed(1)}%
+- 사실성(정확도, Brand AEO Score에 포함되지 않음): ${card.factualityScore === null ? '팩트 그래프 없음 또는 대조할 사실 없음 — 측정 불가' : `${(card.factualityScore * 100).toFixed(1)}%`}
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%
 - 업종·지역 코호트 순위: ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position} / ${card.cohortRank.totalTenants}
 - 사실성 위반 사례: ${card.hallucinationFlags.join(' / ') || '없음'}${eeatLines}${citationLines}`;

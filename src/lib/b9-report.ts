@@ -137,23 +137,27 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     })
   }
 
-  // 4) 사실성
+  // 4) 사실성 — Brand AEO Score에 들어가지 않는 정확도 지표라 가중치가 없다(EEAT와 같은 진단 참고용).
+  //    대조한 사실이 없으면 측정 불가다.
   {
-    let s = rateStatus(card.factualityScore, 0.9, 0.8, 0.6)
+    const v = card.factualityScore
+    let s: MetricStatus = v === null ? 'unknown' : rateStatus(v, 0.9, 0.8, 0.6)
     if (card.hallucinationFlags.length > 0 && (s === 'good' || s === 'ok')) s = 'warn'
     out.push({
       key: 'factualityScore',
-      label: '사실성',
-      weight: AEO_SCORE_WEIGHTS.factualityScore,
-      valueText: formatPct(card.factualityScore),
+      label: '사실성 (점수 미포함)',
+      weight: 0,
+      valueText: formatPct(v),
       status: s,
       note:
         card.hallucinationFlags.length > 0
           ? `Fact Graph와 모순되는 주장이 ${card.hallucinationFlags.length}건 관측됐습니다.`
-          : s === 'good'
-            ? '답변이 사실 정보와 대체로 일치합니다.'
-            : '답변에 사실과 어긋나는 서술이 포함될 여지가 있습니다.',
-      delta: pctDelta(card.factualityScore, prev?.factualityScore),
+          : v === null
+            ? '팩트 그래프가 없거나 대조할 사실이 없어 측정하지 못했습니다.'
+            : s === 'good'
+              ? '답변이 사실 정보와 대체로 일치합니다.'
+              : '답변에 사실과 어긋나는 서술이 포함될 여지가 있습니다.',
+      delta: pctDelta(v, prev?.factualityScore),
     })
   }
 
@@ -284,7 +288,8 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
     })
   }
 
-  if (weak('factualityScore')) {
+  // 사실성을 재지 못한 브랜드(팩트 그래프 없음)에 "사실 오류 정정"을 권하지 않는다 — 오류가 있다는 근거가 없다.
+  if (weak('factualityScore') && by.factualityScore.status !== 'unknown') {
     const m = by.factualityScore
     recs.push({
       id: 'fact',
