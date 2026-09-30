@@ -104,7 +104,35 @@
     "questionBankSize": 36,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "더스완성형외과",
+        "aliases": [
+          "더스완성형외과"
+        ],
+        "domains": [
+          "sswan.co.kr"
+        ]
+      },
+      {
+        "name": "디에이성형외과",
+        "aliases": [
+          "디에이성형외과"
+        ],
+        "domains": [
+          "daprs.com"
+        ]
+      },
+      {
+        "name": "아이디성형외과",
+        "aliases": [
+          "아이디성형외과"
+        ],
+        "domains": [
+          "idhospital.com"
+        ]
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -126,7 +154,35 @@
     "questionBankSize": 36,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "더스완성형외과",
+        "aliases": [
+          "더스완성형외과"
+        ],
+        "domains": [
+          "sswan.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과",
+        "aliases": [
+          "바노바기성형외과"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      },
+      {
+        "name": "디에이성형외과",
+        "aliases": [
+          "디에이성형외과"
+        ],
+        "domains": [
+          "daprs.com"
+        ]
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -148,7 +204,35 @@
     "questionBankSize": 36,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "더스완성형외과",
+        "aliases": [
+          "더스완성형외과"
+        ],
+        "domains": [
+          "sswan.co.kr"
+        ]
+      },
+      {
+        "name": "바노바기성형외과",
+        "aliases": [
+          "바노바기성형외과"
+        ],
+        "domains": [
+          "banobagi.com"
+        ]
+      },
+      {
+        "name": "아이디성형외과",
+        "aliases": [
+          "아이디성형외과"
+        ],
+        "domains": [
+          "idhospital.com"
+        ]
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
