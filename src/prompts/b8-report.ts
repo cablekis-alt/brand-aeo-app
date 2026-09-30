@@ -114,8 +114,12 @@ export interface WeeklyScorecard {
 
 /**
  * B8 — 스코어카드를 사람이 읽는 리포트로 요약.
- * 점수 자체(가중합, MA4, CI, 코호트 랭킹)는 결정적 계산이며 이 프롬프트의 입력으로 이미 확정되어 들어온다.
+ * 점수 자체(가중합, MA4, CI)는 결정적 계산이며 이 프롬프트의 입력으로 이미 확정되어 들어온다.
  * 모델은 새로운 수치를 만들어내지 말고, 주어진 수치만 해석해야 한다.
+ *
+ * 코호트 순위는 넣지 않는다. 리포트는 측정 중에 쓰이는데 순위는 코호트 전원이 저장된 뒤
+ * reconcileCohortRanks(server/cohortRank.ts)에서 확정된다 — 넣으면 본문에 그 순간의 틀린
+ * 분모가 박제된다(실측 2026-W39 통신: 세종텔레콤 "6 / 5", 다섯 곳 중 네 곳이 실제와 달랐다).
  */
 export function buildWeeklyReportPrompt(
   card: WeeklyScorecard,
@@ -156,7 +160,6 @@ export function buildWeeklyReportPrompt(
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성(정확도, Brand AEO Score에 포함되지 않음): ${card.factualityScore === null ? '팩트 그래프 없음 또는 대조할 사실 없음 — 측정 불가' : `${(card.factualityScore * 100).toFixed(1)}%`}
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%
-- 업종·지역 코호트 순위: ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position} / ${card.cohortRank.totalTenants}
 - 사실성 위반 사례: ${card.hallucinationFlags.join(' / ') || '없음'}${eeatLines}${citationLines}`;
 
   return { system, user };
