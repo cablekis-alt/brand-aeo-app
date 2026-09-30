@@ -578,7 +578,8 @@
       {
         "name": "해오름펜션",
         "aliases": [
-          "해오름펜션"
+          "해오름펜션",
+          "군산 해오름펜션"
         ],
         "domains": []
       }
@@ -609,7 +610,55 @@
     "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션",
+          "군산 해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -629,7 +678,55 @@
     "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션",
+          "군산 해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -649,7 +746,55 @@
     "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션",
+          "군산 해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -669,7 +814,55 @@
     "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션",
+          "군산 해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -689,7 +882,55 @@
     "questionBankSize": 42,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "해오름펜션",
+        "aliases": [
+          "해오름펜션",
+          "군산 해오름펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
@@ -710,7 +951,54 @@
     "questionBankSize": 36,
     "questionBankVersion": "v3",
     "repeatsPerQuestion": 1,
-    "competitors": [],
+    "competitors": [
+      {
+        "name": "스테이,머뭄",
+        "aliases": [
+          "스테이,머뭄",
+          "스테이머뭄",
+          "군산 스테이머뭄"
+        ],
+        "domains": [
+          "web4ai.o2osolution.ai"
+        ]
+      },
+      {
+        "name": "스테이 골목집",
+        "aliases": [
+          "스테이 골목집"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이옥도",
+        "aliases": [
+          "스테이옥도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "초원고택",
+        "aliases": [
+          "초원고택"
+        ],
+        "domains": []
+      },
+      {
+        "name": "스테이 선연",
+        "aliases": [
+          "스테이 선연"
+        ],
+        "domains": []
+      },
+      {
+        "name": "라엘펜션",
+        "aliases": [
+          "라엘펜션"
+        ],
+        "domains": []
+      }
+    ],
     "factGraph": [],
     "cohortOnly": true
   },
