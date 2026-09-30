@@ -429,7 +429,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
 }
 
 /** B8 — 결정적 집계. 지표 계산은 server/aggregate.ts 한 곳에만 두고 여기서는 카드를 조립한다. */
-function aggregateScorecard(
+export function aggregateScorecard(
   tenant: TenantConfig,
   weekOf: string,
   questions: QuestionSpec[],
@@ -442,8 +442,13 @@ function aggregateScorecard(
 ): WeeklyScorecard {
   const m = aggregateWeeklyMetrics(tenant, questions, analyses);
 
-  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score;
-  const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]));
+  // 이번 주보다 앞선 주만 본다. 같은 주를 다시 재면 히스토리에 그 주의 이전 측정 카드가 아직
+  // 남아 있어(saveScorecard가 교체하는 것은 이 계산 뒤다) 그 카드가 "전주"가 되고 이동평균에
+  // 같은 주가 두 번 들어간다(실측 2026-W40 스테이,머뭄 3차: 전주 4·ma4 14, 맞는 값 27·21).
+  // 재계산 스크립트(rescore-local·rescore-all)는 주차마다 한 장씩 히스토리를 쌓아 같은 규칙이다.
+  const prior = history.filter((h) => h.weekOf < weekOf);
+  const previousWeek = prior.length > 0 ? prior[prior.length - 1].aeoScore.current : m.score;
+  const ma4 = Math.round(movingAverage4([...prior.map((h) => h.aeoScore.current), m.score]));
 
   return {
     tenantId: tenant.tenantId,
