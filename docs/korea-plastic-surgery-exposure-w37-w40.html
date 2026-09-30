@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Korea Plastic Surgery 노출 분석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+  th.brk2, td.brk2 { border-left: 2px dotted var(--rule-2); }
+
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  .bar { display: block; height: 10px; width: calc(var(--w) * 4px); background: var(--context); border-radius: 2px; }
+  .bar.focus { background: var(--s1); }
+  th.bar-col { min-width: 100px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">내부 검토 · 키워드 노출 · 성형외과 측정 응답 W37–W40</p>
+  <h1>Korea Plastic Surgery, AI 답변에서 얼마나 보이나</h1>
+  <p class="lede">성형외과 브랜드를 측정하며 모은 AI 응답 2,002건을 다시 읽어, “Korea Plastic Surgery” 계열 사이트가 얼마나 나오는지 셌다. <strong>31건(1.55%)</strong>에 나왔고 <strong>전부 인용 링크</strong>였다. AI가 답변 본문에서 이 이름을 직접 부른 적은 한 번도 없다. 국내 AI 답변에서 성형 정보의 중심은 네이버 블로그(23.6%)와 강남언니(18.6%)이고, 이 키워드는 미국성형외과학회와 비슷한 수준의 작은 출처다.</p>
+  <dl class="meta">
+    <div><dt>키워드</dt><dd>Korea Plastic Surgery</dd></div>
+    <div><dt>모집단</dt><dd>성형외과 측정 응답 2,002건</dd></div>
+    <div><dt>기간</dt><dd>2026-W37 – W40</dd></div>
+    <div><dt>방식</dt><dd>기존 측정 재분석 (추가 호출 없음)</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">무엇을 셌나</p>
+  <h2>병원이 아니라 사이트·커뮤니티 이름이다</h2>
+  <p class="lede">우리 프로그램에 “Korea Plastic Surgery”라는 브랜드나 별칭은 없다(등록 브랜드 144곳, 경쟁사 목록까지 확인). 측정 데이터에 나오는 이 이름은 외국인 환자를 겨냥한 영어 정보 사이트와 해외 이용자 커뮤니티다. 인용 주소에 <code>korea-plastic-surgery</code>(또는 <code>koreaplasticsurgery</code>)가 들어간 것과, 답변 본문에 “Korea Plastic Surgery”라는 글자가 나온 것을 모두 셌다.</p>
+  <div class="scroller">
+    <table>
+      <caption>키워드가 나온 응답 31건의 출처 (응답 수)</caption>
+      <thead><tr><th class="lead">출처</th><th>응답</th><th class="lead">성격</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><code>korea-plastic-surgery-database.com</code></td><td class="n">23</td><td class="lead">외국인용 병원 순위·정보 사이트 — 시술별 “top” 순위 페이지</td></tr>
+        <tr><td class="lead">Reddit <code>r/KoreaPlasticSurgery</code></td><td class="n">5</td><td class="lead">해외 이용자 후기 커뮤니티 — 재수술·코 수술·부작용 글</td></tr>
+        <tr><td class="lead"><code>korea-plastic-surgery.com</code></td><td class="n">1</td><td class="lead">병원 소개 페이지 모음</td></tr>
+        <tr><td class="lead"><code>editionps.com</code> <span class="dim">(에디션성형외과)</span></td><td class="n">1</td><td class="lead">병원 블로그 글 주소에 키워드를 씀</td></tr>
+        <tr><td class="lead"><code>koreaplasticsurgery.tistory.com</code></td><td class="n">1</td><td class="lead">영문 후기 블로그</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">대한성형외과학회 사이트 <code>plasticsurgery.or.kr</code>은 이름이 비슷하지만 이 키워드에 넣지 않았다(주소에 “korea”가 없다). 아래 비교표에 따로 있다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">다른 출처와 비교</p>
+  <h2>국내 AI 답변의 성형 정보는 네이버 블로그와 강남언니가 쥐고 있다</h2>
+  <div class="scroller">
+    <table>
+      <caption>같은 응답 2,002건 중 각 출처가 나온 응답의 비율</caption>
+      <thead><tr><th class="lead">출처</th><th>응답</th><th>비율</th><th class="lead bar-col"></th></tr></thead>
+      <tbody>
+        <tr><td class="lead">네이버 블로그</td><td class="n">472</td><td class="n">23.6%</td><td class="lead"><span class="bar" style="--w: 23.6"></span></td></tr>
+        <tr><td class="lead">강남언니</td><td class="n">373</td><td class="n">18.6%</td><td class="lead"><span class="bar" style="--w: 18.6"></span></td></tr>
+        <tr><td class="lead">성예사</td><td class="n">190</td><td class="n">9.5%</td><td class="lead"><span class="bar" style="--w: 9.5"></span></td></tr>
+        <tr><td class="lead">바비톡</td><td class="n">148</td><td class="n">7.4%</td><td class="lead"><span class="bar" style="--w: 7.4"></span></td></tr>
+        <tr><td class="lead">대한성형외과학회 <code>plasticsurgery.or.kr</code></td><td class="n">98</td><td class="n">4.9%</td><td class="lead"><span class="bar" style="--w: 4.9"></span></td></tr>
+        <tr><td class="lead">Reddit 전체</td><td class="n">42</td><td class="n">2.1%</td><td class="lead"><span class="bar" style="--w: 2.1"></span></td></tr>
+        <tr class="hi"><td class="lead"><strong>Korea Plastic Surgery 계열</strong></td><td class="n"><strong>31</strong></td><td class="n"><strong>1.5%</strong></td><td class="lead"><span class="bar focus" style="--w: 1.5"></span></td></tr>
+        <tr><td class="lead">미국성형외과학회 <code>plasticsurgery.org</code></td><td class="n">31</td><td class="n">1.5%</td><td class="lead"><span class="bar" style="--w: 1.5"></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">응답 단위로 셌다 — 한 응답에 같은 출처가 여러 번 인용돼도 1건이다. 인용 목록과 본문 속 링크를 모두 본다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">어디서 나오나</p>
+  <h2>엔진·주차·질문 유형·측정 브랜드별</h2>
+  <div class="scroller">
+    <table>
+      <caption>키워드가 나온 응답 / 전체 응답</caption>
+      <thead><tr><th class="lead">구분</th><th class="lead">항목</th><th>나온 응답</th><th>비율</th></tr></thead>
+      <tbody>
+        <tr><td class="lead dim" rowspan="3">엔진</td><td class="lead">Gemini</td><td class="n">18 / 828</td><td class="n">2.17%</td></tr>
+        <tr><td class="lead">OpenAI <span class="dim">(W37–W38만)</span></td><td class="n">6 / 396</td><td class="n">1.52%</td></tr>
+        <tr><td class="lead">Perplexity</td><td class="n">7 / 778</td><td class="n">0.90%</td></tr>
+        <tr><td class="lead dim" rowspan="4">주차</td><td class="lead">W37</td><td class="n">12 / 792</td><td class="n">1.52%</td></tr>
+        <tr><td class="lead">W38</td><td class="n">7 / 424</td><td class="n">1.65%</td></tr>
+        <tr><td class="lead">W39</td><td class="n">6 / 357</td><td class="n">1.68%</td></tr>
+        <tr><td class="lead">W40</td><td class="n">6 / 429</td><td class="n">1.40%</td></tr>
+        <tr class="hi"><td class="lead dim" rowspan="2">질문 유형</td><td class="lead">일반 질문 (브랜드 이름 없음)</td><td class="n">25 / 1,223</td><td class="n"><strong>2.04%</strong></td></tr>
+        <tr><td class="lead">브랜드 지목 질문</td><td class="n">6 / 779</td><td class="n">0.77%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede">네 주 내내 1.4~1.7%로 거의 같다. 브랜드 이름 없이 병원을 찾는 일반 질문에서 두 배 넘게 자주 붙는다 — 순위·모음 사이트가 “어디가 잘해?”류 질문의 근거로 쓰이는 전형적인 모습이다. Gemini가 가장 자주 인용한다.</p>
+  <div class="scroller">
+    <table>
+      <caption>측정 브랜드별 — 키워드가 한 번이라도 나온 곳 (비율 높은 순)</caption>
+      <thead><tr><th class="lead">측정 브랜드</th><th>나온 응답</th><th>비율</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">WJ 원진성형외과</td><td class="n">6 / 140</td><td class="n">4.29%</td></tr>
+        <tr><td class="lead">뷰성형외과</td><td class="n">4 / 108</td><td class="n">3.70%</td></tr>
+        <tr><td class="lead">쁠리성형외과</td><td class="n">4 / 180</td><td class="n">2.22%</td></tr>
+        <tr><td class="lead">유노성형외과</td><td class="n">4 / 180</td><td class="n">2.22%</td></tr>
+        <tr><td class="lead">강남세브란스성형외과</td><td class="n">2 / 108</td><td class="n">1.85%</td></tr>
+        <tr><td class="lead">에스엠성형외과</td><td class="n">3 / 176</td><td class="n">1.70%</td></tr>
+        <tr><td class="lead">아이디성형외과</td><td class="n">2 / 177</td><td class="n">1.13%</td></tr>
+        <tr><td class="lead">기린성형외과</td><td class="n">2 / 178</td><td class="n">1.12%</td></tr>
+        <tr><td class="lead">바이미성형외과</td><td class="n">2 / 179</td><td class="n">1.12%</td></tr>
+        <tr><td class="lead">드림성형외과</td><td class="n">1 / 108</td><td class="n">0.93%</td></tr>
+        <tr><td class="lead">바노바기성형외과</td><td class="n">1 / 180</td><td class="n">0.56%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">“측정 브랜드”는 그 질문지를 받은 브랜드다. 키워드가 그 브랜드를 가리킨다는 뜻은 아니다. 표본이 브랜드당 1~6건이라 순서는 방향 정도로만 읽는다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">인용된 페이지</p>
+  <h2>순위 페이지와 재수술·부작용 후기 글</h2>
+  <div class="scroller">
+    <table>
+      <caption>자주 인용된 주소 (인용 횟수 — 한 응답에서 여러 번 인용되면 모두 셈)</caption>
+      <thead><tr><th class="lead">주소</th><th>인용</th></tr></thead>
+      <tbody>
+        <tr><td class="lead"><code>korea-plastic-surgery-database.com/for/top-nose-surgery</code></td><td class="n">6</td></tr>
+        <tr><td class="lead">Reddit — <code>double_eyelid_surgery_revision</code> (1vlhyd0)</td><td class="n">6</td></tr>
+        <tr><td class="lead"><code>korea-plastic-surgery.com/garnet/epicanthoplasty-seoul-korea</code></td><td class="n">4</td></tr>
+        <tr><td class="lead"><code>korea-plastic-surgery-database.com/for/gangnam-plastic-surgeons</code></td><td class="n">3</td></tr>
+        <tr><td class="lead"><code>korea-plastic-surgery-database.com/face-lift</code></td><td class="n">2</td></tr>
+        <tr><td class="lead"><code>korea-plastic-surgery-database.com/for/top-liposuction</code></td><td class="n">2</td></tr>
+        <tr><td class="lead">Reddit — <code>6_months_later_rhinoplasty_results</code></td><td class="n">2</td></tr>
+        <tr><td class="lead">Reddit — <code>i_was_botched_by_luho_plastic_surgery</code></td><td class="n">2</td></tr>
+        <tr><td class="lead">Reddit — <code>facial_contouring_high_chance_of_regret</code></td><td class="n">2</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede">정보 사이트는 “코 수술 잘하는 곳 top”, “강남 성형외과 의사” 같은 <strong>순위 페이지</strong>가 인용된다. Reddit은 <strong>재수술·부작용·후회 후기</strong>가 많다. 부정적인 경험담이 병원 이름과 함께 AI 답변의 근거로 쓰일 수 있다는 점은 병원 입장에서 눈여겨볼 만하다(예: W38 한 답변은 Reddit 글을 근거로 특정 클리닉의 부작용 사례를 “주의할 필요가 있다”고 소개했다).</p>
+</section>
+
+<section>
+  <p class="eyebrow">해석</p>
+  <h2>이 숫자로 말할 수 있는 것과 없는 것</h2>
+
+  <div class="finding sev-good">
+    <h3><span class="chip good">말할 수 있음</span> 한국어 AI 답변에서는 작은 출처다</h3>
+    <p>네 주 내내 응답의 1.4~1.7%에만 나오고, 답변 본문에서 이름이 불린 적은 없다. 국내 이용자가 한국어로 물을 때 성형 정보의 주된 근거는 네이버 블로그·강남언니·성예사·바비톡이다.</p>
+  </div>
+
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">말할 수 없음</span> 해외 환자가 영어로 물을 때의 노출</h3>
+    <p>측정 질문은 전부 한국어다. 이 사이트들은 외국인 환자를 겨냥한 영어 사이트라 한국어 질문에서는 적게 잡히는 것이 자연스럽다. “best plastic surgery clinic in Seoul” 같은 영어 질문에서는 전혀 다른 그림일 수 있다 — 그건 이 데이터로 알 수 없고, 영어 질문으로 새로 재야 한다.</p>
+  </div>
+
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">주의</span> 표본이 작다</h3>
+    <p>나온 응답이 31건이라 엔진·브랜드별 비율은 몇 건 차이로 크게 움직인다. OpenAI는 W37–W38에만 측정해 다른 엔진과 기간이 다르다.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">다음</p>
+  <h2>해외 환자 관점이 필요하다면</h2>
+  <ol class="todo">
+    <li><b>영어 질문 세트로 측정</b>
+      <p>외국인 환자가 물을 법한 영어 일반 질문(병원 추천·시술 비교·비용·후기)으로 성형외과 코호트를 잰다. 이 키워드 계열 사이트와 Reddit이 얼마나 근거로 쓰이는지, 어떤 병원이 불리는지를 한국어 결과와 나란히 본다. Perplexity 크레딧 충전이 먼저 필요하다.</p></li>
+    <li><b>부정 후기 인용 점검</b>
+      <p>Reddit 재수술·부작용 글이 어떤 병원 이름과 함께 인용되는지 따로 뽑아, 병원별로 확인이 필요한 글을 추린다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  설치본 데이터의 성형외과 브랜드 측정 원문(<code>raw-calls.json</code>, W37–W40, 응답 2,002건)을 다시 읽어 셌다. W36은 원문 기록이 없어 뺐다. 인용 목록과 답변 본문 속 링크에서 주소에 <code>korea-plastic-surgery</code>·<code>koreaplasticsurgery</code>가 들어간 것, 본문 글자 “Korea Plastic Surgery”를 모두 찾았다(본문 글자는 0건). 새로운 AI 호출은 하지 않았다.
+</footer>
+
+</div>
+</body>
+</html>
