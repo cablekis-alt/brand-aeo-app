@@ -7,6 +7,17 @@ import { TenantContext } from './tenant-context'
 const ATTEMPTS = 3
 const RETRY_DELAY_MS = 800
 
+// 마지막으로 고른 브랜드 — 앱을 다시 켜거나 새로 고쳐도 그 브랜드로 연다(전에는 늘 첫 브랜드였다).
+const TENANT_KEY = 'brand-aeo-tenant'
+
+function readStoredTenant(): string {
+  try {
+    return localStorage.getItem(TENANT_KEY) ?? ''
+  } catch {
+    return '' // 접근 불가(프라이빗 창 등) — 첫 브랜드로 연다
+  }
+}
+
 interface LoadResult {
   tenants: TenantSummary[]
   error: string | null
@@ -14,11 +25,22 @@ interface LoadResult {
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenants, setTenants] = useState<TenantSummary[]>([])
-  const [tenantId, setTenantId] = useState('')
+  const [tenantId, setTenantIdState] = useState(readStoredTenant)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   // 마지막으로 성공한 목록 — 재조회가 실패하면 이걸 유지해 선택지가 사라지지 않게 한다.
   const lastGood = useRef<TenantSummary[]>([])
+
+  // 사용자가 고른 것만 저장한다. apply의 자동 재조정(삭제된 브랜드 → 첫 브랜드)은 저장하지 않는다 —
+  // 서버에 잠깐 못 붙어 데모 목록이 뜰 때 그 첫 데모 브랜드로 실제 선택을 덮어쓰게 된다.
+  const setTenantId = useCallback((id: string) => {
+    setTenantIdState(id)
+    try {
+      localStorage.setItem(TENANT_KEY, id)
+    } catch {
+      /* 저장 못 해도 이번 세션의 선택은 그대로 */
+    }
+  }, [])
 
   /** 타임아웃 + 재시도. setState는 하지 않는다(결과만 돌려주고 반영은 apply가 한다). */
   const fetchWithRetry = useCallback(async (): Promise<LoadResult> => {
@@ -47,7 +69,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // 않으면 tenantId state가 삭제된 id를 계속 들고 있어 아래 tenants[0] 폴백과 어긋난다 —
     // 화면은 첫 브랜드를 보여주는데 state는 삭제된 id라, 그 첫 브랜드를 다시 고르면 select
     // 값이 이미 같아 onChange가 나지 않아 선택이 먹지 않는다.
-    setTenantId((current) =>
+    setTenantIdState((current) =>
       result.tenants.some((item) => item.tenantId === current) ? current : (result.tenants[0]?.tenantId ?? ''),
     )
   }, [])
