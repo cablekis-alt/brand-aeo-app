@@ -191,13 +191,19 @@ const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
  * "이 도메인을 인용한 질문이 없다"는 거짓말로 나온다. 그래서 규칙을 여기 그대로 적어 둔다
  * (src는 server를 import하지 않는다).
  */
+// 서버 server/citationSources.ts의 hostOf와 같은 규칙이다 — URL 호스트를 먼저 보고, 판정 모델의
+// domain은 URL이 아닌 인용에만 쓴다. 둘이 다르면 도메인 행과 질문 역인덱스의 키가 어긋난다.
 function normalizeHost(raw: string, fallbackDomain: string | null): string {
-  if (fallbackDomain) return fallbackDomain.replace(/^www\./, '').toLowerCase()
-  try {
-    return new URL(raw).hostname.replace(/^www\./, '').toLowerCase()
-  } catch {
-    return (raw.split('/')[0] ?? raw).replace(/^www\./, '').toLowerCase()
+  let host: string | null = null
+  if (/^https?:\/\//i.test(raw.trim())) {
+    try {
+      host = new URL(raw.trim()).hostname || null
+    } catch {
+      // URL로 해석되지 않는 값 — 출처 이름처럼 판정 값으로 넘긴다.
+      host = null
+    }
   }
+  return (host ?? fallbackDomain ?? raw.split('/')[0] ?? raw).replace(/^www\./, '').toLowerCase()
 }
 
 /**

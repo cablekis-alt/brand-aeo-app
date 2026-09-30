@@ -1,6 +1,6 @@
 import type { EeatAnalysis } from '../src/prompts/b6-eeat.js';
 import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
-import { analyzeCitationSources, canonicalUrl } from './citationSources.js';
+import { analyzeCitationSources, canonicalUrl, urlHost } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
 import { previousIsoWeek } from './dateUtil.js';
@@ -156,7 +156,8 @@ export async function getCitationBreakdown(
       totalCitations += 1;
       if (citation.ownerType === 'brand-owned') brandOwnedCitations += 1;
 
-      const host = normalizeCitationHost(citation.domain ?? citation.raw);
+      // 판정 모델의 domain은 URL이 아닌 인용에만 쓴다(citationSources.ts urlHost 참고).
+      const host = normalizeCitationHost(urlHost(citation.raw) ?? citation.domain ?? citation.raw);
       const acc = byHost.get(host) ?? { counts: {}, citationCount: 0, supporting: 0, urls: new Map<string, UrlAcc>() };
       acc.counts[citation.ownerType] = (acc.counts[citation.ownerType] ?? 0) + 1;
       acc.citationCount += 1;

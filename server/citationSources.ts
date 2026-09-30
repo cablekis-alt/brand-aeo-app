@@ -93,13 +93,29 @@ function looksLikeNewsHost(host: string): boolean {
   return /news/.test(first) && !/newsletter/.test(first);
 }
 
-function hostOf(raw: string, fallbackDomain: string | null): string {
-  if (fallbackDomain) return fallbackDomain.replace(/^www\./, '').toLowerCase();
+/**
+ * 인용 URL의 호스트. http(s) URL이 아니면 null — 출처 이름만 있는 인용이다.
+ *
+ * 인용의 호스트는 판정 모델이 적은 `domain`이 아니라 URL에서 뽑는다. 판정 모델은 같은 URL을
+ * 어떤 때는 전체 호스트(shop.kt.com)로, 어떤 때는 상위 도메인(kt.com)으로 적는다 — 실측
+ * 2026-W36~W40 인용 116,716건 중 4.1%가 상위 도메인으로 묶였고, 같은 URL이 기록마다 달랐다
+ * (1,415개). 그 값을 먼저 믿으면 같은 사이트가 주마다 다른 줄로 갈라지고 전주 대비가 가짜로
+ * 움직인다(KT W40: kt.com 126건으로 보였지만 실제 대표 사이트 인용은 0건).
+ * 화면 쪽 src/lib/gapActions.ts의 normalizeHost도 같은 규칙이다 — 둘이 다르면 행 키가 어긋난다.
+ */
+export function urlHost(raw: string): string | null {
+  if (!/^https?:\/\//i.test(raw.trim())) return null;
   try {
-    return new URL(raw).hostname.replace(/^www\./, '').toLowerCase();
+    return new URL(raw.trim()).hostname.toLowerCase() || null;
   } catch {
-    return (raw.split('/')[0] ?? raw).replace(/^www\./, '').toLowerCase();
+    // 스킴은 있지만 URL로 해석되지 않는 값(공백·깨진 문자) — 출처 이름처럼 판정 값으로 넘긴다.
+    return null;
   }
+}
+
+function hostOf(raw: string, fallbackDomain: string | null): string {
+  const host = urlHost(raw) ?? fallbackDomain ?? raw.split('/')[0] ?? raw;
+  return host.replace(/^www\./, '').toLowerCase();
 }
 
 function hostMatches(host: string, catalog: Set<string>): boolean {

@@ -1,5 +1,5 @@
 import type { EeatAnalysis, EeatPillar } from '../src/prompts/b6-eeat.js';
-import { classifyCitationSourceKind } from './citationSources.js';
+import { classifyCitationSourceKind, urlHost } from './citationSources.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 
 const EXPERIENCE_RE = /후기|리뷰|경험|다녀|방문|상담|시술받|수술받|이용했|묵었|숙박|예약했|다녀왔|직접|실제 이용|stayed|visited|reviewed/i;
@@ -74,7 +74,7 @@ export function computeEeatAnalysis(analyses: QuestionRepeatAnalysis[]): EeatAna
       : 0.45 * mentionRate + 0.35 * experientialRatio + 0.2 * reviewSupportRate,
     uniqueEvidence([
       ...experientialMentions.map((m) => m.sentence),
-      ...reviewSupport.slice(0, 3).map((c) => c.domain ?? c.raw),
+      ...reviewSupport.slice(0, 3).map((c) => urlHost(c.raw) ?? c.domain ?? c.raw),
     ]),
   );
 
@@ -91,7 +91,7 @@ export function computeEeatAnalysis(analyses: QuestionRepeatAnalysis[]): EeatAna
       ? 0.2 * mentionRate
       : 0.5 * authorityShare + 0.3 * topRate + 0.2 * mentionRate,
     uniqueEvidence([
-      ...authoritySupport.map((c) => c.domain ?? c.raw),
+      ...authoritySupport.map((c) => urlHost(c.raw) ?? c.domain ?? c.raw),
       ...topRecs.slice(0, 3).map((a) => `${a.engine} ${a.questionId} #${a.callIndex}: 1위 추천`),
     ]),
   );
@@ -103,7 +103,7 @@ export function computeEeatAnalysis(analyses: QuestionRepeatAnalysis[]): EeatAna
     uniqueEvidence([
       ...contradicted.map((c) => `불일치: ${c.claimText}`),
       ...negativeMentions.map((m) => m.sentence),
-      ...officialCitations.slice(0, 3).map((c) => c.domain ?? c.raw),
+      ...officialCitations.slice(0, 3).map((c) => urlHost(c.raw) ?? c.domain ?? c.raw),
     ]),
   );
 

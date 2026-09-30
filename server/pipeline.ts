@@ -26,7 +26,7 @@ import { getEngineClient, getJudgeClient, usedJudgeEngineId } from './engines/in
 import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
-import { analyzeCitationSources } from './citationSources.js';
+import { analyzeCitationSources, urlHost } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { ResultStore } from './store.js';
@@ -403,7 +403,8 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
     shareOfMention: totalMentions > 0 ? targetCount / totalMentions : 0,
     citations: (citation?.citations ?? []).map((c) => ({
       raw: c.raw,
-      domain: c.domain,
+      // 판정 모델이 적은 domain은 같은 URL도 호스트·상위 도메인으로 오락가락한다 — URL에서 뽑는다.
+      domain: urlHost(c.raw) ?? c.domain,
       ownerType: c.ownerType,
       supportsBrandMention: c.supportsBrandMention,
     })),
