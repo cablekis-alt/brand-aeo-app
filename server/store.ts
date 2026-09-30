@@ -10,6 +10,8 @@ export interface QuestionBank {
   version: string;
   generatedAt: string;
   questions: QuestionSpec[];
+  /** 일반 질문을 가져온 코호트 은행. 코호트 공통 질문지를 쓰는 브랜드만 있다. */
+  cohortBank?: { key: string; version: string };
 }
 
 export interface ResultStore {

@@ -115,6 +115,7 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     ...(d.brandPageUrl ? { brandPageUrl: d.brandPageUrl } : {}),
     ...(d.cohortOnly ? { cohortOnly: true } : {}),
     ...(d.autoCohort === false ? { autoCohort: false } : {}),
+    ...(d.cohortQuestionBank ? { cohortQuestionBank: d.cohortQuestionBank } : {}),
   };
 }
 

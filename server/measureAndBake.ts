@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
+import { ensureCohortBank } from './cohortQuestionBank.js';
 import { reconcileCohortRanks } from './cohortRank.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
@@ -277,6 +278,11 @@ export async function measureAndBake(
   //    실측(web4ai + 경쟁사 5개): 경쟁사 5개 동시 구간은 5.2호출/초를 냈는데, 마지막에 혼자 도는
   //    본 브랜드는 2.75호출/초밖에 못 채웠다. 브랜드 하나로는 파이프를 못 채운다.
   //    총량 상한은 전역 LLM 슬롯이 잡으므로 같이 돌려도 쿼터에 몰리는 양은 늘지 않는다.
+  // 코호트 공통 질문지는 병렬 측정을 시작하기 전에 한 번 준비한다. 동시에 재는 브랜드들이 각자
+  // 만들면 서로 다른 질문지가 된다(ensureCohortBank가 진행 중인 생성을 공유하지만, 먼저 끝내 두면
+  // 실패도 여기서 한 번에 드러난다).
+  if (tenant.cohortQuestionBank) await ensureCohortBank(tenant);
+
   const cohortTask =
     cohortTargets.length > 0
       ? // 경쟁사끼리는 서로를 참조하지 않으므로 병렬로 측정한다. 실패한 브랜드는 건너뛰고

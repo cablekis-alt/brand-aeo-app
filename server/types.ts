@@ -22,6 +22,10 @@ export interface TenantConfig extends BrandContext {
   // 사실이 실제로 적힌 페이지. ownedDomains[0]은 "소유한 곳"일 뿐 본문이 있는 곳과 다를 수
   // 있다(스테이,머뭄: 소유 도메인 루트는 콘솔 껍데기, 본문은 /s/stay). 사실 추출의 기본 주소.
   brandPageUrl?: string;
+  // 코호트 공통 질문지 버전(예: 'c1'). 있으면 일반 질문은 같은 코호트(업종·지역)가 함께 쓰는
+  // 코호트 은행에서 가져오고, 브랜드 전용 질문만 이 브랜드 은행에서 만든다(cohortQuestionBank.ts).
+  // 없으면 전처럼 브랜드마다 은행 전체를 만든다.
+  cohortQuestionBank?: string;
 }
 
 export interface RawCallRecord {

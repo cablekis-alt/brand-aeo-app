@@ -196,3 +196,128 @@ ${existingTexts.map((t) => `- ${t}`).join('\n')}`;
 
   return { system, user };
 }
+
+export interface CohortQuestionBankRequest {
+  industry: string;
+  region: string;
+  /** 코호트 브랜드의 이름·별칭 — 질문에 들어가면 안 되는 이름 목록. */
+  excludedNames: string[];
+  /** 만들 일반 질문 수(= 코호트 브랜드의 category-agnostic 몫). */
+  count: number;
+  /** 탐색(learn) 질문 하한. 브랜드 은행과 같은 기준(전체 문항의 20%)을 그대로 쓴다. */
+  learnMin: number;
+  /** questionId 접두 — 코호트 은행 버전(예: c1). */
+  version: string;
+  previousVersionDiffNote?: string;
+}
+
+/**
+ * B1-코호트 — 같은 코호트(업종·지역)의 브랜드가 **함께 쓰는** 일반 질문만 만든다.
+ *
+ * 왜 따로 만드나. 브랜드마다 은행을 만들면 일반 질문도 브랜드마다 달라져(실측: 통신 5사 22문항,
+ * 10개 조합 모두 겹침 0개) 언급률·SoM 차이가 가시성 차이인지 질문 차이인지 가릴 수 없다.
+ * 브랜드 이름을 주고 만들면 질문이 그 브랜드의 주력 분야로 기운다(KT는 가정용 인터넷 속도,
+ * 세종텔레콤은 기업용 전용회선) — 그래서 여기에는 **업종·지역만** 준다.
+ */
+export function buildCohortQuestionBankPrompt(req: CohortQuestionBankRequest): PromptMessage {
+  const { industry, region, excludedNames, count, learnMin, version } = req;
+
+  const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
+목표는 실제 소비자가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 일반 질문을 만드는 것입니다.
+이 질문들은 같은 업종·지역의 여러 브랜드가 **똑같이** 받는 공통 시험지입니다. 어떤 브랜드가 "이름을 대지 않아도" AI 답변에 나오는지 비교하는 데 쓰입니다.
+
+★ 가장 중요한 제약:
+1. 정확히 ${count}개를 만든다. 전부 category-agnostic이다.
+2. 어떤 상호·브랜드명·업체명도 넣지 마라(containsBrandName=false). 특히 아래 이름은 절대 넣지 마라:
+   ${excludedNames.join(', ') || '(없음)'}
+3. 특정 브랜드의 주력 상품·강점 쪽으로 치우치지 마라. 이 업종의 소비자가 흔히 묻는 주제를 고르게 다룬다.
+
+그 밖의 규칙:
+4. 질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.
+5. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
+6. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다 (의도 다양성 확보).
+7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn(탐색: 기준·개념을 묻는다),
+   consider(비교: 후보를 고르거나 비교한다, 추천·순위·A vs B), decide(결정: 가격·예약·후기 등 선택 직전 확인).
+   **learn은 최소 ${learnMin}개**를 만든다. 추천형(consider)도 포함한다 — "${region} ${industry} 추천해줘"처럼
+   후보를 고르는 질문에서 어떤 브랜드가 불리는지가 이 측정의 핵심이다.
+8. 각 질문에 콘텐츠 주제 topic을 하나 매긴다 — 질문의 **내용**으로 묶는 이름이다(형태가 아니다).
+   전체가 4~7개 주제로 묶이게 하고, 한국어 명사구로 12자 이내로 쓴다. "기타"·"일반" 같은 이름은 만들지 마라.
+9. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
+
+JSON 스키마 (배열의 각 원소):
+{
+  "questionId": string,        // "${version}-{순번3자리}"
+  "text": string,
+  "category": "category-agnostic",
+  "stage": "learn" | "consider" | "decide",
+  "topic": string,
+  "containsBrandName": false
+}`;
+
+  const user = `업종: ${industry}
+지역: ${region}
+버저닝 태그: ${version}
+${req.previousVersionDiffNote ? `이전 시도 참고사항: ${req.previousVersionDiffNote}` : ''}
+
+위 조건에 맞는 일반 질문 ${count}개를 생성하라.`;
+
+  return { system, user };
+}
+
+export interface BrandQuestionBankRequest {
+  industry: string;
+  region: string;
+  brandName: string;
+  competitorNames: string[];
+  /** 만들 브랜드 전용 질문 수(= 전체 문항 − 코호트 공통 일반 질문). */
+  count: number;
+  version: string;
+  previousVersionDiffNote?: string;
+}
+
+/**
+ * B1-브랜드 — 코호트 공통 일반 질문을 쓰는 브랜드의 **브랜드 전용 질문만** 만든다
+ * (브랜드 직접·비교·가격·후기·지역). 일반 질문은 코호트 은행이 대신한다.
+ */
+export function buildBrandQuestionBankPrompt(req: BrandQuestionBankRequest): PromptMessage {
+  const { industry, region, brandName, competitorNames, count, version } = req;
+
+  const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
+목표는 실제 소비자가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 질문을 만드는 것입니다.
+이번에는 **브랜드를 지목하는 질문만** 만든다. 브랜드 이름 없는 일반 질문은 따로 준비되어 있으니 만들지 마라.
+
+★ 가장 중요한 제약:
+1. 정확히 ${count}개를 만든다. category-agnostic은 하나도 만들지 않는다.
+2. brand-direct(브랜드 직접), comparison(비교), price-spec(가격/스펙), troubleshooting-review(후기/문제해결),
+   local-regional(지역 특화)로 고르게 분배한다.
+3. 모든 질문에 측정 대상 브랜드명(${brandName})이 들어간다(containsBrandName=true). comparison에는 경쟁사명이 함께 들어가도 된다.
+
+그 밖의 규칙:
+4. 질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.
+5. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
+6. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다.
+7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn / consider / decide(정의는 문장의 의도로 판단).
+8. 각 질문에 콘텐츠 주제 topic을 하나 매긴다(한국어 명사구 12자 이내).
+9. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
+
+JSON 스키마 (배열의 각 원소):
+{
+  "questionId": string,        // "${version}-{순번3자리}"
+  "text": string,
+  "category": "brand-direct" | "comparison" | "price-spec" | "troubleshooting-review" | "local-regional",
+  "stage": "learn" | "consider" | "decide",
+  "topic": string,
+  "containsBrandName": true
+}`;
+
+  const user = `업종: ${industry}
+지역: ${region}
+측정 대상 브랜드: ${brandName}
+주요 경쟁사: ${competitorNames.join(', ')}
+버저닝 태그: ${version}
+${req.previousVersionDiffNote ? `이전 시도 참고사항: ${req.previousVersionDiffNote}` : ''}
+
+위 조건에 맞는 브랜드 전용 질문 ${count}개를 생성하라.`;
+
+  return { system, user };
+}

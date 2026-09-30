@@ -27,6 +27,7 @@ import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { analyzeCitationSources, urlHost } from './citationSources.js';
+import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { ResultStore } from './store.js';
@@ -76,6 +77,11 @@ function brandAndCompetitorNames(tenant: TenantConfig): string[] {
 
 /** B1 — 질문 은행은 버전당 1회만 생성하고 이후 주차에는 재사용한다 (버전을 바꾸면 재생성). */
 export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+  // 코호트 공통 질문지를 쓰는 브랜드는 일반 질문을 코호트 은행에서 가져온다. 아래의 60% 하한
+  // 보정(enforceAgnosticQuota)은 거치지 않는다 — 브랜드 전용 질문을 일반 질문으로 승격하면
+  // 코호트가 공유하지 않는 일반 질문이 섞인다.
+  if (tenant.cohortQuestionBank) return ensureComposedQuestionBank(tenant, store);
+
   const quota = agnosticQuota(tenant.questionBankSize);
   const names = brandAndCompetitorNames(tenant);
 

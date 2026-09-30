@@ -20,6 +20,8 @@ export interface QuestionSpec {
   region: string;
   containsBrandName: boolean;
   version: string;
+  /** 코호트 공통 질문지에서 온 문항이면 true — 같은 코호트 브랜드가 똑같이 받는다. */
+  cohortShared?: boolean;
 }
 
 export interface CompetitorContext {

@@ -18,6 +18,15 @@ export const PIPELINE_DATA_DIR = APP_DATA_DIR
   ? path.join(APP_DATA_DIR, 'data')
   : path.resolve(process.cwd(), 'data');
 
+/**
+ * 코호트 공통 질문지 루트. data/ 밖에 둔다 — 코호트 순위·재계산 스크립트·웹 baking이 data/의
+ * 폴더를 전부 브랜드로 보고 훑는다. dev·CI는 저장소의 cohort-banks/(커밋된 기준본),
+ * 패키징은 userData/cohort-banks/.
+ */
+export const COHORT_BANK_DIR = APP_DATA_DIR
+  ? path.join(APP_DATA_DIR, 'cohort-banks')
+  : path.resolve(process.cwd(), 'cohort-banks');
+
 /** 런타임 상태 파일(오버레이·큐) 경로. 패키징이면 userData 바로 아래, 아니면 기존 server/ 경로. */
 export function stateFilePath(name: string): string {
   return APP_DATA_DIR ? path.join(APP_DATA_DIR, name) : path.resolve(process.cwd(), 'server', name);
