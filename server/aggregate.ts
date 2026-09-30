@@ -34,6 +34,15 @@ export interface WeeklyMetrics {
 // 표시 일관성을 위한 표준 엔진 순서(ChatGPT·Gemini·Claude·Perplexity).
 const ENGINE_ORDER = ['openai', 'gemini', 'claude', 'perplexity'];
 
+/**
+ * 추천 순위를 지표로 쓰려면 순위가 매겨진 응답이 이만큼은 있어야 한다. 그보다 적으면 측정하지
+ * 않은 것으로 보고 null(재정규화로 제외)로 둔다.
+ *
+ * 2026-W40 기준 순위가 산출된 48곳 중 20곳이 응답 2건 이하, 14곳이 1건이었다. 1건이면 그 한 번이
+ * 1위였는지만으로 가중치 0.15짜리 지표가 만점이 된다.
+ */
+export const MIN_RANKED_RESPONSES = 3;
+
 export function aggregateWeeklyMetrics(
   tenant: AggregateTenant,
   questions: QuestionSpec[],
@@ -49,9 +58,13 @@ export function aggregateWeeklyMetrics(
   const hasCompetitors = tenant.competitors.length > 0;
   const shareOfMention = shareOfMentionOf(categoryAgnostic, hasCompetitors);
 
-  // 순위·사실성·인용은 전체 응답 기준 — 브랜드명이 들어간 질문에서도 그대로 의미가 있는 지표다.
-  const ranked = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
-  const avgRecommendationRank = ranked.length > 0 ? mean(ranked) : null;
+  // 추천 순위도 언급률과 같은 모집단(카테고리 무관 질문)에서 낸다. 브랜드명을 넣고 물으면 답이 그
+  // 브랜드 중심으로 써져, 1위가 질문 때문에 나온다 — 2026-W39 라엘펜션은 언급률 0%인데 brand-direct
+  // 응답 1건의 1위로 40점을 받아 스테이,머뭄(39점)보다 위에 섰다.
+  const ranked = categoryAgnostic.map((a) => a.brandRank).filter((r): r is number => r !== null);
+  const avgRecommendationRank = ranked.length >= MIN_RANKED_RESPONSES ? mean(ranked) : null;
+
+  // 사실성·인용은 전체 응답 기준 — 브랜드명이 들어간 질문에서도 그대로 의미가 있는 지표다.
 
   const totalSupported = analyses.reduce((sum, a) => sum + a.factualitySupported, 0);
   const totalContradicted = analyses.reduce((sum, a) => sum + a.factualityContradicted, 0);
@@ -86,6 +99,8 @@ export function aggregateWeeklyMetrics(
   });
 
   // CI 폭은 반복 호출 1건마다의 점수 분포에서 낸다(동일 질문 3회 반복의 분산). 중심은 위 결정적 점수.
+  // 응답별 순위도 위 지표와 같은 모집단만 쓴다 — 브랜드명 질문의 순위가 분산에 섞이지 않게.
+  const agnosticSet = new Set(categoryAgnostic);
   const perCallScores = analyses.map((a) => {
     const perCallFactuality =
       a.factualitySupported + a.factualityContradicted > 0
@@ -96,7 +111,7 @@ export function aggregateWeeklyMetrics(
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
       shareOfMention: hasCompetitors ? a.shareOfMention : null,
-      avgRecommendationRank: a.brandRank,
+      avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
       factualityScore: perCallFactuality,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
       mentionSentiment: perCallSentiment,

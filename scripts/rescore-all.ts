@@ -37,7 +37,21 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
     console.warn(`  ${tenant.tenantId} ${prev.weekOf}: 분석 소스 없음 — 기존 카드 유지`)
     return prev
   }
-  const m = aggregateWeeklyMetrics(tenant, src.questions, src.analyses)
+  // 발행본에는 브랜드마다 최신 은행 하나만 있다. 은행을 새로 만든 브랜드의 옛 주차는 문항 id가 그
+  // 은행에 없어 모집단이 빈 집합이 되고, 그대로 계산하면 언급률 0이 조용히 덮어써진다.
+  const bankIds = new Set(src.questions.map((q) => q.questionId))
+  if (!src.analyses.every((a) => bankIds.has(a.questionId))) {
+    console.warn(`  ${tenant.tenantId} ${prev.weekOf}: 발행된 은행과 판정 레코드의 문항이 맞지 않음 — 기존 카드 유지`)
+    return prev
+  }
+  // SoM 산출 여부는 지금 설정이 아니라 그 주 카드 기준이다(scripts/rescore-local.ts의 hadCompetitors와
+  // 같은 규칙). 경쟁사 목록을 나중에 넣은 브랜드의 옛 주차에 SoM 100%가 소급되지 않게 한다.
+  const hadCompetitors = prev.shareOfMention !== null
+  const m = aggregateWeeklyMetrics(
+    { competitors: hadCompetitors ? [{ name: '(저장된 카드 기준)' }] : [] },
+    src.questions,
+    src.analyses,
+  )
   const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score
   const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]))
 

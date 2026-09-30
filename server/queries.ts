@@ -329,8 +329,8 @@ function shareOfMentionFrom(analyses: QuestionRepeatAnalysis[], brandName: strin
 
 /**
  * 순위 판정이 있었던 응답 중 자사가 1위로 뽑힌 비율.
- * 모집단은 스코어카드의 avgRecommendationRank와 같이 **전체 응답**이다
- * (카테고리 무관으로 좁힌 것은 언급률·SoM 계열뿐이다).
+ * 모집단은 스코어카드의 avgRecommendationRank와 같이 카테고리 무관 질문 응답이다 — 브랜드명을 넣고
+ * 물으면 답이 그 브랜드 중심으로 써져 1위가 질문 때문에 나오기 때문이다(server/aggregate.ts).
  */
 function topRecommendationFrom(
   analyses: QuestionRepeatAnalysis[],
@@ -409,18 +409,16 @@ export async function getRankingView(
   const position = peers.findIndex((peer) => peer.tenantId === tenant.tenantId) + 1;
 
   const competitorShareOfMention = shareOfMentionFrom(analyses, tenant.brandName);
-  const top = topRecommendationFrom(allAnalyses, tenant.brandName);
+  const top = topRecommendationFrom(analyses, tenant.brandName);
 
-  // 엔진별 분해 — 전체와 **같은 함수**로 계산한다. 규칙을 복제하면 "합계는 맞는데 엔진별 합이
-  // 안 맞는" 상태가 조용히 생긴다. 모집단의 비대칭(언급 점유는 카테고리 무관, 순위는 전체)도
-  // 그대로 유지해야 두 수치가 위쪽 요약과 대조된다.
+  // 엔진별 분해 — 전체와 **같은 함수**, 같은 모집단으로 계산한다. 규칙을 복제하면 "합계는 맞는데
+  // 엔진별 합이 안 맞는" 상태가 조용히 생긴다.
   const engines = [...new Set(allAnalyses.map((a) => a.engine))].sort((a, b) =>
     ENGINE_ORDER.indexOf(a) - ENGINE_ORDER.indexOf(b),
   );
   const byEngine: EngineRanking[] = engines.map((engine) => {
     const scopedForEngine = analyses.filter((a) => a.engine === engine);
-    const allForEngine = allAnalyses.filter((a) => a.engine === engine);
-    const engineTop = topRecommendationFrom(allForEngine, tenant.brandName);
+    const engineTop = topRecommendationFrom(scopedForEngine, tenant.brandName);
     return {
       engine,
       competitorShareOfMention: shareOfMentionFrom(scopedForEngine, tenant.brandName),

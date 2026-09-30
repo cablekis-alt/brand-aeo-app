@@ -42,7 +42,6 @@ if (appDataDir) process.env.APP_DATA_DIR = path.resolve(appDataDir)
 const { aggregateWeeklyMetrics } = await import('../server/aggregate')
 const { PIPELINE_DATA_DIR } = await import('../server/appPaths')
 const { computeCohortRank, movingAverage4 } = await import('../server/scoring')
-const { loadRuntimeTenants } = await import('../server/tenantRegistry')
 type WeeklyScorecard = import('../src/prompts/b8-report').WeeklyScorecard
 type QuestionBank = import('../server/store').QuestionBank
 type QuestionRepeatAnalysis = import('../server/types').QuestionRepeatAnalysis
@@ -64,33 +63,48 @@ const readJson = <T,>(p: string): T | null => {
   }
 }
 
-/** 설정된 버전의 은행이 없으면 그 브랜드 디렉터리에 있는 가장 최신 은행 파일을 쓴다. */
-function loadBank(tenantDir: string, version: string): QuestionBank | null {
+/** 그 브랜드 디렉터리에 있는 은행 파일 전부. */
+function loadBanks(tenantDir: string): QuestionBank[] {
   const bankDir = path.join(tenantDir, 'question-bank')
-  const exact = readJson<QuestionBank>(path.join(bankDir, `${version}.json`))
-  if (exact) return exact
-  if (!existsSync(bankDir)) return null
-  const files = readdirSync(bankDir)
+  if (!existsSync(bankDir)) return []
+  return readdirSync(bankDir)
     .filter((f) => f.endsWith('.json'))
     .sort()
-  const latest = files.at(-1)
-  return latest ? readJson<QuestionBank>(path.join(bankDir, latest)) : null
+    .map((f) => readJson<QuestionBank>(path.join(bankDir, f)))
+    .filter((b): b is QuestionBank => b !== null)
 }
 
-// 테넌트 설정이 있으면 그게 정답이다. 다만 설치본은 브랜드 목록을 번들에 굽기 때문에, 이
-// 체크아웃의 config에 없는 브랜드가 앱 데이터에는 잔뜩 있다(설치본 94곳 vs 체크아웃 30곳).
-// 그래서 설정이 없으면 저장된 데이터로 필요한 값만 추론한다.
-const tenantById = new Map((await loadRuntimeTenants()).map((t) => [t.tenantId, t]))
+/**
+ * 그 주차의 판정 레코드가 실제로 쓴 은행을 고른다 — 레코드의 문항 id가 전부 들어 있는 은행이다.
+ *
+ * 예전에는 설정된 버전(없으면 최신) 은행 하나로 모든 주차를 계산했다. 은행을 새로 만든 브랜드는
+ * 옛 주차의 id(v1-*)가 새 은행(v3-*)에 없어 그 주차가 통째로 건너뛰어졌고, 한 브랜드 안에서 주차마다
+ * 다른 집계 규칙이 남았다. 새 은행에 문항을 덧붙인 경우(36 → 42)는 옛 주차의 id가 모두 들어 있어
+ * 그 은행이 그대로 맞는다.
+ */
+function bankFor(banks: QuestionBank[], analyses: QuestionRepeatAnalysis[]): QuestionBank | null {
+  const ids = new Set(analyses.map((a) => a.questionId))
+  return (
+    banks.find((b) => {
+      const bankIds = new Set(b.questions.map((q) => q.questionId))
+      return [...ids].every((id) => bankIds.has(id))
+    }) ?? null
+  )
+}
 
 /**
- * SoM 산출에 필요한 건 "경쟁사가 설정돼 있었는가" 하나다. 설정을 못 찾으면 저장된 값에서 추론한다.
- *   - 이전 카드의 shareOfMention이 null이 아니었다 → 그때 SoM이 산출됐다 = 경쟁사가 있었다
- *   - 판정 레코드에 경쟁사 언급이 하나라도 있다 → 경쟁사가 있었다
- * 둘 다 아니면 false로 본다. 그 경우 새 SoM도 어차피 측정불가(null)이므로 결과가 달라지지 않는다.
+ * SoM 산출에 필요한 건 "그 주에 경쟁사가 설정돼 있었는가" 하나다. 지금 설정이 아니라 그 주 카드로
+ * 판단한다 — 카드에 SoM이 있었으면 경쟁사가 있었던 것이다.
+ *
+ * 지금 설정을 쓰면 안 된다. 경쟁사 목록을 나중에 넣은 브랜드(2026-09-30 펜션 코호트)는 옛 주차 판정에
+ * 경쟁사 언급이 없어, "경쟁사 있음"으로 계산하면 언급되기만 하면 SoM이 100%로 나온다. 판정 레코드의
+ * competitorMentions로 추론해서도 안 된다 — 언급 횟수 0인 빈 항목이 남아 있어 같은 100%가 나왔다
+ * (comp-1j0j0pl 2026-W36).
+ *
+ * 카드에 SoM이 없던 주는 경쟁사가 없었거나 모집단에 언급이 전혀 없었던 주라, 다시 계산해도 null이다.
  */
-function hadCompetitors(prev: WeeklyScorecard, analyses: QuestionRepeatAnalysis[]): boolean {
-  if (prev.shareOfMention !== null) return true
-  return analyses.some((a) => a.competitorMentions.length > 0)
+function hadCompetitors(prev: WeeklyScorecard): boolean {
+  return prev.shareOfMention !== null
 }
 
 const isWeekDir = (name: string) => /^\d{4}-W\d{2}$/.test(name)
@@ -103,9 +117,8 @@ for (const tenantId of readdirSync(dataDir)) {
   const tenantDir = path.join(dataDir, tenantId)
   if (!statSync(tenantDir).isDirectory()) continue
 
-  const tenant = tenantById.get(tenantId)
-  const bank = loadBank(tenantDir, tenant?.questionBankVersion ?? '')
-  if (!bank) {
+  const banks = loadBanks(tenantDir)
+  if (banks.length === 0) {
     console.warn(`${tenantId}: 질문 은행 없음 — 건너뜀 (질문 category를 알 수 없어 모집단을 정할 수 없음)`)
     skipped += 1
     continue
@@ -118,17 +131,17 @@ for (const tenantId of readdirSync(dataDir)) {
     const prev = readJson<WeeklyScorecard>(path.join(weekDir, 'scorecard.json'))
     if (!analyses || analyses.length === 0 || !prev) continue
 
-    // 은행과 판정 레코드의 questionId가 전혀 겹치지 않으면(버전 불일치) 모집단이 빈 집합이 되어
-    // 언급률 0 · SoM 측정불가라는 잘못된 값이 조용히 나온다. 그 경우 건드리지 않고 넘긴다.
-    const bankIds = new Set(bank.questions.map((q) => q.questionId))
-    if (!analyses.some((a) => bankIds.has(a.questionId))) {
-      console.warn(`${tenantId} ${weekOf}: 질문 은행(${bank.version})과 판정 레코드의 질문 id 불일치 — 건너뜀`)
+    // 판정 레코드의 문항이 다 들어 있는 은행이 없으면 모집단을 정할 수 없다. 틀린 은행으로 계산하면
+    // 언급률 0 · SoM 측정불가라는 잘못된 값이 조용히 나오므로, 건드리지 않고 넘긴다.
+    const bank = bankFor(banks, analyses)
+    if (!bank) {
+      console.warn(`${tenantId} ${weekOf}: 판정 레코드의 문항이 모두 들어 있는 은행이 없음 — 건너뜀`)
       skipped += 1
       continue
     }
 
     // aggregateWeeklyMetrics는 competitors의 "개수"만 본다(0이면 SoM 측정불가).
-    const competitors = tenant ? tenant.competitors : hadCompetitors(prev, analyses) ? [{ name: '(추론)' }] : []
+    const competitors = hadCompetitors(prev) ? [{ name: '(저장된 카드 기준)' }] : []
     const m = aggregateWeeklyMetrics({ competitors }, bank.questions, analyses)
     const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score
     const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]))

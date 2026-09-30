@@ -4,6 +4,7 @@
  *
  *   npx tsx scripts/verify-demo-data.ts
  */
+import { MIN_RANKED_RESPONSES } from '../server/aggregate';
 import { demoQuestionAnalyses, demoQuestionBank, demoScorecardHistory } from '../server/demoData';
 import { DemoResultStore } from '../server/demoStore';
 import { getRankingView } from '../server/queries';
@@ -50,7 +51,8 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
       0,
     );
     const derivedSom = brandMentions + compMentions > 0 ? brandMentions / (brandMentions + compMentions) : 0;
-    const ranks = analyses.map((a) => a.brandRank).filter((r): r is number => r !== null);
+    // 순위도 언급률과 같은 모집단이고, 응답이 MIN_RANKED_RESPONSES건 미만이면 측정하지 않은 것이다.
+    const ranks = agnosticRecords.map((a) => a.brandRank).filter((r): r is number => r !== null);
     const derivedRank = mean(ranks);
     const supported = analyses.reduce((s, a) => s + a.factualitySupported, 0);
     const contradicted = analyses.reduce((s, a) => s + a.factualityContradicted, 0);
@@ -81,9 +83,11 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     if (ranking.mentionScope !== 'category-agnostic') {
       bad.push([`랭킹 모집단(${ranking.mentionScope}) — 질문 은행 분류 실패`, 0, 1]);
     }
-    // 순위는 추천 문맥이 없으면 null이다. 그 경우 파생값도 순위 레코드가 없어야 정합이다.
+    // 순위는 순위 응답이 MIN_RANKED_RESPONSES건 미만이면 null이다. 그 경우 파생값도 그만큼 적어야 정합이다.
     if (card.avgRecommendationRank === null) {
-      if (ranks.length > 0) bad.push(['순위(null 기대)', derivedRank, 0]);
+      if (ranks.length >= MIN_RANKED_RESPONSES) bad.push(['순위(null 기대)', derivedRank, 0]);
+    } else if (ranks.length < MIN_RANKED_RESPONSES) {
+      bad.push(['순위(응답 부족 — null 기대)', derivedRank, card.avgRecommendationRank]);
     } else if (Math.abs(derivedRank - card.avgRecommendationRank) > 0.15) {
       bad.push(['순위', derivedRank, card.avgRecommendationRank]);
     }
