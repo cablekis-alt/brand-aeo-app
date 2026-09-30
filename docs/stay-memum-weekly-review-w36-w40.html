@@ -146,14 +146,14 @@
 <div class="wrap">
 
 <header class="top">
-  <p class="eyebrow">내부 검토 · 주간 스코어카드 · 코호트 랭킹 · W40 재측정 · 현재 점수 기준(v0.2.42) 반영</p>
+  <p class="eyebrow">내부 검토 · 주간 스코어카드 · 코호트 랭킹 · W40 3회 측정 · 현재 점수 기준(v0.2.42) 반영</p>
   <h1>스테이,머뭄 5주 추이, 어디까지 믿을 수 있나</h1>
-  <p class="lede">W36부터 W40까지 점수는 7 → 30 → 19 → 27 → 4, 코호트 순위는 3위 → 1위 → 2위 → 2위 → 5위다. 2026-09-30에 추천 순위 계산 기준을 바꾸고(v0.2.41) 사실성을 점수에서 뺀 뒤(v0.2.42) 다섯 주를 모두 다시 계산한 값이다. W40은 같은 날 두 번 쟀고, 두 번째 측정부터 경쟁사도 같은 문항 수와 같은 지표로 비교된다. 그 결과 스테이,머뭄의 W40 급락은 <strong>실제로 확인됐고</strong>, 경쟁사 사이의 순위는 <strong>한 번 측정으로는 믿기 어려울 만큼 흔들린다</strong>는 것도 드러났다.</p>
+  <p class="lede">W36부터 W40까지 점수는 7 → 30 → 19 → 27 → 7, 코호트 순위는 3위 → 1위 → 2위 → 2위 → 5위다. 2026-09-30에 추천 순위 계산 기준을 바꾸고(v0.2.41) 사실성을 점수에서 뺀 뒤(v0.2.42) 다섯 주를 모두 다시 계산한 값이다. W40은 같은 날 세 번 쟀다. 두 번째 측정부터 경쟁사도 같은 문항 수와 같은 지표로 비교되고, 세 번째는 두 번째와 설정이 같다. 그 결과 스테이,머뭄의 W40 하락은 <strong>세 번 모두 확인됐고</strong>, 경쟁사 사이의 순위는 <strong>한 번 측정으로는 믿기 어려울 만큼 흔들린다</strong>는 것도 드러났다.</p>
   <dl class="meta">
     <div><dt>브랜드</dt><dd>스테이,머뭄 (web4ai)</dd></div>
     <div><dt>코호트</dt><dd>펜션 · 전북 군산 · 6곳</dd></div>
     <div><dt>기간</dt><dd>2026-W36 – W40</dd></div>
-    <div><dt>측정</dt><dd>6회 (W40 2회)</dd></div>
+    <div><dt>측정</dt><dd>7회 (W40 3회)</dd></div>
   </dl>
 </header>
 
@@ -167,10 +167,10 @@
       <span><i class="lk brk"></i>모두의 조건이 바뀐 지점</span>
       <span><i class="lk brk2"></i>경쟁사 조건만 바뀐 지점</span>
     </div>
-    <svg class="plot" id="plot" viewBox="0 0 720 300" role="img" aria-label="W36부터 W40까지 코호트 6곳의 Brand AEO Score 추이. 스테이,머뭄은 7, 30, 19, 27, 4."></svg>
+    <svg class="plot" id="plot" viewBox="0 0 720 300" role="img" aria-label="W36부터 W40까지 코호트 6곳의 Brand AEO Score 추이. 스테이,머뭄은 7, 30, 19, 27, 7."></svg>
     <div class="tip" id="tip"></div>
   </div>
-  <p class="note">W36→W37에는 수집 엔진과 문항 수가, W38→W39에는 Perplexity 모델과 스테이,머뭄의 문항 수가 바뀌었다. W39→W40에는 경쟁사만 바뀌었다(문항 36→42, SoM 산출 시작). W40 값은 두 번째 측정이다. <strong>스테이,머뭄 자신의 점수는 W37–W38, W39–W40을 비교할 수 있고, 코호트 순위는 W37–W38만 같은 조건이다.</strong></p>
+  <p class="note">W36→W37에는 수집 엔진과 문항 수가, W38→W39에는 Perplexity 모델과 스테이,머뭄의 문항 수가 바뀌었다. W39→W40에는 경쟁사만 바뀌었다(문항 36→42, SoM 산출 시작). W40 값은 세 번째 측정이다. <strong>스테이,머뭄 자신의 점수는 W37–W38, W39–W40을 비교할 수 있고, 코호트 순위는 W37–W38만 같은 조건이다.</strong></p>
 </section>
 
 <section>
@@ -178,17 +178,17 @@
   <h2>스테이,머뭄 지표별 5주</h2>
   <div class="scroller">
     <table>
-      <caption>언급률·SoM은 category-agnostic 문항에서만 계산한다. 추천 순위는 낮을수록 좋다. 사실성은 정확도로 따로 보여 주고 점수에는 넣지 않는다(v0.2.42). W40은 2차 측정값, 괄호는 1차.</caption>
+      <caption>언급률·SoM은 category-agnostic 문항에서만 계산한다. 추천 순위는 낮을수록 좋다. 사실성은 정확도로 따로 보여 주고 점수에는 넣지 않는다(v0.2.42). W40은 3차 측정값, 괄호는 1차 · 2차.</caption>
       <thead><tr><th class="lead">지표</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40</th></tr></thead>
       <tbody>
-        <tr class="hi"><td class="lead"><strong>Brand AEO Score</strong></td><td class="n">7</td><td class="n brk">30</td><td class="n">19</td><td class="n brk">27</td><td class="n brk2">4 <span class="dim">(4)</span></td></tr>
-        <tr><td class="lead dim">95% 신뢰구간</td><td class="n dim">1.3–12.7</td><td class="n dim brk">23.5–36.5</td><td class="n dim">12.0–26.0</td><td class="n dim brk">20.8–33.2</td><td class="n dim brk2">−1.4–9.4</td></tr>
-        <tr><td class="lead">코호트 순위</td><td class="n">3 / 6</td><td class="n brk">1 / 6</td><td class="n">2 / 6</td><td class="n brk">2 / 6</td><td class="n brk2">5 / 6 <span class="dim">(5)</span></td></tr>
-        <tr><td class="lead">언급률</td><td class="n">6.2%</td><td class="n brk">22.7%</td><td class="n">25.0%</td><td class="n brk">17.9%</td><td class="n brk2">5.4% <span class="dim">(5.4%)</span></td></tr>
-        <tr><td class="lead">SoM</td><td class="n">16.0%</td><td class="n brk">32.1%</td><td class="n">28.8%</td><td class="n brk">28.2%</td><td class="n brk2">5.8% <span class="dim">(4.6%)</span></td></tr>
-        <tr><td class="lead">자사 인용률</td><td class="n">0.0%</td><td class="n brk">0.4%</td><td class="n">0.5%</td><td class="n brk">0.7%</td><td class="n brk2">0.7% <span class="dim">(0.5%)</span></td></tr>
-        <tr><td class="lead">추천 순위</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim brk2">확인 불가 <span class="dim">(확인 불가)</span></td></tr>
-        <tr><td class="lead">사실성 <span class="dim">(점수 미포함)</span></td><td class="n">66.7%</td><td class="n brk">100%</td><td class="n">100%</td><td class="n brk">100%</td><td class="n brk2">97.6% <span class="dim">(94.7%)</span></td></tr>
+        <tr class="hi"><td class="lead"><strong>Brand AEO Score</strong></td><td class="n">7</td><td class="n brk">30</td><td class="n">19</td><td class="n brk">27</td><td class="n brk2">7 <span class="dim">(4 · 4)</span></td></tr>
+        <tr><td class="lead dim">95% 신뢰구간</td><td class="n dim">1.3–12.7</td><td class="n dim brk">23.5–36.5</td><td class="n dim">12.0–26.0</td><td class="n dim brk">20.8–33.2</td><td class="n dim brk2">1.5–12.5</td></tr>
+        <tr><td class="lead">코호트 순위</td><td class="n">3 / 6</td><td class="n brk">1 / 6</td><td class="n">2 / 6</td><td class="n brk">2 / 6</td><td class="n brk2">5 / 6 <span class="dim">(5 · 5)</span></td></tr>
+        <tr><td class="lead">언급률</td><td class="n">6.2%</td><td class="n brk">22.7%</td><td class="n">25.0%</td><td class="n brk">17.9%</td><td class="n brk2">10.7% <span class="dim">(5.4% · 5.4%)</span></td></tr>
+        <tr><td class="lead">SoM</td><td class="n">16.0%</td><td class="n brk">32.1%</td><td class="n">28.8%</td><td class="n brk">28.2%</td><td class="n brk2">10.5% <span class="dim">(4.6% · 5.8%)</span></td></tr>
+        <tr><td class="lead">자사 인용률</td><td class="n">0.0%</td><td class="n brk">0.4%</td><td class="n">0.5%</td><td class="n brk">0.7%</td><td class="n brk2">0.6% <span class="dim">(0.5% · 0.7%)</span></td></tr>
+        <tr><td class="lead">추천 순위</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim brk2">확인 불가 <span class="dim">(확인 불가 · 확인 불가)</span></td></tr>
+        <tr><td class="lead">사실성 <span class="dim">(점수 미포함)</span></td><td class="n">66.7%</td><td class="n brk">100%</td><td class="n">100%</td><td class="n brk">100%</td><td class="n brk2">97.1% <span class="dim">(94.7% · 97.6%)</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -199,14 +199,14 @@
   <h2>6곳의 주차별 점수와 순위</h2>
   <div class="scroller">
     <table>
-      <caption>점수 (순위). 동점은 같은 순위다(W36 스테이옥도·라엘펜션 0점 공동 5위). 코호트 구성은 5주 내내 같은 6곳이다. W40은 2차 측정값이고, 여섯 곳이 처음으로 같은 문항 수·같은 지표로 비교된 주다.</caption>
+      <caption>점수 (순위). 동점은 같은 순위다(W36 스테이옥도·라엘펜션 0점 공동 5위). 코호트 구성은 5주 내내 같은 6곳이다. W40은 3차 측정값이다. W40 2·3차는 여섯 곳이 같은 문항 수·같은 지표로 비교된 측정이다.</caption>
       <thead><tr><th class="lead">브랜드</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40</th></tr></thead>
       <tbody>
-        <tr><td class="lead">스테이 선연</td><td class="n">2 (4)</td><td class="n brk">8 (5)</td><td class="n">1 (5)</td><td class="n brk">3 (5)</td><td class="n brk2">25 (1)</td></tr>
-        <tr><td class="lead">스테이옥도</td><td class="n">0 (5)</td><td class="n brk">11 (3)</td><td class="n">11 (4)</td><td class="n brk">26 (3)</td><td class="n brk2">20 (2)</td></tr>
-        <tr><td class="lead">스테이 골목집</td><td class="n">31 (2)</td><td class="n brk">9 (4)</td><td class="n">13 (3)</td><td class="n brk">30 (1)</td><td class="n brk2">12 (3)</td></tr>
-        <tr><td class="lead">초원고택</td><td class="n">34 (1)</td><td class="n brk">18 (2)</td><td class="n">25 (1)</td><td class="n brk">7 (4)</td><td class="n brk2">8 (4)</td></tr>
-        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">7 (3)</td><td class="n brk">30 (1)</td><td class="n">19 (2)</td><td class="n brk">27 (2)</td><td class="n brk2">4 (5)</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">2 (4)</td><td class="n brk">8 (5)</td><td class="n">1 (5)</td><td class="n brk">3 (5)</td><td class="n brk2">16 (3)</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">0 (5)</td><td class="n brk">11 (3)</td><td class="n">11 (4)</td><td class="n brk">26 (3)</td><td class="n brk2">18 (2)</td></tr>
+        <tr><td class="lead">스테이 골목집</td><td class="n">31 (2)</td><td class="n brk">9 (4)</td><td class="n">13 (3)</td><td class="n brk">30 (1)</td><td class="n brk2">31 (1)</td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">34 (1)</td><td class="n brk">18 (2)</td><td class="n">25 (1)</td><td class="n brk">7 (4)</td><td class="n brk2">10 (4)</td></tr>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">7 (3)</td><td class="n brk">30 (1)</td><td class="n">19 (2)</td><td class="n brk">27 (2)</td><td class="n brk2">7 (5)</td></tr>
         <tr><td class="lead">라엘펜션</td><td class="n">0 (5)</td><td class="n brk">0 (6)</td><td class="n">0 (6)</td><td class="n brk">0 (6)</td><td class="n brk2">0 (6)</td></tr>
       </tbody>
     </table>
@@ -218,7 +218,7 @@
   <h2>주차마다 무엇이 바뀌었나</h2>
   <div class="scroller">
     <table>
-      <thead><tr><th class="lead">항목</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40 (2차)</th></tr></thead>
+      <thead><tr><th class="lead">항목</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40 (2·3차)</th></tr></thead>
       <tbody>
         <tr><td class="lead">수집 엔진</td><td class="n">ChatGPT · Gemini</td><td class="n brk">Gemini · Perplexity</td><td class="n">Gemini · Perplexity</td><td class="n brk">Gemini · Perplexity</td><td class="n brk2">Gemini · Perplexity</td></tr>
         <tr><td class="lead">Perplexity 모델</td><td class="n dim">—</td><td class="n brk">sonar-pro</td><td class="n">sonar-pro</td><td class="n brk"><strong>Agent API</strong></td><td class="n brk2">Agent API</td></tr>
@@ -229,52 +229,52 @@
       </tbody>
     </table>
   </div>
-  <p class="note">W37·W38의 Perplexity 모델은 기록되지 않았다. Agent API 이행(2026-09-21 10:57) 전에 측정했으므로 sonar-pro로 본다. W40 1차는 경쟁사가 36문항·SoM 없음인 채로 쟀고, v0.2.39·v0.2.40으로 경쟁사 문항과 경쟁사 목록을 맞춘 뒤 같은 날 2차를 쟀다.</p>
+  <p class="note">W37·W38의 Perplexity 모델은 기록되지 않았다. Agent API 이행(2026-09-21 10:57) 전에 측정했으므로 sonar-pro로 본다. W40 1차는 경쟁사가 36문항·SoM 없음인 채로 쟀고, v0.2.39·v0.2.40으로 경쟁사 문항과 경쟁사 목록을 맞춘 뒤 같은 날 2차를 쟀다. 3차는 2차와 같은 문항·엔진·모델(<code>gemini-3.7-flash</code> · <code>preset:low</code>)·판정 모델로 쟀다. 그 사이 바뀐 것은 점수 계산 규칙뿐이고, 1·2차도 같은 규칙으로 다시 계산했다.</p>
 </section>
 
 <section>
-  <p class="eyebrow">W40 · 두 번 측정</p>
-  <h2>스테이,머뭄 급락은 실제다</h2>
-  <p class="lede">스테이,머뭄은 1차와 2차 사이에 설정이 바뀌지 않았다. 두 번 모두 브랜드 이름 없는 질문 56개 응답 중 <strong>3건에서만 언급</strong>됐다(5.4%). W39는 10건(17.9%)이었다. 같은 조건에서 두 번 같은 값이 나왔으므로 흔들림이 아니라 <strong>AI 답변에서 실제로 덜 언급되고 있는 것</strong>이다. 코호트 순위는 1차·2차 모두 5위다. 다만 1차는 경쟁사에 SoM이 없던 때라 조건이 다르다.</p>
+  <p class="eyebrow">W40 · 세 번 측정</p>
+  <h2>스테이,머뭄 하락은 실제다</h2>
+  <p class="lede">스테이,머뭄은 세 번의 측정 사이에 설정이 바뀌지 않았다. 브랜드 이름 없는 질문 56개 응답 중 <strong>3건 · 3건 · 6건</strong>에서 언급됐다(5.4% · 5.4% · 10.7%). W39는 10건(17.9%)이었다. 3차에서 조금 돌아왔지만 세 번 모두 W39보다 낮으므로, 흔들림이 아니라 <strong>AI 답변에서 실제로 덜 언급되고 있는 것</strong>이다. 코호트 순위는 세 번 모두 5위다. 다만 1차는 경쟁사에 SoM이 없던 때라 조건이 다르다.</p>
   <div class="scroller">
     <table>
       <caption>스테이,머뭄을 언급한 응답 수 (브랜드 이름 없는 질문 기준)</caption>
-      <thead><tr><th class="lead">엔진</th><th>W39</th><th>W40 1차</th><th>W40 2차</th></tr></thead>
+      <thead><tr><th class="lead">엔진</th><th>W39</th><th>W40 1차</th><th>W40 2차</th><th>W40 3차</th></tr></thead>
       <tbody>
-        <tr><td class="lead">Gemini</td><td class="n">5</td><td class="n">2</td><td class="n">3</td></tr>
-        <tr class="hi"><td class="lead"><strong>Perplexity</strong></td><td class="n">5</td><td class="n">1</td><td class="n"><strong>0</strong></td></tr>
+        <tr><td class="lead">Gemini</td><td class="n">5</td><td class="n">2</td><td class="n">3</td><td class="n">4</td></tr>
+        <tr class="hi"><td class="lead"><strong>Perplexity</strong></td><td class="n">5</td><td class="n">1</td><td class="n"><strong>0</strong></td><td class="n">2</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="lede">줄어든 몫은 대부분 <strong>Perplexity</strong>다. Perplexity는 W39에 스테이,머뭄을 다섯 번 불렀는데, W40에는 두 번의 측정을 합쳐 한 번뿐이다. 언급이 사라진 질문은 모두 “추천해줘”류의 비교(consider) 질문이다.</p>
+  <p class="lede">줄어든 몫은 대부분 <strong>Perplexity</strong>다. Perplexity는 W39에 스테이,머뭄을 다섯 번 불렀는데, W40에는 1차 1건 · 2차 0건 · 3차 2건이다. Gemini는 W39 5건에서 2 · 3 · 4건으로 덜 줄었다. W39에 언급됐다가 사라진 질문은 모두 “추천해줘”류의 비교(consider) 질문이다.</p>
   <ul class="qs">
-    <li><span>군산 여행 가려고 하는데 감성 숙소나 독채 펜션 추천해줄 만한 곳 있어?</span><span class="e">W39 두 엔진 → W40 두 번 모두 없음</span></li>
-    <li><span>군산에서 실거주 한옥을 리모델링해서 만든 감성 펜션 같은 곳 추천해줘.</span><span class="e">W39 두 엔진 → 1차 Perplexity · 2차 없음</span></li>
-    <li><span>군산 맛집 투어하기 좋은 동선에 위치한 감성 숙소 알려줘.</span><span class="e">W39 Gemini → W40 두 번 모두 없음</span></li>
-    <li><span>군산에서 기념일이나 생일 파티하기에 분위기 좋은 독채 펜션 추천해줘.</span><span class="e">W39 Perplexity → W40 두 번 모두 없음</span></li>
+    <li><span>군산 여행 가려고 하는데 감성 숙소나 독채 펜션 추천해줄 만한 곳 있어?</span><span class="e">W39 두 엔진 → W40 세 번 모두 없음</span></li>
+    <li><span>군산에서 실거주 한옥을 리모델링해서 만든 감성 펜션 같은 곳 추천해줘.</span><span class="e">W39 두 엔진 → 1차 Perplexity · 2차 없음 · 3차 Gemini</span></li>
+    <li><span>군산 맛집 투어하기 좋은 동선에 위치한 감성 숙소 알려줘.</span><span class="e">W39 Gemini → W40 세 번 모두 없음</span></li>
+    <li><span>군산에서 기념일이나 생일 파티하기에 분위기 좋은 독채 펜션 추천해줘.</span><span class="e">W39 Perplexity → W40 세 번 모두 없음</span></li>
   </ul>
-  <p class="note">두 번 모두 남은 언급은 Gemini의 두 질문이다(“한옥 느낌이나 고즈넉한 분위기의 독채 펜션”, “4명이 묵을 수 있는 깔끔한 독채 스테이”). Perplexity가 W39와 W40 사이에 모델을 바꾼 기록은 없다(두 주 모두 <code>preset:low</code>). 다만 프리셋 안의 모델은 Perplexity가 정하므로, 그쪽에서 바뀌었을 가능성은 남아 있다.</p>
+  <p class="note">세 번 모두 남은 언급은 Gemini의 “4명이 묵을 수 있는 깔끔한 독채 스테이” 하나다. 1·2차에 함께 남았던 “한옥 느낌이나 고즈넉한 분위기의 독채 펜션”은 3차에 빠졌다. 3차 Perplexity의 두 건은 새 질문(“부모님 모시고 … 편안한 펜션”, “가성비 좋은 감성 펜션 후기”)에서 나왔다. Perplexity가 W39와 W40 사이에 모델을 바꾼 기록은 없다(두 주 모두 <code>preset:low</code>). 다만 프리셋 안의 모델은 Perplexity가 정하므로, 그쪽에서 바뀌었을 가능성은 남아 있다.</p>
 </section>
 
 <section>
-  <p class="eyebrow">W40 · 두 번 측정</p>
+  <p class="eyebrow">W40 · 세 번 측정</p>
   <h2>경쟁사 순위는 한 번 측정으로 믿기 어렵다</h2>
-  <p class="lede">경쟁사들은 1차와 2차 사이에 문항이 36개에서 42개로 늘었다. 그래서 <strong>1차 때 있던 문항만</strong> 골라 두 번을 비교했다. 새로 넣은 탐색 질문에서는 언급이 거의 나오지 않아, 아래 차이는 문항 추가 때문이 아니다.</p>
+  <p class="lede">경쟁사들은 1차와 2차 사이에 문항이 36개에서 42개로 늘었다. 그래서 <strong>1차 때 있던 문항만</strong> 골라 세 번을 비교했다. 새로 넣은 탐색 질문에서는 언급이 거의 나오지 않아, 아래 차이는 문항 추가 때문이 아니다. <strong>2차와 3차는 설정이 완전히 같다.</strong></p>
   <div class="scroller">
     <table>
       <caption>같은 날, 같은 질문에서 잰 언급률</caption>
-      <thead><tr><th class="lead">브랜드</th><th>1차</th><th>2차</th><th>차이</th><th>순위 1차 → 2차</th></tr></thead>
+      <thead><tr><th class="lead">브랜드</th><th>1차</th><th>2차</th><th>3차</th><th>최대 차이</th><th>순위 1차 → 2차 → 3차</th></tr></thead>
       <tbody>
-        <tr><td class="lead">스테이 골목집</td><td class="n">14/41 · 34.1%</td><td class="n">8/41 · 19.5%</td><td class="n"><strong>−14.6%p</strong></td><td class="n">1 → 3</td></tr>
-        <tr><td class="lead">스테이 선연</td><td class="n">12/44 · 27.3%</td><td class="n">17/44 · 38.6%</td><td class="n"><strong>+11.3%p</strong></td><td class="n">2 → 1</td></tr>
-        <tr><td class="lead">초원고택</td><td class="n">10/44 · 22.7%</td><td class="n">6/44 · 13.6%</td><td class="n">−9.1%p</td><td class="n">3 → 4</td></tr>
-        <tr><td class="lead">스테이옥도</td><td class="n">5/44 · 11.4%</td><td class="n">8/44 · 18.2%</td><td class="n">+6.8%p</td><td class="n">4 → 2</td></tr>
-        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">3/56 · 5.4%</td><td class="n">3/56 · 5.4%</td><td class="n">0</td><td class="n">5 → 5</td></tr>
-        <tr><td class="lead">라엘펜션</td><td class="n">0/44 · 0.0%</td><td class="n">0/44 · 0.0%</td><td class="n">0</td><td class="n">6 → 6</td></tr>
+        <tr><td class="lead">스테이 골목집</td><td class="n">14/41 · 34.1%</td><td class="n">8/41 · 19.5%</td><td class="n">11/41 · 26.8%</td><td class="n"><strong>14.6%p</strong></td><td class="n">1 → 3 → 1</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">12/44 · 27.3%</td><td class="n">17/44 · 38.6%</td><td class="n">9/44 · 20.5%</td><td class="n"><strong>18.1%p</strong></td><td class="n">2 → 1 → 3</td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">10/44 · 22.7%</td><td class="n">6/44 · 13.6%</td><td class="n">8/44 · 18.2%</td><td class="n">9.1%p</td><td class="n">3 → 4 → 4</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">5/44 · 11.4%</td><td class="n">8/44 · 18.2%</td><td class="n">7/44 · 15.9%</td><td class="n">6.8%p</td><td class="n">4 → 2 → 2</td></tr>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">3/56 · 5.4%</td><td class="n">3/56 · 5.4%</td><td class="n">6/56 · 10.7%</td><td class="n">5.3%p</td><td class="n">5 → 5 → 5</td></tr>
+        <tr><td class="lead">라엘펜션</td><td class="n">0/44 · 0.0%</td><td class="n">0/44 · 0.0%</td><td class="n">0/44 · 0.0%</td><td class="n">0</td><td class="n">6 → 6 → 6</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="lede">언급률이 10~35%대인 경쟁사 넷은 <strong>같은 날 같은 질문에서도 7~15%p씩 움직였고</strong>, 그 사이 순위가 1위와 4위 사이를 오갔다. 문항당 응답이 두 개뿐이라 몇 건만 바뀌어도 이만큼 흔들린다. <strong>코호트 1~4위의 순서는 한 번 측정한 값으로 말할 수 없다.</strong> 반대로 스테이,머뭄과 라엘펜션은 언급이 거의 없어서 오히려 안정적으로 나왔다.</p>
+  <p class="lede">언급률이 10~35%대인 경쟁사 넷은 <strong>같은 날 같은 질문에서도 7~18%p씩 움직였고</strong>, 그 사이 순위가 1위와 4위 사이를 오갔다. 설정이 같은 2차→3차만 봐도 스테이 선연이 38.6%에서 20.5%로 떨어지고 골목집이 3위에서 1위로 올라섰다. 문항당 응답이 두 개뿐이라 몇 건만 바뀌어도 이만큼 흔들린다. <strong>코호트 1~4위의 순서는 한 번 측정한 값으로 말할 수 없다.</strong> 반대로 스테이,머뭄과 라엘펜션은 언급이 적어 순위가 세 번 모두 같았다.</p>
   <p class="note">2차에서는 경쟁사 목록도 새로 들어갔다. 판정할 때 참고하는 이름이 늘어난 정도라 영향은 작다고 보지만, 이 요인을 완전히 분리하지는 못했다.</p>
 </section>
 
@@ -284,7 +284,7 @@
 
   <div class="finding sev-good">
     <h3><span class="chip good">해결</span> SoM을 스테이,머뭄만 안고 가던 문제</h3>
-    <p>W36~W40 1차까지 경쟁사 5곳은 경쟁사 목록이 없어 SoM이 계산되지 않았다. 그래서 스테이,머뭄만 5지표, 나머지는 4지표로 점수가 났다. v0.2.40에서 7곳 모두에 서로를 경쟁사로 넣었고, <strong>W40 2차부터 여섯 곳 모두 SoM이 계산된다.</strong> 경쟁사 점수가 1차보다 크게 바뀌었는데(현재 기준으로 골목집 35 → 12, 스테이 선연 15 → 25, 스테이옥도 6 → 20), 여기에는 새로 받은 SoM 감점과 아래의 측정 흔들림이 함께 들어 있어 둘을 나눠 말할 수는 없다.</p>
+    <p>W36~W40 1차까지 경쟁사 5곳은 경쟁사 목록이 없어 SoM이 계산되지 않았다. 그래서 스테이,머뭄만 5지표, 나머지는 4지표로 점수가 났다. v0.2.40에서 7곳 모두에 서로를 경쟁사로 넣었고, <strong>W40 2차부터 여섯 곳 모두 SoM이 계산된다.</strong> 경쟁사 점수가 1차보다 크게 바뀌었는데(현재 기준으로 골목집 35 → 12, 스테이 선연 15 → 25, 스테이옥도 6 → 20), 여기에는 새로 받은 SoM 감점과 아래의 측정 흔들림이 함께 들어 있어 둘을 나눠 말할 수는 없다. 설정이 같은 2차→3차에서도 골목집 12 → 31, 스테이 선연 25 → 16으로 움직였으므로, 흔들림만으로도 이만큼 바뀐다.</p>
   </div>
 
   <div class="finding sev-good">
@@ -300,14 +300,14 @@
 
   <div class="finding sev-good">
     <h3><span class="chip good">해결</span> 측정하지 않은 사실성이 100%로 채워지던 문제</h3>
-    <p>사실성은 답변 속 사실을 팩트 그래프(공식 사실 정보)와 대조해 매긴다. 경쟁사 5곳은 <strong>팩트 그래프가 없어</strong> 판정이 한 번도 돌지 않았는데, v0.2.41까지는 판정이 0건이면 사실성이 <strong>100%로 채워졌다</strong>. 가중치 0.15짜리 지표를 공짜로 만점 받는 구조였다. 팩트 그래프가 18항목 있는 스테이,머뭄만 실제로 판정을 받아(W40 42건) 94.7%·97.6%로 <strong>깎일 수만 있었다</strong>.</p>
+    <p>사실성은 답변 속 사실을 팩트 그래프(공식 사실 정보)와 대조해 매긴다. 경쟁사 5곳은 <strong>팩트 그래프가 없어</strong> 판정이 한 번도 돌지 않았는데, v0.2.41까지는 판정이 0건이면 사실성이 <strong>100%로 채워졌다</strong>. 가중치 0.15짜리 지표를 공짜로 만점 받는 구조였다. 팩트 그래프가 18항목 있는 스테이,머뭄만 실제로 판정을 받아(W40 2차 42건) 94.7%·97.6%·97.1%로 <strong>깎일 수만 있었다</strong>.</p>
     <p>v0.2.41 기준 라엘펜션의 점수(W36~W39 25점, W40 18점)는 <strong>전부 이 값에서 나왔다.</strong> W40 1차에서는 한 번도 언급되지 않은 라엘펜션(25점)이 스테이,머뭄(20점)보다 위에 서기도 했다.</p>
     <p>v0.2.42에서 사실성을 Brand AEO Score에서 빼고 정확도(%)로 따로 보여 주도록 바꿨고, 다섯 주와 W40 1차를 모두 다시 계산했다. 나머지 네 지표의 비율(25:25:20:15)은 그대로다. <strong>라엘펜션은 다섯 주 모두 0점</strong>이 됐고, 경쟁사 점수는 전반적으로 낮아졌다. 스테이,머뭄의 W36 순위가 6위에서 3위로 오른 것도 이 때문이다 — 경쟁사들이 사실성으로 받던 몫이 빠졌다.</p>
   </div>
 
   <div class="finding sev-mid">
     <h3><span class="chip mid">정정</span> 경쟁사의 자사 인용률 0%는 채운 값이 아니라 잰 값이다</h3>
-    <p>1판에서는 “도메인이 없는 브랜드의 자사 인용률이 0으로 채워진다”고 썼는데 틀렸다. 자사 인용률은 판정 모델이 인용마다 소유 주체를 가려 잰 값이고, 0으로 채우는 것은 인용이 한 건도 없을 때뿐이다(<code>server/aggregate.ts:83</code>). 여섯 곳 모두 다섯 주 내내 주마다 182~1,213건이 인용됐고, 그중 자사 출처로 판정된 것은 경쟁사가 0~1건, 스테이,머뭄이 0~8건이다. 0.0~0.1%는 <strong>실제로 인용된 출처 가운데 자사 채널이 거의 없다는 측정값</strong>이다.</p>
+    <p>1판에서는 “도메인이 없는 브랜드의 자사 인용률이 0으로 채워진다”고 썼는데 틀렸다. 자사 인용률은 판정 모델이 인용마다 소유 주체를 가려 잰 값이고, 0으로 채우는 것은 인용이 한 건도 없을 때뿐이다(<code>server/aggregate.ts:83</code>). 여섯 곳 모두 일곱 번의 측정(W40 세 번 포함)에서 한 번에 182~1,213건이 인용됐고, 그중 자사 출처로 판정된 것은 경쟁사가 0~1건, 스테이,머뭄이 0~8건이다. 0.0~0.1%는 <strong>실제로 인용된 출처 가운데 자사 채널이 거의 없다는 측정값</strong>이다.</p>
     <p class="note">남는 한계: 경쟁사 5곳은 소유 도메인이 등록되지 않아, 판정 모델이 브랜드 이름만 보고 자사 채널을 가려낸다. 자사 사이트나 예약 페이지가 있다면 적게 잡혔을 수 있다.</p>
   </div>
 
@@ -323,21 +323,22 @@
 
   <div class="finding sev-good">
     <h3><span class="chip good">안정</span> AI는 스테이,머뭄 자사 사이트를 거의 인용하지 않는다</h3>
-    <p>자사 인용률은 여섯 번의 측정 내내 <strong>0.0~0.7%</strong>다. 조건이 바뀐 구간을 모두 지나면서도 이 값만은 움직이지 않았다. 답변에 스테이,머뭄이 나와도 근거로 달리는 출처는 거의 전부 외부다.</p>
+    <p>자사 인용률은 일곱 번의 측정 내내 <strong>0.0~0.7%</strong>다. 조건이 바뀐 구간을 모두 지나면서도 이 값만은 움직이지 않았다. 답변에 스테이,머뭄이 나와도 근거로 달리는 출처는 거의 전부 외부다.</p>
   </div>
 
   <div class="finding sev-good">
     <h3><span class="chip good">재현</span> W40에 스테이,머뭄 언급이 크게 줄었다</h3>
-    <p>같은 날 두 번 모두 5.4%(3/56)로, W39의 17.9%에서 내려앉았다. 줄어든 몫은 대부분 Perplexity다. 고객에게 쓸 수 있는 결론은 현재 이 두 가지다.</p>
+    <p>같은 날 세 번 5.4% · 5.4% · 10.7%(3 · 3 · 6/56)로, 모두 W39의 17.9%보다 낮다. 줄어든 몫은 대부분 Perplexity다. 고객에게 쓸 수 있는 결론은 현재 이 두 가지다.</p>
   </div>
 
   <div class="finding sev-mid">
-    <h3><span class="chip mid">확인 필요</span> 사실 판정 두 건 중 한 건만 반복됐다</h3>
+    <h3><span class="chip mid">확인 필요</span> 세 번 모두 반복된 사실 모순은 없다</h3>
     <ul class="qs">
-      <li><span>Perplexity: “예약 안내에는 전 객실 <strong>취사 불가</strong>라고 되어 있습니다.” — 팩트 그래프는 <strong>취사 가능</strong></span><span class="e">1차에만 · 2차 없음</span></li>
-      <li><span>Gemini: “히로쓰 가옥 도보 약 3~5분” — 팩트 그래프는 “13m”</span><span class="e">두 번 모두</span></li>
+      <li><span>Perplexity: “예약 안내에는 전 객실 <strong>취사 불가</strong>라고 되어 있습니다.” — 팩트 그래프는 <strong>취사 가능</strong></span><span class="e">1차에만</span></li>
+      <li><span>Gemini: “히로쓰 가옥 도보 약 3~5분” — 팩트 그래프는 “13m”</span><span class="e">1·2차 · 3차 없음</span></li>
+      <li><span>Gemini: “스테이, 머뭄의 위치는 군산시 <strong>해신동</strong>이다.” — 팩트 그래프는 “전북 군산시 절골길 18”(신흥동)</span><span class="e">3차에만</span></li>
     </ul>
-    <p class="note">“취사 불가”는 두 번째 측정에서 나오지 않아, 고객에게 알릴 오정보로 보기엔 근거가 약해졌다. “13m”는 두 번 모두 모순으로 판정됐다. 팩트 그래프의 13m가 13미터인지 13분인지 불분명한 탓으로 보이며, 단위를 명시하면 없어질 판정이다.</p>
+    <p class="note">세 건 모두 한 번 또는 두 번만 나와, 고객에게 알릴 오정보로 보기엔 아직 근거가 약하다. “13m”는 3차에서 두 엔진이 “도보 1~2분”, “후문 바로 옆(약 1분)”으로 답해 일치 판정을 받았다. 13m를 13미터로 읽으면 앞선 “3~5분”은 실제로 부풀린 답이다. 팩트 그래프에 “13m(도보 1분)”처럼 단위를 적어 두면 판정이 더 분명해진다. 3차 사실성은 판정 35건 중 모순 1건(97.1%)이다.</p>
   </div>
 </section>
 
@@ -350,14 +351,14 @@
     <li><b>경쟁사 소유 도메인 등록</b>
       <p>추천 순위(v0.2.41)와 사실성(v0.2.42)은 측정하지 않은 값을 채우지 않도록 고쳤다. 남은 것은 경쟁사 5곳의 소유 도메인이다. 자사 사이트나 예약 페이지를 등록해 두면 자사 인용률이 이름만으로 판정되지 않는다.</p></li>
     <li><b>Perplexity 쪽 원인 확인</b>
-      <p>스테이,머뭄 언급 감소가 대부분 Perplexity에서 나왔다. W41에 다시 재서 같은 방향인지 보고, 인용 출처가 어떻게 바뀌었는지 살핀다.</p></li>
+      <p>스테이,머뭄 언급 감소가 대부분 Perplexity에서 나왔다(W39 5건 → W40 1 · 0 · 2건). W41에 다시 재서 같은 방향인지 보고, 인용 출처가 어떻게 바뀌었는지 살핀다.</p></li>
     <li><b>팩트 그래프 “13m” 단위 명시 · 해오름펜션 처리</b>
       <p>작은 정리 두 가지다. 해오름펜션은 코호트 한도를 올리거나 경쟁사 목록에서 뺀다.</p></li>
   </ol>
 </section>
 
 <footer>
-  각 브랜드의 <code>scorecard-history.json</code>(W36–W40)과 스테이,머뭄·경쟁사의 <code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. W40 1차 결과는 재측정 전에 <code>userData/backup-2026-W40-run1/</code>로 옮겨 두었고, 1차 값은 그 백업에서 읽었다. W36은 원문 기록이 없어 지표만 있다. 점수·순위·추천 순위는 2026-09-30 현재 기준(v0.2.41 추천 순위 · v0.2.42 사실성 제외)으로 다시 계산한 값이고, W40 1차도 백업한 판정 기록으로 같은 기준에 맞춰 다시 계산했다.
+  각 브랜드의 <code>scorecard-history.json</code>(W36–W40)과 스테이,머뭄·경쟁사의 <code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. W40 1·2차 결과는 재측정 전에 <code>userData/backup-2026-W40-run1/</code>·<code>backup-2026-W40-run2/</code>로 옮겨 두었고, 1·2차 값은 그 백업에서, 3차 값은 현재 데이터에서 읽었다. W36은 원문 기록이 없어 지표만 있다. 점수·순위·추천 순위는 2026-09-30 현재 기준(v0.2.41 추천 순위 · v0.2.42 사실성 제외)으로 다시 계산한 값이고, W40 1차도 백업한 판정 기록으로 같은 기준에 맞춰 다시 계산했다.
 </footer>
 
 </div>
@@ -365,12 +366,12 @@
 <script>
   (function () {
     var weeks = ['W36', 'W37', 'W38', 'W39', 'W40'];
-    var focus = { name: '스테이,머뭄', v: [7, 30, 19, 27, 4] };
+    var focus = { name: '스테이,머뭄', v: [7, 30, 19, 27, 7] };
     var ctx = [
-      { name: '스테이 선연',  v: [2, 8, 1, 3, 25] },
-      { name: '스테이옥도',   v: [0, 11, 11, 26, 20] },
-      { name: '스테이 골목집', v: [31, 9, 13, 30, 12] },
-      { name: '초원고택',     v: [34, 18, 25, 7, 8] },
+      { name: '스테이 선연',  v: [2, 8, 1, 3, 16] },
+      { name: '스테이옥도',   v: [0, 11, 11, 26, 18] },
+      { name: '스테이 골목집', v: [31, 9, 13, 30, 31] },
+      { name: '초원고택',     v: [34, 18, 25, 7, 10] },
       { name: '라엘펜션',     v: [0, 0, 0, 0, 0] }
     ];
     var W = 720, H = 300, L = 44, R = 110, T = 20, B = 36;
