@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>스테이,머뭄 W36–W40 검토</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+
+  /* chart */
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  /* findings */
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">내부 검토 · 주간 스코어카드 · 코호트 랭킹</p>
+  <h1>스테이,머뭄 5주 추이, 어디까지 믿을 수 있나</h1>
+  <p class="lede">W36부터 W40까지 점수는 30 → 41 → 43 → 39 → 32, 코호트 순위는 6위 → 4위 → 3위 → 6위 → 5위다. 그런데 다섯 주 중 조건이 같은 쌍은 두 개뿐이고, 코호트 순위표에는 비교 대상과 잣대가 다른 문제가 세 겹 들어 있다. 이 페이지는 숫자를 보여 주되, 각 숫자를 어디까지 믿어도 되는지를 함께 적는다.</p>
+  <dl class="meta">
+    <div><dt>브랜드</dt><dd>스테이,머뭄 (web4ai)</dd></div>
+    <div><dt>코호트</dt><dd>펜션 · 전북 군산 · 6곳</dd></div>
+    <div><dt>기간</dt><dd>2026-W36 – W40</dd></div>
+    <div><dt>측정</dt><dd>주 1회 · 5회</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">점수 추이</p>
+  <h2>비교할 수 있는 구간은 W37–W38과 W39–W40뿐이다</h2>
+  <div class="chart" id="chart">
+    <div class="legend">
+      <span><i class="lk"></i>스테이,머뭄</span>
+      <span><i class="lk ctx"></i>경쟁사 5곳</span>
+      <span><i class="lk brk"></i>측정 조건이 바뀐 지점</span>
+    </div>
+    <svg class="plot" id="plot" viewBox="0 0 720 300" role="img" aria-label="W36부터 W40까지 코호트 6곳의 Brand AEO Score 추이. 스테이,머뭄은 30, 41, 43, 39, 32."></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+  <p class="note">점선은 비교가 끊기는 지점이다. W36→W37에는 수집 엔진과 문항 수가, W38→W39에는 Perplexity 모델과 스테이,머뭄의 문항 수가 바뀌었다. 점선을 넘는 증감은 브랜드 변화로 읽으면 안 된다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">주간 스코어카드</p>
+  <h2>스테이,머뭄 지표별 5주</h2>
+  <div class="scroller">
+    <table>
+      <caption>언급률·SoM은 category-agnostic 문항에서만 계산한다. 추천 순위는 낮을수록 좋다.</caption>
+      <thead><tr><th class="lead">지표</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th>W40</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><strong>Brand AEO Score</strong></td><td class="n">30</td><td class="n brk">41</td><td class="n">43</td><td class="n brk">39</td><td class="n">32</td></tr>
+        <tr><td class="lead dim">95% 신뢰구간</td><td class="n dim">25.5–34.5</td><td class="n dim brk">35.7–46.3</td><td class="n dim">37.3–48.7</td><td class="n dim brk">33.9–44.1</td><td class="n dim">27.9–36.1</td></tr>
+        <tr><td class="lead">코호트 순위</td><td class="n">6 / 6</td><td class="n brk">4 / 6</td><td class="n">3 / 6</td><td class="n brk">6 / 6</td><td class="n">5 / 6</td></tr>
+        <tr><td class="lead">언급률</td><td class="n">6.2%</td><td class="n brk">22.7%</td><td class="n">25.0%</td><td class="n brk">17.9%</td><td class="n">5.4%</td></tr>
+        <tr><td class="lead">SoM</td><td class="n">16.0%</td><td class="n brk">32.1%</td><td class="n">28.8%</td><td class="n brk">28.2%</td><td class="n">4.6%</td></tr>
+        <tr><td class="lead">자사 인용률</td><td class="n">0.0%</td><td class="n brk">0.4%</td><td class="n">0.5%</td><td class="n brk">0.7%</td><td class="n">0.5%</td></tr>
+        <tr><td class="lead">추천 순위</td><td class="n">1.00</td><td class="n brk">1.75</td><td class="n">1.00</td><td class="n brk">1.80</td><td class="n">1.00</td></tr>
+        <tr><td class="lead">사실성</td><td class="n">66.7%</td><td class="n brk">100%</td><td class="n">100%</td><td class="n brk">100%</td><td class="n">94.7%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">코호트 랭킹</p>
+  <h2>6곳의 주차별 점수와 순위</h2>
+  <div class="scroller">
+    <table>
+      <caption>점수 (순위). 코호트 구성은 5주 내내 같은 6곳이다.</caption>
+      <thead><tr><th class="lead">브랜드</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th>W40</th><th>SoM 산출</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">30 (6)</td><td class="n brk">41 (4)</td><td class="n">43 (3)</td><td class="n brk">39 (6)</td><td class="n">32 (5)</td><td class="n">5주 모두</td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">47 (1)</td><td class="n brk">51 (1)</td><td class="n">53 (1)</td><td class="n brk">43 (2)</td><td class="n">48 (2)</td><td class="n dim">없음</td></tr>
+        <tr><td class="lead">스테이 골목집</td><td class="n">45 (2)</td><td class="n brk">37 (6)</td><td class="n">38 (6)</td><td class="n brk">45 (1)</td><td class="n">49 (1)</td><td class="n dim">없음</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">40 (4)</td><td class="n brk">47 (2)</td><td class="n">47 (2)</td><td class="n brk">43 (2)</td><td class="n">44 (4)</td><td class="n dim">없음</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">41 (3)</td><td class="n brk">45 (3)</td><td class="n">41 (4)</td><td class="n brk">42 (4)</td><td class="n">45 (3)</td><td class="n dim">없음</td></tr>
+        <tr><td class="lead">라엘펜션</td><td class="n">40 (4)</td><td class="n brk">40 (5)</td><td class="n">40 (5)</td><td class="n brk">40 (5)</td><td class="n">25 (6)</td><td class="n dim">없음</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">측정 조건</p>
+  <h2>주차마다 무엇이 바뀌었나</h2>
+  <div class="scroller">
+    <table>
+      <thead><tr><th class="lead">항목</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th>W40</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">수집 엔진</td><td class="n">ChatGPT · Gemini</td><td class="n brk">Gemini · Perplexity</td><td class="n">Gemini · Perplexity</td><td class="n brk">Gemini · Perplexity</td><td class="n">Gemini · Perplexity</td></tr>
+        <tr><td class="lead">Perplexity 모델</td><td class="n dim">—</td><td class="n brk">sonar-pro</td><td class="n">sonar-pro</td><td class="n brk"><strong>Agent API</strong></td><td class="n">Agent API</td></tr>
+        <tr><td class="lead">문항 · 스테이,머뭄</td><td class="n">12</td><td class="n brk">36</td><td class="n">36</td><td class="n brk"><strong>42</strong></td><td class="n">42</td></tr>
+        <tr><td class="lead">문항 · 경쟁사</td><td class="n">12</td><td class="n brk">36</td><td class="n">36</td><td class="n brk">36</td><td class="n">36</td></tr>
+        <tr><td class="lead">원문 기록</td><td class="n dim">없음</td><td class="n brk">있음</td><td class="n">있음</td><td class="n brk">있음</td><td class="n">있음</td></tr>
+        <tr><td class="lead">모델 기록</td><td class="n dim">없음</td><td class="n dim brk">없음</td><td class="n dim">없음</td><td class="n brk">있음</td><td class="n">있음</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">W37·W38의 Perplexity 모델은 기록되지 않았다. Agent API 이행(2026-09-21 10:57) 전에 측정했으므로 sonar-pro로 본다. W39 측정은 같은 날 11:55에 이행 후 버전으로 돌았고, 카드에 <code>preset:low</code>가 기록돼 있다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">믿으면 안 되는 이유</p>
+  <h2>코호트 순위표에 세 겹의 비대칭이 있다</h2>
+
+  <div class="finding sev-high">
+    <h3><span class="chip high">심각</span> SoM은 스테이,머뭄만 안고 간다</h3>
+    <p>경쟁사 5곳은 경쟁사 목록이 비어 있어 5주 내내 SoM이 계산되지 않았다. SoM 가중치 0.25가 재정규화로 빠진다. <strong>스테이,머뭄만 5지표, 나머지는 4지표로 점수가 난다.</strong> 스테이,머뭄의 SoM은 대개 28~32%로 다른 지표보다 높지 않고, W40에는 4.6%까지 떨어졌다. 그 항목을 가진 쪽만 그만큼 끌려 내려간다.</p>
+    <p>통신 코호트에서 발견해 고친 것과 같은 문제다(경쟁사 목록 추가 + 별칭 통일). 펜션 코호트에는 아직 적용하지 않았다.</p>
+  </div>
+
+  <div class="finding sev-high">
+    <h3><span class="chip high">심각</span> 한 번도 언급되지 않은 라엘펜션이 40점을 받았다</h3>
+    <p>라엘펜션의 언급률은 <strong>5주 모두 0.0%</strong>다. 브랜드 이름이 없는 질문에서 AI가 한 번도 부르지 않았다. 그런데 W36~W39에 40점을 받았고, <strong>W39에는 스테이,머뭄(39점)보다 위에 섰다.</strong></p>
+    <p>점수는 사실성 100%와 추천 순위 1.00에서 나왔다. 그 추천 순위는 W39 기준 <strong>응답 1건</strong>에서 나왔고, 그 1건은 브랜드 이름을 넣고 물은 <code>brand-direct</code> 질문이다. 언급률은 이름 없는 질문만 세는데, 추천 순위는 모든 질문에서 모은다(<code>server/aggregate.ts</code>). W40에는 그 1건마저 순위 판정이 나오지 않아 지표가 빠졌고, 점수가 25점으로 떨어졌다. 저장된 점수를 감성 계수 없이 그대로 재현했다.</p>
+    <p class="note">노출이 전혀 없는 브랜드에도 40점 안팎의 바닥 점수가 생긴다는 뜻이다. 순위표 하위권의 순서는 이 때문에 의미가 약하다.</p>
+  </div>
+
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">주의</span> W39·W40은 스테이,머뭄만 42문항이었다</h3>
+    <p>2026-09-19에 스테이,머뭄에만 탐색 질문 6개를 덧붙였다. W39·W40은 스테이,머뭄이 42문항(agnostic 28), 경쟁사가 36문항(agnostic 22)으로 측정됐다. 더해진 6개가 모두 브랜드가 잘 나오지 않는 탐색 질문이라, 스테이,머뭄 쪽에 불리했을 수 있다.</p>
+    <p class="note">2026-09-30에 경쟁사 5곳에도 같은 6개를 덧붙여 해소했다. <strong>W41부터 여섯 곳 모두 42문항이다.</strong></p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">W40 급락</p>
+  <h2>답변은 실제로 달라졌다, 다만 한 번 잰 값이다</h2>
+  <p class="lede">W40은 W39와 조건이 같다(엔진·모델·42문항). 그런데 언급률이 <span class="num">17.9% → 5.4%</span>, SoM이 <span class="num">28.2% → 4.6%</span>로 떨어졌다. 판정 오류는 아니다. 원문에서 “머뭄”이 등장한 답변이 agnostic 56건 중 <strong>10건 → 3건</strong>으로 실제로 줄었다.</p>
+  <p class="lede">언급이 줄어든 문항 6개는 <strong>모두 “추천해줘”류의 비교(consider) 질문</strong>이다. 새로 언급된 문항은 없다.</p>
+  <ul class="qs">
+    <li><span>군산 여행 가려고 하는데 감성 숙소나 독채 펜션 추천해줄 만한 곳 있어?</span><span class="e">두 엔진 → 없음</span></li>
+    <li><span>군산에 있는 한옥 느낌이나 고즈넉한 분위기의 독채 펜션 있을까?</span><span class="e">두 엔진 → Gemini</span></li>
+    <li><span>친구들이랑 군산에서 4명이 묵을 수 있는 깔끔한 독채 스테이 추천해줘.</span><span class="e">두 엔진 → Gemini</span></li>
+    <li><span>군산에서 실거주 한옥을 리모델링해서 만든 감성 펜션 같은 곳 추천해줘.</span><span class="e">두 엔진 → Perplexity</span></li>
+    <li><span>군산 맛집 투어하기 좋은 동선에 위치한 감성 숙소 알려줘.</span><span class="e">Gemini → 없음</span></li>
+    <li><span>군산에서 기념일이나 생일 파티하기에 분위기 좋은 독채 펜션 추천해줘.</span><span class="e">Perplexity → 없음</span></li>
+  </ul>
+  <div class="scroller">
+    <table>
+      <caption>같은 주 경쟁사 언급률 — 추천 자리가 옮겨 간 모양이다</caption>
+      <thead><tr><th class="lead">브랜드</th><th>W39</th><th>W40</th><th>변화</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">17.9%</td><td class="n">5.4%</td><td class="n">−12.5%p</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">4.5%</td><td class="n">27.3%</td><td class="n">+22.8%p</td></tr>
+        <tr><td class="lead">스테이 골목집</td><td class="n">24.4%</td><td class="n">34.1%</td><td class="n">+9.7%p</td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">13.6%</td><td class="n">22.7%</td><td class="n">+9.1%p</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">15.9%</td><td class="n">11.4%</td><td class="n">−4.5%p</td></tr>
+        <tr><td class="lead">라엘펜션</td><td class="n">0.0%</td><td class="n">0.0%</td><td class="n dim">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede">스테이,머뭄이 빠진 자리에 다른 스테이들이 들어왔다. 스테이 선연은 한 주 만에 6배가 됐다. <strong>이 흔들림이 실제 변화인지는 한 번 측정으로 가릴 수 없다.</strong> 통신 코호트에서 KT를 같은 설정으로 두 번 쟀을 때 언급률이 8.5%p 움직였다. 여기 변화는 그보다 크지만, 표본이 문항당 두 답변뿐이라 몇 건만 바뀌어도 이만큼 움직인다.</p>
+  <p class="note">점수 신뢰구간은 W39 33.9–44.1, W40 27.9–36.1로 조금 겹친다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">믿을 수 있는 것</p>
+  <h2>5주 내내 같은 방향인 결과</h2>
+
+  <div class="finding sev-good">
+    <h3><span class="chip good">안정</span> AI는 스테이,머뭄 자사 사이트를 거의 인용하지 않는다</h3>
+    <p>자사 인용률은 5주 내내 <strong>0.0~0.7%</strong>다. 조건이 바뀐 구간을 모두 지나면서도 이 값만은 움직이지 않았다. 답변에 스테이,머뭄이 나와도 근거로 달리는 출처는 거의 전부 외부다. 다섯 번의 측정에서 같은 방향으로 나온 유일한 결과라, 고객에게 쓸 수 있는 결론은 현재 이것 하나다.</p>
+  </div>
+
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">확인 필요</span> W40에 사실과 어긋난 설명이 2건 나왔다</h3>
+    <p>W37~W39 사실성은 100%였고 W40에 94.7%가 됐다(일치 36 · 모순 2).</p>
+    <ul class="qs">
+      <li><span>Perplexity: “예약 안내에는 전 객실 <strong>취사 불가</strong>라고 되어 있습니다.” — 팩트 그래프는 <strong>취사 가능</strong></span><span class="e">실제 오정보</span></li>
+      <li><span>Gemini: “히로쓰 가옥 도보 약 5분” — 팩트 그래프는 “13m”</span><span class="e">단위 모호</span></li>
+    </ul>
+    <p class="note">첫 번째는 고객이 예약을 망설일 수 있는 오정보라 스테이,머뭄 쪽에 알릴 가치가 있다. 두 번째는 팩트 그래프의 “13m”가 13미터인지 13분인지 불분명해서, 판정이 맞는지부터 확인해야 한다.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">다음</p>
+  <h2>우선순위</h2>
+  <ol class="todo">
+    <li><b>경쟁사 5곳에 경쟁사 목록과 별칭 넣기</b>
+      <p>통신 코호트에 한 것과 같다. 가장 싸고, 다음 측정부터 여섯 곳이 같은 5지표로 비교된다.</p></li>
+    <li><b>W41에 같은 설정으로 두 번 측정</b>
+      <p>W41은 여섯 곳 모두 42문항이 되는 첫 주다. 두 번 재서 W40 급락이 흔들림인지 확인하고, 이 코호트의 흔들림 폭을 처음으로 잰다.</p></li>
+    <li><b>추천 순위 지표의 범위 검토</b>
+      <p>언급률처럼 브랜드 이름이 없는 질문으로 한정할지, 응답이 몇 건 이상일 때만 쓸지 정한다. 점수 계산이 바뀌는 설계 판단이라 별도로 결정이 필요하다.</p></li>
+    <li><b>팩트 그래프 “13m” 표기 확인</b>
+      <p>거리 사실의 단위를 명시해 판정 오류를 없앤다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  각 브랜드의 <code>scorecard-history.json</code>(W36–W40)과 스테이,머뭄의 <code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. W36은 원문 기록이 없어 지표만 있다. 라엘펜션 점수는 저장된 지표로 재계산해 저장값과 일치함을 확인했다.
+</footer>
+
+</div>
+
+<script>
+  (function () {
+    var weeks = ['W36', 'W37', 'W38', 'W39', 'W40'];
+    var focus = { name: '스테이,머뭄', v: [30, 41, 43, 39, 32] };
+    var ctx = [
+      { name: '초원고택',     v: [47, 51, 53, 43, 48] },
+      { name: '스테이 골목집', v: [45, 37, 38, 45, 49] },
+      { name: '스테이옥도',   v: [40, 47, 47, 43, 44] },
+      { name: '스테이 선연',  v: [41, 45, 41, 42, 45] },
+      { name: '라엘펜션',     v: [40, 40, 40, 40, 25] }
+    ];
+    var W = 720, H = 300, L = 44, R = 110, T = 20, B = 36;
+    var ymax = 60;
+    var x = function (i) { return L + i * (W - L - R) / (weeks.length - 1); };
+    var y = function (v) { return T + (1 - v / ymax) * (H - T - B); };
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.getElementById('plot');
+    var el = function (tag, attrs, parent) {
+      var n = document.createElementNS(NS, tag);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      (parent || svg).appendChild(n);
+      return n;
+    };
+
+    [0, 20, 40, 60].forEach(function (t) {
+      el('line', { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: 'var(--rule)', 'stroke-width': 1 });
+      var tx = el('text', { x: L - 8, y: y(t) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--mono)' });
+      tx.textContent = t;
+    });
+    weeks.forEach(function (w, i) {
+      var tx = el('text', { x: x(i), y: H - B + 20, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--mono)' });
+      tx.textContent = w;
+    });
+    [0.5, 2.5].forEach(function (i) {
+      var bx = L + i * (W - L - R) / (weeks.length - 1);
+      el('line', { x1: bx, x2: bx, y1: T - 6, y2: H - B, stroke: 'var(--rule-2)', 'stroke-width': 2, 'stroke-dasharray': '4 4' });
+    });
+
+    var tip = document.getElementById('tip');
+    var chart = document.getElementById('chart');
+    var show = function (evt, text) {
+      var r = chart.getBoundingClientRect();
+      var c = evt.target.getBoundingClientRect();
+      tip.textContent = text;
+      tip.style.left = (c.left + c.width / 2 - r.left) + 'px';
+      tip.style.top = (c.top - r.top) + 'px';
+      tip.classList.add('on');
+    };
+    var hide = function () { tip.classList.remove('on'); };
+    var path = function (v) { return v.map(function (val, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(val).toFixed(1); }).join(' '); };
+
+    ctx.forEach(function (s) {
+      el('path', { d: path(s.v), fill: 'none', stroke: 'var(--context)', 'stroke-width': 1.5, 'stroke-linejoin': 'round' });
+      s.v.forEach(function (val, i) {
+        var c = el('circle', { cx: x(i), cy: y(val), r: 3.5, fill: 'var(--context)', stroke: 'var(--surface)', 'stroke-width': 2, tabindex: 0 });
+        c.setAttribute('aria-label', s.name + ' ' + weeks[i] + ' ' + val + '점');
+        var t = s.name + ' · ' + weeks[i] + ' · ' + val + '점';
+        c.addEventListener('mouseenter', function (e) { show(e, t); });
+        c.addEventListener('focus', function (e) { show(e, t); });
+        c.addEventListener('mouseleave', hide);
+        c.addEventListener('blur', hide);
+      });
+    });
+
+    el('path', { d: path(focus.v), fill: 'none', stroke: 'var(--s1)', 'stroke-width': 2.5, 'stroke-linejoin': 'round' });
+    focus.v.forEach(function (val, i) {
+      var c = el('circle', { cx: x(i), cy: y(val), r: 5, fill: 'var(--s1)', stroke: 'var(--surface)', 'stroke-width': 2, tabindex: 0 });
+      c.setAttribute('aria-label', focus.name + ' ' + weeks[i] + ' ' + val + '점');
+      var t = focus.name + ' · ' + weeks[i] + ' · ' + val + '점';
+      c.addEventListener('mouseenter', function (e) { show(e, t); });
+      c.addEventListener('focus', function (e) { show(e, t); });
+      c.addEventListener('mouseleave', hide);
+      c.addEventListener('blur', hide);
+      var lb = el('text', { x: x(i), y: y(val) + 20, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)', 'font-family': 'var(--mono)' });
+      lb.textContent = val;
+    });
+
+    var endX = W - R + 10;
+    var fl = el('text', { x: endX, y: y(focus.v[4]) + 4, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)', 'font-family': 'var(--sans)' });
+    fl.textContent = focus.name;
+    var cl = el('text', { x: endX, y: y(46) + 4, 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--sans)' });
+    cl.textContent = '경쟁사 5곳';
+    var rl = el('text', { x: endX, y: y(25) + 4, 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--sans)' });
+    rl.textContent = '라엘펜션';
+  })();
+</script>
+</body>
+</html>
