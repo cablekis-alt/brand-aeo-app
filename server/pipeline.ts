@@ -113,6 +113,7 @@ export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStor
       count: tenant.questionBankSize,
       version: tenant.questionBankVersion,
       previousVersionDiffNote: shortfallNote,
+      language: tenant.questionLanguage,
     });
     const result = await judge.call(prompt);
     const parsed = parseJsonLoose<Array<Omit<QuestionSpec, 'industry' | 'region' | 'version'>>>(result.text);
@@ -220,7 +221,7 @@ async function collectRawCalls(
     async (job): Promise<RawCallRecord | null> => {
       // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
       throwIfMeasureCancelled(tenant.tenantId);
-      const prompt = buildEngineCallPrompt(job.engine, job.question.text);
+      const prompt = buildEngineCallPrompt(job.engine, job.question.text, tenant.questionLanguage);
       // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
       const startedAt = new Date().toISOString();
       try {

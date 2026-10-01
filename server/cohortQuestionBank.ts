@@ -95,6 +95,7 @@ async function generateCohortBank(tenant: TenantConfig, key: string, version: st
         learnMin: learnQuota(tenant.questionBankSize),
         version,
         previousVersionDiffNote: note,
+        language: tenant.questionLanguage,
       }),
     );
     const parsed = parseJsonLoose<Array<Partial<QuestionSpec>>>(result.text);
@@ -227,6 +228,7 @@ export async function ensureComposedQuestionBank(tenant: TenantConfig, store: Re
         count,
         version: tenant.questionBankVersion,
         previousVersionDiffNote: note,
+        language: tenant.questionLanguage,
       }),
     );
     const parsed = parseJsonLoose<Array<Partial<QuestionSpec>>>(result.text);

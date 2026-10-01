@@ -116,6 +116,8 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     ...(d.cohortOnly ? { cohortOnly: true } : {}),
     ...(d.autoCohort === false ? { autoCohort: false } : {}),
     ...(d.cohortQuestionBank ? { cohortQuestionBank: d.cohortQuestionBank } : {}),
+    // 알 수 없는 값은 버린다 — 한국어(기본)로 측정하는 편이, 엉뚱한 언어로 은행을 만드는 것보다 낫다.
+    ...(d.questionLanguage === 'en' ? { questionLanguage: 'en' as const } : {}),
   };
 }
 

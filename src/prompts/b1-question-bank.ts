@@ -1,4 +1,21 @@
-import type { PromptMessage, QuestionSpec } from './types.js';
+import type { PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
+
+/**
+ * 질문 문체 규칙 — 언어에 따라 이것만 바뀐다(나머지 규칙·스키마는 같다).
+ *
+ * 영어는 한국에서 시술을 알아보는 외국인 환자의 입력처럼 쓰게 한다. 지역 표기 뒤 괄호 꼬리표
+ * (예: "서울 강남 (영어 질문)")는 한국어 측정과 코호트를 나누려고 붙인 것이라 질문에 넣지 않는다.
+ * topic은 화면에서 한국어 측정과 같이 보이므로 한국어로 둔다.
+ */
+function styleRule(language: QuestionLanguage | undefined): string {
+  if (language === 'en') {
+    return `질문 text는 반드시 영어로 쓴다. 한국에서 시술·수술을 알아보는 외국인 환자가 ChatGPT 같은 AI에 실제로 입력할 법한
+   자연스러운 구어체 영어로 작성한다(설문 문항 같은 딱딱한 문체 금지). 위 예시는 의도만 참고하고 영어로 바꿔 쓴다.
+   지역은 영어 지명으로 쓴다(예: 서울 강남 → Gangnam, Seoul). 지역 표기 뒤 괄호 꼬리표는 측정 구분용이니 질문에 넣지 마라.
+   topic만은 한국어 명사구로 둔다.`;
+  }
+  return '질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.';
+}
 
 export interface QuestionBankRequest {
   industry: string;
@@ -8,6 +25,7 @@ export interface QuestionBankRequest {
   count: number; // 예: 100
   version: string; // 예: '2026-09-01' — 버저닝 기준
   previousVersionDiffNote?: string; // 이전 버전 대비 변경 사유(있으면 회귀분석에 사용)
+  language?: QuestionLanguage; // 없으면 한국어
 }
 
 /**
@@ -92,7 +110,7 @@ category-agnostic = 브랜드명(${brandName})도, 어떤 경쟁사명도, 특�
    troubleshooting-review(후기/문제해결), local-regional(지역 특화)로 고르게 분배한다.
    — brand-direct/comparison에는 브랜드명이나 경쟁사명이 들어가도 된다.
 2. category-agnostic 질문에는 어떤 상호·브랜드명도 절대 넣지 마라(containsBrandName=false).
-3. 질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.
+3. ${styleRule(req.language)}
 4. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
 5. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다 (의도 다양성 확보).
 6. 출력 전에 category가 "category-agnostic"인 원소가 정확히 ${agnosticCount}개인지 직접 세어 확인하라.
@@ -209,6 +227,7 @@ export interface CohortQuestionBankRequest {
   /** questionId 접두 — 코호트 은행 버전(예: c1). */
   version: string;
   previousVersionDiffNote?: string;
+  language?: QuestionLanguage;
 }
 
 /**
@@ -233,7 +252,7 @@ export function buildCohortQuestionBankPrompt(req: CohortQuestionBankRequest): P
 3. 특정 브랜드의 주력 상품·강점 쪽으로 치우치지 마라. 이 업종의 소비자가 흔히 묻는 주제를 고르게 다룬다.
 
 그 밖의 규칙:
-4. 질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.
+4. ${styleRule(req.language)}
 5. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
 6. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다 (의도 다양성 확보).
 7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn(탐색: 기준·개념을 묻는다),
@@ -273,6 +292,7 @@ export interface BrandQuestionBankRequest {
   count: number;
   version: string;
   previousVersionDiffNote?: string;
+  language?: QuestionLanguage;
 }
 
 /**
@@ -293,7 +313,7 @@ export function buildBrandQuestionBankPrompt(req: BrandQuestionBankRequest): Pro
 3. 모든 질문에 측정 대상 브랜드명(${brandName})이 들어간다(containsBrandName=true). comparison에는 경쟁사명이 함께 들어가도 된다.
 
 그 밖의 규칙:
-4. 질문 문체는 실제 사용자 입력처럼 구어체, 오탈자 없는 자연스러운 한국어로 작성한다. 설문 문항 같은 딱딱한 문체 금지.
+4. ${styleRule(req.language)}
 5. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
 6. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다.
 7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn / consider / decide(정의는 문장의 의도로 판단).

@@ -1,5 +1,11 @@
 export type Engine = 'openai' | 'gemini' | 'claude' | 'perplexity';
 
+/**
+ * 측정 질문의 언어. 기본은 한국어다. 'en'은 해외 환자처럼 영어로 묻는 측정이다 — 질문 생성과
+ * 엔진 지시문만 바뀌고, 판정·집계는 같다.
+ */
+export type QuestionLanguage = 'ko' | 'en';
+
 export type QuestionCategory =
   | 'category-agnostic' // 브랜드명 없이 카테고리로만 묻는 질문 (AEO 핵심 지표)
   | 'brand-direct' // 브랜드명을 직접 언급하는 질문

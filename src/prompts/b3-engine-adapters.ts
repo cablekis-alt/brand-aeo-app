@@ -1,11 +1,16 @@
-import type { Engine, PromptMessage } from './types.js';
+import type { Engine, PromptMessage, QuestionLanguage } from './types.js';
 
 /**
  * B3 — 모델별 어댑터.
  * 동일한 B1 질문 원문은 절대 수정하지 않는다 (엔진 간 비교 가능성 유지).
  * 엔진별 시스템 프롬프트만 달리하여, 각 엔진의 실제 최종 사용자 응답과 최대한 동일한 조건을 만든다.
  */
-export function buildEngineCallPrompt(engine: Engine, questionText: string): PromptMessage {
+export function buildEngineCallPrompt(
+  engine: Engine,
+  questionText: string,
+  language: QuestionLanguage = 'ko',
+): PromptMessage {
+  if (language === 'en') return { system: ENGLISH_ADAPTERS[engine], user: questionText };
   const base = `당신은 일반 소비자가 사용하는 AI 어시스턴트입니다.
 아래 질문에 대해, 실제 최종 사용자에게 보여줄 답변을 평소 방식대로 작성하세요.
 이것이 브랜드 조사에 사용된다는 것을 알리는 어떠한 메타 발언도 하지 마세요 (예: "저는 AI로서...").
@@ -30,3 +35,29 @@ Google 검색 기반 최신 정보를 활용할 수 있다면 활용하고, 참�
 
   return { system: adapters[engine], user: questionText };
 }
+
+/**
+ * 영어 질문 측정용 지시문 — 한국어판과 같은 뜻이다. 지시문이 한국어면 영어 질문에도 한국어로
+ * 답할 수 있어, 해외 사용자가 받는 답과 달라진다.
+ */
+const ENGLISH_BASE = `You are an AI assistant used by ordinary consumers.
+Answer the question below the way you normally would for a real end user.
+Do not make any meta remarks revealing that this is used for brand research (e.g. "As an AI...").
+Do not artificially adjust the format or length of the answer; respond exactly as a user of the real service would receive it.`;
+
+const ENGLISH_ADAPTERS: Record<Engine, string> = {
+  openai: `${ENGLISH_BASE}
+If you can use a web search tool, use it and mention sources based on up-to-date information.
+If you have no real-time information, do not say so; answer from general knowledge (minimize refusals and disclaimers).`,
+
+  gemini: `${ENGLISH_BASE}
+If you can use up-to-date information from Google Search, use it and mention the sources you relied on naturally.
+Omit warnings that the information may be outdated.`,
+
+  claude: `${ENGLISH_BASE}
+If web search is available, use it and provide sources. If it is not, answer confidently within your trained knowledge
+and do not add disclaimers such as "this may not be the latest information".`,
+
+  perplexity: `${ENGLISH_BASE}
+Answer based on search results and, as in the real service, include cited sources (URLs or publication names) naturally in the answer.`,
+};

@@ -1,4 +1,4 @@
-import type { BrandContext, Engine, FactGraphNode } from '../src/prompts/types.js';
+import type { BrandContext, Engine, FactGraphNode, QuestionLanguage } from '../src/prompts/types.js';
 
 export interface TenantConfig extends BrandContext {
   tenantId: string;
@@ -26,6 +26,9 @@ export interface TenantConfig extends BrandContext {
   // 코호트 은행에서 가져오고, 브랜드 전용 질문만 이 브랜드 은행에서 만든다(cohortQuestionBank.ts).
   // 없으면 전처럼 브랜드마다 은행 전체를 만든다.
   cohortQuestionBank?: string;
+  // 측정 질문 언어. 없으면 한국어. 'en'은 해외 환자 관점의 영어 질문 측정이다 — 한국어 측정과
+  // 섞이지 않게 별도 테넌트로 두고, 지역 표기에 꼬리표를 붙여 코호트를 나눈다(예: "서울 강남 (영어 질문)").
+  questionLanguage?: QuestionLanguage;
 }
 
 export interface RawCallRecord {
