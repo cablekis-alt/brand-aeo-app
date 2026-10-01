@@ -177,8 +177,8 @@
       <tbody>
         <tr><td class="lead">바노바기성형외과</td><td class="n">1</td><td class="n">11</td><td class="n dim">2.0 – 20.0</td><td class="n">9.1% <span class="dim">(4/44)</span></td><td class="n dim">판정 불가</td><td class="n">12.4%</td><td class="n brk">8</td></tr>
         <tr><td class="lead">디에이성형외과</td><td class="n">1</td><td class="n">11</td><td class="n dim">1.7 – 20.3</td><td class="n">6.8% <span class="dim">(3/44)</span></td><td class="n dim">판정 불가</td><td class="n">16.8%</td><td class="n brk">8</td></tr>
-        <tr class="hi"><td class="lead"><strong>더스완성형외과</strong></td><td class="n">3</td><td class="n"><strong>8</strong></td><td class="n dim">−0.3 – 16.3</td><td class="n">4.5% <span class="dim">(2/44)</span></td><td class="n dim">판정 불가</td><td class="n">14.4%</td><td class="n brk">7</td></tr>
-        <tr><td class="lead">아이디성형외과</td><td class="n">4</td><td class="n">6</td><td class="n dim">−2.2 – 14.2</td><td class="n">2.3% <span class="dim">(1/44)</span></td><td class="n dim">판정 불가</td><td class="n">11.4%</td><td class="n brk">7</td></tr>
+        <tr class="hi"><td class="lead"><strong>더스완성형외과</strong></td><td class="n">3</td><td class="n"><strong>8</strong></td><td class="n dim">0 – 16.3</td><td class="n">4.5% <span class="dim">(2/44)</span></td><td class="n dim">판정 불가</td><td class="n">14.4%</td><td class="n brk">7</td></tr>
+        <tr><td class="lead">아이디성형외과</td><td class="n">4</td><td class="n">6</td><td class="n dim">0 – 14.2</td><td class="n">2.3% <span class="dim">(1/44)</span></td><td class="n dim">판정 불가</td><td class="n">11.4%</td><td class="n brk">7</td></tr>
       </tbody>
     </table>
   </div>
@@ -377,7 +377,7 @@
 </section>
 
 <footer>
-  2차는 앱에 저장된 W40 데이터, 1차는 2차 측정 전에 떠 둔 백업에서 읽었다(<code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>). 점수는 v0.2.51 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만)이고, 1차 점수는 백업의 판정 레코드를 같은 집계 코드로 다시 계산한 값이다(백업은 바꾸지 않았다). 병원 수는 응답 본문에서 “○○성형외과” 이름 패턴으로 센 값이라 몇 곳의 오차가 있을 수 있다. 인용 주소는 실제 URL의 호스트 기준이다(v0.2.45). Site AEO Score는 앱에 저장된 W40 진단(93점)이다.
+  2차는 앱에 저장된 W40 데이터, 1차는 2차 측정 전에 떠 둔 백업에서 읽었다(<code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>). 점수는 v0.2.51 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만)이고, 1차 점수는 백업의 판정 레코드를 같은 집계 코드로 다시 계산한 값이다(백업은 바꾸지 않았다). 병원 수는 응답 본문에서 “○○성형외과” 이름 패턴으로 센 값이라 몇 곳의 오차가 있을 수 있다. 인용 주소는 실제 URL의 호스트 기준이다(v0.2.45). Site AEO Score는 앱에 저장된 W40 진단(93점)이다. 신뢰구간 하한은 0에서 자른다(v0.2.55) — 점수는 0 아래로 내려갈 수 없어, 이전 판의 음수 하한(더스완 −0.3, 아이디 −2.2 등)을 0으로 고쳤다.
 </footer>
 
 </div>
@@ -387,13 +387,13 @@
     var rows = [
       { name: '바노바기', v: 11, lo: 2.0, hi: 20.0, kind: 'ctx' },
       { name: '디에이', v: 11, lo: 1.7, hi: 20.3, kind: 'ctx' },
-      { name: '더스완', v: 8, lo: -0.3, hi: 16.3, kind: 'focus' },
-      { name: '아이디', v: 6, lo: -2.2, hi: 14.2, kind: 'ctx' },
-      { name: '원진 (서초)', v: 8, lo: -1.1, hi: 17.1, kind: 'out' },
-      { name: '강남세브란스 (서초)', v: 2, lo: -4.7, hi: 8.7, kind: 'out' }
+      { name: '더스완', v: 8, lo: 0, hi: 16.3, kind: 'focus' },
+      { name: '아이디', v: 6, lo: 0, hi: 14.2, kind: 'ctx' },
+      { name: '원진 (서초)', v: 8, lo: 0, hi: 17.1, kind: 'out' },
+      { name: '강남세브란스 (서초)', v: 2, lo: 0, hi: 8.7, kind: 'out' }
     ];
     var W = 720, H = 250, L = 150, R = 30, T = 14, B = 30;
-    var xmin = -10, xmax = 30;
+    var xmin = 0, xmax = 30;
     var x = function (v) { return L + (v - xmin) / (xmax - xmin) * (W - L - R); };
     var rowH = (H - T - B) / rows.length;
     var y = function (i) { return T + rowH * (i + 0.5); };
@@ -405,7 +405,7 @@
       svg.appendChild(n);
       return n;
     };
-    [-10, 0, 10, 20, 30].forEach(function (t) {
+    [0, 10, 20, 30].forEach(function (t) {
       el('line', { x1: x(t), x2: x(t), y1: T, y2: H - B, stroke: t === 0 ? 'var(--rule-2)' : 'var(--rule)', 'stroke-width': 1 });
       var tx = el('text', { x: x(t), y: H - B + 18, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--mono)' });
       tx.textContent = t;
