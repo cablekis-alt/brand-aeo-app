@@ -1,5 +1,6 @@
 import type { QuestionSpec } from '../src/prompts/types.js';
-import { agnosticAnalyses, shareOfMentionOf } from './mentionScope.js';
+import { MIN_SOM_MENTIONS } from '../src/prompts/b8-report.js';
+import { agnosticAnalyses, mentionTotals, shareOfMentionOf } from './mentionScope.js';
 import { computeAeoScore, mean, meanWithConfidenceInterval, sentimentWeight } from './scoring.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 
@@ -19,6 +20,8 @@ export interface AggregateTenant {
 export interface WeeklyMetrics {
   mentionRate: number;
   shareOfMention: number | null;
+  /** SoM 표본(자사 + 경쟁사 언급 횟수). 경쟁사가 없으면 undefined. */
+  shareOfMentionMentions?: number;
   avgRecommendationRank: number | null;
   factualityScore: number | null;
   brandOwnedCitationRate: number;
@@ -54,9 +57,12 @@ export function aggregateWeeklyMetrics(
 
   // SoM(Share of Voice) = 표준 정의인 "횟수 기준": 내 언급 총합 / (내 언급 + 경쟁사 언급) 총합.
   // 응답별 비율을 단순 평균하면 언급이 적은 응답이 과대 반영되므로 횟수 기준으로 집계한다
-  // (랭킹 분석 화면과 동일). 경쟁사가 없거나 모집단에 아무 언급도 없으면 측정 불가(null).
+  // (랭킹 분석 화면과 동일). 경쟁사가 없거나, 자사·경쟁사 언급이 MIN_SOM_MENTIONS번 미만이면 측정
+  // 불가(null) — 몇 번의 언급으로 낸 비율은 한두 번에 크게 흔들린다(b8-report.ts 주석).
   const hasCompetitors = tenant.competitors.length > 0;
-  const shareOfMention = shareOfMentionOf(categoryAgnostic, hasCompetitors);
+  const shareOfMention = shareOfMentionOf(categoryAgnostic, hasCompetitors, MIN_SOM_MENTIONS);
+  const somTotals = mentionTotals(categoryAgnostic);
+  const shareOfMentionMentions = hasCompetitors ? somTotals.brand + somTotals.competitors : undefined;
 
   // 추천 순위도 언급률과 같은 모집단(카테고리 무관 질문)에서 낸다. 브랜드명을 넣고 물으면 답이 그
   // 브랜드 중심으로 써져, 1위가 질문 때문에 나온다 — 2026-W39 라엘펜션은 언급률 0%인데 brand-direct
@@ -107,7 +113,8 @@ export function aggregateWeeklyMetrics(
       a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
-      shareOfMention: hasCompetitors ? a.shareOfMention : null,
+      // 집계 SoM이 빠진 주는 응답별 점수에서도 뺀다 — 중심(점수)과 분산이 서로 다른 지표 묶음을 보면 안 된다.
+      shareOfMention: shareOfMention !== null ? a.shareOfMention : null,
       avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
       mentionSentiment: perCallSentiment,
@@ -129,6 +136,7 @@ export function aggregateWeeklyMetrics(
   return {
     mentionRate,
     shareOfMention,
+    ...(shareOfMentionMentions !== undefined ? { shareOfMentionMentions } : {}),
     avgRecommendationRank,
     factualityScore,
     brandOwnedCitationRate,

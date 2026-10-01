@@ -1,5 +1,10 @@
 import type { EeatAnalysis } from '../prompts/b6-eeat'
-import { AEO_SCORE_WEIGHTS, type WeeklyScorecard } from '../prompts/b8-report'
+import {
+  AEO_SCORE_WEIGHTS,
+  MIN_SOM_MENTIONS,
+  shareOfMentionShortSample,
+  type WeeklyScorecard,
+} from '../prompts/b8-report'
 import { formatPct, formatRank } from './format'
 
 // B9 — 주간 스코어카드를 결정적 규칙으로 진단하고 개선제안을 도출한다.
@@ -99,6 +104,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
   // 2) Share of Mention
   {
     const v = card.shareOfMention
+    const shortSample = shareOfMentionShortSample(card)
     const s: MetricStatus = v === null ? 'unknown' : rateStatus(v, 0.4, 0.28, 0.15)
     out.push({
       key: 'shareOfMention',
@@ -108,7 +114,9 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       status: s,
       note:
         v === null
-          ? '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 측정할 수 없습니다.'
+          ? shortSample !== null
+            ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) 점유율을 판정하지 않습니다.`
+            : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 측정할 수 없습니다.'
           : s === 'good'
             ? '브랜드명을 넣지 않은 질문에서 경쟁 브랜드 대비 언급 점유가 높습니다.'
             : '브랜드명을 넣지 않은 질문에서 경쟁사에 점유를 내주고 있습니다.',
@@ -246,21 +254,29 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
   if (weak('shareOfMention')) {
     const m = by.shareOfMention
     const isUnknown = m.status === 'unknown'
+    const shortSample = shareOfMentionShortSample(card)
     recs.push({
       id: 'som',
       title: isUnknown ? '점유율 측정 조건 만들기' : '경쟁 대비 언급 점유 강화',
       priority: priorityOf(m.weight, m.status),
-      basis: isUnknown
-        ? '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).'
-        : `현재 SoM ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`,
-      actions: isUnknown
+      basis: !isUnknown
+        ? `현재 SoM ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`
+        : shortSample !== null
+          ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) Share of Mention을 판정하지 않았습니다(점수에서 제외·재정규화).`
+          : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).',
+      actions: !isUnknown
         ? [
-            '브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.',
-            '경쟁사를 이미 등록했다면 그 업종·지역 질문 자체에 브랜드가 전혀 등장하지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 합니다.',
-          ]
-        : [
             '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
             '후기·평점 플랫폼과 지역 커뮤니티에서의 노출·언급을 늘려 비교 문맥에서 우위를 확보합니다.',
+          ]
+        : shortSample !== null
+          ? [
+              '업종·지역 질문에서 자사와 경쟁사가 거의 거론되지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 점유율을 잴 수 있습니다.',
+              '경쟁사 목록이 실제로 함께 추천되는 곳인지 확인합니다. 그 질문에서 불리지 않는 경쟁사만 있으면 언급 합계가 늘지 않습니다.',
+            ]
+          : [
+            '브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.',
+            '경쟁사를 이미 등록했다면 그 업종·지역 질문 자체에 브랜드가 전혀 등장하지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 합니다.',
           ],
       expected: isUnknown
         ? '점유율 지표가 활성화되어 진단 정확도가 올라갑니다.'

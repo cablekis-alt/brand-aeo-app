@@ -5,6 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
+import { shareOfMentionNote } from '../prompts/b8-report'
 import type { PromptedSplit } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -359,9 +360,7 @@ export default function Dashboard() {
               <h2>Share of Mention</h2>
               <p>{formatPct(card.shareOfMention)}</p>
               <span>
-                {card.shareOfMention === null
-                  ? '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가'
-                  : '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'}
+                {shareOfMentionNote(card) ?? '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'}
               </span>
             </article>
             <article>

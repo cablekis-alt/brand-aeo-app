@@ -46,7 +46,7 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
   }
   // SoM 산출 여부는 지금 설정이 아니라 그 주 카드 기준이다(scripts/rescore-local.ts의 hadCompetitors와
   // 같은 규칙). 경쟁사 목록을 나중에 넣은 브랜드의 옛 주차에 SoM 100%가 소급되지 않게 한다.
-  const hadCompetitors = prev.shareOfMention !== null
+  const hadCompetitors = prev.shareOfMention !== null || typeof prev.shareOfMentionMentions === 'number'
   const m = aggregateWeeklyMetrics(
     { competitors: hadCompetitors ? [{ name: '(저장된 카드 기준)' }] : [] },
     src.questions,
@@ -66,6 +66,7 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
     },
     mentionRate: m.mentionRate,
     shareOfMention: m.shareOfMention,
+    shareOfMentionMentions: m.shareOfMentionMentions,
     avgRecommendationRank: m.avgRecommendationRank,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,

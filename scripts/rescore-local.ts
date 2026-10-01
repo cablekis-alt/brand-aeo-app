@@ -102,9 +102,10 @@ function bankFor(banks: QuestionBank[], analyses: QuestionRepeatAnalysis[]): Que
  * (comp-1j0j0pl 2026-W36).
  *
  * 카드에 SoM이 없던 주는 경쟁사가 없었거나 모집단에 언급이 전혀 없었던 주라, 다시 계산해도 null이다.
+ * 표본 미달(MIN_SOM_MENTIONS)로 SoM이 빠진 카드는 shareOfMentionMentions가 남아 있어 경쟁사가 있던 주로 본다.
  */
 function hadCompetitors(prev: WeeklyScorecard): boolean {
-  return prev.shareOfMention !== null
+  return prev.shareOfMention !== null || typeof prev.shareOfMentionMentions === 'number'
 }
 
 const isWeekDir = (name: string) => /^\d{4}-W\d{2}$/.test(name)
@@ -156,6 +157,7 @@ for (const tenantId of readdirSync(dataDir)) {
       },
       mentionRate: m.mentionRate,
       shareOfMention: m.shareOfMention,
+      shareOfMentionMentions: m.shareOfMentionMentions,
       avgRecommendationRank: m.avgRecommendationRank,
       factualityScore: m.factualityScore,
       brandOwnedCitationRate: m.brandOwnedCitationRate,

@@ -38,10 +38,15 @@ export function mentionTotals(analyses: MentionCountable[]): { brand: number; co
 
 /**
  * SoM(Share of Voice) = 내 언급 총합 / (내 + 경쟁사 언급) 총합.
- * 경쟁사가 설정되지 않았거나 모집단에 아무 언급도 없으면 측정 불가(null) — 0으로 대체하지 않는다.
+ * 경쟁사가 설정되지 않았거나, 언급 합계가 minMentions에 못 미치면 측정 불가(null) — 0으로 대체하지 않는다.
+ * minMentions의 근거는 b8-report.ts의 MIN_SOM_MENTIONS(스코어카드는 그 값을 쓴다).
  */
-export function shareOfMentionOf(analyses: MentionCountable[], hasCompetitors: boolean): number | null {
+export function shareOfMentionOf(
+  analyses: MentionCountable[],
+  hasCompetitors: boolean,
+  minMentions = 1,
+): number | null {
   const { brand, competitors } = mentionTotals(analyses);
   const total = brand + competitors;
-  return hasCompetitors && total > 0 ? brand / total : null;
+  return hasCompetitors && total > 0 && total >= minMentions ? brand / total : null;
 }

@@ -547,7 +547,8 @@
     "enginesUsed": [
       "openai",
       "gemini"
-    ]
+    ],
+    "shareOfMentionMentions": 39
   },
   {
     "tenantId": "bdnewdental",
@@ -735,7 +736,8 @@
     "enginesUsed": [
       "openai",
       "gemini"
-    ]
+    ],
+    "shareOfMentionMentions": 47
   },
   {
     "tenantId": "comp-mhxthx",
@@ -1185,7 +1187,8 @@
     "hallucinationFlags": [],
     "enginesUsed": [
       "gemini"
-    ]
+    ],
+    "shareOfMentionMentions": 32
   },
   {
     "tenantId": "comp-7ulalt",
@@ -1516,7 +1519,8 @@
     "enginesUsed": [
       "gemini"
     ],
-    "judgeEngine": "gemini"
+    "judgeEngine": "gemini",
+    "shareOfMentionMentions": 77
   },
   {
     "tenantId": "comp-mhxthx",
@@ -1887,7 +1891,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -1944,7 +1948,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -1987,9 +1991,9 @@
     "factualityScore": null,
     "brandOwnedCitationRate": 0.08022130013831259,
     "cohortRank": {
-      "position": 2,
+      "position": 1,
       "totalTenants": 6,
-      "tiedCount": 1,
+      "tiedCount": 2,
       "members": [
         {
           "tenantId": "bymeps",
@@ -2001,7 +2005,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -2058,7 +2062,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -2115,7 +2119,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -2146,21 +2150,21 @@
     "region": "서울 서초",
     "brandName": "WJ 원진성형외과",
     "aeoScore": {
-      "current": 16,
-      "ma4": 16,
-      "previousWeek": 16,
-      "ciLow": 7.8,
-      "ciHigh": 24.2
+      "current": 7,
+      "ma4": 7,
+      "previousWeek": 7,
+      "ciLow": -1.4,
+      "ciHigh": 15.4
     },
     "mentionRate": 0.046511627906976744,
-    "shareOfMention": 0.3333333333333333,
+    "shareOfMention": null,
     "avgRecommendationRank": null,
     "factualityScore": 1,
     "brandOwnedCitationRate": 0.09302325581395349,
     "cohortRank": {
       "position": 1,
       "totalTenants": 6,
-      "tiedCount": 1,
+      "tiedCount": 2,
       "members": [
         {
           "tenantId": "bymeps",
@@ -2172,7 +2176,7 @@
         },
         {
           "tenantId": "k-wonjin",
-          "aeoScore": 16
+          "aeoScore": 7
         },
         {
           "tenantId": "sm-ps",
@@ -2194,7 +2198,8 @@
       "perplexity"
     ],
     "judgeEngine": "gemini",
-    "questionBankVersion": "v3"
+    "questionBankVersion": "v3",
+    "shareOfMentionMentions": 9
   },
   {
     "tenantId": "comp-mhxthx",
@@ -2536,6 +2541,7 @@
       "perplexity"
     ],
     "judgeEngine": "gemini",
-    "questionBankVersion": "v3"
+    "questionBankVersion": "v3",
+    "shareOfMentionMentions": 87
   }
 ]

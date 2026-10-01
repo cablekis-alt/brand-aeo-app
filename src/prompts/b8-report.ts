@@ -46,6 +46,37 @@ export const AEO_SCORE_WEIGHTS = {
 } as const;
 
 /**
+ * SoM 최소 표본 — 자사·경쟁사 언급을 합쳐 이 횟수에 못 미치면 SoM을 판정하지 않는다(점수에서 빼고 재정규화).
+ *
+ * 왜 필요한가. SoM은 횟수 비율이라 표본이 작으면 한두 번에 크게 흔들린다(SoM 50%에서 6번이면 ±20%p,
+ * 10번이면 ±16%p). 실측 2026-W40 강남 성형외과는 네 곳 모두 언급 6~8번으로 SoM이 정해져, 바노바기가
+ * 자사 4번 대 경쟁사 2번(66.7%)으로 31점 1위가 됐다 — 그중 약 20점이 SoM 몫이었다. 씨어스 W37은
+ * 8번 모두 자사라 SoM 100%로 42점이었다.
+ *
+ * 10번인 이유. 설치본 SoM 카드 59장 중 4~9번 구간이 10장, 10~19번은 4장뿐이다 — 10번은 소표본 무리를
+ * 통째로 넘는 자리라 순위가 "언급 한 번 차이"로 갈리는 일이 적다(7번이면 강남 W40에서 7번인 더스완만
+ * SoM이 남아 1위가 된다). 20번으로 올리면 "경쟁사 16번 · 자사 0번"처럼 정보가 있는 값까지 버린다.
+ * 추천 순위의 MIN_RANKED_RESPONSES(3건)와 같은 방식이다.
+ */
+export const MIN_SOM_MENTIONS = 10;
+
+type SomFields = Pick<WeeklyScorecard, 'shareOfMention' | 'shareOfMentionMentions'>;
+
+/** 표본 미달로 SoM이 빠진 주면 그 언급 횟수, 아니면 null. */
+export function shareOfMentionShortSample(card: SomFields): number | null {
+  const n = card.shareOfMentionMentions;
+  return card.shareOfMention === null && typeof n === 'number' && n > 0 && n < MIN_SOM_MENTIONS ? n : null;
+}
+
+/** SoM이 null일 때 그 이유 — 화면·리포트가 같은 말을 쓰게 한곳에 둔다. 값이 있으면 null. */
+export function shareOfMentionNote(card: SomFields): string | null {
+  if (card.shareOfMention !== null) return null;
+  const n = shareOfMentionShortSample(card);
+  if (n !== null) return `자사·경쟁사 언급이 ${n}번뿐이라(${MIN_SOM_MENTIONS}번 미만) 판정 불가`;
+  return '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가';
+}
+
+/**
  * 추천 순위(1=최상위)를 0~1로. 점수 계산과 화면 막대가 **같은 함수**를 써야 한다.
  *
  * 순위는 낮을수록 좋고 비율이 아니라서, 화면이 따로 계산하면 "6.4위"에 긴 막대를 그리는
@@ -64,8 +95,12 @@ export interface WeeklyScorecard {
   aeoScore: { current: number; ma4: number; previousWeek: number; ciLow: number; ciHigh: number };
   mentionRate: number; // category-agnostic 질문 중 언급 비율
   // 언급률과 같은 모집단(category-agnostic 질문)에서 낸 횟수 기준 점유율.
-  // 경쟁사가 없거나 그 모집단에 아무 언급도 없으면 측정 불가(null).
+  // 경쟁사가 없거나, 자사·경쟁사 언급이 MIN_SOM_MENTIONS번 미만이면 측정 불가(null).
   shareOfMention: number | null;
+  // SoM 표본 — 그 모집단의 자사 + 경쟁사 언급 횟수. 경쟁사가 있던 주에만 있다(없으면 undefined).
+  // 재계산 스크립트가 "경쟁사가 있었나"를 SoM 값이 아니라 이걸로 판단한다 — 표본이 적어 SoM이
+  // null이 된 주를 "경쟁사 없음"으로 굳히지 않게. 옛 카드에는 없다.
+  shareOfMentionMentions?: number;
   avgRecommendationRank: number | null;
   // supported / (supported+contradicted). 사실 판정이 0건이면 측정 불가(null) — 팩트 그래프가 없는
   // 브랜드는 늘 그렇다. Brand AEO Score에는 들어가지 않는 정확도 지표다(AEO_SCORE_WEIGHTS 주석).
@@ -156,7 +191,7 @@ export function buildWeeklyReportPrompt(
   const user = `주간 스코어카드 (${card.weekOf} / ${card.industry} / ${card.region} / ${card.brandName}):
 - AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
-- Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준): ${card.shareOfMention === null ? '경쟁사 미설정 또는 해당 질문에 언급 없음 — 측정 불가' : `${(card.shareOfMention * 100).toFixed(1)}%`}
+- Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준): ${shareOfMentionNote(card) ?? `${((card.shareOfMention ?? 0) * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성(정확도, Brand AEO Score에 포함되지 않음): ${card.factualityScore === null ? '팩트 그래프 없음 또는 대조할 사실 없음 — 측정 불가' : `${(card.factualityScore * 100).toFixed(1)}%`}
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%

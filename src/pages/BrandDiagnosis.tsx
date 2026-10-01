@@ -18,7 +18,12 @@ import { computeQuestionWinLoss } from '../lib/questionWinLoss'
 import { STAGE_LABEL, type JourneyStage } from '../lib/journeyStage'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { QuestionRepeatAnalysis } from '../lib/types'
-import { AEO_SCORE_WEIGHTS, normalizeRank, type WeeklyScorecard } from '../prompts/b8-report'
+import {
+  AEO_SCORE_WEIGHTS,
+  normalizeRank,
+  shareOfMentionShortSample,
+  type WeeklyScorecard,
+} from '../prompts/b8-report'
 import type { Engine, QuestionSpec } from '../prompts/types'
 
 const SENTIMENT_LABEL: Record<string, string> = { positive: '긍정', neutral: '중립', negative: '부정' }
@@ -95,7 +100,12 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       label: 'Share of Mention',
       weight: AEO_SCORE_WEIGHTS.shareOfMention,
       value: card.shareOfMention,
-      text: card.shareOfMention === null ? '측정 불가' : formatPct(card.shareOfMention),
+      text:
+        card.shareOfMention !== null
+          ? formatPct(card.shareOfMention)
+          : shareOfMentionShortSample(card) !== null
+            ? '판정 불가'
+            : '측정 불가',
     },
     {
       key: 'c',
