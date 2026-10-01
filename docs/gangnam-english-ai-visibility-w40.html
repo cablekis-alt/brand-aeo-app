@@ -161,6 +161,7 @@
     <div><dt>엔진</dt><dd>Gemini · Perplexity</dd></div>
     <div><dt>측정</dt><dd>4회 · 응답 1,440건</dd></div>
     <div><dt>사이트 진단</dt><dd>영문 사이트 3곳</dd></div>
+    <div><dt>콘텐츠</dt><dd>영어 원고 1편</dd></div>
   </dl>
 </header>
 
@@ -357,6 +358,46 @@
 </section>
 
 <section>
+  <p class="eyebrow">처방 예시 · 영어 콘텐츠</p>
+  <h2>해외 환자 안내 원고를 앱이 만든다 — 사실만으로</h2>
+  <p class="lede">처방을 말로만 두지 않고, 앱의 「콘텐츠 생성」으로 바노바기 해외 환자 안내 원고를 실제로 만들었다. 영어 테넌트에서 만들면 <strong>원고는 영어, 운영자 메모는 한국어</strong>로 나온다. 사실은 영문 사이트에서 뽑아 <strong>원문 그대로</strong>만 쓰고, 없는 사실은 지어내지 않고 <strong>빈칸</strong>으로 둔다.</p>
+  <div class="scroller">
+    <table>
+      <caption>영문 사이트에서 뽑아 등록한 사실(팩트 그래프) — 값은 원문 영어 그대로</caption>
+      <thead><tr><th class="lead">병원</th><th>등록</th><th class="lead">주요 사실</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">바노바기</td><td class="n">16</td><td class="lead">통역 8 different languages · 원장단 출신 대학 · 개원 Since 2000 · 주소·오시는 길 · 진료·온라인 상담 시간 · 전화·WhatsApp·영문 이메일</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">13</td><td class="lead">상주 마취과 전문의 9 Anesthesiologists · 건물 B1~12F · 운영 시간 · 리프팅 장비 4종 · 연락처</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">5</td><td class="lead">영문 주소 · 신사역 도보 거리 · 영어 상담 전화 · 온라인 상담 사진 기준 — 영문 홈이 스크립트로만 그려져 적다</td></tr>
+        <tr><td class="lead">더스완</td><td class="n dim">0</td><td class="lead dim">영문 사이트가 없어 영어 사실을 뽑을 수 없다</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="scroller">
+    <table>
+      <caption>바노바기 해외 환자 안내 원고 — 영어 공통 질문 세 개(통역·코디네이션 · 출국 전 화상 상담 · 수술 후 체류)에 답하는 글</caption>
+      <thead><tr><th class="lead">절</th><th class="lead">내용</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">1. How to Choose a Plastic Surgery Clinic in Gangnam for International Patients</td><td class="lead">브랜드 없이 읽히는 선택 기준 · <span class="dim">빈칸: 공항 픽업·제휴 호텔</span></td></tr>
+        <tr><td class="lead">2. Planning Your Trip: Online Consultations and Stay Duration</td><td class="lead">출국 전 상담 안내 · <span class="dim">빈칸: 화상 상담 방식, 수술별 체류 일수</span></td></tr>
+        <tr><td class="lead">3. Coordination and Consultation Checklist</td><td class="lead">확인 항목 표</td></tr>
+        <tr class="hi"><td class="lead">4. Case Example: Banobagi Plastic Surgery</td><td class="lead">사실 16개를 원문 그대로 — 통역 언어 수·원장단·주소·오시는 길·시간·연락처</td></tr>
+        <tr><td class="lead">5. FAQ</td><td class="lead">상담 시간·연락처 · 지원 언어·연령 기준 · 지하철로 찾아가기</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="qs">
+    <li><span>For international visitors, coordination and translation services are supported in 8 different languages.</span><span class="e">사실 그대로</span></li>
+    <li><span>Visitors arriving by public transit can use Subway Line 2 at Yeoksam station exit no.6 and go straight about 100m …</span><span class="e">사실 그대로</span></li>
+  </ul>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">검수</span> 숫자 없는 격상도 잡는다</h3>
+    <p>첫 원고에는 사실보다 크게 말한 문장이 둘 있었다 — 「대표 원장」을 “founded by”(설립자)로, 「원장단 출신 대학」을 “the clinic’s medical team”(의료진 전체)으로 썼다. 숫자가 없어 기존 사실 가드로는 걸리지 않던 종류다. 두 문장을 “led by representative directors”, “Its directors graduated from …”으로 고쳐 저장했고, v0.2.59부터는 사실이 든 문장을 판정 모델이 한 번 더 검사해 <strong>이런 문장을 생성 단계에서 빼고 이유를 남긴다</strong>(재현 시험 9건 모두 기대대로).</p>
+  </div>
+  <p class="note">원고는 “발행 직전”이 아니라 “사람이 30분 안에 마무리할 원고”다. 빈칸 3개(공항 픽업·제휴 호텔, 화상 상담 방식, 수술별 서울 체류 일수)는 병원에 확인해 사실로 등록하면 채워진다. 첫머리와 앞 절은 브랜드 없이 읽히는 안내이고 브랜드는 넷째 절 사례에만 나온다 — 답변 엔진이 “어디가 좋아?”에 인용하는 것은 브랜드 소개글이 아니라 고르는 법을 알려 주는 글이기 때문이다.</p>
+</section>
+
+<section>
   <p class="eyebrow">데모 흐름</p>
   <h2>앱에서 이렇게 보여 준다</h2>
   <ol class="todo">
@@ -369,7 +410,7 @@
     <li><b>정확한 안내 — 공식 사실 등록</b>
       <p>가격 범위·통역 언어·체류 기간·위치·의료진을 팩트 그래프로 등록하고, AI 답변이 그 사실과 맞는지 「브랜드 종합 진단」의 정확도로 확인한다.</p></li>
     <li><b>처방과 추적</b>
-      <p>「콘텐츠 생성」으로 해외 환자 안내 페이지 초안을 만들고, 「AEO 퍼포먼스」에서 주간 추이로 효과를 추적한다고 보여 준다.</p></li>
+      <p>「콘텐츠 생성」에서 영어 테넌트를 골라 해외 환자 안내 원고를 만들고(위 예시), 빈칸과 검증 기록을 보여 준다. 「AEO 퍼포먼스」에서 주간 추이로 효과를 추적한다고 보여 준다.</p></li>
   </ol>
 </section>
 
@@ -396,15 +437,15 @@
   <ol class="todo">
     <li><b>영문 사이트 시술 페이지 진단</b>
       <p>홈 진단은 끝났다. 해외 환자가 많이 묻는 눈·코·안면윤곽 페이지와 비용·통역 안내 페이지를 이어서 진단한다.</p></li>
-    <li><b>영어 콘텐츠 생성</b>
-      <p>지금 콘텐츠 생성은 한국어로만 나온다. 해외 환자 안내 페이지를 영어 원고로 보여 주려면 언어 옵션이 필요하다.</p></li>
+    <li><b>바노바기 원고 빈칸 채우기</b>
+      <p>공항 픽업·제휴 호텔, 화상 상담 방식, 수술별 서울 체류 일수를 병원에 확인해 사실로 등록하면 원고가 완성된다.</p></li>
     <li><b>주 단위 재측정</b>
       <p>다음 주에도 같은 방향이면 결론이 단단해진다. 고객용 결론은 그때 확정한다.</p></li>
   </ol>
 </section>
 
 <footer>
-  2026-10-01 영어 측정 4회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1~3차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더하고 AB·View는 측정 대상으로 함께 쟀으며, 4차부터 AB·View에도 같은 경쟁사 목록을 넣었다. 점수는 v0.2.57 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 Site AEO Checker의 채점 모듈로 스크립트 없이 HTML을 읽어 매겼다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
+  2026-10-01 영어 측정 4회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1~3차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더하고 AB·View는 측정 대상으로 함께 쟀으며, 4차부터 AB·View에도 같은 경쟁사 목록을 넣었다. 점수는 v0.2.57 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 Site AEO Checker의 채점 모듈로 스크립트 없이 HTML을 읽어 매겼다. 영어 원고는 앱의 「콘텐츠 생성」(v0.2.58)으로 만들고 격상 문장 두 개를 사람이 고쳐 저장했으며, 팩트 그래프는 영문 사이트 8쪽에서 뽑은 후보 54개 중 34개(기간 한정 프로모션·중복·환자 안내와 무관한 항목 제외)를 등록했다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
 </footer>
 
 </div>
