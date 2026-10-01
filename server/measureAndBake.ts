@@ -90,6 +90,45 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
 }
 
 /**
+ * 브랜드와 함께 측정할 경쟁사 — 등록된 경쟁사는 본 테넌트로(코호트 재확장 없이), 없으면 cohortOnly 초안.
+ *
+ * 같은 업종에서는 자사 도메인으로 먼저 찾는다. 초안 ID는 도메인 첫 마디라 다른 업종 브랜드와
+ * 겹친다 — 2026-W40 SK텔레콤 측정에서 경쟁사 KT(kt.com)가 ID "kt"가 되어, 통신 KT(ktcorp)
+ * 대신 테이블오더의 KT 하이오더(kt)를 재측정했다. 같은 업종이면 지역이 달라도(강남·서초 성형외과)
+ * 함께 잰다.
+ */
+export function selectCohortTargets(tenant: TenantConfig, runtime: TenantConfig[]): TenantConfig[] {
+  const existingById = new Map(runtime.map((item) => [item.tenantId, item]));
+  const sameIndustry = (t: TenantConfig) => t.industry === tenant.industry;
+  const sameIndustryByDomain = new Map<string, TenantConfig>();
+  for (const t of runtime) {
+    if (!sameIndustry(t)) continue;
+    for (const d of t.ownedDomains ?? []) sameIndustryByDomain.set(d.toLowerCase(), t);
+  }
+  const targets: TenantConfig[] = [];
+  const seen = new Set<string>([tenant.tenantId]);
+  for (const draft of cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT)) {
+    const domain = draft.ownedDomains[0]?.toLowerCase();
+    const existing = (domain ? sameIndustryByDomain.get(domain) : undefined) ?? existingById.get(draft.tenantId);
+    // ID만 같은 다른 업종 브랜드는 재측정하지 않는다. 같은 ID로 새로 만들어도 그 브랜드의
+    // 데이터 폴더에 섞이므로 건너뛰고 알린다.
+    if (existing && !sameIndustry(existing)) {
+      console.warn(
+        `[measureAndBake] 경쟁사 ${draft.brandName}: ID ${draft.tenantId}가 다른 업종의 ` +
+          `${existing.brandName}(${existing.industry} · ${existing.region})와 겹쳐 함께 측정하지 않습니다.`,
+      );
+      continue;
+    }
+    const targetId = existing?.tenantId ?? draft.tenantId;
+    if (seen.has(targetId)) continue;
+    seen.add(targetId);
+    targets.push(existing ? { ...existing, autoCohort: false } : draft);
+  }
+  return targets;
+}
+
+
+/**
  * 측정 결과를 배포용 src/data로 baking한다.
  *
  * 패키징(Electron) 모드: 데이터는 이미 userData/data에 저장됐고 API가 그대로 읽으므로 아무것도 안 한다.
@@ -236,15 +275,7 @@ export async function measureAndBake(
     //    "브랜드 전체 측정"은 경쟁사도 최신 키로 재측정한다: 이미 등록된 경쟁사(본 테넌트)는 그대로
     //    재측정(단, 그 경쟁사의 코호트로 더 퍼지지 않게 autoCohort=false), 없으면 cohortOnly로 새로 측정.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
-      const existingById = new Map((await loadRuntimeTenants()).map((item) => [item.tenantId, item]));
-      const seen = new Set<string>([tenant.tenantId]);
-      for (const draft of cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT)) {
-        if (seen.has(draft.tenantId)) continue;
-        seen.add(draft.tenantId);
-        const existing = existingById.get(draft.tenantId);
-        // 기존 경쟁사면 본 테넌트로 재측정(코호트 재확장 없이), 없으면 cohortOnly 초안.
-        cohortTargets.push(existing ? { ...existing, autoCohort: false } : draft);
-      }
+      cohortTargets.push(...selectCohortTargets(tenant, await loadRuntimeTenants()));
     }
   }
 
