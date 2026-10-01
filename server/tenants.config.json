@@ -131,6 +131,45 @@
         "domains": [
           "idhospital.com"
         ]
+      },
+      {
+        "name": "현대미학성형외과",
+        "aliases": [
+          "현대미학성형외과"
+        ],
+        "domains": [
+          "h-mihak.com"
+        ]
+      },
+      {
+        "name": "빌리프성형외과",
+        "aliases": [
+          "빌리프성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "하나비성형외과",
+        "aliases": [
+          "하나비성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "에디션성형외과",
+        "aliases": [
+          "에디션성형외과"
+        ],
+        "domains": [
+          "editionps.com"
+        ]
+      },
+      {
+        "name": "마인드성형외과",
+        "aliases": [
+          "마인드성형외과"
+        ],
+        "domains": []
       }
     ],
     "factGraph": [],
@@ -181,6 +220,45 @@
         "domains": [
           "daprs.com"
         ]
+      },
+      {
+        "name": "현대미학성형외과",
+        "aliases": [
+          "현대미학성형외과"
+        ],
+        "domains": [
+          "h-mihak.com"
+        ]
+      },
+      {
+        "name": "빌리프성형외과",
+        "aliases": [
+          "빌리프성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "하나비성형외과",
+        "aliases": [
+          "하나비성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "에디션성형외과",
+        "aliases": [
+          "에디션성형외과"
+        ],
+        "domains": [
+          "editionps.com"
+        ]
+      },
+      {
+        "name": "마인드성형외과",
+        "aliases": [
+          "마인드성형외과"
+        ],
+        "domains": []
       }
     ],
     "factGraph": [],
@@ -231,6 +309,45 @@
         "domains": [
           "idhospital.com"
         ]
+      },
+      {
+        "name": "현대미학성형외과",
+        "aliases": [
+          "현대미학성형외과"
+        ],
+        "domains": [
+          "h-mihak.com"
+        ]
+      },
+      {
+        "name": "빌리프성형외과",
+        "aliases": [
+          "빌리프성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "하나비성형외과",
+        "aliases": [
+          "하나비성형외과"
+        ],
+        "domains": []
+      },
+      {
+        "name": "에디션성형외과",
+        "aliases": [
+          "에디션성형외과"
+        ],
+        "domains": [
+          "editionps.com"
+        ]
+      },
+      {
+        "name": "마인드성형외과",
+        "aliases": [
+          "마인드성형외과"
+        ],
+        "domains": []
       }
     ],
     "factGraph": [],
