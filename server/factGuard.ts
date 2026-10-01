@@ -64,7 +64,19 @@ export function createFactGuard(
   };
 
   const guardSentence = (sentence: string): boolean => {
+    // 문장에 값이 그대로 담긴 사실의 숫자는 출처가 있는 숫자다. 같은 숫자가 여러 사실에 들어 있으면
+    // 그중 하나만 담겨도 된다 — 전에는 처음 찾은 사실만 봐서, "Line 2 … Yeoksam station exit no.6 …"의
+    // 2를 전화번호(+82. 2. 522. 6636)의 2로 보고 문장을 버렸다.
+    // 그 사실의 항목 이름에 든 숫자도 출처로 친다(「2호선 역삼역 오시는 길」의 2). 항목 이름은 값이
+    // 무엇인지 알려 주는 꼬리표라, 영어 원고는 그 뜻을 풀어 쓰면서 숫자를 함께 옮긴다.
+    const sourced = new Set<string>();
+    for (const f of facts) {
+      if (!f.value || !sentence.includes(f.value)) continue;
+      for (const n of numberTokens(f.value)) sourced.add(n);
+      for (const n of numberTokens(f.claim ?? '')) sourced.add(n);
+    }
     for (const n of numberTokens(sentence)) {
+      if (sourced.has(n)) continue;
       const fromFact = factNums.find((f) => f.nums.has(n))?.fact;
       if (fromFact) {
         if (!sentence.includes(fromFact.value)) {

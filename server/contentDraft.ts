@@ -60,8 +60,10 @@ async function writeDrafts(tenantId: string, map: DraftMap): Promise<void> {
 
 /** 문장 단위로 자른다. 가드는 문장 하나씩 보고, 걸린 문장만 버린다(문단 통째로 버리지 않는다). */
 function splitSentences(text: string): string[] {
+  // 마침표 뒤가 숫자면 문장 끝이 아니다 — 사이트 원문 그대로인 전화번호 "+82. 2. 522. 6636"이
+  // 조각으로 잘려 조각마다 사실 가드에 걸렸다.
   return text
-    .split(/(?<=[.!?。]|다\.|요\.)\s+/)
+    .split(/(?<=[.!?。]|다\.|요\.)\s+(?!\d)/)
     .map((s) => s.trim())
     .filter(Boolean);
 }
