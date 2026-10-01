@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { cancelLocalMeasure } from '../lib/api'
 
 /**
  * 진행 중인 측정을 보여 주는 공용 부품.
@@ -16,6 +17,8 @@ export interface ActiveMeasure {
   stage?: string
   done?: number
   total?: number
+  /** 중단을 요청받아 멈추는 중(진행 중인 호출이 끝나기를 기다린다). v0.2.50부터. */
+  cancelling?: boolean
 }
 
 /**
@@ -85,8 +88,54 @@ function overallRemainingMs(active: ActiveMeasure[], elapsedMs: number): number 
  * 건수가 없는 단계(인용 정리·집계·리포트)는 단계 이름만 낸다.
  */
 export function measureStageLabel(a: ActiveMeasure): string {
+  if (a.cancelling) return '중단 중'
   const stage = a.stage ?? '준비'
   return a.total ? `${stage} ${a.done ?? 0}/${a.total}` : stage
+}
+
+/**
+ * 진행 중인 로컬 측정 전체를 멈추는 버튼.
+ *
+ * 수집 단계까지인 브랜드는 곧 멈추고 이번 주 데이터를 쓰지 않는다. 이미 저장을 시작한 브랜드
+ * (분석 이후)는 섞인 주차가 남지 않게 마무리한다 — 확인 창과 결과 문구가 그 차이를 알린다.
+ * 진행 중인 AI 호출 한 건은 응답이 올 때까지 기다리므로 줄이 사라지기까지 1~3분 걸릴 수 있다.
+ */
+export function MeasureCancelButton({ active }: { active: ActiveMeasure[] }) {
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  if (active.length === 0) return null
+  const allCancelling = active.every((a) => a.cancelling)
+
+  async function onCancel() {
+    const ok = window.confirm(
+      `진행 중인 측정 ${active.length}곳을 중단할까요?\n\n` +
+        '수집 중인 곳은 바로 멈추고, 이번 주 데이터는 그대로 둡니다.\n' +
+        '이미 분석 단계에 들어간 곳은 결과가 섞이지 않도록 끝까지 마무리합니다.',
+    )
+    if (!ok) return
+    setBusy(true)
+    try {
+      const r = await cancelLocalMeasure()
+      setNote(
+        `${r.stopping.length}곳 중단 요청` +
+          (r.finishing.length ? ` · ${r.finishing.length}곳은 저장 중이라 마무리합니다` : '') +
+          ' — 진행 중인 호출이 끝나면 멈춥니다.',
+      )
+    } catch (err) {
+      setNote(`✗ ${err instanceof Error ? err.message : '측정 중단 실패'}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mp-cancel">
+      <button type="button" className="ghost" onClick={() => void onCancel()} disabled={busy || allCancelling}>
+        {allCancelling ? '중단 중…' : busy ? '중단 요청 중…' : '측정 중단'}
+      </button>
+      {note && <span className="muted">{note}</span>}
+    </div>
+  )
 }
 
 /** 브랜드마다 한 줄. 코호트를 함께 재면 여러 줄이 선다. */
@@ -113,11 +162,12 @@ export default function MeasureProgress({ active }: { active: ActiveMeasure[] })
           <span className="muted"> · {active.length}곳 측정 중</span>
         </p>
       )}
+      <MeasureCancelButton active={active} />
       <ul className="measure-progress">
         {active.map((p) => (
           <li key={p.tenantId}>
             <span className="mp-name">{p.brandName || p.tenantId}</span>
-            <span className="mp-stage">{p.stage ?? '준비'}</span>
+            <span className="mp-stage">{p.cancelling ? '중단 중' : (p.stage ?? '준비')}</span>
             {p.total ? (
               <>
                 <span className="mp-bar" aria-hidden="true">

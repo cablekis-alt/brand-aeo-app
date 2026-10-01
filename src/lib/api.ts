@@ -302,6 +302,19 @@ export async function measureTenantAll(
 }
 
 /**
+ * 진행 중인 로컬 측정을 멈춘다(로컬 백엔드 전용).
+ * stopping은 곧 멈추는 브랜드(이번 주 데이터를 쓰지 않음), finishing은 이미 저장을 시작해 마무리하는 브랜드다.
+ */
+export async function cancelLocalMeasure(): Promise<{ stopping: string[]; finishing: string[] }> {
+  const res = await fetch('/api/measure-cancel', { method: 'POST' })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error || `측정 중단 실패 (HTTP ${res.status})`)
+  }
+  return (await res.json()) as { stopping: string[]; finishing: string[] }
+}
+
+/**
  * 실행 항목의 집행 상태 — 데스크톱·로컬 전용이다.
  *
  * 웹(Vercel)에는 이 라우트가 없다(Hobby 함수 한도를 새로 쓰지 않으려고 만들지 않았다).

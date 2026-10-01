@@ -18,7 +18,7 @@ import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
-import { updateActiveMeasure } from './measureTracker.js';
+import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -218,6 +218,8 @@ async function collectRawCalls(
     jobs,
     COLLECTION_CONCURRENCY,
     async (job): Promise<RawCallRecord | null> => {
+      // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
+      throwIfMeasureCancelled(tenant.tenantId);
       const prompt = buildEngineCallPrompt(job.engine, job.question.text);
       // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
       const startedAt = new Date().toISOString();
@@ -244,6 +246,8 @@ async function collectRawCalls(
           startedAt,
         };
       } catch (err) {
+        // 중단은 실패가 아니다 — 건너뛰고 계속하면 멈추라는 요청이 무시된다.
+        if (err instanceof MeasureCancelledError) throw err;
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
         updateActiveMeasure(tenant.tenantId, { done: ++collected });
         console.warn(
@@ -505,6 +509,7 @@ export async function runWeeklyPipeline(
   const weekOf = getIsoWeekString(now);
 
   const questions = await ensureQuestionBank(tenant, store);
+  throwIfMeasureCancelled(tenant.tenantId);
   const rawCalls = await collectRawCalls(tenant, questions, weekOf);
 
   // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
@@ -517,6 +522,9 @@ export async function runWeeklyPipeline(
       call.citations = call.citations.map((u) => resolvedCitations.get(u) ?? u);
     }
   }
+  // 마지막 중단 확인 지점. 여기를 지나면 이번 주 파일(원문 → 판정 → 스코어카드 → 리포트)을 차례로
+  // 새로 쓰므로, 그 뒤에 끊으면 새 원문과 옛 판정이 섞인 주차가 남는다 — 끝까지 마무리한다.
+  throwIfMeasureCancelled(tenant.tenantId);
   await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
   // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];

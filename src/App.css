@@ -2055,6 +2055,16 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .mp-elapsed b { font-variant-numeric: tabular-nums; }
 /* 경과 줄이 앞에 서면 목록의 위 여백은 그 줄이 이미 냈다. */
 .mp-elapsed + .measure-progress { margin-top: 4px; }
+/* 측정 중단 — 경과 줄과 목록 사이. 결과 문구는 버튼 옆에 붙인다. */
+.mp-cancel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 12.5px;
+}
+.mp-cancel + .measure-progress { margin-top: 6px; }
 
 /* 인용 갭 분석에서 「콘텐츠 생성으로」로 넘어온 카드 — 스크롤 목적지 강조 */
 .gap-card.is-focused {

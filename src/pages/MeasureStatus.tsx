@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
+import { MeasureCancelButton, measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
 import {
   cancelMeasureRun,
@@ -730,6 +730,7 @@ export default function MeasureStatus() {
           <p className="hint" style={{ marginTop: 0 }}>
             이 앱에서 직접 실행한 측정입니다(진행 중은 실시간, 완료는 이 PC에 기록). CLI(<code>measure:local</code>)로 커밋한 기록도 함께 표시됩니다.
           </p>
+          <MeasureCancelButton active={localActive} />
           <div className="table-wrap">
             <table>
               <thead>

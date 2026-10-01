@@ -33,7 +33,7 @@ import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
 import { readLocalMeasures } from './localMeasureLog.js';
-import { listActiveMeasures } from './measureTracker.js';
+import { MeasureCancelledError, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -177,8 +177,19 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
     const result = await measureAndBake(tenant, store, { reuseCohort });
     res.json(result);
   } catch (err) {
+    // 사용자가 멈춘 측정은 실패가 아니다 — 화면이 "중단했습니다"로 알리게 409로 구분한다.
+    if (err instanceof MeasureCancelledError) {
+      res.status(409).json({ error: err.message, cancelled: true });
+      return;
+    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// 진행 중인 로컬 측정 중단 — 수집 단계까지인 브랜드는 곧 멈추고(이번 주 데이터를 쓰지 않는다),
+// 이미 저장을 시작한 브랜드는 섞인 주차가 남지 않게 마무리한다(measureTracker.ts 참고).
+app.post('/api/measure-cancel', (_req, res) => {
+  res.json(requestCancelActiveMeasures());
 });
 
 // 브랜드 추가 — 온보딩 초안을 등록한다.
