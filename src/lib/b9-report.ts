@@ -394,10 +394,11 @@ export function buildPeriodicReport(
   }
   const summary = `Brand AEO Score ${card.aeoScore.current}점(4주 이동평균 ${card.aeoScore.ma4}, ${trendText}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
 
-  const ciWidth = card.aeoScore.ciHigh - card.aeoScore.ciLow
+  // 하한은 0에서 잘려 있어(ciBounds) 상한 − 하한은 흔들림을 줄여 보인다. 자르기 전 폭으로 판단한다.
+  const ciMargin = card.aeoScore.ciHigh - card.aeoScore.current
   const variabilityNote =
-    ciWidth > 25
-      ? `95% 신뢰구간이 ${card.aeoScore.ciLow}–${card.aeoScore.ciHigh}로 넓습니다(변동성 큼). 이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${card.aeoScore.ma4}) 추세로 판단하세요.`
+    2 * ciMargin > 25
+      ? `95% 신뢰구간이 ±${Math.round(ciMargin * 10) / 10}점(${card.aeoScore.ciLow}–${card.aeoScore.ciHigh})으로 넓습니다(변동성 큼). 이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${card.aeoScore.ma4}) 추세로 판단하세요.`
       : null
 
   return {

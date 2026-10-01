@@ -46,6 +46,20 @@ const ENGINE_ORDER = ['openai', 'gemini', 'claude', 'perplexity'];
  */
 export const MIN_RANKED_RESPONSES = 3;
 
+/**
+ * 점수의 95% 신뢰구간(소수 첫째 자리). 하한은 0에서 자른다 — 점수는 0~100이라 음수 하한은 있을 수
+ * 없는 값을 보여 준다(2026-W40 홈캐스트 2점이 −9.1~13.1로 나왔다).
+ *
+ * 자르면 구간 폭이 줄어든다. 흔들림의 크기는 자르기 전 폭(상한 − 점수의 2배)으로 판단해야 한다
+ * — 화면의 「변동성 큼」 알림과 리포트 문구가 그렇게 한다.
+ */
+export function ciBounds(score: number, margin: number): { ciLow: number; ciHigh: number } {
+  return {
+    ciLow: Math.max(0, Math.round((score - margin) * 10) / 10),
+    ciHigh: Math.round((score + margin) * 10) / 10,
+  };
+}
+
 export function aggregateWeeklyMetrics(
   tenant: AggregateTenant,
   questions: QuestionSpec[],

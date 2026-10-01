@@ -25,7 +25,7 @@ import { getIsoWeekString } from './dateUtil.js';
 import { getEngineClient, getJudgeClient, usedJudgeEngineId } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
-import { aggregateWeeklyMetrics } from './aggregate.js';
+import { aggregateWeeklyMetrics, ciBounds } from './aggregate.js';
 import { analyzeCitationSources, urlHost } from './citationSources.js';
 import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
@@ -471,8 +471,7 @@ export function aggregateScorecard(
       current: m.score,
       ma4,
       previousWeek,
-      ciLow: Math.round((m.score - m.ciMargin) * 10) / 10,
-      ciHigh: Math.round((m.score + m.ciMargin) * 10) / 10,
+      ...ciBounds(m.score, m.ciMargin),
     },
     mentionRate: m.mentionRate,
     shareOfMention: m.shareOfMention,

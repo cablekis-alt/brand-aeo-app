@@ -8,7 +8,7 @@
  *   npx tsx scripts/rescore-all.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs'
-import { aggregateWeeklyMetrics } from '../server/aggregate'
+import { aggregateWeeklyMetrics, ciBounds } from '../server/aggregate'
 import { LIVE_ANALYSES, LIVE_BANKS } from '../server/liveRegistry'
 import { computeCohortRank, movingAverage4 } from '../server/scoring'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
@@ -61,8 +61,7 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
       current: m.score,
       ma4,
       previousWeek,
-      ciLow: Math.round((m.score - m.ciMargin) * 10) / 10,
-      ciHigh: Math.round((m.score + m.ciMargin) * 10) / 10,
+      ...ciBounds(m.score, m.ciMargin),
     },
     mentionRate: m.mentionRate,
     shareOfMention: m.shareOfMention,

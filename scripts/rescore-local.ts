@@ -39,7 +39,7 @@ if (rawArg && appDataDir !== rawArg) console.log(`인자 확장: ${rawArg} → $
 // APP_DATA_DIR은 server/appPaths.ts가 모듈 로드 시점에 읽으므로, 그 전에 설정해야 한다.
 if (appDataDir) process.env.APP_DATA_DIR = path.resolve(appDataDir)
 
-const { aggregateWeeklyMetrics } = await import('../server/aggregate')
+const { aggregateWeeklyMetrics, ciBounds } = await import('../server/aggregate')
 const { PIPELINE_DATA_DIR } = await import('../server/appPaths')
 const { computeCohortRank, movingAverage4 } = await import('../server/scoring')
 type WeeklyScorecard = import('../src/prompts/b8-report').WeeklyScorecard
@@ -152,8 +152,7 @@ for (const tenantId of readdirSync(dataDir)) {
         current: m.score,
         ma4,
         previousWeek,
-        ciLow: Math.round((m.score - m.ciMargin) * 10) / 10,
-        ciHigh: Math.round((m.score + m.ciMargin) * 10) / 10,
+        ...ciBounds(m.score, m.ciMargin),
       },
       mentionRate: m.mentionRate,
       shareOfMention: m.shareOfMention,

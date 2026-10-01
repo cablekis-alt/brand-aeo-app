@@ -56,7 +56,8 @@ function comparableRankChange(
  */
 /** 이번 주만으로 판단하는 알림이라 엔진 가드와 무관하다 — 두 경로에서 같이 쓴다. */
 function ciWidthAlert(cur: WeeklyScorecard): Alert | null {
-  const ciWidth = cur.aeoScore.ciHigh - cur.aeoScore.ciLow
+  // 하한은 0에서 잘려 있어(ciBounds) 상한 − 하한은 흔들림을 줄여 보인다. 자르기 전 폭으로 판단한다.
+  const ciWidth = 2 * (cur.aeoScore.ciHigh - cur.aeoScore.current)
   if (ciWidth < 20) return null
   return {
     level: 'info',
