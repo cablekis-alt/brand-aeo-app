@@ -532,11 +532,40 @@ function looksLikeOfficialContact(pageUrl: string, root: HTMLElement, mainText: 
   return /문의|연락처|고객센터|대표전화|contact us|\bemail\b|전화\s*[:：]/i.test(mainText)
 }
 
+/**
+ * 스트리밍 렌더링(React SSR)으로 보낸 본문을 제자리에 붙인다 — 브라우저가 인라인 스크립트($RC)로
+ * 하는 일과 같다.
+ *
+ * Next.js 앱 라우터는 <main> 안에 자리표시 <template id="B:0">만 두고, 실제 본문은 문서 뒤쪽
+ * <div hidden id="S:0">에 담아 보낸다(실측: idhospital.com/en — <main> 0자, S:0 5,601자). 본문은
+ * **서버가 보낸 HTML 안에 있다**. 스크립트를 실행하지 않는 크롤러도 그 글자를 받는다. 옮겨 붙이지
+ * 않으면 빈 <main>만 보고 「스크립트에 의존하는 빈 페이지」로 오판한다.
+ */
+function inlineStreamedSegments(doc: Document) {
+  for (const segment of [...doc.querySelectorAll('div[hidden][id^="S:"]')]) {
+    const n = segment.id.slice(2)
+    const placeholder = doc.getElementById(`B:${n}`)
+    if (!placeholder || placeholder.tagName.toLowerCase() !== 'template') continue
+    placeholder.replaceWith(...[...segment.childNodes])
+    segment.remove()
+  }
+}
+
+/**
+ * 본문 후보가 페이지 글의 이만큼은 담아야 본문으로 친다. 처음 맞는 셀렉터를 그대로 쓰면, <main>이
+ * 없는 사이트에서 카드 하나짜리 #content·article(실측: eng.banobagi.com/nose — 572자, 페이지 전체는
+ * 긴 문단 43개)을 본문으로 삼아 「본문이 짧다」로 오판한다.
+ */
+const CONTENT_ROOT_MIN_SHARE = 0.3
+
 function pickContentRoot(clone: HTMLElement): HTMLElement {
   const selectors = ['#mw-content-text', 'main', '[role="main"]', '#content', 'article', '#root']
+  const total = textOf(clone).length
   for (const sel of selectors) {
     const el = clone.querySelector(sel)
-    if (el && textOf(el).length >= 40) return el as HTMLElement
+    if (!el) continue
+    const len = textOf(el).length
+    if (len >= 40 && len >= total * CONTENT_ROOT_MIN_SHARE) return el as HTMLElement
   }
   return clone
 }
@@ -586,6 +615,7 @@ export function extractPage(input: {
   const previousTitle = document.title
   const doc = new DOMParser().parseFromString(input.html || '', 'text/html')
   document.title = previousTitle
+  inlineStreamedSegments(doc)
   const base = input.finalUrl || input.requestedUrl
 
   const robotsMeta = unique(
