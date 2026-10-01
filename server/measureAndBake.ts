@@ -65,7 +65,9 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
   for (const competitor of tenant.competitors) {
     if (!competitor.name) continue;
     const domain = competitor.domains?.[0];
-    const id = domain ? slugFromDomain(domain) : slugFromName(competitor.name);
+    const baseId = domain ? slugFromDomain(domain) : slugFromName(competitor.name);
+    // 영어 측정의 경쟁사는 ID에 -en을 붙인다 — 같은 병원을 한국어로 재는 테넌트와 데이터 폴더가 겹치지 않게.
+    const id = baseId && tenant.questionLanguage === 'en' ? `${baseId}-en` : baseId;
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(
@@ -80,6 +82,10 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
         questionBankSize: tenant.questionBankSize,
         questionBankVersion: tenant.questionBankVersion,
         repeatsPerQuestion: tenant.repeatsPerQuestion,
+        // 같은 코호트의 시험지·언어를 그대로 쓴다. 안 넘기면 새 경쟁사만 한국어 질문과 자기만의
+        // 은행으로 재게 되어, 코호트 안에서 서로 다른 시험지를 풀게 된다.
+        ...(tenant.questionLanguage ? { questionLanguage: tenant.questionLanguage } : {}),
+        ...(tenant.cohortQuestionBank ? { cohortQuestionBank: tenant.cohortQuestionBank } : {}),
         competitors: [],
         factGraph: [],
         cohortOnly: true,
@@ -102,7 +108,9 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
  */
 export function selectCohortTargets(tenant: TenantConfig, runtime: TenantConfig[]): TenantConfig[] {
   const existingById = new Map(runtime.map((item) => [item.tenantId, item]));
-  const sameIndustry = (t: TenantConfig) => t.industry === tenant.industry;
+  // 질문 언어가 다르면 다른 시장을 재는 것이다 — 같은 병원이라도 함께 측정하지 않는다.
+  const language = (t: TenantConfig) => t.questionLanguage ?? 'ko';
+  const sameIndustry = (t: TenantConfig) => t.industry === tenant.industry && language(t) === language(tenant);
   const sameCohort = (t: TenantConfig) => sameIndustry(t) && t.region === tenant.region;
   const sameCohortByDomain = new Map<string, TenantConfig>();
   const sameIndustryByDomain = new Map<string, TenantConfig>();
@@ -120,11 +128,11 @@ export function selectCohortTargets(tenant: TenantConfig, runtime: TenantConfig[
     const existing =
       (domain ? (sameCohortByDomain.get(domain) ?? sameIndustryByDomain.get(domain)) : undefined) ??
       existingById.get(draft.tenantId);
-    // ID만 같은 다른 업종 브랜드는 재측정하지 않는다. 같은 ID로 새로 만들어도 그 브랜드의
+    // ID만 같은 다른 업종(또는 다른 질문 언어) 브랜드는 재측정하지 않는다. 같은 ID로 새로 만들어도 그 브랜드의
     // 데이터 폴더에 섞이므로 건너뛰고 알린다.
     if (existing && !sameIndustry(existing)) {
       console.warn(
-        `[measureAndBake] 경쟁사 ${draft.brandName}: ID ${draft.tenantId}가 다른 업종의 ` +
+        `[measureAndBake] 경쟁사 ${draft.brandName}: ID ${draft.tenantId}가 다른 업종·언어의 ` +
           `${existing.brandName}(${existing.industry} · ${existing.region})와 겹쳐 함께 측정하지 않습니다.`,
       );
       continue;
