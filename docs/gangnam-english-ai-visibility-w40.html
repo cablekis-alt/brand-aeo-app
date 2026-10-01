@@ -161,6 +161,7 @@
     <div><dt>질문</dt><dd>영어 36개 (공통 22 · 브랜드 14)</dd></div>
     <div><dt>엔진</dt><dd>Gemini · Perplexity</dd></div>
     <div><dt>측정</dt><dd>2회 · 응답 576건</dd></div>
+    <div><dt>사이트 진단</dt><dd>영문 사이트 3곳</dd></div>
   </dl>
 </header>
 
@@ -283,6 +284,39 @@
 </section>
 
 <section>
+  <p class="eyebrow">영문 사이트 진단</p>
+  <h2>AI가 읽는 영문 사이트, 병원마다 상태가 다르다</h2>
+  <p class="lede">Site AEO Checker로 세 병원의 영문 사이트를 진단했다. 스크립트를 실행하지 않고 HTML을 읽는 방식이라, 스크립트를 실행하지 않는 AI 크롤러가 보는 것과 같다. 바노바기·디에이는 준비도가 높고, <strong>아이디는 가장 많이 인용되는 사이트인데도 근거가 불안하다</strong>.</p>
+  <div class="scroller">
+    <table>
+      <caption>Site AEO Score — 2026-10-01 진단 (100점 만점)</caption>
+      <thead><tr><th class="lead">병원 · 페이지</th><th>점수</th><th class="lead">주요 감점</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">바노바기 · <code>eng.banobagi.com</code></td><td class="n"><strong>95</strong></td><td class="lead">글쓴이·의료진 이름 표기가 없다 (E-E-A-T 13/18)</td></tr>
+        <tr><td class="lead">디에이 · <code>daprseng.com</code></td><td class="n"><strong>85</strong></td><td class="lead">글쓴이 표기·게시일이 없고 연락처·회사 정보가 약하다 (E-E-A-T 4/18)</td></tr>
+        <tr class="hi"><td class="lead">아이디 · 영문 홈 <code>idhospital.com/en</code></td><td class="n"><strong>0</strong></td><td class="lead">본문이 스크립트로만 그려져 HTML에 본문이 없다</td></tr>
+        <tr><td class="lead">아이디 · FAQ <span class="dim">(인용 112건)</span></td><td class="n">76</td><td class="lead">핵심 질문·답이 앞에 없고, 병원 정보 구조화 데이터와 글쓴이 표기가 없다</td></tr>
+        <tr class="hi"><td class="lead">아이디 · 소개 페이지 <span class="dim">(인용 90건)</span></td><td class="n"><strong>0</strong></td><td class="lead">지금은 <strong>없는 페이지(HTTP 404)</strong>이고 검색 노출 차단(noindex)이 붙어 있다</td></tr>
+        <tr><td class="lead">더스완</td><td class="n dim">—</td><td class="lead dim">영문 사이트가 없다 (한국어 홈은 9월 30일 진단 93점)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="finding sev-high">
+    <h3><span class="chip high">처방</span> 아이디 — 1위 자리를 받치는 페이지가 비어 있다</h3>
+    <p>영어 답변에서 아이디 사이트 인용 457건 중 202건이 두 페이지에 몰려 있다. 그중 소개 페이지(90건)는 지금 열리지 않는다 — 엔진이 예전에 읽어 둔 페이지를 계속 인용하는 것으로 보인다. 영문 홈은 스크립트를 실행하지 않으면 본문이 없다. 지금의 인용 1위가 오래가지 않을 수 있다(추정). 소개 페이지 복구 또는 새 주소로 연결하는 것이 가장 먼저다.</p>
+  </div>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">처방</span> 바노바기·디에이 — “누가 쓴 글인가”를 채운다</h3>
+    <p>AI가 읽고 인용하기 좋은 구조는 이미 갖췄다. 남은 감점은 의료진 이름·전문의 표기·게시일이다. 의료 정보에서 AI가 신뢰를 가늠하는 부분이라, 해외 환자 안내 페이지마다 담당 의료진과 갱신일을 붙이는 것이 처방이다.</p>
+  </div>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">처방</span> 더스완 — 영문 안내 페이지부터</h3>
+    <p>영어 질문에서 한 번도 불리지 않은 결과와 같은 방향이다. 눈 재수술·통역·체류 기간·비용처럼 해외 환자가 묻는 내용을 영문 페이지로 만드는 것이 출발점이다.</p>
+  </div>
+  <p class="note">진단은 홈과 아이디의 인용 상위 두 페이지만 봤다. 아이디 소개 페이지의 404는 일반 브라우저와 PerplexityBot 이름으로 다시 요청해도 같았다. 스크립트까지 실행하는 검색엔진(Google 등)에는 아이디 영문 홈이 다르게 보일 수 있다. 세 사이트 모두 AI 검색 크롤러를 robots.txt에서 막지 않는다.</p>
+</section>
+
+<section>
   <p class="eyebrow">두 번 같은 방향 ④</p>
   <h2>해외 환자 앞의 경쟁 상대는 목록 밖에 있다</h2>
   <div class="scroller">
@@ -344,8 +378,8 @@
   <ol class="todo">
     <li><b>경쟁사 목록에 AB·View·JK·Braun 추가</b>
       <p>해외 환자 시장의 실제 경쟁 상대로 SoM을 다시 잰다. 함께 측정하는 병원이 늘어 비용과 시간이 는다.</p></li>
-    <li><b>영문 사이트 진단</b>
-      <p>바노바기·디에이·아이디 영문 사이트의 Site AEO Score를 잰다. 더스완은 영문 사이트가 없는 것 자체를 처방으로 제시한다.</p></li>
+    <li><b>영문 사이트 시술 페이지 진단</b>
+      <p>홈 진단은 끝났다. 해외 환자가 많이 묻는 눈·코·안면윤곽 페이지와 비용·통역 안내 페이지를 이어서 진단한다.</p></li>
     <li><b>영어 콘텐츠 생성</b>
       <p>지금 콘텐츠 생성은 한국어로만 나온다. 해외 환자 안내 페이지를 영어 원고로 보여 주려면 언어 옵션이 필요하다.</p></li>
     <li><b>주 단위 재측정</b>
@@ -354,7 +388,7 @@
 </section>
 
 <footer>
-  2026-10-01 영어 측정 2회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1차는 2차 측정 전에 떠 둔 백업이다. 점수는 v0.2.56 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 목록 밖 병원 이름은 응답의 인용 주소·본문을 직접 세었다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
+  2026-10-01 영어 측정 2회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1차는 2차 측정 전에 떠 둔 백업이다. 점수는 v0.2.56 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 목록 밖 병원 이름은 응답의 인용 주소·본문을 직접 세었다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다. 영문 사이트 진단은 2026-10-01에 Site AEO Checker의 채점 모듈로 스크립트 없이 HTML을 읽어 매겼다.
 </footer>
 
 </div>
