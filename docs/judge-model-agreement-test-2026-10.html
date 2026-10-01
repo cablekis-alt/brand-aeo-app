@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>판정 모델 일치율 시험</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+  th.brk2, td.brk2 { border-left: 2px dotted var(--rule-2); }
+
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">내부 검토 · 판정 모델 · 일치율 시험 · 2026-10-01</p>
+  <h1>판정 모델을 싼 것으로 바꿔도 되나</h1>
+  <p class="lede">판정은 브랜드 1회 측정 비용의 절반 안팎을 차지한다. 지금 판정 모델(Gemini 3.7 Flash)을 Gemini 3.1 Flash-Lite나 GPT-6 Luna로 바꾸면 판정 비용이 62~80% 준다. 저장된 원문 200건을 세 모델로 다시 판정해 비교했다. <strong>두 후보 모두 언급 여부·자사 인용은 비슷하게 맞혔지만, 추천 순위·1순위 추천·감성·경쟁사 집계가 크게 달라 점수가 바뀐다.</strong> 판정 모델은 지금대로 둔다.</p>
+  <dl class="meta">
+    <div><dt>표본</dt><dd>W40 원문 200건 · 24개 브랜드</dd></div>
+    <div><dt>기준</dt><dd>저장된 판정 (Gemini 3.7 Flash)</dd></div>
+    <div><dt>후보</dt><dd>Gemini 3.1 Flash-Lite · GPT-6 Luna</dd></div>
+    <div><dt>결론</dt><dd>현행 유지</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">왜 시험했나</p>
+  <h2>판정이 측정 비용의 가장 큰 덩어리다</h2>
+  <div class="scroller">
+    <table>
+      <caption>브랜드 1회 측정(수집 72건) 비용 — W40 실측 토큰 기준</caption>
+      <thead><tr><th class="lead">항목</th><th class="lead">사용량</th><th>비용</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">Gemini 수집 36건</td><td class="lead dim">호출당 입력 290 · 출력 865 토큰 + 검색 1회</td><td class="n">$0.12 + 검색 $0.50</td></tr>
+        <tr><td class="lead">Perplexity 수집 36건</td><td class="lead dim">실제 청구액 평균 $0.0059/호출</td><td class="n">$0.21</td></tr>
+        <tr class="hi"><td class="lead"><strong>판정 (Gemini 3.7 Flash)</strong></td><td class="lead dim">원문 1건당 3.1회 · 입력 3,633 · 출력 1,386</td><td class="n"><strong>$0.57</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Gemini 검색 그라운딩은 매달 5,000건까지 무료라(Gemini 3.x 전체 공유) 실제 검색비는 측정 횟수에 따라 0일 수 있다. 판정 비용은 앱의 비용 표에 금액으로 나오지 않는다(호출 수·토큰만). Gemini 3.7 Flash는 2027년 1월 1일부터 $1.50 / $7.50으로 두 배가 되어, 판정 비용이 브랜드당 약 $1.14로 오른다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">방법</p>
+  <h2>같은 원문을 세 모델로 다시 판정했다</h2>
+  <ol class="todo">
+    <li><b>표본</b><p>설치본 W40 원문 중 저장 판정이 “언급됨” 100건, “언급 안 됨” 100건(24개 브랜드, 고정 시드). 언급된 응답은 드물어서 섞어 뽑으면 언급 판정의 일치를 제대로 잴 수 없다.</p></li>
+    <li><b>재판정</b><p>측정 파이프라인의 판정 함수를 그대로 써서(언급·인용·순위·사실 판정 4종) 세 모델로 다시 판정했다. 데이터는 읽기만 했다.</p></li>
+    <li><b>기준선</b><p>지금 모델로 다시 판정한 결과를 저장된 판정과 비교해, “같은 모델이 다시 판정해도 이 정도는 흔들린다”는 기준을 잡았다. 후보가 이 기준선만큼 일치하면 바꿔도 측정이 달라지지 않는다고 본다.</p></li>
+  </ol>
+</section>
+
+<section>
+  <p class="eyebrow">결과</p>
+  <h2>언급·자사 인용은 비슷하고, 나머지는 크게 다르다</h2>
+  <div class="scroller">
+    <table>
+      <caption>저장된 판정과의 일치 — 같은 표본 200건, 세 실행 모두 오류 0건</caption>
+      <thead><tr><th class="lead">지표</th><th>기준선<br><span class="dim">3.7 Flash</span></th><th>3.1 Flash-Lite</th><th>GPT-6 Luna</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">언급 여부 일치</td><td class="n">99.0% <span class="dim">κ 0.98</span></td><td class="n">97.0% <span class="dim">κ 0.94</span></td><td class="n">94.5% <span class="dim">κ 0.89</span></td></tr>
+        <tr><td class="lead dim">└ 저장 “언급됨”을 맞춤</td><td class="n dim">100%</td><td class="n dim">98%</td><td class="n"><strong>91%</strong></td></tr>
+        <tr><td class="lead dim">└ 저장 “언급 안 됨”을 맞춤</td><td class="n dim">98%</td><td class="n dim">96%</td><td class="n dim">98%</td></tr>
+        <tr><td class="lead">자사 인용 판정 일치</td><td class="n">99.9%</td><td class="n">99.0%</td><td class="n">99.5%</td></tr>
+        <tr class="hi"><td class="lead">추천 순위 정확 일치</td><td class="n">80.0% <span class="dim">(15건)</span></td><td class="n"><strong>25.7%</strong> <span class="dim">(35건)</span></td><td class="n"><strong>34.4%</strong> <span class="dim">(32건)</span></td></tr>
+        <tr class="hi"><td class="lead">1순위 추천 일치</td><td class="n">85.7% <span class="dim">(21건)</span></td><td class="n"><strong>23.9%</strong> <span class="dim">(46건)</span></td><td class="n"><strong>36.8%</strong> <span class="dim">(38건)</span></td></tr>
+        <tr class="hi"><td class="lead">감성(긍·부정) 일치</td><td class="n">97.0%</td><td class="n"><strong>71.4%</strong></td><td class="n"><strong>82.4%</strong></td></tr>
+        <tr><td class="lead">경쟁사 이름 겹침 <span class="dim">(Jaccard)</span></td><td class="n">0.753</td><td class="n">0.724</td><td class="n"><strong>0.297</strong></td></tr>
+        <tr><td class="lead">인용 소유 분류 일치 <span class="dim">(URL 약 2,400개)</span></td><td class="n">85.7%</td><td class="n">75.3%</td><td class="n">72.3%</td></tr>
+        <tr><td class="lead">사실 판정 건수 일치</td><td class="n">94.4% <span class="dim">(18건)</span></td><td class="n">78.3% <span class="dim">(23건)</span></td><td class="n">85.7% <span class="dim">(21건)</span></td></tr>
+        <tr><td class="lead">브랜드 언급 문장 합계 <span class="dim">(저장 210)</span></td><td class="n">216</td><td class="n"><strong>254</strong> <span class="dim">+21%</span></td><td class="n">194 <span class="dim">−8%</span></td></tr>
+        <tr><td class="lead">경쟁사 언급 횟수 합계 <span class="dim">(저장 171)</span></td><td class="n">173</td><td class="n"><strong>223</strong> <span class="dim">+30%</span></td><td class="n">176</td></tr>
+        <tr><td class="lead dim">원문 1건 판정 시간 <span class="dim">(중앙값)</span></td><td class="n dim">6.0초</td><td class="n dim">2.9초</td><td class="n dim">13.1초</td></tr>
+        <tr><td class="lead dim">판정 비용 <span class="dim">(원문 1건당)</span></td><td class="n dim">약 $0.0079</td><td class="n dim">약 $0.0030 <span class="dim">−62%</span></td><td class="n dim">약 $0.0016 <span class="dim">−80%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">추천 순위·1순위 추천·사실 판정은 해당하는 응답이 15~46건으로 적어 비율이 거칠다. 다만 기준선과 후보의 차이가 커서 결론은 달라지지 않는다. 기준선도 순위 일치가 80%라, 지금 모델도 순위 판정은 어느 정도 흔들린다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">해석</p>
+  <h2>바꾸면 그 주에 점수가 달라진다</h2>
+
+  <div class="finding sev-high">
+    <h3><span class="chip high">탈락</span> Gemini 3.1 Flash-Lite — 순위를 더 자주, 다르게 매긴다</h3>
+    <p>순위가 매겨진 응답이 15건에서 35건으로 늘었고 일치는 26%뿐이다. 추천 순위는 “순위 응답 3건 이상”일 때만 점수에 들어가므로, 기준을 넘는 브랜드가 갑자기 늘어 점수가 바뀐다. 감성 일치 71%는 언급률·SoM에 곱하는 감성 계수를 흔들고, 경쟁사 언급을 30% 더 세서 SoM 분모가 커진다. 빠르고(2.9초) 언급 여부·자사 인용은 기준선과 거의 같았다.</p>
+  </div>
+
+  <div class="finding sev-high">
+    <h3><span class="chip high">탈락</span> GPT-6 Luna — 언급을 놓치고 경쟁사 이름을 다르게 잡는다</h3>
+    <p>저장 “언급됨” 100건 중 9건을 “언급 안 됨”으로 봤다. 기준선도 같은 판정을 한 것은 그중 2건뿐이라 대부분 Luna만의 차이다 — 바꾸면 언급률이 일관되게 낮게 나온다. 경쟁사를 찾은 응답은 57건에서 108건으로 늘었는데 이름 겹침은 0.30에 그쳐 SoM 집계가 달라진다. 추론 모델이라 출력 토큰이 1.8배이고 판정이 두 배 느리다(13.1초).</p>
+  </div>
+
+  <div class="finding sev-good">
+    <h3><span class="chip good">공통</span> 점수 일부는 싼 모델도 맞힌다</h3>
+    <p>두 후보 모두 언급 여부(94.5~97%)와 자사 인용 판정(99%+)은 기준선과 가깝다. 다만 이 두 판정은 다른 판정(감성·경쟁사 언급·순위)과 같은 호출에서 함께 나오므로, 이것만 떼어 싼 모델로 돌리는 것은 별도 설계가 필요하다.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">다음</p>
+  <h2>결정과 다시 볼 시점</h2>
+  <ol class="todo">
+    <li><b>판정 모델은 Gemini 3.7 Flash 유지</b>
+      <p>바꾼 주의 점수 변화가 AI 가시성 변화와 구분되지 않는다. 비용보다 측정의 연속성이 먼저다.</p></li>
+    <li><b>2027년 1월 가격 인상 전에 다시 시험</b>
+      <p>같은 가격대의 Gemini 3.8 Flash를 같은 표본·같은 방식으로 시험한다. 3.5 Flash-Lite는 3.1 Flash-Lite와 같은 경량 계열이라 비슷한 결과일 가능성이 높아 지금은 하지 않는다.</p></li>
+    <li><b>비용 표에 판정 비용 반영</b>
+      <p>판정이 측정 비용의 절반 안팎인데 앱의 비용 표에는 금액이 없다. Gemini 무료 검색 한도도 반영해야 실제 비용이 보인다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  설치본 데이터의 W40 원문(<code>raw-calls.json</code>)과 저장 판정(<code>question-analyses.json</code>)에서 표본을 뽑아, 측정 파이프라인의 판정 함수(<code>analyzeRawCall</code>)로 다시 판정했다. GPT-6 Luna는 <code>JUDGE_ENGINE=openai</code> · <code>JUDGE_MODEL=gpt-6-luna</code> · <code>JUDGE_TEMPERATURE=none</code>로 돌렸다. 시험 비용은 판정 약 1,900회, 합계 약 $2.5. 가격은 Gemini·Perplexity 공식 문서(2026-10-01)와 GPT-6 가격 정리 글 두 곳 기준이다. 데이터는 쓰지 않았다.
+</footer>
+
+</div>
+</body>
+</html>
