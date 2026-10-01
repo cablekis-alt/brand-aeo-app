@@ -660,7 +660,7 @@ export async function loadRawAnswers(
 }
 
 /**
- * 엔진 사용량(전체 브랜드 합산). 비용은 내려오지 않는다 — 단가를 코드에 박지 않기 때문이다.
+ * 엔진 사용량(전체 브랜드 합산). 비용은 내려오지 않는다 — 화면이 단가 설정으로 계산한다.
  * 대신 입력·출력을 나눠 준다. 합계만으로는 환산조차 못 한다(출력이 몇 배 비싸고 비중이
  * 엔진마다 다르다).
  */
@@ -674,6 +674,10 @@ export interface UsageRow {
   billedCost: number | null
   latencyMs: number
   tenants: number
+  /** 웹검색을 쓴 호출 수. 판정 줄은 0이다. */
+  searchCalls: number
+  /** 검색 호출의 달별 분포와, 같은 달에 이 주차보다 앞서 쓴 검색 수(월 무료 한도 계산용). */
+  searchByMonth: { month: string; searches: number; priorInMonth: number }[]
 }
 
 export interface UsageStats {
@@ -699,7 +703,10 @@ export interface EngineRate {
   model?: string
   inputPerM?: number
   outputPerM?: number
+  /** 웹검색 1회당 요금. 검색한 호출에만 붙는다. */
   perRequest?: number
+  /** 달마다 무료인 검색 건수. */
+  freeRequestsPerMonth?: number
 }
 
 export interface EnginePricing {

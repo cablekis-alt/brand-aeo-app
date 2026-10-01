@@ -21,6 +21,10 @@ import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
  *
  * 수집(collect)과 판정(judge)을 나눠 센다. 판정은 응답 하나마다 2~4회를 더 부르고 프롬프트에
  * 답변 원문이 통째로 들어가, 수집보다 클 수 있는데 지금까지 아무 데도 안 잡혔다.
+ *
+ * 웹검색을 쓴 호출 수도 따로 센다. 검색 요금은 검색한 호출에만 붙는데 호출 수 전체에 곱하면
+ * 부풀고(판정은 검색을 안 한다 — 2026-W40에 판정 6,811회에 검색 요금 약 $95가 붙었다), 월 무료
+ * 한도(Gemini 5,000건)는 달 단위라 그 달에 앞서 쓴 검색 수를 알아야 계산된다.
  */
 export interface UsageRow {
   engine: string;
@@ -36,6 +40,13 @@ export interface UsageRow {
   billedCost: number | null;
   latencyMs: number;
   tenants: number;
+  /** 웹검색을 쓴 호출 수. 판정 줄은 0이다(판정은 검색하지 않는다). */
+  searchCalls: number;
+  /**
+   * 검색 호출을 달별로 나눈 것. priorInMonth는 같은 엔진이 그 달에 이 주차보다 앞서 쓴 검색 수다 —
+   * 월 무료 한도를 앞 주차가 얼마나 썼는지 알아야 이 주차 몫을 낼 수 있다.
+   */
+  searchByMonth: { month: string; searches: number; priorInMonth: number }[];
 }
 
 export interface UsageWeek {
@@ -79,9 +90,17 @@ async function listWeeks(): Promise<string[]> {
   return [...weeks].sort().reverse();
 }
 
+/**
+ * 보여 줄 주차보다 앞서 더 읽는 주차 수. 첫 주차의 달 무료 한도를 그 달 앞 주차들이 얼마나 썼는지
+ * 세려면 최대 4주(+ 달에 걸친 1주)를 더 봐야 한다. 그 주차들은 검색 수만 세고 줄로 내지 않는다.
+ */
+const SEARCH_LOOKBACK_WEEKS = 5;
+
 export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
   const allWeeks = await listWeeks();
-  const wanted = allWeeks.slice(0, Math.max(1, Math.min(weeksBack, 12)));
+  const wantedCount = Math.max(1, Math.min(weeksBack, 12));
+  const wanted = allWeeks.slice(0, wantedCount);
+  const scanned = allWeeks.slice(0, wantedCount + SEARCH_LOOKBACK_WEEKS);
   let tenants: string[] = [];
   try {
     tenants = await readdir(PIPELINE_DATA_DIR);
@@ -98,6 +117,8 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
     cost: number;
     costCalls: number;
     tenants: Set<string>;
+    search: number;
+    searchByMonth: Map<string, number>;
   };
   const blank = (): Acc => ({
     calls: 0,
@@ -108,7 +129,12 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
     cost: 0,
     costCalls: 0,
     tenants: new Set<string>(),
+    search: 0,
+    searchByMonth: new Map<string, number>(),
   });
+  // 엔진·달별로 지금까지(주차 오름차순) 쓴 검색 수.
+  const monthSearches = new Map<string, number>();
+  const monthKey = (engine: string, month: string) => `${engine}|${month}`;
   const toRows = (per: Map<string, Acc>): UsageRow[] =>
     [...per.entries()]
       .map(([engine, v]) => ({
@@ -121,13 +147,23 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
         billedCost: v.costCalls > 0 && v.costCalls === v.calls ? v.cost : null,
         latencyMs: v.latencyMs,
         tenants: v.tenants.size,
+        searchCalls: v.search,
+        searchByMonth: [...v.searchByMonth.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([month, searches]) => ({
+            month,
+            searches,
+            priorInMonth: monthSearches.get(monthKey(engine, month)) ?? 0,
+          })),
       }))
       .sort((a, b) => b.tokens - a.tokens);
 
   let filesRead = 0;
   const weeksWithJudge: string[] = [];
   const out: UsageWeek[] = [];
-  for (const weekOf of [...wanted].sort()) {
+  const wantedSet = new Set(wanted);
+  for (const weekOf of [...scanned].sort()) {
+    const isWanted = wantedSet.has(weekOf);
     const collect = new Map<string, Acc>();
     const judge = new Map<string, Acc>();
     let judgeSeen = false;
@@ -153,7 +189,7 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
           records = null;
         }
         if (records) {
-          filesRead += 1;
+          if (isWanted) filesRead += 1;
           for (const r of records) {
             const row = collect.get(r.engine ?? 'unknown') ?? blank();
             row.calls += 1;
@@ -165,11 +201,19 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
               row.cost += r.billedCost;
               row.costCalls += 1;
             }
+            if (r.usedWebSearch === true) {
+              row.search += 1;
+              // 달은 실제 호출 시각으로 정한다 — 한 주차가 두 달에 걸칠 수 있다.
+              const month = (r.calledAt ?? '').slice(0, 7) || 'unknown';
+              row.searchByMonth.set(month, (row.searchByMonth.get(month) ?? 0) + 1);
+            }
             row.tenants.add(tenantId);
             collect.set(r.engine ?? 'unknown', row);
           }
         }
       }
+      // 앞 주차는 검색 수만 센다(달 무료 한도의 누적용).
+      if (!isWanted) continue;
 
       // ── 판정 ────────────────────────────────────────────────────────────
       // 원문(raw-calls)은 분석 전에 저장되므로 판정 사용량은 분석 레코드에 실려 있다.
@@ -203,8 +247,16 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
       }
     }
 
-    if (judgeSeen) weeksWithJudge.push(weekOf);
+    // toRows는 지금까지의 누적(priorInMonth)을 읽으므로, 이 주차 검색을 누적에 더하기 전에 부른다.
     const byEngine = toRows(collect);
+    for (const [engine, acc] of collect) {
+      for (const [month, n] of acc.searchByMonth) {
+        monthSearches.set(monthKey(engine, month), (monthSearches.get(monthKey(engine, month)) ?? 0) + n);
+      }
+    }
+    if (!isWanted) continue;
+
+    if (judgeSeen) weeksWithJudge.push(weekOf);
     const judgeByEngine = toRows(judge);
     out.push({
       weekOf,

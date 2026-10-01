@@ -14,7 +14,7 @@ import {
   type MeasureRunInfo,
   type UsageStats,
 } from '../lib/api'
-import { formatMoney, rowCost } from '../lib/engineCost'
+import { formatMoney, rowCost, sumCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { useTenant } from '../context/useTenant'
@@ -463,9 +463,9 @@ export default function MeasureStatus() {
             사실성을 가르는 호출입니다(답변 하나마다 2~4회).
           </p>
           <p className="hint">
-            <b>비용은 계산하지 않습니다</b> — 모델 단가를 코드에 박으면 단가가 바뀐 뒤에도 그대로 거짓을 말하기
-            때문입니다. 대신 <b>입력·출력을 나눠</b> 드립니다: 출력 토큰이 입력보다 몇 배 비싼데 비중이 엔진마다
-            완전히 달라, 합계만으로는 환산조차 되지 않습니다.
+            <b>비용</b>은 아래 「단가 설정」에 넣은 값으로 계산합니다(코드에 박힌 단가는 없습니다). 엔진이 실제
+            청구액을 알려 주면(Perplexity) 그 값을 씁니다. <b>검색 요금</b>은 웹검색을 쓴 호출에만, 그달 무료 한도를
+            넘은 몫에만 붙습니다 — 판정 호출은 검색하지 않아 토큰 요금만 듭니다.
           </p>
           <div className="table-wrap">
             <table>
@@ -501,6 +501,26 @@ export default function MeasureStatus() {
                               ? `판정 ${w.judgeCalls.toLocaleString()}회 · ${w.judgeTokens.toLocaleString()} 토큰`
                               : '판정 기록 없음'}
                           </span>
+                          {(() => {
+                            const collect = sumCost(w.byEngine, pricing?.engines)
+                            const judge = sumCost(w.judgeByEngine, pricing?.engines)
+                            const cur = pricing?.currency ?? ''
+                            // 계산한 줄이 하나도 없으면 합계를 만들지 않는다 — 0으로 보이면 "공짜"가 된다.
+                            if (collect.amount === 0 && judge.amount === 0 && !(collect.complete && judge.complete)) return null
+                            const part = (v: { amount: number; complete: boolean }) =>
+                              `${formatMoney(v.amount, cur)}${v.complete ? '' : '+'}`
+                            return (
+                              <span className="sentence-meta" style={{ display: 'block' }}>
+                                비용{' '}
+                                {part({
+                                  amount: collect.amount + judge.amount,
+                                  complete: collect.complete && judge.complete && w.judgeByEngine.length > 0,
+                                })}
+                                {/* 판정 기록이 없는 주차에 "판정 0"이라 적으면 판정을 공짜로 한 것처럼 읽힌다. */}
+                                {` (수집 ${part(collect)} · 판정 ${w.judgeByEngine.length > 0 ? part(judge) : '기록 없음'})`}
+                              </span>
+                            )
+                          })()}
                         </td>
                       )}
                       <td className="cell-text">
@@ -524,10 +544,17 @@ export default function MeasureStatus() {
                           return (
                             <td className="num">
                               {formatMoney(c.amount, pricing?.currency ?? '')}
-                              {/* 요청당 요금이 섞여 있으면 밝힌다 — 토큰만 보면 싸 보이는 엔진이 있다. */}
+                              {/* 검색 요금이 섞여 있으면 밝힌다 — 토큰만 보면 싸 보이는 엔진이 있다. */}
                               {c.requestPart !== null && c.requestPart > 0 && (
                                 <span className="sentence-meta" style={{ display: 'block' }}>
-                                  요청료 {formatMoney(c.requestPart, pricing?.currency ?? '')}
+                                  검색료 {formatMoney(c.requestPart, pricing?.currency ?? '')}
+                                </span>
+                              )}
+                              {/* 검색이 있었으면 몇 번이 무료 한도로 빠졌는지 밝힌다 — 검색료가 0인 이유가 보여야 한다. */}
+                              {c.searches > 0 && (
+                                <span className="sentence-meta" style={{ display: 'block' }}>
+                                  검색 {c.searches.toLocaleString()}회
+                                  {c.freeSearches > 0 ? ` · 무료 한도 ${c.freeSearches.toLocaleString()}회` : ''}
                                 </span>
                               )}
                               {/* 엔진이 청구액을 직접 준 경우 — 단가 추정이 아님을 밝힌다. */}
@@ -581,9 +608,10 @@ export default function MeasureStatus() {
           {priceExpanded && (
             <div className="pricing-editor">
               <p className="hint" style={{ marginTop: 0 }}>
-                100만 토큰당 가격을 넣으세요. <b>요청당</b>은 토큰과 별개로 호출마다 붙는 고정 요금입니다(웹검색
-                수수료 등) — 없으면 비워 두세요. 통화는 표시용 꼬리표일 뿐이며 <b>환율 환산은 하지 않습니다</b>.
-                넣으신 통화 그대로 계산합니다.
+                100만 토큰당 가격을 넣으세요. <b>검색 1회당</b>은 토큰과 별개로 웹검색을 쓴 호출마다 붙는 요금이고,
+                <b>월 무료 검색</b>은 달마다 그 요금이 붙지 않는 건수입니다(Gemini 검색 그라운딩은 월 5,000건) — 없으면
+                비워 두세요. 통화는 표시용 꼬리표일 뿐이며 <b>환율 환산은 하지 않습니다</b>. 넣으신 통화 그대로
+                계산합니다.
               </p>
               <label className="field" style={{ maxWidth: 200 }}>
                 <span>통화 표기</span>
@@ -610,7 +638,8 @@ export default function MeasureStatus() {
                       <th className="cell-mid">모델 메모</th>
                       <th className="cell-mid">입력 / 1M</th>
                       <th className="cell-mid">출력 / 1M</th>
-                      <th className="cell-mid">요청당</th>
+                      <th className="cell-mid">검색 1회당</th>
+                      <th className="cell-mid">월 무료 검색</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -664,6 +693,15 @@ export default function MeasureStatus() {
                               onChange={(e) => set({ perRequest: num(e.target.value) })}
                             />
                           </td>
+                          <td className="num">
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={rate.freeRequestsPerMonth ?? ''}
+                              onChange={(e) => set({ freeRequestsPerMonth: num(e.target.value) })}
+                            />
+                          </td>
                         </tr>
                       )
                     })}
@@ -700,6 +738,11 @@ export default function MeasureStatus() {
               <p className="hint">
                 ※ 단가는 벤더 콘솔에서 확인해 넣으세요. 저희가 기본값을 채워 드리지 않는 것은, 가격이 바뀐 뒤에도
                 화면이 그대로 거짓을 말하게 되기 때문입니다.
+              </p>
+              <p className="hint">
+                ※ 검색 요금은 <b>검색한 호출 1회를 1건</b>으로 셉니다. 한 호출이 검색어를 여러 개 쓰면 실제 청구가 더
+                클 수 있습니다. 월 무료 한도는 이 앱에 있는 측정만 세므로, 같은 키를 다른 곳에서도 쓰면 한도가 더
+                빨리 찹니다. 판정 줄은 수집과 같은 엔진 단가로 계산합니다(판정 모델이 수집 모델과 다르면 맞지 않습니다).
               </p>
               <p className="hint">
                 ※ 「모델 메모」의 흐린 글씨는 <b>지금 측정에 쓰는 설정</b>이며, 측정 기록에 남는 값과 같습니다

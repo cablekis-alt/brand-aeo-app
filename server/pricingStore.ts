@@ -23,8 +23,16 @@ export interface EngineRate {
   inputPerM?: number;
   /** 100만 출력 토큰당 가격. */
   outputPerM?: number;
-  /** 호출 1회당 고정 요금(웹검색 수수료 등). 없으면 0. */
+  /**
+   * 웹검색 1회당 요금. 검색을 쓴 호출에만 붙는다 — 판정처럼 검색하지 않는 호출에는 붙지 않는다.
+   * 이름은 옛 파일과 맞추려고 그대로 둔다.
+   */
   perRequest?: number;
+  /**
+   * 달마다 무료인 검색 건수(Gemini 검색 그라운딩은 월 5,000건). 이 수까지는 perRequest를 붙이지
+   * 않는다. 단가와 같은 이유로 코드에 기본값을 두지 않는다.
+   */
+  freeRequestsPerMonth?: number;
 }
 
 export interface EnginePricing {
@@ -66,9 +74,11 @@ function cleanRate(raw: unknown): EngineRate {
   const i = num(r.inputPerM);
   const o = num(r.outputPerM);
   const q = num(r.perRequest);
+  const f = num(r.freeRequestsPerMonth);
   if (i !== undefined) out.inputPerM = i;
   if (o !== undefined) out.outputPerM = o;
   if (q !== undefined) out.perRequest = q;
+  if (f !== undefined) out.freeRequestsPerMonth = Math.floor(f);
   return out;
 }
 
