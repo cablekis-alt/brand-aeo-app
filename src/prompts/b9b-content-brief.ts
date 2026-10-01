@@ -1,4 +1,4 @@
-import type { FactGraphNode, PromptMessage } from './types';
+import type { FactGraphNode, PromptMessage, QuestionLanguage } from './types';
 
 /**
  * 콘텐츠 브리프 — 실행 항목 하나를 "무엇을 써야 하나"로 바꾼다. **본문은 쓰지 않는다.**
@@ -49,7 +49,18 @@ export interface ContentBriefRequest {
     questionTexts: string[];
     evidence: string;
   };
+  /** 원고 언어. 없으면 한국어. 영어 테넌트(해외 환자 관점)는 'en'. */
+  language?: QuestionLanguage;
 }
+
+/**
+ * 영어 원고 규칙 — 원고에 들어가는 칸만 영어로 쓰고, 운영자가 읽는 메모는 한국어로 둔다.
+ * 원고를 다듬고 사실을 확인하는 사람은 한국 직원이라, 메모까지 영어면 확인이 늦어진다.
+ */
+const ENGLISH_BRIEF_RULE = `
+6. **이 글은 해외 환자에게 보이는 영어 원고다.** titles·questionsToAnswer·structure의 heading·citableSentences는
+   자연스러운 영어로 쓴다. audience·doNotClaim·channelNotes·structure의 answers는 운영자가 읽는 메모라 한국어로 쓴다.
+   citableSentences는 각 25단어 이내로 쓴다. 사실 값은 팩트 그래프에 적힌 글자 그대로 옮긴다(번역하지 않는다).`;
 
 export function buildContentBriefPrompt(req: ContentBriefRequest): PromptMessage {
   const facts = req.factGraph.length
@@ -92,7 +103,7 @@ JSON 스키마:
   "citableSentences": string[],
   "channelNotes": string[]
 }
-titles는 2~3개, citableSentences는 3~5개(각 60자 이내), channelNotes는 콘텐츠형이면 빈 배열이어도 된다.`;
+titles는 2~3개, citableSentences는 3~5개(각 60자 이내), channelNotes는 콘텐츠형이면 빈 배열이어도 된다.${req.language === 'en' ? ENGLISH_BRIEF_RULE : ''}`;
   const kindLine =
     req.action.kind === 'listing'
       ? `종류: 외부 채널 등재·기고 — 대상 채널 ${req.action.targetDomain ?? '(미정)'}. 그 채널에서 지켜야 할 것(광고성 금지·문서 규칙·형식)을 channelNotes에 적는다.`

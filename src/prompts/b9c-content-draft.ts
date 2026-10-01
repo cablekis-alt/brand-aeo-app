@@ -1,5 +1,5 @@
 import type { ContentBrief } from './b9b-content-brief';
-import type { FactGraphNode, PromptMessage } from './types';
+import type { FactGraphNode, PromptMessage, QuestionLanguage } from './types';
 
 /**
  * 콘텐츠 초안 — 브리프에서 **한 걸음만** 더 간다.
@@ -56,7 +56,19 @@ export interface ContentDraftRequest {
   brief: ContentBrief;
   /** 등재형이면 그 채널 — 채널 규칙을 문체에 반영한다. */
   targetDomain?: string;
+  /** 원고 언어. 없으면 한국어. 영어 테넌트(해외 환자 관점)는 'en'. */
+  language?: QuestionLanguage;
 }
+
+/**
+ * 영어 원고 규칙 — title·lead·본문은 영어, gap의 need는 운영자 메모라 한국어.
+ * 사실 값은 번역하지 않는다: 사실 가드가 값 문자열을 그대로 찾기 때문에, 번역한 값은 "요약·격상"으로
+ * 걸려 문장이 빠진다. 영어 원고에는 영어 값으로 된 팩트 그래프(영문 사이트에서 추출)가 필요하다.
+ */
+const ENGLISH_DRAFT_RULE = `
+8. **이 초안은 해외 환자에게 보이는 영어 원고다.** title·lead·각 절의 heading과 text 본문은 자연스러운 영어로 쓴다.
+   gap의 need는 운영자가 읽는 메모라 한국어로 쓴다. 1-1의 "우리말로 풀어 쓴다"는 "자연스러운 영어로 풀어 쓴다"로 읽는다.
+   사실 값은 팩트 그래프에 적힌 글자 그대로 옮긴다 — 번역하거나 단위를 바꾸지 않는다(값이 한국어면 그 문단은 gap으로 둔다).`;
 
 export function buildContentDraftPrompt(req: ContentDraftRequest): PromptMessage {
   const facts = req.factGraph.length
@@ -118,7 +130,7 @@ JSON 스키마:
       "blocks": [ {"kind":"text","body":string} | {"kind":"gap","need":string} ] }
   ]
 }
-lead는 2~3문장. 각 절의 blocks는 1~4개. 사실이 없어 쓸 게 없는 절은 blocks가 gap 하나여도 된다.`;
+lead는 2~3문장. 각 절의 blocks는 1~4개. 사실이 없어 쓸 게 없는 절은 blocks가 gap 하나여도 된다.${req.language === 'en' ? ENGLISH_DRAFT_RULE : ''}`;
 
   const channelLine = req.targetDomain
     ? `게재 채널: ${req.targetDomain} — 광고성 문구를 피하고 그 채널의 독자에게 맞는 어투로 씁니다.\n`

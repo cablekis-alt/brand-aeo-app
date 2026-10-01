@@ -426,6 +426,7 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
             : [],
           evidence: typeof b.evidence === 'string' ? b.evidence : '',
         },
+        language: tenant.questionLanguage,
       },
       getJudgeClient(),
     );
@@ -514,6 +515,7 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
         questionTexts: brief.brief.questionsToAnswer,
         brief: brief.brief,
         targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
+        language: tenant.questionLanguage,
       },
       getJudgeClient(),
     );
