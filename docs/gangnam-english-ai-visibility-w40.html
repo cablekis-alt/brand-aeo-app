@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>해외 환자 영어 질문 측정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --s1-soft:      #9cc0ec;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+    --s1-soft:     #2c5584;
+      --s1-soft:     #2c5584;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+  th.brk2, td.brk2 { border-left: 2px dotted var(--rule-2); }
+
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
+  .dk { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .dk.ko { background: var(--surface); border: 2px solid var(--context); }
+  .dk.e1 { background: var(--s1-soft); }
+  .dk.e2 { background: var(--s1); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">데모 · 해외 환자 관점 · 영어 질문 측정 · 성형외과 서울 강남 · 2026-W40 2회</p>
+  <h1>해외 환자가 영어로 물으면, AI는 어느 강남 병원을 부르나</h1>
+  <p class="lede">강남 성형외과 4곳(바노바기·디에이·아이디·더스완)을 외국인 환자가 물을 법한 영어 질문 36개로 두 번 쟀다. <strong>순위는 두 번 사이에 뒤집혔다</strong> — 그래서 순위는 결론이 아니다. 두 번 모두 같은 방향으로 나온 것은 넷이다. 더스완은 영어 질문에서 <strong>한 번도 불리지 않았고</strong>, 아이디는 <strong>영문 사이트가 근거로 가장 많이 인용</strong>됐다. AI는 한국어와 달리 <strong>의료관광 플랫폼과 공공 포털</strong>을 근거로 썼고, 실제로 함께 불린 경쟁 상대는 <strong>JK·View·AB 같은 해외 마케팅이 강한 병원</strong>이었다.</p>
+  <dl class="meta">
+    <div><dt>대상</dt><dd>강남 성형외과 4곳</dd></div>
+    <div><dt>질문</dt><dd>영어 36개 (공통 22 · 브랜드 14)</dd></div>
+    <div><dt>엔진</dt><dd>Gemini · Perplexity</dd></div>
+    <div><dt>측정</dt><dd>2회 · 응답 576건</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">무엇으로 쟀나</p>
+  <h2>외국인 환자가 실제로 묻는 질문</h2>
+  <p class="lede">질문은 한국에서 시술을 알아보는 외국인 환자의 입력처럼 만들었다. 병원 이름이 없는 공통 질문 22개는 네 곳이 똑같이 받는 시험지다 — 탐색 9개, 비교·추천 7개, 결정 6개.</p>
+  <ul class="qs">
+    <li><span>Which plastic surgery centers in Gangnam offer dedicated English translation and foreign patient coordination?</span><span class="e">추천</span></li>
+    <li><span>Can you recommend reputable plastic surgery clinics in Gangnam specializing in natural eyelid surgery for foreigners?</span><span class="e">추천</span></li>
+    <li><span>How many days should an international patient plan to stay in Seoul after major plastic surgery?</span><span class="e">탐색</span></li>
+    <li><span>How does the medical tax refund process work for plastic surgery in South Korea?</span><span class="e">탐색</span></li>
+    <li><span>Is it possible to do online video consultations before traveling to Seoul for cosmetic surgery?</span><span class="e">결정</span></li>
+  </ul>
+  <p class="note">브랜드 전용 14개는 “Does Banobagi accept international patients?”처럼 병원 이름을 넣은 질문이다. 병원 이름은 각 병원의 공식 영문 표기를 썼다(Banobagi Plastic Surgery · DA Plastic Surgery · ID Hospital). 더스완은 공식 사이트에 영문판이 없어 로고의 “THE SWAN”에 업종명을 붙인 The Swan Plastic Surgery로 잡았다. 영어 답변에서 이 이름이 다른 뜻으로 잘못 세어진 경우는 없었다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">같은 병원, 다른 언어</p>
+  <h2>한 번 재면 순위가 뒤집힌다</h2>
+  <div class="chart" id="chart">
+    <div class="legend">
+      <span><i class="dk ko"></i>한국어 질문 (W40)</span>
+      <span><i class="dk e1"></i>영어 1차</span>
+      <span><i class="dk e2"></i>영어 2차</span>
+    </div>
+    <svg class="plot" id="plot" viewBox="0 0 720 200" role="img" aria-label="Brand AEO Score. 바노바기 한국어 11, 영어 10 → 28. 디에이 11, 19 → 12. 아이디 6, 18 → 16. 더스완 8, 2 → 3."></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+  <div class="scroller">
+    <table>
+      <caption>Brand AEO Score (코호트 4곳 중 순위). 영어는 같은 질문·같은 설정으로 같은 날 두 번 쟀다.</caption>
+      <thead><tr><th class="lead">병원</th><th>한국어</th><th class="brk">영어 1차</th><th>영어 2차</th><th>영어 언급률<br><span class="dim">1차 → 2차</span></th></tr></thead>
+      <tbody>
+        <tr><td class="lead">바노바기</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(3)</span></td><td class="n"><strong>28</strong> <span class="dim">(1)</span></td><td class="n">3/44 → 8/44</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk"><strong>19</strong> <span class="dim">(1)</span></td><td class="n">12 <span class="dim">(3)</span></td><td class="n">4/44 → 3/44</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">6 <span class="dim">(4)</span></td><td class="n brk">18 <span class="dim">(2)</span></td><td class="n">16 <span class="dim">(2)</span></td><td class="n">3/44 → 4/44</td></tr>
+        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n">8 <span class="dim">(3)</span></td><td class="n brk">2 <span class="dim">(4)</span></td><td class="n">3 <span class="dim">(4)</span></td><td class="n"><strong>0/44 → 0/44</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">바노바기는 같은 질문에서 하루도 안 돼 10점에서 28점이 됐다. 앱이 보여 주는 95% 신뢰구간(1차 0.1–19.9, 2차 18.7–37.3)은 한 번 측정 안의 흔들림만 담아, 측정과 측정 사이의 흔들림을 다 담지 못한다. <strong>점수와 순위는 매주 재서 추세로 읽어야 하는 값</strong>이고, 이 문서의 결론은 두 번 모두 같은 방향으로 나온 것만 쓴다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">두 번 같은 방향 ①</p>
+  <h2>더스완은 영어 질문에서 불리지 않는다</h2>
+  <p class="lede">병원 이름이 없는 영어 질문 44건씩, 두 번 모두 <strong>0건</strong>이다. 한국어에서도 0건과 2건이었지만, 영어에서는 주력 분야인 눈 성형 질문에서도 이름이 나오지 않았다.</p>
+  <div class="scroller">
+    <table>
+      <caption>추천형 질문 두 개 — 4곳의 응답 × 2엔진 × 2회 = 16건 중 이름이 나온 건수</caption>
+      <thead><tr><th class="lead">병원</th><th>통역·외국인 환자 코디네이션</th><th>외국인용 자연스러운 눈 성형</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">JK Plastic Surgery <span class="dim">(목록 밖)</span></td><td class="n">15</td><td class="n">5</td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">13</td><td class="n">5</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">13</td><td class="n">3</td></tr>
+        <tr><td class="lead">View Plastic Surgery <span class="dim">(목록 밖)</span></td><td class="n">13</td><td class="n">5</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">9</td><td class="n">0</td></tr>
+        <tr><td class="lead">NANA Plastic Surgery <span class="dim">(목록 밖)</span></td><td class="n">9</td><td class="n">5</td></tr>
+        <tr><td class="lead">AB Plastic Surgery <span class="dim">(목록 밖)</span></td><td class="n">5</td><td class="n">5</td></tr>
+        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n"><strong>0</strong></td><td class="n"><strong>0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">병원 이름을 넣고 물으면 AI는 더스완을 정확히 안다 — 선릉역 위치, 원장, 눈 재수술 전문, 해외 환자 접수까지 설명했다. 아는데도 “어디가 좋아?”에서는 부르지 않는다. 눈 성형 추천 질문은 답변마다 병원이 크게 달라(16건에 서로 다른 병원 약 25곳) 어느 한 곳이 자리를 잡지 못한 질문이기도 하다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">두 번 같은 방향 ②</p>
+  <h2>영어 답변의 근거는 의료관광 플랫폼과 공공 포털이다</h2>
+  <div class="scroller">
+    <table>
+      <caption>공통 질문 응답에 달린 인용 출처 비중 — 한국어 2,062건 · 영어 1차 2,418건 · 2차 2,431건</caption>
+      <thead><tr><th class="lead">출처 묶음</th><th>한국어</th><th class="brk">영어 1차</th><th>영어 2차</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead">해외 의료관광 플랫폼·후기 <span class="dim">(bookimed · placidway · RealSelf · Reddit 등)</span></td><td class="n">0.4%</td><td class="n brk"><strong>16.6%</strong></td><td class="n"><strong>18.6%</strong></td></tr>
+        <tr class="hi"><td class="lead">공공 의료관광 포털 <span class="dim">(VisitKorea 영문 · 강남구 의료관광 · Medical Korea)</span></td><td class="n">0.6%</td><td class="n brk"><strong>10.4%</strong></td><td class="n"><strong>7.7%</strong></td></tr>
+        <tr><td class="lead">네이버 블로그</td><td class="n">4.0%</td><td class="n brk">0.1%</td><td class="n">0.0%</td></tr>
+        <tr><td class="lead">강남언니</td><td class="n">2.8%</td><td class="n brk">1.4%</td><td class="n">1.3%</td></tr>
+        <tr><td class="lead">4곳 자사 사이트 합계</td><td class="n">4.8%</td><td class="n brk">4.0%</td><td class="n">3.7%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="scroller">
+    <table>
+      <caption>영어 공통 질문 응답의 상위 출처 (1차 · 2차 비중)</caption>
+      <thead><tr><th class="lead">출처</th><th>1차</th><th>2차</th><th class="lead">성격</th></tr></thead>
+      <tbody>
+        <tr><td class="lead"><code>us-uk.bookimed.com</code></td><td class="n">4.3%</td><td class="n">5.3%</td><td class="lead dim">해외 의료관광 예약 플랫폼</td></tr>
+        <tr><td class="lead"><code>pmc.ncbi.nlm.nih.gov</code></td><td class="n">3.6%</td><td class="n">4.0%</td><td class="lead dim">의학 논문</td></tr>
+        <tr><td class="lead"><code>placidway.com</code></td><td class="n">3.1%</td><td class="n">3.7%</td><td class="lead dim">해외 의료관광 플랫폼</td></tr>
+        <tr><td class="lead"><code>medicalkorea.or.kr</code></td><td class="n">3.1%</td><td class="n">3.2%</td><td class="lead dim">한국보건산업진흥원 의료관광 포털</td></tr>
+        <tr><td class="lead"><code>english.visitkorea.or.kr</code></td><td class="n">3.6%</td><td class="n">2.3%</td><td class="lead dim">한국관광공사 영문 의료관광</td></tr>
+        <tr><td class="lead"><code>medicaltour.gangnam.go.kr</code></td><td class="n">3.5%</td><td class="n">2.2%</td><td class="lead dim">강남구 의료관광</td></tr>
+        <tr><td class="lead"><code>realself.com</code></td><td class="n">2.2%</td><td class="n">2.6%</td><td class="lead dim">해외 성형 후기</td></tr>
+        <tr><td class="lead"><code>viewplasticsurgery.com</code></td><td class="n">2.4%</td><td class="n">2.1%</td><td class="lead dim">경쟁 병원 영문 사이트</td></tr>
+        <tr><td class="lead"><code>reddit.com</code></td><td class="n">1.9%</td><td class="n">1.9%</td><td class="lead dim">해외 이용자 커뮤니티</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">한국어 답변이 네이버 블로그·학회·병원 사이트를 근거로 쓰는 것과 전혀 다른 지도다. 해외 환자에게 AI 노출을 늘리는 일은 한국어 콘텐츠를 늘리는 일과 다르다 — <strong>이 플랫폼과 포털에 정확한 정보로 등재되는 것</strong>이 곧 근거가 된다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">두 번 같은 방향 ③</p>
+  <h2>영문 사이트가 근거로 쓰이는 곳은 아이디다</h2>
+  <div class="scroller">
+    <table>
+      <caption>전체 응답의 인용 중 자기 병원 사이트 비중 (자사 인용률)</caption>
+      <thead><tr><th class="lead">병원</th><th>영어 1차</th><th>영어 2차</th><th>한국어</th><th class="lead">영문 사이트</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><strong>아이디</strong></td><td class="n"><strong>21.7%</strong></td><td class="n"><strong>21.4%</strong></td><td class="n">11.4%</td><td class="lead"><code>en.idhospital.com</code></td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">15.8%</td><td class="n">16.2%</td><td class="n">12.4%</td><td class="lead"><code>eng.banobagi.com</code></td></tr>
+        <tr><td class="lead">디에이</td><td class="n">10.6%</td><td class="n">10.1%</td><td class="n">16.8%</td><td class="lead"><code>daprseng.com</code></td></tr>
+        <tr><td class="lead">더스완</td><td class="n">6.9%</td><td class="n">9.6%</td><td class="n">14.4%</td><td class="lead dim">없음</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">아이디는 한국어 질문에서 4곳 중 가장 적게 인용됐는데, 영어 질문에서는 두 번 모두 가장 많이 인용됐다. 더스완은 한국어에서 자기 사이트가 꽤 인용됐지만(14.4%) 영어에서는 가장 낮다. 영문 사이트 유무와 같은 방향의 결과지만, 그것이 원인이라고 확인한 것은 아니다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">두 번 같은 방향 ④</p>
+  <h2>해외 환자 앞의 경쟁 상대는 목록 밖에 있다</h2>
+  <div class="scroller">
+    <table>
+      <caption>영어 공통 질문 응답 176건에서 이름이 나온 응답 수 (회당, 이름 패턴으로 센 값)</caption>
+      <thead><tr><th class="lead">병원</th><th>1차</th><th>2차</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">바노바기 <span class="dim">(측정 대상)</span></td><td class="n">17</td><td class="n">22</td></tr>
+        <tr><td class="lead">AB Plastic Surgery</td><td class="n">15</td><td class="n">16</td></tr>
+        <tr><td class="lead">View Plastic Surgery</td><td class="n">18</td><td class="n">12</td></tr>
+        <tr><td class="lead">디에이 <span class="dim">(측정 대상)</span></td><td class="n">14</td><td class="n">16</td></tr>
+        <tr><td class="lead">JK Plastic Surgery</td><td class="n">11</td><td class="n">13</td></tr>
+        <tr><td class="lead">Braun Plastic Surgery</td><td class="n">9</td><td class="n">10</td></tr>
+        <tr><td class="lead">아이디 <span class="dim">(측정 대상)</span></td><td class="n">6</td><td class="n">10</td></tr>
+        <tr class="hi"><td class="lead">더스완 <span class="dim">(측정 대상)</span></td><td class="n">0</td><td class="n">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">AB·View·JK·Braun은 지금 경쟁사 목록에 없다. 영어 답변에서 이들은 두 번 모두 측정 대상 병원과 비슷하거나 더 자주 불렸다. SoM(경쟁사 대비 언급 점유)은 목록에 있는 이름만 세므로, 해외 환자 시장의 몫을 재려면 이들을 목록에 넣어야 한다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">데모 흐름</p>
+  <h2>앱에서 이렇게 보여 준다</h2>
+  <ol class="todo">
+    <li><b>문제 — 같은 병원, 다른 언어</b>
+      <p>「경쟁 순위」에서 한국어 강남과 「서울 강남 (영어 질문)」 코호트를 나란히 연다. 영어 질문에서 더스완이 한 번도 불리지 않은 것을 「브랜드 종합 진단」에서 보여 준다.</p></li>
+    <li><b>원인 — AI가 무엇을 근거로 쓰나</b>
+      <p>「인용 갭 분석」에서 영어 답변의 출처가 의료관광 플랫폼·공공 포털이라는 것을 보여 준다. 한국어 답변(네이버 블로그·학회)과 대비한다.</p></li>
+    <li><b>진단 — 영문 사이트는 읽히나</b>
+      <p>「Site AEO Checker」로 병원의 영문 사이트를 진단해 AI가 읽고 인용하기 좋은 상태인지 점수로 보여 준다.</p></li>
+    <li><b>정확한 안내 — 공식 사실 등록</b>
+      <p>가격 범위·통역 언어·체류 기간·위치·의료진을 팩트 그래프로 등록하고, AI 답변이 그 사실과 맞는지 「브랜드 종합 진단」의 정확도로 확인한다.</p></li>
+    <li><b>처방과 추적</b>
+      <p>「콘텐츠 생성」으로 해외 환자 안내 페이지 초안을 만들고, 「AEO 퍼포먼스」에서 주간 추이로 효과를 추적한다고 보여 준다.</p></li>
+  </ol>
+</section>
+
+<section>
+  <p class="eyebrow">한계</p>
+  <h2>이 측정이 말하지 않는 것</h2>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">주의</span> 검색 위치는 한국이다</h3>
+    <p>엔진은 한국에서 호출했다. 미국·동남아 등에서 실제 해외 환자가 검색하면 근거 출처와 추천 병원이 다를 수 있다.</p>
+  </div>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">주의</span> 두 번, 같은 날 쟀다</h3>
+    <p>두 번 같은 방향이라 비교적 믿을 만하지만, 주가 바뀌어도 같은지는 아직 모른다. 순위는 두 번 사이에 뒤집혔으므로 결론으로 쓰지 않는다.</p>
+  </div>
+  <div class="finding sev-mid">
+    <h3><span class="chip mid">주의</span> 병원 이름은 패턴으로 셌다</h3>
+    <p>목록 밖 병원의 언급 수는 응답 본문의 “○○ Plastic Surgery” 패턴으로 센 값이라 몇 건의 오차가 있을 수 있다. 측정 대상 4곳의 언급률·SoM은 판정 모델이 센 값이다.</p>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">다음</p>
+  <h2>데모 전에 할 일</h2>
+  <ol class="todo">
+    <li><b>경쟁사 목록에 AB·View·JK·Braun 추가</b>
+      <p>해외 환자 시장의 실제 경쟁 상대로 SoM을 다시 잰다. 함께 측정하는 병원이 늘어 비용과 시간이 는다.</p></li>
+    <li><b>영문 사이트 진단</b>
+      <p>바노바기·디에이·아이디 영문 사이트의 Site AEO Score를 잰다. 더스완은 영문 사이트가 없는 것 자체를 처방으로 제시한다.</p></li>
+    <li><b>영어 콘텐츠 생성</b>
+      <p>지금 콘텐츠 생성은 한국어로만 나온다. 해외 환자 안내 페이지를 영어 원고로 보여 주려면 언어 옵션이 필요하다.</p></li>
+    <li><b>주 단위 재측정</b>
+      <p>다음 주에도 같은 방향이면 결론이 단단해진다. 고객용 결론은 그때 확정한다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  2026-10-01 영어 측정 2회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1차는 2차 측정 전에 떠 둔 백업이다. 점수는 v0.2.56 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 목록 밖 병원 이름은 응답의 인용 주소·본문을 직접 세었다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
+</footer>
+
+</div>
+
+<script>
+  (function () {
+    var rows = [
+      { name: '바노바기', ko: 11, e1: 10, e2: 28 },
+      { name: '디에이', ko: 11, e1: 19, e2: 12 },
+      { name: '아이디', ko: 6, e1: 18, e2: 16 },
+      { name: '더스완', ko: 8, e1: 2, e2: 3, focus: true }
+    ];
+    var W = 720, H = 200, L = 110, R = 30, T = 12, B = 28, xmin = 0, xmax = 30;
+    var x = function (v) { return L + (v - xmin) / (xmax - xmin) * (W - L - R); };
+    var rowH = (H - T - B) / rows.length;
+    var y = function (i) { return T + rowH * (i + 0.5); };
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.getElementById('plot');
+    var el = function (tag, attrs) {
+      var n = document.createElementNS(NS, tag);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      svg.appendChild(n);
+      return n;
+    };
+    [0, 10, 20, 30].forEach(function (t) {
+      el('line', { x1: x(t), x2: x(t), y1: T, y2: H - B, stroke: t === 0 ? 'var(--rule-2)' : 'var(--rule)', 'stroke-width': 1 });
+      var tx = el('text', { x: x(t), y: H - B + 18, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)', 'font-family': 'var(--mono)' });
+      tx.textContent = t;
+    });
+    var tip = document.getElementById('tip');
+    var chart = document.getElementById('chart');
+    var show = function (evt, text) {
+      var r = chart.getBoundingClientRect();
+      var c = evt.target.getBoundingClientRect();
+      tip.textContent = text;
+      tip.style.left = (c.left + c.width / 2 - r.left) + 'px';
+      tip.style.top = (c.top - r.top) + 'px';
+      tip.classList.add('on');
+    };
+    var hide = function () { tip.classList.remove('on'); };
+    rows.forEach(function (d, i) {
+      var label = el('text', { x: L - 12, y: y(i) + 4, 'text-anchor': 'end', 'font-size': d.focus ? 12 : 11, 'font-weight': d.focus ? 600 : 400, fill: d.focus ? 'var(--ink)' : 'var(--muted)', 'font-family': 'var(--sans)' });
+      label.textContent = d.name;
+      el('line', { x1: x(Math.min(d.e1, d.e2)), x2: x(Math.max(d.e1, d.e2)), y1: y(i), y2: y(i), stroke: 'var(--s1)', 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.45 });
+      [['ko', d.ko, '한국어', 'var(--surface)', 'var(--context)'], ['e1', d.e1, '영어 1차', 'var(--s1-soft)', 'var(--surface)'], ['e2', d.e2, '영어 2차', 'var(--s1)', 'var(--surface)']].forEach(function (s) {
+        var c = el('circle', { cx: x(s[1]), cy: y(i), r: 6, fill: s[3], stroke: s[4], 'stroke-width': 2, tabindex: 0 });
+        var text = d.name + ' · ' + s[2] + ' ' + s[1] + '점';
+        c.setAttribute('aria-label', text);
+        c.addEventListener('mouseenter', function (e) { show(e, text); });
+        c.addEventListener('focus', function (e) { show(e, text); });
+        c.addEventListener('mouseleave', hide);
+        c.addEventListener('blur', hide);
+      });
+    });
+  })();
+</script>
+</body>
+</html>
