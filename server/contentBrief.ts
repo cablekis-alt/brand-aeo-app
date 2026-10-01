@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildContentBriefPrompt, type ContentBrief, type ContentBriefRequest } from '../src/prompts/b9b-content-brief.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { findOverclaims } from './claimGuard.js';
 import { createFactGuard } from './factGuard.js';
 import type { EngineClient } from './engines/types.js';
 import { parseJsonLoose } from './jsonParse.js';
@@ -85,8 +86,17 @@ export async function generateBrief(
   judge: EngineClient,
 ): Promise<StoredBrief> {
   const result = await judge.call(buildContentBriefPrompt(req));
-  const brief = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.action.questionTexts);
+  let brief = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.action.questionTexts);
   if (!brief) throw new Error('브리프 응답을 해석할 수 없습니다(JSON 아님). 다시 시도하세요.');
+  // 인용용 문장은 그대로 옮겨 쓰라고 주는 문장이라 격상 검사를 거친다(초안과 같은 가드).
+  const claims = await findOverclaims(brief.citableSentences, req.factGraph, judge, 'drop');
+  if (claims.overclaimed.size || claims.notes.length) {
+    brief = {
+      ...brief,
+      citableSentences: brief.citableSentences.filter((s) => !claims.overclaimed.has(s)),
+      guardNotes: [...(brief.guardNotes ?? []), ...claims.notes],
+    };
+  }
   const stored: StoredBrief = { actionId, generatedAt: new Date().toISOString(), brief };
   const map = await readBriefs(tenantId);
   map[actionId] = stored;

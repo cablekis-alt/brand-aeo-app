@@ -460,6 +460,7 @@ app.put('/api/content-draft/:tenantId', async (req, res) => {
       markdown,
       tenant.factGraph ?? [],
       brief?.brief.questionsToAnswer ?? [],
+      getJudgeClient(),
     );
     res.json(stored);
   } catch (err) {

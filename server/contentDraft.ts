@@ -8,6 +8,7 @@ import {
   type DraftSection,
 } from '../src/prompts/b9c-content-draft.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { findOverclaims } from './claimGuard.js';
 import type { EngineClient } from './engines/types.js';
 import { createFactGuard } from './factGuard.js';
 import { parseJsonLoose } from './jsonParse.js';
@@ -152,6 +153,42 @@ function normalize(
   };
 }
 
+/**
+ * 격상 가드(claimGuard)에 걸린 문장을 초안에서 뺀다. 사실 가드와 같은 방식이다 — 문단이 비면 gap으로
+ * 바꾸고, 쓴 사실 목록과 빈칸 수를 다시 센다.
+ */
+function dropOverclaims(draft: ContentDraft, overclaimed: Set<string>, facts: ContentDraftRequest['factGraph']): ContentDraft {
+  const keep = (text: string) => splitSentences(text).filter((s) => !overclaimed.has(s)).join(' ');
+  const sections = draft.sections.map((s) => ({
+    ...s,
+    blocks: s.blocks.map((b): DraftBlock => {
+      if (b.kind !== 'text' || !b.body) return b;
+      const body = keep(b.body);
+      return body
+        ? { kind: 'text', body }
+        : { kind: 'gap', need: '이 문단의 문장이 사실보다 크게 말해 빠졌습니다 — 아래 검증 기록 참고' };
+    }),
+  }));
+  const lead = keep(draft.lead);
+  const blob = [lead, ...sections.flatMap((s) => s.blocks.map((b) => b.body ?? ''))].join('\n');
+  const usedFacts = draft.usedFacts.filter((line) => {
+    const fact = facts.find((f) => `${f.claim}: ${f.value}` === line);
+    return fact ? blob.includes(fact.value) : true;
+  });
+  const gapCount = sections.reduce((n, s) => n + s.blocks.filter((b) => b.kind === 'gap').length, 0);
+  return { ...draft, lead, sections, usedFacts, gapCount };
+}
+
+/** 초안의 문장 전부(첫머리 + 본문). 격상 가드에 넘긴다. */
+function draftSentences(draft: ContentDraft): string[] {
+  return [
+    ...splitSentences(draft.lead),
+    ...draft.sections.flatMap((s) =>
+      s.blocks.flatMap((b) => (b.kind === 'text' && b.body ? splitSentences(b.body) : [])),
+    ),
+  ];
+}
+
 export async function generateDraft(
   tenantId: string,
   actionId: string,
@@ -159,9 +196,13 @@ export async function generateDraft(
   judge: EngineClient,
 ): Promise<StoredDraft> {
   const result = await judge.call(buildContentDraftPrompt(req));
-  const draft = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.questionTexts);
+  let draft = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.questionTexts);
   if (!draft) throw new Error('초안 응답을 해석할 수 없습니다(JSON 아님). 다시 시도하세요.');
   if (draft.sections.length === 0) throw new Error('초안에 본문 절이 없습니다. 브리프를 먼저 확인하세요.');
+  // 숫자 가드 다음에 격상 가드 — 숫자 없이 주체·범위가 커진 문장을 뺀다.
+  const claims = await findOverclaims(draftSentences(draft), req.factGraph, judge, 'drop');
+  if (claims.overclaimed.size) draft = dropOverclaims(draft, claims.overclaimed, req.factGraph);
+  if (claims.notes.length) draft = { ...draft, guardNotes: [...(draft.guardNotes ?? []), ...claims.notes] };
   const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), draft };
   const map = await readDrafts(tenantId);
   map[actionId] = stored;
@@ -179,17 +220,24 @@ export async function saveEditedDraft(
   markdown: string,
   facts: ContentDraftRequest['factGraph'],
   questionTexts: string[],
+  judge?: EngineClient,
 ): Promise<StoredDraft> {
   const map = await readDrafts(tenantId);
   const current = map[actionId];
   if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
 
   const { guardSentence, notes } = createFactGuard(facts, questionTexts, 'warn');
+  const sentences: string[] = [];
   for (const line of markdown.split(/\r?\n/)) {
     const plain = line.replace(/^[#>\-*\s]+/, '').trim();
     if (!plain) continue;
-    for (const sentence of splitSentences(plain)) guardSentence(sentence);
+    for (const sentence of splitSentences(plain)) {
+      guardSentence(sentence);
+      sentences.push(sentence);
+    }
   }
+  // 사람이 쓴 글도 격상 검사를 받는다 — 경고만 남기고 막지 않는다(숫자 가드와 같은 원칙).
+  if (judge) notes.push(...(await findOverclaims(sentences, facts, judge, 'warn')).notes);
 
   const stored: StoredDraft = {
     ...current,
