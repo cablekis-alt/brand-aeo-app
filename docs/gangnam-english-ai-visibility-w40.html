@@ -117,9 +117,7 @@
   .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
   .dk { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
   .dk.ko { background: var(--surface); border: 2px solid var(--context); }
-  .dk.e1 { background: var(--s1-soft); }
-  .dk.e2 { background: var(--surface); border: 2px solid var(--s1); }
-  .dk.e3 { background: var(--s1); }
+  .dk.en { background: var(--s1); }
   svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
   .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
   .tip.on { opacity: 1; }
@@ -154,14 +152,14 @@
 <div class="wrap">
 
 <header class="top">
-  <p class="eyebrow">데모 · 해외 환자 관점 · 영어 질문 측정 · 성형외과 서울 강남 · 2026-W40 3회</p>
+  <p class="eyebrow">데모 · 해외 환자 관점 · 영어 질문 측정 · 성형외과 서울 강남 · 2026-W40 4회</p>
   <h1>해외 환자가 영어로 물으면, AI는 어느 강남 병원을 부르나</h1>
-  <p class="lede">강남 성형외과 4곳(바노바기·디에이·아이디·더스완)을 외국인 환자가 물을 법한 영어 질문 36개로 세 번 쟀다. 세 번째에는 영어 답변에 자주 나온 View·AB를 측정 대상에 더했다. <strong>순위는 잴 때마다 뒤집혔다</strong> — 그래서 순위는 결론이 아니다. 세 번 모두 같은 방향으로 나온 것은 넷이다. 더스완은 영어 질문에서 <strong>한 번도 추천되지 않았고</strong>, 아이디는 <strong>영문 사이트가 근거로 가장 많이 인용</strong>됐다. AI는 한국어와 달리 <strong>의료관광 플랫폼과 공공 포털</strong>을 근거로 썼고, 실제로 함께 불린 경쟁 상대는 <strong>JK·View·AB 같은 해외 마케팅이 강한 병원</strong>이었다 — 측정 대상에 넣자 View가 언급률 1위였다.</p>
+  <p class="lede">강남 성형외과 4곳(바노바기·디에이·아이디·더스완)을 외국인 환자가 물을 법한 영어 질문 36개로 네 번 쟀다. 세 번째부터는 영어 답변에 자주 나온 View·AB를 측정 대상에 더했다. <strong>순위는 잴 때마다 뒤집혔다</strong> — 그래서 원래 4곳의 순위는 결론이 아니다. 네 번 모두 같은 방향으로 나온 것은 넷이다. 더스완은 영어 질문에서 <strong>한 번도 추천되지 않았고</strong>, 아이디는 <strong>영문 사이트가 근거로 가장 많이 인용</strong>됐다. AI는 한국어와 달리 <strong>의료관광 플랫폼과 공공 포털</strong>을 근거로 썼고, 실제로 함께 불린 경쟁 상대는 <strong>JK·View·AB 같은 해외 마케팅이 강한 병원</strong>이었다 — 측정 대상에 넣자 <strong>View가 두 번 모두 1위</strong>였다.</p>
   <dl class="meta">
     <div><dt>대상</dt><dd>강남 성형외과 4곳 (+View·AB)</dd></div>
     <div><dt>질문</dt><dd>영어 36개 (공통 22 · 브랜드 14)</dd></div>
     <div><dt>엔진</dt><dd>Gemini · Perplexity</dd></div>
-    <div><dt>측정</dt><dd>3회 · 응답 1,008건</dd></div>
+    <div><dt>측정</dt><dd>4회 · 응답 1,440건</dd></div>
     <div><dt>사이트 진단</dt><dd>영문 사이트 3곳</dd></div>
   </dl>
 </header>
@@ -186,46 +184,45 @@
   <div class="chart" id="chart">
     <div class="legend">
       <span><i class="dk ko"></i>한국어 질문 (W40)</span>
-      <span><i class="dk e1"></i>영어 1차</span>
-      <span><i class="dk e2"></i>영어 2차</span>
-      <span><i class="dk e3"></i>영어 3차</span>
+      <span><i class="dk en"></i>영어 질문 (점 하나가 한 번 측정)</span>
+      <span><i class="lk"></i>영어 4회의 범위</span>
     </div>
-    <svg class="plot" id="plot" viewBox="0 0 720 270" role="img" aria-label="Brand AEO Score. 바노바기 한국어 11, 영어 10·28·9. 디에이 11, 19·12·8. 아이디 6, 18·16·12. 더스완 8, 2·3·2. View 영어 3차 13. AB 영어 3차 8."></svg>
+    <svg class="plot" id="plot" viewBox="0 0 720 270" role="img" aria-label="Brand AEO Score. 바노바기 한국어 11, 영어 10·28·9·7. 디에이 11, 19·12·8·7. 아이디 6, 18·16·12·11. 더스완 8, 2·3·2·2. View 영어 3·4차 13·16. AB 영어 3·4차 8·12."></svg>
     <div class="tip" id="tip"></div>
   </div>
   <div class="scroller">
     <table>
-      <caption>Brand AEO Score (괄호는 순위). 영어는 같은 질문으로 같은 날 세 번 쟀다. 1·2차는 4곳, 3차는 View·AB를 더한 6곳 순위다.</caption>
-      <thead><tr><th class="lead">병원</th><th>한국어</th><th class="brk">영어 1차</th><th>2차</th><th>3차</th><th>영어 언급<br><span class="dim">공통 질문 44건</span></th></tr></thead>
+      <caption>Brand AEO Score (괄호는 순위). 영어는 같은 질문으로 같은 날 네 번 쟀다. 1·2차는 4곳, 3·4차는 View·AB를 더한 6곳 순위다.</caption>
+      <thead><tr><th class="lead">병원</th><th>한국어</th><th class="brk">영어 1차</th><th>2차</th><th>3차</th><th>4차</th><th>영어 언급<br><span class="dim">공통 질문 44건</span></th></tr></thead>
       <tbody>
-        <tr><td class="lead">바노바기</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(3)</span></td><td class="n"><strong>28</strong> <span class="dim">(1)</span></td><td class="n">9 <span class="dim">(3)</span></td><td class="n">3 · 8 · 2</td></tr>
-        <tr><td class="lead">디에이</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk"><strong>19</strong> <span class="dim">(1)</span></td><td class="n">12 <span class="dim">(3)</span></td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">4 · 3 · 3</td></tr>
-        <tr><td class="lead">아이디</td><td class="n">6 <span class="dim">(4)</span></td><td class="n brk">18 <span class="dim">(2)</span></td><td class="n">16 <span class="dim">(2)</span></td><td class="n">12 <span class="dim">(2)</span></td><td class="n">3 · 4 · 3</td></tr>
-        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n">8 <span class="dim">(3)</span></td><td class="n brk">2 <span class="dim">(4)</span></td><td class="n">3 <span class="dim">(4)</span></td><td class="n">2 <span class="dim">(6)</span></td><td class="n"><strong>0 · 0 · 0</strong></td></tr>
-        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n"><strong>13</strong> <span class="dim">(1)</span></td><td class="n">— · — · <strong>6</strong></td></tr>
-        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">— · — · 3</td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(3)</span></td><td class="n"><strong>28</strong> <span class="dim">(1)</span></td><td class="n">9 <span class="dim">(3)</span></td><td class="n">7 <span class="dim">(공동 4)</span></td><td class="n">3 · 8 · 2 · 1</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk"><strong>19</strong> <span class="dim">(1)</span></td><td class="n">12 <span class="dim">(3)</span></td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">7 <span class="dim">(공동 4)</span></td><td class="n">4 · 3 · 3 · 2</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">6 <span class="dim">(4)</span></td><td class="n brk">18 <span class="dim">(2)</span></td><td class="n">16 <span class="dim">(2)</span></td><td class="n">12 <span class="dim">(2)</span></td><td class="n">11 <span class="dim">(3)</span></td><td class="n">3 · 4 · 3 · 3</td></tr>
+        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n">8 <span class="dim">(3)</span></td><td class="n brk">2 <span class="dim">(4)</span></td><td class="n">3 <span class="dim">(4)</span></td><td class="n">2 <span class="dim">(6)</span></td><td class="n">2 <span class="dim">(6)</span></td><td class="n"><strong>0 · 0 · 0 · 0</strong></td></tr>
+        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n"><strong>13</strong> <span class="dim">(1)</span></td><td class="n"><strong>16</strong> <span class="dim">(1)</span></td><td class="n">— · — · <strong>6</strong> · <strong>6</strong></td></tr>
+        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">12 <span class="dim">(2)</span></td><td class="n">— · — · 3 · 4</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note">바노바기는 같은 질문에서 10점 → 28점 → 9점이 됐다. 앱이 보여 주는 95% 신뢰구간은 한 번 측정 안의 흔들림만 담아, 측정과 측정 사이의 흔들림을 다 담지 못한다. 3차 점수는 경쟁사 목록을 넓힌 뒤라(아래 ④) SoM의 분모가 달라 1·2차와 같은 잣대가 아니다. <strong>점수와 순위는 매주 재서 추세로 읽어야 하는 값</strong>이고, 이 문서의 결론은 세 번 모두 같은 방향으로 나온 것만 쓴다.</p>
+  <p class="note">바노바기는 같은 질문에서 10 → 28 → 9 → 7점이 됐다. 앱이 보여 주는 95% 신뢰구간은 한 번 측정 안의 흔들림만 담아, 측정과 측정 사이의 흔들림을 다 담지 못한다. 3·4차 점수는 경쟁사 목록을 넓힌 뒤라(아래 ④) SoM의 분모가 달라 1·2차와 같은 잣대가 아니다. <strong>점수와 순위는 매주 재서 추세로 읽어야 하는 값</strong>이고, 이 문서의 결론은 네 번 모두 같은 방향으로 나온 것만 쓴다.</p>
 </section>
 
 <section>
-  <p class="eyebrow">세 번 같은 방향 ①</p>
+  <p class="eyebrow">네 번 같은 방향 ①</p>
   <h2>더스완은 영어 질문에서 추천되지 않는다</h2>
-  <p class="lede">병원 이름이 없는 영어 질문 44건씩, 세 번 모두 <strong>0건</strong>이다. 다른 병원 응답까지 합친 528건에서 이름이 나온 것은 한 번 — 가격 답변에서 <strong>출처 링크 이름</strong>(“The Swan”)으로 나왔을 뿐, 추천 후보로 불린 적은 없다. 주력 분야인 눈 성형 질문에서도 마찬가지다.</p>
+  <p class="lede">병원 이름이 없는 영어 질문 44건씩, 네 번 모두 <strong>0건</strong>이다. 4곳의 응답 704건에서 이름이 나온 것은 한 번 — 가격 답변에서 <strong>출처 링크 이름</strong>(“The Swan”)으로 나왔을 뿐, 추천 후보로 불린 적은 없다. 주력 분야인 눈 성형 질문에서도 마찬가지다.</p>
   <div class="scroller">
     <table>
-      <caption>추천형 질문 두 개 — 4곳의 응답 × 2엔진 × 3회 = 24건 중 이름이 나온 건수</caption>
+      <caption>추천형 질문 두 개 — 4곳의 응답 × 2엔진 × 4회 = 32건 중 이름이 나온 건수</caption>
       <thead><tr><th class="lead">병원</th><th>통역·외국인 환자 코디네이션</th><th>외국인용 자연스러운 눈 성형</th></tr></thead>
       <tbody>
-        <tr><td class="lead">JK Plastic Surgery</td><td class="n"><strong>23</strong></td><td class="n">7</td></tr>
-        <tr><td class="lead">디에이</td><td class="n">20</td><td class="n">3</td></tr>
-        <tr><td class="lead">바노바기</td><td class="n">19</td><td class="n">6</td></tr>
-        <tr><td class="lead">View Plastic Surgery</td><td class="n">18</td><td class="n"><strong>9</strong></td></tr>
-        <tr><td class="lead">NANA Plastic Surgery</td><td class="n">14</td><td class="n">5</td></tr>
-        <tr><td class="lead">아이디</td><td class="n">13</td><td class="n">0</td></tr>
-        <tr><td class="lead">AB Plastic Surgery</td><td class="n">10</td><td class="n">8</td></tr>
+        <tr><td class="lead">JK Plastic Surgery</td><td class="n"><strong>31</strong></td><td class="n">8</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">27</td><td class="n">4</td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">25</td><td class="n">8</td></tr>
+        <tr><td class="lead">View Plastic Surgery</td><td class="n">24</td><td class="n"><strong>12</strong></td></tr>
+        <tr><td class="lead">아이디</td><td class="n">17</td><td class="n">0</td></tr>
+        <tr><td class="lead">NANA Plastic Surgery</td><td class="n">16</td><td class="n">6</td></tr>
+        <tr><td class="lead">AB Plastic Surgery</td><td class="n">14</td><td class="n"><strong>12</strong></td></tr>
         <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n"><strong>0</strong></td><td class="n"><strong>0</strong></td></tr>
       </tbody>
     </table>
@@ -234,35 +231,35 @@
 </section>
 
 <section>
-  <p class="eyebrow">세 번 같은 방향 ②</p>
+  <p class="eyebrow">네 번 같은 방향 ②</p>
   <h2>영어 답변의 근거는 의료관광 플랫폼과 공공 포털이다</h2>
   <div class="scroller">
     <table>
-      <caption>4곳의 공통 질문 응답에 달린 인용 출처 비중 — 한국어 2,062건 · 영어 2,418 / 2,431 / 2,501건</caption>
-      <thead><tr><th class="lead">출처 묶음</th><th>한국어</th><th class="brk">영어 1차</th><th>2차</th><th>3차</th></tr></thead>
+      <caption>4곳의 공통 질문 응답에 달린 인용 출처 비중 — 한국어 2,062건 · 영어 2,418 / 2,431 / 2,501 / 2,398건</caption>
+      <thead><tr><th class="lead">출처 묶음</th><th>한국어</th><th class="brk">영어 1차</th><th>2차</th><th>3차</th><th>4차</th></tr></thead>
       <tbody>
-        <tr class="hi"><td class="lead">해외 의료관광 플랫폼·후기 <span class="dim">(bookimed · placidway · RealSelf · Reddit 등)</span></td><td class="n">0.4%</td><td class="n brk"><strong>16.6%</strong></td><td class="n"><strong>18.6%</strong></td><td class="n"><strong>20.2%</strong></td></tr>
-        <tr class="hi"><td class="lead">공공 의료관광 포털 <span class="dim">(VisitKorea 영문 · 강남구 의료관광 · Medical Korea)</span></td><td class="n">0.6%</td><td class="n brk"><strong>10.4%</strong></td><td class="n"><strong>7.7%</strong></td><td class="n"><strong>10.5%</strong></td></tr>
-        <tr><td class="lead">네이버 블로그</td><td class="n">4.0%</td><td class="n brk">0.1%</td><td class="n">0.0%</td><td class="n">0.0%</td></tr>
-        <tr><td class="lead">강남언니</td><td class="n">2.8%</td><td class="n brk">1.4%</td><td class="n">1.3%</td><td class="n">1.2%</td></tr>
-        <tr><td class="lead">4곳 자사 사이트 합계</td><td class="n">4.8%</td><td class="n brk">4.0%</td><td class="n">3.7%</td><td class="n">2.4%</td></tr>
+        <tr class="hi"><td class="lead">해외 의료관광 플랫폼·후기 <span class="dim">(bookimed · placidway · RealSelf · Reddit 등)</span></td><td class="n">0.4%</td><td class="n brk"><strong>16.6%</strong></td><td class="n"><strong>18.6%</strong></td><td class="n"><strong>20.2%</strong></td><td class="n"><strong>16.9%</strong></td></tr>
+        <tr class="hi"><td class="lead">공공 의료관광 포털 <span class="dim">(VisitKorea 영문 · 강남구 의료관광 · Medical Korea)</span></td><td class="n">0.6%</td><td class="n brk"><strong>10.4%</strong></td><td class="n"><strong>7.7%</strong></td><td class="n"><strong>10.5%</strong></td><td class="n"><strong>10.0%</strong></td></tr>
+        <tr><td class="lead">네이버 블로그</td><td class="n">4.0%</td><td class="n brk">0.1%</td><td class="n">0.0%</td><td class="n">0.0%</td><td class="n">0.0%</td></tr>
+        <tr><td class="lead">강남언니</td><td class="n">2.8%</td><td class="n brk">1.4%</td><td class="n">1.3%</td><td class="n">1.2%</td><td class="n">1.0%</td></tr>
+        <tr><td class="lead">4곳 자사 사이트 합계</td><td class="n">4.8%</td><td class="n brk">4.0%</td><td class="n">3.7%</td><td class="n">2.4%</td><td class="n">3.1%</td></tr>
       </tbody>
     </table>
   </div>
   <div class="scroller">
     <table>
-      <caption>영어 공통 질문 응답의 상위 출처 (1 · 2 · 3차 비중)</caption>
-      <thead><tr><th class="lead">출처</th><th>1차</th><th>2차</th><th>3차</th><th class="lead">성격</th></tr></thead>
+      <caption>영어 공통 질문 응답의 상위 출처 (1 · 2 · 3 · 4차 비중)</caption>
+      <thead><tr><th class="lead">출처</th><th>1차</th><th>2차</th><th>3차</th><th>4차</th><th class="lead">성격</th></tr></thead>
       <tbody>
-        <tr><td class="lead"><code>us-uk.bookimed.com</code></td><td class="n">4.3%</td><td class="n">5.3%</td><td class="n">5.8%</td><td class="lead dim">해외 의료관광 예약 플랫폼</td></tr>
-        <tr><td class="lead"><code>medicalkorea.or.kr</code></td><td class="n">3.1%</td><td class="n">3.2%</td><td class="n">3.8%</td><td class="lead dim">한국보건산업진흥원 의료관광 포털</td></tr>
-        <tr><td class="lead"><code>placidway.com</code></td><td class="n">3.1%</td><td class="n">3.7%</td><td class="n">3.4%</td><td class="lead dim">해외 의료관광 플랫폼</td></tr>
-        <tr><td class="lead"><code>english.visitkorea.or.kr</code></td><td class="n">3.6%</td><td class="n">2.3%</td><td class="n">3.4%</td><td class="lead dim">한국관광공사 영문 의료관광</td></tr>
-        <tr><td class="lead"><code>medicaltour.gangnam.go.kr</code></td><td class="n">3.5%</td><td class="n">2.2%</td><td class="n">3.2%</td><td class="lead dim">강남구 의료관광</td></tr>
-        <tr><td class="lead"><code>realself.com</code></td><td class="n">2.2%</td><td class="n">2.6%</td><td class="n">3.2%</td><td class="lead dim">해외 성형 후기</td></tr>
-        <tr><td class="lead"><code>pmc.ncbi.nlm.nih.gov</code></td><td class="n">3.6%</td><td class="n">4.0%</td><td class="n">2.7%</td><td class="lead dim">의학 논문</td></tr>
-        <tr><td class="lead"><code>viewplasticsurgery.com</code></td><td class="n">2.4%</td><td class="n">2.1%</td><td class="n">1.7%</td><td class="lead dim">View 영문 사이트</td></tr>
-        <tr><td class="lead"><code>reddit.com</code></td><td class="n">1.9%</td><td class="n">1.9%</td><td class="n">1.7%</td><td class="lead dim">해외 이용자 커뮤니티</td></tr>
+        <tr><td class="lead"><code>us-uk.bookimed.com</code></td><td class="n">4.3%</td><td class="n">5.3%</td><td class="n">5.8%</td><td class="n">3.6%</td><td class="lead dim">해외 의료관광 예약 플랫폼</td></tr>
+        <tr><td class="lead"><code>medicalkorea.or.kr</code></td><td class="n">3.1%</td><td class="n">3.2%</td><td class="n">3.8%</td><td class="n">3.3%</td><td class="lead dim">한국보건산업진흥원 의료관광 포털</td></tr>
+        <tr><td class="lead"><code>placidway.com</code></td><td class="n">3.1%</td><td class="n">3.7%</td><td class="n">3.4%</td><td class="n">2.5%</td><td class="lead dim">해외 의료관광 플랫폼</td></tr>
+        <tr><td class="lead"><code>english.visitkorea.or.kr</code></td><td class="n">3.6%</td><td class="n">2.3%</td><td class="n">3.4%</td><td class="n">4.0%</td><td class="lead dim">한국관광공사 영문 의료관광</td></tr>
+        <tr><td class="lead"><code>medicaltour.gangnam.go.kr</code></td><td class="n">3.5%</td><td class="n">2.2%</td><td class="n">3.2%</td><td class="n">2.4%</td><td class="lead dim">강남구 의료관광</td></tr>
+        <tr><td class="lead"><code>realself.com</code></td><td class="n">2.2%</td><td class="n">2.6%</td><td class="n">3.2%</td><td class="n">3.3%</td><td class="lead dim">해외 성형 후기</td></tr>
+        <tr><td class="lead"><code>pmc.ncbi.nlm.nih.gov</code></td><td class="n">3.6%</td><td class="n">4.0%</td><td class="n">2.7%</td><td class="n">3.3%</td><td class="lead dim">의학 논문</td></tr>
+        <tr><td class="lead"><code>viewplasticsurgery.com</code></td><td class="n">2.4%</td><td class="n">2.1%</td><td class="n">1.7%</td><td class="n">1.6%</td><td class="lead dim">View 영문 사이트</td></tr>
+        <tr><td class="lead"><code>reddit.com</code></td><td class="n">1.9%</td><td class="n">1.9%</td><td class="n">1.7%</td><td class="n">2.2%</td><td class="lead dim">해외 이용자 커뮤니티</td></tr>
       </tbody>
     </table>
   </div>
@@ -270,23 +267,23 @@
 </section>
 
 <section>
-  <p class="eyebrow">세 번 같은 방향 ③</p>
+  <p class="eyebrow">네 번 같은 방향 ③</p>
   <h2>영문 사이트가 근거로 쓰이는 곳은 아이디다</h2>
   <div class="scroller">
     <table>
       <caption>전체 응답의 인용 중 자기 병원 사이트 비중 (자사 인용률)</caption>
-      <thead><tr><th class="lead">병원</th><th>영어 1차</th><th>2차</th><th>3차</th><th>한국어</th><th class="lead">영문 사이트</th></tr></thead>
+      <thead><tr><th class="lead">병원</th><th>영어 1차</th><th>2차</th><th>3차</th><th>4차</th><th>한국어</th><th class="lead">영문 사이트</th></tr></thead>
       <tbody>
-        <tr class="hi"><td class="lead"><strong>아이디</strong></td><td class="n"><strong>21.7%</strong></td><td class="n"><strong>21.4%</strong></td><td class="n"><strong>22.9%</strong></td><td class="n">11.4%</td><td class="lead"><code>en.idhospital.com</code></td></tr>
-        <tr><td class="lead">바노바기</td><td class="n">15.8%</td><td class="n">16.2%</td><td class="n">16.8%</td><td class="n">12.4%</td><td class="lead"><code>eng.banobagi.com</code></td></tr>
-        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n dim">—</td><td class="n">15.5%</td><td class="n dim">—</td><td class="lead"><code>viewplasticsurgery.com</code></td></tr>
-        <tr><td class="lead">디에이</td><td class="n">10.6%</td><td class="n">10.1%</td><td class="n">8.7%</td><td class="n">16.8%</td><td class="lead"><code>daprseng.com</code></td></tr>
-        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n dim">—</td><td class="n">10.5%</td><td class="n dim">—</td><td class="lead"><code>abplasticsurgerykorea.com</code></td></tr>
-        <tr><td class="lead">더스완</td><td class="n">6.9%</td><td class="n">9.6%</td><td class="n">6.3%</td><td class="n">14.4%</td><td class="lead dim">없음</td></tr>
+        <tr class="hi"><td class="lead"><strong>아이디</strong></td><td class="n"><strong>21.7%</strong></td><td class="n"><strong>21.4%</strong></td><td class="n"><strong>22.9%</strong></td><td class="n"><strong>19.2%</strong></td><td class="n">11.4%</td><td class="lead"><code>en.idhospital.com</code></td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">15.8%</td><td class="n">16.2%</td><td class="n">16.8%</td><td class="n">15.9%</td><td class="n">12.4%</td><td class="lead"><code>eng.banobagi.com</code></td></tr>
+        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n dim">—</td><td class="n">15.5%</td><td class="n">14.1%</td><td class="n dim">—</td><td class="lead"><code>viewplasticsurgery.com</code></td></tr>
+        <tr><td class="lead">디에이</td><td class="n">10.6%</td><td class="n">10.1%</td><td class="n">8.7%</td><td class="n">8.9%</td><td class="n">16.8%</td><td class="lead"><code>daprseng.com</code></td></tr>
+        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n dim">—</td><td class="n">10.5%</td><td class="n">10.4%</td><td class="n dim">—</td><td class="lead"><code>abplasticsurgerykorea.com</code></td></tr>
+        <tr><td class="lead">더스완</td><td class="n">6.9%</td><td class="n">9.6%</td><td class="n">6.3%</td><td class="n">8.4%</td><td class="n">14.4%</td><td class="lead dim">없음</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note">아이디는 한국어 질문에서 4곳 중 가장 적게 인용됐는데, 영어 질문에서는 세 번 모두 가장 많이 인용됐다. 더스완은 한국어에서 자기 사이트가 꽤 인용됐지만(14.4%) 영어에서는 가장 낮다. 영문 사이트 유무와 같은 방향의 결과지만, 그것이 원인이라고 확인한 것은 아니다.</p>
+  <p class="note">아이디는 한국어 질문에서 4곳 중 가장 적게 인용됐는데, 영어 질문에서는 네 번 모두 4곳 중 가장 많이 인용됐고, View·AB를 더한 3·4차에도 6곳 중 가장 높았다. 더스완은 한국어에서 자기 사이트가 꽤 인용됐지만(14.4%) 영어에서는 가장 낮다. 영문 사이트 유무와 같은 방향의 결과지만, 그것이 원인이라고 확인한 것은 아니다.</p>
 </section>
 
 <section>
@@ -323,26 +320,40 @@
 </section>
 
 <section>
-  <p class="eyebrow">세 번 같은 방향 ④</p>
+  <p class="eyebrow">네 번 같은 방향 ④</p>
   <h2>해외 환자 앞의 경쟁 상대는 목록 밖에 있었다</h2>
   <div class="scroller">
     <table>
       <caption>4곳의 공통 질문 응답 176건(회당)에서 이름이 나온 응답 수 — 이름 패턴으로 센 값</caption>
-      <thead><tr><th class="lead">병원</th><th>1차</th><th>2차</th><th>3차</th></tr></thead>
+      <thead><tr><th class="lead">병원</th><th>1차</th><th>2차</th><th>3차</th><th>4차</th></tr></thead>
       <tbody>
-        <tr><td class="lead">바노바기 <span class="dim">(측정 대상)</span></td><td class="n">19</td><td class="n">25</td><td class="n">15</td></tr>
-        <tr><td class="lead">AB Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">15</td><td class="n">16</td><td class="n">25</td></tr>
-        <tr><td class="lead">View Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">18</td><td class="n">12</td><td class="n">13</td></tr>
-        <tr><td class="lead">디에이 <span class="dim">(측정 대상)</span></td><td class="n">14</td><td class="n">16</td><td class="n">12</td></tr>
-        <tr><td class="lead">JK Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">11</td><td class="n">13</td><td class="n">14</td></tr>
-        <tr><td class="lead">아이디 <span class="dim">(측정 대상)</span></td><td class="n">9</td><td class="n">11</td><td class="n">10</td></tr>
-        <tr><td class="lead">Braun Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">9</td><td class="n">10</td><td class="n">7</td></tr>
-        <tr class="hi"><td class="lead">더스완 <span class="dim">(측정 대상)</span></td><td class="n">0</td><td class="n">0</td><td class="n">1 <span class="dim">(출처 링크)</span></td></tr>
+        <tr><td class="lead">바노바기 <span class="dim">(측정 대상)</span></td><td class="n">19</td><td class="n">25</td><td class="n">15</td><td class="n">16</td></tr>
+        <tr><td class="lead">AB Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">15</td><td class="n">16</td><td class="n">25</td><td class="n">20</td></tr>
+        <tr><td class="lead">View Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">18</td><td class="n">12</td><td class="n">13</td><td class="n">18</td></tr>
+        <tr><td class="lead">디에이 <span class="dim">(측정 대상)</span></td><td class="n">14</td><td class="n">16</td><td class="n">12</td><td class="n">13</td></tr>
+        <tr><td class="lead">JK Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">11</td><td class="n">13</td><td class="n">14</td><td class="n">12</td></tr>
+        <tr><td class="lead">아이디 <span class="dim">(측정 대상)</span></td><td class="n">9</td><td class="n">11</td><td class="n">10</td><td class="n">10</td></tr>
+        <tr><td class="lead">Braun Plastic Surgery <span class="dim">(1·2차 목록 밖)</span></td><td class="n">9</td><td class="n">10</td><td class="n">7</td><td class="n">7</td></tr>
+        <tr class="hi"><td class="lead">더스완 <span class="dim">(측정 대상)</span></td><td class="n">0</td><td class="n">0</td><td class="n">1 <span class="dim">(출처 링크)</span></td><td class="n">0</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="lede">AB·View·JK·Braun은 1·2차 때 경쟁사 목록에 없었는데, 세 번 모두 측정 대상 병원과 비슷하거나 더 자주 불렸다. 3차에서 넷을 경쟁사 목록에 넣고 AB·View는 측정 대상으로 함께 쟀다. <strong>View는 공통 질문 언급률 13.6%(6/44)로 6곳 중 가장 높았다.</strong></p>
-  <p class="note">SoM(경쟁사 대비 언급 점유)은 목록에 있는 이름만 센다. 목록을 넓히자 4곳의 SoM이 크게 낮아졌다 — 바노바기는 2차 57%에서 3차 8%가 됐다. 해외 환자 시장의 실제 경쟁을 넣고 보면 4곳의 몫은 각각 10% 안팎(더스완 0%)이다. AB·View는 자기 경쟁사 목록이 없어 SoM을 계산하지 않았다.</p>
+  <p class="lede">AB·View·JK·Braun은 1·2차 때 경쟁사 목록에 없었는데, 네 번 모두 측정 대상 병원과 비슷하거나 더 자주 불렸다. 3차부터 넷을 경쟁사 목록에 넣고 AB·View는 측정 대상으로 함께 쟀다. <strong>3·4차 두 번 모두 View가 공통 질문 언급률(6/44)과 점수 1위</strong>였다.</p>
+  <div class="scroller">
+    <table>
+      <caption>4차 SoM — 6곳이 같은 경쟁사 범위(측정 6곳 + JK·Braun)로 센 언급 점유</caption>
+      <thead><tr><th class="lead">병원</th><th>SoM</th><th>자사 + 경쟁사 언급</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead"><strong>View</strong></td><td class="n"><strong>24.0%</strong></td><td class="n">25번</td></tr>
+        <tr><td class="lead">AB</td><td class="n">17.4%</td><td class="n">23번</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">12.5%</td><td class="n">32번</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">8.3%</td><td class="n">24번</td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">4.2%</td><td class="n">24번</td></tr>
+        <tr><td class="lead">더스완</td><td class="n">0.0%</td><td class="n">30번</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">SoM(경쟁사 대비 언급 점유)은 목록에 있는 이름만 센다. 목록을 넓히자 원래 4곳의 SoM이 크게 낮아졌다 — 바노바기는 2차 57%에서 3차 8%, 4차 4%가 됐다. 해외 환자 시장의 실제 경쟁을 넣고 보면 원래 4곳의 몫은 0~13%이고, View·AB가 더 크다. 3차에는 AB·View에 경쟁사 목록이 없어 SoM을 내지 못했고, 4차에 같은 목록을 넣어 6곳을 같은 잣대로 쟀다.</p>
 </section>
 
 <section>
@@ -370,8 +381,8 @@
     <p>엔진은 한국에서 호출했다. 미국·동남아 등에서 실제 해외 환자가 검색하면 근거 출처와 추천 병원이 다를 수 있다.</p>
   </div>
   <div class="finding sev-mid">
-    <h3><span class="chip mid">주의</span> 세 번, 같은 날 쟀다</h3>
-    <p>세 번 같은 방향이라 비교적 믿을 만하지만, 주가 바뀌어도 같은지는 아직 모른다. 순위는 잴 때마다 뒤집혔으므로 결론으로 쓰지 않는다. 3차는 경쟁사 목록이 넓어져 점수·SoM이 1·2차와 같은 잣대가 아니다.</p>
+    <h3><span class="chip mid">주의</span> 네 번, 같은 날 쟀다</h3>
+    <p>네 번 같은 방향이라 비교적 믿을 만하지만, 주가 바뀌어도 같은지는 아직 모른다. 원래 4곳의 순위는 잴 때마다 뒤집혔으므로 결론으로 쓰지 않는다. 3·4차는 경쟁사 목록이 넓어져 점수·SoM이 1·2차와 같은 잣대가 아니다. View 1위는 두 번(3·4차)만 본 결과다.</p>
   </div>
   <div class="finding sev-mid">
     <h3><span class="chip mid">주의</span> 병원 이름은 패턴으로 셌다</h3>
@@ -383,8 +394,6 @@
   <p class="eyebrow">다음</p>
   <h2>데모 전에 할 일</h2>
   <ol class="todo">
-    <li><b>View·AB에도 경쟁사 목록 채우기</b>
-      <p>지금은 두 곳의 SoM이 계산되지 않는다. 6곳이 같은 목록으로 SoM을 받아야 서로 비교할 수 있다.</p></li>
     <li><b>영문 사이트 시술 페이지 진단</b>
       <p>홈 진단은 끝났다. 해외 환자가 많이 묻는 눈·코·안면윤곽 페이지와 비용·통역 안내 페이지를 이어서 진단한다.</p></li>
     <li><b>영어 콘텐츠 생성</b>
@@ -395,7 +404,7 @@
 </section>
 
 <footer>
-  2026-10-01 영어 측정 3회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1·2차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더했고 AB·View는 측정 대상으로 함께 쟀다. 점수는 v0.2.57 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 Site AEO Checker의 채점 모듈로 스크립트 없이 HTML을 읽어 매겼다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
+  2026-10-01 영어 측정 4회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1~3차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더하고 AB·View는 측정 대상으로 함께 쟀으며, 4차부터 AB·View에도 같은 경쟁사 목록을 넣었다. 점수는 v0.2.57 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 Site AEO Checker의 채점 모듈로 스크립트 없이 HTML을 읽어 매겼다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
 </footer>
 
 </div>
@@ -403,12 +412,12 @@
 <script>
   (function () {
     var rows = [
-      { name: '바노바기', ko: 11, e1: 10, e2: 28, e3: 9 },
-      { name: '디에이', ko: 11, e1: 19, e2: 12, e3: 8 },
-      { name: '아이디', ko: 6, e1: 18, e2: 16, e3: 12 },
-      { name: '더스완', ko: 8, e1: 2, e2: 3, e3: 2, focus: true },
-      { name: 'View', ko: null, e1: null, e2: null, e3: 13 },
-      { name: 'AB', ko: null, e1: null, e2: null, e3: 8 }
+      { name: '바노바기', ko: 11, en: [10, 28, 9, 7] },
+      { name: '디에이', ko: 11, en: [19, 12, 8, 7] },
+      { name: '아이디', ko: 6, en: [18, 16, 12, 11] },
+      { name: '더스완', ko: 8, en: [2, 3, 2, 2], focus: true },
+      { name: 'View', ko: null, en: [null, null, 13, 16] },
+      { name: 'AB', ko: null, en: [null, null, 8, 12] }
     ];
     var W = 720, H = 270, L = 110, R = 30, T = 12, B = 28, xmin = 0, xmax = 30;
     var x = function (v) { return L + (v - xmin) / (xmax - xmin) * (W - L - R); };
@@ -438,21 +447,22 @@
       tip.classList.add('on');
     };
     var hide = function () { tip.classList.remove('on'); };
+    var dot = function (d, i, v, label, fill, stroke) {
+      var c = el('circle', { cx: x(v), cy: y(i), r: 5.5, fill: fill, stroke: stroke, 'stroke-width': 2, tabindex: 0 });
+      var text = d.name + ' · ' + label + ' ' + v + '점';
+      c.setAttribute('aria-label', text);
+      c.addEventListener('mouseenter', function (e) { show(e, text); });
+      c.addEventListener('focus', function (e) { show(e, text); });
+      c.addEventListener('mouseleave', hide);
+      c.addEventListener('blur', hide);
+    };
     rows.forEach(function (d, i) {
       var label = el('text', { x: L - 12, y: y(i) + 4, 'text-anchor': 'end', 'font-size': d.focus ? 12 : 11, 'font-weight': d.focus ? 600 : 400, fill: d.focus ? 'var(--ink)' : 'var(--muted)', 'font-family': 'var(--sans)' });
       label.textContent = d.name;
-      var en = [d.e1, d.e2, d.e3].filter(function (v) { return v !== null; });
-      if (en.length > 1) el('line', { x1: x(Math.min.apply(null, en)), x2: x(Math.max.apply(null, en)), y1: y(i), y2: y(i), stroke: 'var(--s1)', 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.45 });
-      [['ko', d.ko, '한국어', 'var(--surface)', 'var(--context)'], ['e1', d.e1, '영어 1차', 'var(--s1-soft)', 'var(--surface)'], ['e2', d.e2, '영어 2차', 'var(--surface)', 'var(--s1)'], ['e3', d.e3, '영어 3차', 'var(--s1)', 'var(--surface)']].forEach(function (s) {
-        if (s[1] === null) return;
-        var c = el('circle', { cx: x(s[1]), cy: y(i), r: 6, fill: s[3], stroke: s[4], 'stroke-width': 2, tabindex: 0 });
-        var text = d.name + ' · ' + s[2] + ' ' + s[1] + '점';
-        c.setAttribute('aria-label', text);
-        c.addEventListener('mouseenter', function (e) { show(e, text); });
-        c.addEventListener('focus', function (e) { show(e, text); });
-        c.addEventListener('mouseleave', hide);
-        c.addEventListener('blur', hide);
-      });
+      var en = d.en.filter(function (v) { return v !== null; });
+      if (en.length > 1) el('line', { x1: x(Math.min.apply(null, en)), x2: x(Math.max.apply(null, en)), y1: y(i), y2: y(i), stroke: 'var(--s1)', 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.4 });
+      if (d.ko !== null) dot(d, i, d.ko, '한국어', 'var(--surface)', 'var(--context)');
+      d.en.forEach(function (v, k) { if (v !== null) dot(d, i, v, '영어 ' + (k + 1) + '차', 'var(--s1)', 'var(--surface)'); });
     });
   })();
 </script>
