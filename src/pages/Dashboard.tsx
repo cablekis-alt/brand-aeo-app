@@ -360,7 +360,7 @@ export default function Dashboard() {
               <h2>Share of Mention</h2>
               <p>{formatPct(card.shareOfMention)}</p>
               <span>
-                {shareOfMentionNote(card) ?? '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'}
+                {shareOfMentionNote(card) ?? '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'} · 점수 미포함
               </span>
             </article>
             <article>

@@ -103,17 +103,18 @@ export function aggregateWeeklyMetrics(
   const brandOwnedCitationRate = totalCitations > 0 ? brandOwnedCitations / totalCitations : 0;
 
   // 자사 언급의 감성 계수(0.2~1.0) — 언급 문장의 sentiment 가중 평균. 언급이 없으면 1.0(중립 취급).
-  // Mention·SoM 성분에만 곱해 "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다(원시 비율은 화면 표시용으로 유지).
-  // 곱해지는 두 성분과 같은 모집단에서 낸다 — 안 그러면 성분과 계수가 서로 다른 질문 집합을 보게 된다.
+  // Mention 성분에만 곱해 "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다(원시 비율은 화면 표시용으로 유지).
+  // 곱해지는 성분과 같은 모집단에서 낸다 — 안 그러면 성분과 계수가 서로 다른 질문 집합을 보게 된다.
   const agnosticSentiments = categoryAgnostic.flatMap((a) =>
     a.mentionSentences.map((m) => sentimentWeight(m.sentiment)),
   );
   const mentionSentiment = agnosticSentiments.length > 0 ? mean(agnosticSentiments) : 1.0;
 
   // 점수는 위에서 확정한 집계 지표로 결정적으로 계산한다(화면 지표 → 공식 → 점수가 정확히 일치).
+  // SoM은 점수에 넣지 않는다 — 경쟁사 목록이 있는 브랜드만 잴 수 있어 코호트 안에서 같은 조건으로
+  // 비교할 수 없다(b8-report.ts 가중치 주석). 화면·리포트용으로 카드에만 남긴다.
   const score = computeAeoScore({
     mentionRate,
-    shareOfMention,
     avgRecommendationRank,
     brandOwnedCitationRate,
     mentionSentiment,
@@ -127,8 +128,6 @@ export function aggregateWeeklyMetrics(
       a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
-      // 집계 SoM이 빠진 주는 응답별 점수에서도 뺀다 — 중심(점수)과 분산이 서로 다른 지표 묶음을 보면 안 된다.
-      shareOfMention: shareOfMention !== null ? a.shareOfMention : null,
       avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
       mentionSentiment: perCallSentiment,
