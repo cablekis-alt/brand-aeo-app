@@ -1,7 +1,7 @@
 import { buildClaimCheckPrompt, type ClaimCheckItem, type ClaimCheckVerdict } from '../src/prompts/b5g-claim-check.js';
 import type { FactGraphNode } from '../src/prompts/types.js';
 import type { EngineClient } from './engines/types.js';
-import type { GuardMode } from './factGuard.js';
+import { containsValue, type GuardMode } from './factGuard.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 /**
@@ -32,7 +32,8 @@ export async function findOverclaims(
 
   const items: ClaimCheckItem[] = [];
   for (const sentence of new Set(sentences)) {
-    const hits = facts.filter((f) => f.value && sentence.includes(f.value));
+    // 사실 가드와 같은 대조 규칙(대소문자 무시) — 다르면 "since 2005" 문장이 격상 검사를 건너뛴다.
+    const hits = facts.filter((f) => f.value && containsValue(sentence, f.value));
     if (hits.length) items.push({ id: items.length + 1, sentence, facts: hits.map((f) => `${f.claim}: ${f.value}`) });
   }
   if (items.length === 0) return { overclaimed, notes };
