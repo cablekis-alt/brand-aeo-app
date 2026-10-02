@@ -146,9 +146,9 @@
 <div class="wrap">
 
 <header class="top">
-  <p class="eyebrow">내부 검토 · 주간 스코어카드 · 코호트 랭킹 · W40 3회 측정 · 현재 점수 기준(v0.2.42) 반영</p>
+  <p class="eyebrow">내부 검토 · 주간 스코어카드 · 코호트 랭킹 · W40 3회 측정 · v0.2.64 점수 기준 반영</p>
   <h1>스테이,머뭄 5주 추이, 어디까지 믿을 수 있나</h1>
-  <p class="lede">W36부터 W40까지 점수는 7 → 30 → 19 → 27 → 7, 코호트 순위는 3위 → 1위 → 2위 → 2위 → 5위다. 2026-09-30에 추천 순위 계산 기준을 바꾸고(v0.2.41) 사실성을 점수에서 뺀 뒤(v0.2.42) 다섯 주를 모두 다시 계산한 값이다. W40은 같은 날 세 번 쟀다. 두 번째 측정부터 경쟁사도 같은 문항 수와 같은 지표로 비교되고, 세 번째는 두 번째와 설정이 같다. 그 결과 스테이,머뭄의 W40 하락은 <strong>세 번 모두 확인됐고</strong>, 경쟁사 사이의 순위는 <strong>한 번 측정으로는 믿기 어려울 만큼 흔들린다</strong>는 것도 드러났다.</p>
+  <p class="lede">W36부터 W40까지 점수는 3 → 29 → 14 → 27 → 6, 코호트 순위는 3위 → 1위 → 2위 → 2위 → 5위다. 추천 순위 계산 기준(v0.2.41)·사실성 제외(v0.2.42)에 이어 v0.2.62에서 SoM도 점수에서 뺀 뒤 다섯 주를 모두 다시 계산한 값이다(점수 = 언급률 25 : 자사 인용 20 : 추천 순위 15). W40은 같은 날 세 번 쟀다. 두 번째 측정부터 경쟁사도 같은 문항 수와 같은 지표로 비교되고, 세 번째는 두 번째와 설정이 같다. 그 결과 스테이,머뭄의 W40 하락은 <strong>세 번 모두 확인됐고</strong>, 경쟁사 사이의 순위는 <strong>한 번 측정으로는 믿기 어려울 만큼 흔들린다</strong>는 것도 드러났다.</p>
   <dl class="meta">
     <div><dt>브랜드</dt><dd>스테이,머뭄 (web4ai)</dd></div>
     <div><dt>코호트</dt><dd>펜션 · 전북 군산 · 6곳</dd></div>
@@ -167,7 +167,7 @@
       <span><i class="lk brk"></i>모두의 조건이 바뀐 지점</span>
       <span><i class="lk brk2"></i>경쟁사 조건만 바뀐 지점</span>
     </div>
-    <svg class="plot" id="plot" viewBox="0 0 720 300" role="img" aria-label="W36부터 W40까지 코호트 6곳의 Brand AEO Score 추이. 스테이,머뭄은 7, 30, 19, 27, 7."></svg>
+    <svg class="plot" id="plot" viewBox="0 0 720 300" role="img" aria-label="W36부터 W40까지 코호트 6곳의 Brand AEO Score 추이. 스테이,머뭄은 3, 29, 14, 27, 6."></svg>
     <div class="tip" id="tip"></div>
   </div>
   <p class="note">W36→W37에는 수집 엔진과 문항 수가, W38→W39에는 Perplexity 모델과 스테이,머뭄의 문항 수가 바뀌었다. W39→W40에는 경쟁사만 바뀌었다(문항 36→42, SoM 산출 시작). W40 값은 세 번째 측정이다. <strong>스테이,머뭄 자신의 점수는 W37–W38, W39–W40을 비교할 수 있고, 코호트 순위는 W37–W38만 같은 조건이다.</strong></p>
@@ -178,14 +178,14 @@
   <h2>스테이,머뭄 지표별 5주</h2>
   <div class="scroller">
     <table>
-      <caption>언급률·SoM은 category-agnostic 문항에서만 계산한다. 추천 순위는 낮을수록 좋다. 사실성은 정확도로 따로 보여 주고 점수에는 넣지 않는다(v0.2.42). W40은 3차 측정값, 괄호는 1차 · 2차.</caption>
+      <caption>언급률·SoM은 category-agnostic 문항에서만 계산한다. 추천 순위는 낮을수록 좋다. SoM·사실성은 따로 보여 주고 점수에는 넣지 않는다(v0.2.62·v0.2.42). W40은 3차 측정값, 괄호는 1차 · 2차.</caption>
       <thead><tr><th class="lead">지표</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40</th></tr></thead>
       <tbody>
-        <tr class="hi"><td class="lead"><strong>Brand AEO Score</strong></td><td class="n">7</td><td class="n brk">30</td><td class="n">19</td><td class="n brk">27</td><td class="n brk2">7 <span class="dim">(4 · 4)</span></td></tr>
-        <tr><td class="lead dim">95% 신뢰구간</td><td class="n dim">1.3–12.7</td><td class="n dim brk">23.5–36.5</td><td class="n dim">12.0–26.0</td><td class="n dim brk">20.8–33.2</td><td class="n dim brk2">1.5–12.5</td></tr>
+        <tr class="hi"><td class="lead"><strong>Brand AEO Score</strong></td><td class="n">3</td><td class="n brk">29</td><td class="n">14</td><td class="n brk">27</td><td class="n brk2">6 <span class="dim">(3 · 3)</span></td></tr>
+        <tr><td class="lead dim">95% 신뢰구간</td><td class="n dim">0–7.7</td><td class="n dim brk">23.0–35.0</td><td class="n dim">7.6–20.4</td><td class="n dim brk">20.9–33.1</td><td class="n dim brk2">0.6–11.4</td></tr>
         <tr><td class="lead">코호트 순위</td><td class="n">3 / 6</td><td class="n brk">1 / 6</td><td class="n">2 / 6</td><td class="n brk">2 / 6</td><td class="n brk2">5 / 6 <span class="dim">(5 · 5)</span></td></tr>
         <tr><td class="lead">언급률</td><td class="n">6.2%</td><td class="n brk">22.7%</td><td class="n">25.0%</td><td class="n brk">17.9%</td><td class="n brk2">10.7% <span class="dim">(5.4% · 5.4%)</span></td></tr>
-        <tr><td class="lead">SoM</td><td class="n">16.0%</td><td class="n brk">32.1%</td><td class="n">28.8%</td><td class="n brk">28.2%</td><td class="n brk2">10.5% <span class="dim">(4.6% · 5.8%)</span></td></tr>
+        <tr><td class="lead">SoM <span class="dim">(점수 미포함)</span></td><td class="n">16.0%</td><td class="n brk">32.1%</td><td class="n">28.8%</td><td class="n brk">28.2%</td><td class="n brk2">10.5% <span class="dim">(4.6% · 5.8%)</span></td></tr>
         <tr><td class="lead">자사 인용률</td><td class="n">0.0%</td><td class="n brk">0.4%</td><td class="n">0.5%</td><td class="n brk">0.7%</td><td class="n brk2">0.6% <span class="dim">(0.5% · 0.7%)</span></td></tr>
         <tr><td class="lead">추천 순위</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim">확인 불가</td><td class="n brk">2.00</td><td class="n dim brk2">확인 불가 <span class="dim">(확인 불가 · 확인 불가)</span></td></tr>
         <tr><td class="lead">사실성 <span class="dim">(점수 미포함)</span></td><td class="n">66.7%</td><td class="n brk">100%</td><td class="n">100%</td><td class="n brk">100%</td><td class="n brk2">97.1% <span class="dim">(94.7% · 97.6%)</span></td></tr>
@@ -199,14 +199,14 @@
   <h2>6곳의 주차별 점수와 순위</h2>
   <div class="scroller">
     <table>
-      <caption>점수 (순위). 동점은 같은 순위다(W36 스테이옥도·라엘펜션 0점 공동 5위). 코호트 구성은 5주 내내 같은 6곳이다. W40은 3차 측정값이다. W40 2·3차는 여섯 곳이 같은 문항 수·같은 지표로 비교된 측정이다.</caption>
+      <caption>점수 (순위). 동점은 같은 순위다(W36 스테이옥도·라엘펜션 0점 공동 5위). 코호트 구성은 5주 내내 같은 6곳이다. W40은 3차 측정값이다. W40 2·3차는 여섯 곳이 같은 문항 수로 비교된 측정이다. 점수는 v0.2.64 기준이다.</caption>
       <thead><tr><th class="lead">브랜드</th><th>W36</th><th class="brk">W37</th><th>W38</th><th class="brk">W39</th><th class="brk2">W40</th></tr></thead>
       <tbody>
-        <tr><td class="lead">스테이 선연</td><td class="n">2 (4)</td><td class="n brk">8 (5)</td><td class="n">1 (5)</td><td class="n brk">3 (5)</td><td class="n brk2">16 (3)</td></tr>
-        <tr><td class="lead">스테이옥도</td><td class="n">0 (5)</td><td class="n brk">11 (3)</td><td class="n">11 (4)</td><td class="n brk">26 (3)</td><td class="n brk2">18 (2)</td></tr>
-        <tr><td class="lead">스테이 골목집</td><td class="n">31 (2)</td><td class="n brk">9 (4)</td><td class="n">13 (3)</td><td class="n brk">30 (1)</td><td class="n brk2">31 (1)</td></tr>
-        <tr><td class="lead">초원고택</td><td class="n">34 (1)</td><td class="n brk">18 (2)</td><td class="n">25 (1)</td><td class="n brk">7 (4)</td><td class="n brk2">10 (4)</td></tr>
-        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">7 (3)</td><td class="n brk">30 (1)</td><td class="n">19 (2)</td><td class="n brk">27 (2)</td><td class="n brk2">7 (5)</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">2 (4)</td><td class="n brk">8 (5)</td><td class="n">1 (5)</td><td class="n brk">3 (5)</td><td class="n brk2">9 (2)</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">0 (5)</td><td class="n brk">11 (3)</td><td class="n">11 (4)</td><td class="n brk">26 (3)</td><td class="n brk2">7 (4)</td></tr>
+        <tr><td class="lead">스테이 골목집</td><td class="n">31 (2)</td><td class="n brk">9 (4)</td><td class="n">13 (3)</td><td class="n brk">30 (1)</td><td class="n brk2">34 (1)</td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">34 (1)</td><td class="n brk">18 (2)</td><td class="n">25 (1)</td><td class="n brk">7 (4)</td><td class="n brk2">8 (3)</td></tr>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">3 (3)</td><td class="n brk">29 (1)</td><td class="n">14 (2)</td><td class="n brk">27 (2)</td><td class="n brk2">6 (5)</td></tr>
         <tr><td class="lead">라엘펜션</td><td class="n">0 (5)</td><td class="n brk">0 (6)</td><td class="n">0 (6)</td><td class="n brk">0 (6)</td><td class="n brk2">0 (6)</td></tr>
       </tbody>
     </table>
@@ -284,7 +284,7 @@
 
   <div class="finding sev-good">
     <h3><span class="chip good">해결</span> SoM을 스테이,머뭄만 안고 가던 문제</h3>
-    <p>W36~W40 1차까지 경쟁사 5곳은 경쟁사 목록이 없어 SoM이 계산되지 않았다. 그래서 스테이,머뭄만 5지표, 나머지는 4지표로 점수가 났다. v0.2.40에서 7곳 모두에 서로를 경쟁사로 넣었고, <strong>W40 2차부터 여섯 곳 모두 SoM이 계산된다.</strong> 경쟁사 점수가 1차보다 크게 바뀌었는데(현재 기준으로 골목집 35 → 12, 스테이 선연 15 → 25, 스테이옥도 6 → 20), 여기에는 새로 받은 SoM 감점과 아래의 측정 흔들림이 함께 들어 있어 둘을 나눠 말할 수는 없다. 설정이 같은 2차→3차에서도 골목집 12 → 31, 스테이 선연 25 → 16으로 움직였으므로, 흔들림만으로도 이만큼 바뀐다.</p>
+    <p>W36~W40 1차까지 경쟁사 5곳은 경쟁사 목록이 없어 SoM이 계산되지 않았다. 그래서 스테이,머뭄만 5지표, 나머지는 4지표로 점수가 났다. v0.2.40에서 7곳 모두에 서로를 경쟁사로 넣었고, <strong>W40 2차부터 여섯 곳 모두 SoM이 계산된다.</strong> 그 뒤 v0.2.62에서 SoM을 점수에서 아예 뺐다 — 경쟁사 목록이 있는 브랜드만 SoM을 가져 코호트 순위가 기울었기 때문이다. 그래서 지금 점수로 본 1차→2차 변화(골목집 35 → 8, 스테이 선연 15 → 17, 스테이옥도 6 → 8)는 문항 추가(36→42)와 측정 흔들림에서 나온 것이다. 설정이 같은 2차→3차에서도 골목집 8 → 34, 스테이 선연 17 → 9로 움직였으므로, 흔들림만으로도 이만큼 바뀐다.</p>
   </div>
 
   <div class="finding sev-good">
@@ -302,7 +302,7 @@
     <h3><span class="chip good">해결</span> 측정하지 않은 사실성이 100%로 채워지던 문제</h3>
     <p>사실성은 답변 속 사실을 팩트 그래프(공식 사실 정보)와 대조해 매긴다. 경쟁사 5곳은 <strong>팩트 그래프가 없어</strong> 판정이 한 번도 돌지 않았는데, v0.2.41까지는 판정이 0건이면 사실성이 <strong>100%로 채워졌다</strong>. 가중치 0.15짜리 지표를 공짜로 만점 받는 구조였다. 팩트 그래프가 18항목 있는 스테이,머뭄만 실제로 판정을 받아(W40 2차 42건) 94.7%·97.6%·97.1%로 <strong>깎일 수만 있었다</strong>.</p>
     <p>v0.2.41 기준 라엘펜션의 점수(W36~W39 25점, W40 18점)는 <strong>전부 이 값에서 나왔다.</strong> W40 1차에서는 한 번도 언급되지 않은 라엘펜션(25점)이 스테이,머뭄(20점)보다 위에 서기도 했다.</p>
-    <p>v0.2.42에서 사실성을 Brand AEO Score에서 빼고 정확도(%)로 따로 보여 주도록 바꿨고, 다섯 주와 W40 1차를 모두 다시 계산했다. 나머지 네 지표의 비율(25:25:20:15)은 그대로다. <strong>라엘펜션은 다섯 주 모두 0점</strong>이 됐고, 경쟁사 점수는 전반적으로 낮아졌다. 스테이,머뭄의 W36 순위가 6위에서 3위로 오른 것도 이 때문이다 — 경쟁사들이 사실성으로 받던 몫이 빠졌다.</p>
+    <p>v0.2.42에서 사실성을 Brand AEO Score에서 빼고 정확도(%)로 따로 보여 주도록 바꿨고, 다섯 주와 W40 1차를 모두 다시 계산했다. 나머지 네 지표의 비율(25:25:20:15)은 그대로였다(v0.2.62에서 SoM도 빠져 지금은 25:20:15). <strong>라엘펜션은 다섯 주 모두 0점</strong>이 됐고, 경쟁사 점수는 전반적으로 낮아졌다. 스테이,머뭄의 W36 순위가 6위에서 3위로 오른 것도 이 때문이다 — 경쟁사들이 사실성으로 받던 몫이 빠졌다.</p>
   </div>
 
   <div class="finding sev-mid">
@@ -343,6 +343,27 @@
 </section>
 
 <section>
+  <p class="eyebrow">W40 · 이후 측정</p>
+  <h2>앱의 W40 카드는 이 문서의 3차가 아니다</h2>
+  <p class="lede">이 문서를 쓴 뒤 W40을 두 번 더 쟀다. 같은 주를 다시 재면 그 주 카드를 덮어쓰므로, 지금 앱에 보이는 W40은 <strong>5차(10-02, 공유 질문지)</strong>다. 엔진이 3개로 늘고(ChatGPT 추가) 5차는 질문지까지 바뀌어, 위 1~3차와 바로 비교하지 않는다.</p>
+  <div class="scroller">
+    <table>
+      <caption>W40 4·5차 — 점수 (순위), v0.2.64 기준 · 4차는 백업에서 다시 계산</caption>
+      <thead><tr><th class="lead">브랜드</th><th>4차 <span class="dim">(10-01 · 엔진 3 · 개별 질문지)</span></th><th class="brk">5차 <span class="dim">(10-02 · 엔진 3 · 공유 질문지 v4)</span></th></tr></thead>
+      <tbody>
+        <tr><td class="lead">스테이 골목집</td><td class="n">34 (1)</td><td class="n brk">5 (1)</td></tr>
+        <tr class="hi"><td class="lead"><strong>스테이,머뭄</strong></td><td class="n">5 (4)</td><td class="n brk"><strong>3 (2)</strong></td></tr>
+        <tr><td class="lead">초원고택</td><td class="n">4 (5)</td><td class="n brk">2 (3)</td></tr>
+        <tr><td class="lead">스테이 선연</td><td class="n">27 (2)</td><td class="n brk">1 (4)</td></tr>
+        <tr><td class="lead">스테이옥도</td><td class="n">6 (3)</td><td class="n brk">0 (5)</td></tr>
+        <tr><td class="lead">라엘펜션</td><td class="n">0 (6)</td><td class="n brk">0 (5)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">5차는 여섯 곳이 처음으로 같은 일반 질문 26개를 받은 측정이다. 스테이,머뭄은 일반 질문 응답 78건 중 2건(2.6%)에서 불렸고 순위가 2위로 올랐지만, 점수가 모두 0~5점으로 낮아 순위 차이에 뜻을 두기 어렵다. 공유 질문지 결과는 아직 한 번뿐이라 W41 측정에서 같은 방향인지 본다.</p>
+</section>
+
+<section>
   <p class="eyebrow">다음</p>
   <h2>우선순위</h2>
   <ol class="todo">
@@ -358,7 +379,7 @@
 </section>
 
 <footer>
-  각 브랜드의 <code>scorecard-history.json</code>(W36–W40)과 스테이,머뭄·경쟁사의 <code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. W40 1·2차 결과는 재측정 전에 <code>userData/backup-2026-W40-run1/</code>·<code>backup-2026-W40-run2/</code>로 옮겨 두었고, 1·2차 값은 그 백업에서, 3차 값은 현재 데이터에서 읽었다. W36은 원문 기록이 없어 지표만 있다. 점수·순위·추천 순위는 2026-09-30 현재 기준(v0.2.41 추천 순위 · v0.2.42 사실성 제외)으로 다시 계산한 값이고, W40 1차도 백업한 판정 기록으로 같은 기준에 맞춰 다시 계산했다.
+  각 브랜드의 <code>scorecard-history.json</code>(W36–W40)과 스테이,머뭄·경쟁사의 <code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. W40 1·2차 결과는 재측정 전에 <code>userData/backup-2026-W40-run1/</code>·<code>backup-2026-W40-run2/</code>로 옮겨 두었고, 1·2차 값은 그 백업에서 읽었다. W36은 원문 기록이 없어 지표만 있다. 점수·순위·추천 순위는 v0.2.64 기준(v0.2.41 추천 순위 · v0.2.42 사실성 제외 · v0.2.62 SoM 제외)으로 다시 계산한 값이다. W40 1~4차는 백업한 판정 기록을 복사해 같은 기준으로 다시 계산했다(백업은 바꾸지 않았다) — 3차는 <code>backup-before-ci-clamp</code>, 4차는 <code>backup-before-som-out-rescore</code>에서, 5차는 현재 데이터에서 읽었다.
 </footer>
 
 </div>
@@ -366,12 +387,12 @@
 <script>
   (function () {
     var weeks = ['W36', 'W37', 'W38', 'W39', 'W40'];
-    var focus = { name: '스테이,머뭄', v: [7, 30, 19, 27, 7] };
+    var focus = { name: '스테이,머뭄', v: [3, 29, 14, 27, 6] };
     var ctx = [
-      { name: '스테이 선연',  v: [2, 8, 1, 3, 16] },
-      { name: '스테이옥도',   v: [0, 11, 11, 26, 18] },
-      { name: '스테이 골목집', v: [31, 9, 13, 30, 31] },
-      { name: '초원고택',     v: [34, 18, 25, 7, 10] },
+      { name: '스테이 선연',  v: [2, 8, 1, 3, 9] },
+      { name: '스테이옥도',   v: [0, 11, 11, 26, 7] },
+      { name: '스테이 골목집', v: [31, 9, 13, 30, 34] },
+      { name: '초원고택',     v: [34, 18, 25, 7, 8] },
       { name: '라엘펜션',     v: [0, 0, 0, 0, 0] }
     ];
     var W = 720, H = 300, L = 44, R = 110, T = 20, B = 36;
