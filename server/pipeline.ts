@@ -27,10 +27,12 @@ import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { aggregateWeeklyMetrics, ciBounds } from './aggregate.js';
 import { analyzeCitationSources, urlHost } from './citationSources.js';
+import { cohortRankingEntities } from './cohortEntities.js';
 import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { ResultStore } from './store.js';
+import { loadRuntimeTenants } from './tenantRegistry.js';
 import type {
   CompetitorMentionDetail,
   FactClaimDetail,
@@ -331,7 +333,11 @@ export function assertEnoughCoverage(
  * B5-A~D — 반복 호출 1건마다 독립적으로 판정한다 (3회를 합쳐서 요약한 뒤 판정하지 않는다).
  * 그래야 반복 간 분산이 그대로 살아남아 이후 신뢰구간 계산에 쓰일 수 있다.
  */
-async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promise<QuestionRepeatAnalysis> {
+async function analyzeRawCall(
+  tenant: TenantConfig,
+  call: RawCallRecord,
+  rankingEntities: string[],
+): Promise<QuestionRepeatAnalysis> {
   const judge = getJudgeClient();
   const brand = toBrandContext(tenant);
 
@@ -354,7 +360,7 @@ async function analyzeRawCall(tenant: TenantConfig, call: RawCallRecord): Promis
   const [mentionRaw, citationRaw, rankRaw, factRaw] = await Promise.all([
     judge.call(buildBrandMentionPrompt(brand, call.rawText)),
     citationPrompt ? judge.call(citationPrompt) : Promise.resolve(null),
-    judge.call(buildRecommendationOrderPrompt(brand, call.rawText)),
+    judge.call(buildRecommendationOrderPrompt(brand, call.rawText, rankingEntities)),
     tenant.factGraph.length > 0
       ? judge.call(buildFactCheckPrompt(brand, call.rawText, tenant.factGraph))
       : Promise.resolve(null),
@@ -530,10 +536,12 @@ export async function runWeeklyPipeline(
   // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
 
+  // 추천 순위는 코호트 전원이 같은 병원 목록으로 매긴다(server/cohortEntities.ts).
+  const rankingEntities = cohortRankingEntities(tenant, await loadRuntimeTenants());
   let analyzed = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '분석', done: 0, total: rawCalls.length });
   const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, async (call) => {
-    const out = await analyzeRawCall(tenant, call);
+    const out = await analyzeRawCall(tenant, call, rankingEntities);
     updateActiveMeasure(tenant.tenantId, { done: ++analyzed });
     return out;
   });
