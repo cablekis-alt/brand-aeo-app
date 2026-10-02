@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AEO 시험 결과 요약</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+  th.brk2, td.brk2 { border-left: 2px dotted var(--rule-2); }
+
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">내부 검토 · 시험 결과 요약 · 2026-10-01 – 10-02</p>
+  <h1>Brand AEO · Site AEO · 콘텐츠 가드, 무엇을 시험했고 무엇이 맞았나</h1>
+  <p class="lede">해외 환자 데모를 준비하며 세 가지를 시험했다. <strong>Brand AEO</strong>는 영어 질문으로 네 번 재서 같은 방향으로 나온 것만 골랐고, <strong>Site AEO</strong>는 채점 모듈의 본문 판정 결함 두 개를 고친 뒤 다시 쟀고, <strong>콘텐츠 가드</strong>는 원고가 사실보다 크게 말하지 않게 세 번 고쳤다. 고칠 때마다 먼저 틀리는 것을 재현했고, 고친 뒤 같은 시험으로 확인했다.</p>
+  <dl class="meta">
+    <div><dt>Brand AEO</dt><dd>영어 측정 4회 · 응답 1,440</dd></div>
+    <div><dt>Site AEO</dt><dd>영문 16쪽 · 기준선 7곳</dd></div>
+    <div><dt>콘텐츠</dt><dd>재현 시험 20건 · 원고 2편</dd></div>
+    <div><dt>반영</dt><dd>v0.2.56 – v0.2.61</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">한눈에</p>
+  <h2>요약</h2>
+  <div class="scroller">
+    <table>
+      <thead><tr><th class="lead">영역</th><th class="lead">시험</th><th class="lead">결과</th><th>반영</th></tr></thead>
+      <tbody>
+        <tr><td class="lead"><b>Brand AEO</b></td><td class="lead">강남 성형외과 4곳(+View·AB)을 해외 환자 영어 질문 36개로 4회 측정</td><td class="lead">순위는 매번 뒤집혔다 · 네 번 같은 방향 4가지는 확인</td><td class="n">v0.2.56–57</td></tr>
+        <tr><td class="lead"><b>Site AEO</b></td><td class="lead">영문 홈·시술 페이지 16쪽 진단 → 오판 2종 수정 → 재진단 · 기준선 7곳 회귀 확인</td><td class="lead">아이디 0점 → 66~82점 · 바노바기 허브 68 → 88점 · 기준선 7곳 변화 없음</td><td class="n">v0.2.60</td></tr>
+        <tr><td class="lead"><b>콘텐츠 가드</b></td><td class="lead">원고 사실 대조 — 오탐 1종·누락 2종을 재현 시험으로 고침</td><td class="lead">숫자 7/7 · 격상 13/13 (두 번 돌려 같음)</td><td class="n">v0.2.58–61</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Brand AEO</p>
+  <h2>영어 질문 4회 — 순위는 흔들리고, 네 가지는 같은 방향</h2>
+  <div class="scroller">
+    <table>
+      <caption>W40, 같은 질문(공통 22 · 브랜드 14) · Gemini·Perplexity · 3·4차는 View·AB 포함 6곳</caption>
+      <thead><tr><th class="lead">관찰</th><th>1차</th><th>2차</th><th>3차</th><th>4차</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">바노바기 점수 <span class="dim">(흔들림 예)</span></td><td class="n">10</td><td class="n">28</td><td class="n">9</td><td class="n">7</td></tr>
+        <tr class="hi"><td class="lead">더스완 공통 질문 언급</td><td class="n">0/44</td><td class="n">0/44</td><td class="n">0/44</td><td class="n">0/44</td></tr>
+        <tr class="hi"><td class="lead">자사 인용률 1위</td><td class="n">아이디 21.7%</td><td class="n">아이디 21.4%</td><td class="n">아이디 22.9%</td><td class="n">아이디 19.2%</td></tr>
+        <tr class="hi"><td class="lead">근거 출처 — 의료관광 플랫폼 / 공공 포털 <span class="dim">(한국어 0.4% / 0.6%)</span></td><td class="n">16.6 / 10.4%</td><td class="n">18.6 / 7.7%</td><td class="n">20.2 / 10.5%</td><td class="n">16.9 / 10.0%</td></tr>
+        <tr class="hi"><td class="lead">언급률·점수 1위</td><td class="n dim">—</td><td class="n dim">—</td><td class="n">View 6/44</td><td class="n">View 6/44</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">고객용 결론은 같은 방향으로 나온 것만 쓴다. 측정 전에 두 결함을 찾아 막았다 — 영어·한국어 측정이 같은 도메인이라 영어 측정이 한국어 테넌트를 재측정할 뻔한 경쟁사 선택(v0.2.56), 새 경쟁사가 질문 언어·공유 질문지를 물려받지 않아 한국어로 측정될 뻔한 문제(v0.2.57). 3차부터 경쟁사 목록을 넓혀 SoM 정의가 바뀌었다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Site AEO</p>
+  <h2>채점 모듈의 본문 판정 결함 두 개를 고쳤다</h2>
+  <div class="scroller">
+    <table>
+      <caption>결함 · 원인 · 수정 전 → 후</caption>
+      <thead><tr><th class="lead">결함</th><th class="lead">원인</th><th class="lead">수정 전 → 후</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">스트리밍 렌더링 본문을 「없음」으로 봄</td><td class="lead">Next.js가 본문을 <code>&lt;div hidden id="S:0"&gt;</code>에 담아 보내고 스크립트로 <code>&lt;main&gt;</code>에 옮김 — 빈 <code>&lt;main&gt;</code>만 봤다</td><td class="lead">아이디 홈 0 → 66 · 시술 4쪽 0 → 75~82</td></tr>
+        <tr><td class="lead"><code>&lt;main&gt;</code> 없는 페이지의 본문을 작은 블록으로 고름</td><td class="lead">처음 맞는 <code>#content</code>·<code>article</code>(572자)을 본문으로 삼았다 — 페이지엔 긴 문단 43개</td><td class="lead">바노바기 코·안면 68 → 88 · 눈 87 → 94</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">회귀 확인: 보정 하니스(<code>score-calibrate</code>) 기준선 7곳의 영역별 점수·총점이 수정 전과 같다(MAD 2.40). 배점은 건드리지 않았다. 함께 바로잡은 것: 아이디 「소개 페이지 90건 인용 · 404」는 주소를 앞 두 단계로 묶어 센 집계 실수였다 — 90건은 모두 정상인 하위 페이지 인용이다. 재진단 결과 세 병원 시술 페이지는 대부분 75~95점이고, 공통 약점은 글쓴이·게시일(E-E-A-T)이다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">콘텐츠 가드</p>
+  <h2>숫자는 코드가, 숫자 없는 격상은 판정 모델이 본다</h2>
+  <div class="scroller">
+    <table>
+      <caption>재현 시험 — 고치기 전 실패 → 고친 뒤</caption>
+      <thead><tr><th class="lead">문제</th><th class="lead">재현 사례</th><th>전</th><th>후</th></tr></thead>
+      <tbody>
+        <tr><td class="lead"><b>오탐</b> · 숫자 가드 <span class="dim">(v0.2.58)</span></td><td class="lead">전화번호 “+82. 2. 522. 6636”이 조각나 걸림 · “Line 2”의 2를 전화번호 숫자로 봄</td><td class="n">실패 2/7</td><td class="n"><strong>7/7</strong></td></tr>
+        <tr><td class="lead"><b>누락</b> · 숫자 없는 격상 <span class="dim">(v0.2.59)</span></td><td class="lead">「대표 원장」→ “founded by” · 「원장단」→ “medical team” · 「의료진 30명」→ “전문의 30명”</td><td class="n">실패 3/7</td><td class="n"><strong>9/9</strong></td></tr>
+        <tr><td class="lead"><b>누락</b> · 세는 단위 바뀜 <span class="dim">(v0.2.61)</span></td><td class="lead">「누적 외국인 환자 수」→ “patient visits” · 「수술 건수」→ “patients”</td><td class="n">실패 2/13</td><td class="n"><strong>13/13</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">실제 원고: 바노바기(사실 16 · 빈칸 3)와 아이디(사실 20 · 빈칸 3) 영어 해외 환자 안내. 사람이 고친 세 문장(“founded by”, “medical team”, “patient visits”)은 지금 가드라면 생성 단계에서 걸린다. 숫자 가드 수정 뒤 같은 원고에서 쓴 사실 13 → 19, 가드가 뺀 문장 10건 넘음 → 0건.</p>
+</section>
+
+<section>
+  <p class="eyebrow">한계</p>
+  <h2>남은 것</h2>
+  <ol class="todo">
+    <li><b>Brand AEO는 같은 날 네 번</b><p>주가 바뀌어도 같은지는 W41 이후 측정으로 확인한다. 측정 위치도 한국이다.</p></li>
+    <li><b>격상 가드는 판정 모델이다</b><p>세 번 중 두 번은 실제 원고에서 놓친 뒤 규칙을 더했다. 원고는 계속 사람이 마무리한다.</p></li>
+    <li><b>재현 시험은 저장소 밖에 있다</b><p>단위 시험 체계가 없어 스크래치 스크립트로 돌렸다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  Brand AEO: 설치본 W40 데이터와 1~3차 백업(<code>backup-2026-W40-en-run1~3</code>). Site AEO: 채점 모듈(<code>extractPage</code>·<code>scoreAeo</code>)을 Node에서 실행, 수집은 앱의 <code>collectPage</code>. 콘텐츠: 실제 데이터 사본에서 앱의 생성·저장 함수를 그대로 불러 시험, 판정은 gemini-3.7-flash. 상세는 데모 문서(강남 성형외과 영어 질문 측정)에 있다.
+</footer>
+
+</div>
+
+</body>
+</html>
