@@ -95,19 +95,6 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       text: formatPct(card.mentionRate),
     },
     {
-      key: 's',
-      letter: 'S',
-      label: 'Share of Mention',
-      weight: AEO_SCORE_WEIGHTS.shareOfMention,
-      value: card.shareOfMention,
-      text:
-        card.shareOfMention !== null
-          ? formatPct(card.shareOfMention)
-          : shareOfMentionShortSample(card) !== null
-            ? '판정 불가'
-            : '측정 불가',
-    },
-    {
       key: 'c',
       letter: 'C',
       label: '브랜드 소유 출처',
@@ -130,7 +117,7 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       <p className="eyebrow">Brand AEO Score · {weekLabel(card.weekOf)}</p>
       <p className="breakdown-total">
         <strong>{card.aeoScore.current}</strong>
-        <span className="muted">점 — 아래 네 항목을 가중 평균한 값입니다</span>
+        <span className="muted">점 — 아래 세 항목을 가중 평균한 값입니다</span>
       </p>
       <ul className="breakdown-rows">
         {rows.map((r) => (
@@ -151,9 +138,20 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       </ul>
       <p className="hint" style={{ marginBottom: 0 }}>
         막대는 점수에 실제로 들어가는 값입니다 — 추천 순위는 낮을수록 좋아 0~1로 환산해 그립니다.
-        M·S에는 감성 계수가 곱해집니다.
+        M에는 감성 계수가 곱해집니다.
         {missing.length > 0 &&
           ` ${missing.map((r) => r.letter).join('·')}는 측정할 수 없어 그 가중치를 빼고 남은 합으로 재정규화했습니다 — 0점으로 치지 않습니다.`}
+      </p>
+      {/* SoM은 경쟁사 목록이 있는 브랜드만 잴 수 있어 코호트 안에서 같은 조건으로 비교할 수 없다 — 점수 밖에 둔다. */}
+      <p className="hint" style={{ marginBottom: 0 }}>
+        Share of Mention{' '}
+        {card.shareOfMention !== null
+          ? formatPct(card.shareOfMention)
+          : shareOfMentionShortSample(card) !== null
+            ? '판정 불가'
+            : '측정 불가'}{' '}
+        — 점수에 포함되지 않습니다. 등록한 경쟁사가 있어야 측정되고, 경쟁사 목록이 브랜드마다 달라 코호트 안에서 같은
+        조건으로 비교할 수 없기 때문입니다.
       </p>
       {/* 사실성은 팩트 그래프가 있는 브랜드만 잴 수 있어 코호트 안에서 같은 조건으로 비교할 수 없다 — 점수 밖에 둔다. */}
       <p className="hint" style={{ marginBottom: 0 }}>

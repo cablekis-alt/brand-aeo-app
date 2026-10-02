@@ -101,15 +101,16 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     })
   }
 
-  // 2) Share of Mention
+  // 2) Share of Mention — Brand AEO Score에 들어가지 않는 점유율 지표라 가중치가 없다(사실성과 같은 진단 참고용).
+  //    경쟁사 목록이 있는 브랜드만 잴 수 있어 코호트 안에서 같은 조건으로 비교할 수 없다(b8-report.ts 가중치 주석).
   {
     const v = card.shareOfMention
     const shortSample = shareOfMentionShortSample(card)
     const s: MetricStatus = v === null ? 'unknown' : rateStatus(v, 0.4, 0.28, 0.15)
     out.push({
       key: 'shareOfMention',
-      label: 'Share of Mention',
-      weight: AEO_SCORE_WEIGHTS.shareOfMention,
+      label: 'Share of Mention (점수 미포함)',
+      weight: 0,
       valueText: formatPct(v),
       status: s,
       note:
@@ -262,8 +263,8 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       basis: !isUnknown
         ? `현재 SoM ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`
         : shortSample !== null
-          ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) Share of Mention을 판정하지 않았습니다(점수에서 제외·재정규화).`
-          : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다(점수에서 제외·재정규화).',
+          ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) Share of Mention을 판정하지 않았습니다.`
+          : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다.',
       actions: !isUnknown
         ? [
             '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
@@ -280,7 +281,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
           ],
       expected: isUnknown
         ? '점유율 지표가 활성화되어 진단 정확도가 올라갑니다.'
-        : `가중치 ${pctOf(AEO_SCORE_WEIGHTS.shareOfMention)} 지표 — 비교형 질문에서의 우위가 점수에 직접 반영됩니다.`,
+        : '점수에는 들어가지 않지만, 같은 질문에서 경쟁사보다 먼저 불리는지를 보여주는 지표입니다.',
       links: isUnknown ? [REC_LINKS.onboarding] : [REC_LINKS.diagnosis, REC_LINKS.ranking],
     })
   }

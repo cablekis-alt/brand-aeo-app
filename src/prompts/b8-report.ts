@@ -10,11 +10,11 @@ import type { PromptMessage } from './types.js';
  * 사람은 뜻을 알 수 없었다. Site AEO Score와 구별해야 하므로 'AEO Score'가 아니라
  * 'Brand AEO Score'가 정식 이름이다.
  *
- *   Mention 25 : Share of Mention 25 : Citation 20 : Position 15 — 이 비율을 합 1로 맞춘 값이다
- *   (29.4% · 29.4% · 23.5% · 17.6%).
- *   · Mention/SoM에는 감성 계수를 곱한다
- *   · EEAT와 사실성은 점수에 넣지 않고 별도 진단 축으로 둔다
- *   · SoM/순위가 null(경쟁사 없음 · 순위 응답 3건 미만)이면 그 가중치를 빼고 남은 합으로 재정규화한다
+ *   Mention 25 : Citation 20 : Position 15 — 이 비율을 합 1로 맞춘 값이다
+ *   (41.7% · 33.3% · 25.0%).
+ *   · Mention에는 감성 계수를 곱한다
+ *   · EEAT·사실성·Share of Mention은 점수에 넣지 않고 별도 진단 축으로 둔다
+ *   · 순위가 null(순위 응답 3건 미만)이면 그 가중치를 빼고 남은 합으로 재정규화한다
  *
  * 왜 여기(src/prompts)에 두는가 — server와 src가 둘 다 import하는 유일한 지점이기 때문이다.
  * 예전에는 server/scoring.ts와 src/lib/b9-report.ts가 각자 표를 들고 있었고 값이 갈라졌다
@@ -30,23 +30,30 @@ import type { PromptMessage } from './types.js';
  * 채우지 않고 빼기만 하면(재정규화) 반대로 팩트 그래프가 있는 브랜드만 사실성을 가져 코호트에서
  * 유리해진다(펜션 W40 스테이,머뭄 5위 → 2위). 코호트 안에서 같은 조건으로 잴 수 없는 지표라
  * 점수에서 빼고 정확도로 따로 보여준다.
+ *
+ * Share of Mention(원래 25)은 2026-10-02에 같은 이유로 뺐다. SoM은 그 브랜드에 등록한 경쟁사 목록이
+ * 있어야 잴 수 있는데, 경쟁사 목록은 우리 고객에게만 있고 비교용으로만 재는 브랜드(cohortOnly)에는
+ * 없다. 재정규화로 빼면 고객만 SoM을 가져 코호트 순위가 기운다 — 실측 W40 성동구 정형외과에서 옥수 본은
+ * 공유 질문지 일반 질문 언급 5/66으로 왕십리본(9/66)보다 적었는데, SoM 25%가 더해져 10점 1위가 됐다
+ * (SoM을 빼면 4점). 경쟁사 목록도 브랜드마다 달라, 둘 다 SoM이 있어도 같은 조건의 값이 아니다.
+ * 점수에서 빼고 점유율로 따로 보여준다.
  */
 const WEIGHT_RATIO = {
   mentionRate: 25,
-  shareOfMention: 25,
   brandOwnedCitationRate: 20,
   avgRecommendationRank: 15,
 } as const;
 const WEIGHT_TOTAL = Object.values(WEIGHT_RATIO).reduce((sum, w) => sum + w, 0);
 export const AEO_SCORE_WEIGHTS = {
   mentionRate: WEIGHT_RATIO.mentionRate / WEIGHT_TOTAL,
-  shareOfMention: WEIGHT_RATIO.shareOfMention / WEIGHT_TOTAL,
   brandOwnedCitationRate: WEIGHT_RATIO.brandOwnedCitationRate / WEIGHT_TOTAL,
   avgRecommendationRank: WEIGHT_RATIO.avgRecommendationRank / WEIGHT_TOTAL,
 } as const;
 
 /**
- * SoM 최소 표본 — 자사·경쟁사 언급을 합쳐 이 횟수에 못 미치면 SoM을 판정하지 않는다(점수에서 빼고 재정규화).
+ * SoM 최소 표본 — 자사·경쟁사 언급을 합쳐 이 횟수에 못 미치면 SoM을 판정하지 않는다(판정 불가로 표시).
+ * SoM은 2026-10-02부터 점수에 들어가지 않는다(AEO_SCORE_WEIGHTS 주석). 아래 실측은 그 전, SoM이 점수에
+ * 들어가던 때의 일이다.
  *
  * 왜 필요한가. SoM은 횟수 비율이라 표본이 작으면 한두 번에 크게 흔들린다(SoM 50%에서 6번이면 ±20%p,
  * 10번이면 ±16%p). 실측 2026-W40 강남 성형외과는 네 곳 모두 언급 6~8번으로 SoM이 정해져, 바노바기가
@@ -191,7 +198,7 @@ export function buildWeeklyReportPrompt(
   const user = `주간 스코어카드 (${card.weekOf} / ${card.industry} / ${card.region} / ${card.brandName}):
 - AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
-- Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준): ${shareOfMentionNote(card) ?? `${((card.shareOfMention ?? 0) * 100).toFixed(1)}%`}
+- Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준, Brand AEO Score에 포함되지 않음): ${shareOfMentionNote(card) ?? `${((card.shareOfMention ?? 0) * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
 - 사실성(정확도, Brand AEO Score에 포함되지 않음): ${card.factualityScore === null ? '팩트 그래프 없음 또는 대조할 사실 없음 — 측정 불가' : `${(card.factualityScore * 100).toFixed(1)}%`}
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%
