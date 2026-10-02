@@ -72,6 +72,8 @@ export interface QuestionBank {
   version: string
   generatedAt: string
   questions: QuestionSpec[]
+  /** 설정의 새 버전 은행이 아직 없어 마지막으로 잰 은행을 대신 줄 때, 다음 측정이 만들 버전. */
+  upcomingVersion?: string
 }
 
 // server/queries.ts의 CitationBreakdownRow와 같은 계약. 호스트당 한 줄, 소유권은 다수결.
