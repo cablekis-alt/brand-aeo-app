@@ -27,6 +27,12 @@ export const COHORT_BANK_DIR = APP_DATA_DIR
   ? path.join(APP_DATA_DIR, 'cohort-banks')
   : path.resolve(process.cwd(), 'cohort-banks');
 
+/**
+ * 설치본에 동봉된 코호트 공통 질문지(저장소 cohort-banks/의 기준본). 패키징에서만 있다(electron/main.cjs).
+ * userData에 질문지가 없으면 여기서 가져온다 — 데스크톱이 따로 만들면 CI·저장소와 질문지가 두 벌이 된다.
+ */
+export const BUNDLED_COHORT_BANK_DIR = process.env.BUNDLED_COHORT_BANK_DIR || null;
+
 /** 런타임 상태 파일(오버레이·큐) 경로. 패키징이면 userData 바로 아래, 아니면 기존 server/ 경로. */
 export function stateFilePath(name: string): string {
   return APP_DATA_DIR ? path.join(APP_DATA_DIR, name) : path.resolve(process.cwd(), 'server', name);

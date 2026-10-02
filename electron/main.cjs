@@ -343,6 +343,8 @@ async function createWindow() {
     APP_DATA_DIR: app.getPath('userData'),
     // 첫 실행 시드 소스 — asar에 동봉된 커밋 데이터(src/data).
     SEED_DATA_DIR: path.join(__dirname, '..', 'src', 'data'),
+    // 코호트 공통 질문지 기준본 — asar에 동봉된 저장소 cohort-banks/. userData에 없을 때 가져온다.
+    BUNDLED_COHORT_BANK_DIR: path.join(__dirname, '..', 'cohort-banks'),
   }
   console.log('[data] APP_DATA_DIR =', serverEnv.APP_DATA_DIR)
   try {

@@ -8,7 +8,7 @@ import {
   questionMentionsName,
 } from '../src/prompts/b1-question-bank.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
-import { COHORT_BANK_DIR } from './appPaths.js';
+import { BUNDLED_COHORT_BANK_DIR, COHORT_BANK_DIR } from './appPaths.js';
 import { getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
@@ -47,16 +47,35 @@ function cohortBankPath(key: string, version: string): string {
   return path.join(COHORT_BANK_DIR, key, `${version}.json`);
 }
 
-/** 없으면 null. 파일이 깨졌거나 읽을 수 없으면 그대로 던진다 — 조용히 새로 만들면 질문지가 갈린다. */
-export async function readCohortBank(key: string, version: string): Promise<CohortQuestionBank | null> {
+/** 파일이 없으면 null. 깨졌거나 읽을 수 없으면 그대로 던진다 — 조용히 새로 만들면 질문지가 갈린다. */
+async function readBankFile(file: string): Promise<CohortQuestionBank | null> {
   let raw: string;
   try {
-    raw = await readFile(cohortBankPath(key, version), 'utf-8');
+    raw = await readFile(file, 'utf-8');
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw err;
   }
   return JSON.parse(raw) as CohortQuestionBank;
+}
+
+/**
+ * 코호트 질문지를 읽는다. 없으면 null.
+ *
+ * 설치본은 userData에 없을 때 동봉된 저장소 기준본을 userData로 복사해 쓴다. 기준본이 있는 코호트를
+ * 데스크톱이 새로 만들면 CI·다른 설치본과 다른 질문지가 된다.
+ */
+export async function readCohortBank(key: string, version: string): Promise<CohortQuestionBank | null> {
+  const file = cohortBankPath(key, version);
+  const local = await readBankFile(file);
+  if (local || !BUNDLED_COHORT_BANK_DIR) return local;
+  const bundledFile = path.join(BUNDLED_COHORT_BANK_DIR, key, `${version}.json`);
+  const bundled = await readBankFile(bundledFile);
+  if (!bundled) return null;
+  // copyFile 대신 읽은 값을 같은 형식으로 쓴다 — 동봉본은 asar 안이라 읽기 API로 다루는 편이 안전하다.
+  await saveCohortBank(bundled);
+  console.log(`[B1-코호트] ${key}/${version} 동봉 기준본을 가져왔습니다.`);
+  return bundled;
 }
 
 export async function saveCohortBank(bank: CohortQuestionBank): Promise<void> {
@@ -159,9 +178,10 @@ const inflight = new Map<string, Promise<CohortQuestionBank>>();
  * 코호트는 동시에 측정되므로(measureAndBake) 여러 브랜드가 같은 순간에 여기로 온다. 진행 중인
  * 생성을 공유하지 않으면 브랜드마다 다른 질문지를 만들어 저장한다 — 공통 시험지의 뜻이 사라진다.
  *
- * CI(GitHub Actions)에서는 새로 만들지 않는다. 데스크톱과 CI가 각자 만들면 같은 코호트가 두 벌의
- * 질문지를 갖게 된다. 기준본은 데스크톱에서 만들어 저장소 cohort-banks/에 커밋한다
- * (scripts/generate-cohort-bank.ts).
+ * 기준본은 저장소 cohort-banks/에 커밋된 것이다. CI는 없는 코호트를 만들어 저장소에 커밋하고
+ * (measure.yml), 설치본은 동봉된 기준본을 먼저 쓴다(readCohortBank). 새 코호트를 데스크톱과 CI가
+ * 같은 주에 처음 재면 각자 만들 수 있다 — 그때는 저장소 기준본을 데스크톱으로 가져온다
+ * (scripts/generate-cohort-bank.ts가 두 벌이면 멈춰서 알려준다).
  */
 export function ensureCohortBank(tenant: TenantConfig): Promise<CohortQuestionBank> {
   const version = tenant.cohortQuestionBank;
@@ -174,12 +194,6 @@ export function ensureCohortBank(tenant: TenantConfig): Promise<CohortQuestionBa
   const task = (async () => {
     const existing = await readCohortBank(key, version);
     if (existing) return existing;
-    if (process.env.GITHUB_ACTIONS === 'true' || process.env.CI === 'true') {
-      throw new Error(
-        `코호트 질문지 ${id}가 없습니다 — CI에서는 새로 만들지 않습니다. ` +
-          `데스크톱에서 scripts/generate-cohort-bank.ts로 만든 기준본을 cohort-banks/에 커밋하세요.`,
-      );
-    }
     const bank = await generateCohortBank(tenant, key, version);
     await saveCohortBank(bank);
     console.log(`[B1-코호트] ${id} 생성 — 일반 질문 ${bank.questions.length}개`);

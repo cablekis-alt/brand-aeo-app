@@ -55,6 +55,17 @@ function asEngineList(value: unknown): Engine[] {
   return picked.length > 0 ? picked : ['openai', 'gemini'];
 }
 
+/**
+ * 새 브랜드가 쓰는 코호트 공통 질문지 버전.
+ *
+ * 브랜드마다 질문 은행을 따로 만들면 일반 질문(브랜드 이름 없는 질문)이 브랜드마다 달라 코호트
+ * 순위가 질문지 차이를 잰다 — 실측 W40 성동구 정형외과: 경쟁 병원 질문지에만 자기 동네를 짚은 지역
+ * 질문이 11~15개 있어, 공유 질문지로 다시 재자 왕십리본 35 → 9점, 옥수 본 0/66 → 5/66이 됐다.
+ * 그래서 등록되는 모든 브랜드가 코호트 질문지를 쓴다(cohortQuestionBank.ts). 경쟁사 초안은 본 브랜드의
+ * 값을 물려받는다(measureAndBake.ts cohortOnlyDraftsFrom).
+ */
+export const DEFAULT_COHORT_QUESTION_BANK = 'c1';
+
 /** 온보딩 JSON을 TenantConfig로 정규화한다. 자기 자신을 경쟁사로 넣은 줄은 빼 둔다. */
 export function normalizeTenantDraft(raw: unknown): TenantConfig {
   const d = (raw ?? {}) as Partial<TenantConfig> & { ownedDomains?: string[] };
@@ -115,7 +126,9 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     ...(d.brandPageUrl ? { brandPageUrl: d.brandPageUrl } : {}),
     ...(d.cohortOnly ? { cohortOnly: true } : {}),
     ...(d.autoCohort === false ? { autoCohort: false } : {}),
-    ...(d.cohortQuestionBank ? { cohortQuestionBank: d.cohortQuestionBank } : {}),
+    // 지정이 없으면 기본 코호트 질문지를 쓴다(DEFAULT_COHORT_QUESTION_BANK 주석). 정규화는 등록·측정 요청·
+    // 경쟁사 초안에서만 돈다 — 저장된 베이스·오버레이 테넌트는 이 함수를 거치지 않아 값이 바뀌지 않는다.
+    cohortQuestionBank: d.cohortQuestionBank || DEFAULT_COHORT_QUESTION_BANK,
     // 알 수 없는 값은 버린다 — 한국어(기본)로 측정하는 편이, 엉뚱한 언어로 은행을 만드는 것보다 낫다.
     ...(d.questionLanguage === 'en' ? { questionLanguage: 'en' as const } : {}),
   };
