@@ -1437,6 +1437,47 @@ tbody tr.selected {
 }
 .verdict-summary { margin: 0; color: var(--ink); }
 
+/* 검토 리포트 — 측정 신뢰도 점검 + 코호트 비교 */
+.review-report {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 14px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.review-head h3 { margin: 0 0 4px; }
+.review-head .hint { margin: 0; max-width: 62ch; }
+.trust-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trust-checks li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 14px;
+}
+.trust-checks .judgment { color: var(--muted); }
+@media (max-width: 640px) {
+  .trust-checks li { grid-template-columns: auto 1fr; }
+  .trust-checks .judgment { grid-column: 1 / -1; }
+}
+
 .diagnosis-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .diagnosis-table .weight-tag {
   margin-left: 6px;
