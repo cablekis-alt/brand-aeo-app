@@ -20,7 +20,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -84,7 +84,8 @@
         "value": "서울시 서초구 강남대로 419 파고다타워 12-18층",
         "updatedAt": "2026-09-03"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "banobagi",
@@ -372,11 +373,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "yunoprs",
@@ -394,11 +396,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "sm-ps",
@@ -416,11 +419,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "vvlyps",
@@ -438,11 +442,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "bymeps",
@@ -460,11 +465,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "gsplasticsurgery",
@@ -593,11 +599,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "hushubundang",
@@ -615,11 +622,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "ilovebrace",
@@ -637,11 +645,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "maum-dream",
@@ -663,7 +672,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -723,7 +732,8 @@
         "value": "경기도 성남시 분당구 성남대로 926, 메트로빌딩 7층",
         "updatedAt": "2026-09-04"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "web4ai",
@@ -1326,7 +1336,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [
@@ -1337,7 +1347,8 @@
         "value": "금토로 32 kt판교빌딩",
         "updatedAt": "2026-09-06"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "menuit",
@@ -1355,11 +1366,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "payhere",
@@ -1377,11 +1389,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "vdcompany",
@@ -1399,11 +1412,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "kt",
@@ -1423,11 +1437,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "torder",
@@ -1447,7 +1462,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1495,6 +1510,7 @@
         "value": "서울특별시 영등포구 여의대로 108",
         "updatedAt": "2026-09-08"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   }
 ]
