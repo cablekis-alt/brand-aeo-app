@@ -13,6 +13,7 @@ files:
   - dist/**/*
   - dist-electron/server.cjs
   - src/data/**/* # 첫 실행 시드 소스(커밋된 스코어카드·분석·질문은행)
+  - cohort-banks/**/* # 코호트 공통 질문지 기준본(server/cohortQuestionBank.ts readCohortBank)
   - package.json
 
 asar: true
