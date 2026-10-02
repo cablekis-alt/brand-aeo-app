@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ReviewReportPanel from '../components/ReviewReportPanel'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadSiteScores, type SiteScoreRecord } from '../lib/api'
@@ -198,6 +199,14 @@ export default function PeriodicReport() {
     return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
   }, [siteScores, prevMonth])
 
+  /** 검토 리포트가 쓰는 Site AEO 진단 — 판정 주차 또는 그 전의 가장 최근 기록. */
+  const siteForReview = useMemo(() => {
+    const upTo = Object.keys(siteScores)
+      .filter((w) => w <= judgedWeek)
+      .sort()
+    return upTo.length ? (siteScores[upTo[upTo.length - 1]!] ?? null) : null
+  }, [siteScores, judgedWeek])
+
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(
     () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
@@ -379,6 +388,8 @@ export default function PeriodicReport() {
               </p>
             </section>
           )}
+
+          <ReviewReportPanel card={card} history={history} site={siteForReview} periodic={report} />
 
           <section className={`report-verdict sev-${report.verdict.tone}`}>
             <p className="eyebrow">
