@@ -246,11 +246,23 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const version = typeof req.query.version === 'string' ? req.query.version : tenant.questionBankVersion;
+  const requested = typeof req.query.version === 'string' ? req.query.version : null;
+  const version = requested ?? tenant.questionBankVersion;
   const bank = await store.getQuestionBank(tenant.tenantId, version);
-  const latestWeek = (await scorecardsFor(tenant.tenantId)).at(-1)?.weekOf ?? '2026-W36';
+  const history = await scorecardsFor(tenant.tenantId);
+  // 설정의 새 버전 은행은 다음 측정이 만든다. 그 전에는 마지막으로 잰 은행을 보여 주고 다음 버전을 알린다
+  // — 예시 은행(12문항)으로 떨어지면 실제 질문 목록인 것처럼 보인다(v0.2.63에서 전 브랜드 v4 전환 직후).
+  // 버전을 지정한 요청은 그 버전만 본다.
+  if (!bank && !requested) {
+    const measured = history.at(-1)?.questionBankVersion;
+    const last = measured && measured !== version ? await store.getQuestionBank(tenant.tenantId, measured) : null;
+    if (last) {
+      res.json({ ...last, upcomingVersion: version });
+      return;
+    }
+  }
   if (!bank) markDemo(res);
-  res.json(bank ?? demoQuestionBank(tenant, latestWeek));
+  res.json(bank ?? demoQuestionBank(tenant, history.at(-1)?.weekOf ?? '2026-W36'));
 });
 
 // URL 상세 분석 — 도메인×소유권 기준 인용 집계.
