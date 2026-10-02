@@ -152,9 +152,9 @@
 <div class="wrap">
 
 <header class="top">
-  <p class="eyebrow">데모 · 해외 환자 관점 · 영어 질문 측정 · 성형외과 서울 강남 · 2026-W40 4회</p>
+  <p class="eyebrow">데모 · 해외 환자 관점 · 영어 질문 측정 · 성형외과 서울 강남 · 2026-W40 4회 · v0.2.64 점수</p>
   <h1>해외 환자가 영어로 물으면, AI는 어느 강남 병원을 부르나</h1>
-  <p class="lede">강남 성형외과 4곳(바노바기·디에이·아이디·더스완)을 외국인 환자가 물을 법한 영어 질문 36개로 네 번 쟀다. 세 번째부터는 영어 답변에 자주 나온 View·AB를 측정 대상에 더했다. <strong>순위는 잴 때마다 뒤집혔다</strong> — 그래서 원래 4곳의 순위는 결론이 아니다. 네 번 모두 같은 방향으로 나온 것은 넷이다. 더스완은 영어 질문에서 <strong>한 번도 추천되지 않았고</strong>, 아이디는 <strong>영문 사이트가 근거로 가장 많이 인용</strong>됐다. AI는 한국어와 달리 <strong>의료관광 플랫폼과 공공 포털</strong>을 근거로 썼고, 실제로 함께 불린 경쟁 상대는 <strong>JK·View·AB 같은 해외 마케팅이 강한 병원</strong>이었다 — 측정 대상에 넣자 <strong>View가 두 번 모두 1위</strong>였다.</p>
+  <p class="lede">강남 성형외과 4곳(바노바기·디에이·아이디·더스완)을 외국인 환자가 물을 법한 영어 질문 36개로 네 번 쟀다. 세 번째부터는 영어 답변에 자주 나온 View·AB를 측정 대상에 더했다. 원래 4곳 중 점수 1위는 네 번 중 세 번 아이디였지만 2차에는 바노바기였고, 점수 차이가 신뢰구간 안이라 <strong>원래 4곳의 순위는 아직 결론이 아니다</strong>. 네 번 모두 같은 방향으로 나온 것은 넷이다. 더스완은 영어 질문에서 <strong>한 번도 추천되지 않았고</strong>, 아이디는 <strong>영문 사이트가 근거로 가장 많이 인용</strong>됐다. AI는 한국어와 달리 <strong>의료관광 플랫폼과 공공 포털</strong>을 근거로 썼고, 실제로 함께 불린 경쟁 상대는 <strong>JK·View·AB 같은 해외 마케팅이 강한 병원</strong>이었다 — 측정 대상에 넣자 <strong>View가 두 번 모두 1위</strong>였다(3차는 아이디와 공동).</p>
   <dl class="meta">
     <div><dt>대상</dt><dd>강남 성형외과 4곳 (+View·AB)</dd></div>
     <div><dt>질문</dt><dd>영어 36개 (공통 22 · 브랜드 14)</dd></div>
@@ -181,31 +181,31 @@
 
 <section>
   <p class="eyebrow">같은 병원, 다른 언어</p>
-  <h2>잴 때마다 순위가 뒤집힌다</h2>
+  <h2>1위는 네 번 중 세 번 아이디, 순위는 아직 결론이 아니다</h2>
   <div class="chart" id="chart">
     <div class="legend">
       <span><i class="dk ko"></i>한국어 질문 (W40)</span>
       <span><i class="dk en"></i>영어 질문 (점 하나가 한 번 측정)</span>
       <span><i class="lk"></i>영어 4회의 범위</span>
     </div>
-    <svg class="plot" id="plot" viewBox="0 0 720 270" role="img" aria-label="Brand AEO Score. 바노바기 한국어 11, 영어 10·28·9·7. 디에이 11, 19·12·8·7. 아이디 6, 18·16·12·11. 더스완 8, 2·3·2·2. View 영어 3·4차 13·16. AB 영어 3·4차 8·12."></svg>
+    <svg class="plot" id="plot" viewBox="0 0 720 270" role="img" aria-label="Brand AEO Score. 바노바기 한국어 11, 영어 10·16·10·8. 디에이 11, 10·8·7·6. 아이디 6, 13·13·13·11. 더스완 8, 3·4·3·4. View 영어 3·4차 13·13. AB 영어 3·4차 8·10."></svg>
     <div class="tip" id="tip"></div>
   </div>
   <div class="scroller">
     <table>
-      <caption>Brand AEO Score (괄호는 순위). 영어는 같은 질문으로 같은 날 네 번 쟀다. 1·2차는 4곳, 3·4차는 View·AB를 더한 6곳 순위다.</caption>
+      <caption>Brand AEO Score (괄호는 순위), v0.2.64 기준. 영어는 같은 질문으로 같은 날 네 번 쟀다. 1·2차는 4곳, 3·4차는 View·AB를 더한 6곳 순위다.</caption>
       <thead><tr><th class="lead">병원</th><th>한국어</th><th class="brk">영어 1차</th><th>2차</th><th>3차</th><th>4차</th><th>영어 언급<br><span class="dim">공통 질문 44건</span></th></tr></thead>
       <tbody>
-        <tr><td class="lead">바노바기</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(3)</span></td><td class="n"><strong>28</strong> <span class="dim">(1)</span></td><td class="n">9 <span class="dim">(3)</span></td><td class="n">7 <span class="dim">(공동 4)</span></td><td class="n">3 · 8 · 2 · 1</td></tr>
-        <tr><td class="lead">디에이</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk"><strong>19</strong> <span class="dim">(1)</span></td><td class="n">12 <span class="dim">(3)</span></td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">7 <span class="dim">(공동 4)</span></td><td class="n">4 · 3 · 3 · 2</td></tr>
-        <tr><td class="lead">아이디</td><td class="n">6 <span class="dim">(4)</span></td><td class="n brk">18 <span class="dim">(2)</span></td><td class="n">16 <span class="dim">(2)</span></td><td class="n">12 <span class="dim">(2)</span></td><td class="n">11 <span class="dim">(3)</span></td><td class="n">3 · 4 · 3 · 3</td></tr>
-        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n">8 <span class="dim">(3)</span></td><td class="n brk">2 <span class="dim">(4)</span></td><td class="n">3 <span class="dim">(4)</span></td><td class="n">2 <span class="dim">(6)</span></td><td class="n">2 <span class="dim">(6)</span></td><td class="n"><strong>0 · 0 · 0 · 0</strong></td></tr>
-        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n"><strong>13</strong> <span class="dim">(1)</span></td><td class="n"><strong>16</strong> <span class="dim">(1)</span></td><td class="n">— · — · <strong>6</strong> · <strong>6</strong></td></tr>
-        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n">8 <span class="dim">(공동 4)</span></td><td class="n">12 <span class="dim">(2)</span></td><td class="n">— · — · 3 · 4</td></tr>
+        <tr><td class="lead">바노바기</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(공동 2)</span></td><td class="n"><strong>16</strong> <span class="dim">(1)</span></td><td class="n">10 <span class="dim">(3)</span></td><td class="n">8 <span class="dim">(4)</span></td><td class="n">3 · 8 · 2 · 1</td></tr>
+        <tr><td class="lead">디에이</td><td class="n">11 <span class="dim">(공동 1)</span></td><td class="n brk">10 <span class="dim">(공동 2)</span></td><td class="n">8 <span class="dim">(3)</span></td><td class="n">7 <span class="dim">(5)</span></td><td class="n">6 <span class="dim">(5)</span></td><td class="n">4 · 3 · 3 · 2</td></tr>
+        <tr><td class="lead">아이디</td><td class="n">6 <span class="dim">(4)</span></td><td class="n brk"><strong>13</strong> <span class="dim">(1)</span></td><td class="n">13 <span class="dim">(2)</span></td><td class="n"><strong>13</strong> <span class="dim">(공동 1)</span></td><td class="n">11 <span class="dim">(2)</span></td><td class="n">3 · 4 · 3 · 3</td></tr>
+        <tr class="hi"><td class="lead"><strong>더스완</strong></td><td class="n">8 <span class="dim">(3)</span></td><td class="n brk">3 <span class="dim">(4)</span></td><td class="n">4 <span class="dim">(4)</span></td><td class="n">3 <span class="dim">(6)</span></td><td class="n">4 <span class="dim">(6)</span></td><td class="n"><strong>0 · 0 · 0 · 0</strong></td></tr>
+        <tr><td class="lead">View <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n"><strong>13</strong> <span class="dim">(공동 1)</span></td><td class="n"><strong>13</strong> <span class="dim">(1)</span></td><td class="n">— · — · <strong>6</strong> · <strong>6</strong></td></tr>
+        <tr><td class="lead">AB <span class="dim">(3차부터)</span></td><td class="n dim">—</td><td class="n brk dim">—</td><td class="n dim">—</td><td class="n">8 <span class="dim">(4)</span></td><td class="n">10 <span class="dim">(3)</span></td><td class="n">— · — · 3 · 4</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note">바노바기는 같은 질문에서 10 → 28 → 9 → 7점이 됐다. 앱이 보여 주는 95% 신뢰구간은 한 번 측정 안의 흔들림만 담아, 측정과 측정 사이의 흔들림을 다 담지 못한다. 3·4차 점수는 경쟁사 목록을 넓힌 뒤라(아래 ④) SoM의 분모가 달라 1·2차와 같은 잣대가 아니다. <strong>점수와 순위는 매주 재서 추세로 읽어야 하는 값</strong>이고, 이 문서의 결론은 네 번 모두 같은 방향으로 나온 것만 쓴다.</p>
+  <p class="note">점수는 v0.2.64 기준(언급률·자사 인용·추천 순위, SoM·사실성 제외)으로 네 번 모두 다시 계산한 값이다. SoM이 점수에 들어가던 이전 판에서는 바노바기가 10 → 28 → 9 → 7점으로 흔들렸는데, SoM을 빼자 10 → 16 → 10 → 8점이 됐다 — 흔들림의 상당 부분이 6~8번의 언급에서 나온 SoM 몫이었다. 앱이 보여 주는 95% 신뢰구간은 한 번 측정 안의 흔들림만 담아, 측정과 측정 사이의 흔들림을 다 담지 못한다. SoM이 빠져 경쟁사 목록을 넓힌 3·4차(아래 ④)도 1·2차와 같은 산식으로 비교된다. <strong>점수와 순위는 매주 재서 추세로 읽어야 하는 값</strong>이고, 이 문서의 결론은 네 번 모두 같은 방향으로 나온 것만 쓴다.</p>
 </section>
 
 <section>
@@ -346,10 +346,10 @@
       </tbody>
     </table>
   </div>
-  <p class="lede">AB·View·JK·Braun은 1·2차 때 경쟁사 목록에 없었는데, 네 번 모두 측정 대상 병원과 비슷하거나 더 자주 불렸다. 3차부터 넷을 경쟁사 목록에 넣고 AB·View는 측정 대상으로 함께 쟀다. <strong>3·4차 두 번 모두 View가 공통 질문 언급률(6/44)과 점수 1위</strong>였다.</p>
+  <p class="lede">AB·View·JK·Braun은 1·2차 때 경쟁사 목록에 없었는데, 네 번 모두 측정 대상 병원과 비슷하거나 더 자주 불렸다. 3차부터 넷을 경쟁사 목록에 넣고 AB·View는 측정 대상으로 함께 쟀다. <strong>3·4차 두 번 모두 View가 공통 질문 언급률(6/44) 1위, 점수도 1위</strong>였다(3차 점수는 아이디와 공동 13점).</p>
   <div class="scroller">
     <table>
-      <caption>4차 SoM — 6곳이 같은 경쟁사 범위(측정 6곳 + JK·Braun)로 센 언급 점유</caption>
+      <caption>4차 SoM — 6곳이 같은 경쟁사 범위(측정 6곳 + JK·Braun)로 센 언급 점유 · 점수에는 들어가지 않는다(v0.2.62)</caption>
       <thead><tr><th class="lead">병원</th><th>SoM</th><th>자사 + 경쟁사 언급</th></tr></thead>
       <tbody>
         <tr class="hi"><td class="lead"><strong>View</strong></td><td class="n"><strong>24.0%</strong></td><td class="n">25번</td></tr>
@@ -445,7 +445,7 @@
   </div>
   <div class="finding sev-mid">
     <h3><span class="chip mid">주의</span> 네 번, 같은 날 쟀다</h3>
-    <p>네 번 같은 방향이라 비교적 믿을 만하지만, 주가 바뀌어도 같은지는 아직 모른다. 원래 4곳의 순위는 잴 때마다 뒤집혔으므로 결론으로 쓰지 않는다. 3·4차는 경쟁사 목록이 넓어져 점수·SoM이 1·2차와 같은 잣대가 아니다. View 1위는 두 번(3·4차)만 본 결과다.</p>
+    <p>네 번 같은 방향이라 비교적 믿을 만하지만, 주가 바뀌어도 같은지는 아직 모른다. 원래 4곳의 순위는 네 번 같은 방향이 아니어서(2차는 바노바기 1위) 결론으로 쓰지 않는다. SoM은 3·4차에 경쟁사 목록이 넓어져 1·2차와 같은 잣대가 아니다(점수에는 v0.2.62부터 들어가지 않는다). View 1위는 두 번(3·4차)만 본 결과이고, 3차는 아이디와 공동이다.</p>
   </div>
   <div class="finding sev-mid">
     <h3><span class="chip mid">주의</span> 병원 이름은 패턴으로 셌다</h3>
@@ -465,7 +465,7 @@
 </section>
 
 <footer>
-  2026-10-01 영어 측정 4회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1~3차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더하고 AB·View는 측정 대상으로 함께 쟀으며, 4차부터 AB·View에도 같은 경쟁사 목록을 넣었다. 점수는 v0.2.57 규칙(SoM은 자사·경쟁사 언급 10번 이상일 때만, 신뢰구간 하한 0)이다. 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 2026-10-01 Site AEO Checker 채점 모듈(v0.2.60)로 홈·시술 페이지 16쪽의 HTML을 읽어 매겼다 — 이전 판의 아이디 진단은 v0.2.60 이전 모듈의 오판과 집계 실수였다(본문 「정정」 참고). 영어 원고는 앱의 「콘텐츠 생성」으로 만들었다 — 바노바기는 v0.2.58에서 만들어 격상 문장 두 개를, 아이디는 v0.2.60에서 만들어 세는 단위가 바뀐 문장 하나를 사람이 고쳐 저장했다. 팩트 그래프는 영문 사이트 12쪽에서 뽑은 후보 106개 중 59개(기간 한정 프로모션·중복·주체가 불분명하거나 환자 안내와 무관한 항목 제외)를 등록했다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
+  2026-10-01 영어 측정 4회(W40, 같은 질문 은행 en1 · 공통 질문지 c1)와 같은 주 한국어 측정의 <code>scorecard.json</code>·<code>raw-calls.json</code>·<code>question-analyses.json</code>에서 읽었다. 1~3차는 다음 측정 전에 떠 둔 백업이다. 3차부터 경쟁사 목록에 AB·View·JK·Braun을 더하고 AB·View는 측정 대상으로 함께 쟀으며, 4차부터 AB·View에도 같은 경쟁사 목록을 넣었다. 점수는 v0.2.64 규칙(언급률·자사 인용·추천 순위, SoM·사실성 제외, 신뢰구간 하한 0)이다. 1~3차는 백업한 판정 기록을 복사해 같은 규칙으로 다시 계산했다(백업은 바꾸지 않았다). 인용 출처 묶음과 병원별 이름 수는 응답의 인용 주소·본문을 직접 세었다 — 이전 판과 이름 패턴을 통일해 1·2차 값이 조금 달라졌다. 영문 사이트 진단은 2026-10-01 Site AEO Checker 채점 모듈(v0.2.60)로 홈·시술 페이지 16쪽의 HTML을 읽어 매겼다 — 이전 판의 아이디 진단은 v0.2.60 이전 모듈의 오판과 집계 실수였다(본문 「정정」 참고). 영어 원고는 앱의 「콘텐츠 생성」으로 만들었다 — 바노바기는 v0.2.58에서 만들어 격상 문장 두 개를, 아이디는 v0.2.60에서 만들어 세는 단위가 바뀐 문장 하나를 사람이 고쳐 저장했다. 팩트 그래프는 영문 사이트 12쪽에서 뽑은 후보 106개 중 59개(기간 한정 프로모션·중복·주체가 불분명하거나 환자 안내와 무관한 항목 제외)를 등록했다. 수집 엔진은 Gemini(gemini-3.7-flash)와 Perplexity(preset:low), 판정은 gemini-3.7-flash다.
 </footer>
 
 </div>
@@ -473,12 +473,12 @@
 <script>
   (function () {
     var rows = [
-      { name: '바노바기', ko: 11, en: [10, 28, 9, 7] },
-      { name: '디에이', ko: 11, en: [19, 12, 8, 7] },
-      { name: '아이디', ko: 6, en: [18, 16, 12, 11] },
-      { name: '더스완', ko: 8, en: [2, 3, 2, 2], focus: true },
-      { name: 'View', ko: null, en: [null, null, 13, 16] },
-      { name: 'AB', ko: null, en: [null, null, 8, 12] }
+      { name: '바노바기', ko: 11, en: [10, 16, 10, 8] },
+      { name: '디에이', ko: 11, en: [10, 8, 7, 6] },
+      { name: '아이디', ko: 6, en: [13, 13, 13, 11] },
+      { name: '더스완', ko: 8, en: [3, 4, 3, 4], focus: true },
+      { name: 'View', ko: null, en: [null, null, 13, 13] },
+      { name: 'AB', ko: null, en: [null, null, 8, 10] }
     ];
     var W = 720, H = 270, L = 110, R = 30, T = 12, B = 28, xmin = 0, xmax = 30;
     var x = function (v) { return L + (v - xmin) / (xmax - xmin) * (W - L - R); };
