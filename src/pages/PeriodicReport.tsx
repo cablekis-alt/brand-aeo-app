@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReviewReportPanel from '../components/ReviewReportPanel'
 import WeekPicker from '../components/WeekPicker'
@@ -6,7 +6,7 @@ import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { comparisonFromHistory } from '../lib/citationView'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
-import { ENGINE_LABEL, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
@@ -123,13 +123,34 @@ export default function PeriodicReport() {
       alive = false
     }
   }, [tenant?.tenantId])
-  const siteNow = weekOf ? (siteScores[weekOf] ?? null) : null
+  /*
+   * 주차에 보여 줄 사이트 진단.
+   *   - 가장 최근 측정 주차: 가장 최근 진단(지금의 페이지 상태). 측정 뒤에 진단해도 보인다.
+   *   - 그 밖의 주차: 그 주차 또는 그 전의 가장 최근 진단, 없으면 가장 가까운 이후 진단.
+   *
+   * Brand AEO 측정과 사이트 진단은 대개 다른 주에 한다(실측: KETI는 W37에 측정, 사이트는 W38·W40에
+   * 진단). 같은 주차만 찾으면 진단을 해 둬도 보고서에는 「—」로 남는다. 어느 주의 진단인지는 타일
+   * 아래에 적는다.
+   */
+  const siteWeeks = useMemo(() => Object.keys(siteScores).sort(), [siteScores])
+  const latestMeasuredWeek = history.at(-1)?.weekOf ?? ''
+  const siteFor = useCallback(
+    (week: string): SiteScoreRecord | null => {
+      if (!week) return null
+      const upTo = siteWeeks.filter((w) => w <= week)
+      const pick =
+        week === latestMeasuredWeek ? siteWeeks.at(-1) : (upTo.at(-1) ?? siteWeeks.find((w) => w > week))
+      return pick ? (siteScores[pick] ?? null) : null
+    },
+    [siteScores, siteWeeks, latestMeasuredWeek],
+  )
+  const siteNow = siteFor(weekOf)
+  // 비교 대상은 보여 주는 진단 바로 전의 진단이다(선택 주차가 아니라).
   const sitePrev = useMemo(() => {
-    const before = Object.keys(siteScores)
-      .filter((w) => w < weekOf)
-      .sort()
+    if (!siteNow) return null
+    const before = siteWeeks.filter((w) => w < siteNow.weekOf)
     return before.length ? (siteScores[before[before.length - 1]!] ?? null) : null
-  }, [siteScores, weekOf])
+  }, [siteScores, siteWeeks, siteNow])
 
   /*
    * 인용 건수는 스코어카드에 없다(비율만 있다). 그 주차 인용 분석에서 총계를 읽어 온다.
@@ -199,13 +220,8 @@ export default function PeriodicReport() {
     return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
   }, [siteScores, prevMonth])
 
-  /** 검토 리포트가 쓰는 Site AEO 진단 — 판정 주차 또는 그 전의 가장 최근 기록. */
-  const siteForReview = useMemo(() => {
-    const upTo = Object.keys(siteScores)
-      .filter((w) => w <= judgedWeek)
-      .sort()
-    return upTo.length ? (siteScores[upTo[upTo.length - 1]!] ?? null) : null
-  }, [siteScores, judgedWeek])
+  /** 검토 리포트가 쓰는 Site AEO 진단 — 타일과 같은 규칙(siteFor). */
+  const siteForReview = useMemo(() => siteFor(judgedWeek), [siteFor, judgedWeek])
 
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(
@@ -317,11 +333,11 @@ export default function PeriodicReport() {
                     <p className="tile-note">
                       {now
                         ? prev
-                          ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단 · ${weekLabel(prev.weekOf)} 대비`
-                          : `페이지 준비도 · ${weekLabel(now.weekOf)} 진단 · 첫 기록`
+                          ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${period === 'week' && now.weekOf !== weekOf ? '(이 주차 진단 없음)' : ''} · ${weekLabel(prev.weekOf)} 대비`
+                          : `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${period === 'week' && now.weekOf !== weekOf ? '(이 주차 진단 없음)' : ''} · 첫 기록`
                         : period === 'month'
                           ? '이 달에 사이트 진단 기록이 없습니다'
-                          : 'Site AEO Checker에서 이 주차에 진단한 기록이 없습니다'}
+                          : 'Site AEO Checker로 진단한 기록이 없습니다'}
                     </p>
                   </>
                 )
@@ -403,6 +419,11 @@ export default function PeriodicReport() {
               종합 판정 <strong>{report.verdict.label}</strong>
             </p>
             <p className="verdict-summary">{report.verdict.summary}</p>
+            {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
+            <p className="hint">
+              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge}
+              {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
+            </p>
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
           </section>
 

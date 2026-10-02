@@ -28,6 +28,22 @@ export const ENGINE_LABEL: Record<string, string> = {
   mock: '목(테스트)', // USE_MOCK_ENGINES로 돌린 측정 — 실제 응답이 아니다
 }
 
+/**
+ * 측정 조건 한 줄 — 수집 엔진(모델) · 판단 엔진(모델). 보고서·검토 문서가 같은 문구를 쓴다.
+ * 모델 기록이 없는 옛 카드는 엔진 이름만 적는다(추측하지 않는다).
+ */
+export function measureConditionText(card: {
+  enginesUsed?: string[]
+  modelsUsed?: Record<string, string>
+  judgeEngine?: string
+  judgeModel?: string
+}): { collect: string; judge: string } {
+  const withModel = (engine: string, model?: string) => `${ENGINE_LABEL[engine] ?? engine}${model ? ` (${model})` : ''}`
+  const collect = (card.enginesUsed ?? []).map((e) => withModel(e, card.modelsUsed?.[e])).join(' · ') || '기록 없음'
+  const judge = card.judgeEngine ? withModel(card.judgeEngine, card.judgeModel) : '기록 없음'
+  return { collect, judge }
+}
+
 /** 스코어카드의 judgeEngine 표시. 기록이 없는 구버전 카드는 그렇게 밝힌다(추측하지 않는다). */
 export function judgeLabel(id: string | undefined): string {
   if (!id) return '기록 없음'
