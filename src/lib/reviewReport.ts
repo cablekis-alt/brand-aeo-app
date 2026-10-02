@@ -1,7 +1,7 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { PeriodicReport, Priority } from './b9-report'
 import type { SiteScoreRecord } from './api'
-import { ENGINE_LABEL, OWNER_TYPE_LABEL, weekLabel } from './format'
+import { ENGINE_LABEL, measureConditionText, OWNER_TYPE_LABEL, weekLabel } from './format'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
 /**
@@ -68,6 +68,8 @@ export interface ReviewReport {
   cohortPosition: number
   cohortTotal: number
   cohortTied: boolean
+  /** 수집 엔진(모델) · 판단 엔진(모델) — 문서 머리에 적는다. */
+  conditions: { collect: string; judge: string }
   site: SiteScoreRecord | null
   checks: TrustCheck[]
   cohort: CohortRow[]
@@ -197,6 +199,7 @@ export function buildReviewReport(input: ReviewReportInput): ReviewReport {
     cohortPosition: positionOf(card.aeoScore.current, scores).position,
     cohortTotal: cohortCards.length,
     cohortTied: positionOf(card.aeoScore.current, scores).tied,
+    conditions: measureConditionText(card),
     site,
     checks: trustChecks(card, history, members, cohort, general),
     cohort,
@@ -467,7 +470,8 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);font-si
 <dl class="meta">
 <div><dt>브랜드</dt><dd>${esc(r.brandName)} (${esc(r.tenantId)})</dd></div>
 <div><dt>코호트</dt><dd>${esc(r.industry)} · ${esc(r.region)} · ${r.cohortTotal}곳</dd></div>
-<div><dt>엔진</dt><dd>${esc(r.cohort.find((c) => c.isSelf)?.engines ?? '')}</dd></div>
+<div><dt>수집 엔진</dt><dd>${esc(r.conditions.collect)}</dd></div>
+<div><dt>판단 엔진</dt><dd>${esc(r.conditions.judge)}</dd></div>
 <div><dt>일반 질문</dt><dd>${r.general.questions}개 · 응답 ${r.general.responses}</dd></div>
 </dl>
 </header>

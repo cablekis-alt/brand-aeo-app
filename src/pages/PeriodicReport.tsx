@@ -6,7 +6,7 @@ import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { comparisonFromHistory } from '../lib/citationView'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
-import { ENGINE_LABEL, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
@@ -419,6 +419,11 @@ export default function PeriodicReport() {
               종합 판정 <strong>{report.verdict.label}</strong>
             </p>
             <p className="verdict-summary">{report.verdict.summary}</p>
+            {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
+            <p className="hint">
+              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge}
+              {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
+            </p>
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
           </section>
 
