@@ -102,7 +102,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -173,7 +173,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "idhospital",
@@ -191,7 +192,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -262,7 +263,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "daprs",
@@ -280,7 +282,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -351,7 +353,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "girinps",
@@ -479,11 +482,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "jjprs",
@@ -504,7 +508,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -570,7 +574,8 @@
         "value": "서울특별시 강남구 논현로530",
         "updatedAt": "2026-09-04"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "bdnewdental",
@@ -1226,11 +1231,12 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "viewclinic",
@@ -1250,7 +1256,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1298,7 +1304,8 @@
         "value": "서울 강남구 봉은사로 107",
         "updatedAt": "2026-09-05"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "o2o",
