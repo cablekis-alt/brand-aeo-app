@@ -48,7 +48,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -107,7 +107,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -166,7 +166,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -480,7 +480,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -539,7 +539,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -702,7 +702,7 @@
       "ma4": 7,
       "previousWeek": 7,
       "ciLow": 0,
-      "ciHigh": 14.9
+      "ciHigh": 15.6
     },
     "mentionRate": 0.08333333333333333,
     "shareOfMention": 0.0851063829787234,
@@ -1122,7 +1122,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -1138,11 +1138,11 @@
     "region": "서울 강남",
     "brandName": "뷰성형외과",
     "aeoScore": {
-      "current": 18,
-      "ma4": 18,
-      "previousWeek": 18,
-      "ciLow": 5.7,
-      "ciHigh": 30.3
+      "current": 20,
+      "ma4": 20,
+      "previousWeek": 20,
+      "ciLow": 6.1,
+      "ciHigh": 33.9
     },
     "mentionRate": 0.20833333333333334,
     "shareOfMention": 0.15625,
@@ -1180,7 +1180,7 @@
         },
         {
           "tenantId": "viewclinic",
-          "aeoScore": 18
+          "aeoScore": 20
         }
       ]
     },
@@ -1303,7 +1303,7 @@
         },
         {
           "tenantId": "torder",
-          "aeoScore": 29
+          "aeoScore": 35
         },
         {
           "tenantId": "vdcompany",
@@ -1354,7 +1354,7 @@
         },
         {
           "tenantId": "torder",
-          "aeoScore": 29
+          "aeoScore": 35
         },
         {
           "tenantId": "vdcompany",
@@ -1405,7 +1405,7 @@
         },
         {
           "tenantId": "torder",
-          "aeoScore": 29
+          "aeoScore": 35
         },
         {
           "tenantId": "vdcompany",
@@ -1456,7 +1456,7 @@
         },
         {
           "tenantId": "torder",
-          "aeoScore": 29
+          "aeoScore": 35
         },
         {
           "tenantId": "vdcompany",
@@ -1477,11 +1477,11 @@
     "region": "서울 영등포",
     "brandName": "t'order",
     "aeoScore": {
-      "current": 29,
-      "ma4": 29,
-      "previousWeek": 29,
-      "ciLow": 20.5,
-      "ciHigh": 37.5
+      "current": 35,
+      "ma4": 35,
+      "previousWeek": 35,
+      "ciLow": 23.9,
+      "ciHigh": 46.1
     },
     "mentionRate": 0.5833333333333334,
     "shareOfMention": 0.18181818181818182,
@@ -1507,7 +1507,7 @@
         },
         {
           "tenantId": "torder",
-          "aeoScore": 29
+          "aeoScore": 35
         },
         {
           "tenantId": "vdcompany",
@@ -2246,7 +2246,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
@@ -2303,7 +2303,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
@@ -2360,7 +2360,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
@@ -2417,7 +2417,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
@@ -2474,7 +2474,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
@@ -2493,11 +2493,11 @@
     "region": "전북 군산",
     "brandName": "스테이,머뭄",
     "aeoScore": {
-      "current": 37,
+      "current": 38,
       "ma4": 33,
       "previousWeek": 32,
-      "ciLow": 29.3,
-      "ciHigh": 44.7
+      "ciLow": 30.3,
+      "ciHigh": 45.7
     },
     "mentionRate": 0.29545454545454547,
     "shareOfMention": 0.3448275862068966,
@@ -2531,7 +2531,7 @@
         },
         {
           "tenantId": "web4ai",
-          "aeoScore": 37
+          "aeoScore": 38
         }
       ]
     },
