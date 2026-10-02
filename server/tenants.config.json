@@ -738,7 +738,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -793,7 +793,8 @@
         "value": "전북 군산시 절골길 18",
         "updatedAt": "2026-09-05"
       }
-    ]
+    ],
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-mhxthx",
@@ -809,7 +810,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -861,7 +862,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-1lz1vi2",
@@ -877,7 +879,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -929,7 +931,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-rorko6",
@@ -945,7 +948,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -997,7 +1000,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-1j0j0pl",
@@ -1013,7 +1017,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1065,7 +1069,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-fjgq11",
@@ -1081,7 +1086,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1133,7 +1138,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "comp-1uiujof",
@@ -1150,7 +1156,7 @@
       "gemini"
     ],
     "questionBankSize": 36,
-    "questionBankVersion": "v3",
+    "questionBankVersion": "v4",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1201,7 +1207,8 @@
       }
     ],
     "factGraph": [],
-    "cohortOnly": true
+    "cohortOnly": true,
+    "cohortQuestionBank": "c1"
   },
   {
     "tenantId": "e-dream",
