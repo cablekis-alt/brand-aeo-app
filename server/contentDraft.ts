@@ -63,8 +63,12 @@ async function writeDrafts(tenantId: string, map: DraftMap): Promise<void> {
 function splitSentences(text: string): string[] {
   // 마침표 뒤가 숫자면 문장 끝이 아니다 — 사이트 원문 그대로인 전화번호 "+82. 2. 522. 6636"이
   // 조각으로 잘려 조각마다 사실 가드에 걸렸다.
+  // 칭호·약어(Dr. Mr. St. …) 뒤의 마침표도 문장 끝이 아니다 — "Led by Dr. Choi Soon Woo, …"가
+  // "Led by Dr."와 나머지로 잘려, 격상 가드가 뒤쪽만 빼자 "Led by Dr."라는 조각이 원고에 남았다
+  // (실측: 뷰 영어 원고). "No."는 넣지 않는다 — 뒤에 숫자가 오면 위 규칙이 이미 막고, 숫자가
+  // 아니면 대답 "No."일 수 있다.
   return text
-    .split(/(?<=[.!?。]|다\.|요\.)\s+(?!\d)/)
+    .split(/(?<=[.!?。]|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.)\s+(?!\d)/)
     .map((s) => s.trim())
     .filter(Boolean);
 }

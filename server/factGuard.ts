@@ -32,6 +32,17 @@ function numberTokens(s: string): Set<string> {
 }
 
 /**
+ * 문장에 사실 값이 그대로 들어 있는지 — **대소문자는 가리지 않는다.**
+ *
+ * 사이트 원문 값은 제목 표기로 뽑힐 때가 많아(「Since 2005」), 문장 가운데 쓰면 소문자가 된다
+ * ("… surgery since 2005."). 대소문자까지 같아야 같은 값으로 치면, 값을 그대로 옮긴 문장이
+ * "값을 그대로 쓰셨는지 확인하세요"로 걸린다(실측: 뷰 영어 원고). 숫자·철자는 그대로 비교한다.
+ */
+export function containsValue(text: string, value: string): boolean {
+  return text.toLowerCase().includes(value.toLowerCase());
+}
+
+/**
  * 걸린 문장을 어떻게 하는지 — 기록 문구가 실제 동작과 맞아야 한다.
  *   drop  생성 경로. 문장을 실제로 버린다.
  *   warn  편집 경로. 사람이 쓴 글은 버리지 않고 알리기만 한다.
@@ -52,7 +63,7 @@ export function createFactGuard(
     const out: string[] = [];
     for (const item of arr) {
       // 값 원문 포함 → 그 사실. 아니면 주장 이름 포함 → 그 사실. 둘 다 아니면 새로 만든 사실.
-      const hit = facts.find((f) => item.includes(f.value)) ?? facts.find((f) => f.claim && item.includes(f.claim));
+      const hit = facts.find((f) => containsValue(item, f.value)) ?? facts.find((f) => f.claim && item.includes(f.claim));
       if (!hit) {
         notes.push(`"${item}"은(는) 팩트 그래프에 없는 사실이라 넣지 않았습니다.`);
         continue;
@@ -71,7 +82,7 @@ export function createFactGuard(
     // 무엇인지 알려 주는 꼬리표라, 영어 원고는 그 뜻을 풀어 쓰면서 숫자를 함께 옮긴다.
     const sourced = new Set<string>();
     for (const f of facts) {
-      if (!f.value || !sentence.includes(f.value)) continue;
+      if (!f.value || !containsValue(sentence, f.value)) continue;
       for (const n of numberTokens(f.value)) sourced.add(n);
       for (const n of numberTokens(f.claim ?? '')) sourced.add(n);
     }
@@ -79,7 +90,7 @@ export function createFactGuard(
       if (sourced.has(n)) continue;
       const fromFact = factNums.find((f) => f.nums.has(n))?.fact;
       if (fromFact) {
-        if (!sentence.includes(fromFact.value)) {
+        if (!containsValue(sentence, fromFact.value)) {
           notes.push(
             mode === 'drop'
               ? `"${sentence}" — 사실 "${fromFact.claim}: ${fromFact.value}"의 값을 그대로 담지 않아 뺐습니다(요약·격상 방지).`
