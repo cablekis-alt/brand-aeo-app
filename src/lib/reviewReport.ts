@@ -283,17 +283,26 @@ function trustChecks(
   }
 
   // 3) 측정 횟수 — 한 번 잰 결과는 같은 설정에서도 몇 %p씩 흔들린다.
-  const sameCondition = history.filter(
-    (h) => h.questionBankVersion === card.questionBankVersion && engineSet(h) === engineSet(card),
-  ).length
+  //    은행 버전과 주차를 적는다. "한 번뿐"만 쓰면 "1차 시험 결과"로 읽혔다 — 같은 주 재측정은 그 주를
+  //    덮어써서 세지 않으므로, 세는 단위가 주차라는 것도 보이게 한다.
+  const sameConditionWeeks = history
+    .filter((h) => h.questionBankVersion === card.questionBankVersion && engineSet(h) === engineSet(card))
+    .map((h) => h.weekOf)
+    .sort()
+  const bank = card.questionBankVersion ? `질문 은행 ${card.questionBankVersion}` : '같은 질문 은행'
   checks.push(
-    sameCondition >= 2
-      ? { id: 'runs', label: '측정 횟수', status: 'ok', detail: `같은 질문 은행·엔진으로 잰 주차가 ${sameCondition}개입니다. 같은 방향인지 추이로 확인합니다.` }
+    sameConditionWeeks.length >= 2
+      ? {
+          id: 'runs',
+          label: '측정 횟수',
+          status: 'ok',
+          detail: `${bank}·같은 엔진으로 잰 주차가 ${sameConditionWeeks.length}개입니다(${weekLabel(sameConditionWeeks[0]!)}–${weekLabel(sameConditionWeeks.at(-1)!)}). 같은 방향인지 추이로 확인합니다.`,
+        }
       : {
           id: 'runs',
           label: '측정 횟수',
           status: 'warn',
-          detail: '같은 질문 은행·엔진으로 잰 결과가 이번 한 번뿐입니다. 고객용 결론은 다음 측정에서도 같은 방향일 때 씁니다.',
+          detail: `${bank}·같은 엔진으로 잰 주차가 아직 1개입니다(${weekLabel(card.weekOf)}). 고객용 결론은 다음 주차 측정에서도 같은 방향일 때 씁니다.`,
         },
   )
 
