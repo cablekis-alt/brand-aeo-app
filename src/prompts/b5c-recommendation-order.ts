@@ -6,8 +6,19 @@ import type { BrandContext, PromptMessage } from './types.js';
  * 코드에서 결정적으로 계산한다: SoM = 대상 브랜드 mentionCount / 전체 브랜드 mentionCount 합.
  * 이 프롬프트는 "명시적/암묵적 추천 순위"처럼 카운트만으로는 알 수 없는 판단만 담당한다.
  */
-export function buildRecommendationOrderPrompt(brand: BrandContext, responseText: string): PromptMessage {
-  const entities = [brand.brandName, ...brand.competitors.map((c) => c.name)];
+export function buildRecommendationOrderPrompt(
+  brand: BrandContext,
+  responseText: string,
+  /**
+   * 순위를 매길 병원 목록. 같은 코호트는 같은 목록을 넘긴다(server/cohortEntities.ts) — 브랜드마다 자기
+   * 경쟁사끼리만 매기면, 경쟁사 목록이 없는 브랜드는 추천되기만 하면 1위가 된다. 생략하면 이 브랜드와
+   * 그 경쟁사(예전 동작).
+   */
+  rankingEntities?: string[],
+): PromptMessage {
+  const entities = rankingEntities?.length
+    ? [...new Set([brand.brandName, ...rankingEntities])]
+    : [brand.brandName, ...brand.competitors.map((c) => c.name)];
 
   const system = `당신은 텍스트에서 "추천 우선순위"를 판정하는 분석기입니다.
 등장 순서가 아니라, 글쓴이가 실제로 무엇을 1순위로 추천하는지를 판단하세요.
