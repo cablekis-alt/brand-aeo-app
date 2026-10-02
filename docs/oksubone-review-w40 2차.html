@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>옥수 본 정형외과 W40 재측정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --plane:        #f6f6f4;
+    --surface:      #fcfcfb;
+    --sunk:         #f0f0ec;
+    --ink:          #16181a;
+    --ink-2:        #43464a;
+    --muted:        #6b6e73;
+    --rule:         #e3e3de;
+    --rule-2:       #cfcfc9;
+    --context:      #b7b9b4;
+    --s1:           #2a78d6;
+    --critical:     #d03b3b;
+    --warning:      #fab219;
+    --warning-ink:  #8a5c00;
+    --good:         #0ca30c;
+    --good-ink:     #0a6b0a;
+    --sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plane:       #0d0d0d;
+      --surface:     #1a1a19;
+      --sunk:        #232322;
+      --ink:         #e9e9e5;
+      --ink-2:       #c2c2bc;
+      --muted:       #95958f;
+      --rule:        #2d2d2b;
+      --rule-2:      #40403d;
+      --context:     #55554f;
+      --s1:          #3987e5;
+      --critical:    #e06b6b;
+      --warning:     #fab219;
+      --warning-ink: #f0c05a;
+      --good:        #35b835;
+      --good-ink:    #5cc95c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane:       #0d0d0d;
+    --surface:     #1a1a19;
+    --sunk:        #232322;
+    --ink:         #e9e9e5;
+    --ink-2:       #c2c2bc;
+    --muted:       #95958f;
+    --rule:        #2d2d2b;
+    --rule-2:      #40403d;
+    --context:     #55554f;
+    --s1:          #3987e5;
+    --critical:    #e06b6b;
+    --warning:     #fab219;
+    --warning-ink: #f0c05a;
+    --good:        #35b835;
+    --good-ink:    #5cc95c;
+  }
+
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.72; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.32; margin: 0; font-weight: 600; }
+  h1 { font-size: 1.74rem; letter-spacing: -0.015em; }
+  h2 { font-size: 1.18rem; letter-spacing: -0.008em; }
+  h3 { font-size: 0.98rem; }
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  code { font-size: 0.87em; background: var(--sunk); padding: 0.1em 0.38em; border-radius: 3px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 0.83rem; color: var(--muted); }
+
+  header.top { display: flex; flex-direction: column; gap: 14px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-top: 4px; }
+  .meta div { display: flex; gap: 7px; align-items: baseline; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); }
+  .meta dd { margin: 0; font-family: var(--mono); font-size: 0.82rem; }
+
+  section { display: flex; flex-direction: column; gap: 14px; margin-top: 46px; }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  caption { text-align: left; color: var(--muted); font-size: 0.8rem; padding-bottom: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  th { font-weight: 500; font-size: 0.76rem; color: var(--muted); border-bottom-color: var(--rule-2); }
+  td.lead, th.lead { text-align: left; }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: var(--sunk); }
+  tbody tr:last-child td { border-bottom: none; }
+  .dim { color: var(--muted); }
+  th.brk, td.brk { border-left: 2px dashed var(--rule-2); }
+  th.brk2, td.brk2 { border-left: 2px dotted var(--rule-2); }
+
+  .chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 12px 10px; position: relative; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 0.8rem; color: var(--ink-2); margin: 0 4px 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lk { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--s1); }
+  .lk.ctx { border-top: 1.5px solid var(--context); }
+  .lk.brk { width: 0; height: 12px; border-top: none; border-left: 2px dashed var(--rule-2); }
+  .lk.brk2 { width: 0; height: 12px; border-top: none; border-left: 2px dotted var(--rule-2); }
+  svg.plot { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); }
+  .tip.on { opacity: 1; }
+
+  .finding { border: 1px solid var(--rule); border-left: 3px solid var(--rule-2); border-radius: 5px; background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .finding.sev-high { border-left-color: var(--critical); }
+  .finding.sev-mid  { border-left-color: var(--warning); }
+  .finding.sev-good { border-left-color: var(--good); }
+  .finding h3 { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; font-weight: 500; }
+  .chip.high { color: var(--critical); }
+  .chip.mid  { color: var(--warning-ink); }
+  .chip.good { color: var(--good-ink); }
+  .finding p { font-size: 0.9rem; color: var(--ink-2); }
+
+  ul.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  ul.qs li { background: var(--surface); padding: 9px 12px; font-size: 0.86rem; color: var(--ink-2); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+  ul.qs li .e { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  ol.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+  ol.todo li { padding-left: 4px; }
+  ol.todo b { font-weight: 600; }
+  ol.todo p { font-size: 0.88rem; color: var(--ink-2); margin-top: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.8rem; color: var(--muted); }
+
+  @media (max-width: 560px) { ul.qs li { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">내부 검토 · 2회 측정 · 정형외과 서울 성동구 · Brand AEO + Site AEO · 2026-W40</p>
+  <h1>옥수 본 정형외과, 같은 질문지로 다시 재니 중간이다</h1>
+  <p class="lede">10월 2일에 두 번 쟀다. 1차는 병원마다 질문지가 달랐다. 옥수 본의 일반 질문에는 지역이 든 질문이 <strong>하나도 없었고</strong>, 점수는 1점(공동 4위)이었다. 2차에는 6곳이 <strong>같은 일반 질문 22개</strong>를 받았고, 그중 7개가 지역 질문이다. 옥수 본은 이름 없는 질문에서 처음으로 불렸다(<strong>5/66</strong>, 척척나은과 공동 2위). 왕십리본(9/66)은 여전히 앞선다. 앱 화면의 <strong>10점·1위는 그대로 읽으면 안 된다.</strong> 옥수 본 점수에만 SoM이 들어갔기 때문이고, 다른 5곳과 같은 기준이면 약 4점이다. Site AEO Score는 <strong>56점</strong>이다.</p>
+  <dl class="meta">
+    <div><dt>브랜드</dt><dd>옥수 본 정형외과 (oksubone)</dd></div>
+    <div><dt>코호트</dt><dd>정형외과 · 서울 성동구 · 6곳</dd></div>
+    <div><dt>엔진</dt><dd>ChatGPT · Gemini · Perplexity</dd></div>
+    <div><dt>측정</dt><dd>2회 · 2026-10-02 · 회당 응답 108</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow">코호트</p>
+  <h2>질문지를 맞추자 1차 순위는 무너졌다</h2>
+  <div class="scroller">
+    <table>
+      <caption>W40 · 1차 = 병원별 질문지(v3) · 2차 = 공유 질문지(공통 22개 + 병원별 14개, v4) · 일반 질문 = 브랜드 이름 없는 질문 22개 × 엔진 3</caption>
+      <thead><tr><th class="lead">병원</th><th>1차 점수</th><th class="brk">2차 점수</th><th>2차 앱 순위</th><th>2차 일반 질문 언급</th><th>2차 자사 인용</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">왕십리본정형외과의원</td><td class="n">35</td><td class="n brk">9</td><td class="n">2</td><td class="n"><strong>9/66</strong></td><td class="n">3.8%</td></tr>
+        <tr class="hi"><td class="lead"><strong>옥수 본 정형외과</strong></td><td class="n">1</td><td class="n brk"><strong>10</strong> <span class="dim">(같은 기준 4)</span></td><td class="n">1</td><td class="n"><strong>5/66</strong></td><td class="n">1.7%</td></tr>
+        <tr><td class="lead">척척나은정형외과의원</td><td class="n">3</td><td class="n brk">6</td><td class="n">3</td><td class="n">5/66</td><td class="n">6.0%</td></tr>
+        <tr><td class="lead">연세나무정형외과의원</td><td class="n">9</td><td class="n brk">5</td><td class="n">4</td><td class="n">2/66</td><td class="n">7.4%</td></tr>
+        <tr><td class="lead">금호바른정형외과의원</td><td class="n">1</td><td class="n brk">4</td><td class="n">5</td><td class="n">2/66</td><td class="n">4.8%</td></tr>
+        <tr><td class="lead">성동 정형외과</td><td class="n">0</td><td class="n brk">0</td><td class="n">6</td><td class="n">0/66</td><td class="n">0.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><strong>왜 10점이 1위가 아닌가.</strong> 점수는 언급률·SoM·자사 인용·추천 순위 중 잴 수 있는 지표만 넣고, 가중치를 그 지표들끼리 다시 나눈다. 2차에서 옥수 본은 경쟁사 목록이 있어 SoM 25%(언급 24건)가 들어갔다. 나머지 5곳은 경쟁사 목록 없이 비교용으로만 재는 병원이라 SoM이 빠졌다. 옥수 본에서 SoM을 빼고 같은 산식으로 다시 내면 <strong>4.1점</strong>이다. 연세나무(5)보다 낮고 금호바른(4)과 비슷하다. 언급 수로 봐도 왕십리본이 앞선다. 옥수 본이 받은 응답 66건 안에서도 왕십리본은 12회, 연세나무 6회, 척척나은과 옥수 본은 각각 5회 불렸다.</p>
+  <p class="note"><strong>1차 순위가 무너진 이유.</strong> 왕십리본은 35점에서 9점으로, 연세나무는 9점에서 5점으로 내려갔다. 1차 질문지에는 병원마다 “왕십리역 근처 …”처럼 자기 동네를 짚은 지역 질문이 11~15개씩 있었고, 이 병원들이 불린 응답은 전부 그 질문에서 나왔다. 2차의 지역 질문 7개는 모두 “성동구”를 묻는다. 1차 점수 차이는 대부분 질문지 차이였다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Brand AEO ①</p>
+  <h2>지역을 붙여 물으면 옥수 본도 불린다, 아직은 다섯 번</h2>
+  <p class="lede">1차에서 옥수 본은 일반 질문에서 한 번도 불리지 않았다(0/66). 지역 없이 “잘하는 곳 추천해줘”라고 물으면 AI는 “어느 지역에서 찾으시나요?”라고 되묻거나 대학병원을 들었다. 2차에서는 지역 질문 7개 중 <strong>4개에서 옥수 본이 5회</strong> 불렸다. 다섯 번 모두 지역 질문이었다.</p>
+  <ul class="qs">
+    <li>성동구에서 과잉진료 없이 양심적으로 진단해주는 정형외과 찾고 있어요.<span class="e">ChatGPT · Gemini</span></li>
+    <li>서울 성동구 쪽에서 도수치료 꼼꼼하게 잘 봐주는 정형외과 어디 있나요?<span class="e">Gemini</span></li>
+    <li>성동구 왕십리나 옥수동 근처에 평일 야간진료 하는 정형외과 있을까요?<span class="e">Perplexity</span></li>
+    <li>목 디스크 신경차단술 잘하는 성동구 정형외과 전문의 병원 알려줘.<span class="e">Gemini</span></li>
+  </ul>
+  <p class="note">“허리 통증 비수술 치료”, “무릎 관절 주사”, “주말·일요일 진료” 질문에서는 불리지 않았다. 이 세 질문에서는 왕십리본·척척나은이 불렸다. 추천 목록 안의 순위는 판정되지 않았다. 순위가 매겨진 응답이 너무 적었다. 한 번 측정한 결과라 아직 고객용 결론으로 쓰지 않는다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Brand AEO ②</p>
+  <h2>이름을 넣고 물으면 AI는 정확히 안다</h2>
+  <div class="scroller">
+    <table>
+      <caption>질문 유형별 옥수 본 언급 (응답 수 기준, 엔진 3개) · 2차 브랜드 질문 14개는 새로 만든 질문이라 1차와 다르다</caption>
+      <thead><tr><th class="lead">질문 유형</th><th>1차</th><th class="brk">2차</th></tr></thead>
+      <tbody>
+        <tr><td class="lead">브랜드 직접</td><td class="n">5/9</td><td class="n brk">7/9</td></tr>
+        <tr><td class="lead">비교</td><td class="n">6/9</td><td class="n brk">9/9</td></tr>
+        <tr><td class="lead">가격·사양</td><td class="n">6/9</td><td class="n brk">9/9</td></tr>
+        <tr><td class="lead">지역</td><td class="n">4/6</td><td class="n brk">9/9</td></tr>
+        <tr><td class="lead">후기·문제 해결</td><td class="n">2/9</td><td class="n brk">6/6</td></tr>
+        <tr class="hi"><td class="lead"><strong>일반 (브랜드 이름 없음)</strong></td><td class="n"><strong>0/66</strong></td><td class="n brk"><strong>5/66</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede">이름을 넣은 질문에는 세 엔진 모두 래미안 옥수 리버젠 상가의 <strong>독서당로 223</strong>을 말했다. 후기 질문에는 캐시닥 같은 리뷰 플랫폼의 후기·평점을 근거로 “전반적으로 평가가 좋다”고 답했다.</p>
+  <p class="note">사실성은 1차 88.9%(9건 중 8건), 2차 91.7%(12건 중 11건)이다. 1차의 「틀림」 1건은 판정 오류였다. 금호바른 후기 질문에 Perplexity가 <strong>금호바른의</strong> 주소를 답했는데, 판정이 이를 옥수 본 주소와 다르다고 봤다. 2차의 「틀림」 1건은 AI가 실제로 다르게 말한 경우다. 목 디스크 질문에서 Gemini가 위치를 “독서당로40길 (옥수역 부근)”이라고 했고, 등록 주소는 독서당로 223이다. 등록된 사실이 주소 하나뿐이라 정확도를 더 넓게 잴 수는 없다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Brand AEO ③</p>
+  <h2>AI가 근거로 쓰는 곳은 의료 정보·리뷰 플랫폼이다</h2>
+  <div class="scroller">
+    <table>
+      <caption>옥수 본 응답 108건의 인용 — 상위 출처 (1차 899건 · 2차 932건)</caption>
+      <thead><tr><th class="lead">출처</th><th>1차</th><th class="brk">2차</th><th class="lead">성격</th></tr></thead>
+      <tbody>
+        <tr><td class="lead"><code>cashdoc.me</code></td><td class="n">52</td><td class="n brk">73</td><td class="lead dim">병원 후기·평점 플랫폼</td></tr>
+        <tr><td class="lead"><code>blog.naver.com</code></td><td class="n">54</td><td class="n brk">55</td><td class="lead dim">블로그</td></tr>
+        <tr><td class="lead"><code>modoodoc.com</code></td><td class="n">41</td><td class="n brk">45</td><td class="lead dim">병원 후기·평점 플랫폼</td></tr>
+        <tr><td class="lead"><code>goodoc.co.kr</code></td><td class="n dim">—</td><td class="n brk">39</td><td class="lead dim">병원 찾기·예약 플랫폼</td></tr>
+        <tr><td class="lead"><code>my-doctor.io</code></td><td class="n">27</td><td class="n brk">28</td><td class="lead dim">병원 정보 플랫폼</td></tr>
+        <tr><td class="lead"><code>hira.or.kr</code></td><td class="n">28</td><td class="n brk">27</td><td class="lead dim">건강보험심사평가원</td></tr>
+        <tr class="hi"><td class="lead"><code>oksubone.com</code> <span class="dim">(자사)</span></td><td class="n">11</td><td class="n brk">16</td><td class="lead dim">자사 인용률 1.2% → 1.7%, 두 번 모두 성동 정형외과 다음으로 낮다</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">2차는 지역 질문이 늘면서 이용자 생성 콘텐츠 인용이 325건에서 407건으로 늘었다. 캐시닥·모두닥·굿닥의 후기·평점·진료 정보가 AI 답변에 그대로 인용되고, 두 번 모두 같은 방향이다. 그래서 이 플랫폼의 정보가 정확하고 최신인지가 곧 AI 답변의 품질이 된다.</p>
+</section>
+<section>
+  <p class="eyebrow">Site AEO</p>
+  <h2>홈페이지 56점 — 구조화 데이터와 신뢰 정보가 비어 있다</h2>
+  <div class="scroller">
+    <table>
+      <caption>Site AEO Score — <code>oksubone.com</code> 홈 (2026-10-02 진단, 스크립트 없이 HTML을 읽은 값)</caption>
+      <thead><tr><th class="lead">진단 영역</th><th>점수</th><th class="lead">감점</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="lead">총점</td><td class="n">56 / 100</td><td class="lead dim">부분적으로 준비됨</td></tr>
+        <tr><td class="lead">AI 크롤러 접근·색인</td><td class="n">26 / 26</td><td class="lead dim">AI 크롤러를 막지 않는다</td></tr>
+        <tr><td class="lead">콘텐츠 구조·인용 친화도</td><td class="n">15 / 22</td><td class="lead">홍보성·최상급 표현이 답을 가린다 · Q&A 블록이 없다</td></tr>
+        <tr><td class="lead">구조화 데이터 (JSON-LD)</td><td class="n"><strong>0 / 15</strong></td><td class="lead">Schema.org 구조화 데이터가 없다</td></tr>
+        <tr><td class="lead">E-E-A-T·최신성·신뢰</td><td class="n"><strong>5 / 18</strong></td><td class="lead">의료진 바이라인·게시일이 없다 · 수치에 출처 링크가 없다</td></tr>
+        <tr><td class="lead">기술 기본기</td><td class="n"><strong>4 / 12</strong></td><td class="lead"><strong>HTTPS가 아니다</strong>(https 연결이 실패해 http로 열림) · Open Graph가 없다 · 이미지 대체 텍스트가 비었다</td></tr>
+        <tr><td class="lead">에이전트 접근성</td><td class="n">6 / 7</td><td class="lead">본문 영역 표시(main)가 없다</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">본문은 373단어로 짧다. AI가 홈페이지를 근거로 거의 쓰지 않는 결과(자사 인용 1.2%)와 같은 방향이지만, 그것이 원인이라고 확인한 것은 아니다. 앱에 저장된 진단과 다시 진단한 값이 모두 56점이다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">다음</p>
+  <h2>우선순위</h2>
+  <ol class="todo">
+    <li><b>코호트 점수의 비교 기준 맞추기</b>
+      <p>지금은 경쟁사 목록이 있는 병원만 SoM이 점수에 들어가 순위가 기운다(옥수 본은 10점 1위지만 같은 기준이면 4점). 고객에게 순위를 보여주기 전에 고쳐야 한다. 코호트 안에서는 SoM을 모두 빼거나 모두 넣어야 한다.</p></li>
+    <li><b>공유 질문지로 한 번 더 측정 (W41)</b>
+      <p>공유 질문지 결과는 아직 한 번뿐이다. “지역 질문에서 불린다”, “왕십리본이 앞선다”가 두 번째에도 같은 방향이면 고객용 결론으로 쓴다.</p></li>
+    <li><b>홈페이지 HTTPS·구조화 데이터</b>
+      <p>https 연결이 실패한다. 병원 이름·주소·진료 과목·진료 시간을 담은 구조화 데이터(MedicalClinic)를 넣으면 0/15가 바로 채워진다.</p></li>
+    <li><b>의료진·진료 정보와 갱신일</b>
+      <p>원장 이름·전문 분야·진료 시간을 페이지에 밝히고 갱신일을 붙인다. 같은 사실을 팩트 그래프에도 넣으면 AI 설명의 정확도를 제대로 잴 수 있다(지금은 주소 하나뿐).</p></li>
+    <li><b>후기 플랫폼 정보 점검</b>
+      <p>AI가 캐시닥·모두닥의 후기와 평점을 그대로 인용한다. 그곳의 진료 시간·진료 과목·사진이 최신인지 확인한다.</p></li>
+  </ol>
+</section>
+
+<footer>
+  2026-10-02 두 측정(W40, 엔진 3개 · 회당 36문항 · 응답 108건)의 <code>scorecard.json</code>·<code>question-analyses.json</code>과 코호트 5곳의 같은 주 데이터에서 읽었다. 1차는 병원별 질문 은행 v3이고 백업 <code>backup-2026-W40-oksu-run1</code>에서 읽었다. 2차는 v4로, 공유 질문지 <code>정형외과__서울_성동구/c1</code> 22개와 병원별 14개로 이뤄진다. “일반 질문”은 브랜드 이름이 없는 category-agnostic 질문이다. “같은 기준 4점”은 앱 점수 산식에서 SoM만 빼고 다시 계산한 값이다. Site AEO는 앱에 저장된 W40 진단(56점)과 같은 채점 모듈(v0.2.60)로 다시 읽은 감점 항목이다.
+</footer>
+
+</div>
+
+</body>
+</html>
