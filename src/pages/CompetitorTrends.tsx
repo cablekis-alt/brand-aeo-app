@@ -10,8 +10,9 @@ import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
 import type { RankingView } from '../lib/types'
 
-// 우리 브랜드 + 경쟁사 라인색(우리 브랜드는 강조).
-const LINE_COLORS = ['var(--accent)', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2']
+// 우리 브랜드 + 경쟁사 라인색(우리 브랜드는 강조). 계열색은 index.css의 --series-* — 다크 모드에서도
+// 바탕 대비가 유지되고, 초록 계열은 강조(청록)와 헷갈려 쓰지 않는다.
+const LINE_COLORS = ['var(--accent)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)', 'var(--series-6)']
 
 export default function CompetitorTrends() {
   const { tenant } = useTenant()

@@ -1,24 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap');
 
+/*
+ * Signal Board 토큰(2026-10 상용화 UI). 차가운 회백 바탕 · 녹흑 글자 · 청록 강조 하나.
+ * 상태색은 좋음(청록)과 주의·하락(주황 계열)을 명도까지 달리해 색만으로 가리지 않게 한다.
+ * 글자 토큰은 paper·card·surface-2 세 바탕 모두에서 4.5:1 이상(라이트·다크)으로 검증했다.
+ */
 :root {
-  --ink: #1c1916;
-  --muted: #5c564e;
-  --paper: #f6f1e8;
-  --card: #fffdf8;
-  --line: #d9d0c3;
-  --accent: #9a3412;
-  --accent-soft: #f4e4d8;
-  --good: #3f6212;
-  --bad: #9f1239;
-  --sans: 'IBM Plex Sans KR', 'Segoe UI', sans-serif;
-  --serif: 'Fraunces', Georgia, serif;
+  --ink: #111c18;
+  --ink-2: #4a5752;
+  --muted: #5b6862;
+  --paper: #f3f5f4;
+  --card: #ffffff;
+  --surface-2: #f7f9f8;
+  --line: #dce3e0;
+  --line-strong: #c4cdc9;
+  --accent: #0b6b5d;
+  --accent-soft: #e2f1ed;
+  --accent-ink: #07493f;
+  --good: #0b6b5d;
+  --bad: #b93815;
+  --bad-soft: #fcece6;
+  --warn: #a15c07;
+  --warn-soft: #fdf3e1;
+  --info: #2f5bd3;
+  --info-soft: #e8eefc;
+  /* 비교 선 계열 — 자사는 --accent, 나머지 다섯은 고정 순서(경쟁 시계열). 흰 카드 대비 4.5:1 이상. */
+  --series-2: #2f5bd3;
+  --series-3: #c2551b;
+  --series-4: #7a4fc4;
+  --series-5: #8a6d00;
+  --series-6: #3f4a46;
+  --sans: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --r-card: 12px;
+  --r-ctl: 8px;
 
   /*
    * 인용 유형 색 — 범주형 팔레트. 슬롯 순서는 고정이며 데이터에 따라 돌려쓰지 않는다
    * (필터로 항목이 줄어도 남은 항목의 색이 바뀌면 안 된다).
-   * 우리 서페이스(#f6f1e8 / #161410)에 대해 검증을 돌려 두 모드 모두 통과시켰다:
+   * 처음엔 옛 서페이스(#f6f1e8 / #161410)에 대해 검증해 두 모드 모두 통과시켰다:
    * 명도대·채도·CVD 분리·정상시력 분리 PASS. 라이트의 대비 경고는 범례가 색과 라벨을
-   * 함께 주므로 해소된다(색만으로 식별하게 두지 않는다).
+   * 함께 주므로 해소된다(색만으로 식별하게 두지 않는다). Signal Board 바탕(#f3f5f4·#ffffff /
+   * #0d1311·#141c19)에서 다시 재 보니 아홉 색 모두 대비가 옛 바탕보다 같거나 높아 그대로 둔다.
    * 경쟁사 둘은 같은 빨강에 빗금으로 나눈다 — 새 색을 만드는 대신 "같은 개념의 두 등급"을
    * 형태로 말한다.
    */
@@ -36,15 +59,29 @@
 /* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --ink: #f4efe6;
-    --muted: #b7aea2;
-    --paper: #161410;
-    --card: #1e1b17;
-    --line: #3a342c;
-    --accent: #fdba74;
-    --accent-soft: #3b2718;
-    --good: #bef264;
-    --bad: #fda4af;
+    --ink: #e8efec;
+    --ink-2: #a9b7b1;
+    --muted: #93a19b;
+    --paper: #0d1311;
+    --card: #141c19;
+    --surface-2: #1a2420;
+    --line: #26332e;
+    --line-strong: #3a4a44;
+    --accent: #4cc7b0;
+    --accent-soft: #12332c;
+    --accent-ink: #9fe5d6;
+    --good: #4cc7b0;
+    --bad: #f2895f;
+    --bad-soft: #3b1e14;
+    --warn: #f0b45a;
+    --warn-soft: #3a2a10;
+    --info: #8ca8f5;
+    --info-soft: #18213d;
+    --series-2: #8ca8f5;
+    --series-3: #f08a54;
+    --series-4: #b497f0;
+    --series-5: #d9b84a;
+    --series-6: #a9b7b1;
     --bucket-review: #3987e5;
     --bucket-blog: #d95926;
     --bucket-news: #199e70;
@@ -59,15 +96,29 @@
 
 /* 사용자가 다크를 명시하면 OS가 라이트여도 다크 적용 */
 :root[data-theme='dark'] {
-  --ink: #f4efe6;
-  --muted: #b7aea2;
-  --paper: #161410;
-  --card: #1e1b17;
-  --line: #3a342c;
-  --accent: #fdba74;
-  --accent-soft: #3b2718;
-  --good: #bef264;
-  --bad: #fda4af;
+  --ink: #e8efec;
+  --ink-2: #a9b7b1;
+  --muted: #93a19b;
+  --paper: #0d1311;
+  --card: #141c19;
+  --surface-2: #1a2420;
+  --line: #26332e;
+  --line-strong: #3a4a44;
+  --accent: #4cc7b0;
+  --accent-soft: #12332c;
+  --accent-ink: #9fe5d6;
+  --good: #4cc7b0;
+  --bad: #f2895f;
+  --bad-soft: #3b1e14;
+  --warn: #f0b45a;
+  --warn-soft: #3a2a10;
+  --info: #8ca8f5;
+  --info-soft: #18213d;
+  --series-2: #8ca8f5;
+  --series-3: #f08a54;
+  --series-4: #b497f0;
+  --series-5: #d9b84a;
+  --series-6: #a9b7b1;
   --bucket-review: #3987e5;
   --bucket-blog: #d95926;
   --bucket-news: #199e70;
@@ -93,24 +144,25 @@ body {
 }
 
 #root {
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 32px 20px 80px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   text-align: left;
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--serif);
-  font-weight: 560;
+  font-family: var(--sans);
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
 }
 
 h1 {
-  font-size: clamp(28px, 4vw, 40px);
-  line-height: 1.2;
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 700;
+  line-height: 1.25;
   margin: 8px 0 12px;
 }
 
