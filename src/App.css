@@ -1685,6 +1685,17 @@ p.hint {
 .rec-label { margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .rec-actions { margin: 0; padding-left: 18px; }
 .rec-actions li { margin: 4px 0; }
+.rec-evidence {
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.rec-evidence-block + .rec-evidence-block { margin-top: 10px; }
+.rec-evidence-head { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+.rec-evidence ul { margin: 0; padding-left: 18px; }
+.rec-evidence li { margin: 4px 0; font-size: 14px; line-height: 1.5; }
+.rec-evidence .hint { margin: 4px 0 0; }
 .rec-expected { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
 .rec-expected strong { color: var(--ink); }
 .rec-links { margin: 10px 0 0; display: flex; gap: 14px; flex-wrap: wrap; }

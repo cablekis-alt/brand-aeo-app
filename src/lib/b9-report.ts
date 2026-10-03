@@ -1,4 +1,5 @@
 import type { EeatAnalysis } from '../prompts/b6-eeat'
+import type { RecommendationEvidence } from './recommendationEvidence'
 import {
   AEO_SCORE_WEIGHTS,
   MIN_SOM_MENTIONS,
@@ -40,6 +41,11 @@ export interface Recommendation {
   actions: string[]
   expected: string
   links: { label: string; to: string }[]
+  /**
+   * 이번 주 데이터로 본 실행 항목(밀린 질문·출처·감점) — 화면이 측정 기록을 읽어 붙인다
+   * (src/lib/recommendationEvidence.ts). 기록이 없으면(웹 데모 등) 비어 있고 actions만 보인다.
+   */
+  evidence?: RecommendationEvidence
 }
 
 export interface PeriodicReport {
