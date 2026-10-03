@@ -37,11 +37,13 @@ export function measureConditionText(card: {
   modelsUsed?: Record<string, string>
   judgeEngine?: string
   judgeModel?: string
-}): { collect: string; judge: string } {
+  repeatsPerQuestion?: number
+}): { collect: string; judge: string; repeats: string } {
   const withModel = (engine: string, model?: string) => `${ENGINE_LABEL[engine] ?? engine}${model ? ` (${model})` : ''}`
   const collect = (card.enginesUsed ?? []).map((e) => withModel(e, card.modelsUsed?.[e])).join(' · ') || '기록 없음'
   const judge = card.judgeEngine ? withModel(card.judgeEngine, card.judgeModel) : '기록 없음'
-  return { collect, judge }
+  const repeats = card.repeatsPerQuestion ? `질문당 ${card.repeatsPerQuestion}회` : '기록 없음'
+  return { collect, judge, repeats }
 }
 
 /** 스코어카드의 judgeEngine 표시. 기록이 없는 구버전 카드는 그렇게 밝힌다(추측하지 않는다). */

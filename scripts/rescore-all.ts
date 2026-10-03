@@ -66,6 +66,7 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
     mentionRate: m.mentionRate,
     shareOfMention: m.shareOfMention,
     shareOfMentionMentions: m.shareOfMentionMentions,
+    ...(m.repeatsPerQuestion !== undefined ? { repeatsPerQuestion: m.repeatsPerQuestion } : {}),
     avgRecommendationRank: m.avgRecommendationRank,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,

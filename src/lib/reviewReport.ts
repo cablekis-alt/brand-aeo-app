@@ -68,8 +68,8 @@ export interface ReviewReport {
   cohortPosition: number
   cohortTotal: number
   cohortTied: boolean
-  /** 수집 엔진(모델) · 판단 엔진(모델) — 문서 머리에 적는다. */
-  conditions: { collect: string; judge: string }
+  /** 수집 엔진(모델) · 판단 엔진(모델) · 반복 횟수 — 문서 머리에 적는다. */
+  conditions: { collect: string; judge: string; repeats: string }
   site: SiteScoreRecord | null
   checks: TrustCheck[]
   cohort: CohortRow[]
@@ -277,11 +277,18 @@ function trustChecks(
   if (new Set(all.map(engineSet)).size > 1) diffs.push('수집 엔진')
   if (new Set(all.map((c) => JSON.stringify(c.modelsUsed ?? {}))).size > 1) diffs.push('엔진 모델')
   if (new Set(all.map((c) => c.judgeModel ?? '')).size > 1) diffs.push('판정 모델')
+  // 반복 횟수는 기록이 있는 카드끼리만 비교한다(기록 이전 카드는 모른다 — 다르다고 하지 않는다).
+  if (new Set(all.filter((c) => c.repeatsPerQuestion).map((c) => c.repeatsPerQuestion)).size > 1) diffs.push('질문당 반복 횟수')
   if (others.length > 0) {
     checks.push(
       diffs.length > 0
-        ? { id: 'conditions', label: '같은 측정 조건', status: 'warn', detail: `코호트 안에서 ${diffs.join('·')}이 다릅니다 — 같은 조건의 비교가 아닙니다.` }
-        : { id: 'conditions', label: '같은 측정 조건', status: 'ok', detail: `코호트 모두 ${engineText(card)}로 쟀고 판정 모델도 같습니다.` },
+        ? { id: 'conditions', label: '같은 측정 조건', status: 'warn', detail: `코호트 안에서 다른 조건이 있습니다(${diffs.join(' · ')}) — 같은 조건의 비교가 아닙니다.` }
+        : {
+            id: 'conditions',
+            label: '같은 측정 조건',
+            status: 'ok',
+            detail: `코호트 모두 ${engineText(card)}로 쟀고 판정 모델${card.repeatsPerQuestion ? `·반복 횟수(질문당 ${card.repeatsPerQuestion}회)` : ''}도 같습니다.`,
+          },
     )
   }
 
@@ -472,6 +479,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);font-si
 <div><dt>코호트</dt><dd>${esc(r.industry)} · ${esc(r.region)} · ${r.cohortTotal}곳</dd></div>
 <div><dt>수집 엔진</dt><dd>${esc(r.conditions.collect)}</dd></div>
 <div><dt>판단 엔진</dt><dd>${esc(r.conditions.judge)}</dd></div>
+<div><dt>반복</dt><dd>${esc(r.conditions.repeats)}</dd></div>
 <div><dt>일반 질문</dt><dd>${r.general.questions}개 · 응답 ${r.general.responses}</dd></div>
 </dl>
 </header>

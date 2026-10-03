@@ -483,6 +483,7 @@ export function aggregateScorecard(
     mentionRate: m.mentionRate,
     shareOfMention: m.shareOfMention,
     ...(m.shareOfMentionMentions !== undefined ? { shareOfMentionMentions: m.shareOfMentionMentions } : {}),
+    ...(m.repeatsPerQuestion !== undefined ? { repeatsPerQuestion: m.repeatsPerQuestion } : {}),
     avgRecommendationRank: m.avgRecommendationRank,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,
