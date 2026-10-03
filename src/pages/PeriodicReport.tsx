@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ReviewReportPanel from '../components/ReviewReportPanel'
+import ScoreTrendChart from '../components/ScoreTrendChart'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadQuestionAnalyses, loadQuestionBank, loadSiteScores, type SiteScoreRecord } from '../lib/api'
@@ -492,6 +493,12 @@ export default function PeriodicReport() {
           {period === 'week' && comparison && !comparison.comparable && (
             <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
           )}
+
+          {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
+          <section className="report-trend">
+            <h3>주차별 Brand AEO Score</h3>
+            <ScoreTrendChart history={history} endWeek={judgedWeek || card.weekOf} />
+          </section>
 
           {period === 'month' && (
             <section className="month-context">

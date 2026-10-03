@@ -13,23 +13,27 @@ export type ConditionChange = '수집 엔진' | '판정 엔진' | '모델' | '�
  * 보고서의 측정 조건 점검과 같은 항목이다.
  */
 export function conditionChange(prev: WeeklyScorecard, cur: WeeklyScorecard): ConditionChange | null {
+  return conditionChanges(prev, cur)[0] ?? null
+}
+
+/** 달라진 측정 조건 전부(위와 같은 순서) — 보고서 추이 그래프처럼 「무엇이 바뀌었나」를 다 적어야 할 때. */
+export function conditionChanges(prev: WeeklyScorecard, cur: WeeklyScorecard): ConditionChange[] {
+  const out: ConditionChange[] = []
   const a = [...(prev.enginesUsed ?? [])].sort().join(',')
   const b = [...(cur.enginesUsed ?? [])].sort().join(',')
-  if (a && b && a !== b) return '수집 엔진'
-  if (prev.judgeEngine && cur.judgeEngine && prev.judgeEngine !== cur.judgeEngine) return '판정 엔진'
+  if (a && b && a !== b) out.push('수집 엔진')
+  if (prev.judgeEngine && cur.judgeEngine && prev.judgeEngine !== cur.judgeEngine) out.push('판정 엔진')
   const pm = prev.modelsUsed
   const cm = cur.modelsUsed
-  if (pm && cm) {
-    for (const e of new Set([...Object.keys(pm), ...Object.keys(cm)])) {
-      if (pm[e] && cm[e] && pm[e] !== cm[e]) return '모델'
-    }
-  }
-  if (prev.judgeModel && cur.judgeModel && prev.judgeModel !== cur.judgeModel) return '모델'
+  const modelChanged =
+    (pm && cm && [...new Set([...Object.keys(pm), ...Object.keys(cm)])].some((e) => pm[e] && cm[e] && pm[e] !== cm[e])) ||
+    Boolean(prev.judgeModel && cur.judgeModel && prev.judgeModel !== cur.judgeModel)
+  if (modelChanged) out.push('모델')
   if (prev.questionBankVersion && cur.questionBankVersion && prev.questionBankVersion !== cur.questionBankVersion) {
-    return '질문지'
+    out.push('질문지')
   }
   if (prev.repeatsPerQuestion && cur.repeatsPerQuestion && prev.repeatsPerQuestion !== cur.repeatsPerQuestion) {
-    return '반복 횟수'
+    out.push('반복 횟수')
   }
-  return null
+  return out
 }
