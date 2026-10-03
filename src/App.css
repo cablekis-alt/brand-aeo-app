@@ -966,6 +966,23 @@ td.judgment {
 .top {
   margin-bottom: 28px;
 }
+/* 이전 화면으로 — 헤더 맨 위의 작은 텍스트 버튼. 브랜드 박스 위에 한 줄로 놓인다. */
+.top .back-link {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.top .back-link:hover,
+.top .back-link:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+}
 /* 브랜드 박스가 숨겨진 관리·측정 화면에선 빈 헤더가 여백을 남기지 않게 접는다. */
 .top:empty {
   margin-bottom: 0;
