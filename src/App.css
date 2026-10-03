@@ -1157,11 +1157,11 @@ td.judgment {
   filter: brightness(1.06);
 }
 
+/* 쪽 머리말(그룹 이름) — 대시보드·보고서의 .page-eyebrow와 같은 모양. 그룹 이름은 사이드바와 같다. */
 .brand {
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   font-size: 12px;
-  color: var(--accent);
+  font-weight: 500;
+  color: var(--muted);
   margin: 0;
 }
 
@@ -1177,11 +1177,11 @@ button {
 }
 
 select {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
   background: var(--card);
   color: var(--ink);
-  border-radius: 2px;
+  border-radius: var(--r-ctl);
 }
 
 .error {
@@ -1985,8 +1985,9 @@ p.hint {
 .notice {
   margin: 12px 0 0;
   padding: 10px 14px;
-  border-left: 3px solid var(--warn);
-  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--line));
+  border-radius: 10px;
+  background: var(--warn-soft);
   color: var(--ink);
   font-size: 0.92em;
 }
@@ -2162,8 +2163,8 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 /* 실행 항목 — 글 한 편이 어디로 가는지. 「쓸 글」과 「올릴 곳」이 곱셈으로 읽히지 않게 한다. */
 .gap-dest {
   margin: 6px 0 0;
-  padding: 5px 8px;
-  border-left: 2px solid var(--accent);
+  padding: 6px 10px;
+  border-radius: var(--r-ctl);
   background: var(--tint, rgba(127, 127, 127, 0.06));
   font-size: 12.5px;
   line-height: 1.5;
@@ -2663,8 +2664,10 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 /* 한 줄 결론 — 표 바로 아래에서 "그래서 뭘 고치나"에 답한다. */
 .rank-verdict {
   margin: 10px 0 0;
-  padding-left: 12px;
-  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
   font-size: 14px;
 }
 
@@ -3476,4 +3479,95 @@ td.cell-mid {
   margin-right: 4px;
   font-size: 12.5px;
   font-weight: 700;
+}
+
+/*
+ * ── 기본 입력 요소(상용화 UI 5단계) ──────────────────────────────────
+ * 지금까지 버튼은 브라우저 기본 모양이었고(ghost 44곳, 클래스 없는 버튼 54곳), 화면마다 따로 칠한 곳만
+ * 달랐다. :where()로 0 특이도를 주어, 화면별로 이미 정한 스타일(.panel .primary, .theme-toggle button…)이
+ * 그대로 이기고 아무것도 정하지 않은 버튼만 이 모양을 받는다.
+ */
+:where(button) {
+  padding: 7px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+:where(button):hover:not(:disabled) {
+  border-color: var(--ink-2);
+}
+:where(button):disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+:where(button.ghost) {
+  background: transparent;
+}
+/* 표 칸 안의 버튼(펼치기 ▸, 행 동작)은 줄 높이를 늘리지 않게 작게. */
+:where(td button) {
+  padding: 3px 8px;
+  font-size: 12.5px;
+}
+:where(button.primary) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+  font-weight: 600;
+}
+:where(button.primary):hover:not(:disabled) {
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+:where(button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+:where(input:not([type]), input[type='text'], input[type='url'], input[type='search'], input[type='number'], input[type='email'], input[type='password'], textarea) {
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+:where(input, textarea, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+:where(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--accent);
+}
+
+/* 좁은 화면 메뉴 접기(Sidebar.tsx) — 넓은 화면에서는 단추를 숨기고 메뉴를 늘 펼친다. */
+.sidebar-menu-toggle {
+  display: none;
+}
+@media (max-width: 760px) {
+  .sidebar-menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-ctl);
+    background: var(--card);
+    color: var(--ink);
+  }
+  .brand-lockup {
+    width: 100%;
+  }
+  .sidebar:not(.is-open) .sidebar-cta,
+  .sidebar:not(.is-open) .sidebar-scroll,
+  .sidebar:not(.is-open) .sidebar-status,
+  .sidebar:not(.is-open) .sidebar-foot {
+    display: none;
+  }
 }

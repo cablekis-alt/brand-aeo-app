@@ -434,7 +434,7 @@ export default function BrandDiagnosis() {
 
   return (
     <>
-      <p className="brand">어디가 비어 있나</p>
+      <p className="brand">진단</p>
       <h1>브랜드 종합 진단</h1>
       <p className="lead">
         이번 주 응답
@@ -707,7 +707,7 @@ export default function BrandDiagnosis() {
                           <th>브랜드</th>
                           <th>나온 답변</th>
                           <th>총 등장</th>
-                          <th>엔진</th>
+                          <th className="cell-text">엔진</th>
                           <th>코호트</th>
                         </tr>
                       </thead>
@@ -719,7 +719,7 @@ export default function BrandDiagnosis() {
                             </td>
                             <td>{b.answers}건</td>
                             <td>{b.mentions}회</td>
-                            <td className="muted">{b.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
+                            <td className="cell-text muted">{b.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
                             <td>
                               <span className={`status-pill ${b.registered ? 'st-good' : 'st-warn'}`}>
                                 {b.registered ? '등록됨' : '미등록'}

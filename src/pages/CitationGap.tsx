@@ -91,8 +91,8 @@ function GapRowView({
             <span className="muted">·</span>
           )}
         </td>
-        <td>{row.domain}</td>
-        <td>
+        <td className="cell-text">{row.domain}</td>
+        <td className="cell-text">
           <span className={`status-pill ${BUCKET_PILL[row.bucket]}`}>{GAP_BUCKET_LABEL[row.bucket]}</span>
         </td>
         <td>{formatPct(row.share)}</td>
@@ -100,8 +100,8 @@ function GapRowView({
           <ShareDelta share={row.share} previousShare={row.previousShare} comparable={comparable} />
         </td>
         <td>{row.citationCount}</td>
-        <td>{row.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
-        <td>
+        <td className="cell-text">{row.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
+        <td className="cell-text">
           {row.actionId ? (
             <Link
               to={`/gap-actions?focus=${encodeURIComponent(row.actionId)}&domain=${encodeURIComponent(row.domain)}`}
@@ -135,7 +135,7 @@ function GapRowView({
                       <UrlLink url={u.url} />
                     </td>
                     <td>{u.citationCount}</td>
-                    <td>{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
+                    <td className="cell-text">{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -209,7 +209,7 @@ export default function CitationGap() {
 
   return (
     <>
-      <p className="brand">어디가 비어 있나</p>
+      <p className="brand">진단</p>
       <h1>인용 갭 분석</h1>
       <p className="lead">
         AI가 답을 만들 때 인용하지만 <b>우리 브랜드는 없는</b> 출처를 찾습니다. 이 도메인들이 곧 콘텐츠·PR·제휴로
@@ -332,13 +332,13 @@ export default function CitationGap() {
                 <thead>
                   <tr>
                     <th aria-label="펼치기" />
-                    <th>도메인</th>
-                    <th>유형</th>
+                    <th className="cell-text">도메인</th>
+                    <th className="cell-text">유형</th>
                     <th>점유율</th>
                     <th>전주 대비</th>
                     <th>인용수</th>
-                    <th>엔진</th>
-                    <th>실행</th>
+                    <th className="cell-text">엔진</th>
+                    <th className="cell-text">실행</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -302,7 +302,7 @@ export default function BrandManageList() {
             <thead>
               <tr>
                 <th style={{ whiteSpace: 'nowrap' }}>브랜드</th>
-                <th style={{ whiteSpace: 'nowrap' }}>tenantId</th>
+                <th className="cell-text" style={{ whiteSpace: 'nowrap' }}>tenantId</th>
                 <th style={{ whiteSpace: 'nowrap' }}>업종 · 지역</th>
                 <th>경쟁사</th>
                 {keyStatus && <th style={{ whiteSpace: 'nowrap' }}>수집 엔진</th>}
@@ -319,7 +319,7 @@ export default function BrandManageList() {
                       {row.brandName}
                       {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
                     </td>
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
                       <code>{row.tenantId}</code>
                     </td>
                     <td className="judgment" style={{ whiteSpace: 'nowrap' }}>

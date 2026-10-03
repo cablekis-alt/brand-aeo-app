@@ -779,8 +779,8 @@ export default function MeasureStatus() {
               <thead>
                 <tr>
                   <th>상태</th>
-                  <th>대상</th>
-                  <th>측정 엔진</th>
+                  <th className="cell-text">대상</th>
+                  <th className="cell-text">측정 엔진</th>
                   <th>주차</th>
                   <th>AEO</th>
                   <th>측정시간</th>
@@ -793,10 +793,10 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-warn">진행 중</span>
                     </td>
-                    <td>{a.brandName || a.tenantId}</td>
+                    <td className="cell-text">{a.brandName || a.tenantId}</td>
                     {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
                         온보딩보다 덜 보여 주는 역전이 된다. */}
-                    <td className="muted">{measureStageLabel(a)}</td>
+                    <td className="cell-text muted">{measureStageLabel(a)}</td>
                     <td>-</td>
                     <td className="num">-</td>
                     <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
@@ -808,8 +808,8 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-good">로컬 완료</span>
                     </td>
-                    <td>{e.brandName || e.tenantId}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
+                    <td className="cell-text">{e.brandName || e.tenantId}</td>
+                    <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
                     <td>{e.weekOf}</td>
                     <td className="num">{e.aeoScore}</td>
                     <td className="num">{fmtSec(e.durationSec)}</td>

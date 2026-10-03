@@ -85,7 +85,7 @@ export default function CitationSources() {
                     <tr>
                       <th>엔진</th>
                       <th>인용</th>
-                      <th>구성</th>
+                      <th className="cell-text">구성</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -93,7 +93,7 @@ export default function CitationSources() {
                       <tr key={row.engine}>
                         <td>{ENGINE_LABEL[row.engine] ?? row.engine}</td>
                         <td>{row.total}</td>
-                        <td>
+                        <td className="cell-text">
                           {row.mix
                             .map((item) => `${SOURCE_KIND_LABEL[item.kind] ?? item.kind} ${item.count}`)
                             .join(' · ')}
@@ -114,7 +114,7 @@ export default function CitationSources() {
                   <thead>
                     <tr>
                       <th>도메인</th>
-                      <th>유형</th>
+                      <th className="cell-text">유형</th>
                       <th>엔진 수</th>
                       <th>인용</th>
                     </tr>
@@ -123,7 +123,7 @@ export default function CitationSources() {
                     {data.consensusDomains.map((row) => (
                       <tr key={row.domain}>
                         <td>{row.domain}</td>
-                        <td>{SOURCE_KIND_LABEL[row.kind] ?? row.kind}</td>
+                        <td className="cell-text">{SOURCE_KIND_LABEL[row.kind] ?? row.kind}</td>
                         <td>{row.engineCount}</td>
                         <td>{row.citationCount}</td>
                       </tr>
@@ -141,10 +141,10 @@ export default function CitationSources() {
                 <thead>
                   <tr>
                     <th>URL</th>
-                    <th>유형</th>
-                    <th>소유권</th>
+                    <th className="cell-text">유형</th>
+                    <th className="cell-text">소유권</th>
                     <th>횟수</th>
-                    <th>엔진</th>
+                    <th className="cell-text">엔진</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -155,10 +155,10 @@ export default function CitationSources() {
                           {row.domain}
                         </a>
                       </td>
-                      <td>{SOURCE_KIND_LABEL[row.kind] ?? row.kind}</td>
-                      <td>{OWNER_TYPE_LABEL[row.ownerType] ?? row.ownerType}</td>
+                      <td className="cell-text">{SOURCE_KIND_LABEL[row.kind] ?? row.kind}</td>
+                      <td className="cell-text">{OWNER_TYPE_LABEL[row.ownerType] ?? row.ownerType}</td>
                       <td>{row.citationCount}</td>
-                      <td>{row.engines.map((engine) => ENGINE_LABEL[engine] ?? engine).join(', ')}</td>
+                      <td className="cell-text">{row.engines.map((engine) => ENGINE_LABEL[engine] ?? engine).join(', ')}</td>
                     </tr>
                   ))}
                 </tbody>

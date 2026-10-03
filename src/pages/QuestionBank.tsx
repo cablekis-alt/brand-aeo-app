@@ -225,10 +225,10 @@ export default function QuestionBankPage() {
                 <thead>
                   <tr>
                     <th style={{ width: 34 }}>고름</th>
-                    <th>질문</th>
+                    <th className="cell-text">질문</th>
                     <th>ID</th>
-                    <th>주제</th>
-                    <th>카테고리</th>
+                    <th className="cell-text">주제</th>
+                    <th className="cell-text">카테고리</th>
                     <th>단계</th>
                     <th>브랜드명 포함</th>
                   </tr>
@@ -253,10 +253,10 @@ export default function QuestionBankPage() {
                             }
                           />
                         </td>
-                        <td>{q.text}</td>
+                        <td className="cell-text">{q.text}</td>
                         <td>{q.questionId}</td>
-                        <td>{q.topic ?? <span className="muted">미분류</span>}</td>
-                        <td>{CATEGORY_LABEL[q.category] ?? q.category}</td>
+                        <td className="cell-text">{q.topic ?? <span className="muted">미분류</span>}</td>
+                        <td className="cell-text">{CATEGORY_LABEL[q.category] ?? q.category}</td>
                         <td>
                           {STAGE_LABEL[st.stage]}
                           {st.inferred && (
