@@ -422,7 +422,7 @@ export default function Dashboard() {
                     return (
                       <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}`}>
                         <span className="trend-value">{h.aeoScore.current}</span>
-                        <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 120))}px` }} />
+                        <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 64))}px` }} />
                         <span className="trend-week">{h.weekOf.replace(/^\d{4}-/, '')}</span>
                         <span className={`trend-mark${changed ? ' on' : ''}`} title={changed ? `직전 주와 ${changed}이(가) 다름` : undefined} />
                       </div>
