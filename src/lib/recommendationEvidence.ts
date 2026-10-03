@@ -1,4 +1,4 @@
-import { AEO_SCORE_WEIGHTS, normalizeRank, type WeeklyScorecard } from '../prompts/b8-report'
+import { AEO_SCORE_WEIGHTS, normalizeRank, rankWeightFactor, RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { SiteScoreRecord } from './api'
 import { ENGINE_LABEL } from './format'
@@ -68,7 +68,7 @@ function estimateScore(card: WeeklyScorecard, mentionRate: number): number {
   const parts = [
     { w: w.brandOwnedCitationRate, v: card.brandOwnedCitationRate },
     ...(card.avgRecommendationRank !== null
-      ? [{ w: w.avgRecommendationRank, v: normalizeRank(card.avgRecommendationRank) }]
+      ? [{ w: w.avgRecommendationRank * rankWeightFactor(card.rankedResponses, card.avgRecommendationRank), v: normalizeRank(card.avgRecommendationRank) }]
       : []),
   ]
   const total = w.mentionRate + parts.reduce((s, p) => s + p.w, 0)
@@ -189,8 +189,10 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
         {
           heading:
             card.avgRecommendationRank === null
-              ? `순위가 매겨진 답변 ${rankedResponses}건(3건 이상이어야 점수에 들어간다) — 불렸지만 1순위가 아닌 질문`
-              : '불렸지만 1순위가 아닌 질문',
+              ? '순위가 매겨진 답변이 없다 — 불렸지만 추천 순서가 매겨지지 않은 질문'
+              : rankedResponses < RANK_FULL_WEIGHT_RESPONSES
+                ? `순위가 매겨진 답변 ${rankedResponses}건(점수에는 비중 ${rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}) — 불렸지만 1순위가 아닌 질문`
+                : '불렸지만 1순위가 아닌 질문',
           items: notFirst.slice(0, SHOW).map((r) => {
             const top = general
               .filter((a) => a.questionId === r.questionId && a.topRecommendation && a.topRecommendation !== card.brandName)

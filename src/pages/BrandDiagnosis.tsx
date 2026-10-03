@@ -20,6 +20,8 @@ import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { QuestionRepeatAnalysis } from '../lib/types'
 import {
   AEO_SCORE_WEIGHTS,
+  RANK_FULL_WEIGHT_RESPONSES,
+  rankWeightFactor,
   normalizeRank,
   shareOfMentionShortSample,
   type WeeklyScorecard,
@@ -106,9 +108,13 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       key: 'p',
       letter: 'P',
       label: '평균 추천 순위',
-      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank,
+      // 순위 응답이 적으면 비중을 그만큼만 쓴다(rankWeightFactor) — 막대 옆 비중도 실제 반영 비중으로 적는다.
+      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank * rankWeightFactor(card.rankedResponses, card.avgRecommendationRank),
       value: card.avgRecommendationRank === null ? null : normalizeRank(card.avgRecommendationRank),
-      text: card.avgRecommendationRank === null ? '판정 불가' : `${card.avgRecommendationRank.toFixed(1)}위`,
+      text:
+        card.avgRecommendationRank === null
+          ? '판정 불가'
+          : `${card.avgRecommendationRank.toFixed(1)}위${card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES ? ` (답변 ${card.rankedResponses}건)` : ''}`,
     },
   ]
   const missing = rows.filter((r) => r.value === null)

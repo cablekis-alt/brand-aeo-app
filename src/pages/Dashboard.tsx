@@ -5,7 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
-import { shareOfMentionNote } from '../prompts/b8-report'
+import { RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote } from '../prompts/b8-report'
 import type { PromptedSplit } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -366,7 +366,11 @@ export default function Dashboard() {
             <article>
               <h2>평균 추천 순위</h2>
               <p>{formatRank(card.avgRecommendationRank)}</p>
-              <span>1이 최상위. 순위가 매겨진 응답이 3건 미만이면 판정 불가</span>
+              <span>
+                1이 최상위. 순위 답변 {card.rankedResponses ?? '—'}건
+                {card.rankedResponses !== undefined && card.rankedResponses > 0 && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES ? ' · 점수에는 비중을 줄여 반영' : ''}
+                {card.avgRecommendationRank === null ? ' · 순위 답변이 없으면 판정 불가' : ''}
+              </span>
             </article>
             <article>
               <h2>사실성</h2>

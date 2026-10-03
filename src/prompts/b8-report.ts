@@ -14,7 +14,8 @@ import type { PromptMessage } from './types.js';
  *   (41.7% · 33.3% · 25.0%).
  *   · Mention에는 감성 계수를 곱한다
  *   · EEAT·사실성·Share of Mention은 점수에 넣지 않고 별도 진단 축으로 둔다
- *   · 순위가 null(순위 응답 3건 미만)이면 그 가중치를 빼고 남은 합으로 재정규화한다
+ *   · 추천 순위는 순위가 매겨진 응답 수만큼 비중을 늘려 반영한다(rankWeightFactor) — 0건이면 빼고
+ *     남은 합으로 재정규화한다
  *
  * 왜 여기(src/prompts)에 두는가 — server와 src가 둘 다 import하는 유일한 지점이기 때문이다.
  * 예전에는 server/scoring.ts와 src/lib/b9-report.ts가 각자 표를 들고 있었고 값이 갈라졌다
@@ -63,9 +64,29 @@ export const AEO_SCORE_WEIGHTS = {
  * 10번인 이유. 설치본 SoM 카드 59장 중 4~9번 구간이 10장, 10~19번은 4장뿐이다 — 10번은 소표본 무리를
  * 통째로 넘는 자리라 순위가 "언급 한 번 차이"로 갈리는 일이 적다(7번이면 강남 W40에서 7번인 더스완만
  * SoM이 남아 1위가 된다). 20번으로 올리면 "경쟁사 16번 · 자사 0번"처럼 정보가 있는 값까지 버린다.
- * 추천 순위의 MIN_RANKED_RESPONSES(3건)와 같은 방식이다.
  */
 export const MIN_SOM_MENTIONS = 10;
+
+/**
+ * 추천 순위가 전체 비중(25%)으로 들어가는 순위 응답 수. 그보다 적으면 응답 수만큼만 반영한다.
+ *
+ * 전에는 3건 미만이면 순위를 통째로 빼고(재정규화) 3건부터 전체 비중으로 넣었다. 응답 한 건 차이로
+ * 점수가 15점 넘게 뛰었다 — 실측 W40 디에이 치과는 순위 응답이 4건 → 2건이 되자 33 → 16점이 됐다.
+ * 응답 1건이 1위였는지만으로 만점을 주지 않으려던 원래 뜻은 살리면서, 경계를 없앤다.
+ * 0건이면 여전히 빼고 재정규화한다 — 재지 않은 값을 채우지 않는다.
+ *
+ * 6건인 이유(2026-10-03, 설치본 카드 251장·이웃 주차 90쌍 재계산). 3건 경계를 넘나든 주의 점수 변화가
+ * 평균 20.4점 → 12.6점(6건)으로 줄었다. 10건이면 10.0점이지만 순위 응답 10건 이상 카드가 8장뿐이라
+ * 거의 모든 브랜드에서 순위가 점수에 거의 들어가지 않는다(0건 137 · 1~2건 57 · 3~5건 34 · 6~9건 15).
+ */
+export const RANK_FULL_WEIGHT_RESPONSES = 6;
+
+/** 추천 순위 비중 계수(0~1). 순위가 없으면 0, 응답 수를 모르는 옛 카드는(당시 3건 이상만 있었다) 1. */
+export function rankWeightFactor(rankedResponses: number | undefined, avgRank: number | null): number {
+  if (avgRank === null) return 0;
+  if (rankedResponses === undefined) return 1;
+  return Math.min(1, Math.max(0, rankedResponses) / RANK_FULL_WEIGHT_RESPONSES);
+}
 
 type SomFields = Pick<WeeklyScorecard, 'shareOfMention' | 'shareOfMentionMentions'>;
 
@@ -109,6 +130,11 @@ export interface WeeklyScorecard {
   // null이 된 주를 "경쟁사 없음"으로 굳히지 않게. 옛 카드에는 없다.
   shareOfMentionMentions?: number;
   avgRecommendationRank: number | null;
+  /**
+   * 추천 순위가 매겨진 응답 수(브랜드 이름 없는 질문). 순위 비중을 정한다(rankWeightFactor).
+   * 기록 이전 카드엔 없다 — 그때는 3건 이상일 때만 순위가 있었으므로 전체 비중으로 본다.
+   */
+  rankedResponses?: number;
   // supported / (supported+contradicted). 사실 판정이 0건이면 측정 불가(null) — 팩트 그래프가 없는
   // 브랜드는 늘 그렇다. Brand AEO Score에는 들어가지 않는 정확도 지표다(AEO_SCORE_WEIGHTS 주석).
   factualityScore: number | null;
@@ -207,7 +233,7 @@ export function buildWeeklyReportPrompt(
 - AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
 - Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준, Brand AEO Score에 포함되지 않음): ${shareOfMentionNote(card) ?? `${((card.shareOfMention ?? 0) * 100).toFixed(1)}%`}
-- 평균 추천 순위: ${card.avgRecommendationRank ?? '순위 판정 불가'}
+- 평균 추천 순위: ${card.avgRecommendationRank === null ? '순위 판정 불가' : `${card.avgRecommendationRank}${card.rankedResponses !== undefined ? ` (순위 응답 ${card.rankedResponses}건 · 비중 ${Math.round(rankWeightFactor(card.rankedResponses, card.avgRecommendationRank) * 100)}%)` : ''}`}
 - 사실성(정확도, Brand AEO Score에 포함되지 않음): ${card.factualityScore === null ? '팩트 그래프 없음 또는 대조할 사실 없음 — 측정 불가' : `${(card.factualityScore * 100).toFixed(1)}%`}
 - 브랜드 소유 출처 인용률: ${(card.brandOwnedCitationRate * 100).toFixed(1)}%
 - 사실성 위반 사례: ${card.hallucinationFlags.join(' / ') || '없음'}${eeatLines}${citationLines}`;

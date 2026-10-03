@@ -159,6 +159,7 @@ for (const tenantId of readdirSync(dataDir)) {
       shareOfMentionMentions: m.shareOfMentionMentions,
       ...(m.repeatsPerQuestion !== undefined ? { repeatsPerQuestion: m.repeatsPerQuestion } : {}),
       avgRecommendationRank: m.avgRecommendationRank,
+      rankedResponses: m.rankedResponses,
       factualityScore: m.factualityScore,
       brandOwnedCitationRate: m.brandOwnedCitationRate,
       hallucinationFlags: m.hallucinationFlags,

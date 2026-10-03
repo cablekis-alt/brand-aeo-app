@@ -58,6 +58,8 @@ export function movingAverage4(weeklyScoresOldestFirst: number[]): number {
 export interface AeoScoreInputs {
   mentionRate: number; // 0~1, category-agnostic 질문 중 언급 비율(원시 비율 — 화면 표시값과 동일)
   avgRecommendationRank: number | null; // 1이 최상위, null이면 순위 데이터 없음
+  // 순위 비중 계수(0~1) — 순위 응답 수만큼 비중을 늘린다(b8-report.ts rankWeightFactor). 생략하면 1.
+  rankWeight?: number;
   brandOwnedCitationRate: number; // 0~1
   // 자사 언급의 감성 계수(positive 1.0 / neutral 0.7 / negative 0.2의 평균, 0.2~1.0). 언급이 없으면 1.0(중립 취급).
   // 점수 계산 시 Mention 성분 값에 곱해, "부정적으로 많이 언급"이 가시성 점수를 깎도록 한다.
@@ -75,7 +77,8 @@ export function sentimentWeight(s: 'positive' | 'neutral' | 'negative' | string)
 /**
  * B8 AEO Score. 0~100 스케일. 산식은 리포트 생성 프롬프트(b8-report.ts)에 입력으로만 전달되고, 재계산되지 않는다.
  * 측정되지 않은 항목은 지어내지 않고 재정규화로 제외한다:
- *   - avgRecommendationRank가 null(추천 문맥이 없거나 응답이 적어 순위 판정 불가)이면 그 가중치를 제외.
+ *   - avgRecommendationRank가 null(순위가 매겨진 응답이 없음)이면 그 가중치를 제외하고, 응답이 적으면
+ *     rankWeight만큼만 반영한다.
  * 남은 항목의 가중치 합으로 나눠 비례 재정규화한다. 사실성·Share of Mention은 점수에 넣지 않는다
  * (b8-report.ts 가중치 주석).
  */
@@ -86,10 +89,11 @@ export function computeAeoScore(inputs: AeoScoreInputs): number {
     { value: inputs.mentionRate * s, weight: AEO_SCORE_WEIGHTS.mentionRate },
     { value: inputs.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate },
   ];
-  if (inputs.avgRecommendationRank !== null) {
+  const rankWeight = inputs.rankWeight ?? 1;
+  if (inputs.avgRecommendationRank !== null && rankWeight > 0) {
     components.push({
       value: normalizeRank(inputs.avgRecommendationRank),
-      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank,
+      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank * rankWeight,
     });
   }
   const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);

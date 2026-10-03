@@ -89,7 +89,7 @@ async function verifyTenant(tenant: TenantConfig): Promise<number> {
     if (ranking.mentionScope !== 'category-agnostic') {
       bad.push([`랭킹 모집단(${ranking.mentionScope}) — 질문 은행 분류 실패`, 0, 1]);
     }
-    // 순위는 순위 응답이 MIN_RANKED_RESPONSES건 미만이면 null이다. 그 경우 파생값도 그만큼 적어야 정합이다.
+    // 순위는 순위 응답이 MIN_RANKED_RESPONSES건(1건) 미만, 곧 0건이면 null이다.
     if (card.avgRecommendationRank === null) {
       if (ranks.length >= MIN_RANKED_RESPONSES) bad.push(['순위(null 기대)', derivedRank, 0]);
     } else if (ranks.length < MIN_RANKED_RESPONSES) {

@@ -1,5 +1,5 @@
 import type { QuestionSpec } from '../src/prompts/types.js';
-import { MIN_SOM_MENTIONS } from '../src/prompts/b8-report.js';
+import { MIN_SOM_MENTIONS, rankWeightFactor } from '../src/prompts/b8-report.js';
 import { agnosticAnalyses, mentionTotals, shareOfMentionOf } from './mentionScope.js';
 import { computeAeoScore, mean, meanWithConfidenceInterval, sentimentWeight } from './scoring.js';
 import type { QuestionRepeatAnalysis } from './types.js';
@@ -27,6 +27,8 @@ export interface WeeklyMetrics {
   brandOwnedCitationRate: number;
   /** 감성 계수(0.2~1.0). 점수에만 반영되고 화면 지표에는 들어가지 않는다. */
   mentionSentiment: number;
+  /** 추천 순위가 매겨진 응답 수(카테고리 무관 질문) — 순위 비중을 정한다. */
+  rankedResponses: number;
   /** 질문당 반복 횟수 — 판정 기록의 가장 큰 반복 번호. 판정 기록이 없으면 undefined. */
   repeatsPerQuestion?: number;
   score: number;
@@ -40,13 +42,11 @@ export interface WeeklyMetrics {
 const ENGINE_ORDER = ['openai', 'gemini', 'claude', 'perplexity'];
 
 /**
- * 추천 순위를 지표로 쓰려면 순위가 매겨진 응답이 이만큼은 있어야 한다. 그보다 적으면 측정하지
- * 않은 것으로 보고 null(재정규화로 제외)로 둔다.
- *
- * 2026-W40 기준 순위가 산출된 48곳 중 20곳이 응답 2건 이하, 14곳이 1건이었다. 1건이면 그 한 번이
- * 1위였는지만으로 추천 순위 지표가 만점이 된다.
+ * 추천 순위가 있다고 보는 최소 순위 응답 수 — 1건이다. 응답이 적을 때의 과대 반영은 문턱이 아니라
+ * 비중으로 막는다(b8-report.ts RANK_FULL_WEIGHT_RESPONSES·rankWeightFactor). 2026-W40 기준 순위가
+ * 산출된 48곳 중 14곳이 1건이라, 3건 문턱은 응답 한 건 차이로 점수를 15점 넘게 바꿨다.
  */
-export const MIN_RANKED_RESPONSES = 3;
+export const MIN_RANKED_RESPONSES = 1;
 
 /**
  * 점수의 95% 신뢰구간(소수 첫째 자리). 하한은 0에서 자른다 — 점수는 0~100이라 음수 하한은 있을 수
@@ -85,6 +85,8 @@ export function aggregateWeeklyMetrics(
   // 응답 1건의 1위로 40점을 받아 스테이,머뭄(39점)보다 위에 섰다.
   const ranked = categoryAgnostic.map((a) => a.brandRank).filter((r): r is number => r !== null);
   const avgRecommendationRank = ranked.length >= MIN_RANKED_RESPONSES ? mean(ranked) : null;
+  const rankedResponses = ranked.length;
+  const rankWeight = rankWeightFactor(rankedResponses, avgRecommendationRank);
 
   // 사실성·인용은 전체 응답 기준 — 브랜드명이 들어간 질문에서도 그대로 의미가 있는 지표다.
 
@@ -118,6 +120,7 @@ export function aggregateWeeklyMetrics(
   const score = computeAeoScore({
     mentionRate,
     avgRecommendationRank,
+    rankWeight,
     brandOwnedCitationRate,
     mentionSentiment,
   });
@@ -131,6 +134,8 @@ export function aggregateWeeklyMetrics(
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
       avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
+      // 응답별 점수도 집계와 같은 순위 비중을 쓴다 — 중심과 분산이 서로 다른 산식을 보면 안 된다.
+      rankWeight,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
       mentionSentiment: perCallSentiment,
     });
@@ -155,6 +160,7 @@ export function aggregateWeeklyMetrics(
     mentionRate,
     shareOfMention,
     ...(shareOfMentionMentions !== undefined ? { shareOfMentionMentions } : {}),
+    rankedResponses,
     ...(repeatsPerQuestion !== undefined ? { repeatsPerQuestion } : {}),
     avgRecommendationRank,
     factualityScore,
