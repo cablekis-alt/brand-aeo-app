@@ -1,13 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
+import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
+import { useScorecards } from '../lib/useScorecards'
 import AppVersion from './AppVersion'
+import NavIcon, { type NavIconName } from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 
 /**
- * 메뉴는 **쓰는 사람의 질문** 순서로 묶는다 — 측정 → 어디가 비어 있나 → 그래서 뭘 하나 → 보고.
+ * 메뉴는 **쓰는 사람의 일** 순서로 묶는다 — 측정 → 진단 → 실행 → 보고.
+ *
+ * 그룹 이름은 처음엔 질문(어디가 비어 있나 / 그래서 뭘 하나)이었다. 처음 쓰는 사람에겐 안내가 되지만
+ * 매일 쓰는 화면에서는 훑어 읽기 어렵고 줄도 길어, 상용화 UI(2026-10)에서 짧은 명사로 바꿨다.
+ * 순서는 그대로라 "진단하고 실행한다"는 흐름은 남는다.
  *
  * 예전에는 파이프라인 단계(STAGE 1~4, B1~B9)로 묶고 줄마다 B-코드를 붙였다. 그건 만드는 사람의
  * 언어다. 쓰는 사람은 "측정 상태가 어디 있지"를 찾는데 "STAGE 2 · 엔진 연동 & 정규화"를 읽어야
@@ -23,6 +30,8 @@ interface MenuItem {
   label: string
   to: string
   badge?: 'measuring' | 'actions'
+  /** 주 메뉴만 아이콘을 단다. 접히는 상세·설정 항목은 글자만 두고 아이콘 자리만큼 들여 맞춘다. */
+  icon?: NavIconName
 }
 interface MenuGroup {
   id: string
@@ -35,43 +44,43 @@ interface MenuGroup {
 const MENU: MenuGroup[] = [
   {
     id: 'home',
-    items: [{ label: '대시보드', to: '/' }],
+    items: [{ label: '대시보드', to: '/', icon: 'dashboard' }],
   },
   {
     id: 'measure',
     title: '측정',
     items: [
-      { label: '브랜드·경쟁사 측정', to: '/measure-tenant' },
-      { label: '측정 상태', to: '/measure-status', badge: 'measuring' },
+      { label: '브랜드·경쟁사 측정', to: '/measure-tenant', icon: 'measure' },
+      { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status' },
     ],
   },
   {
     id: 'gaps',
-    title: '어디가 비어 있나',
+    title: '진단',
     items: [
-      { label: '브랜드 종합 진단', to: '/diagnosis' },
-      { label: '가시성 격차 분석', to: '/gap-analysis' },
-      { label: '인용 갭 분석', to: '/citation-gap' },
-      { label: '경쟁 순위', to: '/ranking' },
+      { label: '브랜드 종합 진단', to: '/diagnosis', icon: 'diagnosis' },
+      { label: '가시성 격차 분석', to: '/gap-analysis', icon: 'gap' },
+      { label: '인용 갭 분석', to: '/citation-gap', icon: 'citation' },
+      { label: '경쟁 순위', to: '/ranking', icon: 'ranking' },
     ],
   },
   {
     id: 'act',
-    title: '그래서 뭘 하나',
+    title: '실행',
     items: [
       // 「실행 항목」에서 이름을 바꿨다. 이 화면이 실제로 하는 일은 쓸 글을 정하고 만들어
       // 내보내는 것이고, 고객이 찾는 말도 그쪽이다. 배지(남은 건수)는 그대로 쓴다.
-      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions' },
-      { label: '콘텐츠 보관함', to: '/content-library' },
-      { label: 'Site AEO Checker', to: '/site-diagnosis' },
+      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions', icon: 'content' },
+      { label: '콘텐츠 보관함', to: '/content-library', icon: 'library' },
+      { label: 'Site AEO Checker', to: '/site-diagnosis', icon: 'site' },
     ],
   },
   {
     id: 'report',
     title: '보고',
     items: [
-      { label: 'AEO 퍼포먼스', to: '/performance' },
-      { label: '정기진단 보고서', to: '/report' },
+      { label: 'AEO 퍼포먼스', to: '/performance', icon: 'performance' },
+      { label: '정기진단 보고서', to: '/report', icon: 'report' },
     ],
   },
   {
@@ -150,12 +159,77 @@ function useMeasuringCount(): number {
   return n
 }
 
-export default function Sidebar() {
+/**
+ * 브랜드 바꾸기 — 상단 헤더에서 사이드바 머리로 옮겼다. 보이는 것은 이니셜·이름·업종·지역 카드이고,
+ * 실제 선택은 그 위에 투명하게 겹친 기본 select가 받는다(키보드·스크린리더·긴 목록 스크롤을 그대로 쓴다).
+ */
+function BrandSwitch() {
+  const { tenants, tenant, setTenantId } = useTenant()
+  if (!tenant) return null
+  const initial = Array.from(tenant.brandName.trim())[0] ?? '?'
+  return (
+    <div className="brand-switch">
+      <span className="brand-switch-initial" aria-hidden="true">
+        {initial}
+      </span>
+      <span className="brand-switch-text" aria-hidden="true">
+        <span className="brand-switch-name">{tenant.brandName}</span>
+        <span className="brand-switch-meta">
+          {tenant.industry} · {tenant.region}
+        </span>
+      </span>
+      <NavIcon name="updown" size={16} />
+      <select aria-label="브랜드 바꾸기" value={tenant.tenantId} onChange={(e) => setTenantId(e.target.value)}>
+        {tenants.map((item) => (
+          <option key={item.tenantId} value={item.tenantId}>
+            {item.brandName} · {item.industry} · {item.region}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+/**
+ * 사이드바 바닥의 측정 상태 — 진행 중인 측정이 있으면 그 건수, 없으면 이 브랜드의 마지막 측정 주차와 엔진.
+ * 측정 상태 화면으로 가는 지름길이기도 하다.
+ */
+function MeasureStatusCard({ measuring }: { measuring: number }) {
+  const { tenant } = useTenant()
+  const { history } = useScorecards(tenant?.tenantId ?? '')
+  const latest = history.length > 0 ? history[history.length - 1] : null
+  if (measuring === 0 && latest === null) return null
+  const engines = (latest?.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
+  const head = measuring > 0 || latest === null ? `측정 중 ${measuring}건` : `최근 측정 · ${weekLabel(latest.weekOf)}`
+  return (
+    <NavLink to="/measure-status" className="sidebar-status">
+      <span className="sidebar-status-head">
+        <span className={`sidebar-status-dot${measuring > 0 ? ' live' : ''}`} aria-hidden="true" />
+        {head}
+      </span>
+      {measuring === 0 && engines && <span className="sidebar-status-meta">{engines}</span>}
+    </NavLink>
+  )
+}
+
+export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean }) {
   const { pathname } = useLocation()
   const { tenant } = useTenant()
   const measuring = useMeasuringCount()
   const { plan, loading } = useGapActionPlan(tenant?.tenantId ?? '')
   const openActions = !loading && tenant ? plan.actions.filter(isOpenAction).length : 0
+
+  // 창이 낮아 메뉴가 넘치면 현재 화면 항목을 메뉴 스크롤 안에서만 보이게 맞춘다(창 스크롤은 건드리지
+  // 않는다 — scrollIntoView는 바깥 창까지 움직여 Layout의 스크롤 복원과 다툰다).
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const box = scrollRef.current
+    const on = box?.querySelector<HTMLElement>('a.on')
+    if (!box || !on) return
+    const top = on.offsetTop - box.offsetTop
+    if (top < box.scrollTop) box.scrollTop = top - 8
+    else if (top + on.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top + on.offsetHeight - box.clientHeight + 8
+  }, [pathname])
 
   const [folds, setFolds] = useState<Record<string, boolean | null>>(() =>
     Object.fromEntries(MENU.filter((g) => g.foldable).map((g) => [g.id, readFold(g.id)])),
@@ -182,23 +256,23 @@ export default function Sidebar() {
           </span>
           <span className="brand-names">
             <span className="brand-title">Brand AEO</span>
-            <span className="brand-eyebrow">Web4AI · 가시성 콘솔</span>
+            <span className="brand-eyebrow">Web4AI · AI 답변 가시성</span>
           </span>
         </div>
       </header>
+
+      {showBrandPicker && <BrandSwitch />}
 
       {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
       <NavLink
         to="/brand-onboarding"
         className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
       >
-        <span className="sidebar-cta-mark" aria-hidden="true">
-          +
-        </span>
+        <NavIcon name="plus" size={16} />
         브랜드 추가
       </NavLink>
 
-      <div className="sidebar-scroll">
+      <div className="sidebar-scroll" ref={scrollRef}>
         {MENU.map((group) => {
           const inside = group.items.some((i) => i.to === pathname)
           // 사용자가 정한 적 없으면 현재 페이지를 따라 펴고, 정했으면 그 선택을 따른다.
@@ -215,14 +289,12 @@ export default function Sidebar() {
                     onClick={() => toggle(group.id, open)}
                   >
                     <span className="sidebar-group-label">{group.title}</span>
-                    <span className="sidebar-rule" aria-hidden="true" />
                     {!open && <span className="fold-count">{group.items.length}</span>}
                     <span className={`chev${open ? ' open' : ''}`} aria-hidden="true" />
                   </button>
                 ) : (
                   <p className="sidebar-group-title">
                     <span className="sidebar-group-label">{group.title}</span>
-                    <span className="sidebar-rule" aria-hidden="true" />
                   </p>
                 ))}
               {open && (
@@ -236,6 +308,7 @@ export default function Sidebar() {
                           end={item.to === '/'}
                           className={({ isActive }) => (isActive ? 'on' : undefined)}
                         >
+                          {item.icon && <NavIcon name={item.icon} />}
                           <span className="label">{item.label}</span>
                           {badge && <span className={`sidebar-badge ${badge.cls}`}>{badge.text}</span>}
                         </NavLink>
@@ -248,6 +321,8 @@ export default function Sidebar() {
           )
         })}
       </div>
+
+      <MeasureStatusCard measuring={measuring} />
 
       <footer className="sidebar-foot">
         <div className="sidebar-theme-row">
