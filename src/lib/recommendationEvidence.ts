@@ -181,7 +181,8 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
   }
 
   // ── 추천 순위: 불렸지만 1순위가 아닌 질문과 그때 1순위
-  const rankedResponses = general.filter((a) => a.brandRank !== null).length
+  // 점수와 같은 기준 — 언급된 응답의 순위만 센다(server/aggregate.ts rankOf).
+  const rankedResponses = general.filter((a) => a.mentioned && a.brandRank !== null).length
   const notFirst = rows.filter((r) => r.mentionedRate > 0 && (r.avgRank === null || r.avgRank > 1))
   if (notFirst.length > 0) {
     out.rank = {

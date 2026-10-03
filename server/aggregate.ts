@@ -83,7 +83,11 @@ export function aggregateWeeklyMetrics(
   // 추천 순위도 언급률과 같은 모집단(카테고리 무관 질문)에서 낸다. 브랜드명을 넣고 물으면 답이 그
   // 브랜드 중심으로 써져, 1위가 질문 때문에 나온다 — 2026-W39 라엘펜션은 언급률 0%인데 brand-direct
   // 응답 1건의 1위로 40점을 받아 스테이,머뭄(39점)보다 위에 섰다.
-  const ranked = categoryAgnostic.map((a) => a.brandRank).filter((r): r is number => r !== null);
+  // 브랜드가 언급된 응답의 순위만 센다. 순위 판정과 언급 판정은 따로 돌아, 언급 안 됨인데 순위 1로 적힌
+  // 모순 기록이 있다(2026-10-03 설치본 순위 기록 723건 중 36건). 3건 문턱이 가리던 것을 비중 방식에선
+  // 한 건만으로 점수가 붙는다 — W36 라엘펜션은 언급률 0%인데 5점이 됐다.
+  const rankOf = (a: QuestionRepeatAnalysis) => (a.mentioned ? a.brandRank : null);
+  const ranked = categoryAgnostic.map(rankOf).filter((r): r is number => r !== null);
   const avgRecommendationRank = ranked.length >= MIN_RANKED_RESPONSES ? mean(ranked) : null;
   const rankedResponses = ranked.length;
   const rankWeight = rankWeightFactor(rankedResponses, avgRecommendationRank);
@@ -133,7 +137,7 @@ export function aggregateWeeklyMetrics(
       a.mentionSentences.length > 0 ? mean(a.mentionSentences.map((m) => sentimentWeight(m.sentiment))) : 1.0;
     return computeAeoScore({
       mentionRate: a.mentioned ? 1 : 0,
-      avgRecommendationRank: agnosticSet.has(a) ? a.brandRank : null,
+      avgRecommendationRank: agnosticSet.has(a) ? rankOf(a) : null,
       // 응답별 점수도 집계와 같은 순위 비중을 쓴다 — 중심과 분산이 서로 다른 산식을 보면 안 된다.
       rankWeight,
       brandOwnedCitationRate: a.brandOwnedCitation ? 1 : 0,
