@@ -73,7 +73,9 @@ export function computeQuestionWinLoss(
         ? [...compTotals.entries()].sort((x, y) => y[1] - x[1]).map(([name, mentions]) => ({ name, mentions }))[0]
         : null
 
-    const ranks = list.map((a) => a.brandRank).filter((r): r is number => r !== null)
+    // 점수와 같은 기준 — 브랜드가 언급된 응답의 순위만 센다(server/aggregate.ts rankOf). 언급 안 됨인데
+    // 순위 1로 적힌 모순 판정 기록이 평균을 끌어올리지 않게.
+    const ranks = list.filter((a) => a.mentioned).map((a) => a.brandRank).filter((r): r is number => r !== null)
     const avgRank = ranks.length > 0 ? ranks.reduce((s, r) => s + r, 0) / ranks.length : null
 
     const sentiment = { pos: 0, neu: 0, neg: 0 }
