@@ -1901,10 +1901,119 @@ p.hint {
 .rec-link { font-size: 13px; color: var(--accent); text-decoration: none; }
 .rec-link:hover { text-decoration: underline; }
 
+/*
+ * 정기진단 보고서 — 주차별 Brand AEO Score 추이(ScoreTrendChart). 색은 테마 토큰이라 다크·인쇄에서도 같은 규칙.
+ * 좁은 화면에서는 글자가 읽히는 폭(520px)을 지키고 가로로 넘긴다.
+ */
+.report-trend {
+  margin: 8px 0 20px;
+}
+.report-trend h3 {
+  margin: 24px 0 10px;
+}
+.score-trend {
+  margin: 0;
+  padding: 14px 16px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+}
+.score-trend-scroll {
+  overflow-x: auto;
+}
+.score-trend svg {
+  display: block;
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+}
+.st-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.st-axis,
+.st-rank {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.st-week {
+  fill: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.st-week.none {
+  fill: var(--muted);
+}
+.st-band {
+  fill: var(--accent);
+  fill-opacity: 0.14;
+}
+.st-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+.st-dot {
+  fill: var(--card);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.st-dot.current {
+  fill: var(--accent);
+}
+.st-value {
+  fill: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+.st-value.current {
+  fill: var(--accent-ink);
+  font-size: 13px;
+}
+.st-break {
+  stroke: var(--warn);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.st-break-mark {
+  fill: var(--warn);
+}
+.score-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.st-key {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.st-key.band {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.st-key.diamond {
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: var(--warn);
+}
+.st-key-break {
+  color: var(--warn);
+}
+
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }
   .shell { grid-template-columns: 1fr; gap: 0; }
-  .rec-card, .report-verdict, .panel { break-inside: avoid; }
+  .rec-card, .report-verdict, .panel, .score-trend { break-inside: avoid; }
 }
 
 /* 측정 상태 화면의 실행 문서 링크 — 측정 결과로 만든 작업 지시서. */
