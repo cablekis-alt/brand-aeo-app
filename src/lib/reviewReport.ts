@@ -481,8 +481,9 @@ ul.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
 .chip{font-family:var(--mono);font-size:.66rem;padding:2px 7px;border-radius:3px;border:1px solid currentColor}
 .chip.ok{color:var(--good)}.chip.warn{color:var(--warn)}.chip.review{color:var(--review)}
 ul.qs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:5px;overflow:hidden}
-ul.qs li{background:var(--surface);padding:9px 12px;font-size:.86rem;color:var(--ink-2);display:grid;grid-template-columns:1fr auto;gap:12px}
-ul.qs .e{font-family:var(--mono);font-size:.72rem;color:var(--muted);white-space:nowrap}
+/* 오른쪽 설명이 긴 문장(「틀림」 판정 근거)이면 줄을 바꾼다 — 한 줄로 두면 왼쪽 질문 칸이 한 글자 폭으로 눌린다. */
+ul.qs li{background:var(--surface);padding:9px 12px;font-size:.86rem;color:var(--ink-2);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+ul.qs .e{font-family:var(--mono);font-size:.72rem;color:var(--muted);max-width:42ch;overflow-wrap:anywhere}
 ol.todo{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:12px}ol.todo p{font-size:.88rem;color:var(--ink-2);margin-top:2px}
 footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);font-size:.8rem;color:var(--muted)}
 @media (max-width:560px){ul.qs li{grid-template-columns:1fr}}
