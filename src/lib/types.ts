@@ -165,6 +165,8 @@ export interface RankingView {
   promptedSplit?: PromptedSplit | null
   cohort: {
     position: number
+    /** 동점인 브랜드 수(이 브랜드 포함). 2 이상이면 「공동」. 옛 응답엔 없다. */
+    tiedCount?: number
     totalTenants: number
     /**
      * Brand AEO Score 내림차순. 지표를 함께 싣는 이유는 "몇 위인지"가 아니라 "왜 그 자리인지"를
@@ -174,8 +176,14 @@ export interface RankingView {
       tenantId: string
       brandName: string
       aeoScore: number
+      /** 경쟁 순위(동점은 같은 번호). 옛 응답엔 없어 화면이 줄 번호로 대신한다. */
+      rank?: number
+      tied?: boolean
       mentionRate: number
       brandOwnedCitationRate: number
+      /** 평균 추천 순위와 그 순위가 매겨진 응답 수 — 점수 가중치 15인 지표. */
+      avgRecommendationRank?: number | null
+      rankedResponses?: number | null
       shareOfMention: number | null
       /** 전주 순위. 전주에 측정이 없거나 그때 없던 브랜드면 null — 0이나 '보합'으로 적지 않는다. */
       previousRank?: number | null

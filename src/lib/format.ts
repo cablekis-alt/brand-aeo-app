@@ -14,6 +14,16 @@ export function formatRank(rank: number | null): string {
   return rank === null ? '판정 불가' : rank.toFixed(1)
 }
 
+/**
+ * 순위표·검토 리포트의 평균 추천 순위 칸 — "1.0위 (1건)". 응답 수를 붙이는 이유: 순위가 매겨진 응답 한 건의
+ * 1위는 "늘 1위로 추천된다"로 읽히기 쉽다. 순위 응답이 없으면 "—"(0이나 최하위로 채우지 않는다).
+ * 응답 수 기록이 없는 옛 카드는 건수를 붙이지 않는다.
+ */
+export function formatRankWithCount(avg: number | null | undefined, responses?: number | null): string {
+  if (avg === null || avg === undefined) return '—'
+  return `${avg.toFixed(1)}위${typeof responses === 'number' ? ` (${responses}건)` : ''}`
+}
+
 export function weekLabel(weekOf: string): string {
   const match = weekOf.match(/(\d{4})-W(\d{2})/)
   if (!match) return weekOf

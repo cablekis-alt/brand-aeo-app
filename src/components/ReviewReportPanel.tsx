@@ -3,7 +3,7 @@ import type { WeeklyScorecard } from '../prompts/b8-report'
 import { loadCitationBreakdown, loadQuestionBank, loadScorecards, type SiteScoreRecord } from '../lib/api'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { PeriodicReport } from '../lib/b9-report'
-import { weekLabel } from '../lib/format'
+import { formatRankWithCount, weekLabel } from '../lib/format'
 import { downloadHtml } from '../lib/markdownFile'
 import { buildReviewReport, reviewReportHtml, type CheckStatus, type ReviewReportInput } from '../lib/reviewReport'
 
@@ -116,7 +116,8 @@ export default function ReviewReportPanel({
           <div className="table-wrap">
             <table>
               <caption className="muted">
-                {weekLabel(card.weekOf)} 코호트 {report.cohortTotal}곳 · 일반 질문 = 브랜드 이름 없는 질문
+                {weekLabel(card.weekOf)} 코호트 {report.cohortTotal}곳 · 일반 질문 = 브랜드 이름 없는 질문 · 추천 순위 괄호는
+                순위가 매겨진 응답 수(6건 미만이면 점수에 그만큼만)
               </caption>
               <thead>
                 <tr>
@@ -125,6 +126,7 @@ export default function ReviewReportPanel({
                   <th>Brand AEO Score</th>
                   <th>일반 질문 언급률</th>
                   <th>자사 인용</th>
+                  <th>추천 순위</th>
                   <th>질문지</th>
                 </tr>
               </thead>
@@ -139,6 +141,7 @@ export default function ReviewReportPanel({
                     <td className="num">{r.score}</td>
                     <td className="num">{(r.mentionRate * 100).toFixed(1)}%</td>
                     <td className="num">{(r.ownedRate * 100).toFixed(1)}%</td>
+                    <td className="num">{formatRankWithCount(r.avgRank, r.rankedResponses)}</td>
                     <td>{r.sameQuestions === null ? <span className="muted">확인 불가</span> : r.sameQuestions ? '같음' : <strong>다름</strong>}</td>
                   </tr>
                 ))}
