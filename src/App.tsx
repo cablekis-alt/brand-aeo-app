@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
+import Answers from './pages/Answers'
 import { TenantProvider } from './context/TenantContext'
 import BrandDiagnosis from './pages/BrandDiagnosis'
 import BrandOnboarding from './pages/BrandOnboarding'
@@ -32,6 +33,7 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
+            <Route path="answers" element={<Answers />} />
             <Route path="diagnosis" element={<BrandDiagnosis />} />
             <Route path="question-winloss" element={<QuestionWinLoss />} />
             <Route path="gap-analysis" element={<GapAnalysis />} />

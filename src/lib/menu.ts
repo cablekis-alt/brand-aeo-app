@@ -34,7 +34,11 @@ export interface MenuGroup {
 export const MENU: MenuGroup[] = [
   {
     id: 'home',
-    items: [{ label: '개요', to: '/', icon: 'dashboard' }],
+    // AI 답변은 개요 바로 아래에 둔다 — 고객이 가장 먼저 묻는 「AI가 실제로 뭐라고 했나」를 보는 화면이다.
+    items: [
+      { label: '개요', to: '/', icon: 'dashboard' },
+      { label: 'AI 답변', to: '/answers', icon: 'answers' },
+    ],
   },
   {
     id: 'diagnose',

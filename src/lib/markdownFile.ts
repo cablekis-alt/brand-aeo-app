@@ -31,6 +31,11 @@ export function downloadHtml(filename: string, html: string): void {
   downloadTextFile(filename, html, 'text/html;charset=utf-8')
 }
 
+/** CSV를 .csv로 내려받는다(BOM은 만드는 쪽이 붙인다 — src/lib/answerInsights.ts answersCsv). */
+export function downloadCsv(filename: string, csv: string): void {
+  downloadTextFile(filename, csv, 'text/csv;charset=utf-8')
+}
+
 function downloadTextFile(filename: string, text: string, mime: string): void {
   const blob = new Blob([text], { type: mime })
   const url = URL.createObjectURL(blob)

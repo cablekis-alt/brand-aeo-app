@@ -150,6 +150,7 @@ export function cleanSentence(s: string): string {
   return s
     .replace(/\*\*/g, '')
     .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1')
     .replace(/^#+\s*/, '')
     .replace(/^[*-]\s+/, '')
     .trim()
@@ -260,4 +261,156 @@ function divergenceLine(a: QuestionRepeatAnalysis, others: QuestionRepeatAnalysi
     }
   }
   return null
+}
+
+/** 엔진을 늘 같은 순서로 놓는다 — 질문 목록의 점과 상세 칸이 같은 자리에 같은 엔진이 오게. */
+const ENGINE_ORDER = ['openai', 'gemini', 'perplexity', 'claude']
+export function engineOrder(a: string, b: string): number {
+  const ia = ENGINE_ORDER.indexOf(a)
+  const ib = ENGINE_ORDER.indexOf(b)
+  return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b)
+}
+
+/** 응답 하나의 결과 — 불림(순위 포함)·안 불림·되물음. */
+export type AnswerOutcome = 'hit' | 'miss' | 'ask'
+
+export interface AnswerResponse {
+  engine: string
+  engineLabel: string
+  callIndex: number
+  outcome: AnswerOutcome
+  rank: number | null
+  /** 그 답변이 1순위로 꼽은 곳. 우리 브랜드면 null(순위 칸이 이미 말한다). */
+  topOther: string | null
+  sentences: string[]
+  competitors: string[]
+  citations: CitationChip[]
+  citationCount: number
+  ownedCount: number
+  /** 원문 하이라이트에 쓸 판정 문장 그대로(정리 전). */
+  judged: QuestionRepeatAnalysis
+}
+
+export interface AnswerQuestion {
+  questionId: string
+  text: string
+  topic: string | null
+  /** 브랜드 이름을 넣은 질문인가 — 점수의 언급률은 이름 없는 질문만 센다. */
+  named: boolean
+  responses: AnswerResponse[]
+  /** 되물음을 뺀 응답 중 불린 수 / 응답 수. */
+  hit: number
+  answered: number
+  /** 엔진끼리 결과가 갈렸을 때 한 줄. */
+  divergence: string | null
+}
+
+/**
+ * AI 답변 화면의 질문 목록 — 질문 은행 순서로, 질문마다 엔진별 응답을 묶는다. 값은 판정 기록 그대로다.
+ * 은행에 없는 질문 id(옛 주차를 현재 은행으로 읽은 경우)도 버리지 않고 id를 질문 글 자리에 둔다.
+ */
+export function buildAnswerQuestions(
+  analyses: QuestionRepeatAnalysis[],
+  questions: QuestionSpec[],
+  brandName: string,
+): AnswerQuestion[] {
+  const byQuestion = new Map<string, QuestionRepeatAnalysis[]>()
+  for (const a of analyses) {
+    const list = byQuestion.get(a.questionId) ?? []
+    list.push(a)
+    byQuestion.set(a.questionId, list)
+  }
+  const order = [...questions.map((q) => q.questionId), ...[...byQuestion.keys()].filter((id) => !questions.some((q) => q.questionId === id)).sort()]
+  const byId = new Map(questions.map((q) => [q.questionId, q]))
+  const out: AnswerQuestion[] = []
+  for (const id of order) {
+    const list = byQuestion.get(id)
+    if (!list) continue
+    const q = byId.get(id)
+    const responses = list
+      .slice()
+      .sort((a, b) => engineOrder(a.engine, b.engine) || a.callIndex - b.callIndex)
+      .map((a): AnswerResponse => ({
+        engine: a.engine,
+        engineLabel: ENGINE_LABEL[a.engine] ?? a.engine,
+        callIndex: a.callIndex,
+        outcome: a.clarifying ? 'ask' : a.mentioned ? 'hit' : 'miss',
+        rank: a.mentioned ? a.brandRank : null,
+        topOther: a.topRecommendation && a.topRecommendation !== brandName ? a.topRecommendation : null,
+        sentences: a.mentionSentences.map((m) => cleanSentence(m.sentence)).filter(Boolean),
+        competitors: a.competitorMentions.filter((c) => c.mentionCount > 0).map((c) => c.name),
+        citations: citationChips(a.citations),
+        citationCount: a.citations.length,
+        ownedCount: a.citations.filter((c) => c.ownerType === 'brand-owned').length,
+        judged: a,
+      }))
+    const answered = responses.filter((r) => r.outcome !== 'ask')
+    out.push({
+      questionId: id,
+      text: q?.text ?? id,
+      topic: q?.topic ?? null,
+      named: q ? q.category !== 'category-agnostic' : false,
+      responses,
+      hit: answered.filter((r) => r.outcome === 'hit').length,
+      answered: answered.length,
+      divergence: questionDivergence(answered),
+    })
+  }
+  return out
+}
+
+/** 엔진끼리 갈린 결과를 한 줄로 — 부른 엔진과 안 부른 엔진, 또는 엔진마다 다른 순위. */
+function questionDivergence(answered: AnswerResponse[]): string | null {
+  const engines = (rs: AnswerResponse[]) => [...new Set(rs.map((r) => r.engineLabel))].join('·')
+  const hits = answered.filter((r) => r.outcome === 'hit')
+  const misses = answered.filter((r) => r.outcome === 'miss')
+  if (hits.length > 0 && misses.length > 0) {
+    return `${engines(hits)}는 불렀지만 ${engines(misses)}는 부르지 않았습니다`
+  }
+  const ranked = hits.filter((r) => r.rank !== null)
+  if (new Set(ranked.map((r) => r.rank)).size > 1) {
+    return `엔진마다 순위가 다릅니다 — ${ranked.map((r) => `${r.engineLabel} ${r.rank}순위`).join(' · ')}`
+  }
+  return null
+}
+
+const OUTCOME_CSV: Record<AnswerOutcome, string> = { hit: '불림', miss: '안 불림', ask: '되물음' }
+
+/** CSV 한 칸 — 쉼표·따옴표·줄바꿈이 있으면 따옴표로 감싼다. */
+function csvCell(v: string | number | null): string {
+  const s = v === null ? '' : String(v)
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+/**
+ * 응답 단위 CSV — 한 줄이 응답 하나(질문 × 엔진 × 회차). 엑셀이 한글을 깨뜨리지 않게 BOM을 붙인다.
+ * 수치는 판정 기록 그대로이고, 언급 문장은 마크다운 기호만 걷은 원래 문장이다.
+ */
+export function answersCsv(rows: AnswerQuestion[], engine = ''): string {
+  const head = ['질문ID', '질문', '주제', '질문 종류', '엔진', '회차', '결과', '추천 순위', '1순위로 꼽은 곳', '자사 인용', '출처 수', '언급 문장']
+  const lines = [head.map(csvCell).join(',')]
+  for (const q of rows) {
+    for (const r of q.responses) {
+      if (engine && r.engine !== engine) continue
+      lines.push(
+        [
+          q.questionId,
+          q.text,
+          q.topic ?? '',
+          q.named ? '이름 넣은 질문' : '이름 없는 질문',
+          r.engineLabel,
+          r.callIndex,
+          OUTCOME_CSV[r.outcome],
+          r.rank,
+          r.topOther ?? (r.rank === 1 ? '우리 브랜드' : ''),
+          r.ownedCount,
+          r.citationCount,
+          r.sentences.join(' / '),
+        ]
+          .map(csvCell)
+          .join(','),
+      )
+    }
+  }
+  return '﻿' + lines.join('\r\n') + '\r\n'
 }

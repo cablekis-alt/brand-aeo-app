@@ -499,13 +499,18 @@ export default function Dashboard() {
             <section className="answers-sec" aria-label="AI 답변">
               <div className="dash-card-head">
                 <h2 className="sec-title">AI는 이렇게 답했습니다</h2>
-                <Link to="/question-winloss" className="dash-link">
-                  질문별로 보기 →
+                <Link to="/answers" className="dash-link">
+                  모든 답변 보기 →
                 </Link>
               </div>
               <div className="dash-row">
                 {insights.answers.map((a) => (
-                  <AnswerCard key={`${a.questionId}-${a.engine}`} answer={a} brandName={card.brandName} />
+                  <AnswerCard
+                    key={`${a.questionId}-${a.engine}`}
+                    answer={a}
+                    brandName={card.brandName}
+                    to={`/answers?q=${encodeURIComponent(a.questionId)}&week=${encodeURIComponent(card.weekOf)}`}
+                  />
                 ))}
               </div>
             </section>
@@ -525,7 +530,16 @@ export default function Dashboard() {
                   {todo.items.slice(0, TODO_SHOW).map((item) => (
                     <li key={item.text}>
                       <div className="todo-text">
-                        <span>{item.text}</span>
+                        {item.questionId ? (
+                          <Link
+                            to={`/answers?q=${encodeURIComponent(item.questionId)}&week=${encodeURIComponent(card.weekOf)}`}
+                            className="todo-link"
+                          >
+                            {item.text}
+                          </Link>
+                        ) : (
+                          <span>{item.text}</span>
+                        )}
                         {item.detail && <span className="dash-caption">{item.detail}</span>}
                       </div>
                       <Link to="/gap-actions" state={{ from: 'dashboard', label: '놓친 질문' }} className="btn soft">
