@@ -485,6 +485,7 @@ export function aggregateScorecard(
     ...(m.shareOfMentionMentions !== undefined ? { shareOfMentionMentions: m.shareOfMentionMentions } : {}),
     ...(m.repeatsPerQuestion !== undefined ? { repeatsPerQuestion: m.repeatsPerQuestion } : {}),
     avgRecommendationRank: m.avgRecommendationRank,
+    rankedResponses: m.rankedResponses,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,
     cohortRank: computeCohortRank(m.score, cohortScorecards),

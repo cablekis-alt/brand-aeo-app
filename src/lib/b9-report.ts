@@ -3,6 +3,7 @@ import type { RecommendationEvidence } from './recommendationEvidence'
 import {
   AEO_SCORE_WEIGHTS,
   MIN_SOM_MENTIONS,
+  RANK_FULL_WEIGHT_RESPONSES,
   shareOfMentionShortSample,
   type WeeklyScorecard,
 } from '../prompts/b8-report'
@@ -143,11 +144,14 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       valueText: formatRank(v),
       status: s,
       note:
-        v === null
-          ? '추천·나열형 문맥이 부족해 순위를 판정할 수 없습니다.'
+        (v === null
+          ? '순위가 매겨진 답변이 없어 판정할 수 없습니다.'
           : s === 'good'
             ? 'AI가 추천을 나열할 때 상위에 배치됩니다.'
-            : 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.',
+            : 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.') +
+        (v !== null && card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES
+          ? ` 순위 답변이 ${card.rankedResponses}건뿐이라 점수에는 비중 ${card.rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}로만 반영했습니다.`
+          : ''),
       delta: rankDelta(v, prev?.avgRecommendationRank),
     })
   }
