@@ -3472,7 +3472,8 @@ td.cell-mid {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  height: 190px;
+  /* 막대 최대 64px(Dashboard.tsx) + 점수·주차·표식 글자 — 개요 맨 위 요약을 밀어내지 않게 낮게 둔다. */
+  height: 124px;
   padding: 0 4px;
 }
 .trend-col {
