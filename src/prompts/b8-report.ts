@@ -39,7 +39,7 @@ import type { PromptMessage } from './types.js';
  * (SoM을 빼면 4점). 경쟁사 목록도 브랜드마다 달라, 둘 다 SoM이 있어도 같은 조건의 값이 아니다.
  * 점수에서 빼고 점유율로 따로 보여준다.
  */
-const WEIGHT_RATIO = {
+export const WEIGHT_RATIO = {
   mentionRate: 25,
   brandOwnedCitationRate: 20,
   avgRecommendationRank: 15,
