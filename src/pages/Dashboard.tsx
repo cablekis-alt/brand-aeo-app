@@ -223,12 +223,9 @@ export default function Dashboard() {
               {tenant.brandName} · {tenant.industry} · {tenant.region}
             </p>
           )}
-          <h1>대시보드</h1>
+          <h1>개요</h1>
         </div>
         <div className="page-actions">
-          <Link to="/report" className="btn">
-            정기진단 보고서
-          </Link>
           <Link to="/measure-tenant" className="btn primary">
             측정 실행
           </Link>

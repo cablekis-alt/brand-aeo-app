@@ -24,7 +24,7 @@
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
-  background: var(--card);
+  background: var(--surface-2);
   border-right: 1px solid var(--line);
   padding: 18px 12px 12px;
 }
@@ -43,12 +43,12 @@
 .content {
   min-width: 0;
   max-width: 1280px;
-  padding: 24px 32px 72px;
+  padding: 0 32px 72px;
 }
 
 @media (max-width: 760px) {
   .content {
-    padding: 16px 16px 56px;
+    padding: 0 16px 56px;
   }
 }
 
@@ -111,13 +111,13 @@
   gap: 10px;
   flex: none;
   padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-2);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
   color: var(--muted);
 }
 .brand-switch:hover {
-  border-color: var(--line-strong);
+  box-shadow: 0 0 0 1px var(--line-strong), 0 1px 2px rgb(17 28 24 / 0.06);
 }
 .brand-switch:focus-within {
   outline: 2px solid var(--accent);
@@ -129,9 +129,9 @@
   flex: none;
   display: grid;
   place-items: center;
-  border-radius: 7px;
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 12px;
   font-weight: 700;
 }
@@ -232,9 +232,9 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-2);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
   color: var(--ink);
   text-decoration: none;
 }
@@ -423,12 +423,13 @@
 }
 
 .sidebar-group a.on {
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  background: var(--card);
+  color: var(--ink);
   font-weight: 600;
+  box-shadow: var(--shadow-card);
 }
 .sidebar-group a.on .nav-icon {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 .sidebar-group a:focus-visible,
 .sidebar-fold:focus-visible,
@@ -1089,39 +1090,84 @@ td.judgment {
   font-size: 13px;
 }
 
-.top {
+/*
+ * 상단 작업 막대(TopBar.tsx) — 본문 칸 맨 위에 붙어 스크롤해도 남는다. 본문 칸의 좌우 여백(32px)만큼
+ * 바깥으로 넓혀 칸 너비를 꽉 채운다.
+ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 16px;
-  margin-bottom: 20px;
+  gap: 8px 14px;
+  min-height: 56px;
+  box-sizing: border-box;
+  margin: 0 -32px 22px;
+  padding: 10px 32px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
 }
-/* 이전 화면으로 — 본문 맨 위의 테두리 버튼(시안의 「← 정기진단 보고서」 자리). */
-.top .back-link {
+@media (max-width: 760px) {
+  .topbar {
+    margin: 0 -16px 16px;
+    padding: 8px 16px;
+  }
+}
+.topbar-back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 12px 0 10px;
-  border: 1px solid var(--line-strong);
+  height: 32px;
+  padding: 0 11px 0 9px;
+  border: 0;
   border-radius: var(--r-ctl);
   background: var(--card);
+  box-shadow: 0 0 0 1px var(--line-strong);
   color: var(--ink);
   font: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
 }
-.top .back-link:hover {
-  border-color: var(--ink-2);
+.topbar-back:hover {
+  box-shadow: 0 0 0 1px var(--ink-2);
 }
-.top .back-link:focus-visible {
+.topbar-back:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
-/* 이전 화면이 없고 오류도 없으면 빈 헤더가 여백을 남기지 않게 접는다. */
-.top:empty {
-  margin-bottom: 0;
+.topbar-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.topbar-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar-sep {
+  color: var(--line-strong);
+}
+.topbar-here {
+  color: var(--ink);
+  font-weight: 600;
+}
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* 화면마다 있던 묶음 머리말(.brand)은 작업 막대의 경로가 대신한다 — 두 곳에 같은 말을 두지 않는다. */
+.content > .brand {
+  display: none;
 }
 
 /* 등록된 브랜드가 0개일 때의 빈 상태 */
@@ -1856,7 +1902,7 @@ p.hint {
 .rec-link:hover { text-decoration: underline; }
 
 @media print {
-  .sidebar, .top, .no-print { display: none !important; }
+  .sidebar, .topbar, .no-print { display: none !important; }
   .shell { grid-template-columns: 1fr; gap: 0; }
   .rec-card, .report-verdict, .panel { break-inside: avoid; }
 }

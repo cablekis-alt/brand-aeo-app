@@ -6,108 +6,20 @@ import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useScorecards } from '../lib/useScorecards'
 import AppVersion from './AppVersion'
-import NavIcon, { type NavIconName } from './NavIcon'
+import { MENU, type MenuItem } from '../lib/menu'
+import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 
-/**
- * 메뉴는 **쓰는 사람의 일** 순서로 묶는다 — 측정 → 진단 → 실행 → 보고.
- *
- * 그룹 이름은 처음엔 질문(어디가 비어 있나 / 그래서 뭘 하나)이었다. 처음 쓰는 사람에겐 안내가 되지만
- * 매일 쓰는 화면에서는 훑어 읽기 어렵고 줄도 길어, 상용화 UI(2026-10)에서 짧은 명사로 바꿨다.
- * 순서는 그대로라 "진단하고 실행한다"는 흐름은 남는다.
+/*
+ * 메뉴 정의와 묶는 기준은 lib/menu.ts — 상단 작업 막대의 경로 표시도 같은 정의를 쓴다.
  *
  * 예전에는 파이프라인 단계(STAGE 1~4, B1~B9)로 묶고 줄마다 B-코드를 붙였다. 그건 만드는 사람의
  * 언어다. 쓰는 사람은 "측정 상태가 어디 있지"를 찾는데 "STAGE 2 · 엔진 연동 & 정규화"를 읽어야
  * 했고, 20개 줄 각각에 코드를 한 번씩 더 읽어야 했다. 코드는 코드 주석에만 남긴다.
  *
- * 가끔 여는 상세 화면(감성·URL·EEAT…)은 접어 둔다 — 격차 분석·실행 항목과 같은 무게로 나열하면
+ * 가끔 여는 상세 화면(감성·URL·EEAT…)은 접어 둔다 — 매주 보는 화면과 같은 무게로 나열하면
  * 핵심이 묻힌다. 현재 화면이 접힌 그룹 안이면 자동으로 펼친다.
- *
- * 배지 둘: 측정 상태에 진행 중 건수, 실행 항목에 남은 건수. 메뉴를 열기 전에 "지금 할 일이 있나"가
- * 보이게 — 대시보드까지 가지 않아도 된다.
  */
-interface MenuItem {
-  label: string
-  to: string
-  badge?: 'measuring' | 'actions'
-  /** 주 메뉴만 아이콘을 단다. 접히는 상세·설정 항목은 글자만 두고 아이콘 자리만큼 들여 맞춘다. */
-  icon?: NavIconName
-}
-interface MenuGroup {
-  id: string
-  title?: string
-  items: MenuItem[]
-  /** 접히는 그룹. 기본은 닫힘, 현재 경로가 안에 있으면 열림. */
-  foldable?: boolean
-}
-
-const MENU: MenuGroup[] = [
-  {
-    id: 'home',
-    items: [{ label: '대시보드', to: '/', icon: 'dashboard' }],
-  },
-  {
-    id: 'measure',
-    title: '측정',
-    items: [
-      { label: '브랜드·경쟁사 측정', to: '/measure-tenant', icon: 'measure' },
-      { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status' },
-    ],
-  },
-  {
-    id: 'gaps',
-    title: '진단',
-    items: [
-      { label: '브랜드 종합 진단', to: '/diagnosis', icon: 'diagnosis' },
-      { label: '가시성 격차 분석', to: '/gap-analysis', icon: 'gap' },
-      { label: '인용 갭 분석', to: '/citation-gap', icon: 'citation' },
-      { label: '경쟁 순위', to: '/ranking', icon: 'ranking' },
-    ],
-  },
-  {
-    id: 'act',
-    title: '실행',
-    items: [
-      // 「실행 항목」에서 이름을 바꿨다. 이 화면이 실제로 하는 일은 쓸 글을 정하고 만들어
-      // 내보내는 것이고, 고객이 찾는 말도 그쪽이다. 배지(남은 건수)는 그대로 쓴다.
-      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions', icon: 'content' },
-      { label: '콘텐츠 보관함', to: '/content-library', icon: 'library' },
-      { label: 'Site AEO Checker', to: '/site-diagnosis', icon: 'site' },
-    ],
-  },
-  {
-    id: 'report',
-    title: '보고',
-    items: [
-      { label: 'AEO 퍼포먼스', to: '/performance', icon: 'performance' },
-      { label: '정기진단 보고서', to: '/report', icon: 'report' },
-    ],
-  },
-  {
-    id: 'detail',
-    title: '상세 분석',
-    foldable: true,
-    items: [
-      { label: '질문별 승패', to: '/question-winloss' },
-      { label: '감성 분석', to: '/sentiment' },
-      { label: 'URL 상세 분석', to: '/citations' },
-      { label: 'AI 인용출처 분석', to: '/citation-sources' },
-      { label: 'EEAT 분석', to: '/eeat' },
-      { label: '경쟁 시계열', to: '/competitor-trends' },
-      { label: 'AI 리퍼럴 트래픽', to: '/ai-referrals' },
-    ],
-  },
-  {
-    id: 'settings',
-    title: '설정',
-    foldable: true,
-    items: [
-      { label: '브랜드 사실', to: '/brand-facts' },
-      { label: '질문 프롬프트 빌더', to: '/questions' },
-    ],
-  },
-]
-
 const FOLD_KEY = (id: string) => `sidebar.open.${id}`
 
 /**
