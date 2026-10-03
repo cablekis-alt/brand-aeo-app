@@ -2093,9 +2093,6 @@ p.hint {
 }
 .score-trend svg {
   display: block;
-  width: 100%;
-  min-width: 520px;
-  height: auto;
 }
 .st-grid {
   stroke: var(--line);

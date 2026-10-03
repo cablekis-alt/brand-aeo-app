@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { conditionChanges, type ConditionChange } from '../lib/comparability'
 import { ENGINE_LABEL } from '../lib/format'
 import type { WeeklyScorecard } from '../prompts/b8-report'
@@ -17,8 +17,13 @@ interface Break {
 }
 
 const MAX_WEEKS = 12
-const W = 640
-const H = 230
+/*
+ * 크기 — 가로는 카드 폭을 그대로 쓰고(늘려도 글자는 커지지 않는다) 세로는 고정한다. 예전에는 640×230 그림을
+ * 카드 폭까지 통째로 키워, 넓은 화면에서 높이가 400px을 넘었다. 좁은 화면에서는 주차 글자가 겹치지 않는
+ * 최소 폭(MIN_W)을 지키고 가로로 넘긴다.
+ */
+const MIN_W = 520
+const H = 190
 const PAD = { left: 44, right: 40, top: 22, bottom: 50 }
 
 /** 끝 주차에서 거슬러 최대 12주 — 측정 기록이 시작된 주보다 앞은 자른다. 측정하지 않은 주는 빈칸으로 둔다. */
@@ -58,11 +63,25 @@ const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
  */
 export default function ScoreTrendChart({ history, endWeek }: { history: WeeklyScorecard[]; endWeek: string }) {
   // 좁은 화면에서 그래프가 가로로 넘칠 때 처음부터 최근 주(오른쪽 끝)가 보이게 한다.
-  const scrollRef = useRef<HTMLDivElement>(null)
+  // 상자는 콜백 ref로 받는다 — 측정이 1주인 브랜드에서 넘어오면 상자가 나중에 생기므로 그때 관찰을 건다.
+  const [box, setBox] = useState<HTMLDivElement | null>(null)
+  const boxRef = useRef<HTMLDivElement | null>(null)
+  const attach = useCallback((el: HTMLDivElement | null) => {
+    boxRef.current = el
+    setBox(el)
+  }, [])
+  const [boxW, setBoxW] = useState(0)
   useEffect(() => {
-    const el = scrollRef.current
+    if (!box) return
+    const ro = new ResizeObserver(() => setBoxW(box.clientWidth))
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [box])
+  useEffect(() => {
+    const el = boxRef.current
     if (el) el.scrollLeft = el.scrollWidth
-  }, [endWeek])
+  }, [box, endWeek, boxW])
+  const W = Math.max(MIN_W, boxW)
   const sorted = history.filter((h) => h.weekOf <= endWeek).sort((a, b) => a.weekOf.localeCompare(b.weekOf))
   const slots = slotsOf(sorted, endWeek)
   const measured = slots.filter((s) => s.card)
@@ -113,8 +132,8 @@ export default function ScoreTrendChart({ history, endWeek }: { history: WeeklyS
 
   return (
     <figure className="score-trend">
-      <div className="score-trend-scroll" ref={scrollRef}>
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`주차별 Brand AEO Score — ${summary}`}>
+      <div className="score-trend-scroll" ref={attach}>
+        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`주차별 Brand AEO Score — ${summary}`}>
           {ticks.map((t) => (
             <g key={t}>
               <line className="st-grid" x1={PAD.left} x2={W - PAD.right} y1={y(t)} y2={y(t)} />
