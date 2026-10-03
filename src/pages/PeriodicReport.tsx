@@ -210,6 +210,9 @@ export default function PeriodicReport() {
    */
   const monthBrand = mean(weeksInMonth.map((h) => h.aeoScore.current))
   const prevMonthBrand = mean(weeksInPrevMonth.map((h) => h.aeoScore.current))
+  // 언급률도 평균(%) — 점수와 같은 이유로 한 주가 그 달을 대표하지 못한다.
+  const monthMention = mean(weeksInMonth.map((h) => h.mentionRate * 100))
+  const prevMonthMention = mean(weeksInPrevMonth.map((h) => h.mentionRate * 100))
   const monthSite = useMemo(() => {
     const inMonth = Object.keys(siteScores)
       .filter((w) => isoWeekMonth(w) === activeMonth)
@@ -267,6 +270,23 @@ export default function PeriodicReport() {
     return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
   }, [report, card, evidence, siteForReview])
 
+  /*
+   * 표지 한 문장 — "이름 없이 물은 질문 N개 중 M개에서 불렸습니다". 언급률(응답 단위)과 달리 질문 단위라
+   * 고객이 "어느 질문에서 우리가 나오나"로 바로 읽는다. 판정 기록을 못 읽으면 문장 없이 판정만 둔다.
+   */
+  const coverLine = useMemo(() => {
+    if (!evidence?.bank) return null
+    const agnostic = new Set(evidence.bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.questionId))
+    const asked = new Set<string>()
+    const hit = new Set<string>()
+    for (const a of evidence.analyses) {
+      if (!agnostic.has(a.questionId)) continue
+      asked.add(a.questionId)
+      if (a.mentioned) hit.add(a.questionId)
+    }
+    return asked.size > 0 ? `이름 없이 물은 질문 ${asked.size}개 중 ${hit.size}개에서 불렸습니다` : null
+  }, [evidence])
+
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(
     () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
@@ -277,9 +297,23 @@ export default function PeriodicReport() {
 
   return (
     <>
-      <p className="brand">보고</p>
-      <h1>정기진단 보고서 · 개선제안</h1>
-      <p className="lead">
+      <header className="page-head">
+        <div className="page-title">
+          <p className="page-eyebrow">
+            보고 · {tenant.brandName}
+            {judgedWeek ? ` · ${weekLabel(judgedWeek)}` : ''}
+          </p>
+          <h1>정기진단 보고서</h1>
+        </div>
+        {card && report && (
+          <div className="page-actions no-print">
+            <button type="button" className="btn" onClick={() => window.print()}>
+              인쇄 · PDF 저장
+            </button>
+          </div>
+        )}
+      </header>
+      <p className="page-lead no-print">
         이번 주 스코어카드를 지표별로 진단하고, 약한 지표를 우선순위가 매겨진 실행 가능한 개선안으로 정리합니다. 모든
         판정은 측정된 수치에서 결정적으로 도출되며 새 수치를 만들지 않습니다.
       </p>
@@ -323,10 +357,31 @@ export default function PeriodicReport() {
                 </select>
               </label>
             )}
-            <button type="button" className="ghost" onClick={() => window.print()}>
-              인쇄 · PDF 저장
-            </button>
           </div>
+
+          {/*
+            표지 — 결론 한 문장을 맨 위에 둔다(상용화 UI 4단계). 예전엔 숫자 타일과 검토 리포트 아래에
+            「종합 판정」이 있어, 고객이 받은 문서의 첫 화면에서 결론을 찾을 수 없었다.
+            문장은 코드 템플릿이고, 수는 판정 기록에서 센 그대로다. 점수 칩은 두지 않는다 — 바로 아래
+            타일이 같은 숫자를 더 크게 보여 주고, 이름까지 갈리면('AEO 43') 두 값처럼 읽힌다.
+          */}
+          <section className={`report-cover sev-${report.verdict.tone}`}>
+            <p className="report-cover-eyebrow">
+              {card.brandName} · {weekLabel(card.weekOf)} · {card.industry} · {card.region}
+            </p>
+            <h2 className="report-cover-title">{coverLine ?? `종합 판정 ${report.verdict.label}`}</h2>
+            <p className="verdict-head">
+              <span className={`status-pill st-${report.verdict.tone}`}>종합 판정 {report.verdict.label}</span>
+            </p>
+            <p className="verdict-summary">{report.verdict.summary}</p>
+            {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
+            <p className="hint">
+              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge} · 반복{' '}
+              {measureConditionText(card).repeats}
+              {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
+            </p>
+            {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
+          </section>
 
           {/*
             전주 대비는 **비교가 성립할 때만** 보여 준다. 수집 엔진이 달라진 주차끼리 빼면
@@ -362,6 +417,32 @@ export default function PeriodicReport() {
                   ? `답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
                   : '답변에 얼마나 나오는가'}
               </p>
+            </article>
+            <article>
+              <p className="tile-label">언급률{period === 'month' && ' 월 평균'}</p>
+              {(() => {
+                const pct = (v: number) => Math.round(v * 10) / 10
+                const now = period === 'month' ? monthMention : pct(card.mentionRate * 100)
+                const prev =
+                  period === 'month'
+                    ? prevMonthMention
+                    : comparison?.comparable && prevCard
+                      ? pct(prevCard.mentionRate * 100)
+                      : null
+                return (
+                  <p className="tile-value">
+                    {now === null ? (
+                      <span className="muted">—</span>
+                    ) : (
+                      <>
+                        {now.toFixed(1)}%
+                        <Delta now={now} prev={prev} />
+                      </>
+                    )}
+                  </p>
+                )
+              })()}
+              <p className="tile-note">이름 없이 물은 질문에서 불린 비율 · 증감은 %p</p>
             </article>
             <article>
               <p className="tile-label">Site AEO Score</p>
@@ -462,27 +543,6 @@ export default function PeriodicReport() {
             <p className="muted">검토 리포트를 불러오는 중…</p>
           )}
 
-          <section className={`report-verdict sev-${report.verdict.tone}`}>
-            <p className="eyebrow">
-              {card.brandName} · {weekLabel(card.weekOf)} · {card.industry} · {card.region}
-            </p>
-            {/*
-              점수 칩을 뺐다. 바로 위 타일이 같은 숫자를 더 크게 보여 주고 있었고, 거기서는
-              'Brand AEO Score'인데 여기서는 'AEO 43'이라 이름까지 갈렸다.
-            */}
-            <p className="verdict-head">
-              종합 판정 <strong>{report.verdict.label}</strong>
-            </p>
-            <p className="verdict-summary">{report.verdict.summary}</p>
-            {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
-            <p className="hint">
-              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge} · 반복{' '}
-              {measureConditionText(card).repeats}
-              {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
-            </p>
-            {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
-          </section>
-
           <section>
             <h3>지표별 진단</h3>
             <div className="table-wrap">
@@ -551,7 +611,7 @@ export default function PeriodicReport() {
                 {(enrichedReport ?? report).recommendations.map((rec, i) => (
                   <li key={rec.id} className={`rec-card pr-${rec.priority}`}>
                     <div className="rec-head">
-                      <span className="rec-num">{i + 1}</span>
+                      <span className="rec-num">{String(i + 1).padStart(2, '0')}</span>
                       <h4>{rec.title}</h4>
                       <span className={`priority-pill pr-${rec.priority}`}>우선순위 {PRIORITY_LABEL[rec.priority]}</span>
                     </div>
@@ -576,7 +636,11 @@ export default function PeriodicReport() {
                         {rec.evidence.estimate && <p className="hint">{rec.evidence.estimate}</p>}
                         {rec.evidence.link && (
                           <p className="no-print">
-                            <Link to={rec.evidence.link.to} className="rec-link">
+                            <Link
+                              to={rec.evidence.link.to}
+                              state={{ from: 'report', label: `${String(i + 1).padStart(2, '0')} ${rec.title}` }}
+                              className="rec-link"
+                            >
                               {rec.evidence.link.label} →
                             </Link>
                           </p>

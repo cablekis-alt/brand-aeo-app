@@ -1503,27 +1503,44 @@ tbody tr.selected {
 }
 
 /* --- 정기진단 보고서 (B9) --- */
-.report-verdict {
+/* 표지 — 결론 한 문장이 맨 위. 판정 색은 상태 알약에만 준다(카드 테두리를 칠하지 않는다). */
+.report-cover {
   border: 1px solid var(--line);
-  border-left-width: 4px;
   background: var(--card);
-  border-radius: 12px;
-  padding: 18px 20px;
-  margin: 14px 0 8px;
+  border-radius: var(--r-card);
+  padding: 28px 32px;
+  margin: 14px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.report-verdict.sev-good { border-left-color: var(--good); }
-.report-verdict.sev-warn { border-left-color: var(--warn); }
-.report-verdict.sev-bad { border-left-color: var(--bad); }
+.report-cover-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.report-cover-title {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  word-break: keep-all;
+  color: var(--ink);
+}
+.report-cover .hint {
+  margin: 0;
+}
 .verdict-head {
-  font-family: var(--sans);
-  font-size: 22px;
-  margin: 4px 0 8px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
-.verdict-head strong { color: var(--ink); }
 .score-chip {
   font-family: var(--sans);
   font-size: 13px;
@@ -1533,7 +1550,7 @@ tbody tr.selected {
   background: var(--accent-soft);
   color: var(--accent);
 }
-.verdict-summary { margin: 0; color: var(--ink); }
+.verdict-summary { margin: 0; max-width: 68ch; color: var(--ink-2); line-height: 1.7; }
 
 /* 검토 리포트 — 측정 신뢰도 점검 + 코호트 비교 */
 .review-report {
@@ -1565,12 +1582,22 @@ tbody tr.selected {
 }
 .trust-checks li {
   display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 10px;
+  grid-template-columns: 92px 110px 1fr;
+  gap: 10px 14px;
   align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
-.trust-checks .judgment { color: var(--muted); }
+.trust-checks .judgment { color: var(--ink-2); line-height: 1.55; }
+/* 점검 결과는 채운 칩 — 「같음·주의·사람 확인」이 줄 머리에서 먼저 읽히게. */
+.trust-checks .status-pill {
+  justify-self: start;
+  border: 0;
+}
+.trust-checks .status-pill.st-good { background: var(--accent-soft); color: var(--accent-ink); }
+.trust-checks .status-pill.st-warn { background: var(--warn-soft); color: var(--warn); }
+.trust-checks .status-pill.st-bad { background: var(--bad-soft); color: var(--bad); }
 @media (max-width: 640px) {
   .trust-checks li { grid-template-columns: auto 1fr; }
   .trust-checks .judgment { grid-column: 1 / -1; }
@@ -1753,32 +1780,41 @@ p.hint {
 .strength-list li { margin: 4px 0; }
 
 .rec-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+/*
+ * 개선제안 카드 — 머리 띠(번호·제목·우선순위)와 본문. 우선순위는 왼쪽 굵은 선이 아니라 채운 칩으로 말한다.
+ */
 .rec-card {
   border: 1px solid var(--line);
-  border-left-width: 4px;
   background: var(--card);
-  border-radius: 12px;
-  padding: 16px 18px;
+  border-radius: var(--r-card);
+  padding: 0 20px 18px;
+  overflow: hidden;
 }
-.rec-card.pr-high { border-left-color: var(--bad); }
-.rec-card.pr-medium { border-left-color: var(--warn); }
-.rec-card.pr-low { border-left-color: var(--muted); }
-.rec-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.rec-head h4 { margin: 0; font-family: var(--sans); font-weight: 700; font-size: 18px; flex: 1 1 auto; }
+.rec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 -20px 14px;
+  padding: 14px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+.rec-head h4 { margin: 0; font-family: var(--sans); font-weight: 700; font-size: 16px; flex: 1 1 auto; }
 .rec-num {
-  width: 26px; height: 26px; flex: 0 0 26px;
-  display: grid; place-items: center;
-  border-radius: 999px;
-  background: var(--accent-soft); color: var(--accent);
-  font-weight: 600; font-size: 13px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
 }
 .priority-pill {
   font-size: 12px; font-weight: 600;
-  padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  background: var(--surface-2); color: var(--ink-2);
 }
-.priority-pill.pr-high { color: var(--bad); }
-.priority-pill.pr-medium { color: var(--warn); }
-.priority-pill.pr-low { color: var(--muted); }
+.priority-pill.pr-high { background: var(--bad-soft); color: var(--bad); }
+.priority-pill.pr-medium { background: var(--warn-soft); color: var(--warn); }
+.priority-pill.pr-low { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
 .rec-basis { margin: 2px 0 10px; color: var(--ink); }
 .rec-label { margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .rec-actions { margin: 0; padding-left: 18px; }
@@ -2638,17 +2674,21 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
  * 인쇄에서도 남는다. 이 보고서는 PDF로 저장해 고객에게 보내는 문서라, 첫 장에 요약이
  * 없으면 받는 사람이 표부터 읽어야 한다.
  */
+/* 네 칸을 1px 선으로 이어 붙인 띠 — 따로 떠 있는 카드 넷보다 "한 줄 요약"으로 읽힌다. */
 .report-tiles {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
   margin: 0 0 16px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
 }
 
 .report-tiles > article {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 16px;
+  background: var(--card);
+  padding: 16px 18px;
 }
 
 .tile-label {
@@ -2660,7 +2700,8 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .tile-value {
   margin: 2px 0 0;
   font-family: var(--mono);
-  font-size: 34px;
+  font-size: 30px;
+  font-weight: 600;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
@@ -2676,11 +2717,8 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 
 @media (max-width: 720px) {
-  .report-tiles {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .tile-value {
-    font-size: 28px;
+    font-size: 26px;
   }
 }
 
@@ -3386,4 +3424,56 @@ td.cell-mid {
   font-size: 12px;
   line-height: 1.6;
   color: var(--muted);
+}
+
+/*
+ * ── 보고서·콘텐츠 생성(상용화 UI 4단계) ───────────────────────────────
+ */
+.page-lead {
+  margin: -8px 0 16px;
+  max-width: 72ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* 경로 표시 — 보고서·대시보드에서 넘어왔을 때만(GapActions.tsx ORIGINS). */
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.crumbs a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.crumbs a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.crumbs [aria-current='page'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* 원고 맨 위의 사실 대조 요약 띠(DraftPanel.tsx). */
+.draft-guard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.draft-guard-label {
+  margin-right: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
 }

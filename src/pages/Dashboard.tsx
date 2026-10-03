@@ -460,7 +460,7 @@ export default function Dashboard() {
                           <span>{item.text}</span>
                           {item.detail && <span className="dash-caption">{item.detail}</span>}
                         </div>
-                        <Link to="/gap-actions" className="btn soft">
+                        <Link to="/gap-actions" state={{ from: 'dashboard', label: '이번 주 할 일' }} className="btn soft">
                           이 질문으로 글 만들기
                         </Link>
                       </li>

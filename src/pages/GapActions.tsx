@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
@@ -628,8 +628,20 @@ function ActionCard({
   )
 }
 
+/**
+ * 어디서 넘어왔는지 — 정기진단 보고서의 개선제안·대시보드의 「이번 주 할 일」이 링크 state로 넘긴다.
+ * 경로 표시(「정기진단 보고서 › 01 카테고리 무관 노출 확대 › 콘텐츠 생성」)에만 쓴다. 메뉴로 바로 들어오면 없다.
+ */
+const ORIGINS = {
+  report: { name: '정기진단 보고서', to: '/report' },
+  dashboard: { name: '대시보드', to: '/' },
+} as const
+type OriginState = { from?: keyof typeof ORIGINS; label?: string } | null
+
 export default function GapActions() {
   const { tenant } = useTenant()
+  const navState = useLocation().state as OriginState
+  const origin = navState?.from && ORIGINS[navState.from] ? { ...ORIGINS[navState.from], label: navState.label ?? '' } : null
   // 인용 갭 분석에서 넘어온 목적지. focus=액션 id, domain=사람이 읽을 이름(항목이 없을 때 안내에 쓴다).
   const [searchParams] = useSearchParams()
   const focusId = searchParams.get('focus') ?? ''
@@ -703,11 +715,28 @@ export default function GapActions() {
 
   return (
     <>
-      <p className="brand">그래서 뭘 하나</p>
-      <h1>콘텐츠 생성</h1>
-      <p className="lead">
-        <Link to="/gap-analysis">가시성 격차 분석</Link>이 "어디가 비어 있나"를 말한다면, 여기는{' '}
-        <b>그래서 뭘 하나</b>입니다. 저장된 측정만으로 계산하며 새 API 호출은 없습니다.
+      {origin && (
+        <nav className="crumbs" aria-label="경로">
+          <Link to={origin.to}>{origin.name}</Link>
+          {origin.label && (
+            <>
+              <span aria-hidden="true">›</span>
+              <Link to={origin.to}>{origin.label}</Link>
+            </>
+          )}
+          <span aria-hidden="true">›</span>
+          <span aria-current="page">콘텐츠 생성</span>
+        </nav>
+      )}
+      <header className="page-head">
+        <div className="page-title">
+          <p className="page-eyebrow">실행 · {tenant.brandName}</p>
+          <h1>콘텐츠 생성</h1>
+        </div>
+      </header>
+      <p className="page-lead">
+        <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 정하고
+        만드는 곳입니다. 저장된 측정만으로 계산하며 새 API 호출은 없습니다.
       </p>
 
       <div className="filters">
