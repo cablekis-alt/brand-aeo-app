@@ -57,7 +57,7 @@
   /* 채움형 강조 — 글자색은 var(--paper)라 라이트/다크 모두 accent와 대비가 유지된다. */
   background: var(--accent);
   color: var(--paper);
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -80,7 +80,7 @@
 }
 
 .brand-title {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 17px;
   color: var(--ink);
   letter-spacing: -0.02em;
@@ -793,14 +793,14 @@
 }
 .site-form .resolve-line b {
   color: var(--ink);
-  font-weight: 560;
+  font-weight: 600;
 }
 
 /* 수집 엔진 선택(API 키 패널) — 라디오 한 줄씩, 체크박스는 가로로 흘린다. */
 .apikey-panel h4 {
   margin: 18px 0 6px;
-  font-family: var(--serif);
-  font-weight: 560;
+  font-family: var(--sans);
+  font-weight: 600;
   font-size: 17px;
 }
 .engine-pick {
@@ -938,7 +938,7 @@ td.judgment {
 }
 
 .sev-medium {
-  color: var(--accent);
+  color: var(--warn);
   background: var(--accent-soft);
 }
 
@@ -1164,7 +1164,7 @@ select {
 }
 
 .total strong {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 48px;
   margin-left: 8px;
 }
@@ -1226,7 +1226,7 @@ select {
 }
 
 .metrics article p {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 28px;
   margin: 0 0 8px;
 }
@@ -1431,10 +1431,10 @@ tbody tr.selected {
   margin: 14px 0 8px;
 }
 .report-verdict.sev-good { border-left-color: var(--good); }
-.report-verdict.sev-warn { border-left-color: var(--accent); }
+.report-verdict.sev-warn { border-left-color: var(--warn); }
 .report-verdict.sev-bad { border-left-color: var(--bad); }
 .verdict-head {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 22px;
   margin: 4px 0 8px;
   display: flex;
@@ -1515,7 +1515,7 @@ tbody tr.selected {
 }
 .status-pill.st-good { color: var(--good); }
 .status-pill.st-ok { color: var(--muted); }
-.status-pill.st-warn { color: var(--accent); }
+.status-pill.st-warn { color: var(--warn); }
 .status-pill.st-bad { color: var(--bad); }
 .status-pill.st-info { color: var(--muted); }
 .status-pill.st-unknown { color: var(--muted); }
@@ -1680,10 +1680,10 @@ p.hint {
   padding: 16px 18px;
 }
 .rec-card.pr-high { border-left-color: var(--bad); }
-.rec-card.pr-medium { border-left-color: var(--accent); }
+.rec-card.pr-medium { border-left-color: var(--warn); }
 .rec-card.pr-low { border-left-color: var(--muted); }
 .rec-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.rec-head h4 { margin: 0; font-family: var(--serif); font-weight: 560; font-size: 18px; flex: 1 1 auto; }
+.rec-head h4 { margin: 0; font-family: var(--sans); font-weight: 700; font-size: 18px; flex: 1 1 auto; }
 .rec-num {
   width: 26px; height: 26px; flex: 0 0 26px;
   display: grid; place-items: center;
@@ -1696,7 +1696,7 @@ p.hint {
   padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
 }
 .priority-pill.pr-high { color: var(--bad); }
-.priority-pill.pr-medium { color: var(--accent); }
+.priority-pill.pr-medium { color: var(--warn); }
 .priority-pill.pr-low { color: var(--muted); }
 .rec-basis { margin: 2px 0 10px; color: var(--ink); }
 .rec-label { margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -1868,12 +1868,12 @@ p.hint {
 .notice {
   margin: 12px 0 0;
   padding: 10px 14px;
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--warn);
   background: var(--card);
   color: var(--ink);
   font-size: 0.92em;
 }
-.notice b { color: var(--accent); }
+.notice b { color: var(--warn); }
 
 /* CI 결과 동기화 — 버튼과 설명을 한 줄에. */
 .ci-sync {
@@ -2346,7 +2346,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 
 .score-value {
   margin: 2px 0 0;
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 44px;
   line-height: 1.1;
 }
@@ -2393,7 +2393,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   margin: 0 0 16px;
 }
 .headline.st-good { border-left-color: var(--good); }
-.headline.st-warn { border-left-color: var(--accent); }
+.headline.st-warn { border-left-color: var(--warn); }
 .headline.st-bad { border-left-color: var(--bad); }
 
 .headline-label {
@@ -2533,7 +2533,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   font-size: 14px;
 }
 .breakdown-total strong {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 34px;
   margin-right: 6px;
 }
@@ -2556,7 +2556,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 }
 
 .bd-letter {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-weight: 700;
   color: var(--muted);
 }
@@ -2643,7 +2643,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 
 .tile-value {
   margin: 2px 0 0;
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 34px;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
