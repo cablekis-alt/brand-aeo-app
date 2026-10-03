@@ -181,18 +181,24 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
   }
 
   // 5) 브랜드 소유 출처 인용률
+  //    문구는 상태마다 따로 둔다. 예전엔 '양호'와 그 밖의 둘로만 나눠, 21%('보통')에도 가장 나쁜 쪽 문구
+  //    「거의 연결되지 않습니다」가 붙어 상태 칩과 설명이 서로 다른 말을 했다.
   {
     const s = rateStatus(card.brandOwnedCitationRate, 0.3, 0.15, 0.05)
+    const OWNED_NOTE: Record<MetricStatus, string> = {
+      good: 'AI 답변의 인용이 자사 도메인으로 잘 연결됩니다.',
+      ok: 'AI가 근거로 삼는 출처 중 자사 콘텐츠가 일부 있습니다 — 인용되는 자사 페이지를 늘리면 더 오릅니다.',
+      warn: 'AI가 근거로 삼는 출처 중 자사 콘텐츠가 적습니다.',
+      bad: 'AI가 근거로 삼는 출처가 자사 콘텐츠로 거의 연결되지 않습니다.',
+      unknown: '',
+    }
     out.push({
       key: 'brandOwnedCitationRate',
       label: '브랜드 소유 출처 인용',
       weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
       valueText: formatPct(card.brandOwnedCitationRate),
       status: s,
-      note:
-        s === 'good'
-          ? 'AI 답변의 인용이 자사 도메인으로 잘 연결됩니다.'
-          : 'AI가 근거로 삼는 출처가 자사 콘텐츠로 거의 연결되지 않습니다.',
+      note: OWNED_NOTE[s],
       delta: pctDelta(card.brandOwnedCitationRate, prev?.brandOwnedCitationRate),
     })
   }
