@@ -287,6 +287,28 @@ export default function PeriodicReport() {
     return asked.size > 0 ? `이름 없이 물은 질문 ${asked.size}개 중 ${hit.size}개에서 불렸습니다` : null
   }, [evidence])
 
+  /*
+   * 이름 없는 질문 기준 자사 인용률 — 지표별 진단의 「브랜드 소유 출처 인용」 칸 아래에 함께 보인다.
+   *
+   * 점수에 들어가는 자사 인용률은 이번 주 **모든 질문**의 인용을 센다(server/aggregate.ts). 그런데 언급률은
+   * 이름 없는 질문만 세서, 같은 점수 안에서 두 지표의 모집단이 다르다. 브랜드 이름을 넣은 질문("교보생명
+   * ○○ 알려줘")에는 AI가 자연히 그 브랜드 사이트를 인용하므로 값이 부푼다 — 실측 교보생명 W40은 전체 21.0%,
+   * 이름 없는 질문만 6.8%(46/676)였다. 점수 산식은 그대로 두고, 진단에서 두 값을 나란히 보인다.
+   * 판정 기록에서 바로 세므로 지난 주차에도 나온다. 판정 기록·질문지를 못 읽으면 보이지 않는다.
+   */
+  const unnamedOwned = useMemo(() => {
+    if (!evidence?.bank) return null
+    const agnostic = new Set(evidence.bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.questionId))
+    let total = 0
+    let owned = 0
+    for (const a of evidence.analyses) {
+      if (!agnostic.has(a.questionId)) continue
+      total += a.citations.length
+      owned += a.citations.filter((c) => c.ownerType === 'brand-owned').length
+    }
+    return total > 0 ? { owned, total, rate: owned / total } : null
+  }, [evidence])
+
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(
     () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
@@ -563,7 +585,17 @@ export default function PeriodicReport() {
                         {m.label}
                         {m.weight > 0 && <span className="weight-tag">{Math.round(m.weight * 100)}%</span>}
                       </td>
-                      <td className="num">{m.valueText}</td>
+                      <td className="num">
+                        {m.valueText}
+                        {m.key === 'brandOwnedCitationRate' && unnamedOwned && (
+                          <span
+                            className="cell-sub"
+                            title="점수에는 모든 질문의 인용이 들어갑니다. 이 값은 브랜드 이름 없이 물은 질문(언급률과 같은 모집단)의 인용만 센 것입니다."
+                          >
+                            이름 없는 질문 {(unnamedOwned.rate * 100).toFixed(1)}% ({unnamedOwned.owned}/{unnamedOwned.total}건)
+                          </span>
+                        )}
+                      </td>
                       <td className="num">
                         {m.delta ? <span className={`delta ${m.delta.tone}`}>{m.delta.text}</span> : <span className="muted">–</span>}
                       </td>
