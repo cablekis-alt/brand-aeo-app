@@ -123,7 +123,8 @@ app.get('/api/tenants', async (req, res) => {
   res.json(picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })));
 });
 
-// 브랜드 삭제 — 오버레이(런타임 등록분)와 대기열에서 제거. 베이크된 테넌트는 CLI(delete-tenant.ts)+배포 필요.
+// 브랜드 삭제 — 오버레이·대기열에서 빼고, 로컬/패키징이면 툼스톤 + 남은 코호트 순위 재계산(deleteTenantLocally).
+// 배포(Vercel)의 베이크된 브랜드는 GitHub Actions(delete-tenant.ts)로 커밋 데이터까지 지운다.
 app.delete('/api/tenants', async (req, res) => {
   const tenantId = typeof req.query.tenantId === 'string' ? req.query.tenantId.trim() : '';
   if (!tenantId) {
@@ -137,9 +138,10 @@ app.delete('/api/tenants', async (req, res) => {
     let dispatched = false;
     let htmlUrl: string | undefined;
     let locallyDeleted = false;
-    if (baked && !process.env.VERCEL) {
-      // 로컬/패키징(Electron) — 베이크된 브랜드도 툼스톤으로 즉시 완전 삭제(GitHub Actions 불필요).
-      await deleteTenantLocally(tenantId);
+    if (!process.env.VERCEL) {
+      // 로컬/패키징(Electron) — 베이크 여부와 관계없이 툼스톤으로 즉시 삭제(GitHub Actions 불필요).
+      // 앱에서 등록한 브랜드도 측정 데이터가 남으므로 툼스톤이 없으면 코호트 순위에 계속 낀다.
+      await deleteTenantLocally(tenantId, store);
       locallyDeleted = true;
     } else if (baked && canTriggerRemoteMeasure()) {
       try {

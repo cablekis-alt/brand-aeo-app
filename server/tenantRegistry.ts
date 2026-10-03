@@ -1,11 +1,13 @@
 import rawTenants from './tenants.config.json' with { type: 'json' };
 import { packagedDataMode } from './appPaths.js';
+import { reconcileCohortRanks } from './cohortRank.js';
 import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
 import { readTenantEngines } from './tenantEnginesStore.js';
+import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
 
@@ -32,11 +34,26 @@ async function baseTenants(): Promise<TenantConfig[]> {
 export { canPersistTenants, blobStoreEnabled, removeOverlayTenant };
 
 /**
- * 베이크된 테넌트를 로컬/패키징에서 즉시 완전 삭제한다(툼스톤 추가).
- * loadRuntimeTenants가 이 목록을 걸러내므로, GitHub Actions 없이 목록·선택지에서 바로 사라진다.
+ * 로컬/패키징에서 브랜드를 지운다 — 툼스톤을 달고, 그 브랜드가 끼어 있던 코호트의 순위를 다시 매긴다.
+ *
+ * 툼스톤은 브랜드 목록(loadRuntimeTenants)과 코호트 순위(store.getCohortScorecards) 양쪽이 걸러 낸다.
+ * 예전에는 베이크된 브랜드에만 달고, 앱에서 등록한 브랜드·자동 등록된 경쟁사는 오버레이에서만 뺐다 —
+ * 측정 데이터(data/<id>/)는 남으므로 지운 브랜드가 순위표에 계속 끼었다.
+ *
+ * 순위는 스코어카드에 저장된 값이라(개요·보고서가 그 값을 읽는다) 툼스톤만으로는 남은 브랜드의 「2/6」이
+ * 그대로다. 지운 브랜드가 측정된 주차·코호트마다 측정 끝에 쓰는 것과 같은 재계산을 돌린다.
+ * 측정 데이터는 지우지 않는다 — 툼스톤을 걷으면(같은 id로 다시 등록·측정) 되살아난다.
  */
-export async function deleteTenantLocally(tenantId: string): Promise<void> {
+export async function deleteTenantLocally(tenantId: string, store: ResultStore): Promise<{ ranksUpdated: number }> {
+  const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
   await addDeletedTenant(tenantId);
+  const cohorts = new Map<string, { industry: string; region: string; weekOf: string }>();
+  for (const c of history) cohorts.set(`${c.industry}|${c.region}|${c.weekOf}`, c);
+  let ranksUpdated = 0;
+  for (const { industry, region, weekOf } of cohorts.values()) {
+    ranksUpdated += await reconcileCohortRanks(store, industry, region, weekOf);
+  }
+  return { ranksUpdated };
 }
 
 /**
@@ -185,6 +202,9 @@ export function persistTenantForRuntime(tenant: TenantConfig): Promise<void> {
 }
 
 async function persistTenantForRuntimeUnlocked(tenant: TenantConfig): Promise<void> {
+  // 지운 브랜드를 다시 측정하는 경우(다른 브랜드의 경쟁사 목록에 남아 있으면 측정 때 다시 잰다) — 툼스톤이
+  // 남으면 데이터는 쌓이는데 목록·순위에서 안 보인다. 측정·등록한다는 것은 다시 쓰는 브랜드라는 뜻이다.
+  await removeDeletedTenant(tenant.tenantId);
   if (process.env.VERCEL || packagedDataMode()) {
     const overlay = await readOverlay();
     if (!overlay.some((item) => item.tenantId === tenant.tenantId)) {
