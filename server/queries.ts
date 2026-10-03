@@ -260,12 +260,20 @@ export interface RankingView {
     // 지표를 함께 싣는다 — "몇 위인지"가 아니라 "왜 그 자리인지"를 같은 줄에서 읽기 위해서다.
     // 값은 각 브랜드의 스코어카드에 이미 있는 것이라 새로 계산하지 않는다.
     // NOTE: 같은 모양이 src/lib/types.ts에도 있다(화면용). 둘을 함께 고쳐야 한다.
+    // 동점인 브랜드 수(이 브랜드 포함). 2 이상이면 화면이 「공동」을 붙인다.
+    tiedCount: number;
     peers: {
       tenantId: string;
       brandName: string;
       aeoScore: number;
+      // 순위 — 경쟁 순위(동점은 같은 번호, 그 다음 번호를 건너뛴다). 스코어카드 cohortRank와 같은 규칙.
+      rank: number;
+      tied: boolean;
       mentionRate: number;
       brandOwnedCitationRate: number;
+      // 점수 가중치 15인 지표. 순위 응답 수를 함께 실어, 응답 한 건의 1위가 대표값처럼 읽히지 않게 한다.
+      avgRecommendationRank: number | null;
+      rankedResponses: number | null;
       shareOfMention: number | null;
       // 전주 순위. 전주에 측정이 없거나 그때 없던 브랜드면 null — 0이나 '보합'으로 적지 않는다.
       previousRank: number | null;
@@ -381,11 +389,18 @@ export async function getRankingView(
   const useScoped = bank !== null && scoped.length > 0;
   const analyses = useScoped ? scoped : allAnalyses;
 
-  // 전주 순위표 — 같은 규칙(Brand AEO Score 내림차순)으로 세워야 비교가 성립한다.
-  const prevRank = new Map<string, number>();
-  [...prevCohort]
-    .sort((a, b) => b.aeoScore.current - a.aeoScore.current)
-    .forEach((card, i) => prevRank.set(card.tenantId, i + 1));
+  /*
+   * 순위는 경쟁 순위다 — 동점은 같은 번호, 그 다음 번호를 건너뛴다(1-1-3). 스코어카드의 cohortRank
+   * (server/scoring.ts computeCohortRank)·대시보드·정기진단 보고서와 같은 규칙이다. 예전에는 정렬한
+   * 자리 번호(i + 1)를 써서, 같은 8점인 스테이,머뭄이 대시보드에선 공동 1위인데 여기선 2위였다.
+   * 전주 순위도 같은 규칙으로 세워야 변동(▲▼)이 동점 때문에 생기지 않는다.
+   */
+  const competitionRank = (score: number, scores: number[]) => scores.filter((s) => s > score).length + 1;
+  const prevScores = prevCohort.map((c) => c.aeoScore.current);
+  const prevRank = new Map<string, number>(
+    prevCohort.map((card) => [card.tenantId, competitionRank(card.aeoScore.current, prevScores)]),
+  );
+  const scores = cohortScorecards.map((c) => c.aeoScore.current);
 
   /*
    * 리더보드에 언급률·인용률을 함께 싣는다.
@@ -395,19 +410,24 @@ export async function getRankingView(
    * 값은 그 브랜드의 스코어카드에 이미 있으므로 새로 계산하지 않는다.
    */
   const peers = cohortScorecards
-    .map((card, i) => ({
+    .map((card) => ({
       tenantId: card.tenantId,
       brandName: card.brandName,
       aeoScore: card.aeoScore.current,
+      rank: competitionRank(card.aeoScore.current, scores),
+      tied: scores.filter((s) => s === card.aeoScore.current).length > 1,
       mentionRate: card.mentionRate,
       brandOwnedCitationRate: card.brandOwnedCitationRate,
+      avgRecommendationRank: card.avgRecommendationRank,
+      rankedResponses: card.rankedResponses ?? null,
       shareOfMention: card.shareOfMention,
       previousRank: prevRank.get(card.tenantId) ?? null,
-      _i: i,
     }))
-    .sort((a, b) => b.aeoScore - a.aeoScore)
-    .map(({ _i, ...peer }) => peer);
-  const position = peers.findIndex((peer) => peer.tenantId === tenant.tenantId) + 1;
+    // 동점이면 우리 브랜드를 위로 — 같은 번호 안에서 자기 줄을 먼저 찾게 한다.
+    .sort((a, b) => b.aeoScore - a.aeoScore || Number(b.tenantId === tenant.tenantId) - Number(a.tenantId === tenant.tenantId));
+  const self = peers.find((peer) => peer.tenantId === tenant.tenantId);
+  const position = self ? self.rank : 0;
+  const tiedCount = self ? scores.filter((s) => s === self.aeoScore).length : 1;
 
   const competitorShareOfMention = shareOfMentionFrom(analyses, tenant.brandName);
   const top = topRecommendationFrom(analyses, tenant.brandName);
@@ -430,7 +450,7 @@ export async function getRankingView(
   });
 
   return {
-    cohort: { position, totalTenants: peers.length, peers, previousWeekOf: prevCohort.length > 0 ? prevWeek : null },
+    cohort: { position, tiedCount, totalTenants: peers.length, peers, previousWeekOf: prevCohort.length > 0 ? prevWeek : null },
     competitorShareOfMention,
     mentionScope: useScoped ? 'category-agnostic' : 'all',
     topRecommendationRate: top.rate,

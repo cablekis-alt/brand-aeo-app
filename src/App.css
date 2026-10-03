@@ -1249,6 +1249,15 @@ select {
   font-size: 48px;
   margin-left: 8px;
 }
+/* 「공동」은 숫자가 아니라 꼬리표 — 큰 Mono 숫자와 같은 크기로 두면 순위처럼 읽힌다. */
+.total strong .tie-mark {
+  margin-right: 8px;
+  font-family: var(--sans);
+  font-size: 0.42em;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--ink-2);
+}
 
 .delta {
   margin-left: 12px;

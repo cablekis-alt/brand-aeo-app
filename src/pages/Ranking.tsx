@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadRanking } from '../lib/api'
-import { ENGINE_LABEL, formatPct } from '../lib/format'
+import { ENGINE_LABEL, formatPct, formatRankWithCount } from '../lib/format'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { RankingView } from '../lib/types'
 
@@ -36,7 +36,13 @@ export default function Ranking() {
     if (!me || peers.length < 2) return null
     const above = peers.filter((p) => p.aeoScore > me.aeoScore)
     if (above.length === 0) {
-      return { lead: '코호트 1위입니다.', detail: '격차를 좁힐 상대가 없습니다 — 지금 수준을 유지하는 것이 과제입니다.' }
+      const tied = peers.filter((p) => p.aeoScore === me.aeoScore).length > 1
+      return {
+        lead: tied ? '코호트 공동 1위입니다.' : '코호트 1위입니다.',
+        detail: tied
+          ? '같은 점수의 브랜드가 있습니다 — 앞서려면 아래 지표에서 그 브랜드보다 낮은 칸부터 봅니다.'
+          : '격차를 좁힐 상대가 없습니다 — 지금 수준을 유지하는 것이 과제입니다.',
+      }
     }
     const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
     const gaps = [
@@ -73,7 +79,7 @@ export default function Ranking() {
       return {
         lead,
         detail:
-          '다만 이 표의 지표에서는 뚜렷한 차이가 없습니다 — 격차는 추천 순위·사실성처럼 여기 없는 항목에서 나옵니다. 브랜드 종합 진단의 점수 구성 막대에서 확인하세요.',
+          '다만 언급률·인용률에서는 뚜렷한 차이가 없습니다 — 점수 차이는 추천 순위 칸(응답 수가 적으면 비중도 작다)이나 언급의 감성 계수에서 나옵니다. 브랜드 종합 진단의 점수 구성 막대에서 확인하세요.',
       }
     }
     return {
@@ -109,6 +115,7 @@ export default function Ranking() {
             <p className="total">
               코호트 순위{' '}
               <strong>
+                {(ranking.cohort.tiedCount ?? 1) > 1 && <span className="tie-mark">공동</span>}
                 {ranking.cohort.position || '-'} / {ranking.cohort.totalTenants}
               </strong>
             </p>
@@ -118,8 +125,9 @@ export default function Ranking() {
           <section>
             <h3>코호트 리더보드</h3>
             <p className="hint" style={{ marginTop: 0 }}>
-              Brand AEO Score 순입니다. 지표를 같은 줄에 두면 상위권의 공통점이 보입니다 — 순위보다 <b>그 자리에 있는 이유</b>가
-              고칠 거리를 알려 줍니다.
+              Brand AEO Score 순입니다(동점은 같은 순위). 지표를 같은 줄에 두면 상위권의 공통점이 보입니다 — 순위보다 <b>그
+              자리에 있는 이유</b>가 고칠 거리를 알려 줍니다. 추천 순위의 괄호는 순위가 매겨진 응답 수이고, 6건 미만이면 점수에는
+              그만큼만 들어갑니다.
             </p>
             <div className="table-wrap">
               <table className="leaderboard">
@@ -130,23 +138,29 @@ export default function Ranking() {
                     <th>Brand AEO Score</th>
                     <th>언급률</th>
                     <th>인용률</th>
+                    <th>추천 순위</th>
                     <th>변동</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ranking.cohort.peers.map((peer, i) => {
-                    const rank = i + 1
+                    // 서버가 경쟁 순위를 준다(동점은 같은 번호). 옛 응답이면 줄 번호로 대신한다.
+                    const rank = peer.rank ?? i + 1
                     // 전주 기록이 없으면 변동을 만들지 않는다 — '보합'으로 적으면 없는 비교를 한 것이 된다.
                     const move = peer.previousRank == null ? null : peer.previousRank - rank
                     return (
                       <tr key={peer.tenantId} className={peer.tenantId === tenant.tenantId ? 'self' : undefined}>
-                        <td>{rank}</td>
+                        <td>
+                          {peer.tied ? '공동 ' : ''}
+                          {rank}
+                        </td>
                         <td className="cell-text">
                           <b>{peer.brandName}</b>
                         </td>
                         <td>{peer.aeoScore}</td>
                         <td>{formatPct(peer.mentionRate)}</td>
                         <td>{formatPct(peer.brandOwnedCitationRate)}</td>
+                        <td>{formatRankWithCount(peer.avgRecommendationRank, peer.rankedResponses)}</td>
                         <td className={move == null ? 'muted' : move > 0 ? 'move-up' : move < 0 ? 'move-down' : 'muted'}>
                           {move == null ? '—' : move === 0 ? '—' : move > 0 ? `▲${move}` : `▼${-move}`}
                         </td>

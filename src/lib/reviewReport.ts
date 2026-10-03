@@ -2,7 +2,7 @@ import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { PeriodicReport, Priority } from './b9-report'
 import type { RecommendationEvidence } from './recommendationEvidence'
 import type { SiteScoreRecord } from './api'
-import { ENGINE_LABEL, measureConditionText, OWNER_TYPE_LABEL, weekLabel } from './format'
+import { ENGINE_LABEL, measureConditionText, OWNER_TYPE_LABEL, weekLabel, formatRankWithCount } from './format'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
 /**
@@ -32,6 +32,9 @@ export interface CohortRow {
   tied: boolean
   mentionRate: number
   ownedRate: number
+  /** 평균 추천 순위와 순위 응답 수 — 점수 가중치 15인 지표(표기는 formatRankWithCount). */
+  avgRank: number | null
+  rankedResponses: number | null
   bankVersion: string | null
   /** 이 브랜드와 같은 일반 질문을 받았는지. 은행을 읽지 못하면 null. */
   sameQuestions: boolean | null
@@ -146,6 +149,8 @@ export function buildReviewReport(input: ReviewReportInput): ReviewReport {
         tied,
         mentionRate: c.mentionRate,
         ownedRate: c.brandOwnedCitationRate,
+        avgRank: c.avgRecommendationRank,
+        rankedResponses: c.rankedResponses ?? null,
         bankVersion: c.questionBankVersion ?? null,
         sameQuestions: selfGeneral && general ? sameSet(selfGeneral, general) : null,
         engines: engineText(c),
@@ -397,7 +402,7 @@ export function reviewReportHtml(r: ReviewReport): string {
       (c) =>
         `<tr${c.isSelf ? ' class="hi"' : ''}><td class="lead">${c.isSelf ? `<strong>${esc(c.brandName)}</strong>` : esc(c.brandName)}</td>` +
         `<td class="n">${c.tied ? '공동 ' : ''}${c.position}</td><td class="n">${c.score}</td><td class="n">${pct(c.mentionRate)}</td>` +
-        `<td class="n">${pct(c.ownedRate)}</td><td class="n">${c.sameQuestions === null ? '<span class="dim">확인 불가</span>' : c.sameQuestions ? '같음' : '<strong>다름</strong>'}</td></tr>`,
+        `<td class="n">${pct(c.ownedRate)}</td><td class="n">${esc(formatRankWithCount(c.avgRank, c.rankedResponses))}</td><td class="n">${c.sameQuestions === null ? '<span class="dim">확인 불가</span>' : c.sameQuestions ? '같음' : '<strong>다름</strong>'}</td></tr>`,
     )
     .join('')
 
@@ -502,8 +507,8 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--rule);font-si
 <section><p class="eyebrow">먼저 확인</p><h2>측정 신뢰도 점검</h2><ul class="checks">${checkRows}</ul></section>
 
 <section><p class="eyebrow">코호트</p><h2>같은 주 코호트 비교</h2><div class="scroller"><table>
-<caption>${esc(week)} Brand AEO Score · 일반 질문 언급률 · 자사 인용률 · 이 브랜드와 같은 일반 질문을 받았는지</caption>
-<thead><tr><th class="lead">브랜드</th><th>순위</th><th>점수</th><th>일반 질문 언급률</th><th>자사 인용</th><th>질문지</th></tr></thead>
+<caption>${esc(week)} Brand AEO Score · 일반 질문 언급률 · 자사 인용률 · 평균 추천 순위(괄호는 순위가 매겨진 응답 수) · 이 브랜드와 같은 일반 질문을 받았는지</caption>
+<thead><tr><th class="lead">브랜드</th><th>순위</th><th>점수</th><th>일반 질문 언급률</th><th>자사 인용</th><th>추천 순위</th><th>질문지</th></tr></thead>
 <tbody>${cohortRows}</tbody></table></div>
 <p class="note">점수는 언급률·자사 인용·추천 순위로 낸다. SoM·사실성은 점수에 들어가지 않는다.</p></section>
 
