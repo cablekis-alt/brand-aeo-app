@@ -19,6 +19,8 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 export interface EvidenceItem {
   text: string
   detail?: string
+  /** 질문에서 나온 항목이면 그 질문 — 화면이 AI 답변(/answers?q=)으로 잇는다. */
+  questionId?: string
 }
 
 export interface EvidenceBlock {
@@ -122,6 +124,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
             const others = othersFor(r.questionId)
             return {
               text: r.text,
+              questionId: r.questionId,
               detail:
                 others.length > 0
                   ? `대신 불린 곳: ${others.slice(0, 3).join(' · ')}`

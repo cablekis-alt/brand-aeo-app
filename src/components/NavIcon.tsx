@@ -4,6 +4,7 @@
  */
 const PATHS = {
   dashboard: 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z',
+  answers: 'M4 5h16v11H10l-4 4v-4H4zM8 9h8M8 12h5',
   measure: 'M3 12h4l3-8 4 16 3-8h4',
   status: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7v5l3 2',
   diagnosis: 'M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM15.5 15.5L20 20',

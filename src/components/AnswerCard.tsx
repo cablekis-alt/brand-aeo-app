@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { brandPattern, type AnswerHighlight, type CitationChip } from '../lib/answerInsights'
 
 const OWNER_SHORT: Record<CitationChip['ownerType'], string> = {
@@ -33,11 +34,16 @@ function highlight(text: string, brandName: string): ReactNode[] {
   return out
 }
 
+/** 브랜드 이름에 형광 표시를 한 문장 — AI 답변 화면의 엔진별 칸도 같이 쓴다. */
+export function BrandText({ text, brandName }: { text: string; brandName: string }) {
+  return <>{highlight(text, brandName)}</>
+}
+
 /**
  * 「AI는 이렇게 답했습니다」 카드 — 실제 답변에서 브랜드가 나온 문장과, 그 답변이 붙인 출처를 소유·뒷받침으로
  * 나눠 보인다. 개요와 AI 답변 화면이 같이 쓴다. 문장은 판정 기록의 언급 문장 그대로다(마크다운 기호만 걷는다).
  */
-export default function AnswerCard({ answer, brandName }: { answer: AnswerHighlight; brandName: string }) {
+export default function AnswerCard({ answer, brandName, to }: { answer: AnswerHighlight; brandName: string; to?: string }) {
   const shown = answer.citations.slice(0, CHIPS_SHOWN)
   const rest = answer.citationCount - shown.reduce((s, c) => s + c.count, 0)
   return (
@@ -72,6 +78,11 @@ export default function AnswerCard({ answer, brandName }: { answer: AnswerHighli
           ))}
           {rest > 0 && <span className="cite-chip">외 {rest}건</span>}
         </div>
+      )}
+      {to && (
+        <Link to={to} className="dash-link">
+          이 질문의 엔진별 답변 보기 →
+        </Link>
       )}
     </article>
   )
