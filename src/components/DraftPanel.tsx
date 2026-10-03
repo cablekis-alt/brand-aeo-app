@@ -401,6 +401,15 @@ export default function DraftPanel({
             지어내지 않고 비워 두었습니다.{' '}
             {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다 — 아래 빈칸에 바로 적으세요.` : '비운 자리는 없습니다.'}
           </p>
+          {/* 사실 대조 요약 — 아래 「이 글이 쓴 사실」·빈칸·「검증이 걸러낸 것」의 수를 원고 맨 위에 모은다. */}
+          <p className="draft-guard" aria-label="사실 대조 요약">
+            <span className="draft-guard-label">사실 대조</span>
+            <span className="chip good">쓴 사실 {d.usedFacts.length}개</span>
+            {d.gapCount > 0 && <span className="chip warn">채워야 할 빈칸 {d.gapCount}곳</span>}
+            {d.guardNotes && d.guardNotes.length > 0 && (
+              <span className="chip info">검증이 걸러낸 문장 {d.guardNotes.length}건</span>
+            )}
+          </p>
           {d.gapCount > 0 && (
             <p className="doc-meta" style={{ margin: '0 0 6px' }}>
               한 번에 찾기는 <b>브랜드 페이지 한 곳</b>만 읽습니다. 값이 상세 페이지에 흩어져 있으면 0건이 나오니,
