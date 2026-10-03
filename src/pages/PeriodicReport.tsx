@@ -421,7 +421,8 @@ export default function PeriodicReport() {
             <p className="verdict-summary">{report.verdict.summary}</p>
             {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
             <p className="hint">
-              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge}
+              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge} · 반복{' '}
+              {measureConditionText(card).repeats}
               {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
             </p>
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}

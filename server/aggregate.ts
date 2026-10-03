@@ -27,6 +27,8 @@ export interface WeeklyMetrics {
   brandOwnedCitationRate: number;
   /** 감성 계수(0.2~1.0). 점수에만 반영되고 화면 지표에는 들어가지 않는다. */
   mentionSentiment: number;
+  /** 질문당 반복 횟수 — 판정 기록의 가장 큰 반복 번호. 판정 기록이 없으면 undefined. */
+  repeatsPerQuestion?: number;
   score: number;
   /** 95% 신뢰구간 반폭. 중심은 score. */
   ciMargin: number;
@@ -146,10 +148,14 @@ export function aggregateWeeklyMetrics(
     ...[...engineSet].filter((e) => !ENGINE_ORDER.includes(e)),
   ];
 
+  // 반복 횟수는 설정이 아니라 실제로 물은 횟수에서 낸다 — 설정이 측정 뒤에 바뀌어도 카드는 그때 값을 남긴다.
+  const repeatsPerQuestion = analyses.length > 0 ? Math.max(...analyses.map((a) => Number(a.callIndex) || 1)) : undefined;
+
   return {
     mentionRate,
     shareOfMention,
     ...(shareOfMentionMentions !== undefined ? { shareOfMentionMentions } : {}),
+    ...(repeatsPerQuestion !== undefined ? { repeatsPerQuestion } : {}),
     avgRecommendationRank,
     factualityScore,
     brandOwnedCitationRate,
