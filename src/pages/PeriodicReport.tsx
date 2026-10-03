@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom'
 import ReviewReportPanel from '../components/ReviewReportPanel'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources, loadEeat, loadSiteScores, type SiteScoreRecord } from '../lib/api'
+import { loadCitationSources, loadEeat, loadQuestionAnalyses, loadQuestionBank, loadSiteScores, type SiteScoreRecord } from '../lib/api'
+import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
+import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import { comparisonFromHistory } from '../lib/citationView'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
 import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
@@ -223,6 +226,47 @@ export default function PeriodicReport() {
   /** 검토 리포트가 쓰는 Site AEO 진단 — 타일과 같은 규칙(siteFor). */
   const siteForReview = useMemo(() => siteFor(judgedWeek), [siteFor, judgedWeek])
 
+  /*
+   * 개선제안의 「이번 주 데이터로 본 실행 항목」과 검토 리포트가 함께 쓰는 측정 기록 — 판정 주차의
+   * 질문별 판정·질문 은행·인용 출처. 한 번만 불러와 둘에 나눠 준다.
+   */
+  const evidenceKey = card ? `${card.tenantId}|${card.weekOf}` : ''
+  const [evidenceData, setEvidenceData] = useState<{
+    key: string
+    analyses: QuestionRepeatAnalysis[]
+    bank: QuestionBank | null
+    citations: CitationSourceAnalysis | null
+  } | null>(null)
+  useEffect(() => {
+    if (!card) return
+    let alive = true
+    const key = `${card.tenantId}|${card.weekOf}`
+    Promise.all([
+      loadQuestionAnalyses(card.tenantId, card.weekOf),
+      loadQuestionBank(card.tenantId, card.questionBankVersion),
+      loadCitationSources(card.tenantId, card.weekOf),
+    ]).then(
+      ([analyses, bank, citations]) => alive && setEvidenceData({ key, analyses, bank, citations }),
+      // 기록을 못 읽으면 실행 항목 없이 기본 원칙만 보인다 — 빈 기록으로 두고 넘어간다.
+      () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null }),
+    )
+    return () => {
+      alive = false
+    }
+  }, [card])
+  const evidence = evidenceData?.key === evidenceKey ? evidenceData : null
+  const enrichedReport = useMemo(() => {
+    if (!report || !card || !evidence) return report
+    const map = buildRecommendationEvidence({
+      card,
+      analyses: evidence.analyses,
+      questions: evidence.bank?.questions ?? [],
+      citations: evidence.citations,
+      site: siteForReview,
+    })
+    return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
+  }, [report, card, evidence, siteForReview])
+
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(
     () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
@@ -405,7 +449,18 @@ export default function PeriodicReport() {
             </section>
           )}
 
-          <ReviewReportPanel card={card} history={history} site={siteForReview} periodic={report} />
+          {evidence && enrichedReport ? (
+            <ReviewReportPanel
+              card={card}
+              history={history}
+              site={siteForReview}
+              periodic={enrichedReport}
+              selfAnalyses={evidence.analyses}
+              selfBank={evidence.bank}
+            />
+          ) : (
+            <p className="muted">검토 리포트를 불러오는 중…</p>
+          )}
 
           <section className={`report-verdict sev-${report.verdict.tone}`}>
             <p className="eyebrow">
@@ -493,7 +548,7 @@ export default function PeriodicReport() {
               <p className="muted">주의·미흡 지표가 없어 별도 개선제안이 없습니다. 현재 수준을 유지하세요.</p>
             ) : (
               <ol className="rec-list">
-                {report.recommendations.map((rec, i) => (
+                {(enrichedReport ?? report).recommendations.map((rec, i) => (
                   <li key={rec.id} className={`rec-card pr-${rec.priority}`}>
                     <div className="rec-head">
                       <span className="rec-num">{i + 1}</span>
@@ -501,7 +556,34 @@ export default function PeriodicReport() {
                       <span className={`priority-pill pr-${rec.priority}`}>우선순위 {PRIORITY_LABEL[rec.priority]}</span>
                     </div>
                     <p className="rec-basis">{rec.basis}</p>
-                    <p className="rec-label">실행안</p>
+                    {rec.evidence && rec.evidence.blocks.length > 0 && (
+                      <div className="rec-evidence">
+                        <p className="rec-label">이번 주 데이터로 본 실행 항목</p>
+                        {rec.evidence.blocks.map((b, k) => (
+                          <div key={k} className="rec-evidence-block">
+                            <p className="rec-evidence-head">{b.heading}</p>
+                            <ul>
+                              {b.items.map((it, j) => (
+                                <li key={j}>
+                                  <span>{it.text}</span>
+                                  {it.detail && <span className="muted"> — {it.detail}</span>}
+                                </li>
+                              ))}
+                            </ul>
+                            {b.more ? <p className="hint">외 {b.more}개</p> : null}
+                          </div>
+                        ))}
+                        {rec.evidence.estimate && <p className="hint">{rec.evidence.estimate}</p>}
+                        {rec.evidence.link && (
+                          <p className="no-print">
+                            <Link to={rec.evidence.link.to} className="rec-link">
+                              {rec.evidence.link.label} →
+                            </Link>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <p className="rec-label">{rec.evidence?.blocks.length ? '기본 원칙' : '실행안'}</p>
                     <ul className="rec-actions">
                       {rec.actions.map((a, j) => (
                         <li key={j}>{a}</li>

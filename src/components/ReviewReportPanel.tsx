@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { loadCitationBreakdown, loadQuestionAnalyses, loadQuestionBank, loadScorecards, type SiteScoreRecord } from '../lib/api'
+import { loadCitationBreakdown, loadQuestionBank, loadScorecards, type SiteScoreRecord } from '../lib/api'
+import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { PeriodicReport } from '../lib/b9-report'
 import { weekLabel } from '../lib/format'
 import { downloadHtml } from '../lib/markdownFile'
@@ -26,11 +27,16 @@ export default function ReviewReportPanel({
   history,
   site,
   periodic,
+  selfAnalyses,
+  selfBank,
 }: {
   card: WeeklyScorecard
   history: WeeklyScorecard[]
   site: SiteScoreRecord | null
   periodic: PeriodicReport
+  /** 정기진단 보고서가 이미 불러온 이 브랜드의 판정 기록·질문 은행 — 두 번 불러오지 않는다. */
+  selfAnalyses: QuestionRepeatAnalysis[]
+  selfBank: QuestionBank | null
 }) {
   const key = `${card.tenantId}|${card.weekOf}`
   const [state, setState] = useState<{ key: string; data: Loaded | null; error: string | null }>({ key: '', data: null, error: null })
@@ -43,13 +49,15 @@ export default function ReviewReportPanel({
         await Promise.all(memberIds.map(async (id) => (await loadScorecards(id)).find((c) => c.weekOf === card.weekOf) ?? null))
       ).filter((c): c is WeeklyScorecard => c !== null)
       const bankEntries = await Promise.all(
-        [card, ...memberCards].map(async (c) => [c.tenantId, await loadQuestionBank(c.tenantId, c.questionBankVersion)] as const),
+        memberCards.map(async (c) => [c.tenantId, await loadQuestionBank(c.tenantId, c.questionBankVersion)] as const),
       )
-      const [analyses, citations] = await Promise.all([
-        loadQuestionAnalyses(card.tenantId, card.weekOf),
-        loadCitationBreakdown(card.tenantId, card.weekOf),
-      ])
-      return { members: memberCards, banks: Object.fromEntries(bankEntries), analyses, citationRows: citations.rows }
+      const citations = await loadCitationBreakdown(card.tenantId, card.weekOf)
+      return {
+        members: memberCards,
+        banks: { ...Object.fromEntries(bankEntries), [card.tenantId]: selfBank },
+        analyses: selfAnalyses,
+        citationRows: citations.rows,
+      }
     }
     load().then(
       (data) => alive && setState({ key, data, error: null }),
@@ -58,7 +66,7 @@ export default function ReviewReportPanel({
     return () => {
       alive = false
     }
-  }, [key, card])
+  }, [key, card, selfAnalyses, selfBank])
 
   const loaded = state.key === key ? state : null
   const report = useMemo(

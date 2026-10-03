@@ -1,5 +1,6 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { PeriodicReport, Priority } from './b9-report'
+import type { RecommendationEvidence } from './recommendationEvidence'
 import type { SiteScoreRecord } from './api'
 import { ENGINE_LABEL, measureConditionText, OWNER_TYPE_LABEL, weekLabel } from './format'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
@@ -79,7 +80,7 @@ export interface ReviewReport {
   citations: { total: number; owned: number; ownedRate: number; ownedRank: number | null; top: CitationRow[] }
   /** 「틀림」 판정 — 질문·엔진·AI가 말한 값·등록된 값. 사람이 원문을 보고 판정 오류인지 가린다. */
   factuality: { score: number | null; contradicted: { question: string; engine: string; said: string; registered: string }[] }
-  recommendations: { title: string; priority: Priority; basis: string }[]
+  recommendations: { title: string; priority: Priority; basis: string; evidence?: RecommendationEvidence }[]
 }
 
 export interface ReviewReportInput {
@@ -226,7 +227,7 @@ export function buildReviewReport(input: ReviewReportInput): ReviewReport {
           })),
       ),
     },
-    recommendations: periodic.recommendations.map((r) => ({ title: r.title, priority: r.priority, basis: r.basis })),
+    recommendations: periodic.recommendations.map((r) => ({ title: r.title, priority: r.priority, basis: r.basis, evidence: r.evidence })),
   }
 }
 
@@ -356,6 +357,20 @@ function esc(s: string): string {
 const CHECK_LABEL: Record<CheckStatus, string> = { ok: '확인', warn: '주의', review: '사람 확인' }
 const PRIORITY_TEXT: Record<Priority, string> = { high: '높음', medium: '중간', low: '낮음' }
 
+/** 개선제안 하나 — 근거와 이번 주 데이터로 본 실행 항목(밀린 질문·출처·감점)을 함께 적는다. */
+function recommendationHtml(x: ReviewReport['recommendations'][number]): string {
+  const blocks = (x.evidence?.blocks ?? [])
+    .map(
+      (b) =>
+        `<p class="note"><b>${esc(b.heading)}</b></p><ul class="qs">${b.items
+          .map((it) => `<li>${esc(it.text)}${it.detail ? `<span class="e">${esc(it.detail)}</span>` : ''}</li>`)
+          .join('')}</ul>${b.more ? `<p class="note">외 ${b.more}개</p>` : ''}`,
+    )
+    .join('')
+  const estimate = x.evidence?.estimate ? `<p class="note">${esc(x.evidence.estimate)}</p>` : ''
+  return `<li><b>${esc(x.title)}</b> <span class="dim">우선순위 ${PRIORITY_TEXT[x.priority]}</span><p>${esc(x.basis)}</p>${blocks}${estimate}</li>`
+}
+
 /** 공유용 단일 HTML 문서. 스타일을 안에 담아 파일 하나로 열린다(라이트·다크 모두). */
 export function reviewReportHtml(r: ReviewReport): string {
   const week = weekLabel(r.weekOf)
@@ -414,7 +429,7 @@ ${r.site.categories.map((c) => `<tr><td class="lead">${esc(c.name)}</td><td clas
 
   const recs =
     r.recommendations.length > 0
-      ? `<ol class="todo">${r.recommendations.map((x) => `<li><b>${esc(x.title)}</b> <span class="dim">우선순위 ${PRIORITY_TEXT[x.priority]}</span><p>${esc(x.basis)}</p></li>`).join('')}</ol>`
+      ? `<ol class="todo">${r.recommendations.map(recommendationHtml).join('')}</ol>`
       : '<p class="note">주의·미흡 지표가 없어 별도 개선제안이 없다.</p>'
 
   const factNote =
