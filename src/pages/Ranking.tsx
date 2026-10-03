@@ -91,7 +91,7 @@ export default function Ranking() {
   return (
     <>
       <p className="brand">진단</p>
-      <h1>랭킹 분석</h1>
+      <h1>경쟁 순위</h1>
       <p className="lead">같은 업종·지역의 다른 브랜드와 비교해 몇 위인지, 추천 우선순위에서 얼마나 앞서는지 봅니다.</p>
 
       <div className="filters">

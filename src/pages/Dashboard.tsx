@@ -604,7 +604,7 @@ export default function Dashboard() {
             <p className="pipeline-stage">진단</p>
             <h2>밀리는 질문·엔진·경쟁사</h2>
             <p>{card ? `카테고리 무관 언급률 ${formatPct(card.mentionRate)}` : '측정 후 채워집니다'}</p>
-            <Link to="/question-winloss">질문별 승패 →</Link>
+            <Link to="/answers">AI 답변 →</Link>
           </article>
           <article>
             <p className="pipeline-stage">실행</p>

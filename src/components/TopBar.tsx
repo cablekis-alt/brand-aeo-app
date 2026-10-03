@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { routeMeta } from '../lib/menu'
+import CommandPalette from './CommandPalette'
 
 /**
  * 상단 작업 막대(상용화 UI 2차) — 왼쪽은 「이전 화면」과 경로(브랜드 / 묶음 / 화면), 오른쪽은 이 화면에서
@@ -10,7 +11,7 @@ import { routeMeta } from '../lib/menu'
  * 기간(주차)은 여기서 고르지 않는다 — 화면마다 주차 선택이 있고, 이를 한 곳으로 모으는 일은 별도
  * 변경이다. 「공유」는 두지 않는다 — 데스크톱 앱에는 링크 공유 기능이 없다. 오른쪽 단추는 정기진단
  * 보고서로 간다 — 내보내기(인쇄·PDF, 검토 리포트 HTML)가 거기 있다. 단추 이름을 「내보내기」로 하면 누르는
- * 순간 파일이 나올 것처럼 읽혀 「정기진단 보고서」로 둔다.
+ * 순간 파일이 나올 것처럼 읽혀 「정기진단 보고서」로 둔다. 그 왼쪽에 명령 창(Ctrl K) 단추를 둔다.
  */
 export default function TopBar({
   showBrand,
@@ -52,13 +53,14 @@ export default function TopBar({
           </span>
         </nav>
       )}
-      {showBrand && tenant && pathname !== '/report' && (
-        <div className="topbar-actions">
+      <div className="topbar-actions">
+        <CommandPalette />
+        {showBrand && tenant && pathname !== '/report' && (
           <Link to="/report" className="btn primary">
             정기진단 보고서
           </Link>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   )
 }
