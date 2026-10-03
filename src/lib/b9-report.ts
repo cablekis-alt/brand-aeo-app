@@ -248,7 +248,7 @@ const REC_LINKS = {
   site: { label: '사이트 종합 진단', to: '/site-diagnosis' },
   citations: { label: 'URL 상세 분석', to: '/citations' },
   sources: { label: 'AI 인용출처 분석', to: '/citation-sources' },
-  ranking: { label: '랭킹 분석', to: '/ranking' },
+  ranking: { label: '경쟁 순위', to: '/ranking' },
   eeat: { label: 'EEAT 분석', to: '/eeat' },
   onboarding: { label: '브랜드 추가', to: '/brand-onboarding' },
 }

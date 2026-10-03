@@ -45,7 +45,6 @@ export const MENU: MenuGroup[] = [
     title: '진단',
     items: [
       { label: '경쟁 순위', to: '/ranking', icon: 'ranking' },
-      { label: '질문별 승패', to: '/question-winloss', icon: 'gap' },
       { label: '인용 갭 분석', to: '/citation-gap', icon: 'citation' },
       { label: '브랜드 종합 진단', to: '/diagnosis', icon: 'diagnosis' },
     ],
@@ -75,7 +74,10 @@ export const MENU: MenuGroup[] = [
     id: 'detail',
     title: '상세 분석',
     foldable: true,
+    // 질문별 승패는 2차에서 여기로 옮겼다 — 질문 하나씩 보는 일은 AI 답변 화면이 맡고, 승·무·패와 감성 표는
+    // 가끔 여는 상세 표다.
     items: [
+      { label: '질문별 승패', to: '/question-winloss' },
       { label: '가시성 격차 분석', to: '/gap-analysis' },
       { label: '감성 분석', to: '/sentiment' },
       { label: 'URL 상세 분석', to: '/citations' },
@@ -106,4 +108,11 @@ export function routeMeta(pathname: string): { group: string | null; label: stri
     if (item) return { group: g.title ?? null, label: item.label }
   }
   return EXTRA[pathname] ? { group: null, label: EXTRA[pathname] } : null
+}
+
+/** 명령 창(Ctrl K)의 화면 목록 — 메뉴 순서 그대로, 묶음 이름을 함께. */
+export function allScreens(): { label: string; to: string; group: string | null }[] {
+  const out = MENU.flatMap((g) => g.items.map((i) => ({ label: i.label, to: i.to, group: g.title ?? null })))
+  for (const [to, label] of Object.entries(EXTRA)) out.push({ label, to, group: null })
+  return out
 }
