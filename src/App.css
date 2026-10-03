@@ -1613,6 +1613,16 @@ tbody tr.selected {
 }
 
 .diagnosis-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 값 아래 보조 줄 — 같은 지표를 다른 모집단으로 센 값(예: 이름 없는 질문 기준 자사 인용률). */
+.diagnosis-table .cell-sub {
+  display: block;
+  margin-top: 2px;
+  /* 칸(td.num)은 줄바꿈을 막지만 이 보조 줄은 접혀야 좁은 화면에서 진단 문구 칸을 짓누르지 않는다. */
+  white-space: normal;
+  min-width: 8em;
+  font-size: 11.5px;
+  color: var(--muted);
+}
 .diagnosis-table .weight-tag {
   margin-left: 6px;
   font-size: 11px;

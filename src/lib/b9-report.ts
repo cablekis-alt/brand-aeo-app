@@ -61,6 +61,17 @@ export interface PeriodicReport {
 
 const SEVERITY: Record<MetricStatus, number> = { bad: 1, warn: 0.6, unknown: 0.5, ok: 0.25, good: 0 }
 
+/**
+ * 지표 설명은 상태(양호·보통·주의·미흡)마다 따로 둔다. 예전엔 '양호'와 그 밖의 둘로만 나눠, '보통'에도
+ * 가장 나쁜 쪽 문구가 붙어 상태 칩과 설명이 서로 다른 말을 했다(실측: 교보생명 W40 자사 인용 21.0%
+ * '보통' 옆에 「거의 연결되지 않습니다」, SoM 35.9% '보통' 옆에 「경쟁사에 점유를 내주고 있습니다」).
+ * 측정 불가(unknown)는 지표마다 사정이 달라 각 지표가 따로 적는다.
+ */
+type GradedNotes = Record<Exclude<MetricStatus, 'unknown'>, string>
+function noteFor(s: MetricStatus, notes: GradedNotes): string {
+  return s === 'unknown' ? '' : notes[s]
+}
+
 function rateStatus(v: number, good: number, ok: number, warn: number): MetricStatus {
   if (v >= good) return 'good'
   if (v >= ok) return 'ok'
@@ -100,10 +111,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       weight: AEO_SCORE_WEIGHTS.mentionRate,
       valueText: formatPct(card.mentionRate),
       status: s,
-      note:
-        s === 'good'
-          ? '브랜드명을 넣지 않은 자연어 질문에서도 잘 노출됩니다.'
-          : '브랜드명을 넣지 않은 질문에서 답변에 등장하는 비율이 낮습니다.',
+      note: noteFor(s, {
+        good: '브랜드명을 넣지 않은 자연어 질문에서도 잘 노출됩니다.',
+        ok: '브랜드명을 넣지 않은 질문에서 자주 등장하지만, 빠지는 질문이 남아 있습니다.',
+        warn: '브랜드명을 넣지 않은 질문에서 답변에 등장하는 비율이 낮습니다.',
+        bad: '브랜드명을 넣지 않은 질문에서는 답변에 거의 등장하지 않습니다.',
+      }),
       delta: pctDelta(card.mentionRate, prev?.mentionRate),
     })
   }
@@ -125,9 +138,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
           ? shortSample !== null
             ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) 점유율을 판정하지 않습니다.`
             : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 측정할 수 없습니다.'
-          : s === 'good'
-            ? '브랜드명을 넣지 않은 질문에서 경쟁 브랜드 대비 언급 점유가 높습니다.'
-            : '브랜드명을 넣지 않은 질문에서 경쟁사에 점유를 내주고 있습니다.',
+          : noteFor(s, {
+              good: '브랜드명을 넣지 않은 질문에서 경쟁 브랜드 대비 언급 점유가 높습니다.',
+              ok: '브랜드명을 넣지 않은 질문에서 경쟁 브랜드와 언급을 나눠 갖고 있습니다 — 앞선 경쟁사를 따라잡을 여지가 있습니다.',
+              warn: '브랜드명을 넣지 않은 질문에서 경쟁사에 점유를 내주고 있습니다.',
+              bad: '브랜드명을 넣지 않은 질문의 언급 대부분을 경쟁사가 가져갑니다.',
+            }),
       delta: pctDelta(v, prev?.shareOfMention),
     })
   }
@@ -146,9 +162,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       note:
         (v === null
           ? '순위가 매겨진 답변이 없어 판정할 수 없습니다.'
-          : s === 'good'
-            ? 'AI가 추천을 나열할 때 상위에 배치됩니다.'
-            : 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.') +
+          : noteFor(s, {
+              good: 'AI가 추천을 나열할 때 상위에 배치됩니다.',
+              ok: 'AI가 추천을 나열할 때 중상위에 놓입니다.',
+              warn: 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.',
+              bad: 'AI가 추천을 나열할 때 대체로 뒤쪽에 놓입니다.',
+            })) +
         (v !== null && card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES
           ? ` 순위 답변이 ${card.rankedResponses}건뿐이라 점수에는 비중 ${card.rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}로만 반영했습니다.`
           : ''),
@@ -173,9 +192,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
           ? `Fact Graph와 모순되는 주장이 ${card.hallucinationFlags.length}건 관측됐습니다.`
           : v === null
             ? '팩트 그래프가 없거나 대조할 사실이 없어 측정하지 못했습니다.'
-            : s === 'good'
-              ? '답변이 사실 정보와 대체로 일치합니다.'
-              : '답변에 사실과 어긋나는 서술이 포함될 여지가 있습니다.',
+            : noteFor(s, {
+                good: '답변이 사실 정보와 대체로 일치합니다.',
+                ok: '답변이 사실 정보와 대부분 일치하지만, 어긋나는 서술이 일부 있습니다.',
+                warn: '답변에 사실과 어긋나는 서술이 적지 않습니다.',
+                bad: '답변의 사실 정보 상당수가 팩트 그래프와 어긋납니다.',
+              }),
       delta: pctDelta(v, prev?.factualityScore),
     })
   }
@@ -189,10 +211,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
       valueText: formatPct(card.brandOwnedCitationRate),
       status: s,
-      note:
-        s === 'good'
-          ? 'AI 답변의 인용이 자사 도메인으로 잘 연결됩니다.'
-          : 'AI가 근거로 삼는 출처가 자사 콘텐츠로 거의 연결되지 않습니다.',
+      note: noteFor(s, {
+        good: 'AI 답변의 인용이 자사 도메인으로 잘 연결됩니다.',
+        ok: 'AI가 근거로 삼는 출처 중 자사 콘텐츠가 일부 있습니다 — 인용되는 자사 페이지를 늘리면 더 오릅니다.',
+        warn: 'AI가 근거로 삼는 출처 중 자사 콘텐츠가 적습니다.',
+        bad: 'AI가 근거로 삼는 출처가 자사 콘텐츠로 거의 연결되지 않습니다.',
+      }),
       delta: pctDelta(card.brandOwnedCitationRate, prev?.brandOwnedCitationRate),
     })
   }
@@ -206,10 +230,12 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       weight: 0, // 점수 가중치엔 없으나 진단 참고
       valueText: formatPct(eeat.overall),
       status: s,
-      note:
-        s === 'good'
-          ? '경험·전문성·권위·신뢰 신호가 고르게 나타납니다.'
-          : 'AI 답변에서 전문성·권위·신뢰 신호가 약하게 나타납니다.',
+      note: noteFor(s, {
+        good: '경험·전문성·권위·신뢰 신호가 고르게 나타납니다.',
+        ok: '경험·전문성·권위·신뢰 신호가 나타나지만 고르지 않습니다.',
+        warn: 'AI 답변에서 전문성·권위·신뢰 신호가 약하게 나타납니다.',
+        bad: 'AI 답변에서 전문성·권위·신뢰 신호가 거의 보이지 않습니다.',
+      }),
     })
   }
 
