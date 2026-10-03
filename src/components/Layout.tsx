@@ -4,6 +4,7 @@ import { clearDataSource, useDemoData } from '../lib/dataSource'
 import { useTenant } from '../context/useTenant'
 import EmptyBrands from './EmptyBrands'
 import Sidebar from './Sidebar'
+import TopBar from './TopBar'
 
 // 선택 브랜드와 무관한 관리·측정 화면 — 사이드바의 브랜드 바꾸기를 숨기고, 브랜드 0개여도 그대로 연다
 // (브랜드 추가는 첫 등록 통로, 측정 대기열·상태는 전역, 테넌트 골라 측정은 자체 드롭다운).
@@ -98,21 +99,15 @@ export default function Layout() {
     <div className="shell">
       <Sidebar showBrandPicker={showBrandPicker} />
       <div className="content">
-        <header className="top">
-          {canGoBack && (
-            <button type="button" className="back-link" onClick={() => navigate(-1)} title="이전 화면으로 (Alt+←)">
-              ← 이전 화면
+        <TopBar showBrand={!isManagement} canGoBack={canGoBack} onBack={() => navigate(-1)} />
+        {error && (
+          <p className="error" role="alert">
+            {error}{' '}
+            <button type="button" className="ghost" onClick={() => void reloadTenants()}>
+              다시 시도
             </button>
-          )}
-          {error && (
-            <p className="error" role="alert">
-              {error}{' '}
-              <button type="button" className="ghost" onClick={() => void reloadTenants()}>
-                다시 시도
-              </button>
-            </p>
-          )}
-        </header>
+          </p>
+        )}
 
         {demo && !isManagement && (
           <p className="notice" role="status">

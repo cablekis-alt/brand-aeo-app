@@ -32,8 +32,11 @@
   --series-6: #3f4a46;
   --sans: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  --r-card: 12px;
+  --r-card: 14px;
   --r-ctl: 8px;
+  /* 카드 경계 — 1px 선 + 아주 옅은 그림자. raise는 맨 위 요약처럼 한 단계 떠야 하는 면에만 쓴다. */
+  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(17 28 24 / 0.05);
+  --shadow-raise: 0 0 0 1px var(--line), 0 10px 30px -18px rgb(17 28 24 / 0.22);
 
   /*
    * 인용 유형 색 — 범주형 팔레트. 슬롯 순서는 고정이며 데이터에 따라 돌려쓰지 않는다
@@ -82,6 +85,8 @@
     --series-4: #b497f0;
     --series-5: #d9b84a;
     --series-6: #a9b7b1;
+    --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
+    --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
     --bucket-review: #3987e5;
     --bucket-blog: #d95926;
     --bucket-news: #199e70;
@@ -119,6 +124,8 @@
   --series-4: #b497f0;
   --series-5: #d9b84a;
   --series-6: #a9b7b1;
+  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
   --bucket-review: #3987e5;
   --bucket-blog: #d95926;
   --bucket-news: #199e70;

@@ -4,6 +4,7 @@ import ReviewReportPanel from '../components/ReviewReportPanel'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadQuestionAnalyses, loadQuestionBank, loadSiteScores, type SiteScoreRecord } from '../lib/api'
+import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
@@ -276,15 +277,8 @@ export default function PeriodicReport() {
    */
   const coverLine = useMemo(() => {
     if (!evidence?.bank) return null
-    const agnostic = new Set(evidence.bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.questionId))
-    const asked = new Set<string>()
-    const hit = new Set<string>()
-    for (const a of evidence.analyses) {
-      if (!agnostic.has(a.questionId)) continue
-      asked.add(a.questionId)
-      if (a.mentioned) hit.add(a.questionId)
-    }
-    return asked.size > 0 ? `이름 없이 물은 질문 ${asked.size}개 중 ${hit.size}개에서 불렸습니다` : null
+    const { asked, hit } = questionCoverage(evidence.analyses, evidence.bank.questions)
+    return asked > 0 ? `이름 없이 물은 질문 ${asked}개 중 ${hit}개에서 불렸습니다` : null
   }, [evidence])
 
   /*
@@ -296,18 +290,10 @@ export default function PeriodicReport() {
    * 이름 없는 질문만 6.8%(46/676)였다. 점수 산식은 그대로 두고, 진단에서 두 값을 나란히 보인다.
    * 판정 기록에서 바로 세므로 지난 주차에도 나온다. 판정 기록·질문지를 못 읽으면 보이지 않는다.
    */
-  const unnamedOwned = useMemo(() => {
-    if (!evidence?.bank) return null
-    const agnostic = new Set(evidence.bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.questionId))
-    let total = 0
-    let owned = 0
-    for (const a of evidence.analyses) {
-      if (!agnostic.has(a.questionId)) continue
-      total += a.citations.length
-      owned += a.citations.filter((c) => c.ownerType === 'brand-owned').length
-    }
-    return total > 0 ? { owned, total, rate: owned / total } : null
-  }, [evidence])
+  const unnamedOwned = useMemo(
+    () => (evidence?.bank ? unnamedOwnedCitation(evidence.analyses, evidence.bank.questions) : null),
+    [evidence],
+  )
 
   /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
   const monthEngineSets = useMemo(

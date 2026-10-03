@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import AnswerCard from '../components/AnswerCard'
 import ChangeAlerts from '../components/ChangeAlerts'
+import PositionMap from '../components/PositionMap'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText, weekLabel } from '../lib/format'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
+import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { conditionChange } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
 import { RANK_FULL_WEIGHT_RESPONSES, WEIGHT_RATIO, shareOfMentionNote } from '../prompts/b8-report'
@@ -19,7 +22,7 @@ const TREND_WEEKS = 5
 const TODO_SHOW = 3
 
 export default function Dashboard() {
-  const { tenant, tenants } = useTenant()
+  const { tenant } = useTenant()
   // Site AEO Score의 주차 기록은 로컬 서버에만 있다(Vercel에는 이 라우트가 없다).
   // 웹에서 "진단하면 쌓입니다"라고 안내하면 지키지 못할 약속이 된다.
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
@@ -171,31 +174,6 @@ export default function Dashboard() {
     return { card: h, changed: before ? conditionChange(before, h) : null }
   })
 
-  // 코호트 순위표 — 카드에 저장된 구성원 점수로 매긴다(서버의 computeCohortRank와 같은 경쟁 순위:
-  // 동점은 같은 번호). 전주 점수는 전주 카드의 구성원 기록에서 같은 브랜드를 찾는다.
-  const cohortRows = (() => {
-    const members = card?.cohortRank.members
-    if (!card || !members || members.length === 0) return []
-    const prevOf = new Map((prevCard?.cohortRank.members ?? []).map((m) => [m.tenantId, m.aeoScore]))
-    const peerNames = new Map((rankingView?.cohort.peers ?? []).map((p) => [p.tenantId, p.brandName]))
-    const nameOf = (id: string) => peerNames.get(id) ?? tenants.find((t) => t.tenantId === id)?.brandName ?? id
-    const scores = members.map((m) => m.aeoScore)
-    return [...members]
-      .sort((a, b) => b.aeoScore - a.aeoScore || nameOf(a.tenantId).localeCompare(nameOf(b.tenantId), 'ko'))
-      .map((m) => {
-        const position = scores.filter((s) => s > m.aeoScore).length + 1
-        const tied = scores.filter((s) => s === m.aeoScore).length > 1
-        return {
-          tenantId: m.tenantId,
-          name: nameOf(m.tenantId),
-          score: m.aeoScore,
-          rank: `${tied ? '공동 ' : ''}${position}`,
-          prev: prevOf.get(m.tenantId) ?? null,
-          self: m.tenantId === card.tenantId,
-        }
-      })
-  })()
-
   // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
   // (키가 설정돼도 크레딧 소진 등으로 실패하면 빠진다), 구버전 스코어카드는 tenant.engines로 폴백한다.
   const ALL_ENGINES = ['openai', 'gemini', 'claude', 'perplexity'] as const
@@ -214,331 +192,359 @@ export default function Dashboard() {
   const unnamed = promptedSplit?.unnamed
   const conditions = card ? measureConditionText(card) : null
 
+  /*
+   * 개요 2차의 판정 기록 계산 — 결론 문장·엔진별 언급·이름 없는 질문 기준 자사 인용·대표 답변(lib/answerInsights).
+   * 「이번 주 할 일」과 같은 판정 기록(todoData)을 쓴다. 기록을 못 읽으면 이 칸들만 빠지고 점수는 그대로 보인다.
+   */
+  const insights = useMemo(() => {
+    if (!card || !todoData || todoData.key !== splitKey || !todoData.bank) return null
+    const qs = todoData.bank.questions
+    return {
+      sentence: headlineSentence(todoData.analyses, qs, card.brandName),
+      coverage: questionCoverage(todoData.analyses, qs),
+      engines: engineMentions(todoData.analyses, qs),
+      owned: unnamedOwnedCitation(todoData.analyses, qs),
+      answers: pickAnswerHighlights(todoData.analyses, qs, card.brandName),
+    }
+  }, [card, todoData, splitKey])
+  const peers = rankingView?.cohort.peers ?? []
+  const engineLine = (() => {
+    const e = insights?.engines ?? []
+    if (e.length < 2) return null
+    const top = e[0]!
+    const bottom = e[e.length - 1]!
+    if (top.mentioned === bottom.mentioned) return '엔진 사이 차이가 없습니다.'
+    return `${top.label}에서 가장 자주, ${bottom.label}에서 가장 적게 불립니다 — 차이는 ${top.mentioned - bottom.mentioned}문항입니다.`
+  })()
+
   return (
     <>
-      <header className="page-head">
-        <div className="page-title">
-          {tenant && (
-            <p className="page-eyebrow">
-              {tenant.brandName} · {tenant.industry} · {tenant.region}
-            </p>
-          )}
-          <h1>대시보드</h1>
-        </div>
-        <div className="page-actions">
-          <Link to="/report" className="btn">
-            정기진단 보고서
-          </Link>
-          <Link to="/measure-tenant" className="btn primary">
-            측정 실행
-          </Link>
-        </div>
-      </header>
-
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
       {loading && !card && <p className="muted">불러오는 중…</p>}
+      {!loading && !card && tenant && <h1 className="page-solo-title">개요</h1>}
 
       {tenant && history.length > 0 && <ChangeAlerts history={history} />}
 
       {tenant && card && (
         <>
-          {headline && (
-            <section className={`headline st-${headline.tone}`} aria-label="이번 주 한 줄">
-              <p className="headline-verdict">
-                <span className={`status-pill st-${headline.tone}`}>{headline.label}</span>
-                <b>
-                  {weekLabel(card.weekOf)} · {card.aeoScore.current}점 · {cohortText}
-                </b>
+          {/*
+            맨 위 요약 — 결론 문장(코드 템플릿, lib/answerInsights)과 점수 링. 문장을 만들 수 없으면(주제 태그 없음 등)
+            숫자 요약을 제목으로 둔다. 판정 알약·「가장 발목을 잡는 건」은 정기진단 보고서와 같은 판정이다.
+          */}
+          <section className="hero2" aria-label="이번 주 요약">
+            <div className="hero2-text">
+              <p className="hero2-eyebrow">
+                <span className="hero2-dot" aria-hidden="true" />
+                이번 주 AI 가시성 · {weekLabel(card.weekOf)} · {usedLabels.join(' · ') || '엔진 기록 없음'}
               </p>
-              {headline.detail && <p className="headline-detail">{headline.detail}</p>}
-            </section>
-          )}
-
-          <section className="dash-row" aria-label="핵심 지표">
-            <article className="dash-card score-card">
-              <div className="dash-card-head">
-                <h2>Brand AEO Score</h2>
-                <span className="chip good">{cohortText}</span>
-              </div>
-              <p className="score-big">
-                <span className="score-num">{card.aeoScore.current}</span>
-                <span className="score-max">/ 100</span>
-                {delta && <span className={`delta-chip ${delta.tone}`}>{delta.text}</span>}
+              <h1 className="hero2-title">
+                {insights?.sentence ?? `${card.brandName} · Brand AEO ${card.aeoScore.current}점 · ${cohortText}`}
+              </h1>
+              <p className="hero2-sub">
+                {insights && insights.coverage.asked > 0
+                  ? `이름 없이 물은 질문 ${insights.coverage.asked}개 중 ${insights.coverage.hit}개에서 불렸고, ${card.industry} · ${card.region} ${cohortText}입니다.`
+                  : `${card.industry} · ${card.region} ${cohortText}입니다.`}
+                {!prevCard && ' 측정 1주차라 추이는 다음 측정부터 쌓입니다.'}
               </p>
-              {/*
-                측정 1주차에는 전주·4주 이동평균·신뢰구간을 감춘다.
-                셋 다 "아직 비교할 게 없다"는 같은 말을 세 번 하는 자리다 — 전주는 "—",
-                이동평균은 이번 주 점수 그 자체, 신뢰구간은 표본이 하나라 넓다. 게다가 위
-                변화 알림 배너가 이미 「기준선 형성 중(측정 1주차)」이라고 말하고 있다.
-                2주차부터 저절로 다시 나타난다(prevCard가 생긴다).
-              */}
-              {prevCard ? (
-                <div className="ci-band" aria-label={`95% 신뢰구간 ${card.aeoScore.ciLow}에서 ${card.aeoScore.ciHigh}`}>
-                  <div className="ci-track">
-                    <span
-                      className="ci-range"
-                      style={{ left: `${card.aeoScore.ciLow}%`, width: `${Math.max(1, card.aeoScore.ciHigh - card.aeoScore.ciLow)}%` }}
-                    />
-                    <span className="ci-mark" style={{ left: `${card.aeoScore.current}%` }} />
-                  </div>
-                  <p className="dash-caption">
-                    95% 신뢰구간 {card.aeoScore.ciLow} – {card.aeoScore.ciHigh} · 전주 {prevScore ?? '—'}
-                    {changedBy && ` (${changedBy} 달라 비교 불가)`} · 4주 평균 {card.aeoScore.ma4}
-                  </p>
-                </div>
-              ) : (
-                <p className="dash-caption">측정 1주차 — 비교 기준을 쌓는 중입니다</p>
+              {headline && (
+                <p className="hero2-verdict">
+                  <span className={`status-pill st-${headline.tone}`}>{headline.label}</span>
+                  {headline.detail && <span>{headline.detail}</span>}
+                </p>
               )}
-            </article>
+            </div>
+            <div className="hero2-score">
+              <div
+                className="score-ring"
+                style={{ background: `conic-gradient(var(--accent) 0 ${card.aeoScore.current}%, var(--surface-2) ${card.aeoScore.current}% 100%)` }}
+                aria-label={`Brand AEO Score ${card.aeoScore.current}점`}
+              >
+                <div className="score-ring-inner">
+                  <span className="score-ring-num">{card.aeoScore.current}</span>
+                  <span className="score-ring-label">Brand AEO</span>
+                </div>
+              </div>
+              <dl className="hero2-facts">
+                <div>
+                  <dt>코호트 순위</dt>
+                  <dd>
+                    {(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}
+                    {card.cohortRank.position} <span className="dash-sub">/ {card.cohortRank.totalTenants}</span>
+                  </dd>
+                </div>
+                {/*
+                  측정 1주차에는 전주·신뢰구간을 감춘다 — "아직 비교할 게 없다"는 같은 말을 여러 번 하는 자리다.
+                  2주차부터 저절로 나타난다(prevCard가 생긴다).
+                */}
+                {prevCard && (
+                  <div>
+                    <dt>전주 대비</dt>
+                    <dd>
+                      {delta ? (
+                        <span className={`delta-chip ${delta.tone}`}>{delta.text}</span>
+                      ) : (
+                        <span className="dash-sub">{changedBy ? `${changedBy} 달라 비교 불가` : '—'}</span>
+                      )}
+                    </dd>
+                  </div>
+                )}
+                {prevCard && (
+                  <div>
+                    <dt>95% 신뢰구간</dt>
+                    <dd className="mono">
+                      {card.aeoScore.ciLow} – {card.aeoScore.ciHigh}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Site AEO</dt>
+                  <dd>
+                    {siteNow ? (
+                      <>
+                        {siteNow.score}
+                        {siteDelta !== null && siteDelta !== 0 && (
+                          <span className={`delta-chip ${siteDelta > 0 ? 'up' : 'down'}`}>
+                            {siteDelta > 0 ? '+' : ''}
+                            {siteDelta}
+                          </span>
+                        )}
+                      </>
+                    ) : isElectron ? (
+                      <Link to="/site-diagnosis" className="dash-link">
+                        진단하기
+                      </Link>
+                    ) : (
+                      <span className="dash-sub">—</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </section>
 
-            <article className="dash-card comp-card">
-              <div className="dash-card-head">
-                <h2>
-                  점수 구성{' '}
-                  <span className="dash-sub">
-                    · 가중치 {WEIGHT_RATIO.mentionRate} : {WEIGHT_RATIO.brandOwnedCitationRate} : {WEIGHT_RATIO.avgRecommendationRank}
-                  </span>
-                </h2>
+          <section className="kpi-strip" aria-label="점수 지표">
+            <article className="kpi">
+              <div className="kpi-head">
+                <span>언급률</span>
+                <span className="kpi-tag">가중치 {WEIGHT_RATIO.mentionRate}</span>
               </div>
-              <div className="comp-tiles">
-                <div className="comp-tile">
-                  <span className="comp-label">
-                    언급률 <span className="dash-sub">· {WEIGHT_RATIO.mentionRate}</span>
-                  </span>
-                  <span className="comp-value">{formatPct(card.mentionRate)}</span>
-                  <span className="comp-bar">
-                    <span style={{ width: `${Math.round(card.mentionRate * 100)}%` }} />
-                  </span>
-                  <span className="dash-caption">
-                    {unnamed && unnamed.answered > 0
-                      ? `이름 없는 질문 응답 ${unnamed.answered}건 중 ${Math.round(unnamed.rate * unnamed.answered)}건`
-                      : '브랜드명을 넣지 않은 질문에서 언급된 비율'}
-                  </span>
-                </div>
-                <div className="comp-tile">
-                  <span className="comp-label">
-                    자사 인용률 <span className="dash-sub">· {WEIGHT_RATIO.brandOwnedCitationRate}</span>
-                  </span>
-                  <span className="comp-value">{formatPct(card.brandOwnedCitationRate)}</span>
-                  <span className="comp-bar">
-                    <span style={{ width: `${Math.round(card.brandOwnedCitationRate * 100)}%` }} />
-                  </span>
-                  <span className="dash-caption">AI가 근거로 쓴 출처 중 우리 사이트</span>
-                </div>
-                <div className="comp-tile">
-                  <span className="comp-label">
-                    추천 순위 <span className="dash-sub">· {WEIGHT_RATIO.avgRecommendationRank}</span>
-                  </span>
-                  <span className="comp-value">
-                    {formatRank(card.avgRecommendationRank)}
-                    {card.avgRecommendationRank !== null && <span className="comp-unit">위</span>}
-                  </span>
-                  <span
-                    className="rank-segs"
-                    aria-label={`순위 응답 ${RANK_FULL_WEIGHT_RESPONSES}건 중 ${Math.min(ranked ?? 0, RANK_FULL_WEIGHT_RESPONSES)}건 반영`}
-                  >
-                    {rankSegments.map((on, i) => (
-                      <span key={i} className={on ? 'on' : undefined} />
-                    ))}
-                  </span>
-                  <span className="dash-caption">
-                    {ranked === undefined
-                      ? '순위 응답 수 기록 없음'
-                      : card.avgRecommendationRank === null || ranked === 0
-                        ? '순위가 매겨진 응답 없음 · 점수에서 제외'
-                        : ranked < RANK_FULL_WEIGHT_RESPONSES
-                          ? `순위 응답 ${ranked}건 · 점수 비중 ${ranked}/${RANK_FULL_WEIGHT_RESPONSES}`
-                          : `순위 응답 ${ranked}건 · 전체 비중`}
-                  </span>
-                </div>
+              <span className="kpi-value">{formatPct(card.mentionRate)}</span>
+              <span className="dash-caption">
+                {unnamed && unnamed.answered > 0
+                  ? `이름 없는 질문 응답 ${unnamed.answered}건 중 ${Math.round(unnamed.rate * unnamed.answered)}건`
+                  : '브랜드명을 넣지 않은 질문에서 언급된 비율'}
+              </span>
+            </article>
+            <article className="kpi">
+              <div className="kpi-head">
+                <span>추천 순위</span>
+                <span className="kpi-tag">가중치 {WEIGHT_RATIO.avgRecommendationRank}</span>
               </div>
+              <span className="kpi-value">
+                {formatRank(card.avgRecommendationRank)}
+                {card.avgRecommendationRank !== null && <span className="comp-unit">위</span>}
+              </span>
+              <span className="rank-segs" aria-label={`순위 응답 ${RANK_FULL_WEIGHT_RESPONSES}건 중 ${Math.min(ranked ?? 0, RANK_FULL_WEIGHT_RESPONSES)}건 반영`}>
+                {rankSegments.map((on, i) => (
+                  <span key={i} className={on ? 'on' : undefined} />
+                ))}
+              </span>
+              <span className="dash-caption">
+                {ranked === undefined
+                  ? '순위 응답 수 기록 없음'
+                  : card.avgRecommendationRank === null || ranked === 0
+                    ? '순위가 매겨진 응답 없음 · 점수에서 제외'
+                    : ranked < RANK_FULL_WEIGHT_RESPONSES
+                      ? `순위 응답 ${ranked}건 · 점수 비중 ${ranked}/${RANK_FULL_WEIGHT_RESPONSES}`
+                      : `순위 응답 ${ranked}건 · 전체 비중`}
+              </span>
+            </article>
+            <article className="kpi">
+              <div className="kpi-head">
+                <span>자사 인용률</span>
+                <span className="kpi-tag">가중치 {WEIGHT_RATIO.brandOwnedCitationRate}</span>
+              </div>
+              <span className="kpi-value">{formatPct(card.brandOwnedCitationRate)}</span>
+              <span className="dash-caption">
+                {insights?.owned
+                  ? `이름 없는 질문만 ${(insights.owned.rate * 100).toFixed(1)}% (${insights.owned.owned}/${insights.owned.total})`
+                  : 'AI가 근거로 쓴 출처 중 우리 사이트'}
+              </span>
+            </article>
+            <article className="kpi">
+              <div className="kpi-head">
+                <span>Share of Mention</span>
+                <span className="kpi-tag muted-tag">점수 미포함</span>
+              </div>
+              <span className="kpi-value">{formatPct(card.shareOfMention)}</span>
+              <span className="dash-caption">
+                {shareOfMentionNote(card) ??
+                  (card.shareOfMentionMentions !== undefined
+                    ? `자사·경쟁사 언급 ${card.shareOfMentionMentions}번 기준`
+                    : '같은 질문에서 경쟁 브랜드 대비 언급 점유')}
+              </span>
             </article>
           </section>
 
-          <section className="dash-row" aria-label="추이와 경쟁">
-            <article className="dash-card trend-card">
+          {/* 사실성은 점수 밖 지표라 평소엔 숨기고, 팩트 그래프와 어긋난 주장이 있을 때만 경고로 띄운다. */}
+          {card.hallucinationFlags.length > 0 && (
+            <details className="fact-warn">
+              <summary>
+                AI 답변 중 브랜드 사실과 어긋난 주장 {card.hallucinationFlags.length}건
+                {card.factualityScore !== null && ` · 사실성 ${formatPct(card.factualityScore)}`}
+              </summary>
+              <ul>
+                {card.hallucinationFlags.map((flag) => (
+                  <li key={flag}>{flag}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+
+          {history.length >= 2 && (
+            <section className="dash-row" aria-label="추이">
+              <article className="dash-card trend-card">
+                <div className="dash-card-head">
+                  <h2>
+                    {trend.length}주 추이 <span className="dash-sub">· 세로축 0–{trendTop}점</span>
+                  </h2>
+                  <Link to="/performance" className="dash-link">
+                    AEO 퍼포먼스
+                  </Link>
+                </div>
+                <div className="trend-bars">
+                  {trend.map(({ card: h, changed }) => {
+                    const current = h.weekOf === card.weekOf
+                    return (
+                      <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}`}>
+                        <span className="trend-value">{h.aeoScore.current}</span>
+                        <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 120))}px` }} />
+                        <span className="trend-week">{h.weekOf.replace(/^\d{4}-/, '')}</span>
+                        <span className={`trend-mark${changed ? ' on' : ''}`} title={changed ? `직전 주와 ${changed}이(가) 다름` : undefined} />
+                      </div>
+                    )
+                  })}
+                </div>
+                {trend.some((t) => t.changed) && (
+                  <p className="dash-caption trend-legend">
+                    <span className="trend-mark on" aria-hidden="true" />
+                    측정 조건이 바뀐 주 — 직전 주와 바로 비교하지 않습니다
+                  </p>
+                )}
+              </article>
+            </section>
+          )}
+
+          <section className="dash-row" aria-label="엔진과 경쟁">
+            <article className="dash-card engine-card">
               <div className="dash-card-head">
-                <h2>
-                  {trend.length}주 추이 <span className="dash-sub">· 세로축 0–{trendTop}점</span>
-                </h2>
-                <Link to="/performance" className="dash-link">
-                  AEO 퍼포먼스
-                </Link>
+                <h2>엔진별 언급</h2>
+                {insights && insights.engines.length > 0 && (
+                  <span className="dash-sub">
+                    이름 없는 질문 {insights.engines[0]!.total}개 · 엔진마다
+                  </span>
+                )}
               </div>
-              <div className="trend-bars">
-                {trend.map(({ card: h, changed }) => {
-                  const current = h.weekOf === card.weekOf
-                  return (
-                    <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}`}>
-                      <span className="trend-value">{h.aeoScore.current}</span>
-                      <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 120))}px` }} />
-                      <span className="trend-week">{h.weekOf.replace(/^\d{4}-/, '')}</span>
-                      <span
-                        className={`trend-mark${changed ? ' on' : ''}`}
-                        title={changed ? `직전 주와 ${changed}이(가) 다름` : undefined}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-              {trend.some((t) => t.changed) && (
-                <p className="dash-caption trend-legend">
-                  <span className="trend-mark on" aria-hidden="true" />
-                  측정 조건이 바뀐 주 — 직전 주와 바로 비교하지 않습니다
-                </p>
+              {insights && insights.engines.length > 0 ? (
+                <>
+                  <ul className="engine-bars">
+                    {insights.engines.map((e) => (
+                      <li key={e.engine}>
+                        <div className="engine-bar-head">
+                          <span className="engine-chip plain">
+                            <span className="engine-dot" data-engine={e.engine} aria-hidden="true" />
+                            {e.label}
+                          </span>
+                          <span className="mono">
+                            <b>{(e.rate * 100).toFixed(1)}%</b> <span className="dash-sub">· {e.mentioned}/{e.total}</span>
+                          </span>
+                        </div>
+                        <span className="engine-bar">
+                          <span data-engine={e.engine} style={{ width: `${Math.max(1, e.rate * 100)}%` }} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {engineLine && <p className="dash-caption">{engineLine}</p>}
+                </>
+              ) : (
+                <p className="dash-caption">질문별 판정을 불러오는 중…</p>
               )}
             </article>
-
-            <article className="dash-card cohort-card">
+            <article className="dash-card map-card">
               <div className="dash-card-head">
                 <h2>
-                  코호트 순위{' '}
-                  <span className="dash-sub">
-                    · {card.industry} · {card.region}
-                  </span>
+                  경쟁 포지션 <span className="dash-sub">· {card.industry} · {card.region}</span>
                 </h2>
                 <Link to="/ranking" className="dash-link">
                   경쟁 순위
                 </Link>
               </div>
-              {cohortRows.length > 0 ? (
-                <div className="table-scroll">
-                  <table className="cohort-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">순위</th>
-                        <th scope="col">브랜드</th>
-                        <th scope="col">점수</th>
-                        <th scope="col" className="num">
-                          전주
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cohortRows.map((r) => (
-                        <tr key={r.tenantId} className={r.self ? 'self' : undefined}>
-                          <td className="rank">{r.rank}</td>
-                          <td className="name">{r.name}</td>
-                          <td>
-                            <span className="cohort-score">
-                              <span className="cohort-bar">
-                                <span style={{ width: `${Math.max(1, r.score)}%` }} />
-                              </span>
-                              <b>{r.score}</b>
-                            </span>
-                          </td>
-                          <td className="num">{r.prev ?? '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {peers.length > 1 ? (
+                <>
+                  <PositionMap peers={peers} selfId={card.tenantId} />
+                  <p className="dash-caption">원 크기 = Brand AEO Score</p>
+                </>
               ) : (
-                <p className="dash-caption">{cohortText} · 구성원 점수 기록이 없는 옛 측정입니다</p>
+                <p className="dash-caption">{cohortText} · 비교할 코호트 측정이 아직 없습니다</p>
               )}
             </article>
           </section>
 
-          <section className="dash-row" aria-label="이번 주 할 일과 진단 지표">
-            <article className="dash-card todo-card">
+          {insights && insights.answers.length > 0 && (
+            <section className="answers-sec" aria-label="AI 답변">
               <div className="dash-card-head">
-                <h2>
-                  이번 주 할 일 <span className="dash-sub">· 다른 곳이 대신 불린 질문</span>
-                </h2>
-                {openActions !== null && openActions > 0 && <span className="dash-sub">남은 실행 항목 {openActions}건</span>}
+                <h2 className="sec-title">AI는 이렇게 답했습니다</h2>
+                <Link to="/question-winloss" className="dash-link">
+                  질문별로 보기 →
+                </Link>
               </div>
-              {todo ? (
-                <>
-                  <ul className="todo-list">
-                    {todo.items.slice(0, TODO_SHOW).map((item) => (
-                      <li key={item.text}>
-                        <div className="todo-text">
-                          <span>{item.text}</span>
-                          {item.detail && <span className="dash-caption">{item.detail}</span>}
-                        </div>
-                        <Link to="/gap-actions" state={{ from: 'dashboard', label: '이번 주 할 일' }} className="btn soft">
-                          이 질문으로 글 만들기
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  {todo.items.length + (todo.more ?? 0) > TODO_SHOW && (
-                    <Link to="/gap-actions" className="dash-link">
-                      밀린 질문 {todo.items.length + (todo.more ?? 0)}개 모두 보기
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <p className="dash-caption">
-                  {todoData && todoData.key === splitKey ? '이번 주 밀린 일반 질문이 없습니다.' : '질문별 판정을 불러오는 중…'}
-                </p>
-              )}
-            </article>
+              <div className="dash-row">
+                {insights.answers.map((a) => (
+                  <AnswerCard key={`${a.questionId}-${a.engine}`} answer={a} brandName={card.brandName} />
+                ))}
+              </div>
+            </section>
+          )}
 
-            <article className="dash-card diag-card">
-              <div className="dash-card-head">
-                <h2>
-                  진단 지표 <span className="dash-sub">· 점수 미포함</span>
-                </h2>
-              </div>
-              <dl className="diag-list">
-                <div>
-                  <dt>Share of Mention</dt>
-                  <dd>{formatPct(card.shareOfMention)}</dd>
-                  <p className="dash-caption">
-                    {shareOfMentionNote(card) ?? '같은 질문(브랜드명 미포함)에서 경쟁 브랜드 대비 언급 점유'}
-                  </p>
-                </div>
-                <div>
-                  <dt>사실성</dt>
-                  <dd>{formatPct(card.factualityScore)}</dd>
-                  {card.hallucinationFlags.length > 0 ? (
-                    <details className="diag-flags">
-                      <summary>사실 불일치 {card.hallucinationFlags.length}건</summary>
-                      <ul>
-                        {card.hallucinationFlags.map((flag) => (
-                          <li key={flag}>{flag}</li>
-                        ))}
-                      </ul>
-                    </details>
-                  ) : (
-                    <p className="dash-caption">
-                      {card.factualityScore === null ? '팩트 그래프가 없으면 판정 불가' : '팩트 그래프와 모순되지 않은 주장 비율'}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <dt>Site AEO</dt>
-                  <dd>
-                    {siteNow ? siteNow.score : '—'}
-                    {siteDelta !== null && siteDelta !== 0 && (
-                      <span className={`delta-chip ${siteDelta > 0 ? 'up' : 'down'}`}>
-                        {siteDelta > 0 ? '+' : ''}
-                        {siteDelta}
-                      </span>
-                    )}
-                  </dd>
-                  <p className="dash-caption">
-                    {siteNow ? (
-                      <>
-                        페이지가 인용될 준비가 됐는가
-                        {siteNow.weekOf !== card.weekOf && ` · ${weekLabel(siteNow.weekOf)} 진단`}
-                      </>
-                    ) : isElectron ? (
-                      <>
-                        <Link to="/site-diagnosis">Site AEO Checker</Link>에서 진단하면 채워집니다
-                      </>
-                    ) : (
-                      '데스크톱 앱에서 진단·기록합니다'
-                    )}
-                  </p>
-                </div>
-              </dl>
-            </article>
+          <section className="dash-card todo-card" aria-label="놓친 질문">
+            <div className="dash-card-head">
+              <h2>
+                놓친 질문 <span className="dash-sub">· {card.brandName} 대신 불린 곳</span>
+              </h2>
+              {openActions !== null && openActions > 0 && <span className="dash-sub">남은 실행 항목 {openActions}건</span>}
+            </div>
+            {todo ? (
+              <>
+                <p className="dash-caption">{todo.heading}</p>
+                <ul className="todo-list">
+                  {todo.items.slice(0, TODO_SHOW).map((item) => (
+                    <li key={item.text}>
+                      <div className="todo-text">
+                        <span>{item.text}</span>
+                        {item.detail && <span className="dash-caption">{item.detail}</span>}
+                      </div>
+                      <Link to="/gap-actions" state={{ from: 'dashboard', label: '놓친 질문' }} className="btn soft">
+                        이 질문으로 글 만들기
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {todo.items.length + (todo.more ?? 0) > TODO_SHOW && (
+                  <Link to="/gap-actions" className="dash-link">
+                    밀린 질문 {todo.items.length + (todo.more ?? 0)}개 모두 보기
+                  </Link>
+                )}
+              </>
+            ) : (
+              <p className="dash-caption">
+                {todoData && todoData.key === splitKey ? '이번 주 밀린 일반 질문이 없습니다.' : '질문별 판정을 불러오는 중…'}
+              </p>
+            )}
           </section>
 
           {promptedSplit && promptedSplit.named.answered > 0 && (
@@ -569,35 +575,22 @@ export default function Dashboard() {
                   <span className="funnel-meta">응답 {promptedSplit.unnamed.answered}건</span>
                 </div>
               </div>
-              <p className="dash-caption">
-                어느 질문에서 밀리는지는 <Link to="/gap-analysis">가시성 격차 분석</Link>, 어느 여정 단계에서 안
-                보이는지는 <Link to="/diagnosis">브랜드 종합 진단</Link>에서 봅니다.
-              </p>
             </section>
           )}
         </>
       )}
 
       {/*
-        사이드바와 같은 순서·같은 말로 묶은 안내 — 측정 → 진단 → 실행 → 보고. 처음 쓰는 사람을 위한 것이라
-        매일 보는 화면에선 접어 둔다(상용화 UI 3단계에서 맨 위에서 맨 아래로 옮겼다).
+        사이드바와 같은 순서·같은 말로 묶은 안내 — 처음 쓰는 사람을 위한 것이라 매일 보는 화면에선 접어 둔다.
       */}
       <details className="dash-guide">
-        <summary>이 브랜드를 보는 순서 — 측정 → 진단 → 실행 → 보고</summary>
+        <summary>이 브랜드를 보는 순서 — 진단 → 실행 → 보고·측정</summary>
         <div className="pipeline-grid">
           <article>
-            <p className="pipeline-stage">측정</p>
-            <h2>같은 질문을 엔진마다 묻는다</h2>
-            <p>
-              {card ? `${weekLabel(card.weekOf)} · ${usedLabels.join(' · ') || '엔진 기록 없음'}` : '아직 측정한 주차가 없습니다'}
-            </p>
-            <Link to="/measure-tenant">브랜드·경쟁사 측정 →</Link>
-          </article>
-          <article>
             <p className="pipeline-stage">진단</p>
-            <h2>밀리는 질문 유형·엔진·경쟁사</h2>
+            <h2>밀리는 질문·엔진·경쟁사</h2>
             <p>{card ? `카테고리 무관 언급률 ${formatPct(card.mentionRate)}` : '측정 후 채워집니다'}</p>
-            <Link to="/gap-analysis">가시성 격차 분석 →</Link>
+            <Link to="/question-winloss">질문별 승패 →</Link>
           </article>
           <article>
             <p className="pipeline-stage">실행</p>
@@ -616,6 +609,12 @@ export default function Dashboard() {
             <h2>점수와 코호트 순위</h2>
             <p>{card ? `Brand AEO Score ${card.aeoScore.current} · ${cohortText}` : '측정 후 채워집니다'}</p>
             <Link to="/report">정기진단 보고서 →</Link>
+          </article>
+          <article>
+            <p className="pipeline-stage">측정</p>
+            <h2>같은 질문을 엔진마다 묻는다</h2>
+            <p>{card ? `${weekLabel(card.weekOf)} · ${usedLabels.join(' · ') || '엔진 기록 없음'}` : '아직 측정한 주차가 없습니다'}</p>
+            <Link to="/measure-tenant">브랜드·경쟁사 측정 →</Link>
           </article>
         </div>
       </details>
