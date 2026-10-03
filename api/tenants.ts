@@ -3,6 +3,7 @@ import { canTriggerRemoteMeasure, triggerGithubDelete } from '../server/githubMe
 import { removeMeasureRequest } from '../server/measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from '../server/deleteRequests.js';
 import { sendJson } from '../server/httpJson.js';
+import { FileResultStore } from '../server/store.js';
 import type { JsonRequest, JsonResponse } from '../server/httpJson.js';
 
 function cors(res: JsonResponse, methods: string) {
@@ -40,14 +41,13 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
       const { removed } = await removeOverlayTenant(tenantId);
       await removeMeasureRequest(tenantId);
       const baked = await isBakedTenant(tenantId);
-      // 베이크된 브랜드는 커밋된 데이터까지 지워야 한다.
-      // - 로컬/패키징(Electron): 툼스톤으로 즉시 완전 삭제(GitHub Actions 불필요).
-      // - 배포(Vercel): GitHub Actions 삭제 워크플로우 트리거(큐에 누적해 concurrency 취소 방지).
+      // - 로컬(vercel dev 등): server/index.ts와 같다 — 베이크 여부와 관계없이 툼스톤 + 남은 코호트 순위 재계산.
+      // - 배포(Vercel): 베이크된 브랜드는 GitHub Actions 삭제 워크플로우 트리거(큐에 누적해 concurrency 취소 방지).
       let dispatched = false;
       let htmlUrl: string | undefined;
       let locallyDeleted = false;
-      if (baked && !process.env.VERCEL) {
-        await deleteTenantLocally(tenantId);
+      if (!process.env.VERCEL) {
+        await deleteTenantLocally(tenantId, new FileResultStore());
         locallyDeleted = true;
       } else if (baked && canTriggerRemoteMeasure()) {
         try {
