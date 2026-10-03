@@ -81,7 +81,7 @@ export default function QuestionWinLoss() {
               <thead>
                 <tr>
                   <th>승패</th>
-                  <th>질문</th>
+                  <th className="cell-text">질문</th>
                   <th className="num">언급률</th>
                   <th className="num">브랜드/최다 경쟁사</th>
                   <th className="num">평균 순위</th>
@@ -94,7 +94,7 @@ export default function QuestionWinLoss() {
                     <td>
                       <span className={`status-pill ${VERDICT[r.verdict].cls}`}>{VERDICT[r.verdict].label}</span>
                     </td>
-                    <td style={{ maxWidth: 380 }}>
+                    <td className="cell-text" style={{ maxWidth: 380 }}>
                       {r.text}
                       <span className="sentence-meta" style={{ display: 'block' }}>
                         {r.questionId} · 응답 {r.responses}건{' · '}

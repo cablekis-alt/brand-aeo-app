@@ -58,7 +58,7 @@ export default function ContentLibrary() {
 
   return (
     <>
-      <p className="brand">그래서 뭘 하나</p>
+      <p className="brand">실행</p>
       <h1>콘텐츠 보관함</h1>
       <p className="lead">
         <Link to="/gap-actions">콘텐츠 생성</Link>에서 만든 글이 여기 모입니다. 실행 항목은 주차마다 다시

@@ -1316,7 +1316,7 @@ export default function BrandOnboarding() {
                 <thead>
                   <tr>
                     <th style={{ width: 34 }}>넣기</th>
-                    <th>주장</th>
+                    <th className="cell-text">주장</th>
                     <th>값</th>
                   </tr>
                 </thead>
@@ -1339,7 +1339,7 @@ export default function BrandOnboarding() {
                             }
                           />
                         </td>
-                        <td>{f.claim}</td>
+                        <td className="cell-text">{f.claim}</td>
                         <td>
                           <b>{f.value}</b>
                         </td>

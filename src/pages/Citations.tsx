@@ -71,8 +71,8 @@ function RowWithUrls({
             <span className="muted">·</span>
           )}
         </td>
-        <td>{row.domain}</td>
-        <td>
+        <td className="cell-text">{row.domain}</td>
+        <td className="cell-text">
           <OwnerPill row={row} />
         </td>
         <td>{formatPct(share)}</td>
@@ -102,7 +102,7 @@ function RowWithUrls({
                       <UrlLink url={u.url} />
                     </td>
                     <td>{u.citationCount}</td>
-                    <td>{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
+                    <td className="cell-text">{u.engines.map((e) => ENGINE_LABEL[e] ?? e).join(', ')}</td>
                     <td>{u.supportingBrandMentionCount}</td>
                   </tr>
                 ))}
@@ -204,8 +204,8 @@ export default function Citations() {
                 <thead>
                   <tr>
                     <th aria-label="펼치기" />
-                    <th>도메인</th>
-                    <th>소유권</th>
+                    <th className="cell-text">도메인</th>
+                    <th className="cell-text">소유권</th>
                     <th>점유율</th>
                     <th>전주 대비</th>
                     <th>인용 횟수</th>

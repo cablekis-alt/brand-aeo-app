@@ -231,6 +231,14 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
     else if (top + on.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top + on.offsetHeight - box.clientHeight + 8
   }, [pathname])
 
+  /*
+   * 좁은 화면(760px 이하)에서는 메뉴를 접어 둔다 — 펼친 채로 두면 메뉴 800px를 지나야 본문이 나온다.
+   * 연 경로를 기억해 두고 그 경로에서만 열린 것으로 본다. 메뉴를 눌러 이동하면 경로가 바뀌어 저절로
+   * 닫힌다(effect로 상태를 되돌리지 않는다). 넓은 화면에서는 CSS가 이 상태를 무시하고 늘 펼친다.
+   */
+  const [menuOpenAt, setMenuOpenAt] = useState<string | null>(null)
+  const menuOpen = menuOpenAt === pathname
+
   const [folds, setFolds] = useState<Record<string, boolean | null>>(() =>
     Object.fromEntries(MENU.filter((g) => g.foldable).map((g) => [g.id, readFold(g.id)])),
   )
@@ -248,7 +256,7 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
   }
 
   return (
-    <nav className="sidebar" aria-label="Web4AI Brand AEO 메뉴">
+    <nav className={`sidebar${menuOpen ? ' is-open' : ''}`} aria-label="Web4AI Brand AEO 메뉴">
       <header className="sidebar-brand">
         <div className="brand-lockup">
           <span className="brand-monogram" aria-hidden="true">
@@ -258,6 +266,16 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
             <span className="brand-title">Brand AEO</span>
             <span className="brand-eyebrow">Web4AI · AI 답변 가시성</span>
           </span>
+          <button
+            type="button"
+            className="sidebar-menu-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="sidebar-menu"
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            onClick={() => setMenuOpenAt(menuOpen ? null : pathname)}
+          >
+            <NavIcon name={menuOpen ? 'close' : 'menu'} size={20} />
+          </button>
         </div>
       </header>
 
@@ -272,7 +290,7 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
         브랜드 추가
       </NavLink>
 
-      <div className="sidebar-scroll" ref={scrollRef}>
+      <div className="sidebar-scroll" id="sidebar-menu" ref={scrollRef}>
         {MENU.map((group) => {
           const inside = group.items.some((i) => i.to === pathname)
           // 사용자가 정한 적 없으면 현재 페이지를 따라 펴고, 정했으면 그 선택을 따른다.

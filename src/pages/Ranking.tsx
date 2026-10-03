@@ -84,7 +84,7 @@ export default function Ranking() {
 
   return (
     <>
-      <p className="brand">어디가 비어 있나</p>
+      <p className="brand">진단</p>
       <h1>랭킹 분석</h1>
       <p className="lead">같은 업종·지역의 다른 브랜드와 비교해 몇 위인지, 추천 우선순위에서 얼마나 앞서는지 봅니다.</p>
 
@@ -126,7 +126,7 @@ export default function Ranking() {
                 <thead>
                   <tr>
                     <th>순위</th>
-                    <th>브랜드</th>
+                    <th className="cell-text">브랜드</th>
                     <th>Brand AEO Score</th>
                     <th>언급률</th>
                     <th>인용률</th>
@@ -141,7 +141,7 @@ export default function Ranking() {
                     return (
                       <tr key={peer.tenantId} className={peer.tenantId === tenant.tenantId ? 'self' : undefined}>
                         <td>{rank}</td>
-                        <td>
+                        <td className="cell-text">
                           <b>{peer.brandName}</b>
                         </td>
                         <td>{peer.aeoScore}</td>

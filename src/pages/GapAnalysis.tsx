@@ -176,7 +176,7 @@ export default function GapAnalysis() {
 
   return (
     <>
-      <p className="brand">어디가 비어 있나</p>
+      <p className="brand">진단</p>
       <h1>가시성 격차 분석</h1>
       <p className="lead">
         어떤 <b>유형의 질문</b>에서, 어떤 <b>엔진</b>에서, <b>누구에게</b> 밀리는지를 봅니다.
@@ -211,7 +211,7 @@ export default function GapAnalysis() {
                     <thead>
                       <tr>
                         <th>축</th>
-                        <th>가장 많이 밀리는 묶음</th>
+                        <th className="cell-text">가장 많이 밀리는 묶음</th>
                         <th>언급률</th>
                         <th>승·패</th>
                       </tr>
@@ -220,7 +220,7 @@ export default function GapAnalysis() {
                       {painRows.map(({ axis: axisLabel, axisKey, group, nameOf }) => (
                         <tr key={axisLabel}>
                           <td className="muted">{axisLabel}</td>
-                          <td>
+                          <td className="cell-text">
                             <button
                               type="button"
                               className="linklike"
@@ -370,7 +370,7 @@ export default function GapAnalysis() {
                       <th>경쟁사</th>
                       <th style={{ textAlign: 'right' }}>가져간 질문</th>
                       <th style={{ textAlign: 'right' }}>언급 문장</th>
-                      <th>예시 질문</th>
+                      <th className="cell-text">예시 질문</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -379,7 +379,7 @@ export default function GapAnalysis() {
                         <td>{c.name}</td>
                         <td style={{ textAlign: 'right' }}>{c.questionsLost}</td>
                         <td style={{ textAlign: 'right' }}>{c.mentions}</td>
-                        <td className="muted">{c.examples.join(' · ')}</td>
+                        <td className="cell-text muted">{c.examples.join(' · ')}</td>
                       </tr>
                     ))}
                   </tbody>

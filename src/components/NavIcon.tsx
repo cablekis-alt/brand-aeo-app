@@ -16,6 +16,8 @@ const PATHS = {
   performance: 'M4 17l5-5 4 4 7-8M14 8h6v6',
   report: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   plus: 'M12 5v14M5 12h14',
+  menu: 'M4 7h16M4 12h16M4 17h16',
+  close: 'M6 6l12 12M18 6L6 18',
   updown: 'M8 9l4-4 4 4M8 15l4 4 4-4',
 } as const
 

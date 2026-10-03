@@ -242,7 +242,7 @@ export default function Performance() {
                     <th>순위</th>
                     <th>사실성</th>
                     <th>인용</th>
-                    <th>판단</th>
+                    <th className="cell-text">판단</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,7 +259,7 @@ export default function Performance() {
                       <td>{formatRank(item.avgRecommendationRank)}</td>
                       <td>{formatPct(item.factualityScore)}</td>
                       <td>{formatPct(item.brandOwnedCitationRate)}</td>
-                      <td>{judgeLabel(item.judgeEngine)}</td>
+                      <td className="cell-text">{judgeLabel(item.judgeEngine)}</td>
                     </tr>
                   ))}
                 </tbody>
