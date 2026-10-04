@@ -4,9 +4,13 @@ import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
 import {
   generateContentBrief,
+  generateContentDraft,
+  loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
   type ActionStatus,
+  type ChannelAdaptation,
+  type ChannelAdaptationMap,
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
@@ -61,15 +65,18 @@ function BriefPanel({
   action,
   stored,
   onStored,
+  initiallyOpen = false,
 }: {
   tenantId: string
   action: GapAction
   stored: StoredBrief | undefined
   onStored: (s: StoredBrief) => void
+  /** 「글 설계 보기」를 펼쳤을 때는 본문까지 바로 연다 — 접힌 것을 한 번 더 펼치게 하지 않는다. */
+  initiallyOpen?: boolean
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(initiallyOpen)
   const [copied, setCopied] = useState(false)
   const make = async (force: boolean) => {
     setBusy(true)
@@ -110,8 +117,8 @@ function BriefPanel({
     <div className="brief">
       <div className="brief-bar">
         {!stored ? (
-          <button type="button" onClick={() => void make(false)} disabled={busy}>
-            {busy ? '브리프 만드는 중…' : '브리프 만들기 (판정 1회)'}
+          <button type="button" onClick={() => void make(false)} disabled={busy} title="판정 1~2회">
+            {busy ? '브리프 만드는 중… 보통 30초' : '브리프 만들기 · 약 30초'}
           </button>
         ) : (
           <>
@@ -366,34 +373,41 @@ function bundleToMarkdown(
   return L.join('\n')
 }
 
+/** 한 편에 걸리는 대략의 시간(분) — 브리프(있으면 생략) + 초안, 각각 사실 대조 포함. 화면 안내용 어림이다. */
+const MINUTES_PER_DRAFT = 1.5
+
 /**
- * 열린 항목의 브리프를 한 번에 만든다.
+ * 쓸 글의 초안을 한 번에 만든다 — 브리프가 없으면 브리프부터.
  *
- * 한 주치 작업을 준비하려면 카드마다 버튼을 눌러야 했다. 항목이 여섯이면 여섯 번이다.
+ * 예전에는 「브리프 없는 N건 한꺼번에 만들기」였다. 두 가지가 어긋났다: 브리프만 만들어서 결국 카드마다
+ * 초안 단추를 또 눌러야 했고, 위의 글이 이미 덮는 채널 카드(「새로 쓸 글이 아닙니다」)까지 브리프를 만들어
+ * 판정 호출을 버렸다. 이제 **쓸 글만**(콘텐츠 항목 + 덮는 글이 없는 채널) 골라 초안까지 간다.
  *
- * 순차로 돈다. 판정 엔진에 한꺼번에 던지면 처리량 천장에 걸려 오히려 느려지고, 무엇이
- * 어디까지 됐는지도 알 수 없다. 한 건 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지
- * 만든 것은 남는다.
+ * 순차로 돈다. 판정 엔진에 한꺼번에 던지면 처리량 천장에 걸려 오히려 느려지고, 무엇이 어디까지 됐는지도
+ * 알 수 없다. 한 편 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지 만든 것은 남는다.
  *
- * 실패는 삼키지 않는다. 오늘 측정에서 절반만 성공한 작업이 조용히 성공으로 끝난 일이 있었다 —
- * 몇 건이 왜 실패했는지 끝에 그대로 보여 준다.
+ * 실패는 삼키지 않는다 — 몇 편이 왜 실패했는지 끝에 그대로 보여 준다.
  */
-function BulkBriefs({
+function BulkDrafts({
   tenantId,
   actions,
   briefs,
+  drafts,
   onBrief,
+  onDraft,
 }: {
   tenantId: string
   actions: GapAction[]
   briefs: Record<string, StoredBrief>
+  drafts: Record<string, StoredDraft>
   onBrief: (s: StoredBrief) => void
+  onDraft: (s: StoredDraft) => void
 }) {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState('')
   const [result, setResult] = useState<string | null>(null)
-  const todo = actions.filter((a) => !briefs[a.id])
-  if (todo.length === 0) return null
+  const todo = actions.filter((a) => !drafts[a.id])
+  if (todo.length === 0 && !result) return null
   const run = async () => {
     setBusy(true)
     setResult(null)
@@ -402,19 +416,19 @@ function BulkBriefs({
     for (const [i, a] of todo.entries()) {
       setProgress(`${i + 1}/${todo.length} · ${a.title}`)
       try {
-        const s = await generateContentBrief(
-          tenantId,
-          {
-            actionId: a.id,
-            kind: a.kind,
-            title: a.title,
-            targetDomain: a.targetDomain,
-            questionTexts: a.questionTexts,
-            evidence: a.evidence,
-          },
-          false,
-        )
-        onBrief(s)
+        if (!briefs[a.id]) {
+          onBrief(
+            await generateContentBrief(tenantId, {
+              actionId: a.id,
+              kind: a.kind,
+              title: a.title,
+              targetDomain: a.targetDomain,
+              questionTexts: a.questionTexts,
+              evidence: a.evidence,
+            }),
+          )
+        }
+        onDraft(await generateContentDraft(tenantId, { actionId: a.id, targetDomain: a.targetDomain }))
         ok += 1
       } catch (e) {
         failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)
@@ -422,17 +436,23 @@ function BulkBriefs({
     }
     setProgress('')
     setBusy(false)
-    setResult(
-      failed.length === 0
-        ? `${ok}건 만들었습니다.`
-        : `${ok}건 성공 · ${failed.length}건 실패\n${failed.join('\n')}`,
-    )
+    setResult(failed.length === 0 ? `초안 ${ok}편을 만들었습니다.` : `${ok}편 성공 · ${failed.length}편 실패\n${failed.join('\n')}`)
   }
   return (
     <div className="brief-bar" style={{ marginBottom: 10 }}>
-      <button type="button" onClick={() => void run()} disabled={busy}>
-        {busy ? `브리프 만드는 중… ${progress}` : `브리프 없는 ${todo.length}건 한꺼번에 만들기 (판정 ${todo.length}회)`}
-      </button>
+      {todo.length > 0 && (
+        <button
+          type="button"
+          onClick={() => void run()}
+          disabled={busy}
+          title="쓸 글마다 브리프(없으면)와 초안을 차례로 만듭니다 — 한 편에 판정 2~4회"
+        >
+          {busy
+            ? `초안 만드는 중… ${progress}`
+            : `초안 없는 글 ${todo.length}편 한꺼번에 만들기 · 약 ${Math.max(1, Math.ceil(todo.length * MINUTES_PER_DRAFT))}분`}
+        </button>
+      )}
+      {busy && <span className="doc-meta">한 편씩 저장되므로 화면을 떠나도 끝난 글은 남습니다.</span>}
       {result && (
         <span className={result.includes('실패') ? 'error' : 'doc-meta'} style={{ whiteSpace: 'pre-line' }}>
           {result}
@@ -454,7 +474,9 @@ function ActionCard({
   onDraft,
   onUrls,
   coveredBy,
-  destinations,
+  channels,
+  adaptations,
+  onAdapted,
   focused = false,
 }: {
   action: GapAction
@@ -472,8 +494,11 @@ function ActionCard({
   onUrls: (id: string, urls: string[], markDone?: boolean) => void
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
-  /** 콘텐츠형일 때, 이 글이 갈 채널들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
-  destinations: string[] | null
+  /** 콘텐츠형일 때, 이 글이 갈 채널 항목들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
+  channels: GapAction[] | null
+  /** 이 글의 채널별 다듬은 글. null이면 다듬기 라우트가 없는 환경(웹)이다. */
+  adaptations: Record<string, ChannelAdaptation> | null
+  onAdapted: (a: ChannelAdaptation) => void
 }) {
   const [channelDraft, setChannelDraft] = useState(false)
   /**
@@ -487,6 +512,7 @@ function ActionCard({
   const awaiting = action.status === 'done' && !action.satisfied
   // 초안 패널이 뜨는 카드는 「올린 글 주소」를 초안의 ③ 올리기 칸에서 받는다(두 곳에 두지 않는다).
   const showsDraft = briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft)
+  const destinations = channels?.map((l) => l.targetDomain ?? l.title) ?? null
   return (
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
@@ -593,7 +619,12 @@ function ActionCard({
         </p>
       )}
       {detail && briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
-        <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
+        // 브리프는 초안을 쓰기 위한 내부 설계도다 — 사람이 읽을 물건이 아니라서 「자세히」 안에서도 접어 둔다.
+        // 초안 만들기가 브리프를 알아서 먼저 만든다(DraftPanel ensureBrief).
+        <details className="brief-design">
+          <summary>글 설계(브리프) 보기{briefs[action.id] ? '' : ' · 아직 없음'}</summary>
+          <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} initiallyOpen />
+        </details>
       )}
       {coveredBy && (
         // 등재형은 "새로 쓸 글"이 아니다. 같은 질문을 이미 덮는 글이 위에 있다는 걸 먼저 말한다.
@@ -624,7 +655,14 @@ function ActionCard({
           stored={drafts[action.id]}
           onStored={onDraft}
           compact={!detail}
-          destinations={destinations}
+          channels={channels}
+          adaptations={adaptations}
+          onAdapted={onAdapted}
+          channelSlot={(ch) =>
+            canSaveStatus ? (
+              <PublishedUrls action={ch} addLabel="올렸어요" onSave={(urls, added) => onUrls(ch.id, urls, added)} />
+            ) : null
+          }
           publishedCount={action.publishedUrls.length}
           publish={
             canSaveStatus ? (
@@ -689,6 +727,25 @@ export default function GapActions() {
   const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
   // 저장된 초안 — 브리프와 같은 방식. 라우트가 없는 환경(웹)이면 null로 남아 패널이 숨는다.
   const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  // 채널별 다듬은 글(콘텐츠 생성 2단계). 키가 맞을 때만 쓴다 — 브랜드를 바꾸면 앞 브랜드 것이 잠깐 보이지 않게.
+  const [adaptState, setAdaptState] = useState<{ key: string; value: ChannelAdaptationMap | null }>({ key: '', value: null })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadChannelAdaptations(id).then((m) => {
+      if (alive) setAdaptState({ key: id, value: m })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const adaptations = adaptState.key === tenant?.tenantId ? adaptState.value : null
+  const onAdapted = (a: ChannelAdaptation) =>
+    setAdaptState((st) => ({
+      ...st,
+      value: { ...(st.value ?? {}), [a.contentActionId]: { ...(st.value?.[a.contentActionId] ?? {}), [a.channelActionId]: a } },
+    }))
   // 목적지 카드가 그려진 뒤 한 번 스크롤한다. 카드가 없으면(인용이 적어 제외·경쟁사) 아래 안내가 대신 뜬다.
   useEffect(() => {
     if (!focusId) return
@@ -724,10 +781,10 @@ export default function GapActions() {
       .sort((x, y) => y.n - x.n)
     return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
   }
-  /** 이 글이 갈 채널들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
-  const destinationsOf = (c: GapAction) => {
+  /** 이 글이 갈 채널 항목들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
+  const channelsOf = (c: GapAction) => {
     const qs = new Set(c.questionIds)
-    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q))).map((l) => l.targetDomain ?? l.title)
+    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q)))
   }
   // 덮는 글이 없는 채널은 사실상 한 편을 더 써야 하는 것이다 — 머리글이 그 수를 밝힌다.
   const orphanListing = openListing.filter((l) => coverageOf(l) === null).length
@@ -830,7 +887,16 @@ export default function GapActions() {
             </details>
             {briefs !== null && open.length > 0 && (
               <>
-                <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
+                {drafts !== null && (
+                  <BulkDrafts
+                    tenantId={tenant.tenantId}
+                    actions={[...openContent, ...openListing.filter((l) => coverageOf(l) === null)]}
+                    briefs={briefs}
+                    drafts={drafts}
+                    onBrief={onBrief}
+                    onDraft={onDraft}
+                  />
+                )}
                 <div className="brief-bar" style={{ marginBottom: 10 }}>
                   <button
                     type="button"
@@ -862,7 +928,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openContent.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={destinationsOf(a)} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={channelsOf(a)} adaptations={adaptations ? (adaptations[a.id] ?? {}) : null} onAdapted={onAdapted} />
                       ))}
                     </div>
                   </>
@@ -883,7 +949,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openListing.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} destinations={null} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} channels={null} adaptations={null} onAdapted={onAdapted} />
                       ))}
                     </div>
                   </>
@@ -902,7 +968,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
                 ))}
               </div>
               </details>
@@ -918,7 +984,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
                 ))}
               </div>
             </section>

@@ -11,7 +11,9 @@ import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
 import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
+import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
+import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
@@ -451,6 +453,57 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
 });
 
 // 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. 파일이 있으면 베이스·오버레이보다 우선한다.
+// 채널 다듬기 — 완성된 글을 올릴 채널 문체로(b9d-channel-adapt). 다듬은 글도 사실 대조를 거친다
+// (channelAdapt.ts). 데스크톱·로컬 전용 — 웹에는 초안 기능이 없다.
+app.get('/api/channel-adapt/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.json(await readAdaptations(tenant.tenantId));
+});
+app.post('/api/channel-adapt/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const contentActionId = str(b.contentActionId);
+  const channelActionId = str(b.channelActionId);
+  const channelDomain = str(b.channelDomain);
+  const sourceMarkdown = typeof b.sourceMarkdown === 'string' ? b.sourceMarkdown : '';
+  if (!contentActionId || !channelActionId || !channelDomain || !sourceMarkdown.trim()) {
+    res.status(400).json({ error: 'contentActionId·channelActionId·channelDomain·sourceMarkdown이 필요합니다.' });
+    return;
+  }
+  if (sourceMarkdown.length > 40000) {
+    res.status(400).json({ error: '원문이 너무 깁니다(4만 자 초과).' });
+    return;
+  }
+  try {
+    res.json(
+      await adaptForChannel(
+        tenant.tenantId,
+        { contentActionId, channelActionId },
+        {
+          brandName: tenant.brandName,
+          channelDomain,
+          style: channelStyleOf(str(b.channelBadge)),
+          sourceMarkdown,
+          factGraph: tenant.factGraph ?? [],
+          language: tenant.questionLanguage,
+        },
+        getJudgeClient(),
+      ),
+    );
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // 빈칸 기록 저장(채운 값·뺌·찾아 둔 후보) — 판정 호출 없음. 초안을 다시 쓰지 않는다(contentDraft.ts gapFills).
 app.put('/api/content-draft/:tenantId/gaps', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);

@@ -1,4 +1,5 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import ChannelTabs from './ChannelTabs'
 import { Link } from 'react-router-dom'
 import {
   findFactsForGaps,
@@ -9,9 +10,11 @@ import {
   saveFactGraph,
   type FactNode,
   type GapFactHit,
+  type ChannelAdaptation,
   type GapFill,
   type StoredDraft,
 } from '../lib/api'
+import { copyRich } from '../lib/clipboard'
 import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml, publishBodyHtml } from '../lib/htmlFile'
@@ -34,30 +37,33 @@ import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFil
 
 type Step = 'gaps' | 'publish'
 
-/** 서식째 선택 복사 — 우리 원고에서 만든(이스케이프된) HTML만 넣는다(lib/htmlFile.ts markdownToHtml). */
-function copyBySelection(html: string): boolean {
-  const box = document.createElement('div')
-  box.contentEditable = 'true'
-  box.style.position = 'fixed'
-  box.style.left = '-9999px'
-  box.style.top = '0'
-  box.innerHTML = html
-  document.body.appendChild(box)
-  const selection = window.getSelection()
-  const range = document.createRange()
-  range.selectNodeContents(box)
-  selection?.removeAllRanges()
-  selection?.addRange(range)
-  let ok = false
-  try {
-    ok = document.execCommand('copy')
-  } catch (e) {
-    console.error('[DraftPanel] 선택 복사 실패', e)
-  }
-  selection?.removeAllRanges()
-  box.remove()
-  return ok
+/**
+ * 저장하지 않은 편집 — 이 PC(localStorage)에 몇 초마다 보관한다. 서버 「저장」은 사실 확인(판정 호출)을 돌려서
+ * 자동으로 부르지 않는다. 그 대신 화면을 떠나도 편집이 사라지지 않게 여기 둔다(다시 열면 「이어서 편집」).
+ * 보관이 안 되는 환경(사생활 모드 등)이면 경고만 남기고 지나간다 — 편집 자체는 막지 않는다.
+ */
+interface PendingEdit {
+  text: string
+  at: string
 }
+function readPending(key: string): PendingEdit | null {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as PendingEdit) : null
+  } catch (e) {
+    console.warn('[DraftPanel] 보관한 편집을 읽지 못했습니다', e)
+    return null
+  }
+}
+function writePending(key: string, value: PendingEdit | null): void {
+  try {
+    if (value) localStorage.setItem(key, JSON.stringify(value))
+    else localStorage.removeItem(key)
+  } catch (e) {
+    console.warn('[DraftPanel] 편집을 보관하지 못했습니다', e)
+  }
+}
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 
 export default function DraftPanel({
   tenantId,
@@ -67,9 +73,12 @@ export default function DraftPanel({
   onStored,
   ensureBrief,
   compact = false,
-  destinations = null,
+  channels = null,
   publishedCount = 0,
   publish,
+  adaptations = null,
+  onAdapted,
+  channelSlot,
 }: {
   tenantId: string
   action: GapAction
@@ -83,12 +92,17 @@ export default function DraftPanel({
    * 세 걸음(초안·빈칸·올리기)은 숨기지 않는다. 그게 이 화면의 본론이다.
    */
   compact?: boolean
-  /** 이 글을 올릴 외부 채널(콘텐츠형). null이면 채널 줄을 그리지 않는다. */
-  destinations?: string[] | null
+  /** 이 글을 올릴 외부 채널 항목(콘텐츠형). 있으면 ③ 올리기가 채널 탭이 된다. */
+  channels?: GapAction[] | null
   /** 이 항목에 기록된 「올린 글 주소」 수 — ③ 단계 표시. */
   publishedCount?: number
-  /** ③ 올리기 칸에 들어갈 주소 기록 부품. 상태를 저장할 수 없는 환경이면 없다. */
+  /** ③ 올리기 칸(자사 사이트)에 들어갈 주소 기록 부품. 상태를 저장할 수 없는 환경이면 없다. */
   publish?: ReactNode
+  /** 채널별 다듬은 글. null이면 다듬기 라우트가 없는 환경이다. */
+  adaptations?: Record<string, ChannelAdaptation> | null
+  onAdapted?: (a: ChannelAdaptation) => void
+  /** 채널 항목의 주소 기록 부품. */
+  channelSlot?: (a: GapAction) => ReactNode
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -113,6 +127,34 @@ export default function DraftPanel({
   // 브랜드 사실 저장은 한 줄로 세운다 — 「맞아요」를 연달아 누르면 읽고-쓰기가 겹쳐 앞 값이 사라진다.
   const factChain = useRef<Promise<unknown>>(Promise.resolve())
 
+  // 기다리는 동안 지난 시간 — "보통 1~2분" 옆에 실제로 얼마나 지났는지 보인다.
+  const startedAt = useRef(0)
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    if (!busy) return
+    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)), 1000)
+    return () => window.clearInterval(id)
+  }, [busy])
+
+  const editKey = `brand-aeo-draft-edit:${tenantId}:${action.id}`
+  const [pending, setPending] = useState<PendingEdit | null>(() => readPending(editKey))
+  const saveTimer = useRef<number | undefined>(undefined)
+  const editText = (value: string) => {
+    setText(value)
+    window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => writePending(editKey, { text: value, at: new Date().toISOString() }), 1200)
+  }
+  const dropPending = () => {
+    window.clearTimeout(saveTimer.current)
+    writePending(editKey, null)
+    setPending(null)
+  }
+  const closeEdit = () => {
+    if (stored && text !== workMarkdownOf(stored) && !window.confirm('저장하지 않은 편집을 버릴까요?')) return
+    dropPending()
+    setEditing(false)
+  }
+
   const make = async (force: boolean) => {
     // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
     if (
@@ -121,6 +163,8 @@ export default function DraftPanel({
       !window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
     )
       return
+    startedAt.current = Date.now()
+    setElapsed(0)
     setBusy(true)
     setError(null)
     try {
@@ -152,6 +196,7 @@ export default function DraftPanel({
     setError(null)
     try {
       onStored(await saveContentDraft(tenantId, action.id, text))
+      dropPending()
       setEditing(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -259,30 +304,10 @@ export default function DraftPanel({
     }
   }
 
-  /**
-   * 「이 글 복사」 — 서식(HTML)과 글자(마크다운)를 함께 넣는다. 붙여 넣는 편집기가 고른다.
-   * 클립보드 쓰기 권한이 막힌 환경(실측: 미리보기 브라우저 NotAllowedError)에서는 화면 밖에 본문을
-   * 그려 선택한 뒤 복사한다 — 이 길도 서식이 남는다.
-   */
+  /** 「이 글 복사」 — 서식째(lib/clipboard.ts). 남은 빈칸 줄은 빠진 발행본이다. */
   const copyPublish = async () => {
     if (!stored) return
-    const md = publishMarkdownOf(stored)
-    const html = publishBodyHtml(stored)
-    let ok: boolean
-    try {
-      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) throw new Error('ClipboardItem 없음')
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': new Blob([html], { type: 'text/html' }),
-          'text/plain': new Blob([md], { type: 'text/plain' }),
-        }),
-      ])
-      ok = true
-    } catch (e) {
-      console.warn('[DraftPanel] 클립보드 API로 복사하지 못해 선택 복사로 넘어갑니다', e)
-      ok = copyBySelection(html)
-    }
-    if (ok) {
+    if (await copyRich(publishMarkdownOf(stored), publishBodyHtml(stored))) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
     } else {
@@ -305,7 +330,7 @@ export default function DraftPanel({
             // 판정 호출 수는 운영자용 정보라 손끝 설명에 둔다. 단추에는 기다릴 시간을 적는다.
             title={hasBrief ? '브리프를 바탕으로 초안을 씁니다(판정 1~2회)' : '브리프를 만든 뒤 이어서 초안까지 씁니다(판정 2~4회)'}
           >
-            {busy ? '초안 쓰는 중… 보통 1~2분' : '초안 만들기 · 약 1~2분'}
+            {busy ? `초안 쓰는 중… ${clock(elapsed)} · 보통 1~2분` : '초안 만들기 · 약 1~2분'}
           </button>
           {busy && <span className="doc-meta">기다리는 동안 다른 글을 계속 다룰 수 있습니다.</span>}
         </div>
@@ -318,6 +343,7 @@ export default function DraftPanel({
     )
   }
 
+  const upCount = (publishedCount > 0 ? 1 : 0) + (channels ?? []).filter((c) => c.publishedUrls.length > 0 || c.status === 'done').length
   const progress = gapProgress(stored)
   const left = progress.total - progress.done
   const d = effectiveDraft(stored)
@@ -341,10 +367,80 @@ export default function DraftPanel({
       key: 'publish',
       n: 3,
       label: '올리기',
-      sub: publishedCount > 0 ? `올린 주소 ${publishedCount}개` : destinations?.length ? `자사 사이트 + ${destinations.length}곳` : '자사 사이트',
-      done: publishedCount > 0,
+      sub: channels?.length
+        ? `${channels.length + 1}곳 중 ${upCount}곳 올림`
+        : publishedCount > 0
+          ? `올린 주소 ${publishedCount}개`
+          : '자사 사이트',
+      done: channels?.length ? upCount === channels.length + 1 : publishedCount > 0,
     },
   ]
+
+  // ③ 올리기의 자사 사이트 칸 — 원문 복사·주소 기록·파일. 채널이 있으면 채널 탭의 첫 탭이 된다.
+  const ownSite = (
+    <>
+          <div className="draft-copy">
+            <button type="button" className="draft-copy-btn" onClick={() => void copyPublish()}>
+              {copied ? '복사했습니다' : '이 글 복사'}
+            </button>
+            <p className="doc-meta">
+              서식째 복사합니다 — 네이버 블로그·티스토리 편집기에 붙여도 제목·굵은 글씨가 남습니다.
+              {(() => {
+                const n = stored.editedMarkdown ? countGapNotes(stored.editedMarkdown) : left
+                return n > 0 ? ` 아직 채우지 않은 빈칸 ${n}곳은 빼고 복사합니다.` : ''
+              })()}
+            </p>
+          </div>
+          {publish}
+          <details className="draft-files">
+            <summary>파일로 받기</summary>
+            <div className="brief-bar">
+              <button
+                type="button"
+                className="ghost"
+                title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
+                onClick={() =>
+                  downloadMarkdown(`발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, publishMarkdownOf(stored))
+                }
+              >
+                발행용 .md
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 「이 글 복사」를 쓰세요."
+                onClick={() => {
+                  if (!tenant) return
+                  void loadFactGraph(tenantId)
+                    .then((fg) => fg?.factGraph ?? [])
+                    .catch((e: unknown) => {
+                      console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
+                      return [] as FactNode[]
+                    })
+                    .then((facts) =>
+                      downloadHtml(
+                        `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                        buildPublishHtml({ stored, brand: tenant, facts }),
+                      ),
+                    )
+                }}
+              >
+                자사 사이트용 .html
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="남은 빈칸 표시와 「이 글이 쓴 사실」까지 담은 작업용 원고입니다."
+                onClick={() =>
+                  downloadMarkdown(`초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, workMarkdownOf(stored))
+                }
+              >
+                작업용 .md
+              </button>
+            </div>
+          </details>
+    </>
+  )
 
   return (
     <div className="brief draft-flow">
@@ -402,11 +498,11 @@ export default function DraftPanel({
 
       {!compact && (
         <div className="brief-bar draft-tools">
-          <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
+          <button type="button" className="ghost" onClick={editing ? closeEdit : startEdit}>
             {editing ? '편집 닫기' : '본문 편집'}
           </button>
           <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-            {busy ? '다시 쓰는 중…' : '다시 만들기'}
+            {busy ? `다시 쓰는 중… ${clock(elapsed)}` : '다시 만들기'}
           </button>
           {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
           <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
@@ -419,6 +515,28 @@ export default function DraftPanel({
         </p>
       )}
 
+      {pending && !editing && (
+        <p className="draft-pending" role="status">
+          저장하지 않은 편집이 있습니다(
+          {new Date(pending.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}).{' '}
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              setText(pending.text)
+              setEditing(true)
+              setStep('gaps')
+            }}
+          >
+            이어서 편집
+          </button>{' '}
+          ·{' '}
+          <button type="button" className="link-btn" onClick={dropPending}>
+            버리기
+          </button>
+        </p>
+      )}
+
       {step === 'gaps' && editing && (
         <div className="brief-body">
           <p className="hint" style={{ marginTop: 0 }}>
@@ -428,7 +546,7 @@ export default function DraftPanel({
           </p>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => editText(e.target.value)}
             rows={18}
             style={{ width: '100%', fontFamily: 'ui-monospace, monospace', fontSize: 13, lineHeight: 1.6 }}
           />
@@ -436,7 +554,7 @@ export default function DraftPanel({
             <button type="button" onClick={() => void save()} disabled={saving || !text.trim()}>
               {saving ? '저장 중…' : '저장'}
             </button>
-            <button type="button" className="ghost" onClick={() => setEditing(false)} disabled={saving}>
+            <button type="button" className="ghost" onClick={closeEdit} disabled={saving}>
               취소
             </button>
             {stored.editedMarkdown && (
@@ -645,72 +763,21 @@ export default function DraftPanel({
 
       {step === 'publish' && (
         <div className="brief-body draft-publish">
-          <div className="draft-copy">
-            <button type="button" className="draft-copy-btn" onClick={() => void copyPublish()}>
-              {copied ? '복사했습니다' : '이 글 복사'}
-            </button>
-            <p className="doc-meta">
-              서식째 복사합니다 — 네이버 블로그·티스토리 편집기에 붙여도 제목·굵은 글씨가 남습니다.
-              {(() => {
-                const n = stored.editedMarkdown ? countGapNotes(stored.editedMarkdown) : left
-                return n > 0 ? ` 아직 채우지 않은 빈칸 ${n}곳은 빼고 복사합니다.` : ''
-              })()}
-            </p>
-          </div>
-          {destinations !== null && (
-            <p className="gap-dest" style={{ margin: 0 }}>
-              올릴 곳 · <b>자사 사이트</b>
-              {destinations.length > 0 && ` · ${destinations.join(' · ')}`}
-            </p>
+          {channels && channels.length > 0 && onAdapted && channelSlot ? (
+            <ChannelTabs
+              tenantId={tenantId}
+              contentActionId={action.id}
+              stored={stored}
+              channels={channels}
+              adaptations={adaptations}
+              onAdapted={onAdapted}
+              ownSite={ownSite}
+              ownPublished={publishedCount > 0}
+              channelSlot={channelSlot}
+            />
+          ) : (
+            ownSite
           )}
-          {publish}
-          <details className="draft-files">
-            <summary>파일로 받기</summary>
-            <div className="brief-bar">
-              <button
-                type="button"
-                className="ghost"
-                title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
-                onClick={() =>
-                  downloadMarkdown(`발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, publishMarkdownOf(stored))
-                }
-              >
-                발행용 .md
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 「이 글 복사」를 쓰세요."
-                onClick={() => {
-                  if (!tenant) return
-                  void loadFactGraph(tenantId)
-                    .then((fg) => fg?.factGraph ?? [])
-                    .catch((e: unknown) => {
-                      console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
-                      return [] as FactNode[]
-                    })
-                    .then((facts) =>
-                      downloadHtml(
-                        `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
-                        buildPublishHtml({ stored, brand: tenant, facts }),
-                      ),
-                    )
-                }}
-              >
-                자사 사이트용 .html
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                title="남은 빈칸 표시와 「이 글이 쓴 사실」까지 담은 작업용 원고입니다."
-                onClick={() =>
-                  downloadMarkdown(`초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, workMarkdownOf(stored))
-                }
-              >
-                작업용 .md
-              </button>
-            </div>
-          </details>
         </div>
       )}
     </div>
