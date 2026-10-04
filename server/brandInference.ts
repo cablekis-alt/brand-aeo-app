@@ -278,6 +278,9 @@ export interface InferredScope {
  *
  * 경쟁사 추론 · 질문지가 이 값을 따른다(src/prompts/b1-question-bank.ts scopeGuide). 모르거나 실패하면
  * 지역형 — 시장 범위가 생기기 전의 기본 동작이다. 사람이 브랜드 추가 화면에서 고칠 수 있다.
+ *
+ * 기준은 매출 구조가 아니라 AI에 묻는 사람이다. 「기업에 납품하면 b2b」로만 정의했더니 SK하이닉스가 B2B로
+ * 추론됐다 — 고객이 넓고 일반인 · 투자자도 HBM · DDR5 · 점유율을 묻는 대형 브랜드라 전국형이 맞다(2026-10-05).
  */
 export async function inferMarketScope(brandName: string, industry: string, context = ''): Promise<InferredScope> {
   const fallback: InferredScope = { marketScope: 'local', buyer: '' };
@@ -286,10 +289,13 @@ export async function inferMarketScope(brandName: string, industry: string, cont
   const system = '당신은 한국 기업의 사업 형태를 분류하는 도우미입니다. 반드시 JSON 객체만 반환하세요.';
   const user = `브랜드: "${brandName}" · 업종: "${industry}"
 ${context.trim() ? `참고(홈페이지 본문 일부):\n${context.trim().slice(0, 1500)}\n` : ''}
-이 브랜드가 주로 누구에게 파는지 하나로 고르세요.
+AI 검색(ChatGPT 등)에서 이 브랜드가 속한 시장을 **누가 주로 묻는지** 기준으로 하나를 고르세요. 매출 구조가 아니라 질문하는 사람이 기준입니다.
 - "local": 동네 · 지역 손님이 직접 찾아오는 사업(병원 · 치과 · 성형외과 · 펜션 · 학원 · 음식점 · 미용실 등)
-- "national": 전국의 일반 소비자에게 파는 브랜드(보험 · 통신사 · 가전 · 식품 · 온라인 서비스 · 전국 언론 등)
-- "b2b": 기업 · 기관 고객에게 납품 · 공급하는 사업(부품 · 소재 · 장비 · 단말 제조, 기업용 소프트웨어, 컨설팅 등)
+- "national": 전국의 일반 소비자가 고르는 브랜드(보험 · 통신사 · 가전 · 식품 · 온라인 서비스 · 전국 언론 등).
+  또 **일반인 · 투자자 · 구직자도 널리 아는 대형 브랜드**는 기업 거래가 주력이어도 national입니다
+  (예: 반도체 · 배터리 · 화학 대기업 — 기술 · 산업 동향 · 소비자 제품 질문에서 이름이 불린다).
+- "b2b": 구매자를 한 줄로 특정할 수 있는 납품 · 공급 사업이고, 일반인은 그 회사를 AI에 거의 묻지 않는 경우
+  (중견 · 중소 부품 · 소재 · 장비 · 단말 제조, 기업용 소프트웨어, 컨설팅 등).
 b2b이면 buyer에 실제로 구매를 정하는 사람을 한 줄로 적으세요(예: "통신사 IPTV 셋톱박스 구매 · 조달 담당자"). 아니면 "".
 스키마: {"marketScope": "local" | "national" | "b2b", "buyer": string}
 설명 없이 JSON만 반환하세요.`;
