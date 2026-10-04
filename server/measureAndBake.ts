@@ -86,6 +86,9 @@ function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
         // 은행으로 재게 되어, 코호트 안에서 서로 다른 시험지를 풀게 된다.
         ...(tenant.questionLanguage ? { questionLanguage: tenant.questionLanguage } : {}),
         ...(tenant.cohortQuestionBank ? { cohortQuestionBank: tenant.cohortQuestionBank } : {}),
+        // 시장 범위 · 구매자도 물려받는다 — 같은 코호트가 같은 성격의 질문지(소비자 / 구매 담당자)를 풀게.
+        ...(tenant.marketScope ? { marketScope: tenant.marketScope } : {}),
+        ...(tenant.buyer ? { buyer: tenant.buyer } : {}),
         competitors: [],
         factGraph: [],
         cohortOnly: true,

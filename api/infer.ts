@@ -1,4 +1,5 @@
-import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from '../server/brandInference.js';
+import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from '../server/brandInference.js';
+import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { canTriggerRemoteMeasure, triggerGithubInfer } from '../server/githubMeasure.js';
 import { markInferPending, readInferResult, slugFromDomain } from '../server/inferResults.js';
 import { sendJson } from '../server/httpJson.js';
@@ -22,6 +23,8 @@ function readBody(req: JsonRequest): Record<string, unknown> {
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+/** 모르는 값은 지역형 — 시장 범위가 생기기 전의 동작. */
+const scopeOf = (v: unknown): MarketScope => ((MARKET_SCOPES as string[]).includes(str(v)) ? (str(v) as MarketScope) : 'local');
 
 export default async function handler(req: JsonRequest, res: JsonResponse) {
   if (req.method === 'OPTIONS') {
@@ -45,7 +48,18 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
         sendJson(res, 400, { error: 'brandName, industry가 필요합니다.' });
         return;
       }
-      sendJson(res, 200, await inferCompetitors(brandName, industry, str(body.region)));
+      sendJson(res, 200, await inferCompetitors(brandName, industry, str(body.region), scopeOf(body.marketScope), str(body.buyer)));
+      return;
+    }
+    if (kind === 'scope') {
+      // 시장 범위(지역형 · 전국형 · B2B형) + B2B 구매자. 데스크톱 server/index.ts와 같은 계약.
+      const brandName = str(body.brandName);
+      const industry = str(body.industry);
+      if (!brandName.trim() || !industry.trim()) {
+        sendJson(res, 400, { error: 'brandName, industry가 필요합니다.' });
+        return;
+      }
+      sendJson(res, 200, await inferMarketScope(brandName, industry, str(body.text)));
       return;
     }
     if (kind === 'competitors-dispatch') {

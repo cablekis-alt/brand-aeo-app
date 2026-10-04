@@ -1,6 +1,6 @@
 import demoScorecards from '../data/demo-scorecards.json'
 import { noteDataSource } from './dataSource'
-import type { Engine } from '../prompts/types'
+import type { Engine, MarketScope } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
@@ -24,6 +24,10 @@ export interface TenantSummary {
   competitors: string[]
   /** 사실이 적힌 페이지. 없으면 소유 도메인 루트를 쓴다. */
   brandPageUrl?: string
+  /** 시장 범위 — 서버가 없으면 지역형(local)으로 채운다. */
+  marketScope?: MarketScope
+  /** B2B형의 구매자. */
+  buyer?: string
 }
 
 const FALLBACK_TENANTS: TenantSummary[] = [

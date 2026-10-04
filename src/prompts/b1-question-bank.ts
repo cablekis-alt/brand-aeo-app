@@ -1,4 +1,4 @@
-import type { PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
+import type { MarketScope, PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
 
 /**
  * 질문 문체 규칙 — 언어에 따라 이것만 바뀐다(나머지 규칙·스키마는 같다).
@@ -7,6 +7,58 @@ import type { PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
  * (예: "서울 강남 (영어 질문)")는 한국어 측정과 코호트를 나누려고 붙인 것이라 질문에 넣지 않는다.
  * topic은 화면에서 한국어 측정과 같이 보이므로 한국어로 둔다.
  */
+/** 시장 범위별 질문 설계 — 누가 묻는가 · 무엇을 묻는가 · 지역을 넣는가 · 추천형 예시. */
+interface ScopeGuide {
+  /** 이 질문을 입력하는 사람 — 프롬프트 첫 줄과 사용자 메시지에 들어간다. */
+  persona: string;
+  /** 다룰 주제의 범위. 지역형은 빈 문자열(기존 규칙 그대로). */
+  topicRule: string;
+  /** 지역을 질문에 넣지 말라는 규칙. 지역형은 빈 문자열. */
+  regionRule: string;
+  /** 추천형(consider) 질문의 예시. */
+  recommend: string;
+  label: string;
+}
+
+/**
+ * 시장 범위가 생기기 전에는 모든 브랜드를 「지역 소비자」로 보고 질문을 만들었다. B2B 납품사(셋톱박스)는
+ * 「수도권 원룸 OTT 셋톱박스 추천」 같은 소비자 질문을 받아 코호트 5곳이 모두 언급률 0%였고(2026-W40),
+ * 업종 이름에 「통신사 납품」을 넣어 우회하자 같은 브랜드가 25%로 1위가 됐다. 지역형은 예전 문구를 그대로 쓴다.
+ */
+export function scopeGuide(scope: MarketScope | undefined, industry: string, region: string, buyer?: string): ScopeGuide {
+  if (scope === 'b2b') {
+    const who = buyer?.trim() || `${industry} 공급사를 찾는 기업 고객의 구매 · 조달 담당자`;
+    return {
+      persona: who,
+      topicRule:
+        '질문은 이 담당자가 공급사 · 제조사를 찾고 비교 · 선정할 때 묻는 업무 질문이다. 일반 소비자의 구매 질문' +
+        '(가성비 · 집에서 쓰기 · 중고 구매 · 자가 설치 등)은 만들지 마라. 요구 스펙 · 인증 · 규격, 납품 실적 · 레퍼런스, ' +
+        '양산 · 품질 관리, 단가 · 계약 조건, 기술 지원 · 유지보수 같은 주제를 고르게 다룬다.',
+      regionRule: '특정 시 · 구 같은 지역을 질문에 넣지 마라 — 이 시장은 지역이 아니라 고객사로 나뉜다.',
+      recommend: `"${industry} 공급사 · 제조사 추천해줘"`,
+      label: 'B2B형(기업 고객에게 납품)',
+    };
+  }
+  if (scope === 'national') {
+    return {
+      persona: '전국의 소비자 · 제품 구매자',
+      topicRule: '제품 · 서비스를 알아보고 비교해 고르는 질문을 고르게 다룬다(기능 · 성능, 가격 · 요금, 브랜드 비교, 이용 후기 등).',
+      regionRule: '특정 시 · 구 같은 지역을 질문에 넣지 마라 — 전국 어디서나 같은 질문을 한다.',
+      recommend: `"${industry} 브랜드 추천해줘"`,
+      label: '전국형(전국 소비자)',
+    };
+  }
+  return { persona: '실제 소비자', topicRule: '', regionRule: '', recommend: `"${region} ${industry} 추천해줘"`, label: '지역형(동네 손님)' };
+}
+
+/** 사용자 메시지의 시장 범위 줄 — 지역형은 넣지 않는다(시장 범위 이전과 같은 프롬프트를 그대로 쓴다). */
+function scopeLines(scope: MarketScope | undefined, guide: ScopeGuide): string {
+  if (!scope || scope === 'local') return '';
+  return `
+시장 범위: ${guide.label}
+질문하는 사람: ${guide.persona}`;
+}
+
 function styleRule(language: QuestionLanguage | undefined): string {
   if (language === 'en') {
     return `질문 text는 반드시 영어로 쓴다. 한국에서 시술·수술을 알아보는 외국인 환자가 ChatGPT 같은 AI에 실제로 입력할 법한
@@ -228,6 +280,10 @@ export interface CohortQuestionBankRequest {
   version: string;
   previousVersionDiffNote?: string;
   language?: QuestionLanguage;
+  /** 없으면 지역형. */
+  marketScope?: MarketScope;
+  /** B2B형의 구매자 — 질문하는 사람이 된다. */
+  buyer?: string;
 }
 
 /**
@@ -240,16 +296,17 @@ export interface CohortQuestionBankRequest {
  */
 export function buildCohortQuestionBankPrompt(req: CohortQuestionBankRequest): PromptMessage {
   const { industry, region, excludedNames, count, learnMin, version } = req;
+  const guide = scopeGuide(req.marketScope, industry, region, req.buyer);
 
   const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
-목표는 실제 소비자가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 일반 질문을 만드는 것입니다.
+목표는 ${guide.persona}가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 일반 질문을 만드는 것입니다.
 이 질문들은 같은 업종·지역의 여러 브랜드가 **똑같이** 받는 공통 시험지입니다. 어떤 브랜드가 "이름을 대지 않아도" AI 답변에 나오는지 비교하는 데 쓰입니다.
 
 ★ 가장 중요한 제약:
 1. 정확히 ${count}개를 만든다. 전부 category-agnostic이다.
 2. 어떤 상호·브랜드명·업체명도 넣지 마라(containsBrandName=false). 특히 아래 이름은 절대 넣지 마라:
    ${excludedNames.join(', ') || '(없음)'}
-3. 특정 브랜드의 주력 상품·강점 쪽으로 치우치지 마라. 이 업종의 소비자가 흔히 묻는 주제를 고르게 다룬다.
+3. 특정 브랜드의 주력 상품·강점 쪽으로 치우치지 마라. ${guide.topicRule || '이 업종의 소비자가 흔히 묻는 주제를 고르게 다룬다.'}${guide.regionRule ? `\n   ${guide.regionRule}` : ''}
 
 그 밖의 규칙:
 4. ${styleRule(req.language)}
@@ -257,7 +314,7 @@ export function buildCohortQuestionBankPrompt(req: CohortQuestionBankRequest): P
 6. 같은 의도의 질문을 표현만 바꿔 중복 생성하지 않는다 (의도 다양성 확보).
 7. 각 질문에 구매 여정 단계 stage를 하나 매긴다 — learn(탐색: 기준·개념을 묻는다),
    consider(비교: 후보를 고르거나 비교한다, 추천·순위·A vs B), decide(결정: 가격·예약·후기 등 선택 직전 확인).
-   **learn은 최소 ${learnMin}개**를 만든다. 추천형(consider)도 포함한다 — "${region} ${industry} 추천해줘"처럼
+   **learn은 최소 ${learnMin}개**를 만든다. 추천형(consider)도 포함한다 — ${guide.recommend}처럼
    후보를 고르는 질문에서 어떤 브랜드가 불리는지가 이 측정의 핵심이다.
 8. 각 질문에 콘텐츠 주제 topic을 하나 매긴다 — 질문의 **내용**으로 묶는 이름이다(형태가 아니다).
    전체가 4~7개 주제로 묶이게 하고, 한국어 명사구로 12자 이내로 쓴다. "기타"·"일반" 같은 이름은 만들지 마라.
@@ -274,7 +331,7 @@ JSON 스키마 (배열의 각 원소):
 }`;
 
   const user = `업종: ${industry}
-지역: ${region}
+지역: ${region}${scopeLines(req.marketScope, guide)}
 버저닝 태그: ${version}
 ${req.previousVersionDiffNote ? `이전 시도 참고사항: ${req.previousVersionDiffNote}` : ''}
 
@@ -293,6 +350,9 @@ export interface BrandQuestionBankRequest {
   version: string;
   previousVersionDiffNote?: string;
   language?: QuestionLanguage;
+  /** 없으면 지역형. */
+  marketScope?: MarketScope;
+  buyer?: string;
 }
 
 /**
@@ -301,15 +361,27 @@ export interface BrandQuestionBankRequest {
  */
 export function buildBrandQuestionBankPrompt(req: BrandQuestionBankRequest): PromptMessage {
   const { industry, region, brandName, competitorNames, count, version } = req;
+  const guide = scopeGuide(req.marketScope, industry, region, req.buyer);
+  // 지역형만 지역 특화 질문을 만든다. 전국형 · B2B형은 그 몫을 다른 질문 종류에 나눠 담는다 — 새 질문 종류를
+  // 만들지 않아 집계 · 보고서는 그대로다.
+  const distribution =
+    req.marketScope === 'b2b'
+      ? `brand-direct(브랜드 직접), comparison(비교), price-spec(가격/스펙), troubleshooting-review(후기/문제해결)로 고르게 분배한다.
+   local-regional(지역 특화)은 만들지 않는다 — 이 시장은 지역이 아니라 고객사로 나뉜다.
+   price-spec에는 단가 · 계약 조건 · 인증 · 규격을, troubleshooting-review에는 납품 실적 · 레퍼런스 · 품질 · 기술 지원 평가를 담는다.`
+      : req.marketScope === 'national'
+        ? `brand-direct(브랜드 직접), comparison(비교), price-spec(가격/스펙), troubleshooting-review(후기/문제해결)로 고르게 분배한다.
+   local-regional(지역 특화)은 만들지 않는다 — 전국 시장이다. price-spec에는 요금 · 가격 · 제품 라인업을 담는다.`
+        : `brand-direct(브랜드 직접), comparison(비교), price-spec(가격/스펙), troubleshooting-review(후기/문제해결),
+   local-regional(지역 특화)로 고르게 분배한다.`;
 
   const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
-목표는 실제 소비자가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 질문을 만드는 것입니다.
+목표는 ${guide.persona}가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 질문을 만드는 것입니다.
 이번에는 **브랜드를 지목하는 질문만** 만든다. 브랜드 이름 없는 일반 질문은 따로 준비되어 있으니 만들지 마라.
 
 ★ 가장 중요한 제약:
 1. 정확히 ${count}개를 만든다. category-agnostic은 하나도 만들지 않는다.
-2. brand-direct(브랜드 직접), comparison(비교), price-spec(가격/스펙), troubleshooting-review(후기/문제해결),
-   local-regional(지역 특화)로 고르게 분배한다.
+2. ${distribution}
 3. 모든 질문에 측정 대상 브랜드명(${brandName})이 들어간다(containsBrandName=true). comparison에는 경쟁사명이 함께 들어가도 된다.
 
 그 밖의 규칙:
@@ -331,7 +403,7 @@ JSON 스키마 (배열의 각 원소):
 }`;
 
   const user = `업종: ${industry}
-지역: ${region}
+지역: ${region}${scopeLines(req.marketScope, guide)}
 측정 대상 브랜드: ${brandName}
 주요 경쟁사: ${competitorNames.join(', ')}
 버저닝 태그: ${version}

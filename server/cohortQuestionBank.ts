@@ -115,6 +115,8 @@ async function generateCohortBank(tenant: TenantConfig, key: string, version: st
         version,
         previousVersionDiffNote: note,
         language: tenant.questionLanguage,
+        marketScope: tenant.marketScope,
+        buyer: tenant.buyer,
       }),
     );
     const parsed = parseJsonLoose<Array<Partial<QuestionSpec>>>(result.text);
@@ -243,13 +245,21 @@ export async function ensureComposedQuestionBank(tenant: TenantConfig, store: Re
         version: tenant.questionBankVersion,
         previousVersionDiffNote: note,
         language: tenant.questionLanguage,
+        marketScope: tenant.marketScope,
+        buyer: tenant.buyer,
       }),
     );
     const parsed = parseJsonLoose<Array<Partial<QuestionSpec>>>(result.text);
-    // 일반 질문은 코호트 질문지가 맡는다 — 여기서 category-agnostic이 오면 버린다.
+    // 일반 질문은 코호트 질문지가 맡는다 — 여기서 category-agnostic이 오면 버린다. 전국형 · B2B형은 지역 특화
+    // 질문도 버린다(프롬프트가 만들지 말라고 했는데 온 것).
+    const regionalAllowed = !tenant.marketScope || tenant.marketScope === 'local';
     const clean = (parsed ?? []).filter(
       (q): q is Partial<QuestionSpec> & { text: string; category: QuestionSpec['category'] } =>
-        typeof q.text === 'string' && q.text.trim().length > 0 && !!q.category && q.category !== 'category-agnostic',
+        typeof q.text === 'string' &&
+        q.text.trim().length > 0 &&
+        !!q.category &&
+        q.category !== 'category-agnostic' &&
+        (regionalAllowed || q.category !== 'local-regional'),
     );
     if (clean.length >= count) {
       brandQuestions = clean.slice(0, count).map((q, i) => ({
