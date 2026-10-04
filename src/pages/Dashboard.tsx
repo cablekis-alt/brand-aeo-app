@@ -10,7 +10,7 @@ import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { conditionChange } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
-import { RANK_FULL_WEIGHT_RESPONSES, WEIGHT_RATIO, shareOfMentionNote } from '../prompts/b8-report'
+import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -20,6 +20,12 @@ import { useGapActionPlan } from '../lib/useGapActionPlan'
 const TREND_WEEKS = 5
 /** 「이번 주 할 일」에 펼쳐 두는 질문 수 — 나머지는 콘텐츠 생성 화면에서 본다. */
 const TODO_SHOW = 3
+
+/**
+ * 가중치는 점수에서 차지하는 몫(%)으로 보인다 — 정기진단 보고서·브랜드 종합 진단·퍼포먼스와 같은 표기.
+ * 코드의 비율값(25·20·15, 합 60)을 그대로 적으면 100점 만점 배점이 빠진 것처럼 읽혔다.
+ */
+const weightPct = (w: number) => `${Math.round(w * 100)}%`
 
 export default function Dashboard() {
   const { tenant } = useTenant()
@@ -330,7 +336,7 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>언급률</span>
-                <span className="kpi-tag">가중치 {WEIGHT_RATIO.mentionRate}</span>
+                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.mentionRate)}</span>
               </div>
               <span className="kpi-value">{formatPct(card.mentionRate)}</span>
               <span className="dash-caption">
@@ -342,7 +348,7 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>추천 순위</span>
-                <span className="kpi-tag">가중치 {WEIGHT_RATIO.avgRecommendationRank}</span>
+                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.avgRecommendationRank)}</span>
               </div>
               <span className="kpi-value">
                 {formatRank(card.avgRecommendationRank)}
@@ -366,7 +372,7 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>자사 인용률</span>
-                <span className="kpi-tag">가중치 {WEIGHT_RATIO.brandOwnedCitationRate}</span>
+                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.brandOwnedCitationRate)}</span>
               </div>
               <span className="kpi-value">{formatPct(card.brandOwnedCitationRate)}</span>
               <span className="dash-caption">
