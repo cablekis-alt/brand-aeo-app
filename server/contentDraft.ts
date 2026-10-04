@@ -35,6 +35,23 @@ export interface StoredDraft {
    * 사람에게만 면제하면 그 기준이 무의미해진다.
    */
   editWarnings?: string[];
+  /**
+   * 빈칸을 화면에서 채운 기록 — 키는 `절 번호:블록 번호`(그 초안 안에서만 뜻이 있다).
+   *
+   * 예전에는 값을 넣으면 사실로 저장하고 **초안을 통째로 다시 썼다**(판정 1~2회, 1~2분). 빈칸은
+   * 문단 하나를 비운 자리라 값만으로는 문장이 되지 않아서였다. 이제는 그 자리에 「항목: 값」
+   * 한 줄을 넣고 다시 쓰지 않는다(src/lib/draftGaps.ts가 내보내기에 반영). 다시 만들기로 새 초안이
+   * 오면 이 기록은 버린다 — 넣은 값은 이미 브랜드 사실에 있어 새 초안이 처음부터 쓴다.
+   */
+  gapFills?: Record<string, GapFill>;
+}
+
+/** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(아직 확인 전). */
+export interface GapFill {
+  value?: string;
+  omit?: boolean;
+  suggested?: string;
+  sourceUrl?: string;
 }
 type DraftMap = Record<string, StoredDraft>;
 
@@ -209,6 +226,40 @@ export async function generateDraft(
   if (claims.notes.length) draft = { ...draft, guardNotes: [...(draft.guardNotes ?? []), ...claims.notes] };
   const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), draft };
   const map = await readDrafts(tenantId);
+  map[actionId] = stored;
+  await writeDrafts(tenantId, map);
+  return stored;
+}
+
+const GAP_KEY = /^\d{1,3}:\d{1,3}$/;
+const MAX_FILL = 500;
+
+/** 빈칸 기록을 저장한다. 판정 호출이 없다 — 값은 사람이 확인한 것이고, 화면이 브랜드 사실에도 넣는다. */
+export async function saveGapFills(
+  tenantId: string,
+  actionId: string,
+  fills: Record<string, unknown>,
+): Promise<StoredDraft> {
+  const map = await readDrafts(tenantId);
+  const current = map[actionId];
+  if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+  const clean: Record<string, GapFill> = {};
+  const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, MAX_FILL) : undefined);
+  for (const [key, raw] of Object.entries(fills)) {
+    if (!GAP_KEY.test(key) || !raw || typeof raw !== 'object') continue;
+    const r = raw as Record<string, unknown>;
+    const fill: GapFill = {};
+    const value = text(r.value);
+    const suggested = text(r.suggested);
+    const sourceUrl = text(r.sourceUrl);
+    if (r.omit === true) fill.omit = true;
+    else if (value) fill.value = value;
+    if (suggested) fill.suggested = suggested;
+    if (sourceUrl && /^https?:\/\//i.test(sourceUrl)) fill.sourceUrl = sourceUrl;
+    if (Object.keys(fill).length) clean[key] = fill;
+  }
+  const stored: StoredDraft = { ...current, gapFills: clean };
+  if (!Object.keys(clean).length) delete stored.gapFills;
   map[actionId] = stored;
   await writeDrafts(tenantId, map);
   return stored;

@@ -1,5 +1,5 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
-import { draftToPublishMarkdown, stripGapNotes } from './markdownFile'
+import { publishMarkdownOf } from './draftGaps'
 
 /**
  * 발행용 .html — 발행용 마크다운을 완성된 HTML 문서로.
@@ -138,9 +138,12 @@ export interface PublishHtmlInput {
   facts: FactNode[]
 }
 
-/** 발행용 마크다운(빈칸·「이 글이 쓴 사실」 제거) — .md 버튼과 같은 원고를 쓴다. */
-export function publishMarkdownOf(stored: StoredDraft): string {
-  return stored.editedMarkdown ? stripGapNotes(stored.editedMarkdown) : draftToPublishMarkdown(stored.draft)
+/**
+ * 「이 글 복사」의 서식 — 발행용 원고의 본문 HTML(<head>·JSON-LD 없음). 네이버 블로그·티스토리 편집기에
+ * 붙여도 제목·굵은 글씨가 남는다. 마크다운을 그대로 붙이면 #·** 기호가 글자로 남았다.
+ */
+export function publishBodyHtml(stored: StoredDraft): string {
+  return markdownToHtml(publishMarkdownOf(stored))
 }
 
 /** 완성된 HTML 문서. 본문은 <article>, <head>에 메타와 JSON-LD(Article + Organization). */

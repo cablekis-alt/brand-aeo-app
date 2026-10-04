@@ -4299,22 +4299,233 @@ td.cell-mid {
   font-weight: 600;
 }
 
-/* 원고 맨 위의 사실 대조 요약 띠(DraftPanel.tsx). */
-.draft-guard {
+/*
+ * 초안 세 걸음(DraftPanel.tsx) — ① 초안 → ② 빈칸 확인 → ③ 올리기. 단계 띠가 곧 손잡이다(누르면 그 칸이 열린다).
+ * 빈칸은 본문 안에서 채운다: 빨강 = 값 필요, 노랑 = 페이지에서 찾은 후보, 초록 = 넣은 값, 회색 = 뺌.
+ */
+.draft-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* 초안이 있는 카드는 한 줄을 다 쓴다 — 두 칸 배치(최소 280px)에서는 단계 띠와 본문 입력이 눌린다. */
+.gap-grid > .gap-card:has(.draft-flow) {
+  grid-column: 1 / -1;
+}
+.draft-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  overflow: hidden;
+}
+.draft-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+.draft-step:last-child {
+  border-right: 0;
+}
+button.draft-step {
+  cursor: pointer;
+}
+button.draft-step:hover {
+  background: var(--card);
+}
+.draft-step.on {
+  background: var(--card);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+.draft-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.draft-step-dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.draft-step.done .draft-step-dot {
+  background: var(--accent);
+  color: var(--paper);
+}
+.draft-step.on:not(.done) .draft-step-dot {
+  background: var(--ink);
+  color: var(--paper);
+}
+.draft-step-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.draft-step-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.draft-step-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.draft-tools {
+  padding-top: 2px;
+}
+.draft-gapbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-ctl);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.draft-gapbar span {
+  flex: 1 1 320px;
+}
+.draft-doc {
+  font-size: 0.92em;
+  line-height: 1.7;
+}
+.draft-doc .draft-title {
+  font-size: 1.05em;
+}
+.gap-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--r-ctl);
+  background: color-mix(in srgb, var(--bad-soft) 55%, transparent);
+  box-shadow: inset 3px 0 0 var(--bad);
+}
+.gap-need {
+  font-weight: 600;
+  color: var(--bad);
+}
+.gap-suggest {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 8px;
-  margin: 0 0 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-2);
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  background: var(--warn-soft);
+  color: var(--warn);
 }
-.draft-guard-label {
-  margin-right: 4px;
-  font-size: 12.5px;
-  font-weight: 700;
+.gap-suggest span {
+  flex: 1 1 220px;
+}
+.gap-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gap-input input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.gap-slot button,
+.gap-suggest button,
+.draft-flow .brief-bar button {
+  border-radius: var(--r-ctl);
+}
+.gap-filled {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.gap-omitted {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.9em;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.gap-omitted .link-btn {
+  text-decoration-line: underline;
+}
+.gap-url-more summary,
+.draft-audit summary,
+.draft-files summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+}
+.draft-audit ul {
+  margin-top: 6px;
+}
+.draft-publish {
+  gap: 12px;
+}
+.draft-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.draft-copy .doc-meta {
+  flex: 1 1 280px;
+  margin: 0;
+}
+.draft-copy-btn {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--accent);
+  color: var(--paper);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.draft-copy-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.draft-files .brief-bar {
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .draft-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .draft-step {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .draft-step:last-child {
+    border-bottom: 0;
+  }
 }
 
 /*

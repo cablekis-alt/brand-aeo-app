@@ -3,15 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { buildPublishHtml } from '../lib/htmlFile'
 import { loadContentDrafts, loadFactGraph, type FactNode, type StoredDraft } from '../lib/api'
-import {
-  countGapNotes,
-  downloadHtml,
-  downloadMarkdown,
-  draftToMarkdown,
-  draftToPublishMarkdown,
-  safeFileName,
-  stripGapNotes,
-} from '../lib/markdownFile'
+import { publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
+import { countGapNotes, downloadHtml, downloadMarkdown, safeFileName } from '../lib/markdownFile'
 
 /**
  * 만든 글이 모이는 곳.
@@ -82,7 +75,7 @@ export default function ContentLibrary() {
           </p>
           <div className="gap-grid">
             {rows.map((d) => {
-              const md = d.editedMarkdown ?? draftToMarkdown(d.draft)
+              const md = workMarkdownOf(d)
               const gaps = countGapNotes(md)
               const shown = open === d.actionId
               return (
@@ -108,7 +101,7 @@ export default function ContentLibrary() {
                       onClick={() =>
                         downloadMarkdown(
                           `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.md`,
-                          d.editedMarkdown ? stripGapNotes(d.editedMarkdown) : draftToPublishMarkdown(d.draft),
+                          publishMarkdownOf(d),
                         )
                       }
                     >
@@ -145,7 +138,7 @@ export default function ContentLibrary() {
                   {shown && (
                     <div className="brief-body">
                       <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {d.editedMarkdown ? stripGapNotes(d.editedMarkdown) : draftToPublishMarkdown(d.draft)}
+                        {publishMarkdownOf(d)}
                       </pre>
                     </div>
                   )}
