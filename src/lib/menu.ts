@@ -98,8 +98,8 @@ export const MENU: MenuGroup[] = [
   },
 ]
 
-/** 메뉴에 없는 화면의 이름 — 사이드바의 「브랜드 추가」 단추로만 들어간다. */
-const EXTRA: Record<string, string> = { '/brand-onboarding': '브랜드 추가' }
+/** 메뉴에 없는 화면의 이름 — 사이드바의 「브랜드 추가」·「모든 브랜드 보기」로 들어간다. */
+const EXTRA: Record<string, string> = { '/brand-onboarding': '브랜드 추가', '/brands': '브랜드 현황' }
 
 /** 경로 표시용 — 지금 화면이 어느 묶음의 무엇인지. 메뉴에 없는 경로면 null. */
 export function routeMeta(pathname: string): { group: string | null; label: string } | null {

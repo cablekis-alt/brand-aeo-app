@@ -558,6 +558,28 @@ export async function adaptForChannel(
   return body
 }
 
+/** 브랜드 현황 — server/portfolio.ts와 같은 모양. 상태: 이번 주 완료·측정 오래됨·질문지 다름·기록 없음·경쟁사 미측정·측정 전. */
+export type PortfolioStatus = 'done' | 'stale' | 'diff' | 'unknown' | 'alone' | 'none'
+export interface PortfolioRow {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  competitors: number
+  status: PortfolioStatus
+  weekOf: string | null
+  score: number | null
+  rank: number | null
+  totalTenants: number | null
+  tied: boolean
+  delta: number | null
+  changeReason: string | null
+}
+/** null = 라우트 없는 환경(웹). 데스크톱 앱 전용 — 판정 호출 없이 저장된 기록만 읽는다. */
+export async function loadPortfolio(): Promise<{ currentWeek: string; rows: PortfolioRow[] } | null> {
+  return getJson<{ currentWeek: string; rows: PortfolioRow[] }>('/api/portfolio')
+}
+
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */
 export async function saveDraftGaps(
   tenantId: string,
