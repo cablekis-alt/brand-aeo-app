@@ -18,6 +18,21 @@ export interface PickerRow {
 
 const isNeed = (r: PickerRow) => r.p !== null && needsMeasure(r.p)
 
+/** 패널이 제 모양을 갖추는 높이(검색 줄 + 목록 + 아래 안내). 기준점 아래가 이보다 좁으면 위로 끌어올린다. */
+const PANEL_HEIGHT = 580
+const EDGE = 16
+
+/**
+ * 패널 윗변 — 기준점(대상 칸 바로 아래) 아래에 공간이 모자라면 위로 올린다. 측정 화면처럼 대상 칸이 창
+ * 아래쪽에 있으면 남은 높이만큼만 써서 목록이 한 줄로 쪼그라들었다(2026-10-04). 창이 패널보다 낮으면
+ * 창 높이에 맞춘다. 대상 칸을 가려도 괜찮다 — 패널이 열려 있는 동안은 패널이 그 칸의 일을 한다.
+ */
+function panelTop(anchorTop: number): number {
+  if (typeof window === 'undefined') return anchorTop
+  const height = Math.min(PANEL_HEIGHT, window.innerHeight - EDGE * 2)
+  return Math.max(EDGE, Math.min(anchorTop, window.innerHeight - height - EDGE))
+}
+
 /** 공백·대소문자를 무시하고 낱말마다 찾는다(명령 창과 같은 방식). */
 function hit(text: string, query: string): boolean {
   const hay = text.toLowerCase().replace(/\s+/g, '')
@@ -129,7 +144,7 @@ export default function BrandPickerPanel({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        style={{ '--bsw-top': `${anchor.top}px`, '--bsw-left': `${anchor.left}px` } as React.CSSProperties}
+        style={{ '--bsw-top': `${panelTop(anchor.top)}px`, '--bsw-left': `${anchor.left}px` } as React.CSSProperties}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
