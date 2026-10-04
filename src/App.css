@@ -103,9 +103,14 @@
   margin-top: 0;
 }
 
-/* 브랜드 바꾸기 — 보이는 카드 위에 투명한 select를 겹친다(Sidebar.tsx BrandSwitch). */
+/* 브랜드 바꾸기 — 누르면 업종별 패널이 열린다(components/BrandSwitcher.tsx, 패널 스타일은 .bsw). */
 .brand-switch {
   position: relative;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -119,9 +124,12 @@
 .brand-switch:hover {
   box-shadow: 0 0 0 1px var(--line-strong), 0 1px 2px rgb(17 28 24 / 0.06);
 }
-.brand-switch:focus-within {
+.brand-switch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+.brand-switch.is-open {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 .brand-switch-initial {
   width: 28px;
@@ -156,14 +164,6 @@
 .brand-switch-meta {
   font-size: 11px;
   color: var(--muted);
-}
-.brand-switch select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
 }
 
 .sidebar-scroll {
@@ -4998,4 +4998,328 @@ button.draft-step:hover {
   .pf-row-name { grid-column: 1 / -1; }
   .pf-row-score { text-align: left; }
   .pf-row-go { display: none; }
+}
+
+/* 브랜드 바꾸기 패널(components/BrandSwitcher.tsx) — 사이드바 브랜드 칸 바로 아래에 화면 기준으로 띄운다. */
+.bsw-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
+}
+.bsw {
+  position: fixed;
+  top: var(--bsw-top);
+  left: var(--bsw-left);
+  /* fixed 요소의 %는 스크롤 막대를 뺀 화면 기준이다 — 100vw는 막대 폭만큼 넘친다. */
+  width: min(820px, calc(100% - var(--bsw-left) - 16px));
+  max-height: calc(100% - var(--bsw-top) - 16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-raise);
+}
+.bsw-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.bsw-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-ctl);
+  background: var(--paper);
+  color: var(--muted);
+}
+.bsw-search:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.bsw-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+}
+.bsw-need {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bsw-need.on {
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 1px var(--warn);
+  color: var(--warn);
+}
+.bsw-need:focus-visible,
+.bsw-group:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.bsw-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.bsw-need.on .bsw-num {
+  color: inherit;
+}
+.bsw-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.bsw-dot.good { background: var(--good); }
+.bsw-dot.warn { background: var(--warn); }
+.bsw-dot.info { background: var(--info); }
+.bsw-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+.bsw-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.bsw-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bsw-group:hover {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.bsw-group.on {
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+.bsw-group-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.bsw-group-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.bsw-group.on .bsw-group-name {
+  font-weight: 700;
+}
+.bsw-group-need {
+  font-size: 11px;
+  color: var(--warn);
+  white-space: nowrap;
+}
+.bsw-list {
+  min-height: 0;
+  max-height: 468px;
+  overflow-y: auto;
+  padding: 4px 0 12px;
+}
+.bsw-note {
+  margin: 0;
+  padding: 10px 18px 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bsw-group-head {
+  margin: 0;
+  padding: 12px 18px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.bsw-cohort {
+  padding-top: 8px;
+}
+.bsw-cohort-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  padding: 4px 18px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.bsw-cohort-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.bsw-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 40px 72px 150px;
+  align-items: center;
+  gap: 10px;
+  margin: 0 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  cursor: pointer;
+}
+.bsw-row.on {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.bsw-row.current {
+  background: var(--accent-soft);
+}
+.bsw-check {
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+.bsw-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.bsw-row.current .bsw-name {
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+.bsw-score {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.bsw-rank {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bsw-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bsw-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--muted);
+}
+.bsw-foot kbd {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.bsw-links {
+  display: inline-flex;
+  gap: 14px;
+}
+.bsw-links a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.bsw-links a:hover {
+  text-decoration: underline;
+}
+
+/* 폰 폭 — 패널이 화면 전체로, 업종군은 위쪽 가로 칩으로. */
+@media (max-width: 760px) {
+  .bsw {
+    top: 8px;
+    left: 8px;
+    width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
+  }
+  .bsw-head {
+    flex-wrap: wrap;
+  }
+  .bsw-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .bsw-groups {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bsw-group {
+    flex: none;
+    min-height: 34px;
+  }
+  .bsw-list {
+    max-height: none;
+  }
+  .bsw-row {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    grid-template-areas: 'check name score' '. rank status';
+    row-gap: 2px;
+  }
+  .bsw-check { grid-area: check; }
+  .bsw-name { grid-area: name; }
+  .bsw-score { grid-area: score; }
+  .bsw-rank { grid-area: rank; }
+  .bsw-status { grid-area: status; justify-self: end; }
 }
