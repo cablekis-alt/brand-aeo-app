@@ -899,18 +899,57 @@
   align-items: center;
   margin-top: 10px;
 }
-.measure-pick select {
-  padding: 9px 12px;
-  border: 1px solid var(--line);
+/* 측정 대상 고르기 — 누르면 업종별 패널(BrandPickerPanel, 스타일은 .bsw)이 열린다. */
+.measure-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: min(320px, 100%);
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--r-ctl);
   background: var(--card);
-  color: var(--ink);
-  border-radius: 2px;
+  box-shadow: var(--shadow-card);
+  color: var(--muted);
   font: inherit;
-  min-width: 260px;
+  text-align: left;
+  cursor: pointer;
 }
-.measure-pick select:disabled {
+.measure-target:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px var(--line-strong), 0 1px 2px rgb(17 28 24 / 0.06);
+}
+.measure-target:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.measure-target.is-open {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.measure-target:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+.measure-target-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.measure-target-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.measure-target-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
   color: var(--muted);
 }
 /* Site AEO 입력 아래 해석 줄 — "상호 → 어떤 URL로 진단하는가"를 클릭 전에 보여준다. */
@@ -5237,6 +5276,22 @@ button.draft-step:hover {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--ink);
+}
+.bsw-tag {
+  flex: none;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.bsw-row.competitor .bsw-name {
+  color: var(--ink-2);
+  font-weight: 400;
 }
 .bsw-row.current .bsw-name {
   font-weight: 700;
