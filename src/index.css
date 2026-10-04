@@ -10,6 +10,14 @@
   --ink-2: #4a5752;
   --muted: #5b6862;
   --paper: #f3f5f4;
+  /* 업종군 색(lib/industryGroups) — 글자·작은 표시에만 쓴다. 세 바탕 모두 5:1 이상. */
+  --grp-1: #b23a62;
+  --grp-2: #2563c4;
+  --grp-3: #8f5e12;
+  --grp-4: #2f7525;
+  --grp-5: #a84a12;
+  --grp-6: #7a4cc2;
+  --grp-7: #0b6e83;
   --card: #ffffff;
   --surface-2: #f7f9f8;
   --line: #dce3e0;
@@ -66,6 +74,13 @@
     --ink-2: #a9b7b1;
     --muted: #93a19b;
     --paper: #0d1311;
+    --grp-1: #f28aaa;
+    --grp-2: #8ab4f8;
+    --grp-3: #f0c46a;
+    --grp-4: #8bd17c;
+    --grp-5: #f5a06a;
+    --grp-6: #b99af2;
+    --grp-7: #6ccfe3;
     --card: #141c19;
     --surface-2: #1a2420;
     --line: #26332e;
@@ -105,6 +120,13 @@
   --ink-2: #a9b7b1;
   --muted: #93a19b;
   --paper: #0d1311;
+  --grp-1: #f28aaa;
+  --grp-2: #8ab4f8;
+  --grp-3: #f0c46a;
+  --grp-4: #8bd17c;
+  --grp-5: #f5a06a;
+  --grp-6: #b99af2;
+  --grp-7: #6ccfe3;
   --card: #141c19;
   --surface-2: #1a2420;
   --line: #26332e;

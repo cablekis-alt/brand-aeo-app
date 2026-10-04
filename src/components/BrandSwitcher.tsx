@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type PortfolioRow } from '../lib/api'
-import { industryGroupOf } from '../lib/industryGroups'
+import { groupColor, industryGroupOf } from '../lib/industryGroups'
 import { groupByIndustry, needsMeasure, statusShort, statusTone } from '../lib/portfolioView'
 import NavIcon from './NavIcon'
 
@@ -228,6 +228,7 @@ export default function BrandSwitcher() {
                         searchRef.current?.focus()
                       }}
                     >
+                      <span className="grp-dot" style={{ '--grp': groupColor(g.name) } as React.CSSProperties} aria-hidden="true" />
                       <span className="bsw-group-text">
                         <span className="bsw-group-name">{g.name}</span>
                         {known && need > 0 && <span className="bsw-group-need">측정 필요 {need}</span>}

@@ -162,11 +162,6 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
       </header>
 
       {showBrandPicker && <BrandSwitcher />}
-      {showBrandPicker && (
-        <NavLink to="/brands" className={({ isActive }) => `sidebar-all-brands${isActive ? ' on' : ''}`}>
-          모든 브랜드 보기
-        </NavLink>
-      )}
 
       {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
       <NavLink
