@@ -1,4 +1,4 @@
-import type { PortfolioRow, PortfolioStatus } from './api'
+import type { CohortMember, PortfolioCohort, PortfolioRow, PortfolioStatus } from './api'
 import { groupOrder, industryGroupOf } from './industryGroups'
 
 /*
@@ -84,5 +84,32 @@ export function groupByIndustry<T extends { brandName: string; industry: string;
           label,
           list: [...list].sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || x.brandName.localeCompare(y.brandName, 'ko')),
         })),
+    }))
+}
+
+/** 지금 이 코호트에서 재는 고객 브랜드인가 — 경쟁사도, 그 뒤 주차에 다시 잰 지난 기록도 아니다. */
+export function isCurrentCustomer(m: CohortMember): boolean {
+  return !m.competitor && m.laterWeek === null
+}
+
+/**
+ * 코호트 리더보드를 업종군별로 묶는다. 업종군은 규칙 순서, 그 안은 지금 재는 고객 브랜드가 많은 코호트부터
+ * (같으면 이름순, 이름도 같으면 최근 주차부터 — 같은 업종 · 지역의 W37과 W40이 나란히 온다).
+ */
+export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohorts: PortfolioCohort[] }[] {
+  const byGroup = new Map<string, PortfolioCohort[]>()
+  for (const c of cohorts) {
+    const g = industryGroupOf(c.industry)
+    byGroup.set(g, [...(byGroup.get(g) ?? []), c])
+  }
+  const own = (c: PortfolioCohort) => c.members.filter(isCurrentCustomer).length
+  const label = (c: PortfolioCohort) => `${c.industry} · ${c.region}`
+  return [...byGroup.entries()]
+    .sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]))
+    .map(([name, list]) => ({
+      name,
+      cohorts: [...list].sort(
+        (a, b) => own(b) - own(a) || label(a).localeCompare(label(b), 'ko') || b.weekOf.localeCompare(a.weekOf),
+      ),
     }))
 }

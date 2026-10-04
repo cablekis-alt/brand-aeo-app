@@ -14,6 +14,8 @@ export interface PickerRow {
   p: PortfolioRow | null
   /** 비교용 경쟁사(cohortOnly) — 「경쟁사」 표시를 달고 고객 브랜드 아래에 둔다. */
   competitor?: boolean
+  /** 경쟁사의 마지막 측정 주차(점수 옆에 적는다). 고객 브랜드는 p의 상태 문구가 대신한다. */
+  week?: string | null
 }
 
 const isNeed = (r: PickerRow) => r.p !== null && needsMeasure(r.p)
@@ -264,9 +266,10 @@ export default function BrandPickerPanel({
                               {r.brandName}
                               {r.competitor && <span className="bsw-tag">경쟁사</span>}
                             </span>
-                            <span className="bsw-score">{r.p?.score ?? (known && !r.competitor ? '—' : '')}</span>
+                            <span className="bsw-score">{r.p?.score ?? (r.competitor ? (r.score ?? '') : known ? '—' : '')}</span>
                             <span className="bsw-rank">{r.p?.rank ? `${r.p.tied ? '공동 ' : ''}${r.p.rank}/${r.p.totalTenants}` : ''}</span>
                             <span className="bsw-status">
+                              {r.competitor && r.week && <span className="bsw-week">{r.week.replace(/^\d{4}-/, '')} 측정</span>}
                               {r.p && (
                                 <>
                                   <span className={`bsw-dot ${statusTone(r.p.status)}`} aria-hidden="true" />

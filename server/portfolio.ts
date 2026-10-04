@@ -36,10 +36,36 @@ export interface PortfolioRow {
   changeReason: string | null;
 }
 
+/** 코호트 미니 리더보드의 한 줄 — 같은 주 · 같은 질문지로 잰 구성원(경쟁사 포함). */
+export interface CohortMember {
+  tenantId: string;
+  brandName: string;
+  score: number;
+  /** 경쟁 순위(동점은 같은 번호) — 스코어카드 cohortRank·경쟁 순위 화면과 같은 규칙. */
+  rank: number;
+  tied: boolean;
+  mentionRate: number;
+  brandOwnedCitationRate: number;
+  /** 비교용 경쟁사(고객 브랜드가 아님). */
+  competitor: boolean;
+  /** 고객 브랜드인데 그 뒤 주차에 다시 쟀으면 그 주차 — 이 코호트는 지난 기록이라 세지 않는다. */
+  laterWeek: string | null;
+}
+
+export interface PortfolioCohort {
+  industry: string;
+  region: string;
+  weekOf: string;
+  /** 점수 높은 순. */
+  members: CohortMember[];
+}
+
 export interface Portfolio {
   /** 오늘 날짜의 주차 — 「이번 주 완료」의 기준. */
   currentWeek: string;
   rows: PortfolioRow[];
+  /** 고객 브랜드의 마지막 측정이 속한 코호트들 — 브랜드 현황의 미니 리더보드. */
+  cohorts: PortfolioCohort[];
 }
 
 /** 일반 질문 글 집합 — 보고서(src/lib/reviewReport.ts generalQuestionTexts)와 같은 기준. */
@@ -61,6 +87,8 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
     return bankCache.get(key)!;
   };
 
+  // 고객 브랜드마다 읽는 그 주 코호트 카드를 모아 둔다 — 같은 코호트를 여러 고객이 공유하면 한 번만 남는다.
+  const cohortCards = new Map<string, { industry: string; region: string; weekOf: string; cards: WeeklyScorecard[] }>();
   const rows = await Promise.all(
     tenants
       .filter((t) => !t.cohortOnly)
@@ -81,6 +109,12 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
         const change = prev ? conditionChange(prev, last) : null;
 
         const members = await store.getCohortScorecards(last.industry, last.region, last.weekOf);
+        cohortCards.set(`${last.industry}|${last.region}|${last.weekOf}`, {
+          industry: last.industry,
+          region: last.region,
+          weekOf: last.weekOf,
+          cards: members,
+        });
         let status: PortfolioStatus;
         if (members.length <= 1) status = 'alone';
         else {
@@ -112,5 +146,30 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
         };
       }),
   );
-  return { currentWeek, rows };
+
+  const customers = new Set(tenants.filter((t) => !t.cohortOnly).map((t) => t.tenantId));
+  const latestWeek = new Map(rows.map((r) => [r.tenantId, r.weekOf]));
+  const cohorts: PortfolioCohort[] = [...cohortCards.values()].map(({ industry, region, weekOf, cards }) => {
+    const scores = cards.map((c) => c.aeoScore.current);
+    const members = cards
+      .map((c): CohortMember => {
+        const score = c.aeoScore.current;
+        const competitor = !customers.has(c.tenantId);
+        const latest = latestWeek.get(c.tenantId) ?? null;
+        return {
+          tenantId: c.tenantId,
+          brandName: c.brandName,
+          score,
+          rank: scores.filter((x) => x > score).length + 1,
+          tied: scores.filter((x) => x === score).length > 1,
+          mentionRate: c.mentionRate,
+          brandOwnedCitationRate: c.brandOwnedCitationRate,
+          competitor,
+          laterWeek: !competitor && latest && latest !== weekOf ? latest : null,
+        };
+      })
+      .sort((a, b) => b.score - a.score || Number(a.competitor) - Number(b.competitor) || a.brandName.localeCompare(b.brandName, 'ko'));
+    return { industry, region, weekOf, members };
+  });
+  return { currentWeek, rows, cohorts };
 }

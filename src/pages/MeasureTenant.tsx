@@ -5,7 +5,7 @@ import ApiKeySettings from '../components/ApiKeySettings'
 import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel'
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
-import { loadPortfolio, measureTenantAll, type PortfolioRow } from '../lib/api'
+import { loadPortfolio, measureTenantAll, type PortfolioCohort, type PortfolioRow } from '../lib/api'
 
 interface MeasureTenantOption {
   tenantId: string
@@ -40,14 +40,18 @@ export default function MeasureTenant() {
    */
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerAnchor, setPickerAnchor] = useState({ top: 0, left: 0 })
-  const [portfolio, setPortfolio] = useState<{ loaded: boolean; rows: PortfolioRow[] | null }>({ loaded: false, rows: null })
+  const [portfolio, setPortfolio] = useState<{ loaded: boolean; rows: PortfolioRow[] | null; cohorts: PortfolioCohort[] }>({
+    loaded: false,
+    rows: null,
+    cohorts: [],
+  })
   const pickerRef = useRef<HTMLButtonElement>(null)
   const openPicker = () => {
     const rect = pickerRef.current?.getBoundingClientRect()
     if (rect) setPickerAnchor({ top: rect.bottom + 6, left: rect.left })
     setPickerOpen(true)
     loadPortfolio().then(
-      (value) => setPortfolio({ loaded: true, rows: value?.rows ?? null }),
+      (value) => setPortfolio({ loaded: true, rows: value?.rows ?? null, cohorts: value?.cohorts ?? [] }),
       (err: unknown) => {
         console.error('[MeasureTenant] 브랜드 현황을 읽지 못했습니다', err)
         setPortfolio((p) => ({ ...p, loaded: true }))
@@ -60,11 +64,29 @@ export default function MeasureTenant() {
   }
   const pickerRows = useMemo((): PickerRow[] => {
     const byId = new Map((portfolio.rows ?? []).map((r) => [r.tenantId, r]))
+    // 경쟁사 점수 — 고객 브랜드의 코호트 리더보드에 든 마지막 측정(브랜드 현황과 같은 값).
+    const compScore = new Map<string, { score: number; week: string }>()
+    for (const c of portfolio.cohorts) {
+      for (const m of c.members) {
+        const prev = compScore.get(m.tenantId)
+        if (m.competitor && (!prev || prev.week < c.weekOf)) compScore.set(m.tenantId, { score: m.score, week: c.weekOf })
+      }
+    }
     return tenants.map((t) => {
       const p = byId.get(t.tenantId) ?? null
-      return { tenantId: t.tenantId, brandName: t.brandName, industry: t.industry, region: t.region, score: p?.score ?? null, p, competitor: Boolean(t.cohortOnly) }
+      const comp = t.cohortOnly ? compScore.get(t.tenantId) : undefined
+      return {
+        tenantId: t.tenantId,
+        brandName: t.brandName,
+        industry: t.industry,
+        region: t.region,
+        score: p?.score ?? comp?.score ?? null,
+        p,
+        competitor: Boolean(t.cohortOnly),
+        week: comp?.week ?? null,
+      }
     })
-  }, [tenants, portfolio.rows])
+  }, [tenants, portfolio.rows, portfolio.cohorts])
 
   useEffect(() => {
     let alive = true

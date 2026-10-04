@@ -576,8 +576,33 @@ export interface PortfolioRow {
   changeReason: string | null
 }
 /** null = 라우트 없는 환경(웹). 데스크톱 앱 전용 — 판정 호출 없이 저장된 기록만 읽는다. */
-export async function loadPortfolio(): Promise<{ currentWeek: string; rows: PortfolioRow[] } | null> {
-  return getJson<{ currentWeek: string; rows: PortfolioRow[] }>('/api/portfolio')
+/** 코호트 미니 리더보드의 한 줄 — server/portfolio.ts CohortMember와 같은 모양. */
+export interface CohortMember {
+  tenantId: string
+  brandName: string
+  score: number
+  rank: number
+  tied: boolean
+  mentionRate: number
+  brandOwnedCitationRate: number
+  competitor: boolean
+  /** 고객 브랜드인데 그 뒤 주차에 다시 쟀으면 그 주차(이 코호트는 지난 기록). */
+  laterWeek: string | null
+}
+export interface PortfolioCohort {
+  industry: string
+  region: string
+  weekOf: string
+  members: CohortMember[]
+}
+export interface Portfolio {
+  currentWeek: string
+  rows: PortfolioRow[]
+  cohorts: PortfolioCohort[]
+}
+
+export async function loadPortfolio(): Promise<Portfolio | null> {
+  return getJson<Portfolio>('/api/portfolio')
 }
 
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */
