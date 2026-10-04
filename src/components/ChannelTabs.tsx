@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { adaptForChannel, type ChannelAdaptation, type StoredDraft } from '../lib/api'
 import { copyRich } from '../lib/clipboard'
 import { publishMarkdownOf } from '../lib/draftGaps'
-import type { GapAction } from '../lib/gapActions'
+import { channelNameOf, isPublishedAction, type GapAction } from '../lib/gapActions'
 import { markdownToHtml } from '../lib/htmlFile'
 import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 
@@ -15,11 +15,6 @@ import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel
  *
  * 주소는 **그 채널 항목**에 기록한다 — 아래 「올릴 곳」 카드와 같은 기록이라 두 곳이 어긋나지 않는다.
  */
-/** 탭 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */
-function channelName(a: GapAction): string {
-  return a.title.replace(/\s*(발행|등재|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
-}
-
 export default function ChannelTabs({
   tenantId,
   contentActionId,
@@ -52,7 +47,7 @@ export default function ChannelTabs({
 
   const source = publishMarkdownOf(stored)
   const sourceKey = sourceKeyOf(source)
-  const published = (a: GapAction) => a.publishedUrls.length > 0 || a.status === 'done'
+  const published = isPublishedAction
   const current = channels.find((c) => c.id === tab) ?? null
 
   const adapt = async (a: GapAction) => {
@@ -110,7 +105,7 @@ export default function ChannelTabs({
             title={published(c) ? '올린 주소가 기록돼 있습니다' : '아직 올리지 않았습니다'}
           >
             <span className={`channel-dot${published(c) ? ' up' : ''}`} aria-hidden="true" />
-            {channelName(c)}
+            {channelNameOf(c)}
           </button>
         ))}
       </div>

@@ -17,7 +17,7 @@ import {
 import DraftPanel from '../components/DraftPanel'
 import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
-import { isOpenAction, type GapAction } from '../lib/gapActions'
+import { channelNameOf, isOpenAction, isPublishedAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
@@ -305,6 +305,17 @@ function PublishedUrls({
       </div>
     </div>
   )
+}
+
+/** 채널 현황 한 줄의 상태 글 — 주소가 있으면 몇 개·인용 확인 수, 없으면 상태 이름. */
+function channelState(a: GapAction): string {
+  if (a.publishedUrls.length > 0) {
+    const cited = a.citedPublishedUrls.length
+    return `올림 · 주소 ${a.publishedUrls.length}개${cited > 0 ? ` · 인용 확인 ${cited}` : ' · 인용 확인 대기'}`
+  }
+  if (a.status === 'done') return '집행함 · 인용 확인 대기'
+  if (a.status === 'doing') return '진행 중'
+  return '아직 안 올림'
 }
 
 /** 아직 채우지도 빼지도 않은 빈칸 수. */
@@ -934,24 +945,53 @@ export default function GapActions() {
                   </>
                 )}
                 {openListing.length > 0 && (
+                  // 채널은 글 카드의 ③ 올리기 탭에서 다듬고 올린다(ChannelTabs). 여기는 같은 항목의 **현황**이다 —
+                  // 큰 카드로 다시 그리면 같은 채널이 두 번 나와, 서로 다른 일로 읽혔다. 글이 덮는 채널은 한 줄로
+                  // 접고(근거·상태 손잡이는 「자세히」에 그대로), 덮는 글이 없는 채널만 따로 쓸 카드로 남긴다.
                   <>
                     <h4 className="gap-subhead">
-                      올릴 곳 {openListing.length}곳{' '}
-                      <span className="muted">
-                        — 위에서 쓴 글을 어디에 올릴지입니다. 새로 쓸 글이 아닙니다
-                        {orphanListing > 0 && (
-                          <>
-                            {' '}(단 <b>{orphanListing}곳</b>은 덮는 글이 없어 따로 써야 합니다)
-                          </>
-                        )}
-                        .
-                      </span>
+                      채널별 올림 현황 {openListing.filter(isPublishedAction).length}/{openListing.length}곳{' '}
+                      <span className="muted">— 글 카드의 ③ 올리기에서 채널 문체로 다듬어 올리면 여기에 기록됩니다.</span>
                     </h4>
-                    <div className="gap-grid">
-                      {openListing.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} channels={null} adaptations={null} onAdapted={onAdapted} />
-                      ))}
-                    </div>
+                    {openListing.some((a) => coverageOf(a) !== null) && (
+                      <ul className="channel-summary">
+                        {openListing
+                          .filter((a) => coverageOf(a) !== null)
+                          .map((a) => (
+                            <li key={a.id}>
+                              <div className="channel-row">
+                                <span className={`channel-dot${isPublishedAction(a) ? ' up' : ''}`} aria-hidden="true" />
+                                <span className="channel-row-name">{channelNameOf(a)}</span>
+                                <span className={`status-pill ${KIND_CLASS[a.kind]}`}>{a.badge}</span>
+                                <span className="channel-row-state">{channelState(a)}</span>
+                                <span className="channel-row-cover">
+                                  밀린 질문 {a.reach}개 · 덮는 글 {coverageOf(a)!.titles.join(' · ')}
+                                </span>
+                              </div>
+                              {/* 상태(보류 등)·주소·채널용 따로 쓰기는 여기서도 그대로 쓸 수 있다. 인용 갭에서 이 채널로 왔으면 펼쳐 둔다. */}
+                              <details className="channel-row-more" open={focusId === a.id}>
+                                <summary>근거·상태 자세히</summary>
+                                <ActionCard action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} channels={null} adaptations={null} onAdapted={onAdapted} />
+                              </details>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                    {orphanListing > 0 && (
+                      <>
+                        <h4 className="gap-subhead">
+                          따로 써야 할 채널 {orphanListing}곳{' '}
+                          <span className="muted">— 위의 글로는 못 덮어 이 채널용으로 한 편 씁니다.</span>
+                        </h4>
+                        <div className="gap-grid">
+                          {openListing
+                            .filter((a) => coverageOf(a) === null)
+                            .map((a) => (
+                              <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
+                            ))}
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </>

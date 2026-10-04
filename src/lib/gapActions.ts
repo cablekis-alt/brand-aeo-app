@@ -556,3 +556,13 @@ export function computeGapActions(
     excludedLowConfidence,
   }
 }
+
+/** 채널 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */
+export function channelNameOf(a: GapAction): string {
+  return a.title.replace(/\s*(발행|등재|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
+}
+
+/** 그 채널에 올렸다고 기록됐나 — 올린 주소가 있거나 「집행함」. */
+export function isPublishedAction(a: GapAction): boolean {
+  return a.publishedUrls.length > 0 || a.status === 'done'
+}
