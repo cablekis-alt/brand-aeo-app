@@ -180,6 +180,18 @@
   display: none;
 }
 
+.sidebar-all-brands {
+  flex: none;
+  margin: -4px 0 0;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.sidebar-all-brands:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
 .sidebar-cta {
   display: flex;
   align-items: center;
@@ -4805,4 +4817,185 @@ button.draft-step:hover {
   .sidebar:not(.is-open) .sidebar-foot {
     display: none;
   }
+}
+
+/*
+ * 브랜드 현황(Portfolio.tsx) — 업종군 → 코호트 → 브랜드 줄. 요약 칸은 누르면 그 상태만 거른다.
+ */
+.pf-search input {
+  width: 220px;
+  max-width: 100%;
+}
+.pf-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0 0 14px;
+}
+.pf-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pf-sum.on {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.pf-sum:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pf-sum-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.pf-sum-value {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.pf-sum.good .pf-sum-value { color: var(--accent-ink); }
+.pf-sum.warn .pf-sum-value { color: var(--warn); }
+.pf-sum.info .pf-sum-value { color: var(--info); }
+.pf-sum-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.pf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+.pf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-chip.on {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.pf-chip-n {
+  font-family: var(--mono);
+  font-weight: 500;
+  opacity: 0.75;
+}
+.pf-group {
+  margin: 0 0 20px;
+}
+.pf-group-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+.pf-card {
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.pf-cohort + .pf-cohort {
+  border-top: 1px solid var(--line);
+}
+.pf-cohort-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 18px 6px;
+  background: var(--surface-2);
+}
+.pf-cohort-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.pf-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) 64px 84px minmax(0, 1.5fr) minmax(0, 1.3fr) 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pf-row:hover {
+  background: var(--surface-2);
+}
+.pf-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.pf-row-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pf-row-brand {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pf-row-meta,
+.pf-row-change {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.pf-row-score {
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 700;
+  text-align: right;
+}
+.pf-row-rank {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.pf-row .chip {
+  justify-self: start;
+}
+.pf-row-go {
+  color: var(--muted);
+  font-size: 18px;
+}
+@media (max-width: 760px) {
+  .pf-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+  }
+  .pf-row-name { grid-column: 1 / -1; }
+  .pf-row-score { text-align: left; }
+  .pf-row-go { display: none; }
 }

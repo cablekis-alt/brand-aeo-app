@@ -12,6 +12,7 @@ import { tagJourneyStages } from './journeyStage.js';
 import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
+import { buildPortfolio } from './portfolio.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -157,6 +158,15 @@ app.delete('/api/tenants', async (req, res) => {
     }
     const stillBaked = baked && !locallyDeleted;
     res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl, locallyDeleted });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 브랜드 현황 — 고객 브랜드마다 마지막 측정·코호트 순위·질문지 일치 상태(portfolio.ts). 읽기만 한다.
+app.get('/api/portfolio', async (_req, res) => {
+  try {
+    res.json(await buildPortfolio(await loadRuntimeTenants(), store));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

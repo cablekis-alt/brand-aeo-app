@@ -6,6 +6,7 @@ import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useScorecards } from '../lib/useScorecards'
 import AppVersion from './AppVersion'
+import { groupOrder, industryGroupOf } from '../lib/industryGroups'
 import { MENU, type MenuItem } from '../lib/menu'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
@@ -71,6 +72,17 @@ function useMeasuringCount(): number {
   return n
 }
 
+function groupedTenants<T extends { industry: string; brandName: string }>(items: T[]): [string, T[]][] {
+  const by = new Map<string, T[]>()
+  for (const t of items) {
+    const g = industryGroupOf(t.industry)
+    by.set(g, [...(by.get(g) ?? []), t])
+  }
+  return [...by.entries()]
+    .sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]))
+    .map(([g, list]) => [g, [...list].sort((a, b) => a.industry.localeCompare(b.industry, 'ko') || a.brandName.localeCompare(b.brandName, 'ko'))])
+}
+
 /**
  * 브랜드 바꾸기 — 상단 헤더에서 사이드바 머리로 옮겼다. 보이는 것은 이니셜·이름·업종·지역 카드이고,
  * 실제 선택은 그 위에 투명하게 겹친 기본 select가 받는다(키보드·스크린리더·긴 목록 스크롤을 그대로 쓴다).
@@ -91,11 +103,16 @@ function BrandSwitch() {
         </span>
       </span>
       <NavIcon name="updown" size={16} />
+      {/* 업종군별로 묶는다(lib/industryGroups) — 브랜드가 30곳을 넘자 한 줄 목록에서 찾기 어려웠다. */}
       <select aria-label="브랜드 바꾸기" value={tenant.tenantId} onChange={(e) => setTenantId(e.target.value)}>
-        {tenants.map((item) => (
-          <option key={item.tenantId} value={item.tenantId}>
-            {item.brandName} · {item.industry} · {item.region}
-          </option>
+        {groupedTenants(tenants).map(([name, items]) => (
+          <optgroup key={name} label={name}>
+            {items.map((item) => (
+              <option key={item.tenantId} value={item.tenantId}>
+                {item.brandName} · {item.industry} · {item.region}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
     </div>
@@ -192,6 +209,11 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
       </header>
 
       {showBrandPicker && <BrandSwitch />}
+      {showBrandPicker && (
+        <NavLink to="/brands" className={({ isActive }) => `sidebar-all-brands${isActive ? ' on' : ''}`}>
+          모든 브랜드 보기
+        </NavLink>
+      )}
 
       {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
       <NavLink
