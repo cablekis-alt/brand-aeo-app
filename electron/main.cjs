@@ -359,7 +359,9 @@ async function createWindow() {
   // 그 포트의 서버가 정말 우리 것인지 서명으로 확인한다(servesUi). 남의 서버면 로드하지 않는다.
   const health = await waitForOwnServer(apiPort)
   if (health === 'ok') {
-    await win.loadURL(`http://localhost:${apiPort}`)
+    // 켤 때는 브랜드 현황에서 시작한다 — 고객 브랜드 30곳 넘게 다루면서 하루의 첫 일이 「어디를 다시
+    // 재야 하나」가 됐다. 켤 때 한 번뿐이고, 앱 안의 이동·새로고침은 보던 화면 그대로다(서버 SPA 폴백).
+    await win.loadURL(`http://localhost:${apiPort}/brands`)
   } else {
     // 서버 프로세스가 죽었으면 그 사실과 마지막 로그를 보여준다(인프로세스일 때는 예외로 잡혔지만
     // 별도 프로세스는 조용히 종료될 수 있어, 원인을 화면에 남겨야 진단이 된다).
