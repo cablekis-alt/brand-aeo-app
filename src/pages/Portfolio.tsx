@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type PortfolioRow } from '../lib/api'
 import { groupOrder, industryGroupOf } from '../lib/industryGroups'
@@ -102,7 +103,10 @@ export default function Portfolio() {
         <p className="muted">브랜드 현황은 데스크톱 앱에서 볼 수 있습니다(웹에는 이 기능이 없습니다).</p>
       )}
 
-      {state.value && (
+      {/* 데스크톱 앱은 켤 때 이 화면에서 시작한다 — 브랜드가 없으면 첫 등록 안내를 보인다. */}
+      {state.value && state.value.rows.length === 0 && <EmptyBrands />}
+
+      {state.value && state.value.rows.length > 0 && (
         <>
           <section className="pf-summary" aria-label="요약">
             {summary.map((s) => (
