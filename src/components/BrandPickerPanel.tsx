@@ -236,7 +236,12 @@ export default function BrandPickerPanel({
                       ? (listedSize.get(c.label) ?? 0)
                       : Math.max(0, ...c.list.map((r) => r.p?.totalTenants ?? 0))
                   return (
-                    <div key={c.label} className="bsw-cohort" role="presentation">
+                    <div
+                      key={c.label}
+                      className="bsw-cohort"
+                      role="presentation"
+                      style={{ '--grp': groupColor(g.name) } as React.CSSProperties}
+                    >
                       <p className="bsw-cohort-head">
                         <span className="bsw-cohort-label">{c.label}</span>
                         {size > 0 && <span>코호트 {size}곳</span>}
