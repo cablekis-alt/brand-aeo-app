@@ -4535,6 +4535,57 @@ button.draft-step:hover {
 .brief-design[open] > summary {
   margin-bottom: 6px;
 }
+/* 채널별 올림 현황 — 글이 덮는 채널을 한 줄씩(GapActions.tsx). 큰 카드는 「근거·상태 자세히」 안에. */
+.channel-summary {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+  overflow: hidden;
+}
+.channel-summary > li {
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+}
+.channel-summary > li:first-child {
+  border-top: 0;
+}
+.channel-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13px;
+}
+.channel-row-name {
+  font-weight: 600;
+}
+.channel-row-state {
+  color: var(--ink-2);
+}
+.channel-row-cover {
+  flex: 1 1 260px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 12px;
+}
+.channel-row-more > summary {
+  margin-top: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+}
+.channel-row-more[open] > .gap-card {
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .channel-row-cover {
+    text-align: left;
+  }
+}
+
 /* ③ 올리기의 채널 탭(ChannelTabs.tsx) — 점: 초록 = 올린 주소 있음. */
 .channel-tabs {
   display: flex;
