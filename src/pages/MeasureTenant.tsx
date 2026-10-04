@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import MeasureProgress, { type ActiveMeasure } from '../components/MeasureProgress'
 import { Link } from 'react-router-dom'
 import ApiKeySettings from '../components/ApiKeySettings'
+import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel'
+import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
-import { measureTenantAll } from '../lib/api'
+import { loadPortfolio, measureTenantAll, type PortfolioRow } from '../lib/api'
 
 interface MeasureTenantOption {
   tenantId: string
   brandName: string
+  industry: string
+  region: string
   cohortOnly?: boolean
 }
 
@@ -27,6 +31,40 @@ export default function MeasureTenant() {
   const [message, setMessage] = useState<string | null>(null)
   // 서버에서 실제로 진행 중인 측정(페이지를 벗어났다 와도 상태 유지). measureVia=local 전용.
   const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
+
+  /*
+   * 측정 대상 고르기 — 사이드바 브랜드 바꾸기와 같은 업종별 패널(BrandPickerPanel). 기본 select에 160곳
+   * (고객 브랜드 + 경쟁사)이 한 줄로 늘어서 찾기 어려웠다. 여기서는 **지금 설정**의 업종·지역으로 묶는다 —
+   * 측정하면 들어갈 코호트가 그것이라, 설정을 바꾼 직후에도 어디로 재게 될지가 보인다(사이드바는 마지막
+   * 측정 기준). 경쟁사도 함께 두고 「경쟁사」 표시를 단다(경쟁사 하나만 측정하는 기능을 위해).
+   */
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerAnchor, setPickerAnchor] = useState({ top: 0, left: 0 })
+  const [portfolio, setPortfolio] = useState<{ loaded: boolean; rows: PortfolioRow[] | null }>({ loaded: false, rows: null })
+  const pickerRef = useRef<HTMLButtonElement>(null)
+  const openPicker = () => {
+    const rect = pickerRef.current?.getBoundingClientRect()
+    if (rect) setPickerAnchor({ top: rect.bottom + 6, left: rect.left })
+    setPickerOpen(true)
+    loadPortfolio().then(
+      (value) => setPortfolio({ loaded: true, rows: value?.rows ?? null }),
+      (err: unknown) => {
+        console.error('[MeasureTenant] 브랜드 현황을 읽지 못했습니다', err)
+        setPortfolio((p) => ({ ...p, loaded: true }))
+      },
+    )
+  }
+  const closePicker = () => {
+    setPickerOpen(false)
+    pickerRef.current?.focus()
+  }
+  const pickerRows = useMemo((): PickerRow[] => {
+    const byId = new Map((portfolio.rows ?? []).map((r) => [r.tenantId, r]))
+    return tenants.map((t) => {
+      const p = byId.get(t.tenantId) ?? null
+      return { tenantId: t.tenantId, brandName: t.brandName, industry: t.industry, region: t.region, score: p?.score ?? null, p, competitor: Boolean(t.cohortOnly) }
+    })
+  }, [tenants, portfolio.rows])
 
   useEffect(() => {
     let alive = true
@@ -135,7 +173,7 @@ export default function MeasureTenant() {
       <section className={`panel${locked ? ' measure-local-only' : ''}`}>
         <h3>측정할 대상 선택</h3>
         <p className="muted">
-          목록에는 내 브랜드와 경쟁사(<code>· 경쟁사</code> 표시)가 모두 있습니다.{' '}
+          목록에는 내 브랜드와 경쟁사(「경쟁사」 표시)가 모두 있고, 측정하면 들어갈 코호트(지금 설정의 업종 · 지역)로 묶입니다.{' '}
           {!healthReady
             ? '환경을 확인하는 중…'
             : measureVia === 'local'
@@ -145,19 +183,46 @@ export default function MeasureTenant() {
                 : '로컬에서만 측정 가능 — 배포에서 켜려면 Vercel에 GH_MEASURE_TOKEN을 넣으세요.'}
         </p>
         <div className="measure-pick">
-          <select
-            value={pickedTenant}
-            onChange={(e) => setPickedTenant(e.target.value)}
+          <button
+            ref={pickerRef}
+            type="button"
+            className={`measure-target${pickerOpen ? ' is-open' : ''}`}
+            onClick={() => (pickerOpen ? closePicker() : openPicker())}
             disabled={locked || isMeasuring}
-            aria-label="측정할 테넌트"
+            aria-haspopup="dialog"
+            aria-expanded={pickerOpen}
+            aria-label={`측정할 대상 고르기 — 지금 ${picked?.brandName ?? '선택 안 함'}`}
           >
-            <option value="">테넌트 선택…</option>
-            {tenants.map((t) => (
-              <option key={t.tenantId} value={t.tenantId}>
-                {t.brandName} ({t.tenantId}){t.cohortOnly ? ' · 경쟁사' : ''}
-              </option>
-            ))}
-          </select>
+            <span className="measure-target-text">
+              <span className="measure-target-name">
+                {picked ? picked.brandName : '측정할 대상 고르기…'}
+                {picked?.cohortOnly && <span className="bsw-tag">경쟁사</span>}
+              </span>
+              {picked && (
+                <span className="measure-target-meta">
+                  {picked.industry} · {picked.region} · {picked.tenantId}
+                </span>
+              )}
+            </span>
+            <NavIcon name="updown" size={16} />
+          </button>
+          {pickerOpen && (
+            <BrandPickerPanel
+              rows={pickerRows}
+              currentId={pickedTenant || null}
+              known={portfolio.rows !== null}
+              loading={!portfolio.loaded}
+              anchor={pickerAnchor}
+              label="측정할 대상 고르기"
+              verb="고르기"
+              cohortSize="listed"
+              onPick={(id) => {
+                setPickedTenant(id)
+                closePicker()
+              }}
+              onClose={closePicker}
+            />
+          )}
           <button
             type="button"
             className="primary"
