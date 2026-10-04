@@ -4,6 +4,7 @@ import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
 import {
   generateContentBrief,
+  generateContentDraft,
   loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
@@ -64,15 +65,18 @@ function BriefPanel({
   action,
   stored,
   onStored,
+  initiallyOpen = false,
 }: {
   tenantId: string
   action: GapAction
   stored: StoredBrief | undefined
   onStored: (s: StoredBrief) => void
+  /** 「글 설계 보기」를 펼쳤을 때는 본문까지 바로 연다 — 접힌 것을 한 번 더 펼치게 하지 않는다. */
+  initiallyOpen?: boolean
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(initiallyOpen)
   const [copied, setCopied] = useState(false)
   const make = async (force: boolean) => {
     setBusy(true)
@@ -113,8 +117,8 @@ function BriefPanel({
     <div className="brief">
       <div className="brief-bar">
         {!stored ? (
-          <button type="button" onClick={() => void make(false)} disabled={busy}>
-            {busy ? '브리프 만드는 중…' : '브리프 만들기 (판정 1회)'}
+          <button type="button" onClick={() => void make(false)} disabled={busy} title="판정 1~2회">
+            {busy ? '브리프 만드는 중… 보통 30초' : '브리프 만들기 · 약 30초'}
           </button>
         ) : (
           <>
@@ -369,34 +373,41 @@ function bundleToMarkdown(
   return L.join('\n')
 }
 
+/** 한 편에 걸리는 대략의 시간(분) — 브리프(있으면 생략) + 초안, 각각 사실 대조 포함. 화면 안내용 어림이다. */
+const MINUTES_PER_DRAFT = 1.5
+
 /**
- * 열린 항목의 브리프를 한 번에 만든다.
+ * 쓸 글의 초안을 한 번에 만든다 — 브리프가 없으면 브리프부터.
  *
- * 한 주치 작업을 준비하려면 카드마다 버튼을 눌러야 했다. 항목이 여섯이면 여섯 번이다.
+ * 예전에는 「브리프 없는 N건 한꺼번에 만들기」였다. 두 가지가 어긋났다: 브리프만 만들어서 결국 카드마다
+ * 초안 단추를 또 눌러야 했고, 위의 글이 이미 덮는 채널 카드(「새로 쓸 글이 아닙니다」)까지 브리프를 만들어
+ * 판정 호출을 버렸다. 이제 **쓸 글만**(콘텐츠 항목 + 덮는 글이 없는 채널) 골라 초안까지 간다.
  *
- * 순차로 돈다. 판정 엔진에 한꺼번에 던지면 처리량 천장에 걸려 오히려 느려지고, 무엇이
- * 어디까지 됐는지도 알 수 없다. 한 건 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지
- * 만든 것은 남는다.
+ * 순차로 돈다. 판정 엔진에 한꺼번에 던지면 처리량 천장에 걸려 오히려 느려지고, 무엇이 어디까지 됐는지도
+ * 알 수 없다. 한 편 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지 만든 것은 남는다.
  *
- * 실패는 삼키지 않는다. 오늘 측정에서 절반만 성공한 작업이 조용히 성공으로 끝난 일이 있었다 —
- * 몇 건이 왜 실패했는지 끝에 그대로 보여 준다.
+ * 실패는 삼키지 않는다 — 몇 편이 왜 실패했는지 끝에 그대로 보여 준다.
  */
-function BulkBriefs({
+function BulkDrafts({
   tenantId,
   actions,
   briefs,
+  drafts,
   onBrief,
+  onDraft,
 }: {
   tenantId: string
   actions: GapAction[]
   briefs: Record<string, StoredBrief>
+  drafts: Record<string, StoredDraft>
   onBrief: (s: StoredBrief) => void
+  onDraft: (s: StoredDraft) => void
 }) {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState('')
   const [result, setResult] = useState<string | null>(null)
-  const todo = actions.filter((a) => !briefs[a.id])
-  if (todo.length === 0) return null
+  const todo = actions.filter((a) => !drafts[a.id])
+  if (todo.length === 0 && !result) return null
   const run = async () => {
     setBusy(true)
     setResult(null)
@@ -405,19 +416,19 @@ function BulkBriefs({
     for (const [i, a] of todo.entries()) {
       setProgress(`${i + 1}/${todo.length} · ${a.title}`)
       try {
-        const s = await generateContentBrief(
-          tenantId,
-          {
-            actionId: a.id,
-            kind: a.kind,
-            title: a.title,
-            targetDomain: a.targetDomain,
-            questionTexts: a.questionTexts,
-            evidence: a.evidence,
-          },
-          false,
-        )
-        onBrief(s)
+        if (!briefs[a.id]) {
+          onBrief(
+            await generateContentBrief(tenantId, {
+              actionId: a.id,
+              kind: a.kind,
+              title: a.title,
+              targetDomain: a.targetDomain,
+              questionTexts: a.questionTexts,
+              evidence: a.evidence,
+            }),
+          )
+        }
+        onDraft(await generateContentDraft(tenantId, { actionId: a.id, targetDomain: a.targetDomain }))
         ok += 1
       } catch (e) {
         failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)
@@ -425,17 +436,23 @@ function BulkBriefs({
     }
     setProgress('')
     setBusy(false)
-    setResult(
-      failed.length === 0
-        ? `${ok}건 만들었습니다.`
-        : `${ok}건 성공 · ${failed.length}건 실패\n${failed.join('\n')}`,
-    )
+    setResult(failed.length === 0 ? `초안 ${ok}편을 만들었습니다.` : `${ok}편 성공 · ${failed.length}편 실패\n${failed.join('\n')}`)
   }
   return (
     <div className="brief-bar" style={{ marginBottom: 10 }}>
-      <button type="button" onClick={() => void run()} disabled={busy}>
-        {busy ? `브리프 만드는 중… ${progress}` : `브리프 없는 ${todo.length}건 한꺼번에 만들기 (판정 ${todo.length}회)`}
-      </button>
+      {todo.length > 0 && (
+        <button
+          type="button"
+          onClick={() => void run()}
+          disabled={busy}
+          title="쓸 글마다 브리프(없으면)와 초안을 차례로 만듭니다 — 한 편에 판정 2~4회"
+        >
+          {busy
+            ? `초안 만드는 중… ${progress}`
+            : `초안 없는 글 ${todo.length}편 한꺼번에 만들기 · 약 ${Math.max(1, Math.ceil(todo.length * MINUTES_PER_DRAFT))}분`}
+        </button>
+      )}
+      {busy && <span className="doc-meta">한 편씩 저장되므로 화면을 떠나도 끝난 글은 남습니다.</span>}
       {result && (
         <span className={result.includes('실패') ? 'error' : 'doc-meta'} style={{ whiteSpace: 'pre-line' }}>
           {result}
@@ -602,7 +619,12 @@ function ActionCard({
         </p>
       )}
       {detail && briefs !== null && !action.satisfied && (!coveredBy || channelDraft) && (
-        <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} />
+        // 브리프는 초안을 쓰기 위한 내부 설계도다 — 사람이 읽을 물건이 아니라서 「자세히」 안에서도 접어 둔다.
+        // 초안 만들기가 브리프를 알아서 먼저 만든다(DraftPanel ensureBrief).
+        <details className="brief-design">
+          <summary>글 설계(브리프) 보기{briefs[action.id] ? '' : ' · 아직 없음'}</summary>
+          <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} initiallyOpen />
+        </details>
       )}
       {coveredBy && (
         // 등재형은 "새로 쓸 글"이 아니다. 같은 질문을 이미 덮는 글이 위에 있다는 걸 먼저 말한다.
@@ -865,7 +887,16 @@ export default function GapActions() {
             </details>
             {briefs !== null && open.length > 0 && (
               <>
-                <BulkBriefs tenantId={tenant.tenantId} actions={open} briefs={briefs} onBrief={onBrief} />
+                {drafts !== null && (
+                  <BulkDrafts
+                    tenantId={tenant.tenantId}
+                    actions={[...openContent, ...openListing.filter((l) => coverageOf(l) === null)]}
+                    briefs={briefs}
+                    drafts={drafts}
+                    onBrief={onBrief}
+                    onDraft={onDraft}
+                  />
+                )}
                 <div className="brief-bar" style={{ marginBottom: 10 }}>
                   <button
                     type="button"

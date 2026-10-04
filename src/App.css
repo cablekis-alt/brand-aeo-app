@@ -4515,6 +4515,26 @@ button.draft-step:hover {
 .draft-files .brief-bar {
   margin-top: 8px;
 }
+.draft-pending {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-ctl);
+  background: var(--info-soft);
+  color: var(--info);
+  font-size: 12.5px;
+}
+/* 「자세히」 안의 글 설계(브리프) — 내부 설계도라 접어 둔다. */
+.brief-design {
+  margin-top: 6px;
+}
+.brief-design > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.brief-design[open] > summary {
+  margin-bottom: 6px;
+}
 /* ③ 올리기의 채널 탭(ChannelTabs.tsx) — 점: 초록 = 올린 주소 있음. */
 .channel-tabs {
   display: flex;

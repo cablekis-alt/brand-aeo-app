@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import ChannelTabs from './ChannelTabs'
 import { Link } from 'react-router-dom'
 import {
@@ -36,6 +36,34 @@ import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFil
  */
 
 type Step = 'gaps' | 'publish'
+
+/**
+ * 저장하지 않은 편집 — 이 PC(localStorage)에 몇 초마다 보관한다. 서버 「저장」은 사실 확인(판정 호출)을 돌려서
+ * 자동으로 부르지 않는다. 그 대신 화면을 떠나도 편집이 사라지지 않게 여기 둔다(다시 열면 「이어서 편집」).
+ * 보관이 안 되는 환경(사생활 모드 등)이면 경고만 남기고 지나간다 — 편집 자체는 막지 않는다.
+ */
+interface PendingEdit {
+  text: string
+  at: string
+}
+function readPending(key: string): PendingEdit | null {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as PendingEdit) : null
+  } catch (e) {
+    console.warn('[DraftPanel] 보관한 편집을 읽지 못했습니다', e)
+    return null
+  }
+}
+function writePending(key: string, value: PendingEdit | null): void {
+  try {
+    if (value) localStorage.setItem(key, JSON.stringify(value))
+    else localStorage.removeItem(key)
+  } catch (e) {
+    console.warn('[DraftPanel] 편집을 보관하지 못했습니다', e)
+  }
+}
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 
 export default function DraftPanel({
   tenantId,
@@ -99,6 +127,34 @@ export default function DraftPanel({
   // 브랜드 사실 저장은 한 줄로 세운다 — 「맞아요」를 연달아 누르면 읽고-쓰기가 겹쳐 앞 값이 사라진다.
   const factChain = useRef<Promise<unknown>>(Promise.resolve())
 
+  // 기다리는 동안 지난 시간 — "보통 1~2분" 옆에 실제로 얼마나 지났는지 보인다.
+  const startedAt = useRef(0)
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    if (!busy) return
+    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)), 1000)
+    return () => window.clearInterval(id)
+  }, [busy])
+
+  const editKey = `brand-aeo-draft-edit:${tenantId}:${action.id}`
+  const [pending, setPending] = useState<PendingEdit | null>(() => readPending(editKey))
+  const saveTimer = useRef<number | undefined>(undefined)
+  const editText = (value: string) => {
+    setText(value)
+    window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => writePending(editKey, { text: value, at: new Date().toISOString() }), 1200)
+  }
+  const dropPending = () => {
+    window.clearTimeout(saveTimer.current)
+    writePending(editKey, null)
+    setPending(null)
+  }
+  const closeEdit = () => {
+    if (stored && text !== workMarkdownOf(stored) && !window.confirm('저장하지 않은 편집을 버릴까요?')) return
+    dropPending()
+    setEditing(false)
+  }
+
   const make = async (force: boolean) => {
     // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
     if (
@@ -107,6 +163,8 @@ export default function DraftPanel({
       !window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
     )
       return
+    startedAt.current = Date.now()
+    setElapsed(0)
     setBusy(true)
     setError(null)
     try {
@@ -138,6 +196,7 @@ export default function DraftPanel({
     setError(null)
     try {
       onStored(await saveContentDraft(tenantId, action.id, text))
+      dropPending()
       setEditing(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -271,7 +330,7 @@ export default function DraftPanel({
             // 판정 호출 수는 운영자용 정보라 손끝 설명에 둔다. 단추에는 기다릴 시간을 적는다.
             title={hasBrief ? '브리프를 바탕으로 초안을 씁니다(판정 1~2회)' : '브리프를 만든 뒤 이어서 초안까지 씁니다(판정 2~4회)'}
           >
-            {busy ? '초안 쓰는 중… 보통 1~2분' : '초안 만들기 · 약 1~2분'}
+            {busy ? `초안 쓰는 중… ${clock(elapsed)} · 보통 1~2분` : '초안 만들기 · 약 1~2분'}
           </button>
           {busy && <span className="doc-meta">기다리는 동안 다른 글을 계속 다룰 수 있습니다.</span>}
         </div>
@@ -439,11 +498,11 @@ export default function DraftPanel({
 
       {!compact && (
         <div className="brief-bar draft-tools">
-          <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
+          <button type="button" className="ghost" onClick={editing ? closeEdit : startEdit}>
             {editing ? '편집 닫기' : '본문 편집'}
           </button>
           <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-            {busy ? '다시 쓰는 중…' : '다시 만들기'}
+            {busy ? `다시 쓰는 중… ${clock(elapsed)}` : '다시 만들기'}
           </button>
           {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
           <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
@@ -456,6 +515,28 @@ export default function DraftPanel({
         </p>
       )}
 
+      {pending && !editing && (
+        <p className="draft-pending" role="status">
+          저장하지 않은 편집이 있습니다(
+          {new Date(pending.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}).{' '}
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              setText(pending.text)
+              setEditing(true)
+              setStep('gaps')
+            }}
+          >
+            이어서 편집
+          </button>{' '}
+          ·{' '}
+          <button type="button" className="link-btn" onClick={dropPending}>
+            버리기
+          </button>
+        </p>
+      )}
+
       {step === 'gaps' && editing && (
         <div className="brief-body">
           <p className="hint" style={{ marginTop: 0 }}>
@@ -465,7 +546,7 @@ export default function DraftPanel({
           </p>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => editText(e.target.value)}
             rows={18}
             style={{ width: '100%', fontFamily: 'ui-monospace, monospace', fontSize: 13, lineHeight: 1.6 }}
           />
@@ -473,7 +554,7 @@ export default function DraftPanel({
             <button type="button" onClick={() => void save()} disabled={saving || !text.trim()}>
               {saving ? '저장 중…' : '저장'}
             </button>
-            <button type="button" className="ghost" onClick={() => setEditing(false)} disabled={saving}>
+            <button type="button" className="ghost" onClick={closeEdit} disabled={saving}>
               취소
             </button>
             {stored.editedMarkdown && (
