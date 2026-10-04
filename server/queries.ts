@@ -374,14 +374,19 @@ export async function getRankingView(
    * 그냥 없다 — 0으로도 "보합"으로도 적지 않는다.
    */
   const prevWeek = previousIsoWeek(weekOf);
-  const [cohortScorecards, prevCohort, allAnalyses, bank] = await Promise.all([
+  const [cohortScorecards, prevCohort, allAnalyses] = await Promise.all([
     store.getCohortScorecards(tenant.industry, tenant.region, weekOf),
     prevWeek
       ? store.getCohortScorecards(tenant.industry, tenant.region, prevWeek).catch(() => [])
       : Promise.resolve([]),
     store.getQuestionAnalyses(tenant.tenantId, weekOf),
-    store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion),
   ]);
+  // 질문지는 **그 주에 쓴 판**을 읽는다(그 주 카드의 questionBankVersion) — 엔진별 추이(engineTrend.ts)와
+  // 같은 규칙. 지금 설정의 판을 읽으면, 측정 뒤 질문지가 바뀐 브랜드는 질문 id가 겹치지 않아 이름 없는
+  // 질문을 하나도 못 골라 전체 응답으로 폴백했다(2026-10-04 SK하이닉스: W37은 v3, 설정은 v4 → SoM 51.3%가
+  // 53.1%로). 그 주 카드가 없으면(측정 전·데모) 지금 설정을 쓴다. 확인: scripts/verify-ranking-bank-version.ts
+  const weekCard = cohortScorecards.find((card) => card.tenantId === tenant.tenantId);
+  const bank = await store.getQuestionBank(tenant.tenantId, weekCard?.questionBankVersion ?? tenant.questionBankVersion);
 
   // 언급 점유는 스코어카드 SoM과 같은 모집단(카테고리 무관 질문)에서 낸다 — server/mentionScope.ts.
   // 두 화면이 같은 개념을 다른 모집단으로 보여주면 사용자가 값을 대조할 수 없다.
