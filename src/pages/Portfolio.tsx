@@ -1,31 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { loadPortfolio, type PortfolioRow, type PortfolioStatus } from '../lib/api'
+import { loadPortfolio, type PortfolioRow } from '../lib/api'
 import { groupOrder, industryGroupOf } from '../lib/industryGroups'
+import { groupByIndustry, needsMeasure, statusChip } from '../lib/portfolioView'
 
 type Filter = '' | 'done' | 'need' | 'alone'
-
-/** 측정이 필요한 상태 — 질문지가 다르거나 기록이 없거나, 같은 질문지지만 이번 주에 재지 않았거나, 아직 안 쟀다. */
-const NEEDS_MEASURE: PortfolioStatus[] = ['diff', 'unknown', 'stale', 'none']
-
-function statusChip(r: PortfolioRow): { text: string; tone: string } {
-  const week = r.weekOf?.replace(/^\d{4}-/, '') ?? ''
-  switch (r.status) {
-    case 'done':
-      return { text: `${week} 완료`, tone: 'good' }
-    case 'stale':
-      return { text: `측정 오래됨 · ${week}`, tone: 'warn' }
-    case 'diff':
-      return { text: '측정 필요 · 질문지 다름', tone: 'warn' }
-    case 'unknown':
-      return { text: '측정 필요 · 질문지 기록 없음', tone: 'warn' }
-    case 'alone':
-      return { text: '경쟁사 미측정', tone: 'info' }
-    default:
-      return { text: '측정 전', tone: '' }
-  }
-}
 
 function changeText(r: PortfolioRow): string {
   if (r.delta !== null) return r.delta === 0 ? '전주와 같음' : `전주 대비 ${r.delta > 0 ? '+' : '−'}${Math.abs(r.delta)}`
@@ -65,7 +45,7 @@ export default function Portfolio() {
   const counts = {
     all: rows.length,
     done: rows.filter((r) => r.status === 'done').length,
-    need: rows.filter((r) => NEEDS_MEASURE.includes(r.status)).length,
+    need: rows.filter(needsMeasure).length,
     alone: rows.filter((r) => r.status === 'alone').length,
   }
   const groupsAll = useMemo(() => {
@@ -79,28 +59,11 @@ export default function Portfolio() {
     const pass = (r: PortfolioRow) =>
       (!filter ||
         (filter === 'done' && r.status === 'done') ||
-        (filter === 'need' && NEEDS_MEASURE.includes(r.status)) ||
+        (filter === 'need' && needsMeasure(r)) ||
         (filter === 'alone' && r.status === 'alone')) &&
       (!group || industryGroupOf(r.industry) === group) &&
       (!q || `${r.brandName} ${r.industry} ${r.region}`.toLowerCase().includes(q))
-    // 업종군 → 코호트 → 브랜드(점수 높은 순)
-    const byGroup = new Map<string, Map<string, PortfolioRow[]>>()
-    for (const r of rows.filter(pass)) {
-      const g = industryGroupOf(r.industry)
-      const cohorts = byGroup.get(g) ?? new Map<string, PortfolioRow[]>()
-      const key = `${r.industry} · ${r.region}`
-      cohorts.set(key, [...(cohorts.get(key) ?? []), r])
-      byGroup.set(g, cohorts)
-    }
-    return [...byGroup.entries()]
-      .sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]))
-      .map(([name, cohorts]) => ({
-        name,
-        cohorts: [...cohorts.entries()]
-          // 우리 브랜드가 많은 코호트부터, 같으면 이름순.
-          .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'))
-          .map(([label, list]) => ({ label, list: [...list].sort((x, y) => (y.score ?? -1) - (x.score ?? -1)) })),
-      }))
+    return groupByIndustry(rows.filter(pass))
   }, [rows, filter, group, query])
 
   const open = (r: PortfolioRow) => {
