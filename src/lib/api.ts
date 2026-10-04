@@ -526,6 +526,38 @@ export async function saveContentDraft(
   return body
 }
 
+/** 채널 다듬기 결과 — server/channelAdapt.ts와 같은 모양. 콘텐츠 항목 → 채널 항목. */
+export interface ChannelAdaptation {
+  contentActionId: string
+  channelActionId: string
+  channelDomain: string
+  style: import('../prompts/b9d-channel-adapt').ChannelStyle
+  title: string
+  markdown: string
+  generatedAt: string
+  sourceKey: string
+  notes?: string[]
+}
+export type ChannelAdaptationMap = Record<string, Record<string, ChannelAdaptation>>
+/** null = 라우트 없는 환경(웹). */
+export async function loadChannelAdaptations(tenantId: string): Promise<ChannelAdaptationMap | null> {
+  return getJson<ChannelAdaptationMap>(`/api/channel-adapt/${encodeURIComponent(tenantId)}`)
+}
+/** 판정 1~2회. 실패하면 throw. */
+export async function adaptForChannel(
+  tenantId: string,
+  input: { contentActionId: string; channelActionId: string; channelDomain: string; channelBadge: string; sourceMarkdown: string },
+): Promise<ChannelAdaptation> {
+  const res = await fetch(`/api/channel-adapt/${encodeURIComponent(tenantId)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const body = (await res.json().catch(() => ({}))) as ChannelAdaptation & { error?: string }
+  if (!res.ok) throw new Error(body.error || `채널 다듬기 실패 (HTTP ${res.status})`)
+  return body
+}
+
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */
 export async function saveDraftGaps(
   tenantId: string,

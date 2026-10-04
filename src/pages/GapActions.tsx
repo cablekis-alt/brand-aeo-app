@@ -4,9 +4,12 @@ import { useTenant } from '../context/useTenant'
 import { useEffect, useState } from 'react'
 import {
   generateContentBrief,
+  loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
   type ActionStatus,
+  type ChannelAdaptation,
+  type ChannelAdaptationMap,
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
@@ -454,7 +457,9 @@ function ActionCard({
   onDraft,
   onUrls,
   coveredBy,
-  destinations,
+  channels,
+  adaptations,
+  onAdapted,
   focused = false,
 }: {
   action: GapAction
@@ -472,8 +477,11 @@ function ActionCard({
   onUrls: (id: string, urls: string[], markDone?: boolean) => void
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
-  /** 콘텐츠형일 때, 이 글이 갈 채널들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
-  destinations: string[] | null
+  /** 콘텐츠형일 때, 이 글이 갈 채널 항목들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
+  channels: GapAction[] | null
+  /** 이 글의 채널별 다듬은 글. null이면 다듬기 라우트가 없는 환경(웹)이다. */
+  adaptations: Record<string, ChannelAdaptation> | null
+  onAdapted: (a: ChannelAdaptation) => void
 }) {
   const [channelDraft, setChannelDraft] = useState(false)
   /**
@@ -487,6 +495,7 @@ function ActionCard({
   const awaiting = action.status === 'done' && !action.satisfied
   // 초안 패널이 뜨는 카드는 「올린 글 주소」를 초안의 ③ 올리기 칸에서 받는다(두 곳에 두지 않는다).
   const showsDraft = briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft)
+  const destinations = channels?.map((l) => l.targetDomain ?? l.title) ?? null
   return (
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
@@ -624,7 +633,14 @@ function ActionCard({
           stored={drafts[action.id]}
           onStored={onDraft}
           compact={!detail}
-          destinations={destinations}
+          channels={channels}
+          adaptations={adaptations}
+          onAdapted={onAdapted}
+          channelSlot={(ch) =>
+            canSaveStatus ? (
+              <PublishedUrls action={ch} addLabel="올렸어요" onSave={(urls, added) => onUrls(ch.id, urls, added)} />
+            ) : null
+          }
           publishedCount={action.publishedUrls.length}
           publish={
             canSaveStatus ? (
@@ -689,6 +705,25 @@ export default function GapActions() {
   const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
   // 저장된 초안 — 브리프와 같은 방식. 라우트가 없는 환경(웹)이면 null로 남아 패널이 숨는다.
   const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  // 채널별 다듬은 글(콘텐츠 생성 2단계). 키가 맞을 때만 쓴다 — 브랜드를 바꾸면 앞 브랜드 것이 잠깐 보이지 않게.
+  const [adaptState, setAdaptState] = useState<{ key: string; value: ChannelAdaptationMap | null }>({ key: '', value: null })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadChannelAdaptations(id).then((m) => {
+      if (alive) setAdaptState({ key: id, value: m })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const adaptations = adaptState.key === tenant?.tenantId ? adaptState.value : null
+  const onAdapted = (a: ChannelAdaptation) =>
+    setAdaptState((st) => ({
+      ...st,
+      value: { ...(st.value ?? {}), [a.contentActionId]: { ...(st.value?.[a.contentActionId] ?? {}), [a.channelActionId]: a } },
+    }))
   // 목적지 카드가 그려진 뒤 한 번 스크롤한다. 카드가 없으면(인용이 적어 제외·경쟁사) 아래 안내가 대신 뜬다.
   useEffect(() => {
     if (!focusId) return
@@ -724,10 +759,10 @@ export default function GapActions() {
       .sort((x, y) => y.n - x.n)
     return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
   }
-  /** 이 글이 갈 채널들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
-  const destinationsOf = (c: GapAction) => {
+  /** 이 글이 갈 채널 항목들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
+  const channelsOf = (c: GapAction) => {
     const qs = new Set(c.questionIds)
-    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q))).map((l) => l.targetDomain ?? l.title)
+    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q)))
   }
   // 덮는 글이 없는 채널은 사실상 한 편을 더 써야 하는 것이다 — 머리글이 그 수를 밝힌다.
   const orphanListing = openListing.filter((l) => coverageOf(l) === null).length
@@ -862,7 +897,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openContent.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={destinationsOf(a)} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={channelsOf(a)} adaptations={adaptations ? (adaptations[a.id] ?? {}) : null} onAdapted={onAdapted} />
                       ))}
                     </div>
                   </>
@@ -883,7 +918,7 @@ export default function GapActions() {
                     </h4>
                     <div className="gap-grid">
                       {openListing.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} destinations={null} />
+                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} channels={null} adaptations={null} onAdapted={onAdapted} />
                       ))}
                     </div>
                   </>
@@ -902,7 +937,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
                 ))}
               </div>
               </details>
@@ -918,7 +953,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} destinations={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
                 ))}
               </div>
             </section>
