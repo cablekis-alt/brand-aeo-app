@@ -10,7 +10,7 @@ import type { QuestionCategory } from '../src/prompts/types.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
 type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory'>;
-type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank'>;
+type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank' | 'getScorecardHistory'>;
 
 export interface CitationBreakdownRow {
   /** 정규화된 호스트 — www.·m. 접두를 접고 소문자로. 같은 사이트가 여러 줄로 갈라지지 않게 한다. */
@@ -373,20 +373,27 @@ export async function getRankingView(
    * 그 주의 카드를 직접 읽어 다시 줄 세우는 편이 정확하다. 전주에 측정이 없으면 변동은
    * 그냥 없다 — 0으로도 "보합"으로도 적지 않는다.
    */
+  /*
+   * 그 주를 보여 줄 때는 **그 주의 자기 카드**를 기준으로 삼는다 — 코호트(업종·지역)도 질문지도 그 카드에
+   * 적힌 값이다. 지금 설정으로 고르면 측정 뒤 설정이 바뀐 브랜드의 지난 주차가 틀린다:
+   *   - 질문지만 바뀌면 질문 id가 겹치지 않아 이름 없는 질문을 하나도 못 골라 전체 응답으로 폴백했다
+   *     (2026-10-04 SK하이닉스 W37: v3로 측정, 설정 v4 → SoM 51.3%가 53.1%로).
+   *   - 코호트가 바뀌면 그 주 리더보드에서 자기 줄이 빠지거나 아예 비었다(같은 날 SK하이닉스를 「메모리
+   *     반도체 · 국내」로, 홈캐스트를 가온그룹 코호트로 옮긴 뒤).
+   * 엔진별 추이(engineTrend.ts)·브랜드 현황(portfolio.ts)과 같은 규칙. 그 주 카드가 없으면(측정 전·데모)
+   * 지금 설정을 쓴다. 확인: scripts/verify-ranking-bank-version.ts
+   */
+  const history = await store.getScorecardHistory(tenant.tenantId, Number.MAX_SAFE_INTEGER);
+  const weekCard = history.find((card) => card.weekOf === weekOf);
+  const industry = weekCard?.industry ?? tenant.industry;
+  const region = weekCard?.region ?? tenant.region;
   const prevWeek = previousIsoWeek(weekOf);
-  const [cohortScorecards, prevCohort, allAnalyses] = await Promise.all([
-    store.getCohortScorecards(tenant.industry, tenant.region, weekOf),
-    prevWeek
-      ? store.getCohortScorecards(tenant.industry, tenant.region, prevWeek).catch(() => [])
-      : Promise.resolve([]),
+  const [cohortScorecards, prevCohort, allAnalyses, bank] = await Promise.all([
+    store.getCohortScorecards(industry, region, weekOf),
+    prevWeek ? store.getCohortScorecards(industry, region, prevWeek).catch(() => []) : Promise.resolve([]),
     store.getQuestionAnalyses(tenant.tenantId, weekOf),
+    store.getQuestionBank(tenant.tenantId, weekCard?.questionBankVersion ?? tenant.questionBankVersion),
   ]);
-  // 질문지는 **그 주에 쓴 판**을 읽는다(그 주 카드의 questionBankVersion) — 엔진별 추이(engineTrend.ts)와
-  // 같은 규칙. 지금 설정의 판을 읽으면, 측정 뒤 질문지가 바뀐 브랜드는 질문 id가 겹치지 않아 이름 없는
-  // 질문을 하나도 못 골라 전체 응답으로 폴백했다(2026-10-04 SK하이닉스: W37은 v3, 설정은 v4 → SoM 51.3%가
-  // 53.1%로). 그 주 카드가 없으면(측정 전·데모) 지금 설정을 쓴다. 확인: scripts/verify-ranking-bank-version.ts
-  const weekCard = cohortScorecards.find((card) => card.tenantId === tenant.tenantId);
-  const bank = await store.getQuestionBank(tenant.tenantId, weekCard?.questionBankVersion ?? tenant.questionBankVersion);
 
   // 언급 점유는 스코어카드 SoM과 같은 모집단(카테고리 무관 질문)에서 낸다 — server/mentionScope.ts.
   // 두 화면이 같은 개념을 다른 모집단으로 보여주면 사용자가 값을 대조할 수 없다.
