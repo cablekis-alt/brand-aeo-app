@@ -4907,8 +4907,33 @@ button.draft-step:hover {
   margin: 0 0 20px;
 }
 .pf-group-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
   margin: 0 0 10px;
   font-size: 17px;
+}
+/* 업종군 색(lib/industryGroups groupColor → --grp) — 제목 글자·작은 표시·카드 위 테두리에만 쓴다. */
+.pf-group-name {
+  color: var(--grp);
+}
+.pf-group .pf-card {
+  border-top: 3px solid var(--grp);
+}
+.grp-mark {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px;
+  background: var(--grp);
+}
+.grp-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--grp);
 }
 .pf-card {
   overflow: hidden;

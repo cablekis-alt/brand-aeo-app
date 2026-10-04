@@ -26,3 +26,9 @@ export function groupOrder(name: string): number {
   const i = INDUSTRY_GROUPS.findIndex((g) => g.name === name)
   return i < 0 ? INDUSTRY_GROUPS.length : i
 }
+
+/** 묶음 색 — 규칙 순서대로 --grp-1…7(index.css), 기타는 회색. 브랜드 현황과 브랜드 바꾸기 패널이 같이 쓴다. */
+export function groupColor(name: string): string {
+  const i = INDUSTRY_GROUPS.findIndex((g) => g.name === name)
+  return i < 0 ? 'var(--muted)' : `var(--grp-${i + 1})`
+}

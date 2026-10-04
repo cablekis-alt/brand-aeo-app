@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type PortfolioRow } from '../lib/api'
-import { groupOrder, industryGroupOf } from '../lib/industryGroups'
+import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
 import { groupByIndustry, needsMeasure, statusChip } from '../lib/portfolioView'
 
 type Filter = '' | 'done' | 'need' | 'alone'
@@ -133,6 +133,7 @@ export default function Portfolio() {
                 aria-pressed={group === name}
                 onClick={() => setGroup(name)}
               >
+                {name && <span className="grp-dot" style={{ '--grp': groupColor(name) } as React.CSSProperties} aria-hidden="true" />}
                 {name || '전체'} <span className="pf-chip-n">{n}</span>
               </button>
             ))}
@@ -141,9 +142,10 @@ export default function Portfolio() {
           {shown.length === 0 && <p className="muted">거르개에 맞는 브랜드가 없습니다.</p>}
 
           {shown.map((g) => (
-            <section key={g.name} className="pf-group" aria-label={g.name}>
+            <section key={g.name} className="pf-group" aria-label={g.name} style={{ '--grp': groupColor(g.name) } as React.CSSProperties}>
               <h2 className="pf-group-title">
-                {g.name}{' '}
+                <span className="grp-mark" aria-hidden="true" />
+                <span className="pf-group-name">{g.name}</span>{' '}
                 <span className="dash-sub">
                   고객 브랜드 {g.cohorts.reduce((n, c) => n + c.list.length, 0)}곳 · 코호트 {g.cohorts.length}개
                 </span>
