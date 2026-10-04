@@ -106,15 +106,23 @@ export function useGapActionPlan(tenantId: string) {
     [tenantId, weekOf, states],
   )
 
-  /** 집행 주소 저장. 상태는 그대로 두고 주소만 바꾼다. */
+  /**
+   * 집행 주소 저장. 상태는 그대로 두고 주소만 바꾼다 — markDone이면 「집행함」으로 함께 바꾼다.
+   * 초안의 「올렸어요」가 주소와 상태를 **한 번에** 저장한다: 상태 저장과 주소 저장을 따로 부르면
+   * 두 번째 요청이 앞 요청 전의 상태(진행 중)를 다시 써서 「집행함」이 사라진다.
+   */
   const setUrls = useCallback(
-    async (actionId: string, urls: string[]) => {
+    async (actionId: string, urls: string[], markDone = false) => {
       if (!tenantId) return
       const before = states
-      const status = states?.[actionId]?.status ?? 'done'
+      const status = markDone ? 'done' : (states?.[actionId]?.status ?? 'done')
       setStates((prev) => ({
         ...(prev ?? {}),
-        [actionId]: { ...(prev?.[actionId] ?? { status, updatedAt: new Date().toISOString() }), publishedUrls: urls },
+        [actionId]: {
+          ...(prev?.[actionId] ?? { status, updatedAt: new Date().toISOString() }),
+          ...(markDone ? { status, markedWeek: weekOf } : {}),
+          publishedUrls: urls,
+        },
       }))
       setSaveError(null)
       const saved = await saveActionUrls(tenantId, actionId, status, urls, weekOf)

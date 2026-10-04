@@ -481,6 +481,15 @@ export interface StoredDraft {
   editedAt?: string
   /** 고친 글의 사실 가드 경고. 저장을 막지는 않는다. */
   editWarnings?: string[]
+  /** 화면에서 채운 빈칸 기록 — 키 `절:블록`. 내보내기는 src/lib/draftGaps.ts로 반영한다. */
+  gapFills?: Record<string, GapFill>
+}
+/** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
+export interface GapFill {
+  value?: string
+  omit?: boolean
+  suggested?: string
+  sourceUrl?: string
 }
 export async function loadContentDrafts(tenantId: string): Promise<Record<string, StoredDraft> | null> {
   return getJson<Record<string, StoredDraft>>(`/api/content-draft/${encodeURIComponent(tenantId)}`)
@@ -514,6 +523,22 @@ export async function saveContentDraft(
   })
   const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
   if (!res.ok) throw new Error(body.error || `초안 저장 실패 (HTTP ${res.status})`)
+  return body
+}
+
+/** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */
+export async function saveDraftGaps(
+  tenantId: string,
+  actionId: string,
+  gapFills: Record<string, GapFill>,
+): Promise<StoredDraft> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/gaps`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actionId, gapFills }),
+  })
+  const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
+  if (!res.ok) throw new Error(body.error || `빈칸 저장 실패 (HTTP ${res.status})`)
   return body
 }
 

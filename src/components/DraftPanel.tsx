@@ -1,45 +1,62 @@
-import { useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   findFactsForGaps,
   generateContentDraft,
   loadFactGraph,
   saveContentDraft,
+  saveDraftGaps,
   saveFactGraph,
   type FactNode,
   type GapFactHit,
+  type GapFill,
   type StoredDraft,
 } from '../lib/api'
+import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
-import { buildPublishHtml } from '../lib/htmlFile'
+import { buildPublishHtml, publishBodyHtml } from '../lib/htmlFile'
 import { useTenant } from '../context/useTenant'
-import {
-  countGapNotes,
-  downloadHtml,
-  downloadMarkdown,
-  draftToMarkdown,
-  draftToPublishMarkdown,
-  safeFileName,
-  stripGapNotes,
-} from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 
 /**
- * 초안 패널 — 브리프에서 한 걸음.
+ * 초안 패널 — 글 한 편을 세 걸음으로 끝낸다: ① 초안 → ② 빈칸 확인 → ③ 올리기.
  *
- * 본문을 통째로 만들지 않는다. 사실이 있어야 쓸 수 있는 자리인데 그 사실이 없으면 문장을
- * 짓지 않고 비운 채 "무엇이 필요한가"를 적어 온다. 그 빈 자리를 눈에 띄게 보여주는 것이
- * 이 화면의 일이다 — 사람이 채울 곳이 어디인지가 결과물의 핵심이다.
+ * 본문을 통째로 지어내지 않는다. 사실이 있어야 쓸 수 있는 문단인데 그 사실이 없으면 비워 두고 "무엇이
+ * 필요한가"를 적어 온다. 그 빈칸을 **본문 안에서 바로** 채우게 하는 것이 이 화면의 일이다.
+ *
+ * 예전 흐름은 값을 적고 「사실로 저장하고 초안 다시 쓰기」를 눌러 글 전체를 다시 썼다(판정 1~2회, 1~2분).
+ * 이제 값은 그 자리에 「항목: 값」 한 줄로 들어가고(lib/draftGaps.ts), 브랜드 사실에도 함께 저장된다.
+ * 모르는 값은 「이 문장 빼기」 — 발행본에서 그 자리만 빠진다. 기록은 서버에 남아 화면을 떠나도 그대로다.
+ *
+ * 내보내기는 「이 글 복사」 하나가 기본이다(서식째 — 블로그 편집기에 붙여도 제목·굵은 글씨가 남는다).
+ * 파일(.md·.html·작업용)은 「파일로 받기」에 접어 둔다. 단추가 일곱 개일 때 무엇을 눌러야 할지 몰랐다.
  */
 
-/**
- * 브랜드 페이지 조회 결과 — 입력칸에 미리 채워 넣고, 어디서 온 값인지 옆에 적는다.
- * 입력 자체는 이것과 무관하게 늘 가능하다(조회는 거들 뿐이다).
- */
-interface GapLookup {
-  byNeed: Record<string, GapFactHit>
-  missing: string[]
-  sourceUrl: string
-  dropped: string[]
+type Step = 'gaps' | 'publish'
+
+/** 서식째 선택 복사 — 우리 원고에서 만든(이스케이프된) HTML만 넣는다(lib/htmlFile.ts markdownToHtml). */
+function copyBySelection(html: string): boolean {
+  const box = document.createElement('div')
+  box.contentEditable = 'true'
+  box.style.position = 'fixed'
+  box.style.left = '-9999px'
+  box.style.top = '0'
+  box.innerHTML = html
+  document.body.appendChild(box)
+  const selection = window.getSelection()
+  const range = document.createRange()
+  range.selectNodeContents(box)
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+  let ok = false
+  try {
+    ok = document.execCommand('copy')
+  } catch (e) {
+    console.error('[DraftPanel] 선택 복사 실패', e)
+  }
+  selection?.removeAllRanges()
+  box.remove()
+  return ok
 }
 
 export default function DraftPanel({
@@ -50,6 +67,9 @@ export default function DraftPanel({
   onStored,
   ensureBrief,
   compact = false,
+  destinations = null,
+  publishedCount = 0,
+  publish,
 }: {
   tenantId: string
   action: GapAction
@@ -59,44 +79,61 @@ export default function DraftPanel({
   /** 브리프가 없으면 먼저 만든다. 초안 한 번 누르기로 여기까지 간다. */
   ensureBrief: () => Promise<void>
   /**
-   * 데모용 축약. 「초안 보기」와 「발행용 .md」만 남기고 나머지 손잡이를 숨긴다.
-   *
-   * 카드 한 장에 버튼이 15개까지 늘어났다(상태 4 · 브리프 4 · 초안 7). 고객에게 보여 줄
-   * 이야기는 "여기서 밀린다 → 이 글을 쓰면 된다 → 초안 여기 있다" 세 걸음인데, 운영자용
-   * 손잡이가 그 위에 다 올라와 있어 세 걸음이 안 보였다. 숨길 뿐 지우지 않는다 —
-   * 카드의 「자세히」가 그대로 되살린다.
+   * 운영자용 손잡이(편집·다시 만들기·생성일)를 숨긴다. 카드의 「자세히」가 되살린다 — 숨길 뿐 지우지 않는다.
+   * 세 걸음(초안·빈칸·올리기)은 숨기지 않는다. 그게 이 화면의 본론이다.
    */
   compact?: boolean
+  /** 이 글을 올릴 외부 채널(콘텐츠형). null이면 채널 줄을 그리지 않는다. */
+  destinations?: string[] | null
+  /** 이 항목에 기록된 「올린 글 주소」 수 — ③ 단계 표시. */
+  publishedCount?: number
+  /** ③ 올리기 칸에 들어갈 주소 기록 부품. 상태를 저장할 수 없는 환경이면 없다. */
+  publish?: ReactNode
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+  const [step, setStep] = useState<Step | null>(null)
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
-  // 빈칸 채우기 — 초안이 비워 둔 자리를 이 화면 안에서 끝낸다.
-  const [filling, setFilling] = useState(false)
-  // 빈칸에 적어 넣는 값. need → 값. 초안 본문의 빈칸 자리에 그대로 입력칸이 붙는다 —
-  // 문제와 해결책이 다른 자리에 있으면 사람이 눈을 왔다 갔다 해야 한다.
+  // 빈칸 입력 중인 값(키 `절:블록`) — 「넣기」를 누를 때 서버에 남는다.
   const [typed, setTyped] = useState<Record<string, string>>({})
-  const [lookup, setLookup] = useState<GapLookup | null>(null)
+  /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
+  const [urlByKey, setUrlByKey] = useState<Record<string, string>>({})
+  /** 조회 중 — 'all'이면 한 번에 찾기, 키면 그 칸 하나. */
+  const [looking, setLooking] = useState<string | null>(null)
+  /** 조회 결과의 항목 이름·종류 — 「맞아요」로 브랜드 사실에 넣을 때 그대로 쓴다(화면을 떠나면 사라져도 된다). */
+  const [hits, setHits] = useState<Record<string, GapFactHit>>({})
+  /** 조회했지만 그 페이지에 없던 칸. */
+  const [missed, setMissed] = useState<Set<string>>(new Set())
+  const [dropped, setDropped] = useState<string[]>([])
+  // 브랜드 사실 저장은 한 줄로 세운다 — 「맞아요」를 연달아 누르면 읽고-쓰기가 겹쳐 앞 값이 사라진다.
+  const factChain = useRef<Promise<unknown>>(Promise.resolve())
+
   const make = async (force: boolean) => {
-    // 다시 만들면 손댄 글이 사라진다. 조용히 덮지 않는다.
-    if (force && stored?.editedMarkdown && !window.confirm('다시 만들면 고쳐 둔 글이 사라집니다. 계속할까요?')) return
+    // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
+    if (
+      force &&
+      (stored?.editedMarkdown || (stored?.gapFills && Object.keys(stored.gapFills).length)) &&
+      !window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
+    )
+      return
     setBusy(true)
     setError(null)
     try {
       // 브리프는 초안을 잘 쓰기 위한 발판이지 사람이 읽으려고 만드는 물건이 아니다. 두 번
       // 누르게 하면 그 사이에 사람이 하는 판단이 없는데도 기다림만 두 번 생긴다.
-      // 없으면 여기서 만들고 이어서 초안까지 간다. 브리프는 따로 접혀 남아 볼 사람은 본다.
       if (!hasBrief) await ensureBrief()
       const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
       onStored(s)
       setEditing(false)
-      setOpen(true)
+      setTyped({})
+      setHits({})
+      setMissed(new Set())
+      setStep(gapProgress(s).total > 0 ? 'gaps' : 'publish')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -105,9 +142,9 @@ export default function DraftPanel({
   }
   const startEdit = () => {
     if (!stored) return
-    setText(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
+    setText(workMarkdownOf(stored))
     setEditing(true)
-    setOpen(true)
+    setStep('gaps')
   }
   const save = async () => {
     if (!stored) return
@@ -122,224 +159,271 @@ export default function DraftPanel({
       setSaving(false)
     }
   }
-  /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
-  const [urlByNeed, setUrlByNeed] = useState<Record<string, string>>({})
-  /** 지금 조회 중인 빈칸 — 한 칸만 찾을 때 그 칸의 버튼만 "읽는 중"으로 바꾼다. */
-  const [fillingNeed, setFillingNeed] = useState<string | null>(null)
-  // 발행용에서 덜어낼 빈칸이 몇 줄인지 — 고쳐 둔 글이면 거기 남은 것을 센다.
-  const gapNotes = stored
-    ? countGapNotes(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
-    : 0
 
-  /** 빈칸의 need 목록 — 초안이 "무엇이 필요한가"를 이미 적어 두었다. */
-  const needsOf = (draft: StoredDraft['draft']): string[] =>
-    draft.sections.flatMap((sec) => sec.blocks.filter((b) => b.kind === 'gap').map((b) => b.need ?? '')).filter(Boolean)
+  /** 빈칸 기록 저장 — 화면에 먼저 반영하고(기다리게 하지 않는다), 실패하면 되돌리고 말한다. */
+  const persistFills = async (next: Record<string, GapFill>) => {
+    if (!stored) return
+    const before = stored
+    onStored({ ...stored, gapFills: next })
+    try {
+      onStored(await saveDraftGaps(tenantId, action.id, next))
+    } catch (e) {
+      onStored(before)
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+  const fills = stored?.gapFills ?? {}
+
+  /** 확인한 값을 브랜드 사실에도 넣는다 — 다음 초안부터는 빈칸이 아니라 문장으로 쓰인다. */
+  const rememberFact = (need: string, value: string, hit: GapFactHit | undefined, sourceUrl?: string) => {
+    // 조회 결과(항목 이름·종류)는 화면을 떠나면 사라진다. 그때도 저장해 둔 후보의 출처 주소는 남긴다.
+    const fact = hit && hit.value === value
+      ? { type: hit.type, claim: hit.claim, value: hit.value, sourceUrl: hit.sourceUrl }
+      : { type: 'other' as FactNode['type'], claim: claimOf(need), value, ...(sourceUrl ? { sourceUrl } : {}) }
+    factChain.current = factChain.current
+      .then(async () => {
+        const current = (await loadFactGraph(tenantId))?.factGraph ?? []
+        if (current.some((f) => f.claim === fact.claim && f.value === fact.value)) return
+        await saveFactGraph(tenantId, [...current, { id: '', updatedAt: '', ...fact } as FactNode])
+      })
+      .catch((e: unknown) => {
+        console.error('[DraftPanel] 브랜드 사실 저장 실패', e)
+        setError('값은 글에 넣었지만 브랜드 사실에 저장하지 못했습니다. 브랜드 사실 화면에서 직접 넣어 주세요.')
+      })
+  }
+  const confirmGap = (key: string, need: string, value: string) => {
+    const v = value.trim()
+    if (!v) return
+    const prev = fills[key]
+    void persistFills({ ...fills, [key]: { value: v } })
+    rememberFact(need, v, hits[key], prev?.suggested === v ? prev.sourceUrl : undefined)
+    setTyped((prev) => ({ ...prev, [key]: '' }))
+  }
+  const omitGap = (key: string) => void persistFills({ ...fills, [key]: { omit: true } })
+  const undoGap = (key: string) => {
+    const next = { ...fills }
+    delete next[key]
+    void persistFills(next)
+  }
+
+  /** 아직 처리하지 않은 빈칸(키 → need). */
+  const openGaps = (): Array<[string, string]> => {
+    if (!stored) return []
+    const out: Array<[string, string]> = []
+    stored.draft.sections.forEach((sec, si) =>
+      sec.blocks.forEach((b, bi) => {
+        const k = gapKey(si, bi)
+        if (b.kind === 'gap' && !fills[k]?.value && !fills[k]?.omit) out.push([k, b.need ?? ''])
+      }),
+    )
+    return out
+  }
 
   /**
-   * 페이지를 읽어 빈칸을 메워 본다. 찾은 것은 후보로만 두고, 사람이 넣어야 저장된다.
+   * 페이지를 읽어 빈칸 후보를 찾는다(판정 1회). 찾은 값은 노란 후보로만 두고, 「맞아요」를 눌러야 글에 들어간다.
    *
-   * onlyNeed를 주면 그 칸 하나만, 그 칸에 적힌 주소로 찾는다. 빈칸마다 값이 있는 페이지가
-   * 다르기 때문이다 — 주소 하나로 전부 찾으려 하면 대개 0건이 나온다(실측: 원진성형외과
-   * 루트에서 4건 전부 실패, 페이지를 짚으니 1건 성공).
+   * onlyKey를 주면 그 칸 하나만, 그 칸에 적힌 주소로 찾는다. 빈칸마다 값이 있는 페이지가 다르기
+   * 때문이다 — 주소 하나로 전부 찾으려 하면 대개 0건이 나온다(실측: 원진성형외과 루트에서 4건 전부 실패,
+   * 페이지를 짚으니 1건 성공).
    */
-  const lookUp = async (onlyNeed?: string) => {
+  const lookUp = async (onlyKey?: string) => {
     if (!stored) return
-    const needs = onlyNeed ? [onlyNeed] : needsOf(stored.draft)
-    if (!needs.length) return
-    const url = onlyNeed ? urlByNeed[onlyNeed]?.trim() : undefined
-    if (onlyNeed) setFillingNeed(onlyNeed)
-    else setFilling(true)
+    const targets = openGaps().filter(([k]) => !onlyKey || k === onlyKey)
+    if (!targets.length) return
+    const needs = [...new Set(targets.map(([, n]) => n))]
+    const url = onlyKey ? urlByKey[onlyKey]?.trim() : undefined
+    setLooking(onlyKey ?? 'all')
     setError(null)
     try {
       const r = await findFactsForGaps(tenantId, needs, url || undefined)
-      // 한 칸만 찾았으면 나머지 칸의 이전 결과를 지우지 않는다 — 칸마다 따로 찾아 나가는
-      // 것이 이 기능의 쓰임이므로, 새 결과가 앞 결과를 덮으면 진행이 보이지 않는다.
-      setLookup((prev) => ({
-        byNeed: { ...(onlyNeed ? prev?.byNeed : {}), ...Object.fromEntries(r.found.map((f) => [f.need, f])) },
-        missing: onlyNeed
-          ? [...(prev?.missing ?? []).filter((n) => n !== onlyNeed), ...r.missing]
-          : r.missing,
-        sourceUrl: r.sourceUrl,
-        dropped: r.dropped,
-      }))
-      // 찾은 값은 입력칸에 미리 채운다. 사람이 그대로 두거나 고칠 수 있게 — 읽기만 되는
-      // 표로 보여 주면 "맞다/틀리다"를 말할 자리가 없다.
-      setTyped((prev) => ({ ...prev, ...Object.fromEntries(r.found.map((f) => [f.need, f.value])) }))
+      const byNeed = new Map(r.found.map((f) => [f.need, f]))
+      const next = { ...fills }
+      const nextHits = { ...hits }
+      const nextMissed = new Set(missed)
+      for (const [k, need] of targets) {
+        const hit = byNeed.get(need)
+        if (hit) {
+          next[k] = { ...next[k], suggested: hit.value, ...(hit.sourceUrl ? { sourceUrl: hit.sourceUrl } : {}) }
+          nextHits[k] = hit
+          nextMissed.delete(k)
+        } else nextMissed.add(k)
+      }
+      setHits(nextHits)
+      setMissed(nextMissed)
+      setDropped(r.dropped)
+      await persistFills(next)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
-      setFilling(false)
-      setFillingNeed(null)
+      setLooking(null)
     }
   }
 
   /**
-   * 고른 사실을 팩트 그래프에 넣고 초안을 다시 쓴다.
-   *
-   * 두 걸음을 하나로 묶는 이유: 사실만 저장하고 끝내면 사람이 "다시 만들기"를 또 눌러야 하고,
-   * 안 누르면 초안은 그대로 빈칸이다. 빈칸을 메우는 목적이 초안을 끝내는 것이므로 여기까지가
-   * 한 동작이다.
+   * 「이 글 복사」 — 서식(HTML)과 글자(마크다운)를 함께 넣는다. 붙여 넣는 편집기가 고른다.
+   * 클립보드 쓰기 권한이 막힌 환경(실측: 미리보기 브라우저 NotAllowedError)에서는 화면 밖에 본문을
+   * 그려 선택한 뒤 복사한다 — 이 길도 서식이 남는다.
    */
-  const applyFacts = async (
-    picked: Array<{ type: FactNode['type']; claim: string; value: string; sourceUrl?: string }>,
-  ) => {
-    if (!picked.length) return
-    setFilling(true)
-    setError(null)
-    try {
-      const current = (await loadFactGraph(tenantId))?.factGraph ?? []
-      const merged = [...current, ...picked.map((p) => ({ id: '', updatedAt: '', ...p }) as FactNode)]
-      await saveFactGraph(tenantId, merged)
-      setTyped({})
-      setLookup(null)
-      await make(true)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setFilling(false)
-    }
-  }
-  const copy = async () => {
+  const copyPublish = async () => {
     if (!stored) return
+    const md = publishMarkdownOf(stored)
+    const html = publishBodyHtml(stored)
+    let ok: boolean
     try {
-      await navigator.clipboard.writeText(stored.editedMarkdown ?? draftToMarkdown(stored.draft))
+      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) throw new Error('ClipboardItem 없음')
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([md], { type: 'text/plain' }),
+        }),
+      ])
+      ok = true
+    } catch (e) {
+      console.warn('[DraftPanel] 클립보드 API로 복사하지 못해 선택 복사로 넘어갑니다', e)
+      ok = copyBySelection(html)
+    }
+    if (ok) {
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      setError('클립보드에 복사하지 못했습니다.')
+      window.setTimeout(() => setCopied(false), 1800)
+    } else {
+      setError('클립보드에 복사하지 못했습니다. 「파일로 받기」를 써 주세요.')
     }
   }
+
   // 브리프가 없어도 버튼은 남긴다. 숨기면 "초안이라는 단계가 있다"는 사실 자체가 안 보인다 —
   // 실측: 실행 항목 id가 사이트 묶음으로 바뀌자 브리프가 어느 항목에도 안 붙었고, 그 순간
-  // 초안 기능이 화면에서 통째로 사라졌다. 대신 누를 수 없게 두고 무엇이 먼저인지 말한다.
-  const d = stored?.draft
-  return (
-    <div className="brief">
-      <div className="brief-bar">
-        {!stored ? (
-          <>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => void make(false)}
-              disabled={busy}
-              title={hasBrief ? '브리프를 바탕으로 초안을 씁니다' : '브리프를 만든 뒤 이어서 초안까지 씁니다'}
-            >
-              {busy
-                ? hasBrief
-                  ? '초안 쓰는 중…'
-                  : '브리프부터 쓰는 중…'
-                : hasBrief
-                  ? '초안 만들기 (판정 1회)'
-                  : '초안 만들기 (브리프까지, 판정 2회)'}
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-              {open ? '초안 접기' : '초안 보기'}
-            </button>
-            {!compact && (
-              <>
-                <button type="button" className="ghost" onClick={() => void copy()}>
-                  {copied ? '복사됨' : '마크다운 복사'}
-                </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    downloadMarkdown(
-                      `초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                      stored.editedMarkdown ?? draftToMarkdown(stored.draft),
-                    )
-                  }
-                >
-                  작업용 .md
-                </button>
-              </>
-            )}
-            {/*
-              발행용을 따로 둔다. 하나뿐일 때는 「.md 내려받기」가 발행용 원고로 읽혔는데,
-              실제로는 `> **채워야 함:** … 팩트 그래프에 가격 항목 없음` 같은 내부 메모가
-              본문에 섞여 나갔다. 빈칸을 못 채운 채 올려야 하는 경우가 정상 경로라서,
-              "지우고 올리세요"라고 말하는 대신 지운 파일을 준다.
-            */}
-            <button
-              type="button"
-              className="ghost"
-              title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다. 그대로 올릴 수 있습니다."
-              onClick={() =>
-                downloadMarkdown(
-                  `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                  stored.editedMarkdown
-                    ? stripGapNotes(stored.editedMarkdown)
-                    : draftToPublishMarkdown(stored.draft),
-                )
-              }
-            >
-              발행용 .md
-              {gapNotes > 0 && <span className="muted"> — 빈칸 {gapNotes}줄 뺌</span>}
-            </button>
-            {/*
-              .html은 자체 사이트·CMS용이다. <article>·<h2> 시맨틱과 <head>의 JSON-LD(Article+Organization)가
-              그대로 AEO 신호가 된다. 사실 그래프는 누를 때 읽는다 — 주소·전화가 있을 때만 Organization에 싣는다.
-            */}
-            <button
-              type="button"
-              className="ghost"
-              title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 본문만 남습니다."
-              onClick={() => {
-                if (!tenant) return
-                void loadFactGraph(tenantId)
-                  .then((fg) => fg?.factGraph ?? [])
-                  .catch(() => [] as FactNode[])
-                  .then((facts) =>
-                    downloadHtml(
-                      `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
-                      buildPublishHtml({ stored, brand: tenant, facts }),
-                    ),
-                  )
-              }}
-            >
-              발행용 .html
-            </button>
-            {!compact && (
-              <>
-                <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
-                  {editing ? '편집 닫기' : '편집'}
-                </button>
-                <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-                  {busy ? '다시 쓰는 중…' : '다시 만들기'}
-                </button>
-              </>
-            )}
-            {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
-            {!compact && d && d.gapCount > 0 && !stored.editedMarkdown && (
-              // 딱지 자체가 버튼이다 — 문제를 알리는 자리와 여는 자리가 같아야 한다.
-              <button
-                type="button"
-                className="st st-warn"
-                style={{ cursor: 'pointer', border: 0 }}
-                title="초안을 열어 빈칸에 값을 적습니다"
-                onClick={() => setOpen(true)}
-              >
-                채울 곳 {d.gapCount} — 채우기
-              </button>
-            )}
-            {!compact && <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>}
-          </>
+  // 초안 기능이 화면에서 통째로 사라졌다.
+  if (!stored) {
+    return (
+      <div className="brief">
+        <div className="brief-bar">
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => void make(false)}
+            disabled={busy}
+            // 판정 호출 수는 운영자용 정보라 손끝 설명에 둔다. 단추에는 기다릴 시간을 적는다.
+            title={hasBrief ? '브리프를 바탕으로 초안을 씁니다(판정 1~2회)' : '브리프를 만든 뒤 이어서 초안까지 씁니다(판정 2~4회)'}
+          >
+            {busy ? '초안 쓰는 중… 보통 1~2분' : '초안 만들기 · 약 1~2분'}
+          </button>
+          {busy && <span className="doc-meta">기다리는 동안 다른 글을 계속 다룰 수 있습니다.</span>}
+        </div>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
         )}
       </div>
+    )
+  }
+
+  const progress = gapProgress(stored)
+  const left = progress.total - progress.done
+  const d = effectiveDraft(stored)
+  const toggle = (s: Step) => setStep((cur) => (cur === s ? null : s))
+  const steps: Array<{ key: Step | 'draft'; n: number; label: string; sub: string; done: boolean }> = [
+    { key: 'draft', n: 1, label: '초안', sub: `완료 · ${stored.generatedAt.slice(0, 10)}`, done: true },
+    {
+      key: 'gaps',
+      n: 2,
+      label: '빈칸 확인',
+      sub: progress.edited
+        ? left > 0
+          ? `고친 글에 빈칸 ${left}줄 남음`
+          : '빈칸 없음'
+        : progress.total === 0
+          ? '빈칸 없음'
+          : `${progress.total}곳 중 ${progress.done}곳 처리${progress.suggested ? ` · 찾은 값 ${progress.suggested}` : ''}`,
+      done: left === 0,
+    },
+    {
+      key: 'publish',
+      n: 3,
+      label: '올리기',
+      sub: publishedCount > 0 ? `올린 주소 ${publishedCount}개` : destinations?.length ? `자사 사이트 + ${destinations.length}곳` : '자사 사이트',
+      done: publishedCount > 0,
+    },
+  ]
+
+  return (
+    <div className="brief draft-flow">
+      <div className="draft-steps" role="group" aria-label={`${action.title} 진행 단계`}>
+        {steps.map((s) =>
+          s.key === 'draft' ? (
+            <div key={s.key} className="draft-step done">
+              <span className="draft-step-dot" aria-hidden="true">
+                ✓
+              </span>
+              <span className="draft-step-text">
+                <span className="draft-step-label">{s.label}</span>
+                <span className="draft-step-sub">{s.sub}</span>
+              </span>
+            </div>
+          ) : (
+            <button
+              key={s.key}
+              type="button"
+              className={`draft-step${s.done ? ' done' : ''}${step === s.key ? ' on' : ''}`}
+              aria-expanded={step === s.key}
+              onClick={() => toggle(s.key as Step)}
+            >
+              <span className="draft-step-dot" aria-hidden="true">
+                {s.done ? '✓' : s.n}
+              </span>
+              <span className="draft-step-text">
+                <span className="draft-step-label">{s.label}</span>
+                <span className="draft-step-sub">{s.sub}</span>
+              </span>
+            </button>
+          ),
+        )}
+      </div>
+
+      {step === null && (
+        // 접힌 카드에서도 다음에 할 일 하나는 바로 누를 수 있게 둔다.
+        <div className="brief-bar">
+          {left > 0 && !progress.edited ? (
+            <button type="button" onClick={() => setStep('gaps')}>
+              빈칸 {left}곳 확인하기
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={() => void copyPublish()}>
+                {copied ? '복사했습니다' : '이 글 복사'}
+              </button>
+              <button type="button" className="ghost" onClick={() => setStep('publish')}>
+                올리기 · 주소 기록
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {!compact && (
+        <div className="brief-bar draft-tools">
+          <button type="button" className="ghost" onClick={editing ? () => setEditing(false) : startEdit}>
+            {editing ? '편집 닫기' : '본문 편집'}
+          </button>
+          <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
+            {busy ? '다시 쓰는 중…' : '다시 만들기'}
+          </button>
+          {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
+          <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
+        </div>
+      )}
+
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      {open && editing && stored && (
+
+      {step === 'gaps' && editing && (
         <div className="brief-body">
           <p className="hint" style={{ marginTop: 0 }}>
-            마크다운으로 고칩니다. 저장할 때 <b>사실 확인</b>을 한 번 돌려, 팩트 그래프에 없는 숫자가 있으면
-            알려 드립니다. 막지는 않습니다 — 직접 확인하신 사실일 수 있습니다. 다만 그런 숫자는{' '}
+            마크다운으로 고칩니다. 저장할 때 <b>사실 확인</b>을 한 번 돌려, 브랜드 사실에 없는 숫자가 있으면 알려
+            드립니다. 막지는 않습니다 — 직접 확인하신 사실일 수 있습니다. 그런 숫자는{' '}
             <Link to="/brand-facts">브랜드 사실</Link>에 넣어 두시면 다음 초안부터 자동으로 들어갑니다.
           </p>
           <textarea
@@ -359,7 +443,7 @@ export default function DraftPanel({
               <button
                 type="button"
                 className="ghost"
-                onClick={() => setText(draftToMarkdown(stored.draft))}
+                onClick={() => setText(draftToMarkdown(effectiveDraft(stored)))}
                 disabled={saving}
               >
                 생성된 원본으로 되돌리기
@@ -368,180 +452,265 @@ export default function DraftPanel({
           </div>
         </div>
       )}
-      {open && !editing && stored?.editWarnings && stored.editWarnings.length > 0 && (
+
+      {step === 'gaps' && !editing && stored.editedMarkdown && (
         <div className="brief-body">
-          <section>
-            <h4>
-              사실 확인 <span className="muted">(고친 글에서 찾은 것 — 막지 않았습니다)</span>
-            </h4>
-            <ul className="muted">
-              {stored.editWarnings.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
-            </ul>
-            <p className="gap-tally">
-              직접 확인하신 값이면 <Link to="/brand-facts">브랜드 사실</Link>에 넣어 두세요. 그러면 다음
-              초안부터 본문에 자동으로 들어가고, 이 경고도 사라집니다.
-            </p>
-          </section>
-        </div>
-      )}
-      {open && !editing && stored?.editedMarkdown && (
-        <div className="brief-body">
+          {stored.editWarnings && stored.editWarnings.length > 0 && (
+            <section>
+              <h4>
+                사실 확인 <span className="muted">(고친 글에서 찾은 것 — 막지 않았습니다)</span>
+              </h4>
+              <ul className="muted">
+                {stored.editWarnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            </section>
+          )}
           <p className="hint" style={{ marginTop: 0 }}>
-            고쳐 둔 글입니다({stored.editedAt?.slice(0, 10)} 저장). 복사·내려받기·묶음 내보내기 모두 이 글을 씁니다.
+            고쳐 둔 글입니다({stored.editedAt?.slice(0, 10)} 저장). 복사·내려받기 모두 이 글을 씁니다.
+            {countGapNotes(stored.editedMarkdown) > 0 && ' 남은 빈칸 줄은 「자세히 → 본문 편집」에서 고치거나, 그대로 두면 발행본에서 빠집니다.'}
           </p>
           <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{stored.editedMarkdown}</pre>
         </div>
       )}
-      {open && !editing && !stored?.editedMarkdown && d && (
-        <div className="brief-body">
-          <p className="hint" style={{ marginTop: 0 }}>
-            발행용 원고가 아니라 <b>사람이 이어받을 원고</b>입니다. 사실이 없어 쓸 수 없던 자리는 문장을
-            지어내지 않고 비워 두었습니다.{' '}
-            {d.gapCount > 0 ? `${d.gapCount}곳을 채우면 완성됩니다 — 아래 빈칸에 바로 적으세요.` : '비운 자리는 없습니다.'}
-          </p>
-          {/* 사실 대조 요약 — 아래 「이 글이 쓴 사실」·빈칸·「검증이 걸러낸 것」의 수를 원고 맨 위에 모은다. */}
-          <p className="draft-guard" aria-label="사실 대조 요약">
-            <span className="draft-guard-label">사실 대조</span>
-            <span className="chip good">쓴 사실 {d.usedFacts.length}개</span>
-            {d.gapCount > 0 && <span className="chip warn">채워야 할 빈칸 {d.gapCount}곳</span>}
-            {d.guardNotes && d.guardNotes.length > 0 && (
-              <span className="chip info">검증이 걸러낸 문장 {d.guardNotes.length}건</span>
-            )}
-          </p>
-          {d.gapCount > 0 && (
-            <p className="doc-meta" style={{ margin: '0 0 6px' }}>
-              한 번에 찾기는 <b>브랜드 페이지 한 곳</b>만 읽습니다. 값이 상세 페이지에 흩어져 있으면 0건이 나오니,
-              빈칸마다 그 값이 적힌 주소를 넣고 <b>이 주소에서 찾기</b>를 쓰세요.
-            </p>
-          )}
-          {d.gapCount > 0 && (
-            <div className="facts-bar" style={{ marginBottom: 10 }}>
-              <button type="button" className="ghost" disabled={filling || busy} onClick={() => void lookUp()}>
-                {filling ? '페이지 읽는 중…' : '브랜드 페이지에서 한 번에 찾아보기'}
-              </button>
-              <button
-                type="button"
-                disabled={filling || busy || !Object.values(typed).some((v) => v.trim())}
-                onClick={() =>
-                  void applyFacts(
-                    Object.entries(typed)
-                      .filter(([, v]) => v.trim())
-                      .map(([need, v]) => {
-                        const hit = lookup?.byNeed[need]
-                        // 조회로 찾은 값을 그대로 두었으면 그때의 항목 이름·출처를 쓴다.
-                        return hit && hit.value === v.trim()
-                          ? { type: hit.type, claim: hit.claim, value: hit.value, sourceUrl: hit.sourceUrl }
-                          : { type: 'other' as FactNode['type'], claim: need, value: v.trim() }
-                      }),
-                  )
-                }
-              >
-                {filling || busy ? '반영하는 중…' : '사실로 저장하고 초안 다시 쓰기'}
-              </button>
-              {lookup && (
-                <span className="doc-meta">
-                  <a href={lookup.sourceUrl} target="_blank" rel="noreferrer">
-                    페이지
-                  </a>
-                  에서 {Object.keys(lookup.byNeed).length}곳을 찾았습니다
-                </span>
+
+      {step === 'gaps' && !editing && !stored.editedMarkdown && (
+        <div className="brief-body draft-doc">
+          {progress.total > 0 && (
+            <div className="draft-gapbar">
+              <span>
+                빈칸 <b>{progress.total}곳</b> 중 {progress.done}곳 처리. 값을 넣으면 그 자리에 「항목: 값」 한 줄로 들어가고
+                브랜드 사실에도 저장됩니다. 모르는 값은 빼면 발행본에서 그 자리만 빠집니다.
+              </span>
+              {left > 0 && (
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={looking !== null}
+                  title="브랜드 페이지 한 곳을 읽어 빈칸 값 후보를 찾습니다(판정 1회)"
+                  onClick={() => void lookUp()}
+                >
+                  {looking === 'all' ? '페이지 읽는 중…' : '브랜드 페이지에서 찾아 채우기'}
+                </button>
               )}
             </div>
           )}
-          {lookup && lookup.dropped.length > 0 && (
+          {dropped.length > 0 && (
             <ul className="doc-meta" style={{ marginTop: 0 }}>
-              {lookup.dropped.map((x) => (
+              {dropped.map((x) => (
                 <li key={x}>{x}</li>
               ))}
             </ul>
           )}
-          <section>
-            <h4>{d.title}</h4>
-            {d.lead && <p>{d.lead}</p>}
-          </section>
-          {d.sections.map((sec) => (
-            <section key={sec.heading}>
+          <h4 className="draft-title">{d.title}</h4>
+          {d.lead && <p>{d.lead}</p>}
+          {stored.draft.sections.map((sec, si) => (
+            <section key={`${si}-${sec.heading}`}>
               <h4>{sec.heading}</h4>
-              {sec.answers && <p className="doc-meta">답하는 질문 · {sec.answers}</p>}
-              {sec.blocks.map((b, i) =>
-                b.kind === 'gap' ? (
-                  // 빈칸이 곧 입력 자리다. 빨간 글씨만 남기면 "나가서 찾아오라"는 말이 된다.
-                  <div key={i} style={{ margin: '8px 0' }}>
-                    <label className="error" htmlFor={`gap-${action.id}-${sec.heading}-${i}`}>
-                      채워야 함 · {b.need}
+              {sec.blocks.map((b, bi) => {
+                if (b.kind !== 'gap') return <p key={bi}>{b.body}</p>
+                const k = gapKey(si, bi)
+                const f = fills[k]
+                const need = b.need ?? ''
+                if (f?.value) {
+                  return (
+                    <p key={bi} className="gap-filled">
+                      {filledLine(need, f.value)}{' '}
+                      <button type="button" className="link-btn" onClick={() => undoGap(k)}>
+                        되돌리기
+                      </button>
+                    </p>
+                  )
+                }
+                if (f?.omit) {
+                  return (
+                    <p key={bi} className="gap-omitted">
+                      {claimOf(need)} — 발행본에서 뺌{' '}
+                      <button type="button" className="link-btn" onClick={() => undoGap(k)}>
+                        되돌리기
+                      </button>
+                    </p>
+                  )
+                }
+                const inputId = `gap-${action.id}-${k}`
+                return (
+                  <div key={bi} className="gap-slot">
+                    <label className="gap-need" htmlFor={inputId}>
+                      채워야 함 · {claimOf(need)}
                     </label>
-                    <input
-                      id={`gap-${action.id}-${sec.heading}-${i}`}
-                      type="text"
-                      value={typed[b.need ?? ''] ?? ''}
-                      // 안내문에 **그 브랜드에 그럴듯하게 들어맞는 값**을 쓰면 안 된다. 실측:
-                      // "예: 도보 8분 · 180,000원 · 자쿠지 없음"을 그대로 넣은 사람이 있었고,
-                      // 지어낸 숫자 3건이 팩트 그래프에 확인된 사실로 들어갔다. 형식만 보인다.
-                      placeholder="확인하신 값만 적으세요 (숫자·시각·금액처럼 대조 가능한 것)"
-                      style={{ width: '100%', marginTop: 4 }}
-                      onChange={(e) => setTyped((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
-                    />
-                    {lookup?.byNeed[b.need ?? ''] && (
-                      <span className="doc-meta">
-                        찾은 값입니다 — 맞으면 그대로 두세요.{' '}
-                        {lookup.byNeed[b.need ?? '']?.sourceUrl && (
-                          <a href={lookup.byNeed[b.need ?? '']!.sourceUrl} target="_blank" rel="noreferrer">
-                            출처 페이지
-                          </a>
-                        )}
-                      </span>
+                    {need !== claimOf(need) && <span className="doc-meta">{need.slice(claimOf(need).length).replace(/^\s*[—–]\s*/, '')}</span>}
+                    {f?.suggested && (
+                      <div className="gap-suggest">
+                        <span>
+                          찾은 값 <b>{f.suggested}</b>
+                          {f.sourceUrl && (
+                            <>
+                              {' · '}
+                              <a href={f.sourceUrl} target="_blank" rel="noreferrer">
+                                출처 페이지
+                              </a>
+                            </>
+                          )}
+                        </span>
+                        <button type="button" onClick={() => confirmGap(k, need, f.suggested ?? '')}>
+                          맞아요
+                        </button>
+                        <button type="button" className="ghost" onClick={() => setTyped((prev) => ({ ...prev, [k]: f.suggested ?? '' }))}>
+                          고치기
+                        </button>
+                      </div>
                     )}
-                    {lookup && lookup.missing.includes(b.need ?? '') && !lookup.byNeed[b.need ?? ''] && (
-                      <span className="doc-meta">그 페이지에는 없었습니다 — 아래에 다른 주소를 넣어 다시 찾아보세요.</span>
-                    )}
-                    {/* 빈칸마다 값이 있는 페이지가 다르다. 주소 하나로 전부 찾으려 하면 대개 0건이다. */}
-                    <div className="gap-url">
+                    <div className="gap-input">
                       <input
+                        id={inputId}
                         type="text"
-                        inputMode="url"
-                        aria-label={`${b.need} 를 찾을 주소`}
-                        placeholder="이 값이 적힌 페이지 주소 (비우면 브랜드 페이지)"
-                        value={urlByNeed[b.need ?? ''] ?? ''}
-                        onChange={(e) => setUrlByNeed((prev) => ({ ...prev, [b.need ?? '']: e.target.value }))}
+                        value={typed[k] ?? ''}
+                        // 안내문에 **그 브랜드에 그럴듯하게 들어맞는 값**을 쓰면 안 된다. 실측:
+                        // "예: 도보 8분 · 180,000원 · 자쿠지 없음"을 그대로 넣은 사람이 있었고,
+                        // 지어낸 숫자 3건이 팩트 그래프에 확인된 사실로 들어갔다. 형식만 보인다.
+                        placeholder="확인하신 값만 적으세요 (숫자·시각·금액처럼 대조 가능한 것)"
+                        onChange={(e) => setTyped((prev) => ({ ...prev, [k]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            confirmGap(k, need, typed[k] ?? '')
+                          }
+                        }}
                       />
-                      <button
-                        type="button"
-                        className="ghost"
-                        disabled={filling || busy || fillingNeed !== null}
-                        onClick={() => void lookUp(b.need ?? '')}
-                      >
-                        {fillingNeed === (b.need ?? '') ? '읽는 중…' : '이 주소에서 찾기'}
+                      <button type="button" disabled={!(typed[k] ?? '').trim()} onClick={() => confirmGap(k, need, typed[k] ?? '')}>
+                        넣기
+                      </button>
+                      <button type="button" className="ghost" onClick={() => omitGap(k)}>
+                        모르면 이 문장 빼기
                       </button>
                     </div>
+                    {missed.has(k) && !f?.suggested && (
+                      <span className="doc-meta">그 페이지에는 없었습니다 — 아래에 값이 적힌 페이지 주소를 넣어 찾아보세요.</span>
+                    )}
+                    {/* 빈칸마다 값이 있는 페이지가 다르다. 주소 하나로 전부 찾으려 하면 대개 0건이다. */}
+                    <details className="gap-url-more">
+                      <summary>다른 페이지에서 찾기</summary>
+                      <div className="gap-url">
+                        <input
+                          type="text"
+                          inputMode="url"
+                          aria-label={`${claimOf(need)} 값이 적힌 페이지 주소`}
+                          placeholder="이 값이 적힌 페이지 주소 (비우면 브랜드 페이지)"
+                          value={urlByKey[k] ?? ''}
+                          onChange={(e) => setUrlByKey((prev) => ({ ...prev, [k]: e.target.value }))}
+                        />
+                        <button type="button" className="ghost" disabled={looking !== null} onClick={() => void lookUp(k)}>
+                          {looking === k ? '읽는 중…' : '이 주소에서 찾기'}
+                        </button>
+                      </div>
+                    </details>
                   </div>
-                ) : (
-                  <p key={i}>{b.body}</p>
-                ),
-              )}
+                )
+              })}
             </section>
           ))}
-          {d.usedFacts.length > 0 && (
-            <section>
-              <h4>이 글이 쓴 사실</h4>
-              <ul>
-                {d.usedFacts.map((f) => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-            </section>
+          {(d.usedFacts.length > 0 || (d.guardNotes && d.guardNotes.length > 0)) && (
+            // 사실 대조 기록은 우리가 검증할 때 보는 것이라 접어 둔다(발행본에는 원래 실리지 않는다).
+            <details className="draft-audit">
+              <summary>
+                사실 대조 · 쓴 사실 {d.usedFacts.length}개
+                {d.guardNotes && d.guardNotes.length > 0 && ` · 검증이 걸러낸 문장 ${d.guardNotes.length}건`}
+              </summary>
+              {d.usedFacts.length > 0 && (
+                <ul>
+                  {d.usedFacts.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+              )}
+              {d.guardNotes && d.guardNotes.length > 0 && (
+                <ul className="muted">
+                  {d.guardNotes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              )}
+            </details>
           )}
-          {d.guardNotes && d.guardNotes.length > 0 && (
-            <section>
-              <h4>검증이 걸러낸 것</h4>
-              <ul>
-                {d.guardNotes.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-            </section>
+          {left === 0 && progress.total > 0 && (
+            <div className="brief-bar">
+              <button type="button" onClick={() => setStep('publish')}>
+                빈칸 확인 끝 — 올리기로
+              </button>
+            </div>
           )}
+        </div>
+      )}
+
+      {step === 'publish' && (
+        <div className="brief-body draft-publish">
+          <div className="draft-copy">
+            <button type="button" className="draft-copy-btn" onClick={() => void copyPublish()}>
+              {copied ? '복사했습니다' : '이 글 복사'}
+            </button>
+            <p className="doc-meta">
+              서식째 복사합니다 — 네이버 블로그·티스토리 편집기에 붙여도 제목·굵은 글씨가 남습니다.
+              {(() => {
+                const n = stored.editedMarkdown ? countGapNotes(stored.editedMarkdown) : left
+                return n > 0 ? ` 아직 채우지 않은 빈칸 ${n}곳은 빼고 복사합니다.` : ''
+              })()}
+            </p>
+          </div>
+          {destinations !== null && (
+            <p className="gap-dest" style={{ margin: 0 }}>
+              올릴 곳 · <b>자사 사이트</b>
+              {destinations.length > 0 && ` · ${destinations.join(' · ')}`}
+            </p>
+          )}
+          {publish}
+          <details className="draft-files">
+            <summary>파일로 받기</summary>
+            <div className="brief-bar">
+              <button
+                type="button"
+                className="ghost"
+                title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
+                onClick={() =>
+                  downloadMarkdown(`발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, publishMarkdownOf(stored))
+                }
+              >
+                발행용 .md
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 「이 글 복사」를 쓰세요."
+                onClick={() => {
+                  if (!tenant) return
+                  void loadFactGraph(tenantId)
+                    .then((fg) => fg?.factGraph ?? [])
+                    .catch((e: unknown) => {
+                      console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
+                      return [] as FactNode[]
+                    })
+                    .then((facts) =>
+                      downloadHtml(
+                        `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                        buildPublishHtml({ stored, brand: tenant, facts }),
+                      ),
+                    )
+                }}
+              >
+                자사 사이트용 .html
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="남은 빈칸 표시와 「이 글이 쓴 사실」까지 담은 작업용 원고입니다."
+                onClick={() =>
+                  downloadMarkdown(`초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, workMarkdownOf(stored))
+                }
+              >
+                작업용 .md
+              </button>
+            </div>
+          </details>
         </div>
       )}
     </div>

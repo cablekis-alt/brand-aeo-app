@@ -11,7 +11,8 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
-import { downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
+import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
@@ -230,7 +231,16 @@ function BriefPanel({
  * 인용된 건지, 그 사이트의 다른 글이 인용된 건지는 구분하지 못한다. 주소를 적어 두면 다음
  * 측정의 인용 주소와 직접 맞춰서 집행한 일과 결과를 잇는다.
  */
-function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: string[]) => void }) {
+function PublishedUrls({
+  action,
+  onSave,
+  addLabel = '추가',
+}: {
+  action: GapAction
+  /** added: 새 주소를 붙였을 때 true — 초안의 「올렸어요」는 이때 「집행함」으로도 바꾼다. */
+  onSave: (urls: string[], added: boolean) => void
+  addLabel?: string
+}) {
   const [input, setInput] = useState('')
   const urls = action.publishedUrls
   const cited = new Set(action.citedPublishedUrls)
@@ -241,7 +251,7 @@ function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: s
       setInput('')
       return
     }
-    onSave([...urls, t])
+    onSave([...urls, t], true)
     setInput('')
   }
   return (
@@ -261,7 +271,7 @@ function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: s
               ) : (
                 <span className="muted">아직 인용 없음</span>
               )}{' '}
-              <button type="button" className="ghost" onClick={() => onSave(urls.filter((x) => x !== u))}>
+              <button type="button" className="ghost" onClick={() => onSave(urls.filter((x) => x !== u), false)}>
                 빼기
               </button>
             </li>
@@ -283,11 +293,17 @@ function PublishedUrls({ action, onSave }: { action: GapAction; onSave: (urls: s
           style={{ flex: 1 }}
         />
         <button type="button" className="ghost" onClick={add} disabled={!/^https?:\/\/\S+$/i.test(input.trim())}>
-          추가
+          {addLabel}
         </button>
       </div>
     </div>
   )
+}
+
+/** 아직 채우지도 빼지도 않은 빈칸 수. */
+function gapsLeft(d: StoredDraft): number {
+  const p = gapProgress(d)
+  return p.total - p.done
 }
 
 /** 마크다운 제목 단계를 두 칸 내린다 — 브리프·초안을 묶음 문서 안에 넣을 때 쓴다. */
@@ -341,8 +357,8 @@ function bundleToMarkdown(
     const d = drafts[a.id]
     L.push(
       d
-        ? demote(d.editedMarkdown ?? draftToMarkdown(d.draft)) +
-            (d.draft.gapCount > 0 ? `\n\n**채워야 할 자리 ${d.draft.gapCount}곳** — 위 인용 표시를 보세요.` : '')
+        ? demote(workMarkdownOf(d)) +
+            (gapsLeft(d) > 0 ? `\n\n**채워야 할 자리 ${gapsLeft(d)}곳** — 위 인용 표시를 보세요.` : '')
         : '### 초안\n\n아직 만들지 않았습니다.',
       '',
     )
@@ -453,7 +469,7 @@ function ActionCard({
   /** null이면 이 환경(웹)에 초안 라우트가 없다. */
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
-  onUrls: (id: string, urls: string[]) => void
+  onUrls: (id: string, urls: string[], markDone?: boolean) => void
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
   /** 콘텐츠형일 때, 이 글이 갈 채널들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
@@ -469,6 +485,8 @@ function ActionCard({
   const [detail, setDetail] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
+  // 초안 패널이 뜨는 카드는 「올린 글 주소」를 초안의 ③ 올리기 칸에서 받는다(두 곳에 두지 않는다).
+  const showsDraft = briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft)
   return (
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
@@ -519,7 +537,7 @@ function ActionCard({
         </>
       )}
       {detail && <p className="gap-tally">완료 조건 · {action.doneSignal}</p>}
-      {detail && canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
+      {detail && !showsDraft && canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
         <PublishedUrls action={action} onSave={(urls) => onUrls(action.id, urls)} />
       )}
       {awaiting && (
@@ -598,7 +616,7 @@ function ActionCard({
           )}
         </div>
       )}
-      {briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft) && (
+      {showsDraft && (
         <DraftPanel
           tenantId={tenantId}
           action={action}
@@ -606,6 +624,13 @@ function ActionCard({
           stored={drafts[action.id]}
           onStored={onDraft}
           compact={!detail}
+          destinations={destinations}
+          publishedCount={action.publishedUrls.length}
+          publish={
+            canSaveStatus ? (
+              <PublishedUrls action={action} addLabel="올렸어요" onSave={(urls, added) => onUrls(action.id, urls, added)} />
+            ) : undefined
+          }
           ensureBrief={async () => {
             onBrief(
               await generateContentBrief(tenantId, {
@@ -736,7 +761,7 @@ export default function GapActions() {
       </header>
       <p className="page-lead">
         <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 정하고
-        만드는 곳입니다. 저장된 측정만으로 계산하며 새 API 호출은 없습니다.
+        만드는 곳입니다. 할 일 목록은 저장된 측정으로 계산합니다. AI를 부르는 것은 초안 만들기와 빈칸 값 찾기뿐입니다.
       </p>
 
       <div className="filters">
