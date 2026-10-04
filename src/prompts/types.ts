@@ -36,6 +36,18 @@ export interface CompetitorContext {
   domains: string[];
 }
 
+/**
+ * 시장 범위 — 이 브랜드가 누구에게 파는가. 지역 · 경쟁사 · 질문지가 이 값을 따른다.
+ *   local    지역형: 동네 손님(병원 · 펜션 · 학원). 지역이 질문에 들어간다.
+ *   national 전국형: 전국 소비자(보험 · 통신 · 가전). 지역은 「국내」, 제품 · 브랜드를 비교한다.
+ *   b2b      B2B형: 기업 고객에게 납품(셋톱박스 · 부품 · 장비). 구매 · 조달 담당자가 공급사를 찾는다.
+ * 값이 없으면 지역형으로 본다 — 시장 범위가 생기기 전의 브랜드가 모두 그렇게 측정됐다.
+ */
+export type MarketScope = 'local' | 'national' | 'b2b';
+export const MARKET_SCOPES: MarketScope[] = ['local', 'national', 'b2b'];
+/** 전국형 · B2B형 브랜드의 지역 값 — 본사 주소가 아니라 시장 전체를 뜻한다. */
+export const NATIONAL_REGION = '국내';
+
 export interface BrandContext {
   brandName: string;
   aliases: string[];
@@ -43,6 +55,10 @@ export interface BrandContext {
   competitors: CompetitorContext[];
   industry: string;
   region: string;
+  /** 없으면 지역형(local). */
+  marketScope?: MarketScope;
+  /** B2B형의 구매자(예: "통신사 IPTV 셋톱박스 구매 · 조달 담당자") — 질문하는 사람이 된다. */
+  buyer?: string;
 }
 
 export interface FactGraphNode {

@@ -5,6 +5,7 @@ import { OpenAiEngineClient } from './engines/openaiEngineClient.js';
 import type { EngineClient } from './engines/types.js';
 import { OpenAiJudgeClient } from './engines/openaiJudgeClient.js';
 import { parseJsonLoose } from './jsonParse.js';
+import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 
 // 한국 도로명/지번 주소 패턴 (온보딩 폼의 것과 동일) — 그라운딩 응답에서 주소만 검증·추출.
 const KR_ADDRESS =
@@ -266,14 +267,79 @@ async function verifiedDomain(raw: string): Promise<string> {
   }
 }
 
+export interface InferredScope {
+  marketScope: MarketScope;
+  /** B2B형일 때만 — 이 브랜드의 고객 중 실제로 구매를 정하는 사람. */
+  buyer: string;
+}
+
 /**
- * 온보딩 보조 — 같은 업종·지역의 경쟁 브랜드를 Gemini(웹 검색 그라운딩)로 추천한다.
+ * 온보딩 보조 — 시장 범위(지역형 · 전국형 · B2B형)와 B2B 구매자를 추론한다. 업종을 안 뒤에 부른다.
+ *
+ * 경쟁사 추론 · 질문지가 이 값을 따른다(src/prompts/b1-question-bank.ts scopeGuide). 모르거나 실패하면
+ * 지역형 — 시장 범위가 생기기 전의 기본 동작이다. 사람이 브랜드 추가 화면에서 고칠 수 있다.
+ *
+ * 기준은 매출 구조가 아니라 AI에 묻는 사람이다. 「기업에 납품하면 b2b」로만 정의했더니 SK하이닉스가 B2B로
+ * 추론됐다 — 고객이 넓고 일반인 · 투자자도 HBM · DDR5 · 점유율을 묻는 대형 브랜드라 전국형이 맞다(2026-10-05).
+ */
+export async function inferMarketScope(brandName: string, industry: string, context = ''): Promise<InferredScope> {
+  const fallback: InferredScope = { marketScope: 'local', buyer: '' };
+  if (!process.env.GEMINI_API_KEY || !brandName.trim() || !industry.trim()) return fallback;
+
+  const system = '당신은 한국 기업의 사업 형태를 분류하는 도우미입니다. 반드시 JSON 객체만 반환하세요.';
+  const user = `브랜드: "${brandName}" · 업종: "${industry}"
+${context.trim() ? `참고(홈페이지 본문 일부):\n${context.trim().slice(0, 1500)}\n` : ''}
+AI 검색(ChatGPT 등)에서 이 브랜드가 속한 시장을 **누가 주로 묻는지** 기준으로 하나를 고르세요. 매출 구조가 아니라 질문하는 사람이 기준입니다.
+- "local": 동네 · 지역 손님이 직접 찾아오는 사업(병원 · 치과 · 성형외과 · 펜션 · 학원 · 음식점 · 미용실 등)
+- "national": 전국의 일반 소비자가 고르는 브랜드(보험 · 통신사 · 가전 · 식품 · 온라인 서비스 · 전국 언론 등).
+  또 **일반인 · 투자자 · 구직자도 널리 아는 대형 브랜드**는 기업 거래가 주력이어도 national입니다
+  (예: 반도체 · 배터리 · 화학 대기업 — 기술 · 산업 동향 · 소비자 제품 질문에서 이름이 불린다).
+- "b2b": 구매자를 한 줄로 특정할 수 있는 납품 · 공급 사업이고, 일반인은 그 회사를 AI에 거의 묻지 않는 경우
+  (중견 · 중소 부품 · 소재 · 장비 · 단말 제조, 기업용 소프트웨어, 컨설팅 등).
+b2b이면 buyer에 실제로 구매를 정하는 사람을 한 줄로 적으세요(예: "통신사 IPTV 셋톱박스 구매 · 조달 담당자"). 아니면 "".
+스키마: {"marketScope": "local" | "national" | "b2b", "buyer": string}
+설명 없이 JSON만 반환하세요.`;
+
+  // 그라운딩(검색) 쪽이 회사의 실제 고객을 더 잘 안다. 실패하면 순수 추론으로 한 번 더.
+  for (const client of [new GeminiEngineClient(), new GeminiJudgeClient()]) {
+    try {
+      const parsed = parseJsonLoose<Partial<{ marketScope: string; buyer: string }>>((await client.call({ system, user })).text);
+      const scope = typeof parsed?.marketScope === 'string' ? parsed.marketScope.trim() : '';
+      if ((MARKET_SCOPES as string[]).includes(scope)) {
+        const buyer = scope === 'b2b' && typeof parsed?.buyer === 'string' ? parsed.buyer.trim().slice(0, 120) : '';
+        return { marketScope: scope as MarketScope, buyer };
+      }
+    } catch (err) {
+      console.error('[inferMarketScope] 추론 실패:', err instanceof Error ? err.message : err);
+    }
+  }
+  return fallback;
+}
+
+/** 시장 범위별 경쟁사 요청 문장 — 지역형만 지역으로 좁힌다. */
+function competitorAsk(brandName: string, industry: string, region: string, scope: MarketScope, buyer: string): string {
+  if (scope === 'b2b') {
+    const to = buyer.trim() || '같은 기업 고객';
+    return `"${brandName}"와 같은 고객(${to})에게 납품 · 공급하며 직접 경쟁하는 같은 "${industry}" 업종 기업 3~5곳을 추천하세요(본사 지역은 따지지 않습니다).`;
+  }
+  if (scope === 'national') {
+    return `"${brandName}"와 국내 시장에서 직접 경쟁하는 같은 "${industry}" 업종의 전국 규모 브랜드 3~5곳을 추천하세요(본사 지역은 따지지 않습니다).`;
+  }
+  return `"${brandName}"와 직접 경쟁하는 ${region ? `${region} 지역의 ` : ''}같은 "${industry}" 업종 브랜드 3~5곳을 추천하세요.`;
+}
+
+/**
+ * 온보딩 보조 — 경쟁 브랜드를 Gemini(웹 검색 그라운딩)로 추천한다. 지역형은 같은 업종 · 지역, 전국형은
+ * 전국 시장, B2B형은 같은 고객사에 납품하는 회사로 찾는다 — 지역형으로만 찾자 SK하이닉스의 경쟁사가 이천의
+ * 소재 · 부품 협력사로 잡히고 삼성전자가 빠졌다(2026-10).
  * 이름은 그대로 쓰되, 도메인은 실재 확인(DNS)에 통과한 것만 채우고 나머지는 빈 값(사용자 보완)으로 둔다.
  */
 export async function inferCompetitors(
   brandName: string,
   industry: string,
   region = '',
+  marketScope: MarketScope = 'local',
+  buyer = '',
 ): Promise<InferredCompetitor[]> {
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
   // OpenAI는 Vercel 리전(iad1)에서 한국어 브랜드 회상에 헛소리(식당·놀이공원 등)를 내므로 로컬/CI에서만 병합한다.
@@ -283,7 +349,7 @@ export async function inferCompetitors(
 
   const system =
     '당신은 한국 시장 리서처입니다. 반드시 JSON 배열만 반환하세요. 도메인은 확실할 때만 적고, 모르면 빈 문자열("")로 두세요. 도메인을 지어내지 마세요.';
-  const user = `"${brandName}"와 직접 경쟁하는 ${region ? `${region} 지역의 ` : ''}같은 "${industry}" 업종 브랜드 3~5곳을 추천하세요.
+  const user = `${competitorAsk(brandName, industry, region, marketScope, buyer)}
 매우 중요: 반드시 실제 "${industry}" 업종의 업체/브랜드만 포함하세요. "${brandName}"와 이름이 비슷하더라도 다른 업종(예: 화장품·카페·차·식당·쇼핑몰 등)은 절대 포함하지 마세요.
 "${brandName}" 자신은 제외합니다.
 각 항목: {"name": 브랜드명(한국어), "domain": 공식 웹사이트 도메인(예: "example.com"), 확실하지 않으면 ""}

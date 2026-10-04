@@ -5,7 +5,9 @@ import express from 'express';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
-import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors } from './brandInference.js';
+import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
+import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
+import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
 import { tagJourneyStages } from './journeyStage.js';
@@ -800,6 +802,29 @@ app.put('/api/site-scores/:tenantId', async (req, res) => {
   }
 });
 
+// 브랜드별 시장 범위(지역형 · 전국형 · B2B형) — data/<tenant>/market-scope.json(tenantScopeStore.ts).
+// 질문지는 다음에 새로 만들 때부터 따른다. 이미 만든 질문지는 그대로라 측정 결과도 그대로다.
+app.put('/api/tenants/:tenantId/market-scope', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  let scope;
+  try {
+    scope = normalizeTenantScope(req.body);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  try {
+    await writeTenantScope(tenant.tenantId, scope);
+    res.json({ tenantId: tenant.tenantId, ...scope });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // 브랜드별 수집 엔진. 전역 지정(COLLECT_ENGINES)이 있으면 그쪽이 이긴다 —
 // 여기 저장한 값은 "전역 지정을 안 쓸 때" 쓰인다(resolveCollectionEngines 한 곳에서 판단).
 app.put('/api/tenants/:tenantId/engines', async (req, res) => {
@@ -1007,7 +1032,22 @@ app.post('/api/infer', async (req, res) => {
         res.status(400).json({ error: 'brandName, industry가 필요합니다.' });
         return;
       }
-      res.json(await inferCompetitors(brandName, industry, region));
+      const scopeRaw = typeof req.body?.marketScope === 'string' ? req.body.marketScope : '';
+      const marketScope: MarketScope = (MARKET_SCOPES as string[]).includes(scopeRaw) ? (scopeRaw as MarketScope) : 'local';
+      const buyer = typeof req.body?.buyer === 'string' ? req.body.buyer : '';
+      res.json(await inferCompetitors(brandName, industry, region, marketScope, buyer));
+      return;
+    }
+    if (kind === 'scope') {
+      // 시장 범위(지역형 · 전국형 · B2B형) + B2B 구매자. 배포 api/infer.ts와 같은 계약.
+      const brandName = typeof req.body?.brandName === 'string' ? req.body.brandName : '';
+      const industry = typeof req.body?.industry === 'string' ? req.body.industry : '';
+      if (!brandName.trim() || !industry.trim()) {
+        res.status(400).json({ error: 'brandName, industry가 필요합니다.' });
+        return;
+      }
+      const text = typeof req.body?.text === 'string' ? req.body.text : '';
+      res.json(await inferMarketScope(brandName, industry, text));
       return;
     }
     if (kind === 'address') {

@@ -7,6 +7,7 @@ import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './ten
 import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
 import { readTenantEngines } from './tenantEnginesStore.js';
+import { readTenantScope, type TenantScope } from './tenantScopeStore.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
@@ -148,7 +149,18 @@ export function normalizeTenantDraft(raw: unknown): TenantConfig {
     cohortQuestionBank: d.cohortQuestionBank || DEFAULT_COHORT_QUESTION_BANK,
     // 알 수 없는 값은 버린다 — 한국어(기본)로 측정하는 편이, 엉뚱한 언어로 은행을 만드는 것보다 낫다.
     ...(d.questionLanguage === 'en' ? { questionLanguage: 'en' as const } : {}),
+    // 시장 범위 — 지역형이 기본이라 값이 없거나 모르면 적지 않는다. 구매자는 B2B형에서만 남긴다.
+    ...(d.marketScope === 'national' || d.marketScope === 'b2b' ? { marketScope: d.marketScope } : {}),
+    ...(d.marketScope === 'b2b' && typeof d.buyer === 'string' && d.buyer.trim() ? { buyer: d.buyer.trim().slice(0, 120) } : {}),
   };
+}
+
+/** 시장 범위 파일은 범위 · 구매자를 통째로 정한다 — 파일에 구매자가 없으면 설정의 구매자도 지운다. */
+function withScope(tenant: TenantConfig, scope: TenantScope): TenantConfig {
+  const next: TenantConfig = { ...tenant, marketScope: scope.marketScope };
+  if (scope.buyer) next.buyer = scope.buyer;
+  else delete next.buyer;
+  return next;
 }
 
 export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
@@ -164,13 +176,14 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   // 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
   // 않기 때문이다.
   const tenants = [...map.values()];
-  const [facts, pages, engines] = await Promise.all([
+  const [facts, pages, engines, scopes] = await Promise.all([
     Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
     Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantEngines(t.tenantId))),
+    Promise.all(tenants.map((t) => readTenantScope(t.tenantId))),
   ]);
   return tenants.map((t, i) => ({
-    ...t,
+    ...(scopes[i] ? withScope(t, scopes[i]!) : t),
     ...(facts[i] ? { factGraph: facts[i]! } : {}),
     ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
     ...(engines[i] ? { engines: engines[i]! } : {}),
@@ -240,5 +253,7 @@ export function toTenantSummary(tenant: TenantConfig) {
     questionBankSize: tenant.questionBankSize,
     competitors: tenant.competitors.map((competitor) => competitor.name),
     ...(tenant.brandPageUrl ? { brandPageUrl: tenant.brandPageUrl } : {}),
+    marketScope: tenant.marketScope ?? 'local',
+    ...(tenant.buyer ? { buyer: tenant.buyer } : {}),
   };
 }

@@ -7,6 +7,7 @@ import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureTenantAll, type FactCandidate } from '../lib/api'
+import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
 const KR_ADDRESS =
@@ -89,7 +90,17 @@ interface TenantDraft {
   factGraph: { id: string; type: string; claim: string; value: string; updatedAt: string }[]
   cohortOnly?: boolean
   autoCohort?: boolean
+  /** 지역형이면 보내지 않는다(서버 기본). */
+  marketScope?: MarketScope
+  buyer?: string
 }
+
+/** 시장 범위 카드 — 브랜드 추가 화면의 선택지(상용화 UI 7차 시안). */
+const SCOPE_OPTIONS: { id: MarketScope; title: string; desc: string; examples: string }[] = [
+  { id: 'local', title: '지역형', desc: '동네 손님에게 판다. 가까운 곳을 찾는 질문이 많다.', examples: '병원 · 치과 · 펜션 · 학원' },
+  { id: 'national', title: '전국형', desc: '전국 소비자에게 판다. 지역보다 제품 · 브랜드를 비교한다.', examples: '보험 · 통신 · 가전 · 식품' },
+  { id: 'b2b', title: 'B2B형', desc: '기업 고객에게 납품한다. 구매 · 조달 담당자가 공급사를 찾는다.', examples: '부품 · 장비 · 단말 · 소재' },
+]
 
 function hostToDomain(u: string): string {
   try {
@@ -284,6 +295,12 @@ export default function BrandOnboarding() {
   const [findingAliases, setFindingAliases] = useState(false)
   const [addrMsg, setAddrMsg] = useState<string | null>(null)
   const [competitorsRaw, setCompetitorsRaw] = useState('')
+  // 시장 범위 — 업종을 안 뒤 추론하고(kind=scope), 사람이 고르면 그 뒤로는 추론이 덮어쓰지 않는다.
+  const [marketScope, setMarketScope] = useState<MarketScope>('local')
+  const [buyer, setBuyer] = useState('')
+  const [scopeTouched, setScopeTouched] = useState(false)
+  const [scopeInferred, setScopeInferred] = useState<MarketScope | null>(null)
+  const [scopeChangedAfterComp, setScopeChangedAfterComp] = useState(false)
   // 수집 엔진 — 기본값은 "키가 있는 엔진 전부"다. 키 없는 엔진을 기본으로 켜 두면
   // 측정에서 조용히 빠져(부분 저하) 고른 것과 실제로 잰 것이 달라진다.
   // 키 상태는 서버가 /api/health로 알려 준다(존재 여부만) — 웹·데스크톱 모두 같은 경로.
@@ -656,12 +673,48 @@ export default function BrandOnboarding() {
         }
       }
 
+      // 시장 범위 → 경쟁사. 전국형 · B2B형이면 경쟁사를 지역으로 좁히지 않는다(지역 칸은 「국내」로 보인다).
+      const scope = await resolveScope(guessedName, resolvedIndustry, inferText)
+      const compRegion = scope.marketScope === 'local' ? resolvedRegion : NATIONAL_REGION
       // 경쟁사 자동 채우기 — URL·상호 두 진입 경로가 공유한다. URL 경로는 사용자가 이미 넣은 경쟁사는 보존.
-      await autoFillCompetitors(guessedName, resolvedIndustry, resolvedRegion, finalDomain, true)
+      await autoFillCompetitors(guessedName, resolvedIndustry, compRegion, finalDomain, true, scope)
     } catch (err) {
       setError(err instanceof Error ? err.message : '수집 중 오류가 발생했습니다.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  /**
+   * 시장 범위를 정한다 — 사람이 이미 골랐으면 그 값, 아니면 추론(kind=scope). 경쟁사 추론보다 먼저 불러야
+   * 경쟁사를 맞는 기준(같은 지역 / 전국 / 같은 고객사)으로 찾는다. 추론이 실패하면 지역형.
+   */
+  async function resolveScope(
+    name: string,
+    industryVal: string,
+    text: string,
+    fresh = false,
+  ): Promise<{ marketScope: MarketScope; buyer: string }> {
+    // fresh: 다른 브랜드를 새로 조회했다 — 앞 브랜드에서 고른 값을 쓰지 않는다(state는 이 렌더의 값이라 직접 넘긴다).
+    if (scopeTouched && !fresh) return { marketScope, buyer }
+    if (!name || !industryVal) return { marketScope: 'local', buyer: '' }
+    try {
+      const r = await fetch('/api/infer?kind=scope', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName: name, industry: industryVal, text: text.slice(0, 1500) }),
+      })
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const j = (await r.json()) as { marketScope?: MarketScope; buyer?: string }
+      const scope: MarketScope = j.marketScope === 'national' || j.marketScope === 'b2b' ? j.marketScope : 'local'
+      const who = scope === 'b2b' ? (j.buyer ?? '').trim() : ''
+      setMarketScope(scope)
+      setBuyer(who)
+      setScopeInferred(scope)
+      return { marketScope: scope, buyer: who }
+    } catch (err) {
+      console.error('[BrandOnboarding] 시장 범위를 추론하지 못했습니다 — 지역형으로 둡니다', err)
+      return { marketScope: 'local', buyer: '' }
     }
   }
 
@@ -673,6 +726,7 @@ export default function BrandOnboarding() {
     regionVal: string,
     domainVal: string,
     skipIfFilled: boolean,
+    scope: { marketScope: MarketScope; buyer: string } = { marketScope: 'local', buyer: '' },
   ) {
     if (!name || !industryVal) return
     if (skipIfFilled && competitorsRaw.trim()) return
@@ -685,7 +739,7 @@ export default function BrandOnboarding() {
         const r = await fetch('/api/infer?kind=competitors', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal }),
+          body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal, ...scope }),
         })
         const list = r.ok ? ((await r.json()) as { name: string; domain?: string }[]) : []
         if (Array.isArray(list) && list.length) {
@@ -706,7 +760,7 @@ export default function BrandOnboarding() {
       const dsp = await fetch('/api/infer?kind=competitors-dispatch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal, domain: domainVal }),
+        body: JSON.stringify({ brandName: name, industry: industryVal, region: regionVal, domain: domainVal, ...scope }),
       })
       const dj = (await dsp.json().catch(() => ({}))) as { dispatched?: boolean }
       if (dj.dispatched) {
@@ -776,6 +830,11 @@ export default function BrandOnboarding() {
     setAddress('')
     setCompetitorsRaw('')
     setCompMsg(null)
+    setMarketScope('local')
+    setBuyer('')
+    setScopeTouched(false)
+    setScopeInferred(null)
+    setScopeChangedAfterComp(false)
     setRegistered(false)
     setRegisterMsg(null)
     setMeasureMsg(null)
@@ -811,7 +870,9 @@ export default function BrandOnboarding() {
       setAddress(info.address || '')
       setExtracted(true)
 
-      await autoFillCompetitors(resolvedName, resolvedIndustry, resolvedRegion, info.domain || '', false)
+      const scope = await resolveScope(resolvedName, resolvedIndustry, '', true)
+      const compRegion = scope.marketScope === 'local' ? resolvedRegion : NATIONAL_REGION
+      await autoFillCompetitors(resolvedName, resolvedIndustry, compRegion, info.domain || '', false, scope)
 
       if (!info.domain) {
         setError(
@@ -856,6 +917,7 @@ export default function BrandOnboarding() {
     }
   }
 
+  const effectiveRegion = marketScope === 'local' ? region.trim() : NATIONAL_REGION
   const tenant: TenantDraft = {
     tenantId: makeTenantId(domain, brandName),
     brandName: brandName.trim(),
@@ -865,7 +927,10 @@ export default function BrandOnboarding() {
       : [],
     ownedDomains: domain ? [domain] : [],
     industry: industry.trim(),
-    region: region.trim(),
+    // 전국형 · B2B형은 지역이 「국내」다 — 본사 주소의 시 · 구는 주소(팩트)로만 남는다.
+    region: effectiveRegion,
+    ...(marketScope !== 'local' ? { marketScope } : {}),
+    ...(marketScope === 'b2b' && buyer.trim() ? { buyer: buyer.trim() } : {}),
     // 5단계에서 고른 엔진. 데스크톱이 아니면 키를 알 수 없어 4개 그대로 두고, 측정 때
     // 키 없는 엔진이 걸러진다(부분 저하).
     engines,
@@ -934,8 +999,15 @@ export default function BrandOnboarding() {
       const res = await fetch('/api/infer?kind=competitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandName: brandName.trim(), industry: industry.trim(), region: region.trim() }),
+        body: JSON.stringify({
+          brandName: brandName.trim(),
+          industry: industry.trim(),
+          region: effectiveRegion,
+          marketScope,
+          buyer: marketScope === 'b2b' ? buyer.trim() : '',
+        }),
       })
+      setScopeChangedAfterComp(false)
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         throw new Error(body.error || `추천 실패 (HTTP ${res.status})`)
@@ -1151,6 +1223,53 @@ export default function BrandOnboarding() {
             <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="예: viewclinic.com" />
             <span className="hint">홈페이지가 있으면 넣으세요 — 브랜드 소유 인용률 측정에 쓰입니다. 없어도 등록됩니다.</span>
           </label>
+          <fieldset className="field span2 scope-pick">
+            <legend>
+              시장 범위 * <span className="hint">이 브랜드는 누구에게 파나요? 지역 · 경쟁사 · 질문지가 이 값을 따릅니다.</span>
+            </legend>
+            <div className="scope-cards" role="radiogroup" aria-label="시장 범위">
+              {SCOPE_OPTIONS.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={marketScope === o.id}
+                  className={`scope-card${marketScope === o.id ? ' on' : ''}`}
+                  onClick={() => {
+                    if (o.id === marketScope) return
+                    setMarketScope(o.id)
+                    setScopeTouched(true)
+                    if (competitorsRaw.trim()) setScopeChangedAfterComp(true)
+                  }}
+                >
+                  <span className="scope-card-title">{o.title}</span>
+                  <span className="scope-card-desc">{o.desc}</span>
+                  <span className="scope-card-ex">예: {o.examples}</span>
+                  {scopeInferred === o.id && <span className="scope-card-badge">페이지에서 추론됨</span>}
+                </button>
+              ))}
+            </div>
+            {marketScope === 'b2b' && (
+              <label className="scope-buyer">
+                <span>누가 사나요? (질문하는 사람이 됩니다)</span>
+                <input
+                  type="text"
+                  value={buyer}
+                  onChange={(e) => {
+                    setBuyer(e.target.value)
+                    setScopeTouched(true)
+                  }}
+                  placeholder="예: 통신사 IPTV 셋톱박스 구매 · 조달 담당자"
+                />
+              </label>
+            )}
+            {scopeChangedAfterComp && (
+              <span className="hint">
+                ⚠ 경쟁사를 찾은 뒤 시장 범위를 바꿨습니다 — 아래 「경쟁사 자동 추천」으로 다시 찾으면 새 기준(
+                {marketScope === 'local' ? '같은 지역' : marketScope === 'national' ? '전국 시장' : '같은 고객사에 납품'})으로 찾습니다.
+              </span>
+            )}
+          </fieldset>
           <label className="field">
             <span>업종 *</span>
             <input
@@ -1174,19 +1293,28 @@ export default function BrandOnboarding() {
           </label>
           <label className="field">
             <span>지역 *</span>
-            <input
-              type="text"
-              list="cohort-regions"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              placeholder="예: 서울 강남"
-            />
+            {marketScope === 'local' ? (
+              <input
+                type="text"
+                list="cohort-regions"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                placeholder="예: 서울 강남"
+              />
+            ) : (
+              <input type="text" value={NATIONAL_REGION} readOnly aria-readonly="true" className="scope-region-locked" />
+            )}
+            {marketScope !== 'local' && (
+              <span className="hint">
+                전국형 · B2B형은 지역이 「{NATIONAL_REGION}」입니다{region.trim() ? ` — 본사 지역(${region.trim()})은 주소로만 보관합니다` : ''}.
+              </span>
+            )}
             <datalist id="cohort-regions">
               {cohortRegions.map((v) => (
                 <option key={v} value={v} />
               ))}
             </datalist>
-            {region.trim() && cohortRegions.length > 0 && !cohortRegions.includes(region.trim()) && (
+            {marketScope === 'local' && region.trim() && cohortRegions.length > 0 && !cohortRegions.includes(region.trim()) && (
               <span className="hint">
                 ⚠ 기존 코호트에 없는 지역입니다 — 새 코호트로 분리됩니다. 의도한 것이 아니면 기존 값과 맞추세요.
               </span>
