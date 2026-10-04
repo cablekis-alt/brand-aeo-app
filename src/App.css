@@ -180,18 +180,6 @@
   display: none;
 }
 
-.sidebar-all-brands {
-  flex: none;
-  margin: -4px 0 0;
-  padding: 2px 10px;
-  font-size: 12px;
-  color: var(--muted);
-  text-decoration: none;
-}
-.sidebar-all-brands:hover {
-  color: var(--accent-ink);
-  text-decoration: underline;
-}
 .sidebar-cta {
   display: flex;
   align-items: center;
