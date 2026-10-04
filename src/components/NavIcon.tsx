@@ -3,6 +3,7 @@
  * 색은 currentColor라 메뉴 글자색(기본·선택·호버)을 그대로 따른다.
  */
 const PATHS = {
+  brands: 'M12 3l9 5-9 5-9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5',
   dashboard: 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z',
   answers: 'M4 5h16v11H10l-4 4v-4H4zM8 9h8M8 12h5',
   measure: 'M3 12h4l3-8 4 16 3-8h4',

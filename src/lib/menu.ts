@@ -34,8 +34,10 @@ export interface MenuGroup {
 export const MENU: MenuGroup[] = [
   {
     id: 'home',
+    // 브랜드 현황은 맨 위 — 데스크톱 앱이 켤 때 여는 화면이고, 앱 안에서도 늘 한 번에 돌아올 수 있어야 한다.
     // AI 답변은 개요 바로 아래에 둔다 — 고객이 가장 먼저 묻는 「AI가 실제로 뭐라고 했나」를 보는 화면이다.
     items: [
+      { label: '브랜드 현황', to: '/brands', icon: 'brands' },
       { label: '개요', to: '/', icon: 'dashboard' },
       { label: 'AI 답변', to: '/answers', icon: 'answers' },
     ],
@@ -98,8 +100,8 @@ export const MENU: MenuGroup[] = [
   },
 ]
 
-/** 메뉴에 없는 화면의 이름 — 사이드바의 「브랜드 추가」·「모든 브랜드 보기」로 들어간다. */
-const EXTRA: Record<string, string> = { '/brand-onboarding': '브랜드 추가', '/brands': '브랜드 현황' }
+/** 메뉴에 없는 화면의 이름 — 사이드바의 「브랜드 추가」로 들어간다. */
+const EXTRA: Record<string, string> = { '/brand-onboarding': '브랜드 추가' }
 
 /** 경로 표시용 — 지금 화면이 어느 묶음의 무엇인지. 메뉴에 없는 경로면 null. */
 export function routeMeta(pathname: string): { group: string | null; label: string } | null {
