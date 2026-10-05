@@ -4423,7 +4423,7 @@ td.cell-mid {
 }
 
 /*
- * 초안 세 걸음(DraftPanel.tsx) — ① 초안 → ② 빈칸 확인 → ③ 올리기. 단계 띠가 곧 손잡이다(누르면 그 칸이 열린다).
+ * 글 카드 본문(DraftPanel.tsx) — 초안과 빈칸 확인. 올리기는 「② 올리기 목록」(PublishList.tsx)이 한다.
  * 빈칸은 본문 안에서 채운다: 빨강 = 값 필요, 노랑 = 페이지에서 찾은 후보, 초록 = 넣은 값, 회색 = 뺌.
  */
 .draft-flow {
@@ -4431,82 +4431,9 @@ td.cell-mid {
   flex-direction: column;
   gap: 10px;
 }
-/* 초안이 있는 카드는 한 줄을 다 쓴다 — 두 칸 배치(최소 280px)에서는 단계 띠와 본문 입력이 눌린다. */
+/* 초안이 있는 카드는 한 줄을 다 쓴다 — 두 칸 배치(최소 280px)에서는 본문과 빈칸 입력이 눌린다. */
 .gap-grid > .gap-card:has(.draft-flow) {
   grid-column: 1 / -1;
-}
-.draft-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: var(--r-ctl);
-  overflow: hidden;
-}
-.draft-step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 9px 12px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--ink);
-  font: inherit;
-  text-align: left;
-}
-.draft-step:last-child {
-  border-right: 0;
-}
-button.draft-step {
-  cursor: pointer;
-}
-button.draft-step:hover {
-  background: var(--card);
-}
-.draft-step.on {
-  background: var(--card);
-  box-shadow: inset 0 -3px 0 var(--accent);
-}
-.draft-step:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-.draft-step-dot {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--line);
-  color: var(--ink-2);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-.draft-step.done .draft-step-dot {
-  background: var(--accent);
-  color: var(--paper);
-}
-.draft-step.on:not(.done) .draft-step-dot {
-  background: var(--ink);
-  color: var(--paper);
-}
-.draft-step-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.draft-step-label {
-  font-size: 13px;
-  font-weight: 600;
-}
-.draft-step-sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11.5px;
-  color: var(--muted);
 }
 .draft-tools {
   padding-top: 2px;
@@ -4607,34 +4534,6 @@ button.draft-step:hover {
 .draft-audit ul {
   margin-top: 6px;
 }
-.draft-publish {
-  gap: 12px;
-}
-.draft-copy {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-}
-.draft-copy .doc-meta {
-  flex: 1 1 280px;
-  margin: 0;
-}
-.draft-copy-btn {
-  padding: 9px 18px;
-  border: 0;
-  border-radius: var(--r-ctl);
-  background: var(--accent);
-  color: var(--paper);
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.draft-copy-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 .draft-files .brief-bar {
   margin-top: 8px;
 }
@@ -4658,93 +4557,253 @@ button.draft-step:hover {
 .brief-design[open] > summary {
   margin-bottom: 6px;
 }
-/* 채널별 올림 현황 — 글이 덮는 채널을 한 줄씩(GapActions.tsx). 큰 카드는 「근거·상태 자세히」 안에. */
-.channel-summary {
-  list-style: none;
+/* 콘텐츠 생성 「?」 설명 · 진행 막대 · ① 글 확인 · ② 올리기 목록(GapActions.tsx · DraftPanel.tsx · PublishList.tsx). */
+.help-toggle {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.help-toggle[aria-expanded='true'] {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.help-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.help-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 72ch;
   margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: var(--r-card);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.help-panel p {
+  margin: 0;
+}
+.publish-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+}
+.publish-progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.publish-progress-row b {
+  font-size: 16px;
+}
+.publish-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+.publish-progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .publish-progress-bar > span {
+    transition: none;
+  }
+}
+.publish-progress-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.step-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.step-head .muted {
+  font-size: 13px;
+  font-weight: 400;
+}
+.article-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.article-summary .draft-title {
+  margin: 0;
+}
+.article-lead {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.article-state {
+  flex: 1 1 200px;
+  font-size: 13px;
+  color: var(--warn);
+}
+.article-state.is-ok {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.publish-list {
+  list-style: none;
+  margin: 0;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--card);
   overflow: hidden;
 }
-.channel-summary > li {
-  padding: 10px 14px;
-  border-top: 1px solid var(--line);
-}
-.channel-summary > li:first-child {
-  border-top: 0;
-}
-.channel-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  font-size: 13px;
-}
-.channel-row-name {
-  font-weight: 600;
-}
-.channel-row-state {
-  color: var(--ink-2);
-}
-.channel-row-cover {
-  flex: 1 1 260px;
-  text-align: right;
-  color: var(--muted);
-  font-size: 12px;
-}
-.channel-row-more > summary {
-  margin-top: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--muted);
-}
-.channel-row-more[open] > .gap-card {
-  margin-top: 8px;
-}
-@media (max-width: 640px) {
-  .channel-row-cover {
-    text-align: left;
-  }
-}
-
-/* ③ 올리기의 채널 탭(ChannelTabs.tsx) — 점: 초록 = 올린 주소 있음. */
-.channel-tabs {
+.publish-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
 }
-.channel-tablist {
+.publish-row:first-child {
+  border-top: 0;
+}
+/* 「빈칸 확인하러 가기」 · 인용 갭 분석에서 넘어와 스크롤할 때 위 가장자리에 붙지 않게. */
+.publish-row,
+.gap-card {
+  scroll-margin-top: 24px;
+}
+.publish-row.is-focused {
+  background: var(--accent-soft);
+}
+.publish-row-main {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
-.channel-tab {
-  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 34px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--r-ctl);
-  background: var(--card);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  color: var(--ink-2);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
+  gap: 6px 12px;
 }
-.channel-tab.on {
-  background: var(--ink);
+.publish-row-name {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+}
+.publish-row-article {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.publish-row-reach {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.publish-state {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.publish-state.is-done {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.publish-state.is-ready,
+.publish-state.is-making {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.publish-state.is-locked,
+.publish-state.is-todo {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.publish-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.publish-row-actions button:not(.link-btn) {
+  border-radius: var(--r-ctl);
+}
+/* 줄의 할 일 하나 — 복사(+ 채널 열기). 채널용 글 만들기 · 주소 보기는 보조 버튼 모양 그대로. */
+.publish-row-actions .publish-go {
+  border: 0;
+  background: var(--accent);
   color: var(--paper);
-  box-shadow: none;
   font-weight: 600;
 }
-.channel-tab:focus-visible {
+.publish-row-actions .publish-go:hover {
+  background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+}
+.publish-row-actions .publish-go:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.publish-row.is-locked .publish-row-name,
+.publish-row.is-locked .publish-row-reach {
+  opacity: 0.55;
+}
+.publish-row.is-done .publish-row-name b {
+  color: var(--ink-2);
+}
+.publish-row-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--warn);
+}
+.publish-row-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.publish-row-preview .channel-preview {
+  align-self: stretch;
+}
+.publish-row-slot {
+  padding-top: 2px;
+}
+@media (max-width: 640px) {
+  .publish-row-actions {
+    flex-basis: 100%;
+  }
+}
+/* 올리기 목록 줄의 점 — 초록 = 올린 주소 있음. */
 .channel-dot {
   flex: none;
   width: 8px;
@@ -4755,23 +4814,6 @@ button.draft-step:hover {
 .channel-dot.up {
   background: var(--accent);
 }
-.channel-tab.on .channel-dot:not(.up) {
-  background: color-mix(in srgb, var(--paper) 45%, transparent);
-}
-.channel-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.channel-why {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-2);
-}
 .channel-stale {
   margin: 0;
   padding: 8px 12px;
@@ -4779,15 +4821,6 @@ button.draft-step:hover {
   background: var(--warn-soft);
   color: var(--warn);
   font-size: 12.5px;
-}
-.channel-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.channel-title {
-  font-weight: 700;
 }
 .channel-preview {
   max-height: 360px;
@@ -4811,32 +4844,6 @@ button.draft-step:hover {
 .channel-preview ol {
   margin: 0 0 8px;
   padding-left: 18px;
-}
-.channel-open {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: var(--r-ctl);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  color: var(--ink);
-  font-size: 13px;
-  text-decoration: none;
-}
-.channel-open:hover {
-  box-shadow: inset 0 0 0 1px var(--ink-2);
-}
-@media (max-width: 640px) {
-  .draft-steps {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .draft-step {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .draft-step:last-child {
-    border-bottom: 0;
-  }
 }
 
 /*

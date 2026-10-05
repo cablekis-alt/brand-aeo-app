@@ -15,9 +15,11 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
+import PublishList from '../components/PublishList'
 import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
-import { channelNameOf, isOpenAction, isPublishedAction, type GapAction } from '../lib/gapActions'
+import { isOpenAction, type GapAction } from '../lib/gapActions'
+import { buildPublishPlan } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
@@ -307,17 +309,6 @@ function PublishedUrls({
   )
 }
 
-/** 채널 현황 한 줄의 상태 글 — 주소가 있으면 몇 개·인용 확인 수, 없으면 상태 이름. */
-function channelState(a: GapAction): string {
-  if (a.publishedUrls.length > 0) {
-    const cited = a.citedPublishedUrls.length
-    return `올림 · 주소 ${a.publishedUrls.length}개${cited > 0 ? ` · 인용 확인 ${cited}` : ' · 인용 확인 대기'}`
-  }
-  if (a.status === 'done') return '집행함 · 인용 확인 대기'
-  if (a.status === 'doing') return '진행 중'
-  return '아직 안 올림'
-}
-
 /** 아직 채우지도 빼지도 않은 빈칸 수. */
 function gapsLeft(d: StoredDraft): number {
   const p = gapProgress(d)
@@ -485,9 +476,6 @@ function ActionCard({
   onDraft,
   onUrls,
   coveredBy,
-  channels,
-  adaptations,
-  onAdapted,
   focused = false,
 }: {
   action: GapAction
@@ -505,11 +493,6 @@ function ActionCard({
   onUrls: (id: string, urls: string[], markDone?: boolean) => void
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
-  /** 콘텐츠형일 때, 이 글이 갈 채널 항목들. 등재형이면 null. 빈 배열은 "우리 사이트에만". */
-  channels: GapAction[] | null
-  /** 이 글의 채널별 다듬은 글. null이면 다듬기 라우트가 없는 환경(웹)이다. */
-  adaptations: Record<string, ChannelAdaptation> | null
-  onAdapted: (a: ChannelAdaptation) => void
 }) {
   const [channelDraft, setChannelDraft] = useState(false)
   /**
@@ -521,9 +504,11 @@ function ActionCard({
   const [detail, setDetail] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
-  // 초안 패널이 뜨는 카드는 「올린 글 주소」를 초안의 ③ 올리기 칸에서 받는다(두 곳에 두지 않는다).
+  // 초안 패널이 뜨는 카드는 「올린 글 주소」를 아래 「② 올리기 목록」의 줄에서 받는다(두 곳에 두지 않는다).
   const showsDraft = briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft)
-  const destinations = channels?.map((l) => l.targetDomain ?? l.title) ?? null
+  // 초안이 생기면 근거 · 질문 목록은 「자세히」로 접는다 — 카드는 글 자체(제목 · 첫 문단 · 빈칸)를 보인다.
+  const hasDraft = Boolean(drafts?.[action.id])
+  const showWhy = detail || !hasDraft
   return (
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
@@ -532,30 +517,15 @@ function ActionCard({
           {action.satisfied ? '충족' : action.badge}
         </span>
         <span className="gap-rate">
-          밀린 질문 <b>{action.reach}</b>개
+          AI가 우리를 말하지 않는 질문 <b>{action.reach}</b>개
         </span>
       </div>
-      <p className="gap-tally" style={{ color: 'var(--ink)' }}>
-        {action.evidence}
-      </p>
-      {destinations !== null && (
-        // 글 한 편이 어디로 가는지 여기서 말한다. 이 줄이 없으면 아래 「올릴 곳」 목록이
-        // "모든 글을 모든 곳에" 로 읽힌다.
-        <p className="gap-dest">
-          {destinations.length > 0 ? (
-            <>
-              올릴 곳 <b>{destinations.length}곳</b> · {destinations.join(' · ')}
-              <span className="muted"> — 우리 사이트에도 올립니다</span>
-            </>
-          ) : (
-            <>
-              올릴 곳 <b>없음</b>
-              <span className="muted"> — 우리 사이트에만 올립니다. AI가 이 질문엔 외부 출처를 안 꺼냈습니다.</span>
-            </>
-          )}
+      {showWhy && (
+        <p className="gap-tally" style={{ color: 'var(--ink)' }}>
+          {action.evidence}
         </p>
       )}
-      {action.questionTexts.length > 0 && (
+      {showWhy && action.questionTexts.length > 0 && (
         <>
           <ul className="gap-worst">
             {action.questionTexts.slice(0, PREVIEW_QUESTIONS).map((q) => (
@@ -666,20 +636,6 @@ function ActionCard({
           stored={drafts[action.id]}
           onStored={onDraft}
           compact={!detail}
-          channels={channels}
-          adaptations={adaptations}
-          onAdapted={onAdapted}
-          channelSlot={(ch) =>
-            canSaveStatus ? (
-              <PublishedUrls action={ch} addLabel="올렸어요" onSave={(urls, added) => onUrls(ch.id, urls, added)} />
-            ) : null
-          }
-          publishedCount={action.publishedUrls.length}
-          publish={
-            canSaveStatus ? (
-              <PublishedUrls action={action} addLabel="올렸어요" onSave={(urls, added) => onUrls(action.id, urls, added)} />
-            ) : undefined
-          }
           ensureBrief={async () => {
             onBrief(
               await generateContentBrief(tenantId, {
@@ -720,6 +676,7 @@ export default function GapActions() {
   const [searchParams] = useSearchParams()
   const focusId = searchParams.get('focus') ?? ''
   const focusDomain = searchParams.get('domain') ?? ''
+  const [help, setHelp] = useState(false)
   const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, setUrls, saveError } =
     useGapActionPlan(tenant?.tenantId ?? '')
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
@@ -778,12 +735,12 @@ export default function GapActions() {
   const onDraft = (s: StoredDraft) => setDrafts((m) => ({ ...(m ?? {}), [s.actionId]: s }))
 
   const open = plan.actions.filter(isOpenAction)
-  // 「쓸 글」과 「올릴 곳」을 나눈다. 둘은 같은 질문을 다르게 자른 것이지 서로 다른 일이 아니다 —
-  // 한 줄에 섞어 놓으면 15장이 15편으로 읽힌다(실측: 콘텐츠형 6 + 등재형 9가 같은 질문 26개를 가리킨다).
+  // 「쓸 글」과 「올릴 곳」은 같은 질문을 다르게 자른 것이지 서로 다른 일이 아니다(실측: 콘텐츠형 6 + 등재형 9가
+  // 같은 질문 26개를 가리킨다). 화면은 둘을 「① 글 확인」과 「② 올리기 목록」으로 편다 — lib/publishPlan.ts.
   const openContent = open.filter((a) => a.kind === 'content')
   const openListing = open.filter((a) => a.kind === 'listing')
-  const coveredByContent = new Set(openContent.flatMap((a) => a.questionIds))
-  /** 이 등재 항목의 질문을 이미 덮는 콘텐츠 항목들 — 카드가 "새로 쓸 글이 아니다"를 말하는 근거. */
+  const publishPlan = buildPublishPlan(openContent, openListing, drafts)
+  /** 이 등재 항목의 질문을 이미 덮는 콘텐츠 항목들 — 초안 라우트가 없는 환경(웹)의 채널 카드가 쓴다. */
   const coverageOf = (a: GapAction) => {
     const qs = new Set(a.questionIds)
     const hit = openContent
@@ -792,13 +749,10 @@ export default function GapActions() {
       .sort((x, y) => y.n - x.n)
     return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
   }
-  /** 이 글이 갈 채널 항목들 — coverageOf의 역방향. 빈 배열은 "우리 사이트에만". */
-  const channelsOf = (c: GapAction) => {
-    const qs = new Set(c.questionIds)
-    return openListing.filter((l) => l.questionIds.some((q) => qs.has(q)))
+  const confirmedCount = publishPlan.articles.filter((x) => x.confirmed).length
+  const showArticle = (id: string) => {
+    document.getElementById(`action-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
-  // 덮는 글이 없는 채널은 사실상 한 편을 더 써야 하는 것이다 — 머리글이 그 수를 밝힌다.
-  const orphanListing = openListing.filter((l) => coverageOf(l) === null).length
 
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
   const skipped = plan.actions.filter((a) => a.status === 'skip')
@@ -826,11 +780,36 @@ export default function GapActions() {
           <p className="page-eyebrow">실행 · {tenant.brandName}</p>
           <h1>콘텐츠 생성</h1>
         </div>
+        <button
+          type="button"
+          className="help-toggle"
+          aria-expanded={help}
+          aria-label="이 화면 설명"
+          title="이 화면 설명"
+          onClick={() => setHelp((v) => !v)}
+        >
+          ?
+        </button>
       </header>
-      <p className="page-lead">
-        <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 정하고
-        만드는 곳입니다. 할 일 목록은 저장된 측정으로 계산합니다. AI를 부르는 것은 초안 만들기와 빈칸 값 찾기뿐입니다.
-      </p>
+      {help && (
+        // 설명은 처음 한 번 읽으면 되는 것이라 「?」 뒤에 둔다 — 화면에는 할 일만 남긴다(상용화 UI 8차 시안).
+        <div className="help-panel">
+          <p>
+            <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 만들고
+            올리는 곳입니다. <b>① 글 확인</b>에서 글의 빈칸을 채우거나 빼면, <b>② 올리기 목록</b>에서 그 글을 올릴 곳이
+            열립니다. 목록은 그곳에 올리면 덮이는 질문이 많은 순서입니다.
+          </p>
+          <p>
+            할 일은 저장된 측정으로 계산합니다. AI를 부르는 것은 초안 만들기, 빈칸 값 찾기, 채널용 글 만들기뿐입니다.
+            완료는 사람이 체크하지 않고 <b>데이터에서 읽습니다</b> — 올린 곳의 인용이 우리 언급을 뒷받침하기 시작하면
+            자동으로 충족으로 넘어갑니다.
+          </p>
+          <p className="muted">
+            글(콘텐츠형)과 올릴 곳(등재형)은 경쟁하는 일이 아닙니다. 글이 <b>무엇을 쓸지</b>, 올릴 곳이 <b>어디에 올릴지</b>라서,
+            한 편을 써서 그곳에 올리면 둘 다 진척됩니다.
+          </p>
+        </div>
+      )}
 
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
@@ -862,141 +841,111 @@ export default function GapActions() {
 
       {ready && (
         <>
-          <section className="hero-card">
-            <p className="eyebrow">이번 주차</p>
-            <ul className="gap-summary">
-              <li>
-                남은 항목 <b>{open.length}건</b>
-                {satisfied.length > 0 && <> · 데이터가 충족을 확인한 항목 {satisfied.length}건</>}
-                {plan.skippedCount > 0 && <> · 보류 {plan.skippedCount}건</>}
-              </li>
-              {plan.awaitingCount > 0 && (
-                <li>
-                  <b>집행 확인 대기 {plan.awaitingCount}건</b> — 했다고 표시했지만 데이터가 아직 확인하지
-                  못한 항목입니다(등재형은 인용, 콘텐츠형은 패 판정으로 확인). 맨 위에 모아 뒀습니다.
-                </li>
+          {open.length === 0 ? (
+            <p className="muted">남은 항목이 없습니다.</p>
+          ) : (
+            <>
+              {publishPlan.rows.length > 0 && drafts !== null && (
+                <section className="publish-progress" aria-label="이번 주 올리기 진행">
+                  <div className="publish-progress-row">
+                    <span>
+                      이번 주 올리기 <b>{publishPlan.done}</b> / {publishPlan.rows.length}곳
+                    </span>
+                    <span className="muted">
+                      올린 글이 덮는 질문 <b>{publishPlan.coveredQuestions}</b> / {publishPlan.totalQuestions}개
+                    </span>
+                  </div>
+                  <div
+                    className="publish-progress-bar"
+                    role="progressbar"
+                    aria-label="올린 곳"
+                    aria-valuemin={0}
+                    aria-valuemax={publishPlan.rows.length}
+                    aria-valuenow={publishPlan.done}
+                  >
+                    <span style={{ width: `${(publishPlan.done / publishPlan.rows.length) * 100}%` }} />
+                  </div>
+                  {plan.awaitingCount > 0 && (
+                    <p className="publish-progress-note">
+                      올렸다고 표시했지만 데이터가 아직 확인하지 못한 곳 <b>{plan.awaitingCount}곳</b> — 다음 측정에서 확인합니다.
+                    </p>
+                  )}
+                </section>
               )}
-              <li className="muted">
-                완료는 사람이 체크하지 않고 <b>데이터에서 읽습니다.</b> 등재가 실제로 되면 그 도메인의
-                인용이 우리 언급을 뒷받침하기 시작하고, 그때 자동으로 충족으로 넘어갑니다.
-              </li>
-            </ul>
-          </section>
 
-          <section>
-            <h3>할 일</h3>
-            <p className="hint" style={{ marginTop: 0 }}>
-              숫자는 <b>이 조치로 되찾을 수 있는 질문 수</b>입니다. 큰 것부터 하시면 됩니다.
-            </p>
-            <details className="gap-more">
-              <summary>왜 두 종류로 나뉘나</summary>
-              <p className="hint">
-                종류가 달라도 같은 단위라 그대로 견주시면 됩니다. 등재형과 콘텐츠형은 경쟁하는 일이
-                아닙니다: 콘텐츠형이 <b>무엇을 쓸지</b>, 등재형이 <b>어디에 올릴지</b>라서, 한 편을 써서
-                그 채널에 올리면 둘 다 진척됩니다.
-              </p>
-            </details>
-            {briefs !== null && open.length > 0 && (
-              <>
-                {drafts !== null && (
+              <section>
+                <h3 className="step-head">
+                  ① 글 확인{' '}
+                  <span className="muted">
+                    {publishPlan.articles.length}편 중 {confirmedCount}편 확인됨
+                  </span>
+                </h3>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  빈칸을 채우거나 빼면 그 글이 확인되고, 아래 올리기 목록에서 그 글의 줄이 열립니다.
+                </p>
+                {briefs !== null && drafts !== null && (
                   <BulkDrafts
                     tenantId={tenant.tenantId}
-                    actions={[...openContent, ...openListing.filter((l) => coverageOf(l) === null)]}
+                    actions={publishPlan.articles.map((x) => x.action)}
                     briefs={briefs}
                     drafts={drafts}
                     onBrief={onBrief}
                     onDraft={onDraft}
                   />
                 )}
-                <div className="brief-bar" style={{ marginBottom: 10 }}>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() =>
-                      downloadMarkdown(
-                        `실행항목-${safeFileName(tenant.brandName)}-${weekOf}.md`,
-                        bundleToMarkdown(tenant.brandName, weekOf, open, briefs, drafts ?? {}),
-                      )
-                    }
-                  >
-                    남은 {open.length}건 한 파일로 내려받기 (.md)
-                  </button>
-                  <span className="doc-meta">브리프·초안이 없는 항목은 그 사실을 적어 둡니다</span>
+                <div className="gap-grid">
+                  {publishPlan.articles.map(({ action: a }) => (
+                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  ))}
                 </div>
-              </>
-            )}
-            {open.length === 0 ? (
-              <p className="muted">남은 항목이 없습니다.</p>
-            ) : (
-              <>
-                {openContent.length > 0 && (
-                  <>
-                    <h4 className="gap-subhead">
-                      쓸 글 {openContent.length}편{' '}
-                      <span className="muted">
-                        — 밀린 질문 {coveredByContent.size}개를 주제별로 나눈 것입니다. 겹치지 않습니다.
-                      </span>
-                    </h4>
-                    <div className="gap-grid">
-                      {openContent.map((a) => (
-                        <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={channelsOf(a)} adaptations={adaptations ? (adaptations[a.id] ?? {}) : null} onAdapted={onAdapted} />
-                      ))}
-                    </div>
-                  </>
+              </section>
+
+              <section>
+                <h3 className="step-head">
+                  ② 올리기 목록 <span className="muted">— 한 줄이 한 번 올리기입니다. 덮는 질문이 많은 곳부터.</span>
+                </h3>
+                {drafts !== null ? (
+                  <PublishList
+                    tenantId={tenant.tenantId}
+                    plan={publishPlan}
+                    adaptations={adaptations}
+                    onAdapted={onAdapted}
+                    focusId={focusId}
+                    onShowArticle={showArticle}
+                    urlSlot={(target) =>
+                      canSaveStatus ? (
+                        <PublishedUrls action={target} addLabel="올렸어요" onSave={(urls, added) => setUrls(target.id, urls, added)} />
+                      ) : null
+                    }
+                  />
+                ) : (
+                  // 초안 라우트가 없는 환경(웹) — 올릴 글이 없으니 채널 카드로 근거 · 상태만 보인다.
+                  <div className="gap-grid">
+                    {openListing.map((a) => (
+                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} />
+                    ))}
+                  </div>
                 )}
-                {openListing.length > 0 && (
-                  // 채널은 글 카드의 ③ 올리기 탭에서 다듬고 올린다(ChannelTabs). 여기는 같은 항목의 **현황**이다 —
-                  // 큰 카드로 다시 그리면 같은 채널이 두 번 나와, 서로 다른 일로 읽혔다. 글이 덮는 채널은 한 줄로
-                  // 접고(근거·상태 손잡이는 「자세히」에 그대로), 덮는 글이 없는 채널만 따로 쓸 카드로 남긴다.
-                  <>
-                    <h4 className="gap-subhead">
-                      채널별 올림 현황 {openListing.filter(isPublishedAction).length}/{openListing.length}곳{' '}
-                      <span className="muted">— 글 카드의 ③ 올리기에서 채널 문체로 다듬어 올리면 여기에 기록됩니다.</span>
-                    </h4>
-                    {openListing.some((a) => coverageOf(a) !== null) && (
-                      <ul className="channel-summary">
-                        {openListing
-                          .filter((a) => coverageOf(a) !== null)
-                          .map((a) => (
-                            <li key={a.id}>
-                              <div className="channel-row">
-                                <span className={`channel-dot${isPublishedAction(a) ? ' up' : ''}`} aria-hidden="true" />
-                                <span className="channel-row-name">{channelNameOf(a)}</span>
-                                <span className={`status-pill ${KIND_CLASS[a.kind]}`}>{a.badge}</span>
-                                <span className="channel-row-state">{channelState(a)}</span>
-                                <span className="channel-row-cover">
-                                  밀린 질문 {a.reach}개 · 덮는 글 {coverageOf(a)!.titles.join(' · ')}
-                                </span>
-                              </div>
-                              {/* 상태(보류 등)·주소·채널용 따로 쓰기는 여기서도 그대로 쓸 수 있다. 인용 갭에서 이 채널로 왔으면 펼쳐 둔다. */}
-                              <details className="channel-row-more" open={focusId === a.id}>
-                                <summary>근거·상태 자세히</summary>
-                                <ActionCard action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} channels={null} adaptations={null} onAdapted={onAdapted} />
-                              </details>
-                            </li>
-                          ))}
-                      </ul>
-                    )}
-                    {orphanListing > 0 && (
-                      <>
-                        <h4 className="gap-subhead">
-                          따로 써야 할 채널 {orphanListing}곳{' '}
-                          <span className="muted">— 위의 글로는 못 덮어 이 채널용으로 한 편 씁니다.</span>
-                        </h4>
-                        <div className="gap-grid">
-                          {openListing
-                            .filter((a) => coverageOf(a) === null)
-                            .map((a) => (
-                              <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
-                            ))}
-                        </div>
-                      </>
-                    )}
-                  </>
+                {briefs !== null && (
+                  <div className="brief-bar" style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() =>
+                        downloadMarkdown(
+                          `실행항목-${safeFileName(tenant.brandName)}-${weekOf}.md`,
+                          bundleToMarkdown(tenant.brandName, weekOf, open, briefs, drafts ?? {}),
+                        )
+                      }
+                    >
+                      남은 {open.length}건 한 파일로 내려받기 (.md)
+                    </button>
+                    <span className="doc-meta">브리프·초안이 없는 항목은 그 사실을 적어 둡니다</span>
+                  </div>
                 )}
-              </>
-            )}
-          </section>
+              </section>
+            </>
+          )}
 
           {satisfied.length > 0 && (
             <section>
@@ -1008,7 +957,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
                 ))}
               </div>
               </details>
@@ -1024,7 +973,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} channels={null} adaptations={null} onAdapted={onAdapted} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
                 ))}
               </div>
             </section>
