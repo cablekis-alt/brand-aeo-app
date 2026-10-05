@@ -60,8 +60,17 @@ export interface GroupView<T> {
 }
 
 /**
- * 업종군 → 코호트(업종 · 지역) → 브랜드로 묶는다. 업종군은 규칙 순서, 코호트는 우리 브랜드가 많은 것부터
- * (같으면 이름순), 브랜드는 점수 높은 순(점수 없으면 뒤, 같으면 이름순).
+ * 영어 질문 코호트인가 — 영어 측정 테넌트는 지역에 「(영어 질문)」 꼬리표를 붙여 한국어 코호트와 나눈다
+ * (server/types.ts questionLanguage). 같은 업종군 안에서 맨 아래에 둔다 — 고객 브랜드가 많아(강남 성형외과
+ * 5곳) 맨 위에 오면 한국어 코호트가 밀려 보였다.
+ */
+export function isEnglishCohort(region: string): boolean {
+  return region.includes('(영어 질문)')
+}
+
+/**
+ * 업종군 → 코호트(업종 · 지역) → 브랜드로 묶는다. 업종군은 규칙 순서, 코호트는 영어 질문 코호트를 맨 뒤로 두고
+ * 우리 브랜드가 많은 것부터(같으면 이름순), 브랜드는 점수 높은 순(점수 없으면 뒤, 같으면 이름순).
  */
 export function groupByIndustry<T extends { brandName: string; industry: string; region: string; score: number | null }>(
   rows: T[],
@@ -79,7 +88,12 @@ export function groupByIndustry<T extends { brandName: string; industry: string;
     .map(([name, cohorts]) => ({
       name,
       cohorts: [...cohorts.entries()]
-        .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'))
+        .sort(
+          (a, b) =>
+            Number(isEnglishCohort(a[0])) - Number(isEnglishCohort(b[0])) ||
+            b[1].length - a[1].length ||
+            a[0].localeCompare(b[0], 'ko'),
+        )
         .map(([label, list]) => ({
           label,
           list: [...list].sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || x.brandName.localeCompare(y.brandName, 'ko')),
@@ -93,8 +107,9 @@ export function isCurrentCustomer(m: CohortMember): boolean {
 }
 
 /**
- * 코호트 리더보드를 업종군별로 묶는다. 업종군은 규칙 순서, 그 안은 지금 재는 고객 브랜드가 많은 코호트부터
- * (같으면 이름순, 이름도 같으면 최근 주차부터 — 같은 업종 · 지역의 W37과 W40이 나란히 온다).
+ * 코호트 리더보드를 업종군별로 묶는다. 업종군은 규칙 순서, 그 안은 영어 질문 코호트를 맨 뒤로 두고 지금 재는
+ * 고객 브랜드가 많은 코호트부터(같으면 이름순, 이름도 같으면 최근 주차부터 — 같은 업종 · 지역의 W37과 W40이
+ * 나란히 온다).
  */
 export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohorts: PortfolioCohort[] }[] {
   const byGroup = new Map<string, PortfolioCohort[]>()
@@ -109,7 +124,11 @@ export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohort
     .map(([name, list]) => ({
       name,
       cohorts: [...list].sort(
-        (a, b) => own(b) - own(a) || label(a).localeCompare(label(b), 'ko') || b.weekOf.localeCompare(a.weekOf),
+        (a, b) =>
+          Number(isEnglishCohort(a.region)) - Number(isEnglishCohort(b.region)) ||
+          own(b) - own(a) ||
+          label(a).localeCompare(label(b), 'ko') ||
+          b.weekOf.localeCompare(a.weekOf),
       ),
     }))
 }
