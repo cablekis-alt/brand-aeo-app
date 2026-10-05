@@ -60,8 +60,33 @@ export interface GroupView<T> {
 }
 
 /**
+ * 영어 질문 코호트인가 — 영어 측정 테넌트는 지역에 「(영어 질문)」 꼬리표를 붙여 한국어 코호트와 나눈다
+ * (server/types.ts questionLanguage).
+ */
+export function isEnglishCohort(region: string): boolean {
+  return region.includes('(영어 질문)')
+}
+
+/**
+ * 영어 질문 코호트를 같은 업종의 마지막 코호트 바로 뒤로 옮긴다(같은 업종이 없으면 맨 뒤). 나머지 순서는 그대로.
+ * 고객 브랜드가 많아(강남 성형외과 5곳) 업종군 맨 위에 오면 한국어 코호트가 밀려 보였고, 업종군 맨 아래로
+ * 내리면 성형외과와 떨어져 무엇의 영어판인지 흐려졌다 — 같은 업종의 끝이 자리다.
+ */
+function placeEnglishAfterSameIndustry<C>(sorted: C[], industryOf: (c: C) => string, regionOf: (c: C) => string): C[] {
+  const out = sorted.filter((c) => !isEnglishCohort(regionOf(c)))
+  for (const e of sorted.filter((c) => isEnglishCohort(regionOf(c)))) {
+    let at = -1
+    out.forEach((c, i) => {
+      if (industryOf(c) === industryOf(e)) at = i
+    })
+    out.splice(at < 0 ? out.length : at + 1, 0, e)
+  }
+  return out
+}
+
+/**
  * 업종군 → 코호트(업종 · 지역) → 브랜드로 묶는다. 업종군은 규칙 순서, 코호트는 우리 브랜드가 많은 것부터
- * (같으면 이름순), 브랜드는 점수 높은 순(점수 없으면 뒤, 같으면 이름순).
+ * (같으면 이름순, 영어 질문 코호트는 같은 업종 끝), 브랜드는 점수 높은 순(점수 없으면 뒤, 같으면 이름순).
  */
 export function groupByIndustry<T extends { brandName: string; industry: string; region: string; score: number | null }>(
   rows: T[],
@@ -78,12 +103,14 @@ export function groupByIndustry<T extends { brandName: string; industry: string;
     .sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]))
     .map(([name, cohorts]) => ({
       name,
-      cohorts: [...cohorts.entries()]
-        .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'))
-        .map(([label, list]) => ({
+      cohorts: placeEnglishAfterSameIndustry(
+        [...cohorts.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko')),
+        ([, list]) => list[0]!.industry,
+        ([, list]) => list[0]!.region,
+      ).map(([label, list]) => ({
           label,
-          list: [...list].sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || x.brandName.localeCompare(y.brandName, 'ko')),
-        })),
+        list: [...list].sort((x, y) => (y.score ?? -1) - (x.score ?? -1) || x.brandName.localeCompare(y.brandName, 'ko')),
+      })),
     }))
 }
 
@@ -94,7 +121,8 @@ export function isCurrentCustomer(m: CohortMember): boolean {
 
 /**
  * 코호트 리더보드를 업종군별로 묶는다. 업종군은 규칙 순서, 그 안은 지금 재는 고객 브랜드가 많은 코호트부터
- * (같으면 이름순, 이름도 같으면 최근 주차부터 — 같은 업종 · 지역의 W37과 W40이 나란히 온다).
+ * (같으면 이름순, 이름도 같으면 최근 주차부터 — 같은 업종 · 지역의 W37과 W40이 나란히 온다). 영어 질문
+ * 코호트는 같은 업종 끝.
  */
 export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohorts: PortfolioCohort[] }[] {
   const byGroup = new Map<string, PortfolioCohort[]>()
@@ -108,8 +136,12 @@ export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohort
     .sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]))
     .map(([name, list]) => ({
       name,
-      cohorts: [...list].sort(
-        (a, b) => own(b) - own(a) || label(a).localeCompare(label(b), 'ko') || b.weekOf.localeCompare(a.weekOf),
+      cohorts: placeEnglishAfterSameIndustry(
+        [...list].sort(
+          (a, b) => own(b) - own(a) || label(a).localeCompare(label(b), 'ko') || b.weekOf.localeCompare(a.weekOf),
+        ),
+        (c) => c.industry,
+        (c) => c.region,
       ),
     }))
 }
