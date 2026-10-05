@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import ChannelTabs from './ChannelTabs'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   findFactsForGaps,
@@ -10,19 +9,21 @@ import {
   saveFactGraph,
   type FactNode,
   type GapFactHit,
-  type ChannelAdaptation,
   type GapFill,
   type StoredDraft,
 } from '../lib/api'
-import { copyRich } from '../lib/clipboard'
 import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
-import { buildPublishHtml, publishBodyHtml } from '../lib/htmlFile'
+import { buildPublishHtml } from '../lib/htmlFile'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 
 /**
- * 초안 패널 — 글 한 편을 세 걸음으로 끝낸다: ① 초안 → ② 빈칸 확인 → ③ 올리기.
+ * 초안 패널 — 콘텐츠 생성 「① 글 확인」의 글 카드 본문. 초안을 만들고 빈칸을 확인한다.
+ *
+ * 올리기는 여기 없다 — 「② 올리기 목록」(PublishList.tsx)이 글과 채널을 한 줄씩 편다. 예전에는 카드마다
+ * ③ 올리기 단계와 채널 탭이 있어, 같은 채널이 아래 「채널별 올림 현황」과 두 번 나왔다(상용화 UI 8차 시안).
+ * 빈칸을 모두 처리하면 그 글은 「확인됨」이고, 올리기 목록에서 그 글의 줄이 열린다(lib/publishPlan.ts).
  *
  * 본문을 통째로 지어내지 않는다. 사실이 있어야 쓸 수 있는 문단인데 그 사실이 없으면 비워 두고 "무엇이
  * 필요한가"를 적어 온다. 그 빈칸을 **본문 안에서 바로** 채우게 하는 것이 이 화면의 일이다.
@@ -31,11 +32,10 @@ import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFil
  * 이제 값은 그 자리에 「항목: 값」 한 줄로 들어가고(lib/draftGaps.ts), 브랜드 사실에도 함께 저장된다.
  * 모르는 값은 「이 문장 빼기」 — 발행본에서 그 자리만 빠진다. 기록은 서버에 남아 화면을 떠나도 그대로다.
  *
- * 내보내기는 「이 글 복사」 하나가 기본이다(서식째 — 블로그 편집기에 붙여도 제목·굵은 글씨가 남는다).
- * 파일(.md·.html·작업용)은 「파일로 받기」에 접어 둔다. 단추가 일곱 개일 때 무엇을 눌러야 할지 몰랐다.
+ * 파일(.md·.html·작업용)은 「자세히」의 「파일로 받기」에 접어 둔다. 복사는 올리기 목록의 줄이 한다.
  */
 
-type Step = 'gaps' | 'publish'
+type Step = 'gaps'
 
 /**
  * 저장하지 않은 편집 — 이 PC(localStorage)에 몇 초마다 보관한다. 서버 「저장」은 사실 확인(판정 호출)을 돌려서
@@ -73,12 +73,6 @@ export default function DraftPanel({
   onStored,
   ensureBrief,
   compact = false,
-  channels = null,
-  publishedCount = 0,
-  publish,
-  adaptations = null,
-  onAdapted,
-  channelSlot,
 }: {
   tenantId: string
   action: GapAction
@@ -88,28 +82,15 @@ export default function DraftPanel({
   /** 브리프가 없으면 먼저 만든다. 초안 한 번 누르기로 여기까지 간다. */
   ensureBrief: () => Promise<void>
   /**
-   * 운영자용 손잡이(편집·다시 만들기·생성일)를 숨긴다. 카드의 「자세히」가 되살린다 — 숨길 뿐 지우지 않는다.
-   * 세 걸음(초안·빈칸·올리기)은 숨기지 않는다. 그게 이 화면의 본론이다.
+   * 운영자용 손잡이(편집·다시 만들기·파일·생성일)를 숨긴다. 카드의 「자세히」가 되살린다 — 숨길 뿐 지우지 않는다.
    */
   compact?: boolean
-  /** 이 글을 올릴 외부 채널 항목(콘텐츠형). 있으면 ③ 올리기가 채널 탭이 된다. */
-  channels?: GapAction[] | null
-  /** 이 항목에 기록된 「올린 글 주소」 수 — ③ 단계 표시. */
-  publishedCount?: number
-  /** ③ 올리기 칸(자사 사이트)에 들어갈 주소 기록 부품. 상태를 저장할 수 없는 환경이면 없다. */
-  publish?: ReactNode
-  /** 채널별 다듬은 글. null이면 다듬기 라우트가 없는 환경이다. */
-  adaptations?: Record<string, ChannelAdaptation> | null
-  onAdapted?: (a: ChannelAdaptation) => void
-  /** 채널 항목의 주소 기록 부품. */
-  channelSlot?: (a: GapAction) => ReactNode
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<Step | null>(null)
-  const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
@@ -177,7 +158,7 @@ export default function DraftPanel({
       setTyped({})
       setHits({})
       setMissed(new Set())
-      setStep(gapProgress(s).total > 0 ? 'gaps' : 'publish')
+      setStep(gapProgress(s).total > 0 ? 'gaps' : null)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -304,17 +285,6 @@ export default function DraftPanel({
     }
   }
 
-  /** 「이 글 복사」 — 서식째(lib/clipboard.ts). 남은 빈칸 줄은 빠진 발행본이다. */
-  const copyPublish = async () => {
-    if (!stored) return
-    if (await copyRich(publishMarkdownOf(stored), publishBodyHtml(stored))) {
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } else {
-      setError('클립보드에 복사하지 못했습니다. 「파일로 받기」를 써 주세요.')
-    }
-  }
-
   // 브리프가 없어도 버튼은 남긴다. 숨기면 "초안이라는 단계가 있다"는 사실 자체가 안 보인다 —
   // 실측: 실행 항목 id가 사이트 묶음으로 바뀌자 브리프가 어느 항목에도 안 붙었고, 그 순간
   // 초안 기능이 화면에서 통째로 사라졌다.
@@ -343,55 +313,45 @@ export default function DraftPanel({
     )
   }
 
-  const upCount = (publishedCount > 0 ? 1 : 0) + (channels ?? []).filter((c) => c.publishedUrls.length > 0 || c.status === 'done').length
   const progress = gapProgress(stored)
   const left = progress.total - progress.done
   const d = effectiveDraft(stored)
-  const toggle = (s: Step) => setStep((cur) => (cur === s ? null : s))
-  const steps: Array<{ key: Step | 'draft'; n: number; label: string; sub: string; done: boolean }> = [
-    { key: 'draft', n: 1, label: '초안', sub: `완료 · ${stored.generatedAt.slice(0, 10)}`, done: true },
-    {
-      key: 'gaps',
-      n: 2,
-      label: '빈칸 확인',
-      sub: progress.edited
-        ? left > 0
-          ? `고친 글에 빈칸 ${left}줄 남음`
-          : '빈칸 없음'
-        : progress.total === 0
-          ? '빈칸 없음'
-          : `${progress.total}곳 중 ${progress.done}곳 처리${progress.suggested ? ` · 찾은 값 ${progress.suggested}` : ''}`,
-      done: left === 0,
-    },
-    {
-      key: 'publish',
-      n: 3,
-      label: '올리기',
-      sub: channels?.length
-        ? `${channels.length + 1}곳 중 ${upCount}곳 올림`
-        : publishedCount > 0
-          ? `올린 주소 ${publishedCount}개`
-          : '자사 사이트',
-      done: channels?.length ? upCount === channels.length + 1 : publishedCount > 0,
-    },
-  ]
+  const opened = step === 'gaps'
 
-  // ③ 올리기의 자사 사이트 칸 — 원문 복사·주소 기록·파일. 채널이 있으면 채널 탭의 첫 탭이 된다.
-  const ownSite = (
-    <>
-          <div className="draft-copy">
-            <button type="button" className="draft-copy-btn" onClick={() => void copyPublish()}>
-              {copied ? '복사했습니다' : '이 글 복사'}
-            </button>
-            <p className="doc-meta">
-              서식째 복사합니다 — 네이버 블로그·티스토리 편집기에 붙여도 제목·굵은 글씨가 남습니다.
-              {(() => {
-                const n = stored.editedMarkdown ? countGapNotes(stored.editedMarkdown) : left
-                return n > 0 ? ` 아직 채우지 않은 빈칸 ${n}곳은 빼고 복사합니다.` : ''
-              })()}
-            </p>
-          </div>
-          {publish}
+  return (
+    <div className="brief draft-flow">
+      {/* 접힌 카드는 제목 · 첫 문단 · 확인 상태만 — 무슨 글인지 알고, 할 일이 하나 보이면 된다. */}
+      <div className="article-summary">
+        {!opened && (
+          <>
+            <h4 className="draft-title">{d.title}</h4>
+            {d.lead && <p className="article-lead">{d.lead}</p>}
+          </>
+        )}
+        <div className="brief-bar">
+          <span className={`article-state${left === 0 ? ' is-ok' : ''}`}>
+            {left === 0
+              ? '✓ 확인됨 — 아래 올리기 목록에서 올리세요'
+              : progress.edited
+                ? `고친 글에 빈칸 ${left}줄 남음`
+                : `확인할 빈칸 ${left}곳${progress.suggested ? ` · 찾은 값 ${progress.suggested}` : ''}`}
+          </span>
+          <button type="button" className={left > 0 && !opened ? undefined : 'ghost'} aria-expanded={opened} onClick={() => setStep(opened ? null : 'gaps')}>
+            {opened ? '접기' : left > 0 && !progress.edited ? `빈칸 ${left}곳 확인하기` : '전체 보기'}
+          </button>
+        </div>
+      </div>
+
+      {!compact && (
+        <div className="brief-bar draft-tools">
+          <button type="button" className="ghost" onClick={editing ? closeEdit : startEdit}>
+            {editing ? '편집 닫기' : '본문 편집'}
+          </button>
+          <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
+            {busy ? `다시 쓰는 중… ${clock(elapsed)}` : '다시 만들기'}
+          </button>
+          {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
+          <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
           <details className="draft-files">
             <summary>파일로 받기</summary>
             <div className="brief-bar">
@@ -408,7 +368,7 @@ export default function DraftPanel({
               <button
                 type="button"
                 className="ghost"
-                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 「이 글 복사」를 쓰세요."
+                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 올리기 목록의 「복사하기」를 쓰세요."
                 onClick={() => {
                   if (!tenant) return
                   void loadFactGraph(tenantId)
@@ -439,73 +399,6 @@ export default function DraftPanel({
               </button>
             </div>
           </details>
-    </>
-  )
-
-  return (
-    <div className="brief draft-flow">
-      <div className="draft-steps" role="group" aria-label={`${action.title} 진행 단계`}>
-        {steps.map((s) =>
-          s.key === 'draft' ? (
-            <div key={s.key} className="draft-step done">
-              <span className="draft-step-dot" aria-hidden="true">
-                ✓
-              </span>
-              <span className="draft-step-text">
-                <span className="draft-step-label">{s.label}</span>
-                <span className="draft-step-sub">{s.sub}</span>
-              </span>
-            </div>
-          ) : (
-            <button
-              key={s.key}
-              type="button"
-              className={`draft-step${s.done ? ' done' : ''}${step === s.key ? ' on' : ''}`}
-              aria-expanded={step === s.key}
-              onClick={() => toggle(s.key as Step)}
-            >
-              <span className="draft-step-dot" aria-hidden="true">
-                {s.done ? '✓' : s.n}
-              </span>
-              <span className="draft-step-text">
-                <span className="draft-step-label">{s.label}</span>
-                <span className="draft-step-sub">{s.sub}</span>
-              </span>
-            </button>
-          ),
-        )}
-      </div>
-
-      {step === null && (
-        // 접힌 카드에서도 다음에 할 일 하나는 바로 누를 수 있게 둔다.
-        <div className="brief-bar">
-          {left > 0 && !progress.edited ? (
-            <button type="button" onClick={() => setStep('gaps')}>
-              빈칸 {left}곳 확인하기
-            </button>
-          ) : (
-            <>
-              <button type="button" onClick={() => void copyPublish()}>
-                {copied ? '복사했습니다' : '이 글 복사'}
-              </button>
-              <button type="button" className="ghost" onClick={() => setStep('publish')}>
-                올리기 · 주소 기록
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {!compact && (
-        <div className="brief-bar draft-tools">
-          <button type="button" className="ghost" onClick={editing ? closeEdit : startEdit}>
-            {editing ? '편집 닫기' : '본문 편집'}
-          </button>
-          <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-            {busy ? `다시 쓰는 중… ${clock(elapsed)}` : '다시 만들기'}
-          </button>
-          {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
-          <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
         </div>
       )}
 
@@ -753,33 +646,14 @@ export default function DraftPanel({
           )}
           {left === 0 && progress.total > 0 && (
             <div className="brief-bar">
-              <button type="button" onClick={() => setStep('publish')}>
-                빈칸 확인 끝 — 올리기로
+              <button type="button" onClick={() => setStep(null)}>
+                확인 끝 — 아래 올리기 목록에서 올리세요
               </button>
             </div>
           )}
         </div>
       )}
 
-      {step === 'publish' && (
-        <div className="brief-body draft-publish">
-          {channels && channels.length > 0 && onAdapted && channelSlot ? (
-            <ChannelTabs
-              tenantId={tenantId}
-              contentActionId={action.id}
-              stored={stored}
-              channels={channels}
-              adaptations={adaptations}
-              onAdapted={onAdapted}
-              ownSite={ownSite}
-              ownPublished={publishedCount > 0}
-              channelSlot={channelSlot}
-            />
-          ) : (
-            ownSite
-          )}
-        </div>
-      )}
     </div>
   )
 }
