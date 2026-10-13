@@ -476,6 +476,14 @@ function resolveJudgeEngine() {
   return 'openai'
 }
 
+// server/engines/index.ts의 resolveWriterEngineId()와 같은 규칙 — 글쓰기(브리프·초안·채널 글) 엔진.
+// WRITER_ENGINE이 없으면 판단 엔진과 같다.
+function resolveWriterEngine() {
+  const explicit = (process.env.WRITER_ENGINE || '').trim().toLowerCase()
+  if (explicit === 'gemini' || explicit === 'claude' || explicit === 'openai') return explicit
+  return resolveJudgeEngine()
+}
+
 ipcMain.handle('settings:apiKeyStatus', () => {
   const status = {}
   for (const n of API_KEY_NAMES) status[n] = Boolean(process.env[n])
@@ -487,6 +495,7 @@ ipcMain.handle('settings:apiKeyStatus', () => {
     status,
     envPath: userEnvPath(),
     judgeEngine: resolveJudgeEngine(),
+    writerEngine: resolveWriterEngine(),
     collectEngines: collect.length > 0 ? collect : null, // null = 테넌트별 설정 사용
   }
 })

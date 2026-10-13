@@ -24,6 +24,8 @@ import { parseJsonLoose } from './jsonParse.js';
  * 두어, 원문을 고치거나 빈칸을 더 채우면 화면이 "다시 다듬기"를 띄운다.
  */
 export interface ChannelAdaptation {
+  /** 이 글을 쓴 모델(대체 모델로 답했으면 그 모델). 예전 기록에는 없다. */
+  model?: string;
   contentActionId: string;
   channelActionId: string;
   channelDomain: string;
@@ -70,9 +72,12 @@ export async function adaptForChannel(
   tenantId: string,
   ids: { contentActionId: string; channelActionId: string },
   req: ChannelAdaptRequest,
-  judge: EngineClient,
+  /** 글을 쓰는 엔진(WRITER_ENGINE). */
+  writer: EngineClient,
+  /** 쓴 글의 사실 격상을 검사하는 엔진 — 판정 엔진. 쓴 모델과 다른 모델이 검사한다. 없으면 writer. */
+  checker: EngineClient = writer,
 ): Promise<ChannelAdaptation> {
-  const result = await judge.call(buildChannelAdaptPrompt(req));
+  const result = await writer.call(buildChannelAdaptPrompt(req));
   const raw = parseJsonLoose<Record<string, unknown>>(result.text);
   const title = typeof raw?.title === 'string' ? raw.title.trim() : '';
   const body = typeof raw?.body === 'string' ? raw.body.replace(/\r\n/g, '\n').trim() : '';
@@ -93,7 +98,7 @@ export async function adaptForChannel(
     const { marker, text } = splitMarker(l);
     return marker.startsWith('#') || !text ? [] : splitSentences(text);
   });
-  const claims = await findOverclaims(sentences, req.factGraph, judge, 'drop');
+  const claims = await findOverclaims(sentences, req.factGraph, checker, 'drop');
   if (claims.overclaimed.size) {
     kept = kept
       .map((l) => {
@@ -126,6 +131,7 @@ export async function adaptForChannel(
     title,
     markdown,
     generatedAt: new Date().toISOString(),
+    ...(result.model ? { model: result.model } : {}),
     sourceKey: sourceKeyOf(req.sourceMarkdown),
     ...(notes.length ? { notes } : {}),
   };

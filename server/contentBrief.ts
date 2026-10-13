@@ -13,6 +13,8 @@ import { parseJsonLoose } from './jsonParse.js';
  * 다시 만들기(force)를 누르면 덮어쓴다.
  */
 export interface StoredBrief {
+  /** 이 글을 쓴 모델(대체 모델로 답했으면 그 모델). 예전 기록에는 없다. */
+  model?: string;
   actionId: string;
   generatedAt: string;
   brief: ContentBrief;
@@ -83,13 +85,16 @@ export async function generateBrief(
   tenantId: string,
   actionId: string,
   req: ContentBriefRequest,
-  judge: EngineClient,
+  /** 글을 쓰는 엔진(WRITER_ENGINE). */
+  writer: EngineClient,
+  /** 쓴 글의 사실 격상을 검사하는 엔진 — 판정 엔진. 쓴 모델과 다른 모델이 검사한다. 없으면 writer. */
+  checker: EngineClient = writer,
 ): Promise<StoredBrief> {
-  const result = await judge.call(buildContentBriefPrompt(req));
+  const result = await writer.call(buildContentBriefPrompt(req));
   let brief = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.action.questionTexts);
   if (!brief) throw new Error('브리프 응답을 해석할 수 없습니다(JSON 아님). 다시 시도하세요.');
   // 인용용 문장은 그대로 옮겨 쓰라고 주는 문장이라 격상 검사를 거친다(초안과 같은 가드).
-  const claims = await findOverclaims(brief.citableSentences, req.factGraph, judge, 'drop');
+  const claims = await findOverclaims(brief.citableSentences, req.factGraph, checker, 'drop');
   if (claims.overclaimed.size || claims.notes.length) {
     brief = {
       ...brief,
@@ -97,7 +102,7 @@ export async function generateBrief(
       guardNotes: [...(brief.guardNotes ?? []), ...claims.notes],
     };
   }
-  const stored: StoredBrief = { actionId, generatedAt: new Date().toISOString(), brief };
+  const stored: StoredBrief = { actionId, generatedAt: new Date().toISOString(), ...(result.model ? { model: result.model } : {}), brief };
   const map = await readBriefs(tenantId);
   map[actionId] = stored;
   await writeBriefs(tenantId, map);

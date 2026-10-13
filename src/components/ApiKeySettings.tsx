@@ -29,6 +29,7 @@ export default function ApiKeySettings() {
   const bridge = typeof window !== 'undefined' ? window.electron : undefined
   const [status, setStatus] = useState<Record<string, boolean> | null>(null)
   const [judge, setJudge] = useState<string | null>(null)
+  const [writer, setWriter] = useState<string | null>(null)
   // 서버에 저장된 값(null = 브랜드별 설정). 초안(draft)과 분리해 "적용" 전에는 건드리지 않는다.
   const [saved, setSaved] = useState<string[] | null>(null)
   const [mode, setMode] = useState<Mode>('per-tenant')
@@ -40,6 +41,7 @@ export default function ApiKeySettings() {
     void bridge?.apiKeyStatus().then((r) => {
       setStatus(r.status)
       setJudge(r.judgeEngine ?? null)
+      setWriter(r.writerEngine ?? null)
       const engines = r.collectEngines ?? null
       setSaved(engines)
       setMode(engines ? 'global' : 'per-tenant')
@@ -200,6 +202,13 @@ export default function ApiKeySettings() {
           <b>판단 엔진</b>은 현재 <b>{JUDGE_LABEL[judge] ?? judge}</b>입니다. 언급·인용·순위·사실성을 모두 이 엔진이
           판정하므로, 바꾸면 같은 응답에서 다른 결과가 나와 <b>주차 간 비교가 깨집니다</b>. 그래서 앱에서는 바꾸지 않고
           고정합니다(변경이 꼭 필요하면 <code>.env</code>의 <code>JUDGE_ENGINE</code>으로 지정).
+        </p>
+      )}
+      {writer && writer !== judge && (
+        <p className="hint" style={{ marginTop: 8, marginBottom: 0 }}>
+          <b>글쓰기 엔진</b>은 <b>{JUDGE_LABEL[writer] ?? writer}</b>입니다. 콘텐츠 브리프 · 초안 · 채널용 글을 이 엔진이 쓰고,
+          쓴 글의 사실 확인은 판단 엔진이 합니다. 측정 점수에는 영향이 없습니다(<code>.env</code>의{' '}
+          <code>WRITER_ENGINE</code>).
         </p>
       )}
     </section>
