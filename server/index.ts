@@ -30,7 +30,7 @@ import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
-import { configuredModels, getJudgeClient } from './engines/index.js';
+import { configuredModels, getJudgeClient, getWriterClient } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -456,6 +456,7 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
         },
         language: tenant.questionLanguage,
       },
+      getWriterClient(),
       getJudgeClient(),
     );
     res.json({ ...stored, reused: false });
@@ -508,6 +509,7 @@ app.post('/api/channel-adapt/:tenantId', async (req, res) => {
           factGraph: tenant.factGraph ?? [],
           language: tenant.questionLanguage,
         },
+        getWriterClient(),
         getJudgeClient(),
       ),
     );
@@ -618,6 +620,7 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
         targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
         language: tenant.questionLanguage,
       },
+      getWriterClient(),
       getJudgeClient(),
     );
     res.json({ ...stored, reused: false });

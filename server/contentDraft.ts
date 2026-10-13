@@ -18,6 +18,8 @@ import { parseJsonLoose } from './jsonParse.js';
  * 실행 항목 id가 주차에 묶이지 않으므로 다음 주에도 같은 초안을 다시 쓴다.
  */
 export interface StoredDraft {
+  /** 이 글을 쓴 모델(대체 모델로 답했으면 그 모델). 예전 기록에는 없다. */
+  model?: string;
   actionId: string;
   generatedAt: string;
   draft: ContentDraft;
@@ -214,17 +216,20 @@ export async function generateDraft(
   tenantId: string,
   actionId: string,
   req: ContentDraftRequest,
-  judge: EngineClient,
+  /** 글을 쓰는 엔진(WRITER_ENGINE). */
+  writer: EngineClient,
+  /** 쓴 글의 사실 격상을 검사하는 엔진 — 판정 엔진. 쓴 모델과 다른 모델이 검사한다. 없으면 writer. */
+  checker: EngineClient = writer,
 ): Promise<StoredDraft> {
-  const result = await judge.call(buildContentDraftPrompt(req));
+  const result = await writer.call(buildContentDraftPrompt(req));
   let draft = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.questionTexts);
   if (!draft) throw new Error('초안 응답을 해석할 수 없습니다(JSON 아님). 다시 시도하세요.');
   if (draft.sections.length === 0) throw new Error('초안에 본문 절이 없습니다. 브리프를 먼저 확인하세요.');
   // 숫자 가드 다음에 격상 가드 — 숫자 없이 주체·범위가 커진 문장을 뺀다.
-  const claims = await findOverclaims(draftSentences(draft), req.factGraph, judge, 'drop');
+  const claims = await findOverclaims(draftSentences(draft), req.factGraph, checker, 'drop');
   if (claims.overclaimed.size) draft = dropOverclaims(draft, claims.overclaimed, req.factGraph);
   if (claims.notes.length) draft = { ...draft, guardNotes: [...(draft.guardNotes ?? []), ...claims.notes] };
-  const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), draft };
+  const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), ...(result.model ? { model: result.model } : {}), draft };
   const map = await readDrafts(tenantId);
   map[actionId] = stored;
   await writeDrafts(tenantId, map);

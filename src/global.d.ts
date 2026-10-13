@@ -35,6 +35,7 @@ interface ElectronBridge {
     status: Record<string, boolean>
     envPath: string
     judgeEngine?: string
+    writerEngine?: string
     collectEngines?: string[] | null
   }>
   /** API 키를 userData/.env에 저장하고 즉시 적용. */

@@ -156,6 +156,40 @@ export function getJudgeClient(): EngineClient {
   return judgeClient;
 }
 
+let writerClient: EngineClient | undefined;
+
+/**
+ * 글쓰기 엔진 id — 콘텐츠 브리프·초안·채널용 글처럼 사람이 읽을 글을 만드는 일에 쓴다.
+ *
+ * 측정 판정과 나눈 이유: 판정은 주차 비교가 생명이라 temperature 0으로 고정할 수 있는 Gemini에 두고,
+ * 글 품질에만 비싼 모델을 쓴다. Claude Opus 5.5 판정은 W40 비교에서 점수가 Gemini와 1점 안이었는데
+ * 비용은 약 6배였다(2026-10-13, 교보생명 응답 108건).
+ *
+ * WRITER_ENGINE이 없으면 판정 엔진과 같다 — 설정하지 않으면 예전 동작 그대로다.
+ */
+export function resolveWriterEngineId(): JudgeEngineId {
+  if (USE_MOCK) return 'mock';
+  const preferred = process.env.WRITER_ENGINE?.trim().toLowerCase();
+  if (preferred === 'gemini' || preferred === 'claude' || preferred === 'openai') return preferred;
+  return resolveJudgeEngineId();
+}
+
+/**
+ * 글쓰기 클라이언트. 판정 엔진과 같은 엔진이면 판정 클라이언트를 그대로 쓴다(예전 동작).
+ * 글은 측정 밖의 일이라 빈 응답 차단기(guarded)는 붙이지 않는다 — 호출한 쪽이 실패를 화면에 알린다.
+ * 모델은 WRITER_MODEL(Claude일 때), 없으면 JUDGE_MODEL, 없으면 claudeJudgeClient의 기본 모델.
+ */
+export function getWriterClient(): EngineClient {
+  const id = resolveWriterEngineId();
+  if (id === 'mock' || id === resolveJudgeEngineId()) return getJudgeClient();
+  if (!writerClient) {
+    if (id === 'claude') writerClient = limited(new ClaudeJudgeClient(process.env.WRITER_MODEL ?? process.env.JUDGE_MODEL), 'judge');
+    else if (id === 'openai') writerClient = limited(new OpenAiJudgeClient(), 'judge');
+    else writerClient = limited(new GeminiJudgeClient(), 'judge');
+  }
+  return writerClient;
+}
+
 /**
  * 지금 실제로 호출하는 모델 — 각 클라이언트가 쓰는 값을 그대로 모은다.
  *
