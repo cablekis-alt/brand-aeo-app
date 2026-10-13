@@ -111,7 +111,7 @@ npm run measure:local
 | LLM API (OpenAI·Gemini) | 측정 시에만 (어디서 돌려도 동일) |
 | PC 전기·자원 | 측정 시에만 (테넌트당 ~2분) |
 
-> 측정 비용 계수: 코호트 측정 상한 `MAX_AUTO_COHORT`(=5, `server/measureAndBake.ts`), 테넌트당 질문 수·반복·엔진 수.
+> 측정 비용 계수: 코호트 측정 상한 `MAX_AUTO_COHORT`(=5, `server/cohortPlan.ts`), 테넌트당 질문 수·반복·엔진 수.
 
 ---
 

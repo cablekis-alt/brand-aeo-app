@@ -15,6 +15,7 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
+import { buildEditorState } from './competitorEditor.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -823,6 +824,22 @@ app.put('/api/tenants/:tenantId/market-scope', async (req, res) => {
   try {
     await writeTenantScope(tenant.tenantId, scope);
     res.json({ tenantId: tenant.tenantId, ...scope });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 경쟁사 편집 서랍의 처음 상태 — 함께 측정·대기, 경쟁사별 최근 점수·비교 질문, 예전 경쟁사(competitorEditor.ts).
+// 읽기만 한다. Express 전용이다(Vercel 함수는 12/12이고, 웹은 이 서랍을 띄우지 않는다).
+app.get('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    const runtime = await loadRuntimeTenants();
+    const tenant = runtime.find((t) => t.tenantId === req.params.tenantId);
+    if (!tenant || tenant.cohortOnly) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(await buildEditorState(tenant, runtime, store));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

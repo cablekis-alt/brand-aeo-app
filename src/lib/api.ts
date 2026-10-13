@@ -579,6 +579,8 @@ export interface PortfolioRow {
   tied: boolean
   delta: number | null
   changeReason: string | null
+  /** 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null. */
+  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
 }
 /** null = 라우트 없는 환경(웹). 데스크톱 앱 전용 — 판정 호출 없이 저장된 기록만 읽는다. */
 /** 코호트 미니 리더보드의 한 줄 — server/portfolio.ts CohortMember와 같은 모양. */
@@ -608,6 +610,55 @@ export interface Portfolio {
 
 export async function loadPortfolio(): Promise<Portfolio | null> {
   return getJson<Portfolio>('/api/portfolio')
+}
+
+/** 경쟁사 편집 서랍 — server/competitorEditor.ts CompetitorEditorState와 같은 모양. */
+export type CompetitorPlanStatus = 'measured' | 'waiting' | 'collision' | 'duplicate' | 'unnamed'
+export interface EditorCompetitorRow {
+  index: number
+  name: string
+  aliases: string[]
+  domains: string[]
+  draftId: string | null
+  status: CompetitorPlanStatus
+  takesSlot: boolean
+  targetTenantId: string | null
+  otherRegion: boolean
+  existingCustomer: boolean
+  collidesWith: { tenantId: string; brandName: string; industry: string; region: string } | null
+  deleted: boolean
+  latest: { weekOf: string; score: number; mentionRate: number; brandOwnedCitationRate: number } | null
+  questionIds: string[]
+}
+export interface EditorPastCompetitor {
+  tenantId: string
+  brandName: string
+  weeks: number
+  lastWeekOf: string
+  lastScore: number
+}
+export interface CompetitorEditorState {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  cap: number
+  measuredCount: number
+  waitingCount: number
+  blockedCount: number
+  baseline: { weekOf: string; score: number; rank: number; totalTenants: number; tied: boolean } | null
+  rows: EditorCompetitorRow[]
+  past: EditorPastCompetitor[]
+  questionBank: { version: string; exists: boolean; measuredVersion: string | null; sharedCount: number; brandCount: number }
+  measuring: boolean
+}
+
+/** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
+export async function loadCompetitorEditor(tenantId: string): Promise<CompetitorEditorState> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/competitors`)
+  const body = (await res.json().catch(() => null)) as (CompetitorEditorState & { error?: string }) | null
+  if (!res.ok || !body) throw new Error(body?.error || `경쟁사 목록을 불러오지 못했습니다 (HTTP ${res.status})`)
+  return body
 }
 
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */

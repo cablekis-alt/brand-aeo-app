@@ -80,7 +80,7 @@ function asEngineList(value: unknown): Engine[] {
  * 순위가 질문지 차이를 잰다 — 실측 W40 성동구 정형외과: 경쟁 병원 질문지에만 자기 동네를 짚은 지역
  * 질문이 11~15개 있어, 공유 질문지로 다시 재자 왕십리본 35 → 9점, 옥수 본 0/66 → 5/66이 됐다.
  * 그래서 등록되는 모든 브랜드가 코호트 질문지를 쓴다(cohortQuestionBank.ts). 경쟁사 초안은 본 브랜드의
- * 값을 물려받는다(measureAndBake.ts cohortOnlyDraftsFrom).
+ * 값을 물려받는다(cohortPlan.ts cohortOnlyDraft).
  */
 export const DEFAULT_COHORT_QUESTION_BANK = 'c1';
 
