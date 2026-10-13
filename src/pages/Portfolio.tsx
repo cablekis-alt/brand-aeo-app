@@ -4,6 +4,7 @@ import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioRow } from '../lib/api'
 import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
+import { directionParticle } from '../lib/korean'
 import { groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
 
 type Filter = '' | 'done' | 'need' | 'alone'
@@ -271,8 +272,11 @@ export default function Portfolio() {
 }
 
 /**
- * 리더보드 한 줄. 지금 재는 고객 브랜드는 그 브랜드로 바꾸고(개요로), 경쟁사는 읽기 전용 개요를 연다.
- * 지난 기록(고객 브랜드의 옛 코호트)은 비교용이라 누르지 않는다.
+ * 리더보드 한 줄. 고객 브랜드는 그 브랜드로 바꾸고(개요로), 경쟁사는 읽기 전용 개요를 연다.
+ *
+ * 지난 기록(그 뒤 주차에 다시 잰 고객 브랜드의 옛 코호트 줄)도 고객 브랜드라 누르면 그 브랜드로 간다 —
+ * 개요는 가장 최근 주차를 보인다. 예전에는 비교용이라 눌리지 않아, 「W40에 다시 측정」이 붙은 뷰성형외과를
+ * W37 코호트에서 눌러도 아무 일이 없었다(2026-10-13).
  */
 function LeaderRow({
   m,
@@ -315,8 +319,8 @@ function LeaderRow({
         {chip && <span className={`chip ${chip.tone}`}>{chip.text}</span>}
         {m.laterWeek && <span className="chip info">{shortWeek(m.laterWeek)}에 다시 측정</span>}
       </span>
-      <span className={`pf-row-go${m.competitor ? ' pf-row-peek' : ''}`} aria-hidden="true">
-        {current || m.competitor ? '›' : ''}
+      <span className={`pf-row-go${current ? '' : ' pf-row-peek'}`} aria-hidden="true">
+        ›
       </span>
     </>
   )
@@ -337,6 +341,13 @@ function LeaderRow({
       {cells}
     </button>
   ) : (
-    <div className={`pf-lb-row ${m.competitor ? 'competitor' : 'past'}`}>{cells}</div>
+    <button
+      type="button"
+      className="pf-lb-row past"
+      title={`${directionParticle(m.brandName)} 바꾸기 — ${m.laterWeek ? `${shortWeek(m.laterWeek)} 측정` : '최근 측정'}을 엽니다`}
+      onClick={() => onOpen(m.tenantId)}
+    >
+      {cells}
+    </button>
   )
 }
