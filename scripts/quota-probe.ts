@@ -12,23 +12,41 @@
  *   npx tsx scripts/quota-probe.ts 8,16            # 단계 지정
  *   npx tsx scripts/quota-probe.ts 8,16 12         # 단계 지정 + 단계별 호출 수
  *   npx tsx scripts/quota-probe.ts 24,48 48 --judge  # 판정 호출(그라운딩 없음)의 천장
+ *   npx tsx scripts/quota-probe.ts 12,24,36 24 --engine=openai      # 다른 수집 엔진(openai · perplexity · claude)
+ *   npx tsx scripts/quota-probe.ts 48,96 48 --judge=claude --model=claude-sonnet-5-5  # Claude 판정
+ *
+ * 수집 엔진은 키가 엔진마다 따로라 천장도 엔진마다 다르다(concurrency.ts가 엔진별 슬롯을 둔 이유).
  *
  * --judge를 붙이면 수집 대신 **판정 호출**을 잰다. 두 호출은 성질이 달라 천장도 다르다 —
  * 수집은 googleSearch 그라운딩이 붙어 한 번에 7~8초가 걸리고 서버가 큐에 세우지만,
  * 판정은 검색이 없다. 같은 슬롯을 다투게 두면 수집이 막혀 있는 동안 판정도 함께 대기한다.
  * 예산을 나눌지 판단하려면 판정 쪽 천장을 따로 알아야 한다.
  *
- * 주의: 실제 Gemini 호출이다(기본 4단계 × 24회 = 96회).
+ * 주의: 실제 API 호출이다(기본 4단계 × 24회 = 96회). 비용이 든다.
  */
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'node:fs';
+import { ClaudeEngineClient } from '../server/engines/claudeEngineClient.js';
+import { ClaudeJudgeClient } from '../server/engines/claudeJudgeClient.js';
 import { GeminiEngineClient } from '../server/engines/geminiEngineClient.js';
 import { GeminiJudgeClient } from '../server/engines/geminiJudgeClient.js';
+import { OpenAiEngineClient } from '../server/engines/openaiEngineClient.js';
+import { PerplexityEngineClient } from '../server/engines/perplexityEngineClient.js';
+import type { EngineClient } from '../server/engines/types.js';
 import { mapWithConcurrency } from '../server/concurrency.js';
 import { buildBrandMentionPrompt, buildEngineCallPrompt } from '../src/prompts/index.js';
-import type { PromptMessage } from '../src/prompts/types.js';
+import type { Engine, PromptMessage } from '../src/prompts/types.js';
 
-const judgeMode = process.argv.includes('--judge');
+const flag = (name: string) => process.argv.find((a) => a === `--${name}` || a.startsWith(`--${name}=`));
+const flagValue = (name: string) => flag(name)?.split('=')[1];
+const judgeMode = Boolean(flag('judge'));
+const judgeEngine = flagValue('judge') === 'claude' ? 'claude' : 'gemini';
+const collectEngine = (flagValue('engine') ?? 'gemini') as Engine;
+const model = flagValue('model');
+if (!['gemini', 'openai', 'perplexity', 'claude'].includes(collectEngine)) {
+  console.error(`모르는 엔진: ${collectEngine}`);
+  process.exit(1);
+}
 const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const levels = (positional[0] ?? '8,16,24,32')
   .split(',')
@@ -97,7 +115,7 @@ function loadJudgePrompts(): PromptMessage[] {
 
 const prompts: PromptMessage[] = judgeMode
   ? loadJudgePrompts()
-  : loadQuestions().map((text) => buildEngineCallPrompt('gemini', text));
+  : loadQuestions().map((text) => buildEngineCallPrompt(collectEngine, text));
 
 if (prompts.length === 0) {
   console.error('프롬프트를 만들 재료가 없습니다(--judge는 data/torder/2026-W37/raw-calls.json이 필요).');
@@ -105,9 +123,19 @@ if (prompts.length === 0) {
 }
 
 // 전역 슬롯을 우회하려고 클라이언트를 직접 만든다(위 주석 참고).
-const client = judgeMode ? new GeminiJudgeClient() : new GeminiEngineClient();
+function collectClient(engine: Engine): EngineClient {
+  if (engine === 'openai') return new OpenAiEngineClient();
+  if (engine === 'perplexity') return new PerplexityEngineClient();
+  if (engine === 'claude') return new ClaudeEngineClient();
+  return new GeminiEngineClient();
+}
+const client: EngineClient = judgeMode
+  ? judgeEngine === 'claude'
+    ? new ClaudeJudgeClient(model)
+    : new GeminiJudgeClient()
+  : collectClient(collectEngine);
 console.log(
-  `${judgeMode ? '판정' : '수집'} 호출 · 모델 ${process.env.GEMINI_MODEL ?? 'gemini-3.7-flash'} · ` +
+  `${judgeMode ? `판정(${judgeEngine})` : `수집(${collectEngine})`} 호출 · 모델 ${model ?? (judgeMode && judgeEngine === 'claude' ? '기본' : collectEngine === 'gemini' ? (process.env.GEMINI_MODEL ?? 'gemini-3.7-flash') : '기본')} · ` +
     `단계 ${levels.join(', ')} · 단계별 ${callsPerLevel}회 · 프롬프트 ${prompts.length}종\n`,
 );
 
@@ -134,6 +162,12 @@ for (const level of levels) {
   await mapWithConcurrency(jobs, level, async (prompt) => {
     try {
       const result = await client.call(prompt);
+      // Claude 판정 클라이언트는 오류를 로그로 남기고 빈 응답을 돌려준다 — 빈 응답은 실패로 센다.
+      if (!result.text.trim()) {
+        other += 1;
+        if (otherMessages.length < 3) otherMessages.push('빈 응답(클라이언트가 오류를 로그로 남김 — 위 로그 확인)');
+        return;
+      }
       latencies.push(result.latencyMs ?? 0);
     } catch (err) {
       if (isQuotaError(err)) quota += 1;

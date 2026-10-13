@@ -16,7 +16,7 @@ import {
 } from '../src/prompts/index.js';
 import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
-import { mapWithConcurrency } from './concurrency.js';
+import { collectLimit, mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
@@ -51,11 +51,14 @@ import type {
 //   동시성 24 → 17.3초 · 429 0건 · 2.77/초   (48회 기준)
 //   동시성 48 → 17.2초 · 429 0건 · 2.79/초   ← 더 안 빨라지고 p95만 9.3→10.8초
 // 즉 키 하나의 처리량 천장이 약 2.8호출/초이고 동시성 24에서 이미 닿는다. 그 위로 올리면
-// 서버가 429 대신 큐에 세워 지연만 길어진다. 그래서 수집을 전역 상한과 같은 24로 맞춘다.
+// 서버가 429 대신 큐에 세워 지연만 길어진다.
+// 수집 슬롯이 엔진마다 따로가 된 뒤(2026-10-13, concurrency.ts)로는 한 브랜드가 띄우는 수집 호출도 쓰는 엔진들의
+// 슬롯 합만큼 띄운다 — 24로 두면 브랜드 하나만 잴 때 엔진마다 8개씩만 돌아 OpenAI·Gemini 슬롯이 놀았다.
+// COLLECTION_CONCURRENCY를 주면 그 값을 쓴다.
 // 판정은 검색이 없어 더 싸고 예산도 따로다(48). 항목당 판정 호출이 평균 2.6개라
 // 16 × 2.6 ≈ 42로 그 예산을 채운다 — 8이면 브랜드 하나만 돌 때 21개밖에 못 띄워
 // 파이프가 반만 찬다(실측: 단독 브랜드 2.75호출/초 vs 코호트 병렬 5.2호출/초).
-const COLLECTION_CONCURRENCY = Math.max(1, Number(process.env.COLLECTION_CONCURRENCY) || 24);
+const COLLECTION_CONCURRENCY_OVERRIDE = Number(process.env.COLLECTION_CONCURRENCY) || 0;
 const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 16);
 
 function toBrandContext(tenant: TenantConfig): BrandContext {
@@ -217,9 +220,13 @@ async function collectRawCalls(
   // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다.
   let collected = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length });
+  const collectionConcurrency = Math.max(
+    1,
+    COLLECTION_CONCURRENCY_OVERRIDE || availableEngines.reduce((n, engine) => n + collectLimit(engine), 0),
+  );
   const settled = await mapWithConcurrency(
     jobs,
-    COLLECTION_CONCURRENCY,
+    collectionConcurrency,
     async (job): Promise<RawCallRecord | null> => {
       // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
       throwIfMeasureCancelled(tenant.tenantId);
