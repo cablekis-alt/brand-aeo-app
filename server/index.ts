@@ -15,6 +15,7 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
+import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -38,7 +39,7 @@ import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
 import { readLocalMeasures } from './localMeasureLog.js';
-import { MeasureCancelledError, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
+import { MeasureCancelledError, beginMeasureRun, endMeasureRun, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -182,12 +183,14 @@ app.get('/api/measure-status', (_req, res) => {
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).
 // 진행중/완료 추적·로깅은 measureAndBake 내부에서 브랜드마다 처리한다.
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
-  const tenant = await findTenant(req.params.tenantId);
-  if (!tenant) {
-    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
-    return;
-  }
+  // 경쟁사 목록을 읽기 전부터 「측정 중」으로 센다 — 읽은 뒤 경쟁사 편집이 저장되면 측정은 옛 목록으로 돈다.
+  beginMeasureRun();
   try {
+    const tenant = await findTenant(req.params.tenantId);
+    if (!tenant) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
     // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
     const reuseCohort = (req.body as { reuseCohort?: unknown } | undefined)?.reuseCohort === true;
     const result = await measureAndBake(tenant, store, { reuseCohort });
@@ -199,6 +202,8 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
       return;
     }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    endMeasureRun();
   }
 });
 
@@ -825,6 +830,69 @@ app.put('/api/tenants/:tenantId/market-scope', async (req, res) => {
     res.json({ tenantId: tenant.tenantId, ...scope });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 경쟁사 편집 서랍의 처음 상태 — 함께 측정·대기, 경쟁사별 최근 점수·비교 질문, 예전 경쟁사(competitorEditor.ts).
+// 읽기만 한다. Express 전용이다(Vercel 함수는 12/12이고, 웹은 이 서랍을 띄우지 않는다).
+app.get('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    const runtime = await loadRuntimeTenants();
+    const tenant = runtime.find((t) => t.tenantId === req.params.tenantId);
+    if (!tenant || tenant.cohortOnly) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(await buildEditorState(tenant, runtime, store));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+function sendEditorError(res: import('express').Response, err: unknown): void {
+  const status = err instanceof EditorError ? err.status : 500;
+  res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+}
+
+// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제. 쓰지 않는다.
+app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
+  try {
+    const runtime = await loadRuntimeTenants();
+    const tenant = runtime.find((t) => t.tenantId === req.params.tenantId);
+    if (!tenant || tenant.cohortOnly) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(await planEdit(tenant, runtime, store, (req.body as { competitors?: unknown } | undefined)?.competitors));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 저장 — data/<tenant>/competitors.json(tenantCompetitorsStore.ts). 다음 측정부터 이 목록으로 잰다. 측정 중이면 409.
+app.put('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    res.json(await saveEdit(req.params.tenantId, store, req.body));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 마지막 저장 되돌리기 — 그 뒤 이 브랜드를 쟀으면 409.
+app.post('/api/tenants/:tenantId/competitors/undo', async (req, res) => {
+  try {
+    res.json(await undoEdit(req.params.tenantId, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 앱에서 고친 목록을 버리고 저장소 설정을 따른다(되돌릴 수 있다).
+app.delete('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    res.json(await resetEdit(req.params.tenantId, store));
+  } catch (err) {
+    sendEditorError(res, err);
   }
 });
 

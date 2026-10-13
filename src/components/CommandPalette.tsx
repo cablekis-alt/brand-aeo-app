@@ -11,6 +11,8 @@ interface Command {
   label: string
   hint: string
   to: string
+  /** 이동하면서 화면에 넘길 요청(예: 브랜드 현황에서 경쟁사 편집 서랍 열기). */
+  state?: unknown
 }
 
 const MAX_QUESTIONS = 8
@@ -88,9 +90,21 @@ export default function CommandPalette() {
 
   const results = useMemo((): Command[] => {
     const q = query.trim()
-    const screens = allScreens(Boolean(viewing))
+    const screens: Command[] = allScreens(Boolean(viewing))
       .filter((s) => !q || matches(`${s.label} ${s.group ?? ''}`, q))
       .map((s) => ({ id: `s:${s.to}`, kind: '화면' as const, label: s.label, hint: s.group ?? '', to: s.to }))
+    // 경쟁사 편집은 브랜드 현황의 서랍이다 — 데스크톱 앱에서, 고객 브랜드를 볼 때만(경쟁사 보기 중에는 잠김).
+    const desktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
+    if (desktop && !viewing && tenantId && (!q || matches('경쟁사 편집 바꾸기 추가 빼기', q))) {
+      screens.push({
+        id: 's:competitor-edit',
+        kind: '화면',
+        label: '경쟁사 편집',
+        hint: `${tenant?.brandName ?? ''} · 브랜드 현황`,
+        to: '/brands',
+        state: { editCompetitors: tenantId },
+      })
+    }
     if (!q) return screens
     const questions = (bank?.tenantId === tenantId ? bank.questions : [])
       .filter((x) => matches(`${x.text} ${x.topic ?? ''}`, q))
@@ -107,12 +121,12 @@ export default function CommandPalette() {
       .slice(0, MAX_COMPETITORS)
       .map((c) => ({ id: `c:${c}`, kind: '경쟁사' as const, label: c, hint: '경쟁 순위에서 보기', to: '/ranking' }))
     return [...screens, ...questions, ...competitors]
-  }, [query, bank, tenantId, tenant?.competitors, viewing])
+  }, [query, bank, tenantId, tenant?.competitors, tenant?.brandName, viewing])
 
   const current = Math.min(active, Math.max(0, results.length - 1))
   const go = (c: Command) => {
     setOpen(false)
-    navigate(c.to)
+    navigate(c.to, c.state ? { state: c.state } : undefined)
   }
 
   const onInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {

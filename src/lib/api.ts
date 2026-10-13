@@ -579,6 +579,10 @@ export interface PortfolioRow {
   tied: boolean
   delta: number | null
   changeReason: string | null
+  /** 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null. */
+  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
+  /** 경쟁사 편집을 저장했고 아직 다시 재지 않았다. */
+  competitorEdit: { savedAt: string; summary: string } | null
 }
 /** null = 라우트 없는 환경(웹). 데스크톱 앱 전용 — 판정 호출 없이 저장된 기록만 읽는다. */
 /** 코호트 미니 리더보드의 한 줄 — server/portfolio.ts CohortMember와 같은 모양. */
@@ -608,6 +612,117 @@ export interface Portfolio {
 
 export async function loadPortfolio(): Promise<Portfolio | null> {
   return getJson<Portfolio>('/api/portfolio')
+}
+
+/** 경쟁사 편집 서랍 — server/competitorEditor.ts CompetitorEditorState와 같은 모양. */
+export type CompetitorPlanStatus = 'measured' | 'waiting' | 'collision' | 'duplicate' | 'unnamed'
+export interface EditorCompetitorRow {
+  index: number
+  name: string
+  aliases: string[]
+  domains: string[]
+  draftId: string | null
+  status: CompetitorPlanStatus
+  takesSlot: boolean
+  targetTenantId: string | null
+  otherRegion: boolean
+  existingCustomer: boolean
+  collidesWith: { tenantId: string; brandName: string; industry: string; region: string } | null
+  deleted: boolean
+  deletedOtherIndustry: { brandName: string; industry: string } | null
+  cohortWeeks: number
+  latest: { weekOf: string; score: number; mentionRate: number; brandOwnedCitationRate: number } | null
+  questionIds: string[]
+}
+export interface CompetitorEntry {
+  name: string
+  aliases: string[]
+  domains: string[]
+}
+export interface EditorPastCompetitor {
+  tenantId: string
+  brandName: string
+  aliases: string[]
+  domains: string[]
+  weeks: number
+  lastWeekOf: string
+  lastScore: number
+}
+export interface CompetitorEditorState {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  cap: number
+  measuredCount: number
+  waitingCount: number
+  blockedCount: number
+  baseline: { weekOf: string; score: number; rank: number; totalTenants: number; tied: boolean } | null
+  competitors: CompetitorEntry[]
+  rows: EditorCompetitorRow[]
+  past: EditorPastCompetitor[]
+  /** continues: 예전 경쟁사를 다시 넣으면 같은 id로 지난 기록을 잇는가. */
+  suggestions: (CompetitorEntry & { source: 'past' | 'cohort' | 'answers'; note: string; continues?: boolean })[]
+  questionBank: { version: string; exists: boolean; measuredVersion: string | null; sharedCount: number; brandCount: number }
+  edit: {
+    active: boolean
+    stale: boolean
+    savedAt: string | null
+    summary: string | null
+    undoAvailable: boolean
+    repoCompetitors: CompetitorEntry[]
+  }
+  measuring: boolean
+}
+/** 바꾼 목록 미리 계산 — server/competitorEditor.ts EditPlan과 같은 모양. */
+export interface CompetitorEditPlan {
+  cap: number
+  measuredCount: number
+  waitingCount: number
+  blockedCount: number
+  rows: EditorCompetitorRow[]
+  competitors: CompetitorEntry[]
+  droppedHosts: string[]
+  leaving: { name: string; tenantId: string | null; questionIds: string[]; thisWeek: boolean }[]
+  notes: string[]
+  errors: string[]
+  unchanged: boolean
+  measuring: boolean
+}
+
+/** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
+export async function loadCompetitorEditor(tenantId: string): Promise<CompetitorEditorState> {
+  return competitorRequest(tenantId, '', 'GET', undefined, '경쟁사 목록을 불러오지 못했습니다')
+}
+
+async function competitorRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string): Promise<T> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/competitors${sub}`, {
+    method,
+    ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  })
+  const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
+  if (!res.ok || !json) throw new Error(json?.error || `${failure} (HTTP ${res.status})`)
+  return json
+}
+
+/** 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). */
+export function planCompetitorEdit(tenantId: string, competitors: CompetitorEntry[]): Promise<CompetitorEditPlan> {
+  return competitorRequest(tenantId, '/plan', 'POST', { competitors }, '바꾼 목록을 계산하지 못했습니다')
+}
+
+/** 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. */
+export function saveCompetitorEdit(tenantId: string, competitors: CompetitorEntry[], summary: string): Promise<CompetitorEditorState> {
+  return competitorRequest(tenantId, '', 'PUT', { competitors, summary }, '경쟁사 목록을 저장하지 못했습니다')
+}
+
+/** 마지막 저장 되돌리기 — 그 뒤 측정했으면 throw. */
+export function undoCompetitorEdit(tenantId: string): Promise<CompetitorEditorState> {
+  return competitorRequest(tenantId, '/undo', 'POST', {}, '되돌리지 못했습니다')
+}
+
+/** 앱에서 고친 목록을 버리고 저장소 설정을 따른다. */
+export function resetCompetitorEdit(tenantId: string): Promise<CompetitorEditorState> {
+  return competitorRequest(tenantId, '', 'DELETE', undefined, '저장소 설정으로 돌아가지 못했습니다')
 }
 
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */

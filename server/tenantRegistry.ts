@@ -8,6 +8,7 @@ import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
 import { readTenantEngines } from './tenantEnginesStore.js';
 import { readTenantScope, type TenantScope } from './tenantScopeStore.js';
+import { overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
@@ -80,7 +81,7 @@ function asEngineList(value: unknown): Engine[] {
  * 순위가 질문지 차이를 잰다 — 실측 W40 성동구 정형외과: 경쟁 병원 질문지에만 자기 동네를 짚은 지역
  * 질문이 11~15개 있어, 공유 질문지로 다시 재자 왕십리본 35 → 9점, 옥수 본 0/66 → 5/66이 됐다.
  * 그래서 등록되는 모든 브랜드가 코호트 질문지를 쓴다(cohortQuestionBank.ts). 경쟁사 초안은 본 브랜드의
- * 값을 물려받는다(measureAndBake.ts cohortOnlyDraftsFrom).
+ * 값을 물려받는다(cohortPlan.ts cohortOnlyDraft).
  */
 export const DEFAULT_COHORT_QUESTION_BANK = 'c1';
 
@@ -163,7 +164,22 @@ function withScope(tenant: TenantConfig, scope: TenantScope): TenantConfig {
   return next;
 }
 
+/** 앱에서 고친 경쟁사 목록을 베이스가 바뀌어 쓰지 않을 때 한 번만 알린다(목록을 읽을 때마다 찍히지 않게). */
+const staleCompetitorWarned = new Set<string>();
+
 export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
+  return mergeRuntimeTenants(true);
+}
+
+/**
+ * 앱에서 고친 경쟁사 목록(competitors.json)을 빼고 병합한 테넌트 — 경쟁사 편집이 베이스 지문을 적고,
+ * 「저장소 설정으로 돌아가기」가 돌아갈 목록을 보여 줄 때 쓴다.
+ */
+export async function loadTenantWithoutCompetitorEdit(tenantId: string): Promise<TenantConfig | undefined> {
+  return (await mergeRuntimeTenants(false)).find((t) => t.tenantId === tenantId);
+}
+
+async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<TenantConfig[]> {
   const [base, overlay, deleted] = await Promise.all([baseTenants(), readOverlay(), readDeletedTenants()]);
   const map = new Map<string, TenantConfig>();
   for (const tenant of base) map.set(tenant.tenantId, tenant);
@@ -172,22 +188,33 @@ export async function loadRuntimeTenants(): Promise<TenantConfig[]> {
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진)만은 저장한 파일이
-  // 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
-  // 않기 때문이다.
+  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진·시장 범위·경쟁사 목록)만은 저장한
+  // 파일이 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
+  // 않기 때문이다. 경쟁사 목록은 고객 브랜드만 고치고, 베이스가 그 뒤에 바뀌었으면 쓰지 않는다
+  // (tenantCompetitorsStore.ts 지문 주석).
   const tenants = [...map.values()];
-  const [facts, pages, engines, scopes] = await Promise.all([
+  const [facts, pages, engines, scopes, competitorEdits] = await Promise.all([
     Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
     Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantEngines(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantScope(t.tenantId))),
+    Promise.all(tenants.map((t) => (withCompetitorEdits && !t.cohortOnly ? readCompetitorOverride(t.tenantId) : null))),
   ]);
-  return tenants.map((t, i) => ({
-    ...(scopes[i] ? withScope(t, scopes[i]!) : t),
-    ...(facts[i] ? { factGraph: facts[i]! } : {}),
-    ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
-    ...(engines[i] ? { engines: engines[i]! } : {}),
-  }));
+  return tenants.map((t, i) => {
+    const edit = competitorEdits[i]?.current ?? null;
+    const applies = overrideApplies(edit, t);
+    if (edit && !applies && !staleCompetitorWarned.has(t.tenantId)) {
+      staleCompetitorWarned.add(t.tenantId);
+      console.warn(`[tenantRegistry] ${t.tenantId}: 저장소 설정이 바뀌어 앱에서 고친 경쟁사 목록을 쓰지 않습니다(competitors.json).`);
+    }
+    return {
+      ...(scopes[i] ? withScope(t, scopes[i]!) : t),
+      ...(facts[i] ? { factGraph: facts[i]! } : {}),
+      ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
+      ...(engines[i] ? { engines: engines[i]! } : {}),
+      ...(applies ? { competitors: edit.competitors } : {}),
+    };
+  });
 }
 
 /**

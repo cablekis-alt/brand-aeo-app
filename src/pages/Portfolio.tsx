@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import CompetitorEditor from '../components/CompetitorEditor'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioRow } from '../lib/api'
@@ -50,8 +51,11 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`
  */
 export default function Portfolio() {
   const navigate = useNavigate()
-  const { setTenantId, viewCompetitor } = useTenant()
+  const location = useLocation()
+  const { setTenantId, viewCompetitor, viewing, reloadTenants } = useTenant()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
+  // 경쟁사 편집을 저장하면 다시 읽는다 — 카드의 「측정 안 됨」·「경쟁사 바뀜」 칩이 저장한 목록을 따르게.
+  const [reloadKey, setReloadKey] = useState(0)
   useEffect(() => {
     let alive = true
     void loadPortfolio().then((value) => {
@@ -60,7 +64,11 @@ export default function Portfolio() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [reloadKey])
+  const afterCompetitorSave = () => {
+    setReloadKey((k) => k + 1)
+    reloadTenants().catch((err: unknown) => console.error('[Portfolio] 브랜드 목록을 다시 읽지 못했습니다', err))
+  }
 
   const [filter, setFilter] = useState<Filter>('')
   const [group, setGroup] = useState('')
@@ -121,17 +129,41 @@ export default function Portfolio() {
     return groupCohorts(visible)
   }, [rows, rowById, state.value, filter, group, query])
 
+  // 경쟁사 편집 서랍에 저장하지 않은 바꾼 내용이 있으면, 다른 브랜드로 바꾸거나 이 화면을 떠나기 전에 묻는다.
+  const editorDirty = useRef(false)
+  const onEditorDirty = useCallback((dirty: boolean) => {
+    editorDirty.current = dirty
+  }, [])
+  const leaveEditor = () => !editorDirty.current || window.confirm('바꾼 경쟁사를 저장하지 않고 나갈까요?')
+
   const open = (tenantId: string) => {
+    if (!leaveEditor()) return
     setTenantId(tenantId)
     navigate('/')
   }
   const [viewError, setViewError] = useState<string | null>(null)
   /** 경쟁사 줄 — 고른 고객 브랜드는 그대로 두고 그 경쟁사를 읽기 전용으로 연다(상용화 UI 10차 시안). */
   const openCompetitor = (tenantId: string) => {
+    if (!leaveEditor()) return
     setViewError(null)
     viewCompetitor(tenantId)
       .then(() => navigate('/'))
       .catch((e: unknown) => setViewError(e instanceof Error ? e.message : String(e)))
+  }
+
+  // 경쟁사 편집 서랍(상용화 UI 11차). 명령 창에서 오면 location.state로 연다 — 이 화면에 머문 채 다시 와도
+  // 열리게 이동(location.key)마다 한 번 본다.
+  const requested = (location.state as { editCompetitors?: string } | null)?.editCompetitors ?? null
+  const [editing, setEditing] = useState<string | null>(requested)
+  const [seenKey, setSeenKey] = useState(location.key)
+  if (location.key !== seenKey) {
+    setSeenKey(location.key)
+    if (requested) setEditing(requested)
+  }
+  const closeEditor = () => {
+    setEditing(null)
+    // 새로 고침·뒤로 가기에서 다시 열리지 않게 이동 기록의 요청을 지운다.
+    if (requested) navigate(location.pathname, { replace: true, state: null })
   }
 
   const summary: { key: Filter; label: string; value: number; sub: string; tone: string }[] = [
@@ -246,6 +278,14 @@ export default function Portfolio() {
                         </span>
                         <span className="dash-sub">{c.weekOf ? `코호트 ${c.members.length}곳 · ${shortWeek(c.weekOf)}` : '측정 전'}</span>
                         {c.weekOf && <span className="pf-cohort-cols">순위 · 점수 · 언급률 · 자사 인용률</span>}
+                        <CohortEditLinks
+                          customers={c.members.filter(isCurrentCustomer).map((m) => rowById.get(m.tenantId)).filter((r): r is PortfolioRow => Boolean(r))}
+                          locked={Boolean(viewing)}
+                          onEdit={(id) => {
+                            if (id !== editing && !leaveEditor()) return
+                            setEditing(id)
+                          }}
+                        />
                       </div>
                       {members.map((m) => (
                         <LeaderRow
@@ -267,7 +307,52 @@ export default function Portfolio() {
           ))}
         </>
       )}
+      {editing && !viewing && state.value && (
+        <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
+      )}
     </>
+  )
+}
+
+/**
+ * 코호트 카드 머리의 「경쟁사 편집」 — 이 코호트에 마지막 측정이 든 고객 브랜드마다 하나. 칸이 차서 재지 않는
+ * 경쟁사가 있으면 주황 칩으로 알린다(server/cohortPlan.ts와 같은 계산). 경쟁사 보기 중에는 잠근다.
+ */
+function CohortEditLinks({
+  customers,
+  locked,
+  onEdit,
+}: {
+  customers: PortfolioRow[]
+  locked: boolean
+  onEdit: (tenantId: string) => void
+}) {
+  if (customers.length === 0) return null
+  const many = customers.length > 1
+  return (
+    <span className="pf-cohort-edit">
+      {customers.map((r) => {
+        const missing = r.competitorPlan ? r.competitorPlan.waiting + r.competitorPlan.blocked : 0
+        const title = locked ? '고객 브랜드에서만 바꿀 수 있어요(경쟁사 보기 중)' : `${r.brandName} 경쟁사 편집`
+        return (
+          <span key={r.tenantId} className="pf-cohort-edit-item">
+            {r.competitorEdit && (
+              <span className="chip info" title={r.competitorEdit.summary}>
+                경쟁사 바뀜 · 다음 측정 대기
+              </span>
+            )}
+            {missing > 0 && (
+              <button type="button" className="chip warn pf-cohort-miss" disabled={locked} title={title} onClick={() => onEdit(r.tenantId)}>
+                경쟁사 {missing}곳 측정 안 됨
+              </button>
+            )}
+            <button type="button" className="pf-cohort-edit-btn" disabled={locked} title={title} onClick={() => onEdit(r.tenantId)}>
+              경쟁사 편집{many ? ` · ${r.brandName}` : ''}
+            </button>
+          </span>
+        )
+      })}
+    </span>
   )
 }
 

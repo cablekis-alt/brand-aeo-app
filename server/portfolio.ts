@@ -1,6 +1,8 @@
 import { conditionChange } from '../src/lib/comparability.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
+import { planCohortTargets } from './cohortPlan.js';
+import { pendingCompetitorEdit } from './competitorEditor.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -23,6 +25,13 @@ export interface PortfolioRow {
   region: string;
   /** 등록한 경쟁사 수. */
   competitors: number;
+  /**
+   * 다음 측정에서 경쟁사를 몇 곳 함께 재는가(cohortPlan.ts — 측정과 같은 계산). waiting은 칸이 차서
+   * 재지 않는 곳, blocked는 칸은 쓰지만 이름 겹침 등으로 재지 않는 곳. 경쟁사를 함께 재지 않는 브랜드면 null.
+   */
+  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null;
+  /** 경쟁사 편집을 저장했고 아직 이 브랜드를 다시 재지 않았다 — 카드의 「경쟁사 바뀜 · 다음 측정 대기」. */
+  competitorEdit: { savedAt: string; summary: string } | null;
   status: PortfolioStatus;
   /** 마지막으로 측정한 주차. 측정 전이면 null. */
   weekOf: string | null;
@@ -76,6 +85,17 @@ function generalTexts(bank: { questions: { category: string; text: string }[] } 
 
 const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));
 
+function competitorPlanOf(t: TenantConfig, tenants: TenantConfig[]): PortfolioRow['competitorPlan'] {
+  if (t.autoCohort === false || !t.competitors.length) return null;
+  const { cap, entries } = planCohortTargets(t, tenants);
+  return {
+    measured: entries.filter((e) => e.status === 'measured').length,
+    cap,
+    waiting: entries.filter((e) => e.status === 'waiting').length,
+    blocked: entries.filter((e) => e.takesSlot && e.status !== 'measured').length,
+  };
+}
+
 export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore, now = new Date()): Promise<Portfolio> {
   const currentWeek = getIsoWeekString(now);
   const bankCache = new Map<string, Promise<Set<string> | null>>();
@@ -99,6 +119,8 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           industry: t.industry,
           region: t.region,
           competitors: t.competitors.length,
+          competitorPlan: competitorPlanOf(t, tenants),
+          competitorEdit: await pendingCompetitorEdit(t),
         };
         const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
         const last = history.at(-1);

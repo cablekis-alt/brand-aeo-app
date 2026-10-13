@@ -2,17 +2,19 @@ import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
 import { ensureCohortBank } from './cohortQuestionBank.js';
+import { MAX_AUTO_COHORT, selectCohortTargets } from './cohortPlan.js';
 import { reconcileCohortRanks } from './cohortRank.js';
 import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
 import { resetJudgeHealth } from './engines/index.js';
-import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
+import { beginMeasureRun, clearActiveMeasure, endMeasureRun, setActiveMeasure } from './measureTracker.js';
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
+import { recordCompetitorMeasurement } from './tenantCompetitorsStore.js';
 import type { FileResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -29,9 +31,6 @@ export interface MeasureBakeResult {
   aeoScore: number;
 }
 
-// 자동 추론된 경쟁사를 코호트로 함께 측정할 때 최대 개수(측정량·시간 제한).
-const MAX_AUTO_COHORT = 5;
-
 // 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
 // "브랜드 전체 측정"이 8분을 넘었다. 호출 총량은 여기가 아니라 전역 LLM 슬롯(concurrency.ts)이
 // 잡으므로, 이 값을 올려도 쿼터에 몰리는 양은 늘지 않는다(대기 큐만 길어진다).
@@ -41,113 +40,6 @@ const MAX_AUTO_COHORT = 5;
 // 3개 병렬에서 366호출을 91초(4.0호출/초)에 처리해, 수집 호출의 천장 2.8호출/초에 걸리지
 // 않는 것도 확인했다 — 판정 호출은 그라운딩 검색이 없어 더 싸다.
 const COHORT_CONCURRENCY = Math.max(1, Number(process.env.COHORT_CONCURRENCY) || MAX_AUTO_COHORT);
-
-function slugFromDomain(domain: string): string {
-  const label = domain.split('.')[0] || 'brand';
-  return label.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '') || 'brand';
-}
-
-/** 도메인 없는 경쟁사용 안정 ID — 이름(한글 등 비ASCII 포함) 해시. */
-function slugFromName(name: string): string {
-  let h = 2166136261 >>> 0; // FNV-1a
-  for (let i = 0; i < name.length; i++) {
-    h ^= name.charCodeAt(i);
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  return 'comp-' + h.toString(36);
-}
-
-/** 본 테넌트의 경쟁사를 cohortOnly 테넌트 초안으로 변환한다 — 코호트 랭킹 분모용.
- *  도메인이 있으면 도메인 slug, 없으면 이름 해시로 안정 ID를 만든다(도메인 없는 업종=펜션 등 지원). */
-function cohortOnlyDraftsFrom(tenant: TenantConfig): TenantConfig[] {
-  const seen = new Set<string>([tenant.tenantId]);
-  const out: TenantConfig[] = [];
-  for (const competitor of tenant.competitors) {
-    if (!competitor.name) continue;
-    const domain = competitor.domains?.[0];
-    const baseId = domain ? slugFromDomain(domain) : slugFromName(competitor.name);
-    // 영어 측정의 경쟁사는 ID에 -en을 붙인다 — 같은 병원을 한국어로 재는 테넌트와 데이터 폴더가 겹치지 않게.
-    const id = baseId && tenant.questionLanguage === 'en' ? `${baseId}-en` : baseId;
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push(
-      normalizeTenantDraft({
-        tenantId: id,
-        brandName: competitor.name,
-        aliases: competitor.aliases?.length ? competitor.aliases : [competitor.name],
-        ownedDomains: domain ? [domain] : [], // 도메인 없으면 빈 배열 — brandOwnedCitation만 null 처리됨
-        industry: tenant.industry,
-        region: tenant.region,
-        engines: tenant.engines,
-        questionBankSize: tenant.questionBankSize,
-        questionBankVersion: tenant.questionBankVersion,
-        repeatsPerQuestion: tenant.repeatsPerQuestion,
-        // 같은 코호트의 시험지·언어를 그대로 쓴다. 안 넘기면 새 경쟁사만 한국어 질문과 자기만의
-        // 은행으로 재게 되어, 코호트 안에서 서로 다른 시험지를 풀게 된다.
-        ...(tenant.questionLanguage ? { questionLanguage: tenant.questionLanguage } : {}),
-        ...(tenant.cohortQuestionBank ? { cohortQuestionBank: tenant.cohortQuestionBank } : {}),
-        // 시장 범위 · 구매자도 물려받는다 — 같은 코호트가 같은 성격의 질문지(소비자 / 구매 담당자)를 풀게.
-        ...(tenant.marketScope ? { marketScope: tenant.marketScope } : {}),
-        ...(tenant.buyer ? { buyer: tenant.buyer } : {}),
-        competitors: [],
-        factGraph: [],
-        cohortOnly: true,
-      }),
-    );
-  }
-  return out;
-}
-
-/**
- * 브랜드와 함께 측정할 경쟁사 — 등록된 경쟁사는 본 테넌트로(코호트 재확장 없이), 없으면 cohortOnly 초안.
- *
- * 같은 업종에서는 자사 도메인으로 먼저 찾는다. 초안 ID는 도메인 첫 마디라 다른 업종 브랜드와
- * 겹친다 — 2026-W40 SK텔레콤 측정에서 경쟁사 KT(kt.com)가 ID "kt"가 되어, 통신 KT(ktcorp)
- * 대신 테이블오더의 KT 하이오더(kt)를 재측정했다. 같은 업종이면 지역이 달라도(강남·서초 성형외과)
- * 함께 잰다.
- *
- * 도메인은 같은 코호트(업종+지역)에서 먼저 찾는다. 영어 질문 측정(banobagi-en 등)은 한국어 측정과
- * 업종·도메인이 같고 지역 꼬리표만 달라, 업종만 보면 한국어 테넌트를 재측정하게 된다.
- */
-export function selectCohortTargets(tenant: TenantConfig, runtime: TenantConfig[]): TenantConfig[] {
-  const existingById = new Map(runtime.map((item) => [item.tenantId, item]));
-  // 질문 언어가 다르면 다른 시장을 재는 것이다 — 같은 병원이라도 함께 측정하지 않는다.
-  const language = (t: TenantConfig) => t.questionLanguage ?? 'ko';
-  const sameIndustry = (t: TenantConfig) => t.industry === tenant.industry && language(t) === language(tenant);
-  const sameCohort = (t: TenantConfig) => sameIndustry(t) && t.region === tenant.region;
-  const sameCohortByDomain = new Map<string, TenantConfig>();
-  const sameIndustryByDomain = new Map<string, TenantConfig>();
-  for (const t of runtime) {
-    if (!sameIndustry(t)) continue;
-    for (const d of t.ownedDomains ?? []) {
-      sameIndustryByDomain.set(d.toLowerCase(), t);
-      if (sameCohort(t)) sameCohortByDomain.set(d.toLowerCase(), t);
-    }
-  }
-  const targets: TenantConfig[] = [];
-  const seen = new Set<string>([tenant.tenantId]);
-  for (const draft of cohortOnlyDraftsFrom(tenant).slice(0, MAX_AUTO_COHORT)) {
-    const domain = draft.ownedDomains[0]?.toLowerCase();
-    const existing =
-      (domain ? (sameCohortByDomain.get(domain) ?? sameIndustryByDomain.get(domain)) : undefined) ??
-      existingById.get(draft.tenantId);
-    // ID만 같은 다른 업종(또는 다른 질문 언어) 브랜드는 재측정하지 않는다. 같은 ID로 새로 만들어도 그 브랜드의
-    // 데이터 폴더에 섞이므로 건너뛰고 알린다.
-    if (existing && !sameIndustry(existing)) {
-      console.warn(
-        `[measureAndBake] 경쟁사 ${draft.brandName}: ID ${draft.tenantId}가 다른 업종·언어의 ` +
-          `${existing.brandName}(${existing.industry} · ${existing.region})와 겹쳐 함께 측정하지 않습니다.`,
-      );
-      continue;
-    }
-    const targetId = existing?.tenantId ?? draft.tenantId;
-    if (seen.has(targetId)) continue;
-    seen.add(targetId);
-    targets.push(existing ? { ...existing, autoCohort: false } : draft);
-  }
-  return targets;
-}
-
 
 /**
  * 측정 결과를 배포용 src/data로 baking한다.
@@ -261,7 +153,24 @@ export async function measureAndBake(
   store: FileResultStore,
   options: MeasureOptions = {},
 ): Promise<MeasureBakeResult> {
+  // 처음부터 끝까지 「측정 중」으로 센다 — 경쟁사 편집이 이 사이에 저장하지 않게(measureTracker.ts).
+  beginMeasureRun();
+  try {
+    return await measureAndBakeRun(tenant, store, options);
+  } finally {
+    endMeasureRun();
+  }
+}
+
+async function measureAndBakeRun(
+  tenant: TenantConfig,
+  store: FileResultStore,
+  options: MeasureOptions,
+): Promise<MeasureBakeResult> {
   let cohortTargets: TenantConfig[] = [];
+  // 자기 코호트와 함께 재는 본 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
+  const startedAt = new Date().toISOString();
+  let ownCohortList: TenantConfig['competitors'] | null = null;
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
@@ -297,6 +206,7 @@ export async function measureAndBake(
     //    재측정(단, 그 경쟁사의 코호트로 더 퍼지지 않게 autoCohort=false), 없으면 cohortOnly로 새로 측정.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
       cohortTargets.push(...selectCohortTargets(tenant, await loadRuntimeTenants()));
+      ownCohortList = tenant.competitors;
     }
   }
 
@@ -380,6 +290,11 @@ export async function measureAndBake(
 
   if (!self.ok) throw self.error;
   const { weekOf, aeoScore } = self.value;
+  if (ownCohortList) {
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt).catch((err: unknown) => {
+      console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
+    });
+  }
 
   // 코호트 순위를 완성된 집합으로 맞춘다 — 파이프라인은 자기 카드가 저장되기 전에 순위를
   // 계산해 분모가 측정 순서에 따라 달라진다(cohortRank.ts 참고). 본 브랜드와 경쟁사를 같이

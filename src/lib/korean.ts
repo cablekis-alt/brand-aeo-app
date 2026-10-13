@@ -42,3 +42,8 @@ export function directionParticle(word: string): string {
 export function withParticle(word: string): string {
   return particle(word, '과', '와', '과(와)')
 }
+
+/** 보조사 — 해오름펜션은 / 스테이옥도는 / reddit.com은(는) */
+export function topicParticle(word: string): string {
+  return particle(word, '은', '는', '은(는)')
+}
