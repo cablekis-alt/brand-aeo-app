@@ -5,7 +5,7 @@ import { MODEL as CLAUDE_MODEL } from './claudeEngineClient.js';
 import type { Engine } from '../../src/prompts/types.js';
 import { withLlmSlot, type LlmPool } from '../concurrency.js';
 import { ClaudeEngineClient } from './claudeEngineClient.js';
-import { ClaudeJudgeClient } from './claudeJudgeClient.js';
+import { ClaudeJudgeClient, DEFAULT_CLAUDE_MODEL } from './claudeJudgeClient.js';
 import { GeminiEngineClient } from './geminiEngineClient.js';
 import { GeminiJudgeClient } from './geminiJudgeClient.js';
 import { MockEngineClient } from './mockEngineClient.js';
@@ -174,16 +174,25 @@ export function resolveWriterEngineId(): JudgeEngineId {
   return resolveJudgeEngineId();
 }
 
+/** Claude 글쓰기 모델 — WRITER_MODEL, 없으면 JUDGE_MODEL, 없으면 claudeJudgeClient의 기본 모델. */
+function claudeWriterModel(): string {
+  return process.env.WRITER_MODEL?.trim() || process.env.JUDGE_MODEL?.trim() || DEFAULT_CLAUDE_MODEL;
+}
+
 /**
- * 글쓰기 클라이언트. 판정 엔진과 같은 엔진이면 판정 클라이언트를 그대로 쓴다(예전 동작).
+ * 글쓰기 클라이언트. 판정과 같은 엔진 · 같은 모델이면 판정 클라이언트를 그대로 쓴다(예전 동작).
  * 글은 측정 밖의 일이라 빈 응답 차단기(guarded)는 붙이지 않는다 — 호출한 쪽이 실패를 화면에 알린다.
- * 모델은 WRITER_MODEL(Claude일 때), 없으면 JUDGE_MODEL, 없으면 claudeJudgeClient의 기본 모델.
+ *
+ * 같은 Claude라도 모델이 다르면 따로 만든다 — 판정은 Sonnet 5.5, 글쓰기는 Opus 5.5처럼 나눠 쓸 때다
+ * (2026-10-13). 예전에는 엔진만 견줘, 판정을 Claude로 바꾸면 WRITER_MODEL이 무시되고 글도 판정 모델로 썼다.
  */
 export function getWriterClient(): EngineClient {
   const id = resolveWriterEngineId();
-  if (id === 'mock' || id === resolveJudgeEngineId()) return getJudgeClient();
+  const judgeId = resolveJudgeEngineId();
+  const sameModel = id !== 'claude' || claudeWriterModel() === (process.env.JUDGE_MODEL?.trim() || DEFAULT_CLAUDE_MODEL);
+  if (id === 'mock' || (id === judgeId && sameModel)) return getJudgeClient();
   if (!writerClient) {
-    if (id === 'claude') writerClient = limited(new ClaudeJudgeClient(process.env.WRITER_MODEL ?? process.env.JUDGE_MODEL), 'judge');
+    if (id === 'claude') writerClient = limited(new ClaudeJudgeClient(claudeWriterModel()), 'judge');
     else if (id === 'openai') writerClient = limited(new OpenAiJudgeClient(), 'judge');
     else writerClient = limited(new GeminiJudgeClient(), 'judge');
   }
