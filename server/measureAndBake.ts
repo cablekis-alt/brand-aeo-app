@@ -8,7 +8,7 @@ import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
 import { resetJudgeHealth } from './engines/index.js';
-import { clearActiveMeasure, setActiveMeasure } from './measureTracker.js';
+import { beginMeasureRun, clearActiveMeasure, endMeasureRun, setActiveMeasure } from './measureTracker.js';
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -151,6 +151,20 @@ export async function measureAndBake(
   tenant: TenantConfig,
   store: FileResultStore,
   options: MeasureOptions = {},
+): Promise<MeasureBakeResult> {
+  // 처음부터 끝까지 「측정 중」으로 센다 — 경쟁사 편집이 이 사이에 저장하지 않게(measureTracker.ts).
+  beginMeasureRun();
+  try {
+    return await measureAndBakeRun(tenant, store, options);
+  } finally {
+    endMeasureRun();
+  }
+}
+
+async function measureAndBakeRun(
+  tenant: TenantConfig,
+  store: FileResultStore,
+  options: MeasureOptions,
 ): Promise<MeasureBakeResult> {
   let cohortTargets: TenantConfig[] = [];
 

@@ -52,8 +52,10 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 export default function Portfolio() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { setTenantId, viewCompetitor, viewing } = useTenant()
+  const { setTenantId, viewCompetitor, viewing, reloadTenants } = useTenant()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
+  // 경쟁사 편집을 저장하면 다시 읽는다 — 카드의 「측정 안 됨」·「경쟁사 바뀜」 칩이 저장한 목록을 따르게.
+  const [reloadKey, setReloadKey] = useState(0)
   useEffect(() => {
     let alive = true
     void loadPortfolio().then((value) => {
@@ -62,7 +64,11 @@ export default function Portfolio() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [reloadKey])
+  const afterCompetitorSave = () => {
+    setReloadKey((k) => k + 1)
+    reloadTenants().catch((err: unknown) => console.error('[Portfolio] 브랜드 목록을 다시 읽지 못했습니다', err))
+  }
 
   const [filter, setFilter] = useState<Filter>('')
   const [group, setGroup] = useState('')
@@ -289,7 +295,7 @@ export default function Portfolio() {
           ))}
         </>
       )}
-      {editing && !viewing && <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} />}
+      {editing && !viewing && <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} />}
     </>
   )
 }
@@ -316,6 +322,11 @@ function CohortEditLinks({
         const title = locked ? '고객 브랜드에서만 바꿀 수 있어요(경쟁사 보기 중)' : `${r.brandName} 경쟁사 편집`
         return (
           <span key={r.tenantId} className="pf-cohort-edit-item">
+            {r.competitorEdit && (
+              <span className="chip info" title={r.competitorEdit.summary}>
+                경쟁사 바뀜 · 다음 측정 대기
+              </span>
+            )}
             {missing > 0 && (
               <button type="button" className="chip warn pf-cohort-miss" disabled={locked} title={title} onClick={() => onEdit(r.tenantId)}>
                 경쟁사 {missing}곳 측정 안 됨

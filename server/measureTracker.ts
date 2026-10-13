@@ -65,6 +65,28 @@ export function listActiveMeasures(): ActiveMeasure[] {
 }
 
 /**
+ * measureAndBake 한 번이 처음(경쟁사 고르기·질문지 준비)부터 끝(코호트 순위 재계산)까지 도는 동안을 센다.
+ *
+ * setActiveMeasure는 파이프라인 구간에만 걸린다 — 그 앞에서 측정할 경쟁사를 이미 골랐고, 그 뒤에 순위를 다시
+ * 매긴다. 경쟁사 편집 저장·되돌리기는 이 전체 구간에 끼면 안 된다(측정은 옛 목록으로 돌고 결과는 새 목록 기준으로
+ * 읽힌다). 측정 안에서 경쟁사를 또 measureAndBake로 재므로 중첩된다 — 그래서 켜짐/꺼짐이 아니라 수다.
+ */
+let measureRuns = 0;
+
+export function beginMeasureRun(): void {
+  measureRuns += 1;
+}
+
+export function endMeasureRun(): void {
+  measureRuns = Math.max(0, measureRuns - 1);
+}
+
+/** 진행 중인 측정이 있는가 — 파이프라인 밖 구간까지 포함한다. */
+export function measureInFlight(): boolean {
+  return measureRuns > 0 || active.size > 0;
+}
+
+/**
  * 진행 중인 로컬 측정 전체에 중단을 요청한다.
  * @returns stopping — 곧 멈출 테넌트, finishing — 이미 저장을 시작해 마무리할 테넌트
  */

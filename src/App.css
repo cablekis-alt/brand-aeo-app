@@ -5959,7 +5959,7 @@ td.cell-mid {
 .ce-cols,
 .ce-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 84px 92px;
+  grid-template-columns: 30px minmax(0, 1fr) 70px 78px 96px;
   gap: 10px;
   align-items: center;
 }
@@ -6145,10 +6145,244 @@ td.cell-mid {
   }
   .ce-cols,
   .ce-row {
-    grid-template-columns: 30px minmax(0, 1fr) 64px;
+    grid-template-columns: 26px minmax(0, 1fr) 56px 92px;
   }
   .ce-q,
-  .ce-cols span:last-child {
+  .ce-cols span:nth-child(4) {
     display: none;
   }
+}
+
+/* 경쟁사 편집 — 편집 동작(바꾸기·빼기 고르기 상자, 저장 막대, 저장 결과). */
+.ce-row.pending {
+  opacity: 0.7;
+}
+.ce-row.struck {
+  opacity: 0.65;
+}
+.ce-row.struck b {
+  text-decoration: line-through;
+}
+.ce-act {
+  text-align: right;
+}
+.ce-btn {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ce-btn:hover {
+  background: var(--surface-2);
+}
+.ce-btn.primary {
+  background: var(--accent);
+  box-shadow: none;
+  color: var(--card);
+}
+.ce-btn.primary:hover {
+  filter: brightness(1.05);
+}
+.ce-btn:focus-visible,
+.ce-link:focus-visible,
+.ce-add:focus-visible,
+.ce-picker-opt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.ce-row-pop {
+  grid-column: 1 / -1;
+}
+.ce-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 2px 40px;
+  padding: 10px;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: var(--shadow-raise);
+}
+.ce-body > .ce-picker {
+  margin-left: 0;
+}
+.ce-picker-title {
+  font-size: 12.5px;
+}
+.ce-picker-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ce-picker-typed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 6px;
+  margin: 2px 0 4px;
+}
+.ce-picker-typed input {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+.ce-picker-typed input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+.ce-picker-typed .btn {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.ce-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ce-picker-head {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ce-picker-opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ce-picker-opt:hover {
+  background: var(--accent-soft);
+}
+.ce-picker-opt.danger .ce-picker-label {
+  color: var(--bad);
+}
+.ce-picker-label {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ce-picker-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ce-add {
+  align-self: flex-start;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ce-edit-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.ce-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.ce-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ce-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ce-bar,
+.ce-saved {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 46%;
+  overflow-y: auto;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+  box-shadow: 0 -10px 24px -18px rgb(17 28 24 / 0.3);
+}
+.ce-saved {
+  background: var(--accent-soft);
+}
+.ce-saved b {
+  color: var(--accent-ink);
+  font-size: 13.5px;
+}
+.ce-saved p,
+.ce-bar p {
+  margin: 0;
+}
+.ce-bar-summary {
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.ce-bar-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.ce-bar-note.warn {
+  color: var(--warn);
+}
+.ce-bar-note.bad {
+  color: var(--bad);
+}
+.ce-bar-q {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.ce-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ce-bar-hint {
+  margin-right: auto;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ce-saved-note {
+  font-size: 11px;
+  color: var(--ink-2);
 }

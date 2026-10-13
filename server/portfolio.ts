@@ -2,6 +2,7 @@ import { conditionChange } from '../src/lib/comparability.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
 import { planCohortTargets } from './cohortPlan.js';
+import { pendingCompetitorEdit } from './competitorEditor.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -29,6 +30,8 @@ export interface PortfolioRow {
    * 재지 않는 곳, blocked는 칸은 쓰지만 이름 겹침 등으로 재지 않는 곳. 경쟁사를 함께 재지 않는 브랜드면 null.
    */
   competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null;
+  /** 경쟁사 편집을 저장했고 아직 이 브랜드를 다시 재지 않았다 — 카드의 「경쟁사 바뀜 · 다음 측정 대기」. */
+  competitorEdit: { savedAt: string; summary: string } | null;
   status: PortfolioStatus;
   /** 마지막으로 측정한 주차. 측정 전이면 null. */
   weekOf: string | null;
@@ -117,6 +120,7 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           region: t.region,
           competitors: t.competitors.length,
           competitorPlan: competitorPlanOf(t, tenants),
+          competitorEdit: await pendingCompetitorEdit(t.tenantId),
         };
         const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
         const last = history.at(-1);

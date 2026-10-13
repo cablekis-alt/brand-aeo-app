@@ -15,7 +15,7 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
-import { buildEditorState } from './competitorEditor.js';
+import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -842,6 +842,53 @@ app.get('/api/tenants/:tenantId/competitors', async (req, res) => {
     res.json(await buildEditorState(tenant, runtime, store));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+function sendEditorError(res: import('express').Response, err: unknown): void {
+  const status = err instanceof EditorError ? err.status : 500;
+  res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+}
+
+// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제. 쓰지 않는다.
+app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
+  try {
+    const runtime = await loadRuntimeTenants();
+    const tenant = runtime.find((t) => t.tenantId === req.params.tenantId);
+    if (!tenant || tenant.cohortOnly) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(await planEdit(tenant, runtime, store, (req.body as { competitors?: unknown } | undefined)?.competitors));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 저장 — data/<tenant>/competitors.json(tenantCompetitorsStore.ts). 다음 측정부터 이 목록으로 잰다. 측정 중이면 409.
+app.put('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    res.json(await saveEdit(req.params.tenantId, store, req.body));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 마지막 저장 되돌리기 — 그 뒤 이 브랜드를 쟀으면 409.
+app.post('/api/tenants/:tenantId/competitors/undo', async (req, res) => {
+  try {
+    res.json(await undoEdit(req.params.tenantId, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 앱에서 고친 목록을 버리고 저장소 설정을 따른다(되돌릴 수 있다).
+app.delete('/api/tenants/:tenantId/competitors', async (req, res) => {
+  try {
+    res.json(await resetEdit(req.params.tenantId, store));
+  } catch (err) {
+    sendEditorError(res, err);
   }
 });
 
