@@ -6,6 +6,7 @@ import PositionMap from '../components/PositionMap'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText, weekLabel } from '../lib/format'
 import { withParticle } from '../lib/korean'
+import { sameCohort } from '../lib/portfolioView'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
@@ -666,6 +667,7 @@ export default function Dashboard() {
 /**
  * 경쟁사 보기(읽기 전용)에서 고른 고객 브랜드와 나란히 — 상용화 UI 10차 시안의 「삼성서울병원과 비교」.
  * 두 브랜드의 마지막 측정을 그대로 견준다. 주차나 질문지가 다르면 그 사실을 밝힌다(같은 질문으로 잰 게 아니다).
+ * 마지막 측정의 코호트(업종 · 지역)가 다르면 나란히 놓지 않는다 — 펜션 경쟁사를 성형외과 고객과 견주는 건 의미가 없다.
  */
 function CompareWithCustomer({
   competitor,
@@ -683,7 +685,7 @@ function CompareWithCustomer({
   const basisKey = competitor && mine ? `${competitor.tenantId}|${competitor.questionBankVersion}|${mine.tenantId}|${mine.questionBankVersion}` : ''
   const [sameQuestions, setSameQuestions] = useState<{ key: string; same: boolean } | null>(null)
   useEffect(() => {
-    if (!competitor || !mine || !competitor.questionBankVersion || !mine.questionBankVersion) return
+    if (!competitor || !mine || !competitor.questionBankVersion || !mine.questionBankVersion || !sameCohort(competitor, mine)) return
     let alive = true
     const general = (b: QuestionBank | null) =>
       b ? new Set(b.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.text)) : null
@@ -706,6 +708,22 @@ function CompareWithCustomer({
     }
   }, [competitor, mine, basisKey])
   if (!competitor || !mine) return null
+  if (!sameCohort(competitor, mine)) {
+    return (
+      <section className="dash-card cv-compare" aria-label={`${withParticle(customerName)} 비교`}>
+        <div className="dash-card-head">
+          <h2>{withParticle(customerName)} 비교</h2>
+          <span className="dash-sub">
+            {competitor.brandName} {competitor.industry} · {competitor.region} · {customerName} {mine.industry} · {mine.region}
+          </span>
+        </div>
+        <p className="dash-caption cv-compare-note">
+          두 브랜드의 마지막 측정이 서로 다른 코호트(업종 · 지역)에 있어 나란히 비교하지 않아요. 같은 질문지로 잰
+          코호트끼리만 견줄 수 있어요.
+        </p>
+      </section>
+    )
+  }
   const rows: { label: string; them: number | null; us: number | null; fmt: (v: number) => string; scale: number }[] = [
     { label: 'Brand AEO Score', them: competitor.aeoScore.current, us: mine.aeoScore.current, fmt: (v) => String(v), scale: 100 },
     { label: '언급률', them: competitor.mentionRate, us: mine.mentionRate, fmt: formatPct, scale: 1 },

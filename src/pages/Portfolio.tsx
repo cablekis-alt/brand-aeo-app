@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import CompetitorEditor from '../components/CompetitorEditor'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
-import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioRow } from '../lib/api'
+import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioCohort, type PortfolioRow } from '../lib/api'
 import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
 import { directionParticle } from '../lib/korean'
-import { groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
+import { customerForCompetitorRow, groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
 
 type Filter = '' | 'done' | 'need' | 'alone'
 
@@ -52,7 +52,7 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 export default function Portfolio() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { setTenantId, viewCompetitor, viewing, reloadTenants } = useTenant()
+  const { setTenantId, viewCompetitor, viewing, customer, reloadTenants } = useTenant()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
   // 경쟁사 편집을 저장하면 다시 읽는다 — 카드의 「측정 안 됨」·「경쟁사 바뀜」 칩이 저장한 목록을 따르게.
   const [reloadKey, setReloadKey] = useState(0)
@@ -142,10 +142,15 @@ export default function Portfolio() {
     navigate('/')
   }
   const [viewError, setViewError] = useState<string | null>(null)
-  /** 경쟁사 줄 — 고른 고객 브랜드는 그대로 두고 그 경쟁사를 읽기 전용으로 연다(상용화 UI 10차 시안). */
-  const openCompetitor = (tenantId: string) => {
+  /**
+   * 경쟁사 줄 — 그 경쟁사를 읽기 전용으로 연다(상용화 UI 10차 시안). 고객 브랜드는 그 줄이 든 코호트 카드의 고객으로
+   * 맞춘다 — 그래야 「고객과 비교」와 「돌아가기」가 같은 코호트를 가리킨다(customerForCompetitorRow 주석).
+   */
+  const openCompetitor = (tenantId: string, cohort: PortfolioCohort) => {
     if (!leaveEditor()) return
     setViewError(null)
+    const target = customerForCompetitorRow(cohort, customer?.tenantId)
+    if (target && target !== customer?.tenantId) setTenantId(target)
     viewCompetitor(tenantId)
       .then(() => navigate('/'))
       .catch((e: unknown) => setViewError(e instanceof Error ? e.message : String(e)))
@@ -296,7 +301,7 @@ export default function Portfolio() {
                           total={c.members.length}
                           measured={Boolean(c.weekOf)}
                           onOpen={open}
-                          onOpenCompetitor={openCompetitor}
+                          onOpenCompetitor={(id) => openCompetitor(id, c)}
                         />
                       ))}
                     </div>

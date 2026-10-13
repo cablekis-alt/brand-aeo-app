@@ -8,7 +8,7 @@
  */
 import type { PortfolioCohort } from '../src/lib/api'
 import { allScreens, isCustomerOnlyPath } from '../src/lib/menu'
-import { cohortOfCompetitor } from '../src/lib/portfolioView'
+import { cohortOfCompetitor, customerForCompetitorRow, sameCohort } from '../src/lib/portfolioView'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -33,6 +33,22 @@ const cohorts: PortfolioCohort[] = [
 ok('고객과 함께 있는 코호트 중 가장 최근(W38 송파)', cohortOfCompetitor(cohorts, 'amc', 'samsunghospital')?.weekOf === '2026-W38')
 ok('고객과 함께 있는 코호트가 없으면 경쟁사가 든 가장 최근(W40)', cohortOfCompetitor(cohorts, 'amc', 'nobody')?.weekOf === '2026-W40')
 ok('경쟁사가 든 코호트가 없으면 null', cohortOfCompetitor(cohorts, 'ghost', 'samsunghospital') === null)
+
+// 브랜드 현황에서 경쟁사 줄을 열 때 맞출 고객 — 다른 업종 고객을 고른 채 펜션 카드의 경쟁사를 열면 펜션 고객으로
+const pension: PortfolioCohort = {
+  industry: '펜션',
+  region: '가상시',
+  weekOf: '2026-W42',
+  members: [member('comp-a', true), member('stay', false), member('comp-b', true)],
+}
+ok('고른 고객이 그 카드에 없으면 카드의 고객으로 맞춘다', customerForCompetitorRow(pension, 'view-ps') === 'stay')
+ok('고른 고객이 그 카드에 있으면 그대로', customerForCompetitorRow(cohorts[0]!, 'samsunghospital') === 'samsunghospital')
+ok('고객이 여럿이면 고른 고객을 우선', customerForCompetitorRow({ ...pension, members: [...pension.members, member('stay2', false)] }, 'stay2') === 'stay2')
+ok('고객 브랜드가 없는 카드면 바꾸지 않는다(null)', customerForCompetitorRow({ ...pension, members: [member('comp-a', true)] }, 'view-ps') === null)
+ok('지난 기록 줄의 고객도 그 카드의 고객', customerForCompetitorRow({ ...pension, members: [member('comp-a', true), { ...member('stay', false), laterWeek: '2026-W43' }] }, 'view-ps') === 'stay')
+ok('같은 업종 · 지역이면 같은 코호트', sameCohort({ industry: '펜션', region: '전북 군산' }, { industry: '펜션', region: '전북 군산' }))
+ok('업종이 다르면 다른 코호트(비교 카드를 나란히 놓지 않음)', !sameCohort({ industry: '펜션', region: '전북 군산' }, { industry: '성형외과', region: '서울 강남' }))
+ok('지역만 달라도 다른 코호트', !sameCohort({ industry: '병원', region: '서울 강남' }, { industry: '병원', region: '서울 송파' }))
 
 let failed = 0
 for (const [label, pass] of checks) {
