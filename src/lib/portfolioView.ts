@@ -147,6 +147,25 @@ export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohort
 }
 
 /**
+ * 브랜드 현황에서 경쟁사 줄을 열 때 맞출 고객 브랜드 — 그 줄이 든 코호트 카드의 고객 브랜드.
+ *
+ * 고른 고객을 그대로 두면 다른 업종 고객과 비교하게 된다: 사이드바에서 View Plastic Surgery를 고른 채 펜션
+ * 카드의 군산여행의 모든것을 열자 성형외과 고객과 나란히 비교했다(2026-10-13). 지금 고른 고객이 그 카드에
+ * 있으면 그대로 두고, 없으면 그 카드의 첫 고객 브랜드로 맞춘다. 고객 브랜드가 없는 카드면 null(바꾸지 않는다).
+ * 그 뒤 주차에 다시 잰 고객도(지난 기록 줄) 그 카드의 고객이다.
+ */
+export function customerForCompetitorRow(cohort: PortfolioCohort, currentCustomerId: string | undefined): string | null {
+  const customers = cohort.members.filter((m) => !m.competitor).map((m) => m.tenantId)
+  if (currentCustomerId && customers.includes(currentCustomerId)) return currentCustomerId
+  return customers[0] ?? null
+}
+
+/** 두 측정이 같은 코호트(업종 · 지역)인가 — 경쟁사 보기의 「고객과 비교」는 같은 코호트일 때만 나란히 놓는다. */
+export function sameCohort(a: { industry: string; region: string }, b: { industry: string; region: string }): boolean {
+  return a.industry === b.industry && a.region === b.region
+}
+
+/**
  * 경쟁사 보기 띠가 보여 줄 코호트 — 그 경쟁사가 고객 브랜드와 함께 있는 코호트 중 가장 최근 주차.
  * 같이 있는 코호트가 없으면(다른 고객의 경쟁사를 연 경우) 그 경쟁사가 든 가장 최근 코호트.
  */
