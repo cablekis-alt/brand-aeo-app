@@ -1,3 +1,5 @@
+import type { Engine } from '../src/prompts/types.js';
+
 /** 엔진 API 레이트리밋을 고려한 제한 동시성 map. 순서는 보존하되, 동시에는 최대 `limit`개만 실행한다. */
 export async function mapWithConcurrency<T, R>(
   items: T[],
@@ -50,24 +52,52 @@ export async function mapWithConcurrency<T, R>(
  * 시간이 길었다. 대기는 우리 세마포어가 만든 것이지 서버가 민 것이 아니다.
  *
  * 수집은 그대로 24다. 그쪽 천장은 서버가 쥐고 있어 올려도 p95만 는다.
+ *
+ * ── 수집 슬롯은 엔진마다 따로 (2026-10-13) ───────────────────────────────────────
+ * 위 24는 Gemini 하나로 수집하던 때 Gemini 키의 천장이다. 엔진이 셋(OpenAI · Gemini · Perplexity)이 된 뒤에도
+ * 24를 셋이 나눠 써, 느린 엔진이 슬롯을 붙잡으면 다른 엔진까지 함께 느려졌다 — 2026-10-13 스테이,머뭄 코호트
+ * 6곳(호출 756회)에서 Gemini 응답 중앙값이 10.4 → 18.9초가 되자 세 엔진의 처리량이 똑같이 0.68 → 0.48회/초로
+ * 떨어졌고 측정이 7분에서 11분이 됐다. 처리량이 「24 ÷ 평균 응답 시간」에 묶여 있었다.
+ * 키와 천장은 엔진마다 다르므로 슬롯도 엔진마다 둔다(scripts/quota-probe.ts --engine, 2026-10-13, 단계별 36회):
+ *
+ *   OpenAI      12 → 0.56/초 p50 16.5초        36 → 1.37/초 p50 15.1초 · 429 0건   → 36
+ *   Perplexity  12 → 0.80/초 p50 8.4초(재시도 4) 36 → 0.56/초 · 429로 12건 실패      → 8 (분당 약 50회 제한)
+ *   Gemini      위 실측 그대로 24
+ *
+ * COLLECT_LLM_CONCURRENCY는 이제 엔진마다의 기본값을 한꺼번에 바꾸고, COLLECT_LLM_CONCURRENCY_<ENGINE>
+ * (예: _PERPLEXITY)이 그 엔진만 바꾼다.
  */
-const LIMITS = {
-  collect: Math.max(1, Number(process.env.COLLECT_LLM_CONCURRENCY) || 24),
-  judge: Math.max(1, Number(process.env.JUDGE_LLM_CONCURRENCY) || 144),
-} as const;
+const COLLECT_DEFAULTS: Record<Engine, number> = { gemini: 24, openai: 36, perplexity: 8, claude: 24 };
 
-export type LlmPool = keyof typeof LIMITS;
+export type LlmPool = 'judge' | `collect:${Engine}`;
 
-const inFlight: Record<LlmPool, number> = { collect: 0, judge: 0 };
-const waiting: Record<LlmPool, Array<() => void>> = { collect: [], judge: [] };
+/** 엔진 하나의 수집 슬롯 수. */
+export function collectLimit(engine: Engine): number {
+  const specific = Number(process.env[`COLLECT_LLM_CONCURRENCY_${engine.toUpperCase()}`]);
+  const shared = Number(process.env.COLLECT_LLM_CONCURRENCY);
+  return Math.max(1, specific || shared || COLLECT_DEFAULTS[engine]);
+}
+
+function limitOf(pool: LlmPool): number {
+  if (pool === 'judge') return Math.max(1, Number(process.env.JUDGE_LLM_CONCURRENCY) || 144);
+  return collectLimit(pool.slice('collect:'.length) as Engine);
+}
+
+const inFlight = new Map<LlmPool, number>();
+const waiting = new Map<LlmPool, Array<() => void>>();
 
 /** 슬롯을 얻는다. 꽉 찼으면 release가 슬롯을 그대로 물려줄 때까지 기다린다. */
 function acquire(pool: LlmPool): Promise<void> {
-  if (inFlight[pool] < LIMITS[pool]) {
-    inFlight[pool] += 1;
+  const used = inFlight.get(pool) ?? 0;
+  if (used < limitOf(pool)) {
+    inFlight.set(pool, used + 1);
     return Promise.resolve();
   }
-  return new Promise<void>((resolve) => waiting[pool].push(resolve));
+  return new Promise<void>((resolve) => {
+    const queue = waiting.get(pool) ?? [];
+    queue.push(resolve);
+    waiting.set(pool, queue);
+  });
 }
 
 /**
@@ -76,9 +106,9 @@ function acquire(pool: LlmPool): Promise<void> {
  * 빈 슬롯으로 보고 끼어들어 상한을 넘긴다.
  */
 function release(pool: LlmPool): void {
-  const next = waiting[pool].shift();
+  const next = waiting.get(pool)?.shift();
   if (next) next();
-  else inFlight[pool] -= 1;
+  else inFlight.set(pool, (inFlight.get(pool) ?? 1) - 1);
 }
 
 export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>): Promise<T> {
@@ -91,5 +121,9 @@ export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>): Promi
 }
 
 export function llmConcurrencyLimits(): Record<LlmPool, number> {
-  return { ...LIMITS };
+  const engines: Engine[] = ['gemini', 'openai', 'perplexity', 'claude'];
+  return Object.fromEntries([
+    ['judge', limitOf('judge')],
+    ...engines.map((e) => [`collect:${e}`, collectLimit(e)]),
+  ]) as Record<LlmPool, number>;
 }
