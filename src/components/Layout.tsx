@@ -2,6 +2,9 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { clearDataSource, useDemoData } from '../lib/dataSource'
 import { useTenant } from '../context/useTenant'
+import { directionParticle, objectParticle } from '../lib/korean'
+import { isCustomerOnlyPath } from '../lib/menu'
+import CompetitorViewBar from './CompetitorViewBar'
 import EmptyBrands from './EmptyBrands'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
@@ -11,11 +14,13 @@ import TopBar from './TopBar'
 const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status', '/brands'])
 
 export default function Layout() {
-  const { tenants, tenant, loading, error, reloadTenants } = useTenant()
+  const { tenants, tenant, customer, viewing, exitCompetitorView, loading, error, reloadTenants } = useTenant()
   const { pathname, key: locationKey } = useLocation()
   const navigationType = useNavigationType()
   const navigate = useNavigate()
   const isManagement = MANAGEMENT_ROUTES.has(pathname)
+  // 경쟁사 보기 중에 고객 전용 화면(측정 · 콘텐츠 생성 · 설정)으로 오면 화면 대신 안내를 둔다.
+  const lockedForCompetitor = Boolean(viewing) && isCustomerOnlyPath(pathname)
   const noBrands = !loading && tenants.length === 0
   const loadingBrands = loading && tenants.length === 0
   const showBrandPicker = Boolean(tenant) && !isManagement
@@ -99,6 +104,7 @@ export default function Layout() {
     <div className="shell">
       <Sidebar showBrandPicker={showBrandPicker} />
       <div className="content">
+        <CompetitorViewBar />
         <TopBar showBrand={!isManagement} canGoBack={canGoBack} onBack={() => navigate(-1)} />
         {error && (
           <p className="error" role="alert">
@@ -121,7 +127,18 @@ export default function Layout() {
           이전에는 아무것도 렌더하지 않아, 목록 조회가 느리면 브랜드 드롭다운조차 없는 상태가
           되어 "눌러도 안 눌린다"로 보였다. 0개면 빈 상태, 관리·측정 화면은 브랜드와 무관하게 열린다.
         */}
-        {isManagement ? (
+        {lockedForCompetitor ? (
+          <section className="cv-locked" role="status">
+            <h1>고객 브랜드에서만 쓰는 화면입니다</h1>
+            <p>
+              지금은 경쟁사 <b>{objectParticle(viewing?.brandName ?? '')}</b> 읽기 전용으로 보고 있습니다. 측정 · 콘텐츠 생성 · 설정은
+              {` ${directionParticle(customer?.brandName ?? '고객 브랜드')}`} 돌아가서 하세요.
+            </p>
+            <button type="button" onClick={exitCompetitorView}>
+              {directionParticle(customer?.brandName ?? '고객 브랜드')} 돌아가 이 화면 열기
+            </button>
+          </section>
+        ) : isManagement ? (
           <Outlet />
         ) : loadingBrands ? (
           <p className="muted" style={{ marginTop: 24 }}>

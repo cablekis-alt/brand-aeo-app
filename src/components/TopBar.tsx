@@ -24,7 +24,7 @@ export default function TopBar({
   onBack: () => void
 }) {
   const { pathname } = useLocation()
-  const { tenant } = useTenant()
+  const { tenant, viewing } = useTenant()
   const meta = routeMeta(pathname)
   const crumbs = [showBrand && tenant ? tenant.brandName : null, meta?.group ?? null].filter((c): c is string => Boolean(c))
 
@@ -55,7 +55,7 @@ export default function TopBar({
       )}
       <div className="topbar-actions">
         <CommandPalette />
-        {showBrand && tenant && pathname !== '/report' && (
+        {showBrand && tenant && !viewing && pathname !== '/report' && (
           <Link to="/report" className="btn primary">
             정기진단 보고서
           </Link>

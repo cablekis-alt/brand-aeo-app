@@ -70,10 +70,11 @@ async function getJson<T>(path: string): Promise<T | null> {
  * 응답이 없어도 무한정 기다리지 않는다 — 기다리는 동안 화면에 브랜드 선택 드롭다운 자체가
  * 없어서 "눌러도 안 눌리는" 상태로 보이기 때문이다.
  */
-export async function fetchTenants(timeoutMs = 5000): Promise<TenantSummary[]> {
+export async function fetchTenants(timeoutMs = 5000, includeCompetitors = false): Promise<TenantSummary[]> {
   let res: Response
   try {
-    res = await fetch('/api/tenants', { signal: AbortSignal.timeout(timeoutMs) })
+    // includeCompetitors: 코호트 비교용으로만 등록된 경쟁사까지 — 경쟁사 보기(읽기 전용)가 쓴다.
+    res = await fetch(includeCompetitors ? '/api/tenants?all=1' : '/api/tenants', { signal: AbortSignal.timeout(timeoutMs) })
   } catch (err) {
     // AbortSignal.timeout은 "signal timed out"이라는 영문 DOMException을 던진다 — 화면에
     // 그대로 노출되지 않도록 우리 문구로 바꾼다.
