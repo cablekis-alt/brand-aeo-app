@@ -753,7 +753,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v4",
+    "questionBankVersion": "v5",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -785,11 +785,14 @@
         "domains": []
       },
       {
-        "name": "라엘펜션",
+        "name": "군산여행의 모든것",
         "aliases": [
-          "라엘펜션"
+          "군산여행의 모든것",
+          "군산 여행의 모든것"
         ],
-        "domains": []
+        "domains": [
+          "all-about-gunsan.vercel.app"
+        ]
       },
       {
         "name": "해오름펜션",
