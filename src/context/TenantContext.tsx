@@ -28,12 +28,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantIdState] = useState(readStoredTenant)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * 경쟁사 보기(읽기 전용) — 브랜드 현황에서 경쟁사 줄을 눌렀을 때. 고른 고객 브랜드(tenantId)는 그대로 두고
+   * 화면이 보는 브랜드만 바꾼다. 저장하지 않는다 — 새로 고치면 고객 브랜드로 돌아온다(지금 누구를 보는지
+   * 헷갈리지 않게).
+   */
+  const [viewing, setViewing] = useState<TenantSummary | null>(null)
   // 마지막으로 성공한 목록 — 재조회가 실패하면 이걸 유지해 선택지가 사라지지 않게 한다.
   const lastGood = useRef<TenantSummary[]>([])
 
   // 사용자가 고른 것만 저장한다. apply의 자동 재조정(삭제된 브랜드 → 첫 브랜드)은 저장하지 않는다 —
   // 서버에 잠깐 못 붙어 데모 목록이 뜰 때 그 첫 데모 브랜드로 실제 선택을 덮어쓰게 된다.
   const setTenantId = useCallback((id: string) => {
+    setViewing(null)
     setTenantIdState(id)
     try {
       localStorage.setItem(TENANT_KEY, id)
@@ -90,11 +97,39 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchWithRetry, apply])
 
-  const tenant = tenants.find((item) => item.tenantId === tenantId) ?? tenants[0]
+  const viewCompetitor = useCallback(
+    async (id: string) => {
+      if (tenants.some((item) => item.tenantId === id)) {
+        setTenantId(id)
+        return
+      }
+      const all = await fetchTenants(5000, true)
+      const found = all.find((item) => item.tenantId === id)
+      if (!found) throw new Error(`경쟁사를 찾지 못했습니다: ${id}`)
+      setViewing(found)
+    },
+    [tenants, setTenantId],
+  )
+  const exitCompetitorView = useCallback(() => setViewing(null), [])
+
+  const customer = tenants.find((item) => item.tenantId === tenantId) ?? tenants[0]
+  const tenant = viewing ?? customer
 
   return (
     <TenantContext.Provider
-      value={{ tenants, tenantId: tenant?.tenantId ?? tenantId, setTenantId, tenant, loading, error, reloadTenants }}
+      value={{
+        tenants,
+        tenantId: tenant?.tenantId ?? tenantId,
+        setTenantId,
+        tenant,
+        customer,
+        viewing,
+        viewCompetitor,
+        exitCompetitorView,
+        loading,
+        error,
+        reloadTenants,
+      }}
     >
       {children}
     </TenantContext.Provider>

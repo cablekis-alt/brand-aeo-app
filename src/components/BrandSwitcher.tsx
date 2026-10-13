@@ -20,7 +20,7 @@ import NavIcon from './NavIcon'
  * 브랜드 목록으로 이름부터 보여 준다.
  */
 export default function BrandSwitcher() {
-  const { tenants, tenant, setTenantId } = useTenant()
+  const { tenants, tenant, customer, viewing, setTenantId } = useTenant()
   const [open, setOpen] = useState(false)
   const [anchor, setAnchor] = useState({ top: 0, left: 0 })
   const [portfolio, setPortfolio] = useState<{ loaded: boolean; rows: PortfolioRow[] | null }>({ loaded: false, rows: null })
@@ -55,14 +55,15 @@ export default function BrandSwitcher() {
 
   if (!tenant) return null
   const current = rows.find((r) => r.tenantId === tenant.tenantId) ?? null
-  const initial = Array.from(tenant.brandName.trim())[0] ?? '?'
+  // 경쟁사 보기 중이면 브랜드 칸이 그 경쟁사를 회색으로 보인다 — 지금 누구를 보는지 헷갈리지 않게.
+  const initial = viewing ? '경' : (Array.from(tenant.brandName.trim())[0] ?? '?')
 
   return (
     <>
       <button
         ref={triggerRef}
         type="button"
-        className={`brand-switch${open ? ' is-open' : ''}`}
+        className={`brand-switch${open ? ' is-open' : ''}${viewing ? ' is-competitor' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`브랜드 바꾸기 — 지금 ${tenant.brandName}`}
@@ -74,7 +75,7 @@ export default function BrandSwitcher() {
         <span className="brand-switch-text" aria-hidden="true">
           <span className="brand-switch-name">{tenant.brandName}</span>
           <span className="brand-switch-meta">
-            {current?.industry ?? tenant.industry} · {current?.region ?? tenant.region}
+            {viewing ? '경쟁사 · 읽기 전용' : `${current?.industry ?? tenant.industry} · ${current?.region ?? tenant.region}`}
           </span>
         </span>
         <NavIcon name="updown" size={16} />
@@ -83,7 +84,7 @@ export default function BrandSwitcher() {
       {open && (
         <BrandPickerPanel
           rows={rows}
-          currentId={tenant.tenantId}
+          currentId={customer?.tenantId ?? tenant.tenantId}
           known={known}
           loading={!portfolio.loaded}
           anchor={anchor}

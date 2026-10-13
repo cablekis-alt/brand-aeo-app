@@ -22,6 +22,11 @@ export interface MenuItem {
   badge?: 'measuring' | 'actions'
   /** 주 메뉴만 아이콘을 단다. 접히는 상세·설정 항목은 글자만 두고 아이콘 자리만큼 들여 맞춘다. */
   icon?: NavIconName
+  /**
+   * 고객 브랜드에서만 여는 화면 — 경쟁사 보기(읽기 전용)에서는 잠긴다. 측정·글쓰기·설정처럼 그 브랜드를
+   * 위해 무언가를 만들거나 바꾸는 화면이다. 보는 화면(개요·답변·순위·분석)은 경쟁사로도 연다.
+   */
+  customerOnly?: true
 }
 export interface MenuGroup {
   id: string
@@ -57,19 +62,19 @@ export const MENU: MenuGroup[] = [
     items: [
       // 「실행 항목」에서 이름을 바꿨다. 이 화면이 실제로 하는 일은 쓸 글을 정하고 만들어
       // 내보내는 것이고, 고객이 찾는 말도 그쪽이다. 배지(남은 건수)는 그대로 쓴다.
-      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions', icon: 'content' },
-      { label: '콘텐츠 보관함', to: '/content-library', icon: 'library' },
-      { label: 'Site AEO Checker', to: '/site-diagnosis', icon: 'site' },
+      { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions', icon: 'content', customerOnly: true },
+      { label: '콘텐츠 보관함', to: '/content-library', icon: 'library', customerOnly: true },
+      { label: 'Site AEO Checker', to: '/site-diagnosis', icon: 'site', customerOnly: true },
     ],
   },
   {
     id: 'report',
     title: '보고·측정',
     items: [
-      { label: '정기진단 보고서', to: '/report', icon: 'report' },
+      { label: '정기진단 보고서', to: '/report', icon: 'report', customerOnly: true },
       { label: 'AEO 퍼포먼스', to: '/performance', icon: 'performance' },
-      { label: '브랜드·경쟁사 측정', to: '/measure-tenant', icon: 'measure' },
-      { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status' },
+      { label: '브랜드·경쟁사 측정', to: '/measure-tenant', icon: 'measure', customerOnly: true },
+      { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status', customerOnly: true },
     ],
   },
   {
@@ -86,7 +91,7 @@ export const MENU: MenuGroup[] = [
       { label: 'AI 인용출처 분석', to: '/citation-sources' },
       { label: 'EEAT 분석', to: '/eeat' },
       { label: '경쟁 시계열', to: '/competitor-trends' },
-      { label: 'AI 리퍼럴 트래픽', to: '/ai-referrals' },
+      { label: 'AI 리퍼럴 트래픽', to: '/ai-referrals', customerOnly: true },
     ],
   },
   {
@@ -94,11 +99,20 @@ export const MENU: MenuGroup[] = [
     title: '설정',
     foldable: true,
     items: [
-      { label: '브랜드 사실', to: '/brand-facts' },
-      { label: '질문 프롬프트 빌더', to: '/questions' },
+      { label: '브랜드 사실', to: '/brand-facts', customerOnly: true },
+      { label: '질문 프롬프트 빌더', to: '/questions', customerOnly: true },
     ],
   },
 ]
+
+/** 메뉴에 없는 고객 전용 화면 — 사이드바의 「브랜드 추가」. */
+const EXTRA_CUSTOMER_ONLY = ['/brand-onboarding']
+
+/** 경쟁사 보기(읽기 전용)에서 잠기는 화면인가. */
+export function isCustomerOnlyPath(pathname: string): boolean {
+  if (EXTRA_CUSTOMER_ONLY.includes(pathname)) return true
+  return MENU.some((g) => g.items.some((i) => i.to === pathname && i.customerOnly))
+}
 
 /** 메뉴에 없는 화면의 이름 — 사이드바의 「브랜드 추가」로 들어간다. */
 const EXTRA: Record<string, string> = { '/brand-onboarding': '브랜드 추가' }
@@ -113,8 +127,8 @@ export function routeMeta(pathname: string): { group: string | null; label: stri
 }
 
 /** 명령 창(Ctrl K)의 화면 목록 — 메뉴 순서 그대로, 묶음 이름을 함께. */
-export function allScreens(): { label: string; to: string; group: string | null }[] {
+export function allScreens(competitorView = false): { label: string; to: string; group: string | null }[] {
   const out = MENU.flatMap((g) => g.items.map((i) => ({ label: i.label, to: i.to, group: g.title ?? null })))
   for (const [to, label] of Object.entries(EXTRA)) out.push({ label, to, group: null })
-  return out
+  return competitorView ? out.filter((s) => !isCustomerOnlyPath(s.to)) : out
 }

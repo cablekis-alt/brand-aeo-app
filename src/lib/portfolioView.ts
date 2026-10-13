@@ -145,3 +145,17 @@ export function groupCohorts(cohorts: PortfolioCohort[]): { name: string; cohort
       ),
     }))
 }
+
+/**
+ * 경쟁사 보기 띠가 보여 줄 코호트 — 그 경쟁사가 고객 브랜드와 함께 있는 코호트 중 가장 최근 주차.
+ * 같이 있는 코호트가 없으면(다른 고객의 경쟁사를 연 경우) 그 경쟁사가 든 가장 최근 코호트.
+ */
+export function cohortOfCompetitor(
+  cohorts: PortfolioCohort[],
+  competitorId: string,
+  customerId: string | undefined,
+): PortfolioCohort | null {
+  const withIt = cohorts.filter((c) => c.members.some((m) => m.tenantId === competitorId))
+  const latest = (list: PortfolioCohort[]) => [...list].sort((a, b) => b.weekOf.localeCompare(a.weekOf))[0] ?? null
+  return latest(withIt.filter((c) => c.members.some((m) => m.tenantId === customerId))) ?? latest(withIt)
+}

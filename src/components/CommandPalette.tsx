@@ -35,7 +35,7 @@ function matches(text: string, query: string): boolean {
  */
 export default function CommandPalette() {
   const navigate = useNavigate()
-  const { tenant } = useTenant()
+  const { tenant, viewing } = useTenant()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -88,7 +88,7 @@ export default function CommandPalette() {
 
   const results = useMemo((): Command[] => {
     const q = query.trim()
-    const screens = allScreens()
+    const screens = allScreens(Boolean(viewing))
       .filter((s) => !q || matches(`${s.label} ${s.group ?? ''}`, q))
       .map((s) => ({ id: `s:${s.to}`, kind: '화면' as const, label: s.label, hint: s.group ?? '', to: s.to }))
     if (!q) return screens
@@ -107,7 +107,7 @@ export default function CommandPalette() {
       .slice(0, MAX_COMPETITORS)
       .map((c) => ({ id: `c:${c}`, kind: '경쟁사' as const, label: c, hint: '경쟁 순위에서 보기', to: '/ranking' }))
     return [...screens, ...questions, ...competitors]
-  }, [query, bank, tenantId, tenant?.competitors])
+  }, [query, bank, tenantId, tenant?.competitors, viewing])
 
   const current = Math.min(active, Math.max(0, results.length - 1))
   const go = (c: Command) => {

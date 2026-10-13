@@ -131,6 +131,14 @@
 .brand-switch.is-open {
   box-shadow: 0 0 0 2px var(--accent);
 }
+/* 경쟁사 보기 — 브랜드 칸을 회색으로(지금 보는 것이 고객 브랜드가 아님). */
+.brand-switch.is-competitor {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.brand-switch.is-competitor .brand-switch-initial {
+  background: var(--muted);
+}
 .brand-switch-initial {
   width: 28px;
   height: 28px;
@@ -440,6 +448,39 @@
 
 .sidebar-group a .label {
   flex: 1;
+}
+/* 경쟁사 보기에서 잠긴 메뉴 — 자리는 남겨 어디 있는지는 보이게 하고, 누르지는 못하게. */
+.sidebar-locked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-ctl);
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.35;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.sidebar-group.foldable .sidebar-locked {
+  padding-left: 38px;
+}
+.sidebar-locked .label {
+  flex: 1;
+}
+.sidebar-locked-note {
+  font-size: 11px;
+}
+.sidebar-cta.is-locked {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.sidebar-cta.is-locked:hover {
+  background: transparent;
+  border-color: var(--line-strong);
+  border-style: dashed;
 }
 
 .filters {
@@ -5175,6 +5216,25 @@ td.cell-mid {
   color: var(--muted);
   font-size: 18px;
 }
+/* 경쟁사 줄 — 누르면 읽기 전용 개요(상용화 UI 10차 시안). 고객 줄보다 조용하게, 올렸을 때만 화살표. */
+.pf-lb-row.competitor {
+  cursor: pointer;
+}
+.pf-lb-row.competitor:hover {
+  background: var(--surface-2);
+}
+.pf-lb-row.competitor:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.pf-row-peek {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.pf-lb-row.competitor:hover .pf-row-peek,
+.pf-lb-row.competitor:focus-visible .pf-row-peek {
+  opacity: 1;
+}
 .pf-cohort-cols {
   margin-left: auto;
   font-size: 11px;
@@ -5599,4 +5659,147 @@ td.cell-mid {
   .bsw-score { grid-area: score; }
   .bsw-rank { grid-area: rank; }
   .bsw-status { grid-area: status; justify-self: end; }
+}
+
+/* 경쟁사 보기(읽기 전용) 띠 · 잠긴 화면 · 고객과 비교 카드 — CompetitorViewBar.tsx · Layout.tsx · Dashboard.tsx */
+.cv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 -32px 16px;
+  padding: 10px 32px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+}
+.cv-tag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 18%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cv-text {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+.cv-cohort {
+  opacity: 0.75;
+}
+.cv-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cv-chip {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 12%, transparent);
+  color: var(--paper);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.cv-chip.on {
+  background: var(--paper);
+  color: var(--ink);
+}
+.cv-chip:focus-visible,
+.cv-back:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+.cv-back {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cv-error {
+  flex-basis: 100%;
+  color: var(--paper);
+  font-size: 12px;
+}
+.cv-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 60ch;
+  margin-top: 32px;
+}
+.cv-locked h1 {
+  margin: 0;
+  font-size: 22px;
+}
+.cv-locked p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.cv-compare-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cv-compare-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 64px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 12px;
+}
+.cv-compare-label {
+  grid-row: span 2;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cv-compare-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cv-compare-bar > span:first-child {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.cv-compare-bar.us > span:first-child {
+  background: var(--accent);
+}
+.cv-compare-who {
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.cv-compare-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cv-compare-val.us {
+  font-weight: 700;
+}
+.cv-compare-note {
+  margin: 12px 0 0;
+}
+@media (max-width: 760px) {
+  .cv-bar {
+    margin: 0 -16px 12px;
+    padding: 10px 16px;
+  }
+  .cv-compare-row {
+    grid-template-columns: 88px minmax(0, 1fr) 56px;
+  }
 }

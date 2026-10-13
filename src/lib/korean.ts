@@ -30,3 +30,15 @@ export function objectParticle(word: string): string {
 export function subjectParticle(word: string): string {
   return particle(word, '이', '가', '이(가)')
 }
+
+/** 방향 — 삼성서울병원으로 / 티스토리로 / 서울로(ㄹ 받침은 「로」) / reddit.com(으)로 */
+export function directionParticle(word: string): string {
+  const jong = finalJongseong(word)
+  if (jong === null) return `${word}(으)로`
+  return `${word}${jong === 0 || jong === 8 ? '로' : '으로'}`
+}
+
+/** 접속 — 삼성서울병원과 / 티스토리와 / reddit.com과(와) */
+export function withParticle(word: string): string {
+  return particle(word, '과', '와', '과(와)')
+}

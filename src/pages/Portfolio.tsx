@@ -49,7 +49,7 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`
  */
 export default function Portfolio() {
   const navigate = useNavigate()
-  const { setTenantId } = useTenant()
+  const { setTenantId, viewCompetitor } = useTenant()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
   useEffect(() => {
     let alive = true
@@ -124,6 +124,14 @@ export default function Portfolio() {
     setTenantId(tenantId)
     navigate('/')
   }
+  const [viewError, setViewError] = useState<string | null>(null)
+  /** 경쟁사 줄 — 고른 고객 브랜드는 그대로 두고 그 경쟁사를 읽기 전용으로 연다(상용화 UI 10차 시안). */
+  const openCompetitor = (tenantId: string) => {
+    setViewError(null)
+    viewCompetitor(tenantId)
+      .then(() => navigate('/'))
+      .catch((e: unknown) => setViewError(e instanceof Error ? e.message : String(e)))
+  }
 
   const summary: { key: Filter; label: string; value: number; sub: string; tone: string }[] = [
     { key: '', label: '고객 브랜드', value: counts.all, sub: `업종군 ${groupsAll.length}개`, tone: '' },
@@ -146,6 +154,11 @@ export default function Portfolio() {
           </label>
         </div>
       </header>
+      {viewError && (
+        <p className="error" role="alert">
+          {viewError}
+        </p>
+      )}
       <p className="page-lead">
         등록한 고객 브랜드를 업종별로 모았습니다. 코호트(업종 · 지역)마다 마지막 측정과 질문지가 같은지 보이고, 줄을 누르면
         그 브랜드의 개요로 갑니다.
@@ -242,6 +255,7 @@ export default function Portfolio() {
                           total={c.members.length}
                           measured={Boolean(c.weekOf)}
                           onOpen={open}
+                          onOpenCompetitor={openCompetitor}
                         />
                       ))}
                     </div>
@@ -256,7 +270,10 @@ export default function Portfolio() {
   )
 }
 
-/** 리더보드 한 줄. 지금 재는 고객 브랜드는 누를 수 있고(개요로), 경쟁사·지난 기록은 비교용이다. */
+/**
+ * 리더보드 한 줄. 지금 재는 고객 브랜드는 그 브랜드로 바꾸고(개요로), 경쟁사는 읽기 전용 개요를 연다.
+ * 지난 기록(고객 브랜드의 옛 코호트)은 비교용이라 누르지 않는다.
+ */
 function LeaderRow({
   m,
   row,
@@ -264,6 +281,7 @@ function LeaderRow({
   total,
   measured,
   onOpen,
+  onOpenCompetitor,
 }: {
   m: CohortMember
   row: PortfolioRow | undefined
@@ -271,6 +289,7 @@ function LeaderRow({
   total: number
   measured: boolean
   onOpen: (tenantId: string) => void
+  onOpenCompetitor: (tenantId: string) => void
 }) {
   const current = isCurrentCustomer(m) ? row : undefined
   const chip = current ? statusChip(current) : null
@@ -296,13 +315,25 @@ function LeaderRow({
         {chip && <span className={`chip ${chip.tone}`}>{chip.text}</span>}
         {m.laterWeek && <span className="chip info">{shortWeek(m.laterWeek)}에 다시 측정</span>}
       </span>
-      <span className="pf-row-go" aria-hidden="true">
-        {current ? '›' : ''}
+      <span className={`pf-row-go${m.competitor ? ' pf-row-peek' : ''}`} aria-hidden="true">
+        {current || m.competitor ? '›' : ''}
       </span>
     </>
   )
-  return current ? (
-    <button type="button" className="pf-lb-row own" onClick={() => onOpen(m.tenantId)}>
+  if (current) {
+    return (
+      <button type="button" className="pf-lb-row own" onClick={() => onOpen(m.tenantId)}>
+        {cells}
+      </button>
+    )
+  }
+  return m.competitor ? (
+    <button
+      type="button"
+      className="pf-lb-row competitor"
+      title={`${m.brandName} 개요 보기(읽기 전용)`}
+      onClick={() => onOpenCompetitor(m.tenantId)}
+    >
       {cells}
     </button>
   ) : (

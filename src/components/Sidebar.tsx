@@ -96,7 +96,7 @@ function MeasureStatusCard({ measuring }: { measuring: number }) {
 
 export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean }) {
   const { pathname } = useLocation()
-  const { tenant } = useTenant()
+  const { tenant, viewing } = useTenant()
   const measuring = useMeasuringCount()
   const { plan, loading } = useGapActionPlan(tenant?.tenantId ?? '')
   const openActions = !loading && tenant ? plan.actions.filter(isOpenAction).length : 0
@@ -164,13 +164,20 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
       {showBrandPicker && <BrandSwitcher />}
 
       {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
-      <NavLink
-        to="/brand-onboarding"
-        className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
-      >
-        <NavIcon name="plus" size={16} />
-        브랜드 추가
-      </NavLink>
+      {viewing ? (
+        <span className="sidebar-cta is-locked" aria-disabled="true" title="경쟁사 보기 중에는 쓸 수 없습니다">
+          <NavIcon name="plus" size={16} />
+          브랜드 추가
+        </span>
+      ) : (
+        <NavLink
+          to="/brand-onboarding"
+          className={({ isActive }) => `sidebar-cta${isActive ? ' on' : ''}`}
+        >
+          <NavIcon name="plus" size={16} />
+          브랜드 추가
+        </NavLink>
+      )}
 
       <div className="sidebar-scroll" id="sidebar-menu" ref={scrollRef}>
         {MENU.map((group) => {
@@ -201,6 +208,18 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
                 <ul>
                   {group.items.map((item) => {
                     const badge = badgeOf(item)
+                    if (viewing && item.customerOnly) {
+                      // 경쟁사 보기(읽기 전용)에서는 만들고 바꾸는 화면을 잠근다 — 자리는 남겨 어디 있는지는 보이게.
+                      return (
+                        <li key={item.to}>
+                          <span className="sidebar-locked" aria-disabled="true" title="고객 브랜드에서만 쓰는 화면입니다">
+                            {item.icon && <NavIcon name={item.icon} />}
+                            <span className="label">{item.label}</span>
+                            <span className="sidebar-locked-note">고객만</span>
+                          </span>
+                        </li>
+                      )
+                    }
                     return (
                       <li key={item.to}>
                         <NavLink

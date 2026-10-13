@@ -5,12 +5,13 @@ import ChangeAlerts from '../components/ChangeAlerts'
 import PositionMap from '../components/PositionMap'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText, weekLabel } from '../lib/format'
+import { withParticle } from '../lib/korean'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { conditionChange } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
-import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote } from '../prompts/b8-report'
+import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { isOpenAction } from '../lib/gapActions'
@@ -28,7 +29,7 @@ const TODO_SHOW = 3
 const weightPct = (w: number) => `${Math.round(w * 100)}%`
 
 export default function Dashboard() {
-  const { tenant } = useTenant()
+  const { tenant, customer, viewing } = useTenant()
   // Site AEO Score의 주차 기록은 로컬 서버에만 있다(Vercel에는 이 라우트가 없다).
   // 웹에서 "진단하면 쌓입니다"라고 안내하면 지키지 못할 약속이 된다.
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
@@ -319,7 +320,7 @@ export default function Dashboard() {
                           </span>
                         )}
                       </>
-                    ) : isElectron ? (
+                    ) : isElectron && !viewing ? (
                       <Link to="/site-diagnosis" className="dash-link">
                         진단하기
                       </Link>
@@ -410,6 +411,8 @@ export default function Dashboard() {
               </ul>
             </details>
           )}
+
+          {viewing && customer && <CompareWithCustomer competitor={card} customerId={customer.tenantId} customerName={customer.brandName} />}
 
           {history.length >= 2 && (
             <section className="dash-row" aria-label="추이">
@@ -522,6 +525,7 @@ export default function Dashboard() {
             </section>
           )}
 
+          {!viewing && (
           <section className="dash-card todo-card" aria-label="놓친 질문">
             <div className="dash-card-head">
               <h2>
@@ -566,6 +570,7 @@ export default function Dashboard() {
               </p>
             )}
           </section>
+          )}
 
           {promptedSplit && promptedSplit.named.answered > 0 && (
             <section className="dash-card split-card">
@@ -603,6 +608,7 @@ export default function Dashboard() {
       {/*
         사이드바와 같은 순서·같은 말로 묶은 안내 — 처음 쓰는 사람을 위한 것이라 매일 보는 화면에선 접어 둔다.
       */}
+      {!viewing && (
       <details className="dash-guide">
         <summary>이 브랜드를 보는 순서 — 진단 → 실행 → 보고·측정</summary>
         <div className="pipeline-grid">
@@ -638,6 +644,7 @@ export default function Dashboard() {
           </article>
         </div>
       </details>
+      )}
 
       <p className="dash-foot">
         {card && conditions ? (
@@ -653,5 +660,90 @@ export default function Dashboard() {
         않습니다.
       </p>
     </>
+  )
+}
+
+/**
+ * 경쟁사 보기(읽기 전용)에서 고른 고객 브랜드와 나란히 — 상용화 UI 10차 시안의 「삼성서울병원과 비교」.
+ * 두 브랜드의 마지막 측정을 그대로 견준다. 주차나 질문지가 다르면 그 사실을 밝힌다(같은 질문으로 잰 게 아니다).
+ */
+function CompareWithCustomer({
+  competitor,
+  customerId,
+  customerName,
+}: {
+  competitor: WeeklyScorecard | null
+  customerId: string
+  customerName: string
+}) {
+  const { history } = useScorecards(customerId)
+  const mine = history.at(-1) ?? null
+  // 같은 질문으로 쟀는지 — 버전 이름만으로는 모른다(W36은 브랜드마다 「v1」인데 질문 문장이 달랐다).
+  // 브랜드 현황(server/portfolio.ts)과 같이 이름 없는 질문의 문장 집합을 견준다. 못 읽으면 다르다고 본다.
+  const basisKey = competitor && mine ? `${competitor.tenantId}|${competitor.questionBankVersion}|${mine.tenantId}|${mine.questionBankVersion}` : ''
+  const [sameQuestions, setSameQuestions] = useState<{ key: string; same: boolean } | null>(null)
+  useEffect(() => {
+    if (!competitor || !mine || !competitor.questionBankVersion || !mine.questionBankVersion) return
+    let alive = true
+    const general = (b: QuestionBank | null) =>
+      b ? new Set(b.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.text)) : null
+    void Promise.all([
+      loadQuestionBank(competitor.tenantId, competitor.questionBankVersion),
+      loadQuestionBank(mine.tenantId, mine.questionBankVersion),
+    ])
+      .then(([a, b]) => {
+        const x = general(a)
+        const y = general(b)
+        const same = Boolean(x && y && x.size > 0 && x.size === y.size && [...x].every((t) => y.has(t)))
+        if (alive) setSameQuestions({ key: basisKey, same })
+      })
+      .catch((err: unknown) => {
+        console.error('[CompareWithCustomer] 질문지를 읽지 못해 다른 질문지로 봅니다', err)
+        if (alive) setSameQuestions({ key: basisKey, same: false })
+      })
+    return () => {
+      alive = false
+    }
+  }, [competitor, mine, basisKey])
+  if (!competitor || !mine) return null
+  const rows: { label: string; them: number | null; us: number | null; fmt: (v: number) => string; scale: number }[] = [
+    { label: 'Brand AEO Score', them: competitor.aeoScore.current, us: mine.aeoScore.current, fmt: (v) => String(v), scale: 100 },
+    { label: '언급률', them: competitor.mentionRate, us: mine.mentionRate, fmt: formatPct, scale: 1 },
+    { label: '자사 인용률', them: competitor.brandOwnedCitationRate, us: mine.brandOwnedCitationRate, fmt: formatPct, scale: 1 },
+  ]
+  const sameBasis = competitor.weekOf === mine.weekOf && sameQuestions?.key === basisKey && sameQuestions.same
+  const bar = (v: number | null, scale: number) => `${v === null ? 0 : Math.max(2, Math.min(100, Math.round((v / scale) * 100)))}%`
+  return (
+    <section className="dash-card cv-compare" aria-label={`${withParticle(customerName)} 비교`}>
+      <div className="dash-card-head">
+        <h2>{withParticle(customerName)} 비교</h2>
+        <span className="dash-sub">
+          {competitor.brandName} {weekLabel(competitor.weekOf)} · {customerName} {weekLabel(mine.weekOf)}
+        </span>
+      </div>
+      <div className="cv-compare-rows">
+        {rows.map((r) => (
+          <div className="cv-compare-row" key={r.label}>
+            <span className="cv-compare-label">{r.label}</span>
+            <span className="cv-compare-bar them">
+              <span style={{ width: bar(r.them, r.scale) }} />
+              <span className="cv-compare-who">{competitor.brandName}</span>
+            </span>
+            <span className="cv-compare-val">{r.them === null ? '—' : r.fmt(r.them)}</span>
+            <span className="cv-compare-bar us">
+              <span style={{ width: bar(r.us, r.scale) }} />
+              <span className="cv-compare-who">{customerName}</span>
+            </span>
+            <span className="cv-compare-val us">{r.us === null ? '—' : r.fmt(r.us)}</span>
+          </div>
+        ))}
+      </div>
+      {(!competitor.questionBankVersion || !mine.questionBankVersion || (sameQuestions?.key === basisKey && !sameBasis)) && (
+        <p className="dash-caption cv-compare-note">
+          두 브랜드를 다른 주차나 다른 질문지로 쟀습니다 — 질문별 승패는 비교할 수 없습니다. 같은 코호트 질문지로 다시
+          재면 같은 질문에서 누가 앞서는지 볼 수 있습니다.
+        </p>
+      )}
+    </section>
   )
 }
