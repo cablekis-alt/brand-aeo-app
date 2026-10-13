@@ -5217,13 +5217,16 @@ td.cell-mid {
   font-size: 18px;
 }
 /* 경쟁사 줄 — 누르면 읽기 전용 개요(상용화 UI 10차 시안). 고객 줄보다 조용하게, 올렸을 때만 화살표. */
-.pf-lb-row.competitor {
+.pf-lb-row.competitor,
+.pf-lb-row.past {
   cursor: pointer;
 }
-.pf-lb-row.competitor:hover {
+.pf-lb-row.competitor:hover,
+.pf-lb-row.past:hover {
   background: var(--surface-2);
 }
-.pf-lb-row.competitor:focus-visible {
+.pf-lb-row.competitor:focus-visible,
+.pf-lb-row.past:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -5232,7 +5235,9 @@ td.cell-mid {
   transition: opacity 120ms ease;
 }
 .pf-lb-row.competitor:hover .pf-row-peek,
-.pf-lb-row.competitor:focus-visible .pf-row-peek {
+.pf-lb-row.competitor:focus-visible .pf-row-peek,
+.pf-lb-row.past:hover .pf-row-peek,
+.pf-lb-row.past:focus-visible .pf-row-peek {
   opacity: 1;
 }
 .pf-cohort-cols {
