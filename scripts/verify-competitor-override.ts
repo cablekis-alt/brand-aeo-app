@@ -62,6 +62,9 @@ try {
   ok('이름 없는 줄은 거절', throws(() => store.normalizeCompetitorList([{ name: '  ' }], owner), '이름이 비어'))
   ok('21곳은 거절', throws(() => store.normalizeCompetitorList(Array.from({ length: 21 }, (_, i) => ({ name: `가상 ${i}` })), owner), '20곳'))
   ok('hostFromInput: 스킴 없는 주소', store.hostFromInput('All-About.example/a') === 'all-about.example')
+  ok('hostFromInput: 모바일 주소(m.)는 벗긴다', store.hostFromInput('https://m.virtual-a.co.kr/main') === 'virtual-a.co.kr')
+  ok('첫 마디가 업체 이름이 아닌 주소(shop.)는 공용으로 본다', store.isSharedHost('shop.virtual-b.co.kr') && !store.isSharedHost('virtual-b.co.kr'))
+  ok('목록 지문은 순서가 바뀌면 달라진다', store.listHash([n.competitors[0], n.competitors[1]]) !== store.listHash([n.competitors[1], n.competitors[0]]))
 
   // 2) 베이스 지문
   const fp = store.baseFingerprint(owner)

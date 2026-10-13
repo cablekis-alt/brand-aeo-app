@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import CompetitorEditor from '../components/CompetitorEditor'
 import EmptyBrands from '../components/EmptyBrands'
@@ -129,13 +129,22 @@ export default function Portfolio() {
     return groupCohorts(visible)
   }, [rows, rowById, state.value, filter, group, query])
 
+  // 경쟁사 편집 서랍에 저장하지 않은 바꾼 내용이 있으면, 다른 브랜드로 바꾸거나 이 화면을 떠나기 전에 묻는다.
+  const editorDirty = useRef(false)
+  const onEditorDirty = useCallback((dirty: boolean) => {
+    editorDirty.current = dirty
+  }, [])
+  const leaveEditor = () => !editorDirty.current || window.confirm('바꾼 경쟁사를 저장하지 않고 나갈까요?')
+
   const open = (tenantId: string) => {
+    if (!leaveEditor()) return
     setTenantId(tenantId)
     navigate('/')
   }
   const [viewError, setViewError] = useState<string | null>(null)
   /** 경쟁사 줄 — 고른 고객 브랜드는 그대로 두고 그 경쟁사를 읽기 전용으로 연다(상용화 UI 10차 시안). */
   const openCompetitor = (tenantId: string) => {
+    if (!leaveEditor()) return
     setViewError(null)
     viewCompetitor(tenantId)
       .then(() => navigate('/'))
@@ -272,7 +281,10 @@ export default function Portfolio() {
                         <CohortEditLinks
                           customers={c.members.filter(isCurrentCustomer).map((m) => rowById.get(m.tenantId)).filter((r): r is PortfolioRow => Boolean(r))}
                           locked={Boolean(viewing)}
-                          onEdit={setEditing}
+                          onEdit={(id) => {
+                            if (id !== editing && !leaveEditor()) return
+                            setEditing(id)
+                          }}
                         />
                       </div>
                       {members.map((m) => (
@@ -295,7 +307,9 @@ export default function Portfolio() {
           ))}
         </>
       )}
-      {editing && !viewing && <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} />}
+      {editing && !viewing && state.value && (
+        <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
+      )}
     </>
   )
 }

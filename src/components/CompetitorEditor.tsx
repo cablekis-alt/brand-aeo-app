@@ -34,6 +34,14 @@ const shortDate = (iso: string) => {
 const squash = (s: string) => s.replace(/\s+/g, '')
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ok'; value: CompetitorEditorState }
+/** id를 붙이기 전의 작업 — push가 고정 id를 준다(src/lib/competitorEdit.ts newKey 주석). */
+type NewOp = EditOp extends infer T ? (T extends EditOp ? Omit<T, 'id'> : never) : never
+/** 작업 id — 서랍을 다시 열어도 겹치지 않게 모듈에서 센다(작업 목록은 서랍마다 새로 시작한다). */
+let opSeq = 0
+function nextOpId(): string {
+  opSeq += 1
+  return String(opSeq)
+}
 type Open = { kind: 'row'; key: string } | { kind: 'wait'; key: string } | { kind: 'add' } | null
 type PlanState = { key: string; value: CompetitorEditPlan | null; error: string | null }
 
@@ -55,10 +63,13 @@ export default function CompetitorEditor({
   tenantId,
   onClose,
   onSaved,
+  onDirtyChange,
 }: {
   tenantId: string
   onClose: () => void
   onSaved: () => void
+  /** 저장하지 않은 바꾼 내용이 있는지 — 브랜드 현황이 다른 브랜드로 바꾸거나 화면을 떠나기 전에 묻는다. */
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const navigate = useNavigate()
   const { setTenantId } = useTenant()
@@ -71,6 +82,7 @@ export default function CompetitorEditor({
   const [actionError, setActionError] = useState<string | null>(null)
   const [savedNow, setSavedNow] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [pickError, setPickError] = useState<string | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -118,13 +130,20 @@ export default function CompetitorEditor({
     }
   }, [tenantId, requestKey])
 
+  useEffect(() => {
+    onDirtyChange?.(ops.length > 0)
+  }, [ops.length, onDirtyChange])
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
+
   const close = () => {
+    if (busy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
     if (ops.length && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
     onClose()
   }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
+      // 명령 창·브랜드 고르기가 처리한 Escape(preventDefault)는 서랍까지 닫지 않는다.
+      if (e.key !== 'Escape' || e.defaultPrevented) return
       if (open) setOpen(null)
       else close()
     }
@@ -136,12 +155,30 @@ export default function CompetitorEditor({
   const planned = ops.length ? current?.value ?? null : null
   const planning = ops.length > 0 && !current
   // 서버 계산이 오기 전에는 원래 줄의 정보를 이름으로 붙여 보여 준다(칸 나눔은 순서대로 가정).
+  // 계산이 실패해도(잘못된 주소 등) 새로 넣은 줄은 보여야 한다 — 그래야 그 줄을 되돌릴 수 있다.
   const rowFor = (item: EditItem, i: number): EditorCompetitorRow | null => {
     if (!s) return null
     if (!ops.length) return s.rows[i] ?? null
-    if (planned) return planned.rows[i] ?? null
+    if (planned?.rows[i]) return planned.rows[i]
+    const guess = { index: i, status: i < s.cap ? ('measured' as const) : ('waiting' as const), takesSlot: i < s.cap }
     const known = s.rows.find((r) => squash(r.name) === squash(item.competitor.name))
-    return known ? { ...known, index: i, status: i < s.cap ? 'measured' : 'waiting', takesSlot: i < s.cap } : null
+    if (known) return { ...known, ...guess }
+    return {
+      ...guess,
+      name: item.competitor.name,
+      aliases: item.competitor.aliases,
+      domains: item.competitor.domains,
+      draftId: null,
+      targetTenantId: null,
+      otherRegion: false,
+      existingCustomer: false,
+      collidesWith: null,
+      deleted: false,
+      deletedOtherIndustry: null,
+      cohortWeeks: 0,
+      latest: null,
+      questionIds: [],
+    }
   }
   const rows = applied.list.map((item, i) => ({ item, row: rowFor(item, i) }))
   const slotRows = rows.filter((x) => x.row?.takesSlot)
@@ -155,15 +192,27 @@ export default function CompetitorEditor({
   const neverMeasured = !ops.length ? s?.rows.find((r) => r.status === 'waiting' && !r.latest) : undefined
   const originalStatus = (key: string) => (key.startsWith('b') ? s?.rows[Number(key.slice(1))]?.status : undefined)
 
-  const push = (op: EditOp) => {
-    setOps([...ops, op])
+  // 성립하지 않는 작업(이미 있는 이름, 마지막 한 곳 빼기)은 쌓지 않고 고르기 상자에 이유를 보인다.
+  const push = (raw: NewOp) => {
+    const op = { ...raw, id: nextOpId() } as EditOp
+    const next = [...ops, op]
+    if (!applyOps(base, next).valid.at(-1)) {
+      setPickError(op.t === 'drop' ? '마지막 한 곳은 뺄 수 없어요 — 경쟁사가 하나도 없으면 측정할 때마다 AI가 새로 골라요.' : '이미 목록에 있는 곳이에요.')
+      return
+    }
+    setOps(next)
     setOpen(null)
+    setPickError(null)
     setSavedNow(false)
     setActionError(null)
   }
+  const toggle = (next: Open) => {
+    setPickError(null)
+    setOpen(next)
+  }
   const revert = (index: number) => setOps(revertOp(base, ops, index))
   const listNames = new Set(applied.list.map((x) => squash(x.competitor.name)))
-  const suggestionGroups = (make: (entry: CompetitorEntry, source: InputSource) => EditOp): PickerGroup[] =>
+  const suggestionGroups = (make: (entry: CompetitorEntry, source: InputSource) => NewOp): PickerGroup[] =>
     (['past', 'cohort', 'answers'] as const).map((source) => ({
       head: SOURCE_HEAD[source],
       options: (s?.suggestions ?? [])
@@ -172,13 +221,16 @@ export default function CompetitorEditor({
           id: `${source}:${x.name}`,
           label: x.name,
           sub: x.note,
-          onPick: () => push(make({ name: x.name, aliases: x.aliases, domains: x.domains }, source)),
+          // 예전 경쟁사라도 같은 id로 이어지지 않으면 「다시 넣음」이 아니라 새로 넣은 곳이다.
+          onPick: () => push(make({ name: x.name, aliases: x.aliases, domains: x.domains }, source === 'past' && x.continues === false ? 'cohort' : source)),
         })),
     }))
 
   const summary = summarizeOps(base, ops)
   const errors = planned?.errors ?? []
-  const canSave = Boolean(s) && ops.length > 0 && Boolean(planned) && !planned?.unchanged && errors.length === 0 && !s?.measuring && !busy
+  // 측정 중인지는 미리 계산 응답으로 다시 본다 — 서랍을 연 뒤 측정이 끝났을 수 있다.
+  const measuringNow = planned ? planned.measuring : Boolean(s?.measuring)
+  const canSave = Boolean(s) && ops.length > 0 && Boolean(planned) && !planned?.unchanged && errors.length === 0 && !measuringNow && !busy
 
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
@@ -272,7 +324,7 @@ export default function CompetitorEditor({
           </p>
         )}
         {s && (
-          <>
+          <fieldset className="ce-fieldset" disabled={busy}>
             <div className="ce-us">
               <b>{s.brandName}</b>
               <span className="ce-us-tag">우리</span>
@@ -309,12 +361,13 @@ export default function CompetitorEditor({
                     action={
                       placed !== undefined
                         ? { label: '되돌리기', onClick: () => revert(placed) }
-                        : { label: '바꾸기·빼기', onClick: () => setOpen(isOpen ? null : { kind: 'row', key: item.key }), expanded: isOpen }
+                        : { label: '바꾸기·빼기', onClick: () => toggle(isOpen ? null : { kind: 'row', key: item.key }), expanded: isOpen }
                     }
                   >
                     {isOpen && (
                       <CompetitorPicker
                         title={`${item.competitor.name} 자리에 넣을 곳`}
+                        error={pickError}
                         groups={[
                           {
                             head: '대기 중',
@@ -330,15 +383,18 @@ export default function CompetitorEditor({
                           ...suggestionGroups((entry, source) => ({ t: 'replace', key: item.key, with: entry, source })),
                           {
                             head: '바꾸지 않고',
-                            options: [
-                              {
-                                id: 'drop',
-                                label: '빼기',
-                                sub: `다음 측정부터 빠져요 · 지난 기록은 남아요 · ${dropHint(waitingNames, measuredCount - 1)}`,
-                                danger: true,
-                                onPick: () => push({ t: 'drop', key: item.key }),
-                              },
-                            ],
+                            options:
+                              applied.list.length > 1
+                                ? [
+                                    {
+                                      id: 'drop',
+                                      label: '빼기',
+                                      sub: `다음 측정부터 빠져요 · 지난 기록은 남아요 · ${dropHint(waitingNames, row?.status === 'measured' ? measuredCount - 1 : measuredCount)}`,
+                                      danger: true,
+                                      onPick: () => push({ t: 'drop', key: item.key }),
+                                    },
+                                  ]
+                                : [],
                           },
                         ]}
                         typed={{ submitLabel: '이곳으로 바꾸기', onSubmit: (entry) => push({ t: 'replace', key: item.key, with: entry, source: 'typed' }) }}
@@ -389,19 +445,22 @@ export default function CompetitorEditor({
                     <Row
                       key={item.key}
                       r={row!}
-                      n="대기"
+                      n={row?.status === 'waiting' ? '대기' : '중복'}
                       extraChips={sourceChips(item, applied.replaced, applied.movedDown, originalStatus(item.key), row!)}
                       {...rowProps}
                       action={
                         placed !== undefined && !applied.movedDown.has(item.key)
                           ? { label: '되돌리기', onClick: () => revert(placed) }
                           : row?.status === 'waiting'
-                            ? { label: '측정에 넣기', primary: true, onClick: () => setOpen(isOpen ? null : { kind: 'wait', key: item.key }), expanded: isOpen }
-                            : undefined
+                            ? { label: '측정에 넣기', primary: true, onClick: () => toggle(isOpen ? null : { kind: 'wait', key: item.key }), expanded: isOpen }
+                            : applied.list.length > 1
+                              ? { label: '빼기', onClick: () => push({ t: 'drop', key: item.key }) }
+                              : undefined
                       }
                     >
                       {isOpen && (
                         <CompetitorPicker
+                          error={pickError}
                           title="어느 곳과 자리를 바꿀까요?"
                           note="고른 곳은 지우지 않고 대기로 내려가요."
                           groups={[
@@ -434,14 +493,15 @@ export default function CompetitorEditor({
               type="button"
               className="ce-add"
               aria-expanded={open?.kind === 'add'}
-              onClick={() => setOpen(open?.kind === 'add' ? null : { kind: 'add' })}
+              onClick={() => toggle(open?.kind === 'add' ? null : { kind: 'add' })}
             >
               + 경쟁사 추가
             </button>
             {open?.kind === 'add' && (
               <CompetitorPicker
                 title="추가할 곳"
-                note={measuredCount >= cap ? `${cap}곳이 다 찼어요. 넣으면 대기로 들어가요 — 함께 재려면 줄의 「바꾸기·빼기」를 쓰세요.` : undefined}
+                error={pickError}
+                note={slotRows.length >= cap ? `${cap}칸이 다 찼어요. 넣으면 대기로 들어가요 — 함께 재려면 줄의 「바꾸기·빼기」를 쓰세요.` : undefined}
                 groups={suggestionGroups((entry, source) => ({ t: 'add', with: entry, source }))}
                 typed={{ submitLabel: '추가', onSubmit: (entry) => push({ t: 'add', with: entry, source: 'typed' }) }}
               />
@@ -475,7 +535,7 @@ export default function CompetitorEditor({
                   <span>저장소 설정의 목록을 쓰는 중</span>
                 )}
                 {s.edit.undoAvailable && s.edit.summary && (
-                  <button type="button" className="ce-link" disabled={busy || s.measuring} onClick={undo} title={s.edit.summary}>
+                  <button type="button" className="ce-link" disabled={busy} onClick={undo} title={s.edit.summary}>
                     마지막 저장 되돌리기
                   </button>
                 )}
@@ -483,7 +543,7 @@ export default function CompetitorEditor({
                   (confirmReset ? (
                     <span className="ce-confirm">
                       저장소 설정({s.edit.repoCompetitors.map((c) => c.name).join(', ')})으로 돌아갈까요?
-                      <button type="button" className="ce-link" disabled={busy || s.measuring} onClick={reset}>
+                      <button type="button" className="ce-link" disabled={busy} onClick={reset}>
                         돌아가기
                       </button>
                       <button type="button" className="ce-link" onClick={() => setConfirmReset(false)}>
@@ -508,7 +568,7 @@ export default function CompetitorEditor({
                 ?
               </span>
             </p>
-          </>
+          </fieldset>
         )}
       </div>
 
@@ -536,7 +596,7 @@ export default function CompetitorEditor({
             </p>
           )}
           <div className="ce-bar-actions">
-            <span className="ce-bar-hint">{s.measuring ? '측정이 끝난 뒤에 저장할 수 있어요' : '다음 측정부터 적용돼요'}</span>
+            <span className="ce-bar-hint">{measuringNow ? '측정이 끝난 뒤에 저장할 수 있어요' : '다음 측정부터 적용돼요'}</span>
             <button type="button" className="btn" onClick={() => setOps([])} disabled={busy}>
               취소
             </button>
@@ -559,7 +619,7 @@ export default function CompetitorEditor({
           )}
           <div className="ce-bar-actions">
             {s.edit.undoAvailable && (
-              <button type="button" className="btn" onClick={undo} disabled={busy || s.measuring}>
+              <button type="button" className="btn" onClick={undo} disabled={busy}>
                 되돌리기
               </button>
             )}
@@ -584,11 +644,11 @@ function sourceChips(
   originalStatus: string | undefined,
   row: EditorCompetitorRow,
 ): { text: string; tone: string; title?: string }[] {
-  if (item.source === 'past') return [{ text: '다시 넣음', tone: 'info', title: `지난 기록 ${row.cohortWeeks}주를 이어요` }]
+  if (item.source === 'past' && row.cohortWeeks > 0) return [{ text: '다시 넣음', tone: 'info', title: `지난 기록 ${row.cohortWeeks}주를 이어요` }]
   if (item.source) return [{ text: '새로', tone: 'info' }]
   if (movedDown.has(item.key) && row.status === 'waiting') return [{ text: '대기로 내려감', tone: '', title: '지우지 않았어요 · 측정하지 않을 뿐이에요' }]
   if (originalStatus && originalStatus !== 'measured' && row.status === 'measured') return [{ text: '측정에 들어감', tone: 'good' }]
-  if (replaced.has(item.key)) return [{ text: '측정에 들어감', tone: 'good' }]
+  if (replaced.has(item.key) && row.status === 'measured') return [{ text: '측정에 들어감', tone: 'good' }]
   return []
 }
 

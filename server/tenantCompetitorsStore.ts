@@ -27,8 +27,14 @@ export interface CompetitorOverride {
 export interface CompetitorOverrideFile {
   /** 지금 쓰는 목록. null이면 베이스(저장소 설정)를 쓴다. */
   current: CompetitorOverride | null;
-  /** 마지막 저장 — 되돌리기용. 다음 측정이 시작되면 되돌릴 수 없다(competitorEditor.ts). */
+  /** 마지막 저장 — 되돌리기용. 그 목록으로 이미 쟀으면 되돌릴 수 없다(competitorEditor.ts). */
   lastSave: { savedAt: string; before: CompetitorOverride | null; summary: string } | null;
+  /**
+   * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가
+   * 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도
+   * 섞여 있어 쓰지 않는다. 처음 저장할 때는 그 직전 목록(마지막 측정이 쓴 목록)으로 채운다(at = null).
+   */
+  measured: { at: string | null; listHash: string } | null;
   updatedAt: string;
 }
 
@@ -36,6 +42,12 @@ const MAX_COMPETITORS = 20;
 
 function filePathFor(tenantId: string): string {
   return path.join(PIPELINE_DATA_DIR, tenantId, 'competitors.json');
+}
+
+/** 경쟁사 목록의 지문 — 측정한 목록과 지금 목록이 같은지 볼 때 쓴다. */
+export function listHash(competitors: CompetitorContext[]): string {
+  const payload = JSON.stringify(competitors.map((c) => [c.name, c.aliases, c.domains]));
+  return createHash('sha1').update(payload).digest('hex').slice(0, 16);
 }
 
 /** 베이스(저장소 설정·오버레이) 값의 지문 — 경쟁사 목록과 질문지 설정이 바뀌면 달라진다. */
@@ -64,8 +76,18 @@ const SHARED_HOSTS = new Set([
   'yanolja.com', 'goodchoice.kr', 'yeogi.com', 'airbnb.co.kr', 'airbnb.com', 'booking.com', 'agoda.com',
 ]);
 
+/** 첫 마디가 업체 이름이 아닌 주소 — 'blog.x.com'·'shop.x.co.kr'은 id가 'blog'·'shop'이 되어 다른 업체와 겹친다. */
+const GENERIC_LABELS = new Set(['blog', 'shop', 'store', 'mall', 'home', 'web', 'site', 'booking', 'book', 'reserve', 'smartstore', 'cafe', 'post', 'brand', 'official']);
+
 export function isSharedHost(host: string): boolean {
-  return SHARED_HOSTS.has(host) || host.endsWith('.naver.com') || host.endsWith('.kakao.com') || host.endsWith('.daum.net');
+  return (
+    SHARED_HOSTS.has(host) ||
+    host.endsWith('.naver.com') ||
+    host.endsWith('.kakao.com') ||
+    host.endsWith('.daum.net') ||
+    // cohortPlan.ts slugFromDomain과 같은 첫 마디(그 모듈은 tenantRegistry를 거쳐 이 파일을 가져와 순환이 된다).
+    GENERIC_LABELS.has(host.split('.')[0] ?? '')
+  );
 }
 
 /**
@@ -77,7 +99,8 @@ export function hostFromInput(raw: string): string | null {
   if (!text) return null;
   const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`;
   try {
-    const host = new URL(withScheme).hostname.toLowerCase().replace(/^www\./, '');
+    // www.·m.(모바일) 접두를 벗긴다 — 'm.x.co.kr'을 그대로 두면 id가 'm'이 되어 다른 업체와 겹친다.
+    const host = new URL(withScheme).hostname.toLowerCase().replace(/^(?:www|m|mobile)\./, '');
     return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : null;
   } catch {
     return null;
@@ -142,7 +165,8 @@ export async function readCompetitorOverride(tenantId: string): Promise<Competit
   try {
     const parsed = JSON.parse(text) as Partial<CompetitorOverrideFile>;
     const current = parsed.current && Array.isArray(parsed.current.competitors) && typeof parsed.current.base === 'string' ? parsed.current : null;
-    return { current, lastSave: parsed.lastSave ?? null, updatedAt: parsed.updatedAt ?? '' };
+    const measured = parsed.measured && typeof parsed.measured.listHash === 'string' ? parsed.measured : null;
+    return { current, lastSave: parsed.lastSave ?? null, measured, updatedAt: parsed.updatedAt ?? '' };
   } catch (err) {
     console.error(`[tenantCompetitors] ${tenantId} competitors.json을 읽지 못했습니다 — 저장소 설정의 경쟁사를 씁니다:`, err);
     return null;
@@ -155,6 +179,26 @@ export async function writeCompetitorOverride(tenantId: string, file: Omit<Compe
   const tmp = `${target}.${process.pid}.tmp`;
   await writeFile(tmp, JSON.stringify({ ...file, updatedAt: new Date().toISOString() }, null, 2), 'utf-8');
   await rename(tmp, target);
+}
+
+// 이 파일을 읽고 쓰는 일(편집 저장·되돌리기, 측정 기록)은 프로세스 안에서 한 줄로 — 서로의 쓰기를 덮지 않게.
+let fileChain: Promise<unknown> = Promise.resolve();
+export function serializeCompetitorFile<T>(task: () => Promise<T>): Promise<T> {
+  const run = fileChain.then(task, task);
+  fileChain = run.catch(() => undefined);
+  return run;
+}
+
+/**
+ * 브랜드를 자기 코호트와 함께 쟀다고 적는다(measureAndBake). 앱에서 경쟁사를 고친 적이 없는 브랜드(파일 없음)는
+ * 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
+ */
+export function recordCompetitorMeasurement(tenantId: string, competitors: CompetitorContext[], at: string): Promise<void> {
+  return serializeCompetitorFile(async () => {
+    const file = await readCompetitorOverride(tenantId);
+    if (!file) return;
+    await writeCompetitorOverride(tenantId, { current: file.current, lastSave: file.lastSave, measured: { at, listHash: listHash(competitors) } });
+  });
 }
 
 /** 앱에서 고친 목록이 지금 베이스 위에 저장된 것인가. 아니면(베이스가 그 뒤에 바뀌었으면) 쓰지 않는다. */

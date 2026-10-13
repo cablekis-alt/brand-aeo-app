@@ -661,7 +661,8 @@ export interface CompetitorEditorState {
   competitors: CompetitorEntry[]
   rows: EditorCompetitorRow[]
   past: EditorPastCompetitor[]
-  suggestions: (CompetitorEntry & { source: 'past' | 'cohort' | 'answers'; note: string })[]
+  /** continues: 예전 경쟁사를 다시 넣으면 같은 id로 지난 기록을 잇는가. */
+  suggestions: (CompetitorEntry & { source: 'past' | 'cohort' | 'answers'; note: string; continues?: boolean })[]
   questionBank: { version: string; exists: boolean; measuredVersion: string | null; sharedCount: number; brandCount: number }
   edit: {
     active: boolean
@@ -686,6 +687,7 @@ export interface CompetitorEditPlan {
   notes: string[]
   errors: string[]
   unchanged: boolean
+  measuring: boolean
 }
 
 /** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */

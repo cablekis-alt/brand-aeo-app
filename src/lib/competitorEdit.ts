@@ -4,6 +4,9 @@
  * 바꾼 결과를 통째로 들고 있지 않고 작업 목록으로 드는 이유: 줄마다 「되돌리기」가 그 작업 하나만 빼야 한다.
  * 작업 하나를 빼면 그 작업이 들인 줄을 쓰던 뒤 작업도 성립하지 않을 수 있다 — 그런 작업은 같이 빠진다(prune).
  *
+ * 새로 들인 줄의 key는 작업마다 고정된 id에서 만든다(`n${id}`). 작업 번호로 만들면 앞 작업을 되돌릴 때 번호가
+ * 당겨져, 뒤 작업이 가리키던 줄이 다른 줄로 바뀐다(고르지 않은 곳이 측정 칸에 올라갔다).
+ *
  * 몇 곳을 함께 재고 몇 곳이 대기인지는 여기서 세지 않는다. 서버가 측정과 같은 함수로 계산한다
  * (POST /api/tenants/:id/competitors/plan → server/cohortPlan.ts).
  */
@@ -18,7 +21,7 @@ export interface CompetitorInput {
 /** 새로 들인 곳이 어디서 왔는가 — 줄의 칩(「다시 넣음」·「새로」)과 요약 문구가 다르다. */
 export type InputSource = 'past' | 'cohort' | 'answers' | 'typed'
 
-export type EditOp =
+export type EditOp = { id: string } & (
   /** key 줄을 다른 곳으로 바꾼다. from이 있으면 목록에 이미 있던 그 줄(대기 중)을 그 자리로 올린다. */
   | { t: 'replace'; key: string; from?: string; with?: CompetitorInput; source?: InputSource }
   /** key 줄을 바꾸지 않고 뺀다. */
@@ -27,6 +30,10 @@ export type EditOp =
   | { t: 'swap'; a: string; b: string }
   /** 맨 뒤에 더한다. */
   | { t: 'add'; with: CompetitorInput; source: InputSource }
+)
+
+/** 새로 들인 줄의 key — 작업 id에서 만든다(번호가 아니라). */
+export const newKey = (op: { id: string }) => `n${op.id}`
 
 export interface EditItem {
   key: string
@@ -87,7 +94,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
             okOp = true
           }
         } else if (op.with && !nameTaken(op.with.name)) {
-          const item: EditItem = { key: `n${i}`, competitor: op.with, source: op.source ?? 'typed' }
+          const item: EditItem = { key: newKey(op), competitor: op.with, source: op.source ?? 'typed' }
           const [out] = list.splice(pos, 1, item)
           removed.push(out!)
           removedBy.set(out!.key, i)
@@ -116,7 +123,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
       }
     } else if (op.t === 'add') {
       if (!nameTaken(op.with.name)) {
-        const item: EditItem = { key: `n${i}`, competitor: op.with, source: op.source }
+        const item: EditItem = { key: newKey(op), competitor: op.with, source: op.source }
         list.push(item)
         placedBy.set(item.key, i)
         okOp = true
@@ -146,17 +153,19 @@ export function revertOp(base: EditItem[], ops: EditOp[], index: number): EditOp
   )
 }
 
-/** 바꾼 내용 요약 — 저장 막대와 저장 기록(브랜드 현황 칩)에 쓴다. */
+/** 바꾼 내용 요약 — 저장 막대와 저장 기록(브랜드 현황 칩)에 쓴다. 성립하지 않는 작업은 말하지 않는다. */
 export function summarizeOps(base: EditItem[], ops: EditOp[]): string[] {
+  const { valid } = applyOps(base, ops)
   const names = new Map(base.map((x) => [x.key, x.competitor.name]))
   const lines: string[] = []
-  ops.forEach((op, i) => {
-    if (op.t === 'add') names.set(`n${i}`, op.with.name)
-    if (op.t === 'replace' && op.with) names.set(`n${i}`, op.with.name)
+  ops.forEach((op) => {
+    if (op.t === 'add') names.set(newKey(op), op.with.name)
+    if (op.t === 'replace' && op.with) names.set(newKey(op), op.with.name)
   })
   const name = (key: string) => names.get(key) ?? key
   ops.forEach((op, i) => {
-    if (op.t === 'replace') lines.push(`바꿈 · ${name(op.key)} → ${op.from ? name(op.from) : name(`n${i}`)}`)
+    if (!valid[i]) return
+    if (op.t === 'replace') lines.push(`바꿈 · ${name(op.key)} → ${op.from ? name(op.from) : name(newKey(op))}`)
     else if (op.t === 'drop') lines.push(`빼기 · ${name(op.key)}`)
     else if (op.t === 'swap') lines.push(`측정에 넣기 · ${name(op.a)}(${name(op.b)} 대기로)`)
     else lines.push(`${op.source === 'past' ? '다시 넣음' : '추가'} · ${op.with.name}`)

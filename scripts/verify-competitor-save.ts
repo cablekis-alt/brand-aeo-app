@@ -36,6 +36,7 @@ try {
   const ed = await import('../server/competitorEditor')
   const reg = await import('../server/tenantRegistry')
   const tracker = await import('../server/measureTracker')
+  const fileStore = await import('../server/tenantCompetitorsStore')
   const { slugFromName } = await import('../server/cohortPlan')
   const { FileResultStore } = await import('../server/store')
   const store = new FileResultStore()
@@ -83,21 +84,34 @@ try {
   ok('저장 요약과 되돌리기 가능', s1.edit.summary === '가상 요약' && s1.edit.undoAvailable)
   ok('측정이 읽는 목록에도 반영된다', (await fresh()).competitors[0].name === c1.name)
   ok('같은 목록을 다시 저장하면 400', await rejects(ed.saveEdit(id, store, { competitors: swapped }), 400))
-  ok('브랜드 현황 대기 표시', (await ed.pendingCompetitorEdit(id))?.summary === '가상 요약')
+  ok('브랜드 현황 대기 표시', (await ed.pendingCompetitorEdit(await fresh()))?.summary === '가상 요약')
 
   // 4) 되돌리기
   const s2 = await ed.undoEdit(id, store)
   ok('되돌리면 저장소 설정으로', !s2.edit.active && s2.competitors[0].name === c0.name && (await fresh()).competitors[0].name === c0.name)
   ok('되돌린 뒤 또 되돌리면 409', await rejects(ed.undoEdit(id, store), 409))
 
-  // 5) 저장한 뒤 측정했으면 되돌릴 수 없다
+  // 5) 저장한 뒤 그 목록으로 측정했으면 되돌릴 수 없다 — 측정 기록은 competitors.json에 남는다(measureAndBake)
   await ed.saveEdit(id, store, { competitors: swapped })
-  writeJson('measure-runs.json', [
-    { tenantId: id, brandName: repo.brandName, weekOf: '2026-W01', aeoScore: 0, durationSec: 1, at: new Date(Date.now() + 60_000).toISOString() },
-  ])
-  ok('측정한 뒤에는 되돌리기 409', await rejects(ed.undoEdit(id, store), 409))
-  ok('측정한 뒤에는 대기 표시가 사라진다', (await ed.pendingCompetitorEdit(id)) === null)
-  rmSync(path.join(dir, 'measure-runs.json'))
+  const later = new Date(Date.now() + 60_000).toISOString()
+  await fileStore.recordCompetitorMeasurement(id, repo.competitors, later)
+  ok('저장 뒤 옛 목록으로 잰 측정(저장과 시작이 겹침)은 되돌리기를 막지 않는다', (await ed.buildEditorState(await fresh(), await reg.loadRuntimeTenants(), store)).edit.undoAvailable)
+  ok('옛 목록으로 쟀으면 여전히 「다음 측정 대기」', (await ed.pendingCompetitorEdit(await fresh())) !== null)
+  await fileStore.recordCompetitorMeasurement(id, swapped, later)
+  ok('새 목록으로 측정한 뒤에는 되돌리기 409', await rejects(ed.undoEdit(id, store), 409))
+  ok('새 목록으로 측정한 뒤에는 대기 표시가 사라진다', (await ed.pendingCompetitorEdit(await fresh())) === null)
+  // 측정 완료 로그(measure-runs.json)는 보지 않는다 — 50건에서 잘리고 다른 고객의 경쟁사로 잰 측정도 섞인다.
+  writeJson('measure-runs.json', [])
+  ok('측정 로그가 비어도 판단이 바뀌지 않는다', (await ed.pendingCompetitorEdit(await fresh())) === null)
+
+  // 5-b) 두 번 저장한 뒤 되돌려도, 아직 재지 않은 목록이면 대기 표시가 남는다
+  const third = [c0, ...repo.competitors.slice(2), c1]
+  await ed.saveEdit(id, store, { competitors: third })
+  await ed.saveEdit(id, store, { competitors: [c1, ...repo.competitors.slice(2), c0] })
+  const s5b = await ed.undoEdit(id, store)
+  ok('되돌린 뒤 목록은 앞 저장', s5b.competitors.at(-1)!.name === c1.name)
+  ok('앞 저장도 아직 재지 않았으면 대기 표시가 남는다', (await ed.pendingCompetitorEdit(await fresh())) !== null)
+  await ed.saveEdit(id, store, { competitors: swapped })
 
   // 6) 저장소 설정으로 돌아가기 → 되돌리기
   const s3 = await ed.resetEdit(id, store)
@@ -110,11 +124,24 @@ try {
   const s5 = await ed.saveEdit(id, store, { competitors: repo.competitors })
   ok('저장소 설정과 같으면 고친 목록 없음', !s5.edit.active && !s5.edit.stale)
 
-  // 8) 측정 중에는 저장·되돌리기 409
+  // 8) 측정 중에는 저장·되돌리기 409, 미리 계산은 측정 중이라고 알린다
   tracker.beginMeasureRun()
   ok('측정 중 저장 409', await rejects(ed.saveEdit(id, store, { competitors: swapped }), 409))
   ok('측정 중 되돌리기 409', await rejects(ed.undoEdit(id, store), 409))
+  ok('측정 중이면 미리 계산에 measuring', (await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), store, swapped)).measuring)
   tracker.endMeasureRun()
+  ok('측정이 끝나면 measuring false', !(await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), store, swapped)).measuring)
+
+  // 8-b) 저장소 설정이 바뀌어 쓰이지 않는 고친 목록 — 대기 표시도, 돌아가기도 없다
+  await ed.saveEdit(id, store, { competitors: swapped })
+  writeJson(`data/${id}/competitors.json`, {
+    current: { competitors: swapped, base: 'old-base' },
+    lastSave: { savedAt: new Date().toISOString(), before: null, summary: '쓰이지 않는 편집' },
+    measured: { at: null, listHash: 'x' },
+  })
+  ok('쓰이지 않는 고친 목록은 대기 표시가 없다', (await ed.pendingCompetitorEdit(await fresh())) === null)
+  ok('쓰이지 않는 고친 목록에서 돌아가기는 409', await rejects(ed.resetEdit(id, store), 409))
+  rmSync(path.join(dir, 'data', id, 'competitors.json'))
 
   // 9) 지운 다른 업종 브랜드와 id가 같으면 넣을 수 없다
   const ghost = '가상 지운 통신사'
@@ -132,6 +159,18 @@ try {
   const p3 = await ed.planEdit(repo, await reg.loadRuntimeTenants(), store, [...repo.competitors, { name: '가상 블로그 펜션', domains: ['https://blog.naver.com/x'] }])
   ok('공용 주소는 이름으로 잰다고 알린다', p3.droppedHosts.includes('blog.naver.com') && p3.notes.some((n) => n.includes('공용 주소')))
   ok('정리한 목록에는 주소가 없다', p3.competitors.at(-1)!.domains.length === 0)
+
+  // 11) 고객 자신의 이름은 넣을 수 없고, 같은 업종에 등록된 브랜드 이름이면 그 홈페이지로 잇는다
+  const runtime = await reg.loadRuntimeTenants()
+  const p4 = await ed.planEdit(repo, runtime, store, [...repo.competitors, { name: repo.brandName.replace(/\s+/g, ' ') }])
+  ok('고객 자신의 이름 → 저장을 막는 문제', p4.errors.some((e) => e.includes('자신이에요')))
+  const sibling = runtime.find((t) => t.tenantId !== id && t.industry === repo.industry && (t.questionLanguage ?? 'ko') === (repo.questionLanguage ?? 'ko') && t.ownedDomains.length > 0 && !repo.competitors.some((c) => c.name.replace(/\s+/g, '') === t.brandName.replace(/\s+/g, '')))
+  if (sibling) {
+    const p5 = await ed.planEdit(repo, runtime, store, [...repo.competitors, { name: sibling.brandName }])
+    ok('등록된 브랜드 이름이면 그 홈페이지로 잇는다', p5.competitors.at(-1)!.domains[0] === sibling.ownedDomains[0] && p5.notes.some((n) => n.includes('이어 재요')))
+  } else {
+    ok('같은 업종 등록 브랜드(시험 대상)가 있어야 한다', false)
+  }
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

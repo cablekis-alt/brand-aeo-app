@@ -6386,3 +6386,17 @@ td.cell-mid {
   font-size: 11px;
   color: var(--ink-2);
 }
+.ce-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ce-picker-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--bad);
+}

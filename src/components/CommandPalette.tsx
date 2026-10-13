@@ -93,8 +93,9 @@ export default function CommandPalette() {
     const screens: Command[] = allScreens(Boolean(viewing))
       .filter((s) => !q || matches(`${s.label} ${s.group ?? ''}`, q))
       .map((s) => ({ id: `s:${s.to}`, kind: '화면' as const, label: s.label, hint: s.group ?? '', to: s.to }))
-    // 경쟁사 편집은 브랜드 현황의 서랍이다 — 고객 브랜드를 볼 때만(경쟁사 보기 중에는 잠김).
-    if (!viewing && tenantId && (!q || matches('경쟁사 편집 바꾸기 추가 빼기', q))) {
+    // 경쟁사 편집은 브랜드 현황의 서랍이다 — 데스크톱 앱에서, 고객 브랜드를 볼 때만(경쟁사 보기 중에는 잠김).
+    const desktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
+    if (desktop && !viewing && tenantId && (!q || matches('경쟁사 편집 바꾸기 추가 빼기', q))) {
       screens.push({
         id: 's:competitor-edit',
         kind: '화면',

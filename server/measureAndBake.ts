@@ -14,6 +14,7 @@ import { resolveJudgeEngineId } from './engines/index.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
+import { recordCompetitorMeasurement } from './tenantCompetitorsStore.js';
 import type { FileResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -167,6 +168,9 @@ async function measureAndBakeRun(
   options: MeasureOptions,
 ): Promise<MeasureBakeResult> {
   let cohortTargets: TenantConfig[] = [];
+  // 자기 코호트와 함께 재는 본 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
+  const startedAt = new Date().toISOString();
+  let ownCohortList: TenantConfig['competitors'] | null = null;
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
@@ -202,6 +206,7 @@ async function measureAndBakeRun(
     //    재측정(단, 그 경쟁사의 코호트로 더 퍼지지 않게 autoCohort=false), 없으면 cohortOnly로 새로 측정.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
       cohortTargets.push(...selectCohortTargets(tenant, await loadRuntimeTenants()));
+      ownCohortList = tenant.competitors;
     }
   }
 
@@ -285,6 +290,11 @@ async function measureAndBakeRun(
 
   if (!self.ok) throw self.error;
   const { weekOf, aeoScore } = self.value;
+  if (ownCohortList) {
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt).catch((err: unknown) => {
+      console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
+    });
+  }
 
   // 코호트 순위를 완성된 집합으로 맞춘다 — 파이프라인은 자기 카드가 저장되기 전에 순위를
   // 계산해 분모가 측정 순서에 따라 달라진다(cohortRank.ts 참고). 본 브랜드와 경쟁사를 같이

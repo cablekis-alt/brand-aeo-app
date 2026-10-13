@@ -39,7 +39,7 @@ import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
 import { readLocalMeasures } from './localMeasureLog.js';
-import { MeasureCancelledError, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
+import { MeasureCancelledError, beginMeasureRun, endMeasureRun, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -183,12 +183,14 @@ app.get('/api/measure-status', (_req, res) => {
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).
 // 진행중/완료 추적·로깅은 measureAndBake 내부에서 브랜드마다 처리한다.
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
-  const tenant = await findTenant(req.params.tenantId);
-  if (!tenant) {
-    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
-    return;
-  }
+  // 경쟁사 목록을 읽기 전부터 「측정 중」으로 센다 — 읽은 뒤 경쟁사 편집이 저장되면 측정은 옛 목록으로 돈다.
+  beginMeasureRun();
   try {
+    const tenant = await findTenant(req.params.tenantId);
+    if (!tenant) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
     // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
     const reuseCohort = (req.body as { reuseCohort?: unknown } | undefined)?.reuseCohort === true;
     const result = await measureAndBake(tenant, store, { reuseCohort });
@@ -200,6 +202,8 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
       return;
     }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  } finally {
+    endMeasureRun();
   }
 });
 

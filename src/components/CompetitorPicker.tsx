@@ -21,11 +21,14 @@ export interface PickerGroup {
 export default function CompetitorPicker({
   title,
   note,
+  error,
   groups,
   typed,
 }: {
   title: string
   note?: string
+  /** 고른 것을 넣지 못한 이유(이미 있는 이름 등). */
+  error?: string | null
   groups: PickerGroup[]
   typed?: { submitLabel: string; onSubmit: (entry: CompetitorEntry) => void }
 }) {
@@ -41,6 +44,11 @@ export default function CompetitorPicker({
     <div className="ce-picker" role="group" aria-label={title}>
       <b className="ce-picker-title">{title}</b>
       {note && <p className="ce-picker-note">{note}</p>}
+      {error && (
+        <p className="ce-picker-error" role="alert">
+          {error}
+        </p>
+      )}
       {typed && (
         <form
           className="ce-picker-typed"

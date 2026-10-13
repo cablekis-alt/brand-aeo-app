@@ -120,7 +120,7 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           region: t.region,
           competitors: t.competitors.length,
           competitorPlan: competitorPlanOf(t, tenants),
-          competitorEdit: await pendingCompetitorEdit(t.tenantId),
+          competitorEdit: await pendingCompetitorEdit(t),
         };
         const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
         const last = history.at(-1);

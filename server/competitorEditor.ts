@@ -1,17 +1,19 @@
-import { planCohortTargets, type CompetitorPlanStatus } from './cohortPlan.js';
+import { competitorDraftId, planCohortTargets, type CompetitorPlanStatus } from './cohortPlan.js';
 import { discoverBrands } from './competitorDiscovery.js';
 import { linkCompetitorQuestions } from './competitorQuestions.js';
-import { readLocalMeasures } from './localMeasureLog.js';
 import { measureInFlight } from './measureTracker.js';
 import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import {
   baseFingerprint,
+  listHash,
   normalizeCompetitorList,
   overrideApplies,
   readCompetitorOverride,
+  serializeCompetitorFile,
   writeCompetitorOverride,
   type CompetitorOverride,
+  type CompetitorOverrideFile,
 } from './tenantCompetitorsStore.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
 import { objectParticle } from '../src/lib/korean.js';
@@ -74,6 +76,8 @@ export interface EditorSuggestion {
   /** past: 예전 경쟁사 · cohort: 같은 코호트에 등록된 브랜드 · answers: 지난 측정 답변에 나온 이름. */
   source: 'past' | 'cohort' | 'answers';
   note: string;
+  /** 예전 경쟁사를 다시 넣으면 같은 id로 지난 기록을 잇는가(source past). */
+  continues?: boolean;
 }
 
 export interface CompetitorEditorState {
@@ -139,6 +143,8 @@ export interface EditPlan {
   errors: string[];
   /** 지금 목록과 같다(바뀐 것이 없다). */
   unchanged: boolean;
+  /** 진행 중인 로컬 측정이 있다 — 저장이 막힌다(서랍을 연 뒤 측정이 끝났는지 여기서 다시 본다). */
+  measuring: boolean;
 }
 
 /** 서랍 API의 실패 — 라우트가 status로 응답한다. */
@@ -153,6 +159,7 @@ export class EditorError extends Error {
 }
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '');
+const squash = (s: string) => s.replace(/\s+/g, '');
 const sameList = (a: CompetitorContext[], b: CompetitorContext[]) =>
   JSON.stringify(a.map((c) => [c.name, c.aliases, c.domains])) === JSON.stringify(b.map((c) => [c.name, c.aliases, c.domains]));
 
@@ -238,6 +245,8 @@ async function describeRows(ctx: Context, competitors: CompetitorContext[]) {
   };
 }
 
+const PAST_WEEKS = 12;
+
 /** 이 고객의 지난 코호트에 끼어 있었지만 지금은 아무 고객도 재지 않는 경쟁사. */
 async function pastCompetitors(ctx: Context, rows: EditorCompetitorRow[]): Promise<EditorPastCompetitor[]> {
   // 같은 코호트의 다른 고객이 지금 재는 경쟁사도 뺀다 — 이 고객이 뺀 곳이 아니다.
@@ -251,8 +260,10 @@ async function pastCompetitors(ctx: Context, rows: EditorCompetitorRow[]): Promi
   }
   const byId = new Map(ctx.runtime.map((t) => [t.tenantId, t]));
   const pastMap = new Map<string, EditorPastCompetitor>();
-  for (const card of ctx.history) {
-    const members = await ctx.store.getCohortScorecards(card.industry, card.region, card.weekOf);
+  // 최근 12주만 본다 — 주마다 모든 브랜드 폴더를 읽으므로(getCohortScorecards) 오래된 기록까지 훑으면 서랍이 느려진다.
+  const recent = ctx.history.slice(-PAST_WEEKS);
+  const cohorts = await Promise.all(recent.map((card) => ctx.store.getCohortScorecards(card.industry, card.region, card.weekOf)));
+  for (const members of cohorts) {
     for (const m of members) {
       if (m.tenantId === ctx.tenant.tenantId || ctx.customers.has(m.tenantId) || currentIds.has(m.tenantId)) continue;
       const prev = pastMap.get(m.tenantId);
@@ -283,12 +294,16 @@ async function suggestionsFor(ctx: Context, rows: EditorCompetitorRow[], past: E
     out.push(s);
   };
   for (const p of past) {
+    // 다시 넣었을 때 같은 id가 나와야 기록이 이어진다. 홈페이지로 만든 id(도메인 첫 마디)인데 그 주소를 모르면
+    // 이름으로 새로 잰다 — 그때는 이어진다고 말하지 않는다.
+    const continues = competitorDraftId(ctx.tenant, { name: p.brandName, aliases: p.aliases, domains: p.domains }) === p.tenantId;
     add({
       name: p.brandName,
       aliases: p.aliases,
       domains: p.domains,
       source: 'past',
-      note: `지난 기록 ${p.weeks}주 · 마지막 ${shortWeek(p.lastWeekOf)} ${p.lastScore}점 · 다시 넣으면 기록을 이어요`,
+      continues,
+      note: `지난 기록 ${p.weeks}주 · 마지막 ${shortWeek(p.lastWeekOf)} ${p.lastScore}점 · ${continues ? '다시 넣으면 기록을 이어요' : '다시 넣으면 새로 재요(지난 기록과 이어지지 않음)'}`,
     });
   }
   for (const t of ctx.runtime) {
@@ -310,9 +325,14 @@ async function suggestionsFor(ctx: Context, rows: EditorCompetitorRow[], past: E
   return out;
 }
 
-/** 저장한 뒤 이 고객 브랜드를 쟀는가(측정 완료 기록 기준). 쟀으면 되돌리지 않는다 — 그 측정은 새 목록으로 쟀다. */
-function measuredSince(tenantId: string, savedAt: string): boolean {
-  return readLocalMeasures().some((r) => r.tenantId === tenantId && r.at > savedAt);
+/**
+ * 마지막 저장을 되돌릴 수 있는가 — 저장한 뒤 이 브랜드를 지금 목록으로 쟀으면 안 된다(그 측정은 새 목록으로 쟀다).
+ * 저장 뒤에 시작했어도 옛 목록으로 잰 측정(저장과 측정 시작이 겹친 경우)은 막지 않는다.
+ */
+function canUndo(file: CompetitorOverrideFile | null, effective: TenantConfig['competitors']): boolean {
+  if (!file?.lastSave) return false;
+  const m = file.measured;
+  return !(m && m.at && m.at > file.lastSave.savedAt && m.listHash === listHash(effective));
 }
 
 export async function buildEditorState(tenant: TenantConfig, runtime: TenantConfig[], store: ResultStore): Promise<CompetitorEditorState> {
@@ -357,7 +377,7 @@ export async function buildEditorState(tenant: TenantConfig, runtime: TenantConf
       stale: Boolean(current) && !active,
       savedAt: file?.lastSave?.savedAt ?? null,
       summary: file?.lastSave?.summary ?? null,
-      undoAvailable: Boolean(file?.lastSave) && !measuredSince(tenant.tenantId, file!.lastSave!.savedAt),
+      undoAvailable: canUndo(file, tenant.competitors),
       repoCompetitors: repo?.competitors ?? [],
     },
     measuring: measureInFlight(),
@@ -372,15 +392,37 @@ export async function planEdit(tenant: TenantConfig, runtime: TenantConfig[], st
   } catch (err) {
     throw new EditorError(400, err instanceof Error ? err.message : String(err));
   }
+  const notes: string[] = [];
+  const errors: string[] = [];
+  // 새로 넣은 이름이 같은 업종에 등록된 브랜드면 그 홈페이지로 잇는다 — 이름만으로 재면 id가 달라 같은 곳이 두 줄이 된다.
+  // 고객 자신의 이름은 넣을 수 없다. 원래 목록에 있던 줄은 손대지 않는다(id가 바뀌면 기록이 끊긴다).
+  const own = new Set([tenant.brandName, ...tenant.aliases].map(squash));
+  const before = new Set(tenant.competitors.map((c) => squash(c.name)));
+  const language = (t: TenantConfig) => t.questionLanguage ?? 'ko';
+  const competitors = normalized.competitors.map((c) => {
+    const key = squash(c.name);
+    if (own.has(key) || c.aliases.some((a) => own.has(squash(a)))) errors.push(`${c.name}: ${tenant.brandName} 자신이에요 — 경쟁사로 넣을 수 없어요.`);
+    if (before.has(key) || c.domains.length) return c;
+    const registered = runtime.find(
+      (t) =>
+        t.tenantId !== tenant.tenantId &&
+        t.industry === tenant.industry &&
+        language(t) === language(tenant) &&
+        t.ownedDomains.length > 0 &&
+        [t.brandName, ...t.aliases].some((n) => squash(n) === key),
+    );
+    if (!registered) return c;
+    notes.push(`${c.name}: 등록된 브랜드(${registered.brandName} · ${registered.ownedDomains[0]})와 이어 재요.`);
+    return { ...c, domains: [registered.ownedDomains[0]!] };
+  });
   const ctx = await loadContext(tenant, runtime, store);
-  const [now, next] = await Promise.all([describeRows(ctx, tenant.competitors), describeRows(ctx, normalized.competitors)]);
+  const [now, next] = await Promise.all([describeRows(ctx, tenant.competitors), describeRows(ctx, competitors)]);
   const nextMeasured = new Set(next.rows.filter((r) => r.status === 'measured').map((r) => r.targetTenantId));
   const week = getIsoWeekString(new Date());
   const leaving = now.rows
     .filter((r) => r.status === 'measured' && !nextMeasured.has(r.targetTenantId))
     .map((r) => ({ name: r.name, tenantId: r.targetTenantId, questionIds: r.questionIds, thisWeek: r.latest?.weekOf === week }));
 
-  const notes: string[] = [];
   for (const l of leaving) {
     if (l.questionIds.length) {
       notes.push(`질문지는 그대로예요 — 빠진 ${objectParticle(l.name)} 묻는 질문(${l.questionIds.join(' · ')})이 남아요.`);
@@ -390,30 +432,26 @@ export async function planEdit(tenant: TenantConfig, runtime: TenantConfig[], st
   if (normalized.droppedHosts.length) {
     notes.push(`공용 주소라 홈페이지로 쓰지 않았어요(이름으로 잽니다): ${normalized.droppedHosts.join(', ')}`);
   }
-  const errors = next.rows
-    .filter((r) => r.deletedOtherIndustry)
-    .map(
-      (r) =>
-        `${r.name}: 지운 다른 업종 브랜드(${r.deletedOtherIndustry!.brandName} · ${r.deletedOtherIndustry!.industry})와 id가 같아 넣을 수 없어요. 홈페이지 주소를 넣거나 이름을 조금 바꿔 주세요.`,
+  for (const r of next.rows) {
+    if (!r.deletedOtherIndustry) continue;
+    errors.push(
+      `${r.name}: 지운 다른 업종 브랜드(${r.deletedOtherIndustry.brandName} · ${r.deletedOtherIndustry.industry})와 id가 같아 넣을 수 없어요. 홈페이지 주소를 넣거나 이름을 조금 바꿔 주세요.`,
     );
+  }
   return {
     ...next,
-    competitors: normalized.competitors,
+    competitors,
     droppedHosts: normalized.droppedHosts,
     leaving,
     notes,
     errors,
-    unchanged: sameList(normalized.competitors, tenant.competitors),
+    unchanged: sameList(competitors, tenant.competitors),
+    measuring: measureInFlight(),
   };
 }
 
-// 저장·되돌리기는 프로세스 안에서 한 줄로 — 같은 파일을 두 요청이 동시에 읽고 쓰지 않게.
-let editChain: Promise<unknown> = Promise.resolve();
-function serializeEdit<T>(task: () => Promise<T>): Promise<T> {
-  const run = editChain.then(task, task);
-  editChain = run.catch(() => undefined);
-  return run;
-}
+// 저장·되돌리기는 측정 기록과 같은 줄에서 — 같은 파일을 두 곳이 동시에 읽고 쓰지 않게(tenantCompetitorsStore.ts).
+const serializeEdit = serializeCompetitorFile;
 
 async function customerTenant(tenantId: string): Promise<{ tenant: TenantConfig; runtime: TenantConfig[] }> {
   const runtime = await loadRuntimeTenants();
@@ -443,7 +481,10 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     // 저장소 설정과 같아지면 고친 목록을 지운다 — 저장소 설정을 그대로 따른다.
     const current: CompetitorOverride | null = sameList(competitors, repo.competitors) ? null : { competitors, base: baseFingerprint(repo) };
     const summary = typeof raw.summary === 'string' && raw.summary.trim() ? raw.summary.trim().slice(0, 300) : '경쟁사 목록을 바꿨어요';
-    await writeCompetitorOverride(tenantId, { current, lastSave: { savedAt: new Date().toISOString(), before, summary } });
+    // 처음 고칠 때는 지금 목록이 마지막 측정이 쓴 목록이다 — 「다음 측정 대기」를 그것과 견준다.
+    const measured = file?.measured ?? { at: null, listHash: listHash(tenant.competitors) };
+    assertNotMeasuring(); // 위에서 기다리는 동안 측정이 시작됐을 수 있다 — 쓰기 직전에 다시 본다.
+    await writeCompetitorOverride(tenantId, { current, lastSave: { savedAt: new Date().toISOString(), before, summary }, measured });
     const after = await customerTenant(tenantId);
     return buildEditorState(after.tenant, after.runtime, store);
   });
@@ -453,13 +494,14 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
 export function undoEdit(tenantId: string, store: ResultStore): Promise<CompetitorEditorState> {
   return serializeEdit(async () => {
     assertNotMeasuring();
-    await customerTenant(tenantId);
+    const { tenant } = await customerTenant(tenantId);
     const file = await readCompetitorOverride(tenantId);
     if (!file?.lastSave) throw new EditorError(409, '되돌릴 저장이 없어요.');
-    if (measuredSince(tenantId, file.lastSave.savedAt)) {
-      throw new EditorError(409, '저장한 뒤 이미 측정해서 되돌릴 수 없어요. 경쟁사를 다시 바꿔 저장해 주세요.');
+    if (!canUndo(file, tenant.competitors)) {
+      throw new EditorError(409, '저장한 뒤 이 목록으로 이미 측정해서 되돌릴 수 없어요. 경쟁사를 다시 바꿔 저장해 주세요.');
     }
-    await writeCompetitorOverride(tenantId, { current: file.lastSave.before, lastSave: null });
+    assertNotMeasuring();
+    await writeCompetitorOverride(tenantId, { current: file.lastSave.before, lastSave: null, measured: file.measured });
     const after = await customerTenant(tenantId);
     return buildEditorState(after.tenant, after.runtime, store);
   });
@@ -469,21 +511,30 @@ export function undoEdit(tenantId: string, store: ResultStore): Promise<Competit
 export function resetEdit(tenantId: string, store: ResultStore): Promise<CompetitorEditorState> {
   return serializeEdit(async () => {
     assertNotMeasuring();
-    await customerTenant(tenantId);
-    const file = await readCompetitorOverride(tenantId);
-    if (!file?.current) throw new EditorError(409, '이미 저장소 설정을 쓰고 있어요.');
+    const [file, repo] = await Promise.all([readCompetitorOverride(tenantId), loadTenantWithoutCompetitorEdit(tenantId)]);
+    if (!repo || repo.cohortOnly) throw new EditorError(404, `tenant not found: ${tenantId}`);
+    // 고친 목록이 없거나, 저장소 설정이 바뀌어 이미 쓰이지 않는 목록이면 돌아갈 것이 없다.
+    if (!file?.current || !overrideApplies(file.current, repo)) throw new EditorError(409, '이미 저장소 설정을 쓰고 있어요.');
+    assertNotMeasuring();
     await writeCompetitorOverride(tenantId, {
       current: null,
       lastSave: { savedAt: new Date().toISOString(), before: file.current, summary: '저장소 설정의 경쟁사 목록으로 돌아감' },
+      measured: file.measured,
     });
     const after = await customerTenant(tenantId);
     return buildEditorState(after.tenant, after.runtime, store);
   });
 }
 
-/** 저장한 뒤 아직 측정하지 않은 편집 — 브랜드 현황 카드의 「경쟁사 바뀜 · 다음 측정 대기」. */
-export async function pendingCompetitorEdit(tenantId: string): Promise<{ savedAt: string; summary: string } | null> {
-  const file = await readCompetitorOverride(tenantId);
-  if (!file?.lastSave || measuredSince(tenantId, file.lastSave.savedAt)) return null;
-  return { savedAt: file.lastSave.savedAt, summary: file.lastSave.summary };
+/**
+ * 고친 목록을 아직 재지 않았다 — 브랜드 현황 카드의 「경쟁사 바뀜 · 다음 측정 대기」.
+ * tenant는 측정이 읽는 런타임 값이다(고친 목록이 쓰이면 그 목록). 마지막으로 잰 목록과 다르면 대기다.
+ * 고친 목록이 저장소 설정 변경으로 쓰이지 않으면(지문 다름) 다음 측정도 그 목록을 쓰지 않으므로 대기가 아니다.
+ */
+export async function pendingCompetitorEdit(tenant: TenantConfig): Promise<{ savedAt: string; summary: string } | null> {
+  const file = await readCompetitorOverride(tenant.tenantId);
+  if (!file?.measured) return null;
+  if (file.current && !sameList(file.current.competitors, tenant.competitors)) return null;
+  if (file.measured.listHash === listHash(tenant.competitors)) return null;
+  return { savedAt: file.lastSave?.savedAt ?? file.updatedAt, summary: file.lastSave?.summary ?? '경쟁사 목록을 바꿨어요' };
 }
