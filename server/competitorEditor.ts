@@ -16,7 +16,7 @@ import {
   type CompetitorOverrideFile,
 } from './tenantCompetitorsStore.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
-import { objectParticle } from '../src/lib/korean.js';
+import { directionParticle, objectParticle } from '../src/lib/korean.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { CompetitorContext } from '../src/prompts/types.js';
 import type { QuestionBank, ResultStore } from './store.js';
@@ -428,6 +428,19 @@ export async function planEdit(tenant: TenantConfig, runtime: TenantConfig[], st
       notes.push(`질문지는 그대로예요 — 빠진 ${objectParticle(l.name)} 묻는 질문(${l.questionIds.join(' · ')})이 남아요.`);
     }
     if (l.thisWeek) notes.push(`이번 주(${shortWeek(week)})에 다시 재도 ${l.name}의 ${shortWeek(week)} 기록은 순위표에 남아요.`);
+  }
+  // 같은 경쟁사인데 홈페이지가 바뀌어 측정 id가 달라지면 지난 기록과 이어지지 않는다 — 저장 전에 알린다.
+  const nowByName = new Map(now.rows.map((r) => [squash(r.name), r]));
+  for (const r of next.rows) {
+    const was = nowByName.get(squash(r.name));
+    const oldId = was?.targetTenantId ?? was?.draftId;
+    const newId = r.targetTenantId ?? r.draftId;
+    if (!was || !oldId || !newId || oldId === newId) continue;
+    notes.push(
+      was.cohortWeeks > 0
+        ? `${r.name}: 홈페이지를 바꾸면 측정 id가 ${oldId} → ${directionParticle(newId)} 바뀌어 지난 기록(${was.cohortWeeks}주)과 이어지지 않아요.`
+        : `${r.name}: 홈페이지를 바꾸면 측정 id가 ${oldId} → ${directionParticle(newId)} 바뀌어요.`,
+    );
   }
   if (normalized.droppedHosts.length) {
     notes.push(`공용 주소라 홈페이지로 쓰지 않았어요(이름으로 잽니다): ${normalized.droppedHosts.join(', ')}`);

@@ -84,6 +84,20 @@ const names = (ops: EditOp[]) => toCompetitors(applyOps(base, ops).list).map((x)
   ok('요약도 Y를 말한다', summarizeOps(five, revertOp(five, ops, 0)).includes('측정에 넣기 · 가상 Y(가상 A 대기로)'))
 }
 
+// 홈페이지만 바꾸기 — 이름·자리는 그대로, 되돌리면 원래 주소
+{
+  const withSite = baseItems([c('가상 하나'), { name: '가상 둘', aliases: ['가상 둘'], domains: ['old-two.example'] }, c('가상 셋')])
+  const hp = op({ t: 'homepage', key: 'b1', domains: ['https://www.new-two.example/rooms'] })
+  const a = applyOps(withSite, [hp])
+  ok('홈페이지만 바꾸면 자리는 그대로', toCompetitors(a.list).map((v) => v.name).join(',') === '가상 하나,가상 둘,가상 셋')
+  ok('바뀐 주소가 들어간다(정리는 서버)', a.list[1]!.competitor.domains.join() === 'https://www.new-two.example/rooms')
+  ok('바꾸기 전 주소를 기억한다', a.rehomed.get('b1')?.join() === 'old-two.example' && a.placedBy.get('b1') === 0)
+  ok('요약에는 정리한 주소', summarizeOps(withSite, [hp]).join() === '주소 바꿈 · 가상 둘 (old-two.example → new-two.example)')
+  ok('지금 주소와 같으면 성립하지 않는다', !applyOps(withSite, [op({ t: 'homepage', key: 'b1', domains: ['www.old-two.example'] })]).valid[0])
+  ok('되돌리면 원래 주소', applyOps(withSite, revertOp(withSite, [hp], 0)).list[1]!.competitor.domains.join() === 'old-two.example')
+  ok('주소가 없던 줄에도 넣을 수 있다', summarizeOps(withSite, [op({ t: 'homepage', key: 'b0', domains: ['one.example'] })]).join() === '주소 바꿈 · 가상 하나 (없음 → one.example)')
+}
+
 ok('빼기 설명 — 대기 첫 줄이 올라온다', dropHint(['해오름펜션'], 5) === '대기 첫 줄 해오름펜션이 올라와요')
 ok('빼기 설명 — 대기가 없으면', dropHint([], 4) === '4곳만 함께 측정해요')
 

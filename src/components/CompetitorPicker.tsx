@@ -30,13 +30,23 @@ export default function CompetitorPicker({
   /** 고른 것을 넣지 못한 이유(이미 있는 이름 등). */
   error?: string | null
   groups: PickerGroup[]
-  typed?: { submitLabel: string; onSubmit: (entry: CompetitorEntry) => void }
+  /**
+   * 직접 넣기. onHomepageOnly가 있으면 이름을 비우고 홈페이지만 넣었을 때 그 줄의 주소만 바꾼다
+   * (「바꾸기·빼기」에서 연 경우 — 같은 경쟁사의 홈페이지가 바뀌었을 때).
+   */
+  typed?: { submitLabel: string; onSubmit: (entry: CompetitorEntry) => void; onHomepageOnly?: (homepage: string) => void }
 }) {
   const [name, setName] = useState('')
   const [homepage, setHomepage] = useState('')
+  const homepageOnly = Boolean(typed?.onHomepageOnly) && !name.trim() && Boolean(homepage.trim())
   const submit = () => {
+    if (!typed) return
+    if (homepageOnly) {
+      typed.onHomepageOnly?.(homepage.trim())
+      return
+    }
     const n = name.trim()
-    if (!n || !typed) return
+    if (!n) return
     typed.onSubmit({ name: n, aliases: [n], domains: homepage.trim() ? [homepage.trim()] : [] })
   }
   const shown = groups.filter((g) => g.options.length > 0)
@@ -65,10 +75,13 @@ export default function CompetitorPicker({
             <span className="sr-only">홈페이지(선택)</span>
             <input value={homepage} onChange={(e) => setHomepage(e.target.value)} placeholder="홈페이지(없으면 비워 두기)" />
           </label>
-          <button type="submit" className="btn soft" disabled={!name.trim()}>
-            {typed.submitLabel}
+          <button type="submit" className="btn soft" disabled={!name.trim() && !homepageOnly}>
+            {homepageOnly ? '홈페이지만 바꾸기' : typed.submitLabel}
           </button>
         </form>
+      )}
+      {typed?.onHomepageOnly && (
+        <p className="ce-picker-note">이름을 비우고 홈페이지만 넣으면 이 경쟁사의 주소만 바꿔요.</p>
       )}
       {shown.map((g) => (
         <div key={g.head} className="ce-picker-group">

@@ -30,6 +30,8 @@ export type EditOp = { id: string } & (
   | { t: 'swap'; a: string; b: string }
   /** 맨 뒤에 더한다. */
   | { t: 'add'; with: CompetitorInput; source: InputSource }
+  /** key 줄의 홈페이지만 바꾼다(이름·자리는 그대로). 서버가 주소를 정리한다(주소 전체 → 도메인). */
+  | { t: 'homepage'; key: string; domains: string[] }
 )
 
 /** 새로 들인 줄의 key — 작업 id에서 만든다(번호가 아니라). */
@@ -55,6 +57,8 @@ export interface AppliedEdit {
   replaced: Map<string, string>
   /** 자리 바꾸기로 대기로 내려간 줄. */
   movedDown: Set<string>
+  /** 홈페이지만 바꾼 줄 key → 바꾸기 전 주소. */
+  rehomed: Map<string, string[]>
   /** 작업마다 성립했는지. */
   valid: boolean[]
 }
@@ -72,6 +76,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
   const removedBy = new Map<string, number>()
   const replaced = new Map<string, string>()
   const movedDown = new Set<string>()
+  const rehomed = new Map<string, string[]>()
   const valid: boolean[] = []
   const at = (key: string) => list.findIndex((x) => x.key === key)
   const nameTaken = (name: string) => list.some((x) => squash(x.competitor.name) === squash(name))
@@ -128,10 +133,29 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         placedBy.set(item.key, i)
         okOp = true
       }
+    } else if (op.t === 'homepage') {
+      const pos = at(op.key)
+      const cur = pos >= 0 ? list[pos]! : null
+      // 지금 주소와 같으면 바꾼 것이 없다.
+      if (cur && hostsOf(cur.competitor.domains).join() !== hostsOf(op.domains).join()) {
+        if (!rehomed.has(op.key)) rehomed.set(op.key, cur.competitor.domains)
+        list[pos] = { ...cur, competitor: { ...cur.competitor, domains: op.domains } }
+        placedBy.set(op.key, i)
+        okOp = true
+      }
     }
     valid.push(okOp)
   })
-  return { list, removed, placedBy, removedBy, replaced, movedDown, valid }
+  return { list, removed, placedBy, removedBy, replaced, movedDown, rehomed, valid }
+}
+
+/** 화면에 보일 주소 — 'https://www.x.com/a' → 'x.com'. 저장할 때는 서버가 같은 규칙으로 정리한다. */
+export function displayHost(raw: string): string {
+  return raw.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/[/?#].*$/, '').replace(/^www\./i, '').toLowerCase()
+}
+
+function hostsOf(domains: string[]): string[] {
+  return domains.map(displayHost).filter(Boolean)
 }
 
 /** 성립하지 않는 작업을 뺀다. 한 번 빼면 뒤 작업이 또 깨질 수 있어 더 줄지 않을 때까지 반복한다. */
@@ -168,7 +192,10 @@ export function summarizeOps(base: EditItem[], ops: EditOp[]): string[] {
     if (op.t === 'replace') lines.push(`바꿈 · ${name(op.key)} → ${op.from ? name(op.from) : name(newKey(op))}`)
     else if (op.t === 'drop') lines.push(`빼기 · ${name(op.key)}`)
     else if (op.t === 'swap') lines.push(`측정에 넣기 · ${name(op.a)}(${name(op.b)} 대기로)`)
-    else lines.push(`${op.source === 'past' ? '다시 넣음' : '추가'} · ${op.with.name}`)
+    else if (op.t === 'homepage') {
+      const before = base.find((x) => x.key === op.key)?.competitor.domains ?? []
+      lines.push(`주소 바꿈 · ${name(op.key)} (${hostsOf(before).join(', ') || '없음'} → ${hostsOf(op.domains).join(', ') || '없음'})`)
+    } else lines.push(`${op.source === 'past' ? '다시 넣음' : '추가'} · ${op.with.name}`)
   })
   return lines
 }
