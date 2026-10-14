@@ -15,10 +15,12 @@ import {
 import {
   applyOps,
   baseItems,
+  displayHost,
   dropHint,
   revertOp,
   summarizeOps,
   toCompetitors,
+  type AppliedEdit,
   type EditItem,
   type EditOp,
   type InputSource,
@@ -197,7 +199,13 @@ export default function CompetitorEditor({
     const op = { ...raw, id: nextOpId() } as EditOp
     const next = [...ops, op]
     if (!applyOps(base, next).valid.at(-1)) {
-      setPickError(op.t === 'drop' ? '마지막 한 곳은 뺄 수 없어요 — 경쟁사가 하나도 없으면 측정할 때마다 AI가 새로 골라요.' : '이미 목록에 있는 곳이에요.')
+      setPickError(
+        op.t === 'drop'
+          ? '마지막 한 곳은 뺄 수 없어요 — 경쟁사가 하나도 없으면 측정할 때마다 AI가 새로 골라요.'
+          : op.t === 'homepage'
+            ? '지금 홈페이지와 같아요.'
+            : '이미 목록에 있는 곳이에요.',
+      )
       return
     }
     setOps(next)
@@ -345,7 +353,7 @@ export default function CompetitorEditor({
             <ol className="ce-rows">
               {slotRows.map(({ item, row }, i) => {
                 const placed = applied.placedBy.get(item.key)
-                const chips = sourceChips(item, applied.replaced, applied.movedDown, originalStatus(item.key), row!)
+                const chips = sourceChips(item, applied, originalStatus(item.key), row!)
                 const isOpen = open?.kind === 'row' && open.key === item.key
                 const sub = applied.replaced.has(item.key)
                   ? `${base.find((b) => b.key === applied.replaced.get(item.key))?.competitor.name ?? ''} 대신`
@@ -397,7 +405,11 @@ export default function CompetitorEditor({
                                 : [],
                           },
                         ]}
-                        typed={{ submitLabel: '이곳으로 바꾸기', onSubmit: (entry) => push({ t: 'replace', key: item.key, with: entry, source: 'typed' }) }}
+                        typed={{
+                          submitLabel: '이곳으로 바꾸기',
+                          onSubmit: (entry) => push({ t: 'replace', key: item.key, with: entry, source: 'typed' }),
+                          onHomepageOnly: (home) => push({ t: 'homepage', key: item.key, domains: [home] }),
+                        }}
                       />
                     )}
                   </Row>
@@ -446,7 +458,7 @@ export default function CompetitorEditor({
                       key={item.key}
                       r={row!}
                       n={row?.status === 'waiting' ? '대기' : '중복'}
-                      extraChips={sourceChips(item, applied.replaced, applied.movedDown, originalStatus(item.key), row!)}
+                      extraChips={sourceChips(item, applied, originalStatus(item.key), row!)}
                       {...rowProps}
                       action={
                         placed !== undefined && !applied.movedDown.has(item.key)
@@ -636,14 +648,20 @@ export default function CompetitorEditor({
   )
 }
 
-/** 이번 편집에서 생긴 표시 — 다시 넣음 · 새로 · 측정에 들어감 · 대기로 내려감. */
+/** 이번 편집에서 생긴 표시 — 다시 넣음 · 새로 · 주소 바뀜 · 측정에 들어감 · 대기로 내려감. */
 function sourceChips(
   item: EditItem,
-  replaced: Map<string, string>,
-  movedDown: Set<string>,
+  applied: Pick<AppliedEdit, 'replaced' | 'movedDown' | 'rehomed'>,
   originalStatus: string | undefined,
   row: EditorCompetitorRow,
 ): { text: string; tone: string; title?: string }[] {
+  const { replaced, movedDown, rehomed } = applied
+  const before = rehomed.get(item.key)
+  if (before) {
+    const was = before.map(displayHost).join(', ') || '없음'
+    const now = item.competitor.domains.map(displayHost).join(', ') || '없음'
+    return [{ text: '주소 바뀜', tone: 'info', title: `${was} → ${now}` }]
+  }
   if (item.source === 'past' && row.cohortWeeks > 0) return [{ text: '다시 넣음', tone: 'info', title: `지난 기록 ${row.cohortWeeks}주를 이어요` }]
   if (item.source) return [{ text: '새로', tone: 'info' }]
   if (movedDown.has(item.key) && row.status === 'waiting') return [{ text: '대기로 내려감', tone: '', title: '지우지 않았어요 · 측정하지 않을 뿐이에요' }]

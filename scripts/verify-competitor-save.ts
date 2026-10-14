@@ -160,6 +160,14 @@ try {
   ok('공용 주소는 이름으로 잰다고 알린다', p3.droppedHosts.includes('blog.naver.com') && p3.notes.some((n) => n.includes('공용 주소')))
   ok('정리한 목록에는 주소가 없다', p3.competitors.at(-1)!.domains.length === 0)
 
+  // 10-b) 같은 경쟁사의 홈페이지만 바꾸면 측정 id가 바뀐다고 알린다(지난 기록이 있으면 주 수까지)
+  const idx = repo.competitors.findIndex((x) => x.domains.length === 0)
+  const rehomed = repo.competitors.map((x, i) => (i === idx ? { ...x, domains: ['https://www.virtual-new-home.example/'] } : x))
+  const p6 = await ed.planEdit(repo, await reg.loadRuntimeTenants(), store, rehomed)
+  ok('홈페이지만 바꾼 목록은 주소가 정리된다', p6.competitors[idx]!.domains.join() === 'virtual-new-home.example')
+  ok('측정 id가 바뀐다고 알린다', p6.notes.some((n) => n.includes(repo.competitors[idx]!.name) && n.includes('→ virtual-new-home')))
+  ok('id가 안 바뀌는 줄은 알리지 않는다', p6.notes.filter((n) => n.includes('측정 id')).length === 1)
+
   // 11) 고객 자신의 이름은 넣을 수 없고, 같은 업종에 등록된 브랜드 이름이면 그 홈페이지로 잇는다
   const runtime = await reg.loadRuntimeTenants()
   const p4 = await ed.planEdit(repo, runtime, store, [...repo.competitors, { name: repo.brandName.replace(/\s+/g, ' ') }])
