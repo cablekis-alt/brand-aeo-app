@@ -68,6 +68,11 @@ interface MeasureOptions {
   /** baking을 호출자에게 미룬다 — 코호트 병렬 측정 중 execSync로 이벤트 루프를 막지 않기 위해. */
   deferBake?: boolean;
   /**
+   * 다른 브랜드의 측정 안에서 경쟁사로 잰다. 코호트 순위 재계산은 그 측정이 끝에서 한 번 한다 —
+   * 경쟁사마다 하면 형제 브랜드의 카드 저장과 겹친다.
+   */
+  inCohortRun?: boolean;
+  /**
    * 이번 주 카드가 이미 있는 경쟁사는 다시 재지 않는다(기본 false = 항상 재측정).
    *
    * 주차 카드는 주차당 하나라, 같은 주에 다시 재면 앞선 측정을 **덮어쓴다** — 데이터가
@@ -255,7 +260,7 @@ async function measureAndBakeRun(
           async (target): Promise<{ tenant: TenantConfig; weekOf: string } | null> => {
             try {
               console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
-              const result = await measureAndBake(target, store, { deferBake: true });
+              const result = await measureAndBake(target, store, { deferBake: true, inCohortRun: true });
               return { tenant: target, weekOf: result.weekOf };
             } catch (err) {
               console.error(
@@ -300,7 +305,11 @@ async function measureAndBakeRun(
   // 계산해 분모가 측정 순서에 따라 달라진다(cohortRank.ts 참고). 본 브랜드와 경쟁사를 같이
   // 재기 때문에 이 재계산이 더 중요해졌다 — 어느 카드도 완성된 집합을 보지 못한다.
   // 실패해도 측정 자체는 살린다.
-  if (!tenant.cohortOnly) {
+  //
+  // 경쟁사만 따로 재도(측정 화면 「이 경쟁사만 측정」) 다시 계산한다. 예전에는 본 브랜드 측정에서만 해서,
+  // 경쟁사 점수가 바뀌어도 같은 코호트 고객 카드의 「3위 / 7」 같은 저장 순위가 다음 전체 측정까지 옛 값으로
+  // 남았다(2026-10-15). 다른 브랜드 측정 안에서 잰 경쟁사는 그 측정이 끝에서 한 번 계산한다(inCohortRun).
+  if (!tenant.cohortOnly || !options.inCohortRun) {
     try {
       const updated = await reconcileCohortRanks(store, tenant.industry, tenant.region, weekOf);
       if (updated > 0) console.log(`[measureAndBake] 코호트 순위 재계산 — 카드 ${updated}개 갱신`);
