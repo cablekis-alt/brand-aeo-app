@@ -7,6 +7,7 @@ import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureTenantAll, type FactCandidate } from '../lib/api'
+import { directionParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
@@ -23,6 +24,23 @@ function htmlToPlain(html: string): string {
     .replace(/&#160;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/** 등록이 이미 있는 tenantId와 부딪혔을 때 서버가 알려 주는 상대 — server/tenantPromote.ts TenantConflict와 같은 모양. */
+interface TenantConflict {
+  kind: 'competitor' | 'customer' | 'repo'
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  ownedDomains: string[]
+  sameSite: boolean
+  weeks: number
+  lastWeekOf: string | null
+  measuredThisWeek: boolean
+  overrides: string[]
+  referencedBy: { tenantId: string; brandName: string }[]
+  sharedIdLines: { tenantId: string; brandName: string; line: string; domain: string }[]
 }
 
 function firstKrAddress(text: string): string {
@@ -324,6 +342,12 @@ export default function BrandOnboarding() {
   const [addrLookupOn, setAddrLookupOn] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
+  // 이미 있는 tenantId와 부딪혔을 때 — 경쟁사로만 재던 같은 곳이면 「고객 브랜드로 전환」을 고를 수 있다.
+  // 어느 입력으로 부딪혔는지(draftKey)를 함께 둔다 — 그 뒤 입력이 바뀌면(자동 채우기 포함) 패널이 설명하는 상대 ·
+  // 바뀌는 업종이 지금 입력과 달라지므로 패널을 숨기고 등록을 다시 누르게 한다.
+  const [conflict, setConflict] = useState<{ info: TenantConflict; draftKey: string } | null>(null)
+  // 전환하면서 이 브랜드를 경쟁사 목록에서 뺄 고객 브랜드(업종이 바뀌면 기본으로 고른다).
+  const [removeFrom, setRemoveFrom] = useState<string[]>([])
   // 등록 완료 시 true — 등록 완료 단계에서 "이 브랜드 전체 측정"을 바로 실행할 수 있게 한다.
   const [registered, setRegistered] = useState(false)
   const [measuring, setMeasuring] = useState(false)
@@ -837,6 +861,7 @@ export default function BrandOnboarding() {
     setScopeChangedAfterComp(false)
     setRegistered(false)
     setRegisterMsg(null)
+    setConflict(null)
     setMeasureMsg(null)
     setBusy(true)
     try {
@@ -967,6 +992,12 @@ export default function BrandOnboarding() {
   const ready = Boolean(tenant.brandName && tenant.industry && tenant.region)
   const canSuggestComp = Boolean(brandName.trim() && industry.trim())
   const json = JSON.stringify(tenant, null, 2)
+  // 전환 패널이 어느 입력으로 확인한 것인지 비교하는 열쇠. 사실의 updatedAt은 렌더마다 오늘 날짜(UTC)로 다시 만들어져
+  // 한국 시각 09:00을 넘기면 입력이 그대로여도 바뀌므로 뺀다.
+  const draftKey = JSON.stringify({
+    ...tenant,
+    factGraph: tenant.factGraph.map((f) => ({ id: f.id, type: f.type, claim: f.claim, value: f.value })),
+  })
 
   /** 브랜드 페이지에서 사실 후보를 뽑는다. 저장하지 않는다 — 고른 것만 등록 때 함께 간다. */
   async function findFacts() {
@@ -1040,6 +1071,7 @@ export default function BrandOnboarding() {
   // 등록만 한다 — 등록 후 드롭다운에 바로 보인다. 측정은 STAGE 1 "브랜드·경쟁사 측정"에서 별도로.
   async function registerBrand() {
     setRegistering(true)
+    setConflict(null)
     setRegisterMsg('브랜드를 등록하는 중…')
     try {
       const reg = await fetch('/api/tenants', {
@@ -1048,7 +1080,16 @@ export default function BrandOnboarding() {
         body: json,
       })
       if (!reg.ok) {
-        const body = (await reg.json().catch(() => ({}))) as { error?: string }
+        const body = (await reg.json().catch(() => ({}))) as { error?: string; conflict?: TenantConflict }
+        if (reg.status === 409 && body.conflict) {
+          // 덮어쓰지 않는다 — 무엇과 부딪혔는지 보이고, 같은 곳의 경쟁사면 전환을 고르게 한다.
+          const c = body.conflict
+          setConflict({ info: c, draftKey })
+          // 업종이 바뀌면 그 고객의 경쟁사 줄은 「이름 겹침 · 측정 안 됨」이 되므로 빼기를 기본으로 고른다.
+          setRemoveFrom(c.industry !== tenant.industry ? c.referencedBy.map((r) => r.tenantId) : [])
+          setRegisterMsg(null)
+          return
+        }
         throw new Error(body.error || `등록 실패 (HTTP ${reg.status})`)
       }
       await reloadTenants()
@@ -1056,6 +1097,50 @@ export default function BrandOnboarding() {
       setRegistered(true)
       // 등록 완료 — 아래 "이 브랜드 전체 측정 시작" 버튼으로 바로 측정할 수 있다(경쟁사·코호트 포함).
       setRegisterMsg(`✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`)
+    } catch (err) {
+      setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
+    } finally {
+      setRegistering(false)
+    }
+  }
+
+  // 경쟁사로만 재던 같은 곳을 고객 브랜드로 전환한다 — id를 그대로 두어 지난 기록을 잇는다(server/tenantPromote.ts).
+  async function promoteBrand() {
+    if (!conflict || conflict.draftKey !== draftKey) return
+    const info = conflict.info
+    setRegistering(true)
+    setRegisterMsg('고객 브랜드로 전환하는 중…')
+    try {
+      const res = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/promote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft: tenant, removeFrom }),
+      })
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string
+        questionBankVersion?: string
+        setAside?: string[]
+        removedFrom?: string[]
+        removeErrors?: { tenantId: string; error: string }[]
+      }
+      if (!res.ok) throw new Error(body.error || `전환 실패 (HTTP ${res.status})`)
+      await reloadTenants()
+      setTenantId(tenant.tenantId)
+      setRegistered(true)
+      const names = (ids: string[]) => ids.map((id) => info.referencedBy.find((r) => r.tenantId === id)?.brandName ?? id).join(', ')
+      const kept = info.weeks > 0 ? ` 지난 기록 ${info.weeks}주를 잇습니다.` : ''
+      const bank = body.questionBankVersion ? ` 질문지는 첫 측정에서 새로 만듭니다(${body.questionBankVersion}).` : ''
+      const aside = body.setAside?.length ? ` 경쟁사일 때 고친 설정(${body.setAside.join(' · ')})은 백업으로 옮겼습니다.` : ''
+      const removed = body.removedFrom?.length ? ` ${names(body.removedFrom)} 경쟁사 목록에서 뺐습니다.` : ''
+      const failed = body.removeErrors?.length
+        ? ` 빼지 못한 곳: ${body.removeErrors.map((e) => `${names([e.tenantId])}(${e.error})`).join(', ')}`
+        : ''
+      const moved = info.industry !== tenant.industry || info.region !== tenant.region
+      const wait = moved && info.measuredThisWeek ? ' 이번 주에 경쟁사로 잰 기록을 남기려면 다음 주 월요일부터 재세요.' : ''
+      setConflict(null)
+      setRegisterMsg(
+        `✓ 고객 브랜드로 전환했습니다 — ${tenant.brandName} (${tenant.tenantId}).${kept}${bank}${aside}${removed}${failed}${wait}`,
+      )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
     } finally {
@@ -1606,6 +1691,21 @@ export default function BrandOnboarding() {
             <code>tenants.config.json</code>에 추가할 수 있습니다.
           </p>
         )}
+        {conflict && !registered && conflict.draftKey === draftKey && (
+          <ConflictPanel
+            conflict={conflict.info}
+            draft={{ industry: tenant.industry, region: tenant.region, ownedDomains: tenant.ownedDomains }}
+            removeFrom={removeFrom}
+            onToggle={(id) => setRemoveFrom((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))}
+            onPromote={() => void promoteBrand()}
+            busy={registering}
+          />
+        )}
+        {conflict && !registered && conflict.draftKey !== draftKey && (
+          <p className="hint" role="status">
+            입력이 바뀌어(자동 채우기 포함) 이미 있는 브랜드와 겹치는지 다시 확인해야 합니다 — 「브랜드 등록」을 다시 눌러 주세요.
+          </p>
+        )}
         {registerMsg && (
           <p className={registerMsg.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
             {registerMsg}
@@ -1666,5 +1766,114 @@ export default function BrandOnboarding() {
 
       <BrandManageList />
     </>
+  )
+}
+
+/**
+ * 등록이 이미 있는 tenantId와 부딪혔을 때 — 그냥 덮어쓰지 않는다(server/tenantPromote.ts 주석). 경쟁사로만 재던
+ * 같은 곳(홈페이지가 같음)이면 고객 브랜드로 전환하고, 바뀌는 것을 미리 보인다. 다른 경우는 이유만 알린다.
+ */
+function ConflictPanel({
+  conflict: c,
+  draft,
+  removeFrom,
+  onToggle,
+  onPromote,
+  busy,
+}: {
+  conflict: TenantConflict
+  draft: { industry: string; region: string; ownedDomains: string[] }
+  removeFrom: string[]
+  onToggle: (tenantId: string) => void
+  onPromote: () => void
+  busy: boolean
+}) {
+  // 조사만 떼어 쓴다 — 「군산여행의 모든것」은 · 전북 군산으로(받침에 맞게).
+  const tp = (w: string) => topicParticle(w).slice(w.length)
+  const dp = (w: string) => directionParticle(w).slice(w.length)
+  if (c.kind === 'customer') {
+    return (
+      <p className="error" role="alert">
+        ✗ {c.brandName}({c.tenantId}){tp(c.brandName)} 이미 등록된 고객 브랜드입니다 — 덮어쓰지 않습니다. 아래 브랜드 목록에서 고치세요.
+      </p>
+    )
+  }
+  if (c.kind === 'repo') {
+    return (
+      <p className="error" role="alert">
+        ✗ {c.brandName}({c.tenantId}){tp(c.brandName)} 저장소 설정에 있는 브랜드라 앱에서 바꿀 수 없습니다.
+      </p>
+    )
+  }
+  if (!c.sameSite) {
+    // id는 홈페이지 첫 마디로 정해지고 이 화면에는 id를 고치는 칸이 없다 — 주소가 맞으면 지금은 등록할 길이 없다.
+    return (
+      <p className="error" role="alert">
+        ✗ 이 홈페이지로 정해지는 id({c.tenantId})를 다른 곳이 이미 경쟁사로 쓰고 있습니다 —{' '}
+        {c.brandName}({c.ownedDomains.join(', ') || '홈페이지 없음'}). 같은 곳이 아니라 덮어쓰지 않습니다. 홈페이지 주소가 맞는지 확인해 주세요.
+        맞다면 지금은 이 주소로 등록할 수 없습니다(id는 홈페이지 첫 마디로 정해집니다).
+      </p>
+    )
+  }
+  const moved = c.industry !== draft.industry || c.region !== draft.region
+  const industryChanged = c.industry !== draft.industry
+  return (
+    <div className="onboard-conflict" role="region" aria-label="고객 브랜드로 전환">
+      <p className="onboard-conflict-title">
+        「{c.brandName}」{tp(c.brandName)} 경쟁사로 이미 측정한 곳입니다 ({c.tenantId} ·{' '}
+        {c.weeks > 0 ? `지난 기록 ${c.weeks}주` : '측정 기록 없음'})
+      </p>
+      <p className="hint">
+        홈페이지({c.ownedDomains.join(', ')})가 같아 같은 곳으로 봅니다. 덮어쓰지 않고 <b>고객 브랜드로 전환</b>합니다 — id를 그대로
+        두어{c.weeks > 0 ? ' 지난 기록을 잇고,' : ''} 위에서 넣은 값(이름 · 경쟁사 · 엔진 등)으로 바꿉니다. 질문지는 첫 측정에서 새로
+        만듭니다.
+      </p>
+      {c.overrides.length > 0 && (
+        <p className="hint">
+          경쟁사일 때 따로 고친 설정({c.overrides.join(' · ')})은 백업으로 옮기고 위에서 넣은 값을 씁니다.
+        </p>
+      )}
+      {moved && (
+        <p className="hint onboard-conflict-warn">
+          업종 · 지역이 <b>{c.industry} · {c.region}</b> → <b>{draft.industry} · {draft.region}</b>{dp(draft.region)} 바뀝니다.
+          {c.weeks > 0 ? ` 지난 기록은 ${c.industry} · ${c.region} 코호트에 남고,` : ''} 다음 측정부터 새 코호트로 잽니다.
+        </p>
+      )}
+      {moved && c.measuredThisWeek && (
+        <p className="hint onboard-conflict-warn">
+          이번 주({c.lastWeekOf})에 경쟁사로 잰 기록이 있습니다. 주차 기록은 한 주에 하나라, 이번 주에 다시 재면 그 기록을 새 측정이
+          덮어쓰고 {c.industry} · {c.region} 순위는 이 브랜드를 빼고 다시 매깁니다. 이번 주 기록을 남기려면 다음 주 월요일부터 재세요.
+        </p>
+      )}
+      {c.referencedBy.length > 0 && (
+        <div className="onboard-conflict-refs">
+          {c.referencedBy.map((r) => (
+            <label key={r.tenantId}>
+              <input type="checkbox" checked={removeFrom.includes(r.tenantId)} onChange={() => onToggle(r.tenantId)} /> {r.brandName}의 경쟁사
+              목록에서 빼기
+            </label>
+          ))}
+          <p className="hint">
+            {industryChanged
+              ? '빼지 않으면 업종이 달라 그 브랜드를 잴 때 「이름 겹침 · 측정 안 됨」으로 남습니다. 빼기는 경쟁사 편집 서랍에서 되돌릴 수 있습니다.'
+              : '빼지 않으면 그 브랜드를 잴 때 이 브랜드도 이 브랜드의 설정으로 함께 잽니다.'}
+          </p>
+        </div>
+      )}
+      {c.sharedIdLines.length > 0 && (
+        // 홈페이지가 다른데 id만 같아 지금 이 브랜드로 재고 있는 줄 — 다른 곳이라 빼지 않고 알린다(server/tenantPromote.ts).
+        <p className="hint onboard-conflict-warn">
+          홈페이지는 다른데 id({c.tenantId})만 같아 지금 이 브랜드로 재고 있는 경쟁사 줄이 있습니다 —{' '}
+          {c.sharedIdLines.map((l) => `${l.brandName}의 「${l.line}」(${l.domain})`).join(', ')}. 다른 곳이라 빼지 않습니다.
+          {industryChanged ? ' 전환하면 그 줄은 업종이 달라 「이름 겹침 · 측정 안 됨」이 됩니다.' : ''} 그 줄의 홈페이지를 확인해
+          주세요.
+        </p>
+      )}
+      <div className="onboard-register-actions">
+        <button type="button" className="primary" onClick={onPromote} disabled={busy}>
+          {busy ? '전환 중…' : '고객 브랜드로 전환'}
+        </button>
+      </div>
+    </div>
   )
 }

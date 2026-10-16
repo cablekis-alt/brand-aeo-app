@@ -16,6 +16,7 @@ import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
 import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
+import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -213,16 +214,49 @@ app.post('/api/measure-cancel', (_req, res) => {
   res.json(requestCancelActiveMeasures());
 });
 
-// 브랜드 추가 — 온보딩 초안을 등록한다.
+// 브랜드 추가 — 온보딩 초안을 등록한다. 이미 있는 tenantId면 409와 함께 무엇과 부딪혔는지(conflict) 돌려준다 —
+// 경쟁사로만 재던 같은 곳이면 화면이 「고객 브랜드로 전환」을 제안한다(tenantPromote.ts).
 app.post('/api/tenants', async (req, res) => {
+  let tenant: TenantConfig | null = null;
   try {
-    const tenant = normalizeTenantDraft(req.body);
+    tenant = normalizeTenantDraft(req.body);
     await registerTenant(tenant);
     res.status(201).json({ ok: true, tenantId: tenant.tenantId, brandName: tenant.brandName });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const status = message.includes('필수 항목') ? 400 : message.includes('이미 존재') ? 409 : 500;
-    res.status(status).json({ error: message });
+    let conflict = null;
+    if (status === 409 && tenant) {
+      try {
+        conflict = await describeTenantConflict(tenant, store);
+      } catch (inner) {
+        console.error('[tenants] 부딪힌 브랜드를 가려내지 못했습니다:', inner);
+      }
+    }
+    res.status(status).json({ error: message, ...(conflict ? { conflict } : {}) });
+  }
+});
+
+// 경쟁사로만 재던 브랜드를 고객 브랜드로 전환 — id를 그대로 두어 지난 기록을 잇는다. 같은 홈페이지일 때만(tenantPromote.ts).
+// 본문: { draft: 온보딩 초안, removeFrom: 이 브랜드를 경쟁사 목록에서 뺄 고객 브랜드 id[] }. Express 전용(데스크톱).
+app.post('/api/tenants/:tenantId/promote', async (req, res) => {
+  const body = (req.body ?? {}) as { draft?: unknown; removeFrom?: unknown };
+  let draft: TenantConfig;
+  try {
+    draft = normalizeTenantDraft(body.draft);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  if (draft.tenantId !== req.params.tenantId) {
+    res.status(400).json({ error: `초안의 tenantId(${draft.tenantId})가 주소(${req.params.tenantId})와 다릅니다.` });
+    return;
+  }
+  const removeFrom = Array.isArray(body.removeFrom) ? body.removeFrom.filter((x): x is string => typeof x === 'string') : [];
+  try {
+    res.json(await promoteCompetitor(draft, removeFrom, store));
+  } catch (err) {
+    sendEditorError(res, err);
   }
 });
 

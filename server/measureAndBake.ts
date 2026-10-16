@@ -121,6 +121,26 @@ export async function reusableThisWeek(
   return { ok: true };
 }
 
+type CohortKey = { industry: string; region: string; weekOf: string };
+
+/**
+ * 이번 측정으로 이번 주 카드가 다른 코호트로 옮겨 갈 브랜드의 옛 코호트.
+ *
+ * 주차 카드는 브랜드 · 주차당 하나라(store.saveScorecard), 이번 주에 이미 잰 브랜드를 업종 · 지역을 바꿔 다시 재면
+ * 옛 코호트의 카드가 새 코호트 카드로 바뀐다. 측정 끝의 순위 재계산은 새 코호트만 돌아서, 옛 코호트에 남은 브랜드의
+ * 저장 순위(「3위 / 7」)는 떠난 브랜드를 센 채 남았다(2026-10-16, 경쟁사 → 고객 브랜드 전환한 군산여행의 모든것).
+ * 측정이 실패하거나 주가 바뀌어 카드가 그대로면, 옛 코호트를 다시 계산해도 값이 같아 아무것도 쓰지 않는다.
+ */
+async function cohortsLeftThisWeek(store: FileResultStore, tenants: TenantConfig[], weekOf: string): Promise<CohortKey[]> {
+  const left = new Map<string, CohortKey>();
+  for (const t of tenants) {
+    const card = (await store.getScorecardHistory(t.tenantId, 12)).find((item) => item.weekOf === weekOf);
+    if (!card || (card.industry === t.industry && card.region === t.region)) continue;
+    left.set(`${card.industry}|${card.region}`, { industry: card.industry, region: card.region, weekOf });
+  }
+  return [...left.values()];
+}
+
 /** 이 브랜드 자신의 측정 — 등록·파이프라인·완료 기록까지. 코호트 측정과 병렬로 돈다. */
 async function measureSelf(
   tenant: TenantConfig,
@@ -250,6 +270,11 @@ async function measureAndBakeRun(
   // 실패도 여기서 한 번에 드러난다).
   if (tenant.cohortQuestionBank) await ensureCohortBank(tenant);
 
+  // 이번 주 카드가 다른 코호트에 있던 브랜드 — 끝에서 옛 코호트 순위도 다시 매긴다(cohortsLeftThisWeek).
+  // 다른 브랜드 측정 안에서 재는 경쟁사는 그 측정이 자기 대상 전체로 한 번 본다.
+  const weekNow = getIsoWeekString(new Date());
+  const leftCohorts = options.inCohortRun ? [] : await cohortsLeftThisWeek(store, [tenant, ...cohortTargets], weekNow);
+
   const cohortTask =
     cohortTargets.length > 0
       ? // 경쟁사끼리는 서로를 참조하지 않으므로 병렬로 측정한다. 실패한 브랜드는 건너뛰고
@@ -293,13 +318,9 @@ async function measureAndBakeRun(
     }
   }
 
-  if (!self.ok) throw self.error;
-  const { weekOf, aeoScore } = self.value;
-  if (ownCohortList) {
-    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt).catch((err: unknown) => {
-      console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
-    });
-  }
+  // 본 브랜드가 실패해도 순위 재계산은 한다(아래) — 파이프라인은 카드를 저장한 뒤 보고서 단계에서도 실패할 수 있어,
+  // 카드는 새 코호트로 옮겨 갔는데 옛 코호트 순위가 떠난 브랜드를 센 채 남는다. 실패했으면 측정을 시작한 주로 본다.
+  const weekOf = self.ok ? self.value.weekOf : weekNow;
 
   // 코호트 순위를 완성된 집합으로 맞춘다 — 파이프라인은 자기 카드가 저장되기 전에 순위를
   // 계산해 분모가 측정 순서에 따라 달라진다(cohortRank.ts 참고). 본 브랜드와 경쟁사를 같이
@@ -311,11 +332,23 @@ async function measureAndBakeRun(
   // 남았다(2026-10-15). 다른 브랜드 측정 안에서 잰 경쟁사는 그 측정이 끝에서 한 번 계산한다(inCohortRun).
   if (!tenant.cohortOnly || !options.inCohortRun) {
     try {
-      const updated = await reconcileCohortRanks(store, tenant.industry, tenant.region, weekOf);
+      let updated = await reconcileCohortRanks(store, tenant.industry, tenant.region, weekOf);
+      for (const old of leftCohorts) {
+        if (old.industry === tenant.industry && old.region === tenant.region && old.weekOf === weekOf) continue;
+        updated += await reconcileCohortRanks(store, old.industry, old.region, old.weekOf);
+      }
       if (updated > 0) console.log(`[measureAndBake] 코호트 순위 재계산 — 카드 ${updated}개 갱신`);
     } catch (err) {
       console.error(`[measureAndBake] 코호트 순위 재계산 실패: ${err instanceof Error ? err.message : err}`);
     }
+  }
+
+  if (!self.ok) throw self.error;
+  const { aeoScore } = self.value;
+  if (ownCohortList) {
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt).catch((err: unknown) => {
+      console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
+    });
   }
 
   if (!options.deferBake) bakeForWeb(tenant, weekOf);

@@ -6400,3 +6400,37 @@ td.cell-mid {
   font-size: 12px;
   color: var(--bad);
 }
+
+/* 등록이 이미 있는 tenantId와 부딪혔을 때(BrandOnboarding.tsx ConflictPanel) — 고객 브랜드로 전환. */
+.onboard-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-ctl);
+  background: var(--info-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--info) 30%, transparent);
+}
+.onboard-conflict p {
+  margin: 0;
+}
+.onboard-conflict-title {
+  font-weight: 700;
+  color: var(--ink);
+}
+.onboard-conflict-warn {
+  color: var(--warn);
+}
+.onboard-conflict-refs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.onboard-conflict-refs label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
