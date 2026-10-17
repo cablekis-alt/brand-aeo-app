@@ -464,7 +464,7 @@ export default function CompetitorEditor({
                         placed !== undefined && !applied.movedDown.has(item.key)
                           ? { label: '되돌리기', onClick: () => revert(placed) }
                           : row?.status === 'waiting'
-                            ? { label: '측정에 넣기', primary: true, onClick: () => toggle(isOpen ? null : { kind: 'wait', key: item.key }), expanded: isOpen }
+                            ? { label: '넣기·빼기', primary: true, onClick: () => toggle(isOpen ? null : { kind: 'wait', key: item.key }), expanded: isOpen }
                             : applied.list.length > 1
                               ? { label: '빼기', onClick: () => push({ t: 'drop', key: item.key }) }
                               : undefined
@@ -489,6 +489,23 @@ export default function CompetitorEditor({
                                   .join(' · '),
                                 onPick: () => push({ t: 'swap', a: item.key, b: x.item.key }),
                               })),
+                            },
+                            // 대기 줄도 목록에서 지울 수 있어야 한다 — 예전엔 「측정에 넣기」만 있어, 자리를 바꿔 대기로
+                            // 내려간 곳(2026-10-17 스테이,머뭄의 군산여행의 모든것)을 지울 길이 없었다.
+                            {
+                              head: '넣지 않고',
+                              options:
+                                applied.list.length > 1
+                                  ? [
+                                      {
+                                        id: 'drop',
+                                        label: '빼기',
+                                        sub: '목록에서 지워요 · 대기 줄이라 함께 측정하는 곳은 그대로예요 · 지난 기록은 남아요',
+                                        danger: true,
+                                        onPick: () => push({ t: 'drop', key: item.key }),
+                                      },
+                                    ]
+                                  : [],
                             },
                           ]}
                         />
