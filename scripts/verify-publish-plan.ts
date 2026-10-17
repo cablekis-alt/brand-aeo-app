@@ -101,6 +101,19 @@ ok('미리 다듬기 = 열린 · 안 올린 채널 2곳', pre.length === 2 && pr
 ok('미리 다듬기에 올린 채널 · 잠긴 채널 · 따로 쓴 글 없음', !pre.includes(naver.id) && !pre.includes(tistory.id) && !pre.includes(orphan.id))
 
 // 초안이 없으면 확인 전(잠금), 웹(초안 라우트 없음)도 같다.
+// 브랜드 블로그를 적어 두면 자사 줄이 그 블로그의 글쓰기 화면을 연다(발행 설정). 없으면 지금처럼 복사만.
+{
+  const own = (p: ReturnType<typeof buildPublishPlan>) => p.rows.find((r) => r.kind === 'own')!
+  const plain = own(buildPublishPlan([c1], [], drafts))
+  ok('블로그 주소가 없으면 자사 사이트 · 복사만', plain.name === '자사 사이트' && plain.verb === 'copy' && plain.openUrl === null)
+  const tistoryBlog = own(buildPublishPlan([c1], [], drafts, { blogUrl: 'https://vblog.tistory.com/' }))
+  ok('티스토리 블로그면 그 블로그의 글쓰기 화면', tistoryBlog.name === '자사 블로그' && tistoryBlog.verb === 'write' && tistoryBlog.openUrl === 'https://vblog.tistory.com/manage/newpost')
+  const naverBlog = own(buildPublishPlan([c1], [], drafts, { blogUrl: 'https://blog.naver.com/vblog' }))
+  ok('네이버 블로그면 공용 글쓰기 화면', naverBlog.openUrl === 'https://blog.naver.com/GoBlogWrite.naver')
+  const other = own(buildPublishPlan([c1], [], drafts, { blogUrl: 'https://vblog.example/news' }))
+  ok('그 밖의 블로그는 적어 둔 주소', other.openUrl === 'https://vblog.example/news')
+}
+
 const noDraft = buildPublishPlan([c1], [naver], null)
 ok('초안 없음 → 잠금', noDraft.rows.every((r) => r.locked) && !noDraft.articles[0]!.confirmed)
 

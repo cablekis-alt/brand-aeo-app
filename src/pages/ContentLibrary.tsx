@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { buildPublishHtml } from '../lib/htmlFile'
-import { loadContentDrafts, loadFactGraph, type FactNode, type StoredDraft } from '../lib/api'
+import { loadContentDrafts, loadFactGraph, loadPublishSettings, type FactNode, type StoredDraft } from '../lib/api'
+import type { PublishSettings } from '../lib/publishSettings'
 import { workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
 import { countGapNotes, downloadHtml, downloadMarkdown, safeFileName } from '../lib/markdownFile'
@@ -25,6 +26,19 @@ export default function ContentLibrary() {
   const [open, setOpen] = useState<string | null>(null)
   const key = tenant?.tenantId ?? ''
   const loading = state?.key !== key
+  // 발행 설정(글 끝 상담 안내 · 태그) — 미리보기와 내보내기가 올리기 목록과 같은 발행본을 내도록.
+  const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
+  const settings = settingsState.key === key ? settingsState.value : null
+  useEffect(() => {
+    if (!key) return
+    let alive = true
+    void loadPublishSettings(key).then((s) => {
+      if (alive) setSettingsState({ key, value: s })
+    })
+    return () => {
+      alive = false
+    }
+  }, [key])
 
   useEffect(() => {
     if (!key) return
@@ -102,7 +116,7 @@ export default function ContentLibrary() {
                       onClick={() =>
                         downloadMarkdown(
                           `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.md`,
-                          publishArticleOf(d, { brand: tenant }),
+                          publishArticleOf(d, { brand: tenant, settings }),
                         )
                       }
                     >
@@ -119,7 +133,7 @@ export default function ContentLibrary() {
                           .then((facts) =>
                             downloadHtml(
                               `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.html`,
-                              buildPublishHtml({ stored: d, brand: tenant, facts }),
+                              buildPublishHtml({ stored: d, brand: tenant, facts, settings }),
                             ),
                           )
                       }}
@@ -139,7 +153,7 @@ export default function ContentLibrary() {
                   {shown && (
                     <div className="brief-body">
                       <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {publishArticleOf(d, { brand: tenant })}
+                        {publishArticleOf(d, { brand: tenant, settings })}
                       </pre>
                     </div>
                   )}

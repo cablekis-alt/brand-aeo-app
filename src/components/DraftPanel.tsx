@@ -4,6 +4,7 @@ import {
   findFactsForGaps,
   generateContentDraft,
   loadFactGraph,
+  loadPublishSettings,
   saveContentDraft,
   saveDraftGaps,
   saveFactGraph,
@@ -360,12 +361,16 @@ export default function DraftPanel({
                 type="button"
                 className="ghost"
                 title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
-                onClick={() =>
-                  downloadMarkdown(
-                    `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                    tenant ? publishArticleOf(stored, { brand: tenant }) : publishMarkdownOf(stored),
+                onClick={() => {
+                  const file = `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`
+                  if (!tenant) {
+                    downloadMarkdown(file, publishMarkdownOf(stored))
+                    return
+                  }
+                  void loadPublishSettings(tenantId).then((settings) =>
+                    downloadMarkdown(file, publishArticleOf(stored, { brand: tenant, settings })),
                   )
-                }
+                }}
               >
                 발행용 .md
               </button>
@@ -375,18 +380,18 @@ export default function DraftPanel({
                 title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 올리기 목록의 「복사하기」를 쓰세요."
                 onClick={() => {
                   if (!tenant) return
-                  void loadFactGraph(tenantId)
+                  const facts = loadFactGraph(tenantId)
                     .then((fg) => fg?.factGraph ?? [])
                     .catch((e: unknown) => {
                       console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
                       return [] as FactNode[]
                     })
-                    .then((facts) =>
-                      downloadHtml(
-                        `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
-                        buildPublishHtml({ stored, brand: tenant, facts }),
-                      ),
-                    )
+                  void Promise.all([facts, loadPublishSettings(tenantId)]).then(([factList, settings]) =>
+                    downloadHtml(
+                      `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                      buildPublishHtml({ stored, brand: tenant, facts: factList, settings }),
+                    ),
+                  )
                 }}
               >
                 자사 사이트용 .html

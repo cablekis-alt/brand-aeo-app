@@ -7,6 +7,8 @@ import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
+import { readPublishSettings, writePublishSettings } from './publishSettingsStore.js';
+import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
@@ -869,6 +871,41 @@ app.put('/api/tenants/:tenantId/market-scope', async (req, res) => {
   try {
     await writeTenantScope(tenant.tenantId, scope);
     res.json({ tenantId: tenant.tenantId, ...scope });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 브랜드별 발행 설정(글 끝 상담 안내 · 문의 링크 · 태그 · 카테고리 · 블로그 주소) — data/<tenant>/publish-settings.json.
+// Express 전용이다(Vercel 함수는 12/12). 웹은 콘텐츠 생성이 없어 이 설정도 쓰지 않는다.
+app.get('/api/tenants/:tenantId/publish-settings', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json((await readPublishSettings(tenant.tenantId)) ?? {});
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.put('/api/tenants/:tenantId/publish-settings', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  let settings;
+  try {
+    settings = normalizePublishSettings(req.body);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  try {
+    res.json(await writePublishSettings(tenant.tenantId, settings));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

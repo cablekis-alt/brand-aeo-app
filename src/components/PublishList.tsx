@@ -5,6 +5,7 @@ import { publishMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { markdownToHtml } from '../lib/htmlFile'
 import { publishArticleOf } from '../lib/publishArticle'
+import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
 import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
@@ -22,6 +23,7 @@ import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 export default function PublishList({
   tenantId,
   plan,
+  settings = null,
   adaptations,
   onAdapted,
   urlSlot,
@@ -30,6 +32,8 @@ export default function PublishList({
 }: {
   tenantId: string
   plan: PublishPlan
+  /** 브랜드별 발행 설정 — 자사 줄 발행본의 글 끝(상담 안내 · 문의 링크)과 「태그 복사」. */
+  settings?: PublishSettings | null
   /** 글별 채널 다듬은 글. null이면 다듬기 라우트가 없는 환경(웹)이다 — 원문을 복사한다. */
   adaptations: ChannelAdaptationMap | null
   onAdapted: (a: ChannelAdaptation) => void
@@ -104,7 +108,7 @@ export default function PublishList({
     const d = row.article.draft
     if (!d) return null
     if (!row.needsAdapt || adaptations === null) {
-      const markdown = row.kind === 'own' && tenant ? publishArticleOf(d, { brand: tenant }) : publishMarkdownOf(d)
+      const markdown = row.kind === 'own' && tenant ? publishArticleOf(d, { brand: tenant, settings }) : publishMarkdownOf(d)
       return { markdown, html: markdownToHtml(markdown) }
     }
     const a = adaptationOf(row)
@@ -122,6 +126,18 @@ export default function PublishList({
     window.setTimeout(() => setCopied((k) => (k === row.key ? null : k)), 1800)
     if (row.openUrl) window.open(row.openUrl, '_blank', 'noopener')
     setOpenSlot((s) => new Set(s).add(row.key))
+  }
+
+  const tags = settings?.tags ?? []
+  // 태그는 본문에 넣지 않는다 — 블로그 편집기의 태그 칸에 따로 붙인다(쉼표로 나눈다).
+  const copyTags = async (key: string) => {
+    const text = tags.join(', ')
+    if (!(await copyRich(text, text))) {
+      setError('태그를 클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`tags:${key}`)
+    window.setTimeout(() => setCopied((k) => (k === `tags:${key}` ? null : k)), 1800)
   }
 
   return (
@@ -196,6 +212,11 @@ export default function PublishList({
                   ) : (
                     <button type="button" disabled={busy !== null} onClick={() => void adapt(row)}>
                       {making ? '이 채널용 글 만드는 중… 30초~1분' : '이 채널용 글 만들기 · 약 30초~1분'}
+                    </button>
+                  )}
+                  {!row.locked && row.kind === 'own' && tags.length > 0 && (
+                    <button type="button" className="ghost" title={tags.join(', ')} onClick={() => void copyTags(row.key)}>
+                      {copied === `tags:${row.key}` ? '태그 복사함' : `태그 복사 ${tags.length}`}
                     </button>
                   )}
                   {!row.locked && text && (

@@ -1,5 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { publishMarkdownOf } from './draftGaps'
+import type { PublishSettings } from './publishSettings'
 
 /**
  * 발행본 = 글쓰기 모델이 쓴 본문(publishMarkdownOf) + 코드가 붙이는 글 끝.
@@ -16,6 +17,8 @@ export type ArticleBrand = Pick<TenantSummary, 'brandName' | 'ownedDomains'>
 
 export interface ArticleContext {
   brand: ArticleBrand
+  /** 브랜드별 발행 설정 — 상담 안내 · 문의 링크(src/lib/publishSettings.ts). 없으면 공식 사이트 링크만. */
+  settings?: PublishSettings | null
 }
 
 /** 브랜드 공식 사이트 — 첫 소유 도메인의 루트. 도메인이 없으면 없다. */
@@ -31,12 +34,18 @@ function linksTo(markdown: string, url: string): boolean {
   return new RegExp(`\\]\\(https?://(www\\.)?${escaped}(/[^)]*)?\\)`, 'i').test(markdown)
 }
 
-/** 글 끝 — 코드가 붙이는 부분(마크다운). 붙일 것이 없으면 빈 문자열. */
+/**
+ * 글 끝 — 코드가 붙이는 부분(마크다운). 붙일 것이 없으면 빈 문자열.
+ * 순서: 상담 안내 → 문의 링크 → 공식 사이트 링크. 문단마다 빈 줄로 나눈다(한 문단으로 붙지 않게).
+ */
 export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
-  const lines: string[] = []
+  const paras: string[] = []
+  const s = ctx.settings
+  if (s?.ctaText) paras.push(s.ctaText)
+  if (s?.inquiryUrl && !linksTo(body, s.inquiryUrl)) paras.push(`[문의하기](${s.inquiryUrl})`)
   const site = brandSiteUrl(ctx.brand)
-  if (site && !linksTo(body, site)) lines.push(`[${ctx.brand.brandName} 공식 사이트](${site})`)
-  return lines.length ? ['---', '', ...lines].join('\n') : ''
+  if (site && !linksTo(body, site) && site !== s?.inquiryUrl) paras.push(`[${ctx.brand.brandName} 공식 사이트](${site})`)
+  return paras.length ? ['---', ...paras].join('\n\n') : ''
 }
 
 /** 자사 사이트에 올릴 발행본 — 본문 + 글 끝. 복사 · .md · .html이 같은 결과를 쓴다. */

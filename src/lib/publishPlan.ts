@@ -2,6 +2,7 @@ import type { StoredDraft } from './api'
 import { gapProgress } from './draftGaps'
 import { channelNameOf, isPublishedAction, type GapAction } from './gapActions'
 import { countGapNotes } from './markdownFile'
+import { blogWriteUrl } from './publishSettings'
 import { channelStyleOf } from '../prompts/b9d-channel-adapt'
 
 /**
@@ -111,23 +112,33 @@ function overlap(a: string[], b: Set<string>): string[] {
   return a.filter((q) => b.has(q))
 }
 
+export interface PublishPlanOptions {
+  /**
+   * 브랜드 블로그(발행 설정 — src/lib/publishSettings.ts). 있으면 자사 줄이 「자사 블로그」가 되고 버튼이 그 블로그의
+   * 글쓰기 화면을 연다. 없으면 지금처럼 복사만 한다.
+   */
+  blogUrl?: string
+}
+
 export function buildPublishPlan(
   openContent: GapAction[],
   openListing: GapAction[],
   drafts: Record<string, StoredDraft> | null,
+  opts: PublishPlanOptions = {},
 ): PublishPlan {
   const contentArticles = openContent.map((a) => articleOf(a, drafts))
   const qsets = new Map(openContent.map((a) => [a.id, new Set(a.questionIds)]))
+  const blogOpen = opts.blogUrl ? blogWriteUrl(opts.blogUrl) : null
 
   const rows: PublishRow[] = contentArticles.map((article) => ({
     key: `own:${article.action.id}`,
     kind: 'own',
     article,
     target: article.action,
-    name: '자사 사이트',
+    name: blogOpen ? '자사 블로그' : '자사 사이트',
     questionIds: article.action.questionIds,
-    verb: 'copy',
-    openUrl: null,
+    verb: blogOpen ? 'write' : 'copy',
+    openUrl: blogOpen,
     needsAdapt: false,
     locked: !article.confirmed,
     done: isPublishedAction(article.action),

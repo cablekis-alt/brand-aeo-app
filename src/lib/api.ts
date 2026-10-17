@@ -4,6 +4,7 @@ import type { Engine, MarketScope } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { PublishSettings } from './publishSettings'
 import type {
   AiReferralReport,
   CitationBreakdown,
@@ -516,6 +517,22 @@ export async function generateContentDraft(
 }
 
 /** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
+/** 브랜드별 발행 설정(src/lib/publishSettings.ts). 라우트가 없는 환경(웹)이면 null. */
+export async function loadPublishSettings(tenantId: string): Promise<PublishSettings | null> {
+  return getJson<PublishSettings>(`/api/tenants/${encodeURIComponent(tenantId)}/publish-settings`)
+}
+/** 실패하면 이유를 담아 throw. */
+export async function savePublishSettings(tenantId: string, settings: PublishSettings): Promise<PublishSettings> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/publish-settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+  const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
+  if (!res.ok) throw new Error(body.error || `발행 설정 저장 실패 (HTTP ${res.status})`)
+  return body
+}
+
 export async function saveContentDraft(
   tenantId: string,
   actionId: string,

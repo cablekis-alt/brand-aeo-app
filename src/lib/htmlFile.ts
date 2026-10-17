@@ -1,5 +1,6 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
 import { publishArticleOf } from './publishArticle'
+import type { PublishSettings } from './publishSettings'
 
 /**
  * 발행용 .html — 발행용 마크다운을 완성된 HTML 문서로.
@@ -176,11 +177,14 @@ export interface PublishHtmlInput {
   stored: StoredDraft
   brand: TenantSummary
   facts: FactNode[]
+  /** 브랜드별 발행 설정 — 글 끝 상담 안내, 태그(keywords) · 카테고리(articleSection). */
+  settings?: PublishSettings | null
 }
 
 /** 완성된 HTML 문서. 본문은 <article>(발행본 — 글 끝 포함), <head>에 메타와 JSON-LD(Article + Organization). */
-export function buildPublishHtml({ stored, brand, facts }: PublishHtmlInput): string {
-  const md = publishArticleOf(stored, { brand })
+export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
+  const md = publishArticleOf(stored, { brand, settings })
+  const keywords = settings?.tags?.join(', ')
   const title = stored.draft.title
   const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)
@@ -195,6 +199,8 @@ export function buildPublishHtml({ stored, brand, facts }: PublishHtmlInput): st
     dateModified: published,
     author: org,
     publisher: org,
+    ...(keywords ? { keywords } : {}),
+    ...(settings?.category ? { articleSection: settings.category } : {}),
     ...(brand.ownedDomains[0] ? { isPartOf: { '@type': 'WebSite', url: `https://${brand.ownedDomains[0].replace(/^https?:\/\//, '')}/`, name: brand.brandName } } : {}),
   }
   const body = markdownToHtml(md)
@@ -207,6 +213,7 @@ export function buildPublishHtml({ stored, brand, facts }: PublishHtmlInput): st
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
     `<title>${escapeHtml(title)}</title>`,
     `<meta name="description" content="${escapeHtml(description)}">`,
+    ...(keywords ? [`<meta name="keywords" content="${escapeHtml(keywords)}">`] : []),
     `<meta property="og:type" content="article">`,
     `<meta property="og:title" content="${escapeHtml(title)}">`,
     `<meta property="og:description" content="${escapeHtml(description)}">`,

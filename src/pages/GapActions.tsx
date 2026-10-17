@@ -8,6 +8,7 @@ import {
   loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
+  loadPublishSettings,
   type ActionStatus,
   type ChannelAdaptation,
   type ChannelAdaptationMap,
@@ -16,6 +17,8 @@ import {
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import PublishList from '../components/PublishList'
+import PublishSettingsPanel from '../components/PublishSettingsPanel'
+import type { PublishSettings } from '../lib/publishSettings'
 import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
@@ -709,6 +712,20 @@ export default function GapActions() {
     }
   }, [tenant?.tenantId])
   const adaptations = adaptState.key === tenant?.tenantId ? adaptState.value : null
+  // 브랜드별 발행 설정(글 끝 상담 안내 · 태그 · 블로그). 키가 맞을 때만 쓴다. 라우트가 없는 환경(웹)이면 null.
+  const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadPublishSettings(id).then((s) => {
+      if (alive) setSettingsState({ key: id, value: s })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const publishSettings = settingsState.key === tenant?.tenantId ? settingsState.value : null
   const onAdapted = (a: ChannelAdaptation) =>
     setAdaptState((st) => ({
       ...st,
@@ -739,7 +756,7 @@ export default function GapActions() {
   // 같은 질문 26개를 가리킨다). 화면은 둘을 「① 글 확인」과 「② 올리기 목록」으로 편다 — lib/publishPlan.ts.
   const openContent = open.filter((a) => a.kind === 'content')
   const openListing = open.filter((a) => a.kind === 'listing')
-  const publishPlan = buildPublishPlan(openContent, openListing, drafts)
+  const publishPlan = buildPublishPlan(openContent, openListing, drafts, { blogUrl: publishSettings?.blogUrl })
   /** 이 등재 항목의 질문을 이미 덮는 콘텐츠 항목들 — 초안 라우트가 없는 환경(웹)의 채널 카드가 쓴다. */
   const coverageOf = (a: GapAction) => {
     const qs = new Set(a.questionIds)
@@ -904,10 +921,20 @@ export default function GapActions() {
                 <h3 className="step-head">
                   ② 올리기 목록 <span className="muted">— 한 줄이 한 번 올리기입니다. 덮는 질문이 많은 곳부터.</span>
                 </h3>
+                {drafts !== null && publishSettings !== null && (
+                  <PublishSettingsPanel
+                    key={tenant.tenantId}
+                    tenantId={tenant.tenantId}
+                    brand={tenant}
+                    settings={publishSettings}
+                    onSaved={(s) => setSettingsState({ key: tenant.tenantId, value: s })}
+                  />
+                )}
                 {drafts !== null ? (
                   <PublishList
                     tenantId={tenant.tenantId}
                     plan={publishPlan}
+                    settings={publishSettings}
                     adaptations={adaptations}
                     onAdapted={onAdapted}
                     focusId={focusId}
