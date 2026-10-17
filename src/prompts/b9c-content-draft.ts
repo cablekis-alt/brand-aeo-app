@@ -18,6 +18,13 @@ import type { FactGraphNode, PromptMessage, QuestionLanguage } from './types';
  * 결과물은 '발행 직전 원고'가 아니라 '사람이 30분 안에 마무리할 수 있는 원고'다.
  */
 
+/**
+ * 블로그 글 형식(format 'article')에서 text 문단의 구실. 내보낼 때 모양이 갈린다(src/lib/markdownFile.ts) —
+ * key는 굵게, quote는 인용, 나머지는 보통 문단.
+ */
+export type DraftRole = 'key' | 'action' | 'why' | 'quote' | 'limit';
+export const DRAFT_ROLES: readonly DraftRole[] = ['key', 'action', 'why', 'quote', 'limit'];
+
 /** 문단 하나 — 쓴 것이거나, 못 써서 비운 것이거나. 둘 중 하나다. */
 export interface DraftBlock {
   /** 'text'면 body가 본문, 'gap'이면 need가 "무엇이 필요한가". */
@@ -25,6 +32,14 @@ export interface DraftBlock {
   body?: string;
   /** gap일 때: 이 자리를 채우려면 어떤 사실이 필요한가. 팩트 그래프에 추가할 항목이 된다. */
   need?: string;
+  /** 블로그 글 형식의 text 문단 구실. 옛 초안 · 옛 형식에는 없다. */
+  role?: DraftRole;
+}
+
+/** 사진 자리 — 글은 사진을 만들지 않는다. 무엇을 찍어 넣을지(alt)와 그 아래 한 줄(caption)만 제안한다. */
+export interface DraftImage {
+  alt: string;
+  caption?: string;
 }
 
 export interface DraftSection {
@@ -32,7 +47,12 @@ export interface DraftSection {
   /** 이 절이 답하는 질문 — 브리프 structure의 answers를 잇는다. */
   answers: string;
   blocks: DraftBlock[];
+  /** 블로그 글 형식에서 사진이 글을 돕는 절에만. */
+  image?: DraftImage;
 }
+
+/** 초안 형식 — 없으면 옛 형식(짧은 문단 원고). 'article'은 블로그 긴 글(절 번호 · 핵심 문장 · 사진 자리). */
+export type DraftFormat = 'article';
 
 export interface ContentDraft {
   title: string;
@@ -45,6 +65,8 @@ export interface ContentDraft {
   usedFacts: string[];
   /** 가드가 걸러낸 것과 이유. 조용히 지우지 않는다. */
   guardNotes?: string[];
+  /** 이 초안의 형식. 없으면 옛 형식 — 옛 초안의 내보내기는 한 글자도 바뀌지 않는다. */
+  format?: DraftFormat;
 }
 
 export interface ContentDraftRequest {
@@ -58,6 +80,13 @@ export interface ContentDraftRequest {
   targetDomain?: string;
   /** 원고 언어. 없으면 한국어. 영어 테넌트(해외 환자 관점)는 'en'. */
   language?: QuestionLanguage;
+  /** 'article'이면 블로그 긴 글 형식. 영어 원고에는 쓰지 않는다(articleFormatOf). */
+  format?: DraftFormat;
+}
+
+/** 이 요청이 블로그 글 형식인지 — 영어 원고는 옛 형식 그대로 둔다(규칙 8이 둘이 되지 않게). */
+export function articleFormatOf(req: Pick<ContentDraftRequest, 'format' | 'language'>): DraftFormat | undefined {
+  return req.format === 'article' && req.language !== 'en' ? 'article' : undefined;
 }
 
 /**
@@ -70,7 +99,56 @@ const ENGLISH_DRAFT_RULE = `
    gap의 need는 운영자가 읽는 메모라 한국어로 쓴다. 1-1의 "우리말로 풀어 쓴다"는 "자연스러운 영어로 풀어 쓴다"로 읽는다.
    사실 값은 팩트 그래프에 적힌 글자 그대로 옮긴다 — 번역하거나 단위를 바꾸지 않는다(값이 한국어면 그 문단은 gap으로 둔다).`;
 
+/**
+ * 블로그 글 형식 규칙 — 참고한 글(에이전시 블로그)의 뼈대: 첫머리에서 답하고, 절마다 질문 → 핵심 한 문장 →
+ * 할 일 · 이유 · 그대로 쓸 말 · 한계, 사진 자리. 실측 답변 · 공식 링크 · 상담 안내 · 태그는 **코드가 붙인다**
+ * (src/lib/publishArticle.ts) — 글쓰기 엔진이 지어내면 확인할 수 없어서 금지한다.
+ */
+const ARTICLE_DRAFT_RULE = `
+8. **이 초안은 블로그 긴 글이다.** 읽는 사람이 이 글만 보고 바로 움직일 수 있게 쓴다.
+   lead와 모든 text 본문을 합쳐 2,500~3,500자. 사실이 모자라면 짧아도 된다 — 길이를 채우려고 사실을 지어내지 않는다.
+   - heading은 규칙 6대로 뜻과 순서를 지키되, 독자가 실제로 묻는 **질문 꼴**로 다듬는다. 앞에 번호를 붙이지 않는다(코드가 붙인다).
+   - text 블록마다 role을 붙인다.
+       key    그 절의 질문에 대한 답 한 문장. 절의 첫 블록이다(규칙 5). 굵게 나간다.
+       action 독자가 할 일 — 무엇을 어떤 순서로 확인하거나 준비하는지.
+       why    그 일이 왜 중요한지.
+       quote  독자가 그대로 옮겨 쓸 말 1~2문장(문의 · 예약 · 상담 때 물어볼 말 등). 인용으로 나간다.
+       limit  한계 · 주의 — 이 방법으로 안 되는 것, 미리 알아 둘 조건.
+     key는 절마다 하나. action · why · quote · limit는 쓸 말이 있을 때만 하나씩 — 억지로 채우지 않는다.
+   - 사진이 글을 돕는 절(최대 3개)에만 "image"를 붙인다: alt는 사진에 담길 장면, caption은 사진 아래 한 줄.
+     사진은 사람이 직접 찍거나 고른다 — 브랜드에 실제로 있는 장소 · 물건 · 화면만 제안하고, 수상 · 인증 장면처럼
+     확인하지 않은 것은 제안하지 않는다. caption에 사실이 들어가면 규칙 1~3을 따른다.
+   - 쓰지 않는 것: 팩트 그래프에 없는 통계 · 건수 · 비율, 주소(URL), "AI에게 물어보면 ~라고 답한다" 같은 AI 답변
+     묘사(실제로 잰 답변은 코드가 따로 붙인다), 문의 · 상담 · 예약 유도 문구(브랜드 안내 문구를 코드가 글 끝에 붙인다),
+     마크다운 기호(**, #, >, 목록 기호).
+   - 제목에 절 수를 넣고 싶으면 숫자 대신 {N}이라고 쓴다(예: "… 고를 때 확인할 {N}가지"). 코드가 실제로 실린 절 수로 바꾼다.`;
+
+const DRAFT_SCHEMA = `JSON 스키마:
+{
+  "title": string,
+  "lead": string,
+  "sections": [
+    { "heading": string, "answers": string,
+      "blocks": [ {"kind":"text","body":string} | {"kind":"gap","need":string} ] }
+  ]
+}
+lead는 2~3문장. 각 절의 blocks는 1~4개. 사실이 없어 쓸 게 없는 절은 blocks가 gap 하나여도 된다.`;
+
+const ARTICLE_SCHEMA = `JSON 스키마:
+{
+  "title": string,
+  "lead": string,
+  "sections": [
+    { "heading": string, "answers": string,
+      "blocks": [ {"kind":"text","role":"key"|"action"|"why"|"quote"|"limit","body":string} | {"kind":"gap","need":string} ],
+      "image": {"alt": string, "caption": string} }
+  ]
+}
+image는 붙일 절에만 쓴다(없으면 키를 빼라). lead는 2~3문장 — 글 전체의 질문에 바로 답한다.
+각 절의 blocks는 2~6개. 사실이 없어 쓸 게 없는 절은 blocks가 gap 하나여도 된다.`;
+
 export function buildContentDraftPrompt(req: ContentDraftRequest): PromptMessage {
+  const article = articleFormatOf(req) === 'article';
   const facts = req.factGraph.length
     ? req.factGraph.map((f) => `- [${f.type}] ${f.claim}: ${f.value}`).join('\n')
     : '- (등록된 사실 없음)';
@@ -119,18 +197,9 @@ export function buildContentDraftPrompt(req: ContentDraftRequest): PromptMessage
 5. 각 절은 **첫 문장에서 질문에 바로 답한다.** 배경 설명으로 시작하지 않는다 —
    답변 엔진은 첫 문장을 인용해 간다.
 6. 브리프의 구조(heading)를 그대로 따른다. 절을 늘리거나 순서를 바꾸지 않는다.
-7. 출력은 아래 JSON 하나만. 설명·마크다운·코드블록 금지.
+7. 출력은 아래 JSON 하나만. 설명·마크다운·코드블록 금지.${article ? ARTICLE_DRAFT_RULE : ''}
 
-JSON 스키마:
-{
-  "title": string,
-  "lead": string,
-  "sections": [
-    { "heading": string, "answers": string,
-      "blocks": [ {"kind":"text","body":string} | {"kind":"gap","need":string} ] }
-  ]
-}
-lead는 2~3문장. 각 절의 blocks는 1~4개. 사실이 없어 쓸 게 없는 절은 blocks가 gap 하나여도 된다.${req.language === 'en' ? ENGLISH_DRAFT_RULE : ''}`;
+${article ? ARTICLE_SCHEMA : DRAFT_SCHEMA}${req.language === 'en' ? ENGLISH_DRAFT_RULE : ''}`;
 
   const channelLine = req.targetDomain
     ? `게재 채널: ${req.targetDomain} — 광고성 문구를 피하고 그 채널의 독자에게 맞는 어투로 씁니다.\n`

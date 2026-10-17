@@ -1,3 +1,4 @@
+import type { ContentDraft, DraftBlock, DraftImage } from '../prompts/b9c-content-draft'
 import type { StoredDraft } from './api'
 
 /**
@@ -57,8 +58,71 @@ export function safeFileName(s: string): string {
 /** 본문에 남는 빈칸 표시. 발행용에서 걷어낼 때도 이 모양을 찾는다. */
 const GAP_LINE = '> **채워야 함:**'
 
+/**
+ * 사람이 사진을 넣을 자리의 주소 — `![대체 텍스트](#image-slot)`. 글은 사진을 만들지 않는다(직접 찍거나 고른 사진을
+ * 올린다). htmlFile.ts가 이 주소를 「사진 넣을 자리」로 낸다. 주소를 https로 바꾸면 그대로 사진이 된다.
+ */
+export const IMAGE_SLOT = '#image-slot'
+const IMAGE_SLOT_LINE = /^!\[[^\]]*\]\(#image-slot\)$/
+
+/** 글에 남은 사진 자리 수 — 올리기 목록이 「사진 넣을 곳 N곳」으로 알린다. */
+export function countImageSlots(markdown: string): number {
+  return markdown.split('\n').filter((line) => IMAGE_SLOT_LINE.test(line.trim())).length
+}
+
+/** 「… {N}가지」 제목의 {N}을 실린 절 수로 바꾼다. 글쓰기 엔진은 숫자를 쓰지 않고 {N}만 남긴다(b9c 규칙 8). */
+export function fillTitleCount(title: string, count: number): string {
+  return title.split('{N}').join(String(count))
+}
+
+/** 발행본에 실리는 절 — 빈칸이 아닌 문단이 하나라도 있는 절과 그 문단. */
+function publishedSections(d: ContentDraft) {
+  return d.sections
+    .map((sec) => ({ sec, blocks: sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim()) }))
+    .filter((s) => s.blocks.length > 0)
+}
+
+/** 화면 · 파일 이름에 쓰는 제목 — 블로그 글 형식이면 {N}을 발행본에 실릴 절 수로 채운다. 옛 형식은 그대로. */
+export function draftTitle(d: ContentDraft): string {
+  return d.format === 'article' ? fillTitleCount(d.title, publishedSections(d).length) : d.title
+}
+
+/** 블로그 글 형식의 문단 한 칸 — 핵심 문장은 굵게, 그대로 쓸 말은 인용, 빈칸은 빈칸 표시. */
+function articleBlockLine(b: DraftBlock): string {
+  if (b.kind === 'gap') return `${GAP_LINE} ${b.need ?? ''}`
+  const body = b.body ?? ''
+  if (b.role === 'key') return `**${body}**`
+  if (b.role === 'quote') return `> ${body}`
+  return body
+}
+
+/** 사진 자리 줄 — 장면은 대체 텍스트로, 설명은 바로 아랫줄 `*설명*`(htmlFile.ts가 figcaption으로 낸다). */
+function imageLines(image: DraftImage): string[] {
+  return [`![${image.alt}](${IMAGE_SLOT})`, ...(image.caption ? [`*${image.caption}*`] : [])]
+}
+
+/**
+ * 블로그 글 형식(format 'article') — 실린 절에 순서대로 번호를 붙이고(엔진은 번호를 쓰지 않는다), 사진 자리는 절 끝에.
+ * publish면 옛 형식과 같은 원칙으로 빈칸 줄 · 빈칸만 있던 절 · 「이 글이 쓴 사실」을 뺀다. 문단이 하나도 없는 절
+ * (빈칸을 모두 뺀 절)은 작업용에서도 뺀다 — 번호가 비지 않게.
+ */
+function articleMarkdown(d: ContentDraft, publish: boolean): string {
+  const shown = publish ? publishedSections(d) : d.sections.map((sec) => ({ sec, blocks: sec.blocks })).filter((s) => s.blocks.length > 0)
+  const L: string[] = [`# ${fillTitleCount(d.title, shown.length)}`, '']
+  if (d.lead) L.push(d.lead, '')
+  shown.forEach(({ sec, blocks }, i) => {
+    L.push(`## ${i + 1}. ${sec.heading}`, '')
+    for (const b of blocks) L.push(articleBlockLine(b), '')
+    if (sec.image) L.push(...imageLines(sec.image), '')
+  })
+  if (publish) return L.join('\n').trimEnd() + '\n'
+  if (d.usedFacts.length) L.push('---', '', '**이 글이 쓴 사실**', ...d.usedFacts.map((f) => `- ${f}`), '')
+  return L.join('\n')
+}
+
 /** 초안을 마크다운으로. 빈 자리는 표시를 남긴 채 내보낸다 — 지우면 채울 곳을 잃는다. */
 export function draftToMarkdown(d: StoredDraft['draft']): string {
+  if (d.format === 'article') return articleMarkdown(d, false)
   const L: string[] = [`# ${d.title}`, '']
   if (d.lead) L.push(d.lead, '')
   for (const sec of d.sections) {
@@ -84,6 +148,7 @@ export function draftToMarkdown(d: StoredDraft['draft']): string {
  * 말이 아니다(화면에는 그대로 남는다).
  */
 export function draftToPublishMarkdown(d: StoredDraft['draft']): string {
+  if (d.format === 'article') return articleMarkdown(d, true)
   const L: string[] = [`# ${d.title}`, '']
   if (d.lead) L.push(d.lead, '')
   for (const sec of d.sections) {

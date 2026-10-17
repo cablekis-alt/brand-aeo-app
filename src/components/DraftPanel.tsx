@@ -13,13 +13,17 @@ import {
   type GapFill,
   type StoredDraft,
 } from '../lib/api'
-import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
+import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
 import EvidencePanel from './EvidencePanel'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
-import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import type { DraftRole } from '../prompts/b9c-content-draft'
+
+/** 블로그 글 형식 문단의 구실 — 확인 화면에서 문단 앞에 붙는 꼬리표. 핵심 문장은 굵게 보여 꼬리표를 달지 않는다. */
+const ROLE_LABEL: Partial<Record<DraftRole, string>> = { action: '할 일', why: '이유', quote: '그대로 쓸 말', limit: '한계' }
 
 /**
  * 초안 패널 — 콘텐츠 생성 「① 글 확인」의 글 카드 본문. 초안을 만들고 빈칸을 확인한다.
@@ -158,7 +162,7 @@ export default function DraftPanel({
       // 브리프는 초안을 잘 쓰기 위한 발판이지 사람이 읽으려고 만드는 물건이 아니다. 두 번
       // 누르게 하면 그 사이에 사람이 하는 판단이 없는데도 기다림만 두 번 생긴다.
       if (!hasBrief) await ensureBrief()
-      const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
+      const s = await generateContentDraft(tenantId, draftRequestOf(action), force)
       onStored(s)
       setEditing(false)
       setTyped({})
@@ -330,7 +334,7 @@ export default function DraftPanel({
       <div className="article-summary">
         {!opened && (
           <>
-            <h4 className="draft-title">{d.title}</h4>
+            <h4 className="draft-title">{draftTitle(d)}</h4>
             {d.lead && <p className="article-lead">{d.lead}</p>}
           </>
         )}
@@ -527,13 +531,26 @@ export default function DraftPanel({
               ))}
             </ul>
           )}
-          <h4 className="draft-title">{d.title}</h4>
+          <h4 className="draft-title">{draftTitle(d)}</h4>
           {d.lead && <p>{d.lead}</p>}
           {stored.draft.sections.map((sec, si) => (
             <section key={`${si}-${sec.heading}`}>
               <h4>{sec.heading}</h4>
               {sec.blocks.map((b, bi) => {
-                if (b.kind !== 'gap') return <p key={bi}>{b.body}</p>
+                if (b.kind !== 'gap') {
+                  if (b.role === 'key') return <p key={bi} className="draft-key">{b.body}</p>
+                  if (b.role === 'quote')
+                    return (
+                      <blockquote key={bi} className="draft-quote">
+                        <span className="draft-role">{ROLE_LABEL.quote}</span> {b.body}
+                      </blockquote>
+                    )
+                  return (
+                    <p key={bi}>
+                      {b.role && <span className="draft-role">{ROLE_LABEL[b.role]}</span>} {b.body}
+                    </p>
+                  )
+                }
                 const k = gapKey(si, bi)
                 const f = fills[k]
                 const need = b.need ?? ''
@@ -632,6 +649,13 @@ export default function DraftPanel({
                   </div>
                 )
               })}
+              {sec.image && (
+                // 사진은 사람이 찍거나 골라 올린다 — 글은 무엇을 넣을지만 제안한다(발행본에 「사진 넣을 자리」로 나간다).
+                <figure className="draft-image-slot">
+                  <span className="draft-role">사진 넣을 자리</span> {sec.image.alt}
+                  {sec.image.caption && <figcaption>{sec.image.caption}</figcaption>}
+                </figure>
+              )}
             </section>
           ))}
           {(d.usedFacts.length > 0 || (d.guardNotes && d.guardNotes.length > 0)) && (

@@ -19,7 +19,7 @@ import DraftPanel from '../components/DraftPanel'
 import PublishList from '../components/PublishList'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
-import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
+import { draftRequestOf, gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan } from '../lib/publishPlan'
@@ -433,7 +433,7 @@ function BulkDrafts({
             }),
           )
         }
-        onDraft(await generateContentDraft(tenantId, { actionId: a.id, targetDomain: a.targetDomain }))
+        onDraft(await generateContentDraft(tenantId, draftRequestOf(a)))
         ok += 1
       } catch (e) {
         failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)

@@ -715,6 +715,8 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
         brief: brief.brief,
         targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
         language: tenant.questionLanguage,
+        // 블로그 글 형식 — 영어 테넌트에는 프롬프트 · 정규화가 쓰지 않는다(articleFormatOf).
+        format: b.format === 'article' ? 'article' : undefined,
       },
       getWriterClient(),
       getJudgeClient(),

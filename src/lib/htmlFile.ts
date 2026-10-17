@@ -1,4 +1,5 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
+import { draftTitle, IMAGE_SLOT } from './markdownFile'
 import { publishArticleOf } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
 
@@ -21,12 +22,6 @@ import type { PublishSettings } from './publishSettings'
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
-
-/**
- * 사람이 사진을 넣을 자리 — `![대체 텍스트](#image-slot)`. 글은 사진을 만들지 않는다(직접 찍거나 고른 사진을
- * 올린다). 자리만 남겨 두면 편집기에서 어디에 무엇을 넣을지 보이고, 주소를 https로 바꾸면 그대로 사진이 된다.
- */
-const IMAGE_SLOT = '#image-slot'
 
 /** 인라인 문법 — 굵게·기울임·코드·이미지·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
 function inline(text: string): string {
@@ -185,7 +180,7 @@ export interface PublishHtmlInput {
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
   const md = publishArticleOf(stored, { brand, settings })
   const keywords = settings?.tags?.join(', ')
-  const title = stored.draft.title
+  const title = draftTitle(stored.draft)
   const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)
   const org = organizationFromFacts(brand, facts)

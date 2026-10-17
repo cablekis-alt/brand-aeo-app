@@ -506,7 +506,8 @@ export async function loadContentDrafts(tenantId: string): Promise<Record<string
 /** 실패하면 throw. 브리프가 없으면 409와 함께 그 사실을 알려준다. */
 export async function generateContentDraft(
   tenantId: string,
-  input: { actionId: string; targetDomain?: string },
+  /** format 'article' = 블로그 긴 글 형식(src/prompts/b9c-content-draft.ts). 없으면 옛 형식. */
+  input: { actionId: string; targetDomain?: string; format?: 'article' },
   force = false,
 ): Promise<StoredDraft> {
   const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {
@@ -519,7 +520,6 @@ export async function generateContentDraft(
   return body
 }
 
-/** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
 /**
  * 글의 실측 사례 — build(이 글의 질문으로 찾기) · confirm(원문과 맞음) · include · exclude(발행본에 넣기) · clear.
  * 판정 호출이 없다. 실패하면 이유를 담아 throw.
@@ -554,6 +554,7 @@ export async function savePublishSettings(tenantId: string, settings: PublishSet
   return body
 }
 
+/** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
 export async function saveContentDraft(
   tenantId: string,
   actionId: string,

@@ -4502,6 +4502,37 @@ td.cell-mid {
 .draft-doc .draft-title {
   font-size: 1.05em;
 }
+/* 블로그 글 형식 — 핵심 문장은 굵게, 그대로 쓸 말은 인용, 사진 자리는 점선 칸(발행본 모양과 맞춘다). */
+.draft-key {
+  font-weight: 700;
+}
+.draft-role {
+  display: inline-block;
+  margin-right: 2px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 0.82em;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.draft-quote {
+  margin: 0 0 0.8em;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line);
+}
+.draft-image-slot {
+  margin: 0 0 0.8em;
+  padding: 8px 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-ctl);
+  color: var(--muted);
+}
+.draft-image-slot figcaption {
+  margin-top: 2px;
+  font-style: italic;
+}
 .gap-slot {
   display: flex;
   flex-direction: column;

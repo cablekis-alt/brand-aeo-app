@@ -2,10 +2,15 @@ import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
+  articleFormatOf,
   buildContentDraftPrompt,
+  DRAFT_ROLES,
   type ContentDraft,
   type ContentDraftRequest,
   type DraftBlock,
+  type DraftFormat,
+  type DraftImage,
+  type DraftRole,
   type DraftSection,
 } from '../src/prompts/b9c-content-draft.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
@@ -120,21 +125,67 @@ export function splitSentences(text: string): string[] {
     .filter(Boolean);
 }
 
+/** 블로그 글 형식에서 사진 자리는 이만큼까지 — 사진이 많으면 사람이 다 채우지 못하고 빈 자리가 남는다. */
+const MAX_IMAGES = 3;
+/** 사진 설명이 이보다 길면 설명이 아니라 문단이다 — 설명은 빼고 자리만 남긴다. */
+const MAX_IMAGE_TEXT = 160;
+
+/** key · quote는 한 덩어리다 — 일부 문장만 남기면 뜻이 바뀐다. 걸리면 칸째 뺀다(채울 사실이 아니라 고쳐 쓸 문장이라 빈칸으로 두지 않는다). */
+const WHOLE_ROLES = new Set<DraftRole>(['key', 'quote']);
+const ROLE_NAME: Record<DraftRole, string> = { key: '핵심 문장', action: '할 일', why: '이유', quote: '그대로 쓸 말', limit: '한계' };
+
+/**
+ * 블로그 글 형식 본문에서 엔진이 넣은 마크다운 기호를 걷는다 — 굵게 · 인용 · 번호는 내보낼 때 코드가 입힌다
+ * (src/lib/markdownFile.ts). 남겨 두면 `****`처럼 겹치거나 사진 자리 · 캡션 줄이 깨진다. 링크는 글자만 남긴다.
+ */
+function plainArticleText(s: string): string {
+  return s
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*|[*`[\]]/g, '')
+    .replace(/^\s*(?:#+|>+|[-•]|\d{1,2}[.)])\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** 주소가 든 문장 — 엔진이 쓴 주소는 확인할 수 없다. 링크는 사람이 확인한 것만 코드가 붙인다. */
+const URL_IN_TEXT = /https?:\/\/|\bwww\.[a-z0-9-]+\./i;
+
+/** 절 제목 앞 번호(「1.」 「Q2)」 「3 -」) — 번호는 내보낼 때 코드가 실린 순서대로 붙인다. */
+function stripHeadingNumber(h: string): string {
+  return h
+    .replace(/\*\*/g, '')
+    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s*(?:[.):]|[-–—])\s*/i, '')
+    .trim();
+}
+
 /**
  * 판정이 쓴 초안을 사실 가드에 통과시킨다. 브리프와 **같은 모듈**을 쓴다.
  *
  * 문단에서 가드에 걸린 문장만 빼고, 남는 문장이 없으면 그 문단을 gap으로 바꾼다 —
  * 문단을 조용히 없애면 글이 왜 짧아졌는지 알 수 없다. gap이면 화면이 "여기를 채우면 완성"으로
  * 보여 주고, guardNotes에 이유가 남는다.
+ *
+ * 블로그 글 형식(format 'article')은 여기에 더해 문단 구실(role)을 받고, 사진 자리를 3곳까지 남기고,
+ * 주소가 든 문장을 뺀다. 핵심 문장 · 그대로 쓸 말은 걸리면 칸째 뺀다(WHOLE_ROLES).
  */
 function normalize(
   raw: unknown,
   facts: ContentDraftRequest['factGraph'],
   questionTexts: string[],
+  format?: DraftFormat,
 ): ContentDraft | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
   const { canonicalFacts, guardSentence, notes } = createFactGuard(facts, questionTexts);
+  const article = format === 'article';
+  /** 옛 형식은 가드만, 블로그 글 형식은 주소 문장을 먼저 뺀 뒤 가드. */
+  const passes = (s: string): boolean => {
+    if (article && URL_IN_TEXT.test(s)) {
+      notes.push(`"${s.slice(0, 60)}…" — 주소가 든 문장은 넣지 않았습니다(링크는 확인한 것만 글 끝에 붙습니다).`);
+      return false;
+    }
+    return guardSentence(s);
+  };
 
   // 팩트 그래프의 **항목 이름**이 문장에 그대로 박힌 경우를 찾는다.
   //
@@ -161,47 +212,76 @@ function normalize(
         if (need) out.push({ kind: 'gap', need });
         continue;
       }
-      const body = String(o.body ?? '').trim();
+      const body = article ? plainArticleText(String(o.body ?? '')) : String(o.body ?? '').trim();
       if (!body) continue;
-      const kept = splitSentences(body).filter(guardSentence);
+      const role = article && DRAFT_ROLES.includes(o.role as DraftRole) ? (o.role as DraftRole) : undefined;
+      const all = splitSentences(body);
+      const kept = all.filter(passes);
+      if (role && WHOLE_ROLES.has(role) && kept.length < all.length) {
+        if (all.length > 1) notes.push(`"${body.slice(0, 60)}…" — ${ROLE_NAME[role]}의 문장 일부가 걸려 칸째 뺐습니다.`);
+        continue;
+      }
       for (const s of kept) noteLabelLeak(s);
       if (kept.length === 0) {
         out.push({ kind: 'gap', need: '이 문단의 문장이 모두 사실 확인에 걸렸습니다 — 아래 검증 기록 참고' });
         continue;
       }
-      out.push({ kind: 'text', body: kept.join(' ') });
+      out.push(role ? { kind: 'text', body: kept.join(' '), role } : { kind: 'text', body: kept.join(' ') });
     }
     return out;
   };
 
+  // 사진 자리 — 장면(alt)과 설명(caption)도 사실 확인을 받는다. 장면이 걸리면 자리째, 설명만 걸리면 설명만 뺀다.
+  const cleanImage = (input: unknown): DraftImage | undefined => {
+    if (!article || !input || typeof input !== 'object') return undefined;
+    const o = input as Record<string, unknown>;
+    const alt = plainArticleText(String(o.alt ?? ''));
+    if (!alt || alt.length > MAX_IMAGE_TEXT || !passes(alt)) return undefined;
+    const caption = plainArticleText(String(o.caption ?? ''));
+    return caption && caption.length <= MAX_IMAGE_TEXT && passes(caption) ? { alt, caption } : { alt };
+  };
+
+  let images = 0;
   const sections: DraftSection[] = Array.isArray(r.sections)
     ? (r.sections as unknown[])
         .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object')
-        .map((x) => ({
-          heading: String(x.heading ?? '').trim(),
-          answers: String(x.answers ?? '').trim(),
-          blocks: cleanBlocks(x.blocks),
-        }))
+        .map((x): DraftSection => {
+          const heading = article ? stripHeadingNumber(String(x.heading ?? '')) : String(x.heading ?? '').trim();
+          const section: DraftSection = { heading, answers: String(x.answers ?? '').trim(), blocks: cleanBlocks(x.blocks) };
+          const image = heading ? cleanImage(x.image) : undefined;
+          if (image && images < MAX_IMAGES) {
+            images += 1;
+            section.image = image;
+          }
+          return section;
+        })
         .filter((s) => s.heading)
     : [];
 
   const leadRaw = typeof r.lead === 'string' ? r.lead.trim() : '';
-  const lead = splitSentences(leadRaw).filter(guardSentence).join(' ');
+  const lead = splitSentences(article ? plainArticleText(leadRaw) : leadRaw).filter(passes).join(' ');
 
   // 초안이 실제로 쓴 사실 — 본문에 값이 그대로 들어간 것만 센다(정본 형태로).
-  const blob = [lead, ...sections.flatMap((s) => s.blocks.map((b) => b.body ?? ''))].join('\n');
+  const blob = [lead, ...sections.flatMap((s) => [...s.blocks.map((b) => b.body ?? ''), ...imageTexts(s)])].join('\n');
   const usedFacts = canonicalFacts(facts.filter((f) => blob.includes(f.value)).map((f) => `${f.claim}: ${f.value}`));
 
   const gapCount = sections.reduce((n, s) => n + s.blocks.filter((b) => b.kind === 'gap').length, 0);
+  const titleRaw = typeof r.title === 'string' ? r.title.trim() : '';
 
   return {
-    title: typeof r.title === 'string' ? r.title.trim() : '',
+    title: article ? titleRaw.replace(/\*\*|^#+\s*/g, '').trim() : titleRaw,
     lead,
     sections,
     gapCount,
     usedFacts,
     ...(notes.length ? { guardNotes: notes } : {}),
+    ...(article ? { format: 'article' as const } : {}),
   };
+}
+
+/** 사진 자리의 글자(장면 · 설명) — 쓴 사실을 셀 때와 격상 검사에 넣는다. */
+function imageTexts(s: DraftSection): string[] {
+  return s.image ? [s.image.alt, ...(s.image.caption ? [s.image.caption] : [])] : [];
 }
 
 /**
@@ -210,18 +290,25 @@ function normalize(
  */
 function dropOverclaims(draft: ContentDraft, overclaimed: Set<string>, facts: ContentDraftRequest['factGraph']): ContentDraft {
   const keep = (text: string) => splitSentences(text).filter((s) => !overclaimed.has(s)).join(' ');
-  const sections = draft.sections.map((s) => ({
-    ...s,
-    blocks: s.blocks.map((b): DraftBlock => {
-      if (b.kind !== 'text' || !b.body) return b;
+  const sections = draft.sections.map((s): DraftSection => {
+    const blocks = s.blocks.flatMap((b): DraftBlock[] => {
+      if (b.kind !== 'text' || !b.body) return [b];
       const body = keep(b.body);
+      // 핵심 문장 · 그대로 쓸 말은 한 문장이라도 빠지면 칸째 뺀다(normalize와 같은 원칙).
+      if (b.role && WHOLE_ROLES.has(b.role) && body !== b.body) return [];
       return body
-        ? { kind: 'text', body }
-        : { kind: 'gap', need: '이 문단의 문장이 사실보다 크게 말해 빠졌습니다 — 아래 검증 기록 참고' };
-    }),
-  }));
+        ? [{ ...b, body }]
+        : [{ kind: 'gap', need: '이 문단의 문장이 사실보다 크게 말해 빠졌습니다 — 아래 검증 기록 참고' }];
+    });
+    if (!s.image) return { ...s, blocks };
+    // 사진 장면이 걸리면 자리째, 설명만 걸리면 설명만 뺀다.
+    const { image, ...rest } = s;
+    if (overclaimed.has(image.alt)) return { ...rest, blocks };
+    const caption = image.caption && !overclaimed.has(image.caption) ? image.caption : undefined;
+    return { ...rest, blocks, image: caption ? { alt: image.alt, caption } : { alt: image.alt } };
+  });
   const lead = keep(draft.lead);
-  const blob = [lead, ...sections.flatMap((s) => s.blocks.map((b) => b.body ?? ''))].join('\n');
+  const blob = [lead, ...sections.flatMap((s) => [...s.blocks.map((b) => b.body ?? ''), ...imageTexts(s)])].join('\n');
   const usedFacts = draft.usedFacts.filter((line) => {
     const fact = facts.find((f) => `${f.claim}: ${f.value}` === line);
     return fact ? blob.includes(fact.value) : true;
@@ -230,13 +317,14 @@ function dropOverclaims(draft: ContentDraft, overclaimed: Set<string>, facts: Co
   return { ...draft, lead, sections, usedFacts, gapCount };
 }
 
-/** 초안의 문장 전부(첫머리 + 본문). 격상 가드에 넘긴다. */
+/** 초안의 문장 전부(첫머리 + 본문 + 사진 자리 글자). 격상 가드에 넘긴다. */
 function draftSentences(draft: ContentDraft): string[] {
   return [
     ...splitSentences(draft.lead),
-    ...draft.sections.flatMap((s) =>
-      s.blocks.flatMap((b) => (b.kind === 'text' && b.body ? splitSentences(b.body) : [])),
-    ),
+    ...draft.sections.flatMap((s) => [
+      ...s.blocks.flatMap((b) => (b.kind === 'text' && b.body ? splitSentences(b.body) : [])),
+      ...imageTexts(s),
+    ]),
   ];
 }
 
@@ -250,7 +338,7 @@ export async function generateDraft(
   checker: EngineClient = writer,
 ): Promise<StoredDraft> {
   const result = await writer.call(buildContentDraftPrompt(req));
-  let draft = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.questionTexts);
+  let draft = normalize(parseJsonLoose<unknown>(result.text), req.factGraph, req.questionTexts, articleFormatOf(req));
   if (!draft) throw new Error('초안 응답을 해석할 수 없습니다(JSON 아님). 다시 시도하세요.');
   if (draft.sections.length === 0) throw new Error('초안에 본문 절이 없습니다. 브리프를 먼저 확인하세요.');
   // 숫자 가드 다음에 격상 가드 — 숫자 없이 주체·범위가 커진 문장을 뺀다.
@@ -322,8 +410,36 @@ export async function saveGapFills(
 }
 
 /**
+ * 「… {N}가지」 제목의 모양 — 코드가 채운 절 수는 고친 글의 사실 확인에서 뺀다(그 숫자는 글이 실은 절 수다).
+ * 블로그 글 형식이고 제목에 {N}이 있을 때만.
+ */
+function countedTitle(draft: ContentDraft): RegExp | null {
+  if (draft.format !== 'article' || !draft.title.includes('{N}')) return null;
+  const parts = draft.title.split('{N}').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp(`^${parts.join('\\d+')}$`);
+}
+
+/**
+ * 고친 글 한 줄을 사실 확인할 평문으로 — 마크다운 표식(제목 · 목록 · 인용 · 굵게) · 절 번호 · 링크 주소를 걷고,
+ * 사진 자리 줄은 통째로 건너뛴다. 절 번호 「1.」와 주소 속 숫자가 「출처 없는 숫자」로 잡히지 않게.
+ */
+export function editedLinePlain(line: string, title: RegExp | null = null): string {
+  const t = line.trim();
+  if (/^!\[[^\]]*\]\([^)]*\)$/.test(t)) return '';
+  const h1 = /^#\s+(.+)$/.exec(t);
+  if (h1 && title?.test(h1[1]!.trim())) return '';
+  return t
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^[#>\-*\s]+/, '')
+    .replace(/^\d{1,2}[.)]\s+/, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*+$/, '')
+    .trim();
+}
+
+/**
  * 사람이 고친 초안을 저장한다. 가드는 경고만 남기고 저장 자체는 막지 않는다.
- * 문장 단위로 보되 마크다운 표식(제목·목록·인용)은 검사 전에 걷어낸다.
+ * 문장 단위로 보되 마크다운 표식(제목·목록·인용)은 검사 전에 걷어낸다(editedLinePlain).
  */
 export async function saveEditedDraft(
   tenantId: string,
@@ -333,12 +449,14 @@ export async function saveEditedDraft(
   questionTexts: string[],
   judge?: EngineClient,
 ): Promise<StoredDraft> {
-  if (!(await readDrafts(tenantId))[actionId]) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+  const before = (await readDrafts(tenantId))[actionId];
+  if (!before) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
 
   const { guardSentence, notes } = createFactGuard(facts, questionTexts, 'warn');
+  const title = countedTitle(before.draft);
   const sentences: string[] = [];
   for (const line of markdown.split(/\r?\n/)) {
-    const plain = line.replace(/^[#>\-*\s]+/, '').trim();
+    const plain = editedLinePlain(line, title);
     if (!plain) continue;
     for (const sentence of splitSentences(plain)) {
       guardSentence(sentence);

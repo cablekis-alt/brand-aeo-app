@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } from '../lib/api'
 import { copyRich } from '../lib/clipboard'
 import { publishMarkdownOf } from '../lib/draftGaps'
+import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import type { GapAction } from '../lib/gapActions'
 import { markdownToHtml } from '../lib/htmlFile'
 import { publishArticleOf } from '../lib/publishArticle'
@@ -177,7 +178,7 @@ export default function PublishList({
                 <span className={`channel-dot${row.done ? ' up' : ''}`} aria-hidden="true" />
                 <span className="publish-row-name">
                   <b>{row.name}</b>
-                  <span className="publish-row-article">{row.article.draft?.draft.title || row.article.action.title}</span>
+                  <span className="publish-row-article">{(row.article.draft && draftTitle(row.article.draft.draft)) || row.article.action.title}</span>
                 </span>
                 <span className="publish-row-reach">
                   질문 <b>{row.questionIds.length}</b>개
@@ -232,6 +233,11 @@ export default function PublishList({
                 </span>
               </div>
               {!row.locked && !row.done && VERB_CAUTION[row.verb] && <p className="publish-row-note">{VERB_CAUTION[row.verb]}</p>}
+              {!row.locked && !row.done && text && countImageSlots(text.markdown) > 0 && (
+                <p className="publish-row-note">
+                  사진 넣을 곳 {countImageSlots(text.markdown)}곳 — 붙여 넣은 글의 「[사진 넣을 자리]」를 직접 찍거나 고른 사진으로 바꾸세요.
+                </p>
+              )}
               {stale && (
                 <p className="channel-stale">
                   원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).{' '}
