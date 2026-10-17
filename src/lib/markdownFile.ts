@@ -1,5 +1,6 @@
 import type { ContentDraft, DraftBlock, DraftImage } from '../prompts/b9c-content-draft'
 import type { StoredDraft } from './api'
+import { articleSources, sourcesLine } from './officialSources'
 
 /**
  * 마크다운 파일로 내보내기 — 화면 부품과 떼어 둔다.
@@ -75,10 +76,10 @@ export function fillTitleCount(title: string, count: number): string {
   return title.split('{N}').join(String(count))
 }
 
-/** 발행본에 실리는 절 — 빈칸이 아닌 문단이 하나라도 있는 절과 그 문단. */
+/** 발행본에 실리는 절 — 빈칸이 아닌 문단이 하나라도 있는 절과 그 문단. si는 d.sections 안 순서. */
 function publishedSections(d: ContentDraft) {
   return d.sections
-    .map((sec) => ({ sec, blocks: sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim()) }))
+    .map((sec, si) => ({ sec, si, blocks: sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim()) }))
     .filter((s) => s.blocks.length > 0)
 }
 
@@ -102,18 +103,22 @@ function imageLines(image: DraftImage): string[] {
 }
 
 /**
- * 블로그 글 형식(format 'article') — 실린 절에 순서대로 번호를 붙이고(엔진은 번호를 쓰지 않는다), 사진 자리는 절 끝에.
- * publish면 옛 형식과 같은 원칙으로 빈칸 줄 · 빈칸만 있던 절 · 「이 글이 쓴 사실」을 뺀다. 문단이 하나도 없는 절
- * (빈칸을 모두 뺀 절)은 작업용에서도 뺀다 — 번호가 비지 않게.
+ * 블로그 글 형식(format 'article') — 실린 절에 순서대로 번호를 붙이고(엔진은 번호를 쓰지 않는다), 사진 자리와 공식 출처
+ * 「참고:」 줄(src/lib/officialSources.ts)은 절 끝에. publish면 옛 형식과 같은 원칙으로 빈칸 줄 · 빈칸만 있던 절 · 「이 글이
+ * 쓴 사실」을 뺀다. 문단이 하나도 없는 절(빈칸을 모두 뺀 절)은 작업용에서도 뺀다 — 번호가 비지 않게.
  */
 function articleMarkdown(d: ContentDraft, publish: boolean): string {
-  const shown = publish ? publishedSections(d) : d.sections.map((sec) => ({ sec, blocks: sec.blocks })).filter((s) => s.blocks.length > 0)
+  const shown = publish
+    ? publishedSections(d)
+    : d.sections.map((sec, si) => ({ sec, si, blocks: sec.blocks })).filter((s) => s.blocks.length > 0)
+  const sources = articleSources(d)
   const L: string[] = [`# ${fillTitleCount(d.title, shown.length)}`, '']
   if (d.lead) L.push(d.lead, '')
-  shown.forEach(({ sec, blocks }, i) => {
+  shown.forEach(({ sec, si, blocks }, i) => {
     L.push(`## ${i + 1}. ${sec.heading}`, '')
     for (const b of blocks) L.push(articleBlockLine(b), '')
     if (sec.image) L.push(...imageLines(sec.image), '')
+    if (sources[si]?.length) L.push(sourcesLine(sources[si]), '')
   })
   if (publish) return L.join('\n').trimEnd() + '\n'
   if (d.usedFacts.length) L.push('---', '', '**이 글이 쓴 사실**', ...d.usedFacts.map((f) => `- ${f}`), '')

@@ -20,6 +20,7 @@ import EvidencePanel from './EvidencePanel'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { articleSources } from '../lib/officialSources'
 import type { DraftRole } from '../prompts/b9c-content-draft'
 
 /** 블로그 글 형식 문단의 구실 — 확인 화면에서 문단 앞에 붙는 꼬리표. 핵심 문장은 굵게 보여 꼬리표를 달지 않는다. */
@@ -326,6 +327,8 @@ export default function DraftPanel({
   const progress = gapProgress(stored)
   const left = progress.total - progress.done
   const d = effectiveDraft(stored)
+  /** 절마다 발행본에 붙을 공식 출처(블로그 글 형식만) — 빈칸을 채운 글 기준, 절 순서는 stored.draft와 같다. */
+  const sources = articleSources(d)
   const opened = step === 'gaps'
 
   return (
@@ -655,6 +658,20 @@ export default function DraftPanel({
                   <span className="draft-role">사진 넣을 자리</span> {sec.image.alt}
                   {sec.image.caption && <figcaption>{sec.image.caption}</figcaption>}
                 </figure>
+              )}
+              {sources[si] && sources[si].length > 0 && (
+                // 공식 안내 링크는 글쓰기 엔진이 아니라 확인한 고정 목록에서 코드가 붙인다(src/lib/officialSources.ts).
+                <p className="doc-meta">
+                  <span className="draft-role">참고</span>{' '}
+                  {sources[si].map((s, i) => (
+                    <span key={s.id}>
+                      {i > 0 && ' · '}
+                      <a href={s.url} target="_blank" rel="noreferrer">
+                        {s.label}
+                      </a>
+                    </span>
+                  ))}
+                </p>
               )}
             </section>
           ))}
