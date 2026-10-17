@@ -6434,3 +6434,17 @@ td.cell-mid {
   font-size: 13px;
   cursor: pointer;
 }
+
+/*
+ * 등록된 브랜드 관리 표(BrandManageList.tsx)의 「전체 측정 · 삭제」 칸 — 오른쪽에 붙여 둔다. 열이 많아 창이 좁으면
+ * 표가 옆으로 밀리는데, 표가 길어 가로 스크롤 막대가 맨 아래에 있어 보이지 않았다 — 오른쪽 끝의 삭제 버튼에
+ * 닿을 길이 없었다(2026-10-17). 밀린 칸 위에 겹치므로 바탕을 칠하고 왼쪽에 옅은 그림자를 둔다. sticky는
+ * .table-wrap의 안쪽 여백(좌우 14px) 앞에서 멈춰 그 여백으로 밀린 글자가 비치므로, 여백만큼 더 붙인다(-14px) —
+ * 표가 넘치지 않을 때는 제자리라 움직이지 않는다.
+ */
+.brand-manage-act {
+  position: sticky;
+  right: -14px;
+  background: var(--card);
+  box-shadow: -10px 0 10px -10px color-mix(in srgb, var(--ink) 30%, transparent);
+}
