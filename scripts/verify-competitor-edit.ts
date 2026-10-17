@@ -29,6 +29,16 @@ const names = (ops: EditOp[]) => toCompetitors(applyOps(base, ops).list).map((x)
   ok('올라온 줄은 그 작업이 둔 줄', a.placedBy.get('b5') === 0 && a.replaced.get('b5') === 'b4')
 }
 
+// 대기 줄(여섯) 빼기 — 함께 재는 다섯 자리는 그대로, 되돌리면 다시 대기로
+{
+  const ops: EditOp[] = [op({ t: 'drop', key: 'b5' })]
+  const a = applyOps(base, ops)
+  ok('대기 줄을 뺄 수 있다', a.valid[0] === true && names(ops) === '가상 하나,가상 둘,가상 셋,가상 넷,가상 다섯')
+  ok('뺀 대기 줄은 빠진 줄로', a.removed.map((x) => x.key).join() === 'b5' && a.removedBy.get('b5') === 0)
+  ok('대기 줄 빼기 요약', summarizeOps(base, ops).join() === '빼기 · 가상 여섯')
+  ok('대기 줄 빼기를 되돌리면 그대로', names(revertOp(base, ops, 0)) === '가상 하나,가상 둘,가상 셋,가상 넷,가상 다섯,가상 여섯')
+}
+
 // 새 이름으로 바꾸기 · 빼기 · 측정에 넣기 · 추가
 {
   const ops: EditOp[] = [

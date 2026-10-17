@@ -15,7 +15,7 @@ export interface PickerGroup {
 }
 
 /**
- * 경쟁사 편집 서랍의 고르기 상자 — 「바꾸기·빼기」, 「측정에 넣기」, 「+ 경쟁사 추가」가 같이 쓴다.
+ * 경쟁사 편집 서랍의 고르기 상자 — 「바꾸기·빼기」, 대기 줄의 「넣기·빼기」, 「+ 경쟁사 추가」가 같이 쓴다.
  * 후보를 묶음별로 보이고, typed가 있으면 이름·홈페이지를 직접 넣는 칸을 맨 위에 둔다.
  */
 export default function CompetitorPicker({
