@@ -3,8 +3,10 @@ import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } fr
 import { copyRich } from '../lib/clipboard'
 import { publishMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
-import { markdownToHtml, publishBodyHtml } from '../lib/htmlFile'
+import { markdownToHtml } from '../lib/htmlFile'
+import { publishArticleOf } from '../lib/publishArticle'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
+import { useTenant } from '../context/useTenant'
 import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 
 /**
@@ -38,6 +40,7 @@ export default function PublishList({
   /** 인용 갭 분석에서 넘어온 채널 항목 id — 그 줄을 강조하고 스크롤 목적지(action-<id>)로 둔다. */
   focusId?: string
 }) {
+  const { tenant } = useTenant()
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -93,11 +96,17 @@ export default function PublishList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, adaptations, busy])
 
-  /** 이 줄에서 복사할 글. 다듬은 글이 필요한데 아직 없으면 null. */
+  /**
+   * 이 줄에서 복사할 글. 다듬은 글이 필요한데 아직 없으면 null.
+   * 자사 사이트 줄은 발행본(본문 + 글 끝 — 공식 사이트 링크 등)을 쓴다. 다듬기 원문(sourceOf)은 본문만이다.
+   */
   const textOf = (row: PublishRow): { markdown: string; html: string } | null => {
     const d = row.article.draft
     if (!d) return null
-    if (!row.needsAdapt || adaptations === null) return { markdown: publishMarkdownOf(d), html: publishBodyHtml(d) }
+    if (!row.needsAdapt || adaptations === null) {
+      const markdown = row.kind === 'own' && tenant ? publishArticleOf(d, { brand: tenant }) : publishMarkdownOf(d)
+      return { markdown, html: markdownToHtml(markdown) }
+    }
     const a = adaptationOf(row)
     return a ? { markdown: a.markdown, html: markdownToHtml(a.markdown) } : null
   }

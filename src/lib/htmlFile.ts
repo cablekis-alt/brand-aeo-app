@@ -1,5 +1,5 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
-import { publishMarkdownOf } from './draftGaps'
+import { publishArticleOf } from './publishArticle'
 
 /**
  * 발행용 .html — 발행용 마크다운을 완성된 HTML 문서로.
@@ -12,7 +12,7 @@ import { publishMarkdownOf } from './draftGaps'
  * 한계를 숨기지 않는다: 네이버 블로그·티스토리 같은 플랫폼은 <head>를 버린다. 그때 살아남는 건
  * 본문 HTML뿐이고 JSON-LD 효과는 자체 사이트에 올릴 때만 난다. 화면이 그 한 줄을 적는다.
  *
- * 마크다운 변환기는 우리 원고 문법(제목·단락·목록·인용·강조·링크)만 다룬다. 외부 라이브러리를
+ * 마크다운 변환기는 우리 원고 문법(제목·단락·목록·인용·강조·링크·이미지)만 다룬다. 외부 라이브러리를
  * 넣지 않는 이유: 입력이 우리 초안(+사람이 고친 것)이라 문법이 좁고, 모르는 문법은 단락으로
  * 안전하게 떨어지면 된다. 텍스트는 전부 이스케이프한다 — 고친 글에 <script>가 있어도 문자로 남는다.
  */
@@ -21,15 +21,37 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-/** 인라인 문법 — 굵게·기울임·코드·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
+/**
+ * 사람이 사진을 넣을 자리 — `![대체 텍스트](#image-slot)`. 글은 사진을 만들지 않는다(직접 찍거나 고른 사진을
+ * 올린다). 자리만 남겨 두면 편집기에서 어디에 무엇을 넣을지 보이고, 주소를 https로 바꾸면 그대로 사진이 된다.
+ */
+const IMAGE_SLOT = '#image-slot'
+
+/** 인라인 문법 — 굵게·기울임·코드·이미지·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
 function inline(text: string): string {
   let s = escapeHtml(text)
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>')
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+  // 이미지는 링크보다 먼저 — 아니면 `![x](주소)`가 「!」 + 링크로 남는다. 사진 자리는 글자로 알린다.
+  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, '<img src="$2" alt="$1">')
+  s = s.replace(new RegExp(`!\\[([^\\]]*)\\]\\(${IMAGE_SLOT}\\)`, 'g'), '[사진: $1]')
   // 링크는 http(s)만 — javascript: 같은 스킴은 그대로 글자로 남긴다.
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
   return s
+}
+
+/** 한 줄 전체가 이미지인 줄 — 그림 하나로 낸다. 주소가 http(s)나 사진 자리가 아니면 단락 글자로 둔다. */
+const IMAGE_LINE = /^!\[([^\]]*)\]\(([^)\s]+)\)$/
+/** 이미지 바로 다음 줄의 `*캡션*` — 그림 설명. 굵게(`**`)는 캡션이 아니다. */
+const CAPTION_LINE = /^\*(?!\*)(.+?)\*$/
+
+function figureHtml(alt: string, url: string, caption: string | null): string | null {
+  const cap = caption ? `<figcaption>${inline(caption)}</figcaption>` : ''
+  if (/^https?:\/\//i.test(url)) return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}">${cap}</figure>`
+  // 편집기가 figure를 버려도 글자는 남도록 안내를 <p>에 둔다.
+  if (url === IMAGE_SLOT) return `<figure class="image-slot"><p>[사진 넣을 자리] ${escapeHtml(alt)}</p>${cap}</figure>`
+  return null
 }
 
 /** 발행용 마크다운 → 본문 HTML(<article> 안쪽). 문서 전체는 buildPublishHtml이 감싼다. */
@@ -48,8 +70,15 @@ export function markdownToHtml(markdown: string): string {
     if (list) out.push(`<${list.tag}>${list.items.map((i) => `<li>${inline(i)}</li>`).join('')}</${list.tag}>`)
     list = null
   }
+  // 인용 안의 빈 `>` 줄은 문단 나눔이다 — 실측 답변 발췌처럼 여러 문단인 인용이 한 덩어리로 붙지 않게.
   const flushQuote = () => {
-    if (quote.length) out.push(`<blockquote><p>${inline(quote.join(' '))}</p></blockquote>`)
+    const paras: string[][] = [[]]
+    for (const q of quote) {
+      if (q) paras[paras.length - 1]!.push(q)
+      else paras.push([])
+    }
+    const body = paras.filter((p) => p.length).map((p) => `<p>${inline(p.join(' '))}</p>`)
+    if (body.length) out.push(`<blockquote>${body.join('')}</blockquote>`)
     quote = []
   }
   const flushAll = () => {
@@ -58,12 +87,23 @@ export function markdownToHtml(markdown: string): string {
     flushQuote()
   }
 
-  for (const raw of lines) {
-    const line = raw.trimEnd()
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i]!.trimEnd()
     const t = line.trim()
     if (!t) {
       flushAll()
       continue
+    }
+    const img = IMAGE_LINE.exec(t)
+    if (img) {
+      const caption = CAPTION_LINE.exec(lines[i + 1]?.trim() ?? '')
+      const figure = figureHtml(img[1]!, img[2]!, caption ? caption[1]! : null)
+      if (figure) {
+        flushAll()
+        out.push(figure)
+        if (caption) i += 1
+        continue
+      }
     }
     const h = /^(#{1,3})\s+(.+)$/.exec(t)
     if (h) {
@@ -138,17 +178,9 @@ export interface PublishHtmlInput {
   facts: FactNode[]
 }
 
-/**
- * 「이 글 복사」의 서식 — 발행용 원고의 본문 HTML(<head>·JSON-LD 없음). 네이버 블로그·티스토리 편집기에
- * 붙여도 제목·굵은 글씨가 남는다. 마크다운을 그대로 붙이면 #·** 기호가 글자로 남았다.
- */
-export function publishBodyHtml(stored: StoredDraft): string {
-  return markdownToHtml(publishMarkdownOf(stored))
-}
-
-/** 완성된 HTML 문서. 본문은 <article>, <head>에 메타와 JSON-LD(Article + Organization). */
+/** 완성된 HTML 문서. 본문은 <article>(발행본 — 글 끝 포함), <head>에 메타와 JSON-LD(Article + Organization). */
 export function buildPublishHtml({ stored, brand, facts }: PublishHtmlInput): string {
-  const md = publishMarkdownOf(stored)
+  const md = publishArticleOf(stored, { brand })
   const title = stored.draft.title
   const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)

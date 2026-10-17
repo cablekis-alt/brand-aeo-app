@@ -15,6 +15,7 @@ import {
 import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
+import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 
@@ -360,7 +361,10 @@ export default function DraftPanel({
                 className="ghost"
                 title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
                 onClick={() =>
-                  downloadMarkdown(`발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, publishMarkdownOf(stored))
+                  downloadMarkdown(
+                    `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
+                    tenant ? publishArticleOf(stored, { brand: tenant }) : publishMarkdownOf(stored),
+                  )
                 }
               >
                 발행용 .md

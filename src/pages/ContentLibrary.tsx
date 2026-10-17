@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { buildPublishHtml } from '../lib/htmlFile'
 import { loadContentDrafts, loadFactGraph, type FactNode, type StoredDraft } from '../lib/api'
-import { publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
+import { workMarkdownOf } from '../lib/draftGaps'
+import { publishArticleOf } from '../lib/publishArticle'
 import { countGapNotes, downloadHtml, downloadMarkdown, safeFileName } from '../lib/markdownFile'
 
 /**
@@ -101,7 +102,7 @@ export default function ContentLibrary() {
                       onClick={() =>
                         downloadMarkdown(
                           `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.md`,
-                          publishMarkdownOf(d),
+                          publishArticleOf(d, { brand: tenant }),
                         )
                       }
                     >
@@ -138,7 +139,7 @@ export default function ContentLibrary() {
                   {shown && (
                     <div className="brief-body">
                       <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {publishMarkdownOf(d)}
+                        {publishArticleOf(d, { brand: tenant })}
                       </pre>
                     </div>
                   )}
