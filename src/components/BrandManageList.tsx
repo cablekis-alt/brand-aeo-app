@@ -306,7 +306,7 @@ export default function BrandManageList() {
                 <th style={{ whiteSpace: 'nowrap' }}>업종 · 지역</th>
                 <th>경쟁사</th>
                 {keyStatus && <th style={{ whiteSpace: 'nowrap' }}>수집 엔진</th>}
-                <th></th>
+                <th className="brand-manage-act"></th>
               </tr>
             </thead>
             <tbody>
@@ -322,7 +322,7 @@ export default function BrandManageList() {
                     <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
                       <code>{row.tenantId}</code>
                     </td>
-                    <td className="judgment" style={{ whiteSpace: 'nowrap' }}>
+                    <td className="judgment" style={{ minWidth: '8em' }}>
                       {row.industry} · {row.region}
                     </td>
                     <td className="judgment" style={{ minWidth: '260px' }}>
@@ -369,7 +369,7 @@ export default function BrandManageList() {
                         </span>
                       </td>
                     )}
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    <td className="brand-manage-act" style={{ whiteSpace: 'nowrap' }}>
                       {deleting ? (
                         <span style={{ display: 'inline-flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start' }}>
                           <span className="hint" style={{ margin: 0 }}>
