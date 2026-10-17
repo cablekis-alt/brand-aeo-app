@@ -554,6 +554,7 @@ app.post('/api/channel-adapt/:tenantId', async (req, res) => {
           brandName: tenant.brandName,
           channelDomain,
           style: channelStyleOf(str(b.channelBadge)),
+          ...(b.format === 'article' ? { format: 'article' as const } : {}),
           sourceMarkdown,
           factGraph: tenant.factGraph ?? [],
           language: tenant.questionLanguage,

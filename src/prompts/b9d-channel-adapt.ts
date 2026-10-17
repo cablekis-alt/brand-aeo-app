@@ -47,10 +47,25 @@ const STYLE_RULE: Record<ChannelStyle, string> = {
   social: `소셜 게시글로 고친다. 3~5문장, 첫 문장에 핵심. 해시태그는 3개 이하로 끝에 둔다. 이모지는 쓰지 않는다.`,
 };
 
+/**
+ * 원문이 블로그 글 형식(b9c format 'article')이고 블로그로 올릴 때 — 이미 블로그 글로 짜여 있으니 구조 · 서식을 그대로 두고
+ * 문장만 다듬는다. 옛 규칙(「원문과 비슷하거나 조금 짧게」 · 맺음말)으로 다듬으면 절 번호 · 핵심 문장 · 사진 자리 · 공식 링크가
+ * 사라지고 글 끝 안내와 맺음말이 겹친다.
+ */
+const ARTICLE_BLOG_RULE = `블로그 글로 다듬는다. 원문은 이미 블로그 글 형식이다 — 구조와 서식은 그대로 두고 문장만 이 블로그의 독자에게 맞게 고친다.
+- 소제목(## 1. …)의 번호와 순서를 그대로 둔다. 소제목의 말은 읽기 쉽게 바꿔도 된다.
+- 굵은 핵심 문장(**…**)과 인용(> …)은 그 모양 그대로 같은 자리에 둔다.
+- 사진 자리 줄(![…](#image-slot))과 바로 아랫줄 설명(*…*)은 한 글자도 바꾸지 않고 같은 자리에 둔다.
+- 링크([…](https://…))는 원문에 있는 것만 주소를 바꾸지 않고 둔다. 새 링크를 만들지 않는다.
+- 길이는 원문의 90~100%. 문단은 2~3문장, "~해요/~입니다" 중 하나로 통일한다.
+- 맺음말 · 문의 안내를 새로 붙이지 않는다(글 끝 안내는 따로 붙는다).`;
+
 export interface ChannelAdaptRequest {
   brandName: string;
   channelDomain: string;
   style: ChannelStyle;
+  /** 원문 초안의 형식 — 'article'(블로그 글 형식)이고 style이 blog면 구조 · 서식을 지키는 규칙을 쓴다. */
+  format?: 'article';
   /** 발행본 마크다운(빈칸 표시·내부 메모를 뺀 것). 이것만이 내용의 근거다. */
   sourceMarkdown: string;
   factGraph: FactGraphNode[];
@@ -80,7 +95,7 @@ export function buildChannelAdaptPrompt(req: ChannelAdaptRequest): PromptMessage
 6. ${language}
 
 채널 형식:
-${STYLE_RULE[req.style]}
+${req.format === 'article' && req.style === 'blog' ? ARTICLE_BLOG_RULE : STYLE_RULE[req.style]}
 
 출력은 JSON 하나만: {"title": string, "body": string}
 body는 마크다운이며 제목(# )은 넣지 않는다. 소제목은 ##, 목록은 - 로 쓴다.`;

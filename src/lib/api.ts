@@ -590,7 +590,8 @@ export async function loadChannelAdaptations(tenantId: string): Promise<ChannelA
 /** 판정 1~2회. 실패하면 throw. */
 export async function adaptForChannel(
   tenantId: string,
-  input: { contentActionId: string; channelActionId: string; channelDomain: string; channelBadge: string; sourceMarkdown: string },
+  /** format 'article' — 원문이 블로그 글 형식이면 블로그 채널에서 구조 · 서식을 지킨다(b9d-channel-adapt). */
+  input: { contentActionId: string; channelActionId: string; channelDomain: string; channelBadge: string; sourceMarkdown: string; format?: 'article' },
 ): Promise<ChannelAdaptation> {
   const res = await fetch(`/api/channel-adapt/${encodeURIComponent(tenantId)}`, {
     method: 'POST',

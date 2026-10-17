@@ -53,6 +53,16 @@ export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
  * 자사 사이트에 올릴 발행본 — 본문 + 실측 사례(사람이 확인했을 때만) + 글 끝. 복사 · .md · .html이 같은 결과를 쓴다.
  * 붙일 것이 없으면 본문 그대로다(바이트까지 같다).
  */
+/**
+ * 채널 줄에서 복사할 글 — 블로그 문체로 다듬은 글이면 글 끝(상담 안내 · 문의 · 공식 사이트)을 붙인다. 블로그는 우리가 쓴
+ * 글임이 드러나는 곳이라 안내가 어울린다. 위키 · 커뮤니티 · 후기 · 보도 · 소셜은 홍보 문구로 지워지거나 광고로 읽혀 그대로 둔다.
+ */
+export function channelCopyOf(adapted: { markdown: string; style: string }, ctx: ArticleContext): string {
+  if (adapted.style !== 'blog') return adapted.markdown
+  const tail = articleTailMarkdown(adapted.markdown, ctx)
+  return tail ? `${adapted.markdown.trimEnd()}\n\n${tail}\n` : adapted.markdown
+}
+
 export function publishArticleOf(stored: StoredDraft, ctx: ArticleContext): string {
   const body = publishMarkdownOf(stored)
   const evidence = renderEvidenceMarkdown(stored.evidence)

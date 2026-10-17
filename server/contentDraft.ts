@@ -119,8 +119,9 @@ export function splitSentences(text: string): string[] {
   // "Led by Dr."와 나머지로 잘려, 격상 가드가 뒤쪽만 빼자 "Led by Dr."라는 조각이 원고에 남았다
   // (실측: 뷰 영어 원고). "No."는 넣지 않는다 — 뒤에 숫자가 오면 위 규칙이 이미 막고, 숫자가
   // 아니면 대답 "No."일 수 있다.
+  // 굵게 닫는 ** 바로 뒤도 문장 끝이다 — 「**핵심 문장.** 다음 문장」이 한 문장으로 묶이면 뒤 문장이 걸릴 때 핵심 문장까지 빠진다.
   return text
-    .split(/(?<=[.!?。]|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.)\s+(?!\d)/)
+    .split(/(?<=[.!?。](?:\*\*)?|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.)\s+(?!\d)/)
     .map((s) => s.trim())
     .filter(Boolean);
 }

@@ -62,6 +62,56 @@ async function writeAdaptations(tenantId: string, map: AdaptMap): Promise<void> 
   await rename(tmp, target);
 }
 
+/** 사진 자리 줄(src/lib/markdownFile.ts)과 그 아랫줄 설명. */
+const IMAGE_SLOT_LINE = /^!\[[^\]]*\]\(#image-slot\)$/;
+const CAPTION_LINE = /^\*(?!\*)(.+?)\*$/;
+const MD_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+const BARE_URL = /https?:\/\/[^\s)\]]+/g;
+
+/**
+ * 다듬은 글의 사진 자리 · 링크를 원문 기준으로 거른다 — 사진 자리 줄과 설명은 원문에 있던 줄만 글자 그대로 남기고(사실 대조를
+ * 건너뛴다 — 원문이 이미 거쳤다), 원문에 없는 링크는 글자만 남긴다. 원문에 없는 맨 주소가 든 문장은 뺀다. 판정이 지어낸 사진
+ * 장면이나 주소는 확인할 수 없다.
+ */
+export function keepSourceMedia(body: string, sourceMarkdown: string): { lines: (string | { media: string })[]; notes: string[] } {
+  const sourceLines = new Set(sourceMarkdown.split(/\r?\n/).map((l) => l.trim()));
+  const sourceUrls = new Set(sourceMarkdown.match(BARE_URL) ?? []);
+  const notes: string[] = [];
+  let droppedMedia = 0;
+  let unlinked = 0;
+  /** 바로 앞 줄이 사진 자리였나 — 설명 줄은 그 사진 자리를 따라간다(남았으면 남고, 뺐으면 빠진다). */
+  let prevImage: 'kept' | 'dropped' | null = null;
+  const lines = body.split('\n').flatMap((line): (string | { media: string })[] => {
+    const t = line.trim();
+    if (IMAGE_SLOT_LINE.test(t)) {
+      prevImage = sourceLines.has(t) ? 'kept' : 'dropped';
+      if (prevImage === 'dropped') droppedMedia += 1;
+      return prevImage === 'kept' ? [{ media: t }] : [];
+    }
+    if (prevImage && CAPTION_LINE.test(t)) {
+      const keep = prevImage === 'kept' && sourceLines.has(t);
+      prevImage = null;
+      return keep ? [{ media: t }] : [];
+    }
+    if (t) prevImage = null;
+    const relinked = line.replace(MD_LINK, (whole, text: string, url: string) => {
+      if (sourceUrls.has(url)) return whole;
+      unlinked += 1;
+      return text;
+    });
+    return [relinked];
+  });
+  if (droppedMedia) notes.push(`원문에 없는 사진 자리 ${droppedMedia}곳을 뺐습니다.`);
+  if (unlinked) notes.push(`원문에 없는 링크 ${unlinked}개는 글자만 남겼습니다.`);
+  return { lines, notes };
+}
+
+/** 원문에 없는 맨 주소가 든 문장 — 링크 문법 밖의 주소만 본다. */
+function foreignBareUrl(sentence: string, sourceMarkdown: string): boolean {
+  const outside = sentence.replace(MD_LINK, '');
+  return (outside.match(BARE_URL) ?? []).some((u) => !sourceMarkdown.includes(u));
+}
+
 /** 마크다운 한 줄의 표식(##, -, 1.)과 본문을 나눈다 — 가드는 본문 문장만 본다. */
 function splitMarker(line: string): { marker: string; text: string } {
   const m = /^(\s*(?:#{1,6}\s+|[-*]\s+|\d+\.\s+|>\s+)?)(.*)$/.exec(line);
@@ -85,16 +135,27 @@ export async function adaptForChannel(
 
   // 숫자 가드 — 원문에 있던 숫자는 출처가 있는 숫자로 친다(질문 자리에 원문을 넘긴다).
   const { guardSentence, notes } = createFactGuard(req.factGraph, [req.sourceMarkdown]);
-  const lines = body.split('\n').map((line) => {
+  // 사진 자리 · 설명 줄은 원문에 있던 것만 그대로(가드를 건너뛴다), 원문에 없는 링크는 글자만.
+  const media = keepSourceMedia(body, req.sourceMarkdown);
+  const passes = (s: string): boolean => {
+    if (foreignBareUrl(s, req.sourceMarkdown)) {
+      notes.push(`"${s.slice(0, 60)}…" — 원문에 없는 주소가 들어 있어 뺐습니다.`);
+      return false;
+    }
+    return guardSentence(s);
+  };
+  const lines = media.lines.map((line) => {
+    if (typeof line !== 'string') return line;
     const { marker, text } = splitMarker(line);
     if (!text || marker.startsWith('#')) return line;
-    const kept = splitSentences(text).filter(guardSentence);
+    const kept = splitSentences(text).filter(passes);
     return kept.length ? `${marker}${kept.join(' ')}` : null;
   });
-  let kept = lines.filter((l): l is string => l !== null);
+  let kept = lines.filter((l): l is string | { media: string } => l !== null);
 
   // 격상 가드 — 숫자 없이 주체·범위가 커진 문장을 뺀다(초안과 같은 'drop').
   const sentences = kept.flatMap((l) => {
+    if (typeof l !== 'string') return [];
     const { marker, text } = splitMarker(l);
     return marker.startsWith('#') || !text ? [] : splitSentences(text);
   });
@@ -102,21 +163,23 @@ export async function adaptForChannel(
   if (claims.overclaimed.size) {
     kept = kept
       .map((l) => {
+        if (typeof l !== 'string') return l;
         const { marker, text } = splitMarker(l);
         if (marker.startsWith('#') || !text) return l;
         const left = splitSentences(text).filter((s) => !claims.overclaimed.has(s));
         return left.length ? `${marker}${left.join(' ')}` : null;
       })
-      .filter((l): l is string => l !== null);
+      .filter((l): l is string | { media: string } => l !== null);
   }
-  notes.push(...claims.notes);
+  notes.push(...media.notes, ...claims.notes);
+  const keptLines = kept.map((l) => (typeof l === 'string' ? l : l.media));
 
   // 본문이 빠진 소제목은 덜어낸다 — 빈 절이 남으면 글이 망가진 것처럼 보인다.
   const cleaned: string[] = [];
-  for (let i = 0; i < kept.length; i += 1) {
-    const line = kept[i]!;
+  for (let i = 0; i < keptLines.length; i += 1) {
+    const line = keptLines[i]!;
     if (/^#{1,6}\s/.test(line)) {
-      const next = kept.slice(i + 1).find((l) => l.trim());
+      const next = keptLines.slice(i + 1).find((l) => l.trim());
       if (!next || /^#{1,6}\s/.test(next)) continue;
     }
     cleaned.push(line);

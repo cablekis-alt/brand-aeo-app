@@ -5,7 +5,7 @@ import { publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import type { GapAction } from '../lib/gapActions'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
-import { publishArticleOf } from '../lib/publishArticle'
+import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
@@ -76,6 +76,7 @@ export default function PublishList({
           channelDomain: row.target.targetDomain ?? row.target.title,
           channelBadge: row.target.badge,
           sourceMarkdown: source,
+          ...(row.article.draft?.draft.format === 'article' ? { format: 'article' as const } : {}),
         }),
       )
     } catch (e) {
@@ -113,7 +114,20 @@ export default function PublishList({
       return { markdown, html: markdownToHtml(markdown) }
     }
     const a = adaptationOf(row)
-    return a ? { markdown: a.markdown, html: markdownToHtml(a.markdown) } : null
+    if (!a) return null
+    const markdown = tenant ? channelCopyOf(a, { brand: tenant, settings }) : a.markdown
+    return { markdown, html: markdownToHtml(markdown) }
+  }
+
+  /**
+   * 이 줄의 제목 — 블로그 편집기는 제목 칸이 따로라 본문과 따로 복사한다. 다듬은 글은 그 제목, 자사 줄은 발행본 첫 줄(# 제목)
+   * 이 있으면 그것(고친 글의 제목), 없으면 초안 제목.
+   */
+  const titleOf = (row: PublishRow, markdown: string): string => {
+    const a = row.needsAdapt ? adaptationOf(row) : undefined
+    if (a?.title) return a.title
+    const h1 = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim()
+    return h1 || (row.article.draft ? draftTitle(row.article.draft.draft) : row.article.action.title)
   }
 
   const run = async (row: PublishRow) => {
@@ -127,6 +141,15 @@ export default function PublishList({
     window.setTimeout(() => setCopied((k) => (k === row.key ? null : k)), 1800)
     if (row.openUrl) window.open(row.openUrl, '_blank', 'noopener')
     setOpenSlot((s) => new Set(s).add(row.key))
+  }
+
+  const copyTitle = async (key: string, title: string) => {
+    if (!(await copyRich(title, escapeHtml(title)))) {
+      setError('제목을 클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`title:${key}`)
+    window.setTimeout(() => setCopied((k) => (k === `title:${key}` ? null : k)), 1800)
   }
 
   const tags = settings?.tags ?? []
@@ -214,6 +237,11 @@ export default function PublishList({
                   ) : (
                     <button type="button" disabled={busy !== null} onClick={() => void adapt(row)}>
                       {making ? '이 채널용 글 만드는 중… 30초~1분' : '이 채널용 글 만들기 · 약 30초~1분'}
+                    </button>
+                  )}
+                  {!row.locked && text && (
+                    <button type="button" className="ghost" title={titleOf(row, text.markdown)} onClick={() => void copyTitle(row.key, titleOf(row, text.markdown))}>
+                      {copied === `title:${row.key}` ? '제목 복사함' : '제목 복사'}
                     </button>
                   )}
                   {!row.locked && row.kind === 'own' && tags.length > 0 && (
