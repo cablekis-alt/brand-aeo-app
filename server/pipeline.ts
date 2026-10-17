@@ -1,3 +1,4 @@
+import { CollectionError, EngineOutage } from './engineExhaustion.js';
 import {
   buildBrandMentionPrompt,
   buildCitationClassificationPrompt,
@@ -217,6 +218,15 @@ async function collectRawCalls(
   // 엔진 하나가 죽어도(예: OpenAI 크레딧 소진 429) 측정 전체를 중단하지 않는다.
   // 실패한 호출은 건너뛰고 성공한 엔진의 응답만으로 진행한다(부분 저하 > 전면 실패).
   const failuresByEngine = new Map<string, number>();
+  // 지출 한도 · 크레딧 · 키처럼 다시 시도해도 풀리지 않는 오류가 난 엔진은 남은 호출을 보내지 않는다(engineExhaustion.ts).
+  // 남은 엔진의 호출을 다 받아도 수집 하한에 못 미치면 그 엔진들의 호출도 더 보내지 않는다 — 어차피 실패할 측정에
+  // 몇 분씩 돈을 쓰지 않게(엔진 셋 중 하나가 처음부터 끊기면 성공률은 많아야 67%).
+  const outage = new EngineOutage();
+  const jobsByEngine = new Map<string, number>();
+  for (const job of jobs) jobsByEngine.set(job.engine, (jobsByEngine.get(job.engine) ?? 0) + 1);
+  const finishedByEngine = new Map<string, number>();
+  const finish = (engine: string) => finishedByEngine.set(engine, (finishedByEngine.get(engine) ?? 0) + 1);
+  const failedSoFar = () => [...failuresByEngine.values()].reduce((n, v) => n + v, 0);
   // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다.
   let collected = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length });
@@ -230,12 +240,21 @@ async function collectRawCalls(
     async (job): Promise<RawCallRecord | null> => {
       // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
       throwIfMeasureCancelled(tenant.tenantId);
+      if (outage.isDown(job.engine) || outage.stopped) {
+        if (outage.isDown(job.engine)) outage.skip(job.engine);
+        else outage.skipStopped();
+        failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
+        finish(job.engine);
+        updateActiveMeasure(tenant.tenantId, { done: ++collected });
+        return null;
+      }
       const prompt = buildEngineCallPrompt(job.engine, job.question.text, tenant.questionLanguage);
       // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
       const startedAt = new Date().toISOString();
       try {
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
         const result = await client.call(prompt);
+        finish(job.engine);
         updateActiveMeasure(tenant.tenantId, { done: ++collected });
         return {
           tenantId: tenant.tenantId,
@@ -259,7 +278,23 @@ async function collectRawCalls(
         // 중단은 실패가 아니다 — 건너뛰고 계속하면 멈추라는 요청이 무시된다.
         if (err instanceof MeasureCancelledError) throw err;
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
+        finish(job.engine);
         updateActiveMeasure(tenant.tenantId, { done: ++collected });
+        if (outage.note(job.engine, err)) {
+          // 측정 상태 화면 · 진행 표시가 「Gemini 지출 한도 초과」를 바로 보이게 한다.
+          updateActiveMeasure(tenant.tenantId, { engineIssues: outage.labels() });
+          console.warn(`[B3] ${outage.labels().join(', ')} — 이번 측정에서 이 엔진의 남은 호출은 보내지 않습니다 (tenant=${tenant.tenantId})`);
+          // 끊긴 엔진의 남은 일감(보내는 중인 것 포함)은 성공할 수 없다. 나머지를 다 받아도 하한에 못 미치면 지금 멈춘다.
+          const lostAhead = [...jobsByEngine]
+            .filter(([engine]) => outage.isDown(engine))
+            .reduce((n, [engine, total]) => n + Math.max(0, total - (finishedByEngine.get(engine) ?? 0)), 0);
+          const bestCoverage = (jobs.length - failedSoFar() - lostAhead) / jobs.length;
+          if (!partialMeasureAllowed() && bestCoverage < MIN_CALL_COVERAGE && !outage.stopped) {
+            outage.stop(MIN_CALL_COVERAGE);
+            updateActiveMeasure(tenant.tenantId, { collectionWillFail: true });
+            console.warn(`[B3] 남은 엔진만으로는 수집 하한에 못 미칩니다(최대 ${Math.round(bestCoverage * 100)}%) — 남은 호출을 보내지 않습니다 (tenant=${tenant.tenantId})`);
+          }
+        }
         console.warn(
           `[B3] ${job.engine} 호출 실패(건너뜀) q=${job.question.questionId} #${job.callIndex}: ` +
             (err instanceof Error ? err.message : String(err)),
@@ -269,18 +304,32 @@ async function collectRawCalls(
     },
   );
 
+  // 끊긴 엔진의 일감은 곧바로 끝나 중단 요청을 확인할 일감이 남지 않을 수 있다 — 여기서 한 번 더 본다.
+  // 안 보면 엔진이 끊긴 뒤 누른 「중단」이 「수집 부족」 실패로 끝난다.
+  throwIfMeasureCancelled(tenant.tenantId);
   const calls = settled.filter((r): r is RawCallRecord => r !== null);
   if (failuresByEngine.size > 0) {
     const summary = [...failuresByEngine.entries()].map(([e, n]) => `${e} ${n}건`).join(', ');
     console.warn(`[B3] 엔진 호출 실패 요약 (tenant=${tenant.tenantId}): ${summary} — 성공 ${calls.length}/${jobs.length}건`);
   }
   if (calls.length === 0) {
-    throw new Error(
-      `[B3] 모든 엔진 호출 실패 — 수집된 응답이 없습니다 (tenant=${tenant.tenantId}). 엔진 API 키·크레딧을 확인하세요.`,
+    throw new CollectionError(
+      `${outage.explain()}[B3] 모든 엔진 호출 실패 — 수집된 응답이 없습니다 (tenant=${tenant.tenantId}). 엔진 API 키·크레딧을 확인하세요.`,
+      outage.labels(),
     );
   }
-  assertEnoughCoverage(tenant, questions, jobs.length, calls, failuresByEngine);
+  try {
+    assertEnoughCoverage(tenant, questions, jobs.length, calls, failuresByEngine);
+  } catch (err) {
+    // 무엇을 고치면 되는지(「Gemini 지출 한도 초과 — …」)를 문구 맨 앞에 둔다 — 화면은 이 문구를 그대로 보인다.
+    throw new CollectionError(`${outage.explain()}${err instanceof Error ? err.message : String(err)}`, outage.labels());
+  }
   return calls;
+}
+
+/** 수집이 하한에 못 미쳐도 부분 데이터로 진행한다(ALLOW_PARTIAL_MEASURE=1) — assertEnoughCoverage 주석. */
+function partialMeasureAllowed(): boolean {
+  return process.env.ALLOW_PARTIAL_MEASURE === '1' || process.env.ALLOW_PARTIAL_MEASURE === 'true';
 }
 
 /** 이 비율에 못 미치면 측정을 실패로 끊는다. */
@@ -317,7 +366,7 @@ export function assertEnoughCoverage(
   const callCoverage = plannedCalls > 0 ? calls.length / plannedCalls : 1;
   if (questionCoverage >= MIN_QUESTION_COVERAGE && callCoverage >= MIN_CALL_COVERAGE) return;
 
-  if (process.env.ALLOW_PARTIAL_MEASURE === '1' || process.env.ALLOW_PARTIAL_MEASURE === 'true') {
+  if (partialMeasureAllowed()) {
     console.warn(
       `[B3] 수집 부족하지만 ALLOW_PARTIAL_MEASURE로 진행 — 질문 ${answered.size}/${questions.length}, 호출 ${calls.length}/${plannedCalls}`,
     );

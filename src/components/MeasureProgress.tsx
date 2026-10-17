@@ -19,6 +19,15 @@ export interface ActiveMeasure {
   total?: number
   /** 중단을 요청받아 멈추는 중(진행 중인 호출이 끝나기를 기다린다). v0.2.50부터. */
   cancelling?: boolean
+  /** 이번 측정에서 끊긴 엔진 — 「Gemini 지출 한도 초과」(server/engineExhaustion.ts). */
+  engineIssues?: string[]
+  /** 남은 엔진만으로는 수집 하한에 못 미쳐 이번 측정은 멈춘다. */
+  collectionWillFail?: boolean
+}
+
+/** 진행 중인 줄들에서 끊긴 엔진을 모은다 — 같은 엔진은 브랜드마다 따로 끊기므로 한 번만 보인다. */
+function activeEngineIssues(active: ActiveMeasure[]): string[] {
+  return [...new Set(active.flatMap((a) => a.engineIssues ?? []))]
 }
 
 /**
@@ -148,6 +157,8 @@ export default function MeasureProgress({ active }: { active: ActiveMeasure[] })
   const starts = active.map((a) => Date.parse(a.startedAt)).filter((t) => Number.isFinite(t))
   const elapsed = starts.length ? now - Math.min(...starts) : null
   const left = elapsed === null ? null : overallRemainingMs(active, elapsed)
+  const issues = activeEngineIssues(active)
+  const stopping = active.filter((a) => a.collectionWillFail).length
 
   return (
     <>
@@ -163,6 +174,15 @@ export default function MeasureProgress({ active }: { active: ActiveMeasure[] })
         </p>
       )}
       <MeasureCancelButton active={active} />
+      {issues.length > 0 && (
+        // 다시 시도해도 풀리지 않는 엔진 오류 — 남은 호출은 보내지 않는다. 수집이 모자라면 측정이 멈춘다.
+        <p className="error" role="status" style={{ margin: '4px 0' }}>
+          ⚠ {issues.join(' · ')} —{' '}
+          {stopping > 0
+            ? `남은 엔진만으로는 수집 하한에 못 미쳐 ${stopping}곳 측정을 멈춥니다. 한도를 푼 뒤 다시 재세요.`
+            : '끊긴 엔진은 건너뜁니다. 수집이 모자라면 측정이 실패할 수 있어요.'}
+        </p>
+      )}
       <ul className="measure-progress">
         {active.map((p) => (
           <li key={p.tenantId}>

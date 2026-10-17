@@ -61,6 +61,22 @@ function fmtEngines(engines?: string[]): string {
 }
 const localLog = measureLogRaw as LocalMeasureLog[]
 
+/** 실패한 로컬 측정 — 서버 measureTracker.ts MeasureFailure와 같은 모양(메모리 · 최근 것만). */
+interface LocalMeasureFailure {
+  tenantId: string
+  brandName: string
+  at: string
+  error: string
+  engineIssues?: string[]
+}
+
+/** 실패 줄에 보일 이유 — 끊긴 엔진이 있으면 그 이름, 없으면 오류 문구 첫 문장. */
+function failureReason(f: LocalMeasureFailure): string {
+  if (f.engineIssues?.length) return f.engineIssues.join(' · ')
+  const first = f.error.replace(/^\[[^\]]+\]\s*/, '').split(/(?<=[.。])\s/)[0] ?? f.error
+  return first.length > 90 ? `${first.slice(0, 90)}…` : first
+}
+
 // 초 → "N분 M초" / "N초"
 function fmtSec(sec?: number): string {
   if (typeof sec !== 'number' || !Number.isFinite(sec)) return '-'
@@ -302,6 +318,7 @@ export default function MeasureStatus() {
   // 이 앱이 직접 돌린 로컬 측정(진행 중 + 완료). /api/measure-status에서 폴링.
   const [localActive, setLocalActive] = useState<ActiveMeasure[]>([])
   const [localDone, setLocalDone] = useState<LocalMeasureLog[]>([])
+  const [localFailed, setLocalFailed] = useState<LocalMeasureFailure[]>([])
   const [nowMs, setNowMs] = useState(() => Date.now())
   const timer = useRef<number | null>(null)
 
@@ -322,9 +339,11 @@ export default function MeasureStatus() {
         const d = (await r.json()) as {
           active?: ActiveMeasure[]
           completed?: LocalMeasureLog[]
+          failed?: LocalMeasureFailure[]
         }
         setLocalActive(Array.isArray(d.active) ? d.active : [])
         setLocalDone(Array.isArray(d.completed) ? d.completed : [])
+        setLocalFailed(Array.isArray(d.failed) ? d.failed : [])
       }
     } catch {
       /* 로컬 상태 엔드포인트 없음(배포 등) — 무시 */
@@ -767,7 +786,7 @@ export default function MeasureStatus() {
         </section>
       )}
 
-      {(localActive.length > 0 || localRows.length > 0) && (
+      {(localActive.length > 0 || localRows.length > 0 || localFailed.length > 0) && (
         <section style={{ marginTop: '8px' }}>
           <h3>로컬 측정 (이 앱)</h3>
           <p className="hint" style={{ marginTop: 0 }}>
@@ -796,11 +815,35 @@ export default function MeasureStatus() {
                     <td className="cell-text">{a.brandName || a.tenantId}</td>
                     {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
                         온보딩보다 덜 보여 주는 역전이 된다. */}
-                    <td className="cell-text muted">{measureStageLabel(a)}</td>
+                    <td className="cell-text muted">
+                      {measureStageLabel(a)}
+                      {a.engineIssues?.length ? (
+                        <span className="chip bad" style={{ marginLeft: 6 }} title="이 엔진의 남은 호출은 보내지 않습니다">
+                          {a.engineIssues.join(' · ')}
+                          {a.collectionWillFail ? ' · 수집 하한 미달로 멈춤' : ''}
+                        </span>
+                      ) : null}
+                    </td>
                     <td>-</td>
                     <td className="num">-</td>
                     <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
                     <td>{timeAgo(a.startedAt)} 시작</td>
+                  </tr>
+                ))}
+                {localFailed.map((f) => (
+                  <tr key={`failed-${f.tenantId}-${f.at}`}>
+                    <td>
+                      <span className="status-pill st-bad">실패</span>
+                    </td>
+                    <td className="cell-text">{f.brandName || f.tenantId}</td>
+                    {/* 끊긴 엔진(「Gemini 지출 한도 초과」)이 있으면 그 이름, 없으면 오류 첫 문장 — 전체 문구는 제목 풍선에. */}
+                    <td className="cell-text" title={f.error}>
+                      {failureReason(f)}
+                    </td>
+                    <td>-</td>
+                    <td className="num">-</td>
+                    <td className="num">-</td>
+                    <td>{timeAgo(f.at)}</td>
                   </tr>
                 ))}
                 {localRows.map((e, i) => (
