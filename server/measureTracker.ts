@@ -13,6 +13,43 @@ export interface ActiveMeasure {
   total?: number;
   /** 중단을 요청받아 멈추는 중이다(진행 중인 호출이 끝나기를 기다리는 동안). */
   cancelling?: boolean;
+  /** 이번 측정에서 끊긴 엔진 — 「Gemini 지출 한도 초과」(engineExhaustion.ts). 남은 호출은 보내지 않는다. */
+  engineIssues?: string[];
+  /** 남은 엔진만으로는 수집 하한에 못 미쳐 이번 측정은 멈춘다(pipeline.ts collectRawCalls). */
+  collectionWillFail?: boolean;
+}
+
+/**
+ * 실패한 측정 — 측정 상태 화면의 「실패」 줄. 완료 기록(localMeasureLog)은 성공만 남겨, 예전엔 실패한 측정이
+ * 측정을 시작한 화면의 문구로만 보이고 사라졌다(2026-10-17 Gemini 지출 한도). 메모리에만 두고 최근 것만 남긴다 —
+ * 앱을 다시 켜면 비고, 같은 브랜드를 다시 재서 성공하면 그 브랜드의 실패 줄은 지운다.
+ */
+export interface MeasureFailure {
+  tenantId: string;
+  brandName: string;
+  at: string; // ISO
+  error: string;
+  engineIssues?: string[];
+}
+
+const MAX_FAILURES = 20;
+const failures: MeasureFailure[] = [];
+
+/** 브랜드마다 마지막 실패 하나만 남긴다 — 같은 곳을 여러 번 재다 실패해도 줄이 쌓이지 않게. */
+export function recordMeasureFailure(failure: MeasureFailure): void {
+  clearMeasureFailures(failure.tenantId);
+  failures.unshift(failure);
+  failures.splice(MAX_FAILURES);
+}
+
+export function clearMeasureFailures(tenantId: string): void {
+  for (let i = failures.length - 1; i >= 0; i -= 1) {
+    if (failures[i]!.tenantId === tenantId) failures.splice(i, 1);
+  }
+}
+
+export function listMeasureFailures(): MeasureFailure[] {
+  return failures.map((f) => ({ ...f }));
 }
 
 const active = new Map<string, ActiveMeasure>();

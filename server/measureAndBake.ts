@@ -8,7 +8,16 @@ import { mapWithConcurrency } from './concurrency.js';
 import { inferCompetitors } from './brandInference.js';
 import { appendLocalMeasure } from './localMeasureLog.js';
 import { resetJudgeHealth } from './engines/index.js';
-import { beginMeasureRun, clearActiveMeasure, endMeasureRun, setActiveMeasure } from './measureTracker.js';
+import { CollectionError } from './engineExhaustion.js';
+import {
+  beginMeasureRun,
+  clearActiveMeasure,
+  clearMeasureFailures,
+  endMeasureRun,
+  MeasureCancelledError,
+  recordMeasureFailure,
+  setActiveMeasure,
+} from './measureTracker.js';
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -141,6 +150,26 @@ async function cohortsLeftThisWeek(store: FileResultStore, tenants: TenantConfig
   return [...left.values()];
 }
 
+/**
+ * 측정 상태 화면의 「실패」 줄을 남긴다. 사용자가 멈춘 측정은 실패가 아니다. 같은 오류를 두 번 남기지 않는다 —
+ * 본 브랜드의 실패는 경쟁사 측정을 기다리지 않고 바로 남기고(measureAndBakeRun), 바깥(measureAndBake)에서 다시 만난다.
+ */
+const recordedFailures = new WeakSet<object>();
+function noteMeasureFailure(tenant: TenantConfig, err: unknown): void {
+  if (err instanceof MeasureCancelledError) return;
+  if (typeof err === 'object' && err !== null) {
+    if (recordedFailures.has(err)) return;
+    recordedFailures.add(err);
+  }
+  recordMeasureFailure({
+    tenantId: tenant.tenantId,
+    brandName: tenant.brandName,
+    at: new Date().toISOString(),
+    error: err instanceof Error ? err.message : String(err),
+    ...(err instanceof CollectionError && err.engineIssues.length ? { engineIssues: err.engineIssues } : {}),
+  });
+}
+
 /** 이 브랜드 자신의 측정 — 등록·파이프라인·완료 기록까지. 코호트 측정과 병렬로 돈다. */
 async function measureSelf(
   tenant: TenantConfig,
@@ -181,7 +210,13 @@ export async function measureAndBake(
   // 처음부터 끝까지 「측정 중」으로 센다 — 경쟁사 편집이 이 사이에 저장하지 않게(measureTracker.ts).
   beginMeasureRun();
   try {
-    return await measureAndBakeRun(tenant, store, options);
+    const result = await measureAndBakeRun(tenant, store, options);
+    clearMeasureFailures(tenant.tenantId);
+    return result;
+  } catch (err) {
+    // 측정 상태 화면의 「실패」 줄 — 함께 재던 경쟁사도 각자 남는다(그 경쟁사의 측정도 이 함수를 거친다).
+    noteMeasureFailure(tenant, err);
+    throw err;
   } finally {
     endMeasureRun();
   }
@@ -301,7 +336,11 @@ async function measureAndBakeRun(
   // 경쟁사 측정이 주인 없이 남아 나중에 파일을 쓴다(고아 작업).
   const selfTask = measureSelf(tenant, store).then(
     (value) => ({ ok: true as const, value }),
-    (error: unknown) => ({ ok: false as const, error }),
+    (error: unknown) => {
+      // 경쟁사 측정이 끝날 때까지(몇 분) 기다리지 않고 바로 「실패」 줄을 남긴다 — 그 사이 진행 줄은 이미 사라졌다.
+      noteMeasureFailure(tenant, error);
+      return { ok: false as const, error };
+    },
   );
   const [measured, self] = await Promise.all([cohortTask, selfTask]);
 

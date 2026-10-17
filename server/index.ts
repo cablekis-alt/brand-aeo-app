@@ -40,7 +40,14 @@ import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
 import { measureAndBake } from './measureAndBake.js';
 import { readLocalMeasures } from './localMeasureLog.js';
-import { MeasureCancelledError, beginMeasureRun, endMeasureRun, listActiveMeasures, requestCancelActiveMeasures } from './measureTracker.js';
+import {
+  MeasureCancelledError,
+  beginMeasureRun,
+  endMeasureRun,
+  listActiveMeasures,
+  listMeasureFailures,
+  requestCancelActiveMeasures,
+} from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -176,9 +183,9 @@ app.get('/api/portfolio', async (_req, res) => {
   }
 });
 
-// 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중(measureAndBake가 브랜드마다 추적) + 완료 기록.
+// 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중(measureAndBake가 브랜드마다 추적) + 완료 기록 + 최근 실패.
 app.get('/api/measure-status', (_req, res) => {
-  res.json({ active: listActiveMeasures(), completed: readLocalMeasures() });
+  res.json({ active: listActiveMeasures(), completed: readLocalMeasures(), failed: listMeasureFailures() });
 });
 
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).

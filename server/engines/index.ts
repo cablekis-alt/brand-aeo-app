@@ -91,7 +91,7 @@ function createEngineClient(engine: Engine): EngineClient {
 }
 
 export function getEngineClient(engine: Engine): EngineClient {
-  if (USE_MOCK) return new MockEngineClient();
+  if (USE_MOCK) return new MockEngineClient(engine);
   let client = engineClients.get(engine);
   if (!client) {
     // 수집 슬롯은 엔진마다 따로다 — 느린 엔진이 다른 엔진의 슬롯을 붙잡지 않게(concurrency.ts).
