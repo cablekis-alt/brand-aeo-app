@@ -1,3 +1,4 @@
+import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -46,6 +47,11 @@ export interface StoredDraft {
    * 오면 이 기록은 버린다 — 넣은 값은 이미 브랜드 사실에 있어 새 초안이 처음부터 쓴다.
    */
   gapFills?: Record<string, GapFill>;
+  /**
+   * 실측 사례 — 저장된 측정 기록에서 코드가 고른 AI 응답 발췌(src/lib/answerEvidence.ts). 사람이 원문과 대조해
+   * 확인해야(confirmedAt) 발행본에 붙는다. 다시 만들기로 새 초안이 와도 남긴다 — 사례는 글이 아니라 측정에서 왔다.
+   */
+  evidence?: AnswerEvidence;
 }
 
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(아직 확인 전). */
@@ -68,6 +74,28 @@ export async function readDrafts(tenantId: string): Promise<DraftMap> {
   } catch {
     return {};
   }
+}
+
+/**
+ * drafts.json 쓰기를 테넌트별로 줄 세운다. 쓰는 길이 넷(초안 · 빈칸 · 편집 · 실측 사례)이라, 줄을 세우지 않으면
+ * 판정 호출을 기다리는 사이 다른 길이 쓴 내용을 옛 스냅샷으로 덮는다. 판정 호출은 줄 밖에서 하고, 줄 안에서는
+ * 파일을 다시 읽어 그 항목만 바꾼다.
+ */
+const draftWrites = new Map<string, Promise<unknown>>();
+function updateDrafts<T>(tenantId: string, task: (map: DraftMap) => Promise<T> | T): Promise<T> {
+  const prev = draftWrites.get(tenantId) ?? Promise.resolve();
+  const run = prev.then(async () => {
+    const map = await readDrafts(tenantId);
+    const result = await task(map);
+    await writeDrafts(tenantId, map);
+    return result;
+  });
+  // 앞 작업이 실패해도 다음 작업은 돈다 — 실패는 그 호출자에게만 간다.
+  draftWrites.set(
+    tenantId,
+    run.catch(() => undefined),
+  );
+  return run;
 }
 
 async function writeDrafts(tenantId: string, map: DraftMap): Promise<void> {
@@ -229,11 +257,34 @@ export async function generateDraft(
   const claims = await findOverclaims(draftSentences(draft), req.factGraph, checker, 'drop');
   if (claims.overclaimed.size) draft = dropOverclaims(draft, claims.overclaimed, req.factGraph);
   if (claims.notes.length) draft = { ...draft, guardNotes: [...(draft.guardNotes ?? []), ...claims.notes] };
-  const stored: StoredDraft = { actionId, generatedAt: new Date().toISOString(), ...(result.model ? { model: result.model } : {}), draft };
-  const map = await readDrafts(tenantId);
-  map[actionId] = stored;
-  await writeDrafts(tenantId, map);
-  return stored;
+  const fresh: StoredDraft = { actionId, generatedAt: new Date().toISOString(), ...(result.model ? { model: result.model } : {}), draft };
+  return updateDrafts(tenantId, (map) => {
+    // 빈칸 기록 · 고친 글은 옛 초안의 것이라 버리고, 실측 사례는 이어받는다.
+    const evidence = map[actionId]?.evidence;
+    const stored: StoredDraft = evidence ? { ...fresh, evidence } : fresh;
+    map[actionId] = stored;
+    return stored;
+  });
+}
+
+/**
+ * 실측 사례를 바꾼다 — update가 지금 사례(없으면 undefined)를 받아 새 사례를 돌려준다(undefined면 지운다).
+ * 판정 호출이 없다. 초안이 없으면 throw.
+ */
+export async function saveEvidence(
+  tenantId: string,
+  actionId: string,
+  update: (current: AnswerEvidence | undefined) => AnswerEvidence | undefined,
+): Promise<StoredDraft> {
+  return updateDrafts(tenantId, (map) => {
+    const current = map[actionId];
+    if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+    const evidence = update(current.evidence);
+    const stored: StoredDraft = { ...current, ...(evidence ? { evidence } : {}) };
+    if (!evidence) delete stored.evidence;
+    map[actionId] = stored;
+    return stored;
+  });
 }
 
 const GAP_KEY = /^\d{1,3}:\d{1,3}$/;
@@ -245,9 +296,6 @@ export async function saveGapFills(
   actionId: string,
   fills: Record<string, unknown>,
 ): Promise<StoredDraft> {
-  const map = await readDrafts(tenantId);
-  const current = map[actionId];
-  if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
   const clean: Record<string, GapFill> = {};
   const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, MAX_FILL) : undefined);
   for (const [key, raw] of Object.entries(fills)) {
@@ -263,11 +311,14 @@ export async function saveGapFills(
     if (sourceUrl && /^https?:\/\//i.test(sourceUrl)) fill.sourceUrl = sourceUrl;
     if (Object.keys(fill).length) clean[key] = fill;
   }
-  const stored: StoredDraft = { ...current, gapFills: clean };
-  if (!Object.keys(clean).length) delete stored.gapFills;
-  map[actionId] = stored;
-  await writeDrafts(tenantId, map);
-  return stored;
+  return updateDrafts(tenantId, (map) => {
+    const current = map[actionId];
+    if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+    const stored: StoredDraft = { ...current, gapFills: clean };
+    if (!Object.keys(clean).length) delete stored.gapFills;
+    map[actionId] = stored;
+    return stored;
+  });
 }
 
 /**
@@ -282,9 +333,7 @@ export async function saveEditedDraft(
   questionTexts: string[],
   judge?: EngineClient,
 ): Promise<StoredDraft> {
-  const map = await readDrafts(tenantId);
-  const current = map[actionId];
-  if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+  if (!(await readDrafts(tenantId))[actionId]) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
 
   const { guardSentence, notes } = createFactGuard(facts, questionTexts, 'warn');
   const sentences: string[] = [];
@@ -299,14 +348,18 @@ export async function saveEditedDraft(
   // 사람이 쓴 글도 격상 검사를 받는다 — 경고만 남기고 막지 않는다(숫자 가드와 같은 원칙).
   if (judge) notes.push(...(await findOverclaims(sentences, facts, judge, 'warn')).notes);
 
-  const stored: StoredDraft = {
-    ...current,
-    editedMarkdown: markdown,
-    editedAt: new Date().toISOString(),
-    ...(notes.length ? { editWarnings: notes } : {}),
-  };
-  if (!notes.length) delete stored.editWarnings;
-  map[actionId] = stored;
-  await writeDrafts(tenantId, map);
-  return stored;
+  // 판정 호출을 기다리는 사이 다른 길(빈칸 · 실측 사례)이 쓴 내용을 덮지 않게, 줄 안에서 다시 읽어 바꾼다.
+  return updateDrafts(tenantId, (map) => {
+    const current = map[actionId];
+    if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+    const stored: StoredDraft = {
+      ...current,
+      editedMarkdown: markdown,
+      editedAt: new Date().toISOString(),
+      ...(notes.length ? { editWarnings: notes } : {}),
+    };
+    if (!notes.length) delete stored.editWarnings;
+    map[actionId] = stored;
+    return stored;
+  });
 }

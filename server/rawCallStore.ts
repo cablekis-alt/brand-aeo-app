@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import type { RawCallRecord } from './types.js';
+import type { EvidenceRawCall } from '../src/lib/answerEvidence.js';
 
 /**
  * 저장된 AI 답변 원문 읽기 — data/<tenant>/<week>/raw-calls.json.
@@ -21,6 +22,36 @@ export interface RawAnswer {
   usedWebSearch: boolean;
   latencyMs?: number;
   calledAt: string;
+  /** 이 호출에 쓴 모델. 기록 이전 데이터에는 없다. */
+  model?: string;
+}
+
+/** 한 주차 원문 전체. 파일이 없거나 깨졌으면 빈 배열(옛 측정 · 베이킹된 데모). */
+async function readRawCalls(tenantId: string, weekOf: string): Promise<RawCallRecord[]> {
+  const file = path.join(PIPELINE_DATA_DIR, tenantId, weekOf, 'raw-calls.json');
+  try {
+    const parsed = JSON.parse(await readFile(file, 'utf-8')) as unknown;
+    return Array.isArray(parsed) ? (parsed as RawCallRecord[]) : [];
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') console.error(`[rawCallStore] ${tenantId}/${weekOf} raw-calls.json을 읽지 못했습니다:`, err);
+    return [];
+  }
+}
+
+/** 글의 실측 사례용 — 여러 질문의 원문을 파일 한 번만 읽어 내린다(src/lib/answerEvidence.ts). */
+export async function getRawCallsForQuestions(tenantId: string, weekOf: string, questionIds: string[]): Promise<EvidenceRawCall[]> {
+  const wanted = new Set(questionIds);
+  return (await readRawCalls(tenantId, weekOf))
+    .filter((r) => wanted.has(r.questionId))
+    .map((r) => ({
+      engine: r.engine,
+      questionId: r.questionId,
+      callIndex: r.callIndex,
+      rawText: r.rawText ?? '',
+      usedWebSearch: Boolean(r.usedWebSearch),
+      ...(r.model ? { model: r.model } : {}),
+      calledAt: r.calledAt ?? '',
+    }));
 }
 
 export async function getRawAnswers(
@@ -48,6 +79,7 @@ export async function getRawAnswers(
       usedWebSearch: Boolean(r.usedWebSearch),
       ...(typeof r.latencyMs === 'number' ? { latencyMs: r.latencyMs } : {}),
       calledAt: r.calledAt ?? '',
+      ...(r.model ? { model: r.model } : {}),
     }))
     .sort((a, b) => a.engine.localeCompare(b.engine) || a.callIndex - b.callIndex);
 }

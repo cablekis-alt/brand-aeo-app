@@ -480,8 +480,11 @@ function ActionCard({
   onUrls,
   coveredBy,
   focused = false,
+  weekOf,
 }: {
   action: GapAction
+  /** 이 항목을 만든 측정 주차 — 초안의 「실측 답변」이 그 주의 기록에서 고른다. */
+  weekOf?: string
   canSaveStatus: boolean
   /** 인용 갭 분석에서 「콘텐츠 생성으로」를 눌러 넘어온 카드 — 스크롤 목적지이자 강조 대상. */
   focused?: boolean
@@ -634,6 +637,7 @@ function ActionCard({
       {showsDraft && (
         <DraftPanel
           tenantId={tenantId}
+          weekOf={weekOf}
           action={action}
           hasBrief={Boolean(briefs[action.id])}
           stored={drafts[action.id]}
@@ -912,7 +916,7 @@ export default function GapActions() {
                 )}
                 <div className="gap-grid">
                   {publishPlan.articles.map(({ action: a }) => (
-                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                   ))}
                 </div>
               </section>
@@ -949,7 +953,7 @@ export default function GapActions() {
                   // 초안 라우트가 없는 환경(웹) — 올릴 글이 없으니 채널 카드로 근거 · 상태만 보인다.
                   <div className="gap-grid">
                     {openListing.map((a) => (
-                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} />
+                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={coverageOf(a)} />
                     ))}
                   </div>
                 )}
@@ -984,7 +988,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
               </details>
@@ -1000,7 +1004,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
             </section>

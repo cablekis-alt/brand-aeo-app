@@ -6491,3 +6491,48 @@ td.cell-mid {
   gap: 4px;
   font-size: 12px;
 }
+
+/* 글 확인 화면의 실측 답변(EvidencePanel.tsx) — 사람이 원문과 대조해 확인한다. */
+.evidence-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.evidence-panel h4 {
+  margin: 0;
+}
+.evidence-item {
+  display: grid;
+  gap: 4px;
+}
+.evidence-item blockquote {
+  margin: 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line);
+}
+.evidence-item .doc-meta {
+  margin: 0;
+}
+.evidence-raw {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.evidence-include {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+.evidence-panel .hint.warn {
+  color: var(--warn);
+  margin: 0;
+}

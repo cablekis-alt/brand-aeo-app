@@ -1,4 +1,5 @@
 import type { StoredDraft, TenantSummary } from './api'
+import { renderEvidenceMarkdown } from './answerEvidence'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -48,9 +49,14 @@ export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
   return paras.length ? ['---', ...paras].join('\n\n') : ''
 }
 
-/** 자사 사이트에 올릴 발행본 — 본문 + 글 끝. 복사 · .md · .html이 같은 결과를 쓴다. */
+/**
+ * 자사 사이트에 올릴 발행본 — 본문 + 실측 사례(사람이 확인했을 때만) + 글 끝. 복사 · .md · .html이 같은 결과를 쓴다.
+ * 붙일 것이 없으면 본문 그대로다(바이트까지 같다).
+ */
 export function publishArticleOf(stored: StoredDraft, ctx: ArticleContext): string {
   const body = publishMarkdownOf(stored)
-  const tail = articleTailMarkdown(body, ctx)
-  return tail ? `${body.trimEnd()}\n\n${tail}\n` : body
+  const evidence = renderEvidenceMarkdown(stored.evidence)
+  const tail = articleTailMarkdown(`${body}\n${evidence}`, ctx)
+  const extra = [evidence, tail].filter(Boolean)
+  return extra.length ? `${[body.trimEnd(), ...extra].join('\n\n')}\n` : body
 }

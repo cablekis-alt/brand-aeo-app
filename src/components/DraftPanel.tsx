@@ -16,6 +16,7 @@ import {
 import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
+import EvidencePanel from './EvidencePanel'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
@@ -75,6 +76,7 @@ export default function DraftPanel({
   onStored,
   ensureBrief,
   compact = false,
+  weekOf,
 }: {
   tenantId: string
   action: GapAction
@@ -87,6 +89,8 @@ export default function DraftPanel({
    * 운영자용 손잡이(편집·다시 만들기·파일·생성일)를 숨긴다. 카드의 「자세히」가 되살린다 — 숨길 뿐 지우지 않는다.
    */
   compact?: boolean
+  /** 이 글(실행 항목)을 만든 측정 주차 — 있으면 「실측 답변」 칸을 연다(측정 전 글쓰기 화면에는 없다). */
+  weekOf?: string
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -663,6 +667,16 @@ export default function DraftPanel({
         </div>
       )}
 
+      {opened && !editing && weekOf && tenant && (
+        <EvidencePanel
+          tenantId={tenantId}
+          stored={stored}
+          questionIds={action.questionIds}
+          weekOf={weekOf}
+          industry={tenant.industry}
+          onStored={onStored}
+        />
+      )}
     </div>
   )
 }
