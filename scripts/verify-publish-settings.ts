@@ -44,6 +44,13 @@ try {
     blogUrl: 'https://vblog.tistory.com',
   })
   ok('상담 안내 앞의 #·- 는 떼고 줄바꿈은 한 칸', s.ctaText === '사이트 주소와 자주 받는 질문을 준비해 문의해 주세요.')
+  const cta = (t: string) => normalizePublishSettings({ ctaText: t }).ctaText
+  ok('공백 없는 맨 앞 숫자 · 기호는 그대로(1.5배 · +82 · -10% · **굵게**)',
+    cta('1.5배 빠른 상담을 받아 보세요.') === '1.5배 빠른 상담을 받아 보세요.' &&
+      cta('+82 문의 환영') === '+82 문의 환영' &&
+      cta('-10% 할인 상담') === '-10% 할인 상담' &&
+      cta('**무료 상담**을 받아 보세요.') === '**무료 상담**을 받아 보세요.')
+  ok('인용 표시 > 는 공백 없이도 뗀다', cta('>상담은 무료입니다.') === '상담은 무료입니다.' && cta('1. > 상담은 무료입니다.') === '상담은 무료입니다.')
   ok('주소 앞에 https를 붙인다', s.inquiryUrl === 'https://vtravel.example/contact')
   ok('태그는 # 떼고 같은 것은 한 번', JSON.stringify(s.tags) === JSON.stringify(['가상여행', '가상 관광']))
   ok('카테고리 공백 정리', s.category === '여행 정보')

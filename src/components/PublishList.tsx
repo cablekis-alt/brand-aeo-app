@@ -4,7 +4,7 @@ import { copyRich } from '../lib/clipboard'
 import { publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import type { GapAction } from '../lib/gapActions'
-import { markdownToHtml } from '../lib/htmlFile'
+import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
 import { publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
@@ -133,7 +133,8 @@ export default function PublishList({
   // 태그는 본문에 넣지 않는다 — 블로그 편집기의 태그 칸에 따로 붙인다(쉼표로 나눈다).
   const copyTags = async (key: string) => {
     const text = tags.join(', ')
-    if (!(await copyRich(text, text))) {
+    // html 쪽은 이스케이프한 것만 넘긴다(clipboard.ts) — 「<신상>」 같은 태그가 사라지거나 태그로 그려지지 않게.
+    if (!(await copyRich(text, escapeHtml(text)))) {
       setError('태그를 클립보드에 복사하지 못했습니다.')
       return
     }

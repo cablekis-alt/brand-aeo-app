@@ -19,7 +19,7 @@ import type { PublishSettings } from './publishSettings'
  * 안전하게 떨어지면 된다. 텍스트는 전부 이스케이프한다 — 고친 글에 <script>가 있어도 문자로 남는다.
  */
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 

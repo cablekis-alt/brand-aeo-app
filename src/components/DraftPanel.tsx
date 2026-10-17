@@ -691,7 +691,8 @@ export default function DraftPanel({
         </div>
       )}
 
-      {opened && !editing && weekOf && tenant && (
+      {/* 실측 사례는 자사 글(content)의 발행본에만 붙는다 — 채널 전용 글(등재형)의 올리기 줄은 본문만 복사한다. */}
+      {opened && !editing && weekOf && tenant && action.kind === 'content' && (
         <EvidencePanel
           tenantId={tenantId}
           stored={stored}

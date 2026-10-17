@@ -52,7 +52,11 @@ export interface AnswerEvidence {
   questionBankVersion?: string
   /** 엔진마다 하나, 최대 둘. 순위가 아니라 질문 순서로 고른다. */
   items: EvidenceItem[]
-  /** 이 글의 질문을 물은 응답(되물음 제외)과 그중 이름이 나온 응답. */
+  /**
+   * 이름을 넣지 않은 질문을 물은 응답(되물음 제외)과 그중 이름이 실제로 나온 응답 — 원문에 이름이 있고, 조건부
+   * 지목 · 못 찾음 문장만 있는 답은 뺀다. 이름을 넣어 물으면 이름이 나오는 게 당연해 비율이 부풀므로 세지 않는다
+   * (다른 지표 — answerInsights · reviewReport — 와 같은 원칙).
+   */
   answered: { asked: number; mentioned: number }
   conditions: { collect: string; judge: string; repeats: string }
   /** 같은 질문 은행 · 같은 엔진으로 잰 주차 수. */
@@ -97,36 +101,51 @@ const MAX_EXCERPT = 300
 const MAX_COMPARE = 3
 /** 문장으로 읽히는 최소 길이 — 목록 · 표 머리의 조각(「총액 요금제 기준 (예: …)」)을 거른다. */
 const MIN_SENTENCE = 15
-/** 문장 끝 — 마침표 · 물음표 · 느낌표, 또는 「~다」 · 「~요」로 끝나는 줄. */
-const SENTENCE_END = /([.!?。]|[다요])["'」』)]?$/
+/** 문장 끝 — 마침표 · 느낌표, 또는 「~다」 · 「~요」로 끝나는 줄. 물음표로 끝나는 문장(되묻기)은 옮기지 않는다. */
+const SENTENCE_END = /([.!。]|[다요])["'」』)]?$/
 
 /** 의료 업종 — 실측 사례를 기본으로 끈다. 사람이 켤 수 있다. */
 export const MEDICAL_INDUSTRY = /성형|치과|병원|의원|피부과|한의원|클리닉|의료|안과|산부인과/
 
-/** 조건부 지목 · 못 찾음 — 이름이 들어 있어도 우리를 가리킨 답이 아니다. */
-const CONDITIONAL = /말씀하시는|가리키는|것이라면|라면[,，]|정보를 찾(을 수 없|지 못)|확인되지 않|확인할 수 없|찾지 못|알려진 바가 없|정보가 없/
+/**
+ * 조건부 지목 · 못 찾음 · 되묻기 — 이름이 들어 있어도 우리를 가리킨 답이 아니다. 작은 브랜드에 대한 한국어 답변에
+ * 흔한 꼴(「~을 말하는 거라면」 「~을 의미하신다면」 「~이 맞다면」 「~을 찾으시는 건가요」 「잘 알려져 있지 않습니다」)을 함께 거른다.
+ */
+const CONDITIONAL =
+  /말씀하시는|가리키는|것이라면|거라면|[라다]면[,，]|신다면|(?:뜻|의미|지칭|말)한다면|맞다면|찾으시는|(?:건|것인|인)가요|정보를 찾(?:을 수 없|지 못)|찾기 어렵|확인되지 않|확인할 수 없|확인이 (?:어렵|필요)|인지(?:는|를) 확인|찾지 못|알려진 바가 없|알려져 있지 않|등록(?:돼|되어) 있지 않|단정하기 어렵|파악하기 어렵|정보가 없/
 
-/** 비교용 — 공백 · 마크다운 · 각주 번호를 걷는다. 발췌가 원문에 있는지 볼 때 둘 다 이렇게 바꿔 비교한다. */
-function plain(s: string): string {
-  return s
-    .replace(/\[(\d+)\]/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/[*_`#>]/g, '')
-    .replace(/\s+/g, '')
-}
+/** 뒤 내용을 가리키는 문장(「~은 다음과 같습니다」) — 가리키는 목록 없이 옮기면 빈말이 된다. */
+const POINTS_ONWARD = /(?:다음|아래)과 같(?:습니다|아요|다)|(?:다음|아래)와 같(?:습니다|아요|다)/
 
-/** 발췌로 낼 문장 — 서식 · 링크 · 각주 번호만 걷고 글자는 그대로. */
+/** 발췌로 낼 문장 — 서식(굵게 · 인용 · 제목 · 목록 기호) · 링크 · 각주 번호만 걷고 글자는 그대로, 공백은 한 칸으로. */
 function cleanExcerpt(s: string): string {
   return s
+    .trim()
     .replace(/\[(\d+)\]/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/\*\*/g, '')
     .replace(/\*([^*\n]+)\*/g, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/^>+\s*/, '')
     .replace(/^#+\s*/, '')
     .replace(/^[*-]\s+/, '')
+    .replace(/^\d+[.)]\s+/, '')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/**
+ * 원문 한 줄(서식을 걷은 것)에 이 문장이 **문장 하나로** 있나 — 줄 처음이나 문장 끝 부호 뒤에서 시작하고, 줄 끝이나
+ * 공백 앞에서 끝나야 한다. 앞부분을 뗀 조각(「다른 곳보다 가상 여행은 …」의 뒷부분)과 두 줄을 이은 문장(제목 + 다음 줄)은
+ * 받지 않는다. 공백은 지우지 않고 한 칸으로만 줄여 비교한다 — 판정이 띄어쓰기를 바꾼 문장은 원문이 아니다.
+ */
+function sentenceInLine(line: string, sentence: string): boolean {
+  for (let i = line.indexOf(sentence); i >= 0; i = line.indexOf(sentence, i + 1)) {
+    const starts = i === 0 || /[.!?。]["'」』)]?\s$/.test(line.slice(0, i))
+    const end = i + sentence.length
+    if (starts && (end === line.length || /\s/.test(line[end]!))) return true
+  }
+  return false
 }
 
 /** UTC 시각 → 한국 날짜(YYYY-MM-DD). 읽지 못하면 빈 문자열. */
@@ -162,7 +181,7 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
 
 /** 이 응답에서 발행본에 옮겨도 되는 문장들. 없으면 빈 배열. */
 function pickSentences(a: QuestionRepeatAnalysis, raw: EvidenceRawCall, ours: RegExp[], others: RegExp[]): string[] {
-  const rawPlain = plain(raw.rawText)
+  const rawLines = raw.rawText.split(/\r?\n/).map(cleanExcerpt).filter(Boolean)
   const picked: string[] = []
   for (const m of a.mentionSentences ?? []) {
     if (m.sentiment === 'negative') continue
@@ -173,10 +192,10 @@ function pickSentences(a: QuestionRepeatAnalysis, raw: EvidenceRawCall, ours: Re
     // 목록 · 표 머리의 조각은 인용할 문장이 아니다.
     if (sentence.length < MIN_SENTENCE || !SENTENCE_END.test(sentence)) continue
     if (/\d/.test(sentence)) continue // 숫자는 판정이 사실 대조를 하지 않은 값일 수 있다 — 옮기지 않는다
-    if (CONDITIONAL.test(sentence)) continue
+    if (CONDITIONAL.test(sentence) || POINTS_ONWARD.test(sentence)) continue
     if (!hasAny(sentence, ours)) continue // 「언급」으로 판정됐어도 이름이 실제로 있어야 한다
     if (hasAny(sentence, others)) continue
-    if (!rawPlain.includes(plain(sentence))) continue // 원문에 글자 그대로 있어야 한다
+    if (!rawLines.some((line) => sentenceInLine(line, sentence))) continue // 원문 한 줄에 문장 그대로 있어야 한다
     if (picked.includes(sentence)) continue
     picked.push(sentence)
     if (picked.length >= MAX_SENTENCES) break
@@ -193,7 +212,17 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
   const order = new Map(input.questionIds.map((id, i) => [id, i]))
 
   const answers = input.analyses.filter((a) => wanted.has(a.questionId) && a.engine !== ('mock' as string) && !a.clarifying)
-  const answered = { asked: answers.length, mentioned: answers.filter((a) => a.mentioned).length }
+  /** 이름이 실제로 나온 답 — 판정이 언급으로 봤고, 원문에 이름이 있고, 조건부 지목 · 못 찾음 문장만 있는 답이 아니다. */
+  const realMention = (a: QuestionRepeatAnalysis): boolean => {
+    if (!a.mentioned) return false
+    const raw = rawOf.get(`${a.engine}|${a.questionId}|${a.callIndex}`)
+    if (raw && !hasAny(raw.rawText, ours)) return false
+    const sentences = a.mentionSentences ?? []
+    return sentences.length === 0 || sentences.some((m) => !CONDITIONAL.test(m.sentence ?? ''))
+  }
+  const unnamed = answers.filter((a) => !byQuestion.get(a.questionId)?.containsBrandName)
+  const answered = { asked: unnamed.length, mentioned: unnamed.filter(realMention).length }
+  const mentionedAny = answers.filter(realMention).length
 
   // 이름 없는 질문을 먼저, 그 안에서는 글의 질문 순서(순위로 줄 세우지 않는다).
   const candidates = answers
@@ -213,8 +242,11 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
     const raw = rawOf.get(`${a.engine}|${a.questionId}|${a.callIndex}`)
     const q = byQuestion.get(a.questionId)
     if (!raw || !q) continue
+    // 등록 경쟁사 · 코호트 브랜드에 더해, 이 답이 1순위로 꼽은 곳과 판정이 찾은 다른 이름도 남의 이름이다.
     const competitorNames = [...input.competitorNames]
-    if (a.topRecommendation && !hasAny(a.topRecommendation, ours)) competitorNames.push(a.topRecommendation)
+    for (const name of [a.topRecommendation, ...(a.competitorMentions ?? []).map((c) => c.name)]) {
+      if (name && !hasAny(name, ours)) competitorNames.push(name)
+    }
     const sentences = pickSentences(a, raw, ours, namePatterns(competitorNames))
     if (!sentences.length) continue
     items.push({
@@ -240,10 +272,10 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
 
   const emptyReason = items.length
     ? undefined
-    : answered.asked === 0
+    : answers.length === 0
       ? '이 주에는 이 글의 질문을 잰 기록이 없습니다.'
-      : answered.mentioned === 0
-        ? `이 글의 질문을 물은 답변 ${answered.asked}건에서 ${input.brandName} 이름이 나오지 않았습니다.`
+      : mentionedAny === 0
+        ? `이 글의 질문을 물은 답변 ${answers.length}건에서 ${input.brandName} 이름이 나오지 않았습니다.`
         : '이름이 나온 답변은 있지만, 원문 그대로 옮길 수 있는 문장이 없습니다(숫자 · 경쟁사 이름 · 조건부 지목이 든 문장은 뺍니다).'
 
   return {
@@ -280,7 +312,11 @@ export function renderEvidenceMarkdown(e: AnswerEvidence | undefined): string {
     L.push(`질문: 「${it.questionText}」${it.named ? ' — 이름을 넣어 물은 질문' : ''}`, '')
   }
   L.push('### 이렇게 확인했습니다', '')
-  L.push(`- 이 글의 질문을 ${e.conditions.collect}에 물었습니다. 답변 ${e.answered.asked}건 중 ${e.answered.mentioned}건에서 이름이 나왔습니다.`)
+  L.push(
+    e.answered.asked > 0
+      ? `- 이 글의 질문을 ${e.conditions.collect}에 물었습니다. 이름을 넣지 않은 질문의 답변 ${e.answered.asked}건 중 ${e.answered.mentioned}건에서 이름이 나왔습니다.`
+      : `- 이 글의 질문을 ${e.conditions.collect}에 물었습니다. 모두 이름을 넣어 물은 질문이라 이름이 나온 비율은 세지 않았습니다.`,
+  )
   L.push('- 앱 화면이 아니라 API로 받은 응답입니다. 앱에서 같은 질문을 해도 다르게 답할 수 있습니다.')
   // 「Claude (claude-sonnet-5-5)」를 괄호 안에 또 괄호로 넣지 않게 「Claude · claude-sonnet-5-5」로.
   const judge = e.conditions.judge.replace(/ \((.+)\)$/, ' · $1')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { loadRawAnswers, updateDraftEvidence, type RawAnswer, type StoredDraft } from '../lib/api'
+import { loadRawAnswers, updateDraftEvidence, type StoredDraft } from '../lib/api'
 import { evidenceLabel, evidencePublishable, kstDate, MEDICAL_INDUSTRY, renderEvidenceMarkdown, type EvidenceItem } from '../lib/answerEvidence'
 import { weekLabel } from '../lib/format'
 import { markdownToHtml } from '../lib/htmlFile'
@@ -31,9 +31,12 @@ export default function EvidencePanel({
   const ev = stored.evidence
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  /** 원문을 펼친 응답(키 `엔진|질문|회차`)과 불러온 원문. */
+  /**
+   * 원문을 펼친 응답과 불러온 원문 — 키에 사례를 고른 시각(builtAt)을 넣어, 「다시 찾기」 뒤 같은 엔진 · 질문 · 회차의 옛 원문이
+   * 새 발췌 옆에 남지 않게 한다. remeasured는 그 주를 다시 재 원문이 이 발췌를 고른 답변이 아닌 경우(calledAt이 다름).
+   */
   const [openRaw, setOpenRaw] = useState<string | null>(null)
-  const [raw, setRaw] = useState<Record<string, RawAnswer | null>>({})
+  const [raw, setRaw] = useState<Record<string, { rawText: string; remeasured: boolean } | null>>({})
 
   const run = async (op: 'build' | 'confirm' | 'include' | 'exclude') => {
     setBusy(op)
@@ -53,7 +56,7 @@ export default function EvidencePanel({
     }
   }
 
-  const keyOf = (it: EvidenceItem) => `${it.engine}|${it.questionId}|${it.callIndex}`
+  const keyOf = (it: EvidenceItem) => `${ev?.builtAt ?? ''}|${it.engine}|${it.questionId}|${it.callIndex}`
   const toggleRaw = async (it: EvidenceItem) => {
     const key = keyOf(it)
     if (openRaw === key) {
@@ -63,7 +66,8 @@ export default function EvidencePanel({
     setOpenRaw(key)
     if (key in raw || !ev) return
     const answers = await loadRawAnswers(tenantId, ev.weekOf, it.questionId)
-    setRaw((prev) => ({ ...prev, [key]: answers?.find((a) => a.engine === it.engine && a.callIndex === it.callIndex) ?? null }))
+    const found = answers?.find((a) => a.engine === it.engine && a.callIndex === it.callIndex)
+    setRaw((prev) => ({ ...prev, [key]: found ? { rawText: found.rawText, remeasured: found.calledAt !== it.calledAt } : null }))
   }
 
   const medical = MEDICAL_INDUSTRY.test(industry)
@@ -99,9 +103,15 @@ export default function EvidencePanel({
             </button>
           </p>
           {openRaw === keyOf(it) && (
-            <pre className="evidence-raw">
-              {keyOf(it) in raw ? (raw[keyOf(it)]?.rawText ?? '원문을 찾지 못했습니다(그 주를 다시 쟀으면 원문이 바뀌었을 수 있습니다).') : '불러오는 중…'}
-            </pre>
+            raw[keyOf(it)]?.remeasured ? (
+              <p className="hint warn">
+                이 주를 다시 쟀습니다 — 지금 원문은 이 발췌를 고른 답변이 아닙니다. 「다시 찾기」로 새 답변에서 고르세요.
+              </p>
+            ) : (
+              <pre className="evidence-raw">
+                {keyOf(it) in raw ? (raw[keyOf(it)]?.rawText ?? '원문을 찾지 못했습니다(그 주를 다시 쟀으면 원문이 바뀌었을 수 있습니다).') : '불러오는 중…'}
+              </pre>
+            )
           )}
         </div>
       ))}

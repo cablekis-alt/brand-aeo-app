@@ -38,9 +38,21 @@ export default function PublishSettingsPanel({
     invalid = e instanceof Error ? e.message : String(e)
   }
   const tail = draft ? articleTailMarkdown('', { brand, settings: draft }) : ''
-  const configured = [settings.ctaText && '상담 안내', settings.tags?.length && `태그 ${settings.tags.length}`, settings.blogUrl && '블로그']
+  const configured = [
+    settings.ctaText && '상담 안내',
+    settings.inquiryUrl && '문의 링크',
+    settings.tags?.length && `태그 ${settings.tags.length}`,
+    settings.category && '카테고리',
+    settings.blogUrl && '블로그',
+  ]
     .filter(Boolean)
     .join(' · ')
+
+  // 저장한 뒤 다시 고치면 「저장했어요」를 지운다 — 저장 안 된 편집이 저장된 것처럼 보이지 않게.
+  const edit = (set: (v: string) => void) => (e: { target: { value: string } }) => {
+    set(e.target.value)
+    setMessage(null)
+  }
 
   const save = async () => {
     if (!draft) return
@@ -68,26 +80,26 @@ export default function PublishSettingsPanel({
           <textarea
             rows={2}
             value={ctaText}
-            onChange={(e) => setCtaText(e.target.value)}
+            onChange={edit(setCtaText)}
             placeholder="예: 사이트 주소와 자주 받는 질문 2~3개를 준비해 문의해 주세요."
           />
         </label>
         {/\d/.test(ctaText) && <p className="hint warn">숫자(가격 · 기간 · 횟수)는 확인한 값만 쓰세요 — 글 끝은 사실 대조를 거치지 않습니다.</p>}
         <label>
           문의 링크
-          <input value={inquiryUrl} onChange={(e) => setInquiryUrl(e.target.value)} placeholder="예: https://example.com/contact" />
+          <input value={inquiryUrl} onChange={edit(setInquiryUrl)} placeholder="예: https://example.com/contact" />
         </label>
         <label>
           태그 <span className="muted">(쉼표로 구분 · 최대 {PUBLISH_LIMITS.tags}개 — 올리기 목록에서 「태그 복사」)</span>
-          <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="예: 군산여행, 군산 관광" />
+          <input value={tags} onChange={edit(setTags)} placeholder="예: 군산여행, 군산 관광" />
         </label>
         <label>
           카테고리
-          <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="예: AI 검색 최적화" />
+          <input value={category} onChange={edit(setCategory)} placeholder="예: AI 검색 최적화" />
         </label>
         <label>
           블로그 주소 <span className="muted">(티스토리면 「자사 블로그」 줄이 그 블로그의 글쓰기 화면을 엽니다)</span>
-          <input value={blogUrl} onChange={(e) => setBlogUrl(e.target.value)} placeholder="예: https://myblog.tistory.com" />
+          <input value={blogUrl} onChange={edit(setBlogUrl)} placeholder="예: https://myblog.tistory.com" />
         </label>
         {invalid && (
           <p className="error" role="alert">

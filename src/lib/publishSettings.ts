@@ -36,12 +36,14 @@ export function httpUrl(raw: unknown, label: string): string | undefined {
 }
 
 /**
- * 상담 안내 한 문단. 줄바꿈은 한 칸으로 붙이고, 맨 앞의 #·>·-·「1.」은 떼어 낸다 — 마크다운 제목 · 인용 ·
- * 목록이 되어 글 끝 모양이 바뀌지 않게.
+ * 상담 안내 한 문단. 줄바꿈은 한 칸으로 붙이고, 맨 앞의 제목 · 인용 · 목록 표시(#·>·-·「1.」)는 떼어 낸다 — 마크다운
+ * 제목 · 인용 · 목록이 되어 글 끝 모양이 바뀌지 않게. 인용(>) 말고는 **뒤에 공백이 있을 때만** 표시다 — 「1.5배」 「+82」
+ * 「**무료 상담**」의 앞 글자를 떼면 숫자 · 서식이 바뀐다(글 끝은 사실 대조를 거치지 않는다).
  */
+const CTA_MARK = /^(#{1,6}\s+|>+\s*|[-*+]\s+|\d+[.)]\s+)/
 function ctaOf(raw: unknown): string | undefined {
   let s = typeof raw === 'string' ? raw.replace(/\s+/g, ' ').trim() : ''
-  while (/^(#+|>+|[-*+]|\d+[.)])\s*/.test(s)) s = s.replace(/^(#+|>+|[-*+]|\d+[.)])\s*/, '')
+  while (CTA_MARK.test(s)) s = s.replace(CTA_MARK, '')
   if (!s) return undefined
   if (s.length > PUBLISH_LIMITS.cta) throw new Error(`상담 안내는 ${PUBLISH_LIMITS.cta}자까지 쓸 수 있어요(지금 ${s.length}자).`)
   return s

@@ -84,7 +84,7 @@ try {
       A({ questionId: 'v3-002', engine: 'openai', sentences: ['가상 여행도 좋은 선택입니다.'] }),
     ],
     raw: [
-      R('v3-001', 'openai', `가상시를 여행한다면 ${good} 길 안내도 있습니다.`, { model: 'gpt-6-luna' }),
+      R('v3-001', 'openai', `가상시 여행 정보를 찾으신다면 참고하세요. ${good} 길 안내도 있습니다.`, { model: 'gpt-6-luna' }),
       R('v3-001', 'perplexity', '가상 여행을 말씀하시는 것이라면 가상시 공식 관광 사이트를 보세요.', { model: 'preset:low' }),
       R('v3-002', 'perplexity', '코스를 고를 때는 가상여행 사이트의 지도를 참고하세요.', { model: 'preset:low', usedWebSearch: false }),
       R('v3-002', 'openai', '가상 여행도 좋은 선택입니다.'),
@@ -98,7 +98,7 @@ try {
   ok('라벨 — 모델 · 웹 검색은 호출마다', ev.evidenceLabel(built.items[0]!) === 'ChatGPT(API · gpt-6-luna · 웹 검색) 응답 · 2026-10-15 측정')
   ok('라벨 — Perplexity 프리셋 · 웹 검색 없음', ev.evidenceLabel(built.items[1]!) === 'Perplexity(API · 프리셋 low · 웹 검색 없음) 응답 · 2026-10-15 측정')
   ok('같은 엔진의 다른 질문은 고르지 않는다(엔진당 하나)', built.items.filter((i) => i.engine === 'openai').length === 1)
-  ok('답변 수 · 이름 나온 수', built.answered.asked === 4 && built.answered.mentioned === 4)
+  ok('답변 수 · 이름 나온 수(조건부 지목만 있는 답은 세지 않는다)', built.answered.asked === 4 && built.answered.mentioned === 3)
   ok('비교 질문은 이름 없는 질문 먼저', built.compareQuestions[0] === questions[0]!.text && built.compareQuestions.at(-1) === questions[2]!.text)
   ok('측정 조건', built.conditions.collect === 'ChatGPT (gpt-6-luna) · Perplexity (preset:low)' && built.conditions.repeats === '질문당 1회')
   ok('확인 전이고 넣기는 켜짐', built.include === true && built.confirmedAt === undefined)
@@ -117,6 +117,32 @@ try {
   reject('목록 조각은 고르지 않는다(문장 끝이 없음)', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행 기준 (예: 가상 여행 코스 등)'] })], [R('v3-001', 'openai', '- 가상 여행 기준 (예: 가상 여행 코스 등)')])
   reject('너무 짧은 조각은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행입니다.'] })], [R('v3-001', 'openai', '가상 여행입니다.')])
   reject('표 줄은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['| 가상 여행 | 정보 사이트 |'] })], [R('v3-001', 'openai', '| 가상 여행 | 정보 사이트 |')])
+  const plainGood = '가상 여행은 가상시 관광지와 맛집을 함께 정리한 정보 사이트입니다.'
+  reject('띄어쓰기를 바꾼 문장은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행은 가상시 관광지와맛집을 함께정리한 정보 사이트입니다.'] })], [R('v3-001', 'openai', plainGood)])
+  reject('앞부분을 뗀 조각은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: [plainGood] })], [R('v3-001', 'openai', `다른 곳보다 ${plainGood}`)])
+  reject('두 줄을 이은 문장은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행 가상시 관광지와 맛집을 함께 정리한 정보 사이트입니다.'] })], [R('v3-001', 'openai', '## 가상 여행\n가상시 관광지와 맛집을 함께 정리한 정보 사이트입니다.')])
+  const quoted = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [`> ${plainGood}`] })], raw: [R('v3-001', 'openai', `앞 문단입니다.\n> ${plainGood}`)] })
+  ok('인용 줄의 > 는 걷고 고른다', quoted.items[0]?.excerpt === plainGood)
+  for (const s of [
+    '가상 여행을 말하는 거라면 가상시 공식 관광 사이트를 보세요.',
+    '가상 여행을 의미하신다면 가상시 공식 관광 사이트를 보세요.',
+    '가상 여행이 맞다면 가상시 관광지를 정리한 사이트입니다.',
+    '가상 여행이라는 이름의 서비스는 잘 알려져 있지 않습니다.',
+    '가상 여행에 대한 구체적인 정보는 찾기 어렵습니다.',
+    '혹시 가상 여행을 찾으시는 건가요?',
+    '가상시 관광 안내에는 가상 여행이라는 서비스가 등록돼 있지 않습니다.',
+    '현재 정보만으로는 가상 여행이 어떤 곳인지 단정하기 어렵습니다.',
+    '가상 여행이 가상시 공식 관광 사이트를 뜻한다면 그곳이 더 자세합니다.',
+    '먼저 가상 여행이 공식 관광 안내 서비스의 명칭인지는 확인이 필요합니다.',
+  ]) {
+    reject(`조건부 지목 · 못 찾음 · 되묻기는 고르지 않는다 — 「${s.slice(0, 14)}…」`, [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], [R('v3-001', 'openai', s)])
+  }
+  reject('뒤 목록을 가리키는 문장은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행의 주요 서비스는 다음과 같습니다.'] })], [R('v3-001', 'openai', '가상 여행의 주요 서비스는 다음과 같습니다.')])
+  const withOther = { ...A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행과 다른곳여행을 함께 비교해 보세요.'] }), competitorMentions: [{ name: '다른곳여행', mentionCount: 1, sentences: [] }] } as unknown as ReturnType<typeof A>
+  reject('판정이 찾은 다른 이름이 든 문장은 고르지 않는다', [withOther], [R('v3-001', 'openai', '가상 여행과 다른곳여행을 함께 비교해 보세요.')])
+  const namedOnly = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-003', engine: 'openai', sentences: [plainGood] })], raw: [R('v3-003', 'openai', plainGood)] })
+  ok('이름을 넣어 물은 질문은 답변 수에 넣지 않는다', namedOnly.items.length === 1 && namedOnly.answered.asked === 0 && namedOnly.answered.mentioned === 0)
+  ok('모두 이름 넣은 질문이면 비율을 쓰지 않는다', ev.renderEvidenceMarkdown({ ...namedOnly, confirmedAt: '2026-10-18T01:00:00.000Z' }).includes('모두 이름을 넣어 물은 질문이라 이름이 나온 비율은 세지 않았습니다'))
 
   const none = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', mentioned: false })], raw: [] })
   ok('이름이 안 나왔으면 그렇게 적는다', none.items.length === 0 && (none.emptyReason ?? '').includes('1건에서 가상 여행 이름이 나오지 않았습니다'))
@@ -134,6 +160,7 @@ try {
   ok('여러 주 잰 경우', ev.renderEvidenceMarkdown({ ...confirmed, sameConditionWeeks: 3 }).includes('같은 질문 · 같은 엔진으로 3주 쟀습니다'))
   ok('앱 화면이 아니라 API 응답이라고 적는다', md.includes('앱 화면이 아니라 API로 받은 응답입니다'))
   ok('판정 모델 표기에 괄호가 겹치지 않는다', md.includes('판정 모델이 골랐고(Claude · claude-sonnet-5-5)'))
+  ok('이름 나온 비율은 이름 없는 질문 기준이라고 적는다', md.includes('이름을 넣지 않은 질문의 답변 4건 중 3건에서 이름이 나왔습니다.'))
   ok('스크린샷 · 캡처 · 순위라는 말이 없다', !/스크린샷|캡처|screenshot|순위/i.test(md))
   ok('넣기를 끄면 없다', ev.renderEvidenceMarkdown({ ...confirmed, include: false }) === '')
   const html = markdownToHtml(md)
@@ -154,6 +181,18 @@ try {
   ok('확인 전 사례는 발행본에 없다', publishArticleOf({ ...stored, evidence: built }, { brand }) === publishArticleOf(stored, { brand }))
 
   // 4) 저장 — 초안 기록에 붙이고, 다시 만들어도 남고, 쓰기가 서로 덮지 않는다
+  // 3-1) 남의 이름 — 코호트 브랜드 · 그들의 경쟁사 · 별칭. 우리 이름과 같은 이름은 뺀다.
+  const { evidenceOtherNames } = await import('../server/articleEvidence')
+  const T = (o: Record<string, unknown>) => ({ industry: '관광안내', region: '가상시', aliases: [], competitors: [], ...o }) as never
+  const others = evidenceOtherNames(T({ tenantId: 'va', brandName: '가상 여행', aliases: ['가상여행'] }), [
+    T({ tenantId: 'va', brandName: '가상 여행', aliases: ['가상여행'] }),
+    T({ tenantId: 'vb', brandName: '다른 여행', aliases: ['다른여행'], competitors: [{ name: '세번째 관광', aliases: ['세번째'] }] }),
+    T({ tenantId: 'vc', brandName: '먼 여행', region: '먼시' }),
+    T({ tenantId: 'va2', brandName: '가상 여행', aliases: ['가상 여행 본점'] }),
+  ])
+  ok('코호트 브랜드와 그 별칭 · 경쟁사는 남의 이름', ['다른 여행', '다른여행', '세번째 관광', '세번째'].every((n) => others.includes(n)))
+  ok('우리 이름 · 다른 코호트 · 같은 이름으로 다시 등록한 브랜드의 별칭은 넣지 않는다', !['가상 여행', '가상여행', '먼 여행', '가상 여행 본점'].some((n) => others.includes(n)))
+
   const drafts = await import('../server/contentDraft')
   writeJson('data/vtravel/drafts.json', { 'content:a': stored })
   await Promise.all([

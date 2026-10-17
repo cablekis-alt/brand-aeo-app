@@ -613,7 +613,7 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
         res.status(400).json({ error: 'questionIds가 필요합니다.' });
         return;
       }
-      const evidence = await buildArticleEvidence(store, tenant, questionIds, weekOf);
+      const evidence = await buildArticleEvidence(store, tenant, questionIds, weekOf, await loadRuntimeTenants());
       // 새로 고르면 사람 확인은 다시 받는다. 넣기를 끈 선택은 지킨다.
       res.json(await saveEvidence(tenant.tenantId, actionId, (cur) => ({ ...evidence, include: cur ? cur.include : evidence.include })));
       return;
