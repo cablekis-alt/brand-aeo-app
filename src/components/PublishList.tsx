@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } from '../lib/api'
 import { copyRich } from '../lib/clipboard'
-import { publishMarkdownOf } from '../lib/draftGaps'
+import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import type { GapAction } from '../lib/gapActions'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
@@ -120,14 +120,14 @@ export default function PublishList({
   }
 
   /**
-   * 이 줄의 제목 — 블로그 편집기는 제목 칸이 따로라 본문과 따로 복사한다. 다듬은 글은 그 제목, 자사 줄은 발행본 첫 줄(# 제목)
-   * 이 있으면 그것(고친 글의 제목), 없으면 초안 제목.
+   * 이 줄의 제목 — 블로그 편집기는 제목 칸이 따로라 본문과 따로 복사한다. 다듬은 글은 사실 대조를 거친 그 제목, 자사 줄은 발행본
+   * 첫 줄(# 제목)이 있으면 그것(고친 글의 제목), 없으면 빈칸을 채운 초안의 제목.
    */
   const titleOf = (row: PublishRow, markdown: string): string => {
     const a = row.needsAdapt ? adaptationOf(row) : undefined
-    if (a?.title) return a.title
+    if (a?.title && a.titleChecked) return a.title
     const h1 = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim()
-    return h1 || (row.article.draft ? draftTitle(row.article.draft.draft) : row.article.action.title)
+    return h1 || (row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title)
   }
 
   const run = async (row: PublishRow) => {
@@ -202,7 +202,7 @@ export default function PublishList({
                 <span className={`channel-dot${row.done ? ' up' : ''}`} aria-hidden="true" />
                 <span className="publish-row-name">
                   <b>{row.name}</b>
-                  <span className="publish-row-article">{(row.article.draft && draftTitle(row.article.draft.draft)) || row.article.action.title}</span>
+                  <span className="publish-row-article">{(row.article.draft && draftTitle(effectiveDraft(row.article.draft))) || row.article.action.title}</span>
                 </span>
                 <span className="publish-row-reach">
                   질문 <b>{row.questionIds.length}</b>개

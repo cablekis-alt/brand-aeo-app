@@ -112,7 +112,13 @@ export const MEDICAL_INDUSTRY = /성형|치과|병원|의원|피부과|한의원
  * 흔한 꼴(「~을 말하는 거라면」 「~을 의미하신다면」 「~이 맞다면」 「~을 찾으시는 건가요」 「잘 알려져 있지 않습니다」)을 함께 거른다.
  */
 const CONDITIONAL =
-  /말씀하시는|가리키는|것이라면|거라면|[라다]면[,，]|신다면|(?:뜻|의미|지칭|말)한다면|맞다면|찾으시는|(?:건|것인|인)가요|정보를 찾(?:을 수 없|지 못)|찾기 어렵|확인되지 않|확인할 수 없|확인이 (?:어렵|필요)|인지(?:는|를) 확인|찾지 못|알려진 바가 없|알려져 있지 않|등록(?:돼|되어) 있지 않|단정하기 어렵|파악하기 어렵|정보가 없/
+  /말씀하시는|가리키는|(?:것|거)(?:이)?라면|(?:말씀|의미|뜻|지칭|말)(?:하|하시)?(?:신|한|는)다면|(?:이|가)\s?맞다면|(?:찾으시는|말씀하시는|말하는)\s?(?:건|것인?)가요|정보를 찾(?:을 수 없|지 못)|찾기 어렵|확인되지 않|확인할 수 없|확인이 어렵|(?:인지|맞는지)(?:는|를)?\s?확인이 필요|찾지 못|알려진 바가 없|알려져 있지 않|등록(?:돼|되어) 있지 않|단정하기 어렵|파악하기 어렵|정보가 없/
+
+/**
+ * 옮길 문장에서만 더 거르는 조건문 — 「~이라면,」으로 조건을 단 문장. 이름이 나온 답으로는 세지만(조건을 단 추천도 추천이다)
+ * 우리 글에 인용하지는 않는다. 「~을 원하신다면 X를 추천합니다」처럼 조건 없이 우리를 꼽는 문장은 여기 걸리지 않는다.
+ */
+const CONDITIONAL_CLAUSE = /라면[,，]/
 
 /** 뒤 내용을 가리키는 문장(「~은 다음과 같습니다」) — 가리키는 목록 없이 옮기면 빈말이 된다. */
 const POINTS_ONWARD = /(?:다음|아래)과 같(?:습니다|아요|다)|(?:다음|아래)와 같(?:습니다|아요|다)/
@@ -192,7 +198,7 @@ function pickSentences(a: QuestionRepeatAnalysis, raw: EvidenceRawCall, ours: Re
     // 목록 · 표 머리의 조각은 인용할 문장이 아니다.
     if (sentence.length < MIN_SENTENCE || !SENTENCE_END.test(sentence)) continue
     if (/\d/.test(sentence)) continue // 숫자는 판정이 사실 대조를 하지 않은 값일 수 있다 — 옮기지 않는다
-    if (CONDITIONAL.test(sentence) || POINTS_ONWARD.test(sentence)) continue
+    if (CONDITIONAL.test(sentence) || CONDITIONAL_CLAUSE.test(sentence) || POINTS_ONWARD.test(sentence)) continue
     if (!hasAny(sentence, ours)) continue // 「언급」으로 판정됐어도 이름이 실제로 있어야 한다
     if (hasAny(sentence, others)) continue
     if (!rawLines.some((line) => sentenceInLine(line, sentence))) continue // 원문 한 줄에 문장 그대로 있어야 한다
@@ -202,6 +208,17 @@ function pickSentences(a: QuestionRepeatAnalysis, raw: EvidenceRawCall, ours: Re
   }
   const joined = picked.join(' ')
   return joined.length > MAX_EXCERPT ? picked.slice(0, 1) : picked
+}
+
+/**
+ * 이 이름이 우리 이름인가 — 띄어쓰기를 무시하고 양쪽으로 본다. 코호트 다른 브랜드가 우리를 「가상오더」(우리는 「가상 오더」)나
+ * 「하이오더」(우리는 「KT 하이오더」)로 경쟁사에 적어 두면, 그 이름을 남의 이름으로 거를 때 우리 이름이 든 문장이 모두 빠진다.
+ */
+export function isOurName(name: string, ourNames: string[]): boolean {
+  const ours = namePatterns(ourNames)
+  if (hasAny(name, ours)) return true
+  const theirs = brandPattern(name)
+  return theirs !== null && ourNames.some((n) => hasAny(n, [theirs]))
 }
 
 export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
@@ -242,11 +259,12 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
     const raw = rawOf.get(`${a.engine}|${a.questionId}|${a.callIndex}`)
     const q = byQuestion.get(a.questionId)
     if (!raw || !q) continue
-    // 등록 경쟁사 · 코호트 브랜드에 더해, 이 답이 1순위로 꼽은 곳과 판정이 찾은 다른 이름도 남의 이름이다.
-    const competitorNames = [...input.competitorNames]
-    for (const name of [a.topRecommendation, ...(a.competitorMentions ?? []).map((c) => c.name)]) {
-      if (name && !hasAny(name, ours)) competitorNames.push(name)
-    }
+    // 등록 경쟁사 · 코호트 브랜드에 더해, 이 답이 1순위로 꼽은 곳과 판정이 찾은 다른 이름도 남의 이름이다. 우리 이름과 겹치는
+    // 이름(띄어쓰기만 다른 우리 이름, 우리 이름의 일부)은 빼야 우리 문장이 모두 걸러지지 않는다.
+    const ourNames = [input.brandName, ...input.aliases]
+    const competitorNames = [...input.competitorNames, a.topRecommendation, ...(a.competitorMentions ?? []).map((c) => c.name)].filter(
+      (name): name is string => Boolean(name) && !isOurName(name!, ourNames),
+    )
     const sentences = pickSentences(a, raw, ours, namePatterns(competitorNames))
     if (!sentences.length) continue
     items.push({

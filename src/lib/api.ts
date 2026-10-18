@@ -581,6 +581,8 @@ export interface ChannelAdaptation {
   generatedAt: string
   sourceKey: string
   notes?: string[]
+  /** 제목이 사실 대조를 거쳤나(server/channelAdapt.ts) — 아니면 「제목 복사」가 다듬은 제목을 쓰지 않는다. */
+  titleChecked?: boolean
 }
 export type ChannelAdaptationMap = Record<string, Record<string, ChannelAdaptation>>
 /** null = 라우트 없는 환경(웹). */

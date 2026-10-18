@@ -120,10 +120,40 @@ export function splitSentences(text: string): string[] {
   // (실측: 뷰 영어 원고). "No."는 넣지 않는다 — 뒤에 숫자가 오면 위 규칙이 이미 막고, 숫자가
   // 아니면 대답 "No."일 수 있다.
   // 굵게 닫는 ** 바로 뒤도 문장 끝이다 — 「**핵심 문장.** 다음 문장」이 한 문장으로 묶이면 뒤 문장이 걸릴 때 핵심 문장까지 빠진다.
-  return text
-    .split(/(?<=[.!?。](?:\*\*)?|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.)\s+(?!\d)/)
+  // 다만 약어 예외는 ** 앞의 「Dr.」에도 적용하고(「**Led by Dr.** Choi …」), 「**Q.**」 「**주의!**」 같은 짧은 굵은 꼬리표는
+  // 문장이 아니라 다음 문장에 붙인다 — 따로 두면 뒤 문장이 걸릴 때 꼬리표만 남는다.
+  const parts = text
+    .split(/(?<=[.!?。](?:\*\*)?|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.(?:\*\*)?)\s+(?!\d)/)
     .map((s) => s.trim())
     .filter(Boolean);
+  const out: string[] = [];
+  for (const part of parts) {
+    const prev = out[out.length - 1];
+    if (prev !== undefined && BOLD_LABEL.test(prev)) out[out.length - 1] = `${prev} ${part}`;
+    else out.push(part);
+  }
+  return out;
+}
+
+/** 짧은 굵은 꼬리표(「**Q.**」 「**A.**」 「**1.**」 「**주의!**」) — 문장이 아니다. */
+const BOLD_LABEL = /^\*\*[^*]{1,12}[.!?]\*\*$/;
+
+/**
+ * 글 속 주소 — 스킴(https://) · www. · 흔한 최상위 도메인으로 끝나는 도메인 꼴(gasang-stay.co.kr, booking.naver.com/…).
+ * 글쓰기 엔진이 쓴 주소는 확인할 수 없다. allowed(사실 값 · 다듬기 원문)에 그대로 있는 주소와 schema.org 같은 기술 용어는 뺀다.
+ */
+// 주소 글자는 영문 URL 글자만 — 「https://kt.com/에서」의 조사까지 주소로 읽으면 원문에 있는 주소도 「원문에 없음」이 된다.
+const ADDRESS =
+  /https?:\/\/[a-z0-9\-._~:/?#@!$&'*+,;=%]+|\bwww\.[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[a-z0-9\-._~:/?#@!$&'*+,;=%]*)?|\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)*\.(?:com|net|org|co\.kr|or\.kr|go\.kr|kr|io|ai|me|info|biz|shop|site|xyz|app|dev)\b(?:\/[a-z0-9\-._~:/?#@!$&'*+,;=%]*)?/gi;
+const ADDRESS_TERMS = new Set(['schema.org']);
+export function foreignAddresses(text: string, allowed: string): string[] {
+  const known = allowed.toLowerCase();
+  return (text.match(ADDRESS) ?? [])
+    .map((a) => a.replace(/[.,;:!?]+$/, ''))
+    .filter((a) => {
+      const low = a.toLowerCase();
+      return low && !ADDRESS_TERMS.has(low) && !known.includes(low);
+    });
 }
 
 /** 블로그 글 형식에서 사진 자리는 이만큼까지 — 사진이 많으면 사람이 다 채우지 못하고 빈 자리가 남는다. */
@@ -135,27 +165,40 @@ const MAX_IMAGE_TEXT = 160;
 const WHOLE_ROLES = new Set<DraftRole>(['key', 'quote']);
 const ROLE_NAME: Record<DraftRole, string> = { key: '핵심 문장', action: '할 일', why: '이유', quote: '그대로 쓸 말', limit: '한계' };
 
+/** 표 줄 — 블로그 글 형식은 표를 넣지 않는다(붙여 넣는 블로그 편집기가 표를 깨뜨린다). */
+const TABLE_LINE = /^\s*\|/m;
+
 /**
  * 블로그 글 형식 본문에서 엔진이 넣은 마크다운 기호를 걷는다 — 굵게 · 인용 · 번호는 내보낼 때 코드가 입힌다
  * (src/lib/markdownFile.ts). 남겨 두면 `****`처럼 겹치거나 사진 자리 · 캡션 줄이 깨진다. 링크는 글자만 남긴다.
+ * 여러 줄이면 줄마다 목록 기호를 걷어 한 문단으로 잇고, 표 줄은 뺀다(cleanBlocks가 기록을 남긴다).
  */
 function plainArticleText(s: string): string {
   return s
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/\*\*|[*`[\]]/g, '')
-    .replace(/^\s*(?:#+|>+|[-•]|\d{1,2}[.)])\s+/, '')
+    .split(/\r?\n/)
+    .filter((line) => !TABLE_LINE.test(line))
+    .map((line) =>
+      line
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/\*\*|[*`[\]]/g, '')
+        .replace(/^\s*(?:#+|>+|[-•]|\d{1,2}[.)])\s+/, '')
+        .trim(),
+    )
+    .filter(Boolean)
+    .join(' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-/** 주소가 든 문장 — 엔진이 쓴 주소는 확인할 수 없다. 링크는 사람이 확인한 것만 코드가 붙인다. */
-const URL_IN_TEXT = /https?:\/\/|\bwww\.[a-z0-9-]+\./i;
-
-/** 절 제목 앞 번호(「1.」 「Q2)」 「3 -」) — 번호는 내보낼 때 코드가 실린 순서대로 붙인다. */
+/**
+ * 절 제목 앞 번호(「1.」 「Q2)」 「3 - 」) — 번호는 내보낼 때 코드가 실린 순서대로 붙인다. 번호 뒤에 숫자가 이어지면
+ * (「1.5배」 「1:1 상담」 「10-20대」 「3.5km」) 번호가 아니라 사실이라 그대로 둔다 — 절 제목은 사실 가드를 거치지 않는다.
+ */
 function stripHeadingNumber(h: string): string {
   return h
     .replace(/\*\*/g, '')
-    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s*(?:[.):]|[-–—])\s*/i, '')
+    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s*[.)](?!\d)\s*/i, '')
+    .replace(/^\s*(?:Q\s*)?\d{1,2}\s+[-–—]\s+/i, '')
     .trim();
 }
 
@@ -179,9 +222,11 @@ function normalize(
   const r = raw as Record<string, unknown>;
   const { canonicalFacts, guardSentence, notes } = createFactGuard(facts, questionTexts);
   const article = format === 'article';
+  /** 주소로 써도 되는 글자 — 사실 값 · 항목 이름 · 질문(브랜드 홈페이지 주소가 사실로 들어 있으면 그 주소는 쓴다). */
+  const allowedAddresses = [...facts.map((f) => `${f.claim} ${f.value}`), ...questionTexts].join('\n');
   /** 옛 형식은 가드만, 블로그 글 형식은 주소 문장을 먼저 뺀 뒤 가드. */
   const passes = (s: string): boolean => {
-    if (article && URL_IN_TEXT.test(s)) {
+    if (article && foreignAddresses(s, allowedAddresses).length) {
       notes.push(`"${s.slice(0, 60)}…" — 주소가 든 문장은 넣지 않았습니다(링크는 확인한 것만 글 끝에 붙습니다).`);
       return false;
     }
@@ -212,6 +257,9 @@ function normalize(
         const need = String(o.need ?? '').trim();
         if (need) out.push({ kind: 'gap', need });
         continue;
+      }
+      if (article && TABLE_LINE.test(String(o.body ?? ''))) {
+        notes.push('표는 블로그 글 형식에 넣지 않아 표 줄을 뺐습니다 — 항목을 문장으로 풀어 쓰세요.');
       }
       const body = article ? plainArticleText(String(o.body ?? '')) : String(o.body ?? '').trim();
       if (!body) continue;
@@ -426,7 +474,9 @@ function countedTitle(draft: ContentDraft): RegExp | null {
  */
 export function editedLinePlain(line: string, title: RegExp | null = null): string {
   const t = line.trim();
-  if (/^!\[[^\]]*\]\([^)]*\)$/.test(t)) return '';
+  // 사진 줄은 주소만 걷고 대체 텍스트(사진 설명)는 본다 — 설명에 넣은 숫자도 사실 확인을 받는다.
+  const image = /^!\[([^\]]*)\]\([^)]*\)$/.exec(t);
+  if (image) return image[1]!.trim();
   const h1 = /^#\s+(.+)$/.exec(t);
   if (h1 && title?.test(h1[1]!.trim())) return '';
   return t

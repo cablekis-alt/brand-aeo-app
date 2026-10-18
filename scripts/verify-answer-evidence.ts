@@ -138,6 +138,22 @@ try {
     reject(`조건부 지목 · 못 찾음 · 되묻기는 고르지 않는다 — 「${s.slice(0, 14)}…」`, [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], [R('v3-001', 'openai', s)])
   }
   reject('뒤 목록을 가리키는 문장은 고르지 않는다', [A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행의 주요 서비스는 다음과 같습니다.'] })], [R('v3-001', 'openai', '가상 여행의 주요 서비스는 다음과 같습니다.')])
+  // 조건 없이 우리를 꼽는 문장 · 주의 문장은 고르고 센다. 「~이라면,」 조건문은 세되 옮기지 않는다
+  for (const s of [
+    '조용한 독채 숙소를 원하신다면 가상 여행을 추천합니다.',
+    '바다 전망 숙소를 찾으시는 분께는 가상 여행이 잘 맞습니다.',
+    '가상 여행은 예약 전에 주차 가능 여부 확인이 필요합니다.',
+  ]) {
+    const e = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], raw: [R('v3-001', 'openai', s)] })
+    ok(`조건 없는 추천 · 주의는 고르고 센다 — 「${s.slice(0, 14)}…」`, e.items.length === 1 && e.answered.mentioned === 1)
+  }
+  const clause = '가족 여행이라면, 가상 여행이 좋은 선택입니다.'
+  const clauseEv = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [clause] })], raw: [R('v3-001', 'openai', clause)] })
+  ok('「~이라면,」 조건문은 이름 나온 답으로 세되 옮기지 않는다', clauseEv.items.length === 0 && clauseEv.answered.mentioned === 1)
+  // 우리 이름을 띄어쓰기만 다르게 · 일부만 적은 남의 목록은 우리 문장을 막지 않는다
+  ok('isOurName — 띄어쓰기 · 일부', ev.isOurName('가상여행', ['가상 여행']) && ev.isOurName('하이오더', ['KT 하이오더']) && !ev.isOurName('다른 여행', ['가상 여행']))
+  const spaced = ev.buildAnswerEvidence({ ...base, competitorNames: ['가상여행', '가상 관광공사'], analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [plainGood] })], raw: [R('v3-001', 'openai', plainGood)] })
+  ok('경쟁사 목록에 띄어쓰기만 다른 우리 이름이 있어도 우리 문장을 고른다', spaced.items.length === 1)
   const withOther = { ...A({ questionId: 'v3-001', engine: 'openai', sentences: ['가상 여행과 다른곳여행을 함께 비교해 보세요.'] }), competitorMentions: [{ name: '다른곳여행', mentionCount: 1, sentences: [] }] } as unknown as ReturnType<typeof A>
   reject('판정이 찾은 다른 이름이 든 문장은 고르지 않는다', [withOther], [R('v3-001', 'openai', '가상 여행과 다른곳여행을 함께 비교해 보세요.')])
   const namedOnly = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-003', engine: 'openai', sentences: [plainGood] })], raw: [R('v3-003', 'openai', plainGood)] })
@@ -192,6 +208,10 @@ try {
   ])
   ok('코호트 브랜드와 그 별칭 · 경쟁사는 남의 이름', ['다른 여행', '다른여행', '세번째 관광', '세번째'].every((n) => others.includes(n)))
   ok('우리 이름 · 다른 코호트 · 같은 이름으로 다시 등록한 브랜드의 별칭은 넣지 않는다', !['가상 여행', '가상여행', '먼 여행', '가상 여행 본점'].some((n) => others.includes(n)))
+  const othersSpaced = evidenceOtherNames(T({ tenantId: 'va', brandName: '가상 여행', aliases: [] }), [
+    T({ tenantId: 'vb', brandName: '다른 여행', competitors: [{ name: '가상여행', aliases: [] }] }),
+  ])
+  ok('코호트가 띄어쓰기만 다르게 적은 우리 이름은 남의 이름이 아니다', !othersSpaced.includes('가상여행') && othersSpaced.includes('다른 여행'))
 
   const drafts = await import('../server/contentDraft')
   writeJson('data/vtravel/drafts.json', { 'content:a': stored })

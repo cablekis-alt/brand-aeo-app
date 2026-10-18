@@ -213,7 +213,7 @@ try {
 
   // 6) 고친 글 저장 — 절 번호 · 채운 제목 수 · 링크 주소 · 사진 자리 줄은 「출처 없는 숫자」가 아니다
   ok('editedLinePlain — 절 번호', drafts.editedLinePlain('## 1. 어디서 출발하나요?') === '어디서 출발하나요?')
-  ok('editedLinePlain — 사진 자리 줄은 건너뛴다', drafts.editedLinePlain('![사진 2장](#image-slot)') === '')
+  ok('editedLinePlain — 사진 줄은 주소를 걷고 대체 텍스트를 본다', drafts.editedLinePlain('![사진 2장](#image-slot)') === '사진 2장' && drafts.editedLinePlain('![입구](https://vtravel.example/a/123.png)') === '입구')
   ok('editedLinePlain — 링크는 글자만', drafts.editedLinePlain('[문의하기](https://vtravel.example/123)') === '문의하기')
   ok('editedLinePlain — 설명 줄 · 굵게 기호', drafts.editedLinePlain('*출발 전 모이는 곳*') === '출발 전 모이는 곳' && drafts.editedLinePlain('**핵심**입니다.') === '핵심입니다.')
   const saved = await drafts.saveEditedDraft('vtravel', 'content:a', work, facts, brief.questionsToAnswer)
@@ -222,6 +222,99 @@ try {
   ok('사람이 넣은 출처 없는 숫자는 여전히 알린다', (savedWithNumber.editWarnings ?? []).some((w) => w.includes('숫자 100')))
   const otherTitle = await drafts.saveEditedDraft('vtravel', 'content:a', work.replace('확인할 4가지', '확인할 4가지와 7곳'), facts, brief.questionsToAnswer)
   ok('제목 모양이 바뀌면 그 숫자도 알린다', (otherTitle.editWarnings ?? []).some((w) => w.includes('확인할 4가지와 7곳')))
+  const altNumber = await drafts.saveEditedDraft('vtravel', 'content:a', `${work}\n![연 5만 명이 찾은 인증서](https://vtravel.example/award.png)\n`, facts, brief.questionsToAnswer)
+  ok('사진 대체 텍스트의 출처 없는 숫자도 알린다', (altNumber.editWarnings ?? []).some((w) => w.includes('숫자 5')))
+
+  // 7) 절 제목 번호 — 목록 번호만 떼고 숫자로 시작하는 사실은 그대로
+  const headings = [
+    '1.5배 더 빨리 도착하나요?',
+    '1:1 상담은 어떻게 신청하나요?',
+    '10-20대도 참여하나요?',
+    '3.5km 산책길은 어디서 시작하나요?',
+    '2) 두 번째 질문인가요?',
+    'Q3. 세 번째 질문인가요?',
+    '4 - 네 번째 질문인가요?',
+    '**5. 다섯 번째 질문인가요?**',
+  ]
+  const headed = await drafts.generateDraft(
+    'vtravel',
+    'content:h',
+    { ...request, format: 'article' },
+    writerOf({ title: 'T', lead: '첫머리입니다.', sections: headings.map((h, i) => ({ heading: h, answers: `q${i}`, blocks: [{ kind: 'text', role: 'key', body: '가상 여행은 정보 사이트입니다.' }] })) }),
+    checker,
+  )
+  ok(
+    '절 제목 — 1.5배 · 1:1 · 10-20대 · 3.5km는 그대로, 2) · Q3. · 4 - · 5.는 뗀다',
+    JSON.stringify(headed.draft.sections.map((s) => s.heading)) ===
+      JSON.stringify(['1.5배 더 빨리 도착하나요?', '1:1 상담은 어떻게 신청하나요?', '10-20대도 참여하나요?', '3.5km 산책길은 어디서 시작하나요?', '두 번째 질문인가요?', '세 번째 질문인가요?', '네 번째 질문인가요?', '다섯 번째 질문인가요?']),
+  )
+
+  // 8) 주소 — 스킴 · www 없는 도메인도 주소다. 사실 값에 든 도메인과 schema.org는 쓴다
+  const addrFacts = [...facts, { id: 'f9', type: 'other' as const, claim: '홈페이지', value: 'vtravel.co.kr', updatedAt: NOW }]
+  const addr = await drafts.generateDraft(
+    'vtravel',
+    'content:u',
+    { ...request, factGraph: addrFacts, format: 'article' },
+    writerOf({
+      title: 'T',
+      lead: '첫머리입니다.',
+      sections: [
+        {
+          heading: '어디서 예약하나요?',
+          answers: 'q1',
+          blocks: [
+            { kind: 'text', role: 'action', body: '예약은 fake-booking.co.kr/reserve 에서 받습니다. 지도는 booking.naver.com 에서 봅니다. 자세한 안내는 vtravel.co.kr에서 볼 수 있습니다. schema.org 형식을 따르면 좋습니다.' },
+          ],
+        },
+      ],
+    }),
+    checker,
+  )
+  const addrBody = addr.draft.sections[0]?.blocks[0]?.body ?? ''
+  ok('스킴 없는 지어낸 도메인 문장은 뺀다', !addrBody.includes('fake-booking') && !addrBody.includes('booking.naver.com') && (addr.draft.guardNotes ?? []).filter((n) => n.includes('주소가 든 문장')).length === 2)
+  ok('사실 값에 든 도메인 · schema.org 문장은 남는다', addrBody.includes('vtravel.co.kr에서 볼 수 있습니다.') && addrBody.includes('schema.org 형식을 따르면 좋습니다.'))
+
+  // 9) 표 · 목록 — 표 줄은 빼고 기록, 목록은 기호를 걷어 한 문단으로
+  const tabled = await drafts.generateDraft(
+    'vtravel',
+    'content:t',
+    { ...request, format: 'article' },
+    writerOf({
+      title: 'T',
+      lead: '첫머리입니다.',
+      sections: [
+        {
+          heading: '무엇을 챙기나요?',
+          answers: 'q1',
+          blocks: [
+            { kind: 'text', role: 'action', body: '| 항목 | 내용 |\n|---|---|\n| 주차 | 가능 |' },
+            { kind: 'text', role: 'action', body: '- 편한 신발을 챙기세요.\n- 물을 챙기세요.' },
+          ],
+        },
+      ],
+    }),
+    checker,
+  )
+  const tb = tabled.draft.sections[0]?.blocks ?? []
+  ok('표 줄은 넣지 않고 기록을 남긴다', !tb.some((b) => (b.body ?? '').includes('|')) && (tabled.draft.guardNotes ?? []).some((n) => n.includes('표는 블로그 글 형식에 넣지 않아')))
+  ok('목록은 기호를 걷어 한 문단으로', tb.some((b) => b.body === '편한 신발을 챙기세요. 물을 챙기세요.'))
+
+  // 10) 문장 나누기 — 짧은 굵은 꼬리표는 다음 문장에 붙고, ** 앞의 Dr.도 약어다
+  ok('「**Q.**」 「**A.**」 꼬리표는 다음 문장과 한 문장', JSON.stringify(drafts.splitSentences('**Q.** 마지막 출발은 언제인가요? **A.** 마지막 출발은 오후 5시 30분입니다.')) === JSON.stringify(['**Q.** 마지막 출발은 언제인가요?', '**A.** 마지막 출발은 오후 5시 30분입니다.']))
+  ok('「**Led by Dr.** …」은 자르지 않는다', drafts.splitSentences('**Led by Dr.** Choi performs surgeries.').length === 1)
+  ok('굵은 핵심 문장 뒤는 자른다', JSON.stringify(drafts.splitSentences('**가상 여행은 정보 사이트입니다.** 하루 300명이 찾아요.')) === JSON.stringify(['**가상 여행은 정보 사이트입니다.**', '하루 300명이 찾아요.']))
+
+  // 11) 고친 글 발행본 — 빈칸만 있던 절은 빠지고 번호 · 제목 수가 맞는다. .html 제목도 본문 제목과 같다
+  const editedStored = { ...stored, editedMarkdown: work, editedAt: NOW }
+  const editedPub = publishMarkdownOf(editedStored)
+  ok('고친 글 — 빈칸만 남은 절은 빠지고 제목 수가 실린 절 수', editedPub.startsWith('# 가상시 여행 코스 고를 때 확인할 3가지\n') && !editedPub.includes('무엇을 준비하나요') && !/^## 4\./m.test(editedPub))
+  ok('고친 글 — 번호는 1부터 차례로', JSON.stringify([...editedPub.matchAll(/^## (\d+)\./gm)].map((m) => m[1])) === JSON.stringify(['1', '2', '3']))
+  const renumber = publishMarkdownOf({ ...stored, editedMarkdown: work.replace('## 1. 어디서 출발하나요?', '## 1. 어디서 출발하나요?\n\n> **채워야 함:** 지운 절') .replace(/## 2\. 몇 시까지 운영하나요\?[\s\S]*?(?=## 3\.)/, '## 2. 몇 시까지 운영하나요?\n\n> **채워야 함:** 비운 절\n\n'), editedAt: NOW })
+  ok('고친 글 — 가운데 절이 비면 뒤 번호를 당긴다', /^## 2\. 어떤 코스가 있나요\?/m.test(renumber) && renumber.startsWith('# 가상시 여행 코스 고를 때 확인할 2가지'))
+  const filledDoc = buildPublishHtml({ stored: { ...stored, gapFills: { '3:0': { value: '편한 신발' } } }, brand: { brandName: '가상 여행', aliases: ['가상 여행'], ownedDomains: ['vtravel.example'] } as never, facts: [] })
+  ok('빈칸을 채운 글 — .html <title> · headline이 본문 제목과 같은 수', filledDoc.includes('<title>가상시 여행 코스 고를 때 확인할 4가지</title>') && filledDoc.includes('"headline": "가상시 여행 코스 고를 때 확인할 4가지"') && filledDoc.includes('<h1>가상시 여행 코스 고를 때 확인할 4가지</h1>'))
+  const oldEdited = { actionId: 'content:o', generatedAt: NOW, draft: fixture, editedMarkdown: '# T\n\nL\n\n## H1\nB1\n\n## H2\n> **채워야 함:** n\n' }
+  ok('옛 형식 고친 글 — 예전처럼 빈칸 줄만 걷는다', publishMarkdownOf(oldEdited) === '# T\n\nL\n\n## H1\nB1\n\n## H2')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

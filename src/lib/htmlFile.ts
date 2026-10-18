@@ -1,4 +1,5 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
+import { effectiveDraft } from './draftGaps'
 import { draftTitle, IMAGE_SLOT } from './markdownFile'
 import { publishArticleOf } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
@@ -180,7 +181,9 @@ export interface PublishHtmlInput {
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
   const md = publishArticleOf(stored, { brand, settings })
   const keywords = settings?.tags?.join(', ')
-  const title = draftTitle(stored.draft)
+  // 블로그 글 형식은 본문 첫 줄(# 제목)과 같은 제목 — 빈칸을 채우거나 본문을 고치면 {N}이 바뀐다. 옛 형식은 예전처럼 초안 제목.
+  const title =
+    stored.draft.format === 'article' ? (/^#\s+(.+)$/m.exec(md)?.[1]?.trim() ?? draftTitle(effectiveDraft(stored))) : stored.draft.title
   const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)
   const org = organizationFromFacts(brand, facts)

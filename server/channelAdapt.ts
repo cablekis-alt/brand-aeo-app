@@ -8,7 +8,7 @@ import {
 } from '../src/prompts/b9d-channel-adapt.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { findOverclaims } from './claimGuard.js';
-import { splitSentences } from './contentDraft.js';
+import { foreignAddresses, splitSentences } from './contentDraft.js';
 import type { EngineClient } from './engines/types.js';
 import { createFactGuard } from './factGuard.js';
 import { parseJsonLoose } from './jsonParse.js';
@@ -38,6 +38,11 @@ export interface ChannelAdaptation {
   sourceKey: string;
   /** 사실 대조에서 뺀 문장 기록. */
   notes?: string[];
+  /**
+   * 제목도 본문과 같은 사실 대조(숫자 · 주소 · 격상)를 거쳤나 — 걸리면 원문 제목으로 되돌린다. 화면의 「제목 복사」는 이 값이
+   * true일 때만 다듬은 제목을 쓴다(예전 기록의 제목은 대조를 거치지 않았다).
+   */
+  titleChecked?: boolean;
 }
 type AdaptMap = Record<string, Record<string, ChannelAdaptation>>;
 
@@ -106,10 +111,20 @@ export function keepSourceMedia(body: string, sourceMarkdown: string): { lines: 
   return { lines, notes };
 }
 
-/** 원문에 없는 맨 주소가 든 문장 — 링크 문법 밖의 주소만 본다. */
-function foreignBareUrl(sentence: string, sourceMarkdown: string): boolean {
-  const outside = sentence.replace(MD_LINK, '');
-  return (outside.match(BARE_URL) ?? []).some((u) => !sourceMarkdown.includes(u));
+/**
+ * 원문에 없는 주소가 든 문장 — 스킴 · www. · 도메인 꼴 모두(초안 쪽 foreignAddresses와 같은 규칙). 링크는 주소를 걷고 글자만
+ * 본다(원문에 없는 링크 주소는 keepSourceMedia가 이미 걷었다) — 링크 글자에 지어낸 주소를 쓴 경우도 잡는다.
+ */
+function foreignAddress(sentence: string, sourceMarkdown: string): boolean {
+  return foreignAddresses(sentence.replace(MD_LINK, '$1'), sourceMarkdown).length > 0;
+}
+
+/**
+ * 통째로 다루는 줄 — 줄 전체가 굵은 핵심 문장(**…**)이거나 인용(> …). 문장 하나라도 걸리면 줄째 뺀다(초안의 key · quote와
+ * 같은 원칙). 일부만 빼면 닫는 **가 사라져 별표가 글자로 보이거나, 그대로 쓸 말의 뜻이 바뀐다.
+ */
+function wholeLine(marker: string, text: string): boolean {
+  return marker.trim() === '>' || /^\*\*[^*].*\*\*$/.test(text);
 }
 
 /** 마크다운 한 줄의 표식(##, -, 1.)과 본문을 나눈다 — 가드는 본문 문장만 본다. */
@@ -129,7 +144,7 @@ export async function adaptForChannel(
 ): Promise<ChannelAdaptation> {
   const result = await writer.call(buildChannelAdaptPrompt(req));
   const raw = parseJsonLoose<Record<string, unknown>>(result.text);
-  const title = typeof raw?.title === 'string' ? raw.title.trim() : '';
+  const rawTitle = typeof raw?.title === 'string' ? raw.title.trim() : '';
   const body = typeof raw?.body === 'string' ? raw.body.replace(/\r\n/g, '\n').trim() : '';
   if (!body) throw new Error('다듬은 글을 해석할 수 없습니다(JSON 아님 또는 본문 없음). 다시 시도하세요.');
 
@@ -138,7 +153,7 @@ export async function adaptForChannel(
   // 사진 자리 · 설명 줄은 원문에 있던 것만 그대로(가드를 건너뛴다), 원문에 없는 링크는 글자만.
   const media = keepSourceMedia(body, req.sourceMarkdown);
   const passes = (s: string): boolean => {
-    if (foreignBareUrl(s, req.sourceMarkdown)) {
+    if (foreignAddress(s, req.sourceMarkdown)) {
       notes.push(`"${s.slice(0, 60)}…" — 원문에 없는 주소가 들어 있어 뺐습니다.`);
       return false;
     }
@@ -148,7 +163,9 @@ export async function adaptForChannel(
     if (typeof line !== 'string') return line;
     const { marker, text } = splitMarker(line);
     if (!text || marker.startsWith('#')) return line;
-    const kept = splitSentences(text).filter(passes);
+    const all = splitSentences(text);
+    const kept = all.filter(passes);
+    if (wholeLine(marker, text) && kept.length < all.length) return null;
     return kept.length ? `${marker}${kept.join(' ')}` : null;
   });
   let kept = lines.filter((l): l is string | { media: string } => l !== null);
@@ -159,14 +176,21 @@ export async function adaptForChannel(
     const { marker, text } = splitMarker(l);
     return marker.startsWith('#') || !text ? [] : splitSentences(text);
   });
-  const claims = await findOverclaims(sentences, req.factGraph, checker, 'drop');
+  // 제목도 같은 대조를 받는다 — 「제목 복사」로 블로그 제목 칸에 그대로 들어간다. 걸리면 원문 제목(# 줄)으로 되돌린다.
+  const sourceTitle = /^#\s+(.+)$/m.exec(req.sourceMarkdown)?.[1]?.trim() ?? '';
+  let title = rawTitle && passes(rawTitle) ? rawTitle : sourceTitle;
+  const claims = await findOverclaims(title ? [...sentences, title] : sentences, req.factGraph, checker, 'drop');
+  if (title && claims.overclaimed.has(title)) title = sourceTitle;
+  if (rawTitle && title !== rawTitle) notes.push(`제목 「${rawTitle.slice(0, 40)}」이 사실 대조에 걸려 원문 제목으로 되돌렸습니다.`);
   if (claims.overclaimed.size) {
     kept = kept
       .map((l) => {
         if (typeof l !== 'string') return l;
         const { marker, text } = splitMarker(l);
         if (marker.startsWith('#') || !text) return l;
-        const left = splitSentences(text).filter((s) => !claims.overclaimed.has(s));
+        const all = splitSentences(text);
+        const left = all.filter((s) => !claims.overclaimed.has(s));
+        if (wholeLine(marker, text) && left.length < all.length) return null;
         return left.length ? `${marker}${left.join(' ')}` : null;
       })
       .filter((l): l is string | { media: string } => l !== null);
@@ -197,6 +221,7 @@ export async function adaptForChannel(
     ...(result.model ? { model: result.model } : {}),
     sourceKey: sourceKeyOf(req.sourceMarkdown),
     ...(notes.length ? { notes } : {}),
+    titleChecked: true,
   };
   const map = await readAdaptations(tenantId);
   map[ids.contentActionId] = { ...(map[ids.contentActionId] ?? {}), [ids.channelActionId]: stored };

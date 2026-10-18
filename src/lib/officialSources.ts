@@ -38,7 +38,8 @@ export const OFFICIAL_SOURCES: readonly OfficialSource[] = [
     id: 'google-url-inspection',
     label: 'Search Console 도움말 — URL 검사 도구',
     url: 'https://support.google.com/webmasters/answer/9012289',
-    match: /URL\s?검사|URL Inspection|색인\s?생성\s?요청|Search Console|서치\s?콘솔/i,
+    // 「URL 검사」만으로는 보안 제품(악성 URL 검사)과 겹친다 — Search Console · 구글 · 색인과 함께일 때만.
+    match: /Search Console|서치\s?콘솔|URL Inspection|(?:구글|Google)\s?(?:의\s?)?URL\s?검사|색인\s?생성\s?요청/i,
     checkedAt: '2026-10-18',
   },
   {
@@ -52,21 +53,24 @@ export const OFFICIAL_SOURCES: readonly OfficialSource[] = [
     id: 'google-structured-data',
     label: 'Google 검색 센터 — 구조화된 데이터 소개',
     url: 'https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data',
-    match: /구조화(?:된)?\s?데이터|JSON-LD|schema\.org|스키마\s?마크업/i,
+    // 「구조화된 데이터」만으로는 데이터 분석 제품과 겹친다 — 마크업 · 검색 · 구글과 함께일 때만.
+    match: /JSON-LD|schema\.org|스키마\s?마크업|구조화(?:된)?\s?데이터\s?마크업|(?:구글|Google|검색)[^\n]{0,20}구조화(?:된)?\s?데이터/i,
     checkedAt: '2026-10-18',
   },
   {
     id: 'google-sitemaps',
     label: 'Google 검색 센터 — 사이트맵 알아보기',
     url: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview',
-    match: /사이트맵|sitemap/i,
+    // 「사이트맵」만으로는 홈페이지 메뉴 안내와 겹친다 — 제출 · 등록 · XML일 때만.
+    match: /sitemap\.xml|XML\s?(?:사이트맵|sitemap)|사이트맵[^\n.]{0,10}(?:제출|등록)/i,
     checkedAt: '2026-10-18',
   },
   {
     id: 'google-ai-features',
     label: 'Google 검색 센터 — AI 기능과 웹사이트',
     url: 'https://developers.google.com/search/docs/appearance/ai-features',
-    match: /AI\s?개요|AI Overviews?|AI\s?모드|AI Mode/i,
+    // 「AI 모드」는 가전 · 셋톱 기능 이름이기도 하다 — 구글 검색의 AI 개요 · AI 모드일 때만.
+    match: /AI Overviews?|(?:구글|Google)\s?(?:의\s?)?(?:검색\s?)?AI\s?(?:개요|모드|Mode)/i,
     checkedAt: '2026-10-18',
   },
 ]

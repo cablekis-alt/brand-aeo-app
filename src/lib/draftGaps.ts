@@ -1,7 +1,7 @@
 import type { ContentDraft } from '../prompts/b9c-content-draft'
 import type { GapFill, StoredDraft } from './api'
 import type { GapAction } from './gapActions'
-import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes } from './markdownFile'
+import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
 
 /**
  * 초안 빈칸을 화면에서 채운 기록(gapFills)을 원고에 반영한다.
@@ -74,7 +74,10 @@ export function workMarkdownOf(stored: StoredDraft): string {
 
 /** 발행용 원고 — 남은 빈칸 줄과 「이 글이 쓴 사실」을 뺀다. 복사·.md·.html이 같은 원고를 쓴다. */
 export function publishMarkdownOf(stored: StoredDraft): string {
-  return stored.editedMarkdown ? stripGapNotes(stored.editedMarkdown) : draftToPublishMarkdown(effectiveDraft(stored))
+  if (!stored.editedMarkdown) return draftToPublishMarkdown(effectiveDraft(stored))
+  const md = stripGapNotes(stored.editedMarkdown)
+  // 블로그 글 형식만 — 빈 소제목 · 절 번호 · 제목 수를 맞춘다. 옛 형식은 예전 그대로(한 글자도 바꾸지 않는다).
+  return stored.draft.format === 'article' ? tidyArticleMarkdown(md, stored.draft.title) : md
 }
 
 /**

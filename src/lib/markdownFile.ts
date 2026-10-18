@@ -66,6 +66,59 @@ const GAP_LINE = '> **채워야 함:**'
 export const IMAGE_SLOT = '#image-slot'
 const IMAGE_SLOT_LINE = /^!\[[^\]]*\]\(#image-slot\)$/
 
+/**
+ * 고친 블로그 글 형식 원고의 발행본 정리 — 빈칸 줄을 걷은 원고(stripGapNotes)에서 본문이 없는 절(소제목 · 사진 자리 · 참고 줄만
+ * 남은 절)을 빼고, 남은 「## n.」 번호를 1부터 다시 매기고, 제목이 {N} 틀(titleTemplate)이면 그 수를 실린 절 수로 맞춘다.
+ * 작업용 원고는 채울 곳이 보이게 빈칸만 있는 절에도 번호를 달고 그 절까지 센다 — 고친 글을 그대로 내보내면 빈 소제목과 틀린
+ * 수가 나간다. 사람이 번호를 지운 소제목은 그대로 둔다.
+ */
+export function tidyArticleMarkdown(markdown: string, titleTemplate: string): string {
+  const lines = withoutUsedFacts(markdown.split('\n'))
+  const isHeading = (l: string) => /^#{1,2}\s/.test(l)
+  const isFiller = (l: string) => {
+    const t = l.trim()
+    return !t || IMAGE_SLOT_LINE.test(t) || /^\*(?!\*)(.+?)\*$/.test(t) || /^참고:\s/.test(t)
+  }
+  const kept: string[] = []
+  for (let i = 0; i < lines.length; ) {
+    if (/^##\s/.test(lines[i]!)) {
+      let j = i + 1
+      while (j < lines.length && !isHeading(lines[j]!)) j += 1
+      const body = lines.slice(i + 1, j)
+      if (!body.every(isFiller)) kept.push(lines[i]!, ...body)
+      i = j
+      continue
+    }
+    kept.push(lines[i]!)
+    i += 1
+  }
+  let n = 0
+  const numbered = kept.map((l) => (/^##\s+\d+\.\s/.test(l) ? l.replace(/^##\s+\d+\.\s/, () => `## ${(n += 1)}. `) : l))
+  const parts = titleTemplate.split('{N}')
+  if (parts.length > 1 && n > 0) {
+    const shape = new RegExp(`^#\\s+${parts.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\d+')}\\s*$`)
+    const h1 = numbered.findIndex((l) => shape.test(l))
+    if (h1 >= 0) numbered[h1] = `# ${fillTitleCount(titleTemplate, n)}`
+  }
+  return numbered.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd()
+}
+
+/**
+ * 작업용 원고 끝의 「이 글이 쓴 사실」(앞의 --- 와 목록까지)을 뺀다 — 검증할 때 보는 목록이지 독자에게 할 말이 아니다(발행용
+ * draftToPublishMarkdown과 같은 원칙). 작업용 원고를 그대로 고쳐 저장하면 이 목록이 함께 들어온다.
+ */
+function withoutUsedFacts(lines: string[]): string[] {
+  const at = lines.findIndex((l) => l.trim() === USED_FACTS_LINE)
+  if (at < 0) return lines
+  let start = at
+  while (start > 0 && !lines[start - 1]!.trim()) start -= 1
+  if (start > 0 && /^-{3,}$/.test(lines[start - 1]!.trim())) start -= 1
+  let end = at + 1
+  while (end < lines.length && (!lines[end]!.trim() || /^\s*-\s/.test(lines[end]!))) end += 1
+  return [...lines.slice(0, start), ...lines.slice(end)]
+}
+const USED_FACTS_LINE = '**이 글이 쓴 사실**'
+
 /** 글에 남은 사진 자리 수 — 올리기 목록이 「사진 넣을 곳 N곳」으로 알린다. */
 export function countImageSlots(markdown: string): number {
   return markdown.split('\n').filter((line) => IMAGE_SLOT_LINE.test(line.trim())).length

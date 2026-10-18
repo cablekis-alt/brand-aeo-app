@@ -102,6 +102,38 @@ try {
   ok('다듬은 글 — 원문에 없는 맨 주소가 든 문장은 뺀다', !out.includes('https://fake.example/book') && (adapted.notes ?? []).some((n) => n.includes('원문에 없는 주소')))
   ok('다듬은 글 — 원문에 없는 숫자 문장은 여전히 뺀다', !out.includes('300명') && out.includes('**가상 여행은 오전 9시부터 운영해요.**'))
 
+  // 2-1) 제목 · 주소 · 통째 줄
+  const body2 = [
+    '## 1. 어디서 출발하나요?',
+    '',
+    '**가상 여행은 가상역 2번 출구에서 출발해요. 매년 3만 명이 이곳에서 출발해요.**',
+    '',
+    '> 출발 장소가 가상역 2번 출구가 맞나요? 주차는 50대까지 되나요?',
+    '',
+    '가상역 2번 출구에서 만나요. 예약은 www.fake-booking.example 에서 받아요. 지도는 fake-booking.co.kr/map 에서 봐요.',
+    '',
+    `자세한 내용은 [https://fake-booking.example/guide](${ROBOTS})에 있어요.`,
+    '',
+    '**Q.** 마지막 출발은 언제인가요? **A.** 마지막 출발은 오후 5시 30분이에요.',
+  ].join('\n')
+  const writer2 = { call: async () => ({ text: JSON.stringify({ title: '가상시 1위 여행, 50% 할인 https://evil.example.com', body: body2 }), citations: [], usedWebSearch: false }) }
+  const adapted2 = await adaptForChannel('vtravel', { contentActionId: 'content:a', channelActionId: 'listing:c' }, { ...base, style: 'blog', format: 'article' }, writer2, checker)
+  const out2 = adapted2.markdown
+  ok('제목 — 사실 대조에 걸리면 원문 제목으로 되돌리고 기록', adapted2.title === '가상시 여행 사이트 고를 때 확인할 2가지' && adapted2.titleChecked === true && (adapted2.notes ?? []).some((n) => n.includes('원문 제목으로 되돌렸습니다')))
+  ok('굵은 핵심 줄 — 한 문장이라도 걸리면 줄째 뺀다(별표가 남지 않게)', !out2.includes('3만') && out2.split('\n').every((l) => ((l.match(/\*\*/g) ?? []).length % 2) === 0) && !out2.includes('**가상 여행은 가상역 2번 출구에서 출발해요.'))
+  ok('인용 줄 — 한 문장이라도 걸리면 줄째 뺀다', !out2.includes('> 출발 장소가'))
+  ok('www · 도메인 꼴 주소가 든 문장은 뺀다', out2.includes('가상역 2번 출구에서 만나요.') && !out2.includes('fake-booking.example 에서') && !out2.includes('fake-booking.co.kr'))
+  ok('링크 글자에 지어낸 주소를 쓴 문장도 뺀다', !out2.includes('https://fake-booking.example/guide'))
+  ok('「**Q.**」 꼬리표는 그 문장과 함께 남거나 빠진다(답 없는 **A.** 없음)', out2.includes('**Q.** 마지막 출발은 언제인가요?') && !/\*\*A\.\*\*\s*$/m.test(out2))
+  const okTitle = await adaptForChannel(
+    'vtravel',
+    { contentActionId: 'content:a', channelActionId: 'listing:d' },
+    { ...base, style: 'blog', format: 'article' },
+    { call: async () => ({ text: JSON.stringify({ title: '가상시 여행 사이트, 이렇게 고르세요', body: '## 1. 어디서 출발하나요?\n\n가상역 2번 출구에서 만나요.' }), citations: [], usedWebSearch: false }) },
+    checker,
+  )
+  ok('제목 — 걸리지 않으면 다듬은 제목 그대로', okTitle.title === '가상시 여행 사이트, 이렇게 고르세요' && okTitle.titleChecked === true)
+
   // 3) 복사할 글 — 블로그 채널만 글 끝을 붙인다
   const brand = { brandName: '가상 여행', ownedDomains: ['vtravel.example'] }
   const settings = { ctaText: '가상 여행 사이트에서 코스를 비교해 보세요.' }

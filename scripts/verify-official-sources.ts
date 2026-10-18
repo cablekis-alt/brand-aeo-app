@@ -45,7 +45,7 @@ try {
       {
         heading: '색인이 됐는지는 어떻게 아나요?',
         answers: 'q2',
-        blocks: [text('URL 검사로 색인 상태를 봅니다.', 'key'), text('robots.txt를 고친 뒤에는 다시 확인하세요.')],
+        blocks: [text('Search Console의 URL 검사로 색인 상태를 봅니다.', 'key'), text('robots.txt를 고친 뒤에는 다시 확인하세요.')],
       },
       { heading: '사이트맵은 꼭 있어야 하나요?', answers: 'q3', blocks: [{ kind: 'gap' as const, need: '사이트 규모 — 팩트 그래프에 없음' }] },
       {
@@ -65,6 +65,18 @@ try {
   ok('주제가 둘이면 둘 다(구조화 데이터 · 사이트맵)', JSON.stringify(picked[3]) === JSON.stringify(['google-structured-data', 'google-sitemaps']))
   ok('주제가 없는 절에는 없다', picked[4]!.length === 0)
   ok('옛 형식 초안에는 붙지 않는다', articleSources({ ...draft, format: undefined }).every((xs) => xs.length === 0))
+  // 제품 문구와 겹치는 말 — 검색 맥락 없이는 붙이지 않는다
+  const product = (body: string) => articleSources({ ...draft, sections: [{ heading: '어떻게 쓰나요?', answers: 'q', blocks: [text(body, 'key')] }] })[0]!
+  for (const body of [
+    '가상 에어컨은 AI 모드로 켜 두면 알아서 온도를 맞춥니다.',
+    '리모컨의 AI 모드 버튼을 누르면 추천 채널이 나옵니다.',
+    '받은 메일의 악성 URL 검사를 자동으로 합니다.',
+    '구조화된 데이터와 문서를 함께 분석합니다.',
+    '홈페이지 사이트맵에서 메뉴를 찾으세요.',
+  ]) {
+    ok(`제품 문구에는 붙이지 않는다 — 「${body.slice(0, 16)}…」`, product(body).length === 0)
+  }
+  ok('구글 AI 개요 · 사이트맵 제출 · 구조화 데이터 마크업은 붙인다', product('구글 AI 개요에 나오려면 사이트맵을 Search Console에 제출하세요.').length === 2 && product('구조화된 데이터 마크업을 넣으세요.')[0]?.id === 'google-structured-data')
 
   // 3) 내보내기
   const pub = md.draftToPublishMarkdown(draft)

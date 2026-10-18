@@ -1,4 +1,4 @@
-import { buildAnswerEvidence, type AnswerEvidence } from '../src/lib/answerEvidence.js';
+import { buildAnswerEvidence, isOurName, type AnswerEvidence } from '../src/lib/answerEvidence.js';
 import { sameConditionWeeks } from '../src/lib/reviewReport.js';
 import { cohortRankingEntities } from './cohortEntities.js';
 import { getRawCallsForQuestions } from './rawCallStore.js';
@@ -19,7 +19,8 @@ export const WEEK_OF = /^\d{4}-W\d{2}$/;
  * 코호트 다른 브랜드 이름이 든 문장이 골라졌다. 우리 이름 · 별칭과 같은 이름은 뺀다(같은 브랜드를 두 번 등록한 경우).
  */
 export function evidenceOtherNames(tenant: TenantConfig, runtime: TenantConfig[]): string[] {
-  const ours = new Set([tenant.brandName, ...(tenant.aliases ?? [])].map((n) => n.trim()).filter(Boolean));
+  const ourNames = [tenant.brandName, ...(tenant.aliases ?? [])].map((n) => n.trim()).filter(Boolean);
+  const ours = { has: (n: string) => isOurName(n, ourNames) };
   const names = new Set(cohortRankingEntities(tenant, runtime));
   for (const t of [tenant, ...runtime]) {
     const self = t.tenantId === tenant.tenantId;
