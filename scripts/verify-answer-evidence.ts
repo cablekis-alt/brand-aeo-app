@@ -230,6 +230,11 @@ try {
   ok('우리 이름을 품은 코호트 브랜드와 그 별칭 · 경쟁사는 남의 이름', ['SKT', 'SK텔레콤', 'LG유플러스', 'LG U+'].every((n) => telecom.includes(n)))
   const sktEv = ev.buildAnswerEvidence({ ...base, brandName: 'KT', aliases: ['KT', '케이티'], competitorNames: telecom, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: ['SKT는 전국 어디서나 통화 품질이 좋아 추천할 만합니다.'] })], raw: [R('v3-001', 'openai', 'SKT는 전국 어디서나 통화 품질이 좋아 추천할 만합니다.')] })
   ok('남의 이름(SKT) 문장은 우리 사례로 고르지 않는다', sktEv.items.length === 0)
+  // 반대로 우리가 SKT이고 경쟁사가 KT면 — 「SKT는 …」은 우리 문장, 「SKT와 KT …」는 남의 이름이 든 문장
+  const skt = (s: string) => ev.buildAnswerEvidence({ ...base, brandName: 'SKT', aliases: ['SKT', 'SK텔레콤'], competitorNames: ['KT', '케이티'], analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], raw: [R('v3-001', 'openai', s)] })
+  ok('우리 이름(SKT) 속 남의 이름(KT)은 남의 이름으로 보지 않는다', skt('SKT는 전국 어디서나 통화 품질이 좋습니다.').items.length === 1)
+  ok('낱말로 선 남의 이름(KT)이 든 문장은 고르지 않는다', skt('SKT와 KT 모두 전국망이 안정적인 편입니다.').items.length === 0)
+  ok('「KT」는 「SKT」 문장에서 나온 것으로 세지 않는다', ev.buildAnswerEvidence({ ...base, brandName: 'KT', aliases: ['KT'], competitorNames: [], analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: ['SKT는 전국 어디서나 통화 품질이 좋습니다.'] })], raw: [R('v3-001', 'openai', 'SKT는 전국 어디서나 통화 품질이 좋습니다.')] }).items.length === 0)
 
   const drafts = await import('../server/contentDraft')
   writeJson('data/vtravel/drafts.json', { 'content:a': stored })

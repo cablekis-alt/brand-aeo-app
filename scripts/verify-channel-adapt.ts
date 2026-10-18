@@ -150,6 +150,14 @@ try {
   const particle = await run('가상 여행 안내', `자세한 내용은 ${ROBOTS}에서 봐요.`, source, 'listing:j')
   ok('원문 주소에 조사가 붙은 문장은 남는다', particle.markdown.includes(`${ROBOTS}에서 봐요.`))
 
+  const glued = await run(
+    '가상 여행 안내',
+    '- 홈페이지: https://www.gasang.co.kr\n- 예약은 https://www.gasang.co.kr로 하세요.\n- 공식 홈페이지는 https://www.gasang.co.kr이에요.',
+    `${source}\n자세한 내용은 https://www.gasang.co.kr에서 확인하세요.\n`,
+    'listing:k',
+  )
+  ok('원문 주소에 조사가 붙어 있어도 다른 어미로 쓴 같은 주소는 남는다', glued.markdown.includes('- 홈페이지: https://www.gasang.co.kr') && glued.markdown.includes('https://www.gasang.co.kr로 하세요.') && glued.markdown.includes('https://www.gasang.co.kr이에요.'))
+
   // 3) 복사할 글 — 블로그 채널만 글 끝을 붙인다
   const brand = { brandName: '가상 여행', ownedDomains: ['vtravel.example'] }
   const settings = { ctaText: '가상 여행 사이트에서 코스를 비교해 보세요.' }

@@ -324,6 +324,21 @@ try {
   ok('같은 사이트를 경로 없이 쓴 주소 · 조사가 붙은 같은 주소는 허용', fa('hotel-gasang.co.kr에서 봅니다.', factText).length === 0 && fa('https://www.hotel-gasang.co.kr/rooms/deluxe에서 봅니다.', factText).length === 0)
   ok('단축 · 링크 주소도 주소다', ['linktr.ee/vtravel', 'youtu.be/vtravelIntro', 'bit.ly/gasang', 'forms.gle/AbCdEf', 'gasang.co'].every((a) => fa(`모든 링크는 ${a} 에 있습니다.`, '').length === 1))
   ok('주소가 아닌 말은 주소로 읽지 않는다', fa('robots.txt와 Node.js, 1.5배, 3.5km/h, schema.org를 봅니다.', '').length === 0)
+  ok('파일 나열(robots.txt/sitemap.xml · Next.js/React)은 주소가 아니다', fa('먼저 robots.txt/sitemap.xml에 차단 규칙이 있는지 보세요.', '').length === 0 && fa('Next.js/React로 만든 사이트도 같습니다.', '').length === 0 && fa('llms.txt/robots.txt 파일을 점검하세요.', '').length === 0)
+  const home = '홈페이지 https://www.gasang.co.kr'
+  ok(
+    '사실의 주소 뒤에 어미 · 괄호 · 따옴표 · 굵게가 붙어도 같은 주소',
+    [
+      '공식 홈페이지는 https://www.gasang.co.kr입니다.',
+      '공식 홈페이지는 https://www.gasang.co.kr이에요.',
+      '예약은 https://www.gasang.co.kr에서도 됩니다.',
+      'https://www.gasang.co.kr(공식 홈페이지)에서 봅니다.',
+      '**www.gasang.co.kr**에서 봅니다.',
+      '“https://www.gasang.co.kr”에서 봅니다.',
+      '（https://www.gasang.co.kr）에서 봅니다.',
+    ].every((s) => fa(s, home).length === 0),
+  )
+  ok('원문 쪽 주소에 조사가 붙어 있어도 같은 주소로 맞춘다', fa('- 홈페이지: https://www.gasang.co.kr', '자세한 내용은 https://www.gasang.co.kr에서 확인하세요.').length === 0 && fa('gasang.co.kr에서 확인하세요.', '공식 홈페이지는 https://www.gasang.co.kr입니다.').length === 0)
 
   // 13) 굵은 꼬리표는 정해 둔 말만 — 짧은 진짜 문장은 따로 자른다
   ok('짧은 굵은 문장은 꼬리표가 아니다', JSON.stringify(drafts.splitSentences('**예약은 필수입니다.** 주말은 30분 만에 마감됩니다.')) === JSON.stringify(['**예약은 필수입니다.**', '주말은 30분 만에 마감됩니다.']))

@@ -143,46 +143,50 @@ const BOLD_LABEL = /^\*\*(?:Q|A|[QA]?\d{1,2}|주의|참고|팁|TIP|NOTE)[.!?:]?\
 
 /**
  * 글 속 주소 — 스킴(https://) · www. · 도메인 꼴(gasang-stay.co.kr, linktr.ee/…, booking.naver.com/…). 스킴 · www 뒤와 경로는
- * 공백 · 괄호 전까지 모두 주소다(「https://가상여행.kr」 「…/가상여행」처럼 한글이 섞여도). 경로 없는 도메인은 흔한 최상위
- * 도메인일 때만 주소로 본다(「Node.js」 같은 말을 주소로 읽지 않게).
+ * 공백 · 괄호 · 따옴표 · 굵게 표시 전까지 주소 후보로 잡는다(「https://가상여행.kr」 「…/가상여행」처럼 한글이 섞여도). 뒤에 붙은
+ * 조사 · 어미(「…kr입니다」)는 비교할 때 addressKey가 뗀다. 경로 없는 도메인은 흔한 최상위 도메인일 때만, 경로가 붙은 도메인은
+ * 파일 확장자가 아닐 때만 주소로 본다(「robots.txt/sitemap.xml」 「Next.js/React」를 주소로 읽지 않게).
  */
-const URL_CHARS = `[^\\s)\\]<>"'「」]`;
+const URL_CHARS = `[^\\s()\\[\\]<>"'「」*·（）“”‘’,]`;
+const FILE_EXT = '(?:txt|xml|js|mjs|ts|jsx|tsx|html?|json|md|png|jpe?g|gif|svg|webp|pdf|csv|css|php|py|java|go|rb|zip|exe|mp4|mp3|docx?|xlsx?|pptx?)';
 const ADDRESS = new RegExp(
   [
     `https?:\\/\\/${URL_CHARS}+`,
     `\\bwww\\.${URL_CHARS}+`,
-    `\\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.[a-z]{2,}\\/${URL_CHARS}*`,
+    `\\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.(?!${FILE_EXT}\\/)[a-z]{2,}\\/${URL_CHARS}*`,
     `\\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.(?:com|net|org|co\\.kr|or\\.kr|go\\.kr|kr|io|ai|me|info|biz|shop|site|xyz|app|dev|co|be|ee|ly|gle|tv|to|gg|link|page|store|blog|online|top|us|jp|cc)\\b`,
   ].join('|'),
   'gi',
 );
 const ADDRESS_TERMS = new Set(['schema.org']);
-/** 주소에 붙은 조사 — 「https://kt.com/에서」는 원문의 「https://kt.com/」과 같은 주소다. */
-const PARTICLE = /(?:에서|에게|으로|부터|까지|이나|에|로|을|를|이|가|은|는|의|와|과|도|나|만)$/;
+/** 경로 자리에 온 한글이 조사 · 어미뿐인 경우(「https://kt.com/에서」) — 경로가 아니라 문장이다. */
+const ENDING = /^(?:에서|에게|으로|부터|까지|이나|에|로|을|를|이|가|은|는|의|와|과|도|나|만|처럼|입니다|이에요|예요|이며|이고)(?:도|는|만)?[.,;:!?]*$/;
 
-/** 비교용 주소 — 소문자, 스킴 · www. · 끝 문장부호 · 끝 / 를 걷는다. */
-function addressKey(a: string): string {
-  return a
-    .toLowerCase()
-    .replace(/[.,;:!?]+$/, '')
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/+$/, '');
+/**
+ * 비교용 주소 — 소문자, 스킴 · www.를 걷고, 주소 뒤에 붙은 한글(조사 · 어미 · 문장)을 뗀다. 한글 바로 앞이 / ? = & # 이면 경로
+ * (「…/가상여행」)라 두되, 그 한글이 조사뿐이면 뗀다. 호스트가 한글로 시작하면(「가상여행.kr」) 그대로 둔다. 끝 문장부호 · / 도 걷는다.
+ * 원문 · 사실 쪽 주소에도 같은 규칙을 써서 「…kr에서」와 「…kr입니다」가 같은 주소로 맞춰진다.
+ */
+function addressKey(raw: string): string {
+  let a = raw.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
+  const hangul = a.search(/[가-힣ㄱ-ㅎㅏ-ㅣ]/);
+  if (hangul > 0) {
+    const tail = a.slice(hangul);
+    if (!/[/?=&#]/.test(a[hangul - 1]!) || ENDING.test(tail)) a = a.slice(0, hangul);
+  }
+  return a.replace(/[.,;:!?]+$/, '').replace(/\/+$/, '');
 }
 
 /**
  * 원문 · 사실에 없는 주소. 주소 단위로 비교한다 — 글자 일부가 겹친다고 같은 주소가 아니다(「gasang.co.kr」 ≠ 「hotel-gasang.co.kr」,
- * 경로를 자른 「…/ro」 ≠ 「…/rooms/deluxe」). 허용: 같은 주소, 조사만 붙은 같은 주소, 경로 없이 쓴 같은 사이트(그 호스트 · 상위 도메인).
+ * 경로를 자른 「…/ro」 ≠ 「…/rooms/deluxe」). 허용: 같은 주소(조사 · 어미가 붙어도), 경로 없이 쓴 같은 사이트(그 호스트 · 상위 도메인).
  */
 export function foreignAddresses(text: string, allowed: string): string[] {
-  const known = new Set((allowed.match(ADDRESS) ?? []).map(addressKey));
+  const known = new Set((allowed.match(ADDRESS) ?? []).map(addressKey).filter(Boolean));
   const hosts = [...known].map((k) => k.split('/')[0]!);
   const ok = (key: string): boolean => {
     if (!key || ADDRESS_TERMS.has(key) || known.has(key)) return true;
-    const bare = key.replace(PARTICLE, '');
-    if (bare !== key && known.has(addressKey(bare))) return true;
-    const host = addressKey(bare);
-    return !host.includes('/') && hosts.some((h) => h === host || h.endsWith(`.${host}`));
+    return !key.includes('/') && hosts.some((h) => h === key || h.endsWith(`.${key}`));
   };
   return (text.match(ADDRESS) ?? []).filter((a) => !ok(addressKey(a)));
 }

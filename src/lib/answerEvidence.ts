@@ -179,11 +179,23 @@ function namePatterns(names: string[]): RegExp[] {
   return names.map((n) => brandPattern(n)).filter((r): r is RegExp => r !== null)
 }
 
+/** 두 글자가 모두 영문 · 숫자인가 — 영문 이름이 다른 영문 낱말 속에 든 경우(「SKT」 속 「KT」)를 가른다. */
+function asciiJoin(a: string | undefined, b: string | undefined): boolean {
+  return Boolean(a && b && /[a-z0-9]/i.test(a) && /[a-z0-9]/i.test(b))
+}
+
+/** text의 start 자리에서 맞은 이름(word)이 낱말로 서 있나 — 영문 이름은 앞뒤가 영문 · 숫자로 이어지면 다른 낱말의 일부다. 한글은 그대로 본다. */
+function standalone(text: string, start: number, word: string): boolean {
+  const end = start + word.length
+  return !asciiJoin(text[start - 1], word[0]) && !asciiJoin(text[end], word[word.length - 1])
+}
+
+/**
+ * 이 글에 이름이 있나 — 띄어쓰기를 무시하고 찾되 영문 이름은 낱말 경계에서만(우리 「KT」가 「SKT는 …」에서 나온 것으로 보지 않고,
+ * 남의 「KT」가 우리 「SKT」 문장을 막지 않게).
+ */
 function hasAny(text: string, patterns: RegExp[]): boolean {
-  return patterns.some((p) => {
-    p.lastIndex = 0
-    return p.test(text)
-  })
+  return patterns.some((p) => [...text.matchAll(new RegExp(p.source, 'g'))].some((m) => standalone(text, m.index ?? 0, m[0])))
 }
 
 /** 이 응답에서 발행본에 옮겨도 되는 문장들. 없으면 빈 배열. */
@@ -222,15 +234,7 @@ export function isOurName(name: string, ourNames: string[]): boolean {
   if (!squash(name)) return false
   if (ourNames.some((o) => squash(o) === squash(name))) return true
   const theirs = brandPattern(name)
-  if (!theirs) return false
-  const asciiJoin = (a: string | undefined, b: string | undefined) => Boolean(a && b && /[a-z0-9]/i.test(a) && /[a-z0-9]/i.test(b))
-  return ourNames.some((o) =>
-    [...o.matchAll(new RegExp(theirs.source, 'g'))].some((m) => {
-      const start = m.index ?? 0
-      const end = start + m[0].length
-      return !asciiJoin(o[start - 1], m[0][0]) && !asciiJoin(o[end], m[0][m[0].length - 1])
-    }),
-  )
+  return theirs !== null && ourNames.some((o) => hasAny(o, [theirs]))
 }
 
 export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
