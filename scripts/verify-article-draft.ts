@@ -354,6 +354,47 @@ try {
   )
   ok('절 제목 — 1 – 2인 · 10 - 20대는 그대로, Q1: · ## 4 - 는 뗀다', JSON.stringify(headed2.draft.sections.map((s) => s.heading)) === JSON.stringify(['1 – 2인 객실은 얼마인가요?', '10 - 20대도 많이 오나요?', '예약은 어떻게 하나요?', '주차는 되나요?']))
 
+  // 14-1) 바깥 정보 빈칸 — 브랜드가 채울 수 없는 빈칸(external)은 본문에 두지 않고 기록만, 표시 없는 빈칸은 브랜드 빈칸
+  ok('블로그 글 형식 프롬프트 — 빈칸에 scope(brand · external)', articlePrompt.system.includes('"scope":"brand"|"external"') && articlePrompt.system.includes('브랜드 밖의 정보'))
+  ok('옛 형식 프롬프트에는 scope가 없다', !oldPrompt.system.includes('scope'))
+  const { buildContentBriefPrompt } = await import('../src/prompts/b9b-content-brief')
+  const briefPrompt = buildContentBriefPrompt({ brandName: '가상 여행', industry: '관광안내', region: '가상시', competitorNames: [], factGraph: facts, action: { kind: 'content', title: 'T', questionTexts: ['가상시 여행 코스 추천'], evidence: '' } })
+  ok('브리프 프롬프트 — 바깥 수치가 필요한 절은 만들지 않는다', briefPrompt.system.includes('브랜드가 확인해 줄 수 없는 바깥 수치'))
+  const scoped = await drafts.generateDraft(
+    'vtravel',
+    'content:s',
+    { ...request, format: 'article' },
+    writerOf({
+      title: 'T',
+      lead: '첫머리입니다.',
+      sections: [
+        {
+          heading: '얼마나 하나요?',
+          answers: 'q1',
+          blocks: [
+            { kind: 'text', role: 'key', body: '가상 여행은 정보 사이트입니다.' },
+            { kind: 'gap', need: '가상 여행 이용 요금 — 팩트 그래프에 없음', scope: 'brand' },
+            { kind: 'gap', need: '가상시 여행객 평균 지출액 — 시장 통계', scope: 'external' },
+            { kind: 'gap', need: '가상 여행 단체 할인 여부 — 팩트 그래프에 없음' },
+          ],
+        },
+        {
+          heading: '시에서 정한 기준은 무엇인가요?',
+          answers: 'q2',
+          blocks: [{ kind: 'gap', need: '가상시 관광 안내 기준 — 지자체 정보', scope: 'external' }],
+          image: { alt: '가상시 안내판', caption: '시 안내판' },
+        },
+        { heading: '어디서 출발하나요?', answers: 'q3', blocks: [{ kind: 'text', role: 'key', body: '가상 여행은 가상역 2번 출구에서 출발합니다.' }], image: { alt: '가상역 출구', caption: '출발 장소' } },
+      ],
+    }),
+    checker,
+  )
+  const sg = scoped.draft
+  ok('바깥 정보 빈칸은 빼고 기록, 브랜드 · 표시 없는 빈칸은 남긴다', sg.sections[0]?.blocks.filter((b) => b.kind === 'gap').map((b) => b.need).join('|') === '가상 여행 이용 요금 — 팩트 그래프에 없음|가상 여행 단체 할인 여부 — 팩트 그래프에 없음' && (sg.guardNotes ?? []).filter((n) => n.includes('브랜드 밖의 정보라 빈칸으로 두지 않고')).length === 2)
+  ok('바깥 정보 빈칸만 있던 절은 빠지고 그 사진은 세지 않는다', sg.sections.length === 2 && sg.sections[1]?.heading === '어디서 출발하나요?' && sg.sections[1].image?.alt === '가상역 출구' && sg.gapCount === 2)
+  const scopedOld = await drafts.generateDraft('vtravel', 'content:s-old', request, writerOf({ title: 'T', lead: '첫머리입니다.', sections: [{ heading: 'H', answers: 'q', blocks: [{ kind: 'gap', need: '바깥 수치', scope: 'external' }] }] }), checker)
+  ok('옛 형식은 scope를 보지 않는다(빈칸 그대로)', scopedOld.draft.sections[0]?.blocks[0]?.kind === 'gap' && scopedOld.draft.gapCount === 1)
+
   // 15) 고친 글 정리 — 사람이 쓴 「참고: …」 문장 · 기울임 문단은 본문, 사실 목록 뒤 빈 줄 다음 목록은 남는다
   const manual = '# 가상시 여행 코스 고를 때 확인할 3가지\n\n## 1. 주차는 되나요?\n\n참고: 주차장은 건물 뒤편에 있습니다.\n\n## 2. 사진은요?\n\n![입구](#image-slot)\n*입구 사진*\n\n## 3. 비 오는 날은요?\n\n*비 오는 날에는 테라스석을 닫습니다.*\n\n---\n\n**이 글이 쓴 사실**\n- 출발 장소: 가상역 2번 출구\n\n- 우산을 챙기세요\n- 편한 신발을 신으세요\n'
   const manualPub = publishMarkdownOf({ ...stored, editedMarkdown: manual, editedAt: NOW })

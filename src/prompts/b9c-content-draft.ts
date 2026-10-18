@@ -122,7 +122,11 @@ const ARTICLE_DRAFT_RULE = `
      묘사(실제로 잰 답변은 코드가 따로 붙인다), 문의 · 상담 · 예약 유도 문구(브랜드 안내 문구를 코드가 글 끝에 붙인다),
      마크다운 기호(**, #, >, 목록 기호).
    - 제목에 절 수를 넣고 싶으면 숫자 대신 {N}이라고 쓴다(예: "… 고를 때 확인할 {N}가지"). 코드가 실제로 실린 절 수로 바꾼다.
-   - 브리프 구조의 [table] · [list] 절도 표 · 목록 없이 문장으로 쓴다. 항목이 여럿이면 action 블록을 여러 개로 나눈다.`;
+   - 브리프 구조의 [table] · [list] 절도 표 · 목록 없이 문장으로 쓴다. 항목이 여럿이면 action 블록을 여러 개로 나눈다.
+   - 빈칸(gap)에는 "scope"를 붙인다. brand = 브랜드가 확인해 줄 수 있는 자기 정보(가격 · 시설 · 운영 · 인력 · 정책),
+     external = 브랜드 밖의 정보(시장 통계 · 업계 평균 · 공공기관이나 지자체가 정하는 정보 · 다른 업체 정보).
+     external이 필요한 자리는 빈칸으로 두기보다 독자가 직접 확인할 곳과 방법(action)으로 바꿔 쓴다. 그래도 남으면 scope를
+     external로 둔다 — 그런 빈칸은 브랜드가 채울 수 없어 코드가 본문에서 뺀다. 애매하면 brand로 둔다.`;
 
 const DRAFT_SCHEMA = `JSON 스키마:
 {
@@ -141,7 +145,7 @@ const ARTICLE_SCHEMA = `JSON 스키마:
   "lead": string,
   "sections": [
     { "heading": string, "answers": string,
-      "blocks": [ {"kind":"text","role":"key"|"action"|"why"|"quote"|"limit","body":string} | {"kind":"gap","need":string} ],
+      "blocks": [ {"kind":"text","role":"key"|"action"|"why"|"quote"|"limit","body":string} | {"kind":"gap","need":string,"scope":"brand"|"external"} ],
       "image": {"alt": string, "caption": string} }
   ]
 }
