@@ -152,8 +152,9 @@ function jsonForScript(value: unknown): string {
  * 주소는 type 'location'이거나 claim에 주소·소재지가 들어간 것, 전화는 claim에 전화·연락처·대표번호.
  * 값은 그대로 문자열로 싣는다(우편번호·시군구 분해는 추측이 들어가므로 하지 않는다).
  */
-function organizationFromFacts(brand: TenantSummary, facts: FactNode[]): Record<string, unknown> {
-  const url = brand.brandPageUrl || (brand.ownedDomains[0] ? `https://${brand.ownedDomains[0].replace(/^https?:\/\//, '')}/` : undefined)
+function organizationFromFacts(brand: TenantSummary, facts: FactNode[], siteUrl?: string): Record<string, unknown> {
+  // 발행 설정의 공식 사이트 주소가 있으면 그것이 이 조직의 사이트다. 없으면 예전처럼 브랜드 페이지 → 도메인 루트.
+  const url = siteUrl || brand.brandPageUrl || (brand.ownedDomains[0] ? `https://${brand.ownedDomains[0].replace(/^https?:\/\//, '')}/` : undefined)
   const org: Record<string, unknown> = {
     '@type': 'Organization',
     '@id': url ? `${url}#organization` : undefined,
@@ -186,7 +187,7 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
     stored.draft.format === 'article' ? (/^#\s+(.+)$/m.exec(md)?.[1]?.trim() ?? draftTitle(effectiveDraft(stored))) : stored.draft.title
   const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)
-  const org = organizationFromFacts(brand, facts)
+  const org = organizationFromFacts(brand, facts, settings?.siteUrl)
   const article = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -199,7 +200,11 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
     publisher: org,
     ...(keywords ? { keywords } : {}),
     ...(settings?.category ? { articleSection: settings.category } : {}),
-    ...(brand.ownedDomains[0] ? { isPartOf: { '@type': 'WebSite', url: `https://${brand.ownedDomains[0].replace(/^https?:\/\//, '')}/`, name: brand.brandName } } : {}),
+    ...(settings?.siteUrl
+      ? { isPartOf: { '@type': 'WebSite', url: settings.siteUrl, name: brand.brandName } }
+      : brand.ownedDomains[0]
+        ? { isPartOf: { '@type': 'WebSite', url: `https://${brand.ownedDomains[0].replace(/^https?:\/\//, '')}/`, name: brand.brandName } }
+        : {}),
   }
   const body = markdownToHtml(md)
 

@@ -16,6 +16,12 @@ export interface PublishSettings {
   category?: string
   /** 브랜드 블로그 주소 — 티스토리면 글쓰기 화면을 연다. */
   blogUrl?: string
+  /**
+   * 공식 사이트 주소 — 글 끝 「○○ 공식 사이트」 링크와 .html 구조화 데이터의 웹사이트 주소. 비우면 첫 소유 도메인의 루트를 쓴다.
+   * 한 도메인을 여러 브랜드가 경로로 나눠 쓰면(https://web4ai.o2osolution.ai/s/stay) 루트는 그 브랜드가 아니라서 따로 적는다.
+   * 「브랜드 페이지」(사실을 읽어 오는 페이지 — 오시는 길 · 진료 안내 등)와는 다른 값이다.
+   */
+  siteUrl?: string
   updatedAt?: string
 }
 
@@ -79,11 +85,13 @@ export function normalizePublishSettings(input: unknown): PublishSettings {
   const tags = tagsOf(raw.tags)
   const category = categoryOf(raw.category)
   const blogUrl = httpUrl(raw.blogUrl, '블로그')
+  const siteUrl = httpUrl(raw.siteUrl, '공식 사이트')
   if (ctaText) out.ctaText = ctaText
   if (inquiryUrl) out.inquiryUrl = inquiryUrl
   if (tags) out.tags = tags
   if (category) out.category = category
   if (blogUrl) out.blogUrl = blogUrl
+  if (siteUrl) out.siteUrl = siteUrl
   return out
 }
 

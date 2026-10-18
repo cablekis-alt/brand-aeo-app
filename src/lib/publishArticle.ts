@@ -22,8 +22,12 @@ export interface ArticleContext {
   settings?: PublishSettings | null
 }
 
-/** 브랜드 공식 사이트 — 첫 소유 도메인의 루트. 도메인이 없으면 없다. */
-export function brandSiteUrl(brand: ArticleBrand): string | undefined {
+/**
+ * 브랜드 공식 사이트 — 발행 설정의 공식 사이트 주소(settings.siteUrl)가 있으면 그것, 없으면 첫 소유 도메인의 루트.
+ * 둘 다 없으면 없다. 루트만 쓰면 한 도메인을 경로로 나눠 쓰는 브랜드(…/s/stay)는 플랫폼 첫 화면으로 간다.
+ */
+export function brandSiteUrl(brand: ArticleBrand, settings?: PublishSettings | null): string | undefined {
+  if (settings?.siteUrl) return settings.siteUrl
   const host = brand.ownedDomains[0]?.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '')
   return host ? `https://${host}/` : undefined
 }
@@ -44,7 +48,7 @@ export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
   const s = ctx.settings
   if (s?.ctaText) paras.push(s.ctaText)
   if (s?.inquiryUrl && !linksTo(body, s.inquiryUrl)) paras.push(`[문의하기](${s.inquiryUrl})`)
-  const site = brandSiteUrl(ctx.brand)
+  const site = brandSiteUrl(ctx.brand, s)
   if (site && !linksTo(body, site) && site !== s?.inquiryUrl) paras.push(`[${ctx.brand.brandName} 공식 사이트](${site})`)
   return paras.length ? ['---', ...paras].join('\n\n') : ''
 }

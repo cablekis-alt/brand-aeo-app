@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { savePublishSettings } from '../lib/api'
 import { markdownToHtml } from '../lib/htmlFile'
-import { articleTailMarkdown, type ArticleBrand } from '../lib/publishArticle'
+import { articleTailMarkdown, brandSiteUrl, type ArticleBrand } from '../lib/publishArticle'
 import { normalizePublishSettings, PUBLISH_LIMITS, type PublishSettings } from '../lib/publishSettings'
 
 /**
@@ -26,6 +26,7 @@ export default function PublishSettingsPanel({
   const [tags, setTags] = useState((settings.tags ?? []).join(', '))
   const [category, setCategory] = useState(settings.category ?? '')
   const [blogUrl, setBlogUrl] = useState(settings.blogUrl ?? '')
+  const [siteUrl, setSiteUrl] = useState(settings.siteUrl ?? '')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -33,7 +34,7 @@ export default function PublishSettingsPanel({
   let draft: PublishSettings | null = null
   let invalid: string | null = null
   try {
-    draft = normalizePublishSettings({ ctaText, inquiryUrl, tags, category, blogUrl })
+    draft = normalizePublishSettings({ ctaText, inquiryUrl, tags, category, blogUrl, siteUrl })
   } catch (e) {
     invalid = e instanceof Error ? e.message : String(e)
   }
@@ -44,6 +45,7 @@ export default function PublishSettingsPanel({
     settings.tags?.length && `태그 ${settings.tags.length}`,
     settings.category && '카테고리',
     settings.blogUrl && '블로그',
+    settings.siteUrl && '공식 사이트',
   ]
     .filter(Boolean)
     .join(' · ')
@@ -100,6 +102,15 @@ export default function PublishSettingsPanel({
         <label>
           블로그 주소 <span className="muted">(티스토리면 「자사 블로그」 줄이 그 블로그의 글쓰기 화면을 엽니다)</span>
           <input value={blogUrl} onChange={edit(setBlogUrl)} placeholder="예: https://myblog.tistory.com" />
+        </label>
+        <label>
+          공식 사이트 주소{' '}
+          <span className="muted">(글 끝 「공식 사이트」 링크 — 한 도메인을 여러 브랜드가 나눠 쓰면 그 브랜드 페이지 주소를 적으세요)</span>
+          <input
+            value={siteUrl}
+            onChange={edit(setSiteUrl)}
+            placeholder={brandSiteUrl(brand) ? `비우면 ${brandSiteUrl(brand)}` : '예: https://example.com/'}
+          />
         </label>
         {invalid && (
           <p className="error" role="alert">

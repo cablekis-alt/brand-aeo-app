@@ -101,6 +101,18 @@ try {
   ok('meta keywords', doc.includes('<meta name="keywords" content="가상여행, 가상 관광">'))
   ok('본문에 상담 안내 · 문의 링크', doc.includes('<p>사이트 주소와 자주 받는 질문을 준비해 문의해 주세요.</p>') && doc.includes('<a href="https://vtravel.example/contact" rel="noopener">문의하기</a>'))
   ok('설정이 없으면 keywords 없음', !buildPublishHtml({ stored, brand, facts: [] }).includes('keywords'))
+
+  // 5) 공식 사이트 주소 — 한 도메인을 경로로 나눠 쓰는 브랜드(…/s/stay)
+  ok('공식 사이트 주소 — 맨 주소에 https를 붙인다', normalizePublishSettings({ siteUrl: 'vtravel.example/s/stay' }).siteUrl === 'https://vtravel.example/s/stay')
+  ok('공식 사이트 주소 — javascript:는 거절', throws(() => normalizePublishSettings({ siteUrl: 'javascript:alert(1)' }), 'http · https'))
+  const site = { siteUrl: 'https://vtravel.example/s/stay' }
+  ok('글 끝 공식 사이트 링크는 적어 둔 주소', articleTailMarkdown('', { brand, settings: site }) === '---\n\n[가상 여행 공식 사이트](https://vtravel.example/s/stay)')
+  ok('본문이 이미 그 주소로 링크하면 또 붙이지 않는다', articleTailMarkdown('[여기](https://vtravel.example/s/stay)', { brand, settings: site }) === '')
+  ok('같은 도메인의 다른 브랜드 주소로 링크했어도 우리 주소는 붙인다', articleTailMarkdown('[다른 곳](https://vtravel.example/s/other)', { brand, settings: site }).includes('(https://vtravel.example/s/stay)'))
+  const siteDoc = buildPublishHtml({ stored, brand, facts: [], settings: site })
+  ok('.html 구조화 데이터의 조직 · 웹사이트 주소도 적어 둔 주소', siteDoc.includes('"url": "https://vtravel.example/s/stay"') && !siteDoc.includes('"url": "https://vtravel.example/"'))
+  const plainDoc = buildPublishHtml({ stored, brand, facts: [] })
+  ok('적지 않으면 예전처럼 도메인 루트', plainDoc.includes('"url": "https://vtravel.example/"') && !plainDoc.includes('/s/stay'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
