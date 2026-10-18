@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   findFactsForGaps,
   generateContentDraft,
+  loadContentBriefs,
   loadFactGraph,
   loadPublishSettings,
   saveContentDraft,
@@ -17,6 +18,8 @@ import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgres
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
 import EvidencePanel from './EvidencePanel'
+import FactApprovalSheet from './FactApprovalSheet'
+import { mergeApproved, needsFromBrief } from '../lib/factApproval'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
@@ -120,12 +123,23 @@ export default function DraftPanel({
   const [dropped, setDropped] = useState<string[]>([])
   // 브랜드 사실 저장은 한 줄로 세운다 — 「맞아요」를 연달아 누르면 읽고-쓰기가 겹쳐 앞 값이 사라진다.
   const factChain = useRef<Promise<unknown>>(Promise.resolve())
+  /**
+   * 초안 쓰기 전 승인 시트 — 브리프가 「확인 필요」로 남긴 사실을 브랜드 페이지에서 찾은 값(src/lib/factApproval.ts).
+   * force는 시트를 닫은 뒤 쓸 초안이 「다시 만들기」인지.
+   */
+  const [prefill, setPrefill] = useState<{ hits: GapFactHit[]; sourceUrl: string; dropped: string[]; force: boolean } | null>(null)
+  /** 사실 찾기 결과 한 줄 — 못 찾았거나 페이지를 못 읽었거나 넣은 개수. */
+  const [prefillNote, setPrefillNote] = useState<string | null>(null)
+  /** 기다리는 일 — 브랜드 페이지에서 사실 찾기 / 초안 쓰기. 버튼 글자가 달라진다. */
+  const [busyKind, setBusyKind] = useState<'facts' | 'draft'>('draft')
 
   // 기다리는 동안 지난 시간 — "보통 1~2분" 옆에 실제로 얼마나 지났는지 보인다.
   const startedAt = useRef(0)
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
     if (!busy) return
+    // 기다리기 시작한 시각은 여기서 잡는다 — 초안 만들기 · 승인 시트 둘 다 busy를 켜면 시작이다.
+    startedAt.current = Date.now()
     const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)), 1000)
     return () => window.clearInterval(id)
   }, [busy])
@@ -157,27 +171,107 @@ export default function DraftPanel({
       !window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
     )
       return
-    startedAt.current = Date.now()
     setElapsed(0)
     setBusy(true)
     setError(null)
+    setPrefill(null)
+    setPrefillNote(null)
     try {
       // 브리프는 초안을 잘 쓰기 위한 발판이지 사람이 읽으려고 만드는 물건이 아니다. 두 번
       // 누르게 하면 그 사이에 사람이 하는 판단이 없는데도 기다림만 두 번 생긴다.
       if (!hasBrief) await ensureBrief()
-      const s = await generateContentDraft(tenantId, draftRequestOf(action), force)
-      onStored(s)
-      setEditing(false)
-      setTyped({})
-      setHits({})
-      setMissed(new Set())
-      setStep(gapProgress(s).total > 0 ? 'gaps' : null)
+      // 초안 쓰기 전에 브리프가 「확인 필요」로 남긴 사실을 브랜드 페이지에서 찾는다 — 찾으면 승인 시트를 띄우고 여기서 멈춘다.
+      // 실측: 초안을 다 쓴 뒤 빈칸마다 값을 찾아 넣은 곳이 79곳 중 0곳이었다.
+      const found = await findBriefFacts()
+      if (found) {
+        setPrefill({ ...found, force })
+        return
+      }
+      await writeDraft(force)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+      setBusyKind('draft')
+    }
+  }
+  /** 브리프의 「확인 필요」 사실을 브랜드 페이지에서 찾는다(판정 1회). 못 찾거나 페이지를 못 읽으면 null — 초안은 예전처럼 빈칸으로 쓴다. */
+  const findBriefFacts = async (): Promise<{ hits: GapFactHit[]; sourceUrl: string; dropped: string[] } | null> => {
+    const briefs = await loadContentBriefs(tenantId)
+    const needs = needsFromBrief(briefs?.[action.id]?.brief.doNotClaim ?? [])
+    if (!needs.length) return null
+    setBusyKind('facts')
+    try {
+      const r = await findFactsForGaps(tenantId, needs)
+      if (!r.found.length) {
+        setPrefillNote(`브랜드 페이지에서 확인 필요 사실 ${needs.length}개를 찾아봤지만 없었습니다 — 그 자리는 빈칸으로 남습니다.`)
+        return null
+      }
+      return { hits: r.found, sourceUrl: r.sourceUrl, dropped: r.dropped }
+    } catch (e) {
+      // 페이지를 못 읽어도 초안은 쓴다(예전처럼 빈칸으로). 이유는 화면에 남긴다.
+      console.warn('[DraftPanel] 브랜드 페이지에서 사실을 찾지 못했습니다', e)
+      setPrefillNote(`브랜드 페이지에서 사실을 찾지 못해 건너뛰었습니다 — ${e instanceof Error ? e.message : String(e)}`)
+      return null
+    } finally {
+      setBusyKind('draft')
+    }
+  }
+  const writeDraft = async (force: boolean) => {
+    const s = await generateContentDraft(tenantId, draftRequestOf(action), force)
+    onStored(s)
+    setEditing(false)
+    setTyped({})
+    setHits({})
+    setMissed(new Set())
+    setStep(gapProgress(s).total > 0 ? 'gaps' : null)
+  }
+  /** 승인 시트의 결정 — 체크한 값을 브랜드 사실에 넣고(빈 배열이면 저장 없이) 초안을 쓴다. 저장이 실패하면 시트를 남기고 알린다. */
+  const finishPrefill = async (approved: GapFactHit[]) => {
+    if (!prefill) return
+    const { force } = prefill
+    setElapsed(0)
+    setBusy(true)
+    setError(null)
+    try {
+      if (approved.length) {
+        // 「맞아요」 저장과 같은 줄에 세운다 — 읽고-쓰기가 겹쳐 앞 값이 사라지지 않게. 지금 사실을 읽지 못하면 저장하지 않는다
+        // (빈 목록에 덧붙여 저장하면 있던 사실이 사라진다).
+        const saveFacts = factChain.current.then(async () => {
+          const current = await loadFactGraph(tenantId)
+          if (!current) throw new Error('지금 브랜드 사실을 읽지 못해 저장하지 않았습니다. 다시 시도하거나 「건너뛰고 초안 쓰기」를 누르세요.')
+          await saveFactGraph(tenantId, mergeApproved(current.factGraph, approved))
+        })
+        factChain.current = saveFacts.catch(() => undefined)
+        await saveFacts
+        setPrefillNote(`브랜드 사실 ${approved.length}개를 넣었습니다. 초안이 그 자리를 문장으로 씁니다.`)
+      }
+      setPrefill(null)
+      await writeDraft(force)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
   }
+  const busyLabel = (draftLabel: string) => (busyKind === 'facts' ? `브랜드 페이지에서 사실 찾는 중… ${clock(elapsed)}` : draftLabel)
+  const prefillView = (
+    <>
+      {prefill && tenant && (
+        <FactApprovalSheet
+          key={`${prefill.sourceUrl}|${prefill.hits.length}`}
+          hits={prefill.hits}
+          sourceUrl={prefill.sourceUrl}
+          dropped={prefill.dropped}
+          industry={tenant.industry}
+          busy={busy}
+          onApprove={(approved) => void finishPrefill(approved)}
+          onSkip={() => void finishPrefill([])}
+        />
+      )}
+      {prefillNote && <p className="doc-meta">{prefillNote}</p>}
+    </>
+  )
   const startEdit = () => {
     if (!stored) return
     setText(workMarkdownOf(stored))
@@ -333,10 +427,11 @@ export default function DraftPanel({
             // 판정 호출 수는 운영자용 정보라 손끝 설명에 둔다. 단추에는 기다릴 시간을 적는다.
             title={hasBrief ? '브리프를 바탕으로 초안을 씁니다(판정 1~2회)' : '브리프를 만든 뒤 이어서 초안까지 씁니다(판정 2~4회)'}
           >
-            {busy ? `초안 쓰는 중… ${clock(elapsed)} · 보통 1~2분` : '초안 만들기 · 약 1~2분'}
+            {busy ? busyLabel(`초안 쓰는 중… ${clock(elapsed)} · 보통 1~2분`) : '초안 만들기 · 약 1~2분'}
           </button>
           {busy && <span className="doc-meta">기다리는 동안 다른 글을 계속 다룰 수 있습니다.</span>}
         </div>
+        {prefillView}
         {error && (
           <p className="error" role="alert">
             {error}
@@ -391,7 +486,7 @@ export default function DraftPanel({
             {editing ? '편집 닫기' : '본문 편집'}
           </button>
           <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
-            {busy ? `다시 쓰는 중… ${clock(elapsed)}` : '다시 만들기'}
+            {busy ? busyLabel(`다시 쓰는 중… ${clock(elapsed)}`) : '다시 만들기'}
           </button>
           {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
           <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
@@ -452,6 +547,7 @@ export default function DraftPanel({
         </div>
       )}
 
+      {prefillView}
       {error && (
         <p className="error" role="alert">
           {error}

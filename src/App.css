@@ -4533,6 +4533,29 @@ td.cell-mid {
   margin-top: 2px;
   font-style: italic;
 }
+/* 초안 쓰기 전 승인 시트 — 브랜드 페이지에서 찾은 사실을 사람이 고른다(FactApprovalSheet.tsx). */
+.fact-sheet {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+}
+.fact-sheet h4 {
+  margin: 0;
+}
+.fact-sheet-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fact-sheet-list label {
+  cursor: pointer;
+}
 .gap-slot {
   display: flex;
   flex-direction: column;
