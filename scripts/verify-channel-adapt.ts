@@ -134,6 +134,22 @@ try {
   )
   ok('제목 — 걸리지 않으면 다듬은 제목 그대로', okTitle.title === '가상시 여행 사이트, 이렇게 고르세요' && okTitle.titleChecked === true)
 
+  // 2-2) 제목 링크 · 원문 제목 없음 · 섞인 굵게 · 주소 단위
+  const run = (title: string, body: string, src = source, key = 'listing:e') =>
+    adaptForChannel('vtravel', { contentActionId: 'content:a', channelActionId: key }, { ...base, sourceMarkdown: src, style: 'blog', format: 'article' }, { call: async () => ({ text: JSON.stringify({ title, body }), citations: [], usedWebSearch: false }) }, checker)
+  const linkTitle = await run('가상 여행 [자세한 안내](https://evil-guide.example.com/x)', '가상역 2번 출구에서 만나요.')
+  ok('제목 링크 속 지어낸 주소도 잡아 원문 제목으로', linkTitle.title === '가상시 여행 사이트 고를 때 확인할 2가지')
+  const okLinkTitle = await run(`가상 여행 [안내](${ROBOTS})`, '가상역 2번 출구에서 만나요.', source, 'listing:f')
+  ok('원문 링크가 든 제목은 링크 표시만 걷어 쓴다', okLinkTitle.title === '가상 여행 안내')
+  const noH1 = await run('가상 여행 3일 만에 설치', '가상역 2번 출구에서 만나요.', source.replace(/^# .*\n/, ''), 'listing:g')
+  ok('원문 제목이 없으면 비우고 그렇게 적는다', noH1.title === '' && (noH1.notes ?? []).some((n) => n.includes('비워 두었습니다')))
+  const mixed = await run('가상 여행 안내', '**가상 여행**을 쓰면 가상역 2번 출구에서 바로 만나요. 설치 전에는 **3일 정도 여유를 두는 게 좋아요.**', source, 'listing:h')
+  ok('굵게로 시작 · 끝나는 섞인 문단은 걸린 문장만 뺀다', mixed.markdown.includes('**가상 여행**을 쓰면 가상역 2번 출구에서 바로 만나요.') && !mixed.markdown.includes('3일'))
+  const span = await run('가상 여행 안내', '**가상 여행은 가상역 2번 출구에서 출발해요. 설치는 3일이면 끝나요.** 손님이 직원을 부르지 않아도 돼요.', source, 'listing:i')
+  ok('여러 문장에 걸친 굵게의 가운데가 빠지면 굵게를 걷는다(별표가 남지 않게)', !span.markdown.includes('**') && span.markdown.includes('가상 여행은 가상역 2번 출구에서 출발해요.'))
+  const particle = await run('가상 여행 안내', `자세한 내용은 ${ROBOTS}에서 봐요.`, source, 'listing:j')
+  ok('원문 주소에 조사가 붙은 문장은 남는다', particle.markdown.includes(`${ROBOTS}에서 봐요.`))
+
   // 3) 복사할 글 — 블로그 채널만 글 끝을 붙인다
   const brand = { brandName: '가상 여행', ownedDomains: ['vtravel.example'] }
   const settings = { ctaText: '가상 여행 사이트에서 코스를 비교해 보세요.' }

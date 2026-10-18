@@ -112,13 +112,14 @@ export const MEDICAL_INDUSTRY = /성형|치과|병원|의원|피부과|한의원
  * 흔한 꼴(「~을 말하는 거라면」 「~을 의미하신다면」 「~이 맞다면」 「~을 찾으시는 건가요」 「잘 알려져 있지 않습니다」)을 함께 거른다.
  */
 const CONDITIONAL =
-  /말씀하시는|가리키는|(?:것|거)(?:이)?라면|(?:말씀|의미|뜻|지칭|말)(?:하|하시)?(?:신|한|는)다면|(?:이|가)\s?맞다면|(?:찾으시는|말씀하시는|말하는)\s?(?:건|것인?)가요|정보를 찾(?:을 수 없|지 못)|찾기 어렵|확인되지 않|확인할 수 없|확인이 어렵|(?:인지|맞는지)(?:는|를)?\s?확인이 필요|찾지 못|알려진 바가 없|알려져 있지 않|등록(?:돼|되어) 있지 않|단정하기 어렵|파악하기 어렵|정보가 없/
+  /말씀하시는|가리키는|가리킨다면|(?:것|거)(?:이)?라면|(?:말씀|의미|뜻|지칭|말)(?:하|하시)?(?:신|한|는)다면|(?:언급|얘기|이야기)하(?:신|시는|는)?다면|존재한다면|(?:이|가)\s?(?:정확히\s?)?맞다면|(?:찾으시는|말씀하시는|말하는)\s?(?:건|것인?)가요|정보를 찾(?:을 수 없|지 못)|찾기 어렵|확인되지 않|확인할 수 없|확인이 어렵|(?:인지|맞는지)(?:는|를)?\s?확인이 필요|찾지 못|알려진 바가 없|알려져 있지 않|등록(?:돼|되어) 있지 않|단정하기 어렵|파악하기 어렵|정보가 없/
 
 /**
- * 옮길 문장에서만 더 거르는 조건문 — 「~이라면,」으로 조건을 단 문장. 이름이 나온 답으로는 세지만(조건을 단 추천도 추천이다)
- * 우리 글에 인용하지는 않는다. 「~을 원하신다면 X를 추천합니다」처럼 조건 없이 우리를 꼽는 문장은 여기 걸리지 않는다.
+ * 옮길 문장에서만 더 거르는 조건문 — 「~이라면,」 「~한다면,」처럼 쉼표로 조건을 단 문장. 이름이 나온 답으로는 세지만(조건을 단
+ * 추천도 추천이다) 우리 글에 인용하지는 않는다. 쉼표 없이 조건 뒤에 바로 우리를 꼽는 문장(「~을 원하신다면 X를 추천합니다」)은
+ * 고른다.
  */
-const CONDITIONAL_CLAUSE = /라면[,，]/
+const CONDITIONAL_CLAUSE = /[라다]면[,，]/
 
 /** 뒤 내용을 가리키는 문장(「~은 다음과 같습니다」) — 가리키는 목록 없이 옮기면 빈말이 된다. */
 const POINTS_ONWARD = /(?:다음|아래)과 같(?:습니다|아요|다)|(?:다음|아래)와 같(?:습니다|아요|다)/
@@ -211,14 +212,25 @@ function pickSentences(a: QuestionRepeatAnalysis, raw: EvidenceRawCall, ours: Re
 }
 
 /**
- * 이 이름이 우리 이름인가 — 띄어쓰기를 무시하고 양쪽으로 본다. 코호트 다른 브랜드가 우리를 「가상오더」(우리는 「가상 오더」)나
- * 「하이오더」(우리는 「KT 하이오더」)로 경쟁사에 적어 두면, 그 이름을 남의 이름으로 거를 때 우리 이름이 든 문장이 모두 빠진다.
+ * 이 이름이 우리 이름인가 — 띄어쓰기만 다른 우리 이름(「가상오더」 ↔ 「가상 오더」)이거나 우리 이름의 일부(「하이오더」 ⊂
+ * 「KT 하이오더」)일 때. 코호트 다른 브랜드가 우리를 이렇게 적어 두면, 그 이름을 남의 이름으로 거를 때 우리 문장이 모두 빠진다.
+ * 반대로 우리 이름을 품은 남의 이름(「SKT」 ⊃ 「KT」, 「왕십리본정형외과의원」 ⊃ 「본정형외과」)은 남의 이름이다. 영문 이름의
+ * 일부는 낱말 경계에서만 본다 — 「KT」는 「SKT」의 일부가 아니다.
  */
 export function isOurName(name: string, ourNames: string[]): boolean {
-  const ours = namePatterns(ourNames)
-  if (hasAny(name, ours)) return true
+  const squash = (s: string) => s.replace(/\s+/g, '').toLowerCase()
+  if (!squash(name)) return false
+  if (ourNames.some((o) => squash(o) === squash(name))) return true
   const theirs = brandPattern(name)
-  return theirs !== null && ourNames.some((n) => hasAny(n, [theirs]))
+  if (!theirs) return false
+  const asciiJoin = (a: string | undefined, b: string | undefined) => Boolean(a && b && /[a-z0-9]/i.test(a) && /[a-z0-9]/i.test(b))
+  return ourNames.some((o) =>
+    [...o.matchAll(new RegExp(theirs.source, 'g'))].some((m) => {
+      const start = m.index ?? 0
+      const end = start + m[0].length
+      return !asciiJoin(o[start - 1], m[0][0]) && !asciiJoin(o[end], m[0][m[0].length - 1])
+    }),
+  )
 }
 
 export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {

@@ -315,6 +315,36 @@ try {
   ok('빈칸을 채운 글 — .html <title> · headline이 본문 제목과 같은 수', filledDoc.includes('<title>가상시 여행 코스 고를 때 확인할 4가지</title>') && filledDoc.includes('"headline": "가상시 여행 코스 고를 때 확인할 4가지"') && filledDoc.includes('<h1>가상시 여행 코스 고를 때 확인할 4가지</h1>'))
   const oldEdited = { actionId: 'content:o', generatedAt: NOW, draft: fixture, editedMarkdown: '# T\n\nL\n\n## H1\nB1\n\n## H2\n> **채워야 함:** n\n' }
   ok('옛 형식 고친 글 — 예전처럼 빈칸 줄만 걷는다', publishMarkdownOf(oldEdited) === '# T\n\nL\n\n## H1\nB1\n\n## H2')
+
+  // 12) 주소 — 주소 단위 비교, 한글 호스트 · 경로, 단축 주소, 조사
+  const fa = drafts.foreignAddresses
+  const factText = '홈페이지 https://www.hotel-gasang.co.kr\n객실 https://www.hotel-gasang.co.kr/rooms/deluxe\n스토어 https://smartstore.naver.com/vtravel'
+  ok('한글 호스트 · 허용 주소에 한글 경로를 붙인 주소는 주소다', fa('예약은 https://가상여행.kr 입니다.', factText).length === 1 && fa('후기는 https://smartstore.naver.com/가상여행 에서 봅니다.', factText).length === 1)
+  ok('글자 일부만 겹친 다른 도메인 · 경로를 자른 주소는 허용하지 않는다', fa('gasang.co.kr 에서 봅니다.', factText).length === 1 && fa('https://www.hotel-gasang.co.kr/ro 에서 봅니다.', factText).length === 1)
+  ok('같은 사이트를 경로 없이 쓴 주소 · 조사가 붙은 같은 주소는 허용', fa('hotel-gasang.co.kr에서 봅니다.', factText).length === 0 && fa('https://www.hotel-gasang.co.kr/rooms/deluxe에서 봅니다.', factText).length === 0)
+  ok('단축 · 링크 주소도 주소다', ['linktr.ee/vtravel', 'youtu.be/vtravelIntro', 'bit.ly/gasang', 'forms.gle/AbCdEf', 'gasang.co'].every((a) => fa(`모든 링크는 ${a} 에 있습니다.`, '').length === 1))
+  ok('주소가 아닌 말은 주소로 읽지 않는다', fa('robots.txt와 Node.js, 1.5배, 3.5km/h, schema.org를 봅니다.', '').length === 0)
+
+  // 13) 굵은 꼬리표는 정해 둔 말만 — 짧은 진짜 문장은 따로 자른다
+  ok('짧은 굵은 문장은 꼬리표가 아니다', JSON.stringify(drafts.splitSentences('**예약은 필수입니다.** 주말은 30분 만에 마감됩니다.')) === JSON.stringify(['**예약은 필수입니다.**', '주말은 30분 만에 마감됩니다.']))
+  ok('정해 둔 꼬리표는 붙인다(**주의!** · **1.**)', drafts.splitSentences('**주의!** 우산을 챙기세요.').length === 1 && drafts.splitSentences('**1.** 출발은 가상역입니다.').length === 1)
+
+  // 14) 절 제목 — 띄어 쓴 범위는 그대로, Q1: · ## 4 - 는 뗀다
+  const headed2 = await drafts.generateDraft(
+    'vtravel',
+    'content:h2',
+    { ...request, format: 'article' },
+    writerOf({ title: 'T', lead: '첫머리입니다.', sections: ['1 – 2인 객실은 얼마인가요?', '10 - 20대도 많이 오나요?', 'Q1: 예약은 어떻게 하나요?', '## 4 - 주차는 되나요?'].map((h, i) => ({ heading: h, answers: `q${i}`, blocks: [{ kind: 'text', role: 'key', body: '가상 여행은 정보 사이트입니다.' }] })) }),
+    checker,
+  )
+  ok('절 제목 — 1 – 2인 · 10 - 20대는 그대로, Q1: · ## 4 - 는 뗀다', JSON.stringify(headed2.draft.sections.map((s) => s.heading)) === JSON.stringify(['1 – 2인 객실은 얼마인가요?', '10 - 20대도 많이 오나요?', '예약은 어떻게 하나요?', '주차는 되나요?']))
+
+  // 15) 고친 글 정리 — 사람이 쓴 「참고: …」 문장 · 기울임 문단은 본문, 사실 목록 뒤 빈 줄 다음 목록은 남는다
+  const manual = '# 가상시 여행 코스 고를 때 확인할 3가지\n\n## 1. 주차는 되나요?\n\n참고: 주차장은 건물 뒤편에 있습니다.\n\n## 2. 사진은요?\n\n![입구](#image-slot)\n*입구 사진*\n\n## 3. 비 오는 날은요?\n\n*비 오는 날에는 테라스석을 닫습니다.*\n\n---\n\n**이 글이 쓴 사실**\n- 출발 장소: 가상역 2번 출구\n\n- 우산을 챙기세요\n- 편한 신발을 신으세요\n'
+  const manualPub = publishMarkdownOf({ ...stored, editedMarkdown: manual, editedAt: NOW })
+  ok('고친 글 — 사람이 쓴 「참고:」 문장 · 기울임 문단 절은 남는다', manualPub.includes('주차장은 건물 뒤편에 있습니다.') && manualPub.includes('테라스석을 닫습니다.'))
+  ok('고친 글 — 사진 자리 · 설명만 있는 절은 빠지고 번호 · 수가 맞는다', !manualPub.includes('사진은요') && manualPub.startsWith('# 가상시 여행 코스 고를 때 확인할 2가지') && manualPub.includes('## 2. 비 오는 날은요?'))
+  ok('고친 글 — 사실 목록은 빠지고 빈 줄 뒤 사람 목록은 남는다', !manualPub.includes('이 글이 쓴 사실') && !manualPub.includes('출발 장소: 가상역') && manualPub.includes('- 우산을 챙기세요'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

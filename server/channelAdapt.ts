@@ -124,7 +124,20 @@ function foreignAddress(sentence: string, sourceMarkdown: string): boolean {
  * 같은 원칙). 일부만 빼면 닫는 **가 사라져 별표가 글자로 보이거나, 그대로 쓸 말의 뜻이 바뀐다.
  */
 function wholeLine(marker: string, text: string): boolean {
-  return marker.trim() === '>' || /^\*\*[^*].*\*\*$/.test(text);
+  return marker.trim() === '>' || /^\*\*[^*]+\*\*$/.test(text);
+}
+
+/**
+ * 남은 문장에서 굵게 짝이 깨졌으면(** 가 홀수) 굵게를 걷는다 — 여러 문장에 걸친 굵게의 가운데 문장이 빠지면 닫는 **가 사라져
+ * 별표가 글자로 보인다. 글자는 그대로 두고 표시만 뺀다.
+ */
+function balanceBold(text: string): string {
+  return ((text.match(/\*\*/g) ?? []).length % 2 === 1 ? text.replace(/\*\*/g, '') : text);
+}
+
+/** 제목에서 링크 표시를 걷은 글자(「[안내](https://…)」 → 「안내」). 주소 검사는 걷기 전 제목으로 한다. */
+function titleTextOf(title: string): string {
+  return title.replace(MD_LINK, '$1').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
 }
 
 /** 마크다운 한 줄의 표식(##, -, 1.)과 본문을 나눈다 — 가드는 본문 문장만 본다. */
@@ -166,7 +179,7 @@ export async function adaptForChannel(
     const all = splitSentences(text);
     const kept = all.filter(passes);
     if (wholeLine(marker, text) && kept.length < all.length) return null;
-    return kept.length ? `${marker}${kept.join(' ')}` : null;
+    return kept.length ? `${marker}${balanceBold(kept.join(' '))}` : null;
   });
   let kept = lines.filter((l): l is string | { media: string } => l !== null);
 
@@ -176,12 +189,26 @@ export async function adaptForChannel(
     const { marker, text } = splitMarker(l);
     return marker.startsWith('#') || !text ? [] : splitSentences(text);
   });
-  // 제목도 같은 대조를 받는다 — 「제목 복사」로 블로그 제목 칸에 그대로 들어간다. 걸리면 원문 제목(# 줄)으로 되돌린다.
+  // 제목도 같은 대조를 받는다 — 「제목 복사」로 블로그 제목 칸에 그대로 들어간다. 주소는 링크 안까지 보고(걷기 전 제목),
+  // 숫자 · 격상은 링크 표시를 걷은 글자로 본다. 걸리면 원문 제목(# 줄)으로 되돌리고, 원문 제목은 이미 받은 글이라 다시 검사하지 않는다.
   const sourceTitle = /^#\s+(.+)$/m.exec(req.sourceMarkdown)?.[1]?.trim() ?? '';
-  let title = rawTitle && passes(rawTitle) ? rawTitle : sourceTitle;
-  const claims = await findOverclaims(title ? [...sentences, title] : sentences, req.factGraph, checker, 'drop');
-  if (title && claims.overclaimed.has(title)) title = sourceTitle;
-  if (rawTitle && title !== rawTitle) notes.push(`제목 「${rawTitle.slice(0, 40)}」이 사실 대조에 걸려 원문 제목으로 되돌렸습니다.`);
+  const titleText = titleTextOf(rawTitle);
+  let titleOk = Boolean(titleText);
+  if (titleOk && foreignAddresses(rawTitle, req.sourceMarkdown).length) {
+    notes.push(`제목 「${rawTitle.slice(0, 40)}」에 원문에 없는 주소가 들어 있습니다.`);
+    titleOk = false;
+  }
+  if (titleOk && !guardSentence(titleText)) titleOk = false;
+  const claims = await findOverclaims(titleOk ? [...sentences, titleText] : sentences, req.factGraph, checker, 'drop');
+  if (titleOk && claims.overclaimed.has(titleText)) titleOk = false;
+  const title = titleOk ? titleText : sourceTitle;
+  if (rawTitle && !titleOk) {
+    notes.push(
+      sourceTitle
+        ? `제목 「${rawTitle.slice(0, 40)}」이 사실 대조에 걸려 원문 제목으로 되돌렸습니다.`
+        : `제목 「${rawTitle.slice(0, 40)}」이 사실 대조에 걸려 비워 두었습니다(올리기 목록은 초안 제목을 씁니다).`,
+    );
+  }
   if (claims.overclaimed.size) {
     kept = kept
       .map((l) => {
@@ -191,7 +218,7 @@ export async function adaptForChannel(
         const all = splitSentences(text);
         const left = all.filter((s) => !claims.overclaimed.has(s));
         if (wholeLine(marker, text) && left.length < all.length) return null;
-        return left.length ? `${marker}${left.join(' ')}` : null;
+        return left.length ? `${marker}${balanceBold(left.join(' '))}` : null;
       })
       .filter((l): l is string | { media: string } => l !== null);
   }

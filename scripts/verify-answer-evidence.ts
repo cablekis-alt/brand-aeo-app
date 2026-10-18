@@ -147,6 +147,18 @@ try {
     const e = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], raw: [R('v3-001', 'openai', s)] })
     ok(`조건 없는 추천 · 주의는 고르고 센다 — 「${s.slice(0, 14)}…」`, e.items.length === 1 && e.answered.mentioned === 1)
   }
+  for (const s of [
+    '가상 여행을 가리킨다면, 가상 여행은 조용한 분위기의 여행 정보 사이트입니다.',
+    '가상 여행을 언급하신다면, 가상 여행은 여행 정보를 모은 사이트입니다.',
+    '찾으시는 곳이 가상 여행이 정확히 맞다면, 가상시 공식 안내를 함께 보세요.',
+  ]) {
+    const e = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [s] })], raw: [R('v3-001', 'openai', s)] })
+    ok(`신원 확인용 조건문은 고르지도 세지도 않는다 — 「${s.slice(0, 14)}…」`, e.items.length === 0 && e.answered.mentioned === 0)
+  }
+  const wantComma = '조용한 곳을 원하신다면, 가상 여행이 좋은 선택입니다.'
+  const wantEv = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [wantComma] })], raw: [R('v3-001', 'openai', wantComma)] })
+  ok('쉼표로 조건을 단 추천은 세되 옮기지 않는다', wantEv.items.length === 0 && wantEv.answered.mentioned === 1)
+  ok('우리 이름을 품은 남의 이름은 남의 이름(SKT ⊃ KT · 왕십리본정형외과의원 ⊃ 본정형외과)', !ev.isOurName('SKT', ['KT', '케이티']) && !ev.isOurName('왕십리본정형외과의원', ['옥수본정형외과', '본정형외과']) && !ev.isOurName('KT', ['SK텔레콤', 'SKT']))
   const clause = '가족 여행이라면, 가상 여행이 좋은 선택입니다.'
   const clauseEv = ev.buildAnswerEvidence({ ...base, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: [clause] })], raw: [R('v3-001', 'openai', clause)] })
   ok('「~이라면,」 조건문은 이름 나온 답으로 세되 옮기지 않는다', clauseEv.items.length === 0 && clauseEv.answered.mentioned === 1)
@@ -212,6 +224,12 @@ try {
     T({ tenantId: 'vb', brandName: '다른 여행', competitors: [{ name: '가상여행', aliases: [] }] }),
   ])
   ok('코호트가 띄어쓰기만 다르게 적은 우리 이름은 남의 이름이 아니다', !othersSpaced.includes('가상여행') && othersSpaced.includes('다른 여행'))
+  const telecom = evidenceOtherNames(T({ tenantId: 'kt', brandName: 'KT', aliases: ['KT', '케이티'], industry: '통신', region: '전국' }), [
+    T({ tenantId: 'skt', brandName: 'SKT', aliases: ['SKT', 'SK텔레콤'], industry: '통신', region: '전국', competitors: [{ name: 'LG유플러스', aliases: ['LG U+'] }] }),
+  ])
+  ok('우리 이름을 품은 코호트 브랜드와 그 별칭 · 경쟁사는 남의 이름', ['SKT', 'SK텔레콤', 'LG유플러스', 'LG U+'].every((n) => telecom.includes(n)))
+  const sktEv = ev.buildAnswerEvidence({ ...base, brandName: 'KT', aliases: ['KT', '케이티'], competitorNames: telecom, analyses: [A({ questionId: 'v3-001', engine: 'openai', sentences: ['SKT는 전국 어디서나 통화 품질이 좋아 추천할 만합니다.'] })], raw: [R('v3-001', 'openai', 'SKT는 전국 어디서나 통화 품질이 좋아 추천할 만합니다.')] })
+  ok('남의 이름(SKT) 문장은 우리 사례로 고르지 않는다', sktEv.items.length === 0)
 
   const drafts = await import('../server/contentDraft')
   writeJson('data/vtravel/drafts.json', { 'content:a': stored })

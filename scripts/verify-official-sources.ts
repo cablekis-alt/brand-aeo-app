@@ -76,6 +76,11 @@ try {
   ]) {
     ok(`제품 문구에는 붙이지 않는다 — 「${body.slice(0, 16)}…」`, product(body).length === 0)
   }
+  const sec = (heading: string, body: string) => articleSources({ ...draft, sections: [{ heading, answers: 'q', blocks: [text(body, 'key')] }] })[0]!.map((s) => s.id)
+  ok('「구글 검색의 AI 개요」 · 맨 「AI 개요」는 붙인다', sec('구글 검색의 AI 개요란?', 'AI 개요는 검색 결과 위에 요약을 보여 줍니다.').includes('google-ai-features') && sec('AI 개요에 나오려면?', '맨 위 요약에 들어가려면 답을 먼저 쓰세요.').includes('google-ai-features'))
+  ok('같은 절에 구글 · 색인이 있으면 「URL 검사 도구」에 붙인다', sec('구글에 등록됐는지 확인하기', 'URL 검사 도구에 페이지 주소를 넣으면 색인 여부가 나옵니다.').includes('google-url-inspection'))
+  ok('「사이트맵을 만든 뒤 … 제출」에 사이트맵 링크', sec('사이트맵 제출', '사이트맵을 만든 뒤 구글 서치 콘솔에서 제출합니다.').includes('google-sitemaps'))
+  ok('제목에 검색 맥락이 있으면 「구조화된 데이터」에 붙인다', sec('검색에 잘 보이려면', '구조화된 데이터를 페이지에 넣으세요.').includes('google-structured-data'))
   ok('구글 AI 개요 · 사이트맵 제출 · 구조화 데이터 마크업은 붙인다', product('구글 AI 개요에 나오려면 사이트맵을 Search Console에 제출하세요.').length === 2 && product('구조화된 데이터 마크업을 넣으세요.')[0]?.id === 'google-structured-data')
 
   // 3) 내보내기

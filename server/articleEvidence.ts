@@ -21,10 +21,14 @@ export const WEEK_OF = /^\d{4}-W\d{2}$/;
 export function evidenceOtherNames(tenant: TenantConfig, runtime: TenantConfig[]): string[] {
   const ourNames = [tenant.brandName, ...(tenant.aliases ?? [])].map((n) => n.trim()).filter(Boolean);
   const ours = { has: (n: string) => isOurName(n, ourNames) };
+  /** 같은 브랜드를 다시 등록한 테넌트 — 띄어쓰기만 다른 같은 이름. 그 별칭 · 경쟁사는 우리 것으로 보고 건너뛴다. */
+  const squash = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  const sameBrand = (n: string) => ourNames.some((o) => squash(o) === squash(n));
   const names = new Set(cohortRankingEntities(tenant, runtime));
   for (const t of [tenant, ...runtime]) {
     const self = t.tenantId === tenant.tenantId;
-    if (!self && (!names.has(t.brandName.trim()) || ours.has(t.brandName.trim()))) continue;
+    // 우리 이름을 품은 다른 브랜드(「SKT」 · 「왕십리본정형외과의원」)는 건너뛰지 않는다 — 그 별칭 · 경쟁사도 남의 이름이다.
+    if (!self && (!names.has(t.brandName.trim()) || sameBrand(t.brandName.trim()))) continue;
     if (!self) for (const a of t.aliases ?? []) names.add(a.trim());
     for (const c of t.competitors ?? []) for (const n of [c.name, ...(c.aliases ?? [])]) names.add(n.trim());
   }

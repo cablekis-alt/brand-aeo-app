@@ -126,8 +126,9 @@ export default function PublishList({
   const titleOf = (row: PublishRow, markdown: string): string => {
     const a = row.needsAdapt ? adaptationOf(row) : undefined
     if (a?.title && a.titleChecked) return a.title
-    const h1 = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim()
-    return h1 || (row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title)
+    // 다듬은 글 본문에는 # 제목이 없다 — 다듬기 원문(고친 글이면 그 제목)으로 떨어진다.
+    const h1 = (md: string) => /^#\s+(.+)$/m.exec(md)?.[1]?.trim()
+    return h1(markdown) || h1(sourceOf(row)) || (row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title)
   }
 
   const run = async (row: PublishRow) => {

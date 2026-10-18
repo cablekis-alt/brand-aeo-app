@@ -135,25 +135,56 @@ export function splitSentences(text: string): string[] {
   return out;
 }
 
-/** 짧은 굵은 꼬리표(「**Q.**」 「**A.**」 「**1.**」 「**주의!**」) — 문장이 아니다. */
-const BOLD_LABEL = /^\*\*[^*]{1,12}[.!?]\*\*$/;
+/**
+ * 굵은 꼬리표(「**Q.**」 「**A.**」 「**1.**」 「**주의!**」) — 문장이 아니다. 정해 둔 말만 꼬리표로 본다: 길이로 가르면
+ * 「**예약은 필수입니다.**」 같은 짧은 진짜 문장까지 다음 문장에 붙어, 뒤 문장이 걸릴 때 함께 빠진다.
+ */
+const BOLD_LABEL = /^\*\*(?:Q|A|[QA]?\d{1,2}|주의|참고|팁|TIP|NOTE)[.!?:]?\*\*$/i;
 
 /**
- * 글 속 주소 — 스킴(https://) · www. · 흔한 최상위 도메인으로 끝나는 도메인 꼴(gasang-stay.co.kr, booking.naver.com/…).
- * 글쓰기 엔진이 쓴 주소는 확인할 수 없다. allowed(사실 값 · 다듬기 원문)에 그대로 있는 주소와 schema.org 같은 기술 용어는 뺀다.
+ * 글 속 주소 — 스킴(https://) · www. · 도메인 꼴(gasang-stay.co.kr, linktr.ee/…, booking.naver.com/…). 스킴 · www 뒤와 경로는
+ * 공백 · 괄호 전까지 모두 주소다(「https://가상여행.kr」 「…/가상여행」처럼 한글이 섞여도). 경로 없는 도메인은 흔한 최상위
+ * 도메인일 때만 주소로 본다(「Node.js」 같은 말을 주소로 읽지 않게).
  */
-// 주소 글자는 영문 URL 글자만 — 「https://kt.com/에서」의 조사까지 주소로 읽으면 원문에 있는 주소도 「원문에 없음」이 된다.
-const ADDRESS =
-  /https?:\/\/[a-z0-9\-._~:/?#@!$&'*+,;=%]+|\bwww\.[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[a-z0-9\-._~:/?#@!$&'*+,;=%]*)?|\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)*\.(?:com|net|org|co\.kr|or\.kr|go\.kr|kr|io|ai|me|info|biz|shop|site|xyz|app|dev)\b(?:\/[a-z0-9\-._~:/?#@!$&'*+,;=%]*)?/gi;
+const URL_CHARS = `[^\\s)\\]<>"'「」]`;
+const ADDRESS = new RegExp(
+  [
+    `https?:\\/\\/${URL_CHARS}+`,
+    `\\bwww\\.${URL_CHARS}+`,
+    `\\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.[a-z]{2,}\\/${URL_CHARS}*`,
+    `\\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.(?:com|net|org|co\\.kr|or\\.kr|go\\.kr|kr|io|ai|me|info|biz|shop|site|xyz|app|dev|co|be|ee|ly|gle|tv|to|gg|link|page|store|blog|online|top|us|jp|cc)\\b`,
+  ].join('|'),
+  'gi',
+);
 const ADDRESS_TERMS = new Set(['schema.org']);
+/** 주소에 붙은 조사 — 「https://kt.com/에서」는 원문의 「https://kt.com/」과 같은 주소다. */
+const PARTICLE = /(?:에서|에게|으로|부터|까지|이나|에|로|을|를|이|가|은|는|의|와|과|도|나|만)$/;
+
+/** 비교용 주소 — 소문자, 스킴 · www. · 끝 문장부호 · 끝 / 를 걷는다. */
+function addressKey(a: string): string {
+  return a
+    .toLowerCase()
+    .replace(/[.,;:!?]+$/, '')
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/+$/, '');
+}
+
+/**
+ * 원문 · 사실에 없는 주소. 주소 단위로 비교한다 — 글자 일부가 겹친다고 같은 주소가 아니다(「gasang.co.kr」 ≠ 「hotel-gasang.co.kr」,
+ * 경로를 자른 「…/ro」 ≠ 「…/rooms/deluxe」). 허용: 같은 주소, 조사만 붙은 같은 주소, 경로 없이 쓴 같은 사이트(그 호스트 · 상위 도메인).
+ */
 export function foreignAddresses(text: string, allowed: string): string[] {
-  const known = allowed.toLowerCase();
-  return (text.match(ADDRESS) ?? [])
-    .map((a) => a.replace(/[.,;:!?]+$/, ''))
-    .filter((a) => {
-      const low = a.toLowerCase();
-      return low && !ADDRESS_TERMS.has(low) && !known.includes(low);
-    });
+  const known = new Set((allowed.match(ADDRESS) ?? []).map(addressKey));
+  const hosts = [...known].map((k) => k.split('/')[0]!);
+  const ok = (key: string): boolean => {
+    if (!key || ADDRESS_TERMS.has(key) || known.has(key)) return true;
+    const bare = key.replace(PARTICLE, '');
+    if (bare !== key && known.has(addressKey(bare))) return true;
+    const host = addressKey(bare);
+    return !host.includes('/') && hosts.some((h) => h === host || h.endsWith(`.${host}`));
+  };
+  return (text.match(ADDRESS) ?? []).filter((a) => !ok(addressKey(a)));
 }
 
 /** 블로그 글 형식에서 사진 자리는 이만큼까지 — 사진이 많으면 사람이 다 채우지 못하고 빈 자리가 남는다. */
@@ -197,8 +228,8 @@ function plainArticleText(s: string): string {
 function stripHeadingNumber(h: string): string {
   return h
     .replace(/\*\*/g, '')
-    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s*[.)](?!\d)\s*/i, '')
-    .replace(/^\s*(?:Q\s*)?\d{1,2}\s+[-–—]\s+/i, '')
+    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s*[.):](?!\d)\s*/i, '')
+    .replace(/^\s*#*\s*(?:Q\s*)?\d{1,2}\s+[-–—]\s+(?!\d)/i, '')
     .trim();
 }
 

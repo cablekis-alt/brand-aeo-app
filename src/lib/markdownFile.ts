@@ -75,9 +75,12 @@ const IMAGE_SLOT_LINE = /^!\[[^\]]*\]\(#image-slot\)$/
 export function tidyArticleMarkdown(markdown: string, titleTemplate: string): string {
   const lines = withoutUsedFacts(markdown.split('\n'))
   const isHeading = (l: string) => /^#{1,2}\s/.test(l)
-  const isFiller = (l: string) => {
+  // 본문이 아닌 줄 — 빈 줄, 사진 자리, 사진 자리 바로 아래 설명 줄, 공식 출처 「참고:」 줄(링크만 있는 모양). 사람이 쓴 「참고: …」
+  // 문장이나 기울임 문단은 본문이다.
+  const isFiller = (l: string, prev: string) => {
     const t = l.trim()
-    return !t || IMAGE_SLOT_LINE.test(t) || /^\*(?!\*)(.+?)\*$/.test(t) || /^참고:\s/.test(t)
+    if (!t || IMAGE_SLOT_LINE.test(t) || SOURCES_LINE.test(t)) return true
+    return /^\*(?!\*)(.+?)\*$/.test(t) && IMAGE_SLOT_LINE.test(prev.trim())
   }
   const kept: string[] = []
   for (let i = 0; i < lines.length; ) {
@@ -85,7 +88,7 @@ export function tidyArticleMarkdown(markdown: string, titleTemplate: string): st
       let j = i + 1
       while (j < lines.length && !isHeading(lines[j]!)) j += 1
       const body = lines.slice(i + 1, j)
-      if (!body.every(isFiller)) kept.push(lines[i]!, ...body)
+      if (!body.every((l, k) => isFiller(l, k > 0 ? body[k - 1]! : ''))) kept.push(lines[i]!, ...body)
       i = j
       continue
     }
@@ -113,11 +116,14 @@ function withoutUsedFacts(lines: string[]): string[] {
   let start = at
   while (start > 0 && !lines[start - 1]!.trim()) start -= 1
   if (start > 0 && /^-{3,}$/.test(lines[start - 1]!.trim())) start -= 1
+  // 목록은 이름표 바로 아래 이어진 「- 」 줄까지만 — 빈 줄 뒤는 사람이 덧붙인 본문일 수 있다.
   let end = at + 1
-  while (end < lines.length && (!lines[end]!.trim() || /^\s*-\s/.test(lines[end]!))) end += 1
+  while (end < lines.length && /^\s*-\s/.test(lines[end]!)) end += 1
   return [...lines.slice(0, start), ...lines.slice(end)]
 }
 const USED_FACTS_LINE = '**이 글이 쓴 사실**'
+/** 공식 출처 「참고:」 줄의 모양(src/lib/officialSources.ts sourcesLine) — 링크만으로 된 줄. */
+const SOURCES_LINE = /^참고:\s*\[[^\]]+\]\(https?:[^)\s]+\)(?:\s·\s\[[^\]]+\]\(https?:[^)\s]+\))*$/
 
 /** 글에 남은 사진 자리 수 — 올리기 목록이 「사진 넣을 곳 N곳」으로 알린다. */
 export function countImageSlots(markdown: string): number {
