@@ -4,6 +4,8 @@ import type { Engine, MarketScope } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { PublishSettings } from './publishSettings'
+import type { AnswerEvidence } from './answerEvidence'
 import type {
   AiReferralReport,
   CitationBreakdown,
@@ -488,6 +490,8 @@ export interface StoredDraft {
   editWarnings?: string[]
   /** 화면에서 채운 빈칸 기록 — 키 `절:블록`. 내보내기는 src/lib/draftGaps.ts로 반영한다. */
   gapFills?: Record<string, GapFill>
+  /** 실측 사례 — 사람이 원문과 대조해 확인하면 발행본에 붙는다(src/lib/answerEvidence.ts). */
+  evidence?: AnswerEvidence
 }
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
 export interface GapFill {
@@ -502,7 +506,8 @@ export async function loadContentDrafts(tenantId: string): Promise<Record<string
 /** 실패하면 throw. 브리프가 없으면 409와 함께 그 사실을 알려준다. */
 export async function generateContentDraft(
   tenantId: string,
-  input: { actionId: string; targetDomain?: string },
+  /** format 'article' = 블로그 긴 글 형식(src/prompts/b9c-content-draft.ts). 없으면 옛 형식. */
+  input: { actionId: string; targetDomain?: string; format?: 'article' },
   force = false,
 ): Promise<StoredDraft> {
   const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {
@@ -512,6 +517,40 @@ export async function generateContentDraft(
   })
   const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
   if (!res.ok) throw new Error(body.error || `초안 생성 실패 (HTTP ${res.status})`)
+  return body
+}
+
+/**
+ * 글의 실측 사례 — build(이 글의 질문으로 찾기) · confirm(원문과 맞음) · include · exclude(발행본에 넣기) · clear.
+ * 판정 호출이 없다. 실패하면 이유를 담아 throw.
+ */
+export async function updateDraftEvidence(
+  tenantId: string,
+  body: { actionId: string; op: 'build' | 'confirm' | 'include' | 'exclude' | 'clear'; questionIds?: string[]; weekOf?: string },
+): Promise<StoredDraft> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/evidence`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
+  if (!res.ok) throw new Error(data.error || `실측 사례 저장 실패 (HTTP ${res.status})`)
+  return data
+}
+
+/** 브랜드별 발행 설정(src/lib/publishSettings.ts). 라우트가 없는 환경(웹)이면 null. */
+export async function loadPublishSettings(tenantId: string): Promise<PublishSettings | null> {
+  return getJson<PublishSettings>(`/api/tenants/${encodeURIComponent(tenantId)}/publish-settings`)
+}
+/** 실패하면 이유를 담아 throw. */
+export async function savePublishSettings(tenantId: string, settings: PublishSettings): Promise<PublishSettings> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/publish-settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+  const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
+  if (!res.ok) throw new Error(body.error || `발행 설정 저장 실패 (HTTP ${res.status})`)
   return body
 }
 
@@ -542,6 +581,8 @@ export interface ChannelAdaptation {
   generatedAt: string
   sourceKey: string
   notes?: string[]
+  /** 제목이 사실 대조를 거쳤나(server/channelAdapt.ts) — 아니면 「제목 복사」가 다듬은 제목을 쓰지 않는다. */
+  titleChecked?: boolean
 }
 export type ChannelAdaptationMap = Record<string, Record<string, ChannelAdaptation>>
 /** null = 라우트 없는 환경(웹). */
@@ -551,7 +592,8 @@ export async function loadChannelAdaptations(tenantId: string): Promise<ChannelA
 /** 판정 1~2회. 실패하면 throw. */
 export async function adaptForChannel(
   tenantId: string,
-  input: { contentActionId: string; channelActionId: string; channelDomain: string; channelBadge: string; sourceMarkdown: string },
+  /** format 'article' — 원문이 블로그 글 형식이면 블로그 채널에서 구조 · 서식을 지킨다(b9d-channel-adapt). */
+  input: { contentActionId: string; channelActionId: string; channelDomain: string; channelBadge: string; sourceMarkdown: string; format?: 'article' },
 ): Promise<ChannelAdaptation> {
   const res = await fetch(`/api/channel-adapt/${encodeURIComponent(tenantId)}`, {
     method: 'POST',

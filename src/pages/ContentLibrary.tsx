@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { buildPublishHtml } from '../lib/htmlFile'
-import { loadContentDrafts, loadFactGraph, type FactNode, type StoredDraft } from '../lib/api'
-import { publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
-import { countGapNotes, downloadHtml, downloadMarkdown, safeFileName } from '../lib/markdownFile'
+import { loadContentDrafts, loadFactGraph, loadPublishSettings, type FactNode, type StoredDraft } from '../lib/api'
+import type { PublishSettings } from '../lib/publishSettings'
+import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
+import { publishArticleOf } from '../lib/publishArticle'
+import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
 
 /**
  * 만든 글이 모이는 곳.
@@ -24,6 +26,19 @@ export default function ContentLibrary() {
   const [open, setOpen] = useState<string | null>(null)
   const key = tenant?.tenantId ?? ''
   const loading = state?.key !== key
+  // 발행 설정(글 끝 상담 안내 · 태그) — 미리보기와 내보내기가 올리기 목록과 같은 발행본을 내도록.
+  const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
+  const settings = settingsState.key === key ? settingsState.value : null
+  useEffect(() => {
+    if (!key) return
+    let alive = true
+    void loadPublishSettings(key).then((s) => {
+      if (alive) setSettingsState({ key, value: s })
+    })
+    return () => {
+      alive = false
+    }
+  }, [key])
 
   useEffect(() => {
     if (!key) return
@@ -77,11 +92,12 @@ export default function ContentLibrary() {
             {rows.map((d) => {
               const md = workMarkdownOf(d)
               const gaps = countGapNotes(md)
+              const title = draftTitle(effectiveDraft(d))
               const shown = open === d.actionId
               return (
                 <article className="gap-card" key={d.actionId}>
                   <div className="gap-card-head">
-                    <span className="gap-name">{d.draft.title}</span>
+                    <span className="gap-name">{title}</span>
                     {d.editedMarkdown && <span className="st st-info">고침</span>}
                     {gaps > 0 && <span className="st st-warn">빈칸 {gaps}</span>}
                   </div>
@@ -100,8 +116,8 @@ export default function ContentLibrary() {
                       title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
                       onClick={() =>
                         downloadMarkdown(
-                          `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.md`,
-                          publishMarkdownOf(d),
+                          `발행용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.md`,
+                          publishArticleOf(d, { brand: tenant, settings }),
                         )
                       }
                     >
@@ -117,8 +133,8 @@ export default function ContentLibrary() {
                           .catch(() => [] as FactNode[])
                           .then((facts) =>
                             downloadHtml(
-                              `발행용-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.html`,
-                              buildPublishHtml({ stored: d, brand: tenant, facts }),
+                              `발행용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`,
+                              buildPublishHtml({ stored: d, brand: tenant, facts, settings }),
                             ),
                           )
                       }}
@@ -129,7 +145,7 @@ export default function ContentLibrary() {
                       type="button"
                       className="ghost"
                       onClick={() =>
-                        downloadMarkdown(`초안-${safeFileName(d.draft.title)}-${d.generatedAt.slice(0, 10)}.md`, md)
+                        downloadMarkdown(`초안-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.md`, md)
                       }
                     >
                       작업용 .md
@@ -138,7 +154,7 @@ export default function ContentLibrary() {
                   {shown && (
                     <div className="brief-body">
                       <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {publishMarkdownOf(d)}
+                        {publishArticleOf(d, { brand: tenant, settings })}
                       </pre>
                     </div>
                   )}

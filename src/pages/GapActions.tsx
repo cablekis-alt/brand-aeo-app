@@ -8,6 +8,7 @@ import {
   loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
+  loadPublishSettings,
   type ActionStatus,
   type ChannelAdaptation,
   type ChannelAdaptationMap,
@@ -16,7 +17,9 @@ import {
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import PublishList from '../components/PublishList'
-import { gapProgress, workMarkdownOf } from '../lib/draftGaps'
+import PublishSettingsPanel from '../components/PublishSettingsPanel'
+import type { PublishSettings } from '../lib/publishSettings'
+import { draftRequestOf, gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan } from '../lib/publishPlan'
@@ -430,7 +433,7 @@ function BulkDrafts({
             }),
           )
         }
-        onDraft(await generateContentDraft(tenantId, { actionId: a.id, targetDomain: a.targetDomain }))
+        onDraft(await generateContentDraft(tenantId, draftRequestOf(a)))
         ok += 1
       } catch (e) {
         failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)
@@ -477,8 +480,11 @@ function ActionCard({
   onUrls,
   coveredBy,
   focused = false,
+  weekOf,
 }: {
   action: GapAction
+  /** 이 항목을 만든 측정 주차 — 초안의 「실측 답변」이 그 주의 기록에서 고른다. */
+  weekOf?: string
   canSaveStatus: boolean
   /** 인용 갭 분석에서 「콘텐츠 생성으로」를 눌러 넘어온 카드 — 스크롤 목적지이자 강조 대상. */
   focused?: boolean
@@ -631,6 +637,7 @@ function ActionCard({
       {showsDraft && (
         <DraftPanel
           tenantId={tenantId}
+          weekOf={weekOf}
           action={action}
           hasBrief={Boolean(briefs[action.id])}
           stored={drafts[action.id]}
@@ -709,6 +716,20 @@ export default function GapActions() {
     }
   }, [tenant?.tenantId])
   const adaptations = adaptState.key === tenant?.tenantId ? adaptState.value : null
+  // 브랜드별 발행 설정(글 끝 상담 안내 · 태그 · 블로그). 키가 맞을 때만 쓴다. 라우트가 없는 환경(웹)이면 null.
+  const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadPublishSettings(id).then((s) => {
+      if (alive) setSettingsState({ key: id, value: s })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const publishSettings = settingsState.key === tenant?.tenantId ? settingsState.value : null
   const onAdapted = (a: ChannelAdaptation) =>
     setAdaptState((st) => ({
       ...st,
@@ -739,7 +760,7 @@ export default function GapActions() {
   // 같은 질문 26개를 가리킨다). 화면은 둘을 「① 글 확인」과 「② 올리기 목록」으로 편다 — lib/publishPlan.ts.
   const openContent = open.filter((a) => a.kind === 'content')
   const openListing = open.filter((a) => a.kind === 'listing')
-  const publishPlan = buildPublishPlan(openContent, openListing, drafts)
+  const publishPlan = buildPublishPlan(openContent, openListing, drafts, { blogUrl: publishSettings?.blogUrl })
   /** 이 등재 항목의 질문을 이미 덮는 콘텐츠 항목들 — 초안 라우트가 없는 환경(웹)의 채널 카드가 쓴다. */
   const coverageOf = (a: GapAction) => {
     const qs = new Set(a.questionIds)
@@ -895,7 +916,7 @@ export default function GapActions() {
                 )}
                 <div className="gap-grid">
                   {publishPlan.articles.map(({ action: a }) => (
-                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                   ))}
                 </div>
               </section>
@@ -904,10 +925,20 @@ export default function GapActions() {
                 <h3 className="step-head">
                   ② 올리기 목록 <span className="muted">— 한 줄이 한 번 올리기입니다. 덮는 질문이 많은 곳부터.</span>
                 </h3>
+                {drafts !== null && publishSettings !== null && (
+                  <PublishSettingsPanel
+                    key={tenant.tenantId}
+                    tenantId={tenant.tenantId}
+                    brand={tenant}
+                    settings={publishSettings}
+                    onSaved={(s) => setSettingsState({ key: tenant.tenantId, value: s })}
+                  />
+                )}
                 {drafts !== null ? (
                   <PublishList
                     tenantId={tenant.tenantId}
                     plan={publishPlan}
+                    settings={publishSettings}
                     adaptations={adaptations}
                     onAdapted={onAdapted}
                     focusId={focusId}
@@ -922,7 +953,7 @@ export default function GapActions() {
                   // 초안 라우트가 없는 환경(웹) — 올릴 글이 없으니 채널 카드로 근거 · 상태만 보인다.
                   <div className="gap-grid">
                     {openListing.map((a) => (
-                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={coverageOf(a)} />
+                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={coverageOf(a)} />
                     ))}
                   </div>
                 )}
@@ -957,7 +988,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
               </details>
@@ -973,7 +1004,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
             </section>

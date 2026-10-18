@@ -1,6 +1,7 @@
 import type { ContentDraft } from '../prompts/b9c-content-draft'
 import type { GapFill, StoredDraft } from './api'
-import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes } from './markdownFile'
+import type { GapAction } from './gapActions'
+import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
 
 /**
  * 초안 빈칸을 화면에서 채운 기록(gapFills)을 원고에 반영한다.
@@ -13,6 +14,18 @@ import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes }
  * 복사·.md·.html·보관함·묶음 내려받기가 모두 이 결과를 쓴다 — 한 곳이라도 원본을 쓰면 채운 값이
  * 그 내보내기에서만 빠진다.
  */
+
+/**
+ * 초안 요청 — 자사 글(content)은 블로그 글 형식, 등재형(listing)은 옛 형식(그 채널의 규칙이 문체를 정한다).
+ * 초안을 만드는 길(글 카드 · 한 번에 만들기)이 같은 요청을 쓰도록 여기 둔다. 영어 테넌트는 서버가 형식을 무시한다.
+ */
+export function draftRequestOf(action: Pick<GapAction, 'id' | 'kind' | 'targetDomain'>): {
+  actionId: string
+  targetDomain?: string
+  format?: 'article'
+} {
+  return { actionId: action.id, targetDomain: action.targetDomain, ...(action.kind === 'content' ? { format: 'article' as const } : {}) }
+}
 
 /** 빈칸 자리의 키 — 그 초안 안에서만 뜻이 있다(다시 만들면 기록을 버린다). */
 export function gapKey(sectionIndex: number, blockIndex: number): string {
@@ -61,7 +74,10 @@ export function workMarkdownOf(stored: StoredDraft): string {
 
 /** 발행용 원고 — 남은 빈칸 줄과 「이 글이 쓴 사실」을 뺀다. 복사·.md·.html이 같은 원고를 쓴다. */
 export function publishMarkdownOf(stored: StoredDraft): string {
-  return stored.editedMarkdown ? stripGapNotes(stored.editedMarkdown) : draftToPublishMarkdown(effectiveDraft(stored))
+  if (!stored.editedMarkdown) return draftToPublishMarkdown(effectiveDraft(stored))
+  const md = stripGapNotes(stored.editedMarkdown)
+  // 블로그 글 형식만 — 빈 소제목 · 절 번호 · 제목 수를 맞춘다. 옛 형식은 예전 그대로(한 글자도 바꾸지 않는다).
+  return stored.draft.format === 'article' ? tidyArticleMarkdown(md, stored.draft.title) : md
 }
 
 /**

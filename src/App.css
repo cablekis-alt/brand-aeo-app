@@ -4502,6 +4502,37 @@ td.cell-mid {
 .draft-doc .draft-title {
   font-size: 1.05em;
 }
+/* 블로그 글 형식 — 핵심 문장은 굵게, 그대로 쓸 말은 인용, 사진 자리는 점선 칸(발행본 모양과 맞춘다). */
+.draft-key {
+  font-weight: 700;
+}
+.draft-role {
+  display: inline-block;
+  margin-right: 2px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 0.82em;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.draft-quote {
+  margin: 0 0 0.8em;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line);
+}
+.draft-image-slot {
+  margin: 0 0 0.8em;
+  padding: 8px 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-ctl);
+  color: var(--muted);
+}
+.draft-image-slot figcaption {
+  margin-top: 2px;
+  font-style: italic;
+}
 .gap-slot {
   display: flex;
   flex-direction: column;
@@ -6447,4 +6478,92 @@ td.cell-mid {
   right: -14px;
   background: var(--card);
   box-shadow: -10px 0 10px -10px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+/* 브랜드별 발행 설정(PublishSettingsPanel.tsx) — 올리기 목록 위의 접는 칸. */
+.publish-settings {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+}
+.publish-settings summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.publish-settings summary .muted {
+  font-weight: 400;
+  margin-left: 6px;
+}
+.publish-settings-body {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  max-width: 640px;
+}
+.publish-settings-body label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.publish-settings-body input,
+.publish-settings-body textarea {
+  font: inherit;
+  width: 100%;
+}
+.publish-settings-body .hint.warn {
+  color: var(--warn);
+  margin: 0;
+}
+.publish-settings-preview {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* 글 확인 화면의 실측 답변(EvidencePanel.tsx) — 사람이 원문과 대조해 확인한다. */
+.evidence-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.evidence-panel h4 {
+  margin: 0;
+}
+.evidence-item {
+  display: grid;
+  gap: 4px;
+}
+.evidence-item blockquote {
+  margin: 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line);
+}
+.evidence-item .doc-meta {
+  margin: 0;
+}
+.evidence-raw {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.evidence-include {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+.evidence-panel .hint.warn {
+  color: var(--warn);
+  margin: 0;
 }

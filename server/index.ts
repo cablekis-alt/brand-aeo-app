@@ -7,6 +7,8 @@ import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
+import { readPublishSettings, writePublishSettings } from './publishSettingsStore.js';
+import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
 import { ciSyncEnabled, describeRepo, syncFromCi } from './ciSync.js';
@@ -17,7 +19,8 @@ import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
 import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
-import { generateDraft, readDrafts, saveEditedDraft, saveGapFills } from './contentDraft.js';
+import { generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills } from './contentDraft.js';
+import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
@@ -551,6 +554,7 @@ app.post('/api/channel-adapt/:tenantId', async (req, res) => {
           brandName: tenant.brandName,
           channelDomain,
           style: channelStyleOf(str(b.channelBadge)),
+          ...(b.format === 'article' ? { format: 'article' as const } : {}),
           sourceMarkdown,
           factGraph: tenant.factGraph ?? [],
           language: tenant.questionLanguage,
@@ -580,6 +584,53 @@ app.put('/api/content-draft/:tenantId/gaps', async (req, res) => {
   }
   try {
     res.json(await saveGapFills(tenant.tenantId, actionId, fills));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 글의 실측 사례(src/lib/answerEvidence.ts) — 저장된 측정 기록에서 코드가 고르고, 사람이 원문과 대조해 확인한다.
+// 판정 · 글쓰기 호출이 없다. op: build(찾기) · confirm(원문과 맞음) · include · exclude(발행본에 넣기 켜고 끄기) · clear.
+app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const actionId = typeof b.actionId === 'string' ? b.actionId : '';
+  const op = typeof b.op === 'string' ? b.op : '';
+  if (!actionId || !['build', 'confirm', 'include', 'exclude', 'clear'].includes(op)) {
+    res.status(400).json({ error: 'actionId와 op(build · confirm · include · exclude · clear)가 필요합니다.' });
+    return;
+  }
+  try {
+    if (op === 'build') {
+      const questionIds = Array.isArray(b.questionIds)
+        ? b.questionIds.filter((q): q is string => typeof q === 'string' && q.length <= 60).slice(0, 200)
+        : [];
+      const weekOf = typeof b.weekOf === 'string' && WEEK_OF.test(b.weekOf) ? b.weekOf : undefined;
+      if (!questionIds.length) {
+        res.status(400).json({ error: 'questionIds가 필요합니다.' });
+        return;
+      }
+      const evidence = await buildArticleEvidence(store, tenant, questionIds, weekOf, await loadRuntimeTenants());
+      // 새로 고르면 사람 확인은 다시 받는다. 넣기를 끈 선택은 지킨다.
+      res.json(await saveEvidence(tenant.tenantId, actionId, (cur) => ({ ...evidence, include: cur ? cur.include : evidence.include })));
+      return;
+    }
+    const now = new Date().toISOString();
+    res.json(
+      await saveEvidence(tenant.tenantId, actionId, (cur) => {
+        if (op === 'clear') return undefined;
+        if (!cur) throw new Error('먼저 실측 사례를 찾으세요.');
+        if (op === 'confirm') {
+          if (!cur.items.length) throw new Error('확인할 실측 사례가 없습니다.');
+          return { ...cur, confirmedAt: now };
+        }
+        return { ...cur, include: op === 'include' };
+      }),
+    );
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -665,6 +716,8 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
         brief: brief.brief,
         targetDomain: typeof b.targetDomain === 'string' ? b.targetDomain : undefined,
         language: tenant.questionLanguage,
+        // 블로그 글 형식 — 영어 테넌트에는 프롬프트 · 정규화가 쓰지 않는다(articleFormatOf).
+        format: b.format === 'article' ? 'article' : undefined,
       },
       getWriterClient(),
       getJudgeClient(),
@@ -869,6 +922,41 @@ app.put('/api/tenants/:tenantId/market-scope', async (req, res) => {
   try {
     await writeTenantScope(tenant.tenantId, scope);
     res.json({ tenantId: tenant.tenantId, ...scope });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 브랜드별 발행 설정(글 끝 상담 안내 · 문의 링크 · 태그 · 카테고리 · 블로그 주소) — data/<tenant>/publish-settings.json.
+// Express 전용이다(Vercel 함수는 12/12). 웹은 콘텐츠 생성이 없어 이 설정도 쓰지 않는다.
+app.get('/api/tenants/:tenantId/publish-settings', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json((await readPublishSettings(tenant.tenantId)) ?? {});
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.put('/api/tenants/:tenantId/publish-settings', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  let settings;
+  try {
+    settings = normalizePublishSettings(req.body);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  try {
+    res.json(await writePublishSettings(tenant.tenantId, settings));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

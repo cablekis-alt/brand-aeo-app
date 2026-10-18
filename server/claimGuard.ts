@@ -18,8 +18,11 @@ export interface OverclaimResult {
   notes: string[];
 }
 
-/** 한 번에 보내는 문장 수 상한 — 초안 하나는 보통 10~20문장이다. 넘으면 앞쪽만 보고 밝힌다. */
-const MAX_SENTENCES = 40;
+/**
+ * 한 번에 보내는 문장 수 상한 — 옛 형식 초안은 보통 10~20문장, 블로그 글 형식(2,500~3,500자)은 40~60문장이다.
+ * 사실이 든 문장만 보내므로 이만큼이면 글 하나가 다 들어간다. 넘으면 앞쪽만 보고 밝힌다.
+ */
+const MAX_SENTENCES = 80;
 
 export async function findOverclaims(
   sentences: string[],

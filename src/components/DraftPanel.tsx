@@ -4,6 +4,7 @@ import {
   findFactsForGaps,
   generateContentDraft,
   loadFactGraph,
+  loadPublishSettings,
   saveContentDraft,
   saveDraftGaps,
   saveFactGraph,
@@ -12,11 +13,18 @@ import {
   type GapFill,
   type StoredDraft,
 } from '../lib/api'
-import { claimOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
+import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
+import EvidencePanel from './EvidencePanel'
+import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
-import { countGapNotes, downloadHtml, downloadMarkdown, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { articleSources } from '../lib/officialSources'
+import type { DraftRole } from '../prompts/b9c-content-draft'
+
+/** 블로그 글 형식 문단의 구실 — 확인 화면에서 문단 앞에 붙는 꼬리표. 핵심 문장은 굵게 보여 꼬리표를 달지 않는다. */
+const ROLE_LABEL: Partial<Record<DraftRole, string>> = { action: '할 일', why: '이유', quote: '그대로 쓸 말', limit: '한계' }
 
 /**
  * 초안 패널 — 콘텐츠 생성 「① 글 확인」의 글 카드 본문. 초안을 만들고 빈칸을 확인한다.
@@ -73,6 +81,7 @@ export default function DraftPanel({
   onStored,
   ensureBrief,
   compact = false,
+  weekOf,
 }: {
   tenantId: string
   action: GapAction
@@ -85,6 +94,8 @@ export default function DraftPanel({
    * 운영자용 손잡이(편집·다시 만들기·파일·생성일)를 숨긴다. 카드의 「자세히」가 되살린다 — 숨길 뿐 지우지 않는다.
    */
   compact?: boolean
+  /** 이 글(실행 항목)을 만든 측정 주차 — 있으면 「실측 답변」 칸을 연다(측정 전 글쓰기 화면에는 없다). */
+  weekOf?: string
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -152,7 +163,7 @@ export default function DraftPanel({
       // 브리프는 초안을 잘 쓰기 위한 발판이지 사람이 읽으려고 만드는 물건이 아니다. 두 번
       // 누르게 하면 그 사이에 사람이 하는 판단이 없는데도 기다림만 두 번 생긴다.
       if (!hasBrief) await ensureBrief()
-      const s = await generateContentDraft(tenantId, { actionId: action.id, targetDomain: action.targetDomain }, force)
+      const s = await generateContentDraft(tenantId, draftRequestOf(action), force)
       onStored(s)
       setEditing(false)
       setTyped({})
@@ -316,6 +327,8 @@ export default function DraftPanel({
   const progress = gapProgress(stored)
   const left = progress.total - progress.done
   const d = effectiveDraft(stored)
+  /** 절마다 발행본에 붙을 공식 출처(블로그 글 형식만) — 빈칸을 채운 글 기준, 절 순서는 stored.draft와 같다. */
+  const sources = articleSources(d)
   const opened = step === 'gaps'
 
   return (
@@ -324,7 +337,7 @@ export default function DraftPanel({
       <div className="article-summary">
         {!opened && (
           <>
-            <h4 className="draft-title">{d.title}</h4>
+            <h4 className="draft-title">{draftTitle(d)}</h4>
             {d.lead && <p className="article-lead">{d.lead}</p>}
           </>
         )}
@@ -359,9 +372,16 @@ export default function DraftPanel({
                 type="button"
                 className="ghost"
                 title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
-                onClick={() =>
-                  downloadMarkdown(`발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, publishMarkdownOf(stored))
-                }
+                onClick={() => {
+                  const file = `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`
+                  if (!tenant) {
+                    downloadMarkdown(file, publishMarkdownOf(stored))
+                    return
+                  }
+                  void loadPublishSettings(tenantId).then((settings) =>
+                    downloadMarkdown(file, publishArticleOf(stored, { brand: tenant, settings })),
+                  )
+                }}
               >
                 발행용 .md
               </button>
@@ -371,18 +391,18 @@ export default function DraftPanel({
                 title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 올리기 목록의 「복사하기」를 쓰세요."
                 onClick={() => {
                   if (!tenant) return
-                  void loadFactGraph(tenantId)
+                  const facts = loadFactGraph(tenantId)
                     .then((fg) => fg?.factGraph ?? [])
                     .catch((e: unknown) => {
                       console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
                       return [] as FactNode[]
                     })
-                    .then((facts) =>
-                      downloadHtml(
-                        `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
-                        buildPublishHtml({ stored, brand: tenant, facts }),
-                      ),
-                    )
+                  void Promise.all([facts, loadPublishSettings(tenantId)]).then(([factList, settings]) =>
+                    downloadHtml(
+                      `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                      buildPublishHtml({ stored, brand: tenant, facts: factList, settings }),
+                    ),
+                  )
                 }}
               >
                 자사 사이트용 .html
@@ -514,13 +534,26 @@ export default function DraftPanel({
               ))}
             </ul>
           )}
-          <h4 className="draft-title">{d.title}</h4>
+          <h4 className="draft-title">{draftTitle(d)}</h4>
           {d.lead && <p>{d.lead}</p>}
           {stored.draft.sections.map((sec, si) => (
             <section key={`${si}-${sec.heading}`}>
               <h4>{sec.heading}</h4>
               {sec.blocks.map((b, bi) => {
-                if (b.kind !== 'gap') return <p key={bi}>{b.body}</p>
+                if (b.kind !== 'gap') {
+                  if (b.role === 'key') return <p key={bi} className="draft-key">{b.body}</p>
+                  if (b.role === 'quote')
+                    return (
+                      <blockquote key={bi} className="draft-quote">
+                        <span className="draft-role">{ROLE_LABEL.quote}</span> {b.body}
+                      </blockquote>
+                    )
+                  return (
+                    <p key={bi}>
+                      {b.role && <span className="draft-role">{ROLE_LABEL[b.role]}</span>} {b.body}
+                    </p>
+                  )
+                }
                 const k = gapKey(si, bi)
                 const f = fills[k]
                 const need = b.need ?? ''
@@ -619,6 +652,27 @@ export default function DraftPanel({
                   </div>
                 )
               })}
+              {sec.image && (
+                // 사진은 사람이 찍거나 골라 올린다 — 글은 무엇을 넣을지만 제안한다(발행본에 「사진 넣을 자리」로 나간다).
+                <figure className="draft-image-slot">
+                  <span className="draft-role">사진 넣을 자리</span> {sec.image.alt}
+                  {sec.image.caption && <figcaption>{sec.image.caption}</figcaption>}
+                </figure>
+              )}
+              {sources[si] && sources[si].length > 0 && (
+                // 공식 안내 링크는 글쓰기 엔진이 아니라 확인한 고정 목록에서 코드가 붙인다(src/lib/officialSources.ts).
+                <p className="doc-meta">
+                  <span className="draft-role">참고</span>{' '}
+                  {sources[si].map((s, i) => (
+                    <span key={s.id}>
+                      {i > 0 && ' · '}
+                      <a href={s.url} target="_blank" rel="noreferrer">
+                        {s.label}
+                      </a>
+                    </span>
+                  ))}
+                </p>
+              )}
             </section>
           ))}
           {(d.usedFacts.length > 0 || (d.guardNotes && d.guardNotes.length > 0)) && (
@@ -654,6 +708,17 @@ export default function DraftPanel({
         </div>
       )}
 
+      {/* 실측 사례는 자사 글(content)의 발행본에만 붙는다 — 채널 전용 글(등재형)의 올리기 줄은 본문만 복사한다. */}
+      {opened && !editing && weekOf && tenant && action.kind === 'content' && (
+        <EvidencePanel
+          tenantId={tenantId}
+          stored={stored}
+          questionIds={action.questionIds}
+          weekOf={weekOf}
+          industry={tenant.industry}
+          onStored={onStored}
+        />
+      )}
     </div>
   )
 }

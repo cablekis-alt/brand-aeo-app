@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } from '../lib/api'
 import { copyRich } from '../lib/clipboard'
-import { publishMarkdownOf } from '../lib/draftGaps'
+import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
+import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import type { GapAction } from '../lib/gapActions'
-import { markdownToHtml, publishBodyHtml } from '../lib/htmlFile'
+import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
+import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
+import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
+import { useTenant } from '../context/useTenant'
 import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 
 /**
@@ -20,6 +24,7 @@ import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 export default function PublishList({
   tenantId,
   plan,
+  settings = null,
   adaptations,
   onAdapted,
   urlSlot,
@@ -28,6 +33,8 @@ export default function PublishList({
 }: {
   tenantId: string
   plan: PublishPlan
+  /** 브랜드별 발행 설정 — 자사 줄 발행본의 글 끝(상담 안내 · 문의 링크)과 「태그 복사」. */
+  settings?: PublishSettings | null
   /** 글별 채널 다듬은 글. null이면 다듬기 라우트가 없는 환경(웹)이다 — 원문을 복사한다. */
   adaptations: ChannelAdaptationMap | null
   onAdapted: (a: ChannelAdaptation) => void
@@ -38,6 +45,7 @@ export default function PublishList({
   /** 인용 갭 분석에서 넘어온 채널 항목 id — 그 줄을 강조하고 스크롤 목적지(action-<id>)로 둔다. */
   focusId?: string
 }) {
+  const { tenant } = useTenant()
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -68,6 +76,7 @@ export default function PublishList({
           channelDomain: row.target.targetDomain ?? row.target.title,
           channelBadge: row.target.badge,
           sourceMarkdown: source,
+          ...(row.article.draft?.draft.format === 'article' ? { format: 'article' as const } : {}),
         }),
       )
     } catch (e) {
@@ -93,13 +102,33 @@ export default function PublishList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, adaptations, busy])
 
-  /** 이 줄에서 복사할 글. 다듬은 글이 필요한데 아직 없으면 null. */
+  /**
+   * 이 줄에서 복사할 글. 다듬은 글이 필요한데 아직 없으면 null.
+   * 자사 사이트 줄은 발행본(본문 + 글 끝 — 공식 사이트 링크 등)을 쓴다. 다듬기 원문(sourceOf)은 본문만이다.
+   */
   const textOf = (row: PublishRow): { markdown: string; html: string } | null => {
     const d = row.article.draft
     if (!d) return null
-    if (!row.needsAdapt || adaptations === null) return { markdown: publishMarkdownOf(d), html: publishBodyHtml(d) }
+    if (!row.needsAdapt || adaptations === null) {
+      const markdown = row.kind === 'own' && tenant ? publishArticleOf(d, { brand: tenant, settings }) : publishMarkdownOf(d)
+      return { markdown, html: markdownToHtml(markdown) }
+    }
     const a = adaptationOf(row)
-    return a ? { markdown: a.markdown, html: markdownToHtml(a.markdown) } : null
+    if (!a) return null
+    const markdown = tenant ? channelCopyOf(a, { brand: tenant, settings }) : a.markdown
+    return { markdown, html: markdownToHtml(markdown) }
+  }
+
+  /**
+   * 이 줄의 제목 — 블로그 편집기는 제목 칸이 따로라 본문과 따로 복사한다. 다듬은 글은 사실 대조를 거친 그 제목, 자사 줄은 발행본
+   * 첫 줄(# 제목)이 있으면 그것(고친 글의 제목), 없으면 빈칸을 채운 초안의 제목.
+   */
+  const titleOf = (row: PublishRow, markdown: string): string => {
+    const a = row.needsAdapt ? adaptationOf(row) : undefined
+    if (a?.title && a.titleChecked) return a.title
+    // 다듬은 글 본문에는 # 제목이 없다 — 다듬기 원문(고친 글이면 그 제목)으로 떨어진다.
+    const h1 = (md: string) => /^#\s+(.+)$/m.exec(md)?.[1]?.trim()
+    return h1(markdown) || h1(sourceOf(row)) || (row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title)
   }
 
   const run = async (row: PublishRow) => {
@@ -113,6 +142,28 @@ export default function PublishList({
     window.setTimeout(() => setCopied((k) => (k === row.key ? null : k)), 1800)
     if (row.openUrl) window.open(row.openUrl, '_blank', 'noopener')
     setOpenSlot((s) => new Set(s).add(row.key))
+  }
+
+  const copyTitle = async (key: string, title: string) => {
+    if (!(await copyRich(title, escapeHtml(title)))) {
+      setError('제목을 클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`title:${key}`)
+    window.setTimeout(() => setCopied((k) => (k === `title:${key}` ? null : k)), 1800)
+  }
+
+  const tags = settings?.tags ?? []
+  // 태그는 본문에 넣지 않는다 — 블로그 편집기의 태그 칸에 따로 붙인다(쉼표로 나눈다).
+  const copyTags = async (key: string) => {
+    const text = tags.join(', ')
+    // html 쪽은 이스케이프한 것만 넘긴다(clipboard.ts) — 「<신상>」 같은 태그가 사라지거나 태그로 그려지지 않게.
+    if (!(await copyRich(text, escapeHtml(text)))) {
+      setError('태그를 클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`tags:${key}`)
+    window.setTimeout(() => setCopied((k) => (k === `tags:${key}` ? null : k)), 1800)
   }
 
   return (
@@ -152,7 +203,7 @@ export default function PublishList({
                 <span className={`channel-dot${row.done ? ' up' : ''}`} aria-hidden="true" />
                 <span className="publish-row-name">
                   <b>{row.name}</b>
-                  <span className="publish-row-article">{row.article.draft?.draft.title || row.article.action.title}</span>
+                  <span className="publish-row-article">{(row.article.draft && draftTitle(effectiveDraft(row.article.draft))) || row.article.action.title}</span>
                 </span>
                 <span className="publish-row-reach">
                   질문 <b>{row.questionIds.length}</b>개
@@ -190,6 +241,16 @@ export default function PublishList({
                     </button>
                   )}
                   {!row.locked && text && (
+                    <button type="button" className="ghost" title={titleOf(row, text.markdown)} onClick={() => void copyTitle(row.key, titleOf(row, text.markdown))}>
+                      {copied === `title:${row.key}` ? '제목 복사함' : '제목 복사'}
+                    </button>
+                  )}
+                  {!row.locked && row.kind === 'own' && tags.length > 0 && (
+                    <button type="button" className="ghost" title={tags.join(', ')} onClick={() => void copyTags(row.key)}>
+                      {copied === `tags:${row.key}` ? '태그 복사함' : `태그 복사 ${tags.length}`}
+                    </button>
+                  )}
+                  {!row.locked && text && (
                     <button
                       type="button"
                       className="link-btn"
@@ -202,6 +263,11 @@ export default function PublishList({
                 </span>
               </div>
               {!row.locked && !row.done && VERB_CAUTION[row.verb] && <p className="publish-row-note">{VERB_CAUTION[row.verb]}</p>}
+              {!row.locked && !row.done && text && countImageSlots(text.markdown) > 0 && (
+                <p className="publish-row-note">
+                  사진 넣을 곳 {countImageSlots(text.markdown)}곳 — 붙여 넣은 글의 「[사진 넣을 자리]」를 직접 찍거나 고른 사진으로 바꾸세요.
+                </p>
+              )}
               {stale && (
                 <p className="channel-stale">
                   원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).{' '}
