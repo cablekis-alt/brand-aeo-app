@@ -246,7 +246,14 @@ export default function DraftPanel({
   const omitAll = () => {
     const open = openGaps()
     if (!open.length) return
-    if (!window.confirm(`남은 빈칸 ${open.length}곳을 모두 빼고 이 글을 확인됨으로 둘까요? 발행본에서 그 자리만 빠집니다. 뺀 칸은 하나씩 「되돌리기」로 다시 열 수 있습니다.`))
+    // 찾아 둔 값(노란 후보)이 있는 칸도 함께 빠진다 — 「맞아요」로 넣을 기회를 조용히 없애지 않게 미리 알린다.
+    const withCandidate = open.filter(([k]) => fills[k]?.suggested).length
+    const candidateNote = withCandidate ? ` 찾아 둔 값이 있는 칸 ${withCandidate}곳도 함께 빠집니다 — 그 값을 넣으려면 취소하고 「맞아요」를 누르세요.` : ''
+    if (
+      !window.confirm(
+        `남은 빈칸 ${open.length}곳을 모두 빼고 이 글을 확인됨으로 둘까요? 발행본에서 그 자리만 빠집니다. 뺀 칸은 하나씩 「되돌리기」로 다시 열 수 있습니다.${candidateNote}`,
+      )
+    )
       return
     const next = { ...fills }
     for (const [k] of open) next[k] = { ...next[k], omit: true }
