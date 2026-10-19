@@ -562,7 +562,8 @@ function ActionCard({
           {action.progress ? (
             <>
               집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 이 플랫폼은 실렸다/아니다가
-              아니라 <b>지분</b>입니다 — 지금 인용 {action.progress.total}회 중 {action.progress.supporting}회가 우리를
+              아니라 <b>지분</b>입니다 — 지금 {action.progress.unnamed && '브랜드 이름 없는 질문의 '}인용{' '}
+              {action.progress.total}회 중 {action.progress.supporting}회가 우리를
               뒷받침합니다. 다음 측정에서 이 비율이 오르는지 보세요.
             </>
           ) : action.kind === 'listing' ? (

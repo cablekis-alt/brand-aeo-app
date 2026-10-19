@@ -1,5 +1,5 @@
 import type { EeatAnalysis } from '../src/prompts/b6-eeat.js';
-import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
+import type { CitationQuestionScope, CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
 import { analyzeCitationSources, canonicalUrl, urlHost } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
@@ -9,7 +9,7 @@ import type { QuestionRepeatAnalysis } from './types.js';
 import type { QuestionCategory } from '../src/prompts/types.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
-type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory'>;
+type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory' | 'getQuestionBank'>;
 type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank' | 'getScorecardHistory'>;
 
 export interface CitationBreakdownRow {
@@ -518,6 +518,14 @@ export interface CitationSourceOptions {
   engine?: string | null;
   /** 코호트 경쟁사 소유 도메인 — URL 행의 cohortCompetitor 판정용. */
   competitorDomains?: string[];
+  /**
+   * 질문 유형으로 좁혀 본다 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문.
+   * 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기 쉬워서, 섞어 세면 이름 없는 질문에서는 우리가
+   * 없는 출처가 「뒷받침함」으로 숨는다. 실행 항목의 「충족」(src/lib/gapActions.ts)과 같은 기준이다.
+   */
+  questions?: CitationQuestionScope | null;
+  /** 그 주 스코어카드에 질문 은행 버전이 없을 때 쓸 지금 버전(테넌트 설정). */
+  currentBankVersion?: string;
 }
 
 export async function getCitationSourceAnalysis(
@@ -528,6 +536,24 @@ export async function getCitationSourceAnalysis(
 ): Promise<CitationSourceAnalysis> {
   const engine = options.engine?.trim() || null;
   const all = await store.getQuestionAnalyses(tenantId, weekOf);
-  const analyses = engine ? all.filter((a) => a.engine === engine) : all;
-  return analyzeCitationSources(analyses, { competitorDomains: options.competitorDomains });
+  const byEngine = engine ? all.filter((a) => a.engine === engine) : all;
+  const scope = options.questions ?? null;
+  if (!scope) return analyzeCitationSources(byEngine, { competitorDomains: options.competitorDomains });
+
+  // 그 주차를 측정한 은행으로 가른다 — 지금 은행으로 가르면 옛 주차의 질문 id가 맞지 않는다(src/lib/bankVersion.ts와 같은 순서).
+  const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
+  const prefixes = new Set(all.map((a) => /^(v\d+)-/.exec(a.questionId ?? '')?.[1]).filter((p): p is string => Boolean(p)));
+  const bankVersion =
+    history.find((card) => card.weekOf === weekOf)?.questionBankVersion ??
+    (prefixes.size === 1 ? [...prefixes][0] : undefined) ??
+    options.currentBankVersion;
+  const bank = bankVersion ? await store.getQuestionBank(tenantId, bankVersion) : null;
+  const named = new Map((bank?.questions ?? []).map((q) => [q.questionId, q.containsBrandName]));
+  // 은행에 없는 질문은 어느 쪽인지 알 수 없다 — 한쪽으로 몰지 않고 빼고 그 수를 밝힌다.
+  const kept = byEngine.filter((a) => named.get(a.questionId) === (scope === 'named'));
+  const unknown = byEngine.filter((a) => !named.has(a.questionId)).length;
+  return {
+    ...analyzeCitationSources(kept, { competitorDomains: options.competitorDomains }),
+    questionScope: { scope, bankVersion: bank ? bank.version : null, responses: kept.length, unknown },
+  };
 }

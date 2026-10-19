@@ -23,7 +23,7 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
  *
  * ── 완료를 저장하지 않는 이유 ────────────────────────────────────────────────
  * 완료는 사람이 체크하는 값이 아니라 **데이터에서 읽는 값**이다. 등재가 실제로 되면
- * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다(supportingBrandMentionCount > 0).
+ * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다 — 브랜드 이름 없는 질문에서(unnamedCitationsByHost).
  * 그래서 satisfied는 매번 계산한다. 사람이 적어 넣은 '완료'와 실제 노출이 어긋나는
  * 상태를 아예 만들지 않는다.
  *
@@ -106,7 +106,12 @@ export interface GapAction {
    * 아니라 "인용 M회 중 N회가 우리를 뒷받침"인 자리라 satisfied가 켜지지 않는다 — 대신 이 값이
    * 움직인다. 화면이 비율을 그대로 보여 준다.
    */
-  progress?: { supporting: number; total: number }
+  progress?: {
+    supporting: number
+    total: number
+    /** 브랜드 이름 없는 질문의 인용으로 셌나 — false면 질문 은행을 읽지 못해 모든 질문으로 셌다. */
+    unnamed: boolean
+  }
 }
 
 export interface GapActionPlan {
@@ -227,6 +232,52 @@ function questionsByDomain(analyses: QuestionRepeatAnalysis[]): Map<string, Set<
   return map
 }
 
+interface UnnamedTally {
+  /** 브랜드 이름 없는 질문(containsBrandName=false)에서 받은 인용 수. */
+  citations: number
+  /** 그중 우리 언급을 뒷받침한 인용 수. */
+  supporting: number
+  /** 이름을 댄 질문에서 우리를 뒷받침한 인용 수 — 「충족」이 아닌 이유를 밝힐 때 쓴다. */
+  namedSupporting: number
+}
+
+/**
+ * 호스트 → 브랜드 이름 없는 질문에서 받은 인용과 그중 우리를 뒷받침한 수.
+ *
+ * 「충족」과 블로그 플랫폼 지분은 이 값으로 본다. 이름을 댄 질문(「OO 어때?」)은 AI가 그 이름으로 찾아가 우리를
+ * 뒷받침하는 페이지를 인용하기 쉽다 — 그 인용까지 세면 이름을 모르는 사람의 질문에서는 아직 우리가 없는 곳이
+ * 「충족」으로 할 일 목록에서 빠진다. 인용 갭 화면의 「브랜드 이름 없는 질문」(server/queries.ts)과 같은 기준이다.
+ *
+ * 은행에 없는 질문은 어느 쪽인지 알 수 없어 세지 않는다. known이 false면 이 주차 질문을 은행에서 하나도 찾지
+ * 못한 것이다 — 그때는 이름 없는 질문 기준을 확인할 수 없다.
+ */
+function unnamedCitationsByHost(
+  analyses: QuestionRepeatAnalysis[],
+  questions: QuestionSpec[],
+): { byHost: Map<string, UnnamedTally>; known: boolean } {
+  const named = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
+  const byHost = new Map<string, UnnamedTally>()
+  let known = false
+  for (const a of analyses) {
+    const isNamed = named.get(a.questionId)
+    if (isNamed === undefined) continue
+    known = true
+    for (const c of a.citations ?? []) {
+      const host = normalizeHost(c.raw, c.domain)
+      if (!host) continue
+      const row = byHost.get(host) ?? { citations: 0, supporting: 0, namedSupporting: 0 }
+      if (isNamed) {
+        if (c.supportsBrandMention) row.namedSupporting += 1
+      } else {
+        row.citations += 1
+        if (c.supportsBrandMention) row.supporting += 1
+      }
+      byHost.set(host, row)
+    }
+  }
+  return { byHost, known }
+}
+
 /** 등재를 제안할 수 없는 출처. 경쟁사 사이트에는 우리가 실릴 수 없다. */
 function isCompetitorOwned(kind: string, ownerType: string): boolean {
   return kind === 'competitor' || ownerType === 'competitor-owned'
@@ -248,6 +299,7 @@ function listingActions(
   citations: CitationSourceAnalysis | null,
   domainQuestions: Map<string, Set<string>>,
   rows: WinLossRow[],
+  unnamed: { byHost: Map<string, UnnamedTally>; known: boolean },
 ): {
   actions: GapAction[]
   competitorDomainCount: number
@@ -337,7 +389,16 @@ function listingActions(
       // 1회 뒷받침을 '충족'이라 부르면 과장이다. 임의의 기준선(예: 20%)을 만드는 대신 비율을
       // 그대로 보여 주고 자동 충족은 켜지 않는다(콘텐츠형과 같은 모양).
       const isPlatform = Boolean(r.platform)
-      const satisfied = !isPlatform && r.supporting > 0
+      // 「충족」은 브랜드 이름 없는 질문의 인용으로만 본다(unnamedCitationsByHost). 은행을 읽지 못해 나눌 수 없으면 켜지 않는다.
+      const u = { citations: 0, supporting: 0, namedSupporting: 0 }
+      for (const h of r.hosts) {
+        const t = unnamed.byHost.get(h)
+        if (!t) continue
+        u.citations += t.citations
+        u.supporting += t.supporting
+        u.namedSupporting += t.namedSupporting
+      }
+      const satisfied = !isPlatform && unnamed.known && u.supporting > 0
       const engines = [...r.engines].join('·')
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
@@ -370,11 +431,29 @@ function listingActions(
             ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 우리가 밀린 질문입니다.`
             : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
 
-      const share = r.citationCount > 0 ? Math.round((r.supporting / r.citationCount) * 100) : 0
+      // 지분도 브랜드 이름 없는 질문의 인용으로 낸다. 은행을 읽지 못했을 때만 모든 질문으로 세고 그렇게 밝힌다.
+      const progress = unnamed.known
+        ? { supporting: u.supporting, total: u.citations, unnamed: true }
+        : { supporting: r.supporting, total: r.citationCount, unnamed: false }
+      const share = progress.total > 0 ? Math.round((progress.supporting / progress.total) * 100) : 0
       const platformEvidence =
-        `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 그중 우리를 뒷받침하는 대목은 ` +
-        `${r.supporting}회(${share}%)입니다. 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
+        `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) ` +
+        (unnamed.known
+          ? `브랜드 이름 없는 질문에서 받은 인용 ${u.citations}회 중 우리를 뒷받침하는 대목은 ${u.supporting}회(${share}%)입니다.`
+          : `그중 우리를 뒷받침하는 대목은 ${r.supporting}회(${share}%)입니다(질문 은행을 읽지 못해 질문 유형으로 나누지 못했습니다).`) +
+        ` 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
         (r.platform ? ` ${r.platform.note}` : '')
+      // 「충족」이 아닌 이유 — 뒷받침이 이름을 댄 질문에서만 나왔으면 그렇게 말한다. "0건"이라고 하면 사실과 다르다.
+      const unmetEvidence =
+        r.supporting === 0
+          ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.`
+          : unnamed.known
+            ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 브랜드 이름 없는 질문에서 우리를 뒷받침한 대목은 0건입니다.` +
+              (u.namedSupporting > 0
+                ? ` 이름을 댄 질문에서만 ${u.namedSupporting}회 뒷받침해, 이름을 모르는 사람에게는 아직 보이지 않습니다.`
+                : '')
+            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 우리를 뒷받침하는 대목도 ${r.supporting}회 있지만, ` +
+              `질문 은행을 읽지 못해 브랜드 이름 없는 질문에서였는지 확인하지 못했습니다.`
 
       return {
         id: r.platform ? `listing:platform:${r.domain}` : `listing:${r.domain}`,
@@ -384,9 +463,9 @@ function listingActions(
         evidence: isPlatform
           ? platformEvidence + citedNote
           : satisfied
-            ? `${subjectParticle(name)} 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다.` +
+            ? `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.` +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
-            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+            : unmetEvidence +
               // 묶음은 어느 매체인지 밝혀야 한다 — "언론 5곳"만으로는 무엇을 해야 할지 알 수 없다.
               (isNewsGroup ? ` 인용된 매체: ${[...r.hosts].sort().join(' · ')}. 보도자료 한 건으로 함께 노립니다.` : '') +
               citedNote,
@@ -400,10 +479,10 @@ function listingActions(
         status: 'todo',
         publishedUrls: [],
         citedPublishedUrls: [],
-        ...(isPlatform ? { progress: { supporting: r.supporting, total: r.citationCount } } : {}),
+        ...(isPlatform ? { progress } : {}),
         doneSignal: isPlatform
-          ? `${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${r.supporting}/${r.citationCount})`
-          : `${name} 인용이 우리 언급을 뒷받침하면 완료`,
+          ? `${progress.unnamed ? '브랜드 이름 없는 질문의 ' : ''}${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${progress.supporting}/${progress.total})`
+          : `브랜드 이름 없는 질문에서 ${name} 인용이 우리 언급을 뒷받침하면 완료`,
       }
     })
 
@@ -523,6 +602,7 @@ export function computeGapActions(
     citations,
     questionsByDomain(analyses),
     rows,
+    unnamedCitationsByHost(analyses, questions),
   )
   const content = contentActions(rows)
 

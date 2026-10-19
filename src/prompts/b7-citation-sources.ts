@@ -52,6 +52,9 @@ export interface CitationSourceConsensusRow {
   citationCount: number;
 }
 
+/** 질문 유형 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문. */
+export type CitationQuestionScope = 'unnamed' | 'named';
+
 export interface CitationSourceAnalysis {
   totalCitations: number;
   uniqueUrls: number;
@@ -61,4 +64,9 @@ export interface CitationSourceAnalysis {
   byEngine: CitationSourceEngineRow[];
   urls: CitationSourceUrlRow[];
   consensusDomains: CitationSourceConsensusRow[];
+  /**
+   * 질문 유형으로 좁혔을 때만 있다. bankVersion이 null이면 그 주차를 측정한 은행을 찾지 못해 나누지 못한 것이다
+   * (집계가 비어 있어도 "인용이 없다"는 뜻이 아니다). unknown은 은행에 없어 어느 쪽인지 몰라 뺀 응답 수.
+   */
+  questionScope?: { scope: CitationQuestionScope; bankVersion: string | null; responses: number; unknown: number };
 }
