@@ -4893,6 +4893,35 @@ td.cell-mid {
 .publish-row-slot {
   padding-top: 2px;
 }
+/* 올린 글 주소 — 집행 원장(PublishedUrlEditor). 주소가 길어도 줄 밖으로 밀지 않는다. */
+.post-editor {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.post-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+.post-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.post-meta {
+  margin: 2px 0 0;
+}
+.post-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
 @media (max-width: 640px) {
   .publish-row-actions {
     flex-basis: 100%;

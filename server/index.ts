@@ -55,6 +55,15 @@ import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
 import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
+import { queueTenantWrite } from './tenantWriteQueue.js';
+import {
+  addPublishedPost,
+  patchPublishedPost,
+  PublishedPostsError,
+  readPublishedPosts,
+  type AddPostInput,
+  type PatchPostInput,
+} from './publishedPosts.js';
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
@@ -1081,7 +1090,8 @@ app.get('/api/action-states/:tenantId', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  res.json(await readActionStates(tenant.tenantId));
+  // 쓰기 줄에 세워 읽는다 — 윈도우에서 읽는 중인 파일 위로 쓰기(rename)가 실패하지 않게(server/tenantWriteQueue.ts).
+  res.json(await queueTenantWrite(tenant.tenantId, () => readActionStates(tenant.tenantId)));
 });
 
 app.put('/api/action-states/:tenantId', async (req, res) => {
@@ -1107,6 +1117,52 @@ app.put('/api/action-states/:tenantId', async (req, res) => {
     publishedUrls: publishedUrls === undefined ? undefined : sanitizeUrls(publishedUrls),
   });
   res.json(next);
+});
+
+// 집행 원장 — 올린 글 주소를 주소 한 줄 = 기록 한 줄로 남긴다(server/publishedPosts.ts). 데스크톱·로컬 전용.
+// 오류는 이유와 함께 돌려준다(409: 다른 글에 적힌 주소, 400: 첫 화면·단축 주소 등, 500: 파일이 깨짐 — 쓰지 않는다).
+function sendPostsError(res: import('express').Response, err: unknown) {
+  const status = err instanceof PublishedPostsError ? err.status : 500;
+  res.status(status).json({ error: err instanceof Error ? err.message : String(err), ...(err instanceof PublishedPostsError ? err.detail : {}) });
+}
+
+app.get('/api/published-posts/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json({ posts: await readPublishedPosts(tenant.tenantId) });
+  } catch (err) {
+    sendPostsError(res, err);
+  }
+});
+
+app.post('/api/published-posts/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await addPublishedPost(tenant.tenantId, (req.body ?? {}) as AddPostInput));
+  } catch (err) {
+    sendPostsError(res, err);
+  }
+});
+
+app.patch('/api/published-posts/:tenantId/:postId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await patchPublishedPost(tenant.tenantId, req.params.postId, (req.body ?? {}) as PatchPostInput));
+  } catch (err) {
+    sendPostsError(res, err);
+  }
 });
 
 // 랭킹 분석 — 업종·지역 코호트 순위 + 경쟁사 언급 점유율.

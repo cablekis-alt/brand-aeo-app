@@ -5,13 +5,14 @@ import {
   loadQuestionAnalyses,
   loadQuestionBank,
   saveActionState,
-  saveActionUrls,
   type ActionStateMap,
   type ActionStatus,
+  type RecordPostInput,
 } from './api'
 import { resolveBankVersion } from './bankVersion'
 import { computeGapActions, type GapActionPlan } from './gapActions'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
+import { usePublishedPosts } from './usePublishedPosts'
 import { useWeeklyPage } from './useWeeklyPage'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
@@ -107,37 +108,26 @@ export function useGapActionPlan(tenantId: string) {
   )
 
   /**
-   * 집행 주소 저장. 상태는 그대로 두고 주소만 바꾼다 — markDone이면 「집행함」으로 함께 바꾼다.
-   * 초안의 「올렸어요」가 주소와 상태를 **한 번에** 저장한다: 상태 저장과 주소 저장을 따로 부르면
-   * 두 번째 요청이 앞 요청 전의 상태(진행 중)를 다시 써서 「집행함」이 사라진다.
+   * 올린 글 주소는 집행 원장에 쓴다(server/publishedPosts.ts — 주소 한 줄 = 기록 한 줄). 「올렸어요」는 markDone으로 그 항목을
+   * 「집행함」으로 **같은 요청에서** 바꾼다 — 따로 부르면 두 번째 요청이 앞 요청 전의 상태를 다시 쓴다. 주소를 고치거나 빼도
+   * 집행한 주(markedWeek)는 덮지 않는다(예전에는 주소만 고쳐도 보던 주차로 덮였다).
    */
-  const setUrls = useCallback(
-    async (actionId: string, urls: string[], markDone = false) => {
-      if (!tenantId) return
-      const before = states
-      const status = markDone ? 'done' : (states?.[actionId]?.status ?? 'done')
-      setStates((prev) => ({
-        ...(prev ?? {}),
-        [actionId]: {
-          ...(prev?.[actionId] ?? { status, updatedAt: new Date().toISOString() }),
-          ...(markDone ? { status, markedWeek: weekOf } : {}),
-          publishedUrls: urls,
-        },
-      }))
-      setSaveError(null)
-      const saved = await saveActionUrls(tenantId, actionId, status, urls, weekOf)
-      if (saved) setStates(saved)
-      else {
-        setStates(before)
-        setSaveError('주소를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
-      }
+  const published = usePublishedPosts(tenantId)
+  const { record } = published
+  /** 성공하면 null, 실패하면 이유. 브랜드가 바뀐 뒤 온 결과는 상태에 반영하지 않는다(usePublishedPosts가 stale로 알린다). */
+  const recordPost = useCallback(
+    async (input: Omit<RecordPostInput, 'viewingWeek'>): Promise<string | null> => {
+      const r = await record({ ...input, viewingWeek: weekOf })
+      if (!r.ok) return r.error
+      if (r.states) setStates(r.states)
+      return null
     },
-    [tenantId, weekOf, states],
+    [record, weekOf],
   )
 
   const plan: GapActionPlan = useMemo(
-    () => computeGapActions(analyses, questions, citations, states ?? {}),
-    [analyses, questions, citations, states],
+    () => computeGapActions(analyses, questions, citations, states ?? {}, published.posts ?? [], weekOf),
+    [analyses, questions, citations, states, published.posts, weekOf],
   )
 
   return {
@@ -151,7 +141,18 @@ export function useGapActionPlan(tenantId: string) {
     /** 상태를 저장할 수 있는 환경인가(웹에서는 false). 화면은 이걸로 컨트롤을 숨긴다. */
     canSaveStatus: statesReady && states !== null,
     setStatus,
-    setUrls,
     saveError,
+    /** 올린 글 주소를 적을 수 있는 환경인가(웹에서는 false). 원장을 읽다 실패해도 true다 — 이유는 posts.error에 있다. */
+    canRecordPosts: statesReady && states !== null && published.available,
+    /** 집행 원장 — 뺀 기록까지 모두. 화면이 「뺀 주소」로 접어 보이고 되살린다. */
+    posts: {
+      list: published.posts ?? [],
+      busy: published.busy,
+      error: published.error,
+      record: recordPost,
+      remove: published.remove,
+      restore: published.restore,
+      setPublishedOn: published.setPublishedOn,
+    },
   }
 }

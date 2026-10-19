@@ -1,5 +1,6 @@
-import type { ActionStateMap, ActionStatus } from './api'
+import type { ActionStateMap, ActionStatus, PublishedPost } from './api'
 import { blogPlatformOf } from './blogPlatforms'
+import { indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -87,7 +88,7 @@ export interface GapAction {
    * 둘을 갈라 두면 **집행했는데 몇 주째 충족이 안 되는 항목**이 저절로 드러난다.
    */
   status: ActionStatus
-  /** 집행하고 올린 글 주소(사람이 적는다). */
+  /** 집행하고 올린 글 주소(사람이 적는다 — 집행 원장의 뺀 적 없는 기록). */
   publishedUrls: string[]
   /**
    * 그중 이번 주 인용에 실제로 등장한 주소.
@@ -99,6 +100,8 @@ export interface GapAction {
   citedPublishedUrls: string[]
   /** status를 정한 시점의 주차 — 집행 후 얼마나 지났는지 세는 데 쓴다. */
   markedWeek?: string
+  /** 올린 글마다 이번 주 결과(집행 원장). publishedUrls와 같은 순서다. */
+  publishedHits?: PublishedHit[]
   /** 무엇이 관측되면 완료인지 — 화면과 사람이 같은 기준을 보게 한다. */
   doneSignal: string
   /**
@@ -596,24 +599,88 @@ function rank(a: GapAction): number {
 }
 
 /**
- * 집행 주소와 인용 주소를 맞추기 위한 정규화. 서버(actionStates.normalizeUrl)와 같은 규칙이어야
- * 한다 — 한쪽만 바꾸면 맞던 주소가 조용히 안 맞게 된다.
- * 질의 문자열은 남긴다. 기사 id가 거기 있는 사이트가 많아 지우면 서로 다른 글이 같아진다.
+ * 올린 글 한 편의 이번 주 결과(집행 원장 기록 한 줄). 주소 규칙은 src/lib/publishedUrl.ts 한 벌이다 — 정확 일치만 센다.
  */
-function normalizeActionUrl(raw: string): string {
-  return raw
-    .trim()
-    .replace(/^https?:\/\//i, '')
-    .replace(/^www\./i, '')
-    .replace(/\/+$/, '')
-    .toLowerCase()
+export interface PublishedHit {
+  post: PublishedPost
+  /** 이번 주 측정이 올린 날에 견줘 언제였나. before면 그 주 인용은 이 글의 효과가 아니라 세지 않는다. */
+  timing: PostTiming
+  /** 정확 일치 인용(응답 단위). 이번 주에 인용되지 않았으면 null. */
+  tally: WeekTally | null
+  /** 질의(?…)만 다른 주소를 인용한 응답 수 — 같은 글일 수도 다른 글일 수도 있어 숫자에 넣지 않는다. */
+  variantCited: number
+  /** 「글을 내렸어요」로 뺀 기록인데 이 주 측정은 내리기 전이었다 — 그 주 인용은 센다. 내린 날(한국 날짜). */
+  takenDownOn?: string
 }
 
+/**
+ * 이번 주 측정에서 올린 글을 찾는다. 기록이 없으면 판정을 읽지 않는다.
+ * 「잘못 적은 주소」는 어느 주에서도 뺀다. 「글을 내렸어요」는 내린 날 전에 한 측정에서는 남긴다 — 글이 올라가 있던 주의 인용이다.
+ */
+function publishedHitsOf(
+  posts: PublishedPost[],
+  analyses: QuestionRepeatAnalysis[],
+  questions: QuestionSpec[],
+  weekOf: string,
+): Map<string, PublishedHit[]> {
+  const out = new Map<string, PublishedHit[]>()
+  if (!posts.some((p) => !p.removedAt || p.removedReason === 'taken-down')) return out
+  const window = measuredWindow(analyses)
+  const measuredBefore = (removedOn: string) => {
+    if (window) return removedOn > window.last
+    const week = isoWeekOf(removedOn)
+    return week !== null && week > weekOf
+  }
+  const shown = posts.flatMap((p): { post: PublishedPost; takenDownOn?: string }[] => {
+    if (!p.removedAt) return [{ post: p }]
+    const removedOn = kstDate(p.removedAt)
+    return p.removedReason === 'taken-down' && removedOn && measuredBefore(removedOn) ? [{ post: p, takenDownOn: removedOn }] : []
+  })
+  if (shown.length === 0) return out
+  // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄 질문으로 나누지 않는다(확인 불가).
+  const named = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
+  const known = analyses.some((a) => named.has(a.questionId))
+  const index = indexWeekCitations(analyses, known ? named : null)
+  // 질의만 다른 주소는 응답 단위로 센다 — 한 응답이 변형 주소 여럿을 인용해도 한 번이다.
+  const responseKeys = new Map<string, Set<string>>()
+  for (const a of analyses) {
+    const id = `${a.questionId}|${a.engine}|${a.callIndex}`
+    const keys = responseKeys.get(id) ?? new Set<string>()
+    for (const c of a.citations ?? []) {
+      const key = c.raw ? trackingKey(c.raw) : null
+      if (key) keys.add(key)
+    }
+    responseKeys.set(id, keys)
+  }
+  for (const { post, takenDownOn } of shown) {
+    const timing = timingOf(post.publishedOn, window, weekOf)
+    // 내린 글인데 이 주 측정이 올리기도 전이었다 — 이 주에는 올라가 있던 적이 없으니 「뺀 주소」에만 둔다.
+    if (takenDownOn && timing === 'before') continue
+    let variantCited = 0
+    for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
+    const hit: PublishedHit = {
+      post,
+      timing,
+      tally: index.get(post.key) ?? null,
+      variantCited,
+      ...(takenDownOn ? { takenDownOn } : {}),
+    }
+    out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
+  }
+  return out
+}
+
+/**
+ * posts는 집행 원장(server/publishedPosts.ts) — 뺀 기록이 섞여 와도 된다(여기서 거른다). weekOf는 analyses의 주차로, 측정 시각이
+ * 없는 옛 기록에서 올린 날과 측정 시점을 견줄 때 쓴다.
+ */
 export function computeGapActions(
   analyses: QuestionRepeatAnalysis[],
   questions: QuestionSpec[],
   citations: CitationSourceAnalysis | null,
   states: ActionStateMap = {},
+  posts: PublishedPost[] = [],
+  weekOf = '',
 ): GapActionPlan {
   const rows = computeQuestionWinLoss(analyses, questions)
   const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
@@ -624,21 +691,22 @@ export function computeGapActions(
   )
   const content = contentActions(rows)
 
-  // 이번 주 인용 주소 전부(정규화). 집행 주소와 맞추는 데만 쓴다.
-  const citedUrls = new Set<string>()
-  for (const a of analyses) for (const c of a.citations ?? []) if (c.raw) citedUrls.add(normalizeActionUrl(c.raw))
+  // 올린 글 주소는 집행 원장에서 온다 — 상태가 없는 항목에도 붙는다. 예전처럼 앞부분만 맞으면 같은 글로 보지 않는다
+  // (`…/1`을 올렸는데 `…/12`가 인용돼도 「인용됨」이 됐다). 올리기 전에 한 측정은 세지 않는다.
+  const hitsByTarget = publishedHitsOf(posts, analyses, questions, weekOf)
 
   const actions = [...listing, ...content]
     .map((a) => {
       const saved = states[a.id]
-      if (!saved) return a
-      const publishedUrls = saved.publishedUrls ?? []
-      const cited = publishedUrls.filter((u) => {
-        const n = normalizeActionUrl(u)
-        // 같거나, 인용 주소가 우리 주소로 시작하면(질의·앵커가 덧붙은 경우) 같은 글로 본다.
-        return citedUrls.has(n) || [...citedUrls].some((c) => c.startsWith(n))
-      })
-      return { ...a, status: saved.status, markedWeek: saved.markedWeek, publishedUrls, citedPublishedUrls: cited }
+      const hits = hitsByTarget.get(a.id) ?? []
+      if (!saved && hits.length === 0) return a
+      return {
+        ...a,
+        ...(saved ? { status: saved.status, markedWeek: saved.markedWeek } : {}),
+        publishedUrls: hits.map((h) => h.post.url),
+        citedPublishedUrls: hits.filter((h) => h.timing !== 'before' && (h.tally?.all.cited ?? 0) > 0).map((h) => h.post.url),
+        ...(hits.length ? { publishedHits: hits } : {}),
+      }
     })
     .sort((a, b) => rank(a) - rank(b) || b.reach - a.reach)
 

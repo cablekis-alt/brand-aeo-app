@@ -1,6 +1,7 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 
 /**
  * 실행 항목의 **사람이 정하는 상태**를 테넌트 단위로 저장한다.
@@ -41,6 +42,9 @@ export interface ActionState {
    * 다음 측정의 인용 URL과 직접 맞출 수 있고, 그제서야 "집행한 일"과 "결과"가 이어진다.
    *
    * 배열인 이유는 플랫폼형 항목(티스토리 발행 등) 하나에 글이 여러 편 붙기 때문이다.
+   *
+   * v0.4.3부터 새 주소는 집행 원장(published-posts.json — server/publishedPosts.ts)에 쓴다. 여기 남은 옛 주소는 원장을 읽을 때
+   * 「옛 기록」으로 합쳐 보인다.
    */
   publishedUrls?: string[];
   /**
@@ -73,12 +77,25 @@ export async function readActionStates(tenantId: string): Promise<ActionStateMap
  *
  * 임시 파일에 쓰고 rename으로 갈아끼운다(store.ts와 같은 이유 — 부분적으로 쓰인 파일이
  * 읽히면 readActionStates가 조용히 {}를 돌려주고 상태가 통째로 사라진 것처럼 보인다).
+ * 쓰기는 테넌트별 줄에 세운다(tenantWriteQueue.ts) — 집행 원장의 「올렸어요」가 같은 줄에서 이 파일을 함께 쓴다.
  */
-export async function writeActionState(
+export function writeActionState(
   tenantId: string,
   actionId: string,
-  patch: { status: ActionStatus; markedWeek?: string; note?: string; publishedUrls?: string[] },
+  patch: ActionStatePatch,
 ): Promise<ActionStateMap> {
+  return queueTenantWrite(tenantId, () => writeActionStateInQueue(tenantId, actionId, patch));
+}
+
+export interface ActionStatePatch {
+  status: ActionStatus;
+  markedWeek?: string;
+  note?: string;
+  publishedUrls?: string[];
+}
+
+/** 줄 안에서만 부른다 — 이미 줄에 선 작업(집행 원장 쓰기)이 상태도 함께 쓸 때. 줄 밖에서 부르면 순서를 잃는다. */
+export async function writeActionStateInQueue(tenantId: string, actionId: string, patch: ActionStatePatch): Promise<ActionStateMap> {
   const current = await readActionStates(tenantId);
   // 주소는 상태와 수명이 다르다 — patch에 없으면 기존 것을 그대로 둔다.
   const urls = patch.publishedUrls ?? current[actionId]?.publishedUrls ?? [];
@@ -95,11 +112,7 @@ export async function writeActionState(
       ...(urls.length ? { publishedUrls: urls } : {}),
     };
   }
-  const target = filePathFor(tenantId);
-  await mkdir(path.dirname(target), { recursive: true });
-  const tmp = `${target}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(current, null, 2), 'utf-8');
-  await rename(tmp, target);
+  await writeJsonAtomic(filePathFor(tenantId), current);
   return current;
 }
 
