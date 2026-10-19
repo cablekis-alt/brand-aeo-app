@@ -15,6 +15,7 @@ import { measureInFlight } from './measureTracker.js';
 import {
   checkRewrite,
   deriveQuestionBank,
+  linkAfterEdit,
   planQuestionHandoff,
   type HandoffHint,
   type QuestionPlan,
@@ -240,7 +241,9 @@ export class EditorError extends Error {
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '');
 const squash = (s: string) => s.replace(/\s+/g, '');
-const sameList = (a: CompetitorContext[], b: CompetitorContext[]) =>
+/** 넘겨받기와 같은 이름 비교 — 띄어쓰기 · 대소문자를 무시한다(questionHandoff.ts). */
+const fold = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+const sameList =(a: CompetitorContext[], b: CompetitorContext[]) =>
   JSON.stringify(a.map((c) => [c.name, c.aliases, c.domains])) === JSON.stringify(b.map((c) => [c.name, c.aliases, c.domains]));
 
 interface Context {
@@ -738,6 +741,8 @@ export interface QuestionRewriteContext {
   bank: QuestionBank | null;
   /** 바꾼 목록(측정 순서). */
   next: CompetitorContext[];
+  /** 지금 목록에 있다가 바꾼 목록에서 빠지는 곳 — 고친 문장 검사가 긴 이름부터 읽는 데 쓴다(questionHandoff.ts linkAfterEdit). */
+  gone: CompetitorContext[];
   brandName: string;
   brandNames: string[];
   industry: string;
@@ -868,6 +873,7 @@ async function computePlan(
       plan: questions,
       bank: ctx.bank,
       next: competitors,
+      gone: tenant.competitors.filter((c) => !competitors.some((x) => fold(x.name) === fold(c.name))),
       brandName: tenant.brandName,
       brandNames,
       industry: tenant.industry,
@@ -919,7 +925,14 @@ function derivedBankFor(rewrite: QuestionRewriteContext, repo: TenantConfig, raw
       ...bank.questions.filter((q) => q.questionId !== item.fromId).map((q) => q.text),
       ...[...drafts.entries()].filter(([id]) => id !== item.fromId).map(([, x]) => x.text),
     ];
-    const checked = checkRewrite(d.text, d.topic, { item, brandNames: rewrite.brandNames, language: rewrite.language, next: rewrite.next, otherTexts: others });
+    const checked = checkRewrite(d.text, d.topic, {
+      item,
+      brandNames: rewrite.brandNames,
+      language: rewrite.language,
+      next: rewrite.next,
+      gone: rewrite.gone,
+      otherTexts: others,
+    });
     if (checked.reasons.length) throw new EditorError(400, `${item.fromId}: ${checked.reasons.join(' · ')}`);
     // 고쳐 쓰기가 정리해 돌려준 문장 · 주제 그대로여야 한다 — 저장이 다시 다듬으면 미리 본 것과 달라진다.
     if (checked.text !== d.text || (checked.topic ?? '') !== (d.topic ?? '')) {
@@ -927,16 +940,16 @@ function derivedBankFor(rewrite: QuestionRewriteContext, repo: TenantConfig, raw
     }
   }
   const derived = deriveQuestionBank(bank, plan, drafts, { now, base: baseFingerprint(repo) });
-  // 만든 은행을 다시 잇는다 — 고친 질문은 받을 곳에만, 남은 질문은 나간 곳에 이어지지 않아야 한다.
-  const outgoing = [...new Map(plan.items.flatMap((i) => i.swaps.map((s) => [s.from.name, s.from] as const))).values()];
-  const linked = linkCompetitorQuestions(derived.questions, rewrite.next, rewrite.brandNames);
-  const stale = linkCompetitorQuestions(derived.questions, outgoing, rewrite.brandNames);
+  // 만든 은행을 다시 잇는다 — 고친 질문은 받을 곳에만, 남은 질문은 나간 곳에 이어지지 않아야 한다. 고친 문장 검사(R4 · R5)와 같은
+  // 함수로 잇는다 — 나간 이름이 남는 · 받는 곳 이름 안에 들어 있어도(초원 / 초원고택) 남는 이름으로 읽는다.
+  const outgoing = [...new Map(plan.items.flatMap((i) => i.swaps.map((s) => [fold(s.from.name), s.from] as const))).values()];
+  const relinked = new Map(linkAfterEdit(derived.questions, rewrite.next, rewrite.gone, outgoing, rewrite.brandNames).map((l) => [l.questionId, l]));
   const ids = derived.questions.map((q) => q.questionId);
   const problems = [
     ...rewrites
-      .filter((i) => linked.questions.find((l) => l.questionId === i.toId)?.competitorIndexes.join() !== i.expectedIndexes.join())
-      .map((i) => `${i.toId}이 넘겨받을 경쟁사에 이어지지 않아요`),
-    ...stale.questions.map((l) => `${l.questionId}이 빠지는 경쟁사를 계속 물어요`),
+      .filter((i) => relinked.get(i.toId!)?.nextIndexes.join() !== i.expectedIndexes.join())
+      .map((i) => `${i.toId}: 넘겨받을 경쟁사에 이어지지 않아요`),
+    ...[...relinked.values()].filter((l) => l.outgoingHit).map((l) => `${l.questionId}: 빠지는 경쟁사를 계속 물어요`),
     ...(new Set(ids).size !== ids.length ? ['질문 id가 겹쳐요'] : []),
     ...(derived.questions.length !== plan.sizeAfter ? [`문항 수가 ${plan.sizeAfter}개가 아니에요`] : []),
     // 코호트 질문지를 쓰지 않는 은행은 측정이 일반 질문 하한을 다시 맞추며 은행을 고쳐 쓴다 — 하한 아래로 내려가면 안 된다.

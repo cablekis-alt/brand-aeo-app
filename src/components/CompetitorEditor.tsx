@@ -342,9 +342,11 @@ export default function CompetitorEditor({
     return () => clearInterval(timer)
   }, [drafting])
   const draftElapsed = draft?.status === 'running' ? Math.max(0, Math.round((nowMs - draft.startedAt) / 1000)) : 0
-  const redraft = () => {
+  // 「다시 쓰기」 — 결과를 받은 뒤면 다른 표현으로 새로 쓴다(fresh). 시간 초과 · 오류 뒤면 서버가 아직 쓰는 중이거나 써 둔 결과에
+  // 붙는다 — fresh로 보내면 그 결과를 버리고 판정 엔진을 다시 불러, 같은 3분을 또 기다리게 된다.
+  const redraft = (fresh: boolean) => {
     if (!qplan) return
-    runDraft(tenantId, qplan.key, JSON.parse(requestKey) as { competitors: CompetitorEntry[]; handoff: HandoffHint[] }, true, setDrafts, () => setQOpen(true))
+    runDraft(tenantId, qplan.key, JSON.parse(requestKey) as { competitors: CompetitorEntry[]; handoff: HandoffHint[] }, fresh, setDrafts, () => setQOpen(true))
   }
   const canSave =
     Boolean(s) &&
@@ -666,7 +668,11 @@ export default function CompetitorEditor({
                       )}
                     </span>
                     <span className="ce-score-num">{was?.latest?.score ?? '—'}</span>
-                    <span className="ce-q none">{qTextFor(item.competitor.name) ?? '—'}</span>
+                    <span className="ce-q none">
+                      {qTextFor(item.competitor.name) ??
+                        // 재지 않던 대기 줄을 빼면 넘겨받지 않는다 — 그 줄을 짚은 질문은 질문지에 그대로 남는다.
+                        ((qplan?.mode === 'same' || qplan?.mode === 'derive') && was?.questionIds.length ? `${was.questionIds.join(' · ')} 남음` : '—')}
+                    </span>
                     <span className="ce-act">
                       <button type="button" className="ce-btn" onClick={() => revert(by)}>
                         되돌리기
@@ -908,6 +914,8 @@ export default function CompetitorEditor({
               onToggle={() => setQOpen(!qOpen)}
               onRedraft={redraft}
               canRedraft={!measuringNow && !busy}
+              measuring={measuringNow}
+              onRecheck={() => setReplan((n) => n + 1)}
               sharedCount={s.questionBank.sharedCount}
             />
           ) : (
@@ -1030,6 +1038,7 @@ function savedQuestionText(plan: QuestionHandoffPlan | null, version: string): s
     return `질문지 ${plan.fromVersion} → ${plan.toVersion}${fixed ? ` · 비교 질문 ${fixed}개 고침` : ''}${removed ? ` · ${removed}개 뺌` : ''} · 다음 측정부터 써요 · 되돌리면 질문지도 원래대로(${plan.fromVersion}) 돌아가요`
   }
   if (plan?.mode === 'repo') return `질문지: 저장소 질문지(${plan.toVersion})로 돌아갔어요`
+  if (plan?.mode === 'fresh') return `질문지(${plan.toVersion})는 다음 측정 때 새 목록으로 만들어요`
   return `질문지: 그대로 (${version})`
 }
 
@@ -1045,6 +1054,8 @@ function QuestionPlanBlock({
   onToggle,
   onRedraft,
   canRedraft,
+  measuring,
+  onRecheck,
   sharedCount,
 }: {
   plan: QuestionHandoffPlan
@@ -1052,8 +1063,12 @@ function QuestionPlanBlock({
   elapsed: number
   open: boolean
   onToggle: () => void
-  onRedraft: () => void
+  /** fresh: 받은 결과를 버리고 다른 표현으로 새로 쓴다. */
+  onRedraft: (fresh: boolean) => void
   canRedraft: boolean
+  /** 측정 중이라 고쳐 쓰기를 시작하지 않았다 — 끝난 뒤 「다시 확인」으로 계획을 새로 받는다. */
+  measuring: boolean
+  onRecheck: () => void
   sharedCount: number
 }) {
   if (plan.mode === 'same') return <p className="ce-bar-q">질문지: 그대로 ({plan.fromVersion})</p>
@@ -1078,10 +1093,18 @@ function QuestionPlanBlock({
         </button>
       </p>
       {draft?.status === 'running' && <p className="ce-bar-note">비교 질문 고쳐 쓰는 중… {clock(elapsed)}</p>}
+      {!draft && fixed.length > 0 && measuring && (
+        <p className="ce-bar-note">
+          측정이 끝나면 비교 질문을 고쳐 써요{' '}
+          <button type="button" className="ce-link" onClick={onRecheck}>
+            다시 확인
+          </button>
+        </p>
+      )}
       {draft?.status === 'error' && (
         <p className="ce-bar-note bad">
           비교 질문을 고쳐 쓰지 못했어요 — {draft.message}{' '}
-          <button type="button" className="ce-link" onClick={onRedraft} disabled={!canRedraft}>
+          <button type="button" className="ce-link" onClick={() => onRedraft(false)} disabled={!canRedraft}>
             다시 쓰기
           </button>
         </p>
@@ -1115,7 +1138,15 @@ function QuestionPlanBlock({
                     ) : f ? (
                       <p className="ce-bar-note bad">고쳐 쓰지 못했어요 — {f.reasons.join(' · ')}</p>
                     ) : (
-                      <p className="ce-qplan-wait">{draft?.status === 'error' ? '고쳐 쓰지 못했어요' : '고쳐 쓰는 중…'}</p>
+                      <p className="ce-qplan-wait">
+                        {draft?.status === 'error'
+                          ? '고쳐 쓰지 못했어요'
+                          : draft?.status === 'running'
+                            ? '고쳐 쓰는 중…'
+                            : measuring
+                              ? '측정이 끝나면 고쳐 써요'
+                              : '고쳐 쓰기를 기다리는 중…'}
+                      </p>
                     ))}
                 </li>
               )
@@ -1129,8 +1160,8 @@ function QuestionPlanBlock({
           <p className="ce-qplan-note">
             저장하면 다음 측정 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요 · 점수 · 순위는 공통 질문 {sharedCount}개로 매겨요
           </p>
-          {fixed.length > 0 && (done || failed.length > 0) && (
-            <button type="button" className="ce-link" onClick={onRedraft} disabled={!canRedraft}>
+          {fixed.length > 0 && done && (
+            <button type="button" className="ce-link" onClick={() => onRedraft(true)} disabled={!canRedraft}>
               다시 쓰기
             </button>
           )}

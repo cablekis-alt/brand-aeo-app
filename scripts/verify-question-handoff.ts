@@ -197,7 +197,7 @@ ok('주제: 이름이 없으면 아니다', !topicMentions('커플 숙소 추천
 // checkRewrite R0~R9
 const item = itemOf(s1, 'v5-004')!
 const next1 = [A, ...NOW.slice(1)]
-const ctx = { item, brandNames: BRAND, language: 'ko' as const, next: next1, otherTexts: bank.questions.filter((x) => x.questionId !== 'v5-004').map((x) => x.text) }
+const ctx = { item, brandNames: BRAND, language: 'ko' as const, next: next1, gone: [NOW[0]!], otherTexts: bank.questions.filter((x) => x.questionId !== 'v5-004').map((x) => x.text) }
 const good = '가상시 감성 펜션 찾는데 가상머뭄이랑 새펜션A 중에 어디가 더 나아?'
 const cases: [string, unknown, boolean][] = [
   ['좋은 문장', good, true],
@@ -224,19 +224,21 @@ for (const [label, text, want] of cases) {
   ok(`checkRewrite ${want ? '통과' : '거절'}: ${label}${r.reasons.length ? ` (${r.reasons.join(' / ')})` : ''}`, (r.reasons.length === 0) === want)
 }
 ok('checkRewrite: 공백을 하나로 정리한다', checkRewrite(`  ${good.replace(' 중에', '   중에')} `, undefined, ctx).text === good)
-ok('checkRewrite R9: 쓸 수 있는 주제는 받는다', checkRewrite(good, ' 새펜션A와의  비교 ', ctx).topic === '새펜션A와의 비교')
-ok('checkRewrite R9: 나간 이름이 남은 주제는 비운다', checkRewrite(good, '골목집 대신 새펜션A', ctx).topic === undefined)
-ok('checkRewrite R9: 주제가 없거나 길면 비운다(문장은 통과)', checkRewrite(good, '', ctx).topic === undefined && checkRewrite(good, '가'.repeat(31), ctx).reasons.length === 0)
+ok('checkRewrite R9: 쓸 수 있는 주제는 받는다(공백 · 따옴표 정리)', checkRewrite(good, ' "감성 숙소  비교" ', ctx).topic === '감성 숙소 비교')
+ok('checkRewrite R9: 나간 이름이 남은 주제는 비운다', checkRewrite(good, '골목집 대신 새 숙소', ctx).topic === undefined)
+ok('checkRewrite R9: 받는 곳 · 고객 이름이 주제가 되면 비운다(isBrandTopic)', checkRewrite(good, '새펜션A와의 비교', ctx).topic === undefined && checkRewrite(good, '가상머뭄 장점', ctx).topic === undefined)
+ok('checkRewrite R9: 「미분류」는 주제로 받지 않는다', checkRewrite(good, '미분류', ctx).topic === undefined)
+ok('checkRewrite R9: 주제가 없거나 24자를 넘으면 비운다(문장은 통과)', checkRewrite(good, '', ctx).topic === undefined && checkRewrite(good, '가'.repeat(25), ctx).topic === undefined && checkRewrite(good, '가'.repeat(25), ctx).reasons.length === 0)
 
 // 초원 → 초원고택: 새 이름이 옛 이름을 품는다
 const choItem = itemOf(cho, 'v5-004')!
-const choCtx = { item: choItem, brandNames: BRAND, language: 'ko' as const, next: [c('초원고택'), NOW[1]!], otherTexts: [] }
+const choCtx = { item: choItem, brandNames: BRAND, language: 'ko' as const, next: [c('초원고택'), NOW[1]!], gone: [c('초원')], otherTexts: [] }
 ok('checkRewrite: 초원고택은 초원이 남은 것이 아니다', checkRewrite('가상머뭄이랑 초원고택 중 가족 여행엔 어디가 좋아?', undefined, choCtx).reasons.length === 0)
 ok('checkRewrite: 초원이 따로 남으면 거절', checkRewrite('가상머뭄이랑 초원, 초원고택 중 가족 여행엔 어디가 좋아?', undefined, choCtx).reasons.length > 0)
 
 // 경쟁사 둘: 남는 곳을 지우면 거절
 const multiItem = itemOf(m1, 'v5-008')!
-const multiCtx = { item: multiItem, brandNames: BRAND, language: 'ko' as const, next: next1, otherTexts: [] }
+const multiCtx = { item: multiItem, brandNames: BRAND, language: 'ko' as const, next: next1, gone: [NOW[0]!], otherTexts: [] }
 ok('checkRewrite(경쟁사 둘): 남는 곳을 둔 문장은 통과', checkRewrite('가상머뭄, 새펜션A, 가상옥도 세 곳 1박 가격 비교해 줘', undefined, multiCtx).reasons.length === 0)
 ok('checkRewrite(경쟁사 둘): 남는 곳을 지우면 거절', checkRewrite('가상머뭄이랑 새펜션A 두 곳 1박 가격 비교해 줘', undefined, multiCtx).reasons.length > 0)
 
@@ -259,7 +261,7 @@ const en = planQuestionHandoff({
   hints: [{ from: zano.name, to: nova.name }],
   taken: ['en1'],
 })
-const enCtx = { item: en.items[0]!, brandNames: ['Fake Plastic Surgery', '가짜성형외과'], language: 'en' as const, next: [nova], otherTexts: [] }
+const enCtx = { item: en.items[0]!, brandNames: ['Fake Plastic Surgery', '가짜성형외과'], language: 'en' as const, next: [nova], gone: [zano], otherTexts: [] }
 ok('영어: en1 → en2 · en2-005', en.toVersion === 'en2' && en.items[0]?.toId === 'en2-005')
 ok('영어: 좋은 문장 통과', checkRewrite('Between Fake Plastic Surgery and Nova Clinic, which clinic has a better reputation for rhinoplasty?', undefined, enCtx).reasons.length === 0)
 ok('영어: 나간 곳 별칭(ZANOBAGI)이 남으면 거절', checkRewrite('Is Fake Plastic Surgery or Nova Clinic better than ZANOBAGI for rhinoplasty?', undefined, enCtx).reasons.length > 0)
@@ -279,7 +281,7 @@ const url = planQuestionHandoff({
   hints: [{ from: '가상 골목집', to: '새펜션A' }],
   taken: ['v2'],
 })
-const urlCtx = { item: url.items[0]!, brandNames: ['fake-brand.example'], language: 'ko' as const, next: [A], otherTexts: [] }
+const urlCtx = { item: url.items[0]!, brandNames: ['fake-brand.example'], language: 'ko' as const, next: [A], gone: [NOW[0]!], otherTexts: [] }
 ok('고객 이름 없는 질문: 이름 없이 고쳐도 통과', checkRewrite('가상시에서 새펜션A 말고 다른 한옥 펜션 어디 있어?', undefined, urlCtx).reasons.length === 0)
 
 // 서랍의 힌트 — 바꿈 · 측정에 넣기 · 사슬(바꾼 줄을 다시 바꿈) · 되돌린 작업은 보내지 않는다
@@ -287,7 +289,8 @@ const items = baseItems([...NOW, W])
 const hintsOf = (ops: EditOp[]) => handoffHints(items, applyOps(items, ops)).map((h) => `${h.from}→${h.to}`).join(',')
 ok('힌트: 바꿈', hintsOf([{ id: '1', t: 'replace', key: 'b0', with: A, source: 'typed' }]) === '가상 골목집→새펜션A')
 ok('힌트: 대기 줄로 바꿈', hintsOf([{ id: '1', t: 'replace', key: 'b2', from: 'b5' }]) === '초원고택→대기펜션')
-ok('힌트: 측정에 넣기', hintsOf([{ id: '1', t: 'swap', a: 'b5', b: 'b3' }]) === '가상 선연→대기펜션')
+ok('힌트: 측정에 넣기(내려간 줄 쪽 힌트는 서버가 쓰지 않는다)', hintsOf([{ id: '1', t: 'swap', a: 'b5', b: 'b3' }]).split(',').includes('가상 선연→대기펜션'))
+ok('힌트: 자리를 두 번 바꾸면 원래대로(힌트 없음)', hintsOf([{ id: '1', t: 'swap', a: 'b5', b: 'b3' }, { id: '2', t: 'swap', a: 'b3', b: 'b5' }]) === '')
 ok(
   '힌트: 바꾼 줄을 다시 바꾸면 원래 줄에서 마지막 곳으로',
   hintsOf([
@@ -303,6 +306,99 @@ ok(
   ]).split(',').includes('가상 골목집→대기펜션'),
 )
 ok('힌트: 빼기 · 추가 · 홈페이지는 힌트가 없다', hintsOf([{ id: '1', t: 'drop', key: 'b0' }, { id: '2', t: 'add', with: B, source: 'typed' }, { id: '3', t: 'homepage', key: 'b1', domains: ['x.example'] }]) === '')
+
+// 검토 지적 — 자리 바꾸기 사슬(대기둘을 엠원 자리에, 대기셋을 대기둘 자리에)과 바꿔 넣은 줄을 다시 자리 바꾸기로 내림
+const W2 = c('대기둘')
+const W3 = c('대기셋')
+const chainNow = [c('엑스'), c('엠원'), c('씨'), c('디'), c('이'), W, W2, W3]
+const chainItems = baseItems(chainNow)
+const chainHints = (ops: EditOp[]) => handoffHints(chainItems, applyOps(chainItems, ops))
+const h4 = chainHints([
+  { id: '1', t: 'swap', a: 'b6', b: 'b1' },
+  { id: '2', t: 'swap', a: 'b7', b: 'b6' },
+  { id: '3', t: 'drop', key: 'b0' },
+])
+ok('힌트: 자리 바꾸기 사슬은 원래 줄에서 지금 주인으로(엠원 → 대기셋)', h4.some((h) => h.from === '엠원' && h.to === '대기셋'))
+const N1 = c('새로운펜션')
+const h3ops: EditOp[] = [
+  { id: '1', t: 'replace', key: 'b1', with: N1, source: 'typed' },
+  { id: '2', t: 'swap', a: 'b6', b: 'n1' },
+  { id: '3', t: 'drop', key: 'b0' },
+]
+const h3 = chainHints(h3ops)
+ok('힌트: 바꿔 넣은 줄을 자리 바꾸기로 내리면 원래 줄에서 올라온 곳으로(엠원 → 대기둘)', h3.some((h) => h.from === '엠원' && h.to === '대기둘'))
+const chainBank: QuestionBank = { ...bank, questions: [...shared, q('v5-001', '가상머뭄이랑 엑스 중 어디가 나아?'), q('v5-002', '가상머뭄이랑 엠원 중 어디가 조용해?')] }
+const chainNext = applyOps(chainItems, h3ops).list.map((x) => x.competitor)
+const p3 = planQuestionHandoff({
+  bank: chainBank,
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: chainNow, measured: measuredOf(chainNow) },
+  next: { competitors: chainNext, measured: measuredOf(chainNext) },
+  hints: [{ from: '엠원', to: '새로운펜션' }, ...h3],
+  taken: ['v5'],
+})
+ok('서버: 한 자리에 힌트가 여럿이면 쓸 수 있는 나중 힌트(엠원 → 대기둘)', toName(p3.items.find((i) => i.fromId === 'v5-002')) === '대기둘')
+
+// 검토 지적 — 넘겨줄 질문을 들어온 곳의 「자기 질문」으로 세지 않는다
+const renameRun = (now: CompetitorContext[], next: CompetitorContext[], questions: QuestionSpec[], hints: HandoffInput['hints']) =>
+  planQuestionHandoff({
+    bank: { ...bank, questions: [...shared, ...questions] },
+    version: 'v5',
+    brandNames: BRAND,
+    backToRepo: false,
+    repoVersion: 'v5',
+    now: { competitors: now, measured: now.map(() => true) },
+    next: { competitors: next, measured: next.map(() => true) },
+    hints,
+    taken: ['v5'],
+  })
+const shorter = renameRun([c('초원고택'), NOW[1]!], [c('초원'), NOW[1]!], [q('v5-004', '가상머뭄이랑 초원고택 중 어디가 좋아?')], [{ from: '초원고택', to: '초원' }])
+ok('옛 이름의 일부로 바꿈(초원고택 → 초원): 넘겨받아 고쳐 쓴다', itemOf(shorter, 'v5-004')?.action === 'rewrite' && toName(itemOf(shorter, 'v5-004')) === '초원' && !shorter.unreceived.length)
+const aliasRename = renameRun(
+  [c('바다별장'), NOW[1]!],
+  [c('바다별장 리조트', ['바다별장 리조트', '바다별장']), NOW[1]!],
+  [q('v5-004', '가상머뭄이랑 바다별장 중 어디가 좋아?')],
+  [{ from: '바다별장', to: '바다별장 리조트' }],
+)
+ok('옛 이름을 별칭으로 둔 이름 바꾸기: 넘겨받아 고쳐 쓴다', itemOf(aliasRename, 'v5-004')?.action === 'rewrite' && toName(itemOf(aliasRename, 'v5-004')) === '바다별장 리조트')
+const caseOnly = renameRun([c('KT'), NOW[1]!], [c('kt'), NOW[1]!], [q('v5-004', '가상머뭄이랑 KT 중 어디가 좋아?')], [{ from: 'KT', to: 'kt' }])
+ok('대소문자만 바꿈(KT → kt): 같은 곳 · 질문지 그대로', caseOnly.mode === 'same')
+const named2 = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-007', '가상머뭄, 가상 골목집, 대기펜션 세 곳 비교해 줘')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: [...NOW, W], measured: measuredOf([...NOW, W]) },
+  next: { competitors: [...NOW.slice(1), W], measured: measuredOf([...NOW.slice(1), W]) },
+  hints: [],
+  taken: ['v5'],
+})
+ok('나가는 곳의 질문이 이미 짚은 곳은 받지 않는다(자기 자신과 견주게 된다)', itemOf(named2, 'v5-007')?.action === 'remove')
+const fkRun = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄이랑 가상 골목집 중 어디가 나아?')] },
+  version: 'v5',
+  brandNames: [...BRAND, 'FK'],
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: NOW, measured: measuredOf(NOW) },
+  next: { competitors: [c('FKpos'), ...NOW.slice(1)], measured: measuredOf(NOW) },
+  hints: [{ from: '가상 골목집', to: 'FKpos' }],
+  taken: ['v5'],
+})
+ok('고객 이름을 품은 곳(FKpos · 고객 별칭 FK)은 받지 않는다 — 질문에서 이어지지 않는다', itemOf(fkRun, 'v5-001')?.action === 'remove')
+
+// 검토 지적 — 남는 이름이 나간 이름의 일부일 때(남는 가상초원 · 나가는 가상초원고택) 나간 이름이 남은 문장을 거절한다
+const subNow = [c('가상초원'), c('가상초원고택'), NOW[3]!]
+const subNext = [c('가상초원'), c('새곳'), NOW[3]!]
+const subPlan = renameRun(subNow, subNext, [q('v5-001', '가상머뭄, 가상초원, 가상초원고택 중 어디가 제일 조용해?')], [{ from: '가상초원고택', to: '새곳' }])
+const subItem = itemOf(subPlan, 'v5-001')!
+const subCtx = { item: subItem, brandNames: BRAND, language: 'ko' as const, next: subNext, gone: [c('가상초원고택')], otherTexts: [] }
+ok('남는 이름이 나간 이름의 일부: 고친 문장은 통과', checkRewrite('가상머뭄, 가상초원, 새곳 중 어디가 제일 조용해?', undefined, subCtx).reasons.length === 0)
+ok('남는 이름이 나간 이름의 일부: 나간 이름이 남으면 거절', checkRewrite('가상머뭄, 가상초원, 새곳, 가상초원고택 중 어디가 제일 조용해?', undefined, subCtx).reasons.includes('나간 경쟁사 이름이 남았어요'))
 
 let failed = 0
 for (const [label, cond] of checks) {

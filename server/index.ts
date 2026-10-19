@@ -334,11 +334,15 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
     const measured = history.at(-1)?.questionBankVersion;
     const last = measured && measured !== version ? await store.getQuestionBank(tenant.tenantId, measured) : null;
     if (last) {
-      const derived = bank?.derivedFrom;
+      // 마지막으로 잰 은행과 견줘 센다 — 재기 전에 두 번 고쳐 저장하면(v5 → v6 → v7) 마지막 단계만으로는 모자란다.
+      // 고친 질문은 새 id를 달고(v7-004) 원래 질문 하나를 대신하므로, 남은 원래 질문 수에서 고친 수를 빼면 뺀 수다.
+      const lastIds = new Set(last.questions.map((q) => q.questionId));
+      const kept = bank ? bank.questions.filter((q) => lastIds.has(q.questionId)).length : 0;
+      const replaced = bank ? bank.questions.length - kept : 0;
       res.json({
         ...last,
         upcomingVersion: version,
-        ...(derived ? { upcomingDerived: { replaced: derived.replaced.length, removed: derived.removed.length } } : {}),
+        ...(bank?.derivedFrom ? { upcomingDerived: { replaced, removed: Math.max(0, last.questions.length - kept - replaced) } } : {}),
       });
       return;
     }

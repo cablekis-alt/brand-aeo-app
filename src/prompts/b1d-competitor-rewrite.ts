@@ -55,7 +55,7 @@ export function buildCompetitorRewritePrompt(req: CompetitorRewriteRequest): Pro
 8. ${styleRule(req.language)}
 ${
   req.topicNeedsRewrite
-    ? `9. 원래 주제(topic)에 빼는 경쟁사 이름이 들어 있다. 새 질문의 주제를 한국어 명사구(30자 이내)로 다시 붙인다.
+    ? `9. 원래 주제(topic)에 빼는 경쟁사 이름이 들어 있다. 새 질문의 주제를 한국어 명사구(24자 이내)로 다시 붙인다.
    업체 이름을 넣지 말고 무엇을 비교 · 질문하는지로 이름 짓는다(예: "분위기 비교", "가족 숙소 비교").
 
 응답은 JSON 객체 하나만: {"text": "고쳐 쓴 질문", "topic": "새 주제"}`

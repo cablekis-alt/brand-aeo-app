@@ -180,6 +180,7 @@ export default function QuestionBankPage() {
                 ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정부터 {bank.upcomingVersion} 질문지를 씁니다 — 경쟁사를 바꾸며
                 {bank.upcomingDerived.replaced ? ` 비교 질문 ${bank.upcomingDerived.replaced}개를 고쳐 썼고` : ''}
                 {bank.upcomingDerived.removed ? ` ${bank.upcomingDerived.removed}개를 뺐고` : ''} 나머지 질문은 그대로입니다(경쟁사 편집).
+                주제 · 단계 매기기는 그 측정 뒤에 할 수 있어요 — 지금 매기면 다음 측정이 쓰는 질문지에는 남지 않아요.
               </p>
             ) : (
               <p className="hint">
@@ -212,7 +213,7 @@ export default function QuestionBankPage() {
                 <button
                   type="button"
                   className="ghost"
-                  disabled={tagging !== null}
+                  disabled={tagging !== null || Boolean(bank.upcomingDerived)}
                   onClick={async () => {
                     if (!tenant) return
                     setTagging('판정 중…')
@@ -247,7 +248,7 @@ export default function QuestionBankPage() {
               <button
                 type="button"
                 className="ghost"
-                disabled={topicTagging !== null}
+                disabled={topicTagging !== null || Boolean(bank.upcomingDerived)}
                 onClick={async () => {
                   if (!tenant) return
                   setTopicTagging('판정 중…')

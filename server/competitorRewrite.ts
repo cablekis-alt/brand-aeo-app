@@ -100,7 +100,14 @@ async function rewriteOne(
       retryNote = '직전 응답은 JSON 객체 하나가 아니었다. 설명 없이 {"text": "..."} 형태로만 답하라.';
       continue;
     }
-    const checked = checkRewrite(parsed.text, parsed.topic, { item, brandNames: ctx.brandNames, language: ctx.language, next: ctx.next, otherTexts: bankTexts });
+    const checked = checkRewrite(parsed.text, parsed.topic, {
+      item,
+      brandNames: ctx.brandNames,
+      language: ctx.language,
+      next: ctx.next,
+      gone: ctx.gone,
+      otherTexts: bankTexts,
+    });
     if (!checked.reasons.length) {
       return { fromId: item.fromId, toId: item.toId!, text: checked.text, ...(checked.topic ? { topic: checked.topic } : {}), attempts: attempt };
     }

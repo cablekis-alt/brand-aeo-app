@@ -179,6 +179,7 @@ try {
   await ed.undoEdit(ID, store)
   ok('되돌리면 v5 · 옛 목록', (await fresh()).questionBankVersion === 'v5' && (await fresh()).competitors[0]!.name === '가상골목')
   ok('되돌려도 v6.json은 남는다', exists(`data/${ID}/question-bank/v6.json`))
+  ok('되돌리기 전에 설정을 읽은 측정(v6 · 새 목록)은 되돌리기와 겹쳐도 멈추지 않는다', !(await rejects(pipeline.ensureQuestionBank(t1, store))))
   const plan2 = await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), store, replaced, undefined, handoff)
   ok('되돌린 뒤 다시 계획하면 v7', plan2.questions.toVersion === 'v7' && plan2.questions.items[0]!.toId === 'v7-002')
 
@@ -246,8 +247,32 @@ try {
     buildCompetitorRewritePrompt({ industry: '가상업종', region: '가상시 (영어 질문)', brandName: '가상머뭄', brandAliases: ['가상,머뭄'], source: item.source, swaps: item.swaps.map((s) => ({ from: s.from, to: s.to! })), keep: item.keep, topicNeedsRewrite: item.topicNeedsRewrite }),
   )
   const parsedMock = JSON.parse(mockAnswer.text) as { text: string; topic: string }
-  ok('모의 판정: 고쳐 쓴 문장이 검사를 통과한다', checkRewrite(parsedMock.text, parsedMock.topic, { item, brandNames: ['가상머뭄', '가상,머뭄'], language: 'ko', next: replaced, otherTexts: [] }).reasons.length === 0)
+  ok('모의 판정: 고쳐 쓴 문장이 검사를 통과한다', checkRewrite(parsedMock.text, parsedMock.topic, { item, brandNames: ['가상머뭄', '가상,머뭄'], language: 'ko', next: replaced, gone: [COMPETITORS[0]!], otherTexts: [] }).reasons.length === 0)
   ok('프롬프트: 지역 꼬리표 「(영어 질문)」은 뗀다', !buildCompetitorRewritePrompt({ industry: 'x', region: '가상시 (영어 질문)', brandName: 'b', brandAliases: [], source: item.source, swaps: [], keep: [], topicNeedsRewrite: false }).user.includes('(영어 질문)'))
+
+  // 15) 나간 이름이 남는 · 받는 곳 이름의 일부일 때도 저장된다(검토 지적) — 저장 검사가 고친 문장 검사와 같은 잇기를 쓴다.
+  const SUB = 'fake-rewrite-sub'
+  const subList = [c('가상초원'), c('가상초원고택'), c('가상선연')]
+  writeJson('tenants.overlay.json', [tenant, { ...tenant, tenantId: SUB, ownedDomains: ['fake-sub.example'], region: '가상구', competitors: subList, questionBankSize: 4 }])
+  const subShared = shared.map((x) => ({ ...x, region: '가상구' }))
+  writeJson(`cohort-banks/가상업종__가상구/c1.json`, { key: '가상업종__가상구', industry: '가상업종', region: '가상구', version: 'c1', generatedAt: 'x', questions: subShared })
+  writeJson(`data/${SUB}/question-bank/v5.json`, {
+    version: 'v5',
+    generatedAt: 'x',
+    cohortBank: { key: '가상업종__가상구', version: 'c1' },
+    questions: [...subShared, q('v5-001', '가족 여행이면 가상머뭄이랑 가상초원 중 어디가 좋아?'), q('v5-002', '가상머뭄이랑 가상초원고택 중 어디가 조용해?')],
+  })
+  const subTenant = async () => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === SUB)!
+  const saveSub = async (list: ReturnType<typeof c>[], hints: { from: string; to: string }[], texts: Record<string, string>) => {
+    const p = await ed.planEdit(await subTenant(), await reg.loadRuntimeTenants(), store, list, undefined, hints)
+    const drafts = p.questions.items.filter((i) => i.action === 'rewrite').map((i) => ({ fromId: i.fromId, text: texts[i.fromId]! }))
+    return { plan: p, state: await ed.saveEdit(SUB, store, { competitors: list, handoff: hints, questions: { key: p.questions.key, drafts } }) }
+  }
+  const longer = await saveSub([c('가상초원별채'), ...subList.slice(1)], [{ from: '가상초원', to: '가상초원별채' }], { 'v5-001': '가족 여행이면 가상머뭄이랑 가상초원별채 중 어디가 좋아?' })
+  ok('긴 이름으로 바꿈(가상초원 → 가상초원별채): 저장된다', longer.state.questionBank.version === 'v6' && longer.plan.questions.items.length === 1)
+  await ed.undoEdit(SUB, store)
+  const stay = await saveSub([c('새곳'), ...subList.slice(1)], [{ from: '가상초원', to: '새곳' }], { 'v5-001': '가족 여행이면 가상머뭄이랑 새곳 중 어디가 좋아?' })
+  ok('나간 이름을 품은 곳이 남음(가상초원고택): 손대지 않은 v5-002도 저장을 막지 않는다', stay.state.questionBank.version === 'v7' && stay.plan.questions.items.every((i) => i.fromId === 'v5-001'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

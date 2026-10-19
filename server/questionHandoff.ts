@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { linkCompetitorQuestions } from './competitorQuestions.js';
+import { isBrandTopic, normalizeTopic } from '../src/prompts/b1c-question-topic.js';
 import type { CompetitorContext, QuestionLanguage, QuestionSpec } from '../src/prompts/types.js';
 import type { QuestionBank } from './store.js';
 
@@ -77,10 +78,38 @@ export interface HandoffInput {
   taken: Iterable<string>;
 }
 
-const squash = (s: string) => s.replace(/\s+/g, '');
+/** 주제 칸 길이 — 주제 화면 · 집계가 쓰는 normalizeTopic과 같다(넘으면 자르지 않고 비운다). */
+const TOPIC_MAX_LENGTH = 24;
+
 /** 글자 비교용 — 띄어쓰기와 대소문자를 무시한다(linkCompetitorQuestions와 같다). */
 const fold = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+/** 같은 경쟁사인가 — 이름을 같은 규칙으로 접는다(대소문자만 바꾼 「KT → kt」는 같은 곳이다). */
+const keyOf = (c: CompetitorContext) => fold(c.name);
 const namesOf = (c: CompetitorContext) => [c.name, ...(c.aliases ?? [])].filter(Boolean);
+
+/**
+ * 바꾼 목록으로 질문을 다시 잇는다 — 빠지는 이름(나가는 곳 · 목록에서 지운 줄)도 함께 놓고 긴 이름부터 읽는다. 그래야 나간
+ * 이름이 남는 곳 · 받는 곳 이름 안에 들어 있어도(초원 / 초원고택) 남는 이름으로 읽고, 지운 긴 이름 안의 짧은 이름을 나간 곳으로
+ * 잘못 읽지 않는다. 넘겨받기 계산 · 고쳐 쓴 문장 검사(R4 · R5) · 저장 검사가 모두 이 함수를 쓴다(미리 본 것 = 저장되는 것).
+ *
+ * nextIndexes: 이어진 바꾼 목록 위치(나가는 곳이 대기로 남아 있으면 그 위치는 빼고 outgoingHit로 센다).
+ */
+export function linkAfterEdit(
+  questions: QuestionSpec[],
+  next: CompetitorContext[],
+  gone: CompetitorContext[],
+  outgoing: CompetitorContext[],
+  brandNames: string[],
+): { questionId: string; nextIndexes: number[]; outgoingHit: boolean }[] {
+  const nextKeys = new Set(next.map(keyOf));
+  const outKeys = new Set(outgoing.map(keyOf));
+  const combined = [...next, ...gone.filter((c) => !nextKeys.has(keyOf(c)))];
+  return linkCompetitorQuestions(questions, combined, brandNames).questions.map((l) => ({
+    questionId: l.questionId,
+    nextIndexes: l.competitorIndexes.filter((i) => i < next.length && !outKeys.has(keyOf(combined[i]!))),
+    outgoingHit: l.competitorIndexes.some((i) => outKeys.has(keyOf(combined[i]!))),
+  }));
+}
 
 /**
  * 다음 질문지 버전 — 접두는 두고 끝 숫자만 올린다(v5 → v6, en1 → en2, v9 → v10). 쓰인 이름이면 계속 올린다
@@ -133,54 +162,68 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
 
   const now = input.now.competitors;
   const next = input.next.competitors;
-  const nowMeasured = new Set(now.filter((_, i) => input.now.measured[i]).map((c) => squash(c.name)));
-  const nextMeasured = new Set(next.filter((_, i) => input.next.measured[i]).map((c) => squash(c.name)));
-  const outgoing = now.filter((c, i) => input.now.measured[i] && !nextMeasured.has(squash(c.name)));
-  const incoming = next.filter((c, i) => input.next.measured[i] && !nowMeasured.has(squash(c.name)));
-  const outgoingKeys = new Set(outgoing.map((c) => squash(c.name)));
+  const nowMeasured = new Set(now.filter((_, i) => input.now.measured[i]).map(keyOf));
+  const nextMeasured = new Set(next.filter((_, i) => input.next.measured[i]).map(keyOf));
+  const outgoing = now.filter((c, i) => input.now.measured[i] && !nextMeasured.has(keyOf(c)));
+  const incoming = next.filter((c, i) => input.next.measured[i] && !nowMeasured.has(keyOf(c)));
+  const outgoingKeys = new Set(outgoing.map(keyOf));
+  const nextIndex = new Map(next.map((c, i) => [keyOf(c), i]));
+  const gone = now.filter((c) => !nextIndex.has(keyOf(c)));
   const linksNow = linkCompetitorQuestions(bank.questions, now, brandNames);
-  const linksNext = linkCompetitorQuestions(bank.questions, next, brandNames);
-  const nextIndex = new Map(next.map((c, i) => [squash(c.name), i]));
-  const ownIds = (c: CompetitorContext) => linksNext.byCompetitor[nextIndex.get(squash(c.name)) ?? -1] ?? [];
   const questionsOf = (c: CompetitorContext) => linksNow.byCompetitor[now.indexOf(c)] ?? [];
+  // 넘겨줄 질문 — 나가는 곳을 짚은 질문이다. 들어온 곳의 「자기 질문」으로 세지 않는다(옛 이름을 별칭으로 둔 이름 바꾸기 ·
+  // 옛 이름의 일부로 바꾸기에서는 넘겨줄 질문이 들어온 곳에도 이어진다).
+  const handedOff = new Set(outgoing.flatMap(questionsOf));
+  const after = new Map(linkAfterEdit(bank.questions, next, gone, outgoing, brandNames).map((l) => [l.questionId, l.nextIndexes]));
+  const named = (questionId: string, c: CompetitorContext) => (after.get(questionId) ?? []).includes(nextIndex.get(keyOf(c)) ?? -1);
+  const ownIds = (c: CompetitorContext) => bank.questions.filter((q) => !handedOff.has(q.questionId) && named(q.questionId, c)).map((q) => q.questionId);
+  // 고객 이름을 품은 이름은 질문에서 이어지지 않는다(잇기가 고객 이름을 먼저 지운다) — 받아도 고쳐 쓴 질문이 검사를 통과할 수 없다.
+  const brandFolds = brandNames.map(fold).filter(Boolean);
+  const linkable = (c: CompetitorContext) => namesOf(c).some((n) => !brandFolds.some((b) => fold(n).includes(b)));
 
   // 받는 곳은 경쟁사 단위로 정한다 — 한 경쟁사의 질문은 모두 같은 곳이 받고, 받는 곳 하나는 나가는 곳 하나만 받는다.
-  // 자기 질문이 이미 있는 들어온 곳은 받지 않는다(경쟁사마다 비교 질문 하나).
+  // 자기 질문이 이미 있는 들어온 곳은 받지 않는다(경쟁사마다 비교 질문 하나). 나가는 곳의 질문이 이미 짚은 곳도 받지 않는다
+  // (그 질문이 자기 자신과 견주게 된다).
   const receiver = new Map<CompetitorContext, { to: CompetitorContext; via: 'hint' | 'promoted' }>();
   const taken = new Set<string>();
-  const eligible = (c: CompetitorContext) => !ownIds(c).length && !taken.has(squash(c.name));
+  // 「이미 짚은 곳」은 지금 목록으로 본다 — 지금 목록에 따로 있던 곳(대기 줄)을 그 질문이 함께 짚었다. 새로 든 곳이 옛 이름을
+  // 별칭으로 가져 바꾼 목록에서 이어지는 것(이름 바꾸기)은 넘겨받는다.
+  const nowIndex = new Map(now.map((c, i) => [keyOf(c), i]));
+  const linkedNow = new Map(linksNow.questions.map((l) => [l.questionId, l.competitorIndexes]));
+  const alreadyIn = (o: CompetitorContext, c: CompetitorContext) =>
+    nowIndex.has(keyOf(c)) && questionsOf(o).some((id) => (linkedNow.get(id) ?? []).includes(nowIndex.get(keyOf(c))!));
+  const eligible = (c: CompetitorContext, o: CompetitorContext) => linkable(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c);
   const withQuestions = outgoing.filter((o) => questionsOf(o).length > 0);
-  // 1) 화면 힌트(바꿈 · 측정에 넣기) — 지금 목록 순서로.
+  // 1) 화면 힌트(바꿈 · 측정에 넣기) — 지금 목록 순서로. 한 자리에 힌트가 여럿이면 나중 것부터 본다.
   for (const o of withQuestions) {
-    const hint = input.hints.find((h) => squash(h.from) === squash(o.name));
-    const to = hint ? incoming.find((c) => squash(c.name) === squash(hint.to)) : undefined;
-    if (to && eligible(to)) {
+    for (const hint of input.hints.filter((h) => fold(h.from) === keyOf(o)).reverse()) {
+      const to = incoming.find((c) => keyOf(c) === fold(hint.to));
+      if (!to || !eligible(to, o)) continue;
       receiver.set(o, { to, via: 'hint' });
-      taken.add(squash(to.name));
+      taken.add(keyOf(to));
+      break;
     }
   }
   // 2) 남은 나가는 곳 — 빼기로 대기 첫 줄이 올라왔거나 추가한 곳이 측정에 들었다. 바꾼 목록 순서로 첫 곳이 받는다.
   for (const o of withQuestions) {
     if (receiver.has(o)) continue;
-    const to = incoming.find(eligible);
+    const to = incoming.find((c) => eligible(c, o));
     if (!to) continue;
     receiver.set(o, { to, via: 'promoted' });
-    taken.add(squash(to.name));
+    taken.add(keyOf(to));
   }
 
   const toVersion = nextBankVersion(input.version, [...input.taken, input.version]);
   const items: HandoffItem[] = [];
   for (const linked of linksNow.questions) {
-    const outs = linked.competitorIndexes.map((i) => now[i]!).filter((c) => outgoingKeys.has(squash(c.name)));
+    const outs = linked.competitorIndexes.map((i) => now[i]!).filter((c) => outgoingKeys.has(keyOf(c)));
     if (!outs.length) continue;
     const q = bank.questions.find((x) => x.questionId === linked.questionId)!;
     const swaps: HandoffSwap[] = outs.map((from) => {
       const r = receiver.get(from);
       return { from, to: r?.to ?? null, via: r?.via ?? null };
     });
-    const keep = linked.competitorIndexes
-      .map((i) => now[i]!)
-      .filter((c) => !outgoingKeys.has(squash(c.name)) && nextIndex.has(squash(c.name)));
+    const keep = linked.competitorIndexes.map((i) => now[i]!).filter((c) => !outgoingKeys.has(keyOf(c)) && nextIndex.has(keyOf(c)));
     // 짚은 경쟁사 가운데 한 곳이라도 받을 곳이 없으면 질문을 통째로 뺀다(결정 D1) — 이름만 빼면 다른 질문이 된다.
     const rewrite = swaps.every((s) => s.to);
     const seq = /-(\d+)$/.exec(q.questionId)?.[1];
@@ -192,7 +235,7 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
       source: { text: q.text, ...(q.topic ? { topic: q.topic } : {}), category: q.category, ...(q.stage ? { stage: q.stage } : {}) },
       swaps,
       keep,
-      expectedIndexes: rewrite ? stay.map((c) => nextIndex.get(squash(c.name))!).sort((a, b) => a - b) : [],
+      expectedIndexes: rewrite ? stay.map((c) => nextIndex.get(keyOf(c))!).sort((a, b) => a - b) : [],
       topicNeedsRewrite: rewrite && topicMentions(q.topic, outs, [...brandNames, ...stay.flatMap(namesOf)]),
       reason: !rewrite ? 'noReceiver' : swaps.some((s) => s.via === 'promoted') ? 'promoted' : 'hint',
     });
@@ -235,7 +278,7 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
  */
 export function handoffKey(
   plan: Pick<QuestionPlan, 'mode' | 'fromVersion' | 'toVersion' | 'items'>,
-  input: Pick<HandoffInput, 'brandNames' | 'next'>,
+  input: Pick<HandoffInput, 'brandNames' | 'next' | 'now'>,
 ): string {
   const ctx = (c: CompetitorContext) => [c.name, c.aliases ?? []];
   const payload = {
@@ -256,6 +299,8 @@ export function handoffKey(
     ]),
     brand: input.brandNames,
     names: input.next.competitors.map(ctx),
+    // 지금 목록도 넣는다 — 빠지는 이름(지운 대기 줄 포함)이 고쳐 쓴 문장 검사에 쓰인다(linkAfterEdit).
+    before: input.now.competitors.map(ctx),
   };
   return createHash('sha1').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
 }
@@ -331,6 +376,8 @@ export interface RewriteCheckContext {
   language: QuestionLanguage;
   /** 바꾼 목록(측정 순서) — expectedIndexes의 기준. */
   next: CompetitorContext[];
+  /** 지금 목록에 있다가 바꾼 목록에서 빠지는 곳(나가는 곳 · 지운 대기 줄) — linkAfterEdit가 긴 이름부터 읽는 데 쓴다. */
+  gone: CompetitorContext[];
   /** 은행의 다른 문장(공통 포함)과 같은 묶음의 다른 고친 문장 — 같으면 안 된다. */
   otherTexts: string[];
 }
@@ -354,19 +401,21 @@ export function checkRewrite(raw: unknown, rawTopic: unknown, ctx: RewriteCheckC
   // R3: 원래 질문에 고객 이름이 있었으면 새 문장에도 있어야 한다(결정 D10 — 이름 없는 질문지도 있다).
   const hasBrand = (t: string) => ctx.brandNames.some((n) => n && fold(t).includes(fold(n)));
   if (hasBrand(item.source.text) && !hasBrand(text)) reasons.push('고객 브랜드 이름이 빠졌어요');
-  // R4: 이어지는 경쟁사가 정확히 받는 곳 ∪ 남는 경쟁사여야 한다 — 받는 곳 이름이 있고, 남는 곳을 지우지 않았고, 다른 경쟁사를 넣지 않았다.
-  const linked = linkCompetitorQuestions([{ ...(item.source as QuestionSpec), questionId: item.fromId, text }], ctx.next, ctx.brandNames);
-  const got = linked.questions[0]?.competitorIndexes ?? [];
+  // R4 · R5: 바꾼 목록과 빠지는 이름을 함께 놓고 긴 이름부터 잇는다(저장 검사와 같은 함수). 이어지는 곳이 정확히 받는 곳 ∪ 남는
+  // 경쟁사여야 하고(받는 곳 이름이 있고, 남는 곳을 지우지 않았고, 다른 경쟁사를 넣지 않았다), 나가는 곳에는 이어지지 않아야 한다
+  // (초원 → 초원고택처럼 새 이름이 옛 이름을 품어도 새 이름으로 읽는다).
+  const outgoing = item.swaps.map((s) => s.from);
+  const linked = linkAfterEdit([{ ...(item.source as QuestionSpec), questionId: item.fromId, text }], ctx.next, ctx.gone, outgoing, ctx.brandNames)[0];
+  const got = linked?.nextIndexes ?? [];
   if (got.join() !== item.expectedIndexes.join()) {
     const want = item.expectedIndexes.map((i) => ctx.next[i]?.name).join(', ');
     const seen = got.map((i) => ctx.next[i]?.name).join(', ') || '없음';
     reasons.push(`짚은 경쟁사가 달라요(필요: ${want} · 문장: ${seen})`);
   }
-  // R5: 나가는 경쟁사 이름이 남았다 — 고객 이름과 바꾼 목록의 다른 이름을 긴 것부터 지운 뒤에 본다(초원 → 초원고택).
-  const outKeys = new Set(item.swaps.map((s) => squash(s.from.name)));
-  const keepNames = [...ctx.brandNames, ...ctx.next.filter((c) => !outKeys.has(squash(c.name))).flatMap(namesOf)];
-  const rest = blankNames(text, keepNames);
-  if (item.swaps.some((s) => namesOf(s.from).some((n) => rest.includes(fold(n))))) reasons.push('나간 경쟁사 이름이 남았어요');
+  if (linked?.outgoingHit) reasons.push('나간 경쟁사 이름이 남았어요');
+  const outKeys = new Set(outgoing.map(keyOf));
+  const keepNames = [...ctx.brandNames, ...ctx.next.filter((c) => !outKeys.has(keyOf(c))).flatMap(namesOf)];
+  const rest = blankNames(text, [...keepNames, ...ctx.gone.flatMap(namesOf), ...outgoing.flatMap(namesOf)]);
   // R6: 길이 — 원래 질문과 비슷한 길이여야 한다.
   const max = ctx.language === 'en' ? 250 : 150;
   const was = item.source.text.length;
@@ -379,12 +428,14 @@ export function checkRewrite(raw: unknown, rawTopic: unknown, ctx: RewriteCheckC
   const letters = (residue.match(/[A-Za-z가-힣]/g) ?? []).length;
   if (ctx.language === 'en' && hangul > 0) reasons.push('영어 질문에 한글이 섞였어요');
   if (ctx.language !== 'en' && (letters === 0 || hangul / letters < 0.5)) reasons.push('한국어 질문이 아니에요');
-  // R9: 주제 — 나가는 이름이 든 주제만 새로 받는다. 비었거나 길거나 나간 이름이 남으면 비운다.
+  // R9: 주제 — 나가는 이름이 든 주제만 새로 받는다. 비었거나 「미분류」이거나 길거나(주제 칸 24자), 나간 이름이 남거나, 업체
+  // 이름이 주제가 됐으면(주제 매기기의 isBrandTopic과 같은 기준 — 프롬프트만으로는 막지 못한다) 비운다.
   let topic: string | undefined = item.source.topic;
   if (item.topicNeedsRewrite) {
-    const t = typeof rawTopic === 'string' ? rawTopic.replace(/\s+/g, ' ').trim() : '';
-    const stale = topicMentions(t, item.swaps.map((s) => s.from), keepNames);
-    topic = t && t.length <= 30 && !/[\r\n]/.test(t) && !stale ? t : undefined;
+    const t = typeof rawTopic === 'string' ? rawTopic.replace(/\s+/g, ' ').replace(/^["'`]|["'`]$/g, '').trim() : '';
+    const clean = t.length <= TOPIC_MAX_LENGTH ? normalizeTopic(t) : undefined;
+    const names = [...keepNames, ...ctx.gone.flatMap(namesOf), ...outgoing.flatMap(namesOf)];
+    topic = clean && !topicMentions(clean, outgoing, keepNames) && !isBrandTopic(clean, names) ? clean : undefined;
   }
   return { text, ...(topic ? { topic } : {}), reasons };
 }

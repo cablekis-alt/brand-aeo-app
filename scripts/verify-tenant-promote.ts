@@ -71,6 +71,16 @@ try {
   // 경쟁사일 때 고친 시장 범위와, 경쟁사 목록 없이 만든 v3 질문지.
   writeJson('data/vtown/market-scope.json', { marketScope: 'b2b', buyer: '가상 구매 담당' })
   writeJson('data/vtown/question-bank/v3.json', { version: 'v3', questions: [] })
+  // 고객 vcust의 질문지 — 「가상 여행」을 짚은 비교 질문이 있다. 목록에서 빼면 그 질문도 빠진다(질문 넘겨받기 · 받을 곳 없음).
+  const vq = (questionId: string, text: string, category: string, cohortShared = false) => ({
+    questionId, text, category, industry: '펜션', region: '가상시', containsBrandName: !cohortShared, version: questionId.split('-')[0], ...(cohortShared ? { cohortShared } : {}),
+  })
+  writeJson('data/vcust/question-bank/v3.json', {
+    version: 'v3',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    cohortBank: { key: '펜션__가상시', version: 'c1' },
+    questions: [vq('c1-001', '가상시 펜션 추천해줘', 'category-agnostic', true), vq('v3-001', '가상 펜션이랑 가상 여행 중에 어디가 더 나아?', 'comparison'), vq('v3-002', '가상 펜션 체크인 몇 시야?', 'brand-direct')],
+  })
 
   // 문항 수 1 — 가짜 엔진은 브랜드 전용 질문을 만들지 못해, 4)의 측정이 코호트 공통 질문만 쓰게 한다.
   const draft = reg.normalizeTenantDraft({
@@ -122,6 +132,11 @@ try {
   ok('id는 그대로 — 지난 기록이 이어진다', (await store.getScorecardHistory('vtown', 99)).length === 1)
   const customer = runtime.find((t) => t.tenantId === 'vcust')!
   ok('고른 고객의 경쟁사 목록에서 빠진다(www 무시)', customer.competitors.map((x) => x.name).join() === '가상 둘')
+  const vcustV4 = JSON.parse(readFileSync(path.join(dir, 'data/vcust/question-bank/v4.json'), 'utf8')) as { questions: { questionId: string }[] }
+  ok(
+    '그 경쟁사를 짚은 비교 질문도 빠진다(질문지 v3 → v4 · 3 → 2)',
+    customer.questionBankVersion === 'v4' && customer.questionBankSize === 2 && vcustV4.questions.map((x) => x.questionId).join() === 'c1-001,v3-002',
+  )
   const vother = runtime.find((t) => t.tenantId === 'vother')!
   ok('id만 같은 다른 곳의 줄은 빼지 않는다', vother.competitors.map((x) => x.name).join() === '가상 시청')
   const vmulti = runtime.find((t) => t.tenantId === 'vmulti')!

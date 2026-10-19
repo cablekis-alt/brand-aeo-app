@@ -4,7 +4,7 @@ import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { readCohortExclusions, updateCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { competitorDraftId } from './cohortPlan.js';
 import { affectedCohortWeeks, reconcileCohortRanks } from './cohortRank.js';
-import { EditorError, saveEdit } from './competitorEditor.js';
+import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
@@ -269,7 +269,21 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     const kept = customer.competitors.filter((line) => lineTarget(customer, line, existing) !== 'same');
     if (kept.length === customer.competitors.length) continue;
     try {
-      await saveEdit(id, store, { competitors: kept, summary: `빼기 · ${draft.brandName}(고객 브랜드로 전환)` });
+      // 그 경쟁사를 짚은 비교 질문은 빼기와 같다(질문 넘겨받기 — competitorEditor.ts). 빼기만이면 고쳐 쓸 문장이 없어 그대로 저장한다.
+      // 올라오는 대기 줄이 질문을 넘겨받아 고쳐 써야 하면 여기서는 하지 않는다 — 고친 문장을 확인할 곳은 서랍뿐이다.
+      const questions = (await planEdit(customer, runtime, store, kept)).questions;
+      if (questions.mode === 'derive' && questions.items.some((i) => i.action === 'rewrite')) {
+        removeErrors.push({
+          tenantId: id,
+          error: `${draft.brandName} 자리에 드는 경쟁사가 비교 질문을 넘겨받아 고쳐 써야 해요 — 경쟁사 편집 서랍에서 빼 주세요.`,
+        });
+        continue;
+      }
+      await saveEdit(id, store, {
+        competitors: kept,
+        summary: `빼기 · ${draft.brandName}(고객 브랜드로 전환)`,
+        ...(questions.mode === 'derive' ? { questions: { key: questions.key, drafts: [] } } : {}),
+      });
       removedFrom.push(id);
     } catch (err) {
       removeErrors.push({ tenantId: id, error: err instanceof Error ? err.message : String(err) });

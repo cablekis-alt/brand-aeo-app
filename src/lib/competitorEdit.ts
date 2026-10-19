@@ -58,8 +58,11 @@ export interface AppliedEdit {
   replaced: Map<string, string>
   /** 자리 바꾸기로 대기로 내려간 줄. */
   movedDown: Set<string>
-  /** 자리 바꾸기로 측정에 든 대기 줄 key → 그 자리에 있던(대기로 내려간) 줄 key. */
-  swapped: Map<string, string>
+  /**
+   * 줄 key → 그 줄이 지금 차지한 원래 줄의 자리(원래 줄 key). 바꿈은 바뀐 줄의 자리를, 자리 바꾸기는 상대의 자리를 넘겨받는다.
+   * 질문 넘겨받기 힌트가 이 값으로 「누가 누구 자리에 들었나」를 보낸다(handoffHints).
+   */
+  slotOf: Map<string, string>
   /** 홈페이지만 바꾼 줄 key → 바꾸기 전 주소. */
   rehomed: Map<string, string[]>
   /** 작업마다 성립했는지. */
@@ -79,7 +82,13 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
   const removedBy = new Map<string, number>()
   const replaced = new Map<string, string>()
   const movedDown = new Set<string>()
-  const swapped = new Map<string, string>()
+  const slotOf = new Map(base.map((x) => [x.key, x.key]))
+  // 자리를 넘긴다 — to가 from의 자리를 차지한다(from의 자리가 없으면 to도 자리가 없다).
+  const takeSlot = (to: string, from: string) => {
+    const slot = slotOf.get(from)
+    if (slot) slotOf.set(to, slot)
+    else slotOf.delete(to)
+  }
   const rehomed = new Map<string, string[]>()
   const valid: boolean[] = []
   const at = (key: string) => list.findIndex((x) => x.key === key)
@@ -100,6 +109,8 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
             removedBy.set(out!.key, i)
             placedBy.set(moved!.key, i)
             replaced.set(moved!.key, out!.key)
+            takeSlot(moved!.key, out!.key)
+            slotOf.delete(out!.key)
             okOp = true
           }
         } else if (op.with && !nameTaken(op.with.name)) {
@@ -109,6 +120,8 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
           removedBy.set(out!.key, i)
           placedBy.set(item.key, i)
           replaced.set(item.key, out!.key)
+          takeSlot(item.key, out!.key)
+          slotOf.delete(out!.key)
           okOp = true
         }
       }
@@ -119,6 +132,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         const [out] = list.splice(pos, 1)
         removed.push(out!)
         removedBy.set(out!.key, i)
+        slotOf.delete(out!.key)
         okOp = true
       }
     } else if (op.t === 'swap') {
@@ -128,7 +142,10 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         ;[list[a], list[b]] = [list[b]!, list[a]!]
         placedBy.set(op.a, i)
         movedDown.add(op.b)
-        swapped.set(op.a, op.b)
+        const slotA = slotOf.get(op.a)
+        takeSlot(op.a, op.b)
+        if (slotA) slotOf.set(op.b, slotA)
+        else slotOf.delete(op.b)
         okOp = true
       }
     } else if (op.t === 'add') {
@@ -151,7 +168,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
     }
     valid.push(okOp)
   })
-  return { list, removed, placedBy, removedBy, replaced, movedDown, swapped, rehomed, valid }
+  return { list, removed, placedBy, removedBy, replaced, movedDown, slotOf, rehomed, valid }
 }
 
 /** 화면에 보일 주소 — 'https://www.x.com/a' → 'x.com'. 저장할 때는 서버가 같은 규칙으로 정리한다. */
@@ -231,29 +248,17 @@ export function toCompetitors(list: EditItem[]): CompetitorInput[] {
 
 /**
  * 질문 넘겨받기 힌트 — 누가 누구 자리에 들었나(이름). 서버는 바꾼 목록만 받아서 이 힌트가 없으면 받는 곳을 목록 순서로 짐작한다
- * (여러 작업을 섞으면 뒤바뀐다). 바꿈은 들어온 줄 ← 바뀐 줄, 측정에 넣기는 올라온 대기 줄 ← 내려간 줄이다. 바꾼 줄을 다시
- * 바꿨으면 원래 줄까지 따라간다. 지금 목록에 남은 줄만 보낸다.
+ * (여러 작업을 섞으면 뒤바뀐다). 원래 줄마다 그 자리를 지금 차지한 줄을 하나 보낸다(slotOf) — 바꾼 줄을 다시 바꾸거나, 바꿔
+ * 넣은 줄을 다시 자리 바꾸기로 내려도 원래 줄에서 지금 주인까지 바로 잇는다. 자기 자리에 있는 줄은 보내지 않는다.
  */
-export function handoffHints(base: EditItem[], applied: Pick<AppliedEdit, 'list' | 'removed' | 'replaced' | 'swapped'>): HandoffHint[] {
-  const names = new Map([...base, ...applied.removed, ...applied.list].map((x) => [x.key, x.competitor.name]))
-  const origin = (key: string) => {
-    let k = key
-    const seen = new Set<string>()
-    while (applied.replaced.has(k) && !seen.has(k)) {
-      seen.add(k)
-      k = applied.replaced.get(k)!
-    }
-    return k
-  }
-  const inList = new Set(applied.list.map((x) => x.key))
+export function handoffHints(base: EditItem[], applied: Pick<AppliedEdit, 'list' | 'slotOf'>): HandoffHint[] {
+  const names = new Map(base.map((x) => [x.key, x.competitor.name]))
   const hints: HandoffHint[] = []
-  const push = (fromKey: string, toKey: string) => {
-    const from = names.get(origin(fromKey))
-    const to = names.get(toKey)
-    if (from && to && from !== to && !hints.some((h) => h.from === from && h.to === to)) hints.push({ from, to })
+  for (const item of applied.list) {
+    const slot = applied.slotOf.get(item.key)
+    const from = slot && slot !== item.key ? names.get(slot) : undefined
+    if (from && from !== item.competitor.name) hints.push({ from, to: item.competitor.name })
   }
-  for (const [inKey, outKey] of applied.replaced) if (inList.has(inKey)) push(outKey, inKey)
-  for (const [upKey, downKey] of applied.swapped) if (inList.has(upKey)) push(downKey, upKey)
   return hints
 }
 

@@ -83,7 +83,8 @@ async function bakeTenant(tenantId: string): Promise<{ weekOf: string; score: nu
   const card = hist[hist.length - 1]
   const weekOf = card.weekOf
 
-  const bankPath = `data/${tenantId}/question-bank/${tenant.questionBankVersion}.json`
+  // 그 주에 쓴 은행 — 앱에서 경쟁사를 바꾸며 고쳐 만든 질문지(v6)로 잰 주는 저장소 설정 버전(v5)과 다르다(competitors.json).
+  const bankPath = `data/${tenantId}/question-bank/${card.questionBankVersion ?? tenant.questionBankVersion}.json`
   const anPath = `data/${tenantId}/${weekOf}/question-analyses.json`
   if (!existsSync(bankPath) || !existsSync(anPath)) {
     throw new Error(`측정 산출물 누락: ${existsSync(bankPath) ? anPath : bankPath}`)
