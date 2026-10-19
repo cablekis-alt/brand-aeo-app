@@ -100,11 +100,15 @@ export function postChannelLabel(p: Pick<PublishedPost, 'targetActionId' | 'via'
 export const monthDay = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
 
 /**
- * 기록이 속한 주 — 올린 날의 주, 올린 날을 모르면 기록한 날의 주(옛 기록은 집행 상태를 마지막으로 고친 때 — 늦은 쪽이다). 지난 주차
- * 보고서가 그 뒤의 기록을 넣지 않게 하는 한 가지 시계다.
+ * 기록이 속한 주 — 올린 날의 주, 올린 날을 모르면 기록한 날의 주. 지난 주차 보고서가 그 뒤의 기록을 넣지 않게 하는 한 가지 시계다.
+ *
+ * 옛 기록(v0.4.3 전 집행 상태에 적은 주소, publishedOnSource 'legacy')은 ''(늘 앞) — 그 recordedAt은 집행 상태를 고칠 때마다 지금으로
+ * 바뀌는 updatedAt이라, 자르면 오래전 집행이 상태를 한 번 고친 뒤 보고서에서 사라진다. 그 주소는 모두 v0.4.3 전에 적었다.
  */
-export function postWeekOf(p: Pick<PublishedPost, 'publishedOn' | 'recordedAt'>): string {
-  return (p.publishedOn ? isoWeekOf(p.publishedOn) : isoWeekOf(kstDate(p.recordedAt) ?? '')) ?? ''
+export function postWeekOf(p: Pick<PublishedPost, 'publishedOn' | 'recordedAt' | 'publishedOnSource'>): string {
+  if (p.publishedOn) return isoWeekOf(p.publishedOn) ?? ''
+  if (p.publishedOnSource === 'legacy') return ''
+  return isoWeekOf(kstDate(p.recordedAt) ?? '') ?? ''
 }
 
 /** 한 번 올린 글 — 같은 주소를 여러 줄(자사 블로그 줄 + 그 블로그의 채널 줄)에 적은 기록을 하나로 묶은 것. */
@@ -117,7 +121,10 @@ export interface Posting<T> {
 
 /**
  * 편수는 원장 줄이 아니라 올린 글로 센다 — 같은 주소 · 같은 올린 날인 줄은 한 편이다(올렸다 내리고 다시 올린 주소는 날이 달라 따로).
- * 같은 주소에 날짜가 있는 줄이 있으면 날짜 없는 옛 줄은 뺀다. 지금 올라가 있는 줄을 대표로 둔다. 「잘못 적은 주소」는 뺀다.
+ * 같은 주소에 날짜가 있는 줄이 있으면 날짜 없는 옛 줄은 뺀다. 「잘못 적은 주소」는 뺀다.
+ *
+ * 대표 줄: 「글을 내렸어요」는 줄마다 따로 적으므로, 한 줄이라도 내렸으면 그 주소는 내려간 것이다 — 가장 먼저 내린 줄을 대표로 둔다
+ * (내린 날 · 내린 뒤 칸이 판단에 들어간다). 다만 내린 뒤에 같은 주소를 다시 적은 줄이 있으면 다시 올린 것으로 보고 그 줄을 둔다.
  */
 export function distinctPostings<T>(items: T[], postOf: (t: T) => PublishedPost): Posting<T>[] {
   const live = items.filter((t) => postOf(t).removedReason !== 'mistake')
@@ -130,7 +137,11 @@ export function distinctPostings<T>(items: T[], postOf: (t: T) => PublishedPost)
     groups.set(k, [...(groups.get(k) ?? []), t])
   }
   return [...groups.values()].map((group) => {
-    const item = group.find((t) => !postOf(t).removedAt) ?? group[0]!
+    const down = group
+      .filter((t) => postOf(t).removedReason === 'taken-down' && postOf(t).removedAt)
+      .sort((a, b) => postOf(a).removedAt!.localeCompare(postOf(b).removedAt!))[0]
+    const reposted = down && group.find((t) => !postOf(t).removedAt && postOf(t).recordedAt > postOf(down).removedAt!)
+    const item = reposted ?? down ?? group.find((t) => !postOf(t).removedAt) ?? group[0]!
     return { item, post: postOf(item), places: [...new Set(group.map((t) => postChannelLabel(postOf(t))))] }
   })
 }
@@ -185,9 +196,9 @@ export function executionMarks(
   const byX = new Map<number, { hollow: boolean; posts: Posting<PublishedPost>[] }>()
   let outOfRange = 0
   let undated = 0
-  for (const posting of distinctPostings(posts, (p) => p)) {
+  // 보고 주차로 먼저 자르고 묶는다 — 보고서 표와 같은 순서(그 뒤에 적은 같은 주소 줄이 옛 줄을 지우지 않게).
+  for (const posting of distinctPostings(endWeek ? posts.filter((p) => postWeekOf(p) <= endWeek) : posts, (p) => p)) {
     const { post } = posting
-    if (endWeek && postWeekOf(post) > endWeek) continue
     const pd = post.publishedOn
     const week = pd ? isoWeekOf(pd) : null
     if (!pd || !week) {

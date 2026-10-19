@@ -12,7 +12,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import ScoreTrendChart from '../src/components/ScoreTrendChart';
 import type { PublishedPost } from '../src/lib/api';
 import { computeGapActions } from '../src/lib/gapActions';
-import { afterWeeksOf, executionMarks, executionsPerSlot, executionSummaryLine } from '../src/lib/publishTracking';
+import { afterWeeksOf, distinctPostings, executionMarks, executionsPerSlot, executionSummaryLine } from '../src/lib/publishTracking';
 import { trackingKey } from '../src/lib/publishedUrl';
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
@@ -176,6 +176,19 @@ ok(
   '같은 주소 · 같은 날을 여러 줄에 적으면 한 편 — 범례에 올린 곳을 모은다, 날짜 있는 줄이 있으면 날짜 없는 옛 줄은 뺀다',
   dup.pins.length === 1 && dup.pins[0]!.posts.length === 1 && dup.pins[0]!.posts[0]!.places.length === 2 && dup.undated === 0 && executionsPerSlot(dup, bars).get('2026-W42')?.count === 1,
 );
+// 한 줄에서만 「글을 내렸어요」 — 그 주소는 내려갔다(내린 줄이 대표). 내린 뒤 같은 주소를 다시 적었으면 다시 올린 것.
+const ownDown = { ...own, removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' as const };
+ok(
+  '같은 주소 · 같은 날 두 줄(둘 다 내리기 전에 적음) 가운데 한 줄만 내렸으면 내린 줄이 대표',
+  distinctPostings([{ ...chan, recordedAt: '2026-10-03T00:00:00Z' }, { ...ownDown, recordedAt: '2026-10-03T00:00:00Z' }], (p) => p)[0]?.post.id === 'o',
+);
+ok(
+  '내린 뒤 같은 주소를 다시 적은 줄이 있으면 그 줄이 대표',
+  distinctPostings([{ ...chan, recordedAt: '2026-10-09T00:00:00Z' }, ownDown], (p) => p)[0]?.post.id === 'o2',
+);
+// 보고 주차로 먼저 자르고 묶는다 — 그 뒤에 적은 같은 주소 줄이 옛 줄을 지우지 않는다(보고서 표와 같은 순서)
+const legacyRow = { ...own, id: 'lg', publishedOn: null, publishedOnSource: 'legacy' as const, recordedAt: '2026-09-20T00:00:00Z' };
+ok('보고 주차 뒤의 같은 주소 줄 때문에 옛 줄이 그래프 「올린 날 모름」에서 빠지지 않는다', executionMarks([legacyRow, { ...chan, publishedOn: '2026-10-28' }], slots, weeks, '2026-W43').undated === 1);
 ok('올렸다 내리고 다시 올린 같은 주소는 날이 달라 두 편', executionMarks([{ ...own, removedAt: '2026-10-04T00:00:00Z', removedReason: 'taken-down' }, { ...chan, publishedOn: '2026-10-20' }], bars, weeks).pins.reduce((n, p) => n + p.posts.length, 0) === 2);
 
 // 측정 주차 이름과 측정한 날의 주가 어긋남(일요일 밤 · CI 시간대) — 측정 기간 안에 올렸으면 그 칸 위 속 빈 핀
@@ -216,7 +229,15 @@ const nextWeekPost = { ...wikiPost, publishedOn: '2026-10-19', recordedAt: '2026
 const nextWeekState = { 'listing:namu.wiki': { status: 'done' as const, updatedAt: '2026-10-19T01:00:00Z', markedWeek: '2026-W42' } };
 const mixed = evidence({ posts: [nextWeekPost], states: nextWeekState });
 ok('다음 주에 「올렸어요」(보던 주차는 이번 주)면 이번 주 보고서는 그대로 권한다', recommended(mixed) && !JSON.stringify(mixed).includes('올린 주소 기록 없음'));
-ok('날짜 없는 옛 기록도 기록한 날이 보고 주차 뒤면 집행으로 보지 않는다', recommended(evidence({ posts: [{ ...wikiPost, publishedOn: null, publishedOnSource: 'legacy', recordedAt: '2026-10-28T00:00:00Z' }] })));
+// 옛 기록(v0.4.3 전 상태 파일의 주소)의 recordedAt은 상태를 고칠 때마다 바뀐다 — 그것으로 자르면 오래전 집행이 사라져 다시 권해진다.
+ok(
+  '옛 기록은 상태를 나중에 고쳐 기록 시각이 보고 주차 뒤로 밀려도 집행으로 본다',
+  !recommended(evidence({ posts: [{ ...wikiPost, publishedOn: null, publishedOnSource: 'legacy', recordedAt: '2026-10-28T00:00:00Z' }] })),
+);
+ok(
+  '원장에 날짜 없이 적은 기록은 기록한 날이 보고 주차 뒤면 집행으로 보지 않는다',
+  recommended(evidence({ posts: [{ ...wikiPost, publishedOn: null, publishedOnSource: 'user', recordedAt: '2026-10-28T00:00:00Z' }] })),
+);
 const downed = evidence({
   posts: [{ ...wikiPost, publishedOn: '2026-10-05', removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' }],
   states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-05T00:00:00Z' } },
