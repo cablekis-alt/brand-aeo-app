@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { HistoryWeek, PublishedPost } from '../lib/api'
 import { conditionChanges, type ConditionChange } from '../lib/comparability'
 import { ENGINE_LABEL } from '../lib/format'
-import { executionMarks, pinLegend, type ExecutionPin } from '../lib/publishTracking'
+import { executionMarks, pinLegend, postingLegend, type ExecutionPin } from '../lib/publishTracking'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { previousIsoWeek } from '../prompts/isoWeek'
 
@@ -30,6 +30,8 @@ const PAD = { left: 44, right: 40, top: 22, bottom: 50 }
 /** 집행 핀 줄 — 핀이 있을 때만 위쪽을 이만큼 늘려 따로 둔다(점 · 값 · 조건 변경 표시와 겹치지 않게). */
 const PIN_ROW = 18
 const PIN_Y = 12
+/** 양 끝 틈 핀을 그림 안쪽 끝에서 띄우는 거리 — 핀 원 지름(14) + 선 두께보다 넓게. */
+const PIN_EDGE = 16
 /** 범례에 이름을 적는 핀 수 — 나머지는 「외 n편」. */
 const PIN_LEGEND = 4
 
@@ -156,8 +158,15 @@ export default function ScoreTrendChart({
   const y = (v: number) => padTop + innerH - (Math.max(0, Math.min(top, v)) / top) * innerH
   const ticks = [0, top / 2, top]
   // 조건 변경 선과 같은 틈이면 4px 비켜 둘 다 보이게 한다. 양 끝 틈은 그림 안으로 당긴다.
+  // 양 끝 틈 핀은 끝 칸 위 핀과 원이 겹치지 않게 PIN_EDGE만큼 띄우고, 왼쪽 끝 핀이 있으면 세로축 눈금을 그만큼 왼쪽으로 옮긴다.
   const pinX = (p: ExecutionPin) =>
-    Math.min(W - PAD.right + 12, Math.max(PAD.left - 12, x(p.x) + (breaks.some((b) => b.at - 0.5 === p.x) ? 4 : 0)))
+    Math.min(W - PAD.right + PIN_EDGE, Math.max(PAD.left - PIN_EDGE, x(p.x) + (breaks.some((b) => b.at - 0.5 === p.x) ? 4 : 0)))
+  const leftEdgePin = pins.some((p) => p.x < 0)
+  // 속 빈 핀은 그 칸 점 위에 서므로 선을 점수 글자 위에서 멈춘다(글자를 긋지 않게).
+  const pinLineEnd = (p: ExecutionPin) => {
+    const card = p.hollow ? slots[p.x]?.card : null
+    return card ? Math.max(PIN_Y + 7, y(card.aeoScore.current) - 24) : padTop + innerH
+  }
   const pinPosts = pins.reduce((n, p) => n + p.posts.length, 0)
   const legendRest = pins.slice(PIN_LEGEND).reduce((n, p) => n + p.posts.length, 0)
 
@@ -178,7 +187,7 @@ export default function ScoreTrendChart({
           {ticks.map((t) => (
             <g key={t}>
               <line className="st-grid" x1={PAD.left} x2={W - PAD.right} y1={y(t)} y2={y(t)} />
-              <text className="st-axis" x={PAD.left - 8} y={y(t) + 4} textAnchor="end">
+              <text className="st-axis" x={PAD.left - (leftEdgePin ? PIN_EDGE + 4 : 8)} y={y(t) + 4} textAnchor="end">
                 {t}
               </text>
             </g>
@@ -221,8 +230,8 @@ export default function ScoreTrendChart({
             const px = pinX(p)
             return (
               <g key={`exec-${p.n}`} className={`st-exec-pin${p.hollow ? ' hollow' : ''}`}>
-                <title>{p.posts.map((post) => pinLegend({ ...p, posts: [post] })).join('\n')}</title>
-                <line className="st-exec" x1={px} x2={px} y1={PIN_Y + 7} y2={padTop + innerH} />
+                <title>{p.posts.map((q) => postingLegend(q, endWeek)).join('\n')}</title>
+                <line className="st-exec" x1={px} x2={px} y1={PIN_Y + 7} y2={pinLineEnd(p)} />
                 <circle className="st-exec-dot" cx={px} cy={PIN_Y} r={7} />
                 <text className="st-exec-num" x={px} y={PIN_Y + 3.5} textAnchor="middle">
                   {p.n}
@@ -276,13 +285,13 @@ export default function ScoreTrendChart({
             <span className="st-key diamond" aria-hidden="true" /> {shortWeek(b.weekOf)} {b.detail} — 앞뒤를 잇지 않음
           </span>
         ))}
-        {pins.length > 0 && <span>번호 핀은 올린 글 — 핀 오른쪽 점이 올린 뒤 측정</span>}
+        {pins.length > 0 && <span>번호 핀은 올린 글 — 핀 오른쪽 점이 올린 뒤 측정(내린 글은 내린 날까지)</span>}
         {pins.slice(0, PIN_LEGEND).map((p) => (
           <span key={`exec-${p.n}`} className="st-key-exec">
             <span className={`st-key exec${p.hollow ? ' hollow' : ''}`} aria-hidden="true">
               {p.n}
             </span>{' '}
-            {pinLegend(p)}
+            {pinLegend(p, endWeek)}
             {p.hollow && ' · 측정하던 주에 올려 전후 불명'}
           </span>
         ))}

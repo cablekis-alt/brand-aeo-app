@@ -18,7 +18,7 @@ import {
 } from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
-import { afterWeeksOf, executionSummaryLine, monthDay, postChannelLabel, summarizePost, TIER_LABEL } from '../lib/publishTracking'
+import { afterWeeksOf, distinctPostings, executionSummaryLine, monthDay, postWeekOf, summarizePost, TIER_LABEL } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -315,7 +315,10 @@ export default function PeriodicReport() {
   const states = !viewing && actionStates.key === tenant?.tenantId ? actionStates.value : null
   const execPosts = useMemo(() => published.history?.posts.map((p) => p.post) ?? [], [published.history])
 
-  /** 보고 주차까지로 자른 집행 표 — 그 뒤 측정 · 그 뒤에 올린 글은 넣지 않는다. 날짜를 모르는 옛 기록은 넣는다(언제인지 몰라도 집행했다). */
+  /**
+   * 보고 주차까지로 자른 집행 표 — 그 뒤 측정 · 그 뒤에 올린(날짜 없으면 기록한) 글은 넣지 않는다. 같은 주소를 여러 줄에 적은 기록은
+   * 한 편으로 묶는다(편수는 글로 센다).
+   */
   const execution = useMemo(() => {
     const h = published.history
     const until = judgedWeek || card?.weekOf || ''
@@ -323,18 +326,22 @@ export default function PeriodicReport() {
     const cut = h.weeks.findIndex((w) => w.weekOf > until)
     const end = cut < 0 ? h.weeks.length : cut
     const weeks = h.weeks.slice(0, end)
-    const rows = h.posts
-      .filter((p) => !p.post.publishedOn || (isoWeekOf(p.post.publishedOn) ?? '') <= until)
-      .map((p) => {
-        const cells = p.cells.slice(0, end)
-        const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
-        return {
-          post: p.post,
-          summary: summarizePost(cells, weeks),
-          after: afterWeeksOf(cells, weeks, p.post.publishedOn),
-          removedOn: removedOn && (isoWeekOf(removedOn) ?? '') <= until ? removedOn : null,
-        }
-      })
+    const rows = distinctPostings(
+      h.posts.filter((p) => postWeekOf(p.post) <= until),
+      (p) => p.post,
+    ).map(({ item, post, places }) => {
+      const cells = item.cells.slice(0, end)
+      const removedOn = post.removedAt ? kstDate(post.removedAt) : null
+      const summary = summarizePost(cells, weeks)
+      return {
+        post,
+        places,
+        // 날짜를 모르는 기록은 잘린 칸과 상관없이 「올린 날 모름」 — 기다리면 풀리는 「측정 대기」가 아니다.
+        summary: post.publishedOn ? summary : { ...summary, tier: 'undated' as const },
+        after: afterWeeksOf(cells, weeks, post.publishedOn, removedOn),
+        removedOn: removedOn && (isoWeekOf(removedOn) ?? '') <= until ? removedOn : null,
+      }
+    })
     if (rows.length === 0) return null
     return { rows, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
   }, [published.history, judgedWeek, card?.weekOf])
@@ -347,11 +354,11 @@ export default function PeriodicReport() {
       questions: evidence.bank?.questions ?? [],
       citations: evidence.citations,
       site: siteForReview,
-      ...(states ? { states } : {}),
-      ...(execPosts.length > 0 ? { posts: execPosts } : {}),
+      // 올린 글 기록을 다 읽었을 때만 집행을 가른다 — 읽는 중 · 실패 · 웹이면 전처럼 모두 권한다(「주소 기록 없음」을 지어내지 않는다).
+      ...(published.history ? { posts: execPosts, ...(states ? { states } : {}) } : {}),
     })
     return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
-  }, [report, card, evidence, siteForReview, states, execPosts])
+  }, [report, card, evidence, siteForReview, states, execPosts, published.history])
 
   /*
    * 표지 한 문장 — "이름 없이 물은 질문 N개 중 M개에서 불렸습니다". 언급률(응답 단위)과 달리 질문 단위라
@@ -586,6 +593,11 @@ export default function PeriodicReport() {
           </section>
 
           {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
+          {!viewing && published.error && (
+            <p className="hint no-print">
+              올린 글 기록을 읽지 못해 집행 핀 · 「집행한 글과 인용」 · 개선제안의 집행 구분을 넣지 않았습니다: {published.error}
+            </p>
+          )}
           {execution && (
             <section className="report-exec">
               <h3>집행한 글과 인용</h3>
@@ -612,7 +624,7 @@ export default function PeriodicReport() {
                         <td className="cell-text">
                           {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
                           {r.removedOn && ` · ${monthDay(r.removedOn)} 내림`}
-                          <div className="doc-meta">{postChannelLabel(r.post)}</div>
+                          <div className="doc-meta">{r.places.join(' · ')}</div>
                         </td>
                         <td className="cell-text">
                           {r.after.length === 0

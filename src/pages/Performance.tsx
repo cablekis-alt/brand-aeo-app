@@ -3,7 +3,7 @@ import PublishedHistoryTable from '../components/PublishedHistoryTable'
 import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
-import { executionMarks, executionsPerSlot, pinLegend } from '../lib/publishTracking'
+import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
@@ -130,17 +130,20 @@ export default function Performance() {
    * 항목은 믿을 날짜가 없다).
    */
   const execSlots = useMemo(() => history.map((h) => ({ weekOf: h.weekOf, measured: true })), [history])
-  const marks = useMemo(
-    () =>
-      published.history && published.history.posts.length > 0
-        ? executionMarks(
-            published.history.posts.map((p) => p.post),
-            execSlots,
-            published.history.weeks,
-          )
-        : null,
-    [published.history, execSlots],
-  )
+  const marks = useMemo(() => {
+    const h = published.history
+    if (!h || h.posts.length === 0) return null
+    // 첫 막대 바로 앞 측정 — 그 측정 뒤에 올린 글은 첫 막대 행(「직전 측정과 이 측정 사이」)에 든다.
+    const first = history[0]?.weekOf ?? ''
+    const prev = h.weeks.filter((w) => w.weekOf < first).at(-1) ?? null
+    return executionMarks(
+      h.posts.map((p) => p.post),
+      execSlots,
+      h.weeks,
+      undefined,
+      prev,
+    )
+  }, [published.history, execSlots, history])
   const perWeek = useMemo(() => (marks ? executionsPerSlot(marks, execSlots) : null), [marks, execSlots])
   const pins = !viewing && marks ? marks.pins : []
 
@@ -211,7 +214,7 @@ export default function Performance() {
                   key={`exec-${p.n}`}
                   className={`exec-pin${p.hollow ? ' hollow' : ''}`}
                   style={{ left: `${(Math.min(history.length - 0.5, Math.max(-0.5, p.x)) + 0.5) / history.length * 100}%` }}
-                  title={p.posts.map((post) => pinLegend({ ...p, posts: [post] })).join('\n') + (p.hollow ? '\n측정하던 주에 올려 전후 불명' : '')}
+                  title={p.posts.map((q) => postingLegend(q)).join('\n') + (p.hollow ? '\n측정하던 때 올려 전후 불명' : '')}
                 >
                   <b>{p.n}</b>
                 </span>
@@ -223,7 +226,9 @@ export default function Performance() {
               — 판 전체가 오른 주에는 점수가 올라도 선을 넘지 못합니다.
               {avgPoints.length === 0 && ' 이 브랜드의 업종·지역 코호트에 비교할 다른 브랜드가 없어 평균선이 없습니다.'}
               {pins.length > 0 &&
-                ' 번호 핀은 올린 글이고, 핀 오른쪽 막대가 올린 뒤 측정입니다(속 빈 핀은 측정하던 주에 올려 전후 불명). 핀에 마우스를 올리면 글이 보입니다.'}
+                ' 번호 핀은 올린 글이고, 핀 오른쪽 막대가 올린 뒤 측정입니다(속 빈 핀은 측정하던 때 올려 전후 불명). 핀에 마우스를 올리면 글이 보입니다.'}
+              {!viewing && marks && marks.outOfRange > 0 && ` 첫 막대 앞에 올린 글 ${marks.outOfRange}편은 핀이 없습니다.`}
+              {!viewing && marks && marks.undated > 0 && ` 올린 날을 모르는 기록 ${marks.undated}편은 핀이 없습니다.`}
             </p>
           </section>
 
