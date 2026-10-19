@@ -1812,6 +1812,44 @@ select {
   vector-effect: non-scaling-stroke;
 }
 
+/*
+ * 집행 핀 — 막대 위 줄에 HTML로 둔다. 늘어나는 오버레이 SVG(preserveAspectRatio=none)에 그리면 원이 찌그러진다.
+ * 핀이 있을 때만 위쪽을 늘리고, 평균선 오버레이도 같은 만큼 내린다(같은 좌표계).
+ */
+.spark.has-exec {
+  padding-top: 26px;
+  height: 158px;
+}
+.spark.has-exec .spark-overlay {
+  top: 26px;
+  height: calc(100% - 50px);
+}
+.exec-pin {
+  position: absolute;
+  top: 2px;
+  bottom: 24px;
+  width: 0;
+  border-left: 1.2px solid var(--info);
+  pointer-events: auto;
+}
+.exec-pin b {
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--info);
+  background: var(--info);
+  color: var(--card);
+  font: 600 10px/13px var(--mono);
+  text-align: center;
+}
+.exec-pin.hollow b {
+  background: var(--card);
+  color: var(--info);
+}
+
 .spark button.on .bar {
   background: var(--accent);
   border-color: var(--accent);
@@ -2242,6 +2280,15 @@ p.hint {
 .report-trend {
   margin: 8px 0 20px;
 }
+.report-exec h3 {
+  margin: 24px 0 8px;
+}
+.report-exec-line {
+  margin: 0 0 10px;
+}
+.exec-table {
+  font-size: 13px;
+}
 .report-trend h3 {
   margin: 24px 0 10px;
 }
@@ -2340,11 +2387,55 @@ p.hint {
 .st-key-break {
   color: var(--warn);
 }
+/* 집행 핀(올린 글) — 조건 변경(--warn 점선 · 마름모)과 갈리게 --info 실선 · 번호 원. */
+.st-exec {
+  stroke: var(--info);
+  stroke-width: 1.2;
+}
+.st-exec-dot {
+  fill: var(--info);
+  stroke: var(--info);
+  stroke-width: 1.5;
+}
+.st-exec-pin.hollow .st-exec-dot {
+  fill: var(--card);
+}
+.st-exec-num {
+  fill: var(--card);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+.st-exec-pin.hollow .st-exec-num {
+  fill: var(--info);
+}
+.st-key-exec {
+  color: var(--ink-2);
+}
+.st-key.exec {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid var(--info);
+  background: var(--info);
+  color: var(--card);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 12px;
+  text-align: center;
+}
+.st-key.exec.hollow {
+  background: var(--card);
+  color: var(--info);
+}
 
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }
   .shell { grid-template-columns: 1fr; gap: 0; }
-  .rec-card, .report-verdict, .panel, .score-trend { break-inside: avoid; }
+  .rec-card, .report-verdict, .panel, .score-trend, .exec-table tr { break-inside: avoid; }
+  /* 집행 절은 길이가 정해져 있지 않아 통째로 넘기면 빈 쪽이 생긴다 — 행만 붙들고, 제목 · 요약 줄은 첫 행과 같은 쪽에 둔다. */
+  .report-exec h3, .report-exec-line { break-after: avoid; }
   /* 화면용 카드 표면은 종이에서 테두리만 남긴다 — 그림자·채움은 인쇄에서 번진다. */
   .table-wrap, .hero-card { background: none; box-shadow: none; }
 }

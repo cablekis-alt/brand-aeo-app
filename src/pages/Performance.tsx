@@ -3,6 +3,7 @@ import PublishedHistoryTable from '../components/PublishedHistoryTable'
 import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
+import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
@@ -20,6 +21,13 @@ const WEIGHTS: { key: keyof typeof AEO_SCORE_WEIGHTS; label: string }[] = [
   { key: 'brandOwnedCitationRate', label: '브랜드 소유 출처(인용)' },
   { key: 'avgRecommendationRank', label: '추천 순위' },
 ]
+
+/** 「집행」 칸 — 기록이 없는 주는 「—」(0편이라고 단정하지 않는다 — 적지 않았을 뿐일 수 있다). */
+function execCellText(row: { count: number; unsure: number } | undefined): string {
+  if (!row) return '—'
+  const parts = [...(row.count > 0 ? [`${row.count}편`] : []), ...(row.unsure > 0 ? [`전후 불명 ${row.unsure}`] : [])]
+  return parts.join(' · ') || '—'
+}
 
 function maxScore(history: WeeklyScorecard[]): number {
   return Math.max(100, ...history.map((card) => card.aeoScore.current))
@@ -116,6 +124,29 @@ export default function Performance() {
     [history],
   )
 
+  /*
+   * 집행 핀(언급률 2번 P4) — 올린 글을 막대 사이에 번호 핀으로 단다. 핀 오른쪽 막대가 올린 뒤 측정이다. 막대는 측정한 주만
+   * 늘어놓으므로, 측정하지 않은 주에 올린 글은 다음 막대 왼쪽에 선다. 기록 · 올린 날이 있는 글만(주소 없이 「집행함」만 누른
+   * 항목은 믿을 날짜가 없다).
+   */
+  const execSlots = useMemo(() => history.map((h) => ({ weekOf: h.weekOf, measured: true })), [history])
+  const marks = useMemo(() => {
+    const h = published.history
+    if (!h || h.posts.length === 0) return null
+    // 첫 막대 바로 앞 측정 — 그 측정 뒤에 올린 글은 첫 막대 행(「직전 측정과 이 측정 사이」)에 든다.
+    const first = history[0]?.weekOf ?? ''
+    const prev = h.weeks.filter((w) => w.weekOf < first).at(-1) ?? null
+    return executionMarks(
+      h.posts.map((p) => p.post),
+      execSlots,
+      h.weeks,
+      undefined,
+      prev,
+    )
+  }, [published.history, execSlots, history])
+  const perWeek = useMemo(() => (marks ? executionsPerSlot(marks, execSlots) : null), [marks, execSlots])
+  const pins = !viewing && marks ? marks.pins : []
+
   return (
     <>
       <p className="brand">보고</p>
@@ -134,7 +165,11 @@ export default function Performance() {
         <>
           <section>
             <h3>주간 추이</h3>
-            <div className="spark" role="img" aria-label="주간 Brand AEO Score 막대 그래프와 코호트 평균선">
+            <div
+              className={`spark${pins.length > 0 ? ' has-exec' : ''}`}
+              role="img"
+              aria-label={`주간 Brand AEO Score 막대 그래프와 코호트 평균선${pins.length > 0 ? ' · 올린 글 번호 핀' : ''}`}
+            >
               {history.map((item) => (
                 <button
                   key={item.weekOf}
@@ -174,12 +209,26 @@ export default function Performance() {
                   })}
                 </svg>
               )}
+              {pins.map((p) => (
+                <span
+                  key={`exec-${p.n}`}
+                  className={`exec-pin${p.hollow ? ' hollow' : ''}`}
+                  style={{ left: `${(Math.min(history.length - 0.5, Math.max(-0.5, p.x)) + 0.5) / history.length * 100}%` }}
+                  title={p.posts.map((q) => postingLegend(q)).join('\n') + (p.hollow ? '\n측정하던 때 올려 전후 불명' : '')}
+                >
+                  <b>{p.n}</b>
+                </span>
+              ))}
             </div>
             <p className="hint">
               막대는 <b>자사</b>, 가로선은 <b>코호트 평균</b>입니다
               {peerCount > 0 ? ` (자사를 뺀 ${peerCount}개 브랜드)` : ''}. 평균선 위로 올라간 주가 실제로 앞선 주입니다
               — 판 전체가 오른 주에는 점수가 올라도 선을 넘지 못합니다.
               {avgPoints.length === 0 && ' 이 브랜드의 업종·지역 코호트에 비교할 다른 브랜드가 없어 평균선이 없습니다.'}
+              {pins.length > 0 &&
+                ' 번호 핀은 올린 글이고, 핀 오른쪽 막대가 올린 뒤 측정입니다(속 빈 핀은 측정하던 때 올려 전후 불명). 핀에 마우스를 올리면 글이 보입니다.'}
+              {!viewing && marks && marks.outOfRange > 0 && ` 첫 막대 앞에 올린 글 ${marks.outOfRange}편은 핀이 없습니다.`}
+              {!viewing && marks && marks.undated > 0 && ` 올린 날을 모르는 기록 ${marks.undated}편은 핀이 없습니다.`}
             </p>
           </section>
 
@@ -246,6 +295,9 @@ export default function Performance() {
                     <th>순위</th>
                     <th>사실성</th>
                     <th>인용</th>
+                    {!viewing && perWeek && (
+                      <th title="직전 측정과 이 측정 사이에 올린 글 수(올린 곳 기록 기준)">집행</th>
+                    )}
                     <th className="cell-text">판단</th>
                   </tr>
                 </thead>
@@ -263,6 +315,7 @@ export default function Performance() {
                       <td>{formatRank(item.avgRecommendationRank)}</td>
                       <td>{formatPct(item.factualityScore)}</td>
                       <td>{formatPct(item.brandOwnedCitationRate)}</td>
+                      {!viewing && perWeek && <td>{execCellText(perWeek.get(item.weekOf))}</td>}
                       <td className="cell-text">{judgeLabel(item.judgeEngine)}</td>
                     </tr>
                   ))}
