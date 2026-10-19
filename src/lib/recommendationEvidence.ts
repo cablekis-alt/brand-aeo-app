@@ -1,8 +1,10 @@
 import { AEO_SCORE_WEIGHTS, normalizeRank, rankWeightFactor, RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
-import type { SiteScoreRecord } from './api'
-import { ENGINE_LABEL } from './format'
-import { computeGapActions } from './gapActions'
+import type { ActionStateMap, PublishedPost, SiteScoreRecord } from './api'
+import { ENGINE_LABEL, weekLabel } from './format'
+import { computeGapActions, type GapAction } from './gapActions'
+import { monthDay } from './publishTracking'
+import { isoWeekOf } from './publishedUrl'
 import { computeQuestionWinLoss } from './questionWinLoss'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -43,9 +45,31 @@ export interface EvidenceInput {
   questions: QuestionSpec[]
   citations: CitationSourceAnalysis | null
   site: SiteScoreRecord | null
+  /**
+   * 집행 상태 · 올린 글 기록(데스크톱 — 웹은 없다). 주면 이미 집행한 등재 항목을 다시 권하지 않고 「집행함 · 인용 대기」로 따로
+   * 적는다(언급률 2번 P4). 그 주차 뒤의 집행은 보지 않는다 — 지난 주차 보고서가 그 뒤 일을 집행했다고 말하지 않게. 없으면 전과 같다.
+   */
+  states?: ActionStateMap
+  posts?: PublishedPost[]
 }
 
 const SHOW = 5
+
+/** 집행한 등재 항목의 꼬리표 — 「집행함 10/19 · 인용 대기」. */
+function executedNote(a: GapAction, posts: PublishedPost[]): string {
+  const dates = posts
+    .filter((p) => p.targetActionId === a.id && !p.removedAt && p.publishedOn)
+    .map((p) => p.publishedOn!)
+    .sort()
+  const when = dates.length > 0 ? ` ${monthDay(dates.at(-1)!)}` : a.markedWeek ? ` (${weekLabel(a.markedWeek)}에 표시)` : ''
+  const result =
+    a.citedPublishedUrls.length > 0
+      ? '올린 글이 이번 주 인용됨 · 아직 충족 전'
+      : a.publishedUrls.length > 0
+        ? '인용 대기'
+        : '올린 주소 기록 없음'
+  return `집행함${when} · ${result}`
+}
 
 /** 사이트 진단 영역 → 그 영역 감점을 줄이는 구체 조치. 영역 id는 src/lib/aeo/scoreMeta.ts와 같다. */
 const SITE_FIX: Record<string, string> = {
@@ -145,14 +169,28 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
   // ── 자사 인용률: 인용했지만 우리를 뒷받침하지 않은 출처, 이미 인용되는 자사 페이지, 사이트 감점
   const citationBlocks: EvidenceBlock[] = []
   if (citations) {
-    const plan = computeGapActions(analyses, questions, citations, {})
-    const listing = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
+    const asOf = card.weekOf
+    const posts = (input.posts ?? []).filter((p) => !p.publishedOn || (isoWeekOf(p.publishedOn) ?? '') <= asOf)
+    const states = Object.fromEntries(Object.entries(input.states ?? {}).filter(([, s]) => !s.markedWeek || s.markedWeek <= asOf))
+    const plan = computeGapActions(analyses, questions, citations, states, posts, asOf)
+    const open = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
+    // 이미 집행한 일은 다시 권하지 않는다 — 집행함으로 표시했거나 올린 주소를 적은 항목. 충족은 다음 측정이 말한다.
+    const executed = (a: GapAction) => a.status === 'done' || a.publishedUrls.length > 0
+    const listing = open.filter((a) => !executed(a))
+    const done = open.filter(executed)
     if (listing.length > 0) {
       citationBlocks.push({
         // 「충족」은 브랜드 이름 없는 질문으로 정한다(gapActions.ts) — 이름을 댄 질문에서만 뒷받침한 출처도 여기 온다.
         heading: 'AI가 인용했지만 브랜드 이름 없는 질문에서는 우리를 뒷받침하지 않은 출처',
         items: listing.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: `${a.evidence} 완료 기준: ${a.doneSignal}` })),
         more: Math.max(0, listing.length - 4),
+      })
+    }
+    if (done.length > 0) {
+      citationBlocks.push({
+        heading: '이미 집행한 출처 — 다시 권하지 않음(다음 측정에서 인용을 확인)',
+        items: done.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: executedNote(a, posts) })),
+        more: Math.max(0, done.length - 4),
       })
     }
     const owned = citations.urls

@@ -13,11 +13,10 @@ import {
   type ActionStateMap,
   type ActionStatus,
   type FactNode,
-  type PublishedPost,
   type StoredDraft,
 } from '../lib/api'
 import { recordOnlyHits, topicSnapshotFor } from '../lib/gapActions'
-import { summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
+import { postChannelLabel, summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { QuestionBank } from '../lib/types'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
@@ -25,15 +24,6 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
-
-/** 기록이 어느 줄에 올린 것인지 — 한 글의 기록을 모아 볼 때 줄 이름을 붙인다. */
-function targetLabelOf(p: PublishedPost): string {
-  if (p.targetActionId === 'listing:__news__') return '언론'
-  if (p.via === 'direct') return '직접 적음'
-  if (p.via === 'own') return '자사 블로그 · 사이트'
-  // 채널 줄 · 덮는 글 없는 채널(orphan) 줄 — 채널 이름.
-  return p.targetActionId.replace(/^listing:(platform:)?/, '').replace(/^content:/, '')
-}
 
 /**
  * 만든 글이 모이는 곳.
@@ -152,7 +142,7 @@ export default function ContentLibrary() {
           removed={records.filter((p) => p.removedAt)}
           weekOf=""
           busy={published.busy}
-          targetLabel={targetLabelOf}
+          targetLabel={postChannelLabel}
           onRecord={async (url, publishedOn, chosen) => {
             // 초안이 없는 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
             const topic = topicSnapshotFor(articleId, bank, stored?.generatedAt)

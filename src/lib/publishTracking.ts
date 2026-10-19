@@ -1,4 +1,5 @@
-import type { HistoryCell, HistoryWeek } from './api'
+import type { HistoryCell, HistoryWeek, PublishedPost } from './api'
+import { isoWeekOf, timingOf } from './publishedUrl'
 
 /**
  * 올린 글 하나의 판단 — 올린 뒤 측정에서 얼마나 인용됐나(언급률 2번 P3).
@@ -84,4 +85,160 @@ export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<History
     // 같은 주소를 앞서 올렸다 내린 기록이 올라가 있던 주의 인용은 그 글의 것이다 — 다시 올린 기록의 날짜를 의심하지 않는다.
     citedBeforePublish: cells.some((c) => c && !c.afterRemoval && !c.earlierPostingLive && c.timing === 'before' && cited(c)),
   }
+}
+
+/** 기록이 어느 줄에 올린 것인지 — 범례 · 표에서 글 옆에 붙인다. */
+export function postChannelLabel(p: Pick<PublishedPost, 'targetActionId' | 'via'>): string {
+  if (p.targetActionId === 'listing:__news__') return '언론'
+  if (p.via === 'direct') return '직접 적음'
+  if (p.via === 'own') return '자사 블로그 · 사이트'
+  // 채널 줄 · 덮는 글 없는 채널(orphan) 줄 — 채널 이름.
+  return p.targetActionId.replace(/^listing:(platform:)?/, '').replace(/^content:/, '')
+}
+
+/** "2026-10-19" → "10/19". */
+export const monthDay = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
+
+/** 그래프 칸 — 측정한 주인지(빈칸이면 미측정). */
+export interface ExecutionSlot {
+  weekOf: string
+  measured: boolean
+}
+
+/** 그래프 위 집행 핀 하나. 같은 자리에 든 글은 한 핀으로 합친다. */
+export interface ExecutionPin {
+  /** 칸 번호로 잰 위치 — 정수면 그 칸 위, .5면 두 칸 사이 틈. */
+  x: number
+  /** 측정하던 주에 올려 그 측정의 전후를 모른다 — 속 빈 핀. */
+  hollow: boolean
+  posts: PublishedPost[]
+  /** 범례 번호(1부터, 왼쪽부터). */
+  n: number
+}
+
+export interface ExecutionMarks {
+  pins: ExecutionPin[]
+  /** 그래프 첫 칸보다 앞서 올린 글 수 — 핀 없이 범례에 수만 적는다. */
+  outOfRange: number
+  /** 올린 날을 모르는 옛 기록 수 — 둘 자리가 없다. */
+  undated: number
+}
+
+/**
+ * 집행 핀 자리(언급률 2번 P4). 올린 날이 든 주가 측정됐으면 측정 전에 올린 글은 그 칸 왼쪽 틈, 측정 뒤에 올린 글은 오른쪽 틈에
+ * 둔다 — 핀 오른쪽 막대 · 점이 「올린 뒤 측정」이다. 측정하던 날 · 시각 없는 같은 주는 칸 위 속 빈 핀(전후 불명), 측정하지 않은 주는
+ * 칸 위. 칸 목록에 없는 주(측정한 주만 늘어놓은 막대)는 그다음 칸 왼쪽 틈이다.
+ *
+ * 「잘못 적은 주소」는 버리고 「글을 내렸어요」는 둔다(올렸던 일이다). endWeek 뒤에 올린 글은 버린다 — 지난 주차 보고서에 그 뒤의
+ * 집행을 그리지 않는다. 주소 없이 「집행함」만 누른 항목은 믿을 날짜가 없어 핀을 두지 않는다(여기에 오지 않는다).
+ */
+export function executionMarks(
+  posts: PublishedPost[],
+  slots: ExecutionSlot[],
+  weeks: Pick<HistoryWeek, 'weekOf' | 'window'>[],
+  endWeek?: string,
+): ExecutionMarks {
+  const windowOf = new Map(weeks.map((w) => [w.weekOf, w.window]))
+  const byX = new Map<number, { hollow: boolean; posts: PublishedPost[] }>()
+  let outOfRange = 0
+  let undated = 0
+  for (const post of posts) {
+    if (post.removedReason === 'mistake') continue
+    const week = post.publishedOn ? isoWeekOf(post.publishedOn) : null
+    if (!post.publishedOn || !week) {
+      undated += 1
+      continue
+    }
+    if (endWeek && week > endWeek) continue
+    if (slots.length === 0) continue
+    if (week < slots[0]!.weekOf) {
+      outOfRange += 1
+      continue
+    }
+    let x: number
+    let hollow = false
+    const i = slots.findIndex((s) => s.weekOf === week)
+    if (i >= 0 && slots[i]!.measured) {
+      const timing = timingOf(post.publishedOn, windowOf.get(week) ?? null, week)
+      if (timing === 'after') x = i - 0.5
+      else if (timing === 'before') x = i + 0.5
+      else {
+        x = i
+        hollow = true
+      }
+    } else if (i >= 0) {
+      x = i
+    } else {
+      const next = slots.findIndex((s) => s.weekOf > week)
+      x = next >= 0 ? next - 0.5 : slots.length - 0.5
+    }
+    const at = byX.get(x) ?? { hollow, posts: [] }
+    at.posts.push(post)
+    byX.set(x, at)
+  }
+  const pins = [...byX.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([x, v], k) => ({ x, hollow: v.hollow, posts: [...v.posts].sort((a, b) => (a.publishedOn ?? '').localeCompare(b.publishedOn ?? '')), n: k + 1 }))
+  return { pins, outOfRange, undated }
+}
+
+/** 핀의 범례 한 줄 — 「10/19 자사 블로그 · 사이트 「제목」 외 1편」. */
+export function pinLegend(pin: ExecutionPin): string {
+  const first = pin.posts[0]!
+  const title = first.articleTitle ?? first.articleId
+  const rest = pin.posts.length - 1
+  return `${first.publishedOn ? monthDay(first.publishedOn) : ''} ${postChannelLabel(first)} 「${title}」${rest > 0 ? ` 외 ${rest}편` : ''}`
+}
+
+/**
+ * 측정 행마다 그 측정 직전에 올린 편수 — 직전 측정과 이 측정 사이(핀이 이 칸 왼쪽 틈)에 올린 글. 측정하던 주에 올린 글(속 빈 핀)은
+ * unsure로 따로 센다. 마지막 측정 뒤에 올린 글은 어느 행에도 들지 않는다.
+ */
+export function executionsPerSlot(marks: ExecutionMarks, slots: ExecutionSlot[]): Map<string, { count: number; unsure: number }> {
+  const out = new Map<string, { count: number; unsure: number }>()
+  for (const pin of marks.pins) {
+    const slot = slots[Math.ceil(pin.x)]
+    if (!slot) continue
+    const row = out.get(slot.weekOf) ?? { count: 0, unsure: 0 }
+    if (pin.hollow) row.unsure += pin.posts.length
+    else row.count += pin.posts.length
+    out.set(slot.weekOf, row)
+  }
+  return out
+}
+
+const SUMMARY_ORDER: [PostTier, string][] = [
+  ['repeated', '반복 인용'],
+  ['once', '한 번 인용(판단 보류)'],
+  ['none', '인용 없음'],
+  ['waiting', '아직 올린 뒤 측정 없음'],
+  ['undated', '올린 날 모름'],
+  ['removed', '판단할 측정 없이 내림'],
+]
+
+/**
+ * 보고서 한 문장 — 「W42까지 기록한 집행 글 3편: 반복 인용 1편 · 인용 없음 2편.」 0인 판단은 뺀다. 「덕분에」 같은 인과 표현은 쓰지
+ * 않는다 — 인용은 측정 조건 · 다른 글에도 달려 있다. 기록이 없으면 null(「집행 0편」이라고 단정하지 않는다 — 적지 않았을 뿐일 수 있다).
+ */
+export function executionSummaryLine(summaries: Pick<PostSummary, 'tier'>[], untilLabel: string): string | null {
+  if (summaries.length === 0) return null
+  const parts = SUMMARY_ORDER.map(([tier, label]) => [label, summaries.filter((s) => s.tier === tier).length] as const)
+    .filter(([, n]) => n > 0)
+    .map(([label, n]) => `${label} ${n}편`)
+  return `${untilLabel}까지 기록한 집행 글 ${summaries.length}편: ${parts.join(' · ')}.`
+}
+
+/** 올린 뒤 측정 주 — 판정 기록이 없는 주(확인 불가)와 측정하던 주(전후 불명)도 넣는다. 내린 뒤의 주에서 멈춘다. */
+export function afterWeeksOf(cells: (HistoryCell | null)[], weeks: Pick<HistoryWeek, 'weekOf'>[], publishedOn: string | null): { weekOf: string; cell: HistoryCell | null }[] {
+  const publishedWeek = publishedOn ? isoWeekOf(publishedOn) : null
+  if (!publishedWeek) return []
+  const out: { weekOf: string; cell: HistoryCell | null }[] = []
+  cells.forEach((cell, i) => {
+    const weekOf = weeks[i]?.weekOf
+    if (!weekOf || weekOf < publishedWeek) return
+    if (cell?.afterRemoval) return
+    if (cell && cell.timing === 'before') return
+    out.push({ weekOf, cell })
+  })
+  return out
 }

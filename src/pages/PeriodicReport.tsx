@@ -4,10 +4,24 @@ import ReviewReportPanel from '../components/ReviewReportPanel'
 import ScoreTrendChart from '../components/ScoreTrendChart'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources, loadEeat, loadQuestionAnalyses, loadQuestionBank, loadSiteScores, type SiteScoreRecord } from '../lib/api'
+import { UrlLink } from '../components/CitationBits'
+import {
+  loadActionStates,
+  loadCitationSources,
+  loadEeat,
+  loadQuestionAnalyses,
+  loadQuestionBank,
+  loadSiteScores,
+  type ActionStateMap,
+  type HistoryCell,
+  type SiteScoreRecord,
+} from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
+import { afterWeeksOf, executionSummaryLine, monthDay, postChannelLabel, summarizePost, TIER_LABEL } from '../lib/publishTracking'
+import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import { comparisonFromHistory } from '../lib/citationView'
@@ -42,8 +56,19 @@ function Delta({ now, prev }: { now: number; prev: number | null }) {
   )
 }
 
+/** 집행 표 칸 — 올린 뒤 측정 한 주. 숫자는 그 주소를 정확히 인용한 응답 수. */
+function afterWeekText(weekOf: string, cell: HistoryCell | null): string {
+  const w = weekOf.slice(5)
+  if (!cell) return `${w} 확인 불가`
+  if (cell.timing === 'during' || cell.timing === 'ambiguous') return `${w} 전후 불명`
+  return cell.tally ? `${w} 인용 ${cell.tally.all.cited}` : `${w} 인용 없음`
+}
+
+/** 집행 표에 보이는 올린 뒤 측정 주 수 — 최근 것부터. */
+const EXEC_WEEKS = 6
+
 export default function PeriodicReport() {
-  const { tenant } = useTenant()
+  const { tenant, viewing } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const [weekOf, setWeekOf] = useWeekSelection(history)
 
@@ -267,6 +292,53 @@ export default function PeriodicReport() {
     }
   }, [card])
   const evidence = evidenceData?.key === evidenceKey ? evidenceData : null
+
+  /*
+   * 집행한 글(언급률 2번 P4) — 고객 브랜드의 올린 글 기록과 집행 상태. 데스크톱에서만 있다(웹은 라우트가 없어 null). 그래프 핀 ·
+   * 「집행한 글과 인용」 절 · 개선제안의 재권고 방지에 함께 쓴다. 경쟁사 보기에서는 쓰지 않는다 — 우리 집행 기록이다.
+   */
+  const published = usePublishedHistory(viewing ? '' : (tenant?.tenantId ?? ''))
+  const [actionStates, setActionStates] = useState<{ key: string; value: ActionStateMap | null }>({ key: '', value: null })
+  useEffect(() => {
+    const id = viewing ? '' : tenant?.tenantId
+    if (!id) return
+    let alive = true
+    loadActionStates(id).then(
+      (value) => alive && setActionStates({ key: id, value }),
+      // 집행 상태를 못 읽으면 개선제안은 전처럼 모든 출처를 권한다 — 집행 여부를 지어내지 않는다.
+      () => alive && setActionStates({ key: id, value: null }),
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId, viewing])
+  const states = !viewing && actionStates.key === tenant?.tenantId ? actionStates.value : null
+  const execPosts = useMemo(() => published.history?.posts.map((p) => p.post) ?? [], [published.history])
+
+  /** 보고 주차까지로 자른 집행 표 — 그 뒤 측정 · 그 뒤에 올린 글은 넣지 않는다. 날짜를 모르는 옛 기록은 넣는다(언제인지 몰라도 집행했다). */
+  const execution = useMemo(() => {
+    const h = published.history
+    const until = judgedWeek || card?.weekOf || ''
+    if (!h || !until || h.posts.length === 0) return null
+    const cut = h.weeks.findIndex((w) => w.weekOf > until)
+    const end = cut < 0 ? h.weeks.length : cut
+    const weeks = h.weeks.slice(0, end)
+    const rows = h.posts
+      .filter((p) => !p.post.publishedOn || (isoWeekOf(p.post.publishedOn) ?? '') <= until)
+      .map((p) => {
+        const cells = p.cells.slice(0, end)
+        const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
+        return {
+          post: p.post,
+          summary: summarizePost(cells, weeks),
+          after: afterWeeksOf(cells, weeks, p.post.publishedOn),
+          removedOn: removedOn && (isoWeekOf(removedOn) ?? '') <= until ? removedOn : null,
+        }
+      })
+    if (rows.length === 0) return null
+    return { rows, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
+  }, [published.history, judgedWeek, card?.weekOf])
+
   const enrichedReport = useMemo(() => {
     if (!report || !card || !evidence) return report
     const map = buildRecommendationEvidence({
@@ -275,9 +347,11 @@ export default function PeriodicReport() {
       questions: evidence.bank?.questions ?? [],
       citations: evidence.citations,
       site: siteForReview,
+      ...(states ? { states } : {}),
+      ...(execPosts.length > 0 ? { posts: execPosts } : {}),
     })
     return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
-  }, [report, card, evidence, siteForReview])
+  }, [report, card, evidence, siteForReview, states, execPosts])
 
   /*
    * 표지 한 문장 — "이름 없이 물은 질문 N개 중 M개에서 불렸습니다". 언급률(응답 단위)과 달리 질문 단위라
@@ -504,8 +578,69 @@ export default function PeriodicReport() {
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
           <section className="report-trend">
             <h3>주차별 Brand AEO Score</h3>
-            <ScoreTrendChart history={history} endWeek={judgedWeek || card.weekOf} />
+            <ScoreTrendChart
+              history={history}
+              endWeek={judgedWeek || card.weekOf}
+              {...(published.history && execPosts.length > 0 ? { executions: { posts: execPosts, weeks: published.history.weeks } } : {})}
+            />
           </section>
+
+          {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
+          {execution && (
+            <section className="report-exec">
+              <h3>집행한 글과 인용</h3>
+              {execution.line && <p className="report-exec-line">{execution.line}</p>}
+              <div className="table-wrap">
+                <table className="exec-table">
+                  <thead>
+                    <tr>
+                      <th>올린 글</th>
+                      <th>올린 날 · 올린 곳</th>
+                      <th className="cell-text">올린 뒤 측정(최근 {EXEC_WEEKS}주까지)</th>
+                      <th className="cell-text">판단</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {execution.rows.map((r) => (
+                      <tr key={r.post.id}>
+                        <td className="cell-text">
+                          <b>{r.post.articleTitle ?? r.post.articleId}</b>
+                          <div>
+                            <UrlLink url={r.post.url} max={200} />
+                          </div>
+                        </td>
+                        <td className="cell-text">
+                          {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
+                          {r.removedOn && ` · ${monthDay(r.removedOn)} 내림`}
+                          <div className="doc-meta">{postChannelLabel(r.post)}</div>
+                        </td>
+                        <td className="cell-text">
+                          {r.after.length === 0
+                            ? '—'
+                            : r.after
+                                .slice(-EXEC_WEEKS)
+                                .map((a) => afterWeekText(a.weekOf, a.cell))
+                                .join(' · ')}
+                        </td>
+                        <td className="cell-text">
+                          {TIER_LABEL[r.summary.tier]}
+                          {r.summary.measuredAfter > 0 && (
+                            <div className="doc-meta">
+                              올린 뒤 측정 {r.summary.measuredAfter}회 중 {r.summary.citedWeeks}주 인용
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="hint">
+                숫자는 그 주소를 정확히 인용한 AI 응답 수입니다. 「반복 인용」은 올린 뒤 측정 2회 이상에서 인용됐을 때만 붙입니다. 인용은 측정
+                조건과 다른 글에도 달려 있어, 점수 변화의 원인으로 읽지 않습니다. 「확인 불가」는 그 주 판정 기록이 없다는 뜻입니다.
+              </p>
+            </section>
+          )}
 
           {period === 'month' && (
             <section className="month-context">
