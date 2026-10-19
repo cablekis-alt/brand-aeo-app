@@ -354,6 +354,12 @@ export async function loadActionStates(tenantId: string): Promise<ActionStateMap
  */
 export type PostVia = 'own' | 'channel' | 'orphan' | 'direct'
 export type PostRemovedReason = 'mistake' | 'taken-down'
+/** 질문 은행에서 고른 질문으로 쓴 글(topic:)의 질문 스냅샷 — 은행 버전을 모르면 bankVersion null, 문장 없음. */
+export interface TopicSnapshot {
+  bankVersion: string | null
+  questionIds: string[]
+  questionTexts: string[]
+}
 export interface PublishedPost {
   id: string
   url: string
@@ -370,6 +376,7 @@ export interface PublishedPost {
   draftGeneratedAt?: string
   adaptationSourceKey?: string
   viewingWeek?: string
+  topic?: TopicSnapshot
   removedAt?: string
   removedReason?: PostRemovedReason
   legacy?: true
@@ -427,6 +434,8 @@ export interface RecordPostInput {
   publishedOnChosen: boolean
   /** 「올렸어요」 — 같은 요청에서 그 항목을 「집행함」으로 바꾼다. */
   markDone: boolean
+  /** topic: 글이면 질문 스냅샷. */
+  topic?: TopicSnapshot
 }
 
 export async function recordPublishedPost(

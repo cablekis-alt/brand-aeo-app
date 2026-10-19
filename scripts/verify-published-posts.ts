@@ -143,6 +143,28 @@ try {
   await writeFile(qFile, JSON.stringify({ version: 1, keyRule: 3, posts: [...many, { ...many[0], id: 'p-removed', url: 'https://example.com/c/removed', key: 'example.com/c/removed', removedAt: '2026-10-02T00:00:00Z', removedReason: 'mistake' }] }), 'utf-8');
   ok('뺀 적 없는 기록이 가득하면 되살리기도 400', (await fails(patchPublishedPost(Q, 'p-removed', { restore: true }))) === 400);
 
+  // 8-d) 질문 은행에서 고른 글(topic:)의 질문 스냅샷 — 질문 id의 뜻은 은행 판마다 바뀌어 그때의 판 · 문장을 고정한다
+  const P = 'topic-tenant';
+  const topicArticle = 'topic:v5-001+v5-007';
+  const snap = { bankVersion: 'v5', questionIds: ['v5-001', 'v5-007'], questionTexts: ['가상 질문 하나', '가상 질문 둘'] };
+  const withTopic = await addPublishedPost(P, { articleId: topicArticle, targetActionId: topicArticle, via: 'direct', url: 'https://fake.tistory.com/41', markDone: true, topic: snap });
+  const pStates = await readActionStates(P);
+  ok('topic 글 기록이 질문 스냅샷을 고정하고 그 글을 집행함으로 바꾼다', JSON.stringify(withTopic.post.topic) === JSON.stringify(snap) && pStates[topicArticle]?.status === 'done');
+  ok('계획에 없는 항목 id(topic:)의 기록도 남는다', (await readPublishedPosts(P)).some((p) => p.articleId === topicArticle && !p.removedAt));
+  ok('topic: 글이 아니면 스냅샷을 받지 않는다(400)', (await fails(addPublishedPost(P, { ...base, url: 'https://fake.tistory.com/42', topic: snap }))) === 400);
+  ok('질문 id가 비었거나 문자열이 아니면 400', (await fails(addPublishedPost(P, { articleId: 'topic:x', targetActionId: 'topic:x', via: 'direct', url: 'https://fake.tistory.com/43', topic: { bankVersion: 'v5', questionIds: [1, 2], questionTexts: ['a', 'b'] } }))) === 400);
+  ok('은행 판이 있는데 문장 수가 다르면 400', (await fails(addPublishedPost(P, { articleId: 'topic:a+b', targetActionId: 'topic:a+b', via: 'direct', url: 'https://fake.tistory.com/44', topic: { bankVersion: 'v5', questionIds: ['a', 'b'], questionTexts: ['a'] } }))) === 400);
+  ok('스냅샷 질문이 글(topic:)의 질문과 다르면 400', (await fails(addPublishedPost(P, { articleId: 'topic:v5-001+v5-002', targetActionId: 'topic:v5-001+v5-002', via: 'direct', url: 'https://fake.tistory.com/47', topic: { bankVersion: 'v5', questionIds: ['v5-030'], questionTexts: ['다른 질문'] } }))) === 400);
+  const longId = `topic:${Array.from({ length: 30 }, (_, i) => `c1-${String(i + 1).padStart(3, '0')}`).join('+')}`;
+  const longRec = await addPublishedPost(P, { articleId: longId, targetActionId: longId, via: 'direct', url: 'https://fake.tistory.com/48', markDone: true });
+  ok('질문을 많이 고른 글(200자 넘는 id)도 자르지 않고 기록한다', longRec.post.articleId === longId && (await readActionStates(P))[longId]?.status === 'done');
+  ok('id가 상한을 넘으면 자르지 않고 400', (await fails(addPublishedPost(P, { articleId: `topic:${'x'.repeat(5000)}`, targetActionId: 'topic:x', via: 'direct', url: 'https://fake.tistory.com/49' }))) === 400);
+  const noBankTopic = await addPublishedPost(P, { articleId: 'topic:v4-002', targetActionId: 'topic:v4-002', via: 'direct', url: 'https://fake.tistory.com/45', topic: { bankVersion: null, questionIds: ['v4-002'] } });
+  ok('은행 판을 모르면 질문 id만 남긴다', noBankTopic.post.topic?.bankVersion === null && noBankTopic.post.topic.questionTexts.length === 0);
+  await addPublishedPost(P, { articleId: 'topic:v5-009', targetActionId: 'topic:v5-009', via: 'direct', url: 'https://fake.tistory.com/46' });
+  const addSnap = await addPublishedPost(P, { articleId: 'topic:v5-009', targetActionId: 'topic:v5-009', via: 'direct', url: 'https://fake.tistory.com/46', topic: { bankVersion: 'v5', questionIds: ['v5-009'], questionTexts: ['가상 질문 셋'] } });
+  ok('스냅샷이 없던 기록을 다시 적으면 스냅샷을 붙인다', addSnap.existing && addSnap.post.topic?.bankVersion === 'v5');
+
   // 9) 읽는 중에 쓰기 — 윈도우는 다른 요청이 파일을 연 순간 rename이 실패한다(EPERM). 다시 시도해 줄이 사라지지 않고 임시 파일도 남지 않는다.
   const R = 'reader-tenant';
   let reading = true;

@@ -336,7 +336,8 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
     }
   }
   if (!bank) markDemo(res);
-  res.json(bank ?? demoQuestionBank(tenant, history.at(-1)?.weekOf ?? '2026-W36', requested ?? undefined));
+  // 측정 전 브랜드는 예시 은행을 준다 — demo를 실어, 화면이 그 판 번호를 「이 글이 겨냥한 질문의 판」으로 기록하지 않게 한다.
+  res.json(bank ?? { ...demoQuestionBank(tenant, history.at(-1)?.weekOf ?? '2026-W36', requested ?? undefined), demo: true });
 });
 
 // URL 상세 분석 — 도메인×소유권 기준 인용 집계.

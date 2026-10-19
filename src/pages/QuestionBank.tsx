@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DraftPanel from '../components/DraftPanel'
+import PublishedUrlEditor, { ExecutionStatusButtons } from '../components/PublishedUrlEditor'
 import { useTenant } from '../context/useTenant'
 import {
   generateContentBrief,
+  loadActionStates,
   loadContentBriefs,
   loadContentDrafts,
   loadQuestionBank,
+  saveActionState,
   tagQuestionBankStages,
   tagQuestionBankTopics,
+  type ActionStateMap,
+  type ActionStatus,
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
-import type { GapAction } from '../lib/gapActions'
+import { effectiveDraft } from '../lib/draftGaps'
+import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActions'
+import { draftTitle } from '../lib/markdownFile'
+import { usePublishedPosts } from '../lib/usePublishedPosts'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
 import type { QuestionBank, QuestionSpec } from '../lib/types'
 
@@ -25,8 +33,9 @@ import type { QuestionBank, QuestionSpec } from '../lib/types'
  * 은행에서 고르면 된다. 우선순위를 모른다고 글까지 못 쓸 이유는 없다.
  *
  * id를 질문 id로 짓는 이유: 주차가 바뀌어도 같은 질문 묶음이면 같은 초안에 이어 붙어야 한다.
+ * 집행 상태는 저장된 값을 쓴다 — 예전에는 늘 「할 일」로 고정돼 있었다.
  */
-function actionFromQuestions(picked: QuestionSpec[]): GapAction {
+function actionFromQuestions(picked: QuestionSpec[], status: ActionStatus = 'todo'): GapAction {
   const ids = picked.map((q) => q.questionId).sort()
   const head = picked[0]?.text ?? ''
   return {
@@ -41,7 +50,7 @@ function actionFromQuestions(picked: QuestionSpec[]): GapAction {
     questionTexts: picked.map((q) => q.text),
     reach: picked.length,
     satisfied: false,
-    status: 'todo',
+    status,
     publishedUrls: [],
     citedPublishedUrls: [],
     doneSignal: '다음 측정에서 이 질문들의 판정을 확인하세요',
@@ -81,6 +90,23 @@ export default function QuestionBankPage() {
     })
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
   const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  // 올린 글 주소(집행 원장)와 집행 상태 — 질문을 골라 쓴 글(topic:)은 콘텐츠 생성의 올리기 목록에 나오지 않아 여기서 적는다.
+  // 둘 다 데스크톱 · 로컬 전용이다(웹은 null → 칸을 숨긴다).
+  const published = usePublishedPosts(tenant?.tenantId ?? '')
+  const [statesState, setStatesState] = useState<{ key: string; value: ActionStateMap | null } | null>(null)
+  const states = statesState && statesState.key === tenant?.tenantId ? statesState.value : null
+  const [statusError, setStatusError] = useState<string | null>(null)
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    let alive = true
+    void loadActionStates(id).then((m) => {
+      if (alive) setStatesState({ key: id, value: m })
+    })
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
 
   useEffect(() => {
     if (!tenant) return
@@ -117,6 +143,17 @@ export default function QuestionBankPage() {
     [bank, picked],
   )
   const action = pickedQuestions.length > 0 ? actionFromQuestions(pickedQuestions) : null
+  const savedStatus = action ? (states?.[action.id]?.status ?? 'todo') : 'todo'
+  const canRecord = published.available && states !== null
+  const setStatus = async (status: ActionStatus) => {
+    if (!tenant || !action) return
+    const id = tenant.tenantId
+    setStatusError(null)
+    const saved = await saveActionState(id, action.id, status)
+    // 그사이 브랜드를 바꿨으면 늦게 온 응답으로 새 브랜드의 상태를 덮지 않는다.
+    setStatesState((prev) => (prev && prev.key !== id ? prev : saved ? { key: id, value: saved } : prev))
+    if (!saved) setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+  }
 
   const agnosticRatio = useMemo(() => {
     if (!bank || bank.questions.length === 0) return 0
@@ -305,7 +342,8 @@ export default function QuestionBankPage() {
                 {action && briefs !== null && drafts !== null && tenant && (
                   <DraftPanel
                     tenantId={tenant.tenantId}
-                    action={action}
+                    action={{ ...action, status: savedStatus }}
+                    publishHint="올린 뒤 아래 「올린 곳」에 주소를 적으세요"
                     hasBrief={Boolean(briefs[action.id])}
                     stored={drafts[action.id]}
                     onStored={(d) => setDrafts((prev) => ({ ...(prev ?? {}), [action.id]: d }))}
@@ -320,6 +358,48 @@ export default function QuestionBankPage() {
                       setBriefs((prev) => ({ ...(prev ?? {}), [action.id]: b }))
                     }}
                   />
+                )}
+                {action && drafts?.[action.id] && canRecord && (
+                  <section className="post-section" aria-label="올린 곳">
+                    <h4 style={{ margin: '12px 0 4px' }}>올린 곳</h4>
+                    <p className="hint" style={{ marginTop: 0 }}>
+                      이 글을 올린 주소와 올린 날, 겨냥한 질문을 기록해 둡니다 — 주차별 인용 결과는 이 기록으로 냅니다(결과 화면은
+                      다음 단계에서 붙습니다). 질문 은행 판은 이 초안을 쓸 때의 판이라고 확인될 때만 함께 남깁니다.
+                    </p>
+                    <ExecutionStatusButtons label={action.title} status={savedStatus} onChange={(s) => void setStatus(s)} />
+                    {statusError && <p className="error">{statusError}</p>}
+                    {published.error && <p className="error">올린 글 기록: {published.error}</p>}
+                    <PublishedUrlEditor
+                      judged={false}
+                      addLabel="올렸어요"
+                      hits={recordOnlyHits((published.posts ?? []).filter((p) => p.targetActionId === action.id))}
+                      removed={(published.posts ?? []).filter((p) => p.targetActionId === action.id && p.removedAt)}
+                      weekOf=""
+                      busy={published.busy}
+                      onRecord={async (url, publishedOn, chosen) => {
+                        const stored = drafts[action.id]
+                        const r = await published.record({
+                          url,
+                          articleId: action.id,
+                          targetActionId: action.id,
+                          via: 'direct',
+                          articleTitle: stored ? draftTitle(effectiveDraft(stored)) : action.title,
+                          ...(stored ? { draftGeneratedAt: stored.generatedAt } : {}),
+                          publishedOn,
+                          publishedOnChosen: chosen,
+                          markDone: true,
+                          // 질문 id의 뜻은 은행 판마다 바뀐다 — 지금 은행이 이 초안을 쓸 때의 판일 때만 판 · 문장을 고정한다.
+                          topic: topicSnapshotFor(action.id, bank, stored?.generatedAt),
+                        })
+                        if (!r.ok) return r.error
+                        if (r.states) setStatesState((prev) => (prev && prev.key !== tenant.tenantId ? prev : { key: tenant.tenantId, value: r.states! }))
+                        return null
+                      }}
+                      onRemove={published.remove}
+                      onRestore={published.restore}
+                      onSetDate={published.setPublishedOn}
+                    />
+                  </section>
                 )}
               </>
             )}
