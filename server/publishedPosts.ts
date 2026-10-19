@@ -68,9 +68,12 @@ export const MAX_POSTS = 500;
 /** 라우트가 그대로 상태 코드로 쓰는 오류. */
 export class PublishedPostsError extends Error {
   readonly status: number;
-  constructor(message: string, status: number) {
+  /** 응답에 함께 싣는 값 — 409면 가로막은 기록(conflict). */
+  readonly detail: Record<string, unknown>;
+  constructor(message: string, status: number, detail: Record<string, unknown> = {}) {
     super(message);
     this.status = status;
+    this.detail = detail;
   }
 }
 
@@ -148,10 +151,16 @@ async function readAll(tenantId: string): Promise<{ ledger: PublishedPost[]; leg
   return { ledger, legacy: legacyPosts(await readActionStates(tenantId), ledger) };
 }
 
-/** 원장 + 옛 기록. 뺀 기록도 함께 준다 — 화면이 「뺀 주소」로 접어 보이고 되살린다. */
-export async function readPublishedPosts(tenantId: string): Promise<PublishedPost[]> {
-  const { ledger, legacy } = await readAll(tenantId);
-  return [...ledger, ...legacy];
+/**
+ * 원장 + 옛 기록. 뺀 기록도 함께 준다 — 화면이 「뺀 주소」로 접어 보이고 되살린다.
+ * 읽기도 쓰기 줄에 세운다 — 윈도우에서는 읽는 중인 파일 위로 rename이 실패해(EPERM), 화면 여러 곳이 동시에 불러오면 「올렸어요」가
+ * 실패했다(검토 실측: 읽기 2개를 쉬지 않고 걸면 80건 중 3건).
+ */
+export function readPublishedPosts(tenantId: string): Promise<PublishedPost[]> {
+  return queueTenantWrite(tenantId, async () => {
+    const { ledger, legacy } = await readAll(tenantId);
+    return [...ledger, ...legacy];
+  });
 }
 
 async function writeLedger(tenantId: string, posts: PublishedPost[]): Promise<void> {
@@ -224,26 +233,60 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
   const markedWeek = str(input.viewingWeek, 20);
   return queueTenantWrite(tenantId, async () => {
     const { ledger, legacy } = await readAll(tenantId);
-    const active = [...ledger, ...legacy].find((p) => p.key === key && !p.removedAt);
+    const actives = [...ledger, ...legacy].filter((p) => p.key === key && !p.removedAt);
+    // 한 주소는 한 글의 것이다 — 다른 글에 적힌 주소면 거절한다. 같은 글은 여러 곳(자사 블로그 줄 · 그 블로그가 속한 채널 줄)에
+    // 함께 적을 수 있다. 옛 기록은 글을 몰라(articleId = 항목) 같은 곳이면 같은 글로 본다.
+    const sameTarget = actives.find((p) => p.targetActionId === targetActionId && (p.articleId === articleId || p.legacy));
+    const otherArticle = actives.find((p) => p !== sameTarget && p.articleId !== articleId && !(p.legacy && p.targetActionId === targetActionId));
+    if (otherArticle) {
+      const name = otherArticle.articleTitle ? `「${otherArticle.articleTitle}」` : otherArticle.articleId;
+      const where = otherArticle.viewingWeek ? ` ${otherArticle.viewingWeek} 화면에서 적은 기록입니다.` : '';
+      throw new PublishedPostsError(`이 주소는 이미 다른 글 ${name}의 올린 주소로 적혀 있습니다.${where} 그 기록을 빼야 이 글에 적을 수 있습니다.`, 409, {
+        conflict: { id: otherArticle.id, articleId: otherArticle.articleId, targetActionId: otherArticle.targetActionId, viewingWeek: otherArticle.viewingWeek ?? null },
+      });
+    }
     let post: PublishedPost;
     let existing = false;
     let posts = ledger;
-    if (active && active.articleId === articleId && active.targetActionId === targetActionId) {
-      post = active;
+    const chosenDate = input.publishedOn !== undefined && input.publishedOnChosen === true;
+    if (sameTarget?.legacy) {
+      // 옛 기록을 다시 적으면 원장으로 옮긴다 — 이제야 글 · 올린 날을 안다.
       existing = true;
-    } else if (active) {
-      const name = active.articleTitle ? `「${active.articleTitle}」` : active.articleId;
-      throw new PublishedPostsError(`이 주소는 이미 ${name}의 올린 글로 적혀 있습니다. 그 기록을 먼저 빼 주세요.`, 409);
+      post = {
+        ...without(sameTarget, 'legacy'),
+        articleId,
+        via,
+        publishedOn,
+        publishedOnSource: chosenDate ? 'user' : 'default-today',
+        ...(str(input.articleTitle, 200) ? { articleTitle: str(input.articleTitle, 200) } : {}),
+        ...(markedWeek ? { viewingWeek: markedWeek } : {}),
+      };
+      posts = [...ledger, post];
+      await writeLedger(tenantId, posts);
+    } else if (sameTarget) {
+      existing = true;
+      // 같은 주소를 날짜를 골라 다시 적었으면 그 날로 고친다 — 날짜를 버리고 성공처럼 보이면 틀린 날이 그대로 남는다.
+      if (chosenDate && sameTarget.publishedOn !== publishedOn) {
+        post = { ...sameTarget, publishedOn, publishedOnSource: 'user' };
+        posts = ledger.map((p) => (p.id === sameTarget.id ? post : p));
+        await writeLedger(tenantId, posts);
+      } else {
+        post = sameTarget;
+      }
     } else {
-      if (ledger.length >= MAX_POSTS) {
-        throw new PublishedPostsError(`집행 기록이 ${MAX_POSTS}줄을 넘었습니다. 잘못 적은 주소를 정리한 뒤 다시 시도해 주세요.`, 400);
+      // 상한은 뺀 적 없는 기록으로 센다 — 뺀 기록까지 세면 정리해도 자리가 나지 않는다. 파일이 끝없이 커지지 않게 전체 상한도 둔다.
+      if (ledger.filter((p) => !p.removedAt).length >= MAX_POSTS) {
+        throw new PublishedPostsError(`올린 글 기록이 ${MAX_POSTS}개를 넘었습니다. 잘못 적은 주소를 빼고 다시 시도해 주세요.`, 400);
+      }
+      if (ledger.length >= MAX_POSTS * 4) {
+        throw new PublishedPostsError(`집행 기록 파일이 ${MAX_POSTS * 4}줄(뺀 기록 포함)을 넘었습니다. 관리자에게 정리를 요청해 주세요.`, 400);
       }
       post = {
         id: `p-${randomUUID().replace(/-/g, '').slice(0, 12)}`,
         url,
         key,
         publishedOn,
-        publishedOnSource: input.publishedOn !== undefined && input.publishedOnChosen === true ? 'user' : 'default-today',
+        publishedOnSource: chosenDate ? 'user' : 'default-today',
         recordedAt: new Date().toISOString(),
         articleId,
         targetActionId,
@@ -289,8 +332,14 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
     const found = ledger.find((p) => p.id === postId) ?? legacy.find((p) => p.id === postId);
     if (!found) throw new PublishedPostsError(`집행 기록을 찾지 못했습니다: ${postId}`, 404);
     if (input.restore === true && found.removedAt) {
-      // 같은 주소가 그사이 다른 기록으로 다시 적혔으면 되살리지 않는다 — 한 주소에 기록이 둘이 된다.
-      const clash = ledger.find((p) => p.id !== found.id && p.key === found.key && !p.removedAt);
+      // 같은 주소가 그사이 다른 글이나 같은 곳에 다시 적혔으면 되살리지 않는다 — 한 주소가 두 글의 것이 되거나 한 곳에 두 번 붙는다.
+      const clash = ledger.find(
+        (p) =>
+          p.id !== found.id &&
+          p.key === found.key &&
+          !p.removedAt &&
+          (p.articleId !== found.articleId || p.targetActionId === found.targetActionId),
+      );
       if (clash) throw new PublishedPostsError('같은 주소가 다른 기록으로 다시 적혀 있어 되살리지 않았습니다.', 409);
     }
     const base = without(found, 'legacy', 'removedAt', 'removedReason');

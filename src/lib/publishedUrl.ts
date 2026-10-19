@@ -12,10 +12,28 @@
  */
 
 /** 키 규칙 버전. 규칙을 바꾸면 올리고, 서버는 저장된 기록을 읽을 때 key를 다시 계산한다. */
-export const KEY_RULE = 1
+export const KEY_RULE = 2
 
-/** 인용 추적용 파라미터 — 같은 글인데 붙었다 안 붙었다 한다(OpenAI는 utm_source=openai를 붙인다). */
-const TRACKING_PARAM = /^(utm_.*|fbclid|gclid|si|igshid)$/i
+/**
+ * 인용 추적용 파라미터 — 같은 글인데 붙었다 안 붙었다 한다(OpenAI는 utm_source=openai를 붙인다). si는 유튜브 · 스포티파이의
+ * 공유 꼬리표지만 다른 사이트에서는 뜻이 있는 값이라(실측: 지역 코드) 전역으로 떼지 않는다 — 유튜브는 v만 남긴다.
+ */
+const TRACKING_PARAM = /^(utm_.*|fbclid|gclid|igshid|igsh)$/i
+
+/**
+ * 질의가 글을 가리키지 않는 플랫폼 — 질의를 모두 뗀다. 티스토리는 카테고리 목록에서 연 글에 ?category=가, 인스타그램은 「링크 복사」에
+ * ?igsh= · ?hl=가 붙는다(실측: 그대로 적으면 인용 8,311건 중 0건이 맞았다).
+ */
+const QUERYLESS_HOST = (host: string) => host === 'blog.naver.com' || host.endsWith('.tistory.com') || host === 'instagram.com'
+
+/** 유튜브 영상 id — youtu.be · /shorts/ · /embed/ · /live/ · watch?v= 모두 같은 영상이다. id는 대소문자를 가린다. */
+function youtubeId(host: string, u: URL, path: string): string | null {
+  if (host === 'youtu.be') return path.split('/').filter(Boolean)[0] ?? null
+  if (host !== 'youtube.com') return null
+  if (path === '/watch') return u.searchParams.get('v')
+  const m = /^\/(shorts|embed|live|v)\/([^/]+)$/.exec(path)
+  return m ? m[2]! : null
+}
 
 /** 단축 주소 — 인용에는 원래 주소로 나오므로 그대로 적으면 맞출 수 없다. */
 const SHORT_HOSTS = new Set(['naver.me', 'bit.ly', 't.co', 'goo.gl', 'tinyurl.com', 'han.gl', 'me2.do', 'vo.la', 'url.kr', 'buly.kr', 'is.gd'])
@@ -47,24 +65,30 @@ function hostOf(u: URL): string {
 /**
  * 비교용 키. http(s)가 아니거나 주소가 아니면 null.
  *   - 호스트 소문자, www. · m. 떼기, 해시 떼기, 경로 끝 슬래시 떼기, 경로의 퍼센트 인코딩 풀기
- *   - 추적 파라미터(utm_* · fbclid · gclid · si · igshid) 제거, 남은 질의는 키 순으로
- *   - 네이버 블로그: PostView.naver|nhn?blogId=&logNo= → /blogId/logNo, 질의는 모두 뗀다(trackingCode · fromRss 등)
- *   - 티스토리: /m/123 → /123
- *   - 전체를 소문자로
+ *   - 추적 파라미터(utm_* · fbclid · gclid · igshid · igsh) 제거, 남은 질의는 키 순으로
+ *   - 네이버 블로그: PostView.naver|nhn?blogId=&logNo= 와 /blogId?logNo= → /blogId/logNo
+ *   - 네이버 블로그 · 티스토리 · 인스타그램: 질의를 모두 뗀다(글을 가리키지 않는다)
+ *   - 티스토리: /m/… → /… (숫자 주소와 /entry/글제목 모두)
+ *   - 유튜브: youtube.com/watch?v=<id> 하나로(id는 대소문자를 그대로 둔다)
+ *   - 나머지는 전체를 소문자로
  */
 export function trackingKey(raw: string): string | null {
   const u = parse(raw)
   if (!u) return null
   const host = hostOf(u)
   let path = decodePath(u.pathname).replace(/\/+$/, '')
+  const video = youtubeId(host, u, path)
+  if (video) return `youtube.com/watch?v=${video}`
   let params = [...u.searchParams.entries()].filter(([k]) => !TRACKING_PARAM.test(k))
   if (host === 'blog.naver.com') {
     const blogId = u.searchParams.get('blogId')
     const logNo = u.searchParams.get('logNo')
+    const segments = path.split('/').filter(Boolean)
     if (/^\/PostView\.(naver|nhn)$/i.test(path) && blogId && logNo) path = `/${blogId}/${logNo}`
-    params = []
+    else if (segments.length === 1 && logNo) path = `/${segments[0]}/${logNo}`
   }
-  if (host.endsWith('.tistory.com')) path = path.replace(/^\/m(?=\/\d)/, '')
+  if (QUERYLESS_HOST(host)) params = []
+  if (host.endsWith('.tistory.com')) path = path.replace(/^\/m(?=\/)/, '')
   params.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
   const query = params.length ? `?${params.map(([k, v]) => `${k}=${v}`).join('&')}` : ''
   return `${host}${path}${query}`.toLowerCase()
@@ -89,12 +113,14 @@ export function isArticleUrl(raw: string): { ok: true } | { ok: false; reason: A
   const host = hostOf(u)
   if (SHORT_HOSTS.has(host)) return { ok: false, reason: 'short-link' }
   const key = trackingKey(raw) ?? ''
-  const rest = key.slice(host.length)
+  // 키의 호스트는 원래 호스트와 다를 수 있다(youtu.be → youtube.com). 첫 / · ? 앞까지가 호스트다.
+  const cut = key.search(/[/?]/)
+  const rest = cut < 0 ? '' : key.slice(cut)
   if (rest === '') return { ok: false, reason: 'homepage' }
   const segments = rest.split('?')[0]!.split('/').filter(Boolean)
   const single = segments.length === 1 && !rest.includes('?')
   if (single && host === 'blog.naver.com') return { ok: false, reason: 'blog-home' }
-  if (single && segments[0]!.startsWith('@') && ['brunch.co.kr', 'velog.io', 'medium.com'].includes(host)) {
+  if (single && segments[0]!.startsWith('@') && ['brunch.co.kr', 'velog.io', 'medium.com', 'youtube.com'].includes(host)) {
     return { ok: false, reason: 'blog-home' }
   }
   return { ok: true }
@@ -103,12 +129,14 @@ export function isArticleUrl(raw: string): { ok: true } | { ok: false; reason: A
 /**
  * 올린 글 키와 인용 키의 관계.
  *   exact          같은 글
- *   query-variant  올린 주소에 질의가 없고(경로가 한 단계 이상) 인용 주소가 거기에 `?…`만 붙은 것 — 같은 글일 수도, 다른 글일 수도 있다
+ *   query-variant  질의만 다른 것 — 한쪽에 질의가 없고(경로가 한 단계 이상) 다른 쪽이 거기에 `?…`만 붙었다. 같은 글일 수도, 다른
+ *                  글일 수도 있다(게시판 idx · category). 올린 쪽에 질의가 붙은 경우도 본다.
  *   null           다른 글. `/1` 아래의 `/1/comments`나 `/12`는 다른 글이다.
  */
 export function matchKind(postKey: string, citedKey: string): 'exact' | 'query-variant' | null {
   if (postKey === citedKey) return 'exact'
-  if (!postKey.includes('?') && postKey.includes('/') && citedKey.startsWith(`${postKey}?`)) return 'query-variant'
+  const variantOf = (bare: string, withQuery: string) => !bare.includes('?') && bare.includes('/') && withQuery.startsWith(`${bare}?`)
+  if (variantOf(postKey, citedKey) || variantOf(citedKey, postKey)) return 'query-variant'
   return null
 }
 

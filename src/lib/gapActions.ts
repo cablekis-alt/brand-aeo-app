@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { indexWeekCitations, matchKind, measuredWindow, timingOf, type PostTiming, type WeekTally } from './publishedUrl'
+import { indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -607,11 +607,16 @@ export interface PublishedHit {
   timing: PostTiming
   /** 정확 일치 인용(응답 단위). 이번 주에 인용되지 않았으면 null. */
   tally: WeekTally | null
-  /** 질의(?…)만 다른 주소의 인용 응답 수 — 같은 글일 수도 다른 글일 수도 있어 숫자에 넣지 않는다. */
+  /** 질의(?…)만 다른 주소를 인용한 응답 수 — 같은 글일 수도 다른 글일 수도 있어 숫자에 넣지 않는다. */
   variantCited: number
+  /** 「글을 내렸어요」로 뺀 기록인데 이 주 측정은 내리기 전이었다 — 그 주 인용은 센다. 내린 날(한국 날짜). */
+  takenDownOn?: string
 }
 
-/** 이번 주 측정에서 올린 글을 찾는다. 기록이 없으면 판정을 읽지 않는다. */
+/**
+ * 이번 주 측정에서 올린 글을 찾는다. 기록이 없으면 판정을 읽지 않는다.
+ * 「잘못 적은 주소」는 어느 주에서도 뺀다. 「글을 내렸어요」는 내린 날 전에 한 측정에서는 남긴다 — 글이 올라가 있던 주의 인용이다.
+ */
 function publishedHitsOf(
   posts: PublishedPost[],
   analyses: QuestionRepeatAnalysis[],
@@ -619,17 +624,44 @@ function publishedHitsOf(
   weekOf: string,
 ): Map<string, PublishedHit[]> {
   const out = new Map<string, PublishedHit[]>()
-  const active = posts.filter((p) => !p.removedAt)
-  if (active.length === 0) return out
+  if (!posts.some((p) => !p.removedAt || p.removedReason === 'taken-down')) return out
+  const window = measuredWindow(analyses)
+  const measuredBefore = (removedOn: string) => {
+    if (window) return removedOn > window.last
+    const week = isoWeekOf(removedOn)
+    return week !== null && week > weekOf
+  }
+  const shown = posts.flatMap((p): { post: PublishedPost; takenDownOn?: string }[] => {
+    if (!p.removedAt) return [{ post: p }]
+    const removedOn = kstDate(p.removedAt)
+    return p.removedReason === 'taken-down' && removedOn && measuredBefore(removedOn) ? [{ post: p, takenDownOn: removedOn }] : []
+  })
+  if (shown.length === 0) return out
   // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄 질문으로 나누지 않는다(확인 불가).
   const named = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
   const known = analyses.some((a) => named.has(a.questionId))
   const index = indexWeekCitations(analyses, known ? named : null)
-  const window = measuredWindow(analyses)
-  for (const post of active) {
+  // 질의만 다른 주소는 응답 단위로 센다 — 한 응답이 변형 주소 여럿을 인용해도 한 번이다.
+  const responseKeys = new Map<string, Set<string>>()
+  for (const a of analyses) {
+    const id = `${a.questionId}|${a.engine}|${a.callIndex}`
+    const keys = responseKeys.get(id) ?? new Set<string>()
+    for (const c of a.citations ?? []) {
+      const key = c.raw ? trackingKey(c.raw) : null
+      if (key) keys.add(key)
+    }
+    responseKeys.set(id, keys)
+  }
+  for (const { post, takenDownOn } of shown) {
     let variantCited = 0
-    for (const [key, t] of index) if (matchKind(post.key, key) === 'query-variant') variantCited += t.all.cited
-    const hit: PublishedHit = { post, timing: timingOf(post.publishedOn, window, weekOf), tally: index.get(post.key) ?? null, variantCited }
+    for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
+    const hit: PublishedHit = {
+      post,
+      timing: timingOf(post.publishedOn, window, weekOf),
+      tally: index.get(post.key) ?? null,
+      variantCited,
+      ...(takenDownOn ? { takenDownOn } : {}),
+    }
     out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
   }
   return out

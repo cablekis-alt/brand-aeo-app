@@ -6,7 +6,7 @@
  *
  *   npx tsx scripts/verify-published-posts.ts
  */
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -97,6 +97,48 @@ try {
   const many = Array.from({ length: MAX_POSTS }, (_, i) => ({ id: `p-${i}`, url: `https://example.com/c/${i}`, key: `example.com/c/${i}`, publishedOn: '2026-10-01', publishedOnSource: 'user', recordedAt: '2026-10-01T00:00:00Z', articleId: 'a', targetActionId: 'a', via: 'own' }));
   await writeFile(capFile, JSON.stringify({ version: 1, keyRule: 1, posts: many }), 'utf-8');
   ok(`${MAX_POSTS}줄을 넘으면 400`, (await fails(addPublishedPost(C, { ...base, url: 'https://example.com/c/new' }))) === 400);
+
+  ok('상한은 뺀 적 없는 기록으로 센다(뺀 기록만 가득하면 새로 적힌다)', await (async () => {
+    const D = 'cap-removed-tenant';
+    const f = path.join(root, 'data', D, 'published-posts.json');
+    await mkdir(path.dirname(f), { recursive: true });
+    await writeFile(f, JSON.stringify({ version: 1, keyRule: 2, posts: many.map((p) => ({ ...p, removedAt: '2026-10-02T00:00:00Z', removedReason: 'mistake' })) }), 'utf-8');
+    return (await fails(addPublishedPost(D, { ...base, url: 'https://example.com/c/new' }))) === null;
+  })());
+
+  // 8) 같은 글은 여러 곳(자사 블로그 줄 · 그 블로그가 속한 채널 줄)에 같은 주소로 적을 수 있다
+  const S = 'same-article-tenant';
+  const own = await addPublishedPost(S, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/5', markDone: true });
+  const channel = await addPublishedPost(S, { articleId: 'content:a', targetActionId: 'listing:platform:tistory.com', via: 'channel', url: 'https://fake.tistory.com/5?category=1', markDone: true });
+  const sStates = await readActionStates(S);
+  ok('같은 글을 다른 곳에 같은 주소로 적으면 그 곳에도 한 줄이 생기고 집행함이 된다', !channel.existing && channel.posts.length === 2 && own.post.key === channel.post.key && sStates['listing:platform:tistory.com']?.status === 'done');
+  const conflictBody = await addPublishedPost(S, { articleId: 'content:b', targetActionId: 'content:b', via: 'own', url: 'https://fake.tistory.com/5' }).then(
+    () => null,
+    (err: { status?: number; detail?: { conflict?: { id?: string } } }) => err,
+  );
+  ok('다른 글이면 409와 가로막은 기록을 함께 준다', conflictBody?.status === 409 && Boolean(conflictBody.detail?.conflict?.id));
+  const redated = await addPublishedPost(S, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/5', publishedOn: '2026-10-03', publishedOnChosen: true });
+  ok('같은 곳에 날짜를 골라 다시 적으면 그 날로 고친다', redated.existing && redated.post.id === own.post.id && redated.post.publishedOn === '2026-10-03' && redated.post.recordedAt === own.post.recordedAt);
+  await writeActionState(S, 'listing:old2.example', { status: 'done', publishedUrls: ['https://old2.example/a/9'] });
+  const relegacy = await addPublishedPost(S, { articleId: 'content:a', targetActionId: 'listing:old2.example', via: 'channel', url: 'https://old2.example/a/9', publishedOn: '2026-09-20', publishedOnChosen: true });
+  const afterRelegacy = await readPublishedPosts(S);
+  ok('옛 기록을 같은 곳에 다시 적으면 원장으로 옮기고 글 · 올린 날을 채운다', relegacy.existing && !relegacy.post.legacy && relegacy.post.articleId === 'content:a' && relegacy.post.publishedOn === '2026-09-20' && afterRelegacy.filter((p) => p.key === 'old2.example/a/9').length === 1);
+
+  // 9) 읽는 중에 쓰기 — 윈도우는 다른 요청이 파일을 연 순간 rename이 실패한다(EPERM). 다시 시도해 줄이 사라지지 않고 임시 파일도 남지 않는다.
+  const R = 'reader-tenant';
+  let reading = true;
+  const readers = Array.from({ length: 4 }, async () => {
+    while (reading) await readPublishedPosts(R).catch(() => undefined);
+  });
+  const burst = await Promise.allSettled([
+    ...Array.from({ length: 60 }, (_, i) => addPublishedPost(R, { ...base, url: `https://example.com/read/${i}` })),
+    ...Array.from({ length: 20 }, (_, i) => writeActionState(R, `listing:r${i}.example`, { status: 'doing' })),
+  ]);
+  reading = false;
+  await Promise.all(readers);
+  const leftovers = (await readdir(path.join(root, 'data', R))).filter((f) => f.endsWith('.tmp'));
+  const rPosts = await readPublishedPosts(R);
+  ok('읽는 중에도 쓰기 실패 0건 · 줄 유실 0건 · 남은 임시 파일 0개', burst.every((b) => b.status === 'fulfilled') && rPosts.length === 60 && leftovers.length === 0);
 
   // 7) 키 규칙이 바뀐 옛 파일은 읽을 때 key를 다시 계산한다
   const K = 'rule-tenant';

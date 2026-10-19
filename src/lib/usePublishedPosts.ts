@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   loadPublishedPosts,
   patchPublishedPost,
@@ -16,12 +16,18 @@ import {
  * 깨짐 등) available은 true로 두고 error에 이유를 싣는다 — 기능을 조용히 숨기면 왜 적을 수 없는지 모른다.
  *
  * 날짜 고치기 · 빼기 · 되살리기는 화면에 먼저 반영하고 실패하면 되돌린다. 새 주소 기록은 서버가 키 · id를 정하므로 응답을
- * 기다린다(로컬 서버라 짧다).
+ * 기다린다(로컬 서버라 짧다). 기록 실패는 그 칸에만 돌려준다 — 한 줄의 409가 모든 줄에 뜨지 않게. error는 읽기 · 고치기 실패다.
+ *
+ * 요청 중에 브랜드를 바꾸면 늦게 온 응답을 버린다 — 새 브랜드의 기록을 앞 브랜드 것으로 덮지 않는다.
  */
 export function usePublishedPosts(tenantId: string) {
   const [loaded, setLoaded] = useState<{ key: string; posts: PublishedPost[] | null; available: boolean } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const current = useRef(tenantId)
+  useEffect(() => {
+    current.current = tenantId
+  }, [tenantId])
 
   useEffect(() => {
     if (!tenantId) return
@@ -46,19 +52,21 @@ export function usePublishedPosts(tenantId: string) {
   const fresh = loaded?.key === tenantId ? loaded : null
   const posts = fresh?.posts ?? null
 
-  /** 새 주소 기록. 성공하면 바뀐 집행 상태(markDone)를 돌려준다 — 실패하면 null이고 error에 이유가 남는다. */
+  /**
+   * 새 주소 기록. 성공하면 바뀐 집행 상태(markDone)를, 실패하면 이유를 돌려준다. 그사이 브랜드가 바뀌었으면 결과를 버리고
+   * stale로 알린다.
+   */
   const record = useCallback(
-    async (input: RecordPostInput): Promise<{ states?: ActionStateMap } | null> => {
-      if (!tenantId) return null
+    async (input: RecordPostInput): Promise<{ ok: true; states?: ActionStateMap } | { ok: false; error: string; stale?: true }> => {
+      if (!tenantId) return { ok: false, error: '브랜드가 정해지지 않았습니다.' }
       setBusy(true)
-      setError(null)
       try {
         const r = await recordPublishedPost(tenantId, input)
+        if (current.current !== tenantId) return { ok: false, error: '브랜드가 바뀌어 결과를 버렸습니다.', stale: true }
         setLoaded({ key: tenantId, posts: r.posts, available: true })
-        return { ...(r.states ? { states: r.states } : {}) }
+        return { ok: true, ...(r.states ? { states: r.states } : {}) }
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
-        return null
+        return { ok: false, error: err instanceof Error ? err.message : String(err) }
       } finally {
         setBusy(false)
       }
@@ -92,8 +100,9 @@ export function usePublishedPosts(tenantId: string) {
       setError(null)
       try {
         const r = await patchPublishedPost(tenantId, postId, change)
-        setLoaded({ key: tenantId, posts: r.posts, available: true })
+        if (current.current === tenantId) setLoaded({ key: tenantId, posts: r.posts, available: true })
       } catch (err) {
+        if (current.current !== tenantId) return
         setLoaded({ key: tenantId, posts: before, available: true })
         setError(err instanceof Error ? err.message : String(err))
       }

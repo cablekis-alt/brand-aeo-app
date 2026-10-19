@@ -29,6 +29,14 @@ ok('티스토리 모바일 /m/N → /N', same('https://fake.tistory.com/m/12', '
 ok('퍼센트 인코딩된 한글 경로', same('https://example.com/%EA%B0%80%EC%83%81', 'https://example.com/가상'))
 ok('남은 질의는 키 순으로', same('https://example.com/view?b=2&a=1', 'https://example.com/view?a=1&b=2'))
 ok('http(s)가 아니면 null', trackingKey('ftp://example.com/a') === null && trackingKey('그냥 글자') === null)
+// 질의가 글을 가리키지 않는 플랫폼 — 그대로 적으면 인용과 하나도 맞지 않았다(검토 실측: 티스토리 8,311건 중 0건)
+ok('티스토리 ?category=는 같은 글', same('https://fake.tistory.com/12?category=998877', 'https://fake.tistory.com/12'))
+ok('티스토리 모바일 /m/entry/글제목 → /entry/글제목', same('https://fake.tistory.com/m/entry/가상-글', 'https://fake.tistory.com/entry/가상-글'))
+ok('네이버 블로그 /아이디?Redirect=Log&logNo=N → /아이디/N', same('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233', 'https://blog.naver.com/fakeblog/2233'))
+ok('인스타그램 「링크 복사」 ?igsh= · ?hl=는 같은 글', same('https://www.instagram.com/p/FAKE01/?igsh=abc', 'https://instagram.com/p/FAKE01/?hl=ko'))
+ok('유튜브 youtu.be · shorts · watch?v=&pp=&t=는 같은 영상', same('https://youtu.be/AbCdEfGhIjK?si=Zz9', 'https://www.youtube.com/watch?v=AbCdEfGhIjK&pp=x&t=30') && same('https://m.youtube.com/shorts/AbCdEfGhIjK', 'https://www.youtube.com/watch?v=AbCdEfGhIjK'))
+ok('유튜브 영상 id는 대소문자를 가린다', trackingKey('https://youtu.be/AbCdEfGhIjK') !== trackingKey('https://youtu.be/abcdefghijk'))
+ok('si는 유튜브 밖에서는 떼지 않는다(지역 코드 등 뜻이 있는 값)', !same('https://example.or.kr/page?si=11', 'https://example.or.kr/page'))
 
 // 2) 경계 — 다른 글은 섞지 않는다
 const k = (u: string) => trackingKey(u)!
@@ -37,6 +45,7 @@ ok('?no=1과 ?no=12는 다른 글', matchKind(k('https://example.com/view?no=1')
 ok('/1/comments는 /1이 아니다', matchKind(k('https://example.com/post/1'), k('https://example.com/post/1/comments')) === null)
 ok('질의만 붙은 인용은 query-variant(숫자에 넣지 않는다)', matchKind(k('https://namu.wiki/w/가상'), k('https://namu.wiki/w/가상?uuid=abc')) === 'query-variant')
 ok('같은 글은 exact', matchKind(k('https://example.com/post/1'), k('https://example.com/post/1?utm_source=openai')) === 'exact')
+ok('올린 쪽에만 질의가 붙어도 query-variant', matchKind(k('https://example.com/post/1?ref=menu'), k('https://example.com/post/1')) === 'query-variant')
 
 // 3) 받지 않는 주소
 const reason = (u: string) => {
@@ -44,7 +53,8 @@ const reason = (u: string) => {
   return r.ok ? 'ok' : r.reason
 }
 ok('첫 화면은 거절', reason('https://example.com/') === 'homepage' && reason('https://www.example.com') === 'homepage')
-ok('블로그 홈은 거절', reason('https://blog.naver.com/fakeblog') === 'blog-home' && reason('https://brunch.co.kr/@fake') === 'blog-home')
+ok('블로그 홈 · 유튜브 채널 홈은 거절', reason('https://blog.naver.com/fakeblog') === 'blog-home' && reason('https://brunch.co.kr/@fake') === 'blog-home' && reason('https://www.youtube.com/@fake') === 'blog-home')
+ok('네이버 블로그 ?logNo= 글 주소 · 유튜브 공유 주소는 받는다', reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' && reason('https://youtu.be/AbCdEfGhIjK') === 'ok')
 ok('단축 주소는 거절', reason('https://naver.me/abc') === 'short-link')
 ok('글 주소는 받는다', reason('https://blog.naver.com/fakeblog/2233') === 'ok' && reason('https://fake.tistory.com/12') === 'ok' && reason('https://example.com/?p=12') === 'ok')
 
@@ -123,8 +133,18 @@ const before = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-1
 ok('올리기 전에 한 측정은 인용으로 세지 않는다', before?.publishedHits?.[0]?.timing === 'before' && before.citedPublishedUrls.length === 0)
 const after = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01')]).actions.find((a) => a.id === target)
 ok('올린 뒤 측정의 정확 일치 인용은 센다', after?.citedPublishedUrls.length === 1 && after.publishedHits?.[0]?.tally?.unnamed?.cited === 2)
-const removed = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-12T00:00:00Z', removedReason: 'mistake' })]).actions.find((a) => a.id === target)
-ok('뺀 기록은 붙지 않는다', (removed?.publishedUrls.length ?? 0) === 0)
+const removed = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'mistake' })]).actions.find((a) => a.id === target)
+ok('「잘못 적은 주소」는 어느 주에서도 붙지 않는다', (removed?.publishedUrls.length ?? 0) === 0)
+const takenAfter = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)
+ok('「글을 내렸어요」는 내리기 전 측정에서는 남고 인용을 센다', takenAfter?.publishedHits?.[0]?.takenDownOn === '2026-10-19' && takenAfter.citedPublishedUrls.length === 1)
+const takenBefore = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-13T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)
+ok('내린 뒤에 한 측정에서는 붙지 않는다', (takenBefore?.publishedUrls.length ?? 0) === 0)
+// 한 응답이 질의만 다른 주소 둘을 인용해도 한 번이다
+const variantWeek = [response('v9-001', 0, false, [['https://example.com/post/5?page=1', false], ['https://example.com/post/5?page=2', false], ['https://fake.tistory.com/1', false]], '2026-10-14T01:00:00Z')]
+const variantPlan = computeGapActions(variantWeek as unknown as Analyses, questions, analyzeCitationSources(variantWeek as never), {}, [post('pv', 'https://example.com/post/5', 'listing:any', '2026-10-01')], '2026-W42')
+const variantTarget = variantPlan.actions.find((a) => a.kind === 'listing')?.id ?? ''
+const variantHit = computeGapActions(variantWeek as unknown as Analyses, questions, analyzeCitationSources(variantWeek as never), {}, [post('pv', 'https://example.com/post/5', variantTarget, '2026-10-01')], '2026-W42').actions.flatMap((a) => a.publishedHits ?? [])[0]
+ok('질의만 다른 주소는 응답 단위로 센다(한 응답 · 변형 둘 = 1)', variantHit?.variantCited === 1 && variantHit.tally === null)
 const noBank = computeGapActions(week as unknown as Analyses, [], citations, {}, [post('p1', 'https://fake.tistory.com/1', target, '2026-10-01')], '2026-W42')
 const noBankHit = noBank.actions.flatMap((a) => a.publishedHits ?? [])[0]
 ok('은행을 못 읽은 주는 이름 없는 질문 수가 null(인용 수는 남는다)', noBankHit?.tally?.unnamed === null && noBankHit.tally.all.cited === 3)

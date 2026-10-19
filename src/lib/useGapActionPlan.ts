@@ -113,13 +113,16 @@ export function useGapActionPlan(tenantId: string) {
    * 집행한 주(markedWeek)는 덮지 않는다(예전에는 주소만 고쳐도 보던 주차로 덮였다).
    */
   const published = usePublishedPosts(tenantId)
+  const { record } = published
+  /** 성공하면 null, 실패하면 이유. 브랜드가 바뀐 뒤 온 결과는 상태에 반영하지 않는다(usePublishedPosts가 stale로 알린다). */
   const recordPost = useCallback(
-    async (input: Omit<RecordPostInput, 'viewingWeek'>): Promise<boolean> => {
-      const r = await published.record({ ...input, viewingWeek: weekOf })
-      if (r?.states) setStates(r.states)
-      return r !== null
+    async (input: Omit<RecordPostInput, 'viewingWeek'>): Promise<string | null> => {
+      const r = await record({ ...input, viewingWeek: weekOf })
+      if (!r.ok) return r.error
+      if (r.states) setStates(r.states)
+      return null
     },
-    [published, weekOf],
+    [record, weekOf],
   )
 
   const plan: GapActionPlan = useMemo(

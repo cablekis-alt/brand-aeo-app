@@ -20,7 +20,7 @@ import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
-import { draftRequestOf, gapProgress, workMarkdownOf } from '../lib/draftGaps'
+import { draftRequestOf, effectiveDraft, gapProgress, workMarkdownOf } from '../lib/draftGaps'
 import { downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan } from '../lib/publishPlan'
@@ -492,7 +492,6 @@ function ActionCard({
           removed={posts.list.filter((p) => p.targetActionId === action.id && p.removedAt)}
           weekOf={weekOf ?? ''}
           busy={posts.busy}
-          error={posts.error}
           onRecord={(url, publishedOn, chosen) =>
             posts.record({
               url,
@@ -809,6 +808,12 @@ export default function GapActions() {
           {saveError}
         </p>
       )}
+      {/* 집행 원장을 읽거나 고치지 못했다 — 숨기면 올린 주소가 0개로 보여도 왜인지 모른다. 새 주소 기록 실패는 그 칸에만 뜬다. */}
+      {canRecordPosts && posts.error && (
+        <p className="error" role="alert">
+          올린 글 기록: {posts.error}
+        </p>
+      )}
 
       {loading && <p className="muted">불러오는 중…</p>}
 
@@ -919,7 +924,6 @@ export default function GapActions() {
                           removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt)}
                           weekOf={weekOf}
                           busy={posts.busy}
-                          error={posts.error}
                           // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
                           onRecord={(url, publishedOn, chosen) =>
                             posts.record({
@@ -927,7 +931,7 @@ export default function GapActions() {
                               articleId: row.article.action.id,
                               targetActionId: row.target.id,
                               via: row.kind,
-                              articleTitle: row.article.draft ? draftTitle(row.article.draft.draft) : row.article.action.title,
+                              articleTitle: row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title,
                               ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
                               ...(adaptations?.[row.article.action.id]?.[row.target.id]
                                 ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }

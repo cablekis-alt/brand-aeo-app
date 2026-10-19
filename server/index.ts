@@ -55,6 +55,7 @@ import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
 import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
+import { queueTenantWrite } from './tenantWriteQueue.js';
 import {
   addPublishedPost,
   patchPublishedPost,
@@ -1089,7 +1090,8 @@ app.get('/api/action-states/:tenantId', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  res.json(await readActionStates(tenant.tenantId));
+  // 쓰기 줄에 세워 읽는다 — 윈도우에서 읽는 중인 파일 위로 쓰기(rename)가 실패하지 않게(server/tenantWriteQueue.ts).
+  res.json(await queueTenantWrite(tenant.tenantId, () => readActionStates(tenant.tenantId)));
 });
 
 app.put('/api/action-states/:tenantId', async (req, res) => {
@@ -1121,7 +1123,7 @@ app.put('/api/action-states/:tenantId', async (req, res) => {
 // 오류는 이유와 함께 돌려준다(409: 다른 글에 적힌 주소, 400: 첫 화면·단축 주소 등, 500: 파일이 깨짐 — 쓰지 않는다).
 function sendPostsError(res: import('express').Response, err: unknown) {
   const status = err instanceof PublishedPostsError ? err.status : 500;
-  res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  res.status(status).json({ error: err instanceof Error ? err.message : String(err), ...(err instanceof PublishedPostsError ? err.detail : {}) });
 }
 
 app.get('/api/published-posts/:tenantId', async (req, res) => {
