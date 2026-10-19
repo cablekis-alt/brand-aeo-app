@@ -37,6 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
+      # 측정 주차(weekOf)를 한국 날짜로 정한다 — 데스크톱 설치본과 같은 기준. 러너 기본은 UTC라, 월요일 09:00 KST 전에 돌리면
+      # 지난주 주차가 붙었다(getIsoWeekString은 로컬 시각을 읽는다). 측정 기간(window)은 이미 한국 날짜로 남는다.
+      TZ: Asia/Seoul
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
