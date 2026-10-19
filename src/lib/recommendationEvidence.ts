@@ -56,16 +56,26 @@ export interface EvidenceInput {
 const SHOW = 5
 
 /**
- * 집행한 등재 항목의 꼬리표 — 「집행함 10/19 · 인용 대기」. 이번 주 결과(publishedHits — 그 주 측정 기준으로 내린 글을 이미 가렸다)와
- * 보고 주차까지의 기록으로 적는다. 글을 내렸으면 내린 날을 밝힌다(다음 측정이 인용할 수 없다). 블로그 플랫폼은 「충족」이 없는 지분
- * 자리라 「충족 전」 대신 지분을 적는다.
+ * 집행 상태 — 집행함으로 표시했거나 올린 주소를 적은(내린 글 포함) 항목만. 이번 주 결과(publishedHits)와 보고 주차까지의 기록으로
+ * 정한다.
  */
-function executedNote(a: GapAction, posts: PublishedPost[], asOf: string): string {
+interface Execution {
+  /** 「집행함 10/19」의 날짜 부분(앞 공백 포함). */
+  when: string
+  /** 보고 주차에 올라가 있던 글이 있다. */
+  live: boolean
+  /** 보고 주차까지 내린 마지막 날 — 올라가 있는 글이 없으면 「다시 올릴 곳」이다. */
+  lastDown?: string
+  cited: boolean
+}
+
+function executionOf(a: GapAction, posts: PublishedPost[], asOf: string): Execution | null {
   const hits = a.publishedHits ?? []
   const downs = posts
     .filter((p) => p.targetActionId === a.id && p.removedReason === 'taken-down' && p.removedAt)
     .map((p) => ({ post: p, on: kstDate(p.removedAt!) }))
     .filter((d): d is { post: PublishedPost; on: string } => Boolean(d.on) && (isoWeekOf(d.on!) ?? '') <= asOf)
+  if (a.status !== 'done' && a.publishedUrls.length === 0 && downs.length === 0) return null
   const dated = (hits.length > 0 ? hits.map((h) => h.post) : downs.map((d) => d.post))
     .map((p) => p.publishedOn)
     .filter((d): d is string => Boolean(d))
@@ -76,16 +86,30 @@ function executedNote(a: GapAction, posts: PublishedPost[], asOf: string): strin
   const lastDown = [...downs.map((d) => d.on), ...hits.map((h) => h.takenDownOn).filter((d): d is string => Boolean(d) && (isoWeekOf(d!) ?? '') <= asOf)]
     .sort()
     .at(-1)
-  const result =
-    a.citedPublishedUrls.length > 0
-      ? `올린 글이 이번 주 인용됨${a.progress ? '' : ' · 아직 충족 전'}`
-      : live.length > 0
-        ? '인용 대기'
-        : lastDown
-          ? `올린 글 ${monthDay(lastDown)} 내림`
-          : '올린 주소 기록 없음'
+  return { when, live: live.length > 0, ...(lastDown ? { lastDown } : {}), cited: a.citedPublishedUrls.length > 0 }
+}
+
+/** 블로그 플랫폼 — 「충족」이 없는 지분 자리라 한 편 올렸다고 끝나지 않는다(더 올리면 지분이 오른다). */
+const isPlatform = (a: GapAction) => a.id.startsWith('listing:platform:')
+
+/** 글을 모두 내렸다 — 다음 측정이 인용할 글이 없으니 다시 권한다. */
+const allTakenDown = (e: Execution) => !e.live && !e.cited && Boolean(e.lastDown)
+
+/** 「집행함 10/19 · 인용 대기」 — 다시 권하지 않는 항목의 꼬리표. */
+function executedNote(e: Execution): string {
+  const result = e.cited ? '올린 글이 이번 주 인용됨 · 아직 충족 전' : e.live ? '인용 대기' : '올린 주소 기록 없음'
+  return `집행함${e.when} · ${result}`
+}
+
+/**
+ * 다시 권하는 집행 항목의 머리말 — 블로그 플랫폼은 「집행함 10/1 · 지분 1/2 — 더 올리면 지분이 오른다」, 글을 모두 내렸으면 「올린 글
+ * 10/8 내림 — 다시 올릴 곳」.
+ */
+function reRecommendNote(a: GapAction, e: Execution): string {
+  if (!isPlatform(a)) return `올린 글 ${monthDay(e.lastDown!)} 내림 — 다시 올릴 곳`
+  const result = e.cited ? '올린 글이 이번 주 인용됨' : e.live ? '인용 대기' : e.lastDown ? `올린 글 ${monthDay(e.lastDown)} 내림` : '올린 주소 기록 없음'
   const share = a.progress ? ` · 지분 ${a.progress.supporting}/${a.progress.total}` : ''
-  return `집행함${when} · ${result}${share}`
+  return `집행함${e.when} · ${result}${share} — 더 올리면 지분이 오른다`
 }
 
 /** 상태 · 기록의 주 — 한 가지 달력 시계(한국 날짜)로 자른다. 상태는 마지막으로 고친 때(늦은 쪽 — 지난 보고서에서는 덜 집행한 것으로 본다). */
@@ -199,22 +223,30 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
     const states = Object.fromEntries(Object.entries(input.states ?? {}).filter(([, s]) => stampWeek(s.updatedAt) <= asOf))
     const plan = computeGapActions(analyses, questions, citations, states, posts, asOf)
     const open = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
-    // 이미 집행한 일은 다시 권하지 않는다 — 집행함으로 표시했거나 올린 주소를 적은 항목. 충족은 다음 측정이 말한다.
-    const executed = (a: GapAction) => a.status === 'done' || a.publishedUrls.length > 0
-    const listing = open.filter((a) => !executed(a))
-    const done = open.filter(executed)
+    // 이미 집행한 일은 다시 권하지 않는다 — 집행함으로 표시했거나 올린 주소를 적은 항목. 충족은 다음 측정이 말한다. 다만 블로그
+    // 플랫폼(지분 자리)과 글을 모두 내린 항목은 할 일이 남아 계속 권하고, 집행했다는 사실을 머리말로 단다.
+    const exec = new Map(open.map((a) => [a.id, executionOf(a, posts, asOf)]))
+    const stays = (a: GapAction) => {
+      const e = exec.get(a.id)
+      return !e || isPlatform(a) || allTakenDown(e)
+    }
+    const listing = open.filter(stays)
+    const done = open.filter((a) => !stays(a))
     if (listing.length > 0) {
       citationBlocks.push({
         // 「충족」은 브랜드 이름 없는 질문으로 정한다(gapActions.ts) — 이름을 댄 질문에서만 뒷받침한 출처도 여기 온다.
         heading: 'AI가 인용했지만 브랜드 이름 없는 질문에서는 우리를 뒷받침하지 않은 출처',
-        items: listing.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: `${a.evidence} 완료 기준: ${a.doneSignal}` })),
+        items: listing.slice(0, 4).map((a) => {
+          const e = exec.get(a.id)
+          return { text: `${a.title} (${a.badge})`, detail: `${e ? `[${reRecommendNote(a, e)}] ` : ''}${a.evidence} 완료 기준: ${a.doneSignal}` }
+        }),
         more: Math.max(0, listing.length - 4),
       })
     }
     if (done.length > 0) {
       citationBlocks.push({
         heading: '이미 집행한 출처 — 다시 권하지 않음(다음 측정에서 인용을 확인)',
-        items: done.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: executedNote(a, posts, asOf) })),
+        items: done.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: executedNote(exec.get(a.id)!) })),
         more: Math.max(0, done.length - 4),
       })
     }

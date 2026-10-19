@@ -221,13 +221,23 @@ const downed = evidence({
   posts: [{ ...wikiPost, publishedOn: '2026-10-05', removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' }],
   states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-05T00:00:00Z' } },
 });
-ok('측정 전에 내린 글은 「주소 기록 없음」이 아니라 내린 날', executedBlock(downed)?.items[0]?.detail === '집행함 10/5 · 올린 글 10/8 내림');
+// 사용자 결정(10-19): 글을 모두 내린 항목 · 블로그 플랫폼은 다시 권하고, 집행했다는 사실을 머리말로 단다.
+const wikiDetail = (blocks: ReturnType<typeof evidence>) => blocks[0]?.items.find((i) => i.text.startsWith(wiki.title))?.detail ?? '';
+ok(
+  '글을 모두 내린 집행함 항목은 다시 권하고 「올린 글 10/8 내림 — 다시 올릴 곳」을 단다',
+  recommended(downed) && !executedBlock(downed) && wikiDetail(downed).startsWith('[올린 글 10/8 내림 — 다시 올릴 곳] '),
+);
+const downedOnly = evidence({ posts: [{ ...wikiPost, publishedOn: '2026-10-05', removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' }] });
+ok('집행함 표시 없이 글만 내렸어도 같은 머리말', recommended(downedOnly) && wikiDetail(downedOnly).startsWith('[올린 글 10/8 내림 — 다시 올릴 곳] '));
 const naverUrl = 'https://blog.naver.com/me/1';
 const naver = evidence({
   posts: [post('n', '2026-10-01', { url: naverUrl, key: trackingKey(naverUrl) ?? naverUrl, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
 });
-const naverNote = executedBlock(naver)?.items.find((i) => i.text.includes('네이버'))?.detail ?? '';
-ok('블로그 플랫폼은 「충족 전」 대신 지분을 적는다', /^집행함 10\/1 · 올린 글이 이번 주 인용됨 · 지분 \d+\/\d+$/.test(naverNote));
+const naverNote = naver[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? '';
+ok(
+  '블로그 플랫폼은 한 편 올려도 계속 권하고 지분을 머리말로 단다(「충족 전」이라 쓰지 않는다)',
+  !executedBlock(naver) && /^\[집행함 10\/1 · 올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — 더 올리면 지분이 오른다\] /.test(naverNote) && !naverNote.includes('충족 전'),
+);
 
 let failed = 0;
 for (const [label, pass] of checks) {
