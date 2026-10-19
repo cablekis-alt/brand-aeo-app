@@ -545,6 +545,21 @@ async function matchingBank(
   return keepFirst ? first : null;
 }
 
+/**
+ * 그 주 판정을 나눌 질문 은행 — 인용 출처 집계와 같은 후보 순서(그 주 카드 → 질문 id 접두 → 지금 설정)로, 판정의 질문 id가 맞는
+ * 은행만 쓴다. 하나도 맞지 않으면 null(이름 없는/이름 댄 질문을 나누지 않는다). 올린 글 인용 이력(publishedHistory.ts)이 쓴다.
+ */
+export function weekQuestionBank(
+  store: Pick<ResultStore, 'getQuestionBank'>,
+  tenantId: string,
+  analyses: { questionId: string }[],
+  recordedVersion: string | undefined,
+  currentVersion: string | undefined,
+): Promise<QuestionBank | null> {
+  const prefixes = new Set(analyses.map((a) => /^(v\d+)-/.exec(a.questionId ?? '')?.[1]).filter((p): p is string => Boolean(p)));
+  return matchingBank(store, tenantId, analyses, [recordedVersion, prefixes.size === 1 ? [...prefixes][0] : undefined, currentVersion], false);
+}
+
 /** AI 인용출처 분석 — 소유권을 넘어 출처 유형·엔진 치우침·합의 도메인을 집계한다. */
 export interface CitationSourceOptions {
   /** 수집 엔진 하나로 좁혀 본다. rows·mix·qualityRate 전부 그 엔진 응답만으로 낸다. */

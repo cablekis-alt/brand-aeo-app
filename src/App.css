@@ -4922,6 +4922,26 @@ td.cell-mid {
   gap: 6px;
   margin-top: 4px;
 }
+/* AEO 퍼포먼스 「올린 글 인용 추적」 — 행은 올린 글, 열은 측정 주차. 넓으면 표 상자만 가로로 넘긴다. */
+.history-table {
+  font-size: 13px;
+}
+.history-table .history-post {
+  min-width: 220px;
+  overflow-wrap: anywhere;
+}
+.history-table .history-cell {
+  white-space: nowrap;
+}
+.history-table .history-gap {
+  width: 1.4em;
+  padding: 8px 0;
+  text-align: center;
+  color: var(--muted);
+}
+.history-table .history-tier {
+  min-width: 170px;
+}
 /* 질문 은행 · 콘텐츠 보관함의 「올린 곳」 — 상태 버튼과 주소 칸을 글 아래에 붙인다. */
 .post-section {
   display: grid;

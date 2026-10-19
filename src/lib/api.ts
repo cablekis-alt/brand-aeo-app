@@ -438,6 +438,50 @@ export interface RecordPostInput {
   topic?: TopicSnapshot
 }
 
+/** 올린 글 인용 이력(server/publishedHistory.ts) — 주소 × 측정 주차. 서버 타입과 같은 모양이다. */
+export interface HistoryWeek {
+  weekOf: string
+  /** 판정 기록이 있다. false면 그 주 칸은 0이 아니라 확인 불가다. */
+  analysed: boolean
+  window: { first: string; last: string } | null
+  engines: string[]
+  bankVersion: string | null
+  responses: { all: number; unnamed: number | null; named: number | null; unknown: number }
+  /** 직전 측정 주와 달라진 측정 조건. */
+  changes: string[]
+}
+export interface HistoryCell {
+  timing: import('./publishedUrl').PostTiming
+  afterRemoval: boolean
+  tally: import('./publishedUrl').WeekTally | null
+  variantCited: number
+  topicMention?: { answered: number; mentioned: number } | null
+}
+export interface PostHistory {
+  post: PublishedPost
+  cells: (HistoryCell | null)[]
+}
+export interface PublishedHistory {
+  weeks: HistoryWeek[]
+  posts: PostHistory[]
+}
+
+/** 이력 읽기. null은 이 환경에 기능이 없다(웹 — 라우트 404). 그 밖의 실패는 이유와 함께 throw한다. */
+export async function loadPublishedHistory(tenantId: string, weeks = 12): Promise<PublishedHistory | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/published-history/${encodeURIComponent(tenantId)}?weeks=${weeks}`)
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  const body = (await res.json().catch(() => null)) as (PublishedHistory & { error?: string }) | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.weeks)) {
+    throw new PublishedPostsRequestError(body?.error || `올린 글 인용 이력을 읽지 못했습니다 (HTTP ${res.status})`)
+  }
+  return body
+}
+
 export async function recordPublishedPost(
   tenantId: string,
   input: RecordPostInput,

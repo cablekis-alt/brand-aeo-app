@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import PublishedHistoryTable from '../components/PublishedHistoryTable'
 import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
+import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { AEO_SCORE_WEIGHTS, MIN_SOM_MENTIONS, type WeeklyScorecard } from '../prompts/b8-report'
@@ -24,7 +26,9 @@ function maxScore(history: WeeklyScorecard[]): number {
 }
 
 export default function Performance() {
-  const { tenant } = useTenant()
+  const { tenant, viewing } = useTenant()
+  // 올린 글 인용 추적(언급률 2번 P3) — 고객 브랜드에서만. 경쟁사 보기는 그 브랜드의 집행 기록이 우리 것이 아니다.
+  const published = usePublishedHistory(viewing ? '' : (tenant?.tenantId ?? ''))
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const [selectedWeek, setSelectedWeek] = useWeekSelection(history)
 
@@ -273,6 +277,22 @@ export default function Performance() {
               </p>
             )}
           </section>
+
+          {!viewing && published.available && (
+            <section id="published">
+              <h3>올린 글 인용 추적</h3>
+              {published.error ? (
+                <p className="error">올린 글 기록: {published.error}</p>
+              ) : published.history && published.history.posts.length > 0 ? (
+                <PublishedHistoryTable history={published.history} />
+              ) : (
+                <p className="muted">
+                  아직 올린 글 기록이 없습니다. 콘텐츠 생성의 「올렸어요」, 질문 은행, 콘텐츠 보관함에서 올린 주소를 적으면 여기서 측정
+                  주차마다 그 글이 AI 답변에 인용됐는지 셉니다.
+                </p>
+              )}
+            </section>
+          )}
 
           {card.hallucinationFlags.length > 0 && (
             <section className="panel warn">

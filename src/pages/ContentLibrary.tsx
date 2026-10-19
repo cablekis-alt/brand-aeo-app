@@ -17,6 +17,8 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import { recordOnlyHits, topicSnapshotFor } from '../lib/gapActions'
+import { summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
+import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { QuestionBank } from '../lib/types'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import type { PublishSettings } from '../lib/publishSettings'
@@ -117,6 +119,15 @@ export default function ContentLibrary() {
   }, [key, hasTopic])
   const canRecord = published.available && states !== null
   const postsOf = (articleId: string) => (published.posts ?? []).filter((p) => p.articleId === articleId)
+  // 글별 인용 판단(언급률 2번 P3) — 그 글의 기록 가운데 가장 강한 판단을 칩으로 단다. 자세한 주차별 칸은 AEO 퍼포먼스에 있다.
+  const history = usePublishedHistory(canRecord ? key : '')
+  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'waiting']
+  const tierOf = (articleId: string): PostTier | null => {
+    const rows = (history.history?.posts ?? []).filter((p) => p.post.articleId === articleId)
+    if (rows.length === 0 || !history.history) return null
+    const tiers = new Set(rows.map((p) => summarizePost(p.cells, history.history!.weeks).tier))
+    return TIER_ORDER.find((t) => tiers.has(t)) ?? null
+  }
   const setStatus = async (actionId: string, status: ActionStatus) => {
     const id = key
     setStatusError(null)
@@ -261,6 +272,7 @@ export default function ContentLibrary() {
               const shown = open === d.actionId
               const postCount = postsOf(d.actionId).filter((p) => !p.removedAt).length
               const postsShown = postsOpen === d.actionId
+              const tier = postCount > 0 ? tierOf(d.actionId) : null
               return (
                 <article className="gap-card" key={d.actionId}>
                   <div className="gap-card-head">
@@ -268,6 +280,11 @@ export default function ContentLibrary() {
                     {d.editedMarkdown && <span className="st st-info">고침</span>}
                     {gaps > 0 && <span className="st st-warn">빈칸 {gaps}</span>}
                     {canRecord && postCount > 0 && <span className="st st-info">올린 곳 {postCount}</span>}
+                    {tier && (
+                      <span className="st st-info" title="올린 뒤 측정에서 그 주소가 AI 답변에 인용됐나 — 주차별 칸은 AEO 퍼포먼스의 올린 글 인용 추적">
+                        {TIER_LABEL[tier]}
+                      </span>
+                    )}
                   </div>
                   <p className="gap-tally">{d.draft.lead}</p>
                   <p className="doc-meta">
