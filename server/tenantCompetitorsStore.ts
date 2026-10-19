@@ -37,6 +37,10 @@ export interface CompetitorOverrideFile {
     before: CompetitorOverride | null;
     summary: string;
     exclusions?: { added: CohortExclusion[]; removed: CohortExclusion[] };
+    /** 목록은 그대로 두고 지난 기록만 바꾼 저장. */
+    listUnchanged?: true;
+    /** listUnchanged일 때, 그 전 목록 저장의 시각 · 요약(「다음 측정 대기」가 보인다). */
+    list?: { savedAt: string; summary: string };
   } | null;
   /**
    * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가

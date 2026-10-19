@@ -1,7 +1,9 @@
 import { access, mkdir, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { readCohortExclusions, updateCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { competitorDraftId } from './cohortPlan.js';
+import { affectedCohortWeeks, reconcileCohortRanks } from './cohortRank.js';
 import { EditorError, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
@@ -243,6 +245,20 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
 
   const removedFrom: string[] = [];
   const removeErrors: PromoteResult['removeErrors'] = [];
+  // 경쟁사일 때 다른 고객이 「지난 기록에서도 빼기」로 뺀 기록을 푼다 — 고객 브랜드가 되면 자기 코호트에서 자기 카드가 빠진 채
+  // 남고, 고객 브랜드는 서랍의 예전 경쟁사에 나오지 않아 풀 곳이 없다. 실패해도 전환은 되돌리지 않고 알린다.
+  try {
+    let released: CohortExclusion[] = [];
+    // 뺀 기록이 없으면 파일을 쓰지 않는다(전환마다 쓰지 않게).
+    if ((await readCohortExclusions()).some((e) => e.tenantId === draft.tenantId)) await updateCohortExclusions((entries) => {
+      released = entries.filter((e) => e.tenantId === draft.tenantId);
+      return entries.filter((e) => e.tenantId !== draft.tenantId);
+    });
+    for (const k of await affectedCohortWeeks(store, released)) await reconcileCohortRanks(store, k.industry, k.region, k.weekOf);
+  } catch (err) {
+    console.error(`[tenantPromote] ${draft.tenantId} 코호트 제외 해제 실패:`, err);
+    removeErrors.push({ tenantId: draft.tenantId, error: `지난 기록 제외를 풀지 못했어요: ${err instanceof Error ? err.message : String(err)}` });
+  }
   const runtime = await loadRuntimeTenants();
   for (const id of new Set(removeFrom)) {
     const customer = runtime.find((t) => t.tenantId === id && !t.cohortOnly);

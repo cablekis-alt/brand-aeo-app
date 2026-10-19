@@ -135,10 +135,12 @@ type CohortKey = { industry: string; region: string; weekOf: string };
 
 /**
  * 같은 주에 다시 넣어 잰 경쟁사의 코호트 제외를 푼다(cohortExclusionStore.ts trimRemeasured) — 그 주부터 다시 센다.
- * 이번 측정으로 이 코호트에 카드를 남긴 경쟁사(측정 성공 · 이번 주 카드 재사용)만 본다. 다시 셀 코호트 주차를 돌려준다.
+ * 이번 측정으로 이 고객의 코호트에 카드를 남긴 경쟁사(측정 성공 · 이번 주 카드 재사용)만 본다 — 다른 지역으로 잰 경쟁사의 카드는
+ * 이 고객의 순위표에 들지 않으므로, 그 지역 고객이 뺀 기록을 풀지 않는다. 다시 셀 코호트 주차를 돌려준다.
  * 실패해도 측정은 살린다(그 주는 계속 빠진 채 남는다 — 서랍의 「다시 세기」로 풀 수 있다).
  */
-async function releaseRemeasured(
+export async function releaseRemeasured(
+  cohort: { industry: string; region: string },
   measured: ({ tenant: TenantConfig; weekOf: string } | null)[],
   reused: TenantConfig[],
   weekOf: string,
@@ -146,7 +148,7 @@ async function releaseRemeasured(
   const hits = [
     ...measured.flatMap((m) => (m ? [{ tenantId: m.tenant.tenantId, industry: m.tenant.industry, region: m.tenant.region, weekOf: m.weekOf }] : [])),
     ...reused.map((t) => ({ tenantId: t.tenantId, industry: t.industry, region: t.region, weekOf })),
-  ];
+  ].filter((h) => h.industry === cohort.industry && h.region === cohort.region);
   if (!hits.length) return [];
   try {
     // 풀 것이 없으면 파일을 쓰지 않는다(측정마다 쓰지 않게).
@@ -409,7 +411,7 @@ async function measureAndBakeRun(
   // 남았다(2026-10-15). 다른 브랜드 측정 안에서 잰 경쟁사는 그 측정이 끝에서 한 번 계산한다(inCohortRun).
   // 뺐던 경쟁사(「지난 기록에서도 빼기」)를 다시 넣어 같은 주에 쟀다 — 그 주는 다시 센다. 고객 브랜드의 측정에서만 —
   // 「이 경쟁사만 측정」으로 따로 잰 것은 목록에 다시 넣은 것이 아니다. 측정에 실패한 경쟁사는 그대로 둔다.
-  const released = !tenant.cohortOnly && !options.inCohortRun ? await releaseRemeasured(measured, reusedTargets, weekNow) : [];
+  const released = !tenant.cohortOnly && !options.inCohortRun ? await releaseRemeasured({ industry: tenant.industry, region: tenant.region }, measured, reusedTargets, weekNow) : [];
 
   if (!tenant.cohortOnly || !options.inCohortRun) {
     try {

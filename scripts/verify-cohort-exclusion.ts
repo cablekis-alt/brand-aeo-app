@@ -102,6 +102,14 @@ try {
     }))
     writeJson(`data/${tid}/scorecard-history.json`, history)
   }
+  // 고객이 코호트를 옮기기 전(W40) 옛 코호트에서 함께 잰 곳 — 예전 경쟁사로 보이지만 지금 코호트에는 기록이 없다.
+  const oldCard = (tid: string, name: string, score: number) => ({
+    tenantId: tid, brandName: name, weekOf: '2026-W40', industry: '옛업종', region: '옛지역',
+    aeoScore: { current: score, ciLow: 0, ciHigh: score }, mentionRate: 0, brandOwnedCitationRate: 0, cohortRank: { position: 1, totalTenants: 2 },
+  })
+  const custHistory = JSON.parse(JSON.stringify((await store.getScorecardHistory(id, 10))))
+  writeJson(`data/${id}/scorecard-history.json`, [oldCard(id, repo.brandName, 1), ...custHistory])
+  writeJson('data/fake-old/scorecard-history.json', [oldCard('fake-old', '가짜옛코호트', 0)])
   for (const w of weeks) await rank.reconcileCohortRanks(store, repo.industry, repo.region, w)
   const ranksOf = async () =>
     Object.fromEntries(
@@ -117,6 +125,13 @@ try {
   const s0 = await ed.buildEditorState(repo, runtime0, store)
   const pastX = s0.past.find((p) => p.tenantId === X)
   ok('뺀 적 없는 예전 경쟁사로 보인다(뺀 범위 없음)', Boolean(pastX) && pastX!.excluded.length === 0 && pastX!.firstWeekOf === '2026-W41' && pastX!.lastWeekOf === '2026-W42')
+  ok('예전 경쟁사에 지금 코호트의 카드 범위가 붙는다', pastX?.cohortWeeks === 2 && pastX.cohortFirstWeekOf === '2026-W41' && pastX.cohortLastWeekOf === '2026-W42')
+  const oldPast = s0.past.find((p) => p.tenantId === 'fake-old')
+  ok('옛 코호트에서만 함께 잰 곳은 지금 코호트 카드가 0(뺄 것이 없다)', oldPast?.cohortWeeks === 0)
+  ok(
+    '옛 코호트 경쟁사를 빼려 하면 이름을 밝혀 막는다',
+    (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [{ tenantId: 'fake-old' }], restore: [] })).errors.some((e) => e.startsWith('가짜옛코호트:')),
+  )
 
   const p1 = await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [{ tenantId: X }], restore: [] })
   const pv = p1.exclusion!
@@ -135,8 +150,9 @@ try {
   tracker.endMeasureRun()
   const saved = await ed.saveEdit(id, store, { competitors: repo.competitors, summary: '지난 기록에서 빼기', pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: pv.key })
   const afterSave = await ranksOf()
-  ok('저장된 고객 순위 = 미리보기(3/6)', weeks.every((w, i) => {
-    const r = afterSave[id]![i]!
+  const savedRanks = await Promise.all(weeks.map((w) => custRank(w)))
+  ok('저장된 고객 순위 = 미리보기(3/6)', weeks.every((_, i) => {
+    const r = savedRanks[i]!
     return r.position === pv.weeks[i]!.after.position && r.totalTenants === pv.weeks[i]!.after.totalTenants && (r.tiedCount ?? 1) === pv.weeks[i]!.after.tiedCount
   }))
   const recount = await Promise.all(weeks.map((w) => rank.planCohortRanks(store, repo.industry, repo.region, w)))
@@ -170,6 +186,8 @@ try {
   // ── 8) 지운 브랜드와 함께 ─────────────────────────────────────────
   const pv3 = (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [{ tenantId: X }], restore: [] })).exclusion!
   await ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: pv3.key })
+  const dupPlan = await ed.planEdit(repo, await reg.loadRuntimeTenants(), store, repo.competitors, { add: [{ tenantId: X }], restore: [] })
+  ok('이미 뺀 주만 덮으면 항목을 더 만들지 않는다', (dupPlan.exclusion?.items.length ?? 0) === 0 && dupPlan.notes.some((n) => n.includes('이미 지난 기록에서 뺐어요')))
   writeJson('tenants.deleted.json', ['fake-e'])
   const both = await store.getCohortScorecards(repo.industry, repo.region, '2026-W42')
   ok('지운 브랜드와 뺀 경쟁사가 함께 빠진다', both.length === 5 && !both.some((c) => c.tenantId === X || c.tenantId === 'fake-e'))
@@ -185,6 +203,61 @@ try {
   ok('다른 고객이 함께 재면 잠긴다(미리보기)', lockPlan.locked.length === 1 && lockPlan.locked[0]!.by.includes('가짜다른고객'))
   ok('잠긴 경쟁사는 저장 409', await rejects(ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: lockPlan.key }), 409))
   ok('잠겨서 아무것도 쓰지 않았다', JSON.stringify(await ranksOf()) === snapshot0)
+  writeJson('tenants.overlay.json', [])
+
+  // ── 10) 순위 다시 세기 중 실패하면 되돌린다 ─────────────────────────
+  class FailingStore extends FileResultStore {
+    calls = 0
+    async saveScorecard(card: Parameters<FileResultStore['saveScorecard']>[0]): Promise<void> {
+      this.calls += 1
+      if (this.calls === 3) throw Object.assign(new Error('EBUSY: 시험용 실패'), { code: 'EBUSY' })
+      return super.saveScorecard(card)
+    }
+  }
+  const failing = new FailingStore()
+  const pvF = (await ed.planEdit(repo, runtime0, failing, repo.competitors, { add: [{ tenantId: X }], restore: [] })).exclusion!
+  let failed10 = false
+  try {
+    await ed.saveEdit(id, failing, { competitors: repo.competitors, summary: '실패할 저장', pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: pvF.key })
+  } catch {
+    failed10 = true
+  }
+  ok('다시 세는 중 실패하면 저장이 실패한다', failed10)
+  ok('실패하면 제외 목록과 순위를 되돌린다(일부만 다시 쓴 순위가 남지 않는다)', (await ex.readCohortExclusions()).length === 0 && JSON.stringify(await ranksOf()) === snapshot0)
+  ok('실패한 저장은 되돌리기 기록에 남지 않는다', (await ed.buildEditorState(repo, runtime0, store)).edit.summary !== '실패할 저장')
+
+  // ── 11) 「다시 세기」를 되돌리면 다시 빼게 된다 — 그사이 다른 고객이 재게 됐으면 막는다 ──
+  const pvU = (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [{ tenantId: X }], restore: [] })).exclusion!
+  await ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: pvU.key })
+  const prU = (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [], restore: [X] })).exclusion!
+  await ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [], restore: [X] }, previewKey: prU.key })
+  writeJson('tenants.overlay.json', [other])
+  ok('다른 고객이 함께 재게 된 경쟁사는 되돌리기로도 다시 뺄 수 없다(409)', await rejects(ed.undoEdit(id, store), 409))
+  ok('막혀서 아무것도 쓰지 않았다', JSON.stringify(await ranksOf()) === snapshot0 && (await ex.readCohortExclusions()).length === 0)
+  writeJson('tenants.overlay.json', [])
+
+  // ── 12) 같은 주 재측정 해제는 측정한 고객의 코호트에서만 ──────────────
+  const mb = await import('../server/measureAndBake')
+  const pvR = (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [{ tenantId: X }], restore: [] })).exclusion!
+  await ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [{ tenantId: X }], restore: [] }, previewKey: pvR.key })
+  const xTenant = { tenantId: X, industry: repo.industry, region: repo.region } as unknown as Parameters<typeof mb.releaseRemeasured>[1][number] extends infer M ? (M extends { tenant: infer T } ? T : never) : never
+  const elsewhere = await mb.releaseRemeasured({ industry: repo.industry, region: '다른지역' }, [{ tenant: xTenant, weekOf: '2026-W42' }], [], '2026-W42')
+  ok('다른 지역 고객의 측정은 이 코호트의 제외를 풀지 않는다', elsewhere.length === 0 && (await ex.readCohortExclusions())[0]?.untilWeek === '2026-W42')
+  const here = await mb.releaseRemeasured({ industry: repo.industry, region: repo.region }, [{ tenant: xTenant, weekOf: '2026-W42' }], [], '2026-W42')
+  ok('같은 코호트 고객이 다시 넣어 재면 그 주부터 푼다', here.length === 1 && (await ex.readCohortExclusions())[0]?.untilWeek === '2026-W41')
+  const prR = (await ed.planEdit(repo, runtime0, store, repo.competitors, { add: [], restore: [X] })).exclusion!
+  await ed.saveEdit(id, store, { competitors: repo.competitors, pastOut: { add: [], restore: [X] }, previewKey: prR.key })
+  for (const w of weeks) await rank.reconcileCohortRanks(store, repo.industry, repo.region, w)
+  ok('다시 세어 처음으로 돌아왔다', JSON.stringify(await ranksOf()) === snapshot0 && (await ex.readCohortExclusions()).length === 0)
+
+  // ── 13) 잠금은 다른 고객의 마지막 카드 코호트도 본다(설정을 옮기고 아직 다시 재지 않은 고객) ──
+  const moved = { ...other, tenantId: 'fake-moved-customer', brandName: '가짜옮긴고객', region: '옮긴지역' }
+  writeJson('tenants.overlay.json', [moved])
+  writeJson('data/fake-moved-customer/scorecard-history.json', [
+    { tenantId: 'fake-moved-customer', brandName: '가짜옮긴고객', weekOf: '2026-W42', industry: repo.industry, region: repo.region, aeoScore: { current: 0, ciLow: 0, ciHigh: 0 }, mentionRate: 0, brandOwnedCitationRate: 0, cohortRank: { position: 1, totalTenants: 1 } },
+  ])
+  const movedPlan = (await ed.planEdit(repo, await reg.loadRuntimeTenants(), store, repo.competitors, { add: [{ tenantId: X }], restore: [] })).exclusion!
+  ok('설정은 다른 코호트지만 마지막 순위표가 이 코호트인 고객이 재면 잠긴다', movedPlan.locked.some((l) => l.by.includes('가짜옮긴고객')))
   writeJson('tenants.overlay.json', [])
 } catch (err) {
   console.error(err)

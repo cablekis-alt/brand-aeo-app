@@ -544,7 +544,12 @@ export function aggregateScorecard(
     rankedResponses: m.rankedResponses,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,
-    cohortRank: computeCohortRank(m.score, cohortScorecards),
+    // 자기 순위는 「다른 카드 + 이번 점수」로 센다. 코호트 제외 목록(「지난 기록에서도 빼기」)에 든 경쟁사를 따로 재면 자기 카드가
+    // 거른 목록에서 빠져 분모에 자기가 없고, 측정 끝의 다시 세기도 뺀 카드는 건너뛰어 그대로 남는다.
+    cohortRank: computeCohortRank(m.score, [
+      ...cohortScorecards.filter((c) => c.tenantId !== tenant.tenantId),
+      { tenantId: tenant.tenantId, aeoScore: { current: m.score } } as WeeklyScorecard,
+    ]),
     hallucinationFlags: m.hallucinationFlags,
     enginesUsed: m.enginesUsed,
     // 판단 엔진·질문 은행 버전은 지표 집계(aggregate.ts)가 아니라 여기서 붙인다 — 재계산

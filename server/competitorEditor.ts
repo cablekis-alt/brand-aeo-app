@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   applyExclusionChanges,
+  isExcluded,
   readCohortExclusions,
   stampExclusion,
   updateCohortExclusions,
@@ -78,11 +79,18 @@ export interface EditorPastCompetitor {
   brandName: string;
   aliases: string[];
   domains: string[];
-  /** 이 고객의 코호트에 카드가 있는 주차 수와 처음 · 마지막 주차. */
+  /** 이 고객의 최근 순위표(최근 12주)에 든 주차 수와 처음 · 마지막 주차. */
   weeks: number;
   firstWeekOf: string;
   lastWeekOf: string;
   lastScore: number;
+  /**
+   * 지금 코호트(업종 · 지역)에 있는 이 경쟁사 카드 전체 — 「지난 기록에서도 빼기」가 빼는 범위다(최근 12주보다 넓을 수 있다).
+   * 0이면 옛 코호트(이 고객이 코호트를 옮기기 전)의 기록뿐이라 뺄 것이 없다.
+   */
+  cohortWeeks: number;
+  cohortFirstWeekOf: string | null;
+  cohortLastWeekOf: string | null;
   /** 지난 기록에서 뺀 범위(코호트 제외 목록). 비면 지난 순위표에 남아 있다. */
   excluded: ExcludedRange[];
 }
@@ -249,10 +257,21 @@ async function loadContext(tenant: TenantConfig, runtime: TenantConfig[], store:
     readCohortExclusions(),
   ]);
   const last = history.at(-1) ?? null;
+  // 코호트는 점수 기록의 업종·지역이다(영어 질문 측정은 지역에 꼬리표가 붙는다). 측정 전이면 설정값.
+  const industry = last?.industry ?? tenant.industry;
+  const region = last?.region ?? tenant.region;
   const othersListed = new Set<string>();
   const othersMeasuring = new Map<string, string[]>();
-  for (const other of runtime) {
-    if (other.cohortOnly || other.tenantId === tenant.tenantId || other.industry !== tenant.industry || other.region !== tenant.region) continue;
+  // 같은 코호트의 다른 고객 — 마지막 카드가 이 코호트에 있거나(아직 옛 코호트로 순위표에 든다), 설정이 이 코호트인(다음 측정부터
+  // 여기서 잰다) 고객. 설정만 보면 「국내」로 옮기고 아직 다시 재지 않은 고객을 놓쳐 잠금이 빠진다.
+  const others = runtime.filter((o) => !o.cohortOnly && o.tenantId !== tenant.tenantId);
+  const otherLast = await Promise.all(others.map((o) => store.getScorecardHistory(o.tenantId, 1)));
+  for (const [i, other] of others.entries()) {
+    const ol = otherLast[i]!.at(-1);
+    const inCohort =
+      ((ol?.industry ?? other.industry) === industry && (ol?.region ?? other.region) === region) ||
+      (other.industry === industry && other.region === region);
+    if (!inCohort) continue;
     for (const e of planCohortTargets(other, runtime).entries) {
       for (const id of [e.targetTenantId, e.draftId]) {
         if (!id) continue;
@@ -267,9 +286,8 @@ async function loadContext(tenant: TenantConfig, runtime: TenantConfig[], store:
     store,
     history,
     last,
-    // 코호트는 점수 기록의 업종·지역이다(영어 질문 측정은 지역에 꼬리표가 붙는다). 측정 전이면 설정값.
-    industry: last?.industry ?? tenant.industry,
-    region: last?.region ?? tenant.region,
+    industry,
+    region,
     customers: new Set(runtime.filter((t) => !t.cohortOnly).map((t) => t.tenantId)),
     deletedIds: new Set(deleted),
     bank,
@@ -340,17 +358,19 @@ const PAST_WEEKS = 12;
 
 /** 이 고객의 지난 코호트에 끼어 있었지만 지금은 아무 고객도 재지 않는 경쟁사. */
 async function pastCompetitors(ctx: Context, rows: EditorCompetitorRow[]): Promise<EditorPastCompetitor[]> {
-  // 같은 코호트의 다른 고객이 지금 재는 경쟁사도 뺀다 — 이 고객이 뺀 곳이 아니다.
-  const currentIds = new Set([...rows.flatMap((r) => [r.targetTenantId, r.draftId]).filter((x): x is string => Boolean(x)), ...ctx.othersListed]);
+  const ownIds = new Set(rows.flatMap((r) => [r.targetTenantId, r.draftId]).filter((x): x is string => Boolean(x)));
+  // 같은 코호트의 다른 고객이 목록에 둔 경쟁사도 뺀다 — 이 고객이 뺀 곳이 아니다. 다만 이 코호트에서 지난 기록을 뺀 경쟁사는
+  // 남긴다 — 「다시 세기」를 할 곳이 이 목록뿐이다.
+  const hidden = (id: string) => ownIds.has(id) || (ctx.othersListed.has(id) && !excludedRanges(ctx, id).length);
   const byId = new Map(ctx.runtime.map((t) => [t.tenantId, t]));
-  const pastMap = new Map<string, EditorPastCompetitor>();
+  const pastMap = new Map<string, Omit<EditorPastCompetitor, 'cohortWeeks' | 'cohortFirstWeekOf' | 'cohortLastWeekOf'>>();
   // 최근 12주만 본다 — 주마다 모든 브랜드 폴더를 읽으므로(getCohortScorecards) 오래된 기록까지 훑으면 서랍이 느려진다.
   // 지난 기록에서 뺀 경쟁사도 보여야 한다(「다시 세기」) — 제외 목록 없이 읽고 뺀 범위를 따로 붙인다.
   const recent = ctx.history.slice(-PAST_WEEKS);
   const cohorts = await Promise.all(recent.map((card) => ctx.store.getCohortScorecards(card.industry, card.region, card.weekOf, { exclusions: [] })));
   for (const members of cohorts) {
     for (const m of members) {
-      if (m.tenantId === ctx.tenant.tenantId || ctx.customers.has(m.tenantId) || currentIds.has(m.tenantId)) continue;
+      if (m.tenantId === ctx.tenant.tenantId || ctx.customers.has(m.tenantId) || hidden(m.tenantId)) continue;
       const prev = pastMap.get(m.tenantId);
       const newer = !prev || m.weekOf >= prev.lastWeekOf;
       const t = byId.get(m.tenantId);
@@ -367,7 +387,42 @@ async function pastCompetitors(ctx: Context, rows: EditorCompetitorRow[]): Promi
       });
     }
   }
-  return [...pastMap.values()].sort((a, b) => b.lastWeekOf.localeCompare(a.lastWeekOf) || a.brandName.localeCompare(b.brandName, 'ko'));
+  // 최근 12주 밖에서 뺀 경쟁사도 「다시 세기」를 할 수 있게 넣는다.
+  const extra = [
+    ...new Set(
+      ctx.exclusions
+        .filter((e) => e.industry === ctx.industry && e.region === ctx.region && !pastMap.has(e.tenantId) && !hidden(e.tenantId) && !ctx.customers.has(e.tenantId))
+        .map((e) => e.tenantId),
+    ),
+  ];
+  const ids = [...pastMap.keys(), ...extra];
+  const histories = await Promise.all(ids.map((id) => ctx.store.getScorecardHistory(id, Number.MAX_SAFE_INTEGER)));
+  const out: EditorPastCompetitor[] = [];
+  for (const [i, id] of ids.entries()) {
+    const inCohort = histories[i]!.filter((c) => c.industry === ctx.industry && c.region === ctx.region);
+    const cohort = { cohortWeeks: inCohort.length, cohortFirstWeekOf: inCohort[0]?.weekOf ?? null, cohortLastWeekOf: inCohort.at(-1)?.weekOf ?? null };
+    const seen = pastMap.get(id);
+    if (seen) {
+      out.push({ ...seen, ...cohort });
+      continue;
+    }
+    const lastCard = inCohort.at(-1);
+    if (!lastCard) continue;
+    const t = byId.get(id);
+    out.push({
+      tenantId: id,
+      brandName: lastCard.brandName,
+      aliases: t?.aliases ?? [lastCard.brandName],
+      domains: t?.ownedDomains ?? [],
+      weeks: inCohort.length,
+      firstWeekOf: inCohort[0]!.weekOf,
+      lastWeekOf: lastCard.weekOf,
+      lastScore: lastCard.aeoScore.current,
+      excluded: excludedRanges(ctx, id),
+      ...cohort,
+    });
+  }
+  return out.sort((a, b) => b.lastWeekOf.localeCompare(a.lastWeekOf) || a.brandName.localeCompare(b.brandName, 'ko'));
 }
 
 /** 「+ 경쟁사 추가」 후보 — 예전 경쟁사, 같은 코호트에 등록된 브랜드, 마지막 측정 답변에 나온 이름. AI는 부르지 않는다. */
@@ -410,6 +465,14 @@ async function suggestionsFor(ctx: Context, rows: EditorCompetitorRow[], past: E
     }
   }
   return out;
+}
+
+/** 마지막 목록 저장의 시각 · 요약 — 지난 기록만 바꾼 저장은 건너뛴다(그 전 목록 저장을 이어 둔 값). 없으면 undefined. */
+function listSaveInfo(file: CompetitorOverrideFile): { savedAt: string; summary: string } | undefined {
+  const ls = file.lastSave;
+  if (!ls) return undefined;
+  if (ls.listUnchanged) return ls.list;
+  return { savedAt: ls.savedAt, summary: ls.summary };
 }
 
 /**
@@ -462,7 +525,7 @@ export async function buildEditorState(tenant: TenantConfig, runtime: TenantConf
     edit: {
       active,
       stale: Boolean(current) && !active,
-      savedAt: file?.lastSave?.savedAt ?? null,
+      savedAt: (file ? listSaveInfo(file)?.savedAt : undefined) ?? file?.lastSave?.savedAt ?? null,
       summary: file?.lastSave?.summary ?? null,
       undoAvailable: canUndo(file, tenant.competitors),
       repoCompetitors: repo?.competitors ?? [],
@@ -517,6 +580,7 @@ async function planExclusion(
   nextRows: EditorCompetitorRow[],
   input: PastOutInput,
   errors: string[],
+  notes: string[],
 ): Promise<ExclusionChange> {
   const listed = new Set(nextRows.flatMap((r) => [r.targetTenantId, r.draftId]).filter((x): x is string => Boolean(x)));
   const add: CohortExclusion[] = [];
@@ -535,7 +599,7 @@ async function planExclusion(
     const inCohort = history.filter((c) => c.industry === ctx.industry && c.region === ctx.region);
     const last = inCohort.at(-1);
     if (!last) {
-      errors.push('이 코호트에 남은 기록이 없는 경쟁사예요.');
+      errors.push(`${history.at(-1)?.brandName ?? a.tenantId}: 이 코호트(${ctx.industry} · ${ctx.region})에 남은 기록이 없는 경쟁사예요.`);
       continue;
     }
     if (a.onlyWeek && !inCohort.some((c) => c.weekOf === a.onlyWeek)) {
@@ -554,6 +618,11 @@ async function planExclusion(
       excludedBy: ctx.tenant.tenantId,
     });
     const covered = inCohort.filter((c) => c.weekOf <= entry.untilWeek && (!entry.fromWeek || c.weekOf >= entry.fromWeek));
+    // 이미 뺀 주만 덮으면 항목을 더 만들지 않는다 — 같은 범위 항목이 겹쳐 쌓이면 「다시 세기」 · 되돌리기가 일부만 푼다.
+    if (covered.every((c) => isExcluded(ctx.exclusions, c))) {
+      notes.push(`${last.brandName}: 그 주차는 이미 지난 기록에서 뺐어요.`);
+      continue;
+    }
     add.push(entry);
     items.push({
       tenantId: a.tenantId,
@@ -708,7 +777,7 @@ async function computePlan(
       `${r.name}: 지운 다른 업종 브랜드(${r.deletedOtherIndustry.brandName} · ${r.deletedOtherIndustry.industry})와 id가 같아 넣을 수 없어요. 홈페이지 주소를 넣거나 이름을 조금 바꿔 주세요.`,
     );
   }
-  const exclusion = pastOut ? await planExclusion(ctx, next.rows, pastOut, errors) : null;
+  const exclusion = pastOut ? await planExclusion(ctx, next.rows, pastOut, errors, notes) : null;
   return {
     plan: {
       ...next,
@@ -787,15 +856,25 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     const measured = file?.measured ?? { at: null, listHash: listHash(tenant.competitors) };
     assertNotMeasuring(); // 위에서 기다리는 동안 측정이 시작됐을 수 있다 — 쓰기 직전에 다시 본다.
     const exclusions = exclusion ? { added: exclusion.add, removed: exclusion.removed } : undefined;
-    if (exclusions) await writeExclusion(store, { add: exclusions.added, removed: exclusions.removed });
+    // 지난 기록만 바꾼 저장이면 직전 목록 저장의 설명을 이어 둔다 — 「경쟁사 바뀜 · 다음 측정 대기」가 제외 요약을 보이지 않게.
+    const list = plan.unchanged && file?.lastSave ? listSaveInfo(file) : undefined;
     try {
+      // 제외 목록 · 순위 다시 세기 · 되돌리기 기록이 모두 끝나야 저장이다. 어느 단계든 실패하면 제외 목록을 되돌리고 다시 센다
+      // (반대로 다시 불러도 같은 결과다) — 되돌릴 기록 없는 제외나 일부만 다시 쓴 순위가 남지 않게.
+      if (exclusions) await writeExclusion(store, { add: exclusions.added, removed: exclusions.removed });
       await writeCompetitorOverride(tenantId, {
         current,
-        lastSave: { savedAt: new Date().toISOString(), before, summary, ...(exclusions ? { exclusions } : {}) },
+        lastSave: {
+          savedAt: new Date().toISOString(),
+          before,
+          summary,
+          ...(exclusions ? { exclusions } : {}),
+          ...(plan.unchanged ? { listUnchanged: true as const } : {}),
+          ...(list ? { list } : {}),
+        },
         measured,
       });
     } catch (err) {
-      // 되돌리기 기록을 남기지 못했으면 제외 목록도 되돌린다 — 되돌릴 수 없는 제외가 남지 않게.
       if (exclusions) {
         await writeExclusion(store, { add: exclusions.removed, removed: exclusions.added }).catch((undoErr: unknown) =>
           console.error(`[competitorEditor] ${tenantId} 제외 목록 되돌리기 실패:`, undoErr),
@@ -812,15 +891,26 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
 export function undoEdit(tenantId: string, store: ResultStore): Promise<CompetitorEditorState> {
   return serializeEdit(async () => {
     assertNotMeasuring();
-    const { tenant } = await customerTenant(tenantId);
+    const { tenant, runtime } = await customerTenant(tenantId);
     const file = await readCompetitorOverride(tenantId);
     if (!file?.lastSave) throw new EditorError(409, '되돌릴 저장이 없어요.');
     if (!canUndo(file, tenant.competitors)) {
       throw new EditorError(409, '저장한 뒤 이 목록으로 이미 측정해서 되돌릴 수 없어요. 경쟁사를 다시 바꿔 저장해 주세요.');
     }
-    assertNotMeasuring();
-    // 그 저장이 지난 기록에서 뺀 · 되살린 항목도 반대로 돌린다(순위를 다시 센다).
+    // 그 저장이 지난 기록에서 뺀 · 되살린 항목도 반대로 돌린다(순위를 다시 센다). 「다시 세기」를 되돌리면 다시 빼게 되는데,
+    // 그사이 다른 고객이 그 경쟁사를 함께 재게 됐으면 막는다(빼기와 같은 잠금 규칙).
     const ex = file.lastSave.exclusions;
+    if (ex?.removed.length) {
+      const ctx = await loadContext(tenant, runtime, store);
+      const locked = ex.removed.filter((e) => ctx.othersMeasuring.has(e.tenantId));
+      if (locked.length) {
+        throw new EditorError(
+          409,
+          `${locked.map((e) => `${e.brandName}(${ctx.othersMeasuring.get(e.tenantId)!.join(', ')}도 재요)`).join(', ')}: 다른 고객 브랜드가 함께 재는 경쟁사가 됐어요 — 지난 기록에서 다시 뺄 수 없어 되돌릴 수 없어요.`,
+        );
+      }
+    }
+    assertNotMeasuring();
     if (ex) await writeExclusion(store, { add: ex.removed, removed: ex.added });
     await writeCompetitorOverride(tenantId, { current: file.lastSave.before, lastSave: null, measured: file.measured });
     const after = await customerTenant(tenantId);
@@ -857,5 +947,6 @@ export async function pendingCompetitorEdit(tenant: TenantConfig): Promise<{ sav
   if (!file?.measured) return null;
   if (file.current && !sameList(file.current.competitors, tenant.competitors)) return null;
   if (file.measured.listHash === listHash(tenant.competitors)) return null;
-  return { savedAt: file.lastSave?.savedAt ?? file.updatedAt, summary: file.lastSave?.summary ?? '경쟁사 목록을 바꿨어요' };
+  const info = listSaveInfo(file);
+  return { savedAt: info?.savedAt ?? file.updatedAt, summary: info?.summary ?? '경쟁사 목록을 바꿨어요' };
 }

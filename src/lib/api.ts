@@ -862,6 +862,10 @@ export interface EditorPastCompetitor {
   firstWeekOf: string
   lastWeekOf: string
   lastScore: number
+  /** 지금 코호트에 있는 이 경쟁사 카드 전체 — 「지난 기록에서도 빼기」가 빼는 범위. 0이면 옛 코호트 기록뿐이다. */
+  cohortWeeks: number
+  cohortFirstWeekOf: string | null
+  cohortLastWeekOf: string | null
   excluded: ExcludedRange[]
 }
 export interface CompetitorEditorState {

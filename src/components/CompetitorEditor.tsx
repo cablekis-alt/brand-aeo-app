@@ -94,10 +94,17 @@ export default function CompetitorEditor({
   // 「지난 기록에서도 빼기」: 경쟁사 id → 'all'(이 코호트 지난 기록 전체) 또는 주차(그 주만). 「다시 세기」: 뺀 범위를 지울 id.
   const [pastOut, setPastOut] = useState<Record<string, string>>({})
   const [restore, setRestore] = useState<string[]>([])
-  const [confirmPast, setConfirmPast] = useState(false)
+  // 확인 창은 연 때의 미리보기(key)에 묶는다 — 미리보기가 바뀌거나 사라지면 저절로 닫히고, 나중에 혼자 열리지 않는다.
+  const [confirmKey, setConfirmKey] = useState<string | null>(null)
   const [savedExclusion, setSavedExclusion] = useState<ExclusionPreview | null>(null)
+  // 저장이 실패하면(그사이 순위가 바뀌어 409 등) 같은 입력으로 미리보기를 다시 받는다.
+  const [replan, setReplan] = useState(0)
+  // 마지막으로 받은 미리보기 — 새 미리보기를 기다리는 동안에도 「W42 기록만 빼기」 · 「다시 세기」 체크가 사라지지 않게(저장은 새 것만 쓴다).
+  const [lastPlan, setLastPlan] = useState<CompetitorEditPlan | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
+  const saveRef = useRef<HTMLButtonElement>(null)
+  const confirmWasOpen = useRef(false)
 
   useEffect(() => {
     let alive = true
@@ -128,7 +135,7 @@ export default function CompetitorEditor({
     .map((item) => s?.rows[Number(item.key.slice(1))])
     .map((r) => (r ? (r.targetTenantId ?? r.draftId) : null))
     .filter((x): x is string => Boolean(x))
-  const eligible = new Set([...removedIds, ...(s?.past.map((p) => p.tenantId) ?? [])])
+  const eligible = new Set([...removedIds, ...(s?.past.filter((p) => p.cohortWeeks > 0).map((p) => p.tenantId) ?? [])])
   const excludedIds = new Set([
     ...(s?.past.filter((p) => p.excluded.length).map((p) => p.tenantId) ?? []),
     ...(s?.rows.filter((r) => r.excluded.length).map((r) => r.targetTenantId ?? r.draftId) ?? []),
@@ -148,7 +155,11 @@ export default function CompetitorEditor({
     const timer = setTimeout(() => {
       const req = JSON.parse(requestKey) as { competitors: CompetitorEntry[]; pastOut: PastOutInput | null }
       planCompetitorEdit(tenantId, req.competitors, req.pastOut).then(
-        (value) => alive && setPlan({ key: requestKey, value, error: null }),
+        (value) => {
+          if (!alive) return
+          setPlan({ key: requestKey, value, error: null })
+          setLastPlan(value)
+        },
         (err: unknown) => {
           console.error('[CompetitorEditor] 바꾼 목록을 계산하지 못했습니다', err)
           if (alive) setPlan({ key: requestKey, value: null, error: err instanceof Error ? err.message : String(err) })
@@ -159,39 +170,24 @@ export default function CompetitorEditor({
       alive = false
       clearTimeout(timer)
     }
-  }, [tenantId, requestKey])
+  }, [tenantId, requestKey, replan])
 
   useEffect(() => {
     onDirtyChange?.(dirty)
   }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
-  // 확인 창을 열면 「다시 계산하고 저장」으로 초점을 옮긴다.
-  useEffect(() => {
-    if (confirmPast) confirmRef.current?.focus()
-  }, [confirmPast])
-
   const close = () => {
     if (busy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
     if (dirty && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
     onClose()
   }
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // 명령 창·브랜드 고르기가 처리한 Escape(preventDefault)는 서랍까지 닫지 않는다.
-      if (e.key !== 'Escape' || e.defaultPrevented) return
-      if (confirmPast) {
-        if (!busy) setConfirmPast(false)
-      } else if (open) setOpen(null)
-      else close()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
 
   const current = plan && plan.key === requestKey ? plan : null
   const planned = dirty ? current?.value ?? null : null
   const planning = dirty && !current
+  // 새 미리보기를 기다리는 동안 보일 값 — 줄의 뺀 범위 · 「이번 주」 여부는 체크에 따라 바뀌지 않는다. 저장 판단은 planned만 쓴다.
+  const shownPlan = planned ?? (dirty ? lastPlan : null)
   // 서버 계산이 오기 전에는 원래 줄의 정보를 이름으로 붙여 보여 준다(칸 나눔은 순서대로 가정).
   // 계산이 실패해도(잘못된 주소 등) 새로 넣은 줄은 보여야 한다 — 그래야 그 줄을 되돌릴 수 있다.
   const rowFor = (item: EditItem, i: number): EditorCompetitorRow | null => {
@@ -199,6 +195,8 @@ export default function CompetitorEditor({
     if (!ops.length) return s.rows[i] ?? null
     if (planned?.rows[i]) return planned.rows[i]
     const guess = { index: i, status: i < s.cap ? ('measured' as const) : ('waiting' as const), takesSlot: i < s.cap }
+    const prev = lastPlan?.rows[i]
+    if (prev && squash(prev.name) === squash(item.competitor.name)) return { ...prev, ...guess }
     const known = s.rows.find((r) => squash(r.name) === squash(item.competitor.name))
     if (known) return { ...known, ...guess }
     return {
@@ -289,10 +287,12 @@ export default function CompetitorEditor({
     !measuringNow &&
     !busy
 
+  const confirmOpen = confirmKey !== null && exclusion?.key === confirmKey
   const clearEdits = () => {
     setOps([])
     setPastOut({})
     setRestore([])
+    setConfirmKey(null)
   }
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
@@ -302,7 +302,9 @@ export default function CompetitorEditor({
         setLoad({ status: 'ok', value })
         clearEdits()
         setOpen(null)
-        setConfirmPast(false)
+        // 저장 전 미리보기는 버린다 — 같은 입력을 다시 고르면 새로 계산한다.
+        setPlan(null)
+        setLastPlan(null)
         setBusy(false)
         after(value)
         onSaved()
@@ -310,8 +312,11 @@ export default function CompetitorEditor({
       (err: unknown) => {
         console.error('[CompetitorEditor] 저장하지 못했습니다', err)
         setBusy(false)
-        setConfirmPast(false)
+        setConfirmKey(null)
         setActionError(err instanceof Error ? err.message : String(err))
+        // 그사이 순위가 바뀌었을 수 있다 — 미리보기를 버리고 같은 입력으로 다시 받는다(옛 key로 다시 저장하지 않게).
+        setPlan(null)
+        setReplan((n) => n + 1)
       },
     )
   }
@@ -333,7 +338,26 @@ export default function CompetitorEditor({
     )
   }
   // 지난 기록을 바꾸면 확인을 받는다 — 이미 보낸 주간 보고서와 숫자가 달라질 수 있다.
-  const save = () => (exclusion?.items.length ? setConfirmPast(true) : doSave())
+  const save = () => (exclusion?.items.length ? setConfirmKey(exclusion.key) : doSave())
+
+  // 확인 창을 열면 「다시 계산하고 저장」으로, 닫으면 저장 버튼으로 초점을 옮긴다.
+  useEffect(() => {
+    if (confirmOpen) confirmRef.current?.focus()
+    else if (confirmWasOpen.current) saveRef.current?.focus()
+    confirmWasOpen.current = confirmOpen
+  }, [confirmOpen])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // 명령 창·브랜드 고르기가 처리한 Escape(preventDefault)는 서랍까지 닫지 않는다.
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      if (confirmOpen) {
+        if (!busy) setConfirmKey(null)
+      } else if (open) setOpen(null)
+      else close()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
   const undo = () =>
     run(
       () => undoCompetitorEdit(tenantId),
@@ -373,7 +397,8 @@ export default function CompetitorEditor({
   // 지난 기록에서 뺀 뒤 다시 넣은 경쟁사 — 다시 잰 주부터는 저절로 세지만, 그 전 주는 여기서 다시 센다.
   const restoreFor = (r: EditorCompetitorRow | null) => {
     const id = r ? (r.targetTenantId ?? r.draftId) : null
-    if (!r || !id || !r.excluded.length) return undefined
+    // 요청에 실을 수 있는 곳만 — 저장된 상태에서 뺀 범위가 있는 곳(미리보기 줄만 보고 그리면 체크해도 요청에 안 실린다).
+    if (!r || !id || !r.excluded.length || !excludedIds.has(id)) return undefined
     return (
       <label className="ce-pastbox-opt">
         <input type="checkbox" checked={restore.includes(id)} onChange={(e) => toggleRestore(id, e.target.checked)} />
@@ -384,7 +409,7 @@ export default function CompetitorEditor({
 
   return (
     <aside className="ce-drawer" aria-labelledby="ce-title">
-      <div className="ce-head">
+      <div className="ce-head" inert={confirmOpen || undefined}>
         <div className="ce-title-row">
           <h2 id="ce-title" ref={headingRef} tabIndex={-1}>
             경쟁사 편집
@@ -429,7 +454,7 @@ export default function CompetitorEditor({
         {s?.measuring && <p className="ce-alert">측정이 진행 중이에요. 끝난 뒤에 저장할 수 있어요.</p>}
       </div>
 
-      <div className="ce-body">
+      <div className="ce-body" inert={confirmOpen || undefined}>
         {load.status === 'loading' && <p className="muted">불러오는 중…</p>}
         {load.status === 'error' && (
           <p className="error" role="alert">
@@ -526,7 +551,7 @@ export default function CompetitorEditor({
                 const was = s.rows[Number(item.key.slice(1))]
                 const pastId = was ? (was.targetTenantId ?? was.draftId) : null
                 // 같은 주에 다시 재면 이번 주 기록이 순위표에 남는다 — 그 주만 뺄 수 있게 한다.
-                const sameWeek = planned?.leaving.find((l) => l.tenantId === pastId)?.thisWeek ? (was?.latest?.weekOf ?? null) : null
+                const sameWeek = shownPlan?.leaving.find((l) => l.tenantId === pastId)?.thisWeek ? (was?.latest?.weekOf ?? null) : null
                 return (
                   <li key={item.key} className="ce-row struck">
                     <span className="ce-n">−</span>
@@ -535,7 +560,7 @@ export default function CompetitorEditor({
                         <b>{item.competitor.name}</b>
                         <span className="chip bad">뺄 예정</span>
                       </span>
-                      <span className="ce-domain">다음 측정부터 빠져요 · {pastOut[pastId ?? ''] ? '지난 기록에서도 빼요' : '지난 기록은 남아요'}</span>
+                      <span className="ce-domain">다음 측정부터 빠져요 · {pastLabel(pastOut[pastId ?? ''])}</span>
                       {pastId && was && was.cohortWeeks > 0 && was.latest && (
                         <PastBox
                           range={weekRange(was.cohortFirstWeekOf ?? was.latest.weekOf, was.latest.weekOf)}
@@ -666,7 +691,13 @@ export default function CompetitorEditor({
                 {pastOpen && (
                   <ul>
                     {s.past.map((p) => {
-                      const excludedText = p.excluded.length ? rangesText(p.excluded, p.firstWeekOf) : null
+                      // 뺄 수 있는 범위는 지금 코호트에 있는 이 경쟁사의 카드 전체다(최근 12주보다 넓을 수 있다).
+                      const first = p.cohortFirstWeekOf ?? p.firstWeekOf
+                      const last = p.cohortLastWeekOf ?? p.lastWeekOf
+                      const excludedText = p.excluded.length ? rangesText(p.excluded, first) : null
+                      // 뺀 범위가 이 코호트 카드를 모두 덮는가 — 일부(그 주만 등)면 남은 주도 뺄 수 있게 체크를 함께 둔다.
+                      const fullyOut = p.excluded.some((r) => (!r.fromWeek || r.fromWeek <= first) && r.untilWeek >= last)
+                      const lastOut = p.excluded.some((r) => (!r.fromWeek || r.fromWeek <= last) && r.untilWeek >= last)
                       return (
                         <li key={p.tenantId}>
                           <div className="ce-past-line">
@@ -675,24 +706,31 @@ export default function CompetitorEditor({
                           </div>
                           <div className="ce-past-meta">
                             지난 기록 {p.weeks}주 · 마지막 {shortWeek(p.lastWeekOf)} {p.lastScore}점
-                            {excludedText ? ' · 지난 순위표에서 빠져 있어요' : ' · 지난 순위표에 남아 있어요'}
+                            {p.cohortWeeks === 0
+                              ? ' · 옛 코호트 기록이라 지금 순위표에는 없어요'
+                              : excludedText
+                                ? fullyOut
+                                  ? ' · 지난 순위표에서 빠져 있어요'
+                                  : ` · ${excludedText} 순위에서만 빠져 있어요`
+                                : ' · 지난 순위표에 남아 있어요'}
                           </div>
-                          {excludedText ? (
+                          {excludedText && (
                             <label className="ce-pastbox-opt">
                               <input type="checkbox" checked={restore.includes(p.tenantId)} onChange={(e) => toggleRestore(p.tenantId, e.target.checked)} />
                               다시 세기 — 지난 순위표에 다시 넣어요
                             </label>
-                          ) : (
+                          )}
+                          {p.cohortWeeks > 0 && !fullyOut && (
                             <PastBox
-                              range={weekRange(p.firstWeekOf, p.lastWeekOf)}
-                              weeks={p.weeks}
+                              range={weekRange(first, last)}
+                              weeks={p.cohortWeeks}
                               // 고객의 마지막 순위에 남은 카드(같은 주 재측정으로 남은 곳) — 그 주만 뺄 수 있다.
-                              onlyWeek={s.baseline && p.lastWeekOf === s.baseline.weekOf ? p.lastWeekOf : null}
+                              onlyWeek={!lastOut && s.baseline && last === s.baseline.weekOf ? last : null}
                               value={pastOut[p.tenantId]}
                               onChange={(v) => setPast(p.tenantId, v)}
                               lockedBy={[]}
                               excluded={[]}
-                              firstWeek={p.firstWeekOf}
+                              firstWeek={first}
                             />
                           )}
                         </li>
@@ -749,7 +787,7 @@ export default function CompetitorEditor({
       </div>
 
       {s && dirty && (
-        <div className="ce-bar">
+        <div className="ce-bar" inert={confirmOpen || undefined}>
           <p className="ce-bar-summary">{summary.join(' · ')}</p>
           {planning && <p className="ce-bar-note">{pastInput ? '지난 순위를 다시 세는 중…' : '함께 측정할 곳을 다시 세는 중…'}</p>}
           {exclusion && exclusion.items.length > 0 && <ExclusionPreviewBlock preview={exclusion} brandName={s.brandName} />}
@@ -785,7 +823,7 @@ export default function CompetitorEditor({
             <button type="button" className="btn" onClick={clearEdits} disabled={busy}>
               취소
             </button>
-            <button type="button" className="btn primary" onClick={save} disabled={!canSave}>
+            <button type="button" className="btn primary" ref={saveRef} onClick={save} disabled={!canSave}>
               {busy ? '저장 중…' : '저장'}
             </button>
           </div>
@@ -820,8 +858,8 @@ export default function CompetitorEditor({
         </div>
       )}
 
-      {s && confirmPast && exclusion && (
-        <div className="ce-dialog-backdrop" onMouseDown={() => !busy && setConfirmPast(false)}>
+      {s && confirmOpen && exclusion && (
+        <div className="ce-dialog-backdrop" onMouseDown={() => !busy && setConfirmKey(null)}>
           <div className="ce-dialog" role="dialog" aria-modal="true" aria-labelledby="ce-dialog-title" onMouseDown={(e) => e.stopPropagation()}>
             <h3 id="ce-dialog-title">{exclusion.items.some((it) => it.action === 'exclude') ? '지난 기록에서도 뺄까요?' : '지난 순위표에 다시 넣을까요?'}</h3>
             <p>{confirmText(exclusion)}</p>
@@ -831,7 +869,7 @@ export default function CompetitorEditor({
               보고서와 숫자가 달라질 수 있어요. 이 앱 순위표에서만 바뀌어요 · 웹 화면과 GitHub 측정 순위는 그대로예요.
             </p>
             <div className="ce-bar-actions">
-              <button type="button" className="btn" onClick={() => setConfirmPast(false)} disabled={busy}>
+              <button type="button" className="btn" onClick={() => setConfirmKey(null)} disabled={busy}>
                 취소
               </button>
               <button type="button" className="btn primary" ref={confirmRef} onClick={doSave} disabled={busy || !canSave}>
@@ -843,6 +881,12 @@ export default function CompetitorEditor({
       )}
     </aside>
   )
+}
+
+/** 뺀 줄의 지난 기록 안내 — 체크에 따라. */
+function pastLabel(value: string | undefined): string {
+  if (!value) return '지난 기록은 남아요'
+  return value === 'all' ? '지난 기록에서도 빼요' : `${shortWeek(value)} 기록만 빼요`
 }
 
 /** 「W36~W42」 — 뺀 범위들(fromWeek가 없으면 그 경쟁사의 첫 기록부터). */
