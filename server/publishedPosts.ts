@@ -32,6 +32,8 @@ export interface TopicSnapshot {
 
 /** 질문 스냅샷 상한 — 한 글이 다루는 질문은 많아야 수십 개다. */
 const TOPIC_MAX_QUESTIONS = 60;
+/** 항목 id 상한 — topic: 글은 고른 질문 id를 +로 이으므로 질문 60개 × id 60자를 받는다. */
+const MAX_ID_LENGTH = 'topic:'.length + TOPIC_MAX_QUESTIONS * 61;
 
 /**
  * topic 스냅샷 검사. topic: 글이 아니면 받지 않는다. questionIds는 문자열 배열, 문장은 id와 개수가 같거나(은행을 알 때) 비어
@@ -46,6 +48,10 @@ function checkTopic(value: unknown, articleId: string): TopicSnapshot | undefine
   const isStrings = (a: unknown, max: number): a is string[] =>
     Array.isArray(a) && a.length <= TOPIC_MAX_QUESTIONS && a.every((x) => typeof x === 'string' && x.length > 0 && x.length <= max);
   if (!isStrings(ids, 60) || ids.length === 0) throw new PublishedPostsError('질문 스냅샷의 questionIds가 올바르지 않습니다.', 400);
+  // 스냅샷은 그 글의 질문이어야 한다 — topic: id는 고른 질문 id를 정렬해 +로 이은 것이다.
+  if (`topic:${ids.join('+')}` !== articleId) {
+    throw new PublishedPostsError('질문 스냅샷의 질문이 글(topic:)의 질문과 다릅니다.', 400);
+  }
   if (!Array.isArray(texts) || (texts.length > 0 && !isStrings(texts, 400))) {
     throw new PublishedPostsError('질문 스냅샷의 questionTexts가 올바르지 않습니다.', 400);
   }
@@ -274,8 +280,12 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
   const check = isArticleUrl(url);
   if (!check.ok) return Promise.reject(new PublishedPostsError(ARTICLE_URL_REASON[check.reason], 400));
   const key = trackingKey(url);
-  const articleId = str(input.articleId, 200);
-  const targetActionId = str(input.targetActionId, 200);
+  // 항목 id는 자르지 않는다 — 잘린 id로 적으면 기록과 집행 상태가 그 글에서 떨어져 나간다(질문을 많이 고른 topic: 글).
+  if ([input.articleId, input.targetActionId].some((v) => typeof v === 'string' && v.trim().length > MAX_ID_LENGTH)) {
+    return Promise.reject(new PublishedPostsError(`글 · 올린 곳 id가 너무 깁니다(${MAX_ID_LENGTH}자까지). 한 글에 고른 질문을 줄여 주세요.`, 400));
+  }
+  const articleId = str(input.articleId, MAX_ID_LENGTH);
+  const targetActionId = str(input.targetActionId, MAX_ID_LENGTH);
   const via = VIAS.find((v) => v === input.via);
   if (!key || !articleId || !targetActionId || !via) {
     return Promise.reject(new PublishedPostsError('주소 · 글 · 올린 곳(articleId · targetActionId · via)이 필요합니다.', 400));

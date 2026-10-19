@@ -1,11 +1,11 @@
-import type { ActionStateMap, ActionStatus, PublishedPost } from './api'
+import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
 import { indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
-import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
+import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 /**
  * 격차 → 실행 항목.
@@ -619,6 +619,23 @@ export interface PublishedHit {
  */
 export function recordOnlyHits(posts: PublishedPost[]): PublishedHit[] {
   return posts.filter((p) => !p.removedAt).map((post) => ({ post, timing: 'unknown' as const, tally: null, variantCited: 0 }))
+}
+
+/**
+ * topic: 글(질문 은행에서 고른 질문으로 쓴 글)의 질문 스냅샷. 지금 질문 은행이 그 글을 쓸 때의 판이라고 볼 수 있을 때만 판 · 문장을
+ * 붙인다 — 질문 id는 판마다 다시 쓰여서(c1-001…, 실측: 이어진 판에 함께 있는 id의 27%가 문장이 바뀌었다) 지금 은행에 id가 있다는
+ * 것만으로는 같은 질문이 아니다. 은행이 초안보다 나중에 만들어졌거나, 초안이 없거나(시각을 모른다), 측정 전 예시 은행이면 id만
+ * 남긴다(겨냥한 질문의 결과는 확인 불가로 둔다). 질문 은행 화면과 콘텐츠 보관함이 함께 쓴다.
+ */
+export function topicSnapshotFor(articleId: string, bank: QuestionBank | null, draftGeneratedAt: string | undefined): TopicSnapshot | undefined {
+  if (!articleId.startsWith('topic:')) return undefined
+  const ids = articleId.slice('topic:'.length).split('+').filter(Boolean)
+  if (ids.length === 0) return undefined
+  const idsOnly: TopicSnapshot = { bankVersion: null, questionIds: ids, questionTexts: [] }
+  if (!bank || bank.demo || !draftGeneratedAt || bank.generatedAt > draftGeneratedAt) return idsOnly
+  const byId = new Map(bank.questions.map((q) => [q.questionId, q.text]))
+  if (!ids.every((id) => byId.has(id))) return idsOnly
+  return { bankVersion: bank.version, questionIds: ids, questionTexts: ids.map((id) => byId.get(id)!) }
 }
 
 /**

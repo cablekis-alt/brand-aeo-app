@@ -18,7 +18,7 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import { effectiveDraft } from '../lib/draftGaps'
-import { recordOnlyHits, type GapAction } from '../lib/gapActions'
+import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActions'
 import { draftTitle } from '../lib/markdownFile'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
@@ -147,10 +147,12 @@ export default function QuestionBankPage() {
   const canRecord = published.available && states !== null
   const setStatus = async (status: ActionStatus) => {
     if (!tenant || !action) return
+    const id = tenant.tenantId
     setStatusError(null)
-    const saved = await saveActionState(tenant.tenantId, action.id, status)
-    if (saved) setStatesState({ key: tenant.tenantId, value: saved })
-    else setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+    const saved = await saveActionState(id, action.id, status)
+    // 그사이 브랜드를 바꿨으면 늦게 온 응답으로 새 브랜드의 상태를 덮지 않는다.
+    setStatesState((prev) => (prev && prev.key !== id ? prev : saved ? { key: id, value: saved } : prev))
+    if (!saved) setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
   }
 
   const agnosticRatio = useMemo(() => {
@@ -361,8 +363,8 @@ export default function QuestionBankPage() {
                   <section className="post-section" aria-label="올린 곳">
                     <h4 style={{ margin: '12px 0 4px' }}>올린 곳</h4>
                     <p className="hint" style={{ marginTop: 0 }}>
-                      이 글을 올린 주소를 적으면 다음 측정부터 그 글이 AI 답변에 인용되는지 셉니다. 고른 질문과 지금 질문 은행
-                      판({bank.version})을 함께 남깁니다 — 질문 은행이 바뀌어도 이 글이 겨냥한 질문을 잃지 않습니다.
+                      이 글을 올린 주소와 올린 날, 겨냥한 질문을 기록해 둡니다 — 주차별 인용 결과는 이 기록으로 냅니다(결과 화면은
+                      다음 단계에서 붙습니다). 질문 은행 판은 이 초안을 쓸 때의 판이라고 확인될 때만 함께 남깁니다.
                     </p>
                     <ExecutionStatusButtons label={action.title} status={savedStatus} onChange={(s) => void setStatus(s)} />
                     {statusError && <p className="error">{statusError}</p>}
@@ -386,11 +388,11 @@ export default function QuestionBankPage() {
                           publishedOn,
                           publishedOnChosen: chosen,
                           markDone: true,
-                          // 질문 id의 뜻은 은행 판마다 바뀐다 — 그때 고른 질문 문장과 판을 함께 고정한다.
-                          topic: { bankVersion: bank.version, questionIds: action.questionIds, questionTexts: pickedQuestions.slice().sort((a, b) => (a.questionId < b.questionId ? -1 : 1)).map((q) => q.text) },
+                          // 질문 id의 뜻은 은행 판마다 바뀐다 — 지금 은행이 이 초안을 쓸 때의 판일 때만 판 · 문장을 고정한다.
+                          topic: topicSnapshotFor(action.id, bank, stored?.generatedAt),
                         })
                         if (!r.ok) return r.error
-                        if (r.states) setStatesState({ key: tenant.tenantId, value: r.states })
+                        if (r.states) setStatesState((prev) => (prev && prev.key !== tenant.tenantId ? prev : { key: tenant.tenantId, value: r.states! }))
                         return null
                       }}
                       onRemove={published.remove}

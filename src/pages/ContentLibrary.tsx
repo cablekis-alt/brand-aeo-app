@@ -15,9 +15,8 @@ import {
   type FactNode,
   type PublishedPost,
   type StoredDraft,
-  type TopicSnapshot,
 } from '../lib/api'
-import { recordOnlyHits } from '../lib/gapActions'
+import { recordOnlyHits, topicSnapshotFor } from '../lib/gapActions'
 import type { QuestionBank } from '../lib/types'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import type { PublishSettings } from '../lib/publishSettings'
@@ -27,22 +26,11 @@ import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, safeFileName
 
 /** 기록이 어느 줄에 올린 것인지 — 한 글의 기록을 모아 볼 때 줄 이름을 붙인다. */
 function targetLabelOf(p: PublishedPost): string {
-  if (p.targetActionId === p.articleId) return p.via === 'own' ? '자사 블로그 · 사이트' : '직접 적음'
   if (p.targetActionId === 'listing:__news__') return '언론'
+  if (p.via === 'direct') return '직접 적음'
+  if (p.via === 'own') return '자사 블로그 · 사이트'
+  // 채널 줄 · 덮는 글 없는 채널(orphan) 줄 — 채널 이름.
   return p.targetActionId.replace(/^listing:(platform:)?/, '').replace(/^content:/, '')
-}
-
-/**
- * 보관함에서 topic: 글을 기록할 때의 질문 스냅샷. 초안에는 그때의 질문 은행 판이 없으므로, 지금 은행에 그 질문 id가 모두 있을 때만
- * 판과 문장을 붙이고, 아니면 id만 남긴다(겨냥한 질문의 결과는 확인 불가로 둔다).
- */
-function topicSnapshotOf(articleId: string, bank: QuestionBank | null): TopicSnapshot | undefined {
-  if (!articleId.startsWith('topic:')) return undefined
-  const ids = articleId.slice('topic:'.length).split('+').filter(Boolean)
-  if (ids.length === 0) return undefined
-  const byId = new Map((bank?.questions ?? []).map((q) => [q.questionId, q.text]))
-  const known = bank !== null && ids.every((id) => byId.has(id))
-  return known ? { bankVersion: bank.version, questionIds: ids, questionTexts: ids.map((id) => byId.get(id)!) } : { bankVersion: null, questionIds: ids, questionTexts: [] }
 }
 
 /**
@@ -130,10 +118,12 @@ export default function ContentLibrary() {
   const canRecord = published.available && states !== null
   const postsOf = (articleId: string) => (published.posts ?? []).filter((p) => p.articleId === articleId)
   const setStatus = async (actionId: string, status: ActionStatus) => {
+    const id = key
     setStatusError(null)
-    const saved = await saveActionState(key, actionId, status)
-    if (saved) setStatesState({ key, value: saved })
-    else setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+    const saved = await saveActionState(id, actionId, status)
+    // 그사이 브랜드를 바꿨으면 늦게 온 응답으로 새 브랜드의 상태를 덮지 않는다.
+    setStatesState((prev) => (prev && prev.key !== id ? prev : saved ? { key: id, value: saved } : prev))
+    if (!saved) setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
   }
   /** 한 글의 올린 곳 — 그 글의 모든 기록(자사 · 채널 줄)을 보이고, 이 글에 직접 적는다. */
   const postsPanel = (articleId: string, title: string, stored: StoredDraft | undefined) => {
@@ -150,7 +140,8 @@ export default function ContentLibrary() {
           busy={published.busy}
           targetLabel={targetLabelOf}
           onRecord={async (url, publishedOn, chosen) => {
-            const topic = topicSnapshotOf(articleId, bank)
+            // 초안이 없는 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
+            const topic = topicSnapshotFor(articleId, bank, stored?.generatedAt)
             const r = await published.record({
               url,
               articleId,
@@ -164,7 +155,7 @@ export default function ContentLibrary() {
               ...(topic ? { topic } : {}),
             })
             if (!r.ok) return r.error
-            if (r.states) setStatesState({ key, value: r.states })
+            if (r.states) setStatesState((prev) => (prev && prev.key !== key ? prev : { key, value: r.states! }))
             return null
           }}
           onRemove={published.remove}
@@ -186,6 +177,53 @@ export default function ContentLibrary() {
     ? [...new Set((published.posts ?? []).map((p) => p.articleId))].filter((id) => !drafts[id])
     : []
 
+  // 초안이 없는 기록 — 초안이 0편이어도 보여야 한다(초안을 모두 지웠거나 주소만 적은 브랜드).
+  const orphanSection = (
+    <>
+      {canRecord && orphanArticles.length > 0 && (
+        <>
+          <h3>주소만 남은 기록</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            초안이 없는 글의 올린 주소입니다. 기록은 지우지 않고 남겨 두므로, 여기서 날짜를 고치거나 빼고 되살릴 수 있습니다.
+          </p>
+          <div className="gap-grid">
+            {orphanArticles.map((articleId) => {
+              const first = postsOf(articleId)[0]
+              const title = first?.articleTitle ?? articleId
+              return (
+                <article className="gap-card" key={articleId}>
+                  <div className="gap-card-head">
+                    <span className="gap-name">{title}</span>
+                  </div>
+                  <p className="doc-meta">
+                    <code>{articleId}</code>
+                  </p>
+                  {postsPanel(articleId, title, undefined)}
+                </article>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </>
+  )
+
+  // 상태 · 원장 오류 — 어느 갈래(초안 0편 · 있음)에서든 보인다.
+  const notices = (
+    <>
+      {statusError && (
+        <p className="error" role="alert">
+          {statusError}
+        </p>
+      )}
+      {canRecord && published.error && (
+        <p className="error" role="alert">
+          올린 글 기록: {published.error}
+        </p>
+      )}
+    </>
+  )
+
   return (
     <>
       <p className="brand">실행</p>
@@ -200,21 +238,16 @@ export default function ContentLibrary() {
       ) : drafts === null ? (
         <p className="muted">이 환경에서는 초안 보관함을 쓸 수 없습니다 (데스크톱·로컬 전용).</p>
       ) : rows.length === 0 ? (
-        <p className="muted">
-          아직 만든 글이 없습니다. <Link to="/gap-actions">콘텐츠 생성</Link>에서 첫 글을 만들어 보세요.
-        </p>
+        <section>
+          <p className="muted">
+            아직 만든 글이 없습니다. <Link to="/gap-actions">콘텐츠 생성</Link>에서 첫 글을 만들어 보세요.
+          </p>
+          {notices}
+          {orphanSection}
+        </section>
       ) : (
         <section>
-          {statusError && (
-            <p className="error" role="alert">
-              {statusError}
-            </p>
-          )}
-          {canRecord && published.error && (
-            <p className="error" role="alert">
-              올린 글 기록: {published.error}
-            </p>
-          )}
+          {notices}
           <p className="hint" style={{ marginTop: 0 }}>
             글 <b>{rows.length}편</b>. <b>발행용 .md</b>는 빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고라 그대로
             올릴 수 있습니다. <b>발행용 .html</b>은 자체 사이트·CMS용 완성 문서로, JSON-LD(Article·Organization)를
@@ -303,31 +336,7 @@ export default function ContentLibrary() {
               )
             })}
           </div>
-          {canRecord && orphanArticles.length > 0 && (
-            <>
-              <h3>주소만 남은 기록</h3>
-              <p className="hint" style={{ marginTop: 0 }}>
-                초안이 없는 글의 올린 주소입니다. 기록은 지우지 않고 남겨 두므로, 여기서 날짜를 고치거나 빼고 되살릴 수 있습니다.
-              </p>
-              <div className="gap-grid">
-                {orphanArticles.map((articleId) => {
-                  const first = postsOf(articleId)[0]
-                  const title = first?.articleTitle ?? articleId
-                  return (
-                    <article className="gap-card" key={articleId}>
-                      <div className="gap-card-head">
-                        <span className="gap-name">{title}</span>
-                      </div>
-                      <p className="doc-meta">
-                        <code>{articleId}</code>
-                      </p>
-                      {postsPanel(articleId, title, undefined)}
-                    </article>
-                  )
-                })}
-              </div>
-            </>
-          )}
+          {orphanSection}
         </section>
       )}
     </>

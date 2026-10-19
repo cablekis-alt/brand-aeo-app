@@ -158,6 +158,19 @@ const noBank = computeGapActions(week as unknown as Analyses, [], citations, {},
 const noBankHit = noBank.actions.flatMap((a) => a.publishedHits ?? [])[0]
 ok('은행을 못 읽은 주는 이름 없는 질문 수가 null(인용 수는 남는다)', noBankHit?.tally?.unnamed === null && noBankHit.tally.all.cited === 3)
 
+// 7) topic: 글의 질문 스냅샷 — 질문 id는 판마다 다시 쓰이므로(c1-001…) 지금 은행이 그 초안을 쓸 때의 판일 때만 판 · 문장을 붙인다
+const { topicSnapshotFor } = await import('../src/lib/gapActions')
+const bankOf = (version: string, generatedAt: string, extra: object = {}) =>
+  ({ version, generatedAt, questions: [{ questionId: 'c1-001', text: `${version} 질문 하나` }, { questionId: 'c1-002', text: `${version} 질문 둘` }], ...extra }) as never
+const topicId = 'topic:c1-001+c1-002'
+const fresh = topicSnapshotFor(topicId, bankOf('v5', '2026-10-13T00:00:00Z'), '2026-10-15T00:00:00Z')
+ok('은행보다 나중에 쓴 초안은 그 판 · 문장을 붙인다', fresh?.bankVersion === 'v5' && fresh.questionTexts.join('|') === 'v5 질문 하나|v5 질문 둘')
+const stale = topicSnapshotFor(topicId, bankOf('v5', '2026-10-13T00:00:00Z'), '2026-10-05T00:00:00Z')
+ok('은행보다 먼저 쓴 초안은 id만 남긴다(옛 판의 같은 id는 다른 질문)', stale?.bankVersion === null && stale.questionTexts.length === 0 && stale.questionIds.join('+') === 'c1-001+c1-002')
+ok('초안이 없으면(쓴 시각을 모른다) id만 남긴다', topicSnapshotFor(topicId, bankOf('v5', '2026-10-13T00:00:00Z'), undefined)?.bankVersion === null)
+ok('측정 전 예시 은행이면 id만 남긴다', topicSnapshotFor(topicId, bankOf('v5', '2026-10-13T00:00:00Z', { demo: true }), '2026-10-15T00:00:00Z')?.bankVersion === null)
+ok('topic: 글이 아니면 스냅샷이 없다', topicSnapshotFor('content:category-agnostic', bankOf('v5', '2026-10-13T00:00:00Z'), '2026-10-15T00:00:00Z') === undefined)
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

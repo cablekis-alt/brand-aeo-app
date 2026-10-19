@@ -315,7 +315,10 @@ export function ExecutionStatusButtons({
           disabled={disabled}
           className={status === c.value ? 'on' : undefined}
           aria-pressed={status === c.value}
-          onClick={() => onChange(c.value)}
+          // 이미 눌린 상태를 다시 저장하지 않는다 — 이 화면은 주차가 없어서, 다시 저장하면 콘텐츠 생성에서 남긴 집행 주(markedWeek)가 지워진다.
+          onClick={() => {
+            if (status !== c.value) onChange(c.value)
+          }}
         >
           {c.label}
         </button>
