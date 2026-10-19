@@ -456,6 +456,7 @@ export interface HistoryCell {
   tally: import('./publishedUrl').WeekTally | null
   variantCited: number
   topicMention?: { answered: number; mentioned: number } | null
+  earlierPostingLive?: true
 }
 export interface PostHistory {
   post: PublishedPost

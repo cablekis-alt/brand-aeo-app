@@ -57,6 +57,11 @@ export interface HistoryCell {
    * undefined(해당 없음).
    */
   topicMention?: { answered: number; mentioned: number } | null;
+  /**
+   * 같은 주소를 앞서 올렸다 「글을 내렸어요」로 내린 다른 기록이 그 주에 올라가 있었다 — 다시 올린 기록에서 그 주 인용은 앞 글의
+   * 것이라 「올리기 전에 이미 인용됨(올린 날 확인)」으로 보지 않는다.
+   */
+  earlierPostingLive?: true;
 }
 
 export interface PostHistory {
@@ -158,18 +163,26 @@ export async function getPublishedHistory(
       changes,
     });
 
-    shown.forEach((post, i) => {
+    // 내린 날이 이 주 측정보다 뒤면 이 주에는 글이 올라가 있었다.
+    const status = shown.map((post) => {
       const removedOn = post.removedAt ? kstDate(post.removedAt) : null;
-      // 내린 날이 이 주 측정보다 뒤면 이 주에는 글이 올라가 있었다.
       const upDuring = !removedOn || (window ? removedOn > window.last : (isoWeekOf(removedOn) ?? '') > card.weekOf);
+      return { upDuring, timing: timingOf(post.publishedOn, window, card.weekOf) };
+    });
+    shown.forEach((post, i) => {
+      const { upDuring, timing } = status[i]!;
       let variantCited = 0;
       if (upDuring) for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1;
       const cell: HistoryCell = {
-        timing: timingOf(post.publishedOn, window, card.weekOf),
+        timing,
         afterRemoval: !upDuring,
         tally: upDuring ? (index.get(post.key) ?? null) : null,
         variantCited,
       };
+      const earlierLive = shown.some(
+        (other, j) => j !== i && other.key === post.key && other.removedReason === 'taken-down' && status[j]!.upDuring && status[j]!.timing !== 'before',
+      );
+      if (timing === 'before' && earlierLive) cell.earlierPostingLive = true;
       if (post.articleId.startsWith('topic:')) {
         const topicMention = topicMentionOf(post, bank, analyses);
         if (topicMention !== undefined) cell.topicMention = topicMention;

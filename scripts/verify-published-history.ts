@@ -127,6 +127,17 @@ ok('올린 날을 모르면 unknown', (await timings(null)) === 'unknown,none,un
 const down = await getPublishedHistory(store, tenant, [post('p', '2026-09-28', { removedAt: '2026-10-10T00:00:00Z', removedReason: 'taken-down' })], 12);
 ok('「글을 내렸어요」: 내리기 전 주는 세고, 내린 뒤 주는 afterRemoval', down.posts[0]!.cells[0]?.afterRemoval === false && down.posts[0]!.cells[2]?.afterRemoval === true && down.posts[0]!.cells[2]?.tally === null);
 
+// 5-2) 같은 주소를 올렸다 내리고 다시 올렸다 — 앞 글이 올라가 있던 주의 인용으로 새 기록의 올린 날을 의심하지 않는다
+const old = post('old', '2026-09-28', { removedAt: '2026-10-02T00:00:00Z', removedReason: 'taken-down' });
+const again = post('again', '2026-10-13');
+const repost = await getPublishedHistory(store, tenant, [old, again], 12);
+ok(
+  '다시 올린 기록: 앞서 내린 기록이 올라가 있던 주의 인용은 「올리기 전 인용」 경고에 넣지 않는다',
+  repost.posts[1]!.cells[0]?.earlierPostingLive === true && !summarizePost(repost.posts[1]!.cells, repost.weeks).citedBeforePublish,
+);
+const alone = await getPublishedHistory(store, tenant, [again], 12);
+ok('앞 기록이 없으면 올리기 전 인용은 그대로 경고한다', alone.posts[0]!.cells[0]?.earlierPostingLive === undefined && summarizePost(alone.posts[0]!.cells, alone.weeks).citedBeforePublish);
+
 // 6) topic: 글 — 기록한 판과 그 주 판이 같을 때만 겨냥한 질문의 언급을 낸다
 const topic = await getPublishedHistory(store, tenant, [post('t', '2026-09-28', { articleId: 'topic:c1-001+c1-002', targetActionId: 'topic:c1-001+c1-002', topic: { bankVersion: 'v5', questionIds: ['c1-001', 'c1-002'], questionTexts: ['v5 이름 없는 질문', 'v5 이름 댄 질문'] } })], 12);
 ok('topic: 판이 같은 주는 겨냥한 이름 없는 질문의 응답 · 언급', JSON.stringify(topic.posts[0]!.cells[2]?.topicMention) === JSON.stringify({ answered: 2, mentioned: 1 }));
@@ -175,7 +186,11 @@ ok(
 const unknownCell = (cited: number) => ({ ...cell('after', cited), timing: 'unknown' as const });
 ok('올린 날을 모르는 옛 기록은 측정 대기가 아니라 「올린 날 모름」', s([unknownCell(1), null, unknownCell(1), unknownCell(0)]).tier === 'undated');
 ok(
-  '올린 뒤 측정 전에 내린 글은 측정 대기가 아니라 「측정 전에 내림」',
+  '올린 날을 모르는 기록은 내렸어도 「올린 날 모름」(「내림」이 먼저 걸리지 않는다)',
+  s([unknownCell(1), null, unknownCell(1), { ...unknownCell(0), afterRemoval: true, tally: null }]).tier === 'undated',
+);
+ok(
+  '판단할 수 있는 올린 뒤 측정 없이 내린 글은 측정 대기가 아니라 「내림」',
   s([cell('before', 0), null, { ...cell('after', 0), afterRemoval: true, tally: null }, { ...cell('after', 0), afterRemoval: true, tally: null }]).tier === 'removed',
 );
 ok('아직 올린 뒤 측정이 없는 글은 측정 대기', s([cell('before', 0), null, cell('during', 0), cell('before', 0)]).tier === 'waiting');
