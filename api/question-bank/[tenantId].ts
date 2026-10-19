@@ -16,5 +16,8 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   // Vercel 함수의 기본 lib 타깃이 낮아 Array.prototype.at을 쓰지 않는다.
   const history = demoScorecardHistory(tenantId);
   const latestWeek = history.length > 0 ? history[history.length - 1].weekOf : '2026-W36';
-  sendJson(res, 200, demoQuestionBank(tenant, latestWeek));
+  // 버전을 지정하면 그 버전의 실측 은행을 준다 — 옛 주차의 질문 id가 맞아야 이름 없는 질문을 가려낸다(demoQuestionBank 주석).
+  const versionRaw = req.query.version;
+  const version = typeof versionRaw === 'string' && versionRaw ? versionRaw : undefined;
+  sendJson(res, 200, demoQuestionBank(tenant, latestWeek, version));
 }

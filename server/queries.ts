@@ -1,15 +1,15 @@
 import type { EeatAnalysis } from '../src/prompts/b6-eeat.js';
-import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
+import type { CitationQuestionScope, CitationSourceAnalysis } from '../src/prompts/b7-citation-sources.js';
 import { analyzeCitationSources, canonicalUrl, urlHost } from './citationSources.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { agnosticAnalyses } from './mentionScope.js';
 import { previousIsoWeek } from './dateUtil.js';
-import type { ResultStore } from './store.js';
+import type { QuestionBank, ResultStore } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 import type { QuestionCategory } from '../src/prompts/types.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
-type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory'>;
+type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory' | 'getQuestionBank'>;
 type RankingSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getCohortScorecards' | 'getQuestionBank' | 'getScorecardHistory'>;
 
 export interface CitationBreakdownRow {
@@ -388,12 +388,20 @@ export async function getRankingView(
   const industry = weekCard?.industry ?? tenant.industry;
   const region = weekCard?.region ?? tenant.region;
   const prevWeek = previousIsoWeek(weekOf);
-  const [cohortScorecards, prevCohort, allAnalyses, bank] = await Promise.all([
+  const [cohortScorecards, prevCohort, allAnalyses] = await Promise.all([
     store.getCohortScorecards(industry, region, weekOf),
     prevWeek ? store.getCohortScorecards(industry, region, prevWeek).catch(() => []) : Promise.resolve([]),
     store.getQuestionAnalyses(tenant.tenantId, weekOf),
-    store.getQuestionBank(tenant.tenantId, weekCard?.questionBankVersion ?? tenant.questionBankVersion),
   ]);
+  // 그 주 카드의 은행이 판정과 맞지 않으면 지금 설정의 은행도 본다(matchingBank 주석 — 배포 환경의 데모 주차). 둘 다 안 맞으면
+  // 예전처럼 카드의 은행을 쓴다.
+  const bank = await matchingBank(
+    store,
+    tenant.tenantId,
+    allAnalyses,
+    [weekCard?.questionBankVersion ?? tenant.questionBankVersion, tenant.questionBankVersion],
+    true,
+  );
 
   // 언급 점유는 스코어카드 SoM과 같은 모집단(카테고리 무관 질문)에서 낸다 — server/mentionScope.ts.
   // 두 화면이 같은 개념을 다른 모집단으로 보여주면 사용자가 값을 대조할 수 없다.
@@ -512,12 +520,45 @@ export async function getEeatAnalysis(
   return computeEeatAnalysis(analyses);
 }
 
+/**
+ * 후보 버전을 차례로 불러, 판정의 질문 id가 하나라도 맞는 첫 은행을 고른다(요청한 버전과 다른 버전이 오면 맞지 않는 것으로 본다).
+ *
+ * 카드에 적힌 버전만으로는 모자라다 — 배포 환경의 데모 주차는 실측 판정(그때 쓴 v1·v3 은행의 id)과 합성 판정(예시 은행의 id)이
+ * 섞여 있고, 합성 주차의 카드에도 실측 은행 버전이 적혀 있다. 실데이터에서는 첫 후보(그 주 카드의 은행)가 맞으므로 결과가 같다.
+ * 하나도 맞지 않으면 keepFirst일 때 첫 후보로 받은 은행(예전 동작), 아니면 null.
+ */
+async function matchingBank(
+  store: Pick<ResultStore, 'getQuestionBank'>,
+  tenantId: string,
+  analyses: { questionId: string }[],
+  versions: (string | undefined)[],
+  keepFirst: boolean,
+): Promise<QuestionBank | null> {
+  const ids = new Set(analyses.map((a) => a.questionId));
+  let first: QuestionBank | null = null;
+  for (const version of [...new Set(versions.filter((v): v is string => Boolean(v)))]) {
+    const bank = await store.getQuestionBank(tenantId, version);
+    if (!bank) continue;
+    first ??= bank;
+    if (bank.version === version && (ids.size === 0 || bank.questions.some((q) => ids.has(q.questionId)))) return bank;
+  }
+  return keepFirst ? first : null;
+}
+
 /** AI 인용출처 분석 — 소유권을 넘어 출처 유형·엔진 치우침·합의 도메인을 집계한다. */
 export interface CitationSourceOptions {
   /** 수집 엔진 하나로 좁혀 본다. rows·mix·qualityRate 전부 그 엔진 응답만으로 낸다. */
   engine?: string | null;
   /** 코호트 경쟁사 소유 도메인 — URL 행의 cohortCompetitor 판정용. */
   competitorDomains?: string[];
+  /**
+   * 질문 유형으로 좁혀 본다 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문.
+   * 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기 쉬워서, 섞어 세면 이름 없는 질문에서는 우리가
+   * 없는 출처가 「뒷받침함」으로 숨는다. 실행 항목의 「충족」(src/lib/gapActions.ts)과 같은 기준이다.
+   */
+  questions?: CitationQuestionScope | null;
+  /** 그 주 스코어카드에 질문 은행 버전이 없을 때 쓸 지금 버전(테넌트 설정). */
+  currentBankVersion?: string;
 }
 
 export async function getCitationSourceAnalysis(
@@ -528,6 +569,29 @@ export async function getCitationSourceAnalysis(
 ): Promise<CitationSourceAnalysis> {
   const engine = options.engine?.trim() || null;
   const all = await store.getQuestionAnalyses(tenantId, weekOf);
-  const analyses = engine ? all.filter((a) => a.engine === engine) : all;
-  return analyzeCitationSources(analyses, { competitorDomains: options.competitorDomains });
+  const byEngine = engine ? all.filter((a) => a.engine === engine) : all;
+  const scope = options.questions ?? null;
+  if (!scope) return analyzeCitationSources(byEngine, { competitorDomains: options.competitorDomains });
+
+  // 그 주차를 측정한 은행으로 가른다 — 지금 은행으로 가르면 옛 주차의 질문 id가 맞지 않는다(src/lib/bankVersion.ts와 같은 순서:
+  // 그 주 카드 → 질문 id 접두 → 지금 설정). 후보 중 판정의 질문 id가 맞는 첫 은행을 쓰고, 하나도 안 맞으면 나누지 않는다.
+  const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
+  const prefixes = new Set(all.map((a) => /^(v\d+)-/.exec(a.questionId ?? '')?.[1]).filter((p): p is string => Boolean(p)));
+  const bank = await matchingBank(
+    store,
+    tenantId,
+    all,
+    [history.find((card) => card.weekOf === weekOf)?.questionBankVersion, prefixes.size === 1 ? [...prefixes][0] : undefined, options.currentBankVersion],
+    false,
+  );
+  const named = new Map((bank?.questions ?? []).map((q) => [q.questionId, q.containsBrandName]));
+  // 은행에 없는 질문은 어느 쪽인지 알 수 없다 — 한쪽으로 몰지 않고 빼고 그 수를 밝힌다.
+  const kept = byEngine.filter((a) => named.get(a.questionId) === (scope === 'named'));
+  const unknown = byEngine.filter((a) => !named.has(a.questionId)).length;
+  // 응답이 있는데 하나도 은행에서 찾지 못했으면 이 은행으로는 나눌 수 없다(엔진으로 좁힌 뒤에도 같다).
+  const split = bank !== null && !(byEngine.length > 0 && unknown === byEngine.length);
+  return {
+    ...analyzeCitationSources(split ? kept : [], { competitorDomains: options.competitorDomains }),
+    questionScope: { scope, bankVersion: split ? bank.version : null, responses: split ? kept.length : 0, unknown },
+  };
 }

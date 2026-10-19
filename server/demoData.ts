@@ -113,9 +113,19 @@ export function demoCohortScorecards(industry: string, region: string, weekOf: s
 // 실측 산출물(LIVE_BANKS·LIVE_ANALYSES)은 server/liveRegistry.ts에서 온다.
 // 새 브랜드는 scripts/publish-tenant.ts가 그 레지스트리를 자동 갱신한다 (배포 환경용).
 
-export function demoQuestionBank(tenant: DemoTenant, weekOf: string): QuestionBank {
+/**
+ * version을 주면 그 버전의 실측 은행을 먼저 찾는다 — 실측 판정 레코드(LIVE_ANALYSES)는 그때 쓴 은행(v1·v3)의 질문 id를
+ * 달고 있는데 설정은 이미 v4·v5라, 설정 버전으로만 찾으면 예시 은행이 와서 질문 id가 하나도 맞지 않는다(이름 없는 질문을
+ * 가려내지 못한다). 맞는 실측 은행이 없으면 예전처럼 설정 버전으로 찾는다.
+ */
+export function demoQuestionBank(tenant: DemoTenant, weekOf: string, version?: string): QuestionBank {
   const live = LIVE_BANKS[tenant.tenantId];
-  if (live && live.version === tenant.questionBankVersion && Array.isArray(live.questions) && live.questions.length > 0) {
+  if (
+    live &&
+    Array.isArray(live.questions) &&
+    live.questions.length > 0 &&
+    (live.version === version || live.version === tenant.questionBankVersion)
+  ) {
     return live;
   }
   return {

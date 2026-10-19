@@ -3,7 +3,7 @@ import { noteDataSource } from './dataSource'
 import type { Engine, MarketScope } from '../prompts/types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
-import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { PublishSettings } from './publishSettings'
 import type { AnswerEvidence } from './answerEvidence'
 import type {
@@ -167,14 +167,19 @@ export async function loadEeat(tenantId: string, weekOf: string): Promise<EeatAn
   return remote ?? EMPTY_EEAT
 }
 
-// AI 인용출처 분석.
+// AI 인용출처 분석. questions를 주면 그 질문 유형(브랜드 이름 없는 질문 / 이름을 댄 질문)의 응답만 센다.
 export async function loadCitationSources(
   tenantId: string,
   weekOf: string,
   engine?: string | null,
+  questions?: CitationQuestionScope | null,
 ): Promise<CitationSourceAnalysis> {
   const base = `/api/citation-sources/${encodeURIComponent(tenantId)}/${encodeURIComponent(weekOf)}`
-  const remote = await getJson<CitationSourceAnalysis>(engine ? `${base}?engine=${encodeURIComponent(engine)}` : base)
+  const params = new URLSearchParams()
+  if (engine) params.set('engine', engine)
+  if (questions) params.set('questions', questions)
+  const qs = params.toString()
+  const remote = await getJson<CitationSourceAnalysis>(qs ? `${base}?${qs}` : base)
   return remote ?? EMPTY_CITATION_SOURCES
 }
 

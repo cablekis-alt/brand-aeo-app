@@ -18,6 +18,17 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   const store = new DemoResultStore([tenant]);
   const engineRaw = req.query.engine;
   const engine = typeof engineRaw === 'string' && engineRaw ? engineRaw : null;
+  const questionsRaw = req.query.questions;
+  const questions = questionsRaw === 'unnamed' || questionsRaw === 'named' ? questionsRaw : null;
   const competitorDomains = tenant.competitors.flatMap((c) => c.domains ?? []);
-  sendJson(res, 200, await getCitationSourceAnalysis(store, tenantId, weekOf, { engine, competitorDomains }));
+  sendJson(
+    res,
+    200,
+    await getCitationSourceAnalysis(store, tenantId, weekOf, {
+      engine,
+      competitorDomains,
+      questions,
+      currentBankVersion: tenant.questionBankVersion,
+    }),
+  );
 }

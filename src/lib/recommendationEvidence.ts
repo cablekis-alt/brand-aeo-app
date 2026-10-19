@@ -149,7 +149,8 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
     const listing = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
     if (listing.length > 0) {
       citationBlocks.push({
-        heading: 'AI가 인용했지만 우리를 뒷받침하지 않은 출처',
+        // 「충족」은 브랜드 이름 없는 질문으로 정한다(gapActions.ts) — 이름을 댄 질문에서만 뒷받침한 출처도 여기 온다.
+        heading: 'AI가 인용했지만 브랜드 이름 없는 질문에서는 우리를 뒷받침하지 않은 출처',
         items: listing.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: `${a.evidence} 완료 기준: ${a.doneSignal}` })),
         more: Math.max(0, listing.length - 4),
       })

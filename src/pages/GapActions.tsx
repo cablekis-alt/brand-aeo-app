@@ -562,8 +562,18 @@ function ActionCard({
           {action.progress ? (
             <>
               집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 이 플랫폼은 실렸다/아니다가
-              아니라 <b>지분</b>입니다 — 지금 인용 {action.progress.total}회 중 {action.progress.supporting}회가 우리를
+              아니라 <b>지분</b>입니다 — 지금 {action.progress.unnamed && '브랜드 이름 없는 질문의 '}인용{' '}
+              {action.progress.total}회 중 {action.progress.supporting}회가 우리를
               뒷받침합니다. 다음 측정에서 이 비율이 오르는지 보세요.
+            </>
+          ) : action.kind === 'listing' && action.support && action.support.all > 0 ? (
+            // 「충족」은 브랜드 이름 없는 질문으로 정한다(gapActions.ts). 이름을 댄 질문에서 이미 뒷받침하면 페이지에 브랜드명은
+            // 있다 — "못 찾았다 · 브랜드명이 있는지 보라"고 하면 멀쩡한 등재 페이지를 점검하게 만든다.
+            <>
+              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}.{' '}
+              {action.support.known
+                ? `이름을 댄 질문에서는 이 출처가 우리를 ${action.support.all}회 뒷받침하지만, 브랜드 이름 없는 질문에서는 아직입니다. 그 페이지가 이름을 모르는 사람의 질문(위 질문 목록의 주제 · 지역 · 업종 말)에도 답하는지 보세요.`
+                : `이 출처가 우리를 ${action.support.all}회 뒷받침하지만, 질문 은행을 읽지 못해 브랜드 이름 없는 질문에서였는지 확인하지 못했습니다.`}
             </>
           ) : action.kind === 'listing' ? (
             <>
@@ -822,8 +832,8 @@ export default function GapActions() {
           </p>
           <p>
             할 일은 저장된 측정으로 계산합니다. AI를 부르는 것은 초안 만들기, 빈칸 값 찾기, 채널용 글 만들기뿐입니다.
-            완료는 사람이 체크하지 않고 <b>데이터에서 읽습니다</b> — 올린 곳의 인용이 우리 언급을 뒷받침하기 시작하면
-            자동으로 충족으로 넘어갑니다.
+            완료는 사람이 체크하지 않고 <b>데이터에서 읽습니다</b> — 브랜드 이름 없는 질문에서 올린 곳의 인용이 우리 언급을
+            뒷받침하기 시작하면 자동으로 충족으로 넘어갑니다.
           </p>
           <p className="muted">
             글(콘텐츠형)과 올릴 곳(등재형)은 경쟁하는 일이 아닙니다. 글이 <b>무엇을 쓸지</b>, 올릴 곳이 <b>어디에 올릴지</b>라서,
