@@ -72,6 +72,8 @@ function writePending(key: string, value: PendingEdit | null): void {
   }
 }
 const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+/** 블로그 글 형식 발행본이 이보다 짧으면 알린다(목표는 2,500~3,500자 — b9c 규칙 8). */
+const SHORT_ARTICLE = 1500
 
 export default function DraftPanel({
   tenantId,
@@ -237,6 +239,26 @@ export default function DraftPanel({
     setTyped((prev) => ({ ...prev, [key]: '' }))
   }
   const omitGap = (key: string) => void persistFills({ ...fills, [key]: { omit: true } })
+  /**
+   * 남은 빈칸을 모두 뺀다 — 값을 넣은 칸은 그대로 두고, 아직 처리하지 않은 칸만 「빼기」로(찾아 둔 후보는 남겨 둔다).
+   * 실측: 빈칸 79곳 중 값을 넣은 곳이 0곳이고 29곳을 한 칸씩 「빼기」로 처리했다. 뺀 칸은 하나씩 「되돌리기」할 수 있다.
+   */
+  const omitAll = () => {
+    const open = openGaps()
+    if (!open.length) return
+    // 찾아 둔 값(노란 후보)이 있는 칸도 함께 빠진다 — 「맞아요」로 넣을 기회를 조용히 없애지 않게 미리 알린다.
+    const withCandidate = open.filter(([k]) => fills[k]?.suggested).length
+    const candidateNote = withCandidate ? ` 찾아 둔 값이 있는 칸 ${withCandidate}곳도 함께 빠집니다 — 그 값을 넣으려면 취소하고 「맞아요」를 누르세요.` : ''
+    if (
+      !window.confirm(
+        `남은 빈칸 ${open.length}곳을 모두 빼고 이 글을 확인됨으로 둘까요? 발행본에서 그 자리만 빠집니다. 뺀 칸은 하나씩 「되돌리기」로 다시 열 수 있습니다.${candidateNote}`,
+      )
+    )
+      return
+    const next = { ...fills }
+    for (const [k] of open) next[k] = { ...next[k], omit: true }
+    void persistFills(next)
+  }
   const undoGap = (key: string) => {
     const next = { ...fills }
     delete next[key]
@@ -326,6 +348,8 @@ export default function DraftPanel({
 
   const progress = gapProgress(stored)
   const left = progress.total - progress.done
+  // 빈칸을 모두 처리한 블로그 글이 너무 짧으면 알린다 — 빈칸을 한꺼번에 빼면 글이 짧아지기 쉽다.
+  const publishLength = left === 0 && stored.draft.format === 'article' ? publishMarkdownOf(stored).length : 0
   const d = effectiveDraft(stored)
   /** 절마다 발행본에 붙을 공식 출처(블로그 글 형식만) — 빈칸을 채운 글 기준, 절 순서는 stored.draft와 같다. */
   const sources = articleSources(d)
@@ -353,6 +377,12 @@ export default function DraftPanel({
             {opened ? '접기' : left > 0 && !progress.edited ? `빈칸 ${left}곳 확인하기` : '전체 보기'}
           </button>
         </div>
+        {publishLength > 0 && publishLength < SHORT_ARTICLE && (
+          <p className="hint warn">
+            발행본이 약 {publishLength.toLocaleString()}자로 짧습니다. <Link to="/brand-facts">브랜드 사실</Link>을 더 넣고 「다시
+            만들기」를 하면 빈칸 대신 문장으로 채워집니다.
+          </p>
+        )}
       </div>
 
       {!compact && (
@@ -523,6 +553,11 @@ export default function DraftPanel({
                   onClick={() => void lookUp()}
                 >
                   {looking === 'all' ? '페이지 읽는 중…' : '브랜드 페이지에서 찾아 채우기'}
+                </button>
+              )}
+              {left > 0 && (
+                <button type="button" className="ghost" disabled={looking !== null} onClick={omitAll} title="값을 모르는 칸을 한 번에 빼고 글을 확인됨으로 둡니다">
+                  남은 빈칸 {left}곳 모두 빼기
                 </button>
               )}
             </div>

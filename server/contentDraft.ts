@@ -290,7 +290,15 @@ function normalize(
       const o = item as Record<string, unknown>;
       if (o.kind === 'gap') {
         const need = String(o.need ?? '').trim();
-        if (need) out.push({ kind: 'gap', need });
+        if (!need) continue;
+        // 브랜드 밖의 정보(시장 통계 · 업계 평균 · 공공기관 · 다른 업체)가 필요한 빈칸은 브랜드가 채울 수 없다 — 실측으로
+        // 초안 19편의 빈칸 79곳 중 값을 넣은 곳이 0곳이었다. 빈칸으로 두지 않고 기록만 남긴다(엔진이 external로 표시한 것만,
+        // 표시가 없으면 브랜드 빈칸으로 둔다).
+        if (article && o.scope === 'external') {
+          notes.push(`「${need.slice(0, 80)}」 — 브랜드 밖의 정보라 빈칸으로 두지 않고 뺐습니다.`);
+          continue;
+        }
+        out.push({ kind: 'gap', need });
         continue;
       }
       if (article && TABLE_LINE.test(String(o.body ?? ''))) {
@@ -332,14 +340,16 @@ function normalize(
         .map((x): DraftSection => {
           const heading = article ? stripHeadingNumber(String(x.heading ?? '')) : String(x.heading ?? '').trim();
           const section: DraftSection = { heading, answers: String(x.answers ?? '').trim(), blocks: cleanBlocks(x.blocks) };
-          const image = heading ? cleanImage(x.image) : undefined;
+          // 빠질 절(제목 없음 · 블로그 글 형식에서 문단 없음)의 사진은 세지 않는다 — 다음 절의 사진 자리를 뺏지 않게.
+          const image = heading && (!article || section.blocks.length > 0) ? cleanImage(x.image) : undefined;
           if (image && images < MAX_IMAGES) {
             images += 1;
             section.image = image;
           }
           return section;
         })
-        .filter((s) => s.heading)
+        // 블로그 글 형식은 문단이 하나도 남지 않은 절(바깥 정보 빈칸만 있던 절)도 뺀다 — 제목만 남은 절은 글이 깨진 것처럼 보인다.
+        .filter((s) => s.heading && (!article || s.blocks.length > 0))
     : [];
 
   const leadRaw = typeof r.lead === 'string' ? r.lead.trim() : '';
