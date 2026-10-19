@@ -34,11 +34,12 @@ export class DemoResultStore {
   }
 
   // 언급률·SoM 모집단(카테고리 무관 질문)을 가려내려면 질문의 category가 필요하다.
-  // 합성 판정 레코드와 같은 질문 세트에서 만들므로 questionId·category가 항상 맞는다.
-  async getQuestionBank(tenantId: string, _version: string): Promise<QuestionBank | null> {
+  // 합성 판정 레코드는 예시 은행에서, 실측 판정 레코드는 그때 쓴 실측 은행에서 만들었다 — 요청한 버전의 실측 은행이
+  // 있으면 그것을 준다(demoQuestionBank 주석). 없으면 예시 은행이 오므로 호출부는 version이 맞는지 본다.
+  async getQuestionBank(tenantId: string, version: string): Promise<QuestionBank | null> {
     const tenant = this.tenantOf(tenantId);
     if (!tenant) return null;
-    return demoQuestionBank(tenant, LATEST_DEMO_WEEK);
+    return demoQuestionBank(tenant, LATEST_DEMO_WEEK, version);
   }
 
   async getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]> {

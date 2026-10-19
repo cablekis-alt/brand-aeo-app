@@ -6,6 +6,7 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadEeat, loadQuestionAnalyses, loadQuestionBank, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
+import { resolveBankVersion } from '../lib/bankVersion'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
@@ -246,15 +247,21 @@ export default function PeriodicReport() {
     if (!card) return
     let alive = true
     const key = `${card.tenantId}|${card.weekOf}`
-    Promise.all([
-      loadQuestionAnalyses(card.tenantId, card.weekOf),
-      loadQuestionBank(card.tenantId, card.questionBankVersion),
-      loadCitationSources(card.tenantId, card.weekOf),
-    ]).then(
-      ([analyses, bank, citations]) => alive && setEvidenceData({ key, analyses, bank, citations }),
-      // 기록을 못 읽으면 실행 항목 없이 기본 원칙만 보인다 — 빈 기록으로 두고 넘어간다.
-      () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null }),
-    )
+    loadQuestionAnalyses(card.tenantId, card.weekOf)
+      .then(async (analyses) => {
+        // 그 주차를 측정한 은행으로 — 버전이 없는 옛 카드는 질문 id 접두로 찾는다(콘텐츠 생성의 useGapActionPlan과 같은 규칙).
+        // 지금 은행을 받으면 질문 id가 맞지 않아 이름 없는 질문을 가려내지 못하고, 실린 출처가 「충족」에서 빠진다.
+        const [bank, citations] = await Promise.all([
+          loadQuestionBank(card.tenantId, resolveBankVersion([card], card.weekOf, analyses)),
+          loadCitationSources(card.tenantId, card.weekOf),
+        ])
+        return { analyses, bank, citations }
+      })
+      .then(
+        ({ analyses, bank, citations }) => alive && setEvidenceData({ key, analyses, bank, citations }),
+        // 기록을 못 읽으면 실행 항목 없이 기본 원칙만 보인다 — 빈 기록으로 두고 넘어간다.
+        () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null }),
+      )
     return () => {
       alive = false
     }

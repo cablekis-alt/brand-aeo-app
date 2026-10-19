@@ -109,9 +109,14 @@ export interface GapAction {
   progress?: {
     supporting: number
     total: number
-    /** 브랜드 이름 없는 질문의 인용으로 셌나 — false면 질문 은행을 읽지 못해 모든 질문으로 셌다. */
+    /** 브랜드 이름 없는 질문의 인용으로 셌나 — false면 모든 질문으로 셌다(질문 은행을 읽지 못했거나, 이름 없는 질문에서는 인용되지 않은 곳). */
     unnamed: boolean
   }
+  /**
+   * 등재형의 뒷받침 인용 수 — 모든 질문 / 브랜드 이름 없는 질문. 「충족」은 이름 없는 질문으로 정하므로, 집행했는데 충족이 아닐 때
+   * 화면이 "아직 못 찾았다"와 "이름을 댄 질문에서는 찾았다"를 가를 때 쓴다. known이 false면 이름 없는 질문인지 몰랐다.
+   */
+  support?: { all: number; unnamed: number; known: boolean }
 }
 
 export interface GapActionPlan {
@@ -398,7 +403,11 @@ function listingActions(
         u.supporting += t.supporting
         u.namedSupporting += t.namedSupporting
       }
-      const satisfied = !isPlatform && unnamed.known && u.supporting > 0
+      // 이름 없는 질문에서는 아예 인용되지 않는 곳(이름을 댄 질문에서만 꺼낸다)은 이름 없는 질문 기준의 갭이 아니다 — 거기 다시
+      // 등재해도 이름 없는 질문의 답은 달라지지 않는다. 그런 곳은 예전처럼 어느 질문에서든 뒷받침하면 「충족」으로 둔다. 안 그러면
+      // 이미 실린 곳이 끝낼 수 없는 할 일로 남는다(실측: banobagi W40 reddit.com — 10회 인용 전부 이름을 댄 질문, 그중 4회 뒷받침).
+      const namedOnly = unnamed.known && u.citations === 0
+      const satisfied = !isPlatform && unnamed.known && (namedOnly ? r.supporting > 0 : u.supporting > 0)
       const engines = [...r.engines].join('·')
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
@@ -431,22 +440,26 @@ function listingActions(
             ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 우리가 밀린 질문입니다.`
             : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
 
-      // 지분도 브랜드 이름 없는 질문의 인용으로 낸다. 은행을 읽지 못했을 때만 모든 질문으로 세고 그렇게 밝힌다.
-      const progress = unnamed.known
-        ? { supporting: u.supporting, total: u.citations, unnamed: true }
-        : { supporting: r.supporting, total: r.citationCount, unnamed: false }
+      // 지분도 브랜드 이름 없는 질문의 인용으로 낸다. 은행을 읽지 못했거나 이름 없는 질문에서는 인용되지 않은 곳만 모든 질문으로
+      // 세고 그렇게 밝힌다(0회 중 0회라고 쓰지 않는다).
+      const progress =
+        unnamed.known && !namedOnly
+          ? { supporting: u.supporting, total: u.citations, unnamed: true }
+          : { supporting: r.supporting, total: r.citationCount, unnamed: false }
       const share = progress.total > 0 ? Math.round((progress.supporting / progress.total) * 100) : 0
       const platformEvidence =
         `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) ` +
-        (unnamed.known
+        (progress.unnamed
           ? `브랜드 이름 없는 질문에서 받은 인용 ${u.citations}회 중 우리를 뒷받침하는 대목은 ${u.supporting}회(${share}%)입니다.`
-          : `그중 우리를 뒷받침하는 대목은 ${r.supporting}회(${share}%)입니다(질문 은행을 읽지 못해 질문 유형으로 나누지 못했습니다).`) +
+          : `그중 우리를 뒷받침하는 대목은 ${r.supporting}회(${share}%)입니다 — ` +
+            `${namedOnly ? '브랜드 이름 없는 질문에서는 인용되지 않았습니다' : '질문 은행을 읽지 못해 질문 유형으로 나누지 못했습니다'}.`) +
         ` 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
         (r.platform ? ` ${r.platform.note}` : '')
       // 「충족」이 아닌 이유 — 뒷받침이 이름을 댄 질문에서만 나왔으면 그렇게 말한다. "0건"이라고 하면 사실과 다르다.
       const unmetEvidence =
         r.supporting === 0
-          ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.`
+          ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
+            (namedOnly ? ' 브랜드 이름을 댄 질문에서만 인용되는 곳입니다.' : '')
           : unnamed.known
             ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 브랜드 이름 없는 질문에서 우리를 뒷받침한 대목은 0건입니다.` +
               (u.namedSupporting > 0
@@ -463,7 +476,9 @@ function listingActions(
         evidence: isPlatform
           ? platformEvidence + citedNote
           : satisfied
-            ? `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.` +
+            ? (namedOnly
+                ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
+                : `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`) +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
             : unmetEvidence +
               // 묶음은 어느 매체인지 밝혀야 한다 — "언론 5곳"만으로는 무엇을 해야 할지 알 수 없다.
@@ -480,9 +495,12 @@ function listingActions(
         publishedUrls: [],
         citedPublishedUrls: [],
         ...(isPlatform ? { progress } : {}),
+        support: { all: r.supporting, unnamed: u.supporting, known: unnamed.known },
         doneSignal: isPlatform
           ? `${progress.unnamed ? '브랜드 이름 없는 질문의 ' : ''}${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${progress.supporting}/${progress.total})`
-          : `브랜드 이름 없는 질문에서 ${name} 인용이 우리 언급을 뒷받침하면 완료`,
+          : namedOnly
+            ? `${name} 인용이 우리 언급을 뒷받침하면 완료`
+            : `브랜드 이름 없는 질문에서 ${name} 인용이 우리 언급을 뒷받침하면 완료`,
       }
     })
 

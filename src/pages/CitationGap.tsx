@@ -30,6 +30,13 @@ const EMPTY: CitationSourceAnalysis = {
   consensusDomains: [],
 }
 
+/** 불러온 집계와 그것을 부른 조건(엔진 · 질문 유형). 조건이 빈 값이면 아직 아무것도 받지 않은 것이다. */
+interface LoadedGap {
+  filterKey: string
+  analysis: CitationSourceAnalysis
+}
+const EMPTY_LOADED: LoadedGap = { filterKey: '', analysis: EMPTY }
+
 /**
  * 질문 유형 필터. 기본은 브랜드 이름 없는 질문이다 — 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기
  * 쉬워서, 섞어 보면 이름을 모르는 사람의 질문에서는 우리가 없는 출처가 「뒷받침함」으로 숨는다. 콘텐츠 생성의
@@ -169,19 +176,26 @@ export default function CitationGap() {
   const [bucket, setBucket] = useState<GapBucket | 'all'>('all')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<string | null>(null)
-  // 엔진 · 질문 유형이 바뀌면 loader 참조가 바뀌어 useWeeklyData가 다시 불러온다.
+  // 엔진 · 질문 유형이 바뀌면 loader 참조가 바뀌어 useWeeklyData가 다시 불러온다. 다만 useWeeklyData는 브랜드 · 주차로만
+  // 새것인지 보므로, 새 응답이 올 때까지 앞 조건의 숫자가 새 조건의 이름표를 달고 남는다 — 결과에 조건을 붙여 다르면 불러오는
+  // 중으로 본다.
+  const filterKey = `${engine}|${scope}`
   const loader = useCallback(
-    (tenantId: string, weekOf: string) => loadCitationSources(tenantId, weekOf, engine || null, questions),
-    [engine, questions],
+    (tenantId: string, weekOf: string): Promise<LoadedGap> =>
+      loadCitationSources(tenantId, weekOf, engine || null, questions).then((analysis) => ({ filterKey: `${engine}|${scope}`, analysis })),
+    [engine, questions, scope],
   )
   const {
     history,
     weeks,
     weekOf,
     setWeekOf,
-    data: analysis,
-    loading,
-  } = useWeeklyPage<CitationSourceAnalysis>(loader, tenant?.tenantId ?? '', EMPTY)
+    data: loaded,
+    loading: loadingData,
+  } = useWeeklyPage<LoadedGap>(loader, tenant?.tenantId ?? '', EMPTY_LOADED)
+  const stale = loaded.filterKey !== '' && loaded.filterKey !== filterKey
+  const analysis = stale ? EMPTY : loaded.analysis
+  const loading = loadingData || stale
 
   const gap = useMemo(() => computeCitationGap(analysis), [analysis])
   const targets = useMemo(() => topEntryTargets(gap, 5), [gap])
@@ -193,13 +207,15 @@ export default function CitationGap() {
   // 전주 갭 — 비교 가능할 때만 불러온다. 결과에 어느 (브랜드·주차·엔진·질문 유형)의 것인지 키를 함께 담아, 필터를
   // 바꾼 직후 옛 전주 값이 새 조건에 붙는 일을 막는다.
   const prevKey = comparison?.comparable ? `${tenant?.tenantId ?? ''}|${comparison.previousWeekOf}|${engine}|${scope}` : ''
-  const [previous, setPrevious] = useState<{ key: string; gap: CitationGapSummary } | null>(null)
+  // unsplit — 전주는 질문 유형으로 나눌 수 없었다(그 주 은행 없음). 빈 집계를 전주로 두면 모든 도메인이 「신규」가 된다.
+  const [previous, setPrevious] = useState<{ key: string; gap: CitationGapSummary; unsplit: boolean } | null>(null)
   useEffect(() => {
     if (!prevKey || !tenant || !comparison?.comparable) return
     let cancelled = false
     loadCitationSources(tenant.tenantId, comparison.previousWeekOf, engine || null, questions)
       .then((prevAnalysis) => {
-        if (!cancelled) setPrevious({ key: prevKey, gap: computeCitationGap(prevAnalysis) })
+        if (!cancelled)
+          setPrevious({ key: prevKey, gap: computeCitationGap(prevAnalysis), unsplit: prevAnalysis.questionScope?.bankVersion === null })
       })
       .catch(() => {
         if (!cancelled) setPrevious(null)
@@ -208,7 +224,8 @@ export default function CitationGap() {
       cancelled = true
     }
   }, [prevKey, tenant, comparison, engine, questions])
-  const comparable = Boolean(comparison?.comparable && previous && previous.key === prevKey)
+  const prevUnsplit = Boolean(previous && previous.key === prevKey && previous.unsplit)
+  const comparable = Boolean(comparison?.comparable && previous && previous.key === prevKey && !previous.unsplit)
 
   const rows = useMemo(() => {
     const base = comparable && previous ? attachPreviousShares(gap.gapDomains, previous.gap) : gap.gapDomains
@@ -285,7 +302,14 @@ export default function CitationGap() {
               {questions && ` · ${QUESTION_SCOPE_LABEL[scope]}만`}
               {unknownResponses > 0 && ` (질문 은행에 없는 질문의 응답 ${unknownResponses}개는 어느 쪽인지 몰라 뺐습니다)`}
             </p>
-            <ComparisonNote comparison={comparison} />
+            {prevUnsplit && comparison ? (
+              <p className="muted">
+                <span className="status-pill st-warn">비교 불가</span> 전주({comparison.previousWeekOf})는 질문 유형으로 나눌 수 없어
+                비교하지 않습니다.
+              </p>
+            ) : (
+              <ComparisonNote comparison={comparison} />
+            )}
 
             {/* 유형별 갭 비중 — 전체 인용 대비. 칸 사이 2px는 서페이스색이라 색이 맞닿지 않는다. */}
             <div className="mix-bar" role="img" aria-label="유형별 갭 비중">
@@ -357,8 +381,9 @@ export default function CitationGap() {
             </div>
 
             <p className="muted">
-              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주 전체 인용 기준입니다. 도메인을 펼치면 실제 인용된
-              URL(상위 10개)이 보입니다.
+              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주{' '}
+              {questions ? `${QUESTION_SCOPE_LABEL[scope]}의 ` : '전체 '}인용 기준입니다. 도메인을 펼치면 실제 인용된 URL(상위
+              10개)이 보입니다.
               {(bucket !== 'all' || query) && ` · 표시 ${rows.length}/${gap.gapDomains.length}개`}
             </p>
 

@@ -327,7 +327,7 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
     }
   }
   if (!bank) markDemo(res);
-  res.json(bank ?? demoQuestionBank(tenant, history.at(-1)?.weekOf ?? '2026-W36'));
+  res.json(bank ?? demoQuestionBank(tenant, history.at(-1)?.weekOf ?? '2026-W36', requested ?? undefined));
 });
 
 // URL 상세 분석 — 도메인×소유권 기준 인용 집계.
