@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { PostRemovedReason, PublishedPost } from '../lib/api'
+import type { ActionStatus, PostRemovedReason, PublishedPost } from '../lib/api'
 import type { PublishedHit } from '../lib/gapActions'
 import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst } from '../lib/publishedUrl'
 import { UrlLink } from './CitationBits'
@@ -40,6 +40,7 @@ function statusOf(h: PublishedHit, week: string): { pill: string; cls: string; d
 
 /**
  * 올린 글 주소 — 집행 원장(server/publishedPosts.ts)의 기록을 적고, 이번 주 측정에서 그 글이 인용됐는지 보인다.
+ * judged가 false면 주차 판정 없이 기록(올린 날 · 올린 곳)만 보인다.
  *
  * 주소마다 올린 날을 함께 남긴다(기본 오늘, 고칠 수 있다). 며칠 뒤에 적는 일이 흔해서, 적은 시각을 올린 날로 쓰면 그 사이
  * 측정이 「올리기 전」으로 잡힌다. 「빼기」는 지우지 않는다 — 잘못 적은 주소는 이력에서 빼고, 내린 글은 내린 날까지 남긴다.
@@ -54,6 +55,8 @@ export default function PublishedUrlEditor({
   onRemove,
   onRestore,
   onSetDate,
+  judged = true,
+  targetLabel,
 }: {
   /** 이 곳의 뺀 적 없는 기록과 이번 주 결과. */
   hits: PublishedHit[]
@@ -67,6 +70,10 @@ export default function PublishedUrlEditor({
   onRemove: (postId: string, reason: PostRemovedReason) => void
   onRestore: (postId: string) => void
   onSetDate: (postId: string, date: string) => void
+  /** false면 주차 판정을 보이지 않는다(src/lib/gapActions.ts recordOnlyHits). */
+  judged?: boolean
+  /** 기록마다 어느 줄에 올린 것인지 — 한 글의 기록을 모아 볼 때(콘텐츠 보관함). */
+  targetLabel?: (post: PublishedPost) => string
 }) {
   const today = todayKst()
   const [input, setInput] = useState('')
@@ -109,7 +116,8 @@ export default function PublishedUrlEditor({
   return (
     <div className="post-editor">
       <p className="gap-tally" style={{ marginBottom: 4 }}>
-        올린 글 주소{hits.length > 0 && ` · ${week} 인용 확인 ${citedCount}/${hits.length}`}
+        올린 글 주소
+        {hits.length > 0 && (judged ? ` · ${week} 인용 확인 ${citedCount}/${hits.length}` : ` ${hits.length}개`)}
       </p>
       {hits.length > 0 && (
         <ul className="post-list">
@@ -119,13 +127,15 @@ export default function PublishedUrlEditor({
             return (
               <li key={p.id}>
                 <div className="post-line">
-                  <UrlLink url={p.url} max={64} /> <span className={`status-pill ${s.cls}`}>{s.pill}</span>
+                  <UrlLink url={p.url} max={64} />
+                  {judged && <span className={`status-pill ${s.cls}`}>{s.pill}</span>}
+                  {targetLabel && <span className="st st-info">{targetLabel(p)}</span>}
                 </div>
                 <p className="doc-meta post-meta">
                   {p.publishedOn ? `${shortDate(p.publishedOn)} 올림` : '올린 날 모름(옛 기록)'}
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
-                  {s.detail && ` · ${s.detail}`}
-                  {h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
+                  {judged && s.detail && ` · ${s.detail}`}
+                  {judged && h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
                   {/* 내린 글은 이 줄에서 되살리거나 「잘못 적은 주소」로 바꾼다 — 이 주에 보이는 동안은 아래 「뺀 주소」에 두 번 두지 않는다. */}
                   {h.takenDownOn ? (
                     <>
@@ -271,6 +281,45 @@ export default function PublishedUrlEditor({
           </ul>
         </details>
       )}
+    </div>
+  )
+}
+
+/** 집행 상태 — 콘텐츠 생성 카드(GapActions.tsx STATUS_CHOICES)와 같은 말을 쓴다. 「완료」가 아니라 「집행함」이다. */
+const STATUS_CHOICES: { value: ActionStatus; label: string; title: string }[] = [
+  { value: 'todo', label: '안 함', title: '아직 손대지 않음' },
+  { value: 'doing', label: '진행 중', title: '작업하고 있음' },
+  { value: 'done', label: '집행함', title: '올렸음' },
+  { value: 'skip', label: '보류', title: '하지 않기로 함' },
+]
+
+/** 글 하나의 집행 상태 버튼 — 질문 은행 · 콘텐츠 보관함처럼 실행 항목 카드가 없는 화면이 쓴다. */
+export function ExecutionStatusButtons({
+  label,
+  status,
+  disabled,
+  onChange,
+}: {
+  label: string
+  status: ActionStatus
+  disabled?: boolean
+  onChange: (status: ActionStatus) => void
+}) {
+  return (
+    <div className="action-status" role="group" aria-label={`${label} 집행 상태`}>
+      {STATUS_CHOICES.map((c) => (
+        <button
+          key={c.value}
+          type="button"
+          title={c.title}
+          disabled={disabled}
+          className={status === c.value ? 'on' : undefined}
+          aria-pressed={status === c.value}
+          onClick={() => onChange(c.value)}
+        >
+          {c.label}
+        </button>
+      ))}
     </div>
   )
 }

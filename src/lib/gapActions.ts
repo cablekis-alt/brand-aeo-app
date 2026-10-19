@@ -614,6 +614,14 @@ export interface PublishedHit {
 }
 
 /**
+ * 주차 판정 없이 기록만 보일 때의 줄 — 질문 은행 · 콘텐츠 보관함처럼 「어느 주」라는 기준이 없는 화면이 쓴다(PublishedUrlEditor
+ * judged=false). 임의의 주로 「인용 없음」을 보이면 오해를 부르므로, 결과는 주차별 이력에서 본다.
+ */
+export function recordOnlyHits(posts: PublishedPost[]): PublishedHit[] {
+  return posts.filter((p) => !p.removedAt).map((post) => ({ post, timing: 'unknown' as const, tally: null, variantCited: 0 }))
+}
+
+/**
  * 이번 주 측정에서 올린 글을 찾는다. 기록이 없으면 판정을 읽지 않는다.
  * 「잘못 적은 주소」는 어느 주에서도 뺀다. 「글을 내렸어요」는 내린 날 전에 한 측정에서는 남긴다 — 글이 올라가 있던 주의 인용이다.
  */

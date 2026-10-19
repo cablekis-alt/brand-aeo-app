@@ -4922,6 +4922,15 @@ td.cell-mid {
   gap: 6px;
   margin-top: 4px;
 }
+/* 질문 은행 · 콘텐츠 보관함의 「올린 곳」 — 상태 버튼과 주소 칸을 글 아래에 붙인다. */
+.post-section {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
 @media (max-width: 640px) {
   .publish-row-actions {
     flex-basis: 100%;

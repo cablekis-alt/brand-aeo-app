@@ -23,6 +23,39 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
  */
 
 export type PostVia = 'own' | 'channel' | 'orphan' | 'direct';
+
+export interface TopicSnapshot {
+  bankVersion: string | null;
+  questionIds: string[];
+  questionTexts: string[];
+}
+
+/** 질문 스냅샷 상한 — 한 글이 다루는 질문은 많아야 수십 개다. */
+const TOPIC_MAX_QUESTIONS = 60;
+
+/**
+ * topic 스냅샷 검사. topic: 글이 아니면 받지 않는다. questionIds는 문자열 배열, 문장은 id와 개수가 같거나(은행을 알 때) 비어
+ * 있어야 한다(은행을 모를 때). 틀리면 400 — 잘못된 스냅샷을 남기면 나중 결과가 엉뚱한 질문을 가리킨다.
+ */
+function checkTopic(value: unknown, articleId: string): TopicSnapshot | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!articleId.startsWith('topic:')) throw new PublishedPostsError('질문 스냅샷은 질문 은행에서 고른 글(topic:)에만 붙습니다.', 400);
+  const v = value as Record<string, unknown>;
+  const ids = v.questionIds;
+  const texts = v.questionTexts ?? [];
+  const isStrings = (a: unknown, max: number): a is string[] =>
+    Array.isArray(a) && a.length <= TOPIC_MAX_QUESTIONS && a.every((x) => typeof x === 'string' && x.length > 0 && x.length <= max);
+  if (!isStrings(ids, 60) || ids.length === 0) throw new PublishedPostsError('질문 스냅샷의 questionIds가 올바르지 않습니다.', 400);
+  if (!Array.isArray(texts) || (texts.length > 0 && !isStrings(texts, 400))) {
+    throw new PublishedPostsError('질문 스냅샷의 questionTexts가 올바르지 않습니다.', 400);
+  }
+  const bankVersion = typeof v.bankVersion === 'string' && v.bankVersion.trim() ? v.bankVersion.trim().slice(0, 20) : null;
+  if (bankVersion && texts.length !== ids.length) {
+    throw new PublishedPostsError('질문 스냅샷의 문장 수가 질문 수와 다릅니다.', 400);
+  }
+  if (!bankVersion && texts.length > 0) throw new PublishedPostsError('은행 버전 없이 질문 문장만 남길 수는 없습니다.', 400);
+  return { bankVersion, questionIds: [...ids], questionTexts: bankVersion ? [...(texts as string[])] : [] };
+}
 export type RemovedReason = 'mistake' | 'taken-down';
 export type PublishedOnSource = 'default-today' | 'user' | 'legacy';
 
@@ -50,6 +83,11 @@ export interface PublishedPost {
   adaptationSourceKey?: string;
   /** 기록할 때 보던 주차 — 감사용일 뿐 발행 시점으로 쓰지 않는다. */
   viewingWeek?: string;
+  /**
+   * 질문 은행에서 고른 질문으로 쓴 글(topic:)의 질문 스냅샷. 질문 id의 뜻은 은행 판마다 바뀌므로(ktcorp v4→v5) 그때의 은행 버전과
+   * 문장을 함께 고정한다. bankVersion이 null이면 그때의 은행을 몰라 문장도 없다 — 겨냥한 질문의 결과는 확인 불가로 둔다.
+   */
+  topic?: TopicSnapshot;
   removedAt?: string;
   removedReason?: RemovedReason;
   /** 집행 상태 파일에만 있던 옛 주소. 원장 파일에는 없다 — 고치면 원장으로 옮긴다. */
@@ -203,6 +241,8 @@ export interface AddPostInput {
   publishedOnChosen?: unknown;
   /** true면 같은 줄 작업에서 그 항목을 「집행함」으로 바꾼다(「올렸어요」). */
   markDone?: unknown;
+  /** topic: 글의 질문 스냅샷(TopicSnapshot). */
+  topic?: unknown;
 }
 
 export interface AddPostResult {
@@ -246,6 +286,12 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
   } catch (err) {
     return Promise.reject(err);
   }
+  let topic: TopicSnapshot | undefined;
+  try {
+    topic = checkTopic(input.topic, articleId);
+  } catch (err) {
+    return Promise.reject(err);
+  }
   const markedWeek = str(input.viewingWeek, 20);
   return queueTenantWrite(tenantId, async () => {
     const { ledger, legacy } = await readAll(tenantId);
@@ -278,14 +324,22 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
         publishedOnSource: chosenDate ? 'user' : 'legacy',
         ...(str(input.articleTitle, 200) ? { articleTitle: str(input.articleTitle, 200) } : {}),
         ...(markedWeek ? { viewingWeek: markedWeek } : {}),
+        ...(topic ? { topic } : {}),
       };
       posts = [...ledger, post];
       await writeLedger(tenantId, posts);
     } else if (sameTarget) {
       existing = true;
       // 같은 주소를 날짜를 골라 다시 적었으면 그 날로 고친다 — 날짜를 버리고 성공처럼 보이면 틀린 날이 그대로 남는다.
-      if (chosenDate && sameTarget.publishedOn !== publishedOn) {
-        post = { ...sameTarget, publishedOn, publishedOnSource: 'user' };
+      // 질문 스냅샷이 없던 기록이면 이번에 받은 것을 붙인다.
+      const redate = chosenDate && sameTarget.publishedOn !== publishedOn;
+      const addTopic = Boolean(topic && !sameTarget.topic);
+      if (redate || addTopic) {
+        post = {
+          ...sameTarget,
+          ...(redate ? { publishedOn, publishedOnSource: 'user' as const } : {}),
+          ...(addTopic && topic ? { topic } : {}),
+        };
         posts = ledger.map((p) => (p.id === sameTarget.id ? post : p));
         await writeLedger(tenantId, posts);
       } else {
@@ -307,6 +361,7 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
         ...(str(input.draftGeneratedAt, 40) ? { draftGeneratedAt: str(input.draftGeneratedAt, 40) } : {}),
         ...(str(input.adaptationSourceKey, 200) ? { adaptationSourceKey: str(input.adaptationSourceKey, 200) } : {}),
         ...(markedWeek ? { viewingWeek: markedWeek } : {}),
+        ...(topic ? { topic } : {}),
       };
       posts = [...ledger, post];
       await writeLedger(tenantId, posts);

@@ -91,6 +91,7 @@ export default function DraftPanel({
   ensureBrief,
   compact = false,
   weekOf,
+  publishHint = '아래 올리기 목록에서 올리세요',
 }: {
   tenantId: string
   action: GapAction
@@ -105,6 +106,11 @@ export default function DraftPanel({
   compact?: boolean
   /** 이 글(실행 항목)을 만든 측정 주차 — 있으면 「실측 답변」 칸을 연다(측정 전 글쓰기 화면에는 없다). */
   weekOf?: string
+  /**
+   * 빈칸을 다 처리한 뒤의 안내 — 어디서 올리는지. 기본은 콘텐츠 생성의 「② 올리기 목록」이다. 그 목록이 없는 화면(질문 은행)은
+   * 자기 화면의 주소 칸을 가리킨다.
+   */
+  publishHint?: string
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -485,7 +491,7 @@ export default function DraftPanel({
         <div className="brief-bar">
           <span className={`article-state${left === 0 ? ' is-ok' : ''}`}>
             {left === 0
-              ? '✓ 확인됨 — 아래 올리기 목록에서 올리세요'
+              ? `✓ 확인됨 — ${publishHint}`
               : progress.edited
                 ? `고친 글에 빈칸 ${left}줄 남음`
                 : `확인할 빈칸 ${left}곳${progress.suggested ? ` · 찾은 값 ${progress.suggested}` : ''}`}
@@ -854,7 +860,7 @@ export default function DraftPanel({
           {left === 0 && progress.total > 0 && (
             <div className="brief-bar">
               <button type="button" onClick={() => setStep(null)}>
-                확인 끝 — 아래 올리기 목록에서 올리세요
+                확인 끝 — {publishHint}
               </button>
             </div>
           )}
