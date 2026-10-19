@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { packagedDataMode } from './appPaths.js';
+import { readCohortExclusions, trimRemeasured, updateCohortExclusions } from './cohortExclusionStore.js';
 import { ensureCohortBank } from './cohortQuestionBank.js';
 import { MAX_AUTO_COHORT, selectCohortTargets } from './cohortPlan.js';
 import { reconcileCohortRanks } from './cohortRank.js';
@@ -133,6 +134,40 @@ export async function reusableThisWeek(
 type CohortKey = { industry: string; region: string; weekOf: string };
 
 /**
+ * 같은 주에 다시 넣어 잰 경쟁사의 코호트 제외를 푼다(cohortExclusionStore.ts trimRemeasured) — 그 주부터 다시 센다.
+ * 이번 측정으로 이 코호트에 카드를 남긴 경쟁사(측정 성공 · 이번 주 카드 재사용)만 본다. 다시 셀 코호트 주차를 돌려준다.
+ * 실패해도 측정은 살린다(그 주는 계속 빠진 채 남는다 — 서랍의 「다시 세기」로 풀 수 있다).
+ */
+async function releaseRemeasured(
+  measured: ({ tenant: TenantConfig; weekOf: string } | null)[],
+  reused: TenantConfig[],
+  weekOf: string,
+): Promise<CohortKey[]> {
+  const hits = [
+    ...measured.flatMap((m) => (m ? [{ tenantId: m.tenant.tenantId, industry: m.tenant.industry, region: m.tenant.region, weekOf: m.weekOf }] : [])),
+    ...reused.map((t) => ({ tenantId: t.tenantId, industry: t.industry, region: t.region, weekOf })),
+  ];
+  if (!hits.length) return [];
+  try {
+    // 풀 것이 없으면 파일을 쓰지 않는다(측정마다 쓰지 않게).
+    if (!trimRemeasured(await readCohortExclusions(), hits).trimmed.length) return [];
+    let trimmed: ReturnType<typeof trimRemeasured>['trimmed'] = [];
+    await updateCohortExclusions((entries) => {
+      const result = trimRemeasured(entries, hits);
+      trimmed = result.trimmed;
+      return result.entries;
+    });
+    for (const t of trimmed) {
+      console.log(`[measureAndBake] 코호트 제외 해제 ${t.entry.tenantId}(${t.entry.brandName}): ${t.weekOf}부터 다시 셉니다${t.removed ? ' — 항목을 지웠습니다' : ''}`);
+    }
+    return trimmed.map((t) => ({ industry: t.entry.industry, region: t.entry.region, weekOf: t.weekOf }));
+  } catch (err) {
+    console.error(`[measureAndBake] 코호트 제외 해제 실패: ${err instanceof Error ? err.message : err}`);
+    return [];
+  }
+}
+
+/**
  * 이번 측정으로 이번 주 카드가 다른 코호트로 옮겨 갈 브랜드의 옛 코호트.
  *
  * 주차 카드는 브랜드 · 주차당 하나라(store.saveScorecard), 이번 주에 이미 잰 브랜드를 업종 · 지역을 바꿔 다시 재면
@@ -228,6 +263,8 @@ async function measureAndBakeRun(
   options: MeasureOptions,
 ): Promise<MeasureBakeResult> {
   let cohortTargets: TenantConfig[] = [];
+  // 이번 주 카드를 다시 쓴(재측정하지 않은) 경쟁사 — 그 카드도 이번 코호트에 든다(코호트 제외 해제에 쓴다).
+  let reusedTargets: TenantConfig[] = [];
   // 자기 코호트와 함께 재는 본 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
   const startedAt = new Date().toISOString();
   let ownCohortList: TenantConfig['competitors'] | null = null;
@@ -288,6 +325,7 @@ async function measureAndBakeRun(
           reused.map((c) => c.target.tenantId).join(', '),
       );
     }
+    reusedTargets = reused.map((c) => c.target);
     cohortTargets = checks.filter((c) => !c.verdict.ok).map((c) => c.target);
   }
 
@@ -369,10 +407,14 @@ async function measureAndBakeRun(
   // 경쟁사만 따로 재도(측정 화면 「이 경쟁사만 측정」) 다시 계산한다. 예전에는 본 브랜드 측정에서만 해서,
   // 경쟁사 점수가 바뀌어도 같은 코호트 고객 카드의 「3위 / 7」 같은 저장 순위가 다음 전체 측정까지 옛 값으로
   // 남았다(2026-10-15). 다른 브랜드 측정 안에서 잰 경쟁사는 그 측정이 끝에서 한 번 계산한다(inCohortRun).
+  // 뺐던 경쟁사(「지난 기록에서도 빼기」)를 다시 넣어 같은 주에 쟀다 — 그 주는 다시 센다. 고객 브랜드의 측정에서만 —
+  // 「이 경쟁사만 측정」으로 따로 잰 것은 목록에 다시 넣은 것이 아니다. 측정에 실패한 경쟁사는 그대로 둔다.
+  const released = !tenant.cohortOnly && !options.inCohortRun ? await releaseRemeasured(measured, reusedTargets, weekNow) : [];
+
   if (!tenant.cohortOnly || !options.inCohortRun) {
     try {
       let updated = await reconcileCohortRanks(store, tenant.industry, tenant.region, weekOf);
-      for (const old of leftCohorts) {
+      for (const old of [...leftCohorts, ...released]) {
         if (old.industry === tenant.industry && old.region === tenant.region && old.weekOf === weekOf) continue;
         updated += await reconcileCohortRanks(store, old.industry, old.region, old.weekOf);
       }

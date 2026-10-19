@@ -10,6 +10,7 @@
  * 몇 곳을 함께 재고 몇 곳이 대기인지는 여기서 세지 않는다. 서버가 측정과 같은 함수로 계산한다
  * (POST /api/tenants/:id/competitors/plan → server/cohortPlan.ts).
  */
+import type { ExclusionPreview, RankLite } from './api'
 import { subjectParticle } from './korean'
 
 export interface CompetitorInput {
@@ -198,6 +199,25 @@ export function summarizeOps(base: EditItem[], ops: EditOp[]): string[] {
     } else lines.push(`${op.source === 'past' ? '다시 넣음' : '추가'} · ${op.with.name}`)
   })
   return lines
+}
+
+const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
+
+/** 「W36~W42」 — 한 주면 「W42」. */
+export function weekRange(first: string, until: string): string {
+  return first === until ? shortWeek(until) : `${shortWeek(first)}~${shortWeek(until)}`
+}
+
+/** 「3위 / 6」(동점이면 「 (동점 2)」). */
+export function rankText(r: RankLite): string {
+  return `${r.position}위 / ${r.totalTenants}${r.tiedCount > 1 ? ` (동점 ${r.tiedCount})` : ''}`
+}
+
+/** 지난 기록 바꾸기 요약 — 저장 막대 · 저장 기록에 쓴다. 서버 미리보기 값으로만 만든다. */
+export function summarizePastOut(preview: ExclusionPreview | null): string[] {
+  return (preview?.items ?? []).map(
+    (it) => `${it.action === 'exclude' ? '지난 기록에서 빼기' : '다시 세기'} · ${it.brandName} ${weekRange(it.fromWeek ?? it.firstWeek, it.untilWeek)}`,
+  )
 }
 
 /** 저장할 목록. */

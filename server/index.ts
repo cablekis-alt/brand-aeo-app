@@ -1002,7 +1002,8 @@ function sendEditorError(res: import('express').Response, err: unknown): void {
   res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
 }
 
-// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제. 쓰지 않는다.
+// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제, 「지난 기록에서도 빼기」의
+// 주차별 순위(pastOut). 쓰지 않는다.
 app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
   try {
     const runtime = await loadRuntimeTenants();
@@ -1011,7 +1012,8 @@ app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
       res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
       return;
     }
-    res.json(await planEdit(tenant, runtime, store, (req.body as { competitors?: unknown } | undefined)?.competitors));
+    const body = (req.body ?? {}) as { competitors?: unknown; pastOut?: unknown };
+    res.json(await planEdit(tenant, runtime, store, body.competitors, body.pastOut));
   } catch (err) {
     sendEditorError(res, err);
   }

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import type { CohortExclusion } from './cohortExclusionStore.js';
 import type { CompetitorContext } from '../src/prompts/types.js';
 import type { TenantConfig } from './types.js';
 
@@ -27,8 +28,16 @@ export interface CompetitorOverride {
 export interface CompetitorOverrideFile {
   /** 지금 쓰는 목록. null이면 베이스(저장소 설정)를 쓴다. */
   current: CompetitorOverride | null;
-  /** 마지막 저장 — 되돌리기용. 그 목록으로 이미 쟀으면 되돌릴 수 없다(competitorEditor.ts). */
-  lastSave: { savedAt: string; before: CompetitorOverride | null; summary: string } | null;
+  /**
+   * 마지막 저장 — 되돌리기용. 그 목록으로 이미 쟀으면 되돌릴 수 없다(competitorEditor.ts). exclusions는 그 저장이 코호트 제외
+   * 목록(cohortExclusionStore.ts)에 더한 · 지운 항목 — 되돌리면 반대로 한다.
+   */
+  lastSave: {
+    savedAt: string;
+    before: CompetitorOverride | null;
+    summary: string;
+    exclusions?: { added: CohortExclusion[]; removed: CohortExclusion[] };
+  } | null;
   /**
    * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가
    * 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도

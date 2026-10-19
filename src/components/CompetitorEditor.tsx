@@ -11,21 +11,27 @@ import {
   type CompetitorEditorState,
   type CompetitorEntry,
   type EditorCompetitorRow,
+  type ExcludedRange,
+  type ExclusionPreview,
+  type PastOutInput,
 } from '../lib/api'
 import {
   applyOps,
   baseItems,
   displayHost,
   dropHint,
+  rankText,
   revertOp,
   summarizeOps,
+  summarizePastOut,
   toCompetitors,
+  weekRange,
   type AppliedEdit,
   type EditItem,
   type EditOp,
   type InputSource,
 } from '../lib/competitorEdit'
-import { topicParticle, withParticle } from '../lib/korean'
+import { objectParticle, subjectParticle, topicParticle, withParticle } from '../lib/korean'
 import CompetitorPicker, { type PickerGroup } from './CompetitorPicker'
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
@@ -85,7 +91,13 @@ export default function CompetitorEditor({
   const [savedNow, setSavedNow] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
+  // 「지난 기록에서도 빼기」: 경쟁사 id → 'all'(이 코호트 지난 기록 전체) 또는 주차(그 주만). 「다시 세기」: 뺀 범위를 지울 id.
+  const [pastOut, setPastOut] = useState<Record<string, string>>({})
+  const [restore, setRestore] = useState<string[]>([])
+  const [confirmPast, setConfirmPast] = useState(false)
+  const [savedExclusion, setSavedExclusion] = useState<ExclusionPreview | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const confirmRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     let alive = true
@@ -111,14 +123,31 @@ export default function CompetitorEditor({
   const s = load.status === 'ok' ? load.value : null
   const base = useMemo(() => baseItems(s?.competitors ?? []), [s])
   const applied = useMemo(() => applyOps(base, ops), [base, ops])
-  const requestKey = ops.length ? JSON.stringify(toCompetitors(applied.list)) : ''
+  // 체크할 수 있는 곳 — 이번 편집에서 뺀 줄(그 코호트 기록이 있을 때)과 예전 경쟁사. 줄을 되돌리면 그 체크는 요청에서 빠진다.
+  const removedIds = applied.removed
+    .map((item) => s?.rows[Number(item.key.slice(1))])
+    .map((r) => (r ? (r.targetTenantId ?? r.draftId) : null))
+    .filter((x): x is string => Boolean(x))
+  const eligible = new Set([...removedIds, ...(s?.past.map((p) => p.tenantId) ?? [])])
+  const excludedIds = new Set([
+    ...(s?.past.filter((p) => p.excluded.length).map((p) => p.tenantId) ?? []),
+    ...(s?.rows.filter((r) => r.excluded.length).map((r) => r.targetTenantId ?? r.draftId) ?? []),
+  ])
+  const pastAdd = Object.entries(pastOut)
+    .filter(([id]) => eligible.has(id))
+    .map(([id, v]) => (v === 'all' ? { tenantId: id } : { tenantId: id, onlyWeek: v }))
+  const pastRestore = restore.filter((id) => excludedIds.has(id))
+  const pastInput: PastOutInput | null = pastAdd.length || pastRestore.length ? { add: pastAdd, restore: pastRestore } : null
+  const dirty = ops.length > 0 || pastInput !== null
+  const requestKey = dirty ? JSON.stringify({ competitors: toCompetitors(applied.list), pastOut: pastInput }) : ''
 
   // 바뀔 때마다(잠깐 멈춘 뒤) 서버에 미리 계산을 묻는다. 응답은 지금 목록과 같을 때만 쓴다.
   useEffect(() => {
     if (!requestKey) return
     let alive = true
     const timer = setTimeout(() => {
-      planCompetitorEdit(tenantId, JSON.parse(requestKey) as CompetitorEntry[]).then(
+      const req = JSON.parse(requestKey) as { competitors: CompetitorEntry[]; pastOut: PastOutInput | null }
+      planCompetitorEdit(tenantId, req.competitors, req.pastOut).then(
         (value) => alive && setPlan({ key: requestKey, value, error: null }),
         (err: unknown) => {
           console.error('[CompetitorEditor] 바꾼 목록을 계산하지 못했습니다', err)
@@ -133,20 +162,27 @@ export default function CompetitorEditor({
   }, [tenantId, requestKey])
 
   useEffect(() => {
-    onDirtyChange?.(ops.length > 0)
-  }, [ops.length, onDirtyChange])
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
+
+  // 확인 창을 열면 「다시 계산하고 저장」으로 초점을 옮긴다.
+  useEffect(() => {
+    if (confirmPast) confirmRef.current?.focus()
+  }, [confirmPast])
 
   const close = () => {
     if (busy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
-    if (ops.length && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
+    if (dirty && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
     onClose()
   }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // 명령 창·브랜드 고르기가 처리한 Escape(preventDefault)는 서랍까지 닫지 않는다.
       if (e.key !== 'Escape' || e.defaultPrevented) return
-      if (open) setOpen(null)
+      if (confirmPast) {
+        if (!busy) setConfirmPast(false)
+      } else if (open) setOpen(null)
       else close()
     }
     window.addEventListener('keydown', onKey)
@@ -154,8 +190,8 @@ export default function CompetitorEditor({
   })
 
   const current = plan && plan.key === requestKey ? plan : null
-  const planned = ops.length ? current?.value ?? null : null
-  const planning = ops.length > 0 && !current
+  const planned = dirty ? current?.value ?? null : null
+  const planning = dirty && !current
   // 서버 계산이 오기 전에는 원래 줄의 정보를 이름으로 붙여 보여 준다(칸 나눔은 순서대로 가정).
   // 계산이 실패해도(잘못된 주소 등) 새로 넣은 줄은 보여야 한다 — 그래야 그 줄을 되돌릴 수 있다.
   const rowFor = (item: EditItem, i: number): EditorCompetitorRow | null => {
@@ -178,6 +214,9 @@ export default function CompetitorEditor({
       deleted: false,
       deletedOtherIndustry: null,
       cohortWeeks: 0,
+      cohortFirstWeekOf: null,
+      excluded: [],
+      measuredByOthers: [],
       latest: null,
       questionIds: [],
     }
@@ -234,20 +273,36 @@ export default function CompetitorEditor({
         })),
     }))
 
-  const summary = summarizeOps(base, ops)
+  const exclusion = pastInput ? (planned?.exclusion ?? null) : null
+  const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion)]
   const errors = planned?.errors ?? []
+  const pastLocked = (exclusion?.locked.length ?? 0) > 0
   // 측정 중인지는 미리 계산 응답으로 다시 본다 — 서랍을 연 뒤 측정이 끝났을 수 있다.
   const measuringNow = planned ? planned.measuring : Boolean(s?.measuring)
-  const canSave = Boolean(s) && ops.length > 0 && Boolean(planned) && !planned?.unchanged && errors.length === 0 && !measuringNow && !busy
+  const canSave =
+    Boolean(s) &&
+    dirty &&
+    Boolean(planned) &&
+    (!planned?.unchanged || Boolean(exclusion?.items.length)) &&
+    errors.length === 0 &&
+    !pastLocked &&
+    !measuringNow &&
+    !busy
 
+  const clearEdits = () => {
+    setOps([])
+    setPastOut({})
+    setRestore([])
+  }
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
     setActionError(null)
     task().then(
       (value) => {
         setLoad({ status: 'ok', value })
-        setOps([])
+        clearEdits()
         setOpen(null)
+        setConfirmPast(false)
         setBusy(false)
         after(value)
         onSaved()
@@ -255,12 +310,51 @@ export default function CompetitorEditor({
       (err: unknown) => {
         console.error('[CompetitorEditor] 저장하지 못했습니다', err)
         setBusy(false)
+        setConfirmPast(false)
         setActionError(err instanceof Error ? err.message : String(err))
       },
     )
   }
-  const save = () => run(() => saveCompetitorEdit(tenantId, toCompetitors(applied.list), summary.join(' · ')), () => setSavedNow(true))
-  const undo = () => run(() => undoCompetitorEdit(tenantId), () => setSavedNow(false))
+  // 저장하는 순간의 미리보기 — 확인 창 · 결과 카드가 같은 값을 보인다. 서버는 이 previewKey와 지금 계산이 같을 때만 쓴다.
+  const doSave = () => {
+    const shown = exclusion
+    run(
+      () =>
+        saveCompetitorEdit(
+          tenantId,
+          toCompetitors(applied.list),
+          summary.join(' · '),
+          pastInput && shown ? { pastOut: pastInput, previewKey: shown.key } : null,
+        ),
+      () => {
+        setSavedNow(true)
+        setSavedExclusion(shown?.items.length ? shown : null)
+      },
+    )
+  }
+  // 지난 기록을 바꾸면 확인을 받는다 — 이미 보낸 주간 보고서와 숫자가 달라질 수 있다.
+  const save = () => (exclusion?.items.length ? setConfirmPast(true) : doSave())
+  const undo = () =>
+    run(
+      () => undoCompetitorEdit(tenantId),
+      () => {
+        setSavedNow(false)
+        setSavedExclusion(null)
+      },
+    )
+  const setPast = (id: string, value: string | undefined) => {
+    const next = { ...pastOut }
+    if (value) next[id] = value
+    else delete next[id]
+    setPastOut(next)
+    setSavedNow(false)
+    setActionError(null)
+  }
+  const toggleRestore = (id: string, on: boolean) => {
+    setRestore(on ? [...new Set([...restore, id])] : restore.filter((x) => x !== id))
+    setSavedNow(false)
+    setActionError(null)
+  }
   const reset = () =>
     run(
       () => resetCompetitorEdit(tenantId),
@@ -276,6 +370,17 @@ export default function CompetitorEditor({
   }
 
   const rowProps = { top, ours: s?.baseline?.score ?? null, baselineWeek: s?.baseline?.weekOf ?? null, pending: planning }
+  // 지난 기록에서 뺀 뒤 다시 넣은 경쟁사 — 다시 잰 주부터는 저절로 세지만, 그 전 주는 여기서 다시 센다.
+  const restoreFor = (r: EditorCompetitorRow | null) => {
+    const id = r ? (r.targetTenantId ?? r.draftId) : null
+    if (!r || !id || !r.excluded.length) return undefined
+    return (
+      <label className="ce-pastbox-opt">
+        <input type="checkbox" checked={restore.includes(id)} onChange={(e) => toggleRestore(id, e.target.checked)} />
+        지난 기록 다시 세기 ({rangesText(r.excluded, r.cohortFirstWeekOf ?? r.excluded[0]!.untilWeek)})
+      </label>
+    )
+  }
 
   return (
     <aside className="ce-drawer" aria-labelledby="ce-title">
@@ -366,6 +471,7 @@ export default function CompetitorEditor({
                     extraChips={chips}
                     sub={sub}
                     {...rowProps}
+                    below={restoreFor(row)}
                     action={
                       placed !== undefined
                         ? { label: '되돌리기', onClick: () => revert(placed) }
@@ -418,6 +524,9 @@ export default function CompetitorEditor({
               {applied.removed.map((item) => {
                 const by = applied.removedBy.get(item.key)!
                 const was = s.rows[Number(item.key.slice(1))]
+                const pastId = was ? (was.targetTenantId ?? was.draftId) : null
+                // 같은 주에 다시 재면 이번 주 기록이 순위표에 남는다 — 그 주만 뺄 수 있게 한다.
+                const sameWeek = planned?.leaving.find((l) => l.tenantId === pastId)?.thisWeek ? (was?.latest?.weekOf ?? null) : null
                 return (
                   <li key={item.key} className="ce-row struck">
                     <span className="ce-n">−</span>
@@ -426,7 +535,19 @@ export default function CompetitorEditor({
                         <b>{item.competitor.name}</b>
                         <span className="chip bad">뺄 예정</span>
                       </span>
-                      <span className="ce-domain">다음 측정부터 빠져요 · 지난 기록은 남아요</span>
+                      <span className="ce-domain">다음 측정부터 빠져요 · {pastOut[pastId ?? ''] ? '지난 기록에서도 빼요' : '지난 기록은 남아요'}</span>
+                      {pastId && was && was.cohortWeeks > 0 && was.latest && (
+                        <PastBox
+                          range={weekRange(was.cohortFirstWeekOf ?? was.latest.weekOf, was.latest.weekOf)}
+                          weeks={was.cohortWeeks}
+                          onlyWeek={sameWeek}
+                          value={pastOut[pastId]}
+                          onChange={(v) => setPast(pastId, v)}
+                          lockedBy={was.measuredByOthers}
+                          excluded={was.excluded}
+                          firstWeek={was.cohortFirstWeekOf ?? was.latest.weekOf}
+                        />
+                      )}
                     </span>
                     <span className="ce-score-num">{was?.latest?.score ?? '—'}</span>
                     <span className="ce-q none">{was?.questionIds.length ? `${was.questionIds.join(' · ')} 남음` : '—'}</span>
@@ -460,6 +581,7 @@ export default function CompetitorEditor({
                       n={row?.status === 'waiting' ? '대기' : '중복'}
                       extraChips={sourceChips(item, applied, originalStatus(item.key), row!)}
                       {...rowProps}
+                    below={restoreFor(row)}
                       action={
                         placed !== undefined && !applied.movedDown.has(item.key)
                           ? { label: '되돌리기', onClick: () => revert(placed) }
@@ -543,20 +665,45 @@ export default function CompetitorEditor({
                 </button>
                 {pastOpen && (
                   <ul>
-                    {s.past.map((p) => (
-                      <li key={p.tenantId}>
-                        <b>{p.brandName}</b>
-                        <span>
-                          지난 기록 {p.weeks}주 · 마지막 {shortWeek(p.lastWeekOf)} {p.lastScore}점 · 지난 순위표에 남아 있어요
-                        </span>
-                      </li>
-                    ))}
+                    {s.past.map((p) => {
+                      const excludedText = p.excluded.length ? rangesText(p.excluded, p.firstWeekOf) : null
+                      return (
+                        <li key={p.tenantId}>
+                          <div className="ce-past-line">
+                            <b>{p.brandName}</b>
+                            {excludedText && <span className="chip">지난 기록에서 뺌 · {excludedText}</span>}
+                          </div>
+                          <div className="ce-past-meta">
+                            지난 기록 {p.weeks}주 · 마지막 {shortWeek(p.lastWeekOf)} {p.lastScore}점
+                            {excludedText ? ' · 지난 순위표에서 빠져 있어요' : ' · 지난 순위표에 남아 있어요'}
+                          </div>
+                          {excludedText ? (
+                            <label className="ce-pastbox-opt">
+                              <input type="checkbox" checked={restore.includes(p.tenantId)} onChange={(e) => toggleRestore(p.tenantId, e.target.checked)} />
+                              다시 세기 — 지난 순위표에 다시 넣어요
+                            </label>
+                          ) : (
+                            <PastBox
+                              range={weekRange(p.firstWeekOf, p.lastWeekOf)}
+                              weeks={p.weeks}
+                              // 고객의 마지막 순위에 남은 카드(같은 주 재측정으로 남은 곳) — 그 주만 뺄 수 있다.
+                              onlyWeek={s.baseline && p.lastWeekOf === s.baseline.weekOf ? p.lastWeekOf : null}
+                              value={pastOut[p.tenantId]}
+                              onChange={(v) => setPast(p.tenantId, v)}
+                              lockedBy={[]}
+                              excluded={[]}
+                              firstWeek={p.firstWeekOf}
+                            />
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </section>
             )}
 
-            {(s.edit.active || s.edit.undoAvailable) && !ops.length && !savedNow && (
+            {(s.edit.active || s.edit.undoAvailable) && !dirty && !savedNow && (
               <div className="ce-edit-state">
                 {s.edit.active ? (
                   <span>앱에서 고친 목록을 쓰는 중{s.edit.savedAt ? ` · ${shortDate(s.edit.savedAt)} 저장` : ''}</span>
@@ -601,10 +748,11 @@ export default function CompetitorEditor({
         )}
       </div>
 
-      {s && ops.length > 0 && (
+      {s && dirty && (
         <div className="ce-bar">
           <p className="ce-bar-summary">{summary.join(' · ')}</p>
-          {planning && <p className="ce-bar-note">함께 측정할 곳을 다시 세는 중…</p>}
+          {planning && <p className="ce-bar-note">{pastInput ? '지난 순위를 다시 세는 중…' : '함께 측정할 곳을 다시 세는 중…'}</p>}
+          {exclusion && exclusion.items.length > 0 && <ExclusionPreviewBlock preview={exclusion} brandName={s.brandName} />}
           {current?.error && <p className="ce-bar-note bad">{current.error}</p>}
           {waitingNames.length > 0 && <p className="ce-bar-note warn">대기 {waitingNames.length}곳({waitingNames.join(', ')})은 측정하지 않아요</p>}
           {planned?.notes.map((n) => (
@@ -617,7 +765,7 @@ export default function CompetitorEditor({
               {e}
             </p>
           ))}
-          {planned?.unchanged && <p className="ce-bar-note">지금 목록과 같아요.</p>}
+          {planned?.unchanged && !pastInput && <p className="ce-bar-note">지금 목록과 같아요.</p>}
           <p className="ce-bar-q">질문지: 그대로 ({s.questionBank.version})</p>
           {actionError && (
             <p className="ce-bar-note bad" role="alert">
@@ -625,8 +773,16 @@ export default function CompetitorEditor({
             </p>
           )}
           <div className="ce-bar-actions">
-            <span className="ce-bar-hint">{measuringNow ? '측정이 끝난 뒤에 저장할 수 있어요' : '다음 측정부터 적용돼요'}</span>
-            <button type="button" className="btn" onClick={() => setOps([])} disabled={busy}>
+            <span className="ce-bar-hint">
+              {measuringNow
+                ? '측정이 끝난 뒤에 저장할 수 있어요'
+                : pastInput
+                  ? ops.length
+                    ? '목록은 다음 측정부터 · 지난 순위는 저장하면 바로 다시 세요'
+                    : '저장하면 지난 순위를 바로 다시 세요'
+                  : '다음 측정부터 적용돼요'}
+            </span>
+            <button type="button" className="btn" onClick={clearEdits} disabled={busy}>
               취소
             </button>
             <button type="button" className="btn primary" onClick={save} disabled={!canSave}>
@@ -636,10 +792,11 @@ export default function CompetitorEditor({
         </div>
       )}
 
-      {s && savedNow && !ops.length && (
+      {s && savedNow && !dirty && (
         <div className="ce-saved" role="status">
-          <b>✓ 저장했어요 · 다음 측정부터 적용돼요</b>
+          <b>✓ 저장했어요 · {savedExclusion ? '지난 순위를 다시 셌어요' : '다음 측정부터 적용돼요'}</b>
           {s.edit.summary && <p>{s.edit.summary}</p>}
+          {savedExclusion && <p>순위 카드 {savedExclusion.cardsRewritten}장을 다시 계산했어요 · 점수는 그대로예요</p>}
           <p>질문지: 그대로 ({s.questionBank.version})</p>
           {actionError && (
             <p className="ce-bar-note bad" role="alert">
@@ -657,11 +814,129 @@ export default function CompetitorEditor({
             </button>
           </div>
           <p className="ce-saved-note">
-            되돌리기는 다음 측정 전까지만 돼요. 「측정하러 가기」는 화면만 옮기고 측정은 시작하지 않아요. GitHub 측정·웹 화면은 저장소 설정을 따라요.
+            되돌리기는 다음 측정 전까지만 돼요{savedExclusion ? ' — 그 뒤에는 예전 경쟁사의 「다시 세기」로 되돌려요' : ''}. 「측정하러 가기」는 화면만 옮기고 측정은
+            시작하지 않아요. GitHub 측정·웹 화면은 저장소 설정을 따라요{savedExclusion ? ' · 지난 기록 빼기도 이 앱 순위표에만 적용돼요' : ''}.
           </p>
         </div>
       )}
+
+      {s && confirmPast && exclusion && (
+        <div className="ce-dialog-backdrop" onMouseDown={() => !busy && setConfirmPast(false)}>
+          <div className="ce-dialog" role="dialog" aria-modal="true" aria-labelledby="ce-dialog-title" onMouseDown={(e) => e.stopPropagation()}>
+            <h3 id="ce-dialog-title">{exclusion.items.some((it) => it.action === 'exclude') ? '지난 기록에서도 뺄까요?' : '지난 순위표에 다시 넣을까요?'}</h3>
+            <p>{confirmText(exclusion)}</p>
+            <ExclusionPreviewBlock preview={exclusion} brandName={s.brandName} compact />
+            <p className="ce-dialog-note">
+              점수는 그대로예요. 측정 기록은 지우지 않고 순위 계산에서만 {exclusion.items.some((it) => it.action === 'exclude') ? '빼요' : '다시 넣어요'}. 이미 보낸 주간
+              보고서와 숫자가 달라질 수 있어요. 이 앱 순위표에서만 바뀌어요 · 웹 화면과 GitHub 측정 순위는 그대로예요.
+            </p>
+            <div className="ce-bar-actions">
+              <button type="button" className="btn" onClick={() => setConfirmPast(false)} disabled={busy}>
+                취소
+              </button>
+              <button type="button" className="btn primary" ref={confirmRef} onClick={doSave} disabled={busy || !canSave}>
+                {busy ? '저장 중…' : '다시 계산하고 저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
+  )
+}
+
+/** 「W36~W42」 — 뺀 범위들(fromWeek가 없으면 그 경쟁사의 첫 기록부터). */
+function rangesText(ranges: ExcludedRange[], firstWeek: string): string {
+  return ranges.map((r) => weekRange(r.fromWeek ?? firstWeek, r.untilWeek)).join(', ')
+}
+
+/** 확인 창 첫 문장 — 무엇을 빼고 되살리는지. 서버 미리보기 이름으로 만든다. */
+function confirmText(preview: ExclusionPreview): string {
+  const out = preview.items.filter((it) => it.action === 'exclude').map((it) => it.brandName)
+  const back = preview.items.filter((it) => it.action === 'restore').map((it) => it.brandName)
+  const parts: string[] = []
+  if (out.length) parts.push(`${subjectParticle(out.join(' · '))} 든 지난 주차 순위를 다시 계산해요.`)
+  if (back.length) parts.push(`${objectParticle(back.join(' · '))} 지난 순위표에 다시 넣고 순위를 다시 계산해요.`)
+  return parts.join(' ')
+}
+
+/**
+ * 지난 순위 미리보기 — 이 고객의 주차별 순위(지금 → 바뀐 뒤), 다시 쓸 카드 수, 함께 바뀌는 다른 고객, 잠김. 모두 서버가 저장과
+ * 같은 계산으로 낸 값이다.
+ */
+function ExclusionPreviewBlock({ preview, brandName, compact = false }: { preview: ExclusionPreview; brandName: string; compact?: boolean }) {
+  return (
+    <div className="ce-preview">
+      <p className="ce-preview-head">
+        {brandName} 지난 순위 <span>· 점수는 그대로, 순위만 다시 셉니다</span>
+      </p>
+      {preview.weeks.length ? (
+        <ul>
+          {preview.weeks.map((w) => (
+            <li key={w.weekOf}>
+              <span className="ce-preview-week">{shortWeek(w.weekOf)}</span>
+              {w.before ? rankText(w.before) : '—'} → <b>{rankText(w.after)}</b>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="ce-preview-none">{brandName} 순위는 바뀌지 않아요.</p>
+      )}
+      {!compact && <p className="ce-preview-meta">순위 카드 {preview.cardsRewritten}장을 다시 계산해요 · 이미 보낸 주간 보고서와 숫자가 달라질 수 있어요.</p>}
+      {preview.otherCustomers.map((o) => (
+        <p key={o.brandName} className="ce-bar-note warn">
+          다른 고객 {o.brandName}의 지난 순위도 {o.weeks}주 바뀌어요.
+        </p>
+      ))}
+      {preview.locked.map((l) => (
+        <p key={l.tenantId} className="ce-bar-note bad">
+          {l.brandName}: {l.by.join(', ')}도 이 경쟁사를 재고 있어 지난 기록에서 뺄 수 없어요.
+        </p>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * 「지난 기록에서도 빼기」 체크 — 기본은 꺼짐(지난 기록은 남는다). 그 주만 뺄 수 있으면(같은 주 재측정으로 남은 카드) 둘째 체크를
+ * 둔다. 다른 고객이 함께 재는 경쟁사는 잠근다(그 고객의 순위표에 든다).
+ */
+function PastBox({
+  range,
+  weeks,
+  onlyWeek,
+  value,
+  onChange,
+  lockedBy,
+  excluded,
+  firstWeek,
+}: {
+  range: string
+  weeks: number
+  onlyWeek: string | null
+  value: string | undefined
+  onChange: (value: string | undefined) => void
+  lockedBy: string[]
+  excluded: ExcludedRange[]
+  firstWeek: string
+}) {
+  if (lockedBy.length) {
+    return <span className="ce-pastbox-lock">{lockedBy.join(', ')}도 이 경쟁사를 재고 있어 지난 기록에서 뺄 수 없어요</span>
+  }
+  return (
+    <span className="ce-pastbox">
+      {excluded.length > 0 && <span className="ce-pastbox-note">이미 지난 기록에서 뺌 · {rangesText(excluded, firstWeek)}</span>}
+      <label className="ce-pastbox-opt">
+        <input type="checkbox" checked={value === 'all'} onChange={(e) => onChange(e.target.checked ? 'all' : undefined)} />
+        지난 기록에서도 빼기 ({range} · {weeks}주)
+      </label>
+      {onlyWeek && (
+        <label className="ce-pastbox-opt">
+          <input type="checkbox" checked={value === onlyWeek} onChange={(e) => onChange(e.target.checked ? onlyWeek : undefined)} />
+          {shortWeek(onlyWeek)} 기록만 빼기
+        </label>
+      )}
+    </span>
   )
 }
 
@@ -697,6 +972,7 @@ function Row({
   extraChips = [],
   sub,
   action,
+  below,
   children,
 }: {
   r: EditorCompetitorRow
@@ -708,6 +984,8 @@ function Row({
   extraChips?: { text: string; tone: string; title?: string }[]
   sub?: string
   action?: { label: string; onClick: () => void; primary?: boolean; expanded?: boolean }
+  /** 이름 아래 한 줄(「지난 기록 다시 세기」). */
+  below?: React.ReactNode
   children?: React.ReactNode
 }) {
   const chips = [...extraChips]
@@ -723,6 +1001,13 @@ function Row({
     chips.push(r.latest ? { text: '대기', tone: '', title: '지금은 칸이 차서 재지 않아요' } : { text: '측정 안 됨', tone: 'warn' })
   }
   if (r.otherRegion) chips.push({ text: '다른 지역으로 잼', tone: 'info', title: '다른 지역에 등록된 같은 브랜드로 재요 · 이 순위표에는 나오지 않아요' })
+  if (r.excluded.length) {
+    chips.push({
+      text: '지난 기록 일부 뺌',
+      tone: '',
+      title: `${rangesText(r.excluded, r.cohortFirstWeekOf ?? r.excluded[0]!.untilWeek)} 순위에서는 빠져 있어요 · 다시 잰 주부터는 저절로 세요`,
+    })
+  }
   if (r.existingCustomer) chips.push({ text: '고객 브랜드', tone: 'info', title: '다른 고객 브랜드를 그 브랜드 설정으로 재요' })
   if (r.deletedOtherIndustry) {
     chips.push({ text: '넣을 수 없음', tone: 'bad', title: `지운 다른 업종 브랜드(${r.deletedOtherIndustry.brandName})와 id가 같아요` })
@@ -745,6 +1030,7 @@ function Row({
           ))}
         </span>
         <span className="ce-domain">{[sub, r.domains[0] ?? '홈페이지 없음'].filter(Boolean).join(' · ')}</span>
+        {below}
       </span>
       <span className="ce-score" title={r.latest ? `${shortWeek(r.latest.weekOf)} · 1회 측정` : '측정 기록 없음'}>
         <span className="ce-score-num">

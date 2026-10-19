@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { isExcluded, readCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
@@ -23,7 +24,16 @@ export interface ResultStore {
   saveScorecard(scorecard: WeeklyScorecard): Promise<void>;
   saveReport(tenantId: string, weekOf: string, reportMarkdown: string): Promise<void>;
   getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]>;
-  getCohortScorecards(industry: string, region: string, weekOf: string): Promise<WeeklyScorecard[]>;
+  /**
+   * 코호트(업종 · 지역 · 주차)의 카드 — 지운 브랜드와 코호트 제외 목록(cohortExclusionStore.ts)에 든 카드는 뺀다.
+   * opts.exclusions를 주면 파일 대신 그 목록으로 뺀다(미리보기 · 예전 경쟁사 목록).
+   */
+  getCohortScorecards(
+    industry: string,
+    region: string,
+    weekOf: string,
+    opts?: { exclusions?: readonly CohortExclusion[] },
+  ): Promise<WeeklyScorecard[]>;
 }
 
 const DATA_DIR = PIPELINE_DATA_DIR;
@@ -121,11 +131,21 @@ export class FileResultStore implements ResultStore {
     return history.sort((a, b) => a.weekOf.localeCompare(b.weekOf)).slice(-weeksBack);
   }
 
-  async getCohortScorecards(industry: string, region: string, weekOf: string): Promise<WeeklyScorecard[]> {
+  async getCohortScorecards(
+    industry: string,
+    region: string,
+    weekOf: string,
+    opts?: { exclusions?: readonly CohortExclusion[] },
+  ): Promise<WeeklyScorecard[]> {
     await ensureDir(DATA_DIR);
     // 코호트는 디렉터리 목록으로 만든다. 브랜드를 삭제해도 이미 측정한 data/<tenant>/는 남으므로
     // (측정 결과는 지우지 않는다), 삭제된 브랜드가 순위표에 계속 끼는 것을 여기서 걸러낸다.
-    const [tenantDirs, deleted] = await Promise.all([readdir(DATA_DIR), readDeletedTenants()]);
+    // 「지난 기록에서도 빼기」로 뺀 경쟁사도 그 코호트 · 주차에서만 걸러낸다(카드는 남는다).
+    const [tenantDirs, deleted, exclusions] = await Promise.all([
+      readdir(DATA_DIR),
+      readDeletedTenants(),
+      opts?.exclusions ? Promise.resolve(opts.exclusions) : readCohortExclusions(),
+    ]);
     const deletedIds = new Set(deleted);
     const results: WeeklyScorecard[] = [];
     for (const tenantId of tenantDirs) {
@@ -133,7 +153,7 @@ export class FileResultStore implements ResultStore {
       const historyPath = path.join(DATA_DIR, tenantId, 'scorecard-history.json');
       const history = await readJsonArray<WeeklyScorecard>(historyPath);
       const match = history.find((s) => s.industry === industry && s.region === region && s.weekOf === weekOf);
-      if (match) results.push(match);
+      if (match && !isExcluded(exclusions, match)) results.push(match);
     }
     return results;
   }

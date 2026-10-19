@@ -815,8 +815,38 @@ export interface EditorCompetitorRow {
   deleted: boolean
   deletedOtherIndustry: { brandName: string; industry: string } | null
   cohortWeeks: number
+  cohortFirstWeekOf: string | null
+  /** 지난 기록에서 뺀 범위(코호트 제외 목록). */
+  excluded: ExcludedRange[]
+  /** 이 경쟁사를 함께 재는 다른 고객 브랜드 — 있으면 지난 기록에서 뺄 수 없다. */
+  measuredByOthers: string[]
   latest: { weekOf: string; score: number; mentionRate: number; brandOwnedCitationRate: number } | null
   questionIds: string[]
+}
+/** 코호트 제외 목록에 든 범위 — fromWeek가 없으면 처음부터. */
+export interface ExcludedRange {
+  id: string
+  fromWeek?: string
+  untilWeek: string
+}
+export interface RankLite {
+  position: number
+  totalTenants: number
+  tiedCount: number
+}
+/** 「지난 기록에서도 빼기」 · 「다시 세기」 미리보기 — server/competitorEditor.ts ExclusionPreview와 같은 모양. */
+export interface ExclusionPreview {
+  items: { tenantId: string; brandName: string; action: 'exclude' | 'restore'; fromWeek?: string; untilWeek: string; firstWeek: string; weeks: number }[]
+  weeks: { weekOf: string; before: RankLite | null; after: RankLite }[]
+  locked: { tenantId: string; brandName: string; by: string[] }[]
+  otherCustomers: { brandName: string; weeks: number }[]
+  cardsRewritten: number
+  key: string
+}
+/** 지난 기록 바꾸기 — 뺄 경쟁사(onlyWeek면 그 주만)와 다시 셀 경쟁사. */
+export interface PastOutInput {
+  add: { tenantId: string; onlyWeek?: string }[]
+  restore: string[]
 }
 export interface CompetitorEntry {
   name: string
@@ -829,8 +859,10 @@ export interface EditorPastCompetitor {
   aliases: string[]
   domains: string[]
   weeks: number
+  firstWeekOf: string
   lastWeekOf: string
   lastScore: number
+  excluded: ExcludedRange[]
 }
 export interface CompetitorEditorState {
   tenantId: string
@@ -872,6 +904,7 @@ export interface CompetitorEditPlan {
   errors: string[]
   unchanged: boolean
   measuring: boolean
+  exclusion: ExclusionPreview | null
 }
 
 /** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
@@ -889,14 +922,25 @@ async function competitorRequest<T>(tenantId: string, sub: string, method: strin
   return json
 }
 
-/** 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). */
-export function planCompetitorEdit(tenantId: string, competitors: CompetitorEntry[]): Promise<CompetitorEditPlan> {
-  return competitorRequest(tenantId, '/plan', 'POST', { competitors }, '바꾼 목록을 계산하지 못했습니다')
+/**
+ * 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). pastOut이 있으면 「지난 기록에서도 빼기」 ·
+ * 「다시 세기」의 주차별 순위도 계산한다(exclusion).
+ */
+export function planCompetitorEdit(tenantId: string, competitors: CompetitorEntry[], pastOut?: PastOutInput | null): Promise<CompetitorEditPlan> {
+  return competitorRequest(tenantId, '/plan', 'POST', { competitors, ...(pastOut ? { pastOut } : {}) }, '바꾼 목록을 계산하지 못했습니다')
 }
 
-/** 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. */
-export function saveCompetitorEdit(tenantId: string, competitors: CompetitorEntry[], summary: string): Promise<CompetitorEditorState> {
-  return competitorRequest(tenantId, '', 'PUT', { competitors, summary }, '경쟁사 목록을 저장하지 못했습니다')
+/**
+ * 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. 지난 기록을 바꾸면 미리 본 결과의 previewKey를 함께 보낸다 — 그사이
+ * 순위가 바뀌었으면 throw(409).
+ */
+export function saveCompetitorEdit(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  summary: string,
+  past?: { pastOut: PastOutInput; previewKey: string } | null,
+): Promise<CompetitorEditorState> {
+  return competitorRequest(tenantId, '', 'PUT', { competitors, summary, ...(past ?? {}) }, '경쟁사 목록을 저장하지 못했습니다')
 }
 
 /** 마지막 저장 되돌리기 — 그 뒤 측정했으면 throw. */
