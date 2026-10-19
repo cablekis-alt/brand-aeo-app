@@ -348,25 +348,108 @@ export async function loadActionStates(tenantId: string): Promise<ActionStateMap
   return getJson<ActionStateMap>(`/api/action-states/${encodeURIComponent(tenantId)}`)
 }
 
-/** 집행 주소만 갈아끼운다. 상태는 건드리지 않는다(서버가 status를 그대로 다시 쓴다). */
-export async function saveActionUrls(
-  tenantId: string,
-  actionId: string,
-  status: ActionStatus,
-  publishedUrls: string[],
-  markedWeek?: string,
-): Promise<ActionStateMap | null> {
+/**
+ * 집행 원장 — 올린 글 주소 한 줄 = 기록 한 줄(server/publishedPosts.ts). 데스크톱·로컬 전용이다.
+ * 주소는 v0.4.3부터 여기에 쓴다. 집행 상태 파일에 남은 옛 주소는 서버가 「옛 기록」(legacy)으로 합쳐 준다.
+ */
+export type PostVia = 'own' | 'channel' | 'orphan' | 'direct'
+export type PostRemovedReason = 'mistake' | 'taken-down'
+export interface PublishedPost {
+  id: string
+  url: string
+  /** 비교용 키(src/lib/publishedUrl.ts trackingKey). */
+  key: string
+  /** 올린 날(한국 날짜). null이면 모른다(옛 기록). */
+  publishedOn: string | null
+  publishedOnSource: 'default-today' | 'user' | 'legacy'
+  recordedAt: string
+  articleId: string
+  targetActionId: string
+  via: PostVia
+  articleTitle?: string
+  draftGeneratedAt?: string
+  adaptationSourceKey?: string
+  viewingWeek?: string
+  removedAt?: string
+  removedReason?: PostRemovedReason
+  legacy?: true
+}
+
+/** 원장 요청 실패 — 서버가 준 이유를 그대로 싣는다(409 다른 글의 주소, 400 첫 화면 주소 등). */
+export class PublishedPostsRequestError extends Error {}
+
+async function postsRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response
   try {
-    const res = await fetch(`/api/action-states/${encodeURIComponent(tenantId)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actionId, status, markedWeek, publishedUrls }),
-    })
-    if (!res.ok) return null
-    return (await res.json()) as ActionStateMap
-  } catch {
+    res = await fetch(path, init)
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  const body = (await res.json().catch(() => ({}))) as T & { error?: string }
+  if (!res.ok) throw new PublishedPostsRequestError(body.error || `집행 기록 요청 실패 (HTTP ${res.status})`)
+  return body
+}
+
+/**
+ * 원장 읽기. **null은 "이 환경에는 기록 기능이 없다"(웹 — 라우트 404)**는 뜻이고, 그 밖의 실패(파일이 깨짐 등)는 이유와 함께
+ * throw한다 — 기능을 조용히 숨기면 왜 적을 수 없는지 모른다.
+ */
+export async function loadPublishedPosts(tenantId: string): Promise<PublishedPost[] | null> {
+  const path = `/api/published-posts/${encodeURIComponent(tenantId)}`
+  let res: Response
+  try {
+    res = await fetch(path)
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  if (res.status === 404) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    // 브랜드가 없다는 404는 기능이 없다는 뜻이 아니다 — 그대로 알린다.
+    if (body?.error?.startsWith('tenant not found')) throw new PublishedPostsRequestError(body.error)
     return null
   }
+  const body = (await res.json().catch(() => ({}))) as { posts?: PublishedPost[]; error?: string }
+  if (!res.ok || !Array.isArray(body.posts)) throw new PublishedPostsRequestError(body.error || `집행 기록을 읽지 못했습니다 (HTTP ${res.status})`)
+  return body.posts
+}
+
+export interface RecordPostInput {
+  url: string
+  articleId: string
+  targetActionId: string
+  via: PostVia
+  articleTitle?: string
+  draftGeneratedAt?: string
+  adaptationSourceKey?: string
+  viewingWeek?: string
+  publishedOn: string
+  /** 사람이 날짜를 고쳤는가(아니면 기본값 오늘). */
+  publishedOnChosen: boolean
+  /** 「올렸어요」 — 같은 요청에서 그 항목을 「집행함」으로 바꾼다. */
+  markDone: boolean
+}
+
+export async function recordPublishedPost(
+  tenantId: string,
+  input: RecordPostInput,
+): Promise<{ post: PublishedPost; posts: PublishedPost[]; states?: ActionStateMap; existing: boolean }> {
+  return postsRequest(`/api/published-posts/${encodeURIComponent(tenantId)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+}
+
+export async function patchPublishedPost(
+  tenantId: string,
+  postId: string,
+  patch: { publishedOn?: string; remove?: PostRemovedReason; restore?: true },
+): Promise<{ post: PublishedPost; posts: PublishedPost[] }> {
+  return postsRequest(`/api/published-posts/${encodeURIComponent(tenantId)}/${encodeURIComponent(postId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
 }
 
 /** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */

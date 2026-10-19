@@ -1,0 +1,235 @@
+import { useState } from 'react'
+import type { PostRemovedReason, PublishedPost } from '../lib/api'
+import type { PublishedHit } from '../lib/gapActions'
+import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst } from '../lib/publishedUrl'
+import { UrlLink } from './CitationBits'
+
+const REMOVED_LABEL: Record<PostRemovedReason, string> = {
+  mistake: '잘못 적은 주소',
+  'taken-down': '글을 내림',
+}
+
+/** "2026-10-19" → "10/19" */
+const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
+
+/**
+ * 이번 주 결과 한 줄. 숫자는 정확 일치 인용만 센다(src/lib/publishedUrl.ts). 올리기 전에 한 측정은 세지 않고, 측정하던 날 올린
+ * 글은 전후를 알 수 없다고 밝힌다. 질문 은행을 못 읽은 주는 이름 없는/이름 댄 질문을 0이 아니라 확인 불가로 둔다.
+ */
+function statusOf(h: PublishedHit, week: string): { pill: string; cls: string; detail: string | null } {
+  if (h.timing === 'before') return { pill: '올리기 전 측정', cls: 'st-unknown', detail: `${week} 측정은 올린 날보다 앞이라 세지 않습니다.` }
+  const unsure = h.timing === 'during' || h.timing === 'ambiguous'
+  const t = h.tally
+  if (!t) {
+    return unsure
+      ? { pill: '전후 불명', cls: 'st-unknown', detail: `${week} 측정 중에 올려, 인용이 없던 것이 올리기 전이라 그런지 알 수 없습니다.` }
+      : { pill: '인용 없음', cls: 'st-unknown', detail: `${week} 측정의 AI 답변 인용에서 이 주소를 찾지 못했습니다.` }
+  }
+  const counts =
+    t.unnamed && t.named
+      ? `${week} · 이름 없는 질문 ${t.unnamed.cited} · 이름 댄 질문 ${t.named.cited} · 뒷받침 ${t.all.supporting}`
+      : `${week} · 인용 ${t.all.cited} · 질문지를 못 읽어 질문 유형은 확인 불가`
+  return {
+    pill: '인용됨',
+    cls: t.unnamed && t.unnamed.cited > 0 ? 'st-good' : 'st-info',
+    detail: unsure ? `${counts} (측정 중에 올림 — 전후 불명)` : counts,
+  }
+}
+
+/**
+ * 올린 글 주소 — 집행 원장(server/publishedPosts.ts)의 기록을 적고, 이번 주 측정에서 그 글이 인용됐는지 보인다.
+ *
+ * 주소마다 올린 날을 함께 남긴다(기본 오늘, 고칠 수 있다). 며칠 뒤에 적는 일이 흔해서, 적은 시각을 올린 날로 쓰면 그 사이
+ * 측정이 「올리기 전」으로 잡힌다. 「빼기」는 지우지 않는다 — 잘못 적은 주소는 이력에서 빼고, 내린 글은 내린 날까지 남긴다.
+ */
+export default function PublishedUrlEditor({
+  hits,
+  removed,
+  weekOf,
+  addLabel = '추가',
+  busy,
+  error,
+  onRecord,
+  onRemove,
+  onRestore,
+  onSetDate,
+}: {
+  /** 이 곳의 뺀 적 없는 기록과 이번 주 결과. */
+  hits: PublishedHit[]
+  /** 이 곳의 뺀 기록 — 접어 두고 되살린다. */
+  removed: PublishedPost[]
+  weekOf: string
+  addLabel?: string
+  busy: boolean
+  error: string | null
+  /** 성공하면 true — 입력칸을 비운다. chosen: 사람이 날짜를 바꿨는가. */
+  onRecord: (url: string, publishedOn: string, chosen: boolean) => Promise<boolean>
+  onRemove: (postId: string, reason: PostRemovedReason) => void
+  onRestore: (postId: string) => void
+  onSetDate: (postId: string, date: string) => void
+}) {
+  const today = todayKst()
+  const [input, setInput] = useState('')
+  const [date, setDate] = useState<string | null>(null)
+  const [reject, setReject] = useState<string | null>(null)
+  const [editing, setEditing] = useState<{ id: string; date: string } | null>(null)
+  const [removing, setRemoving] = useState<string | null>(null)
+  const week = weekOf ? weekOf.slice(5) : '이번 주'
+  const citedCount = hits.filter((h) => h.timing !== 'before' && h.tally).length
+
+  const add = async () => {
+    const url = input.trim()
+    if (!url) return
+    const check = isArticleUrl(url)
+    if (!check.ok) {
+      setReject(ARTICLE_URL_REASON[check.reason])
+      return
+    }
+    setReject(null)
+    if (await onRecord(url, date ?? today, date !== null)) {
+      setInput('')
+      setDate(null)
+    }
+  }
+
+  return (
+    <div className="post-editor">
+      <p className="gap-tally" style={{ marginBottom: 4 }}>
+        올린 글 주소{hits.length > 0 && ` · ${week} 인용 확인 ${citedCount}/${hits.length}`}
+      </p>
+      {hits.length > 0 && (
+        <ul className="post-list">
+          {hits.map((h) => {
+            const s = statusOf(h, week)
+            const p = h.post
+            return (
+              <li key={p.id}>
+                <div className="post-line">
+                  <UrlLink url={p.url} max={64} /> <span className={`status-pill ${s.cls}`}>{s.pill}</span>
+                </div>
+                <p className="doc-meta post-meta">
+                  {p.publishedOn ? `${shortDate(p.publishedOn)} 올림` : '올린 날 모름(옛 기록)'}
+                  {s.detail && ` · ${s.detail}`}
+                  {h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
+                  <button type="button" className="link-btn" disabled={busy} onClick={() => setEditing({ id: p.id, date: p.publishedOn ?? today })}>
+                    날짜 고치기
+                  </button>{' '}
+                  <button type="button" className="link-btn" disabled={busy} onClick={() => setRemoving(removing === p.id ? null : p.id)}>
+                    빼기
+                  </button>
+                </p>
+                {editing?.id === p.id && (
+                  <div className="post-row">
+                    <input
+                      type="date"
+                      value={editing.date}
+                      max={today}
+                      aria-label="올린 날"
+                      onChange={(e) => setEditing({ id: p.id, date: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={!editing.date || editing.date > today}
+                      onClick={() => {
+                        onSetDate(p.id, editing.date)
+                        setEditing(null)
+                      }}
+                    >
+                      저장
+                    </button>
+                    <button type="button" className="ghost" onClick={() => setEditing(null)}>
+                      취소
+                    </button>
+                  </div>
+                )}
+                {removing === p.id && (
+                  <div className="post-row">
+                    <span className="doc-meta">왜 빼나요?</span>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        onRemove(p.id, 'mistake')
+                        setRemoving(null)
+                      }}
+                    >
+                      잘못 적은 주소
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        onRemove(p.id, 'taken-down')
+                        setRemoving(null)
+                      }}
+                    >
+                      글을 내렸어요
+                    </button>
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <div className="post-row">
+        <input
+          type="url"
+          value={input}
+          placeholder="https://… 올린 글 주소"
+          aria-label="올린 글 주소"
+          disabled={busy}
+          onChange={(e) => {
+            setInput(e.target.value)
+            setReject(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              void add()
+            }
+          }}
+          style={{ flex: 1, minWidth: 0 }}
+        />
+        <button type="button" className="ghost" onClick={() => void add()} disabled={busy || !/^https?:\/\/\S+$/i.test(input.trim())}>
+          {busy ? '저장 중…' : addLabel}
+        </button>
+      </div>
+      <p className="doc-meta post-meta">
+        올린 날{' '}
+        {date === null ? (
+          <>
+            오늘({shortDate(today)}){' '}
+            <button type="button" className="link-btn" onClick={() => setDate(today)}>
+              바꾸기
+            </button>
+          </>
+        ) : (
+          <input type="date" value={date} max={today} aria-label="올린 날" onChange={(e) => setDate(e.target.value || null)} />
+        )}
+        {' — 며칠 뒤에 적는다면 실제로 올린 날로 바꾸세요. 그 사이 측정을 「올리기 전」으로 세지 않습니다.'}
+      </p>
+      {(reject || error) && <p className="error">{reject ?? error}</p>}
+      {removed.length > 0 && (
+        <details className="draft-audit">
+          <summary>뺀 주소 {removed.length}개</summary>
+          <ul className="post-list">
+            {removed.map((p) => (
+              <li key={p.id}>
+                <span className="muted">{p.url}</span>{' '}
+                <span className="doc-meta">
+                  {p.removedReason ? REMOVED_LABEL[p.removedReason] : '뺌'}
+                  {p.removedAt && kstDate(p.removedAt) && ` · ${shortDate(kstDate(p.removedAt)!)}`}
+                </span>{' '}
+                <button type="button" className="link-btn" disabled={busy} onClick={() => onRestore(p.id)}>
+                  되살리기
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  )
+}

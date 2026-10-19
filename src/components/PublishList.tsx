@@ -3,7 +3,6 @@ import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } fr
 import { copyRich } from '../lib/clipboard'
 import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
-import type { GapAction } from '../lib/gapActions'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
 import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
@@ -39,7 +38,8 @@ export default function PublishList({
   adaptations: ChannelAdaptationMap | null
   onAdapted: (a: ChannelAdaptation) => void
   /** 올린 주소 기록 부품. 상태를 저장할 수 없는 환경이면 null. */
-  urlSlot: (target: GapAction) => ReactNode
+  /** 「올렸어요」 칸 — 줄 전체를 받는다. 기록에 글 · 올린 곳 · 초안 판을 함께 남기려면 대상 항목만으로는 모자라다. */
+  urlSlot: (row: PublishRow) => ReactNode
   /** 잠긴 줄의 「글 확인하러 가기」 — 그 글 카드로 옮겨 간다. */
   onShowArticle: (actionId: string) => void
   /** 인용 갭 분석에서 넘어온 채널 항목 id — 그 줄을 강조하고 스크롤 목적지(action-<id>)로 둔다. */
@@ -301,7 +301,7 @@ export default function PublishList({
                   )}
                 </div>
               )}
-              {slotOpen && <div className="publish-row-slot">{urlSlot(row.target)}</div>}
+              {slotOpen && <div className="publish-row-slot">{urlSlot(row)}</div>}
             </li>
           )
         })}

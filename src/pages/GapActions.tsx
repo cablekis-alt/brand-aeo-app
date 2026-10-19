@@ -17,13 +17,17 @@ import {
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import PublishList from '../components/PublishList'
+import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
 import { draftRequestOf, gapProgress, workMarkdownOf } from '../lib/draftGaps'
-import { downloadMarkdown, safeFileName } from '../lib/markdownFile'
+import { downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
+
+/** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
+type PlanPosts = ReturnType<typeof useGapActionPlan>['posts']
 
 // 배지 문구는 항목이 정한다(출처마다 하는 일이 다르다). 화면은 색만 정한다.
 const KIND_CLASS: Record<GapAction['kind'], string> = { listing: 'st-warn', content: 'st-info' }
@@ -236,82 +240,6 @@ function BriefPanel({
 
 
 
-/**
- * 집행하고 올린 글 주소.
- *
- * 충족 판정은 도메인 단위라 "그 사이트에서 우리가 보인다"까지만 말한다. 우리가 올린 그 글이
- * 인용된 건지, 그 사이트의 다른 글이 인용된 건지는 구분하지 못한다. 주소를 적어 두면 다음
- * 측정의 인용 주소와 직접 맞춰서 집행한 일과 결과를 잇는다.
- */
-function PublishedUrls({
-  action,
-  onSave,
-  addLabel = '추가',
-}: {
-  action: GapAction
-  /** added: 새 주소를 붙였을 때 true — 초안의 「올렸어요」는 이때 「집행함」으로도 바꾼다. */
-  onSave: (urls: string[], added: boolean) => void
-  addLabel?: string
-}) {
-  const [input, setInput] = useState('')
-  const urls = action.publishedUrls
-  const cited = new Set(action.citedPublishedUrls)
-  const add = () => {
-    const t = input.trim()
-    if (!/^https?:\/\/\S+$/i.test(t)) return
-    if (urls.some((u) => u.toLowerCase() === t.toLowerCase())) {
-      setInput('')
-      return
-    }
-    onSave([...urls, t], true)
-    setInput('')
-  }
-  return (
-    <div className="gap-urls">
-      <p className="gap-tally" style={{ marginBottom: 4 }}>
-        올린 글 주소{urls.length > 0 && ` · 인용 확인 ${cited.size}/${urls.length}`}
-      </p>
-      {urls.length > 0 && (
-        <ul style={{ margin: '0 0 6px', paddingLeft: 18 }}>
-          {urls.map((u) => (
-            <li key={u}>
-              <a href={u} target="_blank" rel="noreferrer">
-                {u.length > 64 ? `${u.slice(0, 64)}…` : u}
-              </a>{' '}
-              {cited.has(u) ? (
-                <span className="st st-ok">이번 주 인용됨</span>
-              ) : (
-                <span className="muted">아직 인용 없음</span>
-              )}{' '}
-              <button type="button" className="ghost" onClick={() => onSave(urls.filter((x) => x !== u), false)}>
-                빼기
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div style={{ display: 'flex', gap: 6 }}>
-        <input
-          type="url"
-          value={input}
-          placeholder="https://… 올린 글 주소"
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              add()
-            }
-          }}
-          style={{ flex: 1 }}
-        />
-        <button type="button" className="ghost" onClick={add} disabled={!/^https?:\/\/\S+$/i.test(input.trim())}>
-          {addLabel}
-        </button>
-      </div>
-    </div>
-  )
-}
-
 /** 아직 채우지도 빼지도 않은 빈칸 수. */
 function gapsLeft(d: StoredDraft): number {
   const p = gapProgress(d)
@@ -477,7 +405,7 @@ function ActionCard({
   onBrief,
   drafts,
   onDraft,
-  onUrls,
+  posts,
   coveredBy,
   focused = false,
   weekOf,
@@ -496,7 +424,8 @@ function ActionCard({
   /** null이면 이 환경(웹)에 초안 라우트가 없다. */
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
-  onUrls: (id: string, urls: string[], markDone?: boolean) => void
+  /** 집행 원장 — null이면 이 환경(웹)에서는 주소를 적을 수 없다. */
+  posts: PlanPosts | null
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
 }) {
@@ -510,6 +439,13 @@ function ActionCard({
   const [detail, setDetail] = useState(false)
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
+  // 언제 집행했나 — 올린 날이 적힌 기록이 있으면 그 날(가장 최근), 없으면 상태를 정할 때 보던 주차.
+  const lastPosted = (action.publishedHits ?? []).map((h) => h.post.publishedOn).filter((d): d is string => Boolean(d)).sort().at(-1)
+  const executedWhen = lastPosted
+    ? ` (${Number(lastPosted.slice(5, 7))}/${Number(lastPosted.slice(8, 10))} 올림)`
+    : action.markedWeek
+      ? ` (${action.markedWeek}에 표시)`
+      : ''
   // 초안 패널이 뜨는 카드는 「올린 글 주소」를 아래 「② 올리기 목록」의 줄에서 받는다(두 곳에 두지 않는다).
   const showsDraft = briefs !== null && drafts !== null && !action.satisfied && (!coveredBy || channelDraft)
   // 초안이 생기면 근거 · 질문 목록은 「자세히」로 접는다 — 카드는 글 자체(제목 · 첫 문단 · 빈칸)를 보인다.
@@ -550,8 +486,29 @@ function ActionCard({
         </>
       )}
       {detail && <p className="gap-tally">완료 조건 · {action.doneSignal}</p>}
-      {detail && !showsDraft && canSaveStatus && action.status !== 'todo' && action.status !== 'skip' && (
-        <PublishedUrls action={action} onSave={(urls) => onUrls(action.id, urls)} />
+      {detail && !showsDraft && posts && action.status !== 'todo' && action.status !== 'skip' && (
+        <PublishedUrlEditor
+          hits={action.publishedHits ?? []}
+          removed={posts.list.filter((p) => p.targetActionId === action.id && p.removedAt)}
+          weekOf={weekOf ?? ''}
+          busy={posts.busy}
+          error={posts.error}
+          onRecord={(url, publishedOn, chosen) =>
+            posts.record({
+              url,
+              articleId: action.id,
+              targetActionId: action.id,
+              via: 'direct',
+              articleTitle: action.title,
+              publishedOn,
+              publishedOnChosen: chosen,
+              markDone: false,
+            })
+          }
+          onRemove={posts.remove}
+          onRestore={posts.restore}
+          onSetDate={posts.setPublishedOn}
+        />
       )}
       {awaiting && (
         // 종류마다 확인 방법이 다르다. 등재형은 인용 데이터가 자동으로 충족을 켜지만,
@@ -561,7 +518,7 @@ function ActionCard({
         <p className="gap-tally" style={{ color: 'var(--accent)' }}>
           {action.progress ? (
             <>
-              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 이 플랫폼은 실렸다/아니다가
+              집행했다고 표시했습니다{executedWhen}. 이 플랫폼은 실렸다/아니다가
               아니라 <b>지분</b>입니다 — 지금 {action.progress.unnamed && '브랜드 이름 없는 질문의 '}인용{' '}
               {action.progress.total}회 중 {action.progress.supporting}회가 우리를
               뒷받침합니다. 다음 측정에서 이 비율이 오르는지 보세요.
@@ -570,7 +527,7 @@ function ActionCard({
             // 「충족」은 브랜드 이름 없는 질문으로 정한다(gapActions.ts). 이름을 댄 질문에서 이미 뒷받침하면 페이지에 브랜드명은
             // 있다 — "못 찾았다 · 브랜드명이 있는지 보라"고 하면 멀쩡한 등재 페이지를 점검하게 만든다.
             <>
-              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}.{' '}
+              집행했다고 표시했습니다{executedWhen}.{' '}
               {action.support.known
                 ? `이름을 댄 질문에서는 이 출처가 우리를 ${action.support.all}회 뒷받침하지만, 브랜드 이름 없는 질문에서는 아직입니다. 그 페이지가 이름을 모르는 사람의 질문(위 질문 목록의 주제 · 지역 · 업종 말)에도 답하는지 보세요.`
                 : `이 출처가 우리를 ${action.support.all}회 뒷받침하지만, 질문 은행을 읽지 못해 브랜드 이름 없는 질문에서였는지 확인하지 못했습니다.`}
@@ -578,13 +535,13 @@ function ActionCard({
           ) : action.kind === 'listing' ? (
             <>
               집행했다고 표시했지만 아직 인용에서 우리를 못 찾았습니다
-              {action.markedWeek && ` (${action.markedWeek}에 표시)`}. AI가 새 페이지를 읽어 들이는 데
+              {executedWhen}. AI가 새 페이지를 읽어 들이는 데
               보통 몇 주가 걸립니다. 다음 측정에서도 그대로면 등재된 페이지에 브랜드명이 실제로 있는지,
               크롤러가 읽을 수 있는 정적 페이지인지 확인하세요.
             </>
           ) : (
             <>
-              집행했다고 표시했습니다{action.markedWeek && ` (${action.markedWeek})`}. 콘텐츠는 인용이
+              집행했다고 표시했습니다{executedWhen}. 콘텐츠는 인용이
               아니라 <b>이 질문들의 패 판정이 줄어드는 것</b>으로 확인됩니다 — 다음 측정을 보세요.
               자동으로 충족되지 않으므로, 효과가 보이면 직접 판단해 상태를 정리하세요.
             </>
@@ -694,8 +651,9 @@ export default function GapActions() {
   const focusId = searchParams.get('focus') ?? ''
   const focusDomain = searchParams.get('domain') ?? ''
   const [help, setHelp] = useState(false)
-  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, setUrls, saveError } =
+  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError, canRecordPosts, posts } =
     useGapActionPlan(tenant?.tenantId ?? '')
+  const cardPosts = canRecordPosts ? posts : null
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
   useEffect(() => {
@@ -926,7 +884,7 @@ export default function GapActions() {
                 )}
                 <div className="gap-grid">
                   {publishPlan.articles.map(({ action: a }) => (
-                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
+                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
                   ))}
                 </div>
               </section>
@@ -953,9 +911,36 @@ export default function GapActions() {
                     onAdapted={onAdapted}
                     focusId={focusId}
                     onShowArticle={showArticle}
-                    urlSlot={(target) =>
-                      canSaveStatus ? (
-                        <PublishedUrls action={target} addLabel="올렸어요" onSave={(urls, added) => setUrls(target.id, urls, added)} />
+                    urlSlot={(row) =>
+                      canRecordPosts ? (
+                        <PublishedUrlEditor
+                          addLabel="올렸어요"
+                          hits={row.target.publishedHits ?? []}
+                          removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt)}
+                          weekOf={weekOf}
+                          busy={posts.busy}
+                          error={posts.error}
+                          // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
+                          onRecord={(url, publishedOn, chosen) =>
+                            posts.record({
+                              url,
+                              articleId: row.article.action.id,
+                              targetActionId: row.target.id,
+                              via: row.kind,
+                              articleTitle: row.article.draft ? draftTitle(row.article.draft.draft) : row.article.action.title,
+                              ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
+                              ...(adaptations?.[row.article.action.id]?.[row.target.id]
+                                ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
+                                : {}),
+                              publishedOn,
+                              publishedOnChosen: chosen,
+                              markDone: true,
+                            })
+                          }
+                          onRemove={posts.remove}
+                          onRestore={posts.restore}
+                          onSetDate={posts.setPublishedOn}
+                        />
                       ) : null
                     }
                   />
@@ -963,7 +948,7 @@ export default function GapActions() {
                   // 초안 라우트가 없는 환경(웹) — 올릴 글이 없으니 채널 카드로 근거 · 상태만 보인다.
                   <div className="gap-grid">
                     {openListing.map((a) => (
-                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={coverageOf(a)} />
+                      <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={coverageOf(a)} />
                     ))}
                   </div>
                 )}
@@ -998,7 +983,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
               </details>
@@ -1014,7 +999,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} onUrls={setUrls} weekOf={weekOf} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
                 ))}
               </div>
             </section>
