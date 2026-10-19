@@ -19,7 +19,7 @@ import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
 import EvidencePanel from './EvidencePanel'
 import FactApprovalSheet from './FactApprovalSheet'
-import { mergeApproved, needsFromBrief } from '../lib/factApproval'
+import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
@@ -78,6 +78,10 @@ const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padSt
 /** 블로그 글 형식 발행본이 이보다 짧으면 알린다(목표는 2,500~3,500자 — b9c 규칙 8). */
 const SHORT_ARTICLE = 1500
 
+/** 다시 쓰면 사라지는 손댄 상태 — 승인 시트를 연 뒤 달라졌는지 볼 때 쓴다. */
+const editStampOf = (s: StoredDraft | undefined): string =>
+  s ? JSON.stringify([s.generatedAt, s.editedMarkdown ?? '', s.gapFills ?? {}]) : ''
+
 export default function DraftPanel({
   tenantId,
   action,
@@ -125,9 +129,12 @@ export default function DraftPanel({
   const factChain = useRef<Promise<unknown>>(Promise.resolve())
   /**
    * 초안 쓰기 전 승인 시트 — 브리프가 「확인 필요」로 남긴 사실을 브랜드 페이지에서 찾은 값(src/lib/factApproval.ts).
-   * force는 시트를 닫은 뒤 쓸 초안이 「다시 만들기」인지.
+   * force는 시트를 닫은 뒤 쓸 초안이 「다시 만들기」인지. actionId · stamp는 시트를 연 글과 그때의 고친 상태 — 시트는 기다리는
+   * 동안 열려 있어서(질문 고르기가 바뀌거나, 한꺼번에 만들기가 초안을 쓰거나, 아래 초안을 고칠 수 있다) 닫을 때 다시 맞춰 본다.
    */
-  const [prefill, setPrefill] = useState<{ hits: GapFactHit[]; sourceUrl: string; dropped: string[]; force: boolean } | null>(null)
+  const [prefill, setPrefill] = useState<
+    { hits: SheetHit[]; sourceUrl: string; dropped: string[]; force: boolean; actionId: string; stamp: string } | null
+  >(null)
   /** 사실 찾기 결과 한 줄 — 못 찾았거나 페이지를 못 읽었거나 넣은 개수. */
   const [prefillNote, setPrefillNote] = useState<string | null>(null)
   /** 기다리는 일 — 브랜드 페이지에서 사실 찾기 / 초안 쓰기. 버튼 글자가 달라진다. */
@@ -163,14 +170,12 @@ export default function DraftPanel({
     setEditing(false)
   }
 
+  // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
+  const confirmOverwrite = () =>
+    !(stored?.editedMarkdown || (stored?.gapFills && Object.keys(stored.gapFills).length)) ||
+    window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
   const make = async (force: boolean) => {
-    // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
-    if (
-      force &&
-      (stored?.editedMarkdown || (stored?.gapFills && Object.keys(stored.gapFills).length)) &&
-      !window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
-    )
-      return
+    if (force && !confirmOverwrite()) return
     setElapsed(0)
     setBusy(true)
     setError(null)
@@ -184,7 +189,7 @@ export default function DraftPanel({
       // 실측: 초안을 다 쓴 뒤 빈칸마다 값을 찾아 넣은 곳이 79곳 중 0곳이었다.
       const found = await findBriefFacts()
       if (found) {
-        setPrefill({ ...found, force })
+        setPrefill({ ...found, force, actionId: action.id, stamp: editStampOf(stored) })
         return
       }
       await writeDraft(force)
@@ -196,18 +201,26 @@ export default function DraftPanel({
     }
   }
   /** 브리프의 「확인 필요」 사실을 브랜드 페이지에서 찾는다(판정 1회). 못 찾거나 페이지를 못 읽으면 null — 초안은 예전처럼 빈칸으로 쓴다. */
-  const findBriefFacts = async (): Promise<{ hits: GapFactHit[]; sourceUrl: string; dropped: string[] } | null> => {
+  const findBriefFacts = async (): Promise<{ hits: SheetHit[]; sourceUrl: string; dropped: string[] } | null> => {
     const briefs = await loadContentBriefs(tenantId)
-    const needs = needsFromBrief(briefs?.[action.id]?.brief.doNotClaim ?? [])
-    if (!needs.length) return null
+    const asked = needsFromBrief(briefs?.[action.id]?.brief.doNotClaim ?? [])
+    if (!asked.length) return null
     setBusyKind('facts')
     try {
+      // 지금 브랜드 사실과 맞춰 본다 — 브리프는 다시 만들지 않아서, 빈칸에 넣거나 시트에서 넣은 사실도 「확인 필요」로 남아 있다.
+      // 이미 답이 있는 항목은 다시 묻지 않고, 같은 항목의 다른 값은 덧붙이지 않고 바꿀지 묻는다(src/lib/factApproval.ts).
+      const graph = await loadFactGraph(tenantId)
+      if (!graph) throw new Error('지금 브랜드 사실을 읽지 못했습니다.')
+      const needs = unansweredNeeds(asked, graph.factGraph)
+      if (!needs.length) return null
       const r = await findFactsForGaps(tenantId, needs)
-      if (!r.found.length) {
-        setPrefillNote(`브랜드 페이지에서 확인 필요 사실 ${needs.length}개를 찾아봤지만 없었습니다 — 그 자리는 빈칸으로 남습니다.`)
+      const hits = reconcileHits(r.found, graph.factGraph)
+      if (!hits.length) {
+        // 「빈칸으로 남는다」고 하지 않는다 — 브랜드 사실에 이미 있던 값이면 초안이 그 자리를 문장으로 쓴다.
+        setPrefillNote(`브랜드 페이지에서 확인 필요 사실 ${needs.length}개를 찾아봤지만 새로 넣을 값이 없었습니다.`)
         return null
       }
-      return { hits: r.found, sourceUrl: r.sourceUrl, dropped: r.dropped }
+      return { hits, sourceUrl: r.sourceUrl, dropped: r.dropped }
     } catch (e) {
       // 페이지를 못 읽어도 초안은 쓴다(예전처럼 빈칸으로). 이유는 화면에 남긴다.
       console.warn('[DraftPanel] 브랜드 페이지에서 사실을 찾지 못했습니다', e)
@@ -227,9 +240,17 @@ export default function DraftPanel({
     setStep(gapProgress(s).total > 0 ? 'gaps' : null)
   }
   /** 승인 시트의 결정 — 체크한 값을 브랜드 사실에 넣고(빈 배열이면 저장 없이) 초안을 쓴다. 저장이 실패하면 시트를 남기고 알린다. */
-  const finishPrefill = async (approved: GapFactHit[]) => {
+  const finishPrefill = async (approved: SheetHit[]) => {
     if (!prefill) return
-    const { force } = prefill
+    // 시트를 연 글이 아니면(질문 고르기를 바꿨다) 버린다 — 다른 글에 초안을 쓰거나 그 글의 확인 창을 건너뛰지 않는다.
+    if (prefill.actionId !== action.id) {
+      setPrefill(null)
+      return
+    }
+    // 시트가 떠 있는 동안 초안이 생겼으면(한꺼번에 만들기) 승인한 값을 넣으려면 다시 써야 한다 — 그냥 쓰면 서버가 그 초안을 돌려준다.
+    const force = prefill.force || (approved.length > 0 && Boolean(stored))
+    // 시트를 보는 동안 고친 글 · 빈칸 기록도 묻지 않고 덮지 않는다. 「다시 만들기」에서 이미 물은 상태 그대로면 다시 묻지 않는다.
+    if (force && editStampOf(stored) !== prefill.stamp && !confirmOverwrite()) return
     setElapsed(0)
     setBusy(true)
     setError(null)
@@ -257,7 +278,7 @@ export default function DraftPanel({
   const busyLabel = (draftLabel: string) => (busyKind === 'facts' ? `브랜드 페이지에서 사실 찾는 중… ${clock(elapsed)}` : draftLabel)
   const prefillView = (
     <>
-      {prefill && tenant && (
+      {prefill && prefill.actionId === action.id && tenant && (
         <FactApprovalSheet
           key={`${prefill.sourceUrl}|${prefill.hits.length}`}
           hits={prefill.hits}
@@ -267,6 +288,7 @@ export default function DraftPanel({
           busy={busy}
           onApprove={(approved) => void finishPrefill(approved)}
           onSkip={() => void finishPrefill([])}
+          onCancel={() => setPrefill(null)}
         />
       )}
       {prefillNote && <p className="doc-meta">{prefillNote}</p>}

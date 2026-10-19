@@ -9,7 +9,7 @@
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
 
-const { mergeApproved, needsFromBrief, preChecked } = await import('../src/lib/factApproval')
+const { mergeApproved, needsFromBrief, preChecked, reconcileHits, unansweredNeeds } = await import('../src/lib/factApproval')
 
 // 1) 브리프의 「확인 필요」 → 찾을 말
 ok('「확인 필요:」를 걷는다', JSON.stringify(needsFromBrief(['확인 필요: 객실 기본 요금', '확인필요：취사도구 품목'])) === JSON.stringify(['객실 기본 요금', '취사도구 품목']))
@@ -34,6 +34,26 @@ ok('있던 사실은 그대로 앞에', merged[0] === current[0])
 ok('같은 사실은 한 번만 더한다', merged.length === 2 && merged[1]?.claim === '체크인 시간' && merged[1].value === '15:00')
 ok('출처 주소를 남긴다(id · 시각은 서버가)', merged[1]?.sourceUrl === 'https://v.example/info' && merged[1].id === '' && merged[1].updatedAt === '')
 ok('승인한 것이 없으면 그대로', mergeApproved(current, []).length === 1)
+
+// 4) 지금 브랜드 사실과 맞추기 — 「다시 만들기」는 브리프를 다시 만들지 않아 「확인 필요」가 사실을 넣은 뒤에도 남는다
+const graph = [
+  { id: 'f-typed', type: 'other' as const, claim: '체크인 시간', value: '14:00', updatedAt: '2026-10-18' },
+  { id: 'f-park', type: 'other' as const, claim: '주차 요금', value: '무료', updatedAt: '2026-10-18' },
+]
+ok('브랜드 사실이 답한 항목은 다시 찾지 않는다(빈칸에 넣은 값은 claimOf(need)로 저장된다)', JSON.stringify(unansweredNeeds(['체크인 시간 — 팩트 그래프에 없음', '체크인시간', '객실 기본 요금'], graph)) === JSON.stringify(['객실 기본 요금']))
+const conflict = reconcileHits([{ need: '체크인 가능 시각', type: 'other', claim: '체크인 시간', value: '15:00', sourceUrl: 'https://v.example/' }], graph)
+ok('같은 항목에 다른 값이 있으면 지금 값을 붙인다', conflict.length === 1 && conflict[0]?.replaces?.id === 'f-typed' && conflict[0].replaces.value === '14:00')
+ok('바꾸는 줄은 처음에 꺼 둔다', !preChecked(conflict[0]!, '펜션'))
+ok('need의 항목 이름으로도 같은 항목을 찾는다', reconcileHits([{ need: '체크인 시간', type: 'other', claim: '입실 시각', value: '15:00', sourceUrl: '' }], graph)[0]?.replaces?.id === 'f-typed')
+ok('같은 항목 · 같은 값은 뺀다(띄어쓰기만 달라도)', reconcileHits([{ need: '주차', type: 'other', claim: '주차요금', value: '무료', sourceUrl: '' }], graph).length === 0)
+ok('항목이 다르면 값이 같아도 남긴다', reconcileHits([{ need: '와이파이', type: 'other', claim: '와이파이', value: '무료', sourceUrl: '' }], graph).length === 1)
+ok('찾은 값끼리 같은 것은 한 번', reconcileHits([
+  { need: '조식', type: 'other', claim: '조식 시간', value: '08:00', sourceUrl: '' },
+  { need: '아침', type: 'other', claim: '조식 시간', value: '08:00', sourceUrl: '' },
+], graph).length === 1)
+const replaced = mergeApproved(graph, conflict)
+ok('바꾸기로 한 값은 그 사실 자리에서 바꾼다 — 한 항목에 값이 둘이 되지 않는다', replaced.length === 2 && replaced[0]?.id === 'f-typed' && replaced[0].claim === '체크인 시간' && replaced[0].value === '15:00' && replaced[0].sourceUrl === 'https://v.example/')
+ok('바꾸는 사이 그 사실이 지워졌으면 새로 넣는다', mergeApproved([graph[1]!], conflict).map((f) => `${f.claim}:${f.value}`).join(',') === '주차 요금:무료,체크인 시간:15:00')
 
 let failed = 0
 for (const [label, pass] of checks) {
