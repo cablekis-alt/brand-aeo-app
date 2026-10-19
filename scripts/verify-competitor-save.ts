@@ -3,7 +3,8 @@
  * 임시 폴더를 APP_DATA_DIR로 쓰고 가짜 질문지·가짜 기록만 만든다. AI는 부르지 않는다.
  *
  * 왜: 저장은 다음 측정의 경쟁사를 바꾼다. 측정 중에 저장되거나, 측정한 뒤에 되돌려지면 화면 숫자와 측정이
- * 어긋난다. 빠지는 경쟁사를 짚은 비교 질문은 그대로 남는다는 것도 저장 전에 알려야 한다.
+ * 어긋난다. 빠지는 경쟁사를 짚은 비교 질문을 누가 넘겨받는지도 저장 전에 보여야 한다(넘겨받기 자체는
+ * verify-question-handoff.ts · verify-competitor-rewrite.ts).
  *
  *   npx tsx scripts/verify-competitor-save.ts
  */
@@ -60,6 +61,16 @@ try {
     ],
   })
   const fresh = async () => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === id)!
+  // 넘겨받을 질문이 생기는 저장 — 나간 이름을 받는 곳 이름으로 바꾼 문장을 싣는다(판정 엔진 대신 · 이 시험은 AI를 부르지 않는다).
+  const saveList = async (competitors: typeof repo.competitors) => {
+    const plan = await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), store, competitors)
+    const drafts = plan.questions.items
+      .filter((i) => i.action === 'rewrite')
+      .map((i) => ({ fromId: i.fromId, text: i.swaps.reduce((t, s) => t.replace(s.from.name, s.to!.name), i.source.text) }))
+    return { plan, state: await ed.saveEdit(id, store, { competitors, questions: { key: plan.questions.key, drafts } }) }
+  }
+  const { MAX_AUTO_COHORT } = await import('../server/cohortPlan')
+  const waitingFirst = repo.competitors[MAX_AUTO_COHORT]
 
   // 1) 처음 상태
   const s0 = await ed.buildEditorState(repo, runtime0, store)
@@ -72,7 +83,14 @@ try {
   const dropFirst = repo.competitors.slice(1)
   const p1 = await ed.planEdit(repo, runtime0, store, dropFirst)
   ok('빠지는 경쟁사와 그 비교 질문', p1.leaving.length === 1 && p1.leaving[0].name === c0.name && p1.leaving[0].questionIds.join() === `${v}-001`)
-  ok('비교 질문이 빠진 경쟁사를 계속 묻는다고 알린다', p1.notes.some((n) => n.includes(`묻는 질문(${v}-001)이 남아요`) && n.includes(c0.name)))
+  const h1 = p1.questions.items.find((i) => i.fromId === `${v}-001`)
+  ok(
+    '빠지는 경쟁사의 비교 질문을 넘겨받기 계획에 담는다(대기 첫 줄이 있으면 그곳이 받고, 없으면 뺀다)',
+    p1.questions.mode === 'derive' &&
+      h1?.swaps[0]?.from.name === c0.name &&
+      (waitingFirst ? h1.action === 'rewrite' && h1.swaps[0]?.to?.name === waitingFirst.name && h1.reason === 'promoted' : h1?.action === 'remove'),
+  )
+  ok('「질문이 남아요」 안내는 더 없다(질문지를 고친다)', !p1.notes.some((n) => n.includes('남아요')))
   ok('바뀜으로 본다', !p1.unchanged && p1.errors.length === 0)
   ok('같은 목록이면 바뀐 것 없음', (await ed.planEdit(repo, runtime0, store, repo.competitors)).unchanged)
   ok('잘못된 입력은 400', await rejects(ed.planEdit(repo, runtime0, store, []), 400))
@@ -107,9 +125,14 @@ try {
   // 5-b) 두 번 저장한 뒤 되돌려도, 아직 재지 않은 목록이면 대기 표시가 남는다
   const third = [c0, ...repo.competitors.slice(2), c1]
   await ed.saveEdit(id, store, { competitors: third })
-  await ed.saveEdit(id, store, { competitors: [c1, ...repo.competitors.slice(2), c0] })
+  // 두 번째 저장은 c0을 맨 뒤로 보낸다 — 경쟁사가 6곳 이상이면 c0이 대기로 내려가 그 비교 질문을 올라온 c1이 넘겨받는다.
+  const second = await saveList([c1, ...repo.competitors.slice(2), c0])
+  if (second.plan.questions.mode === 'derive') {
+    ok('넘겨받기 저장은 새 버전 질문지로 잰다', (await fresh()).questionBankVersion === second.plan.questions.toVersion)
+  }
   const s5b = await ed.undoEdit(id, store)
   ok('되돌린 뒤 목록은 앞 저장', s5b.competitors.at(-1)!.name === c1.name)
+  ok('되돌리면 질문지도 앞 버전', (await fresh()).questionBankVersion === v)
   ok('앞 저장도 아직 재지 않았으면 대기 표시가 남는다', (await ed.pendingCompetitorEdit(await fresh())) !== null)
   await ed.saveEdit(id, store, { competitors: swapped })
 

@@ -883,7 +883,15 @@ export interface CompetitorEditorState {
   past: EditorPastCompetitor[]
   /** continues: 예전 경쟁사를 다시 넣으면 같은 id로 지난 기록을 잇는가. */
   suggestions: (CompetitorEntry & { source: 'past' | 'cohort' | 'answers'; note: string; continues?: boolean })[]
-  questionBank: { version: string; exists: boolean; measuredVersion: string | null; sharedCount: number; brandCount: number }
+  questionBank: {
+    version: string
+    exists: boolean
+    measuredVersion: string | null
+    sharedCount: number
+    brandCount: number
+    /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처. */
+    derived: { from: string; replaced: number; removed: number } | null
+  }
   edit: {
     active: boolean
     stale: boolean
@@ -909,6 +917,45 @@ export interface CompetitorEditPlan {
   unchanged: boolean
   measuring: boolean
   exclusion: ExclusionPreview | null
+  questions: QuestionHandoffPlan
+}
+
+/** 질문 넘겨받기 — server/questionHandoff.ts QuestionPlan과 같은 모양. */
+export interface QuestionHandoffItem {
+  fromId: string
+  toId: string | null
+  action: 'rewrite' | 'remove'
+  source: { text: string; topic?: string; category: string; stage?: 'learn' | 'consider' | 'decide' }
+  swaps: { from: CompetitorEntry; to: CompetitorEntry | null; via: 'hint' | 'promoted' | null }[]
+  keep: CompetitorEntry[]
+  expectedIndexes: number[]
+  topicNeedsRewrite: boolean
+  reason: 'hint' | 'promoted' | 'noReceiver'
+}
+export interface QuestionHandoffPlan {
+  /** derive만 새 질문지를 만든다. same: 그대로 · repo: 저장소 질문지로 돌아감 · fresh: 다음 측정이 새로 만든다. */
+  mode: 'same' | 'derive' | 'repo' | 'fresh'
+  fromVersion: string
+  toVersion: string
+  sizeBefore: number
+  sizeAfter: number
+  items: QuestionHandoffItem[]
+  receivers: { name: string; ids: string[] }[]
+  unreceived: { name: string; questionIds: string[]; reason: 'noReceiver' | 'receiverHasOwn'; own?: { name: string; questionIds: string[] } }[]
+  key: string
+}
+/** 넘겨받기 힌트 — from 자리를 to가 대신했다(이름). */
+export interface HandoffHint {
+  from: string
+  to: string
+}
+/** 고쳐 쓴 비교 질문 — server/competitorRewrite.ts RewriteResult와 같은 모양. */
+export interface QuestionRewriteResult {
+  key: string
+  drafts: { fromId: string; toId: string; text: string; topic?: string; attempts: number }[]
+  failed: { fromId: string; reasons: string[] }[]
+  ms: number
+  engine?: string
 }
 
 /** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
@@ -916,10 +963,11 @@ export async function loadCompetitorEditor(tenantId: string): Promise<Competitor
   return competitorRequest(tenantId, '', 'GET', undefined, '경쟁사 목록을 불러오지 못했습니다')
 }
 
-async function competitorRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string): Promise<T> {
+async function competitorRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/competitors${sub}`, {
     method,
     ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    ...(signal ? { signal } : {}),
   })
   const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
   if (!res.ok || !json) throw new Error(json?.error || `${failure} (HTTP ${res.status})`)
@@ -930,21 +978,60 @@ async function competitorRequest<T>(tenantId: string, sub: string, method: strin
  * 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). pastOut이 있으면 「지난 기록에서도 빼기」 ·
  * 「다시 세기」의 주차별 순위도 계산한다(exclusion).
  */
-export function planCompetitorEdit(tenantId: string, competitors: CompetitorEntry[], pastOut?: PastOutInput | null): Promise<CompetitorEditPlan> {
-  return competitorRequest(tenantId, '/plan', 'POST', { competitors, ...(pastOut ? { pastOut } : {}) }, '바꾼 목록을 계산하지 못했습니다')
+export function planCompetitorEdit(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  pastOut?: PastOutInput | null,
+  handoff: HandoffHint[] = [],
+): Promise<CompetitorEditPlan> {
+  return competitorRequest(
+    tenantId,
+    '/plan',
+    'POST',
+    { competitors, ...(pastOut ? { pastOut } : {}), ...(handoff.length ? { handoff } : {}) },
+    '바꾼 목록을 계산하지 못했습니다',
+  )
+}
+
+/**
+ * 넘겨받은 비교 질문을 판정 엔진으로 고쳐 쓴다(미리보기 — 저장하지 않는다). key는 미리 계산한 계획의 것이다. fresh면 저장해 둔
+ * 결과를 쓰지 않고 다르게 다시 쓴다. 한 문항에 최대 90초씩 걸릴 수 있어 3분에서 끊는다.
+ */
+export function draftCompetitorQuestions(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  handoff: HandoffHint[],
+  key: string,
+  fresh = false,
+): Promise<QuestionRewriteResult> {
+  return competitorRequest(
+    tenantId,
+    '/questions',
+    'POST',
+    { competitors, key, ...(handoff.length ? { handoff } : {}), ...(fresh ? { fresh } : {}) },
+    '비교 질문을 고쳐 쓰지 못했습니다',
+    AbortSignal.timeout(180_000),
+  )
 }
 
 /**
  * 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. 지난 기록을 바꾸면 미리 본 결과의 previewKey를 함께 보낸다 — 그사이
- * 순위가 바뀌었으면 throw(409).
+ * 순위가 바뀌었으면 throw(409). 넘겨받은 질문이 있으면 고쳐 쓴 문장(미리 본 그대로)을 questions로 보낸다.
  */
 export function saveCompetitorEdit(
   tenantId: string,
   competitors: CompetitorEntry[],
   summary: string,
   past?: { pastOut: PastOutInput; previewKey: string } | null,
+  extra: { handoff?: HandoffHint[]; questions?: { key: string; drafts: { fromId: string; text: string; topic?: string }[] } } = {},
 ): Promise<CompetitorEditorState> {
-  return competitorRequest(tenantId, '', 'PUT', { competitors, summary, ...(past ?? {}) }, '경쟁사 목록을 저장하지 못했습니다')
+  return competitorRequest(
+    tenantId,
+    '',
+    'PUT',
+    { competitors, summary, ...(past ?? {}), ...(extra.handoff?.length ? { handoff: extra.handoff } : {}), ...(extra.questions ? { questions: extra.questions } : {}) },
+    '경쟁사 목록을 저장하지 못했습니다',
+  )
 }
 
 /** 마지막 저장 되돌리기 — 그 뒤 측정했으면 throw. */

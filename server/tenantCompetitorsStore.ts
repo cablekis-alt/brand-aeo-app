@@ -23,6 +23,11 @@ export interface CompetitorOverride {
   competitors: CompetitorContext[];
   /** 저장할 때의 베이스 지문(baseFingerprint). */
   base: string;
+  /**
+   * 경쟁사를 바꾸며 고쳐 만든 질문지(4단계 「바뀐 경쟁사 질문만 고치기」) — 있으면 베이스의 questionBankVersion ·
+   * questionBankSize 대신 쓴다. 없으면 베이스 질문지다. 지문(base)은 베이스 값으로만 계산하므로 이 값과 무관하다.
+   */
+  questionBank?: { version: string; size: number };
 }
 
 export interface CompetitorOverrideFile {
@@ -166,6 +171,11 @@ export function normalizeCompetitorList(
   return { competitors, droppedHosts };
 }
 
+function validQuestionBank(x: unknown): x is { version: string; size: number } {
+  const v = x as { version?: unknown; size?: unknown } | null;
+  return Boolean(v && typeof v.version === 'string' && v.version && typeof v.size === 'number' && Number.isInteger(v.size) && v.size > 0);
+}
+
 /** 파일이 없거나 깨졌으면 null(= 베이스 값). */
 export async function readCompetitorOverride(tenantId: string): Promise<CompetitorOverrideFile | null> {
   let text: string;
@@ -177,7 +187,12 @@ export async function readCompetitorOverride(tenantId: string): Promise<Competit
   }
   try {
     const parsed = JSON.parse(text) as Partial<CompetitorOverrideFile>;
-    const current = parsed.current && Array.isArray(parsed.current.competitors) && typeof parsed.current.base === 'string' ? parsed.current : null;
+    let current = parsed.current && Array.isArray(parsed.current.competitors) && typeof parsed.current.base === 'string' ? parsed.current : null;
+    // 질문지 값이 깨졌으면 목록도 쓰지 않는다 — 목록만 쓰면 그 목록과 맞지 않는 베이스 질문지로 잰다.
+    if (current?.questionBank !== undefined && !validQuestionBank(current.questionBank)) {
+      console.error(`[tenantCompetitors] ${tenantId} competitors.json의 질문지 값이 올바르지 않습니다 — 저장소 설정의 경쟁사를 씁니다:`, current.questionBank);
+      current = null;
+    }
     const measured = parsed.measured && typeof parsed.measured.listHash === 'string' ? parsed.measured : null;
     return { current, lastSave: parsed.lastSave ?? null, measured, updatedAt: parsed.updatedAt ?? '' };
   } catch (err) {

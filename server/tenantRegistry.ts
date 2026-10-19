@@ -212,7 +212,13 @@ async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<Tenant
       ...(facts[i] ? { factGraph: facts[i]! } : {}),
       ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
       ...(engines[i] ? { engines: engines[i]! } : {}),
-      ...(applies ? { competitors: edit.competitors } : {}),
+      // 경쟁사를 바꾸며 고쳐 만든 질문지가 있으면 그 버전 · 크기로 잰다(competitorEditor.ts 4단계).
+      ...(applies
+        ? {
+            competitors: edit.competitors,
+            ...(edit.questionBank ? { questionBankVersion: edit.questionBank.version, questionBankSize: edit.questionBank.size } : {}),
+          }
+        : {}),
     };
   });
 }

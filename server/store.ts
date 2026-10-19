@@ -1,10 +1,11 @@
-import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { isExcluded, readCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
+import type { DerivedFrom } from './questionHandoff.js';
 import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
 
 export interface QuestionBank {
@@ -13,11 +14,18 @@ export interface QuestionBank {
   questions: QuestionSpec[];
   /** 일반 질문을 가져온 코호트 은행. 코호트 공통 질문지를 쓰는 브랜드만 있다. */
   cohortBank?: { key: string; version: string };
+  /** 경쟁사 편집이 앞 버전에서 바뀐 경쟁사 질문만 고쳐 만든 은행(questionHandoff.ts). 측정은 이 은행을 그대로 쓴다. */
+  derivedFrom?: DerivedFrom;
 }
 
 export interface ResultStore {
   getQuestionBank(tenantId: string, version: string): Promise<QuestionBank | null>;
   saveQuestionBank(tenantId: string, bank: QuestionBank): Promise<void>;
+  /** 새 버전 은행을 만든다 — 같은 버전 파일이 이미 있으면 거절한다(덮어쓰지 않는다). */
+  createQuestionBank(tenantId: string, bank: QuestionBank): Promise<void>;
+  removeQuestionBank(tenantId: string, version: string): Promise<void>;
+  /** 은행 파일 이름(버전) — 읽을 수 없는 파일도 센다(그 이름은 이미 쓰였다). */
+  listQuestionBankVersions(tenantId: string): Promise<string[]>;
   saveRawCalls(tenantId: string, weekOf: string, calls: RawCallRecord[]): Promise<void>;
   saveQuestionAnalyses(tenantId: string, weekOf: string, analyses: QuestionRepeatAnalysis[]): Promise<void>;
   getQuestionAnalyses(tenantId: string, weekOf: string): Promise<QuestionRepeatAnalysis[]>;
@@ -83,7 +91,41 @@ export class FileResultStore implements ResultStore {
   async saveQuestionBank(tenantId: string, bank: QuestionBank): Promise<void> {
     const dir = path.join(DATA_DIR, tenantId, 'question-bank');
     await ensureDir(dir);
-    await writeFile(path.join(dir, `${bank.version}.json`), JSON.stringify(bank, null, 2), 'utf-8');
+    // 쓰다 만 파일을 측정이 읽으면 getQuestionBank가 null로 보고 은행을 새로 만든다 — 원자적으로 쓴다.
+    await writeJsonAtomic(path.join(dir, `${bank.version}.json`), bank);
+  }
+
+  async createQuestionBank(tenantId: string, bank: QuestionBank): Promise<void> {
+    const dir = path.join(DATA_DIR, tenantId, 'question-bank');
+    await ensureDir(dir);
+    const target = path.join(dir, `${bank.version}.json`);
+    // 있는지 본 뒤 rename한다(rename은 있는 파일을 덮는다). 이 은행을 쓰는 다른 곳(측정)은 경쟁사 편집 저장과 겹치지 않는다
+    // (저장은 측정 중이면 거절하고 한 줄로 돈다 — competitorEditor.ts).
+    const exists = await access(target).then(
+      () => true,
+      (err: NodeJS.ErrnoException) => {
+        if (err.code === 'ENOENT') return false;
+        throw err;
+      },
+    );
+    if (exists) throw new Error(`${tenantId} 질문 은행 ${bank.version}이 이미 있습니다.`);
+    await writeJsonAtomic(target, bank);
+  }
+
+  async removeQuestionBank(tenantId: string, version: string): Promise<void> {
+    await unlink(path.join(DATA_DIR, tenantId, 'question-bank', `${version}.json`)).catch((err: NodeJS.ErrnoException) => {
+      if (err.code !== 'ENOENT') throw err;
+    });
+  }
+
+  async listQuestionBankVersions(tenantId: string): Promise<string[]> {
+    try {
+      const names = await readdir(path.join(DATA_DIR, tenantId, 'question-bank'));
+      return names.filter((n) => n.endsWith('.json')).map((n) => n.slice(0, -'.json'.length));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+      throw err;
+    }
   }
 
   async saveReport(tenantId: string, weekOf: string, reportMarkdown: string): Promise<void> {

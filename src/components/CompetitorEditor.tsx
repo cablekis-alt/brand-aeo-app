@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import {
+  draftCompetitorQuestions,
   loadCompetitorEditor,
   planCompetitorEdit,
   resetCompetitorEdit,
@@ -13,13 +14,17 @@ import {
   type EditorCompetitorRow,
   type ExcludedRange,
   type ExclusionPreview,
+  type HandoffHint,
   type PastOutInput,
+  type QuestionHandoffPlan,
+  type QuestionRewriteResult,
 } from '../lib/api'
 import {
   applyOps,
   baseItems,
   displayHost,
   dropHint,
+  handoffHints,
   rankText,
   revertOp,
   summarizeOps,
@@ -52,6 +57,34 @@ function nextOpId(): string {
 }
 type Open = { kind: 'row'; key: string } | { kind: 'wait'; key: string } | { kind: 'add' } | null
 type PlanState = { key: string; value: CompetitorEditPlan | null; error: string | null }
+/** 넘겨받은 비교 질문 고쳐 쓰기 — 계획(key)마다 하나. */
+type DraftState = { status: 'running'; startedAt: number } | { status: 'done'; value: QuestionRewriteResult } | { status: 'error'; message: string }
+type SetDrafts = (update: (prev: Record<string, DraftState>) => Record<string, DraftState>) => void
+
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+
+/** 고쳐 쓰기를 부르고 결과를 계획 key 자리에 둔다. 자동(계획이 오면)과 「다시 쓰기」가 함께 쓴다. */
+function runDraft(
+  tenantId: string,
+  key: string,
+  req: { competitors: CompetitorEntry[]; handoff: HandoffHint[] },
+  fresh: boolean,
+  setDrafts: SetDrafts,
+  onResult: () => void,
+) {
+  setDrafts((d) => ({ ...d, [key]: { status: 'running', startedAt: Date.now() } }))
+  draftCompetitorQuestions(tenantId, req.competitors, req.handoff, key, fresh).then(
+    (value) => {
+      setDrafts((d) => ({ ...d, [key]: { status: 'done', value } }))
+      onResult()
+    },
+    (err: unknown) => {
+      console.error('[CompetitorEditor] 비교 질문을 고쳐 쓰지 못했습니다', err)
+      const message = err instanceof Error ? (err.name === 'TimeoutError' ? '3분 안에 끝나지 않았어요' : err.message) : String(err)
+      setDrafts((d) => ({ ...d, [key]: { status: 'error', message } }))
+    },
+  )
+}
 
 const SOURCE_HEAD: Record<'past' | 'cohort' | 'answers', string> = {
   past: '예전 경쟁사',
@@ -65,7 +98,8 @@ const SOURCE_HEAD: Record<'past' | 'cohort' | 'answers', string> = {
  *
  * 바꾼 내용은 작업 목록(src/lib/competitorEdit.ts)으로 들고, 바뀔 때마다 서버에 미리 계산을 묻는다 —
  * 「함께 측정 5/5 · 대기」는 측정과 같은 함수(server/cohortPlan.ts)로 세야 실제 측정과 어긋나지 않는다.
- * 저장은 data/<tenant>/competitors.json에 하고 다음 측정부터 적용된다. 질문지는 이 단계에서 바꾸지 않는다.
+ * 저장은 data/<tenant>/competitors.json에 하고 다음 측정부터 적용된다. 빠지는 경쟁사를 짚은 비교 질문은 들어오는 곳이 넘겨받아
+ * 고쳐 쓴다(4단계 — 서버가 받는 곳을 정하고 판정 엔진이 문장을 쓴다). 고친 질문을 확인해야 저장할 수 있다.
  */
 export default function CompetitorEditor({
   tenantId,
@@ -101,6 +135,11 @@ export default function CompetitorEditor({
   const [replan, setReplan] = useState(0)
   // 마지막으로 받은 미리보기 — 새 미리보기를 기다리는 동안에도 「W42 기록만 빼기」 · 「다시 세기」 체크가 사라지지 않게(저장은 새 것만 쓴다).
   const [lastPlan, setLastPlan] = useState<CompetitorEditPlan | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, DraftState>>({})
+  const [qOpen, setQOpen] = useState(false)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  // 저장한 순간의 질문지 계획 — 결과 카드가 「v5 → v6」을 보인다.
+  const [savedQuestions, setSavedQuestions] = useState<QuestionHandoffPlan | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
@@ -146,15 +185,17 @@ export default function CompetitorEditor({
   const pastRestore = restore.filter((id) => excludedIds.has(id))
   const pastInput: PastOutInput | null = pastAdd.length || pastRestore.length ? { add: pastAdd, restore: pastRestore } : null
   const dirty = ops.length > 0 || pastInput !== null
-  const requestKey = dirty ? JSON.stringify({ competitors: toCompetitors(applied.list), pastOut: pastInput }) : ''
+  // 누가 누구 자리에 들었나 — 서버가 빠지는 경쟁사의 질문을 받을 곳을 정할 때 쓴다(요청 key에도 넣어 미리보기 = 저장).
+  const hints = useMemo(() => handoffHints(base, applied), [base, applied])
+  const requestKey = dirty ? JSON.stringify({ competitors: toCompetitors(applied.list), pastOut: pastInput, handoff: hints }) : ''
 
   // 바뀔 때마다(잠깐 멈춘 뒤) 서버에 미리 계산을 묻는다. 응답은 지금 목록과 같을 때만 쓴다.
   useEffect(() => {
     if (!requestKey) return
     let alive = true
     const timer = setTimeout(() => {
-      const req = JSON.parse(requestKey) as { competitors: CompetitorEntry[]; pastOut: PastOutInput | null }
-      planCompetitorEdit(tenantId, req.competitors, req.pastOut).then(
+      const req = JSON.parse(requestKey) as { competitors: CompetitorEntry[]; pastOut: PastOutInput | null; handoff: HandoffHint[] }
+      planCompetitorEdit(tenantId, req.competitors, req.pastOut, req.handoff).then(
         (value) => {
           if (!alive) return
           setPlan({ key: requestKey, value, error: null })
@@ -272,11 +313,39 @@ export default function CompetitorEditor({
     }))
 
   const exclusion = pastInput ? (planned?.exclusion ?? null) : null
-  const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion)]
+  const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion), ...questionSummary(planned?.questions ?? null)]
   const errors = planned?.errors ?? []
   const pastLocked = (exclusion?.locked.length ?? 0) > 0
   // 측정 중인지는 미리 계산 응답으로 다시 본다 — 서랍을 연 뒤 측정이 끝났을 수 있다.
   const measuringNow = planned ? planned.measuring : Boolean(s?.measuring)
+  // 질문 넘겨받기 — 고쳐 쓸 질문이 있으면 계획이 오자마자 판정 엔진에 고쳐 쓰기를 맡긴다(빼기만 있으면 부르지 않는다).
+  const qplan = planned?.questions ?? null
+  const rewrites = qplan?.mode === 'derive' ? qplan.items.filter((i) => i.action === 'rewrite') : []
+  const draft = qplan ? drafts[qplan.key] : undefined
+  const draftDone = draft?.status === 'done' ? draft.value : null
+  const questionsReady =
+    !qplan || qplan.mode !== 'derive' || rewrites.length === 0 || Boolean(draftDone && !draftDone.failed.length && draftDone.drafts.length === rewrites.length)
+  const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow ? qplan.key : null
+  useEffect(() => {
+    if (!draftNeeded) return
+    // 계획과 같은 입력으로 부른다(requestKey) — 서버가 계획을 다시 세어 key가 같을 때만 고쳐 쓴다.
+    const timer = setTimeout(() => {
+      const req = JSON.parse(requestKey) as { competitors: CompetitorEntry[]; handoff: HandoffHint[] }
+      runDraft(tenantId, draftNeeded, req, false, setDrafts, () => setQOpen(true))
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [tenantId, draftNeeded, requestKey])
+  const drafting = draft?.status === 'running'
+  useEffect(() => {
+    if (!drafting) return
+    const timer = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [drafting])
+  const draftElapsed = draft?.status === 'running' ? Math.max(0, Math.round((nowMs - draft.startedAt) / 1000)) : 0
+  const redraft = () => {
+    if (!qplan) return
+    runDraft(tenantId, qplan.key, JSON.parse(requestKey) as { competitors: CompetitorEntry[]; handoff: HandoffHint[] }, true, setDrafts, () => setQOpen(true))
+  }
   const canSave =
     Boolean(s) &&
     dirty &&
@@ -285,6 +354,7 @@ export default function CompetitorEditor({
     errors.length === 0 &&
     !pastLocked &&
     !measuringNow &&
+    questionsReady &&
     !busy
 
   const confirmOpen = confirmKey !== null && exclusion?.key === confirmKey
@@ -323,6 +393,12 @@ export default function CompetitorEditor({
   // 저장하는 순간의 미리보기 — 확인 창 · 결과 카드가 같은 값을 보인다. 서버는 이 previewKey와 지금 계산이 같을 때만 쓴다.
   const doSave = () => {
     const shown = exclusion
+    const shownQuestions = qplan
+    // 고쳐 쓴 문장은 미리 본 그대로 보낸다 — 서버는 다시 쓰지 않고 같은 검사만 다시 한다.
+    const questions =
+      qplan?.mode === 'derive'
+        ? { key: qplan.key, drafts: (draftDone?.drafts ?? []).map((d) => ({ fromId: d.fromId, text: d.text, ...(d.topic ? { topic: d.topic } : {}) })) }
+        : undefined
     run(
       () =>
         saveCompetitorEdit(
@@ -330,10 +406,12 @@ export default function CompetitorEditor({
           toCompetitors(applied.list),
           summary.join(' · '),
           pastInput && shown ? { pastOut: pastInput, previewKey: shown.key } : null,
+          { handoff: hints, questions },
         ),
       () => {
         setSavedNow(true)
         setSavedExclusion(shown?.items.length ? shown : null)
+        setSavedQuestions(shownQuestions)
       },
     )
   }
@@ -364,6 +442,7 @@ export default function CompetitorEditor({
       () => {
         setSavedNow(false)
         setSavedExclusion(null)
+        setSavedQuestions(null)
       },
     )
   const setPast = (id: string, value: string | undefined) => {
@@ -394,6 +473,17 @@ export default function CompetitorEditor({
   }
 
   const rowProps = { top, ours: s?.baseline?.score ?? null, baselineWeek: s?.baseline?.weekOf ?? null, pending: planning }
+  // 줄의 「비교 질문」 칸 — 넘겨받는 곳은 「v6-004 받음」, 빠지는 곳은 「v5-004 → 새 곳」 · 「v5-004 뺌」.
+  const qTextFor = (name: string): string | undefined => {
+    if (qplan?.mode !== 'derive') return undefined
+    const got = qplan.receivers.find((r) => squash(r.name) === squash(name))
+    if (got) return `${got.ids.join(' · ')} 받음`
+    const outs = qplan.items.flatMap((i) => {
+      const swap = i.swaps.find((sw) => squash(sw.from.name) === squash(name))
+      return swap ? [i.action === 'rewrite' && swap.to ? `${i.fromId} → ${swap.to.name}` : `${i.fromId} 뺌`] : []
+    })
+    return outs.length ? outs.join(' · ') : undefined
+  }
   // 지난 기록에서 뺀 뒤 다시 넣은 경쟁사 — 다시 잰 주부터는 저절로 세지만, 그 전 주는 여기서 다시 센다.
   const restoreFor = (r: EditorCompetitorRow | null) => {
     const id = r ? (r.targetTenantId ?? r.draftId) : null
@@ -496,6 +586,7 @@ export default function CompetitorEditor({
                     extraChips={chips}
                     sub={sub}
                     {...rowProps}
+                    qText={qTextFor(item.competitor.name)}
                     below={restoreFor(row)}
                     action={
                       placed !== undefined
@@ -575,7 +666,7 @@ export default function CompetitorEditor({
                       )}
                     </span>
                     <span className="ce-score-num">{was?.latest?.score ?? '—'}</span>
-                    <span className="ce-q none">{was?.questionIds.length ? `${was.questionIds.join(' · ')} 남음` : '—'}</span>
+                    <span className="ce-q none">{qTextFor(item.competitor.name) ?? '—'}</span>
                     <span className="ce-act">
                       <button type="button" className="ce-btn" onClick={() => revert(by)}>
                         되돌리기
@@ -606,7 +697,8 @@ export default function CompetitorEditor({
                       n={row?.status === 'waiting' ? '대기' : '중복'}
                       extraChips={sourceChips(item, applied, originalStatus(item.key), row!)}
                       {...rowProps}
-                    below={restoreFor(row)}
+                      qText={qTextFor(item.competitor.name)}
+                      below={restoreFor(row)}
                       action={
                         placed !== undefined && !applied.movedDown.has(item.key)
                           ? { label: '되돌리기', onClick: () => revert(placed) }
@@ -774,6 +866,9 @@ export default function CompetitorEditor({
 
             <p className="ce-bank">
               질문지 {s.questionBank.version}
+              {s.questionBank.exists && s.questionBank.measuredVersion && s.questionBank.measuredVersion !== s.questionBank.version
+                ? ` (다음 측정부터 · 마지막 측정 ${s.questionBank.measuredVersion})`
+                : ''}
               {s.questionBank.exists ? ` · 공통 ${s.questionBank.sharedCount} · 브랜드 ${s.questionBank.brandCount}` : ' · 다음 측정 때 새로 만들어요'}
               <span
                 className="ce-hint"
@@ -804,7 +899,20 @@ export default function CompetitorEditor({
             </p>
           ))}
           {planned?.unchanged && !pastInput && <p className="ce-bar-note">지금 목록과 같아요.</p>}
-          <p className="ce-bar-q">질문지: 그대로 ({s.questionBank.version})</p>
+          {qplan ? (
+            <QuestionPlanBlock
+              plan={qplan}
+              draft={draft}
+              elapsed={draftElapsed}
+              open={qOpen}
+              onToggle={() => setQOpen(!qOpen)}
+              onRedraft={redraft}
+              canRedraft={!measuringNow && !busy}
+              sharedCount={s.questionBank.sharedCount}
+            />
+          ) : (
+            <p className="ce-bar-q">질문지: {planning ? '계산 중…' : `그대로 (${s.questionBank.version})`}</p>
+          )}
           {actionError && (
             <p className="ce-bar-note bad" role="alert">
               {actionError}
@@ -814,7 +922,9 @@ export default function CompetitorEditor({
             <span className="ce-bar-hint">
               {measuringNow
                 ? '측정이 끝난 뒤에 저장할 수 있어요'
-                : pastInput
+                : !questionsReady
+                  ? '고쳐 쓴 질문을 확인한 뒤 저장할 수 있어요'
+                  : pastInput
                   ? ops.length
                     ? '목록은 다음 측정부터 · 지난 순위는 저장하면 바로 다시 세요'
                     : '저장하면 지난 순위를 바로 다시 세요'
@@ -835,7 +945,7 @@ export default function CompetitorEditor({
           <b>✓ 저장했어요 · {savedExclusion ? '지난 순위를 다시 셌어요' : '다음 측정부터 적용돼요'}</b>
           {s.edit.summary && <p>{s.edit.summary}</p>}
           {savedExclusion && <p>순위 카드 {savedExclusion.cardsRewritten}장을 다시 계산했어요 · 점수는 그대로예요</p>}
-          <p>질문지: 그대로 ({s.questionBank.version})</p>
+          <p>{savedQuestionText(savedQuestions, s.questionBank.version)}</p>
           {actionError && (
             <p className="ce-bar-note bad" role="alert">
               {actionError}
@@ -902,6 +1012,132 @@ function confirmText(preview: ExclusionPreview): string {
   if (out.length) parts.push(`${subjectParticle(out.join(' · '))} 든 지난 주차 순위를 다시 계산해요.`)
   if (back.length) parts.push(`${objectParticle(back.join(' · '))} 지난 순위표에 다시 넣고 순위를 다시 계산해요.`)
   return parts.join(' ')
+}
+
+/** 저장 기록 요약에 붙일 질문지 한 줄 — 새 질문지를 만들 때만. */
+function questionSummary(plan: QuestionHandoffPlan | null): string[] {
+  if (plan?.mode !== 'derive') return []
+  const fixed = plan.items.filter((i) => i.action === 'rewrite').length
+  const removed = plan.items.length - fixed
+  return [`질문지 ${plan.fromVersion}→${plan.toVersion}${fixed ? ` · 비교 질문 ${fixed}개 고침` : ''}${removed ? ` · ${removed}개 뺌` : ''}`]
+}
+
+/** 저장 결과 카드의 질문지 줄. */
+function savedQuestionText(plan: QuestionHandoffPlan | null, version: string): string {
+  if (plan?.mode === 'derive') {
+    const fixed = plan.items.filter((i) => i.action === 'rewrite').length
+    const removed = plan.items.length - fixed
+    return `질문지 ${plan.fromVersion} → ${plan.toVersion}${fixed ? ` · 비교 질문 ${fixed}개 고침` : ''}${removed ? ` · ${removed}개 뺌` : ''} · 다음 측정부터 써요 · 되돌리면 질문지도 원래대로(${plan.fromVersion}) 돌아가요`
+  }
+  if (plan?.mode === 'repo') return `질문지: 저장소 질문지(${plan.toVersion})로 돌아갔어요`
+  return `질문지: 그대로 (${version})`
+}
+
+/**
+ * 질문 넘겨받기 — 저장 막대의 질문지 줄과 펼쳐 보는 미리보기(고칠 질문 · 뺄 질문 · 넘겨받지 않는 곳). 고쳐 쓴 문장은 판정 엔진이
+ * 쓰고 서버가 검사한 것이다. 저장은 여기 보인 문장 그대로 한다.
+ */
+function QuestionPlanBlock({
+  plan,
+  draft,
+  elapsed,
+  open,
+  onToggle,
+  onRedraft,
+  canRedraft,
+  sharedCount,
+}: {
+  plan: QuestionHandoffPlan
+  draft: DraftState | undefined
+  elapsed: number
+  open: boolean
+  onToggle: () => void
+  onRedraft: () => void
+  canRedraft: boolean
+  sharedCount: number
+}) {
+  if (plan.mode === 'same') return <p className="ce-bar-q">질문지: 그대로 ({plan.fromVersion})</p>
+  if (plan.mode === 'repo') return <p className="ce-bar-q">질문지: 저장소 질문지({plan.toVersion})로 돌아가요</p>
+  if (plan.mode === 'fresh') return <p className="ce-bar-q">질문지({plan.toVersion})는 다음 측정 때 새 목록으로 만들어요</p>
+  const fixed = plan.items.filter((i) => i.action === 'rewrite')
+  const removed = plan.items.filter((i) => i.action === 'remove')
+  const done = draft?.status === 'done' ? draft.value : null
+  const failed = done?.failed ?? []
+  const head = [
+    `질문지 ${plan.fromVersion} → ${plan.toVersion}`,
+    fixed.length ? `비교 질문 ${fixed.length}개 바뀜` : null,
+    removed.length ? `${removed.length}개 뺌 (${plan.sizeBefore} → ${plan.sizeAfter})` : null,
+  ].filter(Boolean)
+  const own = plan.unreceived.filter((u) => u.reason === 'receiverHasOwn' && u.own)
+  return (
+    <div className="ce-qplan">
+      <p className="ce-bar-q">
+        {head.join(' · ')}{' '}
+        <button type="button" className="ce-link" aria-expanded={open} onClick={onToggle}>
+          {open ? '접기 ▴' : '보기 ▾'}
+        </button>
+      </p>
+      {draft?.status === 'running' && <p className="ce-bar-note">비교 질문 고쳐 쓰는 중… {clock(elapsed)}</p>}
+      {draft?.status === 'error' && (
+        <p className="ce-bar-note bad">
+          비교 질문을 고쳐 쓰지 못했어요 — {draft.message}{' '}
+          <button type="button" className="ce-link" onClick={onRedraft} disabled={!canRedraft}>
+            다시 쓰기
+          </button>
+        </p>
+      )}
+      {failed.length > 0 && !open && <p className="ce-bar-note bad">고쳐 쓰지 못한 질문 {failed.length}개 — 「보기」에서 이유를 보고 다시 써 주세요</p>}
+      {open && (
+        <div className="ce-qplan-body">
+          <ul className="ce-qplan-list">
+            {plan.items.map((item) => {
+              const d = done?.drafts.find((x) => x.fromId === item.fromId)
+              const f = failed.find((x) => x.fromId === item.fromId)
+              const keep = item.keep.length ? ` · ${item.keep.map((k) => k.name).join(', ')} 그대로` : ''
+              return (
+                <li key={item.fromId} className={`ce-qplan-item${item.action === 'remove' ? ' removed' : ''}`}>
+                  <p className="ce-qplan-head">
+                    {item.action === 'rewrite'
+                      ? `${item.fromId} → ${item.toId} · ${item.swaps.map((sw) => `${sw.from.name} → ${sw.to?.name ?? ''}`).join(', ')}${keep}`
+                      : `${item.fromId} 뺌 · ${item.swaps.map((sw) => sw.from.name).join(', ')} — 넘겨받을 곳이 없어요`}
+                  </p>
+                  <p className="ce-qplan-old">{item.source.text}</p>
+                  {item.action === 'rewrite' &&
+                    (d ? (
+                      <>
+                        <p className="ce-qplan-new">{d.text}</p>
+                        {item.topicNeedsRewrite && (
+                          <p className="ce-qplan-topic">
+                            주제: {item.source.topic} → {d.topic ?? '미분류'}
+                          </p>
+                        )}
+                      </>
+                    ) : f ? (
+                      <p className="ce-bar-note bad">고쳐 쓰지 못했어요 — {f.reasons.join(' · ')}</p>
+                    ) : (
+                      <p className="ce-qplan-wait">{draft?.status === 'error' ? '고쳐 쓰지 못했어요' : '고쳐 쓰는 중…'}</p>
+                    ))}
+                </li>
+              )
+            })}
+          </ul>
+          {own.map((u) => (
+            <p key={u.name} className="ce-bar-note">
+              {topicParticle(u.own!.name)} 이미 비교 질문({u.own!.questionIds.join(' · ')})이 있어 {u.name}의 질문을 넘겨받지 않아요
+            </p>
+          ))}
+          <p className="ce-qplan-note">
+            저장하면 다음 측정 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요 · 점수 · 순위는 공통 질문 {sharedCount}개로 매겨요
+          </p>
+          {fixed.length > 0 && (done || failed.length > 0) && (
+            <button type="button" className="ce-link" onClick={onRedraft} disabled={!canRedraft}>
+              다시 쓰기
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -1015,6 +1251,7 @@ function Row({
   pending,
   extraChips = [],
   sub,
+  qText,
   action,
   below,
   children,
@@ -1027,6 +1264,8 @@ function Row({
   pending: boolean
   extraChips?: { text: string; tone: string; title?: string }[]
   sub?: string
+  /** 「비교 질문」 칸을 넘겨받기 계획으로 바꿔 보인다(「v6-004 받음」 · 「v5-004 → 새 곳」). */
+  qText?: string
   action?: { label: string; onClick: () => void; primary?: boolean; expanded?: boolean }
   /** 이름 아래 한 줄(「지난 기록 다시 세기」). */
   below?: React.ReactNode
@@ -1086,7 +1325,7 @@ function Row({
           {ours !== null && <i style={{ left: `${Math.min(100, Math.round((ours / top) * 100))}%` }} />}
         </span>
       </span>
-      <span className={`ce-q${r.questionIds.length ? '' : ' none'}`}>{r.questionIds.length ? r.questionIds.join(' · ') : '비교 질문 없음'}</span>
+      <span className={`ce-q${qText || r.questionIds.length ? '' : ' none'}`}>{qText ?? (r.questionIds.length ? r.questionIds.join(' · ') : '비교 질문 없음')}</span>
       <span className="ce-act">
         {action && (
           <button

@@ -174,12 +174,19 @@ export default function QuestionBankPage() {
 
       {bank && (
         <>
-          {bank.upcomingVersion && (
-            <p className="hint">
-              ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정부터 {bank.upcomingVersion}(코호트 공유 질문지 +
-              브랜드 전용 질문)로 바뀌고, 새 질문은 그 측정에서 만들어집니다.
-            </p>
-          )}
+          {bank.upcomingVersion &&
+            (bank.upcomingDerived ? (
+              <p className="hint">
+                ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정부터 {bank.upcomingVersion} 질문지를 씁니다 — 경쟁사를 바꾸며
+                {bank.upcomingDerived.replaced ? ` 비교 질문 ${bank.upcomingDerived.replaced}개를 고쳐 썼고` : ''}
+                {bank.upcomingDerived.removed ? ` ${bank.upcomingDerived.removed}개를 뺐고` : ''} 나머지 질문은 그대로입니다(경쟁사 편집).
+              </p>
+            ) : (
+              <p className="hint">
+                ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정부터 {bank.upcomingVersion}(코호트 공유 질문지 +
+                브랜드 전용 질문)로 바뀌고, 새 질문은 그 측정에서 만들어집니다.
+              </p>
+            ))}
           <section className="hero-card">
             <p className="eyebrow">
               버전 {bank.version} · {new Date(bank.generatedAt).toLocaleDateString('ko-KR')} 생성 · 질문{' '}

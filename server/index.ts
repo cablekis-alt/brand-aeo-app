@@ -17,7 +17,8 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
-import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
+import { buildEditorState, EditorError, planEdit, questionRewriteContext, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
+import { draftCompetitorRewrites } from './competitorRewrite.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills } from './contentDraft.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
@@ -35,7 +36,7 @@ import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
-import { configuredModels, getJudgeClient, getWriterClient } from './engines/index.js';
+import { configuredModels, getJudgeClient, getWriterClient, usedJudgeEngineId } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -327,12 +328,18 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
   const history = await scorecardsFor(tenant.tenantId);
   // 설정의 새 버전 은행은 다음 측정이 만든다. 그 전에는 마지막으로 잰 은행을 보여 주고 다음 버전을 알린다
   // — 예시 은행(12문항)으로 떨어지면 실제 질문 목록인 것처럼 보인다(v0.2.63에서 전 브랜드 v4 전환 직후).
+  // 경쟁사 편집이 고쳐 만든 은행(derivedFrom)도 재기 전까지는 같다 — 지난 주 판정을 아직 묻지 않은 질문과 맞추지 않게.
   // 버전을 지정한 요청은 그 버전만 본다.
-  if (!bank && !requested) {
+  if ((!bank || bank.derivedFrom) && !requested) {
     const measured = history.at(-1)?.questionBankVersion;
     const last = measured && measured !== version ? await store.getQuestionBank(tenant.tenantId, measured) : null;
     if (last) {
-      res.json({ ...last, upcomingVersion: version });
+      const derived = bank?.derivedFrom;
+      res.json({
+        ...last,
+        upcomingVersion: version,
+        ...(derived ? { upcomingDerived: { replaced: derived.replaced.length, removed: derived.removed.length } } : {}),
+      });
       return;
     }
   }
@@ -1002,8 +1009,8 @@ function sendEditorError(res: import('express').Response, err: unknown): void {
   res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
 }
 
-// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제, 「지난 기록에서도 빼기」의
-// 주차별 순위(pastOut). 쓰지 않는다.
+// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사의 질문을 누가 넘겨받는지(handoff: 바꿈 · 측정에 넣기 힌트),
+// 저장을 막는 문제, 「지난 기록에서도 빼기」의 주차별 순위(pastOut). 쓰지 않는다.
 app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
   try {
     const runtime = await loadRuntimeTenants();
@@ -1012,8 +1019,26 @@ app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
       res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
       return;
     }
-    const body = (req.body ?? {}) as { competitors?: unknown; pastOut?: unknown };
-    res.json(await planEdit(tenant, runtime, store, body.competitors, body.pastOut));
+    const body = (req.body ?? {}) as { competitors?: unknown; pastOut?: unknown; handoff?: unknown };
+    res.json(await planEdit(tenant, runtime, store, body.competitors, body.pastOut, body.handoff));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 넘겨받은 비교 질문 고쳐 쓰기(미리보기) — 판정 엔진을 부른다. 쓰지 않는다(저장은 PUT이 이 문장을 받아 다시 검사한다).
+// 계획(key)이 미리 본 것과 다르거나 측정 중이면 409, 판정 엔진 키가 없으면 503.
+app.post('/api/tenants/:tenantId/competitors/questions', async (req, res) => {
+  try {
+    const ctx = await questionRewriteContext(req.params.tenantId, store, req.body);
+    let judge;
+    try {
+      judge = getJudgeClient();
+    } catch (err) {
+      throw new EditorError(503, `판정 엔진 키가 없어요 — ${err instanceof Error ? err.message : String(err)}`);
+    }
+    const fresh = (req.body as { fresh?: unknown } | undefined)?.fresh === true;
+    res.json({ ...(await draftCompetitorRewrites(ctx, judge, { fresh })), engine: usedJudgeEngineId() });
   } catch (err) {
     sendEditorError(res, err);
   }

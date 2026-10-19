@@ -72,8 +72,12 @@ export interface QuestionBank {
   version: string
   generatedAt: string
   questions: QuestionSpec[]
-  /** 설정의 새 버전 은행이 아직 없어 마지막으로 잰 은행을 대신 줄 때, 다음 측정이 만들 버전. */
+  /**
+   * 마지막으로 잰 은행을 대신 줄 때, 다음 측정이 쓸 버전 — 그 버전 은행이 아직 없거나, 경쟁사 편집이 고쳐 만들어 아직 재지 않았다.
+   */
   upcomingVersion?: string
+  /** 다음 측정이 쓸 은행이 경쟁사 편집으로 고쳐 만든 것이면 그 내용(고친 · 뺀 질문 수). */
+  upcomingDerived?: { replaced: number; removed: number }
   /** 측정 전이라 예시 은행을 받았다(로컬 서버) — 이 판 번호는 실제 측정 은행의 것이 아니다. */
   demo?: boolean
 }

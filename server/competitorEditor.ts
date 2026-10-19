@@ -12,6 +12,14 @@ import { affectedCohortWeeks, planCohortRanks, reconcileCohortRanks, type Cohort
 import { discoverBrands } from './competitorDiscovery.js';
 import { linkCompetitorQuestions } from './competitorQuestions.js';
 import { measureInFlight } from './measureTracker.js';
+import {
+  checkRewrite,
+  deriveQuestionBank,
+  planQuestionHandoff,
+  type HandoffHint,
+  type QuestionPlan,
+  type RewriteDraft,
+} from './questionHandoff.js';
 import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import {
@@ -26,9 +34,10 @@ import {
   type CompetitorOverrideFile,
 } from './tenantCompetitorsStore.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
-import { directionParticle, objectParticle } from '../src/lib/korean.js';
+import { directionParticle } from '../src/lib/korean.js';
+import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
-import type { CompetitorContext } from '../src/prompts/types.js';
+import type { CompetitorContext, QuestionLanguage } from '../src/prompts/types.js';
 import type { QuestionBank, ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -172,6 +181,8 @@ export interface CompetitorEditorState {
     measuredVersion: string | null;
     sharedCount: number;
     brandCount: number;
+    /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처(앞 버전 · 고친 수 · 뺀 수). */
+    derived: { from: string; replaced: number; removed: number } | null;
   };
   /** 앱에서 고친 목록(competitors.json)의 상태. */
   edit: {
@@ -212,6 +223,8 @@ export interface EditPlan {
   measuring: boolean;
   /** 「지난 기록에서도 빼기」 · 「다시 세기」 미리보기. 요청에 없으면 null. */
   exclusion: ExclusionPreview | null;
+  /** 질문 넘겨받기(4단계) — 빠지는 경쟁사의 질문을 누가 받고, 질문지가 어떻게 되는가. */
+  questions: QuestionPlan;
 }
 
 /** 서랍 API의 실패 — 라우트가 status로 응답한다. */
@@ -521,6 +534,9 @@ export async function buildEditorState(tenant: TenantConfig, runtime: TenantConf
       measuredVersion: last?.questionBankVersion ?? null,
       sharedCount: ctx.bank ? ctx.bank.questions.filter((q) => q.cohortShared).length : 0,
       brandCount: ctx.bank ? ctx.bank.questions.filter((q) => !q.cohortShared).length : 0,
+      derived: ctx.bank?.derivedFrom
+        ? { from: ctx.bank.derivedFrom.version, replaced: ctx.bank.derivedFrom.replaced.length, removed: ctx.bank.derivedFrom.removed.length }
+        : null,
     },
     edit: {
       active,
@@ -698,9 +714,42 @@ export async function planEdit(
   store: ResultStore,
   input: unknown,
   pastOut?: unknown,
+  handoff?: unknown,
 ): Promise<EditPlan> {
-  return (await computePlan(tenant, runtime, store, input, pastOut)).plan;
+  return (await computePlan(tenant, runtime, store, input, pastOut, handoff)).plan;
 }
+
+/** 화면이 보내는 넘겨받기 힌트(바꿈 · 측정에 넣기 — 누가 누구 자리에 들었나)를 정리한다. 잘못된 입력이면 400. */
+function parseHints(raw: unknown): HandoffHint[] {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw) || raw.length > 40) throw new EditorError(400, '바꾼 경쟁사 정보가 올바르지 않습니다.');
+  return raw.map((h) => {
+    const x = (h ?? {}) as { from?: unknown; to?: unknown };
+    if (typeof x.from !== 'string' || !x.from.trim() || typeof x.to !== 'string' || !x.to.trim()) {
+      throw new EditorError(400, '바꾼 경쟁사 정보가 올바르지 않습니다.');
+    }
+    return { from: x.from, to: x.to };
+  });
+}
+
+/** 고쳐 쓰기(판정 엔진)와 저장 검사가 함께 쓰는 값 — 같은 계획 위에서 문장을 만들고 검사한다. */
+export interface QuestionRewriteContext {
+  plan: QuestionPlan;
+  bank: QuestionBank | null;
+  /** 바꾼 목록(측정 순서). */
+  next: CompetitorContext[];
+  brandName: string;
+  brandNames: string[];
+  industry: string;
+  region: string;
+  language: QuestionLanguage;
+}
+
+const measuredFlags = (rows: EditorCompetitorRow[], length: number) => {
+  const flags = Array.from({ length }, () => false);
+  for (const r of rows) if (r.status === 'measured') flags[r.index] = true;
+  return flags;
+};
 
 async function computePlan(
   tenant: TenantConfig,
@@ -708,8 +757,10 @@ async function computePlan(
   store: ResultStore,
   input: unknown,
   pastOutRaw?: unknown,
-): Promise<{ plan: EditPlan; exclusion: ExclusionChange | null }> {
+  handoffRaw?: unknown,
+): Promise<{ plan: EditPlan; exclusion: ExclusionChange | null; rewrite: QuestionRewriteContext; repo: TenantConfig | undefined }> {
   const pastOut = parsePastOut(pastOutRaw);
+  const hints = parseHints(handoffRaw);
   let normalized;
   try {
     normalized = normalizeCompetitorList(input, tenant, tenant.competitors);
@@ -740,7 +791,31 @@ async function computePlan(
     return { ...c, domains: [registered.ownedDomains[0]!] };
   });
   const ctx = await loadContext(tenant, runtime, store);
-  const [now, next] = await Promise.all([describeRows(ctx, tenant.competitors), describeRows(ctx, competitors)]);
+  const [now, next, repo, bankVersions] = await Promise.all([
+    describeRows(ctx, tenant.competitors),
+    describeRows(ctx, competitors),
+    loadTenantWithoutCompetitorEdit(tenant.tenantId),
+    store.listQuestionBankVersions(tenant.tenantId),
+  ]);
+  const unchanged = sameList(competitors, tenant.competitors);
+  const brandNames = [tenant.brandName, ...tenant.aliases];
+  // 빠지는 경쟁사의 질문을 누가 받는가. 저장소 목록으로 돌아가는 저장은 앱 수정본을 지우므로(saveEdit) 질문지도 저장소
+  // 버전으로 돌아간다. 새 버전 이름은 은행 파일 · 이 고객 카드 · 저장소가 쓴 이름을 피한다.
+  const questions = planQuestionHandoff({
+    bank: ctx.bank,
+    version: tenant.questionBankVersion,
+    brandNames,
+    backToRepo: Boolean(repo && !unchanged && sameList(competitors, repo.competitors)),
+    repoVersion: repo?.questionBankVersion ?? tenant.questionBankVersion,
+    now: { competitors: tenant.competitors, measured: measuredFlags(now.rows, tenant.competitors.length) },
+    next: { competitors, measured: measuredFlags(next.rows, competitors.length) },
+    hints,
+    taken: [
+      ...bankVersions,
+      ...ctx.history.map((c) => c.questionBankVersion).filter((v): v is string => Boolean(v)),
+      ...(repo ? [repo.questionBankVersion] : []),
+    ],
+  });
   const nextMeasured = new Set(next.rows.filter((r) => r.status === 'measured').map((r) => r.targetTenantId));
   const week = getIsoWeekString(new Date());
   const leaving = now.rows
@@ -748,9 +823,6 @@ async function computePlan(
     .map((r) => ({ name: r.name, tenantId: r.targetTenantId, questionIds: r.questionIds, thisWeek: r.latest?.weekOf === week }));
 
   for (const l of leaving) {
-    if (l.questionIds.length) {
-      notes.push(`질문지는 그대로예요 — 빠진 ${objectParticle(l.name)} 묻는 질문(${l.questionIds.join(' · ')})이 남아요.`);
-    }
     if (l.thisWeek) {
       notes.push(`이번 주(${shortWeek(week)})에 다시 재도 ${l.name}의 ${shortWeek(week)} 기록은 순위표에 남아요 — 「${shortWeek(week)} 기록만 빼기」로 뺄 수 있어요.`);
     }
@@ -786,12 +858,92 @@ async function computePlan(
       leaving,
       notes,
       errors,
-      unchanged: sameList(competitors, tenant.competitors),
+      unchanged,
       measuring: measureInFlight(),
       exclusion: exclusion?.preview ?? null,
+      questions,
     },
     exclusion: exclusion && exclusion.preview.items.length ? exclusion : null,
+    rewrite: {
+      plan: questions,
+      bank: ctx.bank,
+      next: competitors,
+      brandName: tenant.brandName,
+      brandNames,
+      industry: tenant.industry,
+      region: tenant.region,
+      language: tenant.questionLanguage ?? 'ko',
+    },
+    repo,
   };
+}
+
+/**
+ * 고쳐 쓰기(POST /competitors/questions)가 쓸 계획 — 서랍이 미리 본 계획(key)과 같아야 한다. 측정 중에는 고쳐 쓰지 않는다
+ * (판정 엔진을 측정과 나눠 쓴다 · 결정 D8).
+ */
+export async function questionRewriteContext(tenantId: string, store: ResultStore, body: unknown): Promise<QuestionRewriteContext> {
+  if (measureInFlight()) throw new EditorError(409, '측정이 진행 중이에요. 끝난 뒤에 고쳐 써 주세요.');
+  const { tenant, runtime } = await customerTenant(tenantId);
+  const raw = (body ?? {}) as { competitors?: unknown; handoff?: unknown; key?: unknown };
+  const { plan, rewrite } = await computePlan(tenant, runtime, store, raw.competitors, undefined, raw.handoff);
+  if (plan.errors.length) throw new EditorError(400, plan.errors.join(' '));
+  if (raw.key !== plan.questions.key) throw new EditorError(409, '그사이 질문지나 목록이 바뀌었어요. 서랍을 다시 열어 주세요.');
+  return rewrite;
+}
+
+/**
+ * 저장할 새 은행 — 화면이 보낸 고친 문장(미리 본 그대로)으로 만든다. 판정 엔진은 부르지 않는다. 계획이 미리 본 것과 다르거나
+ * 문장이 검사를 통과하지 못하면 거절한다(미리 본 것 = 저장되는 것).
+ */
+function derivedBankFor(rewrite: QuestionRewriteContext, repo: TenantConfig, raw: unknown, now: string): QuestionBank {
+  const { plan, bank } = rewrite;
+  if (!bank) throw new EditorError(409, '질문지 파일이 없어요. 서랍을 다시 열어 주세요.');
+  const body = (raw ?? {}) as { key?: unknown; drafts?: unknown };
+  if (body.key !== plan.key) throw new EditorError(409, '그사이 질문지나 목록이 바뀌었어요 — 고쳐 쓴 질문을 다시 확인한 뒤 저장해 주세요.');
+  const rewrites = plan.items.filter((i) => i.action === 'rewrite');
+  const drafts = new Map<string, RewriteDraft>();
+  for (const d of Array.isArray(body.drafts) ? body.drafts : []) {
+    const x = (d ?? {}) as { fromId?: unknown; text?: unknown; topic?: unknown };
+    if (typeof x.fromId !== 'string' || typeof x.text !== 'string' || (x.topic !== undefined && typeof x.topic !== 'string')) {
+      throw new EditorError(400, '고쳐 쓴 질문이 올바르지 않습니다.');
+    }
+    drafts.set(x.fromId, { text: x.text, ...(x.topic ? { topic: x.topic } : {}) });
+  }
+  if (drafts.size !== rewrites.length || rewrites.some((i) => !drafts.has(i.fromId))) {
+    throw new EditorError(400, '고쳐 쓴 질문이 넘겨받을 질문과 맞지 않아요. 다시 고쳐 써 주세요.');
+  }
+  for (const item of rewrites) {
+    const d = drafts.get(item.fromId)!;
+    const others = [
+      ...bank.questions.filter((q) => q.questionId !== item.fromId).map((q) => q.text),
+      ...[...drafts.entries()].filter(([id]) => id !== item.fromId).map(([, x]) => x.text),
+    ];
+    const checked = checkRewrite(d.text, d.topic, { item, brandNames: rewrite.brandNames, language: rewrite.language, next: rewrite.next, otherTexts: others });
+    if (checked.reasons.length) throw new EditorError(400, `${item.fromId}: ${checked.reasons.join(' · ')}`);
+    // 고쳐 쓰기가 정리해 돌려준 문장 · 주제 그대로여야 한다 — 저장이 다시 다듬으면 미리 본 것과 달라진다.
+    if (checked.text !== d.text || (checked.topic ?? '') !== (d.topic ?? '')) {
+      throw new EditorError(400, `${item.fromId}: 미리 본 문장과 달라요. 다시 고쳐 써 주세요.`);
+    }
+  }
+  const derived = deriveQuestionBank(bank, plan, drafts, { now, base: baseFingerprint(repo) });
+  // 만든 은행을 다시 잇는다 — 고친 질문은 받을 곳에만, 남은 질문은 나간 곳에 이어지지 않아야 한다.
+  const outgoing = [...new Map(plan.items.flatMap((i) => i.swaps.map((s) => [s.from.name, s.from] as const))).values()];
+  const linked = linkCompetitorQuestions(derived.questions, rewrite.next, rewrite.brandNames);
+  const stale = linkCompetitorQuestions(derived.questions, outgoing, rewrite.brandNames);
+  const ids = derived.questions.map((q) => q.questionId);
+  const problems = [
+    ...rewrites
+      .filter((i) => linked.questions.find((l) => l.questionId === i.toId)?.competitorIndexes.join() !== i.expectedIndexes.join())
+      .map((i) => `${i.toId}이 넘겨받을 경쟁사에 이어지지 않아요`),
+    ...stale.questions.map((l) => `${l.questionId}이 빠지는 경쟁사를 계속 물어요`),
+    ...(new Set(ids).size !== ids.length ? ['질문 id가 겹쳐요'] : []),
+    ...(derived.questions.length !== plan.sizeAfter ? [`문항 수가 ${plan.sizeAfter}개가 아니에요`] : []),
+    // 코호트 질문지를 쓰지 않는 은행은 측정이 일반 질문 하한을 다시 맞추며 은행을 고쳐 쓴다 — 하한 아래로 내려가면 안 된다.
+    ...(!repo.cohortQuestionBank && countAgnostic(derived.questions) < agnosticQuota(plan.sizeAfter) ? ['일반 질문이 하한보다 적어져요'] : []),
+  ];
+  if (problems.length) throw new EditorError(400, `새 질문지를 만들 수 없어요: ${problems.join(' · ')}`);
+  return derived;
 }
 
 /** 제외 목록을 바꾸고 그 주차 순위를 다시 센다. 반대 방향(되돌리기 · 실패 보상)도 같은 함수로 한다. */
@@ -827,8 +979,8 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
   return serializeEdit(async () => {
     assertNotMeasuring();
     const { tenant, runtime } = await customerTenant(tenantId);
-    const raw = (body ?? {}) as { competitors?: unknown; summary?: unknown; pastOut?: unknown; previewKey?: unknown };
-    const { plan, exclusion } = await computePlan(tenant, runtime, store, raw.competitors, raw.pastOut);
+    const raw = (body ?? {}) as { competitors?: unknown; summary?: unknown; pastOut?: unknown; previewKey?: unknown; handoff?: unknown; questions?: unknown };
+    const { plan, exclusion, rewrite, repo } = await computePlan(tenant, runtime, store, raw.competitors, raw.pastOut, raw.handoff);
     if (plan.errors.length) throw new EditorError(400, plan.errors.join(' '));
     if (plan.unchanged && !exclusion) throw new EditorError(400, '바뀐 내용이 없어요.');
     if (exclusion) {
@@ -838,9 +990,17 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
       }
       if (raw.previewKey !== exclusion.preview.key) throw new EditorError(409, '그사이 순위가 바뀌었어요. 미리보기를 다시 확인한 뒤 저장해 주세요.');
     }
-    const repo = await loadTenantWithoutCompetitorEdit(tenantId);
     if (!repo) throw new EditorError(404, `tenant not found: ${tenantId}`);
     const competitors = plan.competitors;
+    const savedAt = new Date().toISOString();
+    const newBank = plan.questions.mode === 'derive' ? derivedBankFor(rewrite, repo, raw.questions, savedAt) : null;
+    // 수정본의 질문지 — 새로 만들었으면 그 버전, 아니면 지금 쓰는 앱 질문지를 그대로 잇는다(빠뜨리면 저장소 버전으로 떨어져
+    // 목록과 질문지가 어긋난다).
+    const questionBank = newBank
+      ? { version: newBank.version, size: newBank.questions.length }
+      : tenant.questionBankVersion !== repo.questionBankVersion
+        ? { version: tenant.questionBankVersion, size: tenant.questionBankSize }
+        : undefined;
     const file = await readCompetitorOverride(tenantId);
     // 지난 기록만 바꾼 저장이면 되돌려도 목록은 그대로다(쓰이지 않는 옛 목록도 지우지 않게 파일 값 그대로).
     const before = plan.unchanged ? (file?.current ?? null) : overrideApplies(file?.current ?? null, repo) ? file!.current : null;
@@ -850,7 +1010,7 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
       ? (file?.current ?? null)
       : sameList(competitors, repo.competitors)
         ? null
-        : { competitors, base: baseFingerprint(repo) };
+        : { competitors, base: baseFingerprint(repo), ...(questionBank ? { questionBank } : {}) };
     const summary = typeof raw.summary === 'string' && raw.summary.trim() ? raw.summary.trim().slice(0, 300) : '경쟁사 목록을 바꿨어요';
     // 처음 고칠 때는 지금 목록이 마지막 측정이 쓴 목록이다 — 「다음 측정 대기」를 그것과 견준다.
     const measured = file?.measured ?? { at: null, listHash: listHash(tenant.competitors) };
@@ -858,14 +1018,21 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     const exclusions = exclusion ? { added: exclusion.add, removed: exclusion.removed } : undefined;
     // 지난 기록만 바꾼 저장이면 직전 목록 저장의 설명을 이어 둔다 — 「경쟁사 바뀜 · 다음 측정 대기」가 제외 요약을 보이지 않게.
     const list = plan.unchanged && file?.lastSave ? listSaveInfo(file) : undefined;
+    let createdBank: string | null = null;
     try {
-      // 제외 목록 · 순위 다시 세기 · 되돌리기 기록이 모두 끝나야 저장이다. 어느 단계든 실패하면 제외 목록을 되돌리고 다시 센다
-      // (반대로 다시 불러도 같은 결과다) — 되돌릴 기록 없는 제외나 일부만 다시 쓴 순위가 남지 않게.
+      // 새 질문지 → 제외 목록 · 순위 다시 세기 → 수정본 순서로 쓴다. 새 질문지가 수정본보다 먼저다 — 수정본이 가리키는 버전
+      // 파일이 없으면 다음 측정이 그 버전을 판정 엔진으로 새로 만들어 미리 본 질문과 달라진다. 어느 단계든 실패하면 앞 단계를
+      // 되돌린다(제외 목록은 반대로 다시 불러도 같은 결과다) — 되돌릴 기록 없는 제외, 일부만 다시 쓴 순위, 아무도 안 쓰는
+      // 질문지가 남지 않게.
+      if (newBank) {
+        await store.createQuestionBank(tenantId, newBank);
+        createdBank = newBank.version;
+      }
       if (exclusions) await writeExclusion(store, { add: exclusions.added, removed: exclusions.removed });
       await writeCompetitorOverride(tenantId, {
         current,
         lastSave: {
-          savedAt: new Date().toISOString(),
+          savedAt,
           before,
           summary,
           ...(exclusions ? { exclusions } : {}),
@@ -878,6 +1045,12 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
       if (exclusions) {
         await writeExclusion(store, { add: exclusions.removed, removed: exclusions.added }).catch((undoErr: unknown) =>
           console.error(`[competitorEditor] ${tenantId} 제외 목록 되돌리기 실패:`, undoErr),
+        );
+      }
+      if (createdBank) {
+        const version = createdBank;
+        await store.removeQuestionBank(tenantId, version).catch((undoErr: unknown) =>
+          console.error(`[competitorEditor] ${tenantId} 새 질문지 ${version} 지우기 실패:`, undoErr),
         );
       }
       throw err;

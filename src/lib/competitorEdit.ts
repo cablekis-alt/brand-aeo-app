@@ -10,7 +10,7 @@
  * 몇 곳을 함께 재고 몇 곳이 대기인지는 여기서 세지 않는다. 서버가 측정과 같은 함수로 계산한다
  * (POST /api/tenants/:id/competitors/plan → server/cohortPlan.ts).
  */
-import type { ExclusionPreview, RankLite } from './api'
+import type { ExclusionPreview, HandoffHint, RankLite } from './api'
 import { subjectParticle } from './korean'
 
 export interface CompetitorInput {
@@ -58,6 +58,8 @@ export interface AppliedEdit {
   replaced: Map<string, string>
   /** 자리 바꾸기로 대기로 내려간 줄. */
   movedDown: Set<string>
+  /** 자리 바꾸기로 측정에 든 대기 줄 key → 그 자리에 있던(대기로 내려간) 줄 key. */
+  swapped: Map<string, string>
   /** 홈페이지만 바꾼 줄 key → 바꾸기 전 주소. */
   rehomed: Map<string, string[]>
   /** 작업마다 성립했는지. */
@@ -77,6 +79,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
   const removedBy = new Map<string, number>()
   const replaced = new Map<string, string>()
   const movedDown = new Set<string>()
+  const swapped = new Map<string, string>()
   const rehomed = new Map<string, string[]>()
   const valid: boolean[] = []
   const at = (key: string) => list.findIndex((x) => x.key === key)
@@ -125,6 +128,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         ;[list[a], list[b]] = [list[b]!, list[a]!]
         placedBy.set(op.a, i)
         movedDown.add(op.b)
+        swapped.set(op.a, op.b)
         okOp = true
       }
     } else if (op.t === 'add') {
@@ -147,7 +151,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
     }
     valid.push(okOp)
   })
-  return { list, removed, placedBy, removedBy, replaced, movedDown, rehomed, valid }
+  return { list, removed, placedBy, removedBy, replaced, movedDown, swapped, rehomed, valid }
 }
 
 /** 화면에 보일 주소 — 'https://www.x.com/a' → 'x.com'. 저장할 때는 서버가 같은 규칙으로 정리한다. */
@@ -223,6 +227,34 @@ export function summarizePastOut(preview: ExclusionPreview | null): string[] {
 /** 저장할 목록. */
 export function toCompetitors(list: EditItem[]): CompetitorInput[] {
   return list.map((x) => x.competitor)
+}
+
+/**
+ * 질문 넘겨받기 힌트 — 누가 누구 자리에 들었나(이름). 서버는 바꾼 목록만 받아서 이 힌트가 없으면 받는 곳을 목록 순서로 짐작한다
+ * (여러 작업을 섞으면 뒤바뀐다). 바꿈은 들어온 줄 ← 바뀐 줄, 측정에 넣기는 올라온 대기 줄 ← 내려간 줄이다. 바꾼 줄을 다시
+ * 바꿨으면 원래 줄까지 따라간다. 지금 목록에 남은 줄만 보낸다.
+ */
+export function handoffHints(base: EditItem[], applied: Pick<AppliedEdit, 'list' | 'removed' | 'replaced' | 'swapped'>): HandoffHint[] {
+  const names = new Map([...base, ...applied.removed, ...applied.list].map((x) => [x.key, x.competitor.name]))
+  const origin = (key: string) => {
+    let k = key
+    const seen = new Set<string>()
+    while (applied.replaced.has(k) && !seen.has(k)) {
+      seen.add(k)
+      k = applied.replaced.get(k)!
+    }
+    return k
+  }
+  const inList = new Set(applied.list.map((x) => x.key))
+  const hints: HandoffHint[] = []
+  const push = (fromKey: string, toKey: string) => {
+    const from = names.get(origin(fromKey))
+    const to = names.get(toKey)
+    if (from && to && from !== to && !hints.some((h) => h.from === from && h.to === to)) hints.push({ from, to })
+  }
+  for (const [inKey, outKey] of applied.replaced) if (inList.has(inKey)) push(outKey, inKey)
+  for (const [upKey, downKey] of applied.swapped) if (inList.has(upKey)) push(downKey, upKey)
+  return hints
 }
 
 /** 「바꾸지 않고 빼기」의 설명 — 대기 첫 줄이 올라오는지. */

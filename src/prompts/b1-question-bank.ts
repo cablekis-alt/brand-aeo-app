@@ -59,7 +59,7 @@ function scopeLines(scope: MarketScope | undefined, guide: ScopeGuide): string {
 질문하는 사람: ${guide.persona}`;
 }
 
-function styleRule(language: QuestionLanguage | undefined): string {
+export function styleRule(language: QuestionLanguage | undefined): string {
   if (language === 'en') {
     return `질문 text는 반드시 영어로 쓴다. 한국에서 시술·수술을 알아보는 외국인 환자가 ChatGPT 같은 AI에 실제로 입력할 법한
    자연스러운 구어체 영어로 작성한다(설문 문항 같은 딱딱한 문체 금지). 위 예시는 의도만 참고하고 영어로 바꿔 쓴다.

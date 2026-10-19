@@ -651,7 +651,11 @@ export default function Dashboard() {
         {card && conditions ? (
           <>
             {weekLabel(card.weekOf)} 측정 · 수집 {conditions.collect} · 판정 {conditions.judge} · 질문{' '}
-            {tenant?.questionBankSize ?? '—'}개{card.questionBankVersion ? ` (질문지 ${card.questionBankVersion})` : ''} ·{' '}
+            {/* 그 주에 쓴 은행의 문항 수 — 설정값은 다음 측정의 값이라(경쟁사 편집이 질문을 빼면 41) 그 주와 다를 수 있다. */}
+            {(todoData?.key === splitKey && todoData.bank && todoData.bank.version === card.questionBankVersion
+              ? todoData.bank.questions.length
+              : tenant?.questionBankSize) ?? '—'}
+            개{card.questionBankVersion ? ` (질문지 ${card.questionBankVersion})` : ''} ·{' '}
             {conditions.repeats}.
           </>
         ) : (
