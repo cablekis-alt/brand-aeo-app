@@ -56,6 +56,7 @@ import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRa
 import { startScheduler } from './scheduler.js';
 import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
 import { queueTenantWrite } from './tenantWriteQueue.js';
+import { getPublishedHistory } from './publishedHistory.js';
 import {
   addPublishedPost,
   patchPublishedPost,
@@ -1148,6 +1149,22 @@ app.post('/api/published-posts/:tenantId', async (req, res) => {
   }
   try {
     res.json(await addPublishedPost(tenant.tenantId, (req.body ?? {}) as AddPostInput));
+  } catch (err) {
+    sendPostsError(res, err);
+  }
+});
+
+// 올린 글 인용 이력 — 주소 × 측정 주차(server/publishedHistory.ts). 저장하지 않고 요청마다 계산한다. 데모로 대신하지 않는다.
+app.get('/api/published-history/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const weeks = Number(req.query.weeks);
+  try {
+    const posts = await readPublishedPosts(tenant.tenantId);
+    res.json(await getPublishedHistory(store, tenant, posts, Number.isFinite(weeks) && weeks > 0 ? weeks : 12));
   } catch (err) {
     sendPostsError(res, err);
   }
