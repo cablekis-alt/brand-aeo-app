@@ -78,6 +78,8 @@ export interface QuestionBank {
   upcomingVersion?: string
   /** 다음 측정이 쓸 은행이 경쟁사 편집으로 고쳐 만든 것이면 그 내용(고친 · 뺀 질문 수). */
   upcomingDerived?: { replaced: number; removed: number }
+  /** 다음 측정이 쓸 은행을 경쟁사 편집의 「브랜드 질문 모두 새로 쓰기」로 정했으면 새로 쓸 브랜드 질문 수(공통 질문은 그대로). */
+  upcomingRegenerate?: { brandCount: number }
   /** 측정 전이라 예시 은행을 받았다(로컬 서버) — 이 판 번호는 실제 측정 은행의 것이 아니다. */
   demo?: boolean
 }

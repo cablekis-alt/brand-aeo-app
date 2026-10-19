@@ -6754,6 +6754,67 @@ td.cell-mid {
   font-size: 11.5px;
   color: var(--muted);
 }
+
+/* 경쟁사 편집 5단계 — 질문지 방식 「다른 방법」 · 「업종 다름」. */
+.ce-qmode-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.ce-qmode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ce-qmode-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ce-qmode-opt input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.ce-qmode-opt.off {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.ce-qmode-opt > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ce-qmode-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.ce-qmode-sub.warn,
+.ce-q.warn,
+.ce-industry-note {
+  color: var(--warn);
+}
+.ce-qmode-version {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.ce-industry-note {
+  grid-column: 2 / -1;
+  font-size: 11.5px;
+}
 .ce-dialog-backdrop {
   position: fixed;
   inset: 0;

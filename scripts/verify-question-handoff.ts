@@ -80,10 +80,20 @@ ok('S1 바꿈: 이어질 위치는 바꾼 목록의 0번', itemOf(s1, 'v5-004')?
 ok('S1 바꿈: 주제에 「골목집」이 있어 주제도 새로 받는다', itemOf(s1, 'v5-004')?.topicNeedsRewrite === true)
 ok('S1 바꿈: 공통 질문에 나간 이름이 있어도 건드리지 않는다', !s1.items.some((i) => i.fromId.startsWith('c1-')))
 
-// S2 빼기(대기 없음) — 넘겨받을 곳이 없어 뺀다.
-const s2 = run(NOW.slice(1))
-ok('S2 빼기: v5-004 뺌 · 7 → 6', itemOf(s2, 'v5-004')?.action === 'remove' && itemOf(s2, 'v5-004')?.toId === null && s2.sizeAfter === 6)
+// S2 빼기(대기 없음) — 이미 재는데 비교 질문이 없는 곳(해돋이펜션)이 받는다(결정 E8).
+const s2e = run(NOW.slice(1))
+ok('S2 빼기: 이미 재는데 질문 없는 해돋이펜션이 v6-004를 받는다(existing)', toName(itemOf(s2e, 'v5-004')) === '해돋이펜션' && itemOf(s2e, 'v5-004')?.reason === 'existing' && s2e.sizeAfter === 7)
+ok('S2 빼기(새로 든 곳만 받기 — 고객 전환): 뺀다', itemOf(run(NOW.slice(1), [], { existingReceivers: false }), 'v5-004')?.action === 'remove')
+// 받을 곳이 정말 없으면 뺀다 — 질문 없는 해돋이펜션까지 지금 목록에 없는 경우.
+const NOQ = NOW.slice(0, 4)
+const s2 = run(NOQ.slice(1), [], { now: { competitors: NOQ, measured: measuredOf(NOQ) } })
+ok('S2 빼기(받을 곳 없음): v5-004 뺌 · 7 → 6', itemOf(s2, 'v5-004')?.action === 'remove' && itemOf(s2, 'v5-004')?.toId === null && s2.sizeAfter === 6)
 ok('S2 빼기: 받을 곳 없음으로 알린다', s2.unreceived.length === 1 && s2.unreceived[0]!.name === '가상 골목집' && s2.unreceived[0]!.reason === 'noReceiver')
+// 업종 다름으로 표시된 곳은 받지 않는다 — 그 이유를 알린다.
+const s2o = run(NOW.slice(1), [], { otherIndustry: ['해돋이펜션'] })
+ok('업종 다름(해돋이펜션)은 받지 않는다 → 뺌 · 이유 otherIndustry', itemOf(s2o, 'v5-004')?.action === 'remove' && s2o.unreceived[0]?.reason === 'otherIndustry' && s2o.unreceived[0]?.other?.join() === '해돋이펜션')
+const s1o = run([c('새펜션A'), ...NOW.slice(1)], [{ from: '가상 골목집', to: '새펜션A' }], { otherIndustry: ['새펜션 a'] })
+ok('업종 다름인 새 곳 대신 이미 재는 곳이 받는다(이름은 띄어쓰기 · 대소문자 무시)', toName(itemOf(s1o, 'v5-004')) === '해돋이펜션')
 
 // S3 빼기로 대기 첫 줄이 올라옴 — 올라온 곳이 받는다(promoted).
 const W = c('대기펜션')
@@ -130,15 +140,18 @@ const m1 = run([A, ...NOW.slice(1)], [{ from: '가상 골목집', to: '새펜션
 const m1i = itemOf(m1, 'v5-008')
 ok('경쟁사 둘(받는 곳 있음): 남는 곳(가상옥도)을 keep으로 두고 고쳐 쓴다', m1i?.action === 'rewrite' && m1i.keep.map((k) => k.name).join() === '가상옥도' && m1i.expectedIndexes.join() === '0,1')
 ok('경쟁사 둘: 비교가 아닌 종류도 똑같이 다룬다(D2)', m1i?.source.category === 'price-spec')
-const m2 = run(NOW.slice(1), [], { bank: multiBank })
+const m2 = run(NOQ.slice(1), [], { bank: multiBank, now: { competitors: NOQ, measured: measuredOf(NOQ) } })
 ok('경쟁사 둘(받는 곳 없음): 질문을 통째로 뺀다(D1)', itemOf(m2, 'v5-008')?.action === 'remove' && m2.sizeAfter === multiBank.questions.length - 2)
 const C = c('새펜션C')
 const m3 = run([NOW[0]!, C, ...NOW.slice(2)], [{ from: '가상옥도', to: '새펜션C' }], { bank: multiBank })
 ok('한 경쟁사의 질문 셋(007 · 008 · 009)은 모두 같은 곳이 받는다', ['v5-007', 'v5-008', 'v5-009'].every((id) => toName(itemOf(m3, id)) === '새펜션C'))
 ok('받는 곳 표시에 셋이 모두 든다', m3.receivers[0]?.ids.join() === 'v6-007,v6-008,v6-009')
 
-// 자기 질문이 있는 곳은 받지 않는다(D4)
-const ownBank: QuestionBank = { ...bank, questions: [...bank.questions, q('v5-010', '가상머뭄이랑 대기펜션 중 조용한 곳은?')] }
+// 자기 질문이 있는 곳은 받지 않는다(D4) — 이미 재는 해돋이펜션도 자기 질문이 있게 해 받을 곳이 없게 한다.
+const ownBank: QuestionBank = {
+  ...bank,
+  questions: [...bank.questions, q('v5-010', '가상머뭄이랑 대기펜션 중 조용한 곳은?'), q('v5-011', '가상머뭄이랑 해돋이펜션 중 바다 전망은 어디가 나아?')],
+}
 const o1 = run([...NOW.slice(1), W], [], { bank: ownBank, now: { competitors: [...NOW, W], measured: measuredOf([...NOW, W]) } })
 ok('자기 질문 있는 대기펜션은 받지 않는다 → v5-004 뺌', itemOf(o1, 'v5-004')?.action === 'remove')
 ok('그 이유(receiverHasOwn)와 그 곳의 질문을 알린다', o1.unreceived[0]?.reason === 'receiverHasOwn' && o1.unreceived[0]?.own?.name === '대기펜션' && o1.unreceived[0]?.own?.questionIds.join() === 'v5-010')
@@ -377,7 +390,10 @@ const named2 = planQuestionHandoff({
   hints: [],
   taken: ['v5'],
 })
-ok('나가는 곳의 질문이 이미 짚은 곳은 받지 않는다(자기 자신과 견주게 된다)', itemOf(named2, 'v5-007')?.action === 'remove')
+ok(
+  '나가는 곳의 질문이 이미 짚은 곳(대기펜션)은 받지 않는다(자기 자신과 견주게 된다) — 이미 재는 다른 곳이 받는다',
+  itemOf(named2, 'v5-007')?.swaps[0]?.via === 'existing' && toName(itemOf(named2, 'v5-007')) !== '대기펜션' && itemOf(named2, 'v5-007')?.keep.map((k) => k.name).join() === '대기펜션',
+)
 const fkRun = planQuestionHandoff({
   bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄이랑 가상 골목집 중 어디가 나아?')] },
   version: 'v5',
@@ -389,7 +405,7 @@ const fkRun = planQuestionHandoff({
   hints: [{ from: '가상 골목집', to: 'FKpos' }],
   taken: ['v5'],
 })
-ok('고객 이름을 품은 곳(FKpos · 고객 별칭 FK)은 받지 않는다 — 질문에서 이어지지 않는다', itemOf(fkRun, 'v5-001')?.action === 'remove')
+ok('고객 이름을 품은 곳(FKpos · 고객 별칭 FK)은 받지 않는다 — 질문에서 이어지지 않는다(이미 재는 곳이 받음)', itemOf(fkRun, 'v5-001')?.swaps[0]?.via === 'existing' && toName(itemOf(fkRun, 'v5-001')) !== 'FKpos')
 
 // 검토 지적 — 남는 이름이 나간 이름의 일부일 때(남는 가상초원 · 나가는 가상초원고택) 나간 이름이 남은 문장을 거절한다
 const subNow = [c('가상초원'), c('가상초원고택'), NOW[3]!]

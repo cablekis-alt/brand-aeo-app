@@ -16,6 +16,11 @@ export interface QuestionBank {
   cohortBank?: { key: string; version: string };
   /** 경쟁사 편집이 앞 버전에서 바뀐 경쟁사 질문만 고쳐 만든 은행(questionHandoff.ts). 측정은 이 은행을 그대로 쓴다. */
   derivedFrom?: DerivedFrom;
+  /**
+   * 경쟁사 편집의 「브랜드 질문 모두 새로 쓰기」로 측정이 새로 만든 은행 — 앞 버전과 저장할 때의 저장소 지문(baseFingerprint).
+   * 저장소가 나중에 같은 버전 이름을 따로 쓰면 측정을 멈추는 데 쓴다(pipeline.ts assertDerivedBankInUse).
+   */
+  regeneratedFrom?: { version: string; by: 'competitor-edit'; base: string };
 }
 
 export interface ResultStore {

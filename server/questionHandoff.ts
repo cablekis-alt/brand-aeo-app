@@ -28,7 +28,8 @@ export interface HandoffSwap {
   from: CompetitorContext;
   /** 넘겨받는 곳. null이면 받을 곳이 없다(그 질문은 빠진다). */
   to: CompetitorContext | null;
-  via: 'hint' | 'promoted' | null;
+  /** hint: 바꿈 · 측정에 넣기 힌트 · promoted: 새로 측정에 든 곳 · existing: 이미 재는데 비교 질문이 없던 곳. */
+  via: 'hint' | 'promoted' | 'existing' | null;
 }
 
 export interface HandoffItem {
@@ -45,7 +46,7 @@ export interface HandoffItem {
   expectedIndexes: number[];
   /** 주제에 나가는 경쟁사 이름(또는 그 일부)이 들어 있어 주제도 새로 받는다. */
   topicNeedsRewrite: boolean;
-  reason: 'hint' | 'promoted' | 'noReceiver';
+  reason: 'hint' | 'promoted' | 'existing' | 'noReceiver';
 }
 
 export interface QuestionPlan {
@@ -58,7 +59,14 @@ export interface QuestionPlan {
   /** 넘겨받는 곳 → 받은 새 질문 id. */
   receivers: { name: string; ids: string[] }[];
   /** 넘겨받을 곳이 없어 질문이 빠지는 나가는 경쟁사. receiverHasOwn이면 들어온 곳이 이미 자기 질문을 가졌다. */
-  unreceived: { name: string; questionIds: string[]; reason: 'noReceiver' | 'receiverHasOwn'; own?: { name: string; questionIds: string[] } }[];
+  unreceived: {
+    name: string;
+    questionIds: string[];
+    reason: 'noReceiver' | 'receiverHasOwn' | 'otherIndustry';
+    own?: { name: string; questionIds: string[] };
+    /** otherIndustry — 받을 수 있었지만 「업종 다름」으로 표시된 곳. */
+    other?: string[];
+  }[];
   key: string;
 }
 
@@ -74,6 +82,13 @@ export interface HandoffInput {
   now: { competitors: CompetitorContext[]; measured: boolean[] };
   next: { competitors: CompetitorContext[]; measured: boolean[] };
   hints: HandoffHint[];
+  /** 「업종 다름」으로 표시된 경쟁사 이름 — 비교 질문을 넘겨받지 않는다(competitorIndustry.ts). */
+  otherIndustry?: string[];
+  /**
+   * 이미 재는데 비교 질문이 없는 곳도 받는가(기본 true, 결정 E8). 고친 문장을 확인할 화면이 없는 곳(고객 전환의 「목록에서
+   * 빼기」)은 false로 부른다 — 그때는 새로 든 곳만 받고, 받을 곳이 없으면 뺀다.
+   */
+  existingReceivers?: boolean;
   /** 이미 쓰인 버전 이름(은행 파일 · 카드 · 저장소) — 새 버전은 이 이름을 피한다. */
   taken: Iterable<string>;
 }
@@ -184,7 +199,7 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   // 받는 곳은 경쟁사 단위로 정한다 — 한 경쟁사의 질문은 모두 같은 곳이 받고, 받는 곳 하나는 나가는 곳 하나만 받는다.
   // 자기 질문이 이미 있는 들어온 곳은 받지 않는다(경쟁사마다 비교 질문 하나). 나가는 곳의 질문이 이미 짚은 곳도 받지 않는다
   // (그 질문이 자기 자신과 견주게 된다).
-  const receiver = new Map<CompetitorContext, { to: CompetitorContext; via: 'hint' | 'promoted' }>();
+  const receiver = new Map<CompetitorContext, { to: CompetitorContext; via: 'hint' | 'promoted' | 'existing' }>();
   const taken = new Set<string>();
   // 「이미 짚은 곳」은 지금 목록으로 본다 — 지금 목록에 따로 있던 곳(대기 줄)을 그 질문이 함께 짚었다. 새로 든 곳이 옛 이름을
   // 별칭으로 가져 바꾼 목록에서 이어지는 것(이름 바꾸기)은 넘겨받는다.
@@ -192,7 +207,13 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   const linkedNow = new Map(linksNow.questions.map((l) => [l.questionId, l.competitorIndexes]));
   const alreadyIn = (o: CompetitorContext, c: CompetitorContext) =>
     nowIndex.has(keyOf(c)) && questionsOf(o).some((id) => (linkedNow.get(id) ?? []).includes(nowIndex.get(keyOf(c))!));
-  const eligible = (c: CompetitorContext, o: CompetitorContext) => linkable(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c);
+  // 「업종 다름」으로 표시된 곳은 받지 않는다 — 다른 업종 곳과 견주는 질문은 고객 업종 질문이 아니다.
+  const otherIndustry = new Set((input.otherIndustry ?? []).map(fold));
+  const sameIndustry = (c: CompetitorContext) => !otherIndustry.has(keyOf(c));
+  const eligible = (c: CompetitorContext, o: CompetitorContext) =>
+    linkable(c) && sameIndustry(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c);
+  // 이미 재는데 비교 질문이 없던 곳(바꾼 목록에서도 잰다) — 새로 든 곳이 없을 때 받는다(결정 E8).
+  const staying = next.filter((c, i) => input.next.measured[i] && nowMeasured.has(keyOf(c)));
   const withQuestions = outgoing.filter((o) => questionsOf(o).length > 0);
   // 1) 화면 힌트(바꿈 · 측정에 넣기) — 지금 목록 순서로. 한 자리에 힌트가 여럿이면 나중 것부터 본다.
   for (const o of withQuestions) {
@@ -210,6 +231,14 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
     const to = incoming.find((c) => eligible(c, o));
     if (!to) continue;
     receiver.set(o, { to, via: 'promoted' });
+    taken.add(keyOf(to));
+  }
+  // 3) 그래도 남은 나가는 곳 — 이미 재는데 비교 질문이 없는 곳이 받는다(바꾼 목록 순서). 그래야 질문지가 덜 줄어든다.
+  for (const o of input.existingReceivers === false ? [] : withQuestions) {
+    if (receiver.has(o)) continue;
+    const to = staying.find((c) => eligible(c, o));
+    if (!to) continue;
+    receiver.set(o, { to, via: 'existing' });
     taken.add(keyOf(to));
   }
 
@@ -237,7 +266,7 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
       keep,
       expectedIndexes: rewrite ? stay.map((c) => nextIndex.get(keyOf(c))!).sort((a, b) => a - b) : [],
       topicNeedsRewrite: rewrite && topicMentions(q.topic, outs, [...brandNames, ...stay.flatMap(namesOf)]),
-      reason: !rewrite ? 'noReceiver' : swaps.some((s) => s.via === 'promoted') ? 'promoted' : 'hint',
+      reason: !rewrite ? 'noReceiver' : swaps.some((s) => s.via === 'existing') ? 'existing' : swaps.some((s) => s.via === 'promoted') ? 'promoted' : 'hint',
     });
   }
   if (!items.length) return empty('same', input.version);
@@ -251,11 +280,16 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   for (const o of withQuestions) {
     if (receiver.has(o)) continue;
     const own = incoming.find((c) => ownIds(c).length > 0);
+    // 업종 다름만 아니었으면 받을 수 있던 곳 — 표시를 풀면 넘겨받는다(화면이 그 이유를 보인다).
+    const other = [...incoming, ...staying].filter(
+      (c) => !sameIndustry(c) && linkable(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c),
+    );
     unreceived.push({
       name: o.name,
       questionIds: questionsOf(o),
-      reason: own ? 'receiverHasOwn' : 'noReceiver',
+      reason: own ? 'receiverHasOwn' : other.length ? 'otherIndustry' : 'noReceiver',
       ...(own ? { own: { name: own.name, questionIds: ownIds(own) } } : {}),
+      ...(!own && other.length ? { other: other.map((c) => c.name) } : {}),
     });
   }
   const removed = items.filter((i) => i.action === 'remove').length;

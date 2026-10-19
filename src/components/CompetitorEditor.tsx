@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import {
+  checkCompetitorIndustry,
   draftCompetitorQuestions,
   loadCompetitorEditor,
+  markCompetitorIndustry,
   planCompetitorEdit,
   resetCompetitorEdit,
   saveCompetitorEdit,
@@ -15,9 +17,11 @@ import {
   type ExcludedRange,
   type ExclusionPreview,
   type HandoffHint,
+  type IndustryResult,
   type PastOutInput,
   type QuestionHandoffPlan,
   type QuestionRewriteResult,
+  type RewriteAllPlan,
 } from '../lib/api'
 import {
   applyOps,
@@ -60,6 +64,12 @@ type PlanState = { key: string; value: CompetitorEditPlan | null; error: string 
 /** 넘겨받은 비교 질문 고쳐 쓰기 — 계획(key)마다 하나. */
 type DraftState = { status: 'running'; startedAt: number } | { status: 'done'; value: QuestionRewriteResult } | { status: 'error'; message: string }
 type SetDrafts = (update: (prev: Record<string, DraftState>) => Record<string, DraftState>) => void
+/** 질문지 방식 — 바뀐 경쟁사 질문만 고치기(기본) · 브랜드 질문 모두 새로 쓰기 · 질문지 그대로 두기. */
+type QuestionMode = 'derive' | 'all' | 'keep'
+type SavedQuestions = { plan: QuestionHandoffPlan | null; mode: QuestionMode; all: RewriteAllPlan | null }
+type IndustryCheckState = { status: 'running' } | { status: 'done'; result: IndustryResult } | { status: 'error'; message: string }
+/** 줄의 업종 표시 — 확인 중 · 다른 업종으로 보임. */
+type RowIndustry = { state: 'checking' } | { state: 'other'; looksLike: string | null }
 
 const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 
@@ -138,8 +148,15 @@ export default function CompetitorEditor({
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({})
   const [qOpen, setQOpen] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
-  // 저장한 순간의 질문지 계획 — 결과 카드가 「v5 → v6」을 보인다.
-  const [savedQuestions, setSavedQuestions] = useState<QuestionHandoffPlan | null>(null)
+  // 저장한 순간의 질문지 계획 · 방식 — 결과 카드가 「v5 → v6」 · 「브랜드 질문 N개 새로 씀」을 보인다.
+  const [savedQuestions, setSavedQuestions] = useState<SavedQuestions | null>(null)
+  // 질문지 방식(「다른 방법」, 5단계) — 화면만 든다(계획 요청에 넣지 않는다). 저장할 때 방식과 그 방식의 key를 싣는다.
+  const [qMode, setQMode] = useState<QuestionMode>('derive')
+  const [qModeOpen, setQModeOpen] = useState(false)
+  // 목록은 그대로 두고 질문지만 새로 쓰기 — 서랍 바닥 줄 「브랜드 질문 N개 모두 새로 쓰기…」(결정 E2).
+  const [questionOnly, setQuestionOnly] = useState(false)
+  // 업종 확인(추가 · 새 이름으로 바꾸기, 결정 7) — 이름(접은 값) → 상태. 끝나면 서버 판정(줄의 industry)이 이어받는다.
+  const [industryChecks, setIndustryChecks] = useState<Record<string, IndustryCheckState>>({})
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
@@ -184,7 +201,7 @@ export default function CompetitorEditor({
     .map(([id, v]) => (v === 'all' ? { tenantId: id } : { tenantId: id, onlyWeek: v }))
   const pastRestore = restore.filter((id) => excludedIds.has(id))
   const pastInput: PastOutInput | null = pastAdd.length || pastRestore.length ? { add: pastAdd, restore: pastRestore } : null
-  const dirty = ops.length > 0 || pastInput !== null
+  const dirty = ops.length > 0 || pastInput !== null || questionOnly
   // 누가 누구 자리에 들었나 — 서버가 빠지는 경쟁사의 질문을 받을 곳을 정할 때 쓴다(요청 key에도 넣어 미리보기 = 저장).
   const hints = useMemo(() => handoffHints(base, applied), [base, applied])
   const requestKey = dirty ? JSON.stringify({ competitors: toCompetitors(applied.list), pastOut: pastInput, handoff: hints }) : ''
@@ -258,6 +275,7 @@ export default function CompetitorEditor({
       measuredByOthers: [],
       latest: null,
       questionIds: [],
+      industry: null,
     }
   }
   const rows = applied.list.map((item, i) => ({ item, row: rowFor(item, i) }))
@@ -291,7 +309,63 @@ export default function CompetitorEditor({
     setPickError(null)
     setSavedNow(false)
     setActionError(null)
+    // 새로 들인 곳은 업종을 확인한다(대기 줄 올리기 · 자리 바꾸기는 이미 목록에 있던 곳이라 하지 않는다).
+    if (op.t === 'add') startIndustryCheck(op.with)
+    else if (op.t === 'replace' && op.with) startIndustryCheck(op.with)
   }
+  const startIndustryCheck = (entry: CompetitorEntry) => {
+    const key = squash(entry.name).toLowerCase()
+    const prev = industryChecks[key]
+    if (prev?.status === 'running' || prev?.status === 'done') return
+    setIndustryChecks((m) => ({ ...m, [key]: { status: 'running' } }))
+    checkCompetitorIndustry(tenantId, entry).then(
+      (result) => {
+        setIndustryChecks((m) => ({ ...m, [key]: { status: 'done', result } }))
+        // 판정이 저장됐으면 계획을 다시 받는다 — 업종 다름이면 그곳은 비교 질문을 넘겨받지 않는다.
+        if (result.verdict) setReplan((n) => n + 1)
+      },
+      (err: unknown) => {
+        console.error('[CompetitorEditor] 업종을 확인하지 못했습니다', err)
+        setIndustryChecks((m) => ({ ...m, [key]: { status: 'error', message: err instanceof Error ? err.message : String(err) } }))
+      },
+    )
+  }
+  // 사람이 정한 업종(「펜션 맞음」 · 「업종 다름으로 표시」) — 바로 저장된다(결정 F4). 서랍 상태와 계획을 다시 받는다.
+  const markIndustry = (name: string, mark: 'same' | 'different' | null) => {
+    setOpen(null)
+    setActionError(null)
+    markCompetitorIndustry(tenantId, name, mark)
+      .then((result) => {
+        setIndustryChecks((m) => ({ ...m, [squash(name).toLowerCase()]: { status: 'done', result } }))
+        return loadCompetitorEditor(tenantId)
+      })
+      .then(
+        (value) => {
+          setLoad({ status: 'ok', value })
+          setReplan((n) => n + 1)
+        },
+        (err: unknown) => {
+          console.error('[CompetitorEditor] 업종 표시를 저장하지 못했습니다', err)
+          setActionError(err instanceof Error ? err.message : String(err))
+        },
+      )
+  }
+  // 줄의 업종 표시 — 확인 중이면 「업종 확인 중」, 다르면 「업종 다름 ?」. 계획이 오기 전에는 방금 받은 확인 결과를 쓴다.
+  const industryFor = (name: string, row: EditorCompetitorRow | null): RowIndustry | undefined => {
+    const check = industryChecks[squash(name).toLowerCase()]
+    if (check?.status === 'running') return { state: 'checking' }
+    const mark = row?.industry ?? null
+    if (mark?.verdict === 'different') return { state: 'other', looksLike: mark.looksLike }
+    if (!mark && check?.status === 'done' && check.result.verdict === 'different') return { state: 'other', looksLike: check.result.looksLike }
+    return undefined
+  }
+  const industryName = s?.industry ?? ''
+  const sameLabel = industryName && industryName.length <= 6 ? `${industryName} 맞음` : '같은 업종 맞음'
+  // 고르기 상자의 「업종」 줄 — 다르게 본 곳은 풀고, 아니면 손으로 「업종 다름」을 단다.
+  const industryOption = (name: string, row: EditorCompetitorRow | null) =>
+    industryFor(name, row)?.state === 'other'
+      ? { id: 'industry', label: sameLabel, sub: '「업종 다름」 표시를 지워요 · 비교 질문을 다시 넘겨받을 수 있어요', onPick: () => markIndustry(name, 'same') }
+      : { id: 'industry', label: '업종 다름으로 표시', sub: '비교 질문을 넘겨받지 않아요 · 측정은 그대로 해요', onPick: () => markIndustry(name, 'different') }
   const toggle = (next: Open) => {
     setPickError(null)
     setOpen(next)
@@ -313,19 +387,28 @@ export default function CompetitorEditor({
     }))
 
   const exclusion = pastInput ? (planned?.exclusion ?? null) : null
-  const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion), ...questionSummary(planned?.questions ?? null)]
   const errors = planned?.errors ?? []
   const pastLocked = (exclusion?.locked.length ?? 0) > 0
   // 측정 중인지는 미리 계산 응답으로 다시 본다 — 서랍을 연 뒤 측정이 끝났을 수 있다.
   const measuringNow = planned ? planned.measuring : Boolean(s?.measuring)
   // 질문 넘겨받기 — 고쳐 쓸 질문이 있으면 계획이 오자마자 판정 엔진에 고쳐 쓰기를 맡긴다(빼기만 있으면 부르지 않는다).
   const qplan = planned?.questions ?? null
-  const rewrites = qplan?.mode === 'derive' ? qplan.items.filter((i) => i.action === 'rewrite') : []
+  const allPlan = planned?.rewriteAll ?? null
+  // 실제로 쓰는 방식 — 「모두 새로 쓰기」는 서버가 열어 줄 때만, 「그대로 두기」는 고칠 질문이 있을 때만(결정 E6).
+  const qm: QuestionMode = qMode === 'all' && allPlan?.available ? 'all' : qMode === 'keep' && qplan?.mode === 'derive' ? 'keep' : 'derive'
+  const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion), ...questionSummary(qplan, qm, allPlan)]
+  const rewrites = qm === 'derive' && qplan?.mode === 'derive' ? qplan.items.filter((i) => i.action === 'rewrite') : []
   const draft = qplan ? drafts[qplan.key] : undefined
   const draftDone = draft?.status === 'done' ? draft.value : null
   const questionsReady =
-    !qplan || qplan.mode !== 'derive' || rewrites.length === 0 || Boolean(draftDone && !draftDone.failed.length && draftDone.drafts.length === rewrites.length)
-  const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow ? qplan.key : null
+    qm !== 'derive' ||
+    !qplan ||
+    qplan.mode !== 'derive' ||
+    rewrites.length === 0 ||
+    Boolean(draftDone && !draftDone.failed.length && draftDone.drafts.length === rewrites.length)
+  // 업종 확인이 끝나기 전에는 고쳐 쓰기를 미룬다 — 곧 「업종 다름」이 될 곳으로 쓰면 판정 엔진을 한 번 헛부른다.
+  const industryPending = Object.values(industryChecks).some((c) => c.status === 'running')
+  const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow && !industryPending ? qplan.key : null
   useEffect(() => {
     if (!draftNeeded) return
     // 계획과 같은 입력으로 부른다(requestKey) — 서버가 계획을 다시 세어 key가 같을 때만 고쳐 쓴다.
@@ -352,19 +435,37 @@ export default function CompetitorEditor({
     Boolean(s) &&
     dirty &&
     Boolean(planned) &&
-    (!planned?.unchanged || Boolean(exclusion?.items.length)) &&
+    (!planned?.unchanged || Boolean(exclusion?.items.length) || qm === 'all') &&
     errors.length === 0 &&
     !pastLocked &&
     !measuringNow &&
     questionsReady &&
     !busy
 
-  const confirmOpen = confirmKey !== null && exclusion?.key === confirmKey
+  // 확인 창은 「지난 기록 빼기」와 「모두 새로 쓰기」를 함께 다룬다(결정 E7) — 둘 다 해당하면 창 하나에 두 부분.
+  const confirmPast = Boolean(exclusion?.items.length)
+  const confirmAll = qm === 'all' && Boolean(allPlan)
+  const saveConfirmKey = confirmPast || confirmAll ? JSON.stringify([confirmPast ? exclusion!.key : null, confirmAll ? allPlan!.key : null]) : null
+  const confirmOpen = confirmKey !== null && confirmKey === saveConfirmKey
   const clearEdits = () => {
     setOps([])
     setPastOut({})
     setRestore([])
     setConfirmKey(null)
+    setQMode('derive')
+    setQModeOpen(false)
+    setQuestionOnly(false)
+  }
+  const chooseMode = (mode: QuestionMode) => {
+    setQMode(mode)
+    setQModeOpen(true)
+    setSavedNow(false)
+    setActionError(null)
+  }
+  // 목록은 그대로 두고 질문지만 새로 쓰기 — 저장 막대를 열고 「모두 새로 쓰기」를 골라 둔다.
+  const startQuestionOnly = () => {
+    setQuestionOnly(true)
+    chooseMode('all')
   }
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
@@ -395,12 +496,16 @@ export default function CompetitorEditor({
   // 저장하는 순간의 미리보기 — 확인 창 · 결과 카드가 같은 값을 보인다. 서버는 이 previewKey와 지금 계산이 같을 때만 쓴다.
   const doSave = () => {
     const shown = exclusion
-    const shownQuestions = qplan
-    // 고쳐 쓴 문장은 미리 본 그대로 보낸다 — 서버는 다시 쓰지 않고 같은 검사만 다시 한다.
+    const shownQuestions: SavedQuestions = { plan: qplan, mode: qm, all: allPlan }
+    // 고쳐 쓴 문장은 미리 본 그대로 보낸다 — 서버는 다시 쓰지 않고 같은 검사만 다시 한다. 다른 방식은 그 방식의 key만 싣는다.
     const questions =
-      qplan?.mode === 'derive'
-        ? { key: qplan.key, drafts: (draftDone?.drafts ?? []).map((d) => ({ fromId: d.fromId, text: d.text, ...(d.topic ? { topic: d.topic } : {}) })) }
-        : undefined
+      qm === 'all' && allPlan
+        ? { mode: 'all' as const, key: allPlan.key }
+        : qm === 'keep' && qplan?.mode === 'derive'
+          ? { mode: 'keep' as const, key: qplan.key }
+          : qplan?.mode === 'derive'
+            ? { key: qplan.key, drafts: (draftDone?.drafts ?? []).map((d) => ({ fromId: d.fromId, text: d.text, ...(d.topic ? { topic: d.topic } : {}) })) }
+            : undefined
     run(
       () =>
         saveCompetitorEdit(
@@ -417,8 +522,9 @@ export default function CompetitorEditor({
       },
     )
   }
-  // 지난 기록을 바꾸면 확인을 받는다 — 이미 보낸 주간 보고서와 숫자가 달라질 수 있다.
-  const save = () => (exclusion?.items.length ? setConfirmKey(exclusion.key) : doSave())
+  // 지난 기록을 바꾸거나 브랜드 질문을 모두 새로 쓰면 확인을 받는다 — 이미 보낸 주간 보고서와 숫자가 달라지거나, 브랜드 질문별
+  // 지난 추이가 끊긴다.
+  const save = () => (saveConfirmKey ? setConfirmKey(saveConfirmKey) : doSave())
 
   // 확인 창을 열면 「다시 계산하고 저장」으로, 닫으면 저장 버튼으로 초점을 옮긴다.
   useEffect(() => {
@@ -476,8 +582,12 @@ export default function CompetitorEditor({
 
   const rowProps = { top, ours: s?.baseline?.score ?? null, baselineWeek: s?.baseline?.weekOf ?? null, pending: planning }
   // 줄의 「비교 질문」 칸 — 넘겨받는 곳은 「v6-004 받음」, 빠지는 곳은 「v5-004 → 새 곳」 · 「v5-004 뺌」.
-  const qTextFor = (name: string): string | undefined => {
-    if (qplan?.mode !== 'derive') return undefined
+  const qTextFor = (name: string, removed = false): string | undefined => {
+    // 모두 새로 쓰면 목록의 곳은 다음 측정이 새로 쓰고, 뺀 곳의 질문은 사라진다. 질문지 파일이 아직 없으면(모두 새로 쓰기를 저장한
+    // 뒤 · 측정 전 브랜드) 다음 측정이 새 목록으로 만든다 — 「비교 질문 없음」이 아니다.
+    if (qm === 'all') return removed ? '—' : '새로 씀'
+    if (s && !s.questionBank.exists) return removed ? '—' : '새로 만들 예정'
+    if (qm === 'keep' || qplan?.mode !== 'derive') return undefined
     const got = qplan.receivers.find((r) => squash(r.name) === squash(name))
     if (got) return `${got.ids.join(' · ')} 받음`
     const outs = qplan.items.flatMap((i) => {
@@ -589,6 +699,10 @@ export default function CompetitorEditor({
                     sub={sub}
                     {...rowProps}
                     qText={qTextFor(item.competitor.name)}
+                    industry={industryFor(item.competitor.name, row)}
+                    industryName={industryName}
+                    sameLabel={sameLabel}
+                    onIndustrySame={() => markIndustry(item.competitor.name, 'same')}
                     below={restoreFor(row)}
                     action={
                       placed !== undefined
@@ -625,8 +739,9 @@ export default function CompetitorEditor({
                                       danger: true,
                                       onPick: () => push({ t: 'drop', key: item.key }),
                                     },
+                                    industryOption(item.competitor.name, row),
                                   ]
-                                : [],
+                                : [industryOption(item.competitor.name, row)],
                           },
                         ]}
                         typed={{
@@ -668,10 +783,12 @@ export default function CompetitorEditor({
                       )}
                     </span>
                     <span className="ce-score-num">{was?.latest?.score ?? '—'}</span>
-                    <span className="ce-q none">
-                      {qTextFor(item.competitor.name) ??
-                        // 재지 않던 대기 줄을 빼면 넘겨받지 않는다 — 그 줄을 짚은 질문은 질문지에 그대로 남는다.
-                        ((qplan?.mode === 'same' || qplan?.mode === 'derive') && was?.questionIds.length ? `${was.questionIds.join(' · ')} 남음` : '—')}
+                    <span className={`ce-q none${qm === 'keep' && was?.questionIds.length ? ' warn' : ''}`}>
+                      {qTextFor(item.competitor.name, true) ??
+                        // 재지 않던 대기 줄을 빼면 넘겨받지 않는다 — 그 줄을 짚은 질문은 질문지에 그대로 남는다(「그대로 두기」도 같다).
+                        ((qplan?.mode === 'same' || qplan?.mode === 'derive') && was?.questionIds.length
+                          ? `${was.questionIds.join(' · ')} ${qm === 'keep' ? '계속 물음' : '남음'}`
+                          : '—')}
                     </span>
                     <span className="ce-act">
                       <button type="button" className="ce-btn" onClick={() => revert(by)}>
@@ -704,6 +821,10 @@ export default function CompetitorEditor({
                       extraChips={sourceChips(item, applied, originalStatus(item.key), row!)}
                       {...rowProps}
                       qText={qTextFor(item.competitor.name)}
+                      industry={industryFor(item.competitor.name, row)}
+                      industryName={industryName}
+                      sameLabel={sameLabel}
+                      onIndustrySame={() => markIndustry(item.competitor.name, 'same')}
                       below={restoreFor(row)}
                       action={
                         placed !== undefined && !applied.movedDown.has(item.key)
@@ -749,8 +870,9 @@ export default function CompetitorEditor({
                                         danger: true,
                                         onPick: () => push({ t: 'drop', key: item.key }),
                                       },
+                                      industryOption(item.competitor.name, row),
                                     ]
-                                  : [],
+                                  : [industryOption(item.competitor.name, row)],
                             },
                           ]}
                         />
@@ -882,6 +1004,15 @@ export default function CompetitorEditor({
               >
                 ?
               </span>
+              {/* 목록은 그대로 두고 질문지만 새로 쓰기(결정 E2) — 이미 재는 곳에 비교 질문이 없을 때 쓴다. */}
+              {!dirty && !savedNow && s.questionBank.rewriteAll.available && (
+                <>
+                  {' '}
+                  <button type="button" className="ce-link" onClick={startQuestionOnly} disabled={busy}>
+                    브랜드 질문 {s.questionBank.rewriteAll.brandCount}개 모두 새로 쓰기…
+                  </button>
+                </>
+              )}
             </p>
           </fieldset>
         )}
@@ -904,22 +1035,49 @@ export default function CompetitorEditor({
               {e}
             </p>
           ))}
-          {planned?.unchanged && !pastInput && <p className="ce-bar-note">지금 목록과 같아요.</p>}
+          {planned?.unchanged && !pastInput && (
+            <p className="ce-bar-note">{questionOnly ? '목록은 그대로 두고 질문지만 새로 써요.' : '지금 목록과 같아요.'}</p>
+          )}
           {qplan ? (
             <QuestionPlanBlock
               plan={qplan}
+              mode={qm}
+              all={allPlan}
               draft={draft}
               elapsed={draftElapsed}
               open={qOpen}
               onToggle={() => setQOpen(!qOpen)}
               onRedraft={redraft}
+              onKeep={() => chooseMode('keep')}
               canRedraft={!measuringNow && !busy}
               measuring={measuringNow}
               onRecheck={() => setReplan((n) => n + 1)}
               sharedCount={s.questionBank.sharedCount}
+              listNames={applied.list.map((x) => x.competitor.name)}
             />
           ) : (
             <p className="ce-bar-q">질문지: {planning ? '계산 중…' : `그대로 (${s.questionBank.version})`}</p>
+          )}
+          {/* 다시 계산하는 동안에도 지난 계획으로 그린다 — 고른 단추의 초점이 사라지지 않게. */}
+          {shownPlan && (
+            <QuestionModeChooser
+              plan={shownPlan.questions}
+              all={shownPlan.rewriteAll}
+              mode={qm}
+              open={qModeOpen || qMode !== 'derive'}
+              onToggle={() => setQModeOpen(!qModeOpen)}
+              onChoose={chooseMode}
+              disabled={busy}
+            />
+          )}
+          {qm !== 'all' && planned && planned.noQuestion.length > 0 && allPlan?.available && (
+            <p className="ce-bar-note">
+              {withParticle(planned.noQuestion.join(' · '))} 비교하는 질문은 없어요 —{' '}
+              <button type="button" className="ce-link" onClick={() => chooseMode('all')} disabled={busy}>
+                브랜드 질문 {allPlan.brandCount}개 모두 새로 쓰기
+              </button>
+              로 새로 쓰면 생길 수 있어요(보장하지는 않아요).
+            </p>
           )}
           {actionError && (
             <p className="ce-bar-note bad" role="alert">
@@ -932,7 +1090,9 @@ export default function CompetitorEditor({
                 ? '측정이 끝난 뒤에 저장할 수 있어요'
                 : !questionsReady
                   ? '고쳐 쓴 질문을 확인한 뒤 저장할 수 있어요'
-                  : pastInput
+                  : qm === 'all' && !pastInput
+                    ? '저장하면 다음 측정 때 질문지를 새로 만들어요'
+                    : pastInput
                   ? ops.length
                     ? '목록은 다음 측정부터 · 지난 순위는 저장하면 바로 다시 세요'
                     : '저장하면 지난 순위를 바로 다시 세요'
@@ -976,22 +1136,45 @@ export default function CompetitorEditor({
         </div>
       )}
 
-      {s && confirmOpen && exclusion && (
+      {s && confirmOpen && (
         <div className="ce-dialog-backdrop" onMouseDown={() => !busy && setConfirmKey(null)}>
           <div className="ce-dialog" role="dialog" aria-modal="true" aria-labelledby="ce-dialog-title" onMouseDown={(e) => e.stopPropagation()}>
-            <h3 id="ce-dialog-title">{exclusion.items.some((it) => it.action === 'exclude') ? '지난 기록에서도 뺄까요?' : '지난 순위표에 다시 넣을까요?'}</h3>
-            <p>{confirmText(exclusion)}</p>
-            <ExclusionPreviewBlock preview={exclusion} brandName={s.brandName} compact />
-            <p className="ce-dialog-note">
-              점수는 그대로예요. 측정 기록은 지우지 않고 순위 계산에서만 {exclusion.items.some((it) => it.action === 'exclude') ? '빼요' : '다시 넣어요'}. 이미 보낸 주간
-              보고서와 숫자가 달라질 수 있어요. 이 앱 순위표에서만 바뀌어요 · 웹 화면과 GitHub 측정 순위는 그대로예요.
-            </p>
+            <h3 id="ce-dialog-title">
+              {confirmPast && confirmAll
+                ? '저장하기 전에 확인해 주세요'
+                : confirmAll
+                  ? `브랜드 질문 ${allPlan!.brandCount}개를 새로 써요`
+                  : exclusion!.items.some((it) => it.action === 'exclude')
+                    ? '지난 기록에서도 뺄까요?'
+                    : '지난 순위표에 다시 넣을까요?'}
+            </h3>
+            {confirmPast && exclusion && (
+              <>
+                <p>{confirmText(exclusion)}</p>
+                <ExclusionPreviewBlock preview={exclusion} brandName={s.brandName} compact />
+                <p className="ce-dialog-note">
+                  점수는 그대로예요. 측정 기록은 지우지 않고 순위 계산에서만 {exclusion.items.some((it) => it.action === 'exclude') ? '빼요' : '다시 넣어요'}. 이미
+                  보낸 주간 보고서와 숫자가 달라질 수 있어요. 이 앱 순위표에서만 바뀌어요 · 웹 화면과 GitHub 측정 순위는 그대로예요.
+                </p>
+              </>
+            )}
+            {confirmAll && allPlan && (
+              <>
+                <p>
+                  브랜드 질문 {allPlan.brandCount}개를 새로 써요. 브랜드 질문별 지난 추이는 {allPlan.toVersion}부터 새로 시작해요.
+                </p>
+                <p className="ce-dialog-note">
+                  질문은 다음 측정 때 새 목록으로 만들어요(미리 볼 수 없어요). 공통 질문 {s.questionBank.sharedCount}개는 그대로라 점수 · 순위는 같은
+                  질문으로 매겨요. 그 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요.
+                </p>
+              </>
+            )}
             <div className="ce-bar-actions">
               <button type="button" className="btn" onClick={() => setConfirmKey(null)} disabled={busy}>
                 취소
               </button>
               <button type="button" className="btn primary" ref={confirmRef} onClick={doSave} disabled={busy || !canSave}>
-                {busy ? '저장 중…' : '다시 계산하고 저장'}
+                {busy ? '저장 중…' : confirmPast && confirmAll ? '다시 계산하고 새로 써서 저장' : confirmAll ? '새로 쓰고 저장' : '다시 계산하고 저장'}
               </button>
             </div>
           </div>
@@ -1023,15 +1206,22 @@ function confirmText(preview: ExclusionPreview): string {
 }
 
 /** 저장 기록 요약에 붙일 질문지 한 줄 — 새 질문지를 만들 때만. */
-function questionSummary(plan: QuestionHandoffPlan | null): string[] {
-  if (plan?.mode !== 'derive') return []
+function questionSummary(plan: QuestionHandoffPlan | null, mode: QuestionMode, all: RewriteAllPlan | null): string[] {
+  if (mode === 'all' && all) return [`질문지 ${all.fromVersion}→${all.toVersion} · 브랜드 질문 ${all.brandCount}개 새로 씀`]
+  if (mode === 'keep' || plan?.mode !== 'derive') return []
   const fixed = plan.items.filter((i) => i.action === 'rewrite').length
   const removed = plan.items.length - fixed
   return [`질문지 ${plan.fromVersion}→${plan.toVersion}${fixed ? ` · 비교 질문 ${fixed}개 고침` : ''}${removed ? ` · ${removed}개 뺌` : ''}`]
 }
 
 /** 저장 결과 카드의 질문지 줄. */
-function savedQuestionText(plan: QuestionHandoffPlan | null, version: string): string {
+function savedQuestionText(saved: SavedQuestions | null, version: string): string {
+  const plan = saved?.plan ?? null
+  if (saved?.mode === 'all' && saved.all) {
+    const a = saved.all
+    return `질문지 ${a.fromVersion} → ${a.toVersion} · 브랜드 질문 ${a.brandCount}개 새로 씀 · 다음 측정 때 새로 만들어요 · 되돌리면 질문지도 원래대로(${a.fromVersion}) 돌아가요`
+  }
+  if (saved?.mode === 'keep') return `질문지: 그대로 (${version})`
   if (plan?.mode === 'derive') {
     const fixed = plan.items.filter((i) => i.action === 'rewrite').length
     const removed = plan.items.length - fixed
@@ -1048,29 +1238,64 @@ function savedQuestionText(plan: QuestionHandoffPlan | null, version: string): s
  */
 function QuestionPlanBlock({
   plan,
+  mode,
+  all,
   draft,
   elapsed,
   open,
   onToggle,
   onRedraft,
+  onKeep,
   canRedraft,
   measuring,
   onRecheck,
   sharedCount,
+  listNames,
 }: {
   plan: QuestionHandoffPlan
+  /** 고른 방식(「다른 방법」). */
+  mode: QuestionMode
+  all: RewriteAllPlan | null
   draft: DraftState | undefined
   elapsed: number
   open: boolean
   onToggle: () => void
   /** fresh: 받은 결과를 버리고 다른 표현으로 새로 쓴다. */
   onRedraft: (fresh: boolean) => void
+  /** 고쳐 쓰기에 실패했을 때의 탈출 — 「질문지 그대로 두기」를 고른다(결정 E6). */
+  onKeep: () => void
   canRedraft: boolean
   /** 측정 중이라 고쳐 쓰기를 시작하지 않았다 — 끝난 뒤 「다시 확인」으로 계획을 새로 받는다. */
   measuring: boolean
   onRecheck: () => void
   sharedCount: number
+  /** 바꾼 목록의 이름 — 「그대로 두기」 경고가 뺀 곳과 대기로 내려간 곳을 나눠 쓴다. */
+  listNames: string[]
 }) {
+  if (mode === 'all' && all) {
+    return (
+      <p className="ce-bar-q">
+        질문지 {all.fromVersion} → {all.toVersion} · 브랜드 질문 {all.brandCount}개 새로 써요 · 다음 측정 때 만들어요 · 공통 질문 {sharedCount}개는 그대로
+      </p>
+    )
+  }
+  if (mode === 'keep' && plan.mode === 'derive') {
+    const inList = new Set(listNames.map((n) => n.replace(/\s+/g, '')))
+    return (
+      <div className="ce-qplan">
+        <p className="ce-bar-q">질문지: 그대로 ({plan.fromVersion})</p>
+        {plan.items.map((item) => (
+          <p key={item.fromId} className="ce-bar-note warn">
+            {item.fromId} ·{' '}
+            {item.swaps
+              .map((sw) => `${inList.has(sw.from.name.replace(/\s+/g, '')) ? '측정에서 빠진' : '뺀'} ${objectParticle(sw.from.name)}`)
+              .join(', ')}{' '}
+            계속 물어요
+          </p>
+        ))}
+      </div>
+    )
+  }
   if (plan.mode === 'same') return <p className="ce-bar-q">질문지: 그대로 ({plan.fromVersion})</p>
   if (plan.mode === 'repo') return <p className="ce-bar-q">질문지: 저장소 질문지({plan.toVersion})로 돌아가요</p>
   if (plan.mode === 'fresh') return <p className="ce-bar-q">질문지({plan.toVersion})는 다음 측정 때 새 목록으로 만들어요</p>
@@ -1106,10 +1331,20 @@ function QuestionPlanBlock({
           비교 질문을 고쳐 쓰지 못했어요 — {draft.message}{' '}
           <button type="button" className="ce-link" onClick={() => onRedraft(false)} disabled={!canRedraft}>
             다시 쓰기
+          </button>{' '}
+          <button type="button" className="ce-link" onClick={onKeep}>
+            질문지 그대로 두기
           </button>
         </p>
       )}
-      {failed.length > 0 && !open && <p className="ce-bar-note bad">고쳐 쓰지 못한 질문 {failed.length}개 — 「보기」에서 이유를 보고 다시 써 주세요</p>}
+      {failed.length > 0 && !open && (
+        <p className="ce-bar-note bad">
+          고쳐 쓰지 못한 질문 {failed.length}개 — 「보기」에서 이유를 보고 다시 써 주세요{' '}
+          <button type="button" className="ce-link" onClick={onKeep}>
+            질문지 그대로 두기
+          </button>
+        </p>
+      )}
       {open && (
         <div className="ce-qplan-body">
           <ul className="ce-qplan-list">
@@ -1121,7 +1356,9 @@ function QuestionPlanBlock({
                 <li key={item.fromId} className={`ce-qplan-item${item.action === 'remove' ? ' removed' : ''}`}>
                   <p className="ce-qplan-head">
                     {item.action === 'rewrite'
-                      ? `${item.fromId} → ${item.toId} · ${item.swaps.map((sw) => `${sw.from.name} → ${sw.to?.name ?? ''}`).join(', ')}${keep}`
+                      ? `${item.fromId} → ${item.toId} · ${item.swaps
+                          .map((sw) => `${sw.from.name} → ${sw.to?.name ?? ''}${sw.via === 'existing' ? '(이미 재는데 비교 질문이 없던 곳)' : ''}`)
+                          .join(', ')}${keep}`
                       : `${item.fromId} 뺌 · ${item.swaps.map((sw) => sw.from.name).join(', ')} — 넘겨받을 곳이 없어요`}
                   </p>
                   <p className="ce-qplan-old">{item.source.text}</p>
@@ -1157,6 +1394,13 @@ function QuestionPlanBlock({
               {topicParticle(u.own!.name)} 이미 비교 질문({u.own!.questionIds.join(' · ')})이 있어 {u.name}의 질문을 넘겨받지 않아요
             </p>
           ))}
+          {plan.unreceived
+            .filter((u) => u.reason === 'otherIndustry' && u.other?.length)
+            .map((u) => (
+              <p key={u.name} className="ce-bar-note">
+                {u.other!.join(' · ')} — 업종 다름이라 {u.name} 질문을 넘겨받지 않아요({u.questionIds.join(' · ')} 뺌)
+              </p>
+            ))}
           <p className="ce-qplan-note">
             저장하면 다음 측정 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요 · 점수 · 순위는 공통 질문 {sharedCount}개로 매겨요
           </p>
@@ -1166,6 +1410,80 @@ function QuestionPlanBlock({
             </button>
           )}
         </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 「다른 방법 ▾」 — 질문지를 어떻게 할지 고른다(5단계). 네이티브 라디오 묶음이라 화살표 키로 고른다. 다시 계산하는 동안에도 지난 계획으로
+ * 그려 고른 단추의 초점이 사라지지 않는다. 고를 것이 하나뿐이면(은행이 아직 없음 등) 그리지 않는다.
+ */
+function QuestionModeChooser({
+  plan,
+  all,
+  mode,
+  open,
+  onToggle,
+  onChoose,
+  disabled,
+}: {
+  plan: QuestionHandoffPlan
+  all: RewriteAllPlan
+  mode: QuestionMode
+  open: boolean
+  onToggle: () => void
+  onChoose: (mode: QuestionMode) => void
+  disabled: boolean
+}) {
+  const fixable = plan.mode === 'derive'
+  if (plan.mode === 'fresh' || (!fixable && !all.available)) return null
+  const defaultLabel = fixable
+    ? '바뀐 경쟁사 질문만 고치기 (추천)'
+    : plan.mode === 'repo'
+      ? `저장소 질문지(${plan.toVersion})로 돌아가기`
+      : `질문지 그대로 (${plan.fromVersion})`
+  const version =
+    mode === 'all'
+      ? `저장하면 ${all.fromVersion} → ${all.toVersion}`
+      : mode === 'keep' || plan.mode === 'same'
+        ? `${plan.fromVersion} 그대로`
+        : `저장하면 ${plan.fromVersion} → ${plan.toVersion}`
+  return (
+    <div className="ce-qmode-wrap">
+      <button type="button" className="ce-link" aria-expanded={open} aria-controls="ce-qmode" onClick={onToggle}>
+        다른 방법 {open ? '▴' : '▾'}
+      </button>
+      {open && (
+        <fieldset id="ce-qmode" className="ce-qmode" disabled={disabled}>
+          <legend className="sr-only">질문지를 어떻게 할까요</legend>
+          <label className="ce-qmode-opt">
+            <input type="radio" name="ce-qmode" checked={mode === 'derive'} onChange={() => onChoose('derive')} />
+            <span>
+              {defaultLabel}
+              {fixable && <span className="ce-qmode-sub">브랜드 질문별 주간 비교가 가장 덜 끊겨요</span>}
+            </span>
+          </label>
+          <label className={`ce-qmode-opt${all.available ? '' : ' off'}`}>
+            <input type="radio" name="ce-qmode" checked={mode === 'all'} disabled={!all.available} onChange={() => onChoose('all')} />
+            <span>
+              브랜드 질문 {all.brandCount}개 모두 새로 쓰기
+              <span className="ce-qmode-sub">
+                {all.available ? `브랜드 질문별 지난 추이는 ${all.toVersion}부터 새로 시작해요 · 다음 측정 때 만들어요(미리 볼 수 없어요)` : all.reason}
+              </span>
+            </span>
+          </label>
+          {fixable && (
+            <label className="ce-qmode-opt">
+              <input type="radio" name="ce-qmode" checked={mode === 'keep'} onChange={() => onChoose('keep')} />
+              <span>
+                질문지 그대로 두기
+                <span className="ce-qmode-sub warn">빠지는 경쟁사를 묻는 질문이 그대로 남아요 — 나중에는 「모두 새로 쓰기」로만 고칠 수 있어요</span>
+              </span>
+            </label>
+          )}
+          <p className="ce-qmode-version">{version}</p>
+        </fieldset>
       )}
     </div>
   )
@@ -1283,6 +1601,10 @@ function Row({
   extraChips = [],
   sub,
   qText,
+  industry,
+  industryName = '',
+  sameLabel = '같은 업종 맞음',
+  onIndustrySame,
   action,
   below,
   children,
@@ -1297,6 +1619,12 @@ function Row({
   sub?: string
   /** 「비교 질문」 칸을 넘겨받기 계획으로 바꿔 보인다(「v6-004 받음」 · 「v5-004 → 새 곳」). */
   qText?: string
+  /** 「업종 확인 중」 · 「업종 다름 ?」(5단계). */
+  industry?: RowIndustry
+  /** 고객 업종(설명 문구) · 「{업종} 맞음」 단추 문구. */
+  industryName?: string
+  sameLabel?: string
+  onIndustrySame?: () => void
   action?: { label: string; onClick: () => void; primary?: boolean; expanded?: boolean }
   /** 이름 아래 한 줄(「지난 기록 다시 세기」). */
   below?: React.ReactNode
@@ -1314,6 +1642,9 @@ function Row({
   if (r.status === 'waiting' && !extraChips.length) {
     chips.push(r.latest ? { text: '대기', tone: '', title: '지금은 칸이 차서 재지 않아요' } : { text: '측정 안 됨', tone: 'warn' })
   }
+  // 업종 칩은 대기 칩과 따로 붙인다(extraChips로 넣으면 대기 칩이 사라진다). 설명은 칩 아래 줄에 늘 보인다(키보드로도 읽힌다).
+  if (industry?.state === 'checking') chips.push({ text: '업종 확인 중', tone: '' })
+  if (industry?.state === 'other') chips.push({ text: '업종 다름', tone: 'warn' })
   if (r.otherRegion) chips.push({ text: '다른 지역으로 잼', tone: 'info', title: '다른 지역에 등록된 같은 브랜드로 재요 · 이 순위표에는 나오지 않아요' })
   if (r.excluded.length) {
     chips.push({
@@ -1369,6 +1700,18 @@ function Row({
           </button>
         )}
       </span>
+      {/* 줄 폭 전체에 둔다 — 이름 칸에 두면 좁은 서랍에서 세로로 길어진다. */}
+      {industry?.state === 'other' && (
+        <span className="ce-industry-note">
+          다른 업종으로 보여요{industry.looksLike ? `(${industry.looksLike})` : ''} · {industryName} 질문으로 재서 점수가 낮게 나올 수 있어요 · 비교
+          질문을 넘겨받지 않아요{' '}
+          {onIndustrySame && (
+            <button type="button" className="ce-link" onClick={onIndustrySame}>
+              {sameLabel}
+            </button>
+          )}
+        </span>
+      )}
       {children && <div className="ce-row-pop">{children}</div>}
     </li>
   )

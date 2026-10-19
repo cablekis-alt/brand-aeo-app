@@ -17,8 +17,19 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
-import { buildEditorState, EditorError, planEdit, questionRewriteContext, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
+import {
+  buildEditorState,
+  checkEditorIndustry,
+  EditorError,
+  markEditorIndustry,
+  planEdit,
+  questionRewriteContext,
+  resetEdit,
+  saveEdit,
+  undoEdit,
+} from './competitorEditor.js';
 import { draftCompetitorRewrites } from './competitorRewrite.js';
+import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills } from './contentDraft.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
@@ -36,7 +47,7 @@ import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
-import { configuredModels, getJudgeClient, getWriterClient, usedJudgeEngineId } from './engines/index.js';
+import { configuredModels, getEngineClient, getJudgeClient, getWriterClient, usedJudgeEngineId } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -339,10 +350,14 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
       const lastIds = new Set(last.questions.map((q) => q.questionId));
       const kept = bank ? bank.questions.filter((q) => lastIds.has(q.questionId)).length : 0;
       const replaced = bank ? bank.questions.length - kept : 0;
+      // 「브랜드 질문 모두 새로 쓰기」로 올린 버전이면(경쟁사 편집, 아직 은행 없음) 새로 쓸 브랜드 질문 수를 알린다.
+      const qb = !bank ? (await readCompetitorOverride(tenant.tenantId))?.current?.questionBank : undefined;
+      const regenerate = qb?.regenerate && qb.version === version ? { brandCount: Math.max(0, qb.size - last.questions.filter((q) => q.cohortShared).length) } : null;
       res.json({
         ...last,
         upcomingVersion: version,
         ...(bank?.derivedFrom ? { upcomingDerived: { replaced, removed: Math.max(0, last.questions.length - kept - replaced) } } : {}),
+        ...(regenerate ? { upcomingRegenerate: regenerate } : {}),
       });
       return;
     }
@@ -1032,6 +1047,25 @@ app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
 
 // 넘겨받은 비교 질문 고쳐 쓰기(미리보기) — 판정 엔진을 부른다. 쓰지 않는다(저장은 PUT이 이 문장을 받아 다시 검사한다).
 // 계획(key)이 미리 본 것과 다르거나 측정 중이면 409, 판정 엔진 키가 없으면 503.
+// 경쟁사 「업종 다름」 확인 — 경쟁사를 추가하거나 새 이름으로 바꿀 때 서랍이 부른다(검색이 붙은 Gemini 1회, 이미 본 이름이면 다시
+// 묻지 않음). 확인하지 못하면 verdict null · error로 답한다(칩 없음). Express 전용이다(Vercel 리전에서는 한국 지역 업체 판단이 틀린다).
+app.post('/api/tenants/:tenantId/competitors/industry', async (req, res) => {
+  try {
+    res.json(await checkEditorIndustry(req.params.tenantId, req.body, () => getEngineClient('gemini')));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 사람이 정한 업종(「펜션 맞음」 · 「업종 다름으로 표시」 · 표시 지우기) — 바로 쓴다(목록 저장과 따로).
+app.post('/api/tenants/:tenantId/competitors/industry/mark', async (req, res) => {
+  try {
+    res.json(await markEditorIndustry(req.params.tenantId, req.body));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
 app.post('/api/tenants/:tenantId/competitors/questions', async (req, res) => {
   try {
     const ctx = await questionRewriteContext(req.params.tenantId, store, req.body);

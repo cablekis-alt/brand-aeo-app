@@ -184,7 +184,8 @@ try {
   ok('되돌린 뒤 다시 계획하면 v7', plan2.questions.toVersion === 'v7' && plan2.questions.items[0]!.toId === 'v7-002')
 
   // 8) 빼기만 있는 저장 — 판정 엔진 없이 v7 · 6문항
-  const dropped = COMPETITORS.filter((x) => x.name !== '가상선연')
+  // 질문 없는 가상해돋이도 함께 뺀다 — 남으면 그곳이 v5-004를 넘겨받는다(결정 E8). 받을 곳이 없어야 빼기만 남는다.
+  const dropped = COMPETITORS.filter((x) => x.name !== '가상선연' && x.name !== '가상해돋이')
   const plan3 = await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), store, dropped)
   ok('빼기 계획: v5-004 뺌 · 7 → 6 · 고쳐 쓸 것 없음', plan3.questions.mode === 'derive' && plan3.questions.items.every((i) => i.action === 'remove') && plan3.questions.sizeAfter === 6)
   const removeOnly = await rw.draftCompetitorRewrites(await ed.questionRewriteContext(ID, store, { competitors: dropped, key: plan3.questions.key }), new FakeJudge(() => new Error('부르면 안 된다')))

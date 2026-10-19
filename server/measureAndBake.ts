@@ -429,7 +429,7 @@ async function measureAndBakeRun(
   if (!self.ok) throw self.error;
   const { aeoScore } = self.value;
   if (ownCohortList) {
-    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt).catch((err: unknown) => {
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
     });
   }

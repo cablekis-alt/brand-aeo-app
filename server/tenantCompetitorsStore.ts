@@ -26,8 +26,10 @@ export interface CompetitorOverride {
   /**
    * 경쟁사를 바꾸며 고쳐 만든 질문지(4단계 「바뀐 경쟁사 질문만 고치기」) — 있으면 베이스의 questionBankVersion ·
    * questionBankSize 대신 쓴다. 없으면 베이스 질문지다. 지문(base)은 베이스 값으로만 계산하므로 이 값과 무관하다.
+   * regenerate는 5단계 「브랜드 질문 모두 새로 쓰기」 — 저장할 때 은행 파일을 쓰지 않고, 다음 측정이 그 버전을 새로 만든다.
+   * from은 그 전 버전, base는 저장할 때의 저장소 지문이다(측정이 만든 은행에 표식으로 옮겨 적는다 — pipeline.ts).
    */
-  questionBank?: { version: string; size: number };
+  questionBank?: { version: string; size: number; regenerate?: { from: string; base: string } };
 }
 
 export interface CompetitorOverrideFile {
@@ -51,8 +53,9 @@ export interface CompetitorOverrideFile {
    * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가
    * 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도
    * 섞여 있어 쓰지 않는다. 처음 저장할 때는 그 직전 목록(마지막 측정이 쓴 목록)으로 채운다(at = null).
+   * bankVersion은 그 측정이 쓴 질문지 버전 — 목록은 그대로 두고 질문지만 새로 쓴 저장도 「다음 측정 대기」로 보이게 한다.
    */
-  measured: { at: string | null; listHash: string } | null;
+  measured: { at: string | null; listHash: string; bankVersion?: string } | null;
   updatedAt: string;
 }
 
@@ -171,9 +174,18 @@ export function normalizeCompetitorList(
   return { competitors, droppedHosts };
 }
 
-function validQuestionBank(x: unknown): x is { version: string; size: number } {
-  const v = x as { version?: unknown; size?: unknown } | null;
-  return Boolean(v && typeof v.version === 'string' && v.version && typeof v.size === 'number' && Number.isInteger(v.size) && v.size > 0);
+function validQuestionBank(x: unknown): x is NonNullable<CompetitorOverride['questionBank']> {
+  const v = x as { version?: unknown; size?: unknown; regenerate?: unknown } | null;
+  const r = v?.regenerate as { from?: unknown; base?: unknown } | undefined;
+  return Boolean(
+    v &&
+      typeof v.version === 'string' &&
+      v.version &&
+      typeof v.size === 'number' &&
+      Number.isInteger(v.size) &&
+      v.size > 0 &&
+      (r === undefined || (r && typeof r.from === 'string' && r.from && typeof r.base === 'string' && r.base)),
+  );
 }
 
 /** 파일이 없거나 깨졌으면 null(= 베이스 값). */
@@ -221,11 +233,15 @@ export function serializeCompetitorFile<T>(task: () => Promise<T>): Promise<T> {
  * 브랜드를 자기 코호트와 함께 쟀다고 적는다(measureAndBake). 앱에서 경쟁사를 고친 적이 없는 브랜드(파일 없음)는
  * 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
  */
-export function recordCompetitorMeasurement(tenantId: string, competitors: CompetitorContext[], at: string): Promise<void> {
+export function recordCompetitorMeasurement(tenantId: string, competitors: CompetitorContext[], at: string, bankVersion?: string): Promise<void> {
   return serializeCompetitorFile(async () => {
     const file = await readCompetitorOverride(tenantId);
     if (!file) return;
-    await writeCompetitorOverride(tenantId, { current: file.current, lastSave: file.lastSave, measured: { at, listHash: listHash(competitors) } });
+    await writeCompetitorOverride(tenantId, {
+      current: file.current,
+      lastSave: file.lastSave,
+      measured: { at, listHash: listHash(competitors), ...(bankVersion ? { bankVersion } : {}) },
+    });
   });
 }
 

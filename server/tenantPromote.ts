@@ -271,7 +271,8 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     try {
       // 그 경쟁사를 짚은 비교 질문은 빼기와 같다(질문 넘겨받기 — competitorEditor.ts). 빼기만이면 고쳐 쓸 문장이 없어 그대로 저장한다.
       // 올라오는 대기 줄이 질문을 넘겨받아 고쳐 써야 하면 여기서는 하지 않는다 — 고친 문장을 확인할 곳은 서랍뿐이다.
-      const questions = (await planEdit(customer, runtime, store, kept)).questions;
+      // 이미 재는 다른 경쟁사에 넘기지 않는다(고친 문장을 볼 화면이 없다) — 새로 든 곳이 없으면 그 질문은 빠진다.
+      const questions = (await planEdit(customer, runtime, store, kept, undefined, undefined, { existingReceivers: false })).questions;
       if (questions.mode === 'derive' && questions.items.some((i) => i.action === 'rewrite')) {
         removeErrors.push({
           tenantId: id,
@@ -282,7 +283,7 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
       await saveEdit(id, store, {
         competitors: kept,
         summary: `빼기 · ${draft.brandName}(고객 브랜드로 전환)`,
-        ...(questions.mode === 'derive' ? { questions: { key: questions.key, drafts: [] } } : {}),
+        ...(questions.mode === 'derive' ? { questions: { key: questions.key, drafts: [], receivers: 'incoming' } } : {}),
       });
       removedFrom.push(id);
     } catch (err) {

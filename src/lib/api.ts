@@ -822,6 +822,32 @@ export interface EditorCompetitorRow {
   measuredByOthers: string[]
   latest: { weekOf: string; score: number; mentionRate: number; brandOwnedCitationRate: number } | null
   questionIds: string[]
+  /** 「업종 다름」 판정 — 모르면 null(server/competitorEditor.ts IndustryMark). */
+  industry: IndustryMark | null
+}
+export interface IndustryMark {
+  verdict: 'same' | 'different'
+  looksLike: string | null
+  by: 'ai' | 'person'
+}
+/** 「브랜드 질문 모두 새로 쓰기」 — server/competitorEditor.ts RewriteAllPlan과 같은 모양. */
+export interface RewriteAllPlan {
+  available: boolean
+  reason: string | null
+  fromVersion: string
+  toVersion: string
+  size: number
+  brandCount: number
+  key: string
+}
+/** 업종 확인 · 표시의 응답 — verdict null이면 모른다(칩 없음). error는 확인하지 못한 이유. */
+export interface IndustryResult {
+  name: string
+  verdict: 'same' | 'different' | null
+  looksLike: string | null
+  reason: string | null
+  by: 'ai' | 'person' | null
+  error?: string
 }
 /** 코호트 제외 목록에 든 범위 — fromWeek가 없으면 처음부터. */
 export interface ExcludedRange {
@@ -891,6 +917,8 @@ export interface CompetitorEditorState {
     brandCount: number
     /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처. */
     derived: { from: string; replaced: number; removed: number } | null
+    /** 「브랜드 질문 모두 새로 쓰기」 — 목록 그대로 질문지만 새로 쓰는 저장(서랍 바닥 줄). */
+    rewriteAll: RewriteAllPlan
   }
   edit: {
     active: boolean
@@ -918,6 +946,10 @@ export interface CompetitorEditPlan {
   measuring: boolean
   exclusion: ExclusionPreview | null
   questions: QuestionHandoffPlan
+  /** 「브랜드 질문 모두 새로 쓰기」 — 고르면 저장할 때 버전만 올리고 다음 측정이 새로 쓴다. */
+  rewriteAll: RewriteAllPlan
+  /** 함께 재는데 비교 질문이 없는 곳(넘겨받는 곳 · 업종 다름 제외). */
+  noQuestion: string[]
 }
 
 /** 질문 넘겨받기 — server/questionHandoff.ts QuestionPlan과 같은 모양. */
@@ -926,11 +958,11 @@ export interface QuestionHandoffItem {
   toId: string | null
   action: 'rewrite' | 'remove'
   source: { text: string; topic?: string; category: string; stage?: 'learn' | 'consider' | 'decide' }
-  swaps: { from: CompetitorEntry; to: CompetitorEntry | null; via: 'hint' | 'promoted' | null }[]
+  swaps: { from: CompetitorEntry; to: CompetitorEntry | null; via: 'hint' | 'promoted' | 'existing' | null }[]
   keep: CompetitorEntry[]
   expectedIndexes: number[]
   topicNeedsRewrite: boolean
-  reason: 'hint' | 'promoted' | 'noReceiver'
+  reason: 'hint' | 'promoted' | 'existing' | 'noReceiver'
 }
 export interface QuestionHandoffPlan {
   /** derive만 새 질문지를 만든다. same: 그대로 · repo: 저장소 질문지로 돌아감 · fresh: 다음 측정이 새로 만든다. */
@@ -941,7 +973,14 @@ export interface QuestionHandoffPlan {
   sizeAfter: number
   items: QuestionHandoffItem[]
   receivers: { name: string; ids: string[] }[]
-  unreceived: { name: string; questionIds: string[]; reason: 'noReceiver' | 'receiverHasOwn'; own?: { name: string; questionIds: string[] } }[]
+  unreceived: {
+    name: string
+    questionIds: string[]
+    reason: 'noReceiver' | 'receiverHasOwn' | 'otherIndustry'
+    own?: { name: string; questionIds: string[] }
+    /** otherIndustry — 「업종 다름」만 아니었으면 받을 수 있던 곳. */
+    other?: string[]
+  }[]
   key: string
 }
 /** 넘겨받기 힌트 — from 자리를 to가 대신했다(이름). */
@@ -1023,7 +1062,11 @@ export function saveCompetitorEdit(
   competitors: CompetitorEntry[],
   summary: string,
   past?: { pastOut: PastOutInput; previewKey: string } | null,
-  extra: { handoff?: HandoffHint[]; questions?: { key: string; drafts: { fromId: string; text: string; topic?: string }[] } } = {},
+  extra: {
+    handoff?: HandoffHint[]
+    /** mode: derive(기본) · all(브랜드 질문 모두 새로 쓰기) · keep(질문지 그대로 두기). drafts는 derive일 때만. */
+    questions?: { mode?: 'derive' | 'all' | 'keep'; key: string; drafts?: { fromId: string; text: string; topic?: string }[] }
+  } = {},
 ): Promise<CompetitorEditorState> {
   return competitorRequest(
     tenantId,
@@ -1032,6 +1075,19 @@ export function saveCompetitorEdit(
     { competitors, summary, ...(past ?? {}), ...(extra.handoff?.length ? { handoff: extra.handoff } : {}), ...(extra.questions ? { questions: extra.questions } : {}) },
     '경쟁사 목록을 저장하지 못했습니다',
   )
+}
+
+/**
+ * 경쟁사 「업종 다름」 확인 — 추가하거나 새 이름으로 바꿀 때 부른다(데스크톱 전용, 검색이 붙은 판정 1회 · 이미 본 이름이면 바로 답함).
+ * 확인하지 못하면 verdict null · error로 돌아온다. 그라운딩 호출이 30초까지 걸릴 수 있어 45초에서 끊는다.
+ */
+export function checkCompetitorIndustry(tenantId: string, entry: CompetitorEntry): Promise<IndustryResult> {
+  return competitorRequest(tenantId, '/industry', 'POST', entry, '업종을 확인하지 못했습니다', AbortSignal.timeout(45_000))
+}
+
+/** 사람이 정한 업종 — same(「펜션 맞음」) · different(「업종 다름으로 표시」) · null(표시 지우기). 바로 저장된다. */
+export function markCompetitorIndustry(tenantId: string, name: string, mark: 'same' | 'different' | null): Promise<IndustryResult> {
+  return competitorRequest(tenantId, '/industry/mark', 'POST', { name, mark }, '업종 표시를 저장하지 못했습니다')
 }
 
 /** 마지막 저장 되돌리기 — 그 뒤 측정했으면 throw. */
