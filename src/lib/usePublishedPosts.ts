@@ -24,6 +24,9 @@ export function usePublishedPosts(tenantId: string) {
   const [loaded, setLoaded] = useState<{ key: string; posts: PublishedPost[] | null; available: boolean } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // 서버가 원장을 고쳐 돌려준 횟수 — 원장으로 계산하는 화면(인용 이력)이 저장이 끝난 뒤에 다시 읽게 한다. 화면 먼저 반영(낙관적)
+  // 때 올리면 서버가 아직 고치기 전 원장으로 계산할 수 있다.
+  const [saved, setSaved] = useState(0)
   const current = useRef(tenantId)
   useEffect(() => {
     current.current = tenantId
@@ -64,6 +67,7 @@ export function usePublishedPosts(tenantId: string) {
         const r = await recordPublishedPost(tenantId, input)
         if (current.current !== tenantId) return { ok: false, error: '브랜드가 바뀌어 결과를 버렸습니다.', stale: true }
         setLoaded({ key: tenantId, posts: r.posts, available: true })
+        setSaved((n) => n + 1)
         // 새 원장을 받았으니 앞서 읽기 · 고치기에 실패했다는 안내는 더 이상 맞지 않는다.
         setError(null)
         return { ok: true, ...(r.states ? { states: r.states } : {}) }
@@ -102,7 +106,10 @@ export function usePublishedPosts(tenantId: string) {
       setError(null)
       try {
         const r = await patchPublishedPost(tenantId, postId, change)
-        if (current.current === tenantId) setLoaded({ key: tenantId, posts: r.posts, available: true })
+        if (current.current === tenantId) {
+          setLoaded({ key: tenantId, posts: r.posts, available: true })
+          setSaved((n) => n + 1)
+        }
       } catch (err) {
         if (current.current !== tenantId) return
         setLoaded({ key: tenantId, posts: before, available: true })
@@ -117,6 +124,8 @@ export function usePublishedPosts(tenantId: string) {
     /** 이 환경에서 기록할 수 있는가(웹은 false). 읽기 실패여도 true — 이유는 error에 있다. */
     available: fresh?.available ?? false,
     ready: fresh !== null,
+    /** 저장이 끝날 때마다 바뀐다 — 원장에서 계산한 값을 다시 읽을 때 쓴다. */
+    saved,
     busy,
     error,
     record,

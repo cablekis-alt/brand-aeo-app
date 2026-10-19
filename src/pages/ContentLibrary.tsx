@@ -119,11 +119,14 @@ export default function ContentLibrary() {
   }, [key, hasTopic])
   const canRecord = published.available && states !== null
   const postsOf = (articleId: string) => (published.posts ?? []).filter((p) => p.articleId === articleId)
-  // 글별 인용 판단(언급률 2번 P3) — 그 글의 기록 가운데 가장 강한 판단을 칩으로 단다. 자세한 주차별 칸은 AEO 퍼포먼스에 있다.
-  const history = usePublishedHistory(canRecord ? key : '')
-  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'waiting']
+  // 글별 인용 판단(언급률 2번 P3) — 그 글의 지금 올라가 있는 주소 가운데 가장 강한 판단을 칩으로 단다. 「올린 곳 N」과 같은
+  // 주소만 본다 — 내린 글의 판단을 새로 올린 주소 옆에 붙이지 않는다. 이 화면에서 주소를 고치면 저장이 끝난 뒤 다시 읽는다.
+  // 자세한 주차별 칸(내린 글 포함)은 AEO 퍼포먼스에 있다.
+  const history = usePublishedHistory(canRecord ? key : '', 12, published.saved)
+  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'waiting', 'undated', 'removed']
   const tierOf = (articleId: string): PostTier | null => {
-    const rows = (history.history?.posts ?? []).filter((p) => p.post.articleId === articleId)
+    const live = new Set(postsOf(articleId).filter((p) => !p.removedAt).map((p) => p.id))
+    const rows = (history.history?.posts ?? []).filter((p) => p.post.articleId === articleId && live.has(p.post.id))
     if (rows.length === 0 || !history.history) return null
     const tiers = new Set(rows.map((p) => summarizePost(p.cells, history.history!.weeks).tier))
     return TIER_ORDER.find((t) => tiers.has(t)) ?? null

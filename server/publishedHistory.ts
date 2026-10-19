@@ -53,7 +53,8 @@ export interface HistoryCell {
   variantCited: number;
   /**
    * topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 그 주 응답 · 언급. 그 주 은행 판이 기록한 판과 같을 때만 낸다 — 질문 id는 판마다
-   * 다시 쓰이므로 판이 다르면 null(확인 불가). topic: 글이 아니면 undefined.
+   * 다시 쓰이므로 판이 다르면 null(확인 불가). 그 주 답변이 없어도 null. topic: 글이 아니거나 겨냥한 질문에 이름 없는 질문이 없으면
+   * undefined(해당 없음).
    */
   topicMention?: { answered: number; mentioned: number } | null;
 }
@@ -83,11 +84,21 @@ export async function getPublishedHistory(
   const shown = posts.filter((p) => !p.removedAt || p.removedReason === 'taken-down');
   if (shown.length === 0) return { weeks: [], posts: [] };
   const limit = Math.min(Math.max(1, Math.floor(weeksBack) || 1), MAX_HISTORY_WEEKS);
-  const cards = [...(await store.getScorecardHistory(tenant.tenantId, limit))].sort((a, b) => a.weekOf.localeCompare(b.weekOf));
+  const all = [...(await store.getScorecardHistory(tenant.tenantId, MAX_HISTORY_WEEKS))].sort((a, b) => a.weekOf.localeCompare(b.weekOf));
+  // 판단은 올린 뒤 측정 전체로 한다 — 최근 N주만 보면 예전에 올려 여러 번 인용된 글이 「인용 없음」이 된다. 가장 이른 올린 주의 바로
+  // 앞 측정까지 넓힌다(올리기 전 인용을 알리려고). 올린 날을 모르는 기록은 판단하지 않으므로 넓히지 않는다. 최대 MAX_HISTORY_WEEKS.
+  const earliest = shown
+    .map((p) => (p.publishedOn ? isoWeekOf(p.publishedOn) : null))
+    .filter((w): w is string => Boolean(w))
+    .sort()[0];
+  const firstAfter = earliest ? all.findIndex((c) => c.weekOf >= earliest) : -1;
+  const start = Math.max(0, Math.min(all.length - limit, firstAfter >= 0 ? firstAfter - 1 : all.length - limit));
+  const cards = all.slice(start);
 
   const weeks: HistoryWeek[] = [];
   const cells: (HistoryCell | null)[][] = shown.map(() => []);
-  let prev: WeeklyScorecard | null = null;
+  // 첫 열의 조건 변경도 그 앞 측정과 견준다(창 밖이어도).
+  let prev: WeeklyScorecard | null = all[start - 1] ?? null;
   for (const card of cards) {
     const changes = prev ? conditionChanges(prev, card) : [];
     prev = card;
@@ -106,7 +117,10 @@ export async function getPublishedHistory(
       continue;
     }
 
-    const bank = await weekQuestionBank(store, tenant.tenantId, analyses, card.questionBankVersion, tenant.questionBankVersion);
+    const found = await weekQuestionBank(store, tenant.tenantId, analyses, card.questionBankVersion, tenant.questionBankVersion);
+    // 카드에 판이 적혀 있으면 그 판만 쓴다 — 그 파일이 없어 지금 판으로 넘어가면, 판마다 다시 쓰이는 질문 id(c1-001 등)가 다른
+    // 질문을 가리킬 수 있다. 판을 모르면 확인 불가로 둔다.
+    const bank = found && card.questionBankVersion && found.version !== card.questionBankVersion ? null : found;
     const named = bank ? new Map(bank.questions.map((q) => [q.questionId, q.containsBrandName])) : null;
     const index = indexWeekCitations(analyses, named);
     const window = measuredWindow(analyses);
@@ -156,22 +170,29 @@ export async function getPublishedHistory(
         tally: upDuring ? (index.get(post.key) ?? null) : null,
         variantCited,
       };
-      if (post.articleId.startsWith('topic:')) cell.topicMention = topicMentionOf(post, bank, analyses);
+      if (post.articleId.startsWith('topic:')) {
+        const topicMention = topicMentionOf(post, bank, analyses);
+        if (topicMention !== undefined) cell.topicMention = topicMention;
+      }
       cells[i]!.push(cell);
     });
   }
   return { weeks, posts: shown.map((post, i) => ({ post, cells: cells[i]! })) };
 }
 
-/** topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 응답 · 언급. 기록한 판과 그 주 판이 다르거나 판을 모르면 null. */
+/**
+ * topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 응답 · 언급. 기록한 판과 그 주 판이 다르거나 판을 모르면 null. 겨냥한 질문에 이름
+ * 없는 질문이 없으면 undefined(해당 없음), 그 주에 그 질문의 답변이 없으면(모두 되묻기 · 수집 실패) null — 0/0으로 보이지 않는다.
+ */
 function topicMentionOf(
   post: PublishedPost,
   bank: Awaited<ReturnType<typeof weekQuestionBank>>,
   analyses: { questionId: string; engine: string; callIndex: number; mentioned: boolean; clarifying?: boolean }[],
-): { answered: number; mentioned: number } | null {
+): { answered: number; mentioned: number } | null | undefined {
   const snap = post.topic;
   if (!snap?.bankVersion || !bank || bank.version !== snap.bankVersion) return null;
   const unnamed = new Set(bank.questions.filter((q) => snap.questionIds.includes(q.questionId) && !q.containsBrandName).map((q) => q.questionId));
+  if (unnamed.size === 0) return undefined;
   const seen = new Set<string>();
   let answered = 0;
   let mentioned = 0;
@@ -183,5 +204,5 @@ function topicMentionOf(
     answered += 1;
     if (a.mentioned) mentioned += 1;
   }
-  return { answered, mentioned };
+  return answered > 0 ? { answered, mentioned } : null;
 }

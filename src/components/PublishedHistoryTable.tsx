@@ -2,10 +2,13 @@ import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory } from '..
 import { summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
 import { kstDate } from '../lib/publishedUrl'
 import { weekLabel } from '../lib/format'
+import { isoWeekThursday } from '../prompts/isoWeek'
 import { UrlLink } from './CitationBits'
 
 const TIER_CLASS: Record<PostTier, string> = {
   waiting: 'st-unknown',
+  undated: 'st-unknown',
+  removed: 'st-unknown',
   none: 'st-unknown',
   once: 'st-info',
   repeated: 'st-good',
@@ -13,10 +16,10 @@ const TIER_CLASS: Record<PostTier, string> = {
 
 const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
 
-/** "2026-W42" → 주 번호를 이어 세는 값(연도 경계는 53주로 근사) — 측정 사이 빈 주를 찾는 데만 쓴다. */
+/** "2026-W42" → 그 주 목요일을 7일 단위로 센 값 — 측정 사이 빈 주를 찾는 데만 쓴다(52주 · 53주 해 모두 맞다). */
 const weekSerial = (weekOf: string) => {
-  const m = /^(\d{4})-W(\d{2})$/.exec(weekOf)
-  return m ? Number(m[1]) * 53 + Number(m[2]) : 0
+  const t = isoWeekThursday(weekOf)
+  return t ? Math.round(t.getTime() / (7 * 86_400_000)) : 0
 }
 
 /**
@@ -42,7 +45,7 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
   if (c.tally && unsure) sub.push('전후 불명')
   if (c.variantCited > 0) sub.push(`질의만 다른 주소 ${c.variantCited}`)
   if (c.topicMention !== undefined) {
-    sub.push(c.topicMention ? `겨냥 질문 언급 ${c.topicMention.mentioned}/${c.topicMention.answered}` : '겨냥 질문: 확인 불가')
+    sub.push(c.topicMention ? `겨냥한 이름 없는 질문 언급 ${c.topicMention.mentioned}/${c.topicMention.answered}` : '겨냥 질문: 확인 불가')
   }
   const title =
     c.timing === 'during'
@@ -83,10 +86,12 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         </td>
         <td className="cell-text history-tier">
           <span className={`status-pill ${TIER_CLASS[summary.tier]}`}>{TIER_LABEL[summary.tier]}</span>
-          <div className="doc-meta">
-            올린 뒤 측정 {summary.measuredAfter}회 · 인용된 주 {summary.citedWeeks}
-            {summary.unnamedCited === null ? ' · 이름 없는 질문: 확인 불가' : ` · 이름 없는 질문 인용 ${summary.unnamedCited}`}
-          </div>
+          {summary.measuredAfter > 0 && (
+            <div className="doc-meta">
+              올린 뒤 측정 {summary.measuredAfter}회 · 인용된 주 {summary.citedWeeks}
+              {summary.unnamedCited === null ? ' · 이름 없는 질문: 확인 불가' : ` · 이름 없는 질문 인용 ${summary.unnamedCited}`}
+            </div>
+          )}
           {summary.lapsed && <div className="doc-meta">최근 측정에서는 인용 없음</div>}
           {summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀜</div>}
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
@@ -145,9 +150,10 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
       </div>
       <p className="doc-meta">
         숫자는 그 주소가 정확히 인용된 AI 응답 수입니다(한 응답에 여러 번 나와도 1). 「이름 없는 질문」은 브랜드 이름을 넣지 않은
-        질문(containsBrandName=false)으로, 점수가 쓰는 「카테고리 무관 질문」과 질문 약 1.4%가 다릅니다. 「인용 없음」은 그 주 분석에서
+        질문(containsBrandName=false)으로, 점수가 쓰는 「카테고리 무관 질문」과 정의가 다릅니다(옛 질문지에서는 일부 질문이 두 기준에서 갈립니다). 「인용 없음」은 그 주 분석에서
         찾지 못했다는 뜻입니다. 「반복 인용」은 올린 뒤 측정 2회 이상에서 인용됐을 때만 붙입니다 — 단일 측정은 흔들립니다.
-        ◆는 직전 측정과 수집 엔진 · 판정 · 질문지가 달라진 주이고, 보정하지 않았습니다.
+        ◆는 직전 측정과 측정 조건(수집 엔진 · 판정 엔진 · 모델 · 질문지 · 반복 횟수)이 달라진 주입니다 — 엔진이나 반복 횟수가 바뀌면
+        응답 수 자체가 달라져 숫자를 그대로 견줄 수 없고, 보정하지 않았습니다. 바뀐 항목은 주차 머리글에 마우스를 올리면 보입니다.
         {history.weeks.length > maxWeeks && ` 최근 ${maxWeeks}주만 보입니다(판단은 ${history.weeks.length}주 기준).`}
       </p>
     </>

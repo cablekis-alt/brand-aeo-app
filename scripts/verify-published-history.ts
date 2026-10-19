@@ -70,14 +70,20 @@ const analysesByWeek: Record<string, QuestionRepeatAnalysis[]> = {
   '2026-W43': [answer('v9-001', 0, [[POST, true]])], // 측정 시각이 없는 옛 형태
 };
 let reads = 0;
-const store = {
-  getScorecardHistory: async () => cards,
+// 실제 저장소처럼 최근 n장만 돌려준다(server/store.ts getScorecardHistory).
+const makeStore = (
+  cardList: WeeklyScorecard[],
+  byWeek: Record<string, QuestionRepeatAnalysis[]>,
+  bankMap: Record<string, QuestionBank>,
+) => ({
+  getScorecardHistory: async (_t: string, n: number) => cardList.slice(-n),
   getQuestionAnalyses: async (_t: string, week: string) => {
     reads += 1;
-    return analysesByWeek[week] ?? [];
+    return byWeek[week] ?? [];
   },
-  getQuestionBank: async (_t: string, v: string) => banks[v] ?? null,
-};
+  getQuestionBank: async (_t: string, v: string) => bankMap[v] ?? null,
+});
+const store = makeStore(cards, analysesByWeek, banks);
 const post = (id: string, publishedOn: string | null, extra: Partial<PublishedPost> = {}): PublishedPost => ({
   id,
   url: POST,
@@ -126,6 +132,31 @@ const topic = await getPublishedHistory(store, tenant, [post('t', '2026-09-28', 
 ok('topic: 판이 같은 주는 겨냥한 이름 없는 질문의 응답 · 언급', JSON.stringify(topic.posts[0]!.cells[2]?.topicMention) === JSON.stringify({ answered: 2, mentioned: 1 }));
 ok('topic: 판이 다른 주(같은 id, 다른 질문)는 확인 불가(null)', topic.posts[0]!.cells[0]?.topicMention === null);
 
+ok(
+  'topic: 겨냥한 질문에 이름 없는 질문이 없으면 해당 없음(undefined — 0/0이 아니다)',
+  (await getPublishedHistory(store, tenant, [post('n', '2026-09-28', { articleId: 'topic:c1-002', targetActionId: 'topic:c1-002', topic: { bankVersion: 'v5', questionIds: ['c1-002'], questionTexts: ['v5 이름 댄 질문'] } })], 12)).posts[0]!.cells[2]?.topicMention === undefined,
+);
+const clarifyingOnly = makeStore(cards, { ...analysesByWeek, '2026-W42': [answer('c1-001', 0, [], { clarifying: true }), answer('c1-002', 0, [])] }, banks);
+ok(
+  'topic: 그 주 겨냥 질문 답변이 모두 되묻기면 확인 불가(null — 0/0이 아니다)',
+  (await getPublishedHistory(clarifyingOnly, tenant, [post('t', '2026-09-28', { articleId: 'topic:c1-001', targetActionId: 'topic:c1-001', topic: { bankVersion: 'v5', questionIds: ['c1-001'], questionTexts: ['v5 이름 없는 질문'] } })], 12)).posts[0]!.cells[2]?.topicMention === null,
+);
+
+// 6-2) 카드에 적힌 판의 은행 파일이 없으면 지금 판으로 넘어가지 않는다 — c1-001 같은 id는 판마다 다른 질문일 수 있다
+const v4Missing = makeStore(cards, analysesByWeek, { v5: banks.v5! });
+const missing = await getPublishedHistory(v4Missing, tenant, [post('t', '2026-09-28', { articleId: 'topic:c1-001', targetActionId: 'topic:c1-001', topic: { bankVersion: 'v5', questionIds: ['c1-001'], questionTexts: ['v5 이름 없는 질문'] } })], 12);
+ok(
+  '기록한 판(v4) 은행이 없으면 지금 판(v5)으로 나누지 않는다 — 확인 불가',
+  missing.weeks[0]?.bankVersion === null && missing.weeks[0].responses.unnamed === null && missing.posts[0]!.cells[0]?.topicMention === null && missing.posts[0]!.cells[0]?.tally?.unnamed === null,
+);
+
+// 6-3) 판단은 올린 뒤 측정 전체로 — 요청한 주 수보다 오래전에 올렸으면 그 앞 측정까지 넓힌다
+const wide = await getPublishedHistory(store, tenant, [post('p', '2026-10-05')], 1);
+ok('요청 주 수(1)보다 오래전에 올렸으면 올린 주 바로 앞 측정부터 읽는다', wide.weeks.map((x) => x.weekOf).join(',') === '2026-W40,2026-W41,2026-W42,2026-W43');
+const narrow = await getPublishedHistory(store, tenant, [post('p', '2026-11-30')], 1);
+ok('아직 측정 전인 글은 요청 주 수만 읽고, 첫 열 조건 변경도 그 앞 측정과 견준다', narrow.weeks.length === 1 && (narrow.weeks[0]?.changes ?? []).includes('질문지'));
+ok('올린 날을 모르는 기록은 창을 넓히지 않는다', (await getPublishedHistory(store, tenant, [post('p', null)], 2)).weeks.length === 2);
+
 // 7) 글별 판단 — 「인용됨」은 올린 뒤 측정 2회 이상
 const s = (cells: Parameters<typeof summarizePost>[0], weeks = h.weeks) => summarizePost(cells, weeks);
 const cell = (timing: 'after' | 'before' | 'during', cited: number, unnamedCited: number | null = cited) =>
@@ -136,6 +167,18 @@ ok('한 번만 인용되면 판단 보류', s([cell('after', 1), null, cell('aft
 ok('올린 뒤 측정 2회 이상에서 인용되면 반복 인용', s([cell('after', 1), null, cell('after', 2), cell('after', 0)]).tier === 'repeated');
 ok('올리기 전 측정에 인용이 있으면 날짜 확인 경고', s([cell('before', 1), null, cell('after', 0), cell('after', 0)]).citedBeforePublish);
 ok('측정 조건이 바뀐 주가 섞이면 알린다', s([cell('after', 1), null, cell('after', 1), cell('after', 0)]).conditionMixed);
+ok(
+  '판정 기록이 없는 사이 주에서 바뀐 조건도 알린다',
+  s([cell('after', 1), null, cell('after', 0)], [{ changes: [] }, { changes: ['수집 엔진'] }, { changes: [] }]).conditionMixed &&
+    !s([cell('after', 1), null, cell('after', 0)], [{ changes: ['수집 엔진'] }, { changes: [] }, { changes: [] }]).conditionMixed,
+);
+const unknownCell = (cited: number) => ({ ...cell('after', cited), timing: 'unknown' as const });
+ok('올린 날을 모르는 옛 기록은 측정 대기가 아니라 「올린 날 모름」', s([unknownCell(1), null, unknownCell(1), unknownCell(0)]).tier === 'undated');
+ok(
+  '올린 뒤 측정 전에 내린 글은 측정 대기가 아니라 「측정 전에 내림」',
+  s([cell('before', 0), null, { ...cell('after', 0), afterRemoval: true, tally: null }, { ...cell('after', 0), afterRemoval: true, tally: null }]).tier === 'removed',
+);
+ok('아직 올린 뒤 측정이 없는 글은 측정 대기', s([cell('before', 0), null, cell('during', 0), cell('before', 0)]).tier === 'waiting');
 
 let failed = 0;
 for (const [label, pass] of checks) {
