@@ -120,15 +120,18 @@ function hashOf(text: string): string {
   return h.toString(16);
 }
 
-/** 집행 상태 파일에만 있던 옛 주소 — 원장에 같은 키가 이미 있으면(옮겼거나 뺐다) 다시 보이지 않는다. */
+/**
+ * 집행 상태 파일에만 있던 옛 주소 — 원장에 **같은 곳 · 같은 키**의 줄이 이미 있으면(옮겼거나 뺐다) 다시 보이지 않는다. 같은 글을
+ * 다른 곳(채널 줄)에 같은 주소로 적었다고 이 곳의 옛 기록이 사라지면 안 된다.
+ */
 function legacyPosts(states: ActionStateMap, ledger: PublishedPost[]): PublishedPost[] {
-  const known = new Set(ledger.map((p) => p.key));
+  const known = new Set(ledger.map((p) => `${p.targetActionId}|${p.key}`));
   const out: PublishedPost[] = [];
   for (const [actionId, state] of Object.entries(states)) {
     for (const url of state.publishedUrls ?? []) {
       const key = trackingKey(url);
-      if (!key || known.has(key)) continue;
-      known.add(key);
+      if (!key || known.has(`${actionId}|${key}`)) continue;
+      known.add(`${actionId}|${key}`);
       out.push({
         id: `legacy-${hashOf(`${actionId}|${url}`)}`,
         url,
@@ -213,6 +216,19 @@ export interface AddPostResult {
 
 const VIAS: PostVia[] = ['own', 'channel', 'orphan', 'direct'];
 
+/**
+ * 줄을 하나 더 살릴 자리가 있는가 — 새 기록 · 옛 기록 옮기기 · 되살리기가 함께 쓴다. 상한은 뺀 적 없는 기록으로 센다(뺀 기록까지
+ * 세면 정리해도 자리가 나지 않는다). 파일이 끝없이 커지지 않게 뺀 기록을 포함한 전체 상한도 둔다.
+ */
+function assertRoom(ledger: PublishedPost[]): void {
+  if (ledger.filter((p) => !p.removedAt).length >= MAX_POSTS) {
+    throw new PublishedPostsError(`올린 글 기록이 ${MAX_POSTS}개를 넘었습니다. 잘못 적은 주소를 빼고 다시 시도해 주세요.`, 400);
+  }
+  if (ledger.length >= MAX_POSTS * 4) {
+    throw new PublishedPostsError(`집행 기록 파일이 ${MAX_POSTS * 4}줄(뺀 기록 포함)을 넘었습니다. 관리자에게 정리를 요청해 주세요.`, 400);
+  }
+}
+
 export function addPublishedPost(tenantId: string, input: AddPostInput): Promise<AddPostResult> {
   const url = typeof input.url === 'string' ? input.url.trim() : '';
   const check = isArticleUrl(url);
@@ -235,9 +251,9 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
     const { ledger, legacy } = await readAll(tenantId);
     const actives = [...ledger, ...legacy].filter((p) => p.key === key && !p.removedAt);
     // 한 주소는 한 글의 것이다 — 다른 글에 적힌 주소면 거절한다. 같은 글은 여러 곳(자사 블로그 줄 · 그 블로그가 속한 채널 줄)에
-    // 함께 적을 수 있다. 옛 기록은 글을 몰라(articleId = 항목) 같은 곳이면 같은 글로 본다.
+    // 함께 적을 수 있다. 옛 기록은 어느 글인지 모르므로(articleId = 항목) 「다른 글」로 단정하지 않고, 같은 곳이면 같은 기록으로 본다.
     const sameTarget = actives.find((p) => p.targetActionId === targetActionId && (p.articleId === articleId || p.legacy));
-    const otherArticle = actives.find((p) => p !== sameTarget && p.articleId !== articleId && !(p.legacy && p.targetActionId === targetActionId));
+    const otherArticle = actives.find((p) => p !== sameTarget && !p.legacy && p.articleId !== articleId);
     if (otherArticle) {
       const name = otherArticle.articleTitle ? `「${otherArticle.articleTitle}」` : otherArticle.articleId;
       const where = otherArticle.viewingWeek ? ` ${otherArticle.viewingWeek} 화면에서 적은 기록입니다.` : '';
@@ -250,14 +266,16 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
     let posts = ledger;
     const chosenDate = input.publishedOn !== undefined && input.publishedOnChosen === true;
     if (sameTarget?.legacy) {
-      // 옛 기록을 다시 적으면 원장으로 옮긴다 — 이제야 글 · 올린 날을 안다.
+      // 옛 기록을 다시 적으면 원장으로 옮긴다 — 이제야 어느 글인지 안다. 올린 날은 사람이 골랐을 때만 채운다 — 모르는 날을 오늘로
+      // 채우면 지난 주 인용이 「올리기 전 측정」이 되어 사라진다.
+      assertRoom(ledger);
       existing = true;
       post = {
         ...without(sameTarget, 'legacy'),
         articleId,
         via,
-        publishedOn,
-        publishedOnSource: chosenDate ? 'user' : 'default-today',
+        publishedOn: chosenDate ? publishedOn : null,
+        publishedOnSource: chosenDate ? 'user' : 'legacy',
         ...(str(input.articleTitle, 200) ? { articleTitle: str(input.articleTitle, 200) } : {}),
         ...(markedWeek ? { viewingWeek: markedWeek } : {}),
       };
@@ -274,13 +292,7 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
         post = sameTarget;
       }
     } else {
-      // 상한은 뺀 적 없는 기록으로 센다 — 뺀 기록까지 세면 정리해도 자리가 나지 않는다. 파일이 끝없이 커지지 않게 전체 상한도 둔다.
-      if (ledger.filter((p) => !p.removedAt).length >= MAX_POSTS) {
-        throw new PublishedPostsError(`올린 글 기록이 ${MAX_POSTS}개를 넘었습니다. 잘못 적은 주소를 빼고 다시 시도해 주세요.`, 400);
-      }
-      if (ledger.length >= MAX_POSTS * 4) {
-        throw new PublishedPostsError(`집행 기록 파일이 ${MAX_POSTS * 4}줄(뺀 기록 포함)을 넘었습니다. 관리자에게 정리를 요청해 주세요.`, 400);
-      }
+      assertRoom(ledger);
       post = {
         id: `p-${randomUUID().replace(/-/g, '').slice(0, 12)}`,
         url,
@@ -341,7 +353,9 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
           (p.articleId !== found.articleId || p.targetActionId === found.targetActionId),
       );
       if (clash) throw new PublishedPostsError('같은 주소가 다른 기록으로 다시 적혀 있어 되살리지 않았습니다.', 409);
+      assertRoom(ledger);
     }
+    if (found.legacy) assertRoom(ledger);
     const base = without(found, 'legacy', 'removedAt', 'removedReason');
     const next: PublishedPost = {
       ...base,

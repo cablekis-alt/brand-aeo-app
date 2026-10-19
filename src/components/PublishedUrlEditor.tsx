@@ -126,8 +126,17 @@ export default function PublishedUrlEditor({
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
                   {s.detail && ` · ${s.detail}`}
                   {h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
-                  {/* 내린 글은 아래 「뺀 주소」에서 되살린다 — 여기서 다시 빼거나 날짜를 고치지 않는다. */}
-                  {!h.takenDownOn && (
+                  {/* 내린 글은 이 줄에서 되살리거나 「잘못 적은 주소」로 바꾼다 — 이 주에 보이는 동안은 아래 「뺀 주소」에 두 번 두지 않는다. */}
+                  {h.takenDownOn ? (
+                    <>
+                      <button type="button" className="link-btn" disabled={busy} onClick={() => onRestore(p.id)}>
+                        되살리기
+                      </button>{' '}
+                      <button type="button" className="link-btn" disabled={busy} onClick={() => onRemove(p.id, 'mistake')}>
+                        잘못 적은 주소로 바꾸기
+                      </button>
+                    </>
+                  ) : (
                     <>
                       <button type="button" className="link-btn" disabled={busy} onClick={() => setEditing({ id: p.id, date: p.publishedOn ?? today })}>
                         날짜 고치기

@@ -124,6 +124,25 @@ try {
   const afterRelegacy = await readPublishedPosts(S);
   ok('옛 기록을 같은 곳에 다시 적으면 원장으로 옮기고 글 · 올린 날을 채운다', relegacy.existing && !relegacy.post.legacy && relegacy.post.articleId === 'content:a' && relegacy.post.publishedOn === '2026-09-20' && afterRelegacy.filter((p) => p.key === 'old2.example/a/9').length === 1);
 
+  // 8-b) 옛 기록과 같은 글의 다른 곳 — 한쪽에 적었다고 다른 곳의 옛 기록이 사라지거나 「다른 글」로 막히면 안 된다
+  const L = 'legacy-two-rows-tenant';
+  await writeActionState(L, 'content:a', { status: 'done', publishedUrls: ['https://fake.tistory.com/31'] });
+  await addPublishedPost(L, { articleId: 'content:a', targetActionId: 'listing:platform:tistory.com', via: 'channel', url: 'https://fake.tistory.com/31' });
+  const lPosts = await readPublishedPosts(L);
+  ok('옛 기록(자사 줄)은 같은 글을 채널 줄에 적어도 그대로 보인다', lPosts.some((p) => p.legacy && p.targetActionId === 'content:a') && lPosts.some((p) => !p.legacy && p.targetActionId === 'listing:platform:tistory.com'));
+  await writeActionState(L, 'listing:platform:tistory.com', { status: 'done', publishedUrls: ['https://fake.tistory.com/32'] });
+  ok('채널 줄의 옛 기록이 있어도 같은 글을 자사 줄에 적을 수 있다(옛 기록을 「다른 글」로 단정하지 않는다)', (await fails(addPublishedPost(L, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/32' }))) === null);
+  await writeActionState(L, 'listing:x.example', { status: 'done', publishedUrls: ['https://x.example/a/7'] });
+  const kept = await addPublishedPost(L, { articleId: 'content:a', targetActionId: 'listing:x.example', via: 'channel', url: 'https://x.example/a/7', publishedOn: '2026-10-19', publishedOnChosen: false });
+  ok('옛 기록을 날짜 없이 다시 적어 옮기면 올린 날은 모름으로 둔다(오늘로 채우지 않는다)', kept.post.publishedOn === null && kept.post.publishedOnSource === 'legacy');
+
+  // 8-c) 되살리기도 상한을 지킨다
+  const Q = 'cap-restore-tenant';
+  const qFile = path.join(root, 'data', Q, 'published-posts.json');
+  await mkdir(path.dirname(qFile), { recursive: true });
+  await writeFile(qFile, JSON.stringify({ version: 1, keyRule: 3, posts: [...many, { ...many[0], id: 'p-removed', url: 'https://example.com/c/removed', key: 'example.com/c/removed', removedAt: '2026-10-02T00:00:00Z', removedReason: 'mistake' }] }), 'utf-8');
+  ok('뺀 적 없는 기록이 가득하면 되살리기도 400', (await fails(patchPublishedPost(Q, 'p-removed', { restore: true }))) === 400);
+
   // 9) 읽는 중에 쓰기 — 윈도우는 다른 요청이 파일을 연 순간 rename이 실패한다(EPERM). 다시 시도해 줄이 사라지지 않고 임시 파일도 남지 않는다.
   const R = 'reader-tenant';
   let reading = true;

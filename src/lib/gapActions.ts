@@ -653,11 +653,14 @@ function publishedHitsOf(
     responseKeys.set(id, keys)
   }
   for (const { post, takenDownOn } of shown) {
+    const timing = timingOf(post.publishedOn, window, weekOf)
+    // 내린 글인데 이 주 측정이 올리기도 전이었다 — 이 주에는 올라가 있던 적이 없으니 「뺀 주소」에만 둔다.
+    if (takenDownOn && timing === 'before') continue
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
     const hit: PublishedHit = {
       post,
-      timing: timingOf(post.publishedOn, window, weekOf),
+      timing,
       tally: index.get(post.key) ?? null,
       variantCited,
       ...(takenDownOn ? { takenDownOn } : {}),

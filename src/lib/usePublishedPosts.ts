@@ -64,6 +64,8 @@ export function usePublishedPosts(tenantId: string) {
         const r = await recordPublishedPost(tenantId, input)
         if (current.current !== tenantId) return { ok: false, error: '브랜드가 바뀌어 결과를 버렸습니다.', stale: true }
         setLoaded({ key: tenantId, posts: r.posts, available: true })
+        // 새 원장을 받았으니 앞서 읽기 · 고치기에 실패했다는 안내는 더 이상 맞지 않는다.
+        setError(null)
         return { ok: true, ...(r.states ? { states: r.states } : {}) }
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : String(err) }

@@ -12,7 +12,7 @@
  */
 
 /** 키 규칙 버전. 규칙을 바꾸면 올리고, 서버는 저장된 기록을 읽을 때 key를 다시 계산한다. */
-export const KEY_RULE = 2
+export const KEY_RULE = 3
 
 /**
  * 인용 추적용 파라미터 — 같은 글인데 붙었다 안 붙었다 한다(OpenAI는 utm_source=openai를 붙인다). si는 유튜브 · 스포티파이의
@@ -34,6 +34,17 @@ function youtubeId(host: string, u: URL, path: string): string | null {
   const m = /^\/(shorts|embed|live|v)\/([^/]+)$/.exec(path)
   return m ? m[2]! : null
 }
+
+/** 인스타그램 게시물 — /p/ · /reel/ · /reels/ · /tv/ 와 /<계정>/p/<코드> 는 같은 게시물이다. 코드는 대소문자를 가린다. */
+function instagramCode(host: string, path: string): string | null {
+  if (host !== 'instagram.com') return null
+  const m = /^(?:\/[^/]+)?\/(p|reels?|tv)\/([^/]+)$/.exec(path)
+  return m ? m[2]! : null
+}
+
+/** 유튜브 · 인스타그램에서 영상 · 게시물이 아닌 첫 단계 경로(채널 · 프로필 홈으로 보지 않는다). */
+const YOUTUBE_RESERVED = new Set(['watch', 'shorts', 'embed', 'live', 'v', 'playlist', 'results', 'hashtag', 'feed', 'premium'])
+const INSTAGRAM_RESERVED = new Set(['p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts'])
 
 /** 단축 주소 — 인용에는 원래 주소로 나오므로 그대로 적으면 맞출 수 없다. */
 const SHORT_HOSTS = new Set(['naver.me', 'bit.ly', 't.co', 'goo.gl', 'tinyurl.com', 'han.gl', 'me2.do', 'vo.la', 'url.kr', 'buly.kr', 'is.gd'])
@@ -66,10 +77,10 @@ function hostOf(u: URL): string {
  * 비교용 키. http(s)가 아니거나 주소가 아니면 null.
  *   - 호스트 소문자, www. · m. 떼기, 해시 떼기, 경로 끝 슬래시 떼기, 경로의 퍼센트 인코딩 풀기
  *   - 추적 파라미터(utm_* · fbclid · gclid · igshid · igsh) 제거, 남은 질의는 키 순으로
- *   - 네이버 블로그: PostView.naver|nhn?blogId=&logNo= 와 /blogId?logNo= → /blogId/logNo
+ *   - 네이버 블로그: PostView · GoPost · PostList.naver|nhn?blogId=&logNo= 와 /blogId?logNo= → /blogId/logNo
  *   - 네이버 블로그 · 티스토리 · 인스타그램: 질의를 모두 뗀다(글을 가리키지 않는다)
  *   - 티스토리: /m/… → /… (숫자 주소와 /entry/글제목 모두)
- *   - 유튜브: youtube.com/watch?v=<id> 하나로(id는 대소문자를 그대로 둔다)
+ *   - 유튜브: youtube.com/watch?v=<id> 하나로, 인스타그램: instagram.com/p/<코드> 하나로(id · 코드는 대소문자를 그대로 둔다)
  *   - 나머지는 전체를 소문자로
  */
 export function trackingKey(raw: string): string | null {
@@ -79,13 +90,17 @@ export function trackingKey(raw: string): string | null {
   let path = decodePath(u.pathname).replace(/\/+$/, '')
   const video = youtubeId(host, u, path)
   if (video) return `youtube.com/watch?v=${video}`
+  const post = instagramCode(host, path)
+  if (post) return `instagram.com/p/${post}`
   let params = [...u.searchParams.entries()].filter(([k]) => !TRACKING_PARAM.test(k))
   if (host === 'blog.naver.com') {
     const blogId = u.searchParams.get('blogId')
     const logNo = u.searchParams.get('logNo')
     const segments = path.split('/').filter(Boolean)
-    if (/^\/PostView\.(naver|nhn)$/i.test(path) && blogId && logNo) path = `/${blogId}/${logNo}`
-    else if (segments.length === 1 && logNo) path = `/${segments[0]}/${logNo}`
+    // 한 단계 경로가 끝점 파일(PostView.naver · GoPost.naver · PostList.nhn …)이면 아이디는 blogId에 있다. 아니면 그 경로가 아이디다.
+    const endpoint = segments.length === 1 && /\.(naver|nhn)$/i.test(segments[0]!)
+    if (endpoint && blogId && logNo) path = `/${blogId}/${logNo}`
+    else if (segments.length === 1 && !endpoint && logNo) path = `/${segments[0]}/${logNo}`
   }
   if (QUERYLESS_HOST(host)) params = []
   if (host.endsWith('.tistory.com')) path = path.replace(/^\/m(?=\/)/, '')
@@ -120,7 +135,17 @@ export function isArticleUrl(raw: string): { ok: true } | { ok: false; reason: A
   const segments = rest.split('?')[0]!.split('/').filter(Boolean)
   const single = segments.length === 1 && !rest.includes('?')
   if (single && host === 'blog.naver.com') return { ok: false, reason: 'blog-home' }
-  if (single && segments[0]!.startsWith('@') && ['brunch.co.kr', 'velog.io', 'medium.com', 'youtube.com'].includes(host)) {
+  if (single && segments[0]!.startsWith('@') && ['brunch.co.kr', 'velog.io', 'medium.com'].includes(host)) {
+    return { ok: false, reason: 'blog-home' }
+  }
+  // 유튜브 채널(/@x · /@x/videos · /channel/<id> · /c/x · /user/x · 옛 /이름)과 인스타그램 프로필(/<계정>)은 영상 · 게시물이 아니다.
+  if (host === 'youtube.com' && !key.startsWith('youtube.com/watch?v=')) {
+    const first = segments[0] ?? ''
+    if (first.startsWith('@') || ['channel', 'c', 'user'].includes(first) || (segments.length === 1 && !YOUTUBE_RESERVED.has(first))) {
+      return { ok: false, reason: 'blog-home' }
+    }
+  }
+  if (host === 'instagram.com' && !key.startsWith('instagram.com/p/') && segments.length === 1 && !INSTAGRAM_RESERVED.has(segments[0]!)) {
     return { ok: false, reason: 'blog-home' }
   }
   return { ok: true }
@@ -129,14 +154,17 @@ export function isArticleUrl(raw: string): { ok: true } | { ok: false; reason: A
 /**
  * 올린 글 키와 인용 키의 관계.
  *   exact          같은 글
- *   query-variant  질의만 다른 것 — 한쪽에 질의가 없고(경로가 한 단계 이상) 다른 쪽이 거기에 `?…`만 붙었다. 같은 글일 수도, 다른
- *                  글일 수도 있다(게시판 idx · category). 올린 쪽에 질의가 붙은 경우도 본다.
+ *   query-variant  올린 주소에 질의가 없고(경로가 한 단계 이상) 인용 주소가 거기에 `?…`만 붙은 것 — 같은 글일 수도, 다른 글일
+ *                  수도 있다(게시판 idx · category).
  *   null           다른 글. `/1` 아래의 `/1/comments`나 `/12`는 다른 글이다.
+ *
+ * 반대 방향(올린 쪽에만 질의)은 보지 않는다. 질의로 글을 가리키는 게시판 글(…?idx=47)을 적으면, 질의 없는 목록 · 첫 화면 인용
+ * 하나가 그 게시판 글 전부에 같은 숫자로 붙었다(검토 실측: 힌트가 약 3배, 그 쌍의 82%가 실제로는 다른 페이지). 플랫폼의 쓸모없는
+ * 질의(티스토리 ?category= 등)는 키에서 이미 뗀다.
  */
 export function matchKind(postKey: string, citedKey: string): 'exact' | 'query-variant' | null {
   if (postKey === citedKey) return 'exact'
-  const variantOf = (bare: string, withQuery: string) => !bare.includes('?') && bare.includes('/') && withQuery.startsWith(`${bare}?`)
-  if (variantOf(postKey, citedKey) || variantOf(citedKey, postKey)) return 'query-variant'
+  if (!postKey.includes('?') && postKey.includes('/') && citedKey.startsWith(`${postKey}?`)) return 'query-variant'
   return null
 }
 

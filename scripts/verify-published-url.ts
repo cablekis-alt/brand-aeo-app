@@ -45,7 +45,12 @@ ok('?no=1과 ?no=12는 다른 글', matchKind(k('https://example.com/view?no=1')
 ok('/1/comments는 /1이 아니다', matchKind(k('https://example.com/post/1'), k('https://example.com/post/1/comments')) === null)
 ok('질의만 붙은 인용은 query-variant(숫자에 넣지 않는다)', matchKind(k('https://namu.wiki/w/가상'), k('https://namu.wiki/w/가상?uuid=abc')) === 'query-variant')
 ok('같은 글은 exact', matchKind(k('https://example.com/post/1'), k('https://example.com/post/1?utm_source=openai')) === 'exact')
-ok('올린 쪽에만 질의가 붙어도 query-variant', matchKind(k('https://example.com/post/1?ref=menu'), k('https://example.com/post/1')) === 'query-variant')
+// 반대 방향(올린 쪽에만 질의)은 힌트로 보지 않는다 — 게시판 글(…?idx=47)마다 질의 없는 목록 · 첫 화면 인용이 같은 숫자로
+// 붙었다(2차 검토 실측: 힌트 약 3배, 그 쌍의 82%가 다른 페이지).
+ok('올린 쪽에만 질의가 있으면 질의만 다른 주소로 보지 않는다', matchKind(k('https://example.com/board/view?idx=47'), k('https://example.com/board/view')) === null)
+ok('네이버 블로그 GoPost · PostList 끝점 → /아이디/글번호', same('https://blog.naver.com/GoPost.naver?blogId=fakeblog&logNo=2233', 'https://blog.naver.com/fakeblog/2233') && same('https://blog.naver.com/PostList.naver?blogId=fakeblog&from=postList&categoryNo=5&logNo=2233', 'https://blog.naver.com/fakeblog/2233'))
+ok('인스타그램 /reel/ · /p/ · /계정/p/ 는 같은 게시물', same('https://www.instagram.com/reel/FAKE01/', 'https://www.instagram.com/p/FAKE01/') && same('https://www.instagram.com/fakeacct/p/FAKE01/', 'https://instagram.com/p/FAKE01/?igsh=x'))
+ok('인스타그램 게시물 코드는 대소문자를 가린다', trackingKey('https://www.instagram.com/p/FAKE01/') !== trackingKey('https://www.instagram.com/p/fake01/'))
 
 // 3) 받지 않는 주소
 const reason = (u: string) => {
@@ -54,6 +59,8 @@ const reason = (u: string) => {
 }
 ok('첫 화면은 거절', reason('https://example.com/') === 'homepage' && reason('https://www.example.com') === 'homepage')
 ok('블로그 홈 · 유튜브 채널 홈은 거절', reason('https://blog.naver.com/fakeblog') === 'blog-home' && reason('https://brunch.co.kr/@fake') === 'blog-home' && reason('https://www.youtube.com/@fake') === 'blog-home')
+ok('유튜브 채널의 다른 주소 형태 · 인스타그램 프로필도 거절', ['https://www.youtube.com/@fake/videos', 'https://www.youtube.com/channel/UCfake123', 'https://www.youtube.com/c/fake', 'https://www.youtube.com/user/fake', 'https://www.youtube.com/fakechannel', 'https://www.instagram.com/fakeacct/'].every((u) => reason(u) === 'blog-home'))
+ok('유튜브 재생목록 · 인스타그램 게시물은 받는다', reason('https://www.youtube.com/playlist?list=PLfake') === 'ok' && reason('https://www.instagram.com/reel/FAKE01/') === 'ok')
 ok('네이버 블로그 ?logNo= 글 주소 · 유튜브 공유 주소는 받는다', reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' && reason('https://youtu.be/AbCdEfGhIjK') === 'ok')
 ok('단축 주소는 거절', reason('https://naver.me/abc') === 'short-link')
 ok('글 주소는 받는다', reason('https://blog.naver.com/fakeblog/2233') === 'ok' && reason('https://fake.tistory.com/12') === 'ok' && reason('https://example.com/?p=12') === 'ok')
@@ -139,6 +146,8 @@ const takenAfter = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-
 ok('「글을 내렸어요」는 내리기 전 측정에서는 남고 인용을 센다', takenAfter?.publishedHits?.[0]?.takenDownOn === '2026-10-19' && takenAfter.citedPublishedUrls.length === 1)
 const takenBefore = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-13T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)
 ok('내린 뒤에 한 측정에서는 붙지 않는다', (takenBefore?.publishedUrls.length ?? 0) === 0)
+const takenNeverUp = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-16', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)
+ok('올리기도 전에 한 측정에서는 내린 글을 「올라가 있던 때」로 붙이지 않는다', (takenNeverUp?.publishedUrls.length ?? 0) === 0)
 // 한 응답이 질의만 다른 주소 둘을 인용해도 한 번이다
 const variantWeek = [response('v9-001', 0, false, [['https://example.com/post/5?page=1', false], ['https://example.com/post/5?page=2', false], ['https://fake.tistory.com/1', false]], '2026-10-14T01:00:00Z')]
 const variantPlan = computeGapActions(variantWeek as unknown as Analyses, questions, analyzeCitationSources(variantWeek as never), {}, [post('pv', 'https://example.com/post/5', 'listing:any', '2026-10-01')], '2026-W42')
