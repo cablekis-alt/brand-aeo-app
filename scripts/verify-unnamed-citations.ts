@@ -27,13 +27,14 @@ const question = (questionId: string, containsBrandName: boolean) =>
   ({ questionId, text: containsBrandName ? '가상브랜드 어때?' : '군산 숙소 추천해 줘', category: containsBrandName ? 'brand-direct' : 'category-agnostic', containsBrandName }) as QuestionSpec;
 const questions = [question('v2-001', false), question('v2-002', true)];
 
-const cite = (raw: string, supports: boolean) => ({ raw, domain: null, ownerType: 'third-party-authority' as const, supportsBrandMention: supports });
-const analysis = (questionId: string, citations: ReturnType<typeof cite>[]) =>
+const cite = (raw: string, supports: boolean, ownerType: 'third-party-authority' | 'brand-owned' = 'third-party-authority') => ({ raw, domain: null, ownerType, supportsBrandMention: supports });
+// mentioned — 그 답에 우리 이름이 나왔는지. 이름 없는 질문의 「뒷받침」은 이름이 나온 답에서만 센다(2026-10-21, 맘맘 오분류).
+const analysis = (questionId: string, citations: ReturnType<typeof cite>[], mentioned = false) =>
   ({
     questionId,
     engine: 'gemini',
     callIndex: 0,
-    mentioned: false,
+    mentioned,
     mentionSentences: [],
     competitorMentions: [],
     shareOfMention: 0,
@@ -48,14 +49,18 @@ const analysis = (questionId: string, citations: ReturnType<typeof cite>[]) =>
   }) as unknown as QuestionRepeatAnalysis;
 
 // 위키는 이름을 댄 질문에서만 우리를 뒷받침한다. 이름 없는 질문에서는 인용되지만 뒷받침이 없다.
-// 네이버 블로그는 이름 없는 질문에서 3회 중 1회, 이름을 댄 질문에서 2회 중 2회 뒷받침한다.
+// 네이버 블로그는 이름 없는 질문에서 3회 중 1회(그 답에 우리 이름이 나왔다), 이름을 댄 질문에서 2회 중 2회 뒷받침한다.
 const analyses = [
-  analysis('v2-001', [
-    cite('https://namu.wiki/w/가상', false),
-    cite('https://blog.naver.com/a/1', true),
-    cite('https://blog.naver.com/b/2', false),
-    cite('https://blog.naver.com/c/3', false),
-  ]),
+  analysis(
+    'v2-001',
+    [
+      cite('https://namu.wiki/w/가상', false),
+      cite('https://blog.naver.com/a/1', true),
+      cite('https://blog.naver.com/b/2', false),
+      cite('https://blog.naver.com/c/3', false),
+    ],
+    true,
+  ),
   analysis('v2-002', [cite('https://namu.wiki/w/가상', true), cite('https://blog.naver.com/a/1', true), cite('https://blog.naver.com/d/4', true)]),
 ];
 const plan = (qs: QuestionSpec[], list = analyses) =>
@@ -66,8 +71,22 @@ const action = (p: ReturnType<typeof plan>, id: string) => p.actions.find((a) =>
 const wiki = action(plan(questions), 'listing:namu.wiki');
 ok('이름을 댄 질문에서만 뒷받침한 곳은 「충족」이 아니다', wiki?.satisfied === false);
 ok('근거 문장이 이름을 댄 질문에서만 뒷받침했다고 밝힌다', /이름을 댄 질문에서만 1회/.test(wiki?.evidence ?? ''));
-const unnamedHit = [analysis('v2-001', [cite('https://namu.wiki/w/가상', true)])];
+const unnamedHit = [analysis('v2-001', [cite('https://namu.wiki/w/가상', true)], true)];
 ok('이름 없는 질문에서 뒷받침하면 「충족」', action(plan(questions, unnamedHit), 'listing:namu.wiki')?.satisfied === true);
+
+// 1-a) 맘맘 오분류 회귀(web4ai W42) — 이름 없는 질문의 답에 우리 이름이 없는데 판정이 「뒷받침」을 붙였다. 이름 없는 질문의 답은
+//      이름을 대야만 우리를 가리킬 수 있으니 「충족」이 아니고, 모든 질문 합계(집행 후 대기 문구)에서도 빼야 한다.
+const misjudged = [analysis('v2-001', [cite('https://mom-mom.net/travel/places/1', true), cite('https://mom-mom.net/travel/places/2', false)])];
+const mommom = action(plan(questions, misjudged), 'listing:mom-mom.net');
+ok('언급 없는 답의 「뒷받침」으로는 「충족」이 되지 않는다(맘맘 회귀)', mommom?.satisfied === false);
+ok('언급 없는 답의 「뒷받침」은 모든 질문 합계에서도 빠진다', mommom?.support?.all === 0 && mommom.support.unnamed === 0);
+ok('근거 문장이 뒷받침 0건이라고 쓴다', /우리를 뒷받침하는 대목은 0건입니다/.test(mommom?.evidence ?? ''));
+// 이름을 댄 질문은 「이 숙소는…」처럼 이름 없이 가리킬 수 있어 언급 판정으로 거르지 않는다(1-b의 reddit도 mentioned:false다).
+const namedNoMention = action(plan(questions, [analysis('v2-002', [cite('https://namu.wiki/w/가상', true)])]), 'listing:namu.wiki');
+ok('이름을 댄 질문에서는 언급 없는 답의 뒷받침도 그대로 센다', namedNoMention?.support?.all === 1);
+// 묶음 합계(서버)와 호스트 합계를 빼도 음수가 되지 않는다 — 같은 호스트가 이름 없는 질문에서만 언급 없이 뒷받침한 경우.
+const mixed = action(plan(questions, [...misjudged, analysis('v2-002', [cite('https://mom-mom.net/travel/places/3', true)])]), 'listing:mom-mom.net');
+ok('언급 없는 뒷받침을 빼도 합계는 0 이상이고 이름 댄 질문의 뒷받침은 남는다', mixed?.support?.all === 1 && mixed.satisfied === false);
 ok('은행을 읽지 못하면 이름 없는 질문인지 몰라 켜지 않는다', action(plan([], unnamedHit), 'listing:namu.wiki')?.satisfied === false);
 ok('은행을 읽지 못했다고 근거 문장이 밝힌다', /질문 은행을 읽지 못해/.test(action(plan([], unnamedHit), 'listing:namu.wiki')?.evidence ?? ''));
 ok('뒷받침이 아예 없으면 예전 문장 그대로', /우리를 뒷받침하는 대목은 0건입니다\./.test(action(plan(questions, [analysis('v2-001', [cite('https://namu.wiki/w/가상', false)])]), 'listing:namu.wiki')?.evidence ?? ''));
@@ -137,6 +156,23 @@ const otherBank = await getCitationSourceAnalysis(
 ok('다른 버전의 은행이 오면 나누지 못한 것으로 본다(그 은행 버전을 대지 않는다)', otherBank.questionScope?.bankVersion === null && otherBank.totalCitations === 0);
 const noMatch = await getCitationSourceAnalysis(store(card, [analysis('v2-999', [cite('https://namu.wiki/w/가상', true)])]), 't', WEEK, { questions: 'unnamed' });
 ok('응답이 있는데 은행에서 하나도 못 찾으면 나누지 못한 것으로 본다', noMatch.questionScope?.bankVersion === null && noMatch.questionScope.unknown === 1);
+
+// 3-b) 이름 없는 질문 보기의 「뒷받침」도 언급 있는 답에서만 센다(실행 항목 「충족」과 같은 기준). 전체 · 이름 댄 질문 보기는 그대로.
+const mm = [analysis('v2-001', [cite('https://mom-mom.net/travel/places/1', true)])];
+const mmUnnamed = await getCitationSourceAnalysis(store(card, mm), 't', WEEK, { questions: 'unnamed' });
+const mmAll = await getCitationSourceAnalysis(store(card, mm), 't', WEEK);
+ok('이름 없는 질문 보기 — 언급 없는 답의 뒷받침은 0', supportingOf(mmUnnamed, 'https://mom-mom.net/travel/places/1') === 0);
+ok('전체 보기 — 저장된 판정 그대로 1', supportingOf(mmAll, 'https://mom-mom.net/travel/places/1') === 1);
+
+// 3-c) 후기·예약 플랫폼 페이지의 「자사」 판정은 믿지 않는다(맘맘을 머뭄으로) — 출처 종류는 후기 플랫폼, URL 행 소유는 unknown.
+//      우리 소유 도메인처럼 카탈로그 밖의 자사 판정은 그대로다.
+const owned = analyzeCitationSources([
+  analysis('v2-001', [cite('https://mom-mom.net/travel/places/9', false, 'brand-owned'), cite('https://www.vstay.example/s/stay', true, 'brand-owned')]),
+]);
+const momRow = owned.urls.find((u) => u.raw === 'https://mom-mom.net/travel/places/9');
+const ownRow = owned.urls.find((u) => u.raw === 'https://www.vstay.example/s/stay');
+ok('후기 플랫폼의 자사 판정은 후기 플랫폼 · 소유 unknown으로 본다', momRow?.kind === 'review' && momRow.ownerType === 'unknown');
+ok('카탈로그 밖의 자사 판정은 그대로 자사', ownRow?.kind === 'brand-official' && ownRow.ownerType === 'brand-owned');
 
 // 4) 배포 환경(DemoResultStore · api/question-bank) — 실측 판정은 그때 쓴 은행(v1)의 질문 id를 단다. 설정은 v4라 예전에는
 //    예시 은행이 와서 이름 없는 질문 기준 화면이 실측 주차마다 비었다.

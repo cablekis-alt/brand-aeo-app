@@ -24,7 +24,7 @@ import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types
  *
  * ── 완료를 저장하지 않는 이유 ────────────────────────────────────────────────
  * 완료는 사람이 체크하는 값이 아니라 **데이터에서 읽는 값**이다. 등재가 실제로 되면
- * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다 — 브랜드 이름 없는 질문에서(unnamedCitationsByHost).
+ * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다 — 브랜드 이름 없는 질문에서, 그 답에 우리 이름이 나왔을 때(unnamedCitationsByHost).
  * 그래서 satisfied는 매번 계산한다. 사람이 적어 넣은 '완료'와 실제 노출이 어긋나는
  * 상태를 아예 만들지 않는다.
  *
@@ -243,10 +243,16 @@ function questionsByDomain(analyses: QuestionRepeatAnalysis[]): Map<string, Set<
 interface UnnamedTally {
   /** 브랜드 이름 없는 질문(containsBrandName=false)에서 받은 인용 수. */
   citations: number
-  /** 그중 우리 언급을 뒷받침한 인용 수. */
+  /** 그중 우리 언급을 뒷받침한 인용 수 — 그 답에 우리 이름이 나온 것만. */
   supporting: number
   /** 이름을 댄 질문에서 우리를 뒷받침한 인용 수 — 「충족」이 아닌 이유를 밝힐 때 쓴다. */
   namedSupporting: number
+  /**
+   * 이름 없는 질문인데 답에 우리 이름이 없는데도 판정이 「뒷받침」이라 한 인용 수 — 세지 않고 따로 둔다. 이름 없는 질문의 답은
+   * 이름을 대야만 우리를 가리킬 수 있어 두 판정이 어긋난 값이다(실측: web4ai W42 「맘맘」 페이지를 「머뭄」으로 착각, 답에 「머뭄」 0회).
+   * 모든 질문 합계(서버 집계)에서도 이만큼 뺀다.
+   */
+  unmentionedSupporting: number
 }
 
 /**
@@ -273,12 +279,14 @@ function unnamedCitationsByHost(
     for (const c of a.citations ?? []) {
       const host = normalizeHost(c.raw, c.domain)
       if (!host) continue
-      const row = byHost.get(host) ?? { citations: 0, supporting: 0, namedSupporting: 0 }
+      const row = byHost.get(host) ?? { citations: 0, supporting: 0, namedSupporting: 0, unmentionedSupporting: 0 }
       if (isNamed) {
+        // 이름을 댄 질문의 답은 「이 숙소는…」처럼 이름 없이 우리를 가리킬 수 있어 언급 판정으로 거르지 않는다.
         if (c.supportsBrandMention) row.namedSupporting += 1
       } else {
         row.citations += 1
-        if (c.supportsBrandMention) row.supporting += 1
+        if (c.supportsBrandMention && a.mentioned) row.supporting += 1
+        else if (c.supportsBrandMention) row.unmentionedSupporting += 1
       }
       byHost.set(host, row)
     }
@@ -398,19 +406,22 @@ function listingActions(
       // 그대로 보여 주고 자동 충족은 켜지 않는다(콘텐츠형과 같은 모양).
       const isPlatform = Boolean(r.platform)
       // 「충족」은 브랜드 이름 없는 질문의 인용으로만 본다(unnamedCitationsByHost). 은행을 읽지 못해 나눌 수 없으면 켜지 않는다.
-      const u = { citations: 0, supporting: 0, namedSupporting: 0 }
+      const u = { citations: 0, supporting: 0, namedSupporting: 0, unmentionedSupporting: 0 }
       for (const h of r.hosts) {
         const t = unnamed.byHost.get(h)
         if (!t) continue
         u.citations += t.citations
         u.supporting += t.supporting
         u.namedSupporting += t.namedSupporting
+        u.unmentionedSupporting += t.unmentionedSupporting
       }
+      // 모든 질문 합계(서버 집계)에서 언급 없는 답의 「뒷받침」을 뺀다. 묶음 단위 합계와 호스트 단위 합계라 음수가 되지 않게 막는다.
+      const supportingAll = Math.max(0, r.supporting - u.unmentionedSupporting)
       // 이름 없는 질문에서는 아예 인용되지 않는 곳(이름을 댄 질문에서만 꺼낸다)은 이름 없는 질문 기준의 갭이 아니다 — 거기 다시
       // 등재해도 이름 없는 질문의 답은 달라지지 않는다. 그런 곳은 예전처럼 어느 질문에서든 뒷받침하면 「충족」으로 둔다. 안 그러면
       // 이미 실린 곳이 끝낼 수 없는 할 일로 남는다(실측: banobagi W40 reddit.com — 10회 인용 전부 이름을 댄 질문, 그중 4회 뒷받침).
       const namedOnly = unnamed.known && u.citations === 0
-      const satisfied = !isPlatform && unnamed.known && (namedOnly ? r.supporting > 0 : u.supporting > 0)
+      const satisfied = !isPlatform && unnamed.known && (namedOnly ? supportingAll > 0 : u.supporting > 0)
       const engines = [...r.engines].join('·')
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
@@ -448,19 +459,19 @@ function listingActions(
       const progress =
         unnamed.known && !namedOnly
           ? { supporting: u.supporting, total: u.citations, unnamed: true }
-          : { supporting: r.supporting, total: r.citationCount, unnamed: false }
+          : { supporting: supportingAll, total: r.citationCount, unnamed: false }
       const share = progress.total > 0 ? Math.round((progress.supporting / progress.total) * 100) : 0
       const platformEvidence =
         `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) ` +
         (progress.unnamed
           ? `브랜드 이름 없는 질문에서 받은 인용 ${u.citations}회 중 우리를 뒷받침하는 대목은 ${u.supporting}회(${share}%)입니다.`
-          : `그중 우리를 뒷받침하는 대목은 ${r.supporting}회(${share}%)입니다 — ` +
+          : `그중 우리를 뒷받침하는 대목은 ${supportingAll}회(${share}%)입니다 — ` +
             `${namedOnly ? '브랜드 이름 없는 질문에서는 인용되지 않았습니다' : '질문 은행을 읽지 못해 질문 유형으로 나누지 못했습니다'}.`) +
         ` 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
         (r.platform ? ` ${r.platform.note}` : '')
       // 「충족」이 아닌 이유 — 뒷받침이 이름을 댄 질문에서만 나왔으면 그렇게 말한다. "0건"이라고 하면 사실과 다르다.
       const unmetEvidence =
-        r.supporting === 0
+        supportingAll === 0
           ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
             (namedOnly ? ' 브랜드 이름을 댄 질문에서만 인용되는 곳입니다.' : '')
           : unnamed.known
@@ -468,7 +479,7 @@ function listingActions(
               (u.namedSupporting > 0
                 ? ` 이름을 댄 질문에서만 ${u.namedSupporting}회 뒷받침해, 이름을 모르는 사람에게는 아직 보이지 않습니다.`
                 : '')
-            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 우리를 뒷받침하는 대목도 ${r.supporting}회 있지만, ` +
+            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 우리를 뒷받침하는 대목도 ${supportingAll}회 있지만, ` +
               `질문 은행을 읽지 못해 브랜드 이름 없는 질문에서였는지 확인하지 못했습니다.`
 
       return {
@@ -480,7 +491,7 @@ function listingActions(
           ? platformEvidence + citedNote
           : satisfied
             ? (namedOnly
-                ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
+                ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${supportingAll}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
                 : `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`) +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
             : unmetEvidence +
@@ -498,7 +509,7 @@ function listingActions(
         publishedUrls: [],
         citedPublishedUrls: [],
         ...(isPlatform ? { progress } : {}),
-        support: { all: r.supporting, unnamed: u.supporting, known: unnamed.known },
+        support: { all: supportingAll, unnamed: u.supporting, known: unnamed.known },
         doneSignal: isPlatform
           ? `${progress.unnamed ? '브랜드 이름 없는 질문의 ' : ''}${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${progress.supporting}/${progress.total})`
           : namedOnly

@@ -606,7 +606,7 @@ export async function getCitationSourceAnalysis(
   // 응답이 있는데 하나도 은행에서 찾지 못했으면 이 은행으로는 나눌 수 없다(엔진으로 좁힌 뒤에도 같다).
   const split = bank !== null && !(byEngine.length > 0 && unknown === byEngine.length);
   return {
-    ...analyzeCitationSources(split ? kept : [], { competitorDomains: options.competitorDomains }),
+    ...analyzeCitationSources(split ? kept : [], { competitorDomains: options.competitorDomains, supportRequiresMention: scope === 'unnamed' }),
     questionScope: { scope, bankVersion: split ? bank.version : null, responses: split ? kept.length : 0, unknown },
   };
 }
