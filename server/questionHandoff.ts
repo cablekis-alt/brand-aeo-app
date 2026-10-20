@@ -197,10 +197,8 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   const linkable = (c: CompetitorContext) => namesOf(c).some((n) => !brandFolds.some((b) => fold(n).includes(b)));
 
   // 받는 곳은 경쟁사 단위로 정한다 — 한 경쟁사의 질문은 모두 같은 곳이 받고, 받는 곳 하나는 나가는 곳 하나만 받는다.
-  // 자기 질문이 이미 있는 들어온 곳은 받지 않는다(경쟁사마다 비교 질문 하나). 나가는 곳의 질문이 이미 짚은 곳도 받지 않는다
+  // 자기 질문이 이미 있는 곳은 받지 않는다(경쟁사마다 비교 질문 하나). 나가는 곳의 질문이 이미 짚은 곳도 받지 않는다
   // (그 질문이 자기 자신과 견주게 된다).
-  const receiver = new Map<CompetitorContext, { to: CompetitorContext; via: 'hint' | 'promoted' | 'existing' }>();
-  const taken = new Set<string>();
   // 「이미 짚은 곳」은 지금 목록으로 본다 — 지금 목록에 따로 있던 곳(대기 줄)을 그 질문이 함께 짚었다. 새로 든 곳이 옛 이름을
   // 별칭으로 가져 바꾼 목록에서 이어지는 것(이름 바꾸기)은 넘겨받는다.
   const nowIndex = new Map(now.map((c, i) => [keyOf(c), i]));
@@ -210,59 +208,106 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   // 「업종 다름」으로 표시된 곳은 받지 않는다 — 다른 업종 곳과 견주는 질문은 고객 업종 질문이 아니다.
   const otherIndustry = new Set((input.otherIndustry ?? []).map(fold));
   const sameIndustry = (c: CompetitorContext) => !otherIndustry.has(keyOf(c));
-  const eligible = (c: CompetitorContext, o: CompetitorContext) =>
-    linkable(c) && sameIndustry(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c);
-  // 이미 재는데 비교 질문이 없던 곳(바꾼 목록에서도 잰다) — 새로 든 곳이 없을 때 받는다(결정 E8).
+  const ownCount = new Map(next.map((c) => [keyOf(c), ownIds(c).length]));
+  const canReceive = (c: CompetitorContext, o: CompetitorContext) => linkable(c) && sameIndustry(c) && !ownCount.get(keyOf(c)) && !alreadyIn(o, c);
+  // 이미 재는데 비교 질문이 없던 곳(바꾼 목록에서도 잰다) — 새로 든 곳으로 안 될 때 받는다(결정 E8).
   const staying = next.filter((c, i) => input.next.measured[i] && nowMeasured.has(keyOf(c)));
   const withQuestions = outgoing.filter((o) => questionsOf(o).length > 0);
-  // 1) 화면 힌트(바꿈 · 측정에 넣기) — 지금 목록 순서로. 한 자리에 힌트가 여럿이면 나중 것부터 본다.
-  for (const o of withQuestions) {
+  const pool = [...incoming, ...(input.existingReceivers === false ? [] : staying)];
+  // 화면 힌트(바꿈 · 측정에 넣기) — 한 자리에 힌트가 여럿이면 나중 것부터 본다.
+  const hintFor = (o: CompetitorContext) => {
     for (const hint of input.hints.filter((h) => fold(h.from) === keyOf(o)).reverse()) {
       const to = incoming.find((c) => keyOf(c) === fold(hint.to));
-      if (!to || !eligible(to, o)) continue;
-      receiver.set(o, { to, via: 'hint' });
-      taken.add(keyOf(to));
-      break;
+      if (to && canReceive(to, o)) return to;
     }
-  }
-  // 3)에서 먼저 볼 곳 — 지금 질문지에 아예 이름이 없는 곳. 넘겨줄 질문에만 함께 나온 곳은 그 질문을 고쳐 써도 남아 이미 비교
-  // 질문이 생기므로 뒤로 미룬다(한 곳이 질문 둘을 갖고 다른 곳은 하나도 없게 되지 않게).
-  const unnamedNow = (c: CompetitorContext) => !nowIndex.has(keyOf(c)) || !(linksNow.byCompetitor[nowIndex.get(keyOf(c))!]?.length);
-  const stayingOrder = [...staying.filter(unnamedNow), ...staying.filter((c) => !unnamedNow(c))];
-  // 받는 곳을 정했어도 쓰지 못한 나가는 곳 — 그 질문이 모두 빠진다(함께 짚은 다른 나가는 곳이 받을 곳이 없다). 다시 받지 않는다.
-  const wasted = new Set<CompetitorContext>();
-  const assign = () => {
-    // 2) 남은 나가는 곳 — 빼기로 대기 첫 줄이 올라왔거나 추가한 곳이 측정에 들었다. 바꾼 목록 순서로 첫 곳이 받는다.
-    for (const o of withQuestions) {
-      if (receiver.has(o) || wasted.has(o)) continue;
-      const to = incoming.find((c) => eligible(c, o));
-      if (!to) continue;
-      receiver.set(o, { to, via: 'promoted' });
-      taken.add(keyOf(to));
-    }
-    // 3) 그래도 남은 나가는 곳 — 이미 재는데 비교 질문이 없는 곳이 받는다(바꾼 목록 순서). 그래야 질문지가 덜 줄어든다.
-    for (const o of input.existingReceivers === false ? [] : withQuestions) {
-      if (receiver.has(o) || wasted.has(o)) continue;
-      const to = stayingOrder.find((c) => eligible(c, o));
-      if (!to) continue;
-      receiver.set(o, { to, via: 'existing' });
-      taken.add(keyOf(to));
-    }
+    return null;
   };
-  assign();
-  // 4) 받는 곳을 정했는데 그 질문이 하나도 고쳐지지 않는 나가는 곳은 받는 곳을 돌려준다 — 그 곳이 다른 나가는 곳의 질문을 살릴 수
-  // 있다. 돌려준 뒤 2) · 3)을 다시 돈다(돌려준 나가는 곳의 질문은 이미 모두 빠지므로 다른 질문은 나빠지지 않는다).
+  type Choice = { to: CompetitorContext; via: 'hint' | 'promoted' | 'existing'; rank: number };
+  const options: Choice[][] = withQuestions.map((o) => {
+    const hint = hintFor(o);
+    const list: Choice[] = hint ? [{ to: hint, via: 'hint', rank: 0 }] : [];
+    pool.forEach((c, i) => {
+      if (c !== hint && canReceive(c, o)) list.push({ to: c, via: incoming.includes(c) ? 'promoted' : 'existing', rank: i + 1 });
+    });
+    return list;
+  });
   const outsOf = new Map(linksNow.questions.map((l) => [l.questionId, l.competitorIndexes.map((i) => now[i]!).filter((c) => outgoingKeys.has(keyOf(c)))]));
-  for (;;) {
-    const idle = [...receiver.keys()].filter((o) => questionsOf(o).every((id) => (outsOf.get(id) ?? []).some((x) => !receiver.has(x))));
-    if (!idle.length) break;
-    for (const o of idle) {
-      taken.delete(keyOf(receiver.get(o)!.to));
-      receiver.delete(o);
-      wasted.add(o);
+  const keepOf = new Map(
+    linksNow.questions.map((l) => [l.questionId, l.competitorIndexes.map((i) => now[i]!).filter((c) => !outgoingKeys.has(keyOf(c)) && nextIndex.has(keyOf(c)))]),
+  );
+  const handedIds = [...handedOff];
+  const askedNext = next.filter((c, i) => input.next.measured[i] && sameIndustry(c));
+
+  // 받는 곳 고르기 — 나가는 곳마다 받을 수 있는 곳을 모두 견줘 고른다(함께 재는 곳은 5칸이라 경우가 적다). 앞에서부터 차례로
+  // 정하면 목록 순서에 따라 살릴 수 있는 질문을 뺀다(한 곳만 받을 수 있는 나가는 곳의 후보를 다른 곳이 먼저 가져간다).
+  // 견주는 순서(앞이 먼저):
+  //   1) 고쳐 쓰는 질문이 많다 — 질문지가 덜 줄어든다. 짚은 나가는 곳이 모두 받는 곳을 얻어야 고쳐 쓴다(결정 D1).
+  //   2) 화면 힌트대로 받는다 — 사람이 고른 자리다.
+  //   3) 새로 든 곳이 받는다(결정 E8).
+  //   4) 저장한 뒤 비교 질문이 없는 곳이 적다 — 한 곳이 질문 둘을 갖고 다른 곳은 하나도 없게 되지 않게.
+  //   5) 목록 순서 — 지금 목록 앞의 나가는 곳이 바꾼 목록 앞의 곳을 받는다.
+  // 받는 곳을 얻어도 그 질문이 하나도 고쳐지지 않는 나가는 곳(함께 짚은 나가는 곳이 받을 곳이 없다)은 받는 곳을 두지 않는다.
+  type Score = { rewritten: number; hints: number; promoted: number; without: number; ranks: number[]; useful: Set<CompetitorContext> };
+  const scoreOf = (chosen: (Choice | null)[]): Score => {
+    const got = new Map(withQuestions.map((o, i) => [o, chosen[i]]));
+    const rewritten = handedIds.filter((id) => (outsOf.get(id) ?? []).every((o) => got.get(o)));
+    const useful = new Set(rewritten.flatMap((id) => outsOf.get(id) ?? []));
+    const covered = new Set(rewritten.flatMap((id) => (keepOf.get(id) ?? []).map(keyOf)));
+    let hints = 0;
+    let promoted = 0;
+    const ranks = withQuestions.map((o, i) => {
+      const ch = chosen[i];
+      if (!ch || !useful.has(o)) return Number.POSITIVE_INFINITY;
+      covered.add(keyOf(ch.to));
+      if (ch.via === 'hint') hints += 1;
+      else if (ch.via === 'promoted') promoted += 1;
+      return ch.rank;
+    });
+    const without = askedNext.filter((c) => !ownCount.get(keyOf(c)) && !covered.has(keyOf(c))).length;
+    return { rewritten: rewritten.length, hints, promoted, without, ranks, useful };
+  };
+  const better = (a: Score, b: Score): boolean => {
+    if (a.rewritten !== b.rewritten) return a.rewritten > b.rewritten;
+    if (a.hints !== b.hints) return a.hints > b.hints;
+    if (a.promoted !== b.promoted) return a.promoted > b.promoted;
+    if (a.without !== b.without) return a.without < b.without;
+    for (let i = 0; i < a.ranks.length; i += 1) if (a.ranks[i] !== b.ranks[i]) return a.ranks[i]! < b.ranks[i]!;
+    return false;
+  };
+  // 경우가 지나치게 많으면(칸을 크게 늘린 설정) 먼저 본 것 가운데 가장 나은 것으로 멈춘다 — 앞의 경우가 차례로 정한 것과 같다.
+  const SEARCH_LIMIT = 50_000;
+  let visited = 0;
+  let best: { chosen: (Choice | null)[]; score: Score } | null = null;
+  const chosen: (Choice | null)[] = [];
+  const used = new Set<string>();
+  const search = (i: number) => {
+    if (visited >= SEARCH_LIMIT) return;
+    if (i === withQuestions.length) {
+      visited += 1;
+      const score = scoreOf(chosen);
+      if (!best || better(score, best.score)) best = { chosen: [...chosen], score };
+      return;
     }
-    assign();
-  }
+    for (const ch of options[i]!) {
+      if (used.has(keyOf(ch.to))) continue;
+      used.add(keyOf(ch.to));
+      chosen.push(ch);
+      search(i + 1);
+      chosen.pop();
+      used.delete(keyOf(ch.to));
+    }
+    chosen.push(null);
+    search(i + 1);
+    chosen.pop();
+  };
+  search(0);
+  const picked = best as { chosen: (Choice | null)[]; score: Score } | null;
+  const receiver = new Map<CompetitorContext, { to: CompetitorContext; via: 'hint' | 'promoted' | 'existing' }>();
+  withQuestions.forEach((o, i) => {
+    const ch = picked?.chosen[i];
+    if (ch && picked!.score.useful.has(o)) receiver.set(o, { to: ch.to, via: ch.via });
+  });
+  const taken = new Set([...receiver.values()].map((r) => keyOf(r.to)));
 
   const toVersion = nextBankVersion(input.version, [...input.taken, input.version]);
   const items: HandoffItem[] = [];
@@ -301,11 +346,6 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   const unreceived: QuestionPlan['unreceived'] = [];
   for (const o of withQuestions) {
     if (receiver.has(o)) continue;
-    // 받는 곳을 돌려준 곳(4) — 함께 짚은 다른 나가는 곳 때문에 빠진다. 그 곳의 이유가 따로 나온다.
-    if (wasted.has(o)) {
-      unreceived.push({ name: o.name, questionIds: questionsOf(o), reason: 'noReceiver' });
-      continue;
-    }
     const own = incoming.find((c) => ownIds(c).length > 0);
     // 업종 다름만 아니었으면 받을 수 있던 곳 — 표시를 풀면 넘겨받는다. 이유가 「자기 질문이 있음」이어도 함께 싣는다(화면이 둘 다
     // 보인다 — 사람이 풀 수 있는 것은 업종 표시다).

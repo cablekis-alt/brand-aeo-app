@@ -253,8 +253,10 @@ export default function CompetitorEditor({
     onClose()
   }
 
-  // 다시 받기로 한 뒤의 옛 계획은 쓰지 않는다 — 업종 판정 전 계획으로 고쳐 쓰기를 부르면 서버가 409로 거절하고 그 오류가 남는다.
-  const current = plan && plan.key === requestKey && plan.replan === replan ? plan : null
+  const current = plan && plan.key === requestKey ? plan : null
+  // 다시 받기로 한 뒤(업종 판정 · 표시)의 옛 계획 — 보이고 저장은 그대로 하되(서버가 다시 세어 다르면 409), 고쳐 쓰기는 부르지 않는다.
+  // 판정 전 계획으로 부르면 서버가 409로 거절하고 그 오류가 계획 key에 남는다.
+  const freshPlan = current?.replan === replan
   const planned = dirty ? current?.value ?? null : null
   const planning = dirty && !current
   // 새 미리보기를 기다리는 동안 보일 값 — 줄의 뺀 범위 · 「이번 주」 여부는 체크에 따라 바뀌지 않는다. 저장 판단은 planned만 쓴다.
@@ -322,6 +324,7 @@ export default function CompetitorEditor({
     setPickError(null)
     setSavedNow(false)
     setActionError(null)
+    setIndustryError(null)
     // 새로 들인 곳은 업종을 확인한다(대기 줄 올리기 · 자리 바꾸기는 이미 목록에 있던 곳이라 하지 않는다).
     if (op.t === 'add') startIndustryCheck(op.with)
     else if (op.t === 'replace' && op.with) startIndustryCheck(op.with)
@@ -348,21 +351,24 @@ export default function CompetitorEditor({
   const markIndustry = (name: string, mark: 'same' | 'different' | null) => {
     setOpen(null)
     setIndustryError(null)
-    markCompetitorIndustry(tenantId, name, mark)
-      .then((result) => {
+    markCompetitorIndustry(tenantId, name, mark).then(
+      (result) => {
+        // 표시는 저장됐다 — 계획을 다시 받고(받는 곳이 바뀐다), 줄의 표시는 서랍 상태를 다시 불러 맞춘다.
         setIndustryChecks((m) => ({ ...m, [squash(name).toLowerCase()]: { status: 'done', result } }))
-        return loadCompetitorEditor(tenantId)
-      })
-      .then(
-        (value) => {
-          setLoad({ status: 'ok', value })
-          setReplan((n) => n + 1)
-        },
-        (err: unknown) => {
-          console.error('[CompetitorEditor] 업종 표시를 저장하지 못했습니다', err)
-          setIndustryError(`${name} 업종 표시를 저장하지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
-        },
-      )
+        setReplan((n) => n + 1)
+        loadCompetitorEditor(tenantId).then(
+          (value) => setLoad({ status: 'ok', value }),
+          (err: unknown) => {
+            console.error('[CompetitorEditor] 업종 표시 뒤 경쟁사 목록을 다시 불러오지 못했습니다', err)
+            setIndustryError(`${name} 업종 표시는 저장했지만 목록을 다시 불러오지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
+          },
+        )
+      },
+      (err: unknown) => {
+        console.error('[CompetitorEditor] 업종 표시를 저장하지 못했습니다', err)
+        setIndustryError(`${name} 업종 표시를 저장하지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
+      },
+    )
   }
   // 줄의 업종 표시 — 확인 중이면 「업종 확인 중」, 다르면 「업종 다름 ?」. 계획이 오기 전에는 방금 받은 확인 결과를 쓴다.
   const industryFor = (name: string, row: EditorCompetitorRow | null): RowIndustry | undefined => {
@@ -429,7 +435,7 @@ export default function CompetitorEditor({
   // 센다(되돌린 줄의 확인까지 기다리지 않게).
   const listKeys = new Set(applied.list.map((x) => squash(x.competitor.name).toLowerCase()))
   const industryPending = Object.entries(industryChecks).some(([key, c]) => c.status === 'running' && listKeys.has(key))
-  const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow && !industryPending ? qplan.key : null
+  const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow && !industryPending && freshPlan ? qplan.key : null
   useEffect(() => {
     if (!draftNeeded) return
     // 계획과 같은 입력으로 부른다(requestKey) — 서버가 계획을 다시 세어 key가 같을 때만 고쳐 쓴다.
@@ -449,7 +455,7 @@ export default function CompetitorEditor({
   // 「다시 쓰기」 — 결과를 받은 뒤면 다른 표현으로 새로 쓴다(fresh). 시간 초과 · 오류 뒤면 서버가 아직 쓰는 중이거나 써 둔 결과에
   // 붙는다 — fresh로 보내면 그 결과를 버리고 판정 엔진을 다시 불러, 같은 3분을 또 기다리게 된다.
   const redraft = (fresh: boolean) => {
-    if (!qplan) return
+    if (!qplan || !freshPlan) return
     runDraft(tenantId, qplan.key, JSON.parse(requestKey) as { competitors: CompetitorEntry[]; handoff: HandoffHint[] }, fresh, setDrafts, () => setQOpen(true))
   }
   const canSave =
@@ -476,6 +482,7 @@ export default function CompetitorEditor({
     setQMode('derive')
     setQModeOpen(false)
     setQuestionOnly(false)
+    setIndustryError(null)
   }
   const chooseMode = (mode: QuestionMode) => {
     setQMode(mode)
@@ -484,6 +491,7 @@ export default function CompetitorEditor({
     if (mode !== 'all') setQuestionOnly(false)
     setSavedNow(false)
     setActionError(null)
+    setIndustryError(null)
   }
   // 목록은 그대로 두고 질문지만 새로 쓰기 — 저장 막대를 열고 「모두 새로 쓰기」를 골라 둔다.
   const startQuestionOnly = () => {
@@ -493,6 +501,7 @@ export default function CompetitorEditor({
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
     setActionError(null)
+    setIndustryError(null)
     task().then(
       (value) => {
         setLoad({ status: 'ok', value })
@@ -1077,7 +1086,7 @@ export default function CompetitorEditor({
               onToggle={() => setQOpen(!qOpen)}
               onRedraft={redraft}
               onKeep={() => chooseMode('keep')}
-              canRedraft={!measuringNow && !busy}
+              canRedraft={!measuringNow && !busy && freshPlan}
               measuring={measuringNow}
               onRecheck={() => setReplan((n) => n + 1)}
               waitingIndustry={industryPending}
@@ -1087,8 +1096,9 @@ export default function CompetitorEditor({
           ) : (
             <p className="ce-bar-q">질문지: {planning ? '계산 중…' : `그대로 (${s.questionBank.version})`}</p>
           )}
-          {/* 다시 계산하는 동안에도 지난 계획으로 그린다 — 고른 단추의 초점이 사라지지 않게. */}
-          {shownPlan && (
+          {/* 다시 계산하는 동안에도 지난 계획으로 그린다 — 고른 단추의 초점이 사라지지 않게. 목록을 그대로 둔 「질문지만 새로 쓰기」에서는
+              그리지 않는다 — 다른 방법은 「취소」뿐이고, 라디오로 고르면 막대가 통째로 사라져 초점을 잃는다. */}
+          {shownPlan && !(questionOnly && !ops.length && !pastInput) && (
             <QuestionModeChooser
               plan={shownPlan.questions}
               all={shownPlan.rewriteAll}

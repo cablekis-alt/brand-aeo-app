@@ -1363,13 +1363,21 @@ export async function markEditorIndustry(tenantId: string, body: unknown): Promi
   return industryResult(competitor.name, next[key], tenant.industry);
 }
 
-/** 마지막 측정과 질문지 버전이 다르고, 그 버전을 쓰이는 수정본이 골랐다(질문지만 새로 쓴 저장 · 넘겨받기로 만든 버전). */
+/**
+ * 마지막 측정과 질문지 버전이 다른 것이 경쟁사 편집 때문인가 — 쓰이는 수정본이 그 버전을 골랐거나(질문지만 새로 쓴 저장 · 넘겨받기로
+ * 만든 버전), 잰 뒤의 저장(저장소 설정으로 돌아가기 · 저장소 목록으로 저장)이 잰 앱 질문지를 버렸다. 저장소 설정이 버전을 올린 것만
+ * 남으면 아니다.
+ */
 async function bankChosenByEdit(file: CompetitorOverrideFile, tenant: TenantConfig): Promise<boolean> {
-  const measured = file.measured?.bankVersion;
-  if (!measured || measured === tenant.questionBankVersion) return false;
-  if (!file.current?.questionBank || file.current.questionBank.version !== tenant.questionBankVersion) return false;
-  const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
-  return Boolean(repo && overrideApplies(file.current, repo));
+  const measured = file.measured;
+  if (!measured?.bankVersion || measured.bankVersion === tenant.questionBankVersion) return false;
+  if (file.current?.questionBank?.version === tenant.questionBankVersion) {
+    const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
+    if (repo && overrideApplies(file.current, repo)) return true;
+  }
+  const save = file.lastSave;
+  const savedAfter = Boolean(save && (!measured.at || save.savedAt > measured.at));
+  return savedAfter && save!.before?.questionBank?.version === measured.bankVersion;
 }
 
 /**

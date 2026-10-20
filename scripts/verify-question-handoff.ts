@@ -466,6 +466,55 @@ const e6 = planQuestionHandoff({
 })
 ok('자기 질문 있음 + 업종 다름: 이유는 receiverHasOwn, 업종 다름 곳도 싣는다', e6.unreceived[0]?.reason === 'receiverHasOwn' && e6.unreceived[0]?.own?.name === '가짜대기' && e6.unreceived[0]?.other?.join() === '가짜해돋이')
 
+// 받는 곳은 모두 견줘 고른다 — 목록 순서로 차례로 정하면, 한 곳만 받을 수 있는 나가는 곳(가짜옥도 — 가짜초원은 이미 함께 짚음)의
+// 후보를 다른 곳이 먼저 가져가 질문을 뺀다
+const orderRun = (nowList: CompetitorContext[]) =>
+  planQuestionHandoff({
+    bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄이랑 가짜골목 중 어디가 나아?'), q('v5-002', '가상머뭄, 가짜옥도, 가짜초원 세 곳 가격 비교해 줘')] },
+    version: 'v5',
+    brandNames: BRAND,
+    backToRepo: false,
+    repoVersion: 'v5',
+    now: { competitors: nowList, measured: measuredOf(nowList) },
+    next: { competitors: [c('가짜초원'), c('가짜해돋이')], measured: [true, true] },
+    hints: [],
+    taken: ['v5'],
+  })
+const ord1 = orderRun([c('가짜골목'), c('가짜옥도'), c('가짜초원'), c('가짜해돋이')])
+const ord2 = orderRun([c('가짜옥도'), c('가짜골목'), c('가짜초원'), c('가짜해돋이')])
+ok('모두 견줘 고르기: 두 질문 다 고쳐 쓴다(가짜골목 → 가짜초원, 가짜옥도 → 가짜해돋이)', toName(itemOf(ord1, 'v5-001')) === '가짜초원' && toName(itemOf(ord1, 'v5-002')) === '가짜해돋이' && ord1.sizeAfter === ord1.sizeBefore)
+ok('모두 견줘 고르기: 지금 목록 순서가 달라도 같은 결과', toName(itemOf(ord2, 'v5-001')) === '가짜초원' && toName(itemOf(ord2, 'v5-002')) === '가짜해돋이' && ord2.unreceived.length === 0)
+
+// 받는 곳 둘로 짝 질문 하나는 살린다(나가는 넷이 둘씩 짝으로 질문을 함께 가짐) — 지금 목록 순서가 섞여 있어도
+const pairNow = [c('가짜골목'), c('가짜선연'), c('가짜옥도'), c('가짜초원')]
+const pairs = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄, 가짜골목, 가짜옥도 세 곳 비교해 줘'), q('v5-002', '가상머뭄, 가짜선연, 가짜초원 세 곳 비교해 줘')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: pairNow, measured: measuredOf(pairNow) },
+  next: { competitors: [c('새곳엑스'), c('새곳와이')], measured: [true, true] },
+  hints: [],
+  taken: ['v5'],
+})
+ok('짝 질문: 받는 곳 둘로 v5-001을 살린다(3 → 2)', itemOf(pairs, 'v5-001')?.action === 'rewrite' && itemOf(pairs, 'v5-002')?.action === 'remove' && pairs.sizeAfter === pairs.sizeBefore - 1 && pairs.receivers.length === 2)
+
+// 함께 짚은 나가는 곳 때문에 빠지는 곳도 업종 다름 안내를 잃지 않는다(표시를 풀면 고쳐 쓴다)
+const otherPair = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄, 가짜골목, 가짜옥도 세 곳 비교해 줘')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: [c('가짜골목'), c('가짜옥도')], measured: [true, true] },
+  next: { competitors: [c('새곳엑스'), c('새곳제트')], measured: [true, true] },
+  hints: [],
+  otherIndustry: ['새곳제트'],
+  taken: ['v5'],
+})
+ok('짝 질문 + 업종 다름: 빠지는 두 곳 모두 업종 다름 곳(새곳제트)을 싣는다', itemOf(otherPair, 'v5-001')?.action === 'remove' && otherPair.unreceived.length === 2 && otherPair.unreceived.every((u) => u.other?.join() === '새곳제트'))
+
 let failed = 0
 for (const [label, cond] of checks) {
   if (!cond) failed += 1

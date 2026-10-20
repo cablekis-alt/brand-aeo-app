@@ -196,6 +196,15 @@ try {
   ok('저장소가 v6을 따로 쓰면 멈춘다(표시가 이어져 가드가 본다)', await rejects(pipeline.ensureQuestionBank(await fresh(D.tenantId), store)))
   writeJson('tenants.overlay.json', [A, B, C, D, E])
 
+  // 11-2) 모두 새로 쓴 질문지(v6)로 잰 뒤 「저장소 설정으로 돌아가기」 — 다음 측정은 v5로 재므로 대기다(저장소 버전 올림과 다르다)
+  ok('잰 뒤에는 대기 없음(B · v6)', (await fresh(B.tenantId)).questionBankVersion === 'v6' && (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
+  // (9)는 측정 시각을 1분 뒤로 적었다 — 실제처럼 측정이 먼저 끝난 뒤에 돌아가게 시각을 다시 적는다.
+  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() - 1000).toISOString(), 'v6')
+  await ed.resetEdit(B.tenantId, store)
+  ok('저장소 설정으로 돌아가면 v5로 재니 대기', (await fresh(B.tenantId)).questionBankVersion === 'v5' && (await ed.pendingCompetitorEdit(await fresh(B.tenantId)))?.summary === '저장소 설정의 경쟁사 목록으로 돌아감')
+  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() + 120_000).toISOString(), 'v5')
+  ok('v5로 잰 뒤에는 대기 없음', (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
+
   // 12) 「모두 새로 쓰기」 권하는 곳 — 저장한 뒤 비교 질문이 없는 곳(빠지는 질문은 세지 않는다 · 그대로 두기면 넘겨받기가 없다)
   writeJson('cohort-banks/가상업종__가상면/c1.json', cohortFile('가상면'))
   writeJson(`data/${E.tenantId}/question-bank/v5.json`, bankOf('가상면', [q('v5-001', '가상머뭄, 가상골목, 가상초원 세 곳 1박 가격 비교해 줘', '가상면')]))
