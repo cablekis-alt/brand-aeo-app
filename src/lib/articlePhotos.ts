@@ -55,11 +55,11 @@ function headingText(line: string): string {
   return normSlotAlt(line.replace(/^##\s+/, '').replace(/^\d+\.\s+/, ''))
 }
 
-/** 사진 대체 텍스트 정리 — 제어 문자 · 줄바꿈 · 대괄호를 걷고 160자까지(마크다운 이미지 문법이 깨지지 않게). */
+/** 사진 대체 텍스트 정리 — 제어 문자 · 줄바꿈 · 대괄호 · 역슬래시(닫는 대괄호를 글자로 만든다)를 걷고 160자까지(마크다운 이미지 문법이 깨지지 않게). */
 export function cleanPhotoAlt(s: string): string {
   const visible = Array.from(s, (ch) => {
     const code = ch.codePointAt(0)!
-    return code < 0x20 || code === 0x7f || ch === '[' || ch === ']' ? ' ' : ch
+    return code < 0x20 || code === 0x7f || ch === '[' || ch === ']' || ch === '\\' ? ' ' : ch
   }).join('')
   return visible
     .replace(/\s+/g, ' ')
@@ -136,7 +136,8 @@ export interface PhotoMatch {
  * ① 장면 글자와 소제목이 모두 같은 자리가 하나뿐이면 그 자리.
  * ② 같은 장면 글자의 자리 수가 고를 때와 같으면 nth 번째 자리(소제목만 고쳤다).
  * 그 밖에는 넣지 않는다 — 같은 소제목 아래 빈 자리가 하나뿐이거나 같은 장면 글자의 빈 자리가 있으면 그 자리를 제안한다.
- * 한 자리에는 사진 하나 — 앞서 짝지은 사진이 차지한 자리는 다시 쓰지 않는다.
+ * 한 자리에는 사진 하나. ①을 모든 사진에 먼저 주고 ②는 남은 자리에만 — 고른 순서에 따라 정확히 맞는 사진의 자리를 다른 사진이
+ * ②로 먼저 가져가 두 사진이 서로 바뀌지 않게.
  */
 export function matchPhotos(markdown: string, picks: readonly PhotoPick[]): PhotoMatch {
   const slots = photoSlotsOf(markdown)
@@ -144,20 +145,25 @@ export function matchPhotos(markdown: string, picks: readonly PhotoPick[]): Phot
   const result: PhotoMatch = { applied: [], suggested: [], unmatched: [] }
   const free = (s: PhotoSlot) => !taken.has(s.line)
   const confirmed = picks.filter((p) => p.confirmedAt)
-  const pending: PhotoPick[] = []
+  const placed = new Map<PhotoPick, PhotoSlot>()
+  const take = (pick: PhotoPick, slot: PhotoSlot | undefined) => {
+    if (!slot || !free(slot) || placed.has(pick)) return
+    taken.add(slot.line)
+    placed.set(pick, slot)
+  }
   for (const pick of confirmed) {
     const both = slots.filter((s) => s.key === pick.slot && s.heading === pick.heading)
+    if (both.length === 1) take(pick, both[0])
+  }
+  for (const pick of confirmed) {
     const sameKey = slots.filter((s) => s.key === pick.slot)
-    const slot =
-      both.length === 1 && free(both[0]!)
-        ? both[0]!
-        : sameKey.length === pick.same && sameKey[pick.nth - 1] && free(sameKey[pick.nth - 1]!)
-          ? sameKey[pick.nth - 1]!
-          : null
-    if (slot) {
-      taken.add(slot.line)
-      result.applied.push({ pick, slot })
-    } else pending.push(pick)
+    if (sameKey.length === pick.same) take(pick, sameKey[pick.nth - 1])
+  }
+  const pending: PhotoPick[] = []
+  for (const pick of confirmed) {
+    const slot = placed.get(pick)
+    if (slot) result.applied.push({ pick, slot })
+    else pending.push(pick)
   }
   // 제안은 넣은 사진이 다 자리를 잡은 뒤에 — 넣을 사진의 자리를 제안으로 내주지 않는다.
   for (const pick of pending) {
@@ -199,4 +205,13 @@ const PHOTO_MEDICAL =
 
 export function isPhotoMedical(industry: string | undefined): boolean {
   return PHOTO_MEDICAL.test(industry ?? '')
+}
+
+/**
+ * 고른 사진을 글에 넣어도 되는가 — 브랜드의 사진 사용 확인이 있고, 의료 업종이면 의료광고 확인까지 있을 때만. 내보내기 · 사진 받기
+ * (서버 photo-file)가 같은 기준을 쓴다 — 확인 뒤 업종이 의료로 바뀌어도 확인 없이 나가지 않게.
+ */
+export function photosAllowed(settings: { photoRights?: { medical?: true } } | null | undefined, industry: string | undefined): boolean {
+  const rights = settings?.photoRights
+  return Boolean(rights) && (!isPhotoMedical(industry) || Boolean(rights?.medical))
 }

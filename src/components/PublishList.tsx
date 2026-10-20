@@ -182,7 +182,7 @@ export default function PublishList({
           const stale = Boolean(a && row.article.draft && a.sourceKey !== sourceKeyOf(sourceOf(row)))
           const text = textOf(row)
           // 자사 줄의 발행본에 들어간 홈페이지 사진(src/lib/articlePhotos.ts) — 채널 줄 · 다듬은 글에는 넣지 않는다.
-          const photos = row.kind === 'own' && row.article.draft && text ? articlePhotoFiles(row.article.draft) : []
+          const photos = row.kind === 'own' && row.article.draft && text ? articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }) : []
           const ready = !row.locked && text !== null
           const making = busy === row.key
           const slotOpen = openSlot.has(row.key) || (row.done && openSlot.has(`done:${row.key}`))

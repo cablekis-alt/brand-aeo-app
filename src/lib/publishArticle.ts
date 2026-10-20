@@ -1,6 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { renderEvidenceMarkdown } from './answerEvidence'
-import { withPhotos, type AppliedPhoto } from './articlePhotos'
+import { photosAllowed, withPhotos, type AppliedPhoto } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -15,8 +15,8 @@ import type { PublishSettings } from './publishSettings'
  * 고쳐 둔 글(editedMarkdown)에도 섞지 않는다 — 내보낼 때마다 붙는다.
  */
 
-/** 글 끝을 만드는 데 필요한 브랜드 정보. */
-export type ArticleBrand = Pick<TenantSummary, 'brandName' | 'ownedDomains'>
+/** 글 끝을 만드는 데 필요한 브랜드 정보. 업종은 홈페이지 사진의 의료 확인에 쓴다(없으면 의료가 아닌 것으로 본다). */
+export type ArticleBrand = Pick<TenantSummary, 'brandName' | 'ownedDomains'> & Partial<Pick<TenantSummary, 'industry'>>
 
 export interface ArticleContext {
   brand: ArticleBrand
@@ -79,7 +79,8 @@ export function publishArticleParts(stored: StoredDraft, ctx: ArticleContext): {
   const evidence = renderEvidenceMarkdown(stored.evidence)
   // 글 끝은 사진을 넣기 전 본문으로 센다 — 브랜드 사이트의 사진 주소가 「본문에 이미 공식 사이트 링크가 있다」로 잡히지 않게.
   const tail = articleTailMarkdown(`${body}\n${evidence}`, ctx)
-  const { markdown: shown, applied } = withPhotos(body, stored.photos)
+  // 사진 사용 확인(의료 업종은 의료광고 확인까지)이 없으면 고른 사진도 넣지 않는다 — 서버의 사진 받기와 같은 기준.
+  const { markdown: shown, applied } = photosAllowed(ctx.settings, ctx.brand.industry) ? withPhotos(body, stored.photos) : { markdown: body, applied: [] }
   const extra = [evidence, tail].filter(Boolean)
   return { markdown: extra.length ? `${[shown.trimEnd(), ...extra].join('\n\n')}\n` : shown, photos: applied }
 }

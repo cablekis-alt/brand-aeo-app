@@ -150,8 +150,46 @@ ok('사진 형식은 앞 바이트로(jpg · png · gif · webp · avif)', [
 ok('HTML · SVG · 빈 파일은 사진이 아니다', photoTypeOf(ascii('<!doctype html>')) === null && photoTypeOf(ascii('<svg xmlns=')) === null && photoTypeOf(new Uint8Array(0)) === null)
 ok('파일 이름 — 사진1-소제목.jpg (소제목 없으면 자리 글자, 쓸 수 없는 글자는 뺀다)', photoFileName(1, { heading: '사례: 가상스테이', slotAlt: 'x' }, 'image/jpeg') === '사진1-사례-가상스테이.jpg' && photoFileName(2, { heading: '', slotAlt: '정원 풍경' }, 'image/webp') === '사진2-정원-풍경.webp')
 const storedWith = (photos: PhotoPick[]) => ({ actionId: 'content:a', generatedAt: 'g', draft: { title: '가상 글', lead: '리드', sections: [], gapCount: 0, usedFacts: [] }, editedMarkdown: md, photos })
-const files = articlePhotoFiles(storedWith([pick({ nth: 2, heading: '또 다른 사례' }), pick()]))
+const allowed = { settings: { photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z' } }, industry: '펜션' }
+const files = articlePhotoFiles(storedWith([pick({ nth: 2, heading: '또 다른 사례' }), pick()]), allowed)
 ok('같은 사진을 두 자리에 쓰면 한 번만 받는다(글 순서)', files.length === 1 && files[0]!.heading === '사례: 가상스테이' && files[0]!.place.heading === '사례: 가상스테이')
+ok('사진 사용 확인이 없으면(의료 업종은 의료광고 확인까지) 받을 사진도 없다', [
+  articlePhotoFiles(storedWith([pick()]), { settings: null, industry: '펜션' }).length === 0,
+  articlePhotoFiles(storedWith([pick()]), { ...allowed, industry: '정형외과' }).length === 0,
+  articlePhotoFiles(storedWith([pick()]), { settings: { photoRights: { confirmedAt: 'x', medical: true as const } }, industry: '정형외과' }).length === 1,
+].every(Boolean))
+
+// 8) 검토 지적 — 짝짓기는 ①을 모두 먼저, 설명의 역슬래시, 추출의 대체 경로 · srcset · 지연 로딩 · query 주소 · 아이콘
+const swapMd = ['## 1. 주차는 어디에', '![매장 외관](#image-slot)', '## 2. 위치', '![매장 외관](#image-slot)'].join('\n')
+const parking = pick({ slot: '매장 외관', nth: 2, same: 2, heading: '주차', src: 'https://s.example/parking.jpg' })
+const location = pick({ slot: '매장 외관', nth: 1, same: 2, heading: '위치', src: 'https://s.example/location.jpg' })
+const swap = matchPhotos(swapMd, [parking, location])
+ok('정확히 맞는 사진(①)이 먼저 — 고른 순서 때문에 두 사진이 서로 바뀌지 않는다', swap.applied.length === 1 && swap.applied[0]!.pick === location && swap.applied[0]!.slot.heading === '위치' && swap.suggested[0]?.pick === parking)
+ok('설명 끝 역슬래시가 이미지 문법을 깨지 않는다', cleanPhotoAlt('정원\\') === '정원' && withPhotos(md, [pick({ alt: '정원\\' })]).markdown.includes('![정원](https://stay.example/img/a.jpg)'))
+const logoOnly = extractSitePhotos(
+  ld({ '@type': 'LocalBusiness', logo: 'https://s.example/logo.png', image: 'https://s.example/logo.png' }) +
+    '<meta property="og:image" content="https://s.example/hero.jpg"><img src="/room.jpg" alt="가게 내부 테이블">',
+  'https://s.example/',
+)
+ok('업체 사진이 로고뿐이면 대표 사진 · 페이지 사진으로 넘어간다', logoOnly.photos.map((p) => p.src).join() === 'https://s.example/hero.jpg,https://s.example/room.jpg')
+const wp = extractSitePhotos(
+  ld({ '@type': 'Hotel', image: 'https://s.example/up/room.jpg' }) +
+    '<img src="/up/room-1024x683.jpg" srcset="/up/room-1024x683.jpg 1024w, /up/room-300x200.jpg 300w, /up/room-768x512.jpg 768w, /up/room.jpg 1600w" alt="오션뷰 객실의 킹사이즈 침대">',
+  'https://s.example/',
+)
+ok('srcset 크기별 주소는 한 장으로 센다 — 장면 설명을 꼬리표로 버리지 않는다', wp.photos[0]?.alt === '오션뷰 객실의 킹사이즈 침대')
+const lazy = extractSitePhotos('<img src="/blank.gif" data-src="/img/room.jpg" alt="객실 침대"><img src="data:image/gif;base64,R0lG" data-src="/img/pool.jpg" alt="수영장">', 'https://s.example/')
+ok('대체 경로는 지연 로딩의 실제 주소를 쓴다(자리표시자 · data: 빼고)', lazy.photos.map((p) => `${p.src}:${p.alt}`).join() === 'https://s.example/img/room.jpg:객실 침대,https://s.example/img/pool.jpg:수영장')
+const proxied = extractSitePhotos(
+  '<img src="/_vercel/image?url=%2Fimg%2Froom.jpg&w=640" alt="객실 침대"><img src="/_vercel/image?url=%2Fimg%2Fpool.jpg&w=640" alt="루프탑 수영장 전경">' +
+    ld({ '@type': 'Store', image: ['https://s.example/image.php?id=1', 'https://s.example/image.php?id=2'] }),
+  'https://s.example/',
+)
+ok('query로 사진을 가르는 주소는 합치지 않는다', proxied.photos.length === 2 && proxied.photos[0]!.src === 'https://s.example/image.php?id=1')
+const iconAlts = extractSitePhotos('<img src="/_vercel/image?url=%2Fimg%2Froom.jpg&w=640" alt="객실 침대"><img src="/_vercel/image?url=%2Fimg%2Fpool.jpg&w=640" alt="루프탑 수영장 전경">', 'https://s.example/')
+const icons = extractSitePhotos('<img src="/icons/phone.svg" alt="전화"><img src="/icons/kakao.png" alt=""><img src="/img/room.jpg" alt="객실 침대">', 'https://s.example/')
+ok('최적화 주소(/_vercel/image)는 안쪽 사진으로 가른다 — 두 사진 · 제 설명', iconAlts.photos.map((p) => p.alt).join() === '객실 침대,루프탑 수영장 전경')
+ok('대체 경로에서 설명 없는 아이콘 · SVG는 뺀다', icons.photos.map((p) => p.src).join() === 'https://s.example/img/room.jpg')
 
 let failed = 0
 for (const [label, pass] of checks) {

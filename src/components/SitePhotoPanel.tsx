@@ -18,6 +18,7 @@ export default function SitePhotoPanel({
   stored,
   disabled,
   onStored,
+  onSettings,
 }: {
   tenantId: string
   brand: TenantSummary
@@ -25,6 +26,8 @@ export default function SitePhotoPanel({
   /** 초안을 만들거나 다시 쓰는 중 — 그사이 고른 사진은 새 초안에 붙지 못한다. */
   disabled: boolean
   onStored: (s: StoredDraft) => void
+  /** 발행 설정을 읽거나 사진 사용 확인을 바꿨다 — 초안 패널의 「사진 받기」가 같은 확인을 본다. */
+  onSettings?: (s: PublishSettings | null) => void
 }) {
   const md = useMemo(() => publishMarkdownOf(stored), [stored])
   const slots = useMemo(() => photoSlotsOf(md), [md])
@@ -37,8 +40,8 @@ export default function SitePhotoPanel({
   const [pageUrl, setPageUrl] = useState('')
   const [found, setFound] = useState<SitePhotoResult | null>(null)
   const [loading, setLoading] = useState(false)
-  /** 사진을 고르고 있는 자리(줄 번호)와 고른 사진. */
-  const [openSlot, setOpenSlot] = useState<number | null>(null)
+  /** 사진을 고르고 있는 자리(slotId — 장면 글자 · 몇 번째 · 소제목)와 고른 사진. 자리를 바꾸면 고른 사진은 비운다. */
+  const [openSlot, setOpenSlot] = useState<string | null>(null)
   const [choice, setChoice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,6 +53,7 @@ export default function SitePhotoPanel({
       (s) => {
         if (!alive) return
         setSettings(s)
+        onSettings?.(s)
         setPageUrl((cur) => cur || photoPageOf(brand, s) || '')
       },
       (e: unknown) => {
@@ -60,6 +64,8 @@ export default function SitePhotoPanel({
     return () => {
       alive = false
     }
+    // onSettings는 부모의 상태 설정 함수라 바뀌지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, brand])
 
   if (!slots.length && !(stored.photos ?? []).length) return null
@@ -67,12 +73,19 @@ export default function SitePhotoPanel({
   const rights = settings?.photoRights
   const allowed = Boolean(rights) && (!medical || Boolean(rights?.medical))
   const pickAt = (slot: PhotoSlot) => match.applied.find((a) => a.slot.line === slot.line)?.pick
+  const slotId = (slot: PhotoSlot) => `${slot.key}|${slot.nth}|${slot.heading}`
+  const openFor = (id: string | null) => {
+    setOpenSlot(id)
+    setChoice(null)
+  }
 
   const confirmRights = async () => {
     setBusy(true)
     setError(null)
     try {
-      setSettings(await savePhotoRights(tenantId, { medical }))
+      const next = await savePhotoRights(tenantId, { medical })
+      setSettings(next)
+      onSettings?.(next)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -87,6 +100,7 @@ export default function SitePhotoPanel({
     setError(null)
     try {
       setFound(await loadSitePhotos(/^https?:\/\//i.test(url) ? url : `https://${url}`, fresh))
+      setChoice(null)
     } catch (e) {
       setFound(null)
       setError(`홈페이지를 읽지 못했어요 — ${e instanceof Error ? e.message : String(e)}`)
@@ -103,8 +117,7 @@ export default function SitePhotoPanel({
       const next = await saveDraftPhoto(tenantId, body)
       setNote(next.photoNote ?? null)
       onStored(next)
-      setOpenSlot(null)
-      setChoice(null)
+      openFor(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -190,7 +203,8 @@ export default function SitePhotoPanel({
 
       {slots.map((slot) => {
         const picked = pickAt(slot)
-        const open = openSlot === slot.line
+        const id = slotId(slot)
+        const open = openSlot === id
         return (
           <div key={slot.line} className="photo-slot">
             <p className="doc-meta" style={{ margin: 0 }}>
@@ -211,7 +225,7 @@ export default function SitePhotoPanel({
                     {allowed && found && found.photos.length > 0 && (
                       <>
                         {' · '}
-                        <button type="button" className="link-btn" disabled={off} onClick={() => setOpenSlot(open ? null : slot.line)}>
+                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open ? null : id)}>
                           바꾸기
                         </button>
                       </>
@@ -223,7 +237,7 @@ export default function SitePhotoPanel({
               allowed &&
               found &&
               found.photos.length > 0 && (
-                <button type="button" className="ghost" disabled={off} aria-expanded={open} onClick={() => setOpenSlot(open ? null : slot.line)}>
+                <button type="button" className="ghost" disabled={off} aria-expanded={open} onClick={() => openFor(open ? null : id)}>
                   {open ? '닫기' : '홈페이지 사진 고르기'}
                 </button>
               )
@@ -239,7 +253,7 @@ export default function SitePhotoPanel({
                         <img src={p.src} alt="" referrerPolicy="no-referrer" loading="lazy" />
                         <span>{p.alt || <span className="muted">설명 없음</span>}</span>
                         {p.where && <span className="doc-meta">{p.where}</span>}
-                        {(stored.photos ?? []).some((x) => x.src === p.src && !(x.slot === slot.key && x.heading === slot.heading)) && (
+                        {(stored.photos ?? []).some((x) => x.src === p.src && x !== picked) && (
                           <span className="doc-meta">다른 자리에 씀</span>
                         )}
                       </label>
@@ -249,10 +263,11 @@ export default function SitePhotoPanel({
                 <div className="brief-bar">
                   <button
                     type="button"
-                    disabled={!choice}
+                    disabled={!found.photos.some((x) => x.src === choice)}
                     onClick={() => {
                       const p = found.photos.find((x) => x.src === choice)
-                      if (p) void putPhoto(slot, p.src, p.alt, found.pageUrl)
+                      // 이 자리에 이미 들어간 사진이 있으면 그 사진을 바꾼다 — 소제목을 고쳐 자리 열쇠가 달라졌어도 옛 사진이 남지 않게.
+                      if (p) void putPhoto(slot, p.src, p.alt, found.pageUrl, picked)
                     }}
                   >
                     이 사진 넣기

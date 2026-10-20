@@ -25,6 +25,7 @@ import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
+import type { PublishSettings } from '../lib/publishSettings'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 import { articleSources } from '../lib/officialSources'
 import type { DraftRole } from '../prompts/b9c-content-draft'
@@ -124,6 +125,20 @@ export default function DraftPanel({
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [photoBusy, setPhotoBusy] = useState(false)
+  // 발행 설정 — 고른 홈페이지 사진을 넣어도 되는지(사진 사용 확인) 본다. 고른 사진이 있을 때만 읽고, 사진 칸이 확인을 바꾸면 그 값을 받는다.
+  const [pubSettings, setPubSettings] = useState<PublishSettings | null | undefined>(undefined)
+  const pickedCount = stored?.photos?.length ?? 0
+  useEffect(() => {
+    if (!pickedCount) return
+    let alive = true
+    loadPublishSettings(tenantId).then(
+      (s) => alive && setPubSettings(s),
+      (e: unknown) => console.error('[DraftPanel] 발행 설정을 읽지 못해 사진 받기를 숨깁니다', e),
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, pickedCount])
   // 빈칸 입력 중인 값(키 `절:블록`) — 「넣기」를 누를 때 서버에 남는다.
   const [typed, setTyped] = useState<Record<string, string>>({})
   /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
@@ -485,7 +500,7 @@ export default function DraftPanel({
   const opened = step === 'gaps'
   // 사진 자리에 들어갈 홈페이지 사진 — 구조 화면의 자리는 장면 글자 + 소제목으로 찾는다(발행본의 절 번호는 빈 절을 빼면 바뀐다).
   const placedPhotos = matchPhotos(publishMarkdownOf(stored), stored.photos ?? []).applied
-  const photoFiles = articlePhotoFiles(stored)
+  const photoFiles = articlePhotoFiles(stored, { settings: pubSettings, industry: tenant?.industry })
   const photoFor = (heading: string, alt: string) =>
     placedPhotos.find((a) => a.slot.key === normSlotAlt(alt) && a.slot.heading === normSlotAlt(heading))?.pick
 
@@ -916,7 +931,7 @@ export default function DraftPanel({
       )}
       {/* 홈페이지 사진도 자사 글(content)의 발행본에만 들어간다. */}
       {opened && !editing && tenant && action.kind === 'content' && (
-        <SitePhotoPanel tenantId={tenantId} brand={tenant} stored={stored} disabled={busy} onStored={onStored} />
+        <SitePhotoPanel tenantId={tenantId} brand={tenant} stored={stored} disabled={busy} onStored={onStored} onSettings={setPubSettings} />
       )}
     </div>
   )

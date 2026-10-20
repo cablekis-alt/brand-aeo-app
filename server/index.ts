@@ -35,7 +35,7 @@ import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvid
 import { createFactGuard } from './factGuard.js';
 import { fetchSitePhoto } from './sitePhoto.js';
 import { publicCollectorError } from './aeo/networkSafety.js';
-import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, type PhotoPick } from '../src/lib/articlePhotos.js';
+import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, photosAllowed, type PhotoPick } from '../src/lib/articlePhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -788,8 +788,7 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     res.status(404).json({ error: '그 자리에 고른 사진이 없어요.' });
     return;
   }
-  const rights = (await readPublishSettings(tenant.tenantId))?.photoRights;
-  if (!rights || (isPhotoMedical(tenant.industry) && !rights.medical)) {
+  if (!photosAllowed(await readPublishSettings(tenant.tenantId), tenant.industry)) {
     res.status(409).json({ error: '이 브랜드의 홈페이지 사진 사용 확인이 없어요.' });
     return;
   }

@@ -1,5 +1,5 @@
 import { fetchDraftPhotoFile, type StoredDraft, type TenantSummary } from './api'
-import { canonicalPhotoSrc, cleanPhotoAlt, withPhotos, type AppliedPhoto } from './articlePhotos'
+import { canonicalPhotoSrc, cleanPhotoAlt, photosAllowed, withPhotos, type AppliedPhoto } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
@@ -52,6 +52,15 @@ export function photoPageOf(brand: Pick<TenantSummary, 'brandName' | 'ownedDomai
 }
 
 /** 같은 사진인지 — 주소의 query · 조각은 무시하고, Next.js 이미지 최적화 주소(/_next/image?url=)는 원래 주소로 푼다. */
+/** 이미지 최적화 주소 — query에 원래 사진 주소를 담는다(경로 끝 · 그 주소를 담은 query 이름). */
+const IMAGE_PROXIES: [string, string][] = [
+  ['/_next/image', 'url'],
+  ['/_vercel/image', 'url'],
+  ['/.netlify/images', 'url'],
+  ['/_image', 'href'],
+]
+const IMAGE_PATH = /\.(jpe?g|png|gif|webp|avif|bmp)$/i
+
 function photoKey(raw: string, base: string): string | null {
   let url: URL
   try {
@@ -59,11 +68,12 @@ function photoKey(raw: string, base: string): string | null {
   } catch {
     return null
   }
-  if (url.pathname.endsWith('/_next/image')) {
-    const inner = url.searchParams.get('url')
+  for (const [path, param] of IMAGE_PROXIES) {
+    const inner = url.pathname.endsWith(path) ? url.searchParams.get(param) : null
     if (inner) return photoKey(inner, url.href)
   }
-  return `${url.origin}${url.pathname}`
+  // 경로가 사진 파일이 아니면(image.php?id=3) query가 사진을 가른다 — 버리면 다른 사진이 한 장으로 합쳐진다.
+  return IMAGE_PATH.test(url.pathname) ? `${url.origin}${url.pathname}` : `${url.origin}${url.pathname}${url.search}`
 }
 
 function absolute(raw: string, base: string): string | null {
@@ -140,6 +150,26 @@ function imgSources(img: Element): string[] {
   return out
 }
 
+/** 지연 로딩 사진의 실제 주소 — data-src 등을 src(자리표시자 · data: 주소)보다 먼저, 그다음 srcset의 가장 큰 주소. */
+function lazySource(img: Element): string | null {
+  for (const attr of ['data-src', 'data-original', 'data-lazy-src']) {
+    const v = img.getAttribute(attr)?.trim()
+    if (v && !v.startsWith('data:')) return v
+  }
+  const set = img.getAttribute('srcset') ?? img.getAttribute('data-srcset')
+  if (set) {
+    const widest = set
+      .split(',')
+      .map((part) => part.trim().split(/\s+/))
+      .map(([url, size]) => ({ url: url ?? '', w: Number.parseFloat(size ?? '') || 0 }))
+      .filter((c) => c.url && !c.url.startsWith('data:'))
+      .sort((a, b) => b.w - a.w)[0]
+    if (widest) return widest.url
+  }
+  const src = img.getAttribute('src')?.trim()
+  return src && !src.startsWith('data:') ? src : null
+}
+
 /**
  * 사진마다 장면 설명을 고른다 — 그 사진에 붙은 설명 가운데, 여러 사진(GENERIC_ALT_PHOTOS장 이상)에 똑같이 붙은 설명과 꼬리표
  * 모양(TAG_ALT)은 빼고 가장 자주 붙은 것(같으면 긴 것). 장면 설명이 없으면 ''(사진 자리 글자를 쓴다). 브랜드 이름이 든 설명도
@@ -151,14 +181,15 @@ function altChooser(doc: Document, base: string): (key: string) => string {
   for (const img of doc.querySelectorAll('img')) {
     const alt = cleanPhotoAlt(img.getAttribute('alt') ?? '')
     if (!alt) continue
-    for (const raw of imgSources(img)) {
-      const key = photoKey(raw, base)
-      if (!key) continue
+    const keys = [...new Set(imgSources(img).map((raw) => photoKey(raw, base)).filter((k): k is string => Boolean(k)))]
+    if (!keys.length) continue
+    for (const key of keys) {
       const alts = altsByPhoto.get(key) ?? new Map<string, number>()
       alts.set(alt, (alts.get(alt) ?? 0) + 1)
       altsByPhoto.set(key, alts)
-      photosByAlt.set(alt, (photosByAlt.get(alt) ?? new Set<string>()).add(key))
     }
+    // 사진 수는 <img> 하나를 한 장으로 센다 — srcset의 크기별 주소(…-300x200.jpg 등)를 여러 사진으로 세면 장면 설명이 꼬리표로 버려진다.
+    photosByAlt.set(alt, (photosByAlt.get(alt) ?? new Set<string>()).add(keys[0]!))
   }
   return (key) => {
     const alts = [...(altsByPhoto.get(key) ?? new Map<string, number>()).entries()].filter(
@@ -179,12 +210,32 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
   const logoKeys = new Set(logos.map((l) => photoKey(l, base)).filter((k): k is string => Boolean(k)))
   const meta = (prop: string) => doc.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`)?.getAttribute('content')?.trim() ?? ''
 
-  const found: { raw: string; alt: string; source: SitePhoto['source']; where?: string }[] = []
-  const add = (raw: string, rest: Omit<SitePhoto, 'src' | 'alt'> & { alt?: string }) => found.push({ raw, ...rest, alt: rest.alt ?? '' })
-  for (const im of images) add(im.url, { source: 'jsonld', ...(im.where ? { where: im.where } : {}) })
-  if (!found.length) {
+  type Found = { raw: string; alt: string; source: SitePhoto['source']; where?: string }
+  const seen = new Set<string>()
+  const photos: SitePhoto[] = []
+  let skippedHttp = 0
+  // 후보를 걸러 담는다 — 로고 · 같은 사진 · https가 아닌 사진 · SVG(사진 받기가 받지 않는다)는 뺀다.
+  const collect = (found: Found[]) => {
+    for (const f of found) {
+      if (photos.length >= MAX_PHOTOS) return
+      const key = photoKey(f.raw, base)
+      const abs = absolute(f.raw, base)
+      if (!key || !abs || logoKeys.has(key) || seen.has(key) || /\.svg$/i.test(new URL(abs).pathname)) continue
+      seen.add(key)
+      const src = canonicalPhotoSrc(abs)
+      if (!src) {
+        if (abs.startsWith('http:')) skippedHttp += 1
+        continue
+      }
+      photos.push({ src, alt: altOf(key) || f.alt, source: f.source, ...(f.where ? { where: f.where } : {}) })
+    }
+  }
+  collect(images.map((im) => ({ raw: im.url, alt: '', source: 'jsonld' as const, ...(im.where ? { where: im.where } : {}) })))
+  // 업체 사진이 하나도 남지 않으면(없거나 로고 · http뿐) 대표 사진 → 같은 사이트의 설명 있는 사진으로 넘어간다.
+  if (!photos.length) {
+    const fallback: Found[] = []
     const og = meta('og:image')
-    if (og) add(og, { source: 'og', alt: cleanPhotoAlt(meta('og:image:alt')) })
+    if (og) fallback.push({ raw: og, alt: cleanPhotoAlt(meta('og:image:alt')), source: 'og' })
     const host = (() => {
       try {
         return new URL(base).host
@@ -193,27 +244,12 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
       }
     })()
     for (const img of doc.querySelectorAll('img[alt]')) {
-      const src = imgSources(img)[0]
-      const abs = src ? absolute(src, base) : null
-      if (abs && new URL(abs).host === host) add(abs, { source: 'img' })
+      if (!cleanPhotoAlt(img.getAttribute('alt') ?? '')) continue // 빈 설명은 장식(아이콘)이다
+      const raw = lazySource(img)
+      const abs = raw ? absolute(raw, base) : null
+      if (abs && new URL(abs).host === host) fallback.push({ raw: abs, alt: '', source: 'img' })
     }
-  }
-
-  const seen = new Set<string>()
-  const photos: SitePhoto[] = []
-  let skippedHttp = 0
-  for (const f of found) {
-    const key = photoKey(f.raw, base)
-    const abs = absolute(f.raw, base)
-    if (!key || !abs || logoKeys.has(key) || seen.has(key)) continue
-    seen.add(key)
-    const src = canonicalPhotoSrc(abs)
-    if (!src) {
-      if (abs.startsWith('http:')) skippedHttp += 1
-      continue
-    }
-    photos.push({ src, alt: altOf(key) || f.alt, source: f.source, ...(f.where ? { where: f.where } : {}) })
-    if (photos.length >= MAX_PHOTOS) break
+    collect(fallback)
   }
   return { photos, skippedHttp }
 }
@@ -233,8 +269,15 @@ export function loadSitePhotos(pageUrl: string, fresh = false): Promise<SitePhot
   return task
 }
 
-/** 글에 들어간 홈페이지 사진 — 같은 사진은 한 번(글 순서). 「사진 N장 받기」의 N과 파일 순서다. */
-export function articlePhotoFiles(stored: StoredDraft): AppliedPhoto[] {
+/**
+ * 글에 들어간 홈페이지 사진 — 같은 사진은 한 번(글 순서). 「사진 N장 받기」의 N과 파일 순서다. 사진 사용 확인이 없으면(의료 업종은
+ * 의료광고 확인까지) 내보내기에도 넣지 않으므로 받을 사진도 없다(publishArticleParts와 같은 기준).
+ */
+export function articlePhotoFiles(
+  stored: StoredDraft,
+  ctx: { settings: PublishSettings | null | undefined; industry: string | undefined },
+): AppliedPhoto[] {
+  if (!photosAllowed(ctx.settings, ctx.industry)) return []
   const seen = new Set<string>()
   return withPhotos(publishMarkdownOf(stored), stored.photos).applied.filter((p) => {
     if (seen.has(p.src)) return false
@@ -254,7 +297,7 @@ export function photoFileName(k: number, photo: Pick<AppliedPhoto, 'heading' | '
 }
 
 /** 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 하나라도 실패하면 throw. */
-export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos = articlePhotoFiles(stored)): Promise<void> {
+export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos: AppliedPhoto[]): Promise<void> {
   for (const [i, p] of photos.entries()) {
     const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
     downloadBlob(photoFileName(i + 1, p, blob.type), blob)
