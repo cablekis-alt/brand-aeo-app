@@ -177,8 +177,8 @@ export default function QuestionBankPage() {
           {bank.upcomingVersion &&
             (bank.upcomingRegenerate ? (
               <p className="hint">
-                ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정에서 {bank.upcomingVersion} 질문지를 새로 만들어요 — 경쟁사를
-                바꾸며 브랜드 질문 {bank.upcomingRegenerate.brandCount}개를 모두 새로 쓰고, 공통 질문은 그대로예요(경쟁사 편집). 주제 · 단계
+                ※ 지금 목록은 마지막 측정({bank.version}) 질문입니다. 다음 측정에서 {bank.upcomingVersion} 질문지를 새로 만들어요 — 경쟁사
+                편집에서 브랜드 질문 {bank.upcomingRegenerate.brandCount}개를 모두 새로 쓰기로 했고, 공통 질문은 그대로예요. 주제 · 단계
                 매기기는 그 측정 뒤에 할 수 있어요 — 지금 매기면 새 질문지에는 남지 않아요.
               </p>
             ) : bank.upcomingDerived ? (

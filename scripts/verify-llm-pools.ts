@@ -18,6 +18,7 @@ ok('Gemini 24', collectLimit('gemini') === 24)
 ok('OpenAI 36', collectLimit('openai') === 36)
 ok('Perplexity 8', collectLimit('perplexity') === 8)
 ok('판정 144', llmConcurrencyLimits().judge === 144)
+ok('화면 확인 4', llmConcurrencyLimits().check === 4)
 
 // 2) 환경변수 — 엔진 하나만, 또는 전부
 process.env.COLLECT_LLM_CONCURRENCY_PERPLEXITY = '5'
@@ -50,6 +51,18 @@ ok('Perplexity 9번째는 자리가 날 때까지 기다린다', !order.includes
 release()
 await Promise.all([...held, ninth])
 ok('자리가 나면 9번째도 돈다', order.includes('p8'))
+
+// 4) 화면에서 기다리는 확인(경쟁사 업종)은 측정 수집 줄에 서지 않는다 — Gemini 수집 24칸이 다 차도 바로 돈다
+let releaseG!: () => void
+const gateG = new Promise<void>((r) => (releaseG = r))
+const heldG = Array.from({ length: 24 }, () => withLlmSlot('collect:gemini', () => gateG))
+let checked = false
+await withLlmSlot('check', async () => {
+  checked = true
+})
+ok('Gemini 수집이 꽉 차도 화면 확인은 기다리지 않는다', checked)
+releaseG()
+await Promise.all(heldG)
 
 let failed = 0
 for (const [label, pass] of checks) {

@@ -140,6 +140,11 @@ try {
   ok('같은 이름(띄어쓰기 무시)은 다시 묻지 않는다', engine.prompts.length === 1)
   const ruled = new FakeEngine(() => new Error('부르면 안 된다'))
   ok('규칙으로 정하는 이름은 엔진을 부르지 않는다', (await ed.checkEditorIndustry(ID, { name: '바닷가해돋이펜션' }, () => ruled)).verdict === 'same' && ruled.prompts.length === 0)
+  const noKey = () => {
+    throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다.')
+  }
+  ok('엔진 키가 없어도 규칙으로 정하는 이름은 정한다(엔진은 부를 때 만든다)', (await ed.checkEditorIndustry(ID, { name: '바닷가노을펜션' }, noKey)).verdict === 'same')
+  ok('엔진 키가 없으면 규칙 밖 이름은 확인 실패(저장 없음)', (await ed.checkEditorIndustry(ID, { name: '가상 키없음' }, noKey)).error?.includes('GEMINI_API_KEY') === true)
   tracker.beginMeasureRun()
   ok('측정 중에도 확인한다(결정 F2)', (await ed.checkEditorIndustry(ID, { name: '가상 여행모음' }, () => ruled)).verdict === 'different')
   tracker.endMeasureRun()

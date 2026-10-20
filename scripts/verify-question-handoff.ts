@@ -416,6 +416,56 @@ const subCtx = { item: subItem, brandNames: BRAND, language: 'ko' as const, next
 ok('남는 이름이 나간 이름의 일부: 고친 문장은 통과', checkRewrite('가상머뭄, 가상초원, 새곳 중 어디가 제일 조용해?', undefined, subCtx).reasons.length === 0)
 ok('남는 이름이 나간 이름의 일부: 나간 이름이 남으면 거절', checkRewrite('가상머뭄, 가상초원, 새곳, 가상초원고택 중 어디가 제일 조용해?', undefined, subCtx).reasons.includes('나간 경쟁사 이름이 남았어요'))
 
+// 5단계 검토 지적 — 이미 재는 곳이 받을 때(E8) 질문지에 이름이 아예 없는 곳을 먼저 본다(넘겨줄 질문에 함께 나온 곳은 고쳐 써도 남는다)
+const e3Now = [c('가짜골목'), c('가짜옥도'), c('가짜초원'), c('가짜해돋이')]
+const e3Next = [c('새가짜A'), c('가짜초원'), c('가짜해돋이')]
+const e3 = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄, 가짜골목, 가짜초원 세 곳 1박 가격 비교해 줘'), q('v5-002', '가상머뭄이랑 가짜옥도 중 어디가 더 조용해?')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: e3Now, measured: measuredOf(e3Now) },
+  next: { competitors: e3Next, measured: measuredOf(e3Next) },
+  hints: [{ from: '가짜골목', to: '새가짜A' }],
+  taken: ['v5'],
+})
+ok('이미 재는 곳 받기: 이름이 없던 가짜해돋이가 받는다(가짜초원은 v5-001에 남는다)', toName(itemOf(e3, 'v5-002')) === '가짜해돋이' && itemOf(e3, 'v5-001')?.keep.map((k) => k.name).join() === '가짜초원')
+ok('이미 재는 곳 받기: 질문 둘 다 고쳐 쓴다', e3.items.every((i) => i.action === 'rewrite') && e3.sizeAfter === e3.sizeBefore)
+
+// 받는 곳을 정했는데 그 질문이 모두 빠지면(함께 짚은 나가는 곳이 받을 곳이 없다) 받는 곳을 돌려줘 다른 질문을 살린다
+const e4Now = [c('가짜골목'), c('가짜옥도'), c('가짜선연'), c('가짜초원')]
+const e4 = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄, 가짜골목, 가짜옥도 세 곳 가격 비교해 줘'), q('v5-002', '가상머뭄이랑 가짜선연 중 어디가 나아?')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: e4Now, measured: measuredOf(e4Now) },
+  next: { competitors: [c('가짜초원')], measured: [true] },
+  hints: [],
+  taken: ['v5'],
+})
+ok('받는 곳 돌려주기: v5-001은 빠지고(가짜옥도 받을 곳 없음) 가짜초원이 v5-002를 받는다', itemOf(e4, 'v5-001')?.action === 'remove' && toName(itemOf(e4, 'v5-002')) === '가짜초원' && e4.sizeAfter === e4.sizeBefore - 1)
+ok('받는 곳 돌려주기: 받는 곳 표시는 가짜초원 → v6-002 하나', JSON.stringify(e4.receivers) === JSON.stringify([{ name: '가짜초원', ids: ['v6-002'] }]))
+ok('받는 곳 돌려주기: 빠지는 두 곳은 받을 곳 없음으로 남는다', e4.unreceived.map((u) => `${u.name}:${u.reason}`).sort().join() === '가짜골목:noReceiver,가짜옥도:noReceiver')
+
+// 이유가 「들어온 곳에 자기 질문 있음」이어도 업종 다름으로 막힌 곳을 함께 싣는다(사람이 풀 수 있는 것은 업종 표시다)
+const e6Now = [c('가짜골목'), c('가짜해돋이'), c('가짜대기')]
+const e6 = planQuestionHandoff({
+  bank: { ...bank, questions: [...shared, q('v5-001', '가상머뭄이랑 가짜골목 중 어디가 나아?'), q('v5-002', '가상머뭄이랑 가짜대기 중 어디가 조용해?')] },
+  version: 'v5',
+  brandNames: BRAND,
+  backToRepo: false,
+  repoVersion: 'v5',
+  now: { competitors: e6Now, measured: [true, true, false] },
+  next: { competitors: [c('가짜해돋이'), c('가짜대기')], measured: [true, true] },
+  hints: [],
+  otherIndustry: ['가짜해돋이'],
+  taken: ['v5'],
+})
+ok('자기 질문 있음 + 업종 다름: 이유는 receiverHasOwn, 업종 다름 곳도 싣는다', e6.unreceived[0]?.reason === 'receiverHasOwn' && e6.unreceived[0]?.own?.name === '가짜대기' && e6.unreceived[0]?.other?.join() === '가짜해돋이')
+
 let failed = 0
 for (const [label, cond] of checks) {
   if (!cond) failed += 1

@@ -6129,6 +6129,10 @@ td.cell-mid {
   background: var(--warn-soft);
   color: var(--warn);
 }
+.ce-alert.bad {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
 .ce-body {
   flex: 1;
   overflow-y: auto;

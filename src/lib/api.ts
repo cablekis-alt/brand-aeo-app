@@ -948,8 +948,10 @@ export interface CompetitorEditPlan {
   questions: QuestionHandoffPlan
   /** 「브랜드 질문 모두 새로 쓰기」 — 고르면 저장할 때 버전만 올리고 다음 측정이 새로 쓴다. */
   rewriteAll: RewriteAllPlan
-  /** 함께 재는데 비교 질문이 없는 곳(넘겨받는 곳 · 업종 다름 제외). */
+  /** 저장한 뒤 함께 재는데 비교 질문이 없는 곳(빠지는 질문 빼고 넘겨받는 질문 더해 · 업종 다름 제외). */
   noQuestion: string[]
+  /** 「질문지 그대로 두기」로 저장하면 비교 질문이 없는 곳(지금 질문만). */
+  noQuestionKept: string[]
 }
 
 /** 질문 넘겨받기 — server/questionHandoff.ts QuestionPlan과 같은 모양. */
@@ -978,7 +980,7 @@ export interface QuestionHandoffPlan {
     questionIds: string[]
     reason: 'noReceiver' | 'receiverHasOwn' | 'otherIndustry'
     own?: { name: string; questionIds: string[] }
-    /** otherIndustry — 「업종 다름」만 아니었으면 받을 수 있던 곳. */
+    /** 「업종 다름」만 아니었으면 받을 수 있던 곳 — 이유가 receiverHasOwn이어도 싣는다. */
     other?: string[]
   }[]
   key: string

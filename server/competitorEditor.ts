@@ -250,8 +250,10 @@ export interface EditPlan {
   questions: QuestionPlan;
   /** 「브랜드 질문 모두 새로 쓰기」(5단계) — 고르면 저장할 때 버전만 올리고 다음 측정이 새로 쓴다. */
   rewriteAll: RewriteAllPlan;
-  /** 바꾼 목록에서 함께 재는데 비교 질문이 없는 곳(넘겨받는 곳 제외) — 「모두 새로 쓰기」를 권하는 안내에 쓴다. */
+  /** 저장한 뒤 함께 재는데 비교 질문이 없는 곳(빠지는 질문 빼고 넘겨받는 질문 더해) — 「모두 새로 쓰기」를 권하는 안내에 쓴다. */
   noQuestion: string[];
+  /** 「질문지 그대로 두기」로 저장하면 비교 질문이 없는 곳(넘겨받기 없이 지금 질문만). */
+  noQuestionKept: string[];
 }
 
 /**
@@ -918,10 +920,15 @@ async function computePlan(
     otherIndustry: competitors.filter((c) => industryOf(ctx, c.name)?.verdict === 'different').map((c) => c.name),
     ...(options.existingReceivers === false ? { existingReceivers: false } : {}),
   });
+  // 저장한 뒤에도 비교 질문이 없는 곳 — 빠지는 질문은 세지 않고 넘겨받은 질문은 센다. 「질문지 그대로 두기」면 질문지가 그대로라
+  // 넘겨받기 없이 지금 질문으로만 센다.
   const receiving = new Set(questions.receivers.map((r) => fold(r.name)));
-  const noQuestion = next.rows
-    .filter((r) => r.status === 'measured' && !r.questionIds.length && !receiving.has(fold(r.name)) && r.industry?.verdict !== 'different')
+  const dropped = new Set(questions.items.filter((i) => i.action === 'remove').map((i) => i.fromId));
+  const askable = next.rows.filter((r) => r.status === 'measured' && r.industry?.verdict !== 'different');
+  const noQuestion = askable
+    .filter((r) => !r.questionIds.some((id) => !dropped.has(id)) && !receiving.has(fold(r.name)))
     .map((r) => r.name);
+  const noQuestionKept = askable.filter((r) => !r.questionIds.length).map((r) => r.name);
   const nextMeasured = new Set(next.rows.filter((r) => r.status === 'measured').map((r) => r.targetTenantId));
   const week = getIsoWeekString(new Date());
   const leaving = now.rows
@@ -970,6 +977,7 @@ async function computePlan(
       questions,
       rewriteAll: rewriteAllFor(tenant, repo, ctx.bank, taken, competitors),
       noQuestion,
+      noQuestionKept,
     },
     exclusion: exclusion && exclusion.preview.items.length ? exclusion : null,
     rewrite: {
@@ -1139,16 +1147,23 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     const competitors = plan.competitors;
     const savedAt = new Date().toISOString();
     const newBank = plan.questions.mode === 'derive' && questionMode === 'derive' ? derivedBankFor(rewrite, repo, raw.questions, savedAt) : null;
+    const file = await readCompetitorOverride(tenantId);
+    // 「모두 새로 쓰기」를 저장하고 아직 재지 않았다(그 버전 파일이 없다) — 그 뒤의 저장(추가 · 바꾸기 · 그대로 두기 · 고객 전환)도
+    // 새로 쓸 표시를 잇는다. 빠뜨리면 다음 측정이 그 버전을 표시 없이 만들어 저장소 질문지를 고친 것으로 보는 검사가 놓친다.
+    const pendingQb = file?.current && overrideApplies(file.current, repo) ? file.current.questionBank : undefined;
+    const pendingRegenerate =
+      pendingQb?.regenerate && pendingQb.version === tenant.questionBankVersion && plan.questions.mode === 'fresh' ? pendingQb : undefined;
     // 수정본의 질문지 — 새로 만들었으면 그 버전, 모두 새로 쓰면 다음 버전 이름만(은행은 다음 측정이 만든다), 아니면 지금 쓰는 앱
     // 질문지를 그대로 잇는다(빠뜨리면 저장소 버전으로 떨어져 목록과 질문지가 어긋난다).
     const questionBank: CompetitorOverride['questionBank'] = newBank
       ? { version: newBank.version, size: newBank.questions.length }
       : rewriteAll
         ? { version: plan.rewriteAll.toVersion, size: plan.rewriteAll.size, regenerate: { from: plan.rewriteAll.fromVersion, base: baseFingerprint(repo) } }
-        : tenant.questionBankVersion !== repo.questionBankVersion
-          ? { version: tenant.questionBankVersion, size: tenant.questionBankSize }
-          : undefined;
-    const file = await readCompetitorOverride(tenantId);
+        : pendingRegenerate
+          ? { version: pendingRegenerate.version, size: pendingRegenerate.size, regenerate: pendingRegenerate.regenerate }
+          : tenant.questionBankVersion !== repo.questionBankVersion
+            ? { version: tenant.questionBankVersion, size: tenant.questionBankSize }
+            : undefined;
     // 지난 기록만 바꾼 저장이면 되돌려도 목록은 그대로다(쓰이지 않는 옛 목록도 지우지 않게 파일 값 그대로).
     const pastOnly = plan.unchanged && !rewriteAll;
     const before = pastOnly ? (file?.current ?? null) : overrideApplies(file?.current ?? null, repo) ? file!.current : null;
@@ -1309,7 +1324,9 @@ export async function checkEditorIndustry(tenantId: string, body: unknown, clien
   if (cached?.person || (cached?.ai && cached.ai.customerIndustry === tenant.industry)) return industryResult(competitor.name, cached, tenant.industry);
   let check;
   try {
-    check = await checkCompetitorIndustry(tenant, competitor, { client: client(), engine: 'gemini', runtime });
+    // 엔진은 부를 때 만든다 — 규칙으로 정하는 이름(업종 접미사 · 등록 고객)은 엔진 키가 없어도 정해야 한다.
+    const lazy: EngineClient = { call: (prompt) => client().call(prompt) };
+    check = await checkCompetitorIndustry(tenant, competitor, { client: lazy, engine: 'gemini', runtime });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn(`[competitorEditor] ${tenantId} · ${competitor.name} 업종 확인 실패: ${message}`);
@@ -1346,6 +1363,15 @@ export async function markEditorIndustry(tenantId: string, body: unknown): Promi
   return industryResult(competitor.name, next[key], tenant.industry);
 }
 
+/** 마지막 측정과 질문지 버전이 다르고, 그 버전을 쓰이는 수정본이 골랐다(질문지만 새로 쓴 저장 · 넘겨받기로 만든 버전). */
+async function bankChosenByEdit(file: CompetitorOverrideFile, tenant: TenantConfig): Promise<boolean> {
+  const measured = file.measured?.bankVersion;
+  if (!measured || measured === tenant.questionBankVersion) return false;
+  if (!file.current?.questionBank || file.current.questionBank.version !== tenant.questionBankVersion) return false;
+  const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
+  return Boolean(repo && overrideApplies(file.current, repo));
+}
+
 /**
  * 고친 목록을 아직 재지 않았다 — 브랜드 현황 카드의 「경쟁사 바뀜 · 다음 측정 대기」.
  * tenant는 측정이 읽는 런타임 값이다(고친 목록이 쓰이면 그 목록). 마지막으로 잰 목록과 다르면 대기다.
@@ -1355,9 +1381,10 @@ export async function pendingCompetitorEdit(tenant: TenantConfig): Promise<{ sav
   const file = await readCompetitorOverride(tenant.tenantId);
   if (!file?.measured) return null;
   if (file.current && !sameList(file.current.competitors, tenant.competitors)) return null;
-  // 목록도 질문지도 마지막 측정과 같으면 대기가 아니다(질문지 버전을 적기 전의 기록은 목록만 본다).
-  const bankChanged = Boolean(file.measured.bankVersion && file.measured.bankVersion !== tenant.questionBankVersion);
-  if (file.measured.listHash === listHash(tenant.competitors) && !bankChanged) return null;
+  // 목록도 질문지도 마지막 측정과 같으면 대기가 아니다(질문지 버전을 적기 전의 기록은 목록만 본다). 질문지 버전은 앱이 고른
+  // 것(쓰이는 수정본이 적은 버전)만 센다 — 저장소 설정이 질문지 버전을 올린 것은 경쟁사 편집이 아니다.
+  const listChanged = file.measured.listHash !== listHash(tenant.competitors);
+  if (!listChanged && !(await bankChosenByEdit(file, tenant))) return null;
   const info = listSaveInfo(file);
   return { savedAt: info?.savedAt ?? file.updatedAt, summary: info?.summary ?? '경쟁사 목록을 바꿨어요' };
 }

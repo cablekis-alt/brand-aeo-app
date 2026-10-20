@@ -60,7 +60,8 @@ function nextOpId(): string {
   return String(opSeq)
 }
 type Open = { kind: 'row'; key: string } | { kind: 'wait'; key: string } | { kind: 'add' } | null
-type PlanState = { key: string; value: CompetitorEditPlan | null; error: string | null }
+/** replan: 이 계획을 물은 때의 「다시 받기」 횟수 — 그 뒤에 다시 받기로 했으면(업종 판정 · 표시) 낡은 계획이다. */
+type PlanState = { key: string; replan: number; value: CompetitorEditPlan | null; error: string | null }
 /** 넘겨받은 비교 질문 고쳐 쓰기 — 계획(key)마다 하나. */
 type DraftState = { status: 'running'; startedAt: number } | { status: 'done'; value: QuestionRewriteResult } | { status: 'error'; message: string }
 type SetDrafts = (update: (prev: Record<string, DraftState>) => Record<string, DraftState>) => void
@@ -157,6 +158,8 @@ export default function CompetitorEditor({
   const [questionOnly, setQuestionOnly] = useState(false)
   // 업종 확인(추가 · 새 이름으로 바꾸기, 결정 7) — 이름(접은 값) → 상태. 끝나면 서버 판정(줄의 industry)이 이어받는다.
   const [industryChecks, setIndustryChecks] = useState<Record<string, IndustryCheckState>>({})
+  // 업종 표시(「업종 다름으로 표시」 · 「{업종} 맞음」) 실패 — 바꾼 내용이 없어도 보이게 저장 막대가 아닌 목록 아래에 둔다.
+  const [industryError, setIndustryError] = useState<string | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
@@ -202,6 +205,15 @@ export default function CompetitorEditor({
   const pastRestore = restore.filter((id) => excludedIds.has(id))
   const pastInput: PastOutInput | null = pastAdd.length || pastRestore.length ? { add: pastAdd, restore: pastRestore } : null
   const dirty = ops.length > 0 || pastInput !== null || questionOnly
+  // 바꾼 것을 하나씩 모두 되돌리면 고른 질문지 방식도 기본으로 돌아간다 — 다음 편집에 「그대로 두기」가 미리 골라져 있지 않게.
+  const [wasDirty, setWasDirty] = useState(dirty)
+  if (wasDirty !== dirty) {
+    setWasDirty(dirty)
+    if (!dirty) {
+      setQMode('derive')
+      setQModeOpen(false)
+    }
+  }
   // 누가 누구 자리에 들었나 — 서버가 빠지는 경쟁사의 질문을 받을 곳을 정할 때 쓴다(요청 key에도 넣어 미리보기 = 저장).
   const hints = useMemo(() => handoffHints(base, applied), [base, applied])
   const requestKey = dirty ? JSON.stringify({ competitors: toCompetitors(applied.list), pastOut: pastInput, handoff: hints }) : ''
@@ -215,12 +227,12 @@ export default function CompetitorEditor({
       planCompetitorEdit(tenantId, req.competitors, req.pastOut, req.handoff).then(
         (value) => {
           if (!alive) return
-          setPlan({ key: requestKey, value, error: null })
+          setPlan({ key: requestKey, replan, value, error: null })
           setLastPlan(value)
         },
         (err: unknown) => {
           console.error('[CompetitorEditor] 바꾼 목록을 계산하지 못했습니다', err)
-          if (alive) setPlan({ key: requestKey, value: null, error: err instanceof Error ? err.message : String(err) })
+          if (alive) setPlan({ key: requestKey, replan, value: null, error: err instanceof Error ? err.message : String(err) })
         },
       )
     }, 250)
@@ -241,7 +253,8 @@ export default function CompetitorEditor({
     onClose()
   }
 
-  const current = plan && plan.key === requestKey ? plan : null
+  // 다시 받기로 한 뒤의 옛 계획은 쓰지 않는다 — 업종 판정 전 계획으로 고쳐 쓰기를 부르면 서버가 409로 거절하고 그 오류가 남는다.
+  const current = plan && plan.key === requestKey && plan.replan === replan ? plan : null
   const planned = dirty ? current?.value ?? null : null
   const planning = dirty && !current
   // 새 미리보기를 기다리는 동안 보일 값 — 줄의 뺀 범위 · 「이번 주」 여부는 체크에 따라 바뀌지 않는다. 저장 판단은 planned만 쓴다.
@@ -320,7 +333,8 @@ export default function CompetitorEditor({
     setIndustryChecks((m) => ({ ...m, [key]: { status: 'running' } }))
     checkCompetitorIndustry(tenantId, entry).then(
       (result) => {
-        setIndustryChecks((m) => ({ ...m, [key]: { status: 'done', result } }))
+        // 확인하지 못했으면(시간 초과 · 엔진 오류) 다시 넣을 때 다시 확인한다 — 끝난 것으로 두면 그 이름은 이 서랍에서 다시 묻지 않는다.
+        setIndustryChecks((m) => ({ ...m, [key]: result.error ? { status: 'error', message: result.error } : { status: 'done', result } }))
         // 판정이 저장됐으면 계획을 다시 받는다 — 업종 다름이면 그곳은 비교 질문을 넘겨받지 않는다.
         if (result.verdict) setReplan((n) => n + 1)
       },
@@ -333,7 +347,7 @@ export default function CompetitorEditor({
   // 사람이 정한 업종(「펜션 맞음」 · 「업종 다름으로 표시」) — 바로 저장된다(결정 F4). 서랍 상태와 계획을 다시 받는다.
   const markIndustry = (name: string, mark: 'same' | 'different' | null) => {
     setOpen(null)
-    setActionError(null)
+    setIndustryError(null)
     markCompetitorIndustry(tenantId, name, mark)
       .then((result) => {
         setIndustryChecks((m) => ({ ...m, [squash(name).toLowerCase()]: { status: 'done', result } }))
@@ -346,7 +360,7 @@ export default function CompetitorEditor({
         },
         (err: unknown) => {
           console.error('[CompetitorEditor] 업종 표시를 저장하지 못했습니다', err)
-          setActionError(err instanceof Error ? err.message : String(err))
+          setIndustryError(`${name} 업종 표시를 저장하지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
         },
       )
   }
@@ -394,9 +408,14 @@ export default function CompetitorEditor({
   // 질문 넘겨받기 — 고쳐 쓸 질문이 있으면 계획이 오자마자 판정 엔진에 고쳐 쓰기를 맡긴다(빼기만 있으면 부르지 않는다).
   const qplan = planned?.questions ?? null
   const allPlan = planned?.rewriteAll ?? null
-  // 실제로 쓰는 방식 — 「모두 새로 쓰기」는 서버가 열어 줄 때만, 「그대로 두기」는 고칠 질문이 있을 때만(결정 E6).
-  const qm: QuestionMode = qMode === 'all' && allPlan?.available ? 'all' : qMode === 'keep' && qplan?.mode === 'derive' ? 'keep' : 'derive'
+  // 실제로 쓰는 방식 — 「모두 새로 쓰기」는 서버가 열어 줄 때만, 「그대로 두기」는 고칠 질문이 있을 때만(결정 E6). 고르기 묶음은
+  // 다시 계산하는 동안 지난 계획으로 같은 규칙을 본다(고른 단추가 기본으로 넘어갔다 돌아오지 않게).
+  const modeFor = (p: CompetitorEditPlan | null): QuestionMode =>
+    qMode === 'all' && p?.rewriteAll.available ? 'all' : qMode === 'keep' && p?.questions.mode === 'derive' ? 'keep' : 'derive'
+  const qm = modeFor(planned)
   const summary = [...summarizeOps(base, ops), ...summarizePastOut(exclusion), ...questionSummary(qplan, qm, allPlan)]
+  // 저장한 뒤 비교 질문이 없는 곳 — 「그대로 두기」면 넘겨받기가 없다.
+  const noQuestion = (qm === 'keep' ? planned?.noQuestionKept : planned?.noQuestion) ?? []
   const rewrites = qm === 'derive' && qplan?.mode === 'derive' ? qplan.items.filter((i) => i.action === 'rewrite') : []
   const draft = qplan ? drafts[qplan.key] : undefined
   const draftDone = draft?.status === 'done' ? draft.value : null
@@ -406,8 +425,10 @@ export default function CompetitorEditor({
     qplan.mode !== 'derive' ||
     rewrites.length === 0 ||
     Boolean(draftDone && !draftDone.failed.length && draftDone.drafts.length === rewrites.length)
-  // 업종 확인이 끝나기 전에는 고쳐 쓰기를 미룬다 — 곧 「업종 다름」이 될 곳으로 쓰면 판정 엔진을 한 번 헛부른다.
-  const industryPending = Object.values(industryChecks).some((c) => c.status === 'running')
+  // 업종 확인이 끝나기 전에는 고쳐 쓰기를 미룬다 — 곧 「업종 다름」이 될 곳으로 쓰면 판정 엔진을 한 번 헛부른다. 목록에 있는 이름만
+  // 센다(되돌린 줄의 확인까지 기다리지 않게).
+  const listKeys = new Set(applied.list.map((x) => squash(x.competitor.name).toLowerCase()))
+  const industryPending = Object.entries(industryChecks).some(([key, c]) => c.status === 'running' && listKeys.has(key))
   const draftNeeded = qplan && rewrites.length > 0 && !draft && !measuringNow && !industryPending ? qplan.key : null
   useEffect(() => {
     if (!draftNeeded) return
@@ -459,6 +480,8 @@ export default function CompetitorEditor({
   const chooseMode = (mode: QuestionMode) => {
     setQMode(mode)
     setQModeOpen(true)
+    // 질문지만 새로 쓰려다 다른 방법을 고르면 그 흐름을 끝낸다 — 목록이 그대로면 바꾼 것이 없다.
+    if (mode !== 'all') setQuestionOnly(false)
     setSavedNow(false)
     setActionError(null)
   }
@@ -885,6 +908,11 @@ export default function CompetitorEditor({
               <p className="ce-empty">대기 중인 경쟁사가 없어요.</p>
             )}
 
+            {industryError && (
+              <p className="ce-alert bad" role="alert">
+                {industryError}
+              </p>
+            )}
             <button
               type="button"
               className="ce-add"
@@ -1036,7 +1064,7 @@ export default function CompetitorEditor({
             </p>
           ))}
           {planned?.unchanged && !pastInput && (
-            <p className="ce-bar-note">{questionOnly ? '목록은 그대로 두고 질문지만 새로 써요.' : '지금 목록과 같아요.'}</p>
+            <p className="ce-bar-note">{qm === 'all' ? '목록은 그대로 두고 질문지만 새로 써요.' : '지금 목록과 같아요.'}</p>
           )}
           {qplan ? (
             <QuestionPlanBlock
@@ -1052,6 +1080,7 @@ export default function CompetitorEditor({
               canRedraft={!measuringNow && !busy}
               measuring={measuringNow}
               onRecheck={() => setReplan((n) => n + 1)}
+              waitingIndustry={industryPending}
               sharedCount={s.questionBank.sharedCount}
               listNames={applied.list.map((x) => x.competitor.name)}
             />
@@ -1063,16 +1092,16 @@ export default function CompetitorEditor({
             <QuestionModeChooser
               plan={shownPlan.questions}
               all={shownPlan.rewriteAll}
-              mode={qm}
-              open={qModeOpen || qMode !== 'derive'}
+              mode={modeFor(shownPlan)}
+              open={qModeOpen}
               onToggle={() => setQModeOpen(!qModeOpen)}
               onChoose={chooseMode}
               disabled={busy}
             />
           )}
-          {qm !== 'all' && planned && planned.noQuestion.length > 0 && allPlan?.available && (
+          {qm !== 'all' && noQuestion.length > 0 && allPlan?.available && (
             <p className="ce-bar-note">
-              {withParticle(planned.noQuestion.join(' · '))} 비교하는 질문은 없어요 —{' '}
+              {withParticle(noQuestion.join(' · '))} 비교하는 질문은 없어요 —{' '}
               <button type="button" className="ce-link" onClick={() => chooseMode('all')} disabled={busy}>
                 브랜드 질문 {allPlan.brandCount}개 모두 새로 쓰기
               </button>
@@ -1249,6 +1278,7 @@ function QuestionPlanBlock({
   canRedraft,
   measuring,
   onRecheck,
+  waitingIndustry,
   sharedCount,
   listNames,
 }: {
@@ -1268,6 +1298,8 @@ function QuestionPlanBlock({
   /** 측정 중이라 고쳐 쓰기를 시작하지 않았다 — 끝난 뒤 「다시 확인」으로 계획을 새로 받는다. */
   measuring: boolean
   onRecheck: () => void
+  /** 목록에 든 곳의 업종 확인이 끝나지 않아 고쳐 쓰기를 미뤘다. */
+  waitingIndustry: boolean
   sharedCount: number
   /** 바꾼 목록의 이름 — 「그대로 두기」 경고가 뺀 곳과 대기로 내려간 곳을 나눠 쓴다. */
   listNames: string[]
@@ -1318,6 +1350,7 @@ function QuestionPlanBlock({
         </button>
       </p>
       {draft?.status === 'running' && <p className="ce-bar-note">비교 질문 고쳐 쓰는 중… {clock(elapsed)}</p>}
+      {!draft && fixed.length > 0 && !measuring && waitingIndustry && <p className="ce-bar-note">업종 확인이 끝나면 비교 질문을 고쳐 써요</p>}
       {!draft && fixed.length > 0 && measuring && (
         <p className="ce-bar-note">
           측정이 끝나면 비교 질문을 고쳐 써요{' '}
@@ -1382,7 +1415,9 @@ function QuestionPlanBlock({
                             ? '고쳐 쓰는 중…'
                             : measuring
                               ? '측정이 끝나면 고쳐 써요'
-                              : '고쳐 쓰기를 기다리는 중…'}
+                              : waitingIndustry
+                                ? '업종 확인이 끝나면 고쳐 써요'
+                                : '고쳐 쓰기를 기다리는 중…'}
                       </p>
                     ))}
                 </li>
@@ -1395,7 +1430,7 @@ function QuestionPlanBlock({
             </p>
           ))}
           {plan.unreceived
-            .filter((u) => u.reason === 'otherIndustry' && u.other?.length)
+            .filter((u) => u.other?.length)
             .map((u) => (
               <p key={u.name} className="ce-bar-note">
                 {u.other!.join(' · ')} — 업종 다름이라 {u.name} 질문을 넘겨받지 않아요({u.questionIds.join(' · ')} 뺌)

@@ -53,6 +53,9 @@ const base = {
 const A = { ...base, tenantId: 'fake-all-a', ownedDomains: ['fake-a.example'], region: '가상시', competitors: COMPETITORS, questionBankSize: 7 }
 const B = { ...base, tenantId: 'fake-all-b', ownedDomains: ['fake-b.example'], region: '가상구', competitors: COMPETITORS.slice(0, 2), questionBankSize: 3 }
 const C = { ...base, tenantId: 'fake-all-c', ownedDomains: ['fake-c.example'], region: '가상동', competitors: COMPETITORS.slice(0, 2), questionBankSize: 7, cohortQuestionBank: undefined }
+// D: 「모두 새로 쓰기」 뒤 재기 전에 다시 저장한다. E: 세 곳을 함께 묻는 질문 하나(빼면 남는 곳도 질문을 잃는다).
+const D = { ...base, tenantId: 'fake-all-d', ownedDomains: ['fake-d.example'], region: '가상읍', competitors: COMPETITORS.slice(0, 2), questionBankSize: 3 }
+const E = { ...base, tenantId: 'fake-all-e', ownedDomains: ['fake-e.example'], region: '가상면', competitors: [COMPETITORS[0]!, COMPETITORS[2]!], questionBankSize: 3 }
 const q = (questionId: string, text: string, region: string, extra: Record<string, unknown> = {}) => ({
   questionId, text, category: 'comparison', stage: 'consider', industry: '가상업종', region, containsBrandName: true, version: questionId.split('-')[0], ...extra,
 })
@@ -87,6 +90,7 @@ try {
   const { FileResultStore } = await import('../server/store')
   const store = new FileResultStore()
   const fresh = async (id: string) => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === id)!
+  const itemOfPlan = (p: { questions: { items: { fromId: string; action: string }[] } }, id: string) => p.questions.items.find((i) => i.fromId === id)
   const planOf = async (id: string, list: unknown, handoff?: unknown) => ed.planEdit(await fresh(id), await reg.loadRuntimeTenants(), store, list, undefined, handoff)
 
   // 1) 계획 · 상태에 「모두 새로 쓰기」 정보
@@ -165,6 +169,40 @@ try {
   // 9) 측정 기록에 질문지 버전 — 그 버전으로 재면 대기가 사라진다
   await fileStore.recordCompetitorMeasurement(B.tenantId, tb.competitors, new Date(Date.now() + 60_000).toISOString(), tb.questionBankVersion)
   ok('그 버전으로 잰 뒤에는 대기가 사라진다', (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
+
+  // 10) 저장소가 질문지 버전을 올린 것은 경쟁사 편집 대기가 아니다(검토 지적 — 앱이 고른 버전만 센다)
+  await ed.resetEdit(A.tenantId, store)
+  writeJson('tenants.overlay.json', [{ ...A, questionBankVersion: 'v8' }, { ...B, questionBankVersion: 'v8' }, C])
+  ok('저장소 목록으로 돌아간 뒤 저장소가 버전을 올리면 대기 아님', (await ed.pendingCompetitorEdit(await fresh(A.tenantId))) === null)
+  ok('질문지만 새로 쓴 수정본을 잰 뒤 저장소가 버전을 올리면 대기 아님(수정본은 안 쓰인다)', (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
+
+  // 11) 모두 새로 쓰기를 저장하고 재기 전에 다시 저장해도(경쟁사 추가) 새로 쓸 표시를 잇는다 — 가드가 그 버전을 본다
+  writeJson('tenants.overlay.json', [A, B, C, D, E])
+  writeJson('cohort-banks/가상업종__가상읍/c1.json', cohortFile('가상읍'))
+  writeJson(`data/${D.tenantId}/question-bank/v5.json`, bankOf('가상읍', [q('v5-001', '가상머뭄이랑 가상골목 중에 어디가 더 나아?', '가상읍')]))
+  const pd = await planOf(D.tenantId, D.competitors)
+  await ed.saveEdit(D.tenantId, store, { competitors: D.competitors, summary: '질문지 v5→v6', questions: { mode: 'all', key: pd.rewriteAll.key } })
+  const addedD = [...D.competitors, c('가상추가')]
+  ok('재기 전 다시 바꾸면 질문지는 fresh', (await planOf(D.tenantId, addedD)).questions.mode === 'fresh')
+  await ed.saveEdit(D.tenantId, store, { competitors: addedD, summary: '가상추가 추가' })
+  const od = readJson(`data/${D.tenantId}/competitors.json`).current
+  ok('재기 전 추가 저장도 새로 쓸 표시를 잇는다(v6 · 출처 v5)', od.questionBank?.version === 'v6' && od.questionBank.size === 3 && od.questionBank.regenerate?.from === 'v5' && od.competitors.length === 3)
+  ok('그 저장도 다음 측정 대기', (await ed.pendingCompetitorEdit(await fresh(D.tenantId)))?.summary === '가상추가 추가')
+  const backD = await planOf(D.tenantId, D.competitors)
+  ok('재기 전 저장소 목록으로 돌아가면 저장소 질문지(v5)로 돌아간다고 보인다', backD.questions.mode === 'repo' && backD.questions.toVersion === 'v5')
+  await pipeline.ensureQuestionBank(await fresh(D.tenantId), store)
+  ok('측정이 만든 v6에 출처 표식', readJson(`data/${D.tenantId}/question-bank/v6.json`).regeneratedFrom?.version === 'v5')
+  writeJson('tenants.overlay.json', [A, B, C, { ...D, questionBankVersion: 'v6' }, E])
+  ok('저장소가 v6을 따로 쓰면 멈춘다(표시가 이어져 가드가 본다)', await rejects(pipeline.ensureQuestionBank(await fresh(D.tenantId), store)))
+  writeJson('tenants.overlay.json', [A, B, C, D, E])
+
+  // 12) 「모두 새로 쓰기」 권하는 곳 — 저장한 뒤 비교 질문이 없는 곳(빠지는 질문은 세지 않는다 · 그대로 두기면 넘겨받기가 없다)
+  writeJson('cohort-banks/가상업종__가상면/c1.json', cohortFile('가상면'))
+  writeJson(`data/${E.tenantId}/question-bank/v5.json`, bankOf('가상면', [q('v5-001', '가상머뭄, 가상골목, 가상초원 세 곳 1박 가격 비교해 줘', '가상면')]))
+  const pe = await planOf(E.tenantId, [COMPETITORS[2]!])
+  ok('함께 묻던 질문이 빠지면 남는 곳(가상초원)도 비교 질문 없음', itemOfPlan(pe, 'v5-001')?.action === 'remove' && pe.noQuestion.join() === '가상초원' && pe.noQuestionKept.length === 0)
+  const ph = await planOf(A.tenantId, replaced, handoff)
+  ok('넘겨받는 곳은 빼고, 그대로 두기면 넘겨받는 곳도 질문 없음', ph.noQuestion.join() === '가상해돋이' && ph.noQuestionKept.join() === '새펜션A,가상해돋이')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

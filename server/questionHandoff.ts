@@ -225,21 +225,43 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
       break;
     }
   }
-  // 2) 남은 나가는 곳 — 빼기로 대기 첫 줄이 올라왔거나 추가한 곳이 측정에 들었다. 바꾼 목록 순서로 첫 곳이 받는다.
-  for (const o of withQuestions) {
-    if (receiver.has(o)) continue;
-    const to = incoming.find((c) => eligible(c, o));
-    if (!to) continue;
-    receiver.set(o, { to, via: 'promoted' });
-    taken.add(keyOf(to));
-  }
-  // 3) 그래도 남은 나가는 곳 — 이미 재는데 비교 질문이 없는 곳이 받는다(바꾼 목록 순서). 그래야 질문지가 덜 줄어든다.
-  for (const o of input.existingReceivers === false ? [] : withQuestions) {
-    if (receiver.has(o)) continue;
-    const to = staying.find((c) => eligible(c, o));
-    if (!to) continue;
-    receiver.set(o, { to, via: 'existing' });
-    taken.add(keyOf(to));
+  // 3)에서 먼저 볼 곳 — 지금 질문지에 아예 이름이 없는 곳. 넘겨줄 질문에만 함께 나온 곳은 그 질문을 고쳐 써도 남아 이미 비교
+  // 질문이 생기므로 뒤로 미룬다(한 곳이 질문 둘을 갖고 다른 곳은 하나도 없게 되지 않게).
+  const unnamedNow = (c: CompetitorContext) => !nowIndex.has(keyOf(c)) || !(linksNow.byCompetitor[nowIndex.get(keyOf(c))!]?.length);
+  const stayingOrder = [...staying.filter(unnamedNow), ...staying.filter((c) => !unnamedNow(c))];
+  // 받는 곳을 정했어도 쓰지 못한 나가는 곳 — 그 질문이 모두 빠진다(함께 짚은 다른 나가는 곳이 받을 곳이 없다). 다시 받지 않는다.
+  const wasted = new Set<CompetitorContext>();
+  const assign = () => {
+    // 2) 남은 나가는 곳 — 빼기로 대기 첫 줄이 올라왔거나 추가한 곳이 측정에 들었다. 바꾼 목록 순서로 첫 곳이 받는다.
+    for (const o of withQuestions) {
+      if (receiver.has(o) || wasted.has(o)) continue;
+      const to = incoming.find((c) => eligible(c, o));
+      if (!to) continue;
+      receiver.set(o, { to, via: 'promoted' });
+      taken.add(keyOf(to));
+    }
+    // 3) 그래도 남은 나가는 곳 — 이미 재는데 비교 질문이 없는 곳이 받는다(바꾼 목록 순서). 그래야 질문지가 덜 줄어든다.
+    for (const o of input.existingReceivers === false ? [] : withQuestions) {
+      if (receiver.has(o) || wasted.has(o)) continue;
+      const to = stayingOrder.find((c) => eligible(c, o));
+      if (!to) continue;
+      receiver.set(o, { to, via: 'existing' });
+      taken.add(keyOf(to));
+    }
+  };
+  assign();
+  // 4) 받는 곳을 정했는데 그 질문이 하나도 고쳐지지 않는 나가는 곳은 받는 곳을 돌려준다 — 그 곳이 다른 나가는 곳의 질문을 살릴 수
+  // 있다. 돌려준 뒤 2) · 3)을 다시 돈다(돌려준 나가는 곳의 질문은 이미 모두 빠지므로 다른 질문은 나빠지지 않는다).
+  const outsOf = new Map(linksNow.questions.map((l) => [l.questionId, l.competitorIndexes.map((i) => now[i]!).filter((c) => outgoingKeys.has(keyOf(c)))]));
+  for (;;) {
+    const idle = [...receiver.keys()].filter((o) => questionsOf(o).every((id) => (outsOf.get(id) ?? []).some((x) => !receiver.has(x))));
+    if (!idle.length) break;
+    for (const o of idle) {
+      taken.delete(keyOf(receiver.get(o)!.to));
+      receiver.delete(o);
+      wasted.add(o);
+    }
+    assign();
   }
 
   const toVersion = nextBankVersion(input.version, [...input.taken, input.version]);
@@ -279,8 +301,14 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
   const unreceived: QuestionPlan['unreceived'] = [];
   for (const o of withQuestions) {
     if (receiver.has(o)) continue;
+    // 받는 곳을 돌려준 곳(4) — 함께 짚은 다른 나가는 곳 때문에 빠진다. 그 곳의 이유가 따로 나온다.
+    if (wasted.has(o)) {
+      unreceived.push({ name: o.name, questionIds: questionsOf(o), reason: 'noReceiver' });
+      continue;
+    }
     const own = incoming.find((c) => ownIds(c).length > 0);
-    // 업종 다름만 아니었으면 받을 수 있던 곳 — 표시를 풀면 넘겨받는다(화면이 그 이유를 보인다).
+    // 업종 다름만 아니었으면 받을 수 있던 곳 — 표시를 풀면 넘겨받는다. 이유가 「자기 질문이 있음」이어도 함께 싣는다(화면이 둘 다
+    // 보인다 — 사람이 풀 수 있는 것은 업종 표시다).
     const other = [...incoming, ...staying].filter(
       (c) => !sameIndustry(c) && linkable(c) && !ownIds(c).length && !taken.has(keyOf(c)) && !alreadyIn(o, c),
     );
@@ -289,7 +317,7 @@ export function planQuestionHandoff(input: HandoffInput): QuestionPlan {
       questionIds: questionsOf(o),
       reason: own ? 'receiverHasOwn' : other.length ? 'otherIndustry' : 'noReceiver',
       ...(own ? { own: { name: own.name, questionIds: ownIds(own) } } : {}),
-      ...(!own && other.length ? { other: other.map((c) => c.name) } : {}),
+      ...(other.length ? { other: other.map((c) => c.name) } : {}),
     });
   }
   const removed = items.filter((i) => i.action === 'remove').length;
