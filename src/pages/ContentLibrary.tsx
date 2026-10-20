@@ -24,7 +24,7 @@ import { usePublishedPosts } from '../lib/usePublishedPosts'
 import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
-import { countGapNotes, downloadHtml, draftTitle, safeFileName } from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, draftTitle, gapNoteLines, safeFileName } from '../lib/markdownFile'
 
 /**
  * 만든 글이 모이는 곳.
@@ -95,7 +95,7 @@ export default function ContentLibrary() {
     // 올리기 목록의 자사 줄과 같은 발행본(본문 + 사진 + 글 끝)을 서식째 넣는다 — 블로그 편집기에 붙이면 제목 · 굵은 글씨가 남는다.
     const markdown = publishArticleOf(d, { brand: tenant, settings })
     if (!(await copyRich(markdown, markdownToHtml(markdown)))) {
-      setCopyError('클립보드에 복사하지 못했습니다. 「본문 보기」에서 글을 직접 골라 복사하세요.')
+      setCopyError('클립보드에 복사하지 못했습니다. 「본문 보기」를 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
       return
     }
     setCopied(d.actionId)
@@ -332,7 +332,7 @@ export default function ContentLibrary() {
                           .catch(() => [] as FactNode[])
                           .then((facts) =>
                             downloadHtml(
-                              `발행용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`,
+                              `홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`,
                               buildPublishHtml({ stored: d, brand: tenant, facts, settings }),
                             ),
                           )
@@ -349,9 +349,30 @@ export default function ContentLibrary() {
                   {postsShown && postsPanel(d.actionId, title, d)}
                   {shown && (
                     <div className="brief-body">
-                      <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {publishArticleOf(d, { brand: tenant, settings })}
-                      </pre>
+                      {/* 서식째 보인다(markdownToHtml은 모든 글자를 이스케이프한다) — 복사가 막힌 곳에서 여기서 골라 복사해도
+                          블로그에 #·** 기호가 남지 않는다. */}
+                      <div className="channel-preview" dangerouslySetInnerHTML={{ __html: markdownToHtml(publishArticleOf(d, { brand: tenant, settings })) }} />
+                      {/* 작업용 원고(.md)를 뺀 대신 — 그 주 목록에서 빠진 글도 남은 빈칸 · 쓴 사실을 여기서 본다. */}
+                      {gaps > 0 && (
+                        <>
+                          <p className="doc-meta">남은 빈칸 {gaps}줄 — 복사 · .html에서는 빠집니다</p>
+                          <ul>
+                            {gapNoteLines(md).map((line, i) => (
+                              <li key={i}>{line}</li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {d.draft.usedFacts.length > 0 && (
+                        <details className="draft-audit">
+                          <summary>이 글이 쓴 사실 {d.draft.usedFacts.length}개</summary>
+                          <ul>
+                            {d.draft.usedFacts.map((f) => (
+                              <li key={f}>{f}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
                     </div>
                   )}
                 </article>

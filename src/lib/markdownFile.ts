@@ -243,5 +243,14 @@ export function stripGapNotes(markdown: string): string {
 
 /** 발행용으로 내보낼 때 덜어낼 빈칸이 몇 줄인지 — 버튼 옆에 알린다. */
 export function countGapNotes(markdown: string): number {
-  return markdown.split('\n').filter((line) => line.trimStart().startsWith(GAP_LINE)).length
+  return gapNoteLines(markdown).length
+}
+
+/** 남은 빈칸 줄마다 무엇을 채워야 하는지(「채워야 함:」 뒤) — 보관함 본문 보기가 어디가 비었는지 보인다. */
+export function gapNoteLines(markdown: string): string[] {
+  return markdown
+    .split('\n')
+    .map((line) => line.trimStart())
+    .filter((line) => line.startsWith(GAP_LINE))
+    .map((line) => line.slice(GAP_LINE.length).trim())
 }

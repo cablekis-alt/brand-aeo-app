@@ -16,7 +16,9 @@ import {
 } from '../lib/api'
 import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgress, publishMarkdownOf, workMarkdownOf } from '../lib/draftGaps'
 import type { GapAction } from '../lib/gapActions'
-import { buildPublishHtml } from '../lib/htmlFile'
+import { copyRich } from '../lib/clipboard'
+import { buildPublishHtml, markdownToHtml } from '../lib/htmlFile'
+import { publishArticleOf } from '../lib/publishArticle'
 import EvidencePanel from './EvidencePanel'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
@@ -46,7 +48,8 @@ const ROLE_LABEL: Partial<Record<DraftRole, string>> = { action: '할 일', why:
  * 이제 값은 그 자리에 「항목: 값」 한 줄로 들어가고(lib/draftGaps.ts), 브랜드 사실에도 함께 저장된다.
  * 모르는 값은 「이 문장 빼기」 — 발행본에서 그 자리만 빠진다. 기록은 서버에 남아 화면을 떠나도 그대로다.
  *
- * 파일(.md·.html·작업용)은 「자세히」의 「파일로 받기」에 접어 둔다. 복사는 올리기 목록의 줄이 한다.
+ * 내보내기(블로그용 복사 · 홈페이지용 .html · 사진)는 「자세히」의 「블로그 · 홈페이지로 내보내기」에 접어 둔다 — 올리기 목록에
+ * 줄이 없는 글(질문 은행 · 보류 항목)도 여기서 블로그에 올릴 글을 얻는다.
  */
 
 type Step = 'gaps'
@@ -124,6 +127,8 @@ export default function DraftPanel({
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [photoBusy, setPhotoBusy] = useState(false)
+  // 「블로그에 붙일 글 복사」를 방금 눌렀는지(잠깐 「복사했습니다」).
+  const [articleCopied, setArticleCopied] = useState(false)
   // 발행 설정 — 고른 홈페이지 사진을 넣어도 되는지(사진 사용 확인) 본다. 고른 사진이 있을 때만 읽고, 사진 칸이 확인을 바꾸면 그 값을 받는다.
   const [pubSettings, setPubSettings] = useState<PublishSettings | null | undefined>(undefined)
   const pickedCount = stored?.photos?.length ?? 0
@@ -544,12 +549,39 @@ export default function DraftPanel({
           {stored.editedMarkdown && <span className="st st-info">고침 {stored.editedAt?.slice(0, 10)}</span>}
           <span className="doc-meta">{stored.generatedAt.slice(0, 10)} 생성</span>
           <details className="draft-files">
-            <summary>파일로 받기</summary>
+            <summary>블로그 · 홈페이지로 내보내기</summary>
             <div className="brief-bar">
               <button
                 type="button"
                 className="ghost"
-                title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다. 네이버 블로그 · 티스토리에는 올리기 목록의 복사 버튼을 쓰세요."
+                title="제목 · 본문 · 사진 · 글 끝 안내를 서식째 복사합니다. 네이버 블로그 · 티스토리 편집기에 붙이면 서식이 남습니다."
+                disabled={!tenant}
+                onClick={() => {
+                  if (!tenant) return
+                  setError(null)
+                  // 올리기 목록 자사 줄 · 보관함과 같은 발행본(본문 + 사진 + 글 끝). 설정은 누를 때 읽는다 — 사진 확인이 막 바뀌었을 수 있다.
+                  void loadPublishSettings(tenantId)
+                    .then((settings) => {
+                      const markdown = publishArticleOf(stored, { brand: tenant, settings })
+                      return copyRich(markdown, markdownToHtml(markdown))
+                    })
+                    .then((ok) => {
+                      if (!ok) {
+                        setError('클립보드에 복사하지 못했습니다. 「홈페이지용 .html」을 브라우저로 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
+                        return
+                      }
+                      setArticleCopied(true)
+                      window.setTimeout(() => setArticleCopied(false), 1800)
+                    })
+                    .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+                }}
+              >
+                {articleCopied ? '복사했습니다' : '블로그에 붙일 글 복사'}
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다."
                 onClick={() => {
                   if (!tenant) return
                   const facts = loadFactGraph(tenantId)
@@ -560,7 +592,7 @@ export default function DraftPanel({
                     })
                   void Promise.all([facts, loadPublishSettings(tenantId)]).then(([factList, settings]) =>
                     downloadHtml(
-                      `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
+                      `홈페이지용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
                       buildPublishHtml({ stored, brand: tenant, facts: factList, settings }),
                     ),
                   )
