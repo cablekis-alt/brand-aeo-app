@@ -4939,6 +4939,34 @@ td.cell-mid {
   color: var(--accent-ink);
   font-weight: 600;
 }
+/* 「① 글 확인」 머리의 글별 상태 — 한 편이 한 줄(상태 · 글 제목 · 보기). */
+.article-check-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.article-check-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.article-check-list .status-pill {
+  flex: 0 0 auto;
+  min-width: 76px;
+  text-align: center;
+}
+.article-check-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+}
 .publish-list {
   list-style: none;
   margin: 0;
@@ -4958,10 +4986,11 @@ td.cell-mid {
 .publish-row:first-child {
   border-top: 0;
 }
-/* 「빈칸 확인하러 가기」 · 인용 갭 분석에서 넘어와 스크롤할 때 위 가장자리에 붙지 않게. */
+/* 「빈칸 확인하러 가기」 · 「보기」 · 인용 갭 분석에서 넘어와 스크롤할 때 — 위에 붙어 있는 상단 막대(sticky, 약 60px)에
+   카드 머리가 가리지 않게 그 높이만큼 더 띄운다(24px이면 머리가 막대 밑에 숨었다). */
 .publish-row,
 .gap-card {
-  scroll-margin-top: 24px;
+  scroll-margin-top: 84px;
 }
 .publish-row.is-focused {
   background: var(--accent-soft);

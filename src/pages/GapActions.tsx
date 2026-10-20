@@ -25,7 +25,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { draftTitle } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
-import { buildPublishPlan } from '../lib/publishPlan'
+import { buildPublishPlan, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
@@ -293,8 +293,19 @@ function BulkDrafts({
 }
 
 /** 항목 하나. 근거와 완료 조건을 항상 함께 보여준다 — 지시만 있고 근거가 없으면 안 하게 된다. */
+/**
+ * 「① 글 확인」 한 편의 상태 — 목록 줄과 카드 머리가 같은 말을 쓴다. 카드 안쪽(초안 패널)에만 있으면 4편을 훑어서는
+ * 어느 글이 확인됐는지 알 수 없었다(2026-10-20).
+ */
+function articleStateOf(x: PublishArticle): { label: string; tone: string } {
+  if (x.confirmed) return { label: '✓ 확인됨', tone: 'st-good' }
+  if (x.draft) return { label: `빈칸 ${x.gapsLeft}곳`, tone: 'st-warn' }
+  return { label: '초안 없음', tone: 'st-ok' }
+}
+
 function ActionCard({
   action,
+  article,
   canSaveStatus,
   onStatus,
   tenantId,
@@ -308,6 +319,8 @@ function ActionCard({
   weekOf,
 }: {
   action: GapAction
+  /** 「① 글 확인」의 글이면 그 확인 상태 — 카드 머리에 같은 표시를 단다. */
+  article?: PublishArticle
   /** 이 항목을 만든 측정 주차 — 초안의 「실측 답변」이 그 주의 기록에서 고른다. */
   weekOf?: string
   canSaveStatus: boolean
@@ -355,6 +368,7 @@ function ActionCard({
         <span className={`status-pill ${action.satisfied ? 'st-good' : KIND_CLASS[action.kind]}`}>
           {action.satisfied ? '충족' : action.badge}
         </span>
+        {article && <span className={`status-pill ${articleStateOf(article).tone}`}>{articleStateOf(article).label}</span>}
         <span className="gap-rate">
           AI가 우리를 말하지 않는 질문 <b>{action.reach}</b>개
         </span>
@@ -785,6 +799,23 @@ export default function GapActions() {
                 <p className="hint" style={{ marginTop: 0 }}>
                   빈칸을 채우거나 빼면 그 글이 확인되고, 아래 올리기 목록에서 그 글의 줄이 열립니다.
                 </p>
+                {publishPlan.articles.length > 0 && (
+                  <ul className="article-check-list" aria-label="글별 확인 상태">
+                    {publishPlan.articles.map((x) => {
+                      const state = articleStateOf(x)
+                      return (
+                        <li key={x.action.id}>
+                          <span className={`status-pill ${state.tone}`}>{state.label}</span>
+                          {/* 사용자가 알아보는 것은 글 제목이다 — 글이 없을 때만 항목 이름. */}
+                          <span className="article-check-title">{x.draft ? draftTitle(effectiveDraft(x.draft)) : x.action.title}</span>
+                          <button type="button" className="ghost" onClick={() => showArticle(x.action.id)}>
+                            보기
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
                 {briefs !== null && drafts !== null && (
                   <BulkDrafts
                     tenantId={tenant.tenantId}
@@ -796,8 +827,8 @@ export default function GapActions() {
                   />
                 )}
                 <div className="gap-grid">
-                  {publishPlan.articles.map(({ action: a }) => (
-                    <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
+                  {publishPlan.articles.map((x) => (
+                    <ActionCard key={x.action.id} action={x.action} article={x} focused={focusId === x.action.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
                   ))}
                 </div>
               </section>
