@@ -98,6 +98,7 @@ export default function DraftPanel({
   compact = false,
   weekOf,
   publishHint = '아래 올리기 목록에서 올리세요',
+  titleInHeader = false,
 }: {
   tenantId: string
   action: GapAction
@@ -117,6 +118,8 @@ export default function DraftPanel({
    * 자기 화면의 주소 칸을 가리킨다.
    */
   publishHint?: string
+  /** 카드 머리가 이미 글 제목을 보인다(콘텐츠 생성 「① 글 확인」) — 접힌 요약에서 같은 제목을 또 쓰지 않는다. */
+  titleInHeader?: boolean
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -514,7 +517,7 @@ export default function DraftPanel({
       <div className="article-summary">
         {!opened && (
           <>
-            <h4 className="draft-title">{draftTitle(d)}</h4>
+            {!titleInHeader && <h4 className="draft-title">{draftTitle(d)}</h4>}
             {d.lead && <p className="article-lead">{d.lead}</p>}
           </>
         )}

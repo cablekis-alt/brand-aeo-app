@@ -303,6 +303,17 @@ function articleStateOf(x: PublishArticle): { label: string; tone: string } {
   return { label: '초안 없음', tone: 'st-ok' }
 }
 
+/**
+ * 이 글이 무엇을 위한 글인지 — 카드 머리에 항목 이름이 크게 있으면 글 이름처럼 읽혀, 글이 있는 카드는 글 제목을 크게 ·
+ * 이 설명은 작게 둔다(2026-10-20). 콘텐츠 항목은 답하는 질문 묶음(항목 제목 「카테고리 무관 질문 콘텐츠 보강」에서
+ * 「콘텐츠 보강」을 뗀 것, lib/gapActions.ts), 덮는 글이 없는 채널 항목은 그 채널(「namu.wiki 문서 보완」)이다.
+ */
+function articleRoleOf(action: GapAction): { line: string; short: string } {
+  if (action.kind !== 'content') return { line: `${action.title}용 글`, short: action.title }
+  const group = action.title.replace(/\s*콘텐츠 보강$/, '')
+  return { line: `${group}에 답하는 글`, short: `${group} ${action.reach}개` }
+}
+
 function ActionCard({
   action,
   article,
@@ -361,10 +372,12 @@ function ActionCard({
   // 초안이 생기면 근거 · 질문 목록은 「자세히」로 접는다 — 카드는 글 자체(제목 · 첫 문단 · 빈칸)를 보인다.
   const hasDraft = Boolean(drafts?.[action.id])
   const showWhy = detail || !hasDraft
+  // 「① 글 확인」의 글이면 머리에 글 제목을 크게, 답하는 질문 묶음은 그 아래 작게.
+  const articleTitle = article?.draft ? draftTitle(effectiveDraft(article.draft)) : null
   return (
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
-        <span className="gap-name">{action.title}</span>
+        <span className="gap-name">{articleTitle ?? action.title}</span>
         <span className={`status-pill ${action.satisfied ? 'st-good' : KIND_CLASS[action.kind]}`}>
           {action.satisfied ? '충족' : action.badge}
         </span>
@@ -373,6 +386,7 @@ function ActionCard({
           AI가 우리를 말하지 않는 질문 <b>{action.reach}</b>개
         </span>
       </div>
+      {articleTitle && <p className="gap-card-group">{articleRoleOf(action).line}</p>}
       {showWhy && (
         <p className="gap-tally" style={{ color: 'var(--ink)' }}>
           {action.evidence}
@@ -520,6 +534,7 @@ function ActionCard({
           stored={drafts[action.id]}
           onStored={onDraft}
           compact={!detail}
+          titleInHeader={Boolean(articleTitle)}
           ensureBrief={async () => {
             onBrief(
               await generateContentBrief(tenantId, {
@@ -807,7 +822,10 @@ export default function GapActions() {
                         <li key={x.action.id}>
                           <span className={`status-pill ${state.tone}`}>{state.label}</span>
                           {/* 사용자가 알아보는 것은 글 제목이다 — 글이 없을 때만 항목 이름. */}
-                          <span className="article-check-title">{x.draft ? draftTitle(effectiveDraft(x.draft)) : x.action.title}</span>
+                          <span className="article-check-title">
+                            {x.draft ? draftTitle(effectiveDraft(x.draft)) : x.action.title}
+                            {x.draft && <span className="muted"> · {articleRoleOf(x.action).short}</span>}
+                          </span>
                           <button type="button" className="ghost" onClick={() => showArticle(x.action.id)}>
                             보기
                           </button>
