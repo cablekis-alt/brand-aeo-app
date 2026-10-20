@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import express from 'express';
+import { connect as netConnect } from 'node:net';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
@@ -1724,8 +1725,58 @@ if (STATIC_DIR) {
   });
 }
 
-app.listen(PORT, () => {
-  seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
-  console.log(`[server] listening on :${PORT}`);
-  startScheduler(store);
-});
+// 이 PC 안(루프백)에서만 받는다 — 인증이 없는 서버라 모든 인터페이스에서 받으면 같은 와이파이의 다른 기기가 브랜드 데이터 ·
+// 측정 실행 · 페이지 수집 프록시(/api/fetch)에 닿는다. 앱 창 · 개발용 프록시 · 스크립트는 모두 localhost로 부른다. localhost가
+// IPv6(::1)로 먼저 풀리는 환경(윈도우)이 있어 ::1에도 연다(IPv6가 꺼진 PC면 건너뛴다). 다른 기기에서 일부러 열어야 하면 HOST로
+// 바꾼다(예: HOST=0.0.0.0). 검증: scripts/verify-server-bind.ts
+const HOSTS = process.env.HOST?.trim() ? [process.env.HOST.trim()] : ['127.0.0.1', '::1'];
+
+/** 그 주소 · 포트에 이미 받는 소켓이 있는가 — 연결해 본다(electron/main.cjs isPortOccupied와 같은 방식). */
+function portAnswers(host: string, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const sock = netConnect({ host, port });
+    const done = (answered: boolean) => {
+      sock.destroy();
+      resolve(answered);
+    };
+    sock.setTimeout(1000);
+    sock.once('connect', () => done(true));
+    sock.once('timeout', () => done(false));
+    sock.once('error', () => done(false)); // ECONNREFUSED = 비어 있음 · IPv6가 꺼진 PC의 ::1
+  });
+}
+
+/**
+ * 연다. 윈도우는 다른 프로세스가 모든 인터페이스(0.0.0.0 · ::)에 연 포트에도 특정 주소(127.0.0.1)로 또 열게 해 주고, 그러면 루프백
+ * 접속을 이쪽이 조용히 가로챈다(예전 설치본이 4000을 잡고 있을 때 개발 서버를 띄우면 앱 창의 요청이 개발 서버로 간다). 그래서 열기
+ * 전에 그 포트에 이미 받는 곳이 있으면 멈춘다. 첫 주소를 열지 못해도 멈춘다 — 「listening」이라 적고 아무것도 받지 않는 서버가
+ * 남지 않게. 둘째 주소(::1)는 첫 주소를 연 뒤에만 연다.
+ */
+async function startListening(): Promise<void> {
+  const port = Number(PORT);
+  const probe = HOSTS.flatMap((h) => (h === '0.0.0.0' ? ['127.0.0.1'] : h === '::' ? ['::1', '127.0.0.1'] : [h]));
+  for (const host of new Set(HOSTS.length > 1 ? [...probe, '127.0.0.1', '::1'] : probe)) {
+    if (await portAnswers(host, port)) {
+      console.error(`[server] ${host}:${port}에 이미 다른 프로그램이 받고 있어 열지 않습니다 — 그 프로그램(데스크톱 앱 등)을 끄거나 PORT를 바꾸세요.`);
+      process.exit(1);
+    }
+  }
+  app.listen(port, HOSTS[0]!, (err?: Error) => {
+    if (err) {
+      console.error(`[server] ${HOSTS[0]}:${port}에 열지 못했습니다`, err);
+      process.exit(1);
+    }
+    seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
+    console.log(`[server] listening on ${HOSTS[0]} :${port}`);
+    startScheduler(store);
+    for (const host of HOSTS.slice(1)) {
+      app
+        .listen(port, host)
+        .on('listening', () => console.log(`[server] listening on ${host} :${port}`))
+        .on('error', (e: NodeJS.ErrnoException) => {
+          console.warn(`[server] ${host}:${port}에는 열지 못했습니다(${e.code ?? e.message}) — ${HOSTS[0]}로만 받습니다.`);
+        });
+    }
+  });
+}
+void startListening();
