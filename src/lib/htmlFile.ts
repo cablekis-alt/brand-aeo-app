@@ -24,6 +24,15 @@ export function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+/**
+ * 사진 표시 크기. 홈페이지 사진은 원본이 크다(스테이,머뭄 2304×2304). <img>에 크기가 없으면 .html을 그대로 열거나
+ * 스타일 없는 곳에 붙일 때 원본 크기로 펼쳐져 화면을 넘쳤다(2026-10-20). 그림(한 줄 사진)은 칸 너비에 맞추되 720px을
+ * 넘지 않고 비율은 그대로 둔다. 스타일을 버리는 편집기도 있어 width 속성을 함께 둔다. 문장 속 이미지는 늘리지 않고
+ * 칸을 넘지만 않게 한다.
+ */
+const FIGURE_IMG_SIZE = 'width="720" style="width:100%;max-width:720px;height:auto"'
+const INLINE_IMG_SIZE = 'style="max-width:100%;height:auto"'
+
 /** 인라인 문법 — 굵게·기울임·코드·이미지·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
 function inline(text: string): string {
   let s = escapeHtml(text)
@@ -31,7 +40,7 @@ function inline(text: string): string {
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
   // 이미지는 링크보다 먼저 — 아니면 `![x](주소)`가 「!」 + 링크로 남는다. 사진 자리는 글자로 알린다.
-  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, '<img src="$2" alt="$1">')
+  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, `<img src="$2" alt="$1" ${INLINE_IMG_SIZE}>`)
   s = s.replace(new RegExp(`!\\[([^\\]]*)\\]\\(${IMAGE_SLOT}\\)`, 'g'), '[사진: $1]')
   // 링크는 http(s)만 — javascript: 같은 스킴은 그대로 글자로 남긴다.
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
@@ -45,7 +54,7 @@ const CAPTION_LINE = /^\*(?!\*)(.+?)\*$/
 
 function figureHtml(alt: string, url: string, caption: string | null): string | null {
   const cap = caption ? `<figcaption>${inline(caption)}</figcaption>` : ''
-  if (/^https?:\/\//i.test(url)) return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}">${cap}</figure>`
+  if (/^https?:\/\//i.test(url)) return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" ${FIGURE_IMG_SIZE}>${cap}</figure>`
   // 편집기가 figure를 버려도 글자는 남도록 안내를 <p>에 둔다.
   if (url === IMAGE_SLOT) return `<figure class="image-slot"><p>[사진 넣을 자리] ${escapeHtml(alt)}</p>${cap}</figure>`
   return null
