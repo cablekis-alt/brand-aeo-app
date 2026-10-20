@@ -634,6 +634,8 @@ export interface StoredDraft {
   gapFills?: Record<string, GapFill>
   /** 실측 사례 — 사람이 원문과 대조해 확인하면 발행본에 붙는다(src/lib/answerEvidence.ts). */
   evidence?: AnswerEvidence
+  /** 사람이 고른 홈페이지 사진 — 본문에는 넣지 않고 내보낼 때만 사진 자리에 넣는다(src/lib/articlePhotos.ts). */
+  photos?: import('./articlePhotos').PhotoPick[]
 }
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
 export interface GapFill {
@@ -694,6 +696,49 @@ export async function savePublishSettings(tenantId: string, settings: PublishSet
   const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
   if (!res.ok) throw new Error(body.error || `발행 설정 저장 실패 (HTTP ${res.status})`)
   return body
+}
+
+/** 고른 홈페이지 사진 한 장의 파일(「사진 N장 받기」) — 서버가 그 자리에 고른 사진만 받아 준다. 실패하면 throw. */
+export async function fetchDraftPhotoFile(
+  tenantId: string,
+  q: { actionId: string; generatedAt: string; place: PhotoPlace },
+): Promise<Blob> {
+  const params = new URLSearchParams({
+    actionId: q.actionId,
+    generatedAt: q.generatedAt,
+    slot: q.place.slot,
+    nth: String(q.place.nth),
+    heading: q.place.heading,
+  })
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photo-file?${params.toString()}`)
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error || `사진을 받지 못했습니다 (HTTP ${res.status})`)
+  }
+  return res.blob()
+}
+
+/** 이 브랜드의 홈페이지 사진을 글에 써도 된다는 확인(한 번) — 확인 시각은 서버가 찍는다. 의료 업종은 medical까지. */
+export async function savePhotoRights(tenantId: string, opts: { medical?: boolean } = {}): Promise<PublishSettings> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/photo-rights`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts.medical ? { medical: true } : {}),
+  })
+  const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
+  if (!res.ok) throw new Error(body.error || `사진 사용 확인 저장 실패 (HTTP ${res.status})`)
+  // 같은 화면에서 발행 설정을 먼저 읽어 둔 곳(콘텐츠 생성의 올리기 목록)이 새 확인을 쓰게 알린다 — 낡은 설정이면 고른 사진을 뺀다.
+  // (이 파일은 서버 타입 검사에도 들어간다 — DOM 타입이 없어 window 대신 globalThis로 부른다.)
+  const target = globalThis as { dispatchEvent?: (event: Event) => boolean }
+  target.dispatchEvent?.(new CustomEvent<PhotoRightsChange>(PHOTO_RIGHTS_EVENT, { detail: { tenantId, settings: body } }))
+  return body
+}
+
+/** 사진 사용 확인이 바뀌었다(savePhotoRights) — 화면 안에서만 도는 알림. */
+export const PHOTO_RIGHTS_EVENT = 'brand-aeo:photo-rights'
+export interface PhotoRightsChange {
+  tenantId: string
+  settings: PublishSettings
 }
 
 /** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
@@ -1116,6 +1161,31 @@ export async function saveDraftGaps(
   const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
   if (!res.ok) throw new Error(body.error || `빈칸 저장 실패 (HTTP ${res.status})`)
   return body
+}
+
+/** 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목(src/lib/articlePhotos.ts PhotoPick과 같은 열쇠). */
+export type PhotoPlace = Pick<import('./articlePhotos').PhotoPick, 'slot' | 'nth' | 'heading'>
+/** 사진을 고를 때 보내는 값 — 확인 시각은 서버가 찍는다. */
+export type PhotoPickInput = Omit<import('./articlePhotos').PhotoPick, 'confirmedAt'>
+
+/**
+ * 글 사진 자리에 고른 홈페이지 사진을 넣거나(pick — replaces가 있으면 그 자리에서 옮긴다) 뺀다(remove). 판정 호출 없음.
+ * 화면이 본 초안(generatedAt)이 그사이 다시 만들어졌으면 서버가 409로 거절한다. photoNote는 사이트 설명을 쓰지 않은 이유.
+ */
+export async function saveDraftPhoto(
+  tenantId: string,
+  body:
+    | { actionId: string; generatedAt: string; op: 'pick'; pick: PhotoPickInput; replaces?: PhotoPlace }
+    | { actionId: string; generatedAt: string; op: 'remove'; place: PhotoPlace },
+): Promise<StoredDraft & { photoNote?: string }> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const out = (await res.json().catch(() => ({}))) as StoredDraft & { photoNote?: string; error?: string }
+  if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status })
+  return out
 }
 
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */

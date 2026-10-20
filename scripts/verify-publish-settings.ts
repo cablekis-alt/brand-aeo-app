@@ -80,6 +80,21 @@ try {
   console.error = origError
   ok('깨진 파일은 알리고 null', broken === null && errors.length === 1)
 
+  // 3-2) 홈페이지 사진 사용 확인 — 서버만 찍고, 설정 패널 저장(6칸만 보냄)이 지우지 않는다
+  ok('사진 사용 확인은 정규화를 거쳐도 남는다', normalizePublishSettings({ photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z', medical: true } }).photoRights?.medical === true)
+  ok('깨진 확인 값은 throw 없이 뺀다', normalizePublishSettings({ photoRights: { confirmedAt: '어제', medical: 'yes' } }).photoRights === undefined && normalizePublishSettings({ photoRights: 'yes' }).photoRights === undefined)
+  ok('의료 표시는 true만', normalizePublishSettings({ photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z', medical: 'yes' } }).photoRights?.medical === undefined)
+  await store.updatePublishSettings('vtravel', (cur) => ({ ...cur, photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z' } }))
+  // 설정 패널 저장(라우트와 같은 식) — 보낸 photoRights는 버리고 저장된 값을 이어받는다
+  const panel = normalizePublishSettings({ ctaText: '새 안내', photoRights: { confirmedAt: '2000-01-01T00:00:00.000Z' } })
+  delete panel.photoRights
+  await store.updatePublishSettings('vtravel', (cur) => ({ ...panel, ...(cur?.photoRights ? { photoRights: cur.photoRights } : {}) }))
+  const afterPanel = await store.readPublishSettings('vtravel')
+  ok('설정 패널을 저장해도 사진 사용 확인은 남는다', afterPanel?.ctaText === '새 안내' && afterPanel.photoRights?.confirmedAt === '2026-10-20T10:00:00.000Z')
+  await Promise.all(Array.from({ length: 5 }, (_, i) => store.updatePublishSettings('vtravel', (cur) => ({ ...cur, tags: [...(cur?.tags ?? []), `동시${i}`] }))))
+  ok('동시에 고쳐도 서로 덮지 않는다(쓰기 줄)', (await store.readPublishSettings('vtravel'))?.tags?.length === 5)
+  await store.writePublishSettings('vtravel', s)
+
   // 4) 글 끝 — 상담 안내 → 문의 링크 → 공식 사이트, 본문 · 지문은 그대로
   const stored = {
     actionId: 'content:a',

@@ -18,10 +18,14 @@ import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgres
 import type { GapAction } from '../lib/gapActions'
 import { buildPublishHtml } from '../lib/htmlFile'
 import EvidencePanel from './EvidencePanel'
+import SitePhotoPanel from './SitePhotoPanel'
+import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
+import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
+import type { PublishSettings } from '../lib/publishSettings'
 import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 import { articleSources } from '../lib/officialSources'
 import type { DraftRole } from '../prompts/b9c-content-draft'
@@ -80,7 +84,7 @@ const SHORT_ARTICLE = 1500
 
 /** 다시 쓰면 사라지는 손댄 상태 — 승인 시트를 연 뒤 달라졌는지 볼 때 쓴다. */
 const editStampOf = (s: StoredDraft | undefined): string =>
-  s ? JSON.stringify([s.generatedAt, s.editedMarkdown ?? '', s.gapFills ?? {}]) : ''
+  s ? JSON.stringify([s.generatedAt, s.editedMarkdown ?? '', s.gapFills ?? {}, s.photos ?? []]) : ''
 
 export default function DraftPanel({
   tenantId,
@@ -120,6 +124,21 @@ export default function DraftPanel({
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  // 발행 설정 — 고른 홈페이지 사진을 넣어도 되는지(사진 사용 확인) 본다. 고른 사진이 있을 때만 읽고, 사진 칸이 확인을 바꾸면 그 값을 받는다.
+  const [pubSettings, setPubSettings] = useState<PublishSettings | null | undefined>(undefined)
+  const pickedCount = stored?.photos?.length ?? 0
+  useEffect(() => {
+    if (!pickedCount) return
+    let alive = true
+    loadPublishSettings(tenantId).then(
+      (s) => alive && setPubSettings(s),
+      (e: unknown) => console.error('[DraftPanel] 발행 설정을 읽지 못해 사진 받기를 숨깁니다', e),
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, pickedCount])
   // 빈칸 입력 중인 값(키 `절:블록`) — 「넣기」를 누를 때 서버에 남는다.
   const [typed, setTyped] = useState<Record<string, string>>({})
   /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
@@ -176,10 +195,12 @@ export default function DraftPanel({
     setEditing(false)
   }
 
-  // 다시 만들면 손댄 글과 채운 빈칸 기록이 사라진다. 조용히 덮지 않는다.
+  // 다시 만들면 손댄 글 · 채운 빈칸 기록 · 고른 홈페이지 사진이 사라진다. 조용히 덮지 않는다.
   const confirmOverwrite = () =>
-    !(stored?.editedMarkdown || (stored?.gapFills && Object.keys(stored.gapFills).length)) ||
-    window.confirm('다시 만들면 고쳐 둔 글과 채운 빈칸 기록이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?')
+    !(stored?.editedMarkdown || (stored?.gapFills && Object.keys(stored.gapFills).length) || stored?.photos?.length) ||
+    window.confirm(
+      '다시 만들면 고쳐 둔 글 · 채운 빈칸 기록 · 고른 홈페이지 사진이 사라집니다(넣은 값은 브랜드 사실에 남아 새 초안에 들어갑니다). 계속할까요?',
+    )
   const make = async (force: boolean) => {
     if (force && !confirmOverwrite()) return
     setElapsed(0)
@@ -477,6 +498,11 @@ export default function DraftPanel({
   /** 절마다 발행본에 붙을 공식 출처(블로그 글 형식만) — 빈칸을 채운 글 기준, 절 순서는 stored.draft와 같다. */
   const sources = articleSources(d)
   const opened = step === 'gaps'
+  // 사진 자리에 들어갈 홈페이지 사진 — 구조 화면의 자리는 장면 글자 + 소제목으로 찾는다(발행본의 절 번호는 빈 절을 빼면 바뀐다).
+  const placedPhotos = matchPhotos(publishMarkdownOf(stored), stored.photos ?? []).applied
+  const photoFiles = articlePhotoFiles(stored, { settings: pubSettings, industry: tenant?.industry })
+  const photoFor = (heading: string, alt: string) =>
+    placedPhotos.find((a) => a.slot.key === normSlotAlt(alt) && a.slot.heading === normSlotAlt(heading))?.pick
 
   return (
     <div className="brief draft-flow">
@@ -560,6 +586,23 @@ export default function DraftPanel({
               >
                 자사 사이트용 .html
               </button>
+              {photoFiles.length > 0 && (
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={photoBusy}
+                  title="고른 홈페이지 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목)."
+                  onClick={() => {
+                    setPhotoBusy(true)
+                    setError(null)
+                    downloadArticlePhotos(tenantId, stored, photoFiles)
+                      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+                      .finally(() => setPhotoBusy(false))
+                  }}
+                >
+                  {photoBusy ? '사진 받는 중…' : `사진 ${photoFiles.length}장 받기`}
+                </button>
+              )}
               <button
                 type="button"
                 className="ghost"
@@ -811,13 +854,21 @@ export default function DraftPanel({
                   </div>
                 )
               })}
-              {sec.image && (
-                // 사진은 사람이 찍거나 골라 올린다 — 글은 무엇을 넣을지만 제안한다(발행본에 「사진 넣을 자리」로 나간다).
-                <figure className="draft-image-slot">
-                  <span className="draft-role">사진 넣을 자리</span> {sec.image.alt}
-                  {sec.image.caption && <figcaption>{sec.image.caption}</figcaption>}
-                </figure>
-              )}
+              {sec.image &&
+                (() => {
+                  // 사진은 사람이 찍거나 골라 올린다 — 글은 무엇을 넣을지만 제안한다(발행본에 「사진 넣을 자리」로 나간다). 홈페이지
+                  // 사진을 골랐으면 그 사진이 들어간다(아래 「홈페이지 사진」).
+                  const photo = photoFor(sec.heading, sec.image.alt)
+                  return (
+                    <figure className={`draft-image-slot${photo ? ' is-picked' : ''}`}>
+                      {photo ? (
+                        <img className="draft-image-photo" src={photo.src} alt={photo.alt || sec.image.alt} referrerPolicy="no-referrer" />
+                      ) : null}
+                      <span className="draft-role">{photo ? '홈페이지 사진' : '사진 넣을 자리'}</span> {photo ? photo.alt || sec.image.alt : sec.image.alt}
+                      {sec.image.caption && <figcaption>{sec.image.caption}</figcaption>}
+                    </figure>
+                  )
+                })()}
               {sources[si] && sources[si].length > 0 && (
                 // 공식 안내 링크는 글쓰기 엔진이 아니라 확인한 고정 목록에서 코드가 붙인다(src/lib/officialSources.ts).
                 <p className="doc-meta">
@@ -877,6 +928,10 @@ export default function DraftPanel({
           industry={tenant.industry}
           onStored={onStored}
         />
+      )}
+      {/* 홈페이지 사진도 자사 글(content)의 발행본에만 들어간다. */}
+      {opened && !editing && tenant && action.kind === 'content' && (
+        <SitePhotoPanel tenantId={tenantId} brand={tenant} stored={stored} disabled={busy} onStored={onStored} onSettings={setPubSettings} />
       )}
     </div>
   )

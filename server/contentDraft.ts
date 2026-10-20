@@ -1,4 +1,5 @@
 import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
+import type { PhotoPick } from '../src/lib/articlePhotos.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -57,6 +58,11 @@ export interface StoredDraft {
    * 확인해야(confirmedAt) 발행본에 붙는다. 다시 만들기로 새 초안이 와도 남긴다 — 사례는 글이 아니라 측정에서 왔다.
    */
   evidence?: AnswerEvidence;
+  /**
+   * 사람이 고른 홈페이지 사진(src/lib/articlePhotos.ts) — 본문에 넣지 않고 내보낼 때만 사진 자리에 넣는다(본문 지문 · 사실 가드가
+   * 바뀌지 않게). 다시 만들기로 새 초안이 오면 버린다 — 사진 자리가 바뀐다.
+   */
+  photos?: PhotoPick[];
 }
 
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(아직 확인 전). */
@@ -82,7 +88,7 @@ export async function readDrafts(tenantId: string): Promise<DraftMap> {
 }
 
 /**
- * drafts.json 쓰기를 테넌트별로 줄 세운다. 쓰는 길이 넷(초안 · 빈칸 · 편집 · 실측 사례)이라, 줄을 세우지 않으면
+ * drafts.json 쓰기를 테넌트별로 줄 세운다. 쓰는 길이 다섯(초안 · 빈칸 · 편집 · 실측 사례 · 사진)이라, 줄을 세우지 않으면
  * 판정 호출을 기다리는 사이 다른 길이 쓴 내용을 옛 스냅샷으로 덮는다. 판정 호출은 줄 밖에서 하고, 줄 안에서는
  * 파일을 다시 읽어 그 항목만 바꾼다.
  */
@@ -441,7 +447,7 @@ export async function generateDraft(
   if (claims.notes.length) draft = { ...draft, guardNotes: [...(draft.guardNotes ?? []), ...claims.notes] };
   const fresh: StoredDraft = { actionId, generatedAt: new Date().toISOString(), ...(result.model ? { model: result.model } : {}), draft };
   return updateDrafts(tenantId, (map) => {
-    // 빈칸 기록 · 고친 글은 옛 초안의 것이라 버리고, 실측 사례는 이어받는다.
+    // 빈칸 기록 · 고친 글 · 고른 사진은 옛 초안의 것이라 버리고, 실측 사례는 이어받는다.
     const evidence = map[actionId]?.evidence;
     const stored: StoredDraft = evidence ? { ...fresh, evidence } : fresh;
     map[actionId] = stored;
@@ -498,6 +504,31 @@ export async function saveGapFills(
     if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
     const stored: StoredDraft = { ...current, gapFills: clean };
     if (!Object.keys(clean).length) delete stored.gapFills;
+    map[actionId] = stored;
+    return stored;
+  });
+}
+
+/** 화면이 본 초안이 그사이 다시 만들어졌다 — 그 초안의 사진 자리에 고른 사진을 저장하지 않는다(라우트가 409로 답한다). */
+export class DraftChangedError extends Error {}
+
+/**
+ * 고른 홈페이지 사진을 바꾼다 — update가 지금 목록을 받아 새 목록을 돌려준다. 판정 호출이 없다. 화면이 본 초안(generatedAt)과
+ * 지금 초안이 다르면 DraftChangedError — 다시 만드는 1~2분 사이에 고른 사진이 새 초안에 엉뚱하게 붙지 않게.
+ */
+export async function savePhotoPicks(
+  tenantId: string,
+  actionId: string,
+  generatedAt: string,
+  update: (current: PhotoPick[]) => PhotoPick[],
+): Promise<StoredDraft> {
+  return updateDrafts(tenantId, (map) => {
+    const current = map[actionId];
+    if (!current) throw new Error('이 항목의 초안이 없습니다. 먼저 초안을 만드세요.');
+    if (current.generatedAt !== generatedAt) throw new DraftChangedError('그사이 초안이 다시 만들어졌어요. 초안을 다시 불러온 뒤 사진을 골라 주세요.');
+    const photos = update(current.photos ?? []);
+    const stored: StoredDraft = { ...current, photos };
+    if (!photos.length) delete stored.photos;
     map[actionId] = stored;
     return stored;
   });

@@ -1,5 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { renderEvidenceMarkdown } from './answerEvidence'
+import { photosAllowed, withPhotos, type AppliedPhoto } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -9,12 +10,13 @@ import type { PublishSettings } from './publishSettings'
  * 왜 둘을 나누나: 다듬은 글(채널 문체)은 본문의 지문(sourceKeyOf)으로 「원문이 바뀌었습니다」를 가린다
  * (PublishList.tsx). 링크 · 상담 안내 같은 코드 부분을 본문에 섞으면, 설정 하나만 바꿔도 다듬은 글이
  * 전부 「원문 바뀜」이 된다. 사실 가드도 본문만 보아야 한다 — 코드 부분의 주소 · 날짜는 지어낸 숫자가 아니다.
- * 그래서 본문은 그대로 두고, 자사 사이트에 올리는 복사 · .md · .html에서만 글 끝을 붙인다.
+ * 그래서 본문은 그대로 두고, 자사 사이트에 올리는 복사 · .md · .html에서만 글 끝을 붙인다. 고른 홈페이지 사진도 같은 이유로
+ * 여기서만 사진 자리에 넣는다(src/lib/articlePhotos.ts).
  * 고쳐 둔 글(editedMarkdown)에도 섞지 않는다 — 내보낼 때마다 붙는다.
  */
 
-/** 글 끝을 만드는 데 필요한 브랜드 정보. */
-export type ArticleBrand = Pick<TenantSummary, 'brandName' | 'ownedDomains'>
+/** 글 끝을 만드는 데 필요한 브랜드 정보. 업종은 홈페이지 사진의 의료 확인에 쓴다(없으면 의료가 아닌 것으로 본다). */
+export type ArticleBrand = Pick<TenantSummary, 'brandName' | 'ownedDomains'> & Partial<Pick<TenantSummary, 'industry'>>
 
 export interface ArticleContext {
   brand: ArticleBrand
@@ -68,9 +70,17 @@ export function channelCopyOf(adapted: { markdown: string; style: string }, ctx:
 }
 
 export function publishArticleOf(stored: StoredDraft, ctx: ArticleContext): string {
+  return publishArticleParts(stored, ctx).markdown
+}
+
+/** 발행본과 거기에 실제로 들어간 홈페이지 사진 — .html의 JSON-LD image · og:image와 「사진 N장 받기」가 함께 쓴다. */
+export function publishArticleParts(stored: StoredDraft, ctx: ArticleContext): { markdown: string; photos: AppliedPhoto[] } {
   const body = publishMarkdownOf(stored)
   const evidence = renderEvidenceMarkdown(stored.evidence)
+  // 글 끝은 사진을 넣기 전 본문으로 센다 — 브랜드 사이트의 사진 주소가 「본문에 이미 공식 사이트 링크가 있다」로 잡히지 않게.
   const tail = articleTailMarkdown(`${body}\n${evidence}`, ctx)
+  // 사진 사용 확인(의료 업종은 의료광고 확인까지)이 없으면 고른 사진도 넣지 않는다 — 서버의 사진 받기와 같은 기준.
+  const { markdown: shown, applied } = photosAllowed(ctx.settings, ctx.brand.industry) ? withPhotos(body, stored.photos) : { markdown: body, applied: [] }
   const extra = [evidence, tail].filter(Boolean)
-  return extra.length ? `${[body.trimEnd(), ...extra].join('\n\n')}\n` : body
+  return { markdown: extra.length ? `${[shown.trimEnd(), ...extra].join('\n\n')}\n` : shown, photos: applied }
 }

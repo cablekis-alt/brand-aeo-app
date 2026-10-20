@@ -4624,6 +4624,81 @@ td.cell-mid {
   margin-top: 2px;
   font-style: italic;
 }
+/* 홈페이지 사진을 고른 자리 — 실선 테두리와 사진(SitePhotoPanel.tsx). */
+.draft-image-slot.is-picked {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.draft-image-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  margin-bottom: 6px;
+  object-fit: cover;
+  border-radius: var(--r-ctl);
+}
+.photo-slot {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.photo-picked {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.photo-picked img {
+  width: 120px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--r-ctl);
+  flex: none;
+}
+.photo-choose {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.photo-option {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  font-size: 12px;
+  cursor: pointer;
+}
+.photo-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.photo-option img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: calc(var(--r-ctl) - 2px);
+}
+.photo-option:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.photo-option.is-chosen {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--accent-soft);
+}
 /* 초안 쓰기 전 승인 시트 — 브랜드 페이지에서 찾은 사실을 사람이 고른다(FactApprovalSheet.tsx). */
 .fact-sheet {
   display: grid;

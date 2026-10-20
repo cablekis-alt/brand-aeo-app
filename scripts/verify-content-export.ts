@@ -14,6 +14,7 @@ import { buildPublishHtml, markdownToHtml } from '../src/lib/htmlFile'
 import { articleTailMarkdown, brandSiteUrl, publishArticleOf } from '../src/lib/publishArticle'
 import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
+import type { PhotoPick } from '../src/lib/articlePhotos'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -79,6 +80,45 @@ ok('javascript: 이미지는 글자로', markdownToHtml('![x](javascript:alert(1
 const inlineImg = markdownToHtml('문장 속 ![아이콘](https://img.example/i.png) 그림과 [링크](https://example.com/).')
 ok('문장 속 이미지에 「!」가 남지 않는다', !inlineImg.includes('!<a') && inlineImg.includes('<img src="https://img.example/i.png" alt="아이콘">') && inlineImg.includes('<a href="https://example.com/"'))
 ok('문장 속 사진 자리는 글자로 알린다', markdownToHtml('여기에 ![지도](#image-slot) 넣기').includes('[사진: 지도]'))
+
+// 3-2) 홈페이지 사진 — 내보낼 때만 사진 자리에 넣는다(본문 · 지문은 그대로)
+const articleDraft: StoredDraft = {
+  actionId: 'content:article',
+  generatedAt: '2026-10-20T09:00:00.000Z',
+  draft: {
+    format: 'article',
+    title: '가상시 숙소 고르는 기준 {N}가지',
+    lead: '가상시 숙소는 여행 목적에 따라 고르면 됩니다.',
+    sections: [
+      { heading: '지역은 어떻게 고르나요?', answers: 'v5-001', blocks: [{ kind: 'text', role: 'key', body: '목적지에 가까운 곳이 편합니다.' }], image: { alt: '가상 골목 풍경', caption: '골목 입구' } },
+      { heading: '사례: 가상스테이', answers: 'v5-002', blocks: [{ kind: 'text', body: '가상스테이는 독채 두 동입니다.' }], image: { alt: '가상스테이 정원', caption: 'A동과 B동 모두 독채입니다.' } },
+    ],
+    gapCount: 0,
+    usedFacts: [],
+  },
+}
+const photo = (over: Partial<PhotoPick> = {}): PhotoPick => ({
+  slot: '가상스테이 정원', nth: 1, same: 1, heading: '사례: 가상스테이', src: 'https://vtravel.example/img/garden 1(밤).jpg',
+  alt: '밤에 창 너머로 본 정원 나무와 석등', pageUrl: 'https://vtravel.example/', confirmedAt: '2026-10-20T10:00:00.000Z', ...over,
+})
+const withPhoto: StoredDraft = { ...articleDraft, photos: [photo()] }
+const rights = { photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z' } }
+const noPhotoHtml = buildPublishHtml({ stored: articleDraft, brand, facts: [], settings: rights })
+ok('사진을 고르지 않은 글은 발행본 · .html이 그대로', publishArticleOf({ ...articleDraft, photos: [] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }) && !noPhotoHtml.includes('og:image') && !noPhotoHtml.includes('"image"'))
+ok('사진을 골라도 본문 · 지문은 그대로', publishMarkdownOf(withPhoto) === publishMarkdownOf(articleDraft) && sourceKeyOf(publishMarkdownOf(withPhoto)) === sourceKeyOf(publishMarkdownOf(articleDraft)))
+const photoArticle = publishArticleOf(withPhoto, { brand, settings: rights })
+ok('발행본의 사진 자리가 사진으로(괄호 · 공백 · 한글 인코딩)', photoArticle.includes('![밤에 창 너머로 본 정원 나무와 석등](https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg)\n*A동과 B동 모두 독채입니다.*') && photoArticle.includes('![가상 골목 풍경](#image-slot)'))
+ok('브랜드 사이트 사진이 있어도 공식 사이트 링크는 붙는다', photoArticle.endsWith('[가상 여행 공식 사이트](https://vtravel.example/)\n'))
+ok('확인하지 않은 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ confirmedAt: '' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
+ok('https가 아닌 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ src: 'http://vtravel.example/a.jpg' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
+const photoHtml = buildPublishHtml({ stored: withPhoto, brand, facts: [], settings: rights })
+ok('.html 본문에 그림 + 캡션', photoHtml.includes('<figure><img src="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg" alt="밤에 창 너머로 본 정원 나무와 석등"><figcaption>A동과 B동 모두 독채입니다.</figcaption></figure>'))
+ok('.html JSON-LD image · og:image', photoHtml.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]') && photoHtml.includes('<meta property="og:image" content="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg">') && photoHtml.includes('<meta property="og:image:alt" content="밤에 창 너머로 본 정원 나무와 석등">'))
+const twice = buildPublishHtml({ stored: { ...articleDraft, photos: [photo(), photo({ slot: '가상 골목 풍경', heading: '지역은 어떻게 고르나요?' })] }, brand, facts: [], settings: rights })
+ok('같은 사진을 두 자리에 쓰면 JSON-LD image는 한 번', (twice.match(/garden%201%28%EB%B0%A4%29\.jpg/g) ?? []).length === 4 && twice.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]'))
+ok('사이트 설명이 비면 사진 자리 글자를 대체 텍스트로', publishArticleOf({ ...articleDraft, photos: [photo({ alt: '' })] }, { brand, settings: rights }).includes('![가상스테이 정원](https://vtravel.example/img/'))
+ok('사진 사용 확인이 없으면 고른 사진도 넣지 않는다', publishArticleOf(withPhoto, { brand }) === publishArticleOf(articleDraft, { brand }) && !buildPublishHtml({ stored: withPhoto, brand, facts: [] }).includes('og:image'))
+ok('의료 업종은 의료광고 확인까지 있어야 넣는다', !publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: rights }).includes('img/garden') && publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: { photoRights: { ...rights.photoRights, medical: true as const } } }).includes('img/garden'))
 
 // 4) 인용 — 빈 `>` 줄은 문단 나눔
 ok('여러 문단 인용', markdownToHtml('> 첫 문단\n>\n> 둘째 문단') === '<blockquote><p>첫 문단</p><p>둘째 문단</p></blockquote>')

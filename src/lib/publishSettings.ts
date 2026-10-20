@@ -22,7 +22,18 @@ export interface PublishSettings {
    * 「브랜드 페이지」(사실을 읽어 오는 페이지 — 오시는 길 · 진료 안내 등)와는 다른 값이다.
    */
   siteUrl?: string
+  /**
+   * 홈페이지 사진을 글에 써도 된다는 확인(브랜드별 한 번, src/lib/articlePhotos.ts). 서버만 찍는다(PUT photo-rights) — 설정 패널
+   * 저장(PUT publish-settings)은 이 값을 받지 않고 저장된 값을 이어받는다.
+   */
+  photoRights?: PhotoRights
   updatedAt?: string
+}
+
+/** 홈페이지 사진 사용 확인. medical: 의료 업종에서 의료광고(환자 · 시술 전후 사진) 확인까지 받았다. */
+export interface PhotoRights {
+  confirmedAt: string
+  medical?: true
 }
 
 export const PUBLISH_LIMITS = { cta: 200, tags: 10, tag: 30, category: 30 } as const
@@ -76,6 +87,14 @@ function categoryOf(raw: unknown): string | undefined {
   return s
 }
 
+/** 저장된 사진 사용 확인 — 날짜로 읽히는 확인 시각만. 깨진 값은 조용히 뺀다(설정 전체를 못 읽게 하지 않는다). */
+function photoRightsOf(raw: unknown): PhotoRights | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const r = raw as Record<string, unknown>
+  if (typeof r.confirmedAt !== 'string' || Number.isNaN(Date.parse(r.confirmedAt))) return undefined
+  return { confirmedAt: r.confirmedAt, ...(r.medical === true ? { medical: true as const } : {}) }
+}
+
 /** 받은 값을 고른다. 빈 칸은 뺀다. 틀린 값은 이유를 담아 throw. */
 export function normalizePublishSettings(input: unknown): PublishSettings {
   const raw = (input ?? {}) as Record<string, unknown>
@@ -92,6 +111,8 @@ export function normalizePublishSettings(input: unknown): PublishSettings {
   if (category) out.category = category
   if (blogUrl) out.blogUrl = blogUrl
   if (siteUrl) out.siteUrl = siteUrl
+  const photoRights = photoRightsOf(raw.photoRights)
+  if (photoRights) out.photoRights = photoRights
   return out
 }
 
