@@ -55,7 +55,11 @@ export interface CompetitorOverrideFile {
    * 섞여 있어 쓰지 않는다. 처음 저장할 때는 그 직전 목록(마지막 측정이 쓴 목록)으로 채운다(at = null).
    * bankVersion은 그 측정이 쓴 질문지 버전 — 목록은 그대로 두고 질문지만 새로 쓴 저장도 「다음 측정 대기」로 보이게 한다.
    */
-  measured: { at: string | null; listHash: string; bankVersion?: string } | null;
+  /**
+   * 마지막 측정이 쓴 목록 · 질문지. repoBase는 그때의 저장소 설정 지문(baseFingerprint) — 질문지 버전이 달라진 것이 저장소 설정 때문인지
+   * 경쟁사 편집 때문인지 가른다(「다음 측정 대기」).
+   */
+  measured: { at: string | null; listHash: string; bankVersion?: string; repoBase?: string } | null;
   updatedAt: string;
 }
 
@@ -233,14 +237,20 @@ export function serializeCompetitorFile<T>(task: () => Promise<T>): Promise<T> {
  * 브랜드를 자기 코호트와 함께 쟀다고 적는다(measureAndBake). 앱에서 경쟁사를 고친 적이 없는 브랜드(파일 없음)는
  * 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
  */
-export function recordCompetitorMeasurement(tenantId: string, competitors: CompetitorContext[], at: string, bankVersion?: string): Promise<void> {
+export function recordCompetitorMeasurement(
+  tenantId: string,
+  competitors: CompetitorContext[],
+  at: string,
+  bankVersion?: string,
+  repoBase?: string,
+): Promise<void> {
   return serializeCompetitorFile(async () => {
     const file = await readCompetitorOverride(tenantId);
     if (!file) return;
     await writeCompetitorOverride(tenantId, {
       current: file.current,
       lastSave: file.lastSave,
-      measured: { at, listHash: listHash(competitors), ...(bankVersion ? { bankVersion } : {}) },
+      measured: { at, listHash: listHash(competitors), ...(bankVersion ? { bankVersion } : {}), ...(repoBase ? { repoBase } : {}) },
     });
   });
 }

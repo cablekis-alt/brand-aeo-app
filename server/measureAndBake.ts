@@ -22,9 +22,9 @@ import {
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
 import { getIsoWeekString } from './dateUtil.js';
-import { loadRuntimeTenants, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
+import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit, normalizeTenantDraft, persistTenantForRuntime } from './tenantRegistry.js';
 import { blobStoreEnabled, readOverlay, writeOverlay } from './tenantOverlay.js';
-import { recordCompetitorMeasurement } from './tenantCompetitorsStore.js';
+import { baseFingerprint, recordCompetitorMeasurement } from './tenantCompetitorsStore.js';
 import type { FileResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -429,7 +429,12 @@ async function measureAndBakeRun(
   if (!self.ok) throw self.error;
   const { aeoScore } = self.value;
   if (ownCohortList) {
-    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion).catch((err: unknown) => {
+    // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
+    const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId).catch((err: unknown) => {
+      console.warn(`[measureAndBake] 저장소 설정을 읽지 못해 지문 없이 기록합니다 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
+      return undefined;
+    });
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion, repo ? baseFingerprint(repo) : undefined).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
     });
   }

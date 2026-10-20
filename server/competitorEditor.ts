@@ -1179,9 +1179,15 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     // 처음 고칠 때는 지금 목록 · 질문지가 마지막 측정이 쓴 것이다 — 「다음 측정 대기」를 그것과 견준다. 질문지 버전은 마지막
     // 카드의 것(없으면 지금 버전)을 적는다 — 질문지만 새로 쓴 저장도 대기로 보이게.
     const lastCard = (await store.getScorecardHistory(tenantId, 1)).at(-1);
-    const measured = file?.measured
-      ? { ...file.measured, bankVersion: file.measured.bankVersion ?? lastCard?.questionBankVersion ?? tenant.questionBankVersion }
-      : { at: null, listHash: listHash(tenant.competitors), bankVersion: lastCard?.questionBankVersion ?? tenant.questionBankVersion };
+    // 저장소 지문은 측정 질문지가 지금 질문지와 같을 때만 지금 것으로 적는다(다르면 그때 저장소 설정을 알 수 없다 — 질문지 차이로는
+    // 대기를 세지 않는다).
+    const measuredBank = file?.measured?.bankVersion ?? lastCard?.questionBankVersion ?? tenant.questionBankVersion;
+    const repoBase = file?.measured?.repoBase ?? (measuredBank === tenant.questionBankVersion ? baseFingerprint(repo) : undefined);
+    const measured = {
+      ...(file?.measured ?? { at: null, listHash: listHash(tenant.competitors) }),
+      bankVersion: measuredBank,
+      ...(repoBase ? { repoBase } : {}),
+    };
     assertNotMeasuring(); // 위에서 기다리는 동안 측정이 시작됐을 수 있다 — 쓰기 직전에 다시 본다.
     const exclusions = exclusion ? { added: exclusion.add, removed: exclusion.removed } : undefined;
     // 지난 기록만 바꾼 저장이면 직전 목록 저장의 설명을 이어 둔다 — 「경쟁사 바뀜 · 다음 측정 대기」가 제외 요약을 보이지 않게.
@@ -1365,19 +1371,17 @@ export async function markEditorIndustry(tenantId: string, body: unknown): Promi
 
 /**
  * 마지막 측정과 질문지 버전이 다른 것이 경쟁사 편집 때문인가 — 쓰이는 수정본이 그 버전을 골랐거나(질문지만 새로 쓴 저장 · 넘겨받기로
- * 만든 버전), 잰 뒤의 저장(저장소 설정으로 돌아가기 · 저장소 목록으로 저장)이 잰 앱 질문지를 버렸다. 저장소 설정이 버전을 올린 것만
- * 남으면 아니다.
+ * 만든 버전), 잰 뒤로 저장소 설정이 그대로인데 버전이 달라졌다(저장소 설정으로 돌아가기 · 저장소 목록으로 저장이 잰 앱 질문지를
+ * 버렸다 — 그 뒤에 무엇을 저장하거나 되돌려도 같다). 잰 뒤 저장소 설정이 바뀌었으면(버전 올림 · 수정본이 낡음) 아니다. 측정 때의
+ * 저장소 지문을 모르면(예전 기록) 질문지 차이로는 세지 않는다.
  */
 async function bankChosenByEdit(file: CompetitorOverrideFile, tenant: TenantConfig): Promise<boolean> {
   const measured = file.measured;
   if (!measured?.bankVersion || measured.bankVersion === tenant.questionBankVersion) return false;
-  if (file.current?.questionBank?.version === tenant.questionBankVersion) {
-    const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
-    if (repo && overrideApplies(file.current, repo)) return true;
-  }
-  const save = file.lastSave;
-  const savedAfter = Boolean(save && (!measured.at || save.savedAt > measured.at));
-  return savedAfter && save!.before?.questionBank?.version === measured.bankVersion;
+  const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
+  if (!repo) return false;
+  if (file.current && overrideApplies(file.current, repo) && file.current.questionBank?.version === tenant.questionBankVersion) return true;
+  return measured.repoBase !== undefined && measured.repoBase === baseFingerprint(repo);
 }
 
 /**

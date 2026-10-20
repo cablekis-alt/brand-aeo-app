@@ -158,8 +158,10 @@ export default function CompetitorEditor({
   const [questionOnly, setQuestionOnly] = useState(false)
   // 업종 확인(추가 · 새 이름으로 바꾸기, 결정 7) — 이름(접은 값) → 상태. 끝나면 서버 판정(줄의 industry)이 이어받는다.
   const [industryChecks, setIndustryChecks] = useState<Record<string, IndustryCheckState>>({})
-  // 업종 표시(「업종 다름으로 표시」 · 「{업종} 맞음」) 실패 — 바꾼 내용이 없어도 보이게 저장 막대가 아닌 목록 아래에 둔다.
-  const [industryError, setIndustryError] = useState<string | null>(null)
+  // 업종 표시(「업종 다름으로 표시」 · 「{업종} 맞음」) 실패 — 바꾼 내용이 없어도 보이게 저장 막대가 아닌 목록 아래에 둔다. mark: 표시를
+  // 저장하지 못함(다음 편집에서 지운다) · reload: 표시는 저장했는데 서랍 상태를 다시 받지 못함(줄의 표시가 낡았다 — 다시 받을 때까지 둔다).
+  const [industryError, setIndustryError] = useState<{ kind: 'mark' | 'reload'; text: string } | null>(null)
+  const clearMarkError = () => setIndustryError((e) => (e?.kind === 'mark' ? null : e))
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
@@ -324,7 +326,7 @@ export default function CompetitorEditor({
     setPickError(null)
     setSavedNow(false)
     setActionError(null)
-    setIndustryError(null)
+    clearMarkError()
     // 새로 들인 곳은 업종을 확인한다(대기 줄 올리기 · 자리 바꾸기는 이미 목록에 있던 곳이라 하지 않는다).
     if (op.t === 'add') startIndustryCheck(op.with)
     else if (op.t === 'replace' && op.with) startIndustryCheck(op.with)
@@ -350,23 +352,29 @@ export default function CompetitorEditor({
   // 사람이 정한 업종(「펜션 맞음」 · 「업종 다름으로 표시」) — 바로 저장된다(결정 F4). 서랍 상태와 계획을 다시 받는다.
   const markIndustry = (name: string, mark: 'same' | 'different' | null) => {
     setOpen(null)
-    setIndustryError(null)
+    clearMarkError()
     markCompetitorIndustry(tenantId, name, mark).then(
       (result) => {
         // 표시는 저장됐다 — 계획을 다시 받고(받는 곳이 바뀐다), 줄의 표시는 서랍 상태를 다시 불러 맞춘다.
         setIndustryChecks((m) => ({ ...m, [squash(name).toLowerCase()]: { status: 'done', result } }))
         setReplan((n) => n + 1)
         loadCompetitorEditor(tenantId).then(
-          (value) => setLoad({ status: 'ok', value }),
+          (value) => {
+            setLoad({ status: 'ok', value })
+            setIndustryError(null)
+          },
           (err: unknown) => {
             console.error('[CompetitorEditor] 업종 표시 뒤 경쟁사 목록을 다시 불러오지 못했습니다', err)
-            setIndustryError(`${name} 업종 표시는 저장했지만 목록을 다시 불러오지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
+            setIndustryError({
+              kind: 'reload',
+              text: `${name} 업종 표시는 저장했지만 목록을 다시 불러오지 못했어요 — 줄의 업종 표시가 맞지 않을 수 있어요. 서랍을 다시 열어 주세요(${err instanceof Error ? err.message : String(err)})`,
+            })
           },
         )
       },
       (err: unknown) => {
         console.error('[CompetitorEditor] 업종 표시를 저장하지 못했습니다', err)
-        setIndustryError(`${name} 업종 표시를 저장하지 못했어요 — ${err instanceof Error ? err.message : String(err)}`)
+        setIndustryError({ kind: 'mark', text: `${name} 업종 표시를 저장하지 못했어요 — ${err instanceof Error ? err.message : String(err)}` })
       },
     )
   }
@@ -374,7 +382,9 @@ export default function CompetitorEditor({
   const industryFor = (name: string, row: EditorCompetitorRow | null): RowIndustry | undefined => {
     const check = industryChecks[squash(name).toLowerCase()]
     if (check?.status === 'running') return { state: 'checking' }
-    const mark = row?.industry ?? null
+    // 방금 저장한 사람 표시가 가장 새롭다 — 서랍 상태를 다시 받지 못했어도 줄이 옛 표시로 돌아가지 않게.
+    const personNow = check?.status === 'done' && check.result.by === 'person' ? check.result : null
+    const mark = personNow ?? row?.industry ?? null
     if (mark?.verdict === 'different') return { state: 'other', looksLike: mark.looksLike }
     if (!mark && check?.status === 'done' && check.result.verdict === 'different') return { state: 'other', looksLike: check.result.looksLike }
     return undefined
@@ -390,7 +400,10 @@ export default function CompetitorEditor({
     setPickError(null)
     setOpen(next)
   }
-  const revert = (index: number) => setOps(revertOp(base, ops, index))
+  const revert = (index: number) => {
+    setOps(revertOp(base, ops, index))
+    clearMarkError()
+  }
   const listNames = new Set(applied.list.map((x) => squash(x.competitor.name)))
   const suggestionGroups = (make: (entry: CompetitorEntry, source: InputSource) => NewOp): PickerGroup[] =>
     (['past', 'cohort', 'answers'] as const).map((source) => ({
@@ -467,6 +480,7 @@ export default function CompetitorEditor({
     !pastLocked &&
     !measuringNow &&
     questionsReady &&
+    freshPlan &&
     !busy
 
   // 확인 창은 「지난 기록 빼기」와 「모두 새로 쓰기」를 함께 다룬다(결정 E7) — 둘 다 해당하면 창 하나에 두 부분.
@@ -482,7 +496,7 @@ export default function CompetitorEditor({
     setQMode('derive')
     setQModeOpen(false)
     setQuestionOnly(false)
-    setIndustryError(null)
+    clearMarkError()
   }
   const chooseMode = (mode: QuestionMode) => {
     setQMode(mode)
@@ -491,7 +505,7 @@ export default function CompetitorEditor({
     if (mode !== 'all') setQuestionOnly(false)
     setSavedNow(false)
     setActionError(null)
-    setIndustryError(null)
+    clearMarkError()
   }
   // 목록은 그대로 두고 질문지만 새로 쓰기 — 저장 막대를 열고 「모두 새로 쓰기」를 골라 둔다.
   const startQuestionOnly = () => {
@@ -501,10 +515,11 @@ export default function CompetitorEditor({
   const run = (task: () => Promise<CompetitorEditorState>, after: (value: CompetitorEditorState) => void) => {
     setBusy(true)
     setActionError(null)
-    setIndustryError(null)
+    clearMarkError()
     task().then(
       (value) => {
         setLoad({ status: 'ok', value })
+        setIndustryError(null)
         clearEdits()
         setOpen(null)
         // 저장 전 미리보기는 버린다 — 같은 입력을 다시 고르면 새로 계산한다.
@@ -592,11 +607,13 @@ export default function CompetitorEditor({
     setPastOut(next)
     setSavedNow(false)
     setActionError(null)
+    clearMarkError()
   }
   const toggleRestore = (id: string, on: boolean) => {
     setRestore(on ? [...new Set([...restore, id])] : restore.filter((x) => x !== id))
     setSavedNow(false)
     setActionError(null)
+    clearMarkError()
   }
   const reset = () =>
     run(
@@ -919,7 +936,7 @@ export default function CompetitorEditor({
 
             {industryError && (
               <p className="ce-alert bad" role="alert">
-                {industryError}
+                {industryError.text}
               </p>
             )}
             <button
@@ -1127,15 +1144,17 @@ export default function CompetitorEditor({
             <span className="ce-bar-hint">
               {measuringNow
                 ? '측정이 끝난 뒤에 저장할 수 있어요'
-                : !questionsReady
-                  ? '고쳐 쓴 질문을 확인한 뒤 저장할 수 있어요'
-                  : qm === 'all' && !pastInput
-                    ? '저장하면 다음 측정 때 질문지를 새로 만들어요'
-                    : pastInput
-                  ? ops.length
-                    ? '목록은 다음 측정부터 · 지난 순위는 저장하면 바로 다시 세요'
-                    : '저장하면 지난 순위를 바로 다시 세요'
-                  : '다음 측정부터 적용돼요'}
+                : !freshPlan
+                  ? '다시 계산하는 중…'
+                  : !questionsReady
+                    ? '고쳐 쓴 질문을 확인한 뒤 저장할 수 있어요'
+                    : qm === 'all' && !pastInput
+                      ? '저장하면 다음 측정 때 질문지를 새로 만들어요'
+                      : pastInput
+                        ? ops.length
+                          ? '목록은 다음 측정부터 · 지난 순위는 저장하면 바로 다시 세요'
+                          : '저장하면 지난 순위를 바로 다시 세요'
+                        : '다음 측정부터 적용돼요'}
             </span>
             <button type="button" className="btn" onClick={clearEdits} disabled={busy}>
               취소

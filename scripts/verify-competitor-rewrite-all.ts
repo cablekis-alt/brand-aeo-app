@@ -89,6 +89,7 @@ try {
   const fileStore = await import('../server/tenantCompetitorsStore')
   const { FileResultStore } = await import('../server/store')
   const store = new FileResultStore()
+  const repoBaseOf = async (id: string) => fileStore.baseFingerprint((await reg.loadTenantWithoutCompetitorEdit(id))!)
   const fresh = async (id: string) => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === id)!
   const itemOfPlan = (p: { questions: { items: { fromId: string; action: string }[] } }, id: string) => p.questions.items.find((i) => i.fromId === id)
   const planOf = async (id: string, list: unknown, handoff?: unknown) => ed.planEdit(await fresh(id), await reg.loadRuntimeTenants(), store, list, undefined, handoff)
@@ -167,7 +168,7 @@ try {
   ok('저장소가 그대로면 계속 쓴다', !(await rejects(pipeline.ensureQuestionBank(await fresh(B.tenantId), store))))
 
   // 9) 측정 기록에 질문지 버전 — 그 버전으로 재면 대기가 사라진다
-  await fileStore.recordCompetitorMeasurement(B.tenantId, tb.competitors, new Date(Date.now() + 60_000).toISOString(), tb.questionBankVersion)
+  await fileStore.recordCompetitorMeasurement(B.tenantId, tb.competitors, new Date(Date.now() + 60_000).toISOString(), tb.questionBankVersion, await repoBaseOf(B.tenantId))
   ok('그 버전으로 잰 뒤에는 대기가 사라진다', (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
 
   // 10) 저장소가 질문지 버전을 올린 것은 경쟁사 편집 대기가 아니다(검토 지적 — 앱이 고른 버전만 센다)
@@ -199,10 +200,15 @@ try {
   // 11-2) 모두 새로 쓴 질문지(v6)로 잰 뒤 「저장소 설정으로 돌아가기」 — 다음 측정은 v5로 재므로 대기다(저장소 버전 올림과 다르다)
   ok('잰 뒤에는 대기 없음(B · v6)', (await fresh(B.tenantId)).questionBankVersion === 'v6' && (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
   // (9)는 측정 시각을 1분 뒤로 적었다 — 실제처럼 측정이 먼저 끝난 뒤에 돌아가게 시각을 다시 적는다.
-  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() - 1000).toISOString(), 'v6')
+  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() - 1000).toISOString(), 'v6', await repoBaseOf(B.tenantId))
   await ed.resetEdit(B.tenantId, store)
   ok('저장소 설정으로 돌아가면 v5로 재니 대기', (await fresh(B.tenantId)).questionBankVersion === 'v5' && (await ed.pendingCompetitorEdit(await fresh(B.tenantId)))?.summary === '저장소 설정의 경쟁사 목록으로 돌아감')
-  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() + 120_000).toISOString(), 'v5')
+  // 돌아간 뒤 무엇을 저장해도(목록을 바꿨다 다시 저장소 목록으로) 다음 측정이 v5인 동안은 대기다 — 직전 저장만 보면 놓친다
+  const plusX = [...B.competitors, c('가상추가비')]
+  await ed.saveEdit(B.tenantId, store, { competitors: plusX, summary: '가상추가비 추가' })
+  await ed.saveEdit(B.tenantId, store, { competitors: B.competitors, summary: '가상추가비 빼기' })
+  ok('돌아간 뒤 목록을 바꿨다 되돌려도 v5로 재니 대기', (await fresh(B.tenantId)).questionBankVersion === 'v5' && (await ed.pendingCompetitorEdit(await fresh(B.tenantId)))?.summary === '가상추가비 빼기')
+  await fileStore.recordCompetitorMeasurement(B.tenantId, B.competitors, new Date(Date.now() + 120_000).toISOString(), 'v5', await repoBaseOf(B.tenantId))
   ok('v5로 잰 뒤에는 대기 없음', (await ed.pendingCompetitorEdit(await fresh(B.tenantId))) === null)
 
   // 12) 「모두 새로 쓰기」 권하는 곳 — 저장한 뒤 비교 질문이 없는 곳(빠지는 질문은 세지 않는다 · 그대로 두기면 넘겨받기가 없다)
@@ -212,6 +218,21 @@ try {
   ok('함께 묻던 질문이 빠지면 남는 곳(가상초원)도 비교 질문 없음', itemOfPlan(pe, 'v5-001')?.action === 'remove' && pe.noQuestion.join() === '가상초원' && pe.noQuestionKept.length === 0)
   const ph = await planOf(A.tenantId, replaced, handoff)
   ok('넘겨받는 곳은 빼고, 그대로 두기면 넘겨받는 곳도 질문 없음', ph.noQuestion.join() === '가상해돋이' && ph.noQuestionKept.join() === '새펜션A,가상해돋이')
+
+  // 13) 모두 새로 쓴 v6로 잰 뒤 다시 모두 새로 쓰기(v7) — 대기. 그 뒤 저장소가 버전을 올려 수정본이 낡으면 v7은 쓰이지 않으니 대기 아님
+  const F = { ...B, tenantId: 'fake-all-f', ownedDomains: ['fake-f.example'] }
+  writeJson('tenants.overlay.json', [A, B, C, D, E, F])
+  writeJson(`data/${F.tenantId}/question-bank/v5.json`, bankOf('가상구', [q('v5-001', '가상머뭄이랑 가상골목 중에 어디가 더 나아?', '가상구')]))
+  await ed.saveEdit(F.tenantId, store, { competitors: F.competitors, summary: 'F v5→v6', questions: { mode: 'all', key: (await planOf(F.tenantId, F.competitors)).rewriteAll.key } })
+  await pipeline.ensureQuestionBank(await fresh(F.tenantId), store)
+  await fileStore.recordCompetitorMeasurement(F.tenantId, F.competitors, new Date(Date.now() - 1000).toISOString(), 'v6', await repoBaseOf(F.tenantId))
+  ok('F: v6로 잰 뒤 대기 없음', (await ed.pendingCompetitorEdit(await fresh(F.tenantId))) === null)
+  await ed.saveEdit(F.tenantId, store, { competitors: F.competitors, summary: 'F v6→v7', questions: { mode: 'all', key: (await planOf(F.tenantId, F.competitors)).rewriteAll.key } })
+  ok('F: 다시 모두 새로 쓰면(v7) 대기', (await fresh(F.tenantId)).questionBankVersion === 'v7' && (await ed.pendingCompetitorEdit(await fresh(F.tenantId)))?.summary === 'F v6→v7')
+  writeJson('tenants.overlay.json', [A, B, C, D, E, { ...F, questionBankVersion: 'v8' }])
+  ok('F: 저장소가 버전을 올려 수정본이 낡으면 대기 아님', (await fresh(F.tenantId)).questionBankVersion === 'v8' && (await ed.pendingCompetitorEdit(await fresh(F.tenantId))) === null)
+  writeJson('tenants.overlay.json', [A, B, C, D, E, F])
+  ok('F: 저장소가 그대로면 다시 대기', (await ed.pendingCompetitorEdit(await fresh(F.tenantId)))?.summary === 'F v6→v7')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
