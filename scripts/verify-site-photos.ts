@@ -10,6 +10,7 @@
  */
 import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, matchPhotos, photoSlotsOf, withPhotos, type PhotoPick } from '../src/lib/articlePhotos'
 import { countImageSlots } from '../src/lib/markdownFile'
+import { JSDOM } from 'jsdom'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -81,6 +82,58 @@ ok('설명의 대괄호 · 줄바꿈 · 제어 문자를 걷고 160자', cleanPh
 // 5) 의료 업종 — 사진 기능은 넓게 본다
 ok('의료 업종(진료과 · 영문 포함)', ['정형외과', '이비인후과', '피부과', '치과', 'Dental clinic', '한방병원', '소아청소년과'].every(isPhotoMedical))
 ok('의료가 아닌 업종', ['펜션', '관광안내', '통신', '셋톱박스 제조', ''].every((i) => !isPhotoMedical(i)) && !isPhotoMedical(undefined))
+
+// 6) 홈페이지 사진 후보(src/lib/sitePhotos.ts) — 업체 노드의 사진만, 꼬리표가 아닌 장면 설명
+const dom = new JSDOM('<!doctype html><html><body></body></html>')
+;(globalThis as unknown as Record<string, unknown>).DOMParser = dom.window.DOMParser
+const { extractSitePhotos, photoPageOf } = await import('../src/lib/sitePhotos')
+const ld = (v: unknown, type = 'application/ld+json') => `<script type="${type}">${JSON.stringify(v)}</script>`
+const tag = '체크인 · 가상스테이 사진'
+const page = [
+  '<html><head>',
+  ld({
+    '@context': 'https://schema.org',
+    '@type': 'LodgingBusiness',
+    name: '가상스테이',
+    logo: 'https://stay.example/img/logo.png',
+    image: ['https://stay.example/img/living.jpg', '/img/garden.jpg?v=3', 'https://stay.example/img/logo.png', 'http://stay.example/img/old.jpg'],
+    containsPlace: [{ '@type': 'HotelRoom', name: 'A동', image: { '@type': 'ImageObject', contentUrl: '/img/a-room.jpg' } }],
+    review: [{ '@type': 'Review', image: 'https://stay.example/img/review.jpg' }],
+  }),
+  ld({ '@graph': [{ '@type': 'TouristAttraction', name: '가상 축제', image: 'https://stay.example/img/festival.jpg' }, { '@type': 'Person', image: 'https://stay.example/img/star.jpg' }] }, 'application/ld+json; charset=utf-8'),
+  '<script type="application/ld+json">{ 깨진 </script>',
+  '<meta property="og:image" content="https://stay.example/img/og.jpg">',
+  '</head><body>',
+  // 장면 설명 ×2 · 꼬리표 ×여러 사진(일정 카드 썸네일)
+  '<img src="/img/garden.jpg" alt="밤에 창 너머로 본 정원 나무와 석등"><img src="/img/garden.jpg?w=300" alt="밤에 창 너머로 본 정원 나무와 석등">',
+  ...['garden', 'living', 'a-room', 'x1', 'x2'].map((n) => `<img src="/img/${n}.jpg" alt="${tag}">`),
+  '<img src="/_next/image?url=%2Fimg%2Fliving.jpg&w=640" alt="가상스테이 A동 거실의 서까래">',
+  '<img data-src="/img/a-room.jpg" alt="A동 침실">',
+  // 일정 카드 썸네일 — 한 사진에만 꼬리표가 여러 번(장면 설명보다 많이) 붙는다
+  ...Array.from({ length: 6 }, () => '<img src="/img/a-room.jpg" alt="침실로 · 가상스테이 사진">'),
+  '</body></html>',
+].join('')
+const got = extractSitePhotos(page, 'https://stay.example/s/stay')
+const srcs = got.photos.map((p) => p.src)
+ok('업체 · 객실 노드의 사진만(관광지 · 인물 · 후기 · 로고 빼고, http는 세어 뺀다)', srcs.join() === 'https://stay.example/img/living.jpg,https://stay.example/img/garden.jpg?v=3,https://stay.example/img/a-room.jpg' && got.skippedHttp === 1)
+ok('구조화 데이터 사진이 있으면 대표 사진(og)은 후보에 넣지 않는다', !srcs.some((s) => s.includes('og.jpg')))
+const altOf = (part: string) => got.photos.find((p) => p.src.includes(part))?.alt
+ok('여러 사진에 붙은 꼬리표가 아닌 장면 설명을 고른다', altOf('garden') === '밤에 창 너머로 본 정원 나무와 석등')
+ok('최적화 주소(/_next/image) · 지연 로딩 속성도 같은 사진으로 읽는다 · 많이 붙은 꼬리표 모양보다 장면 설명', altOf('living') === '가상스테이 A동 거실의 서까래' && altOf('a-room') === 'A동 침실')
+ok('장면 설명이 없으면 비운다(사진 자리 글자를 쓴다)', extractSitePhotos(ld({ '@type': 'Hotel', image: 'https://s.example/q.jpg' }) + '<img src="https://s.example/q.jpg" alt="객실로 · 가상 사진">', 'https://s.example/').photos[0]?.alt === '')
+ok('가진 곳 이름', got.photos.find((p) => p.src.includes('a-room'))?.where === 'A동' && got.photos[0]?.where === '가상스테이' && got.photos.every((p) => p.source === 'jsonld'))
+const noLd = extractSitePhotos(
+  '<html><head><base href="https://cdn-free.example/stay/"><meta property="og:image" content="hero.jpg"><meta property="og:image:alt" content="가상스테이 외관"></head><body><img src="room.jpg" alt="객실"><img src="https://other.example/ad.jpg" alt="광고"><img src="noalt.jpg"></body></html>',
+  'https://cdn-free.example/stay/index.html',
+)
+ok('구조화 데이터가 없으면 대표 사진 → 같은 사이트의 설명 있는 사진(다른 사이트 · 설명 없는 사진 빼고)', noLd.photos.map((p) => `${p.source}:${p.src}:${p.alt}`).join() === 'og:https://cdn-free.example/stay/hero.jpg:가상스테이 외관,img:https://cdn-free.example/stay/room.jpg:객실')
+const httpOnly = extractSitePhotos(ld({ '@type': 'LocalBusiness', image: ['http://old.example/a.jpg', 'http://old.example/b.jpg'] }), 'http://old.example/')
+ok('http로만 열리는 사이트는 0장 · 뺀 수를 알린다', httpOnly.photos.length === 0 && httpOnly.skippedHttp === 2)
+ok('사진을 찾을 페이지 — 공식 사이트 → 브랜드 페이지 → 도메인 루트', [
+  photoPageOf({ brandName: 'x', ownedDomains: ['a.example'], brandPageUrl: 'https://a.example/brand' }, { siteUrl: 'https://a.example/s/x' }) === 'https://a.example/s/x',
+  photoPageOf({ brandName: 'x', ownedDomains: ['a.example'], brandPageUrl: 'https://a.example/brand' }, null) === 'https://a.example/brand',
+  photoPageOf({ brandName: 'x', ownedDomains: ['a.example'] }, null) === 'https://a.example/',
+].every(Boolean))
 
 let failed = 0
 for (const [label, pass] of checks) {
