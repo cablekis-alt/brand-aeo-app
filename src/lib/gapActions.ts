@@ -275,9 +275,34 @@ interface ListedEvidence {
 }
 
 /**
- * 우리가 이미 그 사이트에 있는가 — 우리 이름이 나온 답이 그 사이트 페이지를 우리 근거(「뒷받침」)로 인용했으면 있다고 본다.
- * 질문 유형(이름 댄 · 없는)은 가리지 않는다. 이름을 댄 질문에서 우리 업체 페이지가 인용되는 곳이 바로 이미 등록된 곳이다
- * (실측: web4ai W42 yeogi.com 21회 · nol.yanolja.com 13회). 언급 없는 답의 「뒷받침」은 세지 않는다(맘맘 오분류).
+ * 업체 한 곳의 페이지(상세 · 프로필)인가 — 후기·예약 플랫폼의 목록 · 검색 · 이벤트 · 사전 · 게시판 · 명소 페이지는 우리가 거기
+ * 등록됐다는 근거가 아니다. 판정이 그런 페이지에도 「뒷받침」을 붙여, 아무 페이지나 세면 등록 안 된 곳이 「소개 보강」이 되고
+ * 「우리 업체 페이지 열기」가 사전 · 이벤트 검색을 열었다(실측: k-wonjin W40 goodoc /dict/73 · gangnamunni /events?q=…,
+ * web4ai W41 airbnb /stays/beachfront). 업체 페이지 주소는 플랫폼마다 모양이 뚜렷해 그 모양만 센다 — 모르는 모양이면 등록됐다고
+ * 보지 않는다(「등재」로 남는 쪽이 「새로 등록하지 마세요」로 잘못 안내하는 쪽보다 덜 해롭다). 실측으로 맞춘 모양: yeogi
+ * /domestic-accommodations/숫자 · nol /stay/domestic/숫자 · mom-mom /properties/… · /hotels/… · /hospital(s)/… · airbnb /rooms/숫자 ·
+ * agoda …/hotel/도시.html · tripadvisor Hotel_Review- · expedia .Hotel-Information · hotels.com /ho숫자/.
+ */
+const LISTING_PAGE = /(^|\/)(hospitals?|hotels?|stay\/domestic|domestic-accommodations|accommodations|properties|rooms)\/[^/]+|Hotel_Review-|\.Hotel-Information|(^|\/)ho\d+\//i
+/** 후기·예약 카탈로그(server/citationSources.ts REVIEW_HOSTS)에 들어 있지만 업체 등록이 아니라 큐레이션 매거진인 곳. */
+const MAGAZINE_HOSTS = new Set(['telltrip.com', 'pzip.kr'])
+
+function isListingPage(raw: string, host: string): boolean {
+  if (MAGAZINE_HOSTS.has(host) || [...MAGAZINE_HOSTS].some((m) => host.endsWith(`.${m}`))) return false
+  let path: string
+  try {
+    path = decodeURIComponent(new URL(raw).pathname)
+  } catch {
+    return false
+  }
+  return LISTING_PAGE.test(path)
+}
+
+/**
+ * 우리가 이미 그 사이트에 있는가 — 우리 이름이 나온 답이 그 사이트의 **업체 페이지**(isListingPage)를 우리 근거(「뒷받침」)로
+ * 인용했으면 있다고 본다. 질문 유형(이름 댄 · 없는)은 가리지 않는다. 이름을 댄 질문에서 우리 업체 페이지가 인용되는 곳이 바로
+ * 이미 등록된 곳이다(실측: web4ai W42 yeogi.com /domestic-accommodations/90328 · nol.yanolja.com /stay/domestic/10068088).
+ * 언급 없는 답의 「뒷받침」은 세지 않는다(맘맘 오분류).
  */
 function listedEvidenceByHost(analyses: QuestionRepeatAnalysis[]): Map<string, ListedEvidence> {
   const byHost = new Map<string, ListedEvidence>()
@@ -286,7 +311,7 @@ function listedEvidenceByHost(analyses: QuestionRepeatAnalysis[]): Map<string, L
     for (const c of a.citations ?? []) {
       if (!c.supportsBrandMention) continue
       const host = normalizeHost(c.raw, c.domain)
-      if (!host) continue
+      if (!host || !isListingPage(c.raw, host)) continue
       const row = byHost.get(host) ?? { responses: new Set<string>(), pages: new Map<string, number>() }
       row.responses.add(`${a.questionId}|${a.engine}|${a.callIndex}`)
       const page = c.raw.replace(/[?#].*$/, '')

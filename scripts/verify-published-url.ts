@@ -85,16 +85,23 @@ const response = (questionId: string, callIndex: number, mentioned: boolean, cit
   ...(startedAt ? { timing: { startedAt } } : {}),
 })
 const week = [
-  // 한 응답에 같은 글이 두 번 — 한 번만 센다
-  response('v9-001', 0, false, [['https://fake.tistory.com/1', false], ['https://fake.tistory.com/1?utm_source=openai', true]], '2026-10-14T01:00:00Z'),
+  // 한 응답에 같은 글이 두 번 — 한 번만 센다. 이름 없는 질문(v9-001)의 「뒷받침」은 답에 우리 이름이 나온 응답에서만 세므로
+  // 두 응답 모두 언급 있음으로 둔다(2026-10-21, 맘맘 오분류 — 입력만 맞추고 기대값은 그대로).
+  response('v9-001', 0, true, [['https://fake.tistory.com/1', false], ['https://fake.tistory.com/1?utm_source=openai', true]], '2026-10-14T01:00:00Z'),
   response('v9-001', 1, true, [['https://fake.tistory.com/1', true]], '2026-10-14T02:00:00Z'),
-  response('v9-002', 0, true, [['https://fake.tistory.com/1', false], ['https://fake.tistory.com/12', true]], '2026-10-15T03:00:00Z'),
+  response('v9-002', 0, false, [['https://fake.tistory.com/1', false], ['https://fake.tistory.com/12', true]], '2026-10-15T03:00:00Z'),
 ]
 const named = new Map([['v9-001', false], ['v9-002', true]])
 const t = indexWeekCitations(week, named).get('fake.tistory.com/1')
 ok('응답 단위로 센다(한 응답 안 중복은 1회)', t?.all.cited === 3 && t.all.supporting === 2)
 ok('이름 없는/이름 댄 질문을 가른다', t?.unnamed?.cited === 2 && t.unnamed.supporting === 2 && t.named?.cited === 1 && t.named.supporting === 0)
 ok('답변에 우리 이름이 나온 응답은 보조로 센다', t?.all.mentioned === 2)
+// 이름 없는 질문인데 답에 우리 이름이 없으면 「뒷받침」을 세지 않는다 — 이름 댄 질문은 이름 없이 가리킬 수 있어 그대로 센다.
+const unmentioned = indexWeekCitations(
+  [response('v9-001', 0, false, [['https://fake.tistory.com/5', true]]), response('v9-002', 0, false, [['https://fake.tistory.com/5', true]])],
+  named,
+).get('fake.tistory.com/5')
+ok('이름 없는 질문의 언급 없는 「뒷받침」은 세지 않고, 이름 댄 질문은 센다', unmentioned?.unnamed?.supporting === 0 && unmentioned.named?.supporting === 1 && unmentioned.all.supporting === 1)
 const unknownBank = indexWeekCitations(week, null).get('fake.tistory.com/1')
 ok('은행을 못 읽으면 이름 없는/이름 댄 질문은 null(0이 아니다)', unknownBank?.unnamed === null && unknownBank.named === null && unknownBank.all.cited === 3)
 

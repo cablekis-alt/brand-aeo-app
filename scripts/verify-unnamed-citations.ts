@@ -119,6 +119,24 @@ ok('언급 없는 답의 뒷받침으로는 등록됐다고 보지 않는다(「
 ok('질문 은행을 못 읽어도 등록 여부는 판단한다', action(plan([], yeogiListed), 'listing:yeogi.com')?.listed === true)
 const wikiListed = action(plan(questions, [analysis('v2-002', [cite('https://namu.wiki/w/가상', true)], true)]), 'listing:namu.wiki')
 ok('위키는 같은 조건이어도 「문서 보완」 그대로', wikiListed?.title === 'namu.wiki 문서 보완' && !wikiListed.listed)
+// 업체 페이지가 아닌 글(목록 · 검색 · 이벤트 · 사전 · 게시판 · 명소)은 등록 근거가 아니다(실측: goodoc /dict/73, gangnamunni /events?q=…).
+const notPages = [
+  'https://www.yeogi.com/accommodation/pension/kr/전북특별자치도/군산시',
+  'https://www.gangnamunni.com/events?q=기린',
+  'https://www.goodoc.co.kr/dict/73/',
+  'https://www.airbnb.co.kr/gimje-si-south-korea/stays/beachfront',
+  'https://www.telltrip.com/hotel-food/hotel/가상-숙소/',
+]
+const notListed = plan(questions, notPages.map((u, i) => ({ ...analysis('v2-002', [cite(u, true)], true), callIndex: i }) as unknown as QuestionRepeatAnalysis))
+ok('목록 · 검색 · 이벤트 · 사전 · 매거진 페이지로는 등록됐다고 보지 않는다', notListed.actions.filter((a) => a.kind === 'listing').every((a) => !a.listed))
+// 업체 페이지와 목록 페이지가 함께 인용되면 업체 페이지를 연다 — 목록이 더 많이 인용돼도.
+const mixedPages = plan(questions, [
+  analysis('v2-002', [cite('https://www.yeogi.com/accommodation/pension/kr/전북특별자치도/군산시', true), cite('https://www.yeogi.com/domestic-accommodations/90328', true)], true),
+  { ...analysis('v2-002', [cite('https://www.yeogi.com/accommodation/pension/kr/전북특별자치도/군산시', true)], true), callIndex: 1 } as unknown as QuestionRepeatAnalysis,
+])
+ok('여는 페이지는 업체 페이지', action(mixedPages, 'listing:yeogi.com')?.listedPage === 'https://www.yeogi.com/domestic-accommodations/90328')
+const medical = action(plan(questions, [analysis('v2-002', [cite('https://www.modoodoc.com/hospital/70122/가상의원', true)], true)]), 'listing:modoodoc.com')
+ok('병원 정보 플랫폼의 병원 페이지도 등록 근거', medical?.listed === true)
 
 // 2) 블로그 플랫폼 지분 — 이름 없는 질문의 인용으로 낸다
 const naver = action(plan(questions), 'listing:platform:blog.naver.com');
@@ -173,12 +191,15 @@ ok('다른 버전의 은행이 오면 나누지 못한 것으로 본다(그 은�
 const noMatch = await getCitationSourceAnalysis(store(card, [analysis('v2-999', [cite('https://namu.wiki/w/가상', true)])]), 't', WEEK, { questions: 'unnamed' });
 ok('응답이 있는데 은행에서 하나도 못 찾으면 나누지 못한 것으로 본다', noMatch.questionScope?.bankVersion === null && noMatch.questionScope.unknown === 1);
 
-// 3-b) 이름 없는 질문 보기의 「뒷받침」도 언급 있는 답에서만 센다(실행 항목 「충족」과 같은 기준). 전체 · 이름 댄 질문 보기는 그대로.
-const mm = [analysis('v2-001', [cite('https://mom-mom.net/travel/places/1', true)])];
+// 3-b) 이름 없는 질문의 「뒷받침」은 언급 있는 답에서만 센다(실행 항목 카드와 같은 기준) — 이름 없는 질문 보기도, 질문 유형으로
+//      좁히지 않은 보기도. 이름 댄 질문은 언급 없이도 센다. 은행을 못 찾으면 저장된 판정 그대로다.
+const mm = [analysis('v2-001', [cite('https://mom-mom.net/travel/places/1', true)]), analysis('v2-002', [cite('https://mom-mom.net/travel/places/2', true)])];
 const mmUnnamed = await getCitationSourceAnalysis(store(card, mm), 't', WEEK, { questions: 'unnamed' });
 const mmAll = await getCitationSourceAnalysis(store(card, mm), 't', WEEK);
 ok('이름 없는 질문 보기 — 언급 없는 답의 뒷받침은 0', supportingOf(mmUnnamed, 'https://mom-mom.net/travel/places/1') === 0);
-ok('전체 보기 — 저장된 판정 그대로 1', supportingOf(mmAll, 'https://mom-mom.net/travel/places/1') === 1);
+ok('전체 보기도 이름 없는 질문의 언급 없는 뒷받침은 0, 이름 댄 질문은 1', supportingOf(mmAll, 'https://mom-mom.net/travel/places/1') === 0 && supportingOf(mmAll, 'https://mom-mom.net/travel/places/2') === 1);
+const mmNoBank = await getCitationSourceAnalysis(store([{ weekOf: WEEK, questionBankVersion: 'v9' }], [analysis('v9-001', [cite('https://mom-mom.net/travel/places/1', true)])]), 't', WEEK);
+ok('전체 보기 — 은행을 못 찾으면 저장된 판정 그대로', supportingOf(mmNoBank, 'https://mom-mom.net/travel/places/1') === 1);
 
 // 3-c) 후기·예약 플랫폼 페이지의 「자사」 판정은 믿지 않는다(맘맘을 머뭄으로) — 출처 종류는 후기 플랫폼, URL 행 소유는 unknown.
 //      우리 소유 도메인처럼 카탈로그 밖의 자사 판정은 그대로다.

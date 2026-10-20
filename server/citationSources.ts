@@ -208,10 +208,11 @@ export interface AnalyzeCitationSourcesOptions {
   /** 코호트 경쟁사의 소유 도메인. URL 행의 cohortCompetitor 판정에 쓴다. */
   competitorDomains?: string[];
   /**
-   * 「뒷받침」을 그 답에 우리 이름이 나왔을 때만 센다 — 브랜드 이름 없는 질문 보기용. 그 답은 이름을 대야만 우리를 가리킬 수
-   * 있어, 언급 없는 답의 「뒷받침」은 판정이 어긋난 값이다(src/lib/gapActions.ts unnamedCitationsByHost의 「충족」과 같은 기준).
+   * 이 질문의 「뒷받침」은 그 답에 우리 이름이 나왔을 때만 세는가 — 브랜드 이름 없는 질문이면 true. 그 답은 이름을 대야만 우리를
+   * 가리킬 수 있어, 언급 없는 답의 「뒷받침」은 판정이 어긋난 값이다(src/lib/gapActions.ts unnamedCitationsByHost의 「충족」과
+   * 같은 기준). 이름을 댄 질문은 「이 숙소는…」처럼 이름 없이 가리킬 수 있어 거르지 않는다. 없으면 저장된 판정 그대로 센다.
    */
-  supportRequiresMention?: boolean;
+  supportNeedsMention?: (questionId: string) => boolean;
 }
 
 /** B7 — 한 주차 인용을 출처 유형·엔진·URL 단위로 집계한다. */
@@ -271,7 +272,9 @@ export function analyzeCitationSources(
       };
       urlRow.citationCount += 1;
       urlRow.engines.add(analysis.engine);
-      if (citation.supportsBrandMention && (!options.supportRequiresMention || analysis.mentioned)) urlRow.supportingBrandMentionCount += 1;
+      if (citation.supportsBrandMention && (analysis.mentioned || !options.supportNeedsMention?.(analysis.questionId))) {
+        urlRow.supportingBrandMentionCount += 1;
+      }
       urlRows.set(key, urlRow);
 
       const domainRow = domainEngines.get(domain) ?? { kind, engines: new Set<string>(), citationCount: 0 };
