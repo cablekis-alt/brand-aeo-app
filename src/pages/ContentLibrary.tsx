@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PublishedUrlEditor, { ExecutionStatusButtons } from '../components/PublishedUrlEditor'
 import { useTenant } from '../context/useTenant'
-import { buildPublishHtml } from '../lib/htmlFile'
+import { copyRich } from '../lib/clipboard'
+import { buildPublishHtml, markdownToHtml } from '../lib/htmlFile'
 import {
   loadActionStates,
   loadContentDrafts,
@@ -23,7 +24,7 @@ import { usePublishedPosts } from '../lib/usePublishedPosts'
 import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
-import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, draftTitle, safeFileName } from '../lib/markdownFile'
 
 /**
  * 만든 글이 모이는 곳.
@@ -49,6 +50,8 @@ export default function ContentLibrary() {
   // 발행 설정(글 끝 상담 안내 · 태그) — 미리보기와 내보내기가 올리기 목록과 같은 발행본을 내도록.
   const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
   const settings = settingsState.key === key ? settingsState.value : null
+  // 설정을 받기 전에 복사 · 내보내면 사진 · 글 끝이 빠진 글이 나간다 — 받을 때까지 두 버튼을 잠근다(실패해도 null로 온다).
+  const settingsReady = settingsState.key === key
   useEffect(() => {
     if (!key) return
     let alive = true
@@ -83,6 +86,21 @@ export default function ContentLibrary() {
   const states = statesState && statesState.key === key ? statesState.value : null
   const [statusError, setStatusError] = useState<string | null>(null)
   const [postsOpen, setPostsOpen] = useState<string | null>(null)
+  // 「블로그에 붙일 글 복사」 — 방금 복사한 글(잠깐 「복사했습니다」) · 복사 실패.
+  const [copied, setCopied] = useState<string | null>(null)
+  const [copyError, setCopyError] = useState<string | null>(null)
+  const copyArticle = async (d: StoredDraft) => {
+    if (!tenant) return
+    setCopyError(null)
+    // 올리기 목록의 자사 줄과 같은 발행본(본문 + 사진 + 글 끝)을 서식째 넣는다 — 블로그 편집기에 붙이면 제목 · 굵은 글씨가 남는다.
+    const markdown = publishArticleOf(d, { brand: tenant, settings })
+    if (!(await copyRich(markdown, markdownToHtml(markdown)))) {
+      setCopyError('클립보드에 복사하지 못했습니다. 「본문 보기」에서 글을 직접 골라 복사하세요.')
+      return
+    }
+    setCopied(d.actionId)
+    window.setTimeout(() => setCopied((k) => (k === d.actionId ? null : k)), 1800)
+  }
   useEffect(() => {
     if (!key) return
     let alive = true
@@ -220,6 +238,11 @@ export default function ContentLibrary() {
           {statusError}
         </p>
       )}
+      {copyError && (
+        <p className="error" role="alert">
+          {copyError}
+        </p>
+      )}
       {canRecord && published.error && (
         <p className="error" role="alert">
           올린 글 기록: {published.error}
@@ -253,9 +276,9 @@ export default function ContentLibrary() {
         <section>
           {notices}
           <p className="hint" style={{ marginTop: 0 }}>
-            글 <b>{rows.length}편</b>. <b>발행용 .md</b>는 빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고라 그대로
-            올릴 수 있습니다. <b>발행용 .html</b>은 자체 사이트·CMS용 완성 문서로, JSON-LD(Article·Organization)를
-            심어 둡니다 — 네이버 블로그·티스토리는 <code>&lt;head&gt;</code>를 버리므로 그때는 본문만 남습니다.
+            글 <b>{rows.length}편</b>. 블로그(네이버·티스토리)에는 <b>블로그에 붙일 글 복사</b>로 복사해 편집기에 붙여
+            넣으세요 — 제목·굵은 글씨·사진이 함께 들어갑니다. 홈페이지·CMS에는 <b>홈페이지용 .html</b>을 올리세요 — AI 검색이
+            읽는 구조화 데이터(JSON-LD)가 들어 있고, 브라우저로 열어 미리 볼 수도 있습니다. 남은 빈칸 줄은 두 곳 모두에서 빠집니다.
           </p>
           <div className="gap-grid">
             {rows.map((d) => {
@@ -291,20 +314,18 @@ export default function ContentLibrary() {
                     <button
                       type="button"
                       className="ghost"
-                      title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
-                      onClick={() =>
-                        downloadMarkdown(
-                          `발행용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.md`,
-                          publishArticleOf(d, { brand: tenant, settings }),
-                        )
-                      }
+                      title="제목 · 본문 · 사진 · 글 끝 안내를 서식째 복사합니다. 네이버 블로그 · 티스토리 편집기에 붙이면 서식이 남습니다."
+                      disabled={!settingsReady}
+                      onClick={() => void copyArticle(d)}
                     >
-                      발행용 .md{gaps > 0 && <span className="muted"> — 빈칸 {gaps}줄 뺌</span>}
+                      {copied === d.actionId ? '복사했습니다' : '블로그에 붙일 글 복사'}
+                      {gaps > 0 && copied !== d.actionId && <span className="muted"> — 빈칸 {gaps}줄 뺌</span>}
                     </button>
                     <button
                       type="button"
                       className="ghost"
-                      title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다."
+                      title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다."
+                      disabled={!settingsReady}
                       onClick={() => {
                         void loadFactGraph(tenant.tenantId)
                           .then((fg) => fg?.factGraph ?? [])
@@ -317,16 +338,7 @@ export default function ContentLibrary() {
                           )
                       }}
                     >
-                      발행용 .html
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() =>
-                        downloadMarkdown(`초안-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.md`, md)
-                      }
-                    >
-                      작업용 .md
+                      홈페이지용 .html
                     </button>
                     {canRecord && (
                       <button type="button" className="ghost" aria-expanded={postsShown} onClick={() => setPostsOpen(postsShown ? null : d.actionId)}>

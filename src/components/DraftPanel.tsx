@@ -23,10 +23,9 @@ import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
 import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
-import { publishArticleOf } from '../lib/publishArticle'
 import { useTenant } from '../context/useTenant'
 import type { PublishSettings } from '../lib/publishSettings'
-import { countGapNotes, downloadHtml, downloadMarkdown, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
+import { countGapNotes, downloadHtml, draftTitle, draftToMarkdown, safeFileName } from '../lib/markdownFile'
 import { articleSources } from '../lib/officialSources'
 import type { DraftRole } from '../prompts/b9c-content-draft'
 
@@ -550,24 +549,7 @@ export default function DraftPanel({
               <button
                 type="button"
                 className="ghost"
-                title="빈칸 표시와 「이 글이 쓴 사실」을 뺀 원고입니다."
-                onClick={() => {
-                  const file = `발행용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`
-                  if (!tenant) {
-                    downloadMarkdown(file, publishMarkdownOf(stored))
-                    return
-                  }
-                  void loadPublishSettings(tenantId).then((settings) =>
-                    downloadMarkdown(file, publishArticleOf(stored, { brand: tenant, settings })),
-                  )
-                }}
-              >
-                발행용 .md
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                title="자체 사이트·CMS용 완성 HTML — <head>에 JSON-LD(Article·Organization)를 심습니다. 네이버 블로그·티스토리는 <head>를 버리므로 그때는 올리기 목록의 「복사하기」를 쓰세요."
+                title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다. 네이버 블로그 · 티스토리에는 올리기 목록의 복사 버튼을 쓰세요."
                 onClick={() => {
                   if (!tenant) return
                   const facts = loadFactGraph(tenantId)
@@ -584,7 +566,7 @@ export default function DraftPanel({
                   )
                 }}
               >
-                자사 사이트용 .html
+                홈페이지용 .html
               </button>
               {photoFiles.length > 0 && (
                 <button
@@ -603,16 +585,6 @@ export default function DraftPanel({
                   {photoBusy ? '사진 받는 중…' : `사진 ${photoFiles.length}장 받기`}
                 </button>
               )}
-              <button
-                type="button"
-                className="ghost"
-                title="남은 빈칸 표시와 「이 글이 쓴 사실」까지 담은 작업용 원고입니다."
-                onClick={() =>
-                  downloadMarkdown(`초안-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`, workMarkdownOf(stored))
-                }
-              >
-                작업용 .md
-              </button>
             </div>
           </details>
         </div>
