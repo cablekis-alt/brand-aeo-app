@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { loadQuestionBank } from '../lib/api'
@@ -143,6 +144,9 @@ export default function CommandPalette() {
     } else if (e.key === 'Escape') {
       e.preventDefault()
       close()
+    } else if (e.key === 'Tab') {
+      // 창에서 포커스를 받는 것은 입력 칸 하나다 — body 끝에 그려져 Tab이 밖으로 나가면 배경 뒤 페이지로 간다.
+      e.preventDefault()
     }
   }
 
@@ -164,7 +168,9 @@ export default function CommandPalette() {
         <kbd>{isMac ? '⌘K' : 'Ctrl K'}</kbd>
       </button>
 
-      {open && (
+      {/* 문서 맨 바깥(body)에 그린다 — 상단 막대는 sticky(z 20)라 따로 쌓이는 층이어서, 그 안에 그리면 경쟁사 편집 서랍(z 90)과
+          브랜드 고르기 패널(z 100) 아래에 깔렸다. */}
+      {open && createPortal(
         <div className="palette-backdrop" onMouseDown={close}>
           <div
             className="palette"
@@ -216,7 +222,8 @@ export default function CommandPalette() {
               {loadingQuestions && query.trim() && <span>질문지를 불러오는 중…</span>}
             </p>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )

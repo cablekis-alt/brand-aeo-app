@@ -155,6 +155,21 @@ export default function BrandPickerPanel({
           if (e.key === 'Escape') {
             e.preventDefault()
             onClose()
+          } else if (e.key === 'Tab') {
+            // 패널은 body 끝에 그려져 Tab이 밖으로 나가면 배경 뒤 페이지 끝으로 간다 — 열려 있는 동안 패널 안에서 돈다.
+            const items = [...e.currentTarget.querySelectorAll<HTMLElement>('input, button, a[href], [tabindex]:not([tabindex="-1"])')].filter(
+              (el) => !el.hasAttribute('disabled'),
+            )
+            const first = items[0]
+            const last = items[items.length - 1]
+            if (!first || !last) return
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault()
+              last.focus()
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault()
+              first.focus()
+            }
           }
         }}
       >
