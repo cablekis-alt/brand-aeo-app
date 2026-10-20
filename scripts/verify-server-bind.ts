@@ -55,7 +55,9 @@ const lan = Object.values(networkInterfaces())
   .flat()
   .find((a) => a && !a.internal && a.family === 'IPv4')?.address
 const env = { ...process.env, APP_DATA_DIR: dir, PORT: String(port), USE_MOCK_ENGINES: 'true', BLOB_READ_WRITE_TOKEN: '', BLOB_STORE_ID: '', PIPELINE_CRON: '', GH_MEASURE_TOKEN: '' }
-delete env.HOST
+delete env.AEO_SERVER_HOST
+// PC 전체에 흔한 이름의 HOST가 있어도(다른 개발 도구용) 서버는 읽지 않는다 — 아래 확인은 모두 HOST=0.0.0.0이 깔린 채로 돈다.
+env.HOST = '0.0.0.0'
 const server = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { cwd: process.cwd(), env, stdio: 'ignore' })
 
 try {
@@ -69,19 +71,19 @@ try {
   else console.log('· 이 PC는 IPv6 루프백이 없어 ::1 확인을 건너뜁니다')
   const health = await fetch(`http://localhost:${port}/health`).then((r) => r.ok, () => false)
   ok('localhost로 부르면 응답한다(앱 창 · 개발용 프록시와 같은 주소)', health)
-  if (lan) ok(`이 PC의 네트워크 주소(${lan})로는 받지 않는다`, !(await reachable(lan, port)))
+  if (lan) ok(`이 PC의 네트워크 주소(${lan})로는 받지 않는다 — 흔한 이름의 HOST=0.0.0.0은 읽지 않는다`, !(await reachable(lan, port)))
   else console.log('· 루프백이 아닌 IPv4 주소가 없어 바깥 주소 확인을 건너뜁니다')
 } finally {
   server.kill()
   await new Promise((r) => setTimeout(r, 500))
 }
 
-// HOST로 일부러 연 경우 — 그 주소에서 받는다(다른 기기에서 쓰려는 사람의 탈출구)
+// AEO_SERVER_HOST로 일부러 연 경우 — 그 주소에서 받는다(다른 기기에서 쓰려는 사람의 탈출구)
 if (lan) {
   const openPort = await freePort()
   const open = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], {
     cwd: process.cwd(),
-    env: { ...env, PORT: String(openPort), HOST: '0.0.0.0' },
+    env: { ...env, PORT: String(openPort), AEO_SERVER_HOST: '0.0.0.0' },
     stdio: 'ignore',
   })
   try {
@@ -90,7 +92,7 @@ if (lan) {
       up = await reachable('127.0.0.1', openPort)
       if (!up) await new Promise((r) => setTimeout(r, 500))
     }
-    ok(`HOST=0.0.0.0이면 네트워크 주소(${lan})에서도 받는다`, up && (await reachable(lan, openPort)))
+    ok(`AEO_SERVER_HOST=0.0.0.0이면 네트워크 주소(${lan})에서도 받는다`, up && (await reachable(lan, openPort)))
   } finally {
     open.kill()
     await new Promise((r) => setTimeout(r, 500))
