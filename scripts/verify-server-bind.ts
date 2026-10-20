@@ -96,6 +96,37 @@ if (lan) {
     await new Promise((r) => setTimeout(r, 500))
   }
 }
+// 이미 다른 프로그램이 그 포트를 잡고 있으면 열지 않고 멈춘다 — 윈도우는 모든 인터페이스에 연 포트에도 127.0.0.1로 또 열게 해 줘서,
+// 그대로 열면 루프백 접속을 조용히 가로챈다(예전 설치본이 4000을 잡고 있을 때 개발 서버를 띄우는 경우).
+const startOn = (holderHost: string | undefined) =>
+  new Promise<{ code: number | null; holderAnswers: boolean }>((resolve, reject) => {
+    const holder = net.createServer((sock) => {
+      // 서버의 연결 확인(portAnswers)은 붙자마자 끊는다 — 그 끊김(ECONNRESET)만 정상이다.
+      sock.on('error', (e: NodeJS.ErrnoException) => {
+        if (e.code !== 'ECONNRESET') throw e
+      })
+      sock.end('HOLDER')
+    })
+    holder.once('error', reject)
+    const listening = () => {
+      const heldPort = (holder.address() as net.AddressInfo).port
+      const child = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { cwd: process.cwd(), env: { ...env, PORT: String(heldPort) }, stdio: 'ignore' })
+      const timer = setTimeout(() => child.kill(), 30_000)
+      child.once('exit', async (code) => {
+        clearTimeout(timer)
+        const holderAnswers = await reachable(holderHost ?? '127.0.0.1', heldPort)
+        holder.close()
+        resolve({ code, holderAnswers })
+      })
+    }
+    if (holderHost) holder.listen(0, holderHost, listening)
+    else holder.listen(0, listening)
+  })
+const wildcard = await startOn(undefined)
+ok('다른 프로그램이 모든 인터페이스에 잡은 포트면 열지 않고 멈춘다(가로채지 않는다)', wildcard.code === 1 && wildcard.holderAnswers)
+const loopbackOnly = await startOn('127.0.0.1')
+ok('다른 프로그램이 127.0.0.1만 잡은 포트여도 멈춘다(::1만 열린 반쪽 서버가 남지 않는다)', loopbackOnly.code === 1 && loopbackOnly.holderAnswers)
+
 rmSync(dir, { recursive: true, force: true })
 
 let failed = 0
