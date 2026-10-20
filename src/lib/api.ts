@@ -634,6 +634,8 @@ export interface StoredDraft {
   gapFills?: Record<string, GapFill>
   /** 실측 사례 — 사람이 원문과 대조해 확인하면 발행본에 붙는다(src/lib/answerEvidence.ts). */
   evidence?: AnswerEvidence
+  /** 사람이 고른 홈페이지 사진 — 본문에는 넣지 않고 내보낼 때만 사진 자리에 넣는다(src/lib/articlePhotos.ts). */
+  photos?: import('./articlePhotos').PhotoPick[]
 }
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
 export interface GapFill {

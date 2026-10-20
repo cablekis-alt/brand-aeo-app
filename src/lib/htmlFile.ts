@@ -1,7 +1,7 @@
 import type { FactNode, StoredDraft, TenantSummary } from './api'
 import { effectiveDraft } from './draftGaps'
 import { draftTitle, IMAGE_SLOT } from './markdownFile'
-import { publishArticleOf } from './publishArticle'
+import { publishArticleParts } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
 
 /**
@@ -180,12 +180,15 @@ export interface PublishHtmlInput {
 
 /** 완성된 HTML 문서. 본문은 <article>(발행본 — 글 끝 포함), <head>에 메타와 JSON-LD(Article + Organization). */
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
-  const md = publishArticleOf(stored, { brand, settings })
+  const { markdown: md, photos } = publishArticleParts(stored, { brand, settings })
+  // 실제로 글에 들어간 홈페이지 사진만 — 같은 사진을 두 자리에 썼으면 한 번.
+  const images = [...new Set(photos.map((p) => p.src))]
   const keywords = settings?.tags?.join(', ')
   // 블로그 글 형식은 본문 첫 줄(# 제목)과 같은 제목 — 빈칸을 채우거나 본문을 고치면 {N}이 바뀐다. 옛 형식은 예전처럼 초안 제목.
   const title =
     stored.draft.format === 'article' ? (/^#\s+(.+)$/m.exec(md)?.[1]?.trim() ?? draftTitle(effectiveDraft(stored))) : stored.draft.title
-  const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#')) || '').slice(0, 160)
+  // 리드가 없으면 첫 본문 줄 — 제목 · 사진 줄은 건너뛴다(사진 주소가 설명이 되지 않게).
+  const description = (stored.draft.lead || md.split('\n').find((l) => l && !l.startsWith('#') && !l.startsWith('![')) || '').slice(0, 160)
   const published = (stored.editedAt ?? stored.generatedAt).slice(0, 10)
   const org = organizationFromFacts(brand, facts, settings?.siteUrl)
   const article = {
@@ -198,6 +201,7 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
     dateModified: published,
     author: org,
     publisher: org,
+    ...(images.length ? { image: images } : {}),
     ...(keywords ? { keywords } : {}),
     ...(settings?.category ? { articleSection: settings.category } : {}),
     ...(settings?.siteUrl
@@ -221,6 +225,9 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
     `<meta property="og:title" content="${escapeHtml(title)}">`,
     `<meta property="og:description" content="${escapeHtml(description)}">`,
     `<meta property="og:site_name" content="${escapeHtml(brand.brandName)}">`,
+    ...(photos[0]
+      ? [`<meta property="og:image" content="${escapeHtml(photos[0].src)}">`, `<meta property="og:image:alt" content="${escapeHtml(photos[0].alt)}">`]
+      : []),
     `<meta property="article:published_time" content="${published}">`,
     '<script type="application/ld+json">',
     jsonForScript(article),
