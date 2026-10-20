@@ -22,19 +22,23 @@ import { channelStyleOf } from '../prompts/b9d-channel-adapt'
 export type PublishRowKind = 'own' | 'channel' | 'orphan'
 
 /** 줄의 버튼 — 채널 성격마다 하는 일이 다르다. */
-export type PublishVerb = 'copy' | 'write' | 'doc' | 'place'
+export type PublishVerb = 'copy' | 'write' | 'doc' | 'place' | 'update'
 
 export const VERB_LABEL: Record<PublishVerb, string> = {
   copy: '복사하기',
   write: '복사하고 글쓰기 열기',
   doc: '복사하고 문서 열기',
   place: '복사하고 등록 페이지 열기',
+  update: '복사하고 우리 업체 페이지 열기',
 }
 
 /** 버튼 옆 주의 — 채널 규칙에 걸려 글이 지워지는 일을 막는다. */
 export const VERB_CAUTION: Partial<Record<PublishVerb, string>> = {
   doc: '홍보성 서술은 지워집니다. 출처를 달 수 있는 사실만 넣으세요.',
   place: '장소 · 업체 등록 화면입니다. 소개 칸에 붙이세요.',
+  update:
+    '이미 등록된 업체입니다 — 새로 등록하지 말고, 이 플랫폼의 업체 관리(파트너) 화면에서 소개 칸 · 사진 설명을 이 글로 보강하세요. ' +
+    '후기는 지어내지 말고, 받은 후기에 답글을 달 때 위치 · 시설 말을 쓰세요.',
 }
 
 export interface PublishArticle {
@@ -104,6 +108,7 @@ export function verbOf(channel: GapAction): PublishVerb {
   if (!channel.targetDomain) return 'copy'
   const style = channelStyleOf(channel.badge)
   if (style === 'wiki') return 'doc'
+  if (style === 'listing-update') return 'update'
   if (style === 'listing') return 'place'
   return 'write'
 }
@@ -161,7 +166,8 @@ export function buildPublishPlan(
         name: channelNameOf(ch),
         questionIds: best.qs,
         verb: verbOf(ch),
-        openUrl: openUrlOf(ch.targetDomain),
+        // 이미 등록된 곳이면 사이트 첫 화면이 아니라 우리 업체 페이지를 연다(gapActions listedPage).
+        openUrl: ch.listedPage ?? openUrlOf(ch.targetDomain),
         needsAdapt: true,
         locked: !best.article.confirmed,
         done: isPublishedAction(ch),
@@ -177,7 +183,8 @@ export function buildPublishPlan(
         name: channelNameOf(ch),
         questionIds: ch.questionIds,
         verb: verbOf(ch),
-        openUrl: openUrlOf(ch.targetDomain),
+        // 이미 등록된 곳이면 사이트 첫 화면이 아니라 우리 업체 페이지를 연다(gapActions listedPage).
+        openUrl: ch.listedPage ?? openUrlOf(ch.targetDomain),
         needsAdapt: false,
         locked: !article.confirmed,
         done: isPublishedAction(ch),

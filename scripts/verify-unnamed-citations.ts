@@ -104,6 +104,22 @@ ok('이름을 댄 질문에서만 인용되고 거기서 뒷받침하면 「충�
 const redditUnmet = action(plan(questions, [analysis('v2-002', [cite('https://www.reddit.com/r/가상/2', false)])]), 'listing:reddit.com');
 ok('이름을 댄 질문에서만 인용되고 뒷받침이 없으면 할 일로 남기고 그렇게 밝힌다', redditUnmet?.satisfied === false && /이름을 댄 질문에서만 인용되는 곳/.test(redditUnmet.evidence) && !/브랜드 이름 없는 질문에서 .*인용이/.test(redditUnmet.doneSignal));
 
+// 1-c) 이미 등록된 후기·예약 플랫폼 — 우리를 말한 답이 그 사이트 페이지를 우리 근거로 인용했으면 「등재」가 아니라 「소개 보강」
+//      (실측: web4ai W42 yeogi.com · nol.yanolja.com). 언급 없는 답의 뒷받침(맘맘 오분류)으로는 켜지지 않는다.
+const yeogiListed = [
+  analysis('v2-002', [cite('https://www.yeogi.com/domestic-accommodations/1?utm_source=x', true)], true),
+  analysis('v2-001', [cite('https://www.yeogi.com/themes/gunsan', false)]),
+]
+const yeogi = action(plan(questions, yeogiListed), 'listing:yeogi.com')
+ok('이미 등록된 후기 플랫폼은 「소개 보강」 · 배지 등록됨 · 우리 페이지(질의 뗌)', yeogi?.title === 'yeogi.com 소개 보강' && yeogi.badge === '후기·예약 플랫폼 · 등록됨' && yeogi.listed === true && yeogi.listedPage === 'https://www.yeogi.com/domestic-accommodations/1')
+ok('근거 문장이 이미 등록된 곳이라고 밝힌다', /^이미 등록된 곳입니다/.test(yeogi?.evidence ?? ''))
+ok('「소개 보강」이어도 충족 · 밀린 질문 수 · 완료 조건은 그대로', yeogi?.satisfied === false && /브랜드 이름 없는 질문에서 yeogi\.com 인용이/.test(yeogi.doneSignal))
+const yeogiUnmentioned = action(plan(questions, [analysis('v2-002', [cite('https://www.yeogi.com/domestic-accommodations/1', true)])]), 'listing:yeogi.com')
+ok('언급 없는 답의 뒷받침으로는 등록됐다고 보지 않는다(「등재」)', yeogiUnmentioned?.title === 'yeogi.com 등재' && !yeogiUnmentioned.listed)
+ok('질문 은행을 못 읽어도 등록 여부는 판단한다', action(plan([], yeogiListed), 'listing:yeogi.com')?.listed === true)
+const wikiListed = action(plan(questions, [analysis('v2-002', [cite('https://namu.wiki/w/가상', true)], true)]), 'listing:namu.wiki')
+ok('위키는 같은 조건이어도 「문서 보완」 그대로', wikiListed?.title === 'namu.wiki 문서 보완' && !wikiListed.listed)
+
 // 2) 블로그 플랫폼 지분 — 이름 없는 질문의 인용으로 낸다
 const naver = action(plan(questions), 'listing:platform:blog.naver.com');
 ok('지분은 이름 없는 질문의 인용 3회 중 1회', naver?.progress?.supporting === 1 && naver.progress.total === 3 && naver.progress.unnamed === true);

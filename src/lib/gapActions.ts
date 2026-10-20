@@ -16,7 +16,8 @@ import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types
  *
  * 두 종류만 낸다. 데이터가 그 둘만 뒷받침하기 때문이다.
  *
- *   listing  AI가 답을 찾으러 가는 **외부 도메인인데 우리가 없는** 곳 → 등재·기고.
+ *   listing  AI가 답을 찾으러 가는 **외부 도메인인데 우리가 없는** 곳 → 등재·기고. 후기·예약 플랫폼에 이미 등록돼 있으면
+ *            새 등록이 아니라 소개 보강(GapAction.listed).
  *            출처: B7 인용 URL. 실측(k-wonjin 2026-W37): 인용 49건 / 도메인 33개 중
  *            우리 것은 k-wonjin.co.kr 하나뿐이고 나머지는 커뮤니티·블로그였다.
  *   content  **밀린 질문 유형** → 그 주제를 다루는 우리 콘텐츠가 없다는 뜻이다.
@@ -120,6 +121,13 @@ export interface GapAction {
    * 화면이 "아직 못 찾았다"와 "이름을 댄 질문에서는 찾았다"를 가를 때 쓴다. known이 false면 이름 없는 질문인지 몰랐다.
    */
   support?: { all: number; unnamed: number; known: boolean }
+  /**
+   * 후기·예약 플랫폼인데 우리가 이미 등록된 곳 — 우리를 말한 답이 이 사이트 페이지를 우리 근거로 인용했다(listedEvidenceByHost).
+   * 할 일이 새 등록이 아니라 그 업체 페이지의 소개 보강이라 제목 · 배지 · 버튼 · 다듬기 문체가 달라진다.
+   */
+  listed?: boolean
+  /** listed일 때 가장 많이 인용된 그 사이트의 우리 근거 페이지(질의 · # 뗀 주소) — 「우리 업체 페이지 열기」가 연다. */
+  listedPage?: string
 }
 
 export interface GapActionPlan {
@@ -195,6 +203,11 @@ const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
   blog: { verb: '블로그 발행', badge: '블로그 플랫폼' },
 }
 const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
+/**
+ * 후기·예약 플랫폼인데 이미 등록된 곳(GapAction.listed). 배지에 「후기」를 남긴다 — 다듬기 문체(channelStyleOf)가 그 글자를 본다.
+ * 「등록됨」은 그 문체를 소개 보강용으로 가른다(실측: web4ai W42 yeogi.com · nol.yanolja.com에 「등재」가 떴지만 이미 등록돼 있었다).
+ */
+const LISTED_REVIEW_PLAY = { verb: '소개 보강', badge: '후기·예약 플랫폼 · 등록됨' }
 
 /**
  * 도메인 표기를 맞춘다.
@@ -253,6 +266,35 @@ interface UnnamedTally {
    * 모든 질문 합계(서버 집계)에서도 이만큼 뺀다.
    */
   unmentionedSupporting: number
+}
+
+/** 이미 등록된 곳의 근거 — 우리를 말한 답(응답 키)과 그 답이 우리 근거로 인용한 이 사이트 페이지(횟수). */
+interface ListedEvidence {
+  responses: Set<string>
+  pages: Map<string, number>
+}
+
+/**
+ * 우리가 이미 그 사이트에 있는가 — 우리 이름이 나온 답이 그 사이트 페이지를 우리 근거(「뒷받침」)로 인용했으면 있다고 본다.
+ * 질문 유형(이름 댄 · 없는)은 가리지 않는다. 이름을 댄 질문에서 우리 업체 페이지가 인용되는 곳이 바로 이미 등록된 곳이다
+ * (실측: web4ai W42 yeogi.com 21회 · nol.yanolja.com 13회). 언급 없는 답의 「뒷받침」은 세지 않는다(맘맘 오분류).
+ */
+function listedEvidenceByHost(analyses: QuestionRepeatAnalysis[]): Map<string, ListedEvidence> {
+  const byHost = new Map<string, ListedEvidence>()
+  for (const a of analyses) {
+    if (!a.mentioned) continue
+    for (const c of a.citations ?? []) {
+      if (!c.supportsBrandMention) continue
+      const host = normalizeHost(c.raw, c.domain)
+      if (!host) continue
+      const row = byHost.get(host) ?? { responses: new Set<string>(), pages: new Map<string, number>() }
+      row.responses.add(`${a.questionId}|${a.engine}|${a.callIndex}`)
+      const page = c.raw.replace(/[?#].*$/, '')
+      row.pages.set(page, (row.pages.get(page) ?? 0) + 1)
+      byHost.set(host, row)
+    }
+  }
+  return byHost
 }
 
 /**
@@ -316,6 +358,7 @@ function listingActions(
   domainQuestions: Map<string, Set<string>>,
   rows: WinLossRow[],
   unnamed: { byHost: Map<string, UnnamedTally>; known: boolean },
+  listedByHost: Map<string, ListedEvidence> = new Map(),
 ): {
   actions: GapAction[]
   competitorDomainCount: number
@@ -423,9 +466,24 @@ function listingActions(
       const namedOnly = unnamed.known && u.citations === 0
       const satisfied = !isPlatform && unnamed.known && (namedOnly ? supportingAll > 0 : u.supporting > 0)
       const engines = [...r.engines].join('·')
+      // 후기·예약 플랫폼에 이미 등록돼 있으면 할 일은 새 등록이 아니라 소개 보강이다.
+      const listedPages = new Map<string, number>()
+      let listedResponses = 0
+      if (r.kind === 'review' && !r.platform) {
+        for (const h of r.hosts) {
+          const e = listedByHost.get(h)
+          if (!e) continue
+          listedResponses += e.responses.size
+          for (const [p, n] of e.pages) listedPages.set(p, (listedPages.get(p) ?? 0) + n)
+        }
+      }
+      const listed = listedResponses > 0
+      const listedPage = listed ? [...listedPages.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] : undefined
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
-        : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
+        : listed
+          ? LISTED_REVIEW_PLAY
+          : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
       const isNewsGroup = r.domain === NEWS_GROUP_KEY
       // 몇 곳을 묶었는지 이름에 담는다 — "언론 기고"만 있으면 어느 매체인지 알 수 없다.
       const name = isNewsGroup
@@ -494,7 +552,11 @@ function listingActions(
                 ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${supportingAll}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
                 : `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`) +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
-            : unmetEvidence +
+            : (listed
+                ? '이미 등록된 곳입니다 — 우리를 말한 답이 이 사이트의 우리 페이지를 인용했습니다. 새로 등록할 곳이 아니라, 그 페이지가 ' +
+                  '이름 없는 질문의 말(지역 · 주변 명소 · 시설)에도 걸리게 소개를 보강할 곳입니다. '
+                : '') +
+              unmetEvidence +
               // 묶음은 어느 매체인지 밝혀야 한다 — "언론 5곳"만으로는 무엇을 해야 할지 알 수 없다.
               (isNewsGroup ? ` 인용된 매체: ${[...r.hosts].sort().join(' · ')}. 보도자료 한 건으로 함께 노립니다.` : '') +
               citedNote,
@@ -510,6 +572,7 @@ function listingActions(
         citedPublishedUrls: [],
         ...(isPlatform ? { progress } : {}),
         support: { all: supportingAll, unnamed: u.supporting, known: unnamed.known },
+        ...(listed ? { listed: true, ...(listedPage ? { listedPage } : {}) } : {}),
         doneSignal: isPlatform
           ? `${progress.unnamed ? '브랜드 이름 없는 질문의 ' : ''}${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${progress.supporting}/${progress.total})`
           : namedOnly
@@ -724,6 +787,7 @@ export function computeGapActions(
     questionsByDomain(analyses),
     rows,
     unnamedCitationsByHost(analyses, questions),
+    listedEvidenceByHost(analyses),
   )
   const content = contentActions(rows)
 
@@ -761,7 +825,7 @@ export function computeGapActions(
 
 /** 채널 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */
 export function channelNameOf(a: GapAction): string {
-  return a.title.replace(/\s*(발행|등재|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
+  return a.title.replace(/\s*(발행|등재|소개 보강|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
 }
 
 /** 그 채널에 올렸다고 기록됐나 — 올린 주소가 있거나 「집행함」. */

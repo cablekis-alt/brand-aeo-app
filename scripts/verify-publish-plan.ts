@@ -8,8 +8,8 @@
  *   npx tsx scripts/verify-publish-plan.ts
  */
 import type { StoredDraft } from '../src/lib/api'
-import type { GapAction } from '../src/lib/gapActions'
-import { buildPublishPlan, openUrlOf, pregenerateTargets, verbOf } from '../src/lib/publishPlan'
+import { channelNameOf, type GapAction } from '../src/lib/gapActions'
+import { buildPublishPlan, openUrlOf, pregenerateTargets, VERB_CAUTION, VERB_LABEL, verbOf } from '../src/lib/publishPlan'
 
 function action(id: string, kind: GapAction['kind'], questionIds: string[], extra: Partial<GapAction> = {}): GapAction {
   return {
@@ -91,6 +91,18 @@ ok('버튼: 자사 사이트는 복사', row(`own:${c1.id}`).verb === 'copy' && 
 ok('버튼: 블로그는 글쓰기 열기', verbOf(naver) === 'write')
 ok('버튼: 위키는 문서 열기', verbOf(wiki) === 'doc')
 ok('버튼: 후기·예약은 등록 페이지', verbOf(triple) === 'place')
+// 이미 등록된 후기·예약 플랫폼(gapActions listed) — 새 등록이 아니라 우리 업체 페이지의 소개 보강, 그 페이지를 연다.
+const listedYeogi = action('listing:yeogi.com', 'listing', ['q6'], {
+  title: 'yeogi.com 소개 보강',
+  badge: '후기·예약 플랫폼 · 등록됨',
+  targetDomain: 'yeogi.com',
+  listed: true,
+  listedPage: 'https://www.yeogi.com/domestic-accommodations/1',
+})
+ok('버튼: 이미 등록된 후기·예약은 우리 업체 페이지(소개 보강)', verbOf(listedYeogi) === 'update' && VERB_LABEL.update === '복사하고 우리 업체 페이지 열기' && Boolean(VERB_CAUTION.update))
+const listedPlan = buildPublishPlan([c1], [listedYeogi], { [c1.id]: draft(c1.id, 1, 1) })
+ok('주소: 이미 등록된 곳은 첫 화면이 아니라 우리 업체 페이지', listedPlan.rows.find((r) => r.key === listedYeogi.id)?.openUrl === 'https://www.yeogi.com/domestic-accommodations/1')
+ok('채널 이름: 「소개 보강」을 뗀다', channelNameOf(listedYeogi) === 'yeogi.com')
 ok('버튼: 언론 묶음(도메인 없음)은 복사만', verbOf(news) === 'copy' && row(news.id).openUrl === null)
 ok('주소: 네이버 블로그는 글쓰기 화면', openUrlOf('blog.naver.com') === 'https://blog.naver.com/GoBlogWrite.naver')
 ok('주소: 그 밖은 첫 화면', openUrlOf('namu.wiki') === 'https://namu.wiki')
