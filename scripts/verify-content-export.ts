@@ -72,13 +72,16 @@ ok('자사 사이트용 .html 본문에 링크', doc.includes('<a href="https://
 const slot = markdownToHtml('![군산 시간여행마을 골목 사진](#image-slot)\n*골목 입구에서 본 모습*')
 ok('사진 자리는 그림 하나 + 캡션', slot === '<figure class="image-slot"><p>[사진 넣을 자리] 군산 시간여행마을 골목 사진</p><figcaption>골목 입구에서 본 모습</figcaption></figure>')
 const real = markdownToHtml('![지도](https://img.example/a.png)\n*캡션*')
-ok('https 이미지는 img + alt + 캡션', real === '<figure><img src="https://img.example/a.png" alt="지도"><figcaption>캡션</figcaption></figure>')
-ok('캡션은 바로 다음 줄만', markdownToHtml('![지도](https://img.example/a.png)\n\n*떨어진 문단*') === '<figure><img src="https://img.example/a.png" alt="지도"></figure>\n<p><em>떨어진 문단</em></p>')
+// 그림 사진은 칸 너비에 맞추되 720px을 넘지 않는다 — 크기가 없으면 원본(2304px 등)으로 펼쳐졌다.
+const FIGURE_SIZE = 'width="720" style="width:100%;max-width:720px;height:auto"'
+ok('https 이미지는 img + alt + 표시 크기 + 캡션', real === `<figure><img src="https://img.example/a.png" alt="지도" ${FIGURE_SIZE}><figcaption>캡션</figcaption></figure>`)
+ok('캡션은 바로 다음 줄만', markdownToHtml('![지도](https://img.example/a.png)\n\n*떨어진 문단*') === `<figure><img src="https://img.example/a.png" alt="지도" ${FIGURE_SIZE}></figure>\n<p><em>떨어진 문단</em></p>`)
 ok('굵은 줄은 캡션이 아니다', markdownToHtml('![지도](#image-slot)\n**굵게**').includes('<p><strong>굵게</strong></p>'))
 ok('alt의 태그는 글자로', markdownToHtml('![<script>x</script>](#image-slot)').includes('[사진 넣을 자리] &lt;script&gt;x&lt;/script&gt;'))
 ok('javascript: 이미지는 글자로', markdownToHtml('![x](javascript:alert(1))') === '<p>![x](javascript:alert(1))</p>')
 const inlineImg = markdownToHtml('문장 속 ![아이콘](https://img.example/i.png) 그림과 [링크](https://example.com/).')
-ok('문장 속 이미지에 「!」가 남지 않는다', !inlineImg.includes('!<a') && inlineImg.includes('<img src="https://img.example/i.png" alt="아이콘">') && inlineImg.includes('<a href="https://example.com/"'))
+ok('문장 속 이미지에 「!」가 남지 않는다', !inlineImg.includes('!<a') && inlineImg.includes('<img src="https://img.example/i.png" alt="아이콘"') && inlineImg.includes('<a href="https://example.com/"'))
+ok('문장 속 이미지는 칸을 넘지 않게만 — 720px로 늘리지 않는다', inlineImg.includes('alt="아이콘" style="max-width:100%;height:auto">') && !inlineImg.includes('width="720"'))
 ok('문장 속 사진 자리는 글자로 알린다', markdownToHtml('여기에 ![지도](#image-slot) 넣기').includes('[사진: 지도]'))
 
 // 3-2) 홈페이지 사진 — 내보낼 때만 사진 자리에 넣는다(본문 · 지문은 그대로)
@@ -112,7 +115,7 @@ ok('브랜드 사이트 사진이 있어도 공식 사이트 링크는 붙는다
 ok('확인하지 않은 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ confirmedAt: '' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
 ok('https가 아닌 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ src: 'http://vtravel.example/a.jpg' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
 const photoHtml = buildPublishHtml({ stored: withPhoto, brand, facts: [], settings: rights })
-ok('.html 본문에 그림 + 캡션', photoHtml.includes('<figure><img src="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg" alt="밤에 창 너머로 본 정원 나무와 석등"><figcaption>A동과 B동 모두 독채입니다.</figcaption></figure>'))
+ok('.html 본문에 그림 + 표시 크기 + 캡션', photoHtml.includes(`<figure><img src="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg" alt="밤에 창 너머로 본 정원 나무와 석등" ${FIGURE_SIZE}><figcaption>A동과 B동 모두 독채입니다.</figcaption></figure>`))
 ok('.html JSON-LD image · og:image', photoHtml.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]') && photoHtml.includes('<meta property="og:image" content="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg">') && photoHtml.includes('<meta property="og:image:alt" content="밤에 창 너머로 본 정원 나무와 석등">'))
 const twice = buildPublishHtml({ stored: { ...articleDraft, photos: [photo(), photo({ slot: '가상 골목 풍경', heading: '지역은 어떻게 고르나요?' })] }, brand, facts: [], settings: rights })
 ok('같은 사진을 두 자리에 쓰면 JSON-LD image는 한 번', (twice.match(/garden%201%28%EB%B0%A4%29\.jpg/g) ?? []).length === 4 && twice.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]'))
