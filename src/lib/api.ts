@@ -698,6 +698,26 @@ export async function savePublishSettings(tenantId: string, settings: PublishSet
   return body
 }
 
+/** 고른 홈페이지 사진 한 장의 파일(「사진 N장 받기」) — 서버가 그 자리에 고른 사진만 받아 준다. 실패하면 throw. */
+export async function fetchDraftPhotoFile(
+  tenantId: string,
+  q: { actionId: string; generatedAt: string; place: PhotoPlace },
+): Promise<Blob> {
+  const params = new URLSearchParams({
+    actionId: q.actionId,
+    generatedAt: q.generatedAt,
+    slot: q.place.slot,
+    nth: String(q.place.nth),
+    heading: q.place.heading,
+  })
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photo-file?${params.toString()}`)
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error || `사진을 받지 못했습니다 (HTTP ${res.status})`)
+  }
+  return res.blob()
+}
+
 /** 이 브랜드의 홈페이지 사진을 글에 써도 된다는 확인(한 번) — 확인 시각은 서버가 찍는다. 의료 업종은 medical까지. */
 export async function savePhotoRights(tenantId: string, opts: { medical?: boolean } = {}): Promise<PublishSettings> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/photo-rights`, {

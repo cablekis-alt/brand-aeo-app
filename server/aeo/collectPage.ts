@@ -37,8 +37,8 @@ interface FetchResult {
   body: string;
 }
 
-/** 응답 본문 바이트. 크기 한도를 넘으면 즉시 끊는다. */
-async function readLimitedBytes(res: Response): Promise<Uint8Array> {
+/** 응답 본문 바이트. 크기 한도(기본은 페이지 한도)를 넘으면 즉시 끊는다. 홈페이지 사진 받기(server/sitePhoto.ts)도 쓴다. */
+export async function readLimitedBytes(res: Response, max = MAX_BODY): Promise<Uint8Array> {
   if (!res.body) return new Uint8Array(0);
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -47,7 +47,7 @@ async function readLimitedBytes(res: Response): Promise<Uint8Array> {
     const { done, value } = await reader.read();
     if (done) break;
     received += value.byteLength;
-    if (received > MAX_BODY) {
+    if (received > max) {
       await reader.cancel();
       throw new CollectorError('BODY_TOO_LARGE', '페이지 크기가 분석 한도를 초과했습니다.');
     }

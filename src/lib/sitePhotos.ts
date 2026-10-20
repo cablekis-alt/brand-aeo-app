@@ -1,5 +1,7 @@
-import type { TenantSummary } from './api'
-import { canonicalPhotoSrc, cleanPhotoAlt } from './articlePhotos'
+import { fetchDraftPhotoFile, type StoredDraft, type TenantSummary } from './api'
+import { canonicalPhotoSrc, cleanPhotoAlt, withPhotos, type AppliedPhoto } from './articlePhotos'
+import { publishMarkdownOf } from './draftGaps'
+import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
 import { brandSiteUrl } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
@@ -229,4 +231,32 @@ export function loadSitePhotos(pageUrl: string, fresh = false): Promise<SitePhot
   cache.set(pageUrl, task)
   task.catch(() => cache.delete(pageUrl))
   return task
+}
+
+/** 글에 들어간 홈페이지 사진 — 같은 사진은 한 번(글 순서). 「사진 N장 받기」의 N과 파일 순서다. */
+export function articlePhotoFiles(stored: StoredDraft): AppliedPhoto[] {
+  const seen = new Set<string>()
+  return withPhotos(publishMarkdownOf(stored), stored.photos).applied.filter((p) => {
+    if (seen.has(p.src)) return false
+    seen.add(p.src)
+    return true
+  })
+}
+
+const PHOTO_EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/avif': 'avif' }
+
+/**
+ * 사진 파일 이름 — 「사진1-소제목.jpg」. 블로그 편집기가 붙여 넣은 바깥 사진을 버리면 사진 자리 안내 글자도 함께 사라져, 넣을
+ * 위치를 이 이름으로 찾는다. 확장자는 서버가 파일 앞 바이트로 정한 형식에서만 정한다.
+ */
+export function photoFileName(k: number, photo: Pick<AppliedPhoto, 'heading' | 'slotAlt'>, type: string): string {
+  return `사진${k}-${safeFileName(photo.heading || photo.slotAlt)}.${PHOTO_EXT[type] ?? 'jpg'}`
+}
+
+/** 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 하나라도 실패하면 throw. */
+export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos = articlePhotoFiles(stored)): Promise<void> {
+  for (const [i, p] of photos.entries()) {
+    const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
+    downloadBlob(photoFileName(i + 1, p, blob.type), blob)
+  }
 }

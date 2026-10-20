@@ -135,6 +135,24 @@ ok('사진을 찾을 페이지 — 공식 사이트 → 브랜드 페이지 → 
   photoPageOf({ brandName: 'x', ownedDomains: ['a.example'] }, null) === 'https://a.example/',
 ].every(Boolean))
 
+// 7) 사진 받기 — 형식은 파일 앞 바이트로, 같은 사진은 한 번, 파일 이름에 글 순서 · 소제목
+const { photoTypeOf } = await import('../server/sitePhoto')
+const { articlePhotoFiles, photoFileName } = await import('../src/lib/sitePhotos')
+const bytes = (...b: number[]) => new Uint8Array(b)
+const ascii = (s: string) => new Uint8Array([...s].map((c) => c.charCodeAt(0)))
+ok('사진 형식은 앞 바이트로(jpg · png · gif · webp · avif)', [
+  photoTypeOf(bytes(0xff, 0xd8, 0xff, 0xe0))?.ext === 'jpg',
+  photoTypeOf(bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0))?.ext === 'png',
+  photoTypeOf(ascii('GIF89a...'))?.ext === 'gif',
+  photoTypeOf(ascii('RIFF....WEBPVP8 '))?.ext === 'webp',
+  photoTypeOf(ascii('....ftypavif....'))?.ext === 'avif',
+].every(Boolean))
+ok('HTML · SVG · 빈 파일은 사진이 아니다', photoTypeOf(ascii('<!doctype html>')) === null && photoTypeOf(ascii('<svg xmlns=')) === null && photoTypeOf(new Uint8Array(0)) === null)
+ok('파일 이름 — 사진1-소제목.jpg (소제목 없으면 자리 글자, 쓸 수 없는 글자는 뺀다)', photoFileName(1, { heading: '사례: 가상스테이', slotAlt: 'x' }, 'image/jpeg') === '사진1-사례-가상스테이.jpg' && photoFileName(2, { heading: '', slotAlt: '정원 풍경' }, 'image/webp') === '사진2-정원-풍경.webp')
+const storedWith = (photos: PhotoPick[]) => ({ actionId: 'content:a', generatedAt: 'g', draft: { title: '가상 글', lead: '리드', sections: [], gapCount: 0, usedFacts: [] }, editedMarkdown: md, photos })
+const files = articlePhotoFiles(storedWith([pick({ nth: 2, heading: '또 다른 사례' }), pick()]))
+ok('같은 사진을 두 자리에 쓰면 한 번만 받는다(글 순서)', files.length === 1 && files[0]!.heading === '사례: 가상스테이' && files[0]!.place.heading === '사례: 가상스테이')
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

@@ -20,6 +20,7 @@ import { buildPublishHtml } from '../lib/htmlFile'
 import EvidencePanel from './EvidencePanel'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
+import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { publishArticleOf } from '../lib/publishArticle'
@@ -122,6 +123,7 @@ export default function DraftPanel({
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [photoBusy, setPhotoBusy] = useState(false)
   // 빈칸 입력 중인 값(키 `절:블록`) — 「넣기」를 누를 때 서버에 남는다.
   const [typed, setTyped] = useState<Record<string, string>>({})
   /** 빈칸별로 찾아볼 주소. 비어 있으면 브랜드 페이지(없으면 소유 도메인 루트)를 쓴다. */
@@ -483,6 +485,7 @@ export default function DraftPanel({
   const opened = step === 'gaps'
   // 사진 자리에 들어갈 홈페이지 사진 — 구조 화면의 자리는 장면 글자 + 소제목으로 찾는다(발행본의 절 번호는 빈 절을 빼면 바뀐다).
   const placedPhotos = matchPhotos(publishMarkdownOf(stored), stored.photos ?? []).applied
+  const photoFiles = articlePhotoFiles(stored)
   const photoFor = (heading: string, alt: string) =>
     placedPhotos.find((a) => a.slot.key === normSlotAlt(alt) && a.slot.heading === normSlotAlt(heading))?.pick
 
@@ -568,6 +571,23 @@ export default function DraftPanel({
               >
                 자사 사이트용 .html
               </button>
+              {photoFiles.length > 0 && (
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={photoBusy}
+                  title="고른 홈페이지 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목)."
+                  onClick={() => {
+                    setPhotoBusy(true)
+                    setError(null)
+                    downloadArticlePhotos(tenantId, stored, photoFiles)
+                      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+                      .finally(() => setPhotoBusy(false))
+                  }}
+                >
+                  {photoBusy ? '사진 받는 중…' : `사진 ${photoFiles.length}장 받기`}
+                </button>
+              )}
               <button
                 type="button"
                 className="ghost"

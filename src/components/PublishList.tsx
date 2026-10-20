@@ -9,6 +9,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
 import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
+import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 
 /**
  * ② 올리기 목록 — 한 줄이 한 번 올리기다(상용화 UI 8차 시안). 줄 계산은 lib/publishPlan.ts.
@@ -49,6 +50,8 @@ export default function PublishList({
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  /** 홈페이지 사진을 받는 중인 줄. */
+  const [photoBusy, setPhotoBusy] = useState<string | null>(null)
   /** 주소 칸을 펼친 줄 — 버튼을 누르면 펼친다. */
   const [openSlot, setOpenSlot] = useState<Set<string>>(new Set())
   const [preview, setPreview] = useState<string | null>(null)
@@ -178,6 +181,8 @@ export default function PublishList({
           const a = row.needsAdapt ? adaptationOf(row) : undefined
           const stale = Boolean(a && row.article.draft && a.sourceKey !== sourceKeyOf(sourceOf(row)))
           const text = textOf(row)
+          // 자사 줄의 발행본에 들어간 홈페이지 사진(src/lib/articlePhotos.ts) — 채널 줄 · 다듬은 글에는 넣지 않는다.
+          const photos = row.kind === 'own' && row.article.draft && text ? articlePhotoFiles(row.article.draft) : []
           const ready = !row.locked && text !== null
           const making = busy === row.key
           const slotOpen = openSlot.has(row.key) || (row.done && openSlot.has(`done:${row.key}`))
@@ -250,6 +255,25 @@ export default function PublishList({
                       {copied === `tags:${row.key}` ? '태그 복사함' : `태그 복사 ${tags.length}`}
                     </button>
                   )}
+                  {!row.locked && photos.length > 0 && row.article.draft && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={photoBusy !== null}
+                      title={photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}
+                      onClick={() => {
+                        const draft = row.article.draft
+                        if (!draft) return
+                        setPhotoBusy(row.key)
+                        setError(null)
+                        downloadArticlePhotos(tenantId, draft, photos)
+                          .catch((e: unknown) => setError(`${row.name} — ${e instanceof Error ? e.message : String(e)}`))
+                          .finally(() => setPhotoBusy(null))
+                      }}
+                    >
+                      {photoBusy === row.key ? '사진 받는 중…' : `사진 ${photos.length}장 받기`}
+                    </button>
+                  )}
                   {!row.locked && text && (
                     <button
                       type="button"
@@ -266,6 +290,12 @@ export default function PublishList({
               {!row.locked && !row.done && text && countImageSlots(text.markdown) > 0 && (
                 <p className="publish-row-note">
                   사진 넣을 곳 {countImageSlots(text.markdown)}곳 — 붙여 넣은 글의 「[사진 넣을 자리]」를 직접 찍거나 고른 사진으로 바꾸세요.
+                </p>
+              )}
+              {!row.locked && !row.done && photos.length > 0 && (
+                <p className="publish-row-note">
+                  홈페이지 사진 {photos.length}장을 넣었어요 — 붙여 넣은 글에서 사진이 안 보이면 「사진 {photos.length}장 받기」로 받은 파일을 그
+                  자리에 올리세요({photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}).
                 </p>
               )}
               {stale && (

@@ -33,6 +33,8 @@ import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
 import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills, savePhotoPicks } from './contentDraft.js';
 import { createFactGuard } from './factGuard.js';
+import { fetchSitePhoto } from './sitePhoto.js';
+import { publicCollectorError } from './aeo/networkSafety.js';
 import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, type PhotoPick } from '../src/lib/articlePhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
@@ -754,6 +756,54 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   } catch (err) {
     const status = err instanceof DraftChangedError ? 409 : err instanceof RangeError ? 400 : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 「사진 N장 받기」 — 저장된 고른 사진 하나의 파일(server/sitePhoto.ts). 화면이 보낸 주소가 아니라 그 자리에 고른 사진만 받는다.
+// 사진 사용 확인이 없거나(의료 업종은 의료광고 확인까지) 화면이 본 초안이 다시 만들어졌으면 409. Express 전용(Vercel 함수 12/12).
+app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const q = req.query as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === 'string' ? normSlotAlt(v) : '');
+  const actionId = typeof q.actionId === 'string' ? q.actionId : '';
+  const generatedAt = typeof q.generatedAt === 'string' ? q.generatedAt : '';
+  const nth = typeof q.nth === 'string' && /^[1-9]\d?$/.test(q.nth) ? Number(q.nth) : 0;
+  const slot = str(q.slot);
+  const heading = str(q.heading);
+  if (!actionId || !generatedAt || !slot || !nth) {
+    res.status(400).json({ error: 'actionId · generatedAt · slot · nth가 필요합니다.' });
+    return;
+  }
+  const stored = (await readDrafts(tenant.tenantId))[actionId];
+  if (!stored || stored.generatedAt !== generatedAt) {
+    res.status(409).json({ error: '그사이 초안이 다시 만들어졌어요. 초안을 다시 불러온 뒤 받아 주세요.' });
+    return;
+  }
+  const pick = stored.photos?.find((p) => p.slot === slot && p.nth === nth && p.heading === heading && p.confirmedAt);
+  if (!pick) {
+    res.status(404).json({ error: '그 자리에 고른 사진이 없어요.' });
+    return;
+  }
+  const rights = (await readPublishSettings(tenant.tenantId))?.photoRights;
+  if (!rights || (isPhotoMedical(tenant.industry) && !rights.medical)) {
+    res.status(409).json({ error: '이 브랜드의 홈페이지 사진 사용 확인이 없어요.' });
+    return;
+  }
+  try {
+    const file = await fetchSitePhoto(pick.src);
+    res.setHeader('Content-Type', file.type);
+    res.setHeader('Content-Disposition', `attachment; filename="photo.${file.ext}"`);
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(Buffer.from(file.bytes));
+  } catch (err) {
+    console.warn(`[photo-file] ${tenant.tenantId} ${pick.src} 받기 실패:`, err);
+    res.status(502).json({ error: publicCollectorError(err).message });
   }
 });
 

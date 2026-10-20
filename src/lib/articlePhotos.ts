@@ -35,6 +35,8 @@ export interface AppliedPhoto {
   heading: string
   /** 원래 사진 자리 글자(파일 이름 · 안내에 쓴다). */
   slotAlt: string
+  /** 고른 사진의 자리 열쇠 — 「사진 N장 받기」가 이것으로 그 사진 파일을 청한다. */
+  place: Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
 }
 
 export const PHOTO_LIMITS = { picks: 3, alt: 160, src: 2048 } as const
@@ -183,7 +185,7 @@ export function withPhotos(markdown: string, picks: readonly PhotoPick[] | undef
     const alt = cleanPhotoAlt(pick.alt) || cleanPhotoAlt(slot.alt)
     const cr = lines[slot.line]!.endsWith('\r') ? '\r' : ''
     lines[slot.line] = `![${alt}](${src})${cr}`
-    out.push({ src, alt, heading: slot.heading, slotAlt: slot.alt })
+    out.push({ src, alt, heading: slot.heading, slotAlt: slot.alt, place: { slot: pick.slot, nth: pick.nth, heading: pick.heading } })
   }
   return out.length ? { markdown: lines.join('\n'), applied: out } : { markdown, applied: [] }
 }
