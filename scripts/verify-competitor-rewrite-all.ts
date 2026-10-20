@@ -17,6 +17,8 @@ process.env.BLOB_READ_WRITE_TOKEN = ''
 process.env.BLOB_STORE_ID = ''
 process.env.PIPELINE_CRON = ''
 process.env.USE_MOCK_ENGINES = 'true'
+// 경쟁사 자동 추론(inferCompetitors)은 모의 엔진 설정을 보지 않고 키가 있으면 실제 엔진을 부른다 — 키를 비운다(16번은 fetch를 가로챈다).
+for (const key of ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'PERPLEXITY_API_KEY', 'ANTHROPIC_API_KEY']) process.env[key] = ''
 delete process.env.VERCEL
 
 const checks: [string, boolean][] = []
@@ -253,6 +255,72 @@ try {
   await measureAndBake(await fresh(G.tenantId), store)
   store.saveScorecard = saveScorecard
   ok('측정 중에 저장소가 버전을 올리면(v9) 대기 아님', (await fresh(G.tenantId)).questionBankVersion === 'v9' && (await ed.pendingCompetitorEdit(await fresh(G.tenantId))) === null)
+
+  // 15) 코호트 없이 재는 고객(autoCohort false — 온보딩에서 「함께 측정」을 끈 고객)도 자기 측정을 적는다. 그 측정도 고친 목록으로
+  //     판정한다 — 적지 않으면 「다음 측정 대기」가 영영 남고 되돌리기가 열린 채다. 다른 고객의 경쟁사로 잰 측정(P가 N을 함께 잰다)은 적지 않는다.
+  const { readLocalMeasures } = await import('../server/localMeasureLog')
+  const saveList = async (id: string, list: ReturnType<typeof c>[], summary: string) => {
+    const plan = await planOf(id, list)
+    return ed.saveEdit(id, store, { competitors: list, summary, ...(plan.questions.mode === 'derive' ? { questions: { key: plan.questions.key, drafts: [] } } : {}) })
+  }
+  const measuredOf = (id: string) => readJson(`data/${id}/competitors.json`).measured
+  const N = { ...base, tenantId: 'fake-all-n', ownedDomains: ['fake-n.example'], region: '가상리', competitors: [c('가상골목')], questionBankSize: 3, autoCohort: false }
+  const P = { ...base, tenantId: 'fake-all-p', brandName: '가상피오', aliases: ['가상피오'], ownedDomains: ['fake-p.example'], region: '가상리', competitors: [{ name: '가상머뭄', aliases: ['가상머뭄'], domains: ['fake-n.example'] }], questionBankSize: 3 }
+  writeJson('tenants.overlay.json', [N, P])
+  writeJson('cohort-banks/가상업종__가상리/c1.json', cohortFile('가상리'))
+  writeJson(`data/${N.tenantId}/question-bank/v5.json`, bankOf('가상리', [q('v5-001', '가상머뭄이랑 가상골목 중에 어디가 더 나아?', '가상리')]))
+  writeJson(`data/${P.tenantId}/question-bank/v5.json`, bankOf('가상리', [q('v5-001', '가상피오랑 가상머뭄 중에 어디가 더 나아?', '가상리')]))
+  await measureAndBake(await fresh(N.tenantId), store)
+  await saveList(N.tenantId, [...N.competitors, c('가상추가엔')], 'N 가상추가엔 추가')
+  ok('N: 저장 뒤 다음 측정 대기', (await ed.pendingCompetitorEdit(await fresh(N.tenantId)))?.summary === 'N 가상추가엔 추가')
+  const runsOfN = () => readLocalMeasures().filter((r) => r.tenantId === N.tenantId).length
+  const nBefore = runsOfN()
+  await measureAndBake(await fresh(P.tenantId), store)
+  ok('N: P의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 대기 그대로', runsOfN() === nBefore + 1 && measuredOf(N.tenantId).at === null && (await ed.pendingCompetitorEdit(await fresh(N.tenantId))) !== null)
+  await measureAndBake(await fresh(N.tenantId), store)
+  const mn = measuredOf(N.tenantId)
+  ok('N: 자기 측정을 마치면 지금 목록 · 시작 시각을 적는다 — 대기 없음', mn.at !== null && mn.listHash === fileStore.listHash((await fresh(N.tenantId)).competitors) && (await ed.pendingCompetitorEdit(await fresh(N.tenantId))) === null)
+  ok('N: 그 목록으로 쟀으니 되돌리기 닫힘', !(await ed.buildEditorState(await fresh(N.tenantId), await reg.loadRuntimeTenants(), store)).edit.undoAvailable && (await rejects(ed.undoEdit(N.tenantId, store), 409)))
+
+  // 16) 저장소 경쟁사 목록이 빈 고객 — 측정마다 경쟁사를 추론해 채우지만 그 목록은 저장하지 않는다. 다음 측정도 빈 목록에서 시작하므로
+  //     빈 목록을 적어야 「저장소 설정으로 돌아가기」 뒤 대기가 사라진다. 추론이 아무것도 못 찾아도 적는다.
+  const H = { ...base, tenantId: 'fake-all-h', brandName: '가상하늘', aliases: ['가상하늘'], ownedDomains: ['fake-h.example'], region: '가상리', competitors: [] as ReturnType<typeof c>[], questionBankSize: 3 }
+  writeJson('tenants.overlay.json', [N, P, H])
+  writeJson(`data/${H.tenantId}/question-bank/v5.json`, bankOf('가상리', [q('v5-001', '가상하늘 체크인 몇 시야?', '가상리', { category: 'brand-direct' })]))
+  const editedThenReset = async (summary: string) => {
+    await saveList(H.tenantId, [c('가상편집')], summary)
+    await fileStore.recordCompetitorMeasurement(H.tenantId, [c('가상편집')], new Date().toISOString(), 'v5', await repoBaseOf(H.tenantId))
+    await ed.resetEdit(H.tenantId, store)
+  }
+  await editedThenReset('H 가상편집')
+  ok('H: 고친 목록으로 잰 뒤 저장소 설정(빈 목록)으로 돌아가면 대기', (await fresh(H.tenantId)).competitors.length === 0 && (await ed.pendingCompetitorEdit(await fresh(H.tenantId)))?.summary === '저장소 설정의 경쟁사 목록으로 돌아감')
+  // 키가 없어 추론이 빈 목록을 돌려준다.
+  await measureAndBake(await fresh(H.tenantId), store)
+  const mh1 = measuredOf(H.tenantId)
+  ok('H: 추론이 비어도 빈 목록으로 잰 것을 적는다 — 대기 없음 · 되돌리기 닫힘', mh1.at !== null && mh1.listHash === fileStore.listHash([]) && (await ed.pendingCompetitorEdit(await fresh(H.tenantId))) === null && !(await ed.buildEditorState(await fresh(H.tenantId), await reg.loadRuntimeTenants(), store)).edit.undoAvailable)
+  await editedThenReset('H 가상편집 다시')
+  ok('H: 다시 고쳐 잰 뒤 돌아가면 대기', (await ed.pendingCompetitorEdit(await fresh(H.tenantId)))?.summary === '저장소 설정의 경쟁사 목록으로 돌아감')
+  // 추론이 두 곳을 찾는다 — Gemini 호출만 가로채 답하고, 다른 외부 호출은 모두 막는다(실제 엔진을 부르지 않는다).
+  const realFetch = globalThis.fetch
+  let inferCalls = 0
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = input instanceof Request ? input.url : String(input)
+    if (url.includes('generativelanguage.googleapis.com') && typeof init?.body === 'string' && init.body.includes('스키마: [{')) {
+      inferCalls += 1
+      const text = JSON.stringify([{ name: '가상추론갑', domain: '' }, { name: '가상추론을', domain: '' }])
+      return new Response(JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text }] }, finishReason: 'STOP' }] }), { status: 200, headers: { 'content-type': 'application/json' } })
+    }
+    throw new Error(`verify: 외부 호출을 막았습니다 — ${url}`)
+  }) as typeof fetch
+  process.env.GEMINI_API_KEY = 'verify-fake-key'
+  try {
+    await measureAndBake(await fresh(H.tenantId), store)
+  } finally {
+    globalThis.fetch = realFetch
+    process.env.GEMINI_API_KEY = ''
+  }
+  const mh2 = measuredOf(H.tenantId)
+  ok('H: 추론한 목록으로 쟀어도 다음 측정이 읽을 빈 목록을 적는다 — 대기 없음 · 되돌리기 닫힘', inferCalls === 1 && (await fresh(H.tenantId)).competitors.length === 0 && mh2.listHash === fileStore.listHash([]) && mh2.at > mh1.at && (await ed.pendingCompetitorEdit(await fresh(H.tenantId))) === null && !(await ed.buildEditorState(await fresh(H.tenantId), await reg.loadRuntimeTenants(), store)).edit.undoAvailable)
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

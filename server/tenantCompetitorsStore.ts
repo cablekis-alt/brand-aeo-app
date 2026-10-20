@@ -50,8 +50,9 @@ export interface CompetitorOverrideFile {
     list?: { savedAt: string; summary: string };
   } | null;
   /**
-   * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가
-   * 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도
+   * 이 브랜드 자신의 측정(코호트 없이 재는 autoCohort false 고객도 · 다른 고객의 경쟁사로 잰 측정은 빼고)이 마지막으로 쓴
+   * 목록(listHash)과 시작 시각. 목록은 런타임 설정이 준 목록이다 — 비어 있어 측정이 경쟁사를 추론해 채웠어도 빈 목록을 적는다
+   * (추론한 목록은 저장하지 않아 다음 측정도 빈 목록에서 시작한다). 「다음 측정 대기」와 되돌리기가 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도
    * 섞여 있어 쓰지 않는다. 처음 저장할 때는 그 직전 목록(마지막 측정이 쓴 목록)으로 채운다(at = null).
    * bankVersion은 그 측정이 쓴 질문지 버전 — 목록은 그대로 두고 질문지만 새로 쓴 저장도 「다음 측정 대기」로 보이게 한다.
    */
@@ -234,8 +235,9 @@ export function serializeCompetitorFile<T>(task: () => Promise<T>): Promise<T> {
 }
 
 /**
- * 브랜드를 자기 코호트와 함께 쟀다고 적는다(measureAndBake). 앱에서 경쟁사를 고친 적이 없는 브랜드(파일 없음)는
- * 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
+ * 고객 브랜드 자신의 측정을 적는다(measureAndBake — cohortOnly 측정 · 다른 고객의 경쟁사로 잰 측정은 적지 않는다).
+ * competitors는 측정이 시작할 때 런타임 설정에서 읽은 목록이다(비어 있으면 추론으로 채우기 전의 빈 목록). 앱에서 경쟁사를 고친 적이
+ * 없는 브랜드(파일 없음)는 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
  */
 export function recordCompetitorMeasurement(
   tenantId: string,

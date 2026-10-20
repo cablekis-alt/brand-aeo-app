@@ -278,11 +278,14 @@ async function measureAndBakeRun(
   let cohortTargets: TenantConfig[] = [];
   // 이번 주 카드를 다시 쓴(재측정하지 않은) 경쟁사 — 그 카드도 이번 코호트에 든다(코호트 제외 해제에 쓴다).
   let reusedTargets: TenantConfig[] = [];
-  // 자기 코호트와 함께 재는 본 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
+  // 고객 브랜드 자신의 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
   const startedAt = new Date().toISOString();
   // 시작할 때의 저장소 설정 지문 — 기록하는 목록 · 질문지 버전과 같은 때의 값이어야 한다(측정 중에 설정이 바뀌어도 어긋나지 않게).
   const repoBase = tenant.cohortOnly ? undefined : await repoFingerprint(tenant.tenantId);
-  let ownCohortList: TenantConfig['competitors'] | null = null;
+  // 적을 목록은 런타임 설정이 준 목록이다 — 아래에서 비어 있으면 추론으로 채우지만 그 목록은 저장하지 않아, 다음 측정도 같은
+  // 빈 목록에서 시작한다(「다음 측정 대기」는 런타임 목록과 견준다). 함께 잴 경쟁사(cohortTargets)와는 따로다 — 코호트 없이
+  // 재는 고객(autoCohort false)도 이 목록으로 판정한다.
+  const runtimeList = tenant.competitors ?? [];
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
@@ -318,7 +321,6 @@ async function measureAndBakeRun(
     //    재측정(단, 그 경쟁사의 코호트로 더 퍼지지 않게 autoCohort=false), 없으면 cohortOnly로 새로 측정.
     if (tenant.autoCohort !== false && tenant.competitors?.length) {
       cohortTargets.push(...selectCohortTargets(tenant, await loadRuntimeTenants()));
-      ownCohortList = tenant.competitors;
     }
   }
 
@@ -441,9 +443,10 @@ async function measureAndBakeRun(
 
   if (!self.ok) throw self.error;
   const { aeoScore } = self.value;
-  if (ownCohortList) {
+  // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다.
+  if (!tenant.cohortOnly && !options.inCohortRun) {
     // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
-    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
+    await recordCompetitorMeasurement(tenant.tenantId, runtimeList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
     });
   }
