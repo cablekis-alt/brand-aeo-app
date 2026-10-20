@@ -12,7 +12,7 @@ import { BUNDLED_COHORT_BANK_DIR, COHORT_BANK_DIR } from './appPaths.js';
 import { getJudgeClient } from './engines/index.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { tagJourneyStages } from './journeyStage.js';
-import type { ResultStore } from './store.js';
+import type { QuestionBank, ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
 /**
@@ -217,7 +217,12 @@ export function ensureCohortBank(tenant: TenantConfig): Promise<CohortQuestionBa
  * 같은 버전의 브랜드 은행이 이미 있는데 코호트 출처가 다르면 멈춘다. 브랜드 전용으로 만든 은행
  * (예: v3)에 설정만 바꿔 붙이면 일반 질문이 공통이 아닌데 공통인 것처럼 기록된다 — 버전을 올려야 한다.
  */
-export async function ensureComposedQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+export async function ensureComposedQuestionBank(
+  tenant: TenantConfig,
+  store: ResultStore,
+  /** 새로 만들 때 은행에 남길 출처 — 경쟁사 편집의 「모두 새로 쓰기」로 정한 버전이면(pipeline.ts). */
+  origin?: QuestionBank['regeneratedFrom'],
+): Promise<QuestionSpec[]> {
   const cohort = await ensureCohortBank(tenant);
   const existing = await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion);
   if (existing) {
@@ -292,6 +297,7 @@ export async function ensureComposedQuestionBank(tenant: TenantConfig, store: Re
     generatedAt: new Date().toISOString(),
     questions,
     cohortBank: { key: cohort.key, version: cohort.version },
+    ...(origin ? { regeneratedFrom: origin } : {}),
   });
   return questions;
 }

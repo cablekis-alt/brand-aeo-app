@@ -10,6 +10,7 @@
  * 몇 곳을 함께 재고 몇 곳이 대기인지는 여기서 세지 않는다. 서버가 측정과 같은 함수로 계산한다
  * (POST /api/tenants/:id/competitors/plan → server/cohortPlan.ts).
  */
+import type { ExclusionPreview, HandoffHint, RankLite } from './api'
 import { subjectParticle } from './korean'
 
 export interface CompetitorInput {
@@ -57,6 +58,11 @@ export interface AppliedEdit {
   replaced: Map<string, string>
   /** 자리 바꾸기로 대기로 내려간 줄. */
   movedDown: Set<string>
+  /**
+   * 줄 key → 그 줄이 지금 차지한 원래 줄의 자리(원래 줄 key). 바꿈은 바뀐 줄의 자리를, 자리 바꾸기는 상대의 자리를 넘겨받는다.
+   * 질문 넘겨받기 힌트가 이 값으로 「누가 누구 자리에 들었나」를 보낸다(handoffHints).
+   */
+  slotOf: Map<string, string>
   /** 홈페이지만 바꾼 줄 key → 바꾸기 전 주소. */
   rehomed: Map<string, string[]>
   /** 작업마다 성립했는지. */
@@ -76,6 +82,13 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
   const removedBy = new Map<string, number>()
   const replaced = new Map<string, string>()
   const movedDown = new Set<string>()
+  const slotOf = new Map(base.map((x) => [x.key, x.key]))
+  // 자리를 넘긴다 — to가 from의 자리를 차지한다(from의 자리가 없으면 to도 자리가 없다).
+  const takeSlot = (to: string, from: string) => {
+    const slot = slotOf.get(from)
+    if (slot) slotOf.set(to, slot)
+    else slotOf.delete(to)
+  }
   const rehomed = new Map<string, string[]>()
   const valid: boolean[] = []
   const at = (key: string) => list.findIndex((x) => x.key === key)
@@ -96,6 +109,8 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
             removedBy.set(out!.key, i)
             placedBy.set(moved!.key, i)
             replaced.set(moved!.key, out!.key)
+            takeSlot(moved!.key, out!.key)
+            slotOf.delete(out!.key)
             okOp = true
           }
         } else if (op.with && !nameTaken(op.with.name)) {
@@ -105,6 +120,8 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
           removedBy.set(out!.key, i)
           placedBy.set(item.key, i)
           replaced.set(item.key, out!.key)
+          takeSlot(item.key, out!.key)
+          slotOf.delete(out!.key)
           okOp = true
         }
       }
@@ -115,6 +132,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         const [out] = list.splice(pos, 1)
         removed.push(out!)
         removedBy.set(out!.key, i)
+        slotOf.delete(out!.key)
         okOp = true
       }
     } else if (op.t === 'swap') {
@@ -124,6 +142,10 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
         ;[list[a], list[b]] = [list[b]!, list[a]!]
         placedBy.set(op.a, i)
         movedDown.add(op.b)
+        const slotA = slotOf.get(op.a)
+        takeSlot(op.a, op.b)
+        if (slotA) slotOf.set(op.b, slotA)
+        else slotOf.delete(op.b)
         okOp = true
       }
     } else if (op.t === 'add') {
@@ -146,7 +168,7 @@ export function applyOps(base: EditItem[], ops: EditOp[]): AppliedEdit {
     }
     valid.push(okOp)
   })
-  return { list, removed, placedBy, removedBy, replaced, movedDown, rehomed, valid }
+  return { list, removed, placedBy, removedBy, replaced, movedDown, slotOf, rehomed, valid }
 }
 
 /** 화면에 보일 주소 — 'https://www.x.com/a' → 'x.com'. 저장할 때는 서버가 같은 규칙으로 정리한다. */
@@ -200,9 +222,44 @@ export function summarizeOps(base: EditItem[], ops: EditOp[]): string[] {
   return lines
 }
 
+const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
+
+/** 「W36~W42」 — 한 주면 「W42」. */
+export function weekRange(first: string, until: string): string {
+  return first === until ? shortWeek(until) : `${shortWeek(first)}~${shortWeek(until)}`
+}
+
+/** 「3위 / 6」(동점이면 「 (동점 2)」). */
+export function rankText(r: RankLite): string {
+  return `${r.position}위 / ${r.totalTenants}${r.tiedCount > 1 ? ` (동점 ${r.tiedCount})` : ''}`
+}
+
+/** 지난 기록 바꾸기 요약 — 저장 막대 · 저장 기록에 쓴다. 서버 미리보기 값으로만 만든다. */
+export function summarizePastOut(preview: ExclusionPreview | null): string[] {
+  return (preview?.items ?? []).map(
+    (it) => `${it.action === 'exclude' ? '지난 기록에서 빼기' : '다시 세기'} · ${it.brandName} ${weekRange(it.fromWeek ?? it.firstWeek, it.untilWeek)}`,
+  )
+}
+
 /** 저장할 목록. */
 export function toCompetitors(list: EditItem[]): CompetitorInput[] {
   return list.map((x) => x.competitor)
+}
+
+/**
+ * 질문 넘겨받기 힌트 — 누가 누구 자리에 들었나(이름). 서버는 바꾼 목록만 받아서 이 힌트가 없으면 받는 곳을 목록 순서로 짐작한다
+ * (여러 작업을 섞으면 뒤바뀐다). 원래 줄마다 그 자리를 지금 차지한 줄을 하나 보낸다(slotOf) — 바꾼 줄을 다시 바꾸거나, 바꿔
+ * 넣은 줄을 다시 자리 바꾸기로 내려도 원래 줄에서 지금 주인까지 바로 잇는다. 자기 자리에 있는 줄은 보내지 않는다.
+ */
+export function handoffHints(base: EditItem[], applied: Pick<AppliedEdit, 'list' | 'slotOf'>): HandoffHint[] {
+  const names = new Map(base.map((x) => [x.key, x.competitor.name]))
+  const hints: HandoffHint[] = []
+  for (const item of applied.list) {
+    const slot = applied.slotOf.get(item.key)
+    const from = slot && slot !== item.key ? names.get(slot) : undefined
+    if (from && from !== item.competitor.name) hints.push({ from, to: item.competitor.name })
+  }
+  return hints
 }
 
 /** 「바꾸지 않고 빼기」의 설명 — 대기 첫 줄이 올라오는지. */

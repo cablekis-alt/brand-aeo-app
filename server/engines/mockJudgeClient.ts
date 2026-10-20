@@ -26,6 +26,9 @@ export class MockJudgeClient implements EngineClient {
     if (system.includes('사실 주장만을 검증하는 팩트체커')) {
       return JSON.stringify({ claims: [] });
     }
+    if (system.includes('측정 질문지의 문장 편집자')) {
+      return JSON.stringify(this.rewriteCompetitorQuestion(user));
+    }
     return '## 요약\n(mock) 이번 주 데이터 기준 리포트입니다.';
   }
 
@@ -38,6 +41,18 @@ export class MockJudgeClient implements EngineClient {
       category: i % 3 === 0 ? 'brand-direct' : 'category-agnostic',
       containsBrandName: i % 3 === 0,
     }));
+  }
+
+  /** B1d(경쟁사 바꾼 질문 고쳐 쓰기) — 원래 질문에서 빼는 경쟁사 이름을 넣는 경쟁사 이름으로 바꾼다. */
+  private rewriteCompetitorQuestion(user: string) {
+    let text = /^원래 질문: (.*)$/m.exec(user)?.[1] ?? '';
+    for (const m of user.matchAll(/^빼는 경쟁사: (.+?)(?: \(별칭: (.+?)\))? → 넣는 경쟁사: (.+)$/gm)) {
+      const [, from, aliases, to] = m;
+      for (const name of [from!, ...(aliases ? aliases.split(', ') : [])].sort((a, b) => b.length - a.length)) {
+        text = text.split(name).join(to!);
+      }
+    }
+    return { text, topic: '경쟁사 비교 (mock)' };
   }
 
   private buildBrandMention(responseText: string) {

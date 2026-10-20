@@ -36,6 +36,7 @@ electron/build/bundled.env
 server/measure-requests.json
 server/delete-requests.json
 server/tenants.deleted.json
+server/cohort-exclusions.json
 server/measure-runs.json
 dist-electron
 server/engine-pricing.json

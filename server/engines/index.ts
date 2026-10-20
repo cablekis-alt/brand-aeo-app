@@ -101,6 +101,22 @@ export function getEngineClient(engine: Engine): EngineClient {
   return client;
 }
 
+const checkClients = new Map<Engine, EngineClient>();
+
+/**
+ * 사람이 화면에서 기다리는 한 번짜리 확인용 수집 엔진(검색이 붙는다) — 측정 수집 슬롯과 따로 줄을 선다(concurrency.ts check).
+ * 측정 중에도 바로 돈다(경쟁사 편집 결정 F2).
+ */
+export function getCheckEngineClient(engine: Engine): EngineClient {
+  if (USE_MOCK) return new MockEngineClient(engine);
+  let client = checkClients.get(engine);
+  if (!client) {
+    client = limited(createEngineClient(engine), 'check');
+    checkClients.set(engine, client);
+  }
+  return client;
+}
+
 let judgeClient: EngineClient | undefined;
 /** 이번 프로세스에서 실제로 생성된 판단 클라이언트의 id. 스코어카드에 기록한다. */
 let judgeEngineId: JudgeEngineId | undefined;

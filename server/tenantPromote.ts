@@ -1,8 +1,10 @@
 import { access, mkdir, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { readCohortExclusions, updateCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { competitorDraftId } from './cohortPlan.js';
-import { EditorError, saveEdit } from './competitorEditor.js';
+import { affectedCohortWeeks, reconcileCohortRanks } from './cohortRank.js';
+import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
@@ -243,6 +245,20 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
 
   const removedFrom: string[] = [];
   const removeErrors: PromoteResult['removeErrors'] = [];
+  // 경쟁사일 때 다른 고객이 「지난 기록에서도 빼기」로 뺀 기록을 푼다 — 고객 브랜드가 되면 자기 코호트에서 자기 카드가 빠진 채
+  // 남고, 고객 브랜드는 서랍의 예전 경쟁사에 나오지 않아 풀 곳이 없다. 실패해도 전환은 되돌리지 않고 알린다.
+  try {
+    let released: CohortExclusion[] = [];
+    // 뺀 기록이 없으면 파일을 쓰지 않는다(전환마다 쓰지 않게).
+    if ((await readCohortExclusions()).some((e) => e.tenantId === draft.tenantId)) await updateCohortExclusions((entries) => {
+      released = entries.filter((e) => e.tenantId === draft.tenantId);
+      return entries.filter((e) => e.tenantId !== draft.tenantId);
+    });
+    for (const k of await affectedCohortWeeks(store, released)) await reconcileCohortRanks(store, k.industry, k.region, k.weekOf);
+  } catch (err) {
+    console.error(`[tenantPromote] ${draft.tenantId} 코호트 제외 해제 실패:`, err);
+    removeErrors.push({ tenantId: draft.tenantId, error: `지난 기록 제외를 풀지 못했어요: ${err instanceof Error ? err.message : String(err)}` });
+  }
   const runtime = await loadRuntimeTenants();
   for (const id of new Set(removeFrom)) {
     const customer = runtime.find((t) => t.tenantId === id && !t.cohortOnly);
@@ -253,7 +269,22 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     const kept = customer.competitors.filter((line) => lineTarget(customer, line, existing) !== 'same');
     if (kept.length === customer.competitors.length) continue;
     try {
-      await saveEdit(id, store, { competitors: kept, summary: `빼기 · ${draft.brandName}(고객 브랜드로 전환)` });
+      // 그 경쟁사를 짚은 비교 질문은 빼기와 같다(질문 넘겨받기 — competitorEditor.ts). 빼기만이면 고쳐 쓸 문장이 없어 그대로 저장한다.
+      // 올라오는 대기 줄이 질문을 넘겨받아 고쳐 써야 하면 여기서는 하지 않는다 — 고친 문장을 확인할 곳은 서랍뿐이다.
+      // 이미 재는 다른 경쟁사에 넘기지 않는다(고친 문장을 볼 화면이 없다) — 새로 든 곳이 없으면 그 질문은 빠진다.
+      const questions = (await planEdit(customer, runtime, store, kept, undefined, undefined, { existingReceivers: false })).questions;
+      if (questions.mode === 'derive' && questions.items.some((i) => i.action === 'rewrite')) {
+        removeErrors.push({
+          tenantId: id,
+          error: `${draft.brandName} 자리에 드는 경쟁사가 비교 질문을 넘겨받아 고쳐 써야 해요 — 경쟁사 편집 서랍에서 빼 주세요.`,
+        });
+        continue;
+      }
+      await saveEdit(id, store, {
+        competitors: kept,
+        summary: `빼기 · ${draft.brandName}(고객 브랜드로 전환)`,
+        ...(questions.mode === 'derive' ? { questions: { key: questions.key, drafts: [], receivers: 'incoming' } } : {}),
+      });
       removedFrom.push(id);
     } catch (err) {
       removeErrors.push({ tenantId: id, error: err instanceof Error ? err.message : String(err) });

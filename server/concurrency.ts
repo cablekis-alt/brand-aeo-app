@@ -69,7 +69,11 @@ export async function mapWithConcurrency<T, R>(
  */
 const COLLECT_DEFAULTS: Record<Engine, number> = { gemini: 24, openai: 36, perplexity: 8, claude: 24 };
 
-export type LlmPool = 'judge' | `collect:${Engine}`;
+/**
+ * check — 사람이 화면에서 기다리는 한 번짜리 확인(경쟁사 편집의 「업종 다름」 확인). 측정 수집과 같은 엔진 · 같은 키를 쓰지만
+ * 슬롯은 따로다 — 코호트 측정 중에는 수집 슬롯 줄에 호출 100건 넘게가 서 있어, 같은 줄에 서면 확인이 시간 초과로 버려진다.
+ */
+export type LlmPool = 'judge' | 'check' | `collect:${Engine}`;
 
 /** 엔진 하나의 수집 슬롯 수. */
 export function collectLimit(engine: Engine): number {
@@ -80,6 +84,7 @@ export function collectLimit(engine: Engine): number {
 
 function limitOf(pool: LlmPool): number {
   if (pool === 'judge') return Math.max(1, Number(process.env.JUDGE_LLM_CONCURRENCY) || 144);
+  if (pool === 'check') return Math.max(1, Number(process.env.CHECK_LLM_CONCURRENCY) || 4);
   return collectLimit(pool.slice('collect:'.length) as Engine);
 }
 
@@ -124,6 +129,7 @@ export function llmConcurrencyLimits(): Record<LlmPool, number> {
   const engines: Engine[] = ['gemini', 'openai', 'perplexity', 'claude'];
   return Object.fromEntries([
     ['judge', limitOf('judge')],
+    ['check', limitOf('check')],
     ...engines.map((e) => [`collect:${e}`, collectLimit(e)]),
   ]) as Record<LlmPool, number>;
 }

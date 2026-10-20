@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import type { CohortExclusion } from './cohortExclusionStore.js';
 import type { CompetitorContext } from '../src/prompts/types.js';
 import type { TenantConfig } from './types.js';
 
@@ -22,19 +23,43 @@ export interface CompetitorOverride {
   competitors: CompetitorContext[];
   /** 저장할 때의 베이스 지문(baseFingerprint). */
   base: string;
+  /**
+   * 경쟁사를 바꾸며 고쳐 만든 질문지(4단계 「바뀐 경쟁사 질문만 고치기」) — 있으면 베이스의 questionBankVersion ·
+   * questionBankSize 대신 쓴다. 없으면 베이스 질문지다. 지문(base)은 베이스 값으로만 계산하므로 이 값과 무관하다.
+   * regenerate는 5단계 「브랜드 질문 모두 새로 쓰기」 — 저장할 때 은행 파일을 쓰지 않고, 다음 측정이 그 버전을 새로 만든다.
+   * from은 그 전 버전, base는 저장할 때의 저장소 지문이다(측정이 만든 은행에 표식으로 옮겨 적는다 — pipeline.ts).
+   */
+  questionBank?: { version: string; size: number; regenerate?: { from: string; base: string } };
 }
 
 export interface CompetitorOverrideFile {
   /** 지금 쓰는 목록. null이면 베이스(저장소 설정)를 쓴다. */
   current: CompetitorOverride | null;
-  /** 마지막 저장 — 되돌리기용. 그 목록으로 이미 쟀으면 되돌릴 수 없다(competitorEditor.ts). */
-  lastSave: { savedAt: string; before: CompetitorOverride | null; summary: string } | null;
+  /**
+   * 마지막 저장 — 되돌리기용. 그 목록으로 이미 쟀으면 되돌릴 수 없다(competitorEditor.ts). exclusions는 그 저장이 코호트 제외
+   * 목록(cohortExclusionStore.ts)에 더한 · 지운 항목 — 되돌리면 반대로 한다.
+   */
+  lastSave: {
+    savedAt: string;
+    before: CompetitorOverride | null;
+    summary: string;
+    exclusions?: { added: CohortExclusion[]; removed: CohortExclusion[] };
+    /** 목록은 그대로 두고 지난 기록만 바꾼 저장. */
+    listUnchanged?: true;
+    /** listUnchanged일 때, 그 전 목록 저장의 시각 · 요약(「다음 측정 대기」가 보인다). */
+    list?: { savedAt: string; summary: string };
+  } | null;
   /**
    * 이 브랜드를 자기 코호트와 함께 마지막으로 잰 목록(listHash)과 시작 시각. 「다음 측정 대기」와 되돌리기가
    * 이 값으로 판단한다 — 측정 완료 로그(measure-runs.json)는 50건에서 잘리고, 다른 고객의 경쟁사로 잰 측정도
    * 섞여 있어 쓰지 않는다. 처음 저장할 때는 그 직전 목록(마지막 측정이 쓴 목록)으로 채운다(at = null).
+   * bankVersion은 그 측정이 쓴 질문지 버전 — 목록은 그대로 두고 질문지만 새로 쓴 저장도 「다음 측정 대기」로 보이게 한다.
    */
-  measured: { at: string | null; listHash: string } | null;
+  /**
+   * 마지막 측정이 쓴 목록 · 질문지. repoBase는 그때의 저장소 설정 지문(baseFingerprint) — 질문지 버전이 달라진 것이 저장소 설정 때문인지
+   * 경쟁사 편집 때문인지 가른다(「다음 측정 대기」).
+   */
+  measured: { at: string | null; listHash: string; bankVersion?: string; repoBase?: string } | null;
   updatedAt: string;
 }
 
@@ -153,6 +178,20 @@ export function normalizeCompetitorList(
   return { competitors, droppedHosts };
 }
 
+function validQuestionBank(x: unknown): x is NonNullable<CompetitorOverride['questionBank']> {
+  const v = x as { version?: unknown; size?: unknown; regenerate?: unknown } | null;
+  const r = v?.regenerate as { from?: unknown; base?: unknown } | undefined;
+  return Boolean(
+    v &&
+      typeof v.version === 'string' &&
+      v.version &&
+      typeof v.size === 'number' &&
+      Number.isInteger(v.size) &&
+      v.size > 0 &&
+      (r === undefined || (r && typeof r.from === 'string' && r.from && typeof r.base === 'string' && r.base)),
+  );
+}
+
 /** 파일이 없거나 깨졌으면 null(= 베이스 값). */
 export async function readCompetitorOverride(tenantId: string): Promise<CompetitorOverrideFile | null> {
   let text: string;
@@ -164,7 +203,12 @@ export async function readCompetitorOverride(tenantId: string): Promise<Competit
   }
   try {
     const parsed = JSON.parse(text) as Partial<CompetitorOverrideFile>;
-    const current = parsed.current && Array.isArray(parsed.current.competitors) && typeof parsed.current.base === 'string' ? parsed.current : null;
+    let current = parsed.current && Array.isArray(parsed.current.competitors) && typeof parsed.current.base === 'string' ? parsed.current : null;
+    // 질문지 값이 깨졌으면 목록도 쓰지 않는다 — 목록만 쓰면 그 목록과 맞지 않는 베이스 질문지로 잰다.
+    if (current?.questionBank !== undefined && !validQuestionBank(current.questionBank)) {
+      console.error(`[tenantCompetitors] ${tenantId} competitors.json의 질문지 값이 올바르지 않습니다 — 저장소 설정의 경쟁사를 씁니다:`, current.questionBank);
+      current = null;
+    }
     const measured = parsed.measured && typeof parsed.measured.listHash === 'string' ? parsed.measured : null;
     return { current, lastSave: parsed.lastSave ?? null, measured, updatedAt: parsed.updatedAt ?? '' };
   } catch (err) {
@@ -193,11 +237,21 @@ export function serializeCompetitorFile<T>(task: () => Promise<T>): Promise<T> {
  * 브랜드를 자기 코호트와 함께 쟀다고 적는다(measureAndBake). 앱에서 경쟁사를 고친 적이 없는 브랜드(파일 없음)는
  * 적을 것이 없다. 시작 시각(at)을 적는다 — 측정이 읽은 목록은 시작할 때의 목록이다.
  */
-export function recordCompetitorMeasurement(tenantId: string, competitors: CompetitorContext[], at: string): Promise<void> {
+export function recordCompetitorMeasurement(
+  tenantId: string,
+  competitors: CompetitorContext[],
+  at: string,
+  bankVersion?: string,
+  repoBase?: string,
+): Promise<void> {
   return serializeCompetitorFile(async () => {
     const file = await readCompetitorOverride(tenantId);
     if (!file) return;
-    await writeCompetitorOverride(tenantId, { current: file.current, lastSave: file.lastSave, measured: { at, listHash: listHash(competitors) } });
+    await writeCompetitorOverride(tenantId, {
+      current: file.current,
+      lastSave: file.lastSave,
+      measured: { at, listHash: listHash(competitors), ...(bankVersion ? { bankVersion } : {}), ...(repoBase ? { repoBase } : {}) },
+    });
   });
 }
 

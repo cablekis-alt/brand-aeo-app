@@ -815,8 +815,64 @@ export interface EditorCompetitorRow {
   deleted: boolean
   deletedOtherIndustry: { brandName: string; industry: string } | null
   cohortWeeks: number
+  cohortFirstWeekOf: string | null
+  /** 지난 기록에서 뺀 범위(코호트 제외 목록). */
+  excluded: ExcludedRange[]
+  /** 이 경쟁사를 함께 재는 다른 고객 브랜드 — 있으면 지난 기록에서 뺄 수 없다. */
+  measuredByOthers: string[]
   latest: { weekOf: string; score: number; mentionRate: number; brandOwnedCitationRate: number } | null
   questionIds: string[]
+  /** 「업종 다름」 판정 — 모르면 null(server/competitorEditor.ts IndustryMark). */
+  industry: IndustryMark | null
+}
+export interface IndustryMark {
+  verdict: 'same' | 'different'
+  looksLike: string | null
+  by: 'ai' | 'person'
+}
+/** 「브랜드 질문 모두 새로 쓰기」 — server/competitorEditor.ts RewriteAllPlan과 같은 모양. */
+export interface RewriteAllPlan {
+  available: boolean
+  reason: string | null
+  fromVersion: string
+  toVersion: string
+  size: number
+  brandCount: number
+  key: string
+}
+/** 업종 확인 · 표시의 응답 — verdict null이면 모른다(칩 없음). error는 확인하지 못한 이유. */
+export interface IndustryResult {
+  name: string
+  verdict: 'same' | 'different' | null
+  looksLike: string | null
+  reason: string | null
+  by: 'ai' | 'person' | null
+  error?: string
+}
+/** 코호트 제외 목록에 든 범위 — fromWeek가 없으면 처음부터. */
+export interface ExcludedRange {
+  id: string
+  fromWeek?: string
+  untilWeek: string
+}
+export interface RankLite {
+  position: number
+  totalTenants: number
+  tiedCount: number
+}
+/** 「지난 기록에서도 빼기」 · 「다시 세기」 미리보기 — server/competitorEditor.ts ExclusionPreview와 같은 모양. */
+export interface ExclusionPreview {
+  items: { tenantId: string; brandName: string; action: 'exclude' | 'restore'; fromWeek?: string; untilWeek: string; firstWeek: string; weeks: number }[]
+  weeks: { weekOf: string; before: RankLite | null; after: RankLite }[]
+  locked: { tenantId: string; brandName: string; by: string[] }[]
+  otherCustomers: { brandName: string; weeks: number }[]
+  cardsRewritten: number
+  key: string
+}
+/** 지난 기록 바꾸기 — 뺄 경쟁사(onlyWeek면 그 주만)와 다시 셀 경쟁사. */
+export interface PastOutInput {
+  add: { tenantId: string; onlyWeek?: string }[]
+  restore: string[]
 }
 export interface CompetitorEntry {
   name: string
@@ -829,8 +885,14 @@ export interface EditorPastCompetitor {
   aliases: string[]
   domains: string[]
   weeks: number
+  firstWeekOf: string
   lastWeekOf: string
   lastScore: number
+  /** 지금 코호트에 있는 이 경쟁사 카드 전체 — 「지난 기록에서도 빼기」가 빼는 범위. 0이면 옛 코호트 기록뿐이다. */
+  cohortWeeks: number
+  cohortFirstWeekOf: string | null
+  cohortLastWeekOf: string | null
+  excluded: ExcludedRange[]
 }
 export interface CompetitorEditorState {
   tenantId: string
@@ -847,7 +909,17 @@ export interface CompetitorEditorState {
   past: EditorPastCompetitor[]
   /** continues: 예전 경쟁사를 다시 넣으면 같은 id로 지난 기록을 잇는가. */
   suggestions: (CompetitorEntry & { source: 'past' | 'cohort' | 'answers'; note: string; continues?: boolean })[]
-  questionBank: { version: string; exists: boolean; measuredVersion: string | null; sharedCount: number; brandCount: number }
+  questionBank: {
+    version: string
+    exists: boolean
+    measuredVersion: string | null
+    sharedCount: number
+    brandCount: number
+    /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처. */
+    derived: { from: string; replaced: number; removed: number } | null
+    /** 「브랜드 질문 모두 새로 쓰기」 — 목록 그대로 질문지만 새로 쓰는 저장(서랍 바닥 줄). */
+    rewriteAll: RewriteAllPlan
+  }
   edit: {
     active: boolean
     stale: boolean
@@ -872,6 +944,59 @@ export interface CompetitorEditPlan {
   errors: string[]
   unchanged: boolean
   measuring: boolean
+  exclusion: ExclusionPreview | null
+  questions: QuestionHandoffPlan
+  /** 「브랜드 질문 모두 새로 쓰기」 — 고르면 저장할 때 버전만 올리고 다음 측정이 새로 쓴다. */
+  rewriteAll: RewriteAllPlan
+  /** 저장한 뒤 함께 재는데 비교 질문이 없는 곳(빠지는 질문 빼고 넘겨받는 질문 더해 · 업종 다름 제외). */
+  noQuestion: string[]
+  /** 「질문지 그대로 두기」로 저장하면 비교 질문이 없는 곳(지금 질문만). */
+  noQuestionKept: string[]
+}
+
+/** 질문 넘겨받기 — server/questionHandoff.ts QuestionPlan과 같은 모양. */
+export interface QuestionHandoffItem {
+  fromId: string
+  toId: string | null
+  action: 'rewrite' | 'remove'
+  source: { text: string; topic?: string; category: string; stage?: 'learn' | 'consider' | 'decide' }
+  swaps: { from: CompetitorEntry; to: CompetitorEntry | null; via: 'hint' | 'promoted' | 'existing' | null }[]
+  keep: CompetitorEntry[]
+  expectedIndexes: number[]
+  topicNeedsRewrite: boolean
+  reason: 'hint' | 'promoted' | 'existing' | 'noReceiver'
+}
+export interface QuestionHandoffPlan {
+  /** derive만 새 질문지를 만든다. same: 그대로 · repo: 저장소 질문지로 돌아감 · fresh: 다음 측정이 새로 만든다. */
+  mode: 'same' | 'derive' | 'repo' | 'fresh'
+  fromVersion: string
+  toVersion: string
+  sizeBefore: number
+  sizeAfter: number
+  items: QuestionHandoffItem[]
+  receivers: { name: string; ids: string[] }[]
+  unreceived: {
+    name: string
+    questionIds: string[]
+    reason: 'noReceiver' | 'receiverHasOwn' | 'otherIndustry'
+    own?: { name: string; questionIds: string[] }
+    /** 「업종 다름」만 아니었으면 받을 수 있던 곳 — 이유가 receiverHasOwn이어도 싣는다. */
+    other?: string[]
+  }[]
+  key: string
+}
+/** 넘겨받기 힌트 — from 자리를 to가 대신했다(이름). */
+export interface HandoffHint {
+  from: string
+  to: string
+}
+/** 고쳐 쓴 비교 질문 — server/competitorRewrite.ts RewriteResult와 같은 모양. */
+export interface QuestionRewriteResult {
+  key: string
+  drafts: { fromId: string; toId: string; text: string; topic?: string; attempts: number }[]
+  failed: { fromId: string; reasons: string[] }[]
+  ms: number
+  engine?: string
 }
 
 /** 경쟁사 편집 서랍의 처음 상태 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
@@ -879,24 +1004,92 @@ export async function loadCompetitorEditor(tenantId: string): Promise<Competitor
   return competitorRequest(tenantId, '', 'GET', undefined, '경쟁사 목록을 불러오지 못했습니다')
 }
 
-async function competitorRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string): Promise<T> {
+async function competitorRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/competitors${sub}`, {
     method,
     ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    ...(signal ? { signal } : {}),
   })
   const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
   if (!res.ok || !json) throw new Error(json?.error || `${failure} (HTTP ${res.status})`)
   return json
 }
 
-/** 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). */
-export function planCompetitorEdit(tenantId: string, competitors: CompetitorEntry[]): Promise<CompetitorEditPlan> {
-  return competitorRequest(tenantId, '/plan', 'POST', { competitors }, '바꾼 목록을 계산하지 못했습니다')
+/**
+ * 바꾼 목록을 미리 계산한다 — 저장하지 않는다. 입력이 잘못되면 throw(서버 메시지). pastOut이 있으면 「지난 기록에서도 빼기」 ·
+ * 「다시 세기」의 주차별 순위도 계산한다(exclusion).
+ */
+export function planCompetitorEdit(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  pastOut?: PastOutInput | null,
+  handoff: HandoffHint[] = [],
+): Promise<CompetitorEditPlan> {
+  return competitorRequest(
+    tenantId,
+    '/plan',
+    'POST',
+    { competitors, ...(pastOut ? { pastOut } : {}), ...(handoff.length ? { handoff } : {}) },
+    '바꾼 목록을 계산하지 못했습니다',
+  )
 }
 
-/** 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. */
-export function saveCompetitorEdit(tenantId: string, competitors: CompetitorEntry[], summary: string): Promise<CompetitorEditorState> {
-  return competitorRequest(tenantId, '', 'PUT', { competitors, summary }, '경쟁사 목록을 저장하지 못했습니다')
+/**
+ * 넘겨받은 비교 질문을 판정 엔진으로 고쳐 쓴다(미리보기 — 저장하지 않는다). key는 미리 계산한 계획의 것이다. fresh면 저장해 둔
+ * 결과를 쓰지 않고 다르게 다시 쓴다. 한 문항에 최대 90초씩 걸릴 수 있어 3분에서 끊는다.
+ */
+export function draftCompetitorQuestions(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  handoff: HandoffHint[],
+  key: string,
+  fresh = false,
+): Promise<QuestionRewriteResult> {
+  return competitorRequest(
+    tenantId,
+    '/questions',
+    'POST',
+    { competitors, key, ...(handoff.length ? { handoff } : {}), ...(fresh ? { fresh } : {}) },
+    '비교 질문을 고쳐 쓰지 못했습니다',
+    AbortSignal.timeout(180_000),
+  )
+}
+
+/**
+ * 저장 — 다음 측정부터 이 목록으로 잰다. 측정 중이면 throw. 지난 기록을 바꾸면 미리 본 결과의 previewKey를 함께 보낸다 — 그사이
+ * 순위가 바뀌었으면 throw(409). 넘겨받은 질문이 있으면 고쳐 쓴 문장(미리 본 그대로)을 questions로 보낸다.
+ */
+export function saveCompetitorEdit(
+  tenantId: string,
+  competitors: CompetitorEntry[],
+  summary: string,
+  past?: { pastOut: PastOutInput; previewKey: string } | null,
+  extra: {
+    handoff?: HandoffHint[]
+    /** mode: derive(기본) · all(브랜드 질문 모두 새로 쓰기) · keep(질문지 그대로 두기). drafts는 derive일 때만. */
+    questions?: { mode?: 'derive' | 'all' | 'keep'; key: string; drafts?: { fromId: string; text: string; topic?: string }[] }
+  } = {},
+): Promise<CompetitorEditorState> {
+  return competitorRequest(
+    tenantId,
+    '',
+    'PUT',
+    { competitors, summary, ...(past ?? {}), ...(extra.handoff?.length ? { handoff: extra.handoff } : {}), ...(extra.questions ? { questions: extra.questions } : {}) },
+    '경쟁사 목록을 저장하지 못했습니다',
+  )
+}
+
+/**
+ * 경쟁사 「업종 다름」 확인 — 추가하거나 새 이름으로 바꿀 때 부른다(데스크톱 전용, 검색이 붙은 판정 1회 · 이미 본 이름이면 바로 답함).
+ * 확인하지 못하면 verdict null · error로 돌아온다. 그라운딩 호출이 30초까지 걸릴 수 있어 45초에서 끊는다.
+ */
+export function checkCompetitorIndustry(tenantId: string, entry: CompetitorEntry): Promise<IndustryResult> {
+  return competitorRequest(tenantId, '/industry', 'POST', entry, '업종을 확인하지 못했습니다', AbortSignal.timeout(45_000))
+}
+
+/** 사람이 정한 업종 — same(「펜션 맞음」) · different(「업종 다름으로 표시」) · null(표시 지우기). 바로 저장된다. */
+export function markCompetitorIndustry(tenantId: string, name: string, mark: 'same' | 'different' | null): Promise<IndustryResult> {
+  return competitorRequest(tenantId, '/industry/mark', 'POST', { name, mark }, '업종 표시를 저장하지 못했습니다')
 }
 
 /** 마지막 저장 되돌리기 — 그 뒤 측정했으면 throw. */

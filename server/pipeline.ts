@@ -32,8 +32,9 @@ import { cohortRankingEntities } from './cohortEntities.js';
 import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
-import type { ResultStore } from './store.js';
-import { loadRuntimeTenants } from './tenantRegistry.js';
+import type { QuestionBank, ResultStore } from './store.js';
+import { baseFingerprint, overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
+import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
 import type {
   CompetitorMentionDetail,
   FactClaimDetail,
@@ -81,12 +82,46 @@ function brandAndCompetitorNames(tenant: TenantConfig): string[] {
   ];
 }
 
+/**
+ * 경쟁사 편집이 고쳐 만든 은행(derivedFrom)과 「모두 새로 쓰기」로 측정이 새로 만든 은행(regeneratedFrom)은 지금 저장소 설정 위에서
+ * 만든 것일 때만 쓴다. 저장소가 나중에 같은 버전 이름을 따로
+ * 쓰면(예: 저장소 v6) 수정본은 낡아 꺼지는데 데스크톱의 v6 파일이 그대로 쓰여, 다른 경쟁사 목록으로 만든 질문을 묻게 된다.
+ *
+ * 수정본을 다시 읽어 견주지 않는다 — 측정이 설정을 읽은 뒤 저장 · 되돌리기가 끝나면, 측정이 읽은 옛 목록 · 옛 질문지는 서로 맞는데도
+ * 수정본만 바뀌어 멈춘다. 은행에 적힌 저장소 지문(derivedFrom.base)은 그 은행을 만든 순간의 값이라 겹친 저장과 상관없다.
+ */
+async function assertDerivedBankInUse(tenant: TenantConfig, store: ResultStore): Promise<void> {
+  const bank = await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion);
+  const origin = bank?.derivedFrom ?? bank?.regeneratedFrom;
+  if (!origin) return;
+  const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId);
+  if (repo && origin.base === baseFingerprint(repo) && repo.questionBankVersion !== tenant.questionBankVersion) return;
+  throw new Error(
+    `${tenant.tenantId} 질문 은행 ${tenant.questionBankVersion}은 앱에서 경쟁사를 바꾸며 만든 질문지인데 저장소 설정이 그 뒤에 바뀌었습니다 — ` +
+      `저장소 설정의 questionBankVersion을 쓰이지 않은 새 값으로 올리세요.`,
+  );
+}
+
+/**
+ * 이 버전이 경쟁사 편집의 「모두 새로 쓰기」로 정한 것이면 그 출처(새로 만드는 은행에 남긴다). 수정본이 지금 저장소 위에서 쓰이고
+ * 그 버전을 가리킬 때만이다 — 저장소가 같은 이름을 쓰는 경우는 표식을 붙이지 않는다(그 은행은 저장소 질문지다).
+ */
+async function regenerateOrigin(tenant: TenantConfig, store: ResultStore): Promise<QuestionBank['regeneratedFrom']> {
+  if (await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion)) return undefined;
+  const [file, repo] = await Promise.all([readCompetitorOverride(tenant.tenantId), loadTenantWithoutCompetitorEdit(tenant.tenantId)]);
+  const current = file?.current ?? null;
+  const qb = current?.questionBank;
+  if (!repo || !overrideApplies(current, repo) || !qb?.regenerate || qb.version !== tenant.questionBankVersion) return undefined;
+  return { version: qb.regenerate.from, by: 'competitor-edit', base: qb.regenerate.base };
+}
+
 /** B1 — 질문 은행은 버전당 1회만 생성하고 이후 주차에는 재사용한다 (버전을 바꾸면 재생성). */
 export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+  await assertDerivedBankInUse(tenant, store);
   // 코호트 공통 질문지를 쓰는 브랜드는 일반 질문을 코호트 은행에서 가져온다. 아래의 60% 하한
   // 보정(enforceAgnosticQuota)은 거치지 않는다 — 브랜드 전용 질문을 일반 질문으로 승격하면
   // 코호트가 공유하지 않는 일반 질문이 섞인다.
-  if (tenant.cohortQuestionBank) return ensureComposedQuestionBank(tenant, store);
+  if (tenant.cohortQuestionBank) return ensureComposedQuestionBank(tenant, store, await regenerateOrigin(tenant, store));
 
   const quota = agnosticQuota(tenant.questionBankSize);
   const names = brandAndCompetitorNames(tenant);
@@ -544,7 +579,12 @@ export function aggregateScorecard(
     rankedResponses: m.rankedResponses,
     factualityScore: m.factualityScore,
     brandOwnedCitationRate: m.brandOwnedCitationRate,
-    cohortRank: computeCohortRank(m.score, cohortScorecards),
+    // 자기 순위는 「다른 카드 + 이번 점수」로 센다. 코호트 제외 목록(「지난 기록에서도 빼기」)에 든 경쟁사를 따로 재면 자기 카드가
+    // 거른 목록에서 빠져 분모에 자기가 없고, 측정 끝의 다시 세기도 뺀 카드는 건너뛰어 그대로 남는다.
+    cohortRank: computeCohortRank(m.score, [
+      ...cohortScorecards.filter((c) => c.tenantId !== tenant.tenantId),
+      { tenantId: tenant.tenantId, aeoScore: { current: m.score } } as WeeklyScorecard,
+    ]),
     hallucinationFlags: m.hallucinationFlags,
     enginesUsed: m.enginesUsed,
     // 판단 엔진·질문 은행 버전은 지표 집계(aggregate.ts)가 아니라 여기서 붙인다 — 재계산

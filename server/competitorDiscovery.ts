@@ -68,7 +68,7 @@ const GENERIC_PREFIX = new Set([
   '유명한', '추천하는', '선호', '인기', '신규', '기존',
 ]);
 
-function suffixesFor(industry: string): { suffixes: string[]; source: DiscoveryResult['suffixSource'] } {
+export function suffixesFor(industry: string): { suffixes: string[]; source: DiscoveryResult['suffixSource'] } {
   const key = (industry ?? '').trim();
   if (SUFFIXES_BY_INDUSTRY[key]) return { suffixes: SUFFIXES_BY_INDUSTRY[key]!, source: 'catalog' };
   // 한글 업종이면 그 자체를 접미사로 시험해 본다(등록 업종이 늘어도 코드를 고치지 않게).

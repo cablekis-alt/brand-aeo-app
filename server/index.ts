@@ -17,7 +17,19 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
-import { buildEditorState, EditorError, planEdit, resetEdit, saveEdit, undoEdit } from './competitorEditor.js';
+import {
+  buildEditorState,
+  checkEditorIndustry,
+  EditorError,
+  markEditorIndustry,
+  planEdit,
+  questionRewriteContext,
+  resetEdit,
+  saveEdit,
+  undoEdit,
+} from './competitorEditor.js';
+import { draftCompetitorRewrites } from './competitorRewrite.js';
+import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
 import { generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills } from './contentDraft.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
@@ -35,7 +47,7 @@ import { discoverBrands } from './competitorDiscovery.js';
 import { normalizeEngineList, writeTenantEngines } from './tenantEnginesStore.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { findFactsForGaps } from './factForGaps.js';
-import { configuredModels, getJudgeClient, getWriterClient } from './engines/index.js';
+import { configuredModels, getCheckEngineClient, getJudgeClient, getWriterClient, usedJudgeEngineId } from './engines/index.js';
 import { cancelMeasureRun, canTriggerRemoteMeasure, listMeasureRuns, triggerGithubDelete } from './githubMeasure.js';
 import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './measureRequests.js';
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
@@ -327,12 +339,26 @@ app.get('/api/question-bank/:tenantId', async (req, res) => {
   const history = await scorecardsFor(tenant.tenantId);
   // 설정의 새 버전 은행은 다음 측정이 만든다. 그 전에는 마지막으로 잰 은행을 보여 주고 다음 버전을 알린다
   // — 예시 은행(12문항)으로 떨어지면 실제 질문 목록인 것처럼 보인다(v0.2.63에서 전 브랜드 v4 전환 직후).
+  // 경쟁사 편집이 고쳐 만든 은행(derivedFrom)도 재기 전까지는 같다 — 지난 주 판정을 아직 묻지 않은 질문과 맞추지 않게.
   // 버전을 지정한 요청은 그 버전만 본다.
-  if (!bank && !requested) {
+  if ((!bank || bank.derivedFrom) && !requested) {
     const measured = history.at(-1)?.questionBankVersion;
     const last = measured && measured !== version ? await store.getQuestionBank(tenant.tenantId, measured) : null;
     if (last) {
-      res.json({ ...last, upcomingVersion: version });
+      // 마지막으로 잰 은행과 견줘 센다 — 재기 전에 두 번 고쳐 저장하면(v5 → v6 → v7) 마지막 단계만으로는 모자란다.
+      // 고친 질문은 새 id를 달고(v7-004) 원래 질문 하나를 대신하므로, 남은 원래 질문 수에서 고친 수를 빼면 뺀 수다.
+      const lastIds = new Set(last.questions.map((q) => q.questionId));
+      const kept = bank ? bank.questions.filter((q) => lastIds.has(q.questionId)).length : 0;
+      const replaced = bank ? bank.questions.length - kept : 0;
+      // 「브랜드 질문 모두 새로 쓰기」로 올린 버전이면(경쟁사 편집, 아직 은행 없음) 새로 쓸 브랜드 질문 수를 알린다.
+      const qb = !bank ? (await readCompetitorOverride(tenant.tenantId))?.current?.questionBank : undefined;
+      const regenerate = qb?.regenerate && qb.version === version ? { brandCount: Math.max(0, qb.size - last.questions.filter((q) => q.cohortShared).length) } : null;
+      res.json({
+        ...last,
+        upcomingVersion: version,
+        ...(bank?.derivedFrom ? { upcomingDerived: { replaced, removed: Math.max(0, last.questions.length - kept - replaced) } } : {}),
+        ...(regenerate ? { upcomingRegenerate: regenerate } : {}),
+      });
       return;
     }
   }
@@ -1002,7 +1028,8 @@ function sendEditorError(res: import('express').Response, err: unknown): void {
   res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
 }
 
-// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사와 그 비교 질문, 저장을 막는 문제. 쓰지 않는다.
+// 바꾼 경쟁사 목록 미리 계산 — 함께 측정·대기, 빠지는 경쟁사의 질문을 누가 넘겨받는지(handoff: 바꿈 · 측정에 넣기 힌트),
+// 저장을 막는 문제, 「지난 기록에서도 빼기」의 주차별 순위(pastOut). 쓰지 않는다.
 app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
   try {
     const runtime = await loadRuntimeTenants();
@@ -1011,7 +1038,45 @@ app.post('/api/tenants/:tenantId/competitors/plan', async (req, res) => {
       res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
       return;
     }
-    res.json(await planEdit(tenant, runtime, store, (req.body as { competitors?: unknown } | undefined)?.competitors));
+    const body = (req.body ?? {}) as { competitors?: unknown; pastOut?: unknown; handoff?: unknown };
+    res.json(await planEdit(tenant, runtime, store, body.competitors, body.pastOut, body.handoff));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 경쟁사 「업종 다름」 확인 — 경쟁사를 추가하거나 새 이름으로 바꿀 때 서랍이 부른다(검색이 붙은 Gemini 1회, 이미 본 이름이면 다시
+// 묻지 않음). 확인하지 못하면 verdict null · error로 답한다(칩 없음). Express 전용이다(Vercel 리전에서는 한국 지역 업체 판단이 틀린다).
+app.post('/api/tenants/:tenantId/competitors/industry', async (req, res) => {
+  try {
+    res.json(await checkEditorIndustry(req.params.tenantId, req.body, () => getCheckEngineClient('gemini')));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 사람이 정한 업종(「펜션 맞음」 · 「업종 다름으로 표시」 · 표시 지우기) — 바로 쓴다(목록 저장과 따로).
+app.post('/api/tenants/:tenantId/competitors/industry/mark', async (req, res) => {
+  try {
+    res.json(await markEditorIndustry(req.params.tenantId, req.body));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 넘겨받은 비교 질문 고쳐 쓰기(미리보기) — 판정 엔진을 부른다. 쓰지 않는다(저장은 PUT이 이 문장을 받아 다시 검사한다).
+// 계획(key)이 미리 본 것과 다르거나 측정 중이면 409, 판정 엔진 키가 없으면 503.
+app.post('/api/tenants/:tenantId/competitors/questions', async (req, res) => {
+  try {
+    const ctx = await questionRewriteContext(req.params.tenantId, store, req.body);
+    let judge;
+    try {
+      judge = getJudgeClient();
+    } catch (err) {
+      throw new EditorError(503, `판정 엔진 키가 없어요 — ${err instanceof Error ? err.message : String(err)}`);
+    }
+    const fresh = (req.body as { fresh?: unknown } | undefined)?.fresh === true;
+    res.json({ ...(await draftCompetitorRewrites(ctx, judge, { fresh })), engine: usedJudgeEngineId() });
   } catch (err) {
     sendEditorError(res, err);
   }

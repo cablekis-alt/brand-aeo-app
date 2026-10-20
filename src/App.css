@@ -6129,6 +6129,10 @@ td.cell-mid {
   background: var(--warn-soft);
   color: var(--warn);
 }
+.ce-alert.bad {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
 .ce-body {
   flex: 1;
   overflow-y: auto;
@@ -6602,6 +6606,253 @@ td.cell-mid {
   margin: 0;
   font-size: 12px;
   color: var(--bad);
+}
+
+/* 경쟁사 편집 3단계 — 「지난 기록에서도 빼기」 체크, 지난 순위 미리보기, 확인 창. */
+.ce-pastbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.ce-pastbox-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  cursor: pointer;
+}
+.ce-pastbox-opt input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.ce-pastbox-note,
+.ce-pastbox-lock {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ce-pastbox-lock {
+  color: var(--warn);
+}
+.ce-row.struck .ce-pastbox,
+.ce-row.struck .ce-pastbox * {
+  text-decoration: none;
+}
+.ce-past li {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ce-past-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.ce-past li .chip {
+  background: var(--card);
+  color: var(--ink-2);
+}
+.ce-past-meta {
+  color: var(--muted);
+}
+.ce-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ce-preview-head {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.ce-preview-head span {
+  font-weight: 500;
+  color: var(--muted);
+}
+.ce-preview ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 2px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.ce-preview-week {
+  display: inline-block;
+  min-width: 34px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+.ce-preview b {
+  color: var(--ink);
+}
+.ce-preview-none,
+.ce-preview-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 경쟁사 편집 4단계 — 질문 넘겨받기: 질문지 줄과 고쳐 쓴 질문 미리보기. */
+.ce-qplan {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ce-qplan-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ce-qplan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ce-qplan-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+}
+.ce-qplan-head {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.ce-qplan-old {
+  color: var(--muted);
+}
+.ce-qplan-item:not(.removed) .ce-qplan-old {
+  text-decoration: line-through;
+  text-decoration-color: var(--line);
+}
+.ce-qplan-item.removed .ce-qplan-old {
+  text-decoration: line-through;
+}
+.ce-qplan-new {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ce-qplan-topic,
+.ce-qplan-wait,
+.ce-qplan-note {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* 경쟁사 편집 5단계 — 질문지 방식 「다른 방법」 · 「업종 다름」. */
+.ce-qmode-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.ce-qmode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ce-qmode-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ce-qmode-opt input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.ce-qmode-opt.off {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.ce-qmode-opt > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ce-qmode-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.ce-qmode-sub.warn,
+.ce-q.warn,
+.ce-industry-note {
+  color: var(--warn);
+}
+.ce-qmode-version {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.ce-industry-note {
+  grid-column: 2 / -1;
+  font-size: 11.5px;
+}
+.ce-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 14 12 / 0.5);
+}
+.ce-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(460px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 18px 20px;
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: 0 18px 48px -12px rgb(17 28 24 / 0.45);
+}
+.ce-dialog h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.ce-dialog p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.ce-dialog .ce-dialog-note {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 /* 등록이 이미 있는 tenantId와 부딪혔을 때(BrandOnboarding.tsx ConflictPanel) — 고객 브랜드로 전환. */
