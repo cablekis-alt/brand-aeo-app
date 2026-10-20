@@ -162,6 +162,9 @@ export default function CompetitorEditor({
   // 저장하지 못함(다음 편집에서 지운다) · reload: 표시는 저장했는데 서랍 상태를 다시 받지 못함(줄의 표시가 낡았다 — 다시 받을 때까지 둔다).
   const [industryError, setIndustryError] = useState<{ kind: 'mark' | 'reload'; text: string } | null>(null)
   const clearMarkError = () => setIndustryError((e) => (e?.kind === 'mark' ? null : e))
+  const clearReloadError = () => setIndustryError((e) => (e?.kind === 'reload' ? null : e))
+  // 업종 표시 뒤 다시 불러오기 차례 — 늦게 끝난 앞 요청이 뒤 요청의 결과를 덮지 않게 마지막 것만 쓴다.
+  const markSeq = useRef(0)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
@@ -358,13 +361,16 @@ export default function CompetitorEditor({
         // 표시는 저장됐다 — 계획을 다시 받고(받는 곳이 바뀐다), 줄의 표시는 서랍 상태를 다시 불러 맞춘다.
         setIndustryChecks((m) => ({ ...m, [squash(name).toLowerCase()]: { status: 'done', result } }))
         setReplan((n) => n + 1)
+        const seq = ++markSeq.current
         loadCompetitorEditor(tenantId).then(
           (value) => {
+            if (seq !== markSeq.current) return
             setLoad({ status: 'ok', value })
-            setIndustryError(null)
+            clearReloadError()
           },
           (err: unknown) => {
             console.error('[CompetitorEditor] 업종 표시 뒤 경쟁사 목록을 다시 불러오지 못했습니다', err)
+            if (seq !== markSeq.current) return
             setIndustryError({
               kind: 'reload',
               text: `${name} 업종 표시는 저장했지만 목록을 다시 불러오지 못했어요 — 줄의 업종 표시가 맞지 않을 수 있어요. 서랍을 다시 열어 주세요(${err instanceof Error ? err.message : String(err)})`,
@@ -519,7 +525,7 @@ export default function CompetitorEditor({
     task().then(
       (value) => {
         setLoad({ status: 'ok', value })
-        setIndustryError(null)
+        clearReloadError()
         clearEdits()
         setOpen(null)
         // 저장 전 미리보기는 버린다 — 같은 입력을 다시 고르면 새로 계산한다.

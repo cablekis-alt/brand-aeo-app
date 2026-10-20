@@ -233,6 +233,26 @@ try {
   ok('F: 저장소가 버전을 올려 수정본이 낡으면 대기 아님', (await fresh(F.tenantId)).questionBankVersion === 'v8' && (await ed.pendingCompetitorEdit(await fresh(F.tenantId))) === null)
   writeJson('tenants.overlay.json', [A, B, C, D, E, F])
   ok('F: 저장소가 그대로면 다시 대기', (await ed.pendingCompetitorEdit(await fresh(F.tenantId)))?.summary === 'F v6→v7')
+
+  // 14) 실제 측정(measureAndBake)이 시작할 때의 저장소 지문을 적는다 — 측정 중에 저장소가 버전을 올려도 대기로 보이지 않는다
+  const { measureAndBake } = await import('../server/measureAndBake')
+  const G = { ...B, tenantId: 'fake-all-g', ownedDomains: ['fake-g.example'] }
+  writeJson('tenants.overlay.json', [A, B, C, D, E, F, G])
+  writeJson(`data/${G.tenantId}/question-bank/v5.json`, bankOf('가상구', [q('v5-001', '가상머뭄이랑 가상골목 중에 어디가 더 나아?', '가상구')]))
+  await measureAndBake(await fresh(G.tenantId), store)
+  await ed.saveEdit(G.tenantId, store, { competitors: G.competitors, summary: 'G all', questions: { mode: 'all', key: (await planOf(G.tenantId, G.competitors)).rewriteAll.key } })
+  await measureAndBake(await fresh(G.tenantId), store)
+  const mg = readJson(`data/${G.tenantId}/competitors.json`).measured
+  ok('측정 기록: v6 · 저장소 지문', mg.bankVersion === 'v6' && mg.repoBase === (await repoBaseOf(G.tenantId)) && (await ed.pendingCompetitorEdit(await fresh(G.tenantId))) === null)
+  await ed.saveEdit(G.tenantId, store, { competitors: G.competitors, summary: 'G all again', questions: { mode: 'all', key: (await planOf(G.tenantId, G.competitors)).rewriteAll.key } })
+  const saveScorecard = store.saveScorecard.bind(store)
+  store.saveScorecard = async (...args: Parameters<typeof saveScorecard>) => {
+    writeJson('tenants.overlay.json', [A, B, C, D, E, F, { ...G, questionBankVersion: 'v9' }])
+    return saveScorecard(...args)
+  }
+  await measureAndBake(await fresh(G.tenantId), store)
+  store.saveScorecard = saveScorecard
+  ok('측정 중에 저장소가 버전을 올리면(v9) 대기 아님', (await fresh(G.tenantId)).questionBankVersion === 'v9' && (await ed.pendingCompetitorEdit(await fresh(G.tenantId))) === null)
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

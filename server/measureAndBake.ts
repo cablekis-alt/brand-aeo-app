@@ -259,6 +259,17 @@ export async function measureAndBake(
   }
 }
 
+/** 저장소 설정 지문(경쟁사 편집 수정본을 뺀 설정) — 읽지 못하면 없이 기록한다(질문지 차이로는 「다음 측정 대기」를 세지 않는다). */
+async function repoFingerprint(tenantId: string): Promise<string | undefined> {
+  try {
+    const repo = await loadTenantWithoutCompetitorEdit(tenantId);
+    return repo ? baseFingerprint(repo) : undefined;
+  } catch (err) {
+    console.warn(`[measureAndBake] 저장소 설정을 읽지 못해 지문 없이 기록합니다 ${tenantId}: ${err instanceof Error ? err.message : err}`);
+    return undefined;
+  }
+}
+
 async function measureAndBakeRun(
   tenant: TenantConfig,
   store: FileResultStore,
@@ -269,6 +280,8 @@ async function measureAndBakeRun(
   let reusedTargets: TenantConfig[] = [];
   // 자기 코호트와 함께 재는 본 측정이면, 끝난 뒤 어느 경쟁사 목록으로 쟀는지 적는다(경쟁사 편집의 「다음 측정 대기」).
   const startedAt = new Date().toISOString();
+  // 시작할 때의 저장소 설정 지문 — 기록하는 목록 · 질문지 버전과 같은 때의 값이어야 한다(측정 중에 설정이 바뀌어도 어긋나지 않게).
+  const repoBase = tenant.cohortOnly ? undefined : await repoFingerprint(tenant.tenantId);
   let ownCohortList: TenantConfig['competitors'] | null = null;
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
@@ -430,11 +443,7 @@ async function measureAndBakeRun(
   const { aeoScore } = self.value;
   if (ownCohortList) {
     // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
-    const repo = await loadTenantWithoutCompetitorEdit(tenant.tenantId).catch((err: unknown) => {
-      console.warn(`[measureAndBake] 저장소 설정을 읽지 못해 지문 없이 기록합니다 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
-      return undefined;
-    });
-    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion, repo ? baseFingerprint(repo) : undefined).catch((err: unknown) => {
+    await recordCompetitorMeasurement(tenant.tenantId, ownCohortList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
     });
   }
