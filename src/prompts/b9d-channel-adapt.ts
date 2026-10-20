@@ -11,12 +11,14 @@ import type { FactGraphNode, PromptMessage, QuestionLanguage } from './types';
  * 하지 않는 것: 고객 후기·체험담처럼 쓰기(가짜 후기), 원문에 없는 인용문·수치·순위 만들기.
  */
 
-export type ChannelStyle = 'blog' | 'wiki' | 'community' | 'listing' | 'press' | 'social';
+export type ChannelStyle = 'blog' | 'wiki' | 'community' | 'listing' | 'listing-update' | 'press' | 'social';
 
 /** 실행 항목 배지(lib/gapActions LISTING_PLAY)에서 문체를 정한다. 모르는 배지는 블로그 문체로 둔다. */
 export function channelStyleOf(badge: string): ChannelStyle {
   if (badge.includes('위키')) return 'wiki';
   if (badge.includes('커뮤니티')) return 'community';
+  // 이미 등록된 후기·예약 플랫폼(lib/gapActions LISTED_REVIEW_PLAY) — 새 등록이 아니라 우리 업체 페이지의 소개 보강. 「후기」보다 먼저 본다.
+  if (badge.includes('등록됨')) return 'listing-update';
   if (badge.includes('후기') || badge.includes('예약')) return 'listing';
   if (badge.includes('언론')) return 'press';
   if (badge.includes('소셜')) return 'social';
@@ -29,6 +31,7 @@ export const STYLE_LABEL: Record<ChannelStyle, string> = {
   wiki: '중립 서술 · 홍보 문구 없음',
   community: '정보 공유 글 · 300~500자',
   listing: '등록 정보 · 소개와 항목',
+  'listing-update': '업체 소개 보강 · 위치 문구 · 사진 설명',
   press: '보도자료 형식',
   social: '짧은 게시글 · 해시태그 3개 이하',
 };
@@ -42,6 +45,10 @@ const STYLE_RULE: Record<ChannelStyle, string> = {
 정리해도 된다. 고객 후기·체험담처럼 쓰지 않는다("제가 받아 봤는데" 금지) — 업체가 쓴 정보 글임을 감추지 않는다.`,
   listing: `후기·예약 플랫폼에 등록할 업체 정보로 고친다. 형식: 첫 줄에 한 문장 소개, 이어서 "## 소개"(2~3문장),
 "## 진료·서비스"(목록), "## 이용 안내"(원문에 있는 위치·연락·운영 정보만, 없으면 이 절을 뺀다).`,
+  'listing-update': `이미 그 플랫폼에 등록된 우리 업체 페이지의 소개 칸을 보강할 문구로 고친다. 새로 등록하는 글이 아니다.
+형식: 첫 줄에 위치를 담은 한 문장(원문에 있는 주소·주변 장소·거리만). 이어서 "## 소개"(2~3문장, 원문이 답하는 질문의 말 —
+지역·주변 명소·업체 유형 — 을 그대로 쓴다), "## 시설 · 이용"(목록, 원문에 있는 것만), "## 사진 설명"(원문에 있는 장소·시설을
+사진 아래 한 줄씩 2~3개, 사진은 사람이 고른다). 후기·평점·예약 유도 문구는 쓰지 않는다.`,
   press: `보도자료 형식으로 고친다. 제목, 첫 문단에 핵심(누가·무엇을), 이어서 본문 2~3문단. 인용문("~라고 말했다")을
 만들지 않는다 — 원문에 없는 말을 누군가의 말로 지어내는 것이 된다.`,
   social: `소셜 게시글로 고친다. 3~5문장, 첫 문장에 핵심. 해시태그는 3개 이하로 끝에 둔다. 이모지는 쓰지 않는다.`,

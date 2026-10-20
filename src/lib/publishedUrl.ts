@@ -232,9 +232,11 @@ export function indexWeekCitations(analyses: AnalysisLike[], namedById: Map<stri
       }
       const named = namedById?.get(a.questionId)
       const buckets = [row.all, named === undefined ? row.unknown : named ? row.named! : row.unnamed!]
+      // 이름 없는 질문의 「뒷받침」은 그 답에 우리 이름이 나왔을 때만 센다 — 실행 항목 카드 · 인용 출처 집계와 같은 기준(맘맘 오분류).
+      const supports = hit.supporting && (a.mentioned || named !== false)
       for (const t of buckets) {
         t.cited += 1
-        if (hit.supporting) t.supporting += 1
+        if (supports) t.supporting += 1
         if (a.mentioned) t.mentioned += 1
       }
       if (row.forms.length < 3 && !row.forms.includes(hit.raw)) row.forms.push(hit.raw)

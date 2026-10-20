@@ -58,6 +58,11 @@ try {
   ok('블로그 글 형식 + 블로그 — 구조 · 사진 자리 · 링크 · 90~100%', articleBlog.system.includes('사진 자리 줄') && articleBlog.system.includes('원문의 90~100%') && articleBlog.system.includes('새 링크를 만들지 않는다'))
   ok('옛 형식 블로그는 옛 규칙 그대로', oldBlog.system.includes('길이는 원문과 비슷하거나 조금 짧게') && !oldBlog.system.includes('사진 자리 줄'))
   ok('블로그가 아닌 채널은 형식과 무관', articleWiki.system === buildChannelAdaptPrompt({ ...base, style: 'wiki' }).system)
+  // 이미 등록된 후기·예약 플랫폼 — 새 등록 글이 아니라 우리 업체 페이지의 소개 보강. 업종에 묶인 말(진료)을 넣지 않는다.
+  const { channelStyleOf } = await import('../src/prompts/b9d-channel-adapt')
+  ok('배지 「등록됨」은 소개 보강 문체, 그냥 후기·예약은 등록 문체', channelStyleOf('후기·예약 플랫폼 · 등록됨') === 'listing-update' && channelStyleOf('후기·예약 플랫폼') === 'listing')
+  const update = buildChannelAdaptPrompt({ ...base, style: 'listing-update' })
+  ok('소개 보강 규칙 — 새로 등록하는 글이 아니고 「진료」가 없다', update.system.includes('새로 등록하는 글이 아니다') && !update.system.includes('진료'))
 
   // 2) 사진 자리 · 링크 거르기
   const body = [

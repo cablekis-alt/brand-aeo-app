@@ -16,7 +16,8 @@ import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types
  *
  * 두 종류만 낸다. 데이터가 그 둘만 뒷받침하기 때문이다.
  *
- *   listing  AI가 답을 찾으러 가는 **외부 도메인인데 우리가 없는** 곳 → 등재·기고.
+ *   listing  AI가 답을 찾으러 가는 **외부 도메인인데 우리가 없는** 곳 → 등재·기고. 후기·예약 플랫폼에 이미 등록돼 있으면
+ *            새 등록이 아니라 소개 보강(GapAction.listed).
  *            출처: B7 인용 URL. 실측(k-wonjin 2026-W37): 인용 49건 / 도메인 33개 중
  *            우리 것은 k-wonjin.co.kr 하나뿐이고 나머지는 커뮤니티·블로그였다.
  *   content  **밀린 질문 유형** → 그 주제를 다루는 우리 콘텐츠가 없다는 뜻이다.
@@ -24,7 +25,7 @@ import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types
  *
  * ── 완료를 저장하지 않는 이유 ────────────────────────────────────────────────
  * 완료는 사람이 체크하는 값이 아니라 **데이터에서 읽는 값**이다. 등재가 실제로 되면
- * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다 — 브랜드 이름 없는 질문에서(unnamedCitationsByHost).
+ * 그 도메인의 인용이 우리 언급을 뒷받침하기 시작한다 — 브랜드 이름 없는 질문에서, 그 답에 우리 이름이 나왔을 때(unnamedCitationsByHost).
  * 그래서 satisfied는 매번 계산한다. 사람이 적어 넣은 '완료'와 실제 노출이 어긋나는
  * 상태를 아예 만들지 않는다.
  *
@@ -120,6 +121,13 @@ export interface GapAction {
    * 화면이 "아직 못 찾았다"와 "이름을 댄 질문에서는 찾았다"를 가를 때 쓴다. known이 false면 이름 없는 질문인지 몰랐다.
    */
   support?: { all: number; unnamed: number; known: boolean }
+  /**
+   * 후기·예약 플랫폼인데 우리가 이미 등록된 곳 — 우리를 말한 답이 이 사이트 페이지를 우리 근거로 인용했다(listedEvidenceByHost).
+   * 할 일이 새 등록이 아니라 그 업체 페이지의 소개 보강이라 제목 · 배지 · 버튼 · 다듬기 문체가 달라진다.
+   */
+  listed?: boolean
+  /** listed일 때 가장 많이 인용된 그 사이트의 우리 근거 페이지(질의 · # 뗀 주소) — 「우리 업체 페이지 열기」가 연다. */
+  listedPage?: string
 }
 
 export interface GapActionPlan {
@@ -195,6 +203,11 @@ const LISTING_PLAY: Record<string, { verb: string; badge: string }> = {
   blog: { verb: '블로그 발행', badge: '블로그 플랫폼' },
 }
 const LISTABLE_KINDS = new Set(Object.keys(LISTING_PLAY))
+/**
+ * 후기·예약 플랫폼인데 이미 등록된 곳(GapAction.listed). 배지에 「후기」를 남긴다 — 다듬기 문체(channelStyleOf)가 그 글자를 본다.
+ * 「등록됨」은 그 문체를 소개 보강용으로 가른다(실측: web4ai W42 yeogi.com · nol.yanolja.com에 「등재」가 떴지만 이미 등록돼 있었다).
+ */
+const LISTED_REVIEW_PLAY = { verb: '소개 보강', badge: '후기·예약 플랫폼 · 등록됨' }
 
 /**
  * 도메인 표기를 맞춘다.
@@ -243,10 +256,70 @@ function questionsByDomain(analyses: QuestionRepeatAnalysis[]): Map<string, Set<
 interface UnnamedTally {
   /** 브랜드 이름 없는 질문(containsBrandName=false)에서 받은 인용 수. */
   citations: number
-  /** 그중 우리 언급을 뒷받침한 인용 수. */
+  /** 그중 우리 언급을 뒷받침한 인용 수 — 그 답에 우리 이름이 나온 것만. */
   supporting: number
   /** 이름을 댄 질문에서 우리를 뒷받침한 인용 수 — 「충족」이 아닌 이유를 밝힐 때 쓴다. */
   namedSupporting: number
+  /**
+   * 이름 없는 질문인데 답에 우리 이름이 없는데도 판정이 「뒷받침」이라 한 인용 수 — 세지 않고 따로 둔다. 이름 없는 질문의 답은
+   * 이름을 대야만 우리를 가리킬 수 있어 두 판정이 어긋난 값이다(실측: web4ai W42 「맘맘」 페이지를 「머뭄」으로 착각, 답에 「머뭄」 0회).
+   * 모든 질문 합계(서버 집계)에서도 이만큼 뺀다.
+   */
+  unmentionedSupporting: number
+}
+
+/** 이미 등록된 곳의 근거 — 우리를 말한 답(응답 키)과 그 답이 우리 근거로 인용한 이 사이트 페이지(횟수). */
+interface ListedEvidence {
+  responses: Set<string>
+  pages: Map<string, number>
+}
+
+/**
+ * 업체 한 곳의 페이지(상세 · 프로필)인가 — 후기·예약 플랫폼의 목록 · 검색 · 이벤트 · 사전 · 게시판 · 명소 페이지는 우리가 거기
+ * 등록됐다는 근거가 아니다. 판정이 그런 페이지에도 「뒷받침」을 붙여, 아무 페이지나 세면 등록 안 된 곳이 「소개 보강」이 되고
+ * 「우리 업체 페이지 열기」가 사전 · 이벤트 검색을 열었다(실측: k-wonjin W40 goodoc /dict/73 · gangnamunni /events?q=…,
+ * web4ai W41 airbnb /stays/beachfront). 업체 페이지 주소는 플랫폼마다 모양이 뚜렷해 그 모양만 센다 — 모르는 모양이면 등록됐다고
+ * 보지 않는다(「등재」로 남는 쪽이 「새로 등록하지 마세요」로 잘못 안내하는 쪽보다 덜 해롭다). 실측으로 맞춘 모양: yeogi
+ * /domestic-accommodations/숫자 · nol /stay/domestic/숫자 · mom-mom /properties/… · /hotels/… · /hospital(s)/… · airbnb /rooms/숫자 ·
+ * agoda …/hotel/도시.html · tripadvisor Hotel_Review- · expedia .Hotel-Information · hotels.com /ho숫자/.
+ */
+const LISTING_PAGE = /(^|\/)(hospitals?|hotels?|stay\/domestic|domestic-accommodations|accommodations|properties|rooms)\/[^/]+|Hotel_Review-|\.Hotel-Information|(^|\/)ho\d+\//i
+/** 후기·예약 카탈로그(server/citationSources.ts REVIEW_HOSTS)에 들어 있지만 업체 등록이 아니라 큐레이션 매거진인 곳. */
+const MAGAZINE_HOSTS = new Set(['telltrip.com', 'pzip.kr'])
+
+function isListingPage(raw: string, host: string): boolean {
+  if (MAGAZINE_HOSTS.has(host) || [...MAGAZINE_HOSTS].some((m) => host.endsWith(`.${m}`))) return false
+  let path: string
+  try {
+    path = decodeURIComponent(new URL(raw).pathname)
+  } catch {
+    return false
+  }
+  return LISTING_PAGE.test(path)
+}
+
+/**
+ * 우리가 이미 그 사이트에 있는가 — 우리 이름이 나온 답이 그 사이트의 **업체 페이지**(isListingPage)를 우리 근거(「뒷받침」)로
+ * 인용했으면 있다고 본다. 질문 유형(이름 댄 · 없는)은 가리지 않는다. 이름을 댄 질문에서 우리 업체 페이지가 인용되는 곳이 바로
+ * 이미 등록된 곳이다(실측: web4ai W42 yeogi.com /domestic-accommodations/90328 · nol.yanolja.com /stay/domestic/10068088).
+ * 언급 없는 답의 「뒷받침」은 세지 않는다(맘맘 오분류).
+ */
+function listedEvidenceByHost(analyses: QuestionRepeatAnalysis[]): Map<string, ListedEvidence> {
+  const byHost = new Map<string, ListedEvidence>()
+  for (const a of analyses) {
+    if (!a.mentioned) continue
+    for (const c of a.citations ?? []) {
+      if (!c.supportsBrandMention) continue
+      const host = normalizeHost(c.raw, c.domain)
+      if (!host || !isListingPage(c.raw, host)) continue
+      const row = byHost.get(host) ?? { responses: new Set<string>(), pages: new Map<string, number>() }
+      row.responses.add(`${a.questionId}|${a.engine}|${a.callIndex}`)
+      const page = c.raw.replace(/[?#].*$/, '')
+      row.pages.set(page, (row.pages.get(page) ?? 0) + 1)
+      byHost.set(host, row)
+    }
+  }
+  return byHost
 }
 
 /**
@@ -273,12 +346,14 @@ function unnamedCitationsByHost(
     for (const c of a.citations ?? []) {
       const host = normalizeHost(c.raw, c.domain)
       if (!host) continue
-      const row = byHost.get(host) ?? { citations: 0, supporting: 0, namedSupporting: 0 }
+      const row = byHost.get(host) ?? { citations: 0, supporting: 0, namedSupporting: 0, unmentionedSupporting: 0 }
       if (isNamed) {
+        // 이름을 댄 질문의 답은 「이 숙소는…」처럼 이름 없이 우리를 가리킬 수 있어 언급 판정으로 거르지 않는다.
         if (c.supportsBrandMention) row.namedSupporting += 1
       } else {
         row.citations += 1
-        if (c.supportsBrandMention) row.supporting += 1
+        if (c.supportsBrandMention && a.mentioned) row.supporting += 1
+        else if (c.supportsBrandMention) row.unmentionedSupporting += 1
       }
       byHost.set(host, row)
     }
@@ -308,6 +383,7 @@ function listingActions(
   domainQuestions: Map<string, Set<string>>,
   rows: WinLossRow[],
   unnamed: { byHost: Map<string, UnnamedTally>; known: boolean },
+  listedByHost: Map<string, ListedEvidence> = new Map(),
 ): {
   actions: GapAction[]
   competitorDomainCount: number
@@ -398,23 +474,41 @@ function listingActions(
       // 그대로 보여 주고 자동 충족은 켜지 않는다(콘텐츠형과 같은 모양).
       const isPlatform = Boolean(r.platform)
       // 「충족」은 브랜드 이름 없는 질문의 인용으로만 본다(unnamedCitationsByHost). 은행을 읽지 못해 나눌 수 없으면 켜지 않는다.
-      const u = { citations: 0, supporting: 0, namedSupporting: 0 }
+      const u = { citations: 0, supporting: 0, namedSupporting: 0, unmentionedSupporting: 0 }
       for (const h of r.hosts) {
         const t = unnamed.byHost.get(h)
         if (!t) continue
         u.citations += t.citations
         u.supporting += t.supporting
         u.namedSupporting += t.namedSupporting
+        u.unmentionedSupporting += t.unmentionedSupporting
       }
+      // 모든 질문 합계(서버 집계)에서 언급 없는 답의 「뒷받침」을 뺀다. 묶음 단위 합계와 호스트 단위 합계라 음수가 되지 않게 막는다.
+      const supportingAll = Math.max(0, r.supporting - u.unmentionedSupporting)
       // 이름 없는 질문에서는 아예 인용되지 않는 곳(이름을 댄 질문에서만 꺼낸다)은 이름 없는 질문 기준의 갭이 아니다 — 거기 다시
       // 등재해도 이름 없는 질문의 답은 달라지지 않는다. 그런 곳은 예전처럼 어느 질문에서든 뒷받침하면 「충족」으로 둔다. 안 그러면
       // 이미 실린 곳이 끝낼 수 없는 할 일로 남는다(실측: banobagi W40 reddit.com — 10회 인용 전부 이름을 댄 질문, 그중 4회 뒷받침).
       const namedOnly = unnamed.known && u.citations === 0
-      const satisfied = !isPlatform && unnamed.known && (namedOnly ? r.supporting > 0 : u.supporting > 0)
+      const satisfied = !isPlatform && unnamed.known && (namedOnly ? supportingAll > 0 : u.supporting > 0)
       const engines = [...r.engines].join('·')
+      // 후기·예약 플랫폼에 이미 등록돼 있으면 할 일은 새 등록이 아니라 소개 보강이다.
+      const listedPages = new Map<string, number>()
+      let listedResponses = 0
+      if (r.kind === 'review' && !r.platform) {
+        for (const h of r.hosts) {
+          const e = listedByHost.get(h)
+          if (!e) continue
+          listedResponses += e.responses.size
+          for (const [p, n] of e.pages) listedPages.set(p, (listedPages.get(p) ?? 0) + n)
+        }
+      }
+      const listed = listedResponses > 0
+      const listedPage = listed ? [...listedPages.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] : undefined
       const play = r.platform
         ? { verb: r.platform.verb, badge: '블로그 플랫폼' }
-        : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
+        : listed
+          ? LISTED_REVIEW_PLAY
+          : (LISTING_PLAY[r.kind] ?? { verb: '등재', badge: '외부 출처' })
       const isNewsGroup = r.domain === NEWS_GROUP_KEY
       // 몇 곳을 묶었는지 이름에 담는다 — "언론 기고"만 있으면 어느 매체인지 알 수 없다.
       const name = isNewsGroup
@@ -448,19 +542,19 @@ function listingActions(
       const progress =
         unnamed.known && !namedOnly
           ? { supporting: u.supporting, total: u.citations, unnamed: true }
-          : { supporting: r.supporting, total: r.citationCount, unnamed: false }
+          : { supporting: supportingAll, total: r.citationCount, unnamed: false }
       const share = progress.total > 0 ? Math.round((progress.supporting / progress.total) * 100) : 0
       const platformEvidence =
         `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) ` +
         (progress.unnamed
           ? `브랜드 이름 없는 질문에서 받은 인용 ${u.citations}회 중 우리를 뒷받침하는 대목은 ${u.supporting}회(${share}%)입니다.`
-          : `그중 우리를 뒷받침하는 대목은 ${r.supporting}회(${share}%)입니다 — ` +
+          : `그중 우리를 뒷받침하는 대목은 ${supportingAll}회(${share}%)입니다 — ` +
             `${namedOnly ? '브랜드 이름 없는 질문에서는 인용되지 않았습니다' : '질문 은행을 읽지 못해 질문 유형으로 나누지 못했습니다'}.`) +
         ` 글쓴이 ${r.hosts.size}곳이 인용됐습니다.` +
         (r.platform ? ` ${r.platform.note}` : '')
       // 「충족」이 아닌 이유 — 뒷받침이 이름을 댄 질문에서만 나왔으면 그렇게 말한다. "0건"이라고 하면 사실과 다르다.
       const unmetEvidence =
-        r.supporting === 0
+        supportingAll === 0
           ? `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했지만(${engines}) 우리를 뒷받침하는 대목은 0건입니다.` +
             (namedOnly ? ' 브랜드 이름을 댄 질문에서만 인용되는 곳입니다.' : '')
           : unnamed.known
@@ -468,7 +562,7 @@ function listingActions(
               (u.namedSupporting > 0
                 ? ` 이름을 댄 질문에서만 ${u.namedSupporting}회 뒷받침해, 이름을 모르는 사람에게는 아직 보이지 않습니다.`
                 : '')
-            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 우리를 뒷받침하는 대목도 ${r.supporting}회 있지만, ` +
+            : `AI가 ${objectParticle(name)} ${r.citationCount}회 인용했고(${engines}) 우리를 뒷받침하는 대목도 ${supportingAll}회 있지만, ` +
               `질문 은행을 읽지 못해 브랜드 이름 없는 질문에서였는지 확인하지 못했습니다.`
 
       return {
@@ -480,10 +574,14 @@ function listingActions(
           ? platformEvidence + citedNote
           : satisfied
             ? (namedOnly
-                ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${r.supporting}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
+                ? `${subjectParticle(name)} 이름을 댄 질문에서 우리 언급을 ${supportingAll}회 뒷받침합니다 — 이미 실려 있습니다. 브랜드 이름 없는 질문에서는 인용되지 않는 곳입니다.`
                 : `${subjectParticle(name)} 브랜드 이름 없는 질문에서 우리 언급을 ${u.supporting}회 뒷받침합니다 — 이미 실려 있습니다.`) +
               (r.hosts.size > 1 ? ` (${r.hosts.size}개 주소 합산)` : '')
-            : unmetEvidence +
+            : (listed
+                ? '이미 등록된 곳입니다 — 우리를 말한 답이 이 사이트의 우리 페이지를 인용했습니다. 새로 등록할 곳이 아니라, 그 페이지가 ' +
+                  '이름 없는 질문의 말(지역 · 주변 명소 · 시설)에도 걸리게 소개를 보강할 곳입니다. '
+                : '') +
+              unmetEvidence +
               // 묶음은 어느 매체인지 밝혀야 한다 — "언론 5곳"만으로는 무엇을 해야 할지 알 수 없다.
               (isNewsGroup ? ` 인용된 매체: ${[...r.hosts].sort().join(' · ')}. 보도자료 한 건으로 함께 노립니다.` : '') +
               citedNote,
@@ -498,7 +596,8 @@ function listingActions(
         publishedUrls: [],
         citedPublishedUrls: [],
         ...(isPlatform ? { progress } : {}),
-        support: { all: r.supporting, unnamed: u.supporting, known: unnamed.known },
+        support: { all: supportingAll, unnamed: u.supporting, known: unnamed.known },
+        ...(listed ? { listed: true, ...(listedPage ? { listedPage } : {}) } : {}),
         doneSignal: isPlatform
           ? `${progress.unnamed ? '브랜드 이름 없는 질문의 ' : ''}${name} 인용 중 우리를 뒷받침하는 비율이 오르면 진척 (지금 ${progress.supporting}/${progress.total})`
           : namedOnly
@@ -713,6 +812,7 @@ export function computeGapActions(
     questionsByDomain(analyses),
     rows,
     unnamedCitationsByHost(analyses, questions),
+    listedEvidenceByHost(analyses),
   )
   const content = contentActions(rows)
 
@@ -750,7 +850,7 @@ export function computeGapActions(
 
 /** 채널 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */
 export function channelNameOf(a: GapAction): string {
-  return a.title.replace(/\s*(발행|등재|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
+  return a.title.replace(/\s*(발행|등재|소개 보강|문서 보완|커뮤니티 노출|보도·기고|채널 콘텐츠)$/, '').trim() || (a.targetDomain ?? a.title)
 }
 
 /** 그 채널에 올렸다고 기록됐나 — 올린 주소가 있거나 「집행함」. */

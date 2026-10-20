@@ -126,6 +126,17 @@ function hostMatches(host: string, catalog: Set<string>): boolean {
 }
 
 /**
+ * 판정이 붙인 소유 구분 — 후기·예약 플랫폼(REVIEW_HOSTS) 페이지의 「자사」는 믿지 않고 unknown으로 본다. 그곳 업체 페이지는
+ * 플랫폼 것이고(우리가 고칠 수 있는 건 소개 칸뿐), 판정이 이름이 비슷한 다른 업체를 우리로 착각하기도 한다(실측: web4ai W42
+ * mom-mom.net 「맘맘」을 「머뭄」으로 10건 — 전 테넌트 · 전 주차에서 리뷰 호스트의 자사 판정은 이것뿐이었다). 출처 종류 · URL 행
+ * 분류에만 쓴다 — 점수(aggregate.ts의 자사 인용률)는 저장된 판정을 그대로 써서 지난 주 점수가 바뀌지 않는다.
+ */
+function trustedOwnerType(citation: Pick<CitationDetail, 'raw' | 'domain' | 'ownerType'>): CitationDetail['ownerType'] {
+  if (citation.ownerType === 'brand-owned' && hostMatches(hostOf(citation.raw, citation.domain), REVIEW_HOSTS)) return 'unknown';
+  return citation.ownerType;
+}
+
+/**
  * 인용 출처의 종류를 정한다. **카탈로그에 없으면 other다.** 추측해서 채우지 않는다.
  *
  * 예전에는 마지막에 두 줄이 더 있었다:
@@ -154,8 +165,9 @@ function hostMatches(host: string, catalog: Set<string>): boolean {
  * 분류를 넓히려면 폴백을 되살리지 말고 위 호스트 카탈로그에 도메인을 추가한다.
  */
 export function classifyCitationSourceKind(citation: Pick<CitationDetail, 'raw' | 'domain' | 'ownerType'>): CitationSourceKind {
-  if (citation.ownerType === 'brand-owned') return 'brand-official';
-  if (citation.ownerType === 'competitor-owned') return 'competitor';
+  const ownerType = trustedOwnerType(citation);
+  if (ownerType === 'brand-owned') return 'brand-official';
+  if (ownerType === 'competitor-owned') return 'competitor';
 
   const host = hostOf(citation.raw, citation.domain);
   if (host.endsWith('.go.kr') || host.endsWith('.gov') || host === 'korea.kr') return 'gov';
@@ -195,6 +207,12 @@ function toMix(counts: Map<CitationSourceKind, number>, total: number): Citation
 export interface AnalyzeCitationSourcesOptions {
   /** 코호트 경쟁사의 소유 도메인. URL 행의 cohortCompetitor 판정에 쓴다. */
   competitorDomains?: string[];
+  /**
+   * 이 질문의 「뒷받침」은 그 답에 우리 이름이 나왔을 때만 세는가 — 브랜드 이름 없는 질문이면 true. 그 답은 이름을 대야만 우리를
+   * 가리킬 수 있어, 언급 없는 답의 「뒷받침」은 판정이 어긋난 값이다(src/lib/gapActions.ts unnamedCitationsByHost의 「충족」과
+   * 같은 기준). 이름을 댄 질문은 「이 숙소는…」처럼 이름 없이 가리킬 수 있어 거르지 않는다. 없으면 저장된 판정 그대로 센다.
+   */
+  supportNeedsMention?: (questionId: string) => boolean;
 }
 
 /** B7 — 한 주차 인용을 출처 유형·엔진·URL 단위로 집계한다. */
@@ -247,14 +265,16 @@ export function analyzeCitationSources(
         raw: citation.raw,
         domain,
         kind,
-        ownerType: citation.ownerType,
+        ownerType: trustedOwnerType(citation),
         citationCount: 0,
         engines: new Set<string>(),
         supportingBrandMentionCount: 0,
       };
       urlRow.citationCount += 1;
       urlRow.engines.add(analysis.engine);
-      if (citation.supportsBrandMention) urlRow.supportingBrandMentionCount += 1;
+      if (citation.supportsBrandMention && (analysis.mentioned || !options.supportNeedsMention?.(analysis.questionId))) {
+        urlRow.supportingBrandMentionCount += 1;
+      }
       urlRows.set(key, urlRow);
 
       const domainRow = domainEngines.get(domain) ?? { kind, engines: new Set<string>(), citationCount: 0 };

@@ -8,7 +8,7 @@ import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
-import { sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
+import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 
 /**
@@ -179,7 +179,9 @@ export default function PublishList({
       <ol className="publish-list">
         {plan.rows.map((row) => {
           const a = row.needsAdapt ? adaptationOf(row) : undefined
-          const stale = Boolean(a && row.article.draft && a.sourceKey !== sourceKeyOf(sourceOf(row)))
+          // 올릴 곳의 형식이 바뀐 다듬은 글(예: 이미 등록된 후기 플랫폼 → 새 등록용이 아니라 소개 보강용)도 다시 만들게 한다.
+          const styleChanged = Boolean(a && a.style !== channelStyleOf(row.target.badge))
+          const stale = Boolean(a && row.article.draft && a.sourceKey !== sourceKeyOf(sourceOf(row))) || styleChanged
           const text = textOf(row)
           // 자사 줄의 발행본에 들어간 홈페이지 사진(src/lib/articlePhotos.ts) — 채널 줄 · 다듬은 글에는 넣지 않는다.
           const photos = row.kind === 'own' && row.article.draft && text ? articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }) : []
@@ -300,7 +302,11 @@ export default function PublishList({
               )}
               {stale && (
                 <p className="channel-stale">
-                  원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).{' '}
+                  {styleChanged
+                    ? channelStyleOf(row.target.badge) === 'listing-update'
+                      ? '올릴 곳 형식이 바뀌었습니다 — 이미 등록된 업체라 새 등록 글이 아니라 소개 보강 글이 필요합니다.'
+                      : '올릴 곳 형식이 바뀌었습니다.'
+                    : '원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).'}{' '}
                   <button type="button" className="link-btn" disabled={busy !== null} onClick={() => void adapt(row)}>
                     {making ? '다시 만드는 중…' : '이 채널용 글 다시 만들기'}
                   </button>

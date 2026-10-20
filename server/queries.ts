@@ -586,10 +586,11 @@ export async function getCitationSourceAnalysis(
   const all = await store.getQuestionAnalyses(tenantId, weekOf);
   const byEngine = engine ? all.filter((a) => a.engine === engine) : all;
   const scope = options.questions ?? null;
-  if (!scope) return analyzeCitationSources(byEngine, { competitorDomains: options.competitorDomains });
 
   // 그 주차를 측정한 은행으로 가른다 — 지금 은행으로 가르면 옛 주차의 질문 id가 맞지 않는다(src/lib/bankVersion.ts와 같은 순서:
   // 그 주 카드 → 질문 id 접두 → 지금 설정). 후보 중 판정의 질문 id가 맞는 첫 은행을 쓰고, 하나도 안 맞으면 나누지 않는다.
+  // 질문 유형으로 좁히지 않는 보기도 은행을 읽는다 — 이름 없는 질문의 「뒷받침」을 언급 있는 답에서만 세어(supportNeedsMention)
+  // 실행 항목 카드(gapActions supportingAll)와 같은 수를 낸다.
   const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
   const prefixes = new Set(all.map((a) => /^(v\d+)-/.exec(a.questionId ?? '')?.[1]).filter((p): p is string => Boolean(p)));
   const bank = await matchingBank(
@@ -600,13 +601,15 @@ export async function getCitationSourceAnalysis(
     false,
   );
   const named = new Map((bank?.questions ?? []).map((q) => [q.questionId, q.containsBrandName]));
+  const supportNeedsMention = (questionId: string) => named.get(questionId) === false;
+  if (!scope) return analyzeCitationSources(byEngine, { competitorDomains: options.competitorDomains, supportNeedsMention });
   // 은행에 없는 질문은 어느 쪽인지 알 수 없다 — 한쪽으로 몰지 않고 빼고 그 수를 밝힌다.
   const kept = byEngine.filter((a) => named.get(a.questionId) === (scope === 'named'));
   const unknown = byEngine.filter((a) => !named.has(a.questionId)).length;
   // 응답이 있는데 하나도 은행에서 찾지 못했으면 이 은행으로는 나눌 수 없다(엔진으로 좁힌 뒤에도 같다).
   const split = bank !== null && !(byEngine.length > 0 && unknown === byEngine.length);
   return {
-    ...analyzeCitationSources(split ? kept : [], { competitorDomains: options.competitorDomains }),
+    ...analyzeCitationSources(split ? kept : [], { competitorDomains: options.competitorDomains, supportNeedsMention }),
     questionScope: { scope, bankVersion: split ? bank.version : null, responses: split ? kept.length : 0, unknown },
   };
 }
