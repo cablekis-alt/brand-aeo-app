@@ -1724,8 +1724,18 @@ if (STATIC_DIR) {
   });
 }
 
-app.listen(PORT, () => {
+// 이 PC 안(루프백)에서만 받는다 — 인증이 없는 서버라 모든 인터페이스에서 받으면 같은 와이파이의 다른 기기가 브랜드 데이터 ·
+// 측정 실행 · 페이지 수집 프록시(/api/fetch)에 닿는다. 앱 창 · 개발용 프록시 · 스크립트는 모두 localhost로 부른다. localhost가
+// IPv6(::1)로 먼저 풀리는 환경(윈도우)이 있어 ::1에도 연다(IPv6가 꺼진 PC면 건너뛴다). 다른 기기에서 일부러 열어야 하면 HOST로
+// 바꾼다(예: HOST=0.0.0.0). 검증: scripts/verify-server-bind.ts
+const HOSTS = process.env.HOST?.trim() ? [process.env.HOST.trim()] : ['127.0.0.1', '::1'];
+app.listen(Number(PORT), HOSTS[0]!, () => {
   seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
-  console.log(`[server] listening on :${PORT}`);
+  console.log(`[server] listening on ${HOSTS.join(' · ')} :${PORT}`);
   startScheduler(store);
 });
+for (const host of HOSTS.slice(1)) {
+  app.listen(Number(PORT), host).on('error', (err: NodeJS.ErrnoException) => {
+    console.warn(`[server] ${host}:${PORT}에는 열지 못했습니다(${err.code ?? err.message}) — ${HOSTS[0]}로만 받습니다.`);
+  });
+}
