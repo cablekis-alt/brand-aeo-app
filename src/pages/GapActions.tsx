@@ -9,9 +9,11 @@ import {
   loadContentBriefs,
   loadContentDrafts,
   loadPublishSettings,
+  PHOTO_RIGHTS_EVENT,
   type ActionStatus,
   type ChannelAdaptation,
   type ChannelAdaptationMap,
+  type PhotoRightsChange,
   type StoredBrief,
   type StoredDraft,
 } from '../lib/api'
@@ -695,6 +697,17 @@ export default function GapActions() {
     return () => {
       alive = false
     }
+  }, [tenant?.tenantId])
+  // 글 확인 칸에서 홈페이지 사진 사용을 확인하면 올리기 목록도 그 확인을 쓴다(낡은 설정이면 고른 사진을 빼고 복사한다).
+  useEffect(() => {
+    const id = tenant?.tenantId
+    if (!id) return
+    const onRights = (e: Event) => {
+      const change = (e as CustomEvent<PhotoRightsChange>).detail
+      if (change.tenantId === id) setSettingsState({ key: id, value: change.settings })
+    }
+    window.addEventListener(PHOTO_RIGHTS_EVENT, onRights)
+    return () => window.removeEventListener(PHOTO_RIGHTS_EVENT, onRights)
   }, [tenant?.tenantId])
   const publishSettings = settingsState.key === tenant?.tenantId ? settingsState.value : null
   const onAdapted = (a: ChannelAdaptation) =>

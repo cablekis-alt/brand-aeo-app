@@ -136,7 +136,32 @@ function jsonLdImages(doc: Document): { images: { url: string; where?: string }[
   return { images, logos }
 }
 
-/** 페이지 <img>의 주소 후보 — src · srcset의 각 주소 · 지연 로딩 속성. */
+/**
+ * srcset의 주소들 — HTML 규칙대로 읽는다: 공백이 아닌 글자 덩어리가 주소이고, 주소 끝의 쉼표나 설명자(800w · 2x) 뒤의 쉼표가
+ * 구분자다. 쉼표로만 자르면 주소 안에 쉼표가 든 변환 주소(/cdn-cgi/image/width=800,quality=75/…, Cloudinary · Wix)와
+ * data: 자리표시자가 조각나 없는 주소가 된다.
+ */
+function srcsetCandidates(set: string): { url: string; size: number }[] {
+  const out: { url: string; size: number }[] = []
+  let i = 0
+  while (i < set.length) {
+    while (i < set.length && (/\s/.test(set[i]!) || set[i] === ',')) i += 1
+    const start = i
+    while (i < set.length && !/\s/.test(set[i]!)) i += 1
+    let url = set.slice(start, i)
+    let descriptor = ''
+    if (url.endsWith(',')) url = url.replace(/,+$/, '')
+    else {
+      const d = i
+      while (i < set.length && set[i] !== ',') i += 1
+      descriptor = set.slice(d, i).trim()
+    }
+    if (url) out.push({ url, size: Number.parseFloat(descriptor) || 0 })
+  }
+  return out
+}
+
+/** 페이지 <img>의 주소 후보 — src · 지연 로딩 속성 · srcset의 각 주소. */
 function imgSources(img: Element): string[] {
   const out: string[] = []
   for (const attr of ['src', 'data-src', 'data-original', 'data-lazy-src']) {
@@ -145,25 +170,23 @@ function imgSources(img: Element): string[] {
   }
   for (const attr of ['srcset', 'data-srcset']) {
     const v = img.getAttribute(attr)
-    if (v) out.push(...v.split(',').map((part) => part.trim().split(/\s+/)[0] ?? '').filter(Boolean))
+    if (v) out.push(...srcsetCandidates(v).map((c) => c.url))
   }
   return out
 }
 
-/** 지연 로딩 사진의 실제 주소 — data-src 등을 src(자리표시자 · data: 주소)보다 먼저, 그다음 srcset의 가장 큰 주소. */
+/**
+ * 사진의 실제 주소 — 지연 로딩 속성(data-src 등) → srcset의 가장 큰 주소 → data-srcset → src. data: 자리표시자는 건너뛴다.
+ */
 function lazySource(img: Element): string | null {
   for (const attr of ['data-src', 'data-original', 'data-lazy-src']) {
     const v = img.getAttribute(attr)?.trim()
     if (v && !v.startsWith('data:')) return v
   }
-  const set = img.getAttribute('srcset') ?? img.getAttribute('data-srcset')
-  if (set) {
-    const widest = set
-      .split(',')
-      .map((part) => part.trim().split(/\s+/))
-      .map(([url, size]) => ({ url: url ?? '', w: Number.parseFloat(size ?? '') || 0 }))
-      .filter((c) => c.url && !c.url.startsWith('data:'))
-      .sort((a, b) => b.w - a.w)[0]
+  for (const attr of ['srcset', 'data-srcset']) {
+    const widest = srcsetCandidates(img.getAttribute(attr) ?? '')
+      .filter((c) => !c.url.startsWith('data:'))
+      .sort((a, b) => b.size - a.size)[0]
     if (widest) return widest.url
   }
   const src = img.getAttribute('src')?.trim()
@@ -188,8 +211,10 @@ function altChooser(doc: Document, base: string): (key: string) => string {
       alts.set(alt, (alts.get(alt) ?? 0) + 1)
       altsByPhoto.set(key, alts)
     }
-    // 사진 수는 <img> 하나를 한 장으로 센다 — srcset의 크기별 주소(…-300x200.jpg 등)를 여러 사진으로 세면 장면 설명이 꼬리표로 버려진다.
-    photosByAlt.set(alt, (photosByAlt.get(alt) ?? new Set<string>()).add(keys[0]!))
+    // 사진 수는 <img> 하나를 한 장으로, 그 사진의 실제 주소로 센다 — srcset의 크기별 주소(…-300x200.jpg 등)를 여러 사진으로 세면
+    // 장면 설명이 꼬리표로 버려지고, 지연 로딩 자리표시자(같은 src)로 세면 모든 사진에 붙은 꼬리표를 한 장으로 본다.
+    const real = lazySource(img)
+    photosByAlt.set(alt, (photosByAlt.get(alt) ?? new Set<string>()).add((real && photoKey(real, base)) || keys[0]!))
   }
   return (key) => {
     const alts = [...(altsByPhoto.get(key) ?? new Map<string, number>()).entries()].filter(

@@ -191,6 +191,24 @@ const icons = extractSitePhotos('<img src="/icons/phone.svg" alt="전화"><img s
 ok('최적화 주소(/_vercel/image)는 안쪽 사진으로 가른다 — 두 사진 · 제 설명', iconAlts.photos.map((p) => p.alt).join() === '객실 침대,루프탑 수영장 전경')
 ok('대체 경로에서 설명 없는 아이콘 · SVG는 뺀다', icons.photos.map((p) => p.src).join() === 'https://s.example/img/room.jpg')
 
+// 9) 수정 검증 지적 — srcset을 HTML 규칙대로(주소 안 쉼표 · data: 자리표시자), 지연 로딩 자리표시자로 사진 수를 세지 않는다
+const cf = extractSitePhotos(
+  '<img src="/cdn-cgi/image/width=800,quality=75/uploads/room.jpg" srcset="/cdn-cgi/image/width=400,quality=75/uploads/room.jpg 400w, /cdn-cgi/image/width=800,quality=75/uploads/room.jpg 800w" alt="객실 내부">',
+  'https://s.example/',
+)
+ok('주소 안에 쉼표가 든 변환 주소(srcset)를 조각내지 않는다', cf.photos.map((p) => p.src).join() === 'https://s.example/cdn-cgi/image/width=800,quality=75/uploads/room.jpg')
+const lazysizes = extractSitePhotos(
+  '<img src="/blank.gif" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-srcset="/img/room-640.jpg 640w, /img/room-1280.jpg 1280w" alt="객실 침대">',
+  'https://s.example/',
+)
+ok('srcset의 data: 자리표시자는 건너뛰고 data-srcset의 가장 큰 사진을 쓴다', lazysizes.photos.map((p) => p.src).join() === 'https://s.example/img/room-1280.jpg')
+const sharedPlaceholder = extractSitePhotos(
+  ld({ '@type': 'Hotel', image: [1, 2, 3, 4].map((n) => `https://s.example/img/p${n}.jpg`) }) +
+    [1, 2, 3, 4].map((n) => `<img src="data:image/gif;base64,R0lG" data-src="/img/p${n}.jpg" alt="가상스테이">`).join(''),
+  'https://s.example/',
+)
+ok('지연 로딩 사진이 같은 자리표시자를 써도 사진마다 붙은 이름 꼬리표는 거른다', sharedPlaceholder.photos.length === 4 && sharedPlaceholder.photos.every((p) => p.alt === ''))
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

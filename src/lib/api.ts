@@ -727,7 +727,18 @@ export async function savePhotoRights(tenantId: string, opts: { medical?: boolea
   })
   const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
   if (!res.ok) throw new Error(body.error || `사진 사용 확인 저장 실패 (HTTP ${res.status})`)
+  // 같은 화면에서 발행 설정을 먼저 읽어 둔 곳(콘텐츠 생성의 올리기 목록)이 새 확인을 쓰게 알린다 — 낡은 설정이면 고른 사진을 뺀다.
+  // (이 파일은 서버 타입 검사에도 들어간다 — DOM 타입이 없어 window 대신 globalThis로 부른다.)
+  const target = globalThis as { dispatchEvent?: (event: Event) => boolean }
+  target.dispatchEvent?.(new CustomEvent<PhotoRightsChange>(PHOTO_RIGHTS_EVENT, { detail: { tenantId, settings: body } }))
   return body
+}
+
+/** 사진 사용 확인이 바뀌었다(savePhotoRights) — 화면 안에서만 도는 알림. */
+export const PHOTO_RIGHTS_EVENT = 'brand-aeo:photo-rights'
+export interface PhotoRightsChange {
+  tenantId: string
+  settings: PublishSettings
 }
 
 /** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
