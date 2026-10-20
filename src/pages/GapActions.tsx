@@ -22,8 +22,8 @@ import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
-import { draftRequestOf, effectiveDraft, gapProgress, workMarkdownOf } from '../lib/draftGaps'
-import { downloadMarkdown, draftTitle, safeFileName } from '../lib/markdownFile'
+import { draftRequestOf, effectiveDraft } from '../lib/draftGaps'
+import { draftTitle } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
@@ -52,24 +52,11 @@ const STATUS_CHOICES: { value: ActionStatus; label: string; title: string }[] = 
 
 
 
-/** 브리프를 마크다운으로 — 문서 도구에 붙여 넣기용. 본문이 아니라 뼈대다. */
-function briefToMarkdown(title: string, b: StoredBrief['brief']): string {
-  const L: string[] = [`# 브리프 · ${title}`, '']
-  if (b.titles.length) L.push('## 제목 후보', ...b.titles.map((t) => `- ${t}`), '')
-  if (b.audience) L.push('## 독자', b.audience, '')
-  if (b.questionsToAnswer.length) L.push('## 답해야 할 질문', ...b.questionsToAnswer.map((q) => `- ${q}`), '')
-  if (b.mustIncludeFacts.length) L.push('## 반드시 넣을 사실(팩트 그래프)', ...b.mustIncludeFacts.map((x) => `- ${x}`), '')
-  if (b.doNotClaim.length) L.push('## 확인 필요한 사실(팩트 그래프에 없음)', ...b.doNotClaim.map((x) => `- ${x}`), '')
-  if (b.structure.length) L.push('## 구조', ...b.structure.map((s) => `- **${s.heading}** (${s.format}) — ${s.answers}`), '')
-  if (b.citableSentences.length) L.push('## 인용용 문장', ...b.citableSentences.map((x) => `- ${x}`), '')
-  if (b.channelNotes.length) L.push('## 채널 메모', ...b.channelNotes.map((x) => `- ${x}`), '')
-  return L.join('\n')
-}
-
 /**
  * 콘텐츠 브리프 패널. 글을 써 주지 않는다 — 무엇에 답하고, 어떤 사실만 쓰고, 어떤 구조가
  * 인용되기 쉬운지까지다. 사실은 팩트 그래프에서만 오고, 없는 것은 "확인 필요"로 남는다.
  * 한 번 만든 브리프는 저장되어 다음 주에도 그대로 열린다(판정 호출은 처음 한 번).
+ * 복사 · 내려받기 버튼은 두지 않는다 — 펼친 브리프는 제목 · 목록으로 그려져 골라 복사하면 서식이 함께 간다.
  */
 function BriefPanel({
   tenantId,
@@ -88,7 +75,6 @@ function BriefPanel({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState(initiallyOpen)
-  const [copied, setCopied] = useState(false)
   const make = async (force: boolean) => {
     setBusy(true)
     setError(null)
@@ -113,16 +99,6 @@ function BriefPanel({
       setBusy(false)
     }
   }
-  const copy = async () => {
-    if (!stored) return
-    try {
-      await navigator.clipboard.writeText(briefToMarkdown(action.title, stored.brief))
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      setError('클립보드에 복사하지 못했습니다.')
-    }
-  }
   const b = stored?.brief
   return (
     <div className="brief">
@@ -135,21 +111,6 @@ function BriefPanel({
           <>
             <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
               {open ? '브리프 접기' : '브리프 보기'}
-            </button>
-            <button type="button" className="ghost" onClick={() => void copy()}>
-              {copied ? '복사됨' : '마크다운 복사'}
-            </button>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() =>
-                downloadMarkdown(
-                  `브리프-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.md`,
-                  briefToMarkdown(action.title, stored.brief),
-                )
-              }
-            >
-              .md 내려받기
             </button>
             <button type="button" className="ghost" onClick={() => void make(true)} disabled={busy}>
               {busy ? '다시 만드는 중…' : '다시 만들기'}
@@ -241,72 +202,6 @@ function BriefPanel({
 }
 
 
-
-/** 아직 채우지도 빼지도 않은 빈칸 수. */
-function gapsLeft(d: StoredDraft): number {
-  const p = gapProgress(d)
-  return p.total - p.done
-}
-
-/** 마크다운 제목 단계를 두 칸 내린다 — 브리프·초안을 묶음 문서 안에 넣을 때 쓴다. */
-function demote(md: string): string {
-  return md.replace(/^(#+)/gm, '$1##')
-}
-
-/**
- * 열린 항목 전부를 한 문서로 묶는다.
- *
- * 항목마다 따로 내려받으면 여섯 항목이 여섯 파일이 된다. 한 주 계획은 문서 하나로 읽는 편이
- * 낫고, 압축 파일은 라이브러리를 새로 들여야 한다.
- *
- * 없는 것은 이름을 적는다. 빠진 것을 숨기면 파일만 보고는 무엇을 더 해야 하는지 알 수 없다.
- */
-function bundleToMarkdown(
-  brandName: string,
-  weekOf: string,
-  actions: GapAction[],
-  briefs: Record<string, StoredBrief>,
-  drafts: Record<string, StoredDraft>,
-): string {
-  const today = new Date().toISOString().slice(0, 10)
-  const nBrief = actions.filter((a) => briefs[a.id]).length
-  const nDraft = actions.filter((a) => drafts[a.id]).length
-  const L: string[] = [
-    `# 실행 항목 묶음 · ${brandName} · ${weekOf}`,
-    '',
-    `내보낸 날 ${today} · 항목 ${actions.length}건 · 브리프 ${nBrief}건 · 초안 ${nDraft}건`,
-    '',
-    '## 목차',
-    ...actions.map(
-      (a, i) =>
-        `${i + 1}. ${a.title} — 브리프 ${briefs[a.id] ? '있음' : '**없음**'} · 초안 ${drafts[a.id] ? '있음' : '**없음**'}`,
-    ),
-    '',
-  ]
-  for (const [i, a] of actions.entries()) {
-    L.push('---', '', `## ${i + 1}. ${a.title}`, '')
-    L.push(`- 종류 · ${a.badge}`, `- 밀린 질문 · ${a.reach}개`, `- 완료 조건 · ${a.doneSignal}`)
-    if (a.publishedUrls.length) {
-      L.push(
-        `- 올린 글 · ${a.publishedUrls
-          .map((u) => `${u}${a.citedPublishedUrls.includes(u) ? ' (인용됨)' : ''}`)
-          .join(', ')}`,
-      )
-    }
-    L.push('', `> ${a.evidence.replace(/\n/g, ' ')}`, '')
-    const b = briefs[a.id]
-    L.push(b ? demote(briefToMarkdown(a.title, b.brief)) : '### 브리프\n\n아직 만들지 않았습니다.', '')
-    const d = drafts[a.id]
-    L.push(
-      d
-        ? demote(workMarkdownOf(d)) +
-            (gapsLeft(d) > 0 ? `\n\n**채워야 할 자리 ${gapsLeft(d)}곳** — 위 인용 표시를 보세요.` : '')
-        : '### 초안\n\n아직 만들지 않았습니다.',
-      '',
-    )
-  }
-  return L.join('\n')
-}
 
 /** 한 편에 걸리는 대략의 시간(분) — 브리프(있으면 생략) + 초안, 각각 사실 대조 포함. 화면 안내용 어림이다. */
 const MINUTES_PER_DRAFT = 1.5
@@ -967,23 +862,6 @@ export default function GapActions() {
                     {openListing.map((a) => (
                       <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={coverageOf(a)} />
                     ))}
-                  </div>
-                )}
-                {briefs !== null && (
-                  <div className="brief-bar" style={{ marginTop: 10 }}>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() =>
-                        downloadMarkdown(
-                          `실행항목-${safeFileName(tenant.brandName)}-${weekOf}.md`,
-                          bundleToMarkdown(tenant.brandName, weekOf, open, briefs, drafts ?? {}),
-                        )
-                      }
-                    >
-                      남은 {open.length}건 한 파일로 내려받기 (.md)
-                    </button>
-                    <span className="doc-meta">브리프·초안이 없는 항목은 그 사실을 적어 둡니다</span>
                   </div>
                 )}
               </section>
