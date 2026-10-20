@@ -1,6 +1,7 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 import { normalizePublishSettings, type PublishSettings } from '../src/lib/publishSettings.js';
 
 /**
@@ -32,12 +33,21 @@ export async function readPublishSettings(tenantId: string): Promise<PublishSett
   }
 }
 
+/**
+ * 설정을 쓴다. 다른 요청이 읽는 순간의 윈도우 rename 실패를 다시 시도하는 원자적 쓰기(writeJsonAtomic)다.
+ */
 export async function writePublishSettings(tenantId: string, settings: PublishSettings): Promise<PublishSettings> {
-  const target = filePathFor(tenantId);
-  await mkdir(path.dirname(target), { recursive: true });
   const saved: PublishSettings = { ...normalizePublishSettings(settings), updatedAt: new Date().toISOString() };
-  const tmp = `${target}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(saved, null, 2), 'utf-8');
-  await rename(tmp, target);
+  await writeJsonAtomic(filePathFor(tenantId), saved);
   return saved;
+}
+
+/**
+ * 지금 설정을 읽어 바꾼 값을 쓴다 — 테넌트 쓰기 줄 안에서(설정 패널 저장과 사진 사용 확인이 서로의 값을 덮지 않게).
+ */
+export function updatePublishSettings(
+  tenantId: string,
+  update: (current: PublishSettings | null) => PublishSettings,
+): Promise<PublishSettings> {
+  return queueTenantWrite(tenantId, async () => writePublishSettings(tenantId, update(await readPublishSettings(tenantId))));
 }

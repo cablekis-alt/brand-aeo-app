@@ -698,6 +698,18 @@ export async function savePublishSettings(tenantId: string, settings: PublishSet
   return body
 }
 
+/** 이 브랜드의 홈페이지 사진을 글에 써도 된다는 확인(한 번) — 확인 시각은 서버가 찍는다. 의료 업종은 medical까지. */
+export async function savePhotoRights(tenantId: string, opts: { medical?: boolean } = {}): Promise<PublishSettings> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/photo-rights`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts.medical ? { medical: true } : {}),
+  })
+  const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
+  if (!res.ok) throw new Error(body.error || `사진 사용 확인 저장 실패 (HTTP ${res.status})`)
+  return body
+}
+
 /** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */
 export async function saveContentDraft(
   tenantId: string,
@@ -1118,6 +1130,31 @@ export async function saveDraftGaps(
   const body = (await res.json().catch(() => ({}))) as StoredDraft & { error?: string }
   if (!res.ok) throw new Error(body.error || `빈칸 저장 실패 (HTTP ${res.status})`)
   return body
+}
+
+/** 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목(src/lib/articlePhotos.ts PhotoPick과 같은 열쇠). */
+export type PhotoPlace = Pick<import('./articlePhotos').PhotoPick, 'slot' | 'nth' | 'heading'>
+/** 사진을 고를 때 보내는 값 — 확인 시각은 서버가 찍는다. */
+export type PhotoPickInput = Omit<import('./articlePhotos').PhotoPick, 'confirmedAt'>
+
+/**
+ * 글 사진 자리에 고른 홈페이지 사진을 넣거나(pick — replaces가 있으면 그 자리에서 옮긴다) 뺀다(remove). 판정 호출 없음.
+ * 화면이 본 초안(generatedAt)이 그사이 다시 만들어졌으면 서버가 409로 거절한다. photoNote는 사이트 설명을 쓰지 않은 이유.
+ */
+export async function saveDraftPhoto(
+  tenantId: string,
+  body:
+    | { actionId: string; generatedAt: string; op: 'pick'; pick: PhotoPickInput; replaces?: PhotoPlace }
+    | { actionId: string; generatedAt: string; op: 'remove'; place: PhotoPlace },
+): Promise<StoredDraft & { photoNote?: string }> {
+  const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const out = (await res.json().catch(() => ({}))) as StoredDraft & { photoNote?: string; error?: string }
+  if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status })
+  return out
 }
 
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */

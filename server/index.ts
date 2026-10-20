@@ -7,7 +7,7 @@ import { seedFirstRunIfEmpty } from './seedFirstRun.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
-import { readPublishSettings, writePublishSettings } from './publishSettingsStore.js';
+import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -31,7 +31,9 @@ import {
 import { draftCompetitorRewrites } from './competitorRewrite.js';
 import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
-import { generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills } from './contentDraft.js';
+import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills, savePhotoPicks } from './contentDraft.js';
+import { createFactGuard } from './factGuard.js';
+import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, type PhotoPick } from '../src/lib/articlePhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { extractFactCandidates } from './factExtract.js';
@@ -681,6 +683,80 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
   }
 });
 
+// 글 사진 자리에 고른 홈페이지 사진(src/lib/articlePhotos.ts) — op pick(넣기 · 옮기기) · remove(빼기). 판정 · 글쓰기 호출이 없고
+// 페이지 · 사진을 다시 받지 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409.
+// 사이트가 단 사진 설명에 브랜드 사실에 없는 숫자가 있으면 설명을 비운다 — 내보낼 때 사실 확인을 거친 사진 자리 글자를 쓴다.
+app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const actionId = typeof b.actionId === 'string' ? b.actionId : '';
+  const generatedAt = typeof b.generatedAt === 'string' ? b.generatedAt : '';
+  const op = b.op === 'pick' || b.op === 'remove' ? b.op : null;
+  const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
+  const count = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 20 ? v : 0);
+  // 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목. 빼기와 옮기기(replaces)가 이것으로 고른 사진을 찾는다.
+  const placeOf = (v: unknown) => {
+    const r = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+    const place = { slot: text(r.slot, 300), nth: count(r.nth), heading: text(r.heading, 300) };
+    return place.slot && place.nth ? place : null;
+  };
+  const samePlace = (p: PhotoPick, place: { slot: string; nth: number; heading: string }) =>
+    p.slot === place.slot && p.nth === place.nth && p.heading === place.heading;
+  if (!actionId || !generatedAt || !op) {
+    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove)가 필요합니다.' });
+    return;
+  }
+  try {
+    if (op === 'remove') {
+      const place = placeOf(b.place);
+      if (!place) {
+        res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
+        return;
+      }
+      res.json(await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => cur.filter((p) => !samePlace(p, place))));
+      return;
+    }
+    const settings = await readPublishSettings(tenant.tenantId);
+    if (!settings?.photoRights) {
+      res.status(409).json({ error: '먼저 이 브랜드의 홈페이지 사진을 글에 써도 되는지 확인해 주세요.' });
+      return;
+    }
+    if (isPhotoMedical(tenant.industry) && !settings.photoRights.medical) {
+      res.status(409).json({ error: '의료 업종은 의료광고 확인까지 받아야 사진을 쓸 수 있어요.' });
+      return;
+    }
+    const raw = (b.pick && typeof b.pick === 'object' ? b.pick : {}) as Record<string, unknown>;
+    const place = placeOf(raw);
+    const same = count(raw.same);
+    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
+    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
+    if (!place || !same || same < place.nth || !src || !pageUrl) {
+      res.status(400).json({ error: '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.' });
+      return;
+    }
+    const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
+    const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
+    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    const replaces = placeOf(b.replaces);
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString() };
+    const stored = await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => {
+      const rest = cur.filter((p) => !samePlace(p, place) && !(replaces && samePlace(p, replaces)));
+      if (rest.length >= PHOTO_LIMITS.picks) {
+        throw new RangeError(`사진은 글 하나에 ${PHOTO_LIMITS.picks}장까지예요 — 자리를 찾지 못한 사진을 먼저 빼 주세요.`);
+      }
+      return [...rest, pick];
+    });
+    res.json(siteAlt && !alt ? { ...stored, photoNote: '사이트의 사진 설명에 브랜드 사실에 없는 숫자가 있어, 사진 자리 글자를 설명으로 씁니다.' } : stored);
+  } catch (err) {
+    const status = err instanceof DraftChangedError ? 409 : err instanceof RangeError ? 400 : 500;
+    res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // 사람이 고친 초안 저장. 사실 가드를 돌려 경고만 남기고 저장은 막지 않는다 — 사람이 확인한
 // 사실일 수 있다. 다만 우리가 판정 엔진에 요구하는 기준을 사람에게만 면제하지는 않는다.
 app.put('/api/content-draft/:tenantId', async (req, res) => {
@@ -1000,8 +1076,31 @@ app.put('/api/tenants/:tenantId/publish-settings', async (req, res) => {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
     return;
   }
+  // 사진 사용 확인은 이 화면이 보내지 않는다(서버만 찍는다) — 보낸 값은 버리고 저장된 값을 이어받는다.
+  delete settings.photoRights;
   try {
-    res.json(await writePublishSettings(tenant.tenantId, settings));
+    res.json(await updatePublishSettings(tenant.tenantId, (cur) => ({ ...settings, ...(cur?.photoRights ? { photoRights: cur.photoRights } : {}) })));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 홈페이지 사진을 글에 써도 된다는 확인(브랜드별 한 번, src/lib/articlePhotos.ts) — 확인 시각은 서버가 찍는다. 의료 업종은
+// 의료광고(환자 · 시술 전후 사진) 확인(medical)까지 받아야 한다. Express 전용이다(Vercel 함수 12/12 — 웹은 사진을 고르지 않는다).
+app.put('/api/tenants/:tenantId/photo-rights', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const medical = (req.body as { medical?: unknown } | undefined)?.medical === true;
+  if (isPhotoMedical(tenant.industry) && !medical) {
+    res.status(400).json({ error: '의료 업종은 환자 · 시술 전후 사진이 아닌지 확인(의료광고)까지 받아야 사진을 쓸 수 있어요.' });
+    return;
+  }
+  try {
+    const confirmedAt = new Date().toISOString();
+    res.json(await updatePublishSettings(tenant.tenantId, (cur) => ({ ...cur, photoRights: { confirmedAt, ...(medical ? { medical: true as const } : {}) } })));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
