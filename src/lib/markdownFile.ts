@@ -18,17 +18,9 @@ import { articleSources, sourcesLine } from './officialSources'
  * 채우기 같은 기능이 한쪽에만 생긴다.
  */
 /**
- * 마크다운을 .md 파일로 내려받는다.
- *
- * 복사만 있으면 붙여 넣을 창이 열려 있을 때만 쓸모가 있다. 팀원에게 넘기거나 보관하려면
- * 파일이 필요하고, 클립보드 접근이 막힌 환경에서는 복사 자체가 실패한다(그때 대안이 없었다).
- * 문자열은 이미 만들고 있으므로 저장만 붙인다.
+ * 완성된 HTML 문서를 .html로 내려받는다(src/lib/htmlFile.ts가 만든 문자열). 글 내보내기는 「블로그는 복사 · 홈페이지는
+ * .html」이라 .md 파일은 내지 않는다 — 일반 사용자는 .md를 열기 어렵고, 블로그 편집기에 붙이면 # · ** 기호가 남는다(2026-10-20).
  */
-export function downloadMarkdown(filename: string, text: string): void {
-  downloadTextFile(filename, text, 'text/markdown;charset=utf-8')
-}
-
-/** 완성된 HTML 문서를 .html로 내려받는다(src/lib/htmlFile.ts가 만든 문자열). */
 export function downloadHtml(filename: string, html: string): void {
   downloadTextFile(filename, html, 'text/html;charset=utf-8')
 }
@@ -243,5 +235,14 @@ export function stripGapNotes(markdown: string): string {
 
 /** 발행용으로 내보낼 때 덜어낼 빈칸이 몇 줄인지 — 버튼 옆에 알린다. */
 export function countGapNotes(markdown: string): number {
-  return markdown.split('\n').filter((line) => line.trimStart().startsWith(GAP_LINE)).length
+  return gapNoteLines(markdown).length
+}
+
+/** 남은 빈칸 줄마다 무엇을 채워야 하는지(「채워야 함:」 뒤) — 보관함 본문 보기가 어디가 비었는지 보인다. */
+export function gapNoteLines(markdown: string): string[] {
+  return markdown
+    .split('\n')
+    .map((line) => line.trimStart())
+    .filter((line) => line.startsWith(GAP_LINE))
+    .map((line) => line.slice(GAP_LINE.length).trim())
 }
