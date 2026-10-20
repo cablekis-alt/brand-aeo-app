@@ -1727,9 +1727,10 @@ if (STATIC_DIR) {
 
 // 이 PC 안(루프백)에서만 받는다 — 인증이 없는 서버라 모든 인터페이스에서 받으면 같은 와이파이의 다른 기기가 브랜드 데이터 ·
 // 측정 실행 · 페이지 수집 프록시(/api/fetch)에 닿는다. 앱 창 · 개발용 프록시 · 스크립트는 모두 localhost로 부른다. localhost가
-// IPv6(::1)로 먼저 풀리는 환경(윈도우)이 있어 ::1에도 연다(IPv6가 꺼진 PC면 건너뛴다). 다른 기기에서 일부러 열어야 하면 HOST로
-// 바꾼다(예: HOST=0.0.0.0). 검증: scripts/verify-server-bind.ts
-const HOSTS = process.env.HOST?.trim() ? [process.env.HOST.trim()] : ['127.0.0.1', '::1'];
+// IPv6(::1)로 먼저 풀리는 환경(윈도우)이 있어 ::1에도 연다(IPv6가 꺼진 PC면 건너뛴다). 다른 기기에서 일부러 열어야 하면
+// AEO_SERVER_HOST로 바꾼다(예: AEO_SERVER_HOST=0.0.0.0). 흔한 이름인 HOST는 읽지 않는다 — PC 전체에 HOST가 설정돼 있으면(다른
+// 개발 도구용) 앱이 그 주소로 열려 창이 서버에 닿지 못한다. 검증: scripts/verify-server-bind.ts
+const HOSTS = process.env.AEO_SERVER_HOST?.trim() ? [process.env.AEO_SERVER_HOST.trim()] : ['127.0.0.1', '::1'];
 
 /** 그 주소 · 포트에 이미 받는 소켓이 있는가 — 연결해 본다(electron/main.cjs isPortOccupied와 같은 방식). */
 function portAnswers(host: string, port: number): Promise<boolean> {
