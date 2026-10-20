@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import type { PortfolioRow } from '../lib/api'
 import { groupColor, industryGroupOf } from '../lib/industryGroups'
 import { groupByIndustry, needsMeasure, statusShort, statusTone } from '../lib/portfolioView'
@@ -51,6 +52,8 @@ function hit(text: string, query: string): boolean {
  * 사이드바 브랜드 바꾸기(BrandSwitcher)와 측정 화면의 측정 대상 고르기(MeasureTenant)가 함께 쓴다.
  * 열릴 때 마운트되므로 거르개·검색은 열 때마다 처음 상태다. 위치는 부르는 쪽이 잰 기준점(anchor)에
  * 화면 기준(position: fixed)으로 띄운다 — 사이드바처럼 overflow: hidden인 곳에서도 잘리지 않는다.
+ * 문서 맨 바깥(body)에 그린다 — 사이드바는 sticky라 따로 쌓이는 층이어서, 그 안에 그리면 z-index가 사이드바 안에서만
+ * 통해 본문의 sticky 요소(상단 막대 · AI 답변의 질문 목록)가 패널 위로 올라왔다(2026-10-20).
  */
 export default function BrandPickerPanel({
   rows,
@@ -139,7 +142,7 @@ export default function BrandPickerPanel({
   const needTotal = rows.filter(isNeed).length
   const found = order.length
 
-  return (
+  return createPortal(
     <div className="bsw-backdrop" onMouseDown={onClose}>
       <div
         className="bsw"
@@ -302,6 +305,7 @@ export default function BrandPickerPanel({
           {links && <span className="bsw-links">{links}</span>}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
