@@ -1,0 +1,188 @@
+/**
+ * 브랜드 기본 정보(업종 · 지역 · 시장 범위) 고치기(server/brandProfileEditor.ts)를 확인한다.
+ * 임시 폴더를 APP_DATA_DIR로 쓰고 가짜 브랜드만 만든다. AI는 부르지 않는다.
+ *
+ * 왜: 그냥 바꾸면 ① 앱에서 고친 경쟁사 목록이 말없이 꺼지고(지문에 질문지 버전이 들어 있다) ② 옛 코호트로 만든 질문지 때문에
+ * 측정이 멈추거나 범위만 바꾼 브랜드가 옛 질문으로 계속 잰다 ③ 이 고객만 재는 경쟁사가 옛 코호트에 남는다. 2026-10-21 군산각을
+ * 지역형으로 바꿀 때 설정 파일을 손으로 고친 일을 앱에서 하게 한다.
+ *
+ *   npx tsx scripts/verify-brand-profile.ts
+ */
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
+const dir = mkdtempSync(path.join(tmpdir(), 'verify-brand-profile-'))
+process.env.APP_DATA_DIR = dir
+process.env.BLOB_READ_WRITE_TOKEN = ''
+process.env.BLOB_STORE_ID = ''
+process.env.USE_MOCK_ENGINES = 'true'
+
+const checks: [string, boolean][] = []
+const ok = (label: string, cond: boolean) => checks.push([label, cond])
+async function rejects(p: Promise<unknown>, status: number): Promise<boolean> {
+  try {
+    await p
+    return false
+  } catch (err) {
+    return (err as { status?: number }).status === status
+  }
+}
+const writeJson = (rel: string, value: unknown) => {
+  const file = path.join(dir, rel)
+  mkdirSync(path.dirname(file), { recursive: true })
+  writeFileSync(file, JSON.stringify(value))
+}
+const readJson = <T>(rel: string): T => JSON.parse(readFileSync(path.join(dir, rel), 'utf-8')) as T
+
+try {
+  const reg = await import('../server/tenantRegistry')
+  const editor = await import('../server/brandProfileEditor')
+  const comp = await import('../server/tenantCompetitorsStore')
+  const tracker = await import('../server/measureTracker')
+  const { planCohortTargets } = await import('../server/cohortPlan')
+  const { reusableThisWeek } = await import('../server/measureAndBake')
+  const { getCohortTrend } = await import('../server/cohortTrend')
+  const { getIsoWeekString } = await import('../server/dateUtil')
+  const { FileResultStore } = await import('../server/store')
+  const store = new FileResultStore()
+  const week = getIsoWeekString(new Date())
+
+  // 가짜 코호트(펜션 · 가상시): 고객 pcust가 경쟁사 ptwo(이 고객만 잰다)와 pshare(고객 pother도 잰다)를 함께 잰다.
+  // 관광안내 · 국내에는 전국형 고객 pnat(공통 질문지 c3)이 있다. psib은 pcust와 홈페이지가 같은 캠핑장 브랜드.
+  const base = { engines: ['gemini'], questionBankSize: 1, questionBankVersion: 'v3', repeatsPerQuestion: 1, factGraph: [], cohortQuestionBank: 'c1' }
+  const line = (name: string, domain: string) => ({ name, aliases: [name], domains: [domain] })
+  const pcustEntry = { ...base, tenantId: 'pcust', brandName: '가상 펜션', aliases: ['가상 펜션'], ownedDomains: ['pcust.example'], industry: '펜션', region: '가상시',
+    ga4PropertyId: '777', competitors: [line('가상 둘', 'ptwo.example'), line('공유 셋', 'pshare.example')] }
+  writeJson('tenants.overlay.json', [
+    pcustEntry,
+    { ...base, tenantId: 'ptwo', brandName: '가상 둘', aliases: ['가상 둘'], ownedDomains: ['ptwo.example'], industry: '펜션', region: '가상시', competitors: [], cohortOnly: true },
+    { ...base, tenantId: 'pshare', brandName: '공유 셋', aliases: ['공유 셋'], ownedDomains: ['pshare.example'], industry: '펜션', region: '가상시', competitors: [], cohortOnly: true },
+    { ...base, tenantId: 'pother', brandName: '다른 민박', aliases: ['다른 민박'], ownedDomains: ['pother.example'], industry: '펜션', region: '가상시', competitors: [line('공유 셋', 'pshare.example')] },
+    { ...base, tenantId: 'pnat', brandName: '가상 전국', aliases: ['가상 전국'], ownedDomains: ['pnat.example'], industry: '관광안내', region: '국내', marketScope: 'national', cohortQuestionBank: 'c3', competitors: [] },
+    { ...base, tenantId: 'psib', brandName: '가상 펜션', aliases: ['가상 펜션'], ownedDomains: ['pcust.example'], industry: '캠핑장', region: '가상시', competitors: [] },
+    { ...base, tenantId: 'peng', brandName: 'Gasang', aliases: ['Gasang'], ownedDomains: ['peng.example'], industry: '펜션', region: '가상시 (영어 질문)', questionLanguage: 'en', competitors: [] },
+  ])
+  // 질문지 v3 · v5가 있고, 경쟁사 편집이 v7을 예약했다(다시 만들기 대기) — 다음 번호는 v8이다(빈 v4 · v6을 채우지 않는다).
+  writeJson('data/pcust/question-bank/v3.json', { version: 'v3', questions: [] })
+  writeJson('data/pcust/question-bank/v5.json', { version: 'v5', questions: [] })
+  const oldFp = comp.baseFingerprint(pcustEntry as never)
+  const edited = [line('가상 둘', 'ptwo.example'), line('공유 셋', 'pshare.example'), line('추가 넷', 'pfour.example')]
+  writeJson('data/pcust/competitors.json', {
+    current: { competitors: edited, base: oldFp, questionBank: { version: 'v7', size: 1, regenerate: { from: 'v3', base: oldFp } } },
+    lastSave: { savedAt: '2026-10-20T00:00:00.000Z', before: { competitors: pcustEntry.competitors, base: oldFp, questionBank: { version: 'v3', size: 1 } }, summary: '추가 넷 추가' },
+    measured: { at: '2026-10-19T00:00:00.000Z', listHash: comp.listHash(pcustEntry.competitors as never), bankVersion: 'v3', repoBase: oldFp },
+    updatedAt: '2026-10-20T00:00:00.000Z',
+  })
+  writeJson('data/pcust/market-scope.json', { marketScope: 'local' })
+  const card = (tenantId: string, industry: string, region: string, questionBankVersion: string, weekOf = week, score = 30) => ({
+    tenantId, brandName: tenantId, industry, region, weekOf, questionBankVersion, aeoScore: { current: score }, mentionRate: 0, brandOwnedCitationRate: 0,
+    cohortRank: { position: 1, totalTenants: 2 }, judgeEngine: 'mock', enginesUsed: ['gemini'],
+  })
+  writeJson('data/pcust/scorecard-history.json', [card('pcust', '펜션', '가상시', 'v3')])
+  writeJson('data/ptwo/scorecard-history.json', [card('ptwo', '펜션', '가상시', 'v3')])
+  writeJson('data/pother/scorecard-history.json', [card('pother', '펜션', '가상시', 'v3', week, 50)])
+
+  // 1) 처음 상태
+  const state = await editor.describeProfileEditor('pcust')
+  ok('상태: 앱에서 등록한 고객 브랜드는 고칠 수 있다', state.editable && state.reason === null && state.industry === '펜션' && state.marketScope === 'local')
+  const two = state.competitors.find((c) => c.tenantId === 'ptwo')
+  const share = state.competitors.find((c) => c.tenantId === 'pshare')
+  ok('상태: 이 고객만 재는 경쟁사는 함께 옮김(기본 켬)', two?.movable === true && two.defaultMove === true)
+  ok('상태: 다른 고객도 재는 경쟁사는 옮기지 않음(그 고객 이름)', share?.movable === false && Boolean(share.reason?.includes('다른 민박')))
+  ok('상태: 자동 완성 업종 · 지역(국내 · 영어 꼬리표 제외)', state.industries.includes('펜션') && state.regions.includes('가상시') && !state.regions.includes('국내') && !state.regions.some((r) => r.includes('영어')))
+  ok('상태: 영어 질문 측정 브랜드는 막음', (await editor.describeProfileEditor('peng')).editable === false)
+  ok('상태: 저장소 설정 브랜드는 막음', (await editor.describeProfileEditor('web4ai')).reason?.includes('저장소') === true)
+  ok('상태: 경쟁사 측정 브랜드 · 없는 브랜드는 404', (await rejects(editor.describeProfileEditor('ptwo'), 404)) && (await rejects(editor.describeProfileEditor('nope'), 404)))
+
+  // 2) 미리 계산
+  const input = (extra: Record<string, unknown>) => ({ industry: '펜션', region: '가상시', marketScope: 'local', buyer: '', move: [], ...extra })
+  const same = await editor.planProfileEdit('pcust', input({}), store)
+  ok('계획: 그대로면 바뀐 내용 없음', same.unchanged && same.errors.length === 0 && same.bank.to === same.bank.from)
+  writeJson('cohort-banks/숙박__가상시/c1.json', { key: '숙박__가상시', version: 'c1', questions: [] })
+  const lodging = await editor.planProfileEdit('pcust', input({ industry: '숙박', move: ['ptwo'] }), store)
+  ok('계획: 질문지는 쓰인 번호 중 가장 큰 것 + 1(v3 · v5 · 예약 v7 → v8)', lodging.bank.from === 'v7' && lodging.bank.to === 'v8')
+  ok('계획: 새 코호트에 다른 브랜드가 만든 공통 질문지 c1이 있으면 c2', lodging.cohortBank.to === 'c2')
+  ok('계획: 함께 옮기는 경쟁사', lodging.moving.map((m) => m.tenantId).join(',') === 'ptwo' && lodging.errors.length === 0)
+  ok('계획: 이번 주에 잰 카드를 새 코호트로 바꾼다고 알림', lodging.thisWeek.includes('가상 펜션') && lodging.thisWeek.includes('가상 둘'))
+  ok('계획: 옮기지 않은 경쟁사는 업종이 달라 측정 안 됨', lodging.notes.some((n) => n.startsWith('공유 셋')))
+  const glamping = await editor.planProfileEdit('pcust', input({ industry: '글램핑' }), store)
+  ok('계획: 새 코호트에 공통 질문지가 없으면 지금 버전(c1)', glamping.cohortBank.to === 'c1')
+  const national = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '아무거나' }), store)
+  ok('계획: 전국형은 지역 「국내」, 구성원의 공통 질문지(c3)를 따른다', national.to.region === '국내' && national.cohortBank.to === 'c3' && national.cohortBank.members.includes('가상 전국'))
+  const b2b = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'b2b', buyer: '여행사' }), store)
+  ok('계획: 같은 코호트에 범위가 다른 브랜드가 있으면 막는다', b2b.errors.some((e) => e.includes('범위가 다른')))
+  const scopeOnly = await editor.planProfileEdit('pcust', input({ marketScope: 'b2b', buyer: '가상 구매', region: '' }), store)
+  ok('계획: 지역형 → B2B형은 지역이 국내로 바뀌어 새 코호트', scopeOnly.to.region === '국내' && scopeOnly.to.buyer === '가상 구매')
+  ok('계획: 함께 재는 다른 고객의 경쟁사는 옮길 수 없다', (await editor.planProfileEdit('pcust', input({ industry: '숙박', move: ['pshare'] }), store)).errors.some((e) => e.includes('옮길 수 없어요')))
+  ok('계획: 같은 홈페이지의 다른 브랜드와 같은 코호트면 막는다', (await editor.planProfileEdit('pcust', input({ industry: '캠핑장' }), store)).errors.some((e) => e.includes('psib')))
+  ok('계획: 지역형인데 지역이 비거나 「국내」면 막는다', (await editor.planProfileEdit('pcust', input({ region: '' }), store)).errors.length > 0 && (await editor.planProfileEdit('pcust', input({ region: '국내' }), store)).errors.length > 0)
+  ok('계획: 모양이 틀린 입력은 400', await rejects(editor.planProfileEdit('pcust', { industry: 3 }, store), 400))
+  writeJson('measure-requests.json', [{ tenant: pcustEntry, requestedAt: '2026-10-21T00:00:00.000Z' }])
+  ok('계획: 측정 대기열에 있으면 막는다', (await editor.planProfileEdit('pcust', input({ industry: '숙박' }), store)).errors.some((e) => e.includes('대기열')))
+  writeJson('measure-requests.json', [])
+
+  // 3) 저장 — 미리보기 열쇠 · 측정 중 · 그대로
+  ok('저장: 미리보기와 다르면 409', await rejects(editor.saveProfileEdit('pcust', input({ industry: '숙박', move: ['ptwo'] }), 'stale', store), 409))
+  tracker.beginMeasureRun()
+  ok('저장: 측정 중이면 409', await rejects(editor.saveProfileEdit('pcust', input({ industry: '숙박', move: ['ptwo'] }), lodging.key, store), 409))
+  tracker.endMeasureRun()
+  ok('저장: 바뀐 내용이 없으면 400', await rejects(editor.saveProfileEdit('pcust', input({}), same.key, store), 400))
+  const saved = await editor.saveProfileEdit('pcust', input({ industry: '숙박', move: ['ptwo'] }), lodging.key, store)
+  ok('저장: 결과', saved.questionBankVersion === 'v8' && saved.moved.join(',') === '가상 둘')
+
+  const overlay = readJson<Record<string, unknown>[]>('tenants.overlay.json')
+  const entry = overlay.find((t) => t.tenantId === 'pcust') as Record<string, unknown>
+  ok('오버레이: 업종 · 질문지 · 공통 질문지만 바뀌고 GA4 · 경쟁사 줄은 그대로', entry.industry === '숙박' && entry.questionBankVersion === 'v8' && entry.cohortQuestionBank === 'c2' &&
+    entry.ga4PropertyId === '777' && (entry.competitors as unknown[]).length === 2)
+  const runtime = await reg.loadRuntimeTenants()
+  const pcust = runtime.find((t) => t.tenantId === 'pcust')!
+  ok('런타임: 앱에서 고친 경쟁사 목록이 계속 쓰인다(가장 중요)', pcust.competitors.map((c) => c.name).join(',') === '가상 둘,공유 셋,추가 넷')
+  ok('런타임: 질문지는 새 번호(예약된 v7로 되돌아가지 않음)', pcust.questionBankVersion === 'v8' && pcust.industry === '숙박')
+  const file = readJson<{ current: { base: string; questionBank?: unknown }; lastSave: { before: { base: string; questionBank?: unknown } }; measured: { repoBase: string; bankVersion: string } }>('data/pcust/competitors.json')
+  const newFp = comp.baseFingerprint(entry as never)
+  ok('경쟁사 목록 파일: 지문을 새로 적고 질문지 값은 버린다', file.current.base === newFp && file.current.questionBank === undefined)
+  ok('경쟁사 목록 파일: 되돌리기용 이전 목록도 같은 지문', file.lastSave.before.base === newFp && file.lastSave.before.questionBank === undefined)
+  ok('경쟁사 목록 파일: 측정 기록은 그대로(거짓 「경쟁사 바뀜」 없음)', file.measured.repoBase === oldFp && file.measured.bankVersion === 'v3')
+  const ptwo = runtime.find((t) => t.tenantId === 'ptwo')!
+  ok('함께 옮긴 경쟁사: 새 업종 · 같은 질문지 이름', ptwo.industry === '숙박' && ptwo.questionBankVersion === 'v8' && ptwo.cohortQuestionBank === 'c2')
+  ok('옮기지 않은 경쟁사는 그대로', runtime.find((t) => t.tenantId === 'pshare')?.industry === '펜션')
+  const entries = planCohortTargets(pcust, runtime).entries
+  ok('새 측정 계획: 옮긴 경쟁사는 함께 잰다', entries.some((e) => e.name === '가상 둘' && e.status === 'measured' && e.targetTenantId === 'ptwo' && !e.otherRegion))
+  ok('새 측정 계획: 옮기지 않은 공유 경쟁사는 업종 충돌', entries.some((e) => e.name === '공유 셋' && e.status === 'collision'))
+  const backups = readdirSync(path.join(dir, 'data/pcust')).filter((f) => f.startsWith('before-profile-'))
+  ok('백업: 옛 오버레이 항목 · 경쟁사 목록 · 시장 범위', backups.length === 1 && ['overlay-entry.json', 'competitors.json', 'market-scope.json'].every((f) => existsSync(path.join(dir, 'data/pcust', backups[0]!, f))))
+  ok('백업: 함께 옮긴 경쟁사도', readdirSync(path.join(dir, 'data/ptwo')).some((f) => f.startsWith('before-profile-')))
+
+  // 4) 브랜드 현황 · 이번 주 재사용 · 코호트 추세
+  const last = (await store.getScorecardHistory('pcust', 99)).at(-1)
+  ok('현황: 다시 재기 전에는 「기본 정보 바뀜 · 다음 측정 대기」', (await editor.pendingProfileEdit('pcust', last))?.summary.includes('업종 펜션 → 숙박') === true)
+  ok('현황: 새 설정으로 잰 카드가 생기면 끝', (await editor.pendingProfileEdit('pcust', card('pcust', '숙박', '가상시', 'v8') as never)) === null)
+  ok('현황: 표식 없는 브랜드는 없음', (await editor.pendingProfileEdit('pother', undefined)) === null)
+  const reuse = await reusableThisWeek(ptwo, store, week)
+  ok('이번 주 재사용: 옛 코호트로 잰 카드는 다시 잰다', !reuse.ok && Boolean(reuse.reason?.includes('코호트 다름')))
+  const trend = await getCohortTrend(store, pcust)
+  ok('코호트 추세: 지난 주는 그 주 카드의 코호트(펜션)와 비교', trend.length === 1 && trend[0]!.peerCount === 2 && trend[0]!.avg === 40)
+
+  // 5) 범위 바꾸기 — 시장 범위 파일도 같은 값으로, 구성원(전국형 pnat)의 공통 질문지를 따른다
+  const toNational = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', move: ['ptwo'] }), store)
+  ok('범위 계획: 오류 없음 · 다음 번호 v9', toNational.errors.length === 0 && toNational.bank.to === 'v9')
+  await editor.saveProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', move: ['ptwo'] }), toNational.key, store)
+  const scopeFile = readJson<{ marketScope: string }>('data/pcust/market-scope.json')
+  const after = (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pcust')!
+  ok('범위 저장: 시장 범위 파일 · 런타임이 전국형', scopeFile.marketScope === 'national' && after.marketScope === 'national' && after.region === '국내' && after.cohortQuestionBank === 'c3')
+  ok('범위 저장: 경쟁사 목록은 여전히 쓰인다', after.competitors.length === 3)
+} finally {
+  rmSync(dir, { recursive: true, force: true })
+}
+
+let failed = 0
+for (const [label, pass] of checks) {
+  console.log(`${pass ? '✓' : '✗'} ${label}`)
+  if (!pass) failed += 1
+}
+if (failed > 0) {
+  console.error(`\n${failed}건 실패`)
+  process.exit(1)
+}
+console.log(`\n모두 통과 (${checks.length}건)`)

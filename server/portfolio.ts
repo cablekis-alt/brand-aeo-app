@@ -1,6 +1,7 @@
 import { conditionChange } from '../src/lib/comparability.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
+import { pendingProfileEdit } from './brandProfileEditor.js';
 import { planCohortTargets } from './cohortPlan.js';
 import { pendingCompetitorEdit } from './competitorEditor.js';
 import type { ResultStore } from './store.js';
@@ -32,6 +33,8 @@ export interface PortfolioRow {
   competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null;
   /** 경쟁사 편집을 저장했고 아직 이 브랜드를 다시 재지 않았다 — 카드의 「경쟁사 바뀜 · 다음 측정 대기」. */
   competitorEdit: { savedAt: string; summary: string } | null;
+  /** 기본 정보(업종 · 지역 · 시장 범위)를 바꿨고 아직 새 설정으로 재지 않았다 — 카드의 「기본 정보 바뀜 · 다음 측정 대기」. */
+  profileEdit: { savedAt: string; summary: string } | null;
   status: PortfolioStatus;
   /** 마지막으로 측정한 주차. 측정 전이면 null. */
   weekOf: string | null;
@@ -113,6 +116,8 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
     tenants
       .filter((t) => !t.cohortOnly)
       .map(async (t): Promise<PortfolioRow> => {
+        const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
+        const last = history.at(-1);
         const base = {
           tenantId: t.tenantId,
           brandName: t.brandName,
@@ -121,9 +126,8 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           competitors: t.competitors.length,
           competitorPlan: competitorPlanOf(t, tenants),
           competitorEdit: await pendingCompetitorEdit(t),
+          profileEdit: await pendingProfileEdit(t.tenantId, last),
         };
-        const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
-        const last = history.at(-1);
         if (!last) {
           return { ...base, status: 'none', weekOf: null, score: null, rank: null, totalTenants: null, tied: false, delta: null, changeReason: null };
         }

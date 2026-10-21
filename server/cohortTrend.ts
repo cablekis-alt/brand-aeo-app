@@ -27,7 +27,8 @@ export async function getCohortTrend(
   const history = await store.getScorecardHistory(tenant.tenantId, weeksBack);
   const points: CohortTrendPoint[] = [];
   for (const card of history) {
-    const cards = await store.getCohortScorecards(tenant.industry, tenant.region, card.weekOf);
+    // 그 주 카드의 업종 · 지역이 그 주의 코호트다 — 기본 정보를 바꾸면 지금 설정과 지난 주 코호트가 다르다(queries.ts와 같다).
+    const cards = await store.getCohortScorecards(card.industry, card.region, card.weekOf);
     const peers = cards.filter((c) => c.tenantId !== tenant.tenantId);
     points.push({
       weekOf: card.weekOf,

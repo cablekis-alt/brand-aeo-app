@@ -271,14 +271,24 @@ async function persistTenantForRuntimeUnlocked(tenant: TenantConfig): Promise<vo
  * 다른 영속화와 같은 줄에서 돈다(serializePersist).
  */
 export function replaceOverlayTenant(tenant: TenantConfig): Promise<void> {
+  return replaceOverlayTenants([tenant]);
+}
+
+/**
+ * 오버레이의 브랜드 여럿을 한 번에 바꾼다 — 기본 정보를 고칠 때 고객과 함께 옮기는 경쟁사(brandProfileEditor.ts).
+ * 하나라도 오버레이에 없으면 아무것도 쓰지 않는다. 오버레이 파일은 한 번만 쓴다.
+ */
+export function replaceOverlayTenants(tenants: TenantConfig[]): Promise<void> {
   return serializePersist(async () => {
     if (!process.env.VERCEL && !packagedDataMode()) {
       throw new Error('dev 체크아웃에서는 저장소 설정(tenants.config.json)을 직접 고치세요.');
     }
     const overlay = await readOverlay();
-    const i = overlay.findIndex((item) => item.tenantId === tenant.tenantId);
-    if (i < 0) throw new Error(`오버레이에 없는 브랜드입니다: ${tenant.tenantId}`);
-    overlay[i] = tenant;
+    for (const tenant of tenants) {
+      const i = overlay.findIndex((item) => item.tenantId === tenant.tenantId);
+      if (i < 0) throw new Error(`오버레이에 없는 브랜드입니다: ${tenant.tenantId}`);
+      overlay[i] = tenant;
+    }
     await writeOverlay(overlay);
   });
 }
