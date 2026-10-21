@@ -171,8 +171,16 @@ export default function QuestionBankPage() {
 
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && !bank && <p className="muted">아직 생성된 질문 은행이 없습니다.</p>}
+      {/* 측정 전 브랜드는 서버가 예시 은행(demo — 다른 업종의 견본)을 준다. 그 목록을 이 브랜드 질문처럼 보이거나 매기기 · 글쓰기에
+          쓰면 헷갈리고 판정 비용만 든다(2026-10-21 군산각 v6 — 성형외과 견본이 보였다). 데스크톱 서버만 demo를 싣는다(웹은 예전 그대로). */}
+      {!loading && bank?.demo && (
+        <p className="hint">
+          아직 이 브랜드의 질문지가 없습니다 — <b>첫 측정 때</b> {tenant.industry} · {tenant.region} 질문지({bank.version})가 만들어집니다.{' '}
+          <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 측정하면 여기에 질문이 보이고, 질문을 골라 글을 쓸 수 있습니다.
+        </p>
+      )}
 
-      {bank && (
+      {bank && !bank.demo && (
         <>
           {bank.upcomingVersion &&
             (bank.upcomingRegenerate ? (

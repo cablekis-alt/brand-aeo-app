@@ -12,6 +12,7 @@ import { overrideApplies, readCompetitorOverride } from './tenantCompetitorsStor
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 import type { Engine } from '../src/prompts/types.js';
+import { sameCohort, sharesSite } from '../src/lib/brandVariant.js';
 
 const BASE_TENANTS = rawTenants as TenantConfig[];
 const ENGINES: Engine[] = ['openai', 'gemini', 'claude', 'perplexity'];
@@ -286,6 +287,12 @@ export async function registerTenant(tenant: TenantConfig): Promise<void> {
   const existing = await loadRuntimeTenants();
   if (existing.some((item) => item.tenantId === tenant.tenantId)) {
     throw new Error(`이미 존재하는 tenantId입니다: ${tenant.tenantId}`);
+  }
+  // 같은 홈페이지 · 같은 코호트(업종 · 지역 · 언어)의 고객 브랜드가 다른 id로 있으면 막는다 — 같은 질문지 · 순위표를 두 브랜드가
+  // 나눠 쓰게 된다(지운 브랜드를 다른 id로 되살리는 경우 등). 다른 범위로 하나 더 등록(tenantPromote registerVariant)은 코호트가 달라 지나간다.
+  if (!tenant.cohortOnly) {
+    const twin = existing.find((item) => !item.cohortOnly && sharesSite(item, tenant) && sameCohort(item, tenant));
+    if (twin) throw new Error(`이미 존재하는 홈페이지 · 코호트입니다: ${twin.tenantId}(${twin.brandName} · ${twin.industry} · ${twin.region})`);
   }
   // 이전에 삭제(툼스톤)된 tenantId를 다시 등록하는 경우, 툼스톤을 걷어내 다시 보이게 한다.
   await removeDeletedTenant(tenant.tenantId);

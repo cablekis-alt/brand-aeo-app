@@ -17,6 +17,8 @@ export interface PickerRow {
   competitor?: boolean
   /** 경쟁사의 마지막 측정 주차(점수 옆에 적는다). 고객 브랜드는 p의 상태 문구가 대신한다. */
   week?: string | null
+  /** 같은 홈페이지를 다른 범위로 하나 더 등록한 브랜드의 범위 표시(지역형 · 전국형 · B2B형, lib/brandVariant.ts variantTag). 없으면 null. */
+  variant?: string | null
 }
 
 const isNeed = (r: PickerRow) => r.p !== null && needsMeasure(r.p)
@@ -287,6 +289,7 @@ export default function BrandPickerPanel({
                             </span>
                             <span className="bsw-name">
                               {r.brandName}
+                              {r.variant && <span className="bsw-tag">{r.variant}</span>}
                               {r.competitor && <span className="bsw-tag">경쟁사</span>}
                             </span>
                             <span className="bsw-score">{r.p?.score ?? (r.competitor ? (r.score ?? '') : known ? '—' : '')}</span>

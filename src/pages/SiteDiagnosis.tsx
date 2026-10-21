@@ -89,7 +89,7 @@ export default function SiteDiagnosis() {
     const owner =
       target.source === 'tenant' && target.tenantId
         ? (tenants.find((t) => t.tenantId === target.tenantId) ?? null)
-        : findTenantByDomain(target.url, tenants)
+        : findTenantByDomain(target.url, tenants, tenant)
     if (!owner) {
       setSaveNote({
         tone: 'skip',

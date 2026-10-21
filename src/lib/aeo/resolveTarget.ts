@@ -102,15 +102,19 @@ export function resolveWithoutNetwork(input: string, tenants: TenantSummary[]): 
   return null
 }
 
-/** URL의 호스트를 소유한 등록 브랜드. 서브도메인도 인정한다(m.k-wonjin.co.kr → k-wonjin). */
-export function findTenantByDomain(url: string, tenants: TenantSummary[]): TenantSummary | null {
+/**
+ * URL의 호스트를 소유한 등록 브랜드. 서브도메인도 인정한다(m.k-wonjin.co.kr → k-wonjin).
+ * 같은 홈페이지를 쓰는 브랜드가 여럿이면(다른 범위로 하나 더 등록한 브랜드 · 영어 측정 -en) 지금 고른 브랜드(preferred)를 먼저 본다 —
+ * 목록의 첫 브랜드로만 가면 나머지 브랜드에는 사이트 점수가 쌓이지 않았다(2026-10-21 gunsan · gunsan-national).
+ */
+export function findTenantByDomain(url: string, tenants: TenantSummary[], preferred?: TenantSummary | null): TenantSummary | null {
   let host: string
   try {
     host = new URL(toHttpsUrl(url)).hostname.replace(/^www\./, '').toLowerCase()
   } catch {
     return null
   }
-  for (const t of tenants) {
+  for (const t of preferred ? [preferred, ...tenants] : tenants) {
     for (const raw of t.ownedDomains ?? []) {
       const d = raw
         .trim()
@@ -146,7 +150,7 @@ export function subjectBrand(
   if (target.source === 'infer' && target.brandName) {
     return { brandName: target.brandName, aliases: [] }
   }
-  const owner = findTenantByDomain(target.url, tenants)
+  const owner = findTenantByDomain(target.url, tenants, selected)
   if (owner) return { brandName: owner.brandName, aliases: owner.aliases ?? [] }
   return selected ? { brandName: selected.brandName, aliases: selected.aliases ?? [] } : null
 }

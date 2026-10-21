@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type PortfolioRow } from '../lib/api'
+import { variantTag } from '../lib/brandVariant'
 import BrandPickerPanel, { type PickerRow } from './BrandPickerPanel'
 import NavIcon from './NavIcon'
 
@@ -48,7 +49,7 @@ export default function BrandSwitcher() {
     return tenants.map((t) => {
       const p = byId.get(t.tenantId) ?? null
       // 점수 기록의 업종·지역이 실제 코호트다(영어 질문 측정은 지역에 꼬리표가 붙는다).
-      return { tenantId: t.tenantId, brandName: t.brandName, industry: p?.industry ?? t.industry, region: p?.region ?? t.region, score: p?.score ?? null, p }
+      return { tenantId: t.tenantId, brandName: t.brandName, industry: p?.industry ?? t.industry, region: p?.region ?? t.region, score: p?.score ?? null, p, variant: variantTag(t, tenants) }
     })
   }, [tenants, portfolio.rows])
   const known = portfolio.rows !== null

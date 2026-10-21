@@ -1,6 +1,8 @@
-import { access, mkdir, readdir, rename, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { isPhotoMedical } from '../src/lib/articlePhotos.js';
+import { hostKey, sameCohort, sharesSite, variantTenantId } from '../src/lib/brandVariant.js';
 import { readCohortExclusions, updateCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { competitorDraftId } from './cohortPlan.js';
 import { affectedCohortWeeks, reconcileCohortRanks } from './cohortRank.js';
@@ -8,8 +10,8 @@ import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { isBakedTenant, loadRuntimeTenants, replaceOverlayTenant } from './tenantRegistry.js';
-import { topicParticle } from '../src/lib/korean.js';
+import { isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
+import { subjectParticle, topicParticle } from '../src/lib/korean.js';
 import type { CompetitorContext } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
@@ -50,6 +52,13 @@ export interface TenantConflict {
    * 다른 곳이라 빼지 않고 알리기만 한다 — 업종이 바뀌면 그 줄은 「이름 겹침 · 측정 안 됨」이 된다.
    */
   sharedIdLines: { tenantId: string; brandName: string; line: string; domain: string }[];
+  /** 이 초안의 홈페이지를 쓰는 고객 브랜드(부딪힌 브랜드 포함) — 「다른 범위로 하나 더 등록」 패널이 보인다. */
+  siblings: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[];
+  /**
+   * 같은 홈페이지를 다른 범위로 하나 더 등록할 때(lib/brandVariant.ts) — 새 id와, 못 하면 그 이유. 부딪힌 곳이 고객 · 저장소
+   * 브랜드이고 홈페이지가 같을 때만 채운다(경쟁사면 「고객 브랜드로 전환」). restoredWeeks는 지운 같은 id에 남은 기록 주 수.
+   */
+  variant: { tenantId: string; blocked: string | null; restoredWeeks: number } | null;
 }
 
 const host = (d: string) => d.trim().toLowerCase().replace(/^www\./, '');
@@ -120,6 +129,10 @@ async function inspect(
   const history = await store.getScorecardHistory(existing.tenantId, Number.MAX_SAFE_INTEGER);
   const lastWeekOf = history.at(-1)?.weekOf ?? null;
   const kind: TenantConflict['kind'] = (await isBakedTenant(existing.tenantId)) ? 'repo' : existing.cohortOnly ? 'competitor' : 'customer';
+  const sameSite = existing.ownedDomains.some((d) => drafts.has(host(d)));
+  const siblings = runtime
+    .filter((t) => !t.cohortOnly && sharesSite(t, draft))
+    .map((t) => ({ tenantId: t.tenantId, brandName: t.brandName, industry: t.industry, region: t.region, marketScope: t.marketScope ?? 'local' }));
   return {
     existing,
     conflict: {
@@ -129,15 +142,43 @@ async function inspect(
       industry: existing.industry,
       region: existing.region,
       ownedDomains: existing.ownedDomains,
-      sameSite: existing.ownedDomains.some((d) => drafts.has(host(d))),
+      sameSite,
       weeks: history.length,
       lastWeekOf,
       measuredThisWeek: lastWeekOf === getIsoWeekString(new Date()),
       overrides: kind === 'competitor' ? (await existingOverrides(existing.tenantId)).map((o) => o.label) : [],
       referencedBy,
       sharedIdLines,
+      siblings,
+      variant: sameSite && kind !== 'competitor' ? await planVariant(draft, existing, runtime, store) : null,
     },
   };
+}
+
+/**
+ * 같은 홈페이지를 다른 범위로 하나 더 등록할 수 있는가 — 새 id(lib/brandVariant.ts variantTenantId)와 막히는 이유.
+ * 홈페이지를 공유하는 브랜드(경쟁사 포함) 중 업종 · 지역 · 언어가 같은 곳이 있으면 같은 질문지 · 순위표를 쓰게 되므로 막는다.
+ */
+async function planVariant(
+  draft: TenantConfig,
+  existing: TenantConfig,
+  runtime: TenantConfig[],
+  store: ResultStore,
+): Promise<NonNullable<TenantConflict['variant']>> {
+  const tenantId = variantTenantId(existing.tenantId, draft.marketScope);
+  const twin = runtime.find((t) => sharesSite(t, draft) && sameCohort(t, draft));
+  const taken = runtime.find((t) => t.tenantId === tenantId);
+  const blocked = twin
+    ? `${twin.brandName}(${twin.tenantId})${subjectParticle(twin.brandName).slice(twin.brandName.length)} 이미 ${twin.industry} · ${twin.region}에 있어요. 업종이나 지역을 바꿔야 다른 질문지로 재요` +
+      (draft.region === '국내' && (twin.marketScope ?? 'local') !== (draft.marketScope ?? 'local')
+        ? ' — 전국형과 B2B형은 지역이 둘 다 「국내」라 업종까지 같으면 같은 코호트예요.'
+        : '.')
+    : taken
+      ? `${tenantId}이(가) 이미 있어요(${taken.brandName} · ${taken.industry} · ${taken.region}).`
+      : null;
+  // 지운 같은 id의 기록 — 등록하면 툼스톤이 걷혀 그 기록이 되살아난다(registerTenant).
+  const restoredWeeks = blocked ? 0 : (await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER)).length;
+  return { tenantId, blocked, restoredWeeks };
 }
 
 export async function describeTenantConflict(draft: TenantConfig, store: ResultStore): Promise<TenantConflict | null> {
@@ -300,4 +341,111 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     removedFrom,
     removeErrors,
   };
+}
+
+/** 바탕 브랜드에서 새 범위 브랜드로 가져오는 설정 — 사람이 넣은 사실 · 발행 정보라 범위가 달라도 같다. 경쟁사 · 시장 범위 · 엔진은 범위마다 다르다. */
+const VARIANT_COPY: { file: string; label: string }[] = [
+  { file: 'fact-graph.json', label: '사실' },
+  { file: 'brand-page.json', label: '브랜드 페이지' },
+  { file: 'publish-settings.json', label: '발행 설정' },
+];
+
+export interface VariantResult {
+  ok: true;
+  tenantId: string;
+  brandName: string;
+  /** 새 브랜드의 질문지 버전 — 첫 측정에서 만든다. */
+  questionBankVersion: string;
+  /** 바탕 브랜드에서 가져온 설정. */
+  copied: string[];
+  /** 가져오지 못한 설정과 이유(등록은 이미 됐다). */
+  copyErrors: { file: string; error: string }[];
+  /** 지운 같은 id에 남아 있어 백업으로 옮긴 설정. */
+  setAside: string[];
+  /** 지운 같은 id에서 되살아난 기록 주 수. */
+  restoredWeeks: number;
+}
+
+/**
+ * 같은 홈페이지를 다른 시장 범위로 하나 더 등록한다 — 부딪힌 브랜드와 그 기록은 그대로 두고 id에 범위 꼬리를 붙인 새 고객 브랜드를
+ * 만든다(lib/brandVariant.ts). 영어 질문 측정(-en)과 같은 방식이다. 지난 기록은 옮기지 않는다 — 새 브랜드는 0주에서 시작한다.
+ *
+ * 1. 다시 살핀다(inspect) — 홈페이지가 같은 고객 · 저장소 브랜드이고 막히지 않았을 때만.
+ * 2. 지운 같은 id에 앱에서 고친 설정 파일이 남아 있으면 등록 값을 이기므로 before-variant-<시각>/으로 옮긴다.
+ * 3. 등록한다 — 별칭 · 홈페이지는 바탕 브랜드와 합친다(다듬어 둔 별칭 · 옛 도메인을 물려받아야 언급 · 자사 인용 판정이 같다).
+ * 4. 사실 · 브랜드 페이지 · 발행 설정을 복사한다(새 브랜드에 이미 있으면 덮지 않는다). 실패해도 등록은 되돌리지 않고 알린다.
+ */
+export async function registerVariant(draft: TenantConfig, store: ResultStore, options: { copyBusinessFiles: boolean }): Promise<VariantResult> {
+  const found = await inspect(draft, store);
+  if (!found) throw new EditorError(404, `같은 홈페이지로 등록된 브랜드가 없습니다: ${draft.tenantId} — 그냥 등록하세요.`);
+  const { existing, conflict } = found;
+  const variant = conflict.variant;
+  if (!variant) throw new EditorError(409, '홈페이지가 같은 고객 브랜드가 아니라 다른 범위로 하나 더 등록할 수 없어요.');
+  if (variant.blocked) throw new EditorError(409, variant.blocked);
+  const tenantId = variant.tenantId;
+  const questionBankVersion = await freshBankVersion(tenantId, draft.questionBankVersion);
+
+  const setAside: string[] = [];
+  const leftovers = await existingOverrides(tenantId);
+  if (leftovers.length > 0) {
+    const backupDir = path.join(tenantDir(tenantId), `before-variant-${new Date().toISOString().replace(/[:.]/g, '-')}`);
+    await mkdir(backupDir, { recursive: true });
+    for (const item of leftovers) {
+      await rename(path.join(tenantDir(tenantId), item.file), path.join(backupDir, item.file));
+      setAside.push(item.label);
+    }
+  }
+
+  const merge = (a: string[], b: string[], key: (s: string) => string) => {
+    const seen = new Set<string>();
+    return [...a, ...b].filter((x) => {
+      const k = key(x);
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  };
+  await registerTenant({
+    ...draft,
+    tenantId,
+    questionBankVersion,
+    aliases: merge(draft.aliases, existing.aliases, (s) => s.trim()),
+    ownedDomains: merge(draft.ownedDomains, existing.ownedDomains, hostKey),
+    ...(existing.ga4PropertyId && !draft.ga4PropertyId ? { ga4PropertyId: existing.ga4PropertyId } : {}),
+    cohortOnly: undefined,
+  });
+
+  const copied: string[] = [];
+  const copyErrors: VariantResult['copyErrors'] = [];
+  if (options.copyBusinessFiles) {
+    await mkdir(tenantDir(tenantId), { recursive: true });
+    for (const item of VARIANT_COPY) {
+      const from = path.join(tenantDir(existing.tenantId), item.file);
+      const to = path.join(tenantDir(tenantId), item.file);
+      try {
+        await access(to);
+        continue;
+      } catch (err) {
+        if (!isMissing(err)) {
+          copyErrors.push({ file: item.label, error: err instanceof Error ? err.message : String(err) });
+          continue;
+        }
+      }
+      try {
+        if (item.file === 'publish-settings.json') {
+          const settings = JSON.parse(await readFile(from, 'utf-8')) as { photoRights?: { medical?: boolean } };
+          // 의료 업종으로 등록하면 의료광고 확인 없는 사진 사용 확인은 넘기지 않는다(lib/articlePhotos photosAllowed).
+          if (settings.photoRights && !settings.photoRights.medical && isPhotoMedical(draft.industry)) delete settings.photoRights;
+          await writeFile(to, JSON.stringify(settings, null, 2), 'utf-8');
+        } else {
+          await copyFile(from, to);
+        }
+        copied.push(item.label);
+      } catch (err) {
+        if (isMissing(err)) continue;
+        copyErrors.push({ file: item.label, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  }
+  return { ok: true, tenantId, brandName: draft.brandName, questionBankVersion, copied, copyErrors, setAside, restoredWeeks: variant.restoredWeeks };
 }

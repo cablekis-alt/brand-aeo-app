@@ -31,7 +31,7 @@ import {
 } from './competitorEditor.js';
 import { draftCompetitorRewrites } from './competitorRewrite.js';
 import { readCompetitorOverride } from './tenantCompetitorsStore.js';
-import { describeTenantConflict, promoteCompetitor } from './tenantPromote.js';
+import { describeTenantConflict, promoteCompetitor, registerVariant } from './tenantPromote.js';
 import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills, savePhotoPicks } from './contentDraft.js';
 import { createFactGuard } from './factGuard.js';
 import { fetchSitePhoto } from './sitePhoto.js';
@@ -292,6 +292,28 @@ app.post('/api/tenants/:tenantId/promote', async (req, res) => {
   const removeFrom = Array.isArray(body.removeFrom) ? body.removeFrom.filter((x): x is string => typeof x === 'string') : [];
   try {
     res.json(await promoteCompetitor(draft, removeFrom, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 같은 홈페이지를 다른 시장 범위로 하나 더 등록 — 부딪힌 고객 브랜드는 그대로 두고 id에 범위 꼬리를 붙인 새 브랜드를 만든다
+// (tenantPromote.ts registerVariant, lib/brandVariant.ts). 본문: { draft: 온보딩 초안(부딪힌 id 그대로), copyBusinessFiles }. Express 전용.
+app.post('/api/tenants/:tenantId/variant', async (req, res) => {
+  const body = (req.body ?? {}) as { draft?: unknown; copyBusinessFiles?: unknown };
+  let draft: TenantConfig;
+  try {
+    draft = normalizeTenantDraft(body.draft);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  if (draft.tenantId !== req.params.tenantId) {
+    res.status(400).json({ error: `초안의 tenantId(${draft.tenantId})가 주소(${req.params.tenantId})와 다릅니다.` });
+    return;
+  }
+  try {
+    res.status(201).json(await registerVariant(draft, store, { copyBusinessFiles: body.copyBusinessFiles !== false }));
   } catch (err) {
     sendEditorError(res, err);
   }

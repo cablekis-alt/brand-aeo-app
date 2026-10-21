@@ -6998,6 +6998,23 @@ td.cell-mid {
   font-size: 13px;
   cursor: pointer;
 }
+/* 같은 홈페이지를 다른 범위로 하나 더 등록 — 이 홈페이지를 쓰는 브랜드 목록과 설정 가져오기. */
+.onboard-conflict-siblings {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.onboard-conflict-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.onboard-conflict-copy input {
+  margin-top: 3px;
+}
 
 /*
  * 등록된 브랜드 관리 표(BrandManageList.tsx)의 「전체 측정 · 삭제」 칸 — 오른쪽에 붙여 둔다. 열이 많아 창이 좁으면

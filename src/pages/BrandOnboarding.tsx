@@ -7,7 +7,8 @@ import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureTenantAll, type FactCandidate } from '../lib/api'
-import { directionParticle, topicParticle } from '../lib/korean'
+import { scopeLabel } from '../lib/brandVariant'
+import { directionParticle, objectParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
@@ -41,6 +42,10 @@ interface TenantConflict {
   overrides: string[]
   referencedBy: { tenantId: string; brandName: string }[]
   sharedIdLines: { tenantId: string; brandName: string; line: string; domain: string }[]
+  /** 이 홈페이지를 쓰는 고객 브랜드(부딪힌 브랜드 포함). 데스크톱 서버만 보낸다. */
+  siblings?: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[]
+  /** 같은 홈페이지를 다른 범위로 하나 더 등록할 때의 새 id와 막히는 이유(lib/brandVariant.ts). 데스크톱 서버만 보낸다. */
+  variant?: { tenantId: string; blocked: string | null; restoredWeeks: number } | null
 }
 
 function firstKrAddress(text: string): string {
@@ -350,6 +355,11 @@ export default function BrandOnboarding() {
   const [removeFrom, setRemoveFrom] = useState<string[]>([])
   // 등록 완료 시 true — 등록 완료 단계에서 "이 브랜드 전체 측정"을 바로 실행할 수 있게 한다.
   const [registered, setRegistered] = useState(false)
+  // 실제로 등록된 id — 다른 범위로 하나 더 등록하면 초안 id(gunsan)가 아니라 범위 꼬리가 붙은 id(gunsan-national)다.
+  // 이것을 안 쓰면 「6 측정」이 새 브랜드가 아니라 원래 브랜드를 잰다.
+  const [registeredAs, setRegisteredAs] = useState<string | null>(null)
+  // 다른 범위로 하나 더 등록할 때 원래 브랜드의 사실 · 브랜드 페이지 · 발행 설정을 가져올지(기본 켬).
+  const [copyBusiness, setCopyBusiness] = useState(true)
   const [measuring, setMeasuring] = useState(false)
   // 측정을 건너뛰었나 — 6단계를 '완료'로 보고 다음 할 일을 안내한다.
   const [skippedMeasure, setSkippedMeasure] = useState(false)
@@ -860,6 +870,7 @@ export default function BrandOnboarding() {
     setScopeInferred(null)
     setScopeChangedAfterComp(false)
     setRegistered(false)
+    setRegisteredAs(null)
     setRegisterMsg(null)
     setConflict(null)
     setMeasureMsg(null)
@@ -1095,6 +1106,7 @@ export default function BrandOnboarding() {
       await reloadTenants()
       setTenantId(tenant.tenantId)
       setRegistered(true)
+      setRegisteredAs(tenant.tenantId)
       // 등록 완료 — 아래 "이 브랜드 전체 측정 시작" 버튼으로 바로 측정할 수 있다(경쟁사·코호트 포함).
       setRegisterMsg(`✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`)
     } catch (err) {
@@ -1127,6 +1139,7 @@ export default function BrandOnboarding() {
       await reloadTenants()
       setTenantId(tenant.tenantId)
       setRegistered(true)
+      setRegisteredAs(tenant.tenantId)
       const names = (ids: string[]) => ids.map((id) => info.referencedBy.find((r) => r.tenantId === id)?.brandName ?? id).join(', ')
       const kept = info.weeks > 0 ? ` 지난 기록 ${info.weeks}주를 잇습니다.` : ''
       const bank = body.questionBankVersion ? ` 질문지는 첫 측정에서 새로 만듭니다(${body.questionBankVersion}).` : ''
@@ -1148,10 +1161,55 @@ export default function BrandOnboarding() {
     }
   }
 
+  // 같은 홈페이지를 다른 범위로 하나 더 등록한다 — 부딪힌 고객 브랜드는 그대로 두고 id에 범위 꼬리를 붙인 새 브랜드를 만든다
+  // (server/tenantPromote.ts registerVariant, lib/brandVariant.ts).
+  async function registerVariantBrand() {
+    if (!conflict || conflict.draftKey !== draftKey) return
+    const info = conflict.info
+    setRegistering(true)
+    setRegisterMsg('다른 범위로 하나 더 등록하는 중…')
+    try {
+      const res = await fetch(`/api/tenants/${encodeURIComponent(tenant.tenantId)}/variant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft: tenant, copyBusinessFiles: copyBusiness }),
+      })
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string
+        tenantId?: string
+        questionBankVersion?: string
+        copied?: string[]
+        copyErrors?: { file: string; error: string }[]
+        setAside?: string[]
+        restoredWeeks?: number
+      }
+      if (!res.ok || !body.tenantId) throw new Error(body.error || `등록 실패 (HTTP ${res.status})`)
+      await reloadTenants()
+      setTenantId(body.tenantId)
+      setRegistered(true)
+      setRegisteredAs(body.tenantId)
+      const copied = body.copied?.length ? ` ${info.brandName}에서 ${objectParticle(body.copied.join(' · '))} 가져왔습니다.` : ''
+      const failed = body.copyErrors?.length ? ` 가져오지 못한 것: ${body.copyErrors.map((e) => `${e.file}(${e.error})`).join(', ')}.` : ''
+      const aside = body.setAside?.length ? ` 지운 같은 id에 남아 있던 설정(${body.setAside.join(' · ')})은 백업으로 옮겼습니다.` : ''
+      const restored = body.restoredWeeks ? ` 지운 같은 id의 지난 기록 ${body.restoredWeeks}주가 되살아났습니다.` : ''
+      setConflict(null)
+      setRegisterMsg(
+        `✓ 다른 범위로 하나 더 등록했습니다 — ${tenant.brandName} · ${scopeLabel(tenant.marketScope)}(${body.tenantId}). ` +
+          `기존 ${info.brandName}(${info.tenantId} · ${info.industry} · ${info.region})${topicParticle(info.brandName).slice(info.brandName.length)} 그대로입니다.` +
+          `${copied}${failed}${aside}${restored}` +
+          ` 질문지는 첫 측정에서 만듭니다(${body.questionBankVersion ?? tenant.questionBankVersion}).`,
+      )
+    } catch (err) {
+      setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
+    } finally {
+      setRegistering(false)
+    }
+  }
+
   // 등록한 본 브랜드를 바로 전체 측정한다(경쟁사·코호트 포함) — STAGE 1로 이동하지 않고 여기서 실행.
   // 로컬은 이 탭에서 즉시 측정(서버가 진행 상태를 추적), 배포는 GitHub Actions를 트리거한다.
   async function measureRegisteredBrand() {
-    const id = tenant.tenantId
+    const id = registeredAs ?? tenant.tenantId
     if (!id || measuring) return
     setMeasuring(true)
     setMeasureMsg(
@@ -1604,7 +1662,7 @@ export default function BrandOnboarding() {
 
       <StageShell id="stage-5" code="5" title="등록" status={s5}>
         <div className="onboard-register">
-          <p className="onboard-tenant">테넌트 초안 (tenantId: {tenant.tenantId || '—'})</p>
+          <p className="onboard-tenant">테넌트 초안 (tenantId: {registeredAs ?? (tenant.tenantId || '—')})</p>
           {keyStatus && (
             <div className="onboard-engines">
               <p className="onboard-engines-title">수집 엔진</p>
@@ -1694,10 +1752,13 @@ export default function BrandOnboarding() {
         {conflict && !registered && conflict.draftKey === draftKey && (
           <ConflictPanel
             conflict={conflict.info}
-            draft={{ industry: tenant.industry, region: tenant.region, ownedDomains: tenant.ownedDomains }}
+            draft={{ industry: tenant.industry, region: tenant.region, ownedDomains: tenant.ownedDomains, marketScope: tenant.marketScope }}
             removeFrom={removeFrom}
             onToggle={(id) => setRemoveFrom((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))}
             onPromote={() => void promoteBrand()}
+            onVariant={() => void registerVariantBrand()}
+            copyBusiness={copyBusiness}
+            onCopyToggle={() => setCopyBusiness((v) => !v)}
             busy={registering}
           />
         )}
@@ -1712,7 +1773,7 @@ export default function BrandOnboarding() {
           </p>
         )}
         <p className="hint onboard-cli">
-          로컬 측정 CLI: <code>npm run measure:local -- {tenant.tenantId || '<tenantId>'}</code> (경쟁사·코호트 포함, baking·배포까지)
+          로컬 측정 CLI: <code>npm run measure:local -- {registeredAs ?? (tenant.tenantId || '<tenantId>')}</code> (경쟁사·코호트 포함, baking·배포까지)
         </p>
       </StageShell>
 
@@ -1749,10 +1810,9 @@ export default function BrandOnboarding() {
             {skippedMeasure && !measuring && (
               // 건너뛰어도 반쪽이 아니다 — 측정은 우선순위를 매기는 일이지 글쓰기의 전제가 아니다(v0.1.91).
               <p className="hint">
-                측정을 미뤘습니다. <b>지금도 글은 쓸 수 있습니다</b> —{' '}
-                <Link to="/questions">질문 프롬프트 빌더</Link>에서 질문을 골라 바로 초안까지 갑니다. 측정은 그 질문
-                중 <b>어느 것에서 밀리는지</b>를 알려 주므로, 나중에 <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
-                에서 돌리면 실행 항목이 많이 밀리는 순서대로 채워집니다.
+                측정을 미뤘습니다. 질문지는 <b>첫 측정 때</b> 이 브랜드의 업종 · 지역 질문으로 만들어집니다 — 나중에{' '}
+                <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 돌리면 <Link to="/questions">질문 프롬프트 빌더</Link>에
+                질문이 생기고, 실행 항목이 많이 밀리는 순서대로 채워집니다.
               </p>
             )}
             {measureMsg && (
@@ -1779,18 +1839,81 @@ function ConflictPanel({
   removeFrom,
   onToggle,
   onPromote,
+  onVariant,
+  copyBusiness,
+  onCopyToggle,
   busy,
 }: {
   conflict: TenantConflict
-  draft: { industry: string; region: string; ownedDomains: string[] }
+  draft: { industry: string; region: string; ownedDomains: string[]; marketScope?: MarketScope }
   removeFrom: string[]
   onToggle: (tenantId: string) => void
   onPromote: () => void
+  onVariant: () => void
+  copyBusiness: boolean
+  onCopyToggle: () => void
   busy: boolean
 }) {
   // 조사만 떼어 쓴다 — 「군산여행의 모든것」은 · 전북 군산으로(받침에 맞게).
   const tp = (w: string) => topicParticle(w).slice(w.length)
   const dp = (w: string) => directionParticle(w).slice(w.length)
+  // 이미 등록된 고객 · 저장소 브랜드와 홈페이지가 같다 — 덮어쓰지 않고 다른 범위로 하나 더 등록할 수 있다(데스크톱 서버만 variant를 보낸다).
+  if ((c.kind === 'customer' || c.kind === 'repo') && c.sameSite && c.variant) {
+    const v = c.variant
+    return (
+      <div className="onboard-conflict" role="region" aria-label="다른 범위로 하나 더 등록">
+        <p className="onboard-conflict-title">
+          「{c.brandName}」{tp(c.brandName)} 이 홈페이지로 이미 등록돼 있습니다 — 덮어쓰지 않습니다
+        </p>
+        {c.siblings && c.siblings.length > 0 && (
+          <ul className="onboard-conflict-siblings">
+            {c.siblings.map((s) => (
+              <li key={s.tenantId}>
+                {s.brandName} · {s.industry} · {s.region} · {scopeLabel(s.marketScope)} <span className="muted">({s.tenantId})</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {v.blocked ? (
+          <p className="error" role="alert">
+            ✗ 다른 범위로 하나 더 등록할 수 없습니다 — {v.blocked} 3단계에서 시장 범위 · 업종 · 지역을 바꾼 뒤 「브랜드 등록」을 다시 눌러
+            주세요.
+          </p>
+        ) : (
+          <>
+            <p className="hint">
+              같은 홈페이지를 <b>다른 범위로 하나 더</b> 등록할 수 있습니다 — 새로 등록:{' '}
+              <b>
+                {draft.industry} · {draft.region} · {scopeLabel(draft.marketScope)}
+              </b>{' '}
+              → <code>{v.tenantId}</code>. 기존 브랜드와 그 기록은 그대로 두고, 새 브랜드는 기록 0주에서 시작해 첫 측정 때 질문지를
+              만듭니다. 이름은 같고 목록에는 범위 표시가 붙어 구분됩니다.
+            </p>
+            {v.restoredWeeks > 0 && (
+              <p className="hint onboard-conflict-warn">
+                예전에 지운 {v.tenantId}의 지난 기록 {v.restoredWeeks}주가 함께 되살아납니다.
+              </p>
+            )}
+            <label className="onboard-conflict-copy">
+              <input type="checkbox" checked={copyBusiness} onChange={onCopyToggle} />
+              <span>
+                {c.brandName}의 사실 · 브랜드 페이지 · 발행 설정을 가져오기(등록할 때 한 번 복사합니다 — 이후 고친 내용은 서로 반영되지
+                않습니다)
+              </span>
+            </label>
+            <p className="hint">
+              두 범위를 매주 재면 이 홈페이지의 측정 비용이 약 두 배입니다(경쟁사 코호트 포함). 올린 글 기록은 브랜드마다 따로입니다.
+            </p>
+            <div className="onboard-register-actions">
+              <button type="button" className="primary" onClick={onVariant} disabled={busy}>
+                {busy ? '등록 중…' : '다른 범위로 하나 더 등록'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
   if (c.kind === 'customer') {
     return (
       <p className="error" role="alert">
