@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { isSharedPlatformHost } from '../src/lib/sharedHosts.js';
 import type { CohortExclusion } from './cohortExclusionStore.js';
 import type { CompetitorContext } from '../src/prompts/types.js';
 import type { TenantConfig } from './types.js';
@@ -87,30 +88,13 @@ export function baseFingerprint(tenant: TenantConfig): string {
   return createHash('sha1').update(payload).digest('hex').slice(0, 16);
 }
 
-/**
- * 여럿이 함께 쓰는 주소 — 한 업체의 홈페이지가 아니다. 경쟁사 id는 도메인 첫 마디라(cohortPlan.ts
- * slugFromDomain) 네이버 블로그를 홈페이지로 넣은 펜션은 모두 id 'blog'가 되어 한 브랜드로 섞이고, 그 플랫폼의
- * 모든 인용이 그 경쟁사의 자사 인용으로 잡힌다. 이런 주소는 홈페이지로 쓰지 않고 이름으로 잰다.
- */
-const SHARED_HOSTS = new Set([
-  'blog.naver.com', 'm.blog.naver.com', 'post.naver.com', 'm.post.naver.com', 'cafe.naver.com',
-  'smartstore.naver.com', 'place.naver.com', 'm.place.naver.com', 'map.naver.com', 'booking.naver.com',
-  'instagram.com', 'facebook.com', 'm.facebook.com', 'youtube.com', 'm.youtube.com', 'threads.net', 'tiktok.com',
-  'twitter.com', 'x.com', 'band.us', 'pf.kakao.com', 'place.map.kakao.com', 'map.kakao.com', 'linktr.ee',
-  'modoo.at', 'blog.daum.net', 'cafe.daum.net', 'brunch.co.kr', 'tistory.com', 'velog.io', 'medium.com',
-  'blogspot.com', 'wordpress.com', 'sites.google.com', 'maps.google.com',
-  'yanolja.com', 'goodchoice.kr', 'yeogi.com', 'airbnb.co.kr', 'airbnb.com', 'booking.com', 'agoda.com',
-]);
-
 /** 첫 마디가 업체 이름이 아닌 주소 — 'blog.x.com'·'shop.x.co.kr'은 id가 'blog'·'shop'이 되어 다른 업체와 겹친다. */
 const GENERIC_LABELS = new Set(['blog', 'shop', 'store', 'mall', 'home', 'web', 'site', 'booking', 'book', 'reserve', 'smartstore', 'cafe', 'post', 'brand', 'official']);
 
+/** 여럿이 함께 쓰는 주소(lib/sharedHosts.ts)이거나 첫 마디가 업체 이름이 아닌 주소 — 홈페이지로 쓰지 않고 이름으로 잰다. */
 export function isSharedHost(host: string): boolean {
   return (
-    SHARED_HOSTS.has(host) ||
-    host.endsWith('.naver.com') ||
-    host.endsWith('.kakao.com') ||
-    host.endsWith('.daum.net') ||
+    isSharedPlatformHost(host) ||
     // cohortPlan.ts slugFromDomain과 같은 첫 마디(그 모듈은 tenantRegistry를 거쳐 이 파일을 가져와 순환이 된다).
     GENERIC_LABELS.has(host.split('.')[0] ?? '')
   );

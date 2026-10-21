@@ -45,7 +45,7 @@ interface TenantConflict {
   /** 이 홈페이지를 쓰는 고객 브랜드(부딪힌 브랜드 포함). 데스크톱 서버만 보낸다. */
   siblings?: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[]
   /** 같은 홈페이지를 다른 범위로 하나 더 등록할 때의 새 id와 막히는 이유(lib/brandVariant.ts). 데스크톱 서버만 보낸다. */
-  variant?: { tenantId: string; blocked: string | null; restoredWeeks: number } | null
+  variant?: { tenantId: string; blocked: string | null; twinId?: string | null; restoredWeeks: number } | null
 }
 
 function firstKrAddress(text: string): string {
@@ -837,6 +837,13 @@ export default function BrandOnboarding() {
    * 그 사실이 <details> 안에 숨어 있었다.
    */
   async function handleStart(e: FormEvent) {
+    // 다른 브랜드를 새로 조회하면 앞 브랜드의 등록 상태를 비운다 — 남으면 6단계가 앞 브랜드(registeredAs)를 잰다. URL 경로도 같다.
+    setRegistered(false)
+    setRegisteredAs(null)
+    setRegisterMsg(null)
+    setConflict(null)
+    setMeasureMsg(null)
+    setSkippedMeasure(false)
     if (url.trim()) {
       // URL 경로는 상호를 페이지에서 뽑지만, 사용자가 적어 넣은 상호가 더 믿을 만하다 —
       // handleExtract가 덮어쓰지 않도록 여기서 지키지는 않는다(2단계에서 확인·수정한다).
@@ -869,11 +876,6 @@ export default function BrandOnboarding() {
     setScopeTouched(false)
     setScopeInferred(null)
     setScopeChangedAfterComp(false)
-    setRegistered(false)
-    setRegisteredAs(null)
-    setRegisterMsg(null)
-    setConflict(null)
-    setMeasureMsg(null)
     setBusy(true)
     try {
       const res = await fetch('/api/infer?kind=identify', {
@@ -1858,7 +1860,11 @@ function ConflictPanel({
   const tp = (w: string) => topicParticle(w).slice(w.length)
   const dp = (w: string) => directionParticle(w).slice(w.length)
   // 이미 등록된 고객 · 저장소 브랜드와 홈페이지가 같다 — 덮어쓰지 않고 다른 범위로 하나 더 등록할 수 있다(데스크톱 서버만 variant를 보낸다).
-  if ((c.kind === 'customer' || c.kind === 'repo') && c.sameSite && c.variant) {
+  // 같은 설정(업종 · 지역)으로 다시 등록했으면(막은 같은 코호트 브랜드가 부딪힌 브랜드 자신) 아래 「이미 등록된 브랜드」 안내로 간다.
+  const sameAgain = Boolean(c.variant?.twinId && c.variant.twinId === c.tenantId)
+  // 다른 범위로 하나 더 등록하는 길 — 같은 설정으로 다시 눌렀을 때 함께 알린다.
+  const variantHint = c.variant ? ' 같은 홈페이지를 다른 범위로 하나 더 등록하려면 2단계(정보)에서 시장 범위 · 업종 · 지역을 바꿔 「브랜드 등록」을 다시 누르세요.' : ''
+  if ((c.kind === 'customer' || c.kind === 'repo') && c.sameSite && c.variant && !sameAgain) {
     const v = c.variant
     return (
       <div className="onboard-conflict" role="region" aria-label="다른 범위로 하나 더 등록">
@@ -1876,8 +1882,8 @@ function ConflictPanel({
         )}
         {v.blocked ? (
           <p className="error" role="alert">
-            ✗ 다른 범위로 하나 더 등록할 수 없습니다 — {v.blocked} 3단계에서 시장 범위 · 업종 · 지역을 바꾼 뒤 「브랜드 등록」을 다시 눌러
-            주세요.
+            ✗ 다른 범위로 하나 더 등록할 수 없습니다 — {v.blocked} 2단계(정보)에서 시장 범위 · 업종 · 지역을 바꾼 뒤 「브랜드 등록」을 다시
+            눌러 주세요. 기존 브랜드를 고치려면 아래 브랜드 목록에서 고치세요.
           </p>
         ) : (
           <>
@@ -1918,6 +1924,7 @@ function ConflictPanel({
     return (
       <p className="error" role="alert">
         ✗ {c.brandName}({c.tenantId}){tp(c.brandName)} 이미 등록된 고객 브랜드입니다 — 덮어쓰지 않습니다. 아래 브랜드 목록에서 고치세요.
+        {variantHint}
       </p>
     )
   }
@@ -1925,6 +1932,7 @@ function ConflictPanel({
     return (
       <p className="error" role="alert">
         ✗ {c.brandName}({c.tenantId}){tp(c.brandName)} 저장소 설정에 있는 브랜드라 앱에서 바꿀 수 없습니다.
+        {variantHint}
       </p>
     )
   }

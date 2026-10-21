@@ -1,4 +1,4 @@
-import { access, copyFile, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { isPhotoMedical } from '../src/lib/articlePhotos.js';
@@ -12,7 +12,7 @@ import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
 import { isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
 import { subjectParticle, topicParticle } from '../src/lib/korean.js';
-import type { CompetitorContext } from '../src/prompts/types.js';
+import type { CompetitorContext, FactGraphNode } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
@@ -56,9 +56,11 @@ export interface TenantConflict {
   siblings: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[];
   /**
    * 같은 홈페이지를 다른 범위로 하나 더 등록할 때(lib/brandVariant.ts) — 새 id와, 못 하면 그 이유. 부딪힌 곳이 고객 · 저장소
-   * 브랜드이고 홈페이지가 같을 때만 채운다(경쟁사면 「고객 브랜드로 전환」). restoredWeeks는 지운 같은 id에 남은 기록 주 수.
+   * 브랜드이고 홈페이지(플랫폼 주소 말고)가 같을 때만 채운다(경쟁사면 「고객 브랜드로 전환」). twinId는 막은 같은 코호트 브랜드 —
+   * 부딪힌 브랜드 자신이면 같은 설정으로 다시 등록한 것이라 화면이 「이미 등록된 브랜드」로 안내한다. restoredWeeks는 지운 같은 id에
+   * 남은 기록 주 수.
    */
-  variant: { tenantId: string; blocked: string | null; restoredWeeks: number } | null;
+  variant: { tenantId: string; blocked: string | null; twinId: string | null; restoredWeeks: number } | null;
 }
 
 const host = (d: string) => d.trim().toLowerCase().replace(/^www\./, '');
@@ -79,9 +81,9 @@ const OVERRIDE_FILES: { file: string; label: string }[] = [
 const tenantDir = (tenantId: string) => path.join(PIPELINE_DATA_DIR, tenantId);
 const isMissing = (err: unknown) => (err as NodeJS.ErrnoException | null)?.code === 'ENOENT';
 
-async function existingOverrides(tenantId: string): Promise<typeof OVERRIDE_FILES> {
+async function existingOverrides(tenantId: string, files = OVERRIDE_FILES): Promise<typeof OVERRIDE_FILES> {
   const found: typeof OVERRIDE_FILES = [];
-  for (const item of OVERRIDE_FILES) {
+  for (const item of files) {
     try {
       await access(path.join(tenantDir(tenantId), item.file));
       found.push(item);
@@ -150,7 +152,8 @@ async function inspect(
       referencedBy,
       sharedIdLines,
       siblings,
-      variant: sameSite && kind !== 'competitor' ? await planVariant(draft, existing, runtime, store) : null,
+      // 플랫폼 주소(blog.naver.com 등)만 같으면 다른 업체다 — 범위 변형으로 묶으면 남의 별칭 · GA4 · 사실을 물려받는다.
+      variant: sameSite && kind !== 'competitor' && sharesSite(existing, draft) ? await planVariant(draft, existing, runtime, store) : null,
     },
   };
 }
@@ -158,6 +161,7 @@ async function inspect(
 /**
  * 같은 홈페이지를 다른 범위로 하나 더 등록할 수 있는가 — 새 id(lib/brandVariant.ts variantTenantId)와 막히는 이유.
  * 홈페이지를 공유하는 브랜드(경쟁사 포함) 중 업종 · 지역 · 언어가 같은 곳이 있으면 같은 질문지 · 순위표를 쓰게 되므로 막는다.
+ * 범위 꼬리 id가 이미 있으면(같은 범위의 두 번째 변형) 막지 않고 -2를 붙인다 — 막으면 업종 · 지역을 바꿔도 풀리지 않는다.
  */
 async function planVariant(
   draft: TenantConfig,
@@ -165,20 +169,20 @@ async function planVariant(
   runtime: TenantConfig[],
   store: ResultStore,
 ): Promise<NonNullable<TenantConflict['variant']>> {
-  const tenantId = variantTenantId(existing.tenantId, draft.marketScope);
-  const twin = runtime.find((t) => sharesSite(t, draft) && sameCohort(t, draft));
-  const taken = runtime.find((t) => t.tenantId === tenantId);
+  const tenantId = variantTenantId(existing, draft.marketScope, runtime);
+  // 등록할 때 바탕 브랜드의 홈페이지까지 합치므로(registerVariant) 같은 코호트도 그 범위에서 찾는다 — 초안 주소만 보면 통과라고
+  // 안내한 뒤 registerTenant의 같은 검사에서 막힌다.
+  const registered = { ...draft, ownedDomains: [...draft.ownedDomains, ...existing.ownedDomains] };
+  const twin = runtime.find((t) => sharesSite(t, registered) && sameCohort(t, draft));
   const blocked = twin
     ? `${twin.brandName}(${twin.tenantId})${subjectParticle(twin.brandName).slice(twin.brandName.length)} 이미 ${twin.industry} · ${twin.region}에 있어요. 업종이나 지역을 바꿔야 다른 질문지로 재요` +
       (draft.region === '국내' && (twin.marketScope ?? 'local') !== (draft.marketScope ?? 'local')
         ? ' — 전국형과 B2B형은 지역이 둘 다 「국내」라 업종까지 같으면 같은 코호트예요.'
         : '.')
-    : taken
-      ? `${tenantId}이(가) 이미 있어요(${taken.brandName} · ${taken.industry} · ${taken.region}).`
-      : null;
+    : null;
   // 지운 같은 id의 기록 — 등록하면 툼스톤이 걷혀 그 기록이 되살아난다(registerTenant).
   const restoredWeeks = blocked ? 0 : (await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER)).length;
-  return { tenantId, blocked, restoredWeeks };
+  return { tenantId, blocked, twinId: twin?.tenantId ?? null, restoredWeeks };
 }
 
 export async function describeTenantConflict(draft: TenantConfig, store: ResultStore): Promise<TenantConflict | null> {
@@ -343,12 +347,11 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
   };
 }
 
-/** 바탕 브랜드에서 새 범위 브랜드로 가져오는 설정 — 사람이 넣은 사실 · 발행 정보라 범위가 달라도 같다. 경쟁사 · 시장 범위 · 엔진은 범위마다 다르다. */
-const VARIANT_COPY: { file: string; label: string }[] = [
-  { file: 'fact-graph.json', label: '사실' },
-  { file: 'brand-page.json', label: '브랜드 페이지' },
-  { file: 'publish-settings.json', label: '발행 설정' },
-];
+/**
+ * 지운 같은 id에 남아 있으면 등록 값 · 바탕 브랜드에서 가져올 값을 이기는 파일 — 앱에서 고친 설정과 발행 설정. 새 브랜드는 바탕 브랜드의
+ * 값이나 빈 값으로 시작해야 한다(지운 브랜드의 문의 링크 · 블로그 주소로 글을 내보내지 않게).
+ */
+const VARIANT_SET_ASIDE: { file: string; label: string }[] = [...OVERRIDE_FILES, { file: 'publish-settings.json', label: '발행 설정' }];
 
 export interface VariantResult {
   ok: true;
@@ -371,9 +374,13 @@ export interface VariantResult {
  * 만든다(lib/brandVariant.ts). 영어 질문 측정(-en)과 같은 방식이다. 지난 기록은 옮기지 않는다 — 새 브랜드는 0주에서 시작한다.
  *
  * 1. 다시 살핀다(inspect) — 홈페이지가 같은 고객 · 저장소 브랜드이고 막히지 않았을 때만.
- * 2. 지운 같은 id에 앱에서 고친 설정 파일이 남아 있으면 등록 값을 이기므로 before-variant-<시각>/으로 옮긴다.
+ * 2. 지운 같은 id에 남은 설정 파일(VARIANT_SET_ASIDE)은 before-variant-<시각>/으로 옮긴다.
  * 3. 등록한다 — 별칭 · 홈페이지는 바탕 브랜드와 합친다(다듬어 둔 별칭 · 옛 도메인을 물려받아야 언급 · 자사 인용 판정이 같다).
- * 4. 사실 · 브랜드 페이지 · 발행 설정을 복사한다(새 브랜드에 이미 있으면 덮지 않는다). 실패해도 등록은 되돌리지 않고 알린다.
+ *    가져오기를 켜면 사실 · 브랜드 페이지는 바탕 브랜드의 실제 값(저장소 설정 · 오버레이 · 앱에서 고친 파일을 합친 값)을 새 브랜드
+ *    설정에 넣는다 — 앱에서 고친 파일만 복사하면 저장소 · 등록 때 넣은 사실과 브랜드 페이지가 빠졌다(2026-10-21 검토). 사실은 바탕
+ *    브랜드 것을 먼저 두고 등록 화면에서 고른 것 중 겹치지 않는 것을 더한다. 등록이 막히면 옮긴 파일을 되돌린다.
+ * 4. 지운 id의 기록이 되살아나면 그 코호트 주차 순위를 다시 매긴다 — 지울 때 빼고 매겼다(tenantRegistry.ts deleteTenantLocally).
+ * 5. 발행 설정을 복사한다. 실패해도 등록은 되돌리지 않고 알린다.
  */
 export async function registerVariant(draft: TenantConfig, store: ResultStore, options: { copyBusinessFiles: boolean }): Promise<VariantResult> {
   const found = await inspect(draft, store);
@@ -382,16 +389,21 @@ export async function registerVariant(draft: TenantConfig, store: ResultStore, o
   const variant = conflict.variant;
   if (!variant) throw new EditorError(409, '홈페이지가 같은 고객 브랜드가 아니라 다른 범위로 하나 더 등록할 수 없어요.');
   if (variant.blocked) throw new EditorError(409, variant.blocked);
+  // 되살아난 기록으로 코호트 순위를 다시 매기므로 측정과 겹치면 안 된다(promoteCompetitor와 같다).
+  if (variant.restoredWeeks > 0 && measureInFlight()) throw new EditorError(409, '측정이 진행 중이에요. 끝난 뒤에 등록해 주세요.');
   const tenantId = variant.tenantId;
   const questionBankVersion = await freshBankVersion(tenantId, draft.questionBankVersion);
 
   const setAside: string[] = [];
-  const leftovers = await existingOverrides(tenantId);
+  const moved: string[] = [];
+  let backupDir = '';
+  const leftovers = await existingOverrides(tenantId, VARIANT_SET_ASIDE);
   if (leftovers.length > 0) {
-    const backupDir = path.join(tenantDir(tenantId), `before-variant-${new Date().toISOString().replace(/[:.]/g, '-')}`);
+    backupDir = path.join(tenantDir(tenantId), `before-variant-${new Date().toISOString().replace(/[:.]/g, '-')}`);
     await mkdir(backupDir, { recursive: true });
     for (const item of leftovers) {
       await rename(path.join(tenantDir(tenantId), item.file), path.join(backupDir, item.file));
+      moved.push(item.file);
       setAside.push(item.label);
     }
   }
@@ -405,46 +417,52 @@ export async function registerVariant(draft: TenantConfig, store: ResultStore, o
       return true;
     });
   };
-  await registerTenant({
-    ...draft,
-    tenantId,
-    questionBankVersion,
-    aliases: merge(draft.aliases, existing.aliases, (s) => s.trim()),
-    ownedDomains: merge(draft.ownedDomains, existing.ownedDomains, hostKey),
-    ...(existing.ga4PropertyId && !draft.ga4PropertyId ? { ga4PropertyId: existing.ga4PropertyId } : {}),
-    cohortOnly: undefined,
-  });
+  const carry = options.copyBusinessFiles;
+  const factKey = (f: FactGraphNode) => f.claim.trim().toLowerCase();
+  const baseFacts = new Set(existing.factGraph.map(factKey));
+  const factGraph = carry ? [...existing.factGraph, ...draft.factGraph.filter((f) => !baseFacts.has(factKey(f)))] : draft.factGraph;
+  const brandPageUrl = draft.brandPageUrl ?? (carry ? existing.brandPageUrl : undefined);
+  try {
+    await registerTenant({
+      ...draft,
+      tenantId,
+      questionBankVersion,
+      aliases: merge(draft.aliases, existing.aliases, (s) => s.trim()),
+      ownedDomains: merge(draft.ownedDomains, existing.ownedDomains, hostKey),
+      factGraph,
+      ...(brandPageUrl ? { brandPageUrl } : {}),
+      ...(existing.ga4PropertyId && !draft.ga4PropertyId ? { ga4PropertyId: existing.ga4PropertyId } : {}),
+      cohortOnly: undefined,
+    });
+  } catch (err) {
+    if (moved.length > 0) await restoreFiles(tenantId, backupDir, moved);
+    const message = err instanceof Error ? err.message : String(err);
+    // registerTenant의 중복 검사(같은 id · 같은 홈페이지 · 코호트) — 살핀 뒤에 다른 등록이 끼어든 경우다.
+    if (message.includes('이미 존재')) throw new EditorError(409, message);
+    throw err;
+  }
+
+  if (variant.restoredWeeks > 0) {
+    const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
+    const weeks = new Map(history.map((c) => [`${c.industry}|${c.region}|${c.weekOf}`, c]));
+    for (const { industry, region, weekOf } of weeks.values()) await reconcileCohortRanks(store, industry, region, weekOf);
+  }
 
   const copied: string[] = [];
   const copyErrors: VariantResult['copyErrors'] = [];
-  if (options.copyBusinessFiles) {
-    await mkdir(tenantDir(tenantId), { recursive: true });
-    for (const item of VARIANT_COPY) {
-      const from = path.join(tenantDir(existing.tenantId), item.file);
-      const to = path.join(tenantDir(tenantId), item.file);
-      try {
-        await access(to);
-        continue;
-      } catch (err) {
-        if (!isMissing(err)) {
-          copyErrors.push({ file: item.label, error: err instanceof Error ? err.message : String(err) });
-          continue;
-        }
-      }
-      try {
-        if (item.file === 'publish-settings.json') {
-          const settings = JSON.parse(await readFile(from, 'utf-8')) as { photoRights?: { medical?: boolean } };
-          // 의료 업종으로 등록하면 의료광고 확인 없는 사진 사용 확인은 넘기지 않는다(lib/articlePhotos photosAllowed).
-          if (settings.photoRights && !settings.photoRights.medical && isPhotoMedical(draft.industry)) delete settings.photoRights;
-          await writeFile(to, JSON.stringify(settings, null, 2), 'utf-8');
-        } else {
-          await copyFile(from, to);
-        }
-        copied.push(item.label);
-      } catch (err) {
-        if (isMissing(err)) continue;
-        copyErrors.push({ file: item.label, error: err instanceof Error ? err.message : String(err) });
-      }
+  if (carry && existing.factGraph.length > 0) copied.push('사실');
+  if (carry && !draft.brandPageUrl && existing.brandPageUrl) copied.push('브랜드 페이지');
+  if (carry) {
+    try {
+      const raw = await readFile(path.join(tenantDir(existing.tenantId), 'publish-settings.json'), 'utf-8');
+      const settings = JSON.parse(raw) as { photoRights?: { medical?: boolean } };
+      // 의료 업종으로 등록하면 의료광고 확인 없는 사진 사용 확인은 넘기지 않는다(lib/articlePhotos photosAllowed).
+      if (settings.photoRights && !settings.photoRights.medical && isPhotoMedical(draft.industry)) delete settings.photoRights;
+      await mkdir(tenantDir(tenantId), { recursive: true });
+      await writeFile(path.join(tenantDir(tenantId), 'publish-settings.json'), JSON.stringify(settings, null, 2), 'utf-8');
+      copied.push('발행 설정');
+    } catch (err) {
+      if (!isMissing(err)) copyErrors.push({ file: '발행 설정', error: err instanceof Error ? err.message : String(err) });
     }
   }
   return { ok: true, tenantId, brandName: draft.brandName, questionBankVersion, copied, copyErrors, setAside, restoredWeeks: variant.restoredWeeks };
