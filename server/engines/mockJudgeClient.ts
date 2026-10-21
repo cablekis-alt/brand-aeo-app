@@ -4,16 +4,18 @@ import type { EngineCallResult, EngineClient } from './types.js';
 /**
  * 실제 심판 모델 연동 전, B1/B5/B8 프롬프트가 파이프라인에 올바르게 배선됐는지 검증하기 위한 목 클라이언트.
  * 프롬프트 종류는 각 b*.ts의 시스템 프롬프트 고유 문구로 구분한다 — 실제 모델 교체 시 이 파일은 통째로 버린다.
- * MOCK_REPORT_DELAY_MS를 주면 주간 리포트(B8) 호출만 그만큼 기다린다 — 뒤에서 쓰는 리포트가 다음 측정보다 늦게 끝나는
- * 경우를 만든다(scripts/verify-measure-tail.ts). 호출할 때 읽으므로 측정마다 바꿀 수 있다.
+ * MOCK_REPORT_DELAY_MS를 주면 주간 리포트(B8) 호출만 그만큼 기다리고, 본문 끝에 「(delay=값)」을 붙인다 — 뒤에서 쓰는
+ * 리포트가 다음 측정보다 늦게 끝나는 경우를 만들고, 어느 측정의 리포트가 저장됐는지 가린다(scripts/verify-measure-tail.ts).
+ * 호출할 때 읽으므로 측정마다 바꿀 수 있다.
  */
 export class MockJudgeClient implements EngineClient {
   async call(prompt: PromptMessage): Promise<EngineCallResult> {
-    const reportDelayMs = Number(process.env.MOCK_REPORT_DELAY_MS) || 0;
-    if (reportDelayMs > 0 && prompt.system.includes('주간 리포트를 작성하는 애널리스트')) {
-      await new Promise((resolve) => setTimeout(resolve, reportDelayMs));
-    }
-    return { text: this.respond(prompt), citations: [], usedWebSearch: false, tokenUsage: 50, latencyMs: 10 };
+    const reportDelay = process.env.MOCK_REPORT_DELAY_MS;
+    const isReport = reportDelay !== undefined && prompt.system.includes('주간 리포트를 작성하는 애널리스트');
+    const reportDelayMs = Number(reportDelay) || 0;
+    if (isReport && reportDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, reportDelayMs));
+    const text = this.respond(prompt) + (isReport ? `\n(delay=${reportDelayMs})` : '');
+    return { text, citations: [], usedWebSearch: false, tokenUsage: 50, latencyMs: 10 };
   }
 
   private respond({ system, user }: PromptMessage): string {
