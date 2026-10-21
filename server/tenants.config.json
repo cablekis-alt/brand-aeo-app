@@ -791,20 +791,9 @@
         "domains": []
       },
       {
-        "name": "군산여행의 모든것",
+        "name": "여미랑",
         "aliases": [
-          "군산여행의 모든것",
-          "군산 여행의 모든것"
-        ],
-        "domains": [
-          "all-about-gunsan.vercel.app"
-        ]
-      },
-      {
-        "name": "해오름펜션",
-        "aliases": [
-          "해오름펜션",
-          "군산 해오름펜션"
+          "여미랑"
         ],
         "domains": []
       }
