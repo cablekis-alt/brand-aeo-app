@@ -59,7 +59,7 @@ import { addMeasureRequest, readMeasureRequests, removeMeasureRequest } from './
 import { addDeleteRequest, DELETE_QUEUE_SENTINEL } from './deleteRequests.js';
 import { demoQuestionBank, demoScorecardHistory } from './demoData.js';
 import { DemoResultStore } from './demoStore.js';
-import { measureAndBake } from './measureAndBake.js';
+import { measureAndBake, measurePreview } from './measureAndBake.js';
 import { readLocalMeasures } from './localMeasureLog.js';
 import {
   MeasureCancelledError,
@@ -230,9 +230,9 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
       res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
       return;
     }
-    // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
-    const reuseCohort = (req.body as { reuseCohort?: unknown } | undefined)?.reuseCohort === true;
-    const result = await measureAndBake(tenant, store, { reuseCohort });
+    // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다. selfOnly=true면 이 브랜드만 잰다.
+    const body = (req.body ?? {}) as { reuseCohort?: unknown; selfOnly?: unknown };
+    const result = await measureAndBake(tenant, store, { reuseCohort: body.reuseCohort === true, selfOnly: body.selfOnly === true });
     res.json(result);
   } catch (err) {
     // 사용자가 멈춘 측정은 실패가 아니다 — 화면이 "중단했습니다"로 알리게 409로 구분한다.
@@ -243,6 +243,21 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   } finally {
     endMeasureRun();
+  }
+});
+
+// 측정 전 계획 — 「건너뛰기」 때 다시 잴 경쟁사와 까닭, 「이 브랜드만」 때 함께 순위를 매길 이번 주 경쟁사 카드의 도구(measurePreview).
+// 읽기만 한다. Express 전용(웹은 GitHub 측정이라 쓰지 않는다).
+app.get('/api/tenants/:tenantId/measure-preview', async (req, res) => {
+  try {
+    const tenant = await findTenant(req.params.tenantId);
+    if (!tenant) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(await measurePreview(tenant, store));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
