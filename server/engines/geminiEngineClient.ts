@@ -45,7 +45,7 @@ export class GeminiEngineClient implements EngineClient {
         }
         throw err;
       }
-    }, 2);
+    }, 2, { label: 'gemini' });
 
     const grounding = response.candidates?.[0]?.groundingMetadata;
     const citations = (grounding?.groundingChunks ?? [])

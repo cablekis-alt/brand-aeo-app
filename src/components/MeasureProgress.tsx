@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cancelLocalMeasure } from '../lib/api'
+import { overallRemainingMs } from '../lib/measureEstimate'
 
 /**
  * 진행 중인 측정을 보여 주는 공용 부품.
@@ -23,6 +24,8 @@ export interface ActiveMeasure {
   engineIssues?: string[]
   /** 남은 엔진만으로는 수집 하한에 못 미쳐 이번 측정은 멈춘다. */
   collectionWillFail?: boolean
+  /** 수집 단계의 엔진별 건수(server/measureTracker.ts). v0.4.21부터라 옛 서버에는 없다. */
+  engines?: Record<string, { done: number; total: number }>
 }
 
 /** 진행 중인 줄들에서 끊긴 엔진을 모은다 — 같은 엔진은 브랜드마다 따로 끊기므로 한 번만 보인다. */
@@ -50,46 +53,6 @@ function formatDuration(ms: number): string {
   const m = Math.floor(sec / 60)
   const s = sec % 60
   return s ? `${m}분 ${s}초` : `${m}분`
-}
-
-/*
- * 분석 단계 몫. done/total은 **현재 단계**의 건수라, 수집이 끝나도 측정은 안 끝난다 —
- * 뒤에 인용 정리·분석·집계·리포트가 남는다. 그중 건수를 세는 건 분석뿐이다.
- *
- * 2026-W39 여섯 곳 실측에서 분석은 수집의 0.09~0.16배였다(중앙값 0.15). 판정 슬롯이
- * 144개로 수집 24개보다 훨씬 넉넉해 같은 건수라도 훨씬 빨리 지나간다.
- */
-const ANALYZE_SHARE = 0.15
-
-/**
- * 남은 시간 어림 — 전체를 한 덩어리로 본다.
- *
- * 줄마다 따로 어림했더니 틀린 숫자가 나왔다. 실측 화면에서 경과 31초에 24/72인 줄은
- * "~1분 1초", 5/72인 줄은 "~6분 49초"를 냈다. 둘은 비슷한 때에 끝나는데 6배가 벌어졌다.
- *
- * 줄의 진행 속도가 그 브랜드의 속도가 아니기 때문이다. 수집 호출은 전역 슬롯 24개를 모두가
- * 나눠 쓰므로, 한 줄이 빠른 건 그 줄이 빨라서가 아니라 그 순간 슬롯을 더 받았기 때문이다.
- * 몫은 다른 줄이 끝나면 곧 바뀐다. 그래서 속도는 줄이 아니라 측정 전체에서 잰다.
- *
- * 아직 시작도 안 한 줄(0/72)의 일감까지 남은 일로 세므로, 뒤에 줄이 밀려 있어도 값이
- * 낮게 나오지 않는다.
- */
-function overallRemainingMs(active: ActiveMeasure[], elapsedMs: number): number | null {
-  // 단계를 아직 못 받은 줄이 있으면 그 줄의 일감을 알 수 없다 — 모르는 채로 어림하면
-  // 남은 일을 통째로 빠뜨린다. 그 줄에 단계가 붙을 때까지 숫자를 내지 않는다.
-  if (active.some((a) => !a.stage)) return null
-
-  let done = 0
-  let left = 0
-  for (const a of active) {
-    done += a.done ?? 0
-    left += Math.max(0, (a.total ?? 0) - (a.done ?? 0))
-  }
-  // 초반 표본으로 뽑은 기울기는 몇 배씩 틀린다 — 틀린 숫자는 없는 것보다 나쁘다.
-  if (done < 10 || elapsedMs < 15_000 || left <= 0) return null
-
-  const perCallMs = elapsedMs / done
-  return left * perCallMs * (1 + ANALYZE_SHARE)
 }
 
 /**

@@ -66,8 +66,26 @@ export async function mapWithConcurrency<T, R>(
  *
  * COLLECT_LLM_CONCURRENCY는 이제 엔진마다의 기본값을 한꺼번에 바꾸고, COLLECT_LLM_CONCURRENCY_<ENGINE>
  * (예: _PERPLEXITY)이 그 엔진만 바꾼다.
+ *
+ * ── Perplexity는 동시 슬롯 대신 분당 시작 수로 묶는다 (2026-10-21) ─────────────────────────────
+ * 동시 슬롯의 처리량은 「슬롯 ÷ 평균 응답 시간」이다. 응답이 빠를 때 맞춘 8슬롯은 응답이 느려지면 한도를 다 못 쓰고,
+ * 빠를 때 넉넉히 주면 한도를 넘는다. W43 설치본 실측: Perplexity 응답 평균 27초(p50 18초 · p90 58초, 10-13의
+ * p50 8.4초의 두 배)에 8슬롯이 내내 차 0.28회/초(분당 17회) — 추정 한도(분당 약 50회)의 1/3이라 6곳 측정에서
+ * OpenAI는 2분 · Gemini는 3분에 끝나고 Perplexity만 10~15분 걸렸다. 429 · 실패는 0건이었다.
+ * 그래서 Perplexity는 분당 45회로 시작 간격을 벌리고(collectRpm), 동시 슬롯은 응답이 느려도 그 속도를 낼 만큼
+ * 24로 둔다 — 처리량이 응답 시간과 상관없이 분당 45회에 붙고, 빠른 날에도 한도를 넘지 않는다.
  */
-const COLLECT_DEFAULTS: Record<Engine, number> = { gemini: 24, openai: 36, perplexity: 8, claude: 24 };
+const COLLECT_DEFAULTS: Record<Engine, number> = { gemini: 24, openai: 36, perplexity: 24, claude: 24 };
+
+/** 엔진별 분당 시작 상한(수집만). 없으면 상한 없음 — 동시 슬롯만 본다. COLLECT_LLM_RPM_<ENGINE>로 바꾸고 0이면 끈다. */
+const COLLECT_RPM_DEFAULTS: Partial<Record<Engine, number>> = { perplexity: 45 };
+
+/** 엔진 하나의 수집 분당 시작 상한. 0이면 상한 없음. */
+export function collectRpm(engine: Engine): number {
+  const raw = process.env[`COLLECT_LLM_RPM_${engine.toUpperCase()}`];
+  const value = raw === undefined || raw === '' ? (COLLECT_RPM_DEFAULTS[engine] ?? 0) : Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
 
 /**
  * check — 사람이 화면에서 기다리는 한 번짜리 확인(경쟁사 편집의 「업종 다름」 확인). 측정 수집과 같은 엔진 · 같은 키를 쓰지만
@@ -116,9 +134,27 @@ function release(pool: LlmPool): void {
   else inFlight.set(pool, (inFlight.get(pool) ?? 1) - 1);
 }
 
+/** 다음 호출을 보내도 되는 시각 — 분당 상한이 있는 수집 엔진만. */
+const nextStartAt = new Map<LlmPool, number>();
+
+/**
+ * 분당 상한이 있으면 시작 간격(60초 ÷ 상한)을 지킨다. 슬롯을 잡은 뒤에 기다린다 — 잡기 전에 시각을 예약하면 슬롯이 늦게
+ * 날 때 예약해 둔 호출들이 한꺼번에 나가 간격이 무너진다. 기다리는 동안 슬롯을 쥐므로 동시 슬롯이 넉넉해야 한다(24).
+ */
+async function pace(pool: LlmPool): Promise<void> {
+  if (!pool.startsWith('collect:')) return;
+  const rpm = collectRpm(pool.slice('collect:'.length) as Engine);
+  if (!rpm) return;
+  const now = Date.now();
+  const at = Math.max(now, nextStartAt.get(pool) ?? 0);
+  nextStartAt.set(pool, at + 60_000 / rpm);
+  if (at > now) await new Promise((resolve) => setTimeout(resolve, at - now));
+}
+
 export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>): Promise<T> {
   await acquire(pool);
   try {
+    await pace(pool);
     return await fn();
   } finally {
     release(pool);
