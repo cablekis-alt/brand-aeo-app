@@ -812,6 +812,8 @@ export interface PortfolioRow {
   competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
   /** 경쟁사 편집을 저장했고 아직 다시 재지 않았다. */
   competitorEdit: { savedAt: string; summary: string } | null
+  /** 기본 정보(업종 · 지역 · 시장 범위)를 바꿨고 아직 새 설정으로 재지 않았다 — 「기본 정보 바뀜 · 다음 측정 대기」. */
+  profileEdit: { savedAt: string; summary: string } | null
 }
 /** null = 라우트 없는 환경(웹). 데스크톱 앱 전용 — 판정 호출 없이 저장된 기록만 읽는다. */
 /** 코호트 미니 리더보드의 한 줄 — server/portfolio.ts CohortMember와 같은 모양. */
@@ -1145,6 +1147,90 @@ export function undoCompetitorEdit(tenantId: string): Promise<CompetitorEditorSt
 /** 앱에서 고친 목록을 버리고 저장소 설정을 따른다. */
 export function resetCompetitorEdit(tenantId: string): Promise<CompetitorEditorState> {
   return competitorRequest(tenantId, '', 'DELETE', undefined, '저장소 설정으로 돌아가지 못했습니다')
+}
+
+/** 기본 정보 서랍 — 이 고객과 함께 재는 경쟁사 측정 브랜드(server/brandProfileEditor.ts ProfileCompetitor). */
+export interface ProfileCompetitor {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  movable: boolean
+  defaultMove: boolean
+  reason: string | null
+}
+
+/** 기본 정보 서랍의 처음 상태(server/brandProfileEditor.ts ProfileEditorState). */
+export interface ProfileEditorState {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  marketScope: MarketScope
+  buyer: string
+  questionBankVersion: string
+  editable: boolean
+  reason: string | null
+  measuring: boolean
+  industries: string[]
+  regions: string[]
+  competitors: ProfileCompetitor[]
+}
+
+export interface ProfileInput {
+  industry: string
+  region: string
+  marketScope: MarketScope
+  buyer: string
+  move: string[]
+}
+
+/** 기본 정보 미리 계산(server/brandProfileEditor.ts ProfilePlan). */
+export interface ProfilePlan {
+  key: string
+  unchanged: boolean
+  errors: string[]
+  notes: string[]
+  measuring: boolean
+  to: { industry: string; region: string; marketScope: MarketScope; buyer: string; questionBankVersion: string; cohortQuestionBank: string | null }
+  bank: { from: string; to: string }
+  cohortBank: { from: string | null; to: string | null; members: string[] }
+  moving: { tenantId: string; brandName: string }[]
+  thisWeek: string[]
+  summary: string
+}
+
+export interface ProfileSaveResult {
+  ok: true
+  tenantId: string
+  summary: string
+  questionBankVersion: string
+  moved: string[]
+  backupDir: string
+}
+
+/** 기본 정보 서랍 요청 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
+async function profileRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string): Promise<T> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/profile${sub}`, {
+    method,
+    ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  })
+  const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
+  if (!res.ok || !json) throw new Error(json?.error || `${failure} (HTTP ${res.status})`)
+  return json
+}
+
+export function loadProfileEditor(tenantId: string): Promise<ProfileEditorState> {
+  return profileRequest(tenantId, '', 'GET', undefined, '기본 정보를 불러오지 못했습니다')
+}
+
+export function planProfileEdit(tenantId: string, input: ProfileInput): Promise<ProfilePlan> {
+  return profileRequest(tenantId, '/plan', 'POST', input, '바꿀 내용을 계산하지 못했습니다')
+}
+
+/** 저장 — 미리보기(previewKey)와 지금 계산이 다르면 서버가 409로 거절한다. */
+export function saveProfileEdit(tenantId: string, input: ProfileInput, previewKey: string): Promise<ProfileSaveResult> {
+  return profileRequest(tenantId, '', 'PUT', { input, previewKey }, '기본 정보를 저장하지 못했습니다')
 }
 
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */

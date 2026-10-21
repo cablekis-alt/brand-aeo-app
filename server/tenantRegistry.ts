@@ -1,5 +1,7 @@
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
 import rawTenants from './tenants.config.json' with { type: 'json' };
-import { packagedDataMode } from './appPaths.js';
+import { packagedDataMode, PIPELINE_DATA_DIR } from './appPaths.js';
 import { reconcileCohortRanks } from './cohortRank.js';
 import { appendTenant, loadTenants } from './config.js';
 import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, writeOverlay } from './tenantOverlay.js';
@@ -271,16 +273,63 @@ async function persistTenantForRuntimeUnlocked(tenant: TenantConfig): Promise<vo
  * 다른 영속화와 같은 줄에서 돈다(serializePersist).
  */
 export function replaceOverlayTenant(tenant: TenantConfig): Promise<void> {
+  return replaceOverlayTenants([tenant]);
+}
+
+/**
+ * 오버레이의 브랜드 여럿을 한 번에 바꾼다 — 기본 정보를 고칠 때 고객과 함께 옮기는 경쟁사(brandProfileEditor.ts).
+ * 하나라도 오버레이에 없으면 아무것도 쓰지 않는다. 오버레이 파일은 한 번만 쓴다.
+ */
+export function replaceOverlayTenants(tenants: TenantConfig[]): Promise<void> {
   return serializePersist(async () => {
     if (!process.env.VERCEL && !packagedDataMode()) {
       throw new Error('dev 체크아웃에서는 저장소 설정(tenants.config.json)을 직접 고치세요.');
     }
     const overlay = await readOverlay();
-    const i = overlay.findIndex((item) => item.tenantId === tenant.tenantId);
-    if (i < 0) throw new Error(`오버레이에 없는 브랜드입니다: ${tenant.tenantId}`);
-    overlay[i] = tenant;
+    for (const tenant of tenants) {
+      const i = overlay.findIndex((item) => item.tenantId === tenant.tenantId);
+      if (i < 0) throw new Error(`오버레이에 없는 브랜드입니다: ${tenant.tenantId}`);
+      overlay[i] = tenant;
+    }
     await writeOverlay(overlay);
   });
+}
+
+/**
+ * 새로 들어오는 브랜드가 쓸 코호트 공통 질문지 버전 — 같은 코호트(업종 · 지역 · 언어)의 고객 브랜드가 쓰는 버전을 따른다.
+ * 기본 정보 고치기(brandProfileEditor.ts)가 공통 질문지를 올린 코호트(c1 → c2)에 기본값 c1으로 들어오면, 한 순위표에서 옛 질문을
+ * 따로 쓰게 된다. 같은 코호트에 고객이 없거나 공통 질문지를 쓰지 않는 브랜드면 그대로.
+ */
+export function cohortBankFor(tenant: TenantConfig, runtime: TenantConfig[]): string | undefined {
+  if (!tenant.cohortQuestionBank) return tenant.cohortQuestionBank;
+  const counts = new Map<string, number>();
+  for (const t of runtime) {
+    if (t.cohortOnly || t.tenantId === tenant.tenantId || !t.cohortQuestionBank || !sameCohort(t, tenant)) continue;
+    counts.set(t.cohortQuestionBank, (counts.get(t.cohortQuestionBank) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? tenant.cohortQuestionBank;
+}
+
+/**
+ * 새로 쓸 질문지 버전 — 그 버전 파일이 이미 있으면(지운 같은 id · 경쟁사로 잴 때 만든 것) 안 쓰인 다음 번호로 올린다.
+ * 옛 질문지는 경쟁사 목록 없이 만들었거나 다른 코호트 공통 질문지로 만든 것이라, 다시 쓰면 첫 측정이 「questionBankVersion을 새 값으로
+ * 올리세요」로 멈춘다(cohortQuestionBank.ts ensureComposedQuestionBank). 지난 주차는 자기 버전의 질문지를 그대로 읽고, 화면은 질문지가
+ * 바뀐 주를 「질문지 v3→v6」로 비교에서 뺀다.
+ */
+export async function freshBankVersion(tenantId: string, wanted: string): Promise<string> {
+  let files: string[];
+  try {
+    files = await readdir(path.join(PIPELINE_DATA_DIR, tenantId, 'question-bank'));
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException | null)?.code === 'ENOENT') return wanted;
+    throw err;
+  }
+  const used = new Set(files.filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -'.json'.length)));
+  if (!used.has(wanted)) return wanted;
+  const numbers = [...used, wanted].map((v) => /^v(\d+)$/.exec(v)?.[1]).filter((n): n is string => Boolean(n)).map(Number);
+  let next = Math.max(0, ...numbers) + 1;
+  while (used.has(`v${next}`)) next += 1;
+  return `v${next}`;
 }
 
 export async function registerTenant(tenant: TenantConfig): Promise<void> {
@@ -296,7 +345,14 @@ export async function registerTenant(tenant: TenantConfig): Promise<void> {
   }
   // 이전에 삭제(툼스톤)된 tenantId를 다시 등록하는 경우, 툼스톤을 걷어내 다시 보이게 한다.
   await removeDeletedTenant(tenant.tenantId);
-  await persistTenantForRuntime(tenant);
+  const cohortQuestionBank = tenant.cohortOnly ? tenant.cohortQuestionBank : cohortBankFor(tenant, existing);
+  if (cohortQuestionBank === tenant.cohortQuestionBank) {
+    await persistTenantForRuntime(tenant);
+    return;
+  }
+  // 공통 질문지를 바꾸면 질문지 번호도 비어 있는 것으로 — 지운 같은 id에 남은 그 번호의 질문지는 옛 공통 질문지로 만든 것이다.
+  const questionBankVersion = await freshBankVersion(tenant.tenantId, tenant.questionBankVersion);
+  await persistTenantForRuntime({ ...tenant, cohortQuestionBank, questionBankVersion });
 }
 
 export function toTenantSummary(tenant: TenantConfig) {

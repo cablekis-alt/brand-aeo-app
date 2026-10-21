@@ -18,6 +18,7 @@ import { tagQuestionTopics } from './questionTopic.js';
 import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
+import { describeProfileEditor, planProfileEdit, saveProfileEdit } from './brandProfileEditor.js';
 import {
   buildEditorState,
   checkEditorIndustry,
@@ -1275,6 +1276,34 @@ app.post('/api/tenants/:tenantId/competitors/undo', async (req, res) => {
 app.delete('/api/tenants/:tenantId/competitors', async (req, res) => {
   try {
     res.json(await resetEdit(req.params.tenantId, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 기본 정보(업종 · 지역 · 시장 범위) 서랍 — 처음 상태 · 미리 계산 · 저장(brandProfileEditor.ts). 앱에서 등록한 브랜드만 고친다.
+// Express 전용이다(Vercel 함수는 12/12이고, 웹은 브랜드 현황 화면을 띄우지 않는다).
+app.get('/api/tenants/:tenantId/profile', async (req, res) => {
+  try {
+    res.json(await describeProfileEditor(req.params.tenantId));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+app.post('/api/tenants/:tenantId/profile/plan', async (req, res) => {
+  try {
+    res.json(await planProfileEdit(req.params.tenantId, req.body, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 저장 — 미리보기와 같은 계획(previewKey)일 때만. 측정 중이면 409.
+app.put('/api/tenants/:tenantId/profile', async (req, res) => {
+  try {
+    const body = (req.body ?? {}) as { input?: unknown; previewKey?: unknown };
+    res.json(await saveProfileEdit(req.params.tenantId, body.input, body.previewKey, store));
   } catch (err) {
     sendEditorError(res, err);
   }

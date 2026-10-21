@@ -1,4 +1,4 @@
-import { access, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { isPhotoMedical } from '../src/lib/articlePhotos.js';
@@ -10,7 +10,7 @@ import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
+import { cohortBankFor, freshBankVersion, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
 import { subjectParticle, topicParticle } from '../src/lib/korean.js';
 import type { CompetitorContext, FactGraphNode } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
@@ -191,28 +191,6 @@ export async function describeTenantConflict(draft: TenantConfig, store: ResultS
   return (await inspect(draft, store))?.conflict ?? null;
 }
 
-/**
- * 전환한 브랜드가 쓸 질문지 버전. 경쟁사로 잴 때 만든 질문지는 경쟁사 목록 없이(비교 질문 없이) 만든 것이라 다시 쓰면
- * 안 되고, 코호트 출처가 다르면 첫 측정이 「questionBankVersion을 새 값으로 올리세요」로 멈춘다
- * (cohortQuestionBank.ts ensureComposedQuestionBank). 그 버전 파일이 이미 있으면 안 쓰인 다음 번호로 올린다 —
- * 지난 주차는 자기 버전의 질문지를 그대로 읽고, 화면은 질문지가 바뀐 주를 「질문지 v3→v6」로 비교에서 뺀다.
- */
-async function freshBankVersion(tenantId: string, wanted: string): Promise<string> {
-  let files: string[];
-  try {
-    files = await readdir(path.join(tenantDir(tenantId), 'question-bank'));
-  } catch (err) {
-    if (isMissing(err)) return wanted;
-    throw err;
-  }
-  const used = new Set(files.filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -'.json'.length)));
-  if (!used.has(wanted)) return wanted;
-  const numbers = [...used, wanted].map((v) => /^v(\d+)$/.exec(v)?.[1]).filter((n): n is string => Boolean(n)).map(Number);
-  let next = Math.max(0, ...numbers) + 1;
-  while (used.has(`v${next}`)) next += 1;
-  return `v${next}`;
-}
-
 /** 옮긴 설정 파일을 제자리로 돌린다 — 오버레이를 못 바꿨을 때. 하나라도 못 돌리면 남기고 알린다. */
 async function restoreFiles(tenantId: string, backupDir: string, moved: string[]): Promise<void> {
   for (const file of moved) {
@@ -284,7 +262,9 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     }
   }
   try {
-    await replaceOverlayTenant({ ...draft, questionBankVersion, cohortOnly: undefined });
+    // 공통 질문지는 들어가는 코호트의 고객 브랜드가 쓰는 버전을 따른다(tenantRegistry.ts cohortBankFor).
+    const cohortQuestionBank = cohortBankFor(draft, await loadRuntimeTenants());
+    await replaceOverlayTenant({ ...draft, questionBankVersion, cohortOnly: undefined, ...(cohortQuestionBank ? { cohortQuestionBank } : {}) });
   } catch (err) {
     await restoreFiles(draft.tenantId, backupDir, moved);
     throw err;

@@ -110,6 +110,14 @@ export async function reusableThisWeek(
   const history = await store.getScorecardHistory(tenant.tenantId, 12);
   const card = history.find((item) => item.weekOf === weekOf);
   if (!card) return { ok: false, reason: '이번 주 카드 없음' };
+  // 기본 정보를 바꿔 함께 옮긴 경쟁사는 이번 주 카드가 옛 코호트 · 옛 질문지로 잰 것이다 — 재사용하면 새 순위표에서 빠진다
+  // (brandProfileEditor.ts).
+  if (card.industry !== tenant.industry || card.region !== tenant.region) {
+    return { ok: false, reason: `코호트 다름(${card.industry} · ${card.region} → ${tenant.industry} · ${tenant.region})` };
+  }
+  if (card.questionBankVersion !== tenant.questionBankVersion) {
+    return { ok: false, reason: `질문지 다름(${card.questionBankVersion ?? '기록 없음'} → ${tenant.questionBankVersion})` };
+  }
 
   const judgeNow = resolveJudgeEngineId();
   if (card.judgeEngine && card.judgeEngine !== judgeNow) {

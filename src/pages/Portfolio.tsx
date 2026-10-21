@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import CompetitorEditor from '../components/CompetitorEditor'
+import ProfileEditor from '../components/ProfileEditor'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioCohort, type PortfolioRow } from '../lib/api'
@@ -54,7 +55,7 @@ export default function Portfolio() {
   const location = useLocation()
   const { setTenantId, viewCompetitor, viewing, customer, reloadTenants } = useTenant()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
-  // 경쟁사 편집을 저장하면 다시 읽는다 — 카드의 「측정 안 됨」·「경쟁사 바뀜」 칩이 저장한 목록을 따르게.
+  // 경쟁사 편집 · 기본 정보를 저장하면 다시 읽는다 — 카드의 「측정 안 됨」·「경쟁사 바뀜」·「기본 정보 바뀜」 칩이 저장한 값을 따르게.
   const [reloadKey, setReloadKey] = useState(0)
   useEffect(() => {
     let alive = true
@@ -129,12 +130,12 @@ export default function Portfolio() {
     return groupCohorts(visible)
   }, [rows, rowById, state.value, filter, group, query])
 
-  // 경쟁사 편집 서랍에 저장하지 않은 바꾼 내용이 있으면, 다른 브랜드로 바꾸거나 이 화면을 떠나기 전에 묻는다.
+  // 경쟁사 편집 · 기본 정보 서랍에 저장하지 않은 바꾼 내용이 있으면, 다른 브랜드로 바꾸거나 이 화면을 떠나기 전에 묻는다.
   const editorDirty = useRef(false)
   const onEditorDirty = useCallback((dirty: boolean) => {
     editorDirty.current = dirty
   }, [])
-  const leaveEditor = () => !editorDirty.current || window.confirm('바꾼 경쟁사를 저장하지 않고 나갈까요?')
+  const leaveEditor = () => !editorDirty.current || window.confirm('바꾼 내용을 저장하지 않고 나갈까요?')
 
   const open = (tenantId: string) => {
     if (!leaveEditor()) return
@@ -160,15 +161,31 @@ export default function Portfolio() {
   // 열리게 이동(location.key)마다 한 번 본다.
   const requested = (location.state as { editCompetitors?: string } | null)?.editCompetitors ?? null
   const [editing, setEditing] = useState<string | null>(requested)
+  // 기본 정보 서랍 — 경쟁사 편집 서랍과 같은 자리(오른쪽)에 뜨므로 한 번에 하나만 연다.
+  const [profiling, setProfiling] = useState<string | null>(null)
   const [seenKey, setSeenKey] = useState(location.key)
   if (location.key !== seenKey) {
     setSeenKey(location.key)
-    if (requested) setEditing(requested)
+    if (requested) {
+      setEditing(requested)
+      // 명령 창에서 경쟁사 편집을 열면 기본 정보 서랍은 닫는다 — 남겨 두면 경쟁사 서랍을 닫을 때 다시 나타난다.
+      setProfiling(null)
+    }
   }
   const closeEditor = () => {
     setEditing(null)
     // 새로 고침·뒤로 가기에서 다시 열리지 않게 이동 기록의 요청을 지운다.
     if (requested) navigate(location.pathname, { replace: true, state: null })
+  }
+  const openProfile = (id: string) => {
+    if ((id !== profiling || editing) && !leaveEditor()) return
+    if (editing) closeEditor()
+    setProfiling(id)
+  }
+  const openCompetitorEditor = (id: string) => {
+    if ((id !== editing || profiling) && !leaveEditor()) return
+    setProfiling(null)
+    setEditing(id)
   }
 
   const summary: { key: Filter; label: string; value: number; sub: string; tone: string }[] = [
@@ -286,10 +303,8 @@ export default function Portfolio() {
                         <CohortEditLinks
                           customers={c.members.filter(isCurrentCustomer).map((m) => rowById.get(m.tenantId)).filter((r): r is PortfolioRow => Boolean(r))}
                           locked={Boolean(viewing)}
-                          onEdit={(id) => {
-                            if (id !== editing && !leaveEditor()) return
-                            setEditing(id)
-                          }}
+                          onEdit={openCompetitorEditor}
+                          onEditProfile={openProfile}
                         />
                       </div>
                       {members.map((m) => (
@@ -315,22 +330,28 @@ export default function Portfolio() {
       {editing && !viewing && state.value && (
         <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
       )}
+      {profiling && !editing && !viewing && state.value && (
+        <ProfileEditor key={profiling} tenantId={profiling} onClose={() => setProfiling(null)} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
+      )}
     </>
   )
 }
 
 /**
- * 코호트 카드 머리의 「경쟁사 편집」 — 이 코호트에 마지막 측정이 든 고객 브랜드마다 하나. 칸이 차서 재지 않는
+ * 코호트 카드 머리의 「기본 정보」 · 「경쟁사 편집」 — 이 코호트에 마지막 측정이 든 고객 브랜드마다 하나. 칸이 차서 재지 않는
  * 경쟁사가 있으면 주황 칩으로 알린다(server/cohortPlan.ts와 같은 계산). 경쟁사 보기 중에는 잠근다.
+ * 기본 정보를 바꾼 브랜드는 다시 잴 때까지 옛 코호트 카드에 남아 「기본 정보 바뀜 · 다음 측정 대기」를 단다.
  */
 function CohortEditLinks({
   customers,
   locked,
   onEdit,
+  onEditProfile,
 }: {
   customers: PortfolioRow[]
   locked: boolean
   onEdit: (tenantId: string) => void
+  onEditProfile: (tenantId: string) => void
 }) {
   if (customers.length === 0) return null
   const many = customers.length > 1
@@ -341,6 +362,11 @@ function CohortEditLinks({
         const title = locked ? '고객 브랜드에서만 바꿀 수 있어요(경쟁사 보기 중)' : `${r.brandName} 경쟁사 편집`
         return (
           <span key={r.tenantId} className="pf-cohort-edit-item">
+            {r.profileEdit && (
+              <span className="chip info" title={r.profileEdit.summary}>
+                기본 정보 바뀜 · 다음 측정 대기
+              </span>
+            )}
             {r.competitorEdit && (
               <span className="chip info" title={r.competitorEdit.summary}>
                 경쟁사 바뀜 · 다음 측정 대기
@@ -351,6 +377,15 @@ function CohortEditLinks({
                 경쟁사 {missing}곳 측정 안 됨
               </button>
             )}
+            <button
+              type="button"
+              className="pf-cohort-edit-btn"
+              disabled={locked}
+              title={locked ? title : `${r.brandName} 업종 · 지역 · 시장 범위 바꾸기`}
+              onClick={() => onEditProfile(r.tenantId)}
+            >
+              기본 정보{many ? ` · ${r.brandName}` : ''}
+            </button>
             <button type="button" className="pf-cohort-edit-btn" disabled={locked} title={title} onClick={() => onEdit(r.tenantId)}>
               경쟁사 편집{many ? ` · ${r.brandName}` : ''}
             </button>
