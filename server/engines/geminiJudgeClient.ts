@@ -50,7 +50,7 @@ export class GeminiJudgeClient implements EngineClient {
           }
           throw err;
         }
-      }, 2);
+      }, 2, { label: 'gemini-judge' });
       return {
         text: response.text ?? '',
         citations: [] as string[],

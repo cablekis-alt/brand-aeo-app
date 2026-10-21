@@ -11,6 +11,11 @@ export interface ActiveMeasure {
   stage?: '준비' | '수집' | '인용 정리' | '분석' | '집계' | '리포트';
   done?: number;
   total?: number;
+  /**
+   * 수집 단계의 엔진별 건수. 엔진마다 속도가 크게 달라(2026-W43: OpenAI 2분 · Gemini 3분 · Perplexity 14분) 합친 건수로
+   * 남은 시간을 어림하면 빠른 엔진이 끝낸 건수에 끌려 몇 배 짧게 나온다 — 화면이 엔진마다 어림해 가장 늦은 것을 쓴다.
+   */
+  engines?: Record<string, { done: number; total: number }>;
   /** 중단을 요청받아 멈추는 중이다(진행 중인 호출이 끝나기를 기다리는 동안). */
   cancelling?: boolean;
   /** 이번 측정에서 끊긴 엔진 — 「Gemini 지출 한도 초과」(engineExhaustion.ts). 남은 호출은 보내지 않는다. */

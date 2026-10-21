@@ -262,9 +262,11 @@ async function collectRawCalls(
   const finishedByEngine = new Map<string, number>();
   const finish = (engine: string) => finishedByEngine.set(engine, (finishedByEngine.get(engine) ?? 0) + 1);
   const failedSoFar = () => [...failuresByEngine.values()].reduce((n, v) => n + v, 0);
-  // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다.
+  // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다. 엔진별 건수도 함께 보낸다(measureTracker.ts engines).
   let collected = 0;
-  updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length });
+  const engineProgress = () =>
+    Object.fromEntries([...jobsByEngine].map(([engine, total]) => [engine, { done: finishedByEngine.get(engine) ?? 0, total }]));
+  updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length, engines: engineProgress() });
   const collectionConcurrency = Math.max(
     1,
     COLLECTION_CONCURRENCY_OVERRIDE || availableEngines.reduce((n, engine) => n + collectLimit(engine), 0),
@@ -280,7 +282,7 @@ async function collectRawCalls(
         else outage.skipStopped();
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
         finish(job.engine);
-        updateActiveMeasure(tenant.tenantId, { done: ++collected });
+        updateActiveMeasure(tenant.tenantId, { done: ++collected, engines: engineProgress() });
         return null;
       }
       const prompt = buildEngineCallPrompt(job.engine, job.question.text, tenant.questionLanguage);
@@ -290,7 +292,7 @@ async function collectRawCalls(
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
         const result = await client.call(prompt);
         finish(job.engine);
-        updateActiveMeasure(tenant.tenantId, { done: ++collected });
+        updateActiveMeasure(tenant.tenantId, { done: ++collected, engines: engineProgress() });
         return {
           tenantId: tenant.tenantId,
           weekOf,
@@ -314,7 +316,7 @@ async function collectRawCalls(
         if (err instanceof MeasureCancelledError) throw err;
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
         finish(job.engine);
-        updateActiveMeasure(tenant.tenantId, { done: ++collected });
+        updateActiveMeasure(tenant.tenantId, { done: ++collected, engines: engineProgress() });
         if (outage.note(job.engine, err)) {
           // 측정 상태 화면 · 진행 표시가 「Gemini 지출 한도 초과」를 바로 보이게 한다.
           updateActiveMeasure(tenant.tenantId, { engineIssues: outage.labels() });
@@ -620,7 +622,7 @@ export async function runWeeklyPipeline(
   // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
   // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(Brand AEO Score 20%)과
   // 인용출처·인용 갭 분석이 무의미해진다. 해소 실패분은 원본을 그대로 둔다.
-  updateActiveMeasure(tenant.tenantId, { stage: '인용 정리', done: 0, total: 0 });
+  updateActiveMeasure(tenant.tenantId, { stage: '인용 정리', done: 0, total: 0, engines: undefined });
   const resolvedCitations = await resolveCitationUrls(rawCalls.flatMap((c) => c.citations));
   if (resolvedCitations.size > 0) {
     for (const call of rawCalls) {

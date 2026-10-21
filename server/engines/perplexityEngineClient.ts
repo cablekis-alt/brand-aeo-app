@@ -80,9 +80,11 @@ export class PerplexityEngineClient implements EngineClient {
     if (PINNED_MODEL) body.model = PINNED_MODEL;
     else body.preset = PRESET;
 
+    // 429는 분당 한도라 15 · 30초 기다렸다 다시 보낸다(분당 시작 상한은 concurrency.ts collectRpm — 이것은 그 안전장치).
     const response = (await withOpenAiRetry(
       () => (this.client.responses.create as unknown as (b: unknown) => Promise<unknown>)(body),
       3,
+      { label: 'perplexity', rateLimitWaitMs: 15_000 },
     )) as AgentResponse;
 
     const output = response.output ?? [];
