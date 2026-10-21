@@ -142,8 +142,9 @@ export function normalizeProfileInput(raw: unknown): ProfileInput {
   if (d.move !== undefined && (!Array.isArray(d.move) || d.move.some((v) => typeof v !== 'string'))) throw new EditorError(400, '함께 옮길 경쟁사 목록이 올바르지 않습니다.');
   return {
     industry: text(d.industry, '업종').slice(0, 60),
-    // 전국형 · B2B형은 지역이 「국내」로 정해진다(BrandOnboarding.tsx와 같다).
-    region: marketScope === 'local' ? text(d.region, '지역').slice(0, 60) : NATIONAL_REGION,
+    // 전국형 · B2B형은 「국내」가 기본이다(BrandOnboarding.tsx와 같다). 이미 전국형 · B2B형인데 지역이 남은 브랜드는 그 지역을 그대로 둘 수 있다
+    // (설치본에 11곳 — 코호트를 「국내」로 옮기는 일은 따로 정한다). 그 밖의 지역은 computePlan이 막는다.
+    region: text(d.region, '지역').slice(0, 60) || (marketScope === 'local' ? '' : NATIONAL_REGION),
     marketScope,
     buyer: marketScope === 'b2b' ? text(d.buyer, '구매자').slice(0, 120) : '',
     move: [...new Set((d.move as string[] | undefined) ?? [])].sort(),
@@ -173,25 +174,65 @@ async function loadContext(tenantId: string): Promise<Context> {
   return { runtime, tenant, entry, overlay, reason };
 }
 
-/** 이 고객과 함께 재는 경쟁사 측정 브랜드와, 함께 옮길 수 있는지. */
-async function competitorsOf(ctx: Context): Promise<ProfileCompetitor[]> {
-  const { tenant, runtime } = ctx;
-  const overlayIds = new Set(ctx.overlay.map((t) => t.tenantId));
-  // 다른 고객이 재는 경쟁사 — 코호트와 상관없이 모든 고객을 본다(지역이 다른 같은 업종 고객도 도메인으로 잰다).
+interface LineTarget {
+  name: string;
+  tenantId: string;
+  /** 이미 등록된 경쟁사 측정 브랜드(cohortOnly)인가. */
+  cohortOnly: boolean;
+}
+
+/**
+ * 고객이 재는(또는 칸이 나면 잴) 경쟁사 브랜드 — 측정 계획(cohortPlan.ts)의 measured 줄과, 칸이 차 대기 중인 줄을 한 줄씩 다시 계획해
+ * 찾은 브랜드. 대기 줄도 앞 줄을 빼면 바로 재므로 함께 옮기기 · 함께 재는 고객 판단에 넣는다. 경쟁사를 재지 않는 고객(autoCohort 끔)은 없다.
+ */
+function lineTargets(customer: TenantConfig, runtime: TenantConfig[]): LineTarget[] {
+  if (customer.autoCohort === false) return [];
+  const out: LineTarget[] = [];
+  for (const e of planCohortTargets(customer, runtime).entries) {
+    const line = customer.competitors[e.index];
+    const resolved = e.status === 'waiting' && line ? planCohortTargets({ ...customer, competitors: [line] }, runtime).entries[0] : e;
+    if (resolved?.status !== 'measured' || !resolved.targetTenantId) continue;
+    out.push({ name: e.name, tenantId: resolved.targetTenantId, cohortOnly: Boolean(resolved.existing?.cohortOnly) });
+  }
+  return out;
+}
+
+interface TargetMap {
+  /** 이 고객이 재는 브랜드. */
+  mine: LineTarget[];
+  /** 브랜드 id → 그 브랜드를 재는 다른 고객 이름. */
+  measuredBy: Map<string, string[]>;
+  /** 어느 고객이든 재는 브랜드 — 아무도 재지 않는 경쟁사 측정 브랜드(지운 고객이 남긴 것 등)는 코호트 구성원으로 세지 않는다. */
+  active: Set<string>;
+}
+
+function targetMap(tenant: TenantConfig, runtime: TenantConfig[]): TargetMap {
   const measuredBy = new Map<string, string[]>();
+  const active = new Set<string>();
+  const mine = lineTargets(tenant, runtime);
+  for (const t of mine) active.add(t.tenantId);
+  // 다른 고객이 재는 경쟁사 — 코호트와 상관없이 모든 고객을 본다(지역이 다른 같은 업종 고객도 도메인으로 잰다).
   for (const other of runtime) {
     if (other.cohortOnly || other.tenantId === tenant.tenantId) continue;
-    for (const e of planCohortTargets(other, runtime).entries) {
-      if (e.status !== 'measured' || !e.targetTenantId) continue;
-      measuredBy.set(e.targetTenantId, [...(measuredBy.get(e.targetTenantId) ?? []), other.brandName]);
+    for (const t of lineTargets(other, runtime)) {
+      active.add(t.tenantId);
+      measuredBy.set(t.tenantId, [...(measuredBy.get(t.tenantId) ?? []), other.brandName]);
     }
   }
+  return { mine, measuredBy, active };
+}
+
+/** 이 고객과 함께 재는 경쟁사 측정 브랜드와, 함께 옮길 수 있는지. */
+async function competitorsOf(ctx: Context, targets: TargetMap): Promise<ProfileCompetitor[]> {
+  const { tenant, runtime } = ctx;
+  const overlayIds = new Set(ctx.overlay.map((t) => t.tenantId));
+  const { measuredBy } = targets;
   const out: ProfileCompetitor[] = [];
   const seen = new Set<string>();
-  for (const e of planCohortTargets(tenant, runtime).entries) {
-    if (e.status !== 'measured' || !e.targetTenantId || !e.existing?.cohortOnly || seen.has(e.targetTenantId)) continue;
-    seen.add(e.targetTenantId);
-    const t = runtime.find((x) => x.tenantId === e.targetTenantId);
+  for (const e of targets.mine) {
+    if (!e.cohortOnly || seen.has(e.tenantId)) continue;
+    seen.add(e.tenantId);
+    const t = runtime.find((x) => x.tenantId === e.tenantId);
     if (!t) continue;
     const shared = measuredBy.get(t.tenantId) ?? [];
     const reason = (await isBakedTenant(t.tenantId))
@@ -224,7 +265,7 @@ export async function describeProfileEditor(tenantId: string): Promise<ProfileEd
     measuring: measureInFlight(),
     industries: sorted(korean.map((t) => t.industry)),
     regions: sorted(korean.map((t) => t.region).filter((r) => r !== NATIONAL_REGION)),
-    competitors: await competitorsOf(ctx),
+    competitors: await competitorsOf(ctx, targetMap(tenant, runtime)),
   };
 }
 
@@ -300,6 +341,11 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   if (input.marketScope === 'local' && !input.region) errors.push('지역형은 지역을 적어 주세요.');
   if (input.marketScope === 'local' && input.region === NATIONAL_REGION) errors.push(`지역형은 「${NATIONAL_REGION}」 대신 지역을 적어 주세요(「${NATIONAL_REGION}」은 전국형 · B2B형).`);
   if (input.region.includes('(영어 질문)')) errors.push('지역에 「(영어 질문)」을 넣을 수 없어요.');
+  // 전국형 · B2B형의 지역은 「국내」 — 이미 전국형 · B2B형으로 지역이 남아 있던 브랜드만 그 지역을 그대로 둘 수 있다.
+  const keepsRegion = scopeOf(tenant) !== 'local' && input.region === tenant.region;
+  if (input.marketScope !== 'local' && input.region !== NATIONAL_REGION && !keepsRegion) {
+    errors.push(`전국형 · B2B형은 지역이 「${NATIONAL_REGION}」예요.`);
+  }
 
   const from: ProfileTarget = {
     industry: tenant.industry,
@@ -312,7 +358,8 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   const unchanged =
     from.industry === input.industry && from.region === input.region && from.marketScope === input.marketScope && from.buyer === input.buyer;
 
-  const competitors = await competitorsOf(ctx);
+  const targets = targetMap(tenant, runtime);
+  const competitors = await competitorsOf(ctx, targets);
   const moving: ProfileCompetitor[] = [];
   for (const id of input.move) {
     const c = competitors.find((x) => x.tenantId === id);
@@ -335,8 +382,11 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   const twin = unchanged ? null : runtime.find((t) => !t.cohortOnly && t.tenantId !== tenant.tenantId && sharesSite(t, tenant) && sameCohort(t, next));
   if (twin) errors.push(`같은 홈페이지의 ${twin.brandName}(${twin.tenantId})${sp(twin.brandName)} 이미 ${twin.industry} · ${twin.region}에 있어요.`);
 
-  // 새 코호트의 구성원 — 함께 옮기는 경쟁사와 자기 자신은 뺀다.
-  const members = runtime.filter((t) => t.tenantId !== tenant.tenantId && !movingIds.has(t.tenantId) && sameCohort(t, next));
+  // 새 코호트의 구성원 — 함께 옮기는 경쟁사와 자기 자신은 뺀다. 경쟁사 측정 브랜드는 어느 고객이든 잴 때만 센다(아무도 재지 않는 곳은
+  // 화면에 보이지도 않고 옮길 수도 없어, 그것 때문에 막히거나 그 질문지를 따르면 안 된다).
+  const members = runtime.filter(
+    (t) => t.tenantId !== tenant.tenantId && !movingIds.has(t.tenantId) && sameCohort(t, next) && (!t.cohortOnly || targets.active.has(t.tenantId)),
+  );
   const otherScope = members.filter((m) => scopeOf(m) !== input.marketScope);
   if (!unchanged && from.cohortQuestionBank && otherScope.length > 0) {
     // 공통 질문지 키는 업종__지역뿐이라(cohortQuestionBank.ts cohortKey) 범위가 다른 브랜드와 같은 공통 질문을 쓰게 된다.
@@ -385,10 +435,26 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
     // 옮기지 않은 경쟁사 — 업종이 다르면 「측정 안 됨」, 지역이 다르면 옛 지역으로 재 새 순위표에 들지 않는다.
     // 업종 · 지역이 비면 측정 계획을 세울 수 없다(초안 정규화가 던진다) — 그 오류는 위에서 이미 알렸다.
     if (input.industry && input.region) {
-      const after = runtime.map((t) => (movingIds.has(t.tenantId) ? { ...t, industry: to.industry, region: to.region, marketScope: to.marketScope } : t));
+      const moved = (t: TenantConfig) => ({ ...t, industry: to.industry, region: to.region, marketScope: to.marketScope });
+      const after = runtime.map((t) => (movingIds.has(t.tenantId) || t.tenantId === tenant.tenantId ? moved(t) : t));
+      const offered = new Set(competitors.map((c) => c.tenantId));
       for (const e of planCohortTargets(next, after).entries) {
-        if (e.status === 'collision') notes.push(`${e.name}: 업종이 다른 브랜드로 등록돼 있어 측정하지 않습니다(옮기지 않은 경쟁사).`);
-        else if (e.status === 'measured' && e.otherRegion) notes.push(`${e.name}: 다른 지역(${e.existing?.region ?? ''})으로 재 새 순위표에 들지 않습니다.`);
+        if (e.status === 'collision') {
+          const why = e.collidesWith && offered.has(e.collidesWith.tenantId) ? '옮기지 않은 경쟁사' : `${e.collidesWith?.brandName ?? '다른 브랜드'}와 id가 겹침`;
+          notes.push(`${e.name}: 업종이 다른 브랜드로 잡혀 측정하지 않습니다(${why}).`);
+        } else if (e.status === 'measured' && e.otherRegion) notes.push(`${e.name}: 다른 지역(${e.existing?.region ?? ''})으로 재 새 순위표에 들지 않습니다.`);
+      }
+      // 이 브랜드를 경쟁사로 재는 다른 고객 — 업종이 바뀌면 그쪽은 이 브랜드를 재지 않고(칸은 차지), 지역이 바뀌면 그쪽 순위표에서 빠진다.
+      for (const other of runtime) {
+        if (other.cohortOnly || other.tenantId === tenant.tenantId || other.autoCohort === false) continue;
+        if (!lineTargets(other, runtime).some((t) => t.tenantId === tenant.tenantId)) continue;
+        for (const e of planCohortTargets(other, after).entries) {
+          if (e.status === 'collision' && e.collidesWith?.tenantId === tenant.tenantId) {
+            notes.push(`${other.brandName}${tp(other.brandName)} 이 브랜드를 경쟁사로 재는데, 업종이 달라져 그쪽에서는 측정하지 않습니다(함께 측정 칸은 차지).`);
+          } else if (e.status === 'measured' && e.targetTenantId === tenant.tenantId && e.otherRegion) {
+            notes.push(`${other.brandName}${tp(other.brandName)} 이 브랜드를 경쟁사로 재는데, 지역이 달라져 그쪽 순위표에 들지 않습니다.`);
+          }
+        }
       }
     }
   }
@@ -541,7 +607,11 @@ function olderVersion(a: string | undefined, b: string): boolean {
  * 기본 정보를 바꾼 뒤 아직 새 설정으로 재지 않았는가 — 브랜드 현황의 「기본 정보 바뀜 · 다음 측정 대기」.
  * 마지막 카드가 새 업종 · 지역이고 질문지가 저장한 버전 이상이면 끝났다(그 뒤 경쟁사 편집으로 버전이 더 올라가도 끝난 것이다).
  */
-export async function pendingProfileEdit(tenantId: string, last: WeeklyScorecard | undefined): Promise<{ savedAt: string; summary: string } | null> {
+export async function pendingProfileEdit(
+  tenant: Pick<TenantConfig, 'tenantId' | 'industry' | 'region'>,
+  last: WeeklyScorecard | undefined,
+): Promise<{ savedAt: string; summary: string } | null> {
+  const { tenantId } = tenant;
   let marker: ProfileMarker;
   try {
     marker = JSON.parse(await readFile(markerPath(tenantId), 'utf-8')) as ProfileMarker;
@@ -550,6 +620,8 @@ export async function pendingProfileEdit(tenantId: string, last: WeeklyScorecard
     return null;
   }
   if (!marker?.to?.questionBankVersion) return null;
+  // 지금 설정이 표식의 새 설정과 다르면 그 뒤 브랜드를 지우고 다시 등록했거나(같은 id) 다시 바꾼 것이다 — 남은 표식은 쓰지 않는다.
+  if (tenant.industry !== marker.to.industry || tenant.region !== marker.to.region) return null;
   if (last && last.industry === marker.to.industry && last.region === marker.to.region && !olderVersion(last.questionBankVersion, marker.to.questionBankVersion)) {
     return null;
   }

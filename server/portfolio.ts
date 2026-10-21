@@ -126,7 +126,7 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           competitors: t.competitors.length,
           competitorPlan: competitorPlanOf(t, tenants),
           competitorEdit: await pendingCompetitorEdit(t),
-          profileEdit: await pendingProfileEdit(t.tenantId, last),
+          profileEdit: await pendingProfileEdit(t, last),
         };
         if (!last) {
           return { ...base, status: 'none', weekOf: null, score: null, rank: null, totalTenants: null, tied: false, delta: null, changeReason: null };

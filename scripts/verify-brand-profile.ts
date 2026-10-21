@@ -62,7 +62,23 @@ try {
     { ...base, tenantId: 'pnat', brandName: '가상 전국', aliases: ['가상 전국'], ownedDomains: ['pnat.example'], industry: '관광안내', region: '국내', marketScope: 'national', cohortQuestionBank: 'c3', competitors: [] },
     { ...base, tenantId: 'psib', brandName: '가상 펜션', aliases: ['가상 펜션'], ownedDomains: ['pcust.example'], industry: '캠핑장', region: '가상시', competitors: [] },
     { ...base, tenantId: 'peng', brandName: 'Gasang', aliases: ['Gasang'], ownedDomains: ['peng.example'], industry: '펜션', region: '가상시 (영어 질문)', questionLanguage: 'en', competitors: [] },
+    // 경쟁사를 재지 않는 고객(autoCohort 끔)이 ptwo를 목록에 두었다 — ptwo는 여전히 pcust만 재는 곳이다.
+    { ...base, tenantId: 'pauto', brandName: '안 재는 고객', aliases: ['안 재는 고객'], ownedDomains: ['pauto.example'], industry: '펜션', region: '가상시', autoCohort: false, competitors: [line('가상 둘', 'ptwo.example')] },
+    // pcust를 경쟁사로 재는 고객.
+    { ...base, tenantId: 'pref', brandName: '참조 민박', aliases: ['참조 민박'], ownedDomains: ['pref.example'], industry: '펜션', region: '가상시', competitors: [line('가상 펜션', 'pcust.example')] },
+    // 아무도 재지 않는 경쟁사 측정 브랜드(지운 고객이 남김) — 야영장 · 국내 · 전국형 · c4.
+    { ...base, tenantId: 'porph', brandName: '남은 곳', aliases: ['남은 곳'], ownedDomains: ['porph.example'], industry: '야영장', region: '국내', marketScope: 'national', cohortQuestionBank: 'c4', competitors: [], cohortOnly: true },
+    // 칸(5곳)을 넘어 대기 중인 경쟁사: pbig의 6번째 pwait(이 고객만), 5번째 pwshare(pother2의 대기 줄도 가리킴).
+    { ...base, tenantId: 'pbig', brandName: '큰 캠핑', aliases: ['큰 캠핑'], ownedDomains: ['pbig.example'], industry: '캠핑', region: '가상시',
+      competitors: [line('가1', 'a1.example'), line('가2', 'a2.example'), line('가3', 'a3.example'), line('가4', 'a4.example'), line('함께 대기', 'pwshare.example'), line('대기 여섯', 'pwait.example')] },
+    { ...base, tenantId: 'pother2', brandName: '옆 캠핑', aliases: ['옆 캠핑'], ownedDomains: ['pother2.example'], industry: '캠핑', region: '가상시',
+      competitors: [line('나1', 'b1.example'), line('나2', 'b2.example'), line('나3', 'b3.example'), line('나4', 'b4.example'), line('나5', 'b5.example'), line('함께 대기', 'pwshare.example')] },
+    { ...base, tenantId: 'pwait', brandName: '대기 여섯', aliases: ['대기 여섯'], ownedDomains: ['pwait.example'], industry: '캠핑', region: '가상시', competitors: [], cohortOnly: true },
+    { ...base, tenantId: 'pwshare', brandName: '함께 대기', aliases: ['함께 대기'], ownedDomains: ['pwshare.example'], industry: '캠핑', region: '가상시', competitors: [], cohortOnly: true },
+    // 시장 범위만 따로 B2B로 정해 지역(가상구)이 남은 고객.
+    { ...base, tenantId: 'pkx', brandName: '가상 송출', aliases: ['가상 송출'], ownedDomains: ['pkx.example'], industry: '방송송출', region: '가상구', competitors: [] },
   ])
+  writeJson('data/pkx/market-scope.json', { marketScope: 'b2b', buyer: '가상 구매' })
   // 질문지 v3 · v5가 있고, 경쟁사 편집이 v7을 예약했다(다시 만들기 대기) — 다음 번호는 v8이다(빈 v4 · v6을 채우지 않는다).
   writeJson('data/pcust/question-bank/v3.json', { version: 'v3', questions: [] })
   writeJson('data/pcust/question-bank/v5.json', { version: 'v5', questions: [] })
@@ -94,6 +110,9 @@ try {
   ok('상태: 영어 질문 측정 브랜드는 막음', (await editor.describeProfileEditor('peng')).editable === false)
   ok('상태: 저장소 설정 브랜드는 막음', (await editor.describeProfileEditor('web4ai')).reason?.includes('저장소') === true)
   ok('상태: 경쟁사 측정 브랜드 · 없는 브랜드는 404', (await rejects(editor.describeProfileEditor('ptwo'), 404)) && (await rejects(editor.describeProfileEditor('nope'), 404)))
+  const big = await editor.describeProfileEditor('pbig')
+  ok('상태: 칸을 넘어 대기 중인 경쟁사도 함께 옮길 수 있다', big.competitors.some((c) => c.tenantId === 'pwait' && c.movable))
+  ok('상태: 다른 고객의 대기 줄이 가리키는 경쟁사는 공유', big.competitors.some((c) => c.tenantId === 'pwshare' && !c.movable && Boolean(c.reason?.includes('옆 캠핑'))))
 
   // 2) 미리 계산
   const input = (extra: Record<string, unknown>) => ({ industry: '펜션', region: '가상시', marketScope: 'local', buyer: '', move: [], ...extra })
@@ -108,9 +127,10 @@ try {
   ok('계획: 옮기지 않은 경쟁사는 업종이 달라 측정 안 됨', lodging.notes.some((n) => n.startsWith('공유 셋')))
   const glamping = await editor.planProfileEdit('pcust', input({ industry: '글램핑' }), store)
   ok('계획: 새 코호트에 공통 질문지가 없으면 지금 버전(c1)', glamping.cohortBank.to === 'c1')
-  const national = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '아무거나' }), store)
-  ok('계획: 전국형은 지역 「국내」, 구성원의 공통 질문지(c3)를 따른다', national.to.region === '국내' && national.cohortBank.to === 'c3' && national.cohortBank.members.includes('가상 전국'))
-  const b2b = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'b2b', buyer: '여행사' }), store)
+  const national = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '국내' }), store)
+  ok('계획: 전국형은 지역 「국내」, 구성원의 공통 질문지(c3)를 따른다', national.errors.length === 0 && national.to.region === '국내' && national.cohortBank.to === 'c3' && national.cohortBank.members.includes('가상 전국'))
+  ok('계획: 지역형에서 전국형으로 바꾸며 다른 지역을 보내면 막는다', (await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '아무거나' }), store)).errors.some((e) => e.includes('국내')))
+  const b2b = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'b2b', region: '국내', buyer: '여행사' }), store)
   ok('계획: 같은 코호트에 범위가 다른 브랜드가 있으면 막는다', b2b.errors.some((e) => e.includes('범위가 다른')))
   const scopeOnly = await editor.planProfileEdit('pcust', input({ marketScope: 'b2b', buyer: '가상 구매', region: '' }), store)
   ok('계획: 지역형 → B2B형은 지역이 국내로 바뀌어 새 코호트', scopeOnly.to.region === '국내' && scopeOnly.to.buyer === '가상 구매')
@@ -121,6 +141,16 @@ try {
   writeJson('measure-requests.json', [{ tenant: pcustEntry, requestedAt: '2026-10-21T00:00:00.000Z' }])
   ok('계획: 측정 대기열에 있으면 막는다', (await editor.planProfileEdit('pcust', input({ industry: '숙박' }), store)).errors.some((e) => e.includes('대기열')))
   writeJson('measure-requests.json', [])
+  ok('계획: 이 브랜드를 경쟁사로 재는 고객에게 생길 일을 알린다', lodging.notes.some((n) => n.startsWith('참조 민박') && n.includes('업종이 달라져')))
+  const camp = await editor.planProfileEdit('pcust', input({ industry: '야영장', marketScope: 'b2b', region: '국내', buyer: '캠핑 운영사' }), store)
+  ok('계획: 아무도 재지 않는 경쟁사 측정 브랜드는 구성원이 아니다(막지 않고 그 질문지도 따르지 않는다)', camp.errors.length === 0 && camp.cohortBank.to !== 'c4' && camp.cohortBank.members.length === 0)
+  const kx = await editor.describeProfileEditor('pkx')
+  const kxInput = (extra: Record<string, unknown>) => ({ industry: '방송송출', region: '가상구', marketScope: 'b2b', buyer: '가상 구매', move: [], ...extra })
+  ok('지역 남은 B2B: 그대로면 바뀐 내용 없음', kx.marketScope === 'b2b' && kx.region === '가상구' && (await editor.planProfileEdit('pkx', kxInput({}), store)).unchanged)
+  const kxBuyer = await editor.planProfileEdit('pkx', kxInput({ buyer: '다른 구매' }), store)
+  ok('지역 남은 B2B: 구매자만 바꾸면 지역은 그대로', kxBuyer.errors.length === 0 && kxBuyer.to.region === '가상구')
+  ok('지역 남은 B2B: 다른 지역으로는 못 옮긴다', (await editor.planProfileEdit('pkx', kxInput({ region: '다른구' }), store)).errors.some((e) => e.includes('국내')))
+  ok('지역 남은 B2B: 「국내」로는 옮길 수 있다', (await editor.planProfileEdit('pkx', kxInput({ region: '국내' }), store)).to.region === '국내')
 
   // 3) 저장 — 미리보기 열쇠 · 측정 중 · 그대로
   ok('저장: 미리보기와 다르면 409', await rejects(editor.saveProfileEdit('pcust', input({ industry: '숙박', move: ['ptwo'] }), 'stale', store), 409))
@@ -156,22 +186,28 @@ try {
 
   // 4) 브랜드 현황 · 이번 주 재사용 · 코호트 추세
   const last = (await store.getScorecardHistory('pcust', 99)).at(-1)
-  ok('현황: 다시 재기 전에는 「기본 정보 바뀜 · 다음 측정 대기」', (await editor.pendingProfileEdit('pcust', last))?.summary.includes('업종 펜션 → 숙박') === true)
-  ok('현황: 새 설정으로 잰 카드가 생기면 끝', (await editor.pendingProfileEdit('pcust', card('pcust', '숙박', '가상시', 'v8') as never)) === null)
-  ok('현황: 표식 없는 브랜드는 없음', (await editor.pendingProfileEdit('pother', undefined)) === null)
+  ok('현황: 다시 재기 전에는 「기본 정보 바뀜 · 다음 측정 대기」', (await editor.pendingProfileEdit(pcust, last))?.summary.includes('업종 펜션 → 숙박') === true)
+  ok('현황: 새 설정으로 잰 카드가 생기면 끝', (await editor.pendingProfileEdit(pcust, card('pcust', '숙박', '가상시', 'v8') as never)) === null)
+  ok('현황: 표식 없는 브랜드는 없음', (await editor.pendingProfileEdit({ tenantId: 'pother', industry: '펜션', region: '가상시' }, undefined)) === null)
+  ok('현황: 지운 뒤 같은 id로 다시 등록해 설정이 다르면 남은 표식은 쓰지 않는다', (await editor.pendingProfileEdit({ tenantId: 'pcust', industry: '펜션', region: '가상시' }, undefined)) === null)
   const reuse = await reusableThisWeek(ptwo, store, week)
   ok('이번 주 재사용: 옛 코호트로 잰 카드는 다시 잰다', !reuse.ok && Boolean(reuse.reason?.includes('코호트 다름')))
   const trend = await getCohortTrend(store, pcust)
   ok('코호트 추세: 지난 주는 그 주 카드의 코호트(펜션)와 비교', trend.length === 1 && trend[0]!.peerCount === 2 && trend[0]!.avg === 40)
 
   // 5) 범위 바꾸기 — 시장 범위 파일도 같은 값으로, 구성원(전국형 pnat)의 공통 질문지를 따른다
-  const toNational = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', move: ['ptwo'] }), store)
+  const toNational = await editor.planProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '국내', move: ['ptwo'] }), store)
   ok('범위 계획: 오류 없음 · 다음 번호 v9', toNational.errors.length === 0 && toNational.bank.to === 'v9')
-  await editor.saveProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', move: ['ptwo'] }), toNational.key, store)
+  await editor.saveProfileEdit('pcust', input({ industry: '관광안내', marketScope: 'national', region: '국내', move: ['ptwo'] }), toNational.key, store)
   const scopeFile = readJson<{ marketScope: string }>('data/pcust/market-scope.json')
   const after = (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pcust')!
   ok('범위 저장: 시장 범위 파일 · 런타임이 전국형', scopeFile.marketScope === 'national' && after.marketScope === 'national' && after.region === '국내' && after.cohortQuestionBank === 'c3')
   ok('범위 저장: 경쟁사 목록은 여전히 쓰인다', after.competitors.length === 3)
+
+  // 6) 공통 질문지를 따르는 등록 — 같은 코호트 고객이 c3을 쓰면 새로 등록하는 브랜드도 c3(기본값 c1이 아니라)
+  await reg.registerTenant(reg.normalizeTenantDraft({ tenantId: 'pnew', brandName: '새 전국', ownedDomains: ['pnew.example'], industry: '관광안내', region: '국내', marketScope: 'national' }))
+  const pnew = readJson<Record<string, unknown>[]>('tenants.overlay.json').find((t) => t.tenantId === 'pnew')
+  ok('등록: 같은 코호트 고객의 공통 질문지를 따른다', pnew?.cohortQuestionBank === 'c3')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

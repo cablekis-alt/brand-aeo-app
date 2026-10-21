@@ -293,6 +293,21 @@ export function replaceOverlayTenants(tenants: TenantConfig[]): Promise<void> {
   });
 }
 
+/**
+ * 새로 들어오는 브랜드가 쓸 코호트 공통 질문지 버전 — 같은 코호트(업종 · 지역 · 언어)의 고객 브랜드가 쓰는 버전을 따른다.
+ * 기본 정보 고치기(brandProfileEditor.ts)가 공통 질문지를 올린 코호트(c1 → c2)에 기본값 c1으로 들어오면, 한 순위표에서 옛 질문을
+ * 따로 쓰게 된다. 같은 코호트에 고객이 없거나 공통 질문지를 쓰지 않는 브랜드면 그대로.
+ */
+export function cohortBankFor(tenant: TenantConfig, runtime: TenantConfig[]): string | undefined {
+  if (!tenant.cohortQuestionBank) return tenant.cohortQuestionBank;
+  const counts = new Map<string, number>();
+  for (const t of runtime) {
+    if (t.cohortOnly || t.tenantId === tenant.tenantId || !t.cohortQuestionBank || !sameCohort(t, tenant)) continue;
+    counts.set(t.cohortQuestionBank, (counts.get(t.cohortQuestionBank) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? tenant.cohortQuestionBank;
+}
+
 export async function registerTenant(tenant: TenantConfig): Promise<void> {
   const existing = await loadRuntimeTenants();
   if (existing.some((item) => item.tenantId === tenant.tenantId)) {
@@ -306,7 +321,8 @@ export async function registerTenant(tenant: TenantConfig): Promise<void> {
   }
   // 이전에 삭제(툼스톤)된 tenantId를 다시 등록하는 경우, 툼스톤을 걷어내 다시 보이게 한다.
   await removeDeletedTenant(tenant.tenantId);
-  await persistTenantForRuntime(tenant);
+  const cohortQuestionBank = tenant.cohortOnly ? tenant.cohortQuestionBank : cohortBankFor(tenant, existing);
+  await persistTenantForRuntime(cohortQuestionBank === tenant.cohortQuestionBank ? tenant : { ...tenant, cohortQuestionBank });
 }
 
 export function toTenantSummary(tenant: TenantConfig) {

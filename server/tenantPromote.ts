@@ -10,7 +10,7 @@ import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
+import { cohortBankFor, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
 import { subjectParticle, topicParticle } from '../src/lib/korean.js';
 import type { CompetitorContext, FactGraphNode } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
@@ -284,7 +284,9 @@ export async function promoteCompetitor(draft: TenantConfig, removeFrom: string[
     }
   }
   try {
-    await replaceOverlayTenant({ ...draft, questionBankVersion, cohortOnly: undefined });
+    // 공통 질문지는 들어가는 코호트의 고객 브랜드가 쓰는 버전을 따른다(tenantRegistry.ts cohortBankFor).
+    const cohortQuestionBank = cohortBankFor(draft, await loadRuntimeTenants());
+    await replaceOverlayTenant({ ...draft, questionBankVersion, cohortOnly: undefined, ...(cohortQuestionBank ? { cohortQuestionBank } : {}) });
   } catch (err) {
     await restoreFiles(draft.tenantId, backupDir, moved);
     throw err;

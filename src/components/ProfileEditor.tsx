@@ -23,7 +23,8 @@ import { MARKET_SCOPES, NATIONAL_REGION, type MarketScope } from '../prompts/typ
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ok'; value: ProfileEditorState }
 type PlanState = { key: string; replan: number; value: ProfilePlan | null; error: string | null }
-type Form = { industry: string; region: string; marketScope: MarketScope; buyer: string }
+// region은 지역형일 때 적는 지역. toNational은 이미 전국형 · B2B형인데 지역이 남은 브랜드를 「국내」로 옮길지.
+type Form = { industry: string; region: string; marketScope: MarketScope; buyer: string; toNational: boolean }
 
 const SCOPE_DESC: Record<MarketScope, string> = {
   local: '그 지역에서 찾는 손님 — 질문에 지역이 들어가요',
@@ -31,13 +32,20 @@ const SCOPE_DESC: Record<MarketScope, string> = {
   b2b: '사업자 · 구매 담당자가 찾는 곳 — 지역은 「국내」',
 }
 
-// 지역형이 아니면 지역 칸은 「국내」로 잠기므로, 지역 입력은 지역형일 때의 값만 들고 있는다.
+// 지역형이 아니면 지역 칸은 잠기므로, 지역 입력은 지역형일 때의 값만 들고 있는다.
 const formOf = (s: ProfileEditorState): Form => ({
   industry: s.industry,
   region: s.marketScope === 'local' ? s.region : '',
   marketScope: s.marketScope,
   buyer: s.buyer,
+  toNational: false,
 })
+
+/**
+ * 이미 전국형 · B2B형인데 지역이 「국내」가 아닌 브랜드(시장 범위만 따로 정한 브랜드) — 지역을 그대로 둘 수 있다. 「국내」로 옮기면
+ * 코호트가 바뀌므로 고른 사람만 옮긴다(서버 brandProfileEditor.ts도 이 두 값만 받는다).
+ */
+const keepsRegion = (s: ProfileEditorState) => s.marketScope !== 'local' && s.region !== NATIONAL_REGION
 
 export default function ProfileEditor({
   tenantId,
@@ -100,7 +108,7 @@ export default function ProfileEditor({
     s && f
       ? {
           industry: f.industry.trim(),
-          region: f.marketScope === 'local' ? f.region.trim() : NATIONAL_REGION,
+          region: f.marketScope === 'local' ? f.region.trim() : keepsRegion(s) && !f.toNational ? s.region : NATIONAL_REGION,
           marketScope: f.marketScope,
           buyer: f.marketScope === 'b2b' ? f.buyer.trim() : '',
           move: s.competitors.filter((c) => c.movable && moveIds.includes(c.tenantId)).map((c) => c.tenantId).sort(),
@@ -153,6 +161,13 @@ export default function ProfileEditor({
   const measuringNow = planned ? planned.measuring : Boolean(s?.measuring)
   const canSave = Boolean(s?.editable && dirty && planned && !planned.unchanged && planned.errors.length === 0 && !measuringNow && freshPlan && !busy)
   const confirmOpen = confirmKey !== null && confirmKey === planned?.key
+
+  // 측정 중에 계산한 미리보기는 측정이 끝나도 그대로라 저장이 막힌 채 남는다 — 측정 중이면 잠시 뒤 다시 계산한다.
+  useEffect(() => {
+    if (!planned?.measuring) return
+    const timer = setTimeout(() => setReplan((n) => n + 1), 5000)
+    return () => clearTimeout(timer)
+  }, [planned])
 
   const update = (patch: Partial<Form>) => {
     if (!f) return
@@ -248,7 +263,7 @@ export default function ProfileEditor({
           </p>
         )}
         {s && !s.editable && <p className="ce-alert warn">{s.reason}</p>}
-        {s?.measuring && <p className="ce-alert">측정이 진행 중이에요. 끝난 뒤에 저장할 수 있어요.</p>}
+        {s && measuringNow && <p className="ce-alert">측정이 진행 중이에요. 끝난 뒤에 저장할 수 있어요.</p>}
       </div>
 
       <div className="ce-body" inert={confirmOpen || undefined}>
@@ -292,9 +307,15 @@ export default function ProfileEditor({
               {f.marketScope === 'local' ? (
                 <input type="text" list="pe-regions" value={f.region} onChange={(e) => update({ region: e.target.value })} placeholder="예: 전북 군산" />
               ) : (
-                <input type="text" value={NATIONAL_REGION} readOnly aria-readonly="true" className="pe-locked" />
+                <input type="text" value={input?.region ?? NATIONAL_REGION} readOnly aria-readonly="true" className="pe-locked" />
               )}
             </label>
+            {f.marketScope !== 'local' && keepsRegion(s) && (
+              <label className="ce-pastbox-opt">
+                <input type="checkbox" checked={f.toNational} onChange={(e) => update({ toNational: e.target.checked })} />
+                지역을 「{NATIONAL_REGION}」로 바꾸기 — 전국형 · B2B형의 기본 코호트로 옮겨요
+              </label>
+            )}
             <datalist id="pe-regions">
               {s.regions.map((v) => (
                 <option key={v} value={v} />

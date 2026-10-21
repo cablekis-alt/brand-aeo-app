@@ -161,18 +161,22 @@ export default function Portfolio() {
   // 열리게 이동(location.key)마다 한 번 본다.
   const requested = (location.state as { editCompetitors?: string } | null)?.editCompetitors ?? null
   const [editing, setEditing] = useState<string | null>(requested)
+  // 기본 정보 서랍 — 경쟁사 편집 서랍과 같은 자리(오른쪽)에 뜨므로 한 번에 하나만 연다.
+  const [profiling, setProfiling] = useState<string | null>(null)
   const [seenKey, setSeenKey] = useState(location.key)
   if (location.key !== seenKey) {
     setSeenKey(location.key)
-    if (requested) setEditing(requested)
+    if (requested) {
+      setEditing(requested)
+      // 명령 창에서 경쟁사 편집을 열면 기본 정보 서랍은 닫는다 — 남겨 두면 경쟁사 서랍을 닫을 때 다시 나타난다.
+      setProfiling(null)
+    }
   }
   const closeEditor = () => {
     setEditing(null)
     // 새로 고침·뒤로 가기에서 다시 열리지 않게 이동 기록의 요청을 지운다.
     if (requested) navigate(location.pathname, { replace: true, state: null })
   }
-  // 기본 정보 서랍 — 경쟁사 편집 서랍과 같은 자리(오른쪽)에 뜨므로 한 번에 하나만 연다.
-  const [profiling, setProfiling] = useState<string | null>(null)
   const openProfile = (id: string) => {
     if ((id !== profiling || editing) && !leaveEditor()) return
     if (editing) closeEditor()
