@@ -296,21 +296,41 @@ export async function cancelMeasureRun(runId: number): Promise<void> {
  * reuseCohort 같은 옵션이 늘면 한 곳만 빠뜨리게 되므로 여기로 모은다.
  *
  * @param reuseCohort 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다.
+ * @param selfOnly 이 브랜드만 잰다 — 경쟁사는 재지 않고, 순위는 경쟁사들의 이번 주 카드로 다시 매긴다.
  */
 export async function measureTenantAll(
   tenantId: string,
   reuseCohort = false,
+  selfOnly = false,
 ): Promise<{ brandName?: string; aeoScore?: number; weekOf?: string }> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/measure`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reuseCohort }),
+    body: JSON.stringify({ reuseCohort, selfOnly }),
   })
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
   }
   return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string }
+}
+
+/** 측정 전 계획(server/measureAndBake.ts MeasurePreview). */
+export interface MeasurePreview {
+  weekOf: string
+  engines: string[]
+  enginesError: string | null
+  judgeEngine: string
+  targets: { tenantId: string; brandName: string; reusable: boolean; reason: string | null }[]
+  peers: { tenantId: string; brandName: string; engines: string[]; judgeEngine: string | null; sameTools: boolean }[]
+}
+
+/** 측정 전 계획 — 로컬 백엔드 전용. 못 읽으면 throw한다(화면은 미리 확인 없이도 측정할 수 있다). */
+export async function loadMeasurePreview(tenantId: string): Promise<MeasurePreview> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/measure-preview`)
+  const body = (await res.json().catch(() => null)) as (MeasurePreview & { error?: string }) | null
+  if (!res.ok || !body) throw new Error(body?.error || `측정 계획을 읽지 못했습니다 (HTTP ${res.status})`)
+  return body
 }
 
 /**

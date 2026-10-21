@@ -6,7 +6,7 @@ import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
 import { variantTag } from '../lib/brandVariant'
-import { loadPortfolio, measureTenantAll, type PortfolioCohort, type PortfolioRow } from '../lib/api'
+import { loadMeasurePreview, loadPortfolio, measureTenantAll, type MeasurePreview, type PortfolioCohort, type PortfolioRow } from '../lib/api'
 
 interface MeasureTenantOption {
   tenantId: string
@@ -20,6 +20,33 @@ interface MeasureTenantOption {
 }
 
 type MeasureVia = 'local' | 'github' | 'none'
+/** 고객 브랜드를 잴 때 경쟁사를 어떻게 — 함께 다시 재기 · 이번 주에 잰 곳은 다시 쓰기 · 이 브랜드만. */
+type CohortMode = 'all' | 'reuse' | 'self'
+
+const ENGINE_LABEL: Record<string, string> = { openai: 'ChatGPT', gemini: 'Gemini', perplexity: 'Perplexity', claude: 'Claude' }
+const engineText = (engines: string[]) => engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ') || '없음'
+
+/**
+ * 「이 브랜드만 측정」 전에 알릴 것 — 함께 순위를 매길 이번 주 경쟁사 카드가 없거나, 다른 도구(수집 · 판단 엔진)로 잰 카드면
+ * 순위 비교가 맞지 않는다(2026-10-21: Gemini를 끈 뒤 군산각만 다시 재려다 겪음).
+ */
+function selfOnlyWarnings(p: MeasurePreview): string[] {
+  const out: string[] = []
+  if (p.enginesError) out.push(p.enginesError)
+  if (p.peers.length === 0) out.push(`이번 주(${p.weekOf.replace(/^\d{4}-/, '')})에 잰 경쟁사가 없어 순위가 혼자(1/1)로 매겨집니다.`)
+  const diff = p.peers.filter((x) => !x.sameTools)
+  if (diff.length > 0) {
+    const names = diff
+      .slice(0, 3)
+      .map((x) => `${x.brandName}(${engineText(x.engines)})`)
+      .join(', ')
+    out.push(
+      `경쟁사 ${diff.length}곳의 이번 주 기록은 다른 도구로 쟀습니다 — ${names}${diff.length > 3 ? ` 외 ${diff.length - 3}곳` : ''}. ` +
+        `이 브랜드만 지금 엔진(${engineText(p.engines)})으로 재면 같은 순위표에서 비교가 맞지 않습니다.`,
+    )
+  }
+  return out
+}
 
 export default function MeasureTenant() {
   const { tenantId: currentTenantId } = useTenant()
@@ -29,9 +56,12 @@ export default function MeasureTenant() {
   const [tenants, setTenants] = useState<MeasureTenantOption[]>([])
   const [pickedTenant, setPickedTenant] = useState('')
   const [measuring, setMeasuring] = useState(false)
-  // 이번 주 카드가 이미 있는 경쟁사를 다시 재지 않는다. 주차 카드는 주차당 하나라 같은 주에
-  // 다시 재면 앞선 측정을 덮어쓴다 — 데이터가 늘지 않고 표본만 바뀐다. 기본은 끔(현재 동작 유지).
-  const [reuseCohort, setReuseCohort] = useState(false)
+  // 경쟁사를 어떻게 잴지. reuse: 이번 주 카드가 이미 있는 경쟁사를 다시 재지 않는다(주차 카드는 주차당 하나라 같은 주에 다시 재면
+  // 앞선 측정을 덮어쓴다 — 데이터가 늘지 않고 표본만 바뀐다). self: 이 브랜드만 잰다. 기본은 all(현재 동작 유지).
+  const [mode, setMode] = useState<CohortMode>('all')
+  // 측정 전 계획(어떤 경쟁사를 다시 재는가 · 이 브랜드만 재면 무엇이 맞지 않는가). 고른 브랜드 것만 보인다.
+  const [preview, setPreview] = useState<{ tenantId: string; value: MeasurePreview | null; error: string | null } | null>(null)
+  const [previewSeq, setPreviewSeq] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   // 서버에서 실제로 진행 중인 측정(페이지를 벗어났다 와도 상태 유지). measureVia=local 전용.
   const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
@@ -170,7 +200,7 @@ export default function MeasureTenant() {
         )
         return
       }
-      const d = await measureTenantAll(pickedTenant, reuseCohort)
+      const d = await measureTenantAll(pickedTenant, mode === 'reuse', mode === 'self')
       setMessage(
         `✓ ${d.brandName} 측정·baking 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
       )
@@ -178,11 +208,36 @@ export default function MeasureTenant() {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
     } finally {
       setMeasuring(false)
+      // 측정으로 이번 주 카드가 바뀌었다 — 계획을 다시 받는다.
+      setPreviewSeq((n) => n + 1)
     }
   }
 
   const picked = tenants.find((t) => t.tenantId === pickedTenant)
   const locked = healthReady && !canMeasure
+  const wantsPreview = measureVia === 'local' && Boolean(picked) && !picked?.cohortOnly
+  useEffect(() => {
+    if (!wantsPreview || !pickedTenant) return
+    let alive = true
+    loadMeasurePreview(pickedTenant).then(
+      (value) => alive && setPreview({ tenantId: pickedTenant, value, error: null }),
+      (err: unknown) => {
+        console.error('[MeasureTenant] 측정 계획을 읽지 못했습니다', err)
+        if (alive) setPreview({ tenantId: pickedTenant, value: null, error: err instanceof Error ? err.message : String(err) })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [wantsPreview, pickedTenant, previewSeq])
+  const plan = preview && preview.tenantId === pickedTenant ? preview.value : null
+  const warnings = mode === 'self' && plan ? selfOnlyWarnings(plan) : []
+  const remeasured = plan?.targets.filter((t) => !t.reusable) ?? []
+  const start = () => {
+    // 이 브랜드만 재는데 순위 비교가 맞지 않으면 확인을 받는다 — 그 주 카드를 덮어쓰고 순위표에 섞인다.
+    if (warnings.length > 0 && !window.confirm(`${warnings.join('\n\n')}\n\n그래도 이 브랜드만 측정할까요?`)) return
+    void measureOne()
+  }
   // 로컬 측정은 앱 전체에서 한 번에 하나씩 순차 실행되므로, 서버에 진행 중이 있으면 측정 중으로 본다.
   const isMeasuring = measuring || (measureVia === 'local' && serverActive.length > 0)
 
@@ -254,7 +309,7 @@ export default function MeasureTenant() {
           <button
             type="button"
             className="primary"
-            onClick={() => void measureOne()}
+            onClick={start}
             disabled={locked || !pickedTenant || isMeasuring}
           >
             {isMeasuring
@@ -263,26 +318,49 @@ export default function MeasureTenant() {
                 ? '로컬에서만 측정 가능'
                 : picked?.cohortOnly
                   ? '이 경쟁사만 측정'
-                  : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
+                  : mode === 'self'
+                    ? '이 브랜드만 측정'
+                    : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
           </button>
         </div>
-        {!picked?.cohortOnly && (
-          <label
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', fontSize: '0.9em' }}
-          >
-            <input
-              type="checkbox"
-              checked={reuseCohort}
-              onChange={(e) => setReuseCohort(e.target.checked)}
-              disabled={locked || isMeasuring}
-            />
-            <span>
-              이번 주에 이미 측정한 경쟁사는 건너뛰기
-              <span className="hint" style={{ marginLeft: '6px' }}>
-                (수집·판단 엔진이 그때와 같을 때만 재사용합니다. 경쟁사 하나당 2분 가까이 걸립니다.)
+        {!picked?.cohortOnly && measureVia === 'local' && (
+          <fieldset className="measure-mode" disabled={locked || isMeasuring}>
+            <legend className="sr-only">경쟁사 측정 방식</legend>
+            <label>
+              <input type="radio" name="measure-mode" checked={mode === 'all'} onChange={() => setMode('all')} />
+              <span>경쟁사도 함께 측정</span>
+            </label>
+            <label>
+              <input type="radio" name="measure-mode" checked={mode === 'reuse'} onChange={() => setMode('reuse')} />
+              <span>
+                이번 주에 이미 측정한 경쟁사는 건너뛰기
+                <span className="hint"> (수집·판단 엔진이 그때와 같을 때만 재사용합니다. 경쟁사 하나당 2분 가까이 걸립니다.)</span>
               </span>
-            </span>
-          </label>
+            </label>
+            <label>
+              <input type="radio" name="measure-mode" checked={mode === 'self'} onChange={() => setMode('self')} />
+              <span>
+                이 브랜드만 측정
+                <span className="hint"> (경쟁사는 다시 재지 않고, 순위는 경쟁사들의 이번 주 기록으로 매깁니다.)</span>
+              </span>
+            </label>
+          </fieldset>
+        )}
+        {!picked?.cohortOnly && mode === 'reuse' && plan && remeasured.length > 0 && (
+          <p className="hint measure-plan-note">
+            다시 재는 경쟁사 {remeasured.length}곳 — {remeasured.map((t) => `${t.brandName}(${t.reason ?? '이번 주 기록 없음'})`).join(', ')}
+          </p>
+        )}
+        {!picked?.cohortOnly && mode === 'reuse' && plan && plan.targets.length > 0 && remeasured.length === 0 && (
+          <p className="hint measure-plan-note">경쟁사 {plan.targets.length}곳 모두 이번 주 기록을 다시 씁니다 — 이 브랜드만 잽니다.</p>
+        )}
+        {warnings.map((w) => (
+          <p key={w} className="hint measure-plan-note warn">
+            ⚠ {w}
+          </p>
+        ))}
+        {!picked?.cohortOnly && mode !== 'all' && preview?.tenantId === pickedTenant && preview.error && (
+          <p className="hint measure-plan-note">측정 계획을 확인하지 못했습니다({preview.error}) — 측정은 할 수 있습니다.</p>
         )}
         {isMeasuring && serverActive.length > 0 && (
           // 이름만 나열하면 "돌고 있다"까지만 말한다. 단계·건수가 있으면 어디쯤인지가 보인다.
@@ -298,6 +376,10 @@ export default function MeasureTenant() {
             {picked.cohortOnly ? (
               <>
                 <b>{picked.brandName}</b> 경쟁사 하나만 측정합니다.
+              </>
+            ) : mode === 'self' ? (
+              <>
+                <b>{picked.brandName}</b>만 측정합니다 — 경쟁사는 다시 재지 않고, 코호트 순위는 경쟁사들의 이번 주 기록으로 매깁니다.
               </>
             ) : (
               <>

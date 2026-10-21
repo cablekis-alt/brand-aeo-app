@@ -90,6 +90,12 @@ interface MeasureOptions {
    * "경쟁사도 최신 키로 재측정"이라 기본값은 바꾸지 않고 호출자가 켜도록 둔다.
    */
   reuseCohort?: boolean;
+  /**
+   * 이 브랜드만 잰다 — 경쟁사 자동 추론 · 함께 측정을 건너뛰고, 코호트 순위는 경쟁사들의 이번 주 카드로 다시 매긴다(측정 화면의
+   * 「이 브랜드만 측정」). 경쟁사를 재지 않았으므로 경쟁사 목록을 「측정함」으로 적지 않는다 — 적으면 경쟁사 편집의
+   * 「다음 측정 대기」가 바뀐 경쟁사를 재지도 않았는데 사라진다. 경쟁사 카드와 도구가 다르면 화면이 측정 전에 알린다(measurePreview).
+   */
+  selfOnly?: boolean;
 }
 
 /**
@@ -137,6 +143,53 @@ export async function reusableThisWeek(
     return { ok: false, reason: `수집 엔진 다름(${enginesThen.join('+')} → ${enginesNow.join('+')})` };
   }
   return { ok: true };
+}
+
+/** 측정 전에 보는 계획 — 측정 화면이 「건너뛰기」 · 「이 브랜드만」을 고르기 전에 무엇이 일어날지 알린다. */
+export interface MeasurePreview {
+  weekOf: string;
+  /** 지금 쓸 수집 엔진 · 판단 엔진. 수집 엔진을 정하지 못하면(키 없음) engines는 비고 enginesError에 까닭. */
+  engines: string[];
+  enginesError: string | null;
+  judgeEngine: string;
+  /** 「건너뛰기」 때 함께 잴 경쟁사마다 — 이번 주 카드를 다시 쓰는가, 아니면 왜 다시 재는가(reusableThisWeek). */
+  targets: { tenantId: string; brandName: string; reusable: boolean; reason: string | null }[];
+  /** 「이 브랜드만」 때 함께 순위를 매길 이번 주 코호트 카드(자기 제외)와, 그 카드가 지금과 같은 도구로 잰 것인가. */
+  peers: { tenantId: string; brandName: string; engines: string[]; judgeEngine: string | null; sameTools: boolean }[];
+}
+
+export async function measurePreview(tenant: TenantConfig, store: FileResultStore): Promise<MeasurePreview> {
+  const weekOf = getIsoWeekString(new Date());
+  const judgeEngine = resolveJudgeEngineId();
+  let engines: string[] = [];
+  let enginesError: string | null = null;
+  try {
+    engines = [...resolveCollectionEngines(tenant)].sort();
+  } catch (err) {
+    enginesError = err instanceof Error ? err.message : String(err);
+  }
+  const runtime = await loadRuntimeTenants();
+  const candidates = tenant.cohortOnly || tenant.autoCohort === false || !tenant.competitors?.length ? [] : selectCohortTargets(tenant, runtime);
+  const targets = await Promise.all(
+    candidates.map(async (t) => {
+      const v = await reusableThisWeek(t, store, weekOf);
+      return { tenantId: t.tenantId, brandName: t.brandName, reusable: v.ok, reason: v.ok ? null : (v.reason ?? null) };
+    }),
+  );
+  const cards = await store.getCohortScorecards(tenant.industry, tenant.region, weekOf);
+  const peers = cards
+    .filter((c) => c.tenantId !== tenant.tenantId)
+    .map((c) => {
+      const used = [...(c.enginesUsed ?? [])].sort();
+      return {
+        tenantId: c.tenantId,
+        brandName: c.brandName,
+        engines: used,
+        judgeEngine: c.judgeEngine ?? null,
+        sameTools: !enginesError && used.join(',') === engines.join(',') && c.judgeEngine === judgeEngine,
+      };
+    });
+  return { weekOf, engines, enginesError, judgeEngine, targets, peers };
 }
 
 type CohortKey = { industry: string; region: string; weekOf: string };
@@ -297,7 +350,7 @@ async function measureAndBakeRun(
 
   // 본 브랜드(경쟁사 측정용 cohortOnly가 아닌)일 때만 경쟁사 자동 추론·코호트 측정을 한다.
   // Vercel 서버리스 리전은 한국어 브랜드 회상에 헛소리를 내므로 이 함수는 Vercel에서 실행되지 않는다.
-  if (!tenant.cohortOnly) {
+  if (!tenant.cohortOnly && !options.selfOnly) {
     // 1) 경쟁사가 비어 있으면 CI 러너·로컬(=LLM 정상)에서 자동 추론해 채운다.
     if (!tenant.competitors?.length) {
       const inferred = await inferCompetitors(tenant.brandName, tenant.industry, tenant.region).catch(() => []);
@@ -451,8 +504,9 @@ async function measureAndBakeRun(
 
   if (!self.ok) throw self.error;
   const { aeoScore } = self.value;
-  // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다.
-  if (!tenant.cohortOnly && !options.inCohortRun) {
+  // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다. 이 브랜드만 잰 측정(selfOnly)도
+  // 경쟁사를 재지 않았으니 적지 않는다.
+  if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly) {
     // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
     await recordCompetitorMeasurement(tenant.tenantId, runtimeList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);

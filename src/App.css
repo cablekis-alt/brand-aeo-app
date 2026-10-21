@@ -1024,6 +1024,36 @@
   align-items: center;
   margin-top: 10px;
 }
+/* 고객 브랜드를 잴 때 경쟁사 측정 방식(MeasureTenant.tsx) — 함께 · 건너뛰기 · 이 브랜드만. */
+.measure-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.9em;
+}
+.measure-mode label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+.measure-mode input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.measure-mode:disabled label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.measure-plan-note {
+  margin: 6px 0 0;
+}
+.measure-plan-note.warn {
+  color: var(--warn);
+}
 /* 측정 대상 고르기 — 누르면 업종별 패널(BrandPickerPanel, 스타일은 .bsw)이 열린다. */
 .measure-target {
   display: flex;
