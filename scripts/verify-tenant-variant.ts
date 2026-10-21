@@ -108,13 +108,14 @@ try {
   writeJson('tenants.overlay.json', [
     { ...base, tenantId: 'vsite', brandName: '가상각', aliases: ['가상각', '가상 여행의 모든것'], ownedDomains: ['vsite.example', 'old.vsite.example'],
       industry: '관광정보서비스', region: '가상시', ga4PropertyId: '123456', brandPageUrl: 'https://vsite.example/about',
-      factGraph: [fact('f1', '주소', '가상시 가상로 1')],
+      factGraph: [fact('f1', '주소', '가상시 가상로 1'), fact('f2', '체크인', '15시')],
       competitors: [{ name: '가상 시청', aliases: ['가상 시청'], domains: ['vcity.example'] }] },
     { ...base, tenantId: 'vsite-en', brandName: '가상각', aliases: ['Gasang-gak'], ownedDomains: ['vsite.example'],
       industry: '관광정보서비스', region: '가상시 (영어 질문)', questionLanguage: 'en' },
     { ...base, tenantId: 'vcomp', brandName: '가상 관광', aliases: ['가상 관광'], ownedDomains: ['vcomp.example'], industry: '관광안내', region: '국내', cohortOnly: true },
     { ...base, tenantId: 'vold', brandName: '가상 옛집', aliases: ['가상 옛집'], ownedDomains: ['old.vsite.example'], industry: '여행사', region: '국내' },
     { ...base, tenantId: 'blog', brandName: '가짜카페A', aliases: ['가짜카페A'], ownedDomains: ['blog.naver.com'], industry: '카페', region: '가상시', ga4PropertyId: '999111' },
+    { ...base, tenantId: 'vnat', brandName: '가상전국', aliases: ['가상전국'], ownedDomains: ['vnat.example'], industry: '관광안내', region: '국내', marketScope: 'national' },
   ])
   writeJson('data/vsite/scorecard-history.json', [{ tenantId: 'vsite', brandName: '가상각', industry: '관광정보서비스', region: '가상시', weekOf: '2026-W40',
     questionBankVersion: 'v3', aeoScore: { current: 30 }, mentionRate: 0, brandOwnedCitationRate: 0, cohortRank: { position: 1, totalTenants: 1 } }])
@@ -133,7 +134,8 @@ try {
   const draftOf = (extra: Record<string, unknown>) =>
     reg.normalizeTenantDraft({ tenantId: 'vsite', brandName: '가상각', ownedDomains: ['www.vsite.example'], engines: ['gemini'], questionBankSize: 1, ...extra })
   const nationalDraft = draftOf({ industry: '관광안내', region: '국내', marketScope: 'national', aliases: ['가상각', '가상각 전국'],
-    competitors: [{ name: '가상 관광', domains: ['vcomp.example'] }], factGraph: [fact('d1', '주소', '등록 화면 주소'), fact('d2', '체크인', '15시')] })
+    competitors: [{ name: '가상 관광', domains: ['vcomp.example'] }],
+    factGraph: [fact('f1', '주차', '10대'), fact('f2', '체크 인', '16시'), fact('f3', '주소', '등록 화면 주소')] })
 
   // 4-a) 살피기 — 고객 브랜드와 부딪히면 범위 변형을 연다
   const conflict = await promote.describeTenantConflict(nationalDraft, store)
@@ -144,7 +146,14 @@ try {
   // 4-b) 같은 코호트면 막는다
   const sameCohortDraft = draftOf({ industry: '관광정보서비스', region: '가상시', marketScope: 'national' })
   const blocked = (await promote.describeTenantConflict(sameCohortDraft, store))?.variant
-  ok('막기: 업종 · 지역이 같으면 이유와 함께 막는다(막은 브랜드 = 부딪힌 브랜드 자신)', Boolean(blocked?.blocked?.includes('vsite')) && blocked?.twinId === 'vsite')
+  ok('막기: 업종 · 지역이 같으면 이유와 함께 막는다(막은 브랜드 = 부딪힌 브랜드 자신, 범위는 달라 같은 설정 아님)',
+    Boolean(blocked?.blocked?.includes('vsite')) && blocked?.twinId === 'vsite' && blocked.sameSettings === false)
+  const sameAgain = (await promote.describeTenantConflict(draftOf({ industry: '관광정보서비스', region: '가상시' }), store))?.variant
+  ok('막기: 범위 · 업종 · 지역이 모두 같으면 같은 설정으로 다시 누른 것', sameAgain?.twinId === 'vsite' && sameAgain.sameSettings === true)
+  const natToB2b = (await promote.describeTenantConflict(reg.normalizeTenantDraft({ tenantId: 'vnat', brandName: '가상전국', ownedDomains: ['vnat.example'],
+    industry: '관광안내', region: '국내', marketScope: 'b2b', buyer: '여행사' }), store))?.variant
+  ok('막기: 전국형 바탕을 같은 업종 B2B형으로 — 같은 설정이 아니고 「국내」 까닭을 보인다',
+    natToB2b?.twinId === 'vnat' && natToB2b.sameSettings === false && Boolean(natToB2b.blocked?.includes('「국내」')))
   ok('막기: 등록도 409', await rejects(promote.registerVariant(sameCohortDraft, store, { copyBusinessFiles: true }), 409))
   const twinComp = draftOf({ industry: '관광안내', region: '국내', marketScope: 'national', ownedDomains: ['vsite.example', 'vcomp.example'] })
   ok('막기: 홈페이지를 함께 쓰는 경쟁사와 같은 코호트도 막는다', (await promote.describeTenantConflict(twinComp, store))?.variant?.twinId === 'vcomp')
@@ -164,7 +173,8 @@ try {
   ok('등록: 바탕 브랜드는 그대로', runtime.find((t) => t.tenantId === 'vsite')?.industry === '관광정보서비스')
   ok('가져오기: 사실 · 브랜드 페이지 · 발행 설정', result.copied.join(',') === '사실,브랜드 페이지,발행 설정' && result.copyErrors.length === 0)
   ok('가져오기: 설정에만 있던 브랜드 페이지', created?.brandPageUrl === 'https://vsite.example/about')
-  ok('가져오기: 바탕 사실이 먼저, 등록 화면 사실은 겹치지 않는 것만', created?.factGraph.map((f) => f.value).join(',') === '가상시 가상로 1,15시')
+  ok('가져오기: 바탕 사실이 먼저, 등록 화면 사실은 겹치지 않는 것만(띄어쓰기 차이도 같은 사실)', created?.factGraph.map((f) => f.value).join(',') === '가상시 가상로 1,15시,10대')
+  ok('가져오기: 더한 사실의 id가 바탕 사실과 겹치지 않는다', new Set(created?.factGraph.map((f) => f.id)).size === created?.factGraph.length)
   ok('가져오기: 시장 범위 · 경쟁사 목록은 가져오지 않는다', !has('data/vsite-national/market-scope.json') && !has('data/vsite-national/competitors.json'))
   ok('가져오기: 발행 설정 내용이 같다', readJson<{ ctaText?: string }>('data/vsite-national/publish-settings.json').ctaText === '문의하기')
   ok('기록: 새 브랜드는 0주에서', result.restoredWeeks === 0 && (await store.getScorecardHistory('vsite-national', 99)).length === 0)

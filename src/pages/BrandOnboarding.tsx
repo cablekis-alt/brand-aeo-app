@@ -45,7 +45,7 @@ interface TenantConflict {
   /** 이 홈페이지를 쓰는 고객 브랜드(부딪힌 브랜드 포함). 데스크톱 서버만 보낸다. */
   siblings?: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[]
   /** 같은 홈페이지를 다른 범위로 하나 더 등록할 때의 새 id와 막히는 이유(lib/brandVariant.ts). 데스크톱 서버만 보낸다. */
-  variant?: { tenantId: string; blocked: string | null; twinId?: string | null; restoredWeeks: number } | null
+  variant?: { tenantId: string; blocked: string | null; twinId?: string | null; sameSettings?: boolean; restoredWeeks: number } | null
 }
 
 function firstKrAddress(text: string): string {
@@ -1860,8 +1860,8 @@ function ConflictPanel({
   const tp = (w: string) => topicParticle(w).slice(w.length)
   const dp = (w: string) => directionParticle(w).slice(w.length)
   // 이미 등록된 고객 · 저장소 브랜드와 홈페이지가 같다 — 덮어쓰지 않고 다른 범위로 하나 더 등록할 수 있다(데스크톱 서버만 variant를 보낸다).
-  // 같은 설정(업종 · 지역)으로 다시 등록했으면(막은 같은 코호트 브랜드가 부딪힌 브랜드 자신) 아래 「이미 등록된 브랜드」 안내로 간다.
-  const sameAgain = Boolean(c.variant?.twinId && c.variant.twinId === c.tenantId)
+  // 같은 설정(범위 · 업종 · 지역)으로 다시 등록했으면 아래 「이미 등록된 브랜드」 안내로 간다. 범위만 바꿨으면(전국형 → B2B형) 막힌 까닭을 보인다.
+  const sameAgain = Boolean(c.variant?.sameSettings)
   // 다른 범위로 하나 더 등록하는 길 — 같은 설정으로 다시 눌렀을 때 함께 알린다.
   const variantHint = c.variant ? ' 같은 홈페이지를 다른 범위로 하나 더 등록하려면 2단계(정보)에서 시장 범위 · 업종 · 지역을 바꿔 「브랜드 등록」을 다시 누르세요.' : ''
   if ((c.kind === 'customer' || c.kind === 'repo') && c.sameSite && c.variant && !sameAgain) {

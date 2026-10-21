@@ -56,11 +56,11 @@ export interface TenantConflict {
   siblings: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string }[];
   /**
    * 같은 홈페이지를 다른 범위로 하나 더 등록할 때(lib/brandVariant.ts) — 새 id와, 못 하면 그 이유. 부딪힌 곳이 고객 · 저장소
-   * 브랜드이고 홈페이지(플랫폼 주소 말고)가 같을 때만 채운다(경쟁사면 「고객 브랜드로 전환」). twinId는 막은 같은 코호트 브랜드 —
-   * 부딪힌 브랜드 자신이면 같은 설정으로 다시 등록한 것이라 화면이 「이미 등록된 브랜드」로 안내한다. restoredWeeks는 지운 같은 id에
-   * 남은 기록 주 수.
+   * 브랜드이고 홈페이지(플랫폼 주소 말고)가 같을 때만 채운다(경쟁사면 「고객 브랜드로 전환」). twinId는 막은 같은 코호트 브랜드,
+   * sameSettings는 그 브랜드가 부딪힌 브랜드 자신이고 범위까지 같을 때 — 같은 설정으로 다시 누른 것이라 화면이 「이미 등록된
+   * 브랜드」로 안내한다. restoredWeeks는 지운 같은 id에 남은 기록 주 수.
    */
-  variant: { tenantId: string; blocked: string | null; twinId: string | null; restoredWeeks: number } | null;
+  variant: { tenantId: string; blocked: string | null; twinId: string | null; sameSettings: boolean; restoredWeeks: number } | null;
 }
 
 const host = (d: string) => d.trim().toLowerCase().replace(/^www\./, '');
@@ -182,7 +182,9 @@ async function planVariant(
     : null;
   // 지운 같은 id의 기록 — 등록하면 툼스톤이 걷혀 그 기록이 되살아난다(registerTenant).
   const restoredWeeks = blocked ? 0 : (await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER)).length;
-  return { tenantId, blocked, twinId: twin?.tenantId ?? null, restoredWeeks };
+  // 부딪힌 브랜드 자신과 범위까지 같으면 같은 설정으로 다시 누른 것이다. 범위만 바꿨으면(전국형 → B2B형) 막힌 까닭(「국내」)을 보여야 한다.
+  const sameSettings = twin?.tenantId === existing.tenantId && (existing.marketScope ?? 'local') === (draft.marketScope ?? 'local');
+  return { tenantId, blocked, twinId: twin?.tenantId ?? null, sameSettings, restoredWeeks };
 }
 
 export async function describeTenantConflict(draft: TenantConfig, store: ResultStore): Promise<TenantConflict | null> {
@@ -418,9 +420,20 @@ export async function registerVariant(draft: TenantConfig, store: ResultStore, o
     });
   };
   const carry = options.copyBusinessFiles;
-  const factKey = (f: FactGraphNode) => f.claim.trim().toLowerCase();
+  // 같은 사실은 띄어쓰기 차이까지 하나로 본다(lib/factApproval.ts claimKey와 같다). 등록 화면도 바탕 브랜드도 id를 fact-1부터 매기므로
+  // 더하는 사실의 id가 겹치면 바꾼다 — 겹치면 빈칸 채우기 승인이 id로 찾다 바탕 사실을 덮어쓴다(2026-10-21 검토).
+  const factKey = (f: FactGraphNode) => f.claim.replace(/\s+/g, '').toLowerCase();
   const baseFacts = new Set(existing.factGraph.map(factKey));
-  const factGraph = carry ? [...existing.factGraph, ...draft.factGraph.filter((f) => !baseFacts.has(factKey(f)))] : draft.factGraph;
+  const ids = new Set(existing.factGraph.map((f) => f.id));
+  const added = draft.factGraph
+    .filter((f) => !baseFacts.has(factKey(f)))
+    .map((f) => {
+      let id = f.id;
+      for (let n = 2; ids.has(id); n += 1) id = `${f.id}-${n}`;
+      ids.add(id);
+      return { ...f, id };
+    });
+  const factGraph = carry ? [...existing.factGraph, ...added] : draft.factGraph;
   const brandPageUrl = draft.brandPageUrl ?? (carry ? existing.brandPageUrl : undefined);
   try {
     await registerTenant({
