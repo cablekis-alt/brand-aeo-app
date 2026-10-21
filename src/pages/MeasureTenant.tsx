@@ -5,6 +5,7 @@ import ApiKeySettings from '../components/ApiKeySettings'
 import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel'
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
+import { variantTag } from '../lib/brandVariant'
 import { loadPortfolio, measureTenantAll, type PortfolioCohort, type PortfolioRow } from '../lib/api'
 
 interface MeasureTenantOption {
@@ -13,6 +14,9 @@ interface MeasureTenantOption {
   industry: string
   region: string
   cohortOnly?: boolean
+  /** 같은 홈페이지를 다른 범위로 하나 더 등록한 브랜드를 가르는 데 쓴다(lib/brandVariant.ts variantTag). */
+  ownedDomains: string[]
+  marketScope?: string
 }
 
 type MeasureVia = 'local' | 'github' | 'none'
@@ -84,6 +88,7 @@ export default function MeasureTenant() {
         p,
         competitor: Boolean(t.cohortOnly),
         week: comp?.week ?? null,
+        variant: variantTag(t, tenants),
       }
     })
   }, [tenants, portfolio.rows, portfolio.cohorts])
@@ -110,7 +115,8 @@ export default function MeasureTenant() {
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!alive) return
-        const next = (Array.isArray(list) ? list : []) as MeasureTenantOption[]
+        // 홈페이지가 없는 옛 응답도 범위 표시 계산이 깨지지 않게 빈 목록으로 맞춘다.
+        const next = ((Array.isArray(list) ? list : []) as MeasureTenantOption[]).map((t) => ({ ...t, ownedDomains: t.ownedDomains ?? [] }))
         setTenants(next)
         setPickedTenant((current) => current || currentTenantId || next[0]?.tenantId || '')
       })

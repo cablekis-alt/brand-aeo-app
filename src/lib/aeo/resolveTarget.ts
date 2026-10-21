@@ -1,4 +1,5 @@
 import type { TenantSummary } from '../api'
+import { hostKey, sharesSite } from '../brandVariant'
 
 /**
  * Site AEO 진단 대상 결정 — 입력이 URL이면 그대로, 상호면 도메인을 찾는다.
@@ -58,19 +59,24 @@ function norm(value: string): string {
  *
  * 정확히 일치하는 게 있으면 그것, 없으면 부분 일치를 보되 **후보가 둘 이상이면 포기**한다
  * ("원진"만 넣었을 때 엉뚱한 브랜드를 골라 남의 사이트를 진단하는 사고를 막는다).
+ * 후보가 모두 같은 홈페이지의 브랜드(다른 범위로 하나 더 등록한 브랜드)면 같은 사이트라 포기하지 않는다 — 지금 고른 브랜드가 그중에
+ * 있으면 그것, 아니면 첫 브랜드.
  */
-export function findTenantByName(input: string, tenants: TenantSummary[]): TenantSummary | null {
+export function findTenantByName(input: string, tenants: TenantSummary[], preferred?: TenantSummary | null): TenantSummary | null {
   const q = norm(input)
   if (q.length < 2) return null
 
   const namesOf = (t: TenantSummary) => [t.brandName, ...(t.aliases ?? [])].map(norm).filter((n) => n.length >= 2)
+  const pick = (found: TenantSummary[]): TenantSummary | null => {
+    if (found.length <= 1) return found[0] ?? null
+    if (!found.every((t) => sharesSite(t, found[0]))) return null
+    return found.find((t) => t.tenantId === preferred?.tenantId) ?? found[0]
+  }
 
   const exact = tenants.filter((t) => namesOf(t).includes(q))
-  if (exact.length === 1) return exact[0]
-  if (exact.length > 1) return null
+  if (exact.length > 0) return pick(exact)
 
-  const partial = tenants.filter((t) => namesOf(t).some((n) => n.includes(q) || q.includes(n)))
-  return partial.length === 1 ? partial[0] : null
+  return pick(tenants.filter((t) => namesOf(t).some((n) => n.includes(q) || q.includes(n))))
 }
 
 /**
@@ -89,12 +95,12 @@ export function tenantSiteUrl(tenant: Pick<TenantSummary, 'ownedDomains' | 'bran
 }
 
 /** ①② — 네트워크 없이 결정되는 경우만 돌려준다. 못 정하면 null(호출부가 ③으로 넘긴다). */
-export function resolveWithoutNetwork(input: string, tenants: TenantSummary[]): ResolvedTarget | null {
+export function resolveWithoutNetwork(input: string, tenants: TenantSummary[], preferred?: TenantSummary | null): ResolvedTarget | null {
   const s = input.trim()
   if (!s) return null
   if (looksLikeUrl(s)) return { url: toHttpsUrl(s), source: 'url' }
 
-  const tenant = findTenantByName(s, tenants)
+  const tenant = findTenantByName(s, tenants, preferred)
   if (tenant) {
     const url = tenantSiteUrl(tenant)
     if (url) return { url, source: 'tenant', brandName: tenant.brandName, tenantId: tenant.tenantId }
@@ -102,26 +108,29 @@ export function resolveWithoutNetwork(input: string, tenants: TenantSummary[]): 
   return null
 }
 
-/** URL의 호스트를 소유한 등록 브랜드. 서브도메인도 인정한다(m.k-wonjin.co.kr → k-wonjin). */
-export function findTenantByDomain(url: string, tenants: TenantSummary[]): TenantSummary | null {
+/**
+ * URL의 호스트를 소유한 등록 브랜드. 서브도메인도 인정한다(m.k-wonjin.co.kr → k-wonjin).
+ * 여럿이 맞으면 더 구체적인 주소(shop.x.com > x.com)를 가진 브랜드가 이긴다. 같은 주소를 쓰는 브랜드가 여럿이면(다른 범위로 하나 더
+ * 등록한 브랜드 · 영어 측정 -en) 지금 고른 브랜드(preferred)가 이긴다 — 목록의 첫 브랜드로만 가면 나머지 브랜드에는 사이트 점수가
+ * 쌓이지 않았다(2026-10-21 gunsan · gunsan-national).
+ */
+export function findTenantByDomain(url: string, tenants: TenantSummary[], preferred?: TenantSummary | null): TenantSummary | null {
   let host: string
   try {
     host = new URL(toHttpsUrl(url)).hostname.replace(/^www\./, '').toLowerCase()
   } catch {
     return null
   }
-  for (const t of tenants) {
+  let best: { tenant: TenantSummary; length: number } | null = null
+  for (const t of preferred ? [preferred, ...tenants] : tenants) {
     for (const raw of t.ownedDomains ?? []) {
-      const d = raw
-        .trim()
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .replace(/\/.*$/, '')
-        .toLowerCase()
-      if (d && (host === d || host.endsWith(`.${d}`))) return t
+      const d = hostKey(raw)
+      if (!d || (host !== d && !host.endsWith(`.${d}`))) continue
+      // 길이가 같으면 먼저 본 브랜드(고른 브랜드 → 목록 순서)가 남는다.
+      if (!best || d.length > best.length) best = { tenant: t, length: d.length }
     }
   }
-  return null
+  return best?.tenant ?? null
 }
 
 /**
@@ -146,7 +155,7 @@ export function subjectBrand(
   if (target.source === 'infer' && target.brandName) {
     return { brandName: target.brandName, aliases: [] }
   }
-  const owner = findTenantByDomain(target.url, tenants)
+  const owner = findTenantByDomain(target.url, tenants, selected)
   if (owner) return { brandName: owner.brandName, aliases: owner.aliases ?? [] }
   return selected ? { brandName: selected.brandName, aliases: selected.aliases ?? [] } : null
 }

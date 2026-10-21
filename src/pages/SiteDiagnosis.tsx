@@ -61,7 +61,7 @@ export default function SiteDiagnosis() {
   // 입력 옆에 보여줄 해석 미리보기. 등록 브랜드는 호출 없이 즉시 알 수 있어 타이핑 중에 보여준다.
   // 렌더마다 계산하는 파생값이다(effect로 저장하면 한 박자 늦게 따라온다).
   const typed = url.trim()
-  const preview = typed && !looksLikeUrl(typed) ? resolveWithoutNetwork(typed, tenants) : null
+  const preview = typed && !looksLikeUrl(typed) ? resolveWithoutNetwork(typed, tenants, tenant) : null
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function SiteDiagnosis() {
     const owner =
       target.source === 'tenant' && target.tenantId
         ? (tenants.find((t) => t.tenantId === target.tenantId) ?? null)
-        : findTenantByDomain(target.url, tenants)
+        : findTenantByDomain(target.url, tenants, tenant)
     if (!owner) {
       setSaveNote({
         tone: 'skip',
@@ -142,7 +142,7 @@ export default function SiteDiagnosis() {
     setBusy(true)
     try {
       // ①URL → ②등록 브랜드명 → ③추론. 앞의 둘은 호출이 없다.
-      let target = resolveWithoutNetwork(url, tenants)
+      let target = resolveWithoutNetwork(url, tenants, tenant)
       if (!target) {
         if (!isElectron) {
           setError('URL을 입력하세요. 상호로 도메인을 찾는 기능은 데스크톱 앱에서만 동작합니다(웹에서는 결과를 신뢰할 수 없습니다).')
