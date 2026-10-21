@@ -25,7 +25,8 @@ const ANALYZE_SHARE = 0.15
  * 수집 슬롯은 엔진마다 따로고 Perplexity는 분당 상한까지 있어(server/concurrency.ts) 엔진 속도가 몇 배씩 다르다.
  * 합친 건수로 어림하면 빠른 엔진이 끝낸 건수에 끌려 남은 시간이 몇 배 짧게 나왔다 — 2026-W43 6곳 측정에서 실제로
  * 6~13분 남았을 때 화면은 약 1분 30초였다. 엔진 건수가 없는 줄(옛 서버)이 있으면 undefined — 합친 어림으로 돌아간다.
- * 남은 엔진의 표본이 아직 적으면 null(틀린 숫자보다 없는 게 낫다).
+ * 처음 1분 · 엔진마다 20건 전에는 null(틀린 숫자보다 없는 게 낫다) — 응답이 오기까지의 첫 지연(평균 27초)이 「경과 ÷ 완료」에
+ * 통째로 들어가, 표본 5건에서 숫자를 내면 실제의 약 2배가 나왔다(2026-10-21 검토 시뮬레이션: 30초 2.0배 · 60초 1.25배).
  */
 function collectionRemainingMs(active: ProgressRow[], elapsedMs: number): number | null | undefined {
   const collecting = active.filter((a) => a.stage === '수집')
@@ -42,7 +43,7 @@ function collectionRemainingMs(active: ProgressRow[], elapsedMs: number): number
   let worst = 0
   for (const { done, left } of sums.values()) {
     if (left <= 0) continue
-    if (done < 5) return null
+    if (done < 20 || elapsedMs < 60_000) return null
     worst = Math.max(worst, left * (elapsedMs / done))
   }
   return worst

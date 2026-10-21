@@ -87,6 +87,28 @@ const off = await stamp('collect:perplexity')
 ok('상한을 끄면(0) 기다리지 않는다', off.at(-1)! - off[0]! < 50)
 for (const k of keys) delete process.env[k]
 
+// 6) 다시 시도해도 안 풀리는 오류(크레딧 소진) — 줄에 선 호출은 간격을 기다리지 않고 같은 오류로 바로 끝난다(빨리 멈추기).
+//    이 엔진은 1분 동안 끊긴 채라 맨 끝에 둔다.
+process.env.COLLECT_LLM_RPM_PERPLEXITY = '600'
+const ends: number[] = []
+const outcomes = await Promise.all(
+  Array.from({ length: 6 }, (_, i) =>
+    withLlmSlot('collect:perplexity', async () => {
+      if (i === 0) throw new Error('insufficient_quota: no credits left')
+      return 'sent'
+    }).then(
+      (v) => (ends.push(Date.now()), v),
+      (err: Error) => (ends.push(Date.now()), err.message),
+    ),
+  ),
+)
+ok('크레딧 소진 뒤 줄에 선 호출은 보내지 않고 같은 오류로 끝난다', outcomes.every((o) => o.includes('insufficient_quota')))
+// 첫 호출은 앞 시험이 남긴 시작 예약만큼 기다릴 수 있다 — 첫 실패 뒤 나머지가 간격(0.1초 × 5) 없이 끝나는지 본다.
+ok('첫 실패 뒤 나머지는 간격을 기다리지 않고 바로 끝난다', Math.max(...ends) - Math.min(...ends) < 100)
+const otherEngine = await withLlmSlot('collect:openai', async () => 'sent')
+ok('다른 엔진은 그대로 돈다', otherEngine === 'sent')
+for (const k of keys) delete process.env[k]
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

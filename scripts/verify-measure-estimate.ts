@@ -25,7 +25,8 @@ ok('엔진별: 가장 늦은 엔진(Perplexity)으로 어림', near(overallRemai
 const merged = rows.map(({ engines: _e, ...r }) => r)
 // 옛 어림(합친 건수): 44건 × (240초 ÷ 208건) × 1.15 ≈ 58초 — 엔진별이 아니면 몇 배 짧다.
 ok('엔진 건수가 없는 옛 서버: 합친 어림으로', near(overallRemainingMs(merged, 240_000), 44 * (240_000 / 208) * 1.15))
-ok('남은 엔진의 표본이 적으면(5건 미만) 숫자를 내지 않는다', overallRemainingMs([row(2)], 240_000) === null)
+ok('남은 엔진의 표본이 적으면(20건 미만) 숫자를 내지 않는다', overallRemainingMs([row(15)], 240_000) === null)
+ok('처음 1분은 엔진별 숫자를 내지 않는다(첫 응답 지연이 들어가 크게 나온다)', overallRemainingMs(rows, 45_000) === null)
 ok('처음 15초는 숫자를 내지 않는다', overallRemainingMs(rows, 10_000) === null)
 ok('단계를 아직 못 받은 줄이 있으면 숫자를 내지 않는다', overallRemainingMs([...rows, {}], 240_000) === null)
 // 한 곳은 이미 분석 중(엔진 건수 없음), 한 곳은 수집 중 — 수집 중인 줄로 엔진별 어림.

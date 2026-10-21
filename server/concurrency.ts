@@ -1,3 +1,4 @@
+import { classifyEngineError } from './engineExhaustion.js';
 import type { Engine } from '../src/prompts/types.js';
 
 /** 엔진 API 레이트리밋을 고려한 제한 동시성 map. 순서는 보존하되, 동시에는 최대 `limit`개만 실행한다. */
@@ -136,6 +137,8 @@ function release(pool: LlmPool): void {
 
 /** 다음 호출을 보내도 되는 시각 — 분당 상한이 있는 수집 엔진만. */
 const nextStartAt = new Map<LlmPool, number>();
+/** 시작 간격을 기다리며 자는 호출을 깨우는 함수 — 엔진이 끊기면 자기 차례(최대 슬롯 수 × 간격, 약 30초)까지 기다리지 않게. */
+const sleepers = new Map<LlmPool, Set<() => void>>();
 
 /**
  * 분당 상한이 있으면 시작 간격(60초 ÷ 상한)을 지킨다. 슬롯을 잡은 뒤에 기다린다 — 잡기 전에 시각을 예약하면 슬롯이 늦게
@@ -148,14 +151,50 @@ async function pace(pool: LlmPool): Promise<void> {
   const now = Date.now();
   const at = Math.max(now, nextStartAt.get(pool) ?? 0);
   nextStartAt.set(pool, at + 60_000 / rpm);
-  if (at > now) await new Promise((resolve) => setTimeout(resolve, at - now));
+  if (at <= now) return;
+  await new Promise<void>((resolve) => {
+    const set = sleepers.get(pool) ?? new Set<() => void>();
+    sleepers.set(pool, set);
+    const wake = () => {
+      clearTimeout(timer);
+      set.delete(wake);
+      resolve();
+    };
+    const timer = setTimeout(wake, at - now);
+    set.add(wake);
+  });
+}
+
+/**
+ * 다시 시도해도 풀리지 않는 오류(지출 한도 · 크레딧 · 키 — engineExhaustion.ts)가 난 수집 엔진. 줄에 선 호출은 간격을 기다리지 않고
+ * 같은 오류로 바로 끝낸다 — 기다리면 「어차피 실패할 측정에 몇 분씩 쓰지 않게」 하려던 멈춤(pipeline.ts EngineOutage)이 분당 45회
+ * 속도로 몇 분 늦어지고, 그동안 다른 엔진 호출이 다 나간다(2026-10-21 검토: 6곳 측정에서 멈춤이 0.8초 → 최대 188초).
+ * 충전하면 다음 측정이 바로 돌게 1분만 기억한다.
+ */
+const exhausted = new Map<LlmPool, { err: unknown; at: number }>();
+const EXHAUSTED_TTL_MS = 60_000;
+
+function throwIfExhausted(pool: LlmPool): void {
+  const hit = exhausted.get(pool);
+  if (hit && Date.now() - hit.at < EXHAUSTED_TTL_MS) throw hit.err;
 }
 
 export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>): Promise<T> {
   await acquire(pool);
   try {
+    throwIfExhausted(pool);
     await pace(pool);
-    return await fn();
+    throwIfExhausted(pool);
+    try {
+      return await fn();
+    } catch (err) {
+      if (pool.startsWith('collect:') && classifyEngineError(err instanceof Error ? err.message : String(err))) {
+        exhausted.set(pool, { err, at: Date.now() });
+        nextStartAt.delete(pool);
+        for (const wake of [...(sleepers.get(pool) ?? [])]) wake();
+      }
+      throw err;
+    }
   } finally {
     release(pool);
   }
