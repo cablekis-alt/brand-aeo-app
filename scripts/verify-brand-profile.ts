@@ -188,8 +188,9 @@ try {
   const last = (await store.getScorecardHistory('pcust', 99)).at(-1)
   ok('현황: 다시 재기 전에는 「기본 정보 바뀜 · 다음 측정 대기」', (await editor.pendingProfileEdit(pcust, last))?.summary.includes('업종 펜션 → 숙박') === true)
   ok('현황: 새 설정으로 잰 카드가 생기면 끝', (await editor.pendingProfileEdit(pcust, card('pcust', '숙박', '가상시', 'v8') as never)) === null)
-  ok('현황: 표식 없는 브랜드는 없음', (await editor.pendingProfileEdit({ tenantId: 'pother', industry: '펜션', region: '가상시' }, undefined)) === null)
-  ok('현황: 지운 뒤 같은 id로 다시 등록해 설정이 다르면 남은 표식은 쓰지 않는다', (await editor.pendingProfileEdit({ tenantId: 'pcust', industry: '펜션', region: '가상시' }, undefined)) === null)
+  ok('현황: 표식 없는 브랜드는 없음', (await editor.pendingProfileEdit({ tenantId: 'pother', industry: '펜션', region: '가상시', questionBankVersion: 'v3' }, undefined)) === null)
+  ok('현황: 지운 뒤 같은 id로 다시 등록해 설정이 다르면 남은 표식은 쓰지 않는다', (await editor.pendingProfileEdit({ tenantId: 'pcust', industry: '펜션', region: '가상시', questionBankVersion: 'v8' }, undefined)) === null)
+  ok('현황: 같은 업종 · 지역으로 다시 등록해 질문지가 표식보다 이르면 쓰지 않는다', (await editor.pendingProfileEdit({ tenantId: 'pcust', industry: '숙박', region: '가상시', questionBankVersion: 'v3' }, undefined)) === null)
   const reuse = await reusableThisWeek(ptwo, store, week)
   ok('이번 주 재사용: 옛 코호트로 잰 카드는 다시 잰다', !reuse.ok && Boolean(reuse.reason?.includes('코호트 다름')))
   const trend = await getCohortTrend(store, pcust)
@@ -208,6 +209,22 @@ try {
   await reg.registerTenant(reg.normalizeTenantDraft({ tenantId: 'pnew', brandName: '새 전국', ownedDomains: ['pnew.example'], industry: '관광안내', region: '국내', marketScope: 'national' }))
   const pnew = readJson<Record<string, unknown>[]>('tenants.overlay.json').find((t) => t.tenantId === 'pnew')
   ok('등록: 같은 코호트 고객의 공통 질문지를 따른다', pnew?.cohortQuestionBank === 'c3')
+  // 지운 id에 옛 공통 질문지로 만든 v3이 남아 있으면 — 공통 질문지를 따라 바꿀 때 질문지 번호도 올린다(첫 측정이 멈추지 않게).
+  writeJson('data/pold/question-bank/v3.json', { version: 'v3', cohortBank: { key: '관광안내__국내', version: 'c1' }, questions: [] })
+  await reg.registerTenant(reg.normalizeTenantDraft({ tenantId: 'pold', brandName: '옛 전국', ownedDomains: ['pold.example'], industry: '관광안내', region: '국내', marketScope: 'national' }))
+  const pold = readJson<Record<string, unknown>[]>('tenants.overlay.json').find((t) => t.tenantId === 'pold')
+  ok('등록: 공통 질문지를 바꾸면 남은 질문지 번호를 피한다(v3 → v4)', pold?.cohortQuestionBank === 'c3' && pold.questionBankVersion === 'v4')
+
+  // 7) 업종을 바꿨다 되돌리기 — 그사이 아무도 재지 않던 경쟁사 측정 브랜드를 다시 재게 되면 그 공통 질문지를 따른다
+  writeJson('cohort-banks/글램핑__가상시/c1.json', { key: '글램핑__가상시', version: 'c1', questions: [] })
+  const prevOverlay = readJson<Record<string, unknown>[]>('tenants.overlay.json')
+  writeJson('tenants.overlay.json', [
+    ...prevOverlay,
+    { ...base, tenantId: 'pglamp', brandName: '가상 글램핑', aliases: ['가상 글램핑'], ownedDomains: ['pglamp.example'], industry: '카라반', region: '가상시', competitors: [line('글램핑 옆', 'pgside.example')] },
+    { ...base, tenantId: 'pgside', brandName: '글램핑 옆', aliases: ['글램핑 옆'], ownedDomains: ['pgside.example'], industry: '글램핑', region: '가상시', competitors: [], cohortOnly: true },
+  ])
+  const back = await editor.planProfileEdit('pglamp', { industry: '글램핑', region: '가상시', marketScope: 'local', buyer: '', move: [] }, store)
+  ok('계획: 바꾼 뒤 다시 재게 되는 경쟁사 측정 브랜드는 구성원(그 공통 질문지 c1을 따른다)', back.errors.length === 0 && back.cohortBank.to === 'c1' && back.cohortBank.members.includes('글램핑 옆'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

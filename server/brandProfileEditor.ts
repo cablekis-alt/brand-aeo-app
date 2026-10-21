@@ -384,8 +384,20 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
 
   // 새 코호트의 구성원 — 함께 옮기는 경쟁사와 자기 자신은 뺀다. 경쟁사 측정 브랜드는 어느 고객이든 잴 때만 센다(아무도 재지 않는 곳은
   // 화면에 보이지도 않고 옮길 수도 없어, 그것 때문에 막히거나 그 질문지를 따르면 안 된다).
+  // 바꾼 뒤에야 이 고객이 다시 재게 되는 곳(업종이 달라 겹치던 경쟁사 측정 브랜드 등)도 센다 — 빠뜨리면 한 순위표에서 공통 질문지가 갈린다.
+  const willMeasure = new Set<string>();
+  if (input.industry && input.region) {
+    const nextRuntime = runtime.map((t) =>
+      t.tenantId === tenant.tenantId ? next : movingIds.has(t.tenantId) ? { ...t, industry: input.industry, region: input.region, marketScope: input.marketScope } : t,
+    );
+    for (const t of lineTargets(next, nextRuntime)) willMeasure.add(t.tenantId);
+  }
   const members = runtime.filter(
-    (t) => t.tenantId !== tenant.tenantId && !movingIds.has(t.tenantId) && sameCohort(t, next) && (!t.cohortOnly || targets.active.has(t.tenantId)),
+    (t) =>
+      t.tenantId !== tenant.tenantId &&
+      !movingIds.has(t.tenantId) &&
+      sameCohort(t, next) &&
+      (!t.cohortOnly || targets.active.has(t.tenantId) || willMeasure.has(t.tenantId)),
   );
   const otherScope = members.filter((m) => scopeOf(m) !== input.marketScope);
   if (!unchanged && from.cohortQuestionBank && otherScope.length > 0) {
@@ -451,7 +463,8 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
         for (const e of planCohortTargets(other, after).entries) {
           if (e.status === 'collision' && e.collidesWith?.tenantId === tenant.tenantId) {
             notes.push(`${other.brandName}${tp(other.brandName)} 이 브랜드를 경쟁사로 재는데, 업종이 달라져 그쪽에서는 측정하지 않습니다(함께 측정 칸은 차지).`);
-          } else if (e.status === 'measured' && e.targetTenantId === tenant.tenantId && e.otherRegion) {
+          } else if (e.status === 'measured' && e.targetTenantId === tenant.tenantId && e.otherRegion && tenant.region === other.region) {
+            // 원래부터 다른 지역으로 재던 고객(그쪽 순위표에 원래 없음)에게는 알리지 않는다.
             notes.push(`${other.brandName}${tp(other.brandName)} 이 브랜드를 경쟁사로 재는데, 지역이 달라져 그쪽 순위표에 들지 않습니다.`);
           }
         }
@@ -608,7 +621,7 @@ function olderVersion(a: string | undefined, b: string): boolean {
  * 마지막 카드가 새 업종 · 지역이고 질문지가 저장한 버전 이상이면 끝났다(그 뒤 경쟁사 편집으로 버전이 더 올라가도 끝난 것이다).
  */
 export async function pendingProfileEdit(
-  tenant: Pick<TenantConfig, 'tenantId' | 'industry' | 'region'>,
+  tenant: Pick<TenantConfig, 'tenantId' | 'industry' | 'region' | 'questionBankVersion'>,
   last: WeeklyScorecard | undefined,
 ): Promise<{ savedAt: string; summary: string } | null> {
   const { tenantId } = tenant;
@@ -621,7 +634,10 @@ export async function pendingProfileEdit(
   }
   if (!marker?.to?.questionBankVersion) return null;
   // 지금 설정이 표식의 새 설정과 다르면 그 뒤 브랜드를 지우고 다시 등록했거나(같은 id) 다시 바꾼 것이다 — 남은 표식은 쓰지 않는다.
-  if (tenant.industry !== marker.to.industry || tenant.region !== marker.to.region) return null;
+  // 질문지가 표식보다 이르면 같은 업종 · 지역으로 다시 등록한 것이다(바꾼 브랜드의 질문지는 표식 버전에서 올라가기만 한다).
+  if (tenant.industry !== marker.to.industry || tenant.region !== marker.to.region || olderVersion(tenant.questionBankVersion, marker.to.questionBankVersion)) {
+    return null;
+  }
   if (last && last.industry === marker.to.industry && last.region === marker.to.region && !olderVersion(last.questionBankVersion, marker.to.questionBankVersion)) {
     return null;
   }
