@@ -146,7 +146,11 @@ function isEditorPage(u: URL): boolean {
     )
   }
   if (host === 'cafe.naver.com') {
-    return /^article(write|modify)\.(naver|nhn)$/.test(segments[0] ?? '') || segments.some((s, i) => s === 'articles' && ['write', 'modify'].includes(segments[i + 1] ?? ''))
+    // 글쓰기는 …/articles/write, 고치기는 …/articles/<글번호>/modify다.
+    return (
+      /^article(write|modify)\.(naver|nhn)$/.test(segments[0] ?? '') ||
+      segments.some((s, i) => s === 'articles' && (segments[i + 1] === 'write' || (/^\d+$/.test(segments[i + 1] ?? '') && segments[i + 2] === 'modify')))
+    )
   }
   if (host === 'brunch.co.kr' || host === 'velog.io') return segments[0] === 'write'
   if (host === 'medium.com') return segments[0] === 'new-story' || (segments[0] === 'p' && segments[2] === 'edit')

@@ -80,6 +80,9 @@ const editorUrls = [
   'https://admin.blog.naver.com/fakeblog/config',
   'https://cafe.naver.com/ArticleWrite.nhn?clubid=1',
   'https://cafe.naver.com/ca-fe/cafes/1/articles/write',
+  'https://cafe.naver.com/ca-fe/cafes/1/articles/2/modify',
+  'https://cafe.naver.com/f-e/cafes/1/articles/2/modify?boardType=L',
+  'https://m.cafe.naver.com/ca-fe/web/cafes/1/articles/2/modify',
   'https://example.com/wp-admin/post.php?post=12&action=edit',
   'https://example.com/wp-login.php',
   'https://brunch.co.kr/write',
@@ -96,7 +99,8 @@ ok(
     reason('https://fake.tistory.com/m/12') === 'ok' &&
     reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' &&
     reason('https://example.com/blog/write-better') === 'ok' &&
-    reason('https://medium.com/p/abc123') === 'ok',
+    reason('https://medium.com/p/abc123') === 'ok' &&
+    reason('https://cafe.naver.com/f-e/cafes/1/articles/2') === 'ok',
 )
 
 // 4) 한 주 인용 집계 — 응답 단위, 은행을 못 읽으면 확인 불가
