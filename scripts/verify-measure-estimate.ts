@@ -200,7 +200,7 @@ try {
   const pp = snaps.filter((m) => m.stage === '수집' && m.sentBy === 'perplexity').map((m) => m.engines?.perplexity)
   ok(
     '서버: 호출을 보내면 그 시각 · 슬롯 · 분당 상한을 바로 보낸다',
-    pp.length === 8 && pp.every((e) => (e?.inflightSentAt?.length ?? 0) > 0 && e!.slots === 24 && e!.rpm === 45),
+    pp.length === 8 && pp.every((e) => (e?.inflightSentAt?.length ?? 0) > 0 && e!.slots === 24 && e!.rpm === 120),
     `보낸 순간 ${pp.length}회`,
   )
   ok('서버: 끝난 호출의 응답 시간을 쌓는다', pp.some((e) => (e?.latencyMs?.length ?? 0) >= 3 && e!.latencyMs!.every((v) => v > 0)))

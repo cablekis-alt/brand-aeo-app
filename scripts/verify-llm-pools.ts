@@ -4,7 +4,8 @@
  * 왜: 수집 슬롯 24를 세 엔진이 나눠 쓰던 때, Gemini가 느려지자 OpenAI·Perplexity까지 함께 느려져 측정이 7분에서
  * 11분이 됐다(2026-10-13). 한 엔진의 슬롯이 꽉 차도 다른 엔진·판정은 기다리지 않아야 한다.
  * Perplexity는 동시 8칸이 응답이 느린 날 한도의 1/3밖에 못 써(2026-10-21 W43: 6곳 측정에서 Perplexity만 14분) 분당 시작 상한
- * 45회 + 동시 24칸으로 바꿨다 — 시작 간격이 지켜지는지도 본다.
+ * 45회 + 동시 24칸으로 바꿨고, 계정 한도가 초당 8회(x-ratelimit-limit)로 확인돼 120회로 올렸다(2026-10-22) — 시작 간격이
+ * 지켜지는지도 본다.
  *
  *   npx tsx scripts/verify-llm-pools.ts
  */
@@ -19,7 +20,7 @@ for (const k of keys) delete process.env[k]
 ok('Gemini 24', collectLimit('gemini') === 24)
 ok('OpenAI 36', collectLimit('openai') === 36)
 ok('Perplexity 24', collectLimit('perplexity') === 24)
-ok('분당 시작 상한: Perplexity 45, 나머지 없음', collectRpm('perplexity') === 45 && collectRpm('openai') === 0 && collectRpm('gemini') === 0)
+ok('분당 시작 상한: Perplexity 120, 나머지 없음', collectRpm('perplexity') === 120 && collectRpm('openai') === 0 && collectRpm('gemini') === 0)
 ok('판정 144', llmConcurrencyLimits().judge === 144)
 ok('화면 확인 4', llmConcurrencyLimits().check === 4)
 
