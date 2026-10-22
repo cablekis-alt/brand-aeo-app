@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ActionStatus, PostRemovedReason, PublishedPost } from '../lib/api'
 import type { PublishedHit } from '../lib/gapActions'
+import { INDEXING_GRACE_DAYS } from '../lib/publishTracking'
 import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst } from '../lib/publishedUrl'
 import { UrlLink } from './CitationBits'
 
@@ -23,9 +24,18 @@ function statusOf(h: PublishedHit, week: string): { pill: string; cls: string; d
   const unsureWhy = h.timing === 'during' ? '측정하던 날 올림' : '같은 주에 올렸는데 측정 시각 기록이 없음'
   const t = h.tally
   if (!t) {
-    return unsure
-      ? { pill: '전후 불명', cls: 'st-unknown', detail: `${week} — ${unsureWhy}이라, 인용이 없던 것이 올리기 전이라 그런지 알 수 없습니다.` }
-      : { pill: '인용 없음', cls: 'st-unknown', detail: `${week} 측정의 AI 답변 인용에서 이 주소를 찾지 못했습니다.` }
+    if (unsure) {
+      return { pill: '전후 불명', cls: 'st-unknown', detail: `${week} — ${unsureWhy}이라, 인용이 없던 것이 올리기 전이라 그런지 알 수 없습니다.` }
+    }
+    // 갓 올린 글 — 색인 · 인용까지 시간이 걸려 이 주의 「인용 없음」으로 판단하지 않는다(올린 글 인용 추적의 「색인 대기」와 같은 기준).
+    if (h.daysAfterPublish !== undefined && h.daysAfterPublish < INDEXING_GRACE_DAYS) {
+      return {
+        pill: '색인 대기',
+        cls: 'st-unknown',
+        detail: `${week} 측정은 올린 지 ${h.daysAfterPublish}일 뒤라 인용이 없어도 아직 판단하지 않습니다(${INDEXING_GRACE_DAYS}일 지난 측정부터).`,
+      }
+    }
+    return { pill: '인용 없음', cls: 'st-unknown', detail: `${week} 측정의 AI 답변 인용에서 이 주소를 찾지 못했습니다.` }
   }
   const counts =
     t.unnamed && t.named

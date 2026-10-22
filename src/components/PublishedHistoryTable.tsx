@@ -1,5 +1,5 @@
 import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory } from '../lib/api'
-import { distinctPostings, summarizePost, TIER_LABEL, type Posting, type PostTier } from '../lib/publishTracking'
+import { distinctPostings, INDEXING_GRACE_DAYS, summarizePost, TIER_LABEL, type Posting, type PostTier } from '../lib/publishTracking'
 import { kstDate } from '../lib/publishedUrl'
 import { weekLabel } from '../lib/format'
 import { isoWeekThursday } from '../prompts/isoWeek'
@@ -9,6 +9,7 @@ const TIER_CLASS: Record<PostTier, string> = {
   waiting: 'st-unknown',
   undated: 'st-unknown',
   removed: 'st-unknown',
+  indexing: 'st-unknown',
   none: 'st-unknown',
   once: 'st-info',
   repeated: 'st-good',
@@ -35,6 +36,8 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
   let main: string
   if (!c.tally) {
     main = unsure ? '전후 불명' : '인용 없음'
+    // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다(판단 칸은 「색인 대기」) — 그 까닭을 칸에도 적는다.
+    if (!unsure && c.daysAfterPublish !== undefined && c.daysAfterPublish < INDEXING_GRACE_DAYS) sub.push(`올린 지 ${c.daysAfterPublish}일 — 판단 이름`)
   } else if (c.tally.unnamed && c.tally.named) {
     main = `이름 없는 ${c.tally.unnamed.cited} · 이름 댄 ${c.tally.named.cited}`
     sub.push(`뒷받침 ${c.tally.all.supporting}`)

@@ -11,7 +11,7 @@
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
 
-const { trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
+const { daysAfterPublish, trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
 const { computeGapActions } = await import('../src/lib/gapActions')
 const { analyzeCitationSources } = await import('../server/citationSources')
 type Analyses = Parameters<typeof computeGapActions>[0]
@@ -181,6 +181,16 @@ const before = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-1
 ok('올리기 전에 한 측정은 인용으로 세지 않는다', before?.publishedHits?.[0]?.timing === 'before' && before.citedPublishedUrls.length === 0)
 const after = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01')]).actions.find((a) => a.id === target)
 ok('올린 뒤 측정의 정확 일치 인용은 센다', after?.citedPublishedUrls.length === 1 && after.publishedHits?.[0]?.tally?.unnamed?.cited === 2)
+// 갓 올린 글은 이번 주 결과도 「인용 없음」 대신 「색인 대기」로 보인다 — 화면이 쓰는 일수를 싣는다(올린 날 → 그 주 첫 측정일).
+ok('이번 주 결과에 올린 뒤 일수를 싣는다(올리기 전 측정은 없음)', after?.publishedHits?.[0]?.daysAfterPublish === 13 && before?.publishedHits?.[0]?.daysAfterPublish === undefined)
+ok(
+  'daysAfterPublish — 측정 첫날 기준 · 시각이 없으면 그 주 월요일 · after가 아니면 null',
+  daysAfterPublish('2026-10-21', { first: '2026-10-22', last: '2026-10-22' }, '2026-W43') === 1 &&
+    daysAfterPublish('2026-10-01', null, '2026-W43') === 18 &&
+    daysAfterPublish('2026-10-22', { first: '2026-10-22', last: '2026-10-22' }, '2026-W43') === null &&
+    daysAfterPublish(null, null, '2026-W43') === null &&
+    daysAfterPublish('2025-12-29', null, '2026-W02') === 7,
+)
 const removed = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'mistake' })]).actions.find((a) => a.id === target)
 ok('「잘못 적은 주소」는 어느 주에서도 붙지 않는다', (removed?.publishedUrls.length ?? 0) === 0)
 const takenAfter = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)

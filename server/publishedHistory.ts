@@ -1,6 +1,7 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { conditionChanges } from '../src/lib/comparability.js';
 import {
+  daysAfterPublish,
   indexWeekCitations,
   isoWeekOf,
   kstDate,
@@ -51,6 +52,8 @@ export interface HistoryCell {
   tally: WeekTally | null;
   /** 질의만 다른 주소를 인용한 응답 수 — 같은 글인지 몰라 숫자에 넣지 않는다. */
   variantCited: number;
+  /** 올린 뒤(after) 측정이 올린 날에서 며칠 뒤였나(src/lib/publishedUrl.ts daysAfterPublish). after가 아니면 없다. */
+  daysAfterPublish?: number;
   /**
    * topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 그 주 응답 · 언급. 그 주 은행 판이 기록한 판과 같을 때만 낸다 — 질문 id는 판마다
    * 다시 쓰이므로 판이 다르면 null(확인 불가). 그 주 답변이 없어도 null. topic: 글이 아니거나 겨냥한 질문에 이름 없는 질문이 없으면
@@ -179,6 +182,8 @@ export async function getPublishedHistory(
         tally: upDuring ? (index.get(post.key) ?? null) : null,
         variantCited,
       };
+      const days = daysAfterPublish(post.publishedOn, window, card.weekOf);
+      if (days !== null) cell.daysAfterPublish = days;
       const earlierLive = shown.some(
         (other, j) => j !== i && other.key === post.key && other.removedReason === 'taken-down' && status[j]!.upDuring && status[j]!.timing !== 'before',
       );

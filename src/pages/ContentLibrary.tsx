@@ -131,7 +131,7 @@ export default function ContentLibrary() {
   // 주소만 본다 — 내린 글의 판단을 새로 올린 주소 옆에 붙이지 않는다. 이 화면에서 주소를 고치면 저장이 끝난 뒤 다시 읽는다.
   // 자세한 주차별 칸(내린 글 포함)은 AEO 퍼포먼스에 있다.
   const history = usePublishedHistory(canRecord ? key : '', 12, published.saved)
-  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'waiting', 'undated', 'removed']
+  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'indexing', 'waiting', 'undated', 'removed']
   const tierOf = (articleId: string): PostTier | null => {
     const live = new Set(postsOf(articleId).filter((p) => !p.removedAt).map((p) => p.id))
     const rows = (history.history?.posts ?? []).filter((p) => p.post.articleId === articleId && live.has(p.post.id))

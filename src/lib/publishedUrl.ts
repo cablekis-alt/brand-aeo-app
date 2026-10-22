@@ -328,6 +328,29 @@ export function isoWeekOf(date: string): string | null {
  */
 export type PostTiming = 'after' | 'before' | 'during' | 'ambiguous' | 'unknown'
 
+/** "2026-W43" → 그 주 월요일 "2026-10-19". 꼴이 아니면 null. */
+function isoWeekMonday(weekOf: string): string | null {
+  const m = /^(\d{4})-W(\d{2})$/.exec(weekOf)
+  if (!m) return null
+  // 1월 4일이 든 주가 1주다.
+  const jan4 = new Date(Date.UTC(Number(m[1]), 0, 4))
+  const monday = new Date(jan4.getTime() - ((jan4.getUTCDay() || 7) - 1) * 86_400_000 + (Number(m[2]) - 1) * 7 * 86_400_000)
+  return monday.toISOString().slice(0, 10)
+}
+
+/**
+ * 올린 뒤(after) 측정이 올린 날에서 며칠 뒤였나 — 측정 시각이 있으면 그 주 첫 측정일, 없으면 그 주 월요일부터 센다(짧게 잡아
+ * 「인용 없음」을 늦게 붙인다). after가 아니면 null. 갓 올린 글은 색인 · 인용까지 열흘 넘게 걸린다 — 이 일수로 판단을 미룬다
+ * (src/lib/publishTracking.ts INDEXING_GRACE_DAYS).
+ */
+export function daysAfterPublish(publishedOn: string | null, window: { first: string; last: string } | null, weekOf: string): number | null {
+  if (!publishedOn || timingOf(publishedOn, window, weekOf) !== 'after') return null
+  const from = window?.first ?? isoWeekMonday(weekOf)
+  if (!from) return null
+  const days = Math.round((Date.parse(`${from}T00:00:00Z`) - Date.parse(`${publishedOn}T00:00:00Z`)) / 86_400_000)
+  return Number.isFinite(days) ? Math.max(0, days) : null
+}
+
 export function timingOf(publishedOn: string | null, window: { first: string; last: string } | null, weekOf: string): PostTiming {
   if (!publishedOn) return 'unknown'
   if (window) {

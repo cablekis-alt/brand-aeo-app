@@ -12,12 +12,20 @@ import { isoWeekOf, kstDate, timingOf } from './publishedUrl'
  * 내린 글(다시 측정될 수 없다)은 「측정 대기」가 아니다. 내리기 전 측정이 판정 기록 없음 · 전후 불명이었을 수 있어 「측정 전에
  * 내렸다」고 단정하지 않는다.
  */
-export type PostTier = 'waiting' | 'undated' | 'removed' | 'none' | 'once' | 'repeated'
+export type PostTier = 'waiting' | 'undated' | 'removed' | 'indexing' | 'none' | 'once' | 'repeated'
+
+/**
+ * 갓 올린 글은 색인 · 인용까지 시간이 걸린다 — 새 글이 처음 인용되기까지 11 · 13일 걸린 실측이 있다(2026-10 측정 기록). 올린 지 이
+ * 일수 안의 측정만 있고 인용이 없으면 「인용 없음」이 아니라 「색인 대기」다(부정 판단만 미룬다 — 그 안의 인용은 그대로 센다).
+ * 실제로 색인됐는지 확인한 것은 아니고 올린 뒤 지난 날로 붙이는 상태다. 주 1회 측정이면 두 번이다.
+ */
+export const INDEXING_GRACE_DAYS = 14
 
 export const TIER_LABEL: Record<PostTier, string> = {
   waiting: '측정 대기',
   undated: '올린 날 모름 · 날짜를 적으면 판단',
   removed: '내림 · 올린 뒤 판단할 측정 없음',
+  indexing: `색인 대기 · 올린 지 ${INDEXING_GRACE_DAYS}일 안 측정만`,
   none: '인용 없음',
   once: '한 번 인용 · 판단 보류',
   repeated: '반복 인용',
@@ -56,10 +64,17 @@ export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<History
   })
   const seen = cells.filter((c): c is HistoryCell => c !== null)
   const citedWeeks = after.filter((a) => cited(a.cell)).length
+  // 올린 지 INDEXING_GRACE_DAYS일이 지난 측정이 하나라도 있어야 「인용 없음」이다. 일수가 없는 칸(옛 서버)은 지난 것으로 본다.
+  const matured = after.some((a) => (a.cell.daysAfterPublish ?? INDEXING_GRACE_DAYS) >= INDEXING_GRACE_DAYS)
   const tier: PostTier =
     after.length > 0
       ? citedWeeks === 0
-        ? 'none'
+        ? matured
+          ? 'none'
+          : // 내렸으면 기다려도 풀리지 않는다.
+            seen.some((c) => c.afterRemoval)
+            ? 'removed'
+            : 'indexing'
         : citedWeeks === 1
           ? 'once'
           : 'repeated'
@@ -289,6 +304,7 @@ const SUMMARY_ORDER: [PostTier, string][] = [
   ['repeated', '반복 인용'],
   ['once', '한 번 인용(판단 보류)'],
   ['none', '인용 없음'],
+  ['indexing', `색인 대기(올린 지 ${INDEXING_GRACE_DAYS}일 안)`],
   ['waiting', '측정 대기'],
   ['undated', '올린 날 모름'],
   ['removed', '판단할 측정 없이 내림'],

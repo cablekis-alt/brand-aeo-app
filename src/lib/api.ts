@@ -475,6 +475,8 @@ export interface HistoryCell {
   afterRemoval: boolean
   tally: import('./publishedUrl').WeekTally | null
   variantCited: number
+  /** 올린 뒤 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글은 판단을 미룬다(publishTracking.ts INDEXING_GRACE_DAYS). */
+  daysAfterPublish?: number
   topicMention?: { answered: number; mentioned: number } | null
   earlierPostingLive?: true
 }
