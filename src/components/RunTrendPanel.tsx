@@ -140,6 +140,19 @@ export default function RunTrendPanel({
     ? m.days.map((d, i) => ({ d, i })).filter(({ i }) => points.some((p, k) => p.weekOf === selectedWeek && Math.floor(m.dots[k]!.x) === i))
     : []
 
+  // 점 위 「k/N」 글자 — 붙은 점끼리 겹치지 않게 앞 글자와 30px 넘게 떨어진 점에만 단다(값은 점 제목 · 회차 표에 다 있다).
+  const labeled = new Set<number>()
+  {
+    let lastX = -Infinity
+    for (const d of [...m.dots].sort((a, b) => a.x - b.x)) {
+      if (d.unknown || !points[d.i]!.ranked) continue
+      if (x(d.x) - lastX >= 30) {
+        labeled.add(d.i)
+        lastX = x(d.x)
+      }
+    }
+  }
+
   const latest = points.at(-1)
   const engineCount = latest?.enginesUsed.length ?? 0
   const spreadNote =
@@ -318,9 +331,11 @@ export default function RunTrendPanel({
                   ) : (
                     <circle className={d.isolated ? 'rt-dot-partial' : `st-dot${current ? ' current' : ''}`} cx={cx} cy={y(v)} r={current ? 5 : 4} />
                   )}
-                  <text className="st-value" x={cx} y={y(v) - 9} textAnchor="middle">
-                    {`${p.ranked.k}/${p.ranked.n}`}
-                  </text>
+                  {labeled.has(d.i) && (
+                    <text className="st-value" x={cx} y={y(v) - 9} textAnchor="middle">
+                      {`${p.ranked.k}/${p.ranked.n}`}
+                    </text>
+                  )}
                 </g>
               )
             })}

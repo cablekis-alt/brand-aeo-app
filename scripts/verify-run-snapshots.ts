@@ -177,12 +177,22 @@ try {
   }
   const survived = await measureAndBake(await tenant(), broken, { selfOnly: true }).then(() => true, () => false)
   ok('회차 기록 실패: 측정은 성공 · 그 주 카드는 저장', survived && cardSaves === 1 && runIds().length === 4)
+  ok('옮겨 두기: 회차 기록과 짝이 맞는 그 주 파일은 옮기지 않는다(앞 측정들)', !runIds().some((id) => id.endsWith('-preserved')))
+  const unrecorded = weekFile('question-analyses.json')
 
-  // 8) 판정 맥락이 바뀌면 지문이 바뀐다 — 별칭 추가
+  // 8) 판정 맥락이 바뀌면 지문이 바뀐다 — 별칭 추가. 이 측정은 7)의 회차 기록 없는 그 주 파일을 덮기 전에 회차 기록으로 옮겨 둔다.
   writeJson('tenants.overlay.json', [{ ...BRAND, aliases: ['회차 펜션', '회차'] }])
   await measureAndBake(await tenant(), store, { selfOnly: true })
   const last = runIds()
   ok('판정 맥락 지문: 별칭이 바뀌면 달라진다', runMeta(last[last.length - 1]).contextFingerprint !== meta.contextFingerprint)
+  const preserved = last.filter((id) => id.endsWith('-preserved'))
+  ok(
+    '옮겨 두기: 회차 기록 없던 그 주 파일을 덮기 전에 옮긴다(판정이 그대로 · 옛 측정 시각 이름이라 새 회차보다 앞)',
+    preserved.length === 1 &&
+      runMeta(preserved[0]!).preserved?.from === 'week-file' &&
+      JSON.stringify(JSON.parse(readFileSync(path.join(runsDir, preserved[0]!, 'question-analyses.json'), 'utf8'))) === JSON.stringify(JSON.parse(unrecorded)) &&
+      last.indexOf(preserved[0]!) < last.length - 1,
+  )
 
   // 9) 경쟁사도 함께 재는 측정은 엔진이 빠져도 그 주 카드를 덮는다 — 코호트 전체가 같은 엔진으로 다시 재진다.
   // 함께 잰 경쟁사의 회차 기록은 inCohortRun으로 남는다. 경쟁사는 질문지를 미리 둔 등록 경쟁사로 잰다(가짜 판정은 경쟁사 전용

@@ -237,28 +237,33 @@ export default function Performance() {
             </p>
           </section>
 
-          {!viewing && runs.available && (runs.error || runs.history) && (
-            <section id="runs">
-              <h3>측정 회차별 보기</h3>
-              {runs.error ? (
-                <p className="error">회차 기록: {runs.error}</p>
-              ) : (
-                (() => {
-                  const h = runs.history!
-                  const recorded = h.points.filter((p) => p.kind === 'run' && !p.preserved)
-                  if (recorded.length === 0) return null
-                  if (recorded.length === 1) {
-                    return (
-                      <p className="hint" style={{ marginTop: 0 }}>
-                        회차 기록 1회({recorded[0]!.at ? kstStamp(recorded[0]!.at) : recorded[0]!.weekOf}) — 두 번째 측정부터 회차별로 봅니다.
-                      </p>
-                    )
-                  }
-                  return <RunTrendPanel history={h} selectedWeek={card.weekOf} onSelectWeek={setSelectedWeek} />
-                })()
-              )}
-            </section>
-          )}
+          {(() => {
+            // 회차 기록이 하나도 없으면(웹 · 회차 기록 전 측정뿐인 브랜드) 절을 통째로 숨긴다.
+            if (viewing || !runs.available) return null
+            if (runs.error) {
+              return (
+                <section id="runs">
+                  <h3>측정 회차별 보기</h3>
+                  <p className="error">회차 기록: {runs.error}</p>
+                </section>
+              )
+            }
+            const h = runs.history
+            const recorded = h?.points.filter((p) => p.kind === 'run' && !p.preserved) ?? []
+            if (!h || recorded.length === 0) return null
+            return (
+              <section id="runs">
+                <h3>측정 회차별 보기</h3>
+                {recorded.length === 1 ? (
+                  <p className="hint" style={{ marginTop: 0 }}>
+                    회차 기록 1회({recorded[0]!.at ? kstStamp(recorded[0]!.at) : recorded[0]!.weekOf}) — 두 번째 측정부터 회차별로 봅니다.
+                  </p>
+                ) : (
+                  <RunTrendPanel history={h} selectedWeek={card.weekOf} onSelectWeek={setSelectedWeek} />
+                )}
+              </section>
+            )
+          })()}
 
           {enginePoints.length > 0 && engineNames.length > 0 && (
             <section>

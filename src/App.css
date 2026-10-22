@@ -2463,7 +2463,12 @@ p.hint {
 /* 측정 회차별 보기(RunTrendPanel.tsx) — 회차 점 · 범위 수염 · 글별 회차 표시. 색은 토큰만 쓴다(다크 모드가 따라온다). */
 .run-trend {
   display: grid;
+  /* 그림이 넓어도 칸이 늘지 않게 — 그림은 .score-trend-scroll 안에서 가로로 넘긴다(페이지는 가로로 밀리지 않는다). */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
+}
+.rt-post-line b {
+  overflow-wrap: anywhere;
 }
 .rt-post-list {
   display: grid;
