@@ -75,11 +75,22 @@ export async function mapWithConcurrency<T, R>(
  * OpenAI는 2분 · Gemini는 3분에 끝나고 Perplexity만 10~15분 걸렸다. 429 · 실패는 0건이었다.
  * 그래서 Perplexity는 분당 45회로 시작 간격을 벌리고(collectRpm), 동시 슬롯은 응답이 느려도 그 속도를 낼 만큼
  * 24로 둔다 — 처리량이 응답 시간과 상관없이 분당 45회에 붙고, 빠른 날에도 한도를 넘지 않는다.
+ *
+ * ── Perplexity 분당 120회 (2026-10-22) ─────────────────────────────
+ * 「분당 약 50회」는 추정이었다. 공식 한도는 분당이 아니라 조직 단위 초당 요청 수(1초 이동 창, 모든 키 · 모델 공용)이고
+ * (docs.perplexity.ai rate-limits-usage-tiers), 설치본 키로 한 번 불러 본 응답 헤더가 x-ratelimit-limit: 8 — 초당 8회
+ * (분당 480회 상당)였다. 위 표의 「동시 12건에 재시도 4건」도 초당 8회로 설명된다. 45회는 한도의 1/10이라, 응답이 빠른 날
+ * Perplexity만 간격에 묶여 끝에 남았다(10-22 스테이,머뭄 단독 42건: OpenAI · Gemini 49초, Perplexity 78.5초 — 응답 중앙
+ * 8초인데 보내는 데만 55초).
+ * 120회(초당 2회, 한도의 1/4)로 올린다. 이 측정의 실제 응답 시간으로 다시 짜면 Perplexity 끝이 78.5 → 51.6초, 느린 날
+ * (10-21 군산각 36건) 205 → 183초다. 더 올려도 단독 측정은 2~5초만 준다. 여유를 크게 두는 까닭: 같은 키를 다른 설치본 ·
+ * CI 측정이 함께 쓰고, 「업종 확인」(check 풀)과 재시도(429 뒤 15 · 30초)는 이 간격 밖에서 보낸다.
+ * 동시 24칸은 그대로다 — 응답이 느린 날(평균 27초)의 처리량은 「24 ÷ 응답 시간」(분당 약 53회)에 묶인다.
  */
 const COLLECT_DEFAULTS: Record<Engine, number> = { gemini: 24, openai: 36, perplexity: 24, claude: 24 };
 
 /** 엔진별 분당 시작 상한(수집만). 없으면 상한 없음 — 동시 슬롯만 본다. COLLECT_LLM_RPM_<ENGINE>로 바꾸고 0이면 끈다. */
-const COLLECT_RPM_DEFAULTS: Partial<Record<Engine, number>> = { perplexity: 45 };
+const COLLECT_RPM_DEFAULTS: Partial<Record<Engine, number>> = { perplexity: 120 };
 
 /** 엔진 하나의 수집 분당 시작 상한. 0이면 상한 없음. */
 export function collectRpm(engine: Engine): number {
