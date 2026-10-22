@@ -287,6 +287,27 @@ ok(
   /올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — /.test(platformSame[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? ''),
 );
 
+// 글을 내렸는데 내리기 전 같은 주 다른 회차에서 인용됐다 — 이미 내린 글은 다음 측정이 인용할 수 없으니 그대로 다시 권한다.
+const downedOther = evidence({
+  posts: [{ ...wikiPost, publishedOn: '2026-10-05', removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' }],
+  states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-05T00:00:00Z' } },
+  citedPostIds: new Set(['w']),
+});
+ok('내린 글이 다른 회차에서 인용됐어도 「다시 올릴 곳」으로 다시 권한다', recommended(downedOther) && wikiDetail(downedOther).startsWith('[올린 글 10/8 내림 — 다시 올릴 곳] '));
+
+// 같은 주에 여러 번 잰 주 — 핀도 칸(foldCell)과 같은 규칙: 올린 뒤 회차가 하나라도 있으면 올린 뒤(왼쪽 틈), 없고 측정하던 회차가 있으면
+// 전후 불명. 그 주 카드 회차가 올리기 전이어도(뒤 회차는 카드를 덮지 않음) 칸과 같은 쪽에 선다.
+const runOf = (first: string, last = first) =>
+  ({ runId: first, kind: 'run', at: `${last}T05:00:00Z`, window: { first, last }, weekCard: 'saved', isWeekCard: false, selfOnly: true, engines: [], partialEngines: [], missingEngines: [], bankVersion: null }) as never;
+const multi = (cardWindow: string, runs: string[]) => [{ weekOf: '2026-W44', window: { first: cardWindow, last: cardWindow }, runs: runs.map((d) => runOf(d)) }];
+const oneSlot = [{ weekOf: '2026-W44', measured: true }];
+const between = executionMarks([post('m1', '2026-10-28')], oneSlot, multi('2026-10-26', ['2026-10-26', '2026-10-30']));
+ok('회차 사이에 올림(카드는 앞 회차) — 핀은 올린 뒤(왼쪽 틈) · 칸과 같은 쪽', between.pins[0]?.x === -0.5 && between.pins[0]?.hollow === false);
+const sameDayRun = executionMarks([post('m2', '2026-10-30')], oneSlot, multi('2026-10-30', ['2026-10-26', '2026-10-30']));
+ok('측정하던 날 올리고 그 뒤 회차가 없으면 전후 불명(속 빈 핀)', sameDayRun.pins[0]?.x === 0 && sameDayRun.pins[0]?.hollow === true);
+const afterAll = executionMarks([post('m3', '2026-10-31')], oneSlot, multi('2026-10-30', ['2026-10-26', '2026-10-30']));
+ok('모든 회차 뒤에 올림 — 오른쪽 틈', afterAll.pins[0]?.x === 0.5);
+
 let failed = 0;
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`);

@@ -18,7 +18,18 @@ import {
 } from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
-import { afterWeeksOf, distinctPostings, executionSummaryLine, freshNoCiteNote, monthDay, postWeekOf, runTallyText, summarizePost, TIER_LABEL } from '../lib/publishTracking'
+import {
+  afterWeeksOf,
+  citedPostIdsInWeek,
+  distinctPostings,
+  executionSummaryLine,
+  freshNoCiteNote,
+  monthDay,
+  postWeekOf,
+  runTallyText,
+  summarizePost,
+  TIER_LABEL,
+} from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -354,19 +365,10 @@ export default function PeriodicReport() {
   }, [published.history, judgedWeek, card?.weekOf])
 
   // 보고 주 칸(그 주 회차를 합친 값)에서 올린 뒤 인용된 기록 — 개선제안의 「인용됨」이 집행 표와 같은 칸을 보게 한다.
-  const citedPostIds = useMemo(() => {
-    const h = published.history
-    const w = h?.weeks.findIndex((x) => x.weekOf === card?.weekOf) ?? -1
-    if (!h || w < 0) return null
-    return new Set(
-      h.posts
-        .filter((p) => {
-          const c = p.cells[w]
-          return Boolean(c && !c.afterRemoval && c.timing !== 'before' && (c.tally?.all.cited ?? 0) > 0)
-        })
-        .map((p) => p.post.id),
-    )
-  }, [published.history, card?.weekOf])
+  const citedPostIds = useMemo(
+    () => (published.history && card ? citedPostIdsInWeek(published.history, card.weekOf) : null),
+    [published.history, card],
+  )
 
   const enrichedReport = useMemo(() => {
     if (!report || !card || !evidence) return report

@@ -2470,6 +2470,13 @@ p.hint {
 .rt-post-line b {
   overflow-wrap: anywhere;
 }
+/* 같은 날 올린 글 「1a · 1b」 — 두 글자라 원 대신 둥근 막대. */
+.st-key.exec.rt-label {
+  width: auto;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+}
 .rt-post-list {
   display: grid;
   gap: 6px;

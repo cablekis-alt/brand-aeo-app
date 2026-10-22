@@ -58,7 +58,10 @@ export interface HistoryWeek {
   weekOf: string;
   /** 판정 기록이 있다. false면 그 주 칸은 0이 아니라 확인 불가다. */
   analysed: boolean;
-  /** 측정한 날(한국 날짜)의 범위 — 판정 시작 시각. 회차가 여럿이면 그 주 회차 전체의 범위. 시각이 없는 옛 기록이면 null. */
+  /**
+   * 측정한 날(한국 날짜)의 범위 — 판정 시작 시각. 회차가 여럿이면 그 주 카드 회차의 범위(회차마다의 범위는 runs[].window — 그래프 핀은
+   * 그것으로 칸과 같은 규칙을 쓴다, src/lib/publishTracking.ts weekTimingOf). 시각이 없는 옛 기록이면 null.
+   */
   window: { first: string; last: string } | null;
   engines: string[];
   /** 그 주 판정을 나눈 질문 은행 판. 못 찾았으면 null. */
@@ -197,7 +200,7 @@ export async function getPublishedHistory(
     weeks.push({
       weekOf: card.weekOf,
       analysed: true,
-      window: many ? unionWindow(views.map((v) => v.window)) : base.window,
+      window: base.window,
       engines: base.engines,
       bankVersion: base.bankVersion,
       responses: base.responses,
@@ -329,12 +332,6 @@ export async function sampleView(
     cells,
     ...(byEngine ? { byEngine } : {}),
   };
-}
-
-function unionWindow(windows: ({ first: string; last: string } | null)[]): { first: string; last: string } | null {
-  const known = windows.filter((w): w is { first: string; last: string } => w !== null);
-  if (known.length === 0) return null;
-  return { first: known.map((w) => w.first).sort()[0]!, last: known.map((w) => w.last).sort().at(-1)! };
 }
 
 function historyRun(s: WeekSample, v: SampleView): HistoryRun {

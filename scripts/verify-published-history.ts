@@ -12,7 +12,7 @@ import type { PublishedPost } from '../server/publishedPosts';
 import type { QuestionBank, RunReadIssue, RunSnapshot } from '../server/store';
 import type { QuestionRepeatAnalysis } from '../server/types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
-import { executionSummaryLine, freshNoCiteNote, summarizePost, withinIndexingGrace } from '../src/lib/publishTracking';
+import { citedPostIdsInWeek, executionSummaryLine, freshNoCiteNote, summarizePost, withinIndexingGrace } from '../src/lib/publishTracking';
 
 const checks: [string, boolean][] = [];
 const ok = (label: string, cond: boolean) => checks.push([label, cond]);
@@ -307,7 +307,8 @@ ok(
   const r4 = [answer('c1-002', 0, [[POST, false]], at('2026-11-08'))];
   // W46: 11-10(화)에 올린 둘째 글과 같은 날 두 번 잼 — 둘째 글은 두 회차 모두 측정하던 날(전후 불명), 첫 글은 D+7 · 인용 없음. 회차 하나는 깨짐.
   const r5 = [answer('c1-001', 0, [], at('2026-11-10')), px('2026-11-10')];
-  const r6 = [answer('c1-001', 0, [], { timing: { startedAt: '2026-11-10T06:00:00Z', wallMs: 0, judgeMs: { mention: 0, citation: 0, rank: 0, fact: 0 } } }), px('2026-11-10')];
+  const t6 = { timing: { startedAt: '2026-11-10T06:00:00Z', wallMs: 0, judgeMs: { mention: 0, citation: 0, rank: 0, fact: 0 } } };
+  const r6 = [answer('c1-001', 0, [], t6), answer('c1-001', 0, [], { ...t6, engine: 'perplexity' as QuestionRepeatAnalysis['engine'] })];
   const runCards = [wcard('2026-W44'), wcard('2026-W45'), wcard('2026-W46')];
   const runStore = makeStore(
     runCards,
@@ -352,10 +353,12 @@ ok(
   ok('회차 합치기 — 올리기 전 회차의 인용은 따로 센다(칸은 after)', c45.citedBeforeRuns === 1);
   ok('회차 합치기 — 일수는 가장 늦은 회차(D+5)', c45.daysAfterPublish === 5);
   ok(
-    '회차 합치기 — 주 측정 창은 회차 전체 범위 · 회차 4개 · 그 주 카드는 r3',
-    wk('2026-W45').window?.first === '2026-11-02' && wk('2026-W45').window?.last === '2026-11-08' && wk('2026-W45').runs?.length === 4 &&
-      wk('2026-W45').runs?.find((r) => r.isWeekCard)?.runId === 'r3',
+    '회차 합치기 — 주 측정 창은 그 주 카드 회차(r3)의 창 · 회차마다의 창은 runs에 · 회차 4개',
+    wk('2026-W45').window?.first === '2026-11-07' && wk('2026-W45').window?.last === '2026-11-07' && wk('2026-W45').runs?.length === 4 &&
+      wk('2026-W45').runs?.find((r) => r.isWeekCard)?.runId === 'r3' && wk('2026-W45').runs?.[0]?.window?.first === '2026-11-02',
   );
+  const cited45 = citedPostIdsInWeek(rh, '2026-W45');
+  ok('그 주 칸에서 인용된 기록 — 회차를 합친 칸 기준(첫 글만)', cited45?.has('run-1') === true && cited45.has('run-2') === false && citedPostIdsInWeek(rh, '2026-W99') === null);
   ok('회차 합치기 — 표본이 하나뿐인 주는 runs가 없다(전과 같은 칸)', wk('2026-W44').runs === undefined && cell(0, '2026-W44').runs === undefined);
   ok('회차 합치기 — 읽지 못한 회차는 그 주 runIssues에 남는다', wk('2026-W46').runIssues?.length === 1);
   const c46 = cell(0, '2026-W46');
@@ -373,6 +376,19 @@ ok(
     html.includes('3회 중 3회 · 그 주 인용 D+2·4·5') && html.includes(' ·4회') && html.includes('(회차 3/5)') && html.includes('첫 인용 확인 D+2') && html.includes('한 주 인용 · 판단 보류'),
   );
   ok('성과 표 — 읽지 못한 회차를 알린다', html.includes('회차 기록 1개를 읽지 못해 칸에서 뺐습니다'));
+
+  // 측정하던 날 올리고 같은 주에 다시 잼 — 전후 불명 회차와 올린 뒤 회차가 섞이면 올린 뒤가 앞선다(인용을 판단에 넣는다).
+  const p3 = post('run-3', '2026-11-17', { url: 'https://example.com/blog/9', key: 'example.com/blog/9' });
+  const ra = [answer('c1-001', 0, [], at('2026-11-17')), px('2026-11-17')];
+  const rb = [answer('c1-001', 0, [['https://example.com/blog/9', false]], at('2026-11-19')), px('2026-11-19')];
+  const mixStore = makeStore([wcard('2026-W47')], { '2026-W47': rb }, banks, {
+    '2026-W47': { runs: [snap('2026-W47', 'ra', '2026-11-17T02:00:00Z', ra), snap('2026-W47', 'rb', '2026-11-19T02:00:00Z', rb)], issues: [] },
+  });
+  const mix = (await getPublishedHistory(mixStore, tenant, [p3], 12)).posts[0]!.cells[0]!;
+  ok(
+    '회차 합치기 — 측정하던 날 회차 + 올린 뒤 회차면 칸은 after(올린 뒤 1회 · 전후 불명 1회 · 인용 1)',
+    mix.timing === 'after' && mix.runs?.measured === 1 && mix.runs.unsure === 1 && mix.tally?.all.cited === 1 && runTallyText(mix)?.main === '1회 중 1회 · 그 주 인용 D+2',
+  );
 }
 
 let failed = 0;

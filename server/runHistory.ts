@@ -117,7 +117,7 @@ export async function getRunHistory(
   const points: RunPoint[] = [];
   // 점마다 그림에 보이는가 · 다음 점과 견줄 카드 · 회차 요약(응답에는 싣지 않는다).
   const drawn: boolean[] = [];
-  const ctx: { scorecard: WeeklyScorecard; meta: RunMeta | null }[] = [];
+  const ctx: { scorecard: WeeklyScorecard; meta: RunMeta | null; isolated: boolean }[] = [];
   const cells: (RunPostCell | null)[][] = shown.map(() => []);
   const issues: string[] = [];
   for (let c = from; c < all.length; c += 1) {
@@ -152,6 +152,7 @@ export async function getRunHistory(
           .sort(),
       };
       const prev = ctx.at(-1);
+      const isolated = s.partialEngines.length > 0 || s.missingEngines.length > 0;
       points.push({
         kind: s.kind,
         runId: s.runId,
@@ -170,7 +171,7 @@ export async function getRunHistory(
         missingEngines: s.missingEngines,
         engineIssues: s.meta?.engineIssues ?? [],
         conditionKey: JSON.stringify(conditions),
-        changesFromPrev: prev ? changesBetween(prev, { scorecard, meta: s.meta }) : [],
+        changesFromPrev: prev ? changesBetween(prev, { scorecard, meta: s.meta, isolated }) : [],
         bankVersion: view.bankVersion,
         ranked,
         score,
@@ -179,7 +180,7 @@ export async function getRunHistory(
         repeatsPerQuestion: scorecard.repeatsPerQuestion ?? null,
       });
       drawn.push(c >= drawFrom);
-      ctx.push({ scorecard, meta: s.meta });
+      ctx.push({ scorecard, meta: s.meta, isolated });
       shown.forEach((_, i) => {
         const cell = view.cells[i];
         if (!cell) {
@@ -233,10 +234,11 @@ export async function getRunHistory(
 
 /** 바로 앞 점과 달라진 조건 — 카드 조건 비교(comparability.ts)에 판정 맥락 · 예정 엔진을 더한다. 모르는 값(옛 기록)은 견주지 않는다. */
 function changesBetween(
-  prev: { scorecard: WeeklyScorecard; meta: RunMeta | null },
-  cur: { scorecard: WeeklyScorecard; meta: RunMeta | null },
+  prev: { scorecard: WeeklyScorecard; meta: RunMeta | null; isolated: boolean },
+  cur: { scorecard: WeeklyScorecard; meta: RunMeta | null; isolated: boolean },
 ): string[] {
-  const out: string[] = [...conditionChanges(prev.scorecard, cur.scorecard)];
+  // 엔진이 빠졌거나 일부만 든 회차는 그 자체로 잇지 않는다 — 쓴 엔진 차이를 「수집 엔진 바뀜」으로 또 적지 않는다(설정을 바꾼 것이 아니다).
+  const out: string[] = conditionChanges(prev.scorecard, cur.scorecard).filter((c) => !(c === '수집 엔진' && (prev.isolated || cur.isolated)));
   const a = prev.meta;
   const b = cur.meta;
   if (a?.contextFingerprint && b?.contextFingerprint && a.contextFingerprint !== b.contextFingerprint) out.push('판정 맥락');

@@ -68,10 +68,13 @@ export interface RunTrendModel {
   segments: number[][]
   breaks: { x: number; text: string }[]
   pins: RunPin[]
-  /** 글별 줄 — 핀 번호와 회차마다의 표시(points와 같은 순서). */
-  rows: { posting: Posting<RunPostRow>; pin: number | null; marks: RunMark[] }[]
-  /** 주마다 회차 점수 — 같은 조건 회차끼리만 평균, 그 주 카드 점수(막대)와 나란히. */
-  scoreLine: { weekOf: string; scores: number[]; mean: number | null; mixed: boolean; bar: number | null }[]
+  /** 글별 줄 — 핀 번호, 줄 이름(같은 날 올린 글은 「1a · 1b」), 회차마다의 표시(points와 같은 순서). */
+  rows: { posting: Posting<RunPostRow>; pin: number | null; label: string; marks: RunMark[] }[]
+  /**
+   * 주마다 회차 점수 — 같은 조건 회차끼리만 평균, 그 주 카드 점수(막대)와 나란히. 평균에서 뺀 회차는 까닭별로 센다(옛 기록 · 엔진이
+   * 빠진 회차 · 질문 은행을 못 찾은 회차).
+   */
+  scoreLine: { weekOf: string; scores: number[]; mean: number | null; mixed: boolean; bar: number | null; legacy: number; isolated: number; unknown: number }[]
   /** 이 브랜드가 같은 날 여러 번 잰 날 가운데 가장 크게 흔들린 날 — 안내 문구에 쓴다. 없으면 null. */
   sameDay: { date: string; scores: number[] } | null
 }
@@ -139,9 +142,16 @@ export function buildRunTrend(h: RunHistory): RunTrendModel {
   }))
   const pinOf = (p: Posting<RunPostRow>) => pins.find((pin) => pin.date === p.post.publishedOn)?.n ?? null
 
-  const rows = postings.map((posting) => ({
+  // 같은 핀에 든 글이 여럿이면 「1a · 1b」로 가른다 — 그림 줄 · 회차 표 열 · 위 목록이 같은 이름을 쓴다.
+  const rows = postings.map((posting) => {
+    const pin = pinOf(posting)
+    const siblings = pin === null ? [] : postings.filter((p) => pinOf(p) === pin)
+    const label = pin === null ? '?' : siblings.length > 1 ? `${pin}${String.fromCharCode(97 + siblings.indexOf(posting))}` : String(pin)
+    return { posting, pin, label }
+  }).map(({ posting, pin, label }) => ({
     posting,
-    pin: pinOf(posting),
+    pin,
+    label,
     marks: posting.item.cells.map((c, k): RunMark => {
       if (!c) return 'unknown'
       if (c.afterRemoval || c.timing === 'before' || c.timing === 'unknown') return 'skip'
@@ -154,24 +164,35 @@ export function buildRunTrend(h: RunHistory): RunTrendModel {
 
   const weeks = [...new Set(points.map((p) => p.weekOf))]
   const scoreLine = weeks.map((weekOf) => {
-    const usable = points
-      .map((p, i) => ({ p, d: dots[i]! }))
-      .filter(({ p, d }) => p.weekOf === weekOf && p.score !== null && !d.legacy && !d.isolated)
+    const inWeek = points.map((p, i) => ({ p, d: dots[i]! })).filter(({ p }) => p.weekOf === weekOf)
+    const usable = inWeek.filter(({ p, d }) => p.score !== null && !d.legacy && !d.isolated)
     const scores = usable.map(({ p }) => p.score!)
     const mixed = new Set(usable.map(({ p }) => p.conditionKey)).size > 1
     const mean = scores.length > 0 && !mixed ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null
-    return { weekOf, scores, mean, mixed, bar: h.weekCardScores[weekOf] ?? null }
+    return {
+      weekOf,
+      scores,
+      mean,
+      mixed,
+      bar: h.weekCardScores[weekOf] ?? null,
+      legacy: inWeek.filter(({ d }) => d.legacy).length,
+      isolated: inWeek.filter(({ d }) => !d.legacy && d.isolated).length,
+      unknown: inWeek.filter(({ p, d }) => !d.legacy && !d.isolated && p.score === null).length,
+    }
   })
 
+  // 같은 날 흔들림 — 같은 조건으로 끝까지 잰 회차끼리만(엔진이 빠진 차이를 잡음으로 설명하지 않게).
   let sameDay: RunTrendModel['sameDay'] = null
   for (const [date, idx] of byDay) {
-    const scores = idx
-      .filter((i) => points[i]!.score !== null && !dots[i]!.legacy)
-      .sort((a, b) => (points[a]!.at ?? '').localeCompare(points[b]!.at ?? ''))
-      .map((i) => points[i]!.score!)
-    if (scores.length < 2) continue
-    const spread = Math.max(...scores) - Math.min(...scores)
-    if (!sameDay || spread > Math.max(...sameDay.scores) - Math.min(...sameDay.scores)) sameDay = { date, scores }
+    const usable = idx.filter((i) => points[i]!.score !== null && !dots[i]!.legacy && !dots[i]!.isolated)
+    const byKey = new Map<string, number[]>()
+    for (const i of usable) byKey.set(points[i]!.conditionKey, [...(byKey.get(points[i]!.conditionKey) ?? []), i])
+    for (const group of byKey.values()) {
+      const scores = [...group].sort((a, b) => (points[a]!.at ?? '').localeCompare(points[b]!.at ?? '')).map((i) => points[i]!.score!)
+      if (scores.length < 2) continue
+      const spread = Math.max(...scores) - Math.min(...scores)
+      if (!sameDay || spread > Math.max(...sameDay.scores) - Math.min(...sameDay.scores)) sameDay = { date, scores }
+    }
   }
 
   return { days, dots, segments, breaks, pins, rows, scoreLine, sameDay }

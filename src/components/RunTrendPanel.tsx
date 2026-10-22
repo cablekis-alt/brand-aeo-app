@@ -166,10 +166,10 @@ export default function RunTrendPanel({
   return (
     <div className="run-trend">
       <p className="hint" style={{ marginTop: 0 }}>
-        이 브랜드를 잰 회차를 시간순으로 봅니다. 위 줄은 올린 글이 회차마다 인용됐는지, 아래 점은 브랜드 이름을 넣지 않은 질문(점수와 같은
-        기준)의 답 가운데 우리가 순위와 함께 불린 응답 수입니다.{' '}
+        이 브랜드를 잰 회차를 시간순으로 봅니다. 위 줄은 올린 글이 회차마다 인용됐는지, 아래 점은 카테고리 무관 질문(점수와 같은 기준 —
+        브랜드 이름 없이 묻는 일반 질문)의 답 가운데 우리가 순위와 함께 불린 응답 수입니다.{' '}
         {m.sameDay
-          ? `같은 날 다시 재도 크게 흔들립니다(이 브랜드 ${dayLabel(m.sameDay.date)} ${m.sameDay.scores.length}회차 점수 ${m.sameDay.scores.join('·')}) — 회차 하나의 오르내림으로 판단하지 마세요.`
+          ? `같은 날 같은 조건으로 다시 재도 크게 흔들립니다(이 브랜드 ${dayLabel(m.sameDay.date)} ${m.sameDay.scores.length}회 점수 ${m.sameDay.scores.join('·')}) — 회차 하나의 오르내림으로 판단하지 마세요.`
           : '같은 날 다시 재도 크게 흔들릴 수 있습니다 — 회차 하나의 오르내림으로 판단하지 마세요.'}
       </p>
 
@@ -177,7 +177,7 @@ export default function RunTrendPanel({
         <p className="muted">올린 글 기록이 없어 회차별 인용은 없습니다.</p>
       ) : (
         <ul className="rt-post-list">
-          {m.rows.map(({ posting, pin }) => {
+          {m.rows.map(({ posting, pin, label }) => {
             const r = posting.item
             const d = latestDays(r.cells)
             const extras = [
@@ -201,8 +201,8 @@ export default function RunTrendPanel({
             return (
               <li key={r.post.id} className="rt-post-line">
                 {pin !== null && (
-                  <span className="st-key exec" aria-hidden="true">
-                    {pin}
+                  <span className="st-key exec rt-label" aria-hidden="true">
+                    {label}
                   </span>
                 )}
                 <b>{r.post.articleTitle ?? r.post.articleId}</b>
@@ -269,7 +269,7 @@ export default function RunTrendPanel({
               return (
                 <g key={`row-${row.posting.item.post.id}`}>
                   <text className="st-axis" x={PAD.left - 6} y={cy + 4} textAnchor="end">
-                    {row.pin !== null ? `글${row.pin}` : '글'}
+                    {`글${row.label}`}
                   </text>
                   {row.marks.map((mark, k) => (
                     <MarkShape
@@ -277,7 +277,7 @@ export default function RunTrendPanel({
                       mark={mark}
                       cx={x(m.dots[k]!.x)}
                       cy={cy}
-                      title={markTitle(points[k]!, row.posting.item.cells[k] ?? null, mark)}
+                      title={`글${row.label} ${row.posting.places.join(' · ')} · ${markTitle(points[k]!, row.posting.item.cells[k] ?? null, mark)}`}
                     />
                   ))}
                 </g>
@@ -391,7 +391,13 @@ export default function RunTrendPanel({
         {m.scoreLine
           .map((w) =>
             w.scores.length === 0
-              ? `${shortWeek(w.weekOf)} 회차 기록 없음${w.bar !== null ? `(막대 ${w.bar}점)` : ''}`
+              ? w.isolated + w.unknown === 0
+                ? `${shortWeek(w.weekOf)} 옛 기록만${w.bar !== null ? `(막대 ${w.bar}점)` : ''}`
+                : `${shortWeek(w.weekOf)} 평균 낼 회차 없음(${[
+                    ...(w.legacy ? [`옛 기록 ${w.legacy}`] : []),
+                    ...(w.isolated ? [`엔진 빠진 회차 ${w.isolated}`] : []),
+                    ...(w.unknown ? [`질문지 못 찾은 회차 ${w.unknown}`] : []),
+                  ].join(' · ')})${w.bar !== null ? ` — 막대 ${w.bar}점` : ''}`
               : w.mixed
                 ? `${shortWeek(w.weekOf)} 조건 섞임 — 평균 안 냄(${w.scores.join('·')})`
                 : `${shortWeek(w.weekOf)} 회차 평균 ${w.mean}(${w.scores.length}회: ${w.scores.join('·')})${w.bar !== null ? ` — 위 막대는 그 주 카드 ${w.bar}점` : ''}`,
@@ -411,7 +417,9 @@ export default function RunTrendPanel({
                 <th>엔진 성공/예정</th>
                 <th>순위 든 응답</th>
                 {m.rows.map((row) => (
-                  <th key={row.posting.item.post.id}>{row.pin !== null ? `글${row.pin}` : '글'}</th>
+                  <th key={row.posting.item.post.id} title={`${row.posting.item.post.articleTitle ?? ''} · ${row.posting.places.join(' · ')}`}>
+                    {`글${row.label}`}
+                  </th>
                 ))}
                 <th>점수</th>
                 <th>주 카드</th>

@@ -17,7 +17,15 @@ const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 1
  * 이번 주 결과 한 줄. 숫자는 정확 일치 인용만 센다(src/lib/publishedUrl.ts). 올리기 전에 한 측정은 세지 않고, 측정하던 날 올린
  * 글은 전후를 알 수 없다고 밝힌다. 질문 은행을 못 읽은 주는 이름 없는/이름 댄 질문을 0이 아니라 확인 불가로 둔다.
  */
-function statusOf(h: PublishedHit, week: string): { pill: string; cls: string; detail: string | null } {
+function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill: string; cls: string; detail: string | null } {
+  // 같은 주 다른 회차에서 인용됐다 — 이 결과는 마지막 저장 측정만 보므로 기준을 밝힌다(AEO 퍼포먼스 올린 글 표는 회차를 합쳐 센다).
+  if (!h.tally && citedOtherRun) {
+    return {
+      pill: '인용됨(다른 회차)',
+      cls: 'st-info',
+      detail: `${week} 같은 주 다른 회차에서 인용됨 — 마지막 저장 측정에서는 찾지 못했습니다. 회차별 결과는 AEO 퍼포먼스의 올린 글 인용 추적에 있습니다.`,
+    }
+  }
   if (h.timing === 'before') return { pill: '올리기 전 측정', cls: 'st-unknown', detail: `${week} 측정은 올린 날보다 앞이라 세지 않습니다.` }
   const unsure = h.timing === 'during' || h.timing === 'ambiguous'
   // during: 측정하던 날 올렸다. ambiguous: 측정 시각이 없는 옛 기록인데 같은 주에 올렸다 — 측정 중이었다고 단정하지 않는다.
@@ -70,6 +78,7 @@ export default function PublishedUrlEditor({
   onSetDate,
   judged = true,
   targetLabel,
+  citedInWeek = null,
 }: {
   /** 이 곳의 뺀 적 없는 기록과 이번 주 결과. */
   hits: PublishedHit[]
@@ -87,6 +96,8 @@ export default function PublishedUrlEditor({
   judged?: boolean
   /** 기록마다 어느 줄에 올린 것인지 — 한 글의 기록을 모아 볼 때(콘텐츠 보관함). */
   targetLabel?: (post: PublishedPost) => string
+  /** 그 주 회차를 합친 칸에서 인용된 기록 id(src/lib/publishTracking.ts citedPostIdsInWeek). 없으면 마지막 저장 측정만 본다. */
+  citedInWeek?: ReadonlySet<string> | null
 }) {
   const today = todayKst()
   const [input, setInput] = useState('')
@@ -97,7 +108,8 @@ export default function PublishedUrlEditor({
   const [editing, setEditing] = useState<{ id: string; date: string } | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   const week = weekOf ? weekOf.slice(5) : '이번 주'
-  const citedCount = hits.filter((h) => h.timing !== 'before' && h.tally).length
+  const otherRun = (h: PublishedHit) => !h.tally && Boolean(citedInWeek?.has(h.post.id))
+  const citedCount = hits.filter((h) => (h.timing !== 'before' && h.tally) || otherRun(h)).length
 
   const dateValid = !dateOpen || (/^\d{4}-\d{2}-\d{2}$/.test(date) && date <= today)
   const add = async () => {
@@ -135,7 +147,7 @@ export default function PublishedUrlEditor({
       {hits.length > 0 && (
         <ul className="post-list">
           {hits.map((h) => {
-            const s = statusOf(h, week)
+            const s = statusOf(h, week, otherRun(h))
             const p = h.post
             return (
               <li key={p.id}>

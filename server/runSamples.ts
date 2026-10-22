@@ -59,7 +59,19 @@ export async function weekSamples(
   card: WeeklyScorecard,
   weekAnalyses: QuestionRepeatAnalysis[],
 ): Promise<{ samples: WeekSample[]; issues: RunReadIssue[] }> {
-  const { runs, issues } = await store.listRunSnapshots(tenantId, card.weekOf);
+  const { runs: listed, issues } = await store.listRunSnapshots(tenantId, card.weekOf);
+  // 같은 측정이 두 번 남았으면 하나로 접는다 — 회차 기록을 잠깐 못 읽은 사이 옮겨 두기가 같은 측정을 또 남길 수 있다
+  // (preserveWeekFile.ts). 판정 시작 시각의 처음이 같은 회차끼리 원래 회차를 옮겨 둔 것보다 앞세운다.
+  const seenFirst = new Set<string>();
+  const runs = [...listed]
+    .sort((a, b) => Number(Boolean(a.meta.preserved)) - Number(Boolean(b.meta.preserved)))
+    .filter((r) => {
+      const first = judgeSpan(r.analyses)?.first;
+      if (!first) return true;
+      if (seenFirst.has(first)) return false;
+      seenFirst.add(first);
+      return true;
+    });
   const cardEngines = card.enginesUsed ?? [];
   let matched = false;
   const samples: WeekSample[] = runs.map((run) => {

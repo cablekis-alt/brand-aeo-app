@@ -112,6 +112,12 @@ try {
   ok('표본: 어느 회차와도 맞지 않는 그 주 파일은 week-file 표본(시각 순 맨 앞)', s2.samples.length === 3 && s2.samples[0]!.kind === 'week-file' && s2.samples[0]!.isWeekFile)
   putRun('2026-W42', 'p', '2026-10-15T05:00:00Z', [answer('v1-001', '2026-10-15')], { meta: { engines: { gemini: { planned: 4, succeeded: 3 } } } })
   ok('표본: 일부만 들어온 엔진', (await weekSamples(store, T, card('2026-W42'), [])).samples[0]!.partialEngines.join() === 'gemini')
+  // 같은 측정이 두 번 남은 경우(회차를 잠깐 못 읽은 사이 옮겨 두기가 또 남김) — 하나로 접고 원래 회차를 남긴다
+  const same = [answer('v1-001', '2026-10-27T01:00:00Z')]
+  putRun('2026-W44', 'orig', '2026-10-27T02:00:00Z', same)
+  putRun('2026-W44', 'orig-preserved', '2026-10-27T01:00:00Z', same, { meta: { preserved: { from: 'week-file', preservedAt: '2026-10-29T00:00:00Z' } } })
+  const dup = await weekSamples(store, T, card('2026-W44'), [answer('v1-001', '2026-10-29')])
+  ok('표본: 판정 시각이 같은 회차는 하나로 접고 옮겨 둔 쪽을 버린다', dup.samples.filter((s) => s.kind === 'run').map((s) => s.runId).join() === 'orig')
 
   // 옮겨 두기 — 회차 기록이 없는 그 주 파일을 runs/로
   writeJson(`data/${T}/scorecard-history.json`, [card('2026-W43')])
@@ -221,6 +227,13 @@ try {
   ok('그 주 카드 점수(막대)를 함께 싣는다', rh.weekCardScores['2026-W43'] === 9)
   ok('저장된 신뢰구간 · 코호트 순위 필드를 싣지 않는다', !JSON.stringify(rh).includes('ciLow') && !JSON.stringify(rh).includes('cohortRank'))
 
+  // 정비 스크립트가 그 주 파일만 고친 경우 — 회차 지표(순위)는 회차 자기 판정으로, 올린 글 칸은 그 주 파일(고친 판정)로 센다
+  const own = [ranked('2026-11-16')]
+  const fixed = [answer('v5-001', '2026-11-16', [POST])]
+  const fs2 = fakeStore([card('2026-W47', { questionBankVersion: 'v5' })], { '2026-W47': fixed }, { '2026-W47': { runs: [snap('2026-W47', 'r47', '2026-11-16T03:00:00Z', own)], issues: [] } }, { v5: bank('v5') })
+  const rh2 = await getRunHistory(fs2, tenant, [post], 6)
+  ok('정비 반영: 순위 응답은 회차 자기 판정(k=1), 올린 글 칸은 그 주 파일(인용 1)', rh2.points[0]?.ranked?.k === 1 && rh2.posts[0]?.cells[0]?.cited === 1)
+
   // 글별 요약은 그림 범위(최근 장)가 아니라 성과 표와 같은 기간 — 그림을 1장으로 줄여도 요약은 그대로
   const narrow = await getRunHistory(fs1, tenant, [post], 1)
   ok('그림을 1주로 줄여도 글별 요약은 올린 뒤 전체', narrow.points.every((p) => p.weekOf === '2026-W46') && narrow.posts[0]!.measuredRuns === 5 && narrow.posts[0]!.citedRuns === 1)
@@ -289,9 +302,17 @@ try {
   ok('그림: UTC 16시 회차는 다음 한국 날 칸', Math.floor(model.dots[2]!.x) === dayOf('2026-10-28'))
   ok('그림: 엔진 일부만 든 회차 · 조건이 바뀐 자리에서 끊는다', JSON.stringify(model.segments) === JSON.stringify([[0, 1], [3, 4]]) && model.dots[2]!.isolated && model.breaks.length === 1)
   ok('그림: 조건이 섞인 주는 점수 평균을 내지 않는다', model.scoreLine[0]!.mixed && model.scoreLine[0]!.mean === null && model.scoreLine[0]!.bar === 1)
-  ok('그림: 같은 날 올린 두 글은 핀 하나', model.pins.length === 1 && model.pins[0]!.postings.length === 2 && model.rows.every((r) => r.pin === 1))
+  ok('그림: 같은 날 올린 두 글은 핀 하나 · 줄 이름은 1a · 1b', model.pins.length === 1 && model.pins[0]!.postings.length === 2 && model.rows.map((r) => r.label).join() === '1a,1b')
+  ok('그림: 평균에서 뺀 회차를 까닭별로 센다(엔진 빠진 회차 1)', model.scoreLine[0]!.isolated === 1 && model.scoreLine[0]!.legacy === 0)
   ok('그림: 엔진이 빠진 회차의 인용 없음은 근거 약함 표시', model.rows[1]!.marks[2] === 'weak' && model.rows[0]!.marks[3] === 'cited' && model.rows[0]!.marks[0] === 'grace')
   ok('그림: 이 브랜드의 같은 날 흔들림(옛 기록 제외)', model.sameDay?.date === '2026-10-27' && model.sameDay.scores.join() === '6,6')
+  // 같은 날 엔진이 빠진 회차는 흔들림 안내에 넣지 않는다(엔진 실패를 잡음으로 설명하지 않게)
+  const swing = buildRunTrend({
+    ...hist,
+    points: [point('s1', '2026-10-27T01:00:00Z', { score: 32 }), point('s2', '2026-10-27T02:00:00Z', { score: 0, missingEngines: ['gemini'] }), point('s3', '2026-10-27T03:00:00Z', { score: 30 })],
+    posts: [],
+  })
+  ok('그림: 같은 날 흔들림은 엔진이 빠진 회차를 뺀다', swing.sameDay?.scores.join() === '32,30')
 
   const React = await import('react')
   const { renderToStaticMarkup } = await import('react-dom/server')
@@ -305,6 +326,8 @@ try {
   ok('패널: 글 요약 — 첫 인용 확인 D+8(직전 D+6) · 인용된 회차 1/3 · 엔진 빠진 회차(Gemini)', html.includes('첫 인용 확인 D+8(직전 인용 없음 D+6)') && html.includes('인용된 회차 1/3') && html.includes('엔진 빠진 회차 1(Gemini)'))
   ok('패널: 글별 95% 범위는 싣지 않는다', !/인용된 회차 1\/3 \(95%/.test(html))
   ok('패널: 회차 표에 엔진 성공/예정', html.includes('Gemini 12/26'))
+  ok('패널: 같은 날 올린 글은 줄 이름으로 가른다(글1a · 글1b)', html.includes('글1a') && html.includes('글1b'))
+  ok('패널: 카테고리 무관 질문이라고 밝힌다', html.includes('카테고리 무관 질문'))
   ok('패널: 점수는 조건 섞임이면 평균 안 냄', html.includes('조건 섞임 — 평균 안 냄'))
 } finally {
   delete process.env.COLLECT_ENGINES

@@ -1,6 +1,6 @@
-import type { HistoryCell, HistoryWeek, PublishedPost } from './api'
+import type { HistoryCell, HistoryWeek, PublishedHistory, PublishedPost } from './api'
 import { ENGINE_LABEL } from './format'
-import { isoWeekOf, kstDate, timingOf } from './publishedUrl'
+import { isoWeekOf, kstDate, timingOf, type PostTiming } from './publishedUrl'
 
 /**
  * 올린 글 하나의 판단 — 올린 뒤 측정에서 얼마나 인용됐나(언급률 2번 P3).
@@ -222,6 +222,33 @@ export function distinctPostings<T>(items: T[], postOf: (t: T) => PublishedPost)
   })
 }
 
+/**
+ * 그 주 측정에 견준 올린 날. 회차가 여럿이면 칸(server/publishedHistory.ts foldCell)과 같은 규칙 — 회차마다 전후를 보고, 올린 뒤
+ * 회차가 하나라도 있으면 after, 없으면 측정하던(during) · 시각 없는 같은 주(ambiguous) · 올리기 전(before) 순이다.
+ */
+export function weekTimingOf(publishedOn: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>): PostTiming {
+  if (!w.runs?.length) return timingOf(publishedOn, w.window, w.weekOf)
+  const each = w.runs.map((r) => timingOf(publishedOn, r.window, w.weekOf))
+  return (['after', 'during', 'ambiguous', 'before'] as const).find((t) => each.includes(t)) ?? 'unknown'
+}
+
+/**
+ * 그 주 칸(회차 합침)에서 올린 뒤 인용된 기록 id — 정기진단 보고서의 개선제안 · 실행 항목의 올린 주소 알약이 마지막 저장 측정에는
+ * 없고 같은 주 다른 회차에서만 인용된 글을 밝히는 데 쓴다. 그 주가 이력에 없으면 null.
+ */
+export function citedPostIdsInWeek(history: Pick<PublishedHistory, 'weeks' | 'posts'>, weekOf: string): Set<string> | null {
+  const w = history.weeks.findIndex((x) => x.weekOf === weekOf)
+  if (w < 0) return null
+  return new Set(
+    history.posts
+      .filter((p) => {
+        const c = p.cells[w]
+        return Boolean(c && !c.afterRemoval && c.timing !== 'before' && (c.tally?.all.cited ?? 0) > 0)
+      })
+      .map((p) => p.post.id),
+  )
+}
+
 /** 그래프 칸 — 측정한 주인지(빈칸이면 미측정). */
 export interface ExecutionSlot {
   weekOf: string
@@ -252,6 +279,8 @@ export interface ExecutionMarks {
  * 주차 이름과 측정한 날의 주가 어긋나도(일요일 밤 측정 · CI 시간대) 서버 칸(timingOf)과 같은 말을 한다. 그 밖에는 올린 날이 든 주가
  * 측정됐으면 측정 전에 올린 글은 그 칸 왼쪽 틈, 측정 뒤에 올린 글은 오른쪽 틈 — 핀 오른쪽 막대 · 점이 「올린 뒤 측정」이다. 시각 없는
  * 같은 주는 칸 위 속 빈 핀, 측정하지 않은 주는 칸 위. 칸 목록에 없는 주(측정한 주만 늘어놓은 막대)는 그다음 칸 왼쪽 틈이다.
+ * 같은 주에 여러 번 잰 주는 칸(server/publishedHistory.ts foldCell)과 같은 규칙으로 정한다 — 올린 뒤 회차가 하나라도 있으면 올린
+ * 뒤, 없고 측정하던 회차가 있으면 전후 불명(weekTimingOf).
  *
  * 첫 칸보다 앞서 올린 글은 수만 센다. 다만 prev(첫 칸 바로 앞 측정)를 주면 그 측정 뒤에 올린 글은 첫 칸 왼쪽 틈에 둔다 — 「직전
  * 측정과 이 측정 사이」를 세는 표의 첫 행이 비지 않게.
@@ -263,12 +292,14 @@ export interface ExecutionMarks {
 export function executionMarks(
   posts: PublishedPost[],
   slots: ExecutionSlot[],
-  weeks: Pick<HistoryWeek, 'weekOf' | 'window'>[],
+  weeks: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>[],
   endWeek?: string,
-  prev?: Pick<HistoryWeek, 'weekOf' | 'window'> | null,
+  prev?: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | null,
 ): ExecutionMarks {
-  const windowOf = new Map(weeks.map((w) => [w.weekOf, w.window]))
-  const within = (d: string, w: { first: string; last: string } | null | undefined) => Boolean(w && w.first <= d && d <= w.last)
+  const weekOfSlot = new Map(weeks.map((w) => [w.weekOf, w]))
+  // 측정하던 때 올렸나 — 측정 시각이 있는 측정만(시각 없는 옛 기록은 같은 주여도 아래에서 칸 위 속 빈 핀).
+  const during = (d: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | undefined) =>
+    Boolean(w && (w.window || w.runs?.length) && weekTimingOf(d, w) === 'during')
   const byX = new Map<number, { hollow: boolean; posts: Posting<PublishedPost>[] }>()
   let outOfRange = 0
   let undated = 0
@@ -284,13 +315,13 @@ export function executionMarks(
     if (slots.length === 0) continue
     let x: number
     let hollow = false
-    const during = slots.findIndex((s) => s.measured && within(pd, windowOf.get(s.weekOf)))
-    if (during >= 0) {
-      x = during
+    const duringSlot = slots.findIndex((s) => s.measured && during(pd, weekOfSlot.get(s.weekOf)))
+    if (duringSlot >= 0) {
+      x = duringSlot
       hollow = true
     } else if (week < slots[0]!.weekOf) {
       // 첫 칸 앞 — 바로 앞 측정 뒤에 올렸으면 첫 칸 왼쪽 틈, 아니면(그 측정 전 · 전후 불명) 범위 밖.
-      if (!prev || within(pd, prev.window) || timingOf(pd, prev.window, prev.weekOf) !== 'before') {
+      if (!prev || weekTimingOf(pd, prev) !== 'before') {
         outOfRange += 1
         continue
       }
@@ -298,7 +329,7 @@ export function executionMarks(
     } else {
       const i = slots.findIndex((s) => s.weekOf === week)
       if (i >= 0 && slots[i]!.measured) {
-        const timing = timingOf(pd, windowOf.get(week) ?? null, week)
+        const timing = weekTimingOf(pd, weekOfSlot.get(week) ?? { weekOf: week, window: null })
         if (timing === 'after') x = i - 0.5
         else if (timing === 'before') x = i + 0.5
         else {

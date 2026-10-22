@@ -1,7 +1,7 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   generateContentBrief,
   generateContentDraft,
@@ -27,6 +27,8 @@ import { draftTitle } from '../lib/markdownFile'
 import { isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
+import { usePublishedHistory } from '../lib/usePublishedHistory'
+import { citedPostIdsInWeek } from '../lib/publishTracking'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
 type PlanPosts = ReturnType<typeof useGapActionPlan>['posts']
@@ -346,7 +348,7 @@ function ActionCard({
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
   /** 집행 원장 — null이면 이 환경(웹)에서는 주소를 적을 수 없다. */
-  posts: PlanPosts | null
+  posts: (PlanPosts & { citedInWeek?: ReadonlySet<string> | null }) | null
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
 }) {
@@ -416,6 +418,7 @@ function ActionCard({
           hits={action.publishedHits ?? []}
           removed={posts.list.filter((p) => p.targetActionId === action.id && p.removedAt)}
           weekOf={weekOf ?? ''}
+          citedInWeek={posts.citedInWeek}
           busy={posts.busy}
           onRecord={(url, publishedOn, chosen) =>
             posts.record({
@@ -578,7 +581,14 @@ export default function GapActions() {
   const [help, setHelp] = useState(false)
   const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError, canRecordPosts, posts } =
     useGapActionPlan(tenant?.tenantId ?? '')
-  const cardPosts = canRecordPosts ? posts : null
+  // 그 주 회차를 합친 올린 글 칸 — 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용된 글을 주소 알약이 밝힌다(성과 표와 같은 칸).
+  const postsRevision = useMemo(() => posts.list.map((p) => `${p.id}|${p.publishedOn ?? ''}|${p.removedAt ?? ''}`).join(','), [posts.list])
+  const weekHistory = usePublishedHistory(canRecordPosts ? (tenant?.tenantId ?? '') : '', 12, postsRevision)
+  const citedInWeek = useMemo(
+    () => (weekHistory.history && weekOf ? citedPostIdsInWeek(weekHistory.history, weekOf) : null),
+    [weekHistory.history, weekOf],
+  )
+  const cardPosts = canRecordPosts ? { ...posts, citedInWeek } : null
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
   useEffect(() => {
@@ -880,6 +890,7 @@ export default function GapActions() {
                           hits={row.target.publishedHits ?? []}
                           removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt)}
                           weekOf={weekOf}
+                          citedInWeek={citedInWeek}
                           busy={posts.busy}
                           // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
                           onRecord={(url, publishedOn, chosen) =>

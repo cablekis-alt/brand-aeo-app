@@ -110,8 +110,11 @@ const citedText = (e: Execution) => (e.citedOtherRun ? '올린 글이 이번 주
 /** 블로그 플랫폼 — 「충족」이 없는 지분 자리라 한 편 올렸다고 끝나지 않는다(더 올리면 지분이 오른다). */
 const isPlatform = (a: GapAction) => a.id.startsWith('listing:platform:')
 
-/** 글을 모두 내렸다 — 다음 측정이 인용할 글이 없으니 다시 권한다. */
-const allTakenDown = (e: Execution) => !e.live && !e.cited && Boolean(e.lastDown)
+/**
+ * 글을 모두 내렸다 — 다음 측정이 인용할 글이 없으니 다시 권한다. 내리기 전 같은 주 다른 회차에서 인용됐어도(citedOtherRun) 다시
+ * 권한다 — 이미 내린 글은 다음 측정이 인용할 수 없다.
+ */
+const allTakenDown = (e: Execution) => !e.live && (!e.cited || e.citedOtherRun) && Boolean(e.lastDown)
 
 /** 「집행함 10/19 · 인용 대기」 — 다시 권하지 않는 항목의 꼬리표. */
 function executedNote(e: Execution): string {

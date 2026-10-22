@@ -249,14 +249,15 @@ export default function Performance() {
               )
             }
             const h = runs.history
-            const recorded = h?.points.filter((p) => p.kind === 'run' && !p.preserved) ?? []
+            // 회차 기록(옮겨 둔 옛 측정 포함). 회차 기록 전 그 주 파일(week-file)만 있으면 그릴 것이 없다.
+            const recorded = h?.points.filter((p) => p.kind === 'run') ?? []
             if (!h || recorded.length === 0) return null
             return (
               <section id="runs">
                 <h3>측정 회차별 보기</h3>
                 {recorded.length === 1 ? (
                   <p className="hint" style={{ marginTop: 0 }}>
-                    회차 기록 1회({recorded[0]!.at ? kstStamp(recorded[0]!.at) : recorded[0]!.weekOf}) — 두 번째 측정부터 회차별로 봅니다.
+                    회차 기록 1회({recorded[0]!.at ? kstStamp(recorded[0]!.at) : recorded[0]!.weekOf}) — 다음 측정부터 회차별로 봅니다.
                   </p>
                 ) : (
                   <RunTrendPanel history={h} selectedWeek={card.weekOf} onSelectWeek={setSelectedWeek} />

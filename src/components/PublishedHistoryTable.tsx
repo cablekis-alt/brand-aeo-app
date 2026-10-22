@@ -66,7 +66,11 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
         : c.timing === 'unknown'
           ? '올린 날을 모르는 옛 기록입니다 — 판단에는 넣지 않습니다'
           : ''
-  const runTitle = c.runs ? `그 주 회차 ${c.runs.measured + c.runs.unsure}번 — 한 회차라도 인용되면 그 주는 인용으로 셉니다` : ''
+  // 올린 뒤로 센 회차만 말한다 — 그 주 전체 회차 수는 주차 머리글(「·3회」)에 있다. 올린 날을 모르는 글은 붙이지 않는다.
+  const runTitle =
+    c.runs && c.runs.measured + c.runs.unsure > 0
+      ? `올린 뒤 회차 ${c.runs.measured}번${c.runs.unsure ? ` · 전후 불명 ${c.runs.unsure}번` : ''} — 한 회차라도 인용되면 그 주는 인용으로 셉니다`
+      : ''
   return { main, sub, cls: c.tally ? '' : 'muted', title: [title, runTitle].filter(Boolean).join('\n') }
 }
 
