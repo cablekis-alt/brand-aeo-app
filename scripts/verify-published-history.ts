@@ -195,6 +195,35 @@ ok(
 );
 ok('아직 올린 뒤 측정이 없는 글은 측정 대기', s([cell('before', 0), null, cell('during', 0), cell('before', 0)]).tier === 'waiting');
 
+// 성과 표 — 같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 줄 · 채널 줄)에 적은 기록은 한 행으로 묶고 올린 곳 칩을 함께 보인다
+// (2026-10-21 티스토리 /1이 두 행으로 보였다). 올린 날이 다르면(내렸다 다시 올림) 따로 둔다.
+{
+  const React = await import('react');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  // tsx는 이 저장소에서 JSX를 고전 방식(React.createElement)으로 바꾼다 — 그림을 그리기 전에 전역 React를 둔다(verify-execution-marks와 같다).
+  Object.assign(globalThis, { React });
+  const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable');
+  const row = (id: string, targetActionId: string, via: PublishedPost['via'], publishedOn: string, url = 'https://fake.tistory.com/1') => ({
+    post: { id, url, key: url.replace('https://', ''), publishedOn, publishedOnSource: 'user', recordedAt: `${publishedOn}T01:00:00Z`, articleId: 'content:a', targetActionId, via, articleTitle: '가상 글' } as PublishedPost,
+    cells: [null],
+  });
+  const html = renderToStaticMarkup(
+    React.createElement(PublishedHistoryTable, {
+      history: {
+        weeks: [{ weekOf: '2026-W43', analysed: true, window: null, engines: [], bankVersion: null, responses: { all: 0, unnamed: null, named: null, unknown: 0 }, changes: [] }],
+        posts: [
+          row('p-own', 'content:a', 'own', '2026-10-21'),
+          row('p-channel', 'listing:platform:tistory.com', 'channel', '2026-10-21'),
+          row('p-other', 'listing:platform:blog.naver.com', 'channel', '2026-10-21', 'https://blog.naver.com/fakeblog/2233'),
+        ],
+      },
+    }),
+  );
+  const rows = html.match(/<tr>/g)?.length ?? 0;
+  ok('성과 표 — 같은 주소 · 같은 날 두 줄은 한 행(머리 1 + 글 2)', rows === 3);
+  ok('성과 표 — 묶인 행에 올린 곳 칩 둘', html.includes('tistory.com') && html.includes('자사 블로그 · 사이트') && (html.match(/st st-info/g)?.length ?? 0) === 2);
+}
+
 let failed = 0;
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`);
