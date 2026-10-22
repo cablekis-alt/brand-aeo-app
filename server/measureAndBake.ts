@@ -96,6 +96,11 @@ interface MeasureOptions {
    * 「다음 측정 대기」가 바뀐 경쟁사를 재지도 않았는데 사라진다. 경쟁사 카드와 도구가 다르면 화면이 측정 전에 알린다(measurePreview).
    */
   selfOnly?: boolean;
+  /**
+   * 리포트(report.md)를 기다리지 않고 측정을 끝낸다(pipeline.ts deferReport) — 측정 화면에서 시작한 측정. 함께 재는 경쟁사도
+   * 같다. 리포트 저장이 실패해도 측정은 성공으로 남는다(점수 · 카드는 이미 저장됐다).
+   */
+  backgroundReport?: boolean;
 }
 
 /**
@@ -272,6 +277,7 @@ function noteMeasureFailure(tenant: TenantConfig, err: unknown): void {
 async function measureSelf(
   tenant: TenantConfig,
   store: FileResultStore,
+  backgroundReport: boolean,
 ): Promise<{ weekOf: string; aeoScore: number; enginesUsed?: string[] }> {
   await persistTenantForRuntime(tenant);
 
@@ -282,7 +288,7 @@ async function measureSelf(
   setActiveMeasure({ tenantId: tenant.tenantId, brandName: tenant.brandName, startedAt: new Date().toISOString() });
   let pipeline;
   try {
-    pipeline = await runWeeklyPipeline(tenant, store);
+    pipeline = await runWeeklyPipeline(tenant, store, undefined, { deferReport: backgroundReport });
   } finally {
     clearActiveMeasure(tenant.tenantId);
   }
@@ -436,7 +442,7 @@ async function measureAndBakeRun(
           async (target): Promise<{ tenant: TenantConfig; weekOf: string } | null> => {
             try {
               console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
-              const result = await measureAndBake(target, store, { deferBake: true, inCohortRun: true });
+              const result = await measureAndBake(target, store, { deferBake: true, inCohortRun: true, backgroundReport: options.backgroundReport });
               return { tenant: target, weekOf: result.weekOf };
             } catch (err) {
               console.error(
@@ -450,7 +456,7 @@ async function measureAndBakeRun(
 
   // 본 브랜드가 실패해도 코호트 측정이 끝날 때까지 기다린다 — 여기서 바로 throw하면 진행 중인
   // 경쟁사 측정이 주인 없이 남아 나중에 파일을 쓴다(고아 작업).
-  const selfTask = measureSelf(tenant, store).then(
+  const selfTask = measureSelf(tenant, store, options.backgroundReport === true).then(
     (value) => ({ ok: true as const, value }),
     (error: unknown) => {
       // 경쟁사 측정이 끝날 때까지(몇 분) 기다리지 않고 바로 「실패」 줄을 남긴다 — 그 사이 진행 줄은 이미 사라졌다.

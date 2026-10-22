@@ -231,8 +231,13 @@ app.post('/api/tenants/:tenantId/measure', async (req, res) => {
       return;
     }
     // reuseCohort=true면 이번 주 카드가 이미 있는(같은 엔진으로 잰) 경쟁사는 다시 재지 않는다. selfOnly=true면 이 브랜드만 잰다.
+    // 화면은 리포트(report.md)를 기다리지 않는다 — 점수 · 카드가 저장되면 끝낸다(measureAndBake backgroundReport).
     const body = (req.body ?? {}) as { reuseCohort?: unknown; selfOnly?: unknown };
-    const result = await measureAndBake(tenant, store, { reuseCohort: body.reuseCohort === true, selfOnly: body.selfOnly === true });
+    const result = await measureAndBake(tenant, store, {
+      reuseCohort: body.reuseCohort === true,
+      selfOnly: body.selfOnly === true,
+      backgroundReport: true,
+    });
     res.json(result);
   } catch (err) {
     // 사용자가 멈춘 측정은 실패가 아니다 — 화면이 "중단했습니다"로 알리게 409로 구분한다.

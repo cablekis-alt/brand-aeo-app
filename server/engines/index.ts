@@ -34,7 +34,7 @@ const engineClients = new Map<Engine, EngineClient>();
  * 저장된 지연값은 여전히 "호출 자체가 걸린 시간"이다(대기까지 섞으면 엔진 비교가 망가진다).
  */
 function limited(client: EngineClient, pool: LlmPool): EngineClient {
-  return { call: (prompt) => withLlmSlot(pool, () => client.call(prompt)) };
+  return { call: (prompt, options) => withLlmSlot(pool, () => client.call(prompt), options?.onSend) };
 }
 
 /**

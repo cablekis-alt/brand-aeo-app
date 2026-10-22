@@ -25,7 +25,7 @@ export async function mapWithConcurrency<T, R>(
 /**
  * 동시에 진행되는 LLM 호출 수 상한 — **수집과 판정을 따로** 잡는다.
  *
- * 파이프라인 안의 동시성(수집 24 · 분석 8 × 판정 최대 4)은 "한 번에 한 브랜드"를 전제한
+ * 파이프라인 안의 동시성(수집은 쓰는 엔진들의 슬롯 합 — pipeline.ts collectionConcurrency · 분석 24 × 판정 최대 4)은 "한 번에 한 브랜드"를 전제한
  * 값이라, 코호트를 병렬로 측정하면 곱해져 같은 모델 쿼터에 몰린다. 그래서 총량 상한은
  * 호출 지점마다 두지 않고 이 파일 한 곳에서 잡는다.
  *
@@ -179,12 +179,17 @@ function throwIfExhausted(pool: LlmPool): void {
   if (hit && Date.now() - hit.at < EXHAUSTED_TTL_MS) throw hit.err;
 }
 
-export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>): Promise<T> {
+/**
+ * 슬롯을 잡고(acquire) 분당 간격을 지킨(pace) 뒤 fn을 부른다. onSend는 fn 바로 앞 — 실제로 보내는 순간에 부른다
+ * (진행 표시가 「응답을 몇 초째 기다리는가」를 센다. 슬롯 · 간격 대기는 넣지 않는다).
+ */
+export async function withLlmSlot<T>(pool: LlmPool, fn: () => Promise<T>, onSend?: () => void): Promise<T> {
   await acquire(pool);
   try {
     throwIfExhausted(pool);
     await pace(pool);
     throwIfExhausted(pool);
+    onSend?.();
     try {
       return await fn();
     } catch (err) {

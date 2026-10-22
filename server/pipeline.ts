@@ -17,9 +17,9 @@ import {
 } from '../src/prompts/index.js';
 import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
-import { collectLimit, mapWithConcurrency } from './concurrency.js';
+import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
-import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure } from './measureTracker.js';
+import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure, type EngineProgress } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -57,11 +57,12 @@ import type {
 // 수집 슬롯이 엔진마다 따로가 된 뒤(2026-10-13, concurrency.ts)로는 한 브랜드가 띄우는 수집 호출도 쓰는 엔진들의
 // 슬롯 합만큼 띄운다 — 24로 두면 브랜드 하나만 잴 때 엔진마다 8개씩만 돌아 OpenAI·Gemini 슬롯이 놀았다.
 // COLLECTION_CONCURRENCY를 주면 그 값을 쓴다.
-// 판정은 검색이 없어 더 싸고 예산도 따로다(48). 항목당 판정 호출이 평균 2.6개라
-// 16 × 2.6 ≈ 42로 그 예산을 채운다 — 8이면 브랜드 하나만 돌 때 21개밖에 못 띄워
-// 파이프가 반만 찬다(실측: 단독 브랜드 2.75호출/초 vs 코호트 병렬 5.2호출/초).
+// 판정은 검색이 없어 더 싸고 슬롯도 따로다(concurrency.ts judge 144). 항목당 판정 호출이 최대 4개(언급 · 인용 · 순위 ·
+// 사실 — 인용 0건이거나 factGraph가 없으면 빠진다)라 24 × 4 = 96까지 띄운다. 16이면 브랜드 하나만 잴 때 분석이
+// 슬롯을 절반도 못 채워, 인용 45개짜리 답 하나가 줄 끝에서 17초를 기다렸다가 혼자 23초를 더 돌았다(2026-W43 gunsan-national,
+// 분석 41초 → 24 · 인용 많은 것 먼저로 재생하면 25초).
 const COLLECTION_CONCURRENCY_OVERRIDE = Number(process.env.COLLECTION_CONCURRENCY) || 0;
-const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 16);
+const ANALYSIS_CONCURRENCY = Math.max(1, Number(process.env.ANALYSIS_CONCURRENCY) || 24);
 
 function toBrandContext(tenant: TenantConfig): BrandContext {
   return {
@@ -262,10 +263,29 @@ async function collectRawCalls(
   const finishedByEngine = new Map<string, number>();
   const finish = (engine: string) => finishedByEngine.set(engine, (finishedByEngine.get(engine) ?? 0) + 1);
   const failedSoFar = () => [...failuresByEngine.values()].reduce((n, v) => n + v, 0);
-  // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다. 엔진별 건수도 함께 보낸다(measureTracker.ts engines).
+  // 진행 보고 — 끝난 건수와 엔진별 진행(measureTracker.ts EngineProgress). 화면이 남은 시간을 어림하려면 「보내고 아직 답이 없는
+  // 호출이 몇 초째 기다리는가」와 「끝난 호출이 얼마나 걸렸나」가 필요하다 — 끝자락에는 속도가 아니라 응답 시간이 남은 시간을 정한다.
   let collected = 0;
-  const engineProgress = () =>
-    Object.fromEntries([...jobsByEngine].map(([engine, total]) => [engine, { done: finishedByEngine.get(engine) ?? 0, total }]));
+  const inflight = new Map<number, { engine: string; sentAt: number }>();
+  const latencies = new Map<string, number[]>();
+  const noteLatency = (engine: string, latencyMs: number | undefined) => {
+    if (!latencyMs || latencyMs <= 0) return;
+    latencies.set(engine, [...(latencies.get(engine) ?? []), latencyMs]);
+  };
+  const engineProgress = (): Record<string, EngineProgress> =>
+    Object.fromEntries(
+      [...jobsByEngine].map(([engine, total]) => {
+        const progress: EngineProgress = {
+          done: finishedByEngine.get(engine) ?? 0,
+          total,
+          inflightSentAt: [...inflight.values()].filter((c) => c.engine === engine).map((c) => c.sentAt).sort((a, b) => a - b),
+          latencyMs: latencies.get(engine) ?? [],
+          slots: collectLimit(engine as Engine),
+          rpm: collectRpm(engine as Engine),
+        };
+        return [engine, progress];
+      }),
+    );
   updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length, engines: engineProgress() });
   const collectionConcurrency = Math.max(
     1,
@@ -274,7 +294,7 @@ async function collectRawCalls(
   const settled = await mapWithConcurrency(
     jobs,
     collectionConcurrency,
-    async (job): Promise<RawCallRecord | null> => {
+    async (job, index): Promise<RawCallRecord | null> => {
       // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
       throwIfMeasureCancelled(tenant.tenantId);
       if (outage.isDown(job.engine) || outage.stopped) {
@@ -288,9 +308,15 @@ async function collectRawCalls(
       const prompt = buildEngineCallPrompt(job.engine, job.question.text, tenant.questionLanguage);
       // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
       const startedAt = new Date().toISOString();
+      const onSend = () => {
+        inflight.set(index, { engine: job.engine, sentAt: Date.now() });
+        updateActiveMeasure(tenant.tenantId, { engines: engineProgress() });
+      };
       try {
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
-        const result = await client.call(prompt);
+        const result = await client.call(prompt, { onSend });
+        inflight.delete(index);
+        noteLatency(job.engine, result.latencyMs);
         finish(job.engine);
         updateActiveMeasure(tenant.tenantId, { done: ++collected, engines: engineProgress() });
         return {
@@ -313,6 +339,7 @@ async function collectRawCalls(
         };
       } catch (err) {
         // 중단은 실패가 아니다 — 건너뛰고 계속하면 멈추라는 요청이 무시된다.
+        inflight.delete(index);
         if (err instanceof MeasureCancelledError) throw err;
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
         finish(job.engine);
@@ -539,6 +566,15 @@ async function analyzeRawCall(
   };
 }
 
+/**
+ * 판정을 보낼 순서(원문 레코드의 자리 번호) — 인용이 많은 답부터. 인용 판정이 분석 시간을 정한다(2026-W43 gunsan-national,
+ * 인용 수와 건별 시간의 상관 0.87). 저장 순서대로 보내면 무거운 답이 줄 끝에서 늦게 시작해 혼자 꼬리를 만든다.
+ * 같은 인용 수는 원래 순서 그대로다(안정 정렬). 내보내는 이유는 시험 때문이다(scripts/verify-measure-tail.ts).
+ */
+export function analysisOrder(rawCalls: RawCallRecord[]): number[] {
+  return rawCalls.map((_, index) => index).sort((a, b) => rawCalls[b].citations.length - rawCalls[a].citations.length);
+}
+
 /** B8 — 결정적 집계. 지표 계산은 server/aggregate.ts 한 곳에만 두고 여기서는 카드를 조립한다. */
 export function aggregateScorecard(
   tenant: TenantConfig,
@@ -603,8 +639,55 @@ export function aggregateScorecard(
 
 export interface PipelineRunResult {
   scorecard: WeeklyScorecard;
+  /** deferReport면 빈 문자열이다 — 리포트는 pendingReport가 끝나야 생긴다. */
   reportMarkdown: string;
   enginesUsed: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 크레딧 소진 등으로 실패한 엔진은 빠진다.
+  /** deferReport일 때 뒤에서 쓰는 리포트. 실패해도 reject하지 않는다(로그만 남긴다). */
+  pendingReport?: Promise<void>;
+}
+
+export interface PipelineOptions {
+  /**
+   * 리포트(report.md)를 기다리지 않는다 — 스코어카드를 저장하면 끝내고 리포트는 뒤에서 쓴다.
+   *
+   * 리포트는 판정 엔진을 한 번 더 불러 16초쯤 걸리는데(2026-W43 gunsan-national 262초 중 16초) 점수 · 카드 · 순위의 입력이
+   * 아니고, 앱 · CI 어디서도 report.md를 읽지 않는다. 그래도 측정 화면은 그동안 「리포트」 단계에 멈춰 있었다.
+   * 화면에서 시작한 측정만 켠다(measureAndBake backgroundReport) — /pipeline/run은 응답에 reportMarkdown을 싣고,
+   * 스크립트는 리포트 실패를 측정 실패로 본다. 앱을 바로 끄면 그 주 report.md는 앞선 측정의 것이 남는다.
+   */
+  deferReport?: boolean;
+}
+
+/*
+ * 브랜드 · 주차마다 마지막으로 카드를 저장한 측정의 번호. 뒤에서 쓰는 리포트가 끝나기 전에 같은 주를 다시 재면, 늦게 끝난
+ * 옛 리포트가 새 카드의 리포트를 덮는다 — 리포트를 쓰기 전에 아직 자기 카드가 마지막인지 본다.
+ */
+const reportGeneration = new Map<string, number>();
+let reportGenerationSeq = 0;
+const pendingReports = new Set<Promise<void>>();
+
+/** 뒤에서 쓰는 리포트가 다 끝나기를 기다린다 — 시험 스크립트가 임시 폴더를 지우기 전에 부른다. */
+export async function settlePendingReports(): Promise<void> {
+  while (pendingReports.size > 0) await Promise.all([...pendingReports]);
+}
+
+async function writeWeeklyReport(
+  tenant: TenantConfig,
+  store: ResultStore,
+  weekOf: string,
+  scorecard: WeeklyScorecard,
+  analyses: QuestionRepeatAnalysis[],
+  generation: number,
+): Promise<string> {
+  const eeat = computeEeatAnalysis(analyses);
+  const citationSources = analyzeCitationSources(analyses);
+  const reportResult = await getJudgeClient().call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
+  if (reportGeneration.get(`${tenant.tenantId}|${weekOf}`) !== generation) {
+    console.warn(`[B8] ${tenant.tenantId} ${weekOf} 리포트를 쓰는 사이 같은 주를 다시 재 — 옛 측정의 리포트는 저장하지 않습니다`);
+    return reportResult.text;
+  }
+  await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
+  return reportResult.text;
 }
 
 /** 파이프라인 진입점. 스케줄러(B2)가 테넌트별로 주 1회 이 함수를 호출한다. */
@@ -612,6 +695,7 @@ export async function runWeeklyPipeline(
   tenant: TenantConfig,
   store: ResultStore,
   now: Date = new Date(),
+  options: PipelineOptions = {},
 ): Promise<PipelineRunResult> {
   const weekOf = getIsoWeekString(now);
 
@@ -640,10 +724,16 @@ export async function runWeeklyPipeline(
   const rankingEntities = cohortRankingEntities(tenant, await loadRuntimeTenants());
   let analyzed = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '분석', done: 0, total: rawCalls.length });
-  const analyses = await mapWithConcurrency(rawCalls, ANALYSIS_CONCURRENCY, async (call) => {
-    const out = await analyzeRawCall(tenant, call, rankingEntities);
+  // 결과는 원래 자리에 되돌려 저장 순서(question-analyses.json)를 지금과 같게 둔다 — 건끼리 의존하지 않는다(analyzeRawCall).
+  const order = analysisOrder(rawCalls);
+  const judged = await mapWithConcurrency(order, ANALYSIS_CONCURRENCY, async (index) => {
+    const out = await analyzeRawCall(tenant, rawCalls[index], rankingEntities);
     updateActiveMeasure(tenant.tenantId, { done: ++analyzed });
     return out;
+  });
+  const analyses: QuestionRepeatAnalysis[] = new Array(rawCalls.length);
+  order.forEach((index, k) => {
+    analyses[index] = judged[k];
   });
   await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
 
@@ -681,14 +771,22 @@ export async function runWeeklyPipeline(
     judgeModel,
   );
   await store.saveScorecard(scorecard);
+  const generation = ++reportGenerationSeq;
+  reportGeneration.set(`${tenant.tenantId}|${weekOf}`, generation);
 
-  const eeat = computeEeatAnalysis(analyses);
-  const citationSources = analyzeCitationSources(analyses);
+  if (options.deferReport) {
+    const pendingReport = writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation).then(
+      () => undefined,
+      (err: unknown) => {
+        console.error(`[B8] ${tenant.tenantId} ${weekOf} 리포트 저장 실패(측정 결과는 저장됨): ${err instanceof Error ? err.message : err}`);
+      },
+    );
+    pendingReports.add(pendingReport);
+    void pendingReport.finally(() => pendingReports.delete(pendingReport));
+    return { scorecard, reportMarkdown: '', enginesUsed, pendingReport };
+  }
 
-  const judge = getJudgeClient();
   updateActiveMeasure(tenant.tenantId, { stage: '리포트', done: 0, total: 0 });
-  const reportResult = await judge.call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
-  await store.saveReport(tenant.tenantId, weekOf, reportResult.text);
-
-  return { scorecard, reportMarkdown: reportResult.text, enginesUsed };
+  const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation);
+  return { scorecard, reportMarkdown, enginesUsed };
 }

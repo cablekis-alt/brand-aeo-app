@@ -1,6 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cancelLocalMeasure } from '../lib/api'
-import { overallRemainingMs } from '../lib/measureEstimate'
+import { ENGINE_LABEL } from '../lib/format'
+import {
+  createEtaTracker,
+  formatDuration,
+  tickEta,
+  waitingNote,
+  type EngineProgress,
+  type EtaTracker,
+  type EtaView,
+} from '../lib/measureEstimate'
 
 /**
  * 진행 중인 측정을 보여 주는 공용 부품.
@@ -16,6 +25,8 @@ export interface ActiveMeasure {
   brandName: string
   startedAt: string
   stage?: string
+  /** 지금 단계에 들어간 시각(epoch ms) — 남은 시간 재료와 같은 릴리스부터. */
+  stageStartedAt?: number
   done?: number
   total?: number
   /** 중단을 요청받아 멈추는 중(진행 중인 호출이 끝나기를 기다린다). v0.2.50부터. */
@@ -24,8 +35,8 @@ export interface ActiveMeasure {
   engineIssues?: string[]
   /** 남은 엔진만으로는 수집 하한에 못 미쳐 이번 측정은 멈춘다. */
   collectionWillFail?: boolean
-  /** 수집 단계의 엔진별 건수(server/measureTracker.ts). v0.4.21부터라 옛 서버에는 없다. */
-  engines?: Record<string, { done: number; total: number }>
+  /** 수집 단계의 엔진별 진행(server/measureTracker.ts). done · total은 v0.4.21부터, 보낸 시각 · 응답 시간 · 슬롯은 그다음 릴리스부터. */
+  engines?: Record<string, EngineProgress>
 }
 
 /** 진행 중인 줄들에서 끊긴 엔진을 모은다 — 같은 엔진은 브랜드마다 따로 끊기므로 한 번만 보인다. */
@@ -34,25 +45,31 @@ function activeEngineIssues(active: ActiveMeasure[]): string[] {
 }
 
 /**
- * 1초마다 현재 시각. 진행 폴링은 5초 간격이라 그 주기로 경과를 그리면 시계가 멈춘 것처럼 보인다.
- * 경과는 startedAt만 있으면 화면에서 셀 수 있으므로 서버를 더 부르지 않는다.
+ * 1초마다 현재 시각과 남은 시간 표시. 진행 폴링은 2~5초 간격이라 그 주기로 경과를 그리면 시계가 멈춘 것처럼 보인다.
+ *
+ * 남은 시간은 새 폴링 응답(active 배열이 바뀐 것)을 받은 뒤 첫 시계에서만 다시 어림하고, 그 밖의 시계에서는 카운트다운만 한다
+ * (lib/measureEstimate.ts tickEta). 매 렌더 다시 어림하면 서버 상태는 그대로인데 경과만 늘어 숫자가 거꾸로 올라갔다(22 → 23 → 24초).
+ * 경과와 남은 시간은 같은 시계로 바꿔 한 화면에서 같은 순간에 움직이게 한다. 측정이 끝나 active가 비면 어림 상태를 버린다.
  */
-function useNow(): number {
-  const [now, setNow] = useState(() => Date.now())
+function useMeasureClock(active: ActiveMeasure[]): { now: number; eta: EtaView } {
+  const [clock, setClock] = useState<{ now: number; eta: EtaView }>(() => ({ now: Date.now(), eta: { kind: 'none' } }))
+  const trackerRef = useRef<EtaTracker>(createEtaTracker())
+  const freshRef = useRef<ActiveMeasure[] | null>(active)
   useEffect(() => {
-    const t = window.setInterval(() => setNow(Date.now()), 1000)
+    freshRef.current = active
+    if (active.length === 0) trackerRef.current = createEtaTracker()
+  }, [active])
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      const nowMs = Date.now()
+      const r = tickEta(trackerRef.current, freshRef.current, nowMs)
+      trackerRef.current = r.tracker
+      freshRef.current = null
+      setClock({ now: nowMs, eta: r.view })
+    }, 1000)
     return () => window.clearInterval(t)
   }, [])
-  return now
-}
-
-/** "3분 12초" · "45초". 시간 단위는 쓰지 않는다 — 측정은 분으로 세는 편이 읽기 쉽다. */
-function formatDuration(ms: number): string {
-  const sec = Math.max(0, Math.round(ms / 1000))
-  if (sec < 60) return `${sec}초`
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return s ? `${m}분 ${s}초` : `${m}분`
+  return clock
 }
 
 /**
@@ -112,27 +129,36 @@ export function MeasureCancelButton({ active }: { active: ActiveMeasure[] }) {
 
 /** 브랜드마다 한 줄. 코호트를 함께 재면 여러 줄이 선다. */
 export default function MeasureProgress({ active }: { active: ActiveMeasure[] }) {
-  const now = useNow()
+  const { now, eta } = useMeasureClock(active)
   if (active.length === 0) return null
 
   // 여러 줄이 거의 동시에 시작하므로(코호트를 함께 재면 startedAt이 밀리초 차이다) 경과는
   // 줄마다 반복하지 않고 가장 먼저 시작한 시각 기준으로 위에 한 번만 낸다.
   const starts = active.map((a) => Date.parse(a.startedAt)).filter((t) => Number.isFinite(t))
   const elapsed = starts.length ? now - Math.min(...starts) : null
-  const left = elapsed === null ? null : overallRemainingMs(active, elapsed)
-  const issues = activeEngineIssues(active)
+  // 중단 중이거나 곧 멈출 측정은 남은 시간이 뜻이 없다(남은 호출을 보내지 않는다).
   const stopping = active.filter((a) => a.collectionWillFail).length
+  const showEta = !active.some((a) => a.cancelling) && stopping === 0
+  const waiting = showEta ? waitingNote(active, now, ENGINE_LABEL) : null
+  const issues = activeEngineIssues(active)
 
   return (
     <>
       {elapsed !== null && (
         <p className="mp-elapsed">
           경과 <b>{formatDuration(elapsed)}</b>
-          {left !== null && (
+          {showEta && eta.kind === 'number' && (
             <>
-              <span className="muted"> · </span>남은 시간 약 <b>{formatDuration(left)}</b>
+              <span className="muted"> · </span>남은 시간 약 <b>{formatDuration(eta.ms)}</b>
             </>
           )}
+          {showEta && eta.kind === 'text' && (
+            <>
+              <span className="muted"> · </span>
+              <b>{eta.text}</b>
+            </>
+          )}
+          {waiting && <span className="muted"> · {waiting}</span>}
           <span className="muted"> · {active.length}곳 측정 중</span>
         </p>
       )}

@@ -27,6 +27,11 @@ export interface EngineCallResult {
   latencyMs?: number;
 }
 
+export interface EngineCallOptions {
+  /** 슬롯 · 분당 간격을 지나 실제로 보내기 직전에 부른다 — 측정 진행 표시(pipeline.ts collectRawCalls). */
+  onSend?: () => void;
+}
+
 export interface EngineClient {
-  call(prompt: PromptMessage): Promise<EngineCallResult>;
+  call(prompt: PromptMessage, options?: EngineCallOptions): Promise<EngineCallResult>;
 }
