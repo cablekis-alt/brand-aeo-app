@@ -13,6 +13,8 @@ export interface LocalMeasureRun {
   durationSec: number;
   at: string; // ISO 완료 시각
   engines?: string[]; // 실제로 수집에 성공한 엔진(예: ['gemini'] 또는 ['gemini','openai'])
+  /** 이 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason) — aeoScore는 이 회차 점수이고 그 주 카드는 앞의 것이다. */
+  weekCardKept?: string;
 }
 
 const FILE = stateFilePath('measure-runs.json');

@@ -23,6 +23,39 @@ export interface QuestionBank {
   regeneratedFrom?: { version: string; by: 'competitor-edit'; base: string };
 }
 
+/**
+ * 측정 1회의 기록 요약(data/<tenant>/<weekOf>/runs/<runId>/run.json). 주차 카드는 그 주 마지막 측정 하나만 남지만(saveScorecard),
+ * 회차 기록은 같은 주에 여러 번 재도 회차마다 남는다 — 집중 관찰 중 「올린 글이 며칠째 처음 인용됐나」를 잃지 않게.
+ */
+export interface RunMeta {
+  runId: string;
+  tenantId: string;
+  weekOf: string;
+  startedAt: string;
+  finishedAt: string;
+  /** 측정 화면의 「이 브랜드만 측정」. */
+  selfOnly: boolean;
+  /** 다른 브랜드의 측정 안에서 경쟁사로 잰 회차. */
+  inCohortRun: boolean;
+  /** 이 회차가 그 주 카드가 됐는가. kept면 앞서 잰 그 주 카드를 그대로 두었다(pipeline.ts weekCardKeepReason). */
+  weekCard: 'saved' | 'kept';
+  weekCardKeptReason?: string;
+  /** 엔진별 예정 · 성공 호출 수 — 엔진 구성이 같아도 일부만 들어온 회차(도중에 지출 한도)를 가린다. */
+  engines: Record<string, { planned: number; succeeded: number }>;
+  /** 이번 측정에서 끊긴 엔진(「Gemini 지출 한도 초과」 등, engineExhaustion.ts). */
+  engineIssues: string[];
+  /**
+   * 판정 맥락 지문 — 별칭 · 소유 도메인 · 경쟁사 · 순위 후보 목록. 질문지 · 엔진이 같아도 이것이 바뀌면 언급 · 순위 판정이 달라진다
+   * (카드의 조건 비교 comparability.ts는 보지 않는 값).
+   */
+  contextFingerprint: string;
+  /** 수집 사용량 — 회차 기록에는 원문(raw-calls)을 남기지 않아 여기 요약한다. 판정 사용량은 question-analyses.json의 judgeUsage. */
+  collectUsage: Record<
+    string,
+    { calls: number; tokens: number; inputTokens: number; outputTokens: number; billedCost: number | null; searchCalls: number }
+  >;
+}
+
 export interface ResultStore {
   getQuestionBank(tenantId: string, version: string): Promise<QuestionBank | null>;
   saveQuestionBank(tenantId: string, bank: QuestionBank): Promise<void>;
@@ -36,6 +69,12 @@ export interface ResultStore {
   getQuestionAnalyses(tenantId: string, weekOf: string): Promise<QuestionRepeatAnalysis[]>;
   saveScorecard(scorecard: WeeklyScorecard): Promise<void>;
   saveReport(tenantId: string, weekOf: string, reportMarkdown: string): Promise<void>;
+  /** 측정 1회 기록을 남긴다 — 같은 회차 번호가 이미 있으면 뒤에 번호를 붙인다. 실제로 쓴 회차 번호를 돌려준다. */
+  saveRunSnapshot(
+    tenantId: string,
+    weekOf: string,
+    snapshot: { scorecard: WeeklyScorecard; analyses: QuestionRepeatAnalysis[]; meta: RunMeta },
+  ): Promise<string>;
   getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]>;
   /**
    * 코호트(업종 · 지역 · 주차)의 카드 — 지운 브랜드와 코호트 제외 목록(cohortExclusionStore.ts)에 든 카드는 뺀다.
@@ -170,6 +209,40 @@ export class FileResultStore implements ResultStore {
     withoutSameWeek.push(scorecard);
     await ensureDir(path.dirname(historyPath));
     await writeJsonAtomic(historyPath, withoutSameWeek);
+  }
+
+  /*
+   * 주차 폴더 안 runs/<runId>/에 쓴다. 주차를 훑는 곳(usageStats listWeeks · rescore-local · rejudge-ranks)은 주차 이름의 폴더에서
+   * 정해진 파일만 읽고, 코호트는 scorecard-history.json만 읽어 이 폴더를 보지 않는다. run.json을 맨 마지막에 쓴다 — run.json이
+   * 없는 폴더는 쓰다 만 회차다.
+   *
+   * 회차 기록은 측정한 그때의 값이다. 측정 끝의 코호트 순위 다시 세기(cohortRank.ts)와 정비 스크립트(rescore-local · rejudge-ranks ·
+   * resolve-stored-citations)는 그 주 파일만 고치므로, 회차 카드의 cohortRank는 다시 세기 전 값이고 정비 뒤에는 그 주 파일과
+   * 다를 수 있다. 회차끼리 견줄 때는 판정(question-analyses.json)에서 다시 집계한다.
+   */
+  async saveRunSnapshot(
+    tenantId: string,
+    weekOf: string,
+    snapshot: { scorecard: WeeklyScorecard; analyses: QuestionRepeatAnalysis[]; meta: RunMeta },
+  ): Promise<string> {
+    const runsDir = path.join(DATA_DIR, tenantId, weekOf, 'runs');
+    await ensureDir(runsDir);
+    let runId = snapshot.meta.runId;
+    // 같은 밀리초에 같은 브랜드를 두 번 끝낼 일은 없지만, 덮으면 회차 하나를 소리 없이 잃는다.
+    for (let n = 2; ; n += 1) {
+      try {
+        await mkdir(path.join(runsDir, runId));
+        break;
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+        runId = `${snapshot.meta.runId}-${n}`;
+      }
+    }
+    const dir = path.join(runsDir, runId);
+    await writeJsonAtomic(path.join(dir, 'scorecard.json'), snapshot.scorecard);
+    await writeJsonAtomic(path.join(dir, 'question-analyses.json'), snapshot.analyses);
+    await writeJsonAtomic(path.join(dir, 'run.json'), { ...snapshot.meta, runId });
+    return runId;
   }
 
   async getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]> {

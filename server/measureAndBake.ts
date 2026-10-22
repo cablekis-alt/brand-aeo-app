@@ -39,6 +39,8 @@ export interface MeasureBakeResult {
   brandName: string;
   weekOf: string;
   aeoScore: number;
+  /** 이번 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason). 있으면 aeoScore는 이 회차 점수이고 그 주 카드는 앞의 것이다. */
+  weekCardKept?: string;
 }
 
 // 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
@@ -86,7 +88,7 @@ interface MeasureOptions {
    * 이번 주 카드가 이미 있는 경쟁사는 다시 재지 않는다(기본 false = 항상 재측정).
    *
    * 주차 카드는 주차당 하나라, 같은 주에 다시 재면 앞선 측정을 **덮어쓴다** — 데이터가
-   * 늘지 않고 표본만 바뀐다. 그래서 재사용은 손실이 아니다. 다만 "전체 측정"의 현재 의도가
+   * 늘지 않고 표본만 바뀐다(회차 기록 runs/에만 쌓인다). 그래서 재사용은 손실이 아니다. 다만 "전체 측정"의 현재 의도가
    * "경쟁사도 최신 키로 재측정"이라 기본값은 바꾸지 않고 호출자가 켜도록 둔다.
    */
   reuseCohort?: boolean;
@@ -277,8 +279,8 @@ function noteMeasureFailure(tenant: TenantConfig, err: unknown): void {
 async function measureSelf(
   tenant: TenantConfig,
   store: FileResultStore,
-  backgroundReport: boolean,
-): Promise<{ weekOf: string; aeoScore: number; enginesUsed?: string[] }> {
+  options: MeasureOptions,
+): Promise<{ weekOf: string; aeoScore: number; enginesUsed?: string[]; weekCardKept?: string }> {
   await persistTenantForRuntime(tenant);
 
   // 이 브랜드의 파이프라인 실행을 진행중/완료로 추적한다(측정 상태 화면 표시용).
@@ -288,7 +290,11 @@ async function measureSelf(
   setActiveMeasure({ tenantId: tenant.tenantId, brandName: tenant.brandName, startedAt: new Date().toISOString() });
   let pipeline;
   try {
-    pipeline = await runWeeklyPipeline(tenant, store, undefined, { deferReport: backgroundReport });
+    pipeline = await runWeeklyPipeline(tenant, store, undefined, {
+      deferReport: options.backgroundReport === true,
+      selfOnly: options.selfOnly === true,
+      inCohortRun: options.inCohortRun === true,
+    });
   } finally {
     clearActiveMeasure(tenant.tenantId);
   }
@@ -301,8 +307,14 @@ async function measureSelf(
     durationSec: Math.round((Date.now() - startedMs) / 1000),
     at: new Date().toISOString(),
     engines: pipeline.enginesUsed,
+    ...(pipeline.weekCardKept ? { weekCardKept: pipeline.weekCardKept } : {}),
   });
-  return { weekOf: scorecard.weekOf, aeoScore: scorecard.aeoScore.current, enginesUsed: pipeline.enginesUsed };
+  return {
+    weekOf: scorecard.weekOf,
+    aeoScore: scorecard.aeoScore.current,
+    enginesUsed: pipeline.enginesUsed,
+    ...(pipeline.weekCardKept ? { weekCardKept: pipeline.weekCardKept } : {}),
+  };
 }
 
 /** 한 테넌트를 측정한 뒤 배포용 src/data에 baking한다. GitHub Actions·로컬 단건 측정이 같이 쓴다. */
@@ -456,7 +468,7 @@ async function measureAndBakeRun(
 
   // 본 브랜드가 실패해도 코호트 측정이 끝날 때까지 기다린다 — 여기서 바로 throw하면 진행 중인
   // 경쟁사 측정이 주인 없이 남아 나중에 파일을 쓴다(고아 작업).
-  const selfTask = measureSelf(tenant, store, options.backgroundReport === true).then(
+  const selfTask = measureSelf(tenant, store, options).then(
     (value) => ({ ok: true as const, value }),
     (error: unknown) => {
       // 경쟁사 측정이 끝날 때까지(몇 분) 기다리지 않고 바로 「실패」 줄을 남긴다 — 그 사이 진행 줄은 이미 사라졌다.
@@ -509,10 +521,10 @@ async function measureAndBakeRun(
   }
 
   if (!self.ok) throw self.error;
-  const { aeoScore } = self.value;
+  const { aeoScore, weekCardKept } = self.value;
   // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다. 이 브랜드만 잰 측정(selfOnly)도
-  // 경쟁사를 재지 않았으니 적지 않는다.
-  if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly) {
+  // 경쟁사를 재지 않았으니 적지 않는다. 그 주 카드를 덮지 않은 측정(weekCardKept)도 카드가 옛 목록 그대로라 적지 않는다.
+  if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly && !weekCardKept) {
     // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
     await recordCompetitorMeasurement(tenant.tenantId, runtimeList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);
@@ -527,5 +539,6 @@ async function measureAndBakeRun(
     brandName: tenant.brandName,
     weekOf,
     aeoScore,
+    ...(weekCardKept ? { weekCardKept } : {}),
   };
 }

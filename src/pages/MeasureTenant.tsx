@@ -201,8 +201,11 @@ export default function MeasureTenant() {
         return
       }
       const d = await measureTenantAll(pickedTenant, mode === 'reuse', mode === 'self')
+      // 엔진이 빠진 측정은 그 주 카드를 덮지 않는다(서버 weekCardKeepReason) — 화면 점수가 이번 측정 값이 아닌 까닭을 알린다.
       setMessage(
-        `✓ ${d.brandName} 측정·baking 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
+        d.weekCardKept
+          ? `✓ ${d.brandName} 측정 완료 (이번 측정 Brand AEO Score ${d.aeoScore ?? '?'}). ${d.weekCardKept}. 이번 측정은 회차 기록에만 남습니다.`
+          : `✓ ${d.brandName} 측정·baking 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
       )
     } catch (err) {
       setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { CollectionError, EngineOutage } from './engineExhaustion.js';
 import {
   buildBrandMentionPrompt,
@@ -32,7 +33,7 @@ import { cohortRankingEntities } from './cohortEntities.js';
 import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
-import type { QuestionBank, ResultStore } from './store.js';
+import type { QuestionBank, ResultStore, RunMeta } from './store.js';
 import { baseFingerprint, overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
 import type {
@@ -237,12 +238,15 @@ export function resolveCollectionEngines(tenant: TenantConfig): Engine[] {
   return available;
 }
 
-/** B3 — 4개 엔진 × 반복 호출. 동일 질문 원문을 그대로 전달한다 (엔진 간 비교 가능성 유지). */
+/**
+ * B3 — 4개 엔진 × 반복 호출. 동일 질문 원문을 그대로 전달한다 (엔진 간 비교 가능성 유지).
+ * 엔진별 예정 호출 수와 끊긴 엔진도 돌려준다 — 회차 기록(run.json)이 일부만 들어온 엔진을 가리는 데 쓴다.
+ */
 async function collectRawCalls(
   tenant: TenantConfig,
   questions: QuestionSpec[],
   weekOf: string,
-): Promise<RawCallRecord[]> {
+): Promise<{ calls: RawCallRecord[]; plannedByEngine: Record<string, number>; engineIssues: string[] }> {
   const availableEngines = resolveCollectionEngines(tenant);
 
   const jobs = questions.flatMap((question) =>
@@ -388,7 +392,7 @@ async function collectRawCalls(
     // 무엇을 고치면 되는지(「Gemini 지출 한도 초과 — …」)를 문구 맨 앞에 둔다 — 화면은 이 문구를 그대로 보인다.
     throw new CollectionError(`${outage.explain()}${err instanceof Error ? err.message : String(err)}`, outage.labels());
   }
-  return calls;
+  return { calls, plannedByEngine: Object.fromEntries(jobsByEngine), engineIssues: outage.labels() };
 }
 
 /** 수집이 하한에 못 미쳐도 부분 데이터로 진행한다(ALLOW_PARTIAL_MEASURE=1) — assertEnoughCoverage 주석. */
@@ -644,6 +648,10 @@ export interface PipelineRunResult {
   enginesUsed: string[]; // 실제로 응답을 수집한 엔진(성공 호출 기준). 크레딧 소진 등으로 실패한 엔진은 빠진다.
   /** deferReport일 때 뒤에서 쓰는 리포트. 실패해도 reject하지 않는다(로그만 남긴다). */
   pendingReport?: Promise<void>;
+  /** 이번 측정이 그 주 카드를 덮지 않은 까닭(weekCardKeepReason). 있으면 scorecard는 이 회차의 카드이고 저장된 주차 카드는 앞의 것이다. */
+  weekCardKept?: string;
+  /** 회차 기록 번호(runs/<runId>/). 기록을 쓰지 못했으면 null — 측정은 그래도 성공이다. */
+  runId: string | null;
 }
 
 export interface PipelineOptions {
@@ -656,6 +664,64 @@ export interface PipelineOptions {
    * 스크립트는 리포트 실패를 측정 실패로 본다. 앱을 바로 끄면 그 주 report.md는 앞선 측정의 것이 남는다.
    */
   deferReport?: boolean;
+  /**
+   * 측정 방식 — 측정 화면의 「이 브랜드만」, 다른 브랜드 측정 안의 경쟁사 측정. 회차 기록(run.json)에 적고, selfOnly는 그 주 카드를
+   * 덮을지(weekCardKeepReason)도 정한다. 점수 계산에는 쓰지 않는다.
+   */
+  selfOnly?: boolean;
+  inCohortRun?: boolean;
+}
+
+/**
+ * 「이 브랜드만 측정」이 그 주 카드를 덮지 않을 까닭 — 덮어도 되면 null. 파이프라인은 selfOnly 측정에서만 부른다.
+ *
+ * 이 브랜드만 재면 경쟁사 카드는 그 주 앞서 잰 그대로다. 그 카드들과 같은 도구로 잰 그 주 카드를, 엔진 하나가 지출 한도 등으로
+ * 빠진 회차가 덮으면 코호트 순위가 다른 도구로 잰 카드끼리 섞이고 전주 비교도 「수집 엔진 다름」으로 쉰다. 그래서 그 주 카드보다
+ * 수집 엔진이 적으면(그 엔진들의 일부) 덮지 않는다. 경쟁사도 함께 재는 측정은 코호트 전체가 같은 엔진으로 다시 재지므로 지금처럼
+ * 덮는다. 지역 · 업종 · 질문지 · 판정 엔진이 그 주 카드와 다르면(기본 정보를 고친 뒤 등) 그 카드를 지킬 까닭이 없어 덮는다 —
+ * 지키면 옛 코호트에 카드가 남는다. 덮지 않은 회차도 회차 기록(runs/)에는 남는다.
+ */
+export function weekCardKeepReason(existing: WeeklyScorecard | undefined, next: WeeklyScorecard): string | null {
+  if (!existing) return null;
+  const sameConditions =
+    existing.industry === next.industry &&
+    existing.region === next.region &&
+    existing.questionBankVersion === next.questionBankVersion &&
+    existing.judgeEngine === next.judgeEngine;
+  if (!sameConditions) return null;
+  const before = existing.enginesUsed ?? [];
+  const after = next.enginesUsed ?? [];
+  if (before.length === 0 || after.length >= before.length || !after.every((e) => before.includes(e))) return null;
+  return `수집 엔진(${[...after].sort().join('+')})이 이번 주 카드(${[...before].sort().join('+')})보다 적어 이번 주 카드는 그대로 둡니다`;
+}
+
+/** 판정 맥락 지문(RunMeta.contextFingerprint) — 별칭 · 소유 도메인 · 경쟁사 · 순위 후보. */
+function contextFingerprint(tenant: TenantConfig, rankingEntities: string[]): string {
+  const { aliases, ownedDomains, competitors } = toBrandContext(tenant);
+  return createHash('sha256')
+    .update(JSON.stringify({ aliases: aliases ?? [], ownedDomains: ownedDomains ?? [], competitors: competitors ?? [], rankingEntities }))
+    .digest('hex')
+    .slice(0, 16);
+}
+
+/** 수집 사용량 요약(RunMeta.collectUsage) — usageStats.ts와 같은 규칙. 청구액은 엔진이 모든 호출에 알려 줄 때만 합한다. */
+function collectUsageOf(rawCalls: RawCallRecord[]): RunMeta['collectUsage'] {
+  const out: RunMeta['collectUsage'] = {};
+  const billed = new Map<string, number>();
+  for (const r of rawCalls) {
+    const row = (out[r.engine] ??= { calls: 0, tokens: 0, inputTokens: 0, outputTokens: 0, billedCost: 0, searchCalls: 0 });
+    row.calls += 1;
+    if (typeof r.tokenUsage === 'number') row.tokens += r.tokenUsage;
+    if (typeof r.inputTokens === 'number') row.inputTokens += r.inputTokens;
+    if (typeof r.outputTokens === 'number') row.outputTokens += r.outputTokens;
+    if (typeof r.billedCost === 'number') {
+      row.billedCost = (row.billedCost ?? 0) + r.billedCost;
+      billed.set(r.engine, (billed.get(r.engine) ?? 0) + 1);
+    }
+    if (r.usedWebSearch === true) row.searchCalls += 1;
+  }
+  for (const [engine, row] of Object.entries(out)) if (billed.get(engine) !== row.calls) row.billedCost = null;
+  return out;
 }
 
 /*
@@ -698,10 +764,11 @@ export async function runWeeklyPipeline(
   options: PipelineOptions = {},
 ): Promise<PipelineRunResult> {
   const weekOf = getIsoWeekString(now);
+  const startedAt = new Date().toISOString();
 
   const questions = await ensureQuestionBank(tenant, store);
   throwIfMeasureCancelled(tenant.tenantId);
-  const rawCalls = await collectRawCalls(tenant, questions, weekOf);
+  const { calls: rawCalls, plannedByEngine, engineIssues } = await collectRawCalls(tenant, questions, weekOf);
 
   // Gemini 그라운딩 리다이렉트(vertexaisearch…/grounding-api-redirect)를 실제 발행 URL로 바꾼다.
   // 이걸 하지 않으면 인용 도메인이 전부 구글로 보여 자사 도메인 판별(Brand AEO Score 20%)과
@@ -713,10 +780,8 @@ export async function runWeeklyPipeline(
       call.citations = call.citations.map((u) => resolvedCitations.get(u) ?? u);
     }
   }
-  // 마지막 중단 확인 지점. 여기를 지나면 이번 주 파일(원문 → 판정 → 스코어카드 → 리포트)을 차례로
-  // 새로 쓰므로, 그 뒤에 끊으면 새 원문과 옛 판정이 섞인 주차가 남는다 — 끝까지 마무리한다.
+  // 마지막 중단 확인 지점. 여기를 지나면 판정 · 집계까지 끝까지 마무리한다.
   throwIfMeasureCancelled(tenant.tenantId);
-  await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
   // 실제로 응답을 수집한 엔진(성공 호출 기준) — 설정만 되고 크레딧 소진 등으로 실패한 엔진은 제외된다.
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
 
@@ -735,7 +800,6 @@ export async function runWeeklyPipeline(
   order.forEach((index, k) => {
     analyses[index] = judged[k];
   });
-  await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
 
   updateActiveMeasure(tenant.tenantId, { stage: '집계', done: 0, total: 0 });
   const history = await store.getScorecardHistory(tenant.tenantId, 12);
@@ -770,7 +834,38 @@ export async function runWeeklyPipeline(
     modelsUsed,
     judgeModel,
   );
-  await store.saveScorecard(scorecard);
+
+  const weekCardKept = (options.selfOnly ? weekCardKeepReason(history.find((h) => h.weekOf === weekOf), scorecard) : null) ?? undefined;
+  if (weekCardKept) {
+    console.warn(`[B8] ${tenant.tenantId} ${weekOf} ${weekCardKept}`);
+  } else {
+    // 그 주 파일은 판정 · 집계가 다 끝난 뒤에 원문 → 판정 → 카드 순으로 함께 쓴다. 원문을 판정 전에 쓰면, 판정에서 실패했을 때
+    // 새 원문과 앞 측정의 판정 · 카드가 한 주차에 섞여 남는다(원문과 판정을 짝지어 읽는 곳 — answerEvidence · rejudge-ranks).
+    await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);
+    await store.saveQuestionAnalyses(tenant.tenantId, weekOf, analyses);
+    await store.saveScorecard(scorecard);
+  }
+
+  const runId = await saveRunSnapshot(store, tenant, weekOf, scorecard, analyses, {
+    runId: new Date().toISOString().replace(/[:.]/g, '-'),
+    tenantId: tenant.tenantId,
+    weekOf,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    selfOnly: options.selfOnly === true,
+    inCohortRun: options.inCohortRun === true,
+    weekCard: weekCardKept ? 'kept' : 'saved',
+    ...(weekCardKept ? { weekCardKeptReason: weekCardKept } : {}),
+    engines: Object.fromEntries(
+      Object.entries(plannedByEngine).map(([engine, planned]) => [engine, { planned, succeeded: rawCalls.filter((c) => c.engine === engine).length }]),
+    ),
+    engineIssues,
+    contextFingerprint: contextFingerprint(tenant, rankingEntities),
+    collectUsage: collectUsageOf(rawCalls),
+  });
+  // 그 주 카드를 그대로 두었으면 리포트도 앞 측정의 것을 둔다.
+  if (weekCardKept) return { scorecard, reportMarkdown: '', enginesUsed, weekCardKept, runId };
+
   const generation = ++reportGenerationSeq;
   reportGeneration.set(`${tenant.tenantId}|${weekOf}`, generation);
 
@@ -783,10 +878,27 @@ export async function runWeeklyPipeline(
     );
     pendingReports.add(pendingReport);
     void pendingReport.finally(() => pendingReports.delete(pendingReport));
-    return { scorecard, reportMarkdown: '', enginesUsed, pendingReport };
+    return { scorecard, reportMarkdown: '', enginesUsed, pendingReport, runId };
   }
 
   updateActiveMeasure(tenant.tenantId, { stage: '리포트', done: 0, total: 0 });
   const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation);
-  return { scorecard, reportMarkdown, enginesUsed };
+  return { scorecard, reportMarkdown, enginesUsed, runId };
+}
+
+/** 회차 기록을 남긴다. 못 남겨도 측정은 성공이다(그 주 파일은 이미 다 썼다) — 오류를 남기고 null. */
+async function saveRunSnapshot(
+  store: ResultStore,
+  tenant: TenantConfig,
+  weekOf: string,
+  scorecard: WeeklyScorecard,
+  analyses: QuestionRepeatAnalysis[],
+  meta: RunMeta,
+): Promise<string | null> {
+  try {
+    return await store.saveRunSnapshot(tenant.tenantId, weekOf, { scorecard, analyses, meta });
+  } catch (err) {
+    console.error(`[B8] ${tenant.tenantId} ${weekOf} 회차 기록 저장 실패(측정은 끝남): ${err instanceof Error ? err.message : err}`);
+    return null;
+  }
 }

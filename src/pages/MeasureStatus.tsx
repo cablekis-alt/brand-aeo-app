@@ -50,6 +50,8 @@ interface LocalMeasureLog {
   durationSec?: number
   source?: string
   engines?: string[]
+  /** 이 측정이 그 주 카드를 덮지 않은 까닭 — 점수는 이 회차 값이고 그 주 카드는 앞 측정 그대로다. */
+  weekCardKept?: string
 }
 
 // 엔진 코드 → 표시 라벨. 수집에 실제 성공한 엔진만 기록되므로, 예: ['gemini'] → "Gemini".
@@ -849,7 +851,14 @@ export default function MeasureStatus() {
                 {localRows.map((e, i) => (
                   <tr key={`${e.tenantId}-${e.at}-${i}`}>
                     <td>
-                      <span className="status-pill st-good">로컬 완료</span>
+                      {/* 엔진이 빠져 그 주 카드를 덮지 않은 회차 — 대시보드 점수와 다른 까닭을 제목 풍선에. */}
+                      {e.weekCardKept ? (
+                        <span className="status-pill st-warn" title={`${e.weekCardKept}. 이 점수는 회차 기록에만 남았습니다.`}>
+                          카드 유지
+                        </span>
+                      ) : (
+                        <span className="status-pill st-good">로컬 완료</span>
+                      )}
                     </td>
                     <td className="cell-text">{e.brandName || e.tenantId}</td>
                     <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>

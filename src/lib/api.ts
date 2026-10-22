@@ -302,7 +302,7 @@ export async function measureTenantAll(
   tenantId: string,
   reuseCohort = false,
   selfOnly = false,
-): Promise<{ brandName?: string; aeoScore?: number; weekOf?: string }> {
+): Promise<{ brandName?: string; aeoScore?: number; weekOf?: string; weekCardKept?: string }> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/measure`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -312,7 +312,7 @@ export async function measureTenantAll(
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
   }
-  return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string }
+  return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string; weekCardKept?: string }
 }
 
 /** 측정 전 계획(server/measureAndBake.ts MeasurePreview). */
