@@ -1,5 +1,19 @@
 // 진행 중인 로컬 측정 추적(측정 상태 화면의 "진행 중" 표시용). 인메모리.
 // measureAndBake가 브랜드마다(본 브랜드 + 코호트 경쟁사) set/clear 하고, /api/measure-status가 읽는다.
+
+/** 수집 단계의 엔진 하나 — 화면이 남은 시간을 어림하는 재료(src/lib/measureEstimate.ts estimateFinishAt). */
+export interface EngineProgress {
+  done: number;
+  total: number;
+  /** 보내고 아직 답이 없는 호출의 보낸 시각(epoch ms, 오름차순) — 슬롯 · 분당 간격 대기가 끝난 뒤(withLlmSlot onSend). */
+  inflightSentAt: number[];
+  /** 이 브랜드 · 이 엔진에서 성공한 호출의 응답 시간(ms, RawCallRecord.latencyMs). 실패는 넣지 않는다. */
+  latencyMs: number[];
+  /** 수집 슬롯 수 · 분당 시작 상한(0 = 없음) — 모든 브랜드가 함께 쓴다(concurrency.ts collectLimit · collectRpm). */
+  slots: number;
+  rpm: number;
+}
+
 export interface ActiveMeasure {
   tenantId: string;
   brandName: string;
@@ -9,13 +23,15 @@ export interface ActiveMeasure {
    * 수집·분석은 건수가 있고(done/total), 나머지 단계는 이름만 바뀐다.
    */
   stage?: '준비' | '수집' | '인용 정리' | '분석' | '집계' | '리포트';
+  /** 지금 단계에 들어간 시각(epoch ms) — updateActiveMeasure가 단계가 바뀔 때 찍는다. */
+  stageStartedAt?: number;
   done?: number;
   total?: number;
   /**
-   * 수집 단계의 엔진별 건수. 엔진마다 속도가 크게 달라(2026-W43: OpenAI 2분 · Gemini 3분 · Perplexity 14분) 합친 건수로
-   * 남은 시간을 어림하면 빠른 엔진이 끝낸 건수에 끌려 몇 배 짧게 나온다 — 화면이 엔진마다 어림해 가장 늦은 것을 쓴다.
+   * 수집 단계의 엔진별 진행. 엔진마다 속도가 크게 달라(2026-W43: OpenAI 2분 · Gemini 3분 · Perplexity 14분) 화면이 엔진마다
+   * 어림한다. 끝자락에는 이미 보낸 호출의 응답만 기다리므로 속도가 아니라 「몇 초째 기다리는가」로 센다(inflightSentAt).
    */
-  engines?: Record<string, { done: number; total: number }>;
+  engines?: Record<string, EngineProgress>;
   /** 중단을 요청받아 멈추는 중이다(진행 중인 호출이 끝나기를 기다리는 동안). */
   cancelling?: boolean;
   /** 이번 측정에서 끊긴 엔진 — 「Gemini 지출 한도 초과」(engineExhaustion.ts). 남은 호출은 보내지 않는다. */
@@ -99,7 +115,8 @@ export function clearActiveMeasure(tenantId: string): void {
 export function updateActiveMeasure(tenantId: string, patch: Partial<ActiveMeasure>): void {
   const cur = active.get(tenantId);
   if (!cur) return;
-  active.set(tenantId, { ...cur, ...patch });
+  const stageChanged = patch.stage !== undefined && patch.stage !== cur.stage;
+  active.set(tenantId, { ...cur, ...patch, ...(stageChanged ? { stageStartedAt: Date.now() } : {}) });
 }
 
 export function listActiveMeasures(): ActiveMeasure[] {

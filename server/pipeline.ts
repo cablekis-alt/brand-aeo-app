@@ -17,9 +17,9 @@ import {
 } from '../src/prompts/index.js';
 import type { Engine } from '../src/prompts/types.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
-import { collectLimit, mapWithConcurrency } from './concurrency.js';
+import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
-import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure } from './measureTracker.js';
+import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure, type EngineProgress } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
 import { isClarifyingResponse } from './clarifyingResponse.js';
 import { getIsoWeekString } from './dateUtil.js';
@@ -263,10 +263,29 @@ async function collectRawCalls(
   const finishedByEngine = new Map<string, number>();
   const finish = (engine: string) => finishedByEngine.set(engine, (finishedByEngine.get(engine) ?? 0) + 1);
   const failedSoFar = () => [...failuresByEngine.values()].reduce((n, v) => n + v, 0);
-  // 진행 보고 — 끝난 건수만 센다. 동시에 도는 호출은 "몇 개가 남았나"를 말하지 못한다. 엔진별 건수도 함께 보낸다(measureTracker.ts engines).
+  // 진행 보고 — 끝난 건수와 엔진별 진행(measureTracker.ts EngineProgress). 화면이 남은 시간을 어림하려면 「보내고 아직 답이 없는
+  // 호출이 몇 초째 기다리는가」와 「끝난 호출이 얼마나 걸렸나」가 필요하다 — 끝자락에는 속도가 아니라 응답 시간이 남은 시간을 정한다.
   let collected = 0;
-  const engineProgress = () =>
-    Object.fromEntries([...jobsByEngine].map(([engine, total]) => [engine, { done: finishedByEngine.get(engine) ?? 0, total }]));
+  const inflight = new Map<number, { engine: string; sentAt: number }>();
+  const latencies = new Map<string, number[]>();
+  const noteLatency = (engine: string, latencyMs: number | undefined) => {
+    if (!latencyMs || latencyMs <= 0) return;
+    latencies.set(engine, [...(latencies.get(engine) ?? []), latencyMs]);
+  };
+  const engineProgress = (): Record<string, EngineProgress> =>
+    Object.fromEntries(
+      [...jobsByEngine].map(([engine, total]) => {
+        const progress: EngineProgress = {
+          done: finishedByEngine.get(engine) ?? 0,
+          total,
+          inflightSentAt: [...inflight.values()].filter((c) => c.engine === engine).map((c) => c.sentAt).sort((a, b) => a - b),
+          latencyMs: latencies.get(engine) ?? [],
+          slots: collectLimit(engine as Engine),
+          rpm: collectRpm(engine as Engine),
+        };
+        return [engine, progress];
+      }),
+    );
   updateActiveMeasure(tenant.tenantId, { stage: '수집', done: 0, total: jobs.length, engines: engineProgress() });
   const collectionConcurrency = Math.max(
     1,
@@ -275,7 +294,7 @@ async function collectRawCalls(
   const settled = await mapWithConcurrency(
     jobs,
     collectionConcurrency,
-    async (job): Promise<RawCallRecord | null> => {
+    async (job, index): Promise<RawCallRecord | null> => {
       // 중단 요청을 받았으면 남은 호출을 보내지 않는다 — 대기 중인 일감이 여기서 바로 끝난다.
       throwIfMeasureCancelled(tenant.tenantId);
       if (outage.isDown(job.engine) || outage.stopped) {
@@ -289,9 +308,15 @@ async function collectRawCalls(
       const prompt = buildEngineCallPrompt(job.engine, job.question.text, tenant.questionLanguage);
       // 슬롯을 요청하기 전에 찍는다 — client.call 바깥에서 대기가 생긴다(engines/index.ts).
       const startedAt = new Date().toISOString();
+      const onSend = () => {
+        inflight.set(index, { engine: job.engine, sentAt: Date.now() });
+        updateActiveMeasure(tenant.tenantId, { engines: engineProgress() });
+      };
       try {
         const client = getEngineClient(job.engine); // 생성자도 try 안에서(키 문제 등 방어)
-        const result = await client.call(prompt);
+        const result = await client.call(prompt, { onSend });
+        inflight.delete(index);
+        noteLatency(job.engine, result.latencyMs);
         finish(job.engine);
         updateActiveMeasure(tenant.tenantId, { done: ++collected, engines: engineProgress() });
         return {
@@ -314,6 +339,7 @@ async function collectRawCalls(
         };
       } catch (err) {
         // 중단은 실패가 아니다 — 건너뛰고 계속하면 멈추라는 요청이 무시된다.
+        inflight.delete(index);
         if (err instanceof MeasureCancelledError) throw err;
         failuresByEngine.set(job.engine, (failuresByEngine.get(job.engine) ?? 0) + 1);
         finish(job.engine);

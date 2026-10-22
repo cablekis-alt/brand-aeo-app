@@ -1,5 +1,5 @@
 import type { PromptMessage } from '../../src/prompts/types.js';
-import type { EngineCallResult, EngineClient } from './types.js';
+import type { EngineCallOptions, EngineCallResult, EngineClient } from './types.js';
 
 /**
  * 실제 엔진 SDK 연동 전, 파이프라인 배선(스케줄러 → 수집 → 분석 → 집계)을 검증하기 위한 목(mock) 클라이언트.
@@ -23,13 +23,16 @@ export class MockEngineClient implements EngineClient {
     this.engine = engine;
   }
 
-  async call(_prompt: PromptMessage): Promise<EngineCallResult> {
+  async call(_prompt: PromptMessage, options?: EngineCallOptions): Promise<EngineCallResult> {
     // 막힌 엔진은 기다리지 않고 바로 거절한다 — 실제 엔진도 지출 한도 · 크레딧 오류는 곧바로 돌려준다.
     const [failEngine, failKind] = (process.env.MOCK_ENGINE_FAIL ?? '').split(':');
     if (failEngine && failEngine === this.engine) throw new Error(MOCK_FAILURE_MESSAGE[failKind ?? ''] ?? 'mock failure');
+    // 가짜 엔진은 슬롯을 거치지 않으므로 여기서 「보냄」을 알린다(진행 표시 시험).
+    options?.onSend?.();
+    // 기다린 시간도 응답 시간에 넣는다 — 진행 표시의 남은 시간 어림이 실제 엔진처럼 응답 시간을 본다.
+    const start = performance.now();
     const delayMs = Number(process.env.MOCK_ENGINE_DELAY_MS) || 0;
     if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
-    const start = performance.now();
     const mentionsBrand = Math.random() > 0.4;
     const text = mentionsBrand
       ? `질문하신 내용에 대해 답변드리면, 뷰성형외과는 강남에서 자주 언급되는 선택지 중 하나입니다. ` +
