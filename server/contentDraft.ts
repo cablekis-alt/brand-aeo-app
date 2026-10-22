@@ -17,7 +17,7 @@ import {
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { findOverclaims } from './claimGuard.js';
 import type { EngineClient } from './engines/types.js';
-import { createFactGuard } from './factGuard.js';
+import { createFactGuard, keepSentences } from './factGuard.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 /**
@@ -314,7 +314,7 @@ function normalize(
       if (!body) continue;
       const role = article && DRAFT_ROLES.includes(o.role as DraftRole) ? (o.role as DraftRole) : undefined;
       const all = splitSentences(body);
-      const kept = all.filter(passes);
+      const kept = keepSentences(all, passes, notes);
       if (role && WHOLE_ROLES.has(role) && kept.length < all.length) {
         if (all.length > 1) notes.push(`"${body.slice(0, 60)}…" — ${ROLE_NAME[role]}의 문장 일부가 걸려 칸째 뺐습니다.`);
         continue;
@@ -389,7 +389,8 @@ function imageTexts(s: DraftSection): string[] {
  * 바꾸고, 쓴 사실 목록과 빈칸 수를 다시 센다.
  */
 function dropOverclaims(draft: ContentDraft, overclaimed: Set<string>, facts: ContentDraftRequest['factGraph']): ContentDraft {
-  const keep = (text: string) => splitSentences(text).filter((s) => !overclaimed.has(s)).join(' ');
+  const orphanNotes: string[] = [];
+  const keep = (text: string) => keepSentences(splitSentences(text), (s) => !overclaimed.has(s), orphanNotes).join(' ');
   const sections = draft.sections.map((s): DraftSection => {
     const blocks = s.blocks.flatMap((b): DraftBlock[] => {
       if (b.kind !== 'text' || !b.body) return [b];
@@ -414,7 +415,8 @@ function dropOverclaims(draft: ContentDraft, overclaimed: Set<string>, facts: Co
     return fact ? blob.includes(fact.value) : true;
   });
   const gapCount = sections.reduce((n, s) => n + s.blocks.filter((b) => b.kind === 'gap').length, 0);
-  return { ...draft, lead, sections, usedFacts, gapCount };
+  const guardNotes = orphanNotes.length ? { guardNotes: [...(draft.guardNotes ?? []), ...orphanNotes] } : {};
+  return { ...draft, lead, sections, usedFacts, gapCount, ...guardNotes };
 }
 
 /** 초안의 문장 전부(첫머리 + 본문 + 사진 자리 글자). 격상 가드에 넘긴다. */

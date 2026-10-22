@@ -32,6 +32,53 @@ function numberTokens(s: string): Set<string> {
 }
 
 /**
+ * 숫자와 바로 뒤 단위 한 글자(붙은 한글 · 영문 · %, 띄어 쓴 한글 하나)를 함께 뽑는다 — 「1박」과 「1인당」의 1은 다른 숫자다.
+ * 숫자만 견주면 「1박 2일 일정이라면」의 1이 「인원 추가 요금: 1인당 20,000원」의 1과 같다고 보고 문장을 뺐다
+ * (2026-10 스테이,머뭄 글 — 남은 「그다음 그곳과…」가 가리킬 곳을 잃었다). 띄어 쓴 영문은 단위로 보지 않는다(「Line 2 Yeoksam」).
+ */
+function numberUnitTokens(s: string): Array<{ num: string; unit: string }> {
+  return [...s.matchAll(/(\d+(?:[.,]\d+)?)(?:([가-힣A-Za-z%])|\s([가-힣]))?/g)].map((m) => ({ num: m[1]!, unit: m[2] ?? m[3] ?? '' }));
+}
+
+/**
+ * 앞 문장에 기대는 첫머리 — 앞 문장이 빠지면 가리킬 곳을 잃는다.
+ *   SEQUENCE  순서 잇기. 문단에 남은 앞 문장이 하나도 없을 때만 함께 뺀다(「먼저 …」가 남아 있으면 「다음으로 …」는 읽힌다).
+ *   REFERENCE 지시 · 인과. 바로 앞 문장이 빠지면 함께 뺀다.
+ */
+const SEQUENCE_LEADS = ['그다음', '그 다음', '그런 다음', '이어서', '다음으로'];
+const REFERENCE_LEADS = ['그곳', '그때', '이때', '그것', '그걸', '이 경우', '그 경우', '그래서', '그러면', '따라서', '그러므로'];
+
+/**
+ * 문단의 문장 가운데 passes를 통과한 것만 남기되, 빠진 문장에 기대던 문장도 함께 뺀다(이유는 notes에).
+ * 사실 가드 · 격상 가드는 문장 하나씩 걸러 앞뒤 연결을 보지 않는다 — 「1박 2일 일정이라면 … 정하세요. 그다음 그곳과 가까운
+ * 지역에서 …」에서 앞 문장만 빠져 「그다음 그곳…」이 혼자 남은 채 블로그에 올라갔다(2026-10-21). 초안 · 채널 다듬기가 함께 쓴다.
+ */
+export function keepSentences(all: string[], passes: (s: string) => boolean, notes: string[], mode: GuardMode = 'drop'): string[] {
+  const kept: string[] = [];
+  let prevDropped = false;
+  for (const s of all) {
+    let keep = passes(s);
+    if (keep) {
+      const head = s.trimStart();
+      const orphan =
+        (kept.length === 0 && prevDropped && SEQUENCE_LEADS.some((w) => head.startsWith(w))) ||
+        (prevDropped && REFERENCE_LEADS.some((w) => head.startsWith(w)));
+      if (orphan) {
+        keep = false;
+        notes.push(
+          mode === 'drop'
+            ? `"${s}" — 앞 문장이 빠져 가리킬 곳이 없어 함께 뺐습니다.`
+            : `"${s}" — 앞 문장이 빠지면 가리킬 곳이 없습니다. 앞뒤가 이어지는지 확인하세요.`,
+        );
+      }
+    }
+    if (keep) kept.push(s);
+    prevDropped = !keep;
+  }
+  return kept;
+}
+
+/**
  * 문장에 사실 값이 그대로 들어 있는지 — **대소문자는 가리지 않는다.**
  *
  * 사이트 원문 값은 제목 표기로 뽑힐 때가 많아(「Since 2005」), 문장 가운데 쓰면 소문자가 된다
@@ -57,7 +104,12 @@ export function createFactGuard(
 ): FactGuard {
   const notes: string[] = [];
   const questionNums = numberTokens(questionTexts.join('\n'));
-  const factNums = facts.map((f) => ({ fact: f, nums: numberTokens(f.value) }));
+  const questionUnits = new Set(numberUnitTokens(questionTexts.join('\n')).map((t) => `${t.num}${t.unit}`));
+  const factNums = facts.map((f) => ({
+    fact: f,
+    nums: numberTokens(f.value),
+    units: new Set(numberUnitTokens(f.value).map((t) => `${t.num}${t.unit}`)),
+  }));
 
   const canonicalFacts = (arr: string[]): string[] => {
     const out: string[] = [];
@@ -86,9 +138,14 @@ export function createFactGuard(
       for (const n of numberTokens(f.value)) sourced.add(n);
       for (const n of numberTokens(f.claim ?? '')) sourced.add(n);
     }
-    for (const n of numberTokens(sentence)) {
+    for (const { num: n, unit } of numberUnitTokens(sentence)) {
       if (sourced.has(n)) continue;
-      const fromFact = factNums.find((f) => f.nums.has(n))?.fact;
+      // 숫자 · 단위가 같은 사실이 먼저다. 숫자만 같고 단위가 다르면(「1박」 · 「1인당」) 질문에 같은 「숫자+단위」가 있을 때만 받는다 —
+      // 질문에 나온 숫자는 인용해도 된다는 초안 규칙(b9c 규칙 3)과 맞춘다. 질문에도 없으면 그 사실의 값으로 견준다(전과 같음).
+      const sameUnit = factNums.find((f) => f.units.has(`${n}${unit}`))?.fact;
+      const sameNumber = factNums.find((f) => f.nums.has(n))?.fact;
+      if (!sameUnit && sameNumber && questionUnits.has(`${n}${unit}`)) continue;
+      const fromFact = sameUnit ?? sameNumber;
       if (fromFact) {
         if (!containsValue(sentence, fromFact.value)) {
           notes.push(
