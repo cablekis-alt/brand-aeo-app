@@ -32,6 +32,7 @@ import { analyzeCitationSources, urlHost } from './citationSources.js';
 import { cohortRankingEntities } from './cohortEntities.js';
 import { ensureComposedQuestionBank } from './cohortQuestionBank.js';
 import { computeEeatAnalysis } from './eeat.js';
+import { preserveUnrecordedWeekFile } from './preserveWeekFile.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { QuestionBank, ResultStore, RunMeta } from './store.js';
 import { baseFingerprint, overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
@@ -839,6 +840,10 @@ export async function runWeeklyPipeline(
   if (weekCardKept) {
     console.warn(`[B8] ${tenant.tenantId} ${weekOf} ${weekCardKept}`);
   } else {
+    // 회차 기록이 없는 그 주 파일(v0.4.26 전 측정 · 회차 기록 저장 실패)은 덮기 전에 회차 기록으로 옮겨 둔다. 못 옮겨도 측정은 계속한다.
+    await preserveUnrecordedWeekFile(store, tenant.tenantId, weekOf).catch((err: unknown) => {
+      console.error(`[B8] ${tenant.tenantId} ${weekOf} 그 주 파일 옮겨 두기 실패(측정은 계속): ${err instanceof Error ? err.message : err}`);
+    });
     // 그 주 파일은 판정 · 집계가 다 끝난 뒤에 원문 → 판정 → 카드 순으로 함께 쓴다. 원문을 판정 전에 쓰면, 판정에서 실패했을 때
     // 새 원문과 앞 측정의 판정 · 카드가 한 주차에 섞여 남는다(원문과 판정을 짝지어 읽는 곳 — answerEvidence · rejudge-ranks).
     await store.saveRawCalls(tenant.tenantId, weekOf, rawCalls);

@@ -9,7 +9,7 @@
  */
 import { getPublishedHistory } from '../server/publishedHistory';
 import type { PublishedPost } from '../server/publishedPosts';
-import type { QuestionBank } from '../server/store';
+import type { QuestionBank, RunReadIssue, RunSnapshot } from '../server/store';
 import type { QuestionRepeatAnalysis } from '../server/types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import { executionSummaryLine, freshNoCiteNote, summarizePost, withinIndexingGrace } from '../src/lib/publishTracking';
@@ -75,6 +75,8 @@ const makeStore = (
   cardList: WeeklyScorecard[],
   byWeek: Record<string, QuestionRepeatAnalysis[]>,
   bankMap: Record<string, QuestionBank>,
+  // 회차 기록(runs/) — 없으면 회차 기록이 생기기 전과 같은 출력이어야 한다.
+  runsByWeek: Record<string, { runs: RunSnapshot[]; issues: RunReadIssue[] }> = {},
 ) => ({
   getScorecardHistory: async (_t: string, n: number) => cardList.slice(-n),
   getQuestionAnalyses: async (_t: string, week: string) => {
@@ -82,6 +84,7 @@ const makeStore = (
     return byWeek[week] ?? [];
   },
   getQuestionBank: async (_t: string, v: string) => bankMap[v] ?? null,
+  listRunSnapshots: async (_t: string, week: string) => runsByWeek[week] ?? { runs: [], issues: [] },
 });
 const store = makeStore(cards, analysesByWeek, banks);
 const post = (id: string, publishedOn: string | null, extra: Partial<PublishedPost> = {}): PublishedPost => ({

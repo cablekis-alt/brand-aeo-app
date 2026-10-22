@@ -54,6 +54,25 @@ export interface RunMeta {
     string,
     { calls: number; tokens: number; inputTokens: number; outputTokens: number; billedCost: number | null; searchCalls: number }
   >;
+  /**
+   * 회차 기록이 없던 그 주 파일을 다음 측정이 덮기 전에 옮겨 둔 회차(server/preserveWeekFile.ts) — v0.4.26 전 측정이나 회차 기록 저장에
+   * 실패한 측정. 측정 방식 · 예정 호출 수 · 판정 맥락은 모른다(engines는 응답 수, contextFingerprint는 빈 문자열).
+   */
+  preserved?: { from: 'week-file'; preservedAt: string };
+}
+
+/** 읽은 회차 하나. */
+export interface RunSnapshot {
+  meta: RunMeta;
+  scorecard: WeeklyScorecard;
+  analyses: QuestionRepeatAnalysis[];
+}
+
+/** 읽지 못한 회차 — 화면이 「회차 기록 n개를 읽지 못해 뺐습니다」로 알린다. */
+export interface RunReadIssue {
+  weekOf: string;
+  runId: string;
+  reason: string;
 }
 
 export interface ResultStore {
@@ -75,6 +94,8 @@ export interface ResultStore {
     weekOf: string,
     snapshot: { scorecard: WeeklyScorecard; analyses: QuestionRepeatAnalysis[]; meta: RunMeta },
   ): Promise<string>;
+  /** 그 주의 회차 기록 — 측정을 마친 시각 순. run.json이 없는 폴더(쓰다 만 회차)는 건너뛰고, 읽지 못한 회차는 issues에 남긴다. */
+  listRunSnapshots(tenantId: string, weekOf: string): Promise<{ runs: RunSnapshot[]; issues: RunReadIssue[] }>;
   getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]>;
   /**
    * 코호트(업종 · 지역 · 주차)의 카드 — 지운 브랜드와 코호트 제외 목록(cohortExclusionStore.ts)에 든 카드는 뺀다.
@@ -243,6 +264,61 @@ export class FileResultStore implements ResultStore {
     await writeJsonAtomic(path.join(dir, 'question-analyses.json'), snapshot.analyses);
     await writeJsonAtomic(path.join(dir, 'run.json'), { ...snapshot.meta, runId });
     return runId;
+  }
+
+  /*
+   * 회차 폴더는 run.json을 쓴 뒤로 바뀌지 않으므로 읽은 회차를 폴더 경로로 붙잡아 둔다 — 성과 화면이 올린 글 이력 · 회차 보기를 함께
+   * 부르면 같은 판정 파일(회당 약 0.45MB)을 여러 번 읽는다. 지운 회차는 폴더 목록에서 빠지므로 캐시가 되살리지 않는다.
+   */
+  private runCache = new Map<string, RunSnapshot>();
+
+  async listRunSnapshots(tenantId: string, weekOf: string): Promise<{ runs: RunSnapshot[]; issues: RunReadIssue[] }> {
+    const runsDir = path.join(DATA_DIR, tenantId, weekOf, 'runs');
+    let names: string[];
+    try {
+      names = await readdir(runsDir);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { runs: [], issues: [] };
+      throw err;
+    }
+    const runs: RunSnapshot[] = [];
+    const issues: RunReadIssue[] = [];
+    for (const runId of names) {
+      const dir = path.join(runsDir, runId);
+      const cached = this.runCache.get(dir);
+      if (cached) {
+        runs.push(cached);
+        continue;
+      }
+      let metaText: string;
+      try {
+        metaText = await readFile(path.join(dir, 'run.json'), 'utf-8');
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        // run.json이 없으면 쓰다 만 회차다(saveRunSnapshot은 run.json을 맨 마지막에 쓴다). 회차 폴더가 아닌 파일도 건너뛴다.
+        if (code === 'ENOENT' || code === 'ENOTDIR') continue;
+        issues.push({ weekOf, runId, reason: `run.json: ${err instanceof Error ? err.message : String(err)}` });
+        continue;
+      }
+      try {
+        const snapshot: RunSnapshot = {
+          meta: JSON.parse(metaText) as RunMeta,
+          scorecard: JSON.parse(await readFile(path.join(dir, 'scorecard.json'), 'utf-8')) as WeeklyScorecard,
+          analyses: JSON.parse(await readFile(path.join(dir, 'question-analyses.json'), 'utf-8')) as QuestionRepeatAnalysis[],
+        };
+        if (!Array.isArray(snapshot.analyses)) throw new Error('question-analyses.json이 배열이 아닙니다');
+        if (typeof snapshot.meta?.finishedAt !== 'string') throw new Error('run.json에 finishedAt이 없습니다');
+        snapshot.meta.runId = runId;
+        if (this.runCache.size >= 64) this.runCache.delete(this.runCache.keys().next().value!);
+        this.runCache.set(dir, snapshot);
+        runs.push(snapshot);
+      } catch (err) {
+        issues.push({ weekOf, runId, reason: err instanceof Error ? err.message : String(err) });
+      }
+    }
+    for (const issue of issues) console.warn(`[store] ${tenantId}/${weekOf} 회차 ${issue.runId}를 읽지 못했습니다: ${issue.reason}`);
+    runs.sort((a, b) => a.meta.finishedAt.localeCompare(b.meta.finishedAt) || a.meta.runId.localeCompare(b.meta.runId));
+    return { runs, issues };
   }
 
   async getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]> {
