@@ -307,6 +307,7 @@ async function measureSelf(
     durationSec: Math.round((Date.now() - startedMs) / 1000),
     at: new Date().toISOString(),
     engines: pipeline.enginesUsed,
+    ...(pipeline.weekCardKept ? { weekCardKept: pipeline.weekCardKept } : {}),
   });
   return {
     weekOf: scorecard.weekOf,
@@ -522,8 +523,8 @@ async function measureAndBakeRun(
   if (!self.ok) throw self.error;
   const { aeoScore, weekCardKept } = self.value;
   // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다. 이 브랜드만 잰 측정(selfOnly)도
-  // 경쟁사를 재지 않았으니 적지 않는다.
-  if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly) {
+  // 경쟁사를 재지 않았으니 적지 않는다. 그 주 카드를 덮지 않은 측정(weekCardKept)도 카드가 옛 목록 그대로라 적지 않는다.
+  if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly && !weekCardKept) {
     // 저장소 설정 지문도 적는다 — 뒤에 질문지 버전이 달라졌을 때 저장소 설정 때문인지 경쟁사 편집 때문인지 가른다.
     await recordCompetitorMeasurement(tenant.tenantId, runtimeList, startedAt, tenant.questionBankVersion, repoBase).catch((err: unknown) => {
       console.error(`[measureAndBake] 경쟁사 측정 기록 실패 ${tenant.tenantId}: ${err instanceof Error ? err.message : err}`);

@@ -664,21 +664,32 @@ export interface PipelineOptions {
    * 스크립트는 리포트 실패를 측정 실패로 본다. 앱을 바로 끄면 그 주 report.md는 앞선 측정의 것이 남는다.
    */
   deferReport?: boolean;
-  /** 회차 기록(run.json)에 적는 측정 방식 — 측정 화면의 「이 브랜드만」, 다른 브랜드 측정 안의 경쟁사 측정. 계산에는 쓰지 않는다. */
+  /**
+   * 측정 방식 — 측정 화면의 「이 브랜드만」, 다른 브랜드 측정 안의 경쟁사 측정. 회차 기록(run.json)에 적고, selfOnly는 그 주 카드를
+   * 덮을지(weekCardKeepReason)도 정한다. 점수 계산에는 쓰지 않는다.
+   */
   selfOnly?: boolean;
   inCohortRun?: boolean;
 }
 
 /**
- * 이번 측정이 그 주 카드를 덮지 않을 까닭 — 덮어도 되면 null.
+ * 「이 브랜드만 측정」이 그 주 카드를 덮지 않을 까닭 — 덮어도 되면 null. 파이프라인은 selfOnly 측정에서만 부른다.
  *
- * 그 주에 앞서 잰 카드보다 수집 엔진이 적으면(그 엔진들의 일부) 덮지 않는다. 엔진 하나가 지출 한도 등으로 빠진 회차가 그 주
- * 공식 값이 되면 전주 비교가 「수집 엔진 다름」으로 쉬고, 코호트 순위도 다른 도구로 잰 카드와 섞인다(2026-W42 gunsan-national:
- * 10-17 openai+perplexity 측정이 그 주 3엔진 카드를 덮었다). 엔진이 같거나 늘었거나 구성이 다르면 지금처럼 마지막 측정이
- * 그 주 카드가 된다. 덮지 않은 회차도 회차 기록(runs/)에는 남는다.
+ * 이 브랜드만 재면 경쟁사 카드는 그 주 앞서 잰 그대로다. 그 카드들과 같은 도구로 잰 그 주 카드를, 엔진 하나가 지출 한도 등으로
+ * 빠진 회차가 덮으면 코호트 순위가 다른 도구로 잰 카드끼리 섞이고 전주 비교도 「수집 엔진 다름」으로 쉰다. 그래서 그 주 카드보다
+ * 수집 엔진이 적으면(그 엔진들의 일부) 덮지 않는다. 경쟁사도 함께 재는 측정은 코호트 전체가 같은 엔진으로 다시 재지므로 지금처럼
+ * 덮는다. 지역 · 업종 · 질문지 · 판정 엔진이 그 주 카드와 다르면(기본 정보를 고친 뒤 등) 그 카드를 지킬 까닭이 없어 덮는다 —
+ * 지키면 옛 코호트에 카드가 남는다. 덮지 않은 회차도 회차 기록(runs/)에는 남는다.
  */
 export function weekCardKeepReason(existing: WeeklyScorecard | undefined, next: WeeklyScorecard): string | null {
-  const before = existing?.enginesUsed ?? [];
+  if (!existing) return null;
+  const sameConditions =
+    existing.industry === next.industry &&
+    existing.region === next.region &&
+    existing.questionBankVersion === next.questionBankVersion &&
+    existing.judgeEngine === next.judgeEngine;
+  if (!sameConditions) return null;
+  const before = existing.enginesUsed ?? [];
   const after = next.enginesUsed ?? [];
   if (before.length === 0 || after.length >= before.length || !after.every((e) => before.includes(e))) return null;
   return `수집 엔진(${[...after].sort().join('+')})이 이번 주 카드(${[...before].sort().join('+')})보다 적어 이번 주 카드는 그대로 둡니다`;
@@ -824,7 +835,7 @@ export async function runWeeklyPipeline(
     judgeModel,
   );
 
-  const weekCardKept = weekCardKeepReason(history.find((h) => h.weekOf === weekOf), scorecard) ?? undefined;
+  const weekCardKept = (options.selfOnly ? weekCardKeepReason(history.find((h) => h.weekOf === weekOf), scorecard) : null) ?? undefined;
   if (weekCardKept) {
     console.warn(`[B8] ${tenant.tenantId} ${weekOf} ${weekCardKept}`);
   } else {

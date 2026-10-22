@@ -215,6 +215,10 @@ export class FileResultStore implements ResultStore {
    * 주차 폴더 안 runs/<runId>/에 쓴다. 주차를 훑는 곳(usageStats listWeeks · rescore-local · rejudge-ranks)은 주차 이름의 폴더에서
    * 정해진 파일만 읽고, 코호트는 scorecard-history.json만 읽어 이 폴더를 보지 않는다. run.json을 맨 마지막에 쓴다 — run.json이
    * 없는 폴더는 쓰다 만 회차다.
+   *
+   * 회차 기록은 측정한 그때의 값이다. 측정 끝의 코호트 순위 다시 세기(cohortRank.ts)와 정비 스크립트(rescore-local · rejudge-ranks ·
+   * resolve-stored-citations)는 그 주 파일만 고치므로, 회차 카드의 cohortRank는 다시 세기 전 값이고 정비 뒤에는 그 주 파일과
+   * 다를 수 있다. 회차끼리 견줄 때는 판정(question-analyses.json)에서 다시 집계한다.
    */
   async saveRunSnapshot(
     tenantId: string,

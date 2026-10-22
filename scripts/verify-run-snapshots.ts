@@ -29,7 +29,8 @@ const writeJson = (rel: string, value: unknown) => {
   mkdirSync(path.dirname(file), { recursive: true })
   writeFileSync(file, JSON.stringify(value))
 }
-const card = (engines?: string[]) => ({ enginesUsed: engines }) as WeeklyScorecard
+const card = (engines?: string[], over: Partial<WeeklyScorecard> = {}) =>
+  ({ industry: '펜션', region: '가상시', questionBankVersion: 'v1', judgeEngine: 'mock', enginesUsed: engines, ...over }) as WeeklyScorecard
 
 const BRAND = {
   tenantId: 'snap', brandName: '회차 펜션', aliases: ['회차 펜션'], ownedDomains: ['snap.example'], industry: '펜션', region: '가상시',
@@ -38,7 +39,8 @@ const BRAND = {
 }
 
 try {
-  const { weekCardKeepReason } = await import('../server/pipeline')
+  const { settlePendingReports, weekCardKeepReason } = await import('../server/pipeline')
+  const { readLocalMeasures } = await import('../server/localMeasureLog')
   const { measureAndBake } = await import('../server/measureAndBake')
   const { getIsoWeekString } = await import('../server/dateUtil')
   const { FileResultStore } = await import('../server/store')
@@ -62,6 +64,10 @@ try {
   ok('덮기: 엔진이 늘면 덮는다', weekCardKeepReason(card(['gemini']), card(['gemini', 'openai'])) === null)
   ok('덮기: 구성이 다르면(부분집합 아님) 덮는다', weekCardKeepReason(card(['gemini', 'openai']), card(['gemini', 'perplexity'])) === null)
   ok('덮기: 엔진 기록 없는 옛 카드는 덮는다', weekCardKeepReason(card(undefined), card(['gemini'])) === null)
+  const three = card(['openai', 'gemini', 'perplexity'])
+  ok('덮기: 지역이 바뀌었으면(기본 정보 고침) 엔진이 빠져도 덮는다', weekCardKeepReason(three, card(['openai'], { region: '새도시' })) === null)
+  ok('덮기: 질문지가 바뀌었으면 엔진이 빠져도 덮는다', weekCardKeepReason(three, card(['openai'], { questionBankVersion: 'v2' })) === null)
+  ok('덮기: 판정 엔진이 바뀌었으면 엔진이 빠져도 덮는다', weekCardKeepReason(three, card(['openai'], { judgeEngine: 'claude' })) === null)
 
   writeJson('tenants.overlay.json', [BRAND])
   const store = new FileResultStore()
@@ -72,7 +78,10 @@ try {
   await measureAndBake(await tenant(), store, { selfOnly: true })
   const two = runIds()
   ok('같은 주 2회: 주차 카드는 한 장', history().filter((h) => h.weekOf === week).length === 1)
-  ok('같은 주 2회: 회차 기록 2개 · 시각 순 이름', two.length === 2 && two[0] < two[1])
+  ok(
+    '같은 주 2회: 회차 기록 2개 · 완료 시각 이름',
+    two.length === 2 && two.every((id) => /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/.test(id)) && runMeta(two[0]).finishedAt <= runMeta(two[1]).startedAt,
+  )
   ok(
     '회차 기록: 카드 · 판정 · run.json이 다 있다',
     two.every((id) => ['scorecard.json', 'question-analyses.json', 'run.json'].every((f) => existsSync(path.join(runsDir, id, f)))),
@@ -106,17 +115,20 @@ try {
   ok('사용량: runs/를 세지 않는다(그 주 원문 한 벌)', usage.weeks.length === 1 && usage.weeks[0].weekOf === week && usage.weeks[0].calls === weekRaw.length)
   ok('코호트: 브랜드당 카드 한 장', (await store.getCohortScorecards(BRAND.industry, BRAND.region, week)).filter((c) => c.tenantId === 'snap').length === 1)
 
-  // 4) 엔진이 빠진 측정 — 그 주 카드 · 파일은 그대로, 회차 기록에만 남고 화면에 까닭을 돌려준다
+  // 4) 이 브랜드만 잰 측정에서 엔진이 빠짐 — 그 주 카드 · 파일은 그대로, 회차 기록에만 남고 화면 · 완료 기록에 까닭을 남긴다.
+  // 화면 경로(backgroundReport)로 잰다 — 뒤에서 쓰는 리포트도 그 주 것을 덮지 않아야 한다.
   const before = { raw: weekFile('raw-calls.json'), an: weekFile('question-analyses.json'), card: weekFile('scorecard.json'), report: weekFile('report.md') }
   process.env.COLLECT_ENGINES = 'gemini'
-  const kept = await measureAndBake(await tenant(), store, { selfOnly: true })
+  const kept = await measureAndBake(await tenant(), store, { selfOnly: true, backgroundReport: true })
+  await settlePendingReports()
   const afterKept = runIds()
   ok('엔진 빠짐: 측정은 성공 · 까닭을 돌려준다', typeof kept.weekCardKept === 'string' && kept.weekCardKept.includes('gemini'))
   ok(
     '엔진 빠짐: 그 주 원문 · 판정 · 카드 · 리포트는 그대로',
-    weekFile('raw-calls.json') === before.raw && weekFile('question-analyses.json') === before.an && weekFile('report.md') === before.report &&
-      history().find((h) => h.weekOf === week)!.enginesUsed!.slice().sort().join() === 'gemini,openai',
+    weekFile('raw-calls.json') === before.raw && weekFile('question-analyses.json') === before.an && weekFile('scorecard.json') === before.card &&
+      weekFile('report.md') === before.report && history().find((h) => h.weekOf === week)!.enginesUsed!.slice().sort().join() === 'gemini,openai',
   )
+  ok('엔진 빠짐: 완료 기록(측정 상태 화면)에 까닭을 남긴다', readLocalMeasures()[0]?.weekCardKept === kept.weekCardKept)
   const keptMeta = runMeta(afterKept[afterKept.length - 1])
   ok(
     '엔진 빠짐: 회차 기록에는 남는다(kept · 까닭 · gemini만)',
@@ -171,6 +183,41 @@ try {
   await measureAndBake(await tenant(), store, { selfOnly: true })
   const last = runIds()
   ok('판정 맥락 지문: 별칭이 바뀌면 달라진다', runMeta(last[last.length - 1]).contextFingerprint !== meta.contextFingerprint)
+
+  // 9) 경쟁사도 함께 재는 측정은 엔진이 빠져도 그 주 카드를 덮는다 — 코호트 전체가 같은 엔진으로 다시 재진다.
+  // 함께 잰 경쟁사의 회차 기록은 inCohortRun으로 남는다. 경쟁사는 질문지를 미리 둔 등록 경쟁사로 잰다(가짜 판정은 경쟁사 전용
+  // 질문을 만들지 못한다).
+  const nq = (n: number, text: string) => ({
+    questionId: `v1-00${n}`, text, category: 'comparison', stage: 'consider', industry: '펜션', region: '가상시', containsBrandName: true, version: 'v1',
+  })
+  writeJson('data/near/question-bank/v1.json', {
+    version: 'v1', generatedAt: '2026-10-22T00:00:00.000Z', questions: [nq(1, '이웃 펜션 어때?'), nq(2, '이웃 펜션 주차 돼?'), nq(3, '이웃 펜션 조식 있어?')],
+  })
+  writeJson('tenants.overlay.json', [
+    { ...BRAND, aliases: ['회차 펜션', '회차'] },
+    {
+      tenantId: 'near', brandName: '이웃 펜션', aliases: ['이웃 펜션'], ownedDomains: ['near.example'], industry: '펜션', region: '가상시',
+      engines: ['gemini', 'openai'], questionBankSize: 3, questionBankVersion: 'v1', repeatsPerQuestion: 2, factGraph: [], competitors: [], cohortOnly: true,
+    },
+  ])
+  process.env.COLLECT_ENGINES = 'gemini'
+  const full = await measureAndBake(await tenant(), store, { backgroundReport: true })
+  await settlePendingReports()
+  const ownRuns = runIds()
+  const ownLast = runMeta(ownRuns[ownRuns.length - 1])
+  ok(
+    '전체 측정: 엔진이 빠져도 그 주 카드를 덮는다(본 브랜드 회차는 selfOnly 아님)',
+    full.weekCardKept === undefined && history().find((h) => h.weekOf === week)!.enginesUsed!.join() === 'gemini' &&
+      ownLast.weekCard === 'saved' && !ownLast.selfOnly && !ownLast.inCohortRun,
+  )
+  const compMetas = readdirSync(path.join(dir, 'data'))
+    .filter((t) => t !== 'snap' && existsSync(path.join(dir, 'data', t, week, 'runs')))
+    .flatMap((t) =>
+      readdirSync(path.join(dir, 'data', t, week, 'runs')).map(
+        (id) => JSON.parse(readFileSync(path.join(dir, 'data', t, week, 'runs', id, 'run.json'), 'utf8')) as RunMeta,
+      ),
+    )
+  ok('전체 측정: 함께 잰 경쟁사 회차는 inCohortRun · selfOnly 아님', compMetas.length >= 1 && compMetas.every((m) => m.inCohortRun && !m.selfOnly))
 } finally {
   delete process.env.COLLECT_ENGINES
   rmSync(dir, { recursive: true, force: true })
