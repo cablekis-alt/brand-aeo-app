@@ -64,6 +64,40 @@ ok('유튜브 재생목록 · 인스타그램 게시물은 받는다', reason('h
 ok('네이버 블로그 ?logNo= 글 주소 · 유튜브 공유 주소는 받는다', reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' && reason('https://youtu.be/AbCdEfGhIjK') === 'ok')
 ok('단축 주소는 거절', reason('https://naver.me/abc') === 'short-link')
 ok('글 주소는 받는다', reason('https://blog.naver.com/fakeblog/2233') === 'ok' && reason('https://fake.tistory.com/12') === 'ok' && reason('https://example.com/?p=12') === 'ok')
+// 글쓰기 · 고치기 · 관리 화면 — 2026-10-21 티스토리 /manage/newpost가 올린 글로 적혔다. 같은 글을 고쳐 다시 올릴 때의 고치기 화면도 막는다.
+const editorUrls = [
+  'https://fake.tistory.com/manage/newpost',
+  'https://fake.tistory.com/manage/newpost/12?type=post&returnURL=https%3A%2F%2Ffake.tistory.com%2F12',
+  'https://fake.tistory.com/m/manage/newpost',
+  'https://fake.tistory.com/manage',
+  'https://fake.tistory.com/admin/entry/post',
+  'https://blog.naver.com/fakeblog/postwrite',
+  'https://blog.naver.com/fakeblog/postupdate?logNo=2233',
+  'https://blog.naver.com/PostWriteForm.naver?blogId=fakeblog',
+  'https://blog.naver.com/PostUpdateForm.naver?blogId=fakeblog&logNo=2233',
+  'https://blog.naver.com/fakeblog?Redirect=Update&logNo=2233',
+  'https://blog.naver.com/fakeblog?Redirect=Write',
+  'https://admin.blog.naver.com/fakeblog/config',
+  'https://cafe.naver.com/ArticleWrite.nhn?clubid=1',
+  'https://cafe.naver.com/ca-fe/cafes/1/articles/write',
+  'https://example.com/wp-admin/post.php?post=12&action=edit',
+  'https://example.com/wp-login.php',
+  'https://brunch.co.kr/write',
+  'https://velog.io/write?id=abc',
+  'https://medium.com/new-story',
+  'https://medium.com/p/abc123/edit',
+  'https://studio.youtube.com/video/AbCdEfGhIjK/edit',
+  'https://www.blogger.com/blog/post/edit/1/2',
+]
+ok('글쓰기 · 고치기 · 관리 화면 주소는 거절(editor)', editorUrls.every((u) => reason(u) === 'editor'))
+ok(
+  '관리 화면과 이름만 비슷한 글 주소는 받는다',
+  reason('https://fake.tistory.com/entry/manage-tips') === 'ok' &&
+    reason('https://fake.tistory.com/m/12') === 'ok' &&
+    reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' &&
+    reason('https://example.com/blog/write-better') === 'ok' &&
+    reason('https://medium.com/p/abc123') === 'ok',
+)
 
 // 4) 한 주 인용 집계 — 응답 단위, 은행을 못 읽으면 확인 불가
 const response = (questionId: string, callIndex: number, mentioned: boolean, cites: [string, boolean][], startedAt?: string) => ({

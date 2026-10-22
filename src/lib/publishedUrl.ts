@@ -109,24 +109,60 @@ export function trackingKey(raw: string): string | null {
   return `${host}${path}${query}`.toLowerCase()
 }
 
-export type ArticleUrlReason = 'not-http' | 'homepage' | 'blog-home' | 'short-link'
+export type ArticleUrlReason = 'not-http' | 'homepage' | 'blog-home' | 'short-link' | 'editor'
 
 export const ARTICLE_URL_REASON: Record<ArticleUrlReason, string> = {
   'not-http': 'http(s)로 시작하는 주소가 아닙니다.',
   homepage: '사이트 첫 화면 주소입니다. 올린 글 한 편의 주소를 적어 주세요.',
   'blog-home': '블로그 홈 주소입니다. 올린 글 한 편의 주소를 적어 주세요.',
   'short-link': '단축 주소입니다. AI 답변에는 원래 주소로 인용되므로, 글을 열어 주소창의 주소를 적어 주세요.',
+  editor: '글쓰기 · 고치기 · 관리 화면 주소입니다. 글을 올린 뒤 공개된 글을 열어 주소창의 주소를 적어 주세요.',
+}
+
+/** 글쓰기 · 관리 화면만 있는 호스트(www. · m.을 뗀 뒤). */
+const EDITOR_HOSTS = new Set(['admin.blog.naver.com', 'studio.youtube.com', 'blogger.com', 'draft.blogger.com'])
+
+/**
+ * 글쓰기 · 고치기 · 관리 화면 주소인지 — 글을 올리는 중에 주소창에 뜨는 주소다. 공개된 글이 아니라 AI 답변에 인용될 일이 없다
+ * (2026-10-21 티스토리 /manage/newpost가 올린 글로 적혔다). 같은 글을 고쳐 다시 올릴 때 뜨는 고치기 화면 주소도 막는다.
+ */
+function isEditorPage(u: URL): boolean {
+  const host = hostOf(u)
+  if (EDITOR_HOSTS.has(host)) return true
+  const segments = decodePath(u.pathname).toLowerCase().split('/').filter(Boolean)
+  if (segments.some((s) => s === 'wp-admin' || s === 'wp-login.php')) return true
+  if (host.endsWith('.tistory.com')) {
+    const first = segments[0] === 'm' ? segments[1] : segments[0]
+    return first === 'manage' || first === 'admin' || first === 'owner'
+  }
+  if (host === 'blog.naver.com') {
+    const redirect = (u.searchParams.get('Redirect') ?? '').toLowerCase()
+    return (
+      /^post(write|update)form\.(naver|nhn)$/.test(segments[0] ?? '') ||
+      segments[1] === 'postwrite' ||
+      segments[1] === 'postupdate' ||
+      redirect === 'write' ||
+      redirect === 'update'
+    )
+  }
+  if (host === 'cafe.naver.com') {
+    return /^article(write|modify)\.(naver|nhn)$/.test(segments[0] ?? '') || segments.some((s, i) => s === 'articles' && ['write', 'modify'].includes(segments[i + 1] ?? ''))
+  }
+  if (host === 'brunch.co.kr' || host === 'velog.io') return segments[0] === 'write'
+  if (host === 'medium.com') return segments[0] === 'new-story' || (segments[0] === 'p' && segments[2] === 'edit')
+  return false
 }
 
 /**
  * 글 한 편의 주소인지. 첫 화면 · 블로그 홈 · 단축 주소는 받지 않는다 — 정확 일치로는 거의 잡히지 않고, 잡혀도 그 글의 효과가
- * 아니다(사이트 전체의 인용이다).
+ * 아니다(사이트 전체의 인용이다). 글쓰기 · 관리 화면 주소도 받지 않는다(isEditorPage).
  */
 export function isArticleUrl(raw: string): { ok: true } | { ok: false; reason: ArticleUrlReason } {
   const u = parse(raw)
   if (!u) return { ok: false, reason: 'not-http' }
   const host = hostOf(u)
   if (SHORT_HOSTS.has(host)) return { ok: false, reason: 'short-link' }
+  if (isEditorPage(u)) return { ok: false, reason: 'editor' }
   const key = trackingKey(raw) ?? ''
   // 키의 호스트는 원래 호스트와 다를 수 있다(youtu.be → youtube.com). 첫 / · ? 앞까지가 호스트다.
   const cut = key.search(/[/?]/)
