@@ -130,6 +130,29 @@ try {
   ok('www · 도메인 꼴 주소가 든 문장은 뺀다', out2.includes('가상역 2번 출구에서 만나요.') && !out2.includes('fake-booking.example 에서') && !out2.includes('fake-booking.co.kr'))
   ok('링크 글자에 지어낸 주소를 쓴 문장도 뺀다', !out2.includes('https://fake-booking.example/guide'))
   ok('「**Q.**」 꼬리표는 그 문장과 함께 남거나 빠진다(답 없는 **A.** 없음)', out2.includes('**Q.** 마지막 출발은 언제인가요?') && !/\*\*A\.\*\*\s*$/m.test(out2))
+
+  // 2-2) 빠진 문장에 기대던 문장 — 가드가 앞 문장을 빼면 「그다음 그곳…」도 함께 빼고 기록한다(초안과 같은 규칙, server/factGuard.ts keepSentences)
+  const body3 = ['## 1. 어디서 출발하나요?', '', '출발 40분 전에 도착하세요. 그다음 그곳에서 일행을 확인하세요. 짐은 가볍게 챙기세요.'].join('\n')
+  const writer3 = { call: async () => ({ text: JSON.stringify({ title: '가상시 여행 준비', body: body3 }), citations: [], usedWebSearch: false }) }
+  const adapted3 = await adaptForChannel('vtravel', { contentActionId: 'content:a', channelActionId: 'listing:d' }, { ...base, style: 'blog', format: 'article' }, writer3, checker)
+  ok(
+    '다듬은 글 — 앞 문장이 빠지면 기대던 「그다음 그곳…」도 함께 뺀다',
+    adapted3.markdown.includes('짐은 가볍게 챙기세요.') && !adapted3.markdown.includes('그다음 그곳에서') && (adapted3.notes ?? []).some((n) => n.includes('앞 문장이 빠져')),
+  )
+  // 격상 가드 경로도 같다 — 크게 말한 앞 문장이 빠지면 「그래서 …」도 함께 뺀다.
+  const body4 = ['## 1. 어디서 출발하나요?', '', '가상 여행만 가상역 2번 출구에서 출발하는 유일한 여행이에요. 그래서 늘 줄이 길어요. 짐은 가볍게 챙기세요.'].join('\n')
+  const writer4 = { call: async () => ({ text: JSON.stringify({ title: '가상시 여행 준비', body: body4 }), citations: [], usedWebSearch: false }) }
+  const overChecker = {
+    call: async () => ({ text: JSON.stringify([{ id: 1, verdict: 'overclaim', reason: '「유일한」은 등록된 사실보다 큽니다.' }]), citations: [], usedWebSearch: false }),
+  }
+  const adapted4 = await adaptForChannel('vtravel', { contentActionId: 'content:a', channelActionId: 'listing:o' }, { ...base, style: 'blog', format: 'article' }, writer4, overChecker)
+  ok(
+    '다듬은 글 — 격상 가드가 앞 문장을 빼면 「그래서 …」도 함께 뺀다',
+    adapted4.markdown.includes('짐은 가볍게 챙기세요.') &&
+      !adapted4.markdown.includes('유일한') &&
+      !adapted4.markdown.includes('그래서 늘') &&
+      (adapted4.notes ?? []).some((n) => n.includes('앞 문장이 빠져')),
+  )
   const okTitle = await adaptForChannel(
     'vtravel',
     { contentActionId: 'content:a', channelActionId: 'listing:d' },

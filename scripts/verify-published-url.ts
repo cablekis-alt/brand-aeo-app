@@ -11,7 +11,7 @@
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
 
-const { trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
+const { daysAfterPublish, trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
 const { computeGapActions } = await import('../src/lib/gapActions')
 const { analyzeCitationSources } = await import('../server/citationSources')
 type Analyses = Parameters<typeof computeGapActions>[0]
@@ -64,6 +64,44 @@ ok('유튜브 재생목록 · 인스타그램 게시물은 받는다', reason('h
 ok('네이버 블로그 ?logNo= 글 주소 · 유튜브 공유 주소는 받는다', reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' && reason('https://youtu.be/AbCdEfGhIjK') === 'ok')
 ok('단축 주소는 거절', reason('https://naver.me/abc') === 'short-link')
 ok('글 주소는 받는다', reason('https://blog.naver.com/fakeblog/2233') === 'ok' && reason('https://fake.tistory.com/12') === 'ok' && reason('https://example.com/?p=12') === 'ok')
+// 글쓰기 · 고치기 · 관리 화면 — 2026-10-21 티스토리 /manage/newpost가 올린 글로 적혔다. 같은 글을 고쳐 다시 올릴 때의 고치기 화면도 막는다.
+const editorUrls = [
+  'https://fake.tistory.com/manage/newpost',
+  'https://fake.tistory.com/manage/newpost/12?type=post&returnURL=https%3A%2F%2Ffake.tistory.com%2F12',
+  'https://fake.tistory.com/m/manage/newpost',
+  'https://fake.tistory.com/manage',
+  'https://fake.tistory.com/admin/entry/post',
+  'https://blog.naver.com/fakeblog/postwrite',
+  'https://blog.naver.com/fakeblog/postupdate?logNo=2233',
+  'https://blog.naver.com/PostWriteForm.naver?blogId=fakeblog',
+  'https://blog.naver.com/PostUpdateForm.naver?blogId=fakeblog&logNo=2233',
+  'https://blog.naver.com/fakeblog?Redirect=Update&logNo=2233',
+  'https://blog.naver.com/fakeblog?Redirect=Write',
+  'https://admin.blog.naver.com/fakeblog/config',
+  'https://cafe.naver.com/ArticleWrite.nhn?clubid=1',
+  'https://cafe.naver.com/ca-fe/cafes/1/articles/write',
+  'https://cafe.naver.com/ca-fe/cafes/1/articles/2/modify',
+  'https://cafe.naver.com/f-e/cafes/1/articles/2/modify?boardType=L',
+  'https://m.cafe.naver.com/ca-fe/web/cafes/1/articles/2/modify',
+  'https://example.com/wp-admin/post.php?post=12&action=edit',
+  'https://example.com/wp-login.php',
+  'https://brunch.co.kr/write',
+  'https://velog.io/write?id=abc',
+  'https://medium.com/new-story',
+  'https://medium.com/p/abc123/edit',
+  'https://studio.youtube.com/video/AbCdEfGhIjK/edit',
+  'https://www.blogger.com/blog/post/edit/1/2',
+]
+ok('글쓰기 · 고치기 · 관리 화면 주소는 거절(editor)', editorUrls.every((u) => reason(u) === 'editor'))
+ok(
+  '관리 화면과 이름만 비슷한 글 주소는 받는다',
+  reason('https://fake.tistory.com/entry/manage-tips') === 'ok' &&
+    reason('https://fake.tistory.com/m/12') === 'ok' &&
+    reason('https://blog.naver.com/fakeblog?Redirect=Log&logNo=2233') === 'ok' &&
+    reason('https://example.com/blog/write-better') === 'ok' &&
+    reason('https://medium.com/p/abc123') === 'ok' &&
+    reason('https://cafe.naver.com/f-e/cafes/1/articles/2') === 'ok',
+)
 
 // 4) 한 주 인용 집계 — 응답 단위, 은행을 못 읽으면 확인 불가
 const response = (questionId: string, callIndex: number, mentioned: boolean, cites: [string, boolean][], startedAt?: string) => ({
@@ -147,6 +185,16 @@ const before = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-1
 ok('올리기 전에 한 측정은 인용으로 세지 않는다', before?.publishedHits?.[0]?.timing === 'before' && before.citedPublishedUrls.length === 0)
 const after = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01')]).actions.find((a) => a.id === target)
 ok('올린 뒤 측정의 정확 일치 인용은 센다', after?.citedPublishedUrls.length === 1 && after.publishedHits?.[0]?.tally?.unnamed?.cited === 2)
+// 갓 올린 글은 이번 주 결과도 「인용 없음」 대신 「색인 대기」로 보인다 — 화면이 쓰는 일수를 싣는다(올린 날 → 그 주 첫 측정일).
+ok('이번 주 결과에 올린 뒤 일수를 싣는다(올리기 전 측정은 없음)', after?.publishedHits?.[0]?.daysAfterPublish === 13 && before?.publishedHits?.[0]?.daysAfterPublish === undefined)
+ok(
+  'daysAfterPublish — 측정 첫날 기준 · 시각이 없으면 그 주 월요일 · after가 아니면 null',
+  daysAfterPublish('2026-10-21', { first: '2026-10-22', last: '2026-10-22' }, '2026-W43') === 1 &&
+    daysAfterPublish('2026-10-01', null, '2026-W43') === 18 &&
+    daysAfterPublish('2026-10-22', { first: '2026-10-22', last: '2026-10-22' }, '2026-W43') === null &&
+    daysAfterPublish(null, null, '2026-W43') === null &&
+    daysAfterPublish('2025-12-29', null, '2026-W02') === 7,
+)
 const removed = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'mistake' })]).actions.find((a) => a.id === target)
 ok('「잘못 적은 주소」는 어느 주에서도 붙지 않는다', (removed?.publishedUrls.length ?? 0) === 0)
 const takenAfter = plan([post('p1', 'https://fake.tistory.com/1', target, '2026-10-01', { removedAt: '2026-10-19T03:00:00Z', removedReason: 'taken-down' })]).actions.find((a) => a.id === target)

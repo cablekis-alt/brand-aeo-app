@@ -409,6 +409,9 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
     const found = ledger.find((p) => p.id === postId) ?? legacy.find((p) => p.id === postId);
     if (!found) throw new PublishedPostsError(`집행 기록을 찾지 못했습니다: ${postId}`, 404);
     if (input.restore === true && found.removedAt) {
+      // 지금 규칙으로 받지 않는 주소(예: 규칙을 강화하기 전에 적은 관리 화면 주소)는 되살리지 않는다 — 적을 때와 같은 검사.
+      const check = isArticleUrl(found.url);
+      if (!check.ok) throw new PublishedPostsError(`되살리지 않았습니다 — ${ARTICLE_URL_REASON[check.reason]}`, 400);
       // 같은 주소가 그사이 다른 글이나 같은 곳에 다시 적혔으면 되살리지 않는다 — 한 주소가 두 글의 것이 되거나 한 곳에 두 번 붙는다.
       const clash = ledger.find(
         (p) =>

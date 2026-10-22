@@ -10,7 +10,7 @@ import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { findOverclaims } from './claimGuard.js';
 import { foreignAddresses, splitSentences } from './contentDraft.js';
 import type { EngineClient } from './engines/types.js';
-import { createFactGuard } from './factGuard.js';
+import { createFactGuard, keepSentences } from './factGuard.js';
 import { parseJsonLoose } from './jsonParse.js';
 
 /**
@@ -177,7 +177,7 @@ export async function adaptForChannel(
     const { marker, text } = splitMarker(line);
     if (!text || marker.startsWith('#')) return line;
     const all = splitSentences(text);
-    const kept = all.filter(passes);
+    const kept = keepSentences(all, passes, notes);
     if (wholeLine(marker, text) && kept.length < all.length) return null;
     return kept.length ? `${marker}${balanceBold(kept.join(' '))}` : null;
   });
@@ -216,7 +216,7 @@ export async function adaptForChannel(
         const { marker, text } = splitMarker(l);
         if (marker.startsWith('#') || !text) return l;
         const all = splitSentences(text);
-        const left = all.filter((s) => !claims.overclaimed.has(s));
+        const left = keepSentences(all, (s) => !claims.overclaimed.has(s), notes);
         if (wholeLine(marker, text) && left.length < all.length) return null;
         return left.length ? `${marker}${balanceBold(left.join(' '))}` : null;
       })

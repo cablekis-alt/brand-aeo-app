@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -710,6 +710,8 @@ export interface PublishedHit {
   variantCited: number
   /** 「글을 내렸어요」로 뺀 기록인데 이 주 측정은 내리기 전이었다 — 그 주 인용은 센다. 내린 날(한국 날짜). */
   takenDownOn?: string
+  /** 올린 뒤(after) 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글의 「인용 없음」은 아직 판단하지 않는다(publishTracking.ts INDEXING_GRACE_DAYS). */
+  daysAfterPublish?: number
 }
 
 /**
@@ -782,12 +784,14 @@ function publishedHitsOf(
     if (takenDownOn && timing === 'before') continue
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
+    const days = daysAfterPublish(post.publishedOn, window, weekOf)
     const hit: PublishedHit = {
       post,
       timing,
       tally: index.get(post.key) ?? null,
       variantCited,
       ...(takenDownOn ? { takenDownOn } : {}),
+      ...(days !== null ? { daysAfterPublish: days } : {}),
     }
     out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
   }

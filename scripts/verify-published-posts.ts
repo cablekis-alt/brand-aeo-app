@@ -143,6 +143,15 @@ try {
   await writeFile(qFile, JSON.stringify({ version: 1, keyRule: 3, posts: [...many, { ...many[0], id: 'p-removed', url: 'https://example.com/c/removed', key: 'example.com/c/removed', removedAt: '2026-10-02T00:00:00Z', removedReason: 'mistake' }] }), 'utf-8');
   ok('뺀 적 없는 기록이 가득하면 되살리기도 400', (await fails(patchPublishedPost(Q, 'p-removed', { restore: true }))) === 400);
 
+  // 8-c2) 관리 화면 주소 — 적을 수 없고, 규칙을 강화하기 전에 적어 「잘못 적은 주소」로 뺀 줄은 되살리지 않는다(2026-10-21 /manage/newpost)
+  ok('관리 화면 주소는 적을 수 없다(400)', (await fails(addPublishedPost(T, { ...base, url: 'https://fake.tistory.com/manage/newpost' }))) === 400);
+  const E = 'editor-restore-tenant';
+  const eFile = path.join(root, 'data', E, 'published-posts.json');
+  await mkdir(path.dirname(eFile), { recursive: true });
+  const editorRow = { ...many[0], id: 'p-editor', url: 'https://fake.tistory.com/manage/newpost', key: 'fake.tistory.com/manage/newpost', removedAt: '2026-10-21T00:56:23Z', removedReason: 'mistake' };
+  await writeFile(eFile, JSON.stringify({ version: 1, keyRule: 3, posts: [editorRow] }), 'utf-8');
+  ok('뺀 관리 화면 주소는 되살리지 않는다(400)', (await fails(patchPublishedPost(E, 'p-editor', { restore: true }))) === 400);
+
   // 8-d) 질문 은행에서 고른 글(topic:)의 질문 스냅샷 — 질문 id의 뜻은 은행 판마다 바뀌어 그때의 판 · 문장을 고정한다
   const P = 'topic-tenant';
   const topicArticle = 'topic:v5-001+v5-007';

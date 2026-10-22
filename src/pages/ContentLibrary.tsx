@@ -131,13 +131,14 @@ export default function ContentLibrary() {
   // 주소만 본다 — 내린 글의 판단을 새로 올린 주소 옆에 붙이지 않는다. 이 화면에서 주소를 고치면 저장이 끝난 뒤 다시 읽는다.
   // 자세한 주차별 칸(내린 글 포함)은 AEO 퍼포먼스에 있다.
   const history = usePublishedHistory(canRecord ? key : '', 12, published.saved)
-  const TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'waiting', 'undated', 'removed']
+  // 강한 판단이 앞 — 판단이 늘어도 빠뜨리지 않게 Record로 둔다(빠지면 타입 검사가 잡는다).
+  const TIER_RANK: Record<PostTier, number> = { repeated: 0, once: 1, none: 2, indexing: 3, waiting: 4, undated: 5, removed: 6 }
   const tierOf = (articleId: string): PostTier | null => {
     const live = new Set(postsOf(articleId).filter((p) => !p.removedAt).map((p) => p.id))
     const rows = (history.history?.posts ?? []).filter((p) => p.post.articleId === articleId && live.has(p.post.id))
     if (rows.length === 0 || !history.history) return null
-    const tiers = new Set(rows.map((p) => summarizePost(p.cells, history.history!.weeks).tier))
-    return TIER_ORDER.find((t) => tiers.has(t)) ?? null
+    const tiers = rows.map((p) => summarizePost(p.cells, history.history!.weeks).tier)
+    return tiers.reduce((best, t) => (TIER_RANK[t] < TIER_RANK[best] ? t : best))
   }
   const setStatus = async (actionId: string, status: ActionStatus) => {
     const id = key

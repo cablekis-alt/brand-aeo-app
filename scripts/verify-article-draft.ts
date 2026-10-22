@@ -70,7 +70,7 @@ const ARTICLE_JSON = {
       blocks: [
         { kind: 'text', role: 'key', body: '가상 여행은 오전 9시부터 오후 6시까지 운영합니다.' },
         { kind: 'text', role: 'quote', body: '마지막 출발이 언제인가요? 오후 5시 이후에도 출발하나요?' },
-        { kind: 'text', role: 'why', body: '가상 해안 산책길은 오전 9시부터 오후 6시까지 열려 있습니다. 그래서 오후에도 걸을 수 있습니다.' },
+        { kind: 'text', role: 'why', body: '가상 해안 산책길은 오전 9시부터 오후 6시까지 열려 있습니다. 오후에는 그늘진 구간이 많습니다.' },
         { kind: 'text', role: 'limit', body: '날씨에 따라 운영이 바뀔 수 있습니다.' },
         { kind: 'text', role: 'bogus', body: '구실이 이상한 문단입니다.' },
       ],
@@ -137,6 +137,10 @@ try {
   ok('영어 원고는 블로그 형식을 쓰지 않는다', !enPrompt.system.includes('블로그 긴 글') && enPrompt.system.includes('영어 원고'))
   ok('articleFormatOf — 영어는 없음', articleFormatOf({ format: 'article', language: 'en' }) === undefined && articleFormatOf({ format: 'article' }) === 'article')
   ok('user 메시지는 형식과 무관', oldPrompt.user === articlePrompt.user)
+  ok(
+    '블로그 글 형식 — 문장 하나가 빠져도 읽히게(앞 문장을 가리키는 말로 시작하지 않기)',
+    articlePrompt.system.includes('문장 하나가 빠져도 나머지가 읽히게') && !oldPrompt.system.includes('문장 하나가 빠져도'),
+  )
 
   // 2) 정규화 · 가드
   const stored = await drafts.generateDraft('vtravel', 'content:a', { ...request, format: 'article' }, writerOf(ARTICLE_JSON), checker)
@@ -150,7 +154,7 @@ try {
   ok('그대로 쓸 말 — 통과하면 role quote', s1?.blocks[2]?.role === 'quote' && s1.blocks[2].body === '출발 장소가 가상역 2번 출구가 맞나요? 주차가 되는지도 알려 주세요.')
   ok('주소가 든 문단은 빈칸이 된다', s1?.blocks[3]?.kind === 'gap' && (d.guardNotes ?? []).some((n) => n.includes('주소가 든 문장')))
   ok('그대로 쓸 말은 한 문장이라도 걸리면 칸째 뺀다(빈칸 아님)', !s2?.blocks.some((b) => b.role === 'quote') && (d.guardNotes ?? []).some((n) => n.includes('그대로 쓸 말의 문장 일부가 걸려 칸째')))
-  ok('격상 — 이유 문단은 걸린 문장만 빼고 role 유지', s2?.blocks.some((b) => b.role === 'why' && b.body === '그래서 오후에도 걸을 수 있습니다.') === true)
+  ok('격상 — 이유 문단은 걸린 문장만 빼고 role 유지', s2?.blocks.some((b) => b.role === 'why' && b.body === '오후에는 그늘진 구간이 많습니다.') === true)
   ok('모르는 role은 버린다', s2?.blocks.some((b) => b.body === '구실이 이상한 문단입니다.' && b.role === undefined) === true)
   ok('격상 — 핵심 문장은 칸째 뺀다(빈칸 아님)', s3?.blocks.length === 2 && s3.blocks[0]?.role === 'action' && s3.blocks[1]?.kind === 'gap')
   ok('사진 설명의 * 를 걷는다', s1?.image?.alt === '가상역 2번 출구 앞 집결 장소' && s1.image.caption === '출발 전 모이는 곳')
@@ -158,6 +162,32 @@ try {
   ok('격상 — 사진 설명만 뺀다', s3?.image?.alt === '바닷가 산책로 풍경' && s3.image.caption === undefined)
   ok('사진 자리는 3곳까지', s4 !== undefined && s4.image === undefined)
   ok('빈칸 수', d.gapCount === 3)
+
+  // 2-b) 빠진 문장에 기대던 문장 — 사실 가드 · 격상 가드가 앞 문장을 빼면 「그다음 그곳…」 · 「그래서 …」도 함께 빼고 기록한다
+  const orphanJson = {
+    title: '가상시 여행 준비',
+    lead: '가상시 여행은 출발 장소를 먼저 보면 됩니다.',
+    sections: [
+      {
+        heading: '출발 전',
+        answers: 'q1',
+        blocks: [
+          { kind: 'text', role: 'action', body: '출발 50분 전에 도착하세요. 그다음 그곳에서 일행을 확인하세요. 짐은 가볍게 챙기세요.' },
+          { kind: 'text', role: 'why', body: '대표 코스는 가상 해안 산책길입니다. 그래서 바닷바람이 셉니다. 겉옷을 챙기세요.' },
+        ],
+      },
+    ],
+  }
+  const orphan = (await drafts.generateDraft('vtravel', 'content:orphan', { ...request, format: 'article' }, writerOf(orphanJson), checker)).draft
+  const [ob1, ob2] = orphan.sections[0]?.blocks ?? []
+  ok(
+    '사실 가드가 앞 문장을 빼면 기대던 「그다음 그곳…」도 함께 뺀다',
+    ob1?.body === '짐은 가볍게 챙기세요.' && (orphan.guardNotes ?? []).some((n) => n.includes('그다음 그곳에서') && n.includes('앞 문장이 빠져')),
+  )
+  ok(
+    '격상 가드가 앞 문장을 빼면 「그래서 …」도 함께 뺀다',
+    ob2?.body === '겉옷을 챙기세요.' && (orphan.guardNotes ?? []).some((n) => n.includes('그래서 바닷바람이') && n.includes('앞 문장이 빠져')),
+  )
 
   // 3) 내보내기
   const pub = publishMarkdownOf(stored)

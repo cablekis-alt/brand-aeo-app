@@ -12,7 +12,7 @@ import type { PublishedPost } from '../server/publishedPosts';
 import type { QuestionBank } from '../server/store';
 import type { QuestionRepeatAnalysis } from '../server/types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
-import { summarizePost } from '../src/lib/publishTracking';
+import { executionSummaryLine, freshNoCiteNote, summarizePost, withinIndexingGrace } from '../src/lib/publishTracking';
 
 const checks: [string, boolean][] = [];
 const ok = (label: string, cond: boolean) => checks.push([label, cond]);
@@ -117,6 +117,23 @@ ok('응답 단위로 센다(한 응답 안 두 번은 1)', c42.tally?.all.cited 
 ok('뒷받침 · 이름이 나온 응답을 센다', c42.tally?.all.supporting === 1 && c42.tally.all.mentioned === 1);
 ok('질의만 다른 주소는 응답 단위로 따로 센다', c42.variantCited === 1);
 ok('은행을 못 찾은 주는 이름 없는 질문 수가 null(인용 수는 남는다)', h.posts[0]!.cells[3]?.tally?.unnamed === null && h.posts[0]!.cells[3]?.tally?.all.cited === 1);
+ok(
+  '올린 뒤 며칠 뒤 측정인지 칸에 싣는다(그 주 첫 측정일 · 시각이 없으면 그 주 월요일 기준)',
+  h.posts[0]!.cells[0]?.daysAfterPublish === 3 && h.posts[0]!.cells[2]?.daysAfterPublish === 16 && h.posts[0]!.cells[3]?.daysAfterPublish === 21,
+);
+
+// 3-b) 갓 올린 글 — 2026-10-21에 올리고 10-22에 한 번 잰 글이 곧바로 「인용 없음」이 됐다(스테이,머뭄 블로그 글). 14일 안 측정뿐이면 「색인 대기」.
+{
+  const fresh = await getPublishedHistory(
+    makeStore([card('2026-W43', { questionBankVersion: 'v5' })], { '2026-W43': [answer('c1-001', 0, [['https://other.example/x', false]], at('2026-10-22'))] }, banks),
+    tenant,
+    [post('pn', '2026-10-21')],
+    12,
+  );
+  const freshCell = fresh.posts[0]?.cells[0];
+  ok('올린 다음 날 측정 — 칸에 1일', freshCell?.timing === 'after' && freshCell.daysAfterPublish === 1);
+  ok('올린 다음 날 측정에서 인용이 없으면 「인용 없음」이 아니라 「색인 대기」', summarizePost(fresh.posts[0]!.cells, fresh.weeks).tier === 'indexing');
+}
 
 // 4) 올린 날과 측정 시점
 const timings = (on: string | null) => getPublishedHistory(store, tenant, [post('p', on)], 12).then((r) => r.posts[0]!.cells.map((c) => c?.timing ?? 'none').join(','));
@@ -194,6 +211,59 @@ ok(
   s([cell('before', 0), null, { ...cell('after', 0), afterRemoval: true, tally: null }, { ...cell('after', 0), afterRemoval: true, tally: null }]).tier === 'removed',
 );
 ok('아직 올린 뒤 측정이 없는 글은 측정 대기', s([cell('before', 0), null, cell('during', 0), cell('before', 0)]).tier === 'waiting');
+// 색인 대기 — 부정 판단만 미룬다
+const young = (cited: number, days: number) => ({ ...cell('after', cited), daysAfterPublish: days });
+ok('올린 지 14일 안 측정만 있고 인용이 없으면 색인 대기', s([young(0, 1), null, young(0, 8), cell('before', 0)]).tier === 'indexing');
+ok('14일 지난 측정이 하나라도 있으면 인용 없음', s([young(0, 6), null, young(0, 14), cell('before', 0)]).tier === 'none');
+ok('14일 안의 인용은 그대로 센다(판단 보류)', s([young(1, 3), null, cell('before', 0), cell('before', 0)]).tier === 'once');
+ok('14일 안에 내렸으면 기다려도 풀리지 않는다 — 내림', s([young(0, 2), null, { ...young(0, 9), afterRemoval: true, tally: null }, cell('before', 0)]).tier === 'removed');
+ok('일수가 없는 칸(옛 서버)은 지난 것으로 본다', s([cell('after', 0), null, cell('before', 0), cell('before', 0)]).tier === 'none');
+ok('경계 — 13일은 색인 대기, 14일은 인용 없음', s([young(0, 13)]).tier === 'indexing' && s([young(0, 14)]).tier === 'none');
+ok('withinIndexingGrace — 13일 안, 14일 · 일수 없음은 지남', withinIndexingGrace(13) && !withinIndexingGrace(14) && !withinIndexingGrace(undefined) && !withinIndexingGrace(null));
+// 내린 날을 넘기면 내린 뒤 측정 칸이 아직 없어도 기다려 풀리는 상태로 두지 않는다(2026-10-22 검토 — 다음 측정 전 · 지난 주차 보고서)
+ok('14일 안 측정만 있는데 내렸으면(내린 뒤 칸 없음) 내림', summarizePost([young(0, 1)], h.weeks.slice(0, 1), '2026-10-23').tier === 'removed');
+ok('보고 주차 뒤에 내렸으면(내린 날을 넘기지 않음) 그 주는 색인 대기', summarizePost([young(0, 1)], h.weeks.slice(0, 1), null).tier === 'indexing');
+ok('올린 뒤 측정 없이 내렸으면(내린 뒤 칸 없음) 측정 대기가 아니라 내림', summarizePost([cell('before', 0)], h.weeks.slice(0, 1), '2026-10-23').tier === 'removed');
+ok(
+  '갓 올린 글의 인용 없음 칸 꼬리 — 14일 안 · 인용 없음 · 올린 뒤일 때만',
+  freshNoCiteNote({ ...young(0, 1) }) === '올린 지 1일 · 아직 판단 전' &&
+    freshNoCiteNote({ ...young(0, 14) }) === null &&
+    freshNoCiteNote({ ...young(1, 3) }) === null &&
+    freshNoCiteNote({ ...cell('before', 0), daysAfterPublish: 1 }) === null,
+);
+ok(
+  '보고서 요약 문장에 색인 대기를 센다',
+  executionSummaryLine([{ tier: 'indexing' }, { tier: 'indexing' }, { tier: 'none' }], 'W43') === 'W43까지 기록한 집행 글 3편: 인용 없음 1편 · 색인 대기(올린 지 14일 안) 2편.',
+);
+
+// 성과 표 — 같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 줄 · 채널 줄)에 적은 기록은 한 행으로 묶고 올린 곳 칩을 함께 보인다
+// (2026-10-21 티스토리 /1이 두 행으로 보였다). 올린 날이 다르면(내렸다 다시 올림) 따로 둔다.
+{
+  const React = await import('react');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  // tsx는 이 저장소에서 JSX를 고전 방식(React.createElement)으로 바꾼다 — 그림을 그리기 전에 전역 React를 둔다(verify-execution-marks와 같다).
+  Object.assign(globalThis, { React });
+  const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable');
+  const row = (id: string, targetActionId: string, via: PublishedPost['via'], publishedOn: string, url = 'https://fake.tistory.com/1') => ({
+    post: { id, url, key: url.replace('https://', ''), publishedOn, publishedOnSource: 'user', recordedAt: `${publishedOn}T01:00:00Z`, articleId: 'content:a', targetActionId, via, articleTitle: '가상 글' } as PublishedPost,
+    cells: [null],
+  });
+  const html = renderToStaticMarkup(
+    React.createElement(PublishedHistoryTable, {
+      history: {
+        weeks: [{ weekOf: '2026-W43', analysed: true, window: null, engines: [], bankVersion: null, responses: { all: 0, unnamed: null, named: null, unknown: 0 }, changes: [] }],
+        posts: [
+          row('p-own', 'content:a', 'own', '2026-10-21'),
+          row('p-channel', 'listing:platform:tistory.com', 'channel', '2026-10-21'),
+          row('p-other', 'listing:platform:blog.naver.com', 'channel', '2026-10-21', 'https://blog.naver.com/fakeblog/2233'),
+        ],
+      },
+    }),
+  );
+  const rows = html.match(/<tr>/g)?.length ?? 0;
+  ok('성과 표 — 같은 주소 · 같은 날 두 줄은 한 행(머리 1 + 글 2)', rows === 3);
+  ok('성과 표 — 묶인 행에 올린 곳 칩 둘', html.includes('tistory.com') && html.includes('자사 블로그 · 사이트') && (html.match(/st st-info/g)?.length ?? 0) === 2);
+}
 
 let failed = 0;
 for (const [label, pass] of checks) {
