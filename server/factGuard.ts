@@ -41,12 +41,33 @@ function numberUnitTokens(s: string): Array<{ num: string; unit: string }> {
 }
 
 /**
+ * 단위 한 글자가 재는 것(차원). 「1박」(숙박)과 「1인당」(사람)처럼 **차원이 다를 때만** 다른 숫자로 본다. 같은 차원의 다른 표기
+ * (「4인」 · 「4명」)는 같은 숫자다 — 다르게 보면 「기준 인원이 4인이라 추가 요금이 없습니다」가 「최대 인원: 4명」 대조를 비켜 간다
+ * (2026-10-22 검토). 표에 없는 단위(분 · 단위 없음 등)는 모른다고 보고 풀어 주지 않는다(fail-closed).
+ */
+const UNIT_DIMENSION: Record<string, string> = {
+  인: 'people', 명: 'people',
+  박: 'nights',
+  일: 'days',
+  원: 'money',
+  년: 'years', 해: 'years',
+  층: 'floor',
+  시: 'hour',
+  개: 'count', 곳: 'count', 종: 'count',
+  회: 'times', 번: 'times',
+  월: 'month',
+  '%': 'percent',
+};
+
+/**
  * 앞 문장에 기대는 첫머리 — 앞 문장이 빠지면 가리킬 곳을 잃는다.
  *   SEQUENCE  순서 잇기. 문단에 남은 앞 문장이 하나도 없을 때만 함께 뺀다(「먼저 …」가 남아 있으면 「다음으로 …」는 읽힌다).
  *   REFERENCE 지시 · 인과. 바로 앞 문장이 빠지면 함께 뺀다.
  */
 const SEQUENCE_LEADS = ['그다음', '그 다음', '그런 다음', '이어서', '다음으로'];
 const REFERENCE_LEADS = ['그곳', '그때', '이때', '그것', '그걸', '이 경우', '그 경우', '그래서', '그러면', '따라서', '그러므로'];
+/** 첫머리가 같아도 앞 문장을 가리키지 않는 말(「그때그때 다릅니다」) — 접두 일치에서 먼저 뺀다. */
+const NOT_LEADS = ['그때그때', '이때껏', '그것참'];
 
 /**
  * 문단의 문장 가운데 passes를 통과한 것만 남기되, 빠진 문장에 기대던 문장도 함께 뺀다(이유는 notes에).
@@ -61,8 +82,9 @@ export function keepSentences(all: string[], passes: (s: string) => boolean, not
     if (keep) {
       const head = s.trimStart();
       const orphan =
-        (kept.length === 0 && prevDropped && SEQUENCE_LEADS.some((w) => head.startsWith(w))) ||
-        (prevDropped && REFERENCE_LEADS.some((w) => head.startsWith(w)));
+        !NOT_LEADS.some((w) => head.startsWith(w)) &&
+        ((kept.length === 0 && prevDropped && SEQUENCE_LEADS.some((w) => head.startsWith(w))) ||
+          (prevDropped && REFERENCE_LEADS.some((w) => head.startsWith(w))));
       if (orphan) {
         keep = false;
         notes.push(
@@ -105,11 +127,13 @@ export function createFactGuard(
   const notes: string[] = [];
   const questionNums = numberTokens(questionTexts.join('\n'));
   const questionUnits = new Set(numberUnitTokens(questionTexts.join('\n')).map((t) => `${t.num}${t.unit}`));
-  const factNums = facts.map((f) => ({
-    fact: f,
-    nums: numberTokens(f.value),
-    units: new Set(numberUnitTokens(f.value).map((t) => `${t.num}${t.unit}`)),
-  }));
+  const factNums = facts.map((f) => {
+    const tokens = numberUnitTokens(f.value);
+    // 숫자마다 그 사실에서 붙은 단위들(같은 숫자가 다른 단위로 두 번 나올 수 있다).
+    const unitsOf = new Map<string, Set<string>>();
+    for (const t of tokens) unitsOf.set(t.num, new Set([...(unitsOf.get(t.num) ?? []), t.unit]));
+    return { fact: f, nums: numberTokens(f.value), units: new Set(tokens.map((t) => `${t.num}${t.unit}`)), unitsOf };
+  });
 
   const canonicalFacts = (arr: string[]): string[] => {
     const out: string[] = [];
@@ -140,12 +164,19 @@ export function createFactGuard(
     }
     for (const { num: n, unit } of numberUnitTokens(sentence)) {
       if (sourced.has(n)) continue;
-      // 숫자 · 단위가 같은 사실이 먼저다. 숫자만 같고 단위가 다르면(「1박」 · 「1인당」) 질문에 같은 「숫자+단위」가 있을 때만 받는다 —
-      // 질문에 나온 숫자는 인용해도 된다는 초안 규칙(b9c 규칙 3)과 맞춘다. 질문에도 없으면 그 사실의 값으로 견준다(전과 같음).
+      // 숫자 · 단위가 같은 사실이 먼저다. 그 숫자를 가진 사실들이 모두 다른 차원의 단위이고(「1박」 · 「1인당」) 질문에 같은 「숫자+단위」가
+      // 있을 때만 받는다 — 질문에 나온 숫자는 인용해도 된다는 초안 규칙(b9c 규칙 3)과 맞춘다. 차원을 모르거나 같으면 그 사실의 값으로
+      // 견준다(전과 같음).
       const sameUnit = factNums.find((f) => f.units.has(`${n}${unit}`))?.fact;
-      const sameNumber = factNums.find((f) => f.nums.has(n))?.fact;
-      if (!sameUnit && sameNumber && questionUnits.has(`${n}${unit}`)) continue;
-      const fromFact = sameUnit ?? sameNumber;
+      const withNumber = factNums.filter((f) => f.nums.has(n));
+      const dimension = UNIT_DIMENSION[unit];
+      const otherDimension =
+        dimension !== undefined &&
+        withNumber.every((f) =>
+          [...f.unitsOf.get(n)!].every((u) => UNIT_DIMENSION[u] !== undefined && UNIT_DIMENSION[u] !== dimension),
+        );
+      if (!sameUnit && withNumber.length && otherDimension && questionUnits.has(`${n}${unit}`)) continue;
+      const fromFact = sameUnit ?? withNumber[0]?.fact;
       if (fromFact) {
         if (!containsValue(sentence, fromFact.value)) {
           notes.push(

@@ -359,7 +359,7 @@ function normalize(
     : [];
 
   const leadRaw = typeof r.lead === 'string' ? r.lead.trim() : '';
-  const lead = splitSentences(article ? plainArticleText(leadRaw) : leadRaw).filter(passes).join(' ');
+  const lead = keepSentences(splitSentences(article ? plainArticleText(leadRaw) : leadRaw), passes, notes).join(' ');
 
   // 초안이 실제로 쓴 사실 — 본문에 값이 그대로 들어간 것만 센다(정본 형태로).
   const blob = [lead, ...sections.flatMap((s) => [...s.blocks.map((b) => b.body ?? ''), ...imageTexts(s)])].join('\n');
