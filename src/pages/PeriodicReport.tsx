@@ -18,7 +18,7 @@ import {
 } from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
-import { afterWeeksOf, distinctPostings, executionSummaryLine, monthDay, postWeekOf, summarizePost, TIER_LABEL } from '../lib/publishTracking'
+import { afterWeeksOf, distinctPostings, executionSummaryLine, freshNoCiteNote, monthDay, postWeekOf, summarizePost, TIER_LABEL } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -61,7 +61,10 @@ function afterWeekText(weekOf: string, cell: HistoryCell | null): string {
   const w = weekOf.slice(5)
   if (!cell) return `${w} 확인 불가`
   if (cell.timing === 'during' || cell.timing === 'ambiguous') return `${w} 전후 불명`
-  return cell.tally ? `${w} 인용 ${cell.tally.all.cited}` : `${w} 인용 없음`
+  if (cell.tally) return `${w} 인용 ${cell.tally.all.cited}`
+  // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다 — 같은 줄 판단 칸의 「색인 대기」와 맞춘다(성과 표와 같은 꼬리).
+  const fresh = freshNoCiteNote(cell)
+  return fresh ? `${w} 인용 없음(${fresh})` : `${w} 인용 없음`
 }
 
 /** 집행 표에 보이는 올린 뒤 측정 주 수 — 최근 것부터. */
@@ -332,14 +335,16 @@ export default function PeriodicReport() {
     ).map(({ item, post, places }) => {
       const cells = item.cells.slice(0, end)
       const removedOn = post.removedAt ? kstDate(post.removedAt) : null
-      const summary = summarizePost(cells, weeks)
+      // 보고 주차까지 내린 날만 — 그 뒤에 내린 일은 이 주 보고서에 넣지 않는다.
+      const removedBy = removedOn && (isoWeekOf(removedOn) ?? '') <= until ? removedOn : null
+      const summary = summarizePost(cells, weeks, removedBy)
       return {
         post,
         places,
         // 날짜를 모르는 기록은 잘린 칸과 상관없이 「올린 날 모름」 — 기다리면 풀리는 「측정 대기」가 아니다.
         summary: post.publishedOn ? summary : { ...summary, tier: 'undated' as const },
         after: afterWeeksOf(cells, weeks, post.publishedOn, removedOn),
-        removedOn: removedOn && (isoWeekOf(removedOn) ?? '') <= until ? removedOn : null,
+        removedOn: removedBy,
       }
     })
     if (rows.length === 0) return null

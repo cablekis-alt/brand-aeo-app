@@ -1,5 +1,5 @@
 import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory } from '../lib/api'
-import { distinctPostings, INDEXING_GRACE_DAYS, summarizePost, TIER_LABEL, type Posting, type PostTier } from '../lib/publishTracking'
+import { distinctPostings, freshNoCiteNote, summarizePost, TIER_LABEL, type Posting, type PostTier } from '../lib/publishTracking'
 import { kstDate } from '../lib/publishedUrl'
 import { weekLabel } from '../lib/format'
 import { isoWeekThursday } from '../prompts/isoWeek'
@@ -37,7 +37,8 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
   if (!c.tally) {
     main = unsure ? '전후 불명' : '인용 없음'
     // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다(판단 칸은 「색인 대기」) — 그 까닭을 칸에도 적는다.
-    if (!unsure && c.daysAfterPublish !== undefined && c.daysAfterPublish < INDEXING_GRACE_DAYS) sub.push(`올린 지 ${c.daysAfterPublish}일 — 아직 판단 전`)
+    const fresh = freshNoCiteNote(c)
+    if (fresh) sub.push(fresh)
   } else if (c.tally.unnamed && c.tally.named) {
     main = `이름 없는 ${c.tally.unnamed.cited} · 이름 댄 ${c.tally.named.cited}`
     sub.push(`뒷받침 ${c.tally.all.supporting}`)
@@ -75,9 +76,9 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
   const postings = distinctPostings(history.posts, (p) => p.post)
 
   const row = ({ item: p, places }: Posting<PostHistory>) => {
-    const summary = summarizePost(p.cells, history.weeks)
-    const cells = p.cells.slice(start)
     const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
+    const summary = summarizePost(p.cells, history.weeks, removedOn)
+    const cells = p.cells.slice(start)
     return (
       <tr key={p.post.id}>
         <td className="cell-text history-post">

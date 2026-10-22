@@ -56,23 +56,36 @@ export interface PostSummary {
 
 const cited = (c: HistoryCell) => (c.tally?.all.cited ?? 0) > 0
 
-/** cells와 weeks는 같은 순서다(서버 server/publishedHistory.ts). */
-export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<HistoryWeek, 'changes'>[]): PostSummary {
+/** 올린 지 INDEXING_GRACE_DAYS일이 안 된 측정인지 — 일수가 없으면(옛 서버) 지난 것으로 본다. 판단 · 표 칸 · 이번 주 알약이 같이 쓴다. */
+export const withinIndexingGrace = (days: number | null | undefined): boolean => days !== null && days !== undefined && days < INDEXING_GRACE_DAYS
+
+/** 갓 올린 글의 「인용 없음」 칸에 붙이는 꼬리 — 그 칸은 판단에 넣지 않는다(성과 표 · 정기진단 보고서 집행 표가 같은 문구를 쓴다). */
+export function freshNoCiteNote(c: HistoryCell): string | null {
+  return !c.tally && c.timing === 'after' && withinIndexingGrace(c.daysAfterPublish) ? `올린 지 ${c.daysAfterPublish}일 · 아직 판단 전` : null
+}
+
+/**
+ * cells와 weeks는 같은 순서다(서버 server/publishedHistory.ts). removedOn은 「글을 내렸어요」로 내린 날(한국 날짜) — 내린 뒤 측정 칸이
+ * 아직 없어도(다음 측정 전 · 지난 주차 보고서) 기다려서 풀리는 상태(색인 대기 · 측정 대기)로 보이지 않게 한다. 보고서는 그 주차까지로
+ * 자른 날을 넘긴다(그 뒤에 내린 일은 그 주 보고서에 넣지 않는다).
+ */
+export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<HistoryWeek, 'changes'>[], removedOn: string | null = null): PostSummary {
   const after: { cell: HistoryCell; week: number }[] = []
   cells.forEach((cell, week) => {
     if (cell && !cell.afterRemoval && cell.timing === 'after') after.push({ cell, week })
   })
   const seen = cells.filter((c): c is HistoryCell => c !== null)
   const citedWeeks = after.filter((a) => cited(a.cell)).length
-  // 올린 지 INDEXING_GRACE_DAYS일이 지난 측정이 하나라도 있어야 「인용 없음」이다. 일수가 없는 칸(옛 서버)은 지난 것으로 본다.
-  const matured = after.some((a) => (a.cell.daysAfterPublish ?? INDEXING_GRACE_DAYS) >= INDEXING_GRACE_DAYS)
+  // 내렸으면 기다려도 풀리지 않는다.
+  const down = removedOn !== null || seen.some((c) => c.afterRemoval)
+  // 올린 지 INDEXING_GRACE_DAYS일이 지난 측정이 하나라도 있어야 「인용 없음」이다.
+  const matured = after.some((a) => !withinIndexingGrace(a.cell.daysAfterPublish))
   const tier: PostTier =
     after.length > 0
       ? citedWeeks === 0
         ? matured
           ? 'none'
-          : // 내렸으면 기다려도 풀리지 않는다.
-            seen.some((c) => c.afterRemoval)
+          : down
             ? 'removed'
             : 'indexing'
         : citedWeeks === 1
@@ -81,7 +94,7 @@ export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<History
       : // 올린 날을 모르면 내렸어도 「올린 날 모름」 — 날짜를 알아야 판단할 수 있다.
         seen.length > 0 && seen.every((c) => c.timing === 'unknown')
         ? 'undated'
-        : seen.some((c) => c.afterRemoval)
+        : down
           ? 'removed'
           : 'waiting'
   const unknownSplit = after.some((a) => a.cell.tally && a.cell.tally.unnamed === null)

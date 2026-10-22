@@ -12,7 +12,7 @@ import type { PublishedPost } from '../server/publishedPosts';
 import type { QuestionBank } from '../server/store';
 import type { QuestionRepeatAnalysis } from '../server/types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
-import { executionSummaryLine, summarizePost } from '../src/lib/publishTracking';
+import { executionSummaryLine, freshNoCiteNote, summarizePost, withinIndexingGrace } from '../src/lib/publishTracking';
 
 const checks: [string, boolean][] = [];
 const ok = (label: string, cond: boolean) => checks.push([label, cond]);
@@ -218,6 +218,19 @@ ok('14일 지난 측정이 하나라도 있으면 인용 없음', s([young(0, 6)
 ok('14일 안의 인용은 그대로 센다(판단 보류)', s([young(1, 3), null, cell('before', 0), cell('before', 0)]).tier === 'once');
 ok('14일 안에 내렸으면 기다려도 풀리지 않는다 — 내림', s([young(0, 2), null, { ...young(0, 9), afterRemoval: true, tally: null }, cell('before', 0)]).tier === 'removed');
 ok('일수가 없는 칸(옛 서버)은 지난 것으로 본다', s([cell('after', 0), null, cell('before', 0), cell('before', 0)]).tier === 'none');
+ok('경계 — 13일은 색인 대기, 14일은 인용 없음', s([young(0, 13)]).tier === 'indexing' && s([young(0, 14)]).tier === 'none');
+ok('withinIndexingGrace — 13일 안, 14일 · 일수 없음은 지남', withinIndexingGrace(13) && !withinIndexingGrace(14) && !withinIndexingGrace(undefined) && !withinIndexingGrace(null));
+// 내린 날을 넘기면 내린 뒤 측정 칸이 아직 없어도 기다려 풀리는 상태로 두지 않는다(2026-10-22 검토 — 다음 측정 전 · 지난 주차 보고서)
+ok('14일 안 측정만 있는데 내렸으면(내린 뒤 칸 없음) 내림', summarizePost([young(0, 1)], h.weeks.slice(0, 1), '2026-10-23').tier === 'removed');
+ok('보고 주차 뒤에 내렸으면(내린 날을 넘기지 않음) 그 주는 색인 대기', summarizePost([young(0, 1)], h.weeks.slice(0, 1), null).tier === 'indexing');
+ok('올린 뒤 측정 없이 내렸으면(내린 뒤 칸 없음) 측정 대기가 아니라 내림', summarizePost([cell('before', 0)], h.weeks.slice(0, 1), '2026-10-23').tier === 'removed');
+ok(
+  '갓 올린 글의 인용 없음 칸 꼬리 — 14일 안 · 인용 없음 · 올린 뒤일 때만',
+  freshNoCiteNote({ ...young(0, 1) }) === '올린 지 1일 · 아직 판단 전' &&
+    freshNoCiteNote({ ...young(0, 14) }) === null &&
+    freshNoCiteNote({ ...young(1, 3) }) === null &&
+    freshNoCiteNote({ ...cell('before', 0), daysAfterPublish: 1 }) === null,
+);
 ok(
   '보고서 요약 문장에 색인 대기를 센다',
   executionSummaryLine([{ tier: 'indexing' }, { tier: 'indexing' }, { tier: 'none' }], 'W43') === 'W43까지 기록한 집행 글 3편: 인용 없음 1편 · 색인 대기(올린 지 14일 안) 2편.',
