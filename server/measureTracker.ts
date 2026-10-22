@@ -78,12 +78,12 @@ const active = new Map<string, ActiveMeasure>();
 /**
  * 측정 중단 요청을 받은 테넌트. 파이프라인이 확인 지점(throwIfMeasureCancelled)에서 본다.
  *
- * 원문 저장(saveRawCalls) 전까지만 멈춘다 — 그 뒤는 이번 주 파일을 차례로 새로 쓰는 중이라,
- * 끊으면 새 원문과 옛 판정이 섞인 주차가 남는다. 저장을 시작한 브랜드는 끝까지 마무리한다.
+ * 수집이 끝난 뒤의 마지막 확인 지점까지만 멈춘다. 그 뒤(분석부터)는 끝까지 마무리한다 — 이번 주 파일(원문 · 판정 · 카드)은
+ * 판정 · 집계가 다 끝난 뒤에 함께 쓴다(pipeline.ts runWeeklyPipeline).
  */
 const cancelRequested = new Set<string>();
 
-/** 이 단계부터는 이번 주 파일을 새로 쓰기 시작했다 — 중단하지 않고 마무리한다. */
+/** 이 단계부터는 마지막 확인 지점을 지났다 — 중단하지 않고 마무리한다. */
 const SAVING_STAGES = new Set<ActiveMeasure['stage']>(['분석', '집계', '리포트']);
 
 /** 중단 요청으로 멈춘 측정. 일반 실패와 구분해 화면에 "중단했습니다"로 알린다. */
@@ -147,7 +147,7 @@ export function measureInFlight(): boolean {
 
 /**
  * 진행 중인 로컬 측정 전체에 중단을 요청한다.
- * @returns stopping — 곧 멈출 테넌트, finishing — 이미 저장을 시작해 마무리할 테넌트
+ * @returns stopping — 곧 멈출 테넌트, finishing — 마지막 확인 지점을 지나 마무리할 테넌트
  */
 export function requestCancelActiveMeasures(): { stopping: string[]; finishing: string[] } {
   const stopping: string[] = [];
@@ -164,7 +164,7 @@ export function requestCancelActiveMeasures(): { stopping: string[]; finishing: 
   return { stopping, finishing };
 }
 
-/** 확인 지점 — 중단이 요청됐으면 던진다. 원문 저장 전에만 부른다(위 cancelRequested 주석). */
+/** 확인 지점 — 중단이 요청됐으면 던진다. 분석을 시작하기 전에만 부른다(위 cancelRequested 주석). */
 export function throwIfMeasureCancelled(tenantId: string): void {
   if (cancelRequested.has(tenantId)) throw new MeasureCancelledError(tenantId);
 }
