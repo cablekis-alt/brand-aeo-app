@@ -75,6 +75,7 @@ import { startScheduler } from './scheduler.js';
 import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
 import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
+import { getRunHistory, MAX_RUN_WEEKS } from './runHistory.js';
 import {
   addPublishedPost,
   patchPublishedPost,
@@ -1450,6 +1451,22 @@ app.get('/api/published-history/:tenantId', async (req, res) => {
   try {
     const posts = await readPublishedPosts(tenant.tenantId);
     res.json(await getPublishedHistory(store, tenant, posts, Number.isFinite(weeks) && weeks > 0 ? weeks : 12));
+  } catch (err) {
+    sendPostsError(res, err);
+  }
+});
+
+// 측정 회차별 보기(server/runHistory.ts) — 같은 주에 여러 번 잰 회차와 올린 글의 회차별 인용. Express 전용(웹은 404 → 화면이 숨긴다).
+app.get('/api/run-history/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const weeks = Number(req.query.weeks);
+  try {
+    const posts = await readPublishedPosts(tenant.tenantId);
+    res.json(await getRunHistory(store, tenant, posts, Number.isFinite(weeks) && weeks > 0 ? Math.min(weeks, MAX_RUN_WEEKS) : 6));
   } catch (err) {
     sendPostsError(res, err);
   }

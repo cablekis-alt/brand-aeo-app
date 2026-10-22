@@ -18,7 +18,18 @@ import {
 } from '../lib/api'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
-import { afterWeeksOf, distinctPostings, executionSummaryLine, freshNoCiteNote, monthDay, postWeekOf, summarizePost, TIER_LABEL } from '../lib/publishTracking'
+import {
+  afterWeeksOf,
+  citedPostIdsInWeek,
+  distinctPostings,
+  executionSummaryLine,
+  freshNoCiteNote,
+  monthDay,
+  postWeekOf,
+  runTallyText,
+  summarizePost,
+  TIER_LABEL,
+} from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -56,11 +67,13 @@ function Delta({ now, prev }: { now: number; prev: number | null }) {
   )
 }
 
-/** 집행 표 칸 — 올린 뒤 측정 한 주. 숫자는 그 주소를 정확히 인용한 응답 수. */
+/** 집행 표 칸 — 올린 뒤 측정 한 주. 숫자는 그 주소를 정확히 인용한 응답 수, 여러 번 잰 주는 회차 수(성과 표와 같은 문구). */
 function afterWeekText(weekOf: string, cell: HistoryCell | null): string {
   const w = weekOf.slice(5)
   if (!cell) return `${w} 확인 불가`
   if (cell.timing === 'during' || cell.timing === 'ambiguous') return `${w} 전후 불명`
+  const runs = runTallyText(cell)
+  if (runs) return `${w} ${runs.main}`
   if (cell.tally) return `${w} 인용 ${cell.tally.all.cited}`
   // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다 — 같은 줄 판단 칸의 「색인 대기」와 맞춘다(성과 표와 같은 꼬리).
   const fresh = freshNoCiteNote(cell)
@@ -351,6 +364,12 @@ export default function PeriodicReport() {
     return { rows, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
   }, [published.history, judgedWeek, card?.weekOf])
 
+  // 보고 주 칸(그 주 회차를 합친 값)에서 올린 뒤 인용된 기록 — 개선제안의 「인용됨」이 집행 표와 같은 칸을 보게 한다.
+  const citedPostIds = useMemo(
+    () => (published.history && card ? citedPostIdsInWeek(published.history, card.weekOf) : null),
+    [published.history, card],
+  )
+
   const enrichedReport = useMemo(() => {
     if (!report || !card || !evidence) return report
     const map = buildRecommendationEvidence({
@@ -360,10 +379,10 @@ export default function PeriodicReport() {
       citations: evidence.citations,
       site: siteForReview,
       // 올린 글 기록을 다 읽었을 때만 집행을 가른다 — 읽는 중 · 실패 · 웹이면 전처럼 모두 권한다(「주소 기록 없음」을 지어내지 않는다).
-      ...(published.history ? { posts: execPosts, ...(states ? { states } : {}) } : {}),
+      ...(published.history ? { posts: execPosts, ...(states ? { states } : {}), ...(citedPostIds ? { citedPostIds } : {}) } : {}),
     })
     return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
-  }, [report, card, evidence, siteForReview, states, execPosts, published.history])
+  }, [report, card, evidence, siteForReview, states, execPosts, published.history, citedPostIds])
 
   /*
    * 표지 한 문장 — "이름 없이 물은 질문 N개 중 M개에서 불렸습니다". 언급률(응답 단위)과 달리 질문 단위라
@@ -643,7 +662,9 @@ export default function PeriodicReport() {
                           {TIER_LABEL[r.summary.tier]}
                           {r.summary.measuredAfter > 0 && (
                             <div className="doc-meta">
-                              올린 뒤 측정 {r.summary.measuredAfter}회 중 {r.summary.citedWeeks}주 인용
+                              올린 뒤 측정한 {r.summary.measuredAfter}주 중 {r.summary.citedWeeks}주 인용
+                              {r.summary.measuredRuns !== r.summary.measuredAfter && ` (회차 ${r.summary.citedRuns}/${r.summary.measuredRuns})`}
+                              {r.summary.firstCitedDays !== null && ` · 첫 인용 확인 D+${r.summary.firstCitedDays}`}
                             </div>
                           )}
                         </td>
@@ -653,8 +674,10 @@ export default function PeriodicReport() {
                 </table>
               </div>
               <p className="hint">
-                숫자는 그 주소를 정확히 인용한 AI 응답 수입니다. 「반복 인용」은 올린 뒤 측정 2회 이상에서 인용됐을 때만 붙입니다. 인용은 측정
-                조건과 다른 글에도 달려 있어, 점수 변화의 원인으로 읽지 않습니다. 「확인 불가」는 그 주 판정 기록이 없다는 뜻입니다.
+                숫자는 그 주소를 정확히 인용한 AI 응답 수입니다. 같은 주에 여러 번 잰 주는 「3회 중 1회」처럼 회차 단위로 적습니다(한 회차라도
+                인용되면 그 주는 인용). 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 자주 잴수록 한 주가 인용으로
+                잡힐 기회가 늘어 회차 수를 함께 적습니다. 인용은 측정 조건과 다른 글에도 달려 있어, 점수 변화의 원인으로 읽지 않습니다. 「확인
+                불가」는 그 주 판정 기록이 없다는 뜻입니다.
               </p>
             </section>
           )}

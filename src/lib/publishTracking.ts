@@ -1,12 +1,15 @@
-import type { HistoryCell, HistoryWeek, PublishedPost } from './api'
-import { isoWeekOf, kstDate, timingOf } from './publishedUrl'
+import type { HistoryCell, HistoryWeek, PublishedHistory, PublishedPost } from './api'
+import { ENGINE_LABEL } from './format'
+import { isoWeekOf, kstDate, timingOf, type PostTiming } from './publishedUrl'
 
 /**
  * 올린 글 하나의 판단 — 올린 뒤 측정에서 얼마나 인용됐나(언급률 2번 P3).
  *
  * 단일 측정은 흔들린다(같은 설정 2회 측정에서도 인용 구성이 바뀐다 — 실측: 인용된 주소의 81.6%가 한 주에만 나왔다). 그래서 한 번
- * 인용된 것은 「판단 보류」로 두고, 올린 뒤 측정 2회 이상에서 인용됐을 때만 「반복 인용」이라 부른다. 올리기 전 · 측정 중(전후 불명) ·
- * 내린 뒤 · 판정 기록이 없는 주는 세지 않는다. 질의만 다른 주소의 인용과 답변에 우리 이름이 나왔는지는 보조 숫자다.
+ * 인용된 것은 「판단 보류」로 두고, 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 「여러 주 인용」이라 부른다. 한 주에 여러 번 잰
+ * 회차는 한 주로 센다(한 회차라도 인용하면 그 주는 인용, server/publishedHistory.ts) — 같은 주 회차는 색인 상태를 공유해 독립 근거가
+ * 아니다. 다만 자주 잴수록 한 주가 「인용」으로 잡힐 기회가 늘어, 주 3회 재는 브랜드가 「여러 주 인용」에 더 빨리 닿는다 — 판단 옆에
+ * 회차 수를 함께 적는다. 올리기 전 · 측정 중(전후 불명) · 내린 뒤 · 판정 기록이 없는 주는 세지 않는다. 질의만 다른 주소의 인용과 답변에 우리 이름이 나왔는지는 보조 숫자다.
  *
  * 올린 뒤 측정이 없을 때는 기다리면 풀리는지로 나눈다 — 올린 날을 모르는 옛 기록(날짜를 적어야 판단)과, 판단할 수 있는 측정 없이
  * 내린 글(다시 측정될 수 없다)은 「측정 대기」가 아니다. 내리기 전 측정이 판정 기록 없음 · 전후 불명이었을 수 있어 「측정 전에
@@ -17,7 +20,7 @@ export type PostTier = 'waiting' | 'undated' | 'removed' | 'indexing' | 'none' |
 /**
  * 갓 올린 글은 색인 · 인용까지 시간이 걸린다 — 새 글이 처음 인용되기까지 11 · 13일 걸린 실측이 있다(2026-10 측정 기록). 올린 지 이
  * 일수 안의 측정만 있고 인용이 없으면 「인용 없음」이 아니라 「색인 대기」다(부정 판단만 미룬다 — 그 안의 인용은 그대로 센다).
- * 실제로 색인됐는지 확인한 것은 아니고 올린 뒤 지난 날로 붙이는 상태다. 주 1회 측정이면 두 번이다.
+ * 실제로 색인됐는지 확인한 것은 아니고 올린 뒤 지난 날로 붙이는 상태다. 주 1회 측정이면 두 주다.
  */
 export const INDEXING_GRACE_DAYS = 14
 
@@ -27,8 +30,8 @@ export const TIER_LABEL: Record<PostTier, string> = {
   removed: '내림 · 올린 뒤 판단할 측정 없음',
   indexing: `색인 대기 · 올린 지 ${INDEXING_GRACE_DAYS}일 안 측정만`,
   none: '인용 없음',
-  once: '한 번 인용 · 판단 보류',
-  repeated: '반복 인용',
+  once: '한 주 인용 · 판단 보류',
+  repeated: '여러 주 인용',
 }
 
 export interface PostSummary {
@@ -37,6 +40,11 @@ export interface PostSummary {
   measuredAfter: number
   /** 그중 정확 일치 인용이 있던 주 수. */
   citedWeeks: number
+  /** 올린 뒤 회차 수 · 그중 인용된 회차 수 — 회차 기록이 없는 주는 1회로 센다. */
+  measuredRuns: number
+  citedRuns: number
+  /** 처음 인용된 회차가 올린 지 며칠 뒤였나. 인용이 없거나 일수를 모르면 null. */
+  firstCitedDays: number | null
   /** 올린 뒤 측정의 이름 없는 질문 인용 합. 그 사이 한 주라도 질문 은행을 못 읽었으면 null(확인 불가). */
   unnamedCited: number | null
   /** 올린 뒤 측정에서 그 인용이 우리를 뒷받침한 응답 합. */
@@ -104,6 +112,9 @@ export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<History
     tier,
     measuredAfter: after.length,
     citedWeeks,
+    measuredRuns: after.reduce((n, a) => n + (a.cell.runs?.measured ?? 1), 0),
+    citedRuns: after.reduce((n, a) => n + (a.cell.runs?.cited ?? (cited(a.cell) ? 1 : 0)), 0),
+    firstCitedDays: firstCitedDaysOf(after.map((a) => a.cell)),
     unnamedCited: unknownSplit ? null : after.reduce((sum, a) => sum + (a.cell.tally?.unnamed?.cited ?? 0), 0),
     supporting: after.reduce((sum, a) => sum + (a.cell.tally?.all.supporting ?? 0), 0),
     variantCited: after.reduce((sum, a) => sum + a.cell.variantCited, 0),
@@ -111,9 +122,46 @@ export function summarizePost(cells: (HistoryCell | null)[], weeks: Pick<History
     conditionMixed:
       first !== undefined && last !== undefined && weeks.slice(first.week + 1, last.week + 1).some((w) => (w?.changes.length ?? 0) > 0),
     // 같은 주소를 앞서 올렸다 내린 기록이 올라가 있던 주의 인용은 그 글의 것이다 — 다시 올린 기록의 날짜를 의심하지 않는다.
-    citedBeforePublish: cells.some((c) => c && !c.afterRemoval && !c.earlierPostingLive && c.timing === 'before' && cited(c)),
+    citedBeforePublish:
+      cells.some((c) => c && !c.afterRemoval && !c.earlierPostingLive && c.timing === 'before' && cited(c)) ||
+      cells.some((c) => (c?.citedBeforeRuns ?? 0) > 0),
   }
 }
+
+function firstCitedDaysOf(after: HistoryCell[]): number | null {
+  const first = after.find(cited)
+  if (!first) return null
+  return first.runs?.citedDays[0] ?? first.daysAfterPublish ?? null
+}
+
+/**
+ * 회차가 여럿인 주의 칸 문구 — 「3회 중 1회 · 그 주 인용 D+12」 · 「3회 · 인용 없음」. 「첫 인용」이라는 말은 글 전체의 첫 인용(판단
+ * 칸 · 회차 보기)에만 쓰고, 칸에는 그 주 인용된 회차의 일수를 적는다. 올린 뒤 회차가 없는 칸(전후 불명 · 올리기 전)은 null —
+ * 그 칸은 회차가 하나일 때와 같은 문구를 쓴다. 성과 표 · 정기진단 보고서 집행 표가 같이 쓴다.
+ */
+export function runTallyText(c: HistoryCell): { main: string; sub: string[] } | null {
+  const r = c.runs
+  if (!r || r.measured === 0 || c.timing !== 'after' || c.afterRemoval) return null
+  const sub: string[] = []
+  if (c.tally) {
+    sub.push(
+      c.tally.unnamed && c.tally.named
+        ? `응답 합 이름 없는 ${c.tally.unnamed.cited} · 이름 댄 ${c.tally.named.cited}`
+        : `응답 합 인용 ${c.tally.all.cited} · 질문 유형 확인 불가`,
+    )
+  }
+  if (r.weak > 0) sub.push(`엔진 빠진 회차 ${r.weak}${r.weakEngines.length ? `(${r.weakEngines.map(engineName).join(' · ')})` : ''}`)
+  if (r.unsure > 0) sub.push(`전후 불명 ${r.unsure}회`)
+  if (r.cited === 0) {
+    const fresh = freshNoCiteNote(c)
+    if (fresh) sub.push(fresh)
+    return { main: `${r.measured}회 · 인용 없음`, sub }
+  }
+  const days = r.citedDays.length > 0 ? ` · 그 주 인용 D+${r.citedDays.join('·')}` : ''
+  return { main: `${r.measured}회 중 ${r.cited}회${days}`, sub }
+}
+
+export const engineName = (e: string) => ENGINE_LABEL[e] ?? e
 
 /** 기록이 어느 줄에 올린 것인지 — 범례 · 표에서 글 옆에 붙인다. */
 export function postChannelLabel(p: Pick<PublishedPost, 'targetActionId' | 'via'>): string {
@@ -174,6 +222,33 @@ export function distinctPostings<T>(items: T[], postOf: (t: T) => PublishedPost)
   })
 }
 
+/**
+ * 그 주 측정에 견준 올린 날. 회차가 여럿이면 칸(server/publishedHistory.ts foldCell)과 같은 규칙 — 회차마다 전후를 보고, 올린 뒤
+ * 회차가 하나라도 있으면 after, 없으면 측정하던(during) · 시각 없는 같은 주(ambiguous) · 올리기 전(before) 순이다.
+ */
+export function weekTimingOf(publishedOn: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>): PostTiming {
+  if (!w.runs?.length) return timingOf(publishedOn, w.window, w.weekOf)
+  const each = w.runs.map((r) => timingOf(publishedOn, r.window, w.weekOf))
+  return (['after', 'during', 'ambiguous', 'before'] as const).find((t) => each.includes(t)) ?? 'unknown'
+}
+
+/**
+ * 그 주 칸(회차 합침)에서 올린 뒤 인용된 기록 id — 정기진단 보고서의 개선제안 · 실행 항목의 올린 주소 알약이 마지막 저장 측정에는
+ * 없고 같은 주 다른 회차에서만 인용된 글을 밝히는 데 쓴다. 그 주가 이력에 없으면 null.
+ */
+export function citedPostIdsInWeek(history: Pick<PublishedHistory, 'weeks' | 'posts'>, weekOf: string): Set<string> | null {
+  const w = history.weeks.findIndex((x) => x.weekOf === weekOf)
+  if (w < 0) return null
+  return new Set(
+    history.posts
+      .filter((p) => {
+        const c = p.cells[w]
+        return Boolean(c && !c.afterRemoval && c.timing !== 'before' && (c.tally?.all.cited ?? 0) > 0)
+      })
+      .map((p) => p.post.id),
+  )
+}
+
 /** 그래프 칸 — 측정한 주인지(빈칸이면 미측정). */
 export interface ExecutionSlot {
   weekOf: string
@@ -204,6 +279,8 @@ export interface ExecutionMarks {
  * 주차 이름과 측정한 날의 주가 어긋나도(일요일 밤 측정 · CI 시간대) 서버 칸(timingOf)과 같은 말을 한다. 그 밖에는 올린 날이 든 주가
  * 측정됐으면 측정 전에 올린 글은 그 칸 왼쪽 틈, 측정 뒤에 올린 글은 오른쪽 틈 — 핀 오른쪽 막대 · 점이 「올린 뒤 측정」이다. 시각 없는
  * 같은 주는 칸 위 속 빈 핀, 측정하지 않은 주는 칸 위. 칸 목록에 없는 주(측정한 주만 늘어놓은 막대)는 그다음 칸 왼쪽 틈이다.
+ * 같은 주에 여러 번 잰 주는 칸(server/publishedHistory.ts foldCell)과 같은 규칙으로 정한다 — 올린 뒤 회차가 하나라도 있으면 올린
+ * 뒤, 없고 측정하던 회차가 있으면 전후 불명(weekTimingOf).
  *
  * 첫 칸보다 앞서 올린 글은 수만 센다. 다만 prev(첫 칸 바로 앞 측정)를 주면 그 측정 뒤에 올린 글은 첫 칸 왼쪽 틈에 둔다 — 「직전
  * 측정과 이 측정 사이」를 세는 표의 첫 행이 비지 않게.
@@ -215,12 +292,14 @@ export interface ExecutionMarks {
 export function executionMarks(
   posts: PublishedPost[],
   slots: ExecutionSlot[],
-  weeks: Pick<HistoryWeek, 'weekOf' | 'window'>[],
+  weeks: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>[],
   endWeek?: string,
-  prev?: Pick<HistoryWeek, 'weekOf' | 'window'> | null,
+  prev?: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | null,
 ): ExecutionMarks {
-  const windowOf = new Map(weeks.map((w) => [w.weekOf, w.window]))
-  const within = (d: string, w: { first: string; last: string } | null | undefined) => Boolean(w && w.first <= d && d <= w.last)
+  const weekOfSlot = new Map(weeks.map((w) => [w.weekOf, w]))
+  // 측정하던 때 올렸나 — 측정 시각이 있는 측정만(시각 없는 옛 기록은 같은 주여도 아래에서 칸 위 속 빈 핀).
+  const during = (d: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | undefined) =>
+    Boolean(w && (w.window || w.runs?.length) && weekTimingOf(d, w) === 'during')
   const byX = new Map<number, { hollow: boolean; posts: Posting<PublishedPost>[] }>()
   let outOfRange = 0
   let undated = 0
@@ -236,13 +315,13 @@ export function executionMarks(
     if (slots.length === 0) continue
     let x: number
     let hollow = false
-    const during = slots.findIndex((s) => s.measured && within(pd, windowOf.get(s.weekOf)))
-    if (during >= 0) {
-      x = during
+    const duringSlot = slots.findIndex((s) => s.measured && during(pd, weekOfSlot.get(s.weekOf)))
+    if (duringSlot >= 0) {
+      x = duringSlot
       hollow = true
     } else if (week < slots[0]!.weekOf) {
       // 첫 칸 앞 — 바로 앞 측정 뒤에 올렸으면 첫 칸 왼쪽 틈, 아니면(그 측정 전 · 전후 불명) 범위 밖.
-      if (!prev || within(pd, prev.window) || timingOf(pd, prev.window, prev.weekOf) !== 'before') {
+      if (!prev || weekTimingOf(pd, prev) !== 'before') {
         outOfRange += 1
         continue
       }
@@ -250,7 +329,7 @@ export function executionMarks(
     } else {
       const i = slots.findIndex((s) => s.weekOf === week)
       if (i >= 0 && slots[i]!.measured) {
-        const timing = timingOf(pd, windowOf.get(week) ?? null, week)
+        const timing = weekTimingOf(pd, weekOfSlot.get(week) ?? { weekOf: week, window: null })
         if (timing === 'after') x = i - 0.5
         else if (timing === 'before') x = i + 0.5
         else {
@@ -314,8 +393,8 @@ export function executionsPerSlot(marks: ExecutionMarks, slots: ExecutionSlot[])
 }
 
 const SUMMARY_ORDER: [PostTier, string][] = [
-  ['repeated', '반복 인용'],
-  ['once', '한 번 인용(판단 보류)'],
+  ['repeated', '여러 주 인용'],
+  ['once', '한 주 인용(판단 보류)'],
   ['none', '인용 없음'],
   ['indexing', `색인 대기(올린 지 ${INDEXING_GRACE_DAYS}일 안)`],
   ['waiting', '측정 대기'],

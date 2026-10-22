@@ -5,6 +5,9 @@ import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
+import { useRunHistory } from '../lib/useRunHistory'
+import RunTrendPanel from '../components/RunTrendPanel'
+import { kstStamp } from '../lib/runTrend'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { AEO_SCORE_WEIGHTS, MIN_SOM_MENTIONS, type WeeklyScorecard } from '../prompts/b8-report'
@@ -37,6 +40,8 @@ export default function Performance() {
   const { tenant, viewing } = useTenant()
   // 올린 글 인용 추적(언급률 2번 P3) — 고객 브랜드에서만. 경쟁사 보기는 그 브랜드의 집행 기록이 우리 것이 아니다.
   const published = usePublishedHistory(viewing ? '' : (tenant?.tenantId ?? ''))
+  // 측정 회차별 보기 — 같은 주에 여러 번 잰 회차(데스크톱 전용, 웹은 숨김). 고객 브랜드에서만.
+  const runs = useRunHistory(viewing ? '' : (tenant?.tenantId ?? ''))
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const [selectedWeek, setSelectedWeek] = useWeekSelection(history)
 
@@ -231,6 +236,35 @@ export default function Performance() {
               {!viewing && marks && marks.undated > 0 && ` 올린 날을 모르는 기록 ${marks.undated}편은 핀이 없습니다.`}
             </p>
           </section>
+
+          {(() => {
+            // 회차 기록이 하나도 없으면(웹 · 회차 기록 전 측정뿐인 브랜드) 절을 통째로 숨긴다.
+            if (viewing || !runs.available) return null
+            if (runs.error) {
+              return (
+                <section id="runs">
+                  <h3>측정 회차별 보기</h3>
+                  <p className="error">회차 기록: {runs.error}</p>
+                </section>
+              )
+            }
+            const h = runs.history
+            // 회차 기록(옮겨 둔 옛 측정 포함). 회차 기록 전 그 주 파일(week-file)만 있으면 그릴 것이 없다.
+            const recorded = h?.points.filter((p) => p.kind === 'run') ?? []
+            if (!h || recorded.length === 0) return null
+            return (
+              <section id="runs">
+                <h3>측정 회차별 보기</h3>
+                {recorded.length === 1 ? (
+                  <p className="hint" style={{ marginTop: 0 }}>
+                    회차 기록 1회({recorded[0]!.at ? kstStamp(recorded[0]!.at) : recorded[0]!.weekOf}) — 다음 측정부터 회차별로 봅니다.
+                  </p>
+                ) : (
+                  <RunTrendPanel history={h} selectedWeek={card.weekOf} onSelectWeek={setSelectedWeek} />
+                )}
+              </section>
+            )
+          })()}
 
           {enginePoints.length > 0 && engineNames.length > 0 && (
             <section>

@@ -2460,10 +2460,126 @@ p.hint {
   color: var(--info);
 }
 
+/* 측정 회차별 보기(RunTrendPanel.tsx) — 회차 점 · 범위 수염 · 글별 회차 표시. 색은 토큰만 쓴다(다크 모드가 따라온다). */
+.run-trend {
+  display: grid;
+  /* 그림이 넓어도 칸이 늘지 않게 — 그림은 .score-trend-scroll 안에서 가로로 넘긴다(페이지는 가로로 밀리지 않는다). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.rt-post-line b {
+  overflow-wrap: anywhere;
+}
+/* 같은 날 올린 글 「1a · 1b」 — 두 글자라 원 대신 둥근 막대. */
+.st-key.exec.rt-label {
+  width: auto;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+}
+.rt-post-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-post-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.rt-post-line .doc-meta {
+  flex-basis: 100%;
+}
+.rt-ci line {
+  stroke: var(--accent);
+  stroke-opacity: 0.45;
+  stroke-width: 1.4;
+}
+.rt-dot-partial {
+  fill: var(--card);
+  stroke: var(--warn);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 2;
+}
+.rt-base {
+  fill: var(--muted);
+}
+.rt-grace {
+  fill: var(--info);
+  fill-opacity: 0.06;
+}
+.rt-week-on {
+  fill: var(--accent-soft);
+}
+.rt-mark {
+  stroke-width: 1.5;
+}
+.rt-mark.cited {
+  fill: var(--info);
+  stroke: var(--info);
+}
+.rt-mark.none {
+  fill: var(--card);
+  stroke: var(--muted);
+}
+.rt-mark.grace {
+  fill: var(--card);
+  stroke: var(--muted);
+  stroke-dasharray: 2 2;
+}
+.rt-mark.unsure circle {
+  fill: var(--card);
+  stroke: var(--info);
+  stroke-width: 1.5;
+}
+.rt-mark.unsure path {
+  fill: var(--info);
+}
+.rt-mark-text {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.rt-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  vertical-align: middle;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  background: var(--card);
+}
+.rt-key.cited {
+  border-color: var(--info);
+  background: var(--info);
+}
+.rt-key.grace {
+  border-style: dashed;
+}
+.rt-key.partial {
+  border: 1.5px dashed var(--warn);
+}
+.rt-key.base {
+  border-radius: 1px;
+  border-color: var(--muted);
+  background: var(--muted);
+}
+.rt-table {
+  font-variant-numeric: tabular-nums;
+}
+.rt-table td,
+.rt-table th {
+  white-space: nowrap;
+}
+
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }
   .shell { grid-template-columns: 1fr; gap: 0; }
-  .rec-card, .report-verdict, .panel, .score-trend, .exec-table tr { break-inside: avoid; }
+  .rec-card, .report-verdict, .panel, .score-trend, .run-trend, .exec-table tr { break-inside: avoid; }
   /* 집행 절은 길이가 정해져 있지 않아 통째로 넘기면 빈 쪽이 생긴다 — 행만 붙들고, 제목 · 요약 줄은 첫 행과 같은 쪽에 둔다. */
   .report-exec h3, .report-exec-line { break-after: avoid; }
   /* 화면용 카드 표면은 종이에서 테두리만 남긴다 — 그림자·채움은 인쇄에서 번진다. */

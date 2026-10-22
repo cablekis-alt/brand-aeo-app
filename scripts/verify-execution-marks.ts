@@ -97,7 +97,7 @@ ok('마지막 측정 뒤에 올린 글은 어느 행에도 넣지 않는다', [.
 // 보고서 한 문장
 ok(
   '0인 판단은 빼고 적는다',
-  executionSummaryLine([{ tier: 'repeated' }, { tier: 'none' }, { tier: 'none' }], 'W42') === 'W42까지 기록한 집행 글 3편: 반복 인용 1편 · 인용 없음 2편.',
+  executionSummaryLine([{ tier: 'repeated' }, { tier: 'none' }, { tier: 'none' }], 'W42') === 'W42까지 기록한 집행 글 3편: 여러 주 인용 1편 · 인용 없음 2편.',
 );
 ok('기록이 없으면 문장이 없다(「집행 0편」이라고 단정하지 않는다)', executionSummaryLine([], 'W42') === null);
 ok('인과 표현을 쓰지 않는다', !/덕분|때문|효과|올랐/.test(executionSummaryLine([{ tier: 'repeated' }, { tier: 'once' }, { tier: 'waiting' }], 'W42') ?? ''));
@@ -259,6 +259,54 @@ ok(
   '블로그 플랫폼은 한 편 올려도 계속 권하고 지분을 머리말로 단다(「충족 전」이라 쓰지 않는다)',
   !executedBlock(naver) && /^\[집행함 10\/1 · 올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — 더 올리면 지분이 오른다\] /.test(naverNote) && !naverNote.includes('충족 전'),
 );
+
+// 같은 주 회차 합침(citedPostIds) — 마지막 저장 측정에는 없고 다른 회차에서만 인용된 글은 「인용됨」으로 적되 기준을 밝힌다.
+// 주지 않으면 전과 같다(위 「인용 대기」 검사).
+const otherRun = evidence({ posts: [wikiPost], citedPostIds: new Set(['w']) });
+ok(
+  '다른 회차에서만 인용된 집행 글 — 「다른 회차에서 인용됨(마지막 저장 측정에서는 없음)」',
+  executedBlock(otherRun)?.items[0]?.detail === '집행함 10/12 · 올린 글이 이번 주 다른 회차에서 인용됨(마지막 저장 측정에서는 없음) · 아직 충족 전',
+);
+ok('회차 합침 기록에 없는 글은 그대로 「인용 대기」', executedBlock(evidence({ posts: [wikiPost], citedPostIds: new Set(['x']) }))?.items[0]?.detail === '집행함 10/12 · 인용 대기');
+const naverOther = 'https://blog.naver.com/me/9';
+const platformOther = evidence({
+  posts: [post('n9', '2026-10-01', { url: naverOther, key: trackingKey(naverOther) ?? naverOther, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
+  citedPostIds: new Set(['n9']),
+});
+const platformNote = platformOther[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? '';
+ok(
+  '블로그 플랫폼 — 다른 회차에서만 인용됐으면 지분이 마지막 측정 기준임을 밝힌다',
+  /다른 회차에서 인용됨\(마지막 저장 측정에서는 없음\) · 지분 \d+\/\d+\(마지막 측정 기준\) — 더 올리면/.test(platformNote),
+);
+const platformSame = evidence({
+  posts: [post('n', '2026-10-01', { url: naverUrl, key: trackingKey(naverUrl) ?? naverUrl, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
+  citedPostIds: new Set(['n']),
+});
+ok(
+  '마지막 측정에서도 인용됐으면 기준을 따로 적지 않는다',
+  /올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — /.test(platformSame[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? ''),
+);
+
+// 글을 내렸는데 내리기 전 같은 주 다른 회차에서 인용됐다 — 이미 내린 글은 다음 측정이 인용할 수 없으니 그대로 다시 권한다.
+const downedOther = evidence({
+  posts: [{ ...wikiPost, publishedOn: '2026-10-05', removedAt: '2026-10-08T00:00:00Z', removedReason: 'taken-down' }],
+  states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-05T00:00:00Z' } },
+  citedPostIds: new Set(['w']),
+});
+ok('내린 글이 다른 회차에서 인용됐어도 「다시 올릴 곳」으로 다시 권한다', recommended(downedOther) && wikiDetail(downedOther).startsWith('[올린 글 10/8 내림 — 다시 올릴 곳] '));
+
+// 같은 주에 여러 번 잰 주 — 핀도 칸(foldCell)과 같은 규칙: 올린 뒤 회차가 하나라도 있으면 올린 뒤(왼쪽 틈), 없고 측정하던 회차가 있으면
+// 전후 불명. 그 주 카드 회차가 올리기 전이어도(뒤 회차는 카드를 덮지 않음) 칸과 같은 쪽에 선다.
+const runOf = (first: string, last = first) =>
+  ({ runId: first, kind: 'run', at: `${last}T05:00:00Z`, window: { first, last }, weekCard: 'saved', isWeekCard: false, selfOnly: true, engines: [], partialEngines: [], missingEngines: [], bankVersion: null }) as never;
+const multi = (cardWindow: string, runs: string[]) => [{ weekOf: '2026-W44', window: { first: cardWindow, last: cardWindow }, runs: runs.map((d) => runOf(d)) }];
+const oneSlot = [{ weekOf: '2026-W44', measured: true }];
+const between = executionMarks([post('m1', '2026-10-28')], oneSlot, multi('2026-10-26', ['2026-10-26', '2026-10-30']));
+ok('회차 사이에 올림(카드는 앞 회차) — 핀은 올린 뒤(왼쪽 틈) · 칸과 같은 쪽', between.pins[0]?.x === -0.5 && between.pins[0]?.hollow === false);
+const sameDayRun = executionMarks([post('m2', '2026-10-30')], oneSlot, multi('2026-10-30', ['2026-10-26', '2026-10-30']));
+ok('측정하던 날 올리고 그 뒤 회차가 없으면 전후 불명(속 빈 핀)', sameDayRun.pins[0]?.x === 0 && sameDayRun.pins[0]?.hollow === true);
+const afterAll = executionMarks([post('m3', '2026-10-31')], oneSlot, multi('2026-10-30', ['2026-10-26', '2026-10-30']));
+ok('모든 회차 뒤에 올림 — 오른쪽 틈', afterAll.pins[0]?.x === 0.5);
 
 let failed = 0;
 for (const [label, pass] of checks) {
