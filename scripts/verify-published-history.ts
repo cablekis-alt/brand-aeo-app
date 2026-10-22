@@ -268,6 +268,113 @@ ok(
   ok('성과 표 — 묶인 행에 올린 곳 칩 둘', html.includes('tistory.com') && html.includes('자사 블로그 · 사이트') && (html.match(/st st-info/g)?.length ?? 0) === 2);
 }
 
+// 8) 회차 합치기 — 같은 주에 여러 번 잰 회차(runs/)를 칸 하나로 합친다(server/publishedHistory.ts foldCell). 한 회차라도 인용하면 그 주는
+// 인용, 숫자는 회차마다 센 뒤 더한다(이어 붙여 한 번에 세면 같은 응답 키가 한 번으로 줄어든다). 표본이 하나뿐인 주는 전과 같다.
+{
+  const React = await import('react');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  Object.assign(globalThis, { React });
+  const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable');
+  const { runTallyText } = await import('../src/lib/publishTracking');
+  const ENG = ['gemini', 'perplexity'];
+  const wcard = (weekOf: string, extra: Partial<WeeklyScorecard> = {}) => card(weekOf, { questionBankVersion: 'v5', enginesUsed: ENG, ...extra });
+  const px = (day: string) => answer('c1-001', 0, [], { ...at(day), engine: 'perplexity' as QuestionRepeatAnalysis['engine'] });
+  const meta = (weekOf: string, runId: string, finishedAt: string, extra: Partial<RunSnapshot['meta']> = {}): RunSnapshot['meta'] => ({
+    runId,
+    tenantId: T,
+    weekOf,
+    startedAt: finishedAt,
+    finishedAt,
+    selfOnly: true,
+    inCohortRun: false,
+    weekCard: 'saved',
+    engines: { gemini: { planned: 2, succeeded: 2 }, perplexity: { planned: 2, succeeded: 2 } },
+    engineIssues: [],
+    contextFingerprint: 'f',
+    collectUsage: {},
+    ...extra,
+  });
+  const snap = (weekOf: string, runId: string, finishedAt: string, analyses: QuestionRepeatAnalysis[], extra: Partial<RunSnapshot['meta']> = {}, cardExtra: Partial<WeeklyScorecard> = {}): RunSnapshot => ({
+    meta: meta(weekOf, runId, finishedAt, extra),
+    scorecard: wcard(weekOf, cardExtra),
+    analyses,
+  });
+  // W45: 11-03(화)에 올림. R1 11-02(올리기 전, 인용) · R2 11-05(D+2, 인용) · R3 11-07(D+4, 같은 응답 키로 인용 — 그 주 카드) · R4 11-08(D+5,
+  // Perplexity가 빠져 카드를 덮지 않음, 은행 판 v9라 이름 없는/이름 댄 확인 불가, 인용).
+  const r1 = [answer('c1-001', 0, [[POST, false]], at('2026-11-02')), px('2026-11-02')];
+  const r2 = [answer('c1-001', 0, [[POST, false]], at('2026-11-05')), px('2026-11-05')];
+  const r3 = [answer('c1-001', 0, [[POST, true]], at('2026-11-07')), px('2026-11-07')];
+  const r4 = [answer('c1-002', 0, [[POST, false]], at('2026-11-08'))];
+  // W46: 11-10(화)에 올린 둘째 글과 같은 날 두 번 잼 — 둘째 글은 두 회차 모두 측정하던 날(전후 불명), 첫 글은 D+7 · 인용 없음. 회차 하나는 깨짐.
+  const r5 = [answer('c1-001', 0, [], at('2026-11-10')), px('2026-11-10')];
+  const r6 = [answer('c1-001', 0, [], { timing: { startedAt: '2026-11-10T06:00:00Z', wallMs: 0, judgeMs: { mention: 0, citation: 0, rank: 0, fact: 0 } } }), px('2026-11-10')];
+  const runCards = [wcard('2026-W44'), wcard('2026-W45'), wcard('2026-W46')];
+  const runStore = makeStore(
+    runCards,
+    { '2026-W44': [answer('c1-001', 0, [], at('2026-10-28')), px('2026-10-28')], '2026-W45': r3, '2026-W46': r6 },
+    banks,
+    {
+      '2026-W45': {
+        runs: [
+          snap('2026-W45', 'r1', '2026-11-02T02:00:00Z', r1),
+          snap('2026-W45', 'r2', '2026-11-05T02:00:00Z', r2),
+          snap('2026-W45', 'r3', '2026-11-07T02:00:00Z', r3),
+          snap(
+            '2026-W45',
+            'r4',
+            '2026-11-08T02:00:00Z',
+            r4,
+            { weekCard: 'kept', weekCardKeptReason: '엔진 빠짐', engines: { gemini: { planned: 1, succeeded: 1 }, perplexity: { planned: 1, succeeded: 0 } } },
+            { questionBankVersion: 'v9', enginesUsed: ['gemini'] },
+          ),
+        ],
+        issues: [],
+      },
+      '2026-W46': {
+        runs: [snap('2026-W46', 'r5', '2026-11-10T02:00:00Z', r5), snap('2026-W46', 'r6', '2026-11-10T07:00:00Z', r6)],
+        issues: [{ weekOf: '2026-W46', runId: 'bad', reason: '깨진 판정 파일(검증용)' }],
+      },
+    },
+  );
+  const p1 = post('run-1', '2026-11-03');
+  const p2 = post('run-2', '2026-11-10', { url: 'https://example.com/blog/8', key: 'example.com/blog/8' });
+  const rh = await getPublishedHistory(runStore, tenant, [p1, p2], 12);
+  const wk = (weekOf: string) => rh.weeks.find((x) => x.weekOf === weekOf)!;
+  const cell = (post: number, weekOf: string) => rh.posts[post]!.cells[rh.weeks.findIndex((x) => x.weekOf === weekOf)]!;
+  const c45 = cell(0, '2026-W45');
+  ok('회차 합치기 — 올린 뒤 회차가 하나라도 있으면 칸은 after', c45.timing === 'after');
+  ok(
+    '회차 합치기 — 올린 뒤 3회 중 3회 인용 · 엔진 빠진 회차 1(Perplexity) · 그 주 인용 D+2·4·5',
+    c45.runs?.measured === 3 && c45.runs.cited === 3 && c45.runs.weak === 1 && c45.runs.weakEngines.join() === 'perplexity' && c45.runs.citedDays.join() === '2,4,5',
+  );
+  ok('회차 합치기 — 같은 응답 키라도 회차가 다르면 따로 센다(응답 합 3)', c45.tally?.all.cited === 3);
+  ok('회차 합치기 — 한 회차라도 은행을 못 읽었으면 이름 없는/이름 댄은 확인 불가', c45.tally?.unnamed === null && c45.tally?.named === null);
+  ok('회차 합치기 — 올리기 전 회차의 인용은 따로 센다(칸은 after)', c45.citedBeforeRuns === 1);
+  ok('회차 합치기 — 일수는 가장 늦은 회차(D+5)', c45.daysAfterPublish === 5);
+  ok(
+    '회차 합치기 — 주 측정 창은 회차 전체 범위 · 회차 4개 · 그 주 카드는 r3',
+    wk('2026-W45').window?.first === '2026-11-02' && wk('2026-W45').window?.last === '2026-11-08' && wk('2026-W45').runs?.length === 4 &&
+      wk('2026-W45').runs?.find((r) => r.isWeekCard)?.runId === 'r3',
+  );
+  ok('회차 합치기 — 표본이 하나뿐인 주는 runs가 없다(전과 같은 칸)', wk('2026-W44').runs === undefined && cell(0, '2026-W44').runs === undefined);
+  ok('회차 합치기 — 읽지 못한 회차는 그 주 runIssues에 남는다', wk('2026-W46').runIssues?.length === 1);
+  const c46 = cell(0, '2026-W46');
+  ok('회차 합치기 — 인용 없는 주는 「2회 · 인용 없음」과 색인 대기 꼬리', runTallyText(c46)?.main === '2회 · 인용 없음' && runTallyText(c46)?.sub.includes('올린 지 7일 · 아직 판단 전') === true);
+  const d46 = cell(1, '2026-W46');
+  ok('회차 합치기 — 같은 날 두 번 잰 날 올린 글은 전후 불명이고 회차 문구를 쓰지 않는다', d46.timing === 'during' && d46.runs?.unsure === 2 && runTallyText(d46) === null);
+  const s1 = summarizePost(rh.posts[0]!.cells, rh.weeks);
+  ok(
+    '회차 합치기 — 판단은 주 단위(한 주 인용 · 판단 보류) · 회차 3/5 · 첫 인용 D+2 · 올리기 전 인용 알림',
+    s1.tier === 'once' && s1.measuredAfter === 2 && s1.citedWeeks === 1 && s1.measuredRuns === 5 && s1.citedRuns === 3 && s1.firstCitedDays === 2 && s1.citedBeforePublish && s1.lapsed,
+  );
+  const html = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: rh }));
+  ok(
+    '성과 표 — 회차 칸 · 머리글 회차 수 · 판단 칸 회차 · 첫 인용',
+    html.includes('3회 중 3회 · 그 주 인용 D+2·4·5') && html.includes(' ·4회') && html.includes('(회차 3/5)') && html.includes('첫 인용 확인 D+2') && html.includes('한 주 인용 · 판단 보류'),
+  );
+  ok('성과 표 — 읽지 못한 회차를 알린다', html.includes('회차 기록 1개를 읽지 못해 칸에서 뺐습니다'));
+}
+
 let failed = 0;
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`);

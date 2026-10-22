@@ -51,6 +51,11 @@ export interface EvidenceInput {
    */
   states?: ActionStateMap
   posts?: PublishedPost[]
+  /**
+   * 보고 주 칸(그 주 회차를 합친 올린 글 이력, server/publishedHistory.ts)에서 올린 뒤 인용된 기록 id. 주면 마지막 저장 측정에는 없고
+   * 같은 주 다른 회차에서만 인용된 글도 「인용됨」으로 적되 그 기준을 밝힌다 — 집행 표와 말이 어긋나지 않게. 없으면 전과 같다.
+   */
+  citedPostIds?: ReadonlySet<string>
 }
 
 const SHOW = 5
@@ -67,9 +72,11 @@ interface Execution {
   /** 보고 주차까지 내린 마지막 날 — 올라가 있는 글이 없으면 「다시 올릴 곳」이다. */
   lastDown?: string
   cited: boolean
+  /** 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용됐다 — 지분 · 충족 숫자는 마지막 측정 기준이라 따로 밝힌다. */
+  citedOtherRun: boolean
 }
 
-function executionOf(a: GapAction, posts: PublishedPost[], asOf: string): Execution | null {
+function executionOf(a: GapAction, posts: PublishedPost[], asOf: string, citedPostIds?: ReadonlySet<string>): Execution | null {
   const hits = a.publishedHits ?? []
   const downs = posts
     .filter((p) => p.targetActionId === a.id && p.removedReason === 'taken-down' && p.removedAt)
@@ -86,8 +93,19 @@ function executionOf(a: GapAction, posts: PublishedPost[], asOf: string): Execut
   const lastDown = [...downs.map((d) => d.on), ...hits.map((h) => h.takenDownOn).filter((d): d is string => Boolean(d) && (isoWeekOf(d!) ?? '') <= asOf)]
     .sort()
     .at(-1)
-  return { when, live: live.length > 0, ...(lastDown ? { lastDown } : {}), cited: a.citedPublishedUrls.length > 0 }
+  const lastRunCited = a.citedPublishedUrls.length > 0
+  const otherRunCited = !lastRunCited && Boolean(citedPostIds) && posts.some((p) => p.targetActionId === a.id && citedPostIds!.has(p.id))
+  return {
+    when,
+    live: live.length > 0,
+    ...(lastDown ? { lastDown } : {}),
+    cited: lastRunCited || otherRunCited,
+    citedOtherRun: otherRunCited,
+  }
 }
+
+/** 「올린 글이 이번 주 인용됨」 — 다른 회차에서만 인용됐으면 그 기준을 밝힌다. */
+const citedText = (e: Execution) => (e.citedOtherRun ? '올린 글이 이번 주 다른 회차에서 인용됨(마지막 저장 측정에서는 없음)' : '올린 글이 이번 주 인용됨')
 
 /** 블로그 플랫폼 — 「충족」이 없는 지분 자리라 한 편 올렸다고 끝나지 않는다(더 올리면 지분이 오른다). */
 const isPlatform = (a: GapAction) => a.id.startsWith('listing:platform:')
@@ -97,7 +115,7 @@ const allTakenDown = (e: Execution) => !e.live && !e.cited && Boolean(e.lastDown
 
 /** 「집행함 10/19 · 인용 대기」 — 다시 권하지 않는 항목의 꼬리표. */
 function executedNote(e: Execution): string {
-  const result = e.cited ? '올린 글이 이번 주 인용됨 · 아직 충족 전' : e.live ? '인용 대기' : '올린 주소 기록 없음'
+  const result = e.cited ? `${citedText(e)} · 아직 충족 전` : e.live ? '인용 대기' : '올린 주소 기록 없음'
   return `집행함${e.when} · ${result}`
 }
 
@@ -107,8 +125,8 @@ function executedNote(e: Execution): string {
  */
 function reRecommendNote(a: GapAction, e: Execution): string {
   if (!isPlatform(a)) return `올린 글 ${monthDay(e.lastDown!)} 내림 — 다시 올릴 곳`
-  const result = e.cited ? '올린 글이 이번 주 인용됨' : e.live ? '인용 대기' : e.lastDown ? `올린 글 ${monthDay(e.lastDown)} 내림` : '올린 주소 기록 없음'
-  const share = a.progress ? ` · 지분 ${a.progress.supporting}/${a.progress.total}` : ''
+  const result = e.cited ? citedText(e) : e.live ? '인용 대기' : e.lastDown ? `올린 글 ${monthDay(e.lastDown)} 내림` : '올린 주소 기록 없음'
+  const share = a.progress ? ` · 지분 ${a.progress.supporting}/${a.progress.total}${e.citedOtherRun ? '(마지막 측정 기준)' : ''}` : ''
   return `집행함${e.when} · ${result}${share} — 더 올리면 지분이 오른다`
 }
 
@@ -225,7 +243,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
     const open = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
     // 이미 집행한 일은 다시 권하지 않는다 — 집행함으로 표시했거나 올린 주소를 적은 항목. 충족은 다음 측정이 말한다. 다만 블로그
     // 플랫폼(지분 자리)과 글을 모두 내린 항목은 할 일이 남아 계속 권하고, 집행했다는 사실을 머리말로 단다.
-    const exec = new Map(open.map((a) => [a.id, executionOf(a, posts, asOf)]))
+    const exec = new Map(open.map((a) => [a.id, executionOf(a, posts, asOf, input.citedPostIds)]))
     const stays = (a: GapAction) => {
       const e = exec.get(a.id)
       return !e || isPlatform(a) || allTakenDown(e)

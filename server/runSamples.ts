@@ -18,6 +18,11 @@ export interface WeekSample {
   /** 회차 카드(측정 때 조건). week-file이면 그 주 카드. */
   scorecard: WeeklyScorecard;
   analyses: QuestionRepeatAnalysis[];
+  /**
+   * 이 회차가 측정 때 남긴 판정 그대로 — 회차 보기의 순위 · 점수는 이것으로 다시 센다(정비 스크립트가 짝지은 회차만 고쳐, 같은 주
+   * 회차끼리 판정 기준이 섞이지 않게). week-file이면 analyses와 같다.
+   */
+  ownAnalyses: QuestionRepeatAnalysis[];
   /** 판정이 그 주 파일에서 왔다 — 그 주 화면(핀 · 측정 창)의 기준. */
   isWeekFile: boolean;
   /** 측정을 마친 때 — 회차는 finishedAt, 그 주 파일은 판정 시작의 마지막(근사). */
@@ -68,6 +73,7 @@ export async function weekSamples(
       meta: run.meta,
       scorecard: run.scorecard,
       analyses: isWeekFile ? weekAnalyses : run.analyses,
+      ownAnalyses: run.analyses,
       isWeekFile,
       at: run.meta.finishedAt,
       partialEngines: engines.filter(([, v]) => v.succeeded > 0 && v.succeeded < v.planned).map(([e]) => e).sort(),
@@ -83,6 +89,7 @@ export async function weekSamples(
       meta: null,
       scorecard: card,
       analyses: weekAnalyses,
+      ownAnalyses: weekAnalyses,
       isWeekFile: true,
       at: judgeSpan(weekAnalyses)?.last ?? null,
       partialEngines: [],

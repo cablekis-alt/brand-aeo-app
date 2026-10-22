@@ -469,16 +469,48 @@ export interface HistoryWeek {
   responses: { all: number; unnamed: number | null; named: number | null; unknown: number }
   /** 직전 측정 주와 달라진 측정 조건. */
   changes: string[]
+  /** 그 주 회차 — 같은 주에 여러 번 잰 주에만(옛 서버는 없다). */
+  runs?: HistoryRun[]
+  /** 읽지 못해 칸에서 뺀 회차. */
+  runIssues?: string[]
+}
+/** 그 주 회차 하나(server/publishedHistory.ts HistoryRun). */
+export interface HistoryRun {
+  runId: string | null
+  kind: 'run' | 'week-file'
+  at: string | null
+  window: { first: string; last: string } | null
+  weekCard: 'saved' | 'kept' | 'week-file'
+  isWeekCard: boolean
+  selfOnly: boolean | null
+  preserved?: true
+  engines: string[]
+  partialEngines: string[]
+  missingEngines: string[]
+  bankVersion: string | null
+}
+/** 회차가 여럿인 주의 칸 — 올린 뒤 회차 가운데 몇 번 인용됐나(server/publishedHistory.ts RunCellTally). */
+export interface RunCellTally {
+  measured: number
+  cited: number
+  weak: number
+  weakEngines: string[]
+  unsure: number
+  citedDays: number[]
 }
 export interface HistoryCell {
   timing: import('./publishedUrl').PostTiming
   afterRemoval: boolean
   tally: import('./publishedUrl').WeekTally | null
   variantCited: number
-  /** 올린 뒤 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글은 판단을 미룬다(publishTracking.ts INDEXING_GRACE_DAYS). */
+  /** 올린 뒤 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글은 판단을 미룬다(publishTracking.ts INDEXING_GRACE_DAYS). 회차가 여럿이면 가장 늦은 회차. */
   daysAfterPublish?: number
   topicMention?: { answered: number; mentioned: number } | null
   earlierPostingLive?: true
+  /** 회차가 여럿인 주 — 회차별로 센 값. */
+  runs?: RunCellTally
+  /** 같은 주에 올리기 전 회차에서 이미 인용됐다. */
+  citedBeforeRuns?: number
 }
 export interface PostHistory {
   post: PublishedPost
@@ -501,6 +533,78 @@ export async function loadPublishedHistory(tenantId: string, weeks = 12): Promis
   if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
   if (!res.ok || !body || !Array.isArray(body.weeks)) {
     throw new PublishedPostsRequestError(body?.error || `올린 글 인용 이력을 읽지 못했습니다 (HTTP ${res.status})`)
+  }
+  return body
+}
+
+/** 측정 회차별 보기(server/runHistory.ts) — 서버 타입과 같은 모양이다. */
+export interface RunPoint {
+  kind: 'run' | 'week-file'
+  runId: string | null
+  weekOf: string
+  at: string | null
+  window: { first: string; last: string } | null
+  selfOnly: boolean | null
+  inCohortRun: boolean | null
+  preserved?: true
+  weekCard: 'saved' | 'kept' | 'week-file'
+  weekCardKeptReason?: string
+  isWeekCard: boolean
+  engines: Record<string, { planned: number; succeeded: number }> | null
+  enginesUsed: string[]
+  partialEngines: string[]
+  missingEngines: string[]
+  engineIssues: string[]
+  conditionKey: string
+  changesFromPrev: string[]
+  bankVersion: string | null
+  ranked: { k: number; n: number; mentioned: number; ci: { lower: number; upper: number } | null } | null
+  score: number | null
+  scoreAtMeasure: number | null
+  agnosticQuestions: number | null
+  repeatsPerQuestion: number | null
+}
+export interface RunPostCell {
+  timing: import('./publishedUrl').PostTiming
+  afterRemoval: boolean
+  daysAfterPublish: number | null
+  withinGrace: boolean
+  cited: number
+  unnamedCited: number | null
+  variantCited: number
+  byEngine: Record<string, number>
+}
+export interface RunPostRow {
+  post: PublishedPost
+  cells: (RunPostCell | null)[]
+  measuredRuns: number
+  citedRuns: number
+  afterGrace: { measured: number; cited: number }
+  firstCited: { at: string | null; daysAfterPublish: number } | null
+  lastUncitedDaysBefore: number | null
+  unsureRuns: number
+  weakRuns: number
+  weakEngines: string[]
+}
+export interface RunHistory {
+  points: RunPoint[]
+  posts: RunPostRow[]
+  weekCardScores: Record<string, number>
+  issues: string[]
+}
+
+/** 회차 보기 읽기. null은 이 환경에 기능이 없다(웹 — 라우트 404). 그 밖의 실패는 이유와 함께 throw한다. */
+export async function loadRunHistory(tenantId: string, weeks = 6): Promise<RunHistory | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/run-history/${encodeURIComponent(tenantId)}?weeks=${weeks}`)
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  const body = (await res.json().catch(() => null)) as (RunHistory & { error?: string }) | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.points)) {
+    throw new PublishedPostsRequestError(body?.error || `측정 회차 기록을 읽지 못했습니다 (HTTP ${res.status})`)
   }
   return body
 }
