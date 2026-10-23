@@ -1,5 +1,5 @@
 import type { RunHistory, RunPoint, RunPostRow } from './api'
-import { kstDate, timingOf } from './publishedUrl'
+import { kstDate } from './publishedUrl'
 import { distinctPostings, INDEXING_GRACE_DAYS, type Posting } from './publishTracking'
 import { isoWeekThursday } from '../prompts/isoWeek'
 
@@ -62,16 +62,10 @@ export interface RunPin {
 }
 
 /**
- * 마지막으로 고친 뒤의 회차 — 고친 날과 같은 규칙(timingOf)으로 고친 날 뒤에 잰 회차만 센다. 고친 날 당일 회차는 전후 불명이라 넣지
- * 않는다. 엔진이 빠진 회차 · 전후 불명 회차는 세지 않는다.
+ * 마지막으로 고친 뒤의 회차 — 서버(server/runHistory.ts)가 글줄의 다른 숫자와 같은 기간(그림 밖 회차 포함) · 같은 셈으로 낸다. 고친 날
+ * 당일 회차는 전후 불명이라 넣지 않고, 엔진 빠진 회차는 넣되 weak로 따로 센다.
  */
-export interface RunSinceEdit {
-  editedOn: string
-  measured: number
-  cited: number
-  /** 고친 날에서 며칠 뒤 회차에서 처음 인용됐나. */
-  firstCitedDays: number | null
-}
+export type RunSinceEdit = NonNullable<RunPostRow['sinceEdit']>
 
 export interface RunTrendModel {
   days: string[]
@@ -179,31 +173,13 @@ export function buildRunTrend(h: RunHistory): RunTrendModel {
       if (dots[k]?.isolated) return 'weak'
       return c.withinGrace ? 'grace' : 'none'
     })
-    const editDates = (posting.post.edits ?? []).map((e) => e.editedOn)
-    const lastEdit = editDates.at(-1)
-    let sinceEdit: RunSinceEdit | null = null
-    if (lastEdit) {
-      sinceEdit = { editedOn: lastEdit, measured: 0, cited: 0, firstCitedDays: null }
-      points.forEach((p, k) => {
-        const day = pointDay(p)
-        const window = p.window ?? (day ? { first: day, last: day } : null)
-        if (timingOf(lastEdit, window, p.weekOf) !== 'after') return
-        const mark = marks[k]
-        if (mark !== 'cited' && mark !== 'none' && mark !== 'grace') return
-        sinceEdit!.measured += 1
-        if (mark !== 'cited') return
-        sinceEdit!.cited += 1
-        const d = day ? dayNum(day) - dayNum(lastEdit) : null
-        if (d !== null && (sinceEdit!.firstCitedDays === null || d < sinceEdit!.firstCitedDays)) sinceEdit!.firstCitedDays = d
-      })
-    }
     return {
       posting,
       pin,
       label,
       marks,
-      edits: editDates.map((date) => ({ date, x: dayIndex.has(date) ? dayIndex.get(date)! : null })),
-      sinceEdit,
+      edits: (posting.post.edits ?? []).map((e) => ({ date: e.editedOn, x: dayIndex.has(e.editedOn) ? dayIndex.get(e.editedOn)! : null })),
+      sinceEdit: posting.item.sinceEdit ?? null,
     }
   })
 

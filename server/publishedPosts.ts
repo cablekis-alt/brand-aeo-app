@@ -340,11 +340,16 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
     let existing = false;
     let posts = ledger;
     const chosenDate = input.publishedOn !== undefined && input.publishedOnChosen === true;
+    // 같은 글 · 같은 주소 · 같은 올린 날로 이미 적은 줄(한 편의 글)에 고친 날이 있으면 새 줄도 그 목록을 이어받는다 — 줄마다 목록이
+    // 갈라지면 성과 표 대표 줄에 따라 「고침」이 보였다 안 보였다 한다.
+    const inheritedEdits = (on: string | null) =>
+      on ? unionEdits(ledger.filter((p) => !p.removedAt && p.key === key && p.articleId === articleId && p.publishedOn === on).map((p) => p.edits)) : [];
     if (sameTarget?.legacy) {
       // 옛 기록을 다시 적으면 원장으로 옮긴다 — 이제야 어느 글인지 안다. 올린 날은 사람이 골랐을 때만 채운다 — 모르는 날을 오늘로
       // 채우면 지난 주 인용이 「올리기 전 측정」이 되어 사라진다.
       assertRoom(ledger);
       existing = true;
+      const inherited = inheritedEdits(chosenDate ? publishedOn : null);
       post = {
         ...without(sameTarget, 'legacy'),
         articleId,
@@ -354,6 +359,7 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
         ...(str(input.articleTitle, 200) ? { articleTitle: str(input.articleTitle, 200) } : {}),
         ...(markedWeek ? { viewingWeek: markedWeek } : {}),
         ...(topic ? { topic } : {}),
+        ...(inherited.length > 0 ? { edits: inherited } : {}),
       };
       posts = [...ledger, post];
       await writeLedger(tenantId, posts);
@@ -380,6 +386,7 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
       }
     } else {
       assertRoom(ledger);
+      const inherited = inheritedEdits(publishedOn);
       post = {
         id: `p-${randomUUID().replace(/-/g, '').slice(0, 12)}`,
         url,
@@ -395,6 +402,7 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
         ...(str(input.adaptationSourceKey, 200) ? { adaptationSourceKey: str(input.adaptationSourceKey, 200) } : {}),
         ...(markedWeek ? { viewingWeek: markedWeek } : {}),
         ...(topic ? { topic } : {}),
+        ...(inherited.length > 0 ? { edits: inherited } : {}),
       };
       posts = [...ledger, post];
       await writeLedger(tenantId, posts);
@@ -417,6 +425,18 @@ export interface PatchPostInput {
   addEdit?: unknown;
   /** 잘못 남긴 고친 날(YYYY-MM-DD)을 뺀다. */
   removeEdit?: unknown;
+}
+
+/** 여러 줄의 고친 날 목록을 합친다 — 같은 날이면 나중에 기록한 판을 둔다(오래된 순). */
+function unionEdits(lists: (PostEdit[] | undefined)[]): PostEdit[] {
+  const byDay = new Map<string, PostEdit>();
+  for (const list of lists) {
+    for (const e of list ?? []) {
+      const cur = byDay.get(e.editedOn);
+      if (!cur || cur.recordedAt < e.recordedAt) byDay.set(e.editedOn, e);
+    }
+  }
+  return [...byDay.values()].sort((a, b) => a.editedOn.localeCompare(b.editedOn));
 }
 
 /** 고친 날 목록에 하나를 넣거나 뺀 결과(오래된 순). */
@@ -465,13 +485,27 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
     if (!found) throw new PublishedPostsError(`집행 기록을 찾지 못했습니다: ${postId}`, 404);
     // 고친 날은 올린 날 뒤에만 선다 — 올린 날을 모르면 앞뒤를 잴 수 없다. 올린 날을 고친 날 뒤로 옮기는 것도 막는다.
     const effectivePublishedOn = publishedOn ?? found.publishedOn;
+    const editsChanged = Boolean(addEdit) || removeEdit !== undefined;
     if (addEdit) {
       if (found.removedAt && input.restore !== true) throw new PublishedPostsError('뺀 기록에는 고친 날을 남기지 않습니다.', 400);
       if (!effectivePublishedOn) throw new PublishedPostsError('올린 날을 모르는 기록입니다 — 올린 날을 먼저 적어 주세요.', 400);
     }
-    const edits = addEdit || removeEdit !== undefined ? nextEdits(found.edits, addEdit, removeEdit) : found.edits;
+    // 한 편의 글 — 같은 글 · 같은 주소 · 같은 올린 날로 적은 다른 줄(자사 블로그 줄 · 그 블로그의 채널 줄). 성과 표가 한 행으로 묶는 범위와
+    // 같다(distinctPostings). 올린 날이 다른 줄은 따로 올린 글이라 고친 날을 나누지 않는다 — 나누면 그 줄의 올린 날보다 앞선 고친 날이 생긴다.
+    const siblings = ledger.filter(
+      (p) => p.id !== found.id && !p.removedAt && p.key === found.key && p.articleId === found.articleId && p.publishedOn === effectivePublishedOn,
+    );
+    const restoring = input.restore === true && Boolean(found.removedAt);
+    // 고친 날은 묶음 전체의 목록(합친 것)에 더하고 뺀다 — 한 줄의 목록으로 다른 줄을 덮으면 그 줄에만 있던 고친 날이 사라진다. 되살린
+    // 줄은 지금 살아 있는 줄의 목록을 따른다(뺀 동안 바뀐 고친 날).
+    const edits = editsChanged
+      ? nextEdits(unionEdits([found.edits, ...siblings.map((s) => s.edits)]), addEdit, removeEdit)
+      : restoring && siblings.length > 0
+        ? unionEdits(siblings.map((s) => s.edits))
+        : found.edits;
+    // 앞뒤 검사는 이번에 올린 날이나 고친 날이 바뀔 때만 — 빼기 · 되살리기를 저장된 값 때문에 막지 않는다.
     const earliestEdit = edits?.[0]?.editedOn;
-    if (earliestEdit && effectivePublishedOn && earliestEdit < effectivePublishedOn) {
+    if ((publishedOn !== undefined || editsChanged) && earliestEdit && effectivePublishedOn && earliestEdit < effectivePublishedOn) {
       throw new PublishedPostsError(
         addEdit && addEdit.editedOn === earliestEdit
           ? `고친 날(${earliestEdit})이 올린 날(${effectivePublishedOn})보다 앞입니다.`
@@ -495,9 +529,9 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
       assertRoom(ledger);
     }
     if (found.legacy) assertRoom(ledger);
-    const editsChanged = Boolean(addEdit) || removeEdit !== undefined;
+    const editsTouched = editsChanged || (restoring && siblings.length > 0);
     const withEdits = (p: PublishedPost): PublishedPost => {
-      if (!editsChanged) return p;
+      if (!editsTouched) return p;
       const copy = { ...p };
       if (edits && edits.length > 0) copy.edits = edits;
       else delete copy.edits;
@@ -513,10 +547,10 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
           ? {}
           : { removedAt: found.removedAt, ...(found.removedReason ? { removedReason: found.removedReason } : {}) }),
     });
-    // 같은 글의 같은 주소를 다른 줄(자사 블로그 줄 · 그 블로그의 채널 줄)에도 적었으면 고친 날을 함께 둔다 — 한 편의 글이다.
-    const sibling = (p: PublishedPost) => editsChanged && p.id !== found.id && p.key === found.key && p.articleId === found.articleId && !p.removedAt;
+    // 고친 날이 바뀌었으면 묶음의 다른 줄에도 같은 목록을 둔다 — 한 편의 글이다.
+    const siblingIds = new Set(editsChanged ? siblings.map((s) => s.id) : []);
     // 옛 기록을 고치면 원장으로 옮긴다 — 이후 읽기에서는 같은 키라 옛 기록 쪽이 가려진다.
-    const posts = (found.legacy ? [...ledger, next] : ledger.map((p) => (p.id === postId ? next : p))).map((p) => (sibling(p) ? withEdits(p) : p));
+    const posts = (found.legacy ? [...ledger, next] : ledger.map((p) => (p.id === postId ? next : p))).map((p) => (siblingIds.has(p.id) ? withEdits(p) : p));
     await writeLedger(tenantId, posts);
     return { post: next, posts: [...posts, ...legacyPosts(await readActionStates(tenantId), posts)] };
   });

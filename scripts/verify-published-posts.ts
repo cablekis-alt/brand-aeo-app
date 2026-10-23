@@ -219,6 +219,30 @@ try {
   await patchPublishedPost(ED, eOwn.post.id, { remove: 'taken-down' });
   ok('뺀 기록에는 고친 날을 남기지 않는다(400)', (await fails(patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2026-10-16' } }))) === 400);
 
+  // 9-b) 검토 회귀 — 고친 날은 같은 올린 날인 줄(한 편의 글)끼리만 나누고, 덮지 않고 합친다
+  const EG = 'edit-group-tenant';
+  const gA = await addPublishedPost(EG, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/11', publishedOn: '2026-10-10', publishedOnChosen: true });
+  const gB = await addPublishedPost(EG, { articleId: 'content:a', targetActionId: 'listing:platform:tistory.com', via: 'channel', url: 'https://fake.tistory.com/11', publishedOn: '2026-10-12', publishedOnChosen: true });
+  const g1 = await patchPublishedPost(EG, gA.post.id, { addEdit: { editedOn: '2026-10-11' } });
+  ok('올린 날이 다른 줄에는 고친 날을 옮기지 않는다', g1.posts.find((p) => p.id === gB.post.id)?.edits === undefined);
+  ok('올린 날이 다른 줄은 그대로 뺄 수 있다', (await fails(patchPublishedPost(EG, gB.post.id, { remove: 'mistake' }))) === null);
+  const EU = 'edit-union-tenant';
+  const uA = await addPublishedPost(EU, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/12', publishedOn: '2026-10-10', publishedOnChosen: true });
+  await patchPublishedPost(EU, uA.post.id, { addEdit: { editedOn: '2026-10-12' } });
+  const uB = await addPublishedPost(EU, { articleId: 'content:a', targetActionId: 'listing:platform:tistory.com', via: 'channel', url: 'https://fake.tistory.com/12', publishedOn: '2026-10-10', publishedOnChosen: true });
+  ok('같은 글 · 같은 날로 새로 적은 줄은 고친 날을 이어받는다', uB.post.edits?.map((e) => e.editedOn).join(',') === '2026-10-12');
+  const u1 = await patchPublishedPost(EU, uB.post.id, { addEdit: { editedOn: '2026-10-14' } });
+  ok('다른 줄에서 고친 날을 더해도 앞서 남긴 날이 사라지지 않는다', u1.posts.find((p) => p.id === uA.post.id)?.edits?.map((e) => e.editedOn).join(',') === '2026-10-12,2026-10-14');
+  await patchPublishedPost(EU, uB.post.id, { remove: 'mistake' });
+  await patchPublishedPost(EU, uA.post.id, { removeEdit: '2026-10-12' });
+  const u2 = await patchPublishedPost(EU, uB.post.id, { restore: true });
+  ok('되살린 줄은 지금 살아 있는 줄의 고친 날을 따른다(뺀 동안 지운 날이 돌아오지 않는다)', u2.post.edits?.map((e) => e.editedOn).join(',') === '2026-10-14');
+  const EB = 'edit-broken-tenant';
+  const ebFile = path.join(root, 'data', EB, 'published-posts.json');
+  await mkdir(path.dirname(ebFile), { recursive: true });
+  await writeFile(ebFile, JSON.stringify({ version: 1, keyRule: 3, posts: [{ ...many[0], id: 'p-bad', url: 'https://fake.tistory.com/13', key: 'fake.tistory.com/13', publishedOn: '2026-10-12', edits: [{ editedOn: '2026-10-11', recordedAt: '2026-10-11T00:00:00Z' }] }] }), 'utf-8');
+  ok('저장된 고친 날이 올린 날보다 앞서도 빼기는 막지 않는다', (await fails(patchPublishedPost(EB, 'p-bad', { remove: 'mistake' }))) === null);
+
   // 7) 키 규칙이 바뀐 옛 파일은 읽을 때 key를 다시 계산한다
   const K = 'rule-tenant';
   const ruleFile = path.join(root, 'data', K, 'published-posts.json');

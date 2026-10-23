@@ -242,6 +242,30 @@ export function weekEditOf(
 
 const dayDiff = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000)
 
+/**
+ * 고친 글의 그 주 칸 꼬리(성과 표). 칸 숫자는 올린 뒤 회차 전체라서, 고치기 전 회차가 섞인 주는 고친 뒤 회차 몫을 따로 적는다 —
+ * summarizeSinceEdit와 같은 셈(인용 일수가 고친 날까지의 일수보다 큰 회차만 고친 뒤). 고친 날 당일 회차는 전후 불명이다. 그 주 측정이
+ * 모두 고치기 전이면 null.
+ */
+export function weekEditNote(
+  post: Pick<PublishedPost, 'edits' | 'publishedOn'>,
+  c: HistoryCell,
+  w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>,
+): string | null {
+  const edit = weekEditOf(post, w)
+  if (!edit || !post.publishedOn) return null
+  const on = monthDay(edit.editedOn)
+  const each = w.runs?.length ? w.runs.map((r) => timingOf(edit.editedOn, r.window, w.weekOf)) : [edit.timing]
+  const afterRuns = each.filter((t) => t === 'after').length
+  if (afterRuns === each.length) return `${on} 고친 뒤`
+  if (afterRuns === 0) {
+    return each.some((t) => t === 'before') ? `${on} 고친 날이 든 주 · 고친 뒤 회차 없음(고친 날 회차는 전후 불명)` : `${on} 고친 날 측정 · 고치기 전후 불명`
+  }
+  const offset = dayDiff(post.publishedOn, edit.editedOn)
+  const citedAfter = (c.runs?.citedDays ?? []).filter((d) => d > offset).map((d) => d - offset)
+  return `${on} 고친 날이 든 주 · 고친 뒤 회차 ${afterRuns}번 ${citedAfter.length ? `인용 D+${citedAfter.join('·')}` : '인용 없음'}`
+}
+
 /** 마지막으로 고친 뒤의 판단 — 고친 글을 본 측정만 센다. 같은 주에 고치기 전 회차가 섞였으면 그 회차의 인용은 넣지 않는다. */
 export interface EditSummary {
   /** 마지막으로 고친 날. */

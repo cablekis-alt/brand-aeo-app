@@ -79,7 +79,7 @@ try {
   const { clopperPearson } = await import('../server/exactInterval')
   const { getRunHistory } = await import('../server/runHistory')
   const { getPublishedHistory } = await import('../server/publishedHistory')
-  const { summarizePost } = await import('../src/lib/publishTracking')
+  const { summarizePost, summarizeSinceEdit } = await import('../src/lib/publishTracking')
 
   // ── 1부: 회차 읽기 · 표본 · 옮겨 두기 ──────────────────────────────────────────────
   const store = new FileResultStore()
@@ -237,6 +237,17 @@ try {
   // 글별 요약은 그림 범위(최근 장)가 아니라 성과 표와 같은 기간 — 그림을 1장으로 줄여도 요약은 그대로
   const narrow = await getRunHistory(fs1, tenant, [post], 1)
   ok('그림을 1주로 줄여도 글별 요약은 올린 뒤 전체', narrow.points.every((p) => p.weekOf === '2026-W46') && narrow.posts[0]!.measuredRuns === 5 && narrow.posts[0]!.citedRuns === 1)
+
+  // 고친 글 — 10-25에 고침. 고친 뒤 회차는 10-26(Perplexity 빠짐) · 11-02(인용) · 11-09, 그림을 1주로 줄여도 전체 기간으로 센다.
+  const editedPost = { ...post, edits: [{ editedOn: '2026-10-25', recordedAt: '2026-10-25T00:00:00Z' }] } as PublishedPost
+  const se = (await getRunHistory(fs1, tenant, [editedPost], 1)).posts[0]!.sinceEdit
+  ok('고친 뒤 회차: 3회 중 1회 인용 · 엔진 빠진 회차 1 · 첫 인용 D+8(고친 날 기준)', se?.measured === 3 && se.cited === 1 && se.weak === 1 && se.firstCitedDays === 8)
+  const phE = await getPublishedHistory(fs1, tenant, [editedPost], 12)
+  const sumE = summarizeSinceEdit(editedPost, phE.posts[0]!.cells, phE.weeks)
+  ok('고친 뒤 첫 인용: 회차 보기 = 성과 표', sumE?.firstCitedDays === se?.firstCitedDays && sumE?.citedWeeks === 1)
+  const sameDay = (await getRunHistory(fs1, tenant, [{ ...editedPost, edits: [{ editedOn: '2026-10-24', recordedAt: '2026-10-24T00:00:00Z' }] } as PublishedPost], 6)).posts[0]!.sinceEdit
+  ok('고친 날 당일 회차(10-24)는 고친 뒤로 세지 않는다', sameDay?.measured === 3)
+  ok('고친 날이 없으면 sinceEdit null', row.sinceEdit === null)
 
   // 실측 일치 — 가짜 엔진으로 두 번 재면 회차 2개, 다시 센 점수 = 측정 때 점수
   const { measureAndBake } = await import('../server/measureAndBake')

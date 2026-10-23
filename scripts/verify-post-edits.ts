@@ -13,7 +13,7 @@ import PublishedUrlEditor from '../src/components/PublishedUrlEditor';
 import type { HistoryCell, HistoryWeek, PublishedPost, RunHistory, RunPoint, RunPostRow } from '../src/lib/api';
 import { computeGapActions, recordOnlyHits } from '../src/lib/gapActions';
 import { editTimingOf, timingOf } from '../src/lib/publishedUrl';
-import { summarizeSinceEdit, weekEditOf } from '../src/lib/publishTracking';
+import { summarizeSinceEdit, weekEditNote, weekEditOf } from '../src/lib/publishTracking';
 import { buildRunTrend } from '../src/lib/runTrend';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
 import { analyzeCitationSources } from '../server/citationSources';
@@ -72,7 +72,17 @@ ok('판정 없는 주 · 내린 뒤 칸은 세지 않는다', removed?.measuredW
 const unknownDays = summarizeSinceEdit(post, [null, null, cell([], { tally: { all: { cited: 1, supporting: 0 }, unnamed: null, named: null } as unknown as HistoryCell['tally'], runs: undefined, daysAfterPublish: undefined })], weeks);
 ok('일수를 모르는 인용 주는 인용으로 세되 첫 인용 일수는 비운다', unknownDays?.citedWeeks === 1 && unknownDays.firstCitedDays === null);
 
-// 4) 회차 보기 — 고친 날 뒤 회차만 센다
+// 3-b) 성과 표 칸 꼬리 — 고치기 전 회차가 섞인 주는 고친 뒤 몫만 따로(칸 숫자는 그 주 올린 뒤 전체)
+const mixedWeek = week('2026-W43', ['2026-10-19', '2026-10-20', '2026-10-22']);
+const mixedPost = { publishedOn: '2026-10-10', edits: [{ editedOn: '2026-10-21', recordedAt: '2026-10-21T00:00:00Z' }] };
+ok('섞인 주 — 고치기 전 회차 인용(D+9·10)만 있으면 「고친 뒤 회차 1번 인용 없음」', weekEditNote(mixedPost, cell([9, 10]), mixedWeek) === '10/21 고친 날이 든 주 · 고친 뒤 회차 1번 인용 없음');
+ok('섞인 주 — 고친 뒤 회차 인용은 고친 날 기준 D+N', weekEditNote(mixedPost, cell([9, 12]), mixedWeek) === '10/21 고친 날이 든 주 · 고친 뒤 회차 1번 인용 D+1');
+ok('모든 회차가 고친 뒤면 「고친 뒤」만', weekEditNote(mixedPost, cell([12]), week('2026-W43', ['2026-10-22', '2026-10-23'])) === '10/21 고친 뒤');
+ok('고친 날 회차와 고치기 전 회차만 있으면 고친 뒤 회차 없음', weekEditNote(mixedPost, cell([]), week('2026-W43', ['2026-10-20', '2026-10-21'])) === '10/21 고친 날이 든 주 · 고친 뒤 회차 없음(고친 날 회차는 전후 불명)');
+ok('고친 날 회차뿐이면 전후 불명', weekEditNote(mixedPost, cell([]), week('2026-W43', ['2026-10-21'])) === '10/21 고친 날 측정 · 고치기 전후 불명');
+ok('모든 회차가 고치기 전이면 꼬리 없음', weekEditNote(mixedPost, cell([9]), week('2026-W43', ['2026-10-19', '2026-10-20'])) === null);
+
+// 4) 회차 보기
 const point = (runId: string, iso: string): RunPoint => ({
   kind: 'run', runId, weekOf: '2026-W43', at: iso, window: null, selfOnly: true, inCohortRun: false, weekCard: 'saved', isWeekCard: false,
   engines: { gemini: { planned: 26, succeeded: 26 } }, enginesUsed: ['gemini'], partialEngines: [], missingEngines: [], engineIssues: [],
@@ -84,19 +94,21 @@ const runPost: PublishedPost = {
   articleId: 'content:category-agnostic', targetActionId: 'listing:platform:tistory.com', via: 'channel',
   edits: [{ editedOn: '2026-10-22', recordedAt: '2026-10-22T00:00:00Z' }],
 };
+// 고친 뒤 회차 셈은 서버가 그림 밖 회차까지 전체 기간으로 낸다(server/runHistory.ts — scripts/verify-run-history.ts가 확인). 그림 모델은
+// 그 값을 그대로 쓰고, 고친 날 점선 자리만 정한다.
+const sinceEdit = { editedOn: '2026-10-22', measured: 1, cited: 1, weak: 0, firstCitedDays: 2 };
 const hist: RunHistory = {
-  // 10/20 인용(고치기 전) · 10/22 인용 없음(고친 날 — 전후 불명) · 10/24 인용(고친 뒤)
   points: [point('a', '2026-10-20T01:00:00Z'), point('b', '2026-10-22T01:00:00Z'), point('c', '2026-10-24T01:00:00Z')],
-  posts: [{ post: runPost, cells: [runCell(1), runCell(0), runCell(1)], measuredRuns: 3, citedRuns: 2, afterGrace: { measured: 3, cited: 2 }, firstCited: { at: '2026-10-20T01:00:00Z', daysAfterPublish: 10 }, lastUncitedDaysBefore: null, unsureRuns: 0, weakRuns: 0, weakEngines: [] }],
+  posts: [{ post: runPost, cells: [runCell(1), runCell(0), runCell(1)], measuredRuns: 3, citedRuns: 2, afterGrace: { measured: 3, cited: 2 }, firstCited: { at: '2026-10-20T01:00:00Z', daysAfterPublish: 10 }, lastUncitedDaysBefore: null, unsureRuns: 0, weakRuns: 0, weakEngines: [], sinceEdit }],
   weekCardScores: {},
   issues: [],
 };
 const model = buildRunTrend(hist);
 const row = model.rows[0]!;
-ok('회차 보기 — 고친 뒤 회차 1 · 인용 1(고친 날 회차는 빼고)', row.sinceEdit?.measured === 1 && row.sinceEdit.cited === 1);
-ok('회차 보기 — 고친 뒤 첫 인용 D+2', row.sinceEdit?.firstCitedDays === 2);
+ok('회차 보기 — 서버가 낸 고친 뒤 셈을 그대로 쓴다', row.sinceEdit === sinceEdit);
 ok('회차 보기 — 고친 날 점선 자리 = 그 날 칸', row.edits.length === 1 && row.edits[0]!.x === model.days.indexOf('2026-10-22'));
-ok('회차 보기 — 고친 날이 없으면 sinceEdit 없음', buildRunTrend({ ...hist, posts: [{ ...hist.posts[0]!, post: { ...runPost, edits: undefined } }] }).rows[0]!.sinceEdit === null);
+ok('회차 보기 — 그림 밖 고친 날은 점선 없음(x null)', buildRunTrend({ ...hist, posts: [{ ...hist.posts[0]!, post: { ...runPost, edits: [{ editedOn: '2026-09-01', recordedAt: '2026-09-01T00:00:00Z' }] } }] }).rows[0]!.edits[0]!.x === null);
+ok('회차 보기 — 옛 서버(셈 없음)면 null', buildRunTrend({ ...hist, posts: [{ ...hist.posts[0]!, sinceEdit: undefined }] }).rows[0]!.sinceEdit === null);
 
 // 5) 콘텐츠 생성의 이번 주 결과 — 고친 뒤 측정인지 밝힌다
 const questions = [{ questionId: 'a1', text: '군산 여행 정보 사이트 추천해줘', category: 'category-agnostic', containsBrandName: false }] as QuestionSpec[];

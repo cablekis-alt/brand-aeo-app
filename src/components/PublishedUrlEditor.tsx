@@ -172,9 +172,10 @@ export default function PublishedUrlEditor({
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
                   {judged && s.detail && ` · ${s.detail}`}
                   {/* 고친 글 — 이 결과가 고친 글을 본 것인지 밝힌다. 고친 날 측정은 올린 날 측정처럼 전후 불명이다. */}
+                  {/* 다른 회차에서 인용된 글이면 이 표시는 마지막 저장 측정 기준이다 — 인용한 회차가 고치기 전일 수 있다. */}
                   {judged &&
                     h.edit &&
-                    ` · ${shortDate(h.edit.editedOn)} ${h.edit.timing === 'after' ? '고친 뒤 측정' : '고친 날 측정(고치기 전후 불명)'}`}
+                    ` · ${otherRun(h) ? '마지막 저장 측정은 ' : ''}${shortDate(h.edit.editedOn)} ${h.edit.timing === 'after' ? '고친 뒤 측정' : '고친 날 측정(고치기 전후 불명)'}`}
                   {judged && h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
                   {/* 내린 글은 이 줄에서 되살리거나 「잘못 적은 주소」로 바꾼다 — 이 주에 보이는 동안은 아래 「뺀 주소」에 두 번 두지 않는다. */}
                   {h.takenDownOn ? (
@@ -263,8 +264,8 @@ export default function PublishedUrlEditor({
                       </button>
                     </div>
                     <p className="doc-meta post-meta">
-                      블로그에서 이 주소의 기존 글을 수정한 날입니다 — 그 뒤 측정을 「고친 뒤」로 따로 봅니다. 새 글로 올렸다면 여기 말고 새
-                      주소를 「올렸어요」로 적으세요.
+                      이 주소의 글(블로그 글 · 문서 · 소개 칸)을 수정한 날입니다 — 그 다음 날 측정부터 「고친 뒤」로 따로 봅니다. 새 글로
+                      올렸다면 여기 말고 새 주소를 「{addLabel}」로 적으세요.
                     </p>
                     {p.edits && p.edits.length > 0 && onRemoveEdit && (
                       <p className="doc-meta post-meta">

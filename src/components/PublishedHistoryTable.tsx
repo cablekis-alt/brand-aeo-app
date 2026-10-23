@@ -6,7 +6,7 @@ import {
   summarizePost,
   summarizeSinceEdit,
   TIER_LABEL,
-  weekEditOf,
+  weekEditNote,
   type Posting,
   type PostTier,
 } from '../lib/publishTracking'
@@ -139,7 +139,8 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
           {sinceEdit && (
             <div className="doc-meta">
               {sinceEdit.measuredWeeks === 0
-                ? `${shortDate(sinceEdit.editedOn)} 고침 · 고친 뒤 측정 없음 — 다음 측정부터`
+                ? // 내린 글에는 다시 오지 않을 측정을 약속하지 않는다.
+                  `${shortDate(sinceEdit.editedOn)} 고침 · ${removedOn ? '고친 뒤 측정 없이 내림' : '고친 뒤 측정 없음 — 다음 측정부터'}`
                 : `${shortDate(sinceEdit.editedOn)} 고친 뒤 측정한 주 ${sinceEdit.measuredWeeks} · 인용된 주 ${sinceEdit.citedWeeks}` +
                   (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '')}
             </div>
@@ -150,9 +151,9 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         </td>
         {cells.flatMap((c, i) => {
           const v = cellView(c)
-          // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다.
-          const edit = c && !c.afterRemoval && c.timing === 'after' ? weekEditOf(p.post, weeks[i]!) : null
-          if (edit) v.sub.push(edit.timing === 'after' ? `${shortDate(edit.editedOn)} 고친 뒤` : `${shortDate(edit.editedOn)} 고친 날 측정 · 고치기 전후 불명`)
+          // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다. 고치기 전 회차가 섞인 주는 고친 뒤 몫을 따로 적는다.
+          const editNote = c && !c.afterRemoval && c.timing === 'after' ? weekEditNote(p.post, c, weeks[i]!) : null
+          if (editNote) v.sub.push(editNote)
           const out = []
           if (gapBefore[i]! > 0) out.push(<td key={`gap-${i}`} className="history-gap" aria-hidden="true" />)
           out.push(
@@ -218,8 +219,9 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         응답 수는 아래 줄에 합으로 적습니다. 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 단일 측정은
         흔들립니다. 자주 잴수록 한 주가 인용으로 잡힐 기회가 늘어, 판단 옆에 회차 수를 함께 적습니다.
         같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 · 채널)에 적은 기록은 한 행으로 묶고 올린 곳을 함께 적습니다.
-        기존 글을 고쳤다고 남긴 글은 칸에 「고친 뒤」(고친 글을 본 측정) · 「고친 날 측정」(고치기 전후 불명)을 적고, 판단 칸에 고친 뒤
-        결과를 따로 적습니다 — 판단(여러 주 인용 등)은 올린 날 기준 그대로입니다.
+        기존 글을 고쳤다고 남긴 글은 칸에 「고친 뒤」(고친 글을 본 측정) · 「고친 날 측정」(고치기 전후 불명)을 적습니다. 고친 날이 든
+        주는 칸 숫자가 그 주 올린 뒤 회차 전체이고, 꼬리에 고친 뒤 회차 몫만 따로 적습니다. 판단 칸에 고친 뒤 결과를 따로 적습니다 —
+        판단(여러 주 인용 등)은 올린 날 기준 그대로입니다.
         ◆는 직전 측정과 측정 조건(수집 엔진 · 판정 엔진 · 모델 · 질문지 · 반복 횟수)이 달라진 주입니다 — 엔진이나 반복 횟수가 바뀌면
         응답 수 자체가 달라져 숫자를 그대로 견줄 수 없고, 보정하지 않았습니다. 바뀐 항목은 주차 머리글에 마우스를 올리면 보입니다.
         {history.weeks.length > maxWeeks && ` 최근 ${maxWeeks}주만 보입니다(판단은 ${history.weeks.length}주 기준).`}

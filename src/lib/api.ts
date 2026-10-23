@@ -597,6 +597,8 @@ export interface RunPostRow {
   unsureRuns: number
   weakRuns: number
   weakEngines: string[]
+  /** 고친 글이면 마지막으로 고친 뒤의 회차(server/runHistory.ts) — 위 숫자와 같은 기간 · 같은 셈. 옛 서버면 없다. */
+  sinceEdit?: { editedOn: string; measured: number; cited: number; weak: number; firstCitedDays: number | null } | null
 }
 export interface RunHistory {
   points: RunPoint[]

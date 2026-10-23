@@ -223,9 +223,11 @@ export default function RunTrendPanel({
                 {sinceEdit && (
                   <div className="doc-meta">
                     {sinceEdit.measured === 0
-                      ? `${monthDay(sinceEdit.editedOn)} 고친 뒤 회차 없음 — 다음 측정부터`
+                      ? // 내린 글에는 다시 오지 않을 측정을 약속하지 않는다.
+                        `${monthDay(sinceEdit.editedOn)} 고친 뒤 회차 ${r.post.removedAt ? '없이 내림' : '없음 — 다음 측정부터'}`
                       : `${monthDay(sinceEdit.editedOn)} 고친 뒤 인용된 회차 ${sinceEdit.cited}/${sinceEdit.measured}` +
-                        (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '')}
+                        (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '') +
+                        (sinceEdit.weak > 0 ? ` · 그중 엔진 빠진 회차 ${sinceEdit.weak}` : '')}
                   </div>
                 )}
               </li>
@@ -283,12 +285,12 @@ export default function RunTrendPanel({
                   <text className="st-axis" x={PAD.left - 6} y={cy + 4} textAnchor="end">
                     {`글${row.label}`}
                   </text>
-                  {/* 고친 날 — 그 줄에 짧은 점선. 이 선 뒤 회차가 고친 글을 본 측정이다. */}
+                  {/* 고친 날 — 그 줄에 짧은 점선(그 날 칸 왼쪽, 올린 날 핀과 같은 자리). 그 날 회차는 전후 불명, 다음 날부터 고친 글을 본 측정이다. */}
                   {row.edits
                     .filter((e) => e.x !== null)
                     .map((e) => (
                       <line key={`edit-${e.date}`} className="rt-edit" x1={x(e.x!)} x2={x(e.x!)} y1={cy - ROW_H / 2 + 2} y2={cy + ROW_H / 2 - 2}>
-                        <title>{`글${row.label} ${monthDay(e.date)} 고침 — 이 뒤 회차가 고친 글을 본 측정`}</title>
+                        <title>{`글${row.label} ${monthDay(e.date)} 고침 — 이 날 회차는 고치기 전후 불명, 다음 날 회차부터 고친 글을 본 측정`}</title>
                       </line>
                     ))}
                   {row.marks.map((mark, k) => (
