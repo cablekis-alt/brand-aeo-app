@@ -32,8 +32,10 @@ const dayNum = (d: string) => Date.parse(`${d}T00:00:00Z`) / DAY
 
 /** 회차가 측정된 한국 날짜 — 시각이 없으면 그 주 판정 창의 첫날, 그것도 없으면 그 주 월요일. */
 function pointDay(p: RunPoint): string | null {
-  if (p.at) return kstDate(p.at)
+  // 판정을 시작한 날이 먼저 — 올린 날 전후 · 올린 지 며칠(publishedUrl.ts timingOf · daysAfterPublish)이 그 날로 센다. 끝난 시각으로
+  // 칸을 정하면 자정을 넘긴 회차가 다음 날 칸에 서서 「색인 대기 · 11/4부터 판단」 · 「올리기 전(당일)」과 어긋난다.
   if (p.window) return p.window.first
+  if (p.at) return kstDate(p.at)
   const thu = isoWeekThursday(p.weekOf)
   return thu ? new Date(thu.getTime() - 3 * DAY).toISOString().slice(0, 10) : null
 }
@@ -93,6 +95,29 @@ export interface RunTrendModel {
   scoreLine: { weekOf: string; scores: number[]; mean: number | null; mixed: boolean; bar: number | null; legacy: number; isolated: number; unknown: number }[]
   /** 이 브랜드가 같은 날 여러 번 잰 날 가운데 가장 크게 흔들린 날 — 안내 문구에 쓴다. 없으면 null. */
   sameDay: { date: string; scores: number[] } | null
+  /** 날짜별 합계(「날짜별 합계」 표). 같은 날 두 번 넘게 잰 날이 없으면 null — 회차 표와 같은 내용이라 그리지 않는다. */
+  daily: RunDayTotal[] | null
+}
+
+/**
+ * 하루치 합계 — 같은 날, 같은 조건으로 끝까지 잰 회차만 합친다(점수 평균 scoreLine과 같은 회차). 옛 기록 · 엔진 빠진 회차 · 질문지를
+ * 못 찾은 회차는 빼고 센다. 같은 질문을 다시 물은 합이라 회차가 늘어도 흔들림이 그만큼 줄지 않는다 — 화면이 밝힌다. 점수는 평균
+ * 내지 않고 회차 점수를 늘어놓는다(지표째 합쳐 점수를 다시 내면 순위 비중이 커져 부풀려진다).
+ */
+export interface RunDayTotal {
+  date: string
+  /** 합친 회차 수. 조건이 섞였으면(mixed) 합치지 않아 0. */
+  runs: number
+  legacy: number
+  isolated: number
+  unknown: number
+  mixed: boolean
+  /** 카테고리 무관 질문 응답 가운데 우리 이름이 나온 응답 · 순위와 함께 불린 응답 / 응답 합. 합친 회차가 없으면 null. */
+  mentioned: { k: number; n: number } | null
+  ranked: { k: number; n: number } | null
+  scores: number[]
+  /** 글마다 그날 합친 회차의 결과 — rows와 같은 순서 · 같은 이름(「1a」). */
+  posts: { id: string; name: string; cited: number; measured: number; grace: number; before: number; unsure: number; removed: number }[]
 }
 
 export function buildRunTrend(h: RunHistory): RunTrendModel {
@@ -216,7 +241,52 @@ export function buildRunTrend(h: RunHistory): RunTrendModel {
     }
   }
 
-  return { days, dots, segments, breaks, pins, rows, scoreLine, sameDay }
+  // 날짜별 합계 — 같은 날 같은 조건 회차를 두 번 넘게 합친 날이 있을 때만(옛 기록 · 엔진 빠진 회차는 세지 않는다 — 그런 날만 있으면
+  // 회차 표보다 알려 주는 것이 없다).
+  const dayRows: RunDayTotal[] = [...byDay.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, idx]) => {
+      const usable = idx.filter((i) => !dots[i]!.legacy && !dots[i]!.isolated && points[i]!.ranked !== null)
+      const mixed = new Set(usable.map((i) => points[i]!.conditionKey)).size > 1
+      const merged = mixed ? [] : [...usable].sort((a, b) => (points[a]!.at ?? '').localeCompare(points[b]!.at ?? ''))
+      const sum = (pick: (r: NonNullable<RunPoint['ranked']>) => number) => merged.reduce((n, i) => n + pick(points[i]!.ranked!), 0)
+      const n = sum((r) => r.n)
+      return {
+        date,
+        runs: merged.length,
+        legacy: idx.filter((i) => dots[i]!.legacy).length,
+        isolated: idx.filter((i) => !dots[i]!.legacy && dots[i]!.isolated).length,
+        unknown: idx.filter((i) => !dots[i]!.legacy && !dots[i]!.isolated && points[i]!.ranked === null).length,
+        mixed,
+        mentioned: merged.length ? { k: sum((r) => r.mentioned), n } : null,
+        ranked: merged.length ? { k: sum((r) => r.k), n } : null,
+        scores: merged.map((i) => points[i]!.score).filter((s): s is number => s !== null),
+        posts: rows.map((row) => {
+          // 핀이 없는 글(그림 범위보다 앞서 올림)은 「글?」가 겹치므로 제목 앞부분으로 부른다.
+          const title = row.posting.post.articleTitle ?? row.posting.post.articleId
+          const name = row.pin === null ? `「${title.length > 12 ? `${title.slice(0, 12)}…` : title}」` : `글${row.label}`
+          const t = { id: row.posting.item.post.id, name, cited: 0, measured: 0, grace: 0, before: 0, unsure: 0, removed: 0 }
+          for (const i of merged) {
+            const c = row.posting.item.cells[i]
+            const mark = row.marks[i]
+            if (!c) continue
+            if (c.afterRemoval) t.removed += 1
+            // 「올리기 전」은 올린 날 당일만 적는다 — 그 앞 날은 당연히 올리기 전이라 칸만 채운다.
+            else if (c.timing === 'before') t.before += date === row.posting.post.publishedOn ? 1 : 0
+            else if (mark === 'unsure') t.unsure += 1
+            else if (mark === 'cited' || mark === 'none' || mark === 'grace') {
+              t.measured += 1
+              if (mark === 'cited') t.cited += 1
+              if (mark === 'grace') t.grace += 1
+            }
+          }
+          return t
+        }),
+      }
+    })
+  const daily = dayRows.some((d) => d.runs > 1) ? dayRows : null
+
+  return { days, dots, segments, breaks, pins, rows, scoreLine, sameDay, daily }
 }
 
 /** 날짜 칸 이름 「10/28」. */

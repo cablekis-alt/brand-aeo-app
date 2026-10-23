@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -155,6 +155,11 @@ export interface GapActionPlan {
    * 따로 밝힌다. 은행을 읽지 못한 주는 유형을 몰라 비어 있다(그때는 밀린 질문 전부가 글에 들어간다).
    */
   otherLost: OtherLostQuestion[]
+  /**
+   * 이번 주 결과(그 주 파일)를 잰 측정의 범위. 화면이 성과 표 이력으로 같은 날 올린 글을 다시 잴 때, 이력의 그 주가 같은 측정인지 맞춰
+   * 본다(publishTracking.ts weekFileTimingOf) — 화면이 낡아 다른 측정의 시각으로 뒤집지 않게.
+   */
+  weekWindow: MeasureWindow | null
 }
 
 export interface OtherLostQuestion {
@@ -747,6 +752,10 @@ export interface PublishedHit {
   daysAfterPublish?: number
   /** 고친 글이면 이번 주 측정이 마지막으로 고친 날에 견줘 어땠나(publishedUrl.ts editTimingOf). 측정 뒤에 고쳤으면 그 전 고친 날로 본다. */
   edit?: { editedOn: string; timing: PostTiming }
+  /** 같은 날 측정을 가른 올린 시각 — 한 편(같은 주소 · 같은 올린 날)에서 가장 이른 누른 시각(publishedUrl.ts postedAtIndex). */
+  postedAt?: string
+  /** 날짜로는 전후 불명인데 올린 시각으로 「올리기 전」이 됐다 — 화면이 「기록한 시각보다 앞에 끝난 측정」이라고 밝힌다. */
+  beforeByTime?: true
 }
 
 /**
@@ -754,7 +763,13 @@ export interface PublishedHit {
  * judged=false). 임의의 주로 「인용 없음」을 보이면 오해를 부르므로, 결과는 주차별 이력에서 본다.
  */
 export function recordOnlyHits(posts: PublishedPost[]): PublishedHit[] {
-  return posts.filter((p) => !p.removedAt).map((post) => ({ post, timing: 'unknown' as const, tally: null, variantCited: 0 }))
+  const postedAt = postedAtIndex(posts)
+  return posts
+    .filter((p) => !p.removedAt)
+    .map((post) => {
+      const at = postedAt.get(post.id) ?? null
+      return { post, timing: 'unknown' as const, tally: null, variantCited: 0, ...(at ? { postedAt: at } : {}) }
+    })
 }
 
 /**
@@ -813,13 +828,18 @@ function publishedHitsOf(
     }
     responseKeys.set(id, keys)
   }
+  // 같은 날 측정은 올린 시각으로 가린다 — 한 편에서 가장 이른 누른 시각(postedAtIndex). 이번 주 결과는 그 주 파일이라 측정 시작을 몰라
+  // 「올리기 전」만 시각으로 가려진다(「올린 뒤」는 화면이 성과 표 이력으로 다시 잰다 — publishTracking.ts weekFileTimingOf).
+  const postedAt = postedAtIndex(posts)
   for (const { post, takenDownOn } of shown) {
-    const timing = timingOf(post.publishedOn, window, weekOf)
+    const at = postedAt.get(post.id) ?? null
+    const timing = timingOf(post.publishedOn, window, weekOf, at)
+    const beforeByTime = timing === 'before' && timingOf(post.publishedOn, window, weekOf) !== 'before'
     // 내린 글인데 이 주 측정이 올리기도 전이었다 — 이 주에는 올라가 있던 적이 없으니 「뺀 주소」에만 둔다.
     if (takenDownOn && timing === 'before') continue
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
-    const days = daysAfterPublish(post.publishedOn, window, weekOf)
+    const days = daysAfterPublish(post.publishedOn, window, weekOf, at)
     const edit = editTimingOf(post.edits, (on) => timingOf(on, window, weekOf))
     const hit: PublishedHit = {
       post,
@@ -829,6 +849,8 @@ function publishedHitsOf(
       ...(takenDownOn ? { takenDownOn } : {}),
       ...(days !== null ? { daysAfterPublish: days } : {}),
       ...(edit ? { edit } : {}),
+      ...(at ? { postedAt: at } : {}),
+      ...(beforeByTime ? { beforeByTime: true as const } : {}),
     }
     out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
   }
@@ -905,6 +927,7 @@ export function computeGapActions(
     competitorDomainCount,
     excludedLowConfidence,
     otherLost,
+    weekWindow: measuredWindow(analyses),
   }
 }
 

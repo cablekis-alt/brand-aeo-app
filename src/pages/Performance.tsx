@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import PublishedHistoryTable from '../components/PublishedHistoryTable'
 import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
@@ -44,6 +45,17 @@ export default function Performance() {
   const runs = useRunHistory(viewing ? '' : (tenant?.tenantId ?? ''))
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const [selectedWeek, setSelectedWeek] = useWeekSelection(history)
+  // 개요의 「회차별 보기」(#runs)로 왔으면 그 절로 내려간다 — 절은 회차 기록을 받은 뒤에 그려지고, 화면을 옮길 때 맨 위로 올리는
+  // Layout 효과(useLayoutEffect) 뒤라야 하므로 여기서 기다렸다가 한 번만 내려간다.
+  const { hash, key: locationKey } = useLocation()
+  const scrolledFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (hash !== '#runs' || scrolledFor.current === locationKey) return
+    const el = document.getElementById('runs')
+    if (!el) return
+    scrolledFor.current = locationKey
+    el.scrollIntoView({ block: 'start' })
+  }, [hash, locationKey, runs.history, runs.error, history])
 
   const card = useMemo(
     () => history.find((item) => item.weekOf === selectedWeek) ?? history.at(-1) ?? null,

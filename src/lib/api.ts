@@ -475,7 +475,7 @@ export interface HistoryWeek {
   weekOf: string
   /** 판정 기록이 있다. false면 그 주 칸은 0이 아니라 확인 불가다. */
   analysed: boolean
-  window: { first: string; last: string } | null
+  window: import('./publishedUrl').MeasureWindow | null
   engines: string[]
   bankVersion: string | null
   responses: { all: number; unnamed: number | null; named: number | null; unknown: number }
@@ -491,7 +491,7 @@ export interface HistoryRun {
   runId: string | null
   kind: 'run' | 'week-file'
   at: string | null
-  window: { first: string; last: string } | null
+  window: import('./publishedUrl').MeasureWindow | null
   weekCard: 'saved' | 'kept' | 'week-file'
   isWeekCard: boolean
   selfOnly: boolean | null
@@ -555,7 +555,7 @@ export interface RunPoint {
   runId: string | null
   weekOf: string
   at: string | null
-  window: { first: string; last: string } | null
+  window: import('./publishedUrl').MeasureWindow | null
   selfOnly: boolean | null
   inCohortRun: boolean | null
   preserved?: true

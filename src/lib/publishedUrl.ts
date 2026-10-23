@@ -297,17 +297,89 @@ export function todayKst(now = Date.now()): string {
   return new Date(now + 9 * 3600_000).toISOString().slice(0, 10)
 }
 
+/**
+ * 측정한 때 — 날짜(한국)의 범위와, 같은 날 올린 글의 전후를 시각으로 가를 때 쓰는 시각.
+ *   endAt    답을 모은 시각의 상한(판정 시작의 마지막 — 판정은 답을 모은 뒤에 한다). 이보다 뒤에 올렸으면 「올리기 전」 측정이다.
+ *   startAt  답을 모은 시각의 하한(회차의 측정 시작). 이보다 앞에 올렸으면 「올린 뒤」 측정이다. 판정 시각으로는 하한을 알 수 없어
+ *            회차 기록(RunMeta.startedAt)이 있을 때만 있다(server/publishedHistory.ts).
+ */
+export interface MeasureWindow {
+  first: string
+  last: string
+  startAt?: string
+  endAt?: string
+}
+
 /** 측정한 날의 범위(한국 날짜) — 판정 시작 시각의 처음과 끝. 시각이 없는 옛 기록이면 null. */
-export function measuredWindow(analyses: { questionId: string; timing?: { startedAt?: string } }[]): { first: string; last: string } | null {
+export function measuredWindow(analyses: { questionId: string; timing?: { startedAt?: string } }[]): MeasureWindow | null {
   let first: string | null = null
   let last: string | null = null
+  let endAt: string | null = null
   for (const a of analyses) {
-    const day = a.timing?.startedAt ? kstDate(a.timing.startedAt) : null
-    if (!day) continue
+    const at = a.timing?.startedAt
+    const day = at ? kstDate(at) : null
+    if (!at || !day) continue
     if (!first || day < first) first = day
     if (!last || day > last) last = day
+    if (!endAt || Date.parse(at) > Date.parse(endAt)) endAt = at
   }
-  return first && last ? { first, last } : null
+  return first && last ? { first, last, ...(endAt ? { endAt } : {}) } : null
+}
+
+/**
+ * 같은 날 측정을 시각으로 가를 때 쓰는 올린 시각 — 올린 날이 「올렸어요」를 누른 날과 같은 기록만, 누른 시각을 쓴다(날짜를 기본값
+ * 그대로 뒀든 오늘로 골랐든 같다 — 실측 10-23 /4는 날짜 칸을 열고 오늘을 골랐다). 올린 시각은 누른 시각보다 늦을 수 없어 「이보다 뒤에
+ * 시작한 측정은 올린 뒤」는 늘 맞다. 「이보다 앞에 끝난 측정은 올리기 전」은 올린 직후에 눌렀다는 전제다(화면이 그렇게 안내한다).
+ * 다른 날을 고른 기록 · 날짜를 모르는 옛 기록은 null — 날짜로만 가린다.
+ */
+export function postedAtOf(post: { publishedOn: string | null; publishedOnSource: string; recordedAt: string }): string | null {
+  return post.publishedOnSource !== 'legacy' && post.publishedOn && kstDate(post.recordedAt) === post.publishedOn ? post.recordedAt : null
+}
+
+interface PostedAtRow {
+  id: string
+  key: string
+  publishedOn: string | null
+  publishedOnSource: string
+  recordedAt: string
+  removedAt?: string
+  removedReason?: string
+}
+
+/**
+ * 기록마다 쓸 올린 시각 — 줄이 아니라 한 편(같은 주소 · 같은 올린 날, 잘못 적은 주소 제외 — 성과 표 distinctPostings와 같은 묶음)
+ * 단위로 정한다. 같은 글을 자사 줄 · 채널 줄에 따로 적으면 나중 줄의 누른 시각은 실제 게시보다 늦다(앞 줄이 그 전에 이미 올라가
+ * 있었다) — 묶음에서 가장 이른 누른 시각을 쓴다. 같은 날 내렸다가 다시 올린 주소는 내린 뒤에 적은 줄끼리 따로 묶는다(다시 올린 글이
+ * 앞 글의 시각을 물려받지 않게). 기록 id → 올린 시각(모르면 null).
+ */
+export function postedAtIndex(posts: PostedAtRow[]): Map<string, string | null> {
+  const out = new Map<string, string | null>()
+  const groups = new Map<string, PostedAtRow[]>()
+  for (const p of posts) {
+    if (p.removedReason === 'mistake' || !p.publishedOn) {
+      out.set(p.id, postedAtOf(p))
+      continue
+    }
+    const k = `${p.key}|${p.publishedOn}`
+    groups.set(k, [...(groups.get(k) ?? []), p])
+  }
+  for (const group of groups.values()) {
+    for (const p of group) {
+      // 이 줄을 적기 전에 내린 같은 묶음 줄이 있으면, 그 뒤에 적은 줄만 같은 편이다.
+      const downBefore = group
+        .filter((q) => q.removedReason === 'taken-down' && q.removedAt && q.removedAt < p.recordedAt)
+        .map((q) => q.removedAt!)
+        .sort()
+        .at(-1)
+      const times = group
+        .filter((q) => !downBefore || q.recordedAt > downBefore)
+        .map(postedAtOf)
+        .filter((t): t is string => t !== null)
+        .sort((a, b) => Date.parse(a) - Date.parse(b))
+      out.set(p.id, times[0] ?? null)
+    }
+  }
+  return out
 }
 
 /** 날짜(YYYY-MM-DD)의 ISO 주차("2026-W42"). */
@@ -347,8 +419,8 @@ function isoWeekMonday(weekOf: string): string | null {
  * 「인용 없음」을 늦게 붙인다). after가 아니면 null. 갓 올린 글은 색인 · 인용까지 열흘 넘게 걸린다 — 이 일수로 판단을 미룬다
  * (src/lib/publishTracking.ts INDEXING_GRACE_DAYS).
  */
-export function daysAfterPublish(publishedOn: string | null, window: { first: string; last: string } | null, weekOf: string): number | null {
-  if (!publishedOn || timingOf(publishedOn, window, weekOf) !== 'after') return null
+export function daysAfterPublish(publishedOn: string | null, window: MeasureWindow | null, weekOf: string, postedAt: string | null = null): number | null {
+  if (!publishedOn || timingOf(publishedOn, window, weekOf, postedAt) !== 'after') return null
   const from = window?.first ?? isoWeekMonday(weekOf)
   if (!from) return null
   const days = Math.round((Date.parse(`${from}T00:00:00Z`) - Date.parse(`${publishedOn}T00:00:00Z`)) / 86_400_000)
@@ -374,11 +446,20 @@ export function editTimingOf(
   return null
 }
 
-export function timingOf(publishedOn: string | null, window: { first: string; last: string } | null, weekOf: string): PostTiming {
+/**
+ * 올린 날(고친 날)에 견준 측정 하나. 날짜로 가리고, 측정하던 날 올렸으면(during) 올린 시각(postedAtOf)과 측정 시각(MeasureWindow)을
+ * 견준다 — 측정 시작보다 앞에 올렸으면 after, 답을 다 모은 뒤에 올렸으면 before, 그 사이면 during(전후 불명) 그대로.
+ */
+export function timingOf(publishedOn: string | null, window: MeasureWindow | null, weekOf: string, postedAt: string | null = null): PostTiming {
   if (!publishedOn) return 'unknown'
   if (window) {
     if (publishedOn < window.first) return 'after'
     if (publishedOn > window.last) return 'before'
+    const at = postedAt ? Date.parse(postedAt) : Number.NaN
+    if (!Number.isNaN(at)) {
+      if (window.startAt && at < Date.parse(window.startAt)) return 'after'
+      if (window.endAt && at > Date.parse(window.endAt)) return 'before'
+    }
     return 'during'
   }
   const week = isoWeekOf(publishedOn)

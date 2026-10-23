@@ -1,6 +1,6 @@
 import type { HistoryCell, HistoryWeek, PublishedHistory, PublishedPost } from './api'
 import { ENGINE_LABEL } from './format'
-import { editTimingOf, isoWeekOf, kstDate, timingOf, type PostTiming } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, isoWeekOf, kstDate, postedAtIndex, timingOf, type MeasureWindow, type PostTiming } from './publishedUrl'
 
 /**
  * 올린 글 하나의 판단 — 올린 뒤 측정에서 얼마나 인용됐나(언급률 2번 P3).
@@ -224,11 +224,12 @@ export function distinctPostings<T>(items: T[], postOf: (t: T) => PublishedPost)
 
 /**
  * 그 주 측정에 견준 올린 날. 회차가 여럿이면 칸(server/publishedHistory.ts foldCell)과 같은 규칙 — 회차마다 전후를 보고, 올린 뒤
- * 회차가 하나라도 있으면 after, 없으면 측정하던(during) · 시각 없는 같은 주(ambiguous) · 올리기 전(before) 순이다.
+ * 회차가 하나라도 있으면 after, 없으면 측정하던(during) · 시각 없는 같은 주(ambiguous) · 올리기 전(before) 순이다. postedAt을 주면
+ * 같은 날 회차를 시각으로 가린다(src/lib/publishedUrl.ts postedAtOf — 칸과 같은 값).
  */
-export function weekTimingOf(publishedOn: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>): PostTiming {
-  if (!w.runs?.length) return timingOf(publishedOn, w.window, w.weekOf)
-  const each = w.runs.map((r) => timingOf(publishedOn, r.window, w.weekOf))
+export function weekTimingOf(publishedOn: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>, postedAt: string | null = null): PostTiming {
+  if (!w.runs?.length) return timingOf(publishedOn, w.window, w.weekOf, postedAt)
+  const each = w.runs.map((r) => timingOf(publishedOn, r.window, w.weekOf, postedAt))
   return (['after', 'during', 'ambiguous', 'before'] as const).find((t) => each.includes(t)) ?? 'unknown'
 }
 
@@ -310,6 +311,29 @@ export function summarizeSinceEdit(
 }
 
 /**
+ * 그 주 마지막 저장 측정(그 주 파일)에 견준 올린 날 — 콘텐츠 생성 「이번 주 결과」(gapActions publishedHitsOf)와 같은 측정이다. 그 결과는
+ * 그 주 파일의 판정 시각만 알아 같은 날 올린 글의 「올린 뒤」를 가리지 못한다(측정 시작은 회차 기록에만 있다). 성과 표 이력의 그 주
+ * 범위(HistoryWeek.window — 그 주 카드 회차, 측정 시작 포함)로 다시 잰다. 기록 id → 전후 · 올린 지 며칠. 그 주가 이력에 없거나, 이력의
+ * 그 주가 이번 주 결과와 다른 측정이면(planWindow와 날짜 · 마지막 판정 시각이 다르다 — 화면을 연 뒤 새 측정이 끝났다) null.
+ */
+export function weekFileTimingOf(
+  history: Pick<PublishedHistory, 'weeks' | 'posts'>,
+  weekOf: string,
+  planWindow: MeasureWindow | null,
+): Map<string, { timing: PostTiming; daysAfterPublish: number | null }> | null {
+  const w = history.weeks.find((x) => x.weekOf === weekOf)
+  if (!w || !w.analysed || !w.window || !planWindow?.endAt) return null
+  if (w.window.endAt !== planWindow.endAt || w.window.first !== planWindow.first || w.window.last !== planWindow.last) return null
+  const postedAt = postedAtIndex(history.posts.map((p) => p.post))
+  return new Map(
+    history.posts.map(({ post }) => {
+      const at = postedAt.get(post.id) ?? null
+      return [post.id, { timing: timingOf(post.publishedOn, w.window, weekOf, at), daysAfterPublish: daysAfterPublish(post.publishedOn, w.window, weekOf, at) }]
+    }),
+  )
+}
+
+/**
  * 그 주 칸(회차 합침)에서 올린 뒤 인용된 기록 id — 정기진단 보고서의 개선제안 · 실행 항목의 올린 주소 알약이 마지막 저장 측정에는
  * 없고 같은 주 다른 회차에서만 인용된 글을 밝히는 데 쓴다. 그 주가 이력에 없으면 null.
  */
@@ -375,11 +399,13 @@ export function executionMarks(
 ): ExecutionMarks {
   const weekOfSlot = new Map(weeks.map((w) => [w.weekOf, w]))
   // 측정하던 때 올렸나 — 측정 시각이 있는 측정만(시각 없는 옛 기록은 같은 주여도 아래에서 칸 위 속 빈 핀).
-  const during = (d: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | undefined) =>
-    Boolean(w && (w.window || w.runs?.length) && weekTimingOf(d, w) === 'during')
+  const during = (d: string, w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'> | undefined, postedAt: string | null) =>
+    Boolean(w && (w.window || w.runs?.length) && weekTimingOf(d, w, postedAt) === 'during')
   const byX = new Map<number, { hollow: boolean; posts: Posting<PublishedPost>[] }>()
   let outOfRange = 0
   let undated = 0
+  // 같은 날 측정은 칸과 같이 한 편에서 가장 이른 누른 시각으로 가린다(postedAtIndex).
+  const postedAtById = postedAtIndex(posts)
   // 보고 주차로 먼저 자르고 묶는다 — 보고서 표와 같은 순서(그 뒤에 적은 같은 주소 줄이 옛 줄을 지우지 않게).
   for (const posting of distinctPostings(endWeek ? posts.filter((p) => postWeekOf(p) <= endWeek) : posts, (p) => p)) {
     const { post } = posting
@@ -392,13 +418,14 @@ export function executionMarks(
     if (slots.length === 0) continue
     let x: number
     let hollow = false
-    const duringSlot = slots.findIndex((s) => s.measured && during(pd, weekOfSlot.get(s.weekOf)))
+    const postedAt = postedAtById.get(post.id) ?? null
+    const duringSlot = slots.findIndex((s) => s.measured && during(pd, weekOfSlot.get(s.weekOf), postedAt))
     if (duringSlot >= 0) {
       x = duringSlot
       hollow = true
     } else if (week < slots[0]!.weekOf) {
       // 첫 칸 앞 — 바로 앞 측정 뒤에 올렸으면 첫 칸 왼쪽 틈, 아니면(그 측정 전 · 전후 불명) 범위 밖.
-      if (!prev || weekTimingOf(pd, prev) !== 'before') {
+      if (!prev || weekTimingOf(pd, prev, postedAt) !== 'before') {
         outOfRange += 1
         continue
       }
@@ -406,7 +433,7 @@ export function executionMarks(
     } else {
       const i = slots.findIndex((s) => s.weekOf === week)
       if (i >= 0 && slots[i]!.measured) {
-        const timing = weekTimingOf(pd, weekOfSlot.get(week) ?? { weekOf: week, window: null })
+        const timing = weekTimingOf(pd, weekOfSlot.get(week) ?? { weekOf: week, window: null }, postedAt)
         if (timing === 'after') x = i - 0.5
         else if (timing === 'before') x = i + 0.5
         else {
