@@ -39,7 +39,7 @@ export default function Dashboard() {
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
   // 이번 주에 여러 번 쟀으면 — 점수는 그 주 카드 회차 하나다(평균이 아니다). 회차 기록은 데스크톱 전용이라 웹에서는 비어 있다.
-  const runHistory = useRunHistory(tenant?.tenantId ?? '', 1)
+  const runHistory = useRunHistory(viewing ? '' : (tenant?.tenantId ?? ''), 1)
   const weekRuns = useMemo(() => {
     const points = (runHistory.history?.points ?? []).filter((p) => card && p.weekOf === card.weekOf)
     if (points.length < 2) return null

@@ -17,14 +17,17 @@ const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
 /** "2026-10-21" + 14 → "2026-11-04". */
 const addDays = (date: string, n: number) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
-/** 날짜별 합계의 글 칸 — 「글1 인용 0/2 · 색인 대기」 · 「글2 올리기 전 1 · 인용 0/1」. 그날 알 것이 없으면 null. */
+/**
+ * 날짜별 합계의 글 칸 — 「글1 인용된 회차 0/2 · 색인 대기」 · 「글2 올리기 전 1회 · 인용된 회차 0/1」. 숫자는 회차 수다(같은 줄의 다른 k/N은
+ * 응답 수라 단위를 밝힌다). 그날 알 것이 없으면 null.
+ */
 function dayPostText(p: NonNullable<RunTrendModel['daily']>[number]['posts'][number]): string | null {
   const parts: string[] = []
-  if (p.before > 0) parts.push(`올리기 전 ${p.before}`)
-  if (p.measured > 0) parts.push(`인용 ${p.cited}/${p.measured}${p.cited === 0 && p.grace === p.measured ? ' · 색인 대기' : ''}`)
-  if (p.unsure > 0) parts.push(`전후 불명 ${p.unsure}`)
-  if (p.removed > 0) parts.push(`내린 뒤 ${p.removed}`)
-  return parts.length > 0 ? `글${p.label} ${parts.join(' · ')}` : null
+  if (p.before > 0) parts.push(`올리기 전 ${p.before}회`)
+  if (p.measured > 0) parts.push(`인용된 회차 ${p.cited}/${p.measured}${p.cited === 0 && p.grace === p.measured ? ' · 색인 대기' : ''}`)
+  if (p.unsure > 0) parts.push(`전후 불명 ${p.unsure}회`)
+  if (p.removed > 0) parts.push(`내린 뒤 ${p.removed}회`)
+  return parts.length > 0 ? `${p.name} ${parts.join(' · ')}` : null
 }
 
 const MARK_TEXT: Record<RunMark, string> = {
@@ -206,15 +209,18 @@ export default function RunTrendPanel({
                 ` · 인용된 회차 ${r.citedRuns}/${r.measuredRuns}` +
                 (r.afterGrace.measured > 0 ? ` · 올린 지 ${INDEXING_GRACE_DAYS}일 지난 회차 ${r.afterGrace.cited}/${r.afterGrace.measured}` : '')
             } else {
-              // 색인 대기가 끝나는 날 — 올린 지 INDEXING_GRACE_DAYS일째 측정부터 「인용 없음」을 판단한다.
-              const graceEnd = r.post.publishedOn ? addDays(r.post.publishedOn, INDEXING_GRACE_DAYS) : null
+              // 색인 대기가 끝나는 날 — 올린 지 INDEXING_GRACE_DAYS일째 측정부터 「인용 없음」을 판단한다. 내린 글에는 다시 오지 않을 판단을
+              // 약속하지 않는다(내린 뒤 회차는 세지 않는다).
+              const graceEnd = r.post.publishedOn && !r.post.removedAt ? addDays(r.post.publishedOn, INDEXING_GRACE_DAYS) : null
               line =
                 `아직 인용 없음 · 회차 0/${r.measuredRuns}` +
                 (d !== null ? ` · 올린 지 ${d}일` : '') +
                 (d !== null && d < INDEXING_GRACE_DAYS
-                  ? graceEnd
-                    ? ` · 색인 대기 · ${monthDay(graceEnd)} 측정부터 판단`
-                    : ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중`
+                  ? r.post.removedAt
+                    ? ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중 내림`
+                    : graceEnd
+                      ? ` · 색인 대기 · ${monthDay(graceEnd)} 측정부터 판단`
+                      : ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중`
                   : '')
             }
             return (
@@ -454,7 +460,10 @@ export default function RunTrendPanel({
                     ...(d.isolated ? [`엔진 빠진 회차 ${d.isolated} 뺌`] : []),
                     ...(d.unknown ? [`질문지 못 찾은 회차 ${d.unknown} 뺌`] : []),
                   ]
-                  const posts = d.posts.map(dayPostText).filter((t): t is string => t !== null)
+                  const posts = d.posts.flatMap((p) => {
+                    const text = dayPostText(p)
+                    return text ? [{ id: p.id, text }] : []
+                  })
                   return (
                     <tr key={d.date}>
                       <td>{dayLabel(d.date)}</td>
@@ -463,7 +472,7 @@ export default function RunTrendPanel({
                       <td>{d.ranked ? `${d.ranked.k}/${d.ranked.n}` : '—'}</td>
                       <td>{d.scores.length > 0 ? d.scores.join(' · ') : '—'}</td>
                       {m.rows.length > 0 && (
-                        <td className="rt-day-posts">{posts.length > 0 ? posts.map((t) => <div key={t}>{t}</div>) : '—'}</td>
+                        <td className="rt-day-posts">{posts.length > 0 ? posts.map((p) => <div key={p.id}>{p.text}</div>) : '—'}</td>
                       )}
                     </tr>
                   )
