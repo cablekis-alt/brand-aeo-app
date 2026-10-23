@@ -336,6 +336,52 @@ export function postedAtOf(post: { publishedOn: string | null; publishedOnSource
   return post.publishedOnSource !== 'legacy' && post.publishedOn && kstDate(post.recordedAt) === post.publishedOn ? post.recordedAt : null
 }
 
+interface PostedAtRow {
+  id: string
+  key: string
+  publishedOn: string | null
+  publishedOnSource: string
+  recordedAt: string
+  removedAt?: string
+  removedReason?: string
+}
+
+/**
+ * 기록마다 쓸 올린 시각 — 줄이 아니라 한 편(같은 주소 · 같은 올린 날, 잘못 적은 주소 제외 — 성과 표 distinctPostings와 같은 묶음)
+ * 단위로 정한다. 같은 글을 자사 줄 · 채널 줄에 따로 적으면 나중 줄의 누른 시각은 실제 게시보다 늦다(앞 줄이 그 전에 이미 올라가
+ * 있었다) — 묶음에서 가장 이른 누른 시각을 쓴다. 같은 날 내렸다가 다시 올린 주소는 내린 뒤에 적은 줄끼리 따로 묶는다(다시 올린 글이
+ * 앞 글의 시각을 물려받지 않게). 기록 id → 올린 시각(모르면 null).
+ */
+export function postedAtIndex(posts: PostedAtRow[]): Map<string, string | null> {
+  const out = new Map<string, string | null>()
+  const groups = new Map<string, PostedAtRow[]>()
+  for (const p of posts) {
+    if (p.removedReason === 'mistake' || !p.publishedOn) {
+      out.set(p.id, postedAtOf(p))
+      continue
+    }
+    const k = `${p.key}|${p.publishedOn}`
+    groups.set(k, [...(groups.get(k) ?? []), p])
+  }
+  for (const group of groups.values()) {
+    for (const p of group) {
+      // 이 줄을 적기 전에 내린 같은 묶음 줄이 있으면, 그 뒤에 적은 줄만 같은 편이다.
+      const downBefore = group
+        .filter((q) => q.removedReason === 'taken-down' && q.removedAt && q.removedAt < p.recordedAt)
+        .map((q) => q.removedAt!)
+        .sort()
+        .at(-1)
+      const times = group
+        .filter((q) => !downBefore || q.recordedAt > downBefore)
+        .map(postedAtOf)
+        .filter((t): t is string => t !== null)
+        .sort((a, b) => Date.parse(a) - Date.parse(b))
+      out.set(p.id, times[0] ?? null)
+    }
+  }
+  return out
+}
+
 /** 날짜(YYYY-MM-DD)의 ISO 주차("2026-W42"). */
 export function isoWeekOf(date: string): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)

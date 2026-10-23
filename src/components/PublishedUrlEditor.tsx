@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { ActionStatus, PostRemovedReason, PublishedPost } from '../lib/api'
 import type { PublishedHit } from '../lib/gapActions'
 import { INDEXING_GRACE_DAYS, withinIndexingGrace } from '../lib/publishTracking'
-import { ARTICLE_URL_REASON, isArticleUrl, kstDate, postedAtOf, todayKst, type PostTiming } from '../lib/publishedUrl'
+import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst, type PostTiming } from '../lib/publishedUrl'
 import { UrlLink } from './CitationBits'
 
 const REMOVED_LABEL: Record<PostRemovedReason, string> = {
@@ -30,14 +30,15 @@ function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill
     }
   }
   if (h.timing === 'before') {
-    // 같은 날 측정은 「올렸어요」를 누른 시각으로 가렸다(postedAtOf) — 날짜로는 「올린 날보다 앞」이 아니다.
-    const at = postedAtOf(h.post)
+    // 올린 날 측정을 기록한 시각으로 가른 「올리기 전」만 시각을 말한다 — 측정한 날이 올린 날보다 앞이면 날짜 문구 그대로. 버튼 이름은
+    // 화면마다 달라(「올렸어요」 · 「추가」) 부르지 않는다.
     return {
       pill: '올리기 전 측정',
       cls: 'st-unknown',
-      detail: at
-        ? `${week} 측정은 「올렸어요」를 누른 시각(${kstClock(at)})보다 앞에 끝나 세지 않습니다.`
-        : `${week} 측정은 올린 날보다 앞이라 세지 않습니다.`,
+      detail:
+        h.beforeByTime && h.postedAt
+          ? `${week} 측정은 기록한 시각(${kstClock(h.postedAt)})보다 앞에 끝나 세지 않습니다.`
+          : `${week} 측정은 올린 날보다 앞이라 세지 않습니다.`,
     }
   }
   const unsure = h.timing === 'during' || h.timing === 'ambiguous'
@@ -141,7 +142,13 @@ export default function PublishedUrlEditor({
   const hits = rawHits.map((h): PublishedHit => {
     const t = timingInWeek?.get(h.post.id)
     if (!t || (h.timing !== 'during' && h.timing !== 'ambiguous') || t.timing === 'during' || t.timing === 'ambiguous' || t.timing === 'unknown') return h
-    return { ...h, timing: t.timing, ...(t.daysAfterPublish !== null ? { daysAfterPublish: t.daysAfterPublish } : {}) }
+    // 전후 불명에서 바뀐 판정은 모두 시각으로 가른 것이다 — 「올리기 전」이면 그렇게 밝힌다.
+    return {
+      ...h,
+      timing: t.timing,
+      ...(t.daysAfterPublish !== null ? { daysAfterPublish: t.daysAfterPublish } : {}),
+      ...(t.timing === 'before' ? { beforeByTime: true as const } : {}),
+    }
   })
   const otherRun = (h: PublishedHit) => !h.tally && Boolean(citedInWeek?.has(h.post.id))
   const citedCount = hits.filter((h) => (h.timing !== 'before' && h.tally) || otherRun(h)).length
@@ -193,8 +200,8 @@ export default function PublishedUrlEditor({
                 </div>
                 <p className="doc-meta post-meta">
                   {p.publishedOn ? `${shortDate(p.publishedOn)} 올림` : '올린 날 모름(옛 기록)'}
-                  {/* 같은 날 측정의 전후를 가르는 시각 — 「올렸어요」를 누른 때다. */}
-                  {postedAtOf(p) && ` · ${kstClock(postedAtOf(p)!)} 기록`}
+                  {/* 같은 날 측정의 전후를 가르는 시각 — 이 글(같은 주소 · 같은 올린 날)을 처음 기록한 때다. */}
+                  {h.postedAt && ` · ${kstClock(h.postedAt)} 기록`}
                   {p.edits && p.edits.length > 0 && ` · ${p.edits.map((e) => shortDate(e.editedOn)).join(' · ')} 고침`}
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
                   {judged && s.detail && ` · ${s.detail}`}

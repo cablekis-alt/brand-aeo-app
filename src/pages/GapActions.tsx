@@ -594,8 +594,8 @@ export default function GapActions() {
   )
   // 같은 날 올린 글 — 이번 주 결과가 전후 불명이면 회차 기록의 측정 시작까지 써서 다시 잰다(publishTracking.ts weekFileTimingOf).
   const timingInWeek = useMemo(
-    () => (weekHistory.history && weekOf ? weekFileTimingOf(weekHistory.history, weekOf) : null),
-    [weekHistory.history, weekOf],
+    () => (weekHistory.history && weekOf ? weekFileTimingOf(weekHistory.history, weekOf, plan.weekWindow) : null),
+    [weekHistory.history, weekOf, plan.weekWindow],
   )
   const cardPosts = canRecordPosts ? { ...posts, citedInWeek, timingInWeek } : null
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.

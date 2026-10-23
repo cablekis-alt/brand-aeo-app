@@ -7,7 +7,7 @@ import {
   kstDate,
   matchKind,
   measuredWindow,
-  postedAtOf,
+  postedAtIndex,
   timingOf,
   trackingKey,
   type CitationTally,
@@ -288,11 +288,18 @@ export async function sampleView(
     responseKeys.set(id, keys);
   }
 
+  // 같은 날 측정은 올린 시각으로 가린다 — 한 편(같은 주소 · 같은 올린 날)에서 가장 이른 누른 시각(postedAtIndex).
+  const postedAt = postedAtIndex(shown);
   // 내린 날이 이 측정보다 뒤면 이 측정 때는 글이 올라가 있었다.
   const status = shown.map((post) => {
     const removedOn = post.removedAt ? kstDate(post.removedAt) : null;
     const upDuring = !removedOn || (window ? removedOn > window.last : (isoWeekOf(removedOn) ?? '') > weekOf);
-    return { upDuring, timing: timingOf(post.publishedOn, window, weekOf, postedAtOf(post)) };
+    // 측정한 날 내렸는데 내린 시각이 답을 다 모은 뒤면, 그 측정 때는 올라가 있었을 수 있다 — 칸은 날짜 규칙 그대로 「내린 뒤」로 두고,
+    // 같은 주소를 다시 올린 기록의 「올리기 전에 이미 인용됨」 경고를 막는 데만 쓴다.
+    const maybeUp =
+      upDuring ||
+      (removedOn !== null && window !== null && removedOn === window.last && (!window.endAt || Date.parse(post.removedAt!) > Date.parse(window.endAt)));
+    return { upDuring, maybeUp, timing: timingOf(post.publishedOn, window, weekOf, postedAt.get(post.id) ?? null) };
   });
   const cells = shown.map((post, i) => {
     const { upDuring, timing } = status[i]!;
@@ -304,10 +311,10 @@ export async function sampleView(
       tally: upDuring ? (index.get(post.key) ?? null) : null,
       variantCited,
     };
-    const days = daysAfterPublish(post.publishedOn, window, weekOf, postedAtOf(post));
+    const days = daysAfterPublish(post.publishedOn, window, weekOf, postedAt.get(post.id) ?? null);
     if (days !== null) cell.daysAfterPublish = days;
     const earlierLive = shown.some(
-      (other, j) => j !== i && other.key === post.key && other.removedReason === 'taken-down' && status[j]!.upDuring && status[j]!.timing !== 'before',
+      (other, j) => j !== i && other.key === post.key && other.removedReason === 'taken-down' && status[j]!.maybeUp && status[j]!.timing !== 'before',
     );
     if (timing === 'before' && earlierLive) cell.earlierPostingLive = true;
     if (post.articleId.startsWith('topic:')) {

@@ -13,7 +13,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import PublishedUrlEditor from '../src/components/PublishedUrlEditor';
 import type { PublishedPost } from '../src/lib/api';
 import { computeGapActions } from '../src/lib/gapActions';
-import { daysAfterPublish, measuredWindow, postedAtOf, timingOf } from '../src/lib/publishedUrl';
+import { daysAfterPublish, measuredWindow, postedAtIndex, postedAtOf, timingOf } from '../src/lib/publishedUrl';
 import { weekFileTimingOf, weekTimingOf } from '../src/lib/publishTracking';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
@@ -100,7 +100,7 @@ const html = renderToStaticMarkup(
     hits: hit ? [hit] : [], removed: [], weekOf: W, busy: false, onRecord: async () => null, onRemove: noop, onRestore: noop, onSetDate: noop,
   }),
 );
-ok('주소 칸 — 「올리기 전 측정」과 누른 시각을 밝힌다', html.includes('올리기 전 측정') && html.includes('「올렸어요」를 누른 시각(14:15)보다 앞에 끝나'));
+ok('주소 칸 — 「올리기 전 측정」과 기록한 시각을 밝힌다(버튼 이름은 부르지 않는다)', html.includes('올리기 전 측정') && html.includes('기록한 시각(14:15)보다 앞에 끝나'));
 ok('주소 칸 — 올린 날 옆에 기록 시각', html.includes('10/23 올림 · 14:15 기록'));
 ok('주소 칸 — 올린 직후에 누르라는 안내', html.includes('오늘 올린 글은 올린 직후에 누르세요'));
 
@@ -110,18 +110,43 @@ const latePlan = computeGapActions(laterWeek as unknown as ClientAnalysis[], que
 const lateHit = latePlan.actions.find((a) => a.id === 'content:category-agnostic')?.publishedHits?.[0];
 ok('그 주 파일만으로는 저녁 회차도 전후 불명(측정 시작을 모른다)', lateHit?.timing === 'during');
 const history = {
-  weeks: [{ weekOf: W, analysed: true, window: win({ startAt: '2026-10-23T13:18:45Z', endAt: '2026-10-23T13:20:42Z' }) }],
+  weeks: [{ weekOf: W, analysed: true, window: win({ startAt: '2026-10-23T13:18:45Z', endAt: '2026-10-23T13:19:30Z' }) }],
   posts: [{ post: post(), cells: [] }],
 } as unknown as Parameters<typeof weekFileTimingOf>[0];
-const inWeek = weekFileTimingOf(history, W);
+const inWeek = weekFileTimingOf(history, W, latePlan.weekWindow);
 ok('이력으로 다시 재면 올린 뒤 · D+0', inWeek?.get('p4')?.timing === 'after' && inWeek.get('p4')?.daysAfterPublish === 0);
-ok('이력에 그 주가 없으면 null', weekFileTimingOf(history, '2026-W44') === null);
+ok('이력에 그 주가 없으면 null', weekFileTimingOf(history, '2026-W44', latePlan.weekWindow) === null);
 const lateHtml = renderToStaticMarkup(
   React.createElement(PublishedUrlEditor, {
     hits: lateHit ? [lateHit] : [], removed: [], weekOf: W, busy: false, timingInWeek: inWeek, onRecord: async () => null, onRemove: noop, onRestore: noop, onSetDate: noop,
   }),
 );
 ok('주소 칸 — 전후 불명 대신 다시 잰 값(올린 지 0일 · 색인 대기)', !lateHtml.includes('전후 불명') && lateHtml.includes('색인 대기'));
+
+// 7) 검토 회귀 — 같은 글을 두 줄에 적으면 한 편으로, 다른 측정으로는 다시 재지 않는다, 날짜 문구, 같은 날 내렸다 다시 올림
+ok('이력의 그 주가 다른 측정이면(화면이 낡음) 다시 재지 않는다', weekFileTimingOf(history, W, { first: DAY, last: DAY, endAt: '2026-10-23T04:41:00Z' }) === null);
+const own = post({ id: 'own', recordedAt: '2026-10-23T05:00:00Z' });
+const channel = post({ id: 'chan', targetActionId: 'listing:platform:tistory.com', via: 'channel', recordedAt: '2026-10-23T08:00:00Z' });
+const pair = postedAtIndex([own, channel]);
+ok('같은 글 두 줄 — 가장 이른 기록 시각을 함께 쓴다', pair.get('own') === '2026-10-23T05:00:00Z' && pair.get('chan') === '2026-10-23T05:00:00Z');
+const between = await sampleView(noBank, { tenantId: 't' }, [own, channel], { weekOf: W, scorecard: card, analyses: [analysis('2026-10-23T06:30:00Z')], startAt: '2026-10-23T06:00:00Z' });
+ok('같은 글 두 줄 — 두 기록 사이 측정이 두 줄 모두 올린 뒤', between.cells.every((c) => c.timing === 'after'));
+const firstPost = post({ id: 'a', recordedAt: '2026-10-23T01:00:00Z', removedAt: '2026-10-23T04:00:00Z', removedReason: 'taken-down' });
+const repost = post({ id: 'b', recordedAt: '2026-10-23T05:00:00Z' });
+ok('같은 날 내렸다 다시 올린 글은 다시 올린 기록의 시각', postedAtIndex([firstPost, repost]).get('b') === '2026-10-23T05:00:00Z');
+const prevDay = [analysis('2026-10-22T04:41:00Z')];
+const prevPlan = computeGapActions(prevDay as unknown as ClientAnalysis[], questions, analyzeCitationSources(prevDay), {}, [post()], W);
+const prevHit = prevPlan.actions.find((a) => a.id === 'content:category-agnostic')?.publishedHits?.[0];
+const prevHtml = renderToStaticMarkup(
+  React.createElement(PublishedUrlEditor, { hits: prevHit ? [prevHit] : [], removed: [], weekOf: W, busy: false, onRecord: async () => null, onRemove: noop, onRestore: noop, onSetDate: noop }),
+);
+ok('전날 측정은 날짜 문구(「올린 날보다 앞」) — 기록 시각을 말하지 않는다', prevHit?.timing === 'before' && !prevHit.beforeByTime && prevHtml.includes('올린 날보다 앞이라') && !prevHtml.includes('기록한 시각('));
+// 옛 글 A(10-19)를 10-23 14:00에 내리고 B로 14:15에 다시 올렸다 — 13:41 측정이 그 주소를 인용했다(그때는 A가 올라가 있었다).
+const citing = { ...analysis('2026-10-23T04:41:00Z'), citations: [{ raw: 'https://fake.tistory.com/4', domain: null, ownerType: 'third-party-authority', supportsBrandMention: false }] } as unknown as QuestionRepeatAnalysis;
+const oldA = post({ id: 'A', publishedOn: '2026-10-19', recordedAt: '2026-10-19T01:00:00Z', removedAt: '2026-10-23T05:00:00Z', removedReason: 'taken-down' });
+const newB = post({ id: 'B', recordedAt: '2026-10-23T05:15:00Z' });
+const reposted = await sampleView(noBank, { tenantId: 't' }, [oldA, newB], { weekOf: W, scorecard: card, analyses: [citing] });
+ok('같은 날 내렸다 다시 올림 — 다시 올린 기록에 「올리기 전에 이미 인용」 경고를 붙이지 않는다', reposted.cells[1]!.timing === 'before' && reposted.cells[1]!.earlierPostingLive === true);
 
 let failed = 0;
 for (const [label, pass] of checks) {
