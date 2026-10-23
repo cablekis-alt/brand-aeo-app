@@ -2581,6 +2581,12 @@ p.hint {
 .rt-table th {
   white-space: nowrap;
 }
+/* 날짜별 합계의 글 칸 — 글마다 한 줄, 칸 안에서는 줄바꿈해 표가 옆으로 밀리지 않게. */
+.rt-table .rt-day-posts {
+  white-space: normal;
+  text-align: left;
+  min-width: 11em;
+}
 
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }

@@ -15,6 +15,8 @@ import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommen
 import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
+import { useRunHistory } from '../lib/useRunHistory'
+import { kstStamp } from '../lib/runTrend'
 import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
@@ -36,6 +38,18 @@ export default function Dashboard() {
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
+  // 이번 주에 여러 번 쟀으면 — 점수는 그 주 카드 회차 하나다(평균이 아니다). 회차 기록은 데스크톱 전용이라 웹에서는 비어 있다.
+  const runHistory = useRunHistory(tenant?.tenantId ?? '', 1)
+  const weekRuns = useMemo(() => {
+    const points = (runHistory.history?.points ?? []).filter((p) => card && p.weekOf === card.weekOf)
+    if (points.length < 2) return null
+    const cardPoint = points.find((p) => p.isWeekCard)
+    return {
+      count: points.length,
+      cardAt: cardPoint?.at ? kstStamp(cardPoint.at) : null,
+      scores: points.map((p) => (p.score === null ? '?' : String(p.score))),
+    }
+  }, [runHistory.history, card])
 
   /*
    * 「이름을 대면 / 안 대면」 대비와 코호트 구성원 이름 — 스코어카드에 없는 값이라 랭킹 API를 한 번 더 부른다.
@@ -277,6 +291,18 @@ export default function Dashboard() {
                 </div>
               </div>
               <dl className="hero2-facts">
+                {weekRuns && (
+                  // 좁은 칸이라 주의 문장은 제목(마우스를 올리면)으로 — 화면에는 횟수 · 점수가 온 회차 · 회차별 점수만.
+                  <div title="점수는 그 주 카드 회차 하나입니다(평균이 아닙니다). 회차마다 흔들려 하루 단위로 견주지 않습니다.">
+                    <dt>이번 주 측정</dt>
+                    <dd>
+                      {weekRuns.count}회{' '}
+                      <span className="dash-sub">
+                        · 점수는 {weekRuns.cardAt ?? '그 주 카드'} 회차 · 회차별 {weekRuns.scores.join('·')} · <Link to="/performance#runs">회차별 보기</Link>
+                      </span>
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt>코호트 순위</dt>
                   <dd>

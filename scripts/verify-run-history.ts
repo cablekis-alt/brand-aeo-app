@@ -325,6 +325,29 @@ try {
   })
   ok('그림: 같은 날 흔들림은 엔진이 빠진 회차를 뺀다', swing.sameDay?.scores.join() === '32,30')
 
+  // 날짜별 합계 — 같은 날 · 같은 조건 회차만 합치고, 점수는 평균 내지 않고 늘어놓는다
+  const d27 = model.daily?.find((d) => d.date === '2026-10-27')
+  const d28 = model.daily?.find((d) => d.date === '2026-10-28')
+  ok(
+    '날짜별 합계: 같은 날 같은 조건 두 회차를 합친다(순위 든 응답 2/156 · 언급 4/156 · 점수 6·6)',
+    d27?.runs === 2 && d27.ranked?.k === 2 && d27.ranked.n === 156 && d27.mentioned?.k === 4 && d27.mentioned.n === 156 && d27.scores.join() === '6,6',
+  )
+  ok('날짜별 합계: 엔진 빠진 회차만 있는 날은 합치지 않고 뺀 수만', d28?.runs === 0 && d28.isolated === 1 && d28.ranked === null)
+  ok('날짜별 합계: 글 칸은 그날 합친 회차의 결과(색인 대기 2회)', d27?.posts[0]?.measured === 2 && d27.posts[0].cited === 0 && d27.posts[0].grace === 2)
+  const mixedDay = buildRunTrend({ ...hist, points: [point('m1', '2026-10-27T01:00:00Z'), point('m2', '2026-10-27T03:00:00Z', { conditionKey: 'k2' })], posts: [] }).daily
+  ok('날짜별 합계: 같은 날 조건이 섞이면 합치지 않는다', mixedDay?.[0]?.mixed === true && mixedDay[0].runs === 0 && mixedDay[0].ranked === null)
+  const beforeCell = (): RunPostRow['cells'][number] => ({ timing: 'before', afterRemoval: false, daysAfterPublish: null, withinGrace: false, cited: 0, unnamedCited: 0, variantCited: 0, byEngine: {} })
+  const sameDayPost = buildRunTrend({
+    ...hist,
+    points: [point('p1', '2026-10-26T01:00:00Z'), point('p2', '2026-10-26T03:00:00Z'), point('p3', '2026-10-27T01:00:00Z'), point('p4', '2026-10-27T09:00:00Z')],
+    posts: [mkRow('z', [beforeCell(), beforeCell(), beforeCell(), cellOf(0)], { post: { ...post, id: 'z', publishedOn: '2026-10-27' } })],
+  }).daily
+  ok(
+    '날짜별 합계: 「올리기 전」은 올린 날 당일만 적는다',
+    sameDayPost?.find((d) => d.date === '2026-10-26')?.posts[0]?.before === 0 && sameDayPost.find((d) => d.date === '2026-10-27')?.posts[0]?.before === 1,
+  )
+  ok('날짜별 합계: 하루에 두 번 넘게 잰 날이 없으면 그리지 않는다', buildRunTrend({ ...hist, points: [point('o1', '2026-10-27T01:00:00Z'), point('o2', '2026-10-29T01:00:00Z')], posts: [] }).daily === null)
+
   const React = await import('react')
   const { renderToStaticMarkup } = await import('react-dom/server')
   Object.assign(globalThis, { React })
@@ -340,6 +363,8 @@ try {
   ok('패널: 같은 날 올린 글은 줄 이름으로 가른다(글1a · 글1b)', html.includes('글1a') && html.includes('글1b'))
   ok('패널: 카테고리 무관 질문이라고 밝힌다', html.includes('카테고리 무관 질문'))
   ok('패널: 점수는 조건 섞임이면 평균 안 냄', html.includes('조건 섞임 — 평균 안 냄'))
+  ok('패널: 날짜별 합계 표와 안내(평균 아님 · 날짜끼리 견주지 않기)', html.includes('날짜별 합계') && html.includes('평균이 아닙니다') && html.includes('글1a 인용 0/2 · 색인 대기'))
+  ok('패널: 색인 대기가 끝나는 날(10/21 + 14일 = 11/4)', html.includes('색인 대기 · 11/4 측정부터 판단'))
 } finally {
   delete process.env.COLLECT_ENGINES
   rmSync(dir, { recursive: true, force: true })

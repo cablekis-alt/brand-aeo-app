@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RunHistory, RunPoint, RunPostCell } from '../lib/api'
 import { ENGINE_LABEL } from '../lib/format'
 import { engineName, INDEXING_GRACE_DAYS, monthDay } from '../lib/publishTracking'
-import { buildRunTrend, dayLabel, kstStamp, pct, type RunMark } from '../lib/runTrend'
+import { buildRunTrend, dayLabel, kstStamp, pct, type RunMark, type RunTrendModel } from '../lib/runTrend'
 
 const MIN_W = 520
 const PAD = { left: 44, right: 16 }
@@ -13,6 +13,19 @@ const GRAPH_H = 150
 const BOTTOM = 40
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
+
+/** "2026-10-21" + 14 → "2026-11-04". */
+const addDays = (date: string, n: number) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
+
+/** 날짜별 합계의 글 칸 — 「글1 인용 0/2 · 색인 대기」 · 「글2 올리기 전 1 · 인용 0/1」. 그날 알 것이 없으면 null. */
+function dayPostText(p: NonNullable<RunTrendModel['daily']>[number]['posts'][number]): string | null {
+  const parts: string[] = []
+  if (p.before > 0) parts.push(`올리기 전 ${p.before}`)
+  if (p.measured > 0) parts.push(`인용 ${p.cited}/${p.measured}${p.cited === 0 && p.grace === p.measured ? ' · 색인 대기' : ''}`)
+  if (p.unsure > 0) parts.push(`전후 불명 ${p.unsure}`)
+  if (p.removed > 0) parts.push(`내린 뒤 ${p.removed}`)
+  return parts.length > 0 ? `글${p.label} ${parts.join(' · ')}` : null
+}
 
 const MARK_TEXT: Record<RunMark, string> = {
   cited: '인용됨',
@@ -193,10 +206,16 @@ export default function RunTrendPanel({
                 ` · 인용된 회차 ${r.citedRuns}/${r.measuredRuns}` +
                 (r.afterGrace.measured > 0 ? ` · 올린 지 ${INDEXING_GRACE_DAYS}일 지난 회차 ${r.afterGrace.cited}/${r.afterGrace.measured}` : '')
             } else {
+              // 색인 대기가 끝나는 날 — 올린 지 INDEXING_GRACE_DAYS일째 측정부터 「인용 없음」을 판단한다.
+              const graceEnd = r.post.publishedOn ? addDays(r.post.publishedOn, INDEXING_GRACE_DAYS) : null
               line =
                 `아직 인용 없음 · 회차 0/${r.measuredRuns}` +
                 (d !== null ? ` · 올린 지 ${d}일` : '') +
-                (d !== null && d < INDEXING_GRACE_DAYS ? ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중` : '')
+                (d !== null && d < INDEXING_GRACE_DAYS
+                  ? graceEnd
+                    ? ` · 색인 대기 · ${monthDay(graceEnd)} 측정부터 판단`
+                    : ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중`
+                  : '')
             }
             return (
               <li key={r.post.id} className="rt-post-line">
@@ -407,6 +426,53 @@ export default function RunTrendPanel({
           {m.pins.length > 0 && <span>번호 핀 = 올린 날 · 옅은 띠 = 올린 뒤 {INDEXING_GRACE_DAYS}일</span>}
         </figcaption>
       </figure>
+
+      {m.daily && (
+        <section aria-label="날짜별 합계">
+          <h4 style={{ margin: '12px 0 4px' }}>날짜별 합계</h4>
+          <p className="hint" style={{ marginTop: 0 }}>
+            같은 날, 같은 조건으로 끝까지 잰 회차만 합쳤습니다(옛 기록 · 엔진이 빠진 회차는 뺍니다). 같은 질문을 다시 물은 합이라 회차가
+            늘어도 흔들림이 그만큼 줄지는 않습니다 — 날짜끼리의 오르내림으로 판단하지 마세요. 점수 칸은 그날 회차 점수를 늘어놓은 것이고
+            평균이 아닙니다.
+          </p>
+          <div className="table-wrap">
+            <table className="rt-table">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>합친 회차</th>
+                  <th title="카테고리 무관 질문 응답 가운데 우리 이름이 나온 응답 / 응답 합">언급(카테고리 무관)</th>
+                  <th>순위 든 응답</th>
+                  <th>점수(참고)</th>
+                  {m.rows.length > 0 && <th className="rt-day-posts">올린 글</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {m.daily.map((d) => {
+                  const dropped = [
+                    ...(d.legacy ? [`옛 기록 ${d.legacy} 뺌`] : []),
+                    ...(d.isolated ? [`엔진 빠진 회차 ${d.isolated} 뺌`] : []),
+                    ...(d.unknown ? [`질문지 못 찾은 회차 ${d.unknown} 뺌`] : []),
+                  ]
+                  const posts = d.posts.map(dayPostText).filter((t): t is string => t !== null)
+                  return (
+                    <tr key={d.date}>
+                      <td>{dayLabel(d.date)}</td>
+                      <td>{d.mixed ? '조건 섞임 — 합치지 않음' : [`${d.runs}회`, ...dropped].join(' · ')}</td>
+                      <td>{d.mentioned ? `${d.mentioned.k}/${d.mentioned.n}` : '—'}</td>
+                      <td>{d.ranked ? `${d.ranked.k}/${d.ranked.n}` : '—'}</td>
+                      <td>{d.scores.length > 0 ? d.scores.join(' · ') : '—'}</td>
+                      {m.rows.length > 0 && (
+                        <td className="rt-day-posts">{posts.length > 0 ? posts.map((t) => <div key={t}>{t}</div>) : '—'}</td>
+                      )}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <p className="hint">
         점수(참고 · 같은 조건 회차의 평균):{' '}
