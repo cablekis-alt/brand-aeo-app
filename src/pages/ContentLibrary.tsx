@@ -153,7 +153,12 @@ export default function ContentLibrary() {
     const records = postsOf(articleId)
     return (
       <div className="post-section">
-        <ExecutionStatusButtons label={title} status={states?.[articleId]?.status ?? 'todo'} onChange={(s) => void setStatus(articleId, s)} />
+        <ExecutionStatusButtons
+          label={title}
+          status={states?.[articleId]?.status ?? 'todo'}
+          allowSkip={!articleId.startsWith('content:')}
+          onChange={(s) => void setStatus(articleId, s)}
+        />
         <PublishedUrlEditor
           judged={false}
           addLabel="올렸어요"

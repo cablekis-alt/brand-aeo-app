@@ -210,7 +210,10 @@ export default function PublishList({
                 <span className={`channel-dot${row.done ? ' up' : ''}`} aria-hidden="true" />
                 <span className="publish-row-name">
                   <b>{row.name}</b>
-                  <span className="publish-row-article">{(row.article.draft && draftTitle(effectiveDraft(row.article.draft))) || row.article.action.title}</span>
+                  {/* 글이 한 편이면 줄마다 같은 제목이라 뺀다 — 위 ① 카드가 그 글이다. */}
+                  {plan.articles.length > 1 && (
+                    <span className="publish-row-article">{(row.article.draft && draftTitle(effectiveDraft(row.article.draft))) || row.article.action.title}</span>
+                  )}
                 </span>
                 <span className="publish-row-reach">
                   질문 <b>{row.questionIds.length}</b>개
