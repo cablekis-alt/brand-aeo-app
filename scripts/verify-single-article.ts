@@ -143,6 +143,21 @@ const noArticle = plan({}, questions, allWin);
 ok('카테고리 무관 패 0 — 콘텐츠 항목 없음', noArticle.actions.every((a) => a.kind !== 'content'));
 ok('카테고리 무관 패 0 — 남은 할 일 0', noArticle.openCount === 0);
 ok('카테고리 무관 패 0 — 다른 유형의 패는 otherLost에 남는다', noArticle.otherLost.length === 2);
+// 이미 올린 곳(비교 패만 인용한 namu.wiki · 아무 패도 인용하지 않은 네이버 블로그)은 글이 없어도 주소 줄로 남는다 — 따로 쓸 글로 쪼개지 않는다.
+const noArticleDone = plan(
+  {
+    'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-20T00:00:00Z', markedWeek: '2026-W43' },
+    'listing:platform:blog.naver.com': { status: 'done', updatedAt: '2026-10-20T00:00:00Z', markedWeek: '2026-W43' },
+  },
+  questions,
+  allWin,
+);
+const noArticlePub = publishOf(noArticleDone);
+ok('글 없는 주 · 올린 곳 — 글 0편(① 글 확인 · 한꺼번에 만들기 없음)', noArticlePub.articles.length === 0);
+ok(
+  '글 없는 주 · 올린 곳 — 잠기지 않은 「올림」 줄(주소를 다룰 수 있다)',
+  noArticlePub.rows.length === 2 && noArticlePub.rows.every((r) => r.kind === 'channel' && r.done && !r.locked && !r.needsAdapt),
+);
 
 // 8) 정기진단 보고서도 목록에서 뺀 곳을 권하지 않는다
 const repCard = { weekOf: '2026-W43', brandName: '가상브랜드', mentionRate: 0, aeoScore: { current: 5, ciLow: 0, ciHigh: 10 }, avgRecommendationRank: null, rankedResponses: 0, brandOwnedCitationRate: 0 } as unknown as WeeklyScorecard;

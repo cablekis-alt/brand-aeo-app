@@ -151,12 +151,15 @@ export default function ContentLibrary() {
   /** 한 글의 올린 곳 — 그 글의 모든 기록(자사 · 채널 줄)을 보이고, 이 글에 직접 적는다. */
   const postsPanel = (articleId: string, title: string, stored: StoredDraft | undefined) => {
     const records = postsOf(articleId)
+    const isContentArticle = articleId.startsWith('content:')
+    const savedStatus = states?.[articleId]?.status ?? 'todo'
     return (
       <div className="post-section">
         <ExecutionStatusButtons
           label={title}
-          status={states?.[articleId]?.status ?? 'todo'}
-          allowSkip={!articleId.startsWith('content:')}
+          // 콘텐츠 생성의 글은 보류하지 않는다 — 예전 화면에서 남긴 보류는 콘텐츠 생성처럼 「안 함」으로 읽는다(gapActions.ts).
+          status={isContentArticle && savedStatus === 'skip' ? 'todo' : savedStatus}
+          allowSkip={!isContentArticle}
           onChange={(s) => void setStatus(articleId, s)}
         />
         <PublishedUrlEditor
