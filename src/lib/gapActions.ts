@@ -149,7 +149,29 @@ export interface GapActionPlan {
    * 있어도 우리가 글을 올릴 수 없는 곳이다 — LISTING_PLAY 주석 참고.
    */
   excludedLowConfidence: number
+  /**
+   * 글에 넣지 않은 밀린 질문 — 카테고리 무관이 아닌 유형(비교 · 가격 · 후기 · 지역 · 브랜드 직접). 글은 한 편, 카테고리 무관
+   * 질문으로만 쓴다(contentActions). 이 질문들의 답이 자사 사이트를 인용하는 비율(브랜드 소유 출처)은 점수에 들어가서 화면이
+   * 따로 밝힌다. 은행을 읽지 못한 주는 유형을 몰라 비어 있다(그때는 밀린 질문 전부가 글에 들어간다).
+   */
+  otherLost: OtherLostQuestion[]
 }
+
+export interface OtherLostQuestion {
+  questionId: string
+  text: string
+  /** 화면에 쓰는 유형 이름(「비교」 등). */
+  categoryLabel: string
+  /** 브랜드 이름이 들어간 질문인가 — 옛 은행에는 유형은 카테고리 무관이 아닌데 이름이 없는 질문이 있다. 은행에 없으면 undefined. */
+  containsBrandName?: boolean
+}
+
+/**
+ * 글 한 편이 답하는 질문 유형. 언급률 · 추천 순위가 이 유형의 응답만으로 나온다(server/mentionScope.ts) — 점수를 움직이는
+ * 질문이 이것뿐이라 글을 유형마다 나누지 않는다(2026-10-23). 다른 유형의 밀린 질문은 0~3개라 매주 바뀌고, 브랜드 이름이
+ * 들어간 질문이라 쓰는 방식도 반대다(브리프 규칙 4-1 · 4-2, src/prompts/b9b-content-brief.ts).
+ */
+const ARTICLE_CATEGORY = 'category-agnostic'
 
 const CATEGORY_LABEL: Record<string, string> = {
   'category-agnostic': '카테고리 무관',
@@ -384,6 +406,10 @@ function listingActions(
   rows: WinLossRow[],
   unnamed: { byHost: Map<string, UnnamedTally>; known: boolean },
   listedByHost: Map<string, ListedEvidence> = new Map(),
+  /** 글이 답하는 밀린 질문인가(inArticle) — 채널의 「밀린 질문」도 같은 기준이라야 모든 채널이 그 글에 붙는다. */
+  inArticle: (row: WinLossRow) => boolean = () => true,
+  /** 글이 카테고리 무관 질문만 답하나(은행을 읽었나) — 근거 문장이 어떤 밀린 질문을 셌는지 밝힌다. */
+  articleScoped = false,
 ): {
   actions: GapAction[]
   competitorDomainCount: number
@@ -524,8 +550,10 @@ function listingActions(
       const cited = [...qids]
         .map((id) => rowById.get(id))
         .filter((row): row is WinLossRow => row !== undefined)
+      // 밀린 질문은 글이 답하는 것만 센다 — 그래야 이 채널의 질문이 늘 그 글의 질문 안에 있어, 채널마다 글을 따로 쓰지 않는다.
+      // 하나도 없으면 reach 0이고 올리기 목록에서 빠진다(isIdleAction).
       const lost = cited
-        .filter((row) => row.verdict === 'loss')
+        .filter((row) => row.verdict === 'loss' && inArticle(row))
         .sort((a, b) => a.mentionedRate - b.mentionedRate)
       const picked = lost.length > 0 ? lost : cited
       // 밀린 질문이 없으면 "그중 N개는…" 절이 통째로 빠진다. 앞 절을 "꺼냈고,"로 두면
@@ -534,7 +562,7 @@ function listingActions(
         cited.length === 0
           ? ''
           : lost.length > 0
-            ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 우리가 밀린 질문입니다.`
+            ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 ${articleScoped ? '카테고리 무관 질문에서 ' : ''}우리가 밀린 질문입니다.`
             : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
 
       // 지분도 브랜드 이름 없는 질문의 인용으로 낸다. 은행을 읽지 못했거나 이름 없는 질문에서는 인용되지 않은 곳만 모든 질문으로
@@ -610,55 +638,45 @@ function listingActions(
 }
 
 /**
- * 콘텐츠형 항목. 밀린 질문을 카테고리로 묶는다.
+ * 콘텐츠형 항목 — **글 한 편.** 밀린 질문 가운데 글이 답하는 것(inArticle)을 한 항목으로 묶는다.
  *
- * 질문 하나에 항목 하나를 만들면 36줄짜리 할 일 목록이 나오는데, 그건 격차 분석 이전으로
- * 돌아가는 것이다. 카테고리는 "같은 글 한 편으로 덮을 수 있는 묶음"에 가깝다.
+ * 질문 하나에 항목 하나를 만들면 36줄짜리 할 일 목록이 나오는데, 그건 격차 분석 이전으로 돌아가는 것이다. 예전에는
+ * 카테고리마다 한 편씩 썼는데, 카테고리 무관 글이 질문의 85~95%와 채널 줄 대부분을 맡고 나머지는 질문 1~3개짜리 글과
+ * 「덮는 글 없는 채널」용 글이었다(실측 W43 군산각: 글 4편 중 3편이 질문 1~3개). 점수를 움직이는 질문은 카테고리 무관뿐이라
+ * 그 글 한 편만 남긴다(ARTICLE_CATEGORY). id는 그대로 `content:category-agnostic` — 올린 글 기록 · 채널용 다듬은 글 · 초안이
+ * 이 키에 붙어 있다. 은행을 읽지 못한 주는 유형을 몰라 밀린 질문 전부를 한 편(`content:`)으로 묶는다(예전과 같은 모양).
  */
-function contentActions(rows: WinLossRow[]): GapAction[] {
-  const byCategory = new Map<string, WinLossRow[]>()
-  for (const r of rows) {
-    if (r.verdict !== 'loss') continue
-    const list = byCategory.get(r.category) ?? []
-    list.push(r)
-    byCategory.set(r.category, list)
-  }
-
-  return [...byCategory.entries()]
-    .map<GapAction>(([category, list]) => {
-      // 언급률이 낮은 질문이 먼저 — 아예 안 나오는 주제가 가장 급하다.
-      const worst = [...list].sort((a, b) => a.mentionedRate - b.mentionedRate)
-      const label = CATEGORY_LABEL[category] ?? category
-      const zero = list.filter((r) => r.mentionedRate === 0).length
-      return {
-        id: `content:${category}`,
-        kind: 'content',
-        title: `${label} 질문 콘텐츠 보강`,
-        badge: '콘텐츠',
-        evidence:
-          zero > 0
-            ? `${label} 질문 ${list.length}개에서 밀리고, 그중 ${zero}개는 언급이 아예 0건입니다.`
-            : `${label} 질문 ${list.length}개에서 경쟁사에 밀립니다.`,
-        questionIds: worst.map((r) => r.questionId),
-        questionTexts: worst.map((r) => r.text),
-        reach: list.length,
-        // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
-        satisfied: false,
-        status: 'todo',
-        publishedUrls: [],
-        citedPublishedUrls: [],
-        doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
-      }
-    })
-    .sort((a, b) => b.reach - a.reach)
+function contentActions(rows: WinLossRow[], inArticle: (row: WinLossRow) => boolean, bankKnown: boolean): GapAction[] {
+  const list = rows.filter((r) => r.verdict === 'loss' && inArticle(r))
+  if (list.length === 0) return []
+  const category = bankKnown ? ARTICLE_CATEGORY : ''
+  // 언급률이 낮은 질문이 먼저 — 아예 안 나오는 주제가 가장 급하다.
+  const worst = [...list].sort((a, b) => a.mentionedRate - b.mentionedRate)
+  const label = CATEGORY_LABEL[category] ?? category
+  const zero = list.filter((r) => r.mentionedRate === 0).length
+  return [
+    {
+      id: `content:${category}`,
+      kind: 'content',
+      title: `${label} 질문 콘텐츠 보강`,
+      badge: '콘텐츠',
+      evidence:
+        zero > 0
+          ? `${label} 질문 ${list.length}개에서 밀리고, 그중 ${zero}개는 언급이 아예 0건입니다.`
+          : `${label} 질문 ${list.length}개에서 경쟁사에 밀립니다.`,
+      questionIds: worst.map((r) => r.questionId),
+      questionTexts: worst.map((r) => r.text),
+      reach: list.length,
+      // 콘텐츠형은 '패가 사라짐'이 완료 신호다. 다음 측정에서 확인된다.
+      satisfied: false,
+      status: 'todo',
+      publishedUrls: [],
+      citedPublishedUrls: [],
+      doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
+    },
+  ]
 }
 
-/**
- * '아직 할 일'의 정의 — **한 곳에서만 정한다.**
- *
- * 실행 항목 화면과 측정 상태 화면이 각자 필터를 쓰면 한쪽만 고쳐져 같은 브랜드·같은 주차인데
- * 남은 건수가 다르게 뜬다. 그러면 둘 다 못 믿게 된다. openCount도 이 함수로 센다.
- */
 /**
  * 인용 갭 분석의 한 도메인이 콘텐츠 생성에서 어느 카드로 이어지는지 — listingActions의 그룹 키 규칙을
  * 그대로 따른다(언론은 한 묶음, 블로그는 플랫폼 단위, 나머지는 사이트 단위). 등재할 수 없는 곳
@@ -676,8 +694,22 @@ export function listingActionIdFor(domain: string, kind: string, ownerType: stri
   return `listing:${siteGroupKey(domain)}`
 }
 
+/**
+ * '아직 할 일'의 정의 — **한 곳에서만 정한다.** 사이드바 · 대시보드 · 측정 상태 · 콘텐츠 생성이 모두 이 함수로 센다.
+ * 각자 필터를 쓰면 한쪽만 고쳐져 같은 브랜드 · 같은 주차인데 남은 건수가 다르게 뜬다. openCount도 이 함수로 센다.
+ */
 export function isOpenAction(a: GapAction): boolean {
-  return !a.satisfied && a.status !== 'skip'
+  return !a.satisfied && a.status !== 'skip' && !isIdleAction(a)
+}
+
+/**
+ * 올려도 이번 주 덮는 밀린 질문이 없는 채널 — 글이 답하는 밀린 질문(카테고리 무관)을 꺼낸 답이 이곳을 인용하지 않았다.
+ * 예전에는 「덮는 글 없는 채널」로 채널마다 글을 따로 쓰게 했는데, 그런 줄 68개가 모두 이런 곳이었다(실측 W43, 브랜드 36곳 —
+ * 우리가 이미 이기는 질문이나 브랜드 이름을 댄 질문에서만 인용된 곳). 할 일 목록에서 빼고 「목록에서 뺀 것」에 이름만 남긴다.
+ * 손댄 곳(진행 중 · 집행함 · 올린 주소)은 빼지 않는다 — 올린 기록이 목록에서 사라지면 안 된다.
+ */
+export function isIdleAction(a: GapAction): boolean {
+  return a.kind === 'listing' && !a.satisfied && a.reach === 0 && a.status === 'todo' && a.publishedUrls.length === 0
 }
 
 /**
@@ -811,14 +843,29 @@ export function computeGapActions(
   weekOf = '',
 ): GapActionPlan {
   const rows = computeQuestionWinLoss(analyses, questions)
+  // 은행에서 이 주 질문의 유형을 하나라도 찾았나 — 못 찾으면 카테고리 무관 질문을 가릴 수 없어 밀린 질문 전부를 글에 넣는다.
+  const bankKnown = rows.some((r) => r.category !== '')
+  const inArticle = (r: WinLossRow) => !bankKnown || r.category === ARTICLE_CATEGORY
   const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
     citations,
     questionsByDomain(analyses),
     rows,
     unnamedCitationsByHost(analyses, questions),
     listedEvidenceByHost(analyses),
+    inArticle,
+    bankKnown,
   )
-  const content = contentActions(rows)
+  const content = contentActions(rows, inArticle, bankKnown)
+  const namedById = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
+  const otherLost: OtherLostQuestion[] = rows
+    .filter((r) => r.verdict === 'loss' && !inArticle(r))
+    .sort((a, b) => a.mentionedRate - b.mentionedRate)
+    .map((r) => ({
+      questionId: r.questionId,
+      text: r.text,
+      categoryLabel: CATEGORY_LABEL[r.category] ?? r.category,
+      ...(namedById.get(r.questionId) !== undefined ? { containsBrandName: namedById.get(r.questionId) } : {}),
+    }))
 
   // 올린 글 주소는 집행 원장에서 온다 — 상태가 없는 항목에도 붙는다. 예전처럼 앞부분만 맞으면 같은 글로 보지 않는다
   // (`…/1`을 올렸는데 `…/12`가 인용돼도 「인용됨」이 됐다). 올리기 전에 한 측정은 세지 않는다.
@@ -826,7 +873,10 @@ export function computeGapActions(
 
   const actions = [...listing, ...content]
     .map((a) => {
-      const saved = states[a.id]
+      // 글은 한 편이라 보류하지 않는다 — 보류하면 채널 줄이 모두 「덮는 글 없는 채널」로 쪼개져 채널마다 글을 따로 쓰게 된다.
+      // 예전 화면(카테고리마다 글)에서 남긴 보류는 「안 함」으로 읽는다.
+      const stored = states[a.id]
+      const saved = stored && !(a.kind === 'content' && stored.status === 'skip') ? stored : undefined
       const hits = hitsByTarget.get(a.id) ?? []
       if (!saved && hits.length === 0) return a
       return {
@@ -849,6 +899,7 @@ export function computeGapActions(
     skippedCount: actions.filter((a) => a.status === 'skip').length,
     competitorDomainCount,
     excludedLowConfidence,
+    otherLost,
   }
 }
 

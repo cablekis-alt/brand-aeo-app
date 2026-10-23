@@ -157,6 +157,9 @@ export function buildPublishPlan(
       const qs = overlap(ch.questionIds, qsets.get(article.action.id)!)
       if (qs.length > 0 && (!best || qs.length > best.qs.length)) best = { article, qs }
     }
+    // 이미 올린 곳은 이번 주 겹치는 질문이 없어도 그 글의 줄로 남긴다 — 글은 한 편이라(gapActions contentActions) 거기 올린 것도
+    // 그 글이다. 따로 쓸 글로 쪼개면 올린 주소가 「글 만들러 가기」 뒤로 숨고, 새 기록이 다른 글로 적힌다.
+    if (!best && isPublishedAction(ch) && contentArticles.length > 0) best = { article: contentArticles[0]!, qs: [] }
     if (best) {
       rows.push({
         key: ch.id,

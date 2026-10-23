@@ -2,7 +2,7 @@ import { AEO_SCORE_WEIGHTS, normalizeRank, rankWeightFactor, RANK_FULL_WEIGHT_RE
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { ActionStateMap, PublishedPost, SiteScoreRecord } from './api'
 import { ENGINE_LABEL, weekLabel } from './format'
-import { computeGapActions, type GapAction } from './gapActions'
+import { computeGapActions, isIdleAction, type GapAction } from './gapActions'
 import { monthDay, postWeekOf } from './publishTracking'
 import { isoWeekOf, kstDate } from './publishedUrl'
 import { computeQuestionWinLoss } from './questionWinLoss'
@@ -243,7 +243,8 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
     const posts = (input.posts ?? []).filter((p) => postWeekOf(p) <= asOf)
     const states = Object.fromEntries(Object.entries(input.states ?? {}).filter(([, s]) => stampWeek(s.updatedAt) <= asOf))
     const plan = computeGapActions(analyses, questions, citations, states, posts, asOf)
-    const open = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied).sort((a, b) => b.reach - a.reach)
+    // 이번 주 덮는 밀린 질문이 없는 곳(isIdleAction)은 콘텐츠 생성이 목록에서 뺀다 — 보고서도 권하지 않는다.
+    const open = plan.actions.filter((a) => a.kind === 'listing' && !a.satisfied && !isIdleAction(a)).sort((a, b) => b.reach - a.reach)
     // 이미 집행한 일은 다시 권하지 않는다 — 집행함으로 표시했거나 올린 주소를 적은 항목. 충족은 다음 측정이 말한다. 다만 블로그
     // 플랫폼(지분 자리)과 글을 모두 내린 항목은 할 일이 남아 계속 권하고, 집행했다는 사실을 머리말로 단다.
     const exec = new Map(open.map((a) => [a.id, executionOf(a, posts, asOf, input.citedPostIds)]))

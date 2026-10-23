@@ -323,16 +323,19 @@ export function ExecutionStatusButtons({
   label,
   status,
   disabled,
+  allowSkip = true,
   onChange,
 }: {
   label: string
   status: ActionStatus
   disabled?: boolean
+  /** 콘텐츠 생성의 글(content:)은 보류하지 않는다 — 보류하면 올리기 목록이 채널마다 따로 쓸 글로 쪼개진다(gapActions.ts). */
+  allowSkip?: boolean
   onChange: (status: ActionStatus) => void
 }) {
   return (
     <div className="action-status" role="group" aria-label={`${label} 집행 상태`}>
-      {STATUS_CHOICES.map((c) => (
+      {STATUS_CHOICES.filter((c) => allowSkip || c.value !== 'skip').map((c) => (
         <button
           key={c.value}
           type="button"

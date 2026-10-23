@@ -24,7 +24,7 @@ import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
 import { draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { draftTitle } from '../lib/markdownFile'
-import { isOpenAction, type GapAction } from '../lib/gapActions'
+import { channelNameOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -477,7 +477,8 @@ function ActionCard({
       )}
       {detail && canSaveStatus && (
         <div className="action-status" role="group" aria-label={`${action.title} 집행 상태`}>
-          {STATUS_CHOICES.map((c) => (
+          {/* 글은 한 편이라 보류하지 않는다 — 보류하면 올리기 목록이 채널마다 따로 쓸 글로 쪼개진다(gapActions.ts). */}
+          {STATUS_CHOICES.filter((c) => action.kind !== 'content' || c.value !== 'skip').map((c) => (
             <button
               key={c.value}
               type="button"
@@ -656,6 +657,8 @@ export default function GapActions() {
     el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }, [focusId, plan])
   const focusMissing = Boolean(focusId) && !loading && plan.actions.every((a) => a.id !== focusId)
+  // 넘어온 곳이 「목록에서 뺀 것」이면 스크롤할 카드가 없다 — 왜 없는지 따로 말한다.
+  const focusIdle = Boolean(focusId) && !loading && plan.actions.some((a) => a.id === focusId && isIdleAction(a))
   useEffect(() => {
     if (!tenant?.tenantId) return
     let alive = true
@@ -691,6 +694,9 @@ export default function GapActions() {
 
   const satisfied = plan.actions.filter((a) => a.satisfied && a.status !== 'skip')
   const skipped = plan.actions.filter((a) => a.status === 'skip')
+  const idle = plan.actions.filter(isIdleAction)
+  /** 글이 여러 편일 때만 글 목록 · 한꺼번에 만들기를 보인다 — 보통은 한 편(gapActions contentActions)이고, 손댄 채널이 따로 쓴 글을 가질 때만 늘어난다. */
+  const manyArticles = publishPlan.articles.length > 1
   const ready = !loading && plan.actions.length > 0
 
   if (!tenant) return null
@@ -731,8 +737,9 @@ export default function GapActions() {
         <div className="help-panel">
           <p>
             <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 만들고
-            올리는 곳입니다. <b>① 글 확인</b>에서 글의 빈칸을 채우거나 빼면, <b>② 올리기 목록</b>에서 그 글을 올릴 곳이
-            열립니다. 목록은 그곳에 올리면 덮이는 질문이 많은 순서입니다.
+            올리는 곳입니다. 글은 <b>한 편</b>입니다 — 언급률 · 추천 순위를 재는 카테고리 무관 질문 가운데 우리가 밀린 질문에
+            답합니다. <b>① 글 확인</b>에서 그 글의 빈칸을 채우거나 빼면, <b>② 올리기 목록</b>에서 그 글을 올릴 곳이 열립니다.
+            목록은 그곳에 올리면 덮이는 질문이 많은 순서입니다.
           </p>
           <p>
             할 일은 저장된 측정으로 계산합니다. AI를 부르는 것은 초안 만들기, 빈칸 값 찾기, 채널용 글 만들기뿐입니다.
@@ -770,6 +777,12 @@ export default function GapActions() {
           등재할 수 없는 출처(경쟁사·자사)입니다. <Link to="/citation-gap">인용 갭 분석으로 돌아가기</Link>
         </p>
       )}
+      {focusIdle && (
+        <p className="muted" role="status">
+          인용 갭 분석에서 넘어온 「{focusDomain || focusId}」는 이번 주 올리기 목록에서 뺐습니다 — 글이 답하는 밀린 질문에서
+          이곳이 인용되지 않아, 올려도 덮는 질문이 없습니다. <Link to="/citation-gap">인용 갭 분석으로 돌아가기</Link>
+        </p>
+      )}
 
       {!loading && plan.actions.length === 0 && (
         <p className="muted">
@@ -783,7 +796,9 @@ export default function GapActions() {
       {ready && (
         <>
           {open.length === 0 ? (
-            <p className="muted">남은 항목이 없습니다.</p>
+            <p className="muted">
+              {plan.otherLost.length > 0 ? '카테고리 무관 질문에서 밀린 곳은 없습니다.' : '남은 항목이 없습니다.'}
+            </p>
           ) : (
             <>
               {publishPlan.rows.length > 0 && drafts !== null && (
@@ -816,15 +831,22 @@ export default function GapActions() {
 
               <section>
                 <h3 className="step-head">
-                  ① 글 확인{' '}
-                  <span className="muted">
-                    {publishPlan.articles.length}편 중 {confirmedCount}편 확인됨
-                  </span>
+                  ① 글 확인
+                  {manyArticles && (
+                    <>
+                      {' '}
+                      <span className="muted">
+                        {publishPlan.articles.length}편 중 {confirmedCount}편 확인됨
+                      </span>
+                    </>
+                  )}
                 </h3>
                 <p className="hint" style={{ marginTop: 0 }}>
-                  빈칸을 채우거나 빼면 그 글이 확인되고, 아래 올리기 목록에서 그 글의 줄이 열립니다.
+                  {manyArticles
+                    ? '빈칸을 채우거나 빼면 그 글이 확인되고, 아래 올리기 목록에서 그 글의 줄이 열립니다.'
+                    : '빈칸을 채우거나 빼면 글이 확인되고, 아래 올리기 목록의 줄이 열립니다. 모든 곳에 이 글 한 편을 올립니다.'}
                 </p>
-                {publishPlan.articles.length > 0 && (
+                {manyArticles && (
                   <ul className="article-check-list" aria-label="글별 확인 상태">
                     {publishPlan.articles.map((x) => {
                       const state = articleStateOf(x)
@@ -844,7 +866,8 @@ export default function GapActions() {
                     })}
                   </ul>
                 )}
-                {briefs !== null && drafts !== null && (
+                {/* 한 편이면 카드의 「초안 만들기」가 같은 일을 한다. */}
+                {manyArticles && briefs !== null && drafts !== null && (
                   <BulkDrafts
                     tenantId={tenant.tenantId}
                     actions={publishPlan.articles.map((x) => x.action)}
@@ -928,6 +951,35 @@ export default function GapActions() {
             </>
           )}
 
+          {plan.otherLost.length > 0 && (
+            // 예전에는 유형마다 글을 한 편씩 썼다(질문 1~3개짜리). 글은 이제 한 편이라 여기 밝혀 둔다 — 목록 밖에 있어도 보이게,
+            // 남은 항목이 없는 주에도 그린다.
+            <section>
+              <details className="gap-more">
+                <summary>글에 넣지 않은 밀린 질문 {plan.otherLost.length}개 — 카테고리 무관이 아닌 질문</summary>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  언급률 · 추천 순위는 카테고리 무관 질문으로만 재서, 글은 그 질문에만 답합니다. 아래 질문은 대부분 브랜드 이름을 넣고
+                  묻는 질문이라 쓰는 방식도 반대입니다(첫 문장에서 바로 답). 다만 이 질문들의 답이 자사 사이트를 인용하는 비율(브랜드
+                  소유 출처)은 점수에 들어갑니다 — 답에 필요한 사실이 자사 사이트의 소개 · 자주 묻는 질문과{' '}
+                  <Link to="/brand-facts">브랜드 사실</Link>에 있는지 확인하세요. 이 질문으로 글을 따로 쓰려면{' '}
+                  <Link to="/questions">질문 은행</Link>에서 골라 쓰고, 예전에 만든 초안은 <Link to="/content-library">콘텐츠 보관함</Link>에
+                  있습니다.
+                </p>
+                <ul className="gap-worst">
+                  {plan.otherLost.map((q) => (
+                    <li key={q.questionId}>
+                      <span className="gap-q">{q.text}</span>{' '}
+                      <span className="muted">
+                        · {q.categoryLabel}
+                        {q.containsBrandName === false && ' · 브랜드 이름 없음'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </section>
+          )}
+
           {satisfied.length > 0 && (
             <section>
               <details className="gap-more">
@@ -968,6 +1020,13 @@ export default function GapActions() {
               데이터가 없어서가 아니라는 뜻입니다.
             </p>
             <ul className="gap-summary">
+              {idle.length > 0 && (
+                <li>
+                  이번 주 덮는 밀린 질문이 없는 곳 <b>{idle.length}곳</b> — 글이 답하는 밀린 질문에서는 인용되지 않았습니다(우리가
+                  밀리지 않은 질문이나 카테고리 무관이 아닌 질문에서만 인용). 올려도 이번 주 덮는 질문이 없어 뺐고, 다음 측정에서 밀린
+                  질문이 이곳을 인용하면 목록에 다시 나옵니다: {idle.map((a) => channelNameOf(a)).join(' · ')}
+                </li>
+              )}
               <li>
                 경쟁사 소유 <b>{plan.competitorDomainCount}개</b> — 경쟁사 사이트에는 우리가 실릴 수
                 없습니다.
