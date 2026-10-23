@@ -420,6 +420,8 @@ export default function QuestionBankPage() {
                       onRemove={published.remove}
                       onRestore={published.restore}
                       onSetDate={published.setPublishedOn}
+                      onAddEdit={(postId, editedOn) => published.addEdit(postId, { editedOn, ...(drafts[action.id] ? { draftGeneratedAt: drafts[action.id]!.generatedAt } : {}) })}
+                      onRemoveEdit={published.removeEdit}
                     />
                   </section>
                 )}

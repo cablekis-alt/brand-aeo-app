@@ -1,6 +1,6 @@
 import type { HistoryCell, HistoryWeek, PublishedHistory, PublishedPost } from './api'
 import { ENGINE_LABEL } from './format'
-import { isoWeekOf, kstDate, timingOf, type PostTiming } from './publishedUrl'
+import { editTimingOf, isoWeekOf, kstDate, timingOf, type PostTiming } from './publishedUrl'
 
 /**
  * 올린 글 하나의 판단 — 올린 뒤 측정에서 얼마나 인용됐나(언급률 2번 P3).
@@ -230,6 +230,59 @@ export function weekTimingOf(publishedOn: string, w: Pick<HistoryWeek, 'weekOf' 
   if (!w.runs?.length) return timingOf(publishedOn, w.window, w.weekOf)
   const each = w.runs.map((r) => timingOf(publishedOn, r.window, w.weekOf))
   return (['after', 'during', 'ambiguous', 'before'] as const).find((t) => each.includes(t)) ?? 'unknown'
+}
+
+/** 고친 글의 그 주 칸 — 그 주 측정이 마지막으로 고친 날에 견줘 어땠나(회차가 여럿이면 올린 날과 같은 weekTimingOf 규칙). */
+export function weekEditOf(
+  post: Pick<PublishedPost, 'edits'>,
+  w: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>,
+): { editedOn: string; timing: PostTiming } | null {
+  return editTimingOf(post.edits, (on) => weekTimingOf(on, w))
+}
+
+const dayDiff = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000)
+
+/** 마지막으로 고친 뒤의 판단 — 고친 글을 본 측정만 센다. 같은 주에 고치기 전 회차가 섞였으면 그 회차의 인용은 넣지 않는다. */
+export interface EditSummary {
+  /** 마지막으로 고친 날. */
+  editedOn: string
+  /** 고친 뒤 회차가 있는 주 수(올린 뒤 · 내리기 전 칸만). */
+  measuredWeeks: number
+  /** 그중 고친 뒤 회차에서 인용된 주 수. */
+  citedWeeks: number
+  /** 고친 날에서 며칠 뒤 처음 인용이 확인됐나. 인용이 없거나 일수를 모르면 null. */
+  firstCitedDays: number | null
+}
+
+/**
+ * 고친 글이면 마지막으로 고친 뒤의 결과(cells와 weeks는 같은 순서). 회차 칸의 인용 일수(citedDays)는 올린 날 기준이라, 고친 날까지의
+ * 일수보다 큰 것만 고친 뒤 회차다 — 날짜 단위라 고친 날 당일 회차는 전후 불명으로 넣지 않는다(올린 날과 같은 규칙).
+ */
+export function summarizeSinceEdit(
+  post: Pick<PublishedPost, 'edits' | 'publishedOn'>,
+  cells: (HistoryCell | null)[],
+  weeks: Pick<HistoryWeek, 'weekOf' | 'window' | 'runs'>[],
+): EditSummary | null {
+  const last = post.edits?.at(-1)?.editedOn
+  if (!last || !post.publishedOn) return null
+  const offset = dayDiff(post.publishedOn, last)
+  let measuredWeeks = 0
+  let citedWeeks = 0
+  let firstCitedDays: number | null = null
+  cells.forEach((c, i) => {
+    const w = weeks[i]
+    if (!c || !w || c.afterRemoval || c.timing !== 'after' || weekTimingOf(last, w) !== 'after') return
+    measuredWeeks += 1
+    const days = c.runs?.citedDays.length ? c.runs.citedDays : cited(c) && c.daysAfterPublish !== undefined ? [c.daysAfterPublish] : []
+    const afterEdit = days.filter((d) => d > offset)
+    // 일수를 모르는 인용(측정 시각 없는 옛 주)은 그 주가 통째로 고친 뒤라 인용으로 센다 — 일수만 비운다.
+    const citedAfter = afterEdit.length > 0 || (days.length === 0 && cited(c))
+    if (!citedAfter) return
+    // 첫 인용 주의 일수를 모르면 「첫 인용 D+N」은 비운다 — 뒤 주의 일수를 첫 인용처럼 적지 않는다.
+    if (citedWeeks === 0 && afterEdit.length > 0) firstCitedDays = Math.min(...afterEdit) - offset
+    citedWeeks += 1
+  })
+  return { editedOn: last, measuredWeeks, citedWeeks, firstCitedDays }
 }
 
 /**

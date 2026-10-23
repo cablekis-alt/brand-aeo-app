@@ -192,6 +192,9 @@ export default function ContentLibrary() {
           onRemove={published.remove}
           onRestore={published.restore}
           onSetDate={published.setPublishedOn}
+          // 보관함은 어느 채널용 글을 붙였는지 모른다 — 초안 판만 남긴다.
+          onAddEdit={(postId, editedOn) => published.addEdit(postId, { editedOn, ...(stored ? { draftGeneratedAt: stored.generatedAt } : {}) })}
+          onRemoveEdit={published.removeEdit}
         />
       </div>
     )

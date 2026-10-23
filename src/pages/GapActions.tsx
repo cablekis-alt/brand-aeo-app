@@ -435,6 +435,8 @@ function ActionCard({
           onRemove={posts.remove}
           onRestore={posts.restore}
           onSetDate={posts.setPublishedOn}
+          onAddEdit={(postId, editedOn) => posts.addEdit(postId, { editedOn })}
+          onRemoveEdit={posts.removeEdit}
         />
       )}
       {awaiting && (
@@ -945,6 +947,17 @@ export default function GapActions() {
                           onRemove={posts.remove}
                           onRestore={posts.restore}
                           onSetDate={posts.setPublishedOn}
+                          // 고친 날에는 지금 이 줄이 복사하는 판을 남긴다 — 「본문 다시 복사」로 붙여 넣은 글이다.
+                          onAddEdit={(postId, editedOn) =>
+                            posts.addEdit(postId, {
+                              editedOn,
+                              ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
+                              ...(row.needsAdapt && adaptations?.[row.article.action.id]?.[row.target.id]
+                                ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
+                                : {}),
+                            })
+                          }
+                          onRemoveEdit={posts.removeEdit}
                         />
                       ) : null
                     }

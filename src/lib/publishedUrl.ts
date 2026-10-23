@@ -355,6 +355,25 @@ export function daysAfterPublish(publishedOn: string | null, window: { first: st
   return Number.isFinite(days) ? Math.max(0, days) : null
 }
 
+/**
+ * 고친 글(server/publishedPosts.ts PostEdit)의 측정 하나 — 고친 날 가운데 그 측정 전 · 측정 중에 있었던 가장 늦은 날과 그 전후.
+ * timingAt은 올린 날과 같은 규칙(timingOf · weekTimingOf)으로 잰다: after = 고친 뒤 측정, during · ambiguous = 고친 날 측정(전후
+ * 불명). 고친 날이 모두 측정 뒤면 null — 그 측정은 고치기 전 글을 본 것이다. 측정 시점을 모르면(unknown) null.
+ */
+export function editTimingOf(
+  edits: { editedOn: string }[] | undefined,
+  timingAt: (date: string) => PostTiming,
+): { editedOn: string; timing: PostTiming } | null {
+  if (!edits?.length) return null
+  for (const e of [...edits].sort((a, b) => b.editedOn.localeCompare(a.editedOn))) {
+    const t = timingAt(e.editedOn)
+    if (t === 'before') continue
+    if (t === 'unknown') return null
+    return { editedOn: e.editedOn, timing: t }
+  }
+  return null
+}
+
 export function timingOf(publishedOn: string | null, window: { first: string; last: string } | null, weekOf: string): PostTiming {
   if (!publishedOn) return 'unknown'
   if (window) {

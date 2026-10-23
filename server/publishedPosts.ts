@@ -65,6 +65,23 @@ function checkTopic(value: unknown, articleId: string): TopicSnapshot | undefine
 export type RemovedReason = 'mistake' | 'taken-down';
 export type PublishedOnSource = 'default-today' | 'user' | 'legacy';
 
+/**
+ * 올린 글을 고친 날 — 원문이 바뀌어 채널용 글을 다시 만들고 블로그의 기존 글을 수정했을 때 남긴다. 주소가 그대로라 기록은 하나인데
+ * 글 내용이 바뀌었으니, 고친 뒤 측정을 따로 보아야 옛 글 · 새 글 가운데 무엇이 인용됐는지 가늠할 수 있다(성과 표 · 회차 보기).
+ */
+export interface PostEdit {
+  /** 고친 날(한국 날짜). 한 글에 같은 날은 한 번. */
+  editedOn: string;
+  /** 기록한 시각. */
+  recordedAt: string;
+  /** 고칠 때 붙여 넣은 판 — 그때 초안의 generatedAt · 채널용 다듬은 글의 sourceKey. */
+  draftGeneratedAt?: string;
+  adaptationSourceKey?: string;
+}
+
+/** 한 글에 남길 수 있는 고친 날 수 — 넘으면 조용히 자르지 않고 알린다. */
+export const MAX_EDITS = 30;
+
 export interface PublishedPost {
   id: string;
   /** 적은 그대로(앞뒤 공백만 뗀다). */
@@ -94,6 +111,8 @@ export interface PublishedPost {
    * 문장을 함께 고정한다. bankVersion이 null이면 그때의 은행을 몰라 문장도 없다 — 겨냥한 질문의 결과는 확인 불가로 둔다.
    */
   topic?: TopicSnapshot;
+  /** 고친 날(오래된 순). 같은 주소를 여러 줄(자사 · 채널)에 적었으면 그 줄들에 같은 목록을 둔다. */
+  edits?: PostEdit[];
   removedAt?: string;
   removedReason?: RemovedReason;
   /** 집행 상태 파일에만 있던 옛 주소. 원장 파일에는 없다 — 고치면 원장으로 옮긴다. */
@@ -217,16 +236,16 @@ async function writeLedger(tenantId: string, posts: PublishedPost[]): Promise<vo
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** 올린 날 검사 — 형식, 실제 날짜, 오늘(한국) 이후가 아님. */
-function checkDate(value: unknown): string {
+/** 올린 날 · 고친 날 검사 — 형식, 실제 날짜, 오늘(한국) 이후가 아님. */
+function checkDate(value: unknown, label = '올린 날'): string {
   if (typeof value !== 'string' || !DATE.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
-    throw new PublishedPostsError('올린 날은 YYYY-MM-DD 형식이어야 합니다.', 400);
+    throw new PublishedPostsError(`${label}은 YYYY-MM-DD 형식이어야 합니다.`, 400);
   }
   if (new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value) {
     throw new PublishedPostsError(`없는 날짜입니다: ${value}`, 400);
   }
-  if (value > todayKst()) throw new PublishedPostsError('올린 날이 오늘보다 뒤입니다.', 400);
-  if (value < '2020-01-01') throw new PublishedPostsError('올린 날이 너무 이릅니다.', 400);
+  if (value > todayKst()) throw new PublishedPostsError(`${label}이 오늘보다 뒤입니다.`, 400);
+  if (value < '2020-01-01') throw new PublishedPostsError(`${label}이 너무 이릅니다.`, 400);
   return value;
 }
 
@@ -343,6 +362,10 @@ export function addPublishedPost(tenantId: string, input: AddPostInput): Promise
       // 같은 주소를 날짜를 골라 다시 적었으면 그 날로 고친다 — 날짜를 버리고 성공처럼 보이면 틀린 날이 그대로 남는다.
       // 질문 스냅샷이 없던 기록이면 이번에 받은 것을 붙인다.
       const redate = chosenDate && sameTarget.publishedOn !== publishedOn;
+      const earliestEdit = sameTarget.edits?.[0]?.editedOn;
+      if (redate && earliestEdit && earliestEdit < publishedOn) {
+        throw new PublishedPostsError(`올린 날을 고친 날(${earliestEdit})보다 뒤로 옮길 수 없습니다.`, 400);
+      }
       const addTopic = Boolean(topic && !sameTarget.topic);
       if (redate || addTopic) {
         post = {
@@ -390,24 +413,72 @@ export interface PatchPostInput {
   remove?: unknown;
   /** true면 되살린다. */
   restore?: unknown;
+  /** 고친 날을 남긴다 — { editedOn, draftGeneratedAt?, adaptationSourceKey? }. 같은 날이면 그 판으로 바꾼다. */
+  addEdit?: unknown;
+  /** 잘못 남긴 고친 날(YYYY-MM-DD)을 뺀다. */
+  removeEdit?: unknown;
+}
+
+/** 고친 날 목록에 하나를 넣거나 뺀 결과(오래된 순). */
+function nextEdits(current: PostEdit[] | undefined, add: PostEdit | undefined, removeOn: string | undefined): PostEdit[] {
+  let list = [...(current ?? [])];
+  if (removeOn !== undefined) {
+    if (!list.some((e) => e.editedOn === removeOn)) throw new PublishedPostsError(`그 날 고친 기록이 없습니다: ${removeOn}`, 400);
+    list = list.filter((e) => e.editedOn !== removeOn);
+  }
+  if (add) {
+    list = [...list.filter((e) => e.editedOn !== add.editedOn), add];
+    if (list.length > MAX_EDITS) throw new PublishedPostsError(`고친 날은 한 글에 ${MAX_EDITS}번까지 남길 수 있습니다.`, 400);
+  }
+  return list.sort((a, b) => a.editedOn.localeCompare(b.editedOn));
 }
 
 export function patchPublishedPost(tenantId: string, postId: string, input: PatchPostInput): Promise<{ post: PublishedPost; posts: PublishedPost[] }> {
   const remove = input.remove === 'mistake' || input.remove === 'taken-down' ? input.remove : undefined;
   if (input.remove !== undefined && !remove) return Promise.reject(new PublishedPostsError('뺀 이유가 올바르지 않습니다.', 400));
   let publishedOn: string | undefined;
+  let addEdit: PostEdit | undefined;
+  let removeEdit: string | undefined;
   try {
     publishedOn = input.publishedOn === undefined ? undefined : checkDate(input.publishedOn);
+    if (input.addEdit !== undefined) {
+      const raw = (input.addEdit ?? {}) as Record<string, unknown>;
+      const draftGeneratedAt = str(raw.draftGeneratedAt, 40);
+      const adaptationSourceKey = str(raw.adaptationSourceKey, 200);
+      addEdit = {
+        editedOn: checkDate(raw.editedOn, '고친 날'),
+        recordedAt: new Date().toISOString(),
+        ...(draftGeneratedAt ? { draftGeneratedAt } : {}),
+        ...(adaptationSourceKey ? { adaptationSourceKey } : {}),
+      };
+    }
+    removeEdit = input.removeEdit === undefined ? undefined : checkDate(input.removeEdit, '고친 날');
   } catch (err) {
     return Promise.reject(err);
   }
-  if (!remove && input.restore !== true && publishedOn === undefined) {
-    return Promise.reject(new PublishedPostsError('바꿀 것이 없습니다(publishedOn · remove · restore).', 400));
+  if (!remove && input.restore !== true && publishedOn === undefined && !addEdit && removeEdit === undefined) {
+    return Promise.reject(new PublishedPostsError('바꿀 것이 없습니다(publishedOn · remove · restore · addEdit · removeEdit).', 400));
   }
   return queueTenantWrite(tenantId, async () => {
     const { ledger, legacy } = await readAll(tenantId);
     const found = ledger.find((p) => p.id === postId) ?? legacy.find((p) => p.id === postId);
     if (!found) throw new PublishedPostsError(`집행 기록을 찾지 못했습니다: ${postId}`, 404);
+    // 고친 날은 올린 날 뒤에만 선다 — 올린 날을 모르면 앞뒤를 잴 수 없다. 올린 날을 고친 날 뒤로 옮기는 것도 막는다.
+    const effectivePublishedOn = publishedOn ?? found.publishedOn;
+    if (addEdit) {
+      if (found.removedAt && input.restore !== true) throw new PublishedPostsError('뺀 기록에는 고친 날을 남기지 않습니다.', 400);
+      if (!effectivePublishedOn) throw new PublishedPostsError('올린 날을 모르는 기록입니다 — 올린 날을 먼저 적어 주세요.', 400);
+    }
+    const edits = addEdit || removeEdit !== undefined ? nextEdits(found.edits, addEdit, removeEdit) : found.edits;
+    const earliestEdit = edits?.[0]?.editedOn;
+    if (earliestEdit && effectivePublishedOn && earliestEdit < effectivePublishedOn) {
+      throw new PublishedPostsError(
+        addEdit && addEdit.editedOn === earliestEdit
+          ? `고친 날(${earliestEdit})이 올린 날(${effectivePublishedOn})보다 앞입니다.`
+          : `올린 날을 고친 날(${earliestEdit})보다 뒤로 옮길 수 없습니다.`,
+        400,
+      );
+    }
     if (input.restore === true && found.removedAt) {
       // 지금 규칙으로 받지 않는 주소(예: 규칙을 강화하기 전에 적은 관리 화면 주소)는 되살리지 않는다 — 적을 때와 같은 검사.
       const check = isArticleUrl(found.url);
@@ -424,8 +495,16 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
       assertRoom(ledger);
     }
     if (found.legacy) assertRoom(ledger);
+    const editsChanged = Boolean(addEdit) || removeEdit !== undefined;
+    const withEdits = (p: PublishedPost): PublishedPost => {
+      if (!editsChanged) return p;
+      const copy = { ...p };
+      if (edits && edits.length > 0) copy.edits = edits;
+      else delete copy.edits;
+      return copy;
+    };
     const base = without(found, 'legacy', 'removedAt', 'removedReason');
-    const next: PublishedPost = {
+    const next: PublishedPost = withEdits({
       ...base,
       ...(publishedOn !== undefined ? { publishedOn, publishedOnSource: 'user' as const } : {}),
       ...(remove
@@ -433,9 +512,11 @@ export function patchPublishedPost(tenantId: string, postId: string, input: Patc
         : input.restore === true || !found.removedAt
           ? {}
           : { removedAt: found.removedAt, ...(found.removedReason ? { removedReason: found.removedReason } : {}) }),
-    };
+    });
+    // 같은 글의 같은 주소를 다른 줄(자사 블로그 줄 · 그 블로그의 채널 줄)에도 적었으면 고친 날을 함께 둔다 — 한 편의 글이다.
+    const sibling = (p: PublishedPost) => editsChanged && p.id !== found.id && p.key === found.key && p.articleId === found.articleId && !p.removedAt;
     // 옛 기록을 고치면 원장으로 옮긴다 — 이후 읽기에서는 같은 키라 옛 기록 쪽이 가려진다.
-    const posts = found.legacy ? [...ledger, next] : ledger.map((p) => (p.id === postId ? next : p));
+    const posts = (found.legacy ? [...ledger, next] : ledger.map((p) => (p.id === postId ? next : p))).map((p) => (sibling(p) ? withEdits(p) : p));
     await writeLedger(tenantId, posts);
     return { post: next, posts: [...posts, ...legacyPosts(await readActionStates(tenantId), posts)] };
   });

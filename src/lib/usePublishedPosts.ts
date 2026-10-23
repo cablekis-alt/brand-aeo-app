@@ -4,6 +4,7 @@ import {
   patchPublishedPost,
   recordPublishedPost,
   type ActionStateMap,
+  type PostEditInput,
   type PostRemovedReason,
   type PublishedPost,
   type RecordPostInput,
@@ -80,8 +81,9 @@ export function usePublishedPosts(tenantId: string) {
     [tenantId],
   )
 
+  // 고친 날은 미리 반영하지 않는다 — 같은 주소의 다른 줄(자사 · 채널)에도 서버가 함께 두므로 응답을 그대로 쓴다(로컬 서버라 짧다).
   const patch = useCallback(
-    async (postId: string, change: { publishedOn?: string; remove?: PostRemovedReason; restore?: true }) => {
+    async (postId: string, change: { publishedOn?: string; remove?: PostRemovedReason; restore?: true; addEdit?: PostEditInput; removeEdit?: string }) => {
       if (!tenantId || !posts) return
       const before = posts
       const now = new Date().toISOString()
@@ -132,5 +134,9 @@ export function usePublishedPosts(tenantId: string) {
     remove: (postId: string, reason: PostRemovedReason) => patch(postId, { remove: reason }),
     restore: (postId: string) => patch(postId, { restore: true }),
     setPublishedOn: (postId: string, publishedOn: string) => patch(postId, { publishedOn }),
+    /** 기존 글을 고친 날을 남긴다(같은 날이면 그 판으로 바꾼다). */
+    addEdit: (postId: string, edit: PostEditInput) => patch(postId, { addEdit: edit }),
+    /** 잘못 남긴 고친 날을 뺀다. */
+    removeEdit: (postId: string, editedOn: string) => patch(postId, { removeEdit: editedOn }),
   }
 }

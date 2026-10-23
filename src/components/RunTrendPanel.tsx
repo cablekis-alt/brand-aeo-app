@@ -177,7 +177,7 @@ export default function RunTrendPanel({
         <p className="muted">올린 글 기록이 없어 회차별 인용은 없습니다.</p>
       ) : (
         <ul className="rt-post-list">
-          {m.rows.map(({ posting, pin, label }) => {
+          {m.rows.map(({ posting, pin, label, sinceEdit }) => {
             const r = posting.item
             const d = latestDays(r.cells)
             const extras = [
@@ -211,11 +211,23 @@ export default function RunTrendPanel({
                     {place}
                   </span>
                 ))}
-                <span className="muted">{r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}</span>
+                <span className="muted">
+                  {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
+                  {r.post.edits && r.post.edits.length > 0 && ` · ${r.post.edits.map((e) => monthDay(e.editedOn)).join(' · ')} 고침`}
+                </span>
                 <div className="doc-meta">
                   {line}
                   {extras.length > 0 && ` · ${extras.join(' · ')}`}
                 </div>
+                {/* 고친 글 — 고친 글을 본 회차만 따로 센다(옛 글 · 새 글을 가르려고). */}
+                {sinceEdit && (
+                  <div className="doc-meta">
+                    {sinceEdit.measured === 0
+                      ? `${monthDay(sinceEdit.editedOn)} 고친 뒤 회차 없음 — 다음 측정부터`
+                      : `${monthDay(sinceEdit.editedOn)} 고친 뒤 인용된 회차 ${sinceEdit.cited}/${sinceEdit.measured}` +
+                        (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '')}
+                  </div>
+                )}
               </li>
             )
           })}
@@ -271,6 +283,14 @@ export default function RunTrendPanel({
                   <text className="st-axis" x={PAD.left - 6} y={cy + 4} textAnchor="end">
                     {`글${row.label}`}
                   </text>
+                  {/* 고친 날 — 그 줄에 짧은 점선. 이 선 뒤 회차가 고친 글을 본 측정이다. */}
+                  {row.edits
+                    .filter((e) => e.x !== null)
+                    .map((e) => (
+                      <line key={`edit-${e.date}`} className="rt-edit" x1={x(e.x!)} x2={x(e.x!)} y1={cy - ROW_H / 2 + 2} y2={cy + ROW_H / 2 - 2}>
+                        <title>{`글${row.label} ${monthDay(e.date)} 고침 — 이 뒤 회차가 고친 글을 본 측정`}</title>
+                      </line>
+                    ))}
                   {row.marks.map((mark, k) => (
                     <MarkShape
                       key={k}

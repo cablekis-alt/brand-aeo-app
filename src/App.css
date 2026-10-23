@@ -2511,6 +2511,12 @@ p.hint {
   fill: var(--info);
   fill-opacity: 0.06;
 }
+/* 고친 날(올린 글을 수정한 날) — 그 글 줄에만 짧은 점선. 집행 핀(실선)과 갈린다. */
+.rt-edit {
+  stroke: var(--info);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
 .rt-week-on {
   fill: var(--accent-soft);
 }

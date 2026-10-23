@@ -380,6 +380,16 @@ export interface TopicSnapshot {
   questionIds: string[]
   questionTexts: string[]
 }
+/** 올린 글을 고친 날(server/publishedPosts.ts PostEdit) — 기존 글을 수정해 원문을 바꿨을 때 남긴다. */
+export interface PostEdit {
+  /** 고친 날(한국 날짜). */
+  editedOn: string
+  recordedAt: string
+  draftGeneratedAt?: string
+  adaptationSourceKey?: string
+}
+/** 고친 날을 남길 때 보내는 값 — 고칠 때 붙여 넣은 판을 함께 남긴다. */
+export type PostEditInput = Pick<PostEdit, 'editedOn' | 'draftGeneratedAt' | 'adaptationSourceKey'>
 export interface PublishedPost {
   id: string
   url: string
@@ -397,6 +407,8 @@ export interface PublishedPost {
   adaptationSourceKey?: string
   viewingWeek?: string
   topic?: TopicSnapshot
+  /** 고친 날(오래된 순). */
+  edits?: PostEdit[]
   removedAt?: string
   removedReason?: PostRemovedReason
   legacy?: true
@@ -623,7 +635,7 @@ export async function recordPublishedPost(
 export async function patchPublishedPost(
   tenantId: string,
   postId: string,
-  patch: { publishedOn?: string; remove?: PostRemovedReason; restore?: true },
+  patch: { publishedOn?: string; remove?: PostRemovedReason; restore?: true; addEdit?: PostEditInput; removeEdit?: string },
 ): Promise<{ post: PublishedPost; posts: PublishedPost[] }> {
   return postsRequest(`/api/published-posts/${encodeURIComponent(tenantId)}/${encodeURIComponent(postId)}`, {
     method: 'PATCH',

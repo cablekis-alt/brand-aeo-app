@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { daysAfterPublish, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -745,6 +745,8 @@ export interface PublishedHit {
   takenDownOn?: string
   /** 올린 뒤(after) 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글의 「인용 없음」은 아직 판단하지 않는다(publishTracking.ts INDEXING_GRACE_DAYS). */
   daysAfterPublish?: number
+  /** 고친 글이면 이번 주 측정이 마지막으로 고친 날에 견줘 어땠나(publishedUrl.ts editTimingOf). 측정 뒤에 고쳤으면 그 전 고친 날로 본다. */
+  edit?: { editedOn: string; timing: PostTiming }
 }
 
 /**
@@ -818,6 +820,7 @@ function publishedHitsOf(
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
     const days = daysAfterPublish(post.publishedOn, window, weekOf)
+    const edit = editTimingOf(post.edits, (on) => timingOf(on, window, weekOf))
     const hit: PublishedHit = {
       post,
       timing,
@@ -825,6 +828,7 @@ function publishedHitsOf(
       variantCited,
       ...(takenDownOn ? { takenDownOn } : {}),
       ...(days !== null ? { daysAfterPublish: days } : {}),
+      ...(edit ? { edit } : {}),
     }
     out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
   }

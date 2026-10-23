@@ -147,6 +147,24 @@ export default function PublishList({
     setOpenSlot((s) => new Set(s).add(row.key))
   }
 
+  /**
+   * 이미 올린 줄의 「본문 다시 복사」 — 원문이 바뀌어 채널용 글을 다시 만들었을 때 블로그의 기존 글을 고치는 데 쓴다. 채널을 열지
+   * 않는다(고칠 곳은 올린 글이다). 복사하면 주소 칸을 열어 「고쳤어요」로 고친 날을 남기게 한다.
+   */
+  const [recopied, setRecopied] = useState<Set<string>>(new Set())
+  const recopy = async (row: PublishRow) => {
+    const t = textOf(row)
+    if (!t) return
+    if (!(await copyRich(t.markdown, t.html))) {
+      setError('클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`body:${row.key}`)
+    window.setTimeout(() => setCopied((k) => (k === `body:${row.key}` ? null : k)), 1800)
+    setRecopied((s) => new Set(s).add(row.key))
+    setOpenSlot((s) => new Set(s).add(`done:${row.key}`))
+  }
+
   const copyTitle = async (key: string, title: string) => {
     if (!(await copyRich(title, escapeHtml(title)))) {
       setError('제목을 클립보드에 복사하지 못했습니다.')
@@ -250,6 +268,18 @@ export default function PublishList({
                       {making ? '이 채널용 글 만드는 중… 30초~1분' : '이 채널용 글 만들기 · 약 30초~1분'}
                     </button>
                   )}
+                  {row.done && !row.locked && text && (
+                    // 원문이 바뀌었는데 이 채널용 글이 옛 판이면 막는다 — 옛 글을 다시 붙이게 된다. 아래 경고 줄에서 다시 만든다.
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={stale}
+                      title={stale ? '원문이 바뀌었습니다 — 이 채널용 글을 다시 만든 뒤 복사하세요.' : '이미 올린 글을 고칠 때 — 본문만 복사합니다(채널은 열지 않음)'}
+                      onClick={() => void recopy(row)}
+                    >
+                      {copied === `body:${row.key}` ? '본문 복사함' : '본문 다시 복사'}
+                    </button>
+                  )}
                   {!row.locked && text && (
                     <button type="button" className="ghost" title={titleOf(row, text.markdown)} onClick={() => void copyTitle(row.key, titleOf(row, text.markdown))}>
                       {copied === `title:${row.key}` ? '제목 복사함' : '제목 복사'}
@@ -291,13 +321,19 @@ export default function PublishList({
                   )}
                 </span>
               </div>
+              {row.done && recopied.has(row.key) && (
+                <p className="publish-row-note">
+                  블로그에서 이 주소의 <b>기존 글을 수정</b>해 붙여 넣으세요 — 새 글로 올리지 마세요(주소가 바뀌면 인용 추적이 끊기고, 같은
+                  블로그에 비슷한 글이 두 편이 됩니다). 다 고쳤으면 아래 주소 줄의 「고쳤어요」로 고친 날을 남깁니다.
+                </p>
+              )}
               {!row.locked && !row.done && VERB_CAUTION[row.verb] && <p className="publish-row-note">{VERB_CAUTION[row.verb]}</p>}
-              {!row.locked && !row.done && text && countImageSlots(text.markdown) > 0 && (
+              {!row.locked && (!row.done || recopied.has(row.key)) && text && countImageSlots(text.markdown) > 0 && (
                 <p className="publish-row-note">
                   사진 넣을 곳 {countImageSlots(text.markdown)}곳 — 붙여 넣은 글의 「[사진 넣을 자리]」를 직접 찍거나 고른 사진으로 바꾸세요.
                 </p>
               )}
-              {!row.locked && !row.done && photos.length > 0 && (
+              {!row.locked && (!row.done || recopied.has(row.key)) && photos.length > 0 && (
                 <p className="publish-row-note">
                   홈페이지 사진 {photos.length}장을 넣었어요 — 붙여 넣은 글에서 사진이 안 보이면 「사진 {photos.length}장 받기」로 받은 파일을 그
                   자리에 올리세요({photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}).

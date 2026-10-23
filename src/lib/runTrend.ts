@@ -1,5 +1,5 @@
 import type { RunHistory, RunPoint, RunPostRow } from './api'
-import { kstDate } from './publishedUrl'
+import { kstDate, timingOf } from './publishedUrl'
 import { distinctPostings, INDEXING_GRACE_DAYS, type Posting } from './publishTracking'
 import { isoWeekThursday } from '../prompts/isoWeek'
 
@@ -61,6 +61,18 @@ export interface RunPin {
   postings: Posting<RunPostRow>[]
 }
 
+/**
+ * 마지막으로 고친 뒤의 회차 — 고친 날과 같은 규칙(timingOf)으로 고친 날 뒤에 잰 회차만 센다. 고친 날 당일 회차는 전후 불명이라 넣지
+ * 않는다. 엔진이 빠진 회차 · 전후 불명 회차는 세지 않는다.
+ */
+export interface RunSinceEdit {
+  editedOn: string
+  measured: number
+  cited: number
+  /** 고친 날에서 며칠 뒤 회차에서 처음 인용됐나. */
+  firstCitedDays: number | null
+}
+
 export interface RunTrendModel {
   days: string[]
   dots: RunDot[]
@@ -68,8 +80,18 @@ export interface RunTrendModel {
   segments: number[][]
   breaks: { x: number; text: string }[]
   pins: RunPin[]
-  /** 글별 줄 — 핀 번호, 줄 이름(같은 날 올린 글은 「1a · 1b」), 회차마다의 표시(points와 같은 순서). */
-  rows: { posting: Posting<RunPostRow>; pin: number | null; label: string; marks: RunMark[] }[]
+  /**
+   * 글별 줄 — 핀 번호, 줄 이름(같은 날 올린 글은 「1a · 1b」), 회차마다의 표시(points와 같은 순서). 고친 글이면 고친 날(그림 안에
+   * 들면 x)과 마지막으로 고친 뒤의 회차 결과.
+   */
+  rows: {
+    posting: Posting<RunPostRow>
+    pin: number | null
+    label: string
+    marks: RunMark[]
+    edits: { date: string; x: number | null }[]
+    sinceEdit: RunSinceEdit | null
+  }[]
   /**
    * 주마다 회차 점수 — 같은 조건 회차끼리만 평균, 그 주 카드 점수(막대)와 나란히. 평균에서 뺀 회차는 까닭별로 센다(옛 기록 · 엔진이
    * 빠진 회차 · 질문 은행을 못 찾은 회차).
@@ -148,19 +170,42 @@ export function buildRunTrend(h: RunHistory): RunTrendModel {
     const siblings = pin === null ? [] : postings.filter((p) => pinOf(p) === pin)
     const label = pin === null ? '?' : siblings.length > 1 ? `${pin}${String.fromCharCode(97 + siblings.indexOf(posting))}` : String(pin)
     return { posting, pin, label }
-  }).map(({ posting, pin, label }) => ({
-    posting,
-    pin,
-    label,
-    marks: posting.item.cells.map((c, k): RunMark => {
+  }).map(({ posting, pin, label }) => {
+    const marks = posting.item.cells.map((c, k): RunMark => {
       if (!c) return 'unknown'
       if (c.afterRemoval || c.timing === 'before' || c.timing === 'unknown') return 'skip'
       if (c.timing === 'during' || c.timing === 'ambiguous') return 'unsure'
       if (c.cited > 0) return 'cited'
       if (dots[k]?.isolated) return 'weak'
       return c.withinGrace ? 'grace' : 'none'
-    }),
-  }))
+    })
+    const editDates = (posting.post.edits ?? []).map((e) => e.editedOn)
+    const lastEdit = editDates.at(-1)
+    let sinceEdit: RunSinceEdit | null = null
+    if (lastEdit) {
+      sinceEdit = { editedOn: lastEdit, measured: 0, cited: 0, firstCitedDays: null }
+      points.forEach((p, k) => {
+        const day = pointDay(p)
+        const window = p.window ?? (day ? { first: day, last: day } : null)
+        if (timingOf(lastEdit, window, p.weekOf) !== 'after') return
+        const mark = marks[k]
+        if (mark !== 'cited' && mark !== 'none' && mark !== 'grace') return
+        sinceEdit!.measured += 1
+        if (mark !== 'cited') return
+        sinceEdit!.cited += 1
+        const d = day ? dayNum(day) - dayNum(lastEdit) : null
+        if (d !== null && (sinceEdit!.firstCitedDays === null || d < sinceEdit!.firstCitedDays)) sinceEdit!.firstCitedDays = d
+      })
+    }
+    return {
+      posting,
+      pin,
+      label,
+      marks,
+      edits: editDates.map((date) => ({ date, x: dayIndex.has(date) ? dayIndex.get(date)! : null })),
+      sinceEdit,
+    }
+  })
 
   const weeks = [...new Set(points.map((p) => p.weekOf))]
   const scoreLine = weeks.map((weekOf) => {

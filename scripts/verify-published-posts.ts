@@ -190,6 +190,35 @@ try {
   const rPosts = await readPublishedPosts(R);
   ok('읽는 중에도 쓰기 실패 0건 · 줄 유실 0건 · 남은 임시 파일 0개', burst.every((b) => b.status === 'fulfilled') && rPosts.length === 60 && leftovers.length === 0);
 
+  // 9) 고친 날 — 원문이 바뀌어 기존 글을 수정했을 때. 같은 주소의 다른 줄(자사 · 채널)에도 함께 둔다.
+  const ED = 'edit-tenant';
+  const eOwn = await addPublishedPost(ED, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/7', publishedOn: '2026-10-10', publishedOnChosen: true });
+  const eChan = await addPublishedPost(ED, { articleId: 'content:a', targetActionId: 'listing:platform:tistory.com', via: 'channel', url: 'https://fake.tistory.com/7', publishedOn: '2026-10-10', publishedOnChosen: true });
+  const e1 = await patchPublishedPost(ED, eChan.post.id, { addEdit: { editedOn: '2026-10-15', adaptationSourceKey: 'k1', draftGeneratedAt: '2026-10-15T01:00:00Z' } });
+  const eOwnAfter = e1.posts.find((p) => p.id === eOwn.post.id);
+  ok('고친 날을 남기면 판과 함께 저장된다', e1.post.edits?.length === 1 && e1.post.edits[0]?.editedOn === '2026-10-15' && e1.post.edits[0]?.adaptationSourceKey === 'k1');
+  ok('같은 글 · 같은 주소의 다른 줄에도 같은 고친 날', eOwnAfter?.edits?.[0]?.editedOn === '2026-10-15');
+  const e2 = await patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2026-10-12' } });
+  ok('고친 날은 오래된 순으로 쌓인다', e2.post.edits?.map((x) => x.editedOn).join(',') === '2026-10-12,2026-10-15');
+  const e3 = await patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2026-10-15', adaptationSourceKey: 'k2' } });
+  ok('같은 날을 다시 남기면 그 판으로 바꾼다(두 번 쌓지 않는다)', e3.post.edits?.length === 2 && e3.post.edits[1]?.adaptationSourceKey === 'k2');
+  ok('올린 날보다 앞선 고친 날은 400', (await fails(patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2026-10-09' } }))) === 400);
+  ok('미래의 고친 날은 400', (await fails(patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2999-01-01' } }))) === 400);
+  ok('형식이 틀린 고친 날은 400', (await fails(patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '10/15' } }))) === 400);
+  ok('올린 날을 고친 날 뒤로 옮기면 400', (await fails(patchPublishedPost(ED, eOwn.post.id, { publishedOn: '2026-10-13' }))) === 400);
+  ok('같은 곳에 다시 적으며 고친 날 뒤로 옮겨도 400', (await fails(addPublishedPost(ED, { articleId: 'content:a', targetActionId: 'content:a', via: 'own', url: 'https://fake.tistory.com/7', publishedOn: '2026-10-14', publishedOnChosen: true }))) === 400);
+  const e4 = await patchPublishedPost(ED, eOwn.post.id, { removeEdit: '2026-10-12' });
+  ok('잘못 남긴 고친 날을 뺀다 — 다른 줄에서도', e4.post.edits?.map((x) => x.editedOn).join(',') === '2026-10-15' && e4.posts.find((p) => p.id === eChan.post.id)?.edits?.length === 1);
+  ok('없는 고친 날을 빼면 400', (await fails(patchPublishedPost(ED, eOwn.post.id, { removeEdit: '2026-10-11' }))) === 400);
+  const e5 = await patchPublishedPost(ED, eOwn.post.id, { removeEdit: '2026-10-15' });
+  ok('마지막 고친 날을 빼면 칸이 사라진다', e5.post.edits === undefined && e5.posts.find((p) => p.id === eChan.post.id)?.edits === undefined);
+  const eNoDate = 'edit-legacy-tenant';
+  await writeActionState(eNoDate, 'content:a', { status: 'done', publishedUrls: ['https://fake.tistory.com/8'] });
+  const eLegacy = (await readPublishedPosts(eNoDate)).find((p) => p.legacy)!;
+  ok('올린 날을 모르는 기록에는 고친 날을 남기지 않는다(400)', (await fails(patchPublishedPost(eNoDate, eLegacy.id, { addEdit: { editedOn: '2026-10-15' } }))) === 400);
+  await patchPublishedPost(ED, eOwn.post.id, { remove: 'taken-down' });
+  ok('뺀 기록에는 고친 날을 남기지 않는다(400)', (await fails(patchPublishedPost(ED, eOwn.post.id, { addEdit: { editedOn: '2026-10-16' } }))) === 400);
+
   // 7) 키 규칙이 바뀐 옛 파일은 읽을 때 key를 다시 계산한다
   const K = 'rule-tenant';
   const ruleFile = path.join(root, 'data', K, 'published-posts.json');
