@@ -7,9 +7,11 @@ import {
   kstDate,
   matchKind,
   measuredWindow,
+  postedAtOf,
   timingOf,
   trackingKey,
   type CitationTally,
+  type MeasureWindow,
   type PostTiming,
   type WeekTally,
 } from '../src/lib/publishedUrl.js';
@@ -42,7 +44,7 @@ export interface HistoryRun {
   /** week-file = 회차 기록이 없는 그 주 파일(v0.4.26 전 측정). */
   kind: 'run' | 'week-file';
   at: string | null;
-  window: { first: string; last: string } | null;
+  window: MeasureWindow | null;
   weekCard: 'saved' | 'kept' | 'week-file';
   /** 지금 그 주 카드(막대 · 보고서 점수)가 이 회차다. */
   isWeekCard: boolean;
@@ -62,7 +64,7 @@ export interface HistoryWeek {
    * 측정한 날(한국 날짜)의 범위 — 판정 시작 시각. 회차가 여럿이면 그 주 카드 회차의 범위(회차마다의 범위는 runs[].window — 그래프 핀은
    * 그것으로 칸과 같은 규칙을 쓴다, src/lib/publishTracking.ts weekTimingOf). 시각이 없는 옛 기록이면 null.
    */
-  window: { first: string; last: string } | null;
+  window: MeasureWindow | null;
   engines: string[];
   /** 그 주 판정을 나눈 질문 은행 판. 못 찾았으면 null. */
   bankVersion: string | null;
@@ -217,7 +219,7 @@ export async function getPublishedHistory(
 
 /** 표본 하나를 센 결과. */
 export interface SampleView {
-  window: { first: string; last: string } | null;
+  window: MeasureWindow | null;
   bank: QuestionBank | null;
   bankVersion: string | null;
   engines: string[];
@@ -240,7 +242,12 @@ export async function weekViews(
   const { samples, issues } = await weekSamples(store, tenant.tenantId, card, analyses);
   const views: SampleView[] = [];
   // 그 주 파일 표본은 그 주 카드로 센다 — 회차 기록이 없던 때와 같은 결과가 나오게.
-  for (const s of samples) views.push(await sampleView(store, tenant, shown, { weekOf: card.weekOf, scorecard: s.isWeekFile ? card : s.scorecard, analyses: s.analyses }, opts));
+  // 회차 기록의 측정 시작 시각은 답을 모으기 시작한 때다 — 같은 날 올린 글의 「올린 뒤」를 가르는 하한. 옮겨 둔 회차(preserved)의 시작은
+  // 판정 시각에서 짐작한 값이라 쓰지 않는다.
+  for (const s of samples) {
+    const startAt = s.meta && !s.meta.preserved ? s.meta.startedAt : undefined;
+    views.push(await sampleView(store, tenant, shown, { weekOf: card.weekOf, scorecard: s.isWeekFile ? card : s.scorecard, analyses: s.analyses, startAt }, opts));
+  }
   return { samples, views, issues: issues.map((i) => `${i.runId}: ${i.reason}`) };
 }
 
@@ -249,17 +256,18 @@ export async function sampleView(
   store: Pick<ResultStore, 'getQuestionBank'>,
   tenant: { tenantId: string; questionBankVersion?: string },
   shown: PublishedPost[],
-  sample: { weekOf: string; scorecard: WeeklyScorecard; analyses: QuestionRepeatAnalysis[] },
+  sample: { weekOf: string; scorecard: WeeklyScorecard; analyses: QuestionRepeatAnalysis[]; startAt?: string },
   opts?: { byEngine?: boolean },
 ): Promise<SampleView> {
-  const { weekOf, scorecard: card, analyses } = sample;
+  const { weekOf, scorecard: card, analyses, startAt } = sample;
   const found = await weekQuestionBank(store, tenant.tenantId, analyses, card.questionBankVersion, tenant.questionBankVersion);
   // 카드에 판이 적혀 있으면 그 판만 쓴다 — 그 파일이 없어 지금 판으로 넘어가면, 판마다 다시 쓰이는 질문 id(c1-001 등)가 다른
   // 질문을 가리킬 수 있다. 판을 모르면 확인 불가로 둔다.
   const bank = found && card.questionBankVersion && found.version !== card.questionBankVersion ? null : found;
   const named = bank ? new Map(bank.questions.map((q) => [q.questionId, q.containsBrandName])) : null;
   const index = indexWeekCitations(analyses, named);
-  const window = measuredWindow(analyses);
+  const measured = measuredWindow(analyses);
+  const window: MeasureWindow | null = measured && startAt ? { ...measured, startAt } : measured;
 
   // 분모와 응답별 인용 키 — 같은 응답이 두 번 들어온 파일(재판정 덧붙임)도 한 번만 센다.
   const responseKeys = new Map<string, Set<string>>();
@@ -284,7 +292,7 @@ export async function sampleView(
   const status = shown.map((post) => {
     const removedOn = post.removedAt ? kstDate(post.removedAt) : null;
     const upDuring = !removedOn || (window ? removedOn > window.last : (isoWeekOf(removedOn) ?? '') > weekOf);
-    return { upDuring, timing: timingOf(post.publishedOn, window, weekOf) };
+    return { upDuring, timing: timingOf(post.publishedOn, window, weekOf, postedAtOf(post)) };
   });
   const cells = shown.map((post, i) => {
     const { upDuring, timing } = status[i]!;
@@ -296,7 +304,7 @@ export async function sampleView(
       tally: upDuring ? (index.get(post.key) ?? null) : null,
       variantCited,
     };
-    const days = daysAfterPublish(post.publishedOn, window, weekOf);
+    const days = daysAfterPublish(post.publishedOn, window, weekOf, postedAtOf(post));
     if (days !== null) cell.daysAfterPublish = days;
     const earlierLive = shown.some(
       (other, j) => j !== i && other.key === post.key && other.removedReason === 'taken-down' && status[j]!.upDuring && status[j]!.timing !== 'before',

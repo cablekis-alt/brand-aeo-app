@@ -28,7 +28,7 @@ import { channelNameOf, isIdleAction, isOpenAction, type GapAction } from '../li
 import { buildPublishPlan, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
-import { citedPostIdsInWeek } from '../lib/publishTracking'
+import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
 type PlanPosts = ReturnType<typeof useGapActionPlan>['posts']
@@ -348,7 +348,7 @@ function ActionCard({
   drafts: Record<string, StoredDraft> | null
   onDraft: (s: StoredDraft) => void
   /** 집행 원장 — null이면 이 환경(웹)에서는 주소를 적을 수 없다. */
-  posts: (PlanPosts & { citedInWeek?: ReadonlySet<string> | null }) | null
+  posts: (PlanPosts & { citedInWeek?: ReadonlySet<string> | null; timingInWeek?: ReturnType<typeof weekFileTimingOf> }) | null
   /** 등재형일 때, 이 채널의 질문을 이미 덮는 콘텐츠 항목. 콘텐츠형이면 null. */
   coveredBy: { titles: string[]; covered: number; total: number } | null
 }) {
@@ -419,6 +419,7 @@ function ActionCard({
           removed={posts.list.filter((p) => p.targetActionId === action.id && p.removedAt)}
           weekOf={weekOf ?? ''}
           citedInWeek={posts.citedInWeek}
+          timingInWeek={posts.timingInWeek}
           busy={posts.busy}
           onRecord={(url, publishedOn, chosen) =>
             posts.record({
@@ -591,7 +592,12 @@ export default function GapActions() {
     () => (weekHistory.history && weekOf ? citedPostIdsInWeek(weekHistory.history, weekOf) : null),
     [weekHistory.history, weekOf],
   )
-  const cardPosts = canRecordPosts ? { ...posts, citedInWeek } : null
+  // 같은 날 올린 글 — 이번 주 결과가 전후 불명이면 회차 기록의 측정 시작까지 써서 다시 잰다(publishTracking.ts weekFileTimingOf).
+  const timingInWeek = useMemo(
+    () => (weekHistory.history && weekOf ? weekFileTimingOf(weekHistory.history, weekOf) : null),
+    [weekHistory.history, weekOf],
+  )
+  const cardPosts = canRecordPosts ? { ...posts, citedInWeek, timingInWeek } : null
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
   useEffect(() => {
@@ -926,6 +932,7 @@ export default function GapActions() {
                           removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt)}
                           weekOf={weekOf}
                           citedInWeek={citedInWeek}
+                          timingInWeek={timingInWeek}
                           busy={posts.busy}
                           // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
                           onRecord={(url, publishedOn, chosen) =>

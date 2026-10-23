@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtOf, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -814,12 +814,13 @@ function publishedHitsOf(
     responseKeys.set(id, keys)
   }
   for (const { post, takenDownOn } of shown) {
-    const timing = timingOf(post.publishedOn, window, weekOf)
+    // 같은 날 측정은 「올렸어요」를 누른 시각으로 가린다(postedAtOf) — 이번 주 결과는 그 주 파일이라 「올리기 전」만 시각으로 가려진다.
+    const timing = timingOf(post.publishedOn, window, weekOf, postedAtOf(post))
     // 내린 글인데 이 주 측정이 올리기도 전이었다 — 이 주에는 올라가 있던 적이 없으니 「뺀 주소」에만 둔다.
     if (takenDownOn && timing === 'before') continue
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
-    const days = daysAfterPublish(post.publishedOn, window, weekOf)
+    const days = daysAfterPublish(post.publishedOn, window, weekOf, postedAtOf(post))
     const edit = editTimingOf(post.edits, (on) => timingOf(on, window, weekOf))
     const hit: PublishedHit = {
       post,

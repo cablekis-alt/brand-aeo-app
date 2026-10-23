@@ -142,7 +142,8 @@ const editor = (extra: Partial<React.ComponentProps<typeof PublishedUrlEditor>> 
       ...extra,
     }),
   );
-ok('고친 날을 「10/10 올림 · 10/22 고침」으로 적는다', editor().includes('10/10 올림 · 10/22 고침'));
+// 올린 날에 적은 기록이라 누른 시각(09:00)도 함께 보인다(verify-posted-time.ts).
+ok('고친 날을 「10/10 올림 · 09:00 기록 · 10/22 고침」으로 적는다', editor().includes('10/10 올림 · 09:00 기록 · 10/22 고침'));
 ok('고친 날을 받을 수 있으면 「고쳤어요」가 있다', editor({ onAddEdit: noop, onRemoveEdit: noop }).includes('고쳤어요'));
 ok('받을 수 없으면 「고쳤어요」를 그리지 않는다', !editor().includes('고쳤어요'));
 ok('올린 날을 모르는 기록에는 「고쳤어요」를 그리지 않는다', !renderToStaticMarkup(

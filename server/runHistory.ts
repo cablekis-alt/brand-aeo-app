@@ -1,6 +1,6 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { conditionChanges } from '../src/lib/comparability.js';
-import { timingOf, type PostTiming } from '../src/lib/publishedUrl.js';
+import { timingOf, type MeasureWindow, type PostTiming } from '../src/lib/publishedUrl.js';
 import { INDEXING_GRACE_DAYS } from '../src/lib/publishTracking.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { clopperPearson } from './exactInterval.js';
@@ -25,7 +25,7 @@ export interface RunPoint {
   runId: string | null;
   weekOf: string;
   at: string | null;
-  window: { first: string; last: string } | null;
+  window: MeasureWindow | null;
   selfOnly: boolean | null;
   inCohortRun: boolean | null;
   /** 회차 기록이 없던 그 주 파일을 옮겨 둔 회차 — 예정 호출 수 · 판정 맥락을 모른다. */

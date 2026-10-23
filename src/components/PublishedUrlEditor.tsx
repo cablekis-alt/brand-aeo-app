@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { ActionStatus, PostRemovedReason, PublishedPost } from '../lib/api'
 import type { PublishedHit } from '../lib/gapActions'
 import { INDEXING_GRACE_DAYS, withinIndexingGrace } from '../lib/publishTracking'
-import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst } from '../lib/publishedUrl'
+import { ARTICLE_URL_REASON, isArticleUrl, kstDate, postedAtOf, todayKst, type PostTiming } from '../lib/publishedUrl'
 import { UrlLink } from './CitationBits'
 
 const REMOVED_LABEL: Record<PostRemovedReason, string> = {
@@ -12,6 +12,9 @@ const REMOVED_LABEL: Record<PostRemovedReason, string> = {
 
 /** "2026-10-19" → "10/19" */
 const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
+
+/** ISO 시각 → 한국 시각 「14:15」. */
+const kstClock = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toISOString().slice(11, 16)
 
 /**
  * 이번 주 결과 한 줄. 숫자는 정확 일치 인용만 센다(src/lib/publishedUrl.ts). 올리기 전에 한 측정은 세지 않고, 측정하던 날 올린
@@ -26,7 +29,17 @@ function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill
       detail: `${week} 같은 주 다른 회차에서 인용됨 — 마지막 저장 측정에서는 찾지 못했습니다. 회차별 결과는 AEO 퍼포먼스의 올린 글 인용 추적에 있습니다.`,
     }
   }
-  if (h.timing === 'before') return { pill: '올리기 전 측정', cls: 'st-unknown', detail: `${week} 측정은 올린 날보다 앞이라 세지 않습니다.` }
+  if (h.timing === 'before') {
+    // 같은 날 측정은 「올렸어요」를 누른 시각으로 가렸다(postedAtOf) — 날짜로는 「올린 날보다 앞」이 아니다.
+    const at = postedAtOf(h.post)
+    return {
+      pill: '올리기 전 측정',
+      cls: 'st-unknown',
+      detail: at
+        ? `${week} 측정은 「올렸어요」를 누른 시각(${kstClock(at)})보다 앞에 끝나 세지 않습니다.`
+        : `${week} 측정은 올린 날보다 앞이라 세지 않습니다.`,
+    }
+  }
   const unsure = h.timing === 'during' || h.timing === 'ambiguous'
   // during: 측정하던 날 올렸다. ambiguous: 측정 시각이 없는 옛 기록인데 같은 주에 올렸다 — 측정 중이었다고 단정하지 않는다.
   const unsureWhy = h.timing === 'during' ? '측정하던 날 올림' : '같은 주에 올렸는데 측정 시각 기록이 없음'
@@ -67,7 +80,7 @@ function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill
  * 측정이 「올리기 전」으로 잡힌다. 「빼기」는 지우지 않는다 — 잘못 적은 주소는 이력에서 빼고, 내린 글은 내린 날까지 남긴다.
  */
 export default function PublishedUrlEditor({
-  hits,
+  hits: rawHits,
   removed,
   weekOf,
   addLabel = '추가',
@@ -81,6 +94,7 @@ export default function PublishedUrlEditor({
   citedInWeek = null,
   onAddEdit,
   onRemoveEdit,
+  timingInWeek = null,
 }: {
   /** 이 곳의 뺀 적 없는 기록과 이번 주 결과. */
   hits: PublishedHit[]
@@ -106,6 +120,11 @@ export default function PublishedUrlEditor({
    */
   onAddEdit?: (postId: string, editedOn: string) => void
   onRemoveEdit?: (postId: string, editedOn: string) => void
+  /**
+   * 같은 측정을 회차 기록의 측정 시작까지 써서 다시 잰 전후(src/lib/publishTracking.ts weekFileTimingOf). 이번 주 결과가 전후 불명일 때만
+   * 쓴다 — 같은 날 올린 글이 그 측정 시작보다 앞에 기록됐으면 「올린 뒤」다.
+   */
+  timingInWeek?: ReadonlyMap<string, { timing: PostTiming; daysAfterPublish: number | null }> | null
 }) {
   const today = todayKst()
   const [input, setInput] = useState('')
@@ -118,6 +137,12 @@ export default function PublishedUrlEditor({
   const [fixing, setFixing] = useState<{ id: string; date: string } | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   const week = weekOf ? weekOf.slice(5) : '이번 주'
+  // 같은 날 올린 글 — 이번 주 결과가 전후 불명이면 회차 기록의 측정 시작까지 써서 다시 잰 값을 쓴다(timingInWeek).
+  const hits = rawHits.map((h): PublishedHit => {
+    const t = timingInWeek?.get(h.post.id)
+    if (!t || (h.timing !== 'during' && h.timing !== 'ambiguous') || t.timing === 'during' || t.timing === 'ambiguous' || t.timing === 'unknown') return h
+    return { ...h, timing: t.timing, ...(t.daysAfterPublish !== null ? { daysAfterPublish: t.daysAfterPublish } : {}) }
+  })
   const otherRun = (h: PublishedHit) => !h.tally && Boolean(citedInWeek?.has(h.post.id))
   const citedCount = hits.filter((h) => (h.timing !== 'before' && h.tally) || otherRun(h)).length
 
@@ -168,6 +193,8 @@ export default function PublishedUrlEditor({
                 </div>
                 <p className="doc-meta post-meta">
                   {p.publishedOn ? `${shortDate(p.publishedOn)} 올림` : '올린 날 모름(옛 기록)'}
+                  {/* 같은 날 측정의 전후를 가르는 시각 — 「올렸어요」를 누른 때다. */}
+                  {postedAtOf(p) && ` · ${kstClock(postedAtOf(p)!)} 기록`}
                   {p.edits && p.edits.length > 0 && ` · ${p.edits.map((e) => shortDate(e.editedOn)).join(' · ')} 고침`}
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
                   {judged && s.detail && ` · ${s.detail}`}
@@ -359,7 +386,8 @@ export default function PublishedUrlEditor({
             </button>
           </>
         )}
-        {' — 며칠 뒤에 적는다면 실제로 올린 날로 바꾸세요. 그 사이 측정을 「올리기 전」으로 세지 않습니다.'}
+        {' — 며칠 뒤에 적는다면 실제로 올린 날로 바꾸세요. 그 사이 측정을 「올리기 전」으로 세지 않습니다. ' +
+          '오늘 올린 글은 올린 직후에 누르세요 — 같은 날 측정은 누른 시각으로 올리기 전 · 뒤를 가립니다.'}
       </p>
       {reject && <p className="error">{reject}</p>}
       {removedOnly.length > 0 && (
