@@ -358,6 +358,8 @@ export default function PeriodicReport() {
         summary: post.publishedOn ? summary : { ...summary, tier: 'undated' as const },
         after: afterWeeksOf(cells, weeks, post.publishedOn, removedOn),
         removedOn: removedBy,
+        // 보고 주차까지 고친 날만 — 그 뒤에 고친 일은 이 주 보고서에 넣지 않는다.
+        editedOn: (post.edits ?? []).map((e) => e.editedOn).filter((d) => (isoWeekOf(d) ?? '') <= until),
       }
     })
     if (rows.length === 0) return null
@@ -647,6 +649,7 @@ export default function PeriodicReport() {
                         </td>
                         <td className="cell-text">
                           {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
+                          {r.editedOn.length > 0 && ` · ${r.editedOn.map(monthDay).join(' · ')} 고침`}
                           {r.removedOn && ` · ${monthDay(r.removedOn)} 내림`}
                           <div className="doc-meta">{r.places.join(' · ')}</div>
                         </td>

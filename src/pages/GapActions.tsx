@@ -435,6 +435,8 @@ function ActionCard({
           onRemove={posts.remove}
           onRestore={posts.restore}
           onSetDate={posts.setPublishedOn}
+          onAddEdit={(postId, editedOn) => posts.addEdit(postId, { editedOn })}
+          onRemoveEdit={posts.removeEdit}
         />
       )}
       {awaiting && (
@@ -697,7 +699,8 @@ export default function GapActions() {
   const idle = plan.actions.filter(isIdleAction)
   /** 글이 여러 편일 때만 글 목록 · 한꺼번에 만들기를 보인다 — 보통은 한 편(gapActions contentActions)이고, 손댄 채널이 따로 쓴 글을 가질 때만 늘어난다. */
   const manyArticles = publishPlan.articles.length > 1
-  const ready = !loading && plan.actions.length > 0
+  // 글에 넣지 않은 밀린 질문만 있는 주(카테고리 무관 질문은 모두 이김)도 그린다 — 그 질문들을 밝히는 칸이 있다.
+  const ready = !loading && (plan.actions.length > 0 || plan.otherLost.length > 0)
 
   if (!tenant) return null
 
@@ -784,7 +787,7 @@ export default function GapActions() {
         </p>
       )}
 
-      {!loading && plan.actions.length === 0 && (
+      {!loading && plan.actions.length === 0 && plan.otherLost.length === 0 && (
         <p className="muted">
           {neverMeasured
             ? '이 브랜드는 아직 측정된 적이 없습니다. '
@@ -807,9 +810,11 @@ export default function GapActions() {
                     <span>
                       이번 주 올리기 <b>{publishPlan.done}</b> / {publishPlan.rows.length}곳
                     </span>
-                    <span className="muted">
-                      올린 글이 덮는 질문 <b>{publishPlan.coveredQuestions}</b> / {publishPlan.totalQuestions}개
-                    </span>
+                    {publishPlan.totalQuestions > 0 && (
+                      <span className="muted">
+                        올린 글이 덮는 질문 <b>{publishPlan.coveredQuestions}</b> / {publishPlan.totalQuestions}개
+                      </span>
+                    )}
                   </div>
                   <div
                     className="publish-progress-bar"
@@ -829,6 +834,12 @@ export default function GapActions() {
                 </section>
               )}
 
+              {publishPlan.articles.length === 0 && (
+                // 카테고리 무관 질문을 모두 이긴 주 — 남은 것은 이미 올린 곳의 주소 줄뿐이다(lib/publishPlan.ts).
+                <p className="muted">카테고리 무관 질문에서 밀린 곳은 없습니다. 아래는 이미 올린 곳입니다.</p>
+              )}
+
+              {publishPlan.articles.length > 0 && (
               <section>
                 <h3 className="step-head">
                   ① 글 확인
@@ -883,6 +894,7 @@ export default function GapActions() {
                   ))}
                 </div>
               </section>
+              )}
 
               <section>
                 <h3 className="step-head">
@@ -935,6 +947,17 @@ export default function GapActions() {
                           onRemove={posts.remove}
                           onRestore={posts.restore}
                           onSetDate={posts.setPublishedOn}
+                          // 고친 날에는 지금 이 줄이 복사하는 판을 남긴다 — 「본문 다시 복사」로 붙여 넣은 글이다.
+                          onAddEdit={(postId, editedOn) =>
+                            posts.addEdit(postId, {
+                              editedOn,
+                              ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
+                              ...(row.needsAdapt && adaptations?.[row.article.action.id]?.[row.target.id]
+                                ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
+                                : {}),
+                            })
+                          }
+                          onRemoveEdit={posts.removeEdit}
                         />
                       ) : null
                     }
@@ -958,9 +981,12 @@ export default function GapActions() {
               <details className="gap-more">
                 <summary>글에 넣지 않은 밀린 질문 {plan.otherLost.length}개 — 카테고리 무관이 아닌 질문</summary>
                 <p className="hint" style={{ marginTop: 0 }}>
-                  언급률 · 추천 순위는 카테고리 무관 질문으로만 재서, 글은 그 질문에만 답합니다. 아래 질문은 대부분 브랜드 이름을 넣고
-                  묻는 질문이라 쓰는 방식도 반대입니다(첫 문장에서 바로 답). 다만 이 질문들의 답이 자사 사이트를 인용하는 비율(브랜드
-                  소유 출처)은 점수에 들어갑니다 — 답에 필요한 사실이 자사 사이트의 소개 · 자주 묻는 질문과{' '}
+                  언급률 · 추천 순위는 카테고리 무관 질문으로만 재서, 글은 그 질문에만 답합니다.
+                  {/* 옛 은행(v1 · v3)에는 유형은 다르지만 브랜드 이름이 없는 질문이 많다 — 이름 든 질문이 있을 때만 그 말을 한다. */}
+                  {plan.otherLost.some((q) => q.containsBrandName === true) &&
+                    ' 브랜드 이름을 넣은 질문은 쓰는 방식도 반대입니다(첫 문장에서 바로 답).'}{' '}
+                  다만 이 질문들의 답이 자사 사이트를 인용하는 비율(브랜드 소유 출처)은 점수에 들어갑니다 — 답에 필요한 사실이 자사
+                  사이트의 소개 · 자주 묻는 질문과{' '}
                   <Link to="/brand-facts">브랜드 사실</Link>에 있는지 확인하세요. 이 질문으로 글을 따로 쓰려면{' '}
                   <Link to="/questions">질문 은행</Link>에서 골라 쓰고, 예전에 만든 초안은 <Link to="/content-library">콘텐츠 보관함</Link>에
                   있습니다.
@@ -971,6 +997,7 @@ export default function GapActions() {
                       <span className="gap-q">{q.text}</span>{' '}
                       <span className="muted">
                         · {q.categoryLabel}
+                        {q.containsBrandName === true && ' · 브랜드 이름 있음'}
                         {q.containsBrandName === false && ' · 브랜드 이름 없음'}
                       </span>
                     </li>

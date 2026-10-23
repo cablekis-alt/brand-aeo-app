@@ -1,6 +1,6 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { conditionChanges } from '../src/lib/comparability.js';
-import type { PostTiming } from '../src/lib/publishedUrl.js';
+import { timingOf, type PostTiming } from '../src/lib/publishedUrl.js';
 import { INDEXING_GRACE_DAYS } from '../src/lib/publishTracking.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { clopperPearson } from './exactInterval.js';
@@ -86,6 +86,11 @@ export interface RunPostRow {
   unsureRuns: number;
   weakRuns: number;
   weakEngines: string[];
+  /**
+   * 고친 글이면 마지막으로 고친 뒤의 회차 — 위 숫자와 같은 기간 · 같은 셈(엔진 빠진 회차도 넣고 따로 센다). 고친 날 당일 회차는 전후
+   * 불명이라 넣지 않는다(고친 날도 올린 날과 같은 timingOf 규칙). 일수는 올린 날 기준 일수에서 고친 날까지의 일수를 뺀 값이다.
+   */
+  sinceEdit: { editedOn: string; measured: number; cited: number; weak: number; firstCitedDays: number | null } | null;
 }
 
 export interface RunHistory {
@@ -210,6 +215,22 @@ export async function getRunHistory(
     const firstIdx = after.findIndex((x) => x.cell.cited > 0);
     const weak = after.filter((x) => x.point.partialEngines.length > 0 || x.point.missingEngines.length > 0);
     const matured = after.filter((x) => !x.cell.withinGrace);
+    const lastEdit = post.edits?.at(-1)?.editedOn;
+    let sinceEdit: RunPostRow['sinceEdit'] = null;
+    if (lastEdit && post.publishedOn) {
+      const offset = Math.round((Date.parse(`${lastEdit}T00:00:00Z`) - Date.parse(`${post.publishedOn}T00:00:00Z`)) / 86_400_000);
+      const afterEdit = after.filter((x) => timingOf(lastEdit, x.point.window, x.point.weekOf) === 'after');
+      const citedAfter = afterEdit.filter((x) => x.cell.cited > 0);
+      // 첫 인용 회차의 일수를 모르면 비운다 — 뒤 회차의 일수를 첫 인용처럼 적지 않는다.
+      const firstDays = citedAfter[0]?.cell.daysAfterPublish ?? null;
+      sinceEdit = {
+        editedOn: lastEdit,
+        measured: afterEdit.length,
+        cited: citedAfter.length,
+        weak: afterEdit.filter((x) => x.point.partialEngines.length > 0 || x.point.missingEngines.length > 0).length,
+        firstCitedDays: firstDays !== null ? firstDays - offset : null,
+      };
+    }
     return {
       post,
       cells: row.filter((_, k) => drawn[k]),
@@ -221,6 +242,7 @@ export async function getRunHistory(
       unsureRuns: row.filter((cell) => cell && !cell.afterRemoval && (cell.timing === 'during' || cell.timing === 'ambiguous')).length,
       weakRuns: weak.length,
       weakEngines: [...new Set(weak.flatMap((x) => [...x.point.partialEngines, ...x.point.missingEngines]))].sort(),
+      sinceEdit,
     };
   });
 

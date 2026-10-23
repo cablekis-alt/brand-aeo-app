@@ -1,6 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
-import { daysAfterPublish, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, timingOf, trackingKey, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -168,8 +168,9 @@ export interface OtherLostQuestion {
 
 /**
  * 글 한 편이 답하는 질문 유형. 언급률 · 추천 순위가 이 유형의 응답만으로 나온다(server/mentionScope.ts) — 점수를 움직이는
- * 질문이 이것뿐이라 글을 유형마다 나누지 않는다(2026-10-23). 다른 유형의 밀린 질문은 0~3개라 매주 바뀌고, 브랜드 이름이
- * 들어간 질문이라 쓰는 방식도 반대다(브리프 규칙 4-1 · 4-2, src/prompts/b9b-content-brief.ts).
+ * 질문이 이것뿐이라 글을 유형마다 나누지 않는다(2026-10-23). 다른 유형의 밀린 질문은 새 은행(v4~)에서 0~3개라 매주 바뀌고,
+ * 대부분 브랜드 이름이 들어간 질문이라 쓰는 방식도 반대다(브리프 규칙 4-1 · 4-2, src/prompts/b9b-content-brief.ts). 옛 은행(v1 · v3)은
+ * 유형은 다르지만 이름이 없는 질문이 많아 5~10개까지 나온다 — 화면은 질문마다 이름 유무를 밝힌다.
  */
 const ARTICLE_CATEGORY = 'category-agnostic'
 
@@ -744,6 +745,8 @@ export interface PublishedHit {
   takenDownOn?: string
   /** 올린 뒤(after) 측정이 올린 날에서 며칠 뒤였나 — 갓 올린 글의 「인용 없음」은 아직 판단하지 않는다(publishTracking.ts INDEXING_GRACE_DAYS). */
   daysAfterPublish?: number
+  /** 고친 글이면 이번 주 측정이 마지막으로 고친 날에 견줘 어땠나(publishedUrl.ts editTimingOf). 측정 뒤에 고쳤으면 그 전 고친 날로 본다. */
+  edit?: { editedOn: string; timing: PostTiming }
 }
 
 /**
@@ -817,6 +820,7 @@ function publishedHitsOf(
     let variantCited = 0
     for (const keys of responseKeys.values()) if ([...keys].some((k) => matchKind(post.key, k) === 'query-variant')) variantCited += 1
     const days = daysAfterPublish(post.publishedOn, window, weekOf)
+    const edit = editTimingOf(post.edits, (on) => timingOf(on, window, weekOf))
     const hit: PublishedHit = {
       post,
       timing,
@@ -824,6 +828,7 @@ function publishedHitsOf(
       variantCited,
       ...(takenDownOn ? { takenDownOn } : {}),
       ...(days !== null ? { daysAfterPublish: days } : {}),
+      ...(edit ? { edit } : {}),
     }
     out.set(post.targetActionId, [...(out.get(post.targetActionId) ?? []), hit])
   }

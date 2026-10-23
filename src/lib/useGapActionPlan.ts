@@ -153,6 +153,8 @@ export function useGapActionPlan(tenantId: string) {
       remove: published.remove,
       restore: published.restore,
       setPublishedOn: published.setPublishedOn,
+      addEdit: published.addEdit,
+      removeEdit: published.removeEdit,
     },
   }
 }

@@ -175,6 +175,22 @@ export function buildPublishPlan(
         locked: !best.article.confirmed,
         done: isPublishedAction(ch),
       })
+    } else if (contentArticles.length === 0 && isPublishedAction(ch)) {
+      // 글이 없는 주(카테고리 무관 질문을 모두 이긴 주)의 이미 올린 곳 — 올린 주소만 다루는 줄이다. 따로 쓸 글로 만들면 잠긴 줄이
+      // 되어 올린 주소가 「글 만들러 가기」 뒤로 숨고, ① 글 확인에 채널마다 글이 다시 생긴다.
+      rows.push({
+        key: ch.id,
+        kind: 'channel',
+        article: articleOf(ch, drafts),
+        target: ch,
+        name: channelNameOf(ch),
+        questionIds: [],
+        verb: verbOf(ch),
+        openUrl: ch.listedPage ?? openUrlOf(ch.targetDomain),
+        needsAdapt: false,
+        locked: false,
+        done: true,
+      })
     } else {
       const article = articleOf(ch, drafts)
       orphanArticles.push(article)

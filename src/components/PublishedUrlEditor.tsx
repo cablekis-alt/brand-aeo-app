@@ -79,6 +79,8 @@ export default function PublishedUrlEditor({
   judged = true,
   targetLabel,
   citedInWeek = null,
+  onAddEdit,
+  onRemoveEdit,
 }: {
   /** 이 곳의 뺀 적 없는 기록과 이번 주 결과. */
   hits: PublishedHit[]
@@ -98,6 +100,12 @@ export default function PublishedUrlEditor({
   targetLabel?: (post: PublishedPost) => string
   /** 그 주 회차를 합친 칸에서 인용된 기록 id(src/lib/publishTracking.ts citedPostIdsInWeek). 없으면 마지막 저장 측정만 본다. */
   citedInWeek?: ReadonlySet<string> | null
+  /**
+   * 기존 글을 고친 날을 남긴다 — 고칠 때 붙여 넣은 판(초안 · 채널용 글)은 부르는 화면이 붙인다. 없으면 「고쳤어요」를 그리지 않는다.
+   * 같은 날을 다시 남기면 그 판으로 바꾼다.
+   */
+  onAddEdit?: (postId: string, editedOn: string) => void
+  onRemoveEdit?: (postId: string, editedOn: string) => void
 }) {
   const today = todayKst()
   const [input, setInput] = useState('')
@@ -106,6 +114,8 @@ export default function PublishedUrlEditor({
   const [date, setDate] = useState(today)
   const [reject, setReject] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ id: string; date: string } | null>(null)
+  // 「고쳤어요」 — 기존 글을 수정한 날을 고르는 칸.
+  const [fixing, setFixing] = useState<{ id: string; date: string } | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   const week = weekOf ? weekOf.slice(5) : '이번 주'
   const otherRun = (h: PublishedHit) => !h.tally && Boolean(citedInWeek?.has(h.post.id))
@@ -158,8 +168,14 @@ export default function PublishedUrlEditor({
                 </div>
                 <p className="doc-meta post-meta">
                   {p.publishedOn ? `${shortDate(p.publishedOn)} 올림` : '올린 날 모름(옛 기록)'}
+                  {p.edits && p.edits.length > 0 && ` · ${p.edits.map((e) => shortDate(e.editedOn)).join(' · ')} 고침`}
                   {h.takenDownOn && ` · ${shortDate(h.takenDownOn)}에 글 내림(이 주는 올라가 있던 때)`}
                   {judged && s.detail && ` · ${s.detail}`}
+                  {/* 고친 글 — 이 결과가 고친 글을 본 것인지 밝힌다. 고친 날 측정은 올린 날 측정처럼 전후 불명이다. */}
+                  {/* 다른 회차에서 인용된 글이면 이 표시는 마지막 저장 측정 기준이다 — 인용한 회차가 고치기 전일 수 있다. */}
+                  {judged &&
+                    h.edit &&
+                    ` · ${otherRun(h) ? '마지막 저장 측정은 ' : ''}${shortDate(h.edit.editedOn)} ${h.edit.timing === 'after' ? '고친 뒤 측정' : '고친 날 측정(고치기 전후 불명)'}`}
                   {judged && h.variantCited > 0 && ` · 질의만 다른 주소에서 ${h.variantCited}회(같은 글인지 확인 필요, 숫자에 넣지 않음)`}{' '}
                   {/* 내린 글은 이 줄에서 되살리거나 「잘못 적은 주소」로 바꾼다 — 이 주에 보이는 동안은 아래 「뺀 주소」에 두 번 두지 않는다. */}
                   {h.takenDownOn ? (
@@ -176,6 +192,19 @@ export default function PublishedUrlEditor({
                       <button type="button" className="link-btn" disabled={busy} onClick={() => setEditing({ id: p.id, date: p.publishedOn ?? today })}>
                         날짜 고치기
                       </button>{' '}
+                      {/* 고친 날은 올린 날 뒤에만 선다 — 올린 날을 모르는 옛 기록은 날짜부터 적는다. */}
+                      {onAddEdit && p.publishedOn && (
+                        <>
+                          <button
+                            type="button"
+                            className="link-btn"
+                            disabled={busy}
+                            onClick={() => setFixing(fixing?.id === p.id ? null : { id: p.id, date: today })}
+                          >
+                            고쳤어요
+                          </button>{' '}
+                        </>
+                      )}
                       <button type="button" className="link-btn" disabled={busy} onClick={() => setRemoving(removing === p.id ? null : p.id)}>
                         빼기
                       </button>
@@ -205,6 +234,52 @@ export default function PublishedUrlEditor({
                     <button type="button" className="ghost" onClick={() => setEditing(null)}>
                       취소
                     </button>
+                  </div>
+                )}
+                {fixing?.id === p.id && onAddEdit && p.publishedOn && (
+                  <div>
+                    <div className="post-row">
+                      <span className="doc-meta">고친 날</span>
+                      <input
+                        type="date"
+                        value={fixing.date}
+                        min={p.publishedOn}
+                        max={today}
+                        aria-label="고친 날"
+                        onChange={(e) => setFixing({ id: p.id, date: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        className="ghost"
+                        disabled={busy || !fixing.date || fixing.date > today || fixing.date < p.publishedOn}
+                        onClick={() => {
+                          onAddEdit(p.id, fixing.date)
+                          setFixing(null)
+                        }}
+                      >
+                        저장
+                      </button>
+                      <button type="button" className="ghost" onClick={() => setFixing(null)}>
+                        취소
+                      </button>
+                    </div>
+                    <p className="doc-meta post-meta">
+                      이 주소의 글(블로그 글 · 문서 · 소개 칸)을 수정한 날입니다 — 그 다음 날 측정부터 「고친 뒤」로 따로 봅니다. 새 글로
+                      올렸다면 여기 말고 새 주소를 「{addLabel}」로 적으세요.
+                    </p>
+                    {p.edits && p.edits.length > 0 && onRemoveEdit && (
+                      <p className="doc-meta post-meta">
+                        남긴 고친 날:{' '}
+                        {p.edits.map((e) => (
+                          <span key={e.editedOn}>
+                            {shortDate(e.editedOn)}{' '}
+                            <button type="button" className="link-btn" disabled={busy} onClick={() => onRemoveEdit(p.id, e.editedOn)}>
+                              빼기
+                            </button>{' '}
+                          </span>
+                        ))}
+                      </p>
+                    )}
                   </div>
                 )}
                 {removing === p.id && (

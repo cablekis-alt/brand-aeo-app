@@ -4,6 +4,7 @@ import { copyRich } from '../lib/clipboard'
 import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
+import { objectParticle } from '../lib/korean'
 import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
@@ -147,6 +148,48 @@ export default function PublishList({
     setOpenSlot((s) => new Set(s).add(row.key))
   }
 
+  /**
+   * 이미 올린 줄의 「본문 다시 복사」 — 원문이 바뀌어 채널용 글을 다시 만들었을 때 블로그의 기존 글을 고치는 데 쓴다. 채널을 열지
+   * 않는다(고칠 곳은 올린 글이다). 복사하면 주소 칸을 열어 「고쳤어요」로 고친 날을 남기게 한다.
+   */
+  const [recopied, setRecopied] = useState<Set<string>>(new Set())
+  /**
+   * 이미 올린 줄에서 고칠 곳 — 줄 성격마다 다르다. 주소가 없거나(「집행함」만 누름) 우리가 고칠 수 없는 곳(언론 묶음 — 보낸 곳이 고친다)은
+   * null이고, 그때는 「본문 다시 복사」를 그리지 않는다.
+   */
+  const editPlaceOf = (row: PublishRow): string | null => {
+    if (row.target.publishedUrls.length === 0) return null
+    if (row.kind === 'own') return `${row.name}의 기존 글`
+    if (row.verb === 'doc') return '그 문서'
+    if (row.verb === 'place' || row.verb === 'update') return `${row.name} 업체 관리 화면의 소개 칸`
+    if (row.verb === 'write') return `${row.name}에 올린 기존 글`
+    return null
+  }
+  /** 복사 뒤 안내 — 고칠 곳, 새로 올리지 말 것, 고친 날을 남기는 길(그 줄 기록 상태에 맞춰). */
+  const recopyHintOf = (row: PublishRow): string => {
+    const place = editPlaceOf(row) ?? '올린 곳'
+    const hits = row.target.publishedHits ?? []
+    const after = hits.some((h) => h.post.publishedOn && !h.takenDownOn)
+      ? '다 고쳤으면 아래 주소 줄의 「고쳤어요」로 고친 날을 남깁니다.'
+      : hits.some((h) => !h.post.publishedOn)
+        ? '다 고쳤으면 아래 주소 줄의 「날짜 고치기」로 올린 날부터 적은 뒤 「고쳤어요」로 고친 날을 남깁니다.'
+        : '내린 글이라 고친 날은 남기지 않습니다 — 되살리거나, 새로 올렸으면 새 주소를 「올렸어요」로 적으세요.'
+    const duplicate = row.verb === 'write' ? '(주소가 바뀌면 인용 추적이 끊기고, 같은 곳에 비슷한 글이 두 편이 됩니다)' : '(주소가 바뀌면 인용 추적이 끊깁니다)'
+    return `${objectParticle(place)} 수정해 붙여 넣으세요 — 새로 올리지 마세요${duplicate}. ${after}`
+  }
+  const recopy = async (row: PublishRow) => {
+    const t = textOf(row)
+    if (!t) return
+    if (!(await copyRich(t.markdown, t.html))) {
+      setError('클립보드에 복사하지 못했습니다.')
+      return
+    }
+    setCopied(`body:${row.key}`)
+    window.setTimeout(() => setCopied((k) => (k === `body:${row.key}` ? null : k)), 1800)
+    setRecopied((s) => new Set(s).add(row.key))
+    setOpenSlot((s) => new Set(s).add(`done:${row.key}`))
+  }
+
   const copyTitle = async (key: string, title: string) => {
     if (!(await copyRich(title, escapeHtml(title)))) {
       setError('제목을 클립보드에 복사하지 못했습니다.')
@@ -250,6 +293,18 @@ export default function PublishList({
                       {making ? '이 채널용 글 만드는 중… 30초~1분' : '이 채널용 글 만들기 · 약 30초~1분'}
                     </button>
                   )}
+                  {row.done && !row.locked && text && editPlaceOf(row) && (
+                    // 이 채널용 글이 옛 판이면(원문 · 올릴 곳 형식이 바뀜) 막는다 — 옛 글을 다시 붙이게 된다. 아래 경고 줄에서 다시 만든다.
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={stale}
+                      title={stale ? '이 채널용 글이 옛 판입니다 — 아래에서 다시 만든 뒤 복사하세요.' : '이미 올린 글을 고칠 때 — 본문만 복사합니다(채널은 열지 않음)'}
+                      onClick={() => void recopy(row)}
+                    >
+                      {copied === `body:${row.key}` ? '본문 복사함' : '본문 다시 복사'}
+                    </button>
+                  )}
                   {!row.locked && text && (
                     <button type="button" className="ghost" title={titleOf(row, text.markdown)} onClick={() => void copyTitle(row.key, titleOf(row, text.markdown))}>
                       {copied === `title:${row.key}` ? '제목 복사함' : '제목 복사'}
@@ -291,13 +346,14 @@ export default function PublishList({
                   )}
                 </span>
               </div>
+              {row.done && recopied.has(row.key) && <p className="publish-row-note">{recopyHintOf(row)}</p>}
               {!row.locked && !row.done && VERB_CAUTION[row.verb] && <p className="publish-row-note">{VERB_CAUTION[row.verb]}</p>}
-              {!row.locked && !row.done && text && countImageSlots(text.markdown) > 0 && (
+              {!row.locked && (!row.done || recopied.has(row.key)) && text && countImageSlots(text.markdown) > 0 && (
                 <p className="publish-row-note">
                   사진 넣을 곳 {countImageSlots(text.markdown)}곳 — 붙여 넣은 글의 「[사진 넣을 자리]」를 직접 찍거나 고른 사진으로 바꾸세요.
                 </p>
               )}
-              {!row.locked && !row.done && photos.length > 0 && (
+              {!row.locked && (!row.done || recopied.has(row.key)) && photos.length > 0 && (
                 <p className="publish-row-note">
                   홈페이지 사진 {photos.length}장을 넣었어요 — 붙여 넣은 글에서 사진이 안 보이면 「사진 {photos.length}장 받기」로 받은 파일을 그
                   자리에 올리세요({photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}).
