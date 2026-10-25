@@ -79,20 +79,23 @@ function wordForm(value: string): string {
 /**
  * 글 안에 이름이 「낱말로」 있는지. 공백을 지우고 부분 문자열로 찾으면 짧은 별칭이 남의 낱말에 걸린다 — 「Back to top」 ·
  * 「desktop」의 kt · skt, 「marketing」의 keti, 「비가 온 뒤」의 가온, 「군산 각 지역」의 군산각(2026-10-25 검토).
- * 앞은 글자 · 숫자가 아니어야 하고, 뒤는 영문 · 숫자로 끝나는 이름만 막는다(한글 이름 뒤에는 조사가 붙는다 — 「군산각에서」).
- * 이름 안의 띄어쓰기는 있어도 없어도 된다(「KT 하이오더」 = 「KT하이오더」).
+ * 앞은 글자 · 숫자 · &가 아니어야 하고(「KT&G」는 KT가 아니다), 뒤는 영문 · 숫자로 끝나는 이름만 막는다(한글 이름 뒤에는
+ * 조사가 붙는다 — 「군산각에서」).
+ *
+ * 띄어쓰기: 이름에 있는 공백은 글에서 있어도 없어도 된다(「KT 하이오더」 = 「KT하이오더」). 글에만 있는 공백 · 하이픈은
+ * 공백을 뺀 이름이 4글자 이상일 때만 받는다 — 「LG U+」 = 「LGU+」, 「바노바기 성형외과」 = 「바노바기성형외과」, 「T-order」 =
+ * 「torder」. 3글자 이하는 받지 않는다 — 「군산 각」 · 「가 온」은 흔한 말의 띄어쓰기다.
  */
 function mentionsWord(text: string, name: string): boolean {
   const n = wordForm(name)
-  if (n.replace(/\s/g, '').length < 2) return false
+  const core = n.replace(/\s/g, '')
+  if (core.length < 2) return false
   const t = wordForm(text)
   if (!t) return false
-  const body = n
-    .split(' ')
-    .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('\\s*')
-  const tail = /[a-z0-9]$/.test(n) ? '(?![a-z0-9])' : ''
-  return new RegExp(`(?<![\\p{L}\\p{N}])${body}${tail}`, 'u').test(t)
+  const esc = (p: string) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const body = [...core].length >= 4 ? [...core].map(esc).join('\\s*') : n.split(' ').map(esc).join('\\s*')
+  const tail = /[a-z0-9]$/.test(n) ? '(?![a-z0-9&])' : ''
+  return new RegExp(`(?<![\\p{L}\\p{N}&])${body}${tail}`, 'u').test(t)
 }
 
 /**
