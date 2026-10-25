@@ -688,8 +688,11 @@ export default function PeriodicReport() {
             />
           </section>
 
-          {/* 같은 주 코호트 비교 — 그래프 아래 순위 숫자를 표로 편다(같은 저장 목록 · 같은 분모). 함께 잰 브랜드가 없으면 뺀다. */}
-          {cohort && cohort.length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} />}
+          {/*
+            같은 주 코호트 비교 — 그래프 아래 순위 숫자를 표로 편다(같은 저장 목록 · 같은 분모). 기록을 읽은 다른 브랜드가 없으면 뺀다
+            (표는 읽은 줄만 그리므로, 저장 목록 수로 세면 이 브랜드 한 줄짜리 「비교」가 나온다).
+          */}
+          {cohort && cohort.filter((r) => r.loaded).length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} />}
           {!cohortLoaded && <p className="muted no-print">코호트 기록을 불러오는 중…</p>}
 
           {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
