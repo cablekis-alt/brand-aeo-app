@@ -113,6 +113,9 @@ ok('숫자 칸: 질문지 · 반복이 바뀐 주는 견주지 않음', mc !== n
 const gc = comparisonFromHistory([g, go], '2026-W42', 'openai')
 ok('인용 갭: 엔진 하나로 좁혔는데 그 엔진 응답이 한쪽에 없으면 그 이유', gc !== null && !gc.comparable && (gc.reason ?? '').includes('ChatGPT 응답이 없어'))
 ok('인용 갭: 견줄 수 있으면 comparable', comparisonFromHistory([card('2026-W41', 1), card('2026-W42', 2)], '2026-W42', null)?.comparable === true)
+// 엔진 필터 안내는 다른 점이 수집 엔진 구성뿐일 때만(질문지 · 판정이 바뀐 주에는 필터를 골라도 비교가 살아나지 않는다)
+ok('인용 갭: 수집 엔진 구성만 다르면 필터 안내', comparisonFromHistory([g, go], '2026-W42', null)?.filterHelps === true)
+ok('인용 갭: 질문지 · 반복이 바뀌면 필터 안내 없음', comparisonFromHistory(mercury, '2026-W40', null)?.filterHelps === false)
 
 let failed = 0
 for (const [label, pass] of checks) {

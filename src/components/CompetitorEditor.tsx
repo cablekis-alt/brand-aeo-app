@@ -1229,7 +1229,7 @@ export default function CompetitorEditor({
                 </p>
                 <p className="ce-dialog-note">
                   질문은 다음 측정 때 새 목록으로 만들어요(미리 볼 수 없어요). 공통 질문 {s.questionBank.sharedCount}개는 그대로라 점수 · 순위는 같은
-                  질문으로 매겨요. 그 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요.
+                  질문으로 매겨요. 그 주는 질문지가 바뀌어 직전 측정 대비 증감을 보이지 않아요.
                 </p>
               </>
             )}
@@ -1472,7 +1472,7 @@ function QuestionPlanBlock({
               </p>
             ))}
           <p className="ce-qplan-note">
-            저장하면 다음 측정 주는 질문지가 바뀌어 전주 대비 증감을 보이지 않아요 · 점수 · 순위는 공통 질문 {sharedCount}개로 매겨요
+            저장하면 다음 측정 주는 질문지가 바뀌어 직전 측정 대비 증감을 보이지 않아요 · 점수 · 순위는 공통 질문 {sharedCount}개로 매겨요
           </p>
           {fixed.length > 0 && done && (
             <button type="button" className="ce-link" onClick={() => onRedraft(true)} disabled={!canRedraft}>

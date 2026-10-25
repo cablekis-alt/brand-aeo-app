@@ -1,4 +1,4 @@
-import { conditionChange } from '../src/lib/comparability.js';
+import { compareConditions, conditionSummary } from '../src/lib/comparability.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
 import { pendingProfileEdit } from './brandProfileEditor.js';
@@ -44,8 +44,13 @@ export interface PortfolioRow {
   tied: boolean;
   /** 직전 측정과 같은 조건일 때만 점수 변화. */
   delta: number | null;
-  /** 직전 측정과 조건이 달라 비교하지 않을 때 그 이유(예: 질문지). */
+  /**
+   * 직전 측정과 견줄 수 없을 때 그 이유 한 구절(conditionSummary — 「질문지 · 반복 횟수 바뀜」 · 「수집 모델 기록 없음」).
+   * 견줄 수 있거나 앞 측정이 없으면 null. 한쪽에만 기록이 있는 조건을 「바뀜」으로 적지 않게 문구째 보낸다.
+   */
   changeReason: string | null;
+  /** delta · changeReason이 가리키는 직전 측정 주차. 2주 이상 떨어졌으면 화면은 「전주」 대신 「직전 측정(Wxx)」으로 적는다. */
+  previousWeekOf: string | null;
 }
 
 /** 코호트 미니 리더보드의 한 줄 — 같은 주 · 같은 질문지로 잰 구성원(경쟁사 포함). */
@@ -129,10 +134,11 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           profileEdit: await pendingProfileEdit(t, last),
         };
         if (!last) {
-          return { ...base, status: 'none', weekOf: null, score: null, rank: null, totalTenants: null, tied: false, delta: null, changeReason: null };
+          return { ...base, status: 'none', weekOf: null, score: null, rank: null, totalTenants: null, tied: false, delta: null, changeReason: null, previousWeekOf: null };
         }
         const prev = history.length > 1 ? history[history.length - 2]! : null;
-        const change = prev ? conditionChange(prev, last) : null;
+        // 직전 측정과 견줘도 되는가 — 앱 전체 규칙(comparability.ts). 바뀐 조건과 기록이 없어 확인할 수 없는 조건을 갈라 적는다.
+        const diffs = prev ? compareConditions(prev, last) : [];
 
         const members = await store.getCohortScorecards(last.industry, last.region, last.weekOf);
         cohortCards.set(`${last.industry}|${last.region}|${last.weekOf}`, {
@@ -167,8 +173,9 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           rank: last.cohortRank.position,
           totalTenants: last.cohortRank.totalTenants,
           tied: (last.cohortRank.tiedCount ?? 1) > 1,
-          delta: prev && !change ? last.aeoScore.current - prev.aeoScore.current : null,
-          changeReason: change,
+          delta: prev && diffs.length === 0 ? last.aeoScore.current - prev.aeoScore.current : null,
+          changeReason: diffs.length > 0 ? conditionSummary(diffs) : null,
+          previousWeekOf: prev?.weekOf ?? null,
         };
       }),
   );

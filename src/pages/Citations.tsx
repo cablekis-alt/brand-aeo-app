@@ -207,7 +207,7 @@ export default function Citations() {
                     <th className="cell-text">도메인</th>
                     <th className="cell-text">소유권</th>
                     <th>점유율</th>
-                    <th>전주 대비</th>
+                    <th>직전 측정 대비</th>
                     <th>인용 횟수</th>
                     <th>브랜드 언급 뒷받침</th>
                   </tr>

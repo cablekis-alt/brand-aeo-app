@@ -808,8 +808,8 @@ export default function PeriodicReport() {
                               {r.summary.firstCitedDays !== null && ` · 첫 인용 확인 D+${r.summary.firstCitedDays}`}
                             </div>
                           )}
-                          {/* 성과 화면과 같은 표식 — 올린 뒤 측정 사이에 측정 조건이 바뀌면 주별 인용을 같은 조건의 반복으로 읽지 않는다. */}
-                          {r.summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀜</div>}
+                          {/* 성과 화면과 같은 표식 — 올린 뒤 측정 사이에 측정 조건이 바뀌었거나 확인할 수 없으면 주별 인용을 같은 조건의 반복으로 읽지 않는다. */}
+                          {r.summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀌었거나 확인할 수 없음</div>}
                         </td>
                       </tr>
                     ))}

@@ -1,5 +1,5 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
-import { conditionChanges } from '../src/lib/comparability.js';
+import { compareConditions, conditionLabel } from '../src/lib/comparability.js';
 import { timingOf, type MeasureWindow, type PostTiming } from '../src/lib/publishedUrl.js';
 import { INDEXING_GRACE_DAYS } from '../src/lib/publishTracking.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
@@ -41,7 +41,10 @@ export interface RunPoint {
   engineIssues: string[];
   /** 같은 조건 회차끼리만 점수를 평균낸다. */
   conditionKey: string;
-  /** 바로 앞 점과 달라진 측정 조건 — 있으면 그 사이를 잇지 않는다. */
+  /**
+   * 바로 앞 점과 달라진(또는 확인할 수 없는) 측정 조건 — 있으면 그 사이를 잇지 않는다. 바뀐 조건은 이름 그대로(「판정 모델」),
+   * 한쪽에만 기록이 있는 조건은 「판정 모델 기록 없음」(src/lib/comparability.ts conditionLabel).
+   */
   changesFromPrev: string[];
   bankVersion: string | null;
   /**
@@ -254,13 +257,19 @@ export async function getRunHistory(
   };
 }
 
-/** 바로 앞 점과 달라진 조건 — 카드 조건 비교(comparability.ts)에 판정 맥락 · 예정 엔진을 더한다. 모르는 값(옛 기록)은 견주지 않는다. */
+/**
+ * 바로 앞 점과 달라진 조건 — 카드 조건 비교(comparability.ts)에 판정 맥락 · 예정 엔진을 더한다. 카드 조건은 공용 규칙 그대로 한쪽에만
+ * 기록이 있으면 「… 기록 없음」으로 적고(바뀜이라 하지 않는다 — 잇지 않는 것은 같다), 판정 맥락 · 예정 엔진은 모르는 값(옛 기록)이면
+ * 견주지 않는다.
+ */
 function changesBetween(
   prev: { scorecard: WeeklyScorecard; meta: RunMeta | null; isolated: boolean },
   cur: { scorecard: WeeklyScorecard; meta: RunMeta | null; isolated: boolean },
 ): string[] {
   // 엔진이 빠졌거나 일부만 든 회차는 그 자체로 잇지 않는다 — 쓴 엔진 차이를 「수집 엔진 바뀜」으로 또 적지 않는다(설정을 바꾼 것이 아니다).
-  const out: string[] = conditionChanges(prev.scorecard, cur.scorecard).filter((c) => !(c === '수집 엔진' && (prev.isolated || cur.isolated)));
+  const out: string[] = compareConditions(prev.scorecard, cur.scorecard)
+    .filter((d) => !(d.dimension === '수집 엔진' && (prev.isolated || cur.isolated)))
+    .map(conditionLabel);
   const a = prev.meta;
   const b = cur.meta;
   if (a?.contextFingerprint && b?.contextFingerprint && a.contextFingerprint !== b.contextFingerprint) out.push('판정 맥락');

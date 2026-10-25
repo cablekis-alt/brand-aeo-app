@@ -85,22 +85,6 @@ const CATEGORY_LABEL: Record<string, string> = {
 const CLARIFYING_WARN = 0.2
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
-const engineSet = (c: Pick<WeeklyScorecard, 'enginesUsed'>) => [...(c.enginesUsed ?? [])].sort().join('+')
-
-/**
- * 같은 질문 은행 · 같은 수집 엔진으로 잰 주차(오름차순). 「측정 횟수」 점검과 콘텐츠의 실측 사례
- * (src/lib/answerEvidence.ts · server/articleEvidence.ts)가 같은 기준으로 센다 — 한 곳만 바뀌면 같은 브랜드가 한쪽에선
- * 「한 번 잰 결과」, 다른 쪽에선 「여러 주」로 보인다. 같은 주 재측정은 그 주를 덮어쓰므로 주차가 세는 단위다.
- */
-export function sameConditionWeeks(
-  history: Pick<WeeklyScorecard, 'weekOf' | 'questionBankVersion' | 'enginesUsed'>[],
-  card: Pick<WeeklyScorecard, 'questionBankVersion' | 'enginesUsed'>,
-): string[] {
-  return history
-    .filter((h) => h.questionBankVersion === card.questionBankVersion && engineSet(h) === engineSet(card))
-    .map((h) => h.weekOf)
-    .sort()
-}
 const engineText = (c: WeeklyScorecard) => (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ') || '기록 없음'
 
 /** 은행의 일반 질문(브랜드 이름 없는 질문) 텍스트 집합. 은행이 없으면 null. */

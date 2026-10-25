@@ -946,8 +946,12 @@ export interface PortfolioRow {
   rank: number | null
   totalTenants: number | null
   tied: boolean
+  /** 직전 측정과 같은 조건일 때만 점수 변화. */
   delta: number | null
+  /** 직전 측정과 견줄 수 없을 때 이유 한 구절 — 「질문지 바뀜」 · 「수집 모델 기록 없음」(뒤에 「바뀜」을 덧붙이지 않는다). */
   changeReason: string | null
+  /** delta · changeReason이 가리키는 직전 측정 주차 — 2주 이상 떨어졌으면 「전주」 대신 「직전 측정(Wxx)」. */
+  previousWeekOf: string | null
   /** 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null. */
   competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
   /** 경쟁사 편집을 저장했고 아직 다시 재지 않았다. */

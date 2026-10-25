@@ -1,5 +1,5 @@
 import { buildAnswerEvidence, isOurName, type AnswerEvidence } from '../src/lib/answerEvidence.js';
-import { sameConditionWeeks } from '../src/lib/reviewReport.js';
+import { comparableRun } from '../src/lib/comparability.js';
 import { cohortRankingEntities } from './cohortEntities.js';
 import { getRawCallsForQuestions } from './rawCallStore.js';
 import type { FileResultStore } from './store.js';
@@ -61,7 +61,9 @@ export async function buildArticleEvidence(
     aliases: tenant.aliases ?? [],
     competitorNames: evidenceOtherNames(tenant, runtime),
     card,
-    sameConditionWeeks: sameConditionWeeks(history, card).length,
+    // 고른 주에서 끝나는 같은 조건 구간 — 정기진단 보고서 「측정 횟수」 점검과 같은 규칙 · 같은 구간. 예전에는 질문지 · 수집 엔진만
+    // 보고 고른 주 뒤의 측정과 판정이 바뀐 주까지 셌다.
+    sameConditionRun: comparableRun(history, card.weekOf),
     industry: tenant.industry,
     builtAt: new Date().toISOString(),
   });

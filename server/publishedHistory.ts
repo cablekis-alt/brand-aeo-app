@@ -1,5 +1,5 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
-import { conditionChanges } from '../src/lib/comparability.js';
+import { conditionLabels } from '../src/lib/comparability.js';
 import {
   daysAfterPublish,
   indexWeekCitations,
@@ -70,7 +70,10 @@ export interface HistoryWeek {
   bankVersion: string | null;
   /** 응답 수(분모) — 은행을 못 찾으면 이름 없는/이름 댄은 null. 회차가 여럿이면 그 주 카드 회차의 수. */
   responses: { all: number; unnamed: number | null; named: number | null; unknown: number };
-  /** 직전 측정 주와 달라진 측정 조건 — 엔진만 늘어도 인용이 생긴 것처럼 보일 수 있어 알린다(보정하지 않는다). */
+  /**
+   * 직전 측정 주와 달라진(또는 확인할 수 없는) 측정 조건 — 엔진만 늘어도 인용이 생긴 것처럼 보일 수 있어 알린다(보정하지 않는다).
+   * 바뀐 조건은 이름 그대로(「판정 모델」), 한쪽에만 기록이 있는 조건은 「판정 모델 기록 없음」(src/lib/comparability.ts conditionLabels).
+   */
   changes: string[];
   /** 그 주 회차 — 표본이 2개 이상일 때만. */
   runs?: HistoryRun[];
@@ -177,7 +180,7 @@ export async function getPublishedHistory(
   // 첫 열의 조건 변경도 그 앞 측정과 견준다(창 밖이어도).
   let prev: WeeklyScorecard | null = all[start - 1] ?? null;
   for (const card of cards) {
-    const changes = prev ? conditionChanges(prev, card) : [];
+    const changes = prev ? conditionLabels(prev, card) : [];
     prev = card;
     const week = await weekViews(store, tenant, shown, card);
     const runIssues = week.issues.length > 0 ? { runIssues: week.issues } : {};

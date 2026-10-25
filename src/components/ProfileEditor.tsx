@@ -409,7 +409,7 @@ export default function ProfileEditor({
             <h3 id="pe-dialog-title">기본 정보를 바꿀까요?</h3>
             <p>{planned.summary}</p>
             <p className="ce-dialog-note">
-              지난 기록은 옛 코호트에 그대로 남고, 다음 측정부터 새 코호트 · 새 질문지({planned.bank.to})로 재요. 바뀐 주는 지난 주와 점수 증감을
+              지난 기록은 옛 코호트에 그대로 남고, 다음 측정부터 새 코호트 · 새 질문지({planned.bank.to})로 재요. 바뀐 주는 직전 측정과 점수 증감을
               비교하지 않아요.
               {planned.moving.length > 0 ? ` 함께 옮길 경쟁사: ${planned.moving.map((m) => m.brandName).join(', ')}.` : ''}
             </p>

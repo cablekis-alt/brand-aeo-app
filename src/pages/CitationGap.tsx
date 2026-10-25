@@ -395,7 +395,7 @@ export default function CitationGap() {
                     <th className="cell-text">도메인</th>
                     <th className="cell-text">유형</th>
                     <th>점유율</th>
-                    <th>전주 대비</th>
+                    <th>직전 측정 대비</th>
                     <th>인용수</th>
                     <th className="cell-text">엔진</th>
                     <th className="cell-text">실행</th>

@@ -41,13 +41,27 @@ export function comparisonFromHistory(
   const previousEngines = [...(previous.enginesUsed ?? [])].sort()
   const currentEngines = [...(current?.enginesUsed ?? [])].sort()
   if (!current) {
-    return { previousWeekOf: previous.weekOf, comparable: false, reason: '이번 주 측정 기록을 찾지 못해 비교하지 않음', previousEngines, currentEngines }
+    return {
+      previousWeekOf: previous.weekOf,
+      comparable: false,
+      reason: '이번 주 측정 기록을 찾지 못해 비교하지 않음',
+      previousEngines,
+      currentEngines,
+      filterHelps: false,
+    }
   }
   const c = comparableWith(sorted, weekOf, { engine })
   if (c.comparable) return { previousWeekOf: previous.weekOf, comparable: true, previousEngines, currentEngines }
   // 엔진 하나로 좁힌 표에서 그 엔진 응답이 한쪽에 없으면 그것이 이유다 — 조건 목록보다 바로 읽힌다.
   const missingEngine =
     engine && previousEngines.length > 0 && currentEngines.length > 0 && (!previousEngines.includes(engine) || !currentEngines.includes(engine))
+  // 「엔진 필터로 한 엔진만 고르면 비교가 살아난다」는 다른 점이 수집 엔진 구성뿐이고 두 주에 함께 있는 엔진이 있을 때만 맞다 —
+  // 질문지 · 판정이 바뀌었거나 기록이 없는 주에 그 안내를 하면 필터를 골라도 여전히 「비교 불가」다.
+  const filterHelps =
+    !engine &&
+    c.diffs.length > 0 &&
+    c.diffs.every((d) => d.dimension === '수집 엔진' && d.state === 'changed') &&
+    previousEngines.some((e) => currentEngines.includes(e))
   return {
     previousWeekOf: previous.weekOf,
     comparable: false,
@@ -56,6 +70,7 @@ export function comparisonFromHistory(
       : c.reason,
     previousEngines,
     currentEngines,
+    filterHelps,
   }
 }
 

@@ -17,7 +17,8 @@ export default function ChangeAlerts({ history }: { history: WeeklyScorecard[] }
 
   return (
     <section className="alerts" aria-label="주간 변화 알림">
-      <p className="alerts-title">변화 알림 · 전주 대비</p>
+      {/* 앞 측정이 2주 이상 떨어질 수 있다(사이에 재지 않은 주) — 「전주」라고 하지 않는다. */}
+      <p className="alerts-title">변화 알림 · 직전 측정 대비</p>
       <ul>
         {alerts.map((a, i) => (
           <li key={i} className={`alert-row ${LEVEL[a.level].cls}`}>

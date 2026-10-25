@@ -5,12 +5,12 @@ import ChangeAlerts from '../components/ChangeAlerts'
 import PositionMap from '../components/PositionMap'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText, weekLabel } from '../lib/format'
-import { withParticle } from '../lib/korean'
+import { subjectParticle, withParticle } from '../lib/korean'
 import { sameCohort } from '../lib/portfolioView'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
 import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
-import { conditionChange } from '../lib/comparability'
+import { compareConditions, conditionSummary, siteComparable, siteDifference, weeksBetween } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
 import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
@@ -137,7 +137,10 @@ export default function Dashboard() {
   const siteWeeks = siteScores.key === (tenant?.tenantId ?? '') ? Object.keys(siteScores.value).sort() : []
   const siteNow = siteWeeks.length > 0 ? (siteScores.value[siteWeeks[siteWeeks.length - 1]!] ?? null) : null
   const sitePrev = siteWeeks.length > 1 ? (siteScores.value[siteWeeks[siteWeeks.length - 2]!] ?? null) : null
-  const siteDelta = siteNow && sitePrev ? siteNow.score - sitePrev.score : null
+  // 같은 페이지(주소)를 같은 방식으로 잰 진단끼리만 증감을 낸다 — 정기진단 보고서와 같은 규칙(siteComparable).
+  // 실측 ktcorp: corp.kt.com 57점 → www.kt.com 0점이 「-57」로 찍혔다(다른 페이지를 잰 것이다).
+  const siteDiff = siteNow && sitePrev ? siteDifference(sitePrev, siteNow) : null
+  const siteDelta = siteNow && sitePrev && siteComparable(sitePrev, siteNow) ? siteNow.score - sitePrev.score : null
 
   /*
    * 「이번 주 한 줄」 — 숫자를 주기 전에 결론을 먼저 놓는다.
@@ -181,19 +184,33 @@ export default function Dashboard() {
   // 말했다). 알림도 히스토리를 쓰므로 이제 두 자리가 같은 값을 본다.
   const prevCard = history.length > 1 ? history[history.length - 2]! : null
   const prevScore = prevCard?.aeoScore.current ?? null
-  // 측정 조건이 다르면 증감을 숫자로 내세우지 않는다. 헤드라인이 빨간 -7인데 바로 아래 알림이
-  // "그렇게 읽지 말라"고 하면 화면이 자기모순이다. 5주 추이의 조건 변경 표식과 같은 규칙이다.
-  const changedBy = prevCard && card ? conditionChange(prevCard, card) : null
-  const delta = card && prevScore !== null && !changedBy ? formatDelta(card.aeoScore.current, prevScore) : null
+  /*
+   * 증감을 내도 되는지는 앱 공용 규칙 하나(compareConditions, lib/comparability)가 정한다 — 위 변화 알림 · 아래 5주 추이 표식 ·
+   * 정기진단 보고서와 같은 판정이다. 여섯 조건(수집 · 판정 엔진, 수집 · 판정 모델, 질문지, 반복 횟수) 중 바뀐 것이 있거나
+   * 한쪽에만 기록이 있어 확인할 수 없으면 증감을 숫자로 내세우지 않고 이유를 적는다. 헤드라인이 빨간 -7인데 바로 위 알림이
+   * "비교할 수 없다"고 하면 화면이 자기모순이다. 기록이 없는 조건은 「달라」가 아니라 「기록이 없어」로 적는다(바뀐 조건이 먼저 온다).
+   */
+  const prevDiffs = prevCard && card ? compareConditions(prevCard, card) : []
+  const firstDiff = prevDiffs[0] ?? null
+  const delta = card && prevScore !== null && !firstDiff ? formatDelta(card.aeoScore.current, prevScore) : null
+  const notComparableText = firstDiff
+    ? firstDiff.state === 'changed'
+      ? `${firstDiff.dimension} 달라 비교 불가`
+      : `${firstDiff.dimension} 기록이 없어 비교 불가`
+    : null
+  // 앞 측정이 2주 이상 떨어져 있으면(사이에 재지 않은 주가 있으면) 「전주」라고 하지 않는다 — 정기진단 보고서와 같은 말.
+  const prevGap = prevCard && card ? weeksBetween(prevCard.weekOf, card.weekOf) : null
+  const deltaLabel = prevCard && (prevGap ?? 1) >= 2 ? `직전 측정(${prevCard.weekOf.replace(/^\d{4}-/, '')}) 대비` : '전주 대비'
 
   // 5주 추이 — 세로축 위끝은 보이는 주의 최고점을 10 단위로 올린 값(최소 20). 0~100 그대로 그리면
   // 한 자릿수·10점대 브랜드는 막대가 바닥에 붙어 추이가 안 보인다. 축 범위는 화면에 함께 적는다.
-  // 직전 주와 측정 조건이 다른 주에는 표식을 단다. 화면에 보이는 첫 주도 그 앞 주와 비교한다.
+  // 직전 측정과 측정 조건이 바뀌었거나 확인할 수 없는(한쪽에만 기록) 주에는 표식을 단다 — 위 칩과 같은 규칙.
+  // 화면에 보이는 첫 주도 그 앞 측정과 비교한다.
   const trendWeeks = history.slice(-TREND_WEEKS)
   const trendTop = Math.max(20, Math.ceil(Math.max(0, ...trendWeeks.map((h) => h.aeoScore.current)) / 10) * 10)
   const trend = trendWeeks.map((h, i, list) => {
     const before = i > 0 ? list[i - 1] : history[history.length - list.length - 1]
-    return { card: h, changed: before ? conditionChange(before, h) : null }
+    return { card: h, diffs: before ? compareConditions(before, h) : [] }
   })
 
   // 안내문·카드는 실제로 수집에 성공한 엔진에서 파생한다. 스코어카드에 기록된 enginesUsed가 진실이며
@@ -316,12 +333,12 @@ export default function Dashboard() {
                 */}
                 {prevCard && (
                   <div>
-                    <dt>전주 대비</dt>
+                    <dt>{deltaLabel}</dt>
                     <dd>
                       {delta ? (
                         <span className={`delta-chip ${delta.tone}`}>{delta.text}</span>
                       ) : (
-                        <span className="dash-sub">{changedBy ? `${changedBy} 달라 비교 불가` : '—'}</span>
+                        <span className="dash-sub">{notComparableText ?? '—'}</span>
                       )}
                     </dd>
                   </div>
@@ -345,6 +362,12 @@ export default function Dashboard() {
                             {siteDelta > 0 ? '+' : ''}
                             {siteDelta}
                           </span>
+                        )}
+                        {siteDiff && (
+                          <>
+                            {' '}
+                            <span className="dash-sub">· {subjectParticle(siteDiff)} 달라 견주지 않음</span>
+                          </>
                         )}
                       </>
                     ) : isElectron && !viewing ? (
@@ -454,22 +477,23 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 <div className="trend-bars">
-                  {trend.map(({ card: h, changed }) => {
+                  {trend.map(({ card: h, diffs }) => {
                     const current = h.weekOf === card.weekOf
+                    const marked = diffs.length > 0
                     return (
                       <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}`}>
                         <span className="trend-value">{h.aeoScore.current}</span>
                         <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 64))}px` }} />
                         <span className="trend-week">{h.weekOf.replace(/^\d{4}-/, '')}</span>
-                        <span className={`trend-mark${changed ? ' on' : ''}`} title={changed ? `직전 주와 ${changed}이(가) 다름` : undefined} />
+                        <span className={`trend-mark${marked ? ' on' : ''}`} title={marked ? `직전 측정과 ${conditionSummary(diffs)}` : undefined} />
                       </div>
                     )
                   })}
                 </div>
-                {trend.some((t) => t.changed) && (
+                {trend.some((t) => t.diffs.length > 0) && (
                   <p className="dash-caption trend-legend">
                     <span className="trend-mark on" aria-hidden="true" />
-                    측정 조건이 바뀐 주 — 직전 주와 바로 비교하지 않습니다
+                    측정 조건이 바뀌었거나 확인할 수 없는 주 — 직전 측정과 바로 비교하지 않습니다
                   </p>
                 )}
               </article>

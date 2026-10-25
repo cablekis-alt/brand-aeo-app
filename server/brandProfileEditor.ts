@@ -434,7 +434,7 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
       const last = (await store.getScorecardHistory(t.tenantId, 1)).at(-1);
       if (last?.weekOf === week) thisWeek.push(t.brandName);
     }
-    notes.push(`질문지를 ${bankTo}로 새로 만듭니다(다음 측정). 바뀐 주는 지난 주와 점수 증감을 비교하지 않습니다.`);
+    notes.push(`질문지를 ${bankTo}로 새로 만듭니다(다음 측정). 바뀐 주는 직전 측정과 점수 증감을 비교하지 않습니다.`);
     if (cohortTo && members.length > 0) {
       const names = members.slice(0, 3).map((m) => m.brandName).join(', ');
       notes.push(`같은 코호트 ${members.length}곳과 공통 질문지(${cohortTo})를 함께 씁니다 — ${names}${members.length > 3 ? ` 외 ${members.length - 3}곳` : ''}.`);

@@ -1,5 +1,5 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { ENGINE_LABEL } from './format'
+import { comparableRun, compareConditions, conditionReason, runAverage, runCountText, weeksBetween } from './comparability'
 
 // 주간 스코어카드 히스토리에서 "이번 주 vs 지난 주" 변화를 감지해 알림을 만든다.
 // 새 데이터 수집 없이 기존 스코어카드만으로 계산한다(SoM 급락·순위 하락·사실성 오류·변동성 등).
@@ -48,38 +48,28 @@ function comparableRankChange(
 }
 
 /**
- * 두 주를 견줄 수 있나 — 수집 엔진이 같아야 한다.
- *
- * 엔진 하나를 덜 재면 질문당 답변 수가 줄어 점수·SoM·순위가 전부 움직인다. 그 변화를
- * "실력 변화"로 알리면 측정 도구로서 거짓말이 된다. 옛 카드는 enginesUsed가 비어 있는데,
- * 그때는 알 수 없으므로 비교를 막지 않는다(막으면 과거 데이터의 알림이 전부 사라진다).
+ * 같은 조건 평균 한 구절 — 「같은 조건 연속 3주 평균 28점」(사이에 재지 않은 주가 있으면 「같은 조건 3번 평균」).
+ * 저장된 ma4(측정 당시 4주 이동평균)는 조건이 바뀐 주를 섞는다(실측 lghellovision 점수 10 · 평균 28) — 쓰지 않고 이력에서 센다.
+ * 같은 조건으로 2번 이상 잰 구간이 없으면 null이고, 그 문장은 빼고 알린다.
  */
-/** 이번 주만으로 판단하는 알림이라 엔진 가드와 무관하다 — 두 경로에서 같이 쓴다. */
-function ciWidthAlert(cur: WeeklyScorecard): Alert | null {
+function sameConditionAverage(history: WeeklyScorecard[], weekOf: string): string | null {
+  const avg = runAverage(history, weekOf)
+  if (!avg) return null
+  return `같은 조건 ${runCountText(comparableRun(history, weekOf).slice(-4))} 평균 ${avg.average}점`
+}
+
+/** 이번 주만으로 판단하는 알림이라 측정 조건 가드와 무관하다 — 두 경로에서 같이 쓴다. */
+function ciWidthAlert(cur: WeeklyScorecard, average: string | null): Alert | null {
   // 하한은 0에서 잘려 있어(ciBounds) 상한 − 하한은 흔들림을 줄여 보인다. 자르기 전 폭으로 판단한다.
   const ciWidth = 2 * (cur.aeoScore.ciHigh - cur.aeoScore.current)
   if (ciWidth < 20) return null
   return {
     level: 'info',
     title: `변동성 큼 (95% CI 폭 ${Math.round(ciWidth)})`,
-    detail: `이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${cur.aeoScore.ma4}) 추세로 판단하세요.`,
+    detail: average
+      ? `이번 주 단일 변동은 과잉 해석하지 말고 ${average}을 함께 보세요.`
+      : '이번 주 단일 변동은 과잉 해석하지 마세요.',
   }
-}
-
-function sameEngines(a: WeeklyScorecard, b: WeeklyScorecard): boolean {
-  const x = [...(a.enginesUsed ?? [])].sort()
-  const y = [...(b.enginesUsed ?? [])].sort()
-  if (x.length === 0 || y.length === 0) return true
-  return x.length === y.length && x.every((e, i) => e === y[i])
-}
-
-/**
- * 판정 엔진이 같은가 — 같은 원문이라도 판정이 바뀌면 언급·순위·사실성 값이 달라진다.
- * 수집 엔진만 막고 판정은 통과시키면 앞뒤가 안 맞는다.
- */
-function sameJudge(a: WeeklyScorecard, b: WeeklyScorecard): boolean {
-  if (!a.judgeEngine || !b.judgeEngine) return true // 옛 카드는 알 수 없어 막지 않는다
-  return a.judgeEngine === b.judgeEngine
 }
 
 export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
@@ -107,46 +97,55 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
     return alerts
   }
 
-  // 엔진 구성이 다르면 측정에서 파생된 변화를 알리지 않는다. 틀린 방향의 경고보다 침묵이
-  // 낫다는 판단은 코호트 구성 가드(comparableRankChange)와 같다.
-  if (!sameEngines(prev, cur) || !sameJudge(prev, cur)) {
-    const label = (c: WeeklyScorecard) =>
-      (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join('·') || '알 수 없음'
-    const judge = (c: WeeklyScorecard) => ENGINE_LABEL[c.judgeEngine ?? ''] ?? c.judgeEngine ?? '알 수 없음'
-    // 무엇이 달라졌는지 밝힌다 — "엔진이 달라서"만으로는 수집인지 판정인지 알 수 없다.
-    const what = !sameEngines(prev, cur)
-      ? `수집 엔진이 ${label(prev)} → ${label(cur)}로 바뀌었습니다.`
-      : `판정 엔진이 ${judge(prev)} → ${judge(cur)}로 바뀌었습니다.`
+  // 같은 조건 평균 — 조건이 바뀐 주에는 같은 조건 구간이 이번 주 하나뿐이라 null(문장이 빠진다).
+  const average = sameConditionAverage(sorted, cur.weekOf)
+
+  /*
+   * 측정 조건이 바뀌었거나 한쪽에만 기록이 있어 확인할 수 없으면 측정에서 파생된 변화를 알리지 않는다 — 앱 공용 규칙
+   * (compareConditions, lib/comparability) 하나로 개요 칩 · 5주 추이 표식 · 정기진단 보고서와 같은 판정을 쓴다. 예전에는
+   * 수집 · 판정 엔진만 봐서 개요 칩이 「질문지 달라 비교 불가」인데 이 알림은 「상승 +11점」이라고 했다.
+   * 틀린 방향의 경고보다 침묵이 낫다는 판단은 코호트 구성 가드(comparableRankChange)와 같다.
+   */
+  const diffs = compareConditions(prev, cur)
+  if (diffs.length > 0) {
     alerts.push({
       level: 'info',
-      title: '엔진이 달라 전주와 비교할 수 없음',
-      detail:
-        `${what} 엔진이 바뀌면 점수·점유·순위가 함께 움직이므로, ` +
-        `점수 차이(${prev.aeoScore.current} → ${cur.aeoScore.current})를 실력 변화로 읽으면 안 됩니다. ` +
-        `같은 엔진으로 두 주를 재면 비교가 살아납니다.`,
+      // 기록이 없는 것을 「달라」라고 하지 않는다 — 바뀐 조건이 하나라도 있을 때만 「달라」.
+      title: diffs.some((d) => d.state === 'changed')
+        ? '측정 조건이 달라 직전 측정과 비교할 수 없음'
+        : '측정 조건 기록이 한쪽에 없어 직전 측정과 비교할 수 없음',
+      // 무엇이 달랐는지 밝힌다 — 첫 조건은 값과 함께(「판정 엔진 Gemini → Claude」), 나머지는 이름만.
+      detail: conditionReason(diffs),
     })
-    const ci = ciWidthAlert(cur)
+    const ci = ciWidthAlert(cur, average)
     if (ci) alerts.push(ci)
     return alerts
   }
 
+  // 앞 측정이 2주 이상 떨어져 있으면(사이에 재지 않은 주) 「전주」가 아니라 「직전 측정(Wxx)」 — 개요 칩 · 정기진단 보고서와 같은 말.
+  const before = (weeksBetween(prev.weekOf, cur.weekOf) ?? 1) >= 2 ? `직전 측정(${prev.weekOf.replace(/^\d{4}-/, '')})` : '전주'
+
   // Brand AEO Score 변화
   const aeoDelta = cur.aeoScore.current - prev.aeoScore.current
   if (aeoDelta <= -8) {
-    alerts.push({ level: 'critical', title: `Brand AEO Score 급락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}. 4주 이동평균(${cur.aeoScore.ma4}) 추세도 함께 확인하세요.` })
+    alerts.push({
+      level: 'critical',
+      title: `Brand AEO Score 급락 ${aeoDelta}점`,
+      detail: `${before} ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.${average ? ` ${average}도 함께 확인하세요.` : ''}`,
+    })
   } else if (aeoDelta <= -4) {
-    alerts.push({ level: 'warn', title: `Brand AEO Score 하락 ${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
+    alerts.push({ level: 'warn', title: `Brand AEO Score 하락 ${aeoDelta}점`, detail: `${before} ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
   } else if (aeoDelta >= 8) {
-    alerts.push({ level: 'good', title: `Brand AEO Score 상승 +${aeoDelta}점`, detail: `전주 ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
+    alerts.push({ level: 'good', title: `Brand AEO Score 상승 +${aeoDelta}점`, detail: `${before} ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
   }
 
   // Share of Mention 변화(둘 다 측정된 경우만)
   if (cur.shareOfMention !== null && prev.shareOfMention !== null) {
     const somDelta = cur.shareOfMention - prev.shareOfMention
     if (somDelta <= -0.15) {
-      alerts.push({ level: 'warn', title: `Share of Mention 급락`, detail: `전주 ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (${(somDelta * 100).toFixed(0)}%p). 경쟁사 대비 언급 점유가 줄었습니다.` })
+      alerts.push({ level: 'warn', title: `Share of Mention 급락`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (${(somDelta * 100).toFixed(0)}%p). 경쟁사 대비 언급 점유가 줄었습니다.` })
     } else if (somDelta >= 0.15) {
-      alerts.push({ level: 'good', title: `Share of Mention 상승`, detail: `전주 ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (+${(somDelta * 100).toFixed(0)}%p).` })
+      alerts.push({ level: 'good', title: `Share of Mention 상승`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (+${(somDelta * 100).toFixed(0)}%p).` })
     }
   }
 
@@ -167,15 +166,15 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   const curFact = cur.factualityScore
   const prevFact = prev.factualityScore
   if (curFact !== null && prevFact !== null && curFact - prevFact <= -0.1) {
-    alerts.push({ level: 'warn', title: `사실 정확도 하락`, detail: `전주 ${pct(prevFact)} → 이번 주 ${pct(curFact)}. AI가 틀린 정보를 말하는 비율이 늘었습니다.` })
+    alerts.push({ level: 'warn', title: `사실 정확도 하락`, detail: `${before} ${pct(prevFact)} → 이번 주 ${pct(curFact)}. AI가 틀린 정보를 말하는 비율이 늘었습니다.` })
   }
 
   // 변동성(신뢰구간 폭)이 크면 단일 변동 과잉해석 주의
-  const ci = ciWidthAlert(cur)
+  const ci = ciWidthAlert(cur, average)
   if (ci) alerts.push(ci)
 
   if (alerts.length === 0) {
-    alerts.push({ level: 'good', title: '특이 변화 없음', detail: `전주 대비 큰 변동이 감지되지 않았습니다 (AEO ${prev.aeoScore.current} → ${cur.aeoScore.current}).` })
+    alerts.push({ level: 'good', title: '특이 변화 없음', detail: `${before} 대비 큰 변동이 감지되지 않았습니다 (AEO ${prev.aeoScore.current} → ${cur.aeoScore.current}).` })
   }
   return alerts
 }
