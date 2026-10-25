@@ -2601,7 +2601,8 @@ p.hint {
   .sidebar, .topbar, .no-print { display: none !important; }
   .print-only { display: block; }
   .shell { grid-template-columns: 1fr; gap: 0; }
-  .rec-card, .report-verdict, .panel, .score-trend, .run-trend, .exec-table tr { break-inside: avoid; }
+  /* 표지 · 숫자 칸 · 진단 표 행은 쪽에 걸쳐 자르지 않는다(옛 .report-verdict는 표지 .report-cover로 바뀌었다). */
+  .rec-card, .report-cover, .report-tiles, .panel, .score-trend, .run-trend, .exec-table tr, .diagnosis-table tr { break-inside: avoid; }
   /* 집행 절은 길이가 정해져 있지 않아 통째로 넘기면 빈 쪽이 생긴다 — 행만 붙들고, 제목 · 요약 줄은 첫 행과 같은 쪽에 둔다. */
   .report-exec h3, .report-exec-line { break-after: avoid; }
   /* 화면용 카드 표면은 종이에서 테두리만 남긴다 — 그림자·채움은 인쇄에서 번진다. */

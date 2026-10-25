@@ -604,8 +604,9 @@ export default function PeriodicReport() {
               </p>
             </article>
           </section>
+          {/* 종이에도 싣는다 — 빼면 PDF에서는 증감이 이유 없이 사라진다. */}
           {period === 'week' && comparison && !comparison.comparable && (
-            <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
+            <p className="hint">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
           )}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
@@ -801,10 +802,18 @@ export default function PeriodicReport() {
             </section>
           )}
 
+          {/*
+            「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다. 기록 원문(엔진 id · 질문 id · 회차)과 판정 오류 가능성은 운영자가 화면에서
+            보고, 고객 종이에는 건수만 싣는다 — 원문을 확인하기 전에는 결론으로 쓰지 않는다.
+          */}
           {report.risks.length > 0 && (
             <section className="panel warn">
-              <h3>리스크 · 사실성 위반 ({report.risks.length}건)</h3>
-              <ul>
+              <h3>리스크 · 사실성 — 사실과 어긋난 주장이 담긴 응답 {report.risks.length}건</h3>
+              <p className="hint no-print">
+                AI가 실제로 틀렸을 수도, 다른 브랜드에 대한 답을 이 브랜드 사실과 대조한 판정 오류일 수도 있습니다. 원문을 확인한 뒤
+                씁니다.
+              </p>
+              <ul className="no-print">
                 {report.risks.map((flag) => (
                   <li key={flag}>{flag}</li>
                 ))}
