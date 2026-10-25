@@ -67,8 +67,8 @@
   --bucket-other: #8d857a;
 }
 
-/* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외) */
-@media (prefers-color-scheme: dark) {
+/* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외). 화면에서만 — 종이는 늘 라이트(흰 종이에 밝은 글자가 흐리게 찍힌다). */
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --ink: #e8efec;
     --ink-2: #a9b7b1;
@@ -114,49 +114,51 @@
   }
 }
 
-/* 사용자가 다크를 명시하면 OS가 라이트여도 다크 적용 */
-:root[data-theme='dark'] {
-  --ink: #e8efec;
-  --ink-2: #a9b7b1;
-  --muted: #93a19b;
-  --paper: #0d1311;
-  --grp-1: #f28aaa;
-  --grp-2: #8ab4f8;
-  --grp-3: #f0c46a;
-  --grp-4: #8bd17c;
-  --grp-5: #f5a06a;
-  --grp-6: #b99af2;
-  --grp-7: #6ccfe3;
-  --card: #141c19;
-  --surface-2: #1a2420;
-  --line: #26332e;
-  --line-strong: #3a4a44;
-  --accent: #4cc7b0;
-  --accent-soft: #12332c;
-  --accent-ink: #9fe5d6;
-  --good: #4cc7b0;
-  --bad: #f2895f;
-  --bad-soft: #3b1e14;
-  --warn: #f0b45a;
-  --warn-soft: #3a2a10;
-  --info: #8ca8f5;
-  --info-soft: #18213d;
-  --series-2: #8ca8f5;
-  --series-3: #f08a54;
-  --series-4: #b497f0;
-  --series-5: #d9b84a;
-  --series-6: #a9b7b1;
-  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
-  --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
-  --bucket-review: #3987e5;
-  --bucket-blog: #d95926;
-  --bucket-news: #199e70;
-  --bucket-gov: #c98500;
-  --bucket-forum: #d55181;
-  --bucket-social: #008300;
-  --bucket-wiki: #9085e9;
-  --bucket-competitor: #e66767;
-  --bucket-other: #9c9287;
+/* 사용자가 다크를 명시하면 OS가 라이트여도 다크 적용 — 이것도 화면에서만(인쇄 · PDF는 라이트) */
+@media screen {
+  :root[data-theme='dark'] {
+    --ink: #e8efec;
+    --ink-2: #a9b7b1;
+    --muted: #93a19b;
+    --paper: #0d1311;
+    --grp-1: #f28aaa;
+    --grp-2: #8ab4f8;
+    --grp-3: #f0c46a;
+    --grp-4: #8bd17c;
+    --grp-5: #f5a06a;
+    --grp-6: #b99af2;
+    --grp-7: #6ccfe3;
+    --card: #141c19;
+    --surface-2: #1a2420;
+    --line: #26332e;
+    --line-strong: #3a4a44;
+    --accent: #4cc7b0;
+    --accent-soft: #12332c;
+    --accent-ink: #9fe5d6;
+    --good: #4cc7b0;
+    --bad: #f2895f;
+    --bad-soft: #3b1e14;
+    --warn: #f0b45a;
+    --warn-soft: #3a2a10;
+    --info: #8ca8f5;
+    --info-soft: #18213d;
+    --series-2: #8ca8f5;
+    --series-3: #f08a54;
+    --series-4: #b497f0;
+    --series-5: #d9b84a;
+    --series-6: #a9b7b1;
+    --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
+    --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
+    --bucket-review: #3987e5;
+    --bucket-blog: #d95926;
+    --bucket-news: #199e70;
+    --bucket-gov: #c98500;
+    --bucket-forum: #d55181;
+    --bucket-social: #008300;
+    --bucket-wiki: #9085e9;
+    --bucket-competitor: #e66767;
+    --bucket-other: #9c9287;
+  }
 }
 
 * {
