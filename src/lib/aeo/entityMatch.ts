@@ -66,6 +66,28 @@ function isBrandOnly(target: string, candidates: string[]): boolean {
   return false
 }
 
+/**
+ * 페이지가 이 브랜드를 한 번이라도 부르는지 — 제목 · H1 · og · 설명 · JSON-LD 이름 · 조직 후보 · 본문 어디든.
+ *
+ * 등록되지 않은 주소를 고른 브랜드 기준으로 판정해도 되는지 가린다. 그 브랜드의 블로그 글이나 새 도메인은 이름이
+ * 나오고, 상관없는 남의 사이트(군산각을 고른 채 진단한 컴북스)는 나오지 않는다 — 그런 페이지에 「og:site_name을
+ * 군산각으로」 같은 조치를 권하면 틀린 말이 된다.
+ */
+export function pageMentionsBrand(s: PageSignals, brandName: string, aliases: string[] = []): boolean {
+  const candidates = [brandName, ...aliases].map((c) => c.trim()).filter(Boolean)
+  const fields = [
+    s.title,
+    ...s.h1s,
+    s.ogSiteName,
+    s.ogTitle,
+    s.metaDescription,
+    ...s.jsonLdEntities.map((e) => e.name ?? ''),
+    ...s.orgCandidates,
+    s.mainText,
+  ]
+  return fields.some((f) => containsBrand(f, candidates) !== null)
+}
+
 const ORG_TYPES = /^(organization|localbusiness|corporation|medicalorganization|medicalclinic|hospital|dentist|store|restaurant|lodgingbusiness|hotel)$/i
 
 export function checkEntityMatch(

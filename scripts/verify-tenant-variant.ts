@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { TenantSummary } from '../src/lib/api'
+import type { PageSignals } from '../src/lib/aeo/types'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'verify-tenant-variant-'))
 process.env.APP_DATA_DIR = dir
@@ -50,7 +51,8 @@ const fact = (id: string, claim: string, value: string) => ({ id, type: 'other',
 
 try {
   const v = await import('../src/lib/brandVariant')
-  const { findTenantByDomain, findTenantByName } = await import('../src/lib/aeo/resolveTarget')
+  const { findTenantByDomain, findTenantByName, subjectBrand } = await import('../src/lib/aeo/resolveTarget')
+  const { pageMentionsBrand } = await import('../src/lib/aeo/entityMatch')
   const reg = await import('../server/tenantRegistry')
   const promote = await import('../server/tenantPromote')
   const { measureAndBake } = await import('../server/measureAndBake')
@@ -101,6 +103,23 @@ try {
   ok('진단: 상호 입력 — 고른 게 다른 브랜드면 첫 변형', findTenantByName('가상각', [...summaries, other], other)?.tenantId === 'x')
   const twinName = { ...other, tenantId: 'o2', brandName: '가상각' } as unknown as TenantSummary
   ok('진단: 상호 입력 — 이름만 같은 다른 홈페이지면 고르지 않는다', findTenantByName('가상각', [summaries[0], twinName]) === null)
+
+  // 엔티티 일치의 주체 — 등록 안 된 주소는 고른 브랜드로 「대신」 정한다(viaSelected). 판정은 페이지가 그 브랜드를 부를 때만
+  // (2026-10-25 군산각을 고른 채 컴북스를 진단하자 「og:site_name을 군산각으로」를 권했다).
+  const owned = subjectBrand({ url: 'https://m.x.example/a', source: 'url' }, summaries, other)
+  ok('엔티티: 주소 주인이 있으면 그 브랜드(대신 아님)', owned?.brandName === '가상각' && owned.viaSelected === false)
+  const viaSel = subjectBrand({ url: 'https://unrelated.example/', source: 'url' }, summaries, summaries[0])
+  ok('엔티티: 주인 없는 주소는 고른 브랜드로 대신', viaSel?.brandName === '가상각' && viaSel.viaSelected === true)
+  ok('엔티티: 고른 브랜드도 없으면 판정 주체 없음', subjectBrand({ url: 'https://unrelated.example/', source: 'url' }, summaries, undefined) === null)
+  ok('엔티티: 상호 추론은 대신 아님', subjectBrand({ url: 'https://y.example/', source: 'infer', brandName: '와이' }, summaries, summaries[0])?.viaSelected === false)
+  const page = (over: Partial<PageSignals>) =>
+    ({ title: '', h1s: [], ogSiteName: '', ogTitle: '', metaDescription: '', jsonLdEntities: [], orgCandidates: [], mainText: '', ...over }) as PageSignals
+  const unrelatedPage = page({ title: '컴북스닷컴', h1s: ['홈'], metaDescription: '출판 브랜드 포털', mainText: '인공지능총서 · 고전 희곡' })
+  ok('엔티티: 브랜드를 한 번도 부르지 않는 남의 페이지', !pageMentionsBrand(unrelatedPage, '가상각', ['가상 여행의 모든것']))
+  ok('엔티티: 본문에만 있어도 부른다(띄어쓰기 무시)', pageMentionsBrand(page({ title: '여행 후기', mainText: '오늘은 가상 각 에서 묵었다' }), '가상각'))
+  ok('엔티티: 별칭으로 불러도 된다', pageMentionsBrand(page({ ogSiteName: '가상 여행의 모든것' }), '가상각', ['가상 여행의 모든것']))
+  ok('엔티티: JSON-LD 조직 이름', pageMentionsBrand(page({ jsonLdEntities: [{ types: ['Organization'], name: '가상각' }] }), '가상각'))
+  ok('엔티티: 한 글자 별칭은 보지 않는다', !pageMentionsBrand(page({ mainText: '가 나 다' }), '가상각', ['가']))
 
   // 4) 서버 — 가짜 브랜드: 고객 vsite(지역형, 사실 · 브랜드 페이지는 설정에만), 같은 홈페이지의 영어 측정 vsite-en,
   //    홈페이지가 같은 경쟁사 vcomp, vsite의 옛 도메인을 함께 쓰는 고객 vold, 네이버 블로그 고객 blog.
