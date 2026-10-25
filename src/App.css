@@ -1522,8 +1522,8 @@ td.judgment {
 .table-wrap tbody tr:last-child > td {
   border-bottom: 0;
 }
-/* 이미 카드인 상자(검토 리포트·머리 카드·대시보드 카드) 안의 표에는 카드 테두리를 다시 두르지 않는다. */
-:is(.review-report, .hero-card, .dash-card) .table-wrap {
+/* 이미 카드인 상자(머리 카드·대시보드 카드) 안의 표에는 카드 테두리를 다시 두르지 않는다. */
+:is(.hero-card, .dash-card) .table-wrap {
   padding: 0;
   background: none;
   border: 0;
@@ -2009,26 +2009,39 @@ tbody tr.selected {
 }
 .verdict-summary { margin: 0; max-width: 68ch; color: var(--ink-2); line-height: 1.7; }
 
-/* 검토 리포트 — 측정 신뢰도 점검 + 코호트 비교 */
-.review-report {
+/* 측정 신뢰도 점검 — 정기진단 보고서 결론 아래 운영자 상자(화면에서만). 접혀 있어도 제목 줄에 확인 · 주의 · 사람 확인 개수. */
+.trust-box {
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 12px;
-  padding: 18px 20px;
-  margin: 14px 0 8px;
+  padding: 12px 18px;
+  margin: 0 0 16px;
+}
+.trust-box > summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.trust-box[open] > summary { margin-bottom: 8px; }
+.trust-box > .hint { margin: 0 0 4px; }
+.trust-counts { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.trust-counts .status-pill { border: 0; }
+.trust-counts .status-pill.st-good { background: var(--accent-soft); color: var(--accent-ink); }
+.trust-counts .status-pill.st-warn { background: var(--warn-soft); color: var(--warn); }
+.trust-counts .status-pill.st-bad { background: var(--bad-soft); color: var(--bad); }
+/* 보고서 본문의 비교 · 근거 표 — 이 브랜드 줄(표지 · 지표와 같은 값)은 옅게 칠한다. 종이는 칠이 빠지므로 이름을 굵게 둔다. */
+:is(.cohort-compare, .mention-section, .citation-top) tbody tr.self { background: var(--accent-soft); }
+:is(.cohort-compare, .mention-section, .citation-top, .site-breakdown) caption { text-align: left; }
+.mention-list,
+.contradicted-list {
+  margin: 0 0 8px;
+  padding-left: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
-.review-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.review-head h3 { margin: 0 0 4px; }
-.review-head .hint { margin: 0; max-width: 62ch; }
 .trust-checks {
   list-style: none;
   margin: 0;
@@ -2601,7 +2614,8 @@ p.hint {
   .sidebar, .topbar, .no-print { display: none !important; }
   .print-only { display: block; }
   .shell { grid-template-columns: 1fr; gap: 0; }
-  .rec-card, .report-verdict, .panel, .score-trend, .run-trend, .exec-table tr { break-inside: avoid; }
+  /* 표지 · 숫자 칸 · 진단 표 행은 쪽에 걸쳐 자르지 않는다(옛 .report-verdict는 표지 .report-cover로 바뀌었다). */
+  .rec-card, .report-cover, .report-tiles, .panel, .score-trend, .run-trend, .exec-table tr, .diagnosis-table tr { break-inside: avoid; }
   /* 집행 절은 길이가 정해져 있지 않아 통째로 넘기면 빈 쪽이 생긴다 — 행만 붙들고, 제목 · 요약 줄은 첫 행과 같은 쪽에 둔다. */
   .report-exec h3, .report-exec-line { break-after: avoid; }
   /* 화면용 카드 표면은 종이에서 테두리만 남긴다 — 그림자·채움은 인쇄에서 번진다. */
@@ -2612,6 +2626,11 @@ p.hint {
   .site-print-head .muted { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
   .crawler-panel, .site-report .hero-card, .site-report tr, .issue-list li { break-inside: avoid; }
   .site-report h3, .crawler-panel h3 { break-after: avoid; }
+  /* 정기진단 보고서의 비교 · 근거 절: 절 제목이 쪽 끝에 홀로 남지 않게, 표 행은 자르지 않게. 짧은 Site 영역 표는 통째로 넘긴다. */
+  :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown) h3,
+  section:has(> ol.rec-list) > h3 { break-after: avoid; }
+  :is(.cohort-compare, .mention-section, .citation-top) tr { break-inside: avoid; }
+  .site-breakdown { break-inside: avoid; }
   /* 레이아웃의 「측정 전 예시 데이터」 배너는 주간 측정(스코어카드) 이야기다 — 페이지를 직접 수집한 사이트 진단 종이에는 싣지 않는다. */
   .content:has(.site-print-head) > .notice { display: none; }
   /* 채운 칩(밝은 글자 + 빨간 바탕)은 배경 그래픽이 꺼진 인쇄에서 글자가 흐려진다 — 테두리 칩으로 찍는다. */

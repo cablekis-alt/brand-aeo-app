@@ -1,21 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import ReviewReportPanel from '../components/ReviewReportPanel'
+import {
+  CitationSourcesSection,
+  CohortCompareSection,
+  ContradictedList,
+  MentionSection,
+  SiteBreakdownSection,
+  TrustChecksBox,
+} from '../components/ReportReviewSections'
 import ScoreTrendChart from '../components/ScoreTrendChart'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { UrlLink } from '../components/CitationBits'
 import {
   loadActionStates,
+  loadCitationBreakdown,
   loadCitationSources,
   loadEeat,
   loadQuestionAnalyses,
   loadQuestionBank,
+  loadScorecards,
   loadSiteScores,
   type ActionStateMap,
   type HistoryCell,
   type SiteScoreRecord,
 } from '../lib/api'
+import { citationTop, cohortRows, selfReview, trustChecks } from '../lib/reviewReport'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
 import {
@@ -33,8 +43,9 @@ import {
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
-import type { QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
+import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
+import type { WeeklyScorecard } from '../prompts/b8-report'
 import { comparisonFromHistory } from '../lib/citationView'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
 import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
@@ -191,7 +202,18 @@ export default function PeriodicReport() {
     },
     [siteScores, siteWeeks, latestMeasuredWeek],
   )
-  const siteNow = siteFor(weekOf)
+  /*
+   * 보고서 전체가 쓰는 사이트 진단 하나 — 숫자 칸 · 「Site AEO 영역별 점수」 · 개선제안 근거가 같은 진단을 쓴다. 예전에는 월간
+   * 숫자 칸만 따로 골라, 칸은 「이 달에 사이트 진단 기록이 없습니다」인데 같은 화면 개선제안은 「사이트 진단(N점)」을 쓰는 일이 있었다.
+   *   - 주간: 그 주차 기준(siteFor).
+   *   - 월간: 그 달의 마지막 진단. 그 달에 진단이 없으면 판정 주차 기준(siteFor)으로 고르고 칸에 「(이 달 진단 없음)」을 밝힌다.
+   *     판정 주차 기준만 쓰면 그 달에 진단이 있어도 앞 달 진단을 고를 수 있다(측정 W37 · 진단 W35 · W39 → 9월에 W35).
+   */
+  const monthSite = useMemo(() => {
+    const inMonth = siteWeeks.filter((w) => isoWeekMonth(w) === activeMonth)
+    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
+  }, [siteScores, siteWeeks, activeMonth])
+  const siteNow = period === 'month' ? (monthSite ?? siteFor(judgedWeek)) : siteFor(weekOf)
   // 비교 대상은 보여 주는 진단 바로 전의 진단이다(선택 주차가 아니라).
   const sitePrev = useMemo(() => {
     if (!siteNow) return null
@@ -250,32 +272,17 @@ export default function PeriodicReport() {
    *
    * Brand 점수는 **평균**이다 — 한 주는 변동이 커서 마지막 주만 보면 그 달을 대표하지 못한다.
    * Site 점수는 평균을 내지 않는다. 그 시점 페이지 상태를 잰 값이라 평균이 뜻을 갖지 않는다 —
-   * 그 달의 **마지막 진단**을 쓴다.
+   * 판정 주차의 진단(siteNow)을 쓴다.
    */
   const monthBrand = mean(weeksInMonth.map((h) => h.aeoScore.current))
   const prevMonthBrand = mean(weeksInPrevMonth.map((h) => h.aeoScore.current))
   // 언급률도 평균(%) — 점수와 같은 이유로 한 주가 그 달을 대표하지 못한다.
   const monthMention = mean(weeksInMonth.map((h) => h.mentionRate * 100))
   const prevMonthMention = mean(weeksInPrevMonth.map((h) => h.mentionRate * 100))
-  const monthSite = useMemo(() => {
-    const inMonth = Object.keys(siteScores)
-      .filter((w) => isoWeekMonth(w) === activeMonth)
-      .sort()
-    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
-  }, [siteScores, activeMonth])
-  const prevMonthSite = useMemo(() => {
-    const inMonth = Object.keys(siteScores)
-      .filter((w) => isoWeekMonth(w) === prevMonth)
-      .sort()
-    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
-  }, [siteScores, prevMonth])
-
-  /** 검토 리포트가 쓰는 Site AEO 진단 — 타일과 같은 규칙(siteFor). */
-  const siteForReview = useMemo(() => siteFor(judgedWeek), [siteFor, judgedWeek])
 
   /*
-   * 개선제안의 「이번 주 데이터로 본 실행 항목」과 검토 리포트가 함께 쓰는 측정 기록 — 판정 주차의
-   * 질문별 판정·질문 은행·인용 출처. 한 번만 불러와 둘에 나눠 준다.
+   * 개선제안의 「이번 주 데이터로 본 실행 항목」과 불린 질문 · 출처 · 사실성 절이 함께 쓰는 측정 기록 — 판정 주차의
+   * 질문별 판정·질문 은행·인용 출처·도메인별 인용. 한 번만 불러와 나눠 준다.
    */
   const evidenceKey = card ? `${card.tenantId}|${card.weekOf}` : ''
   const [evidenceData, setEvidenceData] = useState<{
@@ -283,6 +290,7 @@ export default function PeriodicReport() {
     analyses: QuestionRepeatAnalysis[]
     bank: QuestionBank | null
     citations: CitationSourceAnalysis | null
+    citationRows: CitationBreakdownRow[]
   } | null>(null)
   useEffect(() => {
     if (!card) return
@@ -292,22 +300,70 @@ export default function PeriodicReport() {
       .then(async (analyses) => {
         // 그 주차를 측정한 은행으로 — 버전이 없는 옛 카드는 질문 id 접두로 찾는다(콘텐츠 생성의 useGapActionPlan과 같은 규칙).
         // 지금 은행을 받으면 질문 id가 맞지 않아 이름 없는 질문을 가려내지 못하고, 실린 출처가 「충족」에서 빠진다.
-        const [bank, citations] = await Promise.all([
+        const [bank, citations, breakdown] = await Promise.all([
           loadQuestionBank(card.tenantId, resolveBankVersion([card], card.weekOf, analyses)),
           loadCitationSources(card.tenantId, card.weekOf),
+          loadCitationBreakdown(card.tenantId, card.weekOf),
         ])
-        return { analyses, bank, citations }
+        return { analyses, bank, citations, citationRows: breakdown.rows }
       })
       .then(
-        ({ analyses, bank, citations }) => alive && setEvidenceData({ key, analyses, bank, citations }),
+        (data) => alive && setEvidenceData({ key, ...data }),
         // 기록을 못 읽으면 실행 항목 없이 기본 원칙만 보인다 — 빈 기록으로 두고 넘어간다.
-        () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null }),
+        () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null, citationRows: [] }),
       )
     return () => {
       alive = false
     }
   }, [card])
   const evidence = evidenceData?.key === evidenceKey ? evidenceData : null
+
+  /*
+   * 같은 주 코호트 기록 — 다른 브랜드의 그 주 카드와 질문 은행. 브랜드마다 이력을 받아야 해서 무겁다 — 본문과 따로 뒤에서 불러오고,
+   * 오는 동안 본문은 그대로 그린다(코호트 표 · 신뢰도 점검만 늦게 채워진다).
+   */
+  const [cohortData, setCohortData] = useState<{
+    key: string
+    members: WeeklyScorecard[]
+    banks: Record<string, QuestionBank | null>
+    error: string | null
+  } | null>(null)
+  useEffect(() => {
+    if (!card) return
+    let alive = true
+    const key = `${card.tenantId}|${card.weekOf}`
+    const ids = (card.cohortRank.members ?? []).map((m) => m.tenantId).filter((id) => id !== card.tenantId)
+    const load = async () => {
+      const members = (
+        await Promise.all(ids.map(async (id) => (await loadScorecards(id)).find((c) => c.weekOf === card.weekOf) ?? null))
+      ).filter((c): c is WeeklyScorecard => c !== null)
+      const banks = await Promise.all(members.map(async (c) => [c.tenantId, await loadQuestionBank(c.tenantId, c.questionBankVersion)] as const))
+      return { members, banks: Object.fromEntries(banks) }
+    }
+    load().then(
+      (data) => alive && setCohortData({ key, ...data, error: null }),
+      (err: unknown) => alive && setCohortData({ key, members: [], banks: {}, error: err instanceof Error ? err.message : String(err) }),
+    )
+    return () => {
+      alive = false
+    }
+  }, [card])
+  const cohortLoaded = cohortData?.key === evidenceKey ? cohortData : null
+
+  // 이 브랜드의 그 주 응답 요약(불린 질문 · 유형별 · 「틀림」 원문) — 그 주 은행을 못 읽으면 null.
+  const self = useMemo(() => (evidence ? selfReview(evidence.analyses, evidence.bank) : null), [evidence])
+  const cohort = useMemo(
+    () =>
+      card && cohortLoaded && !cohortLoaded.error
+        ? cohortRows(card, cohortLoaded.members, { ...cohortLoaded.banks, [card.tenantId]: evidence?.bank ?? null })
+        : null,
+    [card, cohortLoaded, evidence],
+  )
+  const checks = useMemo(
+    () => (card && cohort && cohortLoaded ? trustChecks(card, history, cohortLoaded.members, cohort, self?.general ?? null) : null),
+    [card, cohort, cohortLoaded, history, self],
+  )
+  const topCitations = useMemo(() => (evidence && evidence.citationRows.length > 0 ? citationTop(evidence.citationRows) : null), [evidence])
 
   /*
    * 집행한 글(언급률 2번 P4) — 고객 브랜드의 올린 글 기록과 집행 상태. 데스크톱에서만 있다(웹은 라우트가 없어 null). 그래프 핀 ·
@@ -379,12 +435,12 @@ export default function PeriodicReport() {
       analyses: evidence.analyses,
       questions: evidence.bank?.questions ?? [],
       citations: evidence.citations,
-      site: siteForReview,
+      site: siteNow,
       // 올린 글 기록을 다 읽었을 때만 집행을 가른다 — 읽는 중 · 실패 · 웹이면 전처럼 모두 권한다(「주소 기록 없음」을 지어내지 않는다).
       ...(published.history ? { posts: execPosts, ...(states ? { states } : {}), ...(citedPostIds ? { citedPostIds } : {}) } : {}),
     })
     return { ...report, recommendations: report.recommendations.map((r) => (map[r.id] ? { ...r, evidence: map[r.id] } : r)) }
-  }, [report, card, evidence, siteForReview, states, execPosts, published.history, citedPostIds])
+  }, [report, card, evidence, siteNow, states, execPosts, published.history, citedPostIds])
 
   /*
    * 표지 한 문장 — "이름 없이 물은 질문 N개 중 M개에서 불렸습니다". 언급률(응답 단위)과 달리 질문 단위라
@@ -506,6 +562,9 @@ export default function PeriodicReport() {
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
           </section>
 
+          {/* 운영자 점검 — 결론 바로 아래, 화면에서만. 숫자를 읽기 전에 믿어도 되는지 먼저 본다. */}
+          <TrustChecksBox checks={checks} error={cohortLoaded?.error ?? null} />
+
           {/*
             전주 대비는 **비교가 성립할 때만** 보여 준다. 수집 엔진이 달라진 주차끼리 빼면
             그 차이는 브랜드가 아니라 측정 방식이 만든 것이다 — 인용 갭 분석과 같은 판단
@@ -565,13 +624,24 @@ export default function PeriodicReport() {
                   </p>
                 )
               })()}
-              <p className="tile-note">이름 없이 물은 질문에서 불린 비율 · 증감은 %p</p>
+              {/* 응답 단위다 — 표지 문장(「질문 N개 중 M개」)은 질문 단위라 이름으로 가른다. */}
+              <p className="tile-note">이름 없이 물은 질문의 AI 응답 중 불린 비율 · 증감은 %p</p>
             </article>
             <article>
               <p className="tile-label">Site AEO Score</p>
               {(() => {
-                const now = period === 'month' ? monthSite : siteNow
-                const prev = period === 'month' ? prevMonthSite : sitePrev
+                const now = siteNow
+                const prev = sitePrev
+                // 보이는 진단이 그 주(월간이면 그 달) 것이 아니면 밝힌다 — 사이트 진단은 대개 측정과 다른 주에 한다.
+                const away = now
+                  ? period === 'month'
+                    ? isoWeekMonth(now.weekOf) !== activeMonth
+                      ? '(이 달 진단 없음)'
+                      : ''
+                    : now.weekOf !== weekOf
+                      ? '(이 주차 진단 없음)'
+                      : ''
+                  : ''
                 return (
                   <>
                     <p className="tile-value">
@@ -580,12 +650,8 @@ export default function PeriodicReport() {
                     </p>
                     <p className="tile-note">
                       {now
-                        ? prev
-                          ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${period === 'week' && now.weekOf !== weekOf ? '(이 주차 진단 없음)' : ''} · ${weekLabel(prev.weekOf)} 대비`
-                          : `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${period === 'week' && now.weekOf !== weekOf ? '(이 주차 진단 없음)' : ''} · 첫 기록`
-                        : period === 'month'
-                          ? '이 달에 사이트 진단 기록이 없습니다'
-                          : 'Site AEO Checker로 진단한 기록이 없습니다'}
+                        ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${prev ? `${weekLabel(prev.weekOf)} 대비` : '첫 기록'}`
+                        : 'Site AEO Checker로 진단한 기록이 없습니다'}
                     </p>
                   </>
                 )
@@ -604,6 +670,10 @@ export default function PeriodicReport() {
               </p>
             </article>
           </section>
+          {/*
+            화면에서만 — 표지 요약 · 지표별 진단의 전주 대비는 아직 비교 가능 여부를 보지 않고 세서, 종이에 이 문장을 실으면 같은 문서
+            안에서 서로 어긋난다. 「같은 조건」 규칙을 하나로 맞추는 작업에서 함께 정한다.
+          */}
           {period === 'week' && comparison && !comparison.comparable && (
             <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
           )}
@@ -617,6 +687,13 @@ export default function PeriodicReport() {
               {...(published.history && execPosts.length > 0 ? { executions: { posts: execPosts, weeks: published.history.weeks } } : {})}
             />
           </section>
+
+          {/*
+            같은 주 코호트 비교 — 그래프 아래 순위 숫자를 표로 편다(같은 저장 목록 · 같은 분모). 기록을 읽은 다른 브랜드가 없으면 뺀다
+            (표는 읽은 줄만 그리므로, 저장 목록 수로 세면 이 브랜드 한 줄짜리 「비교」가 나온다).
+          */}
+          {cohort && cohort.filter((r) => r.loaded).length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} />}
+          {!cohortLoaded && <p className="muted no-print">코호트 기록을 불러오는 중…</p>}
 
           {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
           {!viewing && published.error && (
@@ -730,19 +807,6 @@ export default function PeriodicReport() {
             </section>
           )}
 
-          {evidence && enrichedReport ? (
-            <ReviewReportPanel
-              card={card}
-              history={history}
-              site={siteForReview}
-              periodic={enrichedReport}
-              selfAnalyses={evidence.analyses}
-              selfBank={evidence.bank}
-            />
-          ) : (
-            <p className="muted">검토 리포트를 불러오는 중…</p>
-          )}
-
           <section>
             <h3>지표별 진단</h3>
             <div className="table-wrap">
@@ -788,6 +852,16 @@ export default function PeriodicReport() {
             </div>
           </section>
 
+          {/*
+            지표 뒤의 근거 — 어느 질문에서 불렸나 · AI가 무엇을 근거로 썼나 · 사이트의 어느 영역이 약한가. 모두 판정 주차 기준이다.
+            기록을 못 읽으면 절을 뺀다(「불린 적 없음」 · 「출처 없음」으로 쓰지 않는다).
+          */}
+          {self && self.general.responses > 0 && <MentionSection self={self} weekOf={card.weekOf} />}
+          {topCitations && (
+            <CitationSourcesSection top={topCitations.top} total={topCitations.total} owned={topCitations.owned} weekOf={card.weekOf} />
+          )}
+          {siteNow && siteNow.categories.length > 0 && <SiteBreakdownSection site={siteNow} />}
+
           {report.strengths.length > 0 && (
             <section className="panel">
               <h3>잘하고 있는 점</h3>
@@ -801,14 +875,27 @@ export default function PeriodicReport() {
             </section>
           )}
 
+          {/*
+            「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다. 기록 원문(엔진 id · 질문 id · 회차)과 판정 오류 가능성은 운영자가 화면에서
+            보고, 고객 종이에는 건수만 싣는다 — 원문을 확인하기 전에는 결론으로 쓰지 않는다.
+          */}
           {report.risks.length > 0 && (
             <section className="panel warn">
-              <h3>리스크 · 사실성 위반 ({report.risks.length}건)</h3>
-              <ul>
-                {report.risks.map((flag) => (
-                  <li key={flag}>{flag}</li>
-                ))}
-              </ul>
+              <h3>리스크 · 사실성 — 사실과 어긋난 주장이 담긴 응답 {report.risks.length}건</h3>
+              <p className="hint no-print">
+                AI가 실제로 틀렸을 수도, 다른 브랜드에 대한 답을 이 브랜드 사실과 대조한 판정 오류일 수도 있습니다. 원문을 확인한 뒤
+                씁니다.
+              </p>
+              {/* 원문은 주장 단위로 — 질문 · 엔진 · AI가 말한 값 · 등록된 값. 판정 기록을 못 읽으면 기록 줄 그대로. */}
+              {self && self.contradicted.length > 0 ? (
+                <ContradictedList items={self.contradicted} />
+              ) : (
+                <ul className="no-print">
+                  {report.risks.map((flag) => (
+                    <li key={flag}>{flag}</li>
+                  ))}
+                </ul>
+              )}
             </section>
           )}
 

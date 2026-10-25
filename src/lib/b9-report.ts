@@ -187,9 +187,10 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       weight: 0,
       valueText: formatPct(v),
       status: s,
+      // 「틀림」 기록은 응답마다 한 줄이라 개수는 응답 수다(server/aggregate.ts) — 주장 수로 부르지 않는다.
       note:
         card.hallucinationFlags.length > 0
-          ? `Fact Graph와 모순되는 주장이 ${card.hallucinationFlags.length}건 관측됐습니다.`
+          ? `Fact Graph와 모순되는 주장이 담긴 응답이 ${card.hallucinationFlags.length}건 관측됐습니다.`
           : v === null
             ? '팩트 그래프가 없거나 대조할 사실이 없어 측정하지 못했습니다.'
             : noteFor(s, {
@@ -348,9 +349,10 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       id: 'fact',
       title: '사실 오류 정정 및 공식 정보 정비',
       priority: Math.max(0, card.hallucinationFlags.length) > 0 ? 'high' : priorityOf(m.weight, m.status),
+      // 「틀림」 기록 원문(엔진 id · 질문 id · 회차)은 싣지 않는다 — 고객이 읽는 근거이고, 원문은 화면의 사실성 절에서 본다.
       basis:
         card.hallucinationFlags.length > 0
-          ? `AI가 사실과 어긋난 주장을 ${card.hallucinationFlags.length}건 생성: ${card.hallucinationFlags.slice(0, 3).join(' / ')}`
+          ? `사실과 어긋난 주장이 담긴 AI 응답이 ${card.hallucinationFlags.length}건 관측됐습니다.`
           : `사실성 ${m.valueText} — 답변에 부정확한 서술이 섞일 여지가 있습니다.`,
       actions: [
         '주소·진료(취급) 항목·가격·자격/이력 등 핵심 사실을 공식 페이지에 최신 상태로 명확히 게시합니다.',
@@ -416,7 +418,10 @@ export function buildPeriodicReport(
   const badCount = metrics.filter((m) => m.status === 'bad').length
   const warnCount = metrics.filter((m) => m.status === 'warn').length
   const trend = card.aeoScore.current - card.aeoScore.previousWeek
-  const trendText = trend > 0 ? `전주 대비 +${trend}` : trend < 0 ? `전주 대비 ${trend}` : '전주와 보합'
+  // 비교할 전주가 없으면 「보합」이라고 하지 않는다 — 첫 측정 주차의 previousWeek는 이번 주 값으로 채워져 차이가 0이다.
+  // 앞 카드가 안 보여도(화면 이력은 최근 12주뿐) 저장된 previousWeek가 이번 주와 다르면 전주가 있었던 것이다 — 그때는 증감을 쓴다.
+  const noPrior = !prev && card.aeoScore.previousWeek === card.aeoScore.current
+  const trendText = noPrior ? '전주 기록 없음' : trend > 0 ? `전주 대비 +${trend}` : trend < 0 ? `전주 대비 ${trend}` : '전주와 보합'
   let tone: MetricStatus
   let label: string
   if (card.aeoScore.current >= 60 && badCount === 0) {
