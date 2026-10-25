@@ -161,10 +161,14 @@ export function cohortRows(
     .sort((a, b) => a.position - b.position || Number(b.isSelf) - Number(a.isSelf))
 }
 
-/** 이 브랜드의 그 주 응답 요약. 그 주 질문 은행을 못 읽으면 일반 질문을 가려낼 수 없어 null이다(「불린 적 없음」으로 쓰지 않는다). */
+/**
+ * 이 브랜드의 그 주 응답 요약. 그 주 질문 은행을 못 읽었거나, 판정 기록이 은행 질문과 하나도 맞지 않으면(기록이 없거나 예시 기록 ·
+ * 예시 은행이 왔을 때) 일반 질문을 가려낼 수 없어 null이다 — 「불린 적 없음 · 0건 중 0건」으로 쓰지 않는다.
+ */
 export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBank | null): SelfReview | null {
   if (!bank) return null
   const bankById = new Map(bank.questions.map((q) => [q.questionId, q]))
+  if (!analyses.some((a) => bankById.has(a.questionId))) return null
   const generalAnalyses = analyses.filter((a) => bankById.get(a.questionId)?.category === 'category-agnostic')
   const mentionedByText = new Map<string, Set<string>>()
   for (const a of generalAnalyses) {

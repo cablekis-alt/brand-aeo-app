@@ -428,7 +428,8 @@ export default function Dashboard() {
           {card.hallucinationFlags.length > 0 && (
             <details className="fact-warn">
               <summary>
-                AI 답변 중 브랜드 사실과 어긋난 주장 {card.hallucinationFlags.length}건
+                {/* 「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다 — 정기진단 보고서와 같은 말로. */}
+                브랜드 사실과 어긋난 주장이 담긴 AI 응답 {card.hallucinationFlags.length}건
                 {card.factualityScore !== null && ` · 사실성 ${formatPct(card.factualityScore)}`}
               </summary>
               <ul>

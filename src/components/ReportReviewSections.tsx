@@ -61,19 +61,26 @@ export function TrustChecksBox({ checks, error }: { checks: TrustCheck[] | null;
 }
 
 /**
- * 같은 주 코호트 비교 — 다른 브랜드 수치가 나오는 유일한 곳. 줄과 순위는 저장된 순위 비교 목록에서 내 그래프 아래 순위와 같은
- * 분모다. 이 브랜드 줄은 위 숫자 칸 · 아래 지표별 진단과 같은 측정값이라 강조하고 그렇다고 밝힌다(다른 값으로 읽히지 않게).
+ * 같은 주 코호트 비교 — 다른 브랜드 수치가 나오는 유일한 곳. 순위는 저장된 순위 비교 목록에서 내 그래프 아래 순위와 같은 분모다.
+ * 이 브랜드 줄은 아래 지표별 진단과 같은 한 주 측정값이라 강조하고 그렇다고 밝힌다(다른 값으로 읽히지 않게). 월간 보기의 위 숫자
+ * 칸은 월 평균이라 「같은 값」이라고 하지 않는다.
+ *
+ * 그 주 기록을 읽지 못한 브랜드는 표에서 빼고 몇 곳 뺐는지만 적는다 — 저장 목록에는 이름이 없어(내부 id뿐) 고객 종이에 id가
+ * 찍힌다. 순위는 뺀 곳까지 포함한 저장 목록 기준 그대로다.
  */
 export function CohortCompareSection({ rows, weekOf }: { rows: CohortRow[]; weekOf: string }) {
+  const shown = rows.filter((r) => r.loaded)
+  const hidden = rows.length - shown.length
   return (
     <section className="cohort-compare">
       <h3>같은 주 코호트 비교</h3>
       <div className="table-wrap">
         <table>
           <caption className="muted">
-            {weekLabel(weekOf)} 코호트 {rows.length}곳 · 굵은 줄(이 브랜드)은 위 숫자 칸 · 아래 지표별 진단과 같은 측정값입니다 · 언급률은
-            이름 없이 물은 질문의 응답 기준, 자사 인용률은 모든 질문 기준 · 추천 순위 괄호는 순위가 매겨진 응답 수(6건 미만이면 점수에
-            그만큼만)
+            {weekLabel(weekOf)} 코호트 {rows.length}곳
+            {hidden > 0 && ` · 이번 주 기록을 읽지 못한 ${hidden}곳은 표에서 뺐습니다(순위는 ${rows.length}곳 기준)`} · 굵은 줄(이
+            브랜드)은 {weekLabel(weekOf)} 한 주의 값으로 아래 지표별 진단과 같습니다 · 언급률은 이름 없이 물은 질문의 응답 기준, 자사
+            인용률은 모든 질문 기준 · 추천 순위 괄호는 순위가 매겨진 응답 수(6건 미만이면 점수에 그만큼만)
           </caption>
           <thead>
             <tr>
@@ -87,7 +94,7 @@ export function CohortCompareSection({ rows, weekOf }: { rows: CohortRow[]; week
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {shown.map((r) => (
               <tr key={r.tenantId} className={r.isSelf ? 'self' : undefined}>
                 <td>{r.isSelf ? <strong>{r.brandName}</strong> : r.brandName}</td>
                 <td className="num">

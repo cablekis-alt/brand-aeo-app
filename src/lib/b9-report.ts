@@ -419,7 +419,9 @@ export function buildPeriodicReport(
   const warnCount = metrics.filter((m) => m.status === 'warn').length
   const trend = card.aeoScore.current - card.aeoScore.previousWeek
   // 비교할 전주가 없으면 「보합」이라고 하지 않는다 — 첫 측정 주차의 previousWeek는 이번 주 값으로 채워져 차이가 0이다.
-  const trendText = !prev ? '전주 기록 없음' : trend > 0 ? `전주 대비 +${trend}` : trend < 0 ? `전주 대비 ${trend}` : '전주와 보합'
+  // 앞 카드가 안 보여도(화면 이력은 최근 12주뿐) 저장된 previousWeek가 이번 주와 다르면 전주가 있었던 것이다 — 그때는 증감을 쓴다.
+  const noPrior = !prev && card.aeoScore.previousWeek === card.aeoScore.current
+  const trendText = noPrior ? '전주 기록 없음' : trend > 0 ? `전주 대비 +${trend}` : trend < 0 ? `전주 대비 ${trend}` : '전주와 보합'
   let tone: MetricStatus
   let label: string
   if (card.aeoScore.current >= 60 && badCount === 0) {

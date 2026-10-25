@@ -40,6 +40,9 @@ const second = buildPeriodicReport([card('2026-W40', 7, 7), card('2026-W41', 8, 
 ok('둘째 주차: 전주 대비 증감은 그대로', second.verdict.summary.includes('전주 대비 +1'))
 const flat = buildPeriodicReport([card('2026-W40', 8, 8), card('2026-W41', 8, 8)], '2026-W41')!
 ok('둘째 주차: 같으면 보합', flat.verdict.summary.includes('전주와 보합'))
+// 화면 이력은 최근 12주뿐 — 가장 오래 불러온 주차라도 저장된 previousWeek가 다르면 전주가 있었다(재검토에서 확인)
+const windowEdge = buildPeriodicReport([card('2026-W41', 9, 8), card('2026-W42', 9, 9)], '2026-W41')!
+ok('불러온 이력의 첫 주차라도 저장된 전주가 있으면 증감을 쓴다', windowEdge.verdict.summary.includes('전주 대비 +1'))
 
 // 2) 사실성 「틀림」 — 응답 단위로 부르고, 내부 문자열을 고객 문장에 싣지 않는다
 const flags = ['openai / v3-q12 #2: 사실성 불일치 2건', 'gemini / v3-q07 #1: 사실성 불일치 1건']
@@ -90,6 +93,10 @@ const analyses = [
   { questionId: 'q1', engine: 'gemini', mentioned: false, clarifying: true, factualityClaims: [{ verdict: 'contradicted', claimText: '주소', responseValue: '가상로 9', factGraphValue: '가상로 1' }] },
 ] as unknown as QuestionRepeatAnalysis[]
 ok('응답 요약: 은행이 없으면 null', selfReview(analyses, null) === null)
+// 판정 기록이 없거나(빈 배열) 예시 기록이라 은행 질문과 하나도 맞지 않으면 null — 「0건 중 0건」을 쓰지 않는다(재검토에서 확인)
+ok('응답 요약: 판정 기록이 없으면 null', selfReview([], bankOf(['질문1', '질문2'])) === null)
+const demoAnalyses = [{ questionId: 'q-demo-1', engine: 'openai', mentioned: true, clarifying: false, factualityClaims: [] }] as unknown as QuestionRepeatAnalysis[]
+ok('응답 요약: 기록이 은행과 하나도 맞지 않으면 null', selfReview(demoAnalyses, bankOf(['질문1', '질문2'])) === null)
 const sr = selfReview(analyses, bankOf(['질문1', '질문2']))!
 ok('응답 요약: 일반 질문 2개 · 응답 2 · 불림 1 · 되물음 1', sr.general.questions === 2 && sr.general.responses === 2 && sr.general.mentioned === 1 && sr.general.clarifying === 1)
 ok('응답 요약: 불린 질문과 엔진', sr.mentionedQuestions.length === 1 && sr.mentionedQuestions[0]!.text === '질문1')

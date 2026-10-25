@@ -203,11 +203,17 @@ export default function PeriodicReport() {
     [siteScores, siteWeeks, latestMeasuredWeek],
   )
   /*
-   * 보고서 전체가 쓰는 사이트 진단 하나 — 숫자 칸 · 「Site AEO 영역별 점수」 · 개선제안 근거. 월간에서도 판정 주차(그 달 마지막
-   * 주차)로 고른다. 예전에는 월간 숫자 칸만 그 달 진단으로 골라, 칸은 「이 달에 사이트 진단 기록이 없습니다」인데 같은 화면 개선제안은
-   * 「사이트 진단(N점)」을 쓰는 일이 있었다. 그 달 진단이 아니면 칸 아래에 어느 주의 진단인지 밝힌다.
+   * 보고서 전체가 쓰는 사이트 진단 하나 — 숫자 칸 · 「Site AEO 영역별 점수」 · 개선제안 근거가 같은 진단을 쓴다. 예전에는 월간
+   * 숫자 칸만 따로 골라, 칸은 「이 달에 사이트 진단 기록이 없습니다」인데 같은 화면 개선제안은 「사이트 진단(N점)」을 쓰는 일이 있었다.
+   *   - 주간: 그 주차 기준(siteFor).
+   *   - 월간: 그 달의 마지막 진단. 그 달에 진단이 없으면 판정 주차 기준(siteFor)으로 고르고 칸에 「(이 달 진단 없음)」을 밝힌다.
+   *     판정 주차 기준만 쓰면 그 달에 진단이 있어도 앞 달 진단을 고를 수 있다(측정 W37 · 진단 W35 · W39 → 9월에 W35).
    */
-  const siteNow = siteFor(judgedWeek)
+  const monthSite = useMemo(() => {
+    const inMonth = siteWeeks.filter((w) => isoWeekMonth(w) === activeMonth)
+    return inMonth.length ? (siteScores[inMonth[inMonth.length - 1]!] ?? null) : null
+  }, [siteScores, siteWeeks, activeMonth])
+  const siteNow = period === 'month' ? (monthSite ?? siteFor(judgedWeek)) : siteFor(weekOf)
   // 비교 대상은 보여 주는 진단 바로 전의 진단이다(선택 주차가 아니라).
   const sitePrev = useMemo(() => {
     if (!siteNow) return null
@@ -664,9 +670,12 @@ export default function PeriodicReport() {
               </p>
             </article>
           </section>
-          {/* 종이에도 싣는다 — 빼면 PDF에서는 증감이 이유 없이 사라진다. */}
+          {/*
+            화면에서만 — 표지 요약 · 지표별 진단의 전주 대비는 아직 비교 가능 여부를 보지 않고 세서, 종이에 이 문장을 실으면 같은 문서
+            안에서 서로 어긋난다. 「같은 조건」 규칙을 하나로 맞추는 작업에서 함께 정한다.
+          */}
           {period === 'week' && comparison && !comparison.comparable && (
-            <p className="hint">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
+            <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
           )}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
@@ -844,7 +853,7 @@ export default function PeriodicReport() {
             지표 뒤의 근거 — 어느 질문에서 불렸나 · AI가 무엇을 근거로 썼나 · 사이트의 어느 영역이 약한가. 모두 판정 주차 기준이다.
             기록을 못 읽으면 절을 뺀다(「불린 적 없음」 · 「출처 없음」으로 쓰지 않는다).
           */}
-          {self && <MentionSection self={self} weekOf={card.weekOf} />}
+          {self && self.general.responses > 0 && <MentionSection self={self} weekOf={card.weekOf} />}
           {topCitations && (
             <CitationSourcesSection top={topCitations.top} total={topCitations.total} owned={topCitations.owned} weekOf={card.weekOf} />
           )}
