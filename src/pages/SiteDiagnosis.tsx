@@ -32,6 +32,14 @@ function printedAt(iso: string): string {
   return Number.isNaN(t) ? iso : new Date(t + 9 * 3600_000).toISOString().slice(0, 16).replace('T', ' ')
 }
 
+/**
+ * 인쇄 머리말 제목 — 진단한 주소(스킴 · 끝 「/」 뺌). 페이지 제목은 쓰지 않는다: 수집에 실패하면 「확인 불가」,
+ * 제목이 없으면 「(제목 없음)」, 봇 차단이면 차단 화면의 제목이 들어 있어 문서 제목으로 읽히면 틀린 말이 된다.
+ */
+function printedAddress(url: string): string {
+  return url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+}
+
 export default function SiteDiagnosis() {
   const { tenant, tenants } = useTenant()
   // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
@@ -321,9 +329,11 @@ export default function SiteDiagnosis() {
           {/* 종이에는 입력 칸 대신 무엇을 언제 진단했는지가 맨 위에 온다. */}
           <header className="print-only site-print-head">
             <p className="page-eyebrow">Site AEO 진단 리포트</p>
-            <h1>{report.pageTitle || report.url}</h1>
+            <h1>{printedAddress(report.url)}</h1>
             <p className="muted">
-              {printedAt(report.analyzedAt)} 진단 · {report.url}
+              {printedAt(report.analyzedAt)} 진단
+              {/* 본문을 읽은 진단에서만 — 실패 리포트의 제목 칸은 「확인 불가」나 차단 화면의 제목이다. */}
+              {report.accessStatus === 'ok' && <> · 페이지 제목 「{report.pageTitle}」</>}
             </p>
           </header>
         </>
@@ -331,11 +341,13 @@ export default function SiteDiagnosis() {
       {report && robots && (
         <section className="crawler-panel">
           <h3>AI 크롤러 접근</h3>
-          {/* 「여기서 바꿀 수 없습니다」는 화면 조작 안내라 종이에는 싣지 않는다. */}
-          <p className="hint no-print" style={{ marginTop: 0 }}>
-            이 페이지의 <code>robots.txt</code>를 읽은 결과입니다. <b>읽기 전용</b>이며 여기서 바꿀 수 없습니다 —
-            고객 사이트의 파일이므로 수정은 그쪽에서 해야 합니다. 위 점수의 「AI 크롤러 접근·색인」이 이 판정을
-            그대로 씁니다.
+          <p className="hint" style={{ marginTop: 0 }}>
+            이 페이지의 <code>robots.txt</code>를 읽은 결과입니다.{' '}
+            {/* 「여기서 바꿀 수 없습니다」는 화면 조작 안내라 종이에는 싣지 않는다 — 판정의 출처(robots.txt)는 남긴다. */}
+            <span className="no-print">
+              <b>읽기 전용</b>이며 여기서 바꿀 수 없습니다 — 고객 사이트의 파일이므로 수정은 그쪽에서 해야 합니다.{' '}
+            </span>
+            아래 점수의 「AI 크롤러 접근·색인」이 이 판정을 그대로 씁니다.
           </p>
           <div className="crawler-groups">
             <div>

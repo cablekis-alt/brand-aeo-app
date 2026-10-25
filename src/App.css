@@ -2612,6 +2612,10 @@ p.hint {
   .site-print-head .muted { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
   .crawler-panel, .site-report .hero-card, .site-report tr, .issue-list li { break-inside: avoid; }
   .site-report h3, .crawler-panel h3 { break-after: avoid; }
+  /* 레이아웃의 「측정 전 예시 데이터」 배너는 주간 측정(스코어카드) 이야기다 — 페이지를 직접 수집한 사이트 진단 종이에는 싣지 않는다. */
+  .content:has(.site-print-head) > .notice { display: none; }
+  /* 채운 칩(밝은 글자 + 빨간 바탕)은 배경 그래픽이 꺼진 인쇄에서 글자가 흐려진다 — 테두리 칩으로 찍는다. */
+  .sev-critical { color: var(--bad); background: none; }
 }
 
 /* 측정 상태 화면의 실행 문서 링크 — 측정 결과로 만든 작업 지시서. */
