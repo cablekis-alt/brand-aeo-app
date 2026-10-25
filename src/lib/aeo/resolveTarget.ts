@@ -142,20 +142,23 @@ export function findTenantByDomain(url: string, tenants: TenantSummary[], prefer
  *   ② 등록 브랜드명으로 찾음 → 그 브랜드(별칭 포함)
  *   ③ 상호 추론            → 추론된 상호(별칭 없음)
  *   ① URL 입력             → 그 호스트를 소유한 등록 브랜드, 없으면 현재 선택 브랜드
+ *
+ * 마지막 경우는 `viaSelected: true`다 — 주소가 그 브랜드 것이라는 근거가 없다. 그 브랜드의 블로그 글 · 새 도메인일 수도,
+ * 상관없는 남의 사이트일 수도 있으니, 판정 전에 페이지가 그 브랜드를 부르는지(pageMentionsBrand) 확인해야 한다.
  */
 export function subjectBrand(
   target: ResolvedTarget,
   tenants: TenantSummary[],
   selected: TenantSummary | undefined,
-): { brandName: string; aliases: string[] } | null {
+): { brandName: string; aliases: string[]; viaSelected: boolean } | null {
   if (target.source === 'tenant') {
     const t = tenants.find((x) => x.tenantId === target.tenantId)
-    if (t) return { brandName: t.brandName, aliases: t.aliases ?? [] }
+    if (t) return { brandName: t.brandName, aliases: t.aliases ?? [], viaSelected: false }
   }
   if (target.source === 'infer' && target.brandName) {
-    return { brandName: target.brandName, aliases: [] }
+    return { brandName: target.brandName, aliases: [], viaSelected: false }
   }
   const owner = findTenantByDomain(target.url, tenants, selected)
-  if (owner) return { brandName: owner.brandName, aliases: owner.aliases ?? [] }
-  return selected ? { brandName: selected.brandName, aliases: selected.aliases ?? [] } : null
+  if (owner) return { brandName: owner.brandName, aliases: owner.aliases ?? [], viaSelected: false }
+  return selected ? { brandName: selected.brandName, aliases: selected.aliases ?? [], viaSelected: true } : null
 }

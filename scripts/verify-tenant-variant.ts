@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { TenantSummary } from '../src/lib/api'
+import type { PageSignals } from '../src/lib/aeo/types'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'verify-tenant-variant-'))
 process.env.APP_DATA_DIR = dir
@@ -50,7 +51,8 @@ const fact = (id: string, claim: string, value: string) => ({ id, type: 'other',
 
 try {
   const v = await import('../src/lib/brandVariant')
-  const { findTenantByDomain, findTenantByName } = await import('../src/lib/aeo/resolveTarget')
+  const { findTenantByDomain, findTenantByName, subjectBrand } = await import('../src/lib/aeo/resolveTarget')
+  const { pageMentionsBrand } = await import('../src/lib/aeo/entityMatch')
   const reg = await import('../server/tenantRegistry')
   const promote = await import('../server/tenantPromote')
   const { measureAndBake } = await import('../server/measureAndBake')
@@ -101,6 +103,38 @@ try {
   ok('진단: 상호 입력 — 고른 게 다른 브랜드면 첫 변형', findTenantByName('가상각', [...summaries, other], other)?.tenantId === 'x')
   const twinName = { ...other, tenantId: 'o2', brandName: '가상각' } as unknown as TenantSummary
   ok('진단: 상호 입력 — 이름만 같은 다른 홈페이지면 고르지 않는다', findTenantByName('가상각', [summaries[0], twinName]) === null)
+
+  // 엔티티 일치의 주체 — 등록 안 된 주소는 고른 브랜드로 「대신」 정한다(viaSelected). 판정은 페이지가 그 브랜드를 부를 때만
+  // (2026-10-25 군산각을 고른 채 컴북스를 진단하자 「og:site_name을 군산각으로」를 권했다).
+  const owned = subjectBrand({ url: 'https://m.x.example/a', source: 'url' }, summaries, other)
+  ok('엔티티: 주소 주인이 있으면 그 브랜드(대신 아님)', owned?.brandName === '가상각' && owned.viaSelected === false)
+  const viaSel = subjectBrand({ url: 'https://unrelated.example/', source: 'url' }, summaries, summaries[0])
+  ok('엔티티: 주인 없는 주소는 고른 브랜드로 대신', viaSel?.brandName === '가상각' && viaSel.viaSelected === true)
+  ok('엔티티: 고른 브랜드도 없으면 판정 주체 없음', subjectBrand({ url: 'https://unrelated.example/', source: 'url' }, summaries, undefined) === null)
+  ok('엔티티: 상호 추론은 대신 아님', subjectBrand({ url: 'https://y.example/', source: 'infer', brandName: '와이' }, summaries, summaries[0])?.viaSelected === false)
+  const page = (over: Partial<PageSignals>) =>
+    ({ title: '', h1s: [], ogSiteName: '', ogTitle: '', metaDescription: '', jsonLdEntities: [], orgCandidates: [], mainText: '', ...over }) as PageSignals
+  const unrelatedPage = page({ title: '컴북스닷컴', h1s: ['홈'], metaDescription: '출판 브랜드 포털', mainText: '인공지능총서 · 고전 희곡' })
+  ok('엔티티: 브랜드를 한 번도 부르지 않는 남의 페이지', !pageMentionsBrand(unrelatedPage, '가상각', ['가상 여행의 모든것']))
+  ok('엔티티: 본문에만 있어도 부른다(조사가 붙어도)', pageMentionsBrand(page({ title: '여행 후기', mainText: '오늘은 「가상각」에서 묵었다' }), '가상각'))
+  ok('엔티티: 별칭으로 불러도 된다(이름 안 띄어쓰기는 상관없음)', pageMentionsBrand(page({ ogSiteName: '가상여행의 모든것' }), '가상각', ['가상 여행의 모든것']))
+  ok('엔티티: JSON-LD 조직 이름', pageMentionsBrand(page({ jsonLdEntities: [{ types: ['Organization'], name: '가상각' }] }), '가상각'))
+  ok('엔티티: 한 글자 별칭은 보지 않는다', !pageMentionsBrand(page({ mainText: '가 나 다' }), '가상각', ['가']))
+  // 짧은 별칭이 남의 낱말에 걸리지 않는다 — 공백을 지운 부분 문자열로 찾던 첫 판의 구멍(2026-10-25 검토).
+  const noise = page({ mainText: 'Back to top · Download our desktop app · marketing · KTX를 타고 · 비가 온 뒤 · 군산 각 지역의 숙소 · 강남가온치과' })
+  ok('엔티티: 「Back to top」 · 「desktop」 · 「KTX」는 KT가 아니다', !pageMentionsBrand(noise, 'KT', ['kt']))
+  ok('엔티티: 「desktop」은 SKT가 아니다', !pageMentionsBrand(noise, 'SK텔레콤', ['SKT']))
+  ok('엔티티: 「marketing」은 KETI가 아니다', !pageMentionsBrand(noise, 'KETI'))
+  ok('엔티티: 「비가 온 뒤」 · 「강남가온치과」는 가온이 아니다', !pageMentionsBrand(noise, '가온그룹', ['가온']))
+  ok('엔티티: 「군산 각 지역」은 군산각이 아니다', !pageMentionsBrand(noise, '군산각'))
+  ok('엔티티: 낱말로 쓴 KT는 부른다(한글 조사 · 이름 안 띄어쓰기)', pageMentionsBrand(page({ mainText: 'KT와 제휴한 KT하이오더 매장' }), 'KT 하이오더') && pageMentionsBrand(page({ title: 'KT 고객센터' }), 'KT'))
+  ok('엔티티: 「KT&G」는 KT가 아니다', !pageMentionsBrand(page({ mainText: 'KT&G 상상마당 공연 안내' }), 'KT', ['kt']))
+  // 글에만 있는 띄어쓰기 · 하이픈 — 4글자 이상 이름은 받는다(낱말 판정 첫 판이 놓치던 것, 2026-10-25 재검토)
+  ok('엔티티: 「LG U+」 = LGU+', pageMentionsBrand(page({ mainText: 'LG U+ 인터넷 가입 혜택' }), 'LG유플러스', ['LGU+']))
+  ok('엔티티: 「SK 텔레콤」 = SK텔레콤', pageMentionsBrand(page({ title: 'SK 텔레콤 요금제' }), 'SK텔레콤'))
+  ok('엔티티: 「T-order」 · 「T order」 = torder', pageMentionsBrand(page({ title: 'T-order 테이블오더' }), "t'order", ['torder']) && pageMentionsBrand(page({ mainText: 'T order 도입 후기' }), 'torder'))
+  ok('엔티티: 「바노바기 성형외과」 = 바노바기성형외과', pageMentionsBrand(page({ h1s: ['바노바기 성형외과 상담 후기'] }), '바노바기성형외과'))
+  ok('엔티티: 띄어 쓴 긴 이름도 앞 낱말에 붙으면 아니다', !pageMentionsBrand(page({ mainText: '비가 온 그룹 활동' }), '가온그룹'))
 
   // 4) 서버 — 가짜 브랜드: 고객 vsite(지역형, 사실 · 브랜드 페이지는 설정에만), 같은 홈페이지의 영어 측정 vsite-en,
   //    홈페이지가 같은 경쟁사 vcomp, vsite의 옛 도메인을 함께 쓰는 고객 vold, 네이버 블로그 고객 blog.

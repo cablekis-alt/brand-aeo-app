@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
 import { useTenant } from '../context/useTenant'
-import { checkEntityMatch, type EntityMatchReport } from '../lib/aeo/entityMatch'
+import { checkEntityMatch, pageMentionsBrand, type EntityMatchReport } from '../lib/aeo/entityMatch'
 import {
   findTenantByDomain,
   looksLikeUrl,
@@ -40,6 +40,12 @@ function printedAddress(url: string): string {
   return url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
 }
 
+/**
+ * 엔티티 일치 결과. 등록되지 않은 주소를 고른 브랜드로 대신 판정하려 했는데 페이지에 그 브랜드 이름이 한 번도
+ * 없으면 판정하지 않고(skipped) 이유만 남긴다.
+ */
+type EntityResult = { kind: 'checked'; report: EntityMatchReport } | { kind: 'skipped'; brandName: string }
+
 export default function SiteDiagnosis() {
   const { tenant, tenants } = useTenant()
   // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
@@ -51,7 +57,7 @@ export default function SiteDiagnosis() {
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<AeoReport | null>(null)
   // 엔티티 일치는 총점과 분리해 따로 담는다 — scoreAeo를 거치지 않으므로 배점에 영향이 없다.
-  const [entity, setEntity] = useState<EntityMatchReport | null>(null)
+  const [entity, setEntity] = useState<EntityResult | null>(null)
   // 입력을 무엇으로 해석했는지(URL/등록 브랜드/추론) — 추론 결과를 조용히 진단하지 않기 위해 표시한다.
   const [resolved, setResolved] = useState<ResolvedTarget | null>(null)
   /*
@@ -216,7 +222,14 @@ export default function SiteDiagnosis() {
       // 판정 기준은 **진단한 페이지의 주체 브랜드**다. 드롭다운 선택을 그대로 쓰면 상호를 넣거나
       // 남의 URL을 넣었을 때 짝이 어긋난다(뷰성형외과 페이지를 t'order 기준으로 판정하는 일).
       const subject = subjectBrand(target, tenants, tenant)
-      setEntity(subject ? checkEntityMatch(signals, subject.brandName, subject.aliases) : null)
+      // 고른 브랜드로 대신 정한 주소는 페이지가 그 브랜드를 부를 때만 판정한다 — 상관없는 남의 사이트(군산각을 고른 채
+      // 진단한 컴북스)에 「title · og:site_name에 군산각을 넣으라」고 권하면 안 된다.
+      if (subject?.viaSelected && !pageMentionsBrand(signals, subject.brandName, subject.aliases)) {
+        setEntity({ kind: 'skipped', brandName: subject.brandName })
+      } else {
+        const checked = subject ? checkEntityMatch(signals, subject.brandName, subject.aliases) : null
+        setEntity(checked ? { kind: 'checked', report: checked } : null)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '진단 중 오류가 발생했습니다.')
     } finally {
@@ -384,7 +397,13 @@ export default function SiteDiagnosis() {
         </section>
       )}
       {report && <SiteReportView report={report} />}
-      {report && entity && <EntityMatchPanel report={entity} />}
+      {report && entity?.kind === 'checked' && <EntityMatchPanel report={entity.report} />}
+      {report && entity?.kind === 'skipped' && (
+        // 고른 브랜드 이름이 나오는 화면 안내라 종이에는 싣지 않는다 — 남의 사이트 PDF에 다른 브랜드 이름이 찍히면 안 된다.
+        <p className="muted no-print" style={{ marginTop: 28 }}>
+          등록된 브랜드 주소가 아니고, 이 페이지에 「{entity.brandName}」 언급도 없어 엔티티 일치는 보지 않았습니다.
+        </p>
+      )}
     </>
   )
 }
