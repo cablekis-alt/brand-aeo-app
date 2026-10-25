@@ -2588,14 +2588,30 @@ p.hint {
   min-width: 11em;
 }
 
+/* 종이에만 싣는 조각(사이트 진단의 인쇄 머리말 등) — 화면에서는 숨긴다. */
+.print-only { display: none; }
+
+/* 사이트 진단 결과 위 「인쇄 · PDF 저장」 줄 — 결과가 시작되는 자리 오른쪽에 둔다. */
+.site-print-actions {
+  justify-content: flex-end;
+  margin: 16px 0 0;
+}
+
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }
+  .print-only { display: block; }
   .shell { grid-template-columns: 1fr; gap: 0; }
   .rec-card, .report-verdict, .panel, .score-trend, .run-trend, .exec-table tr { break-inside: avoid; }
   /* 집행 절은 길이가 정해져 있지 않아 통째로 넘기면 빈 쪽이 생긴다 — 행만 붙들고, 제목 · 요약 줄은 첫 행과 같은 쪽에 둔다. */
   .report-exec h3, .report-exec-line { break-after: avoid; }
   /* 화면용 카드 표면은 종이에서 테두리만 남긴다 — 그림자·채움은 인쇄에서 번진다. */
   .table-wrap, .hero-card { background: none; box-shadow: none; }
+  /* 사이트 진단: 개선안 표처럼 길이가 정해지지 않은 절은 행 · 항목만 붙들고, 절 제목은 첫 줄과 같은 쪽에 둔다. */
+  .site-print-head { margin: 0 0 12px; }
+  .site-print-head h1 { margin: 2px 0 4px; font-size: 22px; }
+  .site-print-head .muted { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+  .crawler-panel, .site-report .hero-card, .site-report tr, .issue-list li { break-inside: avoid; }
+  .site-report h3, .crawler-panel h3 { break-after: avoid; }
 }
 
 /* 측정 상태 화면의 실행 문서 링크 — 측정 결과로 만든 작업 지시서. */

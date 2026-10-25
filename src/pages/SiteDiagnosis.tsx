@@ -26,6 +26,12 @@ function brandSiteUrl(tenant: TenantSummary | undefined): string {
   return tenant ? (tenantSiteUrl(tenant) ?? '') : ''
 }
 
+/** 인쇄 머리말의 진단 시각 — 한국 시각 「2026-10-25 10:35」. 종이는 연도까지 있어야 언제 것인지 안다. */
+function printedAt(iso: string): string {
+  const t = Date.parse(iso)
+  return Number.isNaN(t) ? iso : new Date(t + 9 * 3600_000).toISOString().slice(0, 16).replace('T', ' ')
+}
+
 export default function SiteDiagnosis() {
   const { tenant, tenants } = useTenant()
   // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
@@ -212,14 +218,14 @@ export default function SiteDiagnosis() {
 
   return (
     <>
-      <p className="brand">실행</p>
-      <h1>Site AEO Checker</h1>
-      <p className="lead">
+      <p className="brand no-print">실행</p>
+      <h1 className="no-print">Site AEO Checker</h1>
+      <p className="lead no-print">
         단일 페이지 URL의 AI 검색 대응 준비도를 6개 영역, 100점 만점으로 진단합니다. 브랜드 가시성(주간 파이프라인)과
         달리, 지금 이 페이지의 HTML을 직접 수집해 즉시 채점합니다. 실제 인용·노출·순위를 예측하지 않습니다.
       </p>
 
-      <form className="site-form" onSubmit={handleSubmit}>
+      <form className="site-form no-print" onSubmit={handleSubmit}>
         <label className="field">
           <span>{isElectron ? '분석 URL 또는 브랜드명' : '분석 URL'}</span>
           <input
@@ -286,12 +292,15 @@ export default function SiteDiagnosis() {
       </form>
 
       {error && (
-        <p className="error" role="alert">
+        <p className="error no-print" role="alert">
           {error}
         </p>
       )}
       {saveNote && (
-        <p className={saveNote.tone === 'fail' ? 'error' : 'muted'} role={saveNote.tone === 'fail' ? 'alert' : undefined}>
+        <p
+          className={`${saveNote.tone === 'fail' ? 'error' : 'muted'} no-print`}
+          role={saveNote.tone === 'fail' ? 'alert' : undefined}
+        >
           {saveNote.tone === 'ok' ? '✓ ' : ''}
           {saveNote.text}
           {saveNote.tone === 'ok' && (
@@ -302,10 +311,28 @@ export default function SiteDiagnosis() {
           )}
         </p>
       )}
+      {report && (
+        <>
+          <div className="page-actions site-print-actions no-print">
+            <button type="button" className="btn" onClick={() => window.print()}>
+              인쇄 · PDF 저장
+            </button>
+          </div>
+          {/* 종이에는 입력 칸 대신 무엇을 언제 진단했는지가 맨 위에 온다. */}
+          <header className="print-only site-print-head">
+            <p className="page-eyebrow">Site AEO 진단 리포트</p>
+            <h1>{report.pageTitle || report.url}</h1>
+            <p className="muted">
+              {printedAt(report.analyzedAt)} 진단 · {report.url}
+            </p>
+          </header>
+        </>
+      )}
       {report && robots && (
         <section className="crawler-panel">
           <h3>AI 크롤러 접근</h3>
-          <p className="hint" style={{ marginTop: 0 }}>
+          {/* 「여기서 바꿀 수 없습니다」는 화면 조작 안내라 종이에는 싣지 않는다. */}
+          <p className="hint no-print" style={{ marginTop: 0 }}>
             이 페이지의 <code>robots.txt</code>를 읽은 결과입니다. <b>읽기 전용</b>이며 여기서 바꿀 수 없습니다 —
             고객 사이트의 파일이므로 수정은 그쪽에서 해야 합니다. 위 점수의 「AI 크롤러 접근·색인」이 이 판정을
             그대로 씁니다.
