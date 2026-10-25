@@ -60,7 +60,9 @@ ok('판정이 바뀐 주: 판정 결과를 함께 돌려준다', judgeSwitch.com
 
 // 같은 조건 평균 · 떨어진 주
 const run3 = buildPeriodicReport([card('2026-W40', 10, 10), card('2026-W41', 12, 10), card('2026-W43', 14, 12)], '2026-W43')!
-ok('같은 조건 3주 평균(4주 이동평균 대신)', run3.verdict.summary.includes('같은 조건 3주 평균 12') && !run3.verdict.summary.includes('이동평균'))
+ok('같은 조건 평균(4주 이동평균 대신) — 사이에 빈 주가 있으면 「3번」', run3.verdict.summary.includes('같은 조건 3번 평균 12') && !run3.verdict.summary.includes('이동평균'))
+const run2c = buildPeriodicReport([card('2026-W40', 10, 10), card('2026-W41', 14, 10)], '2026-W41')!
+ok('이어진 주면 「같은 조건 연속 2주 평균」', run2c.verdict.summary.includes('같은 조건 연속 2주 평균 12'))
 ok('2주 떨어진 앞 측정은 「직전 측정(Wxx) 대비」', run3.verdict.summary.includes('직전 측정(2026년 41주차) 대비 +2'))
 ok('같은 조건 1주뿐이면 평균을 쓰지 않는다', !judgeSwitch.verdict.summary.includes('평균'))
 

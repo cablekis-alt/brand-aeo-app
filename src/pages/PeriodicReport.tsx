@@ -46,7 +46,7 @@ import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { comparableRun, compareConditions, conditionReason, siteComparable } from '../lib/comparability'
+import { comparableRun, compareConditions, conditionReason, siteDifference } from '../lib/comparability'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
 import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
@@ -656,7 +656,7 @@ export default function PeriodicReport() {
                 const now = siteNow
                 const prev = sitePrev
                 // 같은 페이지(주소)를 같은 방식으로 잰 진단끼리만 증감을 낸다 — 실측 ktcorp corp.kt.com 57 → www.kt.com 0이 「-57」로 찍혔다.
-                const sameSite = now && prev ? siteComparable(prev, now) : false
+                const siteDiff = now && prev ? siteDifference(prev, now) : null
                 // 보이는 진단이 그 주(월간이면 그 달) 것이 아니면 밝힌다 — 사이트 진단은 대개 측정과 다른 주에 한다.
                 const away = now
                   ? period === 'month'
@@ -671,15 +671,15 @@ export default function PeriodicReport() {
                   <>
                     <p className="tile-value">
                       {now ? now.score : <span className="muted">—</span>}
-                      {now && <Delta now={now.score} prev={sameSite ? (prev?.score ?? null) : null} />}
+                      {now && <Delta now={now.score} prev={prev && !siteDiff ? prev.score : null} />}
                     </p>
                     <p className="tile-note">
                       {now
                         ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${
                             prev
-                              ? sameSite
+                              ? !siteDiff
                                 ? `${weekLabel(prev.weekOf)} 대비`
-                                : `${weekLabel(prev.weekOf)} 진단과 주소 · 수집 방식이 달라 견주지 않음`
+                                : `${weekLabel(prev.weekOf)} 진단과 ${siteDiff === '주소' ? '주소가' : `${siteDiff}이`} 달라 견주지 않음`
                               : '첫 기록'
                           }`
                         : 'Site AEO Checker로 진단한 기록이 없습니다'}
@@ -718,8 +718,10 @@ export default function PeriodicReport() {
           */}
           {period === 'week' && comparison?.previousWeekOf && !comparison.comparable && (
             <p className="hint">
-              ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과 측정 조건이 달라({conditionReason(comparison.diffs)}) 표지 · 숫자 칸 ·
-              지표별 진단에 증감을 적지 않았습니다. 같은 조건으로 다시 재면 증감이 다시 나옵니다.
+              ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과{' '}
+              {comparison.diffs.some((d) => d.state === 'changed') ? '측정 조건이 달라' : '견줄 측정 조건 기록이 한쪽에 없어'}(
+              {conditionReason(comparison.diffs)}) 표지 · Brand AEO Score · 언급률 · 인용 건수 칸 · 지표별 진단에 증감을 적지 않았습니다.
+              같은 조건으로 다시 재면 증감이 다시 나옵니다.
             </p>
           )}
           {period === 'week' && comparison?.previousWeekOf && comparison.comparable && (comparison.gapWeeks ?? 1) >= 2 && (
@@ -856,8 +858,8 @@ export default function PeriodicReport() {
               */}
               {monthConditionBreaks.length > 0 && (
                 <p className="hint">
-                  ※ 이 달 안에서 측정 조건이 바뀌었습니다({monthConditionBreaks.join(' / ')}) — 주차별 점수가 같은 조건에서 나온
-                  값이 아니므로 평균을 하나의 수치처럼 읽지 마세요.
+                  ※ 이 달 안에 측정 조건이 바뀌었거나 확인할 수 없는 주가 있습니다({monthConditionBreaks.join(' / ')}) — 주차별 점수가 같은
+                  조건에서 나온 값이 아니므로 평균을 하나의 수치처럼 읽지 마세요.
                 </p>
               )}
               <p className="hint">

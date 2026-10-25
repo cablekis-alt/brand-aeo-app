@@ -11,9 +11,13 @@ import {
   comparableWith,
   compareConditions,
   conditionChanges,
+  conditionLabels,
   conditionReason,
+  conditionSummary,
   runAverage,
+  runCountText,
   siteComparable,
+  siteDifference,
   weeksBetween,
 } from '../src/lib/comparability'
 import { comparisonFromHistory } from '../src/lib/citationView'
@@ -82,6 +86,20 @@ ok('구간: W42는 W41–W42', comparableRun(hist, '2026-W42').map((c) => c.week
 ok('구간: W40은 W38–W40', comparableRun(hist, '2026-W40').length === 2)
 ok('평균: W42 같은 조건 2주 평균 17', runAverage(hist, '2026-W42')?.average === 17 && runAverage(hist, '2026-W42')?.weeks === 2)
 ok('평균: 조건이 바뀐 첫 주(W41)는 평균 없음', runAverage(hist, '2026-W41') === null)
+
+// 8-1) 바뀐 조건이 먼저 · 화면용 이름 · 이유 문장(재검토: 확인 불가가 앞에 서서 실제 원인을 가렸다 — 실측 humax-networks W38→W40)
+const mixed = compareConditions(
+  card('2026-W38', 9, { modelsUsed: undefined, judgeModel: undefined, repeatsPerQuestion: 3 }),
+  card('2026-W40', 20, { questionBankVersion: 'v7' }),
+)
+ok('바뀐 조건(질문지 · 반복)이 확인 불가(수집 · 판정 모델)보다 먼저', mixed.map((d) => d.dimension).join(',') === '질문지,반복 횟수,수집 모델,판정 모델')
+ok('한 낱말 요약은 실제로 바뀐 조건', conditionChanges(card('2026-W38', 9, { modelsUsed: undefined, repeatsPerQuestion: 3 }), card('2026-W40', 20))[0] === '반복 횟수')
+ok('화면용 이름: 확인 불가는 「기록 없음」', conditionLabels(card('2026-W38', 1, { judgeModel: undefined }), card('2026-W39', 1)).join(',') === '판정 모델 기록 없음')
+ok('요약 구절: 바뀜 · 기록 없음을 가른다', conditionSummary(mixed) === '질문지 · 반복 횟수 바뀜 · 수집 모델 · 판정 모델 기록 없음')
+const unknownOnly = comparableWith([card('2026-W38', 1, { judgeModel: undefined }), card('2026-W39', 2)], '2026-W39')
+ok('확인 불가뿐이면 이유도 「기록이 한쪽에 없어」(「달라」가 아님)', unknownOnly.reason.includes('기록이 한쪽에 없어') && !unknownOnly.reason.includes('달라'))
+ok('같은 조건 세는 말: 이어지면 「연속 N주」, 빈 주가 있으면 「N번」', runCountText([{ weekOf: '2026-W40' }, { weekOf: '2026-W41' }]) === '연속 2주' && runCountText([{ weekOf: '2026-W40' }, { weekOf: '2026-W44' }]) === '2번')
+ok('사이트 차이 이름: 주소만', siteDifference({ url: 'https://corp.kt.com/', collectionMode: 'static' }, { url: 'https://www.kt.com/', collectionMode: 'static' }) === '주소')
 
 // 9) 사이트 진단(실측 ktcorp W40 corp.kt.com 57 → W41 www.kt.com 0)
 ok('사이트: 주소가 다르면 견주지 않음', !siteComparable({ url: 'https://corp.kt.com/', collectionMode: 'static' }, { url: 'https://www.kt.com/', collectionMode: 'static' }))

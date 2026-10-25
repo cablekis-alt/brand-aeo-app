@@ -1,5 +1,5 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { comparableRun, compareConditions, type ConditionChange } from './comparability'
+import { comparableRun, compareConditions, runCountText, type ConditionChange } from './comparability'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, weekLabel } from './format'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
@@ -315,7 +315,7 @@ export function trustChecks(
           id: 'runs',
           label: '측정 횟수',
           status: 'ok',
-          detail: `같은 조건으로 연속 ${run.length}주 쟀습니다(${weekLabel(run[0]!.weekOf)}–${weekLabel(card.weekOf)}). 같은 방향인지 추이로 확인합니다.`,
+          detail: `같은 조건으로 ${runCountText(run)} 쟀습니다(${weekLabel(run[0]!.weekOf)}–${weekLabel(card.weekOf)}). 같은 방향인지 추이로 확인합니다.`,
         }
       : {
           id: 'runs',

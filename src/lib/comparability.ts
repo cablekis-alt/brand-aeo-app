@@ -48,7 +48,9 @@ function tri(dimension: ConditionChange, a: string | null, b: string | null): Co
 }
 
 /**
- * 두 측정 사이에 달라진(또는 확인할 수 없는) 조건 — 순서는 위 여섯 가지 순서. 같으면 빈 배열.
+ * 두 측정 사이에 달라진(또는 확인할 수 없는) 조건 — **바뀐 조건이 먼저**, 그다음 확인 불가(각각 위 여섯 가지 순서). 같으면 빈 배열.
+ * 바뀐 조건을 앞에 두는 까닭: 한 낱말만 적는 곳(개요 칩 · 브랜드 현황)과 이유 첫 구절이 실제 원인을 가리지 않게(실측 humax-networks
+ * W38→W40 — 수집 모델은 W38에 기록이 없을 뿐이고 바뀐 것은 질문지 · 반복인데, 순서대로 두면 「수집 모델」이 먼저 잡혔다).
  * engine을 주면(엔진 하나로 좁혀 본 표) 수집 엔진은 두 측정 모두 그 엔진을 썼는지, 수집 모델은 그 엔진의 모델만 본다.
  */
 export function compareConditions(prev: Card, cur: Card, opts: { engine?: string | null } = {}): ConditionDiff[] {
@@ -102,17 +104,34 @@ export function compareConditions(prev: Card, cur: Card, opts: { engine?: string
     cur.repeatsPerQuestion ? `${cur.repeatsPerQuestion}회` : null,
   )
   if (r) out.push(r)
-  return out
+  return [...out.filter((d) => d.state === 'changed'), ...out.filter((d) => d.state === 'unknown')]
 }
 
-/** 달라진(또는 확인할 수 없는) 조건 이름 전부 — 그래프 · 회차 · 올린 글처럼 「무엇이 바뀌었나」를 다 적을 때. */
+/** 달라진(또는 확인할 수 없는) 조건 이름 전부 — 판단용(견줄 수 있나 · 어느 조건인가). 화면에 적을 때는 conditionLabels를 쓴다. */
 export function conditionChanges(prev: Card, cur: Card): ConditionChange[] {
   return compareConditions(prev, cur).map((d) => d.dimension)
 }
 
-/** 처음 걸린 조건 이름. 견줘도 되면 null — 개요 칩 · 브랜드 현황처럼 한 낱말만 적을 때. */
+/** 처음 걸린 조건 이름(바뀐 조건이 먼저). 견줘도 되면 null. */
 export function conditionChange(prev: Card, cur: Card): ConditionChange | null {
   return conditionChanges(prev, cur)[0] ?? null
+}
+
+/** 화면에 적을 조건 이름 — 바뀐 조건은 이름 그대로, 확인 불가는 「수집 모델 기록 없음」(기록이 없는 것을 「바뀜 · 다름」으로 적지 않는다). */
+export function conditionLabel(d: ConditionDiff): string {
+  return d.state === 'unknown' ? `${d.dimension} 기록 없음` : d.dimension
+}
+
+/** 두 측정 사이 조건 이름들(화면용) — 그래프 · 회차 · 올린 글처럼 「무엇이 달랐나」를 다 적을 때. */
+export function conditionLabels(prev: Card, cur: Card): string[] {
+  return compareConditions(prev, cur).map(conditionLabel)
+}
+
+/** 한 구절 요약 — 「질문지 · 반복 횟수 바뀜」 · 「수집 모델 · 판정 모델 기록 없음」 · 둘이 섞이면 「질문지 바뀜 · 수집 모델 기록 없음」. */
+export function conditionSummary(diffs: ConditionDiff[]): string {
+  const changed = diffs.filter((d) => d.state === 'changed').map((d) => d.dimension)
+  const unknown = diffs.filter((d) => d.state === 'unknown').map((d) => d.dimension)
+  return [changed.length ? `${changed.join(' · ')} 바뀜` : '', unknown.length ? `${unknown.join(' · ')} 기록 없음` : ''].filter(Boolean).join(' · ')
 }
 
 /** 조건 하나를 한 구절로 — 「판정 엔진 Gemini → Claude」 · 「판정 모델 기록 없음(확인 불가)」. */
@@ -173,9 +192,24 @@ export function comparableWith<T extends Card>(history: T[], weekOf: string, opt
     previousWeekOf: prev.weekOf,
     comparable: diffs.length === 0,
     diffs,
-    reason: diffs.length === 0 ? '' : `직전 측정(${prev.weekOf})과 측정 조건이 달라 비교하지 않음 — ${conditionReason(diffs)}`,
+    reason:
+      diffs.length === 0
+        ? ''
+        : diffs.some((d) => d.state === 'changed')
+          ? `직전 측정(${prev.weekOf})과 측정 조건이 달라 비교하지 않음 — ${conditionReason(diffs)}`
+          : `직전 측정(${prev.weekOf})과 견줄 측정 조건 기록이 한쪽에 없어 비교하지 않음 — ${conditionReason(diffs)}`,
     gapWeeks: weeksBetween(prev.weekOf, weekOf),
   }
+}
+
+/**
+ * 같은 조건 구간을 세는 말 — 이웃한 측정이 모두 바로 다음 주면 「연속 N주」, 사이에 측정하지 않은 주가 있으면 「N번」
+ * (W40 · W44만 같은 조건으로 잰 구간을 「연속 2주」라고 하지 않는다).
+ */
+export function runCountText(run: { weekOf: string }[]): string {
+  if (run.length === 0) return ''
+  const span = weeksBetween(run[0]!.weekOf, run[run.length - 1]!.weekOf)
+  return span === run.length - 1 ? `연속 ${run.length}주` : `${run.length}번`
 }
 
 /**
@@ -222,5 +256,14 @@ export function siteComparable(
   prev: { url: string; collectionMode: string },
   cur: { url: string; collectionMode: string },
 ): boolean {
-  return siteKey(prev.url) === siteKey(cur.url) && prev.collectionMode === cur.collectionMode
+  return siteDifference(prev, cur) === null
+}
+
+/** 두 사이트 진단의 다른 점 — 「주소」 · 「수집 방식」 · 「주소 · 수집 방식」, 같으면 null. */
+export function siteDifference(
+  prev: { url: string; collectionMode: string },
+  cur: { url: string; collectionMode: string },
+): string | null {
+  const parts = [siteKey(prev.url) !== siteKey(cur.url) ? '주소' : '', prev.collectionMode !== cur.collectionMode ? '수집 방식' : ''].filter(Boolean)
+  return parts.length ? parts.join(' · ') : null
 }

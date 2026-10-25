@@ -203,7 +203,8 @@ export default function ScoreTrendChart({
           )}
 
           {breaks.map((b) => {
-            const bx = x(b.at) - step / 2
+            // 첫 칸의 조건 변경(창 밖 앞 측정과 견줌)은 칸 사이가 없어 그림 왼쪽 끝에 붙인다 — 세로축 눈금 위나 그림 밖에 그리지 않는다.
+            const bx = Math.max(PAD.left + 4, x(b.at) - step / 2)
             return (
               <g key={`brk-${b.at}`}>
                 <line className="st-break" x1={bx} x2={bx} y1={padTop - 6} y2={padTop + innerH} />
