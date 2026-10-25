@@ -46,7 +46,7 @@ import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { comparisonFromHistory } from '../lib/citationView'
+import { comparableRun, compareConditions, conditionReason, siteComparable } from '../lib/comparability'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
 import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
@@ -161,9 +161,10 @@ export default function PeriodicReport() {
    * 셋을 고른 이유: Brand는 답변에서의 가시성, Site는 페이지 준비도, 인용 건수는 그 주에
    * 엔진이 실제로 근거를 얼마나 끌어왔는지 — 서로 다른 축이라 함께 봐야 한다.
    */
-  const comparison = useMemo(() => comparisonFromHistory(history, weekOf, null), [history, weekOf])
+  // 주간 숫자 칸 · 표지 · 지표별 진단이 같은 판정을 쓴다(report.comparison — 앱 전체 규칙 comparability.ts). 월간은 아래 monthCompare.
+  const comparison = period === 'week' ? (report?.comparison ?? null) : null
   const prevCard = useMemo(
-    () => (comparison ? (history.find((h) => h.weekOf === comparison.previousWeekOf) ?? null) : null),
+    () => (comparison?.previousWeekOf ? (history.find((h) => h.weekOf === comparison.previousWeekOf) ?? null) : null),
     [history, comparison],
   )
 
@@ -466,11 +467,32 @@ export default function PeriodicReport() {
     [evidence],
   )
 
-  /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
-  const monthEngineSets = useMemo(
-    () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
-    [weeksInMonth],
-  )
+  /** 그 달 안에서 측정 조건이 바뀐 곳(앱 전체 규칙) — 바뀌었으면 월 평균을 한 값처럼 읽으면 안 된다. */
+  const monthConditionBreaks = useMemo(() => {
+    const out: string[] = []
+    for (let i = 1; i < weeksInMonth.length; i++) {
+      const diffs = compareConditions(weeksInMonth[i - 1]!, weeksInMonth[i]!)
+      if (diffs.length > 0) out.push(`${weekLabel(weeksInMonth[i]!.weekOf)}: ${conditionReason(diffs)}`)
+    }
+    return out
+  }, [weeksInMonth])
+
+  /*
+   * 월간 증감 — 앞 달과 이 달의 모든 측정이 같은 조건 연속 구간 하나에 들 때만 견준다. 인용 합계는 잰 주 수까지 같아야 한다
+   * (주 수가 다르면 합계 차이는 측정 횟수 차이다). 견줄 수 없으면 이유 한 줄을 화면과 종이에 함께 적는다.
+   */
+  const monthCompare = useMemo(() => {
+    if (period !== 'month' || weeksInPrevMonth.length === 0 || weeksInMonth.length === 0) return null
+    const span = [...weeksInPrevMonth, ...weeksInMonth].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
+    const inRun = new Set(comparableRun(history, span.at(-1)!.weekOf).map((c) => c.weekOf))
+    if (span.every((c) => inRun.has(c.weekOf))) return { comparable: true, reason: '', sameWeeks: weeksInPrevMonth.length === weeksInMonth.length }
+    let reason = ''
+    for (let i = 1; i < span.length && !reason; i++) {
+      const diffs = compareConditions(span[i - 1]!, span[i]!)
+      if (diffs.length > 0) reason = `${weekLabel(span[i]!.weekOf)}: ${conditionReason(diffs)}`
+    }
+    return { comparable: false, reason, sameWeeks: false }
+  }, [period, history, weeksInMonth, weeksInPrevMonth])
 
   if (!tenant) return null
 
@@ -566,10 +588,9 @@ export default function PeriodicReport() {
           <TrustChecksBox checks={checks} error={cohortLoaded?.error ?? null} />
 
           {/*
-            전주 대비는 **비교가 성립할 때만** 보여 준다. 수집 엔진이 달라진 주차끼리 빼면
-            그 차이는 브랜드가 아니라 측정 방식이 만든 것이다 — 인용 갭 분석과 같은 판단
-            (comparisonFromHistory)을 쓴다. Site 점수만 예외인데, 엔진과 무관하게 페이지를
-            읽어 낸 값이라 그 조건이 걸리지 않는다.
+            증감은 **견줄 수 있을 때만** 보여 준다. 측정 조건(수집 엔진 · 판정 · 모델 · 질문지 · 반복)이 바뀐 주끼리 빼면
+            그 차이는 브랜드가 아니라 측정 방식이 만든 것이다 — 앱 전체 규칙(comparability.ts)을 표지 · 지표별 진단과 함께 쓴다.
+            Site 점수는 엔진과 무관하게 페이지를 읽은 값이라 같은 주소 · 같은 수집 방식인지만 본다(siteComparable).
           */}
           <section className="report-tiles">
             <article>
@@ -581,7 +602,7 @@ export default function PeriodicReport() {
                   ) : (
                     <>
                       {monthBrand}
-                      <Delta now={monthBrand} prev={prevMonthBrand} />
+                      <Delta now={monthBrand} prev={monthCompare?.comparable ? prevMonthBrand : null} />
                     </>
                   )
                 ) : (
@@ -596,7 +617,7 @@ export default function PeriodicReport() {
               </p>
               <p className="tile-note">
                 {period === 'month'
-                  ? `답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
+                  ? `답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth && monthCompare?.comparable ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
                   : '답변에 얼마나 나오는가'}
               </p>
             </article>
@@ -607,7 +628,9 @@ export default function PeriodicReport() {
                 const now = period === 'month' ? monthMention : pct(card.mentionRate * 100)
                 const prev =
                   period === 'month'
-                    ? prevMonthMention
+                    ? monthCompare?.comparable
+                      ? prevMonthMention
+                      : null
                     : comparison?.comparable && prevCard
                       ? pct(prevCard.mentionRate * 100)
                       : null
@@ -632,6 +655,8 @@ export default function PeriodicReport() {
               {(() => {
                 const now = siteNow
                 const prev = sitePrev
+                // 같은 페이지(주소)를 같은 방식으로 잰 진단끼리만 증감을 낸다 — 실측 ktcorp corp.kt.com 57 → www.kt.com 0이 「-57」로 찍혔다.
+                const sameSite = now && prev ? siteComparable(prev, now) : false
                 // 보이는 진단이 그 주(월간이면 그 달) 것이 아니면 밝힌다 — 사이트 진단은 대개 측정과 다른 주에 한다.
                 const away = now
                   ? period === 'month'
@@ -646,11 +671,17 @@ export default function PeriodicReport() {
                   <>
                     <p className="tile-value">
                       {now ? now.score : <span className="muted">—</span>}
-                      {now && <Delta now={now.score} prev={prev?.score ?? null} />}
+                      {now && <Delta now={now.score} prev={sameSite ? (prev?.score ?? null) : null} />}
                     </p>
                     <p className="tile-note">
                       {now
-                        ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${prev ? `${weekLabel(prev.weekOf)} 대비` : '첫 기록'}`
+                        ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${
+                            prev
+                              ? sameSite
+                                ? `${weekLabel(prev.weekOf)} 대비`
+                                : `${weekLabel(prev.weekOf)} 진단과 주소 · 수집 방식이 달라 견주지 않음`
+                              : '첫 기록'
+                          }`
                         : 'Site AEO Checker로 진단한 기록이 없습니다'}
                     </p>
                   </>
@@ -662,7 +693,18 @@ export default function PeriodicReport() {
               <p className="tile-value">
                 {cite.now === null ? <span className="muted">—</span> : cite.now.toLocaleString()}
                 {cite.now !== null && (
-                  <Delta now={cite.now} prev={period === 'month' ? cite.prev : comparison?.comparable ? cite.prev : null} />
+                  <Delta
+                    now={cite.now}
+                    prev={
+                      period === 'month'
+                        ? monthCompare?.comparable && monthCompare.sameWeeks
+                          ? cite.prev
+                          : null
+                        : comparison?.comparable
+                          ? cite.prev
+                          : null
+                    }
+                  />
                 )}
               </p>
               <p className="tile-note">
@@ -671,11 +713,28 @@ export default function PeriodicReport() {
             </article>
           </section>
           {/*
-            화면에서만 — 표지 요약 · 지표별 진단의 전주 대비는 아직 비교 가능 여부를 보지 않고 세서, 종이에 이 문장을 실으면 같은 문서
-            안에서 서로 어긋난다. 「같은 조건」 규칙을 하나로 맞추는 작업에서 함께 정한다.
+            증감을 적지 않은 이유 · 떨어진 비교는 종이에도 싣는다 — 표지 · 숫자 칸 · 지표별 진단이 같은 판정을 쓰므로 이제 같은 문서
+            안에서 어긋나지 않는다. 빼면 PDF에서 증감이 이유 없이 사라진다.
           */}
-          {period === 'week' && comparison && !comparison.comparable && (
-            <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
+          {period === 'week' && comparison?.previousWeekOf && !comparison.comparable && (
+            <p className="hint">
+              ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과 측정 조건이 달라({conditionReason(comparison.diffs)}) 표지 · 숫자 칸 ·
+              지표별 진단에 증감을 적지 않았습니다. 같은 조건으로 다시 재면 증감이 다시 나옵니다.
+            </p>
+          )}
+          {period === 'week' && comparison?.previousWeekOf && comparison.comparable && (comparison.gapWeeks ?? 1) >= 2 && (
+            <p className="hint">
+              ※ 증감은 직전 측정({weekLabel(comparison.previousWeekOf)}, {comparison.gapWeeks}주 전) 대비입니다.
+            </p>
+          )}
+          {period === 'month' && monthCompare && !monthCompare.comparable && (
+            <p className="hint">
+              ※ 앞 달({monthLabel(prevMonth)})과 측정 조건이 같지 않아({monthCompare.reason}) 월 평균 · 합계에 증감을 적지
+              않았습니다.
+            </p>
+          )}
+          {period === 'month' && monthCompare?.comparable && !monthCompare.sameWeeks && (
+            <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
@@ -747,6 +806,8 @@ export default function PeriodicReport() {
                               {r.summary.firstCitedDays !== null && ` · 첫 인용 확인 D+${r.summary.firstCitedDays}`}
                             </div>
                           )}
+                          {/* 성과 화면과 같은 표식 — 올린 뒤 측정 사이에 측정 조건이 바뀌면 주별 인용을 같은 조건의 반복으로 읽지 않는다. */}
+                          {r.summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀜</div>}
                         </td>
                       </tr>
                     ))}
@@ -793,10 +854,10 @@ export default function PeriodicReport() {
                 평균을 한 값처럼 읽으면 안 되는 경우를 밝힌다. 그 달 안에서 수집 엔진이 갈렸으면
                 주차별 점수가 같은 조건에서 나온 값이 아니다.
               */}
-              {monthEngineSets.length > 1 && (
+              {monthConditionBreaks.length > 0 && (
                 <p className="hint">
-                  ※ 이 달 안에서 수집 엔진이 달랐습니다 — 주차별 점수가 같은 조건에서 나온 값이 아니므로 평균을
-                  하나의 수치처럼 읽지 마세요.
+                  ※ 이 달 안에서 측정 조건이 바뀌었습니다({monthConditionBreaks.join(' / ')}) — 주차별 점수가 같은 조건에서 나온
+                  값이 아니므로 평균을 하나의 수치처럼 읽지 마세요.
                 </p>
               )}
               <p className="hint">
@@ -815,7 +876,7 @@ export default function PeriodicReport() {
                   <tr>
                     <th>지표</th>
                     <th>값</th>
-                    <th>전주 대비</th>
+                    <th>{period === 'month' || (report.comparison.gapWeeks ?? 1) >= 2 ? '직전 측정 대비' : '전주 대비'}</th>
                     <th>상태</th>
                     <th>진단</th>
                   </tr>

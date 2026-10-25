@@ -1,4 +1,5 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
+import { comparableRun, compareConditions, type ConditionChange } from './comparability'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, weekLabel } from './format'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
@@ -249,75 +250,78 @@ export function trustChecks(
       differ.length > 0
         ? {
             id: 'questions',
-            label: '같은 질문지',
+            label: '같은 일반 질문',
             status: 'warn',
             detail: `${differ.map((r) => r.brandName).join(', ')}은(는) 일반 질문이 다릅니다 — 점수 차이가 가시성이 아니라 질문 차이일 수 있습니다.`,
           }
         : unknown.length > 0
           ? {
               id: 'questions',
-              label: '같은 질문지',
+              label: '같은 일반 질문',
               status: 'warn',
               detail: `${unknown.map((r) => r.brandName).join(', ')}의 이번 주 기록이나 질문 은행을 읽지 못해 같은 질문을 받았는지 확인하지 못했습니다.`,
             }
           : {
               id: 'questions',
-              label: '같은 질문지',
+              label: '같은 일반 질문',
               status: 'ok',
               detail: `코호트 ${cohort.length}곳이 같은 일반 질문${general ? ` ${general.questions}개` : ''}를 받았습니다.`,
             },
     )
   }
 
-  // 2) 같은 측정 조건 — 수집 엔진·모델·판정 모델. 읽은 카드끼리만 비교한다.
-  const all = [card, ...members]
-  const diffs: string[] = []
-  if (new Set(all.map(engineSet)).size > 1) diffs.push('수집 엔진')
-  if (new Set(all.map((c) => JSON.stringify(c.modelsUsed ?? {}))).size > 1) diffs.push('엔진 모델')
-  if (new Set(all.map((c) => c.judgeModel ?? '')).size > 1) diffs.push('판정 모델')
-  // 반복 횟수는 기록이 있는 카드끼리만 비교한다(기록 이전 카드는 모른다 — 다르다고 하지 않는다).
-  if (new Set(all.filter((c) => c.repeatsPerQuestion).map((c) => c.repeatsPerQuestion)).size > 1) diffs.push('질문당 반복 횟수')
+  // 2) 같은 측정 조건 — 같은 주 코호트 브랜드끼리, 앱 전체 규칙(comparability.ts)으로. 질문지 버전 번호는 브랜드마다 따로 매겨
+  //    견주지 않는다(같은 질문을 받았는지는 위 「같은 일반 질문」이 문장으로 본다). 한쪽에만 기록이 있으면 확인 불가로 친다.
+  const byDim = new Map<ConditionChange, { states: Set<string>; brands: string[] }>()
+  for (const m of members) {
+    for (const d of compareConditions(card, m).filter((d) => d.dimension !== '질문지')) {
+      const e = byDim.get(d.dimension) ?? { states: new Set<string>(), brands: [] }
+      e.states.add(d.state)
+      if (!e.brands.includes(m.brandName)) e.brands.push(m.brandName)
+      byDim.set(d.dimension, e)
+    }
+  }
+  const condText = [...byDim]
+    .map(([dim, e]) => `${dim}${e.states.has('changed') ? '' : ' 확인 불가'}(${e.brands.join(', ')})`)
+    .join(' · ')
   const unread = others.filter((r) => !r.loaded).length
   const unreadNote = unread > 0 ? ` (기록을 읽지 못한 ${unread}곳은 빼고 비교)` : ''
   if (others.length > 0) {
     checks.push(
-      diffs.length > 0
+      byDim.size > 0
         ? {
             id: 'conditions',
             label: '같은 측정 조건',
             status: 'warn',
-            detail: `코호트 안에서 다른 조건이 있습니다(${diffs.join(' · ')}) — 같은 조건의 비교가 아닙니다.${unreadNote}`,
+            detail: `코호트 안에서 다른 조건이 있습니다 — ${condText}. 같은 조건의 비교가 아닙니다.${unreadNote}`,
           }
         : {
             id: 'conditions',
             label: '같은 측정 조건',
             status: unread > 0 ? 'warn' : 'ok',
-            detail: `코호트 모두 ${engineText(card)}로 쟀고 판정 모델${card.repeatsPerQuestion ? `·반복 횟수(질문당 ${card.repeatsPerQuestion}회)` : ''}도 같습니다.${unreadNote}`,
+            detail: `코호트 모두 ${engineText(card)}로 쟀고 판정 엔진 · 모델${card.repeatsPerQuestion ? `·반복 횟수(질문당 ${card.repeatsPerQuestion}회)` : ''}도 같습니다.${unreadNote}`,
           },
     )
   }
 
-  // 3) 측정 횟수 — 한 번 잰 결과는 같은 설정에서도 몇 %p씩 흔들린다.
-  //    은행 버전과 주차를 적는다. "한 번뿐"만 쓰면 "1차 시험 결과"로 읽혔다 — 같은 주 재측정은 그 주를
-  //    덮어써서 세지 않으므로, 세는 단위가 주차라는 것도 보이게 한다.
-  const sameWeeks = sameConditionWeeks(
-    history.filter((h) => h.weekOf <= card.weekOf),
-    card,
-  )
-  const bank = card.questionBankVersion ? `질문 은행 ${card.questionBankVersion}` : '같은 질문 은행'
+  // 3) 측정 횟수 — 한 번 잰 결과는 같은 설정에서도 몇 %p씩 흔들린다. 같은 조건으로 **연속해** 잰 주를 센다(앱 전체 규칙의
+  //    comparableRun — 그래프 · 같은 조건 평균과 같은 구간). 예전에는 질문지 · 수집 엔진만 보고 떨어진 주도 세서, 판정이 바뀐 주를
+  //    「같은 조건 3주」로 셌다. 같은 주 재측정은 그 주를 덮어써서 세지 않으므로 세는 단위는 주차다.
+  const run = comparableRun(history, card.weekOf)
+  const hadEarlier = history.some((h) => h.weekOf < card.weekOf)
   checks.push(
-    sameWeeks.length >= 2
+    run.length >= 2
       ? {
           id: 'runs',
           label: '측정 횟수',
           status: 'ok',
-          detail: `${bank}·같은 엔진으로 잰 주차가 ${sameWeeks.length}개입니다(${weekLabel(sameWeeks[0]!)}–${weekLabel(sameWeeks.at(-1)!)}). 같은 방향인지 추이로 확인합니다.`,
+          detail: `같은 조건으로 연속 ${run.length}주 쟀습니다(${weekLabel(run[0]!.weekOf)}–${weekLabel(card.weekOf)}). 같은 방향인지 추이로 확인합니다.`,
         }
       : {
           id: 'runs',
           label: '측정 횟수',
           status: 'warn',
-          detail: `${bank}·같은 엔진으로 잰 주차가 아직 1개입니다(${weekLabel(card.weekOf)}). 고객용 결론은 다음 주차 측정에서도 같은 방향일 때 씁니다.`,
+          detail: `같은 조건으로 잰 주가 아직 이번 주(${weekLabel(card.weekOf)})뿐입니다${hadEarlier ? ' — 직전 측정과 조건이 달랐습니다' : ''}. 고객용 결론은 같은 조건으로 다시 재서 같은 방향일 때 씁니다.`,
         },
   )
 

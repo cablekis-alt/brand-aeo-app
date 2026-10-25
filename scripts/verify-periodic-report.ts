@@ -40,9 +40,29 @@ const second = buildPeriodicReport([card('2026-W40', 7, 7), card('2026-W41', 8, 
 ok('둘째 주차: 전주 대비 증감은 그대로', second.verdict.summary.includes('전주 대비 +1'))
 const flat = buildPeriodicReport([card('2026-W40', 8, 8), card('2026-W41', 8, 8)], '2026-W41')!
 ok('둘째 주차: 같으면 보합', flat.verdict.summary.includes('전주와 보합'))
-// 화면 이력은 최근 12주뿐 — 가장 오래 불러온 주차라도 저장된 previousWeek가 다르면 전주가 있었다(재검토에서 확인)
+// 화면 이력은 최근 12주뿐 — 가장 오래 불러온 주차의 앞 측정은 저장된 previousWeek로만 안다. 그 측정과 견줄 수 있는지(측정 조건)는
+// 모르므로 증감을 쓰지 않고 「확인 불가」(2026-10-25 「같은 조건」 통일 — 승인받은 기대값 변경: 예전엔 「전주 대비 +1」)
 const windowEdge = buildPeriodicReport([card('2026-W41', 9, 8), card('2026-W42', 9, 9)], '2026-W41')!
-ok('불러온 이력의 첫 주차라도 저장된 전주가 있으면 증감을 쓴다', windowEdge.verdict.summary.includes('전주 대비 +1'))
+ok('불러온 이력의 첫 주차: 앞 측정이 이력 밖이면 확인 불가(증감 없음)', windowEdge.verdict.summary.includes('확인 불가') && !windowEdge.verdict.summary.includes('+1'))
+
+// 측정 조건이 바뀐 주 — 표지 · 지표별 진단이 증감을 쓰지 않는다(실측 경쟁사 W41→W42 판정 Gemini → Claude에서 「전주 대비 +9」)
+const judgeSwitch = buildPeriodicReport(
+  [
+    card('2026-W41', 30, 30, { judgeEngine: 'gemini', judgeModel: 'gemini-3.7-flash', mentionRate: 0.1 } as Partial<WeeklyScorecard>),
+    card('2026-W42', 39, 30, { judgeEngine: 'claude', judgeModel: 'claude-sonnet-5-5', mentionRate: 0.2 } as Partial<WeeklyScorecard>),
+  ],
+  '2026-W42',
+)!
+ok('판정이 바뀐 주: 표지에 「전주 대비」 없음', !judgeSwitch.verdict.summary.includes('전주 대비'))
+ok('판정이 바뀐 주: 직전 측정 점수를 부호 없이 나란히 · 무엇이 달랐는지', judgeSwitch.verdict.summary.includes('직전 측정(2026년 41주차) 30점') && judgeSwitch.verdict.summary.includes('판정 엔진'))
+ok('판정이 바뀐 주: 지표별 진단 증감 없음', judgeSwitch.metrics.every((m) => !m.delta))
+ok('판정이 바뀐 주: 판정 결과를 함께 돌려준다', judgeSwitch.comparison.comparable === false && judgeSwitch.comparison.previousWeekOf === '2026-W41')
+
+// 같은 조건 평균 · 떨어진 주
+const run3 = buildPeriodicReport([card('2026-W40', 10, 10), card('2026-W41', 12, 10), card('2026-W43', 14, 12)], '2026-W43')!
+ok('같은 조건 3주 평균(4주 이동평균 대신)', run3.verdict.summary.includes('같은 조건 3주 평균 12') && !run3.verdict.summary.includes('이동평균'))
+ok('2주 떨어진 앞 측정은 「직전 측정(Wxx) 대비」', run3.verdict.summary.includes('직전 측정(2026년 41주차) 대비 +2'))
+ok('같은 조건 1주뿐이면 평균을 쓰지 않는다', !judgeSwitch.verdict.summary.includes('평균'))
 
 // 2) 사실성 「틀림」 — 응답 단위로 부르고, 내부 문자열을 고객 문장에 싣지 않는다
 const flags = ['openai / v3-q12 #2: 사실성 불일치 2건', 'gemini / v3-q07 #1: 사실성 불일치 1건']
@@ -83,7 +103,25 @@ ok('코호트: 읽은 브랜드 값', rowOf('a').mentionRate === 0.09)
 // 4) 측정 횟수 점검은 보고 주차까지만 센다 — 그 뒤에 잰 주차를 근거로 쓰지 않는다
 const later = card('2026-W41', 9, 8, { tenantId: 'me' } as Partial<WeeklyScorecard>)
 const runs = trustChecks(self, [self, later], [memberA, memberC], rows, null).find((c) => c.id === 'runs')!
-ok('측정 횟수: 보고 주차 뒤 주차는 세지 않는다(1개 → 주의)', runs.status === 'warn' && runs.detail.includes('아직 1개'))
+// 문구는 2026-10-25 「같은 조건」 통일로 「같은 조건으로 연속 N주」로 바뀜 — 판정(주의)은 그대로
+ok('측정 횟수: 보고 주차 뒤 주차는 세지 않는다(이번 주뿐 → 주의)', runs.status === 'warn' && runs.detail.includes('아직 이번 주'))
+// 판정이 바뀐 주는 같은 조건 연속 구간을 끊는다(예전엔 질문지 · 수집 엔진만 봐서 「같은 조건 3주」로 셌다)
+const judgeRunHist = [
+  card('2026-W40', 8, 8, { tenantId: 'me', judgeEngine: 'gemini' } as Partial<WeeklyScorecard>),
+  card('2026-W41', 8, 8, { tenantId: 'me', judgeEngine: 'gemini' } as Partial<WeeklyScorecard>),
+  card('2026-W42', 8, 8, { tenantId: 'me', judgeEngine: 'claude' } as Partial<WeeklyScorecard>),
+]
+const judgeRun = trustChecks(judgeRunHist[2]!, judgeRunHist, [], [], null).find((c) => c.id === 'runs')!
+ok('측정 횟수: 판정이 바뀐 주는 구간을 새로 센다', judgeRun.status === 'warn' && judgeRun.detail.includes('직전 측정과 조건이 달랐습니다'))
+const sameRun = trustChecks(judgeRunHist[1]!, judgeRunHist, [], [], null).find((c) => c.id === 'runs')!
+ok('측정 횟수: 같은 조건 연속 2주', sameRun.status === 'ok' && sameRun.detail.includes('연속 2주'))
+// 코호트 같은 측정 조건 — 질문지 버전 번호는 브랜드마다 달라 보지 않고, 판정 차이는 브랜드 이름과 함께
+const memberJudge = card('2026-W42', 8, 8, { tenantId: 'x', brandName: '엑스', judgeEngine: 'gemini', questionBankVersion: 'v9' } as Partial<WeeklyScorecard>)
+const condCheck = trustChecks(judgeRunHist[2]!, judgeRunHist, [memberJudge], [
+  { tenantId: 'me', isSelf: true, loaded: true } as never,
+  { tenantId: 'x', isSelf: false, loaded: true, brandName: '엑스', sameQuestions: true } as never,
+], null).find((c) => c.id === 'conditions')!
+ok('코호트 조건: 판정 엔진 차이를 브랜드와 함께 · 질문지 버전은 보지 않음', condCheck.status === 'warn' && condCheck.detail.includes('판정 엔진(엑스)') && !condCheck.detail.includes('질문지'))
 const qCheck = trustChecks(self, [self], [memberA, memberC], rows, null).find((c) => c.id === 'questions')!
 ok('같은 질문지: 다른 질문을 받은 브랜드(다)를 밝힌다', qCheck.status === 'warn' && qCheck.detail.startsWith('다은(는) 일반 질문이 다릅니다'))
 

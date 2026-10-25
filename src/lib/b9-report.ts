@@ -7,7 +7,8 @@ import {
   shareOfMentionShortSample,
   type WeeklyScorecard,
 } from '../prompts/b8-report'
-import { formatPct, formatRank } from './format'
+import { comparableWith, runAverage, type Comparability } from './comparability'
+import { formatPct, formatRank, weekLabel } from './format'
 
 // B9 — 주간 스코어카드를 결정적 규칙으로 진단하고 개선제안을 도출한다.
 // 점수·수치는 이미 확정된 입력이며, 여기서는 "해석"과 "실행안"만 규칙 기반으로 붙인다(새 수치 생성 금지).
@@ -56,6 +57,11 @@ export interface PeriodicReport {
   risks: string[]
   recommendations: Recommendation[]
   variabilityNote: string | null
+  /**
+   * 직전 측정과 견줘도 되는가 — 앱 전체 규칙(comparability.ts). 표지 요약 · 지표별 진단 · 화면의 숫자 칸이 같은 판정을 쓴다
+   * (예전엔 표지 · 진단만 검사 없이 증감을 써서, 판정이 바뀐 주에도 「전주 대비 +9」가 고객 종이에 찍혔다).
+   */
+  comparison: Comparability
 }
 
 
@@ -408,20 +414,48 @@ export function buildPeriodicReport(
   const idx = history.findIndex((h) => h.weekOf === weekOf)
   const card = idx >= 0 ? history[idx] : history.at(-1)
   if (!card) return null
-  const prev = idx > 0 ? history[idx - 1] : undefined
+  // 직전 측정과 견줘도 될 때만 증감을 쓴다 — 측정 조건이 바뀐 주의 차이는 브랜드가 아니라 측정 방식이 만든 것이다.
+  const comparison = comparableWith(history, card.weekOf)
+  const prev = comparison.previousWeekOf ? history.find((h) => h.weekOf === comparison.previousWeekOf) : undefined
 
-  const metrics = diagnoseMetrics(card, prev, eeat)
+  const metrics = diagnoseMetrics(card, comparison.comparable ? prev : undefined, eeat)
   const strengths = metrics.filter((m) => m.status === 'good')
   const recommendations = buildRecommendations(metrics, card)
 
   // 종합 판정
   const badCount = metrics.filter((m) => m.status === 'bad').length
   const warnCount = metrics.filter((m) => m.status === 'warn').length
-  const trend = card.aeoScore.current - card.aeoScore.previousWeek
-  // 비교할 전주가 없으면 「보합」이라고 하지 않는다 — 첫 측정 주차의 previousWeek는 이번 주 값으로 채워져 차이가 0이다.
-  // 앞 카드가 안 보여도(화면 이력은 최근 12주뿐) 저장된 previousWeek가 이번 주와 다르면 전주가 있었던 것이다 — 그때는 증감을 쓴다.
-  const noPrior = !prev && card.aeoScore.previousWeek === card.aeoScore.current
-  const trendText = noPrior ? '전주 기록 없음' : trend > 0 ? `전주 대비 +${trend}` : trend < 0 ? `전주 대비 ${trend}` : '전주와 보합'
+  /*
+   * 표지의 증감 — 저장된 previousWeek · ma4(측정 당시 값, 조건이 바뀐 주를 가리지 않는다)를 쓰지 않고 이력에서 센다.
+   *   - 앞 측정이 없음: 첫 측정 주차면 「전주 기록 없음」. 저장된 previousWeek가 이번 주와 다르면 앞 측정이 있었는데 불러온 이력
+   *     (최근 12주) 밖이다 — 견줄 수 있는지 모르니 「확인 불가」.
+   *   - 견줄 수 없음: 증감 대신 두 점수를 부호 없이 나란히 적고 무엇이 달랐는지 적는다.
+   *   - 2주 이상 떨어진 앞 측정은 「전주」가 아니라 「직전 측정(Wxx)」.
+   */
+  const prevLabel = comparison.previousWeekOf ? weekLabel(comparison.previousWeekOf) : ''
+  // 바뀐 조건과 한쪽에 기록이 없어 확인할 수 없는 조건을 가른다 — 기록이 없는 것을 「달라」라고 하지 않는다.
+  const changedDims = comparison.diffs.filter((d) => d.state === 'changed').map((d) => d.dimension).join(' · ')
+  const unknownDims = comparison.diffs.filter((d) => d.state === 'unknown').map((d) => d.dimension).join(' · ')
+  const notComparableText = changedDims
+    ? `측정 조건(${changedDims})이 달라 증감으로 읽지 않음`
+    : `측정 조건 기록이 한쪽에 없어(${unknownDims}) 증감으로 읽지 않음`
+  const delta = prev ? card.aeoScore.current - prev.aeoScore.current : 0
+  const against = (comparison.gapWeeks ?? 1) >= 2 ? `직전 측정(${prevLabel}) 대비` : '전주 대비'
+  const trendText = !prev
+    ? card.aeoScore.previousWeek === card.aeoScore.current
+      ? '전주 기록 없음'
+      : '직전 측정 기록을 불러오지 못해 증감 확인 불가'
+    : !comparison.comparable
+      ? `직전 측정(${prevLabel}) ${prev.aeoScore.current}점 — ${notComparableText}`
+      : delta > 0
+        ? `${against} +${delta}`
+        : delta < 0
+          ? `${against} ${delta}`
+          : (comparison.gapWeeks ?? 1) >= 2
+            ? `직전 측정(${prevLabel})과 같음`
+            : '전주와 보합'
+  // 같은 조건 평균 — 같은 조건으로 2번 이상 잰 구간이 있을 때만(조건이 바뀐 주를 섞은 4주 이동평균을 보이지 않는다).
+  const avg = runAverage(history, card.weekOf)
   let tone: MetricStatus
   let label: string
   if (card.aeoScore.current >= 60 && badCount === 0) {
@@ -434,13 +468,16 @@ export function buildPeriodicReport(
     tone = 'bad'
     label = '개선 필요'
   }
-  const summary = `Brand AEO Score ${card.aeoScore.current}점(4주 이동평균 ${card.aeoScore.ma4}, ${trendText}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
+  const scoreNote = [avg ? `같은 조건 ${avg.weeks}주 평균 ${avg.average}` : '', trendText].filter(Boolean).join(', ')
+  const summary = `Brand AEO Score ${card.aeoScore.current}점(${scoreNote}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
 
   // 하한은 0에서 잘려 있어(ciBounds) 상한 − 하한은 흔들림을 줄여 보인다. 자르기 전 폭으로 판단한다.
   const ciMargin = card.aeoScore.ciHigh - card.aeoScore.current
   const variabilityNote =
     2 * ciMargin > 25
-      ? `95% 신뢰구간이 ±${Math.round(ciMargin * 10) / 10}점(${card.aeoScore.ciLow}–${card.aeoScore.ciHigh})으로 넓습니다(변동성 큼). 이번 주 단일 변동은 과잉 해석하지 말고 4주 이동평균(${card.aeoScore.ma4}) 추세로 판단하세요.`
+      ? `95% 신뢰구간이 ±${Math.round(ciMargin * 10) / 10}점(${card.aeoScore.ciLow}–${card.aeoScore.ciHigh})으로 넓습니다(변동성 큼). 이번 주 단일 변동은 과잉 해석하지 말고 ${
+          avg ? `같은 조건 ${avg.weeks}주 평균(${avg.average}) 추세로 판단하세요.` : '같은 조건으로 한 번 더 잰 뒤 같은 방향인지 확인하세요.'
+        }`
       : null
 
   return {
@@ -450,5 +487,6 @@ export function buildPeriodicReport(
     risks: card.hallucinationFlags,
     recommendations,
     variabilityNote,
+    comparison,
   }
 }
