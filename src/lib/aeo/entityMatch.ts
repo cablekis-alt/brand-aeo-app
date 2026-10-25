@@ -66,8 +66,37 @@ function isBrandOnly(target: string, candidates: string[]): boolean {
   return false
 }
 
+/** 낱말 비교용 형태 — 소문자 · 문장부호를 공백으로 · 공백 하나로. norm과 달리 공백을 남겨 낱말 경계를 지킨다. */
+function wordForm(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[’‘`]/g, "'")
+    .replace(/[()[\]{}<>|·・,./\\\-"“”!?:;#]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /**
- * 페이지가 이 브랜드를 한 번이라도 부르는지 — 제목 · H1 · og · 설명 · JSON-LD 이름 · 조직 후보 · 본문 어디든.
+ * 글 안에 이름이 「낱말로」 있는지. 공백을 지우고 부분 문자열로 찾으면 짧은 별칭이 남의 낱말에 걸린다 — 「Back to top」 ·
+ * 「desktop」의 kt · skt, 「marketing」의 keti, 「비가 온 뒤」의 가온, 「군산 각 지역」의 군산각(2026-10-25 검토).
+ * 앞은 글자 · 숫자가 아니어야 하고, 뒤는 영문 · 숫자로 끝나는 이름만 막는다(한글 이름 뒤에는 조사가 붙는다 — 「군산각에서」).
+ * 이름 안의 띄어쓰기는 있어도 없어도 된다(「KT 하이오더」 = 「KT하이오더」).
+ */
+function mentionsWord(text: string, name: string): boolean {
+  const n = wordForm(name)
+  if (n.replace(/\s/g, '').length < 2) return false
+  const t = wordForm(text)
+  if (!t) return false
+  const body = n
+    .split(' ')
+    .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s*')
+  const tail = /[a-z0-9]$/.test(n) ? '(?![a-z0-9])' : ''
+  return new RegExp(`(?<![\\p{L}\\p{N}])${body}${tail}`, 'u').test(t)
+}
+
+/**
+ * 페이지가 이 브랜드를 한 번이라도 부르는지 — 제목 · H1 · og · 설명 · JSON-LD 이름 · 조직 후보 · 본문 어디든, 낱말로.
  *
  * 등록되지 않은 주소를 고른 브랜드 기준으로 판정해도 되는지 가린다. 그 브랜드의 블로그 글이나 새 도메인은 이름이
  * 나오고, 상관없는 남의 사이트(군산각을 고른 채 진단한 컴북스)는 나오지 않는다 — 그런 페이지에 「og:site_name을
@@ -85,7 +114,7 @@ export function pageMentionsBrand(s: PageSignals, brandName: string, aliases: st
     ...s.orgCandidates,
     s.mainText,
   ]
-  return fields.some((f) => containsBrand(f, candidates) !== null)
+  return fields.some((f) => candidates.some((c) => mentionsWord(f, c)))
 }
 
 const ORG_TYPES = /^(organization|localbusiness|corporation|medicalorganization|medicalclinic|hospital|dentist|store|restaurant|lodgingbusiness|hotel)$/i

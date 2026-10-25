@@ -116,10 +116,18 @@ try {
     ({ title: '', h1s: [], ogSiteName: '', ogTitle: '', metaDescription: '', jsonLdEntities: [], orgCandidates: [], mainText: '', ...over }) as PageSignals
   const unrelatedPage = page({ title: '컴북스닷컴', h1s: ['홈'], metaDescription: '출판 브랜드 포털', mainText: '인공지능총서 · 고전 희곡' })
   ok('엔티티: 브랜드를 한 번도 부르지 않는 남의 페이지', !pageMentionsBrand(unrelatedPage, '가상각', ['가상 여행의 모든것']))
-  ok('엔티티: 본문에만 있어도 부른다(띄어쓰기 무시)', pageMentionsBrand(page({ title: '여행 후기', mainText: '오늘은 가상 각 에서 묵었다' }), '가상각'))
-  ok('엔티티: 별칭으로 불러도 된다', pageMentionsBrand(page({ ogSiteName: '가상 여행의 모든것' }), '가상각', ['가상 여행의 모든것']))
+  ok('엔티티: 본문에만 있어도 부른다(조사가 붙어도)', pageMentionsBrand(page({ title: '여행 후기', mainText: '오늘은 「가상각」에서 묵었다' }), '가상각'))
+  ok('엔티티: 별칭으로 불러도 된다(이름 안 띄어쓰기는 상관없음)', pageMentionsBrand(page({ ogSiteName: '가상여행의 모든것' }), '가상각', ['가상 여행의 모든것']))
   ok('엔티티: JSON-LD 조직 이름', pageMentionsBrand(page({ jsonLdEntities: [{ types: ['Organization'], name: '가상각' }] }), '가상각'))
   ok('엔티티: 한 글자 별칭은 보지 않는다', !pageMentionsBrand(page({ mainText: '가 나 다' }), '가상각', ['가']))
+  // 짧은 별칭이 남의 낱말에 걸리지 않는다 — 공백을 지운 부분 문자열로 찾던 첫 판의 구멍(2026-10-25 검토).
+  const noise = page({ mainText: 'Back to top · Download our desktop app · marketing · KTX를 타고 · 비가 온 뒤 · 군산 각 지역의 숙소 · 강남가온치과' })
+  ok('엔티티: 「Back to top」 · 「desktop」 · 「KTX」는 KT가 아니다', !pageMentionsBrand(noise, 'KT', ['kt']))
+  ok('엔티티: 「desktop」은 SKT가 아니다', !pageMentionsBrand(noise, 'SK텔레콤', ['SKT']))
+  ok('엔티티: 「marketing」은 KETI가 아니다', !pageMentionsBrand(noise, 'KETI'))
+  ok('엔티티: 「비가 온 뒤」 · 「강남가온치과」는 가온이 아니다', !pageMentionsBrand(noise, '가온그룹', ['가온']))
+  ok('엔티티: 「군산 각 지역」은 군산각이 아니다', !pageMentionsBrand(noise, '군산각'))
+  ok('엔티티: 낱말로 쓴 KT는 부른다(한글 조사 · 이름 안 띄어쓰기)', pageMentionsBrand(page({ mainText: 'KT와 제휴한 KT하이오더 매장' }), 'KT 하이오더') && pageMentionsBrand(page({ title: 'KT 고객센터' }), 'KT'))
 
   // 4) 서버 — 가짜 브랜드: 고객 vsite(지역형, 사실 · 브랜드 페이지는 설정에만), 같은 홈페이지의 영어 측정 vsite-en,
   //    홈페이지가 같은 경쟁사 vcomp, vsite의 옛 도메인을 함께 쓰는 고객 vold, 네이버 블로그 고객 blog.
