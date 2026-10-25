@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { HistoryWeek, PublishedPost } from '../lib/api'
-import { conditionChanges, type ConditionChange } from '../lib/comparability'
-import { ENGINE_LABEL } from '../lib/format'
+import { compareConditions, diffText } from '../lib/comparability'
 import { executionMarks, pinLegend, postingLegend, type ExecutionPin } from '../lib/publishTracking'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { previousIsoWeek } from '../prompts/isoWeek'
@@ -47,16 +46,6 @@ function slotsOf(history: WeeklyScorecard[], endWeek: string): Slot[] {
     w = previousIsoWeek(w)
   }
   return out
-}
-
-const engines = (c: WeeklyScorecard) => (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join('·')
-
-function changeText(change: ConditionChange, prev: WeeklyScorecard, cur: WeeklyScorecard): string {
-  if (change === '질문지') return `질문지 ${prev.questionBankVersion}→${cur.questionBankVersion}`
-  if (change === '수집 엔진') return `수집 엔진 ${engines(prev)}→${engines(cur)}`
-  if (change === '판정 엔진') return '판정 엔진 바뀜'
-  if (change === '반복 횟수') return `반복 ${prev.repeatsPerQuestion}→${cur.repeatsPerQuestion}회`
-  return '모델 바뀜'
 }
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
@@ -109,18 +98,15 @@ export default function ScoreTrendChart({
     return <p className="hint">측정 1주차라 추이는 다음 측정부터 그려집니다.</p>
   }
 
-  // 조건 변경 — 직전에 측정한 주와 비교한다(사이에 빈 주가 있어도 그 앞 측정과 견준다).
+  // 조건 변경 — 직전에 측정한 주와 비교한다(사이에 빈 주가 있어도 그 앞 측정과 견준다). 앱 전체 규칙(comparability)을 쓴다 —
+  // 한쪽에만 기록이 있는 조건(확인 불가)도 끊는다. 그래프 첫 칸도 창 밖의 앞 측정과 견준다.
   const breaks: Break[] = []
-  let prev: WeeklyScorecard | null = null
+  let prev: WeeklyScorecard | null = [...sorted].reverse().find((h) => h.weekOf < (slots[0]?.weekOf ?? '')) ?? null
   for (const [i, s] of slots.entries()) {
     if (!s.card) continue
     if (prev) {
-      const changes = conditionChanges(prev, s.card)
-      if (changes.length > 0) {
-        const card = s.card
-        const before = prev
-        breaks.push({ at: i, weekOf: s.weekOf, detail: changes.map((c) => changeText(c, before, card)).join(' · ') })
-      }
+      const diffs = compareConditions(prev, s.card)
+      if (diffs.length > 0) breaks.push({ at: i, weekOf: s.weekOf, detail: diffs.map(diffText).join(' · ') })
     }
     prev = s.card
   }
