@@ -56,6 +56,27 @@ export function measureConditionText(card: {
   return { collect, judge, repeats }
 }
 
+/**
+ * 고객 종이용 측정 조건 한 줄 — 「ChatGPT · Gemini · Perplexity에 물음 · 답변 분석 Claude · 질문당 1회 · 질문지 v5」.
+ * 모델 id · preset(gpt-6-luna, preset:low)은 운영자가 화면에서 보는 값이라 빼고 엔진 이름만 쓴다. 기록이 없으면 그 조각을 뺀다.
+ */
+export function measureConditionPlain(card: {
+  enginesUsed?: string[]
+  judgeEngine?: string
+  repeatsPerQuestion?: number
+  questionBankVersion?: string
+}): string {
+  const engines = (card.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
+  return [
+    engines ? `${engines}에 물음` : '',
+    card.judgeEngine ? `답변 분석 ${ENGINE_LABEL[card.judgeEngine] ?? card.judgeEngine}` : '',
+    card.repeatsPerQuestion ? `질문당 ${card.repeatsPerQuestion}회` : '',
+    card.questionBankVersion ? `질문지 ${card.questionBankVersion}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 /** 스코어카드의 judgeEngine 표시. 기록이 없는 구버전 카드는 그렇게 밝힌다(추측하지 않는다). */
 export function judgeLabel(id: string | undefined): string {
   if (!id) return '기록 없음'
@@ -66,7 +87,8 @@ export const OWNER_TYPE_LABEL: Record<string, string> = {
   'brand-owned': '자사',
   'competitor-owned': '경쟁사',
   'third-party-authority': '제3자 권위',
-  'third-party-ugc': '제3자 UGC',
+  // 고객 보고서 「AI가 근거로 쓴 출처」 표에도 실린다 — UGC 같은 업계 약어 대신 AI 답변 화면과 같은 말을 쓴다.
+  'third-party-ugc': '이용자 글',
   unknown: '알 수 없음',
 }
 
@@ -85,7 +107,7 @@ export const SOURCE_KIND_LABEL: Record<string, string> = {
 
 export const EEAT_PILLAR_LABEL: Record<string, { name: string; hint: string }> = {
   experience: { name: 'Experience', hint: '실제 이용·후기처럼 그려지는 정도' },
-  expertise: { name: 'Expertise', hint: '전문성·자격·원장 등 전문가 신호' },
+  expertise: { name: 'Expertise', hint: '전문성·자격·대표 전문가 등 전문가 신호' },
   authoritativeness: { name: 'Authoritativeness', hint: '권위 있는 제3자·1위 추천' },
   trustworthiness: { name: 'Trustworthiness', hint: '사실성·부정 어조·공식 출처' },
 }

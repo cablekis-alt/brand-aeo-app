@@ -108,12 +108,13 @@ function rankDelta(cur: number | null, prev: number | null | undefined): MetricD
 function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: EeatAnalysis): MetricDiagnosis[] {
   const out: MetricDiagnosis[] = []
 
-  // 1) 카테고리 무관 언급률
+  // 1) 언급률 — 브랜드 이름 없이 물은 질문의 응답 기준(카테고리 무관)
   {
     const s = rateStatus(card.mentionRate, 0.5, 0.35, 0.2)
     out.push({
       key: 'mentionRate',
-      label: '카테고리 무관 언급률',
+      // 모집단(이름 없이 물은 질문)은 진단 문장 · 숫자 칸 설명이 말한다 — 표의 이름 칸이 좁아 이름은 짧게 둔다.
+      label: '언급률',
       weight: AEO_SCORE_WEIGHTS.mentionRate,
       valueText: formatPct(card.mentionRate),
       status: s,
@@ -135,7 +136,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
     const s: MetricStatus = v === null ? 'unknown' : rateStatus(v, 0.4, 0.28, 0.15)
     out.push({
       key: 'shareOfMention',
-      label: 'Share of Mention (점수 미포함)',
+      label: '언급 점유율 (점수 미포함)',
       weight: 0,
       valueText: formatPct(v),
       status: s,
@@ -196,25 +197,25 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       // 「틀림」 기록은 응답마다 한 줄이라 개수는 응답 수다(server/aggregate.ts) — 주장 수로 부르지 않는다.
       note:
         card.hallucinationFlags.length > 0
-          ? `Fact Graph와 모순되는 주장이 담긴 응답이 ${card.hallucinationFlags.length}건 관측됐습니다.`
+          ? `등록된 브랜드 정보와 다른 주장이 담긴 응답이 ${card.hallucinationFlags.length}건 있었습니다.`
           : v === null
-            ? '팩트 그래프가 없거나 대조할 사실이 없어 측정하지 못했습니다.'
+            ? '등록된 브랜드 정보가 없거나 대조할 사실이 없어 측정하지 못했습니다.'
             : noteFor(s, {
                 good: '답변이 사실 정보와 대체로 일치합니다.',
                 ok: '답변이 사실 정보와 대부분 일치하지만, 어긋나는 서술이 일부 있습니다.',
                 warn: '답변에 사실과 어긋나는 서술이 적지 않습니다.',
-                bad: '답변의 사실 정보 상당수가 팩트 그래프와 어긋납니다.',
+                bad: '답변의 사실 정보 상당수가 등록된 브랜드 정보와 어긋납니다.',
               }),
       delta: pctDelta(v, prev?.factualityScore),
     })
   }
 
-  // 5) 브랜드 소유 출처 인용률
+  // 5) 자사 출처 인용률
   {
     const s = rateStatus(card.brandOwnedCitationRate, 0.3, 0.15, 0.05)
     out.push({
       key: 'brandOwnedCitationRate',
-      label: '브랜드 소유 출처 인용',
+      label: '자사 출처 인용률',
       weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
       valueText: formatPct(card.brandOwnedCitationRate),
       status: s,
@@ -282,11 +283,11 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
     const m = by.mentionRate
     recs.push({
       id: 'mention',
-      title: '카테고리 무관 노출 확대',
+      title: '브랜드 이름 없는 질문에서 노출 확대',
       priority: priorityOf(m.weight, m.status),
       basis: `현재 언급률 ${m.valueText} — 브랜드명 없는 질문에서의 노출이 부족합니다.`,
       actions: [
-        '업종·지역·니즈(증상/상황) 기반의 공개 가이드·FAQ 콘텐츠를 확충해 자연어 질문의 답이 되도록 합니다.',
+        '업종·지역·이용 상황 기반의 공개 가이드·FAQ 콘텐츠를 늘려 자연어 질문의 답이 되도록 합니다.',
         '"○○ 지역 추천", "○○ 잘하는 곳" 류의 제3자 비교·추천 글에 포함되도록 노출을 늘립니다.',
         '핵심 페이지에 구조화 데이터(JSON-LD)와 명확한 제목·요약을 넣어 AI가 인용하기 쉽게 만듭니다.',
       ],
@@ -304,23 +305,23 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       title: isUnknown ? '점유율 측정 조건 만들기' : '경쟁 대비 언급 점유 강화',
       priority: priorityOf(m.weight, m.status),
       basis: !isUnknown
-        ? `현재 SoM ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`
+        ? `현재 언급 점유율 ${m.valueText} — 브랜드명을 넣지 않은 질문에서 경쟁사에 밀리고 있습니다.`
         : shortSample !== null
-          ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) Share of Mention을 판정하지 않았습니다.`
-          : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 Share of Mention을 측정하지 못하고 있습니다.',
+          ? `브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 ${shortSample}번뿐이라(${MIN_SOM_MENTIONS}번 미만) 언급 점유율을 판정하지 않았습니다.`
+          : '경쟁사가 없거나, 브랜드명을 넣지 않은 질문에서 자사·경쟁사 언급이 전혀 없어 언급 점유율을 측정하지 못하고 있습니다.',
       actions: !isUnknown
         ? [
-            '경쟁사와 함께 거론되는 질문에서 차별화 포인트(시술/후기/가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
+            '경쟁사와 함께 거론되는 질문에서 차별화 포인트(서비스·후기·가격 투명성 등)를 공개 콘텐츠로 명확히 합니다.',
             '후기·평점 플랫폼과 지역 커뮤니티에서의 노출·언급을 늘려 비교 문맥에서 우위를 확보합니다.',
           ]
         : shortSample !== null
           ? [
-              '업종·지역 질문에서 자사와 경쟁사가 거의 거론되지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 점유율을 잴 수 있습니다.',
+              '업종·지역 질문에서 자사와 경쟁사가 거의 거론되지 않는 상태입니다 — 먼저 브랜드 이름 없는 질문의 언급률을 올려야 점유율을 잴 수 있습니다.',
               '경쟁사 목록이 실제로 함께 추천되는 곳인지 확인합니다. 그 질문에서 불리지 않는 경쟁사만 있으면 언급 합계가 늘지 않습니다.',
             ]
           : [
             '브랜드 추가에서 주요 경쟁사를 등록하면 다음 측정부터 점유율이 산출됩니다.',
-            '경쟁사를 이미 등록했다면 그 업종·지역 질문 자체에 브랜드가 전혀 등장하지 않는 상태입니다 — 먼저 카테고리 무관 언급률을 올려야 합니다.',
+            '경쟁사를 이미 등록했다면 그 업종·지역 질문 자체에 브랜드가 전혀 등장하지 않는 상태입니다 — 먼저 브랜드 이름 없는 질문의 언급률을 올려야 합니다.',
           ],
       expected: isUnknown
         ? '점유율 지표가 활성화되어 진단 정확도가 올라갑니다.'
@@ -361,7 +362,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
           ? `사실과 어긋난 주장이 담긴 AI 응답이 ${card.hallucinationFlags.length}건 관측됐습니다.`
           : `사실성 ${m.valueText} — 답변에 부정확한 서술이 섞일 여지가 있습니다.`,
       actions: [
-        '주소·진료(취급) 항목·가격·자격/이력 등 핵심 사실을 공식 페이지에 최신 상태로 명확히 게시합니다.',
+        '주소·제공 서비스(상품)·가격·자격/이력 등 핵심 사실을 공식 페이지에 최신 상태로 명확히 게시합니다.',
         '오정보의 근거가 된 외부 출처(오래된 소개글 등)를 찾아 정정·갱신을 요청합니다.',
         '구조화 데이터로 핵심 사실을 기계가 읽기 쉽게 제공해 혼동을 줄입니다.',
       ],
@@ -378,7 +379,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       priority: priorityOf(m.weight, m.status),
       basis: `자사 출처 인용률 ${m.valueText} — AI가 근거로 자사 콘텐츠를 거의 참조하지 않습니다.`,
       actions: [
-        '자바스크립트 없이도 읽히는 정적 콘텐츠를 확보합니다(비-JS 크롤러 패리티 — 사이트 종합 진단 참고).',
+        '자바스크립트 없이도 읽히는 정적 콘텐츠를 확보합니다(AI 검색 로봇은 대부분 자바스크립트를 실행하지 않습니다).',
         '인용하기 좋은 "팩트/요약" 페이지를 만들고 llms.txt·구조화 데이터로 접근성을 높입니다.',
         'AI가 실제로 인용 중인 제3자 출처를 파악해 그 출처에 자사 정보가 반영되도록 합니다.',
       ],
@@ -395,7 +396,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       priority: 'low',
       basis: `EEAT 종합 ${m.valueText} — 전문성·권위·신뢰 신호가 약하게 나타납니다.`,
       actions: [
-        '전문가(원장/자격)·실제 경험(후기)·권위 있는 제3자 언급을 공개 콘텐츠에 드러냅니다.',
+        '대표·담당 전문가의 자격과 이력, 실제 이용 경험(후기), 권위 있는 제3자 언급을 공개 콘텐츠에 드러냅니다.',
       ],
       expected: '답변의 어조·추천 맥락을 우호적으로 만들어 다른 지표를 함께 끌어올립니다.',
       links: [REC_LINKS.eeat],

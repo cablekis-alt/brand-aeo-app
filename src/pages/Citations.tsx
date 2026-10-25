@@ -11,7 +11,7 @@ const OWNER_TYPE_LABEL: Record<string, string> = {
   'brand-owned': '자사',
   'competitor-owned': '경쟁사',
   'third-party-authority': '제3자 권위',
-  'third-party-ugc': '제3자 UGC',
+  'third-party-ugc': '이용자 글',
   unknown: '알 수 없음',
 }
 

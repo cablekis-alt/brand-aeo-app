@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import type { HistoryWeek, PublishedPost } from '../lib/api'
 import { compareConditions, diffText } from '../lib/comparability'
 import { executionMarks, pinLegend, postingLegend, type ExecutionPin } from '../lib/publishTracking'
@@ -24,6 +25,12 @@ const MAX_WEEKS = 12
  * 최소 폭(MIN_W)을 지키고 가로로 넘긴다.
  */
 const MIN_W = 520
+/*
+ * 인쇄 폭 — A4 세로 본문에서 카드 안쪽 여백을 뺀 정도. 화면 폭(1000px 남짓)으로 그린 그림을 종이에 맞춰 줄이면 글자가 5pt대로
+ * 작아지고, 줄이지 않으면 오른쪽(이번 주)이 잘린다(상용화 UI 3차 U6). 인쇄 직전에 이 폭으로 다시 그리고, 인쇄 CSS는 남은 차이만
+ * 종이 폭에 맞춘다.
+ */
+const PRINT_W = 640
 const H = 190
 const PAD = { left: 44, right: 40, top: 22, bottom: 50 }
 /** 집행 핀 줄 — 핀이 있을 때만 위쪽을 이만큼 늘려 따로 둔다(점 · 값 · 조건 변경 표시와 겹치지 않게). */
@@ -80,6 +87,18 @@ export default function ScoreTrendChart({
     setBox(el)
   }, [])
   const [boxW, setBoxW] = useState(0)
+  // 인쇄 중 — beforeprint에서 바로 다시 그려야 인쇄 배치에 들어간다(다음 틀까지 미루면 화면 폭 그림이 찍힌다).
+  const [printing, setPrinting] = useState(false)
+  useEffect(() => {
+    const before = () => flushSync(() => setPrinting(true))
+    const after = () => setPrinting(false)
+    window.addEventListener('beforeprint', before)
+    window.addEventListener('afterprint', after)
+    return () => {
+      window.removeEventListener('beforeprint', before)
+      window.removeEventListener('afterprint', after)
+    }
+  }, [])
   useEffect(() => {
     if (!box) return
     const ro = new ResizeObserver(() => setBoxW(box.clientWidth))
@@ -90,7 +109,7 @@ export default function ScoreTrendChart({
     const el = boxRef.current
     if (el) el.scrollLeft = el.scrollWidth
   }, [box, endWeek, boxW])
-  const W = Math.max(MIN_W, boxW)
+  const W = printing ? PRINT_W : Math.max(MIN_W, boxW)
   const sorted = history.filter((h) => h.weekOf <= endWeek).sort((a, b) => a.weekOf.localeCompare(b.weekOf))
   const slots = slotsOf(sorted, endWeek)
   const measured = slots.filter((s) => s.card)
@@ -266,12 +285,20 @@ export default function ScoreTrendChart({
         <span>
           <span className="st-key band" aria-hidden="true" /> 95% 신뢰구간
         </span>
-        <span>세로축 0–{top}점 · 아래 숫자는 코호트 순위</span>
+        {/* 고객 종이에 실리는 그림이라 「코호트」 대신 「비교 그룹」(상용화 UI 3차 결정 D6). 점수는 100점 만점이다 — 축만 보면 30점 만점으로 읽힌다. */}
+        <span>세로축 0–{top}점(100점 만점) · 아래 숫자는 비교 그룹 순위</span>
+        {/* 무엇이 바뀌었는지(모델 id · 값)는 운영자가 화면에서 본다 — 종이에는 끊은 주와 까닭 한 줄만 싣는다. */}
         {breaks.map((b) => (
-          <span key={b.at} className="st-key-break">
+          <span key={b.at} className="st-key-break no-print">
             <span className="st-key diamond" aria-hidden="true" /> {shortWeek(b.weekOf)} {b.detail} — 앞뒤를 잇지 않음
           </span>
         ))}
+        {breaks.length > 0 && (
+          <span className="st-key-break print-only">
+            <span className="st-key diamond" aria-hidden="true" /> {breaks.map((b) => shortWeek(b.weekOf)).join(' · ')}: 측정 방식이 바뀐
+            주라 선을 끊었습니다
+          </span>
+        )}
         {pins.length > 0 && <span>번호 핀은 올린 글 — 핀 오른쪽 점이 올린 뒤 측정(내린 글은 내린 날까지)</span>}
         {pins.slice(0, PIN_LEGEND).map((p) => (
           <span key={`exec-${p.n}`} className="st-key-exec">

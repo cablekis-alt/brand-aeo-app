@@ -73,11 +73,12 @@ export function CohortCompareSection({ rows, weekOf }: { rows: CohortRow[]; week
   const hidden = rows.length - shown.length
   return (
     <section className="cohort-compare">
-      <h3>같은 주 코호트 비교</h3>
+      {/* 고객 종이에 실리는 절이라 「코호트」 대신 「비교 그룹」(상용화 UI 3차 결정 D6). */}
+      <h3>같은 주 비교 그룹</h3>
       <div className="table-wrap">
         <table>
           <caption className="muted">
-            {weekLabel(weekOf)} 코호트 {rows.length}곳
+            {weekLabel(weekOf)} 비교 그룹 {rows.length}곳
             {hidden > 0 && ` · 이번 주 기록을 읽지 못한 ${hidden}곳은 표에서 뺐습니다(순위는 ${rows.length}곳 기준)`} · 굵은 줄(이
             브랜드)은 {weekLabel(weekOf)} 한 주의 값으로 아래 지표별 진단과 같습니다 · 언급률은 이름 없이 물은 질문의 응답 기준, 자사
             인용률은 모든 질문 기준 · 추천 순위 괄호는 순위가 매겨진 응답 수(6건 미만이면 점수에 그만큼만)

@@ -95,7 +95,8 @@ for (const id of ['listing:namu.wiki', 'listing:clien.net', 'listing:tripadvisor
 }
 const naver = find(base, 'listing:platform:blog.naver.com');
 ok('네이버 블로그 — 카테고리 무관 패 2개를 덮는다', naver?.reach === 2 && isOpenAction(naver) && !isIdleAction(naver));
-ok('근거 문장이 카테고리 무관 질문의 패라고 밝힌다', /그중 2개는 카테고리 무관 질문에서 우리가 밀린 질문입니다/.test(naver?.evidence ?? ''));
+// 고객 보고서에도 실리는 문장이라 「카테고리 무관」 대신 같은 질문을 부르는 고객용 말 「이름 없이 물은 질문」(상용화 UI 3차 결정 D7 — 뜻은 그대로)
+ok('근거 문장이 카테고리 무관 질문의 패라고 밝힌다', /그중 2개는 이름 없이 물은 질문에서 우리가 밀린 질문입니다/.test(naver?.evidence ?? ''));
 ok('openCount = 글 1 + 채널 2', base.openCount === 3);
 
 // 3) 올리기 목록 — 글 한 편, 따로 쓸 글 없음, 진행 분모는 글의 질문 수

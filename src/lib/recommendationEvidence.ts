@@ -20,7 +20,13 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 export interface EvidenceItem {
   text: string
+  /** 고객 종이에도 싣는 설명 — 합니다체, 내부 용어 없이. */
   detail?: string
+  /**
+   * 운영자 메모 — 화면에서만 보인다(보고서 인쇄에서 빠진다). 지분 · 충족 · 완료 기준처럼 다음 집행을 고르는 데 쓰는 말이다
+   * (상용화 UI 3차 U5: 「[집행함 10/21 · 인용 대기 · 지분 0/102 — 더 올리면 지분이 오른다]」가 고객 PDF에 찍혔다).
+   */
+  opsNote?: string
   /** 질문에서 나온 항목이면 그 질문 — 화면이 AI 답변(/answers?q=)으로 잇는다. */
   questionId?: string
 }
@@ -30,6 +36,8 @@ export interface EvidenceBlock {
   items: EvidenceItem[]
   /** 보여 주지 않은 나머지 개수. */
   more?: number
+  /** 화면에서만 보이는 묶음 — 고객 종이에는 싣지 않는다(사실성 「틀림」 원문: 판정 오류일 수 있어 건수만 싣는다). */
+  screenOnly?: boolean
 }
 
 export interface RecommendationEvidence {
@@ -65,8 +73,10 @@ const SHOW = 5
  * 정한다.
  */
 interface Execution {
-  /** 「집행함 10/19」의 날짜 부분(앞 공백 포함). */
-  when: string
+  /** 마지막으로 올린 날(10/19) — 날짜를 모르면 없다. */
+  postedOn?: string
+  /** 날짜 없이 「집행함」만 누른 주차. */
+  markedWeek?: string
   /** 보고 주차에 올라가 있던 글이 있다. */
   live: boolean
   /** 보고 주차까지 내린 마지막 날 — 올라가 있는 글이 없으면 「다시 올릴 곳」이다. */
@@ -87,7 +97,6 @@ function executionOf(a: GapAction, posts: PublishedPost[], asOf: string, citedPo
     .map((p) => p.publishedOn)
     .filter((d): d is string => Boolean(d))
     .sort()
-  const when = dated.length > 0 ? ` ${monthDay(dated.at(-1)!)}` : a.markedWeek ? ` (${weekLabel(a.markedWeek)}에 표시)` : ''
   // 보고 주차 뒤에 내린 글은 그 주차에는 올라가 있었다.
   const live = hits.filter((h) => !h.takenDownOn || (isoWeekOf(h.takenDownOn) ?? '') > asOf)
   const lastDown = [...downs.map((d) => d.on), ...hits.map((h) => h.takenDownOn).filter((d): d is string => Boolean(d) && (isoWeekOf(d!) ?? '') <= asOf)]
@@ -96,7 +105,7 @@ function executionOf(a: GapAction, posts: PublishedPost[], asOf: string, citedPo
   const lastRunCited = a.citedPublishedUrls.length > 0
   const otherRunCited = !lastRunCited && Boolean(citedPostIds) && posts.some((p) => p.targetActionId === a.id && citedPostIds!.has(p.id))
   return {
-    when,
+    ...(dated.length > 0 ? { postedOn: monthDay(dated.at(-1)!) } : a.markedWeek ? { markedWeek: a.markedWeek } : {}),
     live: live.length > 0,
     ...(lastDown ? { lastDown } : {}),
     cited: lastRunCited || otherRunCited,
@@ -104,11 +113,18 @@ function executionOf(a: GapAction, posts: PublishedPost[], asOf: string, citedPo
   }
 }
 
-/** 「올린 글이 이번 주 인용됨」 — 다른 회차에서만 인용됐으면 그 기준을 밝힌다. */
-const citedText = (e: Execution) => (e.citedOtherRun ? '올린 글이 이번 주 다른 회차에서 인용됨(마지막 저장 측정에서는 없음)' : '올린 글이 이번 주 인용됨')
-
 /** 블로그 플랫폼 — 「충족」이 없는 지분 자리라 한 편 올렸다고 끝나지 않는다(더 올리면 지분이 오른다). */
 const isPlatform = (a: GapAction) => a.id.startsWith('listing:platform:')
+
+/** 「10/19 올림」 — 보고서 집행 표(「올린 날 · 올린 곳」)와 같은 말. 날짜 없이 집행함만 눌렀으면 그 주차를 밝힌다. */
+const postedText = (e: Execution) =>
+  e.postedOn ? `${e.postedOn} 올림` : e.markedWeek ? `집행 표시(${weekLabel(e.markedWeek)})` : '집행 표시'
+
+/** 고객에게 보이는 인용 상태 — 다른 회차에서만 인용됐다는 기준은 운영자 메모로 돌린다(otherRunNote). */
+const stateText = (e: Execution) => (e.cited ? '이번 주 인용됨' : e.live ? '아직 인용 전' : '올린 주소 기록 없음')
+
+/** 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용됐다 — 지분 · 충족 숫자가 마지막 측정 기준이라 운영자에게 밝힌다. */
+const otherRunNote = (e: Execution) => (e.citedOtherRun ? '같은 주 다른 회차에서만 인용(마지막 저장 측정에서는 없음)' : '')
 
 /**
  * 글을 모두 내렸다 — 다음 측정이 인용할 글이 없으니 다시 권한다. 내리기 전 같은 주 다른 회차에서 인용됐어도(citedOtherRun) 다시
@@ -116,21 +132,32 @@ const isPlatform = (a: GapAction) => a.id.startsWith('listing:platform:')
  */
 const allTakenDown = (e: Execution) => !e.live && (!e.cited || e.citedOtherRun) && Boolean(e.lastDown)
 
-/** 「집행함 10/19 · 인용 대기」 — 다시 권하지 않는 항목의 꼬리표. */
-function executedNote(e: Execution): string {
-  const result = e.cited ? `${citedText(e)} · 아직 충족 전` : e.live ? '인용 대기' : '올린 주소 기록 없음'
-  return `집행함${e.when} · ${result}`
+/** 고객 문장과 운영자 메모 한 쌍. */
+interface NotePair {
+  text: string
+  ops: string
+}
+
+/** 「10/19 올림 · 아직 인용 전」 — 다시 권하지 않는 항목의 꼬리표. 인용됐어도 충족 전이면 운영자 메모에 적는다. */
+function executedNote(e: Execution): NotePair {
+  return {
+    text: `${postedText(e)} · ${stateText(e)}`,
+    ops: e.cited ? [otherRunNote(e), '아직 충족 전'].filter(Boolean).join(' · ') : '',
+  }
 }
 
 /**
- * 다시 권하는 집행 항목의 머리말 — 블로그 플랫폼은 「집행함 10/1 · 지분 1/2 — 더 올리면 지분이 오른다」, 글을 모두 내렸으면 「올린 글
- * 10/8 내림 — 다시 올릴 곳」.
+ * 다시 권하는 집행 항목의 머리말 — 블로그 플랫폼은 「10/1 올림 · 이번 주 인용됨 — 글을 더 올릴수록 인용 비중이 오릅니다」(지분은 운영자
+ * 메모), 글을 모두 내렸으면 「올린 글 10/8 내림 — 다시 올릴 곳」.
  */
-function reRecommendNote(a: GapAction, e: Execution): string {
-  if (!isPlatform(a)) return `올린 글 ${monthDay(e.lastDown!)} 내림 — 다시 올릴 곳`
-  const result = e.cited ? citedText(e) : e.live ? '인용 대기' : e.lastDown ? `올린 글 ${monthDay(e.lastDown)} 내림` : '올린 주소 기록 없음'
-  const share = a.progress ? ` · 지분 ${a.progress.supporting}/${a.progress.total}${e.citedOtherRun ? '(마지막 측정 기준)' : ''}` : ''
-  return `집행함${e.when} · ${result}${share} — 더 올리면 지분이 오른다`
+function reRecommendNote(a: GapAction, e: Execution): NotePair {
+  if (!isPlatform(a)) return { text: `올린 글 ${monthDay(e.lastDown!)} 내림 — 다시 올릴 곳`, ops: '' }
+  const state = e.cited || e.live || !e.lastDown ? stateText(e) : `올린 글 ${monthDay(e.lastDown)} 내림`
+  const share = a.progress ? `지분 ${a.progress.supporting}/${a.progress.total}${e.citedOtherRun ? '(마지막 측정 기준)' : ''}` : ''
+  return {
+    text: `${postedText(e)} · ${state} — 글을 더 올릴수록 인용 비중이 오릅니다`,
+    ops: [otherRunNote(e), share].filter(Boolean).join(' · '),
+  }
 }
 
 /** 상태 · 기록의 주 — 한 가지 달력 시계(한국 날짜)로 자른다. 상태는 마지막으로 고친 때(늦은 쪽 — 지난 보고서에서는 덜 집행한 것으로 본다). */
@@ -141,12 +168,12 @@ const stampWeek = (iso: string | undefined) => {
 
 /** 사이트 진단 영역 → 그 영역 감점을 줄이는 구체 조치. 영역 id는 src/lib/aeo/scoreMeta.ts와 같다. */
 const SITE_FIX: Record<string, string> = {
-  crawler: 'robots.txt·사이트맵에서 AI 크롤러(GPTBot·PerplexityBot 등) 접근을 막지 않았는지 확인한다',
-  content: '페이지 첫 문단에 질문의 답을 바로 쓰고, 자주 묻는 질문을 Q&A 블록으로 정리한다',
-  eeat: '글쓴이·담당 전문가 이름과 게시·갱신일을 붙이고, 수치에는 출처를 단다',
-  structured: '업체 정보(이름·주소·연락처·분야)를 구조화 데이터(JSON-LD)로 넣는다',
-  technical: 'HTTPS 연결, 공유 미리보기(Open Graph), 이미지 대체 텍스트를 갖춘다',
-  agent: '본문 영역(main) 표시와 입력 폼 라벨을 갖춰 에이전트가 페이지를 읽게 한다',
+  crawler: 'robots.txt·사이트맵에서 AI 크롤러(GPTBot·PerplexityBot 등) 접근을 막지 않았는지 확인합니다',
+  content: '페이지 첫 문단에 질문의 답을 바로 쓰고, 자주 묻는 질문을 Q&A 블록으로 정리합니다',
+  eeat: '글쓴이·담당 전문가 이름과 게시·갱신일을 붙이고, 수치에는 출처를 답니다',
+  structured: '업체 정보(이름·주소·연락처·분야)를 구조화 데이터(JSON-LD)로 넣습니다',
+  technical: 'HTTPS 연결, 공유 미리보기(Open Graph), 이미지 대체 텍스트를 갖춥니다',
+  agent: '본문 영역(main) 표시와 입력 폼 라벨을 갖춰 AI 에이전트가 페이지를 읽을 수 있게 합니다',
 }
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
@@ -220,7 +247,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
               detail:
                 others.length > 0
                   ? `대신 불린 곳: ${others.slice(0, 3).join(' · ')}`
-                  : '업체 추천 없는 정보형 답변 — 이 질문에 답하는 가이드 글로 인용 출처가 되는 것이 목표',
+                  : '업체 추천 없는 정보형 답변 — 이 질문에 답하는 가이드 글로 인용 출처가 되는 것이 목표입니다',
             }
           }),
           more: Math.max(0, lost.length - SHOW),
@@ -228,7 +255,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
       ],
       estimate:
         gain > 0
-          ? `계산 예시 — 밀린 질문의 답변 ${gain}건에서 불리면 언급률 ${pct(card.mentionRate)} → ${pct(nextRate)}, 점수 약 ${card.aeoScore.current} → ${estimateScore(card, nextRate)}점(같은 산식으로 낸 값이며 약속이 아니다).`
+          ? `계산 예시 — 밀린 질문의 답변 ${gain}건에서 불리면 언급률 ${pct(card.mentionRate)} → ${pct(nextRate)}, 점수 약 ${card.aeoScore.current} → ${estimateScore(card, nextRate)}점(같은 산식으로 낸 값이며 약속이 아닙니다).`
           : undefined,
       link: { label: '실행 계획에서 이 질문들로 글 만들기', to: '/gap-actions' },
     }
@@ -260,15 +287,24 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
         heading: 'AI가 인용했지만 브랜드 이름 없는 질문에서는 우리를 뒷받침하지 않은 출처',
         items: listing.slice(0, 4).map((a) => {
           const e = exec.get(a.id)
-          return { text: `${a.title} (${a.badge})`, detail: `${e ? `[${reRecommendNote(a, e)}] ` : ''}${a.evidence} 완료 기준: ${a.doneSignal}` }
+          const note = e ? reRecommendNote(a, e) : null
+          // 완료 기준 · 지분은 운영자가 다음 집행을 고르는 말이라 화면에만 둔다 — 고객 종이에는 무엇을 왜 하는지만 싣는다.
+          return {
+            text: `${a.title} (${a.badge})`,
+            detail: `${note ? `[${note.text}] ` : ''}${a.evidence}`,
+            opsNote: [note?.ops ?? '', `완료 기준: ${a.doneSignal}`].filter(Boolean).join(' · '),
+          }
         }),
         more: Math.max(0, listing.length - 4),
       })
     }
     if (done.length > 0) {
       citationBlocks.push({
-        heading: '이미 집행한 출처 — 다시 권하지 않음(다음 측정에서 인용을 확인)',
-        items: done.slice(0, 4).map((a) => ({ text: `${a.title} (${a.badge})`, detail: executedNote(exec.get(a.id)!) })),
+        heading: '이미 집행한 출처 — 다음 측정에서 인용을 확인합니다',
+        items: done.slice(0, 4).map((a) => {
+          const note = executedNote(exec.get(a.id)!)
+          return { text: `${a.title} (${a.badge})`, detail: note.text, ...(note.ops ? { opsNote: note.ops } : {}) }
+        }),
         more: Math.max(0, done.length - 4),
       })
     }
@@ -277,7 +313,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
       .sort((a, b) => b.citationCount - a.citationCount)
     if (owned.length > 0) {
       citationBlocks.push({
-        heading: '이미 인용되는 자사 페이지 — 같은 형식으로 늘린다',
+        heading: '이미 인용되는 자사 페이지 — 같은 형식으로 늘립니다',
         items: owned.slice(0, 3).map((u) => ({
           text: u.raw,
           detail: `${u.citationCount}회 인용 · ${u.engines.map((e) => ENGINE_LABEL[e] ?? e).join('·')}`,
@@ -311,7 +347,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
         {
           heading:
             card.avgRecommendationRank === null
-              ? '순위가 매겨진 답변이 없다 — 불렸지만 추천 순서가 매겨지지 않은 질문'
+              ? '순위가 매겨진 답변이 없습니다 — 불렸지만 추천 순서가 매겨지지 않은 질문'
               : rankedResponses < RANK_FULL_WEIGHT_RESPONSES
                 ? `순위가 매겨진 답변 ${rankedResponses}건(점수에는 비중 ${rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}) — 불렸지만 1순위가 아닌 질문`
                 : '불렸지만 1순위가 아닌 질문',
@@ -339,8 +375,13 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
         detail: `${ENGINE_LABEL[a.engine] ?? a.engine}: “${c.responseValue ?? c.claimText}” · 등록: “${c.factGraphValue ?? '—'}” — 판정 오류일 수도 있어 원문을 확인한 뒤 공식 페이지·외부 출처를 고친다`,
       })),
   )
+  // 원문은 화면에서만 — 판정 오류일 수 있어 고객 종이에는 건수(개선제안 근거 문장)만 싣는다(상용화 UI 3차 결정 D8).
   if (contradicted.length > 0) {
-    out.fact = { blocks: [{ heading: '「틀림」으로 판정된 답변', items: contradicted.slice(0, SHOW), more: Math.max(0, contradicted.length - SHOW) }] }
+    out.fact = {
+      blocks: [
+        { heading: '「틀림」으로 판정된 답변', items: contradicted.slice(0, SHOW), more: Math.max(0, contradicted.length - SHOW), screenOnly: true },
+      ],
+    }
   }
 
   return out

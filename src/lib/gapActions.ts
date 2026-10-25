@@ -1,5 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
+import { ENGINE_LABEL } from './format'
 import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
@@ -522,7 +523,8 @@ function listingActions(
       // 이미 실린 곳이 끝낼 수 없는 할 일로 남는다(실측: banobagi W40 reddit.com — 10회 인용 전부 이름을 댄 질문, 그중 4회 뒷받침).
       const namedOnly = unnamed.known && u.citations === 0
       const satisfied = !isPlatform && unnamed.known && (namedOnly ? supportingAll > 0 : u.supporting > 0)
-      const engines = [...r.engines].join('·')
+      // 화면 · 고객 보고서에 그대로 실리는 문장이라 엔진 id(openai)가 아니라 이름(ChatGPT)으로 쓴다.
+      const engines = [...r.engines].map((e) => ENGINE_LABEL[e] ?? e).join('·')
       // 후기·예약 플랫폼에 이미 등록돼 있으면 할 일은 새 등록이 아니라 소개 보강이다.
       const listedPages = new Map<string, number>()
       let listedResponses = 0
@@ -568,7 +570,7 @@ function listingActions(
         cited.length === 0
           ? ''
           : lost.length > 0
-            ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 ${articleScoped ? '카테고리 무관 질문에서 ' : ''}우리가 밀린 질문입니다.`
+            ? ` 질문 ${cited.length}개에서 이 출처를 꺼냈고, 그중 ${lost.length}개는 ${articleScoped ? '이름 없이 물은 질문에서 ' : ''}우리가 밀린 질문입니다.`
             : ` 질문 ${cited.length}개에서 이 출처를 꺼냈습니다.`
 
       // 지분도 브랜드 이름 없는 질문의 인용으로 낸다. 은행을 읽지 못했거나 이름 없는 질문에서는 인용되지 않은 곳만 모든 질문으로

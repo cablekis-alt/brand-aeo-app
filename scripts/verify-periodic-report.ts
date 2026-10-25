@@ -9,6 +9,8 @@
  *   npx tsx scripts/verify-periodic-report.ts
  */
 import { buildPeriodicReport } from '../src/lib/b9-report'
+import { measureConditionPlain } from '../src/lib/format'
+import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence'
 import { citationTop, cohortRows, selfReview, trustChecks } from '../src/lib/reviewReport'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../src/lib/types'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
@@ -147,6 +149,72 @@ const crow = (domain: string, n: number, ownerType = 'third-party-ugc') => ({ do
 const top = citationTop([...Array.from({ length: 7 }, (_, i) => crow(`d${i}.example`, 10 - i)), crow('me.example', 1, 'brand-owned')])
 ok('출처: 상위 6개 + 자사 1개', top.top.length === 7 && top.top.at(-1)!.domain === 'me.example' && top.top.at(-1)!.isOwned)
 ok('출처: 합계 · 자사 건수', top.total === 10 + 9 + 8 + 7 + 6 + 5 + 4 + 1 && top.owned === 1)
+ok('출처 성격: 업계 약어(UGC) 대신 「이용자 글」', top.top[0]!.owner === '이용자 글')
+
+// 7) 고객 종이 문구(상용화 UI 3차 U5, 2026-10-26) — 내부 용어 · 의료 업종 말 · 해라체가 고객 PDF에 찍혔다(펜션 · KT 보고서에 「원장 · 시술」).
+//    모든 지표가 약하면 개선제안이 모두 나온다 — 그 문장 전체를 본다.
+const weakAll = buildPeriodicReport(
+  [
+    card('2026-W41', 5, 5, {
+      mentionRate: 0.02,
+      shareOfMention: 0.05,
+      avgRecommendationRank: 4.5,
+      rankedResponses: 6,
+      factualityScore: 0.5,
+      hallucinationFlags: flags,
+      brandOwnedCitationRate: 0.01,
+    } as Partial<WeeklyScorecard>),
+  ],
+  '2026-W41',
+  {
+    overall: 0.1,
+    experience: { score: 0, evidence: [] },
+    expertise: { score: 0, evidence: [] },
+    authoritativeness: { score: 0, evidence: [] },
+    trustworthiness: { score: 0, evidence: [] },
+    mentionedCallCount: 1,
+    totalCallCount: 10,
+  },
+)!
+const paperText = [
+  ...weakAll.metrics.flatMap((m) => [m.label, m.note]),
+  ...weakAll.recommendations.flatMap((r) => [r.title, r.basis, r.expected, ...r.actions]),
+].join('\n')
+ok('고객 문구: 개선제안이 여섯 지표 모두 나온다', ['mention', 'som', 'rank', 'fact', 'citation', 'eeat'].every((id) => weakAll.recommendations.some((r) => r.id === id)))
+ok('고객 문구: 내부 용어 없음(Fact Graph · 팩트 그래프 · SoM · Share of Mention · UGC · 비-JS · 카테고리 무관)', !/Fact Graph|팩트 그래프|SoM|Share of Mention|UGC|비-JS|카테고리 무관/.test(paperText))
+ok('고객 문구: 의료 업종 말 없음(원장 · 시술 · 진료 · 증상)', !/원장|시술|진료|증상/.test(paperText))
+ok('고객 문구: 지표 이름', weakAll.metrics.some((m) => m.label === '언급률') && weakAll.metrics.some((m) => m.label === '언급 점유율 (점수 미포함)') && weakAll.metrics.some((m) => m.label === '자사 출처 인용률'))
+ok('고객 문구: 사실성은 「등록된 브랜드 정보」와 견준다', weakAll.metrics.find((m) => m.key === 'factualityScore')!.note.startsWith('등록된 브랜드 정보와 다른 주장이 담긴 응답이 2건'))
+
+// 8) 표지 측정 조건 — 종이에는 엔진 이름만(모델 id · preset은 화면에서)
+const plain = measureConditionPlain({
+  enginesUsed: ['openai', 'gemini', 'perplexity'],
+  judgeEngine: 'claude',
+  repeatsPerQuestion: 1,
+  questionBankVersion: 'v5',
+})
+ok('표지 조건(종이): 엔진 이름 · 답변 분석 · 질문당 · 질문지', plain === 'ChatGPT · Gemini · Perplexity에 물음 · 답변 분석 Claude · 질문당 1회 · 질문지 v5')
+ok('표지 조건(종이): 기록이 없으면 그 조각을 뺀다', measureConditionPlain({ enginesUsed: ['gemini'] }) === 'Gemini에 물음')
+
+// 9) 개선제안 근거 — 사실성 원문은 화면 전용(D8: 고객 종이에는 건수만), 계산 예시는 합니다체
+const evBank = { questions: [{ questionId: 'q0', text: '가상 질문', category: 'category-agnostic' }] } as unknown as QuestionBank
+const evAnalyses = [
+  {
+    questionId: 'q0',
+    engine: 'openai',
+    mentioned: false,
+    clarifying: false,
+    mentionSentences: [],
+    competitorMentions: [{ name: '경쟁사', mentionCount: 1 }],
+    topRecommendation: '경쟁사',
+    brandRank: null,
+    factualityClaims: [{ verdict: 'contradicted', claimText: '주소', responseValue: '가상로 9', factGraphValue: '가상로 1' }],
+  },
+] as unknown as QuestionRepeatAnalysis[]
+const ev = buildRecommendationEvidence({ card: card('2026-W41', 5, 5, { mentionRate: 0.02 }), analyses: evAnalyses, questions: evBank.questions, citations: null, site: null })
+ok('근거: 사실성 원문 묶음은 화면 전용', ev.fact?.blocks.every((b) => b.screenOnly) === true)
+ok('근거: 언급률 묶음은 종이에도 싣는다', ev.mention?.blocks.every((b) => !b.screenOnly) === true)
+ok('근거: 계산 예시는 합니다체(「약속이 아닙니다」)', (ev.mention?.estimate ?? '').endsWith('약속이 아닙니다).'))
 
 let failed = 0
 for (const [label, pass] of checks) {
