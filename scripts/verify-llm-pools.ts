@@ -72,6 +72,9 @@ releaseG()
 await Promise.all(heldG)
 
 // 5) 분당 시작 상한 — 분당 600회(0.1초 간격)로 두면 동시에 6건을 넣어도 0.1초씩 벌어져 시작한다. 상한 없는 OpenAI는 한꺼번에.
+//    간격은 이웃한 두 시작 사이가 아니라 첫 시작에서 잰다(k번째 ≥ 첫 시작 + k × 0.1초). 시작 시각은 첫 예약부터 0.1초씩 정해 두고
+//    타이머는 그보다 늦게만 깨는데, Windows 타이머는 15.6ms 단위라 호출마다 0~16ms 늦어 이웃 간격은 84~116ms로 흔들린다
+//    (2026-10-25 「간격 ≥ 90ms」가 3회 중 1회 실패). 2ms는 Date.now와 타이머 시계(libuv)가 ms를 따로 끊어 생기는 반올림 두 번이다.
 process.env.COLLECT_LLM_RPM_PERPLEXITY = '600'
 const stamp = async (pool: 'collect:perplexity' | 'collect:openai') => {
   const starts: number[] = []
@@ -79,8 +82,7 @@ const stamp = async (pool: 'collect:perplexity' | 'collect:openai') => {
   return starts.sort((a, b) => a - b)
 }
 const paced = await stamp('collect:perplexity')
-const gaps = paced.slice(1).map((t, i) => t - paced[i]!)
-ok('분당 상한: 시작 간격을 지킨다(0.1초)', gaps.every((g) => g >= 90))
+ok('분당 상한: 시작 간격을 지킨다(0.1초)', paced.every((t, k) => t - paced[0]! >= k * 100 - 2))
 const free = await stamp('collect:openai')
 ok('상한 없는 엔진은 기다리지 않는다', free.at(-1)! - free[0]! < 50)
 process.env.COLLECT_LLM_RPM_PERPLEXITY = '0'
