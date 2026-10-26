@@ -147,11 +147,13 @@ export default function Portfolio() {
   // 조합이 끊겼다. 주소가 밖에서 바뀌면(되살린 보기 · 거르기 풀기) 칸도 따른다.
   const [qInput, setQInput] = useState(view.q)
   const [syncedQ, setSyncedQ] = useState(view.q)
-  // 아직 주소에 적지 않은 입력이 있으면(치는 중) 칸을 덮지 않는다.
+  // 친 글자가 아직 주소에 반영되지 않았다 — 주소 갱신은 전환(transition)이라 늦게 들어온다. 그동안 들어오는 옛 주소 값으로 칸을 덮지
+  // 않고, 친 값이 주소에 들어오면 끝난다.
   const [typing, setTyping] = useState(false)
   if (view.q !== syncedQ) {
     setSyncedQ(view.q)
-    if (!typing) setQInput(view.q)
+    if (view.q === qInput) setTyping(false)
+    else if (!typing) setQInput(view.q)
   }
   const qTimer = useRef<number | null>(null)
   useEffect(
@@ -166,9 +168,9 @@ export default function Portfolio() {
     if (qTimer.current) window.clearTimeout(qTimer.current)
     if (composing) return
     qTimer.current = window.setTimeout(() => {
-      setSyncedQ(value)
-      setTyping(false)
-      setView({ q: value })
+      // 주소에 이미 같은 값이면(지웠다 같은 글자를 다시 침) 바뀔 것이 없다 — 치는 중을 바로 끝낸다.
+      if ((new URLSearchParams(window.location.search).get('q') ?? '') === value) setTyping(false)
+      else setView({ q: value })
     }, 250)
   }
   const clearFilters = () => {
