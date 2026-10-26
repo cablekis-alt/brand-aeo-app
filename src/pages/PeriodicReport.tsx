@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   CitationSourcesSection,
   CohortCompareSection,
@@ -113,7 +113,9 @@ function ReasonText({ full, plain }: { full: string; plain: string }) {
 export default function PeriodicReport() {
   const { tenant, viewing } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
+  // 다른 화면에서 주차를 지정해 들어올 수 있다(퍼포먼스의 「사실성 리스크」 → 그 주 원문). 없으면 최신 주.
+  const [searchParams] = useSearchParams()
+  const [weekOf, setWeekOf] = useWeekSelection(history, searchParams.get('week') ?? '')
 
   /*
    * 주간 / 월간.

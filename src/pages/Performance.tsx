@@ -400,7 +400,8 @@ export default function Performance() {
               {/* 기록 줄(openai / v5-006 #1)은 내부 값이라 엔진별 응답 수로 — 무엇이 어긋났는지는 보고서 원문 목록에서(상용화 UI 3차 U23). */}
               <p>
                 {factFlagSummary(card.hallucinationFlags)}의 응답이 등록된 브랜드 정보와 다릅니다(판정 검토 전).{' '}
-                <Link to="/report">정기진단 보고서에서 원문 확인 →</Link>
+                {/* 고른 주의 보고서로 연다 — 보고서는 주차를 주지 않으면 최신 주로 열린다(1-B 검토). */}
+                <Link to={`/report?week=${encodeURIComponent(card.weekOf)}`}>정기진단 보고서에서 원문 확인 →</Link>
               </p>
             </section>
           )}

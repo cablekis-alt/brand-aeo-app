@@ -1,5 +1,5 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { scoreBreakdown, type ScorePartKey } from './b9-report'
+import { aeoScoreOf, scoreInputsOf, type ScorePartKey } from './b9-report'
 import { comparableRun, compareConditions, conditionReason, runAverage, runCountText, weeksBetween } from './comparability'
 import { ENGINE_LABEL } from './format'
 
@@ -91,7 +91,7 @@ function comparableRankChange(
   from: { position: number; tied: boolean }
   to: { position: number; tied: boolean }
   total: number
-  /** 이번 주에만 있는 구성원 중 우리보다 점수가 높은 곳 — 이 비교에서 빠졌다고 밝힌다. */
+  /** 직전 측정 구성원에 없던 곳 중 우리보다 점수가 높은 곳 — 이 비교에서 빠졌다고 밝힌다. */
   newAbove: { tenantId: string; aeoScore: number }[]
 } | null {
   const prevMembers = prev.cohortRank.members
@@ -110,26 +110,32 @@ function comparableRankChange(
   }
 }
 
-/** 두 주 비교 그룹 구성원이 같은가 — 다르면 점유율(경쟁사 대비 언급 몫) 증감은 구성 변화가 만든다. 기록이 없으면 null(모름). */
-function sameMembers(prev: WeeklyScorecard, cur: WeeklyScorecard): boolean | null {
-  const a = prev.cohortRank.members
-  const b = cur.cohortRank.members
-  if (!a?.length || !b?.length) return null
-  const ids = new Set(a.map((m) => m.tenantId))
-  return a.length === b.length && b.every((m) => ids.has(m.tenantId))
-}
-
 /**
- * 점수 증감이 주로 어느 항목에서 왔나 — 한 항목이 증감의 60% 이상이면 그 이름(추천 순위면 순위 응답 수도). 실측 스테이,머뭄
- * W42 → W43 +11은 거의 순위 응답 2건에서 나왔는데 알림만 보면 노출이 크게 는 것처럼 읽혔다(상용화 UI 3차 U20).
+ * 점수 증감이 주로 어느 항목에서 왔나 — 실측 스테이,머뭄 W42 → W43 +11은 거의 순위 응답 2건에서 나왔는데 알림만 보면 노출이 크게
+ * 는 것처럼 읽혔다(상용화 UI 3차 U20).
+ *
+ * 항목마다 「직전 측정에 이번 주 그 항목 값만 넣었을 때」 점수가 얼마나 움직이는지 본다(나머지는 직전 값). 항목별 보탠 점수를 빼서
+ * 견주면 안 된다 — 순위 몫이 바뀌면 재정규화로 언급률 · 자사 인용 몫이 값 변화 없이 커지거나 줄어, 순위가 만든 증감을 「언급률에서」라고
+ * 짚는다(1-B 검토). 한 항목이 증감의 60% 이상이고 방향이 같을 때만 그 이름을 적는다.
  */
 function deltaSource(prev: WeeklyScorecard, cur: WeeklyScorecard, delta: number): string | null {
-  const before = new Map(scoreBreakdown(prev).map((p) => [p.key, p.points ?? 0]))
-  const parts = scoreBreakdown(cur).map((p) => ({ key: p.key, d: (p.points ?? 0) - (before.get(p.key) ?? 0) }))
-  const top = parts.sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0]
+  const p = scoreInputsOf(prev)
+  const q = scoreInputsOf(cur)
+  const base = aeoScoreOf(p)
+  const effects: { key: ScorePartKey; d: number }[] = [
+    { key: 'mentionRate', d: aeoScoreOf({ ...p, mentionRate: q.mentionRate, sentiment: q.sentiment }) - base },
+    { key: 'brandOwnedCitationRate', d: aeoScoreOf({ ...p, brandOwnedCitationRate: q.brandOwnedCitationRate }) - base },
+    {
+      key: 'avgRecommendationRank',
+      d: aeoScoreOf({ ...p, avgRecommendationRank: q.avgRecommendationRank, rankedResponses: q.rankedResponses }) - base,
+    },
+  ]
+  const top = effects.sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0]
   if (!top || Math.sign(top.d) !== Math.sign(delta) || Math.abs(top.d) < Math.abs(delta) * 0.6) return null
-  const extra = top.key === 'avgRecommendationRank' && cur.rankedResponses !== undefined ? `(순위 응답 ${cur.rankedResponses}건)` : ''
-  return `이번 증감의 대부분은 ${PART_LABEL[top.key]}${extra}에서 나왔습니다.`
+  if (top.key !== 'avgRecommendationRank') return `이번 증감의 대부분은 ${PART_LABEL[top.key]}에서 나왔습니다.`
+  // 순위가 빠진 주는 「순위 응답 0건에서 나왔다」가 아니라 빠졌다고 말한다.
+  if (cur.avgRecommendationRank === null) return '이번 증감의 대부분은 추천 순위가 점수에서 빠진 데서 나왔습니다(순위가 매겨진 응답 없음).'
+  return `이번 증감의 대부분은 추천 순위${cur.rankedResponses !== undefined ? `(순위 응답 ${cur.rankedResponses}건)` : ''}에서 나왔습니다.`
 }
 
 /**
@@ -175,9 +181,10 @@ export function computeAlerts(history: WeeklyScorecard[], context: AlertContext 
     alerts.push({
       level: 'warn',
       title: `사실 확인 필요 — AI 응답 ${n}건 (판정 검토 전)`,
+      // 제목의 N은 응답 수(기록 줄은 응답마다 한 줄), 아래 목록은 주장 단위다 — 한 응답에 틀린 주장이 여럿일 수 있어 「주장」이라고 밝힌다.
       detail:
         claims.length > 0
-          ? `${contradictedLine(claims[0]!)}${claims.length > 1 ? ` 외 ${claims.length - 1}건` : ''}`
+          ? `${contradictedLine(claims[0]!)}${claims.length > 1 ? ` 외 주장 ${claims.length - 1}건` : ''}`
           : `${factFlagSummary(cur.hallucinationFlags)}의 응답이 등록된 브랜드 정보와 다릅니다.`,
       link: { to: '/report', label: `정기진단 보고서에서 ${n}건 확인` },
     })
@@ -240,16 +247,13 @@ export function computeAlerts(history: WeeklyScorecard[], context: AlertContext 
     if (source && last) last.detail = `${last.detail} ${source}`
   }
 
-  // 언급 점유율 변화(둘 다 측정된 경우만). 비교 그룹 구성이 바뀌었으면 증감은 구성 변화가 만든다 — 방향을 알리지 않고 그렇다고만 적는다.
+  /*
+   * 언급 점유율 변화(둘 다 측정된 경우만). 점유율은 이 브랜드 응답 안에서 등록 경쟁사 목록으로 센다(server/aggregate.ts) — 비교 그룹
+   * 구성원과는 상관이 없어 구성원 변화로 증감을 거르지 않는다(1-B 검토: 「이 브랜드만 측정」으로 구성원이 줄면 진짜 급락이 가려졌다).
+   */
   if (cur.shareOfMention !== null && prev.shareOfMention !== null) {
     const somDelta = cur.shareOfMention - prev.shareOfMention
-    if (Math.abs(somDelta) >= 0.15 && sameMembers(prev, cur) === false) {
-      alerts.push({
-        level: 'info',
-        title: '언급 점유율 증감 생략',
-        detail: `비교 그룹 구성이 바뀌어 점유율 증감(${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)})을 경쟁사 대비 변화로 읽지 않습니다.`,
-      })
-    } else if (somDelta <= -0.15) {
+    if (somDelta <= -0.15) {
       alerts.push({ level: 'warn', title: `언급 점유율 급락`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (${(somDelta * 100).toFixed(0)}%p). 경쟁사 대비 언급 점유가 줄었습니다.` })
     } else if (somDelta >= 0.15) {
       alerts.push({ level: 'good', title: `언급 점유율 상승`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (+${(somDelta * 100).toFixed(0)}%p).` })
@@ -274,10 +278,11 @@ export function computeAlerts(history: WeeklyScorecard[], context: AlertContext 
         return name ? `${name}(${m.aeoScore}점)` : null
       })
       .filter((x): x is string => x !== null)
+    // 직전 측정 구성원에 없던 곳 — 처음 잰 곳인지는 모른다(앞서 쟀다가 직전 주에 빠졌을 수 있다). 데이터가 말하는 만큼만 쓴다.
     const left =
       rankChange.newAbove.length === 0
         ? ''
-        : ` 이번 주 처음 잰 ${newcomers.length === rankChange.newAbove.length ? newcomers.join(' · ') : `${rankChange.newAbove.length}곳`}은 이 비교에서 빠졌습니다.`
+        : ` 직전 측정에 없던 ${newcomers.length === rankChange.newAbove.length ? newcomers.join(' · ') : `${rankChange.newAbove.length}곳`}은 이 비교에서 빠졌습니다.`
     alerts.push(
       down
         ? { level: 'warn', title, detail: `${whole}${left} 경쟁사에 자리를 내줬습니다.` }

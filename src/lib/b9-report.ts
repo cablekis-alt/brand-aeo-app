@@ -117,6 +117,48 @@ export function scoreBreakdown(card: WeeklyScorecard): ScorePart[] {
   ]
 }
 
+/** 점수 식에 들어가는 값 — 카드 값 + 감성 계수(카드에 남지 않아 impliedSentiment로 푼다). */
+export interface ScoreInputs {
+  mentionRate: number
+  sentiment: number
+  brandOwnedCitationRate: number
+  avgRecommendationRank: number | null
+  rankedResponses: number | undefined
+}
+
+/**
+ * Brand AEO Score 식 — server/scoring.ts computeAeoScore와 같다(화면은 서버 모듈을 들이지 않는다). 순위 몫은 순위 응답 수만큼,
+ * 순위가 없으면 빼고 남은 가중치로 나눈다. scripts/verify-first-screen.ts가 서버 식과 같은 값을 내는지 견준다.
+ */
+export function aeoScoreOf(v: ScoreInputs): number {
+  const rankFactor = rankWeightFactor(v.rankedResponses, v.avgRecommendationRank)
+  const parts = [
+    { value: v.mentionRate * v.sentiment, weight: AEO_SCORE_WEIGHTS.mentionRate },
+    { value: v.brandOwnedCitationRate, weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate },
+    ...(v.avgRecommendationRank !== null && rankFactor > 0
+      ? [{ value: normalizeRank(v.avgRecommendationRank), weight: AEO_SCORE_WEIGHTS.avgRecommendationRank * rankFactor }]
+      : []),
+  ]
+  const total = parts.reduce((s, p) => s + p.weight, 0)
+  return Math.round(parts.reduce((s, p) => s + p.value * (p.weight / total), 0) * 100)
+}
+
+/** 카드 점수에서 감성 계수를 거꾸로 푼다(0.2~1). 언급률이 0이면 계수가 점수에 들어가지 않아 1로 둔다. */
+export function impliedSentiment(card: WeeklyScorecard): number {
+  if (card.mentionRate <= 0) return 1
+  const mention = scoreBreakdown(card).find((p) => p.key === 'mentionRate')!
+  const implied = (mention.points ?? 0) / 100 / (mention.weight * card.mentionRate)
+  return Number.isFinite(implied) ? Math.min(1, Math.max(0.2, implied)) : 1
+}
+
+export const scoreInputsOf = (card: WeeklyScorecard): ScoreInputs => ({
+  mentionRate: card.mentionRate,
+  sentiment: impliedSentiment(card),
+  brandOwnedCitationRate: card.brandOwnedCitationRate,
+  avgRecommendationRank: card.avgRecommendationRank,
+  rankedResponses: card.rankedResponses,
+})
+
 /** 가중치 꼬리표 — 「가중치 42%」, 이번 주 비중이 다르면 「가중치 25% → 이번 주 10%」, 빠졌으면 「점수 제외」. */
 export function weightTagText(part: ScorePart, opts: { short?: boolean } = {}): string {
   const base = Math.round(part.baseWeight * 100)
