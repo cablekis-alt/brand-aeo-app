@@ -333,7 +333,7 @@ export default function RunTrendPanel({
 
             {m.breaks.map((b, k) => (
               <g key={`brk-${k}`}>
-                <title>{`${b.text} — 앞뒤를 잇지 않음`}</title>
+                <title>{`측정 조건: ${b.text} — 앞뒤를 잇지 않음`}</title>
                 <line className="st-break" x1={x(b.x)} x2={x(b.x)} y1={graphTop - 6} y2={graphTop + GRAPH_H} />
                 <rect className="st-break-mark" x={x(b.x) - 4} y={graphTop - 10} width={8} height={8} transform={`rotate(45 ${x(b.x)} ${graphTop - 6})`} />
               </g>
@@ -424,9 +424,10 @@ export default function RunTrendPanel({
           <span>
             <span className="rt-key base" aria-hidden="true" /> 옛 기록(회차 기록 전 그 주 마지막 측정) — 잇지 않음
           </span>
+          {/* b.text는 바뀐 조건(이름 그대로)과 「… 기록 없음」이 섞인다 — 기록이 없는 것을 「바뀜」이라 하지 않는다. */}
           {m.breaks.map((b, k) => (
             <span key={k} className="st-key-break">
-              <span className="st-key diamond" aria-hidden="true" /> {b.text} 바뀜 — 앞뒤를 잇지 않음
+              <span className="st-key diamond" aria-hidden="true" /> 측정 조건: {b.text} — 앞뒤를 잇지 않음
             </span>
           ))}
           {m.pins.length > 0 && <span>번호 핀 = 올린 날 · 옅은 띠 = 올린 뒤 {INDEXING_GRACE_DAYS}일</span>}

@@ -11,7 +11,7 @@ const OWNER_TYPE_LABEL: Record<string, string> = {
   'brand-owned': '자사',
   'competitor-owned': '경쟁사',
   'third-party-authority': '제3자 권위',
-  'third-party-ugc': '제3자 UGC',
+  'third-party-ugc': '이용자 글',
   unknown: '알 수 없음',
 }
 
@@ -207,7 +207,7 @@ export default function Citations() {
                     <th className="cell-text">도메인</th>
                     <th className="cell-text">소유권</th>
                     <th>점유율</th>
-                    <th>전주 대비</th>
+                    <th>직전 측정 대비</th>
                     <th>인용 횟수</th>
                     <th>브랜드 언급 뒷받침</th>
                   </tr>

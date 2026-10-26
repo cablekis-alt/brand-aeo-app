@@ -96,6 +96,26 @@ export function variantTag(t: VariantBrand, all: VariantBrand[]): string | null 
   return siblings.some((s) => scopeOf(s) === scope) ? t.industry : SCOPE_LABEL[scope]
 }
 
+/** 화면에 보일 브랜드 이름 — 같은 홈페이지를 쓰는 형제가 있으면 범위 꼬리표를 붙인다(「군산각 · 전국형」). 없으면 이름 그대로. */
+export function brandLabel(t: VariantBrand & { brandName: string }, all: VariantBrand[]): string {
+  const tag = variantTag(t, all)
+  return tag ? `${t.brandName} · ${tag}` : t.brandName
+}
+
+/**
+ * 상호 칸에 들어온 값이 주소인가 — 「https://」 · 「www.」로 시작하거나 「/」로 끝나면 사람들이 부르는 이름이 아니다. 그대로 등록하면
+ * 이름과 별칭이 주소가 되어 AI 답변 속 「도전과나눔」을 언급으로 세지 못한다(실측 dona — 상용화 UI 3차 U7). 막고 홈페이지 칸으로 옮긴다.
+ */
+export function isAddressLike(name: string): boolean {
+  const t = name.trim()
+  return /^(https?:\/\/|www\.)/i.test(t) || (t.length > 1 && t.endsWith('/'))
+}
+
+/** 상호가 도메인 모양인가(「trip.com」) — 막지 않고 확인만 한다(도메인이 실제로 부르는 이름인 곳도 있다). */
+export function isDomainLike(name: string): boolean {
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(name.trim())
+}
+
 export function scopeLabel(scope: string | undefined): string {
   return SCOPE_LABEL[scopeOf({ marketScope: scope })]
 }

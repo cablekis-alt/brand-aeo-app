@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
+import { brandLabel } from '../lib/brandVariant'
 import { routeMeta } from '../lib/menu'
 import CommandPalette from './CommandPalette'
 
@@ -24,9 +25,10 @@ export default function TopBar({
   onBack: () => void
 }) {
   const { pathname } = useLocation()
-  const { tenant, viewing } = useTenant()
+  const { tenant, tenants, viewing } = useTenant()
   const meta = routeMeta(pathname)
-  const crumbs = [showBrand && tenant ? tenant.brandName : null, meta?.group ?? null].filter((c): c is string => Boolean(c))
+  // 같은 홈페이지로 범위만 다르게 등록한 브랜드(군산각 지역형 · 전국형)는 이름이 같다 — 범위 꼬리표로 가른다(상용화 UI 3차 U7).
+  const crumbs = [showBrand && tenant ? brandLabel(tenant, tenants) : null, meta?.group ?? null].filter((c): c is string => Boolean(c))
 
   return (
     <header className="topbar">

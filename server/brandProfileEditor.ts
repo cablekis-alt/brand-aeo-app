@@ -13,15 +13,19 @@ import { baseFingerprint, readCompetitorOverride, serializeCompetitorFile, write
 import { readOverlay } from './tenantOverlay.js';
 import { isBakedTenant, loadRuntimeTenants, replaceOverlayTenants } from './tenantRegistry.js';
 import { readTenantScope, writeTenantScope } from './tenantScopeStore.js';
-import { sameCohort, scopeLabel, sharesSite } from '../src/lib/brandVariant.js';
-import { subjectParticle, topicParticle } from '../src/lib/korean.js';
+import { isAddressLike, isDomainLike, sameCohort, scopeLabel, sharesSite } from '../src/lib/brandVariant.js';
+import { directionParticle, subjectParticle, topicParticle } from '../src/lib/korean.js';
 import { MARKET_SCOPES, NATIONAL_REGION, type MarketScope } from '../src/prompts/types.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { ResultStore } from './store.js';
 import type { TenantConfig } from './types.js';
 
 /**
- * 브랜드 기본 정보(업종 · 지역 · 시장 범위) 고치기 — 브랜드 현황 코호트 카드의 「기본 정보」 서랍(components/ProfileEditor.tsx).
+ * 브랜드 기본 정보(상호 · 별칭 · 업종 · 지역 · 시장 범위) 고치기 — 브랜드 현황 코호트 카드의 「기본 정보」 서랍(components/ProfileEditor.tsx).
+ *
+ * 상호 · 별칭(상용화 UI 3차 U7): 상호 칸에 주소를 넣어 등록한 브랜드(실측 dona — 이름 · 별칭이 모두 「https://www.dona.kr/」)를 앱에서
+ * 고칠 길이 없었다. 상호를 바꾸면 이름을 넣은 질문도 새 이름으로 만들어야 해 질문지 번호를 올린다(업종 · 지역과 같은 길). 별칭만 바꾸면
+ * 질문은 그대로이고 다음 측정의 언급 판정만 달라진다 — 질문지를 올리지 않는다. 경쟁사 측정 브랜드의 이름은 바꾸지 않는다.
  *
  * 왜: 등록한 뒤 업종 · 지역 · 범위를 바꾸려면 설정 파일을 손으로 고쳐야 했다(2026-10-21 군산각 지역형 전환). 그런데 그냥 바꾸면
  * 1. 질문지 — 같은 질문지 버전이 옛 코호트로 만든 것이라 측정이 멈추거나(cohortQuestionBank.ts ensureComposedQuestionBank),
@@ -50,6 +54,7 @@ export interface ProfileCompetitor {
 export interface ProfileEditorState {
   tenantId: string;
   brandName: string;
+  aliases: string[];
   industry: string;
   region: string;
   marketScope: MarketScope;
@@ -67,6 +72,10 @@ export interface ProfileEditorState {
 }
 
 export interface ProfileInput {
+  /** 없으면 그대로. */
+  brandName?: string;
+  /** 없으면 그대로. */
+  aliases?: string[];
   industry: string;
   region: string;
   marketScope: MarketScope;
@@ -76,6 +85,8 @@ export interface ProfileInput {
 }
 
 export interface ProfileTarget {
+  brandName: string;
+  aliases: string[];
   industry: string;
   region: string;
   marketScope: MarketScope;
@@ -127,6 +138,7 @@ const scopeOf = (t: { marketScope?: string }): MarketScope => (t.marketScope ===
 const isEnglish = (t: TenantConfig) => t.questionLanguage === 'en' || t.region.includes('(영어 질문)');
 const tp = (w: string) => topicParticle(w).slice(w.length);
 const sp = (w: string) => subjectParticle(w).slice(w.length);
+const dp = (w: string) => directionParticle(w).slice(w.length);
 
 /** 화면이 보낸 값을 고른다. 모양이 틀리면 400, 값이 비면 계획의 errors로 알린다. */
 export function normalizeProfileInput(raw: unknown): ProfileInput {
@@ -140,7 +152,15 @@ export function normalizeProfileInput(raw: unknown): ProfileInput {
   if (typeof scope !== 'string' || !MARKET_SCOPES.includes(scope as MarketScope)) throw new EditorError(400, `알 수 없는 시장 범위입니다: ${String(scope)}`);
   const marketScope = scope as MarketScope;
   if (d.move !== undefined && (!Array.isArray(d.move) || d.move.some((v) => typeof v !== 'string'))) throw new EditorError(400, '함께 옮길 경쟁사 목록이 올바르지 않습니다.');
+  if (d.aliases !== undefined && (!Array.isArray(d.aliases) || d.aliases.some((v) => typeof v !== 'string'))) throw new EditorError(400, '별칭 목록이 올바르지 않습니다.');
+  // 별칭 — 앞뒤 공백을 걷고 빈 값 · 같은 값은 뺀다(순서는 지킨다). 너무 긴 목록은 자른다.
+  const aliases =
+    d.aliases === undefined
+      ? undefined
+      : [...new Set((d.aliases as string[]).map((a) => a.trim().slice(0, 60)).filter(Boolean))].slice(0, 20);
   return {
+    ...(d.brandName === undefined ? {} : { brandName: text(d.brandName, '상호').slice(0, 80) }),
+    ...(aliases === undefined ? {} : { aliases }),
     industry: text(d.industry, '업종').slice(0, 60),
     // 전국형 · B2B형은 「국내」가 기본이다(BrandOnboarding.tsx와 같다). 이미 전국형 · B2B형인데 지역이 남은 브랜드는 그 지역을 그대로 둘 수 있다
     // (설치본에 11곳 — 코호트를 「국내」로 옮기는 일은 따로 정한다). 그 밖의 지역은 computePlan이 막는다.
@@ -255,6 +275,7 @@ export async function describeProfileEditor(tenantId: string): Promise<ProfileEd
   return {
     tenantId,
     brandName: tenant.brandName,
+    aliases: tenant.aliases ?? [],
     industry: tenant.industry,
     region: tenant.region,
     marketScope: scopeOf(tenant),
@@ -322,13 +343,17 @@ function mostCommon(values: string[]): string | null {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
+const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
+
 function describeChange(from: ProfileTarget, to: ProfileTarget): string {
   const parts: string[] = [];
+  if (from.brandName !== to.brandName) parts.push(`상호 ${from.brandName} → ${to.brandName}`);
+  if (!sameList(from.aliases, to.aliases)) parts.push(`별칭 ${to.aliases.length > 0 ? to.aliases.join(' · ') : '없음'}`);
   if (from.industry !== to.industry) parts.push(`업종 ${from.industry} → ${to.industry}`);
   if (from.region !== to.region) parts.push(`지역 ${from.region} → ${to.region}`);
   if (from.marketScope !== to.marketScope) parts.push(`${scopeLabel(from.marketScope)} → ${scopeLabel(to.marketScope)}`);
   else if (from.buyer !== to.buyer) parts.push('구매자 바뀜');
-  parts.push(`질문지 ${from.questionBankVersion} → ${to.questionBankVersion}`);
+  if (from.questionBankVersion !== to.questionBankVersion) parts.push(`질문지 ${from.questionBankVersion} → ${to.questionBankVersion}`);
   return parts.join(' · ');
 }
 
@@ -348,6 +373,8 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   }
 
   const from: ProfileTarget = {
+    brandName: tenant.brandName,
+    aliases: tenant.aliases ?? [],
     industry: tenant.industry,
     region: tenant.region,
     marketScope: scopeOf(tenant),
@@ -355,13 +382,32 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
     questionBankVersion: tenant.questionBankVersion,
     cohortQuestionBank: tenant.cohortQuestionBank ?? null,
   };
-  const unchanged =
+  // 상호 · 별칭 — 보내지 않았으면 그대로. 상호는 주소면 막고, 도메인 모양이면 알리기만 한다.
+  const nameTo = input.brandName ?? from.brandName;
+  const aliasesTo = input.aliases ?? from.aliases;
+  const nameChanged = nameTo !== from.brandName;
+  const aliasesChanged = !sameList(aliasesTo, from.aliases);
+  if (!nameTo) errors.push('상호를 적어 주세요.');
+  else if (isAddressLike(nameTo)) errors.push('상호에는 주소가 아니라 사람들이 부르는 이름을 적어 주세요 — 예: 도전과나눔.');
+  if (aliasesTo.some(isAddressLike)) errors.push('별칭에 주소를 넣을 수 없어요 — 홈페이지는 그대로 두고 사람들이 부르는 이름만 적어 주세요.');
+  // 새 상호 · 별칭이 이 브랜드의 경쟁사 줄과 같으면 판정에 같은 이름이 둘이 되고 점유율이 합쳐진다 — 경쟁사 편집이 같은 상태를 막는
+  // 것과 같은 비교(공백 무시)로 막는다(1-D 검토, competitorEditor.ts 「자신이에요」).
+  if (nameChanged || aliasesChanged) {
+    const squash = (v: string) => v.replace(/\s+/g, '');
+    const own = new Set([nameTo, ...aliasesTo].filter(Boolean).map(squash));
+    const clash = tenant.competitors.find((c) => own.has(squash(c.name)) || c.aliases.some((a) => own.has(squash(a))));
+    if (clash) errors.push(`「${clash.name}」${tp(clash.name)} 이 브랜드의 경쟁사 목록에 있어요 — 경쟁사 편집에서 그 줄을 먼저 빼거나 다른 이름을 적어 주세요.`);
+  }
+  // 업종 · 지역 · 범위가 그대로인가 — 코호트 · 함께 옮길 경쟁사 · 공통 질문지는 이것이 바뀔 때만 따진다.
+  const cohortUnchanged =
     from.industry === input.industry && from.region === input.region && from.marketScope === input.marketScope && from.buyer === input.buyer;
+  const unchanged = cohortUnchanged && !nameChanged && !aliasesChanged;
 
   const targets = targetMap(tenant, runtime);
   const competitors = await competitorsOf(ctx, targets);
   const moving: ProfileCompetitor[] = [];
-  for (const id of input.move) {
+  // 상호 · 별칭만 바꾸면 코호트가 그대로라 함께 옮길 경쟁사가 없다 — 보낸 목록은 쓰지 않는다(옮기면 경쟁사 질문지까지 올라간다).
+  for (const id of cohortUnchanged ? [] : input.move) {
     const c = competitors.find((x) => x.tenantId === id);
     if (!c) errors.push(`함께 재는 경쟁사가 아닙니다: ${id}`);
     else if (!c.movable) errors.push(`${c.brandName}${tp(c.brandName)} 함께 옮길 수 없어요 — ${c.reason}`);
@@ -379,7 +425,7 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   }
 
   // 같은 홈페이지의 다른 고객 브랜드와 같은 코호트가 되면 같은 질문지 · 순위표를 나눠 쓴다(registerTenant와 같은 규칙).
-  const twin = unchanged ? null : runtime.find((t) => !t.cohortOnly && t.tenantId !== tenant.tenantId && sharesSite(t, tenant) && sameCohort(t, next));
+  const twin = cohortUnchanged ? null : runtime.find((t) => !t.cohortOnly && t.tenantId !== tenant.tenantId && sharesSite(t, tenant) && sameCohort(t, next));
   if (twin) errors.push(`같은 홈페이지의 ${twin.brandName}(${twin.tenantId})${sp(twin.brandName)} 이미 ${twin.industry} · ${twin.region}에 있어요.`);
 
   // 새 코호트의 구성원 — 함께 옮기는 경쟁사와 자기 자신은 뺀다. 경쟁사 측정 브랜드는 어느 고객이든 잴 때만 센다(아무도 재지 않는 곳은
@@ -400,7 +446,7 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
       (!t.cohortOnly || targets.active.has(t.tenantId) || willMeasure.has(t.tenantId)),
   );
   const otherScope = members.filter((m) => scopeOf(m) !== input.marketScope);
-  if (!unchanged && from.cohortQuestionBank && otherScope.length > 0) {
+  if (!cohortUnchanged && from.cohortQuestionBank && otherScope.length > 0) {
     // 공통 질문지 키는 업종__지역뿐이라(cohortQuestionBank.ts cohortKey) 범위가 다른 브랜드와 같은 공통 질문을 쓰게 된다.
     const names = otherScope.slice(0, 3).map((m) => `${m.brandName}(${scopeLabel(m.marketScope)})`);
     errors.push(
@@ -412,7 +458,7 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   // 코호트 공통 질문지 — 구성원이 있으면 그 버전을 따른다. 혼자면 지금 버전을 쓰되, 그 키에 같은 버전 파일이 이미 있거나(다른 브랜드가
   // 만든 것) 키가 그대로인데 범위 · 구매자만 바뀌었으면 다음 번호로 올린다(공통 질문은 범위 · 구매자로 만든다).
   let cohortTo: string | null = from.cohortQuestionBank;
-  if (from.cohortQuestionBank && !unchanged) {
+  if (from.cohortQuestionBank && !cohortUnchanged) {
     const memberVersion = mostCommon(members.map((m) => m.cohortQuestionBank).filter((v): v is string => Boolean(v)));
     if (memberVersion) cohortTo = memberVersion;
     else {
@@ -424,17 +470,48 @@ async function computePlan(ctx: Context, input: ProfileInput, store: ResultStore
   }
 
   const used = await usedBankVersions(ids, ctx, store, requests);
-  const bankTo = unchanged ? from.questionBankVersion : nextAfterMax(from.questionBankVersion, used);
-  const to: ProfileTarget = { industry: input.industry, region: input.region, marketScope: input.marketScope, buyer: input.buyer, questionBankVersion: bankTo, cohortQuestionBank: cohortTo };
+  // 질문지는 코호트가 바뀌거나 상호가 바뀔 때 올린다(이름을 넣은 질문이 새 이름이어야 한다). 별칭만 바뀌면 질문은 그대로다.
+  const bankTo = cohortUnchanged && !nameChanged ? from.questionBankVersion : nextAfterMax(from.questionBankVersion, used);
+  const to: ProfileTarget = {
+    brandName: nameTo,
+    aliases: aliasesTo,
+    industry: input.industry,
+    region: input.region,
+    marketScope: input.marketScope,
+    buyer: input.buyer,
+    questionBankVersion: bankTo,
+    cohortQuestionBank: cohortTo,
+  };
+
+  if (nameChanged && nameTo && !isAddressLike(nameTo)) {
+    notes.push(`상호를 「${nameTo}」${dp(nameTo)} 바꿉니다 — 다음 측정부터 AI 답변에서 이 이름(과 별칭)이 나오면 언급으로 셉니다. 지난 기록의 이름은 그대로입니다.`);
+    if (isDomainLike(nameTo)) notes.push(`「${nameTo}」${sp(nameTo)} 도메인 모양이에요 — 사람들이 부르는 상호가 따로 있으면 그 이름을 적어 주세요.`);
+    const same = runtime.find((t) => !t.cohortOnly && t.tenantId !== tenant.tenantId && t.brandName === nameTo);
+    if (same) notes.push(`같은 이름의 브랜드가 이미 있어요(${same.industry} · ${same.region}) — 화면에서 헷갈리지 않게 확인해 주세요.`);
+    // 이 브랜드를 경쟁사로 재는 다른 고객은 그 줄의 이름(옛 이름)을 순위 후보로 쓴다 — 고치지 않으면 같은 브랜드가 두 이름으로 보인다(1-D 검토).
+    const oldNameUsers = runtime.filter(
+      (o) => !o.cohortOnly && o.tenantId !== tenant.tenantId && lineTargets(o, runtime).some((t) => t.tenantId === tenant.tenantId && t.name !== nameTo),
+    );
+    if (oldNameUsers.length > 0) {
+      notes.push(
+        `${oldNameUsers.map((o) => o.brandName).join(', ')}${tp(oldNameUsers.at(-1)!.brandName)} 이 브랜드를 경쟁사 목록에 옛 이름으로 적어 두었어요 — 그쪽 경쟁사 편집에서 이름을 맞춰 주세요.`,
+      );
+    }
+  }
+  if (aliasesChanged && !nameChanged) {
+    notes.push('별칭을 바꾸면 다음 측정부터 언급 판정이 달라집니다 — 언급률이 직전 측정과 다르게 셀 수 있어요.');
+  }
 
   const week = getIsoWeekString(new Date());
   const thisWeek: string[] = [];
-  if (!unchanged) {
+  if (bankTo !== from.questionBankVersion) {
+    notes.push(`질문지를 ${bankTo}로 새로 만듭니다(다음 측정). 바뀐 주는 직전 측정과 점수 증감을 비교하지 않습니다.`);
+  }
+  if (!cohortUnchanged) {
     for (const t of [tenant, ...moving.map((m) => runtime.find((x) => x.tenantId === m.tenantId)!)]) {
       const last = (await store.getScorecardHistory(t.tenantId, 1)).at(-1);
       if (last?.weekOf === week) thisWeek.push(t.brandName);
     }
-    notes.push(`질문지를 ${bankTo}로 새로 만듭니다(다음 측정). 바뀐 주는 지난 주와 점수 증감을 비교하지 않습니다.`);
     if (cohortTo && members.length > 0) {
       const names = members.slice(0, 3).map((m) => m.brandName).join(', ');
       notes.push(`같은 코호트 ${members.length}곳과 공통 질문지(${cohortTo})를 함께 씁니다 — ${names}${members.length > 3 ? ` 외 ${members.length - 3}곳` : ''}.`);
@@ -496,9 +573,16 @@ export async function planProfileEdit(tenantId: string, raw: unknown, store: Res
   return computePlan(ctx, normalizeProfileInput(raw), store);
 }
 
-/** 오버레이 항목에 새 기본 정보를 넣는다 — 나머지(경쟁사 · 별칭 · GA4 …)는 그대로. 정규화(normalizeTenantDraft)를 거치지 않는다. */
-function applyTarget(entry: TenantConfig, to: ProfileTarget): TenantConfig {
+/**
+ * 오버레이 항목에 새 기본 정보를 넣는다 — 나머지(경쟁사 · GA4 …)는 그대로. 정규화(normalizeTenantDraft)를 거치지 않는다. 상호 · 별칭은
+ * 고객 항목에만(identity) — 함께 옮기는 경쟁사 측정 브랜드는 코호트만 옮긴다.
+ */
+function applyTarget(entry: TenantConfig, to: ProfileTarget, identity: boolean): TenantConfig {
   const next: TenantConfig = { ...entry, industry: to.industry, region: to.region, questionBankVersion: to.questionBankVersion };
+  if (identity) {
+    next.brandName = to.brandName;
+    next.aliases = to.aliases;
+  }
   if (to.cohortQuestionBank) next.cohortQuestionBank = to.cohortQuestionBank;
   if (to.marketScope === 'local') delete next.marketScope;
   else next.marketScope = to.marketScope;
@@ -515,6 +599,9 @@ function applyTarget(entry: TenantConfig, to: ProfileTarget): TenantConfig {
 function rebaseCompetitorOverride(tenantId: string, prev: TenantConfig, next: TenantConfig): Promise<void> {
   const oldFp = baseFingerprint(prev);
   const newFp = baseFingerprint(next);
+  // 지문이 그대로면(별칭만 바꿈 — 지문에는 이름 · 별칭이 없다) 다시 적지 않는다. 다시 적으면 경쟁사 편집이 만든 질문지 값
+  // (questionBank · 다시 만들기 대기)을 버려 그 질문지로 재던 측정이 멈춘다(1-D 검토).
+  if (oldFp === newFp) return Promise.resolve();
   const rebase = (o: CompetitorOverride | null): CompetitorOverride | null => (o && o.base === oldFp ? { competitors: o.competitors, base: newFp } : o);
   return serializeCompetitorFile(async () => {
     const file = await readCompetitorOverride(tenantId);
@@ -565,17 +652,28 @@ export async function saveProfileEdit(tenantId: string, raw: unknown, previewKey
   const prevEntries = [ctx.entry, ...plan.moving.map((m) => ctx.overlay.find((t) => t.tenantId === m.tenantId)!)];
   const copied = new Map<string, string[]>();
   for (const entry of prevEntries) copied.set(entry.tenantId, await backupTenant(entry.tenantId, entry, backup));
-  const nextEntries = prevEntries.map((e) => applyTarget(e, plan.to));
+  /*
+   * 별칭만 바뀐 저장(질문지 · 코호트 그대로)은 오버레이 항목의 별칭만 바꾼다. 계획의 질문지 값은 런타임(경쟁사 편집이 만든 질문지일 수
+   * 있다)에서 와서 오버레이에 적으면 지문이 바뀌고, 경쟁사 편집 질문지로 재던 측정이 멈춘다(1-D 검토 — 「질문 은행 v5은 앱에서 경쟁사를
+   * 바꾸며 만든 질문지인데 저장소 설정이 그 뒤에 바뀌었습니다」).
+   */
+  const aliasOnly = plan.bank.to === plan.bank.from && plan.moving.length === 0 && plan.to.brandName === ctx.tenant.brandName &&
+    plan.to.industry === ctx.tenant.industry && plan.to.region === ctx.tenant.region && plan.to.marketScope === scopeOf(ctx.tenant) && plan.to.buyer === (ctx.tenant.buyer ?? '');
+  const nextEntries = aliasOnly
+    ? [{ ...ctx.entry, aliases: plan.to.aliases }]
+    : prevEntries.map((e, i) => applyTarget(e, plan.to, i === 0));
 
   await replaceOverlayTenants(nextEntries);
   try {
-    for (const entry of nextEntries) {
+    for (const entry of aliasOnly ? [] : nextEntries) {
       if (await readTenantScope(entry.tenantId)) {
         await writeTenantScope(entry.tenantId, plan.to.marketScope === 'b2b' && plan.to.buyer ? { marketScope: 'b2b', buyer: plan.to.buyer } : { marketScope: plan.to.marketScope });
       }
     }
     await rebaseCompetitorOverride(tenantId, ctx.entry, nextEntries[0]!);
     const from: ProfileTarget = {
+      brandName: ctx.tenant.brandName,
+      aliases: ctx.tenant.aliases ?? [],
       industry: ctx.tenant.industry,
       region: ctx.tenant.region,
       marketScope: scopeOf(ctx.tenant),
@@ -583,8 +681,12 @@ export async function saveProfileEdit(tenantId: string, raw: unknown, previewKey
       questionBankVersion: ctx.tenant.questionBankVersion,
       cohortQuestionBank: ctx.tenant.cohortQuestionBank ?? null,
     };
-    const marker: ProfileMarker = { savedAt: new Date().toISOString(), summary: plan.summary, from, to: plan.to };
-    await writeFile(markerPath(tenantId), JSON.stringify(marker, null, 2), 'utf-8');
+    // 별칭만 바꾼 저장은 「다음 측정 대기」 표식을 남기지 않는다 — 질문지가 그대로라 곧바로 끝난 것으로 보이고, 앞선 대기 표식(업종 ·
+    // 질문지 변경)을 덮어써 그 요약이 사라졌다(1-D 검토).
+    if (!aliasOnly) {
+      const marker: ProfileMarker = { savedAt: new Date().toISOString(), summary: plan.summary, from, to: plan.to };
+      await writeFile(markerPath(tenantId), JSON.stringify(marker, null, 2), 'utf-8');
+    }
   } catch (err) {
     console.error(`[brandProfileEditor] ${tenantId} 저장 실패 — 되돌립니다:`, err);
     try {

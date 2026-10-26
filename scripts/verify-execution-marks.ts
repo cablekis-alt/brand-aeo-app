@@ -157,12 +157,13 @@ ok('기록이 없으면 전과 같이 권한다', recommended(evidence()) && !ex
 const wikiUrl = 'https://namu.wiki/w/가상브랜드';
 const wikiPost = post('w', '2026-10-12', { url: wikiUrl, key: trackingKey(wikiUrl) ?? wikiUrl, articleId: 'listing:namu.wiki', targetActionId: 'listing:namu.wiki', via: 'direct' });
 const withPost = evidence({ posts: [wikiPost] });
+// 상용화 UI 3차(U5): 고객 종이에 실리는 문장(detail)과 운영자 메모(opsNote — 화면에서만)를 가른다. 같은 사실을 두 칸에 나눠 확인한다.
 ok(
-  '올린 주소를 적은 항목은 다시 권하지 않고 「집행함 10/12 · 인용 대기」로 따로 적는다',
-  !recommended(withPost) && executedBlock(withPost)?.items[0]?.detail === '집행함 10/12 · 인용 대기',
+  '올린 주소를 적은 항목은 다시 권하지 않고 「10/12 올림 · 아직 인용 전」으로 따로 적는다',
+  !recommended(withPost) && executedBlock(withPost)?.items[0]?.detail === '10/12 올림 · 아직 인용 전' && !executedBlock(withPost)?.items[0]?.opsNote,
 );
 const marked = evidence({ states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-10-10T00:00:00Z', markedWeek: '2026-W41' } } });
-ok('주소 없이 「집행함」만 눌렀으면 그렇게 밝힌다', /^집행함 \(2026년 41주차에 표시\) · 올린 주소 기록 없음$/.test(executedBlock(marked)?.items[0]?.detail ?? ''));
+ok('주소 없이 「집행함」만 눌렀으면 그렇게 밝힌다', /^집행 표시\(2026년 41주차\) · 올린 주소 기록 없음$/.test(executedBlock(marked)?.items[0]?.detail ?? ''));
 ok('보고 주차 뒤에 올린 글 · 뒤에 표시한 집행은 보지 않는다(지난 주차 보고서)', recommended(evidence({ posts: [{ ...wikiPost, publishedOn: '2026-10-30' }] })) && recommended(evidence({ states: { 'listing:namu.wiki': { status: 'done', updatedAt: '2026-11-01T00:00:00Z', markedWeek: '2026-W44' } } })));
 ok('잘못 적어 뺀 주소는 집행으로 보지 않는다', recommended(evidence({ posts: [{ ...wikiPost, removedAt: '2026-10-13T00:00:00Z', removedReason: 'mistake' }] })));
 
@@ -254,29 +255,35 @@ const naverUrl = 'https://blog.naver.com/me/1';
 const naver = evidence({
   posts: [post('n', '2026-10-01', { url: naverUrl, key: trackingKey(naverUrl) ?? naverUrl, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
 });
-const naverNote = naver[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? '';
+const naverItem = naver[0]?.items.find((i) => i.text.includes('네이버'));
+const naverNote = naverItem?.detail ?? '';
 ok(
-  '블로그 플랫폼은 한 편 올려도 계속 권하고 지분을 머리말로 단다(「충족 전」이라 쓰지 않는다)',
-  !executedBlock(naver) && /^\[집행함 10\/1 · 올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — 더 올리면 지분이 오른다\] /.test(naverNote) && !naverNote.includes('충족 전'),
+  '블로그 플랫폼은 한 편 올려도 계속 권하고 집행 사실을 머리말로, 지분은 운영 메모로 단다(「충족 전」이라 쓰지 않는다)',
+  !executedBlock(naver) &&
+    /^\[10\/1 올림 · 이번 주 인용됨 — 글을 더 올릴수록 인용 비중이 오릅니다\] /.test(naverNote) &&
+    /^지분 \d+\/\d+ · 완료 기준: /.test(naverItem?.opsNote ?? '') &&
+    !`${naverNote} ${naverItem?.opsNote ?? ''}`.includes('충족 전'),
 );
 
 // 같은 주 회차 합침(citedPostIds) — 마지막 저장 측정에는 없고 다른 회차에서만 인용된 글은 「인용됨」으로 적되 기준을 밝힌다.
 // 주지 않으면 전과 같다(위 「인용 대기」 검사).
 const otherRun = evidence({ posts: [wikiPost], citedPostIds: new Set(['w']) });
 ok(
-  '다른 회차에서만 인용된 집행 글 — 「다른 회차에서 인용됨(마지막 저장 측정에서는 없음)」',
-  executedBlock(otherRun)?.items[0]?.detail === '집행함 10/12 · 올린 글이 이번 주 다른 회차에서 인용됨(마지막 저장 측정에서는 없음) · 아직 충족 전',
+  '다른 회차에서만 인용된 집행 글 — 고객에게는 「인용됨」, 운영 메모에 「다른 회차에서만 인용(마지막 저장 측정에서는 없음)」',
+  executedBlock(otherRun)?.items[0]?.detail === '10/12 올림 · 이번 주 인용됨' &&
+    executedBlock(otherRun)?.items[0]?.opsNote === '같은 주 다른 회차에서만 인용(마지막 저장 측정에서는 없음) · 아직 충족 전',
 );
-ok('회차 합침 기록에 없는 글은 그대로 「인용 대기」', executedBlock(evidence({ posts: [wikiPost], citedPostIds: new Set(['x']) }))?.items[0]?.detail === '집행함 10/12 · 인용 대기');
+ok('회차 합침 기록에 없는 글은 그대로 「아직 인용 전」', executedBlock(evidence({ posts: [wikiPost], citedPostIds: new Set(['x']) }))?.items[0]?.detail === '10/12 올림 · 아직 인용 전');
 const naverOther = 'https://blog.naver.com/me/9';
 const platformOther = evidence({
   posts: [post('n9', '2026-10-01', { url: naverOther, key: trackingKey(naverOther) ?? naverOther, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
   citedPostIds: new Set(['n9']),
 });
-const platformNote = platformOther[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? '';
+const platformItem = platformOther[0]?.items.find((i) => i.text.includes('네이버'));
 ok(
-  '블로그 플랫폼 — 다른 회차에서만 인용됐으면 지분이 마지막 측정 기준임을 밝힌다',
-  /다른 회차에서 인용됨\(마지막 저장 측정에서는 없음\) · 지분 \d+\/\d+\(마지막 측정 기준\) — 더 올리면/.test(platformNote),
+  '블로그 플랫폼 — 다른 회차에서만 인용됐으면 지분이 마지막 측정 기준임을 운영 메모에 밝힌다',
+  (platformItem?.detail ?? '').startsWith('[10/1 올림 · 이번 주 인용됨 — ') &&
+    /^같은 주 다른 회차에서만 인용\(마지막 저장 측정에서는 없음\) · 지분 \d+\/\d+\(마지막 측정 기준\) · 완료 기준: /.test(platformItem?.opsNote ?? ''),
 );
 const platformSame = evidence({
   posts: [post('n', '2026-10-01', { url: naverUrl, key: trackingKey(naverUrl) ?? naverUrl, articleId: 'content:n', targetActionId: 'listing:platform:blog.naver.com', via: 'channel' })],
@@ -284,7 +291,15 @@ const platformSame = evidence({
 });
 ok(
   '마지막 측정에서도 인용됐으면 기준을 따로 적지 않는다',
-  /올린 글이 이번 주 인용됨 · 지분 \d+\/\d+ — /.test(platformSame[0]?.items.find((i) => i.text.includes('네이버'))?.detail ?? ''),
+  /^지분 \d+\/\d+ · 완료 기준: /.test(platformSame[0]?.items.find((i) => i.text.includes('네이버'))?.opsNote ?? ''),
+);
+// 고객 종이에 실리는 문장에는 운영 표시(지분 n/m · 충족 전 · 완료 기준 · 집행함)가 없다 — 모두 운영 메모로 갔다. 출처 설명의 「지분」 같은
+// 보통 말(「우리 블로그를 운영하면 그 지분이 바로 올라갑니다」)은 고객 문장이라 남는다.
+ok(
+  '고객 문장(detail)에는 지분 n/m · 충족 전 · 완료 기준 · 집행함이 없다',
+  [withPost, marked, naver, otherRun, platformOther, platformSame, downed]
+    .flatMap((blocks) => blocks.flatMap((b) => b.items.map((i) => i.detail ?? '')))
+    .every((d) => !/지분 \d+\/\d+|충족 전|완료 기준|집행함/.test(d)),
 );
 
 // 글을 내렸는데 내리기 전 같은 주 다른 회차에서 인용됐다 — 이미 내린 글은 다음 측정이 인용할 수 없으니 그대로 다시 권한다.

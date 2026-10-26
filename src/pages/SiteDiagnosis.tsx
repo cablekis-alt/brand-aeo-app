@@ -18,6 +18,7 @@ import { robotsAiAccess, type RobotsAiAccess } from '../lib/aeo/robots'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { inferBrandDomain, saveSiteScore, type TenantSummary } from '../lib/api'
+import { siteDifference } from '../lib/comparability'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import type { AeoReport, AuditContext } from '../lib/aeo/types'
 
@@ -139,11 +140,20 @@ export default function SiteDiagnosis() {
       setSaveNote({ tone: 'fail', text: `주차 기록에 실패했습니다 — ${saved.error}` })
       return
     }
+    /*
+     * 직전 진단과의 증감 — 같은 페이지(주소)를 같은 방식으로 잰 진단끼리만(siteComparable · 정기진단 보고서 Site 칸과 같은 규칙).
+     * 실측 ktcorp corp.kt.com 57 → www.kt.com 0이 「-57」로 찍혔다. 직전 진단은 바로 전 주가 아닐 수 있어 「전주」라고 하지 않는다.
+     */
     const weeks = Object.keys(saved.scores).sort()
-    const prev = weeks.filter((w) => w < saved.weekOf).at(-1)
-    const prevScore = prev ? saved.scores[prev]?.score : undefined
-    const delta =
-      typeof prevScore === 'number' ? ` · 전주(${prev}) ${prevScore}점 대비 ${evaluated.overallScore - prevScore >= 0 ? '+' : ''}${evaluated.overallScore - prevScore}` : ' · 첫 기록이라 비교할 전주가 없습니다'
+    const prevWeek = weeks.filter((w) => w < saved.weekOf).at(-1)
+    const prevRecord = prevWeek ? saved.scores[prevWeek] : undefined
+    const siteDiff = prevRecord ? siteDifference(prevRecord, { url: evaluated.url, collectionMode: evaluated.collectionMode }) : null
+    const change = prevRecord ? evaluated.overallScore - prevRecord.score : 0
+    const delta = !prevRecord
+      ? ' · 첫 기록이라 견줄 직전 진단이 없습니다'
+      : siteDiff
+        ? ` · 직전 진단(${prevWeek})과 ${siteDiff === '주소' ? '주소가' : `${siteDiff}이`} 달라 견주지 않습니다`
+        : ` · 직전 진단(${prevWeek}) ${prevRecord.score}점 대비 ${change >= 0 ? '+' : ''}${change}`
     setSaveNote({
       tone: 'ok',
       text: `${owner.brandName}의 ${saved.weekOf} Site AEO Score로 기록했습니다${delta}.`,

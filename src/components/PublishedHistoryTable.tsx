@@ -88,7 +88,7 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
  * 올린 글 인용 추적 — 행은 올린 글(같은 주소 · 같은 올린 날을 여러 줄에 적은 기록은 한 행, distinctPostings — 정기진단 보고서 ·
  * 그래프 핀과 같은 셈), 열은 측정 주차(언급률 2번 P3). 묶인 줄은 올린 곳을 칩으로 함께 보인다. 글 바로 옆 열은 글별 판단이다 —
  * 좁은 화면에서 주차 열을 밀어도 보이게. 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙인다 — 같은 주 회차는
- * 한 주로 센다. 측정 조건이 바뀐 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
+ * 한 주로 센다. 측정 조건이 바뀌었거나 확인할 수 없는 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
  */
 export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { history: PublishedHistory; maxWeeks?: number }) {
   const start = Math.max(0, history.weeks.length - maxWeeks)
@@ -146,7 +146,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
             </div>
           )}
           {summary.lapsed && <div className="doc-meta">최근 측정한 주에는 인용 없음</div>}
-          {summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀜</div>}
+          {summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀌었거나 확인할 수 없음</div>}
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>
         {cells.flatMap((c, i) => {
@@ -186,7 +186,8 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         key={w.weekOf}
         title={[
           weekLabel(w.weekOf),
-          ...(w.changes.length ? [`바뀐 측정 조건: ${w.changes.join(' · ')}`] : []),
+          // 바뀐 조건(이름 그대로)과 「… 기록 없음」이 섞인다 — 머리말에서 「바뀐」이라고 묶어 부르지 않는다.
+          ...(w.changes.length ? [`측정 조건: ${w.changes.join(' · ')}`] : []),
           ...(w.runs ? [`회차 ${w.runs.length}번: ${w.runs.map((r) => (r.at ? kstStamp(r.at) : '시각 모름')).join(' · ')}`] : []),
         ].join('\n')}
       >
@@ -222,8 +223,9 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         기존 글을 고쳤다고 남긴 글은 칸에 「고친 뒤」(고친 글을 본 측정) · 「고친 날 측정」(고치기 전후 불명)을 적습니다. 고친 날이 든
         주는 칸 숫자가 그 주 올린 뒤 회차 전체이고, 꼬리에 고친 뒤 회차 몫만 따로 적습니다. 판단 칸에 고친 뒤 결과를 따로 적습니다 —
         판단(여러 주 인용 등)은 올린 날 기준 그대로입니다.
-        ◆는 직전 측정과 측정 조건(수집 엔진 · 판정 엔진 · 모델 · 질문지 · 반복 횟수)이 달라진 주입니다 — 엔진이나 반복 횟수가 바뀌면
-        응답 수 자체가 달라져 숫자를 그대로 견줄 수 없고, 보정하지 않았습니다. 바뀐 항목은 주차 머리글에 마우스를 올리면 보입니다.
+        ◆는 직전 측정과 측정 조건(수집 엔진 · 판정 엔진 · 모델 · 질문지 · 반복 횟수)이 달라졌거나, 한쪽에만 기록이 있어 같은지 확인할 수
+        없는(「… 기록 없음」) 주입니다 — 엔진이나 반복 횟수가 바뀌면 응답 수 자체가 달라져 숫자를 그대로 견줄 수 없고, 보정하지
+        않았습니다. 해당 항목은 주차 머리글에 마우스를 올리면 보입니다.
         {history.weeks.length > maxWeeks && ` 최근 ${maxWeeks}주만 보입니다(판단은 ${history.weeks.length}주 기준).`}
         {runIssues > 0 && ` 회차 기록 ${runIssues}개를 읽지 못해 칸에서 뺐습니다.`}
       </p>

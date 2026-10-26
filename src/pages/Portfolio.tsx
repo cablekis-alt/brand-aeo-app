@@ -5,6 +5,7 @@ import ProfileEditor from '../components/ProfileEditor'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioCohort, type PortfolioRow } from '../lib/api'
+import { weeksBetween } from '../lib/comparability'
 import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
 import { directionParticle } from '../lib/korean'
 import { customerForCompetitorRow, groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
@@ -28,9 +29,20 @@ function writeShowCompetitors(on: boolean) {
   }
 }
 
+/**
+ * 줄 아래 점수 변화 — 직전 측정과 같은 조건일 때만 증감(서버가 앱 전체 규칙 comparability.ts로 가른다).
+ * 견줄 수 없으면 서버가 보낸 한 구절(「질문지 바뀜」 · 「수집 모델 기록 없음」)을 그대로 붙인다 — 예전에는 뒤에 「바뀜」을
+ * 덧붙여 기록이 한쪽에 없을 뿐인 조건도 「바뀜」이라고 했다. 직전 측정이 2주 이상 떨어졌으면 「전주」가 아니라
+ * 「직전 측정(Wxx)」이라고 적는다(W38 → W41을 「전주 대비」라고 하지 않는다).
+ */
 function changeText(r: PortfolioRow): string {
-  if (r.delta !== null) return r.delta === 0 ? '전주와 같음' : `전주 대비 ${r.delta > 0 ? '+' : '−'}${Math.abs(r.delta)}`
-  if (r.changeReason) return `전주 비교 불가 · ${r.changeReason} 바뀜`
+  const gap = r.previousWeekOf && r.weekOf ? (weeksBetween(r.previousWeekOf, r.weekOf) ?? 1) : 1
+  const far = gap >= 2 && r.previousWeekOf ? `직전 측정(${shortWeek(r.previousWeekOf)})` : null
+  if (r.delta !== null) {
+    if (r.delta === 0) return far ? `${far}과 같음` : '전주와 같음'
+    return `${far ?? '전주'} 대비 ${r.delta > 0 ? '+' : '−'}${Math.abs(r.delta)}`
+  }
+  if (r.changeReason) return `${far ? `${far}과` : '전주와'} 비교 불가 · ${r.changeReason}`
   return r.weekOf ? '측정 1회' : ''
 }
 

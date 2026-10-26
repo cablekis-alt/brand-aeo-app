@@ -17,6 +17,7 @@ import {
 import { formatMoney, rowCost, sumCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
+import { brandLabel, type VariantBrand } from '../lib/brandVariant'
 import { useTenant } from '../context/useTenant'
 import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
@@ -256,6 +257,8 @@ function CiSyncPanel({ onSynced }: { onSynced: () => void }) {
 export default function MeasureStatus() {
   const [runs, setRuns] = useState<MeasureRunInfo[]>([])
   const [enabled, setEnabled] = useState(true)
+  // 원격 측정 실행 목록을 한 번이라도 받았는가 — 데스크톱은 받기 전에 원격 칸을 그리지 않는다(토큰 없는 PC에서 칸이 잠깐 보였다 — 1-C 검토).
+  const [runsKnown, setRunsKnown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   /*
@@ -329,6 +332,7 @@ export default function MeasureStatus() {
     try {
       const data = await loadMeasureRuns()
       setEnabled(data.enabled)
+      setRunsKnown(true)
       setRuns(data.runs)
       setError(null)
     } catch (err) {
@@ -365,8 +369,11 @@ export default function MeasureStatus() {
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!alive || !Array.isArray(list)) return
+        // 범위만 다르게 등록한 같은 이름의 브랜드(군산각 지역형 · 전국형)는 꼬리표로 가른다(상용화 UI 3차 U7).
+        const brands = list.filter((t): t is VariantBrand & { brandName: string } => Boolean(t?.tenantId && Array.isArray(t.ownedDomains)))
         const map: Record<string, string> = {}
         for (const t of list) if (t?.tenantId) map[t.tenantId] = t.brandName || t.tenantId
+        for (const t of brands) if (t.brandName) map[t.tenantId] = brandLabel(t, brands)
         setNameMap(map)
       })
       .catch(() => {})
@@ -424,12 +431,21 @@ export default function MeasureStatus() {
     }
   }
 
+  /*
+   * 데스크톱 앱에서는 원격 측정(GitHub Actions) 칸을 토큰이 있을 때만 보인다 — 토큰 없는 PC에서 「GH_MEASURE_TOKEN을 넣으세요」 · 「npm
+   * run」 같은 개발 안내가 운영자 화면에 남아 있었다(상용화 UI 3차 U4). 웹 · 개발 환경은 예전처럼 늘 보인다.
+   */
+  const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
+  const showRemote = !isDesktop || (runsKnown && enabled)
+
   return (
     <>
       <p className="brand">측정</p>
       <h1>측정 상태</h1>
       <p className="lead">
-        이 앱에서 직접 실행한 측정을 먼저 보여주고, 그 아래에 GitHub Actions 측정 실행을 둡니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.
+        {isDesktop
+          ? `진행 중인 측정과 최근 결과입니다. 측정이 끝나면 바로 화면에 반영됩니다.${showRemote ? ' 원격 측정(GitHub Actions) 기록은 맨 아래에 있습니다.' : ''}`
+          : '이 앱에서 직접 실행한 측정을 먼저 보여주고, 그 아래에 GitHub Actions 측정 실행을 둡니다. 완료·배포 후 새로고침하면 결과가 반영됩니다.'}
       </p>
 
       <div className="filters no-print" style={{ alignItems: 'center' }}>
@@ -781,7 +797,7 @@ export default function MeasureStatus() {
               </p>
               <p className="hint">
                 ※ 설정은 이 화면에서 바꿀 수 없고 환경변수로만 바뀝니다. 바꾸면 그 사실이 측정 데이터에
-                기록되고, 주차 비교에서 「모델이 달라 비교 불가」로 표시됩니다.
+                기록되고, 바뀐 뒤 첫 측정은 직전 측정과 증감을 견주지 않고 모델이 바뀌었다고 적습니다.
               </p>
             </div>
           )}
@@ -814,7 +830,7 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-warn">진행 중</span>
                     </td>
-                    <td className="cell-text">{a.brandName || a.tenantId}</td>
+                    <td className="cell-text">{nameMap[a.tenantId] || a.brandName || a.tenantId}</td>
                     {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
                         온보딩보다 덜 보여 주는 역전이 된다. */}
                     <td className="cell-text muted">
@@ -837,7 +853,7 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-bad">실패</span>
                     </td>
-                    <td className="cell-text">{f.brandName || f.tenantId}</td>
+                    <td className="cell-text">{nameMap[f.tenantId] || f.brandName || f.tenantId}</td>
                     {/* 끊긴 엔진(「Gemini 지출 한도 초과」)이 있으면 그 이름, 없으면 오류 첫 문장 — 전체 문구는 제목 풍선에. */}
                     <td className="cell-text" title={f.error}>
                       {failureReason(f)}
@@ -860,7 +876,7 @@ export default function MeasureStatus() {
                         <span className="status-pill st-good">로컬 완료</span>
                       )}
                     </td>
-                    <td className="cell-text">{e.brandName || e.tenantId}</td>
+                    <td className="cell-text">{nameMap[e.tenantId] || e.brandName || e.tenantId}</td>
                     <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
                     <td>{e.weekOf}</td>
                     <td className="num">{e.aeoScore}</td>
@@ -874,10 +890,11 @@ export default function MeasureStatus() {
         </section>
       )}
 
+      {showRemote && (
       <section style={{ marginTop: '24px' }}>
-        <h3>GitHub Actions 측정 실행</h3>
+        <h3>원격 측정 실행(GitHub Actions)</h3>
         <p className="hint" style={{ marginTop: 0 }}>
-          주차·AEO는 성공 run에 한해 해당 브랜드의 <b>최신 스코어카드</b>를 붙인 best-effort 값입니다(실패·미매칭은 <code>-</code>).
+          주차 · AEO는 성공한 실행에 한해 그 브랜드의 <b>최신 스코어카드</b>를 붙인 참고값입니다(실패 · 맞는 기록이 없으면 <code>-</code>).
         </p>
         <CiSyncPanel onSynced={() => window.location.reload()} />
         {!enabled ? (
@@ -886,8 +903,7 @@ export default function MeasureStatus() {
           </p>
         ) : !loading && runs.length === 0 ? (
           <p className="muted">
-            최근 GitHub Actions 실행이 없습니다. <Link to="/measure-tenant">테넌트 골라 측정</Link>에서 시작하거나, 로컬에서{' '}
-            <code>npm run measure:local</code>을 쓰세요.
+            최근 원격 측정 실행이 없습니다. <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 시작하세요.
           </p>
         ) : (
           <div className="table-wrap">
@@ -942,6 +958,7 @@ export default function MeasureStatus() {
           </div>
         )}
       </section>
+      )}
     </>
   )
 }

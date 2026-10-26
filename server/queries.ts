@@ -7,6 +7,8 @@ import { previousIsoWeek } from './dateUtil.js';
 import type { QuestionBank, ResultStore } from './store.js';
 import type { QuestionRepeatAnalysis } from './types.js';
 import type { QuestionCategory } from '../src/prompts/types.js';
+import { comparableWith } from '../src/lib/comparability.js';
+import { ENGINE_LABEL } from '../src/lib/format.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
 type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory' | 'getQuestionBank'>;
@@ -48,14 +50,16 @@ export interface CitationBreakdown {
   /** 적용된 엔진 필터. 있으면 rows·share·totalCitations 전부 그 엔진 응답만으로 낸 값이다. */
   engine: string | null;
   /**
-   * 전주 대비. 수집 엔진이 같을 때만 비교한다 — 엔진이 다르면 출처 분포가 통째로 바뀌므로
+   * 직전 측정 대비. 측정 조건이 같을 때만 비교한다 — 앱 전체 규칙 하나(src/lib/comparability.ts)에 더해, 두 주 판정 파일에
+   * 실제로 응답한 수집 엔진도 같아야 한다. 엔진이 다르면 출처 분포가 통째로 바뀌므로
    * (Gemini는 예약 플랫폼, Perplexity는 네이버 블로그를 끌어온다) 변화가 아니라 잡음을 그리게 된다.
-   * 엔진 필터가 켜져 있으면 두 주가 모두 그 엔진을 썼는지만 본다 — 그래서 필터를 켜면 엔진 구성이
-   * 바뀐 주차 사이에서도 비교가 살아난다. null이면 전주 자체가 없다.
+   * 엔진 필터가 켜져 있으면 엔진은 두 주가 모두 그 엔진을 썼는지만 본다 — 그래서 다른 점이 엔진 구성뿐이면 필터를 켜서
+   * 비교를 살릴 수 있다(filterHelps). null이면 앞 측정 자체가 없다.
    */
   comparison: CitationComparison | null;
 }
 
+/** NOTE: 같은 모양이 src/lib/types.ts에도 있다(화면용). 둘을 함께 고쳐야 한다. */
 export interface CitationComparison {
   previousWeekOf: string;
   comparable: boolean;
@@ -63,6 +67,8 @@ export interface CitationComparison {
   reason?: string;
   previousEngines: string[];
   currentEngines: string[];
+  /** 엔진 필터로 한 엔진만 고르면 비교가 살아나는가 — 다른 점이 수집 엔진 구성뿐일 때만 true. comparable=true면 없음. */
+  filterHelps?: boolean;
 }
 
 /**
@@ -199,7 +205,7 @@ export async function getCitationBreakdown(
 
   let comparison: CitationComparison | null = null;
   if (withComparison) {
-    // 전주 = 이력에서 이번 주보다 앞선 가장 최근 주차. 이력이 없거나 이번 주가 첫 주면 비교 대상 없음.
+    // 앞 측정 = 이력에서 이번 주보다 앞선 가장 최근 주차. 이력이 없거나 이번 주가 첫 주면 비교 대상 없음.
     const history = await store.getScorecardHistory(tenantId, 104);
     const previousWeekOf = history
       .map((c) => c.weekOf)
@@ -209,19 +215,38 @@ export async function getCitationBreakdown(
     if (previousWeekOf) {
       const prevAll = await store.getQuestionAnalyses(tenantId, previousWeekOf);
       const previousEngines = distinctEngines(prevAll);
-      const comparable = engine
-        ? previousEngines.includes(engine) && engines.includes(engine)
-        : sameEngineSet(previousEngines, engines);
-      if (comparable) {
+      // 견줄 수 있나 — 둘 다 봐야 한다. (1) 두 주 판정 파일에 실제로 응답한 수집 엔진(엔진 필터면 두 주 모두 그 엔진 응답이 있나),
+      // (2) 스코어카드의 측정 조건 — 앱 전체 규칙 하나(comparability.ts: 수집 · 판정 엔진, 수집 · 판정 모델, 질문지, 반복 횟수,
+      // 한쪽에만 기록이 있으면 확인 불가). 예전에는 (1)만 봐서 질문지 · 판정이 바뀐 주에도 점유율 증감을 그렸다.
+      const conditions = comparableWith(history, weekOf, { engine });
+      const hasCard = history.some((c) => c.weekOf === weekOf);
+      const engineName = (e: string) => ENGINE_LABEL[e] ?? e;
+      const engineList = (list: string[]) => list.map(engineName).join('+') || '없음';
+      let reason = '';
+      if (engine !== null && (!previousEngines.includes(engine) || !engines.includes(engine))) {
+        // 엔진 하나로 좁힌 표에서 그 엔진 응답이 한쪽에 없으면 그것이 이유다 — src/lib/citationView.ts와 같은 문구.
+        reason = `직전 측정(${previousWeekOf})${previousEngines.includes(engine) ? '과 달리 이번 주' : ''}에 ${engineName(engine)} 응답이 없어 비교하지 않음`;
+      } else if (!hasCard) {
+        reason = '이번 주 측정 기록을 찾지 못해 비교하지 않음';
+      } else if (!conditions.comparable) {
+        reason = conditions.reason;
+      } else if (engine === null && !sameEngineSet(previousEngines, engines)) {
+        reason = `직전 측정(${previousWeekOf})과 응답한 수집 엔진이 달라 비교하지 않음 — ${engineList(previousEngines)} → ${engineList(engines)}`;
+      }
+      if (!reason) {
         const prev = await getCitationBreakdown(store, tenantId, previousWeekOf, { engine, withComparison: false });
         const prevShare = new Map(prev.rows.map((r) => [r.domain, r.share]));
         for (const row of rows) row.previousShare = prevShare.get(row.domain) ?? 0;
         comparison = { previousWeekOf, comparable: true, previousEngines, currentEngines: engines };
       } else {
-        const reason = engine
-          ? `전주(${previousWeekOf})에 ${engine} 응답이 없어 비교 불가`
-          : `수집 엔진이 달라 비교 불가 — 전주 ${previousEngines.join('+') || '없음'} · 이번 주 ${engines.join('+') || '없음'}`;
-        comparison = { previousWeekOf, comparable: false, reason, previousEngines, currentEngines: engines };
+        // 「엔진 필터로 한 엔진만 고르면 비교가 살아난다」 안내는 다른 점이 수집 엔진 구성뿐이고 두 주에 함께 응답한 엔진이 있을
+        // 때만(src/lib/citationView.ts와 같은 규칙) — 질문지 · 판정이 바뀐 주에는 필터를 골라도 여전히 견줄 수 없다.
+        const filterHelps =
+          engine === null &&
+          hasCard &&
+          conditions.diffs.every((d) => d.dimension === '수집 엔진' && d.state === 'changed') &&
+          previousEngines.some((e) => engines.includes(e));
+        comparison = { previousWeekOf, comparable: false, reason, previousEngines, currentEngines: engines, filterHelps };
       }
     }
   }

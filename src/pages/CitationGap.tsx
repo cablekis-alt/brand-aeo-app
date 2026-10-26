@@ -304,7 +304,7 @@ export default function CitationGap() {
             </p>
             {prevUnsplit && comparison ? (
               <p className="muted">
-                <span className="status-pill st-warn">비교 불가</span> 전주({comparison.previousWeekOf})는 질문 유형으로 나눌 수 없어
+                <span className="status-pill st-warn">비교 불가</span> 직전 측정({comparison.previousWeekOf})은 질문 유형으로 나눌 수 없어
                 비교하지 않습니다.
               </p>
             ) : (
@@ -395,7 +395,7 @@ export default function CitationGap() {
                     <th className="cell-text">도메인</th>
                     <th className="cell-text">유형</th>
                     <th>점유율</th>
-                    <th>전주 대비</th>
+                    <th>직전 측정 대비</th>
                     <th>인용수</th>
                     <th className="cell-text">엔진</th>
                     <th className="cell-text">실행</th>

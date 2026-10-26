@@ -1,4 +1,5 @@
 import { brandPattern } from './answerInsights'
+import { runCountText } from './comparability'
 import { ENGINE_LABEL, measureConditionText } from './format'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -14,7 +15,7 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
  *   「스크린샷」 · 「캡처」라고 부르지 않는다.
  * - 판정 모델이 고른 「언급」에는 틀린 것이 섞인다 — 조건부 지목(「~을 말씀하시는 것이라면」)이 1순위로 세어진
  *   일이 있었다. 그래서 순위는 쓰지 않고, 아래 규칙으로 한 번 더 거른다.
- * - 한 번 잰 결과는 같은 설정에서도 흔들린다. 같은 조건 주차가 2개 미만이면 그렇게 적는다.
+ * - 한 번 잰 결과는 같은 설정에서도 흔들린다. 이 측정에서 끝나는 같은 조건 구간(comparableRun)이 2번 미만이면 그렇게 적는다.
  */
 
 /** 원문 한 건 — server/types.ts RawCallRecord에서 쓰는 필드만. */
@@ -59,8 +60,13 @@ export interface AnswerEvidence {
    */
   answered: { asked: number; mentioned: number }
   conditions: { collect: string; judge: string; repeats: string }
-  /** 같은 질문 은행 · 같은 엔진으로 잰 주차 수. */
+  /**
+   * 이 측정에서 끝나는 같은 조건 구간의 측정 수(src/lib/comparability.ts comparableRun — 정기진단 보고서 「측정 횟수」 점검과
+   * 같은 구간). 2026-10-25 전에 만든 사례는 같은 질문 은행 · 같은 수집 엔진으로 잰 주차 수다(sameConditionRun이 없다).
+   */
   sameConditionWeeks: number
+  /** 그 구간을 세는 말(runCountText) — 「연속 3주」, 사이에 측정하지 않은 주가 있으면 「3번」. */
+  sameConditionRun?: string
   /** 이 글의 질문 원문 — 「같은 질문으로 비교해 보세요」. 이름 없는 질문을 앞에, 최대 3개. */
   compareQuestions: string[]
   /** 고를 응답이 없을 때 이유(화면에만 보인다). */
@@ -90,7 +96,8 @@ export interface BuildEvidenceInput {
     repeatsPerQuestion?: number
     questionBankVersion?: string
   }
-  sameConditionWeeks: number
+  /** 이 측정에서 끝나는 같은 조건 구간(comparableRun, 오름차순) — 고른 주 뒤의 측정은 들지 않는다. */
+  sameConditionRun: { weekOf: string }[]
   industry: string
   builtAt: string
 }
@@ -320,7 +327,8 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
     items,
     answered,
     conditions: measureConditionText(input.card),
-    sameConditionWeeks: input.sameConditionWeeks,
+    sameConditionWeeks: input.sameConditionRun.length,
+    sameConditionRun: runCountText(input.sameConditionRun),
     compareQuestions,
     ...(emptyReason ? { emptyReason } : {}),
     include: !MEDICAL_INDUSTRY.test(input.industry),
@@ -355,9 +363,13 @@ export function renderEvidenceMarkdown(e: AnswerEvidence | undefined): string {
   // 「Claude (claude-sonnet-5-5)」를 괄호 안에 또 괄호로 넣지 않게 「Claude · claude-sonnet-5-5」로.
   const judge = e.conditions.judge.replace(/ \((.+)\)$/, ' · $1')
   L.push(`- 이름이 나온 문장은 판정 모델이 골랐고(${judge}), 사람이 원문과 대조했습니다. 서식만 걷었고 문장은 원문 그대로입니다.`)
+  // 2026-10-25 전에 만든 사례(sameConditionRun 없음)는 질문지 · 수집 엔진만 보고 센 수라 그때 문구로 둔다 — 「같은 조건」이라고
+  // 적으면 세지 않은 판정 · 모델 · 반복까지 같았다고 말하게 된다.
   L.push(
     e.sameConditionWeeks >= 2
-      ? `- 같은 질문 · 같은 엔진으로 ${e.sameConditionWeeks}주 쟀습니다. 주마다 답이 달라질 수 있습니다.`
+      ? e.sameConditionRun
+        ? `- 같은 조건으로 ${e.sameConditionRun} 쟀습니다. 주마다 답이 달라질 수 있습니다.`
+        : `- 같은 질문 · 같은 엔진으로 ${e.sameConditionWeeks}주 쟀습니다. 주마다 답이 달라질 수 있습니다.`
       : '- 한 번 물어본 결과입니다. 같은 질문을 다시 물으면 다르게 답할 수 있습니다.',
   )
   L.push('')

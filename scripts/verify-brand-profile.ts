@@ -225,6 +225,59 @@ try {
   ])
   const back = await editor.planProfileEdit('pglamp', { industry: '글램핑', region: '가상시', marketScope: 'local', buyer: '', move: [] }, store)
   ok('계획: 바꾼 뒤 다시 재게 되는 경쟁사 측정 브랜드는 구성원(그 공통 질문지 c1을 따른다)', back.errors.length === 0 && back.cohortBank.to === 'c1' && back.cohortBank.members.includes('글램핑 옆'))
+
+  // 8) 상호 · 별칭(상용화 UI 3차 U7, 2026-10-26) — 상호 칸에 주소를 넣어 등록한 브랜드(실측 dona)를 앱에서 고친다. 상호를 바꾸면 이름을
+  //    넣은 질문도 새로 만들어야 해 질문지를 올리고, 별칭만 바꾸면 질문지는 그대로다. 경쟁사 측정 브랜드의 이름은 바꾸지 않는다.
+  const glampState = await editor.describeProfileEditor('pglamp')
+  ok('상호: 처음 상태에 별칭', glampState.aliases.join(',') === '가상 글램핑')
+  const same8 = { industry: '카라반', region: '가상시', marketScope: 'local', buyer: '', move: ['pgside'] }
+  ok('상호: 주소면 막는다', (await editor.planProfileEdit('pglamp', { ...same8, brandName: 'https://www.pglamp.example/' }, store)).errors.some((e) => e.includes('주소')))
+  ok('상호: 비우면 막는다', (await editor.planProfileEdit('pglamp', { ...same8, brandName: '' }, store)).errors.some((e) => e.includes('상호')))
+  ok('별칭: 주소면 막는다', (await editor.planProfileEdit('pglamp', { ...same8, aliases: ['www.pglamp.example'] }, store)).errors.some((e) => e.includes('별칭')))
+  ok('상호: 도메인 모양이면 알리기만', (await editor.planProfileEdit('pglamp', { ...same8, brandName: 'pglamp.com' }, store)).notes.some((n) => n.includes('도메인 모양')))
+  const rename = await editor.planProfileEdit('pglamp', { ...same8, brandName: '새 글램핑', aliases: ['새 글램핑', '글램핑 새'] }, store)
+  ok('상호 계획: 오류 없음 · 질문지를 올린다', rename.errors.length === 0 && !rename.unchanged && rename.bank.to !== rename.bank.from)
+  ok('상호 계획: 코호트가 그대로라 함께 옮기는 경쟁사가 없다(보낸 목록은 쓰지 않음)', rename.moving.length === 0 && rename.to.industry === '카라반')
+  ok('상호 계획: 요약 · 안내(조사 「으로」)', rename.summary.includes('상호 가상 글램핑 → 새 글램핑') && rename.notes.some((n) => n.startsWith('상호를 「새 글램핑」으로 바꿉니다')))
+  const aliasOnly = await editor.planProfileEdit('pglamp', { ...same8, aliases: ['가상 글램핑', '글램핑 가상'] }, store)
+  ok('별칭만: 질문지는 그대로 · 언급 판정이 달라진다고 알림', aliasOnly.errors.length === 0 && !aliasOnly.unchanged && aliasOnly.bank.to === aliasOnly.bank.from && aliasOnly.notes.some((n) => n.includes('언급 판정')))
+  await editor.saveProfileEdit('pglamp', { ...same8, brandName: '새 글램핑', aliases: ['새 글램핑', '글램핑 새'] }, rename.key, store)
+  const renamedOverlay = readJson<Record<string, unknown>[]>('tenants.overlay.json')
+  const renamed = renamedOverlay.find((t) => t.tenantId === 'pglamp')!
+  ok('상호 저장: 오버레이 상호 · 별칭 · 질문지', renamed.brandName === '새 글램핑' && (renamed.aliases as string[]).join(',') === '새 글램핑,글램핑 새' && renamed.questionBankVersion === rename.bank.to)
+  ok('상호 저장: 경쟁사 측정 브랜드의 이름은 그대로', renamedOverlay.find((t) => t.tenantId === 'pgside')?.brandName === '글램핑 옆')
+  ok('상호 저장: 런타임에도 새 이름', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pglamp')?.brandName === '새 글램핑')
+
+  // 9) 1-D 검토 회귀 — 경쟁사 편집이 만든 질문지(derivedFrom)를 쓰는 브랜드의 별칭만 바꿔도 그 질문지로 계속 잰다. 예전엔 런타임 질문지
+  //    번호를 오버레이에 적고 경쟁사 목록 파일의 질문지 값을 버려, 다음 측정이 「저장소 설정이 그 뒤에 바뀌었습니다」로 멈췄다.
+  const pderEntry = { ...base, tenantId: 'pder', brandName: '파생 고객', aliases: ['파생 고객'], ownedDomains: ['pder.example'], industry: '민박', region: '가상읍', questionBankVersion: 'v4', competitors: [line('파생 경쟁', 'pderc.example')] }
+  const pnameEntry = { ...base, tenantId: 'pname', brandName: '이름 고객', aliases: ['이름 고객'], ownedDomains: ['pname.example'], industry: '게스트하우스', region: '가상동', competitors: [] }
+  const pnameRef = { ...base, tenantId: 'pnref', brandName: '이름 참조', aliases: ['이름 참조'], ownedDomains: ['pnref.example'], industry: '게스트하우스', region: '가상동', competitors: [line('이름 고객', 'pname.example')] }
+  writeJson('tenants.overlay.json', [...readJson<Record<string, unknown>[]>('tenants.overlay.json'), pderEntry, pnameEntry, pnameRef])
+  const derFp = comp.baseFingerprint(pderEntry as never)
+  writeJson('data/pder/competitors.json', {
+    current: { competitors: pderEntry.competitors, base: derFp, questionBank: { version: 'v5', size: 1 } },
+    lastSave: null,
+    measured: null,
+    updatedAt: '2026-10-25T00:00:00.000Z',
+  })
+  writeJson('data/pder/question-bank/v5.json', { version: 'v5', derivedFrom: { base: derFp, from: 'v4' }, questions: [] })
+  ok('파생 질문지: 런타임은 경쟁사 편집의 v5', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pder')?.questionBankVersion === 'v5')
+  const derInput = { industry: '민박', region: '가상읍', marketScope: 'local', buyer: '', move: [], aliases: ['파생 고객', '파생고객'] }
+  const derPlan = await editor.planProfileEdit('pder', derInput, store)
+  ok('파생 질문지: 별칭만 바꾸는 계획은 질문지 그대로', derPlan.errors.length === 0 && derPlan.bank.to === derPlan.bank.from)
+  await editor.saveProfileEdit('pder', derInput, derPlan.key, store)
+  const derEntry = readJson<Record<string, unknown>[]>('tenants.overlay.json').find((t) => t.tenantId === 'pder')!
+  ok('파생 질문지: 오버레이는 별칭만 바뀌고 질문지 번호(v4) · 지문은 그대로', derEntry.questionBankVersion === 'v4' && (derEntry.aliases as string[]).join(',') === '파생 고객,파생고객' && comp.baseFingerprint(derEntry as never) === derFp)
+  ok('파생 질문지: 경쟁사 목록 파일의 질문지 값(v5)을 지킨다', readJson<{ current: { questionBank?: { version: string } } }>('data/pder/competitors.json').current.questionBank?.version === 'v5')
+  ok('파생 질문지: 런타임은 여전히 v5', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pder')?.questionBankVersion === 'v5')
+  ok('별칭만: 「다음 측정 대기」 표식을 남기지 않는다', !existsSync(path.join(dir, 'data/pder/profile-edit.json')))
+  // 자기 경쟁사 이름으로 바꾸면 막는다(판정에 같은 이름이 둘 — 점유율이 합쳐진다)
+  ok('상호: 자기 경쟁사 이름이면 막는다', (await editor.planProfileEdit('pder', { ...derInput, brandName: '파생 경쟁' }, store)).errors.some((e) => e.includes('경쟁사 목록')))
+  ok('별칭: 자기 경쟁사 이름(공백 무시)이면 막는다', (await editor.planProfileEdit('pder', { ...derInput, aliases: ['파생경쟁'] }, store)).errors.some((e) => e.includes('경쟁사 목록')))
+  // 상호를 바꾸면 이 브랜드를 경쟁사 목록에 옛 이름으로 적은 다른 고객을 알린다
+  const nameRefPlan = await editor.planProfileEdit('pname', { industry: '게스트하우스', region: '가상동', marketScope: 'local', buyer: '', move: [], brandName: '새 이름 고객' }, store)
+  ok('상호: 옛 이름으로 적어 둔 다른 고객을 알린다', nameRefPlan.notes.some((n) => n.startsWith('이름 참조') && n.includes('옛 이름')))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

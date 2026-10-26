@@ -90,6 +90,13 @@ try {
   ok('표시: 경쟁사 · 영어 측정은 형제가 아니다', v.variantTag(english, [local, national, english]) === null && v.variantTag(comp, [local, comp]) === null)
   const blogA = { tenantId: 'blog', ownedDomains: ['blog.naver.com'], industry: '카페', region: '가상시' }
   ok('표시: 네이버 블로그를 함께 쓰는 다른 업체는 형제가 아니다', v.variantTag(blogA, [blogA, { ...blogA, tenantId: 'blog-2' }]) === null)
+  // 이름이 같은 형제(군산각 지역형 · 전국형)는 상단 경로 · 보고서 머리말 · 측정 기록에서 꼬리표로 가른다(상용화 UI 3차 U7)
+  ok('이름: 형제가 있으면 「이름 · 범위」', v.brandLabel({ ...national, brandName: '가상각' }, [local, national]) === '가상각 · 전국형')
+  ok('이름: 혼자면 이름 그대로', v.brandLabel({ ...local, brandName: '가상각' }, [local]) === '가상각')
+  // 상호 칸 검사 — 주소는 막고(홈페이지 칸으로), 도메인 모양은 확인만(실측 dona: 이름 · 별칭이 「https://www.dona.kr/」)
+  ok('상호 검사: https · www · 끝 / 는 주소', v.isAddressLike('https://www.dona.kr/') && v.isAddressLike('www.dona.kr') && v.isAddressLike('dona.kr/'))
+  ok('상호 검사: 보통 이름은 주소가 아니다', !v.isAddressLike('도전과나눔') && !v.isAddressLike('t\'order') && !v.isAddressLike('스테이,머뭄'))
+  ok('상호 검사: 도메인 모양(trip.com)은 확인만', v.isDomainLike('trip.com') && !v.isAddressLike('trip.com') && !v.isDomainLike('도전과나눔'))
 
   // 3) 사이트 진단 — 같은 홈페이지면 지금 고른 브랜드, 더 구체적인 주소의 주인은 그대로
   const summaries = [local, national].map((t) => ({ ...t, brandName: '가상각', aliases: [] }) as unknown as TenantSummary)

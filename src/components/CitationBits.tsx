@@ -4,14 +4,14 @@ import type { CitationComparison } from '../lib/types'
 /**
  * URL 상세 분석·인용 갭 분석이 함께 쓰는 표 컴포넌트.
  *
- * 두 화면이 같은 규칙("수집 엔진이 같은 주차에서만 비교", "일간 잡음 위에 화살표를 그리지 않는다")을
+ * 두 화면이 같은 규칙("측정 조건이 같은 주차에서만 비교" — src/lib/comparability.ts, "일간 잡음 위에 화살표를 그리지 않는다")을
  * 따라야 하는데, 각자 구현하면 문구·문턱이 조금씩 갈린다. 여기 한 곳에 둔다.
  * 상수·순수 함수(KIND_PILL, comparisonFromHistory, tidyUrl)는 src/lib/citationView.ts에 있다.
  */
 
 /**
  * 전주 대비 점유율 변화(%p). 비교 가능한 주차에서만 숫자를 그린다.
- * 엔진이 다르면 「—」이고, 그 이유는 ComparisonNote가 말한다. 전주에 없던 도메인은 「신규」.
+ * 측정 조건이 다르면 「—」이고, 그 이유는 ComparisonNote가 말한다. 전주에 없던 도메인은 「신규」.
  */
 export function ShareDelta({
   share,
@@ -36,19 +36,22 @@ export function ShareDelta({
 
 /** 표 위 한 줄 — 전주와 비교 가능한지, 아니면 왜 아닌지. */
 export function ComparisonNote({ comparison }: { comparison: CitationComparison | null }) {
-  if (!comparison) return <p className="muted">전주 측정이 없어 변화는 표시하지 않습니다.</p>
+  if (!comparison) return <p className="muted">직전 측정이 없어 변화는 표시하지 않습니다.</p>
   if (comparison.comparable) {
     return (
       <p className="muted">
-        전주 대비는 {comparison.previousWeekOf} 기준 · 수집 엔진 동일(
+        {/* 견줄 수 있음 = 여섯 측정 조건이 모두 같음(comparability.ts) — 「수집 엔진 동일」만 적으면 덜 말한다. */}
+        직전 측정 대비는 {comparison.previousWeekOf} 기준 · 측정 조건 같음(수집 엔진{' '}
         {comparison.currentEngines.map((e) => ENGINE_LABEL[e] ?? e).join('+')})
       </p>
     )
   }
+  // 필터 안내는 다른 점이 수집 엔진 구성뿐일 때만 — 질문지 · 판정이 바뀐 주에는 필터를 골라도 비교가 살아나지 않는다.
+  // filterHelps가 없는 응답(옛 서버)은 예전처럼 안내한다.
   return (
     <p className="muted">
-      <span className="status-pill st-warn">비교 불가</span> {comparison.reason} — 엔진 필터로 한 엔진만 고르면 그 엔진이 두 주에
-      모두 있을 때 비교가 살아납니다.
+      <span className="status-pill st-warn">비교 불가</span> {comparison.reason}
+      {comparison.filterHelps !== false && ' — 엔진 필터로 한 엔진만 고르면 그 엔진이 두 주에 모두 있을 때 비교가 살아납니다.'}
     </p>
   )
 }

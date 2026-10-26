@@ -68,7 +68,7 @@ try {
     aliases: ['가상여행'],
     competitorNames: ['가상 관광공사'],
     card: { enginesUsed: ['openai', 'perplexity'], modelsUsed: { openai: 'gpt-6-luna', perplexity: 'preset:low' }, judgeEngine: 'claude', judgeModel: 'claude-sonnet-5-5', repeatsPerQuestion: 1, questionBankVersion: 'v3' },
-    sameConditionWeeks: 1,
+    sameConditionRun: [{ weekOf: '2026-W42' }],
     industry: '관광안내',
     builtAt: '2026-10-18T00:00:00.000Z',
   }
@@ -185,7 +185,16 @@ try {
   ok('라벨과 발췌 인용', md.includes('**ChatGPT(API · gpt-6-luna · 웹 검색) 응답 · 2026-10-15 측정**') && md.includes('> 가상 여행은 가상시 관광지와 맛집을 함께 정리한 정보 사이트입니다.'))
   ok('이름 넣어 물은 질문 표시는 그 질문에만', !md.includes('— 이름을 넣어 물은 질문'))
   ok('한 번 잰 결과라고 적는다', md.includes('한 번 물어본 결과입니다'))
-  ok('여러 주 잰 경우', ev.renderEvidenceMarkdown({ ...confirmed, sameConditionWeeks: 3 }).includes('같은 질문 · 같은 엔진으로 3주 쟀습니다'))
+  // 같은 조건 구간(comparableRun)을 센다 — 이어지면 「연속 N주」, 빈 주가 있으면 「N번」(정기진단 보고서 「측정 횟수」와 같은 말)
+  const runOf = (weeks: string[]) => ev.buildAnswerEvidence({ ...base, sameConditionRun: weeks.map((weekOf) => ({ weekOf })), analyses: [], raw: [] })
+  const run3 = runOf(['2026-W40', '2026-W41', '2026-W42'])
+  ok('같은 조건 구간 — 연속 주', run3.sameConditionWeeks === 3 && run3.sameConditionRun === '연속 3주')
+  ok('같은 조건 구간 — 빈 주가 있으면 횟수', runOf(['2026-W38', '2026-W42']).sameConditionRun === '2번')
+  ok('여러 주 잰 경우', ev.renderEvidenceMarkdown({ ...confirmed, sameConditionWeeks: 3, sameConditionRun: '연속 3주' }).includes('같은 조건으로 연속 3주 쟀습니다'))
+  ok('빈 주가 있으면 「N번」', ev.renderEvidenceMarkdown({ ...confirmed, sameConditionWeeks: 2, sameConditionRun: '2번' }).includes('같은 조건으로 2번 쟀습니다'))
+  // 2026-10-25 전에 저장한 사례는 질문지 · 수집 엔진만 보고 센 수 — 「같은 조건」이라고 고쳐 쓰지 않는다
+  const legacy = ev.renderEvidenceMarkdown({ ...confirmed, sameConditionWeeks: 3, sameConditionRun: undefined })
+  ok('예전 사례는 그때 문구 그대로', legacy.includes('같은 질문 · 같은 엔진으로 3주 쟀습니다') && !legacy.includes('같은 조건으로'))
   ok('앱 화면이 아니라 API 응답이라고 적는다', md.includes('앱 화면이 아니라 API로 받은 응답입니다'))
   ok('판정 모델 표기에 괄호가 겹치지 않는다', md.includes('판정 모델이 골랐고(Claude · claude-sonnet-5-5)'))
   ok('이름 나온 비율은 이름 없는 질문 기준이라고 적는다', md.includes('이름을 넣지 않은 질문의 답변 4건 중 3건에서 이름이 나왔습니다.'))

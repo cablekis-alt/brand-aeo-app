@@ -112,7 +112,7 @@ const w = Object.fromEntries(h.weeks.map((x) => [x.weekOf, x]));
 ok('판정 기록이 없는 주는 analysed=false이고 칸은 null(0이 아니다)', w['2026-W41']?.analysed === false && h.posts[0]?.cells[1] === null);
 ok('그 주를 측정한 은행으로 나눈다(W42는 v5)', w['2026-W42']?.bankVersion === 'v5' && w['2026-W42'].responses.unnamed === 2 && w['2026-W42'].responses.named === 1);
 ok('은행을 못 찾은 주는 이름 없는/이름 댄 분모가 null', w['2026-W43']?.bankVersion === null && w['2026-W43'].responses.unnamed === null);
-ok('측정 조건이 바뀐 주를 알린다(판정 모델 · 질문지)', (w['2026-W42']?.changes ?? []).includes('모델') && (w['2026-W42']?.changes ?? []).includes('질문지'));
+ok('측정 조건이 바뀐 주를 알린다(판정 모델 · 질문지)', (w['2026-W42']?.changes ?? []).includes('판정 모델') && (w['2026-W42']?.changes ?? []).includes('질문지'));
 
 // 3) 칸 — 응답 단위 · 이름 없는/이름 댄 · 뒷받침 · 질의만 다른 주소
 const c42 = h.posts[0]!.cells[2]!;

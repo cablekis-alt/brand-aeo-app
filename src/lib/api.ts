@@ -290,6 +290,23 @@ export async function cancelMeasureRun(runId: number): Promise<void> {
 }
 
 /**
+ * 사용자가 멈춘 측정 — 실패가 아니다(서버가 409 · cancelled로 가른다, server/index.ts). 화면은 빨간 오류가 아니라 안내로 알린다
+ * (상용화 UI 3차 U4: 직접 멈춘 측정이 「✗ 측정을 중단했습니다 (tenant=…)」로 찍혔다).
+ */
+export class MeasureCancelled extends Error {
+  constructor() {
+    super('측정을 멈췄습니다. 이번 주 데이터는 그대로입니다.')
+    this.name = 'MeasureCancelled'
+  }
+}
+
+/** 측정 결과 안내 한 줄 — 멈춘 측정은 ✗ 없이(화면이 ✗로 오류 색을 고른다). */
+export function measureErrorText(err: unknown, fallback = '측정 실패'): string {
+  if (err instanceof MeasureCancelled) return err.message
+  return `✗ ${err instanceof Error ? err.message : fallback}`
+}
+
+/**
  * 브랜드 전체 측정(경쟁사·코호트 포함)을 로컬 백엔드에 요청한다. 수 분 걸린다.
  *
  * 세 화면(측정·브랜드 관리·온보딩)이 같은 엔드포인트를 각자 fetch하고 있었다 —
@@ -309,7 +326,8 @@ export async function measureTenantAll(
     body: JSON.stringify({ reuseCohort, selfOnly }),
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    const body = (await res.json().catch(() => ({}))) as { error?: string; cancelled?: boolean }
+    if (res.status === 409 && body.cancelled) throw new MeasureCancelled()
     throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
   }
   return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string; weekCardKept?: string }
@@ -946,8 +964,12 @@ export interface PortfolioRow {
   rank: number | null
   totalTenants: number | null
   tied: boolean
+  /** 직전 측정과 같은 조건일 때만 점수 변화. */
   delta: number | null
+  /** 직전 측정과 견줄 수 없을 때 이유 한 구절 — 「질문지 바뀜」 · 「수집 모델 기록 없음」(뒤에 「바뀜」을 덧붙이지 않는다). */
   changeReason: string | null
+  /** delta · changeReason이 가리키는 직전 측정 주차 — 2주 이상 떨어졌으면 「전주」 대신 「직전 측정(Wxx)」. */
+  previousWeekOf: string | null
   /** 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null. */
   competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
   /** 경쟁사 편집을 저장했고 아직 다시 재지 않았다. */
@@ -1304,6 +1326,7 @@ export interface ProfileCompetitor {
 export interface ProfileEditorState {
   tenantId: string
   brandName: string
+  aliases: string[]
   industry: string
   region: string
   marketScope: MarketScope
@@ -1318,6 +1341,10 @@ export interface ProfileEditorState {
 }
 
 export interface ProfileInput {
+  /** 없으면 그대로. */
+  brandName?: string
+  /** 없으면 그대로. */
+  aliases?: string[]
   industry: string
   region: string
   marketScope: MarketScope
@@ -1332,7 +1359,16 @@ export interface ProfilePlan {
   errors: string[]
   notes: string[]
   measuring: boolean
-  to: { industry: string; region: string; marketScope: MarketScope; buyer: string; questionBankVersion: string; cohortQuestionBank: string | null }
+  to: {
+    brandName: string
+    aliases: string[]
+    industry: string
+    region: string
+    marketScope: MarketScope
+    buyer: string
+    questionBankVersion: string
+    cohortQuestionBank: string | null
+  }
   bank: { from: string; to: string }
   cohortBank: { from: string | null; to: string | null; members: string[] }
   moving: { tenantId: string; brandName: string }[]

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import type { HistoryWeek, PublishedPost } from '../lib/api'
-import { conditionChanges, type ConditionChange } from '../lib/comparability'
-import { ENGINE_LABEL } from '../lib/format'
+import { compareConditions, conditionSummary, diffText } from '../lib/comparability'
 import { executionMarks, pinLegend, postingLegend, type ExecutionPin } from '../lib/publishTracking'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { previousIsoWeek } from '../prompts/isoWeek'
@@ -16,6 +16,8 @@ interface Break {
   at: number
   weekOf: string
   detail: string
+  /** 종이용 — 바뀐 조건과 기록이 없는 조건을 이름만으로(「질문지 바뀜 · 수집 모델 기록 없음」). 모델 id 같은 값은 싣지 않는다. */
+  plain: string
 }
 
 const MAX_WEEKS = 12
@@ -25,6 +27,12 @@ const MAX_WEEKS = 12
  * 최소 폭(MIN_W)을 지키고 가로로 넘긴다.
  */
 const MIN_W = 520
+/*
+ * 인쇄 폭 — A4 세로 본문에서 카드 안쪽 여백을 뺀 정도. 화면 폭(1000px 남짓)으로 그린 그림을 종이에 맞춰 줄이면 글자가 5pt대로
+ * 작아지고, 줄이지 않으면 오른쪽(이번 주)이 잘린다(상용화 UI 3차 U6). 인쇄 직전에 이 폭으로 다시 그리고, 인쇄 CSS는 남은 차이만
+ * 종이 폭에 맞춘다.
+ */
+const PRINT_W = 640
 const H = 190
 const PAD = { left: 44, right: 40, top: 22, bottom: 50 }
 /** 집행 핀 줄 — 핀이 있을 때만 위쪽을 이만큼 늘려 따로 둔다(점 · 값 · 조건 변경 표시와 겹치지 않게). */
@@ -47,16 +55,6 @@ function slotsOf(history: WeeklyScorecard[], endWeek: string): Slot[] {
     w = previousIsoWeek(w)
   }
   return out
-}
-
-const engines = (c: WeeklyScorecard) => (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join('·')
-
-function changeText(change: ConditionChange, prev: WeeklyScorecard, cur: WeeklyScorecard): string {
-  if (change === '질문지') return `질문지 ${prev.questionBankVersion}→${cur.questionBankVersion}`
-  if (change === '수집 엔진') return `수집 엔진 ${engines(prev)}→${engines(cur)}`
-  if (change === '판정 엔진') return '판정 엔진 바뀜'
-  if (change === '반복 횟수') return `반복 ${prev.repeatsPerQuestion}→${cur.repeatsPerQuestion}회`
-  return '모델 바뀜'
 }
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
@@ -91,6 +89,18 @@ export default function ScoreTrendChart({
     setBox(el)
   }, [])
   const [boxW, setBoxW] = useState(0)
+  // 인쇄 중 — beforeprint에서 바로 다시 그려야 인쇄 배치에 들어간다(다음 틀까지 미루면 화면 폭 그림이 찍힌다).
+  const [printing, setPrinting] = useState(false)
+  useEffect(() => {
+    const before = () => flushSync(() => setPrinting(true))
+    const after = () => setPrinting(false)
+    window.addEventListener('beforeprint', before)
+    window.addEventListener('afterprint', after)
+    return () => {
+      window.removeEventListener('beforeprint', before)
+      window.removeEventListener('afterprint', after)
+    }
+  }, [])
   useEffect(() => {
     if (!box) return
     const ro = new ResizeObserver(() => setBoxW(box.clientWidth))
@@ -101,7 +111,7 @@ export default function ScoreTrendChart({
     const el = boxRef.current
     if (el) el.scrollLeft = el.scrollWidth
   }, [box, endWeek, boxW])
-  const W = Math.max(MIN_W, boxW)
+  const W = printing ? PRINT_W : Math.max(MIN_W, boxW)
   const sorted = history.filter((h) => h.weekOf <= endWeek).sort((a, b) => a.weekOf.localeCompare(b.weekOf))
   const slots = slotsOf(sorted, endWeek)
   const measured = slots.filter((s) => s.card)
@@ -109,18 +119,15 @@ export default function ScoreTrendChart({
     return <p className="hint">측정 1주차라 추이는 다음 측정부터 그려집니다.</p>
   }
 
-  // 조건 변경 — 직전에 측정한 주와 비교한다(사이에 빈 주가 있어도 그 앞 측정과 견준다).
+  // 조건 변경 — 직전에 측정한 주와 비교한다(사이에 빈 주가 있어도 그 앞 측정과 견준다). 앱 전체 규칙(comparability)을 쓴다 —
+  // 한쪽에만 기록이 있는 조건(확인 불가)도 끊는다. 그래프 첫 칸도 창 밖의 앞 측정과 견준다.
   const breaks: Break[] = []
-  let prev: WeeklyScorecard | null = null
+  let prev: WeeklyScorecard | null = [...sorted].reverse().find((h) => h.weekOf < (slots[0]?.weekOf ?? '')) ?? null
   for (const [i, s] of slots.entries()) {
     if (!s.card) continue
     if (prev) {
-      const changes = conditionChanges(prev, s.card)
-      if (changes.length > 0) {
-        const card = s.card
-        const before = prev
-        breaks.push({ at: i, weekOf: s.weekOf, detail: changes.map((c) => changeText(c, before, card)).join(' · ') })
-      }
+      const diffs = compareConditions(prev, s.card)
+      if (diffs.length > 0) breaks.push({ at: i, weekOf: s.weekOf, detail: diffs.map(diffText).join(' · '), plain: conditionSummary(diffs) })
     }
     prev = s.card
   }
@@ -217,7 +224,8 @@ export default function ScoreTrendChart({
           )}
 
           {breaks.map((b) => {
-            const bx = x(b.at) - step / 2
+            // 첫 칸의 조건 변경(창 밖 앞 측정과 견줌)은 칸 사이가 없어 그림 왼쪽 끝에 붙인다 — 세로축 눈금 위나 그림 밖에 그리지 않는다.
+            const bx = Math.max(PAD.left + 4, x(b.at) - step / 2)
             return (
               <g key={`brk-${b.at}`}>
                 <line className="st-break" x1={bx} x2={bx} y1={padTop - 6} y2={padTop + innerH} />
@@ -279,12 +287,23 @@ export default function ScoreTrendChart({
         <span>
           <span className="st-key band" aria-hidden="true" /> 95% 신뢰구간
         </span>
-        <span>세로축 0–{top}점 · 아래 숫자는 코호트 순위</span>
+        {/* 고객 종이에 실리는 그림이라 「코호트」 대신 「비교 그룹」(상용화 UI 3차 결정 D6). 점수는 100점 만점이다 — 축만 보면 30점 만점으로 읽힌다. */}
+        <span>세로축 0–{top}점(100점 만점) · 아래 숫자는 비교 그룹 순위</span>
+        {/*
+          무엇이 바뀌었는지(모델 id · 값)는 운영자가 화면에서 본다 — 종이에는 끊은 주와 조건 이름만 싣는다. 기록이 한쪽에 없어 끊은 주를
+          「바뀐 주」라고 하지 않는다(앱 공용 규칙 — 같은 종이의 ※ 안내도 「기록 없음」과 「바뀜」을 가른다).
+        */}
         {breaks.map((b) => (
-          <span key={b.at} className="st-key-break">
+          <span key={b.at} className="st-key-break no-print">
             <span className="st-key diamond" aria-hidden="true" /> {shortWeek(b.weekOf)} {b.detail} — 앞뒤를 잇지 않음
           </span>
         ))}
+        {breaks.length > 0 && (
+          <span className="st-key-break print-only">
+            <span className="st-key diamond" aria-hidden="true" /> {breaks.map((b) => `${shortWeek(b.weekOf)} ${b.plain}`).join(' / ')} —
+            측정 조건이 다르거나 기록이 없어 앞뒤를 잇지 않았습니다
+          </span>
+        )}
         {pins.length > 0 && <span>번호 핀은 올린 글 — 핀 오른쪽 점이 올린 뒤 측정(내린 글은 내린 날까지)</span>}
         {pins.slice(0, PIN_LEGEND).map((p) => (
           <span key={`exec-${p.n}`} className="st-key-exec">

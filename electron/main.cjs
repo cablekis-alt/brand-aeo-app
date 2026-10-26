@@ -370,7 +370,7 @@ async function createWindow() {
       ? `로컬 서버 프로세스가 시작 직후 종료됐습니다(code ${serverExit.code}).`
       : health === 'foreign'
         ? `포트 ${apiPort}을 다른 프로그램이 사용하고 있어 앱 화면을 열 수 없습니다.` +
-          ` 개발용 서버(npm run server:dev)가 떠 있으면 종료한 뒤 앱을 다시 실행하세요.`
+          ` 열려 있는 Web4AI Brand AEO 창을 모두 닫거나 PC를 다시 시작한 뒤 앱을 여세요.`
         : `로컬 서버(:${apiPort}) 시작을 기다리다 시간이 초과됐습니다.`
     const logTail = serverLog.length > 0 ? `<pre style="padding:0 2rem;white-space:pre-wrap">${serverLog.slice(-12).join('\n')}</pre>` : ''
     await win.loadURL(

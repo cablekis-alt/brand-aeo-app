@@ -121,6 +121,11 @@ export interface CitationComparison {
   reason?: string
   previousEngines: string[]
   currentEngines: string[]
+  /**
+   * 엔진 필터로 한 엔진만 고르면 비교가 살아나는가 — 다른 점이 수집 엔진 구성뿐일 때만 true. 질문지 · 판정 등 다른 조건이
+   * 바뀌었거나 기록이 없으면 필터를 골라도 견줄 수 없으니 false(그 안내를 하지 않는다). 이 값이 없는 옛 서버 응답은 안내를 그대로 둔다.
+   */
+  filterHelps?: boolean
 }
 
 // AI 리퍼럴 트래픽(GA4) — server/gaReferrals.ts의 응답 계약.

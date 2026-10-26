@@ -316,8 +316,8 @@ export default function ContentLibrary() {
                   </div>
                   <p className="gap-tally">{d.draft.lead}</p>
                   <p className="doc-meta">
-                    {(d.editedAt ?? d.generatedAt).slice(0, 10)} · 절 {d.draft.sections.length}개 · 쓴 사실{' '}
-                    {d.draft.usedFacts.length}건 · <code>{d.actionId}</code>
+                    {/* 내부 키(content:category-agnostic)는 보이지 않는다 — 제목이 이미 무슨 글인지 말한다(상용화 UI 3차 U23). */}
+                    {(d.editedAt ?? d.generatedAt).slice(0, 10)} · 소제목 {d.draft.sections.length}개 · 쓴 사실 {d.draft.usedFacts.length}건
                   </p>
                   <div className="facts-bar">
                     <button type="button" onClick={() => setOpen(shown ? null : d.actionId)} aria-expanded={shown}>

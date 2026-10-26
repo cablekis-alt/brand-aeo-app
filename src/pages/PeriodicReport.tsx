@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   CitationSourcesSection,
   CohortCompareSection,
@@ -42,17 +42,18 @@ import {
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { comparisonFromHistory } from '../lib/citationView'
+import { comparableRun, compareConditions, conditionReason, conditionSummary, siteDifference } from '../lib/comparability'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
-import { ENGINE_LABEL, measureConditionText, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, measureConditionPlain, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
-import { buildPeriodicReport, PRIORITY_LABEL, STATUS_LABEL } from '../lib/b9-report'
+import { buildPeriodicReport, PRIORITY_LABEL, scoreBreakdown, STATUS_LABEL, weightTagText, type ScorePartKey } from '../lib/b9-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 
 const EMPTY_EEAT: EeatAnalysis = {
@@ -94,10 +95,28 @@ function afterWeekText(weekOf: string, cell: HistoryCell | null): string {
 /** 집행 표에 보이는 올린 뒤 측정 주 수 — 최근 것부터. */
 const EXEC_WEEKS = 6
 
+/** 파일 이름에 못 쓰는 글자와 띄어쓰기 · 쉼표를 뺀다 — 「스테이,머뭄」 → 「스테이머뭄」. */
+const fileSafe = (s: string) => s.replace(/[\\/:*?"<>|,.\s]+/g, '')
+
+/** CSS 문자열 값 — @page 머리말에 브랜드 이름을 넣는다(따옴표 · 역슬래시 이스케이프). */
+const cssString = (s: string) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ')}"`
+
+/** 화면에서는 값까지(운영자), 종이에서는 바뀐 조건 이름만 — 모델 id 같은 내부 값이 고객 종이에 찍히지 않게. */
+function ReasonText({ full, plain }: { full: string; plain: string }) {
+  return (
+    <>
+      <span className="no-print">{full}</span>
+      <span className="print-only-inline">{plain}</span>
+    </>
+  )
+}
+
 export default function PeriodicReport() {
-  const { tenant, viewing } = useTenant()
+  const { tenant, tenants, viewing } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
-  const [weekOf, setWeekOf] = useWeekSelection(history)
+  // 다른 화면에서 주차를 지정해 들어올 수 있다(퍼포먼스의 「사실성 리스크」 → 그 주 원문). 없으면 최신 주.
+  const [searchParams] = useSearchParams()
+  const [weekOf, setWeekOf] = useWeekSelection(history, searchParams.get('week') ?? '')
 
   /*
    * 주간 / 월간.
@@ -140,7 +159,7 @@ export default function PeriodicReport() {
   /** 판정이 근거로 쓰는 주차 — 월간에서는 그 달의 마지막 주차. */
   const judgedWeek = period === 'month' ? (weeksInMonth.at(-1)?.weekOf ?? weekOf) : weekOf
 
-  const { data: eeat } = useWeeklyData(loadEeat, tenant?.tenantId ?? '', judgedWeek, EMPTY_EEAT)
+  const { data: eeat, loading: eeatLoading } = useWeeklyData(loadEeat, tenant?.tenantId ?? '', judgedWeek, EMPTY_EEAT)
 
   const card = useMemo(
     () => history.find((h) => h.weekOf === judgedWeek) ?? history.at(-1) ?? null,
@@ -161,21 +180,26 @@ export default function PeriodicReport() {
    * 셋을 고른 이유: Brand는 답변에서의 가시성, Site는 페이지 준비도, 인용 건수는 그 주에
    * 엔진이 실제로 근거를 얼마나 끌어왔는지 — 서로 다른 축이라 함께 봐야 한다.
    */
-  const comparison = useMemo(() => comparisonFromHistory(history, weekOf, null), [history, weekOf])
+  // 주간 숫자 칸 · 표지 · 지표별 진단이 같은 판정을 쓴다(report.comparison — 앱 전체 규칙 comparability.ts). 월간은 아래 monthCompare.
+  const comparison = period === 'week' ? (report?.comparison ?? null) : null
   const prevCard = useMemo(
-    () => (comparison ? (history.find((h) => h.weekOf === comparison.previousWeekOf) ?? null) : null),
+    () => (comparison?.previousWeekOf ? (history.find((h) => h.weekOf === comparison.previousWeekOf) ?? null) : null),
     [history, comparison],
   )
 
   // Site AEO Score는 엔진과 무관하게 페이지를 읽어 낸 값이라, 전주 비교에 엔진 조건이 걸리지
   // 않는다. 그 주차보다 앞선 가장 최근 진단을 그대로 쓴다.
   const [siteScores, setSiteScores] = useState<Record<string, SiteScoreRecord>>({})
+  // 어느 브랜드의 진단을 다 읽었는지 — 인쇄 버튼이 기다린다(읽기 전에 찍으면 Site 칸 · 영역 표가 말없이 빠진다).
+  const [siteLoadedFor, setSiteLoadedFor] = useState('')
   useEffect(() => {
     const id = tenant?.tenantId
     if (!id) return
     let alive = true
     void loadSiteScores(id).then((v) => {
-      if (alive) setSiteScores(v ?? {})
+      if (!alive) return
+      setSiteScores(v ?? {})
+      setSiteLoadedFor(id)
     })
     return () => {
       alive = false
@@ -466,11 +490,91 @@ export default function PeriodicReport() {
     [evidence],
   )
 
-  /** 그 달 안에서 수집 엔진이 갈렸는지 — 갈렸으면 평균을 한 값처럼 읽으면 안 된다. */
-  const monthEngineSets = useMemo(
-    () => [...new Set(weeksInMonth.map((h) => [...(h.enginesUsed ?? [])].sort().join('+')).filter(Boolean))],
-    [weeksInMonth],
-  )
+  /** 그 달 안에서 측정 조건이 바뀐 곳(앱 전체 규칙) — 바뀌었으면 월 평균을 한 값처럼 읽으면 안 된다. 화면은 값까지, 종이는 조건 이름만. */
+  const monthConditionBreaks = useMemo(() => {
+    const out: { full: string; plain: string }[] = []
+    for (let i = 1; i < weeksInMonth.length; i++) {
+      const diffs = compareConditions(weeksInMonth[i - 1]!, weeksInMonth[i]!)
+      const w = weekLabel(weeksInMonth[i]!.weekOf)
+      if (diffs.length > 0) out.push({ full: `${w}: ${conditionReason(diffs)}`, plain: `${w}: ${conditionSummary(diffs)}` })
+    }
+    return out
+  }, [weeksInMonth])
+
+  /*
+   * 월간 증감 — 앞 달과 이 달의 모든 측정이 같은 조건 연속 구간 하나에 들 때만 견준다. 인용 합계는 잰 주 수까지 같아야 한다
+   * (주 수가 다르면 합계 차이는 측정 횟수 차이다). 견줄 수 없으면 이유 한 줄을 화면과 종이에 함께 적는다.
+   */
+  const monthCompare = useMemo(() => {
+    if (period !== 'month' || weeksInPrevMonth.length === 0 || weeksInMonth.length === 0) return null
+    const span = [...weeksInPrevMonth, ...weeksInMonth].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
+    const inRun = new Set(comparableRun(history, span.at(-1)!.weekOf).map((c) => c.weekOf))
+    if (span.every((c) => inRun.has(c.weekOf)))
+      return { comparable: true, reason: '', reasonPlain: '', sameWeeks: weeksInPrevMonth.length === weeksInMonth.length }
+    let reason = ''
+    let reasonPlain = ''
+    for (let i = 1; i < span.length && !reason; i++) {
+      const diffs = compareConditions(span[i - 1]!, span[i]!)
+      if (diffs.length > 0) {
+        reason = `${weekLabel(span[i]!.weekOf)}: ${conditionReason(diffs)}`
+        reasonPlain = `${weekLabel(span[i]!.weekOf)}: ${conditionSummary(diffs)}`
+      }
+    }
+    return { comparable: false, reason, reasonPlain, sameWeeks: false }
+  }, [period, history, weeksInMonth, weeksInPrevMonth])
+
+  /*
+   * 인쇄 준비 — 근거 · 비교 그룹 · EEAT · Site · 인용 건수 · 집행 기록을 다 읽기 전에는 인쇄를 막는다. 화면을 열자마자 찍으면 비교 그룹 표 ·
+   * 집행 절이 말없이 빠진 PDF가 나오는데, 운영자 화면에서는 곧 채워져 모른 채 보내게 된다(상용화 UI 3차 U6). 경쟁사 보기는 집행
+   * 기록을 읽지 않으므로 기다리지 않는다.
+   */
+  const printReady =
+    Boolean(evidence) &&
+    Boolean(cohortLoaded) &&
+    !eeatLoading &&
+    siteLoadedFor === (tenant?.tenantId ?? '') &&
+    citations.key === citationKey &&
+    (Boolean(viewing) || (!published.loading && actionStates.key === tenant?.tenantId))
+  // 사람 확인이 남은 점검 — 인쇄 전에 한 번 묻는다(점검 상자는 종이에 싣지 않아 PDF만 보면 모른다).
+  const reviewLeft = checks?.filter((c) => c.status === 'review').length ?? 0
+  const onPrint = () => {
+    if (
+      reviewLeft > 0 &&
+      !window.confirm(`측정 신뢰도 점검에 사람 확인 ${reviewLeft}건이 남아 있습니다. 그래도 인쇄 · PDF로 저장할까요?`)
+    )
+      return
+    window.print()
+  }
+
+  /*
+   * 인쇄할 때만 문서 제목을 「스테이머뭄_정기진단_2026-W43」으로 — PDF로 저장할 때 기본 파일 이름이 된다(매번 손으로 바꾸지 않게).
+   * 버튼과 Ctrl+P 둘 다 오도록 beforeprint · afterprint에 건다. 창 제목은 평소 그대로 둔다.
+   */
+  const reportLabel = card ? (period === 'month' ? monthLabel(activeMonth) : weekLabel(card.weekOf)) : ''
+  // 같은 홈페이지로 범위만 다르게 등록한 브랜드(군산각 지역형 · 전국형)는 이름이 같다 — 머리말 · 파일 이름에 범위 꼬리표(U7).
+  const brandTag = tenant ? variantTag(tenant, tenants) : null
+  const reportBrand = card ? `${card.brandName}${brandTag ? ` · ${brandTag}` : ''}` : ''
+  const printTitle = card ? `${fileSafe(card.brandName)}${brandTag ? `_${fileSafe(brandTag)}` : ''}_정기진단_${period === 'month' ? activeMonth : card.weekOf}` : ''
+  useEffect(() => {
+    if (!printTitle) return
+    let saved: string | null = null
+    // beforeprint가 afterprint 없이 두 번 와도(인쇄 미리보기를 다시 그릴 때) 처음 제목을 지킨다.
+    const before = () => {
+      if (saved === null) saved = document.title
+      document.title = printTitle
+    }
+    const after = () => {
+      if (saved !== null) document.title = saved
+      saved = null
+    }
+    window.addEventListener('beforeprint', before)
+    window.addEventListener('afterprint', after)
+    return () => {
+      after()
+      window.removeEventListener('beforeprint', before)
+      window.removeEventListener('afterprint', after)
+    }
+  }, [printTitle])
 
   if (!tenant) return null
 
@@ -479,19 +583,32 @@ export default function PeriodicReport() {
       <header className="page-head">
         <div className="page-title">
           <p className="page-eyebrow">
-            보고 · {tenant.brandName}
+            보고 · {brandLabel(tenant, tenants)}
             {judgedWeek ? ` · ${weekLabel(judgedWeek)}` : ''}
           </p>
           <h1>정기진단 보고서</h1>
         </div>
         {card && report && (
           <div className="page-actions no-print">
-            <button type="button" className="btn" onClick={() => window.print()}>
-              인쇄 · PDF 저장
+            <button
+              type="button"
+              className="btn"
+              onClick={onPrint}
+              disabled={!printReady}
+              title={printReady ? undefined : '비교 그룹 · 근거 기록을 다 불러온 뒤 인쇄할 수 있습니다'}
+            >
+              {printReady ? '인쇄 · PDF 저장' : '보고서 준비 중…'}
             </button>
           </div>
         )}
       </header>
+      {/*
+        종이 머리말(브랜드 · 기간)과 쪽 번호 — 2쪽부터 브랜드도 주차도 없어 여러 고객 보고서를 한꺼번에 뽑으면 섞였다(U29). 이 화면에
+        있는 동안만 있는 규칙이다(Site AEO 인쇄는 자기 머리말을 쓴다). 첫 쪽은 표지에 같은 말이 있어 머리말을 뺀다.
+      */}
+      {card && (
+        <style>{`@media print { @page { size: A4; margin: 14mm 12mm 16mm; @top-right { content: ${cssString(`${reportBrand} · ${reportLabel} 정기진단 보고서`)}; font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } @bottom-center { content: counter(page) " / " counter(pages); font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } } @page :first { @top-right { content: none; } } }`}</style>
+      )}
       <p className="page-lead no-print">
         이번 주 스코어카드를 지표별로 진단하고, 약한 지표를 우선순위가 매겨진 실행 가능한 개선안으로 정리합니다. 모든
         판정은 측정된 수치에서 결정적으로 도출되며 새 수치를 만들지 않습니다.
@@ -553,12 +670,16 @@ export default function PeriodicReport() {
               <span className={`status-pill st-${report.verdict.tone}`}>종합 판정 {report.verdict.label}</span>
             </p>
             <p className="verdict-summary">{report.verdict.summary}</p>
-            {/* 같은 브랜드라도 엔진·모델·판단 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. */}
-            <p className="hint">
-              수집 엔진 {measureConditionText(card).collect} · 판단 엔진 {measureConditionText(card).judge} · 반복{' '}
+            {/*
+              같은 브랜드라도 엔진·모델·판정 모델이 바뀌면 점수가 움직인다 — 무엇으로 쟀는지 판정 옆에 둔다. 모델 id · preset은 운영자가
+              화면에서 보고, 종이에는 엔진 이름만 싣는다(U5: 「Perplexity (preset:low)」가 고객 PDF 표지에 찍혔다).
+            */}
+            <p className="hint no-print">
+              수집 엔진 {measureConditionText(card).collect} · 판정 엔진 {measureConditionText(card).judge} · 반복{' '}
               {measureConditionText(card).repeats}
-              {card.questionBankVersion ? ` · 질문 은행 ${card.questionBankVersion}` : ''}
+              {card.questionBankVersion ? ` · 질문지 ${card.questionBankVersion}` : ''}
             </p>
+            <p className="hint print-only">{measureConditionPlain(card)}</p>
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
           </section>
 
@@ -566,10 +687,9 @@ export default function PeriodicReport() {
           <TrustChecksBox checks={checks} error={cohortLoaded?.error ?? null} />
 
           {/*
-            전주 대비는 **비교가 성립할 때만** 보여 준다. 수집 엔진이 달라진 주차끼리 빼면
-            그 차이는 브랜드가 아니라 측정 방식이 만든 것이다 — 인용 갭 분석과 같은 판단
-            (comparisonFromHistory)을 쓴다. Site 점수만 예외인데, 엔진과 무관하게 페이지를
-            읽어 낸 값이라 그 조건이 걸리지 않는다.
+            증감은 **견줄 수 있을 때만** 보여 준다. 측정 조건(수집 엔진 · 판정 · 모델 · 질문지 · 반복)이 바뀐 주끼리 빼면
+            그 차이는 브랜드가 아니라 측정 방식이 만든 것이다 — 앱 전체 규칙(comparability.ts)을 표지 · 지표별 진단과 함께 쓴다.
+            Site 점수는 엔진과 무관하게 페이지를 읽은 값이라 같은 주소 · 같은 수집 방식인지만 본다(siteComparable).
           */}
           <section className="report-tiles">
             <article>
@@ -581,7 +701,7 @@ export default function PeriodicReport() {
                   ) : (
                     <>
                       {monthBrand}
-                      <Delta now={monthBrand} prev={prevMonthBrand} />
+                      <Delta now={monthBrand} prev={monthCompare?.comparable ? prevMonthBrand : null} />
                     </>
                   )
                 ) : (
@@ -596,8 +716,8 @@ export default function PeriodicReport() {
               </p>
               <p className="tile-note">
                 {period === 'month'
-                  ? `답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
-                  : '답변에 얼마나 나오는가'}
+                  ? `100점 만점 · 답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth && monthCompare?.comparable ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
+                  : '100점 만점 · 답변에 얼마나 나오는가'}
               </p>
             </article>
             <article>
@@ -607,7 +727,9 @@ export default function PeriodicReport() {
                 const now = period === 'month' ? monthMention : pct(card.mentionRate * 100)
                 const prev =
                   period === 'month'
-                    ? prevMonthMention
+                    ? monthCompare?.comparable
+                      ? prevMonthMention
+                      : null
                     : comparison?.comparable && prevCard
                       ? pct(prevCard.mentionRate * 100)
                       : null
@@ -632,6 +754,8 @@ export default function PeriodicReport() {
               {(() => {
                 const now = siteNow
                 const prev = sitePrev
+                // 같은 페이지(주소)를 같은 방식으로 잰 진단끼리만 증감을 낸다 — 실측 ktcorp corp.kt.com 57 → www.kt.com 0이 「-57」로 찍혔다.
+                const siteDiff = now && prev ? siteDifference(prev, now) : null
                 // 보이는 진단이 그 주(월간이면 그 달) 것이 아니면 밝힌다 — 사이트 진단은 대개 측정과 다른 주에 한다.
                 const away = now
                   ? period === 'month'
@@ -646,11 +770,17 @@ export default function PeriodicReport() {
                   <>
                     <p className="tile-value">
                       {now ? now.score : <span className="muted">—</span>}
-                      {now && <Delta now={now.score} prev={prev?.score ?? null} />}
+                      {now && <Delta now={now.score} prev={prev && !siteDiff ? prev.score : null} />}
                     </p>
                     <p className="tile-note">
                       {now
-                        ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${prev ? `${weekLabel(prev.weekOf)} 대비` : '첫 기록'}`
+                        ? `페이지 준비도 · ${weekLabel(now.weekOf)} 진단${away} · ${
+                            prev
+                              ? !siteDiff
+                                ? `${weekLabel(prev.weekOf)} 대비`
+                                : `${weekLabel(prev.weekOf)} 진단과 ${siteDiff === '주소' ? '주소가' : `${siteDiff}이`} 달라 견주지 않음`
+                              : '첫 기록'
+                          }`
                         : 'Site AEO Checker로 진단한 기록이 없습니다'}
                     </p>
                   </>
@@ -662,7 +792,18 @@ export default function PeriodicReport() {
               <p className="tile-value">
                 {cite.now === null ? <span className="muted">—</span> : cite.now.toLocaleString()}
                 {cite.now !== null && (
-                  <Delta now={cite.now} prev={period === 'month' ? cite.prev : comparison?.comparable ? cite.prev : null} />
+                  <Delta
+                    now={cite.now}
+                    prev={
+                      period === 'month'
+                        ? monthCompare?.comparable && monthCompare.sameWeeks
+                          ? cite.prev
+                          : null
+                        : comparison?.comparable
+                          ? cite.prev
+                          : null
+                    }
+                  />
                 )}
               </p>
               <p className="tile-note">
@@ -671,11 +812,31 @@ export default function PeriodicReport() {
             </article>
           </section>
           {/*
-            화면에서만 — 표지 요약 · 지표별 진단의 전주 대비는 아직 비교 가능 여부를 보지 않고 세서, 종이에 이 문장을 실으면 같은 문서
-            안에서 서로 어긋난다. 「같은 조건」 규칙을 하나로 맞추는 작업에서 함께 정한다.
+            증감을 적지 않은 이유 · 떨어진 비교는 종이에도 싣는다 — 표지 · 숫자 칸 · 지표별 진단이 같은 판정을 쓰므로 이제 같은 문서
+            안에서 어긋나지 않는다. 빼면 PDF에서 증감이 이유 없이 사라진다.
           */}
-          {period === 'week' && comparison && !comparison.comparable && (
-            <p className="hint no-print">※ {comparison.reason} — 점수·인용의 전주 대비를 표시하지 않았습니다.</p>
+          {period === 'week' && comparison?.previousWeekOf && !comparison.comparable && (
+            <p className="hint">
+              ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과{' '}
+              {comparison.diffs.some((d) => d.state === 'changed') ? '측정 조건이 달라' : '견줄 측정 조건 기록이 한쪽에 없어'}(
+              <ReasonText full={conditionReason(comparison.diffs)} plain={conditionSummary(comparison.diffs)} />) 표지 · Brand AEO Score · 언급률 ·
+              인용 건수 칸 · 지표별 진단에 증감을 적지 않았습니다.
+              같은 조건으로 다시 재면 증감이 다시 나옵니다.
+            </p>
+          )}
+          {period === 'week' && comparison?.previousWeekOf && comparison.comparable && (comparison.gapWeeks ?? 1) >= 2 && (
+            <p className="hint">
+              ※ 증감은 직전 측정({weekLabel(comparison.previousWeekOf)}, {comparison.gapWeeks}주 전) 대비입니다.
+            </p>
+          )}
+          {period === 'month' && monthCompare && !monthCompare.comparable && (
+            <p className="hint">
+              ※ 앞 달({monthLabel(prevMonth)})과 측정 조건이 같지 않아(
+              <ReasonText full={monthCompare.reason} plain={monthCompare.reasonPlain} />) 월 평균 · 합계에 증감을 적지 않았습니다.
+            </p>
+          )}
+          {period === 'month' && monthCompare?.comparable && !monthCompare.sameWeeks && (
+            <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
@@ -693,7 +854,7 @@ export default function PeriodicReport() {
             (표는 읽은 줄만 그리므로, 저장 목록 수로 세면 이 브랜드 한 줄짜리 「비교」가 나온다).
           */}
           {cohort && cohort.filter((r) => r.loaded).length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} />}
-          {!cohortLoaded && <p className="muted no-print">코호트 기록을 불러오는 중…</p>}
+          {!cohortLoaded && <p className="muted no-print">비교 그룹 기록을 불러오는 중…</p>}
 
           {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
           {!viewing && published.error && (
@@ -747,6 +908,8 @@ export default function PeriodicReport() {
                               {r.summary.firstCitedDays !== null && ` · 첫 인용 확인 D+${r.summary.firstCitedDays}`}
                             </div>
                           )}
+                          {/* 성과 화면과 같은 표식 — 올린 뒤 측정 사이에 측정 조건이 바뀌었거나 확인할 수 없으면 주별 인용을 같은 조건의 반복으로 읽지 않는다. */}
+                          {r.summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀌었거나 확인할 수 없음</div>}
                         </td>
                       </tr>
                     ))}
@@ -771,7 +934,7 @@ export default function PeriodicReport() {
                     <tr>
                       <th>주차</th>
                       <th>Brand AEO Score</th>
-                      <th>카테고리 무관 언급률</th>
+                      <th>언급률</th>
                       <th>수집 엔진</th>
                     </tr>
                   </thead>
@@ -793,10 +956,14 @@ export default function PeriodicReport() {
                 평균을 한 값처럼 읽으면 안 되는 경우를 밝힌다. 그 달 안에서 수집 엔진이 갈렸으면
                 주차별 점수가 같은 조건에서 나온 값이 아니다.
               */}
-              {monthEngineSets.length > 1 && (
+              {monthConditionBreaks.length > 0 && (
                 <p className="hint">
-                  ※ 이 달 안에서 수집 엔진이 달랐습니다 — 주차별 점수가 같은 조건에서 나온 값이 아니므로 평균을
-                  하나의 수치처럼 읽지 마세요.
+                  ※ 이 달 안에 측정 조건이 바뀌었거나 확인할 수 없는 주가 있습니다(
+                  <ReasonText
+                    full={monthConditionBreaks.map((b) => b.full).join(' / ')}
+                    plain={monthConditionBreaks.map((b) => b.plain).join(' / ')}
+                  />
+                  ) — 주차별 점수가 같은 조건에서 나온 값이 아니므로 평균을 하나의 수치처럼 읽지 마세요.
                 </p>
               )}
               <p className="hint">
@@ -815,7 +982,7 @@ export default function PeriodicReport() {
                   <tr>
                     <th>지표</th>
                     <th>값</th>
-                    <th>전주 대비</th>
+                    <th>{period === 'month' || (report.comparison.gapWeeks ?? 1) >= 2 ? '직전 측정 대비' : '전주 대비'}</th>
                     <th>상태</th>
                     <th>진단</th>
                   </tr>
@@ -825,7 +992,16 @@ export default function PeriodicReport() {
                     <tr key={m.key}>
                       <td>
                         {m.label}
-                        {m.weight > 0 && <span className="weight-tag">{Math.round(m.weight * 100)}%</span>}
+                        {/* 이번 주 실제 비중 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 커진다(개요 · 진단 화면과 같은 값, 상용화 UI 3차 U20). */}
+                        {m.weight > 0 &&
+                          (() => {
+                            const part = scoreBreakdown(card).find((p) => p.key === (m.key as ScorePartKey))
+                            return (
+                              <span className="weight-tag" title="기본 가중치 → 이번 주 실제 비중">
+                                {part ? weightTagText(part, { short: true }) : `${Math.round(m.weight * 100)}%`}
+                              </span>
+                            )
+                          })()}
                       </td>
                       <td className="num">
                         {m.valueText}
@@ -877,10 +1053,11 @@ export default function PeriodicReport() {
 
           {/*
             「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다. 기록 원문(엔진 id · 질문 id · 회차)과 판정 오류 가능성은 운영자가 화면에서
-            보고, 고객 종이에는 건수만 싣는다 — 원문을 확인하기 전에는 결론으로 쓰지 않는다.
+            보고, 고객 종이에는 건수만 싣는다 — 원문을 확인하기 전에는 결론으로 쓰지 않는다. 건수는 지표별 진단 사실성 줄과 개선제안
+            근거 문장에 있어, 이 절은 통째로 화면에만 둔다(종이에는 제목만 남은 빈 상자로 찍혔다 — 상용화 UI 3차 U5 · 결정 D8).
           */}
           {report.risks.length > 0 && (
-            <section className="panel warn">
+            <section className="panel warn no-print">
               <h3>리스크 · 사실성 — 사실과 어긋난 주장이 담긴 응답 {report.risks.length}건</h3>
               <p className="hint no-print">
                 AI가 실제로 틀렸을 수도, 다른 브랜드에 대한 답을 이 브랜드 사실과 대조한 판정 오류일 수도 있습니다. 원문을 확인한 뒤
@@ -914,16 +1091,21 @@ export default function PeriodicReport() {
                     </div>
                     <p className="rec-basis">{rec.basis}</p>
                     {rec.evidence && rec.evidence.blocks.length > 0 && (
-                      <div className="rec-evidence">
+                      // 화면 전용 묶음(사실성 원문)뿐이면 상자째 종이에서 뺀다 — 머리말만 남은 빈 상자가 찍히지 않게.
+                      <div
+                        className={`rec-evidence${rec.evidence.blocks.every((b) => b.screenOnly) && !rec.evidence.estimate ? ' no-print' : ''}`}
+                      >
                         <p className="rec-label">이번 주 데이터로 본 실행 항목</p>
                         {rec.evidence.blocks.map((b, k) => (
-                          <div key={k} className="rec-evidence-block">
+                          <div key={k} className={`rec-evidence-block${b.screenOnly ? ' no-print' : ''}`}>
                             <p className="rec-evidence-head">{b.heading}</p>
                             <ul>
                               {b.items.map((it, j) => (
                                 <li key={j}>
                                   <span>{it.text}</span>
                                   {it.detail && <span className="muted"> — {it.detail}</span>}
+                                  {/* 운영자 메모(지분 · 충족 · 완료 기준) — 화면에서만. */}
+                                  {it.opsNote && <span className="ops-note no-print">운영 메모 · {it.opsNote}</span>}
                                 </li>
                               ))}
                             </ul>
@@ -944,7 +1126,23 @@ export default function PeriodicReport() {
                         )}
                       </div>
                     )}
-                    <p className="rec-label">{rec.evidence?.blocks.length ? '기본 원칙' : '실행안'}</p>
+                    {/*
+                      「기본 원칙」은 위 데이터 항목과 견준 이름이다 — 종이에 데이터 항목이 없으면(사실성 원문만 있는 카드: 화면 전용) 종이에는
+                      다른 카드처럼 「실행안」으로 찍는다.
+                    */}
+                    {(() => {
+                      const blocks = rec.evidence?.blocks ?? []
+                      if (blocks.length === 0) return <p className="rec-label">실행안</p>
+                      const printed = blocks.some((b) => !b.screenOnly) || Boolean(rec.evidence?.estimate)
+                      return printed ? (
+                        <p className="rec-label">기본 원칙</p>
+                      ) : (
+                        <p className="rec-label">
+                          <span className="no-print">기본 원칙</span>
+                          <span className="print-only-inline">실행안</span>
+                        </p>
+                      )
+                    })()}
                     <ul className="rec-actions">
                       {rec.actions.map((a, j) => (
                         <li key={j}>{a}</li>
@@ -967,8 +1165,8 @@ export default function PeriodicReport() {
           </section>
 
           <p className="disclaimer">
-            개선제안은 측정 지표의 강약을 규칙으로 매핑한 가이드입니다. 실제 반영 효과는 다음 측정에서 확인하세요. 점수·수치는
-            리포트 단계에서 재계산하지 않습니다.
+            개선제안은 측정 지표의 강약을 규칙으로 매핑한 가이드입니다. 실제 반영 효과는 다음 측정에서 확인하세요.
+            <span className="no-print"> 점수·수치는 리포트 단계에서 재계산하지 않습니다.</span>
           </p>
         </>
       )}

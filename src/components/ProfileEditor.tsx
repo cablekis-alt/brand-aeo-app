@@ -10,11 +10,12 @@ import {
   type ProfilePlan,
   type ProfileSaveResult,
 } from '../lib/api'
-import { scopeLabel } from '../lib/brandVariant'
+import { isAddressLike, scopeLabel } from '../lib/brandVariant'
 import { MARKET_SCOPES, NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 /**
- * 기본 정보 서랍 — 업종 · 지역 · 시장 범위 고치기(server/brandProfileEditor.ts). 브랜드 현황 코호트 카드의 「기본 정보」로 연다.
+ * 기본 정보 서랍 — 상호 · 별칭 · 업종 · 지역 · 시장 범위 고치기(server/brandProfileEditor.ts). 브랜드 현황 코호트 카드의 「기본 정보」로 연다.
+ * 상호 · 별칭은 언급 판정에 쓰는 이름이다 — 상호 칸에 주소를 넣어 등록한 브랜드를 여기서 고친다(상용화 UI 3차 U7).
  *
  * 경쟁사 편집 서랍(CompetitorEditor.tsx)과 같은 틀이다: 바꾸면 서버가 미리 계산하고(새 질문지 번호 · 함께 옮길 경쟁사 · 막는 문제),
  * 저장은 확인 창을 거쳐 그 미리보기 열쇠로만 한다. 코호트와 질문지가 바뀌어 지난 주와 비교가 끊기므로 늘 확인을 받는다.
@@ -24,7 +25,13 @@ import { MARKET_SCOPES, NATIONAL_REGION, type MarketScope } from '../prompts/typ
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ok'; value: ProfileEditorState }
 type PlanState = { key: string; replan: number; value: ProfilePlan | null; error: string | null }
 // region은 지역형일 때 적는 지역. toNational은 이미 전국형 · B2B형인데 지역이 남은 브랜드를 「국내」로 옮길지.
-type Form = { industry: string; region: string; marketScope: MarketScope; buyer: string; toNational: boolean }
+type Form = { brandName: string; aliases: string; industry: string; region: string; marketScope: MarketScope; buyer: string; toNational: boolean }
+
+/**
+ * 별칭 칸(한 줄에 하나) → 목록. 빈 값 · 같은 값은 뺀다. 쉼표로 나누지 않는다 — 「완벽한 진료를 드리는, 서울퍼펙트치과의원」처럼 쉼표가 든
+ * 별칭이 열자마자 둘로 쪼개져, 건드리지 않은 별칭이 바뀐 값으로 저장됐다(1-D 검토).
+ */
+const aliasList = (text: string) => [...new Set(text.split('\n').map((a) => a.trim()).filter(Boolean))]
 
 const SCOPE_DESC: Record<MarketScope, string> = {
   local: '그 지역에서 찾는 손님 — 질문에 지역이 들어가요',
@@ -34,6 +41,8 @@ const SCOPE_DESC: Record<MarketScope, string> = {
 
 // 지역형이 아니면 지역 칸은 잠기므로, 지역 입력은 지역형일 때의 값만 들고 있는다.
 const formOf = (s: ProfileEditorState): Form => ({
+  brandName: s.brandName,
+  aliases: s.aliases.join('\n'),
   industry: s.industry,
   region: s.marketScope === 'local' ? s.region : '',
   marketScope: s.marketScope,
@@ -104,9 +113,15 @@ export default function ProfileEditor({
   const s = load.status === 'ok' ? load.value : null
   const f = form
   const moveIds = move ?? (s?.competitors.filter((c) => c.defaultMove).map((c) => c.tenantId) ?? [])
+  const aliasesNow = f ? aliasList(f.aliases) : []
+  const identityChanged = Boolean(
+    s && f && (f.brandName.trim() !== s.brandName || aliasesNow.join('\n') !== s.aliases.join('\n')),
+  )
   const input: ProfileInput | null =
     s && f
       ? {
+          // 상호 · 별칭은 바꿨을 때만 보낸다 — 서버는 없으면 그대로 둔다.
+          ...(identityChanged ? { brandName: f.brandName.trim(), aliases: aliasesNow } : {}),
           industry: f.industry.trim(),
           region: f.marketScope === 'local' ? f.region.trim() : keepsRegion(s) && !f.toNational ? s.region : NATIONAL_REGION,
           marketScope: f.marketScope,
@@ -114,7 +129,7 @@ export default function ProfileEditor({
           move: s.competitors.filter((c) => c.movable && moveIds.includes(c.tenantId)).map((c) => c.tenantId).sort(),
         }
       : null
-  const dirty = Boolean(
+  const cohortDirty = Boolean(
     s &&
       input &&
       (input.industry !== s.industry ||
@@ -122,6 +137,7 @@ export default function ProfileEditor({
         input.marketScope !== s.marketScope ||
         input.buyer !== (s.marketScope === 'b2b' ? s.buyer : '')),
   )
+  const dirty = cohortDirty || identityChanged
   const requestKey = dirty && input ? JSON.stringify(input) : ''
 
   // 바뀔 때마다(잠깐 멈춘 뒤) 서버에 미리 계산을 묻는다. 응답은 지금 입력과 같을 때만 쓴다.
@@ -275,6 +291,21 @@ export default function ProfileEditor({
         )}
         {s && f && (
           <fieldset className="ce-fieldset pe-form" disabled={busy || !s.editable}>
+            <label className="pe-field">
+              <span className="pe-label">상호(사람들이 부르는 이름)</span>
+              <input type="text" value={f.brandName} onChange={(e) => update({ brandName: e.target.value })} placeholder="예: 도전과나눔" />
+            </label>
+            {isAddressLike(f.brandName) && <p className="ce-bar-note bad">상호에는 주소가 아니라 사람들이 부르는 이름을 적어 주세요.</p>}
+            <label className="pe-field">
+              <span className="pe-label">별칭(한 줄에 하나)</span>
+              <textarea
+                rows={Math.min(6, Math.max(2, f.aliases.split('\n').length))}
+                value={f.aliases}
+                onChange={(e) => update({ aliases: e.target.value })}
+                placeholder={'예: 도전과 나눔\n사단법인 도전과나눔'}
+              />
+            </label>
+            <p className="ce-qmode-sub">AI 답변에 상호나 별칭이 나오면 언급으로 셉니다. 바꾸면 다음 측정부터 언급 판정이 달라집니다.</p>
             <fieldset className="ce-qmode">
               <legend className="pe-label">시장 범위</legend>
               {MARKET_SCOPES.map((id) => (
@@ -321,7 +352,8 @@ export default function ProfileEditor({
                 <option key={v} value={v} />
               ))}
             </datalist>
-            {s.competitors.length > 0 && (
+            {/* 함께 옮길 경쟁사는 업종 · 지역 · 범위를 바꿀 때만 뜻이 있다 — 상호 · 별칭만 바꾸면 보이지 않는다. */}
+            {s.competitors.length > 0 && cohortDirty && (
               <div className="pe-comp">
                 <p className="pe-label">함께 재는 경쟁사</p>
                 <p className="ce-qmode-sub">이 브랜드만 재는 경쟁사는 함께 옮겨야 새 코호트에서 같이 잽니다.</p>
@@ -369,7 +401,13 @@ export default function ProfileEditor({
           )}
           <div className="ce-bar-actions">
             <span className="ce-bar-hint">
-              {measuringNow ? '측정이 끝난 뒤에 저장할 수 있어요' : !freshPlan ? '다시 계산하는 중…' : '다음 측정부터 새 코호트로 재요'}
+              {measuringNow
+                ? '측정이 끝난 뒤에 저장할 수 있어요'
+                : !freshPlan
+                  ? '다시 계산하는 중…'
+                  : cohortDirty
+                    ? '다음 측정부터 새 코호트로 재요'
+                    : '다음 측정부터 새 이름으로 판정해요'}
             </span>
             <button type="button" className="btn" onClick={clearEdits} disabled={busy}>
               취소
@@ -409,8 +447,11 @@ export default function ProfileEditor({
             <h3 id="pe-dialog-title">기본 정보를 바꿀까요?</h3>
             <p>{planned.summary}</p>
             <p className="ce-dialog-note">
-              지난 기록은 옛 코호트에 그대로 남고, 다음 측정부터 새 코호트 · 새 질문지({planned.bank.to})로 재요. 바뀐 주는 지난 주와 점수 증감을
-              비교하지 않아요.
+              {cohortDirty
+                ? `지난 기록은 옛 코호트에 그대로 남고, 다음 측정부터 새 코호트 · 새 질문지(${planned.bank.to})로 재요. 바뀐 주는 직전 측정과 점수 증감을 비교하지 않아요.`
+                : planned.bank.to !== planned.bank.from
+                  ? `지난 기록의 이름은 그대로 남고, 다음 측정부터 새 이름 · 새 질문지(${planned.bank.to})로 재요. 바뀐 주는 직전 측정과 점수 증감을 비교하지 않아요.`
+                  : '지난 기록은 그대로 남고, 다음 측정부터 새 별칭으로 언급을 판정해요.'}
               {planned.moving.length > 0 ? ` 함께 옮길 경쟁사: ${planned.moving.map((m) => m.brandName).join(', ')}.` : ''}
             </p>
             <div className="ce-bar-actions">
