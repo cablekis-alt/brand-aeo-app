@@ -42,6 +42,7 @@ import {
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
@@ -111,7 +112,7 @@ function ReasonText({ full, plain }: { full: string; plain: string }) {
 }
 
 export default function PeriodicReport() {
-  const { tenant, viewing } = useTenant()
+  const { tenant, tenants, viewing } = useTenant()
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   // 다른 화면에서 주차를 지정해 들어올 수 있다(퍼포먼스의 「사실성 리스크」 → 그 주 원문). 없으면 최신 주.
   const [searchParams] = useSearchParams()
@@ -550,7 +551,10 @@ export default function PeriodicReport() {
    * 버튼과 Ctrl+P 둘 다 오도록 beforeprint · afterprint에 건다. 창 제목은 평소 그대로 둔다.
    */
   const reportLabel = card ? (period === 'month' ? monthLabel(activeMonth) : weekLabel(card.weekOf)) : ''
-  const printTitle = card ? `${fileSafe(card.brandName)}_정기진단_${period === 'month' ? activeMonth : card.weekOf}` : ''
+  // 같은 홈페이지로 범위만 다르게 등록한 브랜드(군산각 지역형 · 전국형)는 이름이 같다 — 머리말 · 파일 이름에 범위 꼬리표(U7).
+  const brandTag = tenant ? variantTag(tenant, tenants) : null
+  const reportBrand = card ? `${card.brandName}${brandTag ? ` · ${brandTag}` : ''}` : ''
+  const printTitle = card ? `${fileSafe(card.brandName)}${brandTag ? `_${fileSafe(brandTag)}` : ''}_정기진단_${period === 'month' ? activeMonth : card.weekOf}` : ''
   useEffect(() => {
     if (!printTitle) return
     let saved: string | null = null
@@ -579,7 +583,7 @@ export default function PeriodicReport() {
       <header className="page-head">
         <div className="page-title">
           <p className="page-eyebrow">
-            보고 · {tenant.brandName}
+            보고 · {brandLabel(tenant, tenants)}
             {judgedWeek ? ` · ${weekLabel(judgedWeek)}` : ''}
           </p>
           <h1>정기진단 보고서</h1>
@@ -603,7 +607,7 @@ export default function PeriodicReport() {
         있는 동안만 있는 규칙이다(Site AEO 인쇄는 자기 머리말을 쓴다). 첫 쪽은 표지에 같은 말이 있어 머리말을 뺀다.
       */}
       {card && (
-        <style>{`@media print { @page { size: A4; margin: 14mm 12mm 16mm; @top-right { content: ${cssString(`${card.brandName} · ${reportLabel} 정기진단 보고서`)}; font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } @bottom-center { content: counter(page) " / " counter(pages); font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } } @page :first { @top-right { content: none; } } }`}</style>
+        <style>{`@media print { @page { size: A4; margin: 14mm 12mm 16mm; @top-right { content: ${cssString(`${reportBrand} · ${reportLabel} 정기진단 보고서`)}; font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } @bottom-center { content: counter(page) " / " counter(pages); font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } } @page :first { @top-right { content: none; } } }`}</style>
       )}
       <p className="page-lead no-print">
         이번 주 스코어카드를 지표별로 진단하고, 약한 지표를 우선순위가 매겨진 실행 가능한 개선안으로 정리합니다. 모든

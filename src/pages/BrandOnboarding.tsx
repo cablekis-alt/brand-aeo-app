@@ -7,8 +7,8 @@ import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureErrorText, measureTenantAll, type FactCandidate } from '../lib/api'
-import { scopeLabel } from '../lib/brandVariant'
-import { directionParticle, objectParticle, topicParticle } from '../lib/korean'
+import { isAddressLike, isDomainLike, scopeLabel } from '../lib/brandVariant'
+import { directionParticle, objectParticle, subjectParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 // 한국 주소 best-effort 추출 (시/도 + 시/군/구 + 로/길 + 번지 + 선택 건물). 실패해도 사용자가 직접 수정 가능.
@@ -837,6 +837,23 @@ export default function BrandOnboarding() {
    * 그 사실이 <details> 안에 숨어 있었다.
    */
   async function handleStart(e: FormEvent) {
+    // 상호 칸에 주소를 넣으면 이름 · 별칭이 주소가 되어 AI 답변 속 상호를 언급으로 세지 못한다(실측 dona — 상용화 UI 3차 U7).
+    // 주소는 홈페이지 칸으로 옮기고 상호를 다시 묻는다. 도메인 모양(「trip.com」)은 실제 이름일 수도 있어 확인만 받는다.
+    if (isAddressLike(brandName)) {
+      e.preventDefault()
+      if (!url.trim()) setUrl(brandName.trim())
+      setBrandName('')
+      setError('상호에는 사람들이 부르는 이름을 넣어 주세요 — 예: 도전과나눔. 넣으신 주소는 홈페이지 칸으로 옮겼습니다.')
+      return
+    }
+    const typed = brandName.trim()
+    if (
+      isDomainLike(typed) &&
+      !window.confirm(`「${typed}」${subjectParticle(typed).slice(typed.length)} 사람들이 부르는 브랜드 이름이 맞나요? 상호가 따로 있으면 취소하고 그 이름을 넣어 주세요.`)
+    ) {
+      e.preventDefault()
+      return
+    }
     // 다른 브랜드를 새로 조회하면 앞 브랜드의 등록 상태를 비운다 — 남으면 6단계가 앞 브랜드(registeredAs)를 잰다. URL 경로도 같다.
     setRegistered(false)
     setRegisteredAs(null)
@@ -1083,6 +1100,11 @@ export default function BrandOnboarding() {
 
   // 등록만 한다 — 등록 후 드롭다운에 바로 보인다. 측정은 STAGE 1 "브랜드·경쟁사 측정"에서 별도로.
   async function registerBrand() {
+    // 2단계에서 상호를 고쳤을 수 있다 — 주소면 등록하지 않는다(1단계와 같은 규칙).
+    if (isAddressLike(tenant.brandName)) {
+      setRegisterMsg('✗ 상호에 주소가 들어 있어요. 2단계에서 사람들이 부르는 이름으로 바꿔 주세요 — 예: 도전과나눔.')
+      return
+    }
     setRegistering(true)
     setConflict(null)
     setRegisterMsg('브랜드를 등록하는 중…')

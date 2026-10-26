@@ -3,6 +3,7 @@ import MeasureProgress, { type ActiveMeasure } from './MeasureProgress'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { measureErrorText, measureTenantAll, saveTenantEngines } from '../lib/api'
+import { variantTag } from '../lib/brandVariant'
 import type { Engine } from '../prompts/types'
 
 /** 데스크톱 앱 — 내부 id · 배포 경로 안내는 웹 · 개발 환경에서만 보인다(상용화 UI 3차 U4). preload가 스크립트보다 먼저 싣는다. */
@@ -35,7 +36,12 @@ function fmtElapsed(ms: number): string {
 }
 
 export default function BrandManageList() {
-  const { reloadTenants } = useTenant()
+  const { reloadTenants, tenants } = useTenant()
+  // 같은 홈페이지로 범위만 다르게 등록한 브랜드는 이름이 같다 — 범위 꼬리표로 가른다(상용화 UI 3차 U7).
+  const tagOf = (tenantId: string) => {
+    const t = tenants.find((x) => x.tenantId === tenantId)
+    return t ? variantTag(t, tenants) : null
+  }
   const [rows, setRows] = useState<BrandRow[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -131,7 +137,7 @@ export default function BrandManageList() {
     setMessage(
       measureVia === 'github'
         ? `${row.brandName} GitHub Actions 측정 요청 중…`
-        : `${row.brandName} 측정 중… (수 분). 완료되면 대시보드·랭킹에 반영됩니다.`,
+        : `${row.brandName} 측정 중… (수 분). 끝나면 개요 · 경쟁 순위에 반영됩니다.`,
     )
     try {
       if (measureVia === 'github') {
@@ -336,6 +342,7 @@ export default function BrandManageList() {
                     {/* 데스크톱 앱에서는 내부 id 칸을 빼고 브랜드 이름 제목(마우스를 올리면)으로 둔다. */}
                     <td style={{ whiteSpace: 'nowrap' }} title={isDesktop ? row.tenantId : undefined}>
                       {row.brandName}
+                      {tagOf(row.tenantId) && <span className="hint"> · {tagOf(row.tenantId)}</span>}
                       {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
                     </td>
                     {!isDesktop && (

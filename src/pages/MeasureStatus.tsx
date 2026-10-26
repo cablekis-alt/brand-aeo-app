@@ -17,6 +17,7 @@ import {
 import { formatMoney, rowCost, sumCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
+import { brandLabel, type VariantBrand } from '../lib/brandVariant'
 import { useTenant } from '../context/useTenant'
 import { isOpenAction } from '../lib/gapActions'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
@@ -365,8 +366,11 @@ export default function MeasureStatus() {
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!alive || !Array.isArray(list)) return
+        // 범위만 다르게 등록한 같은 이름의 브랜드(군산각 지역형 · 전국형)는 꼬리표로 가른다(상용화 UI 3차 U7).
+        const brands = list.filter((t): t is VariantBrand & { brandName: string } => Boolean(t?.tenantId && Array.isArray(t.ownedDomains)))
         const map: Record<string, string> = {}
         for (const t of list) if (t?.tenantId) map[t.tenantId] = t.brandName || t.tenantId
+        for (const t of brands) if (t.brandName) map[t.tenantId] = brandLabel(t, brands)
         setNameMap(map)
       })
       .catch(() => {})
@@ -823,7 +827,7 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-warn">진행 중</span>
                     </td>
-                    <td className="cell-text">{a.brandName || a.tenantId}</td>
+                    <td className="cell-text">{nameMap[a.tenantId] || a.brandName || a.tenantId}</td>
                     {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
                         온보딩보다 덜 보여 주는 역전이 된다. */}
                     <td className="cell-text muted">
@@ -846,7 +850,7 @@ export default function MeasureStatus() {
                     <td>
                       <span className="status-pill st-bad">실패</span>
                     </td>
-                    <td className="cell-text">{f.brandName || f.tenantId}</td>
+                    <td className="cell-text">{nameMap[f.tenantId] || f.brandName || f.tenantId}</td>
                     {/* 끊긴 엔진(「Gemini 지출 한도 초과」)이 있으면 그 이름, 없으면 오류 첫 문장 — 전체 문구는 제목 풍선에. */}
                     <td className="cell-text" title={f.error}>
                       {failureReason(f)}
@@ -869,7 +873,7 @@ export default function MeasureStatus() {
                         <span className="status-pill st-good">로컬 완료</span>
                       )}
                     </td>
-                    <td className="cell-text">{e.brandName || e.tenantId}</td>
+                    <td className="cell-text">{nameMap[e.tenantId] || e.brandName || e.tenantId}</td>
                     <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
                     <td>{e.weekOf}</td>
                     <td className="num">{e.aeoScore}</td>

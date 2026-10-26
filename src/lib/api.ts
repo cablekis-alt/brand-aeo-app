@@ -1326,6 +1326,7 @@ export interface ProfileCompetitor {
 export interface ProfileEditorState {
   tenantId: string
   brandName: string
+  aliases: string[]
   industry: string
   region: string
   marketScope: MarketScope
@@ -1340,6 +1341,10 @@ export interface ProfileEditorState {
 }
 
 export interface ProfileInput {
+  /** 없으면 그대로. */
+  brandName?: string
+  /** 없으면 그대로. */
+  aliases?: string[]
   industry: string
   region: string
   marketScope: MarketScope
@@ -1354,7 +1359,16 @@ export interface ProfilePlan {
   errors: string[]
   notes: string[]
   measuring: boolean
-  to: { industry: string; region: string; marketScope: MarketScope; buyer: string; questionBankVersion: string; cohortQuestionBank: string | null }
+  to: {
+    brandName: string
+    aliases: string[]
+    industry: string
+    region: string
+    marketScope: MarketScope
+    buyer: string
+    questionBankVersion: string
+    cohortQuestionBank: string | null
+  }
   bank: { from: string; to: string }
   cohortBank: { from: string | null; to: string | null; members: string[] }
   moving: { tenantId: string; brandName: string }[]
