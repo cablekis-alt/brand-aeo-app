@@ -1,5 +1,7 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
+import { scoreBreakdown, type ScorePartKey } from './b9-report'
 import { comparableRun, compareConditions, conditionReason, runAverage, runCountText, weeksBetween } from './comparability'
+import { ENGINE_LABEL } from './format'
 
 // 주간 스코어카드 히스토리에서 "이번 주 vs 지난 주" 변화를 감지해 알림을 만든다.
 // 새 데이터 수집 없이 기존 스코어카드만으로 계산한다(SoM 급락·순위 하락·사실성 오류·변동성 등).
@@ -9,12 +11,66 @@ export interface Alert {
   level: AlertLevel
   title: string
   detail: string
+  /** 더 볼 곳 — 화면이 링크로 그린다. */
+  link?: { to: string; label: string }
+}
+
+/** 사실성 「틀림」 주장 하나(정기진단 보고서의 원문 목록과 같은 모양 — reviewReport.selfReview). */
+export interface ContradictedClaim {
+  question: string
+  engine: string
+  said: string
+  registered: string
+}
+
+/**
+ * 알림 문장을 사람 말로 쓰는 데 필요한 것 — 화면이 이미 읽은 기록을 넘긴다. 없으면 기록 줄에서 낼 수 있는 만큼만 쓴다.
+ *   - contradicted: 이번 주 「틀림」 주장(질문 · 엔진 · AI 값 · 등록 값). 없으면 엔진별 응답 수만 적는다.
+ *   - nameOf: 비교 그룹 구성원 id → 브랜드 이름(이번 주 처음 잰 곳을 이름으로 밝힐 때).
+ */
+export interface AlertContext {
+  contradicted?: ContradictedClaim[]
+  nameOf?: (tenantId: string) => string | undefined
+}
+
+/** 점수 항목 이름 — 증감이 어디서 왔는지 밝힐 때. */
+const PART_LABEL: Record<ScorePartKey, string> = {
+  mentionRate: '언급률',
+  brandOwnedCitationRate: '자사 인용률',
+  avgRecommendationRank: '추천 순위',
+}
+
+/**
+ * 「틀림」 기록 줄(server/aggregate.ts: `openai / v5-006 #1: 사실성 불일치 1건`)을 엔진별 응답 수로 — 「ChatGPT 1건 · Gemini 3건」.
+ * 질문 id · 회차 같은 내부 값은 쓰지 않는다. 모양이 다른 줄은 「기타」로 센다.
+ */
+export function factFlagSummary(flags: string[]): string {
+  const counts = new Map<string, number>()
+  for (const f of flags) {
+    const id = /^([a-z0-9-]+) \/ /.exec(f)?.[1]
+    const name = id ? (ENGINE_LABEL[id] ?? id) : '기타'
+    counts.set(name, (counts.get(name) ?? 0) + 1)
+  }
+  return [...counts.entries()].map(([name, n]) => `${name} ${n}건`).join(' · ')
+}
+
+/** 「틀림」 주장 한 줄 — 「ChatGPT · 커플 여행 갈 때 … — AI “도보 3분” ↔ 등록 “13m”」. 질문이 길면 줄인다. */
+export function contradictedLine(c: ContradictedClaim): string {
+  const q = c.question.length > 28 ? `${c.question.slice(0, 28)}…` : c.question
+  return `${c.engine} · ${q} — AI “${c.said}” ↔ 등록 “${c.registered}”`
 }
 
 const pct = (n: number) => `${(n * 100).toFixed(0)}%`
 
-/** 점수 목록 안에서의 경쟁 랭킹 위치(server/scoring.ts의 computeCohortRank와 같은 규칙). */
-const rankIn = (score: number, scores: number[]) => scores.filter((s) => s > score).length + 1
+/**
+ * 점수 목록 안에서의 경쟁 랭킹 위치(server/scoring.ts의 computeCohortRank와 같은 규칙) — 동점이면 「공동」. scores에는 자기 점수도
+ * 들어 있다(비교 그룹 구성원 목록에 자기도 있다).
+ */
+function rankIn(score: number, scores: number[]): { position: number; tied: boolean } {
+  return { position: scores.filter((s) => s > score).length + 1, tied: scores.filter((s) => s === score).length > 1 }
+}
+
+const rankText = (r: { position: number; tied: boolean }) => `${r.tied ? '공동 ' : ''}${r.position}위`
 
 /**
  * 주차 간 코호트 순위 변화 — **두 주에 모두 측정된 브랜드끼리만** 비교한다.
@@ -31,7 +87,13 @@ const rankIn = (score: number, scores: number[]) => scores.filter((s) => s > sco
 function comparableRankChange(
   prev: WeeklyScorecard,
   cur: WeeklyScorecard,
-): { from: number; to: number; total: number } | null {
+): {
+  from: { position: number; tied: boolean }
+  to: { position: number; tied: boolean }
+  total: number
+  /** 이번 주에만 있는 구성원 중 우리보다 점수가 높은 곳 — 이 비교에서 빠졌다고 밝힌다. */
+  newAbove: { tenantId: string; aeoScore: number }[]
+} | null {
   const prevMembers = prev.cohortRank.members
   const curMembers = cur.cohortRank.members
   if (!prevMembers?.length || !curMembers?.length) return null
@@ -44,7 +106,30 @@ function comparableRankChange(
     from: rankIn(prev.aeoScore.current, shared.map((m) => prevScoreById.get(m.tenantId) as number)),
     to: rankIn(cur.aeoScore.current, shared.map((m) => m.aeoScore)),
     total: shared.length,
+    newAbove: curMembers.filter((m) => !prevScoreById.has(m.tenantId) && m.aeoScore > cur.aeoScore.current),
   }
+}
+
+/** 두 주 비교 그룹 구성원이 같은가 — 다르면 점유율(경쟁사 대비 언급 몫) 증감은 구성 변화가 만든다. 기록이 없으면 null(모름). */
+function sameMembers(prev: WeeklyScorecard, cur: WeeklyScorecard): boolean | null {
+  const a = prev.cohortRank.members
+  const b = cur.cohortRank.members
+  if (!a?.length || !b?.length) return null
+  const ids = new Set(a.map((m) => m.tenantId))
+  return a.length === b.length && b.every((m) => ids.has(m.tenantId))
+}
+
+/**
+ * 점수 증감이 주로 어느 항목에서 왔나 — 한 항목이 증감의 60% 이상이면 그 이름(추천 순위면 순위 응답 수도). 실측 스테이,머뭄
+ * W42 → W43 +11은 거의 순위 응답 2건에서 나왔는데 알림만 보면 노출이 크게 는 것처럼 읽혔다(상용화 UI 3차 U20).
+ */
+function deltaSource(prev: WeeklyScorecard, cur: WeeklyScorecard, delta: number): string | null {
+  const before = new Map(scoreBreakdown(prev).map((p) => [p.key, p.points ?? 0]))
+  const parts = scoreBreakdown(cur).map((p) => ({ key: p.key, d: (p.points ?? 0) - (before.get(p.key) ?? 0) }))
+  const top = parts.sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0]
+  if (!top || Math.sign(top.d) !== Math.sign(delta) || Math.abs(top.d) < Math.abs(delta) * 0.6) return null
+  const extra = top.key === 'avgRecommendationRank' && cur.rankedResponses !== undefined ? `(순위 응답 ${cur.rankedResponses}건)` : ''
+  return `이번 증감의 대부분은 ${PART_LABEL[top.key]}${extra}에서 나왔습니다.`
 }
 
 /**
@@ -72,19 +157,29 @@ function ciWidthAlert(cur: WeeklyScorecard, average: string | null): Alert | nul
   }
 }
 
-export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
+export function computeAlerts(history: WeeklyScorecard[], context: AlertContext = {}): Alert[] {
   if (!history || history.length === 0) return []
   const sorted = [...history].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
   const cur = sorted[sorted.length - 1]
   const prev = sorted.length >= 2 ? sorted[sorted.length - 2] : null
   const alerts: Alert[] = []
 
-  // 사실성 오류(할루시네이션)는 전주 비교 없이도 즉시 알린다.
+  /*
+   * 사실성 「틀림」은 전주 비교 없이도 알린다. 판정 오류일 수도 있어(다른 브랜드에 대한 답을 이 브랜드 사실과 대조) 「경고」가 아니라
+   * 「주의」로 두고 「판정 검토 전」이라고 밝힌다 — 정기진단 보고서도 같은 4건을 「판정 오류일 수도」라고 말한다. 기록 줄의 내부 값
+   * (openai / v5-006 #1)은 쓰지 않고 무엇이 어긋났는지 적는다(상용화 UI 3차 U23).
+   */
   if (cur.hallucinationFlags && cur.hallucinationFlags.length > 0) {
+    const n = cur.hallucinationFlags.length
+    const claims = context.contradicted ?? []
     alerts.push({
-      level: 'critical',
-      title: `사실성 오류 ${cur.hallucinationFlags.length}건`,
-      detail: `AI 답변이 브랜드 정보를 잘못 말한 항목이 있습니다: ${cur.hallucinationFlags.slice(0, 2).join(' / ')}${cur.hallucinationFlags.length > 2 ? ' …' : ''}`,
+      level: 'warn',
+      title: `사실 확인 필요 — AI 응답 ${n}건 (판정 검토 전)`,
+      detail:
+        claims.length > 0
+          ? `${contradictedLine(claims[0]!)}${claims.length > 1 ? ` 외 ${claims.length - 1}건` : ''}`
+          : `${factFlagSummary(cur.hallucinationFlags)}의 응답이 등록된 브랜드 정보와 다릅니다.`,
+      link: { to: '/report', label: `정기진단 보고서에서 ${n}건 확인` },
     })
   }
 
@@ -138,27 +233,55 @@ export function computeAlerts(history: WeeklyScorecard[]): Alert[] {
   } else if (aeoDelta >= 8) {
     alerts.push({ level: 'good', title: `Brand AEO Score 상승 +${aeoDelta}점`, detail: `${before} ${prev.aeoScore.current} → 이번 주 ${cur.aeoScore.current}.` })
   }
+  // 큰 증감은 어디서 왔는지 덧붙인다 — 순위 응답 몇 건이 만든 점수를 노출이 는 것으로 읽지 않게.
+  if (Math.abs(aeoDelta) >= 8) {
+    const source = deltaSource(prev, cur, aeoDelta)
+    const last = alerts[alerts.length - 1]
+    if (source && last) last.detail = `${last.detail} ${source}`
+  }
 
-  // Share of Mention 변화(둘 다 측정된 경우만)
+  // 언급 점유율 변화(둘 다 측정된 경우만). 비교 그룹 구성이 바뀌었으면 증감은 구성 변화가 만든다 — 방향을 알리지 않고 그렇다고만 적는다.
   if (cur.shareOfMention !== null && prev.shareOfMention !== null) {
     const somDelta = cur.shareOfMention - prev.shareOfMention
-    if (somDelta <= -0.15) {
-      alerts.push({ level: 'warn', title: `Share of Mention 급락`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (${(somDelta * 100).toFixed(0)}%p). 경쟁사 대비 언급 점유가 줄었습니다.` })
+    if (Math.abs(somDelta) >= 0.15 && sameMembers(prev, cur) === false) {
+      alerts.push({
+        level: 'info',
+        title: '언급 점유율 증감 생략',
+        detail: `비교 그룹 구성이 바뀌어 점유율 증감(${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)})을 경쟁사 대비 변화로 읽지 않습니다.`,
+      })
+    } else if (somDelta <= -0.15) {
+      alerts.push({ level: 'warn', title: `언급 점유율 급락`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (${(somDelta * 100).toFixed(0)}%p). 경쟁사 대비 언급 점유가 줄었습니다.` })
     } else if (somDelta >= 0.15) {
-      alerts.push({ level: 'good', title: `Share of Mention 상승`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (+${(somDelta * 100).toFixed(0)}%p).` })
+      alerts.push({ level: 'good', title: `언급 점유율 상승`, detail: `${before} ${pct(prev.shareOfMention)} → 이번 주 ${pct(cur.shareOfMention)} (+${(somDelta * 100).toFixed(0)}%p).` })
     }
   }
 
-  // 코호트 순위 변화(position 증가 = 하락). 비교 가능한 집합이 없으면 알리지 않는다 —
-  // 틀린 방향의 경고보다 침묵이 낫다(comparableRankChange 주석 참고).
+  /*
+   * 비교 그룹 순위 변화(position 증가 = 하락). 비교 가능한 집합이 없으면 알리지 않는다 — 틀린 방향의 경고보다 침묵이 낫다
+   * (comparableRankChange 주석 참고). 두 주 모두 잰 곳 사이의 순위라 화면의 이번 주 순위(공동 2 / 7)와 다를 수 있다 — 제목에
+   * 기준을 담고, 이번 주 전체 순위와 이번 주 처음 잰 곳(이 비교에서 빠짐)을 함께 적는다. 예전엔 「코호트 순위 상승 3위 → 1위」가
+   * 바로 아래 「공동 2 / 7」과 어긋났다(실측 스테이,머뭄 W43 — 처음 잰 여미랑이 빠지고, 동점에 「공동」이 없었다. 상용화 UI 3차 U8).
+   * 우리보다 높은 곳이 이번 주에 처음 들어왔으면 「상승」을 좋은 소식으로 내세우지 않는다(안내).
+   */
   const rankChange = comparableRankChange(prev, cur)
-  if (rankChange && rankChange.to !== rankChange.from) {
-    const basis = `두 주에 모두 측정된 ${rankChange.total}개 브랜드 기준.`
-    const title = `코호트 순위 ${rankChange.to > rankChange.from ? '하락' : '상승'} ${rankChange.from}위 → ${rankChange.to}위`
+  if (rankChange && rankChange.to.position !== rankChange.from.position) {
+    const down = rankChange.to.position > rankChange.from.position
+    const title = `두 주 모두 잰 ${rankChange.total}곳 사이 순위 ${down ? '하락' : '상승'} ${rankText(rankChange.from)} → ${rankText(rankChange.to)}`
+    const whole = `이번 주 비교 그룹 전체로는 ${(cur.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${cur.cohortRank.position} / ${cur.cohortRank.totalTenants}입니다.`
+    const newcomers = rankChange.newAbove
+      .map((m) => {
+        const name = context.nameOf?.(m.tenantId)
+        return name ? `${name}(${m.aeoScore}점)` : null
+      })
+      .filter((x): x is string => x !== null)
+    const left =
+      rankChange.newAbove.length === 0
+        ? ''
+        : ` 이번 주 처음 잰 ${newcomers.length === rankChange.newAbove.length ? newcomers.join(' · ') : `${rankChange.newAbove.length}곳`}은 이 비교에서 빠졌습니다.`
     alerts.push(
-      rankChange.to > rankChange.from
-        ? { level: 'warn', title, detail: `${basis} 경쟁사에 자리를 내줬습니다.` }
-        : { level: 'good', title, detail: basis },
+      down
+        ? { level: 'warn', title, detail: `${whole}${left} 경쟁사에 자리를 내줬습니다.` }
+        : { level: rankChange.newAbove.length > 0 ? 'info' : 'good', title, detail: `${whole}${left}` },
     )
   }
 

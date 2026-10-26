@@ -3,7 +3,9 @@ import type { RecommendationEvidence } from './recommendationEvidence'
 import {
   AEO_SCORE_WEIGHTS,
   MIN_SOM_MENTIONS,
+  normalizeRank,
   RANK_FULL_WEIGHT_RESPONSES,
+  rankWeightFactor,
   shareOfMentionShortSample,
   type WeeklyScorecard,
 } from '../prompts/b8-report'
@@ -66,6 +68,64 @@ export interface PeriodicReport {
 
 
 const SEVERITY: Record<MetricStatus, number> = { bad: 1, warn: 0.6, unknown: 0.5, ok: 0.25, good: 0 }
+
+export type ScorePartKey = 'mentionRate' | 'brandOwnedCitationRate' | 'avgRecommendationRank'
+
+export interface ScorePart {
+  key: ScorePartKey
+  /** 기본 가중치(AEO_SCORE_WEIGHTS). */
+  baseWeight: number
+  /** 이번 주 실제 비중 — 순위 응답이 적거나 없으면 순위 몫이 줄고 나머지가 그만큼 커진다(재정규화). 빠진 항목은 0. */
+  weight: number
+  /** 이번 주 점수에 이 항목이 보탠 점수(약). 빠진 항목은 null. */
+  points: number | null
+}
+
+/**
+ * 이번 주 Brand AEO Score가 어디서 나왔나 — 항목별 실제 비중과 보탠 점수.
+ *
+ * 점수는 server/scoring.ts computeAeoScore로 낸다: 순위 몫은 순위 응답 수만큼만(rankWeightFactor), 순위가 없으면 빼고 남은
+ * 가중치로 나눈다. 화면마다 기본 가중치(25%)만 적어 「12점 중 10점이 순위 응답 2건에서 나왔다」를 읽을 수 없었고, 진단 화면은
+ * 재정규화 전 값(8%)을 적어 세 화면의 비중이 서로 달랐다(상용화 UI 3차 U20). 여기 한 곳에서 내고 개요 · 진단 · 보고서 · 알림이 쓴다.
+ *
+ * 순위 · 자사 인용 몫은 카드 값으로 정확히 낸다. 언급률 몫에는 감성 계수가 곱해지는데 카드에 남지 않아, 점수에서 나머지 둘을
+ * 뺀 값으로 둔다(반올림 탓에 1점 안팎 어긋날 수 있어 「약」이라고 쓴다).
+ */
+export function scoreBreakdown(card: WeeklyScorecard): ScorePart[] {
+  const rankFactor = rankWeightFactor(card.rankedResponses, card.avgRecommendationRank)
+  const raw = {
+    mentionRate: AEO_SCORE_WEIGHTS.mentionRate,
+    brandOwnedCitationRate: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
+    avgRecommendationRank: card.avgRecommendationRank === null ? 0 : AEO_SCORE_WEIGHTS.avgRecommendationRank * rankFactor,
+  }
+  const total = raw.mentionRate + raw.brandOwnedCitationRate + raw.avgRecommendationRank
+  const rankPoints =
+    card.avgRecommendationRank === null || raw.avgRecommendationRank === 0
+      ? null
+      : normalizeRank(card.avgRecommendationRank) * (raw.avgRecommendationRank / total) * 100
+  const ownedPoints = card.brandOwnedCitationRate * (raw.brandOwnedCitationRate / total) * 100
+  const mentionPoints = Math.max(0, card.aeoScore.current - (rankPoints ?? 0) - ownedPoints)
+  return [
+    { key: 'mentionRate', baseWeight: AEO_SCORE_WEIGHTS.mentionRate, weight: raw.mentionRate / total, points: mentionPoints },
+    { key: 'avgRecommendationRank', baseWeight: AEO_SCORE_WEIGHTS.avgRecommendationRank, weight: raw.avgRecommendationRank / total, points: rankPoints },
+    {
+      key: 'brandOwnedCitationRate',
+      baseWeight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
+      weight: raw.brandOwnedCitationRate / total,
+      points: ownedPoints,
+    },
+  ]
+}
+
+/** 가중치 꼬리표 — 「가중치 42%」, 이번 주 비중이 다르면 「가중치 25% → 이번 주 10%」, 빠졌으면 「점수 제외」. */
+export function weightTagText(part: ScorePart, opts: { short?: boolean } = {}): string {
+  const base = Math.round(part.baseWeight * 100)
+  if (part.weight === 0) return '점수 제외'
+  const now = Math.round(part.weight * 100)
+  // 짧게 — 표 안 작은 꼬리표(「25% → 10%」).
+  if (opts.short) return now === base ? `${base}%` : `${base}% → ${now}%`
+  return now === base ? `가중치 ${base}%` : `가중치 ${base}% → 이번 주 ${now}%`
+}
 
 /**
  * 지표 설명은 상태(양호·보통·주의·미흡)마다 따로 둔다. 예전엔 '양호'와 그 밖의 둘로만 나눠, '보통'에도

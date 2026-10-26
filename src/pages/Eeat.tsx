@@ -2,6 +2,7 @@ import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadEeat } from '../lib/api'
 import { EEAT_PILLAR_LABEL, formatPct } from '../lib/format'
+import { tidyMarkdown } from '../lib/answerHighlight'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { EeatPillarId } from '../prompts/b6-eeat'
 
@@ -82,7 +83,8 @@ export default function Eeat() {
                 <ul className="sentence-list">
                   {pillar.evidence.map((item) => (
                     <li key={item}>
-                      <span className="sentence-text">{item}</span>
+                      {/* AI 답변 문장 그대로라 마크다운 기호(**, 표 막대)가 섞여 있다 — 글자만 남긴다. */}
+                      <span className="sentence-text">{tidyMarkdown(item)}</span>
                     </li>
                   ))}
                 </ul>

@@ -8,11 +8,13 @@ import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText,
 import { subjectParticle, withParticle } from '../lib/korean'
 import { sameCohort } from '../lib/portfolioView'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
-import { buildPeriodicReport, type MetricStatus } from '../lib/b9-report'
+import { buildPeriodicReport, scoreBreakdown, weightTagText, type MetricStatus, type ScorePartKey } from '../lib/b9-report'
+import { contradictedLine, factFlagSummary, type AlertContext } from '../lib/alerts'
+import { selfReview } from '../lib/reviewReport'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { compareConditions, conditionSummary, siteComparable, siteDifference, weeksBetween } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
-import { AEO_SCORE_WEIGHTS, RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
+import { RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
 import { useRunHistory } from '../lib/useRunHistory'
@@ -25,11 +27,6 @@ const TREND_WEEKS = 5
 /** 「이번 주 할 일」에 펼쳐 두는 질문 수 — 나머지는 콘텐츠 생성 화면에서 본다. */
 const TODO_SHOW = 3
 
-/**
- * 가중치는 점수에서 차지하는 몫(%)으로 보인다 — 정기진단 보고서·브랜드 종합 진단·퍼포먼스와 같은 표기.
- * 코드의 비율값(25·20·15, 합 60)을 그대로 적으면 100점 만점 배점이 빠진 것처럼 읽혔다.
- */
-const weightPct = (w: number) => `${Math.round(w * 100)}%`
 
 export default function Dashboard() {
   const { tenant, customer, viewing } = useTenant()
@@ -98,6 +95,14 @@ export default function Dashboard() {
       alive = false
     }
   }, [card])
+  /*
+   * 이번 주 「틀림」 주장(질문 · 엔진 · AI 값 · 등록 값) — 변화 알림과 사실성 경고가 기록 줄(openai / v5-006 #1) 대신 무엇이 어긋났는지
+   * 쓴다(상용화 UI 3차 U23). 정기진단 보고서의 원문 목록과 같은 함수다. 판정 기록 · 질문지를 못 읽으면 null.
+   */
+  const selfCheck = useMemo(
+    () => (todoData && todoData.key === splitKey ? selfReview(todoData.analyses, todoData.bank) : null),
+    [todoData, splitKey],
+  )
   const todo = useMemo((): EvidenceBlock | null => {
     if (!card || !todoData || todoData.key !== splitKey) return null
     const evidence = buildRecommendationEvidence({
@@ -168,7 +173,8 @@ export default function Dashboard() {
     if (siteNow) {
       const gap = siteNow.score - card.aeoScore.current
       if (gap >= 20) {
-        detail.push(`페이지 준비도(${siteNow.score})는 충분하니, 지금 막는 것은 페이지가 아니라 권위·인용일 가능성이 큽니다.`)
+        // 「충분하니」라고 단정하지 않는다 — 두 점수는 다른 것을 재므로 상대 비교만 말한다(62점 사이트를 「충분」이라 부른 일이 있었다).
+        detail.push(`페이지 준비도(${siteNow.score})가 답변 노출 점수보다 훨씬 높습니다 — 지금 막는 것은 페이지보다 권위·인용일 가능성이 큽니다.`)
       } else if (gap <= -20) {
         detail.push(`답변 노출에 비해 페이지 준비도(${siteNow.score})가 뒤처집니다 — 페이지를 먼저 고치면 지금의 노출이 더 단단해집니다.`)
       }
@@ -178,6 +184,26 @@ export default function Dashboard() {
 
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
   const rankingView = ranking.key === splitKey ? ranking.value : null
+  // 변화 알림이 사람 말로 쓰는 데 필요한 것 — 이번 주 「틀림」 주장과 비교 그룹 구성원 이름(비교용 브랜드는 브랜드 목록에 없어 랭킹 응답에서).
+  const alertContext = useMemo(
+    (): AlertContext => ({
+      ...(selfCheck ? { contradicted: selfCheck.contradicted } : {}),
+      nameOf: (id: string) => rankingView?.cohort.peers.find((p) => p.tenantId === id)?.brandName,
+    }),
+    [selfCheck, rankingView],
+  )
+  // 항목별 이번 주 실제 비중 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 커진다(정기진단 보고서 · 진단 화면과 같은 값).
+  const parts = card ? new Map(scoreBreakdown(card).map((p) => [p.key, p])) : null
+  // 좁은 칸이라 짧게(「가중치 25% → 10%」) — 무엇에서 무엇으로인지는 제목(마우스를 올리면)으로.
+  const weightTag = (key: ScorePartKey) => {
+    const part = parts?.get(key)
+    if (!part) return ''
+    return part.weight === 0 ? weightTagText(part) : `가중치 ${weightTagText(part, { short: true })}`
+  }
+  const weightTitle = (key: ScorePartKey) => {
+    const part = parts?.get(key)
+    return part && part.weight > 0 ? `기본 가중치 ${Math.round(part.baseWeight * 100)}% · 이번 주 실제 비중 ${Math.round(part.weight * 100)}%` : undefined
+  }
   const promptedSplit = rankingView?.promptedSplit ?? null
   // 전주는 저장된 previousWeek가 아니라 히스토리에서 읽는다. 저장값은 측정 시점에 박제되어,
   // 지난 주를 다시 재면 어긋난다(실측: W37 카드 33 vs 알림 42 — 같은 화면이 +2와 -7을 동시에
@@ -266,7 +292,7 @@ export default function Dashboard() {
       {loading && !card && <p className="muted">불러오는 중…</p>}
       {!loading && !card && tenant && <h1 className="page-solo-title">개요</h1>}
 
-      {tenant && history.length > 0 && <ChangeAlerts history={history} />}
+      {tenant && history.length > 0 && <ChangeAlerts history={history} context={alertContext} />}
 
       {tenant && card && (
         <>
@@ -305,6 +331,8 @@ export default function Dashboard() {
                 <div className="score-ring-inner">
                   <span className="score-ring-num">{card.aeoScore.current}</span>
                   <span className="score-ring-label">Brand AEO</span>
+                  {/* 축 · 숫자만 보면 몇 점 만점인지 알 수 없다(상용화 UI 3차 U20). */}
+                  <span className="score-ring-sub">100점 만점</span>
                 </div>
               </div>
               <dl className="hero2-facts">
@@ -387,7 +415,9 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>언급률</span>
-                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.mentionRate)}</span>
+                <span className="kpi-tag" title={weightTitle('mentionRate')}>
+                  {weightTag('mentionRate')}
+                </span>
               </div>
               <span className="kpi-value">{formatPct(card.mentionRate)}</span>
               <span className="dash-caption">
@@ -399,9 +429,12 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>추천 순위</span>
-                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.avgRecommendationRank)}</span>
+                <span className={`kpi-tag${card.avgRecommendationRank === null ? ' muted-tag' : ''}`} title={weightTitle('avgRecommendationRank')}>
+                  {weightTag('avgRecommendationRank')}
+                </span>
               </div>
-              <span className="kpi-value">
+              {/* 값이 없으면 글자로 — 고정폭 큰 글씨로 「판 정 불 가」가 벌어져 숫자처럼 보였다. */}
+              <span className={`kpi-value${card.avgRecommendationRank === null ? ' is-text' : ''}`}>
                 {formatRank(card.avgRecommendationRank)}
                 {card.avgRecommendationRank !== null && <span className="comp-unit">위</span>}
               </span>
@@ -423,7 +456,9 @@ export default function Dashboard() {
             <article className="kpi">
               <div className="kpi-head">
                 <span>자사 인용률</span>
-                <span className="kpi-tag">가중치 {weightPct(AEO_SCORE_WEIGHTS.brandOwnedCitationRate)}</span>
+                <span className="kpi-tag" title={weightTitle('brandOwnedCitationRate')}>
+                  {weightTag('brandOwnedCitationRate')}
+                </span>
               </div>
               <span className="kpi-value">{formatPct(card.brandOwnedCitationRate)}</span>
               <span className="dash-caption">
@@ -434,10 +469,10 @@ export default function Dashboard() {
             </article>
             <article className="kpi">
               <div className="kpi-head">
-                <span>Share of Mention</span>
+                <span>언급 점유율</span>
                 <span className="kpi-tag muted-tag">점수 미포함</span>
               </div>
-              <span className="kpi-value">{formatPct(card.shareOfMention)}</span>
+              <span className={`kpi-value${card.shareOfMention === null ? ' is-text' : ''}`}>{formatPct(card.shareOfMention)}</span>
               <span className="dash-caption">
                 {shareOfMentionNote(card) ??
                   (card.shareOfMentionMentions !== undefined
@@ -447,19 +482,24 @@ export default function Dashboard() {
             </article>
           </section>
 
-          {/* 사실성은 점수 밖 지표라 평소엔 숨기고, 팩트 그래프와 어긋난 주장이 있을 때만 경고로 띄운다. */}
+          {/* 사실성은 점수 밖 지표라 평소엔 숨기고, 등록된 브랜드 정보와 어긋난 주장이 있을 때만 경고로 띄운다. */}
           {card.hallucinationFlags.length > 0 && (
             <details className="fact-warn">
               <summary>
-                {/* 「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다 — 정기진단 보고서와 같은 말로. */}
-                브랜드 사실과 어긋난 주장이 담긴 AI 응답 {card.hallucinationFlags.length}건
+                {/* 「틀림」 기록은 응답마다 한 줄이라 건수는 응답 수다 — 정기진단 보고서와 같은 말로. 판정 오류일 수도 있어 「검토 전」. */}
+                브랜드 사실과 어긋난 주장이 담긴 AI 응답 {card.hallucinationFlags.length}건 (판정 검토 전)
                 {card.factualityScore !== null && ` · 사실성 ${formatPct(card.factualityScore)}`}
               </summary>
-              <ul>
-                {card.hallucinationFlags.map((flag) => (
-                  <li key={flag}>{flag}</li>
-                ))}
-              </ul>
+              {/* 기록 줄(openai / v5-006 #1)이 아니라 무엇이 어긋났는지 — 판정 기록을 못 읽으면 엔진별 응답 수만. */}
+              {selfCheck && selfCheck.contradicted.length > 0 ? (
+                <ul>
+                  {selfCheck.contradicted.map((c, i) => (
+                    <li key={i}>{contradictedLine(c)}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">{factFlagSummary(card.hallucinationFlags)}의 응답 — 원문은 정기진단 보고서에서 봅니다.</p>
+              )}
             </details>
           )}
 

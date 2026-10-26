@@ -10,7 +10,7 @@ import {
   type DiscoveryResult,
   type RawAnswer,
 } from '../lib/api'
-import { highlightAnswer, type MarkKind } from '../lib/answerHighlight'
+import { highlightAnswer, tidyMarkdown, tidySegments, type MarkKind } from '../lib/answerHighlight'
 import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, formatPct, weekLabel } from '../lib/format'
 import { computeGapAnalysis } from '../lib/gapAnalysis'
@@ -18,14 +18,8 @@ import { computeQuestionWinLoss } from '../lib/questionWinLoss'
 import { STAGE_LABEL, type JourneyStage } from '../lib/journeyStage'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { QuestionRepeatAnalysis } from '../lib/types'
-import {
-  AEO_SCORE_WEIGHTS,
-  RANK_FULL_WEIGHT_RESPONSES,
-  rankWeightFactor,
-  normalizeRank,
-  shareOfMentionShortSample,
-  type WeeklyScorecard,
-} from '../prompts/b8-report'
+import { RANK_FULL_WEIGHT_RESPONSES, normalizeRank, shareOfMentionShortSample, type WeeklyScorecard } from '../prompts/b8-report'
+import { scoreBreakdown, type ScorePartKey } from '../lib/b9-report'
 import type { Engine, QuestionSpec } from '../prompts/types'
 
 const SENTIMENT_LABEL: Record<string, string> = { positive: '긍정', neutral: '중립', negative: '부정' }
@@ -87,29 +81,31 @@ function StageFunnel({
  * 그 항목을 빼고 남은 가중치로 재정규화해 점수를 낸다 — 다른 얘기다.
  */
 function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
-  const rows: { key: string; letter: string; label: string; weight: number; value: number | null; text: string }[] = [
+  /*
+   * 비중 · 보탠 점수는 정기진단 보고서 · 개요와 같은 함수(scoreBreakdown)에서 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 그만큼
+   * 커진다(재정규화). 예전엔 재정규화 전 값(M 42% · C 33% · P 8%, 합 83%)을 적어 개요 · 보고서(25%)와 셋이 달랐고, 12점 중 10점이
+   * 순위 응답 2건에서 나온 것을 읽을 수 없었다(상용화 UI 3차 U20).
+   */
+  const parts = new Map(scoreBreakdown(card).map((p) => [p.key, p]))
+  const rows: { key: ScorePartKey; letter: string; label: string; value: number | null; text: string }[] = [
     {
-      key: 'm',
+      key: 'mentionRate',
       letter: 'M',
-      label: '카테고리 무관 언급률',
-      weight: AEO_SCORE_WEIGHTS.mentionRate,
+      label: '언급률(이름 없이 물은 질문)',
       value: card.mentionRate,
       text: formatPct(card.mentionRate),
     },
     {
-      key: 'c',
+      key: 'brandOwnedCitationRate',
       letter: 'C',
-      label: '브랜드 소유 출처',
-      weight: AEO_SCORE_WEIGHTS.brandOwnedCitationRate,
+      label: '자사 출처 인용률',
       value: card.brandOwnedCitationRate,
       text: formatPct(card.brandOwnedCitationRate),
     },
     {
-      key: 'p',
+      key: 'avgRecommendationRank',
       letter: 'P',
       label: '평균 추천 순위',
-      // 순위 응답이 적으면 비중을 그만큼만 쓴다(rankWeightFactor) — 막대 옆 비중도 실제 반영 비중으로 적는다.
-      weight: AEO_SCORE_WEIGHTS.avgRecommendationRank * rankWeightFactor(card.rankedResponses, card.avgRecommendationRank),
       value: card.avgRecommendationRank === null ? null : normalizeRank(card.avgRecommendationRank),
       text:
         card.avgRecommendationRank === null
@@ -123,7 +119,7 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
       <p className="eyebrow">Brand AEO Score · {weekLabel(card.weekOf)}</p>
       <p className="breakdown-total">
         <strong>{card.aeoScore.current}</strong>
-        <span className="muted">점 — 아래 세 항목을 가중 평균한 값입니다</span>
+        <span className="muted">점(100점 만점) — 아래 세 항목을 이번 주 비중으로 가중 평균한 값입니다</span>
       </p>
       <ul className="breakdown-rows">
         {rows.map((r) => (
@@ -133,7 +129,19 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
             </span>
             <span className="bd-label">
               {r.label}
-              <span className="muted"> {Math.round(r.weight * 100)}%</span>
+              {(() => {
+                const part = parts.get(r.key)
+                if (!part || part.weight === 0) return <span className="muted"> · 점수 제외</span>
+                const base = Math.round(part.baseWeight * 100)
+                const now = Math.round(part.weight * 100)
+                return (
+                  <span className="muted">
+                    {' '}
+                    · 이번 주 비중 {now}%{now !== base ? `(기본 ${base}%)` : ''}
+                    {part.points !== null ? ` · 약 ${Math.round(part.points)}점` : ''}
+                  </span>
+                )
+              })()}
             </span>
             <span className="bd-bar">
               {r.value !== null && <span style={{ width: `${Math.round(r.value * 100)}%` }} />}
@@ -143,8 +151,9 @@ function ScoreBreakdown({ card }: { card: WeeklyScorecard }) {
         ))}
       </ul>
       <p className="hint" style={{ marginBottom: 0 }}>
-        막대는 점수에 실제로 들어가는 값입니다 — 추천 순위는 낮을수록 좋아 0~1로 환산해 그립니다.
-        M에는 감성 계수가 곱해집니다.
+        막대는 점수에 실제로 들어가는 값입니다 — 추천 순위는 낮을수록 좋아 0~1로 환산해 그립니다. M에는 감성 계수가 곱해집니다.
+        순위가 매겨진 응답이 {RANK_FULL_WEIGHT_RESPONSES}건보다 적으면 P의 비중이 그만큼 줄고 M · C가 커집니다. 「약 N점」은 이번 주 점수에
+        그 항목이 보탠 점수입니다(반올림 탓에 1점 안팎 어긋날 수 있습니다).
         {missing.length > 0 &&
           ` ${missing.map((r) => r.letter).join('·')}는 측정할 수 없어 그 가중치를 빼고 남은 합으로 재정규화했습니다 — 0점으로 치지 않습니다.`}
       </p>
@@ -398,7 +407,9 @@ export default function BrandDiagnosis() {
         for (const m of c.sentences) needles.push({ text: m.sentence, kind: 'competitor' })
       }
     }
-    return { ...highlightAnswer(shown.rawText, needles), needles: needles.length, judged: Boolean(judged) }
+    // 칠할 구간은 원문 그대로에서 찾고, 보일 때 조각마다 마크다운 기호(**, ###, 표 막대)를 걷는다(상용화 UI 3차 U23).
+    const hl = highlightAnswer(shown.rawText, needles)
+    return { segments: tidySegments(hl.segments), missed: hl.missed, needles: needles.length, judged: Boolean(judged) }
   }, [shown, analyses, activeRawQuestion, activeRawEngine])
 
   /*
@@ -583,7 +594,7 @@ export default function BrandDiagnosis() {
                   a.mentionSentences.map((m, i) => (
                     <li key={`${a.engine}-${a.questionId}-${a.callIndex}-${i}`}>
                       <span className={`sentiment ${m.sentiment}`}>{SENTIMENT_LABEL[m.sentiment]}</span>
-                      <span className="sentence-text">{m.sentence}</span>
+                      <span className="sentence-text">{tidyMarkdown(m.sentence)}</span>
                       <span className="sentence-meta">
                         {ENGINE_LABEL[a.engine] ?? a.engine} · {a.questionId} · {a.callIndex}회차
                       </span>

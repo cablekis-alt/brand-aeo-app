@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { computeAlerts, type AlertLevel } from '../lib/alerts'
+import { Link } from 'react-router-dom'
+import { computeAlerts, type AlertContext, type AlertLevel } from '../lib/alerts'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 
 const LEVEL: Record<AlertLevel, { label: string; cls: string }> = {
@@ -10,9 +11,9 @@ const LEVEL: Record<AlertLevel, { label: string; cls: string }> = {
 }
 
 // 주간 변화 알림 — 새 수집 없이 스코어카드 히스토리(전주 vs 이번 주)만으로
-// "무엇이 나빠졌는지"를 대시보드 상단에 요약한다.
-export default function ChangeAlerts({ history }: { history: WeeklyScorecard[] }) {
-  const alerts = useMemo(() => computeAlerts(history), [history])
+// "무엇이 나빠졌는지"를 대시보드 상단에 요약한다. context는 화면이 이미 읽은 기록(「틀림」 주장 · 구성원 이름) — 문장을 사람 말로 쓴다.
+export default function ChangeAlerts({ history, context }: { history: WeeklyScorecard[]; context?: AlertContext }) {
+  const alerts = useMemo(() => computeAlerts(history, context), [history, context])
   if (alerts.length === 0) return null
 
   return (
@@ -25,7 +26,15 @@ export default function ChangeAlerts({ history }: { history: WeeklyScorecard[] }
             <span className={`status-pill ${LEVEL[a.level].cls}`}>{LEVEL[a.level].label}</span>
             <span className="alert-body">
               <b>{a.title}</b>
-              <span className="alert-detail">{a.detail}</span>
+              <span className="alert-detail">
+                {a.detail}
+                {a.link && (
+                  <>
+                    {' '}
+                    <Link to={a.link.to}>{a.link.label} →</Link>
+                  </>
+                )}
+              </span>
             </span>
           </li>
         ))}

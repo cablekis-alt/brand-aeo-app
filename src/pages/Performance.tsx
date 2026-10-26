@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import PublishedHistoryTable from '../components/PublishedHistoryTable'
 import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
+import { factFlagSummary } from '../lib/alerts'
 import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { useRunHistory } from '../lib/useRunHistory'
@@ -396,11 +397,11 @@ export default function Performance() {
           {card.hallucinationFlags.length > 0 && (
             <section className="panel warn">
               <h3>사실성 리스크 ({weekLabel(card.weekOf)})</h3>
-              <ul>
-                {card.hallucinationFlags.map((flag) => (
-                  <li key={flag}>{flag}</li>
-                ))}
-              </ul>
+              {/* 기록 줄(openai / v5-006 #1)은 내부 값이라 엔진별 응답 수로 — 무엇이 어긋났는지는 보고서 원문 목록에서(상용화 UI 3차 U23). */}
+              <p>
+                {factFlagSummary(card.hallucinationFlags)}의 응답이 등록된 브랜드 정보와 다릅니다(판정 검토 전).{' '}
+                <Link to="/report">정기진단 보고서에서 원문 확인 →</Link>
+              </p>
             </section>
           )}
 

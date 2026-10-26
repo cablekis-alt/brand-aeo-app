@@ -52,7 +52,7 @@ import { ENGINE_LABEL, measureConditionPlain, measureConditionText, weekLabel } 
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
-import { buildPeriodicReport, PRIORITY_LABEL, STATUS_LABEL } from '../lib/b9-report'
+import { buildPeriodicReport, PRIORITY_LABEL, scoreBreakdown, STATUS_LABEL, weightTagText, type ScorePartKey } from '../lib/b9-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 
 const EMPTY_EEAT: EeatAnalysis = {
@@ -986,7 +986,16 @@ export default function PeriodicReport() {
                     <tr key={m.key}>
                       <td>
                         {m.label}
-                        {m.weight > 0 && <span className="weight-tag">{Math.round(m.weight * 100)}%</span>}
+                        {/* 이번 주 실제 비중 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 커진다(개요 · 진단 화면과 같은 값, 상용화 UI 3차 U20). */}
+                        {m.weight > 0 &&
+                          (() => {
+                            const part = scoreBreakdown(card).find((p) => p.key === (m.key as ScorePartKey))
+                            return (
+                              <span className="weight-tag" title="기본 가중치 → 이번 주 실제 비중">
+                                {part ? weightTagText(part, { short: true }) : `${Math.round(m.weight * 100)}%`}
+                              </span>
+                            )
+                          })()}
                       </td>
                       <td className="num">
                         {m.valueText}

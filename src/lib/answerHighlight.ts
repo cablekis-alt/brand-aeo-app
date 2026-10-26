@@ -103,3 +103,41 @@ export function highlightAnswer(
   if (cursor < text.length) segments.push({ text: text.slice(cursor), kind: null })
   return { segments, missed }
 }
+
+/** 표 구분 줄(|---|:---:|) — 글자가 없어 통째로 뺀다. */
+const TABLE_RULE = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/
+
+/**
+ * 줄마다 마크다운 기호를 걷는다 — 굵게(**, __), 제목(###), 표 구분 줄, 표 칸 막대(「| 객실 | 독채 |」 → 「객실 · 독채」). 글자는 그대로 둔다.
+ * startsLine이 false면 첫 줄은 줄 가운데서 시작한 조각이라 줄 처음 기호(제목 · 앞 막대)를 걷지 않는다.
+ */
+function tidyLines(text: string, startsLine: boolean): string {
+  return text
+    .split('\n')
+    .map((line, i) => {
+      let l = line.replace(/\*\*|__/g, '')
+      if (i > 0 || startsLine) {
+        if (TABLE_RULE.test(l)) return null
+        l = l.replace(/^\s{0,3}#{1,6}\s+/, '').replace(/^\s*\|\s*/, '')
+      }
+      return l.replace(/\s*\|\s*$/, '').replace(/\s+\|\s+/g, ' · ')
+    })
+    .filter((l): l is string => l !== null)
+    .join('\n')
+}
+
+/** AI 답변 문장 하나를 화면에 보일 글로 — 브랜드 종합 진단 · EEAT 분석의 인용문(상용화 UI 3차 U23: 「**」 · 「###」 · 표 줄이 그대로 보였다). */
+export const tidyMarkdown = (text: string) => tidyLines(text, true)
+
+/**
+ * 하이라이트를 칠한 원문 조각들에서 마크다운 기호를 걷는다. 칠할 구간은 원문 그대로에서 찾고(먼저 걷으면 판정 문장과 위치가
+ * 어긋난다) 화면에 보이기 직전에 조각마다 걷는다 — 칠한 글자는 그대로 남는다. 줄 처음 기호는 그 조각이 줄 처음에서 시작할 때만.
+ */
+export function tidySegments(segments: Segment[]): Segment[] {
+  let atLineStart = true
+  return segments.map((seg) => {
+    const text = tidyLines(seg.text, atLineStart)
+    if (seg.text.length > 0) atLineStart = seg.text.endsWith('\n')
+    return { ...seg, text }
+  })
+}
