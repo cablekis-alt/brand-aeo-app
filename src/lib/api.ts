@@ -290,6 +290,23 @@ export async function cancelMeasureRun(runId: number): Promise<void> {
 }
 
 /**
+ * 사용자가 멈춘 측정 — 실패가 아니다(서버가 409 · cancelled로 가른다, server/index.ts). 화면은 빨간 오류가 아니라 안내로 알린다
+ * (상용화 UI 3차 U4: 직접 멈춘 측정이 「✗ 측정을 중단했습니다 (tenant=…)」로 찍혔다).
+ */
+export class MeasureCancelled extends Error {
+  constructor() {
+    super('측정을 멈췄습니다. 이번 주 데이터는 그대로입니다.')
+    this.name = 'MeasureCancelled'
+  }
+}
+
+/** 측정 결과 안내 한 줄 — 멈춘 측정은 ✗ 없이(화면이 ✗로 오류 색을 고른다). */
+export function measureErrorText(err: unknown, fallback = '측정 실패'): string {
+  if (err instanceof MeasureCancelled) return err.message
+  return `✗ ${err instanceof Error ? err.message : fallback}`
+}
+
+/**
  * 브랜드 전체 측정(경쟁사·코호트 포함)을 로컬 백엔드에 요청한다. 수 분 걸린다.
  *
  * 세 화면(측정·브랜드 관리·온보딩)이 같은 엔드포인트를 각자 fetch하고 있었다 —
@@ -309,7 +326,8 @@ export async function measureTenantAll(
     body: JSON.stringify({ reuseCohort, selfOnly }),
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    const body = (await res.json().catch(() => ({}))) as { error?: string; cancelled?: boolean }
+    if (res.status === 409 && body.cancelled) throw new MeasureCancelled()
     throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
   }
   return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string; weekCardKept?: string }

@@ -6,7 +6,15 @@ import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
 import { variantTag } from '../lib/brandVariant'
-import { loadMeasurePreview, loadPortfolio, measureTenantAll, type MeasurePreview, type PortfolioCohort, type PortfolioRow } from '../lib/api'
+import {
+  loadMeasurePreview,
+  loadPortfolio,
+  measureErrorText,
+  measureTenantAll,
+  type MeasurePreview,
+  type PortfolioCohort,
+  type PortfolioRow,
+} from '../lib/api'
 
 interface MeasureTenantOption {
   tenantId: string
@@ -205,10 +213,11 @@ export default function MeasureTenant() {
       setMessage(
         d.weekCardKept
           ? `✓ ${d.brandName} 측정 완료 (이번 측정 Brand AEO Score ${d.aeoScore ?? '?'}). ${d.weekCardKept}. 이번 측정은 회차 기록에만 남습니다.`
-          : `✓ ${d.brandName} 측정·baking 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). git commit + npx vercel --prod 로 배포하세요.`,
+          : // 측정이 끝나면 이 PC의 기록에 바로 반영된다 — 운영자가 할 수 없는 배포 지시(git commit · vercel)를 하지 않는다(상용화 UI 3차 U4).
+            `✓ ${d.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). 개요 · 경쟁 순위에 바로 반영됩니다.`,
       )
     } catch (err) {
-      setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+      setMessage(measureErrorText(err))
     } finally {
       setMeasuring(false)
       // 측정으로 이번 주 카드가 바뀌었다 — 계획을 다시 받는다.
@@ -241,6 +250,8 @@ export default function MeasureTenant() {
     if (warnings.length > 0 && !window.confirm(`${warnings.join('\n\n')}\n\n그래도 이 브랜드만 측정할까요?`)) return
     void measureOne()
   }
+  // 데스크톱 앱 — 배포(GitHub Actions) · 개발용 명령(npm run) 안내는 웹 · 개발 환경에서만 보인다(상용화 UI 3차 U4).
+  const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   // 로컬 측정은 앱 전체에서 한 번에 하나씩 순차 실행되므로, 서버에 진행 중이 있으면 측정 중으로 본다.
   const isMeasuring = measuring || (measureVia === 'local' && serverActive.length > 0)
 
@@ -250,8 +261,8 @@ export default function MeasureTenant() {
       <h1>브랜드·경쟁사 측정</h1>
       <p className="lead">
         측정할 대상을 골라 실행합니다. <b>본 브랜드</b>를 고르면 <b>경쟁사·코호트까지 함께</b> 측정하고(경쟁 순위의 "이 브랜드
-        측정"과 동일), <b>경쟁사</b>를 고르면 그 경쟁사 <b>하나만</b> 측정합니다(특정 경쟁사 스코어카드만 갱신). 배포에서는
-        GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.
+        측정"과 동일), <b>경쟁사</b>를 고르면 그 경쟁사 <b>하나만</b> 측정합니다(특정 경쟁사 스코어카드만 갱신).
+        {!isDesktop && ' 배포에서는 GitHub Actions가, 로컬에서는 이 탭에서 바로 측정합니다.'}
       </p>
 
       <ApiKeySettings />
@@ -263,7 +274,7 @@ export default function MeasureTenant() {
           {!healthReady
             ? '환경을 확인하는 중…'
             : measureVia === 'local'
-              ? '로컬 백엔드가 감지됐습니다. 선택 후 측정하면 baking까지 이어서 실행합니다.'
+              ? '대상을 고르고 측정하면, 끝나는 대로 개요 · 경쟁 순위에 반영됩니다.'
               : measureVia === 'github'
                 ? '배포 환경입니다. 버튼은 GitHub Actions 측정을 시작하고, 완료·배포 후 새로고침하면 결과가 반영됩니다.'
                 : '로컬에서만 측정 가능 — 배포에서 켜려면 Vercel에 GH_MEASURE_TOKEN을 넣으세요.'}
@@ -285,8 +296,9 @@ export default function MeasureTenant() {
                 {picked?.cohortOnly && <span className="bsw-tag">경쟁사</span>}
               </span>
               {picked && (
-                <span className="measure-target-meta">
-                  {picked.industry} · {picked.region} · {picked.tenantId}
+                // 내부 id(web4ai)는 화면 글자가 아니라 제목(마우스를 올리면)으로 — 운영자가 찾을 때만 본다.
+                <span className="measure-target-meta" title={picked.tenantId}>
+                  {picked.industry} · {picked.region}
                 </span>
               )}
             </span>
@@ -389,8 +401,13 @@ export default function MeasureTenant() {
                 <b>{picked.brandName}</b> + 경쟁사(도메인 없어도 이름 기준으로 코호트 측정)까지 함께 측정 → 코호트 순위 1/N이
                 채워집니다.
               </>
-            )}{' '}
-            로컬 CLI: <code>npm run measure:local -- {picked.tenantId}</code>
+            )}
+            {!isDesktop && (
+              <>
+                {' '}
+                로컬 CLI: <code>npm run measure:local -- {picked.tenantId}</code>
+              </>
+            )}
           </p>
         )}
         {message && (

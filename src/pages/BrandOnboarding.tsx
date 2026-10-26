@@ -6,7 +6,7 @@ import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
 import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
-import { fetchFactCandidatesFor, inferBrandAliases, measureTenantAll, type FactCandidate } from '../lib/api'
+import { fetchFactCandidatesFor, inferBrandAliases, measureErrorText, measureTenantAll, type FactCandidate } from '../lib/api'
 import { scopeLabel } from '../lib/brandVariant'
 import { directionParticle, objectParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
@@ -1110,7 +1110,7 @@ export default function BrandOnboarding() {
       setRegistered(true)
       setRegisteredAs(tenant.tenantId)
       // 등록 완료 — 아래 "이 브랜드 전체 측정 시작" 버튼으로 바로 측정할 수 있다(경쟁사·코호트 포함).
-      setRegisterMsg(`✓ 등록 완료 — ${tenant.brandName} (${tenant.tenantId}). 상단 브랜드 메뉴에서 선택할 수 있습니다.`)
+      setRegisterMsg(`✓ 등록 완료 — ${tenant.brandName}. 상단 브랜드 메뉴에서 선택할 수 있습니다.`)
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
     } finally {
@@ -1154,7 +1154,7 @@ export default function BrandOnboarding() {
       const wait = moved && info.measuredThisWeek ? ' 이번 주에 경쟁사로 잰 기록을 남기려면 다음 주 월요일부터 재세요.' : ''
       setConflict(null)
       setRegisterMsg(
-        `✓ 고객 브랜드로 전환했습니다 — ${tenant.brandName} (${tenant.tenantId}).${kept}${bank}${aside}${removed}${failed}${wait}`,
+        `✓ 고객 브랜드로 전환했습니다 — ${tenant.brandName}.${kept}${bank}${aside}${removed}${failed}${wait}`,
       )
     } catch (err) {
       setRegisterMsg(`✗ ${err instanceof Error ? err.message : '실패했습니다.'}`)
@@ -1196,8 +1196,8 @@ export default function BrandOnboarding() {
       const restored = body.restoredWeeks ? ` 지운 같은 id의 지난 기록 ${body.restoredWeeks}주가 되살아났습니다.` : ''
       setConflict(null)
       setRegisterMsg(
-        `✓ 다른 범위로 하나 더 등록했습니다 — ${tenant.brandName} · ${scopeLabel(tenant.marketScope)}(${body.tenantId}). ` +
-          `기존 ${info.brandName}(${info.tenantId} · ${info.industry} · ${info.region})${topicParticle(info.brandName).slice(info.brandName.length)} 그대로입니다.` +
+        `✓ 다른 범위로 하나 더 등록했습니다 — ${tenant.brandName} · ${scopeLabel(tenant.marketScope)}. ` +
+          `기존 ${info.brandName}(${info.industry} · ${info.region})${topicParticle(info.brandName).slice(info.brandName.length)} 그대로입니다.` +
           `${copied}${failed}${aside}${restored}` +
           ` 질문지는 첫 측정에서 만듭니다(${body.questionBankVersion ?? tenant.questionBankVersion}).`,
       )
@@ -1235,9 +1235,9 @@ export default function BrandOnboarding() {
         return
       }
       const d = await measureTenantAll(id)
-      setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정 완료 (Brand AEO Score ${d.aeoScore ?? '?'}). 대시보드·랭킹에서 확인하세요.`)
+      setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). 개요 · 경쟁 순위에서 확인하세요.`)
     } catch (err) {
-      setMeasureMsg(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+      setMeasureMsg(measureErrorText(err))
     } finally {
       setMeasuring(false)
     }
@@ -1266,7 +1266,7 @@ export default function BrandOnboarding() {
           <h1>브랜드 추가</h1>
           <p className="lead">
             상호만 넣으면 도메인·업종·지역·경쟁사까지 자동으로 채웁니다. 홈페이지 주소를 함께 넣으면 그 페이지를
-            읽어 더 정확해집니다. 확인 후 등록하면 테넌트가 만들어집니다.
+            읽어 더 정확해집니다. 확인 후 등록하면 브랜드 목록에 추가됩니다.
           </p>
         </div>
       </header>
@@ -1664,7 +1664,10 @@ export default function BrandOnboarding() {
 
       <StageShell id="stage-5" code="5" title="등록" status={s5}>
         <div className="onboard-register">
-          <p className="onboard-tenant">테넌트 초안 (tenantId: {registeredAs ?? (tenant.tenantId || '—')})</p>
+          {/* 내부 id는 제목(마우스를 올리면)으로 — 화면 글자로는 「테넌트 · tenantId」 같은 개발 말을 쓰지 않는다(상용화 UI 3차 U4). */}
+          <p className="onboard-tenant" title={`id: ${registeredAs ?? (tenant.tenantId || '—')}`}>
+            등록할 브랜드
+          </p>
           {keyStatus && (
             <div className="onboard-engines">
               <p className="onboard-engines-title">수집 엔진</p>
@@ -1743,7 +1746,7 @@ export default function BrandOnboarding() {
         ) : canRegister ? (
           <p className="hint">
             등록하면 <b>6 측정</b>이 열립니다 — 경쟁사·코호트까지 함께 잽니다
-            {measureVia === 'local' ? ' (로컬 즉시).' : ' (GitHub Actions).'} 지금 재지 않고 나중으로 미룰 수도 있습니다.
+            {measureVia === 'local' ? '.' : ' (GitHub Actions).'} 지금 재지 않고 나중으로 미룰 수도 있습니다.
           </p>
         ) : (
           <p className="hint">
@@ -1774,9 +1777,12 @@ export default function BrandOnboarding() {
             {registerMsg}
           </p>
         )}
-        <p className="hint onboard-cli">
-          로컬 측정 CLI: <code>npm run measure:local -- {registeredAs ?? (tenant.tenantId || '<tenantId>')}</code> (경쟁사·코호트 포함, baking·배포까지)
-        </p>
+        {/* 개발용 명령 — 데스크톱 앱에서는 보이지 않는다. */}
+        {!(typeof window !== 'undefined' && window.electron?.isElectron) && (
+          <p className="hint onboard-cli">
+            로컬 측정 CLI: <code>npm run measure:local -- {registeredAs ?? (tenant.tenantId || '<tenantId>')}</code> (경쟁사·코호트 포함, baking·배포까지)
+          </p>
+        )}
       </StageShell>
 
       <StageShell id="stage-6" code="6" title="측정" status={s6} lockedHint="먼저 5단계에서 브랜드를 등록하세요.">

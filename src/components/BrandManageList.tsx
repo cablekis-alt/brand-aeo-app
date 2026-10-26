@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import MeasureProgress, { type ActiveMeasure } from './MeasureProgress'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { measureTenantAll, saveTenantEngines } from '../lib/api'
+import { measureErrorText, measureTenantAll, saveTenantEngines } from '../lib/api'
 import type { Engine } from '../prompts/types'
+
+/** 데스크톱 앱 — 내부 id · 배포 경로 안내는 웹 · 개발 환경에서만 보인다(상용화 UI 3차 U4). preload가 스크립트보다 먼저 싣는다. */
+const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
 
 // ApiKeySettings와 같은 순서·이름을 쓴다 — 두 화면이 다른 이름을 쓰면 같은 엔진으로 안 보인다.
 // 키 상태는 /api/health가 **엔진 id**로 색인해 준다. 환경변수 이름을 여기 두면 그걸로
@@ -143,9 +146,9 @@ export default function BrandManageList() {
         return
       }
       const d = await measureTenantAll(row.tenantId)
-      setMessage(`✓ ${d.brandName ?? row.brandName} 측정 완료 (Brand AEO Score ${d.aeoScore ?? '?'}).`)
+      setMessage(`✓ ${d.brandName ?? row.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점).`)
     } catch (err) {
-      setMessage(`✗ ${err instanceof Error ? err.message : '측정 실패'}`)
+      setMessage(measureErrorText(err))
     } finally {
       setMeasuringId(null)
     }
@@ -251,8 +254,19 @@ export default function BrandManageList() {
       <h3>등록된 브랜드 관리</h3>
       <p className="hint" style={{ marginTop: 0 }}>
         각 브랜드는 <b>"전체 측정"</b>으로 여기서 바로 경쟁사·코호트까지 함께 측정할 수 있습니다(측정 화면으로 갈 필요 없음).
-        삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 바로 완전 삭제, <b>배포 환경</b>은 GitHub Actions가
-        커밋 데이터·점수까지 정리·자동 배포합니다(고아 경쟁사도 함께 정리, 공유 중인 경쟁사는 보존).
+        {/*
+          데스크톱 앱에서는 배포 경로(GitHub Actions) · 개발 말(고아 경쟁사)을 쓰지 않는다(상용화 UI 3차 U4). 로컬 삭제는 지운 표시만
+          달고 측정 기록은 남긴다(server/tenantRegistry.ts deleteTenantLocally) — 「완전 삭제」라고 하지 않는다.
+        */}
+        {isDesktop ? (
+          ' 삭제하면 목록 · 선택지와 비교 그룹 순위에서 바로 빠집니다. 측정 기록은 이 PC에 남아 있어, 같은 브랜드를 다시 등록하면 되살아납니다.'
+        ) : (
+          <>
+            {' '}
+            삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 바로 완전 삭제, <b>배포 환경</b>은 GitHub Actions가
+            커밋 데이터·점수까지 정리·자동 배포합니다(고아 경쟁사도 함께 정리, 공유 중인 경쟁사는 보존).
+          </>
+        )}
       </p>
 
       {message && (
@@ -302,7 +316,11 @@ export default function BrandManageList() {
             <thead>
               <tr>
                 <th style={{ whiteSpace: 'nowrap' }}>브랜드</th>
-                <th className="cell-text" style={{ whiteSpace: 'nowrap' }}>tenantId</th>
+                {!isDesktop && (
+                  <th className="cell-text" style={{ whiteSpace: 'nowrap' }}>
+                    tenantId
+                  </th>
+                )}
                 <th style={{ whiteSpace: 'nowrap' }}>업종 · 지역</th>
                 <th>경쟁사</th>
                 {keyStatus && <th style={{ whiteSpace: 'nowrap' }}>수집 엔진</th>}
@@ -315,13 +333,16 @@ export default function BrandManageList() {
                 const busy = busyId === row.tenantId || deleting
                 return (
                   <tr key={row.tenantId} style={deleting ? { opacity: 0.55 } : undefined}>
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    {/* 데스크톱 앱에서는 내부 id 칸을 빼고 브랜드 이름 제목(마우스를 올리면)으로 둔다. */}
+                    <td style={{ whiteSpace: 'nowrap' }} title={isDesktop ? row.tenantId : undefined}>
                       {row.brandName}
                       {row.cohortOnly && <span className="hint"> · 경쟁사</span>}
                     </td>
-                    <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
-                      <code>{row.tenantId}</code>
-                    </td>
+                    {!isDesktop && (
+                      <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
+                        <code>{row.tenantId}</code>
+                      </td>
+                    )}
                     <td className="judgment" style={{ minWidth: '8em' }}>
                       {row.industry} · {row.region}
                     </td>
