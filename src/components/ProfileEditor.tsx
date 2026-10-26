@@ -27,8 +27,11 @@ type PlanState = { key: string; replan: number; value: ProfilePlan | null; error
 // region은 지역형일 때 적는 지역. toNational은 이미 전국형 · B2B형인데 지역이 남은 브랜드를 「국내」로 옮길지.
 type Form = { brandName: string; aliases: string; industry: string; region: string; marketScope: MarketScope; buyer: string; toNational: boolean }
 
-/** 별칭 칸(쉼표 · 줄바꿈으로 나눔) → 목록. 빈 값 · 같은 값은 뺀다. */
-const aliasList = (text: string) => [...new Set(text.split(/[,，\n]/).map((a) => a.trim()).filter(Boolean))]
+/**
+ * 별칭 칸(한 줄에 하나) → 목록. 빈 값 · 같은 값은 뺀다. 쉼표로 나누지 않는다 — 「완벽한 진료를 드리는, 서울퍼펙트치과의원」처럼 쉼표가 든
+ * 별칭이 열자마자 둘로 쪼개져, 건드리지 않은 별칭이 바뀐 값으로 저장됐다(1-D 검토).
+ */
+const aliasList = (text: string) => [...new Set(text.split('\n').map((a) => a.trim()).filter(Boolean))]
 
 const SCOPE_DESC: Record<MarketScope, string> = {
   local: '그 지역에서 찾는 손님 — 질문에 지역이 들어가요',
@@ -39,7 +42,7 @@ const SCOPE_DESC: Record<MarketScope, string> = {
 // 지역형이 아니면 지역 칸은 잠기므로, 지역 입력은 지역형일 때의 값만 들고 있는다.
 const formOf = (s: ProfileEditorState): Form => ({
   brandName: s.brandName,
-  aliases: s.aliases.join(', '),
+  aliases: s.aliases.join('\n'),
   industry: s.industry,
   region: s.marketScope === 'local' ? s.region : '',
   marketScope: s.marketScope,
@@ -294,8 +297,13 @@ export default function ProfileEditor({
             </label>
             {isAddressLike(f.brandName) && <p className="ce-bar-note bad">상호에는 주소가 아니라 사람들이 부르는 이름을 적어 주세요.</p>}
             <label className="pe-field">
-              <span className="pe-label">별칭(쉼표로 나눔)</span>
-              <input type="text" value={f.aliases} onChange={(e) => update({ aliases: e.target.value })} placeholder="예: 도전과 나눔, 사단법인 도전과나눔" />
+              <span className="pe-label">별칭(한 줄에 하나)</span>
+              <textarea
+                rows={Math.min(6, Math.max(2, f.aliases.split('\n').length))}
+                value={f.aliases}
+                onChange={(e) => update({ aliases: e.target.value })}
+                placeholder={'예: 도전과 나눔\n사단법인 도전과나눔'}
+              />
             </label>
             <p className="ce-qmode-sub">AI 답변에 상호나 별칭이 나오면 언급으로 셉니다. 바꾸면 다음 측정부터 언급 판정이 달라집니다.</p>
             <fieldset className="ce-qmode">

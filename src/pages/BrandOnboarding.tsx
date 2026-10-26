@@ -841,9 +841,12 @@ export default function BrandOnboarding() {
     // 주소는 홈페이지 칸으로 옮기고 상호를 다시 묻는다. 도메인 모양(「trip.com」)은 실제 이름일 수도 있어 확인만 받는다.
     if (isAddressLike(brandName)) {
       e.preventDefault()
-      if (!url.trim()) setUrl(brandName.trim())
+      const moved = !url.trim()
+      if (moved) setUrl(brandName.trim())
       setBrandName('')
-      setError('상호에는 사람들이 부르는 이름을 넣어 주세요 — 예: 도전과나눔. 넣으신 주소는 홈페이지 칸으로 옮겼습니다.')
+      setError(
+        `상호에는 사람들이 부르는 이름을 넣어 주세요 — 예: 도전과나눔. ${moved ? '넣으신 주소는 홈페이지 칸으로 옮겼습니다.' : '홈페이지 칸에는 이미 주소가 있어 그대로 두었습니다.'}`,
+      )
       return
     }
     const typed = brandName.trim()

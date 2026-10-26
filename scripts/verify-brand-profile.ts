@@ -247,6 +247,37 @@ try {
   ok('상호 저장: 오버레이 상호 · 별칭 · 질문지', renamed.brandName === '새 글램핑' && (renamed.aliases as string[]).join(',') === '새 글램핑,글램핑 새' && renamed.questionBankVersion === rename.bank.to)
   ok('상호 저장: 경쟁사 측정 브랜드의 이름은 그대로', renamedOverlay.find((t) => t.tenantId === 'pgside')?.brandName === '글램핑 옆')
   ok('상호 저장: 런타임에도 새 이름', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pglamp')?.brandName === '새 글램핑')
+
+  // 9) 1-D 검토 회귀 — 경쟁사 편집이 만든 질문지(derivedFrom)를 쓰는 브랜드의 별칭만 바꿔도 그 질문지로 계속 잰다. 예전엔 런타임 질문지
+  //    번호를 오버레이에 적고 경쟁사 목록 파일의 질문지 값을 버려, 다음 측정이 「저장소 설정이 그 뒤에 바뀌었습니다」로 멈췄다.
+  const pderEntry = { ...base, tenantId: 'pder', brandName: '파생 고객', aliases: ['파생 고객'], ownedDomains: ['pder.example'], industry: '민박', region: '가상읍', questionBankVersion: 'v4', competitors: [line('파생 경쟁', 'pderc.example')] }
+  const pnameEntry = { ...base, tenantId: 'pname', brandName: '이름 고객', aliases: ['이름 고객'], ownedDomains: ['pname.example'], industry: '게스트하우스', region: '가상동', competitors: [] }
+  const pnameRef = { ...base, tenantId: 'pnref', brandName: '이름 참조', aliases: ['이름 참조'], ownedDomains: ['pnref.example'], industry: '게스트하우스', region: '가상동', competitors: [line('이름 고객', 'pname.example')] }
+  writeJson('tenants.overlay.json', [...readJson<Record<string, unknown>[]>('tenants.overlay.json'), pderEntry, pnameEntry, pnameRef])
+  const derFp = comp.baseFingerprint(pderEntry as never)
+  writeJson('data/pder/competitors.json', {
+    current: { competitors: pderEntry.competitors, base: derFp, questionBank: { version: 'v5', size: 1 } },
+    lastSave: null,
+    measured: null,
+    updatedAt: '2026-10-25T00:00:00.000Z',
+  })
+  writeJson('data/pder/question-bank/v5.json', { version: 'v5', derivedFrom: { base: derFp, from: 'v4' }, questions: [] })
+  ok('파생 질문지: 런타임은 경쟁사 편집의 v5', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pder')?.questionBankVersion === 'v5')
+  const derInput = { industry: '민박', region: '가상읍', marketScope: 'local', buyer: '', move: [], aliases: ['파생 고객', '파생고객'] }
+  const derPlan = await editor.planProfileEdit('pder', derInput, store)
+  ok('파생 질문지: 별칭만 바꾸는 계획은 질문지 그대로', derPlan.errors.length === 0 && derPlan.bank.to === derPlan.bank.from)
+  await editor.saveProfileEdit('pder', derInput, derPlan.key, store)
+  const derEntry = readJson<Record<string, unknown>[]>('tenants.overlay.json').find((t) => t.tenantId === 'pder')!
+  ok('파생 질문지: 오버레이는 별칭만 바뀌고 질문지 번호(v4) · 지문은 그대로', derEntry.questionBankVersion === 'v4' && (derEntry.aliases as string[]).join(',') === '파생 고객,파생고객' && comp.baseFingerprint(derEntry as never) === derFp)
+  ok('파생 질문지: 경쟁사 목록 파일의 질문지 값(v5)을 지킨다', readJson<{ current: { questionBank?: { version: string } } }>('data/pder/competitors.json').current.questionBank?.version === 'v5')
+  ok('파생 질문지: 런타임은 여전히 v5', (await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'pder')?.questionBankVersion === 'v5')
+  ok('별칭만: 「다음 측정 대기」 표식을 남기지 않는다', !existsSync(path.join(dir, 'data/pder/profile-edit.json')))
+  // 자기 경쟁사 이름으로 바꾸면 막는다(판정에 같은 이름이 둘 — 점유율이 합쳐진다)
+  ok('상호: 자기 경쟁사 이름이면 막는다', (await editor.planProfileEdit('pder', { ...derInput, brandName: '파생 경쟁' }, store)).errors.some((e) => e.includes('경쟁사 목록')))
+  ok('별칭: 자기 경쟁사 이름(공백 무시)이면 막는다', (await editor.planProfileEdit('pder', { ...derInput, aliases: ['파생경쟁'] }, store)).errors.some((e) => e.includes('경쟁사 목록')))
+  // 상호를 바꾸면 이 브랜드를 경쟁사 목록에 옛 이름으로 적은 다른 고객을 알린다
+  const nameRefPlan = await editor.planProfileEdit('pname', { industry: '게스트하우스', region: '가상동', marketScope: 'local', buyer: '', move: [], brandName: '새 이름 고객' }, store)
+  ok('상호: 옛 이름으로 적어 둔 다른 고객을 알린다', nameRefPlan.notes.some((n) => n.startsWith('이름 참조') && n.includes('옛 이름')))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

@@ -7234,7 +7234,22 @@ td.cell-mid {
   font: inherit;
   font-size: 12.5px;
 }
-.pe-field input:focus {
+/* 별칭 — 한 줄에 하나(쉼표가 든 별칭을 지킨다). 입력 칸과 같은 모양, 높이만 줄 수에 맞춘다. */
+.pe-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.pe-field input:focus,
+.pe-field textarea:focus {
   outline: 2px solid var(--accent);
   outline-offset: 0;
 }
