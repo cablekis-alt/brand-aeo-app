@@ -257,6 +257,8 @@ function CiSyncPanel({ onSynced }: { onSynced: () => void }) {
 export default function MeasureStatus() {
   const [runs, setRuns] = useState<MeasureRunInfo[]>([])
   const [enabled, setEnabled] = useState(true)
+  // 원격 측정 실행 목록을 한 번이라도 받았는가 — 데스크톱은 받기 전에 원격 칸을 그리지 않는다(토큰 없는 PC에서 칸이 잠깐 보였다 — 1-C 검토).
+  const [runsKnown, setRunsKnown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   /*
@@ -330,6 +332,7 @@ export default function MeasureStatus() {
     try {
       const data = await loadMeasureRuns()
       setEnabled(data.enabled)
+      setRunsKnown(true)
       setRuns(data.runs)
       setError(null)
     } catch (err) {
@@ -433,7 +436,7 @@ export default function MeasureStatus() {
    * run」 같은 개발 안내가 운영자 화면에 남아 있었다(상용화 UI 3차 U4). 웹 · 개발 환경은 예전처럼 늘 보인다.
    */
   const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
-  const showRemote = !isDesktop || enabled
+  const showRemote = !isDesktop || (runsKnown && enabled)
 
   return (
     <>

@@ -208,13 +208,17 @@ export default function MeasureTenant() {
         )
         return
       }
+      // 경쟁사 하나만 잰 측정은 그 경쟁사 카드만 바뀐다 — 같은 주에 잰 고객 브랜드의 순위표에만 들어간다(1-C 검토).
+      const competitorOnly = Boolean(tenants.find((t) => t.tenantId === pickedTenant)?.cohortOnly)
       const d = await measureTenantAll(pickedTenant, mode === 'reuse', mode === 'self')
       // 엔진이 빠진 측정은 그 주 카드를 덮지 않는다(서버 weekCardKeepReason) — 화면 점수가 이번 측정 값이 아닌 까닭을 알린다.
       setMessage(
         d.weekCardKept
           ? `✓ ${d.brandName} 측정 완료 (이번 측정 Brand AEO Score ${d.aeoScore ?? '?'}). ${d.weekCardKept}. 이번 측정은 회차 기록에만 남습니다.`
           : // 측정이 끝나면 이 PC의 기록에 바로 반영된다 — 운영자가 할 수 없는 배포 지시(git commit · vercel)를 하지 않는다(상용화 UI 3차 U4).
-            `✓ ${d.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). 개요 · 경쟁 순위에 바로 반영됩니다.`,
+            `✓ ${d.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). ${
+              competitorOnly ? '같은 주에 잰 고객 브랜드의 경쟁 순위에 반영됩니다.' : '개요 · 경쟁 순위에 바로 반영됩니다.'
+            }`,
       )
     } catch (err) {
       setMessage(measureErrorText(err))
