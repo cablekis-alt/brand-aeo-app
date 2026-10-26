@@ -18,9 +18,7 @@ import { formatMoney, rowCost, sumCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { brandLabel, type VariantBrand } from '../lib/brandVariant'
-import { useTenant } from '../context/useTenant'
-import { isOpenAction } from '../lib/gapActions'
-import { useGapActionPlan } from '../lib/useGapActionPlan'
+import { failureReason } from '../lib/measureStatus'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
 
@@ -71,13 +69,6 @@ interface LocalMeasureFailure {
   at: string
   error: string
   engineIssues?: string[]
-}
-
-/** 실패 줄에 보일 이유 — 끊긴 엔진이 있으면 그 이름, 없으면 오류 문구 첫 문장. */
-function failureReason(f: LocalMeasureFailure): string {
-  if (f.engineIssues?.length) return f.engineIssues.join(' · ')
-  const first = f.error.replace(/^\[[^\]]+\]\s*/, '').split(/(?<=[.。])\s/)[0] ?? f.error
-  return first.length > 90 ? `${first.slice(0, 90)}…` : first
 }
 
 // 초 → "N분 M초" / "N초"
@@ -136,56 +127,6 @@ function duration(run: MeasureRunInfo): string {
   const s = Math.max(0, Math.round((end - start) / 1000))
   const m = Math.floor(s / 60)
   return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
-}
-
-/**
- * 이 브랜드의 실행 항목 요약 — 측정이 끝난 직후 "그래서 뭘 하지"에 바로 답한다.
- *
- * 예전에는 여기 손으로 적은 문서 링크 배열(brandDocs)이 있었다. 브랜드가 늘 때마다 사람이
- * 줄을 추가해야 했고, 실제로 k-wonjin 하나만 채워져 있었다. 지금은 저장된 측정에서 계산해
- * 모든 브랜드가 자동으로 목록을 갖는다.
- */
-function ActionSummary() {
-  const { tenant } = useTenant()
-  const { plan, weekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
-  if (!tenant) return null
-
-  const open = plan.actions.filter(isOpenAction)
-  return (
-    <section style={{ marginTop: '8px' }}>
-      <h3>실행 항목</h3>
-      <p className="hint" style={{ marginTop: 0 }}>
-        측정이 찾아낸 격차를 할 일로 바꾼 목록입니다. <b>{tenant.brandName}</b>
-        {weekOf && ` · ${weekOf}`} 기준이며, 저장된 측정에서 계산합니다.
-      </p>
-      {loading ? (
-        <p className="muted">불러오는 중…</p>
-      ) : plan.actions.length === 0 ? (
-        <p className="muted">
-          {neverMeasured ? '아직 측정된 적이 없습니다.' : '이 주차에 분석 데이터가 없습니다.'}
-        </p>
-      ) : (
-        <>
-          <ul className="doc-links">
-            {open.slice(0, 4).map((a) => (
-              <li key={a.id}>
-                <Link to="/gap-actions">{a.title}</Link>
-                <span className="doc-meta">
-                  {a.badge} · 영향 {a.reach}
-                  {a.questionTexts[0] && ` · ${a.questionTexts[0]}`}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="hint">
-            남은 {open.length}건 중 {Math.min(4, open.length)}건입니다 ·{' '}
-            <Link to="/gap-actions">실행 항목 전체 보기</Link>
-            {plan.satisfiedCount > 0 && ` (데이터가 충족을 확인한 항목 ${plan.satisfiedCount}건은 따로 표시됩니다)`}
-          </p>
-        </>
-      )}
-    </section>
-  )
 }
 
 /**
@@ -465,8 +406,6 @@ export default function MeasureStatus() {
           {error}
         </p>
       )}
-
-      <ActionSummary />
 
       {BRAND_DOCS.length > 0 && (
         <section style={{ marginTop: '8px' }}>

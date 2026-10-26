@@ -73,6 +73,88 @@ export function listMeasureFailures(): MeasureFailure[] {
   return failures.map((f) => ({ ...f }));
 }
 
+/**
+ * 측정 회차 기록 — 화면 아래 결과 띠와 Windows 알림의 근거다. 사용자가 시작한 측정 하나(함께 재는 경쟁사 포함)가 한 회차다 —
+ * 다른 브랜드의 측정 안에서 경쟁사로 잰 것은 그 회차의 일부라 따로 적지 않는다(measureAndBake가 inCohortRun이면 부르지 않는다).
+ *
+ * seq는 **끝날 때** 붙인다(진행 중이면 0) — 화면은 「본 적 있는 seq보다 큰 것」만 알린다. 메모리에만 두므로 앱을 다시 켜면 비고
+ * bootId가 바뀐다 — 화면은 bootId가 바뀌면 기준을 새로 잡는다.
+ */
+export interface MeasureRunRecord {
+  /** `${tenantId}@${startedAt}` */
+  id: string;
+  seq: number;
+  tenantId: string;
+  brandName: string;
+  startedAt: string;
+  endedAt?: string;
+  /** 「이 브랜드만 측정」. */
+  selfOnly?: boolean;
+  /** 경쟁사(비교용 브랜드) 하나만 잰 측정. */
+  competitorOnly?: boolean;
+  /** 함께 재는 경쟁사 수 — 경쟁사를 고른 뒤 적는다. */
+  competitors?: number;
+  result?: 'done' | 'failed' | 'cancelled';
+  aeoScore?: number;
+  weekOf?: string;
+  /** 이번 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason). */
+  weekCardKept?: string;
+  error?: string;
+  engineIssues?: string[];
+  /** 함께 재다 실패한 경쟁사 — 순위는 나머지로 매겼다. */
+  competitorFailures?: { tenantId: string; brandName: string }[];
+}
+
+export const BOOT_ID = `${Date.now().toString(36)}-${process.pid}`;
+const MAX_RECENT_RUNS = 10;
+let runSeq = 0;
+const currentRuns = new Map<string, MeasureRunRecord>();
+const recentRuns: MeasureRunRecord[] = [];
+
+export function startRunRecord(start: { tenantId: string; brandName: string; selfOnly?: boolean; competitorOnly?: boolean }): MeasureRunRecord {
+  const startedAt = new Date().toISOString();
+  const record: MeasureRunRecord = {
+    id: `${start.tenantId}@${startedAt}`,
+    seq: 0,
+    tenantId: start.tenantId,
+    brandName: start.brandName,
+    startedAt,
+    ...(start.selfOnly ? { selfOnly: true } : {}),
+    ...(start.competitorOnly ? { competitorOnly: true } : {}),
+  };
+  currentRuns.set(record.id, record);
+  return { ...record };
+}
+
+/** 진행 중인 회차에 적는다(함께 재는 경쟁사 수). 이미 끝난 회차면 아무것도 하지 않는다. */
+export function updateRunRecord(id: string, patch: Pick<MeasureRunRecord, 'competitors'>): void {
+  const cur = currentRuns.get(id);
+  if (cur) currentRuns.set(id, { ...cur, ...patch });
+}
+
+export function finishRunRecord(
+  id: string,
+  outcome: Pick<MeasureRunRecord, 'result' | 'aeoScore' | 'weekOf' | 'weekCardKept' | 'error' | 'engineIssues' | 'competitorFailures'>,
+): MeasureRunRecord | null {
+  const cur = currentRuns.get(id);
+  if (!cur) return null;
+  currentRuns.delete(id);
+  runSeq += 1;
+  const done: MeasureRunRecord = { ...cur, ...outcome, seq: runSeq, endedAt: new Date().toISOString() };
+  recentRuns.unshift(done);
+  recentRuns.splice(MAX_RECENT_RUNS);
+  return { ...done };
+}
+
+/** 측정 상태 응답의 runs — 진행 중(시작 순)과 최근에 끝난 회차(최신 먼저, 최대 10개). */
+export function listRunRecords(): { bootId: string; current: MeasureRunRecord[]; recent: MeasureRunRecord[] } {
+  return {
+    bootId: BOOT_ID,
+    current: [...currentRuns.values()].map((r) => ({ ...r })),
+    recent: recentRuns.map((r) => ({ ...r })),
+  };
+}
+
 const active = new Map<string, ActiveMeasure>();
 
 /**

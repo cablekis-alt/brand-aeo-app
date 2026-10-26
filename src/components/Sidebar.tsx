@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { ENGINE_LABEL, weekLabel } from '../lib/format'
+import { brandLabel } from '../lib/brandVariant'
+import { ENGINE_LABEL } from '../lib/format'
 import { isOpenAction } from '../lib/gapActions'
+import { runName, useMeasureStatus, type MeasureStatusState } from '../lib/measureStatus'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useScorecards } from '../lib/useScorecards'
 import AppVersion from './AppVersion'
 import BrandSwitcher from './BrandSwitcher'
 import { MENU, type MenuItem } from '../lib/menu'
+import { measureStageLabel } from './MeasureProgress'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 
@@ -47,63 +50,89 @@ function writeFold(id: string, open: boolean) {
   }
 }
 
-/** 진행 중인 로컬 측정 수 — 측정 상태 화면과 같은 엔드포인트, 15초 폴링. */
-function useMeasuringCount(): number {
-  const [n, setN] = useState(0)
+/**
+ * 메뉴 상자의 위 · 아래에 가려진 항목이 있는가 — 있으면 그쪽 끝을 흐리게 한다. 1280×720(150% 배율) 창에서 메뉴가 넘쳐도
+ * 스크롤 막대가 숨겨져 「설정」이 아래에 있는지 알 수 없었다(상용화 UI 3차 U9). 접기를 펴고 닫아도 다시 재게 상자와 묶음을 함께 본다.
+ */
+function useScrollEdges(ref: RefObject<HTMLDivElement | null>): { top: boolean; bottom: boolean } {
+  const [edges, setEdges] = useState({ top: false, bottom: false })
   useEffect(() => {
-    let alive = true
-    const load = async () => {
-      try {
-        const r = await fetch('/api/measure-status')
-        if (!r.ok) return
-        const d = (await r.json()) as { active?: unknown[] }
-        if (alive) setN(Array.isArray(d.active) ? d.active.length : 0)
-      } catch {
-        /* 서버 없음(웹) — 배지 없음 */
-      }
+    const box = ref.current
+    if (!box) return
+    const update = () => {
+      const top = box.scrollTop > 1
+      const bottom = box.scrollTop + box.clientHeight < box.scrollHeight - 1
+      // 값이 바뀔 때만 다시 그린다 — 그대로인데 새 객체를 넣으면 ResizeObserver와 맞물려 계속 다시 그린다.
+      setEdges((e) => (e.top === top && e.bottom === bottom ? e : { top, bottom }))
     }
-    void load()
-    const t = window.setInterval(() => void load(), 15000)
+    update()
+    box.addEventListener('scroll', update, { passive: true })
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
+    if (ro) {
+      ro.observe(box)
+      for (const group of box.querySelectorAll('.sidebar-group')) ro.observe(group)
+    }
     return () => {
-      alive = false
-      window.clearInterval(t)
+      box.removeEventListener('scroll', update)
+      ro?.disconnect()
     }
-  }, [])
-  return n
+  }, [ref])
+  return edges
 }
 
 /**
- * 사이드바 바닥의 측정 상태 — 진행 중인 측정이 있으면 그 건수, 없으면 이 브랜드의 마지막 측정 주차와 엔진.
- * 측정 상태 화면으로 가는 지름길이기도 하다.
+ * 사이드바 바닥의 측정 상태 — 측정 중이면 무엇을 재는지(경쟁사까지 세어 「측정 중 7건」이라 하지 않는다), 아니면 고른 고객 브랜드의
+ * 마지막 측정 주차와 엔진. 측정이 끝나면 새 주차로 바로 바뀐다(doneEpoch). 측정 상태 화면으로 가는 지름길이기도 하다.
  */
-function MeasureStatusCard({ measuring }: { measuring: number }) {
-  const { tenant } = useTenant()
-  const { history } = useScorecards(tenant?.tenantId ?? '')
+function MeasureStatusCard({ status }: { status: MeasureStatusState }) {
+  const { customer, tenants } = useTenant()
+  const { history } = useScorecards(customer?.tenantId ?? '', { refreshKey: status.doneEpoch })
   const latest = history.length > 0 ? history[history.length - 1] : null
-  if (measuring === 0 && latest === null) return null
+  const root = status.runs?.current[0] ?? null
+  const measuring = root !== null || status.active.length > 0
+  if (!measuring && latest === null) return null
+  if (measuring) {
+    const rootActive = (root && status.active.find((a) => a.tenantId === root.tenantId)) ?? status.active[0]
+    const meta = [root?.competitors ? `경쟁사 ${root.competitors}곳 함께` : '', rootActive ? measureStageLabel(rootActive) : '']
+      .filter(Boolean)
+      .join(' · ')
+    return (
+      <NavLink to="/measure-status" className="sidebar-status">
+        <span className="sidebar-status-head">
+          <span className="sidebar-status-dot live" aria-hidden="true" />
+          <span className="sidebar-status-name">{root ? `측정 중 · ${runName(root, tenants)}` : `측정 중 ${status.active.length}곳`}</span>
+        </span>
+        {meta && <span className="sidebar-status-meta">{meta}</span>}
+      </NavLink>
+    )
+  }
   const engines = (latest?.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
-  const head = measuring > 0 || latest === null ? `측정 중 ${measuring}건` : `최근 측정 · ${weekLabel(latest.weekOf)}`
   return (
     <NavLink to="/measure-status" className="sidebar-status">
       <span className="sidebar-status-head">
-        <span className={`sidebar-status-dot${measuring > 0 ? ' live' : ''}`} aria-hidden="true" />
-        {head}
+        <span className="sidebar-status-dot" aria-hidden="true" />
+        <span className="sidebar-status-name">{customer ? brandLabel(customer, tenants) : ''}</span>
+        {latest && <span className="sidebar-status-week">{latest.weekOf.replace(/^\d{4}-/, '')}</span>}
       </span>
-      {measuring === 0 && engines && <span className="sidebar-status-meta">{engines}</span>}
+      <span className="sidebar-status-meta">{['최근 측정', engines].filter(Boolean).join(' · ')}</span>
     </NavLink>
   )
 }
 
-export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean }) {
+export default function Sidebar({ showBrandPicker, brandScope }: { showBrandPicker: boolean; brandScope: 'brand' | 'global' }) {
   const { pathname } = useLocation()
-  const { tenant, viewing } = useTenant()
-  const measuring = useMeasuringCount()
+  const { tenant, tenants, viewing } = useTenant()
+  const status = useMeasureStatus()
+  // 사용자가 시작한 측정 수(함께 재는 경쟁사는 세지 않는다). 옛 서버(회차 기록 전)면 진행 중인 브랜드 수.
+  const measuringRuns = status.runs ? status.runs.current : null
+  const measuring = measuringRuns ? measuringRuns.length : status.active.length
   const { plan, loading } = useGapActionPlan(tenant?.tenantId ?? '')
   const openActions = !loading && tenant ? plan.actions.filter(isOpenAction).length : 0
 
   // 창이 낮아 메뉴가 넘치면 현재 화면 항목을 메뉴 스크롤 안에서만 보이게 맞춘다(창 스크롤은 건드리지
   // 않는다 — scrollIntoView는 바깥 창까지 움직여 Layout의 스크롤 복원과 다툰다).
   const scrollRef = useRef<HTMLDivElement>(null)
+  const edges = useScrollEdges(scrollRef)
   useEffect(() => {
     const box = scrollRef.current
     const on = box?.querySelector<HTMLElement>('a.on')
@@ -131,9 +160,14 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
       return { ...f, [id]: !shown }
     })
 
-  const badgeOf = (item: MenuItem): { text: string; cls: string } | null => {
-    if (item.badge === 'measuring' && measuring > 0) return { text: String(measuring), cls: 'live' }
-    if (item.badge === 'actions' && openActions > 0) return { text: String(openActions), cls: 'todo' }
+  const badgeOf = (item: MenuItem): { text: string; cls: string; title: string } | null => {
+    if (item.badge === 'measuring' && measuring > 0) {
+      const names = measuringRuns?.map((r) => runName(r, tenants)).join(', ')
+      return { text: String(measuring), cls: 'live', title: names ? `측정 중 · ${names}` : `측정 중 ${measuring}곳` }
+    }
+    if (item.badge === 'actions' && openActions > 0 && tenant) {
+      return { text: String(openActions), cls: 'todo', title: `${tenant.brandName} 남은 콘텐츠 ${openActions}건` }
+    }
     return null
   }
 
@@ -161,7 +195,7 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
         </div>
       </header>
 
-      {showBrandPicker && <BrandSwitcher />}
+      {showBrandPicker && <BrandSwitcher dim={brandScope === 'global'} />}
 
       {/* 스크롤 영역 밖에 둔다 — 안에 있으면 창이 낮아 메뉴가 넘칠 때 목록과 함께 밀려 상단이 잘린다. */}
       {viewing ? (
@@ -179,7 +213,11 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
         </NavLink>
       )}
 
-      <div className="sidebar-scroll" id="sidebar-menu" ref={scrollRef}>
+      <div
+        className={`sidebar-scroll${edges.top ? ' fade-top' : ''}${edges.bottom ? ' fade-bottom' : ''}`}
+        id="sidebar-menu"
+        ref={scrollRef}
+      >
         {MENU.map((group) => {
           const inside = group.items.some((i) => i.to === pathname)
           // 사용자가 정한 적 없으면 현재 페이지를 따라 펴고, 정했으면 그 선택을 따른다.
@@ -229,7 +267,11 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
                         >
                           {item.icon && <NavIcon name={item.icon} />}
                           <span className="label">{item.label}</span>
-                          {badge && <span className={`sidebar-badge ${badge.cls}`}>{badge.text}</span>}
+                          {badge && (
+                            <span className={`sidebar-badge ${badge.cls}`} title={badge.title}>
+                              {badge.text}
+                            </span>
+                          )}
                         </NavLink>
                       </li>
                     )
@@ -241,7 +283,7 @@ export default function Sidebar({ showBrandPicker }: { showBrandPicker: boolean 
         })}
       </div>
 
-      <MeasureStatusCard measuring={measuring} />
+      <MeasureStatusCard status={status} />
 
       <footer className="sidebar-foot">
         <div className="sidebar-theme-row">

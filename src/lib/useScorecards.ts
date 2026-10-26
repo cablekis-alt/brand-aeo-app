@@ -15,8 +15,11 @@ interface Loaded {
  * 빈 히스토리 + loading을 준다. 이전 브랜드의 주차 목록을 그대로 넘기면 화면이
  * 잘못된 (브랜드, 주차) 조합으로 한 번 요청을 보내고 "이 주차에 데이터가 없습니다"가
  * 잠깐 떴다가 바뀐다 — 브랜드를 고른 직후 "바로 안 들어가지는" 증상의 원인이다.
+ *
+ * refreshKey가 바뀌면 같은 브랜드라도 다시 읽는다(사이드바 측정 카드 — 측정이 끝나면 새 주차로). 다시 읽는 동안은 앞 결과를 그대로 보인다.
  */
-export function useScorecards(tenantId: string) {
+export function useScorecards(tenantId: string, opts: { refreshKey?: number } = {}) {
+  const { refreshKey = 0 } = opts
   const [loaded, setLoaded] = useState<Loaded | null>(null)
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export function useScorecards(tenantId: string) {
     return () => {
       cancelled = true
     }
-  }, [tenantId])
+  }, [tenantId, refreshKey])
 
   const fresh = loaded !== null && loaded.tenantId === tenantId
   return {

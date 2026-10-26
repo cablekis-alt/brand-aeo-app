@@ -139,6 +139,30 @@
 .brand-switch.is-competitor .brand-switch-initial {
   background: var(--muted);
 }
+/* 전체 브랜드 화면(브랜드 현황 · 측정 상태 …) — 칸은 남기고 흐리게: 「마지막으로 본 브랜드」(BrandSwitcher dim). */
+.brand-switch.is-dim {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.brand-switch.is-dim .brand-switch-initial {
+  background: var(--muted);
+}
+.brand-switch.is-dim .brand-switch-name {
+  color: var(--ink-2);
+}
+.brand-switch.is-dim:hover {
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+/* 브랜드 목록을 읽는 동안 같은 높이로 자리만 지킨다. */
+.brand-switch.is-placeholder {
+  cursor: default;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.brand-switch.is-placeholder .brand-switch-initial {
+  background: var(--line);
+}
 .brand-switch-initial {
   width: 28px;
   height: 28px;
@@ -174,18 +198,28 @@
   color: var(--muted);
 }
 
+/* 메뉴 상자 — 넘치면 얇은 스크롤 막대를 보이고, 가려진 쪽 끝을 흐리게 한다(Sidebar.tsx useScrollEdges). 막대를 숨겼더니
+   낮은 창에서 「설정」이 아래에 있는지 알 수 없었다(상용화 UI 3차 U9). */
 .sidebar-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 2px 0 4px;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
-.sidebar-scroll::-webkit-scrollbar {
-  display: none;
+.sidebar-scroll.fade-bottom {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+.sidebar-scroll.fade-top {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+.sidebar-scroll.fade-top.fade-bottom {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
 .sidebar-cta {
@@ -281,6 +315,21 @@
   color: var(--muted);
   line-height: 1.45;
 }
+.sidebar-status-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sidebar-status-week {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .sidebar-foot-label {
   font-size: 11px;
@@ -372,6 +421,27 @@
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
+}
+/* 낮은 창의 테마 단추 하나(ThemeToggle.tsx) — 평소에는 세 칸(.theme-toggle)을 쓰고 숨긴다. */
+.theme-cycle {
+  display: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.theme-cycle:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.theme-cycle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* 구버전 마크(호환용) */
@@ -2811,6 +2881,100 @@ p.hint {
 }
 .notice b { color: var(--warn); }
 
+/* 측정 결과 띠(components/MeasureResultBand.tsx) — 본문 아래쪽에 떠서 어느 화면에서든 보인다. 띠 바깥은 눌러도 뒤가 눌린다. */
+.mr-band {
+  position: fixed;
+  z-index: 92;
+  left: calc(248px + 24px);
+  right: 24px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+.mr-item {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(17 28 24 / 0.14);
+  color: var(--ink);
+}
+.mr-item.bad {
+  border-left-color: var(--bad);
+}
+.mr-item.neutral {
+  border-left-color: var(--line-strong);
+}
+.mr-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.mr-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.mr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mr-actions button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.mr-actions button:hover {
+  border-color: var(--line-strong);
+}
+.mr-actions .mr-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+.mr-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.mr-more {
+  pointer-events: auto;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line);
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .mr-band {
+    left: 16px;
+    right: 16px;
+  }
+}
+@media print {
+  .mr-band {
+    display: none;
+  }
+}
+
 /* CI 결과 동기화 — 버튼과 설명을 한 줄에. */
 .ci-sync {
   display: flex;
@@ -2906,6 +3070,49 @@ p.hint {
   gap: 8px;
 }
 @media (prefers-reduced-motion: reduce) { .sidebar-fold .chev { transition: none; } }
+
+/* 낮은 창(높이 800px 이하) — 메뉴 줄 높이 · 여백을 줄이고 테마는 단추 하나로, 바닥은 한 줄로. 1366×768에서 「설정」까지
+   들어간다(상용화 UI 3차 U9). 760px 이하는 좁은 화면 메뉴(접기)라 걸지 않는다. */
+@media (min-width: 761px) and (max-height: 800px) {
+  .sidebar {
+    gap: 6px;
+    padding-top: 12px;
+  }
+  .sidebar-scroll {
+    gap: 4px;
+  }
+  .sidebar-group a,
+  .sidebar-fold,
+  .sidebar-locked {
+    min-height: 28px;
+  }
+  .sidebar-cta {
+    min-height: 30px;
+  }
+  .brand-switch,
+  .sidebar-status {
+    padding: 6px 10px;
+  }
+  .sidebar-status-meta {
+    display: none;
+  }
+  .sidebar-foot {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+  }
+  .sidebar-foot-label,
+  .sidebar .theme-toggle {
+    display: none;
+  }
+  .sidebar .theme-cycle {
+    display: grid;
+  }
+  .app-version .upd-status.is-quiet {
+    display: none;
+  }
+}
 
 /* 콘텐츠 브리프 — 실행 항목 카드 안의 접히는 패널. 본문이 아니라 뼈대라는 점이 문구에 드러난다. */
 .brief { border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 2px; }

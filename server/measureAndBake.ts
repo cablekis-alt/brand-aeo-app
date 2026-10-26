@@ -15,9 +15,12 @@ import {
   clearActiveMeasure,
   clearMeasureFailures,
   endMeasureRun,
+  finishRunRecord,
   MeasureCancelledError,
   recordMeasureFailure,
   setActiveMeasure,
+  startRunRecord,
+  updateRunRecord,
 } from './measureTracker.js';
 import { resolveCollectionEngines, runWeeklyPipeline } from './pipeline.js';
 import { resolveJudgeEngineId } from './engines/index.js';
@@ -41,6 +44,8 @@ export interface MeasureBakeResult {
   aeoScore: number;
   /** 이번 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason). 있으면 aeoScore는 이 회차 점수이고 그 주 카드는 앞의 것이다. */
   weekCardKept?: string;
+  /** 함께 재다 실패한 경쟁사 — 순위는 나머지로 매겼다. */
+  competitorFailures?: { tenantId: string; brandName: string }[];
 }
 
 // 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
@@ -325,13 +330,38 @@ export async function measureAndBake(
 ): Promise<MeasureBakeResult> {
   // 처음부터 끝까지 「측정 중」으로 센다 — 경쟁사 편집이 이 사이에 저장하지 않게(measureTracker.ts).
   beginMeasureRun();
+  // 사용자가 시작한 측정 하나를 한 회차로 적는다(화면 아래 결과 띠 · 알림). 다른 브랜드의 측정 안에서 잰 경쟁사는 그 회차의 일부다.
+  const run = options.inCohortRun
+    ? null
+    : startRunRecord({ tenantId: tenant.tenantId, brandName: tenant.brandName, selfOnly: options.selfOnly === true, competitorOnly: tenant.cohortOnly === true });
   try {
-    const result = await measureAndBakeRun(tenant, store, options);
+    const result = await measureAndBakeRun(tenant, store, options, run?.id ?? null);
     clearMeasureFailures(tenant.tenantId);
+    if (run) {
+      finishRunRecord(run.id, {
+        result: 'done',
+        aeoScore: result.aeoScore,
+        weekOf: result.weekOf,
+        ...(result.weekCardKept ? { weekCardKept: result.weekCardKept } : {}),
+        ...(result.competitorFailures?.length ? { competitorFailures: result.competitorFailures } : {}),
+      });
+    }
     return result;
   } catch (err) {
     // 측정 상태 화면의 「실패」 줄 — 함께 재던 경쟁사도 각자 남는다(그 경쟁사의 측정도 이 함수를 거친다).
     noteMeasureFailure(tenant, err);
+    if (run) {
+      finishRunRecord(
+        run.id,
+        err instanceof MeasureCancelledError
+          ? { result: 'cancelled' }
+          : {
+              result: 'failed',
+              error: err instanceof Error ? err.message : String(err),
+              ...(err instanceof CollectionError && err.engineIssues.length ? { engineIssues: err.engineIssues } : {}),
+            },
+      );
+    }
     throw err;
   } finally {
     endMeasureRun();
@@ -353,6 +383,7 @@ async function measureAndBakeRun(
   tenant: TenantConfig,
   store: FileResultStore,
   options: MeasureOptions,
+  runId: string | null,
 ): Promise<MeasureBakeResult> {
   let cohortTargets: TenantConfig[] = [];
   // 이번 주 카드를 다시 쓴(재측정하지 않은) 경쟁사 — 그 카드도 이번 코호트에 든다(코호트 제외 해제에 쓴다).
@@ -438,6 +469,10 @@ async function measureAndBakeRun(
   // 만들면 서로 다른 질문지가 된다(ensureCohortBank가 진행 중인 생성을 공유하지만, 먼저 끝내 두면
   // 실패도 여기서 한 번에 드러난다).
   if (tenant.cohortQuestionBank) await ensureCohortBank(tenant);
+  if (runId) updateRunRecord(runId, { competitors: cohortTargets.length });
+
+  // 함께 재다 실패한 경쟁사 — 회차 기록에 남긴다(화면이 「경쟁사 2곳은 측정 실패 — 순위는 나머지로 매겼습니다」라고 알린다).
+  const competitorFailures: { tenantId: string; brandName: string }[] = [];
 
   // 이번 주 카드가 다른 코호트에 있던 브랜드 — 끝에서 옛 코호트 순위도 다시 매긴다(cohortsLeftThisWeek).
   // 다른 브랜드 측정 안에서 재는 경쟁사는 그 측정이 자기 대상 전체로 한 번 본다.
@@ -460,6 +495,7 @@ async function measureAndBakeRun(
               console.error(
                 `[measureAndBake] 코호트 경쟁사 측정 실패 ${target.tenantId}: ${err instanceof Error ? err.message : err}`,
               );
+              if (!(err instanceof MeasureCancelledError)) competitorFailures.push({ tenantId: target.tenantId, brandName: target.brandName });
               return null;
             }
           },
@@ -540,5 +576,6 @@ async function measureAndBakeRun(
     weekOf,
     aeoScore,
     ...(weekCardKept ? { weekCardKept } : {}),
+    ...(competitorFailures.length ? { competitorFailures } : {}),
   };
 }

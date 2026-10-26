@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import MeasureProgress, { type ActiveMeasure } from '../components/MeasureProgress'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import ApiKeySettings from '../components/ApiKeySettings'
 import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel'
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
 import { variantTag } from '../lib/brandVariant'
+import { MEASURING_NOTE, useMeasureClaim } from '../lib/measureStatus'
 import {
   loadMeasurePreview,
   loadPortfolio,
@@ -57,12 +58,16 @@ function selfOnlyWarnings(p: MeasurePreview): string[] {
 }
 
 export default function MeasureTenant() {
-  const { tenantId: currentTenantId } = useTenant()
+  const { tenantId: currentTenantId, customer, setTenantId } = useTenant()
+  // 다른 화면이 고를 대상을 넘긴다(결과 띠의 「다시 측정」 · 브랜드 현황 줄의 「측정」) — 바로 시작하지 않고 고른 채로 연다.
+  const location = useLocation()
+  const requestedPick = (location.state as { pick?: string } | null)?.pick ?? null
+  const claim = useMeasureClaim()
   const [canMeasure, setCanMeasure] = useState(false)
   const [measureVia, setMeasureVia] = useState<MeasureVia>('none')
   const [healthReady, setHealthReady] = useState(false)
   const [tenants, setTenants] = useState<MeasureTenantOption[]>([])
-  const [pickedTenant, setPickedTenant] = useState('')
+  const [pickedTenant, setPickedTenant] = useState(requestedPick ?? '')
   const [measuring, setMeasuring] = useState(false)
   // 경쟁사를 어떻게 잴지. reuse: 이번 주 카드가 이미 있는 경쟁사를 다시 재지 않는다(주차 카드는 주차당 하나라 같은 주에 다시 재면
   // 앞선 측정을 덮어쓴다 — 데이터가 늘지 않고 표본만 바뀐다). self: 이 브랜드만 잰다. 기본은 all(현재 동작 유지).
@@ -188,10 +193,11 @@ export default function MeasureTenant() {
   async function measureOne() {
     if (!pickedTenant || !canMeasure) return
     setMeasuring(true)
+    const pickedName = tenants.find((t) => t.tenantId === pickedTenant)?.brandName ?? pickedTenant
     setMessage(
       measureVia === 'github'
-        ? `${pickedTenant} GitHub Actions 측정 요청 중…`
-        : `${pickedTenant} 측정 중… 이 탭을 열어 두세요. 경과·남은 시간은 아래 진행 표시에 나옵니다.`,
+        ? `${pickedName} GitHub Actions 측정 요청 중…`
+        : `${pickedName} ${MEASURING_NOTE} 경과 · 남은 시간은 아래 진행 표시에 나옵니다.`,
     )
     try {
       if (measureVia === 'github') {
@@ -210,6 +216,8 @@ export default function MeasureTenant() {
       }
       // 경쟁사 하나만 잰 측정은 그 경쟁사 카드만 바뀐다 — 같은 주에 잰 고객 브랜드의 순위표에만 들어간다(1-C 검토).
       const competitorOnly = Boolean(tenants.find((t) => t.tenantId === pickedTenant)?.cohortOnly)
+      // 이 화면이 결과를 알린다 — 이 화면을 보고 있으면 화면 아래 결과 띠를 겹쳐 띄우지 않는다.
+      claim(pickedTenant)
       const d = await measureTenantAll(pickedTenant, mode === 'reuse', mode === 'self')
       // 엔진이 빠진 측정은 그 주 카드를 덮지 않는다(서버 weekCardKeepReason) — 화면 점수가 이번 측정 값이 아닌 까닭을 알린다.
       setMessage(
@@ -258,6 +266,18 @@ export default function MeasureTenant() {
   const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   // 로컬 측정은 앱 전체에서 한 번에 하나씩 순차 실행되므로, 서버에 진행 중이 있으면 측정 중으로 본다.
   const isMeasuring = measuring || (measureVia === 'local' && serverActive.length > 0)
+
+  // 사이드바에서 고객 브랜드를 바꾸면 측정 대상도 따라간다(측정 중이 아닐 때). 처음 열 때는 넘겨받은 대상(requestedPick)을 지킨다 —
+  // 바뀐 것만 따른다. 같은 화면에서 다른 대상을 넘겨받아도(결과 띠의 「다시 측정」) 그 대상으로 바꾼다.
+  const customerId = customer?.tenantId ?? ''
+  const [followed, setFollowed] = useState({ customerId, locationKey: location.key })
+  if (followed.customerId !== customerId || followed.locationKey !== location.key) {
+    setFollowed({ customerId, locationKey: location.key })
+    if (!isMeasuring) {
+      if (followed.locationKey !== location.key && requestedPick) setPickedTenant(requestedPick)
+      else if (followed.customerId && customerId) setPickedTenant(customerId)
+    }
+  }
 
   return (
     <>
@@ -320,6 +340,8 @@ export default function MeasureTenant() {
               cohortSize="listed"
               onPick={(id) => {
                 setPickedTenant(id)
+                // 고객 브랜드를 고르면 사이드바도 그 브랜드로 — 측정 카드 · 배지가 고른 브랜드를 가리키게. 경쟁사는 사이드바를 바꾸지 않는다.
+                if (tenants.some((t) => t.tenantId === id && !t.cohortOnly)) setTenantId(id)
                 closePicker()
               }}
               onClose={closePicker}

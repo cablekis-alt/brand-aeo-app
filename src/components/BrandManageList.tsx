@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { measureErrorText, measureTenantAll, saveTenantEngines } from '../lib/api'
 import { variantTag } from '../lib/brandVariant'
+import { MEASURING_NOTE, useMeasureClaim } from '../lib/measureStatus'
 import type { Engine } from '../prompts/types'
 
 /** 데스크톱 앱 — 내부 id · 배포 경로 안내는 웹 · 개발 환경에서만 보인다(상용화 UI 3차 U4). preload가 스크립트보다 먼저 싣는다. */
@@ -54,6 +55,7 @@ export default function BrandManageList() {
   // 측정 경로(local/github/none)와 진행 중인 측정 — 등록된 브랜드를 목록에서 바로 측정한다.
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
   const [measuringId, setMeasuringId] = useState<string | null>(null)
+  const claim = useMeasureClaim()
   // 서버가 보고하는 진행 — 목록에서 바로 측정할 때도 "측정 중…"에 머무르지 않게 한다.
   const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
   // 수집 엔진 — 어떤 키가 있는지(keyStatus)와 전역 지정이 켜져 있는지(globalEngines)를 알아야
@@ -137,7 +139,7 @@ export default function BrandManageList() {
     setMessage(
       measureVia === 'github'
         ? `${row.brandName} GitHub Actions 측정 요청 중…`
-        : `${row.brandName} 측정 중… (수 분). 끝나면 개요 · 경쟁 순위에 반영됩니다.`,
+        : `${row.brandName} ${MEASURING_NOTE}`,
     )
     try {
       if (measureVia === 'github') {
@@ -151,6 +153,8 @@ export default function BrandManageList() {
         setMessage(`✓ ${row.brandName} GitHub Actions 측정 시작 — 수 분 뒤 반영됩니다.`)
         return
       }
+      // 이 화면이 결과를 알린다 — 이 화면을 보고 있으면 화면 아래 결과 띠를 겹쳐 띄우지 않는다.
+      claim(row.tenantId)
       const d = await measureTenantAll(row.tenantId)
       setMessage(`✓ ${d.brandName ?? row.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점).`)
     } catch (err) {

@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type PortfolioRow } from '../lib/api'
-import { variantTag } from '../lib/brandVariant'
+import { brandLabel, variantTag } from '../lib/brandVariant'
 import BrandPickerPanel, { type PickerRow } from './BrandPickerPanel'
 import NavIcon from './NavIcon'
 
@@ -19,8 +19,11 @@ import NavIcon from './NavIcon'
  * 사이드바는 overflow: hidden이라 패널을 그 안에 띄우면 잘린다. 열 때 브랜드 칸 위치를 재서 화면 기준
  * (position: fixed)으로 띄운다. 점수·상태는 열 때마다 /api/portfolio를 새로 읽고, 오기 전에는 이미 가진
  * 브랜드 목록으로 이름부터 보여 준다.
+ *
+ * dim — 브랜드 현황 · 측정 상태 같은 전체 브랜드 화면에서는 칸을 숨기지 않고 흐리게 「마지막으로 본 브랜드」로 둔다. 숨기면 메뉴가
+ * 화면마다 오르내렸고, 사이드바 배지 · 측정 카드가 어느 브랜드 기준인지 보이지 않았다(상용화 UI 3차 U12).
  */
-export default function BrandSwitcher() {
+export default function BrandSwitcher({ dim = false }: { dim?: boolean }) {
   const { tenants, tenant, customer, viewing, setTenantId } = useTenant()
   const [open, setOpen] = useState(false)
   const [anchor, setAnchor] = useState({ top: 0, left: 0 })
@@ -54,8 +57,20 @@ export default function BrandSwitcher() {
   }, [tenants, portfolio.rows])
   const known = portfolio.rows !== null
 
-  if (!tenant) return null
+  // 브랜드 목록을 읽는 동안에도 같은 높이로 자리를 지킨다 — 칸이 늦게 나타나면 메뉴가 밀려 내려간다.
+  if (!tenant) {
+    return (
+      <div className="brand-switch is-placeholder" aria-hidden="true">
+        <span className="brand-switch-initial" />
+        <span className="brand-switch-text">
+          <span className="brand-switch-name">&nbsp;</span>
+          <span className="brand-switch-meta">&nbsp;</span>
+        </span>
+      </div>
+    )
+  }
   const current = rows.find((r) => r.tenantId === tenant.tenantId) ?? null
+  const name = viewing ? tenant.brandName : brandLabel(tenant, tenants)
   // 경쟁사 보기 중이면 브랜드 칸이 그 경쟁사를 회색으로 보인다 — 지금 누구를 보는지 헷갈리지 않게.
   const initial = viewing ? '경' : (Array.from(tenant.brandName.trim())[0] ?? '?')
 
@@ -64,19 +79,24 @@ export default function BrandSwitcher() {
       <button
         ref={triggerRef}
         type="button"
-        className={`brand-switch${open ? ' is-open' : ''}${viewing ? ' is-competitor' : ''}`}
+        className={`brand-switch${open ? ' is-open' : ''}${viewing ? ' is-competitor' : ''}${dim ? ' is-dim' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`브랜드 바꾸기 — 지금 ${tenant.brandName}`}
+        aria-label={dim ? `브랜드 바꾸기 — 마지막으로 본 브랜드 ${name}` : `브랜드 바꾸기 — 지금 ${name}`}
+        title={dim ? '이 화면은 전체 브랜드 기준입니다. 사이드바의 배지와 최근 측정은 이 브랜드 기준입니다.' : undefined}
         onClick={() => (open ? close() : show())}
       >
         <span className="brand-switch-initial" aria-hidden="true">
           {initial}
         </span>
         <span className="brand-switch-text" aria-hidden="true">
-          <span className="brand-switch-name">{tenant.brandName}</span>
+          <span className="brand-switch-name">{name}</span>
           <span className="brand-switch-meta">
-            {viewing ? '경쟁사 · 읽기 전용' : `${current?.industry ?? tenant.industry} · ${current?.region ?? tenant.region}`}
+            {viewing
+              ? '경쟁사 · 읽기 전용'
+              : dim
+                ? '마지막으로 본 브랜드'
+                : `${current?.industry ?? tenant.industry} · ${current?.region ?? tenant.region}`}
           </span>
         </span>
         <NavIcon name="updown" size={16} />

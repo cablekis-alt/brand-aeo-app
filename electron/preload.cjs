@@ -25,4 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
   setApiKey: (name, value) => ipcRenderer.invoke('settings:setApiKey', { name, value }),
   // 수집 엔진 전역 지정. null/빈 배열이면 브랜드별 설정으로 되돌린다.
   setCollectEngines: (engines) => ipcRenderer.invoke('settings:setCollectEngines', { engines }),
+  // 측정 결과 알림 — 알림을 누르면 창을 앞으로, 실패면 작업 표시줄 단추 깜빡임.
+  focusWindow: () => ipcRenderer.invoke('window:focus'),
+  flashWindow: () => ipcRenderer.invoke('window:flash'),
 })

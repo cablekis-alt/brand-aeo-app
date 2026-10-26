@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { clearDataSource, useDemoData } from '../lib/dataSource'
 import { useTenant } from '../context/useTenant'
@@ -6,11 +6,13 @@ import { directionParticle, objectParticle } from '../lib/korean'
 import { isCustomerOnlyPath } from '../lib/menu'
 import CompetitorViewBar from './CompetitorViewBar'
 import EmptyBrands from './EmptyBrands'
+import MeasureResultBand from './MeasureResultBand'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
-// 선택 브랜드와 무관한 관리·측정 화면 — 사이드바의 브랜드 바꾸기를 숨기고, 브랜드 0개여도 그대로 연다
-// (브랜드 추가는 첫 등록 통로, 측정 대기열·상태는 전역, 테넌트 골라 측정은 자체 드롭다운, 브랜드 현황은 전체 목록).
+// 선택 브랜드와 무관한 관리·측정 화면 — 브랜드 0개여도 그대로 연다(브랜드 추가는 첫 등록 통로, 측정 대기열·상태는 전역,
+// 테넌트 골라 측정은 자체 패널, 브랜드 현황은 전체 목록). 사이드바 브랜드 칸은 숨기지 않고 흐리게 둔다 — 화면마다 칸이
+// 사라졌다 나타나면 메뉴가 58px씩 오르내렸고, 사이드바 배지 · 측정 카드가 어느 브랜드 기준인지 보이지 않았다(상용화 UI 3차 U12).
 const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status', '/brands'])
 
 export default function Layout() {
@@ -23,7 +25,10 @@ export default function Layout() {
   const lockedForCompetitor = Boolean(viewing) && isCustomerOnlyPath(pathname)
   const noBrands = !loading && tenants.length === 0
   const loadingBrands = loading && tenants.length === 0
-  const showBrandPicker = Boolean(tenant) && !isManagement
+  const showBrandPicker = !noBrands
+  // 결과 띠의 「개요 보기」 — 이미 그 화면이어도 새 측정 숫자로 다시 그린다.
+  const [pageEpoch, setPageEpoch] = useState(0)
+  const refreshPage = useCallback(() => setPageEpoch((n) => n + 1), [])
   // 데모 응답이 섞여 있으면 배너. 화면·브랜드가 바뀌면 이전 표시를 비운다(주차 변경은 useWeeklyData가 비운다).
   const demo = useDemoData()
   useEffect(() => {
@@ -102,7 +107,7 @@ export default function Layout() {
 
   return (
     <div className="shell">
-      <Sidebar showBrandPicker={showBrandPicker} />
+      <Sidebar showBrandPicker={showBrandPicker} brandScope={isManagement ? 'global' : 'brand'} />
       <div className="content">
         <CompetitorViewBar />
         <TopBar showBrand={!isManagement} canGoBack={canGoBack} onBack={() => navigate(-1)} />
@@ -139,7 +144,9 @@ export default function Layout() {
             </button>
           </section>
         ) : isManagement ? (
-          <Outlet />
+          <Fragment key={pageEpoch}>
+            <Outlet />
+          </Fragment>
         ) : loadingBrands ? (
           <p className="muted" style={{ marginTop: 24 }}>
             브랜드 목록을 불러오는 중…
@@ -147,9 +154,14 @@ export default function Layout() {
         ) : noBrands ? (
           <EmptyBrands />
         ) : (
-          tenant && <Outlet />
+          tenant && (
+            <Fragment key={pageEpoch}>
+              <Outlet />
+            </Fragment>
+          )
         )}
       </div>
+      <MeasureResultBand onRefresh={refreshPage} />
     </div>
   )
 }

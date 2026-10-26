@@ -265,6 +265,8 @@ async function createWindow() {
     mainWindow = null
     if (process.platform !== 'darwin') beginQuit()
   })
+  // 측정 실패로 깜빡이던 작업 표시줄 단추는 창을 보면 끈다(window:flash).
+  win.on('focus', () => win.flashFrame(false))
 
   // 렌더러 안의 외부 링크(GitHub Actions 로그 등)는 기본 브라우저로 연다.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -542,6 +544,18 @@ ipcMain.handle('settings:setApiKey', (_e, payload) => {
   }
 })
 
+// 측정 결과 알림(src/lib/measureStatus.ts) — 알림을 누르면 창을 앞으로, 측정이 실패하면 창이 뒤에 있을 때 작업 표시줄 단추를 깜빡인다.
+ipcMain.handle('window:focus', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+})
+ipcMain.handle('window:flash', () => {
+  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFocused()) return
+  mainWindow.flashFrame(true)
+})
+
 // 수집 엔진 전역 지정(COLLECT_ENGINES). 빈 배열/null이면 "브랜드별 설정 사용"으로 되돌린다.
 // 판단 엔진(JUDGE_ENGINE)은 의도적으로 여기서 바꾸지 않는다 — 판단이 바뀌면 같은 원문에서 다른
 // 판정이 나와 주차 간 비교가 깨지고, 스코어카드에 판단 엔진이 기록되지 않아 사후 설명도 불가능하다.
@@ -596,6 +610,8 @@ function loadEnvForPackaged() {
 }
 
 app.whenReady().then(() => {
+  // Windows 알림은 앱 사용자 모델 ID로 앱을 찾는다 — 설치본은 electron-builder.yml appId(시작 메뉴 바로가기와 같은 값), 개발은 실행 파일 경로.
+  if (process.platform === 'win32') app.setAppUserModelId(app.isPackaged ? 'kr.o2o.web4ai.brandaeo' : process.execPath)
   void createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) void createWindow()

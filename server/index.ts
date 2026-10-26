@@ -67,6 +67,7 @@ import {
   endMeasureRun,
   listActiveMeasures,
   listMeasureFailures,
+  listRunRecords,
   requestCancelActiveMeasures,
 } from './measureTracker.js';
 import { runWeeklyPipeline } from './pipeline.js';
@@ -215,9 +216,10 @@ app.get('/api/portfolio', async (_req, res) => {
   }
 });
 
-// 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중(measureAndBake가 브랜드마다 추적) + 완료 기록 + 최근 실패.
+// 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중(measureAndBake가 브랜드마다 추적) + 완료 기록 + 최근 실패
+// + 회차 기록(runs — 화면 아래 결과 띠 · 알림이 새로 끝난 회차를 가려낸다).
 app.get('/api/measure-status', (_req, res) => {
-  res.json({ active: listActiveMeasures(), completed: readLocalMeasures(), failed: listMeasureFailures() });
+  res.json({ active: listActiveMeasures(), completed: readLocalMeasures(), failed: listMeasureFailures(), runs: listRunRecords() });
 });
 
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).

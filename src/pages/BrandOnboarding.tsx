@@ -8,6 +8,7 @@ import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureErrorText, measureTenantAll, type FactCandidate } from '../lib/api'
 import { isAddressLike, isDomainLike, scopeLabel } from '../lib/brandVariant'
+import { MEASURING_NOTE, useMeasureClaim } from '../lib/measureStatus'
 import { directionParticle, objectParticle, subjectParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
@@ -361,6 +362,7 @@ export default function BrandOnboarding() {
   // 다른 범위로 하나 더 등록할 때 원래 브랜드의 사실 · 브랜드 페이지 · 발행 설정을 가져올지(기본 켬).
   const [copyBusiness, setCopyBusiness] = useState(true)
   const [measuring, setMeasuring] = useState(false)
+  const claim = useMeasureClaim()
   // 측정을 건너뛰었나 — 6단계를 '완료'로 보고 다음 할 일을 안내한다.
   const [skippedMeasure, setSkippedMeasure] = useState(false)
   const [measureMsg, setMeasureMsg] = useState<string | null>(null)
@@ -1242,7 +1244,7 @@ export default function BrandOnboarding() {
     setMeasureMsg(
       measureVia === 'github'
         ? `${tenant.brandName} GitHub Actions 측정 요청 중…`
-        : `${tenant.brandName} 측정 중… (수 분). 완료되면 결과가 반영됩니다.`,
+        : `${tenant.brandName} ${MEASURING_NOTE}`,
     )
     try {
       if (measureVia === 'github') {
@@ -1259,6 +1261,8 @@ export default function BrandOnboarding() {
         )
         return
       }
+      // 이 화면이 결과를 알린다 — 이 화면을 보고 있으면 화면 아래 결과 띠를 겹쳐 띄우지 않는다.
+      claim(id)
       const d = await measureTenantAll(id)
       setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). 개요 · 경쟁 순위에서 확인하세요.`)
     } catch (err) {
