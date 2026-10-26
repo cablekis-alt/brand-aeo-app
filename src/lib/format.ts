@@ -57,8 +57,9 @@ export function measureConditionText(card: {
 }
 
 /**
- * 고객 종이용 측정 조건 한 줄 — 「ChatGPT · Gemini · Perplexity에 물음 · 답변 분석 Claude · 질문당 1회 · 질문지 v5」.
+ * 고객 종이용 측정 조건 한 줄 — 「수집 엔진 ChatGPT · Gemini · Perplexity · 판정 엔진 Claude · 질문당 1회 · 질문지 v5」.
  * 모델 id · preset(gpt-6-luna, preset:low)은 운영자가 화면에서 보는 값이라 빼고 엔진 이름만 쓴다. 기록이 없으면 그 조각을 뺀다.
+ * 조건 이름은 같은 종이의 「측정 조건이 달라(판정 엔진 바뀜)」(comparability.ts)과 같은 말이다(결정 D7 「판정 엔진」).
  */
 export function measureConditionPlain(card: {
   enginesUsed?: string[]
@@ -68,8 +69,8 @@ export function measureConditionPlain(card: {
 }): string {
   const engines = (card.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
   return [
-    engines ? `${engines}에 물음` : '',
-    card.judgeEngine ? `답변 분석 ${ENGINE_LABEL[card.judgeEngine] ?? card.judgeEngine}` : '',
+    engines ? `수집 엔진 ${engines}` : '',
+    card.judgeEngine ? `판정 엔진 ${ENGINE_LABEL[card.judgeEngine] ?? card.judgeEngine}` : '',
     card.repeatsPerQuestion ? `질문당 ${card.repeatsPerQuestion}회` : '',
     card.questionBankVersion ? `질문지 ${card.questionBankVersion}` : '',
   ]

@@ -193,8 +193,9 @@ const plain = measureConditionPlain({
   repeatsPerQuestion: 1,
   questionBankVersion: 'v5',
 })
-ok('표지 조건(종이): 엔진 이름 · 답변 분석 · 질문당 · 질문지', plain === 'ChatGPT · Gemini · Perplexity에 물음 · 답변 분석 Claude · 질문당 1회 · 질문지 v5')
-ok('표지 조건(종이): 기록이 없으면 그 조각을 뺀다', measureConditionPlain({ enginesUsed: ['gemini'] }) === 'Gemini에 물음')
+// 조건 이름은 같은 종이의 「측정 조건이 달라(판정 엔진 바뀜)」과 같은 말(결정 D7 — 1-A 검토에서 「답변 분석」이 어긋난다는 지적)
+ok('표지 조건(종이): 수집 엔진 · 판정 엔진 · 질문당 · 질문지', plain === '수집 엔진 ChatGPT · Gemini · Perplexity · 판정 엔진 Claude · 질문당 1회 · 질문지 v5')
+ok('표지 조건(종이): 기록이 없으면 그 조각을 뺀다', measureConditionPlain({ enginesUsed: ['gemini'] }) === '수집 엔진 Gemini')
 
 // 9) 개선제안 근거 — 사실성 원문은 화면 전용(D8: 고객 종이에는 건수만), 계산 예시는 합니다체
 const evBank = { questions: [{ questionId: 'q0', text: '가상 질문', category: 'category-agnostic' }] } as unknown as QuestionBank

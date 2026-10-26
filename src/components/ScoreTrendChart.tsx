@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { HistoryWeek, PublishedPost } from '../lib/api'
-import { compareConditions, diffText } from '../lib/comparability'
+import { compareConditions, conditionSummary, diffText } from '../lib/comparability'
 import { executionMarks, pinLegend, postingLegend, type ExecutionPin } from '../lib/publishTracking'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { previousIsoWeek } from '../prompts/isoWeek'
@@ -16,6 +16,8 @@ interface Break {
   at: number
   weekOf: string
   detail: string
+  /** 종이용 — 바뀐 조건과 기록이 없는 조건을 이름만으로(「질문지 바뀜 · 수집 모델 기록 없음」). 모델 id 같은 값은 싣지 않는다. */
+  plain: string
 }
 
 const MAX_WEEKS = 12
@@ -125,7 +127,7 @@ export default function ScoreTrendChart({
     if (!s.card) continue
     if (prev) {
       const diffs = compareConditions(prev, s.card)
-      if (diffs.length > 0) breaks.push({ at: i, weekOf: s.weekOf, detail: diffs.map(diffText).join(' · ') })
+      if (diffs.length > 0) breaks.push({ at: i, weekOf: s.weekOf, detail: diffs.map(diffText).join(' · '), plain: conditionSummary(diffs) })
     }
     prev = s.card
   }
@@ -287,7 +289,10 @@ export default function ScoreTrendChart({
         </span>
         {/* 고객 종이에 실리는 그림이라 「코호트」 대신 「비교 그룹」(상용화 UI 3차 결정 D6). 점수는 100점 만점이다 — 축만 보면 30점 만점으로 읽힌다. */}
         <span>세로축 0–{top}점(100점 만점) · 아래 숫자는 비교 그룹 순위</span>
-        {/* 무엇이 바뀌었는지(모델 id · 값)는 운영자가 화면에서 본다 — 종이에는 끊은 주와 까닭 한 줄만 싣는다. */}
+        {/*
+          무엇이 바뀌었는지(모델 id · 값)는 운영자가 화면에서 본다 — 종이에는 끊은 주와 조건 이름만 싣는다. 기록이 한쪽에 없어 끊은 주를
+          「바뀐 주」라고 하지 않는다(앱 공용 규칙 — 같은 종이의 ※ 안내도 「기록 없음」과 「바뀜」을 가른다).
+        */}
         {breaks.map((b) => (
           <span key={b.at} className="st-key-break no-print">
             <span className="st-key diamond" aria-hidden="true" /> {shortWeek(b.weekOf)} {b.detail} — 앞뒤를 잇지 않음
@@ -295,8 +300,8 @@ export default function ScoreTrendChart({
         ))}
         {breaks.length > 0 && (
           <span className="st-key-break print-only">
-            <span className="st-key diamond" aria-hidden="true" /> {breaks.map((b) => shortWeek(b.weekOf)).join(' · ')}: 측정 방식이 바뀐
-            주라 선을 끊었습니다
+            <span className="st-key diamond" aria-hidden="true" /> {breaks.map((b) => `${shortWeek(b.weekOf)} ${b.plain}`).join(' / ')} —
+            측정 조건이 다르거나 기록이 없어 앞뒤를 잇지 않았습니다
           </span>
         )}
         {pins.length > 0 && <span>번호 핀은 올린 글 — 핀 오른쪽 점이 올린 뒤 측정(내린 글은 내린 날까지)</span>}

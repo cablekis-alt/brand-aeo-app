@@ -1120,7 +1120,23 @@ export default function PeriodicReport() {
                         )}
                       </div>
                     )}
-                    <p className="rec-label">{rec.evidence?.blocks.length ? '기본 원칙' : '실행안'}</p>
+                    {/*
+                      「기본 원칙」은 위 데이터 항목과 견준 이름이다 — 종이에 데이터 항목이 없으면(사실성 원문만 있는 카드: 화면 전용) 종이에는
+                      다른 카드처럼 「실행안」으로 찍는다.
+                    */}
+                    {(() => {
+                      const blocks = rec.evidence?.blocks ?? []
+                      if (blocks.length === 0) return <p className="rec-label">실행안</p>
+                      const printed = blocks.some((b) => !b.screenOnly) || Boolean(rec.evidence?.estimate)
+                      return printed ? (
+                        <p className="rec-label">기본 원칙</p>
+                      ) : (
+                        <p className="rec-label">
+                          <span className="no-print">기본 원칙</span>
+                          <span className="print-only-inline">실행안</span>
+                        </p>
+                      )
+                    })()}
                     <ul className="rec-actions">
                       {rec.actions.map((a, j) => (
                         <li key={j}>{a}</li>
