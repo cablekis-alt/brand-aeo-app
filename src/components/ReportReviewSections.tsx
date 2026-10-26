@@ -379,7 +379,11 @@ export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; w
           </div>
         ))}
       </dl>
-      <p className="hint">{weekLabel(weekOf)} 측정값으로 셈했습니다. 점수 식은 화면의 Brand AEO Score와 같습니다.</p>
+      <p className="hint">
+        {weekLabel(weekOf)} 측정값으로 셈했습니다.
+        {/* 고객 종이에는 앱 화면이 없다 — 점수 식 안내는 화면에서만. */}
+        <span className="no-print"> 점수 식은 화면의 Brand AEO Score와 같습니다.</span>
+      </p>
     </section>
   )
 }

@@ -31,7 +31,18 @@ const bank = {
 } as unknown as QuestionBank
 
 const analysis = (questionId: string, engine: string, mentioned: boolean, brandRank: number | null = null) =>
-  ({ questionId, engine, callIndex: 1, mentioned, brandRank, mentionSentences: [], competitorMentions: [], citations: [], factualityClaims: [] }) as unknown as QuestionRepeatAnalysis
+  ({
+    questionId,
+    engine,
+    callIndex: 1,
+    mentioned,
+    brandRank,
+    // 불린 답에는 긍정 문장 하나 — 감성 계수 1(서버와 같은 규칙, 점수 풀이는 이 문장에서 감성을 센다).
+    mentionSentences: mentioned ? [{ text: '가상 문장', sentiment: 'positive' }] : [],
+    competitorMentions: [],
+    citations: [],
+    factualityClaims: [],
+  }) as unknown as QuestionRepeatAnalysis
 
 /**
  * 판정 기록 — 이름 없는 질문 78건 중 rankedQs의 질문에 엔진 rankedEngines만 1위(언급) · extraMentions건은 순위 없이 언급,
@@ -96,10 +107,10 @@ ok('구성: 순위 약 10 + 언급 약 1 + 자사 약 1', text('parts') === '12�
 ok('비중: 2건이라 25% → 10%', text('weights').includes('이번 주는 2건이라 추천 순위 비중이 25% → 10%로'))
 ok('몰림: 12점 중 약 11점 · 답 2건 · 질문 1개 원문', text('concentration').startsWith('12점 가운데 약 11점은 이름 없이 물은 질문의 답 2건(질문 1개 — 「가상 일반 질문 14」)'))
 ok('몰림: 없었다면 1점', text('concentration').endsWith('이 2건이 없었다면 1점입니다.'))
-ok('계단: 0건 1점 · 1건 7점 · 2건 12점 · 3건 17점', text('steps').includes('0건 1점 · 1건 7점 · 2건 12점 · 3건 17점'))
+ok('계단: 0건 1점 · 1건 7점 · 2건 12점(이번 주) · 3건 17점', text('steps').includes('0건 1점 · 1건 7점 · 2건 12점(이번 주) · 3건 17점'))
 ok('순위의 뜻: 비교 그룹 이름 안 순위', text('rankScope').includes('비교 그룹 이름 가운데') && text('rankScope').includes('비교 그룹에 없는 업체는 순위에서 빠지므로'))
 ok('이름을 댈 때: 48건 중 43건 · 78건 중 2건', text('named').includes('응답 48건 중 43건') && text('named').includes('78건 중 2건'))
-ok('움직이는 것: 1위 답 1건 약 +5점 · 자사 1%p 약 +0.4점', text('effects').includes('1건이 약 +5점') && text('effects').includes('1%p가 약 +0.4점'))
+ok('움직이는 것: 1위 답 1건 약 +5점 · 자사 인용률은 모든 질문 기준으로 따로', text('effects').includes('1건이 약 +5점') && text('effects').includes('자사 출처 인용률(모든 질문의 인용 기준)은 1%p에 약 +0.4점'))
 ok('견주는 구간: 이력이 한 주뿐이면 없음', !lines44.some((l) => l.key === 'segment'))
 
 // 2) 고객 종이 문구 — 내부 용어 · 질문 id · 판 번호가 나오지 않는다.
@@ -142,6 +153,45 @@ ok('견주는 구간: 시작 주 · 바뀐 조건 · 그 전 범위', seg.starts
 ok('견주는 구간: 구간 길이를 적지 않는다', seg.endsWith('와는 견주지 않습니다.'))
 const segFirst = explainScore({ card: card43, history: [...before, card43], analyses: w44, bank }).find((l) => l.key === 'segment')?.text ?? ''
 ok('견주는 구간: 바뀐 조건으로 처음 잰 주', segFirst.endsWith('이번 주가 바뀐 조건으로 처음 잰 주입니다.'))
+
+// ── 1단계 검토 반영 ─────────────────────────────────────────────
+// 계단은 1위가 아닌 순위 답을 그대로 두고 1위 답 수만 바꾼다 — 이번 주 칸이 이번 주 점수(실측 골목집 W38 [4,3] 17점이 「0건 11점」).
+for (const ranks of [[3], [4, 3], [1, 4, 1], [3, 3, 1, 1]]) {
+  const a = records({ ranked: ranks.map((rank, i) => ({ q: i, engine: 'perplexity', rank })), namedHits: 20 })
+  const c = cardOf('2026-W44', a, 0.02)
+  const steps = explainScore({ card: c, history: [c], analyses: a, bank }).find((l) => l.key === 'steps')?.text ?? ''
+  const first = ranks.filter((r) => r === 1).length
+  ok(`계단 [${ranks.join(',')}]: 이번 주 칸(${first}건) = 점수 ${c.aeoScore.current}`, steps.includes(`${first}건 ${c.aeoScore.current}점(이번 주)`))
+}
+// 구성 — 항목 몫의 합이 점수와 같다(실측 web4ai W40 「8점 = 5 + 1 + 1」).
+for (const owned of [0.0326, 0.05, 0.13]) {
+  const a = records({ ranked: [{ q: 15, engine: 'openai', rank: 1 }], extraMentions: 1, namedHits: 30 })
+  const c = cardOf('2026-W40', a, owned)
+  const parts = explainScore({ card: c, history: [c], analyses: a, bank }).find((l) => l.key === 'parts')?.text ?? ''
+  const nums = [...parts.matchAll(/약 (\d+)점/g)].map((m) => Number(m[1]))
+  ok(`구성 합 = 점수(자사 ${owned})`, nums.reduce((s, x) => s + x, 0) === c.aeoScore.current)
+}
+// 감성 계수는 판정 기록의 언급 문장에서 센다 — 카드 점수에서 거꾸로 풀면 언급 한두 건인 주에 0.7~0.8로 틀어진다.
+const one = records({ ranked: [], extraMentions: 2, namedHits: 10 })
+// 점수 2.31 → 2로 내려 반올림되는 주 — 거꾸로 풀면 감성 0.78, 문장으로 세면 1.
+const cardOne = cardOf('2026-W41', one, 0.02)
+const effOne = explainScore({ card: cardOne, history: [cardOne], analyses: one, bank }).find((l) => l.key === 'effects')?.text ?? ''
+ok('감성: 문장이 모두 긍정이면 순위 없는 언급 1건 약 +0.7점(거꾸로 푼 감성이면 +0.6)', effOne.includes('순위 없이 불리는 답 1건이 약 +0.7점'))
+// 견주는 구간 — 한쪽에 기록이 없을 뿐이면 「달라져」라고 쓰지 않는다(표지 · 비교 불가 안내와 같은 규칙).
+const noModel = [cardOf('2026-W38', w44, 0.03, { judgeModel: undefined, modelsUsed: undefined } as Partial<WeeklyScorecard>), card43, card44]
+const segUnknown = explainScore({ card: card44, history: noModel, analyses: w44, bank }).find((l) => l.key === 'segment')?.text ?? ''
+ok('견주는 구간(기록 없음뿐): 「달라져」 대신 「기록이 한쪽에 없어」', segUnknown.includes('견줄 측정 조건 기록이 한쪽에 없어(') && !segUnknown.includes('달라져'))
+// 옛 카드(순위 응답 수 없음) · 지금 식으로 점수가 나오지 않는 카드 — 기록으로 센 줄 · 구성 줄을 쓰지 않는다.
+const oldCard = { ...card44, rankedResponses: undefined } as unknown as WeeklyScorecard
+ok('옛 카드: 몰림 · 계단 · 움직이는 것 없음', !explainScore({ card: oldCard, history: [oldCard], analyses: w44, bank }).some((l) => ['concentration', 'steps', 'effects', 'named'].includes(l.key)))
+const oddCard = { ...card44, aeoScore: { ...card44.aeoScore, current: 27 } } as WeeklyScorecard
+ok('식이 맞지 않는 카드: 구성 · 비중 · 기록 줄 없음', !explainScore({ card: oddCard, history: [oddCard], analyses: w44, bank }).some((l) => ['parts', 'weights', 'concentration', 'steps', 'effects'].includes(l.key)))
+// 순위 개선제안 근거 · 순위 진단 비중 — 답이 적으면 단정하지 않고, 비중은 꼬리표와 같은 「25% → 10%」.
+const lowRank = records({ ranked: [{ q: 0, engine: 'openai', rank: 4 }, { q: 1, engine: 'openai', rank: 3 }], namedHits: 20 })
+const cardLow = cardOf('2026-W44', lowRank, 0.02)
+const reportLow = buildPeriodicReport([cardLow], '2026-W44')!
+ok('순위 개선제안(2건): 「하위에 배치」라고 단정하지 않는다', reportLow.recommendations.find((r) => r.id === 'rank')?.basis.includes('답이 적어 순위 위치를 단정하지 않습니다') === true)
+ok('순위 진단(2건): 비중은 「25% → 10%」로(「2/6」 아님)', rankNote.includes('추천 순위 비중이 25% → 10%입니다') && !rankNote.includes('2/6'))
 
 // ── 2단계: 같은 조건 회차 · 다른 회차 표시 · 출처 ─────────────────────────────
 // 회차 기록(server/runHistory.ts 모양) — W42 옛 그 주 파일 · W43 옮겨 둔 회차 · W43 회차 · W44 함께 잰 회차 · W44 이 브랜드만 잰 회차(그 주 카드).

@@ -1,6 +1,16 @@
 import { RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
 import type { RunHistory, RunPoint } from './api'
-import { aeoScoreOf, aeoScoreRaw, scoreBreakdown, scoreInputsOf, weightTagText, type ScoreInputs, type ScorePartKey } from './b9-report'
+import {
+  aeoScoreOf,
+  aeoScoreRaw,
+  mentionSentimentOf,
+  NEUTRAL_SENTIMENT,
+  scoreBreakdown,
+  scoreInputsOf,
+  weightTagText,
+  type ScoreInputs,
+  type ScorePartKey,
+} from './b9-report'
 import { comparableRun, compareConditions, conditionSummary } from './comparability'
 import { formatRank, weekLabel } from './format'
 import { buildRunTrend, kstStamp } from './runTrend'
@@ -67,19 +77,40 @@ function population(card: WeeklyScorecard, analyses: QuestionRepeatAnalysis[], b
   if (unnamed.length === 0) return null
   const ranked = unnamed.filter((a) => a.mentioned && a.brandRank !== null)
   const mentioned = unnamed.filter((a) => a.mentioned).length
+  // 순위 응답 수가 없는 옛 카드는 순위를 다른 식(전체 비중)으로 셌다 — 기록으로 센 줄을 쓰면 계단 · 몰림이 카드 점수와 어긋난다.
   const matchesCard =
-    Math.abs(mentioned / unnamed.length - card.mentionRate) < 1e-6 && (card.rankedResponses === undefined || card.rankedResponses === ranked.length)
+    card.rankedResponses !== undefined &&
+    card.rankedResponses === ranked.length &&
+    Math.abs(mentioned / unnamed.length - card.mentionRate) < 1e-6
   return { unnamed, named, ranked, matchesCard }
 }
 
 /** 이번 주 다른 값은 그대로 두고 순위가 매겨진 답만 바꾼 점수 식 입력 — ranks는 순위가 매겨진 답들의 순위, 그 답들은 언급으로도 센다. */
-function withRanked(base: ScoreInputs, n: number, otherMentions: number, ranks: number[]): ScoreInputs {
+function withRanked(base: ScoreInputs, n: number, otherMentions: number, ranks: number[], sentiment = base.sentiment): ScoreInputs {
   return {
     ...base,
+    sentiment,
     mentionRate: (otherMentions + ranks.length) / n,
     avgRecommendationRank: ranks.length > 0 ? ranks.reduce((s, r) => s + r, 0) / ranks.length : null,
     rankedResponses: ranks.length,
   }
+}
+
+/** 정수 몫 나누기 — 합이 점수와 같게(내림한 뒤 소수부가 큰 항목부터 1점씩). 「12점 = 10 + 1 + 1」이 더해서 맞아야 한다. */
+function apportion(values: number[], total: number): number[] {
+  const floors = values.map((v) => Math.floor(Math.max(0, v)))
+  let diff = total - floors.reduce((a, b) => a + b, 0)
+  const order = values.map((v, i) => ({ i, frac: Math.max(0, v) - floors[i]! })).sort((a, b) => b.frac - a.frac)
+  for (let j = 0; diff > 0 && j < order.length; j += 1, diff -= 1) floors[order[j]!.i]! += 1
+  // 합이 넘치면(언급 몫이 0에서 잘린 경우) 소수부가 작은 항목부터 1점씩 덜어 낸다.
+  for (let j = order.length - 1; diff < 0 && j >= 0; j -= 1) {
+    const i = order[j]!.i
+    if (floors[i]! > 0) {
+      floors[i]! -= 1
+      diff += 1
+    }
+  }
+  return floors
 }
 
 export function explainScore(input: {
@@ -92,46 +123,69 @@ export function explainScore(input: {
   const score = card.aeoScore.current
   const lines: ExplainLine[] = []
   const parts = scoreBreakdown(card)
+  // 지금 점수 식으로 카드 점수가 나오는가 — 옛 가중치로 낸 카드(웹 데모 등)는 항목 몫 · 비중이 맞지 않아 그런 줄을 쓰지 않는다.
+  const formulaFits = aeoScoreOf(scoreInputsOf(card)) === score
 
-  // 구성 — 항목마다 보탠 점수(약). 언급률 몫은 감성 계수가 카드에 남지 않아 나머지를 뺀 값이라 정수로만 적는다.
-  const counted = parts.filter((p) => p.points !== null).sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-  lines.push({
-    key: 'parts',
-    label: '구성',
-    text: `${score}점 = ${counted.map((p) => `${PART_LABEL[p.key]} 약 ${Math.round(p.points ?? 0)}점`).join(' + ')}${
-      parts.some((p) => p.key === 'avgRecommendationRank' && p.points === null) ? ' (순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다)' : ''
-    }.`,
-  })
-
-  // 비중 — 순위 답이 6건보다 적으면 순위 몫을 그만큼 줄이고 나머지를 키운다.
-  const rankPart = parts.find((p) => p.key === 'avgRecommendationRank')!
-  if (card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES) {
-    const others = parts
-      .filter((p) => p.key !== 'avgRecommendationRank')
-      .map((p) => `${PART_LABEL[p.key]} ${weightTagText(p, { short: true })}`)
-      .join(' · ')
+  if (formulaFits) {
+    // 구성 — 항목마다 보탠 점수(약, 정수). 합이 점수와 같게 나눈다.
+    const counted = parts.filter((p) => p.points !== null).sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+    const ints = apportion(
+      counted.map((p) => p.points ?? 0),
+      score,
+    )
     lines.push({
-      key: 'weights',
-      label: '비중',
-      text:
-        rankPart.weight === 0
-          ? `순위가 매겨진 답이 없으면 추천 순위를 빼고 나머지 두 항목으로만 셉니다(${others}).`
-          : `순위가 매겨진 답이 ${RANK_FULL_WEIGHT_RESPONSES}건보다 적으면 그만큼만 반영합니다. 이번 주는 ${card.rankedResponses}건이라 추천 순위 비중이 ${weightTagText(rankPart, { short: true })}로 줄고, 나머지가 커졌습니다(${others}).`,
+      key: 'parts',
+      label: '구성',
+      text: `${score}점 = ${counted.map((p, i) => `${PART_LABEL[p.key]} 약 ${ints[i]}점`).join(' + ')}${
+        parts.some((p) => p.key === 'avgRecommendationRank' && p.points === null) ? ' (순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다)' : ''
+      }.`,
     })
+
+    // 비중 — 순위 답이 6건보다 적으면 순위 몫을 그만큼 줄이고 나머지를 키운다.
+    const rankPart = parts.find((p) => p.key === 'avgRecommendationRank')!
+    if (card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES) {
+      const others = parts
+        .filter((p) => p.key !== 'avgRecommendationRank')
+        .map((p) => `${PART_LABEL[p.key]} ${weightTagText(p, { short: true })}`)
+        .join(' · ')
+      lines.push({
+        key: 'weights',
+        label: '비중',
+        text:
+          rankPart.weight === 0
+            ? `순위가 매겨진 답이 없으면 추천 순위를 빼고 나머지 두 항목으로만 셉니다(${others}).`
+            : `순위가 매겨진 답이 ${RANK_FULL_WEIGHT_RESPONSES}건보다 적으면 그만큼만 반영합니다. 이번 주는 ${card.rankedResponses}건이라 추천 순위 비중이 ${weightTagText(rankPart, { short: true })}로 줄고, 나머지가 커졌습니다(${others}).`,
+      })
+    }
   }
 
+  /*
+   * 기록으로 센 줄(몰림 · 계단 · 이름을 댈 때 · 움직이는 것) — 판정 기록이 카드와 같은 측정이고, 기록 값(실제 감성 계수 포함)으로 같은 식에
+   * 넣어 카드 점수가 나올 때만. 감성 계수는 언급 문장에서 서버와 같은 규칙으로 센다(반올림된 점수에서 거꾸로 풀면 언급이 한두 건인 주에
+   * 0.7~0.8로 틀어진다). 새로 불리는 답을 가정할 때는 지금 문장 평균, 문장이 없으면 중립 0.7(개선제안 계산 예시와 같은 가정).
+   */
   const pop = population(card, analyses, bank)
   const base = scoreInputsOf(card)
-  const usable = pop && pop.matchesCard ? pop : null
+  let usable: (Population & { n: number; ranks: number[]; otherMentions: number; sentimentNow: number; sentimentNew: number }) | null = null
+  if (pop && pop.matchesCard) {
+    const n = pop.unnamed.length
+    const ranks = pop.ranked.map((a) => a.brandRank as number)
+    const otherMentions = pop.unnamed.filter((a) => a.mentioned).length - ranks.length
+    const actual = mentionSentimentOf(pop.unnamed)
+    const sentimentNow = actual ?? 1
+    if (aeoScoreOf(withRanked(base, n, otherMentions, ranks, sentimentNow)) === score) {
+      usable = { ...pop, n, ranks, otherMentions, sentimentNow, sentimentNew: actual ?? NEUTRAL_SENTIMENT }
+    }
+  }
 
   if (usable) {
-    const n = usable.unnamed.length
-    const k = usable.ranked.length
-    const otherMentions = usable.unnamed.filter((a) => a.mentioned).length - k
+    const { n, ranks, otherMentions, sentimentNow, sentimentNew } = usable
+    const k = ranks.length
 
-    // 몰림 — 순위가 매겨진 답 몇 건이 점수 대부분을 낸 주.
+    // 몰림 — 순위가 매겨진 답 몇 건이 점수 대부분을 낸 주. 그 답들이 없었다면 그 답의 언급 문장도 감성 평균에서 빠진다(서버와 같다).
     if (k > 0 && k < RANK_FULL_WEIGHT_RESPONSES) {
-      const without = aeoScoreOf(withRanked(base, n, otherMentions, []))
+      const rest = usable.unnamed.filter((a) => !usable!.ranked.includes(a))
+      const without = aeoScoreOf(withRanked(base, n, otherMentions, [], mentionSentimentOf(rest) ?? 1))
       const fromRanked = score - without
       if (fromRanked >= CONCENTRATION_MIN_POINTS && fromRanked >= score * CONCENTRATION_SHARE) {
         const texts = [...new Set(usable.ranked.map((a) => bank!.questions.find((q) => q.questionId === a.questionId)?.text ?? ''))].filter(Boolean)
@@ -144,10 +198,16 @@ export function explainScore(input: {
       }
     }
 
-    // 계단 — 순위 비중이 늘어나는 구간(6건 미만)에서는 1위 답 한 건이 점수를 크게 바꾼다.
+    // 계단 — 순위 비중이 늘어나는 구간(6건 미만)에서는 1위 답 한 건이 점수를 크게 바꾼다. 1위가 아닌 순위 답은 그대로 두고 1위 답 수만
+    // 바꾼다 — 이번 주 칸이 이번 주 점수와 같다.
     if (k < RANK_FULL_WEIGHT_RESPONSES) {
-      const top = Math.min(RANK_FULL_WEIGHT_RESPONSES, Math.max(3, k + 1))
-      const steps = Array.from({ length: top + 1 }, (_, j) => `${j}건 ${aeoScoreOf(withRanked(base, n, otherMentions, Array(j).fill(1)))}점`)
+      const nonFirst = ranks.filter((r) => r !== 1)
+      const firstNow = k - nonFirst.length
+      const top = Math.min(RANK_FULL_WEIGHT_RESPONSES, Math.max(3, firstNow + 1))
+      const steps = Array.from({ length: top + 1 }, (_, j) => {
+        const s = j === firstNow ? score : aeoScoreOf(withRanked(base, n, otherMentions, [...nonFirst, ...Array(j).fill(1)], j > firstNow ? sentimentNew : sentimentNow))
+        return `${j}건 ${s}점${j === firstNow ? '(이번 주)' : ''}`
+      })
       lines.push({
         key: 'steps',
         label: '계단',
@@ -176,38 +236,41 @@ export function explainScore(input: {
     })
   }
 
-  // 무엇이 점수를 움직이나 — 같은 식에 한 건 · 1%p를 더해 본 값.
+  // 무엇이 점수를 움직이나 — 같은 식에 한 건 · 1%p를 더해 본 값. 자사 출처 인용률은 모든 질문의 인용으로 세므로 따로 적는다.
   if (usable) {
-    const n = usable.unnamed.length
-    const k = usable.ranked.length
-    const otherMentions = usable.unnamed.filter((a) => a.mentioned).length - k
-    const ranks = usable.ranked.map((a) => a.brandRank as number)
-    const now = aeoScoreRaw(withRanked(base, n, otherMentions, ranks))
-    const topOne = aeoScoreRaw(withRanked(base, n, otherMentions, [...ranks, 1])) - now
-    const plainOne = aeoScoreRaw(withRanked(base, n, otherMentions + 1, ranks)) - now
-    const owned = aeoScoreRaw({ ...withRanked(base, n, otherMentions, ranks), brandOwnedCitationRate: base.brandOwnedCitationRate + 0.01 }) - now
+    const { n, ranks, otherMentions, sentimentNow, sentimentNew } = usable
+    const now = aeoScoreRaw(withRanked(base, n, otherMentions, ranks, sentimentNow))
+    const topOne = aeoScoreRaw(withRanked(base, n, otherMentions, [...ranks, 1], sentimentNew)) - now
+    const plainOne = aeoScoreRaw(withRanked(base, n, otherMentions + 1, ranks, sentimentNew)) - now
+    const owned =
+      aeoScoreRaw({ ...withRanked(base, n, otherMentions, ranks, sentimentNow), brandOwnedCitationRate: base.brandOwnedCitationRate + 0.01 }) - now
     lines.push({
       key: 'effects',
       label: '움직이는 것',
-      text: `같은 식으로 셈하면 이번 주에는 이름 없이 물은 질문에서 비교 그룹 이름 중 1위로 추천되는 답 1건이 약 ${pointsText(topOne)}, 순위 없이 불리는 답 1건이 약 ${pointsText(plainOne)}, 자사 출처 인용률 1%p가 약 ${pointsText(owned)}입니다(같은 식으로 낸 값이며 약속이 아닙니다).`,
+      text: `같은 식으로 셈하면 이번 주에는 이름 없이 물은 질문에서 비교 그룹 이름 중 1위로 추천되는 답 1건이 약 ${pointsText(topOne)}, 순위 없이 불리는 답 1건이 약 ${pointsText(plainOne)}입니다. 자사 출처 인용률(모든 질문의 인용 기준)은 1%p에 약 ${pointsText(owned)}입니다(같은 식으로 낸 값이며 약속이 아닙니다).`,
     })
   }
 
-  // 견주는 구간 — 측정 조건이 바뀐 주 앞의 점수와는 견주지 않는다(앱 전체 규칙 comparability.ts).
+  // 견주는 구간 — 측정 조건이 바뀐 주 앞의 점수와는 견주지 않는다(앱 전체 규칙 comparability.ts). 바뀐 조건과 한쪽에 기록이 없는 조건을
+  // 가른다 — 기록이 없는 것을 「달라졌다」고 쓰지 않는다(표지 · 비교 불가 안내와 같은 규칙).
   const run = comparableRun(history, card.weekOf)
   const earlier = history.filter((h) => run.length > 0 && h.weekOf < run[0]!.weekOf).sort((a, b) => a.weekOf.localeCompare(b.weekOf))
   if (run.length > 0 && earlier.length > 0) {
     const scores = earlier.map((h) => h.aeoScore.current)
     const lo = Math.min(...scores)
     const hi = Math.max(...scores)
-    const change = conditionSummary(compareConditions(earlier.at(-1)!, run[0]!))
+    const diffs = compareConditions(earlier.at(-1)!, run[0]!)
+    const changed = diffs.some((d) => d.state === 'changed')
+    const start = weekRangeText(run[0]!.weekOf, run[0]!.weekOf)
+    const before = `그 전 점수(${weekRangeText(earlier[0]!.weekOf, earlier.at(-1)!.weekOf)}, ${lo === hi ? `${lo}점` : `${lo}~${hi}점`})와는 견주지 않습니다.`
+    const unknownDims = diffs.filter((d) => d.state === 'unknown').map((d) => d.dimension).join(' · ')
     lines.push({
       key: 'segment',
       label: '견주는 구간',
       // 같은 조건 구간의 길이는 적지 않는다 — 「같은 조건으로 잰 최근 측정」 절은 같은 주 여러 회차까지 세어(옛 기록 제외) 수가 다르다.
-      text: `${weekRangeText(run[0]!.weekOf, run[0]!.weekOf)}부터 측정 조건${change ? `(${change})` : ''}이 달라져, 그 전 점수(${weekRangeText(earlier[0]!.weekOf, earlier.at(-1)!.weekOf)}, ${lo === hi ? `${lo}점` : `${lo}~${hi}점`})와는 견주지 않습니다.${
-        run.length === 1 ? ' 이번 주가 바뀐 조건으로 처음 잰 주입니다.' : ''
-      }`,
+      text: changed
+        ? `${start}부터 측정 조건(${conditionSummary(diffs)})이 달라져, ${before}${run.length === 1 ? ' 이번 주가 바뀐 조건으로 처음 잰 주입니다.' : ''}`
+        : `${start}부터는 앞 측정과 견줄 측정 조건 기록이 한쪽에 없어(${unknownDims}), ${before}${run.length === 1 ? ' 이번 주부터 새로 이어 봅니다.' : ''}`,
     })
   }
 

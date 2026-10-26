@@ -148,6 +148,23 @@ export function aeoScoreRaw(v: ScoreInputs): number {
   return parts.reduce((s, p) => s + p.value * (p.weight / total), 0) * 100
 }
 
+/** 언급 문장 감성 → 가중치 — server/scoring.ts sentimentWeight와 같다(positive 1 · neutral 0.7 · negative 0.2, 그 밖은 중립). */
+export function sentimentWeightOf(s: string): number {
+  return s === 'positive' ? 1 : s === 'negative' ? 0.2 : 0.7
+}
+
+/** 새 언급을 가정할 때 지금 언급 문장이 없으면 쓰는 감성 — 중립. 보고서 점수 풀이와 개선제안 계산 예시가 같은 가정을 쓴다. */
+export const NEUTRAL_SENTIMENT = 0.7
+
+/**
+ * 감성 계수 — 언급 문장 가중치의 평균(server/aggregate.ts와 같은 규칙 — 이름 없이 물은 질문의 판정 기록만 넘긴다). 문장이 없으면 null.
+ * 판정 기록이 있으면 이 값을 쓴다 — 카드 점수에서 거꾸로 푼 값(impliedSentiment)은 언급이 한두 건인 주에 반올림 탓에 크게 틀어진다.
+ */
+export function mentionSentimentOf(analyses: { mentionSentences: { sentiment: string }[] }[]): number | null {
+  const w = analyses.flatMap((a) => a.mentionSentences.map((m) => sentimentWeightOf(m.sentiment)))
+  return w.length > 0 ? w.reduce((s, x) => s + x, 0) / w.length : null
+}
+
 /** 카드 점수에서 감성 계수를 거꾸로 푼다(0.2~1). 언급률이 0이면 계수가 점수에 들어가지 않아 1로 둔다. */
 export function impliedSentiment(card: WeeklyScorecard): number {
   if (card.mentionRate <= 0) return 1
@@ -188,6 +205,12 @@ function noteFor(s: MetricStatus, notes: GradedNotes): string {
 /** 순위가 매겨진 답이 점수에 다 반영되는 수(6건)보다 적은가 — 응답 수를 모르는 옛 카드는 아니라고 본다. */
 function fewRankedResponses(card: WeeklyScorecard): boolean {
   return card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES
+}
+
+/** 이번 주 추천 순위 비중 「25% → 10%」 — 지표별 진단 꼬리표 · 점수 풀이 「비중」 줄과 같은 값(예전 「비중 2/6」은 33%로 읽혔다). */
+function rankWeightText(card: WeeklyScorecard): string {
+  const part = scoreBreakdown(card).find((p) => p.key === 'avgRecommendationRank')!
+  return weightTagText(part, { short: true })
 }
 
 function rateStatus(v: number, good: number, ok: number, warn: number): MetricStatus {
@@ -286,7 +309,7 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
         v === null
           ? '순위가 매겨진 답변이 없어 판정할 수 없습니다.'
           : few
-            ? `답에 나온 비교 그룹 이름 가운데 평균 ${formatRank(v)}위입니다(순위가 매겨진 답 ${card.rankedResponses}건). 비교 그룹에 없는 업체는 순위에서 빠지고, 점수에는 비중 ${card.rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}만 반영했습니다.`
+            ? `답에 나온 비교 그룹 이름 가운데 평균 ${formatRank(v)}위입니다(순위가 매겨진 답 ${card.rankedResponses}건). 비교 그룹에 없는 업체는 순위에서 빠지고, 점수에는 답 수만큼만 반영해 추천 순위 비중이 ${rankWeightText(card)}입니다.`
             : noteFor(s, {
                 good: 'AI가 추천을 나열할 때 상위에 배치됩니다.',
                 ok: 'AI가 추천을 나열할 때 중상위에 놓입니다.',
@@ -461,10 +484,13 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
       id: 'rank',
       title: '추천 순위 끌어올리기',
       priority: priorityOf(m.weight, m.status),
+      // 순위 답이 몇 건뿐인 주는 지표별 진단처럼 무엇을 셌는지만 적는다 — 답 두 건으로 「하위에 배치」라고 단정하지 않는다.
       basis:
         m.status === 'unknown'
           ? '추천·나열형 문맥이 적어 순위가 판정되지 않습니다.'
-          : `현재 평균 추천 순위 ${m.valueText} — AI 추천 나열에서 하위에 배치됩니다.`,
+          : fewRankedResponses(card)
+            ? `현재 답에 나온 비교 그룹 이름 가운데 평균 ${m.valueText}위(순위가 매겨진 답 ${card.rankedResponses}건) — 답이 적어 순위 위치를 단정하지 않습니다.`
+            : `현재 평균 추천 순위 ${m.valueText} — AI 추천 나열에서 하위에 배치됩니다.`,
       actions: [
         '권위 있는 제3자 추천·수상·"1위/베스트" 신호를 확보해 AI가 상위로 인식하도록 합니다.',
         '리뷰 수·평점·최신 후기를 늘려 추천 근거를 강화합니다.',
