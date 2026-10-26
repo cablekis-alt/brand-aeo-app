@@ -1,5 +1,6 @@
 import type { SiteScoreRecord } from '../lib/api'
 import { formatRankWithCount, weekLabel } from '../lib/format'
+import type { ExplainLine } from '../lib/reportExplain'
 import type { CheckStatus, CitationRow, CohortRow, SelfReview, TrustCheck } from '../lib/reviewReport'
 
 /*
@@ -249,6 +250,27 @@ export function SiteBreakdownSection({ site }: { site: SiteScoreRecord }) {
           </tbody>
         </table>
       </div>
+    </section>
+  )
+}
+
+/**
+ * 점수 풀이 — 이번 주 점수가 어디서 나왔고 무엇이 점수를 움직이는지(문장은 src/lib/reportExplain.ts). 고객 종이에도 싣는다.
+ * 월간 보기에서도 판정 주차 한 주의 풀이라 주차를 함께 적는다.
+ */
+export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; weekOf: string }) {
+  return (
+    <section className="score-explain">
+      <h3>점수 풀이</h3>
+      <dl className="explain-list">
+        {lines.map((l) => (
+          <div key={l.key}>
+            <dt>{l.label}</dt>
+            <dd>{l.text}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="hint">{weekLabel(weekOf)} 측정값으로 셈했습니다. 점수 식은 화면의 Brand AEO Score와 같습니다.</p>
     </section>
   )
 }

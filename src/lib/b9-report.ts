@@ -131,6 +131,11 @@ export interface ScoreInputs {
  * 순위가 없으면 빼고 남은 가중치로 나눈다. scripts/verify-first-screen.ts가 서버 식과 같은 값을 내는지 견준다.
  */
 export function aeoScoreOf(v: ScoreInputs): number {
+  return Math.round(aeoScoreRaw(v))
+}
+
+/** 반올림 전 점수(0~100) — 「자사 인용률 1%p는 약 +0.4점」처럼 1점보다 작은 차이를 셀 때 쓴다(보고서 점수 풀이). */
+export function aeoScoreRaw(v: ScoreInputs): number {
   const rankFactor = rankWeightFactor(v.rankedResponses, v.avgRecommendationRank)
   const parts = [
     { value: v.mentionRate * v.sentiment, weight: AEO_SCORE_WEIGHTS.mentionRate },
@@ -140,7 +145,7 @@ export function aeoScoreOf(v: ScoreInputs): number {
       : []),
   ]
   const total = parts.reduce((s, p) => s + p.weight, 0)
-  return Math.round(parts.reduce((s, p) => s + p.value * (p.weight / total), 0) * 100)
+  return parts.reduce((s, p) => s + p.value * (p.weight / total), 0) * 100
 }
 
 /** 카드 점수에서 감성 계수를 거꾸로 푼다(0.2~1). 언급률이 0이면 계수가 점수에 들어가지 않아 1로 둔다. */
@@ -178,6 +183,11 @@ export function weightTagText(part: ScorePart, opts: { short?: boolean } = {}): 
 type GradedNotes = Record<Exclude<MetricStatus, 'unknown'>, string>
 function noteFor(s: MetricStatus, notes: GradedNotes): string {
   return s === 'unknown' ? '' : notes[s]
+}
+
+/** 순위가 매겨진 답이 점수에 다 반영되는 수(6건)보다 적은가 — 응답 수를 모르는 옛 카드는 아니라고 본다. */
+function fewRankedResponses(card: WeeklyScorecard): boolean {
+  return card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES
 }
 
 function rateStatus(v: number, good: number, ok: number, warn: number): MetricStatus {
@@ -258,10 +268,14 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
   }
 
   // 3) 평균 추천 순위 (낮을수록 좋음)
+  //    순위는 답에 나온 비교 그룹 이름 안에서 매긴다(목록 밖 업체는 빠진다 — src/prompts/b5c-recommendation-order.ts). 순위 답이 몇 건뿐인
+  //    주에 「상위에 배치됩니다」라고 쓰면, 실제 답에서는 네 번째로 소개된 1건이 「늘 상위」로 읽혔다(스테이,머뭄 W44 — 2건 모두 1위였지만
+  //    답 안에서는 2번째 · 4번째). 그런 주는 무엇을 셌는지만 적고, 「잘하고 있는 점」에서도 뺀다(buildPeriodicReport).
   {
     const v = card.avgRecommendationRank
     let s: MetricStatus = 'unknown'
     if (v !== null) s = v <= 2 ? 'good' : v <= 3 ? 'ok' : v <= 4 ? 'warn' : 'bad'
+    const few = v !== null && fewRankedResponses(card)
     out.push({
       key: 'avgRecommendationRank',
       label: '평균 추천 순위',
@@ -269,17 +283,16 @@ function diagnoseMetrics(card: WeeklyScorecard, prev?: WeeklyScorecard, eeat?: E
       valueText: formatRank(v),
       status: s,
       note:
-        (v === null
+        v === null
           ? '순위가 매겨진 답변이 없어 판정할 수 없습니다.'
-          : noteFor(s, {
-              good: 'AI가 추천을 나열할 때 상위에 배치됩니다.',
-              ok: 'AI가 추천을 나열할 때 중상위에 놓입니다.',
-              warn: 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.',
-              bad: 'AI가 추천을 나열할 때 대체로 뒤쪽에 놓입니다.',
-            })) +
-        (v !== null && card.rankedResponses !== undefined && card.rankedResponses < RANK_FULL_WEIGHT_RESPONSES
-          ? ` 순위 답변이 ${card.rankedResponses}건뿐이라 점수에는 비중 ${card.rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}로만 반영했습니다.`
-          : ''),
+          : few
+            ? `답에 나온 비교 그룹 이름 가운데 평균 ${formatRank(v)}위입니다(순위가 매겨진 답 ${card.rankedResponses}건). 비교 그룹에 없는 업체는 순위에서 빠지고, 점수에는 비중 ${card.rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}만 반영했습니다.`
+            : noteFor(s, {
+                good: 'AI가 추천을 나열할 때 상위에 배치됩니다.',
+                ok: 'AI가 추천을 나열할 때 중상위에 놓입니다.',
+                warn: 'AI가 여러 브랜드를 추천할 때 상대적으로 하위에 놓입니다.',
+                bad: 'AI가 추천을 나열할 때 대체로 뒤쪽에 놓입니다.',
+              }),
       delta: rankDelta(v, prev?.avgRecommendationRank),
     })
   }
@@ -368,6 +381,16 @@ function pctOf(weight: number): string {
   return `${Math.round(weight * 100)}%`
 }
 
+/**
+ * 개선제안 기대효과에 적는 비중 — 이번 주 실제 비중(scoreBreakdown). 순위 답이 적은 주는 순위 몫이 줄고 언급률 · 자사 인용 몫이 커지는데,
+ * 기본 가중치만 적으면 「12점 중 10점이 순위」인 주에 언급률을 「가중치 42%」로 적어 지표별 진단의 「42% → 50%」와 어긋났다.
+ */
+function weightOf(card: WeeklyScorecard, key: ScorePartKey): string {
+  const part = scoreBreakdown(card).find((p) => p.key === key)
+  if (!part) return `가중치 ${pctOf(AEO_SCORE_WEIGHTS[key])}`
+  return part.weight === 0 ? `가중치 ${pctOf(part.baseWeight)}(이번 주는 순위가 매겨진 답이 없어 점수에서 빠짐)` : weightTagText(part)
+}
+
 function priorityOf(weight: number, status: MetricStatus): Priority {
   const impact = (weight || 0.1) * SEVERITY[status]
   if (impact >= 0.2) return 'high'
@@ -393,7 +416,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '"○○ 지역 추천", "○○ 잘하는 곳" 류의 제3자 비교·추천 글에 포함되도록 노출을 늘립니다.',
         '핵심 페이지에 구조화 데이터(JSON-LD)와 명확한 제목·요약을 넣어 AI가 인용하기 쉽게 만듭니다.',
       ],
-      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.mentionRate)} 지표 — 개선 시 Brand AEO Score 상승 폭이 큽니다.`,
+      expected: `${weightOf(card, 'mentionRate')} 지표 — 개선 시 Brand AEO Score 상승 폭이 큽니다.`,
       links: [REC_LINKS.questions, REC_LINKS.sources],
     })
   }
@@ -446,7 +469,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '권위 있는 제3자 추천·수상·"1위/베스트" 신호를 확보해 AI가 상위로 인식하도록 합니다.',
         '리뷰 수·평점·최신 후기를 늘려 추천 근거를 강화합니다.',
       ],
-      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.avgRecommendationRank)} 지표 — 추천형 질문 비중이 큰 업종에서 특히 효과적입니다.`,
+      expected: `${weightOf(card, 'avgRecommendationRank')} 지표 — 추천형 질문 비중이 큰 업종에서 특히 효과적입니다.`,
       links: [REC_LINKS.ranking],
     })
   }
@@ -485,7 +508,7 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
         '인용하기 좋은 "팩트/요약" 페이지를 만들고 llms.txt·구조화 데이터로 접근성을 높입니다.',
         'AI가 실제로 인용 중인 제3자 출처를 파악해 그 출처에 자사 정보가 반영되도록 합니다.',
       ],
-      expected: `가중치 ${pctOf(AEO_SCORE_WEIGHTS.brandOwnedCitationRate)} 지표이며, 인용 연결은 신뢰·전환에 직접 기여합니다.`,
+      expected: `${weightOf(card, 'brandOwnedCitationRate')} 지표이며, 인용 연결은 신뢰·전환에 직접 기여합니다.`,
       links: [REC_LINKS.site, REC_LINKS.citations, REC_LINKS.sources],
     })
   }
@@ -522,7 +545,8 @@ export function buildPeriodicReport(
   const prev = comparison.previousWeekOf ? history.find((h) => h.weekOf === comparison.previousWeekOf) : undefined
 
   const metrics = diagnoseMetrics(card, comparison.comparable ? prev : undefined, eeat)
-  const strengths = metrics.filter((m) => m.status === 'good')
+  // 순위 답이 몇 건뿐인 주의 순위는 강점으로 내세우지 않는다 — 답 한두 건의 「비교 그룹 이름 중 1위」다(diagnoseMetrics 3).
+  const strengths = metrics.filter((m) => m.status === 'good' && !(m.key === 'avgRecommendationRank' && fewRankedResponses(card)))
   const recommendations = buildRecommendations(metrics, card)
 
   // 종합 판정

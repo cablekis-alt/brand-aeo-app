@@ -5,6 +5,7 @@ import {
   CohortCompareSection,
   ContradictedList,
   MentionSection,
+  ScoreExplainSection,
   SiteBreakdownSection,
   TrustChecksBox,
 } from '../components/ReportReviewSections'
@@ -42,6 +43,7 @@ import {
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import { explainScore } from '../lib/reportExplain'
 import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
@@ -490,6 +492,15 @@ export default function PeriodicReport() {
     [evidence],
   )
 
+  /*
+   * 점수 풀이 — 판정 주차 점수가 어디서 나왔고 무엇이 점수를 움직이는지(src/lib/reportExplain.ts). 판정 기록을 읽기 전에는 카드만으로
+   * 낼 수 있는 줄(구성 · 비중 · 순위의 뜻 · 견주는 구간)을 보이고, 읽으면 기록으로 센 줄(몰림 · 계단 · 이름을 댈 때 · 움직이는 것)을 더한다.
+   */
+  const explainLines = useMemo(
+    () => (card ? explainScore({ card, history, analyses: evidence?.analyses ?? [], bank: evidence?.bank ?? null }) : []),
+    [card, history, evidence],
+  )
+
   /** 그 달 안에서 측정 조건이 바뀐 곳(앱 전체 규칙) — 바뀌었으면 월 평균을 한 값처럼 읽으면 안 된다. 화면은 값까지, 종이는 조건 이름만. */
   const monthConditionBreaks = useMemo(() => {
     const out: { full: string; plain: string }[] = []
@@ -838,6 +849,8 @@ export default function PeriodicReport() {
           {period === 'month' && monthCompare?.comparable && !monthCompare.sameWeeks && (
             <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
+
+          {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} />}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
           <section className="report-trend">
