@@ -17,6 +17,7 @@ import {
   endMeasureRun,
   finishRunRecord,
   MeasureCancelledError,
+  type CompetitorFailure,
   recordMeasureFailure,
   setActiveMeasure,
   startRunRecord,
@@ -44,8 +45,8 @@ export interface MeasureBakeResult {
   aeoScore: number;
   /** 이번 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason). 있으면 aeoScore는 이 회차 점수이고 그 주 카드는 앞의 것이다. */
   weekCardKept?: string;
-  /** 함께 재다 실패한 경쟁사 — 순위는 나머지로 매겼다. */
-  competitorFailures?: { tenantId: string; brandName: string }[];
+  /** 함께 재다 실패한 경쟁사(이번 주 앞선 기록이 순위에 들어갔는지 함께). */
+  competitorFailures?: CompetitorFailure[];
 }
 
 // 코호트 경쟁사를 몇 개씩 동시에 측정할지. 순차 측정에서는 브랜드당 80초가 그대로 쌓여
@@ -472,7 +473,7 @@ async function measureAndBakeRun(
   if (runId) updateRunRecord(runId, { competitors: cohortTargets.length });
 
   // 함께 재다 실패한 경쟁사 — 회차 기록에 남긴다(화면이 「경쟁사 2곳은 측정 실패 — 순위는 나머지로 매겼습니다」라고 알린다).
-  const competitorFailures: { tenantId: string; brandName: string }[] = [];
+  const competitorFailures: CompetitorFailure[] = [];
 
   // 이번 주 카드가 다른 코호트에 있던 브랜드 — 끝에서 옛 코호트 순위도 다시 매긴다(cohortsLeftThisWeek).
   // 다른 브랜드 측정 안에서 재는 경쟁사는 그 측정이 자기 대상 전체로 한 번 본다.
@@ -558,6 +559,7 @@ async function measureAndBakeRun(
 
   if (!self.ok) throw self.error;
   const { aeoScore, weekCardKept } = self.value;
+  const failures = competitorFailures.length ? await markEarlierCards(store, competitorFailures, { industry: tenant.industry, region: tenant.region, weekOf }) : [];
   // 다른 고객의 경쟁사로 잰 측정(inCohortRun)은 적지 않는다 — 이 브랜드 자신의 측정이 아니다. 이 브랜드만 잰 측정(selfOnly)도
   // 경쟁사를 재지 않았으니 적지 않는다. 그 주 카드를 덮지 않은 측정(weekCardKept)도 카드가 옛 목록 그대로라 적지 않는다.
   if (!tenant.cohortOnly && !options.inCohortRun && !options.selfOnly && !weekCardKept) {
@@ -576,6 +578,25 @@ async function measureAndBakeRun(
     weekOf,
     aeoScore,
     ...(weekCardKept ? { weekCardKept } : {}),
-    ...(competitorFailures.length ? { competitorFailures } : {}),
+    ...(failures.length ? { competitorFailures: failures } : {}),
   };
+}
+
+/**
+ * 함께 재다 실패한 경쟁사가 그래도 순위에 들어갔는가 — 실패한 측정은 카드를 쓰기 전에 멈추므로, 같은 주에 앞서 잰 그 경쟁사의 카드가
+ * 그대로 순위표에 남는다. 화면이 「순위는 나머지로 매겼습니다」라고 잘못 알리지 않게 순위표(getCohortScorecards — 지운 브랜드 ·
+ * 제외 목록을 뺀 같은 집합)에 든 곳을 적는다. 못 읽으면 적지 않고 그대로 둔다(로그를 남긴다).
+ */
+export async function markEarlierCards(
+  store: Pick<FileResultStore, 'getCohortScorecards'>,
+  failures: CompetitorFailure[],
+  cohort: { industry: string; region: string; weekOf: string },
+): Promise<CompetitorFailure[]> {
+  try {
+    const inRanking = new Set((await store.getCohortScorecards(cohort.industry, cohort.region, cohort.weekOf)).map((c) => c.tenantId));
+    return failures.map((f) => (inRanking.has(f.tenantId) ? { ...f, keptEarlierCard: true } : f));
+  } catch (err) {
+    console.error(`[measureAndBake] 실패한 경쟁사의 앞선 기록을 확인하지 못했습니다: ${err instanceof Error ? err.message : err}`);
+    return failures;
+  }
 }

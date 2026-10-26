@@ -268,15 +268,14 @@ export default function MeasureTenant() {
   const isMeasuring = measuring || (measureVia === 'local' && serverActive.length > 0)
 
   // 사이드바에서 고객 브랜드를 바꾸면 측정 대상도 따라간다(측정 중이 아닐 때). 처음 열 때는 넘겨받은 대상(requestedPick)을 지킨다 —
-  // 바뀐 것만 따른다. 같은 화면에서 다른 대상을 넘겨받아도(결과 띠의 「다시 측정」) 그 대상으로 바꾼다.
+  // 바뀐 것만 따른다. 같은 화면에서 다른 대상을 넘겨받으면(결과 띠의 「다시 측정」) 측정 중이어도 그 대상으로 바꿔 둔다 — 단추는
+  // 측정이 끝나야 눌리지만, 사람이 고른 대상을 말없이 버리지 않게.
   const customerId = customer?.tenantId ?? ''
   const [followed, setFollowed] = useState({ customerId, locationKey: location.key })
   if (followed.customerId !== customerId || followed.locationKey !== location.key) {
     setFollowed({ customerId, locationKey: location.key })
-    if (!isMeasuring) {
-      if (followed.locationKey !== location.key && requestedPick) setPickedTenant(requestedPick)
-      else if (followed.customerId && customerId) setPickedTenant(customerId)
-    }
+    if (followed.locationKey !== location.key && requestedPick) setPickedTenant(requestedPick)
+    else if (!isMeasuring && followed.customerId && customerId && followed.customerId !== customerId) setPickedTenant(customerId)
   }
 
   return (

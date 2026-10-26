@@ -82,8 +82,9 @@ export default function BrandSwitcher({ dim = false }: { dim?: boolean }) {
         className={`brand-switch${open ? ' is-open' : ''}${viewing ? ' is-competitor' : ''}${dim ? ' is-dim' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={dim ? `브랜드 바꾸기 — 마지막으로 본 브랜드 ${name}` : `브랜드 바꾸기 — 지금 ${name}`}
-        title={dim ? '이 화면은 전체 브랜드 기준입니다. 사이드바의 배지와 최근 측정은 이 브랜드 기준입니다.' : undefined}
+        aria-label={dim && !viewing ? `브랜드 바꾸기 — 마지막으로 본 브랜드 ${name}` : `브랜드 바꾸기 — 지금 ${name}`}
+        // 경쟁사 보기 중에는 사이드바 측정 카드가 고른 고객 브랜드 기준이라 「이 브랜드 기준」이라고 하지 않는다.
+        title={dim && !viewing ? '이 화면은 전체 브랜드 기준입니다. 사이드바의 배지와 최근 측정은 이 브랜드 기준입니다.' : undefined}
         onClick={() => (open ? close() : show())}
       >
         <span className="brand-switch-initial" aria-hidden="true">

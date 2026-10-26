@@ -29,7 +29,8 @@ export interface MeasureRunRecord {
   weekCardKept?: string
   error?: string
   engineIssues?: string[]
-  competitorFailures?: { tenantId: string; brandName: string }[]
+  /** 함께 재다 실패한 경쟁사. keptEarlierCard면 같은 주에 앞서 잰 그 경쟁사의 카드가 순위에 그대로 들어갔다. */
+  competitorFailures?: { tenantId: string; brandName: string; keptEarlierCard?: boolean }[]
 }
 
 export interface MeasureRuns {
@@ -87,6 +88,17 @@ export function pickNewOutcomes(seen: SeenRuns | null, runs: MeasureRuns | null)
   if (seen === null) return { fresh: [], seen: { bootId: runs.bootId, seq: top } }
   if (seen.bootId !== runs.bootId) return { fresh: runs.recent, seen: { bootId: runs.bootId, seq: top } }
   return { fresh: runs.recent.filter((r) => r.seq > seen.seq), seen: { bootId: runs.bootId, seq: Math.max(seen.seq, top) } }
+}
+
+/**
+ * 실패한 경쟁사가 순위에 어떻게 들어갔나 — 실패한 측정은 카드를 쓰기 전에 멈춰, 같은 주에 앞서 잰 그 경쟁사의 카드는 순위에 남는다.
+ * 그 경우에도 「나머지로 매겼다」고 하면 운영자가 고객에게 틀린 순위 설명을 하게 된다.
+ */
+function failureRanking(failed: NonNullable<MeasureRunRecord['competitorFailures']>): string {
+  const kept = failed.filter((f) => f.keptEarlierCard)
+  if (kept.length === 0) return '순위는 나머지로 매겼습니다'
+  if (kept.length === failed.length) return '순위에는 앞서 잰 이번 주 기록을 썼습니다'
+  return `순위에는 ${kept.map((f) => f.brandName).join(', ')}의 앞서 잰 이번 주 기록을 썼고, 나머지는 빼고 매겼습니다`
 }
 
 function durationText(startedAt: string, endedAt?: string): string | null {
@@ -174,7 +186,8 @@ export function outcomeMessage(r: MeasureRunRecord, tenants: (VariantBrand & { b
       sub: `${r.weekCardKept}. 이번 측정은 회차 기록에만 남습니다.`,
       primary: 'overview',
       statusLink: false,
-      notify,
+      // 개요는 그 주 카드(앞선 측정)를 보인다 — 알림도 이 점수가 그 주 점수인 것처럼 말하지 않는다.
+      notify: { ...notify, body: `이번 회차 ${score}점 — 그 주 기록은 그대로입니다. 눌러서 개요 보기` },
     }
   }
   const failed = r.competitorFailures ?? []
@@ -185,7 +198,7 @@ export function outcomeMessage(r: MeasureRunRecord, tenants: (VariantBrand & { b
     ...base,
     tone: 'good',
     title: `${name} 측정 끝 · Brand AEO ${score}점(100점 만점)`,
-    sub: failed.length ? `${sub}${sub ? ' · ' : ''}경쟁사 ${failed.length}곳(${names})은 측정 실패 — 순위는 나머지로 매겼습니다` : sub,
+    sub: failed.length ? `${sub}${sub ? ' · ' : ''}경쟁사 ${failed.length}곳(${names})은 측정 실패 — ${failureRanking(failed)}` : sub,
     primary: 'overview',
     statusLink: failed.length > 0,
     notify,
@@ -197,6 +210,16 @@ export function outcomeMessage(r: MeasureRunRecord, tenants: (VariantBrand & { b
 const EMPTY: MeasureStatusState = { ok: false, active: [], failed: [], runs: null, doneEpoch: 0, band: [] }
 const BUSY_MS = 5_000
 const IDLE_MS = 15_000
+/** 결과를 맡은 뒤(측정을 막 시작함) 이만큼은 측정 중처럼 자주 읽는다. */
+const EXPECT_BUSY_MS = 30_000
+
+/**
+ * 다음에 읽을 때까지 — 측정 중이거나 막 시작한 참이면 5초, 아니면 15초. 측정을 시작한 직후 읽으면 서버가 아직 회차를 적기 전이라
+ * 「측정 중」이 안 보이고 15초 뒤에야 나타났다 — 그래서 시작한 뒤 잠깐은 측정 중처럼 읽는다.
+ */
+export function pollDelayMs(busy: boolean, expectBusyUntil: number, now: number): number {
+  return busy || now < expectBusyUntil ? BUSY_MS : IDLE_MS
+}
 
 let state: MeasureStatusState = EMPTY
 const listeners = new Set<() => void>()
@@ -206,6 +229,7 @@ let again = false
 /** 라우트가 없다(웹) — 더 읽지 않는다. */
 let unsupported = false
 let seen: SeenRuns | null = null
+let expectBusyUntil = 0
 /** 지금 결과 문구를 직접 보이는 화면이 맡은 브랜드(측정을 시작한 화면) — 창에 포커스가 있으면 띠를 띄우지 않는다. */
 const claims = new Map<string, number>()
 
@@ -233,7 +257,8 @@ function notifyOutcome(r: MeasureRunRecord) {
   if (!view.notify) return
   const { title, body, action } = view.notify
   try {
-    const n = new Notification(title, { body, tag: `measure-${r.seq}` })
+    // 회차 id로 묶는다 — seq는 서버를 다시 켜면 1부터 다시 세어 다른 회차와 겹친다.
+    const n = new Notification(title, { body, tag: `measure-${r.id}` })
     n.onclick = () => {
       const bridge = typeof window !== 'undefined' ? window.electron : undefined
       if (bridge?.focusWindow) void bridge.focusWindow()
@@ -260,7 +285,7 @@ function schedule() {
   timer = null
   if (listeners.size === 0 || unsupported) return
   const busy = state.active.length > 0 || (state.runs?.current.length ?? 0) > 0
-  timer = setTimeout(() => void poll(), busy ? BUSY_MS : IDLE_MS)
+  timer = setTimeout(() => void poll(), pollDelayMs(busy, expectBusyUntil, Date.now()))
 }
 
 async function poll(): Promise<void> {
@@ -318,10 +343,10 @@ export function pollMeasureStatusNow(): Promise<void> {
   return poll()
 }
 
-/** 결과 띠의 한 줄을 닫는다. */
-export function dismissOutcome(seq: number): void {
-  if (!state.band.some((r) => r.seq === seq)) return
-  state = { ...state, band: state.band.filter((r) => r.seq !== seq) }
+/** 결과 띠의 한 줄을 닫는다(회차 id). */
+export function dismissOutcome(id: string): void {
+  if (!state.band.some((r) => r.id === id)) return
+  state = { ...state, band: state.band.filter((r) => r.id !== id) }
   emit()
 }
 
@@ -346,6 +371,11 @@ export function useMeasureStatus(): MeasureStatusState {
   return useSyncExternalStore(subscribe, getMeasureStatus, () => EMPTY)
 }
 
+/** 측정을 막 시작했다 — 서버가 회차를 적기 전이라도 잠깐은 측정 중처럼 자주 읽는다. */
+export function noteMeasureStarted(): void {
+  expectBusyUntil = Date.now() + EXPECT_BUSY_MS
+}
+
 /** 그 브랜드의 결과를 맡는다. 돌려준 함수로 내려놓는다. */
 export function claimMeasureResult(tenantId: string): () => void {
   claims.set(tenantId, (claims.get(tenantId) ?? 0) + 1)
@@ -361,7 +391,8 @@ export function claimMeasureResult(tenantId: string): () => void {
 
 /**
  * 측정을 시작한 화면이 그 브랜드의 결과를 맡는다 — 그 화면이 결과 문구를 보이므로 띠를 겹쳐 띄우지 않는다. 화면을 떠나면
- * 맡은 것을 내려놓는다(그 뒤에 끝나면 띠가 뜬다). 맡는 즉시 한 번 다시 읽는다 — 진행 중 표시가 5초 간격으로 바뀌게.
+ * 맡은 것을 내려놓는다(그 뒤에 끝나면 띠가 뜬다). 맡는 즉시 한 번 다시 읽고 잠깐은 5초 간격으로 읽는다 — 서버가 회차를 적는 대로
+ * 사이드바에 「측정 중」이 뜨게.
  */
 export function useMeasureClaim(): (tenantId: string) => void {
   const mine = useRef(new Map<string, () => void>())
@@ -374,6 +405,7 @@ export function useMeasureClaim(): (tenantId: string) => void {
   }, [])
   return useCallback((tenantId: string) => {
     if (!mine.current.has(tenantId)) mine.current.set(tenantId, claimMeasureResult(tenantId))
+    noteMeasureStarted()
     void pollMeasureStatusNow()
   }, [])
 }

@@ -8,7 +8,7 @@
  *
  *   npx tsx scripts/verify-measure-result.ts
  */
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { TenantConfig } from '../server/types'
@@ -42,7 +42,8 @@ function fakeTenant(tenantId: string): TenantConfig {
 
 try {
   const tracker = await import('../server/measureTracker')
-  const { measureAndBake } = await import('../server/measureAndBake')
+  const { markEarlierCards, measureAndBake } = await import('../server/measureAndBake')
+  const { FileResultStore } = await import('../server/store')
   const { CollectionError } = await import('../server/engineExhaustion')
   const view = await import('../src/lib/measureStatus')
 
@@ -96,6 +97,25 @@ try {
   await measureAndBake(fakeTenant('comp-w'), failingStore(() => new CollectionError('수집 실패', ['Gemini 지출 한도 초과']))).catch(() => undefined)
   ok('끊긴 엔진은 engineIssues로', tracker.listRunRecords().recent[0]?.engineIssues?.[0] === 'Gemini 지출 한도 초과')
 
+  // 실패한 경쟁사가 그래도 순위표에 들었나 — 같은 주에 앞서 잰 카드는 남는다(지운 브랜드 · 다른 주는 아니다).
+  const writeHistory = (id: string, weekOf: string) => {
+    mkdirSync(path.join(dir, 'data', id), { recursive: true })
+    writeFileSync(path.join(dir, 'data', id, 'scorecard-history.json'), JSON.stringify([{ tenantId: id, industry: '가짜업종', region: '가짜시', weekOf, brandName: id }]))
+  }
+  writeHistory('kept', '2026-W43')
+  writeHistory('older', '2026-W42')
+  writeHistory('gone', '2026-W43')
+  writeFileSync(path.join(dir, 'tenants.deleted.json'), JSON.stringify(['gone']))
+  const marked = await markEarlierCards(
+    new FileResultStore(),
+    ['kept', 'older', 'gone', 'none'].map((id) => ({ tenantId: id, brandName: id })),
+    { industry: '가짜업종', region: '가짜시', weekOf: '2026-W43' },
+  )
+  ok(
+    '실패한 경쟁사: 이번 주 앞선 카드가 순위표에 남은 곳만 표시',
+    marked.map((f) => `${f.tenantId}:${f.keptEarlierCard ? 'kept' : '-'}`).join() === 'kept:kept,older:-,gone:-,none:-',
+  )
+
   // ── 3) 새로 끝난 회차 가려내기 ──────────────────────────────────────
   const rec = (seq: number, extra: Partial<import('../src/lib/measureStatus').MeasureRunRecord> = {}) => ({
     id: `t${seq}@x`,
@@ -134,7 +154,12 @@ try {
   const cancelled = view.outcomeMessage(rec(7, { result: 'cancelled' }), tenants)
   ok('멈춤: 중립 · 「그대로」 · 10초 뒤 닫힘 · 알림 없음', cancelled.tone === 'neutral' && cancelled.title.includes('그대로') && cancelled.autoCloseMs === 10_000 && cancelled.notify === null)
   const kept = view.outcomeMessage(rec(8, { weekCardKept: '엔진 하나가 빠진 측정이라 이번 주 카드를 덮지 않았습니다' }), tenants)
-  ok('그 주 카드를 덮지 않음: 「이번 회차 12점」 · 회차 기록에만', kept.title === '스테이 측정 끝 · 이번 회차 12점' && kept.sub.endsWith('이번 측정은 회차 기록에만 남습니다.'))
+  ok(
+    '그 주 카드를 덮지 않음: 「이번 회차 12점」 · 회차 기록에만 · 알림도 그 주 점수처럼 말하지 않는다',
+    kept.title === '스테이 측정 끝 · 이번 회차 12점' &&
+      kept.sub.endsWith('이번 측정은 회차 기록에만 남습니다.') &&
+      kept.notify?.body === '이번 회차 12점 — 그 주 기록은 그대로입니다. 눌러서 개요 보기',
+  )
   const partial = view.outcomeMessage(
     rec(9, {
       competitorFailures: [
@@ -147,6 +172,15 @@ try {
   ok(
     '경쟁사 일부 실패: 이름과 「순위는 나머지로」 · 측정 상태',
     partial.sub === '2026년 43주차 · 9분 12초 걸림 · 경쟁사 2곳(가짜성형외과, 아무개성형외과)은 측정 실패 — 순위는 나머지로 매겼습니다' && partial.statusLink,
+  )
+  const failedTwo = [
+    { tenantId: 'x', brandName: '가짜성형외과', keptEarlierCard: true },
+    { tenantId: 'y', brandName: '아무개성형외과' },
+  ]
+  ok(
+    '실패한 경쟁사의 앞선 이번 주 기록이 순위에 들어갔으면 그렇게 말한다',
+    view.outcomeMessage(rec(11, { competitorFailures: failedTwo }), tenants).sub.endsWith('순위에는 가짜성형외과의 앞서 잰 이번 주 기록을 썼고, 나머지는 빼고 매겼습니다') &&
+      view.outcomeMessage(rec(12, { competitorFailures: [failedTwo[0]!] }), tenants).sub.endsWith('— 순위에는 앞서 잰 이번 주 기록을 썼습니다'),
   )
   const comp = view.outcomeMessage(rec(10, { tenantId: 'comp-1', brandName: '바깥성형외과', competitorOnly: true }), tenants)
   ok(
@@ -176,7 +210,7 @@ try {
   ok('첫 폴링: 띠 · 알림 없음', view.getMeasureStatus().band.length === 0 && notes.length === 0 && view.getMeasureStatus().ok)
   payload = { active: [], failed: [], runs: runs('b9', [rec(2, { result: 'failed', tenantId: 'gak' }), rec(1)]) }
   await view.pollMeasureStatusNow()
-  ok('창이 뒤에 있으면 띠 + 알림 1번(tag measure-2) + 작업 표시줄 깜빡임', view.getMeasureStatus().band.map((r) => r.seq).join() === '2' && notes.length === 1 && notes[0]?.tag === 'measure-2' && flashes === 1)
+  ok('창이 뒤에 있으면 띠 + 알림 1번(tag는 회차 id) + 작업 표시줄 깜빡임', view.getMeasureStatus().band.map((r) => r.seq).join() === '2' && notes.length === 1 && notes[0]?.tag === 'measure-t2@x' && flashes === 1)
   ok('새 결과가 오면 doneEpoch가 오른다', view.getMeasureStatus().doneEpoch === 1)
   await view.pollMeasureStatusNow()
   ok('같은 응답을 다시 받아도 다시 알리지 않는다', notes.length === 1 && view.getMeasureStatus().band.length === 1 && view.getMeasureStatus().doneEpoch === 1)
@@ -192,8 +226,15 @@ try {
   payload = { active: [], failed: [], runs: runs('b9', [rec(5), rec(4)]) }
   await view.pollMeasureStatusNow()
   ok('맡은 화면을 떠나면 다시 띠', view.getMeasureStatus().band[0]?.seq === 5)
-  view.dismissOutcome(5)
+  view.dismissOutcome('t5@x')
   ok('닫으면 띠에서 빠진다', view.getMeasureStatus().band.map((r) => r.seq).join() === '3,2')
+  // 서버를 다시 켜면 seq가 1부터 다시 센다 — 띠 · 알림은 회차 id로 가른다.
+  payload = { active: [], failed: [], runs: runs('b10', [rec(1, { id: 'boot2@x', tenantId: 'gak' })]) }
+  await view.pollMeasureStatusNow()
+  const afterBoot = view.getMeasureStatus().band.map((r) => r.id)
+  view.dismissOutcome('boot2@x')
+  ok('서버를 다시 켠 뒤 같은 seq여도 다른 회차 — 하나만 닫힌다', afterBoot.join() === 'boot2@x,t3@x,t2@x' && view.getMeasureStatus().band.map((r) => r.id).join() === 't3@x,t2@x')
+  ok('측정을 막 시작했으면 30초는 5초 간격 · 측정 중이면 5초 · 아니면 15초', view.pollDelayMs(false, 1_000 + 30_000, 1_000) === 5_000 && view.pollDelayMs(true, 0, 1_000) === 5_000 && view.pollDelayMs(false, 31_000, 31_000) === 15_000)
   g.fetch = async () => new Response('not found', { status: 404 })
   await view.pollMeasureStatusNow()
   ok('라우트가 없으면(웹) ok false', view.getMeasureStatus().ok === false)

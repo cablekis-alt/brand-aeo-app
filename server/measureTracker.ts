@@ -80,6 +80,13 @@ export function listMeasureFailures(): MeasureFailure[] {
  * seq는 **끝날 때** 붙인다(진행 중이면 0) — 화면은 「본 적 있는 seq보다 큰 것」만 알린다. 메모리에만 두므로 앱을 다시 켜면 비고
  * bootId가 바뀐다 — 화면은 bootId가 바뀌면 기준을 새로 잡는다.
  */
+/** 함께 재다 실패한 경쟁사. keptEarlierCard면 같은 주에 앞서 잰 그 경쟁사의 카드가 순위에 그대로 들어갔다. */
+export interface CompetitorFailure {
+  tenantId: string;
+  brandName: string;
+  keptEarlierCard?: boolean;
+}
+
 export interface MeasureRunRecord {
   /** `${tenantId}@${startedAt}` */
   id: string;
@@ -101,8 +108,8 @@ export interface MeasureRunRecord {
   weekCardKept?: string;
   error?: string;
   engineIssues?: string[];
-  /** 함께 재다 실패한 경쟁사 — 순위는 나머지로 매겼다. */
-  competitorFailures?: { tenantId: string; brandName: string }[];
+  /** 함께 재다 실패한 경쟁사. */
+  competitorFailures?: CompetitorFailure[];
 }
 
 export const BOOT_ID = `${Date.now().toString(36)}-${process.pid}`;

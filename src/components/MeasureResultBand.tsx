@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import {
@@ -27,7 +27,7 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
   const act = useCallback(
     (r: MeasureRunRecord, action: OutcomeAction) => {
       const view = outcomeMessage(r, tenants)
-      dismissOutcome(r.seq)
+      dismissOutcome(r.id)
       if (action === 'overview') {
         if (view.customerId) setTenantId(view.customerId)
         navigate('/')
@@ -49,14 +49,28 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
     return () => setOutcomeContext(null)
   }, [tenants, act])
 
-  // 멈춘 측정 줄은 잠깐 보이고 닫는다.
+  // 멈춘 측정 줄은 잠깐 보이고 닫는다 — 줄마다 처음 뜬 때부터 센다(다른 줄이 오가도 다시 세지 않는다).
+  const timers = useRef(new Map<string, number>())
   useEffect(() => {
-    const timers = band.flatMap((r) => {
-      const ms = outcomeMessage(r, tenants).autoCloseMs
-      return ms === null ? [] : [window.setTimeout(() => dismissOutcome(r.seq), ms)]
-    })
-    return () => timers.forEach((t) => window.clearTimeout(t))
-  }, [band, tenants])
+    const live = new Set(band.map((r) => r.id))
+    for (const [id, t] of timers.current) {
+      if (!live.has(id)) {
+        window.clearTimeout(t)
+        timers.current.delete(id)
+      }
+    }
+    for (const r of band) {
+      const ms = r.result === 'cancelled' ? outcomeMessage(r, []).autoCloseMs : null
+      if (ms !== null && !timers.current.has(r.id)) timers.current.set(r.id, window.setTimeout(() => dismissOutcome(r.id), ms))
+    }
+  }, [band])
+  useEffect(() => {
+    const held = timers.current
+    return () => {
+      for (const t of held.values()) window.clearTimeout(t)
+      held.clear()
+    }
+  }, [])
 
   if (band.length === 0) return null
   return (
@@ -64,7 +78,7 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
       {band.slice(0, MAX_SHOWN).map((r) => {
         const view = outcomeMessage(r, tenants)
         return (
-          <div key={r.seq} className={`mr-item ${view.tone}`} role={view.tone === 'bad' ? 'alert' : 'status'}>
+          <div key={r.id} className={`mr-item ${view.tone}`} role={view.tone === 'bad' ? 'alert' : 'status'}>
             <p className="mr-title">{view.title}</p>
             {view.sub && <p className="mr-sub">{view.sub}</p>}
             <div className="mr-actions">
@@ -88,7 +102,7 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
                   측정 상태
                 </button>
               )}
-              <button type="button" onClick={() => dismissOutcome(r.seq)}>
+              <button type="button" onClick={() => dismissOutcome(r.id)}>
                 닫기
               </button>
             </div>
