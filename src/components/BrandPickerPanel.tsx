@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { PortfolioRow } from '../lib/api'
 import { groupColor, industryGroupOf } from '../lib/industryGroups'
-import { groupByIndustry, needsMeasure, statusShort, statusTone } from '../lib/portfolioView'
+import { groupByIndustry, needsMeasure, rowTone, statusShort } from '../lib/portfolioView'
 
 export interface PickerRow {
   tenantId: string
@@ -298,7 +298,7 @@ export default function BrandPickerPanel({
                               {r.competitor && r.week && <span className="bsw-week">{r.week.replace(/^\d{4}-/, '')} 측정</span>}
                               {r.p && (
                                 <>
-                                  <span className={`bsw-dot ${statusTone(r.p.status)}`} aria-hidden="true" />
+                                  <span className={`bsw-dot ${rowTone(r.p)}`} aria-hidden="true" />
                                   {statusShort(r.p)}
                                 </>
                               )}

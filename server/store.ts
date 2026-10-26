@@ -107,9 +107,25 @@ export interface ResultStore {
     weekOf: string,
     opts?: { exclusions?: readonly CohortExclusion[] },
   ): Promise<WeeklyScorecard[]>;
+  /**
+   * 모든 브랜드의 점수 기록을 한 번에 읽어 둔 색인 — 브랜드 현황처럼 여러 브랜드의 이력과 코호트를 한 화면에 모을 때.
+   * getScorecardHistory · getCohortScorecards를 브랜드마다 부르면 폴더 수 × 브랜드 수만큼 파일을 다시 읽는다.
+   */
+  scorecardIndex(): Promise<ScorecardIndex>;
+}
+
+/** scorecardIndex가 돌려주는 색인 — 두 메서드는 getScorecardHistory(id, 전부) · getCohortScorecards(파일의 제외 목록)와 같은 답을 낸다. */
+export interface ScorecardIndex {
+  /** 그 브랜드의 점수 기록, 주차 오름차순. 기록이 없으면 빈 배열. */
+  historyOf(tenantId: string): WeeklyScorecard[];
+  /** 그 코호트 · 주차의 카드 — 지운 브랜드와 코호트 제외 목록에 든 카드는 뺀다. */
+  cohort(industry: string, region: string, weekOf: string): WeeklyScorecard[];
 }
 
 const DATA_DIR = PIPELINE_DATA_DIR;
+
+/** scorecardIndex가 한꺼번에 여는 기록 파일 수. */
+const INDEX_READ_CONCURRENCY = 8;
 
 async function ensureDir(dir: string) {
   await mkdir(dir, { recursive: true });
@@ -352,5 +368,42 @@ export class FileResultStore implements ResultStore {
       if (match && !isExcluded(exclusions, match)) results.push(match);
     }
     return results;
+  }
+
+  async scorecardIndex(): Promise<ScorecardIndex> {
+    await ensureDir(DATA_DIR);
+    const [tenantDirs, deleted, exclusions] = await Promise.all([readdir(DATA_DIR), readDeletedTenants(), readCohortExclusions()]);
+    const histories: WeeklyScorecard[][] = new Array(tenantDirs.length);
+    let next = 0;
+    const worker = async () => {
+      while (next < tenantDirs.length) {
+        const i = next++;
+        histories[i] = await readJsonArray<WeeklyScorecard>(path.join(DATA_DIR, tenantDirs[i]!, 'scorecard-history.json'));
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(INDEX_READ_CONCURRENCY, tenantDirs.length) }, worker));
+
+    const deletedIds = new Set(deleted);
+    const byTenant = new Map<string, WeeklyScorecard[]>();
+    const byCohort = new Map<string, WeeklyScorecard[]>();
+    const cohortKey = (industry: string, region: string, weekOf: string) => `${industry}|${region}|${weekOf}`;
+    // 폴더 순서대로 넣는다 — getCohortScorecards와 같은 순서 · 같은 카드(폴더마다 그 코호트 · 주차의 첫 카드).
+    tenantDirs.forEach((tenantId, i) => {
+      const history = histories[i]!;
+      byTenant.set(tenantId, [...history].sort((a, b) => a.weekOf.localeCompare(b.weekOf)));
+      if (deletedIds.has(tenantId)) return;
+      const seen = new Set<string>();
+      for (const card of history) {
+        const key = cohortKey(card.industry, card.region, card.weekOf);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (isExcluded(exclusions, card)) continue;
+        byCohort.set(key, [...(byCohort.get(key) ?? []), card]);
+      }
+    });
+    return {
+      historyOf: (tenantId) => [...(byTenant.get(tenantId) ?? [])],
+      cohort: (industry, region, weekOf) => [...(byCohort.get(cohortKey(industry, region, weekOf)) ?? [])],
+    };
   }
 }

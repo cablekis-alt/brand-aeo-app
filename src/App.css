@@ -5875,6 +5875,33 @@ td.cell-mid {
   .pf-cohort-cols { display: none; }
   .pf-switch { margin-left: 0; }
 }
+/* 브랜드 현황 첫 로드 뼈대(Portfolio.tsx PortfolioSkeleton) — 요약 타일 · 카드 자리만 잡고 옅게 반짝인다. */
+.pf-summary .pf-skel,
+.pf-card .pf-skel {
+  background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--surface-2) 45%, var(--card)) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: pf-skel-shine 1.4s ease-in-out infinite;
+}
+.pf-sum.pf-skel {
+  height: 84px;
+  cursor: default;
+}
+.pf-cohort-head.pf-skel {
+  height: 34px;
+}
+.pf-lb-row.pf-skel {
+  height: 40px;
+}
+@keyframes pf-skel-shine {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-summary .pf-skel,
+  .pf-card .pf-skel {
+    animation: none;
+  }
+}
 
 /* 브랜드 바꾸기 패널(components/BrandSwitcher.tsx) — 사이드바 브랜드 칸 바로 아래에 화면 기준으로 띄운다. */
 .bsw-backdrop {

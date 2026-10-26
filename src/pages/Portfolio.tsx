@@ -5,10 +5,9 @@ import ProfileEditor from '../components/ProfileEditor'
 import EmptyBrands from '../components/EmptyBrands'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioCohort, type PortfolioRow } from '../lib/api'
-import { weeksBetween } from '../lib/comparability'
 import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
 import { directionParticle } from '../lib/korean'
-import { customerForCompetitorRow, groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
+import { changeLine, customerForCompetitorRow, groupCohorts, isCurrentCustomer, needsMeasure, statusChip } from '../lib/portfolioView'
 
 type Filter = '' | 'done' | 'need' | 'alone'
 
@@ -27,23 +26,6 @@ function writeShowCompetitors(on: boolean) {
   } catch {
     /* 기억 못 해도 동작에는 영향 없음 */
   }
-}
-
-/**
- * 줄 아래 점수 변화 — 직전 측정과 같은 조건일 때만 증감(서버가 앱 전체 규칙 comparability.ts로 가른다).
- * 견줄 수 없으면 서버가 보낸 한 구절(「질문지 바뀜」 · 「수집 모델 기록 없음」)을 그대로 붙인다 — 예전에는 뒤에 「바뀜」을
- * 덧붙여 기록이 한쪽에 없을 뿐인 조건도 「바뀜」이라고 했다. 직전 측정이 2주 이상 떨어졌으면 「전주」가 아니라
- * 「직전 측정(Wxx)」이라고 적는다(W38 → W41을 「전주 대비」라고 하지 않는다).
- */
-function changeText(r: PortfolioRow): string {
-  const gap = r.previousWeekOf && r.weekOf ? (weeksBetween(r.previousWeekOf, r.weekOf) ?? 1) : 1
-  const far = gap >= 2 && r.previousWeekOf ? `직전 측정(${shortWeek(r.previousWeekOf)})` : null
-  if (r.delta !== null) {
-    if (r.delta === 0) return far ? `${far}과 같음` : '전주와 같음'
-    return `${far ?? '전주'} 대비 ${r.delta > 0 ? '+' : '−'}${Math.abs(r.delta)}`
-  }
-  if (r.changeReason) return `${far ? `${far}과` : '전주와'} 비교 불가 · ${r.changeReason}`
-  return r.weekOf ? '측정 1회' : ''
 }
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
@@ -231,7 +213,7 @@ export default function Portfolio() {
         그 브랜드의 개요로 갑니다.
       </p>
 
-      {!state.loaded && <p className="muted">불러오는 중…</p>}
+      {!state.loaded && <PortfolioSkeleton />}
       {state.loaded && state.value === null && (
         <p className="muted">브랜드 현황은 데스크톱 앱에서 볼 수 있습니다(웹에는 이 기능이 없습니다).</p>
       )}
@@ -349,6 +331,26 @@ export default function Portfolio() {
   )
 }
 
+/** 첫 로드 동안의 뼈대 — 요약 타일과 카드 자리를 잡아 둔다. 저장 뒤 다시 읽을 때는 지금 화면을 그대로 둔다. */
+function PortfolioSkeleton() {
+  return (
+    <div aria-busy="true">
+      <p className="sr-only">브랜드 현황을 불러오는 중</p>
+      <div className="pf-summary" aria-hidden="true">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="pf-sum pf-skel" />
+        ))}
+      </div>
+      <div className="pf-card" aria-hidden="true">
+        <div className="pf-cohort-head pf-skel" />
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="pf-lb-row pf-skel" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /**
  * 코호트 카드 머리의 「기본 정보」 · 「경쟁사 편집」 — 이 코호트에 마지막 측정이 든 고객 브랜드마다 하나. 칸이 차서 재지 않는
  * 경쟁사가 있으면 주황 칩으로 알린다(server/cohortPlan.ts와 같은 계산). 경쟁사 보기 중에는 잠근다.
@@ -434,6 +436,7 @@ function LeaderRow({
 }) {
   const current = isCurrentCustomer(m) ? row : undefined
   const chip = current ? statusChip(current) : null
+  const change = current ? changeLine(current) : null
   const cells = (
     <>
       <span className="pf-lb-rank">{measured ? `${m.tied ? '공동 ' : ''}${m.rank}/${total}` : '—'}</span>
@@ -442,7 +445,11 @@ function LeaderRow({
           <span className="pf-lb-text">{m.brandName}</span>
           {m.competitor && <span className="bsw-tag">경쟁사</span>}
         </span>
-        {current && <span className="pf-row-meta">{changeText(current)}</span>}
+        {change && (
+          <span className="pf-row-meta" title={change.title}>
+            {change.text}
+          </span>
+        )}
       </span>
       <span className="pf-lb-score">
         <span className="pf-lb-bar" aria-hidden="true">

@@ -6,6 +6,7 @@ import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { PublishSettings } from './publishSettings'
 import type { AnswerEvidence } from './answerEvidence'
+import type { ConditionChange } from './comparability'
 import type {
   AiReferralReport,
   CitationBreakdown,
@@ -970,8 +971,15 @@ export interface PortfolioRow {
   changeReason: string | null
   /** delta · changeReason이 가리키는 직전 측정 주차 — 2주 이상 떨어졌으면 「전주」 대신 「직전 측정(Wxx)」. */
   previousWeekOf: string | null
-  /** 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null. */
-  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null
+  /** 마지막 측정이 이번 주에서 몇 주 전인가(이번 주 0, 측정 전 null). 옛 서버 응답에는 없다. */
+  ageWeeks?: number | null
+  /** changeReason을 조건별로(바뀜 · 기록 없음). 견줄 수 있거나 앞 측정이 없으면 null. 옛 서버 응답에는 없다. */
+  changeDims?: { changed: ConditionChange[]; unknown: ConditionChange[] } | null
+  /**
+   * 다음 측정에서 함께 잴 경쟁사 수(측정과 같은 계산). 경쟁사를 함께 재지 않는 브랜드면 null.
+   * blocked 중 collision은 다른 업종 브랜드와 ID가 겹친 곳, 나머지는 중복(옛 서버 응답에는 collision이 없다).
+   */
+  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number; collision?: number } | null
   /** 경쟁사 편집을 저장했고 아직 다시 재지 않았다. */
   competitorEdit: { savedAt: string; summary: string } | null
   /** 기본 정보(업종 · 지역 · 시장 범위)를 바꿨고 아직 새 설정으로 재지 않았다 — 「기본 정보 바뀜 · 다음 측정 대기」. */
