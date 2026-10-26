@@ -75,6 +75,11 @@ export async function isBakedTenant(tenantId: string): Promise<boolean> {
   return (await baseTenants()).some((tenant) => tenant.tenantId === tenantId);
 }
 
+/** 저장소 설정(tenants.config.json)에 든 그 브랜드의 설정 — 툼스톤이 달려 있어도 찾는다. 없으면 undefined. */
+export async function findBakedTenant(tenantId: string): Promise<TenantConfig | undefined> {
+  return (await baseTenants()).find((tenant) => tenant.tenantId === tenantId);
+}
+
 function asEngineList(value: unknown): Engine[] {
   // 기본 수집 엔진 = ChatGPT + Gemini (지정이 없거나 유효 항목이 없을 때).
   if (!Array.isArray(value) || value.length === 0) return ['openai', 'gemini'];

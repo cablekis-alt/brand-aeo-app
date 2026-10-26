@@ -64,6 +64,7 @@ import { readLocalMeasures } from './localMeasureLog.js';
 import {
   MeasureCancelledError,
   beginMeasureRun,
+  clearMeasureFailures,
   endMeasureRun,
   listActiveMeasures,
   listMeasureFailures,
@@ -72,7 +73,7 @@ import {
   requestCancelActiveMeasures,
 } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { addRemovedTenant, describeTenantDelete, readRemovedTenants, restoreRemovedTenant, TenantRestoreError } from './tenantRemovedStore.js';
+import { addRemovedTenant, describeTenantDelete, dropRemovedTenant, readRemovedTenants, restoreRemovedTenant, TenantRestoreError } from './tenantRemovedStore.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -191,7 +192,11 @@ app.get('/api/tenants/:tenantId/delete-preview', async (req, res) => {
 app.get('/api/tenants/removed', async (_req, res) => {
   try {
     // 설정 본문(overlay)은 내보내지 않는다 — 목록에는 이름 · 업종 · 지역 · 뺀 날만 보인다.
-    res.json((await readRemovedTenants()).map((r) => ({ tenantId: r.tenantId, brandName: r.brandName, industry: r.industry, region: r.region, removedAt: r.removedAt })));
+    // 같은 ID가 다시 생긴 것(다시 등록 · 경쟁사로 다시 잼 · 멈춘 삭제)은 되살릴 것이 없어 보이지 않는다(되살리기를 누르면 목록에서도 뺀다).
+    const live = new Set((await loadRuntimeTenants()).map((t) => t.tenantId));
+    res.json((await readRemovedTenants())
+      .filter((r) => !live.has(r.tenantId))
+      .map((r) => ({ tenantId: r.tenantId, brandName: r.brandName, industry: r.industry, region: r.region, removedAt: r.removedAt })));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -224,10 +229,28 @@ app.delete('/api/tenants', async (req, res) => {
     res.status(409).json({ error: '측정이 진행 중이에요. 끝난 뒤에 빼 주세요.', busy: true });
     return;
   }
+  // 되살리기용 — 지우기 **전에** 설정(오버레이)과 지우기 직전 모습을 이 PC에 남긴다(tenantRemovedStore.ts). 남기지 못하면
+  // 지우지 않는다(지운 뒤에 남기다 실패하면 경쟁사 · 엔진 설정을 되돌릴 길이 없다). 배포(Vercel)는 남기지 않는다.
+  let before: Awaited<ReturnType<typeof findTenant>>;
   try {
-    // 되살리기용 — 지우기 직전의 설정(오버레이)을 이 PC에 남긴다(tenantRemovedStore.ts). 배포(Vercel)는 남기지 않는다.
-    const before = process.env.VERCEL ? undefined : await findTenant(tenantId);
-    const overlayEntry = before ? ((await readOverlay()).find((t) => t.tenantId === tenantId) ?? null) : null;
+    before = process.env.VERCEL ? undefined : await findTenant(tenantId);
+    if (before) {
+      const overlayEntry = (await readOverlay()).find((t) => t.tenantId === tenantId) ?? null;
+      await addRemovedTenant({
+        tenantId,
+        brandName: before.brandName,
+        industry: before.industry,
+        region: before.region,
+        removedAt: new Date().toISOString(),
+        overlay: overlayEntry,
+        snapshot: before,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: `되살릴 수 있게 설정을 남기지 못해 지우지 않았습니다: ${err instanceof Error ? err.message : String(err)}` });
+    return;
+  }
+  try {
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
     const baked = await isBakedTenant(tenantId);
@@ -239,16 +262,8 @@ app.delete('/api/tenants', async (req, res) => {
       // 앱에서 등록한 브랜드도 측정 데이터가 남으므로 툼스톤이 없으면 코호트 순위에 계속 낀다.
       await deleteTenantLocally(tenantId, store);
       locallyDeleted = true;
-      if (before) {
-        await addRemovedTenant({
-          tenantId,
-          brandName: before.brandName,
-          industry: before.industry,
-          region: before.region,
-          removedAt: new Date().toISOString(),
-          overlay: overlayEntry,
-        }).catch((err: unknown) => console.error(`[tenants] 지운 브랜드 설정을 남기지 못했습니다(되살리기 불가) ${tenantId}:`, err));
-      }
+      // 지운 브랜드의 「최근 실패」 줄은 다시 잴 길이 없어 남겨 두면 늘 보인다.
+      clearMeasureFailures(tenantId);
     } else if (baked && canTriggerRemoteMeasure()) {
       try {
         // 배포(Vercel) — 커밋 데이터까지 지우려면 GitHub Actions. 큐에 누적하고 큐 모드로 트리거.
@@ -262,6 +277,12 @@ app.delete('/api/tenants', async (req, res) => {
     const stillBaked = baked && !locallyDeleted;
     res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl, locallyDeleted });
   } catch (err) {
+    // 지우기가 중간에 멈췄다 — 브랜드가 아직 목록에 있으면 남긴 백업을 거둔다(설정이 이미 빠졌으면 되살리기용으로 둔다).
+    if (before) {
+      await findTenant(tenantId)
+        .then((still) => (still ? dropRemovedTenant(tenantId) : undefined))
+        .catch((dropErr: unknown) => console.error(`[tenants] 멈춘 삭제의 백업을 거두지 못했습니다 ${tenantId}:`, dropErr));
+    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
@@ -277,8 +298,16 @@ app.get('/api/portfolio', async (_req, res) => {
 
 // 측정 상태 — 앱이 직접 돌린 로컬 측정의 진행 중(measureAndBake가 브랜드마다 추적) + 완료 기록 + 최근 실패
 // + 회차 기록(runs — 화면 아래 결과 띠 · 알림이 새로 끝난 회차를 가려낸다).
-app.get('/api/measure-status', (_req, res) => {
-  res.json({ active: listActiveMeasures(), completed: readLocalMeasures(), failed: listMeasureFailures(), runs: listRunRecords() });
+app.get('/api/measure-status', async (_req, res) => {
+  // 최근 실패는 지금 목록에 있는 브랜드 것만 — 경쟁사에서 뺐거나 지운 브랜드는 다시 잴 길이 없어 남겨 두면 늘 보인다.
+  let failed = listMeasureFailures();
+  try {
+    const live = new Set((await loadRuntimeTenants()).map((t) => t.tenantId));
+    failed = failed.filter((f) => live.has(f.tenantId));
+  } catch (err) {
+    console.error('[measure-status] 브랜드 목록을 읽지 못해 실패 줄을 거르지 않았습니다:', err);
+  }
+  res.json({ active: listActiveMeasures(), completed: readLocalMeasures(), failed, runs: listRunRecords() });
 });
 
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).

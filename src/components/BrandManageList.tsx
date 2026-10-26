@@ -53,6 +53,10 @@ export default function BrandManageList() {
     const t = tenants.find((x) => x.tenantId === tenantId)
     return t ? variantTag(t, tenants) : null
   }
+  const labelOf = (row: { tenantId: string; brandName: string }) => {
+    const tag = tagOf(row.tenantId)
+    return tag ? `${row.brandName} · ${tag}` : row.brandName
+  }
   const [rows, setRows] = useState<BrandRow[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -80,7 +84,8 @@ export default function BrandManageList() {
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
   const [globalEngines, setGlobalEngines] = useState<Engine[] | null>(null)
   // 엔진을 고칠 수 있는가 — 저장소가 data/<tenant>/engines.json(파일)이라 Vercel에서는 못 쓴다.
-  // 팩트 그래프·브랜드 페이지도 같은 제약이다. 보여는 주되 체크박스는 잠근다.
+  // 팩트 그래프·브랜드 페이지도 같은 제약이다. 보여는 주되 체크박스는 잠근다. 삭제도 같은 기준이다 — Vercel이 아니면 이 PC(앱 서버)가
+  // 지우고 되살리기를 남긴다.
   const [canEditEngines, setCanEditEngines] = useState(true)
   const [engineBusyId, setEngineBusyId] = useState<string | null>(null)
   const [engineMsg, setEngineMsg] = useState<string | null>(null)
@@ -220,6 +225,8 @@ export default function BrandManageList() {
   }, [deletingIds, reloadTenants])
 
   async function remove(row: BrandRow) {
+    // 범위만 다르게 등록한 형제가 있으면 어느 쪽을 뺐는지 알 수 있게 — 빼고 나면 형제가 사라져 꼬리표를 다시 만들 수 없다.
+    const name = labelOf(row)
     setBusyId(row.tenantId)
     setMessage(null)
     setUndoId(null)
@@ -238,10 +245,10 @@ export default function BrandManageList() {
         // 오버레이 브랜드, 또는 로컬/데스크톱에서 베이크된 브랜드(툼스톤) — 목록에서 바로 빠진다. 로컬은 측정 기록이 남는다.
         setRows((prev) => prev.filter((r) => r.tenantId !== row.tenantId))
         if (body.locallyDeleted) {
-          setMessage(`✓ ${objectParticle(row.brandName)} 목록에서 뺐습니다 — 측정 기록은 이 PC에 남아 있습니다.`)
+          setMessage(`✓ ${objectParticle(name)} 목록에서 뺐습니다 — 측정 기록은 이 PC에 남아 있습니다.`)
           setUndoId(row.tenantId)
           loadRemoved()
-        } else setMessage(`✓ ${objectParticle(row.brandName)} 목록에서 뺐습니다.`)
+        } else setMessage(`✓ ${objectParticle(name)} 목록에서 뺐습니다.`)
         await reloadTenants()
       } else if (body.dispatched) {
         // 베이크된 브랜드 — GitHub Actions가 완전 삭제 실행 중. 사라질 때까지 "삭제 중"으로 잠근다.
@@ -479,8 +486,11 @@ export default function BrandManageList() {
 
       {deleteTarget && (
         <DeleteBrandDialog
+          key={deleteTarget.tenantId}
           tenantId={deleteTarget.tenantId}
           brandName={deleteTarget.brandName}
+          label={labelOf(deleteTarget)}
+          local={canEditEngines}
           busy={busyId === deleteTarget.tenantId}
           onConfirm={() => void remove(deleteTarget)}
           onCancel={() => setDeleteTarget(null)}

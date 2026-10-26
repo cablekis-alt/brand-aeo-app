@@ -76,6 +76,13 @@ writeJson('tenants.overlay.json', [
 ])
 writeJson('data/kyobo/scorecard-history.json', WEEKS.map((w) => card('kyobo', '가짜교보', w, 40, 1)))
 writeJson('data/hanwha/scorecard-history.json', WEEKS.map((w) => card('hanwha', '가짜한화', w, 30, 2)))
+// 최근 실패 — 목록에 있는 브랜드 하나와, 이미 목록에 없는 브랜드 하나(경쟁사에서 뺐거나 지운 곳).
+const failedAt = new Date().toISOString()
+writeJson('measure-failures.json', [
+  { tenantId: 'kyobo', brandName: '가짜교보', at: failedAt, error: '가짜 실패' },
+  { tenantId: 'gone', brandName: '없는 곳', at: failedAt, error: '가짜 실패' },
+])
+const failedIds = async () => (((await call('GET', '/api/measure-status')).body?.failed as { tenantId: string }[] | undefined) ?? []).map((f) => f.tenantId)
 
 const port = await freePort()
 const base = `http://127.0.0.1:${port}`
@@ -122,6 +129,8 @@ try {
   )
   ok('미리보기: 이 브랜드를 경쟁사로 재는 고객', JSON.stringify(preview.body?.competitorOf) === JSON.stringify([{ tenantId: 'hanwha', brandName: '가짜한화' }]))
   ok('미리보기: 측정 중 아님 · 없는 브랜드는 404', preview.body?.measuring === false && (await call('GET', '/api/tenants/none/delete-preview')).status === 404)
+  const failed0 = await failedIds()
+  ok('최근 실패: 목록에 없는 브랜드의 줄은 보이지 않는다', failed0.includes('kyobo') && !failed0.includes('gone'))
 
   // ── 2) 측정 중이면 막는다 ─────────────────────────────────────
   const first = call('POST', '/api/tenants/slow/measure', { selfOnly: true })
@@ -145,8 +154,15 @@ try {
   ok('삭제(로컬) — 목록에서 빠지고 기록은 남는다', del.status === 200 && del.body?.locallyDeleted === true && existsSync(path.join(dir, 'data/kyobo/scorecard-history.json')))
   const listAfter = await call('GET', '/api/tenants')
   ok('브랜드 목록에서 빠진다', Array.isArray(listAfter.body) && !(listAfter.body as unknown as { tenantId: string }[]).some((t) => t.tenantId === 'kyobo'))
-  const backup = readJson<{ tenantId: string; overlay: { tenantId: string } | null }[]>('tenants.removed.json')
-  ok('지우기 전 설정을 남긴다', backup[0]?.tenantId === 'kyobo' && backup[0]?.overlay?.tenantId === 'kyobo')
+  const backup = readJson<{ tenantId: string; overlay: { tenantId: string } | null; snapshot?: { tenantId: string } }[]>('tenants.removed.json')
+  ok('지우기 전 설정 · 모습을 남긴다', backup[0]?.tenantId === 'kyobo' && backup[0]?.overlay?.tenantId === 'kyobo' && backup[0]?.snapshot?.tenantId === 'kyobo')
+  let failuresFile: { tenantId: string }[] = []
+  for (let i = 0; i < 20; i += 1) {
+    failuresFile = readJson<{ tenantId: string }[]>('measure-failures.json')
+    if (!failuresFile.some((f) => f.tenantId === 'kyobo')) break
+    await sleep(100)
+  }
+  ok('지운 브랜드의 실패 줄을 지운다(화면 · 파일)', !(await failedIds()).includes('kyobo') && !failuresFile.some((f) => f.tenantId === 'kyobo'))
   ok('같은 비교 그룹 순위를 이 브랜드를 빼고 다시 매긴다(2/2 → 1/1)', before === '2/2' && hanwhaRank('2026-W43') === '1/1' && hanwhaRank('2026-W36') === '1/1')
   const removed = await call('GET', '/api/tenants/removed')
   const removedList = removed.body as unknown as Record<string, unknown>[]
@@ -168,6 +184,29 @@ try {
   ok('순위가 지우기 전과 같다(1/1 → 2/2)', hanwhaRank('2026-W43') === before && hanwhaRank('2026-W36') === '2/2')
   ok('지운 브랜드 목록에서 빠진다', !readJson<{ tenantId: string }[]>('tenants.removed.json').some((r) => r.tenantId === 'kyobo'))
   ok('되살린 뒤 다시 되살리기 · 목록에 없는 브랜드 → 404', (await call('POST', '/api/tenants/kyobo/restore')).status === 404 && (await call('POST', '/api/tenants/none/restore')).status === 404)
+
+  // ── 6) 오버레이가 없는 백업(저장소 설정 브랜드) · 같은 ID가 다시 생긴 백업 ─────────
+  const removedAt = new Date().toISOString()
+  writeJson('tenants.removed.json', [
+    { tenantId: 'base-twin', brandName: '가짜한화 옛', industry: IND, region: REG, removedAt, overlay: null, snapshot: tenant('base-twin', '가짜한화 옛', { ownedDomains: ['hanwha.example'] }) },
+    { tenantId: 'base-bare', brandName: '설정 없음', industry: IND, region: REG, removedAt, overlay: null },
+    { tenantId: 'hanwha', brandName: '가짜한화', industry: IND, region: REG, removedAt, overlay: tenant('hanwha', '가짜한화') },
+  ])
+  const baseTwin = await call('POST', '/api/tenants/base-twin/restore')
+  ok('오버레이가 없어도 같은 홈페이지 · 비교 그룹 검사(지우기 직전 모습)', baseTwin.status === 409 && String(baseTwin.body?.error).includes('같은 홈페이지'))
+  ok('설정도 모습도 없는 백업은 되살리지 않는다', (await call('POST', '/api/tenants/base-bare/restore')).status === 409)
+  const removedIds = ((await call('GET', '/api/tenants/removed')).body as unknown as { tenantId: string }[]).map((r) => r.tenantId)
+  ok('같은 ID가 다시 있으면 지운 브랜드 목록에 보이지 않는다', !removedIds.includes('hanwha') && removedIds.includes('base-twin'))
+  const again = await call('POST', '/api/tenants/hanwha/restore')
+  ok('같은 ID가 다시 있으면 409 · 백업에서 뺀다', again.status === 409 && !readJson<{ tenantId: string }[]>('tenants.removed.json').some((r) => r.tenantId === 'hanwha'))
+
+  // ── 7) 백업을 남기지 못하면 지우지 않는다 ────────────────────────────
+  rmSync(path.join(dir, 'tenants.removed.json'), { force: true })
+  mkdirSync(path.join(dir, 'tenants.removed.json'))
+  const noBackup = await call('DELETE', '/api/tenants?tenantId=hanwha')
+  const stillThere = ((await call('GET', '/api/tenants')).body as unknown as { tenantId: string }[]).some((t) => t.tenantId === 'hanwha')
+  ok('백업 실패 → 500 · 브랜드는 그대로', noBackup.status === 500 && String(noBackup.body?.error).includes('지우지 않았습니다') && stillThere)
+  rmSync(path.join(dir, 'tenants.removed.json'), { recursive: true, force: true })
 } catch (err) {
   console.error(err)
   checks.push(['예외 없이 끝까지 돈다', false])

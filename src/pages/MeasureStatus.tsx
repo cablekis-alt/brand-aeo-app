@@ -405,16 +405,19 @@ export default function MeasureStatus() {
         </p>
       )}
 
-      <section className="ms-section" aria-labelledby="ms-active">
-        <h3 id="ms-active">진행 중</h3>
-        {localActive.length > 0 ? (
-          <MeasureProgress active={localActive} />
-        ) : (
-          <p className="muted">
-            지금 진행 중인 측정이 없습니다 · <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
-          </p>
-        )}
-      </section>
+      {/* 이 PC(앱 서버)에서 돈 측정 — 서버가 측정 상태를 주지 않는 곳(웹 배포)에서는 원격 측정 칸만 본다. */}
+      {status.ok && (
+        <section className="ms-section" aria-labelledby="ms-active">
+          <h3 id="ms-active">진행 중</h3>
+          {localActive.length > 0 ? (
+            <MeasureProgress active={localActive} nameOf={(a) => nameMap[a.tenantId] || a.brandName} />
+          ) : (
+            <p className="muted">
+              이 PC에서 진행 중인 측정이 없습니다 · <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
+            </p>
+          )}
+        </section>
+      )}
 
       {localFailed.length > 0 && (
         <section className="ms-section" aria-labelledby="ms-failed">

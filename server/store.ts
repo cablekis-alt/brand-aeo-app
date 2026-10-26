@@ -1,8 +1,9 @@
-import { access, mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { isExcluded, readCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { readDeletedTenants } from './tenantTombstone.js';
+import { writeJsonAtomic as writeJsonAtomicWithRetry } from './tenantWriteQueue.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
 import type { DerivedFrom } from './questionHandoff.js';
@@ -138,11 +139,12 @@ async function ensureDir(dir: string) {
  * 코호트를 병렬로 측정하면 A가 쓰는 중에 B가 읽을 수 있고, readJsonArray는 파싱 실패를
  * 조용히 []로 삼키므로 그 브랜드가 코호트 순위 분모에서 소리 없이 빠진다.
  * rename은 같은 볼륨에서 원자적이다(Windows도 MoveFileEx 대체 의미).
+ *
+ * 쓰기는 tenantWriteQueue의 것을 쓴다 — 윈도우에서는 다른 요청이 그 파일을 읽는 순간 rename이 EPERM으로 실패한다. 브랜드를 지울 때
+ * 같은 비교 그룹 순위를 다시 매기다 화면의 읽기와 겹쳐 삭제가 반쯤 된 채 500으로 끝났다. 잠깐 쉬었다 다시 시도한다(임시 파일 이름도 겹치지 않게).
  */
 async function writeJsonAtomic(filePath: string, value: unknown): Promise<void> {
-  const tmp = `${filePath}.${process.pid}.tmp`;
-  await writeFile(tmp, JSON.stringify(value, null, 2), 'utf-8');
-  await rename(tmp, filePath);
+  await writeJsonAtomicWithRetry(filePath, value);
 }
 
 async function readJsonArray<T>(filePath: string): Promise<T[]> {

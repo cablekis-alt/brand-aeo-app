@@ -72,6 +72,12 @@ const groups3 = groupMeasureRuns(
 ok('최근 측정 범위(경쟁사만 잰 회차는 빼고)', JSON.stringify(recentRunDurations(groups3)) === JSON.stringify({ minSec: 174, maxSec: 399, count: 3 }))
 ok('3번이 안 되면 어림하지 않는다', recentRunDurations(groups3.slice(0, 2)) === null)
 ok('그 브랜드의 지난번(가장 최근)', lastRunDurationSec(groups3, 'c1') === 205 && lastRunDurationSec(groups3, 'none') === null)
+// 경쟁사는 고객 측정 안에서 함께 잰 것이 더 최근이면 그 줄의 걸린 시간 — 묶음 맨 앞만 보면 지난번 혼자 잰 30초가 나왔다.
+const groupsChild = groupMeasureRuns(
+  [row('k1', 5000, 30, { runId: 'z' }), row('c1', 9000, 300, { runId: 'y' }), row('k1', 8950, 120, { runId: 'y', parentTenantId: 'c1' })],
+  isCompetitor,
+)
+ok('경쟁사로 함께 잰 것이 더 최근이면 그 줄의 시간', lastRunDurationSec(groupsChild, 'k1') === 120 && lastRunDurationSec(groupsChild, 'c1') === 300)
 ok('시간 글', durationText(174) === '2분 54초' && durationText(45) === '45초' && durationText(399) === '6분 39초')
 
 // ── 4) 서버가 회차 id · 함께 잰 고객을 적는다(가짜 엔진) ───────────────

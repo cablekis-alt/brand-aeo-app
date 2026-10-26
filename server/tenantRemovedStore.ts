@@ -3,7 +3,7 @@ import { stateFilePath } from './appPaths.js';
 import { planCohortTargets } from './cohortPlan.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay, writeOverlay } from './tenantOverlay.js';
-import { isBakedTenant, loadRuntimeTenants, reconcileTenantCohorts } from './tenantRegistry.js';
+import { findBakedTenant, isBakedTenant, loadRuntimeTenants, reconcileTenantCohorts } from './tenantRegistry.js';
 import { removeDeletedTenant } from './tenantTombstone.js';
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 import { sameCohort, sharesSite } from '../src/lib/brandVariant.js';
@@ -26,6 +26,8 @@ export interface RemovedTenant {
   removedAt: string;
   /** 지우기 직전의 오버레이 설정 — 없으면 저장소 설정(tenants.config.json)의 브랜드라 툼스톤만 걷으면 된다. */
   overlay: TenantConfig | null;
+  /** 지우기 직전 브랜드의 모습(목록에 보이던 설정) — 되살릴 때 같은 홈페이지 · 비교 그룹 검사에 쓴다(옛 백업에는 없다). */
+  snapshot?: TenantConfig;
 }
 
 const FILE = stateFilePath('tenants.removed.json');
@@ -117,9 +119,17 @@ export async function restoreRemovedTenant(tenantId: string, store: ResultStore)
   const entry = (await readRemovedTenants()).find((r) => r.tenantId === tenantId);
   if (!entry) throw new TenantRestoreError(404, '지운 브랜드 목록에 없습니다.');
   const runtime = await loadRuntimeTenants();
-  if (runtime.some((t) => t.tenantId === tenantId)) throw new TenantRestoreError(409, `같은 ID의 브랜드가 이미 있습니다: ${tenantId}`);
-  if (entry.overlay && !entry.overlay.cohortOnly) {
-    const twin = runtime.find((t) => !t.cohortOnly && sharesSite(t, entry.overlay!) && sameCohort(t, entry.overlay!));
+  if (runtime.some((t) => t.tenantId === tenantId)) {
+    // 같은 ID로 다시 등록했거나 다른 고객의 경쟁사로 다시 잰 뒤다 — 되살릴 것이 없으니 목록에서 뺀다(남겨 두면 늘 409).
+    await dropRemovedTenant(tenantId);
+    throw new TenantRestoreError(409, `같은 ID의 브랜드가 이미 다시 있어 「지운 브랜드」에서 뺐습니다: ${tenantId}`);
+  }
+  // 같은 홈페이지 · 비교 그룹 검사는 지우기 직전 모습으로 — 저장소 설정 브랜드(오버레이가 없음)도 같은 규칙을 탄다. 모습을 남기기
+  // 전의 백업이면 저장소 설정에서 찾는다.
+  const shape = entry.overlay ?? entry.snapshot ?? (await findBakedTenant(tenantId)) ?? null;
+  if (!shape) throw new TenantRestoreError(409, '이 백업에는 브랜드 설정이 없어 되살릴 수 없습니다.');
+  if (!shape.cohortOnly) {
+    const twin = runtime.find((t) => !t.cohortOnly && sharesSite(t, shape) && sameCohort(t, shape));
     if (twin) {
       throw new TenantRestoreError(409, `같은 홈페이지 · 비교 그룹의 브랜드가 이미 있습니다: ${twin.brandName}(${twin.industry} · ${twin.region})`);
     }
@@ -130,9 +140,14 @@ export async function restoreRemovedTenant(tenantId: string, store: ResultStore)
   }
   await removeDeletedTenant(tenantId);
   await reconcileTenantCohorts(tenantId, store);
-  await queueTenantWrite(QUEUE, async () => {
-    const list = await readRemovedTenants();
-    await writeJsonAtomic(FILE, list.filter((r) => r.tenantId !== tenantId));
-  });
+  await dropRemovedTenant(tenantId);
   return entry;
+}
+
+/** 지운 브랜드 목록에서 뺀다 — 되살렸거나, 같은 ID가 다시 생겼거나, 지우기가 끝나지 못했을 때. */
+export function dropRemovedTenant(tenantId: string): Promise<void> {
+  return queueTenantWrite(QUEUE, async () => {
+    const list = await readRemovedTenants();
+    if (list.some((r) => r.tenantId === tenantId)) await writeJsonAtomic(FILE, list.filter((r) => r.tenantId !== tenantId));
+  });
 }

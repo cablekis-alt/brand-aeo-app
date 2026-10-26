@@ -109,7 +109,8 @@ export default function Portfolio() {
   const { tenants, setTenantId, viewCompetitor, viewing, customer, reloadTenants } = useTenant()
   const measure = useMeasureStatus()
   const [state, setState] = useState<{ loaded: boolean; value: PortfolioData | null }>({ loaded: false, value: null })
-  // 경쟁사 편집 · 기본 정보를 저장하면, 측정이 끝나면 다시 읽는다 — 줄의 칩이 저장한 값 · 새 측정을 따르게.
+  // 경쟁사 편집 · 기본 정보를 저장하면, 측정이 끝나면, 관리 보기를 오가면(빼기 · 되살리기 · 엔진) 다시 읽는다 — 줄의 칩이 저장한
+  // 값 · 새 측정을 따르게.
   const [reloadKey, setReloadKey] = useState(0)
   useEffect(() => {
     let alive = true
@@ -119,7 +120,7 @@ export default function Portfolio() {
     return () => {
       alive = false
     }
-  }, [reloadKey, measure.doneEpoch])
+  }, [reloadKey, measure.doneEpoch, view.mode])
   const afterCompetitorSave = () => {
     setReloadKey((k) => k + 1)
     reloadTenants().catch((err: unknown) => console.error('[Portfolio] 브랜드 목록을 다시 읽지 못했습니다', err))
@@ -477,8 +478,9 @@ export default function Portfolio() {
         </p>
       )}
       <p className="page-lead">
-        등록한 고객 브랜드를 업종별로 모았습니다. 비교 그룹(코호트)은 같은 업종 · 지역에서 같은 주에 함께 잰 브랜드 묶음입니다. 그 안의
-        순위와 마지막 측정을 보이고, 줄을 누르면 그 브랜드의 개요로 갑니다.
+        {managing
+          ? '등록한 브랜드마다 수집 엔진을 고르고, 측정 화면으로 가거나 목록에서 뺍니다.'
+          : '등록한 고객 브랜드를 업종별로 모았습니다. 비교 그룹(코호트)은 같은 업종 · 지역에서 같은 주에 함께 잰 브랜드 묶음입니다. 그 안의 순위와 마지막 측정을 보이고, 줄을 누르면 그 브랜드의 개요로 갑니다.'}
       </p>
 
       {managing && <BrandManageList />}

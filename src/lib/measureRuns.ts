@@ -106,9 +106,17 @@ export function recentRunDurations(groups: RunGroup[], n = 10): { minSec: number
   return { minSec: Math.min(...secs), maxSec: Math.max(...secs), count: recent.length }
 }
 
-/** 그 브랜드를 마지막으로 잰 측정이 걸린 시간(초). 기록이 없으면 null. */
+/**
+ * 그 브랜드를 마지막으로 잰 측정이 걸린 시간(초). 기록이 없으면 null. 경쟁사는 대개 고객 측정 안에서 함께 재므로, 묶음의
+ * 경쟁사 줄로 잰 것이 더 최근이면 그 줄이 걸린 시간을 쓴다.
+ */
 export function lastRunDurationSec(groups: RunGroup[], tenantId: string): number | null {
-  return groups.find((g) => g.root.tenantId === tenantId)?.durationSec ?? null
+  for (const g of groups) {
+    if (g.root.tenantId === tenantId) return g.durationSec
+    const child = g.children.find((c) => c.tenantId === tenantId)
+    if (child?.durationSec !== undefined) return child.durationSec
+  }
+  return null
 }
 
 /** 초 → 「6분 39초」 · 「45초」. */
