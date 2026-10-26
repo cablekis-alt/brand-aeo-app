@@ -8,8 +8,11 @@
  *   npx tsx scripts/verify-report-explain.ts
  */
 import { aeoScoreOf, buildPeriodicReport } from '../src/lib/b9-report'
-import { explainScore } from '../src/lib/reportExplain'
+import type { RunHistory, RunPoint } from '../src/lib/api'
+import { hostName } from '../src/lib/hostNames'
+import { explainScore, ownedDomainCitations, recentRuns, runLabel, separateRunNote, topSourceDomains } from '../src/lib/reportExplain'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../src/lib/types'
+import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
 
 const checks: [string, boolean][] = []
@@ -135,9 +138,94 @@ const before = [
 const card43 = cardOf('2026-W43', w44, 27 / 1113)
 const seg = explainScore({ card: card44, history: [...before, card43, card44], analyses: w44, bank }).find((l) => l.key === 'segment')?.text ?? ''
 ok('견주는 구간: 시작 주 · 바뀐 조건 · 그 전 범위', seg.startsWith('2026년 43주차부터 측정 조건(판정 엔진 · 판정 모델 바뀜)이 달라져, 그 전 점수(2026년 40~41주차, 1~22점)와는 견주지 않습니다.'))
-ok('견주는 구간: 같은 조건 연속 2주', seg.endsWith('같은 조건으로 잰 연속 2주만 이어서 봅니다.'))
+// 같은 조건 구간의 길이는 적지 않는다 — 「같은 조건으로 잰 최근 측정」 절(같은 주 여러 회차 포함)과 수가 달라 헷갈린다(2단계에서 바꿈).
+ok('견주는 구간: 구간 길이를 적지 않는다', seg.endsWith('와는 견주지 않습니다.'))
 const segFirst = explainScore({ card: card43, history: [...before, card43], analyses: w44, bank }).find((l) => l.key === 'segment')?.text ?? ''
 ok('견주는 구간: 바뀐 조건으로 처음 잰 주', segFirst.endsWith('이번 주가 바뀐 조건으로 처음 잰 주입니다.'))
+
+// ── 2단계: 같은 조건 회차 · 다른 회차 표시 · 출처 ─────────────────────────────
+// 회차 기록(server/runHistory.ts 모양) — W42 옛 그 주 파일 · W43 옮겨 둔 회차 · W43 회차 · W44 함께 잰 회차 · W44 이 브랜드만 잰 회차(그 주 카드).
+const point = (weekOf: string, at: string | null, score: number, k: number, extra: Partial<RunPoint> = {}): RunPoint =>
+  ({
+    kind: 'run',
+    runId: at,
+    weekOf,
+    at,
+    window: null,
+    selfOnly: false,
+    inCohortRun: false,
+    weekCard: 'saved',
+    isWeekCard: false,
+    engines: null,
+    enginesUsed: ['gemini', 'openai', 'perplexity'],
+    partialEngines: [],
+    missingEngines: [],
+    engineIssues: [],
+    conditionKey: 'same',
+    changesFromPrev: [],
+    bankVersion: 'v9',
+    ranked: { k, n: 78, mentioned: k, ci: null },
+    score,
+    scoreAtMeasure: score,
+    agnosticQuestions: 26,
+    repeatsPerQuestion: 1,
+    ...extra,
+  }) as RunPoint
+const runs: RunHistory = {
+  points: [
+    point('2026-W42', '2026-10-14T05:39:22.356Z', 1, 0, { kind: 'week-file', runId: null, selfOnly: null, inCohortRun: null, weekCard: 'week-file', isWeekCard: true, changesFromPrev: ['판정 엔진'] }),
+    point('2026-W43', '2026-10-22T07:28:47.359Z', 6, 1, { preserved: true }),
+    point('2026-W43', '2026-10-22T13:50:45.778Z', 12, 2, { isWeekCard: true }),
+    point('2026-W44', '2026-10-26T04:45:46.662Z', 1, 0),
+    point('2026-W44', '2026-10-26T04:51:56.913Z', 12, 2, { selfOnly: true, isWeekCard: true }),
+  ],
+  posts: [],
+  weekCardScores: {},
+  issues: [],
+}
+const recent = recentRuns(runs, '2026-W44')
+ok('최근 회차: 옛 기록(그 주 파일 · 옮겨 둔 회차)은 회차 보기처럼 뺀다 — 12 · 1 · 12', JSON.stringify(recent?.runs.map((p) => p.score)) === '[12,1,12]')
+ok('최근 회차: 평균 8.3 · 범위 1~12', recent?.average === 8.3 && recent.min === 1 && recent.max === 12)
+ok('최근 회차: 지난 주 보고서는 그 주까지만', JSON.stringify(recentRuns(runs, '2026-W43')?.runs.map((p) => p.score) ?? null) === 'null')
+ok('최근 회차: 기록이 없으면(웹) null', recentRuns(null, '2026-W44') === null)
+const brokenRuns: RunHistory = { ...runs, points: runs.points.map((p, i) => (i === 4 ? { ...p, changesFromPrev: ['판정 모델'] } : p)) }
+ok('최근 회차: 조건이 바뀐 회차에서 끊는다(1번뿐이면 null)', recentRuns(brokenRuns, '2026-W44') === null)
+ok('회차 이름: 한국 시각 · 옛 기록은 주차', runLabel(runs.points[4]!) === '10/26 13:51' && runLabel({ ...runs.points[0]!, at: null }) === '2026년 42주차')
+
+// 표지 평균 — 회차 평균이 있으면 그것 하나만(주 카드 평균과 둘이 나오지 않게).
+const hist3 = [cardOf('2026-W42', w44, 0.02, { aeoScore: { current: 1, previousWeek: 1, ma4: 1, ciLow: 0, ciHigh: 5 } } as Partial<WeeklyScorecard>), card43, card44]
+const withRuns = buildPeriodicReport(hist3, '2026-W44', undefined, { average: 8.3, count: 3 })!
+ok('표지: 같은 조건 최근 3번 측정 평균 8.3', withRuns.verdict.summary.includes('같은 조건 최근 3번 측정 평균 8.3') && !withRuns.verdict.summary.includes('연속 3주'))
+const noRuns = buildPeriodicReport(hist3, '2026-W44')!
+ok('표지: 회차 기록이 없으면 주 평균 그대로', noRuns.verdict.summary.includes('같은 조건 연속 3주 평균'))
+
+// 다른 회차 표시 — 그 주 카드가 이 브랜드만 다시 잰 회차면 함께 잰 회차 점수와 함께.
+const note = separateRunNote(runs, card44) ?? ''
+ok('다른 회차 표시: 이 브랜드만 다시 잰 값 · 함께 잰 회차 1점', note === '가상브랜드의 2026년 44주차 점수 12점은 비교 그룹을 잰 회차와 다른 시각(10/26 13:51)에 이 브랜드만 다시 잰 값입니다. 비교 그룹과 함께 잰 회차(10/26 13:45)에서는 1점이었습니다.')
+ok('다른 회차 표시: 함께 잰 회차가 카드면 없음', separateRunNote({ ...runs, points: runs.points.slice(0, 4).map((p, i) => (i === 3 ? { ...p, isWeekCard: true } : p)) }, card44) === null)
+ok('다른 회차 표시: 옮겨 둔 회차는 묻지 않는다', separateRunNote({ ...runs, points: [{ ...runs.points[4]!, preserved: true }] }, card44) === null)
+
+// 출처 — 이름 없이 물은 질문 기준 상위(URL 줄을 도메인으로), 플랫폼 이름, 등록 주소별 인용(0건 포함).
+const src = {
+  urls: [
+    { raw: 'https://www.yeogi.com/a', domain: 'yeogi.com', citationCount: 3, engines: ['gemini'] },
+    { raw: 'https://www.yeogi.com/b', domain: 'yeogi.com', citationCount: 2, engines: ['perplexity'] },
+    { raw: 'https://blog.naver.com/x', domain: 'blog.naver.com', citationCount: 4, engines: ['perplexity'] },
+  ],
+} as unknown as CitationSourceAnalysis
+const tops = topSourceDomains(src)
+ok('출처 상위: 도메인으로 묶고 엔진을 모은다', JSON.stringify(tops) === JSON.stringify([{ domain: 'yeogi.com', count: 5, engines: ['gemini', 'perplexity'] }, { domain: 'blog.naver.com', count: 4, engines: ['perplexity'] }]))
+ok('플랫폼 이름: 하위 주소도 · 모르는 주소는 null', hostName('m.blog.naver.com') === '네이버 블로그' && hostName('nol.yanolja.com') === '놀(야놀자)' && hostName('kr.trip.com') === '트립닷컴' && hostName('gunsan.go.kr') === null)
+const cite = (domain: string) => ({ raw: `https://${domain}/s/x`, domain, ownerType: 'brand-owned', supportsBrandMention: false })
+const withCites = [
+  { ...analysis('n-0', 'openai', true), citations: [cite('old.example'), cite('old.example')] },
+  { ...analysis('g-0', 'openai', true), citations: [cite('www.old.example'), cite('other.example')] },
+] as unknown as QuestionRepeatAnalysis[]
+ok(
+  '등록 주소별 인용: 이름 넣은 · 이름 없는 질문으로 나누고 0건 주소도',
+  JSON.stringify(ownedDomainCitations(withCites, bank, ['old.example', 'new.example'])) ===
+    JSON.stringify([{ domain: 'old.example', named: 2, unnamed: 1, total: 3 }, { domain: 'new.example', named: 0, unnamed: 0, total: 0 }]),
+)
 
 let failed = 0
 for (const [label, pass] of checks) {

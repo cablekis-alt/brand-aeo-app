@@ -536,6 +536,11 @@ export function buildPeriodicReport(
   history: WeeklyScorecard[],
   weekOf: string,
   eeat?: EeatAnalysis,
+  /**
+   * 같은 조건으로 잰 최근 회차 평균(같은 주 여러 회차 포함 — reportExplain.ts recentRuns). 있으면 표지 · 흔들림 문장이 주 카드 평균 대신
+   * 이 값을 쓴다 — 한 문서에 평균이 둘이면 두 값처럼 읽힌다. 회차 기록이 없는 곳(웹)은 null.
+   */
+  runs?: { average: number; count: number } | null,
 ): PeriodicReport | null {
   const idx = history.findIndex((h) => h.weekOf === weekOf)
   const card = idx >= 0 ? history[idx] : history.at(-1)
@@ -582,9 +587,14 @@ export function buildPeriodicReport(
             ? `직전 측정(${prevLabel})과 같음`
             : '전주와 보합'
   // 같은 조건 평균 — 같은 조건으로 2번 이상 잰 구간이 있을 때만(조건이 바뀐 주를 섞은 4주 이동평균을 보이지 않는다).
-  const avg = runAverage(history, card.weekOf)
+  const weekAvg = runAverage(history, card.weekOf)
+  const avg = runs ? { average: runs.average } : weekAvg
   // 「같은 조건 연속 3주 평균」 — 사이에 측정하지 않은 주가 있으면 「같은 조건 3번 평균」(연속이라고 하지 않는다).
-  const avgText = avg ? `같은 조건 ${runCountText(comparableRun(history, card.weekOf).slice(-4))} 평균` : ''
+  const avgText = runs
+    ? `같은 조건 최근 ${runs.count}번 측정 평균`
+    : weekAvg
+      ? `같은 조건 ${runCountText(comparableRun(history, card.weekOf).slice(-4))} 평균`
+      : ''
   let tone: MetricStatus
   let label: string
   if (card.aeoScore.current >= 60 && badCount === 0) {

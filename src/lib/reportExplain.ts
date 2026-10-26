@@ -1,7 +1,10 @@
 import { RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
+import type { RunHistory, RunPoint } from './api'
 import { aeoScoreOf, aeoScoreRaw, scoreBreakdown, scoreInputsOf, weightTagText, type ScoreInputs, type ScorePartKey } from './b9-report'
-import { comparableRun, compareConditions, conditionSummary, runCountText } from './comparability'
-import { formatRank } from './format'
+import { comparableRun, compareConditions, conditionSummary } from './comparability'
+import { formatRank, weekLabel } from './format'
+import { buildRunTrend, kstStamp } from './runTrend'
+import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionBank, QuestionRepeatAnalysis } from './types'
 
 /*
@@ -201,11 +204,124 @@ export function explainScore(input: {
     lines.push({
       key: 'segment',
       label: '견주는 구간',
-      text: `${weekRangeText(run[0]!.weekOf, run[0]!.weekOf)}부터 측정 조건${change ? `(${change})` : ''}이 달라져, 그 전 점수(${weekRangeText(earlier[0]!.weekOf, earlier.at(-1)!.weekOf)}, ${lo === hi ? `${lo}점` : `${lo}~${hi}점`})와는 견주지 않습니다. ${
-        run.length > 1 ? `같은 조건으로 잰 ${runCountText(run)}만 이어서 봅니다.` : '이번 주가 바뀐 조건으로 처음 잰 주입니다.'
+      // 같은 조건 구간의 길이는 적지 않는다 — 「같은 조건으로 잰 최근 측정」 절은 같은 주 여러 회차까지 세어(옛 기록 제외) 수가 다르다.
+      text: `${weekRangeText(run[0]!.weekOf, run[0]!.weekOf)}부터 측정 조건${change ? `(${change})` : ''}이 달라져, 그 전 점수(${weekRangeText(earlier[0]!.weekOf, earlier.at(-1)!.weekOf)}, ${lo === hi ? `${lo}점` : `${lo}~${hi}점`})와는 견주지 않습니다.${
+        run.length === 1 ? ' 이번 주가 바뀐 조건으로 처음 잰 주입니다.' : ''
       }`,
     })
   }
 
   return lines
+}
+
+/** 같은 조건으로 잰 최근 회차 — 보고서 표지 평균과 「같은 조건으로 잰 최근 측정」 절이 같은 묶음을 쓴다. */
+export interface RecentRuns {
+  runs: RunPoint[]
+  /** 소수 한 자리. */
+  average: number
+  min: number
+  max: number
+}
+
+/** 평균에 넣는 주 수 — 표지의 「같은 조건 평균」(comparability.ts runAverage)과 같은 최근 4주. */
+const RECENT_RUN_WEEKS = 4
+
+/**
+ * 판정 주차까지 같은 조건으로 잰 최근 회차(최근 4주) — 같은 주에 여러 번 잰 회차도 넣는다. 주마다 마지막 회차(그 주 카드)만 세면 같은 날
+ * 1점 · 12점으로 잰 주가 12점 한 번으로 남는다(스테이,머뭄 W44).
+ *
+ * 잇는 규칙은 회차 보기(runTrend.ts buildRunTrend segments)와 같다 — 조건이 바뀐 곳, 엔진이 빠진 회차, 옛 기록(회차 기록 전 그 주 파일 ·
+ * 옮겨 둔 회차), 질문지를 못 찾은 회차에서 끊는다. 이을 수 있는 회차가 2번 미만이거나 회차 기록이 없으면(웹) null — 표지는 주 카드 평균을 쓴다.
+ */
+export function recentRuns(h: RunHistory | null, weekOf: string): RecentRuns | null {
+  if (!h || h.points.length === 0) return null
+  const model = buildRunTrend(h)
+  const segOf = (i: number) => model.segments.find((s) => s.includes(i)) ?? null
+  let last = -1
+  h.points.forEach((p, i) => {
+    if (p.weekOf === weekOf && segOf(i)) last = i
+  })
+  if (last < 0) return null
+  const seg = segOf(last)!.filter((i) => i <= last)
+  const weeks = [...new Set(seg.map((i) => h.points[i]!.weekOf))].slice(-RECENT_RUN_WEEKS)
+  const runs = seg.map((i) => h.points[i]!).filter((p) => weeks.includes(p.weekOf) && p.score !== null)
+  if (runs.length < 2) return null
+  const scores = runs.map((p) => p.score!)
+  return {
+    runs,
+    average: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+    min: Math.min(...scores),
+    max: Math.max(...scores),
+  }
+}
+
+/** 회차 이름 — 회차는 측정을 마친 한국 시각(「10/26 13:51」), 시각이 없는 옛 기록은 주차. */
+export function runLabel(p: RunPoint): string {
+  return p.kind === 'run' && p.at ? kstStamp(p.at) : weekLabel(p.weekOf)
+}
+
+/**
+ * 이번 주 카드가 비교 그룹과 다른 회차인가 — 「이 브랜드만」 다시 잰 회차가 그 주 카드면, 같은 주 비교 그룹 표의 다른 브랜드 점수는 다른
+ * 시각에 잰 값이다(스테이,머뭄 W44 — 함께 잰 회차 1점 · 6분 뒤 이 브랜드만 잰 회차 12점). 옮겨 둔 회차는 측정 방식을 몰라 묻지 않는다.
+ */
+export function separateRunNote(h: RunHistory | null, card: WeeklyScorecard): string | null {
+  if (!h) return null
+  const own = h.points.find((p) => p.weekOf === card.weekOf && p.isWeekCard)
+  if (!own || own.kind !== 'run' || own.preserved || own.selfOnly !== true) return null
+  const together = h.points
+    .filter((p) => p.weekOf === card.weekOf && p.kind === 'run' && !p.preserved && p.selfOnly === false && p.inCohortRun === false)
+    .at(-1)
+  const togetherScore = together ? (together.score ?? together.scoreAtMeasure) : null
+  return `${card.brandName}의 ${weekLabel(card.weekOf)} 점수 ${card.aeoScore.current}점은 비교 그룹을 잰 회차와 다른 시각${own.at ? `(${kstStamp(own.at)})` : ''}에 이 브랜드만 다시 잰 값입니다.${
+    together && togetherScore !== null ? ` 비교 그룹과 함께 잰 회차(${together.at ? kstStamp(together.at) : weekLabel(together.weekOf)})에서는 ${togetherScore}점이었습니다.` : ''
+  }`
+}
+
+/** 이름 없이 물은 질문 답의 출처 상위 — 도메인마다 인용 수(인용 분석의 URL 줄을 도메인으로 묶는다). */
+export function topSourceDomains(src: CitationSourceAnalysis | null, limit = 6): { domain: string; count: number; engines: string[] }[] {
+  if (!src || src.urls.length === 0) return []
+  const by = new Map<string, { count: number; engines: Set<string> }>()
+  for (const u of src.urls) {
+    const e = by.get(u.domain) ?? { count: 0, engines: new Set<string>() }
+    e.count += u.citationCount
+    for (const g of u.engines) e.engines.add(g)
+    by.set(u.domain, e)
+  }
+  return [...by]
+    .map(([domain, e]) => ({ domain, count: e.count, engines: [...e.engines].sort() }))
+    .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain))
+    .slice(0, limit)
+}
+
+/** 인용 도메인이 등록된 주소(또는 그 하위 주소)인가 — 소유는 호스트 단위다(server/aggregate · 경로는 보지 않는다). */
+const onDomain = (host: string, domain: string) => {
+  const h = host.toLowerCase().replace(/^www\./, '')
+  const d = domain.toLowerCase().replace(/^www\./, '')
+  return h === d || h.endsWith(`.${d}`)
+}
+
+/**
+ * 등록된 자사 주소마다 인용 수 — 이름을 넣어 물은 질문 · 이름 없이 물은 질문으로 나눠, 한 번도 인용되지 않은 주소(새로 옮긴 주소 등)도
+ * 0건으로 보인다. 판정 모델의 자사 판정(자사 출처 인용률)과 달리 등록 주소와 직접 대조한 수다.
+ */
+export function ownedDomainCitations(
+  analyses: QuestionRepeatAnalysis[],
+  bank: QuestionBank | null,
+  ownedDomains: string[],
+): { domain: string; named: number; unnamed: number; total: number }[] | null {
+  if (!bank || ownedDomains.length === 0 || analyses.length === 0) return null
+  const byId = new Map(bank.questions.map((q) => [q.questionId, q]))
+  return ownedDomains.map((domain) => {
+    let named = 0
+    let unnamed = 0
+    let total = 0
+    for (const a of analyses) {
+      const q = byId.get(a.questionId)
+      const n = a.citations.filter((c) => c.domain !== null && onDomain(c.domain, domain)).length
+      total += n
+      if (q?.containsBrandName === true) named += n
+      else if (q?.category === 'category-agnostic') unnamed += n
+    }
+    return { domain, named, unnamed, total }
+  })
 }
