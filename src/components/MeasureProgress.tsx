@@ -127,8 +127,11 @@ export function MeasureCancelButton({ active }: { active: ActiveMeasure[] }) {
   )
 }
 
-/** 브랜드마다 한 줄. 코호트를 함께 재면 여러 줄이 선다. */
-export default function MeasureProgress({ active }: { active: ActiveMeasure[] }) {
+/**
+ * 브랜드마다 한 줄. 코호트를 함께 재면 여러 줄이 선다. nameOf를 주면 줄 이름을 그것으로 쓴다 — 같은 홈페이지를 범위만 다르게
+ * 등록한 브랜드는 이름이 같아 범위 꼬리표가 붙은 이름이 필요하다.
+ */
+export default function MeasureProgress({ active, nameOf }: { active: ActiveMeasure[]; nameOf?: (a: ActiveMeasure) => string }) {
   const { now, eta } = useMeasureClock(active)
   if (active.length === 0) return null
 
@@ -175,7 +178,7 @@ export default function MeasureProgress({ active }: { active: ActiveMeasure[] })
       <ul className="measure-progress">
         {active.map((p) => (
           <li key={p.tenantId}>
-            <span className="mp-name">{p.brandName || p.tenantId}</span>
+            <span className="mp-name">{nameOf?.(p) || p.brandName || p.tenantId}</span>
             <span className="mp-stage">{p.cancelling ? '중단 중' : (p.stage ?? '준비')}</span>
             {p.total ? (
               <>

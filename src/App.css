@@ -139,6 +139,30 @@
 .brand-switch.is-competitor .brand-switch-initial {
   background: var(--muted);
 }
+/* 전체 브랜드 화면(브랜드 현황 · 측정 상태 …) — 칸은 남기고 흐리게: 「마지막으로 본 브랜드」(BrandSwitcher dim). */
+.brand-switch.is-dim {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.brand-switch.is-dim .brand-switch-initial {
+  background: var(--muted);
+}
+.brand-switch.is-dim .brand-switch-name {
+  color: var(--ink-2);
+}
+.brand-switch.is-dim:hover {
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+/* 브랜드 목록을 읽는 동안 같은 높이로 자리만 지킨다. */
+.brand-switch.is-placeholder {
+  cursor: default;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.brand-switch.is-placeholder .brand-switch-initial {
+  background: var(--line);
+}
 .brand-switch-initial {
   width: 28px;
   height: 28px;
@@ -174,18 +198,28 @@
   color: var(--muted);
 }
 
+/* 메뉴 상자 — 넘치면 얇은 스크롤 막대를 보이고, 가려진 쪽 끝을 흐리게 한다(Sidebar.tsx useScrollEdges). 막대를 숨겼더니
+   낮은 창에서 「설정」이 아래에 있는지 알 수 없었다(상용화 UI 3차 U9). */
 .sidebar-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 2px 0 4px;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
-.sidebar-scroll::-webkit-scrollbar {
-  display: none;
+.sidebar-scroll.fade-bottom {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+.sidebar-scroll.fade-top {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+.sidebar-scroll.fade-top.fade-bottom {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
 .sidebar-cta {
@@ -281,6 +315,21 @@
   color: var(--muted);
   line-height: 1.45;
 }
+.sidebar-status-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sidebar-status-week {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .sidebar-foot-label {
   font-size: 11px;
@@ -372,6 +421,27 @@
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
+}
+/* 낮은 창의 테마 단추 하나(ThemeToggle.tsx) — 평소에는 세 칸(.theme-toggle)을 쓰고 숨긴다. */
+.theme-cycle {
+  display: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.theme-cycle:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.theme-cycle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* 구버전 마크(호환용) */
@@ -2811,6 +2881,104 @@ p.hint {
 }
 .notice b { color: var(--warn); }
 
+/* 측정 결과 띠(components/MeasureResultBand.tsx) — 본문 아래쪽에 떠서 어느 화면에서든 보인다. 띠 바깥은 눌러도 뒤가 눌린다. */
+.mr-band {
+  position: fixed;
+  z-index: 92;
+  left: calc(248px + 24px);
+  right: 24px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+.mr-item {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 4px solid var(--accent);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(17 28 24 / 0.14);
+  color: var(--ink);
+}
+.mr-item.bad {
+  border-left-color: var(--bad);
+}
+.mr-item.neutral {
+  border-left-color: var(--line-strong);
+}
+.mr-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.mr-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.mr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mr-actions button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.mr-actions button:hover {
+  border-color: var(--line-strong);
+}
+.mr-actions .mr-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+.mr-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.mr-more {
+  pointer-events: auto;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line);
+  font-size: 12px;
+}
+/* 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. */
+.shell:has(.mr-band) .content {
+  padding-bottom: 260px;
+}
+@media (max-width: 760px) {
+  .mr-band {
+    left: 16px;
+    right: 16px;
+  }
+}
+@media print {
+  .mr-band {
+    display: none;
+  }
+}
+
 /* CI 결과 동기화 — 버튼과 설명을 한 줄에. */
 .ci-sync {
   display: flex;
@@ -2906,6 +3074,49 @@ p.hint {
   gap: 8px;
 }
 @media (prefers-reduced-motion: reduce) { .sidebar-fold .chev { transition: none; } }
+
+/* 낮은 창(높이 800px 이하) — 메뉴 줄 높이 · 여백을 줄이고 테마는 단추 하나로, 바닥은 한 줄로. 1366×768에서 「설정」까지
+   들어간다(상용화 UI 3차 U9). 760px 이하는 좁은 화면 메뉴(접기)라 걸지 않는다. */
+@media (min-width: 761px) and (max-height: 800px) {
+  .sidebar {
+    gap: 6px;
+    padding-top: 12px;
+  }
+  .sidebar-scroll {
+    gap: 4px;
+  }
+  .sidebar-group a,
+  .sidebar-fold,
+  .sidebar-locked {
+    min-height: 28px;
+  }
+  .sidebar-cta {
+    min-height: 30px;
+  }
+  .brand-switch,
+  .sidebar-status {
+    padding: 6px 10px;
+  }
+  .sidebar-status-meta {
+    display: none;
+  }
+  .sidebar-foot {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+  }
+  .sidebar-foot-label,
+  .sidebar .theme-toggle {
+    display: none;
+  }
+  .sidebar .theme-cycle {
+    display: grid;
+  }
+  .app-version .upd-status.is-quiet {
+    display: none;
+  }
+}
 
 /* 콘텐츠 브리프 — 실행 항목 카드 안의 접히는 패널. 본문이 아니라 뼈대라는 점이 문구에 드러난다. */
 .brief { border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 2px; }
@@ -5629,6 +5840,45 @@ td.cell-mid {
 .pf-group-name {
   color: var(--grp);
 }
+.pf-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px 2px 2px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.pf-group-toggle:hover {
+  background: var(--surface-2);
+}
+.pf-group-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.pf-group-toggle .chev {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-right: 1.6px solid var(--muted);
+  border-bottom: 1.6px solid var(--muted);
+  transform: rotate(-45deg);
+  transition: transform 140ms ease;
+}
+.pf-group-toggle .chev.open {
+  transform: rotate(45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-group-toggle .chev { transition: none; }
+}
+/* 접은 업종군 — 한 줄 요약. */
+.pf-group-digest {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
 .pf-group .pf-card {
   border-top: 3px solid var(--grp);
 }
@@ -5647,36 +5897,85 @@ td.cell-mid {
   background: var(--grp);
 }
 .pf-card {
-  overflow: hidden;
+  /* clip — hidden이면 열 머리의 sticky가 카드 안에서만 붙는다. */
+  overflow: clip;
   border-radius: var(--r-card);
   background: var(--card);
   box-shadow: 0 0 0 1px var(--line);
+  /* 열 머리와 줄이 같은 칸 너비를 쓴다: 순위 · 브랜드 · 점수 · 언급률 · 자사 인용률 · 상태 · 동작 */
+  --pf-cols: 64px minmax(0, 1.6fr) minmax(120px, 1fr) 64px 72px minmax(0, 1.3fr) 92px;
 }
 .pf-cohort + .pf-cohort {
   border-top: 1px solid var(--line);
 }
 .pf-cohort-head {
+  padding: 10px 18px 6px;
+  /* 업종군 색(--grp)을 옅게 깔아 코호트가 바뀌는 지점이 보이게 한다. */
+  background: color-mix(in srgb, var(--grp, var(--surface-2)) 7%, var(--surface-2));
+}
+.pf-cohort-cell {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 10px;
-  padding: 10px 18px 6px;
-  /* 업종군 색(--grp)을 옅게 깔아 코호트가 바뀌는 지점이 보이게 한다. */
-  background: color-mix(in srgb, var(--grp, var(--surface-2)) 7%, var(--surface-2));
 }
 .pf-cohort-label {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--grp, var(--ink-2));
 }
+/* 정렬해 업종군을 풀었을 때 — 비교 그룹마다 어느 업종군인지. */
+.pf-cohort-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--grp, var(--muted));
+}
+/* 질문지가 달라 순위를 그대로 견줄 수 없는 비교 그룹 — 순위를 흐리게 하고 「*」로 머리의 설명을 가리킨다. */
+.pf-cohort-note {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--warn);
+}
+.pf-cohort.is-ref .pf-lb-rank {
+  opacity: 0.55;
+}
+/* 카드 맨 위 열 머리 — 스크롤해도 상단 막대 아래에 붙는다. */
+.pf-lb-head {
+  position: sticky;
+  top: 56px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: var(--pf-cols);
+  align-items: end;
+  gap: 12px;
+  padding: 8px 18px 6px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.pf-lb-head .num {
+  text-align: right;
+}
+.pf-lb-head [title] {
+  cursor: help;
+}
 /* 코호트 미니 리더보드(Portfolio.tsx LeaderRow) — 고객 브랜드와 경쟁사는 같은 글자체 · 같은 막대 색이다(섞여 보이면
    헷갈렸다). 고객 브랜드는 상태 칩 · 전주 대비 변화 · › · 옅은 바탕으로 구분한다. */
 .pf-lb-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1.7fr) minmax(110px, 1.2fr) 60px 64px minmax(0, 1.4fr) 16px;
+  grid-template-columns: var(--pf-cols);
   align-items: center;
   gap: 12px;
   width: 100%;
+  box-sizing: border-box;
+  scroll-margin-top: 96px;
   padding: 7px 18px;
   border: 0;
   border-top: 1px solid var(--line);
@@ -5688,14 +5987,131 @@ td.cell-mid {
 }
 .pf-lb-row.own {
   background: color-mix(in srgb, var(--grp, var(--accent)) 4%, var(--card));
-  cursor: pointer;
+  box-shadow: inset 3px 0 0 var(--grp, var(--accent));
 }
 .pf-lb-row.own:hover {
   background: color-mix(in srgb, var(--grp, var(--accent)) 9%, var(--card));
 }
-.pf-lb-row.own:focus-visible {
+/* 사이드바에서 고른 고객 브랜드 — 업종군 색 막대를 강조색으로 덮는다. */
+.pf-lb-row.own.is-selected {
+  background: color-mix(in srgb, var(--accent) 9%, var(--card));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.pf-sel-tag {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+/* 이름 단추가 줄 전체를 덮는다(::after) — 줄 어디를 눌러도 연다. 칩 단추 · 「측정」 · ⋯ · 점수 변화 설명은 그 위에 따로 놓인다. */
+.pf-lb-open {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pf-lb-open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.pf-lb-open:focus-visible {
+  outline: none;
+}
+.pf-lb-open:focus-visible::after {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
+}
+/* 덮개 위에 놓는 것 — 칩 단추, 설명(title)이 있는 칩(기본 정보 바뀜 요약 등), 고객 줄의 「측정」 · ⋯, 점수 변화 설명. 경쟁사 · 지난
+   기록 줄의 ›와 설명 없는 칩은 덮개 아래에 두어 그 자리를 눌러도 줄이 열린다. */
+.pf-lb-chip .pf-chip-act,
+.pf-lb-chip .chip[title],
+.pf-lb-row.own .pf-lb-act,
+.pf-row-meta.has-title {
+  position: relative;
+  z-index: 1;
+}
+.pf-lb-chip span.chip[title] {
+  cursor: help;
+}
+/* 좁은 칸에서는 칩 글자가 줄을 바꿔 옆 칸(「측정」)을 덮지 않게. */
+.pf-lb-chip .chip {
+  max-width: 100%;
+  white-space: normal;
+}
+.pf-row-meta.has-title {
+  cursor: help;
+}
+.pf-chip-act {
+  border: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pf-chip-act:hover:not(:disabled) {
+  text-decoration: underline;
+}
+.pf-chip-act:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.pf-chip-act:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pf-lb-act {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.pf-row-measure {
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-row-measure:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.pf-row-measure:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pf-more {
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pf-more:hover,
+.pf-more[aria-expanded='true'] {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.pf-row-measure:focus-visible,
+.pf-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .pf-lb-rank {
   font-family: var(--mono);
@@ -5714,7 +6130,14 @@ td.cell-mid {
   align-items: center;
   min-width: 0;
 }
+/* 이름 단추가 줄어들어 긴 이름은 말줄임(…) — 태그(경쟁사 · 선택됨)는 그 옆에 남는다. */
+.pf-lb-brand .pf-lb-open {
+  flex: 0 1 auto;
+  display: block;
+  overflow: hidden;
+}
 .pf-lb-text {
+  display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5725,13 +6148,26 @@ td.cell-mid {
   align-items: center;
   gap: 8px;
 }
+/* 막대 끝이 100점(lib/portfolioView barWidth) — 가운데 가는 틈이 50점 눈금이다. */
 .pf-lb-bar {
+  position: relative;
   flex: 1;
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
+  /* 눈금 때문에 위치를 잡아 덮개 위로 올라온다 — 막대를 눌러도 줄이 열리게 누르기는 덮개로 보낸다. */
+  pointer-events: none;
+}
+.pf-lb-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--card);
 }
 .pf-lb-bar span {
   display: block;
@@ -5769,33 +6205,23 @@ td.cell-mid {
   font-size: 18px;
 }
 /* 경쟁사 줄 — 누르면 읽기 전용 개요(상용화 UI 10차 시안). 고객 줄보다 조용하게, 올렸을 때만 화살표. */
-.pf-lb-row.competitor,
-.pf-lb-row.past {
-  cursor: pointer;
-}
 .pf-lb-row.competitor:hover,
 .pf-lb-row.past:hover {
   background: var(--surface-2);
 }
-.pf-lb-row.competitor:focus-visible,
-.pf-lb-row.past:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+.pf-lb-act .pf-row-go {
+  width: 28px;
+  text-align: center;
 }
 .pf-row-peek {
   opacity: 0;
   transition: opacity 120ms ease;
 }
 .pf-lb-row.competitor:hover .pf-row-peek,
-.pf-lb-row.competitor:focus-visible .pf-row-peek,
+.pf-lb-row.competitor:focus-within .pf-row-peek,
 .pf-lb-row.past:hover .pf-row-peek,
-.pf-lb-row.past:focus-visible .pf-row-peek {
+.pf-lb-row.past:focus-within .pf-row-peek {
   opacity: 1;
-}
-.pf-cohort-cols {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--muted);
 }
 .pf-toolbar {
   display: flex;
@@ -5806,6 +6232,57 @@ td.cell-mid {
 }
 .pf-toolbar .pf-chips {
   margin: 0;
+}
+.pf-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.pf-tools .pf-switch {
+  margin-left: 0;
+}
+.pf-tools .ghost {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-tools .ghost:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pf-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.pf-sort select {
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: inherit;
+}
+.pf-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 .pf-switch {
   display: inline-flex;
@@ -5858,12 +6335,29 @@ td.cell-mid {
     transition: none;
   }
 }
+/* 중간 폭(사이드바가 남는 761~1100px) — 언급률 · 자사 인용률 칸을 빼고 나머지 칸을 좁힌다. 고정 칸 합이 본문보다 넓어 이름 · 상태 칸이
+   0px이 되고 열 머리가 글자마다 줄을 바꿨다. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .pf-card {
+    --pf-cols: 56px minmax(0, 1.5fr) minmax(90px, 1fr) minmax(0, 1.3fr) 84px;
+  }
+  .pf-lb-rate,
+  .pf-lb-head .pf-head-rate {
+    display: none;
+  }
+}
 @media (max-width: 760px) {
+  .pf-lb-head {
+    display: none;
+  }
+  /* 동작 칸 너비를 고정한다 — 줄마다 따로 그리는 격자라 칸이 auto면 고객 줄(「측정」 · ⋯)과 경쟁사 줄(›)의 막대 길이가 달라졌다. */
   .pf-lb-row {
-    grid-template-columns: 52px minmax(0, 1fr) 44px;
-    grid-template-areas: 'rank name num' '. bar bar' '. chip chip';
+    grid-template-columns: 60px minmax(0, 1fr) 84px;
+    grid-template-areas: 'rank name act' '. bar num' '. chip chip';
     gap: 4px 10px;
   }
+  .pf-lb-act { grid-area: act; }
+  .pf-tools { margin-left: 0; }
   .pf-lb-rank { grid-area: rank; }
   .pf-lb-name { grid-area: name; }
   .pf-lb-score { display: contents; }
@@ -5871,9 +6365,84 @@ td.cell-mid {
   .pf-lb-num { grid-area: num; }
   .pf-lb-rate { display: none; }
   .pf-lb-chip { grid-area: chip; }
-  .pf-row-go { display: none; }
-  .pf-cohort-cols { display: none; }
   .pf-switch { margin-left: 0; }
+}
+/* 줄 끝 ⋯ 메뉴(components/RowMenu.tsx) — 문서 맨 바깥에 띄운다. 서랍(90) 위, 명령 창(100) 아래. */
+.rm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 94;
+}
+.rm-menu {
+  position: fixed;
+  z-index: 95;
+  box-sizing: border-box;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(17 28 24 / 0.16);
+}
+.rm-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.rm-item:hover,
+.rm-item:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+.rm-item[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.rm-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.rm-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}
+/* 브랜드 현황 첫 로드 뼈대(Portfolio.tsx PortfolioSkeleton) — 요약 타일 · 카드 자리만 잡고 옅게 반짝인다. */
+.pf-summary .pf-skel,
+.pf-card .pf-skel {
+  background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--surface-2) 45%, var(--card)) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: pf-skel-shine 1.4s ease-in-out infinite;
+}
+.pf-sum.pf-skel {
+  height: 84px;
+  cursor: default;
+}
+.pf-cohort-head.pf-skel {
+  height: 34px;
+}
+.pf-lb-row.pf-skel {
+  height: 40px;
+}
+@keyframes pf-skel-shine {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-summary .pf-skel,
+  .pf-card .pf-skel {
+    animation: none;
+  }
 }
 
 /* 브랜드 바꾸기 패널(components/BrandSwitcher.tsx) — 사이드바 브랜드 칸 바로 아래에 화면 기준으로 띄운다. */
@@ -6359,53 +6928,6 @@ td.cell-mid {
   .cv-compare-row {
     grid-template-columns: 88px minmax(0, 1fr) 56px;
   }
-}
-
-/* 경쟁사 편집 진입점(Portfolio.tsx CohortEditLinks) — 코호트 카드 머리 오른쪽 끝. */
-.pf-cohort-edit {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-left: auto;
-}
-.pf-cohort-cols + .pf-cohort-edit {
-  margin-left: 12px;
-}
-.pf-cohort-edit-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.pf-cohort-miss {
-  border: 0;
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.pf-cohort-edit-btn {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.pf-cohort-edit-btn:hover {
-  text-decoration: underline;
-}
-.pf-cohort-miss:focus-visible,
-.pf-cohort-edit-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.pf-cohort-miss:disabled,
-.pf-cohort-edit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  text-decoration: none;
 }
 
 /* 경쟁사 편집 서랍(components/CompetitorEditor.tsx) — 오른쪽 고정, 배경을 깔지 않는다(리더보드를 보면서 고친다).
@@ -7202,6 +7724,155 @@ td.cell-mid {
 .ce-dialog .ce-dialog-note {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* 되돌리기 어려운 일의 확인 단추(components/ConfirmDialog.tsx) — 빨강은 실패 · 위험에만 쓴다. */
+.btn.danger {
+  border-color: var(--bad);
+  background: var(--bad);
+  color: var(--paper);
+  font-weight: 600;
+}
+.btn.danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.ce-dialog .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cd-require {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cd-require input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+.cd-require input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.ce-dialog .cd-blocked {
+  color: var(--warn);
+}
+
+/* 브랜드 관리의 「지운 브랜드」(components/BrandManageList.tsx) — 접어 두고 펼치면 되살리기. */
+.bm-removed {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.bm-removed > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.bm-removed ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bm-removed li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.bm-removed-name {
+  font-weight: 600;
+}
+
+/* 측정 상태(pages/MeasureStatus.tsx) — 진행 중 → 최근 실패 → 최근 완료 → 비용(접힘) → 원격. */
+.ms-section {
+  margin-top: 16px;
+}
+.ms-section > h3 {
+  margin-bottom: 6px;
+}
+.ms-run-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ms-run-toggle:hover {
+  text-decoration: underline;
+}
+.ms-run-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+tr.ms-run-child td {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+tr.ms-run-child td:nth-child(2) {
+  padding-left: 28px;
+}
+.ms-fold {
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: var(--r-card);
+  box-shadow: 0 0 0 1px var(--line);
+  background: var(--card);
+}
+.ms-fold > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.ms-fold[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* 측정 시작 단추 옆 한 줄(pages/MeasureTenant.tsx) — 지난번 걸린 시간 · 비용이 든다는 사실. */
+.measure-cost-line {
+  margin: 6px 0 0;
+}
+
+/* 브랜드 현황 「현황 | 관리」(pages/Portfolio.tsx). */
+.pf-view {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.pf-view button {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-view button[aria-selected='true'] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.pf-view button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* 기본 정보 서랍(components/ProfileEditor.tsx) — 틀은 경쟁사 편집 서랍(ce-*)을 쓰고 입력 칸만 더한다. */

@@ -1,4 +1,5 @@
 import type { EngineRate, UsageRow } from './api'
+import { ENGINE_LABEL } from './format'
 
 /**
  * 사용량 한 줄의 비용. **모르면 null을 돌려준다 — 0이 아니다.**
@@ -74,20 +75,70 @@ export function formatMoney(amount: number, currency: string): string {
   return `${v} ${currency}`
 }
 
+export interface CostSum {
+  /** 계산한 줄의 합. */
+  amount: number
+  /** 모든 줄을 계산했다. */
+  complete: boolean
+  /** 계산한 줄 수. 0이면 amount는 뜻이 없다(0원이 아니다). */
+  counted: number
+  /** 계산하지 못한 엔진과 까닭 — 엔진마다 하나. */
+  missing: { engine: string; reason: 'noRate' | 'noSplit' }[]
+}
+
 /**
  * 여러 줄(한 주차의 수집 또는 판정)의 비용 합. 계산하지 못한 줄이 하나라도 있으면 complete가
  * false다 — 화면이 그 합을 "일부"로 밝혀야 한다. 빠진 줄을 0으로 치면 합이 실제보다 작아진다.
  */
-export function sumCost(
-  rows: UsageRow[],
-  engines: Record<string, EngineRate> | undefined,
-): { amount: number; complete: boolean } {
+export function sumCost(rows: UsageRow[], engines: Record<string, EngineRate> | undefined): CostSum {
   let amount = 0
-  let complete = true
+  let counted = 0
+  const missing: CostSum['missing'] = []
   for (const row of rows) {
     const c = rowCost(row, engines?.[row.engine])
-    if (c.amount === null) complete = false
-    else amount += c.amount
+    if (c.amount !== null) {
+      amount += c.amount
+      counted += 1
+    } else if ((c.reason === 'noRate' || c.reason === 'noSplit') && !missing.some((m) => m.engine === row.engine)) {
+      missing.push({ engine: row.engine, reason: c.reason })
+    }
   }
-  return { amount, complete }
+  return { amount, complete: missing.length === 0, counted, missing }
+}
+
+/** 계산하지 못한 까닭 한 구절 — 「Claude 단가 미설정」 · 「입력·출력 기록 없음」 · 둘이 섞이면 함께. */
+export function missingCostText(missing: CostSum['missing']): string {
+  const noRate = missing.filter((m) => m.reason === 'noRate').map((m) => ENGINE_LABEL[m.engine] ?? m.engine)
+  const noSplit = missing.some((m) => m.reason === 'noSplit')
+  return [noRate.length ? `${noRate.join(' · ')} 단가 미설정` : '', noSplit ? '입력·출력 기록 없음' : ''].filter(Boolean).join(' · ')
+}
+
+/**
+ * 비용 합을 글로 — 다 계산했으면 금액만, 일부만이면 「9.92 USD 이상 — Claude 단가 미설정」, 하나도 못 했으면
+ * 「확인 불가(Claude 단가 미설정)」. 예전에는 「9.92 USD+」였는데 「+」가 무엇을 뜻하는지 화면에 없었고, 하나도 못 한 주는 0으로 보였다.
+ */
+export function costText(v: CostSum, currency: string): string {
+  const why = missingCostText(v.missing)
+  if (v.counted === 0) return why ? `확인 불가(${why})` : '확인 불가'
+  if (why) return `${formatMoney(v.amount, currency)} 이상 — ${why}`
+  return formatMoney(v.amount, currency)
+}
+
+/** 두 합(수집 · 판정)을 하나로 — 같은 엔진의 까닭은 한 번만. */
+export function mergeCost(a: CostSum, b: CostSum): CostSum {
+  const missing = [...a.missing, ...b.missing.filter((m) => !a.missing.some((x) => x.engine === m.engine && x.reason === m.reason))]
+  return { amount: a.amount + b.amount, counted: a.counted + b.counted, missing, complete: missing.length === 0 }
+}
+
+/** 주차 칸의 합계 — 「비용 12.25 USD」 · 「비용 12.25 USD 이상」 · 「비용 확인 불가」. 계산할 줄이 하나도 없으면 null(줄을 그리지 않는다). */
+export function costTotalText(v: CostSum, currency: string): string | null {
+  if (v.counted === 0) return v.missing.length ? '비용 확인 불가' : null
+  return `비용 ${formatMoney(v.amount, currency)}${v.missing.length ? ' 이상' : ''}`
+}
+
+/** 합계 옆 괄호 안의 한 몫 — 「12.25 USD」 · 「9.92 USD 이상 — Claude 단가 미설정」 · 「확인 불가 — Claude 단가 미설정」. */
+export function costPartText(v: CostSum, currency: string): string {
+  const why = missingCostText(v.missing)
+  if (v.counted === 0) return why ? `확인 불가 — ${why}` : '확인 불가'
+  return why ? `${formatMoney(v.amount, currency)} 이상 — ${why}` : formatMoney(v.amount, currency)
 }

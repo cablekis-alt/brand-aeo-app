@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import BrandManageList from '../components/BrandManageList'
 import MeasureProgress, { type ActiveMeasure } from '../components/MeasureProgress'
 import { useTenant } from '../context/useTenant'
 import { extractPage } from '../lib/aeo/extractPage'
@@ -8,6 +7,8 @@ import { fetchPage } from '../lib/aeo/fetchPage'
 import { parsePublicHttpUrl } from '../lib/aeo/netGuard'
 import { fetchFactCandidatesFor, inferBrandAliases, measureErrorText, measureTenantAll, type FactCandidate } from '../lib/api'
 import { isAddressLike, isDomainLike, scopeLabel } from '../lib/brandVariant'
+import { MEASURING_NOTE, useMeasureClaim, useMeasureStatus } from '../lib/measureStatus'
+import { durationText, groupMeasureRuns, recentRunDurations } from '../lib/measureRuns'
 import { directionParticle, objectParticle, subjectParticle, topicParticle } from '../lib/korean'
 import { NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
@@ -301,7 +302,7 @@ function useElapsed(active: boolean): number {
 const withElapsed = (label: string, sec: number) => (sec > 0 ? `${label} ${sec}초` : label)
 
 export default function BrandOnboarding() {
-  const { reloadTenants, setTenantId } = useTenant()
+  const { reloadTenants, setTenantId, tenants } = useTenant()
   const [url, setUrl] = useState('')
   const [industry, setIndustry] = useState('')
   const [region, setRegion] = useState('')
@@ -361,6 +362,9 @@ export default function BrandOnboarding() {
   // 다른 범위로 하나 더 등록할 때 원래 브랜드의 사실 · 브랜드 페이지 · 발행 설정을 가져올지(기본 켬).
   const [copyBusiness, setCopyBusiness] = useState(true)
   const [measuring, setMeasuring] = useState(false)
+  const claim = useMeasureClaim()
+  // 측정에 걸리는 시간 — 고정 숫자(「보통 3분」) 대신 이 PC의 최근 측정 기록으로 말한다(상용화 UI 3차 U13).
+  const measureStatus = useMeasureStatus()
   // 측정을 건너뛰었나 — 6단계를 '완료'로 보고 다음 할 일을 안내한다.
   const [skippedMeasure, setSkippedMeasure] = useState(false)
   const [measureMsg, setMeasureMsg] = useState<string | null>(null)
@@ -371,7 +375,6 @@ export default function BrandOnboarding() {
   const busySec = useElapsed(busy)
   const factsSec = useElapsed(findingFacts)
   const compSec = useElapsed(suggestingComp)
-  const measureSec = useElapsed(measuring)
   /**
    * 서버가 보고하는 측정 진행. 경과 초는 "멈추지 않았다"까지만 말하고, 어디쯤인지는 못 말한다.
    * 코호트를 함께 재면 브랜드가 여럿이므로 목록으로 받는다.
@@ -1242,7 +1245,7 @@ export default function BrandOnboarding() {
     setMeasureMsg(
       measureVia === 'github'
         ? `${tenant.brandName} GitHub Actions 측정 요청 중…`
-        : `${tenant.brandName} 측정 중… (수 분). 완료되면 결과가 반영됩니다.`,
+        : `${tenant.brandName} ${MEASURING_NOTE}`,
     )
     try {
       if (measureVia === 'github') {
@@ -1259,6 +1262,8 @@ export default function BrandOnboarding() {
         )
         return
       }
+      // 이 화면이 결과를 알린다 — 이 화면을 보고 있으면 화면 아래 결과 띠를 겹쳐 띄우지 않는다.
+      claim(id)
       const d = await measureTenantAll(id)
       setMeasureMsg(`✓ ${d.brandName ?? tenant.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점). 개요 · 경쟁 순위에서 확인하세요.`)
     } catch (err) {
@@ -1267,6 +1272,12 @@ export default function BrandOnboarding() {
       setMeasuring(false)
     }
   }
+
+  // 이 PC의 최근 측정 10번(고객 브랜드 측정)이 걸린 시간 — 3번이 안 되면 어림 대신 일반 안내.
+  const recentRange = recentRunDurations(groupMeasureRuns(measureStatus.completed, (id) => !tenants.some((t) => t.tenantId === id)))
+  const durationHint = recentRange
+    ? `이 PC의 최근 측정 ${recentRange.count}번은 ${durationText(recentRange.minSec)}~${durationText(recentRange.maxSec)} 걸렸습니다 — 경쟁사 수와 엔진 상태에 따라 다릅니다.`
+    : '걸리는 시간은 경쟁사 수와 엔진 상태에 따라 다릅니다(보통 3~15분). 진행 표시에 남은 시간이 나옵니다.'
 
   const currentStage = !extracted ? 1 : !ready ? 2 : 5
   const s1 = stageStatus(1, extracted, ready)
@@ -1821,8 +1832,8 @@ export default function BrandOnboarding() {
             <p className="hint" style={{ marginTop: 0 }}>
               {/* 문항 수는 서버가 정한다. 화면이 숫자를 박으면 서버 기본값과 어긋난다 — 이 파일 위쪽
                   주석에 그 사고 기록이 있다(화면 12문항 × 3회 / 서버 36문항 × 1회). */}
-              질문 은행 전체를 엔진에 던져 <b>어느 질문에서 밀리는지</b>를 잽니다. 경쟁사까지 함께 재면
-              코호트 순위(1/N)도 나옵니다. 실측으로 본 브랜드만 약 2.7분, 경쟁사 포함 6곳이 약 3분입니다(병렬).
+              질문지 전체를 엔진에 물어 <b>어느 질문에서 밀리는지</b>를 잽니다. 경쟁사까지 함께 재면 비교 그룹(코호트) 순위(1/N)도
+              나옵니다. {durationHint}
             </p>
             <div className="onboard-register-actions">
               <button
@@ -1831,7 +1842,7 @@ export default function BrandOnboarding() {
                 onClick={() => void measureRegisteredBrand()}
                 disabled={measuring}
               >
-                {measuring ? withElapsed('측정 중… (보통 3분)', measureSec) : '측정 시작'}
+                {measuring ? '측정 중…' : '측정 시작'}
               </button>
               {!measuring && !skippedMeasure && (
                 <button type="button" className="ghost" onClick={() => setSkippedMeasure(true)}>
@@ -1855,9 +1866,10 @@ export default function BrandOnboarding() {
             )}
           </>
         )}
+        <p className="hint">
+          등록한 브랜드의 수집 엔진 · 삭제는 <Link to="/brands?view=manage">브랜드 현황 › 관리</Link>에서 합니다.
+        </p>
       </StageShell>
-
-      <BrandManageList />
     </>
   )
 }

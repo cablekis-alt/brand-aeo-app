@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MeasureCancelButton, measureStageLabel, type ActiveMeasure } from '../components/MeasureProgress'
-import { Link } from 'react-router-dom'
+import MeasureProgress from '../components/MeasureProgress'
+import { Link, useNavigate } from 'react-router-dom'
+import { useTenant } from '../context/useTenant'
 import {
   cancelMeasureRun,
   loadCiSyncStatus,
@@ -14,13 +15,12 @@ import {
   type MeasureRunInfo,
   type UsageStats,
 } from '../lib/api'
-import { formatMoney, rowCost, sumCost } from '../lib/engineCost'
+import { costPartText, costTotalText, formatMoney, mergeCost, rowCost, sumCost } from '../lib/engineCost'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
 import { BRAND_DOCS } from '../lib/brandDocs'
 import { brandLabel, type VariantBrand } from '../lib/brandVariant'
-import { useTenant } from '../context/useTenant'
-import { isOpenAction } from '../lib/gapActions'
-import { useGapActionPlan } from '../lib/useGapActionPlan'
+import { failureReason, useMeasureStatus } from '../lib/measureStatus'
+import { durationText, groupMeasureRuns, type LocalRun, type RunGroup } from '../lib/measureRuns'
 import measureLogRaw from '../data/measure-log.json'
 import scorecardsRaw from '../data/demo-scorecards.json'
 
@@ -41,20 +41,6 @@ function runTenantId(title: string): string | null {
   return !id || id === '__queue__' ? null : id
 }
 
-// 로컬 측정 기록(measure:local이 커밋). GitHub Actions 실행 목록과 별도로 표시한다.
-interface LocalMeasureLog {
-  tenantId: string
-  brandName: string
-  weekOf: string
-  aeoScore: number
-  at: string
-  durationSec?: number
-  source?: string
-  engines?: string[]
-  /** 이 측정이 그 주 카드를 덮지 않은 까닭 — 점수는 이 회차 값이고 그 주 카드는 앞 측정 그대로다. */
-  weekCardKept?: string
-}
-
 // 엔진 코드 → 표시 라벨. 수집에 실제 성공한 엔진만 기록되므로, 예: ['gemini'] → "Gemini".
 // ENGINE_LABEL은 src/lib/format.ts 것을 쓴다. 여기 사본이 따로 있었는데 mock('목(테스트)')이
 // 빠져 있어, 목 엔진으로 돌린 측정이 이 화면에서만 'mock'으로 보였다.
@@ -62,31 +48,26 @@ function fmtEngines(engines?: string[]): string {
   if (!engines || engines.length === 0) return '-'
   return engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
 }
-const localLog = measureLogRaw as LocalMeasureLog[]
+// 로컬 측정 기록(measure:local이 커밋) — 이 앱이 남긴 기록(/api/measure-status completed)과 합쳐 측정 1회로 묶는다.
+const localLog = measureLogRaw as LocalRun[]
 
-/** 실패한 로컬 측정 — 서버 measureTracker.ts MeasureFailure와 같은 모양(메모리 · 최근 것만). */
-interface LocalMeasureFailure {
-  tenantId: string
-  brandName: string
-  at: string
-  error: string
-  engineIssues?: string[]
+/** 「비용」 접기 상태 — 이 PC에 기억(처음에는 접힘). */
+const COST_OPEN_KEY = 'measureStatus.costOpen'
+function readCostOpen(): boolean {
+  try {
+    return localStorage.getItem(COST_OPEN_KEY) === '1'
+  } catch {
+    return false // 못 읽으면 접힌 채로
+  }
 }
-
-/** 실패 줄에 보일 이유 — 끊긴 엔진이 있으면 그 이름, 없으면 오류 문구 첫 문장. */
-function failureReason(f: LocalMeasureFailure): string {
-  if (f.engineIssues?.length) return f.engineIssues.join(' · ')
-  const first = f.error.replace(/^\[[^\]]+\]\s*/, '').split(/(?<=[.。])\s/)[0] ?? f.error
-  return first.length > 90 ? `${first.slice(0, 90)}…` : first
+function writeCostOpen(open: boolean) {
+  try {
+    localStorage.setItem(COST_OPEN_KEY, open ? '1' : '0')
+  } catch {
+    /* 기억 못 해도 지금 화면은 그대로 */
+  }
 }
-
-// 초 → "N분 M초" / "N초"
-function fmtSec(sec?: number): string {
-  if (typeof sec !== 'number' || !Number.isFinite(sec)) return '-'
-  const s = Math.max(0, Math.round(sec))
-  const m = Math.floor(s / 60)
-  return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
-}
+const GROUP_PAGE = 10
 
 // GitHub Actions 실행 상태 → 한국어 배지 + B9에서 쓰는 status-pill 색상 클래스.
 function statusBadge(run: MeasureRunInfo): { label: string; cls: string } {
@@ -136,56 +117,6 @@ function duration(run: MeasureRunInfo): string {
   const s = Math.max(0, Math.round((end - start) / 1000))
   const m = Math.floor(s / 60)
   return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
-}
-
-/**
- * 이 브랜드의 실행 항목 요약 — 측정이 끝난 직후 "그래서 뭘 하지"에 바로 답한다.
- *
- * 예전에는 여기 손으로 적은 문서 링크 배열(brandDocs)이 있었다. 브랜드가 늘 때마다 사람이
- * 줄을 추가해야 했고, 실제로 k-wonjin 하나만 채워져 있었다. 지금은 저장된 측정에서 계산해
- * 모든 브랜드가 자동으로 목록을 갖는다.
- */
-function ActionSummary() {
-  const { tenant } = useTenant()
-  const { plan, weekOf, loading, neverMeasured } = useGapActionPlan(tenant?.tenantId ?? '')
-  if (!tenant) return null
-
-  const open = plan.actions.filter(isOpenAction)
-  return (
-    <section style={{ marginTop: '8px' }}>
-      <h3>실행 항목</h3>
-      <p className="hint" style={{ marginTop: 0 }}>
-        측정이 찾아낸 격차를 할 일로 바꾼 목록입니다. <b>{tenant.brandName}</b>
-        {weekOf && ` · ${weekOf}`} 기준이며, 저장된 측정에서 계산합니다.
-      </p>
-      {loading ? (
-        <p className="muted">불러오는 중…</p>
-      ) : plan.actions.length === 0 ? (
-        <p className="muted">
-          {neverMeasured ? '아직 측정된 적이 없습니다.' : '이 주차에 분석 데이터가 없습니다.'}
-        </p>
-      ) : (
-        <>
-          <ul className="doc-links">
-            {open.slice(0, 4).map((a) => (
-              <li key={a.id}>
-                <Link to="/gap-actions">{a.title}</Link>
-                <span className="doc-meta">
-                  {a.badge} · 영향 {a.reach}
-                  {a.questionTexts[0] && ` · ${a.questionTexts[0]}`}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="hint">
-            남은 {open.length}건 중 {Math.min(4, open.length)}건입니다 ·{' '}
-            <Link to="/gap-actions">실행 항목 전체 보기</Link>
-            {plan.satisfiedCount > 0 && ` (데이터가 충족을 확인한 항목 ${plan.satisfiedCount}건은 따로 표시됩니다)`}
-          </p>
-        </>
-      )}
-    </section>
-  )
 }
 
 /**
@@ -255,6 +186,10 @@ function CiSyncPanel({ onSynced }: { onSynced: () => void }) {
 }
 
 export default function MeasureStatus() {
+  const navigate = useNavigate()
+  const { setTenantId } = useTenant()
+  // 이 앱의 로컬 측정(진행 중 · 최근 실패 · 완료 기록) — 사이드바 · 결과 띠와 같은 공용 저장소(lib/measureStatus.ts).
+  const status = useMeasureStatus()
   const [runs, setRuns] = useState<MeasureRunInfo[]>([])
   const [enabled, setEnabled] = useState(true)
   // 원격 측정 실행 목록을 한 번이라도 받았는가 — 데스크톱은 받기 전에 원격 칸을 그리지 않는다(토큰 없는 PC에서 칸이 잠깐 보였다 — 1-C 검토).
@@ -319,16 +254,16 @@ export default function MeasureStatus() {
   const [auto, setAuto] = useState(true)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [nameMap, setNameMap] = useState<Record<string, string>>({})
+  // 경쟁사(비교용 브랜드) — 완료 기록을 측정 1회로 묶을 때 고객 브랜드와 가른다.
+  const [competitorIds, setCompetitorIds] = useState<Set<string>>(() => new Set())
   const [cancelling, setCancelling] = useState<number | null>(null)
-  // 이 앱이 직접 돌린 로컬 측정(진행 중 + 완료). /api/measure-status에서 폴링.
-  const [localActive, setLocalActive] = useState<ActiveMeasure[]>([])
-  const [localDone, setLocalDone] = useState<LocalMeasureLog[]>([])
-  const [localFailed, setLocalFailed] = useState<LocalMeasureFailure[]>([])
-  const [nowMs, setNowMs] = useState(() => Date.now())
   const timer = useRef<number | null>(null)
+  const [groupLimit, setGroupLimit] = useState(GROUP_PAGE)
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
+  const [costOpen, setCostOpen] = useState(readCostOpen)
 
+  // GitHub Actions 실행 목록(배포 토큰 필요). 로컬 측정 상태는 공용 저장소가 따로 읽는다.
   const load = useCallback(async () => {
-    // GitHub Actions 실행 목록(배포 토큰 필요) — 실패해도 로컬 상태는 계속 본다.
     try {
       const data = await loadMeasureRuns()
       setEnabled(data.enabled)
@@ -337,22 +272,6 @@ export default function MeasureStatus() {
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : '상태를 불러오지 못했습니다.')
-    }
-    // 앱의 로컬 측정 상태(진행 중 + 완료)
-    try {
-      const r = await fetch('/api/measure-status')
-      if (r.ok) {
-        const d = (await r.json()) as {
-          active?: ActiveMeasure[]
-          completed?: LocalMeasureLog[]
-          failed?: LocalMeasureFailure[]
-        }
-        setLocalActive(Array.isArray(d.active) ? d.active : [])
-        setLocalDone(Array.isArray(d.completed) ? d.completed : [])
-        setLocalFailed(Array.isArray(d.failed) ? d.failed : [])
-      }
-    } catch {
-      /* 로컬 상태 엔드포인트 없음(배포 등) — 무시 */
     }
     setUpdatedAt(new Date())
     setLoading(false)
@@ -375,6 +294,7 @@ export default function MeasureStatus() {
         for (const t of list) if (t?.tenantId) map[t.tenantId] = t.brandName || t.tenantId
         for (const t of brands) if (t.brandName) map[t.tenantId] = brandLabel(t, brands)
         setNameMap(map)
+        setCompetitorIds(new Set(list.filter((t: { tenantId?: string; cohortOnly?: boolean }) => t?.tenantId && t.cohortOnly).map((t: { tenantId: string }) => t.tenantId)))
       })
       .catch(() => {})
     return () => {
@@ -394,28 +314,35 @@ export default function MeasureStatus() {
     }
   }, [auto, load])
 
-  // 진행 중 측정의 경과시간을 1초마다 갱신(리얼타임 표시).
-  useEffect(() => {
-    if (localActive.length === 0) return
-    const t = window.setInterval(() => setNowMs(Date.now()), 1000)
-    return () => window.clearInterval(t)
-  }, [localActive.length])
-
+  const localActive = status.active
+  const localFailed = status.failed
   const active = runs.some((r) => r.status !== 'completed') || localActive.length > 0
 
-  // 로컬 완료 기록: 앱이 방금 돌린 것(API, userData) + 커밋된 CLI 기록(정적). tenantId+at로 중복 제거, 최신순.
-  const localRows: LocalMeasureLog[] = (() => {
+  // 로컬 완료 기록: 앱이 방금 돌린 것(API, userData) + 커밋된 CLI 기록(정적). tenantId+at로 중복 제거한 뒤 측정 1회씩 묶는다.
+  const groups: RunGroup[] = useMemo(() => {
     const seen = new Set<string>()
-    const all = [...localDone, ...localLog]
-    const out: LocalMeasureLog[] = []
-    for (const e of all) {
+    const rows: LocalRun[] = []
+    for (const e of [...status.completed, ...localLog]) {
       const key = `${e.tenantId}-${e.at}`
       if (seen.has(key)) continue
       seen.add(key)
-      out.push(e)
+      rows.push(e)
     }
-    return out.sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 50)
-  })()
+    return groupMeasureRuns(rows, (id) => competitorIds.has(id))
+  }, [status.completed, competitorIds])
+  const nameOf = (r: { tenantId: string; brandName: string }) => nameMap[r.tenantId] || r.brandName || r.tenantId
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  /** 실패 줄의 「다시 측정」 — 측정 화면에서 그 브랜드를 고른 채 연다(바로 재지 않는다). 경쟁사면 사이드바를 바꾸지 않는다. */
+  const remeasure = (tenantId: string) => {
+    if (!competitorIds.has(tenantId)) setTenantId(tenantId)
+    navigate('/measure-tenant', { state: { pick: tenantId } })
+  }
 
   async function onCancel(run: MeasureRunInfo) {
     if (!run.id) return
@@ -438,6 +365,16 @@ export default function MeasureStatus() {
   const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   const showRemote = !isDesktop || (runsKnown && enabled)
 
+  // 접힌 「비용」 줄 — 가장 최근 주차의 비용 한 줄. 단가를 한 번도 넣지 않았으면 그것부터 알린다.
+  const latestWeek = usage?.weeks.reduce<UsageStats['weeks'][number] | null>((a, w) => (!a || w.weekOf > a.weekOf ? w : a), null) ?? null
+  const latestTotal = latestWeek
+    ? costTotalText(mergeCost(sumCost(latestWeek.byEngine, pricing?.engines), sumCost(latestWeek.judgeByEngine, pricing?.engines)), pricing?.currency ?? '')
+    : null
+  const costSummary =
+    pricing !== null && !pricing.updatedAt
+      ? '엔진 사용량 · 비용 — 단가를 아직 넣지 않았습니다(펼쳐서 넣으세요)'
+      : `엔진 사용량 · 비용${latestWeek ? ` — ${weekLabel(latestWeek.weekOf)} ${latestTotal ?? '비용 기록 없음'}` : ''}`
+
   return (
     <>
       <p className="brand">측정</p>
@@ -452,10 +389,12 @@ export default function MeasureStatus() {
         <button type="button" className="ghost" onClick={() => void load()} disabled={loading}>
           {loading ? '불러오는 중…' : '새로고침'}
         </button>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
-          자동 새로고침(8초)
-        </label>
+        {showRemote && (
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+            원격 측정 자동 새로고침(8초)
+          </label>
+        )}
         {updatedAt && <span className="hint">마지막 갱신 {updatedAt.toLocaleTimeString()}</span>}
         {active && <span className="status-pill st-warn">진행 중인 측정 있음</span>}
       </div>
@@ -466,9 +405,151 @@ export default function MeasureStatus() {
         </p>
       )}
 
-      <ActionSummary />
+      {/* 이 PC(앱 서버)에서 돈 측정 — 서버가 측정 상태를 주지 않는 곳(웹 배포)에서는 원격 측정 칸만 본다. */}
+      {status.ok && (
+        <section className="ms-section" aria-labelledby="ms-active">
+          <h3 id="ms-active">진행 중</h3>
+          {localActive.length > 0 ? (
+            <MeasureProgress active={localActive} nameOf={(a) => nameMap[a.tenantId] || a.brandName} />
+          ) : (
+            <p className="muted">
+              이 PC에서 진행 중인 측정이 없습니다 · <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>
+            </p>
+          )}
+        </section>
+      )}
 
-      {BRAND_DOCS.length > 0 && (
+      {localFailed.length > 0 && (
+        <section className="ms-section" aria-labelledby="ms-failed">
+          <h3 id="ms-failed">최근 실패</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            보고서를 보내기 전에 다시 측정하세요. 같은 브랜드를 다시 재서 성공하면 이 줄은 사라집니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th className="cell-text">브랜드</th>
+                  <th className="cell-text">이유</th>
+                  <th>언제</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {localFailed.map((f) => (
+                  <tr key={`failed-${f.tenantId}-${f.at}`}>
+                    <td className="cell-text">
+                      {nameOf(f)}
+                      {competitorIds.has(f.tenantId) && <span className="bsw-tag">경쟁사</span>}
+                    </td>
+                    {/* 끊긴 엔진(「Gemini 지출 한도 초과」)이 있으면 그 이름, 없으면 오류 첫 문장 — 전체 문구는 제목 풍선에. */}
+                    <td className="cell-text" title={f.error}>
+                      {failureReason(f)}
+                    </td>
+                    <td>{timeAgo(f.at)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button type="button" className="ghost" onClick={() => remeasure(f.tenantId)}>
+                        {competitorIds.has(f.tenantId) ? '이 경쟁사만 다시 측정' : '다시 측정'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {groups.length > 0 && (
+        <section className="ms-section" aria-labelledby="ms-done">
+          <h3 id="ms-done">최근 완료</h3>
+          <p className="hint" style={{ marginTop: 0 }}>
+            측정 1회가 1줄입니다 — 경쟁사를 함께 잰 측정은 브랜드 칸을 눌러 펼칩니다. 걸린 시간은 처음 시작부터 마지막 경쟁사가 끝날 때까지입니다.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>상태</th>
+                  <th className="cell-text">브랜드</th>
+                  <th className="cell-text">측정 엔진</th>
+                  <th>주차</th>
+                  <th>Brand AEO</th>
+                  <th>걸린 시간</th>
+                  <th>언제</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groups.slice(0, groupLimit).flatMap((g) => {
+                  const open = openGroups.has(g.key)
+                  const pill = (r: LocalRun) =>
+                    r.weekCardKept ? (
+                      // 엔진이 빠져 그 주 카드를 덮지 않은 회차 — 대시보드 점수와 다른 까닭을 제목 풍선에.
+                      <span className="status-pill st-warn" title={`${r.weekCardKept}. 이 점수는 회차 기록에만 남았습니다.`}>
+                        카드 유지
+                      </span>
+                    ) : (
+                      <span className="status-pill st-good">완료</span>
+                    )
+                  const competitorTag = (r: LocalRun) => competitorIds.has(r.tenantId) && <span className="bsw-tag">경쟁사</span>
+                  const rows = [
+                    <tr key={g.key}>
+                      <td>{pill(g.root)}</td>
+                      <td className="cell-text">
+                        {g.children.length > 0 ? (
+                          <button type="button" className="ms-run-toggle" aria-expanded={open} onClick={() => toggleGroup(g.key)}>
+                            {nameOf(g.root)} · 경쟁사 {g.children.length}곳 {open ? '▾' : '▸'}
+                          </button>
+                        ) : (
+                          <>
+                            {nameOf(g.root)}
+                            {competitorTag(g.root)}
+                          </>
+                        )}
+                      </td>
+                      <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
+                        {fmtEngines(g.root.engines)}
+                      </td>
+                      <td>{g.root.weekOf}</td>
+                      <td className="num">{g.root.aeoScore}</td>
+                      <td className="num">{g.children.length > 0 || g.root.durationSec !== undefined ? durationText(g.durationSec) : '-'}</td>
+                      <td>{timeAgo(new Date(g.endedAt).toISOString())}</td>
+                    </tr>,
+                  ]
+                  if (open) {
+                    for (const c of g.children) {
+                      rows.push(
+                        <tr key={`${g.key}|${c.tenantId}|${c.at}`} className="ms-run-child">
+                          <td>{pill(c)}</td>
+                          <td className="cell-text">
+                            {nameOf(c)}
+                            {competitorTag(c)}
+                          </td>
+                          <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>
+                            {fmtEngines(c.engines)}
+                          </td>
+                          <td>{c.weekOf}</td>
+                          <td className="num">{c.aeoScore}</td>
+                          <td className="num">{c.durationSec !== undefined ? durationText(c.durationSec) : '-'}</td>
+                          <td>{timeAgo(c.at)}</td>
+                        </tr>,
+                      )
+                    }
+                  }
+                  return rows
+                })}
+              </tbody>
+            </table>
+          </div>
+          {groups.length > groupLimit && (
+            <button type="button" className="ghost" onClick={() => setGroupLimit((n) => n + GROUP_PAGE)}>
+              {Math.min(GROUP_PAGE, groups.length - groupLimit)}개 더 보기
+            </button>
+          )}
+        </section>
+      )}
+
+      {!isDesktop && BRAND_DOCS.length > 0 && (
         <section style={{ marginTop: '8px' }}>
           <h3>직접 작성한 문서</h3>
           <p className="hint" style={{ marginTop: 0 }}>
@@ -492,7 +573,16 @@ export default function MeasureStatus() {
       )}
 
       {usage && usage.weeks.length > 0 && (
-        <section style={{ marginTop: '8px' }}>
+        <details
+          className="ms-fold"
+          open={costOpen}
+          onToggle={(e) => {
+            const open = e.currentTarget.open
+            setCostOpen(open)
+            writeCostOpen(open)
+          }}
+        >
+          <summary>{costSummary}</summary>
           <h3>엔진 사용량</h3>
           <p className="hint" style={{ marginTop: 0 }}>
             모든 브랜드를 합친 값입니다 — API 키를 브랜드마다 따로 쓰지 않으므로 크레딧이 왜 줄었는지는 전체를
@@ -542,19 +632,14 @@ export default function MeasureStatus() {
                             const collect = sumCost(w.byEngine, pricing?.engines)
                             const judge = sumCost(w.judgeByEngine, pricing?.engines)
                             const cur = pricing?.currency ?? ''
-                            // 계산한 줄이 하나도 없으면 합계를 만들지 않는다 — 0으로 보이면 "공짜"가 된다.
-                            if (collect.amount === 0 && judge.amount === 0 && !(collect.complete && judge.complete)) return null
-                            const part = (v: { amount: number; complete: boolean }) =>
-                              `${formatMoney(v.amount, cur)}${v.complete ? '' : '+'}`
+                            // 계산한 줄이 하나도 없고 까닭도 없으면 줄을 그리지 않는다 — 0으로 보이면 "공짜"가 된다. 「+」 대신 「이상 — 까닭」.
+                            const total = costTotalText(mergeCost(collect, judge), cur)
+                            if (total === null) return null
                             return (
                               <span className="sentence-meta" style={{ display: 'block' }}>
-                                비용{' '}
-                                {part({
-                                  amount: collect.amount + judge.amount,
-                                  complete: collect.complete && judge.complete && w.judgeByEngine.length > 0,
-                                })}
+                                {total}
                                 {/* 판정 기록이 없는 주차에 "판정 0"이라 적으면 판정을 공짜로 한 것처럼 읽힌다. */}
-                                {` (수집 ${part(collect)} · 판정 ${w.judgeByEngine.length > 0 ? part(judge) : '기록 없음'})`}
+                                {` (수집 ${costPartText(collect, cur)} · 판정 ${w.judgeByEngine.length > 0 ? costPartText(judge, cur) : '기록 없음'})`}
                               </span>
                             )
                           })()}
@@ -605,7 +690,7 @@ export default function MeasureStatus() {
                         }
                         return (
                           <td className="num muted" title={c.reason === 'noRate' ? '이 엔진의 단가가 설정되지 않았습니다' : '입력·출력이 기록되기 전에 측정한 주차라 계산할 수 없습니다'}>
-                            —
+                            {c.reason === 'noRate' ? '단가 미설정' : '기록 없음'}
                           </td>
                         )
                       })()}
@@ -801,93 +886,7 @@ export default function MeasureStatus() {
               </p>
             </div>
           )}
-        </section>
-      )}
-
-      {(localActive.length > 0 || localRows.length > 0 || localFailed.length > 0) && (
-        <section style={{ marginTop: '8px' }}>
-          <h3>로컬 측정 (이 앱)</h3>
-          <p className="hint" style={{ marginTop: 0 }}>
-            이 앱에서 직접 실행한 측정입니다(진행 중은 실시간, 완료는 이 PC에 기록). CLI(<code>measure:local</code>)로 커밋한 기록도 함께 표시됩니다.
-          </p>
-          <MeasureCancelButton active={localActive} />
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>상태</th>
-                  <th className="cell-text">대상</th>
-                  <th className="cell-text">측정 엔진</th>
-                  <th>주차</th>
-                  <th>AEO</th>
-                  <th>측정시간</th>
-                  <th>경과</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localActive.map((a) => (
-                  <tr key={`active-${a.tenantId}`}>
-                    <td>
-                      <span className="status-pill st-warn">진행 중</span>
-                    </td>
-                    <td className="cell-text">{nameMap[a.tenantId] || a.brandName || a.tenantId}</td>
-                    {/* 서버가 단계·건수를 준다. 여기가 "측정 중…"에 머무르면 전용 화면이
-                        온보딩보다 덜 보여 주는 역전이 된다. */}
-                    <td className="cell-text muted">
-                      {measureStageLabel(a)}
-                      {a.engineIssues?.length ? (
-                        <span className="chip bad" style={{ marginLeft: 6 }} title="이 엔진의 남은 호출은 보내지 않습니다">
-                          {a.engineIssues.join(' · ')}
-                          {a.collectionWillFail ? ' · 수집 하한 미달로 멈춤' : ''}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td>-</td>
-                    <td className="num">-</td>
-                    <td className="num">{fmtSec(Math.max(0, (nowMs - new Date(a.startedAt).getTime()) / 1000))}</td>
-                    <td>{timeAgo(a.startedAt)} 시작</td>
-                  </tr>
-                ))}
-                {localFailed.map((f) => (
-                  <tr key={`failed-${f.tenantId}-${f.at}`}>
-                    <td>
-                      <span className="status-pill st-bad">실패</span>
-                    </td>
-                    <td className="cell-text">{nameMap[f.tenantId] || f.brandName || f.tenantId}</td>
-                    {/* 끊긴 엔진(「Gemini 지출 한도 초과」)이 있으면 그 이름, 없으면 오류 첫 문장 — 전체 문구는 제목 풍선에. */}
-                    <td className="cell-text" title={f.error}>
-                      {failureReason(f)}
-                    </td>
-                    <td>-</td>
-                    <td className="num">-</td>
-                    <td className="num">-</td>
-                    <td>{timeAgo(f.at)}</td>
-                  </tr>
-                ))}
-                {localRows.map((e, i) => (
-                  <tr key={`${e.tenantId}-${e.at}-${i}`}>
-                    <td>
-                      {/* 엔진이 빠져 그 주 카드를 덮지 않은 회차 — 대시보드 점수와 다른 까닭을 제목 풍선에. */}
-                      {e.weekCardKept ? (
-                        <span className="status-pill st-warn" title={`${e.weekCardKept}. 이 점수는 회차 기록에만 남았습니다.`}>
-                          카드 유지
-                        </span>
-                      ) : (
-                        <span className="status-pill st-good">로컬 완료</span>
-                      )}
-                    </td>
-                    <td className="cell-text">{nameMap[e.tenantId] || e.brandName || e.tenantId}</td>
-                    <td className="cell-text" style={{ whiteSpace: 'nowrap' }}>{fmtEngines(e.engines)}</td>
-                    <td>{e.weekOf}</td>
-                    <td className="num">{e.aeoScore}</td>
-                    <td className="num">{fmtSec(e.durationSec)}</td>
-                    <td>{timeAgo(e.at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        </details>
       )}
 
       {showRemote && (

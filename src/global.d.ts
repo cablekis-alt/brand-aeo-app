@@ -49,6 +49,10 @@ interface ElectronBridge {
   ) => Promise<{ ok: boolean; engines?: string[] | null; needsRestart?: boolean; error?: string }>
   /** 릴리스 페이지를 기본 브라우저로 연다(수동 다운로드용). */
   openReleases: () => Promise<void>
+  /** 창을 앞으로(측정 결과 알림을 눌렀을 때). 옛 preload에는 없다. */
+  focusWindow?: () => Promise<void>
+  /** 창이 뒤에 있으면 작업 표시줄 단추를 깜빡인다(측정 실패). 옛 preload에는 없다. */
+  flashWindow?: () => Promise<void>
 }
 
 interface Window {

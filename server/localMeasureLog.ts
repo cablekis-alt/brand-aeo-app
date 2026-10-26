@@ -15,10 +15,15 @@ export interface LocalMeasureRun {
   engines?: string[]; // 실제로 수집에 성공한 엔진(예: ['gemini'] 또는 ['gemini','openai'])
   /** 이 측정이 그 주 카드를 덮지 않은 까닭(pipeline.ts weekCardKeepReason) — aeoScore는 이 회차 점수이고 그 주 카드는 앞의 것이다. */
   weekCardKept?: string;
+  /** 측정 회차 id(measureTracker.ts) — 함께 잰 경쟁사 줄도 같은 값이라 측정 상태가 측정 1회로 묶는다(src/lib/measureRuns.ts). */
+  runId?: string;
+  /** 다른 고객의 측정 안에서 경쟁사로 잰 줄이면 그 고객. */
+  parentTenantId?: string;
 }
 
 const FILE = stateFilePath('measure-runs.json');
-const MAX = 50;
+// 고객 하나를 경쟁사 5곳과 재면 6줄이 생긴다 — 측정 50회분쯤을 남긴다.
+const MAX = 300;
 
 export function readLocalMeasures(): LocalMeasureRun[] {
   try {

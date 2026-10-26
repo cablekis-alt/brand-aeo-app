@@ -1,4 +1,4 @@
-import { compareConditions, conditionSummary } from '../src/lib/comparability.js';
+import { compareConditions, conditionSummary, weeksBetween, type ConditionChange } from '../src/lib/comparability.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
 import { pendingProfileEdit } from './brandProfileEditor.js';
@@ -28,9 +28,10 @@ export interface PortfolioRow {
   competitors: number;
   /**
    * 다음 측정에서 경쟁사를 몇 곳 함께 재는가(cohortPlan.ts — 측정과 같은 계산). waiting은 칸이 차서
-   * 재지 않는 곳, blocked는 칸은 쓰지만 이름 겹침 등으로 재지 않는 곳. 경쟁사를 함께 재지 않는 브랜드면 null.
+   * 재지 않는 곳, blocked는 칸은 쓰지만 이름 겹침 등으로 재지 않는 곳(collision은 그중 다른 업종 브랜드와 ID가 겹친 곳,
+   * 나머지는 중복). 경쟁사를 함께 재지 않는 브랜드면 null.
    */
-  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number } | null;
+  competitorPlan: { measured: number; cap: number; waiting: number; blocked: number; collision: number } | null;
   /** 경쟁사 편집을 저장했고 아직 이 브랜드를 다시 재지 않았다 — 카드의 「경쟁사 바뀜 · 다음 측정 대기」. */
   competitorEdit: { savedAt: string; summary: string } | null;
   /** 기본 정보(업종 · 지역 · 시장 범위)를 바꿨고 아직 새 설정으로 재지 않았다 — 카드의 「기본 정보 바뀜 · 다음 측정 대기」. */
@@ -51,6 +52,10 @@ export interface PortfolioRow {
   changeReason: string | null;
   /** delta · changeReason이 가리키는 직전 측정 주차. 2주 이상 떨어졌으면 화면은 「전주」 대신 「직전 측정(Wxx)」으로 적는다. */
   previousWeekOf: string | null;
+  /** 마지막 측정이 이번 주에서 몇 주 전인가(이번 주 0). 측정 전이면 null. */
+  ageWeeks: number | null;
+  /** changeReason을 조건별로 — 바뀐 조건과 기록이 없어 확인할 수 없는 조건. 견줄 수 있거나 앞 측정이 없으면 null. */
+  changeDims: { changed: ConditionChange[]; unknown: ConditionChange[] } | null;
 }
 
 /** 코호트 미니 리더보드의 한 줄 — 같은 주 · 같은 질문지로 잰 구성원(경쟁사 포함). */
@@ -101,11 +106,14 @@ function competitorPlanOf(t: TenantConfig, tenants: TenantConfig[]): PortfolioRo
     cap,
     waiting: entries.filter((e) => e.status === 'waiting').length,
     blocked: entries.filter((e) => e.takesSlot && e.status !== 'measured').length,
+    collision: entries.filter((e) => e.takesSlot && e.status === 'collision').length,
   };
 }
 
 export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore, now = new Date()): Promise<Portfolio> {
   const currentWeek = getIsoWeekString(now);
+  // 모든 브랜드의 점수 기록을 한 번에 읽는다 — 브랜드마다 코호트를 찾느라 폴더 전체를 다시 읽지 않게.
+  const index = await store.scorecardIndex();
   const bankCache = new Map<string, Promise<Set<string> | null>>();
   const textsOf = (card: WeeklyScorecard): Promise<Set<string> | null> => {
     const version = card.questionBankVersion;
@@ -121,7 +129,7 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
     tenants
       .filter((t) => !t.cohortOnly)
       .map(async (t): Promise<PortfolioRow> => {
-        const history = await store.getScorecardHistory(t.tenantId, Number.MAX_SAFE_INTEGER);
+        const history = index.historyOf(t.tenantId);
         const last = history.at(-1);
         const base = {
           tenantId: t.tenantId,
@@ -134,13 +142,26 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           profileEdit: await pendingProfileEdit(t, last),
         };
         if (!last) {
-          return { ...base, status: 'none', weekOf: null, score: null, rank: null, totalTenants: null, tied: false, delta: null, changeReason: null, previousWeekOf: null };
+          return {
+            ...base,
+            status: 'none',
+            weekOf: null,
+            score: null,
+            rank: null,
+            totalTenants: null,
+            tied: false,
+            delta: null,
+            changeReason: null,
+            previousWeekOf: null,
+            ageWeeks: null,
+            changeDims: null,
+          };
         }
         const prev = history.length > 1 ? history[history.length - 2]! : null;
         // 직전 측정과 견줘도 되는가 — 앱 전체 규칙(comparability.ts). 바뀐 조건과 기록이 없어 확인할 수 없는 조건을 갈라 적는다.
         const diffs = prev ? compareConditions(prev, last) : [];
 
-        const members = await store.getCohortScorecards(last.industry, last.region, last.weekOf);
+        const members = index.cohort(last.industry, last.region, last.weekOf);
         cohortCards.set(`${last.industry}|${last.region}|${last.weekOf}`, {
           industry: last.industry,
           region: last.region,
@@ -176,6 +197,14 @@ export async function buildPortfolio(tenants: TenantConfig[], store: ResultStore
           delta: prev && diffs.length === 0 ? last.aeoScore.current - prev.aeoScore.current : null,
           changeReason: diffs.length > 0 ? conditionSummary(diffs) : null,
           previousWeekOf: prev?.weekOf ?? null,
+          ageWeeks: weeksBetween(last.weekOf, currentWeek),
+          changeDims:
+            diffs.length > 0
+              ? {
+                  changed: diffs.filter((d) => d.state === 'changed').map((d) => d.dimension),
+                  unknown: diffs.filter((d) => d.state === 'unknown').map((d) => d.dimension),
+                }
+              : null,
         };
       }),
   );

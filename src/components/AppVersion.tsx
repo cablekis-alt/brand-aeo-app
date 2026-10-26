@@ -48,6 +48,9 @@ export default function AppVersion() {
     }
   })()
 
+  // 할 일이 없는 상태(최신 · 개발 모드) — 낮은 창에서는 숨겨 메뉴 자리를 넓힌다(App.css 조밀 모드).
+  const quiet = status?.state === 'dev' || (status?.state === 'not-available' && !(status.latest && status.latest !== __APP_VERSION__))
+
   return (
     <div className="app-version">
       <div className="app-version-row">
@@ -63,7 +66,7 @@ export default function AppVersion() {
             </button>
           ))}
       </div>
-      {isElectron && label && <p className="upd-status">{label}</p>}
+      {isElectron && label && <p className={`upd-status${quiet ? ' is-quiet' : ''}`}>{label}</p>}
     </div>
   )
 }

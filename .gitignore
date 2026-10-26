@@ -38,5 +38,7 @@ server/delete-requests.json
 server/tenants.deleted.json
 server/cohort-exclusions.json
 server/measure-runs.json
+server/measure-failures.json
+server/tenants.removed.json
 dist-electron
 server/engine-pricing.json

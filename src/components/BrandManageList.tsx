@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import MeasureProgress, { type ActiveMeasure } from './MeasureProgress'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
-import { measureErrorText, measureTenantAll, saveTenantEngines } from '../lib/api'
+import { loadRemovedTenants, restoreTenant, saveTenantEngines, type RemovedTenantSummary } from '../lib/api'
 import { variantTag } from '../lib/brandVariant'
+import { objectParticle } from '../lib/korean'
+import { runName, useMeasureStatus } from '../lib/measureStatus'
 import type { Engine } from '../prompts/types'
+import DeleteBrandDialog from './DeleteBrandDialog'
 
 /** 데스크톱 앱 — 내부 id · 배포 경로 안내는 웹 · 개발 환경에서만 보인다(상용화 UI 3차 U4). preload가 스크립트보다 먼저 싣는다. */
 const isDesktop = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
@@ -35,12 +37,25 @@ function fmtElapsed(ms: number): string {
   return m > 0 ? `${m}분 ${s % 60}초` : `${s}초`
 }
 
+/**
+ * 브랜드 관리 — 수집 엔진 · 측정 · 목록에서 빼기 · 지운 브랜드 되살리기(브랜드 현황의 「관리」 보기).
+ *
+ * 상용화 UI 3차(U15): 「전체 측정」은 여기서 바로 재지 않고 측정 화면으로 보낸다(「측정…」) — 함께 잴 경쟁사 · 방식 · 비용을 보고 시작하게.
+ * 삭제는 브라우저 확인 창 대신 무엇이 남고 바뀌는지 알리는 대화상자에서 브랜드 이름을 입력해야 빠지고, 뺀 브랜드는 아래 「지운 브랜드」에서
+ * 설정째 되살린다(데스크톱 · 로컬).
+ */
 export default function BrandManageList() {
-  const { reloadTenants, tenants } = useTenant()
+  const { reloadTenants, tenants, setTenantId } = useTenant()
+  const navigate = useNavigate()
+  const status = useMeasureStatus()
   // 같은 홈페이지로 범위만 다르게 등록한 브랜드는 이름이 같다 — 범위 꼬리표로 가른다(상용화 UI 3차 U7).
   const tagOf = (tenantId: string) => {
     const t = tenants.find((x) => x.tenantId === tenantId)
     return t ? variantTag(t, tenants) : null
+  }
+  const labelOf = (row: { tenantId: string; brandName: string }) => {
+    const tag = tagOf(row.tenantId)
+    return tag ? `${row.brandName} · ${tag}` : row.brandName
   }
   const [rows, setRows] = useState<BrandRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,17 +66,26 @@ export default function BrandManageList() {
   const [deleteInfo, setDeleteInfo] = useState<Record<string, { at: number; htmlUrl?: string }>>({})
   const [nowTs, setNowTs] = useState(() => Date.now())
   const [message, setMessage] = useState<string | null>(null)
-  // 측정 경로(local/github/none)와 진행 중인 측정 — 등록된 브랜드를 목록에서 바로 측정한다.
+  // 방금 목록에서 뺀 브랜드 — 안내 끝의 「되돌리기」.
+  const [undoId, setUndoId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<BrandRow | null>(null)
+  const [removed, setRemoved] = useState<RemovedTenantSummary[]>([])
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  // 측정 경로(local/github/none) — 「측정…」은 측정 화면으로 보낸다.
   const [measureVia, setMeasureVia] = useState<'local' | 'github' | 'none'>('none')
-  const [measuringId, setMeasuringId] = useState<string | null>(null)
-  // 서버가 보고하는 진행 — 목록에서 바로 측정할 때도 "측정 중…"에 머무르지 않게 한다.
-  const [serverActive, setServerActive] = useState<ActiveMeasure[]>([])
+  // 앱은 한 번에 하나씩 잰다 — 다른 측정이 도는 동안 「측정…」 · 빼기 · 되살리기를 잠근다.
+  const busyRoot = status.runs?.current[0] ?? null
+  const measuring = busyRoot !== null || status.active.length > 0
+  const busyNote = measuring
+    ? `${busyRoot ? runName(busyRoot, tenants) : (status.active[0]?.brandName ?? '')} 측정 중이에요 — 끝나면 측정 · 삭제할 수 있어요.`
+    : undefined
   // 수집 엔진 — 어떤 키가 있는지(keyStatus)와 전역 지정이 켜져 있는지(globalEngines)를 알아야
   // 체크박스가 거짓말을 안 한다. 서버가 /api/health로 알려 준다(키 값이 아니라 존재 여부만).
   const [keyStatus, setKeyStatus] = useState<Record<string, boolean> | null>(null)
   const [globalEngines, setGlobalEngines] = useState<Engine[] | null>(null)
   // 엔진을 고칠 수 있는가 — 저장소가 data/<tenant>/engines.json(파일)이라 Vercel에서는 못 쓴다.
-  // 팩트 그래프·브랜드 페이지도 같은 제약이다. 보여는 주되 체크박스는 잠근다.
+  // 팩트 그래프·브랜드 페이지도 같은 제약이다. 보여는 주되 체크박스는 잠근다. 삭제도 같은 기준이다 — Vercel이 아니면 이 PC(앱 서버)가
+  // 지우고 되살리기를 남긴다.
   const [canEditEngines, setCanEditEngines] = useState(true)
   const [engineBusyId, setEngineBusyId] = useState<string | null>(null)
   const [engineMsg, setEngineMsg] = useState<string | null>(null)
@@ -111,53 +135,10 @@ export default function BrandManageList() {
     }
   }
 
-  useEffect(() => {
-    if (!measuringId || measureVia !== 'local') return
-    let alive = true
-    const poll = () => {
-      fetch('/api/measure-status')
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          if (alive && Array.isArray(d?.active)) setServerActive(d.active as ActiveMeasure[])
-        })
-        .catch(() => {})
-    }
-    poll()
-    const t = window.setInterval(poll, 2000)
-    return () => {
-      alive = false
-      window.clearInterval(t)
-      setServerActive([])
-    }
-  }, [measuringId, measureVia])
-
-  async function measureRow(row: BrandRow) {
-    if (measuringId || measureVia === 'none') return
-    setMeasuringId(row.tenantId)
-    setMessage(
-      measureVia === 'github'
-        ? `${row.brandName} GitHub Actions 측정 요청 중…`
-        : `${row.brandName} 측정 중… (수 분). 끝나면 개요 · 경쟁 순위에 반영됩니다.`,
-    )
-    try {
-      if (measureVia === 'github') {
-        const res = await fetch('/api/measure-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'run', tenantId: row.tenantId }),
-        })
-        const body = (await res.json().catch(() => ({}))) as { error?: string; htmlUrl?: string }
-        if (!res.ok) throw new Error(body.error || `측정 요청 실패 (HTTP ${res.status})`)
-        setMessage(`✓ ${row.brandName} GitHub Actions 측정 시작 — 수 분 뒤 반영됩니다.`)
-        return
-      }
-      const d = await measureTenantAll(row.tenantId)
-      setMessage(`✓ ${d.brandName ?? row.brandName} 측정을 마쳤습니다 — Brand AEO ${d.aeoScore ?? '?'}점(100점 만점).`)
-    } catch (err) {
-      setMessage(measureErrorText(err))
-    } finally {
-      setMeasuringId(null)
-    }
+  /** 「측정…」 — 바로 재지 않고 측정 화면에서 함께 잴 경쟁사 · 방식을 확인하고 시작한다(브랜드 현황 줄의 「측정」과 같은 길). */
+  const measureRow = (row: BrandRow) => {
+    setTenantId(row.tenantId)
+    navigate('/measure-tenant', { state: { pick: row.tenantId } })
   }
 
   const load = useCallback(async () => {
@@ -178,6 +159,29 @@ export default function BrandManageList() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const loadRemoved = useCallback(() => {
+    loadRemovedTenants().then(setRemoved, (err: unknown) => console.error('[BrandManageList] 지운 브랜드를 읽지 못했습니다', err))
+  }, [])
+  useEffect(() => {
+    loadRemoved()
+  }, [loadRemoved])
+
+  async function restore(tenantId: string) {
+    setRestoringId(tenantId)
+    try {
+      const r = await restoreTenant(tenantId)
+      setMessage(`✓ ${objectParticle(r.brandName)} 되살렸습니다 — 설정 · 측정 기록 · 비교 그룹 순위가 지우기 전으로 돌아왔습니다.`)
+      setUndoId(null)
+      await load()
+      await reloadTenants()
+    } catch (err) {
+      setMessage(`✗ ${err instanceof Error ? err.message : '되살리지 못했습니다'}`)
+    } finally {
+      setRestoringId(null)
+      loadRemoved()
+    }
+  }
 
   // 삭제 진행 중이면 1초마다 경과 시간을 갱신한다.
   useEffect(() => {
@@ -206,7 +210,7 @@ export default function BrandManageList() {
             for (const id of gone) delete next[id]
             return next
           })
-          setMessage(`✓ ${gone.length}개 브랜드 완전 삭제가 반영됐습니다.`)
+          setMessage(`✓ ${gone.length}개 브랜드 삭제가 반영됐습니다.`)
           void reloadTenants()
         }
       } catch {
@@ -221,17 +225,30 @@ export default function BrandManageList() {
   }, [deletingIds, reloadTenants])
 
   async function remove(row: BrandRow) {
-    if (!window.confirm(`'${row.brandName}' (${row.tenantId}) 브랜드를 삭제할까요?`)) return
+    // 범위만 다르게 등록한 형제가 있으면 어느 쪽을 뺐는지 알 수 있게 — 빼고 나면 형제가 사라져 꼬리표를 다시 만들 수 없다.
+    const name = labelOf(row)
     setBusyId(row.tenantId)
     setMessage(null)
+    setUndoId(null)
     try {
       const res = await fetch(`/api/tenants?tenantId=${encodeURIComponent(row.tenantId)}`, { method: 'DELETE' })
-      const body = (await res.json().catch(() => ({}))) as { error?: string; stillBaked?: boolean; dispatched?: boolean; htmlUrl?: string }
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string
+        stillBaked?: boolean
+        dispatched?: boolean
+        htmlUrl?: string
+        locallyDeleted?: boolean
+      }
       if (!res.ok) throw new Error(body.error || `삭제 실패 (HTTP ${res.status})`)
+      setDeleteTarget(null)
       if (!body.stillBaked) {
-        // 오버레이 브랜드, 또는 로컬/데스크톱에서 베이크된 브랜드(툼스톤) — 즉시 완전 삭제됨.
+        // 오버레이 브랜드, 또는 로컬/데스크톱에서 베이크된 브랜드(툼스톤) — 목록에서 바로 빠진다. 로컬은 측정 기록이 남는다.
         setRows((prev) => prev.filter((r) => r.tenantId !== row.tenantId))
-        setMessage(`✓ '${row.brandName}' 삭제 완료.`)
+        if (body.locallyDeleted) {
+          setMessage(`✓ ${objectParticle(name)} 목록에서 뺐습니다 — 측정 기록은 이 PC에 남아 있습니다.`)
+          setUndoId(row.tenantId)
+          loadRemoved()
+        } else setMessage(`✓ ${objectParticle(name)} 목록에서 뺐습니다.`)
         await reloadTenants()
       } else if (body.dispatched) {
         // 베이크된 브랜드 — GitHub Actions가 완전 삭제 실행 중. 사라질 때까지 "삭제 중"으로 잠근다.
@@ -249,6 +266,7 @@ export default function BrandManageList() {
         )
       }
     } catch (err) {
+      setDeleteTarget(null)
       setMessage(`✗ ${err instanceof Error ? err.message : '삭제 실패'}`)
     } finally {
       setBusyId(null)
@@ -257,19 +275,19 @@ export default function BrandManageList() {
 
   return (
     <section className="panel" style={{ marginTop: '28px' }}>
-      <h3>등록된 브랜드 관리</h3>
+      <h3>브랜드 관리</h3>
       <p className="hint" style={{ marginTop: 0 }}>
-        각 브랜드는 <b>"전체 측정"</b>으로 여기서 바로 경쟁사·코호트까지 함께 측정할 수 있습니다(측정 화면으로 갈 필요 없음).
+        각 브랜드는 <b>「측정…」</b>으로 바로 잴 수 있습니다 — 측정 화면에서 함께 잴 경쟁사와 방식을 확인하고 시작합니다.
         {/*
           데스크톱 앱에서는 배포 경로(GitHub Actions) · 개발 말(고아 경쟁사)을 쓰지 않는다(상용화 UI 3차 U4). 로컬 삭제는 지운 표시만
           달고 측정 기록은 남긴다(server/tenantRegistry.ts deleteTenantLocally) — 「완전 삭제」라고 하지 않는다.
         */}
         {isDesktop ? (
-          ' 삭제하면 목록 · 선택지와 비교 그룹 순위에서 바로 빠집니다. 측정 기록은 이 PC에 남아 있어, 같은 브랜드를 다시 등록하면 되살아납니다.'
+          ' 목록에서 빼면 선택지와 비교 그룹 순위에서 바로 빠집니다. 측정 기록은 이 PC에 남고, 아래 「지운 브랜드」에서 설정째 되살릴 수 있습니다.'
         ) : (
           <>
             {' '}
-            삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 바로 완전 삭제, <b>배포 환경</b>은 GitHub Actions가
+            삭제 시 목록·선택지에서 즉시 사라집니다 — <b>데스크톱·로컬 앱</b>은 목록에서 빼고 기록은 남김, <b>배포 환경</b>은 GitHub Actions가
             커밋 데이터·점수까지 정리·자동 배포합니다(고아 경쟁사도 함께 정리, 공유 중인 경쟁사는 보존).
           </>
         )}
@@ -277,10 +295,14 @@ export default function BrandManageList() {
 
       {message && (
         <p className={message.startsWith('✗') ? 'error' : 'hint'} role="status" style={{ fontWeight: 500 }}>
-          {message} {measuringId && <Link to="/measure-status">측정 상태에서 진행 보기</Link>}
+          {message}{' '}
+          {undoId && (
+            <button type="button" className="ghost" onClick={() => void restore(undoId)} disabled={restoringId !== null || measuring} title={busyNote}>
+              {restoringId === undoId ? '되돌리는 중…' : '되돌리기'}
+            </button>
+          )}
         </p>
       )}
-      {measuringId && <MeasureProgress active={serverActive} />}
 
       {keyStatus && !canEditEngines && (
         <p className="hint" style={{ marginTop: 0 }}>
@@ -420,15 +442,16 @@ export default function BrandManageList() {
                           {measureVia !== 'none' && !row.cohortOnly && (
                             <button
                               type="button"
-                              className="primary"
-                              onClick={() => void measureRow(row)}
-                              disabled={busy || measuringId !== null}
+                              className="ghost"
+                              onClick={() => measureRow(row)}
+                              disabled={busy || measuring}
+                              title={busyNote ?? `${row.brandName} 측정 화면으로 — 함께 잴 경쟁사를 확인하고 시작합니다`}
                             >
-                              {measuringId === row.tenantId ? '측정 중…' : '전체 측정'}
+                              측정…
                             </button>
                           )}
-                          <button type="button" className="ghost" onClick={() => void remove(row)} disabled={busy || measuringId !== null}>
-                            {busyId === row.tenantId ? '삭제 중…' : '삭제'}
+                          <button type="button" className="ghost" onClick={() => setDeleteTarget(row)} disabled={busy || measuring} title={busyNote}>
+                            {busyId === row.tenantId ? '빼는 중…' : '삭제…'}
                           </button>
                         </span>
                       )}
@@ -439,6 +462,39 @@ export default function BrandManageList() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {removed.length > 0 && (
+        <details className="bm-removed">
+          <summary>지운 브랜드 {removed.length}곳</summary>
+          <p className="hint">되살리면 지우기 전의 설정(경쟁사 · 수집 엔진)과 측정 기록이 돌아오고, 같은 비교 그룹의 순위를 다시 매깁니다.</p>
+          <ul>
+            {removed.map((r) => (
+              <li key={r.tenantId}>
+                <span className="bm-removed-name">{r.brandName}</span>
+                <span className="hint">
+                  {r.industry} · {r.region} · {new Date(r.removedAt).toLocaleDateString()} 뺌
+                </span>
+                <button type="button" className="ghost" onClick={() => void restore(r.tenantId)} disabled={restoringId !== null || measuring} title={busyNote}>
+                  {restoringId === r.tenantId ? '되살리는 중…' : '되살리기'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {deleteTarget && (
+        <DeleteBrandDialog
+          key={deleteTarget.tenantId}
+          tenantId={deleteTarget.tenantId}
+          brandName={deleteTarget.brandName}
+          label={labelOf(deleteTarget)}
+          local={canEditEngines}
+          busy={busyId === deleteTarget.tenantId}
+          onConfirm={() => void remove(deleteTarget)}
+          onCancel={() => setDeleteTarget(null)}
+        />
       )}
     </section>
   )
