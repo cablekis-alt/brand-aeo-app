@@ -6,7 +6,8 @@ import BrandPickerPanel, { type PickerRow } from '../components/BrandPickerPanel
 import NavIcon from '../components/NavIcon'
 import { useTenant } from '../context/useTenant'
 import { variantTag } from '../lib/brandVariant'
-import { MEASURING_NOTE, useMeasureClaim } from '../lib/measureStatus'
+import { MEASURING_NOTE, useMeasureClaim, useMeasureStatus } from '../lib/measureStatus'
+import { durationText, groupMeasureRuns, lastRunDurationSec } from '../lib/measureRuns'
 import {
   loadMeasurePreview,
   loadPortfolio,
@@ -63,6 +64,7 @@ export default function MeasureTenant() {
   const location = useLocation()
   const requestedPick = (location.state as { pick?: string } | null)?.pick ?? null
   const claim = useMeasureClaim()
+  const measureStatus = useMeasureStatus()
   const [canMeasure, setCanMeasure] = useState(false)
   const [measureVia, setMeasureVia] = useState<MeasureVia>('none')
   const [healthReady, setHealthReady] = useState(false)
@@ -238,6 +240,13 @@ export default function MeasureTenant() {
   }
 
   const picked = tenants.find((t) => t.tenantId === pickedTenant)
+  // 시작 단추 옆 한 줄 — 이 브랜드를 지난번 잴 때 걸린 시간(이 PC의 완료 기록). 고정 숫자를 쓰지 않는다.
+  const lastSec = pickedTenant
+    ? lastRunDurationSec(
+        groupMeasureRuns(measureStatus.completed, (id) => Boolean(tenants.find((t) => t.tenantId === id)?.cohortOnly)),
+        pickedTenant,
+      )
+    : null
   const locked = healthReady && !canMeasure
   const wantsPreview = measureVia === 'local' && Boolean(picked) && !picked?.cohortOnly
   useEffect(() => {
@@ -363,6 +372,11 @@ export default function MeasureTenant() {
                     : '브랜드 전체 측정 (경쟁사·코호트 포함)'}
           </button>
         </div>
+        {measureVia === 'local' && picked && (
+          <p className="hint measure-cost-line">
+            {lastSec !== null ? `지난번 ${durationText(lastSec)} 걸렸습니다 · ` : ''}엔진 API 비용이 듭니다.
+          </p>
+        )}
         {!picked?.cohortOnly && measureVia === 'local' && (
           <fieldset className="measure-mode" disabled={locked || isMeasuring}>
             <legend className="sr-only">경쟁사 측정 방식</legend>

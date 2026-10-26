@@ -68,8 +68,11 @@ import {
   listActiveMeasures,
   listMeasureFailures,
   listRunRecords,
+  measureInFlight,
   requestCancelActiveMeasures,
 } from './measureTracker.js';
+import { readOverlay } from './tenantOverlay.js';
+import { addRemovedTenant, describeTenantDelete, readRemovedTenants, restoreRemovedTenant, TenantRestoreError } from './tenantRemovedStore.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -170,6 +173,44 @@ app.get('/api/tenants', async (req, res) => {
   res.json(picked.map((tenant) => ({ ...toTenantSummary(tenant), cohortOnly: Boolean(tenant.cohortOnly) })));
 });
 
+// 브랜드 삭제 미리보기 — 측정 기록이 든 비교 그룹과 주 수, 이 브랜드를 경쟁사로 재는 고객, 지금 측정 중인가. 읽기만 한다(Express 전용).
+app.get('/api/tenants/:tenantId/delete-preview', async (req, res) => {
+  try {
+    const preview = await describeTenantDelete(req.params.tenantId, store);
+    if (!preview) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    res.json(preview);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 지운 브랜드 — 되살릴 수 있는 목록(tenants.removed.json). Express 전용.
+app.get('/api/tenants/removed', async (_req, res) => {
+  try {
+    // 설정 본문(overlay)은 내보내지 않는다 — 목록에는 이름 · 업종 · 지역 · 뺀 날만 보인다.
+    res.json((await readRemovedTenants()).map((r) => ({ tenantId: r.tenantId, brandName: r.brandName, industry: r.industry, region: r.region, removedAt: r.removedAt })));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 지운 브랜드를 설정째 되살린다 — 같은 ID · 같은 홈페이지가 이미 있거나 측정 중이면 409.
+app.post('/api/tenants/:tenantId/restore', async (req, res) => {
+  try {
+    const entry = await restoreRemovedTenant(req.params.tenantId, store);
+    res.json({ ok: true, tenantId: entry.tenantId, brandName: entry.brandName });
+  } catch (err) {
+    if (err instanceof TenantRestoreError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // 브랜드 삭제 — 오버레이·대기열에서 빼고, 로컬/패키징이면 툼스톤 + 남은 코호트 순위 재계산(deleteTenantLocally).
 // 배포(Vercel)의 베이크된 브랜드는 GitHub Actions(delete-tenant.ts)로 커밋 데이터까지 지운다.
 app.delete('/api/tenants', async (req, res) => {
@@ -178,7 +219,15 @@ app.delete('/api/tenants', async (req, res) => {
     res.status(400).json({ error: 'tenantId 쿼리가 필요합니다.' });
     return;
   }
+  // 측정 중에 지우면 그 측정이 지운 브랜드의 카드 · 순위를 다시 쓴다 — 끝난 뒤에 지운다.
+  if (measureInFlight()) {
+    res.status(409).json({ error: '측정이 진행 중이에요. 끝난 뒤에 빼 주세요.', busy: true });
+    return;
+  }
   try {
+    // 되살리기용 — 지우기 직전의 설정(오버레이)을 이 PC에 남긴다(tenantRemovedStore.ts). 배포(Vercel)는 남기지 않는다.
+    const before = process.env.VERCEL ? undefined : await findTenant(tenantId);
+    const overlayEntry = before ? ((await readOverlay()).find((t) => t.tenantId === tenantId) ?? null) : null;
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
     const baked = await isBakedTenant(tenantId);
@@ -190,6 +239,16 @@ app.delete('/api/tenants', async (req, res) => {
       // 앱에서 등록한 브랜드도 측정 데이터가 남으므로 툼스톤이 없으면 코호트 순위에 계속 낀다.
       await deleteTenantLocally(tenantId, store);
       locallyDeleted = true;
+      if (before) {
+        await addRemovedTenant({
+          tenantId,
+          brandName: before.brandName,
+          industry: before.industry,
+          region: before.region,
+          removedAt: new Date().toISOString(),
+          overlay: overlayEntry,
+        }).catch((err: unknown) => console.error(`[tenants] 지운 브랜드 설정을 남기지 못했습니다(되살리기 불가) ${tenantId}:`, err));
+      }
     } else if (baked && canTriggerRemoteMeasure()) {
       try {
         // 배포(Vercel) — 커밋 데이터까지 지우려면 GitHub Actions. 큐에 누적하고 큐 모드로 트리거.
@@ -225,6 +284,11 @@ app.get('/api/measure-status', (_req, res) => {
 // "테넌트 골라 측정" — 지정 테넌트 하나(+본 브랜드면 경쟁사·코호트)를 측정하고 baking까지 한다 (로컬).
 // 진행중/완료 추적·로깅은 measureAndBake 내부에서 브랜드마다 처리한다.
 app.post('/api/tenants/:tenantId/measure', async (req, res) => {
+  // 앱은 한 번에 하나씩 잰다 — 두 측정이 같은 경쟁사 · 같은 주 카드를 함께 쓰면 순위 · 회차 기록이 엉킨다. 화면도 막지만 서버가 마지막으로 막는다.
+  if (measureInFlight()) {
+    res.status(409).json({ error: '이미 측정 중입니다 — 측정 상태에서 진행을 보세요.', busy: true });
+    return;
+  }
   // 경쟁사 목록을 읽기 전부터 「측정 중」으로 센다 — 읽은 뒤 경쟁사 편집이 저장되면 측정은 옛 목록으로 돈다.
   beginMeasureRun();
   try {

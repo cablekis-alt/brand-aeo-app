@@ -301,6 +301,14 @@ export class MeasureCancelled extends Error {
   }
 }
 
+/** 다른 측정이 이미 돌고 있다 — 앱은 한 번에 하나씩 잰다(서버가 409 · busy로 가른다, server/index.ts). */
+export class MeasureBusy extends Error {
+  constructor(message = '이미 측정 중입니다 — 측정 상태에서 진행을 보세요.') {
+    super(message)
+    this.name = 'MeasureBusy'
+  }
+}
+
 /** 측정 결과 안내 한 줄 — 멈춘 측정은 ✗ 없이(화면이 ✗로 오류 색을 고른다). */
 export function measureErrorText(err: unknown, fallback = '측정 실패'): string {
   if (err instanceof MeasureCancelled) return err.message
@@ -327,11 +335,56 @@ export async function measureTenantAll(
     body: JSON.stringify({ reuseCohort, selfOnly }),
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string; cancelled?: boolean }
+    const body = (await res.json().catch(() => ({}))) as { error?: string; cancelled?: boolean; busy?: boolean }
     if (res.status === 409 && body.cancelled) throw new MeasureCancelled()
+    if (res.status === 409 && body.busy) throw new MeasureBusy(body.error)
     throw new Error(body.error || `측정 실패 (HTTP ${res.status})`)
   }
   return (await res.json()) as { brandName?: string; aeoScore?: number; weekOf?: string; weekCardKept?: string }
+}
+
+/** 브랜드 삭제 미리보기(server/tenantRemovedStore.ts TenantDeletePreview). */
+export interface TenantDeletePreview {
+  tenantId: string
+  brandName: string
+  baked: boolean
+  cohorts: { industry: string; region: string; weeks: number; firstWeekOf: string; lastWeekOf: string }[]
+  competitorOf: { tenantId: string; brandName: string }[]
+  measuring: boolean
+}
+
+/** 지우기 전 미리보기 — 로컬 백엔드 전용. 못 읽으면 throw한다. */
+export async function loadDeletePreview(tenantId: string): Promise<TenantDeletePreview> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/delete-preview`)
+  const body = (await res.json().catch(() => null)) as (TenantDeletePreview & { error?: string }) | null
+  if (!res.ok || !body) throw new Error(body?.error || `삭제 미리보기를 읽지 못했습니다 (HTTP ${res.status})`)
+  return body
+}
+
+/** 지운 브랜드 — 되살릴 수 있는 목록(server/tenantRemovedStore.ts). */
+export interface RemovedTenantSummary {
+  tenantId: string
+  brandName: string
+  industry: string
+  region: string
+  removedAt: string
+}
+
+/** 지운 브랜드 목록 — 라우트가 없는 환경(웹)이면 빈 목록. */
+export async function loadRemovedTenants(): Promise<RemovedTenantSummary[]> {
+  const res = await fetch('/api/tenants/removed')
+  if (res.status === 404) return []
+  const body = (await res.json().catch(() => null)) as RemovedTenantSummary[] | { error?: string } | null
+  if (!res.ok || !Array.isArray(body)) throw new Error((body as { error?: string } | null)?.error || `지운 브랜드를 읽지 못했습니다 (HTTP ${res.status})`)
+  return body
+}
+
+/** 지운 브랜드를 설정째 되살린다. 같은 ID · 같은 홈페이지가 이미 있거나 측정 중이면 그 까닭으로 throw. */
+export async function restoreTenant(tenantId: string): Promise<{ tenantId: string; brandName: string }> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/restore`, { method: 'POST' })
+  const body = (await res.json().catch(() => ({}))) as { tenantId?: string; brandName?: string; error?: string }
+  if (!res.ok) throw new Error(body.error || `되살리지 못했습니다 (HTTP ${res.status})`)
+  return { tenantId: body.tenantId ?? tenantId, brandName: body.brandName ?? tenantId }
 }
 
 /** 측정 전 계획(server/measureAndBake.ts MeasurePreview). */

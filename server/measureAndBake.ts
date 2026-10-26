@@ -109,6 +109,10 @@ interface MeasureOptions {
    * 같다. 리포트 저장이 실패해도 측정은 성공으로 남는다(점수 · 카드는 이미 저장됐다).
    */
   backgroundReport?: boolean;
+  /** 이 측정이 든 회차 id — 경쟁사로 함께 잰 측정은 고객 측정의 회차를 물려받아 완료 기록 · 실패 기록에 적는다. */
+  runId?: string;
+  /** 다른 고객의 측정 안에서 경쟁사로 잴 때 그 고객. */
+  parentTenantId?: string;
 }
 
 /**
@@ -266,7 +270,7 @@ async function cohortsLeftThisWeek(store: FileResultStore, tenants: TenantConfig
  * 본 브랜드의 실패는 경쟁사 측정을 기다리지 않고 바로 남기고(measureAndBakeRun), 바깥(measureAndBake)에서 다시 만난다.
  */
 const recordedFailures = new WeakSet<object>();
-function noteMeasureFailure(tenant: TenantConfig, err: unknown): void {
+function noteMeasureFailure(tenant: TenantConfig, err: unknown, runId?: string | null): void {
   if (err instanceof MeasureCancelledError) return;
   if (typeof err === 'object' && err !== null) {
     if (recordedFailures.has(err)) return;
@@ -278,6 +282,7 @@ function noteMeasureFailure(tenant: TenantConfig, err: unknown): void {
     at: new Date().toISOString(),
     error: err instanceof Error ? err.message : String(err),
     ...(err instanceof CollectionError && err.engineIssues.length ? { engineIssues: err.engineIssues } : {}),
+    ...(runId ? { runId } : {}),
   });
 }
 
@@ -314,6 +319,8 @@ async function measureSelf(
     at: new Date().toISOString(),
     engines: pipeline.enginesUsed,
     ...(pipeline.weekCardKept ? { weekCardKept: pipeline.weekCardKept } : {}),
+    ...(options.runId ? { runId: options.runId } : {}),
+    ...(options.parentTenantId ? { parentTenantId: options.parentTenantId } : {}),
   });
   return {
     weekOf: scorecard.weekOf,
@@ -350,7 +357,7 @@ export async function measureAndBake(
     return result;
   } catch (err) {
     // 측정 상태 화면의 「실패」 줄 — 함께 재던 경쟁사도 각자 남는다(그 경쟁사의 측정도 이 함수를 거친다).
-    noteMeasureFailure(tenant, err);
+    noteMeasureFailure(tenant, err, options.runId ?? run?.id);
     if (run) {
       finishRunRecord(
         run.id,
@@ -386,6 +393,8 @@ async function measureAndBakeRun(
   options: MeasureOptions,
   runId: string | null,
 ): Promise<MeasureBakeResult> {
+  // 이 측정이 든 회차 — 사용자가 시작한 측정이면 그 회차, 다른 고객의 측정 안에서 잰 경쟁사면 물려받은 회차.
+  const groupId = runId ?? options.runId ?? null;
   let cohortTargets: TenantConfig[] = [];
   // 이번 주 카드를 다시 쓴(재측정하지 않은) 경쟁사 — 그 카드도 이번 코호트에 든다(코호트 제외 해제에 쓴다).
   let reusedTargets: TenantConfig[] = [];
@@ -490,7 +499,13 @@ async function measureAndBakeRun(
           async (target): Promise<{ tenant: TenantConfig; weekOf: string } | null> => {
             try {
               console.log(`[measureAndBake] 코호트 경쟁사 측정 ▶ ${target.brandName} (${target.tenantId})`);
-              const result = await measureAndBake(target, store, { deferBake: true, inCohortRun: true, backgroundReport: options.backgroundReport });
+              const result = await measureAndBake(target, store, {
+                deferBake: true,
+                inCohortRun: true,
+                backgroundReport: options.backgroundReport,
+                ...(groupId ? { runId: groupId } : {}),
+                parentTenantId: tenant.tenantId,
+              });
               return { tenant: target, weekOf: result.weekOf };
             } catch (err) {
               console.error(
@@ -505,11 +520,11 @@ async function measureAndBakeRun(
 
   // 본 브랜드가 실패해도 코호트 측정이 끝날 때까지 기다린다 — 여기서 바로 throw하면 진행 중인
   // 경쟁사 측정이 주인 없이 남아 나중에 파일을 쓴다(고아 작업).
-  const selfTask = measureSelf(tenant, store, options).then(
+  const selfTask = measureSelf(tenant, store, { ...options, ...(groupId ? { runId: groupId } : {}) }).then(
     (value) => ({ ok: true as const, value }),
     (error: unknown) => {
       // 경쟁사 측정이 끝날 때까지(몇 분) 기다리지 않고 바로 「실패」 줄을 남긴다 — 그 사이 진행 줄은 이미 사라졌다.
-      noteMeasureFailure(tenant, error);
+      noteMeasureFailure(tenant, error, groupId);
       return { ok: false as const, error };
     },
   );

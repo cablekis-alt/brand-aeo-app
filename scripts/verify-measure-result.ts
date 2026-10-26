@@ -8,7 +8,7 @@
  *
  *   npx tsx scripts/verify-measure-result.ts
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { TenantConfig } from '../server/types'
@@ -96,6 +96,19 @@ try {
   ok('멈춘 측정은 cancelled', tracker.listRunRecords().recent[0]?.result === 'cancelled' && tracker.listRunRecords().recent[0]?.tenantId === 'comp-z')
   await measureAndBake(fakeTenant('comp-w'), failingStore(() => new CollectionError('수집 실패', ['Gemini 지출 한도 초과']))).catch(() => undefined)
   ok('끊긴 엔진은 engineIssues로', tracker.listRunRecords().recent[0]?.engineIssues?.[0] === 'Gemini 지출 한도 초과')
+
+  // 실패 기록은 이 PC 파일에도 — 앱을 다시 켜도 「최근 실패」가 남는다. 같은 브랜드가 성공하면 지운다.
+  await tracker.flushMeasureFailures()
+  const failuresFile = path.join(dir, 'measure-failures.json')
+  const saved = JSON.parse(readFileSync(failuresFile, 'utf8')) as { tenantId: string; runId?: string }[]
+  ok(
+    '실패 기록을 measure-failures.json에 남긴다(회차 id와 함께)',
+    saved.some((f) => f.tenantId === 'comp-x') && saved.some((f) => f.tenantId === 'comp-w') && Boolean(saved.find((f) => f.tenantId === 'comp-x')?.runId),
+  )
+  ok('멈춘 측정은 실패로 적지 않는다', !saved.some((f) => f.tenantId === 'comp-z'))
+  tracker.clearMeasureFailures('comp-x')
+  await tracker.flushMeasureFailures()
+  ok('같은 브랜드가 성공하면 파일에서도 지운다', !(JSON.parse(readFileSync(failuresFile, 'utf8')) as { tenantId: string }[]).some((f) => f.tenantId === 'comp-x'))
 
   // 실패한 경쟁사가 그래도 순위표에 들었나 — 같은 주에 앞서 잰 카드는 남는다(지운 브랜드 · 다른 주는 아니다).
   const writeHistory = (id: string, weekOf: string) => {

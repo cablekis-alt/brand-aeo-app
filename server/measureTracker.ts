@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { stateFilePath } from './appPaths.js';
+import { writeJsonAtomic } from './tenantWriteQueue.js';
+
 // 진행 중인 로컬 측정 추적(측정 상태 화면의 "진행 중" 표시용). 인메모리.
 // measureAndBake가 브랜드마다(본 브랜드 + 코호트 경쟁사) set/clear 하고, /api/measure-status가 읽는다.
 
@@ -41,9 +45,12 @@ export interface ActiveMeasure {
 }
 
 /**
- * 실패한 측정 — 측정 상태 화면의 「실패」 줄. 완료 기록(localMeasureLog)은 성공만 남겨, 예전엔 실패한 측정이
- * 측정을 시작한 화면의 문구로만 보이고 사라졌다(2026-10-17 Gemini 지출 한도). 메모리에만 두고 최근 것만 남긴다 —
- * 앱을 다시 켜면 비고, 같은 브랜드를 다시 재서 성공하면 그 브랜드의 실패 줄은 지운다.
+ * 실패한 측정 — 측정 상태 화면의 「최근 실패」 줄. 완료 기록(localMeasureLog)은 성공만 남겨, 예전엔 실패한 측정이
+ * 측정을 시작한 화면의 문구로만 보이고 사라졌다(2026-10-17 Gemini 지출 한도). 최근 것만 남기고, 같은 브랜드를 다시 재서
+ * 성공하면 그 브랜드의 실패 줄은 지운다.
+ *
+ * 이 PC의 measure-failures.json에도 적는다 — 실패한 뒤 앱을 껐다 켜면 실패 흔적이 사라져, 지난 주 숫자로 보고서를 보내는
+ * 일이 생겼다(상용화 UI 3차 U13, 결정 S2-3). 브랜드 이름 · 이유 · 시각만 담는다(키 같은 값은 담지 않는다).
  */
 export interface MeasureFailure {
   tenantId: string;
@@ -51,22 +58,69 @@ export interface MeasureFailure {
   at: string; // ISO
   error: string;
   engineIssues?: string[];
+  /** 그 실패가 든 측정 회차(경쟁사로 함께 잰 실패면 고객 측정의 회차). */
+  runId?: string;
 }
 
 const MAX_FAILURES = 20;
-const failures: MeasureFailure[] = [];
+const FAILURES_FILE = stateFilePath('measure-failures.json');
+
+function loadFailures(): MeasureFailure[] {
+  let text: string;
+  try {
+    text = readFileSync(FAILURES_FILE, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') console.error('[measureTracker] measure-failures.json을 읽지 못했습니다:', err);
+    return [];
+  }
+  try {
+    const data: unknown = JSON.parse(text);
+    return Array.isArray(data)
+      ? (data as MeasureFailure[]).filter((f) => typeof f?.tenantId === 'string' && typeof f.error === 'string').slice(0, MAX_FAILURES)
+      : [];
+  } catch (err) {
+    console.error('[measureTracker] measure-failures.json이 깨져 실패 기록 없이 시작합니다:', err);
+    return [];
+  }
+}
+
+const failures: MeasureFailure[] = loadFailures();
+
+// 쓰기는 차례로 — 앞 쓰기가 끝나기 전에 다음 쓰기가 시작되면 옛 목록이 나중에 덮을 수 있다.
+let failuresWrite: Promise<void> = Promise.resolve();
+function saveFailures(): void {
+  const snapshot = failures.map((f) => ({ ...f }));
+  failuresWrite = failuresWrite
+    .then(() => writeJsonAtomic(FAILURES_FILE, snapshot))
+    .catch((err: unknown) => console.error('[measureTracker] measure-failures.json을 쓰지 못했습니다(화면의 실패 줄은 그대로):', err));
+}
+
+/** 실패 기록 파일 쓰기가 끝날 때까지 — 확인 스크립트가 파일을 읽기 전에 기다린다. */
+export function flushMeasureFailures(): Promise<void> {
+  return failuresWrite;
+}
 
 /** 브랜드마다 마지막 실패 하나만 남긴다 — 같은 곳을 여러 번 재다 실패해도 줄이 쌓이지 않게. */
 export function recordMeasureFailure(failure: MeasureFailure): void {
-  clearMeasureFailures(failure.tenantId);
+  dropFailures(failure.tenantId);
   failures.unshift(failure);
   failures.splice(MAX_FAILURES);
+  saveFailures();
 }
 
 export function clearMeasureFailures(tenantId: string): void {
+  if (dropFailures(tenantId)) saveFailures();
+}
+
+function dropFailures(tenantId: string): boolean {
+  let dropped = false;
   for (let i = failures.length - 1; i >= 0; i -= 1) {
-    if (failures[i]!.tenantId === tenantId) failures.splice(i, 1);
+    if (failures[i]!.tenantId === tenantId) {
+      failures.splice(i, 1);
+      dropped = true;
+    }
   }
+  return dropped;
 }
 
 export function listMeasureFailures(): MeasureFailure[] {

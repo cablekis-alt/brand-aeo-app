@@ -154,10 +154,11 @@ ok('조건 나눔이 없는 옛 응답 → 이유 문자열 그대로', changeLi
 ok('막대 폭 = 100점 만점 · 최소 2 · 0점 · 측정 전 0', barWidth(3, true) === 3 && barWidth(72, true) === 72 && barWidth(1, true) === 2 && barWidth(0, true) === 0 && barWidth(50, false) === 0 && barWidth(130, true) === 100)
 
 // ── 6) 주소 보기 상태 ──────────────────────────────────────────────
-const view = { f: 'todo' as const, g: '의료·뷰티', q: '강남 성형', sort: 'oldest' as const }
+const view = { f: 'todo' as const, g: '의료·뷰티', q: '강남 성형', sort: 'oldest' as const, mode: 'manage' as const }
 ok('보기 상태 ↔ 주소 왕복', same(parseView(viewParams(view).toString()), view) && same(parseView(`?${viewParams(view).toString()}`), view))
-ok('기본 보기의 주소는 비어 있다', viewParams({ f: '', g: '', q: '', sort: '' }).toString() === '')
-ok('모르는 값은 기본으로', same(parseView('?f=need&sort=random&g=x'), { f: '', g: 'x', q: '', sort: '' }))
+ok('기본 보기의 주소는 비어 있다', viewParams({ f: '', g: '', q: '', sort: '', mode: '' }).toString() === '')
+ok('모르는 값은 기본으로', same(parseView('?f=need&sort=random&g=x&view=other'), { f: '', g: 'x', q: '', sort: '', mode: '' }))
+ok('관리 보기 주소', parseView('?view=manage').mode === 'manage' && viewParams({ f: '', g: '', q: '', sort: '', mode: 'manage' }).toString() === 'view=manage')
 
 // ── 7) 비교 그룹 정렬 ──────────────────────────────────────────────
 const member = (tenantId: string, brandName: string, score: number, competitor = false) => ({

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import CompetitorEditor from '../components/CompetitorEditor'
 import ProfileEditor from '../components/ProfileEditor'
+import BrandManageList from '../components/BrandManageList'
 import EmptyBrands from '../components/EmptyBrands'
 import RowMenu, { type RowMenuItem } from '../components/RowMenu'
 import { useTenant } from '../context/useTenant'
@@ -180,6 +181,7 @@ export default function Portfolio() {
     setView({ f: '', g: '', q: '' })
   }
 
+  const managing = view.mode === 'manage'
   const [showCompetitors, setShowCompetitors] = useState(readShowCompetitors)
   const [folds, setFolds] = useState(readFolds)
   const rows = useMemo(() => state.value?.rows ?? [], [state.value])
@@ -446,16 +448,27 @@ export default function Portfolio() {
           <h1>브랜드 현황</h1>
         </div>
         <div className="page-actions">
-          <label className="pf-search">
-            <span className="sr-only">브랜드·업종 찾기</span>
-            <input
-              type="search"
-              placeholder="브랜드·업종·지역 찾기"
-              value={qInput}
-              onChange={(e) => onQuery(e.target.value, (e.nativeEvent as InputEvent).isComposing)}
-              onCompositionEnd={(e) => onQuery(e.currentTarget.value, false)}
-            />
-          </label>
+          {/* 현황 | 관리 — 브랜드 관리(수집 엔진 · 측정 · 목록에서 빼기 · 되살리기)는 브랜드 추가 화면 맨 아래에서 이리로 옮겼다. */}
+          <div className="pf-view" role="tablist" aria-label="브랜드 현황 보기">
+            <button type="button" role="tab" aria-selected={!managing} onClick={() => setView({ mode: '' })}>
+              현황
+            </button>
+            <button type="button" role="tab" aria-selected={managing} onClick={() => setView({ mode: 'manage' })}>
+              관리
+            </button>
+          </div>
+          {!managing && (
+            <label className="pf-search">
+              <span className="sr-only">브랜드·업종 찾기</span>
+              <input
+                type="search"
+                placeholder="브랜드·업종·지역 찾기"
+                value={qInput}
+                onChange={(e) => onQuery(e.target.value, (e.nativeEvent as InputEvent).isComposing)}
+                onCompositionEnd={(e) => onQuery(e.currentTarget.value, false)}
+              />
+            </label>
+          )}
         </div>
       </header>
       {viewError && (
@@ -468,15 +481,17 @@ export default function Portfolio() {
         순위와 마지막 측정을 보이고, 줄을 누르면 그 브랜드의 개요로 갑니다.
       </p>
 
-      {!state.loaded && <PortfolioSkeleton />}
-      {state.loaded && state.value === null && (
+      {managing && <BrandManageList />}
+
+      {!managing && !state.loaded && <PortfolioSkeleton />}
+      {!managing && state.loaded && state.value === null && (
         <p className="muted">브랜드 현황은 데스크톱 앱에서 볼 수 있습니다(웹에는 이 기능이 없습니다).</p>
       )}
 
       {/* 데스크톱 앱은 켤 때 이 화면에서 시작한다 — 브랜드가 없으면 첫 등록 안내를 보인다. */}
-      {state.value && state.value.rows.length === 0 && <EmptyBrands />}
+      {!managing && state.value && state.value.rows.length === 0 && <EmptyBrands />}
 
-      {state.value && state.value.rows.length > 0 && (
+      {!managing && state.value && state.value.rows.length > 0 && (
         <>
           <section className="pf-summary" aria-label="요약">
             {tiles

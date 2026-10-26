@@ -222,14 +222,16 @@ export interface PortfolioViewState {
   g: string
   q: string
   sort: PfSort
+  /** 「현황 | 관리」 — 관리면 브랜드 관리(수집 엔진 · 측정 · 삭제 · 되살리기). 주소 키는 view. */
+  mode: '' | 'manage'
 }
 
-/** 주소의 보기 상태(?f=todo&g=…&q=…&sort=oldest)를 읽는다 — 모르는 값은 기본으로. */
+/** 주소의 보기 상태(?f=todo&g=…&q=…&sort=oldest&view=manage)를 읽는다 — 모르는 값은 기본으로. */
 export function parseView(search: string | URLSearchParams): PortfolioViewState {
   const p = typeof search === 'string' ? new URLSearchParams(search) : search
   const f = FILTERS.find((x) => x === p.get('f')) ?? ''
   const sort = SORTS.find((x) => x === p.get('sort')) ?? ''
-  return { f, g: p.get('g') ?? '', q: p.get('q') ?? '', sort }
+  return { f, g: p.get('g') ?? '', q: p.get('q') ?? '', sort, mode: p.get('view') === 'manage' ? 'manage' : '' }
 }
 
 /** 보기 상태를 주소 값으로 — 기본값은 적지 않는다(기본 보기의 주소는 비어 있다). */
@@ -239,6 +241,7 @@ export function viewParams(v: PortfolioViewState): URLSearchParams {
   if (v.g) p.set('g', v.g)
   if (v.q) p.set('q', v.q)
   if (v.sort) p.set('sort', v.sort)
+  if (v.mode) p.set('view', v.mode)
   return p
 }
 

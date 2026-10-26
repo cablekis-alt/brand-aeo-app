@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { ActiveMeasure } from '../components/MeasureProgress'
 import { brandLabel, type VariantBrand } from './brandVariant'
+import type { LocalRun } from './measureRuns'
 import { weekLabel } from './format'
 
 /*
@@ -54,6 +55,8 @@ export interface MeasureStatusState {
   ok: boolean
   active: ActiveMeasure[]
   failed: MeasureFailure[]
+  /** 이 PC의 측정 완료 기록(브랜드마다 한 줄 — 측정 1회로 묶는 것은 lib/measureRuns.ts). */
+  completed: LocalRun[]
   /** 옛 서버(회차 기록 전)면 null. */
   runs: MeasureRuns | null
   /** 새로 끝난 회차를 받을 때마다 1씩 오른다 — 화면이 저장된 기록을 다시 읽을 신호. */
@@ -207,7 +210,7 @@ export function outcomeMessage(r: MeasureRunRecord, tenants: (VariantBrand & { b
 
 // ── 모듈 하나가 들고 있는 상태 · 폴러 ─────────────────────────────────────
 
-const EMPTY: MeasureStatusState = { ok: false, active: [], failed: [], runs: null, doneEpoch: 0, band: [] }
+const EMPTY: MeasureStatusState = { ok: false, active: [], failed: [], completed: [], runs: null, doneEpoch: 0, band: [] }
 const BUSY_MS = 5_000
 const IDLE_MS = 15_000
 /** 결과를 맡은 뒤(측정을 막 시작함) 이만큼은 측정 중처럼 자주 읽는다. */
@@ -303,7 +306,7 @@ async function poll(): Promise<void> {
       return
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const d = (await res.json()) as { active?: unknown; failed?: unknown; runs?: unknown }
+    const d = (await res.json()) as { active?: unknown; failed?: unknown; completed?: unknown; runs?: unknown }
     const runs = parseRuns(d.runs)
     const picked = pickNewOutcomes(seen, runs)
     seen = picked.seen
@@ -319,6 +322,7 @@ async function poll(): Promise<void> {
       ok: true,
       active: asArray<ActiveMeasure>(d.active),
       failed: asArray<MeasureFailure>(d.failed),
+      completed: asArray<LocalRun>(d.completed),
       runs,
       doneEpoch: state.doneEpoch + (picked.fresh.length > 0 ? 1 : 0),
       band: toBand.length ? [...toBand.sort((a, b) => b.seq - a.seq), ...state.band] : state.band,

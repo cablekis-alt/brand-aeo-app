@@ -7726,6 +7726,155 @@ td.cell-mid {
   color: var(--muted);
 }
 
+/* 되돌리기 어려운 일의 확인 단추(components/ConfirmDialog.tsx) — 빨강은 실패 · 위험에만 쓴다. */
+.btn.danger {
+  border-color: var(--bad);
+  background: var(--bad);
+  color: var(--paper);
+  font-weight: 600;
+}
+.btn.danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.ce-dialog .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cd-require {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cd-require input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+.cd-require input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.ce-dialog .cd-blocked {
+  color: var(--warn);
+}
+
+/* 브랜드 관리의 「지운 브랜드」(components/BrandManageList.tsx) — 접어 두고 펼치면 되살리기. */
+.bm-removed {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.bm-removed > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.bm-removed ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bm-removed li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.bm-removed-name {
+  font-weight: 600;
+}
+
+/* 측정 상태(pages/MeasureStatus.tsx) — 진행 중 → 최근 실패 → 최근 완료 → 비용(접힘) → 원격. */
+.ms-section {
+  margin-top: 16px;
+}
+.ms-section > h3 {
+  margin-bottom: 6px;
+}
+.ms-run-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ms-run-toggle:hover {
+  text-decoration: underline;
+}
+.ms-run-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+tr.ms-run-child td {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+tr.ms-run-child td:nth-child(2) {
+  padding-left: 28px;
+}
+.ms-fold {
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: var(--r-card);
+  box-shadow: 0 0 0 1px var(--line);
+  background: var(--card);
+}
+.ms-fold > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.ms-fold[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* 측정 시작 단추 옆 한 줄(pages/MeasureTenant.tsx) — 지난번 걸린 시간 · 비용이 든다는 사실. */
+.measure-cost-line {
+  margin: 6px 0 0;
+}
+
+/* 브랜드 현황 「현황 | 관리」(pages/Portfolio.tsx). */
+.pf-view {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.pf-view button {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-view button[aria-selected='true'] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.pf-view button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* 기본 정보 서랍(components/ProfileEditor.tsx) — 틀은 경쟁사 편집 서랍(ce-*)을 쓰고 입력 칸만 더한다. */
 .pe-form {
   display: flex;
