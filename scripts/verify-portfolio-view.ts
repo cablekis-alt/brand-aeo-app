@@ -11,14 +11,17 @@ import type { PortfolioCohort, PortfolioRow } from '../src/lib/api'
 import {
   barWidth,
   changeLine,
+  cohortKey,
   parseView,
   passFilter,
+  refReason,
   rowChips,
   rowTone,
   showMeasure,
   sortCohorts,
   statusShort,
   summarize,
+  unmeasuredCohorts,
   viewParams,
   type PfFilter,
 } from '../src/lib/portfolioView'
@@ -189,6 +192,39 @@ ok('오래된 측정부터: 측정 전 → W36 → W40 → W43 → W44', ids(sor
 ok('점수 높은 순(경쟁사 점수는 보지 않는다 · 측정 전 뒤)', ids(sortCohorts(cohorts, byId, 'score')) === 'g5,g1,g3,g2,g4')
 ok('이름 순(가나다)', ids(sortCohorts(cohorts, byId, 'name')) === 'g3,g1,g2,g4,g5')
 ok('기본은 업종군 순서 그대로(5곳 모두)', sortCohorts(cohorts, byId, '').length === 5)
+const tie = [
+  cohort('성형외과', '서울 강남', '2026-W40', [member('t1', '가같음', 50)]),
+  cohort('성형외과', '서울 서초', '2026-W40', [member('t2', '나같음', 60)]),
+]
+const tieRows = new Map([
+  ['t1', row({ tenantId: 't1', score: 50 })],
+  ['t2', row({ tenantId: 't2', score: 60 })],
+])
+ok('같으면 기본 순서(같은 주차 둘 → 업종군 순서 그대로)', ids(sortCohorts(tie, tieRows, 'oldest')) === ids(sortCohorts(tie, tieRows, '')))
+
+// ── 7-1) 측정 전 카드 · 참고용 순위 ──────────────────────────────────
+const fakes = unmeasuredCohorts([
+  row({ tenantId: 'n1', status: 'none', weekOf: null, score: null, region: '서울 강남' }),
+  row({ tenantId: 'n2', status: 'none', weekOf: null, score: null, region: '서울 강남' }),
+  row({ tenantId: 'n3', status: 'none', weekOf: null, score: null, region: '서울 서초' }),
+  row({ tenantId: 's1' }),
+])
+ok(
+  '측정 전 브랜드는 업종 · 지역마다 카드 한 장(측정한 브랜드는 없음)',
+  fakes.length === 2 && fakes.every((c) => c.weekOf === '') && fakes.find((c) => c.region === '서울 강남')?.members.map((m) => m.tenantId).join() === 'n1,n2',
+)
+ok('카드 키가 겹치지 않는다', new Set(fakes.map(cohortKey)).size === fakes.length)
+const refRows = new Map<string, PortfolioRow>([
+  ['d', row({ tenantId: 'd', status: 'diff' })],
+  ['u', row({ tenantId: 'u', status: 'unknown' })],
+  ['o', row({ tenantId: 'o', status: 'stale' })],
+])
+ok(
+  '참고용 순위: 질문지 다름이 먼저 · 기록 없음 · 아니면 없음',
+  refReason(cohort('a', 'b', '2026-W40', [member('u', 'U', 1), member('d', 'D', 2)]), refRows) === 'diff' &&
+    refReason(cohort('a', 'b', '2026-W40', [member('u', 'U', 1), member('o', 'O', 2)]), refRows) === 'unknown' &&
+    refReason(cohort('a', 'b', '2026-W40', [member('o', 'O', 2), member('d', 'D', 1, true)]), refRows) === null,
+)
 
 // ── 8) 줄 「측정」 단추 ────────────────────────────────────────────
 ok('측정 남음 · 비교 안 됨이면 보인다', showMeasure(row({ tenantId: 'a' }), null) === 'on' && showMeasure(row({ tenantId: 'a', status: 'diff' }), null) === 'on' && showMeasure(row({ tenantId: 'a', status: 'none' }), null) === 'on')

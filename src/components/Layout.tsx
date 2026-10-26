@@ -17,7 +17,9 @@ const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/mea
 
 export default function Layout() {
   const { tenants, tenant, customer, viewing, exitCompetitorView, loading, error, reloadTenants } = useTenant()
-  const { pathname, key: locationKey } = useLocation()
+  const { pathname, key: locationKey, state: locationState } = useLocation()
+  // 같은 화면 안에서 보기 상태만 바꾼 이동(브랜드 현황의 거르개 · 정렬 — 주소를 replace)은 스크롤을 그대로 둔다.
+  const keepScroll = Boolean((locationState as { keepScroll?: boolean } | null)?.keepScroll)
   const navigationType = useNavigationType()
   const navigate = useNavigate()
   const isManagement = MANAGEMENT_ROUTES.has(pathname)
@@ -82,6 +84,7 @@ export default function Layout() {
   }, [])
   useLayoutEffect(() => {
     currentKey.current = locationKey
+    if (navigationType === 'REPLACE' && keepScroll) return
     const target = navigationType === 'POP' ? scrollByKey.current.get(locationKey) ?? 0 : 0
     window.scrollTo(0, target)
     if (target === 0) return
@@ -103,7 +106,7 @@ export default function Layout() {
       window.removeEventListener('touchstart', cancel)
       window.removeEventListener('keydown', cancel)
     }
-  }, [locationKey, navigationType])
+  }, [locationKey, navigationType, keepScroll])
 
   return (
     <div className="shell">

@@ -16,27 +16,6 @@ export function needsMeasure(r: Pick<PortfolioRow, 'status'>): boolean {
 
 const shortWeek = (weekOf: string | null) => weekOf?.replace(/^\d{4}-/, '') ?? ''
 
-export function statusTone(status: PortfolioStatus): string {
-  if (status === 'done') return 'good'
-  if (status === 'alone') return 'info'
-  if (status === 'none') return ''
-  return 'warn'
-}
-
-/** 브랜드 현황 화면의 상태 칩 문구. */
-export function statusChip(r: PortfolioRow): { text: string; tone: string } {
-  const week = shortWeek(r.weekOf)
-  const text = {
-    done: `${week} 완료`,
-    stale: `측정 오래됨 · ${week}`,
-    diff: '측정 필요 · 질문지 다름',
-    unknown: '측정 필요 · 질문지 기록 없음',
-    alone: '경쟁사 미측정',
-    none: '측정 전',
-  }[r.status]
-  return { text, tone: statusTone(r.status) }
-}
-
 /**
  * 브랜드 바꾸기 패널의 짧은 상태 문구 — 마지막 측정 주차를 앞에 붙인다. 오래됨은 몇 주 전인지로 적는다 — 월요일이면
  * 지난주에 잰 브랜드가 모두 「오래됨」이 되어, 지난주 측정과 4주 전 측정이 같은 말로 보였다.
@@ -433,4 +412,40 @@ export function cohortOfCompetitor(
   const withIt = cohorts.filter((c) => c.members.some((m) => m.tenantId === competitorId))
   const latest = (list: PortfolioCohort[]) => [...list].sort((a, b) => b.weekOf.localeCompare(a.weekOf))[0] ?? null
   return latest(withIt.filter((c) => c.members.some((m) => m.tenantId === customerId))) ?? latest(withIt)
+}
+
+/** 카드 키 — 업종 · 지역 · 주차(측정 전 카드는 주차가 비어 업종 · 지역마다 하나다). */
+export const cohortKey = (c: PortfolioCohort) => `${c.industry}|${c.region}|${c.weekOf}`
+
+/**
+ * 측정 기록이 없는 고객 브랜드는 비교 그룹 카드가 없다 — 업종 · 지역마다 측정 전 카드 한 장에 모아 목록에서 빠지지 않게(같은
+ * 업종 · 지역의 측정 전 브랜드가 카드 두 장으로 갈리지 않게).
+ */
+export function unmeasuredCohorts(rows: PortfolioRow[]): PortfolioCohort[] {
+  const byKey = new Map<string, PortfolioCohort>()
+  for (const r of rows.filter((x) => !x.weekOf)) {
+    const key = `${r.industry}|${r.region}`
+    const card = byKey.get(key) ?? { industry: r.industry, region: r.region, weekOf: '', members: [] }
+    card.members.push({
+      tenantId: r.tenantId,
+      brandName: r.brandName,
+      score: 0,
+      rank: 0,
+      tied: false,
+      mentionRate: 0,
+      brandOwnedCitationRate: 0,
+      competitor: false,
+      laterWeek: null,
+    })
+    byKey.set(key, card)
+  }
+  return [...byKey.values()]
+}
+
+/** 이 카드의 순위를 그대로 견줄 수 없는 까닭 — 지금 재는 고객 가운데 질문지가 다르거나 기록이 없는 곳이 있으면. */
+export function refReason(c: PortfolioCohort, rowById: Map<string, PortfolioRow>): 'diff' | 'unknown' | null {
+  const statuses = c.members.filter(isCurrentCustomer).map((m) => rowById.get(m.tenantId)?.status)
+  if (statuses.includes('diff')) return 'diff'
+  if (statuses.includes('unknown')) return 'unknown'
+  return null
 }
