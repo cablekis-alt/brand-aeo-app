@@ -2963,6 +2963,10 @@ p.hint {
   box-shadow: 0 0 0 1px var(--line);
   font-size: 12px;
 }
+/* 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. */
+.shell:has(.mr-band) .content {
+  padding-bottom: 260px;
+}
 @media (max-width: 760px) {
   .mr-band {
     left: 16px;
@@ -6021,11 +6025,22 @@ td.cell-mid {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
-.pf-lb-row .pf-chip-act,
-.pf-lb-act,
+/* 덮개 위에 놓는 것 — 칩 단추, 설명(title)이 있는 칩(기본 정보 바뀜 요약 등), 고객 줄의 「측정」 · ⋯, 점수 변화 설명. 경쟁사 · 지난
+   기록 줄의 ›와 설명 없는 칩은 덮개 아래에 두어 그 자리를 눌러도 줄이 열린다. */
+.pf-lb-chip .pf-chip-act,
+.pf-lb-chip .chip[title],
+.pf-lb-row.own .pf-lb-act,
 .pf-row-meta.has-title {
   position: relative;
   z-index: 1;
+}
+.pf-lb-chip span.chip[title] {
+  cursor: help;
+}
+/* 좁은 칸에서는 칩 글자가 줄을 바꿔 옆 칸(「측정」)을 덮지 않게. */
+.pf-lb-chip .chip {
+  max-width: 100%;
+  white-space: normal;
 }
 .pf-row-meta.has-title {
   cursor: help;
@@ -6115,7 +6130,14 @@ td.cell-mid {
   align-items: center;
   min-width: 0;
 }
+/* 이름 단추가 줄어들어 긴 이름은 말줄임(…) — 태그(경쟁사 · 선택됨)는 그 옆에 남는다. */
+.pf-lb-brand .pf-lb-open {
+  flex: 0 1 auto;
+  display: block;
+  overflow: hidden;
+}
 .pf-lb-text {
+  display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6135,6 +6157,8 @@ td.cell-mid {
   border-radius: 999px;
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
+  /* 눈금 때문에 위치를 잡아 덮개 위로 올라온다 — 막대를 눌러도 줄이 열리게 누르기는 덮개로 보낸다. */
+  pointer-events: none;
 }
 .pf-lb-bar::after {
   content: '';
@@ -6311,12 +6335,24 @@ td.cell-mid {
     transition: none;
   }
 }
+/* 중간 폭(사이드바가 남는 761~1100px) — 언급률 · 자사 인용률 칸을 빼고 나머지 칸을 좁힌다. 고정 칸 합이 본문보다 넓어 이름 · 상태 칸이
+   0px이 되고 열 머리가 글자마다 줄을 바꿨다. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .pf-card {
+    --pf-cols: 56px minmax(0, 1.5fr) minmax(90px, 1fr) minmax(0, 1.3fr) 84px;
+  }
+  .pf-lb-rate,
+  .pf-lb-head .pf-head-rate {
+    display: none;
+  }
+}
 @media (max-width: 760px) {
   .pf-lb-head {
     display: none;
   }
+  /* 동작 칸 너비를 고정한다 — 줄마다 따로 그리는 격자라 칸이 auto면 고객 줄(「측정」 · ⋯)과 경쟁사 줄(›)의 막대 길이가 달라졌다. */
   .pf-lb-row {
-    grid-template-columns: 52px minmax(0, 1fr) auto;
+    grid-template-columns: 60px minmax(0, 1fr) 84px;
     grid-template-areas: 'rank name act' '. bar num' '. chip chip';
     gap: 4px 10px;
   }

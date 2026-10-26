@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import CompetitorEditor from '../components/CompetitorEditor'
 import ProfileEditor from '../components/ProfileEditor'
 import EmptyBrands from '../components/EmptyBrands'
@@ -125,22 +125,58 @@ export default function Portfolio() {
   }
 
   // 보기 상태(거르개 · 업종군 · 검색 · 정렬)는 주소에 둔다 — 줄을 열었다 뒤로 와도 그대로. 바꿀 때는 이동 기록을 쌓지 않고
-  // 스크롤도 그대로 둔다(Layout keepScroll). 사이드바로 다시 들어오면(주소가 빔) 이 창에서 마지막으로 본 보기로 연다.
+  // 스크롤도 그대로 둔다(Layout keepScroll).
   const setView = (patch: Partial<PortfolioViewState>) => {
-    setParams(viewParams({ ...view, ...patch }), { replace: true, state: { keepScroll: true } })
+    setParams((prev) => viewParams({ ...parseView(prev), ...patch }), { replace: true, state: { keepScroll: true } })
   }
-  const restoring = useRef(location.search === '' && readSavedView() !== '')
+  // 사이드바 · 명령 창으로 들어와 주소가 비면(이미 이 화면에 있을 때도) 이 창에서 마지막으로 본 보기로 연다. 뒤로 · 앞으로(POP)는 그
+  // 기록의 주소 그대로 둔다 — 덮어쓰면 그 자리의 스크롤 복원도 끊긴다. 거르기를 다 풀면(replace) 빈 보기를 기억한다.
+  const navigationType = useNavigationType()
   useEffect(() => {
-    if (!restoring.current) return
-    restoring.current = false
-    setParams(new URLSearchParams(readSavedView()), {
-      replace: true,
-      state: { ...((location.state as object | null) ?? {}), keepScroll: true },
-    })
-  }, [setParams, location.state])
-  useEffect(() => {
-    if (!restoring.current) writeSavedView(location.search)
-  }, [location.search])
+    if (location.search === '' && navigationType === 'PUSH') {
+      const saved = readSavedView()
+      if (saved) {
+        setParams(new URLSearchParams(saved), { replace: true, state: { ...((location.state as object | null) ?? {}), keepScroll: true } })
+        return
+      }
+    }
+    writeSavedView(location.search)
+  }, [location.key, location.search, location.state, navigationType, setParams])
+
+  // 검색 칸 — 글자는 화면 안에서 바로 바꾸고 주소는 잠깐 뒤에 적는다. 칸을 주소에 직접 묶었더니 글자가 빠지고 커서가 튀며 한글
+  // 조합이 끊겼다. 주소가 밖에서 바뀌면(되살린 보기 · 거르기 풀기) 칸도 따른다.
+  const [qInput, setQInput] = useState(view.q)
+  const [syncedQ, setSyncedQ] = useState(view.q)
+  // 아직 주소에 적지 않은 입력이 있으면(치는 중) 칸을 덮지 않는다.
+  const [typing, setTyping] = useState(false)
+  if (view.q !== syncedQ) {
+    setSyncedQ(view.q)
+    if (!typing) setQInput(view.q)
+  }
+  const qTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (qTimer.current) window.clearTimeout(qTimer.current)
+    },
+    [],
+  )
+  const onQuery = (value: string, composing: boolean) => {
+    setQInput(value)
+    setTyping(true)
+    if (qTimer.current) window.clearTimeout(qTimer.current)
+    if (composing) return
+    qTimer.current = window.setTimeout(() => {
+      setSyncedQ(value)
+      setTyping(false)
+      setView({ q: value })
+    }, 250)
+  }
+  const clearFilters = () => {
+    if (qTimer.current) window.clearTimeout(qTimer.current)
+    setTyping(false)
+    setQInput('')
+    setView({ f: '', g: '', q: '' })
+  }
 
   const [showCompetitors, setShowCompetitors] = useState(readShowCompetitors)
   const [folds, setFolds] = useState(readFolds)
@@ -156,7 +192,7 @@ export default function Portfolio() {
   const cohortTotal = allCohorts.filter((c) => c.members.some(isCurrentCustomer)).length
 
   const visible = useMemo(() => {
-    const q = view.q.trim().toLowerCase()
+    const q = qInput.trim().toLowerCase()
     return allCohorts.filter((c) => {
       if (view.g && industryGroupOf(c.industry) !== view.g) return false
       const passes = c.members.filter(isCurrentCustomer).some((m) => {
@@ -166,11 +202,12 @@ export default function Portfolio() {
       if (!passes) return false
       return !q || `${c.industry} ${c.region} ${c.members.map((m) => m.brandName).join(' ')}`.toLowerCase().includes(q)
     })
-  }, [allCohorts, rowById, view.f, view.g, view.q])
+  }, [allCohorts, rowById, view.f, view.g, qInput])
   const grouped = useMemo(() => groupCohorts(visible), [visible])
   const flat = useMemo(() => (view.sort ? sortCohorts(visible, rowById, view.sort) : []), [visible, rowById, view.sort])
-  // 검색 중에는 접기를 무시한다 — 찾은 브랜드가 접힌 묶음에 숨지 않게.
-  const isFolded = (group: string) => !view.q.trim() && (folds[group] ?? false)
+  // 검색 중에는 접기를 무시한다 — 찾은 브랜드가 접힌 묶음에 숨지 않게(접기 단추도 잠근다).
+  const searching = qInput.trim() !== ''
+  const isFolded = (group: string) => !searching && (folds[group] ?? false)
   const toggleFold = (group: string, folded: boolean) => {
     writeFold(group, folded)
     setFolds((f) => ({ ...f, [group]: folded }))
@@ -223,19 +260,43 @@ export default function Portfolio() {
       setProfiling(null)
     }
   }
-  const closeEditor = () => {
-    setEditing(null)
+  // 서랍을 연 단추(줄의 칩 · ⋯) — 서랍을 닫으면 초점을 거기로 돌린다(그대로 두면 body로 빠져 키보드로 이어 갈 수 없었다).
+  const editorOpener = useRef<HTMLElement | null>(null)
+  const rememberOpener = () => {
+    const el = document.activeElement
+    editorOpener.current = el instanceof HTMLElement && el !== document.body ? el : null
+  }
+  const returnFocus = () => {
+    const el = editorOpener.current
+    editorOpener.current = null
+    if (el) window.setTimeout(() => el.isConnected && el.focus({ preventScroll: true }), 0)
+  }
+  const dropEditorRequest = () => {
     // 새로 고침·뒤로 가기에서 다시 열리지 않게 이동 기록의 요청을 지운다(보기 상태 · 스크롤은 그대로).
     if (requested) navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: { keepScroll: true } })
   }
+  const closeEditor = () => {
+    setEditing(null)
+    dropEditorRequest()
+    returnFocus()
+  }
+  const closeProfile = () => {
+    setProfiling(null)
+    returnFocus()
+  }
   const openProfile = (id: string) => {
     if ((id !== profiling || editing) && !leaveEditor()) return
-    if (editing) closeEditor()
+    if (editing) {
+      setEditing(null)
+      dropEditorRequest()
+    }
+    rememberOpener()
     setProfiling(id)
   }
   const openCompetitorEditor = (id: string) => {
     if ((id !== editing || profiling) && !leaveEditor()) return
     setProfiling(null)
+    rememberOpener()
     setEditing(id)
   }
   /** 줄의 「측정」 — 바로 재지 않고 측정 화면에서 함께 잴 경쟁사 · 방식을 확인하고 시작한다. */
@@ -248,7 +309,8 @@ export default function Portfolio() {
   }
 
   // 지금 재는 중 — 앱은 한 번에 하나씩 잰다. 그 측정에 든 브랜드(경쟁사로 함께 재는 고객 포함)는 「측정 중」 칩, 나머지는 「측정」을 잠근다.
-  const measuringIds = new Set(measure.active.map((a) => a.tenantId))
+  // 진행 줄(active)은 파이프라인 구간에만 있다 — 경쟁사를 고르거나 순위를 다시 매기는 동안에도 그 회차의 브랜드는 「측정 중」이다.
+  const measuringIds = new Set([...measure.active.map((a) => a.tenantId), ...(measure.runs?.current ?? []).map((r) => r.tenantId)])
   const root = measure.runs?.current[0] ?? null
   const busy = root !== null || measure.active.length > 0
   const busyId = root?.tenantId ?? measure.active[0]?.tenantId ?? null
@@ -276,21 +338,22 @@ export default function Portfolio() {
   // 「선택됨 · 스테이,머뭄으로 가기」 — 사이드바에서 고른 고객 브랜드의 줄로 옮긴다(접힌 업종군이면 편다).
   const selectedId = customer?.tenantId ?? null
   const selectedVisible = selectedId !== null && visible.some((c) => c.members.some((m) => isCurrentCustomer(m) && m.tenantId === selectedId))
-  const [jumpTick, setJumpTick] = useState(0)
+  // 누를 때의 대상으로만 옮긴다 — 나중에 사이드바에서 브랜드를 바꿔도 화면이 따라 움직이지 않게.
+  const [jumpTo, setJumpTo] = useState<{ id: string; n: number } | null>(null)
   const jump = () => {
     if (!selectedId) return
     const row = rowById.get(selectedId)
     if (row && !view.sort && isFolded(industryGroupOf(row.industry))) toggleFold(industryGroupOf(row.industry), false)
-    setJumpTick((n) => n + 1)
+    setJumpTo((j) => ({ id: selectedId, n: (j?.n ?? 0) + 1 }))
   }
   useEffect(() => {
-    if (jumpTick === 0 || !selectedId) return
-    const el = document.getElementById(`pf-row-${selectedId}`)
+    if (!jumpTo) return
+    const el = document.getElementById(`pf-row-${jumpTo.id}`)
     if (!el) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
     el.querySelector<HTMLElement>('.pf-lb-open')?.focus({ preventScroll: true })
-  }, [jumpTick, selectedId])
+  }, [jumpTo])
 
   const oldestText = [
     sum.oldest ? `가장 오래된 ${shortWeek(sum.oldest.weekOf)}${sum.oldest.weeks !== null ? ` · ${sum.oldest.weeks}주 전` : ''}` : '',
@@ -383,7 +446,13 @@ export default function Portfolio() {
         <div className="page-actions">
           <label className="pf-search">
             <span className="sr-only">브랜드·업종 찾기</span>
-            <input type="search" placeholder="브랜드·업종·지역 찾기" value={view.q} onChange={(e) => setView({ q: e.target.value })} />
+            <input
+              type="search"
+              placeholder="브랜드·업종·지역 찾기"
+              value={qInput}
+              onChange={(e) => onQuery(e.target.value, (e.nativeEvent as InputEvent).isComposing)}
+              onCompositionEnd={(e) => onQuery(e.currentTarget.value, false)}
+            />
           </label>
         </div>
       </header>
@@ -447,7 +516,7 @@ export default function Portfolio() {
                   선택됨 · {directionParticle(customer.brandName)} 가기
                 </button>
               )}
-              {!view.sort && grouped.length > 1 && !view.q.trim() && (
+              {!view.sort && grouped.length > 1 && !searching && (
                 <button type="button" className="ghost pf-fold-all" onClick={() => setAllFolds(anyOpen)}>
                   {anyOpen ? '모두 접기' : '모두 펴기'}
                 </button>
@@ -482,7 +551,7 @@ export default function Portfolio() {
           {visible.length === 0 && (
             <p className="muted pf-empty">
               거르개에 맞는 브랜드가 없습니다.{' '}
-              <button type="button" className="ghost" onClick={() => setView({ f: '', g: '', q: '' })}>
+              <button type="button" className="ghost" onClick={clearFilters}>
                 거르기 풀기
               </button>
             </p>
@@ -511,7 +580,9 @@ export default function Portfolio() {
                         type="button"
                         className="pf-group-toggle"
                         aria-expanded={!folded}
-                        aria-controls={`pf-g-${i}`}
+                        aria-controls={folded ? undefined : `pf-g-${i}`}
+                        disabled={searching}
+                        title={searching ? '검색 중에는 찾은 브랜드가 숨지 않게 모두 펼쳐 둡니다' : undefined}
                         onClick={() => toggleFold(g.name, !folded)}
                       >
                         <span className={`chev${folded ? '' : ' open'}`} aria-hidden="true" />
@@ -542,7 +613,7 @@ export default function Portfolio() {
         <CompetitorEditor key={editing} tenantId={editing} onClose={closeEditor} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
       )}
       {profiling && !editing && !viewing && state.value && (
-        <ProfileEditor key={profiling} tenantId={profiling} onClose={() => setProfiling(null)} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
+        <ProfileEditor key={profiling} tenantId={profiling} onClose={closeProfile} onSaved={afterCompetitorSave} onDirtyChange={onEditorDirty} />
       )}
     </>
   )
@@ -577,10 +648,10 @@ function ColumnHead() {
       <span role="columnheader" className="num" title="Brand AEO Score — 100점 만점. 막대 끝이 100점, 가운데 눈금이 50점입니다.">
         AEO 점수 · 100점 만점
       </span>
-      <span role="columnheader" className="num" title="이름 없이 물은 질문의 답변 가운데 이 브랜드를 언급한 비율">
+      <span role="columnheader" className="num pf-head-rate" title="이름 없이 물은 질문의 답변 가운데 이 브랜드를 언급한 비율">
         언급률
       </span>
-      <span role="columnheader" className="num" title="AI가 근거로 쓴 출처 가운데 이 브랜드 사이트의 비율(모든 질문 기준)">
+      <span role="columnheader" className="num pf-head-rate" title="AI가 근거로 쓴 출처 가운데 이 브랜드 사이트의 비율(모든 질문 기준)">
         자사 인용률
       </span>
       <span role="columnheader">상태</span>

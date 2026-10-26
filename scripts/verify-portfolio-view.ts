@@ -192,15 +192,16 @@ ok('오래된 측정부터: 측정 전 → W36 → W40 → W43 → W44', ids(sor
 ok('점수 높은 순(경쟁사 점수는 보지 않는다 · 측정 전 뒤)', ids(sortCohorts(cohorts, byId, 'score')) === 'g5,g1,g3,g2,g4')
 ok('이름 순(가나다)', ids(sortCohorts(cohorts, byId, 'name')) === 'g3,g1,g2,g4,g5')
 ok('기본은 업종군 순서 그대로(5곳 모두)', sortCohorts(cohorts, byId, '').length === 5)
+// 입력 순서를 기본 순서(강남 → 서초)와 반대로 넣는다 — 같은 주차면 입력 순서가 아니라 기본 순서를 따라야 한다.
 const tie = [
-  cohort('성형외과', '서울 강남', '2026-W40', [member('t1', '가같음', 50)]),
   cohort('성형외과', '서울 서초', '2026-W40', [member('t2', '나같음', 60)]),
+  cohort('성형외과', '서울 강남', '2026-W40', [member('t1', '가같음', 50)]),
 ]
 const tieRows = new Map([
   ['t1', row({ tenantId: 't1', score: 50 })],
   ['t2', row({ tenantId: 't2', score: 60 })],
 ])
-ok('같으면 기본 순서(같은 주차 둘 → 업종군 순서 그대로)', ids(sortCohorts(tie, tieRows, 'oldest')) === ids(sortCohorts(tie, tieRows, '')))
+ok('같으면 기본 순서(같은 주차 둘 → 입력 순서가 아니라 강남 · 서초)', ids(sortCohorts(tie, tieRows, 'oldest')) === 't1,t2' && ids(sortCohorts(tie, tieRows, '')) === 't1,t2')
 
 // ── 7-1) 측정 전 카드 · 참고용 순위 ──────────────────────────────────
 const fakes = unmeasuredCohorts([
