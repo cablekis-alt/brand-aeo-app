@@ -699,8 +699,8 @@ export function weekCardKeepReason(existing: WeeklyScorecard | undefined, next: 
   return `수집 엔진(${[...after].sort().join('+')})이 이번 주 카드(${[...before].sort().join('+')})보다 적어 이번 주 카드는 그대로 둡니다`;
 }
 
-/** 판정 맥락 지문(RunMeta.contextFingerprint) — 별칭 · 소유 도메인 · 경쟁사 · 순위 후보. */
-function contextFingerprint(tenant: TenantConfig, rankingEntities: string[]): string {
+/** 판정 맥락 지문(RunMeta.contextFingerprint) — 별칭 · 소유 도메인 · 경쟁사 · 순위 후보. 자사 주소를 더할 때 옛 회차 지문을 맞추는 데도 쓴다(ownedDomainsEditor). */
+export function contextFingerprint(tenant: TenantConfig, rankingEntities: string[]): string {
   const { aliases, ownedDomains, competitors } = toBrandContext(tenant);
   return createHash('sha256')
     .update(JSON.stringify({ aliases: aliases ?? [], ownedDomains: ownedDomains ?? [], competitors: competitors ?? [], rankingEntities }))

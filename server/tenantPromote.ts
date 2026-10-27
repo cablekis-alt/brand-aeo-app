@@ -68,7 +68,7 @@ const host = (d: string) => d.trim().toLowerCase().replace(/^www\./, '');
 /**
  * 브랜드별로 앱에서 고친 설정 파일 — 베이스 · 오버레이를 모두 이긴다(tenantRegistry.ts mergeRuntimeTenants).
  * 경쟁사일 때 남은 파일을 그대로 두면 등록 화면에서 넣은 값이 말없이 무시된다. 경로는 각 저장소의 filePathFor와 같다
- * (tenantScopeStore · factGraphStore · brandPageStore · tenantEnginesStore · tenantCompetitorsStore).
+ * (tenantScopeStore · factGraphStore · brandPageStore · tenantEnginesStore · tenantCompetitorsStore · ownedDomainsStore).
  */
 const OVERRIDE_FILES: { file: string; label: string }[] = [
   { file: 'market-scope.json', label: '시장 범위' },
@@ -76,6 +76,7 @@ const OVERRIDE_FILES: { file: string; label: string }[] = [
   { file: 'brand-page.json', label: '브랜드 페이지' },
   { file: 'engines.json', label: '수집 엔진' },
   { file: 'competitors.json', label: '경쟁사 목록' },
+  { file: 'owned-domains.json', label: '더한 자사 주소' },
 ];
 
 const tenantDir = (tenantId: string) => path.join(PIPELINE_DATA_DIR, tenantId);

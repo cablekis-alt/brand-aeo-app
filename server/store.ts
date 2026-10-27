@@ -97,6 +97,16 @@ export interface ResultStore {
   ): Promise<string>;
   /** 그 주의 회차 기록 — 측정을 마친 시각 순. run.json이 없는 폴더(쓰다 만 회차)는 건너뛰고, 읽지 못한 회차는 issues에 남긴다. */
   listRunSnapshots(tenantId: string, weekOf: string): Promise<{ runs: RunSnapshot[]; issues: RunReadIssue[] }>;
+  /**
+   * 이미 있는 회차 파일을 고쳐 쓴다 — 자사 주소를 지난 측정에 적용할 때(ownedDomainsEditor)만 쓴다. 준 파일만 바꾸고 run.json을 맨 마지막에
+   * 쓰며, 읽어 둔 회차 캐시를 비운다.
+   */
+  rewriteRunSnapshot(
+    tenantId: string,
+    weekOf: string,
+    runId: string,
+    files: { scorecard?: WeeklyScorecard; analyses?: QuestionRepeatAnalysis[]; meta?: RunMeta },
+  ): Promise<void>;
   getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]>;
   /**
    * 코호트(업종 · 지역 · 주차)의 카드 — 지운 브랜드와 코호트 제외 목록(cohortExclusionStore.ts)에 든 카드는 뺀다.
@@ -337,6 +347,26 @@ export class FileResultStore implements ResultStore {
     for (const issue of issues) console.warn(`[store] ${tenantId}/${weekOf} 회차 ${issue.runId}를 읽지 못했습니다: ${issue.reason}`);
     runs.sort((a, b) => a.meta.finishedAt.localeCompare(b.meta.finishedAt) || a.meta.runId.localeCompare(b.meta.runId));
     return { runs, issues };
+  }
+
+  async rewriteRunSnapshot(
+    tenantId: string,
+    weekOf: string,
+    runId: string,
+    files: { scorecard?: WeeklyScorecard; analyses?: QuestionRepeatAnalysis[]; meta?: RunMeta },
+  ): Promise<void> {
+    const dir = path.join(DATA_DIR, tenantId, weekOf, 'runs', runId);
+    // 쓰다 만 회차(run.json 없음)를 회차로 되살리지 않게, 있는 회차만 고친다.
+    await readFile(path.join(dir, 'run.json'), 'utf-8');
+    this.runCache.delete(dir);
+    try {
+      if (files.analyses) await writeJsonAtomic(path.join(dir, 'question-analyses.json'), files.analyses);
+      if (files.scorecard) await writeJsonAtomic(path.join(dir, 'scorecard.json'), files.scorecard);
+      if (files.meta) await writeJsonAtomic(path.join(dir, 'run.json'), { ...files.meta, runId });
+    } finally {
+      // 쓰는 사이 화면이 읽어 옛 값을 붙잡았을 수 있다 — 끝난 뒤에도 비운다.
+      this.runCache.delete(dir);
+    }
   }
 
   async getScorecardHistory(tenantId: string, weeksBack: number): Promise<WeeklyScorecard[]> {

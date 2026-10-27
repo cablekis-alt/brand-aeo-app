@@ -8,6 +8,7 @@ import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, 
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
+import { mergeOwnedDomains, readExtraOwnedDomains } from './ownedDomainsStore.js';
 import { readTenantEngines } from './tenantEnginesStore.js';
 import { readTenantScope, type TenantScope } from './tenantScopeStore.js';
 import { overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
@@ -201,17 +202,19 @@ async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<Tenant
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진·시장 범위·경쟁사 목록)만은 저장한
+  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진·시장 범위·경쟁사 목록·더한 자사 주소)만은 저장한
   // 파일이 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
   // 않기 때문이다. 경쟁사 목록은 고객 브랜드만 고치고, 베이스가 그 뒤에 바뀌었으면 쓰지 않는다
   // (tenantCompetitorsStore.ts 지문 주석).
   const tenants = [...map.values()];
-  const [facts, pages, engines, scopes, competitorEdits] = await Promise.all([
+  const [facts, pages, engines, scopes, competitorEdits, extraOwned] = await Promise.all([
     Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
     Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantEngines(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantScope(t.tenantId))),
     Promise.all(tenants.map((t) => (withCompetitorEdits && !t.cohortOnly ? readCompetitorOverride(t.tenantId) : null))),
+    // 더한 자사 주소는 고객 브랜드만(ownedDomainsEditor) — 첫 주소 뒤에 붙여 [0]은 그대로 둔다.
+    Promise.all(tenants.map((t) => (t.cohortOnly ? null : readExtraOwnedDomains(t.tenantId)))),
   ]);
   return tenants.map((t, i) => {
     const edit = competitorEdits[i]?.current ?? null;
@@ -225,6 +228,7 @@ async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<Tenant
       ...(facts[i] ? { factGraph: facts[i]! } : {}),
       ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
       ...(engines[i] ? { engines: engines[i]! } : {}),
+      ...(extraOwned[i] ? { ownedDomains: mergeOwnedDomains(t.ownedDomains ?? [], extraOwned[i]) } : {}),
       // 경쟁사를 바꾸며 고쳐 만든 질문지가 있으면 그 버전 · 크기로 잰다(competitorEditor.ts 4단계).
       ...(applies
         ? {

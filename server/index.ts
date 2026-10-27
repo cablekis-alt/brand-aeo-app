@@ -19,6 +19,7 @@ import { generateBrief, readBriefs } from './contentBrief.js';
 import { adaptForChannel, readAdaptations } from './channelAdapt.js';
 import { buildPortfolio } from './portfolio.js';
 import { describeProfileEditor, planProfileEdit, saveProfileEdit } from './brandProfileEditor.js';
+import { describeOwnedDomains, planOwnedDomains, saveOwnedDomains } from './ownedDomainsEditor.js';
 import {
   buildEditorState,
   checkEditorIndustry,
@@ -1420,6 +1421,34 @@ app.put('/api/tenants/:tenantId/profile', async (req, res) => {
   try {
     const body = (req.body ?? {}) as { input?: unknown; previewKey?: unknown };
     res.json(await saveProfileEdit(req.params.tenantId, body.input, body.previewKey, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 자사 사이트 주소 더하기 · 빼기(ownedDomainsEditor.ts) — 저장소 설정 브랜드도 고친다. 「지난 측정에도 적용」은 저장 때 판정 · 점수 · 순위를
+// 다시 쓴다. Express 전용이다(Vercel 함수 12/12).
+app.get('/api/tenants/:tenantId/owned-domains', async (req, res) => {
+  try {
+    res.json(await describeOwnedDomains(req.params.tenantId));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+app.post('/api/tenants/:tenantId/owned-domains/plan', async (req, res) => {
+  try {
+    res.json(await planOwnedDomains(req.params.tenantId, req.body, store));
+  } catch (err) {
+    sendEditorError(res, err);
+  }
+});
+
+// 저장 — 미리보기와 같은 계획(previewKey)일 때만. 측정 중이면 409.
+app.put('/api/tenants/:tenantId/owned-domains', async (req, res) => {
+  try {
+    const body = (req.body ?? {}) as { input?: unknown; previewKey?: unknown };
+    res.json(await saveOwnedDomains(req.params.tenantId, body.input, body.previewKey, store));
   } catch (err) {
     sendEditorError(res, err);
   }

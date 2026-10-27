@@ -125,6 +125,11 @@ function hostMatches(host: string, catalog: Set<string>): boolean {
   return false;
 }
 
+/** 후기·예약 플랫폼 주소인가(소문자 · www 없는 호스트) — 여기 「자사」는 믿지 않으므로 자사 주소로도 받지 않는다(ownedDomainsEditor). */
+export function isReviewHost(host: string): boolean {
+  return hostMatches(host, REVIEW_HOSTS);
+}
+
 /**
  * 판정이 붙인 소유 구분 — 후기·예약 플랫폼(REVIEW_HOSTS) 페이지의 「자사」는 믿지 않고 unknown으로 본다. 그곳 업체 페이지는
  * 플랫폼 것이고(우리가 고칠 수 있는 건 소개 칸뿐), 판정이 이름이 비슷한 다른 업체를 우리로 착각하기도 한다(실측: web4ai W42
