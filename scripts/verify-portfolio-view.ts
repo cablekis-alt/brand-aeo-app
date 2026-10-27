@@ -70,7 +70,7 @@ ok(
 ok('이번 주에 쟀지만 질문지가 다르면 나이 칩 없이', same(texts(row({ tenantId: 'a', status: 'diff', weekOf: '2026-W44', ageWeeks: 0 })), ['warn:질문지 다름 · 순위 참고용']))
 const unknownChips = rowChips(row({ tenantId: 'a', status: 'unknown', ageWeeks: 1 }))
 ok('unknown → 「질문지 기록 없음 · 순위 참고용」(확인 불가)', unknownChips[1]?.text === '질문지 기록 없음 · 순위 참고용' && Boolean(unknownChips[1]?.title?.includes('확인 불가')))
-ok('alone → 파랑 「경쟁사 없이 측정」', same(texts(row({ tenantId: 'a', status: 'alone', ageWeeks: 0 })), ['info:경쟁사 없이 측정']))
+ok('alone → 정보색 「경쟁사 없이 측정」', same(texts(row({ tenantId: 'a', status: 'alone', ageWeeks: 0 })), ['info:경쟁사 없이 측정']))
 ok('none → 중립 「측정 전」', same(texts(row({ tenantId: 'a', status: 'none', weekOf: null, score: null, ageWeeks: null })), ['-:측정 전']))
 const plan = (p: Partial<NonNullable<PortfolioRow['competitorPlan']>>) => ({ measured: 3, cap: 5, waiting: 0, blocked: 0, collision: 0, ...p })
 const collided = rowChips(row({ tenantId: 'a', status: 'done', ageWeeks: 0, competitorPlan: plan({ blocked: 1, collision: 1 }) }))
@@ -102,7 +102,7 @@ ok(
 
 // ── 2) 점 색 · 짧은 문구(브랜드 바꾸기 패널) ─────────────────────────
 ok('점 색: stale 1주 중립 · 2주 주황 · 나이 모름 주황', rowTone(row({ tenantId: 'a' })) === '' && rowTone(row({ tenantId: 'a', ageWeeks: 2 })) === 'warn' && rowTone(row({ tenantId: 'a', ageWeeks: undefined })) === 'warn')
-ok('점 색: done 초록 · alone 파랑 · none 중립 · diff 주황', rowTone(row({ tenantId: 'a', status: 'done' })) === 'good' && rowTone(row({ tenantId: 'a', status: 'alone' })) === 'info' && rowTone(row({ tenantId: 'a', status: 'none' })) === '' && rowTone(row({ tenantId: 'a', status: 'diff', ageWeeks: 0 })) === 'warn')
+ok('점 색: done 초록 · alone 정보색 · none 중립 · diff 주황', rowTone(row({ tenantId: 'a', status: 'done' })) === 'good' && rowTone(row({ tenantId: 'a', status: 'alone' })) === 'info' && rowTone(row({ tenantId: 'a', status: 'none' })) === '' && rowTone(row({ tenantId: 'a', status: 'diff', ageWeeks: 0 })) === 'warn')
 ok(
   '짧은 문구',
   statusShort(row({ tenantId: 'a' })) === 'W43 · 이번 주 아직' &&
