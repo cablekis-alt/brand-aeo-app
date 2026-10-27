@@ -649,6 +649,17 @@
   color: var(--bad);
 }
 
+/* 감성 분석 맨 위 숫자 칸(긍정 · 중립 · 부정 %) — 칩(.sentiment)이 아니라 큰 숫자라 바탕 · 여백 없이 글자색만 갈래를 따른다. */
+.sentiment-value.positive {
+  color: var(--good);
+}
+.sentiment-value.neutral {
+  color: var(--muted);
+}
+.sentiment-value.negative {
+  color: var(--bad);
+}
+
 .rank-list {
   list-style: none;
   margin: 0;
@@ -3009,11 +3020,12 @@ p.hint {
 }
 .notice b { color: var(--warn); }
 
-/* 측정 결과 띠(components/MeasureResultBand.tsx) — 본문 아래쪽에 떠서 어느 화면에서든 보인다. 띠 바깥은 눌러도 뒤가 눌린다. */
+/* 측정 결과 띠(components/MeasureResultBand.tsx) — 본문 아래쪽에 떠서 어느 화면에서든 보인다. 띠 바깥은 눌러도 뒤가 눌린다.
+   왼쪽 끝은 본문 글줄과 같은 자리(사이드바 220px + 본문 여백 32px). */
 .mr-band {
   position: fixed;
   z-index: 92;
-  left: calc(248px + 24px);
+  left: calc(220px + 32px);
   right: 24px;
   bottom: 16px;
   display: flex;
@@ -3386,7 +3398,6 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .mp-stage { color: var(--muted); white-space: nowrap; }
 .mp-bar {
   height: 5px;
-  border-radius: 3px;
   background: var(--tint, rgba(127, 127, 127, 0.18));
   overflow: hidden;
 }
@@ -3434,7 +3445,6 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   display: flex;
   gap: 2px;
   height: 10px;
-  border-radius: 5px;
   overflow: hidden;
   background: var(--line);
   margin: 10px 0 6px;
@@ -3524,7 +3534,6 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .funnel-bar {
   display: block;
   height: 6px;
-  border-radius: 3px;
   background: var(--line);
   overflow: hidden;
 }
