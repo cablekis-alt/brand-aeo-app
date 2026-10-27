@@ -320,7 +320,8 @@ async function computePast(ctx: Context, added: string[], finalExtra: string[], 
         work.cohortWeeks.push({ industry: card.industry, region: card.region, weekOf });
       }
     }
-    if (promoted > 0 || runsChanged > 0 || JSON.stringify(next) !== JSON.stringify(card)) {
+    // 미리보기에는 숫자가 바뀌는 주만 — 회차의 판정 맥락 표시만 맞추는 주는 회차 수에만 센다.
+    if (promoted > 0 || JSON.stringify(next) !== JSON.stringify(card)) {
       work.weeks.push({
         weekOf,
         promoted,

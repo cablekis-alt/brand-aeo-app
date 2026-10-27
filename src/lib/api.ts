@@ -1470,6 +1470,81 @@ export function saveProfileEdit(tenantId: string, input: ProfileInput, previewKe
   return profileRequest(tenantId, '', 'PUT', { input, previewKey }, '기본 정보를 저장하지 못했습니다')
 }
 
+/** 자사 사이트 주소 칸의 처음 상태(server/ownedDomainsEditor.ts OwnedDomainsState). */
+export interface OwnedDomainsState {
+  tenantId: string
+  brandName: string
+  primary: string | null
+  fixed: string[]
+  extra: string[]
+  editable: boolean
+  reason: string | null
+  measuring: boolean
+}
+
+export interface OwnedDomainsInput {
+  extra: string[]
+  applyPast: boolean
+}
+
+/** 지난 측정 적용 미리보기의 한 주(server/ownedDomainsEditor.ts PastWeekChange). */
+export interface OwnedDomainsPastWeek {
+  weekOf: string
+  promoted: number
+  rateBefore: number
+  rateAfter: number
+  scoreBefore: number
+  scoreAfter: number
+  ma4Before: number
+  ma4After: number
+  runs: number
+}
+
+export interface OwnedDomainsPlan {
+  key: string
+  unchanged: boolean
+  extra: string[]
+  added: string[]
+  removed: string[]
+  errors: string[]
+  notes: string[]
+  measuring: boolean
+  applyPast: boolean
+  past: { weeks: OwnedDomainsPastWeek[]; promoted: number; runs: number; skipped: string[]; cohortWeeks: number } | null
+}
+
+export interface OwnedDomainsSaveResult {
+  ok: true
+  tenantId: string
+  extra: string[]
+  applied: { weeks: number; runs: number; promoted: number; ranksUpdated: number } | null
+  backupDir: string
+}
+
+/** 자사 사이트 주소 요청 — 데스크톱 앱 전용(Express 라우트). 실패하면 throw한다. */
+async function ownedDomainsRequest<T>(tenantId: string, sub: string, method: string, body: unknown, failure: string): Promise<T> {
+  const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/owned-domains${sub}`, {
+    method,
+    ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  })
+  const json = (await res.json().catch(() => null)) as (T & { error?: string }) | null
+  if (!res.ok || !json) throw new Error(json?.error || `${failure} (HTTP ${res.status})`)
+  return json
+}
+
+export function loadOwnedDomains(tenantId: string): Promise<OwnedDomainsState> {
+  return ownedDomainsRequest(tenantId, '', 'GET', undefined, '자사 사이트 주소를 불러오지 못했습니다')
+}
+
+export function planOwnedDomains(tenantId: string, input: OwnedDomainsInput): Promise<OwnedDomainsPlan> {
+  return ownedDomainsRequest(tenantId, '/plan', 'POST', input, '바꿀 내용을 계산하지 못했습니다')
+}
+
+/** 저장 — 미리보기(previewKey)와 지금 계산이 다르면 서버가 409로 거절한다. */
+export function saveOwnedDomains(tenantId: string, input: OwnedDomainsInput, previewKey: string): Promise<OwnedDomainsSaveResult> {
+  return ownedDomainsRequest(tenantId, '', 'PUT', { input, previewKey }, '자사 사이트 주소를 저장하지 못했습니다')
+}
+
 /** 빈칸 기록 저장 — 판정 호출 없음. 실패하면 throw. */
 export async function saveDraftGaps(
   tenantId: string,

@@ -11,6 +11,7 @@ import {
   type ProfileSaveResult,
 } from '../lib/api'
 import { isAddressLike, scopeLabel } from '../lib/brandVariant'
+import OwnedDomainsEditor from './OwnedDomainsEditor'
 import { MARKET_SCOPES, NATIONAL_REGION, type MarketScope } from '../prompts/types'
 
 /**
@@ -77,6 +78,8 @@ export default function ProfileEditor({
   const [plan, setPlan] = useState<PlanState | null>(null)
   const [replan, setReplan] = useState(0)
   const [busy, setBusy] = useState(false)
+  // 자사 사이트 주소 칸은 따로 저장한다 — 닫을 때 묻는 데만 함께 센다.
+  const [domainsDirty, setDomainsDirty] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [confirmKey, setConfirmKey] = useState<string | null>(null)
   const [saved, setSaved] = useState<ProfileSaveResult | null>(null)
@@ -160,13 +163,13 @@ export default function ProfileEditor({
   }, [tenantId, requestKey, replan])
 
   useEffect(() => {
-    onDirtyChange?.(dirty)
-  }, [dirty, onDirtyChange])
+    onDirtyChange?.(dirty || domainsDirty)
+  }, [dirty, domainsDirty, onDirtyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
   const close = () => {
     if (busy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
-    if (dirty && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
+    if ((dirty || domainsDirty) && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
     onClose()
   }
 
@@ -275,10 +278,10 @@ export default function ProfileEditor({
         </div>
         {s && (
           <p className="ce-sub">
-            {s.brandName} · {s.industry} · {s.region} · {scopeLabel(s.marketScope)} · <b>바꾼 내용은 다음 측정부터 적용돼요</b>
+            {s.brandName} · {s.industry} · {s.region} · {scopeLabel(s.marketScope)} · <b>이름 · 업종 · 지역은 다음 측정부터 적용돼요</b>
           </p>
         )}
-        {s && !s.editable && <p className="ce-alert warn">{s.reason}</p>}
+        {s && !s.editable && <p className="ce-alert warn">이름 · 업종 · 지역: {s.reason}</p>}
         {s && measuringNow && <p className="ce-alert">측정이 진행 중이에요. 끝난 뒤에 저장할 수 있어요.</p>}
       </div>
 
@@ -377,6 +380,7 @@ export default function ProfileEditor({
             )}
           </fieldset>
         )}
+        {s && <OwnedDomainsEditor tenantId={tenantId} onSaved={onSaved} onDirtyChange={setDomainsDirty} />}
       </div>
 
       {s && dirty && (
