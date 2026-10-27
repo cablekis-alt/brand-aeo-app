@@ -199,6 +199,12 @@ a:hover {
   color: var(--ink);
 }
 
+/* 글 속 숫자(점수 · 건수 · 주차)를 고정폭으로 — 열을 맞춰 읽게. */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
 #root {
   width: 100%;
   margin: 0;

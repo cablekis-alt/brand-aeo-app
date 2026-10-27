@@ -2213,44 +2213,50 @@ p.hint {
   line-height: 1.5;
 }
 
-/* 주간 변화 알림 (대시보드) */
+/* 주간 변화 알림 — 개요 맨 위 오른쪽 칸(계기판 A: 검은 머리선 + 옅은 줄). */
 .alerts {
-  margin: 18px 0 6px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  background: var(--card);
+  flex: 1 1 320px;
+  min-width: 0;
+  border-top: 1px solid var(--ink);
 }
-.alerts-title {
+.alerts-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0 2px;
+}
+.alerts-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+.alerts-head > span {
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 10px;
 }
 .alerts ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .alert-row {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
 }
 .alert-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 14px;
+  min-width: 0;
+  font-size: 13px;
 }
 .alert-detail {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -4097,13 +4103,13 @@ td.cell-mid {
 
 /*
  * ── 대시보드(상용화 UI 3단계) ─────────────────────────────────────────
- * 카드 행은 flex-wrap — 넓은 화면에선 두 칸, 좁아지면 저절로 한 칸으로 쌓인다.
+ * 칸 행은 flex-wrap — 넓은 화면에선 두 칸, 좁아지면 저절로 한 칸으로 쌓인다. 계기판 A: 카드 상자 없이 검은 머리선 아래 열.
  */
 .dash-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: 0 0 16px;
+  gap: 30px 44px;
+  margin: 0 0 30px;
 }
 .dash-card {
   box-sizing: border-box;
@@ -4111,23 +4117,32 @@ td.cell-mid {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 20px 22px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
 }
+section.dash-card {
+  margin: 0 0 30px;
+}
+.ov-sec-head,
 .dash-card-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink);
 }
+.ov-sec-head h2,
 .dash-card-head h2 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.ov-sec-head .dash-link,
+.dash-card-head .dash-link {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
 }
 .dash-sub {
   font-weight: 400;
@@ -4168,25 +4183,6 @@ td.cell-mid {
   font-size: 12.5px;
   color: var(--ink-2);
 }
-.comp-unit {
-  margin-left: 2px;
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--muted);
-}
-.rank-segs {
-  display: flex;
-  gap: 3px;
-}
-.rank-segs > span {
-  flex: 1;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--line);
-}
-.rank-segs > span.on {
-  background: var(--accent);
-}
 
 .trend-bars {
   display: flex;
@@ -4213,10 +4209,29 @@ td.cell-mid {
 }
 .trend-bar {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   max-width: 44px;
-  border-radius: 6px 6px 0 0;
-  background: var(--line-strong);
+  background: var(--muted);
+}
+.trend-col.prior .trend-bar {
+  border: 1.5px dashed var(--muted);
+  border-bottom: 0;
+  background: transparent;
+}
+.trend-col.prior .trend-value {
+  color: var(--muted);
+}
+.trend-col.run-start {
+  position: relative;
+}
+.trend-col.run-start::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  bottom: 0;
+  border-left: 2px dashed var(--ink-2);
 }
 .trend-col.current .trend-value {
   color: var(--accent-ink);
@@ -4225,10 +4240,13 @@ td.cell-mid {
 .trend-col.current .trend-bar {
   background: var(--accent);
 }
+/* 밑줄 — 칸 사이 틈(12px)까지 이어 한 줄로 보이게 양옆으로 6px씩 늘린다. */
 .trend-week {
+  box-sizing: border-box;
   padding-top: 4px;
-  border-top: 1px solid var(--line);
-  width: 100%;
+  border-top: 1px solid var(--ink);
+  width: calc(100% + 12px);
+  margin: 0 -6px;
   text-align: center;
   font-family: var(--mono);
   font-size: 12px;
@@ -4243,7 +4261,36 @@ td.cell-mid {
   background: transparent;
 }
 .trend-mark.on {
-  background: var(--warn);
+  background: var(--warn-mark);
+}
+.trend-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+.trend-key li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trend-swatch {
+  flex: none;
+  width: 12px;
+  height: 10px;
+  box-sizing: border-box;
+  background: var(--muted);
+}
+.trend-swatch.prior {
+  border: 1.5px dashed var(--muted);
+  background: transparent;
+}
+.trend-swatch.now {
+  background: var(--accent);
 }
 .trend-legend {
   display: flex;
@@ -4281,185 +4328,518 @@ td.cell-mid {
   margin: 0 0 16px;
   font-size: 22px;
 }
-.hero2 {
+/*
+ * ── 개요(계기판 A, 2026-10 디자인) ─────────────────────────────────────
+ * 흰 판은 점수 판 하나 — 나머지는 바탕 위에 검은 머리선 · 옅은 줄 · 열 정렬로 나눈다. 점수 · 백분율은 고정폭.
+ * 구성 막대 색은 항목에 묶는다(언급률 진함 · 추천 순위 중간 · 자사 출처 인용 옅음) — 주마다 크기 순서가 바뀌어도 색은 그대로.
+ */
+.ov-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 24px 40px;
-  margin: 0 0 16px;
-  padding: 28px 30px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  box-shadow: var(--shadow-card);
+  align-items: flex-start;
+  gap: 20px 40px;
+  margin: 0 0 24px;
 }
-.hero2-text {
-  flex: 1 1 420px;
+.ov-head-main {
+  flex: 2 1 480px;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
-.hero2-eyebrow {
+.ov-brand {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+.ov-brand h1 {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.ov-brand span {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.ov-meta {
+  margin: 4px 0 0;
+  font-size: 12px;
   color: var(--muted);
 }
-.hero2-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.hero2-title {
-  margin: 0;
-  font-size: 25px;
-  font-weight: 600;
-  line-height: 1.4;
+.ov-sentence {
+  margin: 18px 0 0;
+  max-width: 32em;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.42;
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
-.hero2-sub {
-  margin: 0;
+.ov-sub {
+  margin: 6px 0 0;
   max-width: 64ch;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
   color: var(--ink-2);
 }
-.hero2-verdict {
+.ov-sub b {
+  color: var(--ink);
+}
+.ov-verdict {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  margin: 12px 0 0;
+  max-width: 72ch;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* 점수 판 — 칸 사이 1px 선은 판 바탕(선 색)이 칸 사이 틈으로 보이게 한다. 칸이 줄을 바꿔도 선이 따라간다. */
+.ov-sheet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0 0 30px;
+  background: var(--line);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.ov-pane {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px 22px;
+  background: var(--card);
+}
+.ov-gauge {
+  flex: 1 1 250px;
+}
+.ov-why {
+  flex: 2 1 420px;
+  gap: 18px;
+}
+.ov-steps {
+  flex: 1 1 240px;
+  gap: 12px;
+}
+.ov-pane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.ov-pane h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+.ov-pane h2.ov-why-title {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.ov-pane-head > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.ov-score {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.ov-score-num {
+  font-family: var(--mono);
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 0.84;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.ov-score-delta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-bottom: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ov-score-delta b {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.ov-score-delta b.tone-up {
+  color: var(--good);
+}
+.ov-score-delta b.tone-down {
+  color: var(--bad);
+}
+/* 100점 눈금 — 옅은 띠 = 95% 신뢰구간, 가는 눈금 = 같은 조건 평균, 굵은 눈금 = 이번 주. */
+.ov-scale {
+  position: relative;
+  height: 40px;
+}
+.ov-scale > span {
+  position: absolute;
+}
+.ov-scale-track {
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 4px;
+  background: var(--line);
+}
+.ov-scale-ci,
+.ov-key.ci {
+  background: color-mix(in srgb, var(--accent) 30%, var(--card));
+}
+.ov-scale-ci {
+  top: 8px;
+  height: 12px;
+}
+.ov-scale-avg {
+  top: 5px;
+  width: 1px;
+  height: 18px;
+  background: var(--ink-2);
+}
+.ov-scale-now {
+  top: 2px;
+  width: 3px;
+  height: 24px;
+  transform: translateX(-50%);
+  background: var(--accent);
+}
+.ov-scale-ticks {
+  left: 0;
+  right: 0;
+  top: 26px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 14px;
+  color: var(--muted);
+}
+.ov-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+.ov-facts > div {
+  display: contents;
+}
+.ov-facts dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.ov-facts dd {
+  margin: 0;
+  text-align: right;
+}
+.ov-key {
+  display: inline-block;
+  flex: none;
+}
+.ov-key.avg {
+  width: 1px;
+  height: 12px;
+  margin: 0 4px;
+  background: var(--ink-2);
+}
+.ov-key.ci {
+  width: 10px;
+  height: 8px;
+}
+
+/* 「N점은 어디서 나왔나」 — 막대 전체 길이 = 이번 주 점수. */
+.ov-bar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ov-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ov-bar-label b {
+  color: var(--ink-2);
+}
+.ov-bar {
+  display: flex;
+  gap: 2px;
+  height: 32px;
+}
+.ov-bar:empty {
+  background: var(--surface-2);
+}
+.ov-seg {
+  flex: 1 1 0;
+  min-width: 3px;
+}
+.ov-seg.part-mentionRate,
+.ov-swatch.part-mentionRate {
+  background: var(--accent);
+}
+.ov-seg.part-avgRecommendationRank,
+.ov-swatch.part-avgRecommendationRank {
+  background: color-mix(in srgb, var(--accent) 58%, var(--card));
+}
+.ov-seg.part-brandOwnedCitationRate,
+.ov-swatch.part-brandOwnedCitationRate {
+  background: color-mix(in srgb, var(--accent) 28%, var(--card));
+}
+/* 몰림 — 진한 칸 안에 글자(판 바탕색 글자 — 라이트 · 다크 모두 대비가 선다). */
+.ov-seg.conc {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 13px;
+  font-weight: 700;
+}
+.ov-seg.rest {
+  background: var(--line-strong);
+}
+.ov-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.ov-legend li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+.ov-legend-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+}
+.ov-legend b {
+  font-size: 15px;
+}
+.ov-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+.ov-why-note {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--ink-2);
 }
-.hero2-score {
-  flex: 0 1 auto;
-  display: flex;
-  align-items: center;
-  gap: 24px;
+.ov-why-note b {
+  color: var(--ink);
 }
-.score-ring {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 132px;
-  height: 132px;
-  border-radius: 50%;
-}
-.score-ring-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 108px;
-  height: 108px;
-  border-radius: 50%;
-  background: var(--card);
-}
-.score-ring-num {
-  font-family: var(--mono);
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-.score-ring-label {
-  margin-top: 4px;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-/* 「100점 만점」 — 점수 숫자만으로는 몇 점 만점인지 알 수 없다. */
-.score-ring-sub {
-  font-size: 10px;
-  color: var(--muted);
-}
-.hero2-facts {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 10px 18px;
+.ov-quote {
   margin: 0;
-  align-items: baseline;
-}
-.hero2-facts > div {
-  display: contents;
-}
-.hero2-facts dt {
-  font-size: 12.5px;
-  color: var(--muted);
-}
-.hero2-facts dd {
-  margin: 0;
-  max-width: 200px;
-  font-size: 15px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.hero2-facts dd.mono {
-  font-family: var(--mono);
-  white-space: nowrap;
-}
-
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin: 0 0 16px;
-}
-.kpi {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  padding: 16px 18px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-}
-.kpi-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12.5px;
+  padding: 8px 12px;
+  background: var(--paper);
+  font-size: 13px;
   color: var(--ink-2);
 }
-.kpi-tag {
-  padding: 1px 7px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-family: var(--mono);
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+.ov-quote > span {
+  margin-right: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* 1위 답 수별 점수(계단) — 막대 높이는 칸 위 숫자 자리를 뺀 높이에 맞춘다(위 여백으로 숫자가 올라간다). */
+.ov-steps .dash-caption {
+  margin-top: 2px;
+}
+.ov-step-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 150px;
+  padding-top: 22px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--ink);
+}
+.ov-step {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  text-align: center;
+}
+.ov-step > .mono {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.ov-step-bar {
+  display: block;
+  background: var(--line-strong);
+}
+.ov-step.current > .mono {
+  font-size: 16px;
+  color: var(--accent);
+}
+.ov-step.current .ov-step-bar {
+  background: var(--accent);
+}
+.ov-step-axis {
+  display: flex;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--muted);
+}
+.ov-step-axis > span {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.ov-step-axis > .current {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* 지표 표 — 값 · 근거 · 점수 비중(막대 = 이번 주, 세로 눈금 = 기본) · 점수 기여. */
+.ov-sec {
+  margin: 0 0 30px;
+}
+.ov-table-wrap {
+  overflow-x: auto;
+}
+.ov-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ov-table thead th {
+  padding: 8px 16px 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.ov-table tbody tr {
+  border-top: 1px solid var(--line);
+  cursor: default;
+}
+.ov-table tbody tr:last-child {
+  border-bottom: 1px solid var(--line);
+}
+/* 표 기본 규칙(칸 아래 선 · 둘째 칸부터 오른쪽 정렬 · 줄바꿈 막기)을 이 표에서는 칸마다 정한다 — 줄 경계는 tr의 선. */
+.ov-table th,
+.ov-table td {
+  border-bottom: 0;
+}
+.ov-table tbody th,
+.ov-table tbody td {
+  padding: 12px 16px 12px 0;
+  vertical-align: middle;
+}
+.ov-table tbody th {
+  font-weight: 700;
+  text-align: left;
   white-space: nowrap;
 }
-.kpi-tag.muted-tag {
-  font-family: var(--sans);
-  background: var(--surface-2);
-  color: var(--muted);
+.ov-table th.num,
+.ov-table td.num {
+  text-align: right;
 }
-.kpi-value {
+.ov-table tr > :last-child {
+  padding-right: 0;
+}
+.ov-table td.ov-val {
+  padding-right: 24px;
   font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: 20px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 /* 값이 없을 때(판정 불가)는 숫자 자리에 글자 — 고정폭 큰 글씨로 쓰면 글자 사이가 벌어져 숫자처럼 보인다. */
-.kpi-value.is-text {
+.ov-table td.ov-val.is-text {
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--muted);
-  line-height: 1.9;
+}
+.ov-table tr.is-ref td.ov-val {
+  color: var(--ink-2);
+}
+.ov-unit {
+  margin-left: 2px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.ov-table td.ov-basis {
+  text-align: left;
+  white-space: normal;
+  color: var(--ink-2);
+}
+.ov-table td.ov-weight {
+  width: 260px;
+  text-align: left;
+}
+.ov-wbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.ov-wbar {
+  position: relative;
+  flex: 1;
+  min-width: 110px;
+  height: 8px;
+  background: var(--line);
+}
+.ov-wbar > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--accent) 58%, var(--card));
+}
+.ov-wbar > i {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.ov-contrib {
+  white-space: nowrap;
+}
+.ov-contrib.is-top {
+  color: var(--accent);
 }
 
 .fact-warn {
@@ -4537,14 +4917,12 @@ td.cell-mid {
 .engine-bar {
   display: block;
   height: 8px;
-  border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--line);
   overflow: hidden;
 }
 .engine-bar > span {
   display: block;
   height: 100%;
-  border-radius: 999px;
   background: var(--series-6);
 }
 .engine-bar > span[data-engine='openai'] { background: var(--accent); }

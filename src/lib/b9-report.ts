@@ -558,6 +558,22 @@ function buildRecommendations(metrics: MetricDiagnosis[], card: WeeklyScorecard)
   return recs.sort((a, b) => order[a.priority] - order[b.priority])
 }
 
+/**
+ * 같은 조건 평균과 그 이름 — 회차 평균(reportExplain.ts recentRuns, 같은 주 여러 회차 포함)이 있으면 그것, 없으면 같은 조건 주 카드 평균
+ * (runAverage). 같은 조건으로 2번 이상 잰 구간이 있을 때만 — 조건이 바뀐 주를 섞은 4주 이동평균을 보이지 않는다. 표지 · 개요가 같은 값을
+ * 같은 말로 쓴다(한 앱에 평균이 둘이면 두 값처럼 읽힌다). 사이에 측정하지 않은 주가 있으면 「같은 조건 3번 평균」(연속이라고 하지 않는다).
+ */
+export function sameConditionAverage(
+  history: WeeklyScorecard[],
+  weekOf: string,
+  runs?: { average: number; count: number } | null,
+): { average: number; text: string } | null {
+  if (runs) return { average: runs.average, text: `같은 조건 최근 ${runs.count}번 측정 평균` }
+  const weekAvg = runAverage(history, weekOf)
+  if (!weekAvg) return null
+  return { average: weekAvg.average, text: `같은 조건 ${runCountText(comparableRun(history, weekOf).slice(-4))} 평균` }
+}
+
 export function buildPeriodicReport(
   history: WeeklyScorecard[],
   weekOf: string,
@@ -612,15 +628,7 @@ export function buildPeriodicReport(
           : (comparison.gapWeeks ?? 1) >= 2
             ? `직전 측정(${prevLabel})과 같음`
             : '전주와 보합'
-  // 같은 조건 평균 — 같은 조건으로 2번 이상 잰 구간이 있을 때만(조건이 바뀐 주를 섞은 4주 이동평균을 보이지 않는다).
-  const weekAvg = runAverage(history, card.weekOf)
-  const avg = runs ? { average: runs.average } : weekAvg
-  // 「같은 조건 연속 3주 평균」 — 사이에 측정하지 않은 주가 있으면 「같은 조건 3번 평균」(연속이라고 하지 않는다).
-  const avgText = runs
-    ? `같은 조건 최근 ${runs.count}번 측정 평균`
-    : weekAvg
-      ? `같은 조건 ${runCountText(comparableRun(history, card.weekOf).slice(-4))} 평균`
-      : ''
+  const avg = sameConditionAverage(history, card.weekOf, runs)
   let tone: MetricStatus
   let label: string
   if (card.aeoScore.current >= 60 && badCount === 0) {
@@ -633,7 +641,7 @@ export function buildPeriodicReport(
     tone = 'bad'
     label = '개선 필요'
   }
-  const scoreNote = [avg ? `${avgText} ${avg.average}` : '', trendText].filter(Boolean).join(', ')
+  const scoreNote = [avg ? `${avg.text} ${avg.average}` : '', trendText].filter(Boolean).join(', ')
   const summary = `Brand AEO Score ${card.aeoScore.current}점(${scoreNote}). 미흡 ${badCount}개·주의 ${warnCount}개 지표가 있으며, 아래 ${recommendations.length}개 개선제안을 우선순위대로 제시합니다.`
 
   // 하한은 0에서 잘려 있어(ciBounds) 상한 − 하한은 흔들림을 줄여 보인다. 자르기 전 폭으로 판단한다.
@@ -641,7 +649,7 @@ export function buildPeriodicReport(
   const variabilityNote =
     2 * ciMargin > 25
       ? `95% 신뢰구간이 ±${Math.round(ciMargin * 10) / 10}점(${card.aeoScore.ciLow}–${card.aeoScore.ciHigh})으로 넓습니다(변동성 큼). 이번 주 단일 변동은 과잉 해석하지 말고 ${
-          avg ? `${avgText}(${avg.average}) 추세로 판단하세요.` : '같은 조건으로 한 번 더 잰 뒤 같은 방향인지 확인하세요.'
+          avg ? `${avg.text}(${avg.average}) 추세로 판단하세요.` : '같은 조건으로 한 번 더 잰 뒤 같은 방향인지 확인하세요.'
         }`
       : null
 
