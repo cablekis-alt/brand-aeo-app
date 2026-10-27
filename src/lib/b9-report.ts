@@ -601,8 +601,9 @@ export function buildPeriodicReport(
   const warnCount = metrics.filter((m) => m.status === 'warn').length
   /*
    * 표지의 증감 — 저장된 previousWeek · ma4(측정 당시 값, 조건이 바뀐 주를 가리지 않는다)를 쓰지 않고 이력에서 센다.
-   *   - 앞 측정이 없음: 첫 측정 주차면 「전주 기록 없음」. 저장된 previousWeek가 이번 주와 다르면 앞 측정이 있었는데 불러온 이력
-   *     (최근 12주) 밖이다 — 견줄 수 있는지 모르니 「확인 불가」.
+   *   - 앞 측정이 없음: 첫 측정 주차면 「전주 기록 없음」 — 저장된 previousWeek가 null이다(2026-10-27 전 카드는 이번 주 점수가
+   *     들어 있어 같으면 첫 측정으로 본다). 그 밖의 값이면 앞 측정이 있었는데 불러온 이력(최근 12주) 밖이다 — 견줄 수 있는지
+   *     모르니 「확인 불가」.
    *   - 견줄 수 없음: 증감 대신 두 점수를 부호 없이 나란히 적고 무엇이 달랐는지 적는다.
    *   - 2주 이상 떨어진 앞 측정은 「전주」가 아니라 「직전 측정(Wxx)」.
    */
@@ -616,7 +617,7 @@ export function buildPeriodicReport(
   const delta = prev ? card.aeoScore.current - prev.aeoScore.current : 0
   const against = (comparison.gapWeeks ?? 1) >= 2 ? `직전 측정(${prevLabel}) 대비` : '전주 대비'
   const trendText = !prev
-    ? card.aeoScore.previousWeek === card.aeoScore.current
+    ? card.aeoScore.previousWeek === null || card.aeoScore.previousWeek === card.aeoScore.current
       ? '전주 기록 없음'
       : '직전 측정 기록을 불러오지 못해 증감 확인 불가'
     : !comparison.comparable
