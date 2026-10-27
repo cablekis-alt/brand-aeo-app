@@ -10,7 +10,7 @@
 import { aeoScoreOf, buildPeriodicReport } from '../src/lib/b9-report'
 import type { RunHistory, RunPoint } from '../src/lib/api'
 import { hostName } from '../src/lib/hostNames'
-import { explainScore, ownedDomainCitations, recentRuns, runLabel, separateRunNote, topSourceDomains } from '../src/lib/reportExplain'
+import { explainScore, ownedDomainCitations, recentRuns, runLabel, scoreExplainData, separateRunNote, topSourceDomains } from '../src/lib/reportExplain'
 import type { QuestionBank, QuestionRepeatAnalysis } from '../src/lib/types'
 import type { CitationSourceAnalysis } from '../src/prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
@@ -112,6 +112,15 @@ ok('순위의 뜻: 비교 그룹 이름 안 순위', text('rankScope').includes(
 ok('이름을 댈 때: 48건 중 43건 · 78건 중 2건', text('named').includes('응답 48건 중 43건') && text('named').includes('78건 중 2건'))
 ok('움직이는 것: 1위 답 1건 약 +5점 · 자사 인용률은 모든 질문 기준으로 따로', text('effects').includes('1건이 약 +5점') && text('effects').includes('자사 출처 인용률(모든 질문의 인용 기준)은 1%p에 약 +0.4점'))
 ok('견주는 구간: 이력이 한 주뿐이면 없음', !lines44.some((l) => l.key === 'segment'))
+// 개요 점수 판(scoreExplainData)이 보고서 문장과 같은 숫자 — 구성 몫 합 = 점수, 몰림 = 점수 − 없었다면, 계단의 이번 주 칸 = 점수.
+const data44 = scoreExplainData({ card: card44, analyses: w44, bank })
+ok('개요 숫자: 구성 10 · 1 · 1(합 12)', data44.parts?.map((p) => `${p.key}:${p.points}`).join(' ') === 'avgRecommendationRank:10 mentionRate:1 brandOwnedCitationRate:1')
+ok('개요 숫자: 몰림 11 + 1 · 답 2건 · 질문 1개', data44.concentration?.fromRanked === 11 && data44.concentration.without === 1 && data44.concentration.answers === 2 && data44.concentration.questions.length === 1)
+ok('개요 숫자: 계단 1 · 7 · 12(이번 주) · 17', data44.steps?.map((s) => `${s.score}${s.current ? '*' : ''}`).join(' ') === '1 7 12* 17')
+ok('개요 숫자: 기록이 없으면 구성만', (() => {
+  const d = scoreExplainData({ card: card44, analyses: [], bank: null })
+  return d.parts !== null && d.concentration === null && d.steps === null
+})())
 
 // 2) 고객 종이 문구 — 내부 용어 · 질문 id · 판 번호가 나오지 않는다.
 const paper = lines44.map((l) => `${l.label} ${l.text}`).join('\n')

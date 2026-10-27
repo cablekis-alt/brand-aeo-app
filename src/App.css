@@ -4144,6 +4144,9 @@ section.dash-card {
   font-size: 12px;
   font-weight: 700;
 }
+.dash-card-head .dash-head-end {
+  margin-left: auto;
+}
 .dash-sub {
   font-weight: 400;
   color: var(--muted);
@@ -4517,12 +4520,24 @@ section.dash-card {
   left: 0;
   right: 0;
   top: 26px;
-  display: flex;
-  justify-content: space-between;
   font-family: var(--mono);
   font-size: 12px;
   line-height: 14px;
   color: var(--muted);
+}
+.ov-scale-ticks > span {
+  position: absolute;
+  top: 0;
+}
+.ov-scale-ticks > span:nth-child(1) {
+  left: 0;
+}
+.ov-scale-ticks > span:nth-child(2) {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ov-scale-ticks > span:nth-child(3) {
+  right: 0;
 }
 .ov-facts {
   display: grid;
@@ -4668,7 +4683,7 @@ section.dash-card {
   color: var(--muted);
 }
 
-/* 1위 답 수별 점수(계단) — 막대 높이는 칸 위 숫자 자리를 뺀 높이에 맞춘다(위 여백으로 숫자가 올라간다). */
+/* 1위 답 수별 점수(계단) — 막대 높이는 위 여백을 뺀 칸 높이의 %. 숫자는 막대 위에 띄워(absolute) 막대를 누르지 않는다. */
 .ov-steps .dash-caption {
   margin-top: 2px;
 }
@@ -4677,7 +4692,7 @@ section.dash-card {
   align-items: flex-end;
   gap: 3px;
   height: 150px;
-  padding-top: 22px;
+  padding-top: 28px;
   box-sizing: border-box;
   border-bottom: 1px solid var(--ink);
 }
@@ -4690,16 +4705,25 @@ section.dash-card {
   justify-content: flex-end;
   text-align: center;
 }
-.ov-step > .mono {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-2);
-}
 .ov-step-bar {
+  position: relative;
   display: block;
+  flex: none;
   background: var(--line-strong);
 }
-.ov-step.current > .mono {
+.ov-step-bar > .mono {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  padding-bottom: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--ink-2);
+}
+.ov-step.current .ov-step-bar > .mono {
   font-size: 16px;
   color: var(--accent);
 }
@@ -4787,6 +4811,9 @@ section.dash-card {
   font-size: 14px;
   font-weight: 500;
   color: var(--muted);
+}
+.ov-table thead th.ov-val-head {
+  padding-right: 24px;
 }
 .ov-table tr.is-ref td.ov-val {
   color: var(--ink-2);
@@ -5345,12 +5372,6 @@ section.dash-card {
     position: static;
     max-height: 320px;
   }
-}
-
-@media (max-width: 640px) {
-  .hero2 { padding: 20px 18px; }
-  .hero2-title { font-size: 20px; }
-  .hero2-score { flex-wrap: wrap; }
 }
 
 .dash-guide {

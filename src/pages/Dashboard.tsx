@@ -199,13 +199,17 @@ export default function Dashboard() {
 
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
   const rankingView = ranking.key === splitKey ? ranking.value : null
-  // 변화 알림이 사람 말로 쓰는 데 필요한 것 — 이번 주 「틀림」 주장과 비교 그룹 구성원 이름(비교용 브랜드는 브랜드 목록에 없어 랭킹 응답에서).
+  /*
+   * 변화 알림이 사람 말로 쓰는 데 필요한 것 — 이번 주 「틀림」 주장과 비교 그룹 구성원 이름(비교용 브랜드는 브랜드 목록에 없어 랭킹 응답에서),
+   * 그리고 점수 판과 같은 같은 조건 평균(알림이 주 카드로 따로 세면 한 화면에 평균이 둘이 된다).
+   */
   const alertContext = useMemo(
     (): AlertContext => ({
       ...(selfCheck ? { contradicted: selfCheck.contradicted } : {}),
       nameOf: (id: string) => rankingView?.cohort.peers.find((p) => p.tenantId === id)?.brandName,
+      average: sameAvg,
     }),
-    [selfCheck, rankingView],
+    [selfCheck, rankingView, sameAvg],
   )
   // 항목별 이번 주 실제 비중 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 커진다(정기진단 보고서 · 진단 화면과 같은 값).
   const parts = card ? new Map(scoreBreakdown(card).map((p) => [p.key, p])) : null
@@ -286,6 +290,8 @@ export default function Dashboard() {
   // 5주 추이 — 이번 주와 같은 조건으로 잰 구간의 첫 주. 그 앞 주는 빈 막대로 그려 잇지 않는다(보고서 「견주는 구간」과 같은 규칙).
   const runStart = card ? (comparableRun(history, card.weekOf)[0]?.weekOf ?? null) : null
   const hasPrior = runStart !== null && trendWeeks.length > 0 && trendWeeks[0]!.weekOf < runStart
+  // 구간 경계에서 무엇이 끊었나 — 바뀐 조건이 있으면 「달라」, 한쪽에 기록이 없을 뿐이면 「기록이 한쪽에 없어」(보고서 「견주는 구간」과 같은 말).
+  const boundaryChanged = hasPrior && (trend.find((t) => t.card.weekOf === runStart)?.diffs.some((d) => d.state === 'changed') ?? false)
 
   /*
    * 개요 2차의 판정 기록 계산 — 결론 문장·엔진별 언급·이름 없는 질문 기준 자사 인용·대표 답변(lib/answerInsights).
@@ -635,8 +641,10 @@ export default function Dashboard() {
                 >
                   {explain.steps.map((s) => (
                     <div key={s.firstAnswers} className={`ov-step${s.current ? ' current' : ''}`}>
-                      <span className="mono">{s.score}</span>
-                      <span className="ov-step-bar" style={{ height: `${Math.max(2, Math.round((s.score / stepTop) * 100))}%` }} />
+                      {/* 숫자는 막대 위에 띄운다(막대 안 · 흐름 밖) — 같은 칸에 두면 높은 막대가 숫자 자리만큼 눌려 높이가 비례하지 않았다. */}
+                      <span className="ov-step-bar" style={{ height: `${Math.max(2, Math.round((s.score / stepTop) * 100))}%` }}>
+                        <span className="mono">{s.score}</span>
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -655,7 +663,8 @@ export default function Dashboard() {
                 </div>
                 {stepMove && (
                   <p className="dash-caption">
-                    1위 답 1건이 오가면 점수가 <span className="mono">{stepMove}</span>점 움직입니다 — 한 번 잰 점수보다 같은 조건 평균으로 봅니다.
+                    1위 답 1건이 오가면 점수가 <span className="mono">{stepMove}</span>점 움직입니다 — 한 번 잰 점수보다{' '}
+                    {sameAvg ? '같은 조건 평균으로 봅니다.' : '같은 조건으로 여러 번 잰 흐름으로 봅니다.'}
                   </p>
                 )}
               </div>
@@ -675,7 +684,7 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th scope="col">지표</th>
-                    <th scope="col" className="num">
+                    <th scope="col" className="num ov-val-head">
                       이번 주
                     </th>
                     <th scope="col">근거</th>
@@ -786,7 +795,8 @@ export default function Dashboard() {
                     {hasPrior && (
                       <li>
                         <span className="trend-swatch prior" aria-hidden="true" />
-                        {runStart?.replace(/^\d{4}-/, '')} 앞 — 측정 조건이 달라 이번 주와 잇지 않음
+                        {runStart?.replace(/^\d{4}-/, '')} 앞 — {runStart?.replace(/^\d{4}-/, '')}부터{' '}
+                        {boundaryChanged ? '측정 조건이 달라 잇지 않음' : '앞 측정과 견줄 조건 기록이 한쪽에 없어 잇지 않음'}
                       </li>
                     )}
                     <li>
@@ -892,7 +902,7 @@ export default function Dashboard() {
               <h2>
                 놓친 질문 <span className="dash-sub">· {card.brandName} 대신 불린 곳</span>
               </h2>
-              {openActions !== null && openActions > 0 && <span className="dash-sub">남은 실행 항목 {openActions}건</span>}
+              {openActions !== null && openActions > 0 && <span className="dash-sub dash-head-end">남은 실행 항목 {openActions}건</span>}
             </div>
             {todo ? (
               <>
