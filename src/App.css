@@ -2741,6 +2741,8 @@ p.hint {
   :is(.cohort-compare, .mention-section, .citation-top, .runs-section) tr { break-inside: avoid; }
   /* 회차 표는 길어야 열몇 줄 — 비교 그룹 표처럼 통째로 넘긴다. */
   .runs-section { break-inside: avoid; }
+  /* 출처 표 두 장은 짧다 — 표마다 통째로 넘겨, 다음 쪽 줄이 제목(어느 질문 기준인지) 없이 남지 않게. */
+  .citation-top .table-wrap { break-inside: avoid; }
   .site-breakdown { break-inside: avoid; }
   /* 비교 그룹 표는 길어야 열몇 줄 — 제목 · 설명만 쪽 끝에 남고 줄이 다음 쪽으로 가지 않게 통째로 넘긴다. */
   .cohort-compare { break-inside: avoid; }

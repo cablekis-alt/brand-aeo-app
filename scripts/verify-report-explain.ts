@@ -238,7 +238,8 @@ ok('최근 회차: 옛 기록(그 주 파일 · 옮겨 둔 회차)은 회차 보
 ok('최근 회차: 평균 8.3 · 범위 1~12', recent?.average === 8.3 && recent.min === 1 && recent.max === 12)
 ok('최근 회차: 지난 주 보고서는 그 주까지만', JSON.stringify(recentRuns(runs, '2026-W43')?.runs.map((p) => p.score) ?? null) === 'null')
 ok('최근 회차: 기록이 없으면(웹) null', recentRuns(null, '2026-W44') === null)
-const brokenRuns: RunHistory = { ...runs, points: runs.points.map((p, i) => (i === 4 ? { ...p, changesFromPrev: ['판정 모델'] } : p)) }
+// 조건은 평균에 넣을 수 있는 회차끼리 conditionKey로 견준다(덮지 않은 회차가 사이에 끼면 서버의 changesFromPrev는 그 회차와 견준 값이다).
+const brokenRuns: RunHistory = { ...runs, points: runs.points.map((p, i) => (i === 3 ? { ...p, conditionKey: 'other' } : p)) }
 ok('최근 회차: 조건이 바뀐 회차에서 끊는다(1번뿐이면 null)', recentRuns(brokenRuns, '2026-W44') === null)
 ok('회차 이름: 한국 시각 · 옛 기록은 주차', runLabel(runs.points[4]!) === '10/26 13:51' && runLabel({ ...runs.points[0]!, at: null }) === '2026년 42주차')
 
@@ -251,7 +252,7 @@ ok('표지: 회차 기록이 없으면 주 평균 그대로', noRuns.verdict.sum
 
 // 다른 회차 표시 — 그 주 카드가 이 브랜드만 다시 잰 회차면 함께 잰 회차 점수와 함께.
 const note = separateRunNote(runs, card44) ?? ''
-ok('다른 회차 표시: 이 브랜드만 다시 잰 값 · 함께 잰 회차 1점', note === '가상브랜드의 2026년 44주차 점수 12점은 비교 그룹을 잰 회차와 다른 시각(10/26 13:51)에 이 브랜드만 다시 잰 값입니다. 비교 그룹과 함께 잰 회차(10/26 13:45)에서는 1점이었습니다.')
+ok('다른 회차 표시: 이 브랜드만 다시 잰 값 · 함께 잰 회차 1점', note === '가상브랜드의 2026년 44주차 점수 12점은 비교 그룹을 잰 회차와 다른 시각(10/26 13:51)에 이 브랜드만 다시 잰 값입니다. 같은 주 같은 조건으로 먼저 잰 회차(10/26 13:45)에서는 1점이었습니다.')
 ok('다른 회차 표시: 함께 잰 회차가 카드면 없음', separateRunNote({ ...runs, points: runs.points.slice(0, 4).map((p, i) => (i === 3 ? { ...p, isWeekCard: true } : p)) }, card44) === null)
 ok('다른 회차 표시: 옮겨 둔 회차는 묻지 않는다', separateRunNote({ ...runs, points: [{ ...runs.points[4]!, preserved: true }] }, card44) === null)
 
@@ -264,7 +265,7 @@ const src = {
   ],
 } as unknown as CitationSourceAnalysis
 const tops = topSourceDomains(src)
-ok('출처 상위: 도메인으로 묶고 엔진을 모은다', JSON.stringify(tops) === JSON.stringify([{ domain: 'yeogi.com', count: 5, engines: ['gemini', 'perplexity'] }, { domain: 'blog.naver.com', count: 4, engines: ['perplexity'] }]))
+ok('출처 상위: 도메인으로 묶고 엔진을 모은다', JSON.stringify(tops) === JSON.stringify([{ domain: 'yeogi.com', count: 5, engines: ['gemini', 'perplexity'], hosts: 1 }, { domain: 'blog.naver.com', count: 4, engines: ['perplexity'], hosts: 1 }]))
 ok('플랫폼 이름: 하위 주소도 · 모르는 주소는 null', hostName('m.blog.naver.com') === '네이버 블로그' && hostName('nol.yanolja.com') === '놀(야놀자)' && hostName('kr.trip.com') === '트립닷컴' && hostName('gunsan.go.kr') === null)
 const cite = (domain: string) => ({ raw: `https://${domain}/s/x`, domain, ownerType: 'brand-owned', supportsBrandMention: false })
 const withCites = [
@@ -276,6 +277,48 @@ ok(
   JSON.stringify(ownedDomainCitations(withCites, bank, ['old.example', 'new.example'])) ===
     JSON.stringify([{ domain: 'old.example', named: 2, unnamed: 1, total: 3 }, { domain: 'new.example', named: 0, unnamed: 0, total: 0 }]),
 )
+
+// ── 2단계 검토 반영 ─────────────────────────────────────────────
+const whole = runs.points.slice(2) // W43 회차 · W44 함께 잰 회차 · W44 이 브랜드만(카드)
+// 그 주 카드 회차가 엔진이 빠졌으면 회차 평균을 쓰지 않는다(표지 점수가 평균에 없고 다른 조건 평균을 「같은 조건」으로 적었다).
+ok('카드 회차 엔진 빠짐: null', recentRuns({ ...runs, points: runs.points.map((p, i) => (i === 4 ? { ...p, missingEngines: ['gemini'] } : p)) }, '2026-W44') === null)
+ok('카드 회차 일부만: null', recentRuns({ ...runs, points: runs.points.map((p, i) => (i === 4 ? { ...p, partialEngines: ['perplexity'] } : p)) }, '2026-W44') === null)
+// 덮지 않은 회차 · 엔진 빠진 회차가 사이에 끼어도 앞 같은 조건 회차를 버리지 않는다 — 평균에서만 뺀다.
+const kept = point('2026-W44', '2026-10-26T05:10:00.000Z', 3, 0, { selfOnly: true, weekCard: 'kept', missingEngines: ['gemini'] })
+const w45 = (at: string, score: number, card = false) => point('2026-W45', at, score, score > 1 ? 2 : 0, { isWeekCard: card })
+const withKept: RunHistory = { ...runs, points: [...runs.points, kept, w45('2026-11-02T04:00:00.000Z', 6), w45('2026-11-02T05:00:00.000Z', 12, true)] }
+ok('덮지 않은 회차가 껴도 W43–W45를 잇는다(12 · 1 · 12 · 6 · 12)', JSON.stringify(recentRuns(withKept, '2026-W45')?.runs.map((p) => p.score)) === '[12,1,12,6,12]')
+// 회차 기록 창 맨 앞까지 가서도 4주를 못 채우면 창 밖에 같은 조건 회차가 더 있을 수 있다 — null(주 카드 평균으로).
+ok('창 맨 앞까지 가고 4주 미만: null', recentRuns({ ...runs, points: whole }, '2026-W44') === null)
+// 그 주 파일을 다시 판정 · 다시 셈해 카드 점수가 회차 점수와 달라졌으면 회차 평균을 쓰지 않는다.
+ok('카드 점수 ≠ 회차 점수: null', recentRuns({ ...runs, weekCardScores: { '2026-W44': 7 } }, '2026-W44') === null)
+// 먼저 잰 회차가 다른 조건이면 점수를 나란히 놓지 않는다(첫 문장만).
+const noteOther = separateRunNote({ ...runs, points: runs.points.map((p, i) => (i === 3 ? { ...p, conditionKey: 'other' } : p)) }, card44) ?? ''
+ok('다른 회차 표시: 먼저 잰 회차가 다른 조건이면 점수 문장 없음', noteOther.endsWith('이 브랜드만 다시 잰 값입니다.'))
+// 등록 주소 — www만 다른 주소는 하나, 인용은 가장 구체적인 주소 하나에만.
+const sub = [
+  { ...analysis('n-0', 'openai', true), citations: [cite('www.banobagi.com'), cite('eng.banobagi.com'), cite('banobagi.com')] },
+  { ...analysis('g-1', 'openai', true), citations: [cite('eng.banobagi.com')] },
+] as unknown as QuestionRepeatAnalysis[]
+ok(
+  '등록 주소: www 합치고 가장 구체적인 주소에만(겹쳐 세지 않음)',
+  JSON.stringify(ownedDomainCitations(sub, bank, ['www.banobagi.com', 'banobagi.com', 'eng.banobagi.com'])) ===
+    JSON.stringify([{ domain: 'www.banobagi.com', named: 2, unnamed: 0, total: 2 }, { domain: 'eng.banobagi.com', named: 1, unnamed: 1, total: 2 }]),
+)
+// 「이름 없이 물은 질문」은 위 출처 표와 같은 기준(브랜드 이름이 없는 질문) — 업종 · 지역 일반 질문이 아니어도 이름이 없으면 그쪽.
+const bankLocal = { ...bank, questions: [...bank.questions, { questionId: 'l-0', text: '가상 지역 질문', category: 'local-regional', containsBrandName: false }] } as unknown as QuestionBank
+const local = [{ ...analysis('l-0', 'gemini', false), citations: [cite('old.example')] }] as unknown as QuestionRepeatAnalysis[]
+ok('등록 주소: 이름 없는 지역 질문도 「이름 없이 물은 질문」으로', JSON.stringify(ownedDomainCitations(local, bankLocal, ['old.example'])) === JSON.stringify([{ domain: 'old.example', named: 0, unnamed: 1, total: 1 }]))
+// 플랫폼 이름 — google.com은 그 주소만(하위 주소는 남이 올린 문서 · 리디렉트), 티스토리는 블로그들을 한 줄로.
+ok('플랫폼 이름: 구글 하위 주소는 이름 없음 · 구글 플레이', hostName('google.com') === '구글' && hostName('vertexaisearch.cloud.google.com') === null && hostName('docs.google.com') === null && hostName('play.google.com') === '구글 플레이')
+const tis = topSourceDomains({
+  urls: [
+    { raw: 'https://a.tistory.com/1', domain: 'a.tistory.com', citationCount: 3, engines: ['gemini'] },
+    { raw: 'https://b.tistory.com/2', domain: 'b.tistory.com', citationCount: 4, engines: ['openai'] },
+    { raw: 'https://blog.naver.com/x', domain: 'blog.naver.com', citationCount: 5, engines: ['perplexity'] },
+  ],
+} as unknown as CitationSourceAnalysis)
+ok('출처 상위: 티스토리 블로그들을 한 줄로(블로그 2곳)', JSON.stringify(tis[0]) === JSON.stringify({ domain: 'tistory.com', count: 7, engines: ['gemini', 'openai'], hosts: 2 }))
 
 let failed = 0
 for (const [label, pass] of checks) {

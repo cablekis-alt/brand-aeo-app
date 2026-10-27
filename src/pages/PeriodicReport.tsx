@@ -877,6 +877,21 @@ export default function PeriodicReport() {
 
           {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} />}
           {recent && <RunsSection recent={recent} weekOf={card.weekOf} />}
+          {/*
+            회차 기록을 못 읽으면(데스크톱 — 웹은 기능이 없어 조용히 둔다) 표지 평균 · 회차 표 · 「이 브랜드만 다시 잰 값」 안내가 말없이 빠진다 —
+            운영자 화면에만 알린다. 읽었지만 빠진 회차가 있으면 그 수도.
+          */}
+          {runHistory.error && (
+            <p className="hint no-print">
+              측정 회차 기록을 읽지 못해 표지 평균은 주 카드 평균으로 적었고, 「같은 조건으로 잰 최근 측정」과 비교 그룹 표 아래 「이 브랜드만
+              다시 잰 값」 안내를 넣지 않았습니다: {runHistory.error}
+            </p>
+          )}
+          {(runHistory.history?.issues.length ?? 0) > 0 && (
+            <p className="hint no-print">
+              측정 회차 기록 {runHistory.history!.issues.length}개를 읽지 못해 회차 평균에서 뺐습니다: {runHistory.history!.issues.slice(0, 3).join(' · ')}
+            </p>
+          )}
 
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
           <section className="report-trend">

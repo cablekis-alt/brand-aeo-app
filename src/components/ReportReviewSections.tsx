@@ -230,22 +230,23 @@ export function MentionSection({ self, weekOf }: { self: SelfReview; weekOf: str
   )
 }
 
-/** 출처 칸 — 아는 플랫폼은 이름과 주소를 함께(「여기어때 yeogi.com」), 모르는 주소는 주소만. */
-function SourceName({ domain }: { domain: string }) {
+/** 출처 칸 — 아는 플랫폼은 이름과 주소를 함께(「여기어때 yeogi.com」), 모르는 주소는 주소만. 블로그를 묶었으면 몇 곳인지(「블로그 17곳」). */
+function SourceName({ domain, hosts = 1 }: { domain: string; hosts?: number }) {
   const name = hostName(domain)
-  return name ? (
+  return (
     <>
-      {name} <code>{domain}</code>
+      {name && <>{name} </>}
+      <code>{domain}</code>
+      {hosts > 1 && <span className="muted"> · 블로그 {hosts}곳</span>}
     </>
-  ) : (
-    <code>{domain}</code>
   )
 }
 
 /**
  * AI가 근거로 쓴 출처 — 그 주 상위 출처와 자사 출처. 건수는 위 「인용 건수」 칸과 같은 인용 분석에서 나온다.
  *
- * 점수의 언급률 · 순위와 같은 모집단인 이름 없이 물은 질문의 출처를 먼저 둔다 — 모든 질문 표만 보면 브랜드 이름을 넣은 질문에서 AI가 찾아간
+ * 이름 없이 물은 질문(브랜드 이름이 없는 질문 — 점수의 언급률 · 순위는 그 가운데 업종 · 지역 일반 질문만 센다)의 출처를 먼저 둔다 — 모든
+ * 질문 표만 보면 브랜드 이름을 넣은 질문에서 AI가 찾아간
  * 홈페이지가 섞여, 이름 없이 물을 때 AI가 무엇을 근거로 쓰는지 읽을 수 없었다(스테이,머뭄 W44 — 홈페이지 인용 25건 중 24건이 이름 넣은
  * 질문). 등록된 자사 주소는 한 번도 인용되지 않았어도 0건으로 적는다(새로 옮긴 주소가 아직 인용되지 않는 것을 보이게).
  */
@@ -261,7 +262,7 @@ export function CitationSourcesSection({
   total: number
   owned: number
   weekOf: string
-  unnamedTop?: { domain: string; count: number; engines: string[] }[]
+  unnamedTop?: { domain: string; count: number; engines: string[]; hosts: number }[]
   homepage?: { domain: string; named: number; unnamed: number; total: number }[] | null
 }) {
   return (
@@ -282,7 +283,7 @@ export function CitationSourcesSection({
               {unnamedTop.map((c) => (
                 <tr key={c.domain}>
                   <td className="cell-text">
-                    <SourceName domain={c.domain} />
+                    <SourceName domain={c.domain} hosts={c.hosts} />
                   </td>
                   <td className="num">{c.count.toLocaleString()}</td>
                   <td>{c.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
