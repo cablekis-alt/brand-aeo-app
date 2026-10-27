@@ -71,17 +71,17 @@ export default function SentimentDashboard() {
           <section className="metrics">
             <article>
               <h2>긍정</h2>
-              <p className="sentiment positive">{pct(posRate(s.overall))}</p>
+              <p className="sentiment-value positive">{pct(posRate(s.overall))}</p>
               <span>{s.overall.pos}개 문장</span>
             </article>
             <article>
               <h2>중립</h2>
-              <p className="sentiment neutral">{pct(s.overall.neu / s.overall.total)}</p>
+              <p className="sentiment-value neutral">{pct(s.overall.neu / s.overall.total)}</p>
               <span>{s.overall.neu}개 문장</span>
             </article>
             <article>
               <h2>부정</h2>
-              <p className="sentiment negative">{pct(negRate(s.overall))}</p>
+              <p className="sentiment-value negative">{pct(negRate(s.overall))}</p>
               <span>{s.overall.neg}개 문장</span>
             </article>
             <article>
