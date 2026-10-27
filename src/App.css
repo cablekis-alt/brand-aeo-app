@@ -4,7 +4,7 @@
  */
 .shell {
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   align-items: start;
   min-height: 100vh;
 }
@@ -24,7 +24,7 @@
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
-  background: var(--surface-2);
+  background: var(--side);
   border-right: 1px solid var(--line);
   padding: 18px 12px 12px;
 }
@@ -116,7 +116,7 @@
   gap: 10px;
   flex: none;
   padding: 9px 10px;
-  border-radius: 12px;
+  border-radius: var(--r-card);
   background: var(--card);
   box-shadow: var(--shadow-card);
   color: var(--muted);
@@ -169,7 +169,7 @@
   flex: none;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   background: var(--ink);
   color: var(--paper);
   font-size: 12px;
@@ -274,7 +274,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--r-card);
   background: var(--card);
   box-shadow: var(--shadow-card);
   color: var(--ink);
@@ -395,7 +395,7 @@
 .theme-toggle {
   display: inline-flex;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--r-ctl);
   overflow: hidden;
 }
 
@@ -449,9 +449,9 @@
 .sidebar-group-title {
   display: flex;
   align-items: center;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
   color: var(--muted);
   margin: 0 0 2px;
   padding: 0 10px;
@@ -475,36 +475,37 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 32px;
+  min-height: 34px;
   padding: 0 10px;
   border-radius: var(--r-ctl);
   text-decoration: none;
-  /* 항목은 잉크, 그룹 라벨만 회색 — 둘이 같은 회색이면 위계가 사라진다. */
-  color: var(--ink);
-  font-size: 13.5px;
+  /* 항목은 짙은 회색, 그룹 라벨은 더 옅게 — 고른 항목만 잉크 · 강조색(계기판: 사이드바는 조용하게). */
+  color: var(--ink-2);
+  font-size: 13px;
   line-height: 1.35;
   letter-spacing: -0.005em;
   word-break: keep-all;
   transition: background-color 120ms ease, color 120ms ease;
 }
+/* 계기판: 메뉴는 글자만 — 아이콘을 숨겨 사이드바를 조용하게 둔다(접히는 상세 · 설정 항목도 같은 들여쓰기). */
 .sidebar-group a .nav-icon {
-  flex: none;
-  color: var(--muted);
+  display: none;
 }
-/* 접히는 상세·설정 항목은 아이콘이 없다 — 아이콘(18px)+간격(10px)만큼 들여 글자 줄을 맞춘다. */
 .sidebar-group.foldable a {
-  padding-left: 38px;
+  padding-left: 10px;
 }
 
 .sidebar-group a:hover {
-  background: var(--surface-2);
+  background: var(--paper);
+  color: var(--ink);
 }
 
+/* 고른 항목 — 흰 판 + 1px 선 + 강조색 굵은 글자. */
 .sidebar-group a.on {
   background: var(--card);
-  color: var(--ink);
-  font-weight: 600;
-  box-shadow: var(--shadow-card);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--line);
 }
 .sidebar-group a.on .nav-icon {
   color: var(--accent);
@@ -2083,7 +2084,7 @@ tbody tr.selected {
 .trust-box {
   border: 1px solid var(--line);
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--r-card);
   padding: 12px 18px;
   margin: 0 0 16px;
 }
@@ -2182,12 +2183,16 @@ tbody tr.selected {
 .status-pill {
   display: inline-block;
   font-size: 12px;
-  font-weight: 600;
-  padding: 2px 9px;
-  border-radius: 999px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
   border: 1px solid currentColor;
   white-space: nowrap;
 }
+/* 상태는 색만으로 가리지 않는다 — 좋음 ● · 주의 ◆ · 미흡 ▼ 모양을 글자 앞에 붙인다(계기판 상태 표기). */
+.status-pill.st-good::before { content: "● "; }
+.status-pill.st-warn::before { content: "◆ "; }
+.status-pill.st-bad::before { content: "▼ "; }
 .status-pill.st-good { color: var(--good); }
 .status-pill.st-ok { color: var(--muted); }
 .status-pill.st-warn { color: var(--warn); }
@@ -2213,7 +2218,7 @@ p.hint {
   margin: 18px 0 6px;
   padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-card);
   background: var(--card);
 }
 .alerts-title {
@@ -2390,7 +2395,7 @@ p.hint {
   margin: 10px 0 6px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
 }
 .rec-evidence-block + .rec-evidence-block { margin-top: 10px; }
 .rec-evidence-head { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
@@ -2577,7 +2582,7 @@ p.hint {
   width: auto;
   min-width: 15px;
   padding: 0 3px;
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
 }
 .rt-post-list {
   display: grid;
@@ -2897,7 +2902,7 @@ p.hint {
   margin: 12px 0 0;
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--line));
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: var(--warn-soft);
   color: var(--ink);
   font-size: 0.92em;
@@ -2925,7 +2930,7 @@ p.hint {
   flex-direction: column;
   gap: 4px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: var(--r-card);
   border-left: 4px solid var(--accent);
   background: var(--card);
   box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(17 28 24 / 0.14);
@@ -3397,7 +3402,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   text-align: left;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   background: var(--card);
   color: var(--ink);
   font: inherit;
@@ -3532,7 +3537,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
  */
 .recognition {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   padding: 14px 16px;
   margin: 0 0 16px;
 }
@@ -3587,7 +3592,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   line-height: 1.7;
   background: var(--surface-2, transparent);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   padding: 14px 16px;
   margin: 0 0 8px;
   max-height: 460px;
@@ -3628,7 +3633,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
  */
 .score-breakdown {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   padding: 14px 16px;
   margin: 0 0 16px;
 }
@@ -3718,7 +3723,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   margin: 10px 0 0;
   padding: 10px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: var(--surface-2);
   font-size: 14px;
 }
@@ -3807,7 +3812,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 
 .engine-facet {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   padding: 10px 12px;
 }
 
@@ -3876,7 +3881,7 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
  */
 .crawler-panel {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   padding: 14px 16px;
   margin: 16px 0 0;
 }
@@ -3975,7 +3980,7 @@ td.cell-mid {
 /* 단가 편집기 — 표 안에서 숫자를 직접 고친다. */
 .pricing-editor {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-ctl);
   padding: 12px 14px;
   margin: 8px 0 0;
 }
@@ -4795,7 +4800,7 @@ td.cell-mid {
   width: 100%;
   padding: 10px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: transparent;
   color: var(--ink);
   font: inherit;
@@ -6401,7 +6406,7 @@ td.cell-mid {
   z-index: 95;
   box-sizing: border-box;
   padding: 4px;
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: var(--card);
   box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgb(17 28 24 / 0.16);
 }

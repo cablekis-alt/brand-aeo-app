@@ -643,7 +643,7 @@ export default function PeriodicReport() {
         있는 동안만 있는 규칙이다(Site AEO 인쇄는 자기 머리말을 쓴다). 첫 쪽은 표지에 같은 말이 있어 머리말을 뺀다.
       */}
       {card && (
-        <style>{`@media print { @page { size: A4; margin: 14mm 12mm 16mm; @top-right { content: ${cssString(`${reportBrand} · ${reportLabel} 정기진단 보고서`)}; font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } @bottom-center { content: counter(page) " / " counter(pages); font: 8pt 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; color: #6b7280; } } @page :first { @top-right { content: none; } } }`}</style>
+        <style>{`@media print { @page { size: A4; margin: 14mm 12mm 16mm; @top-right { content: ${cssString(`${reportBrand} · ${reportLabel} 정기진단 보고서`)}; font: 8pt 'Gothic A1', 'Malgun Gothic', sans-serif; color: #6b7280; } @bottom-center { content: counter(page) " / " counter(pages); font: 8pt 'Gothic A1', 'Malgun Gothic', sans-serif; color: #6b7280; } } @page :first { @top-right { content: none; } } }`}</style>
       )}
       <p className="page-lead no-print">
         이번 주 스코어카드를 지표별로 진단하고, 약한 지표를 우선순위가 매겨진 실행 가능한 개선안으로 정리합니다. 모든

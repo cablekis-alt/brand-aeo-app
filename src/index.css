@@ -1,16 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /*
- * Signal Board 토큰(2026-10 상용화 UI). 차가운 회백 바탕 · 녹흑 글자 · 청록 강조 하나.
- * 상태색은 좋음(청록)과 주의·하락(주황 계열)을 명도까지 달리해 색만으로 가리지 않게 한다.
- * 글자 토큰은 paper·card·surface-2 세 바탕 모두에서 4.5:1 이상(라이트·다크)으로 검증했다.
+ * 계기판 토큰(2026-10 디자인 A). 아주 옅은 차가운 회색 바탕 · 녹흑 글자 · 깊은 청록 강조 하나.
+ * 카드를 겹겹이 띄우지 않고 1px 선 · 열 정렬 · 숫자 크기로 위계를 만든다 — 그림자 없이 테두리만, 모서리는 작게.
+ * 상태색은 명도까지 셋으로 나눈다(미흡 어두움 ▼ · 좋음 중간 ● · 주의 밝음 ◆) — 글자는 *-ink가 아니라 good · warn · bad,
+ * 막대 · 점 같은 표시는 *-mark를 쓴다. 글자 토큰은 paper · side · card · surface-2 네 바탕 모두에서 4.5:1 이상(라이트 · 다크).
+ * 디자인 시안: https://claude.ai/artifact/7XhvXFVY9wb2yTbVSmNJvG (A 계기판).
  */
 :root {
-  --ink: #111c18;
-  --ink-2: #4a5752;
-  --muted: #5b6862;
-  --paper: #f3f5f4;
-  /* 업종군 색(lib/industryGroups) — 글자·작은 표시에만 쓴다. 세 바탕 모두 5:1 이상. */
+  --ink: #0f1b1e;
+  --ink-2: #3d4a51;
+  --muted: #56636a;
+  --paper: #f4f6f8;
+  /* 사이드바 — 바탕보다 한 단계 어둡게, 조용하게. */
+  --side: #e9edf0;
+  /* 업종군 색(lib/industryGroups) — 글자·작은 표시에만 쓴다. 네 바탕 모두 5:1 이상. */
   --grp-1: #b23a62;
   --grp-2: #2563c4;
   --grp-3: #8f5e12;
@@ -19,17 +23,20 @@
   --grp-6: #7a4cc2;
   --grp-7: #0b6e83;
   --card: #ffffff;
-  --surface-2: #f7f9f8;
-  --line: #dce3e0;
-  --line-strong: #c4cdc9;
-  --accent: #0b6b5d;
-  --accent-soft: #e2f1ed;
-  --accent-ink: #07493f;
-  --good: #0b6b5d;
-  --bad: #b93815;
-  --bad-soft: #fcece6;
-  --warn: #a15c07;
-  --warn-soft: #fdf3e1;
+  --surface-2: #eceff2;
+  --line: #dce2e6;
+  --line-strong: #b8c2c8;
+  --accent: #0a5c50;
+  --accent-soft: #e4eeec;
+  --accent-ink: #063e36;
+  --good: #236a45;
+  --good-mark: #3f9b6b;
+  --good-soft: #e3f1e9;
+  --bad: #a3241a;
+  --bad-soft: #f7e4e1;
+  --warn: #7a4e00;
+  --warn-mark: #e0a32e;
+  --warn-soft: #fbf0d6;
   --info: #2f5bd3;
   --info-soft: #e8eefc;
   /* 비교 선 계열 — 자사는 --accent, 나머지 다섯은 고정 순서(경쟁 시계열). 흰 카드 대비 4.5:1 이상. */
@@ -38,21 +45,22 @@
   --series-4: #7a4fc4;
   --series-5: #8a6d00;
   --series-6: #3f4a46;
-  --sans: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  --r-card: 14px;
-  --r-ctl: 8px;
-  /* 카드 경계 — 1px 선 + 아주 옅은 그림자. raise는 맨 위 요약처럼 한 단계 떠야 하는 면에만 쓴다. */
-  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(17 28 24 / 0.05);
-  --shadow-raise: 0 0 0 1px var(--line), 0 10px 30px -18px rgb(17 28 24 / 0.22);
+  /* 글 · 제목은 Gothic A1, 점수 · 백분율 · 주차 · 표의 숫자는 고정폭 JetBrains Mono(한글은 기본 글꼴로 넘어간다). */
+  --sans: 'Gothic A1', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --r-card: 6px;
+  --r-ctl: 5px;
+  /* 면 경계 — 그림자 없이 1px 선. raise는 맨 위 요약처럼 한 단계 또렷해야 하는 면에만(진한 선). */
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-raise: 0 0 0 1px var(--line-strong);
 
   /*
    * 인용 유형 색 — 범주형 팔레트. 슬롯 순서는 고정이며 데이터에 따라 돌려쓰지 않는다
    * (필터로 항목이 줄어도 남은 항목의 색이 바뀌면 안 된다).
    * 처음엔 옛 서페이스(#f6f1e8 / #161410)에 대해 검증해 두 모드 모두 통과시켰다:
    * 명도대·채도·CVD 분리·정상시력 분리 PASS. 라이트의 대비 경고는 범례가 색과 라벨을
-   * 함께 주므로 해소된다(색만으로 식별하게 두지 않는다). Signal Board 바탕(#f3f5f4·#ffffff /
-   * #0d1311·#141c19)에서 다시 재 보니 아홉 색 모두 대비가 옛 바탕보다 같거나 높아 그대로 둔다.
+   * 함께 주므로 해소된다(색만으로 식별하게 두지 않는다). 계기판 바탕(#f4f6f8·#ffffff /
+   * #0e1315·#151d20)에서도 아홉 색 모두 대비가 옛 바탕보다 같거나 높아 그대로 둔다.
    * 경쟁사 둘은 같은 빨강에 빗금으로 나눈다 — 새 색을 만드는 대신 "같은 개념의 두 등급"을
    * 형태로 말한다.
    */
@@ -70,10 +78,11 @@
 /* 다크 토큰 — 시스템 다크(단, 사용자가 라이트를 명시하면 제외). 화면에서만 — 종이는 늘 라이트(흰 종이에 밝은 글자가 흐리게 찍힌다). */
 @media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --ink: #e8efec;
-    --ink-2: #a9b7b1;
-    --muted: #93a19b;
-    --paper: #0d1311;
+    --ink: #e6ecee;
+    --ink-2: #b3bfc4;
+    --muted: #95a3a9;
+    --paper: #0e1315;
+    --side: #12191c;
     --grp-1: #f28aaa;
     --grp-2: #8ab4f8;
     --grp-3: #f0c46a;
@@ -81,27 +90,30 @@
     --grp-5: #f5a06a;
     --grp-6: #b99af2;
     --grp-7: #6ccfe3;
-    --card: #141c19;
-    --surface-2: #1a2420;
-    --line: #26332e;
-    --line-strong: #3a4a44;
-    --accent: #4cc7b0;
-    --accent-soft: #12332c;
-    --accent-ink: #9fe5d6;
-    --good: #4cc7b0;
-    --bad: #f2895f;
-    --bad-soft: #3b1e14;
-    --warn: #f0b45a;
-    --warn-soft: #3a2a10;
+    --card: #151d20;
+    --surface-2: #1b2427;
+    --line: #263236;
+    --line-strong: #3a474c;
+    --accent: #5cc2b0;
+    --accent-soft: #132e29;
+    --accent-ink: #a3e4d8;
+    --good: #74d39d;
+    --good-mark: #4fae7d;
+    --good-soft: #12291c;
+    --bad: #f0897c;
+    --bad-soft: #3a1916;
+    --warn: #f0c062;
+    --warn-mark: #e0a32e;
+    --warn-soft: #362a0f;
     --info: #8ca8f5;
     --info-soft: #18213d;
     --series-2: #8ca8f5;
     --series-3: #f08a54;
     --series-4: #b497f0;
     --series-5: #d9b84a;
-    --series-6: #a9b7b1;
-    --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
-    --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
+    --series-6: #b3bfc4;
+    --shadow-card: 0 0 0 1px var(--line);
+    --shadow-raise: 0 0 0 1px var(--line-strong);
     --bucket-review: #3987e5;
     --bucket-blog: #d95926;
     --bucket-news: #199e70;
@@ -117,10 +129,11 @@
 /* 사용자가 다크를 명시하면 OS가 라이트여도 다크 적용 — 이것도 화면에서만(인쇄 · PDF는 라이트) */
 @media screen {
   :root[data-theme='dark'] {
-    --ink: #e8efec;
-    --ink-2: #a9b7b1;
-    --muted: #93a19b;
-    --paper: #0d1311;
+    --ink: #e6ecee;
+    --ink-2: #b3bfc4;
+    --muted: #95a3a9;
+    --paper: #0e1315;
+    --side: #12191c;
     --grp-1: #f28aaa;
     --grp-2: #8ab4f8;
     --grp-3: #f0c46a;
@@ -128,27 +141,30 @@
     --grp-5: #f5a06a;
     --grp-6: #b99af2;
     --grp-7: #6ccfe3;
-    --card: #141c19;
-    --surface-2: #1a2420;
-    --line: #26332e;
-    --line-strong: #3a4a44;
-    --accent: #4cc7b0;
-    --accent-soft: #12332c;
-    --accent-ink: #9fe5d6;
-    --good: #4cc7b0;
-    --bad: #f2895f;
-    --bad-soft: #3b1e14;
-    --warn: #f0b45a;
-    --warn-soft: #3a2a10;
+    --card: #151d20;
+    --surface-2: #1b2427;
+    --line: #263236;
+    --line-strong: #3a474c;
+    --accent: #5cc2b0;
+    --accent-soft: #132e29;
+    --accent-ink: #a3e4d8;
+    --good: #74d39d;
+    --good-mark: #4fae7d;
+    --good-soft: #12291c;
+    --bad: #f0897c;
+    --bad-soft: #3a1916;
+    --warn: #f0c062;
+    --warn-mark: #e0a32e;
+    --warn-soft: #362a0f;
     --info: #8ca8f5;
     --info-soft: #18213d;
     --series-2: #8ca8f5;
     --series-3: #f08a54;
     --series-4: #b497f0;
     --series-5: #d9b84a;
-    --series-6: #a9b7b1;
-    --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / 0.35);
-    --shadow-raise: 0 0 0 1px var(--line), 0 12px 30px -16px rgb(0 0 0 / 0.6);
+    --series-6: #b3bfc4;
+    --shadow-card: 0 0 0 1px var(--line);
+    --shadow-raise: 0 0 0 1px var(--line-strong);
     --bucket-review: #3987e5;
     --bucket-blog: #d95926;
     --bucket-news: #199e70;
@@ -171,7 +187,16 @@ body {
   min-height: 100%;
   background: var(--paper);
   color: var(--ink);
-  font: 16px/1.55 var(--sans);
+  font: 15px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 글 속 링크 기본색 — 따로 색을 정하지 않은 링크가 브라우저 기본 파랑으로 남아 다크에서 읽히지 않았다. */
+a {
+  color: var(--accent);
+}
+a:hover {
+  color: var(--ink);
 }
 
 #root {
@@ -185,14 +210,14 @@ h1,
 h2,
 h3 {
   font-family: var(--sans);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--ink);
 }
 
 h1 {
-  font-size: clamp(24px, 3vw, 30px);
-  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 26px);
+  font-weight: 800;
   line-height: 1.25;
   margin: 8px 0 12px;
 }
@@ -200,11 +225,21 @@ h1 {
 h2 {
   font-size: 15px;
   font-family: var(--sans);
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 6px;
 }
 
 h3 {
-  font-size: 20px;
-  margin: 32px 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  margin: 28px 0 12px;
+}
+
+/*
+ * 섹션 머리 — 검은 1px 선 위에 굵은 제목(계기판). 카드로 감싸지 않은 본문 절(<section>의 첫 제목)에만 — 카드(.panel) · 대화상자 안
+ * 제목은 테두리가 이미 경계라 선을 긋지 않는다.
+ */
+section:not(.panel) > h3:first-child {
+  padding-top: 9px;
+  border-top: 1px solid var(--ink);
 }
