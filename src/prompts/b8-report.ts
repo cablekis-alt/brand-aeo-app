@@ -1,3 +1,4 @@
+import type { Comparability } from '../lib/comparability.js';
 import type { EeatAnalysis } from './b6-eeat.js';
 import type { CitationSourceAnalysis } from './b7-citation-sources.js';
 import type { PromptMessage } from './types.js';
@@ -120,7 +121,11 @@ export interface WeeklyScorecard {
   industry: string;
   region: string;
   brandName: string;
-  aeoScore: { current: number; ma4: number; previousWeek: number; ciLow: number; ciHigh: number };
+  /**
+   * previousWeek — 이번 주보다 앞선 가장 최근 측정의 점수. 앞 측정이 없으면(첫 측정) null이다 — 재지 않은 값을 채우지 않는다.
+   * 2026-10-27 전 카드는 첫 측정에도 이번 주 점수가 들어 있다(리포트가 「전주 2」를 받아 「3주 연속 같은 값」을 지어냈다).
+   */
+  aeoScore: { current: number; ma4: number; previousWeek: number | null; ciLow: number; ciHigh: number };
   mentionRate: number; // category-agnostic 질문 중 언급 비율
   // 언급률과 같은 모집단(category-agnostic 질문)에서 낸 횟수 기준 점유율.
   // 경쟁사가 없거나, 자사·경쟁사 언급이 MIN_SOM_MENTIONS번 미만이면 측정 불가(null).
@@ -189,6 +194,29 @@ export interface WeeklyScorecard {
 }
 
 /**
+ * AEO Score 줄의 「전주」 자리. 비교할 값이 없는 자리에 숫자를 두지 않는다 — 실측 2026-W42 gunsan(첫 측정)은
+ * 「이번주 2 / 4주 이동평균 2 / 전주 2」를 받아 「3주 연속 같은 값」이라고 썼다.
+ *   - 앞 측정 없음(previousWeek null): 「첫 측정 — 비교할 이전 주차 없음」
+ *   - 앞 측정과 측정 조건이 다름: 직전 점수와 이유만 — 증감으로 읽지 않는다(정기진단 보고서 표지와 같은 규칙, src/lib/comparability.ts)
+ *   - 2주 이상 떨어진 앞 측정: 「전주」가 아니라 「직전 측정(Wxx, N주 전)」
+ * comparison은 이 카드가 든 이력으로 낸 comparableWith다. 없으면 저장된 전주를 그대로 적는다.
+ */
+function previousScoreText(card: WeeklyScorecard, comparison?: Comparability): string {
+  const prev = card.aeoScore.previousWeek;
+  if (prev === null) return '전주: 첫 측정 — 비교할 이전 주차 없음';
+  if (!comparison?.previousWeekOf) return `전주 ${prev}`;
+  const at = comparison.previousWeekOf;
+  if (!comparison.comparable && comparison.diffs.length > 0) {
+    // 바뀐 조건과 한쪽에 기록이 없어 확인할 수 없는 조건을 가른다 — 기록이 없는 것을 「달라」라고 하지 않는다.
+    const changed = comparison.diffs.filter((d) => d.state === 'changed').map((d) => d.dimension).join(' · ');
+    const unknown = comparison.diffs.filter((d) => d.state === 'unknown').map((d) => d.dimension).join(' · ');
+    const why = changed ? `측정 조건(${changed})이 달라` : `측정 조건 기록이 한쪽에 없어(${unknown})`;
+    return `직전 측정(${at}) ${prev} — ${why} 증감으로 읽지 않음`;
+  }
+  return (comparison.gapWeeks ?? 1) >= 2 ? `직전 측정(${at}, ${comparison.gapWeeks}주 전) ${prev}` : `전주 ${prev}`;
+}
+
+/**
  * B8 — 스코어카드를 사람이 읽는 리포트로 요약.
  * 점수 자체(가중합, MA4, CI)는 결정적 계산이며 이 프롬프트의 입력으로 이미 확정되어 들어온다.
  * 모델은 새로운 수치를 만들어내지 말고, 주어진 수치만 해석해야 한다.
@@ -196,14 +224,17 @@ export interface WeeklyScorecard {
  * 코호트 순위는 넣지 않는다. 리포트는 측정 중에 쓰이는데 순위는 코호트 전원이 저장된 뒤
  * reconcileCohortRanks(server/cohortRank.ts)에서 확정된다 — 넣으면 본문에 그 순간의 틀린
  * 분모가 박제된다(실측 2026-W39 통신: 세종텔레콤 "6 / 5", 다섯 곳 중 네 곳이 실제와 달랐다).
+ *
+ * 첫 측정에는 이동평균도 적지 않는다 — 측정 1회의 평균은 이번 주 점수 그대로라 「전주」와 같은 착시를 만든다.
  */
 export function buildWeeklyReportPrompt(
   card: WeeklyScorecard,
-  extras?: { eeat?: EeatAnalysis; citationSources?: CitationSourceAnalysis },
+  extras?: { eeat?: EeatAnalysis; citationSources?: CitationSourceAnalysis; comparison?: Comparability },
 ): PromptMessage {
   const system = `당신은 브랜드 AEO(답변엔진 최적화) 주간 리포트를 작성하는 애널리스트입니다.
 아래에 제공되는 수치 외의 어떤 숫자도 새로 만들어내지 마세요. 수치는 주어진 그대로 인용하세요.
 신뢰구간이 넓다면(변동성이 크면) 그 사실을 반드시 언급하세요. 1회성 변동을 과잉 해석하지 마세요.
+전주 · 이동평균 값이 없거나 「증감으로 읽지 않음」이라고 적힌 항목은 증감 · 보합 · 「N주 연속」 같은 추세를 쓰지 마세요. 주어지지 않은 지난 주 지표(언급률 등)와도 견주지 마세요.
 
 출력 형식(마크다운):
 ## 요약
@@ -230,7 +261,7 @@ export function buildWeeklyReportPrompt(
     : '';
 
   const user = `주간 스코어카드 (${card.weekOf} / ${card.industry} / ${card.region} / ${card.brandName}):
-- AEO Score: 이번주 ${card.aeoScore.current} / 4주 이동평균 ${card.aeoScore.ma4} / 전주 ${card.aeoScore.previousWeek} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
+- AEO Score: 이번주 ${card.aeoScore.current} / ${card.aeoScore.previousWeek === null ? '4주 이동평균: 측정 1회뿐 — 없음' : `4주 이동평균 ${card.aeoScore.ma4}`} / ${previousScoreText(card, extras?.comparison)} / 95% CI [${card.aeoScore.ciLow}, ${card.aeoScore.ciHigh}]
 - 카테고리 무관 질문 언급률: ${(card.mentionRate * 100).toFixed(1)}%
 - Share of Mention (언급률과 같은 카테고리 무관 질문 응답 기준, Brand AEO Score에 포함되지 않음): ${shareOfMentionNote(card) ?? `${((card.shareOfMention ?? 0) * 100).toFixed(1)}%`}
 - 평균 추천 순위: ${card.avgRecommendationRank === null ? '순위 판정 불가' : `${card.avgRecommendationRank}${card.rankedResponses !== undefined ? ` (순위 응답 ${card.rankedResponses}건 · 비중 ${Math.round(rankWeightFactor(card.rankedResponses, card.avgRecommendationRank) * 100)}%)` : ''}`}

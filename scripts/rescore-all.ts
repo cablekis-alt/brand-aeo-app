@@ -52,7 +52,8 @@ function recompute(prev: WeeklyScorecard, tenant: TenantConfig, history: WeeklyS
     src.questions,
     src.analyses,
   )
-  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score
+  // 앞 측정이 없으면 null — 이번 주 점수로 채우지 않는다(server/pipeline.ts aggregateScorecard와 같은 규칙).
+  const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : null
   const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]))
 
   return {

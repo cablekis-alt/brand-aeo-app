@@ -144,7 +144,8 @@ for (const tenantId of readdirSync(dataDir)) {
     // aggregateWeeklyMetrics는 competitors의 "개수"만 본다(0이면 SoM 측정불가).
     const competitors = hadCompetitors(prev) ? [{ name: '(저장된 카드 기준)' }] : []
     const m = aggregateWeeklyMetrics({ competitors }, bank.questions, analyses)
-    const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : m.score
+    // 앞 측정이 없으면 null — 이번 주 점수로 채우지 않는다(server/pipeline.ts aggregateScorecard와 같은 규칙).
+    const previousWeek = history.length > 0 ? history[history.length - 1].aeoScore.current : null
     const ma4 = Math.round(movingAverage4([...history.map((h) => h.aeoScore.current), m.score]))
     const card: WeeklyScorecard = {
       ...prev,

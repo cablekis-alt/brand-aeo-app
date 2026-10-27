@@ -17,6 +17,7 @@ import {
   type WeeklyScorecard,
 } from '../src/prompts/index.js';
 import type { Engine } from '../src/prompts/types.js';
+import { comparableWith } from '../src/lib/comparability.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
@@ -598,8 +599,10 @@ export function aggregateScorecard(
   // 남아 있어(saveScorecard가 교체하는 것은 이 계산 뒤다) 그 카드가 "전주"가 되고 이동평균에
   // 같은 주가 두 번 들어간다(실측 2026-W40 스테이,머뭄 3차: 전주 4·ma4 14, 맞는 값 27·21).
   // 재계산 스크립트(rescore-local·rescore-all)는 주차마다 한 장씩 히스토리를 쌓아 같은 규칙이다.
+  // 앞 측정이 없으면(첫 측정) 전주는 null이다. 이번 주 점수로 채우면 리포트가 「이번주 2 / 전주 2」를 받아
+  // 없던 보합 · 연속을 지어낸다(실측 2026-W42 gunsan 첫 측정 「3주 연속 같은 값」).
   const prior = history.filter((h) => h.weekOf < weekOf);
-  const previousWeek = prior.length > 0 ? prior[prior.length - 1].aeoScore.current : m.score;
+  const previousWeek = prior.length > 0 ? prior[prior.length - 1].aeoScore.current : null;
   const ma4 = Math.round(movingAverage4([...prior.map((h) => h.aeoScore.current), m.score]));
 
   return {
@@ -745,10 +748,13 @@ async function writeWeeklyReport(
   scorecard: WeeklyScorecard,
   analyses: QuestionRepeatAnalysis[],
   generation: number,
+  history: WeeklyScorecard[],
 ): Promise<string> {
   const eeat = computeEeatAnalysis(analyses);
   const citationSources = analyzeCitationSources(analyses);
-  const reportResult = await getJudgeClient().call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources }));
+  // 전주와 견줘도 되는지는 앱 공용 규칙으로 — 측정 조건이 다르면 리포트도 증감으로 읽지 않는다(정기진단 보고서 표지와 같은 판정).
+  const comparison = comparableWith([...history.filter((h) => h.weekOf < weekOf), scorecard], weekOf);
+  const reportResult = await getJudgeClient().call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources, comparison }));
   if (reportGeneration.get(`${tenant.tenantId}|${weekOf}`) !== generation) {
     console.warn(`[B8] ${tenant.tenantId} ${weekOf} 리포트를 쓰는 사이 같은 주를 다시 재 — 옛 측정의 리포트는 저장하지 않습니다`);
     return reportResult.text;
@@ -875,7 +881,7 @@ export async function runWeeklyPipeline(
   reportGeneration.set(`${tenant.tenantId}|${weekOf}`, generation);
 
   if (options.deferReport) {
-    const pendingReport = writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation).then(
+    const pendingReport = writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation, history).then(
       () => undefined,
       (err: unknown) => {
         console.error(`[B8] ${tenant.tenantId} ${weekOf} 리포트 저장 실패(측정 결과는 저장됨): ${err instanceof Error ? err.message : err}`);
@@ -887,7 +893,7 @@ export async function runWeeklyPipeline(
   }
 
   updateActiveMeasure(tenant.tenantId, { stage: '리포트', done: 0, total: 0 });
-  const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation);
+  const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation, history);
   return { scorecard, reportMarkdown, enginesUsed, runId };
 }
 
