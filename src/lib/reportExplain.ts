@@ -212,6 +212,11 @@ export function scoreExplainData(input: ExplainInput): ScoreExplainData {
   return explainCore(input).data
 }
 
+/** 계단 그림의 세로축 위끝 — 가장 높은 칸을 10 단위로 올린 값(최소 10). 개요 · 보고서가 같은 눈금으로 그린다. */
+export function stepScaleTop(steps: { score: number }[]): number {
+  return Math.max(10, Math.ceil(Math.max(0, ...steps.map((s) => s.score)) / 10) * 10)
+}
+
 export function explainScore(input: ExplainInput & { history: WeeklyScorecard[] }): ExplainLine[] {
   const { card, history } = input
   const { data, usable, base } = explainCore(input)

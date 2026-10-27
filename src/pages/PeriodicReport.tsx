@@ -44,7 +44,7 @@ import {
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
-import { explainScore, ownedDomainCitations, recentRuns, separateRunNote, topSourceDomains } from '../lib/reportExplain'
+import { explainScore, ownedDomainCitations, recentRuns, scoreExplainData, separateRunNote, topSourceDomains } from '../lib/reportExplain'
 import { useRunHistory } from '../lib/useRunHistory'
 import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -53,7 +53,7 @@ import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { comparableRun, compareConditions, conditionReason, conditionSummary, siteDifference } from '../lib/comparability'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
-import { ENGINE_LABEL, measureConditionPlain, measureConditionText, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, measureConditionParts, measureConditionText, weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
@@ -524,6 +524,11 @@ export default function PeriodicReport() {
     () => (card ? explainScore({ card, history, analyses: evidence?.analyses ?? [], bank: evidence?.bank ?? null }) : []),
     [card, history, evidence],
   )
+  // 점수 풀이 줄 아래 그림(구성 · 몰림 막대 · 계단) — 문장과 같은 계산, 개요 점수 판과 같은 숫자.
+  const explainData = useMemo(
+    () => (card ? scoreExplainData({ card, analyses: evidence?.analyses ?? [], bank: evidence?.bank ?? null }) : null),
+    [card, evidence],
+  )
 
   /** 그 달 안에서 측정 조건이 바뀐 곳(앱 전체 규칙) — 바뀌었으면 월 평균을 한 값처럼 읽으면 안 된다. 화면은 값까지, 종이는 조건 이름만. */
   const monthConditionBreaks = useMemo(() => {
@@ -616,7 +621,7 @@ export default function PeriodicReport() {
 
   return (
     <>
-      <header className="page-head">
+      <header className="page-head report-head">
         <div className="page-title">
           <p className="page-eyebrow">
             보고 · {brandLabel(tenant, tenants)}
@@ -704,6 +709,15 @@ export default function PeriodicReport() {
             <h2 className="report-cover-title">{coverLine ?? `종합 판정 ${report.verdict.label}`}</h2>
             <p className="verdict-head">
               <span className={`status-pill st-${report.verdict.tone}`}>종합 판정 {report.verdict.label}</span>
+              {/* 판정이 무엇에서 나왔는지 — 아래 요약 문장과 같은 개수(지표별 진단의 미흡 · 주의). 0개면 적지 않는다. */}
+              {(['bad', 'warn'] as const).map((st) => {
+                const n = report.metrics.filter((m) => m.status === st).length
+                return n > 0 ? (
+                  <span key={st} className={`verdict-count st-${st}`}>
+                    {st === 'bad' ? '미흡' : '주의'} <b className="mono">{n}</b>개 지표
+                  </span>
+                ) : null
+              })}
             </p>
             <p className="verdict-summary">{report.verdict.summary}</p>
             {/*
@@ -715,7 +729,15 @@ export default function PeriodicReport() {
               {measureConditionText(card).repeats}
               {card.questionBankVersion ? ` · 질문지 ${card.questionBankVersion}` : ''}
             </p>
-            <p className="hint print-only">{measureConditionPlain(card)}</p>
+            {/* 종이 — 엔진 이름만 칸으로(모델 id · preset은 위 화면 줄에서). */}
+            <dl className="report-conditions print-only">
+              {measureConditionParts(card).map((p) => (
+                <div key={p.label}>
+                  <dt>{p.label}</dt>
+                  <dd>{p.value}</dd>
+                </div>
+              ))}
+            </dl>
             {report.variabilityNote && <p className="hint">※ {report.variabilityNote}</p>}
           </section>
 
@@ -875,7 +897,7 @@ export default function PeriodicReport() {
             <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
 
-          {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} />}
+          {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} data={explainData} />}
           {recent && <RunsSection recent={recent} weekOf={card.weekOf} />}
           {/*
             회차 기록을 못 읽으면(데스크톱 — 웹은 기능이 없어 조용히 둔다) 표지 평균 · 회차 표 · 「이 브랜드만 다시 잰 값」 안내가 말없이 빠진다 —

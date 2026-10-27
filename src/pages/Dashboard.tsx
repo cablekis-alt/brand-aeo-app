@@ -14,7 +14,7 @@ import { selfReview } from '../lib/reviewReport'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { comparableRun, compareConditions, conditionSummary, siteComparable, siteDifference, weeksBetween } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
-import { recentRuns, scoreExplainData } from '../lib/reportExplain'
+import { recentRuns, scoreExplainData, stepScaleTop } from '../lib/reportExplain'
 import { RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
@@ -222,7 +222,7 @@ export default function Dashboard() {
     const ready = todoData && todoData.key === splitKey
     return scoreExplainData({ card, analyses: ready ? todoData.analyses : [], bank: ready ? todoData.bank : null })
   }, [card, todoData, splitKey])
-  const stepTop = explain?.steps ? Math.max(10, Math.ceil(Math.max(...explain.steps.map((s) => s.score)) / 10) * 10) : 10
+  const stepTop = stepScaleTop(explain?.steps ?? [])
   // 1위 답 한 건이 오갈 때 점수가 움직이는 폭 — 계단 칸 사이 차이.
   const stepMove = (() => {
     const s = explain?.steps ?? []

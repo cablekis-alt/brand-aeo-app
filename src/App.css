@@ -2031,30 +2031,25 @@ tbody tr.selected {
 }
 
 /* --- 정기진단 보고서 (B9) --- */
-/* 표지 — 결론 한 문장이 맨 위. 판정 색은 상태 알약에만 준다(카드 테두리를 칠하지 않는다). */
+/* 표지 — 결론 한 문장이 맨 위. 판정 색은 상태 알약에만 준다. 계기판 A: 상자 없이 바탕 위에 — 위 머리선(종이) · 아래 숫자 칸 머리선이 경계다. */
 .report-cover {
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: var(--r-card);
-  padding: 28px 32px;
-  margin: 14px 0 16px;
+  margin: 18px 0 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .report-cover-eyebrow {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
 }
 .report-cover-title {
   margin: 0;
-  font-size: 26px;
-  line-height: 1.35;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 28px;
+  line-height: 1.32;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   text-wrap: balance;
   word-break: keep-all;
   color: var(--ink);
@@ -2079,6 +2074,45 @@ tbody tr.selected {
   color: var(--accent);
 }
 .verdict-summary { margin: 0; max-width: 68ch; color: var(--ink-2); line-height: 1.7; }
+/* 판정 칩 옆 개수(미흡 · 주의) — 모양 + 글자. 모양 색은 글자 토큰(종이에서도 대비가 선다). */
+.verdict-count {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.verdict-count b {
+  margin: 0 2px;
+  color: var(--ink);
+}
+.verdict-count.st-bad::before { content: '▼'; margin-right: 5px; color: var(--bad); }
+.verdict-count.st-warn::before { content: '◆'; margin-right: 5px; color: var(--warn); }
+/* 종이 표지의 측정 조건 칸(수집 엔진 · 판정 엔진 · 반복 · 질문지) — 엔진 칸이 넓다. 칸이 빠지면 남은 칸이 나눈다. */
+.report-conditions {
+  margin: 4px 0 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.report-conditions > div {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 12px 8px;
+  border-left: 1px solid var(--line);
+}
+.report-conditions > div:first-child {
+  flex-grow: 2;
+  padding-left: 0;
+  border-left: 0;
+}
+.report-conditions dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.report-conditions dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
 
 /* 측정 신뢰도 점검 — 정기진단 보고서 결론 아래 운영자 상자(화면에서만). 접혀 있어도 제목 줄에 확인 · 주의 · 사람 확인 개수. */
 .trust-box {
@@ -2117,10 +2151,53 @@ tbody tr.selected {
   border-bottom: 1px solid var(--line);
 }
 .explain-list > div:last-child { border-bottom: 0; }
-.explain-list dt { font-weight: 600; color: var(--ink); }
+.explain-list dt { font-size: 13px; font-weight: 800; color: var(--ink); }
 .explain-list dd { margin: 0; color: var(--ink-2); line-height: 1.7; max-width: 70ch; }
 @media (max-width: 560px) {
   .explain-list > div { grid-template-columns: minmax(0, 1fr); }
+}
+.explain-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 70ch;
+  margin-top: 8px;
+}
+.explain-figure .ov-bar {
+  height: 24px;
+}
+.explain-figure .ov-seg.conc {
+  padding: 0 10px;
+  font-size: 12px;
+}
+.explain-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.explain-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.explain-legend > .explain-legend-scale {
+  margin-left: auto;
+  color: var(--muted);
+}
+.explain-steps {
+  max-width: 320px;
+}
+.explain-steps .ov-step-bars {
+  height: 112px;
+  padding-top: 22px;
+}
+.explain-steps .ov-step-bar > .mono {
+  font-size: 12px;
+}
+.explain-steps .ov-step.current .ov-step-bar > .mono {
+  font-size: 14px;
 }
 .mention-list,
 .contradicted-list {
@@ -2719,6 +2796,11 @@ p.hint {
   /* 표지 · 숫자 칸 · 진단 표 행은 쪽에 걸쳐 자르지 않는다(옛 .report-verdict는 표지 .report-cover로 바뀌었다). */
   .print-only-inline { display: inline; }
   .report-cover, .report-tiles, .panel, .score-trend, .run-trend, .exec-table tr, .diagnosis-table tr { break-inside: avoid; }
+  /* 정기진단 보고서 종이 머리 — 제목 아래 2px 검은 선(계기판 A). 화면의 머리는 다른 화면과 같다. */
+  .report-head { margin-bottom: 0; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+  .report-conditions.print-only { display: flex; }
+  .explain-figure :is(.ov-seg, .ov-swatch, .ov-step-bar) { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .explain-figure, .explain-list > div { break-inside: avoid; }
   /*
    * 정기진단 보고서 종이(상용화 UI 3차 U6 · U29).
    *   - 점수 그래프는 종이 폭에 맞춘다 — 가로 넘김 상자가 잘라 이번 주가 빠졌다(그림은 인쇄 직전 PRINT_W로 다시 그린다).
@@ -3747,35 +3829,41 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   gap: 1px;
   margin: 0 0 16px;
   background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  overflow: hidden;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
 }
 
 .report-tiles > article {
-  background: var(--card);
-  padding: 16px 18px;
+  background: var(--paper);
+  padding: 12px 18px 14px;
+}
+/* 이 보고서의 점수 — 넷 가운데 하나만 강조색. */
+.report-tiles > article:first-child .tile-value {
+  color: var(--accent);
 }
 /* 종이에서는 넷이 한 줄 — 종이 폭에서 auto-fit이 3 + 1로 갈렸다(상용화 UI 3차 U29). */
 @media print {
-  .report-tiles { grid-template-columns: repeat(4, 1fr); }
-  .report-tiles > article { padding: 12px 14px; }
+  .report-tiles { grid-template-columns: repeat(4, 1fr); gap: 0; background: none; }
+  .report-tiles > article { padding: 10px 14px 12px; border-left: 1px solid var(--line); background: none; }
+  .report-tiles > article:first-child { padding-left: 0; border-left: 0; }
   /* 좁은 칸에서 「월 평 / 균」처럼 낱말 가운데서 줄을 바꾸지 않게. */
   .report-tiles :is(.tile-label, .tile-note) { word-break: keep-all; }
 }
 
 .tile-label {
   margin: 0;
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
 }
 
 .tile-value {
   margin: 2px 0 0;
   font-family: var(--mono);
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1.15;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 .tile-value .delta {
