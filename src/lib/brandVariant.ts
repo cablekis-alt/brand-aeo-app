@@ -34,6 +34,20 @@ const scopeOf = (b: Pick<VariantBrand, 'marketScope'>): Scope =>
 const languageOf = (b: Pick<VariantBrand, 'questionLanguage' | 'region'>): string =>
   b.questionLanguage ?? (b.region.includes('(영어 질문)') ? 'en' : 'ko')
 
+/**
+ * 자사 주소 칸 입력 → 호스트. hostKey에 더해 끝 점을 떼고, 한글 도메인은 인용 기록과 같은 퓨니코드로 바꾼다(new URL().hostname —
+ * 인용 호스트 urlHost · 등록 화면과 같은 표기). 바꿀 수 없는 값은 그대로 돌려줘 서버의 형식 검사가 막게 한다.
+ */
+export function ownedHostKey(input: string): string {
+  const h = hostKey(input).replace(/\.+$/, '')
+  if (!h || /^[\x21-\x7e]+$/.test(h)) return h
+  try {
+    return new URL(`http://${h}`).hostname
+  } catch {
+    return h
+  }
+}
+
 export function hostKey(domain: string): string {
   return domain
     .trim()

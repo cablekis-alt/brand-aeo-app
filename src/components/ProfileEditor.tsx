@@ -80,6 +80,7 @@ export default function ProfileEditor({
   const [busy, setBusy] = useState(false)
   // 자사 사이트 주소 칸은 따로 저장한다 — 닫을 때 묻는 데만 함께 센다.
   const [domainsDirty, setDomainsDirty] = useState(false)
+  const [domainsBusy, setDomainsBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [confirmKey, setConfirmKey] = useState<string | null>(null)
   const [saved, setSaved] = useState<ProfileSaveResult | null>(null)
@@ -168,7 +169,7 @@ export default function ProfileEditor({
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
 
   const close = () => {
-    if (busy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
+    if (busy || domainsBusy) return // 저장 중에는 닫지 않는다 — 닫아도 저장은 끝까지 진행된다.
     if ((dirty || domainsDirty) && !window.confirm('바꾼 내용을 저장하지 않고 닫을까요?')) return
     onClose()
   }
@@ -242,6 +243,9 @@ export default function ProfileEditor({
   }
   const save = () => planned && setConfirmKey(planned.key)
   const goMeasure = () => {
+    if (domainsBusy) return
+    // 자사 사이트 주소 칸에 저장하지 않은 주소가 있으면 묻는다 — 이 단추는 기본 정보를 저장한 뒤에만 보여 그쪽 확인을 거치지 않는다.
+    if (domainsDirty && !window.confirm('자사 사이트 주소에 저장하지 않은 바꾼 내용이 있어요. 저장하지 않고 측정 화면으로 갈까요?')) return
     setTenantId(tenantId)
     onClose()
     navigate('/measure-tenant')
@@ -380,7 +384,7 @@ export default function ProfileEditor({
             )}
           </fieldset>
         )}
-        {s && <OwnedDomainsEditor tenantId={tenantId} onSaved={onSaved} onDirtyChange={setDomainsDirty} />}
+        {s && <OwnedDomainsEditor tenantId={tenantId} onSaved={onSaved} onDirtyChange={setDomainsDirty} onBusyChange={setDomainsBusy} />}
       </div>
 
       {s && dirty && (

@@ -13,9 +13,10 @@ import { mergeOwnedDomains, readExtraOwnedDomains, writeExtraOwnedDomains } from
 import { contextFingerprint } from './pipeline.js';
 import { movingAverage4 } from './scoring.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
-import { loadRuntimeTenants } from './tenantRegistry.js';
-import { hostKey } from '../src/lib/brandVariant.js';
+import { configuredOwnedDomains, loadRuntimeTenants } from './tenantRegistry.js';
+import { hostKey, ownedHostKey } from '../src/lib/brandVariant.js';
 import { isSharedPlatformHost } from '../src/lib/sharedHosts.js';
+import { isMultiTenantRoot, isPublicSuffix } from '../src/lib/siteGroup.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionBank, ResultStore, RunMeta } from './store.js';
 import type { QuestionRepeatAnalysis, TenantConfig } from './types.js';
@@ -66,6 +67,8 @@ export interface PastWeekChange {
   ma4After: number;
   /** 같은 주 회차 중 고칠 회차 수. */
   runs: number;
+  /** 그 주 회차 판정에서 자사로 바꿀 인용 수 — 그 주 파일(promoted)과 따로 센다(회차에만 인용이 있을 수 있다). */
+  runPromoted: number;
 }
 
 export interface OwnedDomainsPlan {
@@ -79,14 +82,14 @@ export interface OwnedDomainsPlan {
   measuring: boolean;
   applyPast: boolean;
   /** 지난 측정 적용 미리보기 — 고르지 않았거나 더한 주소가 없으면 null. */
-  past: { weeks: PastWeekChange[]; promoted: number; runs: number; skipped: string[]; cohortWeeks: number } | null;
+  past: { weeks: PastWeekChange[]; promoted: number; runPromoted: number; runs: number; skipped: string[]; cohortWeeks: number } | null;
 }
 
 export interface OwnedDomainsSaveResult {
   ok: true;
   tenantId: string;
   extra: string[];
-  applied: { weeks: number; runs: number; promoted: number; ranksUpdated: number } | null;
+  applied: { weeks: number; runs: number; promoted: number; runPromoted: number; ranksUpdated: number } | null;
   backupDir: string;
 }
 
@@ -98,6 +101,8 @@ interface Context {
   tenant: TenantConfig;
   primary: string | null;
   fixed: string[];
+  /** 설정에 적힌 원문 그대로 — 저장 뒤 런타임 목록(판정 맥락 지문)을 똑같이 만들 때 쓴다. */
+  configured: string[];
   extra: string[];
   reason: string | null;
 }
@@ -106,14 +111,16 @@ async function loadContext(tenantId: string): Promise<Context> {
   const runtime = await loadRuntimeTenants();
   const tenant = runtime.find((t) => t.tenantId === tenantId);
   if (!tenant || tenant.cohortOnly) throw new EditorError(404, `고객 브랜드를 찾을 수 없습니다: ${tenantId}`);
-  const extra = (await readExtraOwnedDomains(tenantId)) ?? [];
-  // 런타임 목록은 더한 주소가 이미 붙어 있다 — 고정 주소는 더한 주소가 아닌 값, 첫 주소는 그 첫 값이다.
-  const fixed = (tenant.ownedDomains ?? []).map(hostKey).filter((d) => d && !extra.includes(d));
+  // 고정 주소는 설정에서 읽는다 — 런타임 목록에서 더한 주소를 빼면, 같은 주소가 나중에 설정에도 들어간 경우 그 주소를 뺄 수 있는
+  // 더한 주소로 잘못 보여 준다(빼도 설정에 남아 바뀌지 않는다).
+  const configured = await configuredOwnedDomains(tenantId);
+  const fixed = [...new Set(configured.map(hostKey).filter(Boolean))];
+  const extra = ((await readExtraOwnedDomains(tenantId)) ?? []).filter((d) => !fixed.includes(d));
   const primary = fixed[0] ?? null;
   let reason: string | null = null;
   if (!process.env.VERCEL && !packagedDataMode()) reason = 'dev 체크아웃에서는 저장소 설정(tenants.config.json)을 직접 고치세요.';
   else if (!primary) reason = '등록한 홈페이지가 없어 주소를 더할 수 없어요.';
-  return { runtime, tenant, primary, fixed, extra, reason };
+  return { runtime, tenant, primary, fixed, configured, extra, reason };
 }
 
 export async function describeOwnedDomains(tenantId: string): Promise<OwnedDomainsState> {
@@ -137,7 +144,7 @@ export function normalizeOwnedDomainsInput(raw: unknown): OwnedDomainsInput {
   }
   const extra: string[] = [];
   for (const d of r.extra as string[]) {
-    const key = hostKey(d);
+    const key = ownedHostKey(d);
     if (key && !extra.includes(key)) extra.push(key);
   }
   return { extra, applyPast: r.applyPast === true };
@@ -150,6 +157,11 @@ function rejectReason(host: string, ctx: Context): string | null {
   if (!HOST_RE.test(host)) return `${host} — 주소 형식이 아니에요(예: example.com).`;
   const inFixed = ctx.fixed.find((d) => ownsHost(host, d));
   if (inFixed) return `${host} — 이미 자사 주소(${inFixed})에 들어 있어요.`;
+  // 하위 주소까지 자사로 세므로, 바탕 주소를 받으면 그 아래 남의 사이트가 모두 자사가 된다.
+  const under = ctx.fixed.find((d) => ownsHost(d, host));
+  if (under) return `${host} — 자사 주소(${under})의 상위 주소라 그 아래 다른 사이트까지 자사로 잡혀요. 사이트 주소를 그대로 적어 주세요.`;
+  if (isPublicSuffix(host)) return `${host} — 도메인이 아니라 접미사예요(예: example.co.kr).`;
+  if (isMultiTenantRoot(host)) return `${host} — 여러 사이트가 함께 쓰는 플랫폼 주소예요. 내 사이트 주소(예: my-site.${host})를 적어 주세요.`;
   if (isSharedPlatformHost(host)) return `${host} — 여럿이 함께 쓰는 플랫폼 주소라 자사 주소로 받지 않아요(남의 글까지 자사로 잡혀요).`;
   if (isReviewHost(host)) return `${host} — 후기 · 예약 플랫폼 주소라 자사 주소로 받지 않아요.`;
   for (const t of ctx.runtime) {
@@ -254,20 +266,26 @@ interface PastWork {
   runs: { weekOf: string; runId: string; scorecard?: WeeklyScorecard; analyses?: QuestionRepeatAnalysis[]; meta?: RunMeta }[];
   cohortWeeks: { industry: string; region: string; weekOf: string }[];
   promoted: number;
+  runPromoted: number;
 }
 
-async function computePast(ctx: Context, added: string[], finalExtra: string[], store: ResultStore): Promise<PastWork> {
+/**
+ * rewriteFingerprints — 더하기만 할 때 참. 빼기가 섞이면 옛 회차는 뺀 주소를 자사로 본 판정이 그대로 남으므로, 지문을 새 설정으로
+ * 바꾸면 다음 측정과의 「판정 맥락」 끊김이 사라진다(검토 반영).
+ */
+async function computePast(ctx: Context, added: string[], finalExtra: string[], rewriteFingerprints: boolean, store: ResultStore): Promise<PastWork> {
   const tenantId = ctx.tenant.tenantId;
   const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
   const oldScores = history.map((h) => h.aeoScore.current);
   const newScores = [...oldScores];
-  const work: PastWork = { weeks: [], skipped: [], analyses: [], cards: [], runs: [], cohortWeeks: [], promoted: 0 };
+  const work: PastWork = { weeks: [], skipped: [], analyses: [], cards: [], runs: [], cohortWeeks: [], promoted: 0, runPromoted: 0 };
 
   // 판정 맥락 지문 — 지금 설정(더하기 전)의 지문과 같은 회차만 새 지문으로 바꾼다.
   const entities = cohortRankingEntities(ctx.tenant, ctx.runtime);
   const fpOld = contextFingerprint(ctx.tenant, entities);
-  // 저장 뒤 런타임 목록과 같은 값 — 고정 주소 뒤에 최종 더한 주소(tenantRegistry mergeOwnedDomains).
-  const fpNew = contextFingerprint({ ...ctx.tenant, ownedDomains: mergeOwnedDomains(ctx.fixed, finalExtra) }, entities);
+  // 저장 뒤 런타임 목록과 같은 값 — 설정 원문 뒤에 최종 더한 주소(tenantRegistry mergeOwnedDomains와 같은 계산). 정규화한 값으로 내면
+  // 설정이 대문자 · 경로째 적힌 브랜드에서 다음 측정 지문과 달라진다(검토 반영).
+  const fpNew = contextFingerprint({ ...ctx.tenant, ownedDomains: mergeOwnedDomains(ctx.configured, finalExtra) }, entities);
 
   for (const [i, card] of history.entries()) {
     const weekOf = card.weekOf;
@@ -291,9 +309,11 @@ async function computePast(ctx: Context, added: string[], finalExtra: string[], 
     rechain(next, card.aeoScore.current, priorOld, priorNew);
 
     let runsChanged = 0;
+    let runPromoted = 0;
     const { runs } = await store.listRunSnapshots(tenantId, weekOf);
     for (const run of runs) {
       const p = promote(run.analyses, added);
+      runPromoted += p.promoted;
       let runCard = structuredClone(run.scorecard);
       if (p.promoted > 0) {
         const fix = await rescoreCard(store, run.scorecard, run.analyses, p.analyses, `${weekOf} 회차 ${run.meta.runId}`);
@@ -301,7 +321,7 @@ async function computePast(ctx: Context, added: string[], finalExtra: string[], 
         runCard = fix.card;
       }
       rechain(runCard, run.scorecard.aeoScore.current, priorOld, priorNew);
-      const metaChanged = run.meta.contextFingerprint === fpOld && fpOld !== fpNew;
+      const metaChanged = rewriteFingerprints && run.meta.contextFingerprint === fpOld && fpOld !== fpNew;
       const cardChanged = JSON.stringify(runCard) !== JSON.stringify(run.scorecard);
       if (p.promoted === 0 && !cardChanged && !metaChanged) continue;
       work.runs.push({
@@ -320,8 +340,9 @@ async function computePast(ctx: Context, added: string[], finalExtra: string[], 
         work.cohortWeeks.push({ industry: card.industry, region: card.region, weekOf });
       }
     }
-    // 미리보기에는 숫자가 바뀌는 주만 — 회차의 판정 맥락 표시만 맞추는 주는 회차 수에만 센다.
-    if (promoted > 0 || JSON.stringify(next) !== JSON.stringify(card)) {
+    work.runPromoted += runPromoted;
+    // 미리보기에는 기록이 바뀌는 주만 — 회차의 판정 맥락 표시만 맞추는 주는 회차 수에만 센다.
+    if (promoted > 0 || runPromoted > 0 || JSON.stringify(next) !== JSON.stringify(card)) {
       work.weeks.push({
         weekOf,
         promoted,
@@ -332,6 +353,7 @@ async function computePast(ctx: Context, added: string[], finalExtra: string[], 
         ma4Before: card.aeoScore.ma4,
         ma4After: next.aeoScore.ma4,
         runs: runsChanged,
+        runPromoted,
       });
     }
   }
@@ -361,10 +383,10 @@ async function computePlan(ctx: Context, input: OwnedDomainsInput, store: Result
     if (hit) notes.push(`${t.brandName}의 경쟁사 목록에 이 주소(${hit.name})가 있어요 — 그 브랜드에서는 경쟁사 인용으로 남아요.`);
   }
   const applyPast = input.applyPast && added.length > 0;
-  const work = applyPast && errors.length === 0 ? await computePast(ctx, added, input.extra, store) : null;
+  const work = applyPast && errors.length === 0 ? await computePast(ctx, added, input.extra, removed.length === 0, store) : null;
   if (!applyPast && added.length > 0) notes.push('지난 측정은 그대로라, 다음 측정의 자사 인용률 · 점수가 주소를 더한 만큼 오를 수 있어요.');
   const past = work
-    ? { weeks: work.weeks, promoted: work.promoted, runs: work.runs.length, skipped: work.skipped, cohortWeeks: work.cohortWeeks.length }
+    ? { weeks: work.weeks, promoted: work.promoted, runPromoted: work.runPromoted, runs: work.runs.length, skipped: work.skipped, cohortWeeks: work.cohortWeeks.length }
     : null;
   // 열쇠에 지난 기록 적용 결과까지 넣는다 — 미리보기 뒤 측정이 끼어들면 저장을 막는다.
   const key = createHash('sha1')
@@ -486,7 +508,7 @@ export async function saveOwnedDomains(tenantId: string, raw: unknown, previewKe
     ok: true,
     tenantId,
     extra: plan.extra,
-    applied: work ? { weeks: work.cards.length, runs: work.runs.length, promoted: work.promoted, ranksUpdated } : null,
+    applied: work ? { weeks: work.cards.length, runs: work.runs.length, promoted: work.promoted, runPromoted: work.runPromoted, ranksUpdated } : null,
     backupDir,
   };
 }

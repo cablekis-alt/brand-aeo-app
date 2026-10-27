@@ -1498,6 +1498,8 @@ export interface OwnedDomainsPastWeek {
   ma4Before: number
   ma4After: number
   runs: number
+  /** 그 주 회차 판정에서 자사로 바꿀 인용 수 — 회차에만 인용이 있을 수 있다. */
+  runPromoted: number
 }
 
 export interface OwnedDomainsPlan {
@@ -1510,14 +1512,14 @@ export interface OwnedDomainsPlan {
   notes: string[]
   measuring: boolean
   applyPast: boolean
-  past: { weeks: OwnedDomainsPastWeek[]; promoted: number; runs: number; skipped: string[]; cohortWeeks: number } | null
+  past: { weeks: OwnedDomainsPastWeek[]; promoted: number; runPromoted: number; runs: number; skipped: string[]; cohortWeeks: number } | null
 }
 
 export interface OwnedDomainsSaveResult {
   ok: true
   tenantId: string
   extra: string[]
-  applied: { weeks: number; runs: number; promoted: number; ranksUpdated: number } | null
+  applied: { weeks: number; runs: number; promoted: number; runPromoted: number; ranksUpdated: number } | null
   backupDir: string
 }
 

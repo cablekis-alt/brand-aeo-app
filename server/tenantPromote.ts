@@ -10,7 +10,7 @@ import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { cohortBankFor, freshBankVersion, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
+import { cohortBankFor, configuredOwnedDomains, freshBankVersion, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
 import { subjectParticle, topicParticle } from '../src/lib/korean.js';
 import type { CompetitorContext, FactGraphNode } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
@@ -422,7 +422,9 @@ export async function registerVariant(draft: TenantConfig, store: ResultStore, o
       tenantId,
       questionBankVersion,
       aliases: merge(draft.aliases, existing.aliases, (s) => s.trim()),
-      ownedDomains: merge(draft.ownedDomains, existing.ownedDomains, hostKey),
+      // 설정에 적힌 주소만 옮긴다 — 런타임 값에는 앱에서 더한 주소(owned-domains.json)가 붙어 있어, 그대로 적으면 새 브랜드에서는
+      // 뺄 수 없는 고정 주소가 되고 원 브랜드에서 빼도 남는다(검토 반영). 더한 주소는 새 브랜드의 「자사 사이트 주소」에서 따로 더한다.
+      ownedDomains: merge(draft.ownedDomains, await configuredOwnedDomains(existing.tenantId), hostKey),
       factGraph,
       ...(brandPageUrl ? { brandPageUrl } : {}),
       ...(existing.ga4PropertyId && !draft.ga4PropertyId ? { ga4PropertyId: existing.ga4PropertyId } : {}),

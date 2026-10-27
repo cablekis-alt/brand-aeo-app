@@ -81,6 +81,16 @@ export async function findBakedTenant(tenantId: string): Promise<TenantConfig | 
   return (await baseTenants()).find((tenant) => tenant.tenantId === tenantId);
 }
 
+/**
+ * 설정에 적힌 자사 주소(원문 그대로) — 저장소 설정이 이기고, 없으면 오버레이. 앱에서 더한 주소(owned-domains.json)는 빠진 값이다.
+ * 런타임 ownedDomains는 이 뒤에 더한 주소를 붙인 것이라(mergeRuntimeTenants), 더한 주소가 설정에도 있는지 가르거나 다른 브랜드로
+ * 옮겨 적을 때 이것을 쓴다(ownedDomainsEditor · tenantPromote registerVariant).
+ */
+export async function configuredOwnedDomains(tenantId: string): Promise<string[]> {
+  const entry = (await findBakedTenant(tenantId)) ?? (await readOverlay()).find((tenant) => tenant.tenantId === tenantId);
+  return entry?.ownedDomains ?? [];
+}
+
 function asEngineList(value: unknown): Engine[] {
   // 기본 수집 엔진 = ChatGPT + Gemini (지정이 없거나 유효 항목이 없을 때).
   if (!Array.isArray(value) || value.length === 0) return ['openai', 'gemini'];

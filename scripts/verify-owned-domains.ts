@@ -216,6 +216,52 @@ try {
   // ── 대기열에 있으면 막는다 ──
   writeJson('measure-requests.json', [{ tenant: oa1, requestedAt: '2026-10-27T00:00:00.000Z' }])
   ok('측정 대기열에 있으면 오류', (await editor.planOwnedDomains('oa', { extra: [], applyPast: false }, store)).errors.some((e) => e.includes('대기열')))
+  writeJson('measure-requests.json', [])
+
+  // ── 검토 반영 ──
+  // or: 고정 주소가 하위 주소(shop.or-brand.example)이고, 설정이 대문자 · 경로째 적혀 있다. W40은 회차에만 runonly.example 인용이 있다.
+  const overlay = readJson<unknown[]>('tenants.overlay.json')
+  overlay.push({ ...base, tenantId: 'or', brandName: '하위 숙소', aliases: ['하위 숙소'], ownedDomains: ['https://Shop.OR-Brand.example/'], industry: '캠핑', region: '가상시', competitors: [] })
+  writeJson('tenants.overlay.json', overlay)
+  writeJson('data/or/question-bank/v1.json', { version: 'v1', generatedAt: '2026-10-01', questions })
+  const plain = weekAnalyses(0).map((a) => ({ ...a, citations: a.citations.filter((c) => !/side\.example$/.test(c.domain ?? '')) })) as Analysis[]
+  const withRunOnly = plain.map((a, i) => (i === 0 ? { ...a, citations: [...a.citations, cite('https://runonly.example/p', 'unknown')] } : a)) as Analysis[]
+  const or40 = cardFor('2026-W40', plain, [], 'or', '하위 숙소')
+  writeJson('data/or/2026-W40/question-analyses.json', plain)
+  writeJson('data/or/2026-W40/scorecard.json', or40)
+  writeJson('data/or/scorecard-history.json', [or40])
+  const rtOr = await reg.loadRuntimeTenants()
+  const orT = rtOr.find((t) => t.tenantId === 'or')!
+  const orEntities = cohortRankingEntities(orT, rtOr)
+  writeJson('data/or/2026-W40/runs/r1/question-analyses.json', withRunOnly)
+  writeJson('data/or/2026-W40/runs/r1/scorecard.json', cardFor('2026-W40', withRunOnly, [], 'or', '하위 숙소'))
+  writeJson('data/or/2026-W40/runs/r1/run.json', { ...runMeta('r1', contextFingerprint(orT, orEntities)), tenantId: 'or', weekOf: '2026-W40' })
+
+  const planFor = (id: string, extra: string[], applyPast = false) => editor.planOwnedDomains(id, { extra, applyPast }, store)
+  ok('거절: 플랫폼 바탕 주소(vercel.app)', (await planFor('or', ['vercel.app'])).errors.some((e) => e.includes('플랫폼')))
+  ok('받음: 플랫폼 아래 내 사이트(my-site.vercel.app)', (await planFor('or', ['my-site.vercel.app'])).errors.length === 0)
+  ok('거절: 접미사(co.kr)', (await planFor('or', ['co.kr'])).errors.some((e) => e.includes('접미사')))
+  ok('거절: 고정 주소의 상위 주소(or-brand.example)', (await planFor('or', ['or-brand.example'])).errors.some((e) => e.includes('상위 주소')))
+  const idn = await planFor('or', ['https://군산각.kr/'])
+  ok('한글 도메인은 퓨니코드로 받는다', idn.errors.length === 0 && idn.extra[0]!.startsWith('xn--'))
+  ok('끝 점은 뗀다', (await planFor('or', ['example-site.com.'])).extra.join() === 'example-site.com')
+
+  const pr = await planFor('or', ['runonly.example'], true)
+  ok('회차에만 있는 인용도 미리보기에 센다', pr.past?.promoted === 0 && pr.past?.runPromoted === 1 && pr.past?.weeks.some((w) => w.weekOf === '2026-W40' && w.runPromoted === 1))
+  await editor.saveOwnedDomains('or', { extra: ['runonly.example'], applyPast: true }, pr.key, store)
+  const rtOr2 = await reg.loadRuntimeTenants()
+  const orT2 = rtOr2.find((t) => t.tenantId === 'or')!
+  const fpOr2 = contextFingerprint(orT2, cohortRankingEntities(orT2, rtOr2))
+  ok('설정이 대문자 · 경로째여도 바꾼 회차 지문 = 다음 측정 지문', readJson<{ contextFingerprint: string }>('data/or/2026-W40/runs/r1/run.json').contextFingerprint === fpOr2)
+  const pr2 = await planFor('or', ['another.example'], true)
+  await editor.saveOwnedDomains('or', { extra: ['another.example'], applyPast: true }, pr2.key, store)
+  ok('빼기와 더하기를 함께 하면 회차 지문은 그대로(끊김 표시 유지)', readJson<{ contextFingerprint: string }>('data/or/2026-W40/runs/r1/run.json').contextFingerprint === fpOr2)
+
+  // 더한 주소가 나중에 설정에도 들어간 경우 — 고정 주소로 보이고, 뺄 수 있는 목록에는 없다.
+  writeJson('data/oc/owned-domains.json', { extra: ['oc.example', 'oc-old.example'], updatedAt: '2026-10-27' })
+  const oc = await editor.describeOwnedDomains('oc')
+  ok('설정에도 있는 더한 주소는 고정으로', oc.fixed.join() === 'oc.example' && oc.extra.join() === 'oc-old.example')
+  ok('설정 주소만(더한 주소 빼고) — 범위 변형 등록이 옮겨 적는 값', (await reg.configuredOwnedDomains('oc')).join() === 'oc.example')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }

@@ -55,6 +55,17 @@ export function registrableDomain(host: string): string {
   return TWO_LEVEL_SUFFIXES.has(last2) ? parts.slice(-3).join('.') : last2
 }
 
+/** 2단계 TLD 자체(co.kr 등)인가 — 도메인이 아니라 접미사다. */
+export function isPublicSuffix(host: string): boolean {
+  return TWO_LEVEL_SUFFIXES.has(host.replace(/^www\./, '').toLowerCase())
+}
+
+/** 서브도메인마다 주인이 다른 플랫폼의 바탕 주소 자체(vercel.app · cafe24.com 등)인가 — 그 아래 주소(x.vercel.app)는 아니다. */
+export function isMultiTenantRoot(host: string): boolean {
+  const h = host.replace(/^www\./, '').toLowerCase()
+  return MULTI_TENANT_SUFFIXES.includes(h)
+}
+
 export function isMultiTenantHost(host: string): boolean {
   const h = host.replace(/^www\./, '').toLowerCase()
   return MULTI_TENANT_SUFFIXES.some((s) => endsWithSuffix(h, s))

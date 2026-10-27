@@ -8,7 +8,7 @@ import {
   type OwnedDomainsSaveResult,
   type OwnedDomainsState,
 } from '../lib/api'
-import { hostKey } from '../lib/brandVariant'
+import { ownedHostKey } from '../lib/brandVariant'
 
 /**
  * 기본 정보 서랍의 「자사 사이트 주소」 칸(server/ownedDomainsEditor.ts). 등록한 홈페이지 말고 브랜드가 가진 다른 사이트를 더한다 —
@@ -27,10 +27,13 @@ export default function OwnedDomainsEditor({
   tenantId,
   onSaved,
   onDirtyChange,
+  onBusyChange,
 }: {
   tenantId: string
   onSaved: () => void
   onDirtyChange?: (dirty: boolean) => void
+  /** 저장하는 동안 참 — 서랍이 닫히지 않게 부모가 본다(저장은 서버에서 끝까지 진행된다). */
+  onBusyChange?: (busy: boolean) => void
 }) {
   const [load, setLoad] = useState<Load>({ status: 'loading' })
   const [extra, setExtra] = useState<string[] | null>(null)
@@ -63,7 +66,8 @@ export default function OwnedDomainsEditor({
 
   const s = load.status === 'ok' ? load.value : null
   const list = extra ?? []
-  const dirty = Boolean(s && list.join('\n') !== s.extra.join('\n'))
+  // 집합으로 비교한다 — 뺀 주소를 다시 더해 순서만 바뀐 목록은 바뀐 것이 아니다(서버도 집합으로 본다).
+  const dirty = Boolean(s && (list.length !== s.extra.length || list.some((d) => !s.extra.includes(d))))
   const added = s ? list.filter((d) => !s.extra.includes(d)) : []
   const input: OwnedDomainsInput = { extra: list, applyPast: applyPast && added.length > 0 }
   const requestKey = dirty ? JSON.stringify(input) : ''
@@ -91,6 +95,10 @@ export default function OwnedDomainsEditor({
     onDirtyChange?.(dirty)
   }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
+  useEffect(() => {
+    onBusyChange?.(busy)
+  }, [busy, onBusyChange])
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange])
 
   const current = plan && plan.key === requestKey ? plan : null
   const freshPlan = current?.replan === replan
@@ -111,7 +119,7 @@ export default function OwnedDomainsEditor({
     setConfirming(false)
   }
   const addDraft = () => {
-    const host = hostKey(draft)
+    const host = ownedHostKey(draft)
     if (!host) return
     if (!list.includes(host)) setExtra([...list, host])
     setDraft('')
@@ -213,7 +221,7 @@ export default function OwnedDomainsEditor({
               <span className="sr-only">더할 주소</span>
               <input type="text" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="예: all-about-gunsan.vercel.app" />
             </label>
-            <button type="submit" className="btn" disabled={!hostKey(draft)}>
+            <button type="submit" className="btn" disabled={!ownedHostKey(draft)}>
               더하기
             </button>
           </form>
@@ -250,9 +258,13 @@ export default function OwnedDomainsEditor({
           {planned?.past && (
             <div className="ce-preview">
               <p className="ce-preview-head">
-                지난 측정 <span>· 자사로 바꿀 인용 {planned.past.promoted.toLocaleString()}건 · 회차 {planned.past.runs}개도 함께</span>
+                지난 측정{' '}
+                <span>
+                  · 자사로 바꿀 인용 {planned.past.promoted.toLocaleString()}건
+                  {planned.past.runPromoted > 0 ? ` · 회차 기록에서 ${planned.past.runPromoted.toLocaleString()}건` : ''} · 고칠 회차 {planned.past.runs}개
+                </span>
               </p>
-              {planned.past.promoted > 0 ? (
+              {planned.past.promoted + planned.past.runPromoted > 0 ? (
                 <ul className="od-weeks">
                   {planned.past.weeks.map((w) => (
                     <li key={w.weekOf}>
@@ -261,6 +273,8 @@ export default function OwnedDomainsEditor({
                         <>
                           인용 {w.promoted}건 · 자사 인용률 {pct(w.rateBefore)} → <b>{pct(w.rateAfter)}</b> · 점수 {w.scoreBefore} → <b>{w.scoreAfter}</b>
                         </>
+                      ) : w.runPromoted > 0 ? (
+                        <>회차 기록에서만 인용 {w.runPromoted}건 · 그 주 점수는 그대로</>
                       ) : (
                         <>
                           앞 주 점수가 바뀌어 4주 평균 {w.ma4Before} → <b>{w.ma4After}</b>
@@ -292,8 +306,8 @@ export default function OwnedDomainsEditor({
           {confirming && planned ? (
             <div className="od-confirm" role="group" aria-label="저장 확인">
               <p>
-                {planned.past && planned.past.weeks.length > 0
-                  ? `지난 ${planned.past.weeks.length}주의 판정 · 점수를 다시 쓰고 저장할까요? 바꾸기 전 기록은 백업해 둬요.`
+                {planned.past && (planned.past.weeks.length > 0 || planned.past.runs > 0)
+                  ? `지난 ${planned.past.weeks.length}주 · 회차 ${planned.past.runs}개의 기록을 다시 쓰고 저장할까요? 바꾸기 전 기록은 백업해 둬요.`
                   : '주소 목록을 저장할까요? 다음 측정부터 적용돼요.'}
               </p>
               <div className="ce-bar-actions">
@@ -324,7 +338,8 @@ export default function OwnedDomainsEditor({
           <b>✓ 자사 사이트 주소를 저장했어요</b>
           {saved.applied ? (
             <p>
-              지난 측정 {saved.applied.weeks}주 · 회차 {saved.applied.runs}개에서 인용 {saved.applied.promoted.toLocaleString()}건을 자사로 바꿨어요
+              지난 측정 {saved.applied.weeks}주 · 회차 {saved.applied.runs}개를 고쳤어요 · 자사로 바꾼 인용 {saved.applied.promoted.toLocaleString()}건
+              {saved.applied.runPromoted > 0 ? `(회차 기록 ${saved.applied.runPromoted.toLocaleString()}건 따로)` : ''}
               {saved.applied.ranksUpdated > 0 ? ` · 순위 카드 ${saved.applied.ranksUpdated}장을 다시 셌어요` : ''}.
             </p>
           ) : (
