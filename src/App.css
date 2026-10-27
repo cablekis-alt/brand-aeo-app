@@ -6175,82 +6175,142 @@ section.dash-card {
   width: 220px;
   max-width: 100%;
 }
+/* 칸 사이 선은 틈(1px)으로 비치는 바탕색 — 좁은 창에서 칸이 줄을 바꿔도 선이 따라간다(칸마다 왼쪽 선을 그으면 둘째 줄 첫 칸에 선이 남았다). */
 .pf-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
   margin: 0 0 14px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  background: var(--line);
 }
 .pf-sum {
+  flex: 1 1 150px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
-  padding: 14px 16px;
+  padding: 12px 20px 14px;
   border: 0;
-  border-radius: var(--r-card);
-  background: var(--card);
-  box-shadow: 0 0 0 1px var(--line);
+  border-radius: 0;
+  background: var(--paper);
   color: var(--ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
+.pf-sum:hover {
+  background: var(--surface-2);
+}
 .pf-sum.on {
-  box-shadow: 0 0 0 2px var(--ink);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 .pf-sum:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 .pf-sum-label {
   font-size: 12px;
+  font-weight: 700;
   color: var(--muted);
 }
 .pf-sum-value {
   font-family: var(--mono);
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
 }
-.pf-sum.good .pf-sum-value { color: var(--accent-ink); }
+.pf-sum.good .pf-sum-value { color: var(--good); }
 .pf-sum.warn .pf-sum-value { color: var(--warn); }
 .pf-sum.info .pf-sum-value { color: var(--info); }
 .pf-sum-sub {
-  font-size: 11.5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* 요약 막대 — 고객 브랜드 한 곳에 한 칸, 칸 색은 왼쪽 요약 칸과 같은 상태(lib/portfolioView statusCells). */
+.pf-progress {
+  flex: 2 1 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 0 14px 20px;
+  background: var(--paper);
+}
+.pf-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.pf-progress-head b {
+  font-size: 15px;
+  color: var(--ink);
+}
+.pf-cells {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+}
+.pf-cells > span {
+  flex: 1 1 0;
+  min-width: 2px;
+  background: var(--line);
+}
+.pf-cells > .done { background: var(--good-mark); }
+.pf-cells > .mismatch { background: var(--warn-mark); }
+.pf-cells > .alone { background: var(--info); }
+.pf-progress-note {
+  font-size: 12px;
   color: var(--muted);
 }
 .pf-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0 22px;
   margin: 0 0 18px;
+  border-bottom: 1px solid var(--line);
 }
 .pf-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  height: 40px;
+  margin-bottom: -1px;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: var(--card);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
   color: var(--ink-2);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+.pf-chip:hover {
+  color: var(--ink);
+}
 .pf-chip.on {
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: none;
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+  font-weight: 800;
+}
+.pf-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .pf-chip-n {
   font-family: var(--mono);
+  font-size: 12px;
   font-weight: 500;
-  opacity: 0.75;
+  color: var(--muted);
 }
 .pf-group {
   margin: 0 0 20px;
@@ -6261,11 +6321,12 @@ section.dash-card {
   align-items: center;
   gap: 4px 8px;
   margin: 0 0 10px;
-  font-size: 17px;
+  font-size: 15px;
+  font-weight: 800;
 }
-/* 업종군 색(lib/industryGroups groupColor → --grp) — 제목 글자·작은 표시·카드 위 테두리에만 쓴다. */
+/* 업종군 색(lib/industryGroups groupColor → --grp) — 제목 글자 · 작은 표시에만 쓴다. 주별 묶음은 업종군이 없어 글자색 그대로. */
 .pf-group-name {
-  color: var(--grp);
+  color: var(--grp, var(--ink));
 }
 .pf-group-toggle {
   display: inline-flex;
@@ -6306,9 +6367,6 @@ section.dash-card {
   font-weight: 400;
   color: var(--muted);
 }
-.pf-group .pf-card {
-  border-top: 3px solid var(--grp);
-}
 .grp-mark {
   width: 10px;
   height: 10px;
@@ -6326,9 +6384,9 @@ section.dash-card {
 .pf-card {
   /* clip — hidden이면 열 머리의 sticky가 카드 안에서만 붙는다. */
   overflow: clip;
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-card);
   background: var(--card);
-  box-shadow: 0 0 0 1px var(--line);
   /* 열 머리와 줄이 같은 칸 너비를 쓴다: 순위 · 브랜드 · 점수 · 언급률 · 자사 인용률 · 상태 · 동작 */
   --pf-cols: 64px minmax(0, 1.6fr) minmax(120px, 1fr) 64px 72px minmax(0, 1.3fr) 92px;
 }
@@ -6336,9 +6394,9 @@ section.dash-card {
   border-top: 1px solid var(--line);
 }
 .pf-cohort-head {
-  padding: 10px 18px 6px;
-  /* 업종군 색(--grp)을 옅게 깔아 코호트가 바뀌는 지점이 보이게 한다. */
-  background: color-mix(in srgb, var(--grp, var(--surface-2)) 7%, var(--surface-2));
+  padding: 9px 18px 7px;
+  /* 비교 그룹이 바뀌는 지점 — 바탕색 띠(계기판 A: 색 대신 명도). */
+  background: var(--paper);
 }
 .pf-cohort-cell {
   display: flex;
@@ -6347,9 +6405,9 @@ section.dash-card {
   gap: 6px 10px;
 }
 .pf-cohort-label {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--grp, var(--ink-2));
+  color: var(--ink);
 }
 /* 정렬해 업종군을 풀었을 때 — 비교 그룹마다 어느 업종군인지. */
 .pf-cohort-group {
@@ -6362,7 +6420,7 @@ section.dash-card {
 }
 /* 질문지가 달라 순위를 그대로 견줄 수 없는 비교 그룹 — 순위를 흐리게 하고 「*」로 머리의 설명을 가리킨다. */
 .pf-cohort-note {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--warn);
 }
@@ -6378,13 +6436,12 @@ section.dash-card {
   grid-template-columns: var(--pf-cols);
   align-items: end;
   gap: 12px;
-  padding: 8px 18px 6px;
-  border-bottom: 1px solid var(--line);
+  padding: 9px 18px 7px;
+  border-bottom: 1px solid var(--ink);
   background: var(--card);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.02em;
 }
 .pf-lb-head .num {
   text-align: right;
@@ -6412,17 +6469,24 @@ section.dash-card {
   font-size: 13px;
   text-align: left;
 }
-.pf-lb-row.own {
-  background: color-mix(in srgb, var(--grp, var(--accent)) 4%, var(--card));
-  box-shadow: inset 3px 0 0 var(--grp, var(--accent));
+.pf-lb-row.own .pf-lb-text {
+  font-weight: 700;
+  color: var(--ink);
 }
 .pf-lb-row.own:hover {
-  background: color-mix(in srgb, var(--grp, var(--accent)) 9%, var(--card));
+  background: var(--surface-2);
 }
 /* 사이드바에서 고른 고객 브랜드 — 업종군 색 막대를 강조색으로 덮는다. */
 .pf-lb-row.own.is-selected {
-  background: color-mix(in srgb, var(--accent) 9%, var(--card));
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
   box-shadow: inset 3px 0 0 var(--accent);
+}
+.pf-lb-row.own.is-selected .pf-lb-text,
+.pf-lb-row.own.is-selected .pf-lb-num {
+  color: var(--accent);
+}
+.pf-lb-row.own.is-selected .pf-lb-bar span {
+  background: var(--accent);
 }
 .pf-sel-tag {
   background: var(--accent-soft);
@@ -6581,9 +6645,7 @@ section.dash-card {
   flex: 1;
   height: 6px;
   overflow: hidden;
-  border-radius: 999px;
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--line);
   /* 눈금 때문에 위치를 잡아 덮개 위로 올라온다 — 막대를 눌러도 줄이 열리게 누르기는 덮개로 보낸다. */
   pointer-events: none;
 }
@@ -6599,8 +6661,10 @@ section.dash-card {
 .pf-lb-bar span {
   display: block;
   height: 100%;
-  border-radius: 999px;
   background: var(--line-strong);
+}
+.pf-lb-row.own .pf-lb-bar span {
+  background: var(--muted);
 }
 .pf-lb-num {
   width: 28px;
@@ -6623,7 +6687,7 @@ section.dash-card {
   min-width: 0;
 }
 .pf-row-meta {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--muted);
 }
@@ -6674,7 +6738,7 @@ section.dash-card {
   height: 32px;
   padding: 0 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-ctl);
   background: var(--card);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--ink-2);
@@ -6719,7 +6783,7 @@ section.dash-card {
   height: 32px;
   padding: 0 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-ctl);
   background: var(--card);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--ink-2);
@@ -6852,7 +6916,7 @@ section.dash-card {
   animation: pf-skel-shine 1.4s ease-in-out infinite;
 }
 .pf-sum.pf-skel {
-  height: 84px;
+  height: 92px;
   cursor: default;
 }
 .pf-cohort-head.pf-skel {
@@ -8276,15 +8340,15 @@ tr.ms-run-child td:nth-child(2) {
 .pf-view {
   display: inline-flex;
   padding: 2px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 .pf-view button {
-  height: 30px;
-  padding: 0 14px;
+  height: 32px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 4px;
   background: transparent;
   color: var(--ink-2);
   font: inherit;
@@ -8293,9 +8357,9 @@ tr.ms-run-child td:nth-child(2) {
   cursor: pointer;
 }
 .pf-view button[aria-selected='true'] {
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: 0 0 0 1px var(--line-strong);
+  background: var(--ink);
+  color: var(--card);
+  font-weight: 700;
 }
 .pf-view button:focus-visible {
   outline: 2px solid var(--accent);

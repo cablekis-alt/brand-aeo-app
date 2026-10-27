@@ -35,11 +35,11 @@ export function statusShort(r: PortfolioRow): string {
 
 /** 브랜드 현황 거르개 — 요약 타일 하나에 하나. 타일끼리 겹치지 않는다(완료 + 측정 남음 + 순위 비교 안 됨 + 경쟁사 없이 = 전체). */
 export type PfFilter = '' | 'done' | 'todo' | 'mismatch' | 'alone'
-/** 브랜드 현황 정렬 — 빈 값은 업종군별(기본), 나머지는 업종군을 풀고 한 줄로 늘어놓는다. */
-export type PfSort = '' | 'oldest' | 'score' | 'name'
+/** 브랜드 현황 정렬 — 빈 값은 업종군별(기본), week는 마지막으로 잰 주별로 묶고, 나머지는 업종군을 풀고 한 줄로 늘어놓는다. */
+export type PfSort = '' | 'week' | 'oldest' | 'score' | 'name'
 
 const FILTERS: PfFilter[] = ['', 'done', 'todo', 'mismatch', 'alone']
-const SORTS: PfSort[] = ['', 'oldest', 'score', 'name']
+const SORTS: PfSort[] = ['', 'week', 'oldest', 'score', 'name']
 
 export function passFilter(r: Pick<PortfolioRow, 'status'>, f: PfFilter): boolean {
   switch (f) {
@@ -252,7 +252,8 @@ export function viewParams(v: PortfolioViewState): URLSearchParams {
  */
 export function sortCohorts(cohorts: PortfolioCohort[], rowById: Map<string, PortfolioRow>, sort: PfSort): PortfolioCohort[] {
   const base = groupCohorts(cohorts).flatMap((g) => g.cohorts)
-  if (!sort) return base
+  // 묶음 보기(업종군 · 마지막 측정 주)는 기본 순서 그대로 — 주별 묶음은 groupCohortsByWeek가 만든다.
+  if (!sort || sort === 'week') return base
   const customers = (c: PortfolioCohort) => c.members.filter(isCurrentCustomer)
   const best = (c: PortfolioCohort): number | null => {
     const scores = customers(c)
@@ -451,4 +452,44 @@ export function refReason(c: PortfolioCohort, rowById: Map<string, PortfolioRow>
   if (statuses.includes('diff')) return 'diff'
   if (statuses.includes('unknown')) return 'unknown'
   return null
+}
+
+/** 「마지막 측정 주별」 묶음 하나 — weekOf가 빈 값이면 측정 전. key는 접기 상태 키. */
+export interface WeekGroup {
+  key: string
+  weekOf: string
+  label: string
+  cohorts: PortfolioCohort[]
+}
+
+/** 「W44 · 이번 주」 · 「W42 · 2주 전」 · 「측정 전」 — 몇 주 전인지 모르면(해가 다른 옛 주차) 주차만. */
+export function weekGroupLabel(weekOf: string, currentWeek: string): string {
+  if (!weekOf) return '측정 전'
+  const age = weeksBetween(weekOf, currentWeek)
+  return `${shortWeek(weekOf)}${age === null ? '' : age <= 0 ? ' · 이번 주' : ` · ${age}주 전`}`
+}
+
+/**
+ * 비교 그룹 카드를 마지막으로 잰 주끼리 묶는다(최근 주부터, 측정 전은 맨 뒤). 보이는 카드에는 그 주가 마지막 측정인 고객 브랜드가
+ * 있다(그 뒤에 다시 잰 고객은 지난 기록 줄이라 카드를 고르지 않는다) — 그래서 카드의 주가 곧 그 고객의 마지막 측정 주다. 주 안에서는
+ * 기본 순서(업종군 순서 → 고객 많은 비교 그룹).
+ */
+export function groupCohortsByWeek(cohorts: PortfolioCohort[], currentWeek: string): WeekGroup[] {
+  const byWeek = new Map<string, PortfolioCohort[]>()
+  for (const c of groupCohorts(cohorts).flatMap((g) => g.cohorts)) byWeek.set(c.weekOf, [...(byWeek.get(c.weekOf) ?? []), c])
+  return [...byWeek.entries()]
+    .sort(([a], [b]) => (a === b ? 0 : a === '' ? 1 : b === '' ? -1 : b.localeCompare(a)))
+    .map(([weekOf, list]) => ({ key: `week:${weekOf || 'none'}`, weekOf, label: weekGroupLabel(weekOf, currentWeek), cohorts: list }))
+}
+
+/** 요약 막대의 한 칸 — 요약 타일과 같은 네 갈래(완료 · 순위 비교 안 됨 · 경쟁사 없이 · 측정 남음). */
+export type StatusCell = 'done' | 'mismatch' | 'alone' | 'todo'
+
+/**
+ * 고객 브랜드 한 곳에 한 칸 — 요약 타일과 같은 거르개(passFilter)로 갈라 타일 순서대로 늘어놓는다. 타일끼리 겹치지 않으므로 칸 수 합이
+ * 고객 브랜드 수다(막대와 타일 숫자가 어긋나지 않는다).
+ */
+export function statusCells(rows: Pick<PortfolioRow, 'status'>[]): StatusCell[] {
+  const order: StatusCell[] = ['done', 'mismatch', 'alone', 'todo']
+  return order.flatMap((cell) => rows.filter((r) => passFilter(r, cell)).map(() => cell))
 }
