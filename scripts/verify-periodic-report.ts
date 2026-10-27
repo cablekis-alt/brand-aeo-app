@@ -198,7 +198,7 @@ ok('표지 조건(종이): 수집 엔진 · 판정 엔진 · 질문당 · 질문
 ok('표지 조건(종이): 기록이 없으면 그 조각을 뺀다', measureConditionPlain({ enginesUsed: ['gemini'] }) === '수집 엔진 Gemini')
 // 표지 조건 칸(디자인 A D4) — 한 줄 문장과 같은 값을 칸으로. 칸 이름 · 순서가 문장과 같다.
 const parts = measureConditionParts({ enginesUsed: ['openai', 'gemini', 'perplexity'], judgeEngine: 'claude', repeatsPerQuestion: 1, questionBankVersion: 'v5' })
-ok('표지 조건 칸: 수집 엔진 · 판정 엔진 · 반복 · 질문지', parts.map((p) => `${p.label}=${p.value}`).join(' | ') === '수집 엔진=ChatGPT · Gemini · Perplexity | 판정 엔진=Claude | 반복=질문당 1회 | 질문지=v5')
+ok('표지 조건 칸: 수집 엔진 · 판정 엔진 · 반복 횟수 · 질문지(조건 바뀜 안내와 같은 이름)', parts.map((p) => `${p.label}=${p.value}`).join(' | ') === '수집 엔진=ChatGPT · Gemini · Perplexity | 판정 엔진=Claude | 반복 횟수=질문당 1회 | 질문지=v5')
 ok('표지 조건 칸: 기록이 없는 칸은 뺀다', measureConditionParts({ judgeEngine: 'gemini' }).map((p) => p.label).join() === '판정 엔진')
 
 // 9) 개선제안 근거 — 사실성 원문은 화면 전용(D8: 고객 종이에는 건수만), 계산 예시는 합니다체

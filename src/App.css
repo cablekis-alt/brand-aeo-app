@@ -2196,6 +2196,10 @@ tbody tr.selected {
 .explain-steps .ov-step-bar > .mono {
   font-size: 12px;
 }
+/* 축 글자 — 칸에 들어가면 한 줄(그림이 높아지면 다음 절이 쪽을 넘긴다), 좁으면(칸 6~7개) 띄어쓰기에서만 줄을 바꾼다(「이 / 번 주」로 갈렸다). */
+.explain-steps .ov-step-axis {
+  word-break: keep-all;
+}
 .explain-steps .ov-step.current .ov-step-bar > .mono {
   font-size: 14px;
 }
@@ -3840,6 +3844,10 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 /* 이 보고서의 점수 — 넷 가운데 하나만 강조색. */
 .report-tiles > article:first-child .tile-value {
   color: var(--accent);
+}
+/* 「보합」은 강조색을 물려받지 않는다 — 오른 것(초록)처럼 읽혔다. 오름 · 내림은 제 색이 있다. */
+.report-tiles > article:first-child .tile-value .delta.flat {
+  color: var(--ink);
 }
 /* 종이에서는 넷이 한 줄 — 종이 폭에서 auto-fit이 3 + 1로 갈렸다(상용화 UI 3차 U29). */
 @media print {

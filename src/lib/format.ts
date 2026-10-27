@@ -68,11 +68,14 @@ export function measureConditionPlain(card: {
   questionBankVersion?: string
 }): string {
   return measureConditionParts(card)
-    .map((p) => (p.label === '반복' ? p.value : `${p.label} ${p.value}`))
+    .map((p) => (p.label === '반복 횟수' ? p.value : `${p.label} ${p.value}`))
     .join(' · ')
 }
 
-/** 고객 종이 표지의 측정 조건 칸(수집 엔진 · 판정 엔진 · 반복 · 질문지) — measureConditionPlain과 같은 값을 칸으로. 기록이 없는 칸은 뺀다. */
+/**
+ * 고객 종이 표지의 측정 조건 칸(수집 엔진 · 판정 엔진 · 반복 횟수 · 질문지) — measureConditionPlain과 같은 값을 칸으로. 기록이 없는 칸은 뺀다.
+ * 칸 이름은 같은 종이의 「측정 조건이 달라(반복 횟수 바뀜)」(comparability.ts)과 같은 말이다.
+ */
 export function measureConditionParts(card: {
   enginesUsed?: string[]
   judgeEngine?: string
@@ -83,7 +86,7 @@ export function measureConditionParts(card: {
   const parts: { label: string; value: string }[] = []
   if (engines) parts.push({ label: '수집 엔진', value: engines })
   if (card.judgeEngine) parts.push({ label: '판정 엔진', value: ENGINE_LABEL[card.judgeEngine] ?? card.judgeEngine })
-  if (card.repeatsPerQuestion) parts.push({ label: '반복', value: `질문당 ${card.repeatsPerQuestion}회` })
+  if (card.repeatsPerQuestion) parts.push({ label: '반복 횟수', value: `질문당 ${card.repeatsPerQuestion}회` })
   if (card.questionBankVersion) parts.push({ label: '질문지', value: card.questionBankVersion })
   return parts
 }
