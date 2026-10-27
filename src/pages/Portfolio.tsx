@@ -588,8 +588,9 @@ export default function Portfolio() {
                   <b className="mono">{sum.done}</b> <span className="mono">/ {sum.all}</span>
                 </span>
               </div>
+              {/* 칸이 많으면(60곳 넘게) 틈을 1px로 — 칸 수가 막대 폭을 넘지 않게. */}
               <div
-                className="pf-cells"
+                className={`pf-cells${cells.length > 60 ? ' dense' : ''}`}
                 role="img"
                 aria-label={`고객 브랜드 ${sum.all}곳 — 이번 주 완료 ${sum.done} · 순위 비교 안 됨 ${sum.mismatch} · 경쟁사 없이 측정 ${sum.alone} · 이번 주 측정 남음 ${sum.todo}`}
               >
@@ -597,7 +598,25 @@ export default function Portfolio() {
                   <span key={i} className={c} />
                 ))}
               </div>
-              <span className="pf-progress-note">한 칸 = 고객 브랜드 한 곳 · 색은 왼쪽 칸과 같은 상태</span>
+              {/* 색 범례는 칸 위치(왼쪽 · 위)에 기대지 않고 갈래 이름 · 수로 — 좁은 창에서는 막대가 요약 칸 아래로 내려간다. */}
+              <ul className="pf-progress-key" aria-hidden="true">
+                {(
+                  [
+                    ['done', '완료', sum.done],
+                    ['mismatch', '순위 비교 안 됨', sum.mismatch],
+                    ['alone', '경쟁사 없이', sum.alone],
+                    ['todo', '측정 남음', sum.todo],
+                  ] as const
+                )
+                  .filter(([, , n]) => n > 0)
+                  .map(([key, label, n]) => (
+                    <li key={key}>
+                      <span className={`pf-key-swatch ${key}`} />
+                      {label} <span className="mono">{n}</span>
+                    </li>
+                  ))}
+                <li className="pf-progress-unit">한 칸 = 고객 브랜드 한 곳</li>
+              </ul>
             </div>
           </section>
 
