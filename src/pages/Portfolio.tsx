@@ -8,6 +8,7 @@ import RowMenu, { type RowMenuItem } from '../components/RowMenu'
 import { useTenant } from '../context/useTenant'
 import { loadPortfolio, type CohortMember, type Portfolio as PortfolioData, type PortfolioCohort, type PortfolioRow } from '../lib/api'
 import { groupColor, groupOrder, industryGroupOf } from '../lib/industryGroups'
+import { weekLabel } from '../lib/format'
 import { directionParticle } from '../lib/korean'
 import { runName, useMeasureStatus } from '../lib/measureStatus'
 import {
@@ -16,6 +17,7 @@ import {
   cohortKey,
   customerForCompetitorRow,
   groupCohorts,
+  groupCohortsByWeek,
   isCurrentCustomer,
   parseView,
   passFilter,
@@ -23,6 +25,7 @@ import {
   rowChips,
   showMeasure,
   sortCohorts,
+  statusCells,
   summarize,
   unmeasuredCohorts,
   viewParams,
@@ -189,6 +192,8 @@ export default function Portfolio() {
   const rowById = useMemo(() => new Map(rows.map((r) => [r.tenantId, r])), [rows])
   const allCohorts = useMemo(() => [...(state.value?.cohorts ?? []), ...unmeasuredCohorts(rows)], [state.value, rows])
   const sum = summarize(rows)
+  // 요약 막대 — 고객 브랜드 한 곳에 한 칸, 요약 타일과 같은 네 갈래.
+  const cells = statusCells(rows)
   const groupsAll = useMemo(() => {
     const m = new Map<string, number>()
     for (const r of rows) m.set(industryGroupOf(r.industry), (m.get(industryGroupOf(r.industry)) ?? 0) + 1)
@@ -209,18 +214,25 @@ export default function Portfolio() {
     })
   }, [allCohorts, rowById, view.f, view.g, qInput])
   const grouped = useMemo(() => groupCohorts(visible), [visible])
-  const flat = useMemo(() => (view.sort ? sortCohorts(visible, rowById, view.sort) : []), [visible, rowById, view.sort])
+  // 「마지막 측정 주별」 — 비교 그룹 카드를 마지막으로 잰 주끼리(최근 주부터, 측정 전은 맨 뒤).
+  const currentWeek = state.value?.currentWeek ?? ''
+  const weekGroups = useMemo(() => (view.sort === 'week' ? groupCohortsByWeek(visible, currentWeek) : []), [visible, view.sort, currentWeek])
+  const flat = useMemo(() => (view.sort && view.sort !== 'week' ? sortCohorts(visible, rowById, view.sort) : []), [visible, rowById, view.sort])
   // 검색 중에는 접기를 무시한다 — 찾은 브랜드가 접힌 묶음에 숨지 않게(접기 단추도 잠근다).
   const searching = qInput.trim() !== ''
   const isFolded = (group: string) => !searching && (folds[group] ?? false)
+  // 주별 묶음의 접기는 이 화면에만 둔다 — 주가 바뀌면 키(W44)도 바뀌어 이 PC에 남겨 둘 까닭이 없다. 업종군 접기는 기억한다.
+  const isWeekKey = (key: string) => key.startsWith('week:')
   const toggleFold = (group: string, folded: boolean) => {
-    writeFold(group, folded)
+    if (!isWeekKey(group)) writeFold(group, folded)
     setFolds((f) => ({ ...f, [group]: folded }))
   }
-  const anyOpen = grouped.some((g) => !isFolded(g.name))
+  // 지금 보기의 묶음 키 — 업종군별은 업종군 이름, 주별은 week:주차, 한 줄 정렬은 묶음이 없다.
+  const foldKeys = view.sort === 'week' ? weekGroups.map((g) => g.key) : view.sort ? [] : grouped.map((g) => g.name)
+  const anyOpen = foldKeys.some((k) => !isFolded(k))
   const setAllFolds = (folded: boolean) => {
-    for (const g of grouped) writeFold(g.name, folded)
-    setFolds((f) => ({ ...f, ...Object.fromEntries(grouped.map((g) => [g.name, folded])) }))
+    for (const k of foldKeys) if (!isWeekKey(k)) writeFold(k, folded)
+    setFolds((f) => ({ ...f, ...Object.fromEntries(foldKeys.map((k) => [k, folded])) }))
   }
 
   // 경쟁사 편집 · 기본 정보 서랍에 저장하지 않은 바꾼 내용이 있으면, 다른 브랜드로 바꾸거나 이 화면을 떠나기 전에 묻는다.
@@ -348,7 +360,8 @@ export default function Portfolio() {
   const jump = () => {
     if (!selectedId) return
     const row = rowById.get(selectedId)
-    if (row && !view.sort && isFolded(industryGroupOf(row.industry))) toggleFold(industryGroupOf(row.industry), false)
+    const key = !row ? null : view.sort === 'week' ? `week:${row.weekOf || 'none'}` : view.sort ? null : industryGroupOf(row.industry)
+    if (key && isFolded(key)) toggleFold(key, false)
     setJumpTo((j) => ({ id: selectedId, n: (j?.n ?? 0) + 1 }))
   }
   useEffect(() => {
@@ -441,11 +454,64 @@ export default function Portfolio() {
     )
   }
 
+  /**
+   * 묶음 한 칸(업종군 또는 마지막 측정 주) — 접기 단추 · 고객 브랜드 수 · 접었을 때 한 줄 요약 · 비교 그룹 카드. color가 있으면 업종군이고
+   * (카드 머리에 업종군을 다시 적지 않는다), 없으면 주별 묶음이라 업종이 섞여 카드마다 업종군을 적는다.
+   */
+  const groupSection = (g: { key: string; label: string; cohorts: PortfolioCohort[]; color: string | null }, i: number) => {
+    const folded = isFolded(g.key)
+    const groupRows = g.cohorts.flatMap((c) =>
+      c.members.filter(isCurrentCustomer).flatMap((m) => {
+        const r = rowById.get(m.tenantId)
+        return r ? [r] : []
+      }),
+    )
+    const digest = summarize(groupRows)
+    return (
+      <section
+        key={g.key}
+        className={`pf-group${g.color ? '' : ' pf-week'}`}
+        aria-label={g.label}
+        style={g.color ? ({ '--grp': g.color } as React.CSSProperties) : undefined}
+      >
+        <h2 className="pf-group-title">
+          <button
+            type="button"
+            className="pf-group-toggle"
+            aria-expanded={!folded}
+            aria-controls={folded ? undefined : `pf-g-${i}`}
+            disabled={searching}
+            title={searching ? '검색 중에는 찾은 브랜드가 숨지 않게 모두 펼쳐 둡니다' : undefined}
+            onClick={() => toggleFold(g.key, !folded)}
+          >
+            <span className={`chev${folded ? '' : ' open'}`} aria-hidden="true" />
+            {g.color && <span className="grp-mark" aria-hidden="true" />}
+            <span className="pf-group-name">{g.label}</span>
+          </button>
+          <span className="dash-sub">
+            고객 브랜드 {groupRows.length}곳 · 비교 그룹 {g.cohorts.length}개
+          </span>
+          {folded && (
+            <span className="pf-group-digest">
+              완료 {digest.done} · 측정 남음 {digest.todo} · 순위 비교 안 됨 {digest.mismatch}
+            </span>
+          )}
+        </h2>
+        {!folded && (
+          <div className="pf-card" id={`pf-g-${i}`} role="table" aria-label={g.label}>
+            <ColumnHead />
+            {g.cohorts.map((c) => cohortCard(c, g.color ? null : industryGroupOf(c.industry)))}
+          </div>
+        )}
+      </section>
+    )
+  }
+
   return (
     <>
       <header className="page-head">
         <div className="page-title">
-          <p className="page-eyebrow">전체 브랜드</p>
+          <p className="page-eyebrow">전체 브랜드{currentWeek ? ` · ${weekLabel(currentWeek)}` : ''}</p>
           <h1>브랜드 현황</h1>
         </div>
         <div className="page-actions">
@@ -480,7 +546,9 @@ export default function Portfolio() {
       <p className="page-lead">
         {managing
           ? '등록한 브랜드마다 수집 엔진을 고르고, 측정 화면으로 가거나 목록에서 뺍니다.'
-          : '등록한 고객 브랜드를 업종별로 모았습니다. 비교 그룹(코호트)은 같은 업종 · 지역에서 같은 주에 함께 잰 브랜드 묶음입니다. 그 안의 순위와 마지막 측정을 보이고, 줄을 누르면 그 브랜드의 개요로 갑니다.'}
+          : `등록한 고객 브랜드를 ${
+              view.sort === 'week' ? '마지막으로 잰 주끼리 묶었습니다' : view.sort ? '비교 그룹 단위로 한 줄로 늘어놓았습니다' : '업종별로 모았습니다'
+            }. 비교 그룹(코호트)은 같은 업종 · 지역에서 같은 주에 함께 잰 브랜드 묶음입니다. 그 안의 순위와 마지막 측정을 보이고, 줄을 누르면 그 브랜드의 개요로 갑니다.`}
       </p>
 
       {managing && <BrandManageList />}
@@ -512,6 +580,44 @@ export default function Portfolio() {
                   <span className="pf-sum-sub">{t.sub}</span>
                 </button>
               ))}
+            {/* 한 칸 = 고객 브랜드 한 곳 — 타일과 같은 네 갈래라 칸 색을 세면 타일 숫자와 같다. */}
+            <div className="pf-progress">
+              <div className="pf-progress-head">
+                <span>{currentWeek ? `${shortWeek(currentWeek)} ` : ''}완료</span>
+                <span>
+                  <b className="mono">{sum.done}</b> <span className="mono">/ {sum.all}</span>
+                </span>
+              </div>
+              {/* 칸이 많으면(60곳 넘게) 틈을 1px로 — 칸 수가 막대 폭을 넘지 않게. */}
+              <div
+                className={`pf-cells${cells.length > 60 ? ' dense' : ''}`}
+                role="img"
+                aria-label={`고객 브랜드 ${sum.all}곳 — 이번 주 완료 ${sum.done} · 순위 비교 안 됨 ${sum.mismatch} · 경쟁사 없이 측정 ${sum.alone} · 이번 주 측정 남음 ${sum.todo}`}
+              >
+                {cells.map((c, i) => (
+                  <span key={i} className={c} />
+                ))}
+              </div>
+              {/* 색 범례는 칸 위치(왼쪽 · 위)에 기대지 않고 갈래 이름 · 수로 — 좁은 창에서는 막대가 요약 칸 아래로 내려간다. */}
+              <ul className="pf-progress-key" aria-hidden="true">
+                {(
+                  [
+                    ['done', '완료', sum.done],
+                    ['mismatch', '순위 비교 안 됨', sum.mismatch],
+                    ['alone', '경쟁사 없이', sum.alone],
+                    ['todo', '측정 남음', sum.todo],
+                  ] as const
+                )
+                  .filter(([, , n]) => n > 0)
+                  .map(([key, label, n]) => (
+                    <li key={key}>
+                      <span className={`pf-key-swatch ${key}`} />
+                      {label} <span className="mono">{n}</span>
+                    </li>
+                  ))}
+                <li className="pf-progress-unit">한 칸 = 고객 브랜드 한 곳</li>
+              </ul>
+            </div>
           </section>
 
           <div className="pf-toolbar">
@@ -535,7 +641,7 @@ export default function Portfolio() {
                   선택됨 · {directionParticle(customer.brandName)} 가기
                 </button>
               )}
-              {!view.sort && grouped.length > 1 && !searching && (
+              {foldKeys.length > 1 && !searching && (
                 <button type="button" className="ghost pf-fold-all" onClick={() => setAllFolds(anyOpen)}>
                   {anyOpen ? '모두 접기' : '모두 펴기'}
                 </button>
@@ -544,6 +650,7 @@ export default function Portfolio() {
                 정렬
                 <select value={view.sort} onChange={(e) => setView({ sort: e.target.value as PfSort })}>
                   <option value="">기본(업종군별)</option>
+                  <option value="week">마지막 측정 주별</option>
                   <option value="oldest">오래된 측정부터</option>
                   <option value="score">점수 높은 순</option>
                   <option value="name">이름 순</option>
@@ -576,56 +683,16 @@ export default function Portfolio() {
             </p>
           )}
 
-          {view.sort
-            ? flat.length > 0 && (
-                <div className="pf-card pf-card-flat" role="table" aria-label="비교 그룹">
-                  <ColumnHead />
-                  {flat.map((c) => cohortCard(c, industryGroupOf(c.industry)))}
-                </div>
-              )
-            : grouped.map((g, i) => {
-                const folded = isFolded(g.name)
-                const groupRows = g.cohorts.flatMap((c) =>
-                  c.members.filter(isCurrentCustomer).flatMap((m) => {
-                    const r = rowById.get(m.tenantId)
-                    return r ? [r] : []
-                  }),
+          {view.sort === 'week'
+            ? weekGroups.map((g, i) => groupSection({ key: g.key, label: g.label, cohorts: g.cohorts, color: null }, i))
+            : view.sort
+              ? flat.length > 0 && (
+                  <div className="pf-card pf-card-flat" role="table" aria-label="비교 그룹">
+                    <ColumnHead />
+                    {flat.map((c) => cohortCard(c, industryGroupOf(c.industry)))}
+                  </div>
                 )
-                const digest = summarize(groupRows)
-                return (
-                  <section key={g.name} className="pf-group" aria-label={g.name} style={{ '--grp': groupColor(g.name) } as React.CSSProperties}>
-                    <h2 className="pf-group-title">
-                      <button
-                        type="button"
-                        className="pf-group-toggle"
-                        aria-expanded={!folded}
-                        aria-controls={folded ? undefined : `pf-g-${i}`}
-                        disabled={searching}
-                        title={searching ? '검색 중에는 찾은 브랜드가 숨지 않게 모두 펼쳐 둡니다' : undefined}
-                        onClick={() => toggleFold(g.name, !folded)}
-                      >
-                        <span className={`chev${folded ? '' : ' open'}`} aria-hidden="true" />
-                        <span className="grp-mark" aria-hidden="true" />
-                        <span className="pf-group-name">{g.name}</span>
-                      </button>
-                      <span className="dash-sub">
-                        고객 브랜드 {groupRows.length}곳 · 비교 그룹 {g.cohorts.length}개
-                      </span>
-                      {folded && (
-                        <span className="pf-group-digest">
-                          완료 {digest.done} · 측정 남음 {digest.todo} · 순위 비교 안 됨 {digest.mismatch}
-                        </span>
-                      )}
-                    </h2>
-                    {!folded && (
-                      <div className="pf-card" id={`pf-g-${i}`} role="table" aria-label={g.name}>
-                        <ColumnHead />
-                        {g.cohorts.map((c) => cohortCard(c, null))}
-                      </div>
-                    )}
-                  </section>
-                )
-              })}
+              : grouped.map((g, i) => groupSection({ key: g.name, label: g.name, cohorts: g.cohorts, color: groupColor(g.name) }, i))}
         </>
       )}
       {editing && !viewing && state.value && (

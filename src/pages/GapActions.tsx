@@ -380,7 +380,7 @@ function ActionCard({
     <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
       <div className="gap-card-head">
         <span className="gap-name">{articleTitle ?? action.title}</span>
-        <span className={`status-pill ${action.satisfied ? 'st-good' : KIND_CLASS[action.kind]}`}>
+        <span className={`status-pill ${action.satisfied ? 'st-good' : `no-glyph ${KIND_CLASS[action.kind]}`}`}>
           {action.satisfied ? '충족' : action.badge}
         </span>
         {article && <span className={`status-pill ${articleStateOf(article).tone}`}>{articleStateOf(article).label}</span>}

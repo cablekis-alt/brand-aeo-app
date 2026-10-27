@@ -17,9 +17,14 @@ export default function ChangeAlerts({ history, context }: { history: WeeklyScor
   if (alerts.length === 0) return null
 
   return (
-    <section className="alerts" aria-label="주간 변화 알림">
-      {/* 앞 측정이 2주 이상 떨어질 수 있다(사이에 재지 않은 주) — 「전주」라고 하지 않는다. */}
-      <p className="alerts-title">변화 알림 · 직전 측정 대비</p>
+    <aside className="alerts" aria-label="주간 변화 알림">
+      <div className="alerts-head">
+        <h2>
+          알림 <span className="mono">{alerts.length}</span>
+        </h2>
+        {/* 앞 측정이 2주 이상 떨어질 수 있다(사이에 재지 않은 주) — 「전주」라고 하지 않는다. */}
+        <span>직전 측정 대비</span>
+      </div>
       <ul>
         {alerts.map((a, i) => (
           <li key={i} className={`alert-row ${LEVEL[a.level].cls}`}>
@@ -39,6 +44,6 @@ export default function ChangeAlerts({ history, context }: { history: WeeklyScor
           </li>
         ))}
       </ul>
-    </section>
+    </aside>
   )
 }

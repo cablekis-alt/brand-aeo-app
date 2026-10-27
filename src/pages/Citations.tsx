@@ -35,7 +35,7 @@ function OwnerPill({ row }: { row: CitationBreakdownRow }) {
         .join(' · ')
     : undefined
   return (
-    <span className={`status-pill ${OWNER_TYPE_PILL[row.ownerType] ?? 'st-unknown'}`} title={detail}>
+    <span className={`status-pill no-glyph ${OWNER_TYPE_PILL[row.ownerType] ?? 'st-unknown'}`} title={detail}>
       {label}
       {row.mixed && <span className="muted"> · 혼재</span>}
     </span>

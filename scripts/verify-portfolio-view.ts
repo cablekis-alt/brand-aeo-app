@@ -12,6 +12,7 @@ import {
   barWidth,
   changeLine,
   cohortKey,
+  groupCohortsByWeek,
   parseView,
   passFilter,
   refReason,
@@ -19,10 +20,12 @@ import {
   rowTone,
   showMeasure,
   sortCohorts,
+  statusCells,
   statusShort,
   summarize,
   unmeasuredCohorts,
   viewParams,
+  weekGroupLabel,
   type PfFilter,
 } from '../src/lib/portfolioView'
 
@@ -193,6 +196,38 @@ ok('오래된 측정부터: 측정 전 → W36 → W40 → W43 → W44', ids(sor
 ok('점수 높은 순(경쟁사 점수는 보지 않는다 · 측정 전 뒤)', ids(sortCohorts(cohorts, byId, 'score')) === 'g5,g1,g3,g2,g4')
 ok('이름 순(가나다)', ids(sortCohorts(cohorts, byId, 'name')) === 'g3,g1,g2,g4,g5')
 ok('기본은 업종군 순서 그대로(5곳 모두)', sortCohorts(cohorts, byId, '').length === 5)
+
+// ── 7-1) 마지막 측정 주별(디자인 A D3) — 최근 주부터, 측정 전은 맨 뒤, 주 안은 기본 순서. 주소에 남는다.
+const weeks = groupCohortsByWeek(cohorts, '2026-W44')
+ok('주별: W44 → W43 → W40 → W36 → 측정 전', weeks.map((g) => g.label).join(' | ') === 'W44 · 이번 주 | W43 · 1주 전 | W40 · 4주 전 | W36 · 8주 전 | 측정 전')
+ok('주별: 카드를 빠뜨리지 않는다(5장) · 키는 week:주차', weeks.flatMap((g) => g.cohorts).length === 5 && weeks.at(-1)!.key === 'week:none' && weeks[0]!.key === 'week:2026-W44')
+// 입력 순서를 기본 순서와 반대로(펜션 → 서초 → 강남) 넣는다.
+const sameWeek = groupCohortsByWeek(
+  [
+    cohort('펜션', '전북 군산', '2026-W40', [member('w3', '다같음', 40)]),
+    cohort('성형외과', '서울 서초', '2026-W40', [member('w2', '나같음', 60)]),
+    cohort('성형외과', '서울 강남', '2026-W40', [member('w1', '가같음', 50)]),
+  ],
+  '2026-W44',
+)
+ok('주별: 같은 주 안은 기본 순서(성형외과 강남 · 서초 → 펜션)', sameWeek.length === 1 && ids(sameWeek[0]!.cohorts) === 'w1,w2,w3')
+ok('주 이름: 해가 바뀐 주도 몇 주 전', weekGroupLabel('2025-W52', '2026-W02') === 'W52 · 2주 전')
+ok('주별 보기 주소 왕복(sort=week)', parseView('?sort=week').sort === 'week' && viewParams({ f: '', g: '', q: '', sort: 'week', mode: '' }).toString() === 'sort=week')
+ok('주별 보기에서 한 줄 정렬은 기본 순서 그대로', ids(sortCohorts(cohorts, byId, 'week')) === ids(sortCohorts(cohorts, byId, '')))
+
+// ── 7-2) 요약 막대 — 고객 브랜드 한 곳에 한 칸, 타일과 같은 네 갈래 · 타일 순서. 칸을 세면 타일 숫자와 같다.
+const mix = (['done', 'stale', 'diff', 'none', 'alone', 'unknown', 'done'] as const).map((status, i) => row({ tenantId: `c${i}`, status }))
+const mixCells = statusCells(mix)
+const mixSum = summarize(mix)
+ok('막대 칸: 완료 · 비교 안 됨 · 경쟁사 없이 · 측정 남음 순서', mixCells.join(' ') === 'done done mismatch mismatch alone todo todo')
+ok(
+  '막대 칸 수 = 타일 숫자(합 = 고객 브랜드 수)',
+  mixCells.length === mixSum.all &&
+    mixCells.filter((c) => c === 'done').length === mixSum.done &&
+    mixCells.filter((c) => c === 'mismatch').length === mixSum.mismatch &&
+    mixCells.filter((c) => c === 'alone').length === mixSum.alone &&
+    mixCells.filter((c) => c === 'todo').length === mixSum.todo,
+)
 // 입력 순서를 기본 순서(강남 → 서초)와 반대로 넣는다 — 같은 주차면 입력 순서가 아니라 기본 순서를 따라야 한다.
 const tie = [
   cohort('성형외과', '서울 서초', '2026-W40', [member('t2', '나같음', 60)]),

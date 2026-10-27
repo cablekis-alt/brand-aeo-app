@@ -8,12 +8,13 @@ import { ENGINE_LABEL, formatDelta, formatPct, formatRank, measureConditionText,
 import { subjectParticle, withParticle } from '../lib/korean'
 import { sameCohort } from '../lib/portfolioView'
 import { loadQuestionAnalyses, loadQuestionBank, loadRanking, loadSiteScores, type SiteScoreRecord } from '../lib/api'
-import { buildPeriodicReport, scoreBreakdown, weightTagText, type MetricStatus, type ScorePartKey } from '../lib/b9-report'
+import { buildPeriodicReport, sameConditionAverage, scoreBreakdown, weightTagText, type MetricStatus, type ScorePartKey } from '../lib/b9-report'
 import { contradictedLine, factFlagSummary, type AlertContext } from '../lib/alerts'
 import { selfReview } from '../lib/reviewReport'
 import { engineMentions, headlineSentence, pickAnswerHighlights, questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
-import { compareConditions, conditionSummary, siteComparable, siteDifference, weeksBetween } from '../lib/comparability'
+import { comparableRun, compareConditions, conditionSummary, siteComparable, siteDifference, weeksBetween } from '../lib/comparability'
 import { buildRecommendationEvidence, type EvidenceBlock } from '../lib/recommendationEvidence'
+import { recentRuns, scoreExplainData, stepScaleTop } from '../lib/reportExplain'
 import { RANK_FULL_WEIGHT_RESPONSES, shareOfMentionNote, type WeeklyScorecard } from '../prompts/b8-report'
 import type { QuestionBank, QuestionRepeatAnalysis, RankingView } from '../lib/types'
 import { useScorecards } from '../lib/useScorecards'
@@ -35,18 +36,32 @@ export default function Dashboard() {
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
   const { history, loading, error } = useScorecards(tenant?.tenantId ?? '')
   const card = history.at(-1) ?? null
-  // 이번 주에 여러 번 쟀으면 — 점수는 그 주 카드 회차 하나다(평균이 아니다). 회차 기록은 데스크톱 전용이라 웹에서는 비어 있다.
-  const runHistory = useRunHistory(viewing ? '' : (tenant?.tenantId ?? ''), 1)
+  /*
+   * 이번 주에 여러 번 쟀으면 — 점수는 그 주 카드 회차 하나다(평균이 아니다). 회차 기록은 데스크톱 전용이라 웹에서는 비어 있다.
+   * 최근 12주를 받는다 — 「같은 조건 평균」이 정기진단 보고서 표지와 같은 회차 창(recentRuns)으로 센다.
+   */
+  const runHistory = useRunHistory(viewing ? '' : (tenant?.tenantId ?? ''), 12)
+  const cardAt = useMemo(() => {
+    const point = (runHistory.history?.points ?? []).find((p) => card && p.weekOf === card.weekOf && p.isWeekCard)
+    return point?.at ? kstStamp(point.at) : null
+  }, [runHistory.history, card])
   const weekRuns = useMemo(() => {
     const points = (runHistory.history?.points ?? []).filter((p) => card && p.weekOf === card.weekOf)
     if (points.length < 2) return null
-    const cardPoint = points.find((p) => p.isWeekCard)
     return {
       count: points.length,
-      cardAt: cardPoint?.at ? kstStamp(cardPoint.at) : null,
       scores: points.map((p) => (p.score === null ? '?' : String(p.score))),
     }
   }, [runHistory.history, card])
+  /*
+   * 같은 조건 평균 — 보고서 표지와 같은 값 · 같은 말(sameConditionAverage). 회차 기록을 다 읽은 뒤에만 보인다 — 먼저 주 카드 평균을 그렸다가
+   * 회차 평균으로 바뀌면 한 화면에서 숫자가 둘이 된다. 경쟁사 보기는 회차 기록을 읽지 않는다(주 카드 평균).
+   */
+  const sameAvg = useMemo(() => {
+    if (!card || (!viewing && runHistory.loading)) return null
+    const recent = recentRuns(runHistory.history, card.weekOf)
+    return sameConditionAverage(history, card.weekOf, recent ? { average: recent.average, count: recent.runs.length } : null)
+  }, [card, history, viewing, runHistory.loading, runHistory.history])
 
   /*
    * 「이름을 대면 / 안 대면」 대비와 코호트 구성원 이름 — 스코어카드에 없는 값이라 랭킹 API를 한 번 더 부른다.
@@ -184,22 +199,39 @@ export default function Dashboard() {
 
   // 브랜드·주차가 바뀌는 순간 옛 값이 새 카드에 붙지 않게 키를 맞춘다.
   const rankingView = ranking.key === splitKey ? ranking.value : null
-  // 변화 알림이 사람 말로 쓰는 데 필요한 것 — 이번 주 「틀림」 주장과 비교 그룹 구성원 이름(비교용 브랜드는 브랜드 목록에 없어 랭킹 응답에서).
+  /*
+   * 변화 알림이 사람 말로 쓰는 데 필요한 것 — 이번 주 「틀림」 주장과 비교 그룹 구성원 이름(비교용 브랜드는 브랜드 목록에 없어 랭킹 응답에서),
+   * 그리고 점수 판과 같은 같은 조건 평균(알림이 주 카드로 따로 세면 한 화면에 평균이 둘이 된다).
+   */
   const alertContext = useMemo(
     (): AlertContext => ({
       ...(selfCheck ? { contradicted: selfCheck.contradicted } : {}),
       nameOf: (id: string) => rankingView?.cohort.peers.find((p) => p.tenantId === id)?.brandName,
+      average: sameAvg,
     }),
-    [selfCheck, rankingView],
+    [selfCheck, rankingView, sameAvg],
   )
   // 항목별 이번 주 실제 비중 — 순위 응답이 적으면 순위 몫이 줄고 나머지가 커진다(정기진단 보고서 · 진단 화면과 같은 값).
   const parts = card ? new Map(scoreBreakdown(card).map((p) => [p.key, p])) : null
-  // 좁은 칸이라 짧게(「가중치 25% → 10%」) — 무엇에서 무엇으로인지는 제목(마우스를 올리면)으로.
-  const weightTag = (key: ScorePartKey) => {
-    const part = parts?.get(key)
-    if (!part) return ''
-    return part.weight === 0 ? weightTagText(part) : `가중치 ${weightTagText(part, { short: true })}`
-  }
+  /*
+   * 「이번 주 N점은 어디서 나왔나」 — 정기진단 보고서 「점수 풀이」와 같은 계산(scoreExplainData). 구성은 카드만으로 나오고, 몰림 · 계단은
+   * 판정 기록을 읽어 카드와 같은 측정일 때만 나온다(못 읽으면 그 칸만 빠진다).
+   */
+  const explain = useMemo(() => {
+    if (!card) return null
+    const ready = todoData && todoData.key === splitKey
+    return scoreExplainData({ card, analyses: ready ? todoData.analyses : [], bank: ready ? todoData.bank : null })
+  }, [card, todoData, splitKey])
+  const stepTop = stepScaleTop(explain?.steps ?? [])
+  // 1위 답 한 건이 오갈 때 점수가 움직이는 폭 — 계단 칸 사이 차이.
+  const stepMove = (() => {
+    const s = explain?.steps ?? []
+    const gaps = s.slice(1).map((x, i) => Math.abs(x.score - s[i]!.score)).filter((d) => d > 0)
+    if (gaps.length === 0) return null
+    const lo = Math.min(...gaps)
+    const hi = Math.max(...gaps)
+    return lo === hi ? `${lo}` : `${lo}–${hi}`
+  })()
   const weightTitle = (key: ScorePartKey) => {
     const part = parts?.get(key)
     return part && part.weight > 0 ? `기본 가중치 ${Math.round(part.baseWeight * 100)}% · 이번 주 실제 비중 ${Math.round(part.weight * 100)}%` : undefined
@@ -253,9 +285,13 @@ export default function Dashboard() {
     ? `코호트 ${(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}${card.cohortRank.position}위 / ${card.cohortRank.totalTenants}`
     : ''
   const ranked = card?.rankedResponses
-  const rankSegments = Array.from({ length: RANK_FULL_WEIGHT_RESPONSES }, (_, i) => i < Math.min(ranked ?? 0, RANK_FULL_WEIGHT_RESPONSES))
   const unnamed = promptedSplit?.unnamed
   const conditions = card ? measureConditionText(card) : null
+  // 5주 추이 — 이번 주와 같은 조건으로 잰 구간의 첫 주. 그 앞 주는 빈 막대로 그려 잇지 않는다(보고서 「견주는 구간」과 같은 규칙).
+  const runStart = card ? (comparableRun(history, card.weekOf)[0]?.weekOf ?? null) : null
+  const hasPrior = runStart !== null && trendWeeks.length > 0 && trendWeeks[0]!.weekOf < runStart
+  // 구간 경계에서 무엇이 끊었나 — 바뀐 조건이 있으면 「달라」, 한쪽에 기록이 없을 뿐이면 「기록이 한쪽에 없어」(보고서 「견주는 구간」과 같은 말).
+  const boundaryChanged = hasPrior && (trend.find((t) => t.card.weekOf === runStart)?.diffs.some((d) => d.state === 'changed') ?? false)
 
   /*
    * 개요 2차의 판정 기록 계산 — 결론 문장·엔진별 언급·이름 없는 질문 기준 자사 인용·대표 답변(lib/answerInsights).
@@ -282,6 +318,62 @@ export default function Dashboard() {
     return `${top.label}에서 가장 자주, ${bottom.label}에서 가장 적게 불립니다 — 차이는 ${top.mentioned - bottom.mentioned}문항입니다.`
   })()
 
+  /*
+   * 지표 표 — 값 · 근거 · 점수 비중(기본 → 이번 주) · 점수 기여. 기여는 「점수가 어디서 나왔나」 구성과 같은 몫(합이 점수와 같다).
+   * 언급 점유율은 점수 밖 참고 지표다.
+   */
+  const metricRows: { key: ScorePartKey | 'shareOfMention'; label: string; value: string; unit?: string; isText: boolean; basis: string }[] = card
+    ? [
+        {
+          key: 'mentionRate',
+          label: '언급률',
+          value: formatPct(card.mentionRate),
+          isText: false,
+          basis:
+            unnamed && unnamed.answered > 0
+              ? `이름 없는 질문 응답 ${unnamed.answered}건 중 ${Math.round(unnamed.rate * unnamed.answered)}건`
+              : '브랜드명을 넣지 않은 질문에서 언급된 비율',
+        },
+        {
+          key: 'avgRecommendationRank',
+          label: '평균 추천 순위',
+          value: formatRank(card.avgRecommendationRank),
+          ...(card.avgRecommendationRank !== null ? { unit: '위' } : {}),
+          isText: card.avgRecommendationRank === null,
+          basis:
+            ranked === undefined
+              ? '순위 응답 수 기록 없음'
+              : card.avgRecommendationRank === null || ranked === 0
+                ? '순위가 매겨진 답 없음 · 점수에서 제외'
+                : ranked < RANK_FULL_WEIGHT_RESPONSES
+                  ? `순위가 매겨진 답 ${ranked}건 — ${RANK_FULL_WEIGHT_RESPONSES}건보다 적어 비중을 줄였습니다`
+                  : `순위가 매겨진 답 ${ranked}건`,
+        },
+        {
+          key: 'brandOwnedCitationRate',
+          label: '자사 출처 인용률',
+          value: formatPct(card.brandOwnedCitationRate),
+          isText: false,
+          basis: insights?.owned
+            ? `이름 없는 질문만 보면 ${(insights.owned.rate * 100).toFixed(1)}% (${insights.owned.owned}/${insights.owned.total})`
+            : 'AI가 근거로 쓴 출처 중 우리 사이트',
+        },
+        {
+          key: 'shareOfMention',
+          label: '언급 점유율',
+          value: formatPct(card.shareOfMention),
+          isText: card.shareOfMention === null,
+          basis:
+            shareOfMentionNote(card) ??
+            (card.shareOfMentionMentions !== undefined
+              ? `자사·경쟁사 언급 ${card.shareOfMentionMentions}번 기준`
+              : '같은 질문에서 경쟁 브랜드 대비 언급 점유'),
+        },
+      ]
+    : []
+  // 점수를 가장 많이 보탠 항목 — 표에서 기여를 강조한다.
+  const topPart = explain?.parts?.find((p) => p.points > 0)?.key ?? null
+
   return (
     <>
       {error && (
@@ -292,58 +384,130 @@ export default function Dashboard() {
       {loading && !card && <p className="muted">불러오는 중…</p>}
       {!loading && !card && tenant && <h1 className="page-solo-title">개요</h1>}
 
-      {tenant && history.length > 0 && <ChangeAlerts history={history} context={alertContext} />}
-
       {tenant && card && (
         <>
           {/*
-            맨 위 요약 — 결론 문장(코드 템플릿, lib/answerInsights)과 점수 링. 문장을 만들 수 없으면(주제 태그 없음 등)
-            숫자 요약을 제목으로 둔다. 판정 알약·「가장 발목을 잡는 건」은 정기진단 보고서와 같은 판정이다.
+            맨 위 — 브랜드 · 결론 문장(코드 템플릿, lib/answerInsights)과 변화 알림(계기판 A). 문장을 만들 수 없으면(주제 태그 없음 등)
+            숫자 요약만 둔다. 판정 알약 · 「가장 발목을 잡는 건」은 정기진단 보고서와 같은 판정이다.
           */}
-          <section className="hero2" aria-label="이번 주 요약">
-            <div className="hero2-text">
-              <p className="hero2-eyebrow">
-                <span className="hero2-dot" aria-hidden="true" />
-                이번 주 AI 가시성 · {weekLabel(card.weekOf)} · {usedLabels.join(' · ') || '엔진 기록 없음'}
+          <section className="ov-head" aria-label="이번 주 요약">
+            <div className="ov-head-main">
+              <div className="ov-brand">
+                <h1>{card.brandName}</h1>
+                <span>
+                  {card.industry} · {card.region}
+                </span>
+              </div>
+              <p className="ov-meta">
+                {weekLabel(card.weekOf)}
+                {cardAt && (
+                  <>
+                    {' '}
+                    · <span className="mono">{cardAt}</span> 측정
+                  </>
+                )}{' '}
+                · {usedLabels.join(' · ') || '엔진 기록 없음'}
               </p>
-              <h1 className="hero2-title">
-                {insights?.sentence ?? `${card.brandName} · Brand AEO ${card.aeoScore.current}점 · ${cohortText}`}
-              </h1>
-              <p className="hero2-sub">
-                {insights && insights.coverage.asked > 0
-                  ? `이름 없이 물은 질문 ${insights.coverage.asked}개 중 ${insights.coverage.hit}개에서 불렸고, ${card.industry} · ${card.region} ${cohortText}입니다.`
-                  : `${card.industry} · ${card.region} ${cohortText}입니다.`}
+              {insights?.sentence && <p className="ov-sentence">{insights.sentence}</p>}
+              <p className="ov-sub">
+                {insights && insights.coverage.asked > 0 ? (
+                  <>
+                    이름 없이 물은 질문 <b className="mono">{insights.coverage.asked}</b>개 중 <b className="mono">{insights.coverage.hit}</b>개에서
+                    불렸고, {cohortText}입니다.
+                  </>
+                ) : (
+                  `${cohortText}입니다.`
+                )}
                 {!prevCard && ' 측정 1주차라 추이는 다음 측정부터 쌓입니다.'}
               </p>
               {headline && (
-                <p className="hero2-verdict">
+                <p className="ov-verdict">
                   <span className={`status-pill st-${headline.tone}`}>{headline.label}</span>
                   {headline.detail && <span>{headline.detail}</span>}
                 </p>
               )}
             </div>
-            <div className="hero2-score">
-              <div
-                className="score-ring"
-                style={{ background: `conic-gradient(var(--accent) 0 ${card.aeoScore.current}%, var(--surface-2) ${card.aeoScore.current}% 100%)` }}
-                aria-label={`Brand AEO Score ${card.aeoScore.current}점`}
-              >
-                <div className="score-ring-inner">
-                  <span className="score-ring-num">{card.aeoScore.current}</span>
-                  <span className="score-ring-label">Brand AEO</span>
-                  {/* 축 · 숫자만 보면 몇 점 만점인지 알 수 없다(상용화 UI 3차 U20). */}
-                  <span className="score-ring-sub">100점 만점</span>
-                </div>
+            <ChangeAlerts history={history} context={alertContext} />
+          </section>
+
+          {/*
+            점수 판 — 흰 판은 이 화면에 이것 하나(계기판 A). 점수 · 100점 눈금(95% 신뢰구간 띠 · 같은 조건 평균 눈금) · 「N점은 어디서 나왔나」
+            (구성 · 몰림 막대) · 1위 답 수별 점수(계단). 구성 · 몰림 · 계단은 정기진단 보고서 「점수 풀이」와 같은 계산이다.
+          */}
+          <section className="ov-sheet" aria-label="이번 주 점수">
+            <div className="ov-pane ov-gauge">
+              <div className="ov-pane-head">
+                <h2>Brand AEO Score</h2>
+                {/* 숫자만 보면 몇 점 만점인지 알 수 없다(상용화 UI 3차 U20). */}
+                <span>100점 만점</span>
               </div>
-              <dl className="hero2-facts">
+              <div className="ov-score">
+                <span className="ov-score-num">{card.aeoScore.current}</span>
+                {/* 측정 1주차에는 전주 · 신뢰구간을 감춘다 — 「아직 비교할 게 없다」는 같은 말을 여러 번 하는 자리다. */}
+                {prevCard && (
+                  <span className="ov-score-delta">
+                    <b className={delta ? `tone-${delta.tone}` : undefined}>{delta ? `${deltaLabel} ${delta.text}` : notComparableText}</b>
+                    <span className="mono">
+                      {prevCard.weekOf.replace(/^\d{4}-/, '')} {prevCard.aeoScore.current} {delta ? '→' : '·'} {card.weekOf.replace(/^\d{4}-/, '')}{' '}
+                      {card.aeoScore.current}
+                    </span>
+                  </span>
+                )}
+              </div>
+              <div
+                className="ov-scale"
+                role="img"
+                aria-label={`100점 눈금 위 이번 주 ${card.aeoScore.current}점${prevCard ? `, 95% 신뢰구간 ${card.aeoScore.ciLow}–${card.aeoScore.ciHigh}` : ''}${
+                  sameAvg ? `, ${sameAvg.text} ${sameAvg.average}` : ''
+                }`}
+              >
+                <span className="ov-scale-track" />
+                {prevCard && (
+                  <span
+                    className="ov-scale-ci"
+                    style={{ left: `${card.aeoScore.ciLow}%`, width: `${Math.max(0.5, card.aeoScore.ciHigh - card.aeoScore.ciLow)}%` }}
+                  />
+                )}
+                {sameAvg && <span className="ov-scale-avg" style={{ left: `${sameAvg.average}%` }} />}
+                <span className="ov-scale-now" style={{ left: `${card.aeoScore.current}%` }} />
+                <span className="ov-scale-ticks" aria-hidden="true">
+                  <span>0</span>
+                  <span>50</span>
+                  <span>100</span>
+                </span>
+              </div>
+              <dl className="ov-facts">
+                {sameAvg && (
+                  <div>
+                    <dt>
+                      <span className="ov-key avg" aria-hidden="true" />
+                      같은 조건 평균
+                    </dt>
+                    <dd>
+                      <b className="mono">{sameAvg.average}</b>{' '}
+                      <span className="dash-sub">{sameAvg.text.replace(/^같은 조건 /, '').replace(/ 평균$/, '')}</span>
+                    </dd>
+                  </div>
+                )}
+                {prevCard && (
+                  <div>
+                    <dt>
+                      <span className="ov-key ci" aria-hidden="true" />
+                      95% 신뢰구간
+                    </dt>
+                    <dd className="mono">
+                      {card.aeoScore.ciLow}–{card.aeoScore.ciHigh}
+                    </dd>
+                  </div>
+                )}
                 {weekRuns && (
-                  // 좁은 칸이라 주의 문장은 제목(마우스를 올리면)으로 — 화면에는 횟수 · 점수가 온 회차 · 회차별 점수만.
+                  // 좁은 칸이라 주의 문장은 제목(마우스를 올리면)으로 — 화면에는 횟수 · 회차별 점수만.
                   <div title="점수는 그 주 카드 회차 하나입니다(평균이 아닙니다). 회차마다 흔들려 하루 단위로 견주지 않습니다.">
                     <dt>이번 주 측정</dt>
                     <dd>
-                      {weekRuns.count}회{' '}
+                      <b className="mono">{weekRuns.count}</b>회{' '}
                       <span className="dash-sub">
-                        · 점수는 {weekRuns.cardAt ?? '그 주 카드'} 회차 · 회차별 {weekRuns.scores.join('·')} · <Link to="/performance#runs">회차별 보기</Link>
+                        · {weekRuns.scores.join('·')} · <Link to="/performance#runs">회차별 보기</Link>
                       </span>
                     </dd>
                   </div>
@@ -352,39 +516,15 @@ export default function Dashboard() {
                   <dt>코호트 순위</dt>
                   <dd>
                     {(card.cohortRank.tiedCount ?? 1) > 1 ? '공동 ' : ''}
-                    {card.cohortRank.position} <span className="dash-sub">/ {card.cohortRank.totalTenants}</span>
+                    <b className="mono">{card.cohortRank.position}</b>위 <span className="dash-sub mono">/ {card.cohortRank.totalTenants}</span>
                   </dd>
                 </div>
-                {/*
-                  측정 1주차에는 전주·신뢰구간을 감춘다 — "아직 비교할 게 없다"는 같은 말을 여러 번 하는 자리다.
-                  2주차부터 저절로 나타난다(prevCard가 생긴다).
-                */}
-                {prevCard && (
-                  <div>
-                    <dt>{deltaLabel}</dt>
-                    <dd>
-                      {delta ? (
-                        <span className={`delta-chip ${delta.tone}`}>{delta.text}</span>
-                      ) : (
-                        <span className="dash-sub">{notComparableText ?? '—'}</span>
-                      )}
-                    </dd>
-                  </div>
-                )}
-                {prevCard && (
-                  <div>
-                    <dt>95% 신뢰구간</dt>
-                    <dd className="mono">
-                      {card.aeoScore.ciLow} – {card.aeoScore.ciHigh}
-                    </dd>
-                  </div>
-                )}
                 <div>
                   <dt>Site AEO</dt>
                   <dd>
                     {siteNow ? (
                       <>
-                        {siteNow.score}
+                        <b className="mono">{siteNow.score}</b>
                         {siteDelta !== null && siteDelta !== 0 && (
                           <span className={`delta-chip ${siteDelta > 0 ? 'up' : 'down'}`}>
                             {siteDelta > 0 ? '+' : ''}
@@ -409,77 +549,194 @@ export default function Dashboard() {
                 </div>
               </dl>
             </div>
+
+            {explain?.parts && (
+              <div className="ov-pane ov-why">
+                <div className="ov-pane-head">
+                  <h2 className="ov-why-title">이번 주 {explain.score}점은 어디서 나왔나</h2>
+                  <span>막대 길이 = {explain.score}점</span>
+                </div>
+                <div className="ov-bar-block">
+                  <div className="ov-bar-label">
+                    <b>구성 — 지표별</b>
+                    <span className="mono">
+                      {explain.score} = {explain.parts.map((p) => p.points).join(' + ')}
+                    </span>
+                  </div>
+                  <div
+                    className="ov-bar"
+                    role="img"
+                    aria-label={`${explain.score}점 구성: ${explain.parts.map((p) => `${p.label} 약 ${p.points}점`).join(', ')}`}
+                  >
+                    {explain.parts
+                      .filter((p) => p.points > 0)
+                      .map((p) => (
+                        <span key={p.key} className={`ov-seg part-${p.key}`} style={{ flexGrow: p.points }} />
+                      ))}
+                  </div>
+                  <ul className="ov-legend">
+                    {explain.parts.map((p) => (
+                      <li key={p.key}>
+                        <span className="ov-legend-name">
+                          <span className={`ov-swatch part-${p.key}`} aria-hidden="true" />
+                          {p.label}
+                        </span>
+                        <span>
+                          약 <b className="mono">{p.points}</b>점{' '}
+                          {parts?.get(p.key) && (
+                            <span className="dash-sub">
+                              · 비중 <span className="mono">{Math.round(parts.get(p.key)!.weight * 100)}%</span>
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {explain.rankDropped && <p className="dash-caption">순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다.</p>}
+                </div>
+                {explain.concentration && (
+                  <div className="ov-bar-block">
+                    <div className="ov-bar-label">
+                      <b>몰림 — 답별</b>
+                      <span className="mono">
+                        {explain.score} = {explain.concentration.fromRanked} + {explain.concentration.without}
+                      </span>
+                    </div>
+                    <div
+                      className="ov-bar"
+                      role="img"
+                      aria-label={`${explain.score}점 가운데 약 ${explain.concentration.fromRanked}점이 순위가 매겨진 답 ${explain.concentration.answers}건에서, 나머지에서 ${explain.concentration.without}점`}
+                    >
+                      <span className="ov-seg conc" style={{ flexGrow: explain.concentration.fromRanked }}>
+                        답 {explain.concentration.answers}건
+                        {explain.concentration.questions.length > 0 && ` · 질문 ${explain.concentration.questions.length}개`}에서 약{' '}
+                        {explain.concentration.fromRanked}점
+                      </span>
+                      {explain.concentration.without > 0 && <span className="ov-seg rest" style={{ flexGrow: explain.concentration.without }} />}
+                    </div>
+                    <p className="ov-why-note">
+                      이름 없이 물은 질문에서 순위가 매겨진 답 {explain.concentration.answers}건이 없었다면{' '}
+                      <b className="mono">{explain.concentration.without}</b>점입니다.
+                    </p>
+                    {explain.concentration.questions.length === 1 && (
+                      <p className="ov-quote">
+                        <span>몰린 질문</span>「{explain.concentration.questions[0]}」
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {explain?.steps && (
+              <div className="ov-pane ov-steps">
+                <div>
+                  <h2>1위 답 수별 점수</h2>
+                  <p className="dash-caption">이번 주 다른 값은 그대로 두고, 비교 그룹 이름 중 1위로 추천된 답 수만 바꾸면</p>
+                </div>
+                <div
+                  className="ov-step-bars"
+                  role="img"
+                  aria-label={explain.steps.map((s) => `${s.firstAnswers}건 ${s.score}점${s.current ? '(이번 주)' : ''}`).join(', ')}
+                >
+                  {explain.steps.map((s) => (
+                    <div key={s.firstAnswers} className={`ov-step${s.current ? ' current' : ''}`}>
+                      {/* 숫자는 막대 위에 띄운다(막대 안 · 흐름 밖) — 같은 칸에 두면 높은 막대가 숫자 자리만큼 눌려 높이가 비례하지 않았다. */}
+                      <span className="ov-step-bar" style={{ height: `${Math.max(2, Math.round((s.score / stepTop) * 100))}%` }}>
+                        <span className="mono">{s.score}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="ov-step-axis" aria-hidden="true">
+                  {explain.steps.map((s) => (
+                    <span key={s.firstAnswers} className={s.current ? 'current' : undefined}>
+                      {s.firstAnswers}건
+                      {s.current && (
+                        <>
+                          <br />
+                          이번 주
+                        </>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                {stepMove && (
+                  <p className="dash-caption">
+                    1위 답 1건이 오가면 점수가 <span className="mono">{stepMove}</span>점 움직입니다 — 한 번 잰 점수보다{' '}
+                    {sameAvg ? '같은 조건 평균으로 봅니다.' : '같은 조건으로 여러 번 잰 흐름으로 봅니다.'}
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
-          <section className="kpi-strip" aria-label="점수 지표">
-            <article className="kpi">
-              <div className="kpi-head">
-                <span>언급률</span>
-                <span className="kpi-tag" title={weightTitle('mentionRate')}>
-                  {weightTag('mentionRate')}
-                </span>
-              </div>
-              <span className="kpi-value">{formatPct(card.mentionRate)}</span>
-              <span className="dash-caption">
-                {unnamed && unnamed.answered > 0
-                  ? `이름 없는 질문 응답 ${unnamed.answered}건 중 ${Math.round(unnamed.rate * unnamed.answered)}건`
-                  : '브랜드명을 넣지 않은 질문에서 언급된 비율'}
-              </span>
-            </article>
-            <article className="kpi">
-              <div className="kpi-head">
-                <span>추천 순위</span>
-                <span className={`kpi-tag${card.avgRecommendationRank === null ? ' muted-tag' : ''}`} title={weightTitle('avgRecommendationRank')}>
-                  {weightTag('avgRecommendationRank')}
-                </span>
-              </div>
-              {/* 값이 없으면 글자로 — 고정폭 큰 글씨로 「판 정 불 가」가 벌어져 숫자처럼 보였다. */}
-              <span className={`kpi-value${card.avgRecommendationRank === null ? ' is-text' : ''}`}>
-                {formatRank(card.avgRecommendationRank)}
-                {card.avgRecommendationRank !== null && <span className="comp-unit">위</span>}
-              </span>
-              <span className="rank-segs" aria-label={`순위 응답 ${RANK_FULL_WEIGHT_RESPONSES}건 중 ${Math.min(ranked ?? 0, RANK_FULL_WEIGHT_RESPONSES)}건 반영`}>
-                {rankSegments.map((on, i) => (
-                  <span key={i} className={on ? 'on' : undefined} />
-                ))}
-              </span>
-              <span className="dash-caption">
-                {ranked === undefined
-                  ? '순위 응답 수 기록 없음'
-                  : card.avgRecommendationRank === null || ranked === 0
-                    ? '순위가 매겨진 응답 없음 · 점수에서 제외'
-                    : ranked < RANK_FULL_WEIGHT_RESPONSES
-                      ? `순위 응답 ${ranked}건 · 점수 비중 ${ranked}/${RANK_FULL_WEIGHT_RESPONSES}`
-                      : `순위 응답 ${ranked}건 · 전체 비중`}
-              </span>
-            </article>
-            <article className="kpi">
-              <div className="kpi-head">
-                <span>자사 인용률</span>
-                <span className="kpi-tag" title={weightTitle('brandOwnedCitationRate')}>
-                  {weightTag('brandOwnedCitationRate')}
-                </span>
-              </div>
-              <span className="kpi-value">{formatPct(card.brandOwnedCitationRate)}</span>
-              <span className="dash-caption">
-                {insights?.owned
-                  ? `이름 없는 질문만 ${(insights.owned.rate * 100).toFixed(1)}% (${insights.owned.owned}/${insights.owned.total})`
-                  : 'AI가 근거로 쓴 출처 중 우리 사이트'}
-              </span>
-            </article>
-            <article className="kpi">
-              <div className="kpi-head">
-                <span>언급 점유율</span>
-                <span className="kpi-tag muted-tag">점수 미포함</span>
-              </div>
-              <span className={`kpi-value${card.shareOfMention === null ? ' is-text' : ''}`}>{formatPct(card.shareOfMention)}</span>
-              <span className="dash-caption">
-                {shareOfMentionNote(card) ??
-                  (card.shareOfMentionMentions !== undefined
-                    ? `자사·경쟁사 언급 ${card.shareOfMentionMentions}번 기준`
-                    : '같은 질문에서 경쟁 브랜드 대비 언급 점유')}
-              </span>
-            </article>
+          <section className="ov-sec" aria-labelledby="ov-metrics">
+            <div className="ov-sec-head">
+              <h2 id="ov-metrics">지표</h2>
+              <span className="dash-sub">막대 = 이번 주 비중 · 세로 눈금 = 기본 비중</span>
+              <Link to="/answers" className="dash-link">
+                AI 답변 보기 →
+              </Link>
+            </div>
+            <div className="ov-table-wrap">
+              <table className="ov-table">
+                <thead>
+                  <tr>
+                    <th scope="col">지표</th>
+                    <th scope="col" className="num ov-val-head">
+                      이번 주
+                    </th>
+                    <th scope="col">근거</th>
+                    <th scope="col">점수 비중 · 기본 → 이번 주</th>
+                    <th scope="col" className="num">
+                      점수 기여
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metricRows.map((r) => {
+                    const part = r.key === 'shareOfMention' ? null : (parts?.get(r.key) ?? null)
+                    const share = r.key === 'shareOfMention' ? null : (explain?.parts?.find((p) => p.key === r.key) ?? null)
+                    return (
+                      <tr key={r.key} className={r.key === 'shareOfMention' ? 'is-ref' : undefined}>
+                        <th scope="row">{r.label}</th>
+                        <td className={`num ov-val${r.isText ? ' is-text' : ''}`}>
+                          {r.value}
+                          {r.unit && <span className="ov-unit">{r.unit}</span>}
+                        </td>
+                        <td className="ov-basis">{r.basis}</td>
+                        <td className="ov-weight" title={r.key === 'shareOfMention' ? undefined : weightTitle(r.key)}>
+                          {!part ? (
+                            <span className="dash-sub">점수 미포함 — 참고 지표</span>
+                          ) : part.weight === 0 ? (
+                            <span className="dash-sub">{weightTagText(part)}</span>
+                          ) : (
+                            <span className="ov-wbar-row">
+                              {/* 눈금 0–60% — 기본 비중 가장 큰 항목(언급률 42%)이 순위가 빠져 커져도(56%) 막대 안에 든다. */}
+                              <span className="ov-wbar" aria-hidden="true">
+                                <span style={{ width: `${Math.min(100, (part.weight / 0.6) * 100)}%` }} />
+                                <i style={{ left: `${Math.min(100, (part.baseWeight / 0.6) * 100)}%` }} />
+                              </span>
+                              <span className="mono">{weightTagText(part, { short: true })}</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className={`num ov-contrib${share && share.key === topPart ? ' is-top' : ''}`}>
+                          {share ? (
+                            <>
+                              약 <b className="mono">{share.points}</b>점
+                            </>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           {/* 사실성은 점수 밖 지표라 평소엔 숨기고, 등록된 브랜드 정보와 어긋난 주장이 있을 때만 경고로 띄운다. */}
@@ -520,8 +777,11 @@ export default function Dashboard() {
                   {trend.map(({ card: h, diffs }) => {
                     const current = h.weekOf === card.weekOf
                     const marked = diffs.length > 0
+                    // 이번 주와 같은 조건으로 잰 구간 앞의 주 — 빈 막대로 그려 이어 읽지 않게 한다. 구간 첫 주 앞에는 세로 점선.
+                    const prior = runStart !== null && h.weekOf < runStart
+                    const start = hasPrior && h.weekOf === runStart
                     return (
-                      <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}`}>
+                      <div key={h.weekOf} className={`trend-col${current ? ' current' : ''}${prior ? ' prior' : ''}${start ? ' run-start' : ''}`}>
                         <span className="trend-value">{h.aeoScore.current}</span>
                         <span className="trend-bar" style={{ height: `${Math.max(2, Math.round((h.aeoScore.current / trendTop) * 64))}px` }} />
                         <span className="trend-week">{h.weekOf.replace(/^\d{4}-/, '')}</span>
@@ -530,11 +790,30 @@ export default function Dashboard() {
                     )
                   })}
                 </div>
-                {trend.some((t) => t.diffs.length > 0) && (
-                  <p className="dash-caption trend-legend">
-                    <span className="trend-mark on" aria-hidden="true" />
-                    측정 조건이 바뀌었거나 확인할 수 없는 주 — 직전 측정과 바로 비교하지 않습니다
-                  </p>
+                {(hasPrior || trend.some((t) => t.diffs.length > 0)) && (
+                  <ul className="trend-key">
+                    {hasPrior && (
+                      <li>
+                        <span className="trend-swatch prior" aria-hidden="true" />
+                        {runStart?.replace(/^\d{4}-/, '')} 앞 — {runStart?.replace(/^\d{4}-/, '')}부터{' '}
+                        {boundaryChanged ? '측정 조건이 달라 잇지 않음' : '앞 측정과 견줄 조건 기록이 한쪽에 없어 잇지 않음'}
+                      </li>
+                    )}
+                    <li>
+                      <span className="trend-swatch" aria-hidden="true" />
+                      같은 조건
+                    </li>
+                    <li>
+                      <span className="trend-swatch now" aria-hidden="true" />
+                      이번 주
+                    </li>
+                    {trend.some((t) => t.diffs.length > 0) && (
+                      <li>
+                        <span className="trend-mark on" aria-hidden="true" />
+                        측정 조건이 바뀌었거나 확인할 수 없는 주 — 직전 측정과 바로 비교하지 않습니다
+                      </li>
+                    )}
+                  </ul>
                 )}
               </article>
             </section>
@@ -623,7 +902,7 @@ export default function Dashboard() {
               <h2>
                 놓친 질문 <span className="dash-sub">· {card.brandName} 대신 불린 곳</span>
               </h2>
-              {openActions !== null && openActions > 0 && <span className="dash-sub">남은 실행 항목 {openActions}건</span>}
+              {openActions !== null && openActions > 0 && <span className="dash-sub dash-head-end">남은 실행 항목 {openActions}건</span>}
             </div>
             {todo ? (
               <>

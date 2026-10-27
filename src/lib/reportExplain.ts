@@ -114,31 +114,122 @@ function apportion(values: number[], total: number): number[] {
   return floors
 }
 
-export function explainScore(input: {
+/** 「점수 풀이」의 숫자 — 보고서 문장(explainScore)과 개요 화면의 구성 · 몰림 막대 · 계단이 같은 계산을 쓴다. */
+export interface ScoreExplainData {
+  score: number
+  /** 구성 — 항목마다 보탠 점수(약, 정수 — 합이 점수와 같다, 큰 것부터). 지금 점수 식으로 카드 점수가 나오지 않는 카드(옛 가중치)는 null. */
+  parts: { key: ScorePartKey; label: string; points: number }[] | null
+  /** 순위가 매겨진 답이 없어 추천 순위가 점수에서 빠졌는가. */
+  rankDropped: boolean
+  /** 몰림 — 순위가 매겨진 답 몇 건(answers)이 점수 대부분(fromRanked)을 낸 주만. without은 그 답들이 없었을 때의 점수. */
+  concentration: { fromRanked: number; without: number; answers: number; questions: string[] } | null
+  /** 계단 — 다른 값은 그대로 두고 1위로 추천된 답 수만 바꾼 점수. 순위 비중이 줄어드는 구간(6건 미만)에서만. */
+  steps: { firstAnswers: number; score: number; current: boolean }[] | null
+}
+
+interface ExplainInput {
   card: WeeklyScorecard
-  history: WeeklyScorecard[]
   analyses: QuestionRepeatAnalysis[]
   bank: QuestionBank | null
-}): ExplainLine[] {
-  const { card, history, analyses, bank } = input
-  const score = card.aeoScore.current
-  const lines: ExplainLine[] = []
-  const parts = scoreBreakdown(card)
-  // 지금 점수 식으로 카드 점수가 나오는가 — 옛 가중치로 낸 카드(웹 데모 등)는 항목 몫 · 비중이 맞지 않아 그런 줄을 쓰지 않는다.
-  const formulaFits = aeoScoreOf(scoreInputsOf(card)) === score
+}
 
-  if (formulaFits) {
-    // 구성 — 항목마다 보탠 점수(약, 정수). 합이 점수와 같게 나눈다.
-    const counted = parts.filter((p) => p.points !== null).sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+/** 판정 기록으로 다시 셀 수 있는 주의 모집단과 점수 식 입력. */
+type Usable = Population & { n: number; ranks: number[]; otherMentions: number; sentimentNow: number; sentimentNew: number }
+
+function explainCore(input: ExplainInput): { data: ScoreExplainData; usable: Usable | null; base: ScoreInputs } {
+  const { card, analyses, bank } = input
+  const score = card.aeoScore.current
+  const breakdown = scoreBreakdown(card)
+  const base = scoreInputsOf(card)
+
+  // 구성 — 지금 점수 식으로 카드 점수가 나올 때만(옛 가중치로 낸 카드 — 웹 데모 등 — 는 항목 몫이 맞지 않는다). 합이 점수와 같게 나눈다.
+  let parts: ScoreExplainData['parts'] = null
+  if (aeoScoreOf(base) === score) {
+    const counted = breakdown.filter((p) => p.points !== null).sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
     const ints = apportion(
       counted.map((p) => p.points ?? 0),
       score,
     )
+    parts = counted.map((p, i) => ({ key: p.key, label: PART_LABEL[p.key], points: ints[i]! }))
+  }
+  const rankDropped = breakdown.some((p) => p.key === 'avgRecommendationRank' && p.points === null)
+
+  /*
+   * 기록으로 센 값(몰림 · 계단 · 이름을 댈 때 · 움직이는 것) — 판정 기록이 카드와 같은 측정이고, 기록 값(실제 감성 계수 포함)으로 같은 식에
+   * 넣어 카드 점수가 나올 때만. 감성 계수는 언급 문장에서 서버와 같은 규칙으로 센다(반올림된 점수에서 거꾸로 풀면 언급이 한두 건인 주에
+   * 0.7~0.8로 틀어진다). 새로 불리는 답을 가정할 때는 지금 문장 평균, 문장이 없으면 중립 0.7(개선제안 계산 예시와 같은 가정).
+   */
+  const pop = population(card, analyses, bank)
+  let usable: Usable | null = null
+  if (pop && pop.matchesCard) {
+    const n = pop.unnamed.length
+    const ranks = pop.ranked.map((a) => a.brandRank as number)
+    const otherMentions = pop.unnamed.filter((a) => a.mentioned).length - ranks.length
+    const actual = mentionSentimentOf(pop.unnamed)
+    const sentimentNow = actual ?? 1
+    if (aeoScoreOf(withRanked(base, n, otherMentions, ranks, sentimentNow)) === score) {
+      usable = { ...pop, n, ranks, otherMentions, sentimentNow, sentimentNew: actual ?? NEUTRAL_SENTIMENT }
+    }
+  }
+
+  let concentration: ScoreExplainData['concentration'] = null
+  let steps: ScoreExplainData['steps'] = null
+  if (usable) {
+    const { n, ranks, otherMentions, sentimentNow, sentimentNew } = usable
+    const k = ranks.length
+
+    // 몰림 — 순위가 매겨진 답 몇 건이 점수 대부분을 낸 주. 그 답들이 없었다면 그 답의 언급 문장도 감성 평균에서 빠진다(서버와 같다).
+    if (k > 0 && k < RANK_FULL_WEIGHT_RESPONSES) {
+      const rest = usable.unnamed.filter((a) => !usable!.ranked.includes(a))
+      const without = aeoScoreOf(withRanked(base, n, otherMentions, [], mentionSentimentOf(rest) ?? 1))
+      const fromRanked = score - without
+      if (fromRanked >= CONCENTRATION_MIN_POINTS && fromRanked >= score * CONCENTRATION_SHARE) {
+        const questions = [...new Set(usable.ranked.map((a) => bank!.questions.find((q) => q.questionId === a.questionId)?.text ?? ''))].filter(Boolean)
+        concentration = { fromRanked, without, answers: k, questions }
+      }
+    }
+
+    // 계단 — 순위 비중이 늘어나는 구간(6건 미만)에서는 1위 답 한 건이 점수를 크게 바꾼다. 1위가 아닌 순위 답은 그대로 두고 1위 답 수만
+    // 바꾼다 — 이번 주 칸이 이번 주 점수와 같다.
+    if (k < RANK_FULL_WEIGHT_RESPONSES) {
+      const nonFirst = ranks.filter((r) => r !== 1)
+      const firstNow = k - nonFirst.length
+      const top = Math.min(RANK_FULL_WEIGHT_RESPONSES, Math.max(3, firstNow + 1))
+      steps = Array.from({ length: top + 1 }, (_, j) => ({
+        firstAnswers: j,
+        score:
+          j === firstNow ? score : aeoScoreOf(withRanked(base, n, otherMentions, [...nonFirst, ...Array(j).fill(1)], j > firstNow ? sentimentNew : sentimentNow)),
+        current: j === firstNow,
+      }))
+    }
+  }
+
+  return { data: { score, parts, rankDropped, concentration, steps }, usable, base }
+}
+
+/** 개요 화면의 「이번 주 N점은 어디서 나왔나」 — 보고서 「점수 풀이」와 같은 계산(같은 조건에서 같은 숫자). */
+export function scoreExplainData(input: ExplainInput): ScoreExplainData {
+  return explainCore(input).data
+}
+
+/** 계단 그림의 세로축 위끝 — 가장 높은 칸을 10 단위로 올린 값(최소 10). 개요 · 보고서가 같은 눈금으로 그린다. */
+export function stepScaleTop(steps: { score: number }[]): number {
+  return Math.max(10, Math.ceil(Math.max(0, ...steps.map((s) => s.score)) / 10) * 10)
+}
+
+export function explainScore(input: ExplainInput & { history: WeeklyScorecard[] }): ExplainLine[] {
+  const { card, history } = input
+  const { data, usable, base } = explainCore(input)
+  const score = data.score
+  const lines: ExplainLine[] = []
+  const parts = scoreBreakdown(card)
+
+  if (data.parts) {
     lines.push({
       key: 'parts',
       label: '구성',
-      text: `${score}점 = ${counted.map((p, i) => `${PART_LABEL[p.key]} 약 ${ints[i]}점`).join(' + ')}${
-        parts.some((p) => p.key === 'avgRecommendationRank' && p.points === null) ? ' (순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다)' : ''
+      text: `${score}점 = ${data.parts.map((p) => `${p.label} 약 ${p.points}점`).join(' + ')}${
+        data.rankDropped ? ' (순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다)' : ''
       }.`,
     })
 
@@ -160,61 +251,23 @@ export function explainScore(input: {
     }
   }
 
-  /*
-   * 기록으로 센 줄(몰림 · 계단 · 이름을 댈 때 · 움직이는 것) — 판정 기록이 카드와 같은 측정이고, 기록 값(실제 감성 계수 포함)으로 같은 식에
-   * 넣어 카드 점수가 나올 때만. 감성 계수는 언급 문장에서 서버와 같은 규칙으로 센다(반올림된 점수에서 거꾸로 풀면 언급이 한두 건인 주에
-   * 0.7~0.8로 틀어진다). 새로 불리는 답을 가정할 때는 지금 문장 평균, 문장이 없으면 중립 0.7(개선제안 계산 예시와 같은 가정).
-   */
-  const pop = population(card, analyses, bank)
-  const base = scoreInputsOf(card)
-  let usable: (Population & { n: number; ranks: number[]; otherMentions: number; sentimentNow: number; sentimentNew: number }) | null = null
-  if (pop && pop.matchesCard) {
-    const n = pop.unnamed.length
-    const ranks = pop.ranked.map((a) => a.brandRank as number)
-    const otherMentions = pop.unnamed.filter((a) => a.mentioned).length - ranks.length
-    const actual = mentionSentimentOf(pop.unnamed)
-    const sentimentNow = actual ?? 1
-    if (aeoScoreOf(withRanked(base, n, otherMentions, ranks, sentimentNow)) === score) {
-      usable = { ...pop, n, ranks, otherMentions, sentimentNow, sentimentNew: actual ?? NEUTRAL_SENTIMENT }
-    }
+  if (data.concentration) {
+    const { fromRanked, without, answers: k, questions } = data.concentration
+    const where = questions.length === 1 ? `질문 1개 — 「${questions[0]}」` : `질문 ${questions.length}개`
+    lines.push({
+      key: 'concentration',
+      label: '몰림',
+      text: `${score}점 가운데 약 ${fromRanked}점은 이름 없이 물은 질문의 답 ${k}건(${where})에서 나왔습니다. 이 ${k}건이 없었다면 ${without}점입니다.`,
+    })
   }
 
-  if (usable) {
-    const { n, ranks, otherMentions, sentimentNow, sentimentNew } = usable
-    const k = ranks.length
-
-    // 몰림 — 순위가 매겨진 답 몇 건이 점수 대부분을 낸 주. 그 답들이 없었다면 그 답의 언급 문장도 감성 평균에서 빠진다(서버와 같다).
-    if (k > 0 && k < RANK_FULL_WEIGHT_RESPONSES) {
-      const rest = usable.unnamed.filter((a) => !usable!.ranked.includes(a))
-      const without = aeoScoreOf(withRanked(base, n, otherMentions, [], mentionSentimentOf(rest) ?? 1))
-      const fromRanked = score - without
-      if (fromRanked >= CONCENTRATION_MIN_POINTS && fromRanked >= score * CONCENTRATION_SHARE) {
-        const texts = [...new Set(usable.ranked.map((a) => bank!.questions.find((q) => q.questionId === a.questionId)?.text ?? ''))].filter(Boolean)
-        const where = texts.length === 1 ? `질문 1개 — 「${texts[0]}」` : `질문 ${texts.length}개`
-        lines.push({
-          key: 'concentration',
-          label: '몰림',
-          text: `${score}점 가운데 약 ${fromRanked}점은 이름 없이 물은 질문의 답 ${k}건(${where})에서 나왔습니다. 이 ${k}건이 없었다면 ${without}점입니다.`,
-        })
-      }
-    }
-
-    // 계단 — 순위 비중이 늘어나는 구간(6건 미만)에서는 1위 답 한 건이 점수를 크게 바꾼다. 1위가 아닌 순위 답은 그대로 두고 1위 답 수만
-    // 바꾼다 — 이번 주 칸이 이번 주 점수와 같다.
-    if (k < RANK_FULL_WEIGHT_RESPONSES) {
-      const nonFirst = ranks.filter((r) => r !== 1)
-      const firstNow = k - nonFirst.length
-      const top = Math.min(RANK_FULL_WEIGHT_RESPONSES, Math.max(3, firstNow + 1))
-      const steps = Array.from({ length: top + 1 }, (_, j) => {
-        const s = j === firstNow ? score : aeoScoreOf(withRanked(base, n, otherMentions, [...nonFirst, ...Array(j).fill(1)], j > firstNow ? sentimentNew : sentimentNow))
-        return `${j}건 ${s}점${j === firstNow ? '(이번 주)' : ''}`
-      })
-      lines.push({
-        key: 'steps',
-        label: '계단',
-        text: `이번 주 다른 값은 그대로 두고 비교 그룹 이름 중 1위로 추천된 답 수만 바꾸면 ${steps.join(' · ')}입니다. 한두 건 차이로 점수가 크게 움직이므로, 한 번 잰 점수보다 같은 조건으로 여러 번 잰 흐름으로 봅니다.`,
-      })
-    }
+  if (data.steps) {
+    const steps = data.steps.map((s) => `${s.firstAnswers}건 ${s.score}점${s.current ? '(이번 주)' : ''}`)
+    lines.push({
+      key: 'steps',
+      label: '계단',
+      text: `이번 주 다른 값은 그대로 두고 비교 그룹 이름 중 1위로 추천된 답 수만 바꾸면 ${steps.join(' · ')}입니다. 한두 건 차이로 점수가 크게 움직이므로, 한 번 잰 점수보다 같은 조건으로 여러 번 잰 흐름으로 봅니다.`,
+    })
   }
 
   // 순위의 뜻 — 순위는 답에 나온 비교 그룹 이름 안에서 매긴다(목록 밖 업체는 빠진다).

@@ -158,6 +158,18 @@ const tableSegs = tidySegments(highlightAnswer(table, [{ text: '역에서 도보
 ok('표 칸 하이라이트: 「위치 · 역에서 도보 3분」', tableSegs.map((x) => x.text).join('') === tidyMarkdown(table) && tidyMarkdown(table).includes('위치 · 역에서 도보 3분'))
 ok('표 칸 하이라이트: 칠한 글자는 그대로', tableSegs.some((x) => x.kind === 'wrong' && x.text === '역에서 도보 3분'))
 
+// 7) 변동성 알림의 같은 조건 평균 — 개요 점수 판이 넘긴 평균(회차 평균 포함)을 그대로 쓴다. 한 화면에 평균이 둘이면 두 값처럼 읽힌다(D2 검토).
+//    넘기지 않으면 예전처럼 주 카드로 세고(정기진단 보고서 등 다른 화면), null이면(회차 기록을 읽는 중) 평균 구절을 뺀다.
+const wideCi = (score: number) => ({ aeoScore: { current: score, ma4: score, previousWeek: score, ciLow: 0, ciHigh: score + 12 } })
+const steady = [card('2026-W41', 10), card('2026-W42', 10), card('2026-W43', 12, wideCi(12))]
+const ciDetail = (ctx?: Parameters<typeof computeAlerts>[1]) => computeAlerts(steady, ctx).find((a) => a.title.startsWith('변동성 큼'))?.detail
+ok('변동성 알림: 평균을 넘기지 않으면 주 카드 평균(연속 3주 11점)', ciDetail() === '이번 주 단일 변동은 과잉 해석하지 말고 같은 조건 연속 3주 평균 11점을 함께 보세요.')
+ok(
+  '변동성 알림: 화면이 넘긴 평균을 그대로(최근 4번 측정 7.8점)',
+  ciDetail({ average: { average: 7.8, text: '같은 조건 최근 4번 측정 평균' } }) === '이번 주 단일 변동은 과잉 해석하지 말고 같은 조건 최근 4번 측정 평균 7.8점을 함께 보세요.',
+)
+ok('변동성 알림: 평균이 null이면 구절을 뺀다', ciDetail({ average: null }) === '이번 주 단일 변동은 과잉 해석하지 마세요.')
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

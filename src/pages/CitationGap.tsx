@@ -111,7 +111,7 @@ function GapRowView({
         </td>
         <td className="cell-text">{row.domain}</td>
         <td className="cell-text">
-          <span className={`status-pill ${BUCKET_PILL[row.bucket]}`}>{GAP_BUCKET_LABEL[row.bucket]}</span>
+          <span className={`status-pill no-glyph ${BUCKET_PILL[row.bucket]}`}>{GAP_BUCKET_LABEL[row.bucket]}</span>
         </td>
         <td>{formatPct(row.share)}</td>
         <td>
@@ -356,7 +356,7 @@ export default function CitationGap() {
             <div className="filters" role="tablist" aria-label="출처 유형">
               <button
                 type="button"
-                className={`status-pill ${bucket === 'all' ? 'st-good' : 'st-unknown'}`}
+                className={`status-pill no-glyph ${bucket === 'all' ? 'st-good' : 'st-unknown'}`}
                 onClick={() => setBucket('all')}
                 aria-pressed={bucket === 'all'}
               >
@@ -369,7 +369,7 @@ export default function CitationGap() {
                   <button
                     type="button"
                     key={b}
-                    className={`status-pill ${active ? BUCKET_PILL[b] : 'st-unknown'}`}
+                    className={`status-pill no-glyph ${active ? BUCKET_PILL[b] : 'st-unknown'}`}
                     onClick={() => setBucket(active ? 'all' : b)}
                     aria-pressed={active}
                     title={`${GAP_BUCKET_LABEL[b]} — 도메인 ${stat.domains}개, 인용 ${stat.citationCount}건 (전체의 ${formatPct(stat.share)})`}

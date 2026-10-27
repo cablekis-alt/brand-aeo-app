@@ -1,7 +1,7 @@
 import type { SiteScoreRecord } from '../lib/api'
 import { ENGINE_LABEL, formatRankWithCount, weekLabel } from '../lib/format'
 import { hostName } from '../lib/hostNames'
-import { runLabel, type ExplainLine, type RecentRuns } from '../lib/reportExplain'
+import { runLabel, stepScaleTop, type ExplainLine, type RecentRuns, type ScoreExplainData } from '../lib/reportExplain'
 import type { CheckStatus, CitationRow, CohortRow, SelfReview, TrustCheck } from '../lib/reviewReport'
 
 /*
@@ -368,7 +368,7 @@ export function SiteBreakdownSection({ site }: { site: SiteScoreRecord }) {
  * 점수 풀이 — 이번 주 점수가 어디서 나왔고 무엇이 점수를 움직이는지(문장은 src/lib/reportExplain.ts). 고객 종이에도 싣는다.
  * 월간 보기에서도 판정 주차 한 주의 풀이라 주차를 함께 적는다.
  */
-export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; weekOf: string }) {
+export function ScoreExplainSection({ lines, weekOf, data }: { lines: ExplainLine[]; weekOf: string; data?: ScoreExplainData | null }) {
   return (
     <section className="score-explain">
       <h3>점수 풀이</h3>
@@ -376,7 +376,10 @@ export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; w
         {lines.map((l) => (
           <div key={l.key}>
             <dt>{l.label}</dt>
-            <dd>{l.text}</dd>
+            <dd>
+              {l.text}
+              {data && <ExplainFigure line={l.key} data={data} />}
+            </dd>
           </div>
         ))}
       </dl>
@@ -387,6 +390,73 @@ export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; w
       </p>
     </section>
   )
+}
+
+/**
+ * 점수 풀이 줄 아래 그림(디자인 A) — 구성 · 몰림 막대와 1위 답 수별 점수(계단). 개요 점수 판과 같은 숫자 · 같은 그림(scoreExplainData,
+ * 막대 클래스도 개요와 같다). 문장이 숫자를 이미 다 말하므로 그림은 화면 읽기 도구에서 감춘다(같은 숫자를 두 번 읽히지 않게).
+ * 문장이 있는 줄에만 붙는다 — explainScore가 그 줄을 쓰지 않는 주(옛 카드 · 기록 없음)에는 그림도 없다.
+ */
+function ExplainFigure({ line, data }: { line: ExplainLine['key']; data: ScoreExplainData }) {
+  if (line === 'parts' && data.parts) {
+    return (
+      <div className="explain-figure" aria-hidden="true">
+        <div className="ov-bar">
+          {data.parts
+            .filter((p) => p.points > 0)
+            .map((p) => (
+              <span key={p.key} className={`ov-seg part-${p.key}`} style={{ flexGrow: p.points }} />
+            ))}
+        </div>
+        <div className="explain-legend">
+          {data.parts.map((p) => (
+            <span key={p.key}>
+              <span className={`ov-swatch part-${p.key}`} />
+              {p.label} 약 {p.points}점
+            </span>
+          ))}
+          <span className="explain-legend-scale">막대 길이 = {data.score}점</span>
+        </div>
+      </div>
+    )
+  }
+  if (line === 'concentration' && data.concentration) {
+    const c = data.concentration
+    return (
+      <div className="explain-figure" aria-hidden="true">
+        <div className="ov-bar">
+          <span className="ov-seg conc" style={{ flexGrow: c.fromRanked }}>
+            답 {c.answers}건에서 약 {c.fromRanked}점
+          </span>
+          {c.without > 0 && <span className="ov-seg rest" style={{ flexGrow: c.without }} />}
+        </div>
+      </div>
+    )
+  }
+  if (line === 'steps' && data.steps) {
+    const top = stepScaleTop(data.steps)
+    return (
+      <div className="explain-figure explain-steps" aria-hidden="true">
+        <div className="ov-step-bars">
+          {data.steps.map((s) => (
+            <div key={s.firstAnswers} className={`ov-step${s.current ? ' current' : ''}`}>
+              <span className="ov-step-bar" style={{ height: `${Math.max(2, Math.round((s.score / top) * 100))}%` }}>
+                <span className="mono">{s.score}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="ov-step-axis">
+          {data.steps.map((s) => (
+            <span key={s.firstAnswers} className={s.current ? 'current' : undefined}>
+              {s.firstAnswers}건{s.current ? ' · 이번 주' : ''}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return null
 }
 
 /** 사실성 「틀림」 원문 — 운영자가 판정 오류인지 가린다(화면에서만). */

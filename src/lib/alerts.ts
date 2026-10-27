@@ -1,6 +1,6 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
-import { aeoScoreOf, scoreInputsOf, type ScorePartKey } from './b9-report'
-import { comparableRun, compareConditions, conditionReason, runAverage, runCountText, weeksBetween } from './comparability'
+import { aeoScoreOf, sameConditionAverage, scoreInputsOf, type ScorePartKey } from './b9-report'
+import { compareConditions, conditionReason, weeksBetween } from './comparability'
 import { ENGINE_LABEL } from './format'
 
 // 주간 스코어카드 히스토리에서 "이번 주 vs 지난 주" 변화를 감지해 알림을 만든다.
@@ -27,10 +27,12 @@ export interface ContradictedClaim {
  * 알림 문장을 사람 말로 쓰는 데 필요한 것 — 화면이 이미 읽은 기록을 넘긴다. 없으면 기록 줄에서 낼 수 있는 만큼만 쓴다.
  *   - contradicted: 이번 주 「틀림」 주장(질문 · 엔진 · AI 값 · 등록 값). 없으면 엔진별 응답 수만 적는다.
  *   - nameOf: 비교 그룹 구성원 id → 브랜드 이름(이번 주 처음 잰 곳을 이름으로 밝힐 때).
+ *   - average: 화면이 보여 주는 같은 조건 평균(b9-report sameConditionAverage). 없으면(undefined) 주 카드로 센다, null이면 구절을 뺀다.
  */
 export interface AlertContext {
   contradicted?: ContradictedClaim[]
   nameOf?: (tenantId: string) => string | undefined
+  average?: { average: number; text: string } | null
 }
 
 /** 점수 항목 이름 — 증감이 어디서 왔는지 밝힐 때. */
@@ -142,11 +144,13 @@ function deltaSource(prev: WeeklyScorecard, cur: WeeklyScorecard, delta: number)
  * 같은 조건 평균 한 구절 — 「같은 조건 연속 3주 평균 28점」(사이에 재지 않은 주가 있으면 「같은 조건 3번 평균」).
  * 저장된 ma4(측정 당시 4주 이동평균)는 조건이 바뀐 주를 섞는다(실측 lghellovision 점수 10 · 평균 28) — 쓰지 않고 이력에서 센다.
  * 같은 조건으로 2번 이상 잰 구간이 없으면 null이고, 그 문장은 빼고 알린다.
+ *
+ * 화면이 이미 센 평균(context.average — 회차 평균 포함, b9-report sameConditionAverage)이 있으면 그 값을 쓴다 — 개요의 점수 판과
+ * 이 알림이 같은 화면에 다른 평균을 내면 두 값처럼 읽힌다. null이면(화면이 아직 회차 기록을 읽는 중이거나 평균이 없다) 구절을 뺀다.
  */
-function sameConditionAverage(history: WeeklyScorecard[], weekOf: string): string | null {
-  const avg = runAverage(history, weekOf)
-  if (!avg) return null
-  return `같은 조건 ${runCountText(comparableRun(history, weekOf).slice(-4))} 평균 ${avg.average}점`
+function averagePhrase(history: WeeklyScorecard[], weekOf: string, given: AlertContext['average']): string | null {
+  const avg = given === undefined ? sameConditionAverage(history, weekOf) : given
+  return avg ? `${avg.text} ${avg.average}점` : null
 }
 
 /** 이번 주만으로 판단하는 알림이라 측정 조건 가드와 무관하다 — 두 경로에서 같이 쓴다. */
@@ -200,7 +204,7 @@ export function computeAlerts(history: WeeklyScorecard[], context: AlertContext 
   }
 
   // 같은 조건 평균 — 조건이 바뀐 주에는 같은 조건 구간이 이번 주 하나뿐이라 null(문장이 빠진다).
-  const average = sameConditionAverage(sorted, cur.weekOf)
+  const average = averagePhrase(sorted, cur.weekOf, context.average)
 
   /*
    * 측정 조건이 바뀌었거나 한쪽에만 기록이 있어 확인할 수 없으면 측정에서 파생된 변화를 알리지 않는다 — 앱 공용 규칙

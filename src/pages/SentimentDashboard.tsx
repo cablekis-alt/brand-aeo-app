@@ -18,9 +18,9 @@ function StackedBar({ c }: { c: SentimentCounts }) {
   if (c.total === 0) return <span className="muted">데이터 없음</span>
   return (
     <span className="senti-bar" role="img" aria-label={`긍정 ${c.pos} 중립 ${c.neu} 부정 ${c.neg}`}>
-      {c.pos > 0 && <span className="seg pos" style={{ width: `${(c.pos / c.total) * 100}%` }} />}
-      {c.neu > 0 && <span className="seg neu" style={{ width: `${(c.neu / c.total) * 100}%` }} />}
-      {c.neg > 0 && <span className="seg neg" style={{ width: `${(c.neg / c.total) * 100}%` }} />}
+      {c.pos > 0 && <span className="senti-seg pos" style={{ width: `${(c.pos / c.total) * 100}%` }} />}
+      {c.neu > 0 && <span className="senti-seg neu" style={{ width: `${(c.neu / c.total) * 100}%` }} />}
+      {c.neg > 0 && <span className="senti-seg neg" style={{ width: `${(c.neg / c.total) * 100}%` }} />}
     </span>
   )
 }
