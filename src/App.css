@@ -2141,7 +2141,7 @@ tbody tr.selected {
 .trust-box > .hint { margin: 0 0 4px; }
 .trust-counts { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .trust-counts .status-pill { border: 0; }
-.trust-counts .status-pill.st-good { background: var(--accent-soft); color: var(--accent-ink); }
+.trust-counts .status-pill.st-good { background: var(--good-soft); color: var(--good); }
 .trust-counts .status-pill.st-warn { background: var(--warn-soft); color: var(--warn); }
 .trust-counts .status-pill.st-bad { background: var(--bad-soft); color: var(--bad); }
 /* 보고서 본문의 비교 · 근거 표 — 이 브랜드 줄(표지 · 지표와 같은 값)은 옅게 칠한다. 종이는 칠이 빠지므로 이름을 굵게 둔다. */
@@ -2242,7 +2242,7 @@ tbody tr.selected {
   justify-self: start;
   border: 0;
 }
-.trust-checks .status-pill.st-good { background: var(--accent-soft); color: var(--accent-ink); }
+.trust-checks .status-pill.st-good { background: var(--good-soft); color: var(--good); }
 .trust-checks .status-pill.st-warn { background: var(--warn-soft); color: var(--warn); }
 .trust-checks .status-pill.st-bad { background: var(--bad-soft); color: var(--bad); }
 @media (max-width: 640px) {
@@ -2282,6 +2282,7 @@ tbody tr.selected {
 .status-pill.st-good::before { content: "● "; }
 .status-pill.st-warn::before { content: "◆ "; }
 .status-pill.st-bad::before { content: "▼ "; }
+.status-pill.no-glyph::before { content: none; }
 .status-pill.st-good { color: var(--good); }
 .status-pill.st-ok { color: var(--muted); }
 .status-pill.st-warn { color: var(--warn); }
@@ -2382,16 +2383,16 @@ p.hint {
   overflow: hidden;
   background: var(--accent-soft);
 }
-.senti-bar .seg {
+.senti-seg {
   height: 100%;
 }
-.senti-bar .seg.pos {
+.senti-seg.pos {
   background: var(--good);
 }
-.senti-bar .seg.neu {
+.senti-seg.neu {
   background: var(--line);
 }
-.senti-bar .seg.neg {
+.senti-seg.neg {
   background: var(--bad);
 }
 .neg-list {
@@ -4198,7 +4199,7 @@ td.cell-mid {
   background: var(--surface-2);
   color: var(--ink-2);
 }
-.chip.good { background: var(--accent-soft); color: var(--accent-ink); }
+.chip.good { background: var(--good-soft); color: var(--good); }
 .chip.warn { background: var(--warn-soft); color: var(--warn); }
 .chip.bad { background: var(--bad-soft); color: var(--bad); }
 .chip.info { background: var(--info-soft); color: var(--info); }
@@ -4275,14 +4276,14 @@ section.dash-card {
 .delta-chip {
   margin-left: 6px;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 600;
   background: var(--surface-2);
   color: var(--ink-2);
 }
-.delta-chip.up { background: var(--accent-soft); color: var(--accent-ink); }
+.delta-chip.up { background: var(--good-soft); color: var(--good); }
 .delta-chip.down { background: var(--bad-soft); color: var(--bad); }
 .comp-label {
   font-size: 12.5px;
@@ -5216,13 +5217,13 @@ section.dash-card {
 }
 .cite-chip {
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 11.5px;
   background: var(--surface-2);
   color: var(--ink-2);
   white-space: nowrap;
 }
-.cite-chip.good { background: var(--accent-soft); color: var(--accent-ink); }
+.cite-chip.good { background: var(--good-soft); color: var(--good); }
 .cite-chip.bad { background: var(--bad-soft); color: var(--bad); }
 .cite-chip.info { background: var(--info-soft); color: var(--info); }
 

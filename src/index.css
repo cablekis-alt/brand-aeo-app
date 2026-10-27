@@ -242,10 +242,11 @@ h3 {
 }
 
 /*
- * 섹션 머리 — 검은 1px 선 위에 굵은 제목(계기판). 카드로 감싸지 않은 본문 절(<section>의 첫 제목)에만 — 카드(.panel) · 대화상자 안
- * 제목은 테두리가 이미 경계라 선을 긋지 않는다.
+ * 섹션 머리 — 검은 1px 선 위에 굵은 제목(계기판). 상자로 감싸지 않은 본문 절(<section>의 첫 제목)에만 — 테두리 상자(.panel.warn) 안
+ * 제목은 테두리가 이미 경계라 선을 긋지 않는다. 그냥 .panel은 상자가 없어 다른 절과 같이 선을 긋는다(빼면 「잘하고 있는 점」 ·
+ * 「API 키」만 선이 없었다).
  */
-section:not(.panel) > h3:first-child {
+section:not(.panel.warn) > h3:first-child {
   padding-top: 9px;
   border-top: 1px solid var(--ink);
 }

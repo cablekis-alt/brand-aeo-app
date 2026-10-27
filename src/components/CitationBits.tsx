@@ -28,7 +28,7 @@ export function ShareDelta({
   if (Math.abs(delta) < 0.05) return <span className="muted">0.0%p</span>
   const cls = delta > 0 ? 'st-good' : 'st-bad'
   return (
-    <span className={`status-pill ${cls}`}>
+    <span className={`status-pill no-glyph ${cls}`}>
       {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%p
     </span>
   )
