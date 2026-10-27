@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /*
- * 계기판 토큰(2026-10 디자인 A). 아주 옅은 차가운 회색 바탕 · 녹흑 글자 · 깊은 청록 강조 하나.
+ * 계기판 토큰(2026-10 디자인 A). 아주 옅은 차가운 회색 바탕 · 녹흑 글자 · 코발트 남색 강조 하나.
+ * 강조색은 상태색(초록 · 주황 · 빨강)과 멀어야 한다 — 처음 쓴 청록 #0a5c50은 좋음 초록과 거의 같아(OKLab 0.057)
+ * 단추 · 좋음 칩 · 점이 한 덩어리로 보여 코발트로 바꿨다(2026-10-27). 정보색은 강조 · 상태색 · 업종군 일곱과 모두 먼 자주(OKLab 최소 0.14, 다크 0.10), 경쟁사 2번 선은 청록.
  * 카드를 겹겹이 띄우지 않고 1px 선 · 열 정렬 · 숫자 크기로 위계를 만든다 — 그림자 없이 테두리만, 모서리는 작게.
  * 상태색은 명도까지 셋으로 나눈다(미흡 어두움 ▼ · 좋음 중간 ● · 주의 밝음 ◆) — 글자는 *-ink가 아니라 good · warn · bad,
  * 막대 · 점 같은 표시는 *-mark를 쓴다. 글자 토큰은 paper · side · card · surface-2 네 바탕 모두에서 4.5:1 이상(라이트 · 다크).
@@ -26,9 +28,9 @@
   --surface-2: #eceff2;
   --line: #dce2e6;
   --line-strong: #b8c2c8;
-  --accent: #0a5c50;
-  --accent-soft: #e4eeec;
-  --accent-ink: #063e36;
+  --accent: #2348b0;
+  --accent-soft: #e8edfa;
+  --accent-ink: #182f78;
   --good: #236a45;
   --good-mark: #3f9b6b;
   --good-soft: #e3f1e9;
@@ -37,10 +39,11 @@
   --warn: #7a4e00;
   --warn-mark: #e0a32e;
   --warn-soft: #fbf0d6;
-  --info: #2f5bd3;
-  --info-soft: #e8eefc;
+  /* 정보 — 콘텐츠 올린 날 표시 · 인용됨 · 경쟁사 없이 · 준비 중 칩. 점수 추이 선(강조색) 위에 찍히고 브랜드 현황에서 업종군 색과 나란히 나오므로 둘 다와 먼 자주. */
+  --info: #7c1878;
+  --info-soft: #f4e8f3;
   /* 비교 선 계열 — 자사는 --accent, 나머지 다섯은 고정 순서(경쟁 시계열). 흰 카드 대비 4.5:1 이상. */
-  --series-2: #2f5bd3;
+  --series-2: #0e7c6b;
   --series-3: #c2551b;
   --series-4: #7a4fc4;
   --series-5: #8a6d00;
@@ -94,9 +97,9 @@
     --surface-2: #1b2427;
     --line: #263236;
     --line-strong: #3a474c;
-    --accent: #5cc2b0;
-    --accent-soft: #132e29;
-    --accent-ink: #a3e4d8;
+    --accent: #6fa8ff;
+    --accent-soft: #16223d;
+    --accent-ink: #c6d8fd;
     --good: #74d39d;
     --good-mark: #4fae7d;
     --good-soft: #12291c;
@@ -105,9 +108,9 @@
     --warn: #f0c062;
     --warn-mark: #e0a32e;
     --warn-soft: #362a0f;
-    --info: #8ca8f5;
-    --info-soft: #18213d;
-    --series-2: #8ca8f5;
+    --info: #fa92f1;
+    --info-soft: #2f1c2e;
+    --series-2: #5cc2b0;
     --series-3: #f08a54;
     --series-4: #b497f0;
     --series-5: #d9b84a;
@@ -145,9 +148,9 @@
     --surface-2: #1b2427;
     --line: #263236;
     --line-strong: #3a474c;
-    --accent: #5cc2b0;
-    --accent-soft: #132e29;
-    --accent-ink: #a3e4d8;
+    --accent: #6fa8ff;
+    --accent-soft: #16223d;
+    --accent-ink: #c6d8fd;
     --good: #74d39d;
     --good-mark: #4fae7d;
     --good-soft: #12291c;
@@ -156,9 +159,9 @@
     --warn: #f0c062;
     --warn-mark: #e0a32e;
     --warn-soft: #362a0f;
-    --info: #8ca8f5;
-    --info-soft: #18213d;
-    --series-2: #8ca8f5;
+    --info: #fa92f1;
+    --info-soft: #2f1c2e;
+    --series-2: #5cc2b0;
     --series-3: #f08a54;
     --series-4: #b497f0;
     --series-5: #d9b84a;

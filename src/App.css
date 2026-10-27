@@ -5544,7 +5544,7 @@ section.dash-card {
 
 /*
  * 글 카드 본문(DraftPanel.tsx) — 초안과 빈칸 확인. 올리기는 「② 올리기 목록」(PublishList.tsx)이 한다.
- * 빈칸은 본문 안에서 채운다: 빨강 = 값 필요, 노랑 = 페이지에서 찾은 후보, 초록 = 넣은 값, 회색 = 뺌.
+ * 빈칸은 본문 안에서 채운다: 빨강 = 값 필요, 노랑 = 페이지에서 찾은 후보, 강조색 = 넣은 값, 회색 = 뺌.
  */
 .draft-flow {
   display: flex;
@@ -6144,7 +6144,7 @@ section.dash-card {
     flex-basis: 100%;
   }
 }
-/* 올리기 목록 줄의 점 — 초록 = 올린 주소 있음. */
+/* 올리기 목록 줄의 점 — 강조색 = 올린 주소 있음. */
 .channel-dot {
   flex: none;
   width: 8px;
