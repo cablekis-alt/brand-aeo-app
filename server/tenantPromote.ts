@@ -10,7 +10,7 @@ import { EditorError, planEdit, saveEdit } from './competitorEditor.js';
 import { getIsoWeekString } from './dateUtil.js';
 import { measureInFlight } from './measureTracker.js';
 import { readOverlay } from './tenantOverlay.js';
-import { cohortBankFor, freshBankVersion, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
+import { cohortBankFor, configuredOwnedDomains, freshBankVersion, isBakedTenant, loadRuntimeTenants, registerTenant, replaceOverlayTenant } from './tenantRegistry.js';
 import { subjectParticle, topicParticle } from '../src/lib/korean.js';
 import type { CompetitorContext, FactGraphNode } from '../src/prompts/types.js';
 import type { ResultStore } from './store.js';
@@ -68,7 +68,7 @@ const host = (d: string) => d.trim().toLowerCase().replace(/^www\./, '');
 /**
  * 브랜드별로 앱에서 고친 설정 파일 — 베이스 · 오버레이를 모두 이긴다(tenantRegistry.ts mergeRuntimeTenants).
  * 경쟁사일 때 남은 파일을 그대로 두면 등록 화면에서 넣은 값이 말없이 무시된다. 경로는 각 저장소의 filePathFor와 같다
- * (tenantScopeStore · factGraphStore · brandPageStore · tenantEnginesStore · tenantCompetitorsStore).
+ * (tenantScopeStore · factGraphStore · brandPageStore · tenantEnginesStore · tenantCompetitorsStore · ownedDomainsStore).
  */
 const OVERRIDE_FILES: { file: string; label: string }[] = [
   { file: 'market-scope.json', label: '시장 범위' },
@@ -76,6 +76,7 @@ const OVERRIDE_FILES: { file: string; label: string }[] = [
   { file: 'brand-page.json', label: '브랜드 페이지' },
   { file: 'engines.json', label: '수집 엔진' },
   { file: 'competitors.json', label: '경쟁사 목록' },
+  { file: 'owned-domains.json', label: '더한 자사 주소' },
 ];
 
 const tenantDir = (tenantId: string) => path.join(PIPELINE_DATA_DIR, tenantId);
@@ -421,7 +422,9 @@ export async function registerVariant(draft: TenantConfig, store: ResultStore, o
       tenantId,
       questionBankVersion,
       aliases: merge(draft.aliases, existing.aliases, (s) => s.trim()),
-      ownedDomains: merge(draft.ownedDomains, existing.ownedDomains, hostKey),
+      // 설정에 적힌 주소만 옮긴다 — 런타임 값에는 앱에서 더한 주소(owned-domains.json)가 붙어 있어, 그대로 적으면 새 브랜드에서는
+      // 뺄 수 없는 고정 주소가 되고 원 브랜드에서 빼도 남는다(검토 반영). 더한 주소는 새 브랜드의 「자사 사이트 주소」에서 따로 더한다.
+      ownedDomains: merge(draft.ownedDomains, await configuredOwnedDomains(existing.tenantId), hostKey),
       factGraph,
       ...(brandPageUrl ? { brandPageUrl } : {}),
       ...(existing.ga4PropertyId && !draft.ga4PropertyId ? { ga4PropertyId: existing.ga4PropertyId } : {}),

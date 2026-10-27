@@ -832,7 +832,7 @@ function LeaderRow({
           label: '기본 정보',
           onSelect: () => actions.editProfile(current.tenantId),
           disabled: actions.locked,
-          title: actions.locked ? actions.lockedNote : `${current.brandName} 업종 · 지역 · 시장 범위 바꾸기`,
+          title: actions.locked ? actions.lockedNote : `${current.brandName} 이름 · 업종 · 지역 · 시장 범위 · 자사 사이트 주소 바꾸기`,
         },
       ]
     : []

@@ -8,6 +8,7 @@ import { blobStoreEnabled, canPersistTenants, readOverlay, removeOverlayTenant, 
 import { addDeletedTenant, readDeletedTenants, removeDeletedTenant } from './tenantTombstone.js';
 import { readFactGraphFile } from './factGraphStore.js';
 import { readBrandPageUrl } from './brandPageStore.js';
+import { mergeOwnedDomains, readExtraOwnedDomains } from './ownedDomainsStore.js';
 import { readTenantEngines } from './tenantEnginesStore.js';
 import { readTenantScope, type TenantScope } from './tenantScopeStore.js';
 import { overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
@@ -78,6 +79,16 @@ export async function isBakedTenant(tenantId: string): Promise<boolean> {
 /** 저장소 설정(tenants.config.json)에 든 그 브랜드의 설정 — 툼스톤이 달려 있어도 찾는다. 없으면 undefined. */
 export async function findBakedTenant(tenantId: string): Promise<TenantConfig | undefined> {
   return (await baseTenants()).find((tenant) => tenant.tenantId === tenantId);
+}
+
+/**
+ * 설정에 적힌 자사 주소(원문 그대로) — 저장소 설정이 이기고, 없으면 오버레이. 앱에서 더한 주소(owned-domains.json)는 빠진 값이다.
+ * 런타임 ownedDomains는 이 뒤에 더한 주소를 붙인 것이라(mergeRuntimeTenants), 더한 주소가 설정에도 있는지 가르거나 다른 브랜드로
+ * 옮겨 적을 때 이것을 쓴다(ownedDomainsEditor · tenantPromote registerVariant).
+ */
+export async function configuredOwnedDomains(tenantId: string): Promise<string[]> {
+  const entry = (await findBakedTenant(tenantId)) ?? (await readOverlay()).find((tenant) => tenant.tenantId === tenantId);
+  return entry?.ownedDomains ?? [];
 }
 
 function asEngineList(value: unknown): Engine[] {
@@ -201,17 +212,19 @@ async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<Tenant
   }
   // 삭제(툼스톤)된 테넌트는 목록·선택지에서 제외한다.
   for (const id of deleted) map.delete(id);
-  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진·시장 범위·경쟁사 목록)만은 저장한
+  // 사람이 앱에서 고치는 값(팩트 그래프·브랜드 페이지 주소·수집 엔진·시장 범위·경쟁사 목록·더한 자사 주소)만은 저장한
   // 파일이 베이스·오버레이를 모두 이긴다 — 베이스가 이기는 병합 규칙 탓에 릴리스 없이는 반영되지
   // 않기 때문이다. 경쟁사 목록은 고객 브랜드만 고치고, 베이스가 그 뒤에 바뀌었으면 쓰지 않는다
   // (tenantCompetitorsStore.ts 지문 주석).
   const tenants = [...map.values()];
-  const [facts, pages, engines, scopes, competitorEdits] = await Promise.all([
+  const [facts, pages, engines, scopes, competitorEdits, extraOwned] = await Promise.all([
     Promise.all(tenants.map((t) => readFactGraphFile(t.tenantId))),
     Promise.all(tenants.map((t) => readBrandPageUrl(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantEngines(t.tenantId))),
     Promise.all(tenants.map((t) => readTenantScope(t.tenantId))),
     Promise.all(tenants.map((t) => (withCompetitorEdits && !t.cohortOnly ? readCompetitorOverride(t.tenantId) : null))),
+    // 더한 자사 주소는 고객 브랜드만(ownedDomainsEditor) — 첫 주소 뒤에 붙여 [0]은 그대로 둔다.
+    Promise.all(tenants.map((t) => (t.cohortOnly ? null : readExtraOwnedDomains(t.tenantId)))),
   ]);
   return tenants.map((t, i) => {
     const edit = competitorEdits[i]?.current ?? null;
@@ -225,6 +238,7 @@ async function mergeRuntimeTenants(withCompetitorEdits: boolean): Promise<Tenant
       ...(facts[i] ? { factGraph: facts[i]! } : {}),
       ...(pages[i] ? { brandPageUrl: pages[i]! } : {}),
       ...(engines[i] ? { engines: engines[i]! } : {}),
+      ...(extraOwned[i] ? { ownedDomains: mergeOwnedDomains(t.ownedDomains ?? [], extraOwned[i]) } : {}),
       // 경쟁사를 바꾸며 고쳐 만든 질문지가 있으면 그 버전 · 크기로 잰다(competitorEditor.ts 4단계).
       ...(applies
         ? {
