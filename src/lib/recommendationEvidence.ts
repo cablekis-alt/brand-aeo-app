@@ -1,6 +1,7 @@
 import { AEO_SCORE_WEIGHTS, normalizeRank, rankWeightFactor, RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { ActionStateMap, PublishedPost, SiteScoreRecord } from './api'
+import { mentionSentimentOf, NEUTRAL_SENTIMENT, scoreBreakdown, weightTagText } from './b9-report'
 import { ENGINE_LABEL, weekLabel } from './format'
 import { computeGapActions, isIdleAction, type GapAction } from './gapActions'
 import { monthDay, postWeekOf } from './publishTracking'
@@ -181,10 +182,10 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 /**
  * 언급률이 오를 때의 점수 계산 예시 — 실제 점수와 같은 산식(가중치·재정규화)으로 낸다.
  *
- * 감성 계수는 카드에 남지 않아, 지금 점수에서 거꾸로 푼다(언급이 없으면 중립 0.7). 반올림 탓에 1점
- * 안팎 어긋날 수 있다.
+ * 감성 계수는 판정 기록의 언급 문장에서 센 값을 받는다(보고서 점수 풀이와 같은 가정 — 문장이 없으면 중립 0.7). 받지 못하면 카드 점수에서
+ * 거꾸로 푼다(반올림 탓에 1점 안팎 어긋날 수 있다).
  */
-function estimateScore(card: WeeklyScorecard, mentionRate: number): number {
+function estimateScore(card: WeeklyScorecard, mentionRate: number, knownSentiment?: number): number {
   const w = AEO_SCORE_WEIGHTS
   const parts = [
     { w: w.brandOwnedCitationRate, v: card.brandOwnedCitationRate },
@@ -196,7 +197,7 @@ function estimateScore(card: WeeklyScorecard, mentionRate: number): number {
   const fixed = parts.reduce((s, p) => s + p.w * p.v, 0)
   const implied =
     card.mentionRate > 0 ? ((card.aeoScore.current / 100) * total - fixed) / (w.mentionRate * card.mentionRate) : 0.7
-  const sentiment = Math.min(1, Math.max(0.2, Number.isFinite(implied) ? implied : 0.7))
+  const sentiment = knownSentiment ?? Math.min(1, Math.max(0.2, Number.isFinite(implied) ? implied : NEUTRAL_SENTIMENT))
   return Math.round(((w.mentionRate * mentionRate * sentiment + fixed) / total) * 100)
 }
 
@@ -255,7 +256,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
       ],
       estimate:
         gain > 0
-          ? `계산 예시 — 밀린 질문의 답변 ${gain}건에서 불리면 언급률 ${pct(card.mentionRate)} → ${pct(nextRate)}, 점수 약 ${card.aeoScore.current} → ${estimateScore(card, nextRate)}점(같은 산식으로 낸 값이며 약속이 아닙니다).`
+          ? `계산 예시 — 밀린 질문의 답변 ${gain}건에서 불리면 언급률 ${pct(card.mentionRate)} → ${pct(nextRate)}, 점수 약 ${card.aeoScore.current} → ${estimateScore(card, nextRate, mentionSentimentOf(general) ?? NEUTRAL_SENTIMENT)}점(같은 산식으로 낸 값이며 약속이 아닙니다).`
           : undefined,
       link: { label: '실행 계획에서 이 질문들로 글 만들기', to: '/gap-actions' },
     }
@@ -349,7 +350,7 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
             card.avgRecommendationRank === null
               ? '순위가 매겨진 답변이 없습니다 — 불렸지만 추천 순서가 매겨지지 않은 질문'
               : rankedResponses < RANK_FULL_WEIGHT_RESPONSES
-                ? `순위가 매겨진 답변 ${rankedResponses}건(점수에는 비중 ${rankedResponses}/${RANK_FULL_WEIGHT_RESPONSES}) — 불렸지만 1순위가 아닌 질문`
+                ? `순위가 매겨진 답변 ${rankedResponses}건(점수에 반영된 추천 순위 비중 ${weightTagText(scoreBreakdown(card).find((p) => p.key === 'avgRecommendationRank')!, { short: true })}) — 불렸지만 1순위가 아닌 질문`
                 : '불렸지만 1순위가 아닌 질문',
           items: notFirst.slice(0, SHOW).map((r) => {
             const top = general

@@ -5,6 +5,8 @@ import {
   CohortCompareSection,
   ContradictedList,
   MentionSection,
+  RunsSection,
+  ScoreExplainSection,
   SiteBreakdownSection,
   TrustChecksBox,
 } from '../components/ReportReviewSections'
@@ -42,6 +44,8 @@ import {
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
+import { explainScore, ownedDomainCitations, recentRuns, separateRunNote, topSourceDomains } from '../lib/reportExplain'
+import { useRunHistory } from '../lib/useRunHistory'
 import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
@@ -165,9 +169,18 @@ export default function PeriodicReport() {
     () => history.find((h) => h.weekOf === judgedWeek) ?? history.at(-1) ?? null,
     [history, judgedWeek],
   )
+  /*
+   * 측정 회차 기록(데스크톱 — 웹은 라우트가 없어 null) — 같은 주에 여러 번 잰 회차까지 넣은 같은 조건 평균(표지 · 「같은 조건으로 잰 최근
+   * 측정」)과 「이 브랜드만 다시 잰 회차」 표시에 쓴다. 판정 주차까지만 센다(recentRuns). 최근 12주를 받는다(라우트 상한).
+   */
+  const runHistory = useRunHistory(tenant?.tenantId ?? '', 12)
+  const recent = useMemo(() => (card ? recentRuns(runHistory.history, card.weekOf) : null), [runHistory.history, card])
   const report = useMemo(
-    () => (history.length ? buildPeriodicReport(history, judgedWeek || (history.at(-1)?.weekOf ?? ''), eeat) : null),
-    [history, judgedWeek, eeat],
+    () =>
+      history.length
+        ? buildPeriodicReport(history, judgedWeek || (history.at(-1)?.weekOf ?? ''), eeat, recent ? { average: recent.average, count: recent.runs.length } : null)
+        : null,
+    [history, judgedWeek, eeat, recent],
   )
   const mean = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null)
 
@@ -314,6 +327,8 @@ export default function PeriodicReport() {
     analyses: QuestionRepeatAnalysis[]
     bank: QuestionBank | null
     citations: CitationSourceAnalysis | null
+    /** 이름 없이 물은 질문의 답에 붙은 출처(웹 · 데스크톱 모두 — ?questions=unnamed). */
+    unnamedCitations: CitationSourceAnalysis | null
     citationRows: CitationBreakdownRow[]
   } | null>(null)
   useEffect(() => {
@@ -324,17 +339,18 @@ export default function PeriodicReport() {
       .then(async (analyses) => {
         // 그 주차를 측정한 은행으로 — 버전이 없는 옛 카드는 질문 id 접두로 찾는다(콘텐츠 생성의 useGapActionPlan과 같은 규칙).
         // 지금 은행을 받으면 질문 id가 맞지 않아 이름 없는 질문을 가려내지 못하고, 실린 출처가 「충족」에서 빠진다.
-        const [bank, citations, breakdown] = await Promise.all([
+        const [bank, citations, unnamedCitations, breakdown] = await Promise.all([
           loadQuestionBank(card.tenantId, resolveBankVersion([card], card.weekOf, analyses)),
           loadCitationSources(card.tenantId, card.weekOf),
+          loadCitationSources(card.tenantId, card.weekOf, null, 'unnamed'),
           loadCitationBreakdown(card.tenantId, card.weekOf),
         ])
-        return { analyses, bank, citations, citationRows: breakdown.rows }
+        return { analyses, bank, citations, unnamedCitations, citationRows: breakdown.rows }
       })
       .then(
         (data) => alive && setEvidenceData({ key, ...data }),
         // 기록을 못 읽으면 실행 항목 없이 기본 원칙만 보인다 — 빈 기록으로 두고 넘어간다.
-        () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null, citationRows: [] }),
+        () => alive && setEvidenceData({ key, analyses: [], bank: null, citations: null, unnamedCitations: null, citationRows: [] }),
       )
     return () => {
       alive = false
@@ -388,6 +404,16 @@ export default function PeriodicReport() {
     [card, cohort, cohortLoaded, history, self],
   )
   const topCitations = useMemo(() => (evidence && evidence.citationRows.length > 0 ? citationTop(evidence.citationRows) : null), [evidence])
+  // 이름 없이 물은 질문 기준 출처 상위 — 그 주를 측정한 질문지를 못 찾아 나누지 못했으면(bankVersion null) 싣지 않는다(「출처 없음」이 아니다).
+  const unnamedTop = useMemo(
+    () => (evidence?.unnamedCitations?.questionScope?.bankVersion ? topSourceDomains(evidence.unnamedCitations) : []),
+    [evidence],
+  )
+  const homepage = useMemo(
+    () => (evidence && tenant ? ownedDomainCitations(evidence.analyses, evidence.bank, tenant.ownedDomains) : null),
+    [evidence, tenant],
+  )
+  const separateNote = useMemo(() => (card ? separateRunNote(runHistory.history, card) : null), [runHistory.history, card])
 
   /*
    * 집행한 글(언급률 2번 P4) — 고객 브랜드의 올린 글 기록과 집행 상태. 데스크톱에서만 있다(웹은 라우트가 없어 null). 그래프 핀 ·
@@ -490,6 +516,15 @@ export default function PeriodicReport() {
     [evidence],
   )
 
+  /*
+   * 점수 풀이 — 판정 주차 점수가 어디서 나왔고 무엇이 점수를 움직이는지(src/lib/reportExplain.ts). 판정 기록을 읽기 전에는 카드만으로
+   * 낼 수 있는 줄(구성 · 비중 · 순위의 뜻 · 견주는 구간)을 보이고, 읽으면 기록으로 센 줄(몰림 · 계단 · 이름을 댈 때 · 움직이는 것)을 더한다.
+   */
+  const explainLines = useMemo(
+    () => (card ? explainScore({ card, history, analyses: evidence?.analyses ?? [], bank: evidence?.bank ?? null }) : []),
+    [card, history, evidence],
+  )
+
   /** 그 달 안에서 측정 조건이 바뀐 곳(앱 전체 규칙) — 바뀌었으면 월 평균을 한 값처럼 읽으면 안 된다. 화면은 값까지, 종이는 조건 이름만. */
   const monthConditionBreaks = useMemo(() => {
     const out: { full: string; plain: string }[] = []
@@ -534,6 +569,7 @@ export default function PeriodicReport() {
     !eeatLoading &&
     siteLoadedFor === (tenant?.tenantId ?? '') &&
     citations.key === citationKey &&
+    !runHistory.loading &&
     (Boolean(viewing) || (!published.loading && actionStates.key === tenant?.tenantId))
   // 사람 확인이 남은 점검 — 인쇄 전에 한 번 묻는다(점검 상자는 종이에 싣지 않아 PDF만 보면 모른다).
   const reviewLeft = checks?.filter((c) => c.status === 'review').length ?? 0
@@ -839,6 +875,24 @@ export default function PeriodicReport() {
             <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
 
+          {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} />}
+          {recent && <RunsSection recent={recent} weekOf={card.weekOf} />}
+          {/*
+            회차 기록을 못 읽으면(데스크톱 — 웹은 기능이 없어 조용히 둔다) 표지 평균 · 회차 표 · 「이 브랜드만 다시 잰 값」 안내가 말없이 빠진다 —
+            운영자 화면에만 알린다. 읽었지만 빠진 회차가 있으면 그 수도.
+          */}
+          {runHistory.error && (
+            <p className="hint no-print">
+              측정 회차 기록을 읽지 못해 표지 평균은 주 카드 평균으로 적었고, 「같은 조건으로 잰 최근 측정」과 비교 그룹 표 아래 「이 브랜드만
+              다시 잰 값」 안내를 넣지 않았습니다: {runHistory.error}
+            </p>
+          )}
+          {(runHistory.history?.issues.length ?? 0) > 0 && (
+            <p className="hint no-print">
+              측정 회차 기록 {runHistory.history!.issues.length}개를 읽지 못해 회차 평균에서 뺐습니다: {runHistory.history!.issues.slice(0, 3).join(' · ')}
+            </p>
+          )}
+
           {/* 판정 주차까지의 최근 12주 — 월간에서도 그 달 마지막 주차에서 끝난다(판정과 같은 주). */}
           <section className="report-trend">
             <h3>주차별 Brand AEO Score</h3>
@@ -853,7 +907,7 @@ export default function PeriodicReport() {
             같은 주 코호트 비교 — 그래프 아래 순위 숫자를 표로 편다(같은 저장 목록 · 같은 분모). 기록을 읽은 다른 브랜드가 없으면 뺀다
             (표는 읽은 줄만 그리므로, 저장 목록 수로 세면 이 브랜드 한 줄짜리 「비교」가 나온다).
           */}
-          {cohort && cohort.filter((r) => r.loaded).length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} />}
+          {cohort && cohort.filter((r) => r.loaded).length > 1 && <CohortCompareSection rows={cohort} weekOf={card.weekOf} note={separateNote} />}
           {!cohortLoaded && <p className="muted no-print">비교 그룹 기록을 불러오는 중…</p>}
 
           {/* 집행한 글과 인용 — 기록이 없거나 웹이면 절을 뺀다(「집행 0편」이라고 단정하지 않는다). */}
@@ -1034,7 +1088,14 @@ export default function PeriodicReport() {
           */}
           {self && self.general.responses > 0 && <MentionSection self={self} weekOf={card.weekOf} />}
           {topCitations && (
-            <CitationSourcesSection top={topCitations.top} total={topCitations.total} owned={topCitations.owned} weekOf={card.weekOf} />
+            <CitationSourcesSection
+              top={topCitations.top}
+              total={topCitations.total}
+              owned={topCitations.owned}
+              weekOf={card.weekOf}
+              unnamedTop={unnamedTop}
+              homepage={homepage}
+            />
           )}
           {siteNow && siteNow.categories.length > 0 && <SiteBreakdownSection site={siteNow} />}
 

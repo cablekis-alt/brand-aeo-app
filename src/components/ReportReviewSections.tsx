@@ -1,5 +1,7 @@
 import type { SiteScoreRecord } from '../lib/api'
-import { formatRankWithCount, weekLabel } from '../lib/format'
+import { ENGINE_LABEL, formatRankWithCount, weekLabel } from '../lib/format'
+import { hostName } from '../lib/hostNames'
+import { runLabel, type ExplainLine, type RecentRuns } from '../lib/reportExplain'
 import type { CheckStatus, CitationRow, CohortRow, SelfReview, TrustCheck } from '../lib/reviewReport'
 
 /*
@@ -68,7 +70,7 @@ export function TrustChecksBox({ checks, error }: { checks: TrustCheck[] | null;
  * 그 주 기록을 읽지 못한 브랜드는 표에서 빼고 몇 곳 뺐는지만 적는다 — 저장 목록에는 이름이 없어(내부 id뿐) 고객 종이에 id가
  * 찍힌다. 순위는 뺀 곳까지 포함한 저장 목록 기준 그대로다.
  */
-export function CohortCompareSection({ rows, weekOf }: { rows: CohortRow[]; weekOf: string }) {
+export function CohortCompareSection({ rows, weekOf, note }: { rows: CohortRow[]; weekOf: string; note?: string | null }) {
   const shown = rows.filter((r) => r.loaded)
   const hidden = rows.length - shown.length
   return (
@@ -114,6 +116,55 @@ export function CohortCompareSection({ rows, weekOf }: { rows: CohortRow[]; week
           </tbody>
         </table>
       </div>
+      {/* 이 브랜드 점수가 비교 그룹과 다른 회차(이 브랜드만 다시 잰 회차)면 밝힌다 — 같은 표의 다른 점수는 다른 시각에 잰 값이다. */}
+      {note && <p className="hint">※ {note}</p>}
+    </section>
+  )
+}
+
+/**
+ * 같은 조건으로 잰 최근 측정 — 같은 주에 여러 번 잰 회차까지 한 줄씩(src/lib/reportExplain.ts recentRuns). 표지의 평균이 이 회차들의
+ * 평균이다. 회차 기록이 없는 곳(웹)이나 이을 수 있는 회차가 2번 미만이면 절을 뺀다.
+ */
+export function RunsSection({ recent, weekOf }: { recent: RecentRuns; weekOf: string }) {
+  const n = recent.runs.length
+  return (
+    <section className="runs-section">
+      <h3>같은 조건으로 잰 최근 측정</h3>
+      <div className="table-wrap">
+        <table>
+          <caption className="muted">
+            {weekLabel(weekOf)}까지 같은 질문 · 같은 AI · 같은 판정 방식으로 잰 {n}번 · 불린 답과 순위는 이름 없이 물은 질문 기준
+          </caption>
+          <thead>
+            <tr>
+              <th>측정</th>
+              <th>불린 답</th>
+              <th>순위가 매겨진 답</th>
+              <th>점수</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recent.runs.map((p, i) => (
+              <tr key={p.runId ?? `${p.weekOf}-${i}`} className={p.isWeekCard && p.weekOf === weekOf ? 'self' : undefined}>
+                <td>
+                  {runLabel(p)}
+                  {p.isWeekCard && (
+                    <span className="muted"> · {p.weekOf === weekOf ? '이번 보고서 점수' : `${weekLabel(p.weekOf)} 점수`}</span>
+                  )}
+                </td>
+                <td className="num">{p.ranked ? `${p.ranked.mentioned}/${p.ranked.n}` : <Unknown />}</td>
+                <td className="num">{p.ranked ? p.ranked.k : <Unknown />}</td>
+                <td className="num">{p.score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="hint">
+        {recent.min === recent.max ? `점수는 모두 ${recent.min}점이었습니다.` : `점수는 ${recent.min}~${recent.max}점 사이였고 평균은 ${recent.average}점입니다.`}{' '}
+        한 번 잰 점수는 답 한두 건에 흔들리므로, 표지의 평균도 이 {n}번으로 냈습니다.
+      </p>
     </section>
   )
 }
@@ -179,25 +230,73 @@ export function MentionSection({ self, weekOf }: { self: SelfReview; weekOf: str
   )
 }
 
-/** AI가 근거로 쓴 출처 — 그 주 상위 출처와 자사 출처. 건수는 위 「인용 건수」 칸과 같은 인용 분석에서 나온다. */
+/** 출처 칸 — 아는 플랫폼은 이름과 주소를 함께(「여기어때 yeogi.com」), 모르는 주소는 주소만. 블로그를 묶었으면 몇 곳인지(「블로그 17곳」). */
+function SourceName({ domain, hosts = 1 }: { domain: string; hosts?: number }) {
+  const name = hostName(domain)
+  return (
+    <>
+      {name && <>{name} </>}
+      <code>{domain}</code>
+      {hosts > 1 && <span className="muted"> · 블로그 {hosts}곳</span>}
+    </>
+  )
+}
+
+/**
+ * AI가 근거로 쓴 출처 — 그 주 상위 출처와 자사 출처. 건수는 위 「인용 건수」 칸과 같은 인용 분석에서 나온다.
+ *
+ * 이름 없이 물은 질문(브랜드 이름이 없는 질문 — 점수의 언급률 · 순위는 그 가운데 업종 · 지역 일반 질문만 센다)의 출처를 먼저 둔다 — 모든
+ * 질문 표만 보면 브랜드 이름을 넣은 질문에서 AI가 찾아간
+ * 홈페이지가 섞여, 이름 없이 물을 때 AI가 무엇을 근거로 쓰는지 읽을 수 없었다(스테이,머뭄 W44 — 홈페이지 인용 25건 중 24건이 이름 넣은
+ * 질문). 등록된 자사 주소는 한 번도 인용되지 않았어도 0건으로 적는다(새로 옮긴 주소가 아직 인용되지 않는 것을 보이게).
+ */
 export function CitationSourcesSection({
   top,
   total,
   owned,
   weekOf,
+  unnamedTop,
+  homepage,
 }: {
   top: CitationRow[]
   total: number
   owned: number
   weekOf: string
+  unnamedTop?: { domain: string; count: number; engines: string[]; hosts: number }[]
+  homepage?: { domain: string; named: number; unnamed: number; total: number }[] | null
 }) {
   return (
     <section className="citation-top">
       <h3>AI가 근거로 쓴 출처</h3>
+      {unnamedTop && unnamedTop.length > 0 && (
+        <div className="table-wrap">
+          <table>
+            <caption className="muted">{weekLabel(weekOf)} · 이름 없이 물은 질문의 답에 붙은 출처 상위</caption>
+            <thead>
+              <tr>
+                <th>출처</th>
+                <th>인용</th>
+                <th>인용한 AI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unnamedTop.map((c) => (
+                <tr key={c.domain}>
+                  <td className="cell-text">
+                    <SourceName domain={c.domain} hosts={c.hosts} />
+                  </td>
+                  <td className="num">{c.count.toLocaleString()}</td>
+                  <td>{c.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <div className="table-wrap">
         <table>
           <caption className="muted">
-            {weekLabel(weekOf)} · 인용 {total.toLocaleString()}건 중 자사 {owned.toLocaleString()}건 · 상위 출처와 자사 출처
+            {weekLabel(weekOf)} · 모든 질문 · 인용 {total.toLocaleString()}건 중 자사 {owned.toLocaleString()}건 · 상위 출처와 자사 출처
           </caption>
           <thead>
             <tr>
@@ -210,7 +309,7 @@ export function CitationSourcesSection({
             {top.map((c) => (
               <tr key={c.domain} className={c.isOwned ? 'self' : undefined}>
                 <td className="cell-text">
-                  <code>{c.domain}</code>
+                  <SourceName domain={c.domain} />
                 </td>
                 <td className="num">{c.count.toLocaleString()}</td>
                 <td>{c.isOwned ? <strong>{c.owner}</strong> : c.owner}</td>
@@ -219,6 +318,18 @@ export function CitationSourcesSection({
           </tbody>
         </table>
       </div>
+      {homepage && homepage.length > 0 && (
+        <p className="hint">
+          등록된 자사 주소로 연결된 인용:{' '}
+          {homepage
+            .map((h) =>
+              h.total > 0
+                ? `${h.domain} ${h.total.toLocaleString()}건(이름을 넣어 물은 질문 ${h.named} · 이름 없이 물은 질문 ${h.unnamed})`
+                : `${h.domain} 0건`,
+            )
+            .join(' · ')}
+        </p>
+      )}
     </section>
   )
 }
@@ -249,6 +360,31 @@ export function SiteBreakdownSection({ site }: { site: SiteScoreRecord }) {
           </tbody>
         </table>
       </div>
+    </section>
+  )
+}
+
+/**
+ * 점수 풀이 — 이번 주 점수가 어디서 나왔고 무엇이 점수를 움직이는지(문장은 src/lib/reportExplain.ts). 고객 종이에도 싣는다.
+ * 월간 보기에서도 판정 주차 한 주의 풀이라 주차를 함께 적는다.
+ */
+export function ScoreExplainSection({ lines, weekOf }: { lines: ExplainLine[]; weekOf: string }) {
+  return (
+    <section className="score-explain">
+      <h3>점수 풀이</h3>
+      <dl className="explain-list">
+        {lines.map((l) => (
+          <div key={l.key}>
+            <dt>{l.label}</dt>
+            <dd>{l.text}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="hint">
+        {weekLabel(weekOf)} 측정값으로 셈했습니다.
+        {/* 고객 종이에는 앱 화면이 없다 — 점수 식 안내는 화면에서만. */}
+        <span className="no-print"> 점수 식은 화면의 Brand AEO Score와 같습니다.</span>
+      </p>
     </section>
   )
 }

@@ -2102,8 +2102,25 @@ tbody tr.selected {
 .trust-counts .status-pill.st-warn { background: var(--warn-soft); color: var(--warn); }
 .trust-counts .status-pill.st-bad { background: var(--bad-soft); color: var(--bad); }
 /* 보고서 본문의 비교 · 근거 표 — 이 브랜드 줄(표지 · 지표와 같은 값)은 옅게 칠한다. 종이는 칠이 빠지므로 이름을 굵게 둔다. */
-:is(.cohort-compare, .mention-section, .citation-top) tbody tr.self { background: var(--accent-soft); }
-:is(.cohort-compare, .mention-section, .citation-top, .site-breakdown) caption { text-align: left; }
+:is(.cohort-compare, .mention-section, .citation-top, .runs-section) tbody tr.self { background: var(--accent-soft); }
+:is(.cohort-compare, .mention-section, .citation-top, .site-breakdown, .runs-section) caption { text-align: left; }
+/* 출처 절은 이름 없이 물은 질문 표와 모든 질문 표 두 장 — 사이를 띄운다. */
+.citation-top .table-wrap + .table-wrap { margin-top: 12px; }
+/* 점수 풀이 — 줄 이름(구성 · 몰림 · 계단 …)과 문장 두 칸. 좁으면 한 칸으로 쌓는다. */
+.explain-list { margin: 0 0 8px; display: grid; gap: 8px; }
+.explain-list > div {
+  display: grid;
+  grid-template-columns: minmax(6.5em, 8em) minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.explain-list > div:last-child { border-bottom: 0; }
+.explain-list dt { font-weight: 600; color: var(--ink); }
+.explain-list dd { margin: 0; color: var(--ink-2); line-height: 1.7; max-width: 70ch; }
+@media (max-width: 560px) {
+  .explain-list > div { grid-template-columns: minmax(0, 1fr); }
+}
 .mention-list,
 .contradicted-list {
   margin: 0 0 8px;
@@ -2717,9 +2734,15 @@ p.hint {
   .crawler-panel, .site-report .hero-card, .site-report tr, .issue-list li { break-inside: avoid; }
   .site-report h3, .crawler-panel h3 { break-after: avoid; }
   /* 정기진단 보고서의 비교 · 근거 절: 절 제목이 쪽 끝에 홀로 남지 않게, 표 행은 자르지 않게. 짧은 Site 영역 표는 통째로 넘긴다. */
-  :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown) h3,
+  :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown, .score-explain, .runs-section) h3,
   section:has(> ol.rec-list) > h3 { break-after: avoid; }
-  :is(.cohort-compare, .mention-section, .citation-top) tr { break-inside: avoid; }
+  /* 점수 풀이는 줄마다 붙들고(문장이 쪽 사이에서 갈리지 않게) 절은 길이대로 흐르게 둔다. */
+  .explain-list > div { break-inside: avoid; }
+  :is(.cohort-compare, .mention-section, .citation-top, .runs-section) tr { break-inside: avoid; }
+  /* 회차 표는 길어야 열몇 줄 — 비교 그룹 표처럼 통째로 넘긴다. */
+  .runs-section { break-inside: avoid; }
+  /* 출처 표 두 장은 짧다 — 표마다 통째로 넘겨, 다음 쪽 줄이 제목(어느 질문 기준인지) 없이 남지 않게. */
+  .citation-top .table-wrap { break-inside: avoid; }
   .site-breakdown { break-inside: avoid; }
   /* 비교 그룹 표는 길어야 열몇 줄 — 제목 · 설명만 쪽 끝에 남고 줄이 다음 쪽으로 가지 않게 통째로 넘긴다. */
   .cohort-compare { break-inside: avoid; }
