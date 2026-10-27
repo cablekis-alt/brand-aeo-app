@@ -154,7 +154,8 @@ function renderChart(trend: NonNullable<ReturnType<typeof buildCompetitorTrend>>
             {w.slice(-3)}
           </text>
         ))}
-        {trend.series.map((s, si) => {
+        {/* SVG는 나중에 그린 것이 위에 온다 — 우리 선을 맨 마지막에 그려 경쟁사 선에 덮이지 않게(색은 원래 자리 si로). */}
+        {trend.series.map((s, si) => ({ s, si })).sort((a, b) => Number(a.s.self) - Number(b.s.self)).map(({ s, si }) => {
           const color = colors[si]
           const pts = s.points
             .map((p, i) => (p.score === null ? null : `${x(i)},${y(p.score)}`))
