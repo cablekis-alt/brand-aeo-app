@@ -3,16 +3,12 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
 import { loadRanking, loadScorecards } from '../lib/api'
-import { buildCompetitorTrend, type TrendEntry } from '../lib/competitorTrends'
+import { buildCompetitorTrend, seriesColors, type TrendEntry } from '../lib/competitorTrends'
 import { weekLabel } from '../lib/format'
 import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
 import type { RankingView } from '../lib/types'
-
-// 우리 브랜드 + 경쟁사 라인색(우리 브랜드는 강조). 계열색은 index.css의 --series-* — 다크 모드에서도
-// 바탕 대비가 유지되고, 강조(코발트)와 같은 파랑 계열은 쓰지 않는다 — 2번 선이 청록인 까닭.
-const LINE_COLORS = ['var(--accent)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)', 'var(--series-6)']
 
 export default function CompetitorTrends() {
   const { tenant } = useTenant()
@@ -62,7 +58,9 @@ export default function CompetitorTrends() {
   if (!tenant) return null
 
   const hasPeers = activePeers.length > 0
-  const chart = trend && trend.weeks.length > 0 ? renderChart(trend) : null
+  // 선과 범례가 같은 색을 쓰도록 한 번만 나눈다 — 우리 선은 늘 강조색.
+  const colors = trend ? seriesColors(trend.series) : []
+  const chart = trend && trend.weeks.length > 0 ? renderChart(trend, colors) : null
 
   return (
     <>
@@ -93,7 +91,7 @@ export default function CompetitorTrends() {
             <ul className="trend-legend">
               {trend.series.map((s, i) => (
                 <li key={s.tenantId}>
-                  <span className="swatch" style={{ background: LINE_COLORS[i % LINE_COLORS.length] }} />
+                  <span className="swatch" style={{ background: colors[i] }} />
                   <span className={s.self ? 'self' : undefined}>
                     {s.brandName}
                     {s.self ? ' (우리)' : ''}
@@ -125,7 +123,7 @@ export default function CompetitorTrends() {
   )
 }
 
-function renderChart(trend: NonNullable<ReturnType<typeof buildCompetitorTrend>>) {
+function renderChart(trend: NonNullable<ReturnType<typeof buildCompetitorTrend>>, colors: string[]) {
   const W = 640
   const H = 220
   const padL = 34
@@ -157,7 +155,7 @@ function renderChart(trend: NonNullable<ReturnType<typeof buildCompetitorTrend>>
           </text>
         ))}
         {trend.series.map((s, si) => {
-          const color = LINE_COLORS[si % LINE_COLORS.length]
+          const color = colors[si]
           const pts = s.points
             .map((p, i) => (p.score === null ? null : `${x(i)},${y(p.score)}`))
             .filter((v): v is string => v !== null)

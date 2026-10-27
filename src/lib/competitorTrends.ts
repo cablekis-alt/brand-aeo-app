@@ -38,6 +38,19 @@ export interface CompetitorTrend {
   maxScore: number
 }
 
+// 경쟁사 선 색 — index.css의 --series-2..6. 다크 모드에서도 바탕 대비가 유지되고, 강조(코발트)와 같은 파랑 계열은
+// 쓰지 않는다(2번 선이 청록인 까닭).
+const COMPETITOR_LINE_COLORS = ['var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)', 'var(--series-6)']
+
+/**
+ * series와 같은 순서의 선 색. 「우리」는 늘 강조색이고, 경쟁사는 정렬 순서대로 계열색을 받는다(다섯을 넘으면 다시 2번부터).
+ * series는 점수 순이라 위치로 나누면 우리보다 높은 경쟁사가 강조색을 가져간다 — 그래서 self로 가른다.
+ */
+export function seriesColors(series: TrendSeries[]): string[] {
+  let k = 0
+  return series.map((s) => (s.self ? 'var(--accent)' : COMPETITOR_LINE_COLORS[k++ % COMPETITOR_LINE_COLORS.length]))
+}
+
 export function buildCompetitorTrend(entries: TrendEntry[]): CompetitorTrend {
   // 모든 브랜드의 주차를 합쳐 공통 축을 만든다(측정이 빠진 주는 null).
   const weekSet = new Set<string>()
