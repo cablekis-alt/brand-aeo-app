@@ -4,6 +4,16 @@ import { PIPELINE_DATA_DIR } from './appPaths.js';
 import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
 
 /**
+ * 생각 토큰 — 기록에 있으면 그 값. 없으면 Gemini 옛 기록만 전체 − 입력 − 출력으로 어림한다(2026-10-29 전에는 따로 적지 않았고,
+ * 생각 수준을 낮춘 비교 측정에서 생각이 0일 때 이 차이도 0이었다). 다른 엔진은 출력 토큰에 이미 들어 있어 0이다.
+ */
+export function thoughtTokensOf(r: Pick<RawCallRecord, 'engine' | 'tokenUsage' | 'inputTokens' | 'outputTokens' | 'thoughtTokens'>): number {
+  if (typeof r.thoughtTokens === 'number') return r.thoughtTokens;
+  if (r.engine !== 'gemini' || typeof r.tokenUsage !== 'number' || typeof r.inputTokens !== 'number' || typeof r.outputTokens !== 'number') return 0;
+  return Math.max(0, r.tokenUsage - r.inputTokens - r.outputTokens);
+}
+
+/**
  * 엔진 사용량 — 호출 수·토큰·소요 시간.
  *
  * 왜 필요한가. 오늘 OpenAI 크레딧이 소진된 것을 **측정이 실패한 뒤에야** 알았다. 화면 어디에도
@@ -32,6 +42,7 @@ export interface UsageRow {
   tokens: number;
   /** 분리 값을 못 주는 엔진·구버전 데이터에서는 0으로 남는다. tokens와 합이 안 맞을 수 있다. */
   inputTokens: number;
+  /** 청구되는 출력 — 생각 토큰을 포함한다(thoughtTokensOf). 단가표의 「출력 / 1M」을 이 값에 곱한다. */
   outputTokens: number;
   /**
    * 엔진이 알려 준 실제 청구액의 합(USD). null이면 그 엔진은 청구액을 주지 않아 단가로
@@ -195,7 +206,8 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
             row.calls += 1;
             if (typeof r.tokenUsage === 'number') row.tokens += r.tokenUsage;
             if (typeof r.inputTokens === 'number') row.input += r.inputTokens;
-            if (typeof r.outputTokens === 'number') row.output += r.outputTokens;
+            // 청구되는 출력 = 출력 + 생각(Gemini 생각 토큰은 outputTokens에 들지 않는다).
+            if (typeof r.outputTokens === 'number') row.output += r.outputTokens + thoughtTokensOf(r);
             if (typeof r.latencyMs === 'number') row.latencyMs += r.latencyMs;
             if (typeof r.billedCost === 'number') {
               row.cost += r.billedCost;

@@ -20,6 +20,7 @@ import type { Engine } from '../src/prompts/types.js';
 import { comparableWith } from '../src/lib/comparability.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
+import { thoughtTokensOf } from './usageStats.js';
 import { engineKeyStatus, globalCollectEngines } from './engineKeys.js';
 import { MeasureCancelledError, throwIfMeasureCancelled, updateActiveMeasure, type EngineProgress } from './measureTracker.js';
 import { resolveCitationUrls } from './citationResolve.js';
@@ -338,6 +339,7 @@ async function collectRawCalls(
           tokenUsage: result.tokenUsage,
           inputTokens: result.inputTokens,
           outputTokens: result.outputTokens,
+          ...(result.thoughtTokens !== undefined ? { thoughtTokens: result.thoughtTokens } : {}),
           billedCost: result.billedCost,
           latencyMs: result.latencyMs,
           calledAt: new Date().toISOString(),
@@ -713,11 +715,12 @@ function collectUsageOf(rawCalls: RawCallRecord[]): RunMeta['collectUsage'] {
   const out: RunMeta['collectUsage'] = {};
   const billed = new Map<string, number>();
   for (const r of rawCalls) {
-    const row = (out[r.engine] ??= { calls: 0, tokens: 0, inputTokens: 0, outputTokens: 0, billedCost: 0, searchCalls: 0 });
+    const row = (out[r.engine] ??= { calls: 0, tokens: 0, inputTokens: 0, outputTokens: 0, thoughtTokens: 0, billedCost: 0, searchCalls: 0 });
     row.calls += 1;
     if (typeof r.tokenUsage === 'number') row.tokens += r.tokenUsage;
     if (typeof r.inputTokens === 'number') row.inputTokens += r.inputTokens;
     if (typeof r.outputTokens === 'number') row.outputTokens += r.outputTokens;
+    row.thoughtTokens = (row.thoughtTokens ?? 0) + thoughtTokensOf(r);
     if (typeof r.billedCost === 'number') {
       row.billedCost = (row.billedCost ?? 0) + r.billedCost;
       billed.set(r.engine, (billed.get(r.engine) ?? 0) + 1);

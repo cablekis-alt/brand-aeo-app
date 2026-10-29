@@ -52,6 +52,8 @@ export interface RawCallRecord {
   // 구버전 데이터엔 없어 선택 필드.
   inputTokens?: number;
   outputTokens?: number;
+  /** 생각 토큰(출력 단가로 청구, outputTokens에 들지 않음 — engines/types.ts). 2026-10-29 전 Gemini 기록에는 없다. */
+  thoughtTokens?: number;
   /**
    * 엔진이 알려 준 실제 청구액(USD). 주는 엔진에서만 있다(현재 Perplexity Agent API).
    * 있으면 단가를 곱해 추정하지 않고 이 값을 쓴다 — 추정보다 정확하고, 과금 구조가 바뀌어도

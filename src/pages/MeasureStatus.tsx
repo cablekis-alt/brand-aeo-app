@@ -730,7 +730,7 @@ export default function MeasureStatus() {
           {priceExpanded && (
             <div className="pricing-editor">
               <p className="hint" style={{ marginTop: 0 }}>
-                100만 토큰당 가격을 넣으세요. <b>검색 1회당</b>은 토큰과 별개로 웹검색을 쓴 호출마다 붙는 요금이고,
+                100만 토큰당 가격을 넣으세요. <b>출력</b>에는 생각 토큰도 들어갑니다(Gemini는 생각 토큰을 출력 단가로 청구합니다). <b>검색 1회당</b>은 토큰과 별개로 웹검색을 쓴 호출마다 붙는 요금이고,
                 <b>월 무료 검색</b>은 달마다 그 요금이 붙지 않는 건수입니다(Gemini 검색 그라운딩은 월 5,000건) — 없으면
                 비워 두세요. 통화는 표시용 꼬리표일 뿐이며 <b>환율 환산은 하지 않습니다</b>. 넣으신 통화 그대로
                 계산합니다.

@@ -53,7 +53,16 @@ export interface RunMeta {
   /** 수집 사용량 — 회차 기록에는 원문(raw-calls)을 남기지 않아 여기 요약한다. 판정 사용량은 question-analyses.json의 judgeUsage. */
   collectUsage: Record<
     string,
-    { calls: number; tokens: number; inputTokens: number; outputTokens: number; billedCost: number | null; searchCalls: number }
+    {
+      calls: number;
+      tokens: number;
+      inputTokens: number;
+      outputTokens: number;
+      /** 생각 토큰(출력 단가로 청구). 2026-10-29 전 회차 기록에는 없다. */
+      thoughtTokens?: number;
+      billedCost: number | null;
+      searchCalls: number;
+    }
   >;
   /**
    * 회차 기록이 없던 그 주 파일을 다음 측정이 덮기 전에 옮겨 둔 회차(server/preserveWeekFile.ts) — v0.4.26 전 측정이나 회차 기록 저장에
