@@ -247,6 +247,22 @@ try {
     moved.applied.length === 1 && moved.markdown.indexOf('parking.webp') < moved.markdown.indexOf('## 오시는 방법') && moved.markdown.includes('![주차장 입구](https://vtravel.example/img/parking.webp)\n*건물 뒤 주차장 입구*'),
   )
   ok('자사 발행본과 같은 절', withPhotos(reordered, [parking]).markdown.indexOf('parking.webp') < withPhotos(reordered, [parking]).markdown.indexOf('## 찾아오는 길'))
+
+  // 설명 줄이 같은 두 자리 — 다듬은 글이 첫 자리 설명을 떼어 놓아도 순서대로 짝짓는다(설명만으로 둘째 자리로 옮기지 않는다).
+  const sameCaption = ['## 주차 안내', '', '![매장 외관](#image-slot)', '*매장 모습*', '', '## 찾아오는 길', '', '![매장 외관](#image-slot)', '*매장 모습*', ''].join('\n')
+  const firstPick = { ...parking, nth: 1, heading: '주차 안내' }
+  const detached = sameCaption.replace('## 주차 안내', '## 차는 어디에 대나요').replace('![매장 외관](#image-slot)\n*매장 모습*', '![매장 외관](#image-slot)\n\n*매장 모습*')
+  const keptOrder = withPhotosFromSource(detached, sameCaption, [firstPick])
+  ok('같은 설명 두 자리 — 설명이 떨어져도 고른 절에', keptOrder.applied.length === 1 && keptOrder.markdown.indexOf('parking.webp') < keptOrder.markdown.indexOf('## 찾아오는 길'))
+
+  // 설명이 한쪽에만 있는 두 자리를 다듬은 글이 뒤바꿨다 — 확실하지 않으니 넣지 않는다.
+  const halfCaption = ['## 주차 안내', '', '![매장 외관](#image-slot)', '', '## 찾아오는 길', '', '![매장 외관](#image-slot)', '*역 정문*', ''].join('\n')
+  const swapped = ['## 오시는 방법', '', '![매장 외관](#image-slot)', '*역 정문*', '', '## 차는 어디에 대나요', '', '![매장 외관](#image-slot)', ''].join('\n')
+  ok('설명이 한쪽뿐인 두 자리가 뒤바뀌면 넣지 않는다', withPhotosFromSource(swapped, halfCaption, [firstPick, { ...firstPick, nth: 2, heading: '찾아오는 길', src: 'https://vtravel.example/img/gate.webp' }]).applied.length === 0)
+  // 설명이 모두 다르면 뒤바뀐 순서도 설명으로 짝짓는다.
+  const swappedTwin = twin('찾아오는 길', '주차 안내').replace('## 주차 안내', '## 차는 어디에 대나요').replace('## 찾아오는 길', '## 오시는 방법')
+  const bySwap = withPhotosFromSource(swappedTwin, reordered, [parking])
+  ok('설명이 모두 다르면 뒤바뀐 순서도 설명으로', bySwap.applied.length === 1 && bySwap.markdown.includes('![주차장 입구](https://vtravel.example/img/parking.webp)\n*건물 뒤 주차장 입구*'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
