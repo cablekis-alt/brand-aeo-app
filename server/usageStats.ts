@@ -7,7 +7,9 @@ import type { QuestionRepeatAnalysis, RawCallRecord } from './types.js';
  * 생각 토큰 — 기록에 있으면 그 값. 없으면 Gemini 옛 기록만 전체 − 입력 − 출력으로 어림한다(2026-10-29 전에는 따로 적지 않았고,
  * 생각 수준을 낮춘 비교 측정에서 생각이 0일 때 이 차이도 0이었다). 다른 엔진은 출력 토큰에 이미 들어 있어 0이다.
  */
-export function thoughtTokensOf(r: Pick<RawCallRecord, 'engine' | 'tokenUsage' | 'inputTokens' | 'outputTokens' | 'thoughtTokens'>): number {
+export function thoughtTokensOf(
+  r: Pick<RawCallRecord, 'tokenUsage' | 'inputTokens' | 'outputTokens' | 'thoughtTokens'> & { engine: string },
+): number {
   if (typeof r.thoughtTokens === 'number') return r.thoughtTokens;
   if (r.engine !== 'gemini' || typeof r.tokenUsage !== 'number' || typeof r.inputTokens !== 'number' || typeof r.outputTokens !== 'number') return 0;
   return Math.max(0, r.tokenUsage - r.inputTokens - r.outputTokens);
@@ -207,7 +209,8 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
             if (typeof r.tokenUsage === 'number') row.tokens += r.tokenUsage;
             if (typeof r.inputTokens === 'number') row.input += r.inputTokens;
             // 청구되는 출력 = 출력 + 생각(Gemini 생각 토큰은 outputTokens에 들지 않는다).
-            if (typeof r.outputTokens === 'number') row.output += r.outputTokens + thoughtTokensOf(r);
+            if (typeof r.outputTokens === 'number') row.output += r.outputTokens;
+            row.output += thoughtTokensOf(r);
             if (typeof r.latencyMs === 'number') row.latencyMs += r.latencyMs;
             if (typeof r.billedCost === 'number') {
               row.cost += r.billedCost;
@@ -253,7 +256,10 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
         row.calls += u.calls;
         row.tokens += u.tokens;
         row.input += u.inputTokens;
-        row.output += u.outputTokens;
+        // 판정도 청구되는 출력 = 출력 + 생각. 옛 Gemini 판정 기록은 전체 − 입력 − 출력으로 어림한다.
+        row.output +=
+          u.outputTokens +
+          thoughtTokensOf({ engine: u.engine, tokenUsage: u.tokens, inputTokens: u.inputTokens, outputTokens: u.outputTokens, thoughtTokens: u.thoughtTokens });
         row.tenants.add(tenantId);
         judge.set(u.engine, row);
       }

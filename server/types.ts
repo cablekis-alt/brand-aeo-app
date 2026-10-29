@@ -162,4 +162,6 @@ export interface JudgeUsage {
   tokens: number;
   inputTokens: number;
   outputTokens: number;
+  /** 생각 토큰(Gemini) — outputTokens에 들지 않지만 출력 단가로 청구된다. 2026-10-29 전 기록에는 없다. */
+  thoughtTokens?: number;
 }

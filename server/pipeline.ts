@@ -504,14 +504,16 @@ async function analyzeRawCall(
    * 합계는 남기기 위해서다.
    */
   const judgeCalls = [mentionRaw, citationRaw, rankRaw, factRaw].filter((r) => r !== null);
+  const judgeEngine = usedJudgeEngineId();
   const judgeUsage: JudgeUsage = {
-    engine: usedJudgeEngineId(),
+    engine: judgeEngine,
     // 판정 모델은 호출 결과가 실어 온 값을 쓴다 — 건너뛴 호출이 있어도 남은 것에서 얻는다.
     model: judgeCalls.find((r) => r.model)?.model,
     calls: judgeCalls.length,
     tokens: judgeCalls.reduce((a, r) => a + (r.tokenUsage ?? 0), 0),
     inputTokens: judgeCalls.reduce((a, r) => a + (r.inputTokens ?? 0), 0),
     outputTokens: judgeCalls.reduce((a, r) => a + (r.outputTokens ?? 0), 0),
+    thoughtTokens: judgeCalls.reduce((a, r) => a + thoughtTokensOf({ engine: judgeEngine, ...r }), 0),
   };
 
   const mention = parseJsonLoose<BrandMentionResult>(mentionRaw.text);

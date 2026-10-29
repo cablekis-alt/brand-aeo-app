@@ -55,14 +55,25 @@ try {
   writeFileSync(path.join(dir, 'data/tg', week, 'raw-calls.json'), JSON.stringify([
     call('gemini', { tokenUsage: 2000, inputTokens: 300, outputTokens: 900 }), // 옛 기록 — 생각 800 어림
     call('gemini', { tokenUsage: 1200, inputTokens: 300, outputTokens: 900, thoughtTokens: 0 }), // 새 기록 — 생각 0
+    call('gemini', { tokenUsage: 1100, inputTokens: 300, thoughtTokens: 800 }), // 생각만 하고 빈 답 — 출력 필드 없음
     call('openai', { tokenUsage: 1500, inputTokens: 1000, outputTokens: 500 }),
+  ]))
+  const judgeUsage = (engine: string, extra: Record<string, number>) => ({ judgeUsage: { engine, calls: 2, ...extra } })
+  writeFileSync(path.join(dir, 'data/tg', week, 'question-analyses.json'), JSON.stringify([
+    judgeUsage('gemini', { tokens: 3000, inputTokens: 2000, outputTokens: 200 }), // 옛 판정 기록 — 생각 800 어림
+    judgeUsage('gemini', { tokens: 2700, inputTokens: 2000, outputTokens: 100, thoughtTokens: 600 }),
+    judgeUsage('claude', { tokens: 2500, inputTokens: 2000, outputTokens: 500 }),
   ]))
   const stats = await getUsageStats(1)
   const w = stats.weeks.find((x) => x.weekOf === week)
   const gem = w?.byEngine.find((r) => r.engine === 'gemini')
   const oai = w?.byEngine.find((r) => r.engine === 'openai')
-  ok('집계: Gemini 출력 = 출력 + 생각(900 + 800 + 900)', gem?.outputTokens === 2600)
+  ok('집계: Gemini 출력 = 출력 + 생각(900 + 800 + 900 + 800)', gem?.outputTokens === 3400)
   ok('집계: 다른 엔진 출력은 그대로', oai?.outputTokens === 500)
+  const jg = w?.judgeByEngine.find((r) => r.engine === 'gemini')
+  const jc = w?.judgeByEngine.find((r) => r.engine === 'claude')
+  ok('판정 집계: Gemini 출력 = 출력 + 생각(200 + 800 + 100 + 600)', jg?.outputTokens === 1700)
+  ok('판정 집계: Claude 출력은 그대로', jc?.outputTokens === 500)
 
   // ── 「같은 조건」: 모델 기록이 바뀌면 수집 모델 바뀜 ──
   const card = (weekOf: string, gemini: string) => ({ weekOf, enginesUsed: ['gemini'], judgeEngine: 'claude', judgeModel: 'claude-sonnet-5-5', modelsUsed: { gemini }, questionBankVersion: 'v1', repeatsPerQuestion: 1 })

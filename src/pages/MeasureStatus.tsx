@@ -867,7 +867,9 @@ export default function MeasureStatus() {
                 빨리 찹니다. 판정 줄은 수집과 같은 엔진 단가로 계산합니다(판정 모델이 수집 모델과 다르면 맞지 않습니다).
               </p>
               <p className="hint">
-                ※ 「모델 메모」의 흐린 글씨는 <b>지금 측정에 쓰는 설정</b>이며, 측정 기록에 남는 값과 같습니다
+                ※ 「모델 메모」의 흐린 글씨는 <b>지금 측정에 쓰는 설정</b>(요청하는 모델 이름)입니다. Gemini 측정
+                기록에는 실제로 답한 모델과 생각 수준이 남아 이 이름과 다를 수 있습니다
+                (예: gemini-3.7-flash → gemini-3.8-flash (thinking low))
                 {pricing?.currentModels &&
                   ` (${pricedEngines
                     .map((id) => `${ENGINE_LABEL[id] ?? id} ${pricing.currentModels?.[id] ?? '?'}`)
