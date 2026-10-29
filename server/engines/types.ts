@@ -20,6 +20,10 @@ export interface EngineCallResult {
   inputTokens?: number;
   outputTokens?: number;
   /**
+   * 생각 토큰 — 출력 단가로 청구되지만 outputTokens에 들지 않는 엔진(Gemini)만 따로 준다. 비용은 출력 + 생각으로 센다.
+   */
+  thoughtTokens?: number;
+  /**
    * 엔진이 알려 준 **실제 청구액**(USD). Perplexity Agent API만 준다.
    * 단가를 곱해 추정할 필요가 없는 값이라, 주는 곳에서는 그대로 받아 둔다.
    */

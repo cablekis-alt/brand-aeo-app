@@ -59,6 +59,8 @@ export class GeminiJudgeClient implements EngineClient {
         tokenUsage: response.usageMetadata?.totalTokenCount,
         inputTokens: response.usageMetadata?.promptTokenCount,
         outputTokens: response.usageMetadata?.candidatesTokenCount,
+        // 생각 수준은 보내지 않아 모델 기본값으로 생각한다 — 그 토큰도 출력 단가로 청구된다.
+        thoughtTokens: response.usageMetadata?.thoughtsTokenCount ?? 0,
         latencyMs: Math.round(performance.now() - start),
       };
     } catch {
