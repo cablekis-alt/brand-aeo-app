@@ -5,12 +5,13 @@ import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
 import { objectParticle } from '../lib/korean'
-import { channelCopyOf, publishArticleOf } from '../lib/publishArticle'
+import { channelArticleParts, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
 import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
-import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
+import { articlePhotoFiles, downloadArticlePhotos, uniquePhotoFiles } from '../lib/sitePhotos'
+import type { AppliedPhoto } from '../lib/articlePhotos'
 
 /**
  * ② 올리기 목록 — 한 줄이 한 번 올리기다(상용화 UI 8차 시안). 줄 계산은 lib/publishPlan.ts.
@@ -107,20 +108,22 @@ export default function PublishList({
   }, [plan, adaptations, busy])
 
   /**
-   * 이 줄에서 복사할 글. 다듬은 글이 필요한데 아직 없으면 null.
+   * 이 줄에서 복사할 글과 거기에 들어간 홈페이지 사진(「사진 N장 받기」). 다듬은 글이 필요한데 아직 없으면 null.
    * 자사 사이트 줄은 발행본(본문 + 글 끝 — 공식 사이트 링크 등)을 쓴다. 다듬기 원문(sourceOf)은 본문만이다.
+   * 블로그 채널 줄은 다듬은 글에 고른 사진과 글 끝을 붙인다(channelArticleParts).
    */
-  const textOf = (row: PublishRow): { markdown: string; html: string } | null => {
+  const textOf = (row: PublishRow): { markdown: string; html: string; photos: AppliedPhoto[] } | null => {
     const d = row.article.draft
     if (!d) return null
     if (!row.needsAdapt || adaptations === null) {
       const markdown = row.kind === 'own' && tenant ? publishArticleOf(d, { brand: tenant, settings }) : publishMarkdownOf(d)
-      return { markdown, html: markdownToHtml(markdown) }
+      const photos = row.kind === 'own' ? articlePhotoFiles(d, { settings, industry: tenant?.industry }) : []
+      return { markdown, html: markdownToHtml(markdown), photos }
     }
     const a = adaptationOf(row)
     if (!a) return null
-    const markdown = tenant ? channelCopyOf(a, { brand: tenant, settings }) : a.markdown
-    return { markdown, html: markdownToHtml(markdown) }
+    const parts = tenant ? channelArticleParts(a, { brand: tenant, settings }, d.photos) : { markdown: a.markdown, photos: [] }
+    return { markdown: parts.markdown, html: markdownToHtml(parts.markdown), photos: uniquePhotoFiles(parts.photos) }
   }
 
   /**
@@ -226,8 +229,8 @@ export default function PublishList({
           const styleChanged = Boolean(a && a.style !== channelStyleOf(row.target.badge))
           const stale = Boolean(a && row.article.draft && a.sourceKey !== sourceKeyOf(sourceOf(row))) || styleChanged
           const text = textOf(row)
-          // 자사 줄의 발행본에 들어간 홈페이지 사진(src/lib/articlePhotos.ts) — 채널 줄 · 다듬은 글에는 넣지 않는다.
-          const photos = row.kind === 'own' && row.article.draft && text ? articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }) : []
+          // 이 줄 복사본에 들어간 홈페이지 사진(src/lib/articlePhotos.ts) — 자사 줄과 블로그 채널 줄.
+          const photos = text?.photos ?? []
           const ready = !row.locked && text !== null
           const making = busy === row.key
           const slotOpen = openSlot.has(row.key) || (row.done && openSlot.has(`done:${row.key}`))

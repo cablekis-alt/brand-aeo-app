@@ -22,7 +22,7 @@ const ROBOTS = 'https://developers.google.com/search/docs/crawling-indexing/robo
 try {
   const { buildChannelAdaptPrompt } = await import('../src/prompts/b9d-channel-adapt')
   const { adaptForChannel, keepSourceMedia } = await import('../server/channelAdapt')
-  const { channelCopyOf } = await import('../src/lib/publishArticle')
+  const { channelArticleParts, channelCopyOf } = await import('../src/lib/publishArticle')
 
   const source = [
     '# 가상시 여행 사이트 고를 때 확인할 2가지',
@@ -192,6 +192,39 @@ try {
   const blogCopy = channelCopyOf({ markdown: out, style: 'blog' }, { brand, settings })
   ok('블로그 채널 — 다듬은 글 뒤에 글 끝(상담 안내 · 공식 사이트)', blogCopy.startsWith(out.trimEnd()) && blogCopy.includes('가상 여행 사이트에서 코스를 비교해 보세요.') && blogCopy.includes('[가상 여행 공식 사이트](https://vtravel.example/)'))
   ok('위키 · 커뮤니티는 그대로', channelCopyOf({ markdown: out, style: 'wiki' }, { brand, settings }) === out && channelCopyOf({ markdown: out, style: 'community' }, { brand, settings }) === out)
+
+  // 4) 블로그 채널 줄에도 고른 홈페이지 사진 — 2026-10-29 티스토리 채널 줄 글에 「[사진 넣을 자리]」 글자만 남았다.
+  //    다듬은 글은 소제목이 바뀌어도 사진 자리 글자와 자리 수가 같으면 들어간다.
+  const pick = {
+    slot: '가상역 2번 출구 앞 집결 장소',
+    nth: 1,
+    same: 1,
+    heading: '다듬기 전 소제목',
+    src: 'https://vtravel.example/img/exit2.webp',
+    alt: '가상역 2번 출구 앞 광장',
+    pageUrl: 'https://vtravel.example/',
+    confirmedAt: '2026-10-29T00:00:00.000Z',
+  }
+  const rights = { ...settings, photoRights: { confirmedAt: '2026-10-29T00:00:00.000Z' } }
+  const withPick = channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings: rights }, [pick])
+  ok(
+    '블로그 채널 — 사진 자리에 고른 사진, 설명 줄 · 글 끝은 그대로',
+    withPick.markdown.includes('![가상역 2번 출구 앞 광장](https://vtravel.example/img/exit2.webp)\n*출발 전 모이는 곳*') &&
+      !withPick.markdown.includes('](#image-slot)\n*출발 전 모이는 곳*') &&
+      withPick.markdown.includes('[가상 여행 공식 사이트](https://vtravel.example/)'),
+  )
+  ok('블로그 채널 — 들어간 사진을 돌려준다(사진 받기)', withPick.photos.length === 1 && withPick.photos[0]!.place.slot === pick.slot && withPick.photos[0]!.place.heading === pick.heading)
+  ok('고른 사진이 없으면 채널 복사본은 예전과 같다', channelCopyOf({ markdown: out, style: 'blog' }, { brand, settings: rights }) === channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings: rights }).markdown)
+  ok('위키 · 커뮤니티에는 사진을 넣지 않는다', channelArticleParts({ markdown: out, style: 'wiki' }, { brand, settings: rights }, [pick]).markdown === out && channelArticleParts({ markdown: out, style: 'community' }, { brand, settings: rights }, [pick]).photos.length === 0)
+  ok('사진 사용 확인이 없으면 넣지 않는다', channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings }, [pick]).photos.length === 0 && channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings }, [pick]).markdown === blogCopy)
+  ok(
+    '의료 업종은 의료광고 확인까지 있어야 넣는다',
+    channelArticleParts({ markdown: out, style: 'blog' }, { brand: { ...brand, industry: '피부과' }, settings: rights }, [pick]).photos.length === 0 &&
+      channelArticleParts({ markdown: out, style: 'blog' }, { brand: { ...brand, industry: '피부과' }, settings: { ...rights, photoRights: { ...rights.photoRights, medical: true as const } } }, [pick]).photos.length === 1,
+  )
+  ok('확인하지 않은 사진은 넣지 않는다', channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings: rights }, [{ ...pick, confirmedAt: '' }]).photos.length === 0)
+  ok('다듬은 글의 같은 자리 수가 고를 때와 다르면 넣지 않는다', channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings: rights }, [{ ...pick, nth: 2, same: 2 }]).photos.length === 0)
+  ok('다듬은 글에 없는 자리의 사진은 넣지 않는다', channelArticleParts({ markdown: out, style: 'blog' }, { brand, settings: rights }, [{ ...pick, slot: '없는 장면' }]).photos.length === 0)
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
