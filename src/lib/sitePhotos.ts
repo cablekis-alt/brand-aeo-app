@@ -303,8 +303,13 @@ export function articlePhotoFiles(
   ctx: { settings: PublishSettings | null | undefined; industry: string | undefined },
 ): AppliedPhoto[] {
   if (!photosAllowed(ctx.settings, ctx.industry)) return []
+  return uniquePhotoFiles(withPhotos(publishMarkdownOf(stored), stored.photos).applied)
+}
+
+/** 글에 들어간 사진에서 받을 파일 — 같은 사진은 한 번(글 순서). 채널 줄은 다듬은 글에 들어간 사진으로 부른다(channelArticleParts). */
+export function uniquePhotoFiles(applied: readonly AppliedPhoto[]): AppliedPhoto[] {
   const seen = new Set<string>()
-  return withPhotos(publishMarkdownOf(stored), stored.photos).applied.filter((p) => {
+  return applied.filter((p) => {
     if (seen.has(p.src)) return false
     seen.add(p.src)
     return true

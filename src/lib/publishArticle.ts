@@ -1,6 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { renderEvidenceMarkdown } from './answerEvidence'
-import { photosAllowed, withPhotos, type AppliedPhoto } from './articlePhotos'
+import { photosAllowed, withPhotos, withPhotosFromSource, type AppliedPhoto } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -64,9 +64,28 @@ export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
  * 글임이 드러나는 곳이라 안내가 어울린다. 위키 · 커뮤니티 · 후기 · 보도 · 소셜은 홍보 문구로 지워지거나 광고로 읽혀 그대로 둔다.
  */
 export function channelCopyOf(adapted: { markdown: string; style: string }, ctx: ArticleContext): string {
-  if (adapted.style !== 'blog') return adapted.markdown
+  return channelArticleParts(adapted, ctx).markdown
+}
+
+/**
+ * 채널 줄에서 복사할 글과 거기에 실제로 들어간 홈페이지 사진. 블로그 문체면 자사 발행본처럼 고른 사진을 사진 자리에 넣는다 —
+ * 2026-10-29 티스토리 채널 줄로 올린 글에 「[사진 넣을 자리]」 글자만 남았다. 사진 자리는 다듬기 원문에서 찾아 다듬은 글로 옮긴다
+ * (withPhotosFromSource). source는 이 다듬은 글을 만든 원문일 때만 넘긴다 — 원문이 바뀐(옛 판) 다듬은 글에 지금 초안의 사진을 넣으면
+ * 다른 절에 들어갈 수 있다. 그 밖의 문체는 다듬은 글 그대로다.
+ */
+export function channelArticleParts(
+  adapted: { markdown: string; style: string },
+  ctx: ArticleContext,
+  source?: { markdown: string; picks: StoredDraft['photos'] },
+): { markdown: string; photos: AppliedPhoto[] } {
+  if (adapted.style !== 'blog') return { markdown: adapted.markdown, photos: [] }
+  // 글 끝은 사진을 넣기 전 글로 센다(publishArticleParts와 같은 이유).
   const tail = articleTailMarkdown(adapted.markdown, ctx)
-  return tail ? `${adapted.markdown.trimEnd()}\n\n${tail}\n` : adapted.markdown
+  const { markdown: shown, applied } =
+    source && photosAllowed(ctx.settings, ctx.brand.industry)
+      ? withPhotosFromSource(adapted.markdown, source.markdown, source.picks)
+      : { markdown: adapted.markdown, applied: [] }
+  return { markdown: tail ? `${shown.trimEnd()}\n\n${tail}\n` : shown, photos: applied }
 }
 
 export function publishArticleOf(stored: StoredDraft, ctx: ArticleContext): string {

@@ -181,7 +181,59 @@ export function matchPhotos(markdown: string, picks: readonly PhotoPick[]): Phot
  */
 export function withPhotos(markdown: string, picks: readonly PhotoPick[] | undefined): { markdown: string; applied: AppliedPhoto[] } {
   if (!picks?.length) return { markdown, applied: [] }
-  const { applied } = matchPhotos(markdown, picks)
+  return placePhotos(markdown, matchPhotos(markdown, picks).applied)
+}
+
+/** 사진 자리 줄 바로 아랫줄의 설명(`*설명*`) — 없으면 ''. */
+function captionAfter(lines: readonly string[], slot: PhotoSlot): string {
+  const m = /^\*(?!\*)(.+?)\*$/.exec((lines[slot.line + 1] ?? '').trim())
+  return m ? normSlotAlt(m[1]!) : ''
+}
+
+/**
+ * 다듬은 글(채널 문체)에 고른 사진을 넣는다. 다듬은 글은 소제목을 바꿔 쓰므로 사진을 다듬은 글에서 바로 짝짓지 않는다 — 먼저 다듬기
+ * 원문(sourceMarkdown — 다듬은 글을 만든 그 원문이어야 한다)에서 자사 발행본과 같은 규칙으로 자리를 찾고, 그 원문 자리를 다듬은 글의
+ * 자리로 옮긴다(mapSlots). 다듬기는 사진 자리 줄과 설명 줄을 원문 글자 그대로 남긴다(server/channelAdapt.ts keepSourceMedia).
+ */
+export function withPhotosFromSource(
+  markdown: string,
+  sourceMarkdown: string,
+  picks: readonly PhotoPick[] | undefined,
+): { markdown: string; applied: AppliedPhoto[] } {
+  if (!picks?.length) return { markdown, applied: [] }
+  const sourceLines = sourceMarkdown.split('\n')
+  const lines = markdown.split('\n')
+  const sourceSlots = photoSlotsOf(sourceMarkdown)
+  const slots = photoSlotsOf(markdown)
+  const placements: { pick: PhotoPick; slot: PhotoSlot }[] = []
+  for (const { pick, slot: from } of matchPhotos(sourceMarkdown, picks).applied) {
+    const to = mapSlots(
+      sourceSlots.filter((s) => s.key === from.key).map((s) => captionAfter(sourceLines, s)),
+      slots.filter((s) => s.key === from.key),
+      (s) => captionAfter(lines, s),
+    )?.[from.nth - 1]
+    if (to) placements.push({ pick, slot: to })
+  }
+  return placePhotos(markdown, placements)
+}
+
+/**
+ * 같은 장면 글자의 원문 자리(설명 줄 목록, 원문 순서)를 다듬은 글의 자리로 — 원문 i번째 자리의 짝을 i번째에 둔다. 확실하지 않으면 null
+ * (그 장면의 사진은 넣지 않는다).
+ * ① 자리 수가 다르면 null. ② 순서대로 짝지어 설명 줄이 어긋나지 않으면(다듬은 글이 설명을 뺐으면 어긋남이 아니다) 그 순서 —
+ * 다듬기는 절 순서를 지킨다(ARTICLE_BLOG_RULE). ③ 어긋나면 원문 설명이 모두 있고 서로 다르며 다듬은 글의 설명이 하나씩 맞을 때만 그 짝.
+ */
+function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot[], captionOf: (s: PhotoSlot) => string): PhotoSlot[] | null {
+  if (sourceCaptions.length !== targets.length) return null
+  const captions = targets.map(captionOf)
+  if (captions.every((c, i) => !c || c === sourceCaptions[i])) return [...targets]
+  if (sourceCaptions.some((c) => !c) || new Set(sourceCaptions).size !== sourceCaptions.length) return null
+  const mapped = sourceCaptions.map((c) => targets[captions.indexOf(c)])
+  return mapped.every(Boolean) && new Set(mapped).size === mapped.length ? (mapped as PhotoSlot[]) : null
+}
+
+/** 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾼다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다. */
+function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
   const lines = markdown.split('\n')
   const out: AppliedPhoto[] = []

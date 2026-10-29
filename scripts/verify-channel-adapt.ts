@@ -22,7 +22,8 @@ const ROBOTS = 'https://developers.google.com/search/docs/crawling-indexing/robo
 try {
   const { buildChannelAdaptPrompt } = await import('../src/prompts/b9d-channel-adapt')
   const { adaptForChannel, keepSourceMedia } = await import('../server/channelAdapt')
-  const { channelCopyOf } = await import('../src/lib/publishArticle')
+  const { channelArticleParts, channelCopyOf } = await import('../src/lib/publishArticle')
+  const { withPhotos, withPhotosFromSource } = await import('../src/lib/articlePhotos')
 
   const source = [
     '# 가상시 여행 사이트 고를 때 확인할 2가지',
@@ -192,6 +193,76 @@ try {
   const blogCopy = channelCopyOf({ markdown: out, style: 'blog' }, { brand, settings })
   ok('블로그 채널 — 다듬은 글 뒤에 글 끝(상담 안내 · 공식 사이트)', blogCopy.startsWith(out.trimEnd()) && blogCopy.includes('가상 여행 사이트에서 코스를 비교해 보세요.') && blogCopy.includes('[가상 여행 공식 사이트](https://vtravel.example/)'))
   ok('위키 · 커뮤니티는 그대로', channelCopyOf({ markdown: out, style: 'wiki' }, { brand, settings }) === out && channelCopyOf({ markdown: out, style: 'community' }, { brand, settings }) === out)
+
+  // 4) 블로그 채널 줄에도 고른 홈페이지 사진 — 2026-10-29 티스토리 채널 줄 글에 「[사진 넣을 자리]」 글자만 남았다.
+  //    사진 자리는 다듬기 원문에서 찾아(소제목까지) 다듬은 글의 같은 자리로 옮긴다.
+  const pick = {
+    slot: '가상역 2번 출구 앞 집결 장소',
+    nth: 1,
+    same: 1,
+    heading: '어디서 출발하나요?',
+    src: 'https://vtravel.example/img/exit2.webp',
+    alt: '가상역 2번 출구 앞 광장',
+    pageUrl: 'https://vtravel.example/',
+    confirmedAt: '2026-10-29T00:00:00.000Z',
+  }
+  const rights = { ...settings, photoRights: { confirmedAt: '2026-10-29T00:00:00.000Z' } }
+  const blog = { markdown: out, style: 'blog' }
+  const from = (picks: (typeof pick)[]) => ({ markdown: source, picks })
+  const withPick = channelArticleParts(blog, { brand, settings: rights }, from([pick]))
+  ok(
+    '블로그 채널 — 사진 자리에 고른 사진, 설명 줄 · 글 끝은 그대로',
+    withPick.markdown.includes('![가상역 2번 출구 앞 광장](https://vtravel.example/img/exit2.webp)\n*출발 전 모이는 곳*') &&
+      !withPick.markdown.includes('](#image-slot)\n*출발 전 모이는 곳*') &&
+      withPick.markdown.includes('[가상 여행 공식 사이트](https://vtravel.example/)'),
+  )
+  ok('블로그 채널 — 들어간 사진을 돌려준다(사진 받기)', withPick.photos.length === 1 && withPick.photos[0]!.place.slot === pick.slot && withPick.photos[0]!.place.heading === pick.heading)
+  ok('고른 사진이 없으면 채널 복사본은 예전과 같다', channelCopyOf(blog, { brand, settings: rights }) === channelArticleParts(blog, { brand, settings: rights }, from([])).markdown)
+  ok('원문을 넘기지 않으면(옛 판 다듬은 글) 사진을 넣지 않는다', channelArticleParts(blog, { brand, settings: rights }).photos.length === 0 && channelArticleParts(blog, { brand, settings: rights }).markdown === channelCopyOf(blog, { brand, settings: rights }))
+  ok('위키 · 커뮤니티에는 사진을 넣지 않는다', channelArticleParts({ markdown: out, style: 'wiki' }, { brand, settings: rights }, from([pick])).markdown === out && channelArticleParts({ markdown: out, style: 'community' }, { brand, settings: rights }, from([pick])).photos.length === 0)
+  ok('사진 사용 확인이 없으면 넣지 않는다', channelArticleParts(blog, { brand, settings }, from([pick])).photos.length === 0 && channelArticleParts(blog, { brand, settings }, from([pick])).markdown === blogCopy)
+  ok(
+    '의료 업종은 의료광고 확인까지 있어야 넣는다',
+    channelArticleParts(blog, { brand: { ...brand, industry: '피부과' }, settings: rights }, from([pick])).photos.length === 0 &&
+      channelArticleParts(blog, { brand: { ...brand, industry: '피부과' }, settings: { ...rights, photoRights: { ...rights.photoRights, medical: true as const } } }, from([pick])).photos.length === 1,
+  )
+  ok('확인하지 않은 사진은 넣지 않는다', channelArticleParts(blog, { brand, settings: rights }, from([{ ...pick, confirmedAt: '' }])).photos.length === 0)
+  ok('다듬은 글에 없는 자리의 사진은 넣지 않는다', channelArticleParts(blog, { brand, settings: rights }, from([{ ...pick, slot: '없는 장면' }])).photos.length === 0)
+  ok(
+    '다듬은 글의 같은 장면 자리 수가 원문과 다르면 넣지 않는다',
+    channelArticleParts({ markdown: out.replace(/^\*출발 전 모이는 곳\*$/m, '*출발 전 모이는 곳*\n\n![가상역 2번 출구 앞 집결 장소](#image-slot)'), style: 'blog' }, { brand, settings: rights }, from([pick])).photos.length === 0,
+  )
+
+  // 같은 장면 글자의 자리가 둘이고 절 순서가 바뀐 원문 — 사진은 고른 절(주차 안내)로. 다듬은 글은 소제목을 바꿔 써도 설명 줄은 원문 그대로다.
+  const twin = (first: string, second: string) =>
+    [first, second]
+      .map((h) => [`## ${h}`, '', '![매장 외관](#image-slot)', h === '주차 안내' ? '*건물 뒤 주차장 입구*' : '*역에서 걸어오면 보이는 정문*', ''].join('\n'))
+      .join('\n')
+  const parking = { ...pick, slot: '매장 외관', nth: 2, same: 2, heading: '주차 안내', src: 'https://vtravel.example/img/parking.webp', alt: '주차장 입구' }
+  const reordered = twin('주차 안내', '찾아오는 길')
+  const reworded = reordered.replace('## 주차 안내', '## 차는 어디에 대나요').replace('## 찾아오는 길', '## 오시는 방법')
+  const moved = withPhotosFromSource(reworded, reordered, [parking])
+  ok(
+    '같은 장면 자리가 둘 — 절 순서가 바뀌어도 고른 절에 넣는다',
+    moved.applied.length === 1 && moved.markdown.indexOf('parking.webp') < moved.markdown.indexOf('## 오시는 방법') && moved.markdown.includes('![주차장 입구](https://vtravel.example/img/parking.webp)\n*건물 뒤 주차장 입구*'),
+  )
+  ok('자사 발행본과 같은 절', withPhotos(reordered, [parking]).markdown.indexOf('parking.webp') < withPhotos(reordered, [parking]).markdown.indexOf('## 찾아오는 길'))
+
+  // 설명 줄이 같은 두 자리 — 다듬은 글이 첫 자리 설명을 떼어 놓아도 순서대로 짝짓는다(설명만으로 둘째 자리로 옮기지 않는다).
+  const sameCaption = ['## 주차 안내', '', '![매장 외관](#image-slot)', '*매장 모습*', '', '## 찾아오는 길', '', '![매장 외관](#image-slot)', '*매장 모습*', ''].join('\n')
+  const firstPick = { ...parking, nth: 1, heading: '주차 안내' }
+  const detached = sameCaption.replace('## 주차 안내', '## 차는 어디에 대나요').replace('![매장 외관](#image-slot)\n*매장 모습*', '![매장 외관](#image-slot)\n\n*매장 모습*')
+  const keptOrder = withPhotosFromSource(detached, sameCaption, [firstPick])
+  ok('같은 설명 두 자리 — 설명이 떨어져도 고른 절에', keptOrder.applied.length === 1 && keptOrder.markdown.indexOf('parking.webp') < keptOrder.markdown.indexOf('## 찾아오는 길'))
+
+  // 설명이 한쪽에만 있는 두 자리를 다듬은 글이 뒤바꿨다 — 확실하지 않으니 넣지 않는다.
+  const halfCaption = ['## 주차 안내', '', '![매장 외관](#image-slot)', '', '## 찾아오는 길', '', '![매장 외관](#image-slot)', '*역 정문*', ''].join('\n')
+  const swapped = ['## 오시는 방법', '', '![매장 외관](#image-slot)', '*역 정문*', '', '## 차는 어디에 대나요', '', '![매장 외관](#image-slot)', ''].join('\n')
+  ok('설명이 한쪽뿐인 두 자리가 뒤바뀌면 넣지 않는다', withPhotosFromSource(swapped, halfCaption, [firstPick, { ...firstPick, nth: 2, heading: '찾아오는 길', src: 'https://vtravel.example/img/gate.webp' }]).applied.length === 0)
+  // 설명이 모두 다르면 뒤바뀐 순서도 설명으로 짝짓는다.
+  const swappedTwin = twin('찾아오는 길', '주차 안내').replace('## 주차 안내', '## 차는 어디에 대나요').replace('## 찾아오는 길', '## 오시는 방법')
+  const bySwap = withPhotosFromSource(swappedTwin, reordered, [parking])
+  ok('설명이 모두 다르면 뒤바뀐 순서도 설명으로', bySwap.applied.length === 1 && bySwap.markdown.includes('![주차장 입구](https://vtravel.example/img/parking.webp)\n*건물 뒤 주차장 입구*'))
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
