@@ -372,7 +372,7 @@ export default function PublishList({
                       ? '올릴 곳 형식이 바뀌었습니다 — 이미 등록된 업체라 새 등록 글이 아니라 소개 보강 글이 필요합니다.'
                       : '올릴 곳 형식이 바뀌었습니다.'
                     : '원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).'}{' '}
-                  {a?.style === 'blog' &&
+                  {channelStyleOf(row.target.badge) === 'blog' &&
                     row.article.draft &&
                     articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }).length > 0 &&
                     '고른 홈페이지 사진은 다시 만든 글에 들어갑니다. '}
