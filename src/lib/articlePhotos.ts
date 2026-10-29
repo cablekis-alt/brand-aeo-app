@@ -181,7 +181,48 @@ export function matchPhotos(markdown: string, picks: readonly PhotoPick[]): Phot
  */
 export function withPhotos(markdown: string, picks: readonly PhotoPick[] | undefined): { markdown: string; applied: AppliedPhoto[] } {
   if (!picks?.length) return { markdown, applied: [] }
-  const { applied } = matchPhotos(markdown, picks)
+  return placePhotos(markdown, matchPhotos(markdown, picks).applied)
+}
+
+/** 사진 자리 줄 바로 아랫줄의 설명(`*설명*`) — 없으면 ''. */
+function captionAfter(lines: readonly string[], slot: PhotoSlot): string {
+  const m = /^\*(?!\*)(.+?)\*$/.exec((lines[slot.line + 1] ?? '').trim())
+  return m ? normSlotAlt(m[1]!) : ''
+}
+
+/**
+ * 다듬은 글(채널 문체)에 고른 사진을 넣는다. 다듬은 글은 소제목을 바꿔 쓰므로 사진을 다듬은 글에서 바로 짝짓지 않는다 — 먼저 다듬기
+ * 원문(sourceMarkdown — 다듬은 글을 만든 그 원문이어야 한다)에서 자사 발행본과 같은 규칙으로 자리를 찾고, 그 원문 자리를 다듬은 글의
+ * 자리로 옮긴다. 다듬기는 사진 자리 줄과 설명 줄을 원문 글자 그대로 남긴다(server/channelAdapt.ts keepSourceMedia). 같은 장면 글자의
+ * 자리 수가 원문과 다르면 넣지 않는다. 같으면 설명 줄이 같은 자리가 하나뿐일 때 그 자리, 아니면 같은 순번의 자리.
+ */
+export function withPhotosFromSource(
+  markdown: string,
+  sourceMarkdown: string,
+  picks: readonly PhotoPick[] | undefined,
+): { markdown: string; applied: AppliedPhoto[] } {
+  if (!picks?.length) return { markdown, applied: [] }
+  const sourceLines = sourceMarkdown.split('\n')
+  const lines = markdown.split('\n')
+  const sourceSlots = photoSlotsOf(sourceMarkdown)
+  const slots = photoSlotsOf(markdown)
+  const placements: { pick: PhotoPick; slot: PhotoSlot }[] = []
+  const taken = new Set<number>()
+  for (const { pick, slot: from } of matchPhotos(sourceMarkdown, picks).applied) {
+    const sameKey = slots.filter((s) => s.key === from.key)
+    if (sameKey.length !== sourceSlots.filter((s) => s.key === from.key).length) continue
+    const caption = captionAfter(sourceLines, from)
+    const byCaption = caption ? sameKey.filter((s) => captionAfter(lines, s) === caption) : []
+    const to = byCaption.length === 1 ? byCaption[0] : sameKey[from.nth - 1]
+    if (!to || taken.has(to.line)) continue
+    taken.add(to.line)
+    placements.push({ pick, slot: to })
+  }
+  return placePhotos(markdown, placements)
+}
+
+/** 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾼다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다. */
+function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
   const lines = markdown.split('\n')
   const out: AppliedPhoto[] = []

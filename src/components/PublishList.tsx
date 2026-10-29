@@ -122,7 +122,10 @@ export default function PublishList({
     }
     const a = adaptationOf(row)
     if (!a) return null
-    const parts = tenant ? channelArticleParts(a, { brand: tenant, settings }, d.photos) : { markdown: a.markdown, photos: [] }
+    // 고른 사진은 이 다듬은 글을 만든 원문이 지금 원문일 때만 넣는다(옛 판이면 아래 경고 줄에서 다시 만든다).
+    const source = sourceOf(row)
+    const fresh = a.sourceKey === sourceKeyOf(source)
+    const parts = tenant ? channelArticleParts(a, { brand: tenant, settings }, fresh ? { markdown: source, picks: d.photos } : undefined) : { markdown: a.markdown, photos: [] }
     return { markdown: parts.markdown, html: markdownToHtml(parts.markdown), photos: uniquePhotoFiles(parts.photos) }
   }
 
@@ -369,6 +372,10 @@ export default function PublishList({
                       ? '올릴 곳 형식이 바뀌었습니다 — 이미 등록된 업체라 새 등록 글이 아니라 소개 보강 글이 필요합니다.'
                       : '올릴 곳 형식이 바뀌었습니다.'
                     : '원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).'}{' '}
+                  {a?.style === 'blog' &&
+                    row.article.draft &&
+                    articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }).length > 0 &&
+                    '고른 홈페이지 사진은 다시 만든 글에 들어갑니다. '}
                   <button type="button" className="link-btn" disabled={busy !== null} onClick={() => void adapt(row)}>
                     {making ? '다시 만드는 중…' : '이 채널용 글 다시 만들기'}
                   </button>
