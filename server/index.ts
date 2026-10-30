@@ -42,6 +42,7 @@ import { publicCollectorError } from './aeo/networkSafety.js';
 import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, photosAllowed, type PhotoPick } from '../src/lib/articlePhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
+import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
@@ -693,6 +694,8 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
             ? (b.questionTexts as unknown[]).filter((x): x is string => typeof x === 'string')
             : [],
           evidence: typeof b.evidence === 'string' ? b.evidence : '',
+          // 추가 글만 보낸다 — 다룰 각도와 이미 쓴 본 글의 제목 · 소제목. 길이를 자르고, 모양이 틀리면 버린다(없이도 브리프는 된다).
+          ...briefFocusOf(b.angle, b.avoid),
         },
         language: tenant.questionLanguage,
       },

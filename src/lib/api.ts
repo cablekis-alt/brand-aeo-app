@@ -812,10 +812,24 @@ export interface StoredBrief {
 export async function loadContentBriefs(tenantId: string): Promise<Record<string, StoredBrief> | null> {
   return getJson<Record<string, StoredBrief>>(`/api/content-brief/${encodeURIComponent(tenantId)}`)
 }
+/**
+ * 브리프 요청. angle · avoid는 추가 글만 보낸다(src/lib/draftGaps.ts briefInputOf) — 없으면 서버 프롬프트가 예전과 같다.
+ * 상한을 넘는 값은 서버가 자른다(src/prompts/b9b-content-brief.ts briefFocusOf).
+ */
+export interface ContentBriefInput {
+  actionId: string
+  kind: 'listing' | 'content'
+  title: string
+  targetDomain?: string
+  questionTexts: string[]
+  evidence: string
+  angle?: string
+  avoid?: import('../prompts/b9b-content-brief').BriefAvoid
+}
 /** 실패하면 throw — 브리프가 조용히 비면 사용자가 "없는 게 정상"으로 읽는다. */
 export async function generateContentBrief(
   tenantId: string,
-  input: { actionId: string; kind: 'listing' | 'content'; title: string; targetDomain?: string; questionTexts: string[]; evidence: string },
+  input: ContentBriefInput,
   force = false,
 ): Promise<StoredBrief> {
   const res = await fetch(`/api/content-brief/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {

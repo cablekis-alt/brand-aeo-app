@@ -1,5 +1,6 @@
+import { briefFocusOf } from '../prompts/b9b-content-brief'
 import type { ContentDraft } from '../prompts/b9c-content-draft'
-import type { GapFill, StoredDraft } from './api'
+import type { ContentBriefInput, GapFill, StoredDraft } from './api'
 import type { GapAction } from './gapActions'
 import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
 
@@ -25,6 +26,29 @@ export function draftRequestOf(action: Pick<GapAction, 'id' | 'kind' | 'targetDo
   format?: 'article'
 } {
   return { actionId: action.id, targetDomain: action.targetDomain, ...(action.kind === 'content' ? { format: 'article' as const } : {}) }
+}
+
+/**
+ * 브리프 요청 — 브리프를 만드는 길(글 설계 · 초안 카드 · 한 번에 만들기)이 같은 요청을 쓰도록 여기 둔다.
+ * 추가 글(action.extra)이면 다룰 각도(주제 이름 + 사람이 적은 각도)와 이미 쓴 본 글의 제목 · 소제목을 함께 보낸다 — 본 글은 다시
+ * 만들지 않으므로 겹침은 추가 글 쪽에서 피한다. 본 글 초안이 아직 없으면 피할 글 없이 보낸다. 추가 글이 아니면 예전 요청 그대로다.
+ */
+export function briefInputOf(
+  action: Pick<GapAction, 'id' | 'kind' | 'title' | 'targetDomain' | 'questionTexts' | 'evidence' | 'extra'>,
+  mainDraft: StoredDraft | undefined,
+): ContentBriefInput {
+  const base: ContentBriefInput = {
+    actionId: action.id,
+    kind: action.kind,
+    title: action.title,
+    targetDomain: action.targetDomain,
+    questionTexts: action.questionTexts,
+    evidence: action.evidence,
+  }
+  if (!action.extra) return base
+  const angle = action.extra.angle?.trim() ? `${action.extra.name} — ${action.extra.angle.trim()}` : action.extra.name
+  const main = mainDraft ? effectiveDraft(mainDraft) : null
+  return { ...base, ...briefFocusOf(angle, main ? { title: main.title, headings: main.sections.map((s) => s.heading) } : undefined) }
 }
 
 /** 빈칸 자리의 키 — 그 초안 안에서만 뜻이 있다(다시 만들면 기록을 버린다). */

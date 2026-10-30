@@ -14,11 +14,17 @@
  * 「올림」을 보지 않으면 추가 글을 티스토리에 올린 순간 본 글의 티스토리 줄도 「올림」이 된다. 플랫폼이 아닌 채널은 한 줄 · 본 글 먼저 —
  * 이미 올린 위키나 여행 사이트 줄이 추가 글로 넘어가면 「본문 다시 복사」가 엉뚱한 글을 복사한다.
  *
+ * 브리프 프롬프트(src/prompts/b9b-content-brief.ts): 추가 글만 다룰 각도와 이미 쓴 본 글의 제목 · 소제목을 보낸다. 둘이 없는 요청(본 글 ·
+ * 등재형 · 질문 은행 글)의 프롬프트는 넣기 전과 한 글자도 다르지 않아야 한다 — 그 브리프들의 결과가 조용히 바뀌지 않게.
+ *
  *   npx tsx scripts/verify-extra-articles.ts
  */
+import { createHash } from 'node:crypto';
 import { analyzeCitationSources } from '../server/citationSources';
 import type { QuestionRepeatAnalysis } from '../server/types';
-import type { ActionStateMap, PublishedPost } from '../src/lib/api';
+import { BRIEF_FOCUS_LIMITS, briefFocusOf, buildContentBriefPrompt, type ContentBriefRequest } from '../src/prompts/b9b-content-brief';
+import type { ActionStateMap, PublishedPost, StoredDraft } from '../src/lib/api';
+import { briefInputOf } from '../src/lib/draftGaps';
 import { computeGapActions, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
 import { buildPublishPlan, recordInputOf, type PublishRow } from '../src/lib/publishPlan';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
@@ -448,6 +454,125 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   // 추가 글이 없으면 줄의 기록은 항목 값 그대로(화면이 row.target.* 대신 row.*를 써도 같다)
   const plain = buildPublishPlan([main], [naver, yeogi], null);
   ok('추가 글 없음 — 줄 기록 = 항목 기록', plain.rows.every((r) => r.publishedUrls === r.target.publishedUrls && r.citedUrls === r.target.citedPublishedUrls && r.hits.length === (r.target.publishedHits?.length ?? 0)));
+}
+
+// ── (d) 브리프 프롬프트 — 각도 · 피할 글(b9b-content-brief) ─────────────────────────────────────────
+{
+  // 기준 — 각도 · 피할 글을 넣기 전의 buildContentBriefPrompt가 아래 두 요청에 낸 문자열. user는 글자 그대로, system은 길어서 sha256.
+  // 프롬프트를 일부러 고칠 때만 기준을 다시 뜬다 — 각도 · 피할 글이 없는 요청(본 글 · 등재형 · 질문 은행 글)의 브리프가 바뀐다는 뜻이다.
+  const sha = (s: string) => createHash('sha256').update(s).digest('hex');
+  const briefBase: ContentBriefRequest = {
+    brandName: '가상 여관',
+    industry: '숙박',
+    region: '가상시',
+    competitorNames: ['가상 민박', '가상 호텔'],
+    factGraph: [
+      { id: 'f1', type: 'price', claim: '1박 요금', value: '약 8만원', updatedAt: '2026-10-01T00:00:00.000Z' },
+      { id: 'f2', type: 'location', claim: '위치', value: '가상역 도보 5분', updatedAt: '2026-10-01T00:00:00.000Z' },
+    ],
+    action: { kind: 'content', title: '가상 주제 콘텐츠 보강', questionTexts: ['가상시 숙소 추천해줘', '가상시 조용한 숙소는?'], evidence: '밀린 질문 2개' },
+  };
+  const briefListing: ContentBriefRequest = {
+    ...briefBase,
+    competitorNames: [],
+    factGraph: [],
+    action: { kind: 'listing', title: '가상 위키 등재', targetDomain: 'wiki.example', questionTexts: [], evidence: '' },
+    language: 'en',
+  };
+  const BASE_USER =
+    '브랜드: 가상 여관 (숙박 · 가상시)\n경쟁사: 가상 민박, 가상 호텔\n종류: 자사 사이트 콘텐츠 — 우리 도메인에 올릴 페이지의 브리프.\n실행 항목: 가상 주제 콘텐츠 보강\n왜 이 항목이 나왔나: 밀린 질문 2개\n\n이 글이 답해야 할 질문(AI가 이 출처를 꺼낸 질문 / 우리가 밀린 질문):\n- 가상시 숙소 추천해줘\n- 가상시 조용한 숙소는?\n\n팩트 그래프(이 사실만 쓸 수 있다):\n- [price] 1박 요금: 약 8만원\n- [location] 위치: 가상역 도보 5분';
+  const BASE_SYSTEM_SHA = '4a73467f54b6590ab58f581a74a4e19e9e36319a9d3f6229fad6c1dc0463f63c';
+  const LISTING_USER =
+    '브랜드: 가상 여관 (숙박 · 가상시)\n경쟁사: (없음)\n종류: 외부 채널 등재·기고 — 대상 채널 wiki.example. 그 채널에서 지켜야 할 것(광고성 금지·문서 규칙·형식)을 channelNotes에 적는다.\n실행 항목: 가상 위키 등재\n왜 이 항목이 나왔나: \n\n이 글이 답해야 할 질문(AI가 이 출처를 꺼낸 질문 / 우리가 밀린 질문):\n- (질문 없음 — 채널 특성만으로 기획)\n\n팩트 그래프(이 사실만 쓸 수 있다):\n- (등록된 사실 없음)';
+  const LISTING_SYSTEM_SHA = '5cfd1b42f736b9e54dddeb19d30f05ae3b375f35e48071a035be2e0d286690ba';
+
+  const basePrompt = buildContentBriefPrompt(briefBase);
+  const listingPrompt = buildContentBriefPrompt(briefListing);
+  ok('브리프 — 각도 · 피할 글 없음: 콘텐츠형 user가 기준과 같다', basePrompt.user === BASE_USER);
+  ok('브리프 — 각도 · 피할 글 없음: 콘텐츠형 system이 기준과 같다', sha(basePrompt.system) === BASE_SYSTEM_SHA);
+  ok('브리프 — 각도 · 피할 글 없음: 등재형(영어) user가 기준과 같다', listingPrompt.user === LISTING_USER);
+  ok('브리프 — 각도 · 피할 글 없음: 등재형(영어) system이 기준과 같다', sha(listingPrompt.system) === LISTING_SYSTEM_SHA);
+  // 서버는 본문의 angle · avoid를 briefFocusOf로 펼친다 — 보내지 않은 요청(본 글 · 등재형)은 키가 생기지 않아 기준과 같다.
+  const serverAbsent = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, ...briefFocusOf(undefined, undefined) } });
+  ok('브리프 — 서버 경로(보내지 않음)도 기준과 같다', serverAbsent.user === BASE_USER && sha(serverAbsent.system) === BASE_SYSTEM_SHA);
+  const blank = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, angle: '   ', avoid: { title: ' ', headings: ['', '  '] } } });
+  ok('브리프 — 빈 각도 · 빈 피할 글은 없는 것과 같다', blank.user === BASE_USER && blank.system === basePrompt.system);
+
+  const withFocus = buildContentBriefPrompt({
+    ...briefBase,
+    action: { ...briefBase.action, angle: '가상 주제 — 조용한 방 고르는 법', avoid: { title: '가상시 숙소 고르는 법', headings: ['위치부터 보기', '편의시설 확인'] } },
+  });
+  const angleLine = '\n다룰 각도: 가상 주제 — 조용한 방 고르는 법 — 제목 후보와 구조를 이 각도에 맞춘다.';
+  const avoidBlock =
+    '\n\n이미 쓴 본 글(겹치지 않게): 「가상시 숙소 고르는 법」\n아래 소제목과 같은 절을 만들지 말고, 이 글의 질문을 더 깊게 다룬다.\n- 위치부터 보기\n- 편의시설 확인';
+  ok('브리프 — 각도 · 피할 글 있음: system은 그대로', withFocus.system === basePrompt.system);
+  ok('브리프 — 「다룰 각도」 줄은 「왜 이 항목이 나왔나」 바로 다음', withFocus.user.includes(`왜 이 항목이 나왔나: 밀린 질문 2개${angleLine}\n\n이 글이 답해야 할 질문`));
+  ok('브리프 — 「이미 쓴 본 글(겹치지 않게)」 블록은 질문 다음 · 팩트 그래프 앞', withFocus.user.includes(`- 가상시 조용한 숙소는?${avoidBlock}\n\n팩트 그래프(이 사실만 쓸 수 있다):`));
+  ok('브리프 — 두 자리를 빼면 기준과 같다(다른 글자는 바뀌지 않음)', withFocus.user.replace(angleLine, '').replace(avoidBlock, '') === BASE_USER);
+  const angleOnly = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, angle: '조용한 방' } });
+  ok('브리프 — 각도만: 피할 글 블록 없음', angleOnly.user.includes('다룰 각도: 조용한 방') && !angleOnly.user.includes('이미 쓴 본 글'));
+  const headingsOnly = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, avoid: { title: '', headings: ['위치부터 보기'] } } });
+  ok('브리프 — 소제목만: 제목 없음으로 표시 · 각도 줄 없음', headingsOnly.user.includes('이미 쓴 본 글(겹치지 않게): (제목 없음)\n아래 소제목과 같은 절을') && !headingsOnly.user.includes('다룰 각도'));
+  const titleOnly = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, avoid: { title: '가상시 숙소 고르는 법', headings: [] } } });
+  ok('브리프 — 제목만: 소제목 목록 없이 본 글과 겹치지 않게', titleOnly.user.includes('「가상시 숙소 고르는 법」\n본 글과 같은 절을 만들지 말고, 이 글의 질문을 더 깊게 다룬다.\n\n팩트 그래프'));
+
+  // 상한 · 모양 — 서버(POST /api/content-brief)와 화면이 같은 briefFocusOf를 쓴다
+  const L = BRIEF_FOCUS_LIMITS;
+  ok('상한 — 각도 200 · 소제목 20개 · 한 줄 80', L.angle === 200 && L.headings === 20 && L.heading === 80);
+  ok('모양 — 아무것도 없으면 키도 없음', JSON.stringify(briefFocusOf(undefined, undefined)) === '{}');
+  ok('모양 — 문자열이 아닌 각도는 버림', JSON.stringify(briefFocusOf(42, null)) === '{}' && JSON.stringify(briefFocusOf(['a'], 'x')) === '{}');
+  ok('모양 — 각도는 앞뒤 공백을 다듬음', briefFocusOf('  조용한 방  ', undefined).angle === '조용한 방');
+  const longAngle = briefFocusOf('가'.repeat(250), undefined).angle ?? '';
+  ok('모양 — 긴 각도는 200자로 자름', longAngle.length === 200);
+  ok('모양 — 피할 글이 객체가 아니거나 소제목이 배열이 아니면 버림', [briefFocusOf(undefined, 'x'), briefFocusOf(undefined, ['a']), briefFocusOf(undefined, { title: 'T', headings: 'a' }), briefFocusOf(undefined, { title: 7, headings: ['a'] })].every((r) => !('avoid' in r)));
+  const clipped = briefFocusOf(undefined, { title: '제'.repeat(100), headings: [...Array.from({ length: 25 }, (_, i) => `소제목 ${i + 1}`), 7, null] }).avoid;
+  ok('모양 — 소제목은 20개까지 · 제목은 80자로 자름', clipped?.headings.length === 20 && clipped.headings[19] === '소제목 20' && clipped.title.length === 80);
+  const mixed = briefFocusOf(undefined, { headings: ['  위치  ', 3, '', 'ㄱ'.repeat(90)] }).avoid;
+  ok('모양 — 제목 없어도 됨 · 문자열 아닌 · 빈 소제목은 빼고 한 줄은 80자', mixed?.title === '' && mixed.headings.length === 2 && mixed.headings[0] === '위치' && mixed.headings[1]?.length === 80);
+  ok('모양 — 제목 · 소제목이 모두 비면 피할 글 없음', !('avoid' in briefFocusOf(undefined, { title: '  ', headings: [' '] })));
+
+  // briefInputOf — 브리프를 만드는 세 길(글 설계 · 초안 카드 · 한 번에 만들기)이 함께 쓴다
+  const mainDraft: StoredDraft = {
+    actionId: 'content:category-agnostic',
+    generatedAt: NOW,
+    draft: {
+      title: '가상시 숙소 고르는 법',
+      lead: '가상 문단',
+      sections: [
+        { heading: '위치부터 보기', answers: 'q1', blocks: [{ kind: 'text', body: '가상 본문' }] },
+        { heading: '편의시설 확인', answers: 'q2', blocks: [{ kind: 'gap', need: '주차 대수 — 팩트 그래프에 없음' }] },
+      ],
+      gapCount: 1,
+      usedFacts: [],
+    },
+  };
+  const plainAction = {
+    id: 'content:category-agnostic',
+    kind: 'content' as const,
+    title: '카테고리 무관 질문 콘텐츠 보강',
+    targetDomain: undefined,
+    questionTexts: ['가상시 숙소 추천해줘'],
+    evidence: '밀린 질문 1개',
+  };
+  const oldInput = { actionId: plainAction.id, kind: plainAction.kind, title: plainAction.title, targetDomain: undefined, questionTexts: plainAction.questionTexts, evidence: plainAction.evidence };
+  ok('요청 — 본 글 · 등재형은 예전 요청 그대로(본 글 초안이 있어도)', JSON.stringify(briefInputOf(plainAction, mainDraft)) === JSON.stringify(oldInput) && JSON.stringify(briefInputOf(plainAction, undefined)) === JSON.stringify(oldInput));
+  const snap = extraTopicSnapshot(def(['c1-011', 'c1-012'], ['가상시 조용한 숙소는?', '가상시 방음 좋은 숙소']));
+  const extraAction = {
+    ...plainAction,
+    id: 'topic:c1-011+c1-012',
+    title: '조용한 방 콘텐츠 보강',
+    extra: { name: '조용한 방', angle: '  방음 · 층 고르는 법 ', how: 'same-bank' as const, missingTexts: [], topic: snap },
+  };
+  const withMain = briefInputOf(extraAction, mainDraft);
+  ok('요청 — 추가 글: 각도는 「이름 — 각도」', withMain.angle === '조용한 방 — 방음 · 층 고르는 법');
+  ok('요청 — 추가 글: 피할 글은 본 글 초안의 제목 · 소제목', JSON.stringify(withMain.avoid) === JSON.stringify({ title: '가상시 숙소 고르는 법', headings: ['위치부터 보기', '편의시설 확인'] }));
+  ok('요청 — 추가 글: 나머지 칸은 그 항목 그대로', withMain.actionId === extraAction.id && withMain.title === extraAction.title && withMain.questionTexts === extraAction.questionTexts);
+  const noAngle = briefInputOf({ ...extraAction, extra: { ...extraAction.extra, angle: undefined } }, undefined);
+  ok('요청 — 각도가 없으면 이름만 · 본 글 초안이 없으면 피할 글 없음', noAngle.angle === '조용한 방' && !('avoid' in noAngle));
+  const longName = briefInputOf({ ...extraAction, extra: { ...extraAction.extra, name: '이'.repeat(60), angle: '각'.repeat(200) } }, undefined);
+  ok('요청 — 이름 + 각도가 길면 200자로 자름(서버도 같은 상한)', longName.angle?.length === 200 && longName.angle.startsWith('이'.repeat(60)));
+  const sent = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, ...briefFocusOf(withMain.angle, withMain.avoid) } });
+  ok('요청 → 서버 → 프롬프트: 각도 줄과 본 글 소제목이 들어감', sent.user.includes('다룰 각도: 조용한 방 — 방음 · 층 고르는 법') && sent.user.includes('「가상시 숙소 고르는 법」') && sent.user.includes('\n- 편의시설 확인'));
 }
 
 let failed = 0;

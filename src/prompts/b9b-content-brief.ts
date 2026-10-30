@@ -48,9 +48,57 @@ export interface ContentBriefRequest {
     targetDomain?: string;
     questionTexts: string[];
     evidence: string;
+    /** 다룰 각도(추가 글만) — 주제 이름과 사람이 적은 각도. 없으면 프롬프트가 예전과 한 글자도 다르지 않다. */
+    angle?: string;
+    /**
+     * 이미 쓴 본 글(추가 글만) — 본 글 초안의 제목과 소제목. 추가 글이 본 글과 같은 절을 되풀이하지 않게 한다.
+     * 본 글은 다시 만들지 않으므로(src/lib/extraArticles.ts) 겹침은 추가 글 쪽에서 피한다.
+     */
+    avoid?: BriefAvoid;
   };
   /** 원고 언어. 없으면 한국어. 영어 테넌트(해외 환자 관점)는 'en'. */
   language?: QuestionLanguage;
+}
+
+export interface BriefAvoid {
+  title: string;
+  headings: string[];
+}
+
+/** 각도 · 피할 글의 길이 상한. 넘는 값은 자른다 — 프롬프트가 본 글 원고만큼 길어지지 않게. */
+export const BRIEF_FOCUS_LIMITS = {
+  angle: 200,
+  /** 피할 소제목 수. */
+  headings: 20,
+  /** 제목 · 소제목 한 줄. */
+  heading: 80,
+} as const;
+
+const clipText = (v: string, max: number): string => v.trim().slice(0, max).trim();
+
+/**
+ * 요청 본문의 angle · avoid를 고른다(서버 POST /api/content-brief와 화면이 같은 규칙을 쓴다). 모양이 틀리면 버린다 — 브리프는 둘
+ * 없이도 만들 수 있으니 400으로 막지 않는다. 비면 키를 아예 두지 않아 프롬프트가 예전과 같다.
+ */
+export function briefFocusOf(angle: unknown, avoid: unknown): { angle?: string; avoid?: BriefAvoid } {
+  const out: { angle?: string; avoid?: BriefAvoid } = {};
+  if (typeof angle === 'string') {
+    const a = clipText(angle, BRIEF_FOCUS_LIMITS.angle);
+    if (a) out.angle = a;
+  }
+  if (avoid && typeof avoid === 'object' && !Array.isArray(avoid)) {
+    const r = avoid as Record<string, unknown>;
+    if ((r.title === undefined || typeof r.title === 'string') && Array.isArray(r.headings)) {
+      const title = typeof r.title === 'string' ? clipText(r.title, BRIEF_FOCUS_LIMITS.heading) : '';
+      const headings = r.headings
+        .filter((h): h is string => typeof h === 'string')
+        .map((h) => clipText(h, BRIEF_FOCUS_LIMITS.heading))
+        .filter(Boolean)
+        .slice(0, BRIEF_FOCUS_LIMITS.headings);
+      if (title || headings.length) out.avoid = { title, headings };
+    }
+  }
+  return out;
 }
 
 /**
@@ -111,14 +159,25 @@ titles는 2~3개, citableSentences는 3~5개(각 60자 이내), channelNotes는 
     req.action.kind === 'listing'
       ? `종류: 외부 채널 등재·기고 — 대상 채널 ${req.action.targetDomain ?? '(미정)'}. 그 채널에서 지켜야 할 것(광고성 금지·문서 규칙·형식)을 channelNotes에 적는다.`
       : '종류: 자사 사이트 콘텐츠 — 우리 도메인에 올릴 페이지의 브리프.';
+  // 각도 · 피할 글은 추가 글에만 온다. 없으면 두 자리가 빈 문자열이라 프롬프트가 예전과 한 글자도 다르지 않다
+  // (scripts/verify-extra-articles.ts가 기준 문자열로 확인한다).
+  const angle = req.action.angle?.trim() ?? '';
+  const angleLine = angle ? `\n다룰 각도: ${angle} — 제목 후보와 구조를 이 각도에 맞춘다.` : '';
+  const avoidTitle = req.action.avoid?.title.trim() ?? '';
+  const avoidHeadings = (req.action.avoid?.headings ?? []).map((h) => h.trim()).filter(Boolean);
+  const avoidBlock =
+    avoidTitle || avoidHeadings.length
+      ? `\n\n이미 쓴 본 글(겹치지 않게): ${avoidTitle ? `「${avoidTitle}」` : '(제목 없음)'}
+${avoidHeadings.length ? '아래 소제목과 같은 절을 만들지 말고' : '본 글과 같은 절을 만들지 말고'}, 이 글의 질문을 더 깊게 다룬다.${avoidHeadings.map((h) => `\n- ${h}`).join('')}`
+      : '';
   const user = `브랜드: ${req.brandName} (${req.industry} · ${req.region})
 경쟁사: ${req.competitorNames.join(', ') || '(없음)'}
 ${kindLine}
 실행 항목: ${req.action.title}
-왜 이 항목이 나왔나: ${req.action.evidence}
+왜 이 항목이 나왔나: ${req.action.evidence}${angleLine}
 
 이 글이 답해야 할 질문(AI가 이 출처를 꺼낸 질문 / 우리가 밀린 질문):
-${req.action.questionTexts.map((q) => `- ${q}`).join('\n') || '- (질문 없음 — 채널 특성만으로 기획)'}
+${req.action.questionTexts.map((q) => `- ${q}`).join('\n') || '- (질문 없음 — 채널 특성만으로 기획)'}${avoidBlock}
 
 팩트 그래프(이 사실만 쓸 수 있다):
 ${facts}`;
