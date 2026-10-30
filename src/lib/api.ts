@@ -5,6 +5,7 @@ import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { PublishSettings } from './publishSettings'
+import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import type { AnswerEvidence } from './answerEvidence'
 import type { ConditionChange } from './comparability'
 import type {
@@ -811,10 +812,24 @@ export interface StoredBrief {
 export async function loadContentBriefs(tenantId: string): Promise<Record<string, StoredBrief> | null> {
   return getJson<Record<string, StoredBrief>>(`/api/content-brief/${encodeURIComponent(tenantId)}`)
 }
+/**
+ * 브리프 요청. angle · avoid는 추가 글만 보낸다(src/lib/draftGaps.ts briefInputOf) — 없으면 서버 프롬프트가 예전과 같다.
+ * 상한을 넘는 값은 서버가 자른다(src/prompts/b9b-content-brief.ts briefFocusOf).
+ */
+export interface ContentBriefInput {
+  actionId: string
+  kind: 'listing' | 'content'
+  title: string
+  targetDomain?: string
+  questionTexts: string[]
+  evidence: string
+  angle?: string
+  avoid?: import('../prompts/b9b-content-brief').BriefAvoid
+}
 /** 실패하면 throw — 브리프가 조용히 비면 사용자가 "없는 게 정상"으로 읽는다. */
 export async function generateContentBrief(
   tenantId: string,
-  input: { actionId: string; kind: 'listing' | 'content'; title: string; targetDomain?: string; questionTexts: string[]; evidence: string },
+  input: ContentBriefInput,
   force = false,
 ): Promise<StoredBrief> {
   const res = await fetch(`/api/content-brief/${encodeURIComponent(tenantId)}${force ? '?force=1' : ''}`, {
@@ -951,6 +966,68 @@ export const PHOTO_RIGHTS_EVENT = 'brand-aeo:photo-rights'
 export interface PhotoRightsChange {
   tenantId: string
   settings: PublishSettings
+}
+
+/**
+ * 추가 글 정의(server/extraArticles.ts · src/lib/extraArticles.ts) — 데스크톱·로컬 전용. **null은 "이 환경에는 추가 글 기능이 없다"
+ * (웹 — 라우트 404)**는 뜻이라 화면은 칸을 숨기고 오류 문구를 띄우지 않는다. 그 밖의 실패는 이유와 함께 throw한다. corrupt면 파일이
+ * 깨져 빈 목록으로 읽었고 서버가 쓰기를 거절한다. 뺀 글(removedAt)도 함께 온다.
+ */
+export async function loadExtraArticles(tenantId: string): Promise<{ articles: ExtraArticle[]; corrupt: boolean } | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/extra-articles/${encodeURIComponent(tenantId)}`)
+  } catch (err) {
+    throw new Error(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, { cause: err })
+  }
+  const body = (await res.json().catch(() => null)) as { articles?: unknown; corrupt?: unknown; error?: string } | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.articles)) throw new Error(body?.error || `추가 글을 읽지 못했습니다 (HTTP ${res.status})`)
+  return { articles: normalizeExtraArticles(body.articles), corrupt: body.corrupt === true }
+}
+
+/** 추가 글을 만들 때 보내는 값 — id는 고른 질문으로 여기서 짓는다(서버가 다시 맞춰 본다). questionTexts는 questionIds와 같은 순서. */
+export interface NewExtraArticleInput {
+  name: string
+  angle?: string
+  bankVersion: string
+  questionIds: string[]
+  questionTexts: string[]
+  createdWeek?: string
+}
+
+/** 저장 결과 — 성공하면 서버가 돌려준 목록 전체(뺀 글 포함), 실패하면 서버가 준 이유(409 다른 글이 맡은 질문 · 10편 상한 등). */
+export type ExtraArticleSaveResult = { ok: true; article: ExtraArticle; articles: ExtraArticle[] } | { ok: false; error: string }
+
+async function extraArticlesRequest(tenantId: string, method: 'POST' | 'PATCH', payload: unknown, failure: string): Promise<ExtraArticleSaveResult> {
+  let res: Response
+  try {
+    res = await fetch(`/api/extra-articles/${encodeURIComponent(tenantId)}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch (err) {
+    return { ok: false, error: `앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}` }
+  }
+  const body = (await res.json().catch(() => null)) as { article?: unknown; articles?: unknown; error?: string } | null
+  if (!res.ok || !body || !Array.isArray(body.articles)) return { ok: false, error: body?.error || `${failure} (HTTP ${res.status})` }
+  const articles = normalizeExtraArticles(body.articles)
+  const article = normalizeExtraArticles([body.article])[0]
+  if (!article) return { ok: false, error: `${failure} — 서버 응답의 모양이 맞지 않습니다.` }
+  return { ok: true, article, articles }
+}
+
+export function createExtraArticle(tenantId: string, input: NewExtraArticleInput): Promise<ExtraArticleSaveResult> {
+  return extraArticlesRequest(tenantId, 'POST', { ...input, id: topicArticleId(input.questionIds) }, '추가 글을 만들지 못했습니다')
+}
+
+/** 이름 · 각도 고치기(각도 ''는 지우기), removed true면 목록에서 빼기 · false면 되살리기. */
+export function updateExtraArticle(
+  tenantId: string,
+  patch: { id: string; name?: string; angle?: string; removed?: boolean },
+): Promise<ExtraArticleSaveResult> {
+  return extraArticlesRequest(tenantId, 'PATCH', patch, '추가 글을 고치지 못했습니다')
 }
 
 /** 사람이 고친 초안을 저장한다. 실패하면 throw — 조용히 삼키면 고친 글이 사라진 줄 모른다. */

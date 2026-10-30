@@ -1,5 +1,6 @@
 import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from './api'
 import { blogPlatformOf } from './blogPlatforms'
+import { aliveExtraArticles, extraTopicSnapshot, resolveExtraArticle, type ExtraArticle, type ExtraResolveHow } from './extraArticles'
 import { ENGINE_LABEL } from './format'
 import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
@@ -129,6 +130,30 @@ export interface GapAction {
   listed?: boolean
   /** listed일 때 가장 많이 인용된 그 사이트의 우리 근거 페이지(질의 · # 뗀 주소) — 「우리 업체 페이지 열기」가 연다. */
   listedPage?: string
+  /**
+   * 추가 글(src/lib/extraArticles.ts)일 때만 — 사람이 본 글에서 질문 몇 개를 떼어 따로 쓰는 글. id는 정의의 topic: id 그대로다.
+   * questionIds는 이번 주 은행에서 다시 찾은 질문, questionTexts는 만들 때 고정한 문장이라 두 배열은 짝이 아니다 — 브리프 · 초안은
+   * 고정 문장으로 만든다(판이 바뀌어도 같은 글).
+   */
+  extra?: {
+    name: string
+    angle?: string
+    /** 이번 주 은행에서 질문을 어떻게 찾았나 — 같은 판이라 id로 · 판이 달라 문장으로 · 확인 불가. */
+    how: ExtraResolveHow
+    /** 이번 주 은행에서 찾지 못한 질문(고정 문장) — 확인 불가로 보인다. 0이나 「이김」으로 채우지 않는다. */
+    missingTexts: string[]
+    /**
+     * 찾지 못한 까닭 — 이번 주 판을 몰라서(예시 은행 · 옛 측정 · 은행을 읽는 중) · 판이 바뀌어 같은 문장이 없어서 · 같은 판인데 은행에
+     * 그 질문이 없어서. 찾지 못한 질문이 없으면 없다. 화면이 까닭을 근거 문장과 같게 말한다.
+     */
+    missingWhy?: 'bank-unknown' | 'bank-changed' | 'not-in-bank'
+    /** 찾은 질문(questionIds) 가운데 이번 주 이긴 질문 수. */
+    won: number
+    /** 찾은 질문 가운데 이번 주 응답 줄이 없는 질문 수 — 확인 불가다(밀리지 않은 것으로 세지 않는다). */
+    noAnswer: number
+    /** 올린 기록에 싣는 질문 스냅샷(만들 때의 판 · id · 문장) — 원장 검사(checkTopic)를 늘 통과한다. */
+    topic: TopicSnapshot
+  }
 }
 
 export interface GapActionPlan {
@@ -653,9 +678,20 @@ function listingActions(
  * 「덮는 글 없는 채널」용 글이었다(실측 W43 군산각: 글 4편 중 3편이 질문 1~3개). 점수를 움직이는 질문은 카테고리 무관뿐이라
  * 그 글 한 편만 남긴다(ARTICLE_CATEGORY). id는 그대로 `content:category-agnostic` — 올린 글 기록 · 채널용 다듬은 글 · 초안이
  * 이 키에 붙어 있다. 은행을 읽지 못한 주는 유형을 몰라 밀린 질문 전부를 한 편(`content:`)으로 묶는다(예전과 같은 모양).
+ *
+ * excluded는 추가 글이 맡은 질문이다 — 본 글의 이번 주 질문에서 뺀다(id · 제목은 그대로). 이미 만들어 올린 본 글은 다시 만들지 않으므로
+ * 진행 막대와 채널 배정만 바로잡는 셈이다. 다 빼면 본 글이 비게 되는 주에는 하나도 빼지 않는다 — 본 글이 목록에서 사라지면 그 글의
+ * 채널 줄과 올린 기록이 갈 곳을 잃는다.
  */
-function contentActions(rows: WinLossRow[], inArticle: (row: WinLossRow) => boolean, bankKnown: boolean): GapAction[] {
-  const list = rows.filter((r) => r.verdict === 'loss' && inArticle(r))
+function contentActions(
+  rows: WinLossRow[],
+  inArticle: (row: WinLossRow) => boolean,
+  bankKnown: boolean,
+  excluded: ReadonlySet<string> = new Set(),
+): GapAction[] {
+  const all = rows.filter((r) => r.verdict === 'loss' && inArticle(r))
+  const kept = all.filter((r) => !excluded.has(r.questionId))
+  const list = kept.length > 0 ? kept : all
   if (list.length === 0) return []
   const category = bankKnown ? ARTICLE_CATEGORY : ''
   // 언급률이 낮은 질문이 먼저 — 아예 안 나오는 주제가 가장 급하다.
@@ -683,6 +719,117 @@ function contentActions(rows: WinLossRow[], inArticle: (row: WinLossRow) => bool
       doneSignal: `다음 측정에서 이 질문들의 패 판정이 줄면 진척`,
     },
   ]
+}
+
+/**
+ * 추가 글 항목 — 살아 있는 정의(src/lib/extraArticles.ts)마다 한 편. 질문은 이번 주 은행에서 다시 찾는다(판이 같으면 id, 다르면 문장이
+ * 정확히 같은 것, 없으면 확인 불가). 사람이 「목록에서 빼기」를 누를 때까지 남긴다 — 이번 주 고른 질문을 모두 이기고 있어도(reach 0)
+ * 빼지 않는다. 올린 기록이 목록에서 사라지면 안 된다.
+ *
+ * claimed는 이번 주 은행에서 찾은 질문 전부 — 본 글에서 뺄 질문이다(contentActions excluded).
+ */
+function extraContentActions(
+  defs: ExtraArticle[],
+  rows: WinLossRow[],
+  questions: QuestionSpec[],
+  weekBankVersion: string | null | undefined,
+): { actions: GapAction[]; claimed: Set<string> } {
+  const rowById = new Map(rows.map((r) => [r.questionId, r]))
+  const claimed = new Set<string>()
+  const actions = aliveExtraArticles(defs).map<GapAction>((def) => {
+    const found = resolveExtraArticle(def, weekBankVersion, questions)
+    for (const id of found.currentIds) claimed.add(id)
+    // 언급률이 낮은 질문이 먼저 — 본 글과 같은 순서. 이번 주 응답이 없는 질문은 뒤에 둔다(이긴 질문도 남긴다: 이 글이 맡은 질문이다).
+    const ordered = found.currentIds
+      .map((id, i) => ({ id, i, row: rowById.get(id) }))
+      .sort((a, b) => (a.row?.mentionedRate ?? Infinity) - (b.row?.mentionedRate ?? Infinity) || a.i - b.i)
+    const lost = ordered.filter((q) => q.row?.verdict === 'loss')
+    const zero = lost.filter((q) => q.row?.mentionedRate === 0).length
+    const won = ordered.filter((q) => q.row?.verdict === 'win').length
+    const noAnswer = ordered.filter((q) => !q.row).length
+    const picked = found.currentIds.length
+    const answered = picked - noAnswer
+    const lostNote =
+      picked === 0
+        ? ''
+        : lost.length > 0
+          ? `고른 질문 ${picked}개 중 ${lost.length}개에서 밀리고${zero > 0 ? `, 그중 ${zero}개는 언급이 아예 0건입니다.` : ' 있습니다.'}`
+          : noAnswer === 0
+            ? `고른 질문 ${picked}개 가운데 이번 주 밀린 질문이 없습니다.`
+            : answered > 0
+              ? `응답이 있는 질문 ${answered}개 가운데 이번 주 밀린 질문이 없습니다.`
+              : ''
+    // 응답 줄이 없는 질문은 밀리지 않은 것으로 세지 않는다 — 확인 불가로 밝힌다.
+    const noAnswerNote = noAnswer > 0 ? `고른 질문 중 ${noAnswer}개는 이번 주 응답이 없어 확인 불가입니다.` : ''
+    // 찾지 못한 질문은 세지 않고 확인 불가로 밝힌다 — 0이나 「이김」으로 채우지 않는다.
+    const missingWhy =
+      found.missingTexts.length === 0
+        ? undefined
+        : !weekBankVersion
+          ? 'bank-unknown'
+          : weekBankVersion !== def.bankVersion
+            ? 'bank-changed'
+            : 'not-in-bank'
+    const missingNote =
+      missingWhy === undefined
+        ? ''
+        : missingWhy === 'bank-unknown'
+          ? `이번 주 질문 은행 판을 몰라 고른 질문 ${found.missingTexts.length}개의 결과는 확인 불가입니다.`
+          : `질문 ${found.missingTexts.length}개는 이번 주 질문 은행(${weekBankVersion})에서 같은 문장을 찾지 못해 확인 불가입니다.`
+    // 판이 바뀌었다는 말 — 문장으로 다시 찾은 주에도, 하나도 찾지 못한 주에도 밝힌다(찾지 못한 까닭이다).
+    const byTextNote =
+      found.how === 'by-text'
+        ? `질문 은행 판이 바뀌어(${def.bankVersion} → ${weekBankVersion}) 문장이 같은 질문으로 다시 찾았습니다.`
+        : missingWhy === 'bank-changed'
+          ? `질문 은행 판이 바뀌었습니다(${def.bankVersion} → ${weekBankVersion}).`
+          : ''
+    return {
+      id: def.id,
+      kind: 'content',
+      title: `${def.name} 콘텐츠 보강`,
+      badge: '추가 글',
+      evidence: [lostNote, noAnswerNote, byTextNote, missingNote].filter(Boolean).join(' '),
+      questionIds: ordered.map((q) => q.id),
+      questionTexts: [...def.questionTexts],
+      reach: lost.length,
+      satisfied: false,
+      status: 'todo',
+      publishedUrls: [],
+      citedPublishedUrls: [],
+      doneSignal: `다음 측정에서 고른 질문들의 패 판정이 줄면 진척`,
+      extra: {
+        name: def.name,
+        ...(def.angle ? { angle: def.angle } : {}),
+        how: found.how,
+        missingTexts: found.missingTexts,
+        ...(missingWhy ? { missingWhy } : {}),
+        won,
+        noAnswer,
+        topic: extraTopicSnapshot(def),
+      },
+    }
+  })
+  return { actions, claimed }
+}
+
+/**
+ * 추가 글의 이번 주 형편 — 카드 머리 · 글 목록 · 「모두 이기고 있어요」 줄이 같은 말을 쓴다. reach는 진 질문만 세므로, reach 0만으로
+ * 「모두 이김」이라 하면 무승부 · 되물음 · 응답 없는 질문까지 이김이 된다.
+ * - unknown: 이번 주 결과가 있는 질문이 하나도 없다(못 찾았거나 응답이 없다) — 0개가 아니라 확인 불가다.
+ * - losing: 밀리는 질문이 있다.
+ * - all-win: 고른 질문을 모두 찾았고 모두 이겼다.
+ * - no-loss: 밀리는 질문은 없지만 모두 이긴 것은 아니다(무승부 · 되물음 · 응답 없음 · 못 찾은 질문이 있다).
+ * 추가 글이 아니면 null.
+ */
+export type ExtraStanding = 'unknown' | 'losing' | 'all-win' | 'no-loss'
+export function extraStandingOf(action: Pick<GapAction, 'extra' | 'questionIds' | 'reach'>): ExtraStanding | null {
+  const extra = action.extra
+  if (!extra) return null
+  const found = action.questionIds.length
+  if (found - extra.noAnswer <= 0) return 'unknown'
+  if (action.reach > 0) return 'losing'
+  if (extra.missingTexts.length === 0 && extra.won === found) return 'all-win'
+  return 'no-loss'
 }
 
 /**
@@ -862,6 +1009,10 @@ function publishedHitsOf(
 /**
  * posts는 집행 원장(server/publishedPosts.ts) — 뺀 기록이 섞여 와도 된다(여기서 거른다). weekOf는 analyses의 주차로, 측정 시각이
  * 없는 옛 기록에서 올린 날과 측정 시점을 견줄 때 쓴다.
+ *
+ * opts는 추가 글 정의와 이 주를 측정한 은행 판(데모 은행이거나 모르면 null)이다. 없거나 정의가 비어 있으면 결과가 예전과 같다 —
+ * 정기진단 보고서(recommendationEvidence)와 기존 검사는 넘기지 않는다. 은행을 읽지 못한 주(`content:`)에는 추가 글을 만들지 않는다.
+ * 등재형 항목은 바꾸지 않는다 — 채널의 질문은 여전히 카테고리 무관 밀린 질문 전부라, 어느 글에 붙일지는 올리기 목록이 정한다.
  */
 export function computeGapActions(
   analyses: QuestionRepeatAnalysis[],
@@ -870,6 +1021,7 @@ export function computeGapActions(
   states: ActionStateMap = {},
   posts: PublishedPost[] = [],
   weekOf = '',
+  opts: { extraArticles?: ExtraArticle[]; bankVersion?: string | null } = {},
 ): GapActionPlan {
   const rows = computeQuestionWinLoss(analyses, questions)
   // 은행에서 이 주 질문의 유형을 하나라도 찾았나 — 못 찾으면 카테고리 무관 질문을 가릴 수 없어 밀린 질문 전부를 글에 넣는다.
@@ -884,7 +1036,10 @@ export function computeGapActions(
     inArticle,
     bankKnown,
   )
-  const content = contentActions(rows, inArticle, bankKnown)
+  const extras = bankKnown
+    ? extraContentActions(opts.extraArticles ?? [], rows, questions, opts.bankVersion)
+    : { actions: [], claimed: new Set<string>() }
+  const content = [...contentActions(rows, inArticle, bankKnown, extras.claimed), ...extras.actions]
   const namedById = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
   const otherLost: OtherLostQuestion[] = rows
     .filter((r) => r.verdict === 'loss' && !inArticle(r))

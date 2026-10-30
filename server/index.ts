@@ -9,6 +9,7 @@ import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
 import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
+import { createExtraArticle, ExtraArticlesError, patchExtraArticle, readExtraArticles } from './extraArticles.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -41,6 +42,7 @@ import { publicCollectorError } from './aeo/networkSafety.js';
 import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, photosAllowed, type PhotoPick } from '../src/lib/articlePhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
+import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
 import { extractFactCandidates } from './factExtract.js';
 import { normalizeFactGraph, readFactGraphFile, writeFactGraphFile } from './factGraphStore.js';
 import { normalizeBrandPageUrl, writeBrandPageUrl } from './brandPageStore.js';
@@ -692,6 +694,8 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
             ? (b.questionTexts as unknown[]).filter((x): x is string => typeof x === 'string')
             : [],
           evidence: typeof b.evidence === 'string' ? b.evidence : '',
+          // 추가 글만 보낸다 — 다룰 각도와 이미 쓴 본 글의 제목 · 소제목. 길이를 자르고, 모양이 틀리면 버린다(없이도 브리프는 된다).
+          ...briefFocusOf(b.angle, b.avoid),
         },
         language: tenant.questionLanguage,
       },
@@ -1293,6 +1297,52 @@ app.put('/api/tenants/:tenantId/photo-rights', async (req, res) => {
     res.json(await updatePublishSettings(tenant.tenantId, (cur) => ({ ...cur, photoRights: { confirmedAt, ...(medical ? { medical: true as const } : {}) } })));
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 추가 글 — 본 글에서 질문 몇 개를 떼어 따로 쓰는 글의 정의(server/extraArticles.ts · src/lib/extraArticles.ts). 데스크톱·로컬 전용이다
+// (Vercel 함수는 12/12 — 웹은 404를 「기능 없음」으로 읽고 칸을 숨긴다). 오류는 이유와 함께 돌려준다(400 잘못된 값 · 409 다른 글과
+// 부딪힘 · 500 파일이 깨짐 — 쓰지 않는다).
+function sendExtraArticlesError(res: import('express').Response, err: unknown) {
+  res.status(err instanceof ExtraArticlesError ? err.status : 500).json({ error: err instanceof Error ? err.message : String(err) });
+}
+
+app.get('/api/extra-articles/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await readExtraArticles(tenant.tenantId));
+  } catch (err) {
+    sendExtraArticlesError(res, err);
+  }
+});
+
+app.post('/api/extra-articles/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await createExtraArticle(tenant.tenantId, req.body ?? {}));
+  } catch (err) {
+    sendExtraArticlesError(res, err);
+  }
+});
+
+app.patch('/api/extra-articles/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await patchExtraArticle(tenant.tenantId, req.body ?? {}));
+  } catch (err) {
+    sendExtraArticlesError(res, err);
   }
 });
 
