@@ -26,11 +26,14 @@ import { channelStyleOf } from '../prompts/b9d-channel-adapt'
  *   플랫폼이 아닌 채널(위키 · 여행 사이트 등)은 같은 업체를 여러 번 올릴 곳이 아니라 **한 줄**이고, 본 글을 먼저 본다: 본 글(topic:이
  *   아닌 글)로 올렸거나 그 글과 겹치면 그 글, 아니면 가장 많이 겹치는 추가 글, 그래도 아니지만 이미 올린 곳이면 본 글. 「덮는 글 없는
  *   채널」은 어느 글도 받지 못했을 때만 생긴다. 이미 올린 곳이 다른 글로 넘어가면 「본문 다시 복사」가 엉뚱한 글을 복사한다 — 그래서
- *   본 글로 올린 적이 없고 살아 있는 추가 글로만 올린 곳은 그 추가 글에 둔다.
+ *   본 글로 올린 기록이 없고 살아 있는 추가 글로만 올린 곳은 그 추가 글에 둔다. 「집행함」만으로는 본 글로 올렸다고 보지 않는다 —
+ *   추가 글로 올린 단일 채널도 「집행함」이 된다. 본 글 줄을 붙이는 「이미 올린 곳」도 topic:이 아닌 기록과 집행 상태로만 본다 — 추가 글
+ *   기록까지 세면 추가 글만 올린 플랫폼에 아무도 쓰지 않은 본 글 줄이 생긴다.
  *
- * 「올림」은 줄마다 그 글의 기록으로 판정한다(PublishRow.hits). 채널 항목 하나에 여러 글의 기록이 모이기 때문이다. 추가 글의 채널 줄은
- * 그 글의 기록만 보고, 기록할 때 채널 항목의 집행 상태를 바꾸지 않는다(recordInputOf). 그 밖의 줄은 지금처럼 집행 상태와 기록으로 보되
- * topic: 기록은 뺀다 — 「목록에서 빼기」로 치운 추가 글의 기록도 본 글 줄을 「올림」으로 만들지 않는다.
+ * 「올림」은 줄마다 그 글의 기록으로 판정한다(PublishRow.hits). 채널 항목 하나에 여러 글의 기록이 모이기 때문이다. 추가 글의 블로그
+ * 플랫폼 줄은 그 글의 기록만 보고, 기록할 때 채널 항목의 집행 상태를 바꾸지 않는다(recordInputOf) — 집행 상태는 그 플랫폼의 본 글 줄
+ * 것이다. 그 밖의 줄은 지금처럼 집행 상태와 기록으로 보되 topic: 기록은 뺀다 — 「목록에서 빼기」로 치운 추가 글의 기록도 본 글 줄을
+ * 「올림」으로 만들지 않는다. 단일 채널은 줄이 하나라 추가 글이 맡아도 집행 상태를 함께 쓴다 — 그 글을 치워도 그 채널은 「올림」으로 남는다.
  */
 
 export type PublishRowKind = 'own' | 'channel' | 'orphan'
@@ -210,11 +213,13 @@ export function buildPublishPlan(
     }
   })
 
-  // 글이 덮는 채널 줄. 추가 글의 줄은 그 글의 기록만으로 「올림」을 본다 — 채널 항목의 집행 상태는 본 글 줄의 것이다(recordInputOf).
+  // 글이 덮는 채널 줄. 추가 글의 줄은 그 글의 기록만 보인다. 추가 글의 플랫폼 줄은 그 기록만으로 「올림」을 본다 — 플랫폼 항목의 집행
+  // 상태는 본 글 줄의 것이다(recordInputOf). 단일 채널은 줄이 하나라 누가 맡든 집행 상태도 본다.
   const channelRow = (ch: GapAction, article: PublishArticle, questionIds: string[], key = ch.id): PublishRow => {
     const id = article.action.id
     const extra = isExtraArticleId(id)
     const records = extra ? recordsOf(ch, (a) => a === id, true) : recordsOf(ch, notExtra, false)
+    const ownState = extra && isBlogPlatformChannel(ch)
     return {
       key,
       kind: 'channel',
@@ -229,7 +234,7 @@ export function buildPublishPlan(
       locked: !article.confirmed,
       ...records,
       anchor: false,
-      done: extra ? records.hits.length > 0 : isPublishedIn(records, ch),
+      done: ownState ? records.hits.length > 0 : isPublishedIn(records, ch),
     }
   }
   // 본 글이 없는 주(카테고리 무관 질문을 모두 이긴 주)의 이미 올린 곳 — 올린 주소만 다루는 줄이다. 따로 쓸 글로 만들면 잠긴 줄이
@@ -267,12 +272,14 @@ export function buildPublishPlan(
   const orphanArticles: PublishArticle[] = []
   for (const ch of openListing) {
     const baseBest = bestOf(ch, baseArticles)
+    // 본 글(topic:이 아닌 글)로 올린 곳 — topic: 기록은 세지 않는다. 추가 글 기록까지 세면 추가 글만 올린 곳에 빈 본 글 줄이 붙는다.
+    const baseRecords = recordsOf(ch, notExtra, false)
     const here: PublishRow[] = []
     if (isBlogPlatformChannel(ch)) {
-      // 본 글 줄 — 배정은 예전과 같다. 이미 올린 곳은 이번 주 겹치는 질문이 없어도 본 글 줄로 남긴다 — 따로 쓸 글로 쪼개면 올린 주소가
-      // 「글 만들러 가기」 뒤로 숨고, 새 기록이 다른 글로 적힌다.
+      // 본 글 줄 — 배정은 예전과 같다. 본 글로 이미 올린 곳은 이번 주 겹치는 질문이 없어도 본 글 줄로 남긴다 — 따로 쓸 글로 쪼개면 올린
+      // 주소가 「글 만들러 가기」 뒤로 숨고, 새 기록이 다른 글로 적힌다.
       if (baseBest) here.push(channelRow(ch, baseBest.article, baseBest.qs))
-      else if (main && isPublishedAction(ch)) here.push(channelRow(ch, main, []))
+      else if (main && isPublishedIn(baseRecords, ch)) here.push(channelRow(ch, main, []))
       else if (!main && isPublishedIn(addressRecords(ch), ch)) here.push(addressRow(ch))
       // 추가 글 줄 — 그 글의 질문과 겹치는 곳, 이 브랜드가 이미 글을 올린 곳(계정이 있다), 그 글로 이미 올린 곳.
       for (const x of extraArticles) {
@@ -280,14 +287,14 @@ export function buildPublishPlan(
         if (qs.length > 0 || isPublishedAction(ch) || postedBy(ch, x.action.id)) here.push(channelRow(ch, x, qs, `${x.action.id}|${ch.id}`))
       }
     } else {
-      // 단일 채널 — 한 줄, 본 글 먼저. 본 글로 올린 적이 없고 살아 있는 추가 글로만 올린 곳은 그 글에 둔다(올린 글과 다시 복사할 글이 같게).
-      const byBase = isPublishedIn(recordsOf(ch, notExtra, false), ch)
-      const owner = byBase ? undefined : extraArticles.find((x) => postedBy(ch, x.action.id))
+      // 단일 채널 — 한 줄, 본 글 먼저. 본 글로 올린 기록이 없고 살아 있는 추가 글로만 올린 곳은 그 글에 둔다(올린 글과 다시 복사할 글이
+      // 같게). 「집행함」은 여기서 보지 않는다 — 추가 글로 올려도 집행함이 되고, 사람이 바꿀 수도 있다.
+      const owner = baseRecords.publishedUrls.length > 0 ? undefined : extraArticles.find((x) => postedBy(ch, x.action.id))
       const extraBest = bestOf(ch, extraArticles)
       if (owner) here.push(channelRow(ch, owner, overlap(ch.questionIds, qsets.get(owner.action.id)!)))
       else if (baseBest) here.push(channelRow(ch, baseBest.article, baseBest.qs))
-      else if (main && isPublishedAction(ch)) here.push(channelRow(ch, main, []))
-      else if (!main && byBase) here.push(addressRow(ch))
+      else if (main && isPublishedIn(baseRecords, ch)) here.push(channelRow(ch, main, []))
+      else if (!main && isPublishedIn(baseRecords, ch)) here.push(addressRow(ch))
       else if (extraBest) here.push(channelRow(ch, extraBest.article, extraBest.qs))
       else if (!main && isPublishedAction(ch)) here.push(addressRow(ch))
     }
@@ -298,7 +305,6 @@ export function buildPublishPlan(
     }
     const article = articleOf(ch, drafts)
     orphanArticles.push(article)
-    const records = recordsOf(ch, notExtra, false)
     rows.push({
       key: ch.id,
       kind: 'orphan',
@@ -311,9 +317,9 @@ export function buildPublishPlan(
       openUrl: ch.listedPage ?? openUrlOf(ch.targetDomain),
       needsAdapt: false,
       locked: !article.confirmed,
-      ...records,
+      ...baseRecords,
       anchor: false,
-      done: isPublishedIn(records, ch),
+      done: isPublishedIn(baseRecords, ch),
     })
   }
 
@@ -337,9 +343,10 @@ export function pregenerateTargets(plan: PublishPlan, n = 2): PublishRow[] {
 }
 
 /**
- * 이 줄의 「올렸어요」가 원장에 남길 글 · 대상 · 경로. 추가 글의 채널 줄은 markDone false — 채널 항목의 집행 상태는 본 글 줄의 것이라,
- * 추가 글을 티스토리에 올려도 본 글의 티스토리 줄이 「올림」이 되지 않는다. 추가 글의 기록에는 만들 때의 질문 스냅샷을 싣는다(원장
- * 검사 checkTopic을 늘 통과한다).
+ * 이 줄의 「올렸어요」가 원장에 남길 글 · 대상 · 경로. 추가 글의 블로그 플랫폼 줄은 markDone false — 플랫폼 항목의 집행 상태는 본 글
+ * 줄의 것이라, 추가 글을 티스토리에 올려도 본 글의 티스토리 줄이 「올림」이 되지 않는다. 추가 글이 맡은 단일 채널 줄은 markDone true —
+ * 줄이 하나라 집행 상태도 그 줄의 것이고, 그 글을 목록에서 빼도 이미 등록한 곳이 「올리기」로 돌아가지 않는다. 추가 글의 기록에는 만들
+ * 때의 질문 스냅샷을 싣는다(원장 검사 checkTopic을 늘 통과한다).
  */
 export function recordInputOf(row: PublishRow): Pick<RecordPostInput, 'articleId' | 'targetActionId' | 'via' | 'markDone' | 'topic'> {
   const articleId = row.article.action.id
@@ -348,7 +355,7 @@ export function recordInputOf(row: PublishRow): Pick<RecordPostInput, 'articleId
     articleId,
     targetActionId: row.target.id,
     via: row.kind,
-    markDone: !(row.kind === 'channel' && isExtraArticleId(articleId)),
+    markDone: !(row.kind === 'channel' && isExtraArticleId(articleId) && isBlogPlatformChannel(row.target)),
     ...(topic?.bankVersion ? { topic: extraTopicSnapshot({ ...topic, bankVersion: topic.bankVersion }) } : {}),
   }
 }

@@ -401,7 +401,8 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   const recX1Own = rec(pub.rows.find((r) => r.key === `own:${x1.id}`));
   ok('기록 — 추가 글 자사 줄: markDone true · 스냅샷', recX1Own?.markDone === true && JSON.stringify(recX1Own.topic) === snapX1 && recX1Own.via === 'own' && recX1Own.targetActionId === x1.id);
   const recTrip = rec(rowsOf(trip.id)[0]);
-  ok('기록 — 추가 글이 맡은 단일 채널 줄: markDone false · 스냅샷', recTrip?.markDone === false && JSON.stringify(recTrip.topic) === JSON.stringify(extraTopicSnapshot(x2Def)));
+  ok('기록 — 추가 글이 맡은 단일 채널 줄: markDone true(줄이 하나라 집행 상태도 그 줄 것) · 스냅샷', recTrip?.markDone === true && JSON.stringify(recTrip.topic) === JSON.stringify(extraTopicSnapshot(x2Def)) && recTrip.articleId === x2.id && recTrip.targetActionId === trip.id);
+  ok('기록 — 추가 글이 맡은 브런치(플랫폼) 줄은 markDone false', rec(rowOf(x2Def.id, brunch.id))?.markDone === false);
   const recMain = rec(mainTistory);
   ok('기록 — 본 글 채널 줄: markDone true · 스냅샷 없음', recMain?.markDone === true && !('topic' in recMain) && recMain.articleId === MAIN && recMain.via === 'channel');
   const recCafe = rec(rowsOf(cafe.id)[0]);
@@ -415,6 +416,34 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   const yeogiRows = noMain.rows.filter((r) => r.target.id === yeogi.id);
   ok('본 글 없음 — 이미 올린 단일 채널은 추가 글로 가지 않고 주소 줄', yeogiRows.length === 1 && yeogiRows[0]?.article.action.id === yeogi.id && yeogiRows[0].done && !yeogiRows[0].needsAdapt);
   ok('본 글 없음 — 따로 쓸 글 없음', noMain.rows.every((r) => r.kind !== 'orphan'));
+
+  // 추가 글로 올린 단일 채널 — 「올렸어요」(markDone true)가 집행함으로 바꾼다. 집행함이어도 그 추가 글 줄에 남아 올린 주소를 보이고,
+  // 그 글을 목록에서 빼도 이미 등록한 곳이 「올리기」로 돌아가지 않는다(같은 업체 중복 등록 방지).
+  const x2Trip = post('https://www.trip.com/fake/1', x2Def.id, trip.id, 'channel');
+  const tripPosted = channel(trip.id, ['q9'], [x2Trip], { badge: '후기·예약 플랫폼', status: 'done' });
+  const tripRows = (p: ReturnType<typeof buildPublishPlan>) => p.rows.filter((r) => r.target.id === trip.id);
+  const postedTrip = tripRows(buildPublishPlan([main, x2], [tripPosted], null));
+  ok('단일 — 추가 글로 올려 집행함이어도 그 추가 글 줄(올림 · 올린 주소)', postedTrip.length === 1 && postedTrip[0]?.article.action.id === x2.id && postedTrip[0].done && postedTrip[0].publishedUrls.join() === x2Trip.url && postedTrip[0].hits.length === 1);
+  const tripTodo = { ...tripPosted, status: 'todo' as const };
+  const todoTrip = tripRows(buildPublishPlan([main, x2], [tripTodo], null));
+  ok('단일 — 같은 곳이 집행 상태 todo여도 같은 줄(집행함은 줄 배정을 바꾸지 않음)', todoTrip.length === 1 && todoTrip[0]?.article.action.id === x2.id && todoTrip[0].done);
+  const mainWithQ9 = action(MAIN, 'content', [...main.questionIds, 'q9']);
+  const backTrip = tripRows(buildPublishPlan([mainWithQ9], [tripPosted], null));
+  ok('단일 — 그 추가 글을 빼서 질문이 본 글로 돌아와도 「올림」(본 글 줄 · 한 줄)', backTrip.length === 1 && backTrip[0]?.article.action.id === MAIN && backTrip[0].kind === 'channel' && backTrip[0].done);
+  const apartPlan = buildPublishPlan([main], [tripPosted], null);
+  const apartTrip = tripRows(apartPlan);
+  ok('단일 — 빼고 나서 본 글과도 안 겹치면 이미 올린 곳이라 본 글 줄 · 「올림」(따로 쓸 글 없음)', apartTrip.length === 1 && apartTrip[0]?.article.action.id === MAIN && apartTrip[0].questionIds.length === 0 && apartTrip[0].done && apartPlan.rows.every((r) => r.kind !== 'orphan'));
+
+  // 추가 글만 올린 플랫폼 — 본 글과 겹치지 않으면 본 글 줄을 붙이지 않는다. 아무도 쓰지 않은 줄이 할 일 · 진행 분모에 더해지고 채널 앵커를
+  // 가져가면 안 된다. 본 글이 올렸거나(기록 · 집행함) 겹칠 때만 본 글 줄이다.
+  const x2Tistory = post('https://fake-b.tistory.com/2', x2Def.id, tistory.id, 'channel');
+  const tistoryX2 = channel(tistory.id, ['q9'], [x2Tistory]);
+  const extraOnly = buildPublishPlan([main, x2], [tistoryX2], null);
+  const extraOnlyRows = extraOnly.rows.filter((r) => r.target.id === tistory.id);
+  ok('플랫폼 — 추가 글만 올린 곳은 그 글 줄 하나(본 글 줄 없음 · 앵커 · 올림)', extraOnlyRows.length === 1 && extraOnlyRows[0]?.key === `${x2.id}|${tistory.id}` && extraOnlyRows[0].anchor && extraOnlyRows[0].done);
+  ok('플랫폼 — 추가 글만 올려도 진행 분모가 늘지 않는다(자사 2 + 글 ② 티스토리)', extraOnly.rows.length === 3 && extraOnly.done === 1);
+  const tistoryX2Marked = channel(tistory.id, ['q9'], [x2Tistory], { status: 'done' });
+  ok('플랫폼 — 본 글 집행함(옛 기록)이면 겹치지 않아도 본 글 줄이 앵커', buildPublishPlan([main, x2], [tistoryX2Marked], null).rows.find((r) => r.target.id === tistory.id && r.anchor)?.article.action.id === MAIN);
 
   // 추가 글이 없으면 줄의 기록은 항목 값 그대로(화면이 row.target.* 대신 row.*를 써도 같다)
   const plain = buildPublishPlan([main], [naver, yeogi], null);
