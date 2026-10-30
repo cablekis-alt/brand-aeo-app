@@ -16,6 +16,7 @@
  *
  * 서버(server/extraArticles.ts)와 화면이 같은 검사를 쓰도록 순수 함수만 둔다. 서버가 import하므로 상대 import는 .js로 쓴다.
  */
+import { BRIEF_FOCUS_LIMITS } from '../prompts/b9b-content-brief.js'
 import type { TopicSnapshot } from './api.js'
 import type { QuestionSpec } from './types.js'
 
@@ -54,6 +55,20 @@ export const EXTRA_LIMITS = {
 } as const
 
 export const isExtraArticleId = (id: string): boolean => id.startsWith('topic:')
+
+const ANGLE_JOINER = ' — '
+
+/**
+ * 브리프에 보내는 다룰 각도 — 「이름 — 각도」, 각도가 없으면 이름만. 브리프는 이 줄을 BRIEF_FOCUS_LIMITS.angle에서 자르므로
+ * 저장할 때 이 줄 전체가 그 상한 안에 드는지 함께 검사한다(넘으면 사람이 적은 각도 뒷부분이 알림 없이 빠진다).
+ */
+export function extraBriefAngle(name: string, angle: string | undefined): string {
+  const a = angle?.trim()
+  return a ? `${name}${ANGLE_JOINER}${a}` : name
+}
+
+/** 주제 이름과 각도를 합친 글자 수의 상한 — 이을 때 넣는 「 — 」 세 글자를 뺀다. */
+export const NAME_AND_ANGLE_LIMIT = BRIEF_FOCUS_LIMITS.angle - ANGLE_JOINER.length
 
 /** 질문 은행 화면(QuestionBank.tsx actionFromQuestions)과 같은 규칙 — 기본 정렬(코드 단위)로 정렬해 +로 잇는다. */
 export function topicArticleId(questionIds: string[]): string {
@@ -135,6 +150,13 @@ function angleOf(raw: unknown): string | undefined | { error: string } {
 
 const isError = (v: unknown): v is { error: string } => typeof v === 'object' && v !== null && 'error' in v
 
+/** 이름과 각도가 브리프의 각도 줄 하나에 다 들어가는지 — 하나씩은 상한 안이어도 합치면 넘을 수 있다. */
+function nameAndAngleError(name: string, angle: string | undefined): string | null {
+  if (extraBriefAngle(name, angle).length <= BRIEF_FOCUS_LIMITS.angle) return null
+  const used = name.length + (angle?.length ?? 0)
+  return `주제 이름과 다룰 각도는 합쳐서 ${NAME_AND_ANGLE_LIMIT}자까지 쓸 수 있어요(지금 ${used}자). 각도를 줄여 주세요.`
+}
+
 /** 살아 있는 다른 글과 질문 문장이 겹치면 그 이유. */
 function overlapOf(article: Pick<ExtraArticle, 'id' | 'questionTexts'>, all: ExtraArticle[]): string | null {
   const mine = new Set(article.questionTexts.map(questionTextKey))
@@ -178,6 +200,8 @@ export function checkNewExtraArticle(input: unknown, all: ExtraArticle[], now: s
   if (isError(name)) return bad(name.error)
   const angle = angleOf(raw.angle)
   if (isError(angle)) return bad(angle.error)
+  const tooLong = nameAndAngleError(name, angle)
+  if (tooLong) return bad(tooLong)
   const createdWeek = isStr(raw.createdWeek) && raw.createdWeek.trim() ? raw.createdWeek.trim().slice(0, 20) : undefined
   const questionTexts = pairs.map((p) => p.text)
 
@@ -224,6 +248,10 @@ export function checkExtraArticlePatch(input: unknown, all: ExtraArticle[], now:
     if (isError(angle)) return bad(angle.error)
     if (angle) next.angle = angle
     else delete next.angle
+  }
+  if (raw.name !== undefined || raw.angle !== undefined) {
+    const tooLong = nameAndAngleError(next.name, next.angle)
+    if (tooLong) return bad(tooLong)
   }
   if (raw.removed === true && !found.removedAt) next.removedAt = now
   if (raw.removed === false && found.removedAt) {

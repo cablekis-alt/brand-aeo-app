@@ -18,7 +18,7 @@ process.env.APP_DATA_DIR = root;
 const { createExtraArticle, patchExtraArticle, readExtraArticles } = await import('../server/extraArticles');
 const { addPublishedPost } = await import('../server/publishedPosts');
 const { readActionStates } = await import('../server/actionStates');
-const { EXTRA_LIMITS, extraTopicSnapshot, topicArticleId } = await import('../src/lib/extraArticles');
+const { EXTRA_LIMITS, NAME_AND_ANGLE_LIMIT, extraTopicSnapshot, topicArticleId } = await import('../src/lib/extraArticles');
 
 const checks: [string, boolean][] = [];
 const ok = (label: string, cond: boolean) => checks.push([label, cond]);
@@ -73,6 +73,10 @@ try {
   ok('이름이 없으면 400', (await fails(createExtraArticle(T, input(['c1-007'], ['가상 질문 일곱'], { name: '  ' })))) === 400);
   ok(`이름이 ${EXTRA_LIMITS.name}자를 넘으면 400`, (await fails(createExtraArticle(T, input(['c1-007'], ['가상 질문 일곱'], { name: '가'.repeat(EXTRA_LIMITS.name + 1) })))) === 400);
   ok(`각도가 ${EXTRA_LIMITS.angle}자를 넘으면 400`, (await fails(createExtraArticle(T, input(['c1-007'], ['가상 질문 일곱'], { angle: '가'.repeat(EXTRA_LIMITS.angle + 1) })))) === 400);
+  ok(
+    `이름 + 각도가 합쳐 ${NAME_AND_ANGLE_LIMIT}자를 넘으면 400(브리프 각도 줄이 잘리지 않게)`,
+    (await fails(createExtraArticle(T, input(['c1-007'], ['가상 질문 일곱'], { name: '가'.repeat(40), angle: '각'.repeat(190) })))) === 400,
+  );
   const many = Array.from({ length: EXTRA_LIMITS.questions + 1 }, (_, i) => `m-${String(i).padStart(3, '0')}`);
   ok(`질문이 ${EXTRA_LIMITS.questions}개를 넘으면 400`, (await fails(createExtraArticle(T, input(many, many.map((id) => `가상 ${id}`))))) === 400);
   ok('질문이 없으면 400', (await fails(createExtraArticle(T, input([], [])))) === 400);
@@ -121,6 +125,11 @@ try {
   ok('바꿀 것이 없으면 400', (await fails(patchExtraArticle(T, { id: 'topic:c1-011+c1-012' }))) === 400);
   ok('모르는 글은 400', (await fails(patchExtraArticle(T, { id: 'topic:none', removed: true }))) === 400);
   ok('removed가 참거짓이 아니면 400', (await fails(patchExtraArticle(T, { id: 'topic:c1-011+c1-012', removed: 'yes' }))) === 400);
+  const fullAngle = '각'.repeat(NAME_AND_ANGLE_LIMIT - '가상 주차 안내'.length);
+  ok('이름과 합쳐 상한까지 각도를 고칠 수 있다', (await patchExtraArticle(T, { id: 'topic:c1-011+c1-012', angle: fullAngle })).article.angle === fullAngle);
+  const renameOver = await fails(patchExtraArticle(T, { id: 'topic:c1-011+c1-012', name: '가상 주차 안내 더' }));
+  const afterOver = (await readExtraArticles(T)).articles.find((a) => a.id === 'topic:c1-011+c1-012');
+  ok('그 뒤 이름을 늘려 합쳐 넘으면 400 · 저장한 값은 그대로', renameOver === 400 && afterOver?.name === '가상 주차 안내' && afterOver.angle === fullAngle);
 
   // 8) 동시에 두 건 — 쓰기 줄이 순서를 지킨다
   const T2 = 'fake-extra-concurrent';

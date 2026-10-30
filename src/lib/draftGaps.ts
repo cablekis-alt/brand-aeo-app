@@ -1,6 +1,7 @@
 import { briefFocusOf } from '../prompts/b9b-content-brief'
 import type { ContentDraft } from '../prompts/b9c-content-draft'
 import type { ContentBriefInput, GapFill, StoredDraft } from './api'
+import { extraBriefAngle } from './extraArticles'
 import type { GapAction } from './gapActions'
 import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
 
@@ -46,7 +47,7 @@ export function briefInputOf(
     evidence: action.evidence,
   }
   if (!action.extra) return base
-  const angle = action.extra.angle?.trim() ? `${action.extra.name} — ${action.extra.angle.trim()}` : action.extra.name
+  const angle = extraBriefAngle(action.extra.name, action.extra.angle)
   const main = mainDraft ? effectiveDraft(mainDraft) : null
   return { ...base, ...briefFocusOf(angle, main ? { title: main.title, headings: main.sections.map((s) => s.heading) } : undefined) }
 }

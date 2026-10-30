@@ -65,7 +65,10 @@ export interface BriefAvoid {
   headings: string[];
 }
 
-/** 각도 · 피할 글의 길이 상한. 넘는 값은 자른다 — 프롬프트가 본 글 원고만큼 길어지지 않게. */
+/**
+ * 각도 · 피할 글의 길이 상한. 넘는 값은 자른다 — 프롬프트가 본 글 원고만큼 길어지지 않게. 추가 글은 「이름 — 각도」 전체가 각도
+ * 상한 안에 들도록 저장할 때 검사한다(src/lib/extraArticles.ts) — 잘림은 저장 검사를 거치지 않은 요청에만 걸린다.
+ */
 export const BRIEF_FOCUS_LIMITS = {
   angle: 200,
   /** 피할 소제목 수. */

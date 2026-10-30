@@ -32,8 +32,11 @@ import {
   aliveExtraArticles,
   checkExtraArticlePatch,
   checkNewExtraArticle,
+  EXTRA_LIMITS,
+  extraBriefAngle,
   extraTopicSnapshot,
   isExtraArticleId,
+  NAME_AND_ANGLE_LIMIT,
   normalizeExtraArticles,
   questionTextKey,
   resolveExtraArticle,
@@ -144,6 +147,28 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   ok('빼기는 removedAt만 남긴다', patched.ok && patched.article.removedAt === NOW && patched.article.name === good.name && !patched.revived);
   const noop = checkExtraArticlePatch({ id: good.id, removed: true }, [removedGood], NOW);
   ok('이미 뺀 글을 다시 빼도 처음 뺀 시각을 둔다', noop.ok && noop.article.removedAt === removedGood.removedAt);
+
+  // 이름 + 각도 — 브리프는 「이름 — 각도」 한 줄을 BRIEF_FOCUS_LIMITS.angle에서 자른다. 하나씩은 상한 안이어도 합쳐 넘으면 저장하지 않는다.
+  ok('이름 + 각도 상한 = 브리프 각도 상한 - 「 — 」', NAME_AND_ANGLE_LIMIT === BRIEF_FOCUS_LIMITS.angle - 3 && NAME_AND_ANGLE_LIMIT < EXTRA_LIMITS.name + EXTRA_LIMITS.angle);
+  ok('브리프 각도 줄 — 「이름 — 각도」, 각도가 비면 이름만', extraBriefAngle('조용한 방', '  방음 ') === '조용한 방 — 방음' && extraBriefAngle('조용한 방', '  ') === '조용한 방' && extraBriefAngle('조용한 방', undefined) === '조용한 방');
+  const newWith = (name: string, angle: string) =>
+    checkNewExtraArticle({ id: 'topic:c1-013+c1-014', name, angle, bankVersion: 'v6', questionIds: ['c1-013', 'c1-014'], questionTexts: ['가상 질문 열셋', '가상 질문 열넷'] }, [good], NOW);
+  const over = newWith('이'.repeat(40), '각'.repeat(190));
+  ok('새 글 — 이름 40 + 각도 190(하나씩은 상한 안)은 합쳐 넘어 400', !over.ok && over.status === 400 && over.error.includes(`${NAME_AND_ANGLE_LIMIT}자까지`) && over.error.includes('지금 230자'));
+  const atLimit = newWith('이'.repeat(40), '각'.repeat(NAME_AND_ANGLE_LIMIT - 40));
+  ok('새 글 — 합쳐 상한과 같으면 저장', atLimit.ok && atLimit.article.angle?.length === NAME_AND_ANGLE_LIMIT - 40);
+  ok('새 글 — 각도 하나만 200자를 넘으면 예전 문구', (() => {
+    const r = newWith('가상', '각'.repeat(201));
+    return !r.ok && r.status === 400 && r.error.startsWith('다룰 각도는 200자까지');
+  })());
+  const longAngled = def(['c1-021'], ['가상 질문 스물하나'], { name: '이'.repeat(20), angle: '각'.repeat(NAME_AND_ANGLE_LIMIT - 20) });
+  const renameOver = checkExtraArticlePatch({ id: longAngled.id, name: '이'.repeat(21) }, [longAngled], NOW);
+  ok('고치기 — 이름만 바꿔도 있던 각도와 합쳐 넘으면 400', !renameOver.ok && renameOver.status === 400 && renameOver.error.includes(`${NAME_AND_ANGLE_LIMIT}자까지`));
+  const angleOver = checkExtraArticlePatch({ id: longAngled.id, angle: '각'.repeat(NAME_AND_ANGLE_LIMIT - 19) }, [longAngled], NOW);
+  ok('고치기 — 각도만 바꿔도 있던 이름과 합쳐 넘으면 400', !angleOver.ok && angleOver.status === 400);
+  const renameShort = checkExtraArticlePatch({ id: longAngled.id, name: '이'.repeat(19), angle: '각'.repeat(NAME_AND_ANGLE_LIMIT - 19) }, [longAngled], NOW);
+  ok('고치기 — 합쳐 상한 안이면 저장', renameShort.ok && renameShort.article.name.length === 19 && renameShort.article.angle?.length === NAME_AND_ANGLE_LIMIT - 19);
+  ok('고치기 — 빼기만 할 때는 이름 · 각도를 다시 재지 않는다', checkExtraArticlePatch({ id: longAngled.id, removed: true }, [{ ...longAngled, name: '이'.repeat(60) }], NOW).ok);
 }
 
 // ── (b) 주간 계산 — computeGapActions opts ───────────────────────────────────────────────────────
@@ -571,6 +596,19 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   ok('요청 — 각도가 없으면 이름만 · 본 글 초안이 없으면 피할 글 없음', noAngle.angle === '조용한 방' && !('avoid' in noAngle));
   const longName = briefInputOf({ ...extraAction, extra: { ...extraAction.extra, name: '이'.repeat(60), angle: '각'.repeat(200) } }, undefined);
   ok('요청 — 이름 + 각도가 길면 200자로 자름(서버도 같은 상한)', longName.angle?.length === 200 && longName.angle.startsWith('이'.repeat(60)));
+  // 저장 검사를 거친 가장 긴 이름 + 각도는 화면 → 서버 → 프롬프트 어디서도 잘리지 않는다(각도 끝 글자까지 「다룰 각도」 줄에 들어감).
+  const stored = checkNewExtraArticle(
+    { id: 'topic:c1-031', name: '조'.repeat(EXTRA_LIMITS.name), angle: `${'각'.repeat(NAME_AND_ANGLE_LIMIT - EXTRA_LIMITS.name - 1)}끝`, bankVersion: 'v6', questionIds: ['c1-031'], questionTexts: ['가상 질문 서른하나'] },
+    [],
+    NOW,
+  );
+  const storedInput = stored.ok ? briefInputOf({ ...extraAction, extra: { ...extraAction.extra, name: stored.article.name, angle: stored.article.angle } }, undefined) : undefined;
+  const storedPrompt = storedInput ? buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, ...briefFocusOf(storedInput.angle, storedInput.avoid) } }) : undefined;
+  ok(
+    '요청 — 저장한 가장 긴 이름 + 각도는 잘리지 않고 각도 끝까지 프롬프트에 들어감',
+    stored.ok && storedInput?.angle === extraBriefAngle(stored.article.name, stored.article.angle) && storedInput.angle.length === BRIEF_FOCUS_LIMITS.angle &&
+      Boolean(storedPrompt?.user.includes(`다룰 각도: ${storedInput.angle} — 제목 후보와`)) && Boolean(storedInput.angle.endsWith('각끝')),
+  );
   const sent = buildContentBriefPrompt({ ...briefBase, action: { ...briefBase.action, ...briefFocusOf(withMain.angle, withMain.avoid) } });
   ok('요청 → 서버 → 프롬프트: 각도 줄과 본 글 소제목이 들어감', sent.user.includes('다룰 각도: 조용한 방 — 방음 · 층 고르는 법') && sent.user.includes('「가상시 숙소 고르는 법」') && sent.user.includes('\n- 편의시설 확인'));
 }
