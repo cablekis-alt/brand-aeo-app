@@ -10,12 +10,17 @@
  * 기존 검사가 그대로 돈다. 추가 글이 맡은 질문은 본 글에서 빠지되, 본 글이 비게 되면 빼지 않는다 — 본 글이 사라지면 그 글의 채널
  * 줄과 올린 기록이 갈 곳을 잃는다.
  *
+ * 올리기 목록(src/lib/publishPlan.ts buildPublishPlan): 채널 항목 하나에 본 글과 추가 글의 기록이 함께 모인다. 줄마다 그 글의 기록으로
+ * 「올림」을 보지 않으면 추가 글을 티스토리에 올린 순간 본 글의 티스토리 줄도 「올림」이 된다. 플랫폼이 아닌 채널은 한 줄 · 본 글 먼저 —
+ * 이미 올린 위키나 여행 사이트 줄이 추가 글로 넘어가면 「본문 다시 복사」가 엉뚱한 글을 복사한다.
+ *
  *   npx tsx scripts/verify-extra-articles.ts
  */
 import { analyzeCitationSources } from '../server/citationSources';
 import type { QuestionRepeatAnalysis } from '../server/types';
 import type { ActionStateMap, PublishedPost } from '../src/lib/api';
-import { computeGapActions, isOpenAction } from '../src/lib/gapActions';
+import { computeGapActions, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
+import { buildPublishPlan, recordInputOf, type PublishRow } from '../src/lib/publishPlan';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
 import {
   aliveExtraArticles,
@@ -286,6 +291,134 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   const skipped = find(plan({ extraArticles: [e2], bankVersion: 'v6' }, { [e2.id]: { status: 'skip', updatedAt: NOW } }), e2.id);
   ok('추가 글 — 콘텐츠형이라 보류는 읽지 않는다(본 글과 같은 규칙)', skipped?.status === 'todo');
   ok('추가 글 기록은 본 글에 붙지 않는다', (find(plan({ extraArticles: [e1, e2], bankVersion: 'v6' }, states, [ownPost]), MAIN)?.publishedUrls.length ?? -1) === 0);
+}
+
+// ── (c) 올리기 목록 — buildPublishPlan · recordInputOf ───────────────────────────────────────────
+{
+  const MAIN = 'content:category-agnostic';
+  const post = (url: string, articleId: string, targetActionId: string, via: PublishedPost['via']): PublishedPost => ({
+    id: `p-${url}`, url, key: url.replace(/^https?:\/\//, ''), publishedOn: '2026-10-20', publishedOnSource: 'user',
+    recordedAt: '2026-10-20T00:00:00Z', articleId, targetActionId, via,
+  });
+  const hit = (p: PublishedPost): PublishedHit => ({ post: p, timing: 'after', tally: null, variantCited: 0 });
+  const action = (id: string, kind: GapAction['kind'], questionIds: string[], extra: Partial<GapAction> = {}): GapAction => ({
+    id, kind, title: id, badge: kind === 'content' ? '콘텐츠' : '블로그 플랫폼', evidence: '', questionIds, questionTexts: questionIds,
+    reach: questionIds.length, satisfied: false, status: 'todo', publishedUrls: [], citedPublishedUrls: [], doneSignal: '', ...extra,
+  });
+  // 채널 항목 — 올린 기록은 계산(computeGapActions)처럼 대상 항목 하나에 글 구분 없이 모인다.
+  const channel = (id: string, questionIds: string[], posts: PublishedPost[], extra: Partial<GapAction> = {}): GapAction =>
+    action(id, 'listing', questionIds, {
+      targetDomain: id.replace(/^listing:(platform:)?/, ''),
+      publishedUrls: posts.map((p) => p.url),
+      ...(posts.length ? { publishedHits: posts.map(hit) } : {}),
+      ...extra,
+    });
+  const extraAction = (d: ExtraArticle, questionIds: string[], posts: PublishedPost[] = []): GapAction =>
+    action(d.id, 'content', questionIds, {
+      badge: '추가 글',
+      publishedUrls: posts.map((p) => p.url),
+      ...(posts.length ? { publishedHits: posts.map(hit) } : {}),
+      extra: { name: d.name, how: 'same-bank', missingTexts: [], topic: extraTopicSnapshot(d) },
+    });
+
+  const x1Def = def(['q7', 'q8'], ['q7 질문', 'q8 질문'], { name: '가상 코스' });
+  const x2Def = def(['q9'], ['q9 질문'], { name: '가상 지도' });
+  // 목록에서 뺀 추가 글 — 항목은 없지만 티스토리에 올린 기록은 원장에 남는다.
+  const goneId = 'topic:q10';
+
+  const main = action(MAIN, 'content', ['q1', 'q2', 'q3', 'q4', 'q5', 'q6']);
+  const x1Own = post('https://fake-brand.example/x1', x1Def.id, x1Def.id, 'own');
+  const x1 = extraAction(x1Def, ['q7', 'q8'], [x1Own]);
+  const x2 = extraAction(x2Def, ['q9']);
+
+  // 티스토리 — 글 ①(x1)과 치운 글만 올렸다. 본 글은 아직(집행 상태 todo).
+  const x1Tistory = post('https://fake-a.tistory.com/1', x1Def.id, 'listing:platform:tistory.com', 'channel');
+  const goneTistory = post('https://fake-a.tistory.com/9', goneId, 'listing:platform:tistory.com', 'channel');
+  const tistory = channel('listing:platform:tistory.com', ['q1', 'q7'], [x1Tistory, goneTistory], { citedPublishedUrls: [x1Tistory.url] });
+  // 네이버 블로그 — 본 글만 올렸다(「올렸어요」가 집행함으로 바꿨다). 글 ①과도 겹친다.
+  const mainNaver = post('https://blog.naver.com/fake/1', MAIN, 'listing:platform:blog.naver.com', 'channel');
+  const naver = channel('listing:platform:blog.naver.com', ['q2', 'q7'], [mainNaver], { status: 'done', citedPublishedUrls: [mainNaver.url] });
+  // 브런치 — 글 ②하고만 겹치고 아무도 올리지 않았다 → 추가 글 줄만, 따로 쓸 글 없음.
+  const brunch = channel('listing:platform:brunch.co.kr', ['q9'], []);
+  // 벨로그 — 본 글하고만 겹치고 아무도 올리지 않았다 → 본 글 줄만.
+  const velog = channel('listing:platform:velog.io', ['q3'], []);
+  // 단일 채널(플랫폼 아님)
+  const wiki = channel('listing:namu.wiki', ['q3', 'q9'], [], { badge: '위키' }); // 본 글과도 글 ②와도 겹침 → 본 글
+  const trip = channel('listing:trip.com', ['q9'], [], { badge: '후기·예약 플랫폼' }); // 글 ②하고만 겹침 → 글 ②(한 줄)
+  const legacyYeogi = post('https://www.yeogi.com/fake/1', 'listing:yeogi.com', 'listing:yeogi.com', 'channel');
+  const yeogi = channel('listing:yeogi.com', ['q9'], [legacyYeogi], { badge: '후기·예약 플랫폼', status: 'done' }); // 본 글(옛 기록)로 올림 · 글 ②와만 겹침
+  const x2Triple = post('https://triple.guide/fake/1', x2Def.id, 'listing:triple.guide', 'channel');
+  const triple = channel('listing:triple.guide', ['q4', 'q9'], [x2Triple], { badge: '후기·예약 플랫폼' }); // 글 ②로만 올림 · 본 글과도 겹침
+  const cafe = channel('listing:cafe.daum.net', ['q11'], [], { badge: '커뮤니티' }); // 어느 글과도 안 겹침 → 따로 쓸 글
+
+  // 추가 글이 본 글보다 앞에 온다 — 항목은 순위 · 밀린 질문 수 순이다.
+  const listing = [tistory, naver, brunch, velog, wiki, trip, yeogi, triple, cafe];
+  const pub = buildPublishPlan([x1, main, x2], listing, null);
+  const rowsOf = (channelId: string) => pub.rows.filter((r) => r.target.id === channelId);
+  const rowOf = (articleId: string, channelId: string) => pub.rows.find((r) => r.article.action.id === articleId && r.target.id === channelId);
+
+  ok('목록 — row.key가 겹치지 않는다', new Set(pub.rows.map((r) => r.key)).size === pub.rows.length);
+  const channelIds = new Set(pub.rows.filter((r) => r.kind === 'channel').map((r) => r.target.id));
+  ok('목록 — channel 줄이 있는 채널마다 앵커 하나', [...channelIds].every((id) => rowsOf(id).filter((r) => r.anchor).length === 1));
+  ok('목록 — own · orphan 줄은 앵커가 아니다', pub.rows.filter((r) => r.kind !== 'channel').every((r) => !r.anchor));
+  ok('목록 — 플랫폼의 앵커는 본 글 줄', rowsOf(tistory.id).find((r) => r.anchor)?.article.action.id === MAIN && rowsOf(naver.id).find((r) => r.anchor)?.article.action.id === MAIN);
+  ok('목록 — 추가 글 플랫폼 줄 key는 글|채널, 본 글 줄은 채널 id 그대로', rowOf(x1Def.id, tistory.id)?.key === `${x1Def.id}|${tistory.id}` && rowOf(MAIN, tistory.id)?.key === tistory.id);
+  ok('목록 — 글은 추가 글이 앞이어도 셋 그대로', pub.articles.map((a) => a.action.id).join() === [x1.id, MAIN, x2.id, cafe.id].join());
+
+  // 줄별 「올림」 — 추가 글 티스토리 기록이 본 글 줄을 「올림」으로 만들지 않는다(반대도)
+  const mainTistory = rowOf(MAIN, tistory.id);
+  const x1TistoryRow = rowOf(x1Def.id, tistory.id);
+  ok('티스토리 — 글 ① 줄은 「올림」, 그 기록 · 인용만', x1TistoryRow?.done === true && x1TistoryRow.publishedUrls.join() === x1Tistory.url && x1TistoryRow.citedUrls.join() === x1Tistory.url && x1TistoryRow.hits.length === 1);
+  ok('티스토리 — 본 글 줄은 「올림」이 아니다(글 ① 기록이 섞이지 않음)', mainTistory?.done === false && mainTistory.citedUrls.length === 0);
+  ok('티스토리 — 치운 추가 글의 기록도 본 글 줄에 섞이지 않는다', mainTistory?.hits.length === 0 && mainTistory.publishedUrls.length === 0);
+  ok('티스토리 — 치운 추가 글의 줄은 없다', !pub.rows.some((r) => r.article.action.id === goneId || r.key.startsWith(`${goneId}|`)));
+  ok('네이버 — 본 글 줄은 「올림」(기록 · 집행함)', rowOf(MAIN, naver.id)?.done === true && rowOf(MAIN, naver.id)?.publishedUrls.join() === mainNaver.url);
+  ok('네이버 — 글 ① 줄은 「올림」이 아니다(채널 집행함을 읽지 않음)', rowOf(x1Def.id, naver.id)?.done === false && rowOf(x1Def.id, naver.id)?.hits.length === 0);
+  ok('자사 — 글 ①은 자기 기록으로 「올림」, 본 글은 아님', pub.rows.find((r) => r.key === `own:${x1.id}`)?.done === true && pub.rows.find((r) => r.key === `own:${MAIN}`)?.done === false);
+
+  // 추가 글이 받는 플랫폼 줄 — 겹치는 곳 · 브랜드가 이미 올린 곳 · 그 글로 올린 곳
+  ok('플랫폼 — 글 ②는 겹치지 않아도 이미 올린 티스토리 · 네이버 줄을 받는다(질문 0개)', rowOf(x2Def.id, tistory.id)?.questionIds.length === 0 && rowOf(x2Def.id, naver.id) !== undefined);
+  ok('플랫폼 — 글 ①은 겹치는 티스토리 줄(q7)', rowOf(x1Def.id, tistory.id)?.questionIds.join() === 'q7');
+  ok('플랫폼 — 아무도 안 올린 곳은 겹치는 글만(브런치: 글 ②만, 따로 쓸 글 없음)', rowsOf(brunch.id).map((r) => r.article.action.id).join() === x2.id && rowsOf(brunch.id).every((r) => r.kind === 'channel'));
+  ok('플랫폼 — 본 글하고만 겹치고 안 올린 곳(벨로그)은 본 글 줄만', rowsOf(velog.id).map((r) => r.article.action.id).join() === MAIN);
+  ok('플랫폼 — 추가 글 채널 줄은 다듬기 필요', rowOf(x2Def.id, brunch.id)?.needsAdapt === true);
+
+  // 단일 채널 — 한 줄, 본 글 먼저, orphan으로 쪼개지지 않음
+  ok('단일 — 본 글과 겹치면 본 글(한 줄)', rowsOf(wiki.id).length === 1 && rowOf(MAIN, wiki.id)?.questionIds.join() === 'q3');
+  ok('단일 — 추가 글하고만 겹치면 그 추가 글(한 줄 · 채널 id key · orphan 아님)', rowsOf(trip.id).length === 1 && rowsOf(trip.id)[0]?.article.action.id === x2.id && rowsOf(trip.id)[0]?.kind === 'channel' && rowsOf(trip.id)[0]?.key === trip.id);
+  ok('단일 — 본 글로 이미 올린 곳은 추가 글과만 겹쳐도 본 글에 남는다', rowsOf(yeogi.id).length === 1 && rowsOf(yeogi.id)[0]?.article.action.id === MAIN && rowsOf(yeogi.id)[0]?.done === true);
+  ok('단일 — 추가 글로만 올린 곳은 본 글과 겹쳐도 그 추가 글에 남는다', rowsOf(triple.id).length === 1 && rowsOf(triple.id)[0]?.article.action.id === x2.id && rowsOf(triple.id)[0]?.done === true);
+  ok('단일 — 어느 글과도 안 겹치면 따로 쓸 글(orphan)', rowsOf(cafe.id).length === 1 && rowsOf(cafe.id)[0]?.kind === 'orphan');
+  ok('단일 — orphan은 그 하나뿐', pub.rows.filter((r) => r.kind === 'orphan').length === 1);
+  ok('진행 수 — 올린 줄 수(글 ① 자사 · 글 ① 티스토리 · 본 글 네이버 · 여기어때 · 트리플)', pub.done === 5);
+
+  // recordInputOf — 추가 글 채널 줄은 집행 상태를 바꾸지 않고 질문 스냅샷을 싣는다
+  const rec = (r: PublishRow | undefined) => (r ? recordInputOf(r) : null);
+  const snapX1 = JSON.stringify(extraTopicSnapshot(x1Def));
+  const recX1Tistory = rec(x1TistoryRow);
+  ok('기록 — 추가 글 채널 줄: markDone false · 스냅샷 · 채널 대상', recX1Tistory?.markDone === false && JSON.stringify(recX1Tistory.topic) === snapX1 && recX1Tistory.targetActionId === tistory.id && recX1Tistory.articleId === x1.id && recX1Tistory.via === 'channel');
+  ok('기록 — 추가 글 스냅샷 id를 이으면 글 id(원장 검사 통과)', recX1Tistory !== null && `topic:${recX1Tistory.topic?.questionIds.join('+')}` === x1.id);
+  const recX1Own = rec(pub.rows.find((r) => r.key === `own:${x1.id}`));
+  ok('기록 — 추가 글 자사 줄: markDone true · 스냅샷', recX1Own?.markDone === true && JSON.stringify(recX1Own.topic) === snapX1 && recX1Own.via === 'own' && recX1Own.targetActionId === x1.id);
+  const recTrip = rec(rowsOf(trip.id)[0]);
+  ok('기록 — 추가 글이 맡은 단일 채널 줄: markDone false · 스냅샷', recTrip?.markDone === false && JSON.stringify(recTrip.topic) === JSON.stringify(extraTopicSnapshot(x2Def)));
+  const recMain = rec(mainTistory);
+  ok('기록 — 본 글 채널 줄: markDone true · 스냅샷 없음', recMain?.markDone === true && !('topic' in recMain) && recMain.articleId === MAIN && recMain.via === 'channel');
+  const recCafe = rec(rowsOf(cafe.id)[0]);
+  ok('기록 — 따로 쓸 글: 채널 항목이 글 · markDone true', recCafe?.via === 'orphan' && recCafe.articleId === cafe.id && recCafe.markDone && !('topic' in recCafe));
+
+  // 본 글이 없는 주 — 이미 올린 곳은 주소 줄(옛 규칙)로 남고, 추가 글은 자기 줄을 받는다. 본 글 대신 추가 글에 붙지 않는다.
+  const yeogiQ7 = { ...yeogi, questionIds: ['q7'], questionTexts: ['q7'] }; // 글 ①과 겹치는 이미 올린 곳
+  const noMain = buildPublishPlan([x1], [naver, yeogiQ7], null);
+  const naverRows = noMain.rows.filter((r) => r.target.id === naver.id);
+  ok('본 글 없음 — 네이버는 주소 줄(앵커 · 올림) + 글 ① 줄', naverRows.length === 2 && naverRows[0]?.article.action.id === naver.id && naverRows[0].anchor && naverRows[0].done && naverRows[1]?.key === `${x1.id}|${naver.id}` && !naverRows[1].done);
+  const yeogiRows = noMain.rows.filter((r) => r.target.id === yeogi.id);
+  ok('본 글 없음 — 이미 올린 단일 채널은 추가 글로 가지 않고 주소 줄', yeogiRows.length === 1 && yeogiRows[0]?.article.action.id === yeogi.id && yeogiRows[0].done && !yeogiRows[0].needsAdapt);
+  ok('본 글 없음 — 따로 쓸 글 없음', noMain.rows.every((r) => r.kind !== 'orphan'));
+
+  // 추가 글이 없으면 줄의 기록은 항목 값 그대로(화면이 row.target.* 대신 row.*를 써도 같다)
+  const plain = buildPublishPlan([main], [naver, yeogi], null);
+  ok('추가 글 없음 — 줄 기록 = 항목 기록', plain.rows.every((r) => r.publishedUrls === r.target.publishedUrls && r.citedUrls === r.target.citedPublishedUrls && r.hits.length === (r.target.publishedHits?.length ?? 0)));
 }
 
 let failed = 0;
