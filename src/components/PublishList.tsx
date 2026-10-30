@@ -22,6 +22,8 @@ import type { AppliedPhoto } from '../lib/articlePhotos'
  * 바로 「준비됨」이도록. 나머지는 처음 누를 때 만든다.
  *
  * 주소는 그 줄의 항목(own은 콘텐츠 항목, 그 밖에는 채널 항목)에 기록한다 — 예전 채널 탭 · 올림 현황과 같은 기록이다.
+ * 줄의 주소 · 인용 수 · 고칠 곳은 그 줄의 글이 남긴 기록(row.hits · row.publishedUrls · row.citedUrls)으로 센다 — 채널 항목 하나에
+ * 본 글과 추가 글의 기록이 함께 모이기 때문이다. 추가 글이 없으면 채널 항목의 주소와 같다.
  */
 export default function PublishList({
   tenantId,
@@ -164,7 +166,7 @@ export default function PublishList({
    * null이고, 그때는 「본문 다시 복사」를 그리지 않는다.
    */
   const editPlaceOf = (row: PublishRow): string | null => {
-    if (row.target.publishedUrls.length === 0) return null
+    if (row.publishedUrls.length === 0) return null
     if (row.kind === 'own') return `${row.name}의 기존 글`
     if (row.verb === 'doc') return '그 문서'
     if (row.verb === 'place' || row.verb === 'update') return `${row.name} 업체 관리 화면의 소개 칸`
@@ -174,7 +176,7 @@ export default function PublishList({
   /** 복사 뒤 안내 — 고칠 곳, 새로 올리지 말 것, 고친 날을 남기는 길(그 줄 기록 상태에 맞춰). */
   const recopyHintOf = (row: PublishRow): string => {
     const place = editPlaceOf(row) ?? '올린 곳'
-    const hits = row.target.publishedHits ?? []
+    const hits = row.hits
     const after = hits.some((h) => h.post.publishedOn && !h.takenDownOn)
       ? '다 고쳤으면 아래 주소 줄의 「고쳤어요」로 고친 날을 남깁니다.'
       : hits.some((h) => !h.post.publishedOn)
@@ -249,10 +251,11 @@ export default function PublishList({
           return (
             <li
               key={row.key}
-              // 채널 줄은 그 채널 항목의 자리다(인용 갭 분석 → focus). 따로 쓴 글(orphan)은 위의 글 카드가 그 자리다.
-              id={row.kind === 'channel' ? `action-${row.target.id}` : undefined}
+              // 채널 줄은 그 채널 항목의 자리다(인용 갭 분석 → focus). 한 채널에 글마다 줄이 있으면 앞 줄(본 글 줄)만 그 자리다(row.anchor).
+              // 따로 쓴 글(orphan)은 위의 글 카드가 그 자리다.
+              id={row.anchor ? `action-${row.target.id}` : undefined}
               className={`publish-row${row.locked ? ' is-locked' : ''}${row.done ? ' is-done' : ''}${
-                row.kind === 'channel' && focusId === row.target.id ? ' is-focused' : ''
+                row.anchor && focusId === row.target.id ? ' is-focused' : ''
               }`}
             >
               <div className="publish-row-main">
@@ -288,7 +291,7 @@ export default function PublishList({
                         })
                       }
                     >
-                      주소 {row.target.publishedUrls.length}개{row.target.citedPublishedUrls.length > 0 && ` · 인용 ${row.target.citedPublishedUrls.length}`}
+                      주소 {row.publishedUrls.length}개{row.citedUrls.length > 0 && ` · 인용 ${row.citedUrls.length}`}
                     </button>
                   ) : text ? (
                     <button type="button" className="publish-go" onClick={() => void run(row)}>

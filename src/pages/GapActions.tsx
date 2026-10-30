@@ -1,7 +1,7 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import {
   generateContentBrief,
   generateContentDraft,
@@ -18,14 +18,16 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
+import ExtraArticleForm from '../components/ExtraArticleForm'
 import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
-import { draftRequestOf, effectiveDraft } from '../lib/draftGaps'
+import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
+import { isExtraArticleId } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
 import { channelNameOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
-import { buildPublishPlan, type PublishArticle } from '../lib/publishPlan'
+import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
@@ -65,12 +67,15 @@ function BriefPanel({
   action,
   stored,
   onStored,
+  mainDraft,
   initiallyOpen = false,
 }: {
   tenantId: string
   action: GapAction
   stored: StoredBrief | undefined
   onStored: (s: StoredBrief) => void
+  /** 본 글의 저장된 초안 — 추가 글의 브리프가 그 제목 · 소제목과 겹치지 않게 한다(briefInputOf). */
+  mainDraft: StoredDraft | undefined
   /** 「글 설계 보기」를 펼쳤을 때는 본문까지 바로 연다 — 접힌 것을 한 번 더 펼치게 하지 않는다. */
   initiallyOpen?: boolean
 }) {
@@ -81,18 +86,7 @@ function BriefPanel({
     setBusy(true)
     setError(null)
     try {
-      const s = await generateContentBrief(
-        tenantId,
-        {
-          actionId: action.id,
-          kind: action.kind,
-          title: action.title,
-          targetDomain: action.targetDomain,
-          questionTexts: action.questionTexts,
-          evidence: action.evidence,
-        },
-        force,
-      )
+      const s = await generateContentBrief(tenantId, briefInputOf(action, mainDraft), force)
       onStored(s)
       setOpen(true)
     } catch (e) {
@@ -225,6 +219,7 @@ function BulkDrafts({
   actions,
   briefs,
   drafts,
+  mainId,
   onBrief,
   onDraft,
 }: {
@@ -232,6 +227,8 @@ function BulkDrafts({
   actions: GapAction[]
   briefs: Record<string, StoredBrief>
   drafts: Record<string, StoredDraft>
+  /** 본 글 항목 id — 추가 글의 브리프가 본 글 초안과 겹치지 않게 한다(briefInputOf). */
+  mainId: string | undefined
   onBrief: (s: StoredBrief) => void
   onDraft: (s: StoredDraft) => void
 }) {
@@ -245,22 +242,15 @@ function BulkDrafts({
     setResult(null)
     const failed: string[] = []
     let ok = 0
+    // 본 글이 먼저 돈다(글 목록 순서) — 이번에 만든 본 글 초안도 뒤의 추가 글 브리프가 피할 글로 쓴다.
+    let mainDraft = mainId ? drafts[mainId] : undefined
     for (const [i, a] of todo.entries()) {
       setProgress(`${i + 1}/${todo.length} · ${a.title}`)
       try {
-        if (!briefs[a.id]) {
-          onBrief(
-            await generateContentBrief(tenantId, {
-              actionId: a.id,
-              kind: a.kind,
-              title: a.title,
-              targetDomain: a.targetDomain,
-              questionTexts: a.questionTexts,
-              evidence: a.evidence,
-            }),
-          )
-        }
-        onDraft(await generateContentDraft(tenantId, draftRequestOf(a)))
+        if (!briefs[a.id]) onBrief(await generateContentBrief(tenantId, briefInputOf(a, mainDraft)))
+        const d = await generateContentDraft(tenantId, draftRequestOf(a))
+        onDraft(d)
+        if (a.id === mainId) mainDraft = d
         ok += 1
       } catch (e) {
         failed.push(`${a.title} — ${e instanceof Error ? e.message : String(e)}`)
@@ -308,11 +298,12 @@ function articleStateOf(x: PublishArticle): { label: string; tone: string } {
 /**
  * 이 글이 무엇을 위한 글인지 — 카드 머리에 항목 이름이 크게 있으면 글 이름처럼 읽혀, 글이 있는 카드는 글 제목을 크게 ·
  * 이 설명은 작게 둔다(2026-10-20). 콘텐츠 항목은 답하는 질문 묶음(항목 제목 「카테고리 무관 질문 콘텐츠 보강」에서
- * 「콘텐츠 보강」을 뗀 것, lib/gapActions.ts), 덮는 글이 없는 채널 항목은 그 채널(「namu.wiki 문서 보완」)이다.
+ * 「콘텐츠 보강」을 뗀 것, lib/gapActions.ts), 추가 글은 사람이 붙인 주제 이름, 덮는 글이 없는 채널 항목은 그 채널
+ * (「namu.wiki 문서 보완」)이다.
  */
 function articleRoleOf(action: GapAction): { line: string; short: string } {
   if (action.kind !== 'content') return { line: `${action.title}용 글`, short: action.title }
-  const group = action.title.replace(/\s*콘텐츠 보강$/, '')
+  const group = action.extra?.name ?? action.title.replace(/\s*콘텐츠 보강$/, '')
   return { line: `${group}에 답하는 글`, short: `${group} ${action.reach}개` }
 }
 
@@ -330,10 +321,19 @@ function ActionCard({
   coveredBy,
   focused = false,
   weekOf,
+  mainDraft,
+  takenByExtras = 0,
+  onRemoveExtra,
 }: {
   action: GapAction
   /** 「① 글 확인」의 글이면 그 확인 상태 — 카드 머리에 같은 표시를 단다. */
   article?: PublishArticle
+  /** 본 글의 저장된 초안 — 추가 글의 브리프가 그 제목 · 소제목과 겹치지 않게 한다(briefInputOf). */
+  mainDraft?: StoredDraft
+  /** 본 글 카드일 때 추가 글이 가져간 이번 주 질문 수. */
+  takenByExtras?: number
+  /** 추가 글 카드의 「목록에서 빼기」 — 성공하면 null, 실패하면 이유. */
+  onRemoveExtra?: () => Promise<string | null>
   /** 이 항목을 만든 측정 주차 — 초안의 「실측 답변」이 그 주의 기록에서 고른다. */
   weekOf?: string
   canSaveStatus: boolean
@@ -360,6 +360,29 @@ function ActionCard({
    * 세 걸음이 묻혔다(실측: 화면 전체 버튼 69개·4,299자). 기능을 지우지 않고 접어 둔다.
    */
   const [detail, setDetail] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+  const extra = action.extra
+  /** 「목록에서 빼기」 — 지우지 않는다. 초안 · 올린 기록은 남고, 맡던 질문은 다음 계산부터 본 글로 돌아간다. */
+  const removeExtra = async () => {
+    if (!extra || !onRemoveExtra) return
+    const ok = window.confirm(
+      `「${extra.name}」 글을 목록에서 뺄까요?\n\n` +
+        '초안과 올린 기록은 지우지 않고 남겨 둡니다(콘텐츠 보관함 · 올린 글 성과에서 볼 수 있어요). ' +
+        '이 글이 맡던 질문은 본 글로 돌아갑니다. 같은 질문으로 다시 만들면 초안과 기록이 이어집니다.',
+    )
+    if (!ok) return
+    setRemoving(true)
+    setRemoveError(null)
+    try {
+      const error = await onRemoveExtra()
+      if (error) setRemoveError(error)
+    } catch (e) {
+      setRemoveError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setRemoving(false)
+    }
+  }
   // 집행했다고 적었는데 데이터가 아직 확인하지 못한 상태 — 가장 먼저 봐야 할 줄이다.
   const awaiting = action.status === 'done' && !action.satisfied
   // 언제 집행했나 — 올린 날이 적힌 기록이 있으면 그 날(가장 최근), 없으면 상태를 정할 때 보던 주차.
@@ -389,6 +412,37 @@ function ActionCard({
         </span>
       </div>
       {articleTitle && <p className="gap-card-group">{articleRoleOf(action).line}</p>}
+      {takenByExtras > 0 && (
+        // 본 글은 다시 만들지 않는다 — 질문 목록 · 진행 막대 · 채널 배정만 바뀐다(lib/gapActions.ts contentActions).
+        <p className="hint" style={{ margin: 0 }}>
+          이 질문 {takenByExtras}개는 추가 글이 맡습니다.{hasDraft && ' 이미 만든 본 글에는 그대로 있어요(다시 만들 필요 없음).'}
+        </p>
+      )}
+      {extra && extra.missingTexts.length > 0 && (
+        // 찾지 못한 질문은 세지 않는다 — 0이나 「이김」으로 채우지 않고 확인 불가로 밝힌다.
+        <details className="draft-audit">
+          <summary>
+            고른 질문 {extra.missingTexts.length}개는 이번 주 질문 은행에서 찾지 못해 확인 불가예요
+            {extra.how === 'by-text' ? ' — 질문 은행 판이 바뀌었습니다.' : '.'}
+          </summary>
+          <ul className="muted">
+            {extra.missingTexts.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {extra && extra.how === 'by-text' && extra.missingTexts.length === 0 && (
+        <p className="doc-meta" style={{ margin: 0 }}>
+          질문 은행 판이 바뀌어 문장이 같은 질문으로 다시 찾았어요.
+        </p>
+      )}
+      {extra && extra.how !== 'unresolved' && extra.missingTexts.length === 0 && action.reach === 0 && (
+        // 이긴 주에도 사람이 뺄 때까지 남긴다 — 올린 기록이 목록에서 사라지면 안 된다.
+        <p className="gap-tally" style={{ color: 'var(--ink)' }}>
+          이번 주 고른 질문을 모두 이기고 있어요.
+        </p>
+      )}
       {showWhy && (
         <p className="gap-tally" style={{ color: 'var(--ink)' }}>
           {action.evidence}
@@ -407,7 +461,8 @@ function ActionCard({
             // 몇 줄만 보인다는 걸 밝힌다. 글은 여기 안 보이는 것까지 답한다 — 예전에는 이 자르기가
             // 브리프에도 그대로 가서 나머지가 조용히 빠졌다.
             <p className="doc-meta" style={{ margin: '2px 0 0' }}>
-              많이 밀리는 순으로 {PREVIEW_QUESTIONS}개만 보입니다. 글은 {action.questionTexts.length}개 전부에 답합니다.
+              {extra ? `고른 질문 가운데 ${PREVIEW_QUESTIONS}개만` : `많이 밀리는 순으로 ${PREVIEW_QUESTIONS}개만`} 보입니다. 글은{' '}
+              {action.questionTexts.length}개 전부에 답합니다.
             </p>
           )}
         </>
@@ -480,7 +535,7 @@ function ActionCard({
       )}
       {detail && canSaveStatus && (
         <div className="action-status" role="group" aria-label={`${action.title} 집행 상태`}>
-          {/* 글은 한 편이라 보류하지 않는다 — 보류하면 올리기 목록이 채널마다 따로 쓸 글로 쪼개진다(gapActions.ts). */}
+          {/* 글은 보류하지 않는다 — 본 글을 보류하면 올리기 목록이 채널마다 따로 쓸 글로 쪼개진다(gapActions.ts). 추가 글은 「목록에서 빼기」로 뺀다. */}
           {STATUS_CHOICES.filter((c) => action.kind !== 'content' || c.value !== 'skip').map((c) => (
             <button
               key={c.value}
@@ -508,7 +563,7 @@ function ActionCard({
         // 초안 만들기가 브리프를 알아서 먼저 만든다(DraftPanel ensureBrief).
         <details className="brief-design">
           <summary>글 설계(브리프) 보기{briefs[action.id] ? '' : ' · 아직 없음'}</summary>
-          <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} initiallyOpen />
+          <BriefPanel tenantId={tenantId} action={action} stored={briefs[action.id]} onStored={onBrief} mainDraft={mainDraft} initiallyOpen />
         </details>
       )}
       {coveredBy && (
@@ -543,18 +598,21 @@ function ActionCard({
           compact={!detail}
           titleInHeader={Boolean(articleTitle)}
           ensureBrief={async () => {
-            onBrief(
-              await generateContentBrief(tenantId, {
-                actionId: action.id,
-                kind: action.kind,
-                title: action.title,
-                targetDomain: action.targetDomain,
-                questionTexts: action.questionTexts,
-                evidence: action.evidence,
-              }),
-            )
+            onBrief(await generateContentBrief(tenantId, briefInputOf(action, mainDraft)))
           }}
         />
+      )}
+      {extra && onRemoveExtra && (
+        <div className="brief-bar">
+          <button type="button" className="ghost" disabled={removing} onClick={() => void removeExtra()}>
+            {removing ? '빼는 중…' : '목록에서 빼기'}
+          </button>
+          {removeError && (
+            <span className="error" role="alert">
+              {removeError}
+            </span>
+          )}
+        </div>
       )}
       {/* 접은 것을 되살리는 자리. 기능을 지운 게 아니라는 것이 여기서 보여야 한다. */}
       <button type="button" className="gap-detail-toggle" onClick={() => setDetail((v) => !v)} aria-expanded={detail}>
@@ -583,7 +641,7 @@ export default function GapActions() {
   const focusId = searchParams.get('focus') ?? ''
   const focusDomain = searchParams.get('domain') ?? ''
   const [help, setHelp] = useState(false)
-  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError, canRecordPosts, posts } =
+  const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError, canRecordPosts, posts, extras } =
     useGapActionPlan(tenant?.tenantId ?? '')
   // 그 주 회차를 합친 올린 글 칸 — 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용된 글을 주소 알약이 밝힌다(성과 표와 같은 칸).
   const postsRevision = useMemo(() => posts.list.map((p) => `${p.id}|${p.publishedOn ?? ''}|${p.removedAt ?? ''}`).join(','), [posts.list])
@@ -695,6 +753,23 @@ export default function GapActions() {
       .sort((x, y) => y.n - x.n)
     return hit.length ? { titles: hit.map((h) => h.title), covered: hit.reduce((sum, h) => sum + h.n, 0), total: qs.size } : null
   }
+  // 글 카드 순서 — 본 글, 추가 글(만든 순서), 그 밖의 글(덮는 글 없는 채널). 항목 순위로 두면 추가 글이 본 글보다 앞에 올 수 있다.
+  const extraOrder = new Map(extras.list.map((d, i) => [d.id, i]))
+  const articleRank = (x: PublishArticle) => (x.action.kind !== 'content' ? 2 : isExtraArticleId(x.action.id) ? 1 : 0)
+  const articleCards = [...publishPlan.articles].sort(
+    (a, b) => articleRank(a) - articleRank(b) || (extraOrder.get(a.action.id) ?? 0) - (extraOrder.get(b.action.id) ?? 0),
+  )
+  const mainArticle = articleCards.find((x) => articleRank(x) === 0)
+  // 본 글 초안 — 이번 주 본 글이 목록에 없어도(그 질문을 모두 이긴 주) 저장된 초안이 있으면 추가 글 브리프가 피할 글로 쓴다.
+  const mainId = mainArticle?.action.id ?? plan.actions.find((a) => a.kind === 'content' && !isExtraArticleId(a.id))?.id
+  const mainDraft = mainId ? drafts?.[mainId] : undefined
+  const extraActions = plan.actions.filter((a) => a.extra)
+  // 추가 글이 본 글에서 가져간 이번 주 밀린 질문(추가 글의 reach 합 — 글끼리 질문이 겹치지 않는다). 본 글이 비지 않게 하나도 빼지
+  // 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
+  const mainQuestionIds = new Set(mainArticle?.action.questionIds ?? [])
+  const mainKeptAll = extraActions.some((a) => a.questionIds.some((id) => mainQuestionIds.has(id)))
+  const takenByExtras = mainKeptAll ? 0 : extraActions.reduce((sum, a) => sum + a.reach, 0)
+  const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = publishPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
     document.getElementById(`action-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
@@ -746,8 +821,18 @@ export default function GapActions() {
         <div className="help-panel">
           <p>
             <Link to="/gap-analysis">가시성 격차 분석</Link>이 어디가 비어 있는지 말한다면, 여기는 그 자리를 채울 글을 만들고
-            올리는 곳입니다. 글은 <b>한 편</b>입니다 — 언급률 · 추천 순위를 재는 카테고리 무관 질문 가운데 우리가 밀린 질문에
-            답합니다. <b>① 글 확인</b>에서 그 글의 빈칸을 채우거나 빼면, <b>② 올리기 목록</b>에서 그 글을 올릴 곳이 열립니다.
+            올리는 곳입니다.{' '}
+            {articleCount > 1 ? (
+              <>
+                글은 <b>{articleCount}편</b>입니다 — 본 글이 언급률 · 추천 순위를 재는 카테고리 무관 질문 가운데 우리가 밀린 질문에
+                답하고, 추가 글은 본 글에서 떼어 낸 질문을 맡습니다.
+              </>
+            ) : (
+              <>
+                글은 <b>한 편</b>입니다 — 언급률 · 추천 순위를 재는 카테고리 무관 질문 가운데 우리가 밀린 질문에 답합니다.
+              </>
+            )}{' '}
+            <b>① 글 확인</b>에서 그 글의 빈칸을 채우거나 빼면, <b>② 올리기 목록</b>에서 그 글을 올릴 곳이 열립니다.
             목록은 그곳에 올리면 덮이는 질문이 많은 순서입니다.
           </p>
           <p>
@@ -865,7 +950,7 @@ export default function GapActions() {
                 </p>
                 {manyArticles && (
                   <ul className="article-check-list" aria-label="글별 확인 상태">
-                    {publishPlan.articles.map((x) => {
+                    {articleCards.map((x) => {
                       const state = articleStateOf(x)
                       return (
                         <li key={x.action.id}>
@@ -887,16 +972,47 @@ export default function GapActions() {
                 {manyArticles && briefs !== null && drafts !== null && (
                   <BulkDrafts
                     tenantId={tenant.tenantId}
-                    actions={publishPlan.articles.map((x) => x.action)}
+                    actions={articleCards.map((x) => x.action)}
                     briefs={briefs}
                     drafts={drafts}
+                    mainId={mainId}
                     onBrief={onBrief}
                     onDraft={onDraft}
                   />
                 )}
                 <div className="gap-grid">
-                  {publishPlan.articles.map((x) => (
-                    <ActionCard key={x.action.id} action={x.action} article={x} focused={focusId === x.action.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
+                  {articleCards.map((x) => (
+                    <Fragment key={x.action.id}>
+                      <ActionCard
+                        action={x.action}
+                        article={x}
+                        focused={focusId === x.action.id}
+                        canSaveStatus={canSaveStatus}
+                        onStatus={setStatus}
+                        tenantId={tenant.tenantId}
+                        briefs={briefs}
+                        onBrief={onBrief}
+                        drafts={drafts}
+                        onDraft={onDraft}
+                        posts={cardPosts}
+                        weekOf={weekOf}
+                        coveredBy={null}
+                        mainDraft={mainDraft}
+                        takenByExtras={x === mainArticle ? takenByExtras : 0}
+                        onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
+                      />
+                      {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
+                      {x === mainArticle && extras.available && (
+                        <ExtraArticleForm
+                          main={x.action}
+                          extraActions={extraActions}
+                          bankVersion={extras.bankVersion}
+                          corrupt={extras.corrupt}
+                          loadError={extras.error}
+                          onCreate={extras.create}
+                        />
+                      )}
+                    </Fragment>
                   ))}
                 </div>
               </section>
@@ -928,19 +1044,24 @@ export default function GapActions() {
                       canRecordPosts ? (
                         <PublishedUrlEditor
                           addLabel="올렸어요"
-                          hits={row.target.publishedHits ?? []}
-                          removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt)}
+                          hits={row.hits}
+                          // 뺀 주소도 그 줄의 글 것만 — 추가 글 줄은 그 글의 기록, 그 밖의 줄은 추가 글(topic:)이 아닌 기록.
+                          removed={posts.list.filter(
+                            (p) =>
+                              p.targetActionId === row.target.id &&
+                              p.removedAt &&
+                              (isExtraArticleId(row.article.action.id) ? p.articleId === row.article.action.id : !isExtraArticleId(p.articleId)),
+                          )}
                           weekOf={weekOf}
                           citedInWeek={citedInWeek}
                           timingInWeek={timingInWeek}
                           busy={posts.busy}
                           // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
+                          // 글 · 대상 · 집행 상태를 바꿀지 · 추가 글의 질문 스냅샷은 줄 모델이 정한다(publishPlan.ts recordInputOf).
                           onRecord={(url, publishedOn, chosen) =>
                             posts.record({
                               url,
-                              articleId: row.article.action.id,
-                              targetActionId: row.target.id,
-                              via: row.kind,
+                              ...recordInputOf(row),
                               articleTitle: row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title,
                               ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
                               ...(adaptations?.[row.article.action.id]?.[row.target.id]
@@ -948,7 +1069,6 @@ export default function GapActions() {
                                 : {}),
                               publishedOn,
                               publishedOnChosen: chosen,
-                              markDone: true,
                             })
                           }
                           onRemove={posts.remove}
