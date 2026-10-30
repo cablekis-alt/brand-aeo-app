@@ -3,7 +3,7 @@ import type { ContentDraft } from '../prompts/b9c-content-draft'
 import type { ContentBriefInput, GapFill, StoredDraft } from './api'
 import { extraBriefAngle } from './extraArticles'
 import type { GapAction } from './gapActions'
-import { countGapNotes, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
+import { countGapNotes, draftTitle, draftToMarkdown, draftToPublishMarkdown, stripGapNotes, tidyArticleMarkdown } from './markdownFile'
 
 /**
  * 초안 빈칸을 화면에서 채운 기록(gapFills)을 원고에 반영한다.
@@ -49,7 +49,8 @@ export function briefInputOf(
   if (!action.extra) return base
   const angle = extraBriefAngle(action.extra.name, action.extra.angle)
   const main = mainDraft ? effectiveDraft(mainDraft) : null
-  return { ...base, ...briefFocusOf(angle, main ? { title: main.title, headings: main.sections.map((s) => s.heading) } : undefined) }
+  // 제목은 화면에 보이는 제목(draftTitle) — 블로그 글 형식의 제목은 「{N}가지」 틀로 저장된다.
+  return { ...base, ...briefFocusOf(angle, main ? { title: draftTitle(main), headings: main.sections.map((s) => s.heading) } : undefined) }
 }
 
 /** 빈칸 자리의 키 — 그 초안 안에서만 뜻이 있다(다시 만들면 기록을 버린다). */
