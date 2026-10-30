@@ -25,7 +25,7 @@ import type { QuestionRepeatAnalysis } from '../server/types';
 import { BRIEF_FOCUS_LIMITS, briefFocusOf, buildContentBriefPrompt, type ContentBriefRequest } from '../src/prompts/b9b-content-brief';
 import type { ActionStateMap, PublishedPost, StoredDraft } from '../src/lib/api';
 import { briefInputOf } from '../src/lib/draftGaps';
-import { computeGapActions, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
+import { computeGapActions, extraStandingOf, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
 import { buildPublishPlan, recordInputOf, type PublishRow } from '../src/lib/publishPlan';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
 import {
@@ -322,6 +322,51 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   const skipped = find(plan({ extraArticles: [e2], bankVersion: 'v6' }, { [e2.id]: { status: 'skip', updatedAt: NOW } }), e2.id);
   ok('추가 글 — 콘텐츠형이라 보류는 읽지 않는다(본 글과 같은 규칙)', skipped?.status === 'todo');
   ok('추가 글 기록은 본 글에 붙지 않는다', (find(plan({ extraArticles: [e1, e2], bankVersion: 'v6' }, states, [ownPost]), MAIN)?.publishedUrls.length ?? -1) === 0);
+
+  // 11) 이번 주 형편(extraStandingOf) — reach는 진 질문만 센다. reach 0만으로 「모두 이김」이라 하면 무승부 · 되물음 · 응답 없는 질문까지
+  // 이김이 되고, 결과가 없는 글은 「0개」가 아니라 확인 불가다.
+  ok('형편 — 진 질문이 있으면 losing', extraStandingOf(x1!) === 'losing' && x1?.extra?.won === 1 && x1.extra.noAnswer === 0 && x1.extra.missingWhy === undefined);
+  ok('형편 — 고른 질문을 모두 이기면 all-win', extraStandingOf(won!) === 'all-win' && won?.extra?.won === 1);
+  ok('형편 — 못 찾은 질문뿐이면 unknown(0개가 아님)', extraStandingOf(unresolved!) === 'unknown');
+  ok('형편 — 판을 모르면 unknown', [e1.id, e2.id].every((id) => extraStandingOf(find(unknownPlan, id)!) === 'unknown'));
+  ok('형편 — 본 글은 null', extraStandingOf(find(base, MAIN)!) === null);
+  // 못 찾은 까닭 — 판 모름 · 판 바뀜 · 같은 판인데 은행에 없음. 화면 요약이 근거 문장과 같은 까닭을 댄다.
+  ok('까닭 — 판을 모르면 bank-unknown', find(unknownPlan, e1.id)?.extra?.missingWhy === 'bank-unknown');
+  ok('까닭 — 판이 바뀌어 하나도 못 찾으면 bank-changed · 근거가 판 바뀜을 밝힌다', unresolved?.extra?.missingWhy === 'bank-changed' && /판이 바뀌었습니다\(v5 → v6\)/.test(unresolved.evidence));
+  const partV6 = def(['a4', 'zz-1'], ['a4 질문', '가상 없는 질문'], { name: '가상 반만 찾음' });
+  const part = find(withExtras([partV6]), partV6.id);
+  ok('까닭 — 같은 판인데 은행에 없는 질문은 not-in-bank', part?.extra?.missingWhy === 'not-in-bank' && part.extra.how === 'same-bank' && !/판이 바뀌/.test(part.evidence));
+  ok('형편 — 찾은 질문을 모두 이겨도 못 찾은 질문이 있으면 no-loss(「모두 이김」 아님)', extraStandingOf(part!) === 'no-loss');
+
+  // 무승부(a6: 셋 중 하나만 언급, 더 많이 말한 경쟁사 없음) · 되물음(a7) · 응답 없음(a8: 은행에는 있고 분석 줄이 없다)
+  const evenWeek = [
+    ...week,
+    analysis('a6', 0, true, []),
+    analysis('a6', 1, false, []),
+    analysis('a6', 2, false, []),
+    { ...analysis('a7', 0, false, []), clarifying: true },
+    { ...analysis('a7', 1, false, []), clarifying: true },
+  ];
+  const evenQuestions = [...questions, question('a6', 'category-agnostic', false), question('a7', 'category-agnostic', false), question('a8', 'category-agnostic', false)];
+  const evenPlan = (defs: ExtraArticle[]) =>
+    computeGapActions(evenWeek as unknown as ClientAnalysis[], evenQuestions, analyzeCitationSources(evenWeek), {}, [], '2026-W44', { extraArticles: defs, bankVersion: 'v6' });
+  const withEven = def(['a4', 'a6'], ['a4 질문', 'a6 질문'], { name: '가상 무승부' });
+  const evenX = find(evenPlan([withEven]), withEven.id);
+  ok('무승부 — reach 0이어도 all-win이 아니다(no-loss)', evenX?.reach === 0 && evenX.extra?.won === 1 && extraStandingOf(evenX) === 'no-loss');
+  ok('무승부 — 근거 문장은 예전처럼 「밀린 질문이 없습니다」', evenX?.evidence === '고른 질문 2개 가운데 이번 주 밀린 질문이 없습니다.');
+  const asked = def(['a7'], ['a7 질문'], { name: '가상 되물음' });
+  const askedX = find(evenPlan([asked]), asked.id);
+  ok('되물음 — no-loss(이김 아님)', askedX?.reach === 0 && askedX.extra?.won === 0 && askedX.extra.noAnswer === 0 && extraStandingOf(askedX) === 'no-loss');
+  const halfNoRow = def(['a4', 'a8'], ['a4 질문', 'a8 질문'], { name: '가상 응답 반' });
+  const halfX = find(evenPlan([halfNoRow]), halfNoRow.id);
+  ok('응답 없음 — 찾은 질문으로 남고 noAnswer로 센다 · no-loss', halfX?.questionIds.join() === 'a4,a8' && halfX.extra?.noAnswer === 1 && halfX.extra.won === 1 && extraStandingOf(halfX) === 'no-loss');
+  ok(
+    '응답 없음 — 근거가 응답 있는 질문만 「밀린 질문 없음」으로 말하고 나머지는 확인 불가',
+    halfX?.evidence === '응답이 있는 질문 1개 가운데 이번 주 밀린 질문이 없습니다. 고른 질문 중 1개는 이번 주 응답이 없어 확인 불가입니다.',
+  );
+  const onlyNoRow = def(['a8'], ['a8 질문'], { name: '가상 응답 없음' });
+  const onlyX = find(evenPlan([onlyNoRow]), onlyNoRow.id);
+  ok('응답 없음뿐 — unknown · 근거가 「밀린 질문 없음」이라 하지 않는다', extraStandingOf(onlyX!) === 'unknown' && onlyX?.extra?.how === 'same-bank' && !/밀린/.test(onlyX.evidence) && /확인 불가/.test(onlyX.evidence));
 }
 
 // ── (c) 올리기 목록 — buildPublishPlan · recordInputOf ───────────────────────────────────────────
@@ -349,7 +394,7 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
       badge: '추가 글',
       publishedUrls: posts.map((p) => p.url),
       ...(posts.length ? { publishedHits: posts.map(hit) } : {}),
-      extra: { name: d.name, how: 'same-bank', missingTexts: [], topic: extraTopicSnapshot(d) },
+      extra: { name: d.name, how: 'same-bank', missingTexts: [], won: 0, noAnswer: 0, topic: extraTopicSnapshot(d) },
     });
 
   const x1Def = def(['q7', 'q8'], ['q7 질문', 'q8 질문'], { name: '가상 코스' });
@@ -447,6 +492,18 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   const yeogiRows = noMain.rows.filter((r) => r.target.id === yeogi.id);
   ok('본 글 없음 — 이미 올린 단일 채널은 추가 글로 가지 않고 주소 줄', yeogiRows.length === 1 && yeogiRows[0]?.article.action.id === yeogi.id && yeogiRows[0].done && !yeogiRows[0].needsAdapt);
   ok('본 글 없음 — 따로 쓸 글 없음', noMain.rows.every((r) => r.kind !== 'orphan'));
+
+  // 줄이 보이는 기록의 규칙(keepsArticle) — 화면의 「뺀 주소」 목록도 이 규칙으로 고른다. 주소 줄은 목록에서 뺀 추가 글의 기록도 받으므로,
+  // 「topic:이 아닌 기록」으로 고르면 거기서 뺀 주소가 어느 목록에도 남지 않아 되살릴 수 없다.
+  const goneNaver = post('https://blog.naver.com/fake/9', goneId, naver.id, 'channel');
+  const naverWithGone = channel(naver.id, ['q2', 'q7'], [mainNaver, goneNaver], { status: 'done' });
+  const goneRows = buildPublishPlan([x1], [naverWithGone], null).rows;
+  const naverAddress = goneRows.find((r) => r.key === naver.id);
+  ok('규칙 — 주소 줄은 뺀 추가 글의 기록을 보이고 같은 규칙으로 고른다', naverAddress?.hits.some((h) => h.post.articleId === goneId) === true && naverAddress.keepsArticle(goneId) && naverAddress.keepsArticle(naver.id) && !naverAddress.keepsArticle(x1.id));
+  ok('규칙 — 뺀 추가 글의 주소는 줄 하나에만 걸린다(되살릴 곳이 하나)', goneRows.filter((r) => r.target.id === naver.id && r.keepsArticle(goneId)).length === 1);
+  ok('규칙 — 추가 글 줄은 그 글의 기록만', rowOf(x1Def.id, tistory.id)?.keepsArticle(x1Def.id) === true && !rowOf(x1Def.id, tistory.id)?.keepsArticle(goneId) && !rowOf(x1Def.id, tistory.id)?.keepsArticle(MAIN));
+  ok('규칙 — 본 글이 있는 주의 본 글 줄은 topic:이 아닌 기록만', mainTistory?.keepsArticle(MAIN) === true && !mainTistory.keepsArticle(goneId) && !mainTistory.keepsArticle(x1Def.id));
+  ok('규칙 — 모든 줄의 hits가 그 줄의 규칙을 따른다', [...pub.rows, ...noMain.rows, ...goneRows].every((r) => r.hits.every((h) => r.keepsArticle(h.post.articleId))));
 
   // 추가 글로 올린 단일 채널 — 「올렸어요」(markDone true)가 집행함으로 바꾼다. 집행함이어도 그 추가 글 줄에 남아 올린 주소를 보이고,
   // 그 글을 목록에서 빼도 이미 등록한 곳이 「올리기」로 돌아가지 않는다(같은 업체 중복 등록 방지).
@@ -586,7 +643,7 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
     ...plainAction,
     id: 'topic:c1-011+c1-012',
     title: '조용한 방 콘텐츠 보강',
-    extra: { name: '조용한 방', angle: '  방음 · 층 고르는 법 ', how: 'same-bank' as const, missingTexts: [], topic: snap },
+    extra: { name: '조용한 방', angle: '  방음 · 층 고르는 법 ', how: 'same-bank' as const, missingTexts: [], won: 0, noAnswer: 0, topic: snap },
   };
   const withMain = briefInputOf(extraAction, mainDraft);
   ok('요청 — 추가 글: 각도는 「이름 — 각도」', withMain.angle === '조용한 방 — 방음 · 층 고르는 법');

@@ -89,6 +89,11 @@ export interface PublishRow {
    * 여러 글의 기록이 모인다. 덮는 글이 없는 주의 「올린 주소만 다루는 줄」은 살아 있는 추가 글 줄에 보이지 않는 기록을 모두 받는다.
    */
   hits: PublishedHit[]
+  /**
+   * hits를 고른 규칙 — 이 줄이 보일 기록인가(기록의 글 id로). 화면의 「뺀 주소」 목록도 같은 규칙으로 고른다. 규칙이 다르면 이 줄에서
+   * 뺀 주소가 어느 목록에도 남지 않아 되살릴 수 없다.
+   */
+  keepsArticle: (articleId: string) => boolean
   /** hits의 주소(같은 순서). */
   publishedUrls: string[]
   /** 그중 이번 주 인용에 나온 주소. */
@@ -151,7 +156,7 @@ function overlap(a: string[], b: Set<string>): string[] {
 /** 블로그 플랫폼 채널(gapActions listingActions — 플랫폼 단위로 묶은 항목). 글마다 따로 올릴 수 있는 곳이다. */
 export const isBlogPlatformChannel = (a: GapAction): boolean => a.id.startsWith('listing:platform:')
 
-type RowRecords = Pick<PublishRow, 'hits' | 'publishedUrls' | 'citedUrls'>
+type RowRecords = Pick<PublishRow, 'hits' | 'keepsArticle' | 'publishedUrls' | 'citedUrls'>
 
 /**
  * 대상 항목의 기록 가운데 keep이 고른 글의 것. exact가 아니고 빠진 기록이 없으면 항목의 주소를 그대로 쓴다 — 기록 줄 없이 주소만 실린
@@ -160,9 +165,9 @@ type RowRecords = Pick<PublishRow, 'hits' | 'publishedUrls' | 'citedUrls'>
 function recordsOf(target: GapAction, keep: (articleId: string) => boolean, exact: boolean): RowRecords {
   const all = target.publishedHits ?? []
   const hits = all.filter((h) => keep(h.post.articleId))
-  if (!exact && hits.length === all.length) return { hits, publishedUrls: target.publishedUrls, citedUrls: target.citedPublishedUrls }
+  if (!exact && hits.length === all.length) return { hits, keepsArticle: keep, publishedUrls: target.publishedUrls, citedUrls: target.citedPublishedUrls }
   const urls = hits.map((h) => h.post.url)
-  return { hits, publishedUrls: urls, citedUrls: target.citedPublishedUrls.filter((u) => urls.includes(u)) }
+  return { hits, keepsArticle: keep, publishedUrls: urls, citedUrls: target.citedPublishedUrls.filter((u) => urls.includes(u)) }
 }
 
 const notExtra = (articleId: string) => !isExtraArticleId(articleId)

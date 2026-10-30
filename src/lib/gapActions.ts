@@ -142,6 +142,15 @@ export interface GapAction {
     how: ExtraResolveHow
     /** 이번 주 은행에서 찾지 못한 질문(고정 문장) — 확인 불가로 보인다. 0이나 「이김」으로 채우지 않는다. */
     missingTexts: string[]
+    /**
+     * 찾지 못한 까닭 — 이번 주 판을 몰라서(예시 은행 · 옛 측정 · 은행을 읽는 중) · 판이 바뀌어 같은 문장이 없어서 · 같은 판인데 은행에
+     * 그 질문이 없어서. 찾지 못한 질문이 없으면 없다. 화면이 까닭을 근거 문장과 같게 말한다.
+     */
+    missingWhy?: 'bank-unknown' | 'bank-changed' | 'not-in-bank'
+    /** 찾은 질문(questionIds) 가운데 이번 주 이긴 질문 수. */
+    won: number
+    /** 찾은 질문 가운데 이번 주 응답 줄이 없는 질문 수 — 확인 불가다(밀리지 않은 것으로 세지 않는다). */
+    noAnswer: number
     /** 올린 기록에 싣는 질문 스냅샷(만들 때의 판 · id · 문장) — 원장 검사(checkTopic)를 늘 통과한다. */
     topic: TopicSnapshot
   }
@@ -736,27 +745,50 @@ function extraContentActions(
       .sort((a, b) => (a.row?.mentionedRate ?? Infinity) - (b.row?.mentionedRate ?? Infinity) || a.i - b.i)
     const lost = ordered.filter((q) => q.row?.verdict === 'loss')
     const zero = lost.filter((q) => q.row?.mentionedRate === 0).length
+    const won = ordered.filter((q) => q.row?.verdict === 'win').length
+    const noAnswer = ordered.filter((q) => !q.row).length
     const picked = found.currentIds.length
+    const answered = picked - noAnswer
     const lostNote =
       picked === 0
         ? ''
         : lost.length > 0
           ? `고른 질문 ${picked}개 중 ${lost.length}개에서 밀리고${zero > 0 ? `, 그중 ${zero}개는 언급이 아예 0건입니다.` : ' 있습니다.'}`
-          : `고른 질문 ${picked}개 가운데 이번 주 밀린 질문이 없습니다.`
+          : noAnswer === 0
+            ? `고른 질문 ${picked}개 가운데 이번 주 밀린 질문이 없습니다.`
+            : answered > 0
+              ? `응답이 있는 질문 ${answered}개 가운데 이번 주 밀린 질문이 없습니다.`
+              : ''
+    // 응답 줄이 없는 질문은 밀리지 않은 것으로 세지 않는다 — 확인 불가로 밝힌다.
+    const noAnswerNote = noAnswer > 0 ? `고른 질문 중 ${noAnswer}개는 이번 주 응답이 없어 확인 불가입니다.` : ''
     // 찾지 못한 질문은 세지 않고 확인 불가로 밝힌다 — 0이나 「이김」으로 채우지 않는다.
-    const missingNote =
+    const missingWhy =
       found.missingTexts.length === 0
-        ? ''
+        ? undefined
         : !weekBankVersion
+          ? 'bank-unknown'
+          : weekBankVersion !== def.bankVersion
+            ? 'bank-changed'
+            : 'not-in-bank'
+    const missingNote =
+      missingWhy === undefined
+        ? ''
+        : missingWhy === 'bank-unknown'
           ? `이번 주 질문 은행 판을 몰라 고른 질문 ${found.missingTexts.length}개의 결과는 확인 불가입니다.`
           : `질문 ${found.missingTexts.length}개는 이번 주 질문 은행(${weekBankVersion})에서 같은 문장을 찾지 못해 확인 불가입니다.`
-    const byTextNote = found.how === 'by-text' ? `질문 은행 판이 바뀌어(${def.bankVersion} → ${weekBankVersion}) 문장이 같은 질문으로 다시 찾았습니다.` : ''
+    // 판이 바뀌었다는 말 — 문장으로 다시 찾은 주에도, 하나도 찾지 못한 주에도 밝힌다(찾지 못한 까닭이다).
+    const byTextNote =
+      found.how === 'by-text'
+        ? `질문 은행 판이 바뀌어(${def.bankVersion} → ${weekBankVersion}) 문장이 같은 질문으로 다시 찾았습니다.`
+        : missingWhy === 'bank-changed'
+          ? `질문 은행 판이 바뀌었습니다(${def.bankVersion} → ${weekBankVersion}).`
+          : ''
     return {
       id: def.id,
       kind: 'content',
       title: `${def.name} 콘텐츠 보강`,
       badge: '추가 글',
-      evidence: [lostNote, byTextNote, missingNote].filter(Boolean).join(' '),
+      evidence: [lostNote, noAnswerNote, byTextNote, missingNote].filter(Boolean).join(' '),
       questionIds: ordered.map((q) => q.id),
       questionTexts: [...def.questionTexts],
       reach: lost.length,
@@ -770,11 +802,34 @@ function extraContentActions(
         ...(def.angle ? { angle: def.angle } : {}),
         how: found.how,
         missingTexts: found.missingTexts,
+        ...(missingWhy ? { missingWhy } : {}),
+        won,
+        noAnswer,
         topic: extraTopicSnapshot(def),
       },
     }
   })
   return { actions, claimed }
+}
+
+/**
+ * 추가 글의 이번 주 형편 — 카드 머리 · 글 목록 · 「모두 이기고 있어요」 줄이 같은 말을 쓴다. reach는 진 질문만 세므로, reach 0만으로
+ * 「모두 이김」이라 하면 무승부 · 되물음 · 응답 없는 질문까지 이김이 된다.
+ * - unknown: 이번 주 결과가 있는 질문이 하나도 없다(못 찾았거나 응답이 없다) — 0개가 아니라 확인 불가다.
+ * - losing: 밀리는 질문이 있다.
+ * - all-win: 고른 질문을 모두 찾았고 모두 이겼다.
+ * - no-loss: 밀리는 질문은 없지만 모두 이긴 것은 아니다(무승부 · 되물음 · 응답 없음 · 못 찾은 질문이 있다).
+ * 추가 글이 아니면 null.
+ */
+export type ExtraStanding = 'unknown' | 'losing' | 'all-win' | 'no-loss'
+export function extraStandingOf(action: Pick<GapAction, 'extra' | 'questionIds' | 'reach'>): ExtraStanding | null {
+  const extra = action.extra
+  if (!extra) return null
+  const found = action.questionIds.length
+  if (found - extra.noAnswer <= 0) return 'unknown'
+  if (action.reach > 0) return 'losing'
+  if (extra.missingTexts.length === 0 && extra.won === found) return 'all-win'
+  return 'no-loss'
 }
 
 /**

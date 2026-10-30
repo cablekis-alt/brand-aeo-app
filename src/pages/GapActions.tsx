@@ -26,7 +26,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { isExtraArticleId } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
-import { channelNameOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
+import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
@@ -304,7 +304,9 @@ function articleStateOf(x: PublishArticle): { label: string; tone: string } {
 function articleRoleOf(action: GapAction): { line: string; short: string } {
   if (action.kind !== 'content') return { line: `${action.title}용 글`, short: action.title }
   const group = action.extra?.name ?? action.title.replace(/\s*콘텐츠 보강$/, '')
-  return { line: `${group}에 답하는 글`, short: `${group} ${action.reach}개` }
+  // 이번 주 결과가 있는 질문이 없는 추가 글은 「0개」가 아니라 확인 불가 — 밀린 질문이 없는 것처럼 읽히면 안 된다.
+  const count = extraStandingOf(action) === 'unknown' ? '확인 불가' : `${action.reach}개`
+  return { line: `${group}에 답하는 글`, short: `${group} ${count}` }
 }
 
 function ActionCard({
@@ -363,13 +365,16 @@ function ActionCard({
   const [removing, setRemoving] = useState(false)
   const [removeError, setRemoveError] = useState<string | null>(null)
   const extra = action.extra
+  const standing = extraStandingOf(action)
   /** 「목록에서 빼기」 — 지우지 않는다. 초안 · 올린 기록은 남고, 맡던 질문은 다음 계산부터 본 글로 돌아간다. */
   const removeExtra = async () => {
     if (!extra || !onRemoveExtra) return
+    // 다시 이어지는 것은 같은 판에서 같은 질문으로 만들 때뿐이다 — 글 id가 그 판의 질문 id로 정해진다(lib/extraArticles.ts topicArticleId).
     const ok = window.confirm(
       `「${extra.name}」 글을 목록에서 뺄까요?\n\n` +
-        '초안과 올린 기록은 지우지 않고 남겨 둡니다(콘텐츠 보관함 · 올린 글 성과에서 볼 수 있어요). ' +
-        '이 글이 맡던 질문은 본 글로 돌아갑니다. 같은 질문으로 다시 만들면 초안과 기록이 이어집니다.',
+        '초안과 올린 기록은 지우지 않고 남겨 둡니다(콘텐츠 보관함 · AEO 퍼포먼스의 올린 글 인용 추적에서 볼 수 있어요). ' +
+        '이 글이 맡던 질문 가운데 이번 주 질문 은행에 있는 것은 본 글로 돌아갑니다. ' +
+        '질문 은행 판이 같을 때 같은 질문으로 다시 만들면 초안과 기록이 이어집니다(판이 바뀐 뒤에 만들면 새 글로 시작해요).',
     )
     if (!ok) return
     setRemoving(true)
@@ -408,7 +413,16 @@ function ActionCard({
         </span>
         {article && <span className={`status-pill ${articleStateOf(article).tone}`}>{articleStateOf(article).label}</span>}
         <span className="gap-rate">
-          AI가 우리를 말하지 않는 질문 <b>{action.reach}</b>개
+          {standing === 'unknown' ? (
+            // 이번 주 결과가 있는 질문이 없다 — 0개로 보이면 밀린 질문이 없는 것처럼 읽힌다.
+            <>
+              AI가 우리를 말하지 않는 질문 <b>확인 불가</b>
+            </>
+          ) : (
+            <>
+              AI가 우리를 말하지 않는 질문 <b>{action.reach}</b>개
+            </>
+          )}
         </span>
       </div>
       {articleTitle && <p className="gap-card-group">{articleRoleOf(action).line}</p>}
@@ -422,8 +436,12 @@ function ActionCard({
         // 찾지 못한 질문은 세지 않는다 — 0이나 「이김」으로 채우지 않고 확인 불가로 밝힌다.
         <details className="draft-audit">
           <summary>
-            고른 질문 {extra.missingTexts.length}개는 이번 주 질문 은행에서 찾지 못해 확인 불가예요
-            {extra.how === 'by-text' ? ' — 질문 은행 판이 바뀌었습니다.' : '.'}
+            {/* 까닭은 근거 문장(lib/gapActions.ts missingWhy)과 같게 — 판을 모르는 것과 판이 바뀐 것은 다른 일이다. */}
+            {extra.missingWhy === 'bank-unknown'
+              ? `이번 주 질문 은행 판을 몰라 고른 질문 ${extra.missingTexts.length}개는 확인 불가예요.`
+              : `고른 질문 ${extra.missingTexts.length}개는 이번 주 질문 은행에서 찾지 못해 확인 불가예요${
+                  extra.missingWhy === 'bank-changed' ? ' — 질문 은행 판이 바뀌었습니다.' : '.'
+                }`}
           </summary>
           <ul className="muted">
             {extra.missingTexts.map((t) => (
@@ -437,10 +455,17 @@ function ActionCard({
           질문 은행 판이 바뀌어 문장이 같은 질문으로 다시 찾았어요.
         </p>
       )}
-      {extra && extra.how !== 'unresolved' && extra.missingTexts.length === 0 && action.reach === 0 && (
+      {standing === 'all-win' && (
         // 이긴 주에도 사람이 뺄 때까지 남긴다 — 올린 기록이 목록에서 사라지면 안 된다.
         <p className="gap-tally" style={{ color: 'var(--ink)' }}>
           이번 주 고른 질문을 모두 이기고 있어요.
+        </p>
+      )}
+      {extra && standing === 'no-loss' && (
+        // 밀린 질문이 없다고 모두 이긴 것은 아니다 — 무승부 · 되물음은 이김이 아니고, 응답 없는 질문은 확인 불가다.
+        <p className="gap-tally" style={{ color: 'var(--ink)' }}>
+          이번 주 {extra.missingTexts.length > 0 ? '찾은 질문 가운데 ' : '고른 질문 가운데 '}밀리는 질문은 없어요.
+          {extra.noAnswer > 0 && ` 응답이 없는 질문 ${extra.noAnswer}개는 확인 불가예요.`}
         </p>
       )}
       {showWhy && (
@@ -862,6 +887,17 @@ export default function GapActions() {
           올린 글 기록: {posts.error}
         </p>
       )}
+      {/* 추가 글 목록을 읽지 못했다 — 빈 목록으로 계산해 추가 글 카드가 사라지고 그 질문이 본 글로 돌아간다. 「글 더 만들기」 칸은
+          본 글이 없는 주에 그려지지 않으니 여기서 밝힌다. */}
+      {extras.available && (extras.error || extras.corrupt) && (
+        <p className="error" role="alert">
+          추가 글 목록:{' '}
+          {extras.error
+            ? `읽지 못했어요(${extras.error}).`
+            : '저장된 목록이 깨져 읽지 못했어요. 목록을 덮어쓰지 않으려고 새 추가 글도 만들지 않습니다.'}{' '}
+          이미 만든 추가 글이 보이지 않고, 그 글이 맡던 질문은 본 글에 들어가 있어요.
+        </p>
+      )}
 
       {loading && <p className="muted">불러오는 중…</p>}
 
@@ -1045,13 +1081,8 @@ export default function GapActions() {
                         <PublishedUrlEditor
                           addLabel="올렸어요"
                           hits={row.hits}
-                          // 뺀 주소도 그 줄의 글 것만 — 추가 글 줄은 그 글의 기록, 그 밖의 줄은 추가 글(topic:)이 아닌 기록.
-                          removed={posts.list.filter(
-                            (p) =>
-                              p.targetActionId === row.target.id &&
-                              p.removedAt &&
-                              (isExtraArticleId(row.article.action.id) ? p.articleId === row.article.action.id : !isExtraArticleId(p.articleId)),
-                          )}
+                          // 뺀 주소도 그 줄이 보이는 기록과 같은 규칙으로(publishPlan.ts keepsArticle) — 다르면 뺀 주소를 되살릴 곳이 없다.
+                          removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt && row.keepsArticle(p.articleId))}
                           weekOf={weekOf}
                           citedInWeek={citedInWeek}
                           timingInWeek={timingInWeek}
