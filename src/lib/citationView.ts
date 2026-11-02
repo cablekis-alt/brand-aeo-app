@@ -1,5 +1,6 @@
 import { comparableWith } from './comparability'
 import { ENGINE_LABEL } from './format'
+import { isProbe } from './questionScope'
 import type { CitationComparison } from './types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import type { CitationQuestionScope } from '../prompts/b7-citation-sources'
@@ -41,6 +42,16 @@ export const QUESTION_SCOPE_LABEL: Record<CitationQuestionScope | 'all', string>
 
 /** 필터에 보이는 순서 — 실증 질문은 점수 밖이라 맨 끝. */
 export const QUESTION_SCOPE_OPTIONS: readonly (CitationQuestionScope | 'all')[] = ['unnamed', 'all', 'named', 'probe']
+
+/**
+ * 고른 주에 보일 질문 유형 칸. weekBank는 **그 주를 측정한 판**의 질문지다(resolveBankVersion) — 지금 질문지로 가르면 모두 새로 쓰기 ·
+ * 기본 정보 수정으로 실증 없는 새 판이 된 뒤 실증을 잰 옛 주의 「실증 질문」 칸이 사라진다(서버는 그 주 판으로 실증 응답을 돌려준다).
+ * 그 판에 실증 질문이 없으면 늘 빈 집계라 칸을 감춘다. 질문지를 아직 못 읽었으면(null) 감춘다.
+ */
+export function questionScopeOptions(weekBank: { questions: { probe?: boolean }[] } | null): readonly (CitationQuestionScope | 'all')[] {
+  const hasProbes = Boolean(weekBank?.questions.some(isProbe))
+  return QUESTION_SCOPE_OPTIONS.filter((s) => s !== 'probe' || hasProbes)
+}
 
 /** 점유율 · 갭 비중을 무엇으로 셌는지(「… 기준입니다」 앞말). */
 export function citationBasisLabel(scope: CitationQuestionScope | 'all'): string {

@@ -20,6 +20,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import ExtraArticleForm from '../src/components/ExtraArticleForm';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import type { QuestionSpec } from '../src/prompts/types';
+import type { WeekTally } from '../src/lib/publishedUrl';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
 import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank';
 import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from '../src/lib/citationView';
@@ -705,6 +706,61 @@ try {
   const htmlBefore = tableHtml(viewBefore);
   check('이력 표: 실증을 잰 주가 있으면 칸에 「실증 3」', htmlAfter.includes('이름 없는 1 · 이름 댄 0 · 실증 3') && htmlAfter.includes('「실증」은 점수에 넣지 않는'), htmlAfter);
   check('이력 표: 실증이 없으면 「실증」 글자가 없음', !htmlBefore.includes('실증') && htmlBefore.includes('이름 없는 1 · 이름 댄 0'), htmlBefore);
+
+  // ── 8-2. 실행 항목 카드의 올린 글 주소(PublishedUrlEditor) ─────────────────────
+  // 실증 답에만 인용된 처치 글 — 카드가 「인용됨」이라 하면서 숫자가 모두 0이면 실험 결과가 어디에도 안 보인다(P7). 실증 인용을
+  // 따로 적고 이름 없는 질문 인용처럼 초록으로. 실증 인용이 없는 글은 문구 · 색이 그대로다.
+  const { default: PublishedUrlEditor } = await import('../src/components/PublishedUrlEditor');
+  const editorHtml = (tally: WeekTally | null | undefined) =>
+    renderToStaticMarkup(
+      React.createElement(PublishedUrlEditor, {
+        hits: [{ post: trackedPost, timing: 'after', tally: tally ?? null, variantCited: 0, daysAfterPublish: 20 }],
+        removed: [],
+        weekOf: '2026-W44',
+        busy: false,
+        onRecord: async () => null,
+        onRemove: () => undefined,
+        onRestore: () => undefined,
+        onSetDate: () => undefined,
+      }),
+    ).replaceAll('<!-- -->', '');
+  const probeOnlyTally = indexWeekCitations([probes[0]!], kindsAfter).get('own.example/page');
+  const editorProbe = editorHtml(probeOnlyTally);
+  check(
+    '올린 글 주소: 실증 답에만 인용되면 「실증 1(점수 제외)」 · 초록',
+    probeOnlyTally?.unnamed?.cited === 0 && editorProbe.includes('이름 없는 질문 0 · 이름 댄 질문 0 · 실증 1(점수 제외) · 뒷받침') && editorProbe.includes('status-pill st-good'),
+    editorProbe,
+  );
+  const editorNoProbe = editorHtml(tallyBefore);
+  check(
+    '올린 글 주소: 실증 인용이 없으면 문구 · 색 그대로',
+    !editorNoProbe.includes('실증') && editorNoProbe.includes('이름 없는 질문 1 · 이름 댄 질문 0 · 뒷받침') && editorNoProbe.includes('status-pill st-good'),
+    editorNoProbe,
+  );
+  const namedOnlyTally = indexWeekCitations([base[0]!], questionKinds([{ questionId: 'v5-001', containsBrandName: true }])).get('own.example/page');
+  const editorNamed = editorHtml(namedOnlyTally);
+  check('대조: 이름 댄 질문에만 인용되면 파랑(st-info) — 초록 조건이 헛돌지 않음', editorNamed.includes('status-pill st-info') && !editorNamed.includes('실증'), editorNamed);
+
+  // ── 8-3. 인용 갭의 「실증 질문」 칸 ──────────────────────────────────────────
+  // 칸은 고른 주를 측정한 판의 질문지로 가른다 — 모두 새로 쓰기로 실증 없는 v6이 된 뒤에도 v5로 잰 W44에서는 실증 응답의 인용
+  // 출처를 볼 수 있어야 하고(서버는 그 주 판으로 돌려준다), 실증 없는 판으로 잰 주에는 칸이 없어야 한다(P7).
+  const { questionScopeOptions } = await import('../src/lib/citationView');
+  const { resolveBankVersion } = await import('../src/lib/bankVersion');
+  const gapHistory = [
+    { ...weekCard, weekOf: '2026-W44', questionBankVersion: 'v5' },
+    { ...weekCard, weekOf: '2026-W45', questionBankVersion: 'v6' },
+  ] as unknown as WeeklyScorecard[];
+  const gapBanks = new Map([
+    ['v5', { questions: bankAfter }],
+    ['v6', { questions: bankBefore }],
+  ]);
+  const scopeAt = (weekOf: string) => questionScopeOptions(gapBanks.get(resolveBankVersion(gapHistory, weekOf, []) ?? 'v6') ?? null);
+  check(
+    '인용 갭 칸: 실증을 잰 판의 주에는 「실증 질문」 · 실증 없는 판의 주에는 없음',
+    scopeAt('2026-W44').includes('probe') && !scopeAt('2026-W45').includes('probe') && scopeAt('2026-W45').length === QUESTION_SCOPE_OPTIONS.length - 1,
+    JSON.stringify({ W44: scopeAt('2026-W44'), W45: scopeAt('2026-W45') }),
+  );
+  check('인용 갭 칸: 질문지를 못 읽었으면 「실증 질문」 없음', !questionScopeOptions(null).includes('probe'));
 
   // ── 9. 경쟁사 편집의 질문 수 · 크기 ─────────────────────────────────────────
   // 저장소 설정의 고객 브랜드 하나(경쟁사 3곳 이상)에 가짜 질문지를 둔다(verify-competitor-save.ts와 같은 방식).

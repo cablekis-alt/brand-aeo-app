@@ -18,7 +18,8 @@ const kstClock = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toISO
 
 /**
  * 이번 주 결과 한 줄. 숫자는 정확 일치 인용만 센다(src/lib/publishedUrl.ts). 올리기 전에 한 측정은 세지 않고, 측정하던 날 올린
- * 글은 전후를 알 수 없다고 밝힌다. 질문 은행을 못 읽은 주는 이름 없는/이름 댄 질문을 0이 아니라 확인 불가로 둔다.
+ * 글은 전후를 알 수 없다고 밝힌다. 질문 은행을 못 읽은 주는 이름 없는/이름 댄 질문을 0이 아니라 확인 불가로 둔다. 실증 질문의
+ * 인용은 「실증」으로 따로 적는다.
  */
 function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill: string; cls: string; detail: string | null } {
   // 같은 주 다른 회차에서 인용됐다 — 이 결과는 마지막 저장 측정만 보므로 기준을 밝힌다(AEO 퍼포먼스 올린 글 표는 회차를 합쳐 센다).
@@ -62,13 +63,17 @@ function statusOf(h: PublishedHit, week: string, citedOtherRun: boolean): { pill
     }
     return { pill: '인용 없음', cls: 'st-unknown', detail: `${week} 측정의 AI 답변 인용에서 이 주소를 찾지 못했습니다.` }
   }
+  // 실증 질문의 인용은 이름 없는 질문에 들지 않는다(WeekTally.probe) — 처치 글이 실증 답에 인용된 것이 실험 결과라 따로 적고, 이름
+  // 없는 질문 인용처럼 초록으로 보인다. 실증 인용이 없으면 문구는 실증을 덧붙이기 전과 같다.
+  const probeCited = t.probe?.cited ?? 0
+  const probePart = probeCited > 0 ? ` · 실증 ${probeCited}(점수 제외)` : ''
   const counts =
     t.unnamed && t.named
-      ? `${week} · 이름 없는 질문 ${t.unnamed.cited} · 이름 댄 질문 ${t.named.cited} · 뒷받침 ${t.all.supporting}`
+      ? `${week} · 이름 없는 질문 ${t.unnamed.cited} · 이름 댄 질문 ${t.named.cited}${probePart} · 뒷받침 ${t.all.supporting}`
       : `${week} · 인용 ${t.all.cited} · 질문지를 못 읽어 질문 유형은 확인 불가`
   return {
     pill: '인용됨',
-    cls: t.unnamed && t.unnamed.cited > 0 ? 'st-good' : 'st-info',
+    cls: (t.unnamed && t.unnamed.cited > 0) || probeCited > 0 ? 'st-good' : 'st-info',
     detail: unsure ? `${counts} (${unsureWhy} — 전후 불명)` : counts,
   }
 }

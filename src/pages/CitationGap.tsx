@@ -4,6 +4,7 @@ import WeekPicker from '../components/WeekPicker'
 import { ComparisonNote, ShareDelta, UrlLink } from '../components/CitationBits'
 import { useTenant } from '../context/useTenant'
 import { loadCitationSources, loadQuestionBank } from '../lib/api'
+import { resolveBankVersion } from '../lib/bankVersion'
 import {
   GAP_BUCKET_LABEL,
   GAP_BUCKET_ORDER,
@@ -17,12 +18,12 @@ import {
 import {
   KIND_PILL,
   QUESTION_SCOPE_LABEL,
-  QUESTION_SCOPE_OPTIONS,
   citationBasisLabel,
   comparisonFromHistory,
+  questionScopeOptions,
 } from '../lib/citationView'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
-import { isProbe } from '../lib/questionScope'
+import type { QuestionBank } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
@@ -167,27 +168,12 @@ function GapRowView({
 export default function CitationGap() {
   const { tenant } = useTenant()
   const [engine, setEngine] = useState<string>('')
-  // 「실증 질문」 칸은 지금 질문지에 실증 질문이 있는 브랜드에만 보인다 — 없는 브랜드에는 늘 빈 집계라 고를 까닭이 없다.
-  const [probeBank, setProbeBank] = useState<{ tenantId: string; has: boolean } | null>(null)
-  useEffect(() => {
-    if (!tenant?.tenantId) return
-    let alive = true
-    const tenantId = tenant.tenantId
-    loadQuestionBank(tenantId).then(
-      (bank) => alive && setProbeBank({ tenantId, has: Boolean(bank?.questions.some(isProbe)) }),
-      (err: unknown) => {
-        console.error('[CitationGap] 질문지를 읽지 못했습니다', err)
-        if (alive) setProbeBank({ tenantId, has: false })
-      },
-    )
-    return () => {
-      alive = false
-    }
-  }, [tenant?.tenantId])
-  const hasProbes = probeBank !== null && probeBank.tenantId === tenant?.tenantId && probeBank.has
-  const scopeOptions = QUESTION_SCOPE_OPTIONS.filter((s) => s !== 'probe' || hasProbes)
+  // 「실증 질문」 칸은 고른 주를 측정한 판의 질문지에 실증 질문이 있을 때만 보인다(questionScopeOptions). 질문지는 아래에서
+  // useWeeklyPage가 정한 주차의 판으로 불러온다 — 판이 바뀐 주로 옮기면 새 질문지가 올 때까지는 같은 브랜드의 앞 질문지로 가른다.
+  const [weekBank, setWeekBank] = useState<{ tenantId: string; version: string | undefined; bank: QuestionBank | null } | null>(null)
+  const scopeOptions = questionScopeOptions(weekBank && weekBank.tenantId === tenant?.tenantId ? weekBank.bank : null)
   const [scopePick, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
-  // 실증 질문이 없는 브랜드로 옮기면 고른 「실증 질문」도 풀린다.
+  // 실증 질문을 재지 않은 판의 주나 다른 브랜드로 옮기면 고른 「실증 질문」도 풀린다.
   const scope = scopeOptions.includes(scopePick) ? scopePick : 'unnamed'
   const questions = scope === 'all' ? null : scope
   const [bucket, setBucket] = useState<GapBucket | 'all'>('all')
@@ -210,6 +196,24 @@ export default function CitationGap() {
     data: loaded,
     loading: loadingData,
   } = useWeeklyPage<LoadedGap>(loader, tenant?.tenantId ?? '', EMPTY_LOADED)
+  // 그 주를 측정한 판 — 서버(getCitationSourceAnalysis)처럼 그 주 카드의 판을 먼저 쓰고, 없으면 지금 판(버전 없이 요청)으로 둔다.
+  const tenantId = tenant?.tenantId ?? ''
+  const weekVersion = weekOf ? resolveBankVersion(history, weekOf, []) : undefined
+  const bankReady = weekBank !== null && weekBank.tenantId === tenantId && weekBank.version === weekVersion
+  useEffect(() => {
+    if (!tenantId || !weekOf || bankReady) return
+    let alive = true
+    loadQuestionBank(tenantId, weekVersion).then(
+      (bank) => alive && setWeekBank({ tenantId, version: weekVersion, bank }),
+      (err: unknown) => {
+        console.error('[CitationGap] 질문지를 읽지 못했습니다', err)
+        if (alive) setWeekBank({ tenantId, version: weekVersion, bank: null })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, weekOf, weekVersion, bankReady])
   const stale = loaded.filterKey !== '' && loaded.filterKey !== filterKey
   const analysis = stale ? EMPTY : loaded.analysis
   const loading = loadingData || stale
