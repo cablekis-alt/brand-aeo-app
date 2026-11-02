@@ -10,7 +10,9 @@
  * 한 질문을 여러 글이 맡는 배정이라 운영 기간에는 겹침을 받아야 한다.
  *
  * 화면은 jsdom으로 두 가지만 본다: 일괄 실행 잠금 · 브리프 · 초안이 브랜드를 넘지 않는지(src/lib/bulkRun.ts), 「글 더 만들기」에 배정이
- * 늦게 와도 그 전에 고른 체크의 경고가 남지 않고 배정 글의 각도까지 보내는지 · 작성자 거르기가 배정표 글을 줄이는지.
+ * 늦게 와도 그 전에 고른 체크의 경고가 남지 않고 배정 글의 각도까지 보내는지 · 작성자 거르기가 배정표 글을 줄이는지 · 한 질문을 여러
+ * 배정 글이 맡으면 「맡음」에 그 글을 모두 다는지. 콘텐츠 생성 화면의 자리 · 문구는 화면이 쓰는 순수 함수로 본다(src/lib/gapActions.ts) —
+ * 작성자를 골라 본 글 카드가 걸러져도 「글 더 만들기」가 남는지, 운영 기간의 실증 칸이 처치 · 대조를 말하지 않는지.
  *
  *   npx tsx scripts/verify-probe-plan.ts
  */
@@ -20,7 +22,7 @@ import ExtraArticleForm from '../src/components/ExtraArticleForm';
 import type { NewExtraArticleInput } from '../src/lib/api';
 import { bulkRunsAfter, passForTenant, type BulkRuns } from '../src/lib/bulkRun';
 import { checkNewExtraArticle, checkExtraArticlePatch, DEFAULT_EXTRA_RULES, EXTRA_LIMITS, extraBriefAngle, topicArticleId, type ExtraArticle } from '../src/lib/extraArticles';
-import type { GapAction } from '../src/lib/gapActions';
+import { extraFormSlot, probeSectionHint, probeTakenNote, type GapAction } from '../src/lib/gapActions';
 import {
   allowedTopicIds,
   extraArticleCap,
@@ -231,13 +233,13 @@ const ids = plan?.articles.map((a) => a.id) ?? [];
   const probeRows = [{ questionId: 'v9-p001', text: '가상시 벚꽃 철에 묵기 좋은 숙소 추천해줘', verdict: 'loss' }] as unknown as WinLossRow[];
   const sent: Omit<NewExtraArticleInput, 'bankVersion' | 'createdWeek'>[] = [];
   const made = { id: A2.id, title: `${A2.name} 콘텐츠 보강`, questionIds: A2.questionIds, questionTexts: A2.questionTexts, extra: { name: A2.name } } as unknown as GapAction;
-  const render = (probePlan: WriterPlan | null, writerKey: string | null = null, bankVersion = 'v9') =>
+  const render = (probePlan: WriterPlan | null, writerKey: string | null = null, bankVersion = 'v9', extraActions = probePlan ? [made] : []) =>
     React.act(async () => {
       root.render(
         React.createElement(ExtraArticleForm, {
           main: mainAction,
           probes: probeRows,
-          extraActions: probePlan ? [made] : [],
+          extraActions,
           bankVersion,
           corrupt: false,
           loadError: null,
@@ -284,7 +286,51 @@ const ids = plan?.articles.map((a) => a.id) ?? [];
   ok('글 더 만들기 — 작성자를 고르면 그 작성자의 배정표 글만', radios().length === 2 && host.textContent?.includes(A1.name) === false, `${radios().length}`);
   await render(plan, null, 'v8');
   ok('글 더 만들기 — 판이 다르면 서버와 같은 말로 막음', warnings().includes('v8') && warnings().includes('v9') && button().disabled);
+
+  // 운영 기간에는 배정 글 여러 편이 한 질문을 맡는다 — 「맡음」에 맡은 글을 모두 달고, 본 글에서 빠진 같은 질문은 한 줄로 둔다.
+  const madeOf = (a: typeof A1) =>
+    ({ id: a.id, title: `${a.name} 콘텐츠 보강`, questionIds: a.questionIds, questionTexts: a.questionTexts, extra: { name: a.name } }) as unknown as GapAction;
+  await render(plan, null, 'v9', [madeOf(A1), madeOf(A2), madeOf(B2)]);
+  const mainRows = [...host.querySelectorAll('ul[aria-label="본 글의 이번 주 질문"] > li')].map((li) => li.textContent ?? '');
+  const rowsOf = (id: string) => mainRows.filter((t) => t.startsWith(TEXT[id]));
+  ok(
+    '맡음 — 한 질문을 여러 글이 맡으면 모두(c1-001 = 하나 · 둘)',
+    rowsOf('c1-001').length === 1 && rowsOf('c1-001')[0].includes(`「${A1.name}」 · 「${B2.name}」 글이 맡음`),
+    mainRows.join(' | '),
+  );
+  ok('맡음 — 한 편만 맡으면 그 글 하나(지금과 같음)', rowsOf('c1-002').length === 1 && rowsOf('c1-002')[0].endsWith(` · 「${A1.name}」 글이 맡음`), mainRows.join(' | '));
+  ok(
+    '맡음 — 본 글에서 빠진 같은 질문은 한 줄에 맡은 글 모두(c1-004)',
+    rowsOf('c1-004').length === 1 && rowsOf('c1-004')[0].includes(`「${A2.name}」 · 「${B2.name}」 글이 맡음`),
+    mainRows.join(' | '),
+  );
   await React.act(async () => root.unmount());
+}
+
+// ── 화면 — 콘텐츠 생성의 「글 더 만들기」 자리 · 실증 칸 문구(src/lib/gapActions.ts) ──────────────
+{
+  ok('자리 — 본 글 카드가 보이면 그 아래', extraFormSlot({ hasMain: true, mainShown: true, probes: 1 }) === 'under-main');
+  ok('자리 — 작성자를 골라 본 글 카드가 걸러져도 글 카드 뒤에 남음', extraFormSlot({ hasMain: true, mainShown: false, probes: 0 }) === 'after-cards');
+  ok('자리 — 본 글이 없는 주는 고를 실증이 있을 때만 실증 칸', extraFormSlot({ hasMain: false, mainShown: false, probes: 2 }) === 'probes' && extraFormSlot({ hasMain: false, mainShown: false, probes: 0 }) === null);
+
+  // 배정이 없으면 지금 문구 그대로 — 처치 · 대조를 말한다.
+  ok('실증 칸 — 배정 없음: 맡은 글 있으면 처치 · 없으면 대조(지금과 같음)', probeTakenNote(['가상 글'], false) === ' · 「가상 글」 글이 맡음(처치)' && probeTakenNote([], false) === ' · 맡은 글 없음(대조)');
+  ok(
+    '실증 칸 — 배정 없음: 안내 문구 그대로',
+    probeSectionHint(null) ===
+      '우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도 넣지 않습니다. 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서 같은 방향일 때만 읽으세요.',
+  );
+  // 운영 기간 — 질문을 골라 만들 수 없으니 처치 · 대조 · 「골라」를 말하지 않는다.
+  const opsHint = probeSectionHint(plan.activeUntil);
+  ok(
+    '실증 칸 — 운영 기간: 처치 · 대조 없이 맡은 글만(여러 편이면 모두)',
+    probeTakenNote(['가상 글', '가상 둘'], true) === ' · 「가상 글」 · 「가상 둘」 글이 맡음' && probeTakenNote([], true) === '',
+  );
+  ok(
+    '실증 칸 — 운영 기간: 안내가 배정표 글만 만든다고 말하고 처치 · 대조 · 「골라」 없음',
+    opsHint.includes(`~${plan.activeUntil}`) && opsHint.includes('배정표 글만') && !/처치|대조|에서 골라/.test(opsHint),
+    opsHint,
+  );
 }
 
 let failed = 0;

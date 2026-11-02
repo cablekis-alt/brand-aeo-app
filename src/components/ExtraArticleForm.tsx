@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import type { NewExtraArticleInput } from '../lib/api'
 import { EXTRA_LIMITS, NAME_AND_ANGLE_LIMIT, questionTextKey } from '../lib/extraArticles'
-import { probeQuestionList, type GapAction } from '../lib/gapActions'
+import { extraTakers, probeQuestionList, takenByLabel, type GapAction } from '../lib/gapActions'
 import { topicGuard, type WriterPlan, type WriterPlanArticle } from '../lib/probePlan'
 import { todayKst } from '../lib/publishedUrl'
 import { VERDICT_WORD, type WinLossRow } from '../lib/questionWinLoss'
@@ -33,8 +33,8 @@ interface QuestionItem {
   /** 본 글의 질문이면 그 id. 다른 추가 글이 맡아 본 글에 없는 질문은 null(고를 수 없다). */
   id: string | null
   text: string
-  /** 이 질문을 맡은 추가 글의 이름. */
-  takenBy: string | null
+  /** 이 질문을 맡은 추가 글의 이름 — 운영 기간에는 배정 글 여러 편이 한 질문을 맡는다. 비면 맡은 글이 없다. */
+  takenBy: string[]
 }
 
 export default function ExtraArticleForm({
@@ -79,17 +79,16 @@ export default function ExtraArticleForm({
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
   // 이번 주 id로 맡은 글 — 본 글이 비지 않게 막은 주에는 본 글에도 같은 질문이 남아 있다(gapActions contentActions).
-  const takenById = new Map<string, string>()
-  for (const x of extraActions) for (const id of x.questionIds) takenById.set(id, x.extra?.name ?? x.title)
+  const takenById = extraTakers(extraActions)
   const mainItems: QuestionItem[] = (main?.questionIds ?? []).map((id, i) => ({
     key: id,
     id,
     text: main?.questionTexts[i] ?? id,
-    takenBy: takenById.get(id) ?? null,
+    takenBy: takenById.get(id) ?? [],
   }))
   // 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다(plan.probes에 없다) — 판정은 확인 불가로 둔다.
   const probeList = probeQuestionList(probes, extraActions)
-  const probeItems: QuestionItem[] = probeList.map((p) => ({ key: p.questionId, id: p.questionId, text: p.text, takenBy: p.takenBy }))
+  const probeItems: QuestionItem[] = probeList.map((p) => ({ key: p.questionId, id: p.questionId, text: p.text, takenBy: p.takers }))
   const verdictById = new Map(probeList.map((p) => [p.questionId, p.verdict]))
   // 본 글에서 빠진 질문 — 다른 글이 맡았다고 흐리게 보인다. 문장은 그 글이 만들 때 고정한 것이고, 이번 주 찾지 못한 질문은 뺀다.
   // 실증은 본 글에서 빠진 질문이 아니라 실증 목록에 「맡음」으로 보인다(응답이 없는 실증까지 — 고정 문장으로 가린다). 본 글이 없는
@@ -99,19 +98,27 @@ export default function ExtraArticleForm({
     ...probes.map((p) => questionTextKey(p.text)),
     ...extraActions.flatMap((x) => (x.extra?.probes ?? []).map((p) => questionTextKey(p.text))),
   ])
-  const takenItems: QuestionItem[] = main
-    ? extraActions.flatMap((x) => {
-        const missing = new Set((x.extra?.missingTexts ?? []).map(questionTextKey))
-        return x.questionTexts
-          .filter((t) => !missing.has(questionTextKey(t)) && !mainKeys.has(questionTextKey(t)) && !probeKeys.has(questionTextKey(t)))
-          .map((t) => ({ key: `${x.id}|${t}`, id: null, text: t, takenBy: x.extra?.name ?? x.title }))
-      })
-    : []
+  // 운영 기간에는 배정 글 여러 편이 같은 질문을 맡는다 — 같은 문장은 한 줄로 두고 맡은 글을 모두 단다.
+  const takenByText = new Map<string, QuestionItem>()
+  if (main) {
+    for (const x of extraActions) {
+      const missing = new Set((x.extra?.missingTexts ?? []).map(questionTextKey))
+      const by = x.extra?.name ?? x.title
+      for (const t of x.questionTexts) {
+        const k = questionTextKey(t)
+        if (missing.has(k) || mainKeys.has(k) || probeKeys.has(k)) continue
+        const seen = takenByText.get(k)
+        if (!seen) takenByText.set(k, { key: `${x.id}|${t}`, id: null, text: t, takenBy: [by] })
+        else if (!seen.takenBy.includes(by)) seen.takenBy.push(by)
+      }
+    }
+  }
+  const takenItems = [...takenByText.values()]
   const items = [...mainItems, ...takenItems]
-  const selectable = mainItems.filter((q) => !q.takenBy)
+  const selectable = mainItems.filter((q) => q.takenBy.length === 0)
   // 작성자 배정 기간에는 질문을 고르지 않는다 — 배정이 늦게 와 그 전에 고른 체크가 남아도 세지 않는다(경고 · 단추 글자가 고를 수 없는 체크를 말하지 않게).
   const chosenMain = probePlan ? [] : selectable.filter((q) => q.id !== null && selected.has(q.id))
-  const chosenProbes = probePlan ? [] : probeItems.filter((q) => !q.takenBy && q.id !== null && selected.has(q.id))
+  const chosenProbes = probePlan ? [] : probeItems.filter((q) => q.takenBy.length === 0 && q.id !== null && selected.has(q.id))
   const chosen = [...chosenMain, ...chosenProbes]
   // 실증과 일반 질문을 한 글에 섞었다 — 막지 않고 알린다.
   const mixed = chosenMain.length > 0 && chosenProbes.length > 0
@@ -192,12 +199,12 @@ export default function ExtraArticleForm({
       {probe && q.id !== null && verdictById.has(q.id) && (
         <span className="muted"> · 이번 주 {verdictById.get(q.id) ? VERDICT_WORD[verdictById.get(q.id)!] : '응답 없음(확인 불가)'}</span>
       )}
-      {q.takenBy && <span className="muted"> · 「{q.takenBy}」 글이 맡음</span>}
+      {q.takenBy.length > 0 && <span className="muted"> · {takenByLabel(q.takenBy)} 글이 맡음</span>}
     </span>
   )
 
   const itemRow = (q: QuestionItem, probe = false) => (
-    <li key={q.key} className={q.takenBy ? 'muted' : undefined}>
+    <li key={q.key} className={q.takenBy.length > 0 ? 'muted' : undefined}>
       {probePlan ? (
         // 작성자 배정 기간에는 질문을 고르지 않는다 — 읽기만 한다.
         itemText(q, probe)
@@ -206,8 +213,8 @@ export default function ExtraArticleForm({
           <input
             type="checkbox"
             style={{ width: 'auto', marginTop: 3 }}
-            disabled={q.takenBy !== null || q.id === null}
-            checked={q.id !== null && !q.takenBy && selected.has(q.id)}
+            disabled={q.takenBy.length > 0 || q.id === null}
+            checked={q.id !== null && q.takenBy.length === 0 && selected.has(q.id)}
             onChange={() => q.id !== null && toggle(q.id)}
           />
           {itemText(q, probe)}

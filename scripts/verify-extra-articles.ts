@@ -26,7 +26,7 @@ import { BRIEF_FOCUS_LIMITS, briefFocusOf, buildContentBriefPrompt, type Content
 import type { ActionStateMap, PublishedPost, StoredDraft } from '../src/lib/api';
 import { briefInputOf, effectiveDraft } from '../src/lib/draftGaps';
 import { draftTitle } from '../src/lib/markdownFile';
-import { computeGapActions, extraStandingOf, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
+import { computeGapActions, extraStandingOf, extraTakenFromMain, isOpenAction, type GapAction, type PublishedHit } from '../src/lib/gapActions';
 import { buildPublishPlan, recordInputOf, type PublishRow } from '../src/lib/publishPlan';
 import type { QuestionRepeatAnalysis as ClientAnalysis, QuestionSpec } from '../src/lib/types';
 import {
@@ -265,6 +265,25 @@ const def = (ids: string[], texts: string[], extra: Partial<ExtraArticle> = {}):
   ok('추가 글 항목 — 각도가 없으면 extra.angle 없음', find(two, e2.id)?.extra !== undefined && !('angle' in (find(two, e2.id)?.extra ?? {})));
   ok('추가 글 항목 — 언급 0건 질문을 밝힌다', find(two, e2.id)?.evidence === '고른 질문 1개 중 1개에서 밀리고, 그중 1개는 언급이 아예 0건입니다.');
   ok('본 글에는 extra가 없다', main !== undefined && !('extra' in main));
+
+  // 3-1) 본 글 카드의 「이 질문 N개는 추가 글이 맡습니다」(extraTakenFromMain) — 본 글에서 실제로 빠진 질문 수와 같아야 한다. 글끼리
+  // 질문이 겹치지 않으면 글마다 reach를 더한 것과 같고(지금까지의 계산), 운영 기간처럼 겹치면(a2를 두 글이 맡음) 질문 id로 한 번씩 센다.
+  const removedFromMain = (p: ReturnType<typeof plan>) => (find(base, MAIN)?.reach ?? 0) - (find(p, MAIN)?.reach ?? 0);
+  const twoExtras = two.actions.filter((a) => a.extra);
+  ok('가져간 질문 — 추가 글의 밀린 질문 id(a3 · a5)', x1?.extra?.lostIds.join() === 'a3' && find(two, e2.id)?.extra?.lostIds.join() === 'a5');
+  ok(
+    '가져간 질문 — 겹치지 않으면 reach 합과 같고 본 글에서 빠진 수와 같다(2)',
+    extraTakenFromMain(twoExtras) === 2 && twoExtras.reduce((sum, a) => sum + a.reach, 0) === 2 && removedFromMain(two) === 2,
+  );
+  const shareA = def(['a1', 'a2'], ['a1 질문', 'a2 질문'], { name: '가상 작성자 하나 글' });
+  const shareB = def(['a2', 'a3'], ['a2 질문', 'a3 질문'], { name: '가상 작성자 둘 글' });
+  const shared = withExtras([shareA, shareB]);
+  const sharedExtras = shared.actions.filter((a) => a.extra);
+  ok('가져간 질문 — 겹친 글도 본 글에 질문이 남으면(a5) 빼낸다', sorted(find(shared, MAIN)?.questionIds) === 'a5');
+  ok(
+    '가져간 질문 — 겹치면 질문 id로 한 번씩(a1 · a2 · a3 = 3, reach 합 4가 아님)',
+    extraTakenFromMain(sharedExtras) === 3 && sharedExtras.reduce((sum, a) => sum + a.reach, 0) === 4 && removedFromMain(shared) === 3,
+  );
 
   // 4) 안전장치 — 본 글이 비게 되면 하나도 빼지 않는다
   const all = def(['a1', 'a2', 'a3', 'a5'], ['a1 질문', 'a2 질문', 'a3 질문', 'a5 질문'], { name: '가상 전부' });

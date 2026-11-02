@@ -30,7 +30,7 @@ import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel, quest
 import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
 import { buildAnswerEvidence } from '../src/lib/answerEvidence';
 import { aeoScoreOf } from '../src/lib/b9-report';
-import { computeGapActions, probeQuestionList } from '../src/lib/gapActions';
+import { computeGapActions, extraTakenFromMain, probeQuestionList } from '../src/lib/gapActions';
 import { computeGapAnalysis } from '../src/lib/gapAnalysis';
 import { checkNewExtraArticle, topicArticleId } from '../src/lib/extraArticles';
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence';
@@ -478,6 +478,17 @@ if (silentArticle.ok) {
   check(
     '실증 목록: 맡은 글이 없으면 응답 없는 실증은 싣지 않음',
     probeQuestionList(silentPlan.probes, []).map((p) => p.questionId).join() === 'v5-p001,v5-p002',
+  );
+  check(
+    '실증 목록: takers는 맡은 글 전부(한 편이면 takenBy와 같음)',
+    silentList.map((p) => p.takers.join('/') || '-').join() === '가상 처치 글,-,가상 처치 글',
+    JSON.stringify(silentList.map((p) => p.takers)),
+  );
+  // 본 글 카드의 「이 질문 N개는 추가 글이 맡습니다」 — 실증은 본 글에서 가져간 질문이 아니다. 밀린 실증(v5-p001)만 맡은 글은 0개.
+  check(
+    '본 글에서 가져간 질문: 밀린 실증은 세지 않음(reach 1 − 밀린 실증 1 = 0)',
+    silentAction?.reach === 1 && silentAction.extra?.lostIds.length === 0 && extraTakenFromMain(silentExtras) === 0,
+    JSON.stringify({ reach: silentAction?.reach, lostIds: silentAction?.extra?.lostIds }),
   );
   // 「글 더 만들기」 — 본 글 목록(aria-label="본 글의 이번 주 질문")과 실증 목록(aria-label="실증 질문")을 나눠 본다.
   // 화면 파일은 jsx 자동 변환을 전제로 하는데 tsx는 고전 변환으로 읽는다 — React를 전역에 둔다(verify-execution-marks.ts와 같다).

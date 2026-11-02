@@ -27,7 +27,18 @@ import { bulkRunsAfter, passForTenant, type BulkKind, type BulkRuns } from '../l
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { aliveExtraArticles, isExtraArticleId, questionTextKey, type ExtraArticle } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
-import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, probeQuestionList, type GapAction } from '../lib/gapActions'
+import {
+  channelNameOf,
+  extraFormSlot,
+  extraStandingOf,
+  extraTakenFromMain,
+  isIdleAction,
+  isOpenAction,
+  probeQuestionList,
+  probeSectionHint,
+  probeTakenNote,
+  type GapAction,
+} from '../lib/gapActions'
 import { useMeasureStatus } from '../lib/measureStatus'
 import {
   extraArticleCap,
@@ -1088,15 +1099,11 @@ export default function GapActions() {
   const mainId = mainArticle?.action.id ?? plan.actions.find((a) => a.kind === 'content' && !isExtraArticleId(a.id))?.id
   const mainDraft = mainId ? drafts?.[mainId] : undefined
   const extraActions = plan.actions.filter((a) => a.extra)
-  // 추가 글이 본 글에서 가져간 이번 주 밀린 질문(추가 글의 reach 합 — 글끼리 질문이 겹치지 않는다). 본 글이 비지 않게 하나도 빼지
-  // 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
+  // 추가 글이 본 글에서 가져간 이번 주 밀린 질문(실증 제외) — 질문 id로 한 번씩 센다. 운영 기간에는 배정 글끼리 질문이 겹쳐 글마다
+  // reach를 더하면 부푼다. 본 글이 비지 않게 하나도 빼지 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
   const mainQuestionIds = new Set(mainArticle?.action.questionIds ?? [])
   const mainKeptAll = extraActions.some((a) => a.questionIds.some((id) => mainQuestionIds.has(id)))
-  // 실증 질문은 본 글에서 가져간 질문이 아니다 — 추가 글의 reach에서 그 글이 맡은 밀린 실증을 뺀다.
-  const lostProbeIds = new Set(plan.probes.filter((p) => p.verdict === 'loss').map((p) => p.questionId))
-  const takenByExtras = mainKeptAll
-    ? 0
-    : extraActions.reduce((sum, a) => sum + a.reach - a.questionIds.filter((id) => lostProbeIds.has(id)).length, 0)
+  const takenByExtras = mainKeptAll ? 0 : extraTakenFromMain(extraActions)
   // 실증 칸 목록 — 맡은 추가 글로 처치(맡은 글 있음) · 대조(없음)를 밝힌다. 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다.
   const probeList = probeQuestionList(plan.probes, extraActions)
   const extraDefs = new Map(extras.list.map((d) => [d.id, d]))
@@ -1115,6 +1122,26 @@ export default function GapActions() {
         rows: publishPlan.rows.filter((r) => shownByWriter(r.article.action.id)),
       }
     : publishPlan
+  // 「글 더 만들기」 자리 — 작성자를 골라 본 글 카드가 걸러져도 글 카드 뒤에 남긴다(그 작성자의 배정표 글만 보인다).
+  const formSlot = extraFormSlot({
+    hasMain: mainArticle !== undefined,
+    mainShown: mainArticle !== undefined && shownCards.includes(mainArticle),
+    probes: plan.probes.length,
+  })
+  const extraForm = (main: GapAction | null) => (
+    <ExtraArticleForm
+      main={main}
+      probes={plan.probes}
+      extraActions={extraActions}
+      bankVersion={extras.bankVersion}
+      corrupt={extras.corrupt}
+      loadError={extras.error}
+      onCreate={extras.create}
+      probePlan={activePlan}
+      writerKey={writerKey}
+      locked={pageLocked}
+    />
+  )
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = shownPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
@@ -1436,22 +1463,11 @@ export default function GapActions() {
                         onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
                       />
                       {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
-                      {x === mainArticle && extras.available && (
-                        <ExtraArticleForm
-                          main={x.action}
-                          probes={plan.probes}
-                          extraActions={extraActions}
-                          bankVersion={extras.bankVersion}
-                          corrupt={extras.corrupt}
-                          loadError={extras.error}
-                          onCreate={extras.create}
-                          probePlan={activePlan}
-                          writerKey={writerKey}
-                          locked={pageLocked}
-                        />
-                      )}
+                      {x === mainArticle && formSlot === 'under-main' && extras.available && extraForm(x.action)}
                     </Fragment>
                   ))}
+                  {/* 작성자를 골라 본 글 카드가 걸러진 주 — 「글 더 만들기」를 글 카드 뒤에 둔다. */}
+                  {mainArticle && formSlot === 'after-cards' && extras.available && extraForm(mainArticle.action)}
                 </div>
               </section>
               )}
@@ -1568,15 +1584,14 @@ export default function GapActions() {
           )}
 
           {probeList.length > 0 && (
-            // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다. 본 글이 없는
-            // 주에는 그 칸이 본 글 카드 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
+            // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다(작성자 배정
+            // 기간에는 고르지 않아 처치 · 대조를 말하지 않는다 — 실증이 남은 옛 판 주를 볼 때다). 본 글이 없는 주에는 그 칸이 본 글 카드
+            // 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
             <section>
               <details className="gap-more">
                 <summary>실증 질문 {probeList.length}개 · 점수 제외 · 본 글에 넣지 않음</summary>
                 <p className="hint" style={{ marginTop: 0 }}>
-                  우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도
-                  넣지 않습니다. 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서
-                  같은 방향일 때만 읽으세요.
+                  {probeSectionHint(activePlan?.activeUntil ?? null)}
                 </p>
                 <ul className="gap-worst">
                   {probeList.map((q) => (
@@ -1584,26 +1599,13 @@ export default function GapActions() {
                       <span className="gap-q">{q.text}</span>{' '}
                       <span className="muted">
                         · 이번 주 {q.verdict ? VERDICT_WORD[q.verdict] : '응답 없음(확인 불가)'}
-                        {q.takenBy ? ` · 「${q.takenBy}」 글이 맡음(처치)` : ' · 맡은 글 없음(대조)'}
+                        {probeTakenNote(q.takers, activePlan !== null)}
                       </span>
                     </li>
                   ))}
                 </ul>
               </details>
-              {!mainArticle && extras.available && plan.probes.length > 0 && (
-                <ExtraArticleForm
-                  main={null}
-                  probes={plan.probes}
-                  extraActions={extraActions}
-                  bankVersion={extras.bankVersion}
-                  corrupt={extras.corrupt}
-                  loadError={extras.error}
-                  onCreate={extras.create}
-                  probePlan={activePlan}
-                  writerKey={writerKey}
-                  locked={pageLocked}
-                />
-              )}
+              {formSlot === 'probes' && extras.available && extraForm(null)}
             </section>
           )}
 
