@@ -244,6 +244,26 @@ try {
   await addPublishedPost(TENANT, { url: 'https://w1.example.com/entry/5', articleId: 'content:c1-099', targetActionId: 'content:c1-099', via: 'own' })
   const partial = await reg.registerPosts(TENANT, raced.items, addPublishedPost)
   ok('쓰기 — 중간에 거절되면 멈추고 더한 수 · 줄 번호를 알림', partial.added.length === 1 && partial.error !== null && partial.error.startsWith('3행:') && partial.error.includes('다른 글'), JSON.stringify(partial))
+  // 원장은 제목을 다듬어 적는다(앞뒤 공백 · 200자 · 빈 제목은 안 적음) — 확인이 다듬기 전 제목과 맞춰 보면 잘 쓴 기록을 틀렸다고 한다.
+  const oddDrafts = { ...drafts, [A1.id]: draftOf(A1.id, `  ${'가'.repeat(210)}  `), [B1.id]: draftOf(B1.id, '') }
+  const oddBefore = await readPublishedPosts(TENANT)
+  const odd = reg.planRegistration({ plan, drafts: oddDrafts, extras, posts: oddBefore, rows: [row(2, 'w1', A1.id, 'https://w1.example.com/entry/6'), row(3, 'w2', B1.id, 'https://w2.example.com/posts/9')], today })
+  const oddDone = await reg.registerPosts(TENANT, odd.items, addPublishedPost)
+  const oddAfter = await readPublishedPosts(TENANT)
+  const oddStates = await readActionStates(TENANT)
+  const oddFresh = oddAfter.filter((p) => !oddBefore.some((q) => q.id === p.id))
+  ok(
+    '확인 — 초안 제목이 길거나 앞뒤 공백이 있거나 비어도 원장이 적은 제목과 맞춰 봄(잘 쓴 기록을 틀렸다고 하지 않음)',
+    odd.errors.length === 0 &&
+      odd.items.length === 2 &&
+      oddDone.error === null &&
+      oddFresh.some((p) => p.articleId === A1.id && p.articleTitle === '가'.repeat(200)) &&
+      oddFresh.some((p) => p.articleId === B1.id && p.articleTitle === undefined) &&
+      reg.checkRegistration({ before: oddBefore, after: oddAfter, items: odd.items, states: oddStates }).length === 0,
+    JSON.stringify({ odd, oddDone, problems: reg.checkRegistration({ before: oddBefore, after: oddAfter, items: odd.items, states: oddStates }) }),
+  )
+  const retitled = oddAfter.map((p) => (oddFresh.some((q) => q.id === p.id) && p.articleId === A1.id ? { ...p, articleTitle: '다른 제목' } : p))
+  ok('확인 — 제목이 정말 다르면 여전히 잡음', reg.checkRegistration({ before: oddBefore, after: retitled, items: odd.items, states: oddStates }).some((p) => p.startsWith('2행의 기록이 계획과 다릅니다')))
 
   // ── 4. 스크립트(하위 프로세스) ─────────────────────────────────────────────
   const scriptRoot = path.join(tmp, 'script-app')

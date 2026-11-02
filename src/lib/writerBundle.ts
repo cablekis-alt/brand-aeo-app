@@ -110,8 +110,30 @@ async function contentOf(tenantId: string, file: WriterBundleFile): Promise<{ na
   return { name: bundlePhotoName(file, blob.type), blob }
 }
 
+/** 같은 이름의 묶음 폴더를 몇 번째까지 피해 볼지 — 하루에 이만큼 다시 받는 일은 없다. */
+const MAX_FOLDER_TRIES = 99
+
 /**
- * 묶음을 저장한다. 폴더를 고를 수 있으면 고른 폴더 안에 묶음 폴더를 만들고(있으면 그 안에 같은 이름 파일을 덮어쓴다) 파일을 쓴다 —
+ * 고른 폴더 안에 새 묶음 폴더를 만든다 — 이미 있으면 「…-2」 「…-3」. 있는 폴더를 다시 쓰면 같은 이름 파일만 덮이고 지난번에만 있던
+ * 사진(소제목 · 자리가 바뀌었거나 사진을 끈 글) · 뺀 글의 .html이 섞여 남아 작성자가 발행본에 없는 사진을 올린다. 사람 폴더라 지우지는 않는다.
+ */
+async function freshBundleFolder(parent: FileSystemDirectoryHandle, base: string): Promise<FileSystemDirectoryHandle> {
+  for (let n = 1; n <= MAX_FOLDER_TRIES; n += 1) {
+    const name = n === 1 ? base : `${base}-${n}`
+    try {
+      await parent.getDirectoryHandle(name)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'NotFoundError') return parent.getDirectoryHandle(name, { create: true })
+      // 같은 이름의 파일이 있으면 그 이름도 피한다.
+      if (err instanceof DOMException && err.name === 'TypeMismatchError') continue
+      throw err
+    }
+  }
+  throw new Error(`「${parent.name}」에 「${base}」 묶음 폴더가 이미 ${MAX_FOLDER_TRIES}개 있습니다 — 다른 폴더를 골라 주세요.`)
+}
+
+/**
+ * 묶음을 저장한다. 폴더를 고를 수 있으면 고른 폴더 안에 새 묶음 폴더를 만들고(같은 이름이 있으면 번호를 붙인다) 파일을 쓴다 —
  * 폴더 고르기를 닫으면 null. 고를 수 없으면 파일마다 내려받는다. 하나라도 실패하면 throw — 그때까지 쓴 파일은 남는다.
  */
 export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): Promise<{ saved: number; where: string } | null> {
@@ -130,7 +152,7 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
     if (err instanceof DOMException && err.name === 'AbortError') return null
     throw err
   }
-  const dir = await parent.getDirectoryHandle(bundle.folder, { create: true })
+  const dir = await freshBundleFolder(parent, bundle.folder)
   for (const file of bundle.files) {
     const { name, blob } = await contentOf(tenantId, file)
     const writable = await (await dir.getFileHandle(name, { create: true })).createWritable()
@@ -143,5 +165,5 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
     }
     await writable.close()
   }
-  return { saved: bundle.files.length, where: `${parent.name}/${bundle.folder}` }
+  return { saved: bundle.files.length, where: `${parent.name}/${dir.name}` }
 }

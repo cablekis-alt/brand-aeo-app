@@ -305,6 +305,9 @@ export async function registerPosts(
 
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
+/** 원장에 적히는 제목 — addPublishedPost의 str(…, 200)과 같이 앞뒤 공백을 지우고 200자로 자르며, 빈 제목은 적지 않는다. */
+const storedTitle = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 200) : undefined)
+
 /**
  * 쓴 뒤 확인 — 원래 원장 기록(옛 기록 제외)이 모두 그대로이고, 더한 기록이 계획과 같고(주소 · 글 · 자사 줄 · 사람이 고른 올린 날 · 질문
  * 스냅샷 · 제목 · 초안 판), 그 글들이 「집행함」인가. 어긋난 곳을 돌려준다(빈 배열이면 통과).
@@ -333,7 +336,7 @@ export function checkRegistration(input: {
       p.targetActionId !== want.articleId ||
       p.publishedOn !== want.publishedOn ||
       p.publishedOnSource !== 'user' ||
-      p.articleTitle !== want.articleTitle ||
+      p.articleTitle !== storedTitle(want.articleTitle) ||
       p.draftGeneratedAt !== want.draftGeneratedAt ||
       !sameJson(p.topic, want.topic) ||
       p.removedAt

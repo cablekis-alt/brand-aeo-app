@@ -94,12 +94,17 @@ ok('배정에 없는 작성자는 빈 묶음', writerBundle({ ...input, writerKe
 
 // 2) 저장 — 폴더 고르기(가짜 창)
 type Written = Map<string, { type: string; size: number }>
-function fakeFolder(name: string, written: Written, folders: string[], failOn?: string) {
+/** folders는 이번에 만든 폴더, existing은 처음부터 있던(또는 만든) 폴더, plainFiles는 고른 폴더에 있던 같은 이름의 파일. */
+function fakeFolder(name: string, written: Written, folders: string[], failOn?: string, existing = new Set<string>(), plainFiles = new Set<string>()) {
   return {
     name,
     async getDirectoryHandle(child: string, opts?: { create?: boolean }) {
-      if (!opts?.create) throw new Error('create 없이 열었다')
-      folders.push(child)
+      if (plainFiles.has(child)) throw new DOMException('같은 이름의 파일', 'TypeMismatchError')
+      if (!opts?.create && !existing.has(child)) throw new DOMException('없음', 'NotFoundError')
+      if (opts?.create && !existing.has(child)) {
+        folders.push(child)
+        existing.add(child)
+      }
       return {
         name: child,
         async getFileHandle(file: string, o?: { create?: boolean }) {
@@ -147,6 +152,28 @@ async function main(): Promise<void> {
     '사진은 그 글 · 그 판 · 그 자리로 청한다',
     photoRequests.length === 1 && asked?.get('actionId') === a1.id && asked.get('generatedAt') === drafts[a1.id]!.generatedAt && asked.get('slot') === '가상 골목 풍경',
   )
+
+  // 같은 날 같은 곳에 다시 받으면 — 있는 묶음 폴더를 다시 쓰면 지난번에만 있던 사진이 섞여 남는다. 새 폴더(…-2)에 쓴다.
+  const againWritten: Written = new Map()
+  const againFolders: string[] = []
+  const existing = new Set<string>()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', againWritten, againFolders, undefined, existing) }
+  await saveWriterBundle('vstay', b)
+  const firstFiles = [...againWritten.keys()].sort()
+  const noPhotos = writerBundle({ ...input, settings: null })
+  const again = await saveWriterBundle('vstay', noPhotos)
+  const secondFiles = [...againWritten.keys()].filter((k) => k.startsWith(`${b.folder}-2/`))
+  ok(
+    '다시 받으면 새 묶음 폴더(…-2)에 쓰고 지난 폴더는 건드리지 않는다',
+    again?.where === `바탕 화면/${b.folder}-2` &&
+      JSON.stringify(againFolders) === JSON.stringify([b.folder, `${b.folder}-2`]) &&
+      JSON.stringify([...againWritten.keys()].filter((k) => k.startsWith(`${b.folder}/`)).sort()) === JSON.stringify(firstFiles),
+  )
+  ok('새 묶음 폴더에는 이번 묶음 파일만 — 지난번 사진이 섞이지 않는다', secondFiles.length === noPhotos.files.length && secondFiles.every((k) => k.endsWith('.html')))
+  ok('세 번째는 …-3', (await saveWriterBundle('vstay', b))?.where === `바탕 화면/${b.folder}-3`)
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', new Map(), [], undefined, new Set(), new Set([b.folder])) }
+  const besideFile = await saveWriterBundle('vstay', b)
+  ok('같은 이름의 파일이 있으면 그 이름도 피한다', besideFile?.where === `바탕 화면/${b.folder}-2`)
 
   g.window = {
     showDirectoryPicker: async () => {
