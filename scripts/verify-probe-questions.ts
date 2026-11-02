@@ -26,7 +26,7 @@ import type { QuestionSpec } from '../src/prompts/types';
 import type { WeekTally } from '../src/lib/publishedUrl';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
 import { agnosticQuota, buildProbeQuestionPrompt, countAgnostic } from '../src/prompts/b1-question-bank';
-import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from '../src/lib/citationView';
+import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel, questionScopeLabel } from '../src/lib/citationView';
 import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
 import { buildAnswerEvidence } from '../src/lib/answerEvidence';
 import { aeoScoreOf } from '../src/lib/b9-report';
@@ -232,6 +232,10 @@ check('인용 갭 필터: 기본 칸(이름 없는 질문)이 맨 앞', QUESTION
 check('인용 갭 필터: 「모든 질문」 이름표가 실증 제외를 말함', QUESTION_SCOPE_LABEL.all.includes('실증 제외'), QUESTION_SCOPE_LABEL.all);
 check('인용 갭 기준 문구: 모든 질문은 실증을 뺀 전체', citationBasisLabel('all') === '실증 질문을 뺀 전체 인용', citationBasisLabel('all'));
 check('인용 갭 기준 문구: 실증 질문 칸', citationBasisLabel('probe') === '실증 질문의 인용', citationBasisLabel('probe'));
+check('인용 갭 필터: 실증 없는 판의 「모든 질문」은 예전 이름표', questionScopeLabel('all', false) === '모든 질문', questionScopeLabel('all', false));
+check('인용 갭 필터: 실증 있는 판의 「모든 질문」은 실증 제외를 말함', questionScopeLabel('all', true) === QUESTION_SCOPE_LABEL.all, questionScopeLabel('all', true));
+check('인용 갭 기준 문구: 실증 없는 판은 예전 말(전체 인용)', citationBasisLabel('all', false) === '전체 인용', citationBasisLabel('all', false));
+check('인용 갭 기준 문구: 실증 없는 판도 이름 없는 질문 칸은 그대로', citationBasisLabel('unnamed', false) === '브랜드 이름 없는 질문의 인용', citationBasisLabel('unnamed', false));
 
 // ── 5-3. 화면 점수 경로(src/lib) ─────────────────────────────────────────────
 // 화면은 서버가 준 판정 기록 · 은행으로 점수 모집단을 다시 센다. 실증을 세면 카드와 숫자가 어긋나고, 점수 풀이는 matchesCard가

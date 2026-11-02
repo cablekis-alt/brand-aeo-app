@@ -17,9 +17,9 @@ import {
 } from '../lib/citationGap'
 import {
   KIND_PILL,
-  QUESTION_SCOPE_LABEL,
   citationBasisLabel,
   comparisonFromHistory,
+  questionScopeLabel,
   questionScopeOptions,
 } from '../lib/citationView'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
@@ -175,6 +175,8 @@ export default function CitationGap() {
   const [scopePick, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
   // 실증 질문을 재지 않은 판의 주나 다른 브랜드로 옮기면 고른 「실증 질문」도 풀린다.
   const scope = scopeOptions.includes(scopePick) ? scopePick : 'unnamed'
+  // 실증 질문이 없는 판이면 「모든 질문」 이름표 · 기준 문구에 실증을 말하지 않는다(questionScopeLabel).
+  const hasProbes = scopeOptions.includes('probe')
   const questions = scope === 'all' ? null : scope
   const [bucket, setBucket] = useState<GapBucket | 'all'>('all')
   const [query, setQuery] = useState('')
@@ -283,7 +285,7 @@ export default function CitationGap() {
         <select value={scope} onChange={(e) => setScope(e.target.value as CitationQuestionScope | 'all')} aria-label="질문 유형 필터">
           {scopeOptions.map((s) => (
             <option key={s} value={s}>
-              {QUESTION_SCOPE_LABEL[s]}
+              {questionScopeLabel(s, hasProbes)}
             </option>
           ))}
         </select>
@@ -299,13 +301,13 @@ export default function CitationGap() {
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && unsplit && (
         <p className="muted">
-          이 주차를 측정한 질문 은행을 찾지 못해 질문 유형으로 나눌 수 없습니다. 질문 유형을 「{QUESTION_SCOPE_LABEL.all}」으로
+          이 주차를 측정한 질문 은행을 찾지 못해 질문 유형으로 나눌 수 없습니다. 질문 유형을 「{questionScopeLabel('all', hasProbes)}」으로
           바꿔 보세요.
         </p>
       )}
       {!loading && !unsplit && !hasData && (
         <p className="muted">
-          이 주차에 수집된 인용 출처가 없습니다{questions && ` — ${QUESTION_SCOPE_LABEL[scope]} 기준`}.
+          이 주차에 수집된 인용 출처가 없습니다{questions && ` — ${questionScopeLabel(scope, hasProbes)} 기준`}.
         </p>
       )}
 
@@ -320,7 +322,7 @@ export default function CitationGap() {
               전체 인용 {gap.totalCitations.toLocaleString()}건 중 {gap.gapCitations.toLocaleString()}건이 우리 언급을 뒷받침하지
               않는 출처에서 나왔습니다 · 갭 도메인 {gap.gapDomains.length}개
               {engine && ` · ${ENGINE_LABEL[engine] ?? engine} 응답만`}
-              {questions ? ` · ${QUESTION_SCOPE_LABEL[scope]}만` : ' · 실증 질문 제외'}
+              {questions ? ` · ${questionScopeLabel(scope, hasProbes)}만` : hasProbes && ' · 실증 질문 제외'}
               {unknownResponses > 0 && ` (질문 은행에 없는 질문의 응답 ${unknownResponses}개는 어느 쪽인지 몰라 뺐습니다)`}
             </p>
             {prevUnsplit && comparison ? (
@@ -402,7 +404,7 @@ export default function CitationGap() {
             </div>
 
             <p className="muted">
-              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주 {citationBasisLabel(scope)} 기준입니다. 도메인을
+              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주 {citationBasisLabel(scope, hasProbes)} 기준입니다. 도메인을
               펼치면 실제 인용된 URL(상위 10개)이 보입니다.
               {(bucket !== 'all' || query) && ` · 표시 ${rows.length}/${gap.gapDomains.length}개`}
             </p>

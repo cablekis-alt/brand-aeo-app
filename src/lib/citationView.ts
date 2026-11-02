@@ -53,9 +53,18 @@ export function questionScopeOptions(weekBank: { questions: { probe?: boolean }[
   return QUESTION_SCOPE_OPTIONS.filter((s) => s !== 'probe' || hasProbes)
 }
 
-/** 점유율 · 갭 비중을 무엇으로 셌는지(「… 기준입니다」 앞말). */
-export function citationBasisLabel(scope: CitationQuestionScope | 'all'): string {
-  return scope === 'all' ? '실증 질문을 뺀 전체 인용' : `${QUESTION_SCOPE_LABEL[scope]}의 인용`
+/**
+ * 화면에 보일 질문 유형 이름. 실증 질문이 없는 판이면 「모든 질문」에 「실증 제외」를 붙이지 않는다 — 뺄 것이 없는데 실증이라는
+ * 말을 보이면 실증을 쓰지 않는 브랜드에서 헷갈린다(예전 이름표 그대로).
+ */
+export function questionScopeLabel(scope: CitationQuestionScope | 'all', hasProbes: boolean): string {
+  return scope === 'all' && !hasProbes ? '모든 질문' : QUESTION_SCOPE_LABEL[scope]
+}
+
+/** 점유율 · 갭 비중을 무엇으로 셌는지(「… 기준입니다」 앞말). 실증 질문이 없는 판이면 예전 말 그대로(「전체 인용」). */
+export function citationBasisLabel(scope: CitationQuestionScope | 'all', hasProbes = true): string {
+  if (scope === 'all') return hasProbes ? '실증 질문을 뺀 전체 인용' : '전체 인용'
+  return `${QUESTION_SCOPE_LABEL[scope]}의 인용`
 }
 
 /**

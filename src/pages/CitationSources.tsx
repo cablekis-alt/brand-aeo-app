@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources } from '../lib/api'
+import { loadCitationSources, loadQuestionBank } from '../lib/api'
+import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, SOURCE_KIND_LABEL, formatPct } from '../lib/format'
+import { isProbe } from '../lib/questionScope'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 
 const EMPTY = {
@@ -17,11 +20,29 @@ const EMPTY = {
 
 export default function CitationSources() {
   const { tenant } = useTenant()
-  const { weeks, weekOf, setWeekOf, data, loading: pending } = useWeeklyPage(
+  const { history, weeks, weekOf, setWeekOf, data, loading: pending } = useWeeklyPage(
     loadCitationSources,
     tenant?.tenantId ?? '',
     EMPTY,
   )
+
+  // 실증 안내는 이 주를 측정한 판에 실증 질문이 있을 때만 — 실증을 쓰지 않는 브랜드에 실증이라는 말을 보이지 않는다.
+  const tenantId = tenant?.tenantId ?? ''
+  const bankVersion = weekOf ? resolveBankVersion(history, weekOf, []) : undefined
+  const [probeBank, setProbeBank] = useState<{ key: string; hasProbes: boolean } | null>(null)
+  const bankKey = `${tenantId}|${bankVersion ?? ''}`
+  useEffect(() => {
+    if (!tenantId || !weekOf) return
+    let alive = true
+    loadQuestionBank(tenantId, bankVersion).then(
+      (bank) => alive && setProbeBank({ key: bankKey, hasProbes: Boolean(bank?.questions.some(isProbe)) }),
+      (err: unknown) => console.error('[CitationSources] 질문지를 읽지 못했습니다', err),
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, weekOf, bankVersion, bankKey])
+  const hasProbes = probeBank?.key === bankKey && probeBank.hasProbes
 
   if (!tenant) return null
 
@@ -33,8 +54,8 @@ export default function CitationSources() {
       <h1>AI 인용출처 분석</h1>
       <p className="lead">
         엔진이 실제로 붙인 URL을 출처 유형별로 나눕니다. URL 상세 분석의 소유권(자사/경쟁사) 위에, 뉴스·공공·후기·블로그 같은
-        매체 성격과 엔진 간 합의 도메인을 봅니다. 실증 질문(점수 밖 실험 질문)의 인용은 세지 않습니다 — 인용 갭 분석의 「실증 질문」
-        칸에서 봅니다.
+        매체 성격과 엔진 간 합의 도메인을 봅니다.
+        {hasProbes && ' 실증 질문(점수 밖 실험 질문)의 인용은 세지 않습니다 — 인용 갭 분석의 「실증 질문」 칸에서 봅니다.'}
       </p>
 
       <div className="filters">
