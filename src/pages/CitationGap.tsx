@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { ComparisonNote, ShareDelta, UrlLink } from '../components/CitationBits'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources } from '../lib/api'
+import { loadCitationSources, loadQuestionBank } from '../lib/api'
+import { resolveBankVersion } from '../lib/bankVersion'
 import {
   GAP_BUCKET_LABEL,
   GAP_BUCKET_ORDER,
@@ -14,8 +15,15 @@ import {
   type GapBucket,
   type GapRow,
 } from '../lib/citationGap'
-import { KIND_PILL, comparisonFromHistory } from '../lib/citationView'
+import {
+  KIND_PILL,
+  citationBasisLabel,
+  comparisonFromHistory,
+  questionScopeLabel,
+  questionScopeOptions,
+} from '../lib/citationView'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
+import type { QuestionBank } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
@@ -36,17 +44,6 @@ interface LoadedGap {
   analysis: CitationSourceAnalysis
 }
 const EMPTY_LOADED: LoadedGap = { filterKey: '', analysis: EMPTY }
-
-/**
- * 질문 유형 필터. 기본은 브랜드 이름 없는 질문이다 — 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기
- * 쉬워서, 섞어 보면 이름을 모르는 사람의 질문에서는 우리가 없는 출처가 「뒷받침함」으로 숨는다. 콘텐츠 생성의
- * 「충족」(src/lib/gapActions.ts)도 같은 기준이다.
- */
-const QUESTION_SCOPE_LABEL: Record<CitationQuestionScope | 'all', string> = {
-  unnamed: '브랜드 이름 없는 질문',
-  all: '모든 질문',
-  named: '브랜드 이름을 댄 질문',
-}
 
 /*
  * 띠 색 — 범주형 팔레트의 고정 슬롯. 값은 src/index.css의 --bucket-* 토큰에 있다.
@@ -171,7 +168,15 @@ function GapRowView({
 export default function CitationGap() {
   const { tenant } = useTenant()
   const [engine, setEngine] = useState<string>('')
-  const [scope, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
+  // 「실증 질문」 칸은 고른 주를 측정한 판의 질문지에 실증 질문이 있을 때만 보인다(questionScopeOptions). 질문지는 아래에서
+  // useWeeklyPage가 정한 주차의 판으로 불러온다 — 판이 바뀐 주로 옮기면 새 질문지가 올 때까지는 같은 브랜드의 앞 질문지로 가른다.
+  const [weekBank, setWeekBank] = useState<{ tenantId: string; version: string | undefined; bank: QuestionBank | null } | null>(null)
+  const scopeOptions = questionScopeOptions(weekBank && weekBank.tenantId === tenant?.tenantId ? weekBank.bank : null)
+  const [scopePick, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
+  // 실증 질문을 재지 않은 판의 주나 다른 브랜드로 옮기면 고른 「실증 질문」도 풀린다.
+  const scope = scopeOptions.includes(scopePick) ? scopePick : 'unnamed'
+  // 실증 질문이 없는 판이면 「모든 질문」 이름표 · 기준 문구에 실증을 말하지 않는다(questionScopeLabel).
+  const hasProbes = scopeOptions.includes('probe')
   const questions = scope === 'all' ? null : scope
   const [bucket, setBucket] = useState<GapBucket | 'all'>('all')
   const [query, setQuery] = useState('')
@@ -193,6 +198,24 @@ export default function CitationGap() {
     data: loaded,
     loading: loadingData,
   } = useWeeklyPage<LoadedGap>(loader, tenant?.tenantId ?? '', EMPTY_LOADED)
+  // 그 주를 측정한 판 — 서버(getCitationSourceAnalysis)처럼 그 주 카드의 판을 먼저 쓰고, 없으면 지금 판(버전 없이 요청)으로 둔다.
+  const tenantId = tenant?.tenantId ?? ''
+  const weekVersion = weekOf ? resolveBankVersion(history, weekOf, []) : undefined
+  const bankReady = weekBank !== null && weekBank.tenantId === tenantId && weekBank.version === weekVersion
+  useEffect(() => {
+    if (!tenantId || !weekOf || bankReady) return
+    let alive = true
+    loadQuestionBank(tenantId, weekVersion).then(
+      (bank) => alive && setWeekBank({ tenantId, version: weekVersion, bank }),
+      (err: unknown) => {
+        console.error('[CitationGap] 질문지를 읽지 못했습니다', err)
+        if (alive) setWeekBank({ tenantId, version: weekVersion, bank: null })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, weekOf, weekVersion, bankReady])
   const stale = loaded.filterKey !== '' && loaded.filterKey !== filterKey
   const analysis = stale ? EMPTY : loaded.analysis
   const loading = loadingData || stale
@@ -260,9 +283,9 @@ export default function CitationGap() {
           ))}
         </select>
         <select value={scope} onChange={(e) => setScope(e.target.value as CitationQuestionScope | 'all')} aria-label="질문 유형 필터">
-          {(['unnamed', 'all', 'named'] as const).map((s) => (
+          {scopeOptions.map((s) => (
             <option key={s} value={s}>
-              {QUESTION_SCOPE_LABEL[s]}
+              {questionScopeLabel(s, hasProbes)}
             </option>
           ))}
         </select>
@@ -278,13 +301,13 @@ export default function CitationGap() {
       {loading && <p className="muted">불러오는 중…</p>}
       {!loading && unsplit && (
         <p className="muted">
-          이 주차를 측정한 질문 은행을 찾지 못해 질문 유형으로 나눌 수 없습니다. 질문 유형을 「{QUESTION_SCOPE_LABEL.all}」으로
+          이 주차를 측정한 질문 은행을 찾지 못해 질문 유형으로 나눌 수 없습니다. 질문 유형을 「{questionScopeLabel('all', hasProbes)}」으로
           바꿔 보세요.
         </p>
       )}
       {!loading && !unsplit && !hasData && (
         <p className="muted">
-          이 주차에 수집된 인용 출처가 없습니다{questions && ` — ${QUESTION_SCOPE_LABEL[scope]} 기준`}.
+          이 주차에 수집된 인용 출처가 없습니다{questions && ` — ${questionScopeLabel(scope, hasProbes)} 기준`}.
         </p>
       )}
 
@@ -299,7 +322,7 @@ export default function CitationGap() {
               전체 인용 {gap.totalCitations.toLocaleString()}건 중 {gap.gapCitations.toLocaleString()}건이 우리 언급을 뒷받침하지
               않는 출처에서 나왔습니다 · 갭 도메인 {gap.gapDomains.length}개
               {engine && ` · ${ENGINE_LABEL[engine] ?? engine} 응답만`}
-              {questions && ` · ${QUESTION_SCOPE_LABEL[scope]}만`}
+              {questions ? ` · ${questionScopeLabel(scope, hasProbes)}만` : hasProbes && ' · 실증 질문 제외'}
               {unknownResponses > 0 && ` (질문 은행에 없는 질문의 응답 ${unknownResponses}개는 어느 쪽인지 몰라 뺐습니다)`}
             </p>
             {prevUnsplit && comparison ? (
@@ -381,9 +404,8 @@ export default function CitationGap() {
             </div>
 
             <p className="muted">
-              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주{' '}
-              {questions ? `${QUESTION_SCOPE_LABEL[scope]}의 ` : '전체 '}인용 기준입니다. 도메인을 펼치면 실제 인용된 URL(상위
-              10개)이 보입니다.
+              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주 {citationBasisLabel(scope, hasProbes)} 기준입니다. 도메인을
+              펼치면 실제 인용된 URL(상위 10개)이 보입니다.
               {(bucket !== 'all' || query) && ` · 표시 ${rows.length}/${gap.gapDomains.length}개`}
             </p>
 

@@ -269,6 +269,8 @@ export type ExtraResolveHow = 'same-bank' | 'by-text' | 'unresolved'
 export interface ExtraResolution {
   /** 이번 주 은행에서 찾은 질문 id(정의 순서). */
   currentIds: string[]
+  /** currentIds와 짝인 고정 문장(만들 때 고정한 것) — 화면이 찾은 질문을 문장으로 가린다(gapActions extra.probes). */
+  currentTexts: string[]
   /** 찾지 못한 질문의 고정 문장 — 확인 불가로 보인다. */
   missingTexts: string[]
   how: ExtraResolveHow
@@ -283,16 +285,19 @@ export function resolveExtraArticle(
   weekBankVersion: string | null | undefined,
   questions: Pick<QuestionSpec, 'questionId' | 'text'>[],
 ): ExtraResolution {
-  if (!weekBankVersion) return { currentIds: [], missingTexts: [...def.questionTexts], how: 'unresolved' }
+  if (!weekBankVersion) return { currentIds: [], currentTexts: [], missingTexts: [...def.questionTexts], how: 'unresolved' }
   const currentIds: string[] = []
+  const currentTexts: string[] = []
   const missingTexts: string[] = []
   if (weekBankVersion === def.bankVersion) {
     const known = new Set(questions.map((q) => q.questionId))
     def.questionIds.forEach((id, i) => {
-      if (known.has(id)) currentIds.push(id)
-      else missingTexts.push(def.questionTexts[i])
+      if (known.has(id)) {
+        currentIds.push(id)
+        currentTexts.push(def.questionTexts[i])
+      } else missingTexts.push(def.questionTexts[i])
     })
-    return { currentIds, missingTexts, how: currentIds.length > 0 ? 'same-bank' : 'unresolved' }
+    return { currentIds, currentTexts, missingTexts, how: currentIds.length > 0 ? 'same-bank' : 'unresolved' }
   }
   const byText = new Map<string, string>()
   for (const q of questions) {
@@ -301,10 +306,12 @@ export function resolveExtraArticle(
   }
   for (const text of def.questionTexts) {
     const id = byText.get(questionTextKey(text))
-    if (id !== undefined && !currentIds.includes(id)) currentIds.push(id)
-    else missingTexts.push(text)
+    if (id !== undefined && !currentIds.includes(id)) {
+      currentIds.push(id)
+      currentTexts.push(text)
+    } else missingTexts.push(text)
   }
-  return { currentIds, missingTexts, how: currentIds.length > 0 ? 'by-text' : 'unresolved' }
+  return { currentIds, currentTexts, missingTexts, how: currentIds.length > 0 ? 'by-text' : 'unresolved' }
 }
 
 /** 올린 기록에 싣는 질문 스냅샷 — 만들 때의 판 · id · 문장 그대로라 원장 검사(checkTopic)를 늘 통과한다. */

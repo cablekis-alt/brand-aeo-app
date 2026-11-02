@@ -46,6 +46,7 @@ import {
 } from './tenantCompetitorsStore.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
 import { directionParticle } from '../src/lib/korean.js';
+import { isProbe } from '../src/lib/questionScope.js';
 import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { CompetitorContext, QuestionLanguage } from '../src/prompts/types.js';
@@ -201,7 +202,13 @@ export interface CompetitorEditorState {
     /** 마지막 측정에 쓴 버전. */
     measuredVersion: string | null;
     sharedCount: number;
+    /** 브랜드 질문 수 — 공통 질문과 실증 질문은 세지 않는다. */
     brandCount: number;
+    /**
+     * 같은 판에 덧붙인 실증 질문 수(src/lib/questionScope.ts). 경쟁사 질문 고치기는 그대로 옮기지만, 「모두 새로 쓰기」는 새 판을
+     * 만들어 실증 질문이 사라진다 — 서랍이 그 안내에 쓴다.
+     */
+    probeCount: number;
     /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처(앞 버전 · 고친 수 · 뺀 수). */
     derived: { from: string; replaced: number; removed: number } | null;
     /** 「브랜드 질문 모두 새로 쓰기」 — 목록은 그대로 두고 질문지만 새로 쓰는 저장(서랍 바닥 줄)에 쓴다. */
@@ -593,7 +600,8 @@ export async function buildEditorState(tenant: TenantConfig, runtime: TenantConf
       exists: Boolean(ctx.bank),
       measuredVersion: last?.questionBankVersion ?? null,
       sharedCount: ctx.bank ? ctx.bank.questions.filter((q) => q.cohortShared).length : 0,
-      brandCount: ctx.bank ? ctx.bank.questions.filter((q) => !q.cohortShared).length : 0,
+      brandCount: ctx.bank ? ctx.bank.questions.filter((q) => !q.cohortShared && !isProbe(q)).length : 0,
+      probeCount: ctx.bank ? ctx.bank.questions.filter(isProbe).length : 0,
       derived: ctx.bank?.derivedFrom
         ? { from: ctx.bank.derivedFrom.version, replaced: ctx.bank.derivedFrom.replaced.length, removed: ctx.bank.derivedFrom.removed.length }
         : null,
@@ -1075,7 +1083,11 @@ function derivedBankFor(rewrite: QuestionRewriteContext, repo: TenantConfig, raw
     ...(new Set(ids).size !== ids.length ? ['질문 id가 겹쳐요'] : []),
     ...(derived.questions.length !== plan.sizeAfter ? [`문항 수가 ${plan.sizeAfter}개가 아니에요`] : []),
     // 코호트 질문지를 쓰지 않는 은행은 측정이 일반 질문 하한을 다시 맞추며 은행을 고쳐 쓴다 — 하한 아래로 내려가면 안 된다.
-    ...(!repo.cohortQuestionBank && countAgnostic(derived.questions) < agnosticQuota(plan.sizeAfter) ? ['일반 질문이 하한보다 적어져요'] : []),
+    // 하한은 실증 질문을 뺀 문항 수로 정한다 — countAgnostic이 실증을 세지 않고, 측정도 실증을 뺀 저장 크기(questionBankSize)로
+    // 하한을 정한다(pipeline.ts). 문항 수에 실증을 넣으면 측정이 받아들이는 은행을 여기서 거절한다.
+    ...(!repo.cohortQuestionBank && countAgnostic(derived.questions) < agnosticQuota(plan.sizeAfter - derived.questions.filter(isProbe).length)
+      ? ['일반 질문이 하한보다 적어져요']
+      : []),
   ];
   if (problems.length) throw new EditorError(400, `새 질문지를 만들 수 없어요: ${problems.join(' · ')}`);
   return derived;
@@ -1154,9 +1166,10 @@ export function saveEdit(tenantId: string, store: ResultStore, body: unknown): P
     const pendingRegenerate =
       pendingQb?.regenerate && pendingQb.version === tenant.questionBankVersion && plan.questions.mode === 'fresh' ? pendingQb : undefined;
     // 수정본의 질문지 — 새로 만들었으면 그 버전, 모두 새로 쓰면 다음 버전 이름만(은행은 다음 측정이 만든다), 아니면 지금 쓰는 앱
-    // 질문지를 그대로 잇는다(빠뜨리면 저장소 버전으로 떨어져 목록과 질문지가 어긋난다).
+    // 질문지를 그대로 잇는다(빠뜨리면 저장소 버전으로 떨어져 목록과 질문지가 어긋난다). 크기에는 옮겨 온 실증 질문을 세지 않는다 —
+    // 크기는 다음에 새로 만들 질문지의 문항 수라(cohortQuestionBank.ts) 세면 판을 새로 쓸 때마다 브랜드 질문이 실증 수만큼 는다.
     const questionBank: CompetitorOverride['questionBank'] = newBank
-      ? { version: newBank.version, size: newBank.questions.length }
+      ? { version: newBank.version, size: newBank.questions.filter((q) => !isProbe(q)).length }
       : rewriteAll
         ? { version: plan.rewriteAll.toVersion, size: plan.rewriteAll.size, regenerate: { from: plan.rewriteAll.fromVersion, base: baseFingerprint(repo) } }
         : pendingRegenerate

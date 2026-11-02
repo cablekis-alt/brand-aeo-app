@@ -28,6 +28,16 @@ export interface QuestionSpec {
   version: string;
   /** 코호트 공통 질문지에서 온 문항이면 true — 같은 코호트 브랜드가 똑같이 받는다. */
   cohortShared?: boolean;
+  /**
+   * 실증 질문이면 true — 콘텐츠가 인용되는지 실험하려고 같은 판에 덧붙인 문항이다. 측정은 다른 질문처럼 매번 묻지만
+   * 점수 · 코호트 비교 · 본 글에서는 뺀다(src/lib/questionScope.ts). 이름 없는 질문(category-agnostic)으로만 쓴다.
+   */
+  probe?: boolean;
+  /**
+   * 다른 실증 질문을 표현만 바꿔 쓴 실증(홀드아웃)이면 그 원래 질문 id — 처치 글이 문장이 다른 같은 의도의 질문에도 인용되는지
+   * 본다(scripts/add-probe-questions.ts --paraphrase-of). 실증 질문에만 있다.
+   */
+  paraphraseOf?: string;
 }
 
 export interface CompetitorContext {

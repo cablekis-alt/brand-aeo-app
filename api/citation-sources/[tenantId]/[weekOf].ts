@@ -19,7 +19,7 @@ export default async function handler(req: JsonRequest, res: JsonResponse) {
   const engineRaw = req.query.engine;
   const engine = typeof engineRaw === 'string' && engineRaw ? engineRaw : null;
   const questionsRaw = req.query.questions;
-  const questions = questionsRaw === 'unnamed' || questionsRaw === 'named' ? questionsRaw : null;
+  const questions = questionsRaw === 'unnamed' || questionsRaw === 'named' || questionsRaw === 'probe' ? questionsRaw : null;
   const competitorDomains = tenant.competitors.flatMap((c) => c.domains ?? []);
   sendJson(
     res,

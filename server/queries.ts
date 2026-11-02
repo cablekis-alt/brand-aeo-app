@@ -9,6 +9,7 @@ import type { QuestionRepeatAnalysis } from './types.js';
 import type { QuestionCategory } from '../src/prompts/types.js';
 import { comparableWith } from '../src/lib/comparability.js';
 import { ENGINE_LABEL } from '../src/lib/format.js';
+import { probeIdsOf, withoutProbes } from '../src/lib/questionScope.js';
 
 /** 인용 집계에 필요한 읽기 메서드만 요구한다 (배포 환경의 읽기 전용 스토어도 그대로 쓸 수 있도록). */
 type CitationSource = Pick<ResultStore, 'getQuestionAnalyses' | 'getScorecardHistory' | 'getQuestionBank'>;
@@ -148,7 +149,8 @@ export async function getCitationBreakdown(
 ): Promise<CitationBreakdown> {
   const engine = options.engine?.trim() || null;
   const withComparison = options.withComparison ?? true;
-  const allAnalyses = await store.getQuestionAnalyses(tenantId, weekOf);
+  // 실증 질문의 응답은 뺀다 — 자사 인용률을 카드(aggregate.ts)와 같은 모집단으로 낸다. 전주 점유율도 같은 규칙(아래 재귀).
+  const allAnalyses = await withoutWeekProbes(store, tenantId, weekOf, await store.getQuestionAnalyses(tenantId, weekOf));
   const engines = distinctEngines(allAnalyses);
   const analyses = engine ? allAnalyses.filter((a) => a.engine === engine) : allAnalyses;
   type UrlAcc = { citationCount: number; engines: Set<string>; supporting: number };
@@ -512,15 +514,17 @@ export async function getRankingView(
  * 모집단과 정확히 같은 기준이라 화면과 점수가 어긋나지 않는다.
  *
  * 되물은 응답(clarifying)은 답을 내놓지 않은 것이라 분모에서 뺀다 — questionWinLoss의
- * mentionedRate와 같은 규칙이다.
+ * mentionedRate와 같은 규칙이다. 실증 질문은 어느 쪽에도 세지 않는다(점수 모집단 밖 — src/lib/questionScope.ts).
  */
 function promptedSplitFrom(
   analyses: QuestionRepeatAnalysis[],
-  questions: { questionId: string; category: QuestionCategory }[],
+  questions: { questionId: string; category: QuestionCategory; probe?: boolean }[],
 ): PromptedSplit {
   const categoryOf = new Map(questions.map((q) => [q.questionId, q.category]));
+  const probes = probeIdsOf(questions);
   const tally = { named: { answered: 0, mentioned: 0 }, unnamed: { answered: 0, mentioned: 0 } };
   for (const a of analyses) {
+    if (probes.has(a.questionId)) continue;
     const category = categoryOf.get(a.questionId);
     if (category === undefined) continue; // 은행에 없는 옛 질문 id — 어느 쪽인지 알 수 없다
     if (a.clarifying) continue;
@@ -541,8 +545,26 @@ export async function getEeatAnalysis(
   tenantId: string,
   weekOf: string,
 ): Promise<EeatAnalysis> {
-  const analyses = await store.getQuestionAnalyses(tenantId, weekOf);
+  // 실증 질문의 응답은 뺀다 — 주간 리포트(pipeline.ts writeWeeklyReport)와 같은 모집단.
+  const analyses = await withoutWeekProbes(store, tenantId, weekOf, await store.getQuestionAnalyses(tenantId, weekOf));
   return computeEeatAnalysis(analyses);
+}
+
+/**
+ * 그 주 판정에서 실증 질문의 응답을 뺀다. 은행은 weekQuestionBank와 같은 순서(그 주 카드 → 질문 id 접두)로 찾고, 못 찾으면
+ * 전체를 그대로 쓴다 — 은행을 읽기 전의 동작이다(실증을 덧붙이기 전 주차 · 은행 없는 데모 주차).
+ */
+async function withoutWeekProbes<T extends { questionId: string }>(
+  store: CitationSource,
+  tenantId: string,
+  weekOf: string,
+  analyses: T[],
+): Promise<T[]> {
+  if (analyses.length === 0) return analyses;
+  const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER);
+  const recorded = history.find((card) => card.weekOf === weekOf)?.questionBankVersion;
+  const bank = await weekQuestionBank(store, tenantId, analyses, recorded, undefined);
+  return bank ? withoutProbes(analyses, bank.questions) : analyses;
 }
 
 /**
@@ -595,6 +617,7 @@ export interface CitationSourceOptions {
    * 질문 유형으로 좁혀 본다 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문.
    * 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기 쉬워서, 섞어 세면 이름 없는 질문에서는 우리가
    * 없는 출처가 「뒷받침함」으로 숨는다. 실행 항목의 「충족」(src/lib/gapActions.ts)과 같은 기준이다.
+   * probe는 실증 질문만 — 실증 응답은 기본 보기와 unnamed에서 빠진다.
    */
   questions?: CitationQuestionScope | null;
   /** 그 주 스코어카드에 질문 은행 버전이 없을 때 쓸 지금 버전(테넌트 설정). */
@@ -627,9 +650,16 @@ export async function getCitationSourceAnalysis(
   );
   const named = new Map((bank?.questions ?? []).map((q) => [q.questionId, q.containsBrandName]));
   const supportNeedsMention = (questionId: string) => named.get(questionId) === false;
-  if (!scope) return analyzeCitationSources(byEngine, { competitorDomains: options.competitorDomains, supportNeedsMention });
+  // 실증 질문(실험용으로 덧붙인 이름 없는 질문)은 기본 보기와 「이름 없는 질문」에서 뺀다 — 실행 항목의 「충족」 · 인용 갭이 실험
+  // 응답으로 부풀지 않게. 실증 응답의 인용 출처는 'probe' 범위로 따로 본다. 은행을 못 찾으면 거르지 않는다(지금까지의 동작).
+  const probes = probeIdsOf(bank?.questions ?? []);
+  if (!scope) {
+    return analyzeCitationSources(withoutProbes(byEngine, bank?.questions ?? []), { competitorDomains: options.competitorDomains, supportNeedsMention });
+  }
   // 은행에 없는 질문은 어느 쪽인지 알 수 없다 — 한쪽으로 몰지 않고 빼고 그 수를 밝힌다.
-  const kept = byEngine.filter((a) => named.get(a.questionId) === (scope === 'named'));
+  const kept = byEngine.filter((a) =>
+    scope === 'probe' ? probes.has(a.questionId) : !probes.has(a.questionId) && named.get(a.questionId) === (scope === 'named'),
+  );
   const unknown = byEngine.filter((a) => !named.has(a.questionId)).length;
   // 응답이 있는데 하나도 은행에서 찾지 못했으면 이 은행으로는 나눌 수 없다(엔진으로 좁힌 뒤에도 같다).
   const split = bank !== null && !(byEngine.length > 0 && unknown === byEngine.length);

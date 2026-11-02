@@ -1,7 +1,9 @@
 import { comparableWith } from './comparability'
 import { ENGINE_LABEL } from './format'
+import { isProbe } from './questionScope'
 import type { CitationComparison } from './types'
 import type { WeeklyScorecard } from '../prompts/b8-report'
+import type { CitationQuestionScope } from '../prompts/b7-citation-sources'
 
 /**
  * URL 상세 분석·인용 갭 분석이 함께 쓰는 표 규칙(상수·순수 함수).
@@ -21,6 +23,48 @@ export const KIND_PILL: Record<string, string> = {
   social: 'st-ok',
   blog: 'st-ok',
   other: 'st-unknown',
+}
+
+/**
+ * 인용 갭 분석의 질문 유형 필터. 기본은 브랜드 이름 없는 질문이다 — 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기
+ * 쉬워서, 섞어 보면 이름을 모르는 사람의 질문에서는 우리가 없는 출처가 「뒷받침함」으로 숨는다. 콘텐츠 생성의
+ * 「충족」(src/lib/gapActions.ts)도 같은 기준이다.
+ *
+ * 「모든 질문」도 실증 질문의 응답은 뺀다(server/queries.ts getCitationSourceAnalysis) — 이름표가 그렇게 말해야 한다. 실증 질문의
+ * 인용 출처는 따로 고르는 칸으로 본다(실험 결과를 볼 길).
+ */
+export const QUESTION_SCOPE_LABEL: Record<CitationQuestionScope | 'all', string> = {
+  unnamed: '브랜드 이름 없는 질문',
+  all: '모든 질문(실증 제외)',
+  named: '브랜드 이름을 댄 질문',
+  probe: '실증 질문',
+}
+
+/** 필터에 보이는 순서 — 실증 질문은 점수 밖이라 맨 끝. */
+export const QUESTION_SCOPE_OPTIONS: readonly (CitationQuestionScope | 'all')[] = ['unnamed', 'all', 'named', 'probe']
+
+/**
+ * 고른 주에 보일 질문 유형 칸. weekBank는 **그 주를 측정한 판**의 질문지다(resolveBankVersion) — 지금 질문지로 가르면 모두 새로 쓰기 ·
+ * 기본 정보 수정으로 실증 없는 새 판이 된 뒤 실증을 잰 옛 주의 「실증 질문」 칸이 사라진다(서버는 그 주 판으로 실증 응답을 돌려준다).
+ * 그 판에 실증 질문이 없으면 늘 빈 집계라 칸을 감춘다. 질문지를 아직 못 읽었으면(null) 감춘다.
+ */
+export function questionScopeOptions(weekBank: { questions: { probe?: boolean }[] } | null): readonly (CitationQuestionScope | 'all')[] {
+  const hasProbes = Boolean(weekBank?.questions.some(isProbe))
+  return QUESTION_SCOPE_OPTIONS.filter((s) => s !== 'probe' || hasProbes)
+}
+
+/**
+ * 화면에 보일 질문 유형 이름. 실증 질문이 없는 판이면 「모든 질문」에 「실증 제외」를 붙이지 않는다 — 뺄 것이 없는데 실증이라는
+ * 말을 보이면 실증을 쓰지 않는 브랜드에서 헷갈린다(예전 이름표 그대로).
+ */
+export function questionScopeLabel(scope: CitationQuestionScope | 'all', hasProbes: boolean): string {
+  return scope === 'all' && !hasProbes ? '모든 질문' : QUESTION_SCOPE_LABEL[scope]
+}
+
+/** 점유율 · 갭 비중을 무엇으로 셌는지(「… 기준입니다」 앞말). 실증 질문이 없는 판이면 예전 말 그대로(「전체 인용」). */
+export function citationBasisLabel(scope: CitationQuestionScope | 'all', hasProbes = true): string {
+  if (scope === 'all') return hasProbes ? '실증 질문을 뺀 전체 인용' : '전체 인용'
+  return `${QUESTION_SCOPE_LABEL[scope]}의 인용`
 }
 
 /**

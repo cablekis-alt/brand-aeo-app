@@ -20,14 +20,26 @@ import { downloadCsv, safeFileName } from '../lib/markdownFile'
 import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 
-type Scope = 'unnamed' | 'named' | 'all'
+type Scope = 'unnamed' | 'named' | 'probe' | 'all'
 type ResultFilter = 'all' | 'hit' | 'miss' | 'split'
 
 const SCOPES: { id: Scope; label: string }[] = [
   { id: 'unnamed', label: '이름 없는 질문' },
   { id: 'named', label: '이름 넣은 질문' },
+  { id: 'probe', label: '실증' },
   { id: 'all', label: '전체' },
 ]
+
+/**
+ * 질문이 종류 칸에 드나. 「이름 없는 질문」은 점수 기준이라 실증 질문(점수 밖 실험 질문 — lib/questionScope.ts)을 빼고, 실증은
+ * 「실증」 칸에서 따로 본다.
+ */
+function inScope(q: AnswerQuestion, scope: Scope): boolean {
+  if (scope === 'all') return true
+  if (scope === 'named') return q.named
+  if (scope === 'probe') return q.probe
+  return !q.named && !q.probe
+}
 const RESULTS: { id: ResultFilter; label: string }[] = [
   { id: 'all', label: '전체' },
   { id: 'hit', label: '불림' },
@@ -110,16 +122,18 @@ export default function Answers() {
   // 고른 질문은 주소(?q=)에 둔다 — 개요의 답변 카드·놓친 질문이 이 화면의 그 질문으로 바로 연다.
   const asked = params.get('q') ?? ''
   const picked = all.find((q) => q.questionId === asked)
-  // 종류를 아직 안 골랐으면 이름 없는 질문(점수 기준)을 보인다. 주소로 연 질문이 이름 넣은 질문이면 전체를 보여
-  // 목록에서도 그 질문이 보이게 한다.
+  // 종류를 아직 안 골랐으면 이름 없는 질문(점수 기준)을 보인다. 주소로 연 질문이 이름 넣은 질문이면 전체를, 실증 질문이면
+  // 「실증」을 보여 목록에서도 그 질문이 보이게 한다.
   const [scopePick, setScope] = useState<Scope | null>(null)
-  const scope: Scope = scopePick ?? (picked?.named ? 'all' : 'unnamed')
-  // 주제는 지금 종류(이름 없는/넣은 질문)에 있는 것만 — 이름 넣은 질문은 질문마다 주제가 따로라 목록이 길어진다.
+  // 「실증」 칸은 이 주에 실증 질문의 답이 있을 때만 보인다 — 실증이 없는 주로 옮기면 고른 「실증」도 풀린다.
+  const hasProbes = all.some((q) => q.probe)
+  const scope: Scope = (scopePick === 'probe' && !hasProbes ? null : scopePick) ?? (picked?.named ? 'all' : picked?.probe ? 'probe' : 'unnamed')
+  // 주제는 지금 종류(이름 없는/넣은 질문 · 실증)에 있는 것만 — 이름 넣은 질문은 질문마다 주제가 따로라 목록이 길어진다.
   const topics = useMemo(
     () => [
       ...new Set(
         all
-          .filter((q) => scope === 'all' || (scope === 'named') === q.named)
+          .filter((q) => inScope(q, scope))
           .map((q) => q.topic)
           .filter((t): t is string => Boolean(t)),
       ),
@@ -136,7 +150,7 @@ export default function Answers() {
     () =>
       all.filter(
         (q) =>
-          (scope === 'all' || (scope === 'named') === q.named) &&
+          inScope(q, scope) &&
           (!activeTopic || q.topic === activeTopic) &&
           passes(q, activeEngine, result),
       ),
@@ -200,7 +214,7 @@ export default function Answers() {
         <>
           <div className="ans-filters">
             <div className="seg" role="group" aria-label="질문 종류">
-              {SCOPES.map((s) => (
+              {SCOPES.filter((s) => s.id !== 'probe' || hasProbes).map((s) => (
                 <button key={s.id} type="button" className={scope === s.id ? 'on' : undefined} onClick={() => setScope(s.id)}>
                   {s.label}
                 </button>
@@ -265,6 +279,7 @@ export default function Answers() {
                       })}
                     </span>
                     {q.topic && <span className="dash-sub">{q.topic}</span>}
+                    {q.probe && <span className="chip">실증 · 점수 제외</span>}
                     {q.divergence && <span className="chip warn">엔진마다 다름</span>}
                   </span>
                 </button>
@@ -307,7 +322,7 @@ function QuestionDetail({ q, brandName, tenantId, weekOf }: { q: AnswerQuestion;
       <div className="ans-detail-head">
         <h2>“{q.text}”</h2>
         <p className="ans-tags">
-          <span className="chip">{q.named ? '이름 넣은 질문' : '이름 없는 질문 · 점수 기준'}</span>
+          <span className="chip">{q.named ? '이름 넣은 질문' : q.probe ? '실증 · 점수 제외' : '이름 없는 질문 · 점수 기준'}</span>
           {q.topic && <span className="chip">{q.topic}</span>}
           <span className="dash-sub mono">{q.questionId}</span>
           <span className="dash-sub">

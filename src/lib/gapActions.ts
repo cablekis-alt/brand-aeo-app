@@ -2,10 +2,11 @@ import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from 
 import { blogPlatformOf } from './blogPlatforms'
 import { aliveExtraArticles, extraTopicSnapshot, resolveExtraArticle, type ExtraArticle, type ExtraResolveHow } from './extraArticles'
 import { ENGINE_LABEL } from './format'
-import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, questionKinds, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
+import { probeIdsOf, withoutProbes } from './questionScope'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -151,6 +152,11 @@ export interface GapAction {
     won: number
     /** 찾은 질문 가운데 이번 주 응답 줄이 없는 질문 수 — 확인 불가다(밀리지 않은 것으로 세지 않는다). */
     noAnswer: number
+    /**
+     * 찾은 질문 가운데 이번 주 은행에서 실증인 질문(이번 주 id · 고정 문장, questionIds 순서). 없으면 없다. 이번 주 응답이 없는 실증은
+     * plan.probes에 없어, 화면이 이 목록으로 실증 목록에 「맡음」으로 두고 본 글에서 가져간 질문으로 잘못 보이지 않게 한다(probeQuestionList).
+     */
+    probes?: { questionId: string; text: string }[]
     /** 올린 기록에 싣는 질문 스냅샷(만들 때의 판 · id · 문장) — 원장 검사(checkTopic)를 늘 통과한다. */
     topic: TopicSnapshot
   }
@@ -181,6 +187,12 @@ export interface GapActionPlan {
    * 따로 밝힌다. 은행을 읽지 못한 주는 유형을 몰라 비어 있다(그때는 밀린 질문 전부가 글에 들어간다).
    */
   otherLost: OtherLostQuestion[]
+  /**
+   * 이번 주 응답이 있는 실증 질문(src/lib/questionScope.ts) 전부와 그 판정 — 이긴 질문도 싣는다. 실증은 점수에 들지 않아 본 글 · otherLost ·
+   * 채널의 질문에 넣지 않는다. 처치군으로 쓸지는 사람이 정한다 — 「글 더 만들기」가 이 목록에서 골라 추가 글을 만든다(extraContentActions는
+   * 실증도 그대로 맡는다). 은행을 읽지 못한 주는 실증인지 몰라 비어 있다.
+   */
+  probes: WinLossRow[]
   /**
    * 이번 주 결과(그 주 파일)를 잰 측정의 범위. 화면이 성과 표 이력으로 같은 날 올린 글을 다시 잴 때, 이력의 그 주가 같은 측정인지 맞춰
    * 본다(publishTracking.ts weekFileTimingOf) — 화면이 낡아 다른 측정의 시각으로 뒤집지 않게.
@@ -735,10 +747,12 @@ function extraContentActions(
   weekBankVersion: string | null | undefined,
 ): { actions: GapAction[]; claimed: Set<string> } {
   const rowById = new Map(rows.map((r) => [r.questionId, r]))
+  const probeIds = probeIdsOf(questions)
   const claimed = new Set<string>()
   const actions = aliveExtraArticles(defs).map<GapAction>((def) => {
     const found = resolveExtraArticle(def, weekBankVersion, questions)
     for (const id of found.currentIds) claimed.add(id)
+    const textById = new Map(found.currentIds.map((id, i) => [id, found.currentTexts[i]]))
     // 언급률이 낮은 질문이 먼저 — 본 글과 같은 순서. 이번 주 응답이 없는 질문은 뒤에 둔다(이긴 질문도 남긴다: 이 글이 맡은 질문이다).
     const ordered = found.currentIds
       .map((id, i) => ({ id, i, row: rowById.get(id) }))
@@ -747,6 +761,8 @@ function extraContentActions(
     const zero = lost.filter((q) => q.row?.mentionedRate === 0).length
     const won = ordered.filter((q) => q.row?.verdict === 'win').length
     const noAnswer = ordered.filter((q) => !q.row).length
+    // 실증은 응답이 없어도 은행으로 가린다 — 응답 줄(rows)로만 가리면 응답 없는 실증이 본 글의 질문처럼 보인다.
+    const probes = ordered.filter((q) => probeIds.has(q.id)).map((q) => ({ questionId: q.id, text: textById.get(q.id) ?? q.id }))
     const picked = found.currentIds.length
     const answered = picked - noAnswer
     const lostNote =
@@ -805,6 +821,7 @@ function extraContentActions(
         ...(missingWhy ? { missingWhy } : {}),
         won,
         noAnswer,
+        ...(probes.length > 0 ? { probes } : {}),
         topic: extraTopicSnapshot(def),
       },
     }
@@ -962,10 +979,10 @@ function publishedHitsOf(
     return p.removedReason === 'taken-down' && removedOn && measuredBefore(removedOn) ? [{ post: p, takenDownOn: removedOn }] : []
   })
   if (shown.length === 0) return out
-  // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄 질문으로 나누지 않는다(확인 불가).
-  const named = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
-  const known = analyses.some((a) => named.has(a.questionId))
-  const index = indexWeekCitations(analyses, known ? named : null)
+  // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄/실증 질문으로 나누지 않는다(확인 불가).
+  const kinds = questionKinds(questions)
+  const known = analyses.some((a) => kinds.has(a.questionId))
+  const index = indexWeekCitations(analyses, known ? kinds : null)
   // 질의만 다른 주소는 응답 단위로 센다 — 한 응답이 변형 주소 여럿을 인용해도 한 번이다.
   const responseKeys = new Map<string, Set<string>>()
   for (const a of analyses) {
@@ -1026,12 +1043,17 @@ export function computeGapActions(
   const rows = computeQuestionWinLoss(analyses, questions)
   // 은행에서 이 주 질문의 유형을 하나라도 찾았나 — 못 찾으면 카테고리 무관 질문을 가릴 수 없어 밀린 질문 전부를 글에 넣는다.
   const bankKnown = rows.some((r) => r.category !== '')
-  const inArticle = (r: WinLossRow) => !bankKnown || r.category === ARTICLE_CATEGORY
+  // 실증 질문은 본 글에 넣지 않는다 — 점수를 움직이지 않고, 처치군으로 쓸지는 사람이 「글 더 만들기」에서 고른다(plan.probes).
+  // 은행을 읽지 못한 주는 실증인지도 몰라 예전처럼 밀린 질문 전부를 넣는다.
+  const inArticle = (r: WinLossRow) => !bankKnown || (r.category === ARTICLE_CATEGORY && !r.probe)
+  // 채널이 꺼낸 질문(밀린 질문이 없을 때 대신 싣는 질문까지) · 「충족」 · 지분은 실증 응답의 인용을 세지 않는다 — 실험 응답이 할 일
+  // 목록을 부풀리거나 「충족」을 켜지 않게(서버 인용 출처 기본 보기도 실증을 뺀다). 이미 등록된 곳의 근거는 사실 확인이라 모든 응답으로 본다.
+  const scored = withoutProbes(analyses, questions)
   const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
     citations,
-    questionsByDomain(analyses),
+    questionsByDomain(scored),
     rows,
-    unnamedCitationsByHost(analyses, questions),
+    unnamedCitationsByHost(scored, questions),
     listedEvidenceByHost(analyses),
     inArticle,
     bankKnown,
@@ -1041,8 +1063,9 @@ export function computeGapActions(
     : { actions: [], claimed: new Set<string>() }
   const content = [...contentActions(rows, inArticle, bankKnown, extras.claimed), ...extras.actions]
   const namedById = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
+  // 실증은 「글에 넣지 않은 밀린 질문」(다른 유형)이 아니다 — 따로 싣는다(probes).
   const otherLost: OtherLostQuestion[] = rows
-    .filter((r) => r.verdict === 'loss' && !inArticle(r))
+    .filter((r) => r.verdict === 'loss' && !inArticle(r) && !r.probe)
     .sort((a, b) => a.mentionedRate - b.mentionedRate)
     .map((r) => ({
       questionId: r.questionId,
@@ -1084,8 +1107,37 @@ export function computeGapActions(
     competitorDomainCount,
     excludedLowConfidence,
     otherLost,
+    probes: rows.filter((r) => r.probe),
     weekWindow: measuredWindow(analyses),
   }
+}
+
+/** 실증 목록의 한 줄 — 이번 주 판정(응답이 없으면 null · 확인 불가)과 맡은 추가 글(없으면 대조). */
+export interface ProbeListItem {
+  questionId: string
+  text: string
+  verdict: WinLossRow['verdict'] | null
+  takenBy: string | null
+}
+
+/**
+ * 콘텐츠 생성 실증 칸 · 「글 더 만들기」가 함께 쓰는 실증 목록 — 이번 주 응답이 있는 실증(plan.probes) 다음에, 추가 글이 맡았는데 이번 주
+ * 응답이 없는 실증(extra.probes)을 붙인다. 응답이 없는 실증은 판정을 채우지 않고 null(확인 불가)로 둔다. 맡지 않은 응답 없는 실증은
+ * 고를 근거(판정)도 맡은 글도 없어 싣지 않는다.
+ */
+export function probeQuestionList(probes: WinLossRow[], extraActions: GapAction[]): ProbeListItem[] {
+  const takenBy = new Map<string, string>()
+  for (const a of extraActions) for (const id of a.questionIds) takenBy.set(id, a.extra?.name ?? a.title)
+  const items: ProbeListItem[] = probes.map((p) => ({ questionId: p.questionId, text: p.text, verdict: p.verdict, takenBy: takenBy.get(p.questionId) ?? null }))
+  const seen = new Set(items.map((p) => p.questionId))
+  for (const a of extraActions) {
+    for (const p of a.extra?.probes ?? []) {
+      if (seen.has(p.questionId)) continue
+      seen.add(p.questionId)
+      items.push({ questionId: p.questionId, text: p.text, verdict: null, takenBy: a.extra?.name ?? a.title })
+    }
+  }
+  return items
 }
 
 /** 채널 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */

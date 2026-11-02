@@ -1,5 +1,6 @@
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
 import { JOURNEY_STAGES, STAGE_LABEL } from './journeyStage'
+import { withoutProbes } from './questionScope'
 import { TOPIC_UNSET } from '../prompts/b1c-question-topic'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -19,6 +20,9 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
  * 넣어서 낸다(규칙 복제 없음).
  *
  * 새 API 호출은 없다. 이미 저장된 분석과 질문 은행만으로 계산한다.
+ *
+ * 실증 질문(점수 밖 실험 질문 — questionScope.ts)은 어느 묶음에도 넣지 않는다. 넣으면 「카테고리 무관」 묶음의
+ * 언급률이 점수의 언급률과 어긋나고, 실험 결과가 보강할 곳처럼 읽힌다.
  */
 
 /** 묶음 하나의 판정 — 화면이 색과 순서를 정하는 데 쓴다. */
@@ -125,9 +129,10 @@ function byPain(a: GapGroup, b: GapGroup): number {
 }
 
 export function computeGapAnalysis(
-  analyses: QuestionRepeatAnalysis[],
+  allAnalyses: QuestionRepeatAnalysis[],
   questions: QuestionSpec[],
 ): GapAnalysis {
+  const analyses = withoutProbes(allAnalyses, questions)
   const rows = computeQuestionWinLoss(analyses, questions)
 
   // ── 카테고리별 ──

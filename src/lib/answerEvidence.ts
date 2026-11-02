@@ -260,6 +260,8 @@ export function buildAnswerEvidence(input: BuildEvidenceInput): AnswerEvidence {
     const sentences = a.mentionSentences ?? []
     return sentences.length === 0 || sentences.some((m) => !CONDITIONAL.test(m.sentence ?? ''))
   }
+  // 실증 질문(questionScope.ts)은 여기서 빼지 않는다 — 점수 모집단이 아니라 「이 글의 질문」을 물은 답을 세는 줄이다. 실증을 고른 추가
+  // 글(처치군)에서 빼면 글이 「모두 이름을 넣어 물은 질문」이라고 거짓으로 적는다. 본 글의 질문에서 실증을 빼는 일은 gapActions가 맡는다.
   const unnamed = answers.filter((a) => !byQuestion.get(a.questionId)?.containsBrandName)
   const answered = { asked: unnamed.length, mentioned: unnamed.filter(realMention).length }
   const mentionedAny = answers.filter(realMention).length

@@ -49,6 +49,8 @@ export default function SentimentDashboard() {
 
   if (!tenant) return null
   const hasData = s.overall.total > 0
+  // 실증 질문(점수 밖 실험 질문)의 답 — 전체 · 엔진별 분포에는 들지 않고, 질문별 줄 · 부정 문장에 표시를 달아 남는다(lib/sentiment.ts).
+  const hasProbes = s.byQuestion.some((q) => q.probe) || s.negatives.some((n) => n.probe)
 
   return (
     <>
@@ -87,7 +89,7 @@ export default function SentimentDashboard() {
             <article>
               <h2>전체 언급 문장</h2>
               <p>{s.overall.total}</p>
-              <span>이 주차 · 질문 × 엔진 × 반복</span>
+              <span>이 주차 · 질문 × 엔진 × 반복{hasProbes && ' · 실증 질문 제외'}</span>
             </article>
           </section>
 
@@ -112,6 +114,12 @@ export default function SentimentDashboard() {
               {s.byQuestion.slice(0, 12).map((q) => (
                 <li key={q.questionId}>
                   <span className="senti-name" title={q.text} style={{ maxWidth: 320 }}>
+                    {/* 이름 칸은 길면 잘린다 — 표시를 앞에 둔다. */}
+                    {q.probe && (
+                      <>
+                        <span className="status-pill st-info">실증 · 점수 제외</span>{' '}
+                      </>
+                    )}
                     {q.text}
                   </span>
                   <StackedBar c={q} />
@@ -133,6 +141,7 @@ export default function SentimentDashboard() {
                   <li key={i}>
                     <span className="sentence-meta">
                       {ENGINE_LABEL[n.engine] ?? n.engine} · {n.questionId} — {n.text}
+                      {n.probe && ' · 실증 · 점수 제외'}
                     </span>
                     <span className="neg-sentence">“{n.sentence}”</span>
                   </li>

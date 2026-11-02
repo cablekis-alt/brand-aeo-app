@@ -15,6 +15,7 @@ import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, formatPct, weekLabel } from '../lib/format'
 import { computeGapAnalysis } from '../lib/gapAnalysis'
 import { computeQuestionWinLoss } from '../lib/questionWinLoss'
+import { probeIdsOf } from '../lib/questionScope'
 import { STAGE_LABEL, type JourneyStage } from '../lib/journeyStage'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { QuestionRepeatAnalysis } from '../lib/types'
@@ -223,12 +224,19 @@ export default function BrandDiagnosis() {
     setEngineFilter(presentEngines)
   }, [presentEngines])
 
+  /*
+   * 실증 질문(점수 밖 실험 질문 — lib/questionScope.ts)의 답. 집계(경쟁사 언급 비교 · AI 인지 상태)에는 넣지 않고, 문장 목록 ·
+   * 원문 · 사실 위반 목록에는 「실증」 표시를 달아 남긴다 — 실험 답이 브랜드 상태를 흔들지 않게.
+   */
+  const probeIds = useMemo(() => probeIdsOf(questions), [questions])
+
   // 문구도 데이터로 말한다. "반복 3회"를 박아 두면 36문항×1회로 바뀐 뒤에도 그대로 거짓말을 한다.
   const shape = useMemo(() => {
-    const questions = new Set(analyses.map((a) => a.questionId)).size
+    const ids = new Set(analyses.map((a) => a.questionId))
+    const probes = [...ids].filter((id) => probeIds.has(id)).length
     const repeats = analyses.reduce((m, a) => Math.max(m, a.callIndex ?? 1), 0)
-    return { questions, repeats, engines: presentEngines.length, total: analyses.length }
-  }, [analyses, presentEngines])
+    return { questions: ids.size, probes, repeats, engines: presentEngines.length, total: analyses.length }
+  }, [analyses, presentEngines, probeIds])
 
   const filtered = useMemo(() => analyses.filter((a) => engineFilter.includes(a.engine)), [analyses, engineFilter])
 
@@ -260,12 +268,13 @@ export default function BrandDiagnosis() {
   const competitorTotals = useMemo(() => {
     const totals = new Map<string, number>()
     for (const analysis of staged) {
+      if (probeIds.has(analysis.questionId)) continue
       for (const competitor of analysis.competitorMentions) {
         totals.set(competitor.name, (totals.get(competitor.name) ?? 0) + competitor.mentionCount)
       }
     }
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
-  }, [staged])
+  }, [staged, probeIds])
 
   const violations = useMemo(
     () => staged.flatMap((a) => a.factualityClaims.filter((c) => c.verdict === 'contradicted').map((claim) => ({ analysis: a, claim }))),
@@ -305,7 +314,9 @@ export default function BrandDiagnosis() {
      */
     const owners = new Map<string, number>()
     const hosts = new Map<string, number>()
-    for (const a of analyses) {
+    // 근거 · 오인지는 실증 질문의 답을 빼고 센다 — 점수의 자사 인용률 · 사실성(server/aggregate.ts)과 같은 모집단.
+    const scored = analyses.filter((a) => !probeIds.has(a.questionId))
+    for (const a of scored) {
       if (!a.mentioned) continue
       for (const c of a.citations) {
         if (!c.supportsBrandMention) continue
@@ -316,7 +327,7 @@ export default function BrandDiagnosis() {
     }
 
     // 오인지 — Fact Graph와 모순된 주장. 어느 엔진이 몇 건인지까지 같이 센다.
-    const wrong = analyses.flatMap((a) =>
+    const wrong = scored.flatMap((a) =>
       a.factualityClaims.filter((c) => c.verdict === 'contradicted').map((claim) => ({ engine: a.engine, claim })),
     )
     const wrongByEngine = new Map<string, number>()
@@ -332,7 +343,7 @@ export default function BrandDiagnosis() {
       wrong,
       wrongByEngine: [...wrongByEngine.entries()].sort((a, b) => b[1] - a[1]),
     }
-  }, [analyses, questions, presentEngines])
+  }, [analyses, questions, presentEngines, probeIds])
 
   /*
    * AI 답변 원문 — 판정의 근거를 통째로 보여 준다.
@@ -347,9 +358,9 @@ export default function BrandDiagnosis() {
     const has = new Set(analyses.map((a) => a.questionId))
     const byId = new Map(questions.map((q) => [q.questionId, q]))
     return [...has]
-      .map((id) => ({ id, text: byId.get(id)?.text ?? id }))
+      .map((id) => ({ id, text: byId.get(id)?.text ?? id, probe: probeIds.has(id) }))
       .sort((a, b) => a.id.localeCompare(b.id))
-  }, [analyses, questions])
+  }, [analyses, questions, probeIds])
 
   const [rawQuestion, setRawQuestion] = useState('')
   // 기본 질문은 **사실 오류가 있는 질문**을 먼저 고른다. 원문을 여는 이유가 대개 그것이다.
@@ -450,7 +461,7 @@ export default function BrandDiagnosis() {
       <p className="lead">
         이번 주 응답
         {shape.total > 0
-          ? ` ${shape.total}건(질문 ${shape.questions}개 × 엔진 ${shape.engines}개 × 반복 ${shape.repeats}회)`
+          ? ` ${shape.total}건(질문 ${shape.questions}개${shape.probes > 0 ? `(실증 ${shape.probes}개 포함)` : ''} × 엔진 ${shape.engines}개 × 반복 ${shape.repeats}회)`
           : '(질문 × 엔진 × 반복)'}{' '}
         중 브랜드가 실제로 어떻게 언급됐는지 문장 단위로 봅니다.
       </p>
@@ -597,6 +608,7 @@ export default function BrandDiagnosis() {
                       <span className="sentence-text">{tidyMarkdown(m.sentence)}</span>
                       <span className="sentence-meta">
                         {ENGINE_LABEL[a.engine] ?? a.engine} · {a.questionId} · {a.callIndex}회차
+                        {probeIds.has(a.questionId) && ' · 실증 · 점수 제외'}
                       </span>
                     </li>
                   )),
@@ -619,6 +631,7 @@ export default function BrandDiagnosis() {
                     {askable.map((q) => (
                       <option key={q.id} value={q.id}>
                         {q.id} · {q.text.length > 48 ? `${q.text.slice(0, 48)}…` : q.text}
+                        {q.probe && ' · 실증 · 점수 제외'}
                       </option>
                     ))}
                   </select>
@@ -757,6 +770,7 @@ export default function BrandDiagnosis() {
 
           <section>
             <h3>경쟁사 언급 비교</h3>
+            {shape.probes > 0 && <p className="hint" style={{ marginTop: 0 }}>실증 질문(점수 제외)의 답은 세지 않습니다.</p>}
             {competitorTotals.length === 0 ? (
               <p className="muted">이 주차에는 경쟁사 언급이 없습니다.</p>
             ) : (
@@ -779,7 +793,8 @@ export default function BrandDiagnosis() {
                   <li key={i}>
                     <strong>{claim.claimText}</strong> — 응답: {claim.responseValue ?? '알 수 없음'}, 실제:{' '}
                     {claim.factGraphValue ?? '알 수 없음'} ({ENGINE_LABEL[analysis.engine] ?? analysis.engine} ·{' '}
-                    {analysis.questionId})
+                    {analysis.questionId}
+                    {probeIds.has(analysis.questionId) && ' · 실증 · 점수 제외'})
                   </li>
                 ))}
               </ul>

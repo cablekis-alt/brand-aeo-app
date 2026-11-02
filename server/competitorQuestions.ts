@@ -1,4 +1,5 @@
 import type { CompetitorContext, QuestionSpec } from '../src/prompts/types.js';
+import { isProbe } from '../src/lib/questionScope.js';
 
 /**
  * 브랜드 전용 질문 가운데 경쟁사를 짚은 질문을 찾는다(경쟁사 편집 서랍의 「v5-004 / 비교 질문 없음」).
@@ -9,6 +10,8 @@ import type { CompetitorContext, QuestionSpec } from '../src/prompts/types.js';
  * - 고객 자신의 이름을 먼저 지운다: 경쟁사 이름이 고객 이름 안에 들어 있으면(예: '스테이') 모든 질문이 걸린다.
  * - 긴 이름부터 찾고 찾은 자리는 지운다: '초원'과 '초원고택'이 둘 다 경쟁사면 '초원고택' 질문은 '초원고택'에만 잇는다.
  * - 코호트 공통 질문(cohortShared)은 보지 않는다 — 특정 브랜드를 짚지 않고, 고쳐 쓸 대상도 아니다.
+ * - 실증 질문(probe)도 보지 않는다 — 실험 중인 질문이라 문장 · id가 그대로여야 한다. 나중에 더한 경쟁사 이름 · 별칭이 본문에
+ *   들어 있어도 그 경쟁사의 질문으로 잇지 않는다(이으면 경쟁사를 뺄 때 고쳐 쓰이거나 빠진다 · questionHandoff.ts).
  */
 export interface LinkedQuestion {
   questionId: string;
@@ -42,7 +45,7 @@ export function linkCompetitorQuestions(
   const byCompetitor: string[][] = competitors.map(() => []);
   const linked: LinkedQuestion[] = [];
   for (const q of questions) {
-    if (q.cohortShared) continue;
+    if (q.cohortShared || isProbe(q)) continue;
     // 찾은 자리는 한 글자짜리 빈칸으로 바꾼다 — 지운 자리를 건너 앞뒤 글자가 붙어 새 이름이 생기지 않게.
     let hay = squash(q.text);
     for (const name of own) hay = hay.split(name).join('\u0000');

@@ -1,3 +1,4 @@
+import { isScoredAgnostic } from '../lib/questionScope.js';
 import type { MarketScope, PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
 
 /**
@@ -105,8 +106,9 @@ export function learnQuota(count: number): number {
   return Math.max(1, Math.ceil(count * 0.2));
 }
 
-export function countAgnostic(questions: Pick<QuestionSpec, 'category'>[]): number {
-  return questions.filter((q) => q.category === 'category-agnostic').length;
+/** 점수에 세는 이름 없는 질문 수 — 실증 질문은 하한을 채우지 않는다(src/lib/questionScope.ts). */
+export function countAgnostic(questions: Pick<QuestionSpec, 'category' | 'probe'>[]): number {
+  return questions.filter(isScoredAgnostic).length;
 }
 
 /** 상호·별칭이 본문에 들어 있는지. 카테고리 무관 승격 가능 여부를 코드로 판정할 때 쓴다. */
@@ -410,6 +412,118 @@ JSON 스키마 (배열의 각 원소):
 ${req.previousVersionDiffNote ? `이전 시도 참고사항: ${req.previousVersionDiffNote}` : ''}
 
 위 조건에 맞는 브랜드 전용 질문 ${count}개를 생성하라.`;
+
+  return { system, user };
+}
+
+export interface ProbeQuestionRequest {
+  industry: string;
+  region: string;
+  /** 없으면 지역형. */
+  marketScope?: MarketScope;
+  buyer?: string;
+  language?: QuestionLanguage;
+  /** 질문에 넣으면 안 되는 이름 — 브랜드 · 별칭 · 경쟁사 · 코호트 순위 이름 전부(server/probeQuestions.ts bannedNames). */
+  bannedNames: string[];
+  /** 브랜드 질문지 · 코호트 공통 질문지에 이미 있는 문장 — 같은 의도를 다시 만들지 않게 보여 준다. */
+  existingTexts: string[];
+  /** 만들 개수(새로 만들 때). 바꿔 쓰기에서는 쓰지 않는다 — 원래 질문 하나에 하나씩 만든다. */
+  count: number;
+  /** 추천형(stage consider · kind recommend) 최소 개수(새로 만들 때). */
+  recommendMin: number;
+  /** 있으면 바꿔 쓰기 — 이 실증 질문들을 의도는 그대로 두고 다른 일상 표현으로 하나씩 다시 쓴다(홀드아웃). */
+  paraphrase?: { questionId: string; text: string }[];
+}
+
+/**
+ * B1-실증 — 우리 글이 AI 답변에 인용되는지 실험할 **이름 없는 질문**을 만든다. 같은 질문지 판에 probe: true로 덧붙여 매번
+ * 측정하지만 점수 · 코호트 비교 · 본 글에서는 뺀다(src/lib/questionScope.ts). 「글 더 만들기」에서 일부를 처치군으로 골라 글을 쓴다.
+ *
+ * 그래서 질문은 글 한 편이 답할 수 있을 만큼 구체적이어야 하고, 이름을 하나도 담지 않아야 한다(이름이 들면 「이름을 대지 않아도
+ * 나오는가」를 볼 수 없다). 추천형은 후보를 고르게 하는 자리라 브랜드가 불리는지가 가장 잘 보여 하한을 둔다. id · 카테고리 ·
+ * 실증 표시는 코드가 매긴다 — 출력은 text · stage · topic · kind뿐이다.
+ *
+ * paraphrase가 있으면 바꿔 쓰기다. 처치 글이 그 문장에만 맞춰져 인용되는지, 같은 의도를 다르게 물어도 인용되는지 가르려고 고른
+ * 실증 질문을 다른 일상 표현으로 다시 쓴다. 단계 · 주제는 원래 질문을 따르므로(코드가 옮긴다) 출력은 paraphraseOf · text뿐이다.
+ */
+export function buildProbeQuestionPrompt(req: ProbeQuestionRequest): PromptMessage {
+  const { industry, region, bannedNames, existingTexts } = req;
+  const guide = scopeGuide(req.marketScope, industry, region, req.buyer);
+  const banned = bannedNames.join(', ') || '(없음)';
+  const existing = existingTexts.map((t) => `- ${t}`).join('\n') || '(없음)';
+
+  if (req.paraphrase && req.paraphrase.length > 0) {
+    const sources = req.paraphrase;
+    const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
+${guide.persona}가 AI 검색·비서 서비스에 입력한 질문을, **의도는 그대로 두고 다른 일상 표현으로** 다시 씁니다.
+같은 뜻을 다른 사람이 다른 말로 물었을 때도 같은 답이 나오는지 보려는 것입니다.
+
+규칙:
+1. 주어진 질문 ${sources.length}개마다 정확히 하나씩, 모두 ${sources.length}개를 만든다. paraphraseOf에는 원래 질문의 id를 그대로 적는다.
+2. 의도를 바꾸지 마라 — 묻는 대상 · 조건(지역 · 인원 · 시기 · 예산 등) · 원하는 답의 종류가 같아야 한다. 조건을 더하거나 빼지 마라.
+3. 낱말 순서나 조사만 바꾸지 말고, 실제로 다른 사람이 물을 법한 다른 표현을 쓴다(동의어 · 다른 문장 구조 · 다른 말투).
+4. 어떤 상호·브랜드명·업체명도 넣지 마라. 특히 아래 이름은 절대 넣지 마라:
+   ${banned}
+5. 아래 "이미 있는 질문"과 같은 문장을 만들지 마라.
+6. ${styleRule(req.language)}
+7. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
+
+JSON 스키마 (배열의 각 원소):
+{
+  "paraphraseOf": string,      // 원래 질문 id
+  "text": string
+}`;
+
+    const user = `업종: ${industry}
+지역: ${region}${scopeLines(req.marketScope, guide)}
+
+다시 쓸 질문:
+${sources.map((s) => `- ${s.questionId}: ${s.text}`).join('\n')}
+
+이미 있는 질문(같은 문장 금지):
+${existing}`;
+
+    return { system, user };
+  }
+
+  const { count, recommendMin } = req;
+  const system = `당신은 AEO(Answer Engine Optimization) 리서치 설계자입니다.
+목표는 ${guide.persona}가 ChatGPT/Perplexity 같은 AI 검색·비서 서비스에 입력할 법한 "자연스러운" 일반 질문을 만드는 것입니다.
+이 질문들은 기존 질문지에 덧붙여 따로 측정합니다. 이 업종의 글 한 편이 정면으로 답할 수 있는 질문이어야 하고,
+그 글이 AI 답변에 인용되는지를 봅니다.
+
+★ 가장 중요한 제약:
+1. 정확히 ${count}개를 만든다. 전부 브랜드 이름 없는 일반 질문이다.
+2. 어떤 상호·브랜드명·업체명도 넣지 마라. 특히 아래 이름은 절대 넣지 마라:
+   ${banned}
+3. 추천형(kind "recommend")을 **최소 ${recommendMin}개** 만든다 — ${guide.recommend}처럼 후보를 고르게 하는 질문이고 stage는 consider다.
+   추천형도 조건(누구와 · 언제 · 무엇을 원하는지)을 하나 이상 달아 서로 다른 상황을 묻게 한다.
+4. 아래 "이미 있는 질문"과 **같은 의도를 다시 만들지 마라**. 표현만 바꾼 중복 금지.
+
+그 밖의 규칙:
+5. ${guide.topicRule || '이 업종의 소비자가 흔히 묻는 주제를 고르게 다룬다.'}${guide.regionRule ? `\n   ${guide.regionRule}` : ''}
+6. ${styleRule(req.language)}
+7. 특정 브랜드에 유리하거나 불리하게 유도하는 질문(답을 암시하는 질문)은 금지한다.
+8. 추천형이 아닌 질문은 kind "info"다 — 기준·시세·절차를 묻는 learn(탐색)이나 선택 직전에 확인하는 decide(결정).
+   stage는 문장의 의도로 매긴다 — learn(탐색) / consider(비교: 후보를 고르거나 비교) / decide(결정).
+9. topic은 질문의 내용으로 묶는 한국어 명사구 12자 이내다. "기타"·"일반" 같은 이름은 만들지 마라.
+10. 출력은 아래 JSON 스키마를 따르는 배열만 반환한다. 설명, 마크다운, 코드블록 금지.
+
+JSON 스키마 (배열의 각 원소):
+{
+  "text": string,
+  "stage": "learn" | "consider" | "decide",
+  "topic": string,
+  "kind": "recommend" | "info"
+}`;
+
+  const user = `업종: ${industry}
+지역: ${region}${scopeLines(req.marketScope, guide)}
+만들 개수: ${count}
+추천형 최소: ${recommendMin}
+
+이미 있는 질문(같은 의도 금지):
+${existing}`;
 
   return { system, user };
 }

@@ -40,9 +40,17 @@ export default function QuestionWinLoss() {
   }, [tenant?.tenantId, bankVersion])
 
   const rows = useMemo(() => computeQuestionWinLoss(analyses, questions), [analyses, questions])
+  // 승패 합계는 점수에 드는 질문만 센다 — 실증 질문(점수 밖 실험 질문)은 줄에 표시만 달고 수를 따로 보인다.
   const tally = useMemo(() => {
-    const t = { win: 0, even: 0, loss: 0, unanswered: 0 }
-    for (const r of rows) t[r.verdict] += 1
+    const t = { win: 0, even: 0, loss: 0, unanswered: 0, scored: 0, probe: 0 }
+    for (const r of rows) {
+      if (r.probe) {
+        t.probe += 1
+        continue
+      }
+      t[r.verdict] += 1
+      t.scored += 1
+    }
     return t
   }, [rows])
 
@@ -73,7 +81,12 @@ export default function QuestionWinLoss() {
             {tally.unanswered > 0 && (
               <span className="status-pill st-info">무응답 {tally.unanswered}</span>
             )}
-            <span className="muted"> · 총 {rows.length}개 질문</span>
+            <span className="muted"> · 총 {tally.scored}개 질문</span>
+            {tally.probe > 0 && (
+              <span className="status-pill st-info" title="점수에 넣지 않는 실험 질문 — 위 승 · 무 · 패 수에 들지 않습니다">
+                실증 {tally.probe}
+              </span>
+            )}
           </div>
 
           <div className="table-wrap" style={{ marginTop: 12 }}>
@@ -96,6 +109,12 @@ export default function QuestionWinLoss() {
                     </td>
                     <td className="cell-text" style={{ maxWidth: 380 }}>
                       {r.text}
+                      {r.probe && (
+                        <>
+                          {' '}
+                          <span className="status-pill st-info">실증 · 점수 제외</span>
+                        </>
+                      )}
                       <span className="sentence-meta" style={{ display: 'block' }}>
                         {r.questionId} · 응답 {r.responses}건{' · '}
                         {/*
@@ -137,6 +156,8 @@ export default function QuestionWinLoss() {
             <b>패</b> = 미언급이거나 경쟁사가 더 많이 언급 · <b>무응답</b> = 엔진이 답 대신 되물어(예: "어느
             지역을 찾으시나요?") 언급될 기회가 없었음 — 질문을 더 구체적으로 바꾸면 해소됩니다. 되물은 응답은
             언급률 분모에서 제외합니다. "브랜드/최다 경쟁사"는 언급 문장 수 비교입니다.
+            {tally.probe > 0 &&
+              ' 「실증 · 점수 제외」는 우리 글이 AI 답에 인용되는지 보려고 덧붙인 실험 질문입니다 — 질문별 수치는 그대로 보이지만 위 승 · 무 · 패 합계와 점수에는 넣지 않습니다.'}
           </p>
         </>
       )}

@@ -1,5 +1,6 @@
 import { normalizeTopic } from '../prompts/b1c-question-topic'
 import { stageOf, type JourneyStage } from './journeyStage'
+import { isProbe } from './questionScope'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
 // 질문(프롬프트) 단위 승패 집계 — 이번 주 응답(질문 × 엔진 × 반복)에서
@@ -8,6 +9,9 @@ import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 // 'unanswered' = 엔진이 답 대신 되물어(예: "어느 지역을 찾으시나요?") 브랜드가 언급될 기회
 // 자체가 없었던 질문. "경쟁에서 밀림(패)"과 진단이 다르므로 분리한다 — 이쪽은 질문 설계 문제다.
 export type WinLossVerdict = 'win' | 'even' | 'loss' | 'unanswered'
+
+/** 판정을 문장 속 낱말로 — 콘텐츠 생성의 실증 질문 목록이 쓴다(표의 「승 · 무 · 패」 배지와 다르다). */
+export const VERDICT_WORD: Record<WinLossVerdict, string> = { win: '이김', even: '비김', loss: '밀림', unanswered: '되물음' }
 
 export interface WinLossRow {
   questionId: string
@@ -18,6 +22,8 @@ export interface WinLossRow {
   stageInferred: boolean
   /** 콘텐츠 주제. 은행에 없으면 undefined — 화면이 '미분류'로 묶고 그 수를 밝힌다. */
   topic?: string
+  /** 실증 질문인가(src/lib/questionScope.ts) — 질문별 수치는 그대로 내고, 본 글 · 점수 쪽이 이 표시로 뺀다. 은행에 없으면 false. */
+  probe: boolean
   responses: number // 이 질문에 대한 응답(엔진×반복) 수
   clarifying: number // 그중 되물은 응답 수(답을 내놓지 않음)
   answered: number // 실제로 답을 내놓은 응답 수 = responses - clarifying
@@ -95,6 +101,7 @@ export function computeQuestionWinLoss(
       category: spec?.category ?? '',
       ...(() => { const st = stageOf({ text: spec?.text ?? '', stage: spec?.stage }); return { stage: st.stage, stageInferred: st.inferred } })(),
       topic: normalizeTopic(spec?.topic),
+      probe: isProbe(spec),
       responses,
       clarifying,
       answered,

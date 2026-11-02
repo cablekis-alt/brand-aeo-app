@@ -22,6 +22,7 @@ import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActi
 import { draftTitle } from '../lib/markdownFile'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
+import { isProbe, isScoredAgnostic } from '../lib/questionScope'
 import type { QuestionBank, QuestionSpec } from '../lib/types'
 
 /**
@@ -155,11 +156,14 @@ export default function QuestionBankPage() {
     if (!saved) setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
   }
 
+  // 점수에 세는 문항으로만 낸다 — 실증 질문은 이름 없는 질문이지만 점수 밖이라, 넣으면 비율이 부풀어 하한(countAgnostic)과 어긋난다.
   const agnosticRatio = useMemo(() => {
-    if (!bank || bank.questions.length === 0) return 0
-    const agnostic = bank.questions.filter((q) => q.category === 'category-agnostic').length
-    return agnostic / bank.questions.length
+    const scored = bank ? bank.questions.filter((q) => !isProbe(q)) : []
+    if (scored.length === 0) return 0
+    return scored.filter(isScoredAgnostic).length / scored.length
   }, [bank])
+  // 실증 질문 수 — 문항 수 옆에 「실증 k개 포함」으로 밝힌다(점수 · 비율에는 들지 않는다).
+  const probeCount = bank ? bank.questions.filter(isProbe).length : 0
 
   if (!tenant) return null
 
@@ -205,7 +209,7 @@ export default function QuestionBankPage() {
           <section className="hero-card">
             <p className="eyebrow">
               버전 {bank.version} · {new Date(bank.generatedAt).toLocaleDateString('ko-KR')} 생성 · 질문{' '}
-              {bank.questions.length}개
+              {bank.questions.length}개{probeCount > 0 && `(실증 ${probeCount}개 포함)`}
             </p>
             <p className="total">
               카테고리 무관 비중 <strong>{(agnosticRatio * 100).toFixed(0)}%</strong>
@@ -312,7 +316,17 @@ export default function QuestionBankPage() {
                             }
                           />
                         </td>
-                        <td className="cell-text">{q.text}</td>
+                        <td className="cell-text">
+                          {q.text}
+                          {isProbe(q) && (
+                            <>
+                              {' '}
+                              <span className="status-pill st-info" title="우리 글이 AI 답에 인용되는지 보려고 덧붙인 실험 질문 — 측정은 하지만 점수 · 본 글에는 넣지 않습니다">
+                                실증 · 점수 제외
+                              </span>
+                            </>
+                          )}
+                        </td>
                         <td>{q.questionId}</td>
                         <td className="cell-text">{q.topic ?? <span className="muted">미분류</span>}</td>
                         <td className="cell-text">{CATEGORY_LABEL[q.category] ?? q.category}</td>

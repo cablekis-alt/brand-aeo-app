@@ -2,6 +2,7 @@ import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { compareConditions, conditionLabel } from '../src/lib/comparability.js';
 import { timingOf, type MeasureWindow, type PostTiming } from '../src/lib/publishedUrl.js';
 import { INDEXING_GRACE_DAYS } from '../src/lib/publishTracking.js';
+import { isScoredAgnostic } from '../src/lib/questionScope.js';
 import { aggregateWeeklyMetrics } from './aggregate.js';
 import { clopperPearson } from './exactInterval.js';
 import { agnosticAnalyses } from './mentionScope.js';
@@ -144,7 +145,8 @@ export async function getRunHistory(
         const scoped = agnosticAnalyses(s.ownAnalyses, bank.questions);
         ranked = { k: m.rankedResponses, n: scoped.length, mentioned: scoped.filter((a) => a.mentioned).length, ci: clopperPearson(m.rankedResponses, scoped.length) };
         score = m.score;
-        agnosticQuestions = bank.questions.filter((q) => q.category === 'category-agnostic').length;
+        // 실증 질문은 세지 않는다 — 덧붙이기 전 회차의 「같은 N문항」이 소급해 커지지 않게(점수 모집단과 같은 기준).
+        agnosticQuestions = bank.questions.filter(isScoredAgnostic).length;
       }
       const conditions = {
         enginesUsed: [...(scorecard.enginesUsed ?? [])].sort(),

@@ -26,8 +26,9 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { isExtraArticleId } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
-import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
+import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, probeQuestionList, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
+import { VERDICT_WORD } from '../lib/questionWinLoss'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
@@ -793,7 +794,13 @@ export default function GapActions() {
   // 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
   const mainQuestionIds = new Set(mainArticle?.action.questionIds ?? [])
   const mainKeptAll = extraActions.some((a) => a.questionIds.some((id) => mainQuestionIds.has(id)))
-  const takenByExtras = mainKeptAll ? 0 : extraActions.reduce((sum, a) => sum + a.reach, 0)
+  // 실증 질문은 본 글에서 가져간 질문이 아니다 — 추가 글의 reach에서 그 글이 맡은 밀린 실증을 뺀다.
+  const lostProbeIds = new Set(plan.probes.filter((p) => p.verdict === 'loss').map((p) => p.questionId))
+  const takenByExtras = mainKeptAll
+    ? 0
+    : extraActions.reduce((sum, a) => sum + a.reach - a.questionIds.filter((id) => lostProbeIds.has(id)).length, 0)
+  // 실증 칸 목록 — 맡은 추가 글로 처치(맡은 글 있음) · 대조(없음)를 밝힌다. 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다.
+  const probeList = probeQuestionList(plan.probes, extraActions)
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = publishPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
@@ -805,8 +812,9 @@ export default function GapActions() {
   const idle = plan.actions.filter(isIdleAction)
   /** 글이 여러 편일 때만 글 목록 · 한꺼번에 만들기를 보인다 — 보통은 한 편(gapActions contentActions)이고, 손댄 채널이 따로 쓴 글을 가질 때만 늘어난다. */
   const manyArticles = publishPlan.articles.length > 1
-  // 글에 넣지 않은 밀린 질문만 있는 주(카테고리 무관 질문은 모두 이김)도 그린다 — 그 질문들을 밝히는 칸이 있다.
-  const ready = !loading && (plan.actions.length > 0 || plan.otherLost.length > 0)
+  // 글에 넣지 않은 밀린 질문만 있는 주(카테고리 무관 질문은 모두 이김)도 그린다 — 그 질문들을 밝히는 칸이 있다. 실증 질문만 있는 주도
+  // 그린다 — 실증 칸과 「글 더 만들기」가 있다.
+  const ready = !loading && (plan.actions.length > 0 || plan.otherLost.length > 0 || plan.probes.length > 0)
 
   if (!tenant) return null
 
@@ -914,7 +922,7 @@ export default function GapActions() {
         </p>
       )}
 
-      {!loading && plan.actions.length === 0 && plan.otherLost.length === 0 && (
+      {!loading && plan.actions.length === 0 && plan.otherLost.length === 0 && plan.probes.length === 0 && (
         <p className="muted">
           {neverMeasured
             ? '이 브랜드는 아직 측정된 적이 없습니다. '
@@ -927,7 +935,12 @@ export default function GapActions() {
         <>
           {open.length === 0 ? (
             <p className="muted">
-              {plan.otherLost.length > 0 ? '카테고리 무관 질문에서 밀린 곳은 없습니다.' : '남은 항목이 없습니다.'}
+              {/* 실증 질문도 카테고리 무관이라 「점수에 드는」을 붙인다 — 실증에서는 밀렸을 수 있다. */}
+              {plan.probes.length > 0
+                ? '점수에 드는 카테고리 무관 질문에서 밀린 곳은 없습니다.'
+                : plan.otherLost.length > 0
+                  ? '카테고리 무관 질문에서 밀린 곳은 없습니다.'
+                  : '남은 항목이 없습니다.'}
             </p>
           ) : (
             <>
@@ -963,7 +976,9 @@ export default function GapActions() {
 
               {publishPlan.articles.length === 0 && (
                 // 카테고리 무관 질문을 모두 이긴 주 — 남은 것은 이미 올린 곳의 주소 줄뿐이다(lib/publishPlan.ts).
-                <p className="muted">카테고리 무관 질문에서 밀린 곳은 없습니다. 아래는 이미 올린 곳입니다.</p>
+                <p className="muted">
+                  {plan.probes.length > 0 ? '점수에 드는 ' : ''}카테고리 무관 질문에서 밀린 곳은 없습니다. 아래는 이미 올린 곳입니다.
+                </p>
               )}
 
               {publishPlan.articles.length > 0 && (
@@ -1041,6 +1056,7 @@ export default function GapActions() {
                       {x === mainArticle && extras.available && (
                         <ExtraArticleForm
                           main={x.action}
+                          probes={plan.probes}
                           extraActions={extraActions}
                           bankVersion={extras.bankVersion}
                           corrupt={extras.corrupt}
@@ -1162,6 +1178,43 @@ export default function GapActions() {
                   ))}
                 </ul>
               </details>
+            </section>
+          )}
+
+          {probeList.length > 0 && (
+            // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다. 본 글이 없는
+            // 주에는 그 칸이 본 글 카드 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
+            <section>
+              <details className="gap-more">
+                <summary>실증 질문 {probeList.length}개 · 점수 제외 · 본 글에 넣지 않음</summary>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도
+                  넣지 않습니다. 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서
+                  같은 방향일 때만 읽으세요.
+                </p>
+                <ul className="gap-worst">
+                  {probeList.map((q) => (
+                    <li key={q.questionId}>
+                      <span className="gap-q">{q.text}</span>{' '}
+                      <span className="muted">
+                        · 이번 주 {q.verdict ? VERDICT_WORD[q.verdict] : '응답 없음(확인 불가)'}
+                        {q.takenBy ? ` · 「${q.takenBy}」 글이 맡음(처치)` : ' · 맡은 글 없음(대조)'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+              {!mainArticle && extras.available && plan.probes.length > 0 && (
+                <ExtraArticleForm
+                  main={null}
+                  probes={plan.probes}
+                  extraActions={extraActions}
+                  bankVersion={extras.bankVersion}
+                  corrupt={extras.corrupt}
+                  loadError={extras.error}
+                  onCreate={extras.create}
+                />
+              )}
             </section>
           )}
 
