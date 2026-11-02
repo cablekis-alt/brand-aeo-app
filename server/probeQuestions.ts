@@ -1,4 +1,4 @@
-import { access, copyFile, mkdir, readFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { isProbe } from '../src/lib/questionScope.js';
 import type { QuestionSpec } from '../src/prompts/types.js';
@@ -177,6 +177,8 @@ export interface CandidateFilterContext {
   probeIds: Set<string>;
   /** 이미 바꿔 쓴 실증(홀드아웃)이 있는 원래 질문 id — 하나에 홀드아웃 하나만 둔다. */
   paraphrased: Set<string>;
+  /** 홀드아웃 자신(paraphraseOf가 있는 실증)의 id — 원래 질문이 될 수 없다(홀드아웃의 홀드아웃은 두지 않는다). */
+  holdouts?: Set<string>;
 }
 
 /** 질문지에서 이미 홀드아웃이 있는 원래 실증 질문 id. */
@@ -184,9 +186,15 @@ export function paraphrasedIds(questions: QuestionSpec[]): Set<string> {
   return new Set(questions.filter(isProbe).flatMap((q) => (q.paraphraseOf ? [q.paraphraseOf] : [])));
 }
 
+/** 질문지의 홀드아웃(다른 실증을 바꿔 쓴 실증) id. */
+export function holdoutIds(questions: QuestionSpec[]): Set<string> {
+  return new Set(questions.filter((q) => isProbe(q) && q.paraphraseOf).map((q) => q.questionId));
+}
+
 /**
  * 후보를 거른다 — 이름이 든 문장, 질문지 · 코호트 공통 질문지에 이미 있는 문장(띄어쓰기만 다른 것 포함), 후보끼리 같은 문장,
- * 질문지의 실증 질문이 아닌 것이나 이미 홀드아웃이 있는 실증을 바꿔 쓴 후보. 남은 후보의 순서는 그대로다.
+ * 질문지의 실증 질문이 아닌 것 · 홀드아웃 · 이미 홀드아웃이 있는 실증을 바꿔 쓴 후보, 앞 후보와 같은 원래 질문을 바꿔 쓴 후보
+ * (사람이 후보 파일 둘을 합친 경우 — 원래 질문 하나에 홀드아웃 하나). 남은 후보의 순서는 그대로다.
  */
 export function filterCandidates(
   candidates: ProbeCandidate[],
@@ -195,6 +203,7 @@ export function filterCandidates(
   const bank = new Set(ctx.existingTexts.map(textKey));
   const cohort = new Set(ctx.cohortTexts.map(textKey));
   const seen = new Set<string>();
+  const sources = new Set<string>();
   const accepted: ProbeCandidate[] = [];
   const rejected: ProbeRejection[] = [];
   for (const c of candidates) {
@@ -212,17 +221,42 @@ export function filterCandidates(
               ? '후보끼리 같은 문장'
               : c.paraphraseOf !== undefined && !ctx.probeIds.has(c.paraphraseOf)
                 ? `질문지의 실증 질문이 아닌 것을 바꿔 씀: ${c.paraphraseOf}`
-                : c.paraphraseOf !== undefined && ctx.paraphrased.has(c.paraphraseOf)
-                  ? `이미 바꿔 쓴 실증이 있는 질문: ${c.paraphraseOf}`
-                  : null;
+                : c.paraphraseOf !== undefined && ctx.holdouts?.has(c.paraphraseOf)
+                  ? `홀드아웃을 다시 바꿔 씀: ${c.paraphraseOf}`
+                  : c.paraphraseOf !== undefined && ctx.paraphrased.has(c.paraphraseOf)
+                    ? `이미 바꿔 쓴 실증이 있는 질문: ${c.paraphraseOf}`
+                    : c.paraphraseOf !== undefined && sources.has(c.paraphraseOf)
+                      ? `같은 원래 질문(${c.paraphraseOf})을 두 번 바꿔 씀`
+                      : null;
     if (reason) {
       rejected.push({ text: c.text, reason });
       continue;
     }
     seen.add(key);
+    if (c.paraphraseOf !== undefined) sources.add(c.paraphraseOf);
     accepted.push(c);
   }
   return { accepted, rejected };
+}
+
+/**
+ * 요청한 개수만 남긴다 — 엔진이 개수를 넘겨 냈을 때. 앞에서부터 자르면 뒤쪽 추천형이 잘려 하한이 거짓으로 미달이 될 수 있으므로,
+ * 추천형을 먼저 하한만큼(앞에서부터) 고르고 남은 자리를 원래 순서대로 채운다. 남긴 것도 버린 것도 원래 순서 그대로다.
+ */
+export function limitCandidates(
+  accepted: ProbeCandidate[],
+  limit: number,
+  recommendMin: number,
+): { kept: ProbeCandidate[]; dropped: ProbeCandidate[] } {
+  const keep = new Set<number>();
+  const quota = Math.min(limit, recommendMin);
+  accepted.forEach((c, i) => {
+    if (keep.size < quota && isRecommendCandidate(c)) keep.add(i);
+  });
+  accepted.forEach((_, i) => {
+    if (keep.size < limit) keep.add(i);
+  });
+  return { kept: accepted.filter((_, i) => keep.has(i)), dropped: accepted.filter((_, i) => !keep.has(i)) };
 }
 
 /** 후보를 질문지 문항으로 — 이름 없는 질문 · 실증 표시. 코호트 공통 문항이 아니다(cohortShared 없음). */
@@ -251,6 +285,85 @@ export function looksVirtualized(p: string): boolean {
   return /packages[\\/]claude_/i.test(p);
 }
 
+/** %APPDATA% · %LOCALAPPDATA% — 이 셸의 패키지 가상화가 옮기는 두 뿌리. */
+export interface AppDataRoots {
+  appData?: string;
+  localAppData?: string;
+}
+
+/**
+ * target에 쓴 파일이 이 셸의 패키지 가상화로 옮겨 간다면 놓일 곳 — %APPDATA%\x는 Packages\Claude_…\LocalCache\Roaming\x,
+ * %LOCALAPPDATA%\x는 …\LocalCache\Local\x. 두 뿌리 밖(UNC //localhost/C$/… · 다른 폴더)이면 없다.
+ */
+export function redirectCandidates(target: string, roots: AppDataRoots, packageDirs: string[]): string[] {
+  const resolved = path.resolve(target);
+  if (looksVirtualized(resolved)) return [];
+  const out: string[] = [];
+  for (const [root, sub] of [
+    [roots.appData, 'Roaming'],
+    [roots.localAppData, 'Local'],
+  ] as const) {
+    if (!root) continue;
+    const rel = path.relative(path.resolve(root), resolved);
+    if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) continue;
+    for (const pkg of packageDirs) out.push(path.join(pkg, 'LocalCache', sub, rel));
+  }
+  return out;
+}
+
+/** %LOCALAPPDATA%\Packages 아래 Claude 패키지 폴더(Claude_…). 없으면 빈 목록. */
+export async function claudePackageDirs(localAppData: string | undefined): Promise<string[]> {
+  if (!localAppData) return [];
+  const dir = path.join(localAppData, 'Packages');
+  const names = await readdir(dir).catch((err: NodeJS.ErrnoException) => {
+    if (err.code === 'ENOENT') return [] as string[];
+    throw err;
+  });
+  return names.filter((n) => /^claude_/i.test(n)).map((n) => path.join(dir, n));
+}
+
+const exists = (p: string) =>
+  access(p).then(
+    () => true,
+    (err: NodeJS.ErrnoException) => {
+      if (err.code === 'ENOENT') return false;
+      throw err;
+    },
+  );
+
+/** target이 이 셸의 가상화 위치에 놓였는가 — 있는 곳을 돌려준다(빈 배열이면 제자리). 쓴 뒤 확인용이다. */
+export async function findRedirectedCopies(target: string, roots: AppDataRoots): Promise<string[]> {
+  const found: string[] = [];
+  for (const c of redirectCandidates(target, roots, await claudePackageDirs(roots.localAppData))) {
+    if (await exists(c)) found.push(c);
+  }
+  return found;
+}
+
+/**
+ * 이 폴더에 쓴 파일이 실제로 그 자리에 가는지 써 보고 확인한다. Claude 셸(MSIX 패키지의 자식)에서는 %APPDATA% 경로 글자도,
+ * realpath로 따라간 경로도 평범한데 쓰기만 파일 단위로 Packages\Claude_…\LocalCache로 옮겨 간다(읽기는 실제 폴더를 그대로
+ * 통과한다 — 그래서 문항 수 · --expect-count 비교도 첫 쓰기에서는 이를 못 잡는다). 그래서 경로를 보지 않고 표지 파일을 하나 써 본
+ * 뒤 가상화 위치에 생겼는지 본다. 표지 파일은 같은 경로로 지운다. 옮겨 간 곳들을 돌려준다(빈 배열이면 제자리).
+ * io는 검사(verify)가 옮겨 가는 쓰기를 흉내 낼 때만 넘긴다.
+ */
+export async function writeRedirects(
+  dir: string,
+  roots: AppDataRoots,
+  io: { write: (file: string) => Promise<void>; remove: (file: string) => Promise<void> } = {
+    write: (file) => writeFile(file, '', { flag: 'wx' }),
+    remove: (file) => unlink(file),
+  },
+): Promise<string[]> {
+  const marker = path.join(dir, `.probe-write-check-${process.pid}-${Date.now()}`);
+  await io.write(marker);
+  try {
+    return await findRedirectedCopies(marker, roots);
+  } finally {
+    await io.remove(marker);
+  }
+}
+
 /** 실증을 덧붙일 질문지 경로가 맞는지 — 그 브랜드의 question-bank 폴더 안이어야 하고, 코호트 공통 질문지 · 가상화 사본은 안 된다. */
 export function bankPathProblem(bankPath: string, dataDir: string, tenantId: string): string | null {
   const resolved = path.resolve(bankPath);
@@ -262,6 +375,12 @@ export function bankPathProblem(bankPath: string, dataDir: string, tenantId: str
   if (looksVirtualized(resolved)) return `이 셸의 가상화 사본 경로로 보입니다: ${resolved}`;
   return null;
 }
+
+/**
+ * --out이 없을 때 후보 파일을 남기는 폴더(지금 폴더 기준). 후보 파일에는 고객 브랜드의 질문 문장과 사용자 이름이 든 절대 경로가
+ * 있으므로, 저장소 루트에서 돌려도 커밋에 섞이지 않게 .gitignore의 *.local 관례(post-drafts.local과 같은)를 따른다.
+ */
+export const DEFAULT_CANDIDATES_DIR = 'probe-candidates.local';
 
 /** dry-run이 남기고 --write가 읽는 후보 파일. 사람이 candidates에서 뺄 후보를 지운 뒤 쓴다. */
 export interface ProbeCandidatesFile {
@@ -350,6 +469,7 @@ export function planProbeWrite(
     cohortTexts: input.cohortTexts,
     probeIds: new Set(bank.questions.filter(isProbe).map((q) => q.questionId)),
     paraphrased: paraphrasedIds(bank.questions),
+    holdouts: holdoutIds(bank.questions),
   });
   for (const r of rejected) errors.push(`후보가 걸립니다(${r.reason}): ${r.text}`);
   if (errors.length > 0) return { ok: false, errors };

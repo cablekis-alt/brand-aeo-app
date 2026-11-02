@@ -15,7 +15,7 @@
  *   npx tsx scripts/verify-probe-questions.ts
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import * as React from 'react';
@@ -48,9 +48,13 @@ import { linkCompetitorQuestions } from '../server/competitorQuestions';
 import { getEngineTrend } from '../server/engineTrend';
 import { agnosticAnalyses } from '../server/mentionScope';
 import {
+  DEFAULT_CANDIDATES_DIR,
   bankPathProblem,
   bannedNames,
   filterCandidates,
+  findRedirectedCopies,
+  holdoutIds,
+  limitCandidates,
   looksVirtualized,
   nameIn,
   nextProbeIds,
@@ -59,8 +63,10 @@ import {
   planProbeWrite,
   readCandidatesFile,
   recommendQuotaMet,
+  redirectCandidates,
   toProbeSpec,
   writeProbeBank,
+  writeRedirects,
   type ProbeCandidate,
   type ProbeCandidatesFile,
 } from '../server/probeQuestions';
@@ -1027,9 +1033,97 @@ check(
   sameJson([...paraphrasedIds([...bankAfter, { ...spec('v5-p003', 'category-agnostic', true), paraphraseOf: 'v5-p001' }])], ['v5-p001']),
 );
 
+// 홀드아웃 규칙 — 원래 질문 하나에 홀드아웃 하나. 후보 파일 둘을 합쳐 같은 원래 질문이 두 번 들어와도, 홀드아웃(p003)을 원래
+// 질문으로 고른 후보도 거른다. 질문지에 이미 있는 홀드아웃만 보던 때는 둘 다 통과했다.
+const bankHoldout: QuestionSpec[] = [...bankAfter, { ...spec('v5-p003', 'category-agnostic', true), paraphraseOf: 'v5-p001' }];
+check('홀드아웃 id: paraphraseOf가 있는 실증만', sameJson([...holdoutIds(bankHoldout)], ['v5-p003']));
+const holdoutFiltered = filterCandidates(
+  [
+    cand('가상읍 애들이랑 묵을 곳 골라줘', { paraphraseOf: 'v5-p002', kind: undefined }),
+    cand('가상읍 아이 데리고 지낼 숙소 어디가 좋아?', { paraphraseOf: 'v5-p002', kind: undefined }),
+    cand('가상읍 바다 쪽 숙소 하나 골라줘', { paraphraseOf: 'v5-p003', kind: undefined }),
+  ],
+  {
+    banned,
+    existingTexts: bankHoldout.map((q) => q.text),
+    cohortTexts: [],
+    probeIds: probeIdsOf(bankHoldout),
+    paraphrased: paraphrasedIds(bankHoldout),
+    holdouts: holdoutIds(bankHoldout),
+  },
+);
+check(
+  '후보 거르기: 같은 원래 질문 두 번 · 홀드아웃을 다시 바꿔 쓴 후보는 거름',
+  sameJson(holdoutFiltered.accepted.map((c) => c.text), ['가상읍 애들이랑 묵을 곳 골라줘']) &&
+    sameJson(holdoutFiltered.rejected.map((r) => r.reason), ['같은 원래 질문(v5-p002)을 두 번 바꿔 씀', '홀드아웃을 다시 바꿔 씀: v5-p003']),
+  JSON.stringify(holdoutFiltered),
+);
+const paraPlan = (candidates: ProbeCandidate[]) =>
+  planProbeWrite({
+    file: {
+      format: 'probe-candidates/1',
+      tenantId: 'probe-self',
+      bankVersion: VERSION,
+      bankPath: 'fake',
+      bankQuestionCount: bankHoldout.length,
+      mode: 'paraphrase',
+      generatedAt: '2026-11-02T00:00:00.000Z',
+      judgeEngine: 'mock',
+      recommendMin: 0,
+      candidates,
+      rejected: [],
+    },
+    tenantId: 'probe-self',
+    version: VERSION,
+    bank: { version: VERSION, questions: bankHoldout },
+    industry: '가상업종',
+    region: '가상읍',
+    banned,
+    cohortTexts: [],
+  });
+const paraErrors = (p: ReturnType<typeof paraPlan>) => (p.ok ? '' : p.errors.join(' | '));
+const dupPlan = paraPlan([
+  cand('A 가상읍 묵을 곳', { paraphraseOf: 'v5-p002', kind: undefined }),
+  cand('B 가상읍 지낼 곳', { paraphraseOf: 'v5-p002', kind: undefined }),
+]);
+const chainPlan = paraPlan([cand('가상읍 바다 쪽 숙소 하나 골라줘', { paraphraseOf: 'v5-p003', kind: undefined })]);
+check(
+  '쓰기 계획(--write): 같은 원래 질문 두 번 · 홀드아웃의 홀드아웃이면 하나도 쓰지 않음',
+  !dupPlan.ok && paraErrors(dupPlan).includes('같은 원래 질문(v5-p002)을 두 번 바꿔 씀') && !chainPlan.ok && paraErrors(chainPlan).includes('홀드아웃을 다시 바꿔 씀: v5-p003'),
+  `${paraErrors(dupPlan)} / ${paraErrors(chainPlan)}`,
+);
+const onePlan = paraPlan([cand('가상읍 묵을 곳 하나 골라줘', { paraphraseOf: 'v5-p002', kind: undefined })]);
+check(
+  '쓰기 계획(--write): 원래 질문 하나에 홀드아웃 하나는 그대로 씀',
+  onePlan.ok && sameJson(onePlan.added.map((q) => [q.questionId, q.paraphraseOf]), [['v5-p004', 'v5-p002']]),
+  paraErrors(onePlan),
+);
+
 // 추천형 하한 — kind recommend이고 단계가 비교(consider)일 때만 센다.
 const quotaSet = [cand('a'), cand('b', { stage: 'learn' }), cand('c', { kind: 'info' })];
 check('추천형 하한: consider · recommend만 셈', recommendQuotaMet(quotaSet, 1) && !recommendQuotaMet(quotaSet, 2));
+
+// 개수 맞추기 — 엔진이 개수를 넘겨 냈을 때 앞에서부터 자르면 뒤쪽 추천형이 잘려 하한이 거짓으로 미달이 된다. 정보형 9개 뒤에
+// 추천형 11개가 오면, 16개로 줄여도 추천형 10개를 채울 수 있어야 한다(앞에서 자르면 추천형 7개).
+const overflow = [
+  ...Array.from({ length: 9 }, (_, i) => cand(`정보 ${i}`, { stage: 'learn', kind: 'info' })),
+  ...Array.from({ length: 11 }, (_, i) => cand(`추천 ${i}`)),
+];
+const limited = limitCandidates(overflow, 16, 10);
+check(
+  '개수 맞추기: 추천형을 하한만큼 먼저 남기고 나머지를 원래 순서로 채움',
+  limited.kept.length === 16 &&
+    limited.kept.filter((c) => c.kind === 'recommend').length === 10 &&
+    recommendQuotaMet(limited.kept, 10) &&
+    !recommendQuotaMet(overflow.slice(0, 16), 10) &&
+    sameJson(limited.kept.map((c) => c.text), [...overflow.slice(0, 6), ...overflow.slice(9, 19)].map((c) => c.text)) &&
+    sameJson(limited.dropped.map((c) => c.text), ['정보 6', '정보 7', '정보 8', '추천 10']),
+  JSON.stringify(limited.dropped.map((c) => c.text)),
+);
+check(
+  '개수 맞추기: 하한 0(바꿔 쓰기) · 넘치지 않으면 앞에서부터 그대로',
+  sameJson(limitCandidates(overflow, 5, 0).kept, overflow.slice(0, 5)) && sameJson(limitCandidates(overflow, 30, 10).kept, overflow),
+);
 
 // 문항으로 — 실증 표시 · 이름 없는 질문 · 코호트 공통 아님. 점수 모집단에 들지 않는다.
 const probeSpec = toProbeSpec(filtered.accepted[1]!, 'v5-p003', { industry: '가상업종', region: '가상읍', version: VERSION });
@@ -1120,6 +1214,56 @@ check(
     !looksVirtualized('//localhost/C$/Users/fake/AppData/Roaming/brand-aeo-app') &&
     !looksVirtualized('C:\\Users\\fake\\AppData\\Roaming\\brand-aeo-app'),
 );
+
+// 쓰기 리다이렉트 — Claude 셸에서는 평범한 %APPDATA% 경로도 읽기는 실제 폴더를 통과하고 쓰기만 파일 단위로 LocalCache에 간다.
+// 경로 글자로는 안 보이므로 써 보고 확인한다. 가짜 %APPDATA% · %LOCALAPPDATA%(Packages\Claude_fake 있음)에서, 옮겨 가는 쓰기는
+// 검사용 io로 흉내 낸다.
+const rdir = mkdtempSync(path.join(tmpdir(), 'verify-probe-redirect-'));
+try {
+  const roots = { appData: path.join(rdir, 'Roaming'), localAppData: path.join(rdir, 'Local') };
+  const pkg = path.join(roots.localAppData, 'Packages', 'Claude_fake');
+  mkdirSync(path.join(pkg, 'LocalCache'), { recursive: true });
+  mkdirSync(path.join(roots.localAppData, 'Packages', 'Other_app'), { recursive: true });
+  const qdir = path.join(roots.appData, 'brand-aeo-app', 'data', 'probe-self', 'question-bank');
+  mkdirSync(qdir, { recursive: true });
+  const mirrorOf = (p: string) => path.join(pkg, 'LocalCache', 'Roaming', path.relative(roots.appData, p));
+  check(
+    '쓰기 리다이렉트 위치: %APPDATA% 아래만 LocalCache\\Roaming으로 · UNC · 다른 폴더 · 가상화 경로 자체는 없음',
+    sameJson(redirectCandidates(path.join(qdir, 'v5.json'), roots, [pkg]), [mirrorOf(path.join(qdir, 'v5.json'))]) &&
+      sameJson(redirectCandidates(path.join(roots.localAppData, 'x', 'y.json'), roots, [pkg]), [path.join(pkg, 'LocalCache', 'Local', 'x', 'y.json')]) &&
+      redirectCandidates('//localhost/C$/Users/fake/AppData/Roaming/brand-aeo-app/x.json', roots, [pkg]).length === 0 &&
+      redirectCandidates(path.join(rdir, 'elsewhere', 'x.json'), roots, [pkg]).length === 0 &&
+      redirectCandidates(path.join(pkg, 'LocalCache', 'Roaming', 'x.json'), roots, [pkg]).length === 0,
+  );
+  const leftovers = () =>
+    [qdir, mirrorOf(qdir)].filter((d) => existsSync(d)).flatMap((d) => readdirSync(d).filter((n) => n.startsWith('.probe-write-check-')));
+  const landed = await writeRedirects(qdir, roots);
+  check('쓰기 확인: 제자리에 가면 빈 목록 · 표지 파일은 지움', landed.length === 0 && leftovers().length === 0, JSON.stringify(landed));
+  const moved = await writeRedirects(qdir, roots, {
+    write: async (file) => {
+      mkdirSync(path.dirname(mirrorOf(file)), { recursive: true });
+      writeFileSync(mirrorOf(file), '');
+    },
+    remove: async (file) => rmSync(mirrorOf(file)),
+  });
+  check(
+    '쓰기 확인: 경로 글자가 평범해도 쓰기가 LocalCache로 가면 그 위치를 돌려줌 · 표지 파일은 지움',
+    moved.length === 1 && moved[0]!.startsWith(path.join(pkg, 'LocalCache', 'Roaming')) && path.basename(moved[0]!).startsWith('.probe-write-check-') && leftovers().length === 0,
+    JSON.stringify(moved),
+  );
+  const backupLike = path.join(roots.appData, 'brand-aeo-app', 'data', 'probe-self', 'before-probe-2026-11-02T00-00-00-000Z');
+  const before = await findRedirectedCopies(backupLike, roots);
+  mkdirSync(mirrorOf(backupLike), { recursive: true });
+  const after = await findRedirectedCopies(backupLike, roots);
+  check('쓴 뒤 확인: 백업 폴더가 LocalCache에 생겼으면 찾음', before.length === 0 && sameJson(after, [mirrorOf(backupLike)]), JSON.stringify(after));
+  check('쓴 뒤 확인: Claude 패키지 폴더가 없으면 빈 목록', (await findRedirectedCopies(backupLike, { ...roots, localAppData: path.join(rdir, 'none') })).length === 0);
+} finally {
+  rmSync(rdir, { recursive: true, force: true });
+}
+
+// 후보 파일 기본 위치 — 저장소 루트에서 --out 없이 돌려도 고객 브랜드 문장 · 절대 경로가 커밋에 섞이지 않는다(.gitignore *.local).
+const ignored = spawnSync('git', ['check-ignore', '-q', `${DEFAULT_CANDIDATES_DIR}/probe-candidates-probe-self-v5-2026-11-02T00-00-00-000Z.json`], { encoding: 'utf8' });
+check('후보 파일 기본 위치: git이 무시하는 폴더', ignored.status === 0 && DEFAULT_CANDIDATES_DIR.endsWith('.local'), `${ignored.status} ${ignored.stderr}`);
 
 // 후보 파일 · 쓰기 계획 — 후보를 만든 뒤 질문지가 바뀌었거나 다른 브랜드 · 판이면 쓰지 않는다. 기존 문항은 같은 객체 그대로 둔다.
 const candidatesFile = (over: Partial<ProbeCandidatesFile> = {}): ProbeCandidatesFile => ({
@@ -1335,6 +1479,48 @@ try {
       raw(vFiles.bank) === vBank &&
       readdirSync(path.join(virtualRoot, 'data', S.tenantId)).every((n) => !n.startsWith('before-probe-')),
     `${virtual.status} ${virtual.stderr}`,
+  );
+  const spawnScript = (scriptArgs: string[], env: NodeJS.ProcessEnv) =>
+    spawnSync(process.execPath, [tsxCli, 'scripts/add-probe-questions.ts', S.tenantId, ...scriptArgs], {
+      encoding: 'utf8',
+      env: { ...process.env, APP_DATA_DIR: '', BLOB_READ_WRITE_TOKEN: '', BLOB_STORE_ID: '', DOTENV_CONFIG_QUIET: 'true', ...env },
+    });
+  // 평범한 %APPDATA% 경로(가짜 프로필 · Claude 패키지 폴더 있음) — 경로 글자로는 가상화가 안 보여도 써 보고 확인한 뒤에야 쓴다.
+  // 이 셸에서 실제 리다이렉트는 흉내 낼 수 없으므로(위 writeRedirects 검사가 맡는다) 여기서는 확인을 거치고 표지 파일이 남지 않는지 본다.
+  const profile = path.join(sdir, 'fake-profile');
+  mkdirSync(path.join(profile, 'Local', 'Packages', 'Claude_fake', 'LocalCache'), { recursive: true });
+  const pRoot = path.join(profile, 'Roaming', 'brand-aeo-app');
+  const pFiles = seed(pRoot);
+  const plain = spawnScript(
+    ['--app-data', pRoot, '--write', '--from', saveCandidates('plain.json', scriptCandidates({ bankPath: pFiles.bank })), '--expect-count', '4'],
+    { APPDATA: path.join(profile, 'Roaming'), LOCALAPPDATA: path.join(profile, 'Local') },
+  );
+  check(
+    '스크립트 --write: 평범한 %APPDATA% 경로도 써 보는 확인을 거침 · 표지 파일이 남지 않음',
+    plain.stdout.includes(`쓰기 확인: ${path.dirname(pFiles.bank)}에 쓴 파일이 그 자리에 갑니다`) &&
+      (plain.status === 0 || /앱이 실행 중|tasklist 실행에 실패/.test(plain.stderr)) &&
+      readdirSync(path.dirname(pFiles.bank)).every((n) => !n.startsWith('.probe-write-check-')),
+    `${plain.status} ${plain.stdout}${plain.stderr}`,
+  );
+  // dry-run --paraphrase-of에 홀드아웃을 주면 판정 엔진을 부르기 전에 멈춘다(혹시 지나가도 mock 엔진 · --out은 임시 폴더).
+  const hRoot = path.join(sdir, 'holdout-root');
+  const hFiles = seed(hRoot);
+  writeFileSync(
+    hFiles.bank,
+    JSON.stringify({
+      ...scriptBank,
+      questions: [
+        ...scriptBank.questions,
+        sq('v5-p001', '가상읍 조용한 숙소 골라줘', 'category-agnostic', { probe: true, stage: 'consider' }),
+        sq('v5-p002', '가상읍 한적한 숙소 하나 골라줘', 'category-agnostic', { probe: true, stage: 'consider', paraphraseOf: 'v5-p001' }),
+      ],
+    }),
+  );
+  const chain = spawnScript(['--app-data', hRoot, '--paraphrase-of', 'v5-p002', '--out', sdir], { USE_MOCK_ENGINES: 'true' });
+  check(
+    '스크립트 dry-run: 홀드아웃을 원래 질문으로 주면 엔진 호출 전에 멈춤',
+    chain.status === 1 && chain.stderr.includes('v5-p002는 v5-p001의 홀드아웃입니다') && !chain.stdout.includes('판정 엔진('),
+    `${chain.status} ${chain.stdout}${chain.stderr}`,
   );
 
   // 앱이 켜져 있으면 쓰기를 거절해야 하고, 꺼져 있으면 백업 뒤 덧붙인다(migrate-question-plan.ts와 같은 tasklist 확인).

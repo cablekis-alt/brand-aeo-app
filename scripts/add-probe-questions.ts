@@ -14,7 +14,7 @@
  *   npx tsx scripts/add-probe-questions.ts <tenantId> --app-data "<userData>" --paraphrase-of v5-p001,v5-p004   # 홀드아웃(하나에 하나씩)
  *   npx tsx scripts/add-probe-questions.ts <tenantId> --app-data "<userData>" --write --from <후보 파일> [--expect-count 42]
  *
- *   --out <폴더>        후보 파일을 남길 곳(기본: 지금 폴더)
+ *   --out <폴더>        후보 파일을 남길 곳(기본: 지금 폴더의 probe-candidates.local — .gitignore의 *.local이라 커밋에 섞이지 않는다)
  *   --expect-count <n>  쓰기 전에 지금 문항 수가 이 값인지 본다(web4ai v5는 42, gunsan v6는 36이었다)
  *
  * 판정 엔진은 측정과 같은 설정(JUDGE_ENGINE)을 쓴다. 키는 .env에서 읽는다 — 설치본 키를 쓰려면 DOTENV_CONFIG_PATH로 userData의
@@ -23,8 +23,10 @@
  * --write가 지키는 것:
  *   - 앱이 실행 중이면 멈춘다(migrate-question-plan.ts와 같은 tasklist 확인) — 측정이 같은 질문지를 읽고 쓴다.
  *   - 해석한 절대 경로와 지금 문항 수를 보여 주고, 경로가 이 셸의 가상화 사본(Packages\Claude_…)으로 보이거나 문항 수가 후보를
- *     만들 때 · --expect-count와 다르면 멈춘다. Claude 셸에서 %APPDATA%는 가상화 사본으로 바뀌어, 실제 앱 데이터가 아닌 것을
- *     고칠 수 있다 — 사용자 터미널이나 //localhost/C$/… 경로에서 실행한다.
+ *     만들 때 · --expect-count와 다르면 멈춘다. Claude 셸에서는 평범한 %APPDATA% 경로도 읽기는 실제 폴더를 통과하는데 쓰기만 파일
+ *     단위로 가상화 사본에 가므로, 경로 글자 · 문항 수로는 못 잡는다. 그래서 질문지 폴더에 표지 파일을 써 보고 가상화 위치에 생기면
+ *     멈추고(server/probeQuestions.ts writeRedirects), 쓴 뒤에도 백업 폴더가 그쪽에 생겼으면 실패로 알린다 — 사용자 터미널이나
+ *     //localhost/C$/… 경로에서 실행한다.
  *   - 질문지와 tenants.overlay.json을 data/<tenantId>/before-probe-<시각>/에 복사한 뒤 질문지 하나만 고친다.
  *   - cohort-banks/ · questionBankSize · src/data 발행본은 건드리지 않는다. 기존 문항은 한 글자도 바꾸지 않는다.
  *
@@ -33,7 +35,7 @@
  */
 import 'dotenv/config'
 import { execFileSync } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 const args = process.argv.slice(2)
@@ -107,7 +109,7 @@ if (bank.version !== version) fail(`질문지 파일의 판(${bank.version})이 
 const questions = bank.questions ?? []
 const probesNow = questions.filter(isProbe)
 
-/** 이 셸의 가상화 사본인지 — 경로 글자와, 따라간 실제 경로를 함께 본다. */
+/** 이 셸의 가상화 사본인지 — 경로 글자와, 따라간 실제 경로를 함께 본다. 평범한 %APPDATA% 경로의 쓰기 리다이렉트는 --write가 써 보고 잡는다. */
 const virtualized = [appData, bankPath].some((p) => probe.looksVirtualized(p) || probe.looksVirtualized(realpathSync.native(p)))
 
 console.log(`브랜드: ${tenant.brandName} (${tenantId})`)
@@ -169,6 +171,7 @@ async function runDry(): Promise<void> {
   for (const id of paraphraseIds) {
     const q = questions.find((x) => x.questionId === id)
     if (!q || !isProbe(q)) fail(`바꿔 쓸 질문이 이 질문지의 실증 질문이 아닙니다: ${id}`)
+    if (q.paraphraseOf) fail(`${id}는 ${q.paraphraseOf}의 홀드아웃입니다 — 홀드아웃은 다시 바꿔 쓰지 않습니다.`)
     if (already.has(id)) fail(`이미 바꿔 쓴 실증이 있는 질문입니다: ${id}`)
     if (!sources.includes(q)) sources.push(q)
   }
@@ -203,13 +206,14 @@ async function runDry(): Promise<void> {
     cohortTexts,
     probeIds: new Set(probesNow.map((q) => q.questionId)),
     paraphrased: already,
+    holdouts: probe.holdoutIds(questions),
   })
   const limit = mode === 'paraphrase' ? sources.length : count
-  const candidates = filtered.accepted.slice(0, limit)
+  const { kept: candidates, dropped } = probe.limitCandidates(filtered.accepted, limit, mode === 'new' ? recommendMin : 0)
   const rejected = [
     ...parsed.rejected,
     ...filtered.rejected,
-    ...filtered.accepted.slice(limit).map((c) => ({ text: c.text, reason: `요청 개수(${limit})를 넘음` })),
+    ...dropped.map((c) => ({ text: c.text, reason: `요청 개수(${limit})를 넘음` })),
   ]
 
   const ids = probe.nextProbeIds(bank, candidates.length)
@@ -250,8 +254,10 @@ async function runDry(): Promise<void> {
     candidates,
     rejected,
   }
-  const outDir = path.resolve(flag('--out') ?? process.cwd())
-  if (!existsSync(outDir)) fail(`--out 폴더가 없습니다: ${outDir}`)
+  const outFlag = flag('--out')
+  const outDir = path.resolve(outFlag ?? probe.DEFAULT_CANDIDATES_DIR)
+  if (outFlag === undefined) mkdirSync(outDir, { recursive: true })
+  else if (!existsSync(outDir)) fail(`--out 폴더가 없습니다: ${outDir}`)
   const outFile = path.join(outDir, `probe-candidates-${tenantId}-${version}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`)
   writeFileSync(outFile, JSON.stringify(file, null, 2) + '\n', 'utf8')
   console.log(`\n후보 파일: ${outFile}`)
@@ -296,6 +302,23 @@ async function runWrite(): Promise<void> {
   console.log(`\n덧붙일 실증 질문 ${added.length}개(문항 ${questions.length} → ${next.length}):`)
   for (const q of added) console.log(`  ${q.questionId}  [${q.stage ?? '-'} · ${q.topic ?? '-'}${q.paraphraseOf ? ` · ← ${q.paraphraseOf}` : ''}]  ${q.text}`)
 
+  // 경로 글자로는 안 보이는 쓰기 리다이렉트 — 질문지 폴더에 표지 파일을 써 보고 가상화 위치에 생기는지 본다.
+  const roots = { appData: process.env.APPDATA, localAppData: process.env.LOCALAPPDATA }
+  let redirected: string[] = []
+  try {
+    redirected = await probe.writeRedirects(path.dirname(bankPath), roots)
+  } catch (err) {
+    fail(`✗ 질문지 폴더에 써 보는 확인을 하지 못했습니다(${err instanceof Error ? err.message : String(err)}). 질문지는 쓰지 않았습니다.`)
+  }
+  if (redirected.length > 0) {
+    fail(
+      `✗ 이 셸에서 쓴 파일이 실제 폴더가 아닌 가상화 사본으로 갑니다: ${redirected.join(', ')}`,
+      '  Claude 셸에서는 %APPDATA% 경로도 평범해 보이고 읽기는 실제 폴더를 통과하지만, 쓰기만 Packages\\Claude_…\\LocalCache로 갑니다.',
+      '  사용자 터미널이나 //localhost/C$/… 경로로 실행하세요. 질문지는 쓰지 않았습니다(표지 파일은 지웠습니다).',
+    )
+  }
+  console.log(`쓰기 확인: ${path.dirname(bankPath)}에 쓴 파일이 그 자리에 갑니다(가상화 사본 아님).`)
+
   // 앱 확인은 쓰기 바로 앞에서 한다 — 확인과 쓰기 사이에 앱을 켤 틈을 줄인다.
   assertAppClosed()
   const { backupDir, copied } = await probe.writeProbeBank({
@@ -308,6 +331,15 @@ async function runWrite(): Promise<void> {
   })
   console.log(`\n백업: ${backupDir}`)
   for (const c of copied) console.log(`  ${path.basename(c)}`)
+
+  // 표지 파일 확인 뒤에도 쓰기가 가상화 사본으로 갔다면(이름이 시각이라 겹치지 않는 백업 폴더로 본다) 성공으로 알리지 않는다.
+  const movedBackup = await probe.findRedirectedCopies(backupDir, roots)
+  if (movedBackup.length > 0) {
+    fail(
+      `✗ 백업과 질문지가 실제 폴더가 아닌 가상화 사본으로 갔습니다: ${movedBackup.join(', ')}`,
+      '  실제 앱의 질문지에는 실증이 없습니다. 사용자 터미널이나 //localhost/C$/… 경로로 다시 실행하세요.',
+    )
+  }
 
   // 쓴 결과를 다시 읽어 기존 문항이 그대로인지 확인한다.
   const saved = JSON.parse(readFileSync(bankPath, 'utf8')) as QuestionBank
