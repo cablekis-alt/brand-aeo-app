@@ -41,17 +41,22 @@ export async function readBundledBank(tenantId: string, version: string): Promis
   }
 }
 
-/** 이 브랜드의 질문지를 설치본에 담아 배포하는가(동봉 폴더에 그 브랜드의 판 파일이 하나라도 있다). */
-export async function hasBundledBanks(tenantId: string): Promise<boolean> {
+/** 그 브랜드의 동봉한 판 이름들. 동봉하지 않으면 빈 배열. */
+export async function listBundledVersions(tenantId: string): Promise<string[]> {
   const dir = bundledTenantDir(tenantId);
-  if (!dir) return false;
+  if (!dir) return [];
   try {
-    return (await readdir(dir)).some((name) => name.endsWith('.json'));
+    return (await readdir(dir)).filter((name) => name.endsWith('.json')).map((name) => name.slice(0, -'.json'.length));
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT' || code === 'ENOTDIR') return false;
+    if (code === 'ENOENT' || code === 'ENOTDIR') return [];
     throw err;
   }
+}
+
+/** 이 브랜드의 질문지를 설치본에 담아 배포하는가(동봉 폴더에 그 브랜드의 판 파일이 하나라도 있다). */
+export async function hasBundledBanks(tenantId: string): Promise<boolean> {
+  return (await listBundledVersions(tenantId)).length > 0;
 }
 
 /**

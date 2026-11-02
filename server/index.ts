@@ -5,6 +5,7 @@ import express from 'express';
 import { connect as netConnect } from 'node:net';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
+import { runBrandUnify } from './brandUnify.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
@@ -2059,6 +2060,8 @@ async function startListening(): Promise<void> {
       process.exit(1);
     }
     seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
+    // v0.4.49 브랜드 통일 — 한 번만 하는 PC별 파일 정리와 점검(userData/unify-check.json). 시드 뒤에 둬야 빈 PC의 첫 실행 시드를 막지 않는다.
+    runBrandUnify().catch((err: unknown) => console.warn('[unify] 브랜드 통일 점검에 실패했습니다', err));
     console.log(`[server] listening on ${HOSTS[0]} :${port}`);
     startScheduler(store);
     for (const host of HOSTS.slice(1)) {
