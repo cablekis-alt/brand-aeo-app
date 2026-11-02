@@ -30,7 +30,7 @@
  *
  * 만드는 규칙(buildProbePlan)과 파일 쓰기(writeProbePlanFile)는 검사(scripts/verify-probe-plan.ts)가 임시 폴더의 가짜 브랜드로 부른다.
  */
-import { existsSync, readFileSync, realpathSync } from 'node:fs'
+import { constants as fsConstants, existsSync, readFileSync, realpathSync } from 'node:fs'
 import { access, copyFile, mkdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -280,7 +280,7 @@ const fileExists = (p: string) =>
 
 /**
  * 배정 파일 쓰기 — 검사를 통과한 배정만 쓴다(깨진 파일은 앱의 글 만들기를 막는다). 이미 있으면 <tenantDir>/before-probe-plan-<시각>/에
- * 복사한 뒤 원자적으로 바꿔 쓰고, 다시 읽어 parseProbePlan으로 같은 배정인지 확인한다.
+ * 복사한 뒤 원자적으로 바꿔 쓰고, 다시 읽어 parseProbePlan으로 같은 배정인지 확인한다. 그 자리에 백업이 이미 있으면 덮지 않고 멈춘다.
  */
 export async function writeProbePlanFile(input: { tenantDir: string; plan: ProbePlan; now: Date }): Promise<{ file: string; backupDir: string | null; plan: ProbePlan }> {
   const checked = parseProbePlan(JSON.parse(JSON.stringify(input.plan)))
@@ -290,7 +290,12 @@ export async function writeProbePlanFile(input: { tenantDir: string; plan: Probe
   if (await fileExists(file)) {
     backupDir = path.join(input.tenantDir, planBackupDirName(input.now))
     await mkdir(backupDir, { recursive: true })
-    await copyFile(file, path.join(backupDir, PROBE_PLAN_FILE))
+    const backupFile = path.join(backupDir, PROBE_PLAN_FILE)
+    // 있는 백업은 덮지 않는다 — 같은 시각에 두 번 쓰면 첫 백업(원래 배정)이 사라진다. 이때는 아무것도 바꾸지 않고 멈춘다.
+    await copyFile(file, backupFile, fsConstants.COPYFILE_EXCL).catch((err: NodeJS.ErrnoException) => {
+      if (err.code === 'EEXIST') throw new Error(`백업 자리에 이미 파일이 있어 쓰지 않습니다(있는 백업을 덮지 않음): ${backupFile}`)
+      throw err
+    })
   }
   await writeJsonAtomic(file, checked.plan)
   const back = parseProbePlan(JSON.parse(await readFile(file, 'utf-8')))
@@ -364,7 +369,8 @@ async function main(): Promise<void> {
     names = raw as Record<string, string>
   }
 
-  const tenantIds = positional.length ? positional : assignment.brands.map((b) => b.tenantId)
+  // 같은 브랜드를 두 번 주면 한 번만 쓴다 — 같은 시각으로 두 번 쓰면 두 번째 백업이 첫 백업(원래 배정)을 덮는다.
+  const tenantIds = [...new Set(positional.length ? positional : assignment.brands.map((b) => b.tenantId))]
   const unknownTenant = tenantIds.filter((t) => !assignment.brands.some((b) => b.tenantId === t))
   if (unknownTenant.length) fail(`배정표에 없는 브랜드입니다: ${unknownTenant.join(', ')}`)
 

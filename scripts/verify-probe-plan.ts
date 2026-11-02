@@ -425,6 +425,14 @@ try {
     refused = err instanceof Error ? err.message : String(err);
   }
   ok('파일 쓰기 — 검사를 통과하지 못한 배정은 쓰지 않음(파일 · 백업 그대로)', refused.includes('쓰지 않습니다') && readFileSync(planFile, 'utf8') === beforeBad && backupsIn(tenantDir).length === 1);
+  // 같은 시각으로 다시 쓰면(같은 브랜드를 한 실행에서 두 번) 백업 자리가 같다 — 있던 백업(원래 배정)을 덮지 않고 멈춘다.
+  let sameNow = '';
+  try {
+    await writeProbePlanFile({ tenantDir, plan: good, now: new Date('2026-11-02T03:04:06.000Z') });
+  } catch (err) {
+    sameNow = err instanceof Error ? err.message : String(err);
+  }
+  ok('파일 쓰기 — 같은 시각의 백업이 이미 있으면 덮지 않고 멈춤(백업 · 파일 그대로)', sameNow.includes('있는 백업을 덮지 않음') && readFileSync(path.join(second.backupDir!, 'probe-plan.json'), 'utf8') === firstRaw && readFileSync(planFile, 'utf8') === beforeBad && backupsIn(tenantDir).length === 1, sameNow);
 
   // 스크립트 — 하위 프로세스(tsx). 가짜 프로필의 %APPDATA% 아래에 앱 데이터를 두고(Claude 패키지 폴더도 가짜) 써 보는 확인까지 거친다.
   const profile = path.join(tmp, 'fake-profile');
@@ -471,6 +479,10 @@ try {
   const rewritten = run(appRoot, '--write', '--names', put(path.join(tmp, 'names-2.json'), { ...NAMES, [A1.id]: '원도심 걸어서 다니는 조용한 숙소' }));
   const rewriteBackups = backupsIn(scriptTenant);
   ok('스크립트 --write 다시 — 있던 파일을 before-probe-plan-<시각>/에 백업한 뒤 바꿔 씀', rewritten.status === 0 && rewriteBackups.length === 1 && readFileSync(path.join(scriptTenant, rewriteBackups[0], 'probe-plan.json'), 'utf8') === savedRaw && parseProbePlan(JSON.parse(readFileSync(scriptPlan, 'utf8'))).plan?.rounds[0].articles[0].name === '원도심 걸어서 다니는 조용한 숙소', `${rewritten.status} ${rewritten.stdout}${rewritten.stderr}`);
+  const beforeTwice = readFileSync(scriptPlan, 'utf8');
+  const twice = run(appRoot, 'demo-probe', 'demo-probe', '--write', '--names', namesFile);
+  const twiceBackups = backupsIn(scriptTenant).filter((n) => !rewriteBackups.includes(n));
+  ok('스크립트 --write — 같은 브랜드를 두 번 주면 한 번만 씀 · 새 백업은 바로 전 파일 · 앞 백업 그대로', twice.status === 0 && twice.stdout.split('저장: ').length === 2 && twiceBackups.length === 1 && readFileSync(path.join(scriptTenant, twiceBackups[0], 'probe-plan.json'), 'utf8') === beforeTwice && readFileSync(path.join(scriptTenant, rewriteBackups[0], 'probe-plan.json'), 'utf8') === savedRaw && parseProbePlan(JSON.parse(readFileSync(scriptPlan, 'utf8'))).plan?.rounds[0].articles[0].name === A1.name, `${twice.status} ${twice.stdout}${twice.stderr}`);
 
   // 가상화 사본처럼 보이는 경로 — 같은 가짜 데이터를 Packages\Claude_…\ 아래에 둔다.
   const virtualRoot = path.join(tmp, 'Packages', 'Claude_fake', 'LocalCache', 'Roaming', 'brand-aeo-app');
