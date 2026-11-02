@@ -41,10 +41,21 @@
  *     오버레이를 바꿀 브랜드가 없으면(모두 새 판 파일만 쓰는 저장소 설정 브랜드) 오버레이는 백업 · 쓰기 없이 그대로인지만 본다.
  * 되돌리기는 백업의 오버레이를 제자리로 복사하면 된다(새 판 파일은 쓰이지 않게 된다). 새 판 파일만 쓴 저장소 설정 브랜드는 되돌릴 것이
  * 없다 — 저장소 설정의 판을 바꾸기 전까지 측정은 옛 판을 잰다.
+ *
+ * 동봉본 만들기(v0.4.49 브랜드 통일):
+ *   npx tsx scripts/promote-probe-questions.ts web4ai gunsan gunsan-national --app-data "<userData>" --bundle-out src/data/question-banks
+ *     [--cohort-out cohort-banks]
+ * 앱 데이터는 읽기만 하고, 저장소 폴더에만 쓴다 — 설치본이 측정 때 userData에 없으면 가져오는 질문지(server/bundledBanks.ts).
+ *   - 실증 질문이 있는 브랜드는 위와 같은 다음 판(표시만 뗌)을, 없는 브랜드는 지금 판을 그대로 <bundle-out>/<tenantId>/<판>.json에 쓴다.
+ *     오버레이 · 저장소 설정 어느 쪽이 판을 정하든 같다(판은 저장소 설정 server/tenants.config.json을 바꾸는 릴리스가 정한다).
+ *   - 그 질문지가 쓰는 코호트 공통 질문지를 <cohort-out>(기본 저장소 cohort-banks/)에 둔다 — 없으면 앱 데이터의 것을 그대로 복사하고,
+ *     있으면 내용(JSON)이 같은지만 본다(autocrlf로 줄 끝이 달라 바이트는 다를 수 있다).
+ *   - 같은 자리에 동봉본이 이미 있으면 내용(판 · 코호트 출처 · 문항)이 같을 때만 그대로 두고, 다르면 쓰지 않고 멈춘다(덮지 않는다).
+ *   - 하나라도 걸리면 아무것도 쓰지 않는다. --write와 함께 쓸 수 없다(앱 데이터에는 쓰지 않는다). 가상화 사본 경로는 거절한다.
  */
 import { execFileSync } from 'node:child_process'
 import { constants as fsConstants, existsSync, readFileSync, realpathSync } from 'node:fs'
-import { access, copyFile, mkdir, readFile } from 'node:fs/promises'
+import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { bankPathProblem, findRedirectedCopies, looksVirtualized, writeRedirects } from '../server/probeQuestions'
@@ -204,6 +215,90 @@ export function promoteOverlay(
   return errors.length > 0 ? { ok: false, errors } : { ok: true, overlay: next }
 }
 
+/** 설치본에 담을 질문지 한 벌(--bundle-out). */
+export interface BundlePlan {
+  tenantId: string
+  /** 측정이 지금 쓰는 판(앱 데이터). */
+  fromVersion: string
+  /** 동봉할 판 — 실증이 있으면 다음 판(표시를 뗌), 없으면 지금 판 그대로. */
+  version: string
+  /** 실증 표시를 떼어 다음 판으로 올렸는가. */
+  promoted: boolean
+  bank: QuestionBank
+  probes: number
+  paraphrases: number
+  /** 이름 없는 질문(category-agnostic) 수 — 동봉본에서는 모두 점수에 센다. */
+  agnostic: number
+}
+
+/**
+ * 동봉할 질문지를 정한다 — 파일을 읽지도 쓰지도 않는다. 실증 질문이 있으면 planPromotion과 같은 다음 판(새 판 파일만 쓰는 저장소 설정
+ * 브랜드와 같다 — 판은 저장소 설정을 바꾸는 릴리스가 정하므로 오버레이의 판은 보지 않는다), 없으면 지금 판을 한 글자도 바꾸지 않고 담는다.
+ * 앱에서 고친 경쟁사 목록이 판을 정하거나, 경쟁사 편집이 만든 질문지이거나, 코호트 출처가 어긋나면 담지 않는다.
+ */
+export function planBundle(input: Omit<PromoteInput, 'bakedBankOnly'>): { ok: true; plan: BundlePlan } | { ok: false; errors: string[] } {
+  const questions = input.bank.questions ?? []
+  if (questions.some(isProbe)) {
+    const promoted = planPromotion({ ...input, source: { baked: true, competitorEdit: input.source.competitorEdit }, bakedBankOnly: true })
+    if (!promoted.ok) return promoted
+    const { plan } = promoted
+    return {
+      ok: true,
+      plan: {
+        tenantId: input.tenantId,
+        fromVersion: plan.fromVersion,
+        version: plan.toVersion,
+        promoted: true,
+        bank: plan.bank,
+        probes: plan.probes,
+        paraphrases: plan.paraphrases,
+        agnostic: plan.agnostic,
+      },
+    }
+  }
+  const errors: string[] = []
+  if (input.source.competitorEdit) errors.push('앱에서 고친 경쟁사 목록(competitors.json)이 쓰이고 있습니다 — 판은 그 파일이 정합니다.')
+  if (input.bank.version !== input.version) errors.push(`질문지 파일의 판(${input.bank.version})이 측정이 쓰는 판(${input.version})과 다릅니다.`)
+  if (input.bank.derivedFrom || input.bank.regeneratedFrom) {
+    errors.push('경쟁사 편집이 만든 질문지(derivedFrom · regeneratedFrom)입니다 — 그 편집이 쓰일 때만 측정되므로 담지 않습니다.')
+  }
+  if (input.cohort) {
+    const from = input.bank.cohortBank
+    if (!from || from.key !== input.cohort.key || from.version !== input.cohort.version) {
+      errors.push(`질문지의 코호트 출처(${from ? `${from.key}/${from.version}` : '없음'})가 지금 코호트 질문지(${input.cohort.key}/${input.cohort.version})와 다릅니다.`)
+    }
+  }
+  const ids = questions.map((q) => q.questionId)
+  if (ids.length === 0) errors.push('문항이 없습니다.')
+  if (new Set(ids).size !== ids.length) errors.push('질문 id가 겹칩니다.')
+  if (errors.length > 0) return { ok: false, errors }
+  return {
+    ok: true,
+    plan: {
+      tenantId: input.tenantId,
+      fromVersion: input.version,
+      version: input.version,
+      promoted: false,
+      bank: JSON.parse(JSON.stringify(input.bank)) as QuestionBank,
+      probes: 0,
+      paraphrases: 0,
+      agnostic: questions.filter((q) => q.category === 'category-agnostic').length,
+    },
+  }
+}
+
+/** 동봉본이 같은가 — 판 · 코호트 출처 · 문항(모든 필드 · 순서)이 같다. generatedAt은 보지 않는다(다시 만들면 시각만 다르다). */
+export function sameBundledBank(a: QuestionBank, b: QuestionBank): boolean {
+  return (
+    a.version === b.version &&
+    JSON.stringify(a.cohortBank ?? null) === JSON.stringify(b.cohortBank ?? null) &&
+    JSON.stringify(a.questions) === JSON.stringify(b.questions)
+  )
+}
+
+/** 동봉본 · 코호트 공통 질문지 파일 내용 — 저장소의 다른 JSON처럼 두 칸 들여쓰기에 끝 줄바꿈. */
+export const bundleFileText = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`
+
 /** 백업 폴더 이름 — 다른 편집의 백업(before-probe-… · before-profile-…)과 같은 꼴. */
 export function promoteBackupDirName(now: Date): string {
   return `before-promote-${now.toISOString().replace(/[:.]/g, '-')}`
@@ -327,14 +422,18 @@ function assertAppClosed(): void {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
-  const VALUE_FLAGS = new Set(['--app-data'])
+  const VALUE_FLAGS = new Set(['--app-data', '--bundle-out', '--cohort-out'])
   const flag = (name: string): string | undefined => {
     const i = args.indexOf(name)
     return i >= 0 ? args[i + 1] : undefined
   }
-  const USAGE = '사용법: npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data <dir> [--baked-bank-only] [--write]'
+  const USAGE =
+    '사용법: npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data <dir> [--baked-bank-only] [--write]\n' +
+    '        npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data <dir> --bundle-out <dir> [--cohort-out <dir>]'
   const unknownFlag = args.find((x) => x.startsWith('--') && !VALUE_FLAGS.has(x) && x !== '--write' && x !== '--baked-bank-only')
   if (unknownFlag) fail(`모르는 옵션입니다: ${unknownFlag}`, USAGE)
+  const missingValue = args.findIndex((x, i) => VALUE_FLAGS.has(x) && (args[i + 1] === undefined || args[i + 1]!.startsWith('--')))
+  if (missingValue >= 0) fail(`${args[missingValue]}에 값이 없습니다.`, USAGE)
   // 같은 브랜드를 두 번 주면 한 번만 본다 — 두 번 계획하면 같은 새 판 파일 · 백업 자리를 두 번 쓰려 한다.
   const tenantIds = [...new Set(args.filter((x, i) => !x.startsWith('--') && !VALUE_FLAGS.has(args[i - 1] ?? '')))]
   const write = args.includes('--write')
@@ -346,6 +445,16 @@ async function main(): Promise<void> {
   if (expanded !== rawAppData) console.log(`인자 확장: ${rawAppData} → ${expanded}`)
   const appData = path.resolve(expanded)
   if (!existsSync(appData)) fail(`앱 데이터 폴더가 없습니다: ${appData}`)
+
+  const bundleOut = flag('--bundle-out')
+  if (bundleOut === undefined && flag('--cohort-out') !== undefined) fail('--cohort-out은 --bundle-out과 함께만 씁니다.', USAGE)
+  if (bundleOut !== undefined) {
+    if (write || bakedBankOnly) fail('--bundle-out은 --write · --baked-bank-only와 함께 쓸 수 없습니다 — 동봉본 만들기는 앱 데이터에 쓰지 않습니다.', USAGE)
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+    const cohortOut = path.resolve(flag('--cohort-out') ?? path.join(repoRoot, 'cohort-banks'))
+    await bundleMain({ tenantIds, appData, bundleOut: path.resolve(bundleOut), cohortOut })
+    return
+  }
 
   // 로컬 앱 데이터만 읽고 쓴다 — .env에 Blob 토큰이 있으면 오버레이(브랜드 목록)를 클라우드에서 읽는다(tenantOverlay.ts).
   process.env.BLOB_READ_WRITE_TOKEN = ''
@@ -547,6 +656,192 @@ async function main(): Promise<void> {
   if (planned.some(({ plan }) => plan.bankOnly)) {
     console.log('저장소 설정 브랜드는 그 판을 바꾼 릴리스를 설치한 뒤 다음 측정부터 새 판을 그대로 잽니다. 그 전까지는 옛 판을 잽니다.')
   }
+}
+
+/** 그 폴더 안이거나 같은 곳인가 — 동봉본 만들기는 앱 데이터에 쓰지 않는다. */
+const insideDir = (dir: string, target: string) => {
+  const rel = path.relative(dir, target)
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))
+}
+
+/**
+ * --bundle-out — 앱 데이터는 읽기만 하고 저장소 폴더(동봉본 · 코호트 공통 질문지)에만 쓴다. 모든 브랜드를 검사한 뒤 하나라도 걸리면
+ * 아무것도 쓰지 않는다. 같은 자리의 파일은 내용이 같으면 그대로 두고, 다르면 멈춘다(덮지 않는다).
+ */
+async function bundleMain(opts: { tenantIds: string[]; appData: string; bundleOut: string; cohortOut: string }): Promise<void> {
+  const { tenantIds, appData, bundleOut, cohortOut } = opts
+  const realAppData = realpathSync.native(appData)
+  if ([appData, realAppData].some(looksVirtualized)) {
+    fail('✗ 이 셸의 가상화 사본(Packages\\Claude_…) 경로로 보입니다 — 실제 앱 데이터가 아닙니다. //localhost/C$/… 경로로 실행하세요.')
+  }
+  for (const out of [bundleOut, cohortOut]) {
+    if (insideDir(appData, out) || insideDir(realAppData, out)) fail(`✗ 앱 데이터 폴더 안에는 쓰지 않습니다: ${out}`)
+  }
+
+  // 로컬 앱 데이터만 읽는다 — .env에 Blob 토큰이 있으면 오버레이(브랜드 목록)를 클라우드에서 읽는다(tenantOverlay.ts).
+  process.env.BLOB_READ_WRITE_TOKEN = ''
+  process.env.BLOB_STORE_ID = ''
+  // APP_DATA_DIR은 server/appPaths.ts가 모듈 로드 시점에 읽으므로, 그 전에 설정해야 한다.
+  process.env.APP_DATA_DIR = appData
+  const { COHORT_BANK_DIR, PIPELINE_DATA_DIR } = await import('../server/appPaths')
+  const { findBakedTenant, loadRuntimeTenants, loadTenantWithoutCompetitorEdit } = await import('../server/tenantRegistry')
+  const { overrideApplies, readCompetitorOverride } = await import('../server/tenantCompetitorsStore')
+  const { cohortKey } = await import('../server/cohortQuestionBank')
+  const { FileResultStore } = await import('../server/store')
+
+  console.log(`앱 데이터(읽기만): ${appData}`)
+  console.log(`동봉본 폴더: ${bundleOut}`)
+  console.log(`코호트 공통 질문지 폴더: ${cohortOut}`)
+
+  // 질문지 파일은 store를 거치지 않고 직접 읽는다 — store.getQuestionBank는 없는 판을 동봉본에서 가져와 앱 데이터에 쓴다.
+  const store = new FileResultStore()
+  const runtime = await loadRuntimeTenants()
+  const bankWrites: { file: string; text: string }[] = []
+  const cohortWrites = new Map<string, string>()
+  let problems = false
+  for (const tenantId of tenantIds) {
+    console.log(`\n■ ${tenantId}`)
+    const errorLine = (e: string) => {
+      problems = true
+      console.log(`  ✗ ${e}`)
+    }
+    const tenant = runtime.find((t) => t.tenantId === tenantId)
+    if (!tenant) {
+      errorLine('브랜드를 찾을 수 없습니다(저장소 설정 · 오버레이 · 지운 브랜드 목록).')
+      continue
+    }
+    if (tenant.cohortOnly) {
+      errorLine('경쟁사로만 재는 브랜드입니다 — 동봉본은 고객 브랜드만 담습니다.')
+      continue
+    }
+    const version = tenant.questionBankVersion
+    const bankPath = path.join(PIPELINE_DATA_DIR, tenantId, 'question-bank', `${version}.json`)
+    const pathProblem = bankPathProblem(bankPath, PIPELINE_DATA_DIR, tenantId)
+    if (pathProblem) {
+      errorLine(pathProblem)
+      continue
+    }
+    if (!existsSync(bankPath)) {
+      // 저장소 설정이 이미 동봉본의 판을 가리키면(굽고 난 뒤 다시 실행) 이 PC에는 그 판이 아직 없다 — 측정 때 동봉본을 가져온다.
+      const bundled = path.join(bundleOut, tenantId, `${version}.json`)
+      if (existsSync(bundled)) console.log(`  판 ${version}은 이 PC에 아직 없고 동봉본이 있습니다 — 그대로 둡니다(측정 때 가져옴): ${bundled}`)
+      else errorLine(`질문지가 없습니다: ${bankPath}`)
+      continue
+    }
+    let bank: QuestionBank
+    try {
+      bank = JSON.parse(readFileSync(bankPath, 'utf8')) as QuestionBank
+    } catch (err) {
+      errorLine(`질문지를 읽지 못했습니다 — ${err instanceof Error ? err.message : String(err)}`)
+      continue
+    }
+    const repo = await loadTenantWithoutCompetitorEdit(tenantId)
+    const edit = (await readCompetitorOverride(tenantId))?.current ?? null
+    const baked = await findBakedTenant(tenantId)
+    const history = await store.getScorecardHistory(tenantId, Number.MAX_SAFE_INTEGER)
+    const taken = [
+      ...(await store.listQuestionBankVersions(tenantId)),
+      ...history.map((c) => c.questionBankVersion).filter((v): v is string => Boolean(v)),
+      ...(edit?.questionBank ? [edit.questionBank.version] : []),
+    ]
+    const cohort = tenant.cohortQuestionBank ? { key: cohortKey(tenant.industry, tenant.region), version: tenant.cohortQuestionBank } : null
+    const result = planBundle({
+      tenantId,
+      version,
+      bank,
+      source: { baked: Boolean(baked), competitorEdit: Boolean(repo && overrideApplies(edit, repo)) },
+      cohort,
+      taken,
+      now: new Date(),
+    })
+    if (!result.ok) {
+      result.errors.forEach(errorLine)
+      continue
+    }
+    const { plan } = result
+    console.log(`  ${tenant.brandName} · 지금 판 ${plan.fromVersion}(${bankPath})`)
+    console.log(
+      plan.promoted
+        ? `  동봉 판 ${plan.version} — 실증 표시 ${plan.probes}개(그중 바꿔 쓴 질문 ${plan.paraphrases}개)를 뗌 · 문항 ${plan.bank.questions.length}개 그대로`
+        : `  동봉 판 ${plan.version} — 실증 질문이 없어 지금 판을 그대로 담음 · 문항 ${plan.bank.questions.length}개`,
+    )
+    console.log(`  이름 없는 질문 ${plan.agnostic}개(모두 점수에 셈)`)
+    const target = path.join(bundleOut, tenantId, `${plan.version}.json`)
+    if (existsSync(target)) {
+      let present: QuestionBank
+      try {
+        present = JSON.parse(readFileSync(target, 'utf8')) as QuestionBank
+      } catch (err) {
+        errorLine(`있는 동봉본을 읽지 못했습니다: ${target} — ${err instanceof Error ? err.message : String(err)}`)
+        continue
+      }
+      if (!sameBundledBank(present, plan.bank)) {
+        errorLine(`같은 자리에 내용이 다른 동봉본이 있습니다 — 덮지 않습니다: ${target}`)
+        continue
+      }
+      console.log(`  동봉본: ${target} — 이미 같은 내용(그대로 둠)`)
+    } else {
+      console.log(`  동봉본: ${target} — 새로 씀`)
+      bankWrites.push({ file: target, text: bundleFileText(plan.bank) })
+    }
+    if (baked?.questionBankVersion === plan.version) {
+      console.log(`  저장소 설정: questionBankVersion ${plan.version} — 맞음`)
+    } else {
+      const now = baked ? `바꾸세요(지금 ${baked.questionBankVersion})` : '넣어 구우세요(지금 없음)'
+      console.log(`  ⚠ 저장소 설정(server/tenants.config.json) ${tenantId}의 questionBankVersion을 ${plan.version}로 ${now}.`)
+    }
+
+    if (!cohort) continue
+    const source = path.join(COHORT_BANK_DIR, cohort.key, `${cohort.version}.json`)
+    const repoFile = path.join(cohortOut, cohort.key, `${cohort.version}.json`)
+    if (!existsSync(source)) {
+      errorLine(`앱 데이터에 코호트 공통 질문지가 없습니다: ${source}`)
+      continue
+    }
+    const sourceText = readFileSync(source, 'utf8')
+    let cohortQuestions: QuestionSpec[]
+    try {
+      cohortQuestions = (JSON.parse(sourceText) as { questions: QuestionSpec[] }).questions
+    } catch (err) {
+      errorLine(`코호트 공통 질문지를 읽지 못했습니다: ${source} — ${err instanceof Error ? err.message : String(err)}`)
+      continue
+    }
+    const shared = plan.bank.questions.filter((q) => q.cohortShared)
+    const sharedMatches =
+      shared.length === cohortQuestions.length &&
+      shared.every((q, i) => q.questionId === cohortQuestions[i]!.questionId && q.text === cohortQuestions[i]!.text)
+    if (!sharedMatches) {
+      errorLine(`질문지의 코호트 공통 문항(${shared.length}개)이 코호트 공통 질문지 ${cohort.key}/${cohort.version}(${cohortQuestions.length}개)와 다릅니다.`)
+      continue
+    }
+    if (existsSync(repoFile)) {
+      let same: boolean
+      try {
+        same = JSON.stringify(JSON.parse(readFileSync(repoFile, 'utf8'))) === JSON.stringify(JSON.parse(sourceText))
+      } catch (err) {
+        errorLine(`저장소의 코호트 공통 질문지를 읽지 못했습니다: ${repoFile} — ${err instanceof Error ? err.message : String(err)}`)
+        continue
+      }
+      if (!same) {
+        errorLine(`저장소의 코호트 공통 질문지가 앱 데이터의 것과 내용이 다릅니다 — 덮지 않습니다: ${repoFile}`)
+        continue
+      }
+      console.log(`  코호트 공통 질문지 ${cohort.key}/${cohort.version}: 저장소에 같은 내용으로 있음(${repoFile})`)
+    } else if (cohortWrites.has(repoFile)) {
+      console.log(`  코호트 공통 질문지 ${cohort.key}/${cohort.version}: 앞 브랜드와 같이 복사`)
+    } else {
+      console.log(`  코호트 공통 질문지 ${cohort.key}/${cohort.version}: 저장소에 없음 — 앱 데이터의 것을 그대로 복사(${repoFile})`)
+      cohortWrites.set(repoFile, sourceText)
+    }
+  }
+
+  if (problems) fail('\n✗ 아무것도 쓰지 않았습니다 — 검사에 걸린 곳이 있습니다(위 ✗).')
+  // 'wx' — 검사한 뒤 그 자리에 파일이 생겼으면 덮지 않고 멈춘다.
+  for (const { file, text } of [...bankWrites, ...[...cohortWrites].map(([file, text]) => ({ file, text }))]) {
+    await mkdir(path.dirname(file), { recursive: true })
+    await writeFile(file, text, { encoding: 'utf8', flag: 'wx' })
+  }
+  console.log(`\n동봉본 ${bankWrites.length}개 · 코호트 공통 질문지 ${cohortWrites.size}개를 썼습니다. 앱 데이터에는 아무것도 쓰지 않았습니다.`)
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main()
