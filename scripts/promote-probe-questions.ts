@@ -4,6 +4,8 @@
  *
  *   npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data "<userData>"            # dry-run(기본)
  *   npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data "<userData>" --write    # 앱을 끄고
+ *   npx tsx scripts/promote-probe-questions.ts web4ai gunsan --app-data "<userData>" --baked-bank-only [--write]
+ *                                                     # 저장소 설정 브랜드(web4ai)는 새 판 파일만 — 아래 참고
  *
  * 지금 판 질문지를 그대로 옮긴 다음 판 파일을 만든다(v5 → v6 꼴 — 그 브랜드의 질문지 파일 · 주차 카드에 아직 없는 다음 번호,
  * server/questionHandoff.ts nextBankVersion). 문항 순서 · id · 문장 · 범주 · 단계 · 주제 · cohortShared · 문항의 version은 그대로 두고
@@ -20,11 +22,14 @@
  *     (경쟁사 초안 · 「모두 새로 쓰기」가 새로 만들 브랜드 질문 수라, 늘리면 측정 비용만 는다).
  * scripts/verify-promote-probe-questions.ts가 임시 폴더의 가짜 브랜드로 실제 ensureQuestionBank를 불러(AI 없이) 이를 확인한다.
  *
- * 판을 오버레이가 정하지 않는 브랜드는 쓰지 않는다(dry-run도 ✗로 알린다).
- *   - 저장소 설정(server/tenants.config.json)에 있는 브랜드 — 병합은 저장소 설정이 이겨 오버레이의 판은 무시된다(tenantRegistry.ts).
- *     오버레이만 바꾸면 측정은 계속 옛 판을 잰다. 저장소 설정을 바꾸는 릴리스가 필요하다 — 사람이 정할 일이다.
- *   - 앱에서 고친 경쟁사 목록(competitors.json)이 쓰이는 브랜드 — 판은 그 파일이 정하고, 오버레이의 판을 바꾸면 베이스 지문이 달라져
- *     고친 경쟁사 목록이 조용히 꺼진다(tenantCompetitorsStore.ts baseFingerprint).
+ * 판을 오버레이가 정하지 않는 브랜드는 그대로는 쓰지 않는다(dry-run도 ✗로 알린다).
+ *   - 저장소 설정(server/tenants.config.json)에 있는 브랜드(web4ai 등) — 병합은 저장소 설정이 이겨 오버레이의 판은 무시된다
+ *     (tenantRegistry.ts). 오버레이만 바꾸면 측정은 계속 옛 판을 잰다. --baked-bank-only를 주면 이런 브랜드는 새 판 파일만 쓰고
+ *     오버레이는 건드리지 않는다. 그 뒤 저장소 설정의 questionBankVersion을 새 판으로 바꾸는 릴리스를 낸다. 순서가 중요하다 — 새 판
+ *     파일 없이 판만 오르면 측정이 질문지를 AI로 새로 만들어(ensureComposedQuestionBank · ensureQuestionBank) 실증 질문이 사라지고
+ *     브랜드 질문이 바뀐다. 새 판 파일은 릴리스 전까지 측정에 쓰이지 않는다(측정은 저장소 설정의 판 파일만 읽는다).
+ *   - 앱에서 고친 경쟁사 목록(competitors.json)이 쓰이는 브랜드 — 판은 그 파일이 정하고, 오버레이 · 저장소 설정의 판을 바꾸면 베이스
+ *     지문이 달라져 고친 경쟁사 목록이 조용히 꺼진다(tenantCompetitorsStore.ts baseFingerprint). --baked-bank-only여도 쓰지 않는다.
  *
  * --write가 지키는 것(scripts/add-probe-questions.ts와 같다):
  *   - 고른 브랜드 가운데 하나라도 걸리면 아무것도 쓰지 않는다.
@@ -33,7 +38,9 @@
  *   - 앱이 실행 중이면 멈춘다 — 측정이 질문지 · 오버레이를 읽는다.
  *   - 지금 판 질문지와 오버레이를 <tenantDir>/before-promote-<시각>/에 복사한 뒤, 새 판 파일을 쓰고(있으면 멈춘다) 오버레이를 원자적으로
  *     바꿔 쓴다. 다시 읽어 쓴 그대로인지, 옛 판 파일이 그대로인지 본다. 옛 판 파일 · cohort-banks · questionBankSize는 건드리지 않는다.
- * 되돌리기는 백업의 오버레이를 제자리로 복사하면 된다(새 판 파일은 쓰이지 않게 된다).
+ *     오버레이를 바꿀 브랜드가 없으면(모두 새 판 파일만 쓰는 저장소 설정 브랜드) 오버레이는 백업 · 쓰기 없이 그대로인지만 본다.
+ * 되돌리기는 백업의 오버레이를 제자리로 복사하면 된다(새 판 파일은 쓰이지 않게 된다). 새 판 파일만 쓴 저장소 설정 브랜드는 되돌릴 것이
+ * 없다 — 저장소 설정의 판을 바꾸기 전까지 측정은 옛 판을 잰다.
  */
 import { execFileSync } from 'node:child_process'
 import { constants as fsConstants, existsSync, readFileSync, realpathSync } from 'node:fs'
@@ -69,12 +76,16 @@ export interface PromoteInput {
   /** 판 이름으로 이미 쓰인 것(질문지 파일 · 주차 카드) — 새 판은 이 이름을 피한다. */
   taken: string[]
   now: Date
+  /** --baked-bank-only — 저장소 설정 브랜드도 새 판 파일만 쓴다(오버레이는 그대로, 판은 릴리스가 올린다). */
+  bakedBankOnly?: boolean
 }
 
 export interface PromotePlan {
   tenantId: string
   fromVersion: string
   toVersion: string
+  /** 새 판 파일만 쓰고 오버레이는 바꾸지 않는다 — 저장소 설정 브랜드(판은 저장소 설정을 바꾸는 릴리스가 올린다). */
+  bankOnly: boolean
   /** 새 판 질문지 — 이대로 쓴다. */
   bank: QuestionBank
   /** 표시를 뗄 실증 질문 수와 그중 바꿔 쓴 질문(홀드아웃) 수. */
@@ -98,20 +109,25 @@ export function promoteQuestion(q: QuestionSpec): QuestionSpec {
 /**
  * 새 판 질문지를 정한다. 판을 오버레이가 정하지 않거나, 질문지가 측정이 쓰는 판 · 코호트와 어긋나거나, 올릴 실증이 없으면 아무것도
  * 정하지 않는다. 경쟁사 편집이 만든 질문지(derivedFrom · regeneratedFrom)는 그 편집이 쓰일 때만 측정되므로 올리지 않는다.
+ * 저장소 설정 브랜드는 bakedBankOnly일 때만 새 판 파일만 쓰는 계획을 세운다(판은 저장소 설정을 바꾸는 릴리스가 올린다).
  */
 export function planPromotion(input: PromoteInput): { ok: true; plan: PromotePlan } | { ok: false; errors: string[] } {
   const { bank, source, version } = input
   const errors: string[] = []
-  if (source.baked) {
+  const bankOnly = source.baked && input.bakedBankOnly === true
+  if (source.baked && !bankOnly) {
     errors.push(
       `저장소 설정(server/tenants.config.json)에 있는 브랜드입니다 — 판은 저장소 설정이 정하고 오버레이의 판은 무시됩니다. ` +
-        `오버레이만 바꾸면 측정은 계속 지금 판(${version})을 잽니다. 저장소 설정의 questionBankVersion을 바꾸는 릴리스가 필요합니다(사람이 정할 일).`,
+        `오버레이만 바꾸면 측정은 계속 지금 판(${version})을 잽니다. --baked-bank-only로 새 판 파일만 먼저 쓰고, ` +
+        '저장소 설정의 questionBankVersion을 그 판으로 바꾸는 릴리스를 내야 합니다.',
     )
   } else if (source.competitorEdit) {
     errors.push(
-      '앱에서 고친 경쟁사 목록(competitors.json)이 쓰이고 있습니다 — 판은 그 파일이 정하고, 오버레이의 판을 바꾸면 베이스 지문이 달라져 ' +
-        '고친 경쟁사 목록이 조용히 꺼집니다.',
+      '앱에서 고친 경쟁사 목록(competitors.json)이 쓰이고 있습니다 — 판은 그 파일이 정하고, ' +
+        `${bankOnly ? '저장소 설정' : '오버레이'}의 판을 바꾸면 베이스 지문이 달라져 고친 경쟁사 목록이 조용히 꺼집니다.`,
     )
+  } else if (bankOnly) {
+    // 저장소 설정이 판을 정한다 — 오버레이에 같은 브랜드가 남아 있어도 무시되므로 오버레이의 판은 보지 않는다.
   } else if (source.overlayVersion === undefined) {
     errors.push('오버레이(tenants.overlay.json)에 없는 브랜드입니다.')
   } else if (source.overlayVersion !== version) {
@@ -145,6 +161,7 @@ export function planPromotion(input: PromoteInput): { ok: true; plan: PromotePla
       tenantId: input.tenantId,
       fromVersion: version,
       toVersion,
+      bankOnly,
       bank: {
         version: toVersion,
         generatedAt: input.now.toISOString(),
@@ -205,9 +222,10 @@ export interface PromoteWriteItem {
 export interface PromoteWriteInput {
   items: PromoteWriteItem[]
   overlayPath: string
-  /** 계획을 세울 때 읽은 오버레이 원문. */
-  overlayBefore: string
-  overlay: unknown[]
+  /** 계획을 세울 때 읽은 오버레이 원문. 오버레이 파일이 없으면 null. */
+  overlayBefore: string | null
+  /** 바꿔 쓸 오버레이. null이면 오버레이는 읽지도 · 백업하지도 · 쓰지도 않는다(모두 새 판 파일만 쓰는 저장소 설정 브랜드). */
+  overlay: unknown[] | null
   now: Date
 }
 
@@ -224,10 +242,10 @@ const fileExists = (p: string) =>
  * 파일 쓰기 — 모두 확인한 뒤에 쓴다. 계획을 세울 때 읽은 원문과 지금 파일이 다르거나(그 사이 앱 · 다른 실행이 고쳤다) 새 판 파일이 이미
  * 있으면 아무것도 쓰지 않고 던진다. 브랜드마다 <tenantDir>/before-promote-<시각>/에 지금 판 질문지와 오버레이를 복사하고(있는 백업은
  * 덮지 않는다), 새 판 파일들을 쓴 뒤 오버레이를 한 번 바꿔 쓴다. 오버레이를 마지막에 쓰므로 중간에 멈추면 새 판 파일만 남고 측정은
- * 옛 판 그대로다.
+ * 옛 판 그대로다. 오버레이를 바꾸지 않으면(overlay null) 오버레이는 보지도 · 백업하지도 · 쓰지도 않는다.
  */
 export async function writePromotion(input: PromoteWriteInput): Promise<{ backups: string[] }> {
-  if ((await readFile(input.overlayPath, 'utf-8')) !== input.overlayBefore) {
+  if (input.overlay !== null && (input.overlayBefore === null || (await readFile(input.overlayPath, 'utf-8')) !== input.overlayBefore)) {
     throw new Error(`오버레이가 그 사이 바뀌었습니다 — 다시 실행하세요: ${input.overlayPath}`)
   }
   for (const item of input.items) {
@@ -238,7 +256,7 @@ export async function writePromotion(input: PromoteWriteInput): Promise<{ backup
   for (const item of input.items) {
     const backupDir = path.join(item.tenantDir, promoteBackupDirName(input.now))
     await mkdir(backupDir, { recursive: true })
-    for (const source of [item.fromPath, input.overlayPath]) {
+    for (const source of input.overlay !== null ? [item.fromPath, input.overlayPath] : [item.fromPath]) {
       const target = path.join(backupDir, path.basename(source))
       // 있는 백업은 덮지 않는다 — 같은 시각에 두 번 쓰면 첫 백업(원래 파일)이 사라진다.
       await copyFile(source, target, fsConstants.COPYFILE_EXCL).catch((err: NodeJS.ErrnoException) => {
@@ -249,11 +267,14 @@ export async function writePromotion(input: PromoteWriteInput): Promise<{ backup
     backups.push(backupDir)
   }
   for (const item of input.items) await writeJsonAtomic(item.toPath, item.bank)
-  await writeJsonAtomic(input.overlayPath, input.overlay)
+  if (input.overlay !== null) await writeJsonAtomic(input.overlayPath, input.overlay)
   return { backups }
 }
 
-/** 쓴 뒤 다시 읽어 본다 — 새 판 파일 · 오버레이가 쓴 그대로이고 옛 판 파일이 그대로인가. 어긋난 곳을 돌려준다(빈 배열이면 통과). */
+/**
+ * 쓴 뒤 다시 읽어 본다 — 새 판 파일 · 오버레이가 쓴 그대로이고 옛 판 파일이 그대로인가(오버레이를 바꾸지 않았으면 오버레이도 그대로인가).
+ * 어긋난 곳을 돌려준다(빈 배열이면 통과).
+ */
 export async function checkPromotion(input: PromoteWriteInput): Promise<string[]> {
   const problems: string[] = []
   const same = async (file: string, expected: unknown) => JSON.stringify(JSON.parse(await readFile(file, 'utf-8'))) === JSON.stringify(expected)
@@ -261,7 +282,11 @@ export async function checkPromotion(input: PromoteWriteInput): Promise<string[]
     if (!(await same(item.toPath, item.bank))) problems.push(`새 판 질문지가 쓴 내용과 다릅니다: ${item.toPath}`)
     if ((await readFile(item.fromPath, 'utf-8')) !== item.before) problems.push(`옛 판 질문지가 바뀌었습니다: ${item.fromPath}`)
   }
-  if (!(await same(input.overlayPath, input.overlay))) problems.push(`오버레이가 쓴 내용과 다릅니다: ${input.overlayPath}`)
+  if (input.overlay !== null) {
+    if (!(await same(input.overlayPath, input.overlay))) problems.push(`오버레이가 쓴 내용과 다릅니다: ${input.overlayPath}`)
+  } else if (input.overlayBefore !== null && (await readFile(input.overlayPath, 'utf-8')) !== input.overlayBefore) {
+    problems.push(`바꾸지 않을 오버레이가 바뀌었습니다: ${input.overlayPath}`)
+  }
   return problems
 }
 
@@ -307,12 +332,13 @@ async function main(): Promise<void> {
     const i = args.indexOf(name)
     return i >= 0 ? args[i + 1] : undefined
   }
-  const USAGE = '사용법: npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data <dir> [--write]'
-  const unknownFlag = args.find((x) => x.startsWith('--') && !VALUE_FLAGS.has(x) && x !== '--write')
+  const USAGE = '사용법: npx tsx scripts/promote-probe-questions.ts <tenantId…> --app-data <dir> [--baked-bank-only] [--write]'
+  const unknownFlag = args.find((x) => x.startsWith('--') && !VALUE_FLAGS.has(x) && x !== '--write' && x !== '--baked-bank-only')
   if (unknownFlag) fail(`모르는 옵션입니다: ${unknownFlag}`, USAGE)
   // 같은 브랜드를 두 번 주면 한 번만 본다 — 두 번 계획하면 같은 새 판 파일 · 백업 자리를 두 번 쓰려 한다.
   const tenantIds = [...new Set(args.filter((x, i) => !x.startsWith('--') && !VALUE_FLAGS.has(args[i - 1] ?? '')))]
   const write = args.includes('--write')
+  const bakedBankOnly = args.includes('--baked-bank-only')
   const rawAppData = flag('--app-data')
   if (!rawAppData || tenantIds.length === 0) fail(USAGE)
 
@@ -406,7 +432,7 @@ async function main(): Promise<void> {
       ...(edit?.questionBank ? [edit.questionBank.version] : []),
     ]
     const cohort = tenant.cohortQuestionBank ? { key: cohortKey(tenant.industry, tenant.region), version: tenant.cohortQuestionBank } : null
-    const result = planPromotion({ tenantId, version, bank, source, cohort, taken, now: new Date() })
+    const result = planPromotion({ tenantId, version, bank, source, cohort, taken, now: new Date(), bakedBankOnly })
     if (!result.ok) {
       result.errors.forEach(errorLine)
       continue
@@ -420,7 +446,13 @@ async function main(): Promise<void> {
       const cohortFile = path.join(COHORT_BANK_DIR, cohort.key, `${cohort.version}.json`)
       console.log(`  코호트 공통 질문지: ${cohort.key}/${cohort.version} — ${existsSync(cohortFile) ? '있음' : `없음(${cohortFile}) — 다음 측정이 동봉본을 가져오거나 새로 만든다`}`)
     }
-    console.log(`  오버레이: questionBankVersion ${plan.fromVersion} → ${plan.toVersion} (questionBankSize ${tenant.questionBankSize} 그대로 — 측정은 저장된 질문지를 그대로 쓴다)`)
+    if (plan.bankOnly) {
+      console.log(`  저장소 설정 브랜드 — 새 판 파일만 씁니다(오버레이 그대로). 쓴 뒤에도 측정은 저장소 설정의 판(${plan.fromVersion})을 잽니다.`)
+      console.log(`  릴리스: server/tenants.config.json ${tenantId}의 questionBankVersion ${plan.fromVersion} → ${plan.toVersion} (questionBankSize ${tenant.questionBankSize} 그대로)`)
+      console.log('  ⚠ 이 파일을 쓴 뒤에 그 릴리스를 설치하세요 — 새 판 파일 없이 판만 오르면 측정이 질문지를 AI로 새로 만들어 실증 질문이 사라집니다.')
+    } else {
+      console.log(`  오버레이: questionBankVersion ${plan.fromVersion} → ${plan.toVersion} (questionBankSize ${tenant.questionBankSize} 그대로 — 측정은 저장된 질문지를 그대로 쓴다)`)
+    }
     console.log(`  새 판 파일: ${toPath}`)
     console.log(`  백업 자리: ${path.join(tenantDir, 'before-promote-<시각>')}`)
     if (existsSync(path.join(tenantDir, PROBE_PLAN_FILE))) {
@@ -436,17 +468,23 @@ async function main(): Promise<void> {
   }
 
   if (problems) fail('✗ 쓰지 않았습니다 — 검사에 걸린 곳이 있습니다(위 ✗).')
-  if (overlayBefore === null) fail(`✗ 오버레이가 없습니다: ${overlayPath}`)
-  const nextOverlay = promoteOverlay(
-    overlay,
-    planned.map(({ plan }) => ({ tenantId: plan.tenantId, from: plan.fromVersion, to: plan.toVersion })),
-  )
-  if (!nextOverlay.ok) fail('✗ 쓰지 않았습니다:', ...nextOverlay.errors.map((e) => `  - ${e}`))
+  // 저장소 설정 브랜드(새 판 파일만)는 오버레이를 바꾸지 않는다 — 모두 그런 브랜드면 오버레이는 건드리지 않는다.
+  const overlayChanges = planned
+    .filter(({ plan }) => !plan.bankOnly)
+    .map(({ plan }) => ({ tenantId: plan.tenantId, from: plan.fromVersion, to: plan.toVersion }))
+  let nextOverlay: unknown[] | null = null
+  if (overlayChanges.length > 0) {
+    if (overlayBefore === null) fail(`✗ 오버레이가 없습니다: ${overlayPath}`)
+    const promoted = promoteOverlay(overlay, overlayChanges)
+    if (!promoted.ok) fail('✗ 쓰지 않았습니다:', ...promoted.errors.map((e) => `  - ${e}`))
+    nextOverlay = promoted.overlay
+  }
   if (virtualized) fail('✗ 가상화 사본 경로에는 쓰지 않습니다. 사용자 터미널이나 //localhost/C$/… 경로로 실행하세요.')
 
   // 경로 글자로는 안 보이는 쓰기 리다이렉트 — 쓸 폴더마다 표지 파일을 써 보고 가상화 위치에 생기는지 본다. 모두 확인한 뒤에 쓴다.
   const roots = { appData: process.env.APPDATA, localAppData: process.env.LOCALAPPDATA }
-  for (const dir of [path.dirname(overlayPath), ...planned.map(({ item }) => path.dirname(item.toPath))]) {
+  const writeDirs = [...(nextOverlay !== null ? [path.dirname(overlayPath)] : []), ...planned.map(({ item }) => path.dirname(item.toPath))]
+  for (const dir of writeDirs) {
     let redirected: string[] = []
     try {
       redirected = await writeRedirects(dir, roots)
@@ -468,7 +506,7 @@ async function main(): Promise<void> {
     items: planned.map(({ item }) => item),
     overlayPath,
     overlayBefore,
-    overlay: nextOverlay.overlay,
+    overlay: nextOverlay,
     now: new Date(),
   }
   let backups: string[]
@@ -483,17 +521,32 @@ async function main(): Promise<void> {
     ...(await Promise.all(input.items.map((i) => findRedirectedCopies(i.toPath, roots)))).flat(),
   ]
   if (moved.length > 0) fail(`✗ 쓴 파일이 실제 폴더가 아닌 가상화 사본으로 갔습니다: ${moved.join(', ')}`)
-  const restore = backups.map((b) => `  ${path.join(b, path.basename(overlayPath))}`)
   const after = await checkPromotion(input)
-  if (after.length > 0) fail('✗ 다시 읽은 파일이 기대와 다릅니다 — 백업의 오버레이를 제자리로 복사해 되돌리세요:', ...after.map((p) => `  - ${p}`), ...restore)
+  if (after.length > 0) {
+    const restore =
+      nextOverlay !== null
+        ? ['  백업의 오버레이를 제자리로 복사해 되돌리세요:', ...backups.map((b) => `  ${path.join(b, path.basename(overlayPath))}`)]
+        : ['  오버레이는 바꾸지 않았습니다 — 새 판 파일은 저장소 설정의 판을 바꾸기 전까지 측정에 쓰이지 않습니다.']
+    fail('✗ 다시 읽은 파일이 기대와 다릅니다:', ...after.map((p) => `  - ${p}`), ...restore)
+  }
 
   for (const [i, { plan, item }] of planned.entries()) {
     console.log(`\n저장: ${item.toPath} (${plan.toVersion} · 문항 ${plan.bank.questions.length}개 · 실증 표시 없음)`)
-    console.log(`  오버레이 ${plan.tenantId}: ${plan.fromVersion} → ${plan.toVersion}`)
+    if (plan.bankOnly) {
+      console.log(`  오버레이 그대로 — 릴리스에서 server/tenants.config.json ${plan.tenantId}의 questionBankVersion을 ${plan.fromVersion} → ${plan.toVersion}로 바꾸세요.`)
+    } else {
+      console.log(`  오버레이 ${plan.tenantId}: ${plan.fromVersion} → ${plan.toVersion}`)
+    }
     console.log(`  백업: ${backups[i]}`)
   }
-  console.log('\n다시 읽음 — 새 판 파일 · 오버레이가 쓴 그대로이고 옛 판 파일은 그대로입니다. cohort-banks · questionBankSize는 건드리지 않았습니다.')
-  console.log('앱을 켜면 다음 측정이 새 판을 그대로 잽니다. 판이 바뀌어 「같은 조건」 비교는 새 판에서 새로 시작합니다.')
+  console.log(
+    `\n다시 읽음 — ${nextOverlay !== null ? '새 판 파일 · 오버레이가' : '새 판 파일이'} 쓴 그대로이고 옛 판 파일은 그대로입니다. ` +
+      `${nextOverlay !== null ? '' : '오버레이 · '}cohort-banks · questionBankSize는 건드리지 않았습니다.`,
+  )
+  if (nextOverlay !== null) console.log('앱을 켜면 다음 측정이 새 판을 그대로 잽니다(오버레이 브랜드). 판이 바뀌어 「같은 조건」 비교는 새 판에서 새로 시작합니다.')
+  if (planned.some(({ plan }) => plan.bankOnly)) {
+    console.log('저장소 설정 브랜드는 그 판을 바꾼 릴리스를 설치한 뒤 다음 측정부터 새 판을 그대로 잽니다. 그 전까지는 옛 판을 잽니다.')
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main()

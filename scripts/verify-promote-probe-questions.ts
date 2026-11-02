@@ -9,6 +9,8 @@
  * 응답을 세는지 본다. 점수는 표시를 뗀 질문을 세는지 aggregateWeeklyMetrics로도 본다(점수 코드는 고치지 않았다).
  *
  * 판을 오버레이가 정하지 않는 브랜드(저장소 설정 · 앱에서 고친 경쟁사 목록)는 오버레이를 바꿔도 측정이 그대로라 쓰지 않아야 한다.
+ * 저장소 설정 브랜드는 --baked-bank-only일 때만 새 판 파일만 쓴다 — 오버레이는 그대로이고, 저장소 설정의 판을 올린 릴리스 뒤의
+ * 설정으로 실제 ensureQuestionBank를 불러 그 파일을 그대로 쓰는지 본다(릴리스 전에는 옛 판 그대로).
  *
  *   npx tsx scripts/verify-promote-probe-questions.ts
  */
@@ -203,6 +205,21 @@ try {
     ok(`planPromotion 거절 — ${label}`, !r.ok && r.errors.some((e) => e.includes(needle)), JSON.stringify(r));
   };
   refused({ source: { baked: true, overlayVersion: 'v6', competitorEdit: false } }, '저장소 설정(server/tenants.config.json)', '저장소 설정에 있는 브랜드(오버레이가 판을 정하지 않음)');
+  refused({ source: { baked: true, overlayVersion: 'v6', competitorEdit: false } }, '--baked-bank-only로 새 판 파일만', '저장소 설정에 있는 브랜드 — 새 판 파일만 쓰는 길을 알림');
+  refused({ source: { baked: true, overlayVersion: 'v6', competitorEdit: true }, bakedBankOnly: true }, '저장소 설정의 판을 바꾸면', '--baked-bank-only여도 앱에서 고친 경쟁사 목록이 쓰이는 저장소 설정 브랜드');
+  refused({ source: { baked: true, competitorEdit: false }, bakedBankOnly: true, cohort: { key: keyOf('가상시'), version: 'c2' } }, '코호트 출처', '--baked-bank-only여도 코호트 출처가 다름');
+  ok('planPromotion A — 오버레이 브랜드는 새 판 파일만 쓰지 않음(bankOnly false)', planA.ok && planA.plan.bankOnly === false);
+  const bankOnlyOf = (source: import('./promote-probe-questions').PromoteSource) => planPromotion({ ...inputA, source, bakedBankOnly: true });
+  const bakedOnly = bankOnlyOf({ baked: true, competitorEdit: false });
+  const bakedStaleOverlay = bankOnlyOf({ baked: true, overlayVersion: 'v5', competitorEdit: false });
+  ok(
+    '--baked-bank-only — 저장소 설정 브랜드는 새 판 파일만(bankOnly) · 오버레이에 없거나 판이 달라도(무시되는 값) 같은 새 판 질문지',
+    bakedOnly.ok && bakedOnly.plan.bankOnly && bakedStaleOverlay.ok && bakedStaleOverlay.plan.bankOnly && planA.ok &&
+      JSON.stringify(bakedOnly.plan.bank) === JSON.stringify(planA.plan.bank) && JSON.stringify(bakedStaleOverlay.plan.bank) === JSON.stringify(planA.plan.bank),
+    JSON.stringify([bakedOnly, bakedStaleOverlay]),
+  );
+  const flagOnOverlayTenant = bankOnlyOf(sourceOk('v6'));
+  ok('--baked-bank-only — 오버레이 브랜드에는 영향 없음(bankOnly false · 오버레이를 바꿈)', flagOnOverlayTenant.ok && flagOnOverlayTenant.plan.bankOnly === false, JSON.stringify(flagOnOverlayTenant));
   refused({ source: { baked: false, overlayVersion: 'v6', competitorEdit: true } }, '고친 경쟁사 목록', '앱에서 고친 경쟁사 목록이 쓰임');
   refused({ source: { baked: false, competitorEdit: false } }, '오버레이(tenants.overlay.json)에 없는', '오버레이에 없음');
   refused({ source: sourceOk('v5') }, '오버레이의 판(v5)', '오버레이 판이 측정 판과 다름');
@@ -303,6 +320,46 @@ try {
     else process.env.COLLECT_ENGINES = collectEnginesBefore;
   }
 
+  // ── 5-2. 저장소 설정 브랜드(--baked-bank-only) — 새 판 파일만 쓰고 오버레이는 그대로, 릴리스로 판이 오르면 그 파일을 그대로 잰다 ──
+  // D 「가상바다」는 저장소 설정에만 있는 브랜드 자리다(임시 오버레이에 없음). 측정이 쓰는 설정은 저장소 설정 값이라 직접 만든다 —
+  // 릴리스 전(v5)과 릴리스 뒤(v6, questionBankSize 그대로).
+  const D = tenantOf('fake-promote-d', '가상바다', '가상시', 'v5', 4, true);
+  const bankD = {
+    version: 'v5',
+    generatedAt: '2026-10-10T00:00:00.000Z',
+    cohortBank: { key: keyOf('가상시'), version: 'c1' },
+    questions: [
+      ...sharedOf('가상시'),
+      q('v5-001', '가상바다 바베큐 돼?', 'brand-direct', '가상시'),
+      q('v5-p001', '가상시 바다 앞 독채 있어?', 'category-agnostic', '가상시', { probe: true }),
+      q('v5-p002', '가상시 바다 바로 앞 독채 숙소 알려줘', 'category-agnostic', '가상시', { probe: true, paraphraseOf: 'v5-p001' }),
+    ],
+  };
+  put(bankFile(D.tenantId, 'v3'), { ...bankD, version: 'v3', questions: bankD.questions.slice(0, 3) });
+  put(bankFile(D.tenantId, 'v5'), bankD);
+  const planD = planPromotion({ tenantId: D.tenantId, version: 'v5', bank: bankD as unknown as QuestionBank, source: { baked: true, competitorEdit: false }, cohort: cohortA, taken: await store.listQuestionBankVersions(D.tenantId), now: NOW, bakedBankOnly: true });
+  if (!planD.ok) throw new Error(`저장소 설정 브랜드 계획이 없습니다: ${JSON.stringify(planD)}`);
+  ok('저장소 설정 브랜드 계획 — v5 → v6 · 문항 5개 그대로 · 실증 표시 없음 · 점수에 세는 것 2 → 4', planD.plan.bankOnly && planD.plan.toVersion === 'v6' && planD.plan.bank.questions.length === 5 && planD.plan.bank.questions.every((x) => x.probe === undefined && x.paraphraseOf === undefined) && planD.plan.scoredBefore === 2 && planD.plan.scoredAfter === 4, JSON.stringify(planD.plan));
+  const overlayBeforeD = bytes(overlayPath);
+  const writeD = { items: [itemOf(D.tenantId, 'v5', planD.plan)], overlayPath, overlayBefore: overlayBeforeD, overlay: null, now: new Date('2026-11-02T05:06:07.008Z') };
+  const { backups: backupsD } = await writePromotion(writeD);
+  ok(
+    'writePromotion(오버레이 null) — 새 판 파일만 씀 · 오버레이 한 바이트도 그대로 · 백업에는 옛 질문지만',
+    bytes(overlayPath) === overlayBeforeD && backupsD.length === 1 && readdirSync(backupsD[0]!).join() === 'v5.json' && bytes(path.join(backupsD[0]!, 'v5.json')) === JSON.stringify(bankD, null, 2) && JSON.stringify(JSON.parse(bytes(bankFile(D.tenantId, 'v6')))) === JSON.stringify(planD.plan.bank),
+    `${backupsD.join(', ')} · ${backupsD[0] ? readdirSync(backupsD[0]).join() : ''}`,
+  );
+  ok('checkPromotion(오버레이 null) — 통과, 그 사이 오버레이가 바뀌었으면 알림', (await checkPromotion(writeD)).length === 0 && (await checkPromotion({ ...writeD, overlayBefore: overlayBeforeD + ' ' })).some((p) => p.includes('바꾸지 않을 오버레이가 바뀌었습니다')));
+  ok('writePromotion(오버레이 null) 다시 — 새 판 파일이 있어 거절', (await rejects(writePromotion({ ...writeD, now: new Date('2026-11-02T06:00:00.000Z') }), '새 판 파일이 이미 있습니다')) === 'ok');
+  const v6D = bytes(bankFile(D.tenantId, 'v6'));
+  const beforeRelease = await ensureQuestionBank(D as never, store);
+  ok('릴리스 전(저장소 설정 v5) — 측정은 옛 판 그대로(실증 포함), 새 판 파일은 쓰이지 않고 그대로', JSON.stringify(beforeRelease) === JSON.stringify(bankD.questions) && bytes(bankFile(D.tenantId, 'v6')) === v6D);
+  const afterRelease = await ensureQuestionBank({ ...D, questionBankVersion: 'v6' } as never, store);
+  ok(
+    '릴리스 뒤(저장소 설정 v6 · questionBankSize 4 그대로) — 측정은 새 판 문항 5개 그대로 · 파일 한 바이트도 안 바뀜 · 새로 만들지 않음',
+    JSON.stringify(afterRelease) === JSON.stringify(planD.plan.bank.questions) && bytes(bankFile(D.tenantId, 'v6')) === v6D && readdirSync(path.dirname(bankFile(D.tenantId, 'v6'))).sort().join() === 'v3.json,v5.json,v6.json',
+    JSON.stringify(afterRelease.map((x) => x.questionId)),
+  );
+
   // ── 6. 점수 — 표시를 뗀 질문이 점수에 든다(점수 코드는 그대로) ─────────────
   const citation = (domain: string, ownerType: CitationDetail['ownerType']): CitationDetail => ({ raw: `https://${domain}/page`, domain, ownerType, supportsBrandMention: ownerType === 'brand-owned' });
   const analysis = (questionId: string, mentioned: boolean, rank: number | null, citations: CitationDetail[] = []): QuestionRepeatAnalysis => ({
@@ -376,6 +433,12 @@ try {
   );
   const dryAB = run(scriptRoot, A.tenantId, B.tenantId, A.tenantId);
   ok('스크립트 dry-run A · B(A 두 번) — 통과 · A는 한 번만 · 아무것도 안 씀', dryAB.status === 0 && dryAB.stdout.split(`■ ${A.tenantId}`).length === 2 && sameSnapshot(snapshot(scriptRoot), scriptBefore), `${dryAB.status} ${dryAB.stdout}${dryAB.stderr}`);
+  const dryFlag = run(scriptRoot, A.tenantId, B.tenantId, '--baked-bank-only');
+  ok(
+    '스크립트 dry-run --baked-bank-only — 받는 옵션 · 오버레이 브랜드(A · B)는 그대로 오버레이를 바꿈 · 아무것도 안 씀',
+    dryFlag.status === 0 && dryFlag.stdout.includes('오버레이: questionBankVersion v6 → v7') && dryFlag.stdout.includes('오버레이: questionBankVersion v3 → v5') && !dryFlag.stdout.includes('저장소 설정 브랜드') && sameSnapshot(snapshot(scriptRoot), scriptBefore),
+    `${dryFlag.status} ${dryFlag.stdout}${dryFlag.stderr}`,
+  );
   const unknown = run(scriptRoot, 'nobody');
   ok('스크립트 — 없는 브랜드는 ✗', unknown.status === 1 && unknown.stdout.includes('브랜드를 찾을 수 없습니다'), `${unknown.status} ${unknown.stdout}${unknown.stderr}`);
   const badFlag = run(scriptRoot, A.tenantId, '--force');
