@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import { access, mkdir, readFile, rename } from 'node:fs/promises';
 import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { BUNDLED_COHORT_BANK_DIR, COHORT_BANK_DIR, packagedDataMode, PIPELINE_DATA_DIR, stateFilePath } from './appPaths.js';
 import { bankQuestionsDiffer, listBundledVersions, readBundledBank } from './bundledBanks.js';
 import { cohortKey } from './cohortQuestionBank.js';
@@ -18,17 +20,21 @@ import { sharesSite } from '../src/lib/brandVariant.js';
  *
  * 1. 한 번만 하는 정리 — 세 브랜드의 engines.json · market-scope.json을 data/<id>/before-unify-0.4.49/로 옮긴다(이름 바꾸기 — 지우지
  *    않는다). 두 파일은 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다(tenantRegistry.ts mergeRuntimeTenants). 표식 파일
- *    (userData/brand-unify-0.4.49.json)이 있으면 다시 하지 않는다 — 그 뒤 앱에서 다시 고친 값은 사람이 고친 것이다. fact-graph.json ·
- *    owned-domains.json · publish-settings.json · brand-page.json은 건드리지 않는다.
+ *    (userData/brand-unify-0.4.49.json)이 있으면 다시 하지 않는다 — 그 뒤 앱에서 다시 고친 값은 사람이 고친 것이다. 중간에 멈추면
+ *    다음 시작은 첫 시도의 대상만 다시 하고, 그 사이 앱에서 새로 만들거나 고친 파일은 옮기지 않는다(UNIFY_PENDING_FILE). 이 PC가 그
+ *    id를 다른 업체로 쓰고 있으면(idCollision) 그 id는 건너뛴다. fact-graph.json · owned-domains.json · publish-settings.json ·
+ *    brand-page.json은 건드리지 않는다.
  * 2. 읽기만 하는 점검 — 시작할 때마다 userData/unify-check.json(과 로그)에 남긴다. 같은 홈페이지를 쓰는 다른 id(군산각을 다른 id로
- *    등록한 PC — 운영자가 지운다), 세 브랜드를 숨긴 툼스톤, 저장소 설정과 다른 오버레이 항목, 동봉본과 다른 코호트 공통 질문지 · 질문지,
- *    남아 있는 PC별 파일.
+ *    등록한 PC — 운영자가 지운다), 세 브랜드를 숨긴 툼스톤, 저장소 설정과 다른 오버레이 항목(그 id를 다른 업체로 쓰고 있으면 알린다),
+ *    동봉본과 다른 코호트 공통 질문지 · 질문지, 남아 있는 PC별 파일, 마치지 못한 정리.
  * 패키징(설치본)에서만 한다 — dev 체크아웃의 data/는 개발자 것이고, 웹은 이 서버를 쓰지 않는다.
  */
 export const UNIFY_VERSION = '0.4.49';
 export const UNIFIED_TENANTS = ['web4ai', 'gunsan', 'gunsan-national'] as const;
 export const UNIFY_BACKUP_DIR = `before-unify-${UNIFY_VERSION}`;
 export const UNIFY_MARKER_FILE = `brand-unify-${UNIFY_VERSION}.json`;
+/** 정리하는 중의 기록 — 첫 시도의 대상을 고정한다(unifyCleanupOnce). 정리가 끝나면 표식이 이긴다. */
+export const UNIFY_PENDING_FILE = `brand-unify-${UNIFY_VERSION}.pending.json`;
 export const UNIFY_CHECK_FILE = 'unify-check.json';
 /** 정리에서 옮기는 파일 — 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다. */
 const MOVED_FILES = ['engines.json', 'market-scope.json'] as const;
@@ -47,48 +53,137 @@ const exists = (file: string) =>
 export interface UnifyCleanup {
   version: string;
   doneAt: string;
-  /** 옮긴 파일 — data/ 기준 상대 경로(원래 자리 → 백업 자리). */
+  /** 옮긴 파일 — data/ 기준 상대 경로(원래 자리 → 백업 자리). 정리가 여러 번 시작에 걸쳐 끝났으면 모든 회차의 것. */
   moved: { from: string; to: string }[];
+  /**
+   * 옮기지 않은 것. from이 없으면 그 브랜드 전체 — 이 PC가 그 id를 다른 업체로 쓰고 있다(idCollision). from이 있으면 그 파일 — 첫 시도
+   * 뒤 앱에서 고쳤거나(사람이 고친 값) 없어졌다.
+   */
+  skipped?: { tenantId: string; from?: string; reason: string }[];
 }
 
 /**
- * 한 번만 하는 정리. 이미 했으면 그때의 기록을 돌려준다. 옮기지 못한 파일이 있으면 표식을 남기지 않고 던진다 — 다음 시작 때 다시 한다.
- * 백업 자리에 이미 파일이 있으면 덮지 않고 그 파일은 옮기지 않는다(던진다).
+ * 정리하는 중의 기록(userData/brand-unify-0.4.49.pending.json). 첫 시도에서 옮길 대상 · 그때의 내용 지문을 정해 두고, 다음 시작은 그
+ * 대상만 다시 한다 — 첫 시도 뒤 앱에서 새로 만든 파일 · 고친 파일 · 이미 옮긴 뒤 다시 저장한 파일은 사람이 고친 것이라 옮기지 않는다.
+ */
+interface UnifyPending {
+  version: string;
+  startedAt: string;
+  targets: { tenantId: string; from: string; sha256: string }[];
+  moved: UnifyCleanup['moved'];
+  skipped: NonNullable<UnifyCleanup['skipped']>;
+}
+
+const sha256Of = async (file: string) => createHash('sha256').update(await readFile(file)).digest('hex');
+
+/** 윈도우에서는 백신 · 색인기 · 동기화가 파일을 잡고 있는 순간 rename이 실패한다 — writeJsonAtomic(tenantWriteQueue.ts)처럼 잠깐 쉬었다 다시 한다. */
+const RETRYABLE_RENAME = new Set(['EPERM', 'EACCES', 'EBUSY']);
+async function renameRetrying(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await rename(from, to);
+      return;
+    } catch (err) {
+      if (RETRYABLE_RENAME.has((err as NodeJS.ErrnoException).code ?? '') && attempt < 6) {
+        await sleep(20 * 2 ** attempt);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+/**
+ * 구운 id를 이 PC가 다른 업체로 쓰고 있는가 — 오버레이 항목이 경쟁사로만 재는 브랜드이거나 이름이 다르다. 경쟁사 id는 도메인 첫
+ * 마디라(cohortPlan.ts slugFromDomain) gunsan.go.kr(군산시 문화관광)도 gunsan이 된다. 병합은 저장소 설정이 이겨 그 항목은 조용히
+ * 가려지고, 그 id 폴더의 지난 기록이 구운 브랜드의 기록처럼 보인다. 겹치면 사람이 읽을 까닭, 아니면 null.
+ */
+export function idCollision(entry: Pick<TenantConfig, 'brandName' | 'cohortOnly'>, baked: Pick<TenantConfig, 'brandName' | 'cohortOnly'>): string | null {
+  const reasons: string[] = [];
+  if (Boolean(entry.cohortOnly) !== Boolean(baked.cohortOnly)) reasons.push(entry.cohortOnly ? '경쟁사로만 재는 브랜드' : '고객 브랜드');
+  if (entry.brandName.trim() !== baked.brandName.trim()) reasons.push(`이름 「${entry.brandName}」`);
+  return reasons.length > 0 ? reasons.join(' · ') : null;
+}
+
+/** 첫 시도 — 옮길 대상과 그때의 내용 지문을 정한다. 이 PC가 다른 업체로 쓰는 id는 대상에서 뺀다. */
+async function planCleanup(now: Date): Promise<UnifyPending> {
+  const overlay = await readOverlay();
+  const targets: UnifyPending['targets'] = [];
+  const skipped: UnifyPending['skipped'] = [];
+  for (const tenantId of UNIFIED_TENANTS) {
+    const entry = overlay.find((t) => t.tenantId === tenantId);
+    const baked = await findBakedTenant(tenantId);
+    const collision = entry && baked ? idCollision(entry, baked) : null;
+    if (collision) {
+      skipped.push({ tenantId, reason: `이 PC의 ${tenantId}는 다른 업체(${collision})라 옮기지 않음` });
+      continue;
+    }
+    for (const name of MOVED_FILES) {
+      const from = path.join(PIPELINE_DATA_DIR, tenantId, name);
+      if (await exists(from)) targets.push({ tenantId, from: path.relative(PIPELINE_DATA_DIR, from), sha256: await sha256Of(from) });
+    }
+  }
+  return { version: UNIFY_VERSION, startedAt: now.toISOString(), targets, moved: [], skipped };
+}
+
+/**
+ * 한 번만 하는 정리. 이미 했으면 그때의 기록을 돌려준다. 옮기지 못한 파일이 있으면 표식을 남기지 않고 던진다 — 다음 시작 때 첫 시도의
+ * 대상 가운데 남은 것만 다시 한다(정리하는 중의 기록 UNIFY_PENDING_FILE). 백업 자리에 이미 파일이 있으면 덮지 않고 그 파일은 옮기지
+ * 않는다(던진다). 첫 시도 때와 내용이 달라진 파일은 사람이 앱에서 고친 것이라 옮기지 않는다.
  */
 export async function unifyCleanupOnce(now: Date = new Date()): Promise<{ ran: boolean; cleanup: UnifyCleanup }> {
   const marker = stateFilePath(UNIFY_MARKER_FILE);
   if (await exists(marker)) return { ran: false, cleanup: JSON.parse(await readFile(marker, 'utf-8')) as UnifyCleanup };
-  const moved: UnifyCleanup['moved'] = [];
+  const pendingFile = stateFilePath(UNIFY_PENDING_FILE);
+  const pending = (await exists(pendingFile)) ? (JSON.parse(await readFile(pendingFile, 'utf-8')) as UnifyPending) : await planCleanup(now);
+  // 옮기기 전에 대상을 남긴다 — 중간에 꺼져도 다음 시작이 새 대상을 고르지 않는다.
+  await writeJsonAtomic(pendingFile, pending);
+  const handled = new Set([...pending.moved.map((m) => m.from), ...pending.skipped.flatMap((k) => (k.from ? [k.from] : []))]);
   const failed: string[] = [];
-  for (const tenantId of UNIFIED_TENANTS) {
-    for (const name of MOVED_FILES) {
-      const from = path.join(PIPELINE_DATA_DIR, tenantId, name);
-      if (!(await exists(from))) continue;
-      const to = path.join(PIPELINE_DATA_DIR, tenantId, UNIFY_BACKUP_DIR, name);
-      if (await exists(to)) {
-        failed.push(`${to}에 이미 파일이 있어 ${from}을 옮기지 않았습니다(덮지 않음)`);
-        continue;
-      }
-      try {
-        await mkdir(path.dirname(to), { recursive: true });
-        await rename(from, to);
-        moved.push({ from: path.relative(PIPELINE_DATA_DIR, from), to: path.relative(PIPELINE_DATA_DIR, to) });
-      } catch (err) {
-        failed.push(`${from}을 옮기지 못했습니다(${err instanceof Error ? err.message : String(err)})`);
-      }
+  for (const target of pending.targets) {
+    if (handled.has(target.from)) continue;
+    const from = path.join(PIPELINE_DATA_DIR, target.from);
+    const to = path.join(PIPELINE_DATA_DIR, target.tenantId, UNIFY_BACKUP_DIR, path.basename(target.from));
+    const toRel = path.relative(PIPELINE_DATA_DIR, to);
+    if (!(await exists(from))) {
+      // 옮긴 뒤 기록을 남기기 전에 꺼진 경우 — 백업 자리의 내용이 첫 시도 때와 같으면 옮긴 것이다.
+      if ((await exists(to)) && (await sha256Of(to)) === target.sha256) pending.moved.push({ from: target.from, to: toRel });
+      else pending.skipped.push({ tenantId: target.tenantId, from: target.from, reason: '정리를 시작한 뒤 없어짐' });
+      continue;
+    }
+    if ((await sha256Of(from)) !== target.sha256) {
+      pending.skipped.push({ tenantId: target.tenantId, from: target.from, reason: '정리를 시작한 뒤 앱에서 고침 — 사람이 고친 값이라 옮기지 않음' });
+      continue;
+    }
+    if (await exists(to)) {
+      failed.push(`${to}에 이미 파일이 있어 ${from}을 옮기지 않았습니다(덮지 않음)`);
+      continue;
+    }
+    try {
+      await mkdir(path.dirname(to), { recursive: true });
+      await renameRetrying(from, to);
+      pending.moved.push({ from: target.from, to: toRel });
+    } catch (err) {
+      failed.push(`${from}을 옮기지 못했습니다(${err instanceof Error ? err.message : String(err)})`);
     }
   }
+  await writeJsonAtomic(pendingFile, pending);
   if (failed.length > 0) {
-    const done = moved.map((m) => m.from).join(', ');
-    throw new Error(`브랜드 통일 정리를 마치지 못했습니다 — ${failed.join(' · ')}${done ? ` (옮긴 것: ${done})` : ''}. 다음 시작 때 다시 합니다.`);
+    const done = pending.moved.map((m) => m.from).join(', ');
+    throw new Error(`브랜드 통일 정리를 마치지 못했습니다 — ${failed.join(' · ')}${done ? ` (옮긴 것: ${done})` : ''}. 다음 시작 때 남은 것만 다시 합니다.`);
   }
-  const cleanup: UnifyCleanup = { version: UNIFY_VERSION, doneAt: now.toISOString(), moved };
+  const cleanup: UnifyCleanup = {
+    version: UNIFY_VERSION,
+    doneAt: now.toISOString(),
+    moved: pending.moved,
+    ...(pending.skipped.length > 0 ? { skipped: pending.skipped } : {}),
+  };
   await writeJsonAtomic(marker, cleanup);
   return { ran: true, cleanup };
 }
 
 export interface UnifyIssue {
-  kind: 'same-site' | 'tombstone' | 'bank-differs' | 'bank-unreadable' | 'cohort-differs' | 'not-baked';
+  kind: 'same-site' | 'tombstone' | 'bank-differs' | 'bank-unreadable' | 'cohort-differs' | 'not-baked' | 'id-collision' | 'cleanup-failed';
   tenantId: string;
   message: string;
 }
@@ -98,7 +193,7 @@ export interface UnifyTenantReport {
   baked: { questionBankVersion: string; industry: string; region: string; marketScope: string } | null;
   /** 툼스톤에 걸려 목록에서 숨었는가. */
   hidden: boolean;
-  /** 오버레이 항목이 저장소 설정과 다른 값(범위 · 업종 · 지역) — 저장소 설정이 이기므로 쓰이지 않는다. 오버레이에 없으면 null. */
+  /** 오버레이 항목이 저장소 설정과 다른 값(범위 · 업종 · 지역 · 이름 · 경쟁사 여부) — 저장소 설정이 이기므로 쓰이지 않는다. 오버레이에 없으면 null. */
   overlayDiffers: Record<string, { overlay: string; repo: string }> | null;
   /** 동봉한 판마다 이 PC 질문지 상태 — missing이면 측정 때 가져온다. */
   banks: { version: string; state: 'same' | 'differs' | 'missing' | 'unreadable'; detail?: string }[];
@@ -137,11 +232,12 @@ async function readJsonState<T>(file: string): Promise<T | null | 'unreadable'> 
   }
 }
 
-/** 읽기만 하는 점검 — 아무 파일도 쓰지 않는다(질문지를 가져오지도 않는다). */
-export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = new Date()): Promise<UnifyCheck> {
+/** 읽기만 하는 점검 — 아무 파일도 쓰지 않는다(질문지를 가져오지도 않는다). cleanupFailure는 이번 시작의 정리가 던진 까닭. */
+export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = new Date(), cleanupFailure?: string): Promise<UnifyCheck> {
   const [runtime, overlay, deleted] = await Promise.all([loadRuntimeTenants(), readOverlay(), readDeletedTenants()]);
   const deletedSet = new Set(deleted);
   const issues: UnifyIssue[] = [];
+  if (cleanupFailure) issues.push({ kind: 'cleanup-failed', tenantId: UNIFIED_TENANTS.join(','), message: cleanupFailure });
   const tenants: Record<string, UnifyTenantReport> = {};
   const cohortBanks: UnifyCheck['cohortBanks'] = [];
   const unified = new Set<string>(UNIFIED_TENANTS);
@@ -161,8 +257,21 @@ export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = 
         ['marketScope', scopeOf(entry), scopeOf(baked)],
         ['industry', entry.industry, baked.industry],
         ['region', entry.region, baked.region],
+        ['brandName', entry.brandName, baked.brandName],
+        ['cohortOnly', String(Boolean(entry.cohortOnly)), String(Boolean(baked.cohortOnly))],
       ];
       for (const [field, a, b] of pairs) if (a !== b) overlayDiffers[field] = { overlay: a, repo: b };
+      const collision = idCollision(entry, baked);
+      if (collision) {
+        issues.push({
+          kind: 'id-collision',
+          tenantId,
+          message:
+            `이 PC의 ${tenantId}는 다른 업체(${collision} · ${entry.industry} · ${entry.region})인데 저장소 설정의 ${baked.brandName}가 같은 id를 씁니다 — ` +
+            `저장소 설정이 이겨 그 업체는 목록에서 가려지고, data/${tenantId}/의 지난 기록이 ${baked.brandName}의 기록처럼 보입니다. ` +
+            '정리는 이 id를 건너뛰었습니다. 운영자에게 알려 주세요.',
+        });
+      }
     }
 
     const banks: UnifyTenantReport['banks'] = [];
@@ -244,17 +353,20 @@ export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = 
 export async function runBrandUnify(): Promise<void> {
   if (!packagedDataMode() || process.env.VERCEL) return;
   let cleanup: UnifyCleanup | null = null;
+  let cleanupFailure: string | undefined;
   try {
     const result = await unifyCleanupOnce();
     cleanup = result.cleanup;
     if (result.ran) {
       const moved = result.cleanup.moved.map((m) => m.from).join(', ');
-      console.log(`[unify] 브랜드 통일 정리(${UNIFY_VERSION}) — ${moved ? `옮김: ${moved} → ${UNIFY_BACKUP_DIR}/` : '옮길 파일 없음'}`);
+      const skipped = (result.cleanup.skipped ?? []).map((k) => `${k.from ?? k.tenantId}(${k.reason})`).join(', ');
+      console.log(`[unify] 브랜드 통일 정리(${UNIFY_VERSION}) — ${moved ? `옮김: ${moved} → ${UNIFY_BACKUP_DIR}/` : '옮길 파일 없음'}${skipped ? ` · 건너뜀: ${skipped}` : ''}`);
     }
   } catch (err) {
-    console.warn(`[unify] ${err instanceof Error ? err.message : String(err)}`);
+    // 점검(unify-check.json)의 cleanup-failed로 올리고 로그에도 남긴다(아래 issues 출력).
+    cleanupFailure = err instanceof Error ? err.message : String(err);
   }
-  const check = await checkBrandUnify(cleanup);
+  const check = await checkBrandUnify(cleanup, new Date(), cleanupFailure);
   await writeJsonAtomic(stateFilePath(UNIFY_CHECK_FILE), check);
   if (check.issues.length === 0) {
     console.log(`[unify] 점검 — 알릴 것 없음(${stateFilePath(UNIFY_CHECK_FILE)})`);

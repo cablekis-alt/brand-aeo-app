@@ -15,10 +15,14 @@
  *   npx tsx scripts/add-probe-questions.ts <tenantId> --app-data "<userData>" --write --from <후보 파일> [--expect-count 42]
  *
  *   --out <폴더>        후보 파일을 남길 곳(기본: 지금 폴더의 probe-candidates.local — .gitignore의 *.local이라 커밋에 섞이지 않는다)
- *   --expect-count <n>  쓰기 전에 지금 문항 수가 이 값인지 본다(web4ai v5는 42, gunsan v6는 36이었다)
+ *   --expect-count <n>  쓰기 전에 지금 문항 수가 이 값인지 본다(dry-run이 끝에 알려 주는 명령에 들어 있다)
  *
  * 판정 엔진은 측정과 같은 설정(JUDGE_ENGINE)을 쓴다. 키는 .env에서 읽는다 — 설치본 키를 쓰려면 DOTENV_CONFIG_PATH로 userData의
  * .env를 가리킨다. 키는 출력하지 않는다.
+ *
+ * 설치본에 담아 배포하는 판(src/data/question-banks — v0.4.49 브랜드 통일의 web4ai v6 · gunsan v7 · gunsan-national v3)에는
+ * dry-run도 하지 않고 멈춘다(server/bundledBanks.ts bundledAppendBlocker). 같은 판에 덧붙이면 그 PC 질문지가 동봉본과 달라져 그 판의
+ * 측정이 매번 멈춘다 — 같은 판은 모든 PC에서 같은 질문이다.
  *
  * --write가 지키는 것:
  *   - 앱이 실행 중이면 멈춘다(migrate-question-plan.ts와 같은 tasklist 확인) — 측정이 같은 질문지를 읽고 쓴다.
@@ -87,6 +91,7 @@ const { COHORT_BANK_DIR, PIPELINE_DATA_DIR, stateFilePath } = await import('../s
 const { loadRuntimeTenants } = await import('../server/tenantRegistry')
 const { cohortKey } = await import('../server/cohortQuestionBank')
 const probe = await import('../server/probeQuestions')
+const { bundledAppendBlocker } = await import('../server/bundledBanks')
 const { isProbe } = await import('../src/lib/questionScope')
 type QuestionSpec = import('../src/prompts/types').QuestionSpec
 type QuestionBank = import('../server/store').QuestionBank
@@ -100,6 +105,8 @@ const tenant = found
 if (tenant.cohortOnly) fail(`${tenantId}는 경쟁사로만 재는 브랜드입니다 — 실증 질문은 글을 쓰는 고객 브랜드에만 넣습니다.`)
 const version = tenant.questionBankVersion
 const bankPath = path.join(PIPELINE_DATA_DIR, tenantId, 'question-bank', `${version}.json`)
+const appendBlocked = await bundledAppendBlocker(tenantId, version)
+if (appendBlocked) fail(`✗ ${appendBlocked}`)
 const pathProblem = probe.bankPathProblem(bankPath, PIPELINE_DATA_DIR, tenantId)
 if (pathProblem) fail(`✗ ${pathProblem}`)
 if (!existsSync(bankPath)) fail(`질문지가 없습니다: ${bankPath} — 이 판으로 한 번 측정한 뒤 실행하세요.`)

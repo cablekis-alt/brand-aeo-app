@@ -181,6 +181,43 @@ ok(
   missing.weeks[0]?.bankVersion === null && missing.weeks[0].responses.unnamed === null && missing.posts[0]!.cells[0]?.topicMention === null && missing.posts[0]!.cells[0]?.tally?.unnamed === null,
 );
 
+// 6-2b) 판 이름만 바뀐 주 — v0.4.49 브랜드 통일은 질문 id · 문장을 그대로 두고 판만 올렸다(web4ai v5 → v6, gunsan v6 → v7). 그 주
+// 은행에서 겨냥한 질문이 모두 같은 문장으로 있으면 그 질문으로 센다. 하나라도 없으면(문장이 바뀜) 확인 불가 — 비슷한 질문으로 채우지 않는다.
+{
+  const sameTexts = (version: string, ids: [string, string], unnamedText = 'v5 이름 없는 질문') =>
+    ({
+      version,
+      generatedAt: '2026-11-03T00:00:00Z',
+      questions: [
+        { questionId: ids[0], text: unnamedText, category: 'category-agnostic', containsBrandName: false },
+        { questionId: ids[1], text: 'v5 이름 댄 질문', category: 'brand-direct', containsBrandName: true },
+      ],
+    }) as unknown as QuestionBank;
+  const bumpBanks: Record<string, QuestionBank> = {
+    v5: banks.v5!,
+    v6: sameTexts('v6', ['c1-001', 'c1-002']),
+    v7: sameTexts('v7', ['c2-001', 'c2-002']),
+    v8: sameTexts('v8', ['c1-001', 'c1-002'], 'v8 바뀐 이름 없는 질문'),
+  };
+  const targetAnswers = (unnamed: string, named: string) => [answer(unnamed, 0, [], { mentioned: true }), answer(unnamed, 1, []), answer(named, 0, [], { mentioned: true })];
+  const bumpStore = makeStore(
+    [card('2026-W44', { questionBankVersion: 'v5' }), card('2026-W45', { questionBankVersion: 'v6' }), card('2026-W46', { questionBankVersion: 'v7' }), card('2026-W47', { questionBankVersion: 'v8' })],
+    { '2026-W44': targetAnswers('c1-001', 'c1-002'), '2026-W45': targetAnswers('c1-001', 'c1-002'), '2026-W46': targetAnswers('c2-001', 'c2-002'), '2026-W47': targetAnswers('c1-001', 'c1-002') },
+    bumpBanks,
+  );
+  const bumped = await getPublishedHistory(
+    bumpStore,
+    tenant,
+    [post('t', '2026-09-28', { articleId: 'topic:c1-001+c1-002', targetActionId: 'topic:c1-001+c1-002', topic: { bankVersion: 'v5', questionIds: ['c1-001', 'c1-002'], questionTexts: ['v5 이름 없는 질문', 'v5 이름 댄 질문'] } })],
+    12,
+  );
+  const mention = (i: number) => JSON.stringify(bumped.posts[0]!.cells[i]?.topicMention);
+  const expected = JSON.stringify({ answered: 2, mentioned: 1 });
+  ok('topic: 판만 바뀐 주(v5 → v6, id · 문장 그대로)도 겨냥한 이름 없는 질문의 응답 · 언급을 낸다', mention(0) === expected && mention(1) === expected);
+  ok('topic: 판이 바뀌며 id가 달라져도(c1-001 → c2-001) 문장이 같으면 그 질문으로 센다', mention(2) === expected);
+  ok('topic: 판이 바뀌며 겨냥한 질문 문장이 바뀐 주는 확인 불가(null)', bumped.posts[0]!.cells[3]?.topicMention === null);
+}
+
 // 6-3) 판단은 올린 뒤 측정 전체로 — 요청한 주 수보다 오래전에 올렸으면 그 앞 측정까지 넓힌다
 const wide = await getPublishedHistory(store, tenant, [post('p', '2026-10-05')], 1);
 ok('요청 주 수(1)보다 오래전에 올렸으면 올린 주 바로 앞 측정부터 읽는다', wide.weeks.map((x) => x.weekOf).join(',') === '2026-W40,2026-W41,2026-W42,2026-W43');

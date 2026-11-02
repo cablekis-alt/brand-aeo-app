@@ -73,3 +73,17 @@ export function bankQuestionsDiffer(local: QuestionBank, bundled: QuestionBank):
   }
   return null;
 }
+
+/**
+ * 같은 판 이름으로 문항을 덧붙이는 운영 스크립트(scripts/add-learn-questions.ts · add-probe-questions.ts)가 쓰기 전에 부른다. 그 판을
+ * 동봉하면 막을 이유를, 아니면 null을 돌려준다. 동봉한 판에 덧붙이면 그 PC 질문지가 동봉본과 달라져 그 판의 측정이 매번 멈추고
+ * (pipeline.ts assertBundledBank), 그 PC 파일을 동봉본에 맞춰 다시 담으면 이미 가져간 다른 PC가 멈춘다 — 같은 판은 모든 PC에서 같은 질문이다.
+ */
+export async function bundledAppendBlocker(tenantId: string, version: string): Promise<string | null> {
+  if (!(await readBundledBank(tenantId, version))) return null;
+  return (
+    `${tenantId} 질문 은행 ${version}은 설치본에 담아 배포하는 질문지입니다 — 같은 판에 문항을 덧붙이면 이 PC 질문지가 설치본의 것과 ` +
+    '달라져 그 판의 측정이 멈춥니다. 문항을 늘리려면 새 판으로 만들어 저장소 설정(server/tenants.config.json)의 판과 동봉본' +
+    '(src/data/question-banks)을 함께 올리는 릴리스로 내세요. 아무것도 쓰지 않았습니다.'
+  );
+}

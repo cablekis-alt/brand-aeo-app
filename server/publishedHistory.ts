@@ -1,5 +1,6 @@
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { conditionLabels } from '../src/lib/comparability.js';
+import { questionTextKey } from '../src/lib/extraArticles.js';
 import {
   daysAfterPublish,
   indexWeekCitations,
@@ -452,8 +453,11 @@ export function foldCell(views: HistoryCell[], samples: Pick<WeekSample, 'partia
 }
 
 /**
- * topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 응답 · 언급. 기록한 판과 그 주 판이 다르거나 판을 모르면 null. 겨냥한 질문에 이름
- * 없는 질문이 없으면 undefined(해당 없음), 그 주에 그 질문의 답변이 없으면(모두 되묻기 · 수집 실패) null — 0/0으로 보이지 않는다.
+ * topic: 글이 겨냥한 질문 가운데 이름 없는 질문의 응답 · 언급. 판을 모르면 null. 기록한 판과 그 주 판이 다르면 겨냥한 질문을 모두
+ * 같은 문장으로 그 주 은행에서 다시 찾을 때만 센다(추가 글 resolveExtraArticle과 같은 문장 비교) — 판 이름만 올린 질문지(v0.4.49
+ * 브랜드 통일의 web4ai v6 · gunsan v7은 id · 문장 그대로)도 이어서 보인다. 하나라도 못 찾으면 null(비슷한 질문으로 채우지 않는다).
+ * 겨냥한 질문에 이름 없는 질문이 없으면 undefined(해당 없음), 그 주에 그 질문의 답변이 없으면(모두 되묻기 · 수집 실패) null — 0/0으로
+ * 보이지 않는다.
  */
 function topicMentionOf(
   post: PublishedPost,
@@ -461,8 +465,10 @@ function topicMentionOf(
   analyses: { questionId: string; engine: string; callIndex: number; mentioned: boolean; clarifying?: boolean }[],
 ): { answered: number; mentioned: number } | null | undefined {
   const snap = post.topic;
-  if (!snap?.bankVersion || !bank || bank.version !== snap.bankVersion) return null;
-  const unnamed = new Set(bank.questions.filter((q) => snap.questionIds.includes(q.questionId) && !q.containsBrandName).map((q) => q.questionId));
+  if (!snap?.bankVersion || !bank) return null;
+  const targetIds = bank.version === snap.bankVersion ? snap.questionIds : idsByText(snap.questionTexts, bank);
+  if (!targetIds) return null;
+  const unnamed = new Set(bank.questions.filter((q) => targetIds.includes(q.questionId) && !q.containsBrandName).map((q) => q.questionId));
   if (unnamed.size === 0) return undefined;
   const seen = new Set<string>();
   let answered = 0;
@@ -476,4 +482,21 @@ function topicMentionOf(
     if (a.mentioned) mentioned += 1;
   }
   return answered > 0 ? { answered, mentioned } : null;
+}
+
+/** 문장마다 그 은행에서 공백을 정리한 문장이 같은 질문의 id. 문장이 없거나 하나라도 못 찾으면 null. */
+function idsByText(texts: string[], bank: QuestionBank): string[] | null {
+  if (texts.length === 0) return null;
+  const byText = new Map<string, string>();
+  for (const q of bank.questions) {
+    const key = questionTextKey(q.text);
+    if (!byText.has(key)) byText.set(key, q.questionId);
+  }
+  const ids: string[] = [];
+  for (const text of texts) {
+    const id = byText.get(questionTextKey(text));
+    if (id === undefined) return null;
+    ids.push(id);
+  }
+  return ids;
 }
