@@ -6,6 +6,7 @@ import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate,
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
+import { withoutProbes } from './questionScope'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionBank, QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -181,6 +182,12 @@ export interface GapActionPlan {
    * 따로 밝힌다. 은행을 읽지 못한 주는 유형을 몰라 비어 있다(그때는 밀린 질문 전부가 글에 들어간다).
    */
   otherLost: OtherLostQuestion[]
+  /**
+   * 이번 주 응답이 있는 실증 질문(src/lib/questionScope.ts) 전부와 그 판정 — 이긴 질문도 싣는다. 실증은 점수에 들지 않아 본 글 · otherLost ·
+   * 채널의 질문에 넣지 않는다. 처치군으로 쓸지는 사람이 정한다 — 「글 더 만들기」가 이 목록에서 골라 추가 글을 만든다(extraContentActions는
+   * 실증도 그대로 맡는다). 은행을 읽지 못한 주는 실증인지 몰라 비어 있다.
+   */
+  probes: WinLossRow[]
   /**
    * 이번 주 결과(그 주 파일)를 잰 측정의 범위. 화면이 성과 표 이력으로 같은 날 올린 글을 다시 잴 때, 이력의 그 주가 같은 측정인지 맞춰
    * 본다(publishTracking.ts weekFileTimingOf) — 화면이 낡아 다른 측정의 시각으로 뒤집지 않게.
@@ -1026,12 +1033,17 @@ export function computeGapActions(
   const rows = computeQuestionWinLoss(analyses, questions)
   // 은행에서 이 주 질문의 유형을 하나라도 찾았나 — 못 찾으면 카테고리 무관 질문을 가릴 수 없어 밀린 질문 전부를 글에 넣는다.
   const bankKnown = rows.some((r) => r.category !== '')
-  const inArticle = (r: WinLossRow) => !bankKnown || r.category === ARTICLE_CATEGORY
+  // 실증 질문은 본 글에 넣지 않는다 — 점수를 움직이지 않고, 처치군으로 쓸지는 사람이 「글 더 만들기」에서 고른다(plan.probes).
+  // 은행을 읽지 못한 주는 실증인지도 몰라 예전처럼 밀린 질문 전부를 넣는다.
+  const inArticle = (r: WinLossRow) => !bankKnown || (r.category === ARTICLE_CATEGORY && !r.probe)
+  // 채널이 꺼낸 질문(밀린 질문이 없을 때 대신 싣는 질문까지) · 「충족」 · 지분은 실증 응답의 인용을 세지 않는다 — 실험 응답이 할 일
+  // 목록을 부풀리거나 「충족」을 켜지 않게(서버 인용 출처 기본 보기도 실증을 뺀다). 이미 등록된 곳의 근거는 사실 확인이라 모든 응답으로 본다.
+  const scored = withoutProbes(analyses, questions)
   const { actions: listing, competitorDomainCount, excludedLowConfidence } = listingActions(
     citations,
-    questionsByDomain(analyses),
+    questionsByDomain(scored),
     rows,
-    unnamedCitationsByHost(analyses, questions),
+    unnamedCitationsByHost(scored, questions),
     listedEvidenceByHost(analyses),
     inArticle,
     bankKnown,
@@ -1041,8 +1053,9 @@ export function computeGapActions(
     : { actions: [], claimed: new Set<string>() }
   const content = [...contentActions(rows, inArticle, bankKnown, extras.claimed), ...extras.actions]
   const namedById = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
+  // 실증은 「글에 넣지 않은 밀린 질문」(다른 유형)이 아니다 — 따로 싣는다(probes).
   const otherLost: OtherLostQuestion[] = rows
-    .filter((r) => r.verdict === 'loss' && !inArticle(r))
+    .filter((r) => r.verdict === 'loss' && !inArticle(r) && !r.probe)
     .sort((a, b) => a.mentionedRate - b.mentionedRate)
     .map((r) => ({
       questionId: r.questionId,
@@ -1084,6 +1097,7 @@ export function computeGapActions(
     competitorDomainCount,
     excludedLowConfidence,
     otherLost,
+    probes: rows.filter((r) => r.probe),
     weekWindow: measuredWindow(analyses),
   }
 }

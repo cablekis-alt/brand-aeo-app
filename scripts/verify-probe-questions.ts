@@ -7,7 +7,8 @@
  * 응답을 써서, 이름 없는 질문 거르개만 고쳐서는 실증 인용이 자사 인용률(점수의 20%)에 섞인다. 점수 밖에서 문항을 직접 세는 곳
  * (회차 보기 N · 브랜드 현황 질문지 비교 · 일반 질문 하한 · 인용 분해 · 인용 출처 · EEAT · 경쟁사 편집의 질문 수와 크기)도 같은
  * 규칙을 따라야 화면 숫자가 카드와 맞는다. 화면이 판정 기록으로 다시 세는 곳(점수 풀이 · 비교 그룹 「같은 질문」 · 응답 요약 · 감성 ·
- * 개요 · 개선제안 근거 · 격차 분석)도 같다. 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
+ * 개요 · 개선제안 근거 · 격차 분석)도 같다. 콘텐츠 생성의 본 글 · 채널에는 실증이 들지 않고 plan.probes로만 나오며, 추가 글은 실증을
+ * 맡을 수 있다(처치군). 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
  *
  *   npx tsx scripts/verify-probe-questions.ts
  */
@@ -22,7 +23,9 @@ import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from
 import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
 import { buildAnswerEvidence } from '../src/lib/answerEvidence';
 import { aeoScoreOf } from '../src/lib/b9-report';
+import { computeGapActions } from '../src/lib/gapActions';
 import { computeGapAnalysis } from '../src/lib/gapAnalysis';
+import { checkNewExtraArticle, topicArticleId } from '../src/lib/extraArticles';
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence';
 import { explainScore, ownedDomainCitations } from '../src/lib/reportExplain';
 import { cohortRows, selfReview } from '../src/lib/reviewReport';
@@ -33,6 +36,7 @@ import type {
   QuestionSpec as ClientQuestionSpec,
 } from '../src/lib/types';
 import { aggregateWeeklyMetrics } from '../server/aggregate';
+import { analyzeCitationSources } from '../server/citationSources';
 import { linkCompetitorQuestions } from '../server/competitorQuestions';
 import { getEngineTrend } from '../server/engineTrend';
 import { agnosticAnalyses } from '../server/mentionScope';
@@ -334,6 +338,74 @@ const probeEvidence = buildAnswerEvidence({
   builtAt: '2026-10-28T03:00:00Z',
 });
 check('실측 사례: 실증만 고른 글도 그 질문의 답을 셈', probeEvidence.answered.asked === 2 && probeEvidence.answered.mentioned === 2, JSON.stringify(probeEvidence.answered));
+
+// ── 5-4. 콘텐츠 생성 — 본 글 · 채널 · 추가 글 ──────────────────────────────────
+// 실증은 본 글 · otherLost · 채널의 질문에 들지 않고 plan.probes로만 나온다. 실증 응답의 인용은 채널의 「충족」 · 대신 싣는 질문을
+// 바꾸지 않는다. 추가 글은 실증을 맡을 수 있다(처치군). 인용 출처는 서버 기본 보기처럼 실증 응답을 뺀 응답으로 낸다.
+// v5-001 패(namu.wiki · tistory 인용) · v5-002 승(네이버 블로그 인용) · v5-003 이름 넣은 질문 패 · v5-p001 패(네이버 블로그 인용) ·
+// v5-p002 승(namu.wiki를 우리 근거로 인용).
+const cd = (raw: string, supportsBrandMention = false): CitationDetail => ({ raw, domain: null, ownerType: 'third-party-ugc', supportsBrandMention });
+const gapBase: QuestionRepeatAnalysis[] = [
+  analysis('v5-001', 'gemini', 1, { mentioned: false, competitor: 1, citations: [cd('https://namu.wiki/w/가상시'), cd('https://fake-probe.tistory.com/1')] }),
+  analysis('v5-001', 'gemini', 2, { mentioned: false, competitor: 1 }),
+  analysis('v5-002', 'gemini', 1, { mentioned: true, citations: [cd('https://blog.naver.com/fake-probe/2')] }),
+  analysis('v5-002', 'gemini', 2, { mentioned: true }),
+  analysis('v5-003', 'gemini', 1, { mentioned: false, competitor: 2 }),
+];
+const gapProbes: QuestionRepeatAnalysis[] = [
+  analysis('v5-p001', 'gemini', 1, { mentioned: false, competitor: 2, citations: [cd('https://blog.naver.com/fake-probe/p1')] }),
+  analysis('v5-p002', 'gemini', 1, { mentioned: true, citations: [cd('https://namu.wiki/w/가상시', true)] }),
+];
+const gapAll = [...gapBase, ...gapProbes];
+const gapPlan = (bank: QuestionSpec[], list: QuestionRepeatAnalysis[], opts: Parameters<typeof computeGapActions>[6] = {}) =>
+  computeGapActions(asClient(list), clientQs(bank), analyzeCitationSources(withoutProbes(list, bank)), {}, [], '2026-W44', opts);
+const gapBefore = gapPlan(bankBefore, gapBase);
+const gapAfter2 = gapPlan(bankAfter, gapAll);
+const MAIN_ID = 'content:category-agnostic';
+const mainOf = (p: ReturnType<typeof gapPlan>) => p.actions.find((a) => a.id === MAIN_ID);
+check('본 글: 실증 질문이 없음(진 일반 질문만)', mainOf(gapAfter2)?.questionIds.join() === 'v5-001', JSON.stringify(mainOf(gapAfter2)?.questionIds));
+check('본 글 · 채널 항목: 덧붙이기 전과 같음', sameJson(gapAfter2.actions, gapBefore.actions), JSON.stringify(gapAfter2.actions.map((a) => [a.id, a.questionIds, a.satisfied])));
+check('otherLost: 덧붙이기 전과 같음(이름 넣은 질문만)', sameJson(gapAfter2.otherLost, gapBefore.otherLost) && gapAfter2.otherLost.map((q) => q.questionId).join() === 'v5-003', JSON.stringify(gapAfter2.otherLost));
+check(
+  'plan.probes: 이긴 실증까지 판정과 함께 · 실증 없는 은행은 빈 목록',
+  gapAfter2.probes.map((r) => `${r.questionId}:${r.verdict}`).join() === 'v5-p001:loss,v5-p002:win' && gapAfter2.probes.every((r) => r.probe) && gapBefore.probes.length === 0,
+  gapAfter2.probes.map((r) => `${r.questionId}:${r.verdict}`).join(),
+);
+check(
+  '채널 항목: 질문에 실증이 없음(대신 싣는 질문 포함)',
+  gapAfter2.actions.filter((a) => a.kind === 'listing').every((a) => a.questionIds.every((id) => !probeIds.has(id))),
+  JSON.stringify(gapAfter2.actions.filter((a) => a.kind === 'listing').map((a) => [a.id, a.questionIds])),
+);
+const wikiOf = (p: ReturnType<typeof gapPlan>) => p.actions.find((a) => a.id === 'listing:namu.wiki');
+check('채널 「충족」: 실증 응답의 뒷받침 인용이 켜지 않음', wikiOf(gapAfter2)?.satisfied === false, JSON.stringify(wikiOf(gapAfter2)?.support));
+// 대조 — probe 표시가 없으면 실증이 본 글 · 채널에 들고 「충족」이 켜진다(검사가 헛돌지 않게).
+const gapNaive = gapPlan(unflagged, gapAll);
+check(
+  '대조: probe 표시가 없으면 본 글에 실증이 들고 namu.wiki가 「충족」',
+  (mainOf(gapNaive)?.questionIds.includes('v5-p001') ?? false) && wikiOf(gapNaive)?.satisfied === true && gapNaive.probes.length === 0,
+  JSON.stringify({ main: mainOf(gapNaive)?.questionIds, wiki: wikiOf(gapNaive)?.satisfied }),
+);
+check('은행을 못 읽은 주: plan.probes 비어 있음', gapPlan([], gapAll).probes.length === 0);
+
+// 추가 글 — 실증만 고른 글(처치군)을 만들 수 있고, 이번 주 id로 찾아 밀린 실증을 reach로 센다. 본 글은 그대로다.
+const probeArticleIds = ['v5-p002', 'v5-p001'];
+const created = checkNewExtraArticle(
+  { id: topicArticleId(probeArticleIds), name: '가상 처치 글', bankVersion: VERSION, questionIds: probeArticleIds, questionTexts: ['v5-p002 질문', 'v5-p001 질문'] },
+  [],
+  '2026-10-30T09:00:00.000Z',
+);
+check('추가 글: 실증 질문 id로 만들 수 있음', created.ok && created.article.id === 'topic:v5-p001+v5-p002', created.ok ? created.article.id : created.error);
+if (created.ok) {
+  const withProbeArticle = gapPlan(bankAfter, gapAll, { extraArticles: [created.article], bankVersion: VERSION });
+  const probeArticle = withProbeArticle.actions.find((a) => a.id === created.article.id);
+  check(
+    '추가 글: 실증을 이번 주 id로 찾고(같은 판) 밀린 실증을 reach로 셈',
+    probeArticle?.extra?.how === 'same-bank' && probeArticle.questionIds.join() === 'v5-p001,v5-p002' && probeArticle.reach === 1 && probeArticle.extra.won === 1,
+    JSON.stringify({ how: probeArticle?.extra?.how, ids: probeArticle?.questionIds, reach: probeArticle?.reach }),
+  );
+  check('추가 글: 실증을 맡아도 본 글 · otherLost는 그대로', sameJson(mainOf(withProbeArticle), mainOf(gapAfter2)) && sameJson(withProbeArticle.otherLost, gapAfter2.otherLost));
+  check('추가 글: 맡아도 plan.probes에 남음(처치 · 대조를 화면이 가름)', withProbeArticle.probes.length === 2);
+}
 
 // 여기부터는 앱 데이터 폴더의 파일도 읽는다 — 위 import는 경로를 정하지 않으므로 이제 임시 폴더로 정하고 모듈을 불러온다.
 const dir = mkdtempSync(path.join(tmpdir(), 'verify-probe-questions-'));
