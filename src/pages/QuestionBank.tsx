@@ -21,6 +21,7 @@ import { effectiveDraft } from '../lib/draftGaps'
 import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActions'
 import { draftTitle } from '../lib/markdownFile'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
+import { useProbePlan } from '../lib/useProbePlan'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
 import { isProbe, isScoredAgnostic } from '../lib/questionScope'
 import type { QuestionBank, QuestionSpec } from '../lib/types'
@@ -97,6 +98,14 @@ export default function QuestionBankPage() {
   const [statesState, setStatesState] = useState<{ key: string; value: ActionStateMap | null } | null>(null)
   const states = statesState && statesState.key === tenant?.tenantId ? statesState.value : null
   const [statusError, setStatusError] = useState<string | null>(null)
+  // 실증 기간에는 여기서 글을 만들지 않는다 — 고른 질문으로 묶은 글은 배정표 밖 글이다(src/lib/probePlan.ts, 서버도 막는다).
+  // 배정 파일이 없으면 지금과 같다.
+  const probe = useProbePlan(tenant?.tenantId ?? '')
+  const writeBlocked = probe.active
+    ? `실증 기간(~${probe.active.activeUntil.slice(5)})에는 콘텐츠 생성의 배정표 글만 만들 수 있어요.`
+    : probe.corrupt
+      ? '배정 파일(probe-plan.json)이 깨져 있어 실증 기간의 글을 만들지 않아요. 관리자에게 확인을 요청해 주세요.'
+      : null
   useEffect(() => {
     const id = tenant?.tenantId
     if (!id) return
@@ -305,7 +314,8 @@ export default function QuestionBankPage() {
                           <input
                             type="checkbox"
                             aria-label={`${q.text} 고르기`}
-                            checked={picked.has(q.questionId)}
+                            disabled={writeBlocked !== null}
+                            checked={writeBlocked === null && picked.has(q.questionId)}
                             onChange={(e) =>
                               setPicked((prev) => {
                                 const next = new Set(prev)
@@ -356,7 +366,17 @@ export default function QuestionBankPage() {
               빈칸이 줄어듭니다 — <Link to="/brand-facts">브랜드 사실</Link>에서 브랜드 페이지로 한 번에 채울 수
               있습니다.
             </p>
-            {picked.size === 0 ? (
+            {writeBlocked ? (
+              <p className="hint warn">
+                {writeBlocked}
+                {probe.active && (
+                  <>
+                    {' '}
+                    <Link to="/gap-actions">콘텐츠 생성</Link>에서 만들어 주세요.
+                  </>
+                )}
+              </p>
+            ) : picked.size === 0 ? (
               <p className="muted">위 표에서 함께 다룰 질문을 고르세요. 한 편의 글로 덮을 수 있는 것끼리 묶으면 됩니다.</p>
             ) : (
               <>
