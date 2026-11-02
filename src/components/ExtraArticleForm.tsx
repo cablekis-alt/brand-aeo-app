@@ -2,10 +2,9 @@ import { useId, useState } from 'react'
 import type { NewExtraArticleInput } from '../lib/api'
 import { EXTRA_LIMITS, NAME_AND_ANGLE_LIMIT, questionTextKey } from '../lib/extraArticles'
 import { probeQuestionList, type GapAction } from '../lib/gapActions'
-import { roleChip, roleOf, topicGuard, type PlannedArticle, type ProbePlan } from '../lib/probePlan'
+import { topicGuard, type WriterPlan, type WriterPlanArticle } from '../lib/probePlan'
 import { todayKst } from '../lib/publishedUrl'
 import { VERDICT_WORD, type WinLossRow } from '../lib/questionWinLoss'
-import { probeRoleTone } from '../lib/useProbePlan'
 
 /**
  * 「글 더 만들기」 — 본 글의 이번 주 질문 몇 개를 골라 추가 글 한 편을 만든다(src/lib/extraArticles.ts).
@@ -21,8 +20,9 @@ import { probeRoleTone } from '../lib/useProbePlan'
  * 질문 은행 판을 모르는 주(예시 은행 포함)에는 만들 수 없다 — 질문 id의 뜻이 판마다 달라, 판 없이 저장하면 다음 주에 엉뚱한 질문을
  * 가리킨다. 이 환경에 기능이 없으면(웹) 부모가 이 칸을 그리지 않는다.
  *
- * 실증 기간(probePlan — src/lib/probePlan.ts)에는 질문을 고르지 않는다 — 「배정표 글」 가운데 하나를 골라 그 정의(이름 · 질문 · 문장)를
- * 그대로 보낸다. 질문 목록에는 역할 칩만 보인다. 배정표 밖 글은 서버도 막는다(server/extraArticles.ts). probePlan이 없으면 지금과 같다.
+ * 작성자 배정 기간(probePlan — src/lib/probePlan.ts)에는 질문을 고르지 않는다 — 「배정표 글」 가운데 하나를 골라 그 정의(이름 · 각도 ·
+ * 질문 · 문장)를 그대로 보낸다. 질문 목록은 읽기만 한다. 배정표 밖 글은 서버도 막는다(server/extraArticles.ts). probePlan이 없으면 지금과
+ * 같다.
  */
 
 /** 서버와 같은 정리 — 공백을 하나로 줄이고 앞뒤를 뗀다(src/lib/extraArticles.ts). 글자 수도 이 값으로 센다. */
@@ -46,6 +46,7 @@ export default function ExtraArticleForm({
   loadError,
   onCreate,
   probePlan = null,
+  writerKey = null,
   locked = false,
 }: {
   /** 본 글 항목 — questionIds와 questionTexts가 짝이다. 본 글이 없는 주(실증만 고를 수 있다)는 null. */
@@ -62,9 +63,11 @@ export default function ExtraArticleForm({
   loadError: string | null
   /** 성공하면 null, 실패하면 서버가 준 이유. */
   onCreate: (input: Omit<NewExtraArticleInput, 'bankVersion' | 'createdWeek'>) => Promise<string | null>
-  /** 잠금 기간 안의 실증 배정(useProbePlan active) — 있으면 「배정표 글」에서만 고른다. null이면 지금과 같다. */
-  probePlan?: ProbePlan | null
-  /** 실증 일괄 실행 중 — 만들기를 막는다(그 실행이 추가 글 · 브리프 · 초안을 차례로 쓰고 있다). */
+  /** 운영 기간 안의 작성자 배정(useProbePlan active) — 있으면 「배정표 글」에서만 고른다. null이면 지금과 같다. */
+  probePlan?: WriterPlan | null
+  /** 화면의 작성자 거르기 — 고르면 배정표 글을 그 작성자 것만 보인다. */
+  writerKey?: string | null
+  /** 일괄 실행 중 — 만들기를 막는다(그 실행이 추가 글 · 브리프 · 초안을 차례로 쓰고 있다). */
   locked?: boolean
 }) {
   const radioName = useId()
@@ -106,7 +109,7 @@ export default function ExtraArticleForm({
     : []
   const items = [...mainItems, ...takenItems]
   const selectable = mainItems.filter((q) => !q.takenBy)
-  // 실증 기간에는 질문을 고르지 않는다 — 배정이 늦게 와 그 전에 고른 체크가 남아도 세지 않는다(경고 · 단추 글자가 고를 수 없는 체크를 말하지 않게).
+  // 작성자 배정 기간에는 질문을 고르지 않는다 — 배정이 늦게 와 그 전에 고른 체크가 남아도 세지 않는다(경고 · 단추 글자가 고를 수 없는 체크를 말하지 않게).
   const chosenMain = probePlan ? [] : selectable.filter((q) => q.id !== null && selected.has(q.id))
   const chosenProbes = probePlan ? [] : probeItems.filter((q) => !q.takenBy && q.id !== null && selected.has(q.id))
   const chosen = [...chosenMain, ...chosenProbes]
@@ -130,12 +133,10 @@ export default function ExtraArticleForm({
         ? '이 주를 잰 질문 은행 판을 알 수 없어(예시 질문 은행이거나 옛 측정) 만들 수 없어요. 측정한 주를 골라 주세요.'
         : probePlan
           ? // 판이 배정 판과 다르면 서버와 같은 말로 막는다 — 같은 id라도 다른 질문이다.
-            topicGuard(probePlan, false, bankVersion, probePlan.rounds[0].articles[0].id, todayKst())
+            topicGuard(probePlan, false, bankVersion, probePlan.articles[0].id, todayKst())
           : null
-  // 실증 기간의 「배정표 글」 — 이미 살아 있는 글은 「만듦」(이번 주 추가 글 항목은 살아 있는 정의마다 하나다).
-  const planned: PlannedArticle[] = probePlan
-    ? probePlan.rounds.flatMap((r) => r.articles.map((a) => ({ ...a, round: r.round, postDate: r.postDate })))
-    : []
+  // 작성자 배정 기간의 「배정표 글」 — 이미 살아 있는 글은 「만듦」(이번 주 추가 글 항목은 살아 있는 정의마다 하나다).
+  const planned: WriterPlanArticle[] = probePlan ? probePlan.articles.filter((a) => !writerKey || a.writer.key === writerKey) : []
   const madeIds = new Set(extraActions.map((x) => x.id))
   const chosenPlan = planned.find((a) => a.id === planPick && !madeIds.has(a.id)) ?? null
   const canSubmit = probePlan
@@ -156,9 +157,9 @@ export default function ExtraArticleForm({
     if (!canSubmit) return
     setBusy(true)
     setMessage(null)
-    // 실증 기간에는 배정 글의 정의를 그대로 보낸다 — 이름 · 질문 · 문장을 고치지 않는다(서버가 배정표와 맞춰 본다).
+    // 작성자 배정 기간에는 배정 글의 정의를 그대로 보낸다 — 이름 · 각도 · 질문 · 문장을 고치지 않는다(서버가 배정표와 맞춰 본다).
     const input = chosenPlan
-      ? { name: chosenPlan.name, questionIds: [...chosenPlan.questionIds], questionTexts: [...chosenPlan.questionTexts] }
+      ? { name: chosenPlan.name, angle: chosenPlan.angle, questionIds: [...chosenPlan.questionIds], questionTexts: [...chosenPlan.questionTexts] }
       : {
           name: nameText,
           ...(angleText ? { angle: angleText } : {}),
@@ -184,17 +185,6 @@ export default function ExtraArticleForm({
     }
   }
 
-  /** 실증 기간에 질문 옆에 붙는 역할 칩 — 이 주의 판이 배정 판일 때만(roleOf). */
-  const roleBadge = (id: string | null) => {
-    const role = probePlan && id !== null ? roleOf(probePlan, bankVersion, id) : null
-    return role ? (
-      <>
-        {' '}
-        <span className={`status-pill ${probeRoleTone(role)}`}>{roleChip(role)}</span>
-      </>
-    ) : null
-  }
-
   const itemText = (q: QuestionItem, probe: boolean) => (
     <span>
       {q.text}
@@ -203,14 +193,13 @@ export default function ExtraArticleForm({
         <span className="muted"> · 이번 주 {verdictById.get(q.id) ? VERDICT_WORD[verdictById.get(q.id)!] : '응답 없음(확인 불가)'}</span>
       )}
       {q.takenBy && <span className="muted"> · 「{q.takenBy}」 글이 맡음</span>}
-      {roleBadge(q.id)}
     </span>
   )
 
   const itemRow = (q: QuestionItem, probe = false) => (
     <li key={q.key} className={q.takenBy ? 'muted' : undefined}>
       {probePlan ? (
-        // 실증 기간에는 질문을 고르지 않는다 — 역할만 보인다.
+        // 작성자 배정 기간에는 질문을 고르지 않는다 — 읽기만 한다.
         itemText(q, probe)
       ) : (
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -233,7 +222,7 @@ export default function ExtraArticleForm({
         글 더 만들기{' '}
         <span className="muted">
           {probePlan
-            ? `실증 기간(~${probePlan.activeUntil.slice(5)})에는 배정표 글만 만듭니다`
+            ? `작성자 배정 기간(~${probePlan.activeUntil})에는 배정표 글만 만듭니다`
             : !main
               ? '실증 질문을 골라 한 편 더 씁니다'
               : probeItems.length > 0
@@ -252,8 +241,8 @@ export default function ExtraArticleForm({
           {probePlan && (
             <div style={{ display: 'grid', gap: 4 }}>
               <p className="hint" style={{ margin: 0 }}>
-                <b>배정표 글</b> — 실증 기간(~{probePlan.activeUntil.slice(5)})에는 이 글만 만들 수 있어요. 이름과 질문은 배정표 그대로
-                씁니다. 이미 만든 글은 「만듦」입니다.
+                <b>배정표 글</b> — 작성자 배정 기간(~{probePlan.activeUntil})에는 이 글만 만들 수 있어요. 이름 · 각도 · 질문은 배정표
+                그대로 씁니다. 이미 만든 글은 「만듦」입니다{writerKey ? ' · 위에서 고른 작성자의 글만 보입니다' : ''}.
               </p>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }} aria-label="배정표 글">
                 {planned.map((a) => {
@@ -273,9 +262,10 @@ export default function ExtraArticleForm({
                           }}
                         />
                         <span>
-                          <b>{a.round}차</b> · {a.name}{' '}
+                          <b>{a.writer.name}</b> · {a.name}{' '}
                           <span className="muted">
-                            · {a.channel} · {a.postDate.slice(5)} 게시{made && ' · 만듦'}
+                            {a.blog && `· ${a.blog} `}· {a.angle}
+                            {made && ' · 만듦'}
                           </span>
                           <ul className="muted" style={{ margin: '2px 0 0', paddingLeft: 18 }}>
                             {a.questionTexts.map((t) => (
@@ -299,8 +289,8 @@ export default function ExtraArticleForm({
             <div style={{ display: 'grid', gap: 4 }}>
               {probePlan ? (
                 <p className="hint" style={{ margin: 0 }}>
-                  <b>실증 질문</b> <span className="status-pill st-info">실증 · 점수 제외</span> — 실증 기간에는 질문을 고르지 않아요. 처치 ·
-                  대조 · 홀드아웃은 배정표가 정했습니다.
+                  <b>실증 질문</b> <span className="status-pill st-info">실증 · 점수 제외</span> — 작성자 배정 기간에는 질문을 고르지
+                  않아요. 글은 배정표 글만 만듭니다.
                 </p>
               ) : (
                 <p className="hint" style={{ margin: 0 }}>

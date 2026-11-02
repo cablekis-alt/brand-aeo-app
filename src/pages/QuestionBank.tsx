@@ -98,13 +98,13 @@ export default function QuestionBankPage() {
   const [statesState, setStatesState] = useState<{ key: string; value: ActionStateMap | null } | null>(null)
   const states = statesState && statesState.key === tenant?.tenantId ? statesState.value : null
   const [statusError, setStatusError] = useState<string | null>(null)
-  // 실증 기간에는 여기서 글을 만들지 않는다 — 고른 질문으로 묶은 글은 배정표 밖 글이다(src/lib/probePlan.ts, 서버도 막는다).
+  // 작성자 배정 기간에는 여기서 글을 만들지 않는다 — 고른 질문으로 묶은 글은 배정표 밖 글이다(src/lib/probePlan.ts, 서버도 막는다).
   // 배정 파일이 없으면 지금과 같다.
   const probe = useProbePlan(tenant?.tenantId ?? '')
   const writeBlocked = probe.active
-    ? `실증 기간(~${probe.active.activeUntil.slice(5)})에는 콘텐츠 생성의 배정표 글만 만들 수 있어요.`
+    ? `작성자 배정 기간(~${probe.active.activeUntil})에는 콘텐츠 생성의 배정표 글만 만들 수 있어요.`
     : probe.corrupt
-      ? '배정 파일(probe-plan.json)이 깨져 있어 실증 기간의 글을 만들지 않아요. 관리자에게 확인을 요청해 주세요.'
+      ? '배정 파일(probe-plan.json)이 깨져 있어 작성자 배정 글을 만들지 않아요. 관리자에게 확인을 요청해 주세요.'
       : null
   useEffect(() => {
     const id = tenant?.tenantId

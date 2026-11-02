@@ -168,14 +168,27 @@ function overlapOf(article: Pick<ExtraArticle, 'id' | 'questionTexts'>, all: Ext
   return null
 }
 
-const capError = () => `추가 글은 ${EXTRA_LIMITS.articles}편까지 둘 수 있어요. 다 쓴 글을 목록에서 뺀 뒤 다시 만들어 주세요.`
+/**
+ * 편수 · 겹침 규칙. 기본은 살아 있는 글 10편 · 한 질문은 한 글만. 작성자 배정 기간에는 서버가 상한을 배정 글 수까지 늘리고 겹침을
+ * 허용한다(src/lib/probePlan.ts writerExtraRules — 배정 밖 글은 그쪽 topicGuard가 막는다).
+ */
+export interface ExtraArticleRules {
+  /** 살아 있는 추가 글 상한. */
+  cap: number
+  /** 다른 살아 있는 글이 맡은 질문을 함께 맡아도 되는가. */
+  sharedQuestions: boolean
+}
+
+export const DEFAULT_EXTRA_RULES: ExtraArticleRules = { cap: EXTRA_LIMITS.articles, sharedQuestions: false }
+
+const capError = (cap: number) => `추가 글은 ${cap}편까지 둘 수 있어요. 다 쓴 글을 목록에서 뺀 뒤 다시 만들어 주세요.`
 
 /**
  * 새 추가 글을 검사해 다음 목록을 만든다. 받는 값: { id, name, angle?, bankVersion, questionIds, questionTexts, createdWeek? }.
  * 질문과 문장은 짝을 지어 id 순으로 정렬한다. 같은 id의 뺀 글이 있으면 되살린다 — 만든 시각은 두고 이름 · 각도 · 판 · 문장은 이번 값으로
- * 바꾼다(같은 id라도 다른 판이면 다른 질문이다).
+ * 바꾼다(같은 id라도 다른 판이면 다른 질문이다). rules를 주지 않으면 기본 규칙(10편 · 겹침 409)이다.
  */
-export function checkNewExtraArticle(input: unknown, all: ExtraArticle[], now: string): ExtraArticleCheck {
+export function checkNewExtraArticle(input: unknown, all: ExtraArticle[], now: string, rules: ExtraArticleRules = DEFAULT_EXTRA_RULES): ExtraArticleCheck {
   const raw = (input ?? {}) as Record<string, unknown>
   const ids = raw.questionIds
   const texts = raw.questionTexts
@@ -207,9 +220,9 @@ export function checkNewExtraArticle(input: unknown, all: ExtraArticle[], now: s
 
   const same = all.find((a) => a.id === id)
   if (same && !same.removedAt) return conflict(`같은 질문으로 만든 '${same.name}' 글이 이미 있어요.`)
-  const overlap = overlapOf({ id, questionTexts }, all)
+  const overlap = rules.sharedQuestions ? null : overlapOf({ id, questionTexts }, all)
   if (overlap) return conflict(overlap)
-  if (aliveExtraArticles(all).length >= EXTRA_LIMITS.articles) return conflict(capError())
+  if (aliveExtraArticles(all).length >= rules.cap) return conflict(capError(rules.cap))
 
   const article: ExtraArticle = {
     id,
@@ -228,9 +241,9 @@ export function checkNewExtraArticle(input: unknown, all: ExtraArticle[], now: s
 
 /**
  * 고치기 — 받는 값: { id, name?, angle?, removed?: boolean }. 각도에 빈 글자를 주면 지운다. removed false는 되살리기라 새로 만들 때와
- * 같은 겹침 · 편수 검사를 거친다. 바꿀 것이 없으면 400.
+ * 같은 겹침 · 편수 검사(rules)를 거친다. 바꿀 것이 없으면 400.
  */
-export function checkExtraArticlePatch(input: unknown, all: ExtraArticle[], now: string): ExtraArticleCheck {
+export function checkExtraArticlePatch(input: unknown, all: ExtraArticle[], now: string, rules: ExtraArticleRules = DEFAULT_EXTRA_RULES): ExtraArticleCheck {
   const raw = (input ?? {}) as Record<string, unknown>
   if (!isStr(raw.id) || !raw.id) return bad('고칠 글(id)이 필요합니다.')
   const found = all.find((a) => a.id === raw.id)
@@ -255,9 +268,9 @@ export function checkExtraArticlePatch(input: unknown, all: ExtraArticle[], now:
   }
   if (raw.removed === true && !found.removedAt) next.removedAt = now
   if (raw.removed === false && found.removedAt) {
-    const overlap = overlapOf(found, all)
+    const overlap = rules.sharedQuestions ? null : overlapOf(found, all)
     if (overlap) return conflict(overlap)
-    if (aliveExtraArticles(all).length >= EXTRA_LIMITS.articles) return conflict(capError())
+    if (aliveExtraArticles(all).length >= rules.cap) return conflict(capError(rules.cap))
     delete next.removedAt
   }
   next.updatedAt = now

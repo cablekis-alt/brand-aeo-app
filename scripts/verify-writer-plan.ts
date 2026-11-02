@@ -38,7 +38,7 @@ import {
   type WriterSpec,
 } from './writer-plan';
 import { checkNewExtraArticle, topicArticleId } from '../src/lib/extraArticles';
-import { parseProbePlan, parseWriterPlan, planWriters, PROBE_NAME_BANNED, type WriterPlan } from '../src/lib/probePlan';
+import { extraArticleCap, parseWriterPlan, planWriters, PROBE_NAME_BANNED, topicGuard, type WriterPlan } from '../src/lib/probePlan';
 
 const checks: [string, boolean, string | undefined][] = [];
 /** detail은 실패했을 때만 찍는다(하위 프로세스 출력 등). */
@@ -196,7 +196,7 @@ for (const c of cases) {
   ok(`${c.label} — 글 80편 · 작성자 8명 × 10편 · 보고서 위반 0 · 겹침 최대 1`, plan.articles.length === 80 && build.report!.violations.length === 0 && build.report!.maxOverlap === 1 && build.report!.perWriter.every((w) => w.articles === 10 && w.questions === 20));
   ok(`${c.label} — 같은 의미 묶음 짝이 하한 이상(${c.clusterFloor})`, build.report!.kinds.cluster >= c.clusterFloor, `${build.report!.kinds.cluster}`);
   ok(`${c.label} — parseWriterPlan 통과 · 다시 읽어도 같음`, JSON.stringify(parseWriterPlan(JSON.parse(JSON.stringify(plan))).plan) === JSON.stringify(plan));
-  ok(`${c.label} — 실증 배정으로는 읽히지 않음(운영 모드 전의 앱은 깨진 배정으로 봄)`, parseProbePlan(JSON.parse(JSON.stringify(plan))).error !== undefined);
+  ok(`${c.label} — 앱이 배정 글 80편을 모두 허용 · 추가 글 상한 80편(운영 기간)`, extraArticleCap(plan, '2026-11-03') === 80 && plan.articles.every((a) => topicGuard(plan, false, plan.bankVersion, a.id, '2026-11-03') === null));
   const again = buildWriterPlan(c.input);
   ok(`${c.label} — 같은 입력이면 같은 배정(결정적)`, JSON.stringify(again.plan) === JSON.stringify(plan) && JSON.stringify(again.report) === JSON.stringify(build.report));
 }

@@ -36,10 +36,11 @@
  * docs/writers/(또는 --out)에 쓴다. --write는:
  *   - 고른 브랜드 모두 검사를 통과해야 쓴다. 한 브랜드라도 걸리면 아무것도 쓰지 않는다. 작성자 설정이 자리표시(placeholder)면 거절한다.
  *   - 가상화 사본 경로(Packages\Claude_…)를 거절하고, 브랜드 폴더에 표지 파일을 써 보아 쓰기가 가상화 위치로 가면 멈춘다
- *     (server/probeQuestions.ts writeRedirects — scripts/write-probe-plan.ts와 같다). Claude 셸에서는 //localhost/C$/… 경로로 실행한다.
+ *     (server/probeQuestions.ts writeRedirects — scripts/promote-probe-questions.ts와 같다). Claude 셸에서는 //localhost/C$/… 경로로 실행한다.
  *   - 이미 probe-plan.json이 있으면(실증 배정 포함) <tenantDir>/before-writer-plan-<시각>/에 복사한 뒤 바꿔 쓰고, 다시 읽어
  *     parseWriterPlan으로 확인한다. 앱은 이 파일을 요청마다 읽기만 하므로 앱을 끄지 않아도 된다. 질문지 · 추가 글은 건드리지 않는다.
- *   - 운영 모드(probe-plan/2를 읽는 앱) 앞의 앱은 이 파일을 깨진 배정으로 보고 'topic:' 글 만들기를 막는다 — 그 릴리스를 설치한 뒤 쓴다.
+ *   - 운영 모드(probe-plan/2를 읽는 앱, v0.4.49) 앞의 앱은 이 파일을 읽지 않는다 — 잠금 · 작성자 단추 · 늘어난 추가 글 상한이 없다. 그
+ *     릴리스를 설치한 뒤 쓴다.
  *
  * 배정(buildWriterPlan) · 규칙 검사(checkWriterRules) · 배정표(writerHandouts) · 파일 쓰기(writeWriterPlanFile)는
  * scripts/verify-writer-plan.ts가 가짜 질문지와 (있으면) 실제 질문지(읽기만)로 부른다.
@@ -1220,7 +1221,7 @@ async function main(): Promise<void> {
     console.log(`  다시 읽음 — ${result.plan.bankVersion} 판 · 글 ${result.plan.articles.length}편 · 운영 기간 ~${result.plan.activeUntil}`)
   }
   console.log('\n앱은 이 파일을 요청마다 읽습니다 — 다시 켜지 않아도 됩니다. 질문지 · 추가 글은 건드리지 않았습니다.')
-  console.log('⚠ 운영 모드(probe-plan/2를 읽는 앱) 앞의 앱은 이 파일을 깨진 배정으로 보고 \'topic:\' 글 만들기를 막습니다.')
+  console.log('⚠ 운영 모드(probe-plan/2를 읽는 앱, v0.4.49) 앞의 앱은 이 파일을 읽지 않습니다 — 잠금 · 작성자 단추 · 늘어난 추가 글 상한이 없습니다.')
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main()

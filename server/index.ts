@@ -672,7 +672,7 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
   }
   const force = req.query.force === '1';
   try {
-    // 실증 기간에는 배정표 글만 — 질문 은행 입구(actionFromQuestions)와 직접 요청까지 닫는다(server/probePlanStore.ts).
+    // 작성자 배정 기간에는 배정표 글만 — 질문 은행 입구(actionFromQuestions)와 직접 요청까지 닫는다(server/probePlanStore.ts).
     const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
     if (refused) {
       res.status(400).json({ error: refused });
@@ -1012,7 +1012,7 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
     res.status(400).json({ error: 'actionId가 필요합니다.' });
     return;
   }
-  // 실증 기간에는 배정표 글만 — 브리프가 이미 있어도 초안은 만들지 않는다(server/probePlanStore.ts).
+  // 작성자 배정 기간에는 배정표 글만 — 브리프가 이미 있어도 초안은 만들지 않는다(server/probePlanStore.ts).
   const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
   if (refused) {
     res.status(400).json({ error: refused });
@@ -1360,7 +1360,7 @@ app.patch('/api/extra-articles/:tenantId', async (req, res) => {
   }
 });
 
-// 실증 배정 — data/<tenant>/probe-plan.json을 읽기만 한다(server/probePlanStore.ts · src/lib/probePlan.ts). 데스크톱·로컬 전용이다
+// 작성자 배정 — data/<tenant>/probe-plan.json을 읽기만 한다(server/probePlanStore.ts · src/lib/probePlan.ts). 데스크톱·로컬 전용이다
 // (Vercel 함수는 12/12 — 웹은 404를 「배정 없음」으로 읽는다). 파일이 없으면 plan null, 깨졌으면 corrupt(글 만들기는 서버가 막는다).
 app.get('/api/probe-plan/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
