@@ -22,6 +22,7 @@ import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActi
 import { draftTitle } from '../lib/markdownFile'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
+import { isProbe, isScoredAgnostic } from '../lib/questionScope'
 import type { QuestionBank, QuestionSpec } from '../lib/types'
 
 /**
@@ -155,10 +156,11 @@ export default function QuestionBankPage() {
     if (!saved) setStatusError('상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
   }
 
+  // 점수에 세는 문항으로만 낸다 — 실증 질문은 이름 없는 질문이지만 점수 밖이라, 넣으면 비율이 부풀어 하한(countAgnostic)과 어긋난다.
   const agnosticRatio = useMemo(() => {
-    if (!bank || bank.questions.length === 0) return 0
-    const agnostic = bank.questions.filter((q) => q.category === 'category-agnostic').length
-    return agnostic / bank.questions.length
+    const scored = bank ? bank.questions.filter((q) => !isProbe(q)) : []
+    if (scored.length === 0) return 0
+    return scored.filter(isScoredAgnostic).length / scored.length
   }, [bank])
 
   if (!tenant) return null

@@ -21,6 +21,7 @@ import { useScorecards } from '../lib/useScorecards'
 import { useRunHistory } from '../lib/useRunHistory'
 import { kstStamp } from '../lib/runTrend'
 import { isOpenAction } from '../lib/gapActions'
+import { isScoredAgnostic } from '../lib/questionScope'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 /** 5주 추이에 보이는 주 수. */
@@ -1061,8 +1062,8 @@ function CompareWithCustomer({
   useEffect(() => {
     if (!competitor || !mine || !competitor.questionBankVersion || !mine.questionBankVersion || !sameCohort(competitor, mine)) return
     let alive = true
-    const general = (b: QuestionBank | null) =>
-      b ? new Set(b.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.text)) : null
+    // 실증 질문은 점수 밖이라 견주지 않는다 — 한쪽에만 덧붙였다고 「다른 질문지」가 되지 않게(server/portfolio.ts와 같은 규칙).
+    const general = (b: QuestionBank | null) => (b ? new Set(b.questions.filter(isScoredAgnostic).map((q) => q.text)) : null)
     void Promise.all([
       loadQuestionBank(competitor.tenantId, competitor.questionBankVersion),
       loadQuestionBank(mine.tenantId, mine.questionBankVersion),

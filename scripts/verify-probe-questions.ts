@@ -6,7 +6,8 @@
  * + 실증 응답이 한 바이트도 다르지 않은 지표를 내야 한다. 특히 사실성 · 자사 인용률 · CI는 이름 없는 질문만이 아니라 전체
  * 응답을 써서, 이름 없는 질문 거르개만 고쳐서는 실증 인용이 자사 인용률(점수의 20%)에 섞인다. 점수 밖에서 문항을 직접 세는 곳
  * (회차 보기 N · 브랜드 현황 질문지 비교 · 일반 질문 하한 · 인용 분해 · 인용 출처 · EEAT · 경쟁사 편집의 질문 수와 크기)도 같은
- * 규칙을 따라야 화면 숫자가 카드와 맞는다. 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
+ * 규칙을 따라야 화면 숫자가 카드와 맞는다. 화면이 판정 기록으로 다시 세는 곳(점수 풀이 · 비교 그룹 「같은 질문」 · 응답 요약 · 감성 ·
+ * 개요 · 개선제안 근거 · 격차 분석)도 같다. 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
  *
  *   npx tsx scripts/verify-probe-questions.ts
  */
@@ -18,6 +19,19 @@ import type { QuestionSpec } from '../src/prompts/types';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
 import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank';
 import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from '../src/lib/citationView';
+import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
+import { buildAnswerEvidence } from '../src/lib/answerEvidence';
+import { aeoScoreOf } from '../src/lib/b9-report';
+import { computeGapAnalysis } from '../src/lib/gapAnalysis';
+import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence';
+import { explainScore, ownedDomainCitations } from '../src/lib/reportExplain';
+import { cohortRows, selfReview } from '../src/lib/reviewReport';
+import { computeSentiment } from '../src/lib/sentiment';
+import type {
+  QuestionBank as ClientQuestionBank,
+  QuestionRepeatAnalysis as ClientAnalysis,
+  QuestionSpec as ClientQuestionSpec,
+} from '../src/lib/types';
 import { aggregateWeeklyMetrics } from '../server/aggregate';
 import { linkCompetitorQuestions } from '../server/competitorQuestions';
 import { getEngineTrend } from '../server/engineTrend';
@@ -184,6 +198,142 @@ check('인용 갭 필터: 기본 칸(이름 없는 질문)이 맨 앞', QUESTION
 check('인용 갭 필터: 「모든 질문」 이름표가 실증 제외를 말함', QUESTION_SCOPE_LABEL.all.includes('실증 제외'), QUESTION_SCOPE_LABEL.all);
 check('인용 갭 기준 문구: 모든 질문은 실증을 뺀 전체', citationBasisLabel('all') === '실증 질문을 뺀 전체 인용', citationBasisLabel('all'));
 check('인용 갭 기준 문구: 실증 질문 칸', citationBasisLabel('probe') === '실증 질문의 인용', citationBasisLabel('probe'));
+
+// ── 5-3. 화면 점수 경로(src/lib) ─────────────────────────────────────────────
+// 화면은 서버가 준 판정 기록 · 은행으로 점수 모집단을 다시 센다. 실증을 세면 카드와 숫자가 어긋나고, 점수 풀이는 matchesCard가
+// 거짓이 되어 기록으로 센 줄을 조용히 버린다. 덧붙이기 전 은행 + 원래 응답과 같은 결과를 내야 한다.
+const clientBank = (questions: QuestionSpec[]) => ({ version: VERSION, generatedAt: '', questions }) as unknown as ClientQuestionBank;
+const clientQs = (questions: QuestionSpec[]) => questions as unknown as ClientQuestionSpec[];
+const asClient = (list: QuestionRepeatAnalysis[]) => list as unknown as ClientAnalysis[];
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+// 점수 풀이 카드 — 점수는 같은 식(aeoScoreOf, 원래 응답의 언급 문장은 모두 긍정이라 감성 1)으로 낸다(verify-report-explain.ts와 같은 방식).
+const scoredRanks = agnosticAnalyses(base, bankBefore).filter((a) => a.mentioned && a.brandRank !== null).map((a) => a.brandRank as number);
+const explainAvg = scoredRanks.reduce((s, r) => s + r, 0) / scoredRanks.length;
+const explainScoreNow = aeoScoreOf({
+  mentionRate: after.mentionRate,
+  sentiment: 1,
+  brandOwnedCitationRate: after.brandOwnedCitationRate,
+  avgRecommendationRank: explainAvg,
+  rankedResponses: scoredRanks.length,
+});
+const explainCard = {
+  tenantId: 'probe-test',
+  brandName: '가상 숙소',
+  weekOf: '2026-W44',
+  industry: '테스트업종',
+  region: '가상시',
+  aeoScore: { current: explainScoreNow, previousWeek: null, ma4: explainScoreNow, ciLow: 0, ciHigh: explainScoreNow },
+  mentionRate: after.mentionRate,
+  shareOfMention: null,
+  avgRecommendationRank: explainAvg,
+  rankedResponses: scoredRanks.length,
+  factualityScore: null,
+  hallucinationFlags: [],
+  brandOwnedCitationRate: after.brandOwnedCitationRate,
+  cohortRank: { position: 1, totalTenants: 2 },
+  enginesUsed: ['gemini', 'openai'],
+  judgeEngine: 'gemini',
+  judgeModel: 'g-1',
+  repeatsPerQuestion: 2,
+  questionBankVersion: VERSION,
+} as unknown as WeeklyScorecard;
+const explainOf = (bank: QuestionSpec[], list: QuestionRepeatAnalysis[]) =>
+  explainScore({ card: explainCard, history: [explainCard], analyses: asClient(list), bank: clientBank(bank) });
+const RECORD_LINES = ['concentration', 'steps', 'effects', 'named'];
+const explainBefore = explainOf(bankBefore, base);
+const explainAfter = explainOf(bankAfter, afterMixed);
+check(
+  '점수 풀이: 실증이 있어도 기록으로 센 줄이 남음(matchesCard 참)',
+  explainAfter.some((l) => l.key === 'steps') && explainAfter.some((l) => l.key === 'named'),
+  explainAfter.map((l) => l.key).join(','),
+);
+check('점수 풀이: 덧붙이기 전과 같은 문장', sameJson(explainAfter, explainBefore));
+check(
+  '대조: probe 표시가 없으면 기록으로 센 줄이 빠짐(검사가 헛돌지 않음)',
+  !explainOf(unflagged, afterMixed).some((l) => RECORD_LINES.includes(l.key)),
+  explainOf(unflagged, afterMixed).map((l) => l.key).join(','),
+);
+const ownedRows = ownedDomainCitations(asClient(afterMixed), clientBank(bankAfter), ['own.example']);
+check(
+  '자사 주소별 인용: 실증 인용을 세지 않음',
+  sameJson(ownedRows, ownedDomainCitations(asClient(base), clientBank(bankBefore), ['own.example'])) && ownedRows?.[0]?.total === 1,
+  JSON.stringify(ownedRows),
+);
+
+// 비교 그룹 「같은 질문」 — 고객만 실증을 덧붙였다. 실증을 세면 같은 일반 질문을 받은 경쟁사가 「일반 질문이 다름」이 된다.
+const reviewRival = { ...explainCard, tenantId: 'probe-rival', brandName: '가상 경쟁' } as WeeklyScorecard;
+const cohortOf = (selfBank: QuestionSpec[]) =>
+  cohortRows(explainCard, [reviewRival], { 'probe-test': clientBank(selfBank), 'probe-rival': clientBank(bankBefore) }).find((r) => !r.isSelf);
+check('정기진단 비교 그룹: 실증을 덧붙여도 같은 질문', cohortOf(bankAfter)?.sameQuestions === true, String(cohortOf(bankAfter)?.sameQuestions));
+check('대조: probe 표시가 없으면 다른 질문(검사가 헛돌지 않음)', cohortOf(unflagged)?.sameQuestions === false, String(cohortOf(unflagged)?.sameQuestions));
+// 「틀림」 주장 — 카드의 환각 플래그처럼 실증 응답의 주장은 목록에 오르지 않는다(카드 건수 아래 목록이 건수와 맞게).
+const claim = { claimText: '가상 주장', claimType: 'other' as const, verdict: 'contradicted' as const, responseValue: '가', factGraphValue: '나' };
+const baseClaims = base.map((a) => (a.questionId === 'v5-003' ? { ...a, factualityClaims: [claim] } : a));
+const afterClaims = [...baseClaims, { ...probes[1]!, factualityClaims: [claim] }];
+const reviewAfter = selfReview(asClient(afterClaims), clientBank(bankAfter));
+check(
+  '정기진단 응답 요약: 일반 질문 · 카테고리 · 「틀림」이 덧붙이기 전과 같음',
+  sameJson(reviewAfter, selfReview(asClient(baseClaims), clientBank(bankBefore))) &&
+    reviewAfter?.general.questions === 2 &&
+    reviewAfter.general.responses === 4 &&
+    reviewAfter.contradicted.length === 1,
+  JSON.stringify(reviewAfter?.general),
+);
+
+// 감성 — 전체 · 엔진별은 실증을 빼고, 질문별 줄은 실증 표시를 달고 남긴다.
+const sentimentBefore = computeSentiment(asClient(base), clientQs(bankBefore));
+const sentimentAfter = computeSentiment(asClient(afterMixed), clientQs(bankAfter));
+check(
+  '감성: 전체 · 엔진별 분포가 덧붙이기 전과 같음',
+  sameJson(sentimentAfter.overall, sentimentBefore.overall) && sameJson(sentimentAfter.byEngine, sentimentBefore.byEngine),
+  JSON.stringify({ overall: sentimentAfter.overall, engines: sentimentAfter.byEngine.map((e) => e.engine) }),
+);
+check(
+  '감성: 질문별 줄에 실증이 실증 표시로 남음',
+  sentimentAfter.byQuestion.some((q) => q.questionId === 'v5-p001' && q.probe) && sentimentAfter.byQuestion.every((q) => q.probe === probeIds.has(q.questionId)),
+  JSON.stringify(sentimentAfter.byQuestion.map((q) => [q.questionId, q.probe])),
+);
+
+// 개요 · AI 답변 화면(answerInsights)
+const insights = (bank: QuestionSpec[], list: QuestionRepeatAnalysis[]) => ({
+  coverage: questionCoverage(asClient(list), clientQs(bank)),
+  engines: engineMentions(asClient(list), clientQs(bank)),
+  owned: unnamedOwnedCitation(asClient(list), clientQs(bank)),
+});
+check('개요: 질문 N개 중 M개 · 엔진별 언급 · 이름 없는 질문 자사 인용이 덧붙이기 전과 같음', sameJson(insights(bankAfter, afterMixed), insights(bankBefore, base)), JSON.stringify(insights(bankAfter, afterMixed)));
+const answerRows = buildAnswerQuestions(asClient(afterMixed), clientQs(bankAfter), '가상 숙소');
+const probeRow = answerRows.find((r) => r.questionId === 'v5-p001');
+check('AI 답변: 실증 질문 줄에 실증 표시(이름 넣은 질문 아님)', probeRow?.probe === true && probeRow.named === false && answerRows.find((r) => r.questionId === 'v5-001')?.probe === false);
+check('AI 답변 CSV: 질문 종류가 「실증 질문」', answersCsv(answerRows).includes('v5-p001,v5-p001 질문,,실증 질문,'), answersCsv(answerRows).split('\r\n')[1] ?? '');
+
+// 개선제안 근거 · 격차 분석 — 밀린 일반 질문 · 묶음 판정에 실증이 들지 않는다.
+const recOf = (bank: QuestionSpec[], list: QuestionRepeatAnalysis[]) =>
+  buildRecommendationEvidence({ card: explainCard, analyses: asClient(list), questions: clientQs(bank), citations: null, site: null });
+check('개선제안 근거: 덧붙이기 전과 같음', sameJson(recOf(bankAfter, afterClaims), recOf(bankBefore, baseClaims)), JSON.stringify(recOf(bankAfter, afterClaims)));
+const gapAfter = computeGapAnalysis(asClient(afterMixed), clientQs(bankAfter));
+check(
+  '격차 분석: 묶음 · 질문 수가 덧붙이기 전과 같음',
+  sameJson(gapAfter, computeGapAnalysis(asClient(base), clientQs(bankBefore))) && gapAfter.totalQuestions === 3,
+  `질문 ${gapAfter.totalQuestions}개`,
+);
+
+// 글의 실측 사례 — 「이 글의 질문」을 물은 답을 세는 줄이라 실증만 고른 추가 글(처치군)에서도 그 답을 센다(점수 모집단이 아니다).
+const probeEvidence = buildAnswerEvidence({
+  weekOf: '2026-W44',
+  questionIds: ['v5-p001'],
+  questions: clientQs(bankAfter),
+  analyses: asClient(afterMixed),
+  raw: [],
+  brandName: '가상 숙소',
+  aliases: [],
+  competitorNames: [],
+  card: { enginesUsed: ['gemini', 'perplexity'] },
+  sameConditionRun: [{ weekOf: '2026-W44' }],
+  industry: '테스트업종',
+  builtAt: '2026-10-28T03:00:00Z',
+});
+check('실측 사례: 실증만 고른 글도 그 질문의 답을 셈', probeEvidence.answered.asked === 2 && probeEvidence.answered.mentioned === 2, JSON.stringify(probeEvidence.answered));
 
 // 여기부터는 앱 데이터 폴더의 파일도 읽는다 — 위 import는 경로를 정하지 않으므로 이제 임시 폴더로 정하고 모듈을 불러온다.
 const dir = mkdtempSync(path.join(tmpdir(), 'verify-probe-questions-'));

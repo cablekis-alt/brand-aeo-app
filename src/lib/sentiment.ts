@@ -1,8 +1,11 @@
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 import type { Engine } from '../prompts/types'
+import { isProbe } from './questionScope'
 
 // 감성 대시보드 집계 — 브랜드 언급 문장의 긍/중/부 분포를 전체·엔진별·질문별로 나누고,
 // 부정 언급 문장을 드릴다운할 수 있게 모은다. 새 수집 없이 기존 판정 데이터만 사용한다.
+// 실증 질문(점수 밖 실험 질문 — questionScope.ts)은 전체·엔진별 분포에 넣지 않고, 질문별 줄과
+// 부정 문장에는 실증 표시(probe)를 달아 남긴다 — 실험 답이 브랜드 감성 분포를 흔들지 않게.
 export interface SentimentCounts {
   pos: number
   neu: number
@@ -17,6 +20,7 @@ export interface EngineSentiment extends SentimentCounts {
 export interface QuestionSentiment extends SentimentCounts {
   questionId: string
   text: string
+  probe: boolean // 실증 질문 — 전체·엔진별 분포에는 들지 않는다
 }
 
 export interface NegativeMention {
@@ -24,6 +28,7 @@ export interface NegativeMention {
   questionId: string
   text: string // 질문 문구
   sentence: string // 부정 언급 문장
+  probe: boolean // 실증 질문의 답
 }
 
 export interface SentimentSummary {
@@ -52,17 +57,21 @@ export function computeSentiment(
   questions: QuestionSpec[],
 ): SentimentSummary {
   const textById = new Map(questions.map((q) => [q.questionId, q.text]))
+  const probeIds = new Set(questions.filter(isProbe).map((q) => q.questionId))
   const overall = empty()
   const engineMap = new Map<Engine, SentimentCounts>()
   const questionMap = new Map<string, SentimentCounts>()
   const negatives: NegativeMention[] = []
 
   for (const a of analyses) {
+    const probe = probeIds.has(a.questionId)
     const eng = engineMap.get(a.engine) ?? empty()
     const q = questionMap.get(a.questionId) ?? empty()
     for (const m of a.mentionSentences) {
-      add(overall, m.sentiment)
-      add(eng, m.sentiment)
+      if (!probe) {
+        add(overall, m.sentiment)
+        add(eng, m.sentiment)
+      }
       add(q, m.sentiment)
       if (m.sentiment === 'negative') {
         negatives.push({
@@ -70,10 +79,12 @@ export function computeSentiment(
           questionId: a.questionId,
           text: textById.get(a.questionId) ?? a.questionId,
           sentence: m.sentence,
+          probe,
         })
       }
     }
-    engineMap.set(a.engine, eng)
+    // 실증 답만 받은 엔진은 엔진별 줄을 만들지 않는다(0개 문장 줄이 생긴다).
+    if (!probe) engineMap.set(a.engine, eng)
     questionMap.set(a.questionId, q)
   }
 
@@ -82,7 +93,7 @@ export function computeSentiment(
     .sort((x, y) => y.total - x.total)
 
   const byQuestion: QuestionSentiment[] = [...questionMap.entries()]
-    .map(([questionId, c]) => ({ questionId, text: textById.get(questionId) ?? questionId, ...c }))
+    .map(([questionId, c]) => ({ questionId, text: textById.get(questionId) ?? questionId, probe: probeIds.has(questionId), ...c }))
     .filter((q) => q.total > 0)
     .sort((x, y) => negRate(y) - negRate(x) || y.neg - x.neg)
 

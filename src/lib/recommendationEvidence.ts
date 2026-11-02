@@ -6,6 +6,7 @@ import { ENGINE_LABEL, weekLabel } from './format'
 import { computeGapActions, isIdleAction, type GapAction } from './gapActions'
 import { monthDay, postWeekOf } from './publishTracking'
 import { isoWeekOf, kstDate } from './publishedUrl'
+import { isScoredAgnostic, withoutProbes } from './questionScope'
 import { computeQuestionWinLoss } from './questionWinLoss'
 import type { QuestionRepeatAnalysis, QuestionSpec } from './types'
 
@@ -207,8 +208,12 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
   if (analyses.length === 0 || questions.length === 0) return out
 
   const byId = new Map(questions.map((q) => [q.questionId, q]))
-  const general = analyses.filter((a) => byId.get(a.questionId)?.category === 'category-agnostic')
-  const generalQuestions = questions.filter((q) => q.category === 'category-agnostic')
+  // 점수의 언급률과 같은 모집단 — 실증 질문은 밀린 질문 · 계산 예시에 넣지 않는다(questionScope.ts).
+  const general = analyses.filter((a) => {
+    const q = byId.get(a.questionId)
+    return q !== undefined && isScoredAgnostic(q)
+  })
+  const generalQuestions = questions.filter(isScoredAgnostic)
   const rows = computeQuestionWinLoss(general, generalQuestions)
 
   // 한 질문에서 대신 불린 곳 — 경쟁사 언급과, 추천 1순위로 판정된 이름(우리 제외).
@@ -367,8 +372,8 @@ export function buildRecommendationEvidence(input: EvidenceInput): Record<string
     }
   }
 
-  // ── 사실성: AI가 실제로 다르게 말한 내용
-  const contradicted = analyses.flatMap((a) =>
+  // ── 사실성: AI가 실제로 다르게 말한 내용 — 카드의 사실성(server/aggregate.ts)처럼 실증 질문의 응답은 세지 않는다.
+  const contradicted = withoutProbes(analyses, questions).flatMap((a) =>
     a.factualityClaims
       .filter((c) => c.verdict === 'contradicted')
       .map((c) => ({

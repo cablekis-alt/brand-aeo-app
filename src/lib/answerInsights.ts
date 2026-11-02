@@ -1,14 +1,19 @@
 import type { CitationDetail, QuestionRepeatAnalysis, QuestionSpec } from './types'
 import { ENGINE_LABEL } from './format'
+import { isProbe, isScoredAgnostic } from './questionScope.js'
 
 /*
  * 개요(대시보드 2차)와 AI 답변 화면이 함께 쓰는 판정 기록 계산. 모두 저장된 판정 기록·질문 은행에서 바로
  * 센다 — 새 API 호출도, 지어낸 문장도 없다. 모집단은 언급률과 같은 「이름 없는 질문」(category-agnostic)이다.
+ * 실증 질문(점수 밖 실험 질문 — questionScope.ts)은 이 모집단에 들지 않는다.
  */
 
 function agnosticOf(analyses: QuestionRepeatAnalysis[], questions: QuestionSpec[]) {
   const byId = new Map(questions.map((q) => [q.questionId, q]))
-  const general = analyses.filter((a) => byId.get(a.questionId)?.category === 'category-agnostic')
+  const general = analyses.filter((a) => {
+    const q = byId.get(a.questionId)
+    return q !== undefined && isScoredAgnostic(q)
+  })
   return { byId, general }
 }
 
@@ -297,6 +302,8 @@ export interface AnswerQuestion {
   topic: string | null
   /** 브랜드 이름을 넣은 질문인가 — 점수의 언급률은 이름 없는 질문만 센다. */
   named: boolean
+  /** 실증 질문인가 — 이름 없는 질문이지만 점수에 세지 않는다(questionScope.ts). named와 함께 참이 되지 않는다. */
+  probe: boolean
   responses: AnswerResponse[]
   /** 되물음을 뺀 응답 중 불린 수 / 응답 수. */
   hit: number
@@ -350,6 +357,7 @@ export function buildAnswerQuestions(
       text: q?.text ?? id,
       topic: q?.topic ?? null,
       named: q ? q.category !== 'category-agnostic' : false,
+      probe: isProbe(q),
       responses,
       hit: answered.filter((r) => r.outcome === 'hit').length,
       answered: answered.length,
@@ -397,7 +405,7 @@ export function answersCsv(rows: AnswerQuestion[], engine = ''): string {
           q.questionId,
           q.text,
           q.topic ?? '',
-          q.named ? '이름 넣은 질문' : '이름 없는 질문',
+          q.named ? '이름 넣은 질문' : q.probe ? '실증 질문' : '이름 없는 질문',
           r.engineLabel,
           r.callIndex,
           OUTCOME_CSV[r.outcome],

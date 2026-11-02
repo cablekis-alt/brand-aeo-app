@@ -14,6 +14,7 @@ import {
 import { comparableRun, compareConditions, conditionSummary } from './comparability'
 import { formatRank, weekLabel } from './format'
 import { platformGroupHost } from './hostNames'
+import { isProbe, isScoredAgnostic } from './questionScope'
 import { kstStamp } from './runTrend'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionBank, QuestionRepeatAnalysis } from './types'
@@ -60,7 +61,10 @@ function weekRangeText(from: string, to: string): string {
   return a[1] === b[1] ? `${a[1]}년 ${Number(a[2])}~${Number(b[2])}주차` : `${a[1]}년 ${Number(a[2])}주차~${b[1]}년 ${Number(b[2])}주차`
 }
 
-/** 이름 없이 물은 질문(점수의 언급률 · 추천 순위 모집단 — server/aggregate.ts와 같은 규칙)과 이름을 넣어 물은 질문의 판정 기록. */
+/**
+ * 이름 없이 물은 질문(점수의 언급률 · 추천 순위 모집단 — server/aggregate.ts와 같은 규칙)과 이름을 넣어 물은 질문의 판정 기록.
+ * 실증 질문은 어느 쪽에도 넣지 않는다 — 카드가 세지 않으니 넣으면 matchesCard가 거짓이 되어 기록으로 센 줄이 조용히 빠진다.
+ */
 interface Population {
   unnamed: QuestionRepeatAnalysis[]
   named: QuestionRepeatAnalysis[]
@@ -73,7 +77,10 @@ interface Population {
 function population(card: WeeklyScorecard, analyses: QuestionRepeatAnalysis[], bank: QuestionBank | null): Population | null {
   if (!bank) return null
   const byId = new Map(bank.questions.map((q) => [q.questionId, q]))
-  const unnamed = analyses.filter((a) => byId.get(a.questionId)?.category === 'category-agnostic')
+  const unnamed = analyses.filter((a) => {
+    const q = byId.get(a.questionId)
+    return q !== undefined && isScoredAgnostic(q)
+  })
   const named = analyses.filter((a) => byId.get(a.questionId)?.containsBrandName === true)
   if (unnamed.length === 0) return null
   const ranked = unnamed.filter((a) => a.mentioned && a.brandRank !== null)
@@ -450,7 +457,8 @@ const bareHost = (d: string) => d.toLowerCase().replace(/^www\./, '')
  * 주소와 직접 대조한 수다(소유는 호스트 단위 — 경로는 보지 않는다).
  *
  * www만 다른 주소는 하나로 합치고, 인용 하나는 맞는 등록 주소 가운데 가장 구체적인 주소 하나에만 센다(eng.banobagi.com 인용은 그 줄에만) —
- * 주소마다 따로 세면 같은 인용이 두 줄에 들어갔다. 질문지에 없는 질문의 인용은 세지 않는다(어느 쪽인지 모른다).
+ * 주소마다 따로 세면 같은 인용이 두 줄에 들어갔다. 질문지에 없는 질문의 인용은 세지 않는다(어느 쪽인지 모른다). 실증 질문의 인용도
+ * 세지 않는다 — 위 출처 표(서버 기본 보기 · ?questions=unnamed)가 실증 응답을 빼므로 같은 기준으로 둔다.
  */
 export function ownedDomainCitations(
   analyses: QuestionRepeatAnalysis[],
@@ -467,7 +475,7 @@ export function ownedDomainCitations(
   const rows = regs.map((r) => ({ domain: r.domain, named: 0, unnamed: 0, total: 0 }))
   for (const a of analyses) {
     const q = byId.get(a.questionId)
-    if (!q) continue
+    if (!q || isProbe(q)) continue
     for (const c of a.citations) {
       if (!c.domain) continue
       const host = bareHost(c.domain)

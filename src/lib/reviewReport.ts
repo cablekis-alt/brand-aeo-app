@@ -1,6 +1,7 @@
 import type { WeeklyScorecard } from '../prompts/b8-report'
 import { comparableRun, compareConditions, runCountText, type ConditionChange } from './comparability'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, weekLabel } from './format'
+import { isScoredAgnostic, withoutProbes } from './questionScope'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
 /**
@@ -87,10 +88,13 @@ const CLARIFYING_WARN = 0.2
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 const engineText = (c: WeeklyScorecard) => (c.enginesUsed ?? []).map((e) => ENGINE_LABEL[e] ?? e).join(' · ') || '기록 없음'
 
-/** 은행의 일반 질문(브랜드 이름 없는 질문) 텍스트 집합. 은행이 없으면 null. */
+/**
+ * 은행의 일반 질문(브랜드 이름 없는 질문) 텍스트 집합. 은행이 없으면 null. 실증 질문은 넣지 않는다 — 점수에 세지 않는 문항이라,
+ * 넣으면 실증을 덧붙인 브랜드만 코호트 다른 브랜드와 「같은 질문」이 아니게 된다(server/portfolio.ts와 같은 규칙).
+ */
 function generalQuestionTexts(bank: QuestionBank | null | undefined): Set<string> | null {
   if (!bank) return null
-  return new Set(bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.text.trim()))
+  return new Set(bank.questions.filter(isScoredAgnostic).map((q) => q.text.trim()))
 }
 
 function sameSet(a: Set<string>, b: Set<string>): boolean {
@@ -149,12 +153,19 @@ export function cohortRows(
 /**
  * 이 브랜드의 그 주 응답 요약. 그 주 질문 은행을 못 읽었거나, 판정 기록이 은행 질문과 하나도 맞지 않으면(기록이 없거나 예시 기록 ·
  * 예시 은행이 왔을 때) 일반 질문을 가려낼 수 없어 null이다 — 「불린 적 없음 · 0건 중 0건」으로 쓰지 않는다.
+ *
+ * 실증 질문의 응답은 어디에도 세지 않는다 — 일반 질문 · 카테고리 줄 · 「틀림」 주장 모두 카드(server/aggregate.ts 첫머리 거르개)와
+ * 같은 모집단이어야 「사실과 어긋난 주장 N건」 아래 목록이 N과 맞는다.
  */
 export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBank | null): SelfReview | null {
   if (!bank) return null
   const bankById = new Map(bank.questions.map((q) => [q.questionId, q]))
   if (!analyses.some((a) => bankById.has(a.questionId))) return null
-  const generalAnalyses = analyses.filter((a) => bankById.get(a.questionId)?.category === 'category-agnostic')
+  const scored = withoutProbes(analyses, bank.questions)
+  const generalAnalyses = scored.filter((a) => {
+    const q = bankById.get(a.questionId)
+    return q !== undefined && isScoredAgnostic(q)
+  })
   const mentionedByText = new Map<string, Set<string>>()
   for (const a of generalAnalyses) {
     if (!a.mentioned) continue
@@ -163,7 +174,7 @@ export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBan
   }
   const categories: CategoryRow[] = Object.entries(CATEGORY_LABEL)
     .map(([category, label]) => {
-      const rows = analyses.filter((a) => bankById.get(a.questionId)?.category === category)
+      const rows = scored.filter((a) => bankById.get(a.questionId)?.category === category)
       return { category, label, mentioned: rows.filter((a) => a.mentioned).length, total: rows.length }
     })
     .filter((r) => r.total > 0)
@@ -176,7 +187,7 @@ export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBan
     },
     mentionedQuestions: [...mentionedByText].map(([text, engines]) => ({ text, engines: [...engines] })),
     categories,
-    contradicted: analyses.flatMap((a) =>
+    contradicted: scored.flatMap((a) =>
       a.factualityClaims
         .filter((c) => c.verdict === 'contradicted')
         .map((c) => ({
