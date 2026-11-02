@@ -759,7 +759,7 @@
       "gemini"
     ],
     "questionBankSize": 42,
-    "questionBankVersion": "v5",
+    "questionBankVersion": "v6",
     "repeatsPerQuestion": 1,
     "competitors": [
       {
@@ -1540,5 +1540,283 @@
       }
     ],
     "cohortQuestionBank": "c1"
+  },
+  {
+    "tenantId": "gunsan",
+    "brandName": "군산각",
+    "aliases": [
+      "군산각",
+      "군산여행의 모든것"
+    ],
+    "ownedDomains": [
+      "gunsan.webforai.kr",
+      "all-about-gunsan.vercel.app"
+    ],
+    "industry": "관광정보서비스",
+    "region": "전북 군산",
+    "engines": [
+      "openai",
+      "perplexity"
+    ],
+    "questionBankSize": 36,
+    "questionBankVersion": "v7",
+    "repeatsPerQuestion": 1,
+    "competitors": [
+      {
+        "name": "군산시 문화관광",
+        "aliases": [
+          "군산시 문화관광"
+        ],
+        "domains": []
+      },
+      {
+        "name": "군산시 스마트 관광 전자지도",
+        "aliases": [
+          "군산시 스마트 관광 전자지도"
+        ],
+        "domains": []
+      },
+      {
+        "name": "대한민국 구석구석",
+        "aliases": [
+          "대한민국 구석구석"
+        ],
+        "domains": []
+      },
+      {
+        "name": "전북 관광",
+        "aliases": [
+          "전북 관광",
+          "전북관광"
+        ],
+        "domains": [
+          "tour.jb.go.kr"
+        ]
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "fact-other-제공-서비스(웹사이트-기능)",
+        "type": "other",
+        "claim": "제공 서비스(웹사이트 기능)",
+        "value": "AI 코스 만들기",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-location-안내-대상-지역",
+        "type": "location",
+        "claim": "안내 대상 지역",
+        "value": "군산",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-맞춤-일정-작성-서비스",
+        "type": "other",
+        "claim": "맞춤 일정 작성 서비스",
+        "value": "AI 코스 만들기 조건만 고르면 일정을 짜 드려요",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-동반-여행자-대상-안내",
+        "type": "other",
+        "claim": "동반 여행자 대상 안내",
+        "value": "아이와 함께",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-대표전화",
+        "type": "other",
+        "claim": "대표전화",
+        "value": "070-4260-8310",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-운영-주체",
+        "type": "other",
+        "claim": "운영 주체",
+        "value": "주식회사 에이아이오투오(AIO2O)",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-안내-정보-범위",
+        "type": "other",
+        "claim": "안내 정보 범위",
+        "value": "관광지·음식점·숙소의 여는 시간과 요금, 가는 길",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-지도-기능",
+        "type": "other",
+        "claim": "지도 기능",
+        "value": "지도에서 찾기",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-아이와-함께-안내-내용",
+        "type": "other",
+        "claim": "아이와 함께 안내 내용",
+        "value": "근대역사박물관·진포해양공원·테디베어박물관은 서로 직선 1km 안 · 월요일에도 여는 곳은 테디베어박물관·킹콩놀이터",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-근대역사박물관-이용시간-(3~10월)",
+        "type": "other",
+        "claim": "근대역사박물관 이용시간 (3~10월)",
+        "value": "09:00–18:00 (입장마감 17:30)",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-other-군산각-웹사이트-주소(URL)",
+        "type": "other",
+        "claim": "군산각 웹사이트 주소(URL)",
+        "value": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-date-근대역사박물관-휴관일",
+        "type": "date",
+        "claim": "근대역사박물관 휴관일",
+        "value": "매주 월요일 1월 1일, 시장이 휴관일로 정한 날",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      },
+      {
+        "id": "fact-price-근대역사박물관-개별-성인-입장료",
+        "type": "price",
+        "claim": "근대역사박물관 개별 성인 입장료",
+        "value": "성인 2,000원",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-30"
+      }
+    ],
+    "cohortQuestionBank": "c1"
+  },
+  {
+    "tenantId": "gunsan-national",
+    "brandName": "군산각",
+    "aliases": [
+      "군산각",
+      "군산여행의 모든것"
+    ],
+    "ownedDomains": [
+      "gunsan.webforai.kr",
+      "all-about-gunsan.vercel.app"
+    ],
+    "industry": "관광안내",
+    "region": "국내",
+    "engines": [
+      "openai",
+      "perplexity"
+    ],
+    "questionBankSize": 36,
+    "questionBankVersion": "v3",
+    "repeatsPerQuestion": 1,
+    "competitors": [
+      {
+        "name": "한국관광공사",
+        "aliases": [
+          "한국관광공사"
+        ],
+        "domains": [
+          "kto.visitkorea.or.kr"
+        ]
+      },
+      {
+        "name": "서울관광재단",
+        "aliases": [
+          "서울관광재단"
+        ],
+        "domains": [
+          "sto.or.kr"
+        ]
+      },
+      {
+        "name": "제주관광공사",
+        "aliases": [
+          "제주관광공사"
+        ],
+        "domains": [
+          "ijto.or.kr"
+        ]
+      },
+      {
+        "name": "부산관광공사",
+        "aliases": [
+          "부산관광공사"
+        ],
+        "domains": [
+          "bto.or.kr"
+        ]
+      },
+      {
+        "name": "인천관광공사",
+        "aliases": [
+          "인천관광공사"
+        ],
+        "domains": []
+      }
+    ],
+    "factGraph": [
+      {
+        "id": "fact-location-안내-대상-지역",
+        "type": "location",
+        "claim": "안내 대상 지역",
+        "value": "군산",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      },
+      {
+        "id": "fact-other-맞춤-일정-작성-서비스",
+        "type": "other",
+        "claim": "맞춤 일정 작성 서비스",
+        "value": "AI 코스 만들기",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      },
+      {
+        "id": "fact-other-아동-동반-여행자-대상-안내",
+        "type": "other",
+        "claim": "아동 동반 여행자 대상 안내",
+        "value": "아이와 함께",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      },
+      {
+        "id": "fact-other-대표전화",
+        "type": "other",
+        "claim": "대표전화",
+        "value": "070-4260-8310",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      },
+      {
+        "id": "fact-other-운영-주체",
+        "type": "other",
+        "claim": "운영 주체",
+        "value": "주식회사 에이아이오투오(AIO2O)",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      },
+      {
+        "id": "fact-other-수록-항목-수(관광지·맛집·숙소)",
+        "type": "other",
+        "claim": "수록 항목 수(관광지·맛집·숙소)",
+        "value": "가볼만한 곳 160곳 맛집 172곳 숙소 90곳",
+        "sourceUrl": "https://gunsan.webforai.kr/",
+        "updatedAt": "2026-10-21"
+      }
+    ],
+    "cohortQuestionBank": "c1",
+    "marketScope": "national"
   }
 ]

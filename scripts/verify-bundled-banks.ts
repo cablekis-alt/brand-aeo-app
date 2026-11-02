@@ -101,7 +101,62 @@ for (const tenantId of bundledTenants) {
   );
 }
 
-// ── 2. 동봉본 만들기(--bundle-out) — 가짜 앱 데이터 ──────────────────────────
+// ── 2. 저장소 설정(server/tenants.config.json)과 맞는가 ──────────────────────
+interface Tenant {
+  tenantId: string;
+  industry: string;
+  region: string;
+  questionBankVersion: string;
+  cohortQuestionBank?: string;
+  marketScope?: string;
+  cohortOnly?: boolean;
+  factGraph?: { id: string; value: string }[];
+}
+const config = readJson<Tenant[]>(path.join(repoRoot, 'server', 'tenants.config.json'));
+const { cohortKey } = await import('../server/cohortQuestionBank');
+ok('저장소 설정 — tenantId가 겹치지 않음', new Set(config.map((t) => t.tenantId)).size === config.length);
+for (const tenantId of bundledTenants) {
+  const t = config.find((x) => x.tenantId === tenantId);
+  ok(`${tenantId} — 저장소 설정에 구운 고객 브랜드(동봉본은 저장소 설정이 판을 정하는 브랜드만)`, Boolean(t && !t.cohortOnly));
+  if (!t) continue;
+  const file = path.join(BUNDLE_DIR, tenantId, `${t.questionBankVersion}.json`);
+  ok(`${tenantId} — 저장소 설정의 판 ${t.questionBankVersion}이 동봉돼 있음`, existsSync(file), file);
+  if (!existsSync(file)) continue;
+  const bank = readJson<Bank>(file);
+  ok(
+    `${tenantId} — 동봉본의 코호트 출처가 설정의 업종 · 지역 · 공통 질문지(${cohortKey(t.industry, t.region)}/${t.cohortQuestionBank})와 같음`,
+    bank.cohortBank?.key === cohortKey(t.industry, t.region) && bank.cohortBank?.version === t.cohortQuestionBank,
+    JSON.stringify(bank.cohortBank),
+  );
+}
+const tenantOf = (id: string) => config.find((t) => t.tenantId === id);
+ok(
+  '저장소 설정 — web4ai v6 · gunsan v7(관광정보서비스 · 전북 군산 · 지역형) · gunsan-national v3(관광안내 · 국내 · 전국형)',
+  tenantOf('web4ai')?.questionBankVersion === 'v6' &&
+    tenantOf('gunsan')?.questionBankVersion === 'v7' &&
+    tenantOf('gunsan')?.industry === '관광정보서비스' &&
+    tenantOf('gunsan')?.region === '전북 군산' &&
+    tenantOf('gunsan')?.marketScope === undefined &&
+    tenantOf('gunsan-national')?.questionBankVersion === 'v3' &&
+    tenantOf('gunsan-national')?.industry === '관광안내' &&
+    tenantOf('gunsan-national')?.region === '국내' &&
+    tenantOf('gunsan-national')?.marketScope === 'national',
+);
+ok(
+  '저장소 설정 — 군산각 사실에 옛 오버레이의 대구 주소(brand-address)가 없음(운영 PC의 fact-graph.json을 구움)',
+  ['gunsan', 'gunsan-national'].every((id) => (tenantOf(id)?.factGraph ?? []).length > 0 && (tenantOf(id)?.factGraph ?? []).every((f) => f.id !== 'brand-address' && !f.value.includes('대구'))),
+);
+// 군산각은 데스크톱에서만 잰다 — CI가 재면 웹 데모 데이터 · 첫 실행 시드에 실린다.
+const srcData = readdirSync(path.join(repoRoot, 'src', 'data'));
+const demoCards = readJson<{ tenantId: string }[]>(path.join(repoRoot, 'src', 'data', 'demo-scorecards.json'));
+ok(
+  '웹 데모 데이터 — 군산각(gunsan*) 질문지 · 분석 · 카드 · liveRegistry 없음',
+  !srcData.some((n) => /^live-gunsan/.test(n)) &&
+    !demoCards.some((c) => c.tenantId.startsWith('gunsan')) &&
+    !/gunsan/.test(readFileSync(path.join(repoRoot, 'server', 'liveRegistry.ts'), 'utf8')),
+);
+
+// ── 3. 동봉본 만들기(--bundle-out) — 가짜 앱 데이터 ──────────────────────────
 const tmp = mkdtempSync(path.join(tmpdir(), 'verify-bundled-banks-'));
 try {
   const promote = await import('./promote-probe-questions');
