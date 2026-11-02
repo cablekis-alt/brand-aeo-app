@@ -2,7 +2,7 @@ import type { ActionStateMap, ActionStatus, PublishedPost, TopicSnapshot } from 
 import { blogPlatformOf } from './blogPlatforms'
 import { aliveExtraArticles, extraTopicSnapshot, resolveExtraArticle, type ExtraArticle, type ExtraResolveHow } from './extraArticles'
 import { ENGINE_LABEL } from './format'
-import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
+import { daysAfterPublish, editTimingOf, indexWeekCitations, isoWeekOf, kstDate, matchKind, measuredWindow, postedAtIndex, questionKinds, timingOf, trackingKey, type MeasureWindow, type PostTiming, type WeekTally } from './publishedUrl'
 import { objectParticle, subjectParticle } from './korean'
 import { siteGroupKey } from './siteGroup'
 import { computeQuestionWinLoss, type WinLossRow } from './questionWinLoss'
@@ -979,10 +979,10 @@ function publishedHitsOf(
     return p.removedReason === 'taken-down' && removedOn && measuredBefore(removedOn) ? [{ post: p, takenDownOn: removedOn }] : []
   })
   if (shown.length === 0) return out
-  // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄 질문으로 나누지 않는다(확인 불가).
-  const named = new Map(questions.map((q) => [q.questionId, q.containsBrandName]))
-  const known = analyses.some((a) => named.has(a.questionId))
-  const index = indexWeekCitations(analyses, known ? named : null)
+  // 은행에서 이 주 질문을 하나도 찾지 못하면 이름 없는/이름 댄/실증 질문으로 나누지 않는다(확인 불가).
+  const kinds = questionKinds(questions)
+  const known = analyses.some((a) => kinds.has(a.questionId))
+  const index = indexWeekCitations(analyses, known ? kinds : null)
   // 질의만 다른 주소는 응답 단위로 센다 — 한 응답이 변형 주소 여럿을 인용해도 한 번이다.
   const responseKeys = new Map<string, Set<string>>()
   for (const a of analyses) {

@@ -220,9 +220,17 @@ export interface CitationTally {
 
 export interface WeekTally {
   all: CitationTally
-  /** 브랜드 이름 없는 질문(containsBrandName=false). 질문 은행을 못 읽었으면 null — 0이 아니라 확인 불가다. */
+  /**
+   * 브랜드 이름 없는 질문(containsBrandName=false) — 실증 질문은 빼고 probe에 따로 센다. 질문 은행을 못 읽었으면 null — 0이 아니라
+   * 확인 불가다.
+   */
   unnamed: CitationTally | null
   named: CitationTally | null
+  /**
+   * 실증 질문(probe — 점수 밖 실험 질문, src/lib/questionScope.ts). 처치 글이 실증 답에 인용됐는지가 실험 결과라 보이되, 이름 없는
+   * 질문에 합치지 않는다 — 실증을 덧붙인 주부터 이름 없는 질문의 분모가 뛰어 주간 비교가 깨진다. 은행을 못 읽었으면 null.
+   */
+  probe: CitationTally | null
   /** 은행에 없는 질문의 응답. 은행을 못 읽었으면 all과 같다. */
   unknown: CitationTally
   /** 이 키로 묶인 원래 주소 몇 개(3개까지) — 무엇이 맞았는지 보여 줄 근거. */
@@ -243,11 +251,22 @@ interface AnalysisLike {
 
 const emptyTally = (): CitationTally => ({ cited: 0, supporting: 0, mentioned: 0 })
 
+/** 올린 글 인용을 나누는 질문 종류 — 이름 댄 · 이름 없는 · 실증. */
+export type QuestionKind = 'named' | 'unnamed' | 'probe'
+
 /**
- * 한 주 판정의 인용을 키별로 센다. namedById는 질문 id → containsBrandName — 그 주를 측정한 은행에서 만든다. null이면
- * 은행을 못 읽은 것이라 이름 없는/이름 댄 질문을 나누지 않는다.
+ * 은행 문항 → 질문 종류. 실증(probe: true)이 먼저다 — 실증은 이름 없는 질문이지만 점수 밖이라 따로 센다. 런타임 import를 두지 않으려고
+ * src/lib/questionScope.ts isProbe와 같은 규칙을 여기 적는다.
  */
-export function indexWeekCitations(analyses: AnalysisLike[], namedById: Map<string, boolean> | null): Map<string, WeekTally> {
+export function questionKinds(questions: { questionId: string; containsBrandName: boolean; probe?: boolean }[]): Map<string, QuestionKind> {
+  return new Map(questions.map((q) => [q.questionId, q.probe === true ? 'probe' : q.containsBrandName ? 'named' : 'unnamed']))
+}
+
+/**
+ * 한 주 판정의 인용을 키별로 센다. kindById는 질문 id → 질문 종류(questionKinds) — 그 주를 측정한 은행에서 만든다. null이면
+ * 은행을 못 읽은 것이라 이름 없는/이름 댄/실증 질문을 나누지 않는다.
+ */
+export function indexWeekCitations(analyses: AnalysisLike[], kindById: Map<string, QuestionKind> | null): Map<string, WeekTally> {
   const out = new Map<string, WeekTally>()
   const seen = new Set<string>()
   for (const a of analyses) {
@@ -265,15 +284,16 @@ export function indexWeekCitations(analyses: AnalysisLike[], namedById: Map<stri
       seen.add(`${response}|${key}`)
       const row = out.get(key) ?? {
         all: emptyTally(),
-        unnamed: namedById ? emptyTally() : null,
-        named: namedById ? emptyTally() : null,
+        unnamed: kindById ? emptyTally() : null,
+        named: kindById ? emptyTally() : null,
+        probe: kindById ? emptyTally() : null,
         unknown: emptyTally(),
         forms: [],
       }
-      const named = namedById?.get(a.questionId)
-      const buckets = [row.all, named === undefined ? row.unknown : named ? row.named! : row.unnamed!]
-      // 이름 없는 질문의 「뒷받침」은 그 답에 우리 이름이 나왔을 때만 센다 — 실행 항목 카드 · 인용 출처 집계와 같은 기준(맘맘 오분류).
-      const supports = hit.supporting && (a.mentioned || named !== false)
+      const kind = kindById?.get(a.questionId)
+      const buckets = [row.all, kind === undefined ? row.unknown : row[kind]!]
+      // 이름 없는 질문(실증 포함)의 「뒷받침」은 그 답에 우리 이름이 나왔을 때만 센다 — 실행 항목 카드 · 인용 출처 집계와 같은 기준(맘맘 오분류).
+      const supports = hit.supporting && (a.mentioned || kind === undefined || kind === 'named')
       for (const t of buckets) {
         t.cited += 1
         if (supports) t.supporting += 1

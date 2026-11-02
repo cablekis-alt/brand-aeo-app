@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { ComparisonNote, ShareDelta, UrlLink } from '../components/CitationBits'
 import { useTenant } from '../context/useTenant'
-import { loadCitationSources } from '../lib/api'
+import { loadCitationSources, loadQuestionBank } from '../lib/api'
 import {
   GAP_BUCKET_LABEL,
   GAP_BUCKET_ORDER,
@@ -22,6 +22,7 @@ import {
   comparisonFromHistory,
 } from '../lib/citationView'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
+import { isProbe } from '../lib/questionScope'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 
@@ -166,7 +167,28 @@ function GapRowView({
 export default function CitationGap() {
   const { tenant } = useTenant()
   const [engine, setEngine] = useState<string>('')
-  const [scope, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
+  // 「실증 질문」 칸은 지금 질문지에 실증 질문이 있는 브랜드에만 보인다 — 없는 브랜드에는 늘 빈 집계라 고를 까닭이 없다.
+  const [probeBank, setProbeBank] = useState<{ tenantId: string; has: boolean } | null>(null)
+  useEffect(() => {
+    if (!tenant?.tenantId) return
+    let alive = true
+    const tenantId = tenant.tenantId
+    loadQuestionBank(tenantId).then(
+      (bank) => alive && setProbeBank({ tenantId, has: Boolean(bank?.questions.some(isProbe)) }),
+      (err: unknown) => {
+        console.error('[CitationGap] 질문지를 읽지 못했습니다', err)
+        if (alive) setProbeBank({ tenantId, has: false })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenant?.tenantId])
+  const hasProbes = probeBank !== null && probeBank.tenantId === tenant?.tenantId && probeBank.has
+  const scopeOptions = QUESTION_SCOPE_OPTIONS.filter((s) => s !== 'probe' || hasProbes)
+  const [scopePick, setScope] = useState<CitationQuestionScope | 'all'>('unnamed')
+  // 실증 질문이 없는 브랜드로 옮기면 고른 「실증 질문」도 풀린다.
+  const scope = scopeOptions.includes(scopePick) ? scopePick : 'unnamed'
   const questions = scope === 'all' ? null : scope
   const [bucket, setBucket] = useState<GapBucket | 'all'>('all')
   const [query, setQuery] = useState('')
@@ -255,7 +277,7 @@ export default function CitationGap() {
           ))}
         </select>
         <select value={scope} onChange={(e) => setScope(e.target.value as CitationQuestionScope | 'all')} aria-label="질문 유형 필터">
-          {QUESTION_SCOPE_OPTIONS.map((s) => (
+          {scopeOptions.map((s) => (
             <option key={s} value={s}>
               {QUESTION_SCOPE_LABEL[s]}
             </option>

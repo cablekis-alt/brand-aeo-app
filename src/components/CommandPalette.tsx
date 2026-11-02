@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTenant } from '../context/useTenant'
 import { loadQuestionBank } from '../lib/api'
 import { allScreens } from '../lib/menu'
+import { isProbe } from '../lib/questionScope'
 import type { QuestionSpec } from '../lib/types'
 
 interface Command {
@@ -108,13 +109,16 @@ export default function CommandPalette() {
     }
     if (!q) return screens
     const questions = (bank?.tenantId === tenantId ? bank.questions : [])
-      .filter((x) => matches(`${x.text} ${x.topic ?? ''}`, q))
+      .filter((x) => matches(`${x.text} ${x.topic ?? ''}${isProbe(x) ? ' 실증 질문' : ''}`, q))
       .slice(0, MAX_QUESTIONS)
       .map((x) => ({
         id: `q:${x.questionId}`,
         kind: '질문' as const,
         label: x.text,
-        hint: [x.topic, x.category === 'category-agnostic' ? '이름 없는 질문' : '이름 넣은 질문'].filter(Boolean).join(' · '),
+        // 실증 질문(점수 밖 실험 질문)은 이름 없는 질문이지만 따로 밝힌다 — AI 답변 화면은 그 질문을 「실증」 칸에서 연다.
+        hint: [x.topic, isProbe(x) ? '실증 질문 · 점수 제외' : x.category === 'category-agnostic' ? '이름 없는 질문' : '이름 넣은 질문']
+          .filter(Boolean)
+          .join(' · '),
         to: `/answers?q=${encodeURIComponent(x.questionId)}`,
       }))
     const competitors = (tenant?.competitors ?? [])

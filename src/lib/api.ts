@@ -551,7 +551,8 @@ export interface HistoryWeek {
   window: import('./publishedUrl').MeasureWindow | null
   engines: string[]
   bankVersion: string | null
-  responses: { all: number; unnamed: number | null; named: number | null; unknown: number }
+  /** 응답 수 — 실증 질문의 응답은 이름 없는 질문에 넣지 않고 probe로 센다. */
+  responses: { all: number; unnamed: number | null; named: number | null; probe: number | null; unknown: number }
   /** 직전 측정 주와 달라진 측정 조건. */
   changes: string[]
   /** 그 주 회차 — 같은 주에 여러 번 잰 주에만(옛 서버는 없다). */

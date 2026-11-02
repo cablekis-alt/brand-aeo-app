@@ -37,9 +37,10 @@ const weekSerial = (weekOf: string) => {
 /**
  * 칸 하나 — 숫자는 정확 일치 인용만, 응답 단위로 센다. 같은 주에 여러 번 잰 주는 회차 단위로 「3회 중 1회」를 앞세우고 응답 합은
  * 아래 줄에 적는다(runTallyText). 0을 지어내지 않는다: 판정 기록이 없는 주는 「확인 불가」, 질문 은행을 못
- * 읽은 주는 질문 유형을 확인 불가로 둔다. 「인용 없음」은 그 주 AI 답변 인용에서 찾지 못했다는 뜻이다.
+ * 읽은 주는 질문 유형을 확인 불가로 둔다. 「인용 없음」은 그 주 AI 답변 인용에서 찾지 못했다는 뜻이다. 실증 질문의 인용은 이름 없는
+ * 질문에 넣지 않고 「실증」으로 따로 적는다 — 실증을 측정한 주가 있는 브랜드에서만(withProbe).
  */
-function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: string; title: string } {
+function cellView(c: HistoryCell | null, withProbe: boolean): { main: string; sub: string[]; cls: string; title: string } {
   if (!c) return { main: '확인 불가', sub: [], cls: 'muted', title: '그 주 판정 기록이 없습니다' }
   if (c.afterRemoval) return { main: '내린 뒤', sub: [], cls: 'muted', title: '글을 내린 뒤에 한 측정이라 세지 않습니다' }
   if (c.timing === 'before') return { main: '—', sub: [], cls: 'muted', title: '올리기 전에 한 측정이라 세지 않습니다' }
@@ -50,6 +51,7 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
   if (runs) {
     main = runs.main
     sub.push(...runs.sub)
+    if (withProbe && c.tally?.probe) sub.push(`응답 합 실증 ${c.tally.probe.cited}`)
   } else if (!c.tally) {
     main = unsure ? '전후 불명' : '인용 없음'
     // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다(판단 칸은 「색인 대기」) — 그 까닭을 칸에도 적는다.
@@ -57,6 +59,7 @@ function cellView(c: HistoryCell | null): { main: string; sub: string[]; cls: st
     if (fresh) sub.push(fresh)
   } else if (c.tally.unnamed && c.tally.named) {
     main = `이름 없는 ${c.tally.unnamed.cited} · 이름 댄 ${c.tally.named.cited}`
+    if (withProbe) main += ` · 실증 ${c.tally.probe?.cited ?? 0}`
     sub.push(`뒷받침 ${c.tally.all.supporting}`)
   } else {
     main = `인용 ${c.tally.all.cited}`
@@ -97,6 +100,8 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
   const gapBefore = weeks.map((w, i) => (i > 0 ? weekSerial(w.weekOf) - weekSerial(weeks[i - 1]!.weekOf) - 1 : 0))
   const postings = distinctPostings(history.posts, (p) => p.post)
   const runIssues = history.weeks.reduce((n, w) => n + (w.runIssues?.length ?? 0), 0)
+  // 실증 질문을 측정한 주가 있을 때만 칸에 「실증」을 적고 안내를 붙인다 — 실증이 없는 브랜드의 표는 그대로다.
+  const withProbe = history.weeks.some((w) => (w.responses.probe ?? 0) > 0)
 
   const row = ({ item: p, places }: Posting<PostHistory>) => {
     const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
@@ -150,7 +155,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>
         {cells.flatMap((c, i) => {
-          const v = cellView(c)
+          const v = cellView(c, withProbe)
           // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다. 고치기 전 회차가 섞인 주는 고친 뒤 몫을 따로 적는다.
           const editNote = c && !c.afterRemoval && c.timing === 'after' ? weekEditNote(p.post, c, weeks[i]!) : null
           if (editNote) v.sub.push(editNote)
@@ -216,7 +221,10 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
       <p className="doc-meta">
         숫자는 그 주소가 정확히 인용된 AI 응답 수입니다(한 응답에 여러 번 나와도 1). 「이름 없는 질문」은 브랜드 이름을 넣지 않은
         질문(containsBrandName=false)으로, 점수가 쓰는 「카테고리 무관 질문」과 정의가 다릅니다(옛 질문지에서는 일부 질문이 두 기준에서 갈립니다). 「인용 없음」은 그 주 분석에서
-        찾지 못했다는 뜻입니다. 같은 주에 여러 번 잰 주는 「3회 중 1회」처럼 회차 단위로 적고(한 회차라도 인용되면 그 주는 인용),
+        찾지 못했다는 뜻입니다.
+        {withProbe &&
+          ' 「실증」은 점수에 넣지 않는 실험 질문(실증 · 점수 제외)의 인용으로, 「이름 없는」에 넣지 않고 따로 셉니다 — 실증을 더한 주에도 이름 없는 질문 숫자를 그 전 주와 견줄 수 있습니다. 실증을 맡은 글(처치)이 실증 답에 인용되는지가 실험 결과이며, 단일 측정은 흔들리니 2번 이상 같은 방향일 때만 결론을 냅니다.'}{' '}
+        같은 주에 여러 번 잰 주는 「3회 중 1회」처럼 회차 단위로 적고(한 회차라도 인용되면 그 주는 인용),
         응답 수는 아래 줄에 합으로 적습니다. 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 단일 측정은
         흔들립니다. 자주 잴수록 한 주가 인용으로 잡힐 기회가 늘어, 판단 옆에 회차 수를 함께 적습니다.
         같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 · 채널)에 적은 기록은 한 행으로 묶고 올린 곳을 함께 적습니다.

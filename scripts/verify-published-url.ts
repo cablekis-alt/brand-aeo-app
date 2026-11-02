@@ -11,7 +11,7 @@
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
 
-const { daysAfterPublish, trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
+const { daysAfterPublish, trackingKey, isArticleUrl, matchKind, indexWeekCitations, measuredWindow, questionKinds, timingOf, isoWeekOf } = await import('../src/lib/publishedUrl')
 const { computeGapActions } = await import('../src/lib/gapActions')
 const { analyzeCitationSources } = await import('../server/citationSources')
 type Analyses = Parameters<typeof computeGapActions>[0]
@@ -129,7 +129,10 @@ const week = [
   response('v9-001', 1, true, [['https://fake.tistory.com/1', true]], '2026-10-14T02:00:00Z'),
   response('v9-002', 0, false, [['https://fake.tistory.com/1', false], ['https://fake.tistory.com/12', true]], '2026-10-15T03:00:00Z'),
 ]
-const named = new Map([['v9-001', false], ['v9-002', true]])
+const named = questionKinds([
+  { questionId: 'v9-001', containsBrandName: false },
+  { questionId: 'v9-002', containsBrandName: true },
+])
 const t = indexWeekCitations(week, named).get('fake.tistory.com/1')
 ok('응답 단위로 센다(한 응답 안 중복은 1회)', t?.all.cited === 3 && t.all.supporting === 2)
 ok('이름 없는/이름 댄 질문을 가른다', t?.unnamed?.cited === 2 && t.unnamed.supporting === 2 && t.named?.cited === 1 && t.named.supporting === 0)

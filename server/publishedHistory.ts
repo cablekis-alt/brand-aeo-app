@@ -8,6 +8,7 @@ import {
   matchKind,
   measuredWindow,
   postedAtIndex,
+  questionKinds,
   timingOf,
   trackingKey,
   type CitationTally,
@@ -68,8 +69,11 @@ export interface HistoryWeek {
   engines: string[];
   /** 그 주 판정을 나눈 질문 은행 판. 못 찾았으면 null. */
   bankVersion: string | null;
-  /** 응답 수(분모) — 은행을 못 찾으면 이름 없는/이름 댄은 null. 회차가 여럿이면 그 주 카드 회차의 수. */
-  responses: { all: number; unnamed: number | null; named: number | null; unknown: number };
+  /**
+   * 응답 수(분모) — 은행을 못 찾으면 이름 없는/이름 댄/실증은 null. 회차가 여럿이면 그 주 카드 회차의 수. 실증 질문의 응답은 이름 없는
+   * 질문에 넣지 않고 probe로 센다 — 실증을 덧붙인 주에도 이름 없는 질문의 분모가 그 전 주와 같다(src/lib/publishedUrl.ts WeekTally.probe).
+   */
+  responses: { all: number; unnamed: number | null; named: number | null; probe: number | null; unknown: number };
   /**
    * 직전 측정 주와 달라진(또는 확인할 수 없는) 측정 조건 — 엔진만 늘어도 인용이 생긴 것처럼 보일 수 있어 알린다(보정하지 않는다).
    * 바뀐 조건은 이름 그대로(「판정 모델」), 한쪽에만 기록이 있는 조건은 「판정 모델 기록 없음」(src/lib/comparability.ts conditionLabels).
@@ -191,7 +195,7 @@ export async function getPublishedHistory(
         window: null,
         engines: card.enginesUsed ?? [],
         bankVersion: null,
-        responses: { all: 0, unnamed: null, named: null, unknown: 0 },
+        responses: { all: 0, unnamed: null, named: null, probe: null, unknown: 0 },
         changes,
         ...runIssues,
       });
@@ -267,22 +271,17 @@ export async function sampleView(
   // 카드에 판이 적혀 있으면 그 판만 쓴다 — 그 파일이 없어 지금 판으로 넘어가면, 판마다 다시 쓰이는 질문 id(c1-001 등)가 다른
   // 질문을 가리킬 수 있다. 판을 모르면 확인 불가로 둔다.
   const bank = found && card.questionBankVersion && found.version !== card.questionBankVersion ? null : found;
-  const named = bank ? new Map(bank.questions.map((q) => [q.questionId, q.containsBrandName])) : null;
-  const index = indexWeekCitations(analyses, named);
+  const kinds = bank ? questionKinds(bank.questions) : null;
+  const index = indexWeekCitations(analyses, kinds);
   const measured = measuredWindow(analyses);
   const window: MeasureWindow | null = measured && startAt ? { ...measured, startAt } : measured;
 
   // 분모와 응답별 인용 키 — 같은 응답이 두 번 들어온 파일(재판정 덧붙임)도 한 번만 센다.
   const responseKeys = new Map<string, Set<string>>();
-  const counts = { unnamed: 0, named: 0, unknown: 0 };
+  const counts = { unnamed: 0, named: 0, probe: 0, unknown: 0 };
   for (const a of analyses) {
     const id = `${a.questionId}|${a.engine}|${a.callIndex}`;
-    if (!responseKeys.has(id)) {
-      const n = named?.get(a.questionId);
-      if (n === undefined) counts.unknown += 1;
-      else if (n) counts.named += 1;
-      else counts.unnamed += 1;
-    }
+    if (!responseKeys.has(id)) counts[kinds?.get(a.questionId) ?? 'unknown'] += 1;
     const keys = responseKeys.get(id) ?? new Set<string>();
     for (const c of a.citations ?? []) {
       const key = c.raw ? trackingKey(c.raw) : null;
@@ -330,7 +329,7 @@ export async function sampleView(
   let byEngine: Record<string, number>[] | undefined;
   if (opts?.byEngine) {
     const engineNames = [...new Set(analyses.map((a) => a.engine))].sort();
-    const perEngine = engineNames.map((e) => [e, indexWeekCitations(analyses.filter((a) => a.engine === e), named)] as const);
+    const perEngine = engineNames.map((e) => [e, indexWeekCitations(analyses.filter((a) => a.engine === e), kinds)] as const);
     byEngine = shown.map((post, i) =>
       cells[i]!.tally ? Object.fromEntries(perEngine.map(([e, idx]) => [e, idx.get(post.key)?.all.cited ?? 0]).filter(([, n]) => (n as number) > 0)) : {},
     );
@@ -343,8 +342,9 @@ export async function sampleView(
     engines: card.enginesUsed ?? [...new Set(analyses.map((a) => a.engine))].sort(),
     responses: {
       all: responseKeys.size,
-      unnamed: named ? counts.unnamed : null,
-      named: named ? counts.named : null,
+      unnamed: kinds ? counts.unnamed : null,
+      named: kinds ? counts.named : null,
+      probe: kinds ? counts.probe : null,
       unknown: counts.unknown,
     },
     cells,
@@ -376,7 +376,7 @@ function addTally(a: CitationTally, b: CitationTally): CitationTally {
   return { cited: a.cited + b.cited, supporting: a.supporting + b.supporting, mentioned: a.mentioned + b.mentioned };
 }
 
-/** 회차들의 정확 일치 인용 합 — 이름 없는/이름 댄은 한 회차라도 은행을 못 읽었으면 확인 불가. */
+/** 회차들의 정확 일치 인용 합 — 이름 없는/이름 댄/실증은 한 회차라도 은행을 못 읽었으면 확인 불가. */
 function sumTallies(tallies: WeekTally[]): WeekTally | null {
   if (tallies.length === 0) return null;
   return tallies.slice(1).reduce<WeekTally>(
@@ -384,6 +384,7 @@ function sumTallies(tallies: WeekTally[]): WeekTally | null {
       all: addTally(sum.all, t.all),
       unnamed: sum.unnamed && t.unnamed ? addTally(sum.unnamed, t.unnamed) : null,
       named: sum.named && t.named ? addTally(sum.named, t.named) : null,
+      probe: sum.probe && t.probe ? addTally(sum.probe, t.probe) : null,
       unknown: addTally(sum.unknown, t.unknown),
       forms: [...new Set([...sum.forms, ...t.forms])].slice(0, 3),
     }),

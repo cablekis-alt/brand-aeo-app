@@ -21,7 +21,7 @@ import { useScorecards } from '../lib/useScorecards'
 import { useRunHistory } from '../lib/useRunHistory'
 import { kstStamp } from '../lib/runTrend'
 import { isOpenAction } from '../lib/gapActions'
-import { isScoredAgnostic } from '../lib/questionScope'
+import { isProbe, isScoredAgnostic } from '../lib/questionScope'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 
 /** 5주 추이에 보이는 주 수. */
@@ -288,6 +288,10 @@ export default function Dashboard() {
   const ranked = card?.rankedResponses
   const unnamed = promptedSplit?.unnamed
   const conditions = card ? measureConditionText(card) : null
+  // 그 주에 쓴 은행과 그 실증 질문 수 — 아래쪽 문구가 쓴다.
+  const weekBank =
+    card && todoData?.key === splitKey && todoData.bank && todoData.bank.version === card.questionBankVersion ? todoData.bank : null
+  const weekProbes = weekBank ? weekBank.questions.filter(isProbe).length : 0
   // 5주 추이 — 이번 주와 같은 조건으로 잰 구간의 첫 주. 그 앞 주는 빈 막대로 그려 잇지 않는다(보고서 「견주는 구간」과 같은 규칙).
   const runStart = card ? (comparableRun(history, card.weekOf)[0]?.weekOf ?? null) : null
   const hasPrior = runStart !== null && trendWeeks.length > 0 && trendWeeks[0]!.weekOf < runStart
@@ -1023,10 +1027,10 @@ export default function Dashboard() {
           <>
             {weekLabel(card.weekOf)} 측정 · 수집 {conditions.collect} · 판정 {conditions.judge} · 질문{' '}
             {/* 그 주에 쓴 은행의 문항 수 — 설정값은 다음 측정의 값이라(경쟁사 편집이 질문을 빼면 41) 그 주와 다를 수 있다. */}
-            {(todoData?.key === splitKey && todoData.bank && todoData.bank.version === card.questionBankVersion
-              ? todoData.bank.questions.length
-              : tenant?.questionBankSize) ?? '—'}
-            개{card.questionBankVersion ? ` (질문지 ${card.questionBankVersion})` : ''} ·{' '}
+            {(weekBank ? weekBank.questions.length : tenant?.questionBankSize) ?? '—'}
+            {/* 실증 질문(점수 밖 실험 질문)도 매번 묻는다 — 문항 수에 넣고 그중 몇 개인지 밝힌다. 설정값(questionBankSize)은 실증을 뺀 수다. */}
+            개{weekProbes > 0 && `(실증 ${weekProbes}개 포함)`}
+            {card.questionBankVersion ? ` (질문지 ${card.questionBankVersion})` : ''} ·{' '}
             {conditions.repeats}.
           </>
         ) : (

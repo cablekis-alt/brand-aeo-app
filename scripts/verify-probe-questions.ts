@@ -632,6 +632,80 @@ try {
     JSON.stringify(splitAfter),
   );
 
+  // ── 8-1. 올린 글 인용 이력 ─────────────────────────────────────────────────────
+  // 실증 응답의 인용은 이름 없는 질문에 넣지 않고 probe 칸에 센다 — 처치 글이 실증 답에 인용됐는지가 실험 결과라 보이되, 이름 없는
+  // 질문의 숫자 · 분모는 덧붙이기 전 주와 같아야 주간 비교가 이어진다. 모든 가짜 인용은 own.example/page다(원래 응답 1건 · 실증 3건).
+  const { foldCell, sampleView } = await import('../server/publishedHistory');
+  const { indexWeekCitations, questionKinds } = await import('../src/lib/publishedUrl');
+  const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable');
+  const kindsAfter = questionKinds(bankAfter);
+  check(
+    '질문 종류: 실증은 probe · 이름 없는/이름 넣은 질문은 그대로',
+    kindsAfter.get('v5-p001') === 'probe' && kindsAfter.get('v5-001') === 'unnamed' && kindsAfter.get('v5-003') === 'named',
+    JSON.stringify([...kindsAfter]),
+  );
+  const tallyAfter = indexWeekCitations(afterMixed, kindsAfter).get('own.example/page');
+  const tallyBefore = indexWeekCitations(base, questionKinds(bankBefore)).get('own.example/page');
+  check(
+    '인용 칸: 실증 인용은 probe 칸에만(이름 없는 질문 칸은 덧붙이기 전과 같음)',
+    tallyAfter?.probe?.cited === 3 && tallyAfter.all.cited === 4 && JSON.stringify(tallyAfter.unnamed) === JSON.stringify(tallyBefore?.unnamed) && tallyBefore?.probe?.cited === 0,
+    JSON.stringify(tallyAfter),
+  );
+  check('인용 칸: 은행을 못 읽으면 probe도 null(확인 불가)', indexWeekCitations(afterMixed, null).get('own.example/page')?.probe === null);
+  const trackedPost = {
+    id: 'probe-post',
+    url: 'https://own.example/page',
+    key: 'own.example/page',
+    publishedOn: '2026-10-01',
+    publishedOnSource: 'user' as const,
+    recordedAt: '2026-10-01T03:00:00Z',
+    articleId: 'content:category-agnostic',
+    targetActionId: 'content:category-agnostic',
+    via: 'own' as const,
+  };
+  const viewOf = (store: ResultStore, analyses: QuestionRepeatAnalysis[]) =>
+    sampleView(store, { tenantId: 'probe-test', questionBankVersion: VERSION }, [trackedPost], { weekOf: '2026-W44', scorecard: weekCard, analyses });
+  const viewBefore = await viewOf(beforeStore, base);
+  const viewAfter = await viewOf(afterStore, afterMixed);
+  check(
+    '이력 분모: 실증 응답은 probe로 · 이름 없는/이름 넣은 질문 분모는 덧붙이기 전과 같음',
+    sameJson(viewAfter.responses, { all: 8, unnamed: 4, named: 1, probe: 3, unknown: 0 }) && sameJson(viewBefore.responses, { all: 5, unnamed: 4, named: 1, probe: 0, unknown: 0 }),
+    JSON.stringify({ before: viewBefore.responses, after: viewAfter.responses }),
+  );
+  const viewNoBank = await viewOf(weekStore(null, afterMixed), afterMixed);
+  check('이력 분모: 은행을 못 찾으면 실증도 null', viewNoBank.responses.probe === null && viewNoBank.responses.unnamed === null, JSON.stringify(viewNoBank.responses));
+  const viewNaive = await viewOf(weekStore(unflagged, afterMixed), afterMixed);
+  check(
+    '대조: probe 표시가 없으면 실증 응답이 이름 없는 질문 분모 · 인용에 듦(검사가 헛돌지 않음)',
+    viewNaive.responses.unnamed === 7 && viewNaive.cells[0]?.tally?.unnamed?.cited === 4,
+    JSON.stringify({ responses: viewNaive.responses, unnamed: viewNaive.cells[0]?.tally?.unnamed }),
+  );
+  const folded = foldCell([viewAfter.cells[0]!, viewAfter.cells[0]!], [
+    { partialEngines: [], missingEngines: [] },
+    { partialEngines: [], missingEngines: [] },
+  ]);
+  check('회차 합치기: probe 칸도 더함', folded.tally?.probe?.cited === 6 && folded.tally.unnamed?.cited === 2, JSON.stringify(folded.tally));
+  const foldedNoBank = foldCell([viewAfter.cells[0]!, viewNoBank.cells[0]!], [
+    { partialEngines: [], missingEngines: [] },
+    { partialEngines: [], missingEngines: [] },
+  ]);
+  check('회차 합치기: 한 회차라도 은행을 못 읽었으면 probe는 확인 불가', foldedNoBank.tally?.probe === null, JSON.stringify(foldedNoBank.tally?.probe));
+  // 표 — 실증을 측정한 주가 있을 때만 칸에 「실증」과 안내를 붙인다. 실증이 없는 브랜드의 표는 글자 하나 바뀌지 않는다.
+  const tableHtml = (view: typeof viewAfter, cells = view.cells) =>
+    renderToStaticMarkup(
+      React.createElement(PublishedHistoryTable, {
+        history: {
+          weeks: [{ weekOf: '2026-W44', analysed: true, window: view.window, engines: view.engines, bankVersion: view.bankVersion, responses: view.responses, changes: [] }],
+          posts: [{ post: trackedPost, cells }],
+        },
+      }),
+    ).replaceAll('<!-- -->', '');
+  check('이력 표: 여러 번 잰 주는 응답 합 아래에 실증 인용', tableHtml(viewAfter, [folded]).includes('응답 합 실증 6'), tableHtml(viewAfter, [folded]));
+  const htmlAfter = tableHtml(viewAfter);
+  const htmlBefore = tableHtml(viewBefore);
+  check('이력 표: 실증을 잰 주가 있으면 칸에 「실증 3」', htmlAfter.includes('이름 없는 1 · 이름 댄 0 · 실증 3') && htmlAfter.includes('「실증」은 점수에 넣지 않는'), htmlAfter);
+  check('이력 표: 실증이 없으면 「실증」 글자가 없음', !htmlBefore.includes('실증') && htmlBefore.includes('이름 없는 1 · 이름 댄 0'), htmlBefore);
+
   // ── 9. 경쟁사 편집의 질문 수 · 크기 ─────────────────────────────────────────
   // 저장소 설정의 고객 브랜드 하나(경쟁사 3곳 이상)에 가짜 질문지를 둔다(verify-competitor-save.ts와 같은 방식).
   const ed = await import('../server/competitorEditor');
