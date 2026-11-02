@@ -1,4 +1,5 @@
 import type { QuestionCategory } from '../src/prompts/types.js';
+import { isScoredAgnostic } from '../src/lib/questionScope.js';
 
 /**
  * 언급률·SoM의 산출 모집단 — "카테고리 무관"(무프롬프트) 질문의 응답만 쓴다.
@@ -11,13 +12,19 @@ import type { QuestionCategory } from '../src/prompts/types.js';
  */
 export const MENTION_SCOPE_LABEL = '카테고리 무관 질문';
 
-/** 판정 레코드에서 카테고리 무관 질문의 응답만 골라낸다. 은행에 없는 questionId는 제외한다. */
+/**
+ * 판정 레코드에서 카테고리 무관 질문의 응답만 골라낸다. 은행에 없는 questionId는 제외한다.
+ * 실증 질문(probe)도 뺀다 — 측정은 하지만 점수 모집단이 아니다(src/lib/questionScope.ts).
+ */
 export function agnosticAnalyses<T extends { questionId: string }>(
   analyses: T[],
-  questions: { questionId: string; category: QuestionCategory }[],
+  questions: { questionId: string; category: QuestionCategory; probe?: boolean }[],
 ): T[] {
-  const categoryOf = new Map(questions.map((q) => [q.questionId, q.category]));
-  return analyses.filter((a) => categoryOf.get(a.questionId) === 'category-agnostic');
+  const specOf = new Map(questions.map((q) => [q.questionId, q]));
+  return analyses.filter((a) => {
+    const spec = specOf.get(a.questionId);
+    return spec !== undefined && isScoredAgnostic(spec);
+  });
 }
 
 interface MentionCountable {

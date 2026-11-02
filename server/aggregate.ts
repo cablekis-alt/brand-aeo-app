@@ -1,4 +1,5 @@
 import type { QuestionSpec } from '../src/prompts/types.js';
+import { withoutProbes } from '../src/lib/questionScope.js';
 import { MIN_SOM_MENTIONS, rankWeightFactor } from '../src/prompts/b8-report.js';
 import { agnosticAnalyses, mentionTotals, shareOfMentionOf } from './mentionScope.js';
 import { computeAeoScore, mean, meanWithConfidenceInterval, sentimentWeight } from './scoring.js';
@@ -65,8 +66,12 @@ export function ciBounds(score: number, margin: number): { ciLow: number; ciHigh
 export function aggregateWeeklyMetrics(
   tenant: AggregateTenant,
   questions: QuestionSpec[],
-  analyses: QuestionRepeatAnalysis[],
+  allAnalyses: QuestionRepeatAnalysis[],
 ): WeeklyMetrics {
+  // 실증 질문(probe)의 응답은 처음부터 뺀다 — 아래의 모든 지표(언급률 · 순위 · 사실성 · 자사 인용률 · CI · 환각 플래그)가
+  // 같은 모집단을 보게. 사실성 · 인용은 이름 없는 질문만이 아니라 전체 응답을 쓰므로 agnosticAnalyses만 고쳐서는 실증 인용이
+  // 자사 인용률(점수의 20%)에 섞인다. 실증을 덧붙여도 결과가 한 바이트도 바뀌지 않아야 한다(scripts/verify-probe-questions.ts).
+  const analyses = withoutProbes(allAnalyses, questions);
   // 언급률·SoM·감성 계수는 같은 모집단(카테고리 무관 질문)에서 낸다 — 근거는 server/mentionScope.ts.
   const categoryAgnostic = agnosticAnalyses(analyses, questions);
   const mentionRate = mean(categoryAgnostic.map((a) => (a.mentioned ? 1 : 0)));
