@@ -10,6 +10,7 @@ import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDo
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
 import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
 import { createExtraArticle, ExtraArticlesError, patchExtraArticle, readExtraArticles } from './extraArticles.js';
+import { checkProbeAction, readProbePlan } from './probePlanStore.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -671,6 +672,12 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
   }
   const force = req.query.force === '1';
   try {
+    // 실증 기간에는 배정표 글만 — 질문 은행 입구(actionFromQuestions)와 직접 요청까지 닫는다(server/probePlanStore.ts).
+    const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
+    if (refused) {
+      res.status(400).json({ error: refused });
+      return;
+    }
     if (!force) {
       const existing = (await readBriefs(tenant.tenantId))[actionId];
       if (existing) {
@@ -1003,6 +1010,12 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
   const actionId = typeof b.actionId === 'string' ? b.actionId : '';
   if (!actionId) {
     res.status(400).json({ error: 'actionId가 필요합니다.' });
+    return;
+  }
+  // 실증 기간에는 배정표 글만 — 브리프가 이미 있어도 초안은 만들지 않는다(server/probePlanStore.ts).
+  const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
+  if (refused) {
+    res.status(400).json({ error: refused });
     return;
   }
   // 초안은 브리프에서 한 걸음이다 — 브리프 없이 만들면 구조도 사실 목록도 없는 맨글이 된다.
@@ -1344,6 +1357,21 @@ app.patch('/api/extra-articles/:tenantId', async (req, res) => {
     res.json(await patchExtraArticle(tenant.tenantId, req.body ?? {}));
   } catch (err) {
     sendExtraArticlesError(res, err);
+  }
+});
+
+// 실증 배정 — data/<tenant>/probe-plan.json을 읽기만 한다(server/probePlanStore.ts · src/lib/probePlan.ts). 데스크톱·로컬 전용이다
+// (Vercel 함수는 12/12 — 웹은 404를 「배정 없음」으로 읽는다). 파일이 없으면 plan null, 깨졌으면 corrupt(글 만들기는 서버가 막는다).
+app.get('/api/probe-plan/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await readProbePlan(tenant.tenantId));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 

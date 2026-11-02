@@ -6,6 +6,7 @@ import type { EeatAnalysis } from '../prompts/b6-eeat'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
+import { parseProbePlan, type ProbePlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
 import type { ConditionChange } from './comparability'
 import type {
@@ -985,6 +986,26 @@ export async function loadExtraArticles(tenantId: string): Promise<{ articles: E
   if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
   if (!res.ok || !body || !Array.isArray(body.articles)) throw new Error(body?.error || `추가 글을 읽지 못했습니다 (HTTP ${res.status})`)
   return { articles: normalizeExtraArticles(body.articles), corrupt: body.corrupt === true }
+}
+
+/**
+ * 실증 배정(server/probePlanStore.ts · src/lib/probePlan.ts) — 데스크톱·로컬 전용. **null은 "이 환경에는 배정 기능이 없다"(웹 — 라우트
+ * 404)**는 뜻이라 화면은 배정 파일이 없을 때와 똑같이 그린다. 그 밖의 실패는 이유와 함께 throw한다. 파일이 없으면 plan null ·
+ * corrupt false, 깨졌으면 plan null · corrupt true(서버가 글 만들기를 막는다). 받은 plan도 다시 검사해 틀리면 깨진 것으로 본다.
+ */
+export async function loadProbePlan(tenantId: string): Promise<{ plan: ProbePlan | null; corrupt: boolean } | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/probe-plan/${encodeURIComponent(tenantId)}`)
+  } catch (err) {
+    throw new Error(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, { cause: err })
+  }
+  const body = (await res.json().catch(() => null)) as { plan?: unknown; corrupt?: unknown; error?: string } | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || typeof body !== 'object' || !('plan' in body)) throw new Error(body?.error || `실증 배정을 읽지 못했습니다 (HTTP ${res.status})`)
+  if (body.corrupt === true || body.plan === null) return { plan: null, corrupt: body.corrupt === true }
+  const parsed = parseProbePlan(body.plan)
+  return parsed.plan ? { plan: parsed.plan, corrupt: false } : { plan: null, corrupt: true }
 }
 
 /** 추가 글을 만들 때 보내는 값 — id는 고른 질문으로 여기서 짓는다(서버가 다시 맞춰 본다). questionTexts는 questionIds와 같은 순서. */
