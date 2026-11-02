@@ -23,6 +23,7 @@ import {
   newestBankVersion,
   paraphrasePairs,
   PER_WRITER,
+  suggestName,
   WRITER_ACTIVE_UNTIL,
   WRITER_PLAN_SEED,
   writerHandouts,
@@ -31,6 +32,7 @@ import {
   writeWriterPlanFile,
   type BankQuestion,
   type Cluster,
+  type PoolQuestion,
   type WriterPlanBuild,
   type WriterPlanInput,
   type WriterSpec,
@@ -237,6 +239,24 @@ for (const c of cases) {
   ok('--names — 두 글에 같은 이름을 주면 거절', dupName.plan === null && dupName.errors.some((e) => e.includes('주제 이름이 같습니다')), dupName.errors.join(' / '));
   const longName = buildWriterPlan({ ...stay!.input, names: { [target.id]: '가'.repeat(61) } });
   ok('--names — 60자를 넘으면 거절', longName.plan === null && longName.errors.some((e) => e.includes('60자')), longName.errors.join(' / '));
+}
+
+// ── 이름 제안 — 긴 주제 ─────────────────────────────────────────────────────
+{
+  // 주제 + label이 60자를 넘으면 주제를 줄인다. 번호까지 잘라 내면 번호가 달라도 이름이 같아져 번호 붙이기가 끝나지 않았다.
+  const q = (id: string, topic: string): PoolQuestion => ({ questionId: id, text: `${id} 가짜 질문`, topic });
+  const longTopic = '가상 숙소 주변 관광지와 대중교통 접근성 안내 정리 모음과 주차 및 체크인 시간 안내';
+  const label = '비용 · 예약 정리';
+  const fit = (names: string[]) => new Set(names).size === names.length && names.every((n) => n.length <= 60 && n.endsWith(`(${label})`));
+  const sameUsed = new Set<string>();
+  const same = [...Array(12).keys()].map((i) => suggestName(q(`c1-${pad(i * 2)}`, longTopic), q(`c1-${pad(i * 2 + 1)}`, longTopic), label, new Map(), sameUsed));
+  ok('이름 제안 — 같은 긴 주제의 글 12편: 끝남 · 이름이 모두 다름 · 60자 이하 · (label)로 끝남', fit(same) && same.slice(1).every((n, i) => n.endsWith(` ${i + 2} (${label})`)), same.join(' / '));
+  const pairUsed = new Set<string>();
+  const pair = [...Array(6).keys()].map((i) => suggestName(q(`c1-${pad(i * 2)}`, longTopic), q(`c1-${pad(i * 2 + 1)}`, `${longTopic} 두 번째`), label, new Map(), pairUsed));
+  ok('이름 제안 — 서로 다른 긴 주제 두 개로 6편(「ta · tb」 · 「tb · ta」를 다 쓴 뒤 번호): 끝남 · 이름이 모두 다름 · 60자 이하', fit(pair), pair.join(' / '));
+  const shortUsed = new Set<string>();
+  const short = [...Array(3).keys()].map((i) => suggestName(q(`c1-${pad(i * 2)}`, '주차'), q(`c1-${pad(i * 2 + 1)}`, '주차'), label, new Map(), shortUsed));
+  ok('이름 제안 — 짧은 주제는 그대로 「주차 (label)」 · 「주차 2 (label)」 · 「주차 3 (label)」', short.join('|') === [`주차 (${label})`, `주차 2 (${label})`, `주차 3 (${label})`].join('|'), short.join(' / '));
 }
 
 // ── 입력 검사 ───────────────────────────────────────────────────────────────
@@ -451,6 +471,10 @@ try {
   ok('스크립트 --write — 작성자 설정이 자리표시면 거절 · 아무것도 안 씀', placeholder.status === 1 && placeholder.stderr.includes('자리표시') && !existsSync(scriptPlan), `${placeholder.status} ${placeholder.stderr}`);
   const badFlag = run(appRoot, '--writers', writersFile, '--bank-version', 'v9');
   ok('스크립트 — --bank-version은 <tenantId>=<판> 꼴만', badFlag.status === 1 && badFlag.stderr.includes('<tenantId>=<판>'), `${badFlag.status} ${badFlag.stderr}`);
+  for (const until of ['2027-13-40', '2027-02-30', '2027-3-31']) {
+    const badUntil = run(appRoot, '--writers', writersFile, '--active-until', until);
+    ok(`스크립트 — --active-until ${until}은 안내로 거절(예외 스택 없음) · 아무것도 안 씀`, badUntil.status === 1 && badUntil.stderr.includes(`--active-until은 YYYY-MM-DD여야 합니다: ${until}`) && !badUntil.stderr.includes('RangeError') && listing() === pristine, `${badUntil.status} ${badUntil.stderr}`);
+  }
   const unknown = run(appRoot, '--writers', writersFile, '--wirte');
   ok('스크립트 — 모르는 옵션은 거절', unknown.status === 1 && unknown.stderr.includes('모르는 옵션'), `${unknown.status} ${unknown.stderr}`);
   const strayNames = run(appRoot, '--writers', writersFile, '--names', put(path.join(tmp, 'names-stray.json'), { nobody: {} }));

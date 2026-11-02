@@ -653,9 +653,12 @@ export function coverageReport(input: RuleInput & { clusters: Cluster[] }): Cove
 // ── 이름 ────────────────────────────────────────────────────────────────────
 const NAME_MAX = 60
 
-/** 「<주제> (<label>)」 — 60자를 넘으면 주제를 줄인다. */
-function nameOf(phrase: string, label: string): string {
-  const tail = ` (${label})`
+/**
+ * 「<주제><번호> (<label>)」 — 60자를 넘으면 주제만 줄인다. 번호(suffix)는 줄이지 않는다 — 줄이면 번호가 달라도 이름이 같아져
+ * suggestName의 번호 붙이기가 끝나지 않는다.
+ */
+function nameOf(phrase: string, label: string, suffix = ''): string {
+  const tail = `${suffix} (${label})`
   const s = `${phrase}${tail}`.replace(/\s+/g, ' ').trim()
   if (s.length <= NAME_MAX) return s
   return `${phrase.slice(0, Math.max(1, NAME_MAX - tail.length - 1)).trimEnd()}…${tail}`.replace(/\s+/g, ' ').trim()
@@ -681,8 +684,9 @@ export function suggestName(a: PoolQuestion, b: PoolQuestion, label: string, clu
       return name
     }
   }
+  // 번호가 다르면 이름이 다르므로(nameOf는 번호를 줄이지 않는다) used가 아무리 커도 끝난다.
   for (let i = 2; ; i += 1) {
-    const name = nameOf(`${phrases[0]} ${i}`, label)
+    const name = nameOf(phrases[0]!, label, ` ${i}`)
     if (!used.has(name)) {
       used.add(name)
       return name
@@ -1019,7 +1023,9 @@ async function main(): Promise<void> {
   const seed = seedFlag === undefined ? WRITER_PLAN_SEED : Number(seedFlag)
   if (!Number.isSafeInteger(seed)) fail(`--seed는 정수여야 합니다: ${seedFlag}`)
   const activeUntil = flag('--active-until') ?? WRITER_ACTIVE_UNTIL
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(activeUntil) || new Date(`${activeUntil}T00:00:00Z`).toISOString().slice(0, 10) !== activeUntil) {
+  // 2027-13-40처럼 없는 날짜는 Invalid Date라 toISOString이 예외를 던진다 — 그 전에 걸러 안내로 끝낸다.
+  const until = new Date(`${activeUntil}T00:00:00Z`)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(activeUntil) || Number.isNaN(until.getTime()) || until.toISOString().slice(0, 10) !== activeUntil) {
     fail(`--active-until은 YYYY-MM-DD여야 합니다: ${activeUntil}`)
   }
   const bankVersions = new Map<string, string>()
