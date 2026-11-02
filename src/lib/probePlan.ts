@@ -313,3 +313,159 @@ export function articleLabel(plan: ProbePlan | null, articleId: string): string 
   const a = planArticle(plan, articleId)
   return a ? `${a.round}차 · ${a.postDate.slice(5)} 게시 · ${a.channel}` : null
 }
+
+// ── 작성자 배정(운영 모드) ─────────────────────────────────────────────────────
+/*
+ * 실증을 끝내고(2026-11-02 운영 방식 전환) 작성자 여러 명이 브랜드마다 글을 나눠 쓴다 — 작성자 8명 × 10편, 글마다 질문 2개.
+ * 파일 자리는 실증 배정과 같다(data/<tenant>/probe-plan.json, scripts/writer-plan.ts가 쓴다). 역할 · 차수가 없고 글마다 작성자 · 각도 ·
+ * 블로그가 붙는다. 한 질문을 여러 글이 맡는다(질문마다 3~4편) — 대신 같은 질문 조합의 글은 두 번 없고(글 id가 모두 다르다), 한
+ * 작성자가 같은 질문을 두 번 맡지 않는다.
+ *
+ * 앱(서버 잠금 · 화면)은 아직 이 형식을 읽지 않는다 — 운영 모드 단위에서 읽기 · 잠금(topicGuard)을 이 형식으로 옮긴다. 그 전의 앱에 이
+ * 파일을 두면 깨진 배정으로 보고 'topic:' 글 만들기를 막는다(fail closed).
+ */
+export const WRITER_PLAN_FORMAT = 'probe-plan/2'
+
+export const WRITER_LIMITS = {
+  /** 작성자 키(w1 …). */
+  key: 20,
+  writerName: 40,
+  blog: 200,
+} as const
+
+export interface PlanWriter {
+  /** 'w1' … — 화면 거르기 · 배정표 파일 이름. */
+  key: string
+  name: string
+}
+
+export interface WriterPlanArticle {
+  /** topicArticleId(questionIds) — 추가 글 id와 같은 규칙. */
+  id: string
+  /** 주제 이름 — 추가 글 이름. 실험 용어를 넣지 않는다. */
+  name: string
+  /** 작성자 각도 — 추가 글의 「다룰 각도」로 들어간다(이름과 합쳐 브리프 각도 한 줄, NAME_AND_ANGLE_LIMIT). */
+  angle: string
+  writer: PlanWriter
+  /** 작성자가 올릴 블로그(주소나 이름). 모르면 빈 글자. */
+  blog: string
+  /** 정렬됨. */
+  questionIds: string[]
+  /** questionIds와 같은 수 · 같은 순서의 배정 판 문장. */
+  questionTexts: string[]
+}
+
+export interface WriterPlan {
+  format: typeof WRITER_PLAN_FORMAT
+  tenantId: string
+  /** 질문 id가 뜻하는 질문지 판. */
+  bankVersion: string
+  /** 운영 기간 마지막 날(YYYY-MM-DD, KST). */
+  activeUntil: string
+  /** 작성자 설정 파일(저장소 기준 경로)과 배정 시드. */
+  source: { writers: string; seed: number }
+  /** 작성자 순 · 작성자 안에서는 배정표 번호 순. */
+  articles: WriterPlanArticle[]
+}
+
+export type WriterPlanParse = { plan: WriterPlan; error?: undefined } | { plan?: undefined; error: string }
+
+/** 작성자 하나 — 키 · 이름은 비지 않은 한 줄. */
+function writerOf(raw: unknown): PlanWriter | null {
+  if (!isObj(raw) || !isStr(raw.key) || !isStr(raw.name)) return null
+  const { key, name } = raw
+  if (!/^[A-Za-z0-9_-]+$/.test(key) || key.length > WRITER_LIMITS.key) return null
+  if (!name.trim() || name !== name.replace(/\s+/g, ' ').trim() || name.length > WRITER_LIMITS.writerName) return null
+  return { key, name }
+}
+
+/** 작성자 배정 글 하나 — 추가 글 만들기 검사(checkNewExtraArticle)를 각도까지 그대로 통과해야 화면이 정의를 그대로 보낼 수 있다. */
+function writerArticleOf(raw: unknown, bankVersion: string, where: string): WriterPlanArticle | string {
+  if (!isObj(raw)) return `${where}: 글 모양이 틀렸습니다.`
+  const { id, name, angle, blog, questionIds, questionTexts } = raw
+  if (!isStr(id) || !isExtraArticleId(id)) return `${where}: 글 id가 'topic:'으로 시작하지 않습니다.`
+  const writer = writerOf(raw.writer)
+  if (!writer) return `${where} ${id}: 작성자(writer.key · writer.name)가 틀렸습니다.`
+  if (!isStr(blog) || blog.length > WRITER_LIMITS.blog || blog !== blog.trim()) return `${where} ${id}: 블로그가 틀렸습니다.`
+  if (!Array.isArray(questionIds) || !questionIds.every(isStr)) return `${where} ${id}: 질문 id 목록이 틀렸습니다.`
+  if (!Array.isArray(questionTexts) || !questionTexts.every(isStr)) return `${where} ${id}: 질문 문장 목록이 틀렸습니다.`
+  if (topicArticleId(questionIds) !== id || `topic:${questionIds.join('+')}` !== id) return `${where} ${id}: 글 id가 정렬한 질문 id와 다릅니다.`
+  if (!isStr(name)) return `${where} ${id}: 주제 이름이 없습니다.`
+  if (!isStr(angle) || !angle.trim()) return `${where} ${id}: 각도가 없습니다.`
+  const checked = checkNewExtraArticle({ id, name, angle, bankVersion, questionIds, questionTexts }, [], '2000-01-01T00:00:00.000Z')
+  if (!checked.ok) return `${where} ${id}: ${checked.error}`
+  if (checked.article.name !== name) return `${where} ${id}: 주제 이름 앞뒤나 사이에 공백이 더 있습니다.`
+  if (checked.article.angle !== angle) return `${where} ${id}: 각도 앞뒤나 사이에 공백이 더 있습니다.`
+  const banned = probeNameError(name)
+  if (banned) return `${where} ${id}: ${banned}`
+  const bannedAngle = PROBE_NAME_BANNED.find((w) => angle.includes(w))
+  if (bannedAngle) return `${where} ${id}: 각도에 '${bannedAngle}' 같은 실험 용어를 넣지 않아요 — 각도는 브리프로 글에 들어갑니다.`
+  return { id, name, angle, writer, blog, questionIds: [...questionIds], questionTexts: [...questionTexts] }
+}
+
+/**
+ * 작성자 배정 파일을 검사해 읽는다 — 형식 · 글 id === topicArticleId(questionIds) · 추가 글 검사(이름 · 각도 · 문장) · 실험 용어 ·
+ * 글 id와 이름이 모두 다름 · 같은 질문 id는 어느 글에서나 같은 문장 · 같은 작성자 키는 같은 이름과 블로그 · 한 작성자가 같은 질문을 두 번
+ * 맡지 않음. 질문마다 글 수가 고른지 · 작성자마다 몇 편인지는 만드는 쪽(scripts/writer-plan.ts)이 본다. 하나라도 틀리면 { error }.
+ */
+export function parseWriterPlan(raw: unknown): WriterPlanParse {
+  const fail = (error: string): WriterPlanParse => ({ error })
+  if (!isObj(raw)) return fail('배정 파일 모양이 틀렸습니다.')
+  if (raw.format !== WRITER_PLAN_FORMAT) return fail(`형식이 ${WRITER_PLAN_FORMAT}가 아닙니다(${String(raw.format)}).`)
+  const { tenantId, bankVersion, activeUntil, source } = raw
+  if (!isStr(tenantId) || !tenantId.trim()) return fail('tenantId가 없습니다.')
+  if (!isStr(bankVersion) || !bankVersion.trim() || bankVersion.length > EXTRA_LIMITS.bankVersion) return fail('질문지 판(bankVersion)이 틀렸습니다.')
+  if (!isDay(activeUntil)) return fail('운영 기간 마지막 날(activeUntil)이 YYYY-MM-DD가 아닙니다.')
+  if (!isObj(source) || !isStr(source.writers) || !source.writers || typeof source.seed !== 'number' || !Number.isFinite(source.seed)) {
+    return fail('출처(source.writers · source.seed)가 틀렸습니다.')
+  }
+  if (!Array.isArray(raw.articles) || raw.articles.length === 0) return fail('글(articles)이 없습니다.')
+
+  const articles: WriterPlanArticle[] = []
+  const ids = new Set<string>()
+  const names = new Map<string, string>()
+  const texts = new Map<string, string>()
+  const writers = new Map<string, Omit<PlanWriter, 'key'> & { blog: string }>()
+  const taken = new Map<string, string>()
+  for (const [i, a] of raw.articles.entries()) {
+    const art = writerArticleOf(a, bankVersion, `${i + 1}번째 글`)
+    if (isStr(art)) return fail(art)
+    if (ids.has(art.id)) return fail(`같은 질문 조합의 글이 두 번 있습니다: ${art.id}`)
+    ids.add(art.id)
+    const sameName = names.get(art.name)
+    if (sameName) return fail(`두 글의 주제 이름이 같습니다: ${sameName} · ${art.id} — ${art.name}`)
+    names.set(art.name, art.id)
+    const w = writers.get(art.writer.key)
+    if (!w) writers.set(art.writer.key, { name: art.writer.name, blog: art.blog })
+    else if (w.name !== art.writer.name || w.blog !== art.blog) return fail(`작성자 ${art.writer.key}의 이름이나 블로그가 글마다 다릅니다(${art.id}).`)
+    for (const [j, qid] of art.questionIds.entries()) {
+      const text = texts.get(qid)
+      if (text === undefined) texts.set(qid, art.questionTexts[j])
+      else if (text !== art.questionTexts[j]) return fail(`질문 ${qid}의 문장이 글마다 다릅니다(${art.id}).`)
+      const mine = `${art.writer.key}\n${qid}`
+      const other = taken.get(mine)
+      if (other) return fail(`작성자 ${art.writer.key}가 질문 ${qid}를 두 글에서 맡습니다: ${other} · ${art.id}`)
+      taken.set(mine, art.id)
+    }
+    articles.push(art)
+  }
+  return {
+    plan: {
+      format: WRITER_PLAN_FORMAT,
+      tenantId,
+      bankVersion,
+      activeUntil,
+      source: { writers: source.writers, seed: source.seed },
+      articles,
+    },
+  }
+}
+
+/** 배정에 나오는 작성자 — 처음 나온 순서, 블로그 포함. */
+export function planWriters(plan: WriterPlan): (PlanWriter & { blog: string })[] {
+  const out: (PlanWriter & { blog: string })[] = []
+  for (const a of plan.articles) {
+    if (!out.some((w) => w.key === a.writer.key)) out.push({ ...a.writer, blog: a.blog })
+  }
+  return out
+}
