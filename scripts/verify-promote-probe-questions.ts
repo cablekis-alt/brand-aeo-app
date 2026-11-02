@@ -5,7 +5,8 @@
  * 왜: 올린 판 파일을 다음 측정이 그대로(문항 전부) 재야 한다. 측정이 질문지를 새로 만들거나 자르면(설정의 questionBankSize보다 문항이
  * 많고, 코호트 출처가 어긋나면 멈춘다) 점수 · 추가 글이 다른 질문을 본다. 그래서 실제 질문지 결정 함수(server/pipeline.ts
  * ensureQuestionBank)를 불러, 코호트 공통 질문지를 쓰는 브랜드 · 쓰지 않는 브랜드 모두 저장된 파일이 한 바이트도 바뀌지 않고 그대로
- * 돌아오는지 본다. 점수는 표시를 뗀 질문을 세는지 aggregateWeeklyMetrics로 본다(점수 코드는 고치지 않았다).
+ * 돌아오는지 본다. 가짜 엔진으로 실제 측정(runWeeklyPipeline)도 한 번 돌려 새 판 문항을 모두 묻고 카드 점수가 실증이었던 질문의
+ * 응답을 세는지 본다. 점수는 표시를 뗀 질문을 세는지 aggregateWeeklyMetrics로도 본다(점수 코드는 고치지 않았다).
  *
  * 판을 오버레이가 정하지 않는 브랜드(저장소 설정 · 앱에서 고친 경쟁사 목록)는 오버레이를 바꿔도 측정이 그대로라 쓰지 않아야 한다.
  *
@@ -269,6 +270,38 @@ try {
   const usedB = await ensureQuestionBank(runtimeB, store);
   ok('측정 B(코호트 공통 질문지 없음) — 새 판 문항 5개 그대로 · 파일 그대로(하한 보정이 고쳐 쓰지 않음)', usedB.length === 5 && JSON.stringify(usedB) === JSON.stringify(planB.plan.bank.questions) && bytes(bankFile(B.tenantId, 'v5')) === v5Before, JSON.stringify(usedB.map((x) => x.questionId)));
   ok('측정 — 실증 표시가 남은 문항 없음', [...usedA, ...usedB].every((x) => x.probe === undefined && x.paraphraseOf === undefined));
+
+  // ── 5-1. 실제 측정 한 번(runWeeklyPipeline · 가짜 엔진) — 새 판 문항을 모두 묻고, 실증이었던 질문의 응답이 카드 점수에 든다 ──
+  // 가짜 엔진은 실증이었던 질문에서만 브랜드를 말한다(가짜 판정은 응답에 그 이름이 있으면 언급으로 본다). 카드 언급률이 3/5면
+  // 이름 없는 질문 5개(실증이었던 3개 포함)를 모두 셌다는 뜻이다 — 실증 표시가 남았다면 원래 일반 질문 2개만 세어 0이다.
+  const { runWeeklyPipeline } = await import('../server/pipeline');
+  const { MockEngineClient } = await import('../server/engines/mockEngineClient');
+  const engineCall = MockEngineClient.prototype.call;
+  const formerProbeTexts = bankA.questions.filter((x) => x.probe === true).map((x) => String(x.text));
+  MockEngineClient.prototype.call = async function (prompt, options) {
+    const result = await engineCall.call(this, prompt, options);
+    const formerProbe = formerProbeTexts.some((text) => prompt.user.includes(text) || prompt.system.includes(text));
+    return {
+      ...result,
+      text: formerProbe ? '가상머뭄(뷰성형외과)을 많이 추천합니다. 가상초원도 있습니다.' : '여러 선택지가 있으니 후기를 비교해 보세요.',
+      citations: [],
+    };
+  };
+  const collectEnginesBefore = process.env.COLLECT_ENGINES;
+  process.env.COLLECT_ENGINES = 'gemini';
+  try {
+    const run = await runWeeklyPipeline(runtimeA, store, new Date('2026-11-04T03:00:00Z'));
+    const saved = await store.getQuestionAnalyses(A.tenantId, run.scorecard.weekOf);
+    const askedIds = [...new Set(saved.map((x) => x.questionId))].sort().join();
+    ok('실제 측정 A — 새 판 7문항을 모두 물음(실증이었던 3개 포함) · 카드 판 v7', askedIds === planA.plan.bank.questions.map((x) => x.questionId).sort().join() && saved.length === 7 && run.scorecard.questionBankVersion === 'v7', `${askedIds} · ${saved.length} · ${run.scorecard.questionBankVersion}`);
+    ok('실제 측정 A — 저장된 v7 파일이 한 바이트도 안 바뀜 · 질문지 폴더 그대로', bytes(bankFile(A.tenantId, 'v7')) === v7Before && readdirSync(path.dirname(bankFile(A.tenantId, 'v7'))).sort().join() === 'v5.json,v6.json,v7.json');
+    const flagged = aggregateWeeklyMetrics({ competitors: [{ name: '가상초원' }] }, bankA.questions as unknown as QuestionSpec[], saved);
+    ok('실제 측정 A — 카드 언급률 3/5(실증이었던 질문의 응답이 점수에 듦), 같은 응답을 실증 표시로 세면 0', Math.abs(run.scorecard.mentionRate - 3 / 5) < 1e-9 && flagged.mentionRate === 0, `${run.scorecard.mentionRate} · ${flagged.mentionRate}`);
+  } finally {
+    MockEngineClient.prototype.call = engineCall;
+    if (collectEnginesBefore === undefined) delete process.env.COLLECT_ENGINES;
+    else process.env.COLLECT_ENGINES = collectEnginesBefore;
+  }
 
   // ── 6. 점수 — 표시를 뗀 질문이 점수에 든다(점수 코드는 그대로) ─────────────
   const citation = (domain: string, ownerType: CitationDetail['ownerType']): CitationDetail => ({ raw: `https://${domain}/page`, domain, ownerType, supportsBrandMention: ownerType === 'brand-owned' });
