@@ -8,11 +8,14 @@
  * (회차 보기 N · 브랜드 현황 질문지 비교 · 일반 질문 하한 · 인용 분해 · 인용 출처 · EEAT · 경쟁사 편집의 질문 수와 크기)도 같은
  * 규칙을 따라야 화면 숫자가 카드와 맞는다. 화면이 판정 기록으로 다시 세는 곳(점수 풀이 · 비교 그룹 「같은 질문」 · 응답 요약 · 감성 ·
  * 개요 · 개선제안 근거 · 격차 분석)도 같다. 콘텐츠 생성의 본 글 · 채널에는 실증이 들지 않고 plan.probes로만 나오며, 추가 글은 실증을
- * 맡을 수 있다(처치군). 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
+ * 맡을 수 있다(처치군). 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다. 실증 질문을 만드는 스크립트
+ * (scripts/add-probe-questions.ts)는 규칙(id · 금지 이름 · 중복 · 추천형 하한 · 프롬프트)과, 임시 폴더의 가짜 브랜드에 후보 파일로
+ * --write를 돌린 결과(백업 · 덧붙이기만 · 거절할 때 아무것도 안 바뀜)를 본다 — AI는 부르지 않는다.
  *
  *   npx tsx scripts/verify-probe-questions.ts
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import * as React from 'react';
@@ -22,7 +25,7 @@ import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import type { QuestionSpec } from '../src/prompts/types';
 import type { WeekTally } from '../src/lib/publishedUrl';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
-import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank';
+import { agnosticQuota, buildProbeQuestionPrompt, countAgnostic } from '../src/prompts/b1-question-bank';
 import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from '../src/lib/citationView';
 import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
 import { buildAnswerEvidence } from '../src/lib/answerEvidence';
@@ -44,7 +47,24 @@ import { analyzeCitationSources } from '../server/citationSources';
 import { linkCompetitorQuestions } from '../server/competitorQuestions';
 import { getEngineTrend } from '../server/engineTrend';
 import { agnosticAnalyses } from '../server/mentionScope';
-import type { ResultStore } from '../server/store';
+import {
+  bankPathProblem,
+  bannedNames,
+  filterCandidates,
+  looksVirtualized,
+  nameIn,
+  nextProbeIds,
+  paraphrasedIds,
+  parseProbeRows,
+  planProbeWrite,
+  readCandidatesFile,
+  recommendQuotaMet,
+  toProbeSpec,
+  writeProbeBank,
+  type ProbeCandidate,
+  type ProbeCandidatesFile,
+} from '../server/probeQuestions';
+import type { QuestionBank as ServerQuestionBank, ResultStore } from '../server/store';
 import type { CitationDetail, QuestionRepeatAnalysis, TenantConfig } from '../server/types';
 
 const checks: [string, boolean, string][] = [];
@@ -914,6 +934,441 @@ try {
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });
+}
+
+// ── 11. 실증 질문 만들기 스크립트(scripts/add-probe-questions.ts) ───────────────────
+// id — 판 접두를 그대로 둔 `${version}-p001` 꼴. 일반 번호 정규식(add-learn-questions maxIndex · questionHandoff seq)과 추가 글 id
+// 구분자('+')에 걸리지 않아야 한다.
+const newIds = nextProbeIds({ version: VERSION, questions: bankAfter }, 2);
+check('실증 id: 그 판의 가장 큰 p번호 다음부터', sameJson(newIds, ['v5-p003', 'v5-p004']), newIds.join(','));
+const firstIds = nextProbeIds({ version: VERSION, questions: [...bankBefore, { questionId: 'v4-p009' }, { questionId: 'v5-010' }, { questionId: 'v5-pxyz' }] }, 1);
+check('실증 id: 실증 없는 판은 p001부터 · 다른 판 접두 · 일반 번호는 보지 않음', sameJson(firstIds, ['v5-p001']), firstIds.join(','));
+check(
+  '실증 id: 일반 번호 정규식 /-(\\d+)$/ · 추가 글 구분자 +에 걸리지 않음',
+  [...newIds, ...firstIds].every((id) => !/-(\d+)$/.test(id) && !id.includes('+')),
+);
+
+// 금지 이름 — 브랜드 · 별칭 · 경쟁사 · 경쟁사 별칭 · 코호트 순위 이름(같은 코호트 구성원과 그 경쟁사). 다른 코호트는 넣지 않는다.
+const fakeTenant = (tenantId: string, brandName: string, region: string, competitors: [string, string[]][], extra: Partial<TenantConfig> = {}) =>
+  ({
+    tenantId,
+    brandName,
+    aliases: [],
+    ownedDomains: [],
+    industry: '가상업종',
+    region,
+    engines: ['gemini'],
+    questionBankSize: 4,
+    questionBankVersion: VERSION,
+    repeatsPerQuestion: 1,
+    factGraph: [],
+    competitors: competitors.map(([name, aliases]) => ({ name, aliases, domains: [] })),
+    ...extra,
+  }) as TenantConfig;
+const selfT = fakeTenant('probe-self', '가상 숙소', '가상읍', [['경쟁 하나', ['경쟁1']]], { aliases: ['가상숙소', ' '] });
+const neighbourT = fakeTenant('probe-neighbour', '가상 이웃', '가상읍', [['먼 경쟁', []]]);
+const elsewhereT = fakeTenant('probe-elsewhere', '다른 지역 숙소', '다른읍', [['다른 경쟁', []]]);
+const banned = bannedNames(selfT, [selfT, neighbourT, elsewhereT]);
+check(
+  '금지 이름: 브랜드 · 별칭 · 경쟁사 · 경쟁사 별칭 · 코호트 구성원과 그 경쟁사',
+  ['가상 숙소', '가상숙소', '경쟁 하나', '경쟁1', '가상 이웃', '먼 경쟁'].every((n) => banned.includes(n)),
+  banned.join(','),
+);
+check(
+  '금지 이름: 다른 코호트 · 빈 이름 · 중복이 없음',
+  !banned.includes('다른 지역 숙소') && !banned.includes('다른 경쟁') && banned.every((n) => n.trim() === n && n.length > 0) && new Set(banned).size === banned.length,
+  banned.join(','),
+);
+check('이름 찾기: 띄어쓰기만 다른 이름도 찾음', nameIn('가상숙 소 근처 조용한 곳', ['가상 숙소']) === '가상 숙소' && nameIn('가상읍 조용한 곳', ['가상 숙소']) === null);
+
+// 후보 거르기 — 이름 · 질문지 · 코호트 공통 질문지 · 후보끼리 중복(띄어쓰기만 다른 것 포함) · 실증 아닌 원래 질문 · 이미 바꿔 쓴 실증.
+const cand = (text: string, extra: Partial<ProbeCandidate> = {}): ProbeCandidate => ({ text, stage: 'consider', kind: 'recommend', ...extra });
+const filterCtx = {
+  banned,
+  existingTexts: bankAfter.map((q) => q.text),
+  cohortTexts: ['가상읍 조용한 곳 알려줘'],
+  probeIds: probeIdsOf(bankAfter),
+  paraphrased: new Set(['v5-p002']),
+};
+const filtered = filterCandidates(
+  [
+    cand('가상읍 아이랑 묵기 좋은 곳 추천해줘'),
+    cand('가상 숙소 말고 다른 곳 추천해줘'),
+    cand('경쟁1 같은 곳 있어?'),
+    cand('v5-001  질문'),
+    cand('가상읍 조용한곳 알려줘'),
+    cand('가상읍 아이랑 묵기 좋은 곳  추천해줘'),
+    cand('가상읍 바다 보이는 곳 골라줘', { paraphraseOf: 'v5-001', kind: undefined }),
+    cand('가상읍 애들이랑 갈 곳 골라줘', { paraphraseOf: 'v5-p002', kind: undefined }),
+    cand('가상읍에서 애들 데리고 묵을 데 어디가 좋아?', { paraphraseOf: 'v5-p001', kind: undefined }),
+  ],
+  filterCtx,
+);
+check(
+  '후보 거르기: 남은 후보(순서 그대로)',
+  sameJson(filtered.accepted.map((c) => c.text), ['가상읍 아이랑 묵기 좋은 곳 추천해줘', '가상읍에서 애들 데리고 묵을 데 어디가 좋아?']),
+  JSON.stringify(filtered.accepted.map((c) => c.text)),
+);
+check(
+  '후보 거르기: 이유',
+  sameJson(filtered.rejected.map((r) => r.reason), [
+    '이름 포함: 가상 숙소',
+    '이름 포함: 경쟁1',
+    '질문지에 같은 문장이 있음',
+    '코호트 공통 질문지에 같은 문장이 있음',
+    '후보끼리 같은 문장',
+    '질문지의 실증 질문이 아닌 것을 바꿔 씀: v5-001',
+    '이미 바꿔 쓴 실증이 있는 질문: v5-p002',
+  ]),
+  JSON.stringify(filtered.rejected.map((r) => r.reason)),
+);
+check(
+  '이미 바꿔 쓴 실증: 질문지의 paraphraseOf에서 읽음',
+  sameJson([...paraphrasedIds([...bankAfter, { ...spec('v5-p003', 'category-agnostic', true), paraphraseOf: 'v5-p001' }])], ['v5-p001']),
+);
+
+// 추천형 하한 — kind recommend이고 단계가 비교(consider)일 때만 센다.
+const quotaSet = [cand('a'), cand('b', { stage: 'learn' }), cand('c', { kind: 'info' })];
+check('추천형 하한: consider · recommend만 셈', recommendQuotaMet(quotaSet, 1) && !recommendQuotaMet(quotaSet, 2));
+
+// 문항으로 — 실증 표시 · 이름 없는 질문 · 코호트 공통 아님. 점수 모집단에 들지 않는다.
+const probeSpec = toProbeSpec(filtered.accepted[1]!, 'v5-p003', { industry: '가상업종', region: '가상읍', version: VERSION });
+check(
+  '문항으로: probe · category-agnostic · containsBrandName false · cohortShared 없음 · paraphraseOf',
+  probeSpec.probe === true &&
+    probeSpec.category === 'category-agnostic' &&
+    probeSpec.containsBrandName === false &&
+    !('cohortShared' in probeSpec) &&
+    probeSpec.paraphraseOf === 'v5-p001' &&
+    probeSpec.version === VERSION &&
+    probeSpec.stage === 'consider',
+  JSON.stringify(probeSpec),
+);
+check(
+  '문항으로: 실증으로 보이고 점수 모집단(일반 질문 하한)에 들지 않음',
+  isProbe(probeSpec) && !isScoredAgnostic(probeSpec) && countAgnostic([...bankBefore, probeSpec]) === countAgnostic(bankBefore),
+);
+check('문항으로: 새 후보에는 paraphraseOf 없음', !('paraphraseOf' in toProbeSpec(filtered.accepted[0]!, 'v5-p004', { industry: '가상업종', region: '가상읍', version: VERSION })));
+
+// 판정 엔진 응답 읽기 — 형식이 틀린 줄은 이유와 함께 거르고, 바꿔 쓰기는 단계 · 주제를 원래 질문에서 옮긴다.
+const parsedNew = parseProbeRows([
+  { text: ' 가상읍 숙소 추천해줘 ', stage: 'consider', topic: ' 숙소 고르기 ', kind: 'recommend' },
+  { text: '', stage: 'learn', kind: 'info' },
+  { text: '단계가 틀린 질문', stage: 'buy', kind: 'info' },
+  { text: '종류가 틀린 질문', stage: 'learn', kind: 'other' },
+  '문자열 줄',
+]);
+check(
+  '응답 읽기: 맞는 줄만 후보(앞뒤 공백 정리) · 나머지는 형식 오류',
+  sameJson(parsedNew.candidates, [{ text: '가상읍 숙소 추천해줘', stage: 'consider', topic: '숙소 고르기', kind: 'recommend' }]) &&
+    parsedNew.rejected.length === 4 &&
+    parsedNew.rejected.every((r) => r.reason.startsWith('형식 오류')),
+  JSON.stringify(parsedNew),
+);
+check('응답 읽기: 배열이 아니면 하나의 형식 오류', parseProbeRows({ text: 'x' }).rejected.length === 1 && parseProbeRows(null).candidates.length === 0);
+const sourceP001 = { ...spec('v5-p001', 'category-agnostic', true), stage: 'consider' as const, topic: '아이 동반' };
+const parsedPara = parseProbeRows(
+  [
+    { paraphraseOf: 'v5-p001', text: '가상읍에서 애들 데리고 묵을 데 어디가 좋아?' },
+    { paraphraseOf: 'v5-p001', text: '두 번째 바꿔 쓰기' },
+    { paraphraseOf: 'v5-p009', text: '목록에 없는 원래 질문' },
+  ],
+  [sourceP001],
+);
+check(
+  '응답 읽기(바꿔 쓰기): 단계 · 주제를 원래 질문에서 옮기고 원래 질문 하나에 하나만',
+  sameJson(parsedPara.candidates, [{ text: '가상읍에서 애들 데리고 묵을 데 어디가 좋아?', stage: 'consider', topic: '아이 동반', paraphraseOf: 'v5-p001' }]) &&
+    parsedPara.rejected.length === 2,
+  JSON.stringify(parsedPara),
+);
+
+// 프롬프트 — 시장 범위 안내(scopeGuide) · 금지 이름 · 기존 문장 · 개수 · 추천형 하한 · 출력 키(text · stage · topic · kind). id는 코드가 매긴다.
+const promptText = (p: { system: string; user: string }) => `${p.system}\n${p.user}`;
+const probePromptReq = { industry: '가상업종', region: '가상읍', bannedNames: ['가상 숙소', '경쟁 하나'], existingTexts: ['기존 질문 하나'], count: 16, recommendMin: 10 };
+const pLocal = promptText(buildProbeQuestionPrompt(probePromptReq));
+check(
+  '실증 프롬프트: 금지 이름 · 기존 문장 · 개수 · 추천형 하한 · 지역형 추천 예시',
+  ['가상 숙소, 경쟁 하나', '- 기존 질문 하나', '정확히 16개', '최소 10개', '"가상읍 가상업종 추천해줘"'].every((s) => pLocal.includes(s)),
+  pLocal,
+);
+check(
+  '실증 프롬프트: 출력은 text · stage · topic · kind뿐(id · 카테고리는 코드가)',
+  pLocal.includes('"kind": "recommend" | "info"') && !pLocal.includes('questionId') && !pLocal.includes('"category"') && !pLocal.includes('시장 범위:'),
+);
+const pNational = promptText(buildProbeQuestionPrompt({ ...probePromptReq, region: '국내', marketScope: 'national' }));
+check('실증 프롬프트: 전국형은 시장 범위 · 지역 금지 규칙', pNational.includes('시장 범위: 전국형') && pNational.includes('특정 시 · 구 같은 지역을 질문에 넣지 마라'));
+const pPara = promptText(buildProbeQuestionPrompt({ ...probePromptReq, paraphrase: [{ questionId: 'v5-p001', text: 'v5-p001 질문' }] }));
+check(
+  '실증 프롬프트(바꿔 쓰기): 원래 질문 · 금지 이름 · paraphraseOf 출력 · 하나에 하나',
+  ['- v5-p001: v5-p001 질문', '가상 숙소, 경쟁 하나', '"paraphraseOf": string', '정확히 하나씩, 모두 1개', '의도를 바꾸지 마라'].every((s) => pPara.includes(s)) &&
+    !pPara.includes('"kind"'),
+  pPara,
+);
+
+// 경로 — 그 브랜드의 question-bank 폴더 안만. 코호트 공통 질문지 · 이 셸의 가상화 사본은 안 된다.
+const fakeRoot = path.join(tmpdir(), 'probe-path-check');
+const fakeData = path.join(fakeRoot, 'data');
+check('경로: 브랜드 질문지는 통과', bankPathProblem(path.join(fakeData, 'probe-self', 'question-bank', 'v5.json'), fakeData, 'probe-self') === null);
+check(
+  '경로: 코호트 공통 질문지 · 다른 브랜드 폴더는 거절',
+  (bankPathProblem(path.join(fakeRoot, 'cohort-banks', 'k', 'c1.json'), fakeData, 'probe-self') ?? '').includes('cohort-banks') &&
+    bankPathProblem(path.join(fakeData, 'probe-other', 'question-bank', 'v5.json'), fakeData, 'probe-self') !== null,
+);
+check(
+  '경로: 가상화 사본(Packages\\Claude_…)만 걸림',
+  looksVirtualized('C:\\Users\\fake\\AppData\\Local\\Packages\\Claude_abc123\\LocalCache\\Roaming\\brand-aeo-app') &&
+    !looksVirtualized('//localhost/C$/Users/fake/AppData/Roaming/brand-aeo-app') &&
+    !looksVirtualized('C:\\Users\\fake\\AppData\\Roaming\\brand-aeo-app'),
+);
+
+// 후보 파일 · 쓰기 계획 — 후보를 만든 뒤 질문지가 바뀌었거나 다른 브랜드 · 판이면 쓰지 않는다. 기존 문항은 같은 객체 그대로 둔다.
+const candidatesFile = (over: Partial<ProbeCandidatesFile> = {}): ProbeCandidatesFile => ({
+  format: 'probe-candidates/1',
+  tenantId: 'probe-self',
+  bankVersion: VERSION,
+  bankPath: 'fake',
+  bankQuestionCount: bankAfter.length,
+  mode: 'new',
+  generatedAt: '2026-11-02T00:00:00.000Z',
+  judgeEngine: 'mock',
+  recommendMin: 1,
+  candidates: [cand('가상읍 아이랑 묵기 좋은 곳 추천해줘'), cand('가상읍 숙소 체크인 보통 몇 시야?', { stage: 'decide', kind: 'info', topic: '예약' })],
+  rejected: [],
+  ...over,
+});
+const planOf = (file: ProbeCandidatesFile, expectCount?: number) =>
+  planProbeWrite({
+    file,
+    tenantId: 'probe-self',
+    version: VERSION,
+    bank: { version: VERSION, questions: bankAfter },
+    industry: '가상업종',
+    region: '가상읍',
+    banned,
+    cohortTexts: filterCtx.cohortTexts,
+    expectCount,
+  });
+const goodPlan = planOf(candidatesFile(), bankAfter.length);
+check(
+  '쓰기 계획: 뒤에 덧붙이기만(기존 문항은 같은 객체) · 다음 실증 id',
+  goodPlan.ok &&
+    goodPlan.questions.length === bankAfter.length + 2 &&
+    bankAfter.every((q, i) => goodPlan.questions[i] === q) &&
+    sameJson(goodPlan.added.map((q) => q.questionId), ['v5-p003', 'v5-p004']) &&
+    goodPlan.added.every((q) => isProbe(q) && q.category === 'category-agnostic' && !q.containsBrandName),
+  JSON.stringify(goodPlan),
+);
+const planErrors = (p: ReturnType<typeof planOf>) => (p.ok ? '' : p.errors.join(' | '));
+check('쓰기 계획: 문항 수가 후보를 만들 때와 다르면 멈춤', planErrors(planOf(candidatesFile({ bankQuestionCount: 3 }))).includes('지금 문항 수(5)가 후보를 만들 때(3)와 다릅니다'));
+check('쓰기 계획: --expect-count와 다르면 멈춤', planErrors(planOf(candidatesFile(), 42)).includes('--expect-count 42'));
+check(
+  '쓰기 계획: 다른 브랜드 · 다른 판의 후보 파일이면 멈춤',
+  planErrors(planOf(candidatesFile({ tenantId: 'probe-other' }))).includes('다른 브랜드') && planErrors(planOf(candidatesFile({ bankVersion: 'v4' }))).includes('판이 바뀌었으면'),
+);
+check(
+  '쓰기 계획: 지금 질문지 기준으로 걸리는 후보가 있으면 하나도 쓰지 않음',
+  planErrors(planOf(candidatesFile({ candidates: [cand('가상읍 새 질문'), cand('v5-001 질문')] }))).includes('질문지에 같은 문장이 있음'),
+);
+check('쓰기 계획: 빈 후보면 멈춤', planErrors(planOf(candidatesFile({ candidates: [] }))).includes('덧붙일 후보가 없습니다'));
+check(
+  '후보 파일 읽기: 형식 · 모드와 paraphraseOf가 맞아야 함',
+  readCandidatesFile(candidatesFile()).ok &&
+    !readCandidatesFile({ ...candidatesFile(), format: 'other' }).ok &&
+    !readCandidatesFile(candidatesFile({ mode: 'paraphrase' })).ok &&
+    !readCandidatesFile(candidatesFile({ candidates: [cand('x', { paraphraseOf: 'v5-p001' })] })).ok &&
+    !readCandidatesFile(candidatesFile({ candidates: [{ text: 'x', stage: 'buy' } as unknown as ProbeCandidate] })).ok,
+);
+
+// 임시 폴더의 가짜 브랜드 — 코호트 공통 질문지를 쓰는 고객(오버레이 등록). 파일 쓰기(writeProbeBank)를 직접 부르고, 스크립트도
+// 하위 프로세스로 --write --from을 돌린다. 하위 프로세스는 앱이 켜져 있으면 쓰기를 거절해야 하므로 그때는 거절만 본다.
+const sdir = mkdtempSync(path.join(tmpdir(), 'verify-probe-script-'));
+try {
+  const { cohortKey } = await import('../server/cohortQuestionBank');
+  const S = fakeTenant('probe-script-fake', '가상 별채', '가상읍', [['가상 앞집', []]], {
+    aliases: ['가상별채'],
+    ownedDomains: ['fake-script.example'],
+    cohortQuestionBank: 'c1',
+  });
+  const key = cohortKey(S.industry, S.region);
+  const sq = (questionId: string, text: string, category: QuestionSpec['category'], extra: Partial<QuestionSpec> = {}): QuestionSpec => ({
+    questionId,
+    text,
+    category,
+    industry: S.industry,
+    region: S.region,
+    containsBrandName: category !== 'category-agnostic',
+    version: questionId.startsWith('c1') ? 'c1' : VERSION,
+    ...extra,
+  });
+  const cohortQuestions = [sq('c1-001', '가상읍 가상업종 추천해줘', 'category-agnostic'), sq('c1-002', '가상읍 가상업종 고를 때 뭘 봐야 해?', 'category-agnostic')];
+  const scriptBank: ServerQuestionBank = {
+    version: VERSION,
+    generatedAt: '2026-10-13T00:00:00.000Z',
+    questions: [
+      ...cohortQuestions.map((q) => ({ ...q, cohortShared: true })),
+      sq('v5-001', '가상 별채 체크인 몇 시야?', 'brand-direct'),
+      sq('v5-002', '가상 별채랑 가상 앞집 중에 어디가 나아?', 'comparison'),
+    ],
+    cohortBank: { key, version: 'c1' },
+  };
+  const put = (root: string, rel: string, value: unknown) => {
+    const file = path.join(root, rel);
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(value, null, 2));
+    return file;
+  };
+  const seed = (root: string) => ({
+    overlay: put(root, 'tenants.overlay.json', [S]),
+    cohort: put(root, path.join('cohort-banks', key, 'c1.json'), { key, industry: S.industry, region: S.region, version: 'c1', generatedAt: '2026-10-01T00:00:00.000Z', questions: cohortQuestions }),
+    bank: put(root, path.join('data', S.tenantId, 'question-bank', `${VERSION}.json`), scriptBank),
+  });
+  const files = seed(sdir);
+  const tenantDirS = path.join(sdir, 'data', S.tenantId);
+  const raw = (file: string) => readFileSync(file, 'utf8');
+  const original = { bank: raw(files.bank), overlay: raw(files.overlay), cohort: raw(files.cohort) };
+  const backups = () => readdirSync(tenantDirS).filter((n) => n.startsWith('before-probe-'));
+  const scriptCandidates = (over: Partial<ProbeCandidatesFile> = {}) =>
+    candidatesFile({
+      tenantId: S.tenantId,
+      bankPath: files.bank,
+      bankQuestionCount: scriptBank.questions.length,
+      candidates: [cand('가상읍 강아지랑 묵을 수 있는 곳 추천해줘'), cand('가상읍 숙소 성수기 요금 보통 얼마야?', { stage: 'learn', kind: 'info', topic: '가격·비용' })],
+      ...over,
+    });
+
+  // 파일 쓰기 — 백업(질문지 · 오버레이) 뒤 질문지 하나만 고친다. 오버레이 · 코호트 공통 질문지는 그대로다.
+  const sPlan = planProbeWrite({
+    file: scriptCandidates(),
+    tenantId: S.tenantId,
+    version: VERSION,
+    bank: scriptBank,
+    industry: S.industry,
+    region: S.region,
+    banned: bannedNames(S, [S]),
+    cohortTexts: cohortQuestions.map((q) => q.text),
+  });
+  check('파일 쓰기 준비: 계획이 섬', sPlan.ok, planErrors(sPlan));
+  if (sPlan.ok) {
+    const written = await writeProbeBank({
+      bankPath: files.bank,
+      overlayPath: files.overlay,
+      tenantDir: tenantDirS,
+      before: original.bank,
+      next: { ...scriptBank, questions: sPlan.questions },
+      now: new Date('2026-11-02T03:04:05.678Z'),
+    });
+    check('파일 쓰기: 백업 폴더 이름 before-probe-<시각>', path.basename(written.backupDir) === 'before-probe-2026-11-02T03-04-05-678Z', written.backupDir);
+    check(
+      '파일 쓰기: 백업에 질문지 · 오버레이 원문',
+      written.copied.length === 2 &&
+        raw(path.join(written.backupDir, `${VERSION}.json`)) === original.bank &&
+        raw(path.join(written.backupDir, 'tenants.overlay.json')) === original.overlay,
+      written.copied.join(','),
+    );
+    const after1 = JSON.parse(raw(files.bank)) as ServerQuestionBank;
+    check(
+      '파일 쓰기: 기존 문항 그대로 · 실증 2개를 뒤에 · 은행의 다른 필드 그대로',
+      sameJson(after1.questions.slice(0, 4), scriptBank.questions) &&
+        sameJson(after1.questions.slice(4).map((q) => q.questionId), ['v5-p001', 'v5-p002']) &&
+        after1.questions.slice(4).every((q) => q.probe === true && !q.cohortShared) &&
+        sameJson(after1.cohortBank, scriptBank.cohortBank) &&
+        after1.generatedAt === scriptBank.generatedAt,
+      JSON.stringify(after1.questions.slice(4)),
+    );
+    check('파일 쓰기: 오버레이(questionBankSize) · 코호트 공통 질문지는 그대로', raw(files.overlay) === original.overlay && raw(files.cohort) === original.cohort);
+    let staleError = '';
+    try {
+      await writeProbeBank({
+        bankPath: files.bank,
+        overlayPath: files.overlay,
+        tenantDir: tenantDirS,
+        before: original.bank,
+        next: { ...scriptBank, questions: sPlan.questions },
+        now: new Date('2026-11-02T03:05:00.000Z'),
+      });
+    } catch (err) {
+      staleError = err instanceof Error ? err.message : String(err);
+    }
+    check('파일 쓰기: 계획 뒤 질문지가 바뀌었으면 아무것도 안 씀(백업도 안 만듦)', staleError.includes('그 사이 바뀌었습니다') && backups().length === 1, staleError);
+  }
+  // 하위 프로세스 검사를 위해 처음 상태로 되돌린다.
+  writeFileSync(files.bank, original.bank);
+  for (const name of backups()) rmSync(path.join(tenantDirS, name), { recursive: true, force: true });
+
+  // 스크립트 --write — 하위 프로세스(tsx). 쓰기 모드는 판정 엔진을 부르지 않는다. Blob 토큰은 비워 로컬 오버레이를 읽게 한다.
+  const tsxCli = path.resolve('node_modules', 'tsx', 'dist', 'cli.mjs');
+  const runScript = (appData: string, candidatesPath: string, ...extra: string[]) =>
+    spawnSync(process.execPath, [tsxCli, 'scripts/add-probe-questions.ts', S.tenantId, '--app-data', appData, '--write', '--from', candidatesPath, ...extra], {
+      encoding: 'utf8',
+      env: { ...process.env, APP_DATA_DIR: '', BLOB_READ_WRITE_TOKEN: '', BLOB_STORE_ID: '', DOTENV_CONFIG_QUIET: 'true' },
+    });
+  const unchanged = () => raw(files.bank) === original.bank && raw(files.overlay) === original.overlay && raw(files.cohort) === original.cohort && backups().length === 0;
+  const saveCandidates = (name: string, value: ProbeCandidatesFile) => put(sdir, name, value);
+
+  const mismatch = runScript(sdir, saveCandidates('mismatch.json', scriptCandidates({ bankQuestionCount: 3 })));
+  check(
+    '스크립트 --write: 문항 수가 후보 파일과 다르면 거절 · 아무것도 안 바뀜',
+    mismatch.status === 1 && mismatch.stderr.includes('지금 문항 수(4)가 후보를 만들 때(3)와 다릅니다') && unchanged(),
+    `${mismatch.status} ${mismatch.stderr}`,
+  );
+  const goodCandidates = saveCandidates('good.json', scriptCandidates());
+  const expectMiss = runScript(sdir, goodCandidates, '--expect-count', '42');
+  check(
+    '스크립트 --write: --expect-count와 다르면 거절 · 해석한 절대 경로와 문항 수를 먼저 보임',
+    expectMiss.status === 1 &&
+      expectMiss.stderr.includes('--expect-count 42') &&
+      expectMiss.stdout.includes(`앱 데이터: ${sdir}`) &&
+      expectMiss.stdout.includes(`질문지: ${files.bank}`) &&
+      expectMiss.stdout.includes(`${VERSION} · 문항 4개(실증 0개)`) &&
+      unchanged(),
+    `${expectMiss.status} ${expectMiss.stdout}${expectMiss.stderr}`,
+  );
+  // 가상화 사본처럼 보이는 경로 — 같은 가짜 데이터를 Packages\Claude_…\ 아래에 둔다.
+  const virtualRoot = path.join(sdir, 'Packages', 'Claude_fake', 'LocalCache', 'Roaming', 'brand-aeo-app');
+  const vFiles = seed(virtualRoot);
+  const vBank = raw(vFiles.bank);
+  const virtual = runScript(virtualRoot, saveCandidates('virtual.json', scriptCandidates({ bankPath: vFiles.bank })));
+  check(
+    '스크립트 --write: 가상화 사본 경로면 거절 · 아무것도 안 바뀜',
+    virtual.status === 1 &&
+      virtual.stderr.includes('가상화 사본') &&
+      raw(vFiles.bank) === vBank &&
+      readdirSync(path.join(virtualRoot, 'data', S.tenantId)).every((n) => !n.startsWith('before-probe-')),
+    `${virtual.status} ${virtual.stderr}`,
+  );
+
+  // 앱이 켜져 있으면 쓰기를 거절해야 하고, 꺼져 있으면 백업 뒤 덧붙인다(migrate-question-plan.ts와 같은 tasklist 확인).
+  const appRunning = (() => {
+    try {
+      const out = execFileSync('tasklist', ['/FI', 'IMAGENAME eq Web4AI Brand AEO.exe', '/NH', '/FO', 'CSV'], { encoding: 'utf8' });
+      return /^"Web4AI Brand AEO\.exe","\d+"/im.test(out);
+    } catch (err) {
+      console.warn(`tasklist를 실행하지 못했습니다 — 스크립트도 쓰기를 거절해야 합니다: ${err instanceof Error ? err.message : String(err)}`);
+      return true;
+    }
+  })();
+  const good = runScript(sdir, goodCandidates, '--expect-count', '4');
+  if (appRunning) {
+    check(
+      '스크립트 --write: 앱이 켜져 있으면(지금 켜져 있음) 쓰기 직전에 거절 · 아무것도 안 바뀜',
+      good.status === 1 && /앱이 실행 중|tasklist 실행에 실패/.test(good.stderr) && good.stdout.includes('덧붙일 실증 질문 2개') && unchanged(),
+      `${good.status} ${good.stderr}`,
+    );
+  } else {
+    const saved = JSON.parse(raw(files.bank)) as ServerQuestionBank;
+    check(
+      '스크립트 --write: 앱이 꺼져 있으면(지금 꺼져 있음) 백업 뒤 실증 2개만 덧붙임',
+      good.status === 0 &&
+        backups().length === 1 &&
+        sameJson(saved.questions.slice(0, 4), scriptBank.questions) &&
+        sameJson(saved.questions.slice(4).map((q) => q.questionId), ['v5-p001', 'v5-p002']) &&
+        raw(files.overlay) === original.overlay &&
+        raw(files.cohort) === original.cohort,
+      `${good.status} ${good.stdout}${good.stderr}`,
+    );
+  }
+} finally {
+  rmSync(sdir, { recursive: true, force: true });
 }
 
 let failed = 0;

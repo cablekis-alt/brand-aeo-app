@@ -67,6 +67,8 @@ export interface QuestionSpec {
   version: string
   /** 실증 질문(점수 · 본 글 제외, 측정은 함). 근거는 src/prompts/types.ts QuestionSpec.probe. */
   probe?: boolean
+  /** 표현만 바꿔 쓴 실증(홀드아웃)의 원래 실증 질문 id. 근거는 src/prompts/types.ts QuestionSpec.paraphraseOf. */
+  paraphraseOf?: string
 }
 
 // 질문 프롬프트 빌더.
