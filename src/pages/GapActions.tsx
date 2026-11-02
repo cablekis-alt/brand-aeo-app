@@ -8,14 +8,17 @@ import {
   loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
+  loadFactGraph,
   loadPublishSettings,
   PHOTO_RIGHTS_EVENT,
   type ActionStatus,
   type ChannelAdaptation,
   type ChannelAdaptationMap,
+  type FactNode,
   type PhotoRightsChange,
   type StoredBrief,
   type StoredDraft,
+  type TenantSummary,
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import ExtraArticleForm from '../components/ExtraArticleForm'
@@ -56,6 +59,7 @@ import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useProbePlan } from '../lib/useProbePlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
+import { canSaveToFolder, saveWriterBundle, writerBundle } from '../lib/writerBundle'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
 type PlanPosts = ReturnType<typeof useGapActionPlan>['posts']
@@ -446,9 +450,12 @@ function BulkDrafts({
  * (extraArticleCap — 운영 기간에는 배정 글 수까지) 안인가, 측정 중이 아닌가(판정 엔진을 함께 쓴다), 다른 일괄 실행이 돌고 있지 않은가
  * (브리프 · 초안 파일 쓰기에 줄이 없다). 이미 살아 있는 글은 건너뛰고, 뺀 글은 서버가 되살린다. 배정 글의 각도는 추가 글의 「다룰
  * 각도」로 들어가 브리프 각도가 된다.
+ *
+ * 초안이 있으면 그 작성자 몫을 한 폴더로 받는 단추도 둔다(src/lib/writerBundle.ts — 글마다 홈페이지용 .html과 사진 파일).
  */
 function WriterRuns({
   tenantId,
+  brand,
   writerPlan,
   writerKey,
   weekBank,
@@ -465,6 +472,8 @@ function WriterRuns({
   onBusyChange,
 }: {
   tenantId: string
+  /** 묶음의 .html이 쓰는 브랜드(글 끝 · JSON-LD · 사진의 업종 확인). */
+  brand: TenantSummary
   /** 운영 기간 안의 배정. */
   writerPlan: WriterPlan
   /** 작성자 거르기 — 고르면 그 작성자 단추만 보인다. */
@@ -496,6 +505,37 @@ function WriterRuns({
   const today = todayKst()
   const cap = extraArticleCap(writerPlan, today)
   const writers = planWriters(writerPlan).filter((w) => !writerKey || w.key === writerKey)
+  // 묶음 받기 — 한 번에 한 작성자. 결과 · 실패는 그 작성자 줄에 보인다.
+  const [bundleBusy, setBundleBusy] = useState<string | null>(null)
+  const [bundleNote, setBundleNote] = useState<{ key: string; text: string; error: boolean } | null>(null)
+
+  /** 그 작성자의 초안을 한 폴더로 — 글 카드 「홈페이지용 .html」과 같은 사실 · 발행 설정으로 만든다. 폴더 고르기를 닫으면 아무 말도 하지 않는다. */
+  const saveBundle = async (key: string) => {
+    setBundleBusy(key)
+    setBundleNote(null)
+    try {
+      const [facts, settings] = await Promise.all([
+        loadFactGraph(tenantId)
+          .then((fg) => fg?.factGraph ?? [])
+          .catch((e: unknown) => {
+            console.error('[WriterRuns] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
+            return [] as FactNode[]
+          }),
+        loadPublishSettings(tenantId),
+      ])
+      const bundle = writerBundle({ plan: writerPlan, writerKey: key, drafts, brand, facts, settings, today })
+      const saved = await saveWriterBundle(tenantId, bundle)
+      if (!saved) return
+      const parts = [`「${saved.where}」에 글 ${bundle.articles}편${bundle.photos > 0 ? ` · 사진 ${bundle.photos}장` : ''}을 저장했어요.`]
+      if (bundle.missing.length > 0) parts.push(`초안이 없는 ${bundle.missing.length}편은 뺐어요(${bundle.missing.join(' · ')}).`)
+      if (bundle.withGaps > 0) parts.push(`빈칸이 남은 글 ${bundle.withGaps}편 — 빈칸 줄은 빠졌어요.`)
+      setBundleNote({ key, text: parts.join(' '), error: false })
+    } catch (e) {
+      setBundleNote({ key, text: `묶음을 다 저장하지 못했어요 — ${e instanceof Error ? e.message : String(e)}`, error: true })
+    } finally {
+      setBundleBusy(null)
+    }
+  }
 
   /** 브리프의 답할 질문 앞부분에 배정 문장이 모두 있는지 — 모델 출력이라 다르면 알리기만 한다. */
   const briefWarning = (a: GapAction, s: StoredBrief): string | null => {
@@ -560,6 +600,28 @@ function WriterRuns({
               locked={locked}
               onBusyChange={onBusyChange}
             />
+            {drafted > 0 && (
+              <div className="brief-bar" style={{ marginBottom: 10 }}>
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={bundleBusy !== null}
+                  onClick={() => void saveBundle(w.key)}
+                  title={
+                    canSaveToFolder()
+                      ? '고른 폴더 안에 이 작성자 묶음 폴더를 만들어 글마다 홈페이지용 .html과 사진 파일을 저장합니다(파일 앞 번호는 배정표 번호).'
+                      : '글마다 홈페이지용 .html과 사진 파일을 내려받습니다(파일 이름 앞에 묶음 이름).'
+                  }
+                >
+                  {bundleBusy === w.key ? '묶음 저장 중…' : `초안 ${drafted}편 묶음 받기`}
+                </button>
+                {bundleNote?.key === w.key && (
+                  <span className={bundleNote.error ? 'error' : 'doc-meta'} role={bundleNote.error ? 'alert' : undefined}>
+                    {bundleNote.text}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )
       })}
@@ -1309,6 +1371,7 @@ export default function GapActions() {
           <WriterRuns
             key={tenant.tenantId}
             tenantId={tenant.tenantId}
+            brand={tenant}
             writerPlan={activePlan}
             writerKey={writerKey}
             weekBank={extras.bankVersion}
