@@ -19,6 +19,7 @@ import {
   allocateQuestions,
   buildWriterPlan,
   checkWriterRules,
+  chooseWriterBank,
   intentsOf,
   newestBankVersion,
   paraphrasePairs,
@@ -322,6 +323,19 @@ for (const c of cases) {
   ok('바꿔 쓴 짝 — 옛 판 문장이 다르면 짝으로 보지 않음', paraphrasePairs(pool, [edited]).length === 7);
   ok('바꿔 쓴 짝 — 다른 id 체계의 판은 짝을 주지 않음', paraphrasePairs(pool, [promoted]).length === 0);
   ok('판 고르기 — 가장 높은 v<N>(v10 > v9 > v2), 숫자가 아닌 판은 보지 않음', newestBankVersion(['v2', 'v10', 'v9', 'draft', 'c1']) === 'v10' && newestBankVersion(['draft']) === null);
+  const dirs = { localDir: path.join('ud', 'question-bank'), bundledDir: path.join('repo', 'question-banks', 't') };
+  const bundledOnly = (file: string) => file === path.join(dirs.bundledDir, 'v6.json');
+  const pick = (input: Partial<Parameters<typeof chooseWriterBank>[0]>) => chooseWriterBank({ localVersions: ['v4', 'v5'], ...dirs, exists: bundledOnly, ...input });
+  const configured = pick({ configured: 'v6' });
+  ok('질문지 고르기 — 측정이 쓰는 판(v6)이 이 PC에 없으면 동봉본을 읽음', configured.ok && configured.version === 'v6' && configured.bundled && configured.from === 'configured' && configured.file === path.join(dirs.bundledDir, 'v6.json'), JSON.stringify(configured));
+  const local = pick({ configured: 'v5' });
+  ok('질문지 고르기 — 이 PC에 있으면 이 PC 파일(동봉본보다 먼저)', local.ok && local.version === 'v5' && !local.bundled && local.file === path.join(dirs.localDir, 'v5.json'));
+  const requested = pick({ requested: 'v4', configured: 'v6' });
+  ok('질문지 고르기 — --bank-version이 설정보다 먼저', requested.ok && requested.version === 'v4' && requested.from === 'requested' && !requested.bundled);
+  const newest = pick({});
+  ok('질문지 고르기 — 브랜드 목록에 없으면 이 PC의 가장 높은 판(예전과 같음)', newest.ok && newest.version === 'v5' && newest.from === 'newest' && !newest.bundled);
+  const missing = pick({ configured: 'v7' });
+  ok('질문지 고르기 — 이 PC에도 동봉본에도 없으면 ✗', !missing.ok && missing.error.includes('v7.json'));
   const before = buildWriterPlan(inputOf('demo-stay', marked, stayExcluded, stayClusters)).plan!;
   const afterInput = inputOf('demo-stay', promotedSameIds, stayExcluded, stayClusters);
   const after = buildWriterPlan({ ...afterInput, avoid: paraphrasePairs(writerPool(promotedSameIds.questions, stayExcluded).pool, [promotedSameIds, marked]) }).plan!;
@@ -541,6 +555,20 @@ try {
     ok(`실제 ${b.tenantId}(${version}) — 같은 의미 묶음 짝이 하한 이상`, r.kinds.cluster >= floorOf(sizes, r.min), `${r.kinds.cluster} < ${floorOf(sizes, r.min)}`);
     ok(`실제 ${b.tenantId}(${version}) — 같은 입력이면 같은 배정`, JSON.stringify(buildWriterPlan(input).plan) === JSON.stringify(build.plan));
     notes.push(`실제 ${b.tenantId}(${version}): 질문 ${r.questions}개 · 글 ${r.articles}편 · 질문마다 ${r.min}~${r.max}편 · 같은 의미 묶음 ${r.kinds.cluster} · 같은 주제 ${r.kinds.topic} · 같은 단계 ${r.kinds.stage} · 그 밖 ${r.kinds.other} · 바꿔 쓴 짝 ${input.avoid.length}`);
+    // v0.4.49 — 저장소 설정의 판(동봉본, 실증 표시를 뗀 판)으로 배정해도 이 PC의 옛 판으로 한 배정과 글 · 작성자 · 이름이 같아야 한다.
+    const repoTenant = (JSON.parse(readFileSync(path.resolve('server', 'tenants.config.json'), 'utf8')) as { tenantId: string; questionBankVersion: string }[]).find((t) => t.tenantId === b.tenantId);
+    const choice = repoTenant
+      ? chooseWriterBank({ configured: repoTenant.questionBankVersion, localVersions: versions, localDir: bankDir, bundledDir: path.resolve('src', 'data', 'question-banks', b.tenantId) })
+      : null;
+    if (choice?.ok && choice.version !== version) {
+      const bundledBank = JSON.parse(readFileSync(choice.file, 'utf8')) as { version: string; questions: BankQuestion[] };
+      const bundledPool = writerPool(bundledBank.questions, excluded).pool;
+      const unified = buildWriterPlan({ ...input, bankVersion: choice.version, bank: bundledBank, avoid: paraphrasePairs(bundledPool, [bundledBank, ...versions.map(read)]) }).plan;
+      ok(
+        `실제 ${b.tenantId} — 동봉본 ${choice.version}${choice.bundled ? '(이 PC에 아직 없음)' : ''}로 배정해도 ${version}과 글 · 질문 · 작성자 · 이름이 같음(판 이름만 다름)`,
+        unified !== null && JSON.stringify(unified.articles) === JSON.stringify(build.plan.articles) && unified.bankVersion === choice.version,
+      );
+    }
   }
 }
 

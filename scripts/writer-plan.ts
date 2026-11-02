@@ -11,8 +11,9 @@
  *   tenantId        없으면 설계(docs/proof/design.json)의 브랜드 전부
  *   --writers       작성자 설정 { format: 'writers/1', placeholder?, writers: [{ key, name, label, angle, blog }] }. label은 글 이름에 붙는
  *                   짧은 각도(「가족 여행」), angle은 추가 글의 「다룰 각도」로 들어가는 문장이다. placeholder: true면 --write를 거절한다.
- *   --bank-version  배정할 질문지 판. 없으면 그 브랜드 question-bank 폴더의 가장 높은 번호(v<N>.json) — 질문지 승격
- *                   (scripts/promote-probe-questions.ts) 뒤면 새 판이다. 질문 id는 승격 전후 같다. 앱은 이 판으로 측정한 주에만 배정 글을 만든다.
+ *   --bank-version  배정할 질문지 판. 없으면 측정이 쓰는 판(브랜드 목록의 설정 — 저장소 설정이 이긴다), 브랜드 목록에 없으면 그
+ *                   브랜드 question-bank 폴더의 가장 높은 번호(v<N>.json). 질문 id는 승격 전후 같다. 앱은 이 판으로 측정한 주에만 배정 글을
+ *                   만든다. 그 판 파일이 이 PC에 아직 없으면 설치본 동봉본(src/data/question-banks/<tenantId>/<판>.json)을 읽는다(chooseWriterBank).
  *   --names         브랜드 → 글 id → 주제 이름 JSON({ "web4ai": { "topic:c1-001+c1-011": "…" } }). 자동 제안 이름을 덮어쓴다.
  *   --seed          배정 시드(기본 20261102). 브랜드마다 FNV-1a("<seed>:<tenantId>")로 난수를 나눈다 — 같은 입력이면 늘 같은 배정이다.
  *
@@ -948,6 +949,36 @@ export async function writeWriterPlanFile(input: { tenantDir: string; plan: Writ
   return { file, backupDir, plan: back.plan }
 }
 
+/** 배정할 질문지 — 판과 그 파일. */
+export type WriterBankChoice =
+  | { ok: true; version: string; file: string; from: 'requested' | 'configured' | 'newest'; bundled: boolean }
+  | { ok: false; error: string }
+
+/**
+ * 배정할 질문지를 고른다(파일은 읽지 않는다). 판은 --bank-version, 없으면 측정이 쓰는 판(브랜드 목록의 설정 — 저장소 설정이 이긴다),
+ * 브랜드 목록에 없으면 이 PC 질문지 폴더의 가장 높은 판. 파일은 이 PC 것을 먼저, 없으면 설치본에 동봉한 질문지(src/data/question-banks —
+ * 측정이 그 판을 처음 읽을 때 이 PC로 가져온다, server/bundledBanks.ts). v0.4.49에서 저장소 설정이 web4ai v6 · gunsan v7로 올라도 운영
+ * PC에는 그 판 파일이 측정 전까지 없다 — 동봉본으로 배정해야 앱이 그 판으로 잰 주에 배정 글을 만든다.
+ */
+export function chooseWriterBank(input: {
+  requested?: string
+  configured?: string
+  localVersions: string[]
+  localDir: string
+  bundledDir: string
+  exists?: (file: string) => boolean
+}): WriterBankChoice {
+  const exists = input.exists ?? existsSync
+  const from = input.requested ? 'requested' : input.configured ? 'configured' : 'newest'
+  const version = input.requested ?? input.configured ?? newestBankVersion(input.localVersions)
+  if (!version) return { ok: false, error: `질문지가 없습니다: ${input.localDir}(v<N>.json)` }
+  const local = path.join(input.localDir, `${version}.json`)
+  if (input.localVersions.includes(version)) return { ok: true, version, file: local, from, bundled: false }
+  const bundled = path.join(input.bundledDir, `${version}.json`)
+  if (exists(bundled)) return { ok: true, version, file: bundled, from, bundled: true }
+  return { ok: false, error: `질문지가 없습니다: ${local}(설치본 동봉본 ${bundled}도 없음)` }
+}
+
 /** 판 이름 가운데 가장 높은 v<N> — 없으면 null. */
 export function newestBankVersion(versions: string[]): string | null {
   let best: { v: string; n: number } | null = null
@@ -1089,13 +1120,20 @@ async function main(): Promise<void> {
     const brandName = tenant?.brandName ?? tenantId
     console.log(`\n■ ${tenantId}${tenant ? ` · ${brandName}` : ' (브랜드 목록에 없음 — 이름 대신 id를 씀)'}`)
     const files = existsSync(bankDir) ? readdirSync(bankDir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -'.json'.length)) : []
-    const version = bankVersions.get(tenantId) ?? newestBankVersion(files)
-    if (!version || !files.includes(version)) {
+    const choice = chooseWriterBank({
+      requested: bankVersions.get(tenantId),
+      configured: tenant?.questionBankVersion,
+      localVersions: files,
+      localDir: bankDir,
+      bundledDir: path.join(repoRoot, 'src', 'data', 'question-banks', tenantId),
+    })
+    if (!choice.ok) {
       problems = true
-      console.log(`  ✗ 질문지가 없습니다: ${version ? path.join(bankDir, `${version}.json`) : `${bankDir}(v<N>.json)`}`)
+      console.log(`  ✗ ${choice.error}`)
       continue
     }
-    const bankPath = path.join(bankDir, `${version}.json`)
+    const { version } = choice
+    const bankPath = choice.file
     const bank = readJsonFile<{ version: string; questions: BankQuestion[] }>(bankPath, '질문지')
     // 다른 판 질문지는 바꿔 쓴 질문 짝을 찾는 데만 쓴다 — 읽지 못한 판은 알리고 건너뛴다.
     const others: { questions: BankQuestion[] }[] = []
@@ -1129,7 +1167,9 @@ async function main(): Promise<void> {
     })
     built.push({ tenantId, brandName, tenantDir, build })
 
-    console.log(`  질문지 ${bankPath}${bankVersions.has(tenantId) ? '' : ' (가장 높은 판)'}`)
+    const fromLabel = { requested: '', configured: ' (측정이 쓰는 판)', newest: ' (가장 높은 판)' }[choice.from]
+    const bundledLabel = choice.bundled ? ' — 설치본 동봉본(이 PC에는 측정 때 가져옴)' : ''
+    console.log(`  질문지 ${bankPath}${fromLabel}${bundledLabel}`)
     if (tenant && tenant.questionBankVersion !== version) {
       console.log(`  ⚠ 측정이 지금 쓰는 판은 ${tenant.questionBankVersion}입니다 — 앱은 ${version} 판으로 측정한 주에만 배정 글을 만듭니다.`)
     }
