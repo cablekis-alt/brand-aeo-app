@@ -1261,7 +1261,10 @@ export interface CompetitorEditorState {
     exists: boolean
     measuredVersion: string | null
     sharedCount: number
+    /** 브랜드 질문 수 — 공통 질문과 실증 질문은 세지 않는다. */
     brandCount: number
+    /** 같은 판에 덧붙인 실증 질문 수 — 「모두 새로 쓰기」는 새 판을 만들어 이 질문들이 사라진다. */
+    probeCount: number
     /** 경쟁사를 바꾸며 고쳐 만든 질문지면 그 출처. */
     derived: { from: string; replaced: number; removed: number } | null
     /** 「브랜드 질문 모두 새로 쓰기」 — 목록 그대로 질문지만 새로 쓰는 저장(서랍 바닥 줄). */

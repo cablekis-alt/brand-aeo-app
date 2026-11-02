@@ -1,3 +1,4 @@
+import { isScoredAgnostic } from '../lib/questionScope.js';
 import type { MarketScope, PromptMessage, QuestionLanguage, QuestionSpec } from './types.js';
 
 /**
@@ -105,8 +106,9 @@ export function learnQuota(count: number): number {
   return Math.max(1, Math.ceil(count * 0.2));
 }
 
-export function countAgnostic(questions: Pick<QuestionSpec, 'category'>[]): number {
-  return questions.filter((q) => q.category === 'category-agnostic').length;
+/** 점수에 세는 이름 없는 질문 수 — 실증 질문은 하한을 채우지 않는다(src/lib/questionScope.ts). */
+export function countAgnostic(questions: Pick<QuestionSpec, 'category' | 'probe'>[]): number {
+  return questions.filter(isScoredAgnostic).length;
 }
 
 /** 상호·별칭이 본문에 들어 있는지. 카테고리 무관 승격 가능 여부를 코드로 판정할 때 쓴다. */

@@ -546,7 +546,8 @@ app.get('/api/citation-sources/:tenantId/:weekOf', async (req, res) => {
   }
   const source = await sourceFor(tenant, req.params.weekOf, res);
   const engine = typeof req.query.engine === 'string' ? req.query.engine : null;
-  const questions = req.query.questions === 'unnamed' || req.query.questions === 'named' ? req.query.questions : null;
+  const questions =
+    req.query.questions === 'unnamed' || req.query.questions === 'named' || req.query.questions === 'probe' ? req.query.questions : null;
   const competitorDomains = tenant.competitors.flatMap((c) => c.domains ?? []);
   res.json(
     await getCitationSourceAnalysis(source, tenant.tenantId, req.params.weekOf, {

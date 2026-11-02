@@ -1057,7 +1057,9 @@ export default function CompetitorEditor({
               {s.questionBank.exists && s.questionBank.measuredVersion && s.questionBank.measuredVersion !== s.questionBank.version
                 ? ` (다음 측정부터 · 마지막 측정 ${s.questionBank.measuredVersion})`
                 : ''}
-              {s.questionBank.exists ? ` · 공통 ${s.questionBank.sharedCount} · 브랜드 ${s.questionBank.brandCount}` : ' · 다음 측정 때 새로 만들어요'}
+              {s.questionBank.exists
+                ? ` · 공통 ${s.questionBank.sharedCount} · 브랜드 ${s.questionBank.brandCount}${s.questionBank.probeCount > 0 ? ` · 실증 ${s.questionBank.probeCount}` : ''}`
+                : ' · 다음 측정 때 새로 만들어요'}
               <span
                 className="ce-hint"
                 title={`점수와 순위는 같은 코호트에 똑같이 묻는 공통 질문${s.questionBank.exists ? ` ${s.questionBank.sharedCount}개` : ''}로 매겨요. 비교 질문은 브랜드 질문이에요.`}
@@ -1125,6 +1127,7 @@ export default function CompetitorEditor({
             <QuestionModeChooser
               plan={shownPlan.questions}
               all={shownPlan.rewriteAll}
+              probeCount={s.questionBank.probeCount}
               mode={modeFor(shownPlan)}
               open={qModeOpen}
               onToggle={() => setQModeOpen(!qModeOpen)}
@@ -1231,6 +1234,12 @@ export default function CompetitorEditor({
                   질문은 다음 측정 때 새 목록으로 만들어요(미리 볼 수 없어요). 공통 질문 {s.questionBank.sharedCount}개는 그대로라 점수 · 순위는 같은
                   질문으로 매겨요. 그 주는 질문지가 바뀌어 직전 측정 대비 증감을 보이지 않아요.
                 </p>
+                {s.questionBank.probeCount > 0 && (
+                  <p className="ce-bar-note warn">
+                    실증 질문 {s.questionBank.probeCount}개는 새 질문지로 옮기지 않아 사라져요 — 실험을 이어 가려면 {allPlan.toVersion}에 실증
+                    질문을 다시 덧붙여야 해요.
+                  </p>
+                )}
               </>
             )}
             <div className="ce-bar-actions">
@@ -1492,6 +1501,7 @@ function QuestionPlanBlock({
 function QuestionModeChooser({
   plan,
   all,
+  probeCount,
   mode,
   open,
   onToggle,
@@ -1500,6 +1510,8 @@ function QuestionModeChooser({
 }: {
   plan: QuestionHandoffPlan
   all: RewriteAllPlan
+  /** 지금 질문지의 실증 질문 수 — 「모두 새로 쓰기」를 고르면 사라진다고 알린다. */
+  probeCount: number
   mode: QuestionMode
   open: boolean
   onToggle: () => void
@@ -1541,6 +1553,7 @@ function QuestionModeChooser({
               <span className="ce-qmode-sub">
                 {all.available ? `브랜드 질문별 지난 추이는 ${all.toVersion}부터 새로 시작해요 · 다음 측정 때 만들어요(미리 볼 수 없어요)` : all.reason}
               </span>
+              {all.available && probeCount > 0 && <span className="ce-qmode-sub warn">실증 질문 {probeCount}개는 새 질문지로 옮기지 않아 사라져요</span>}
             </span>
           </label>
           {fixable && (

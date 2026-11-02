@@ -4,18 +4,24 @@
  * 왜: 실증 질문은 같은 질문지 판에 probe: true로 덧붙여 매번 측정한다. 판이 같으니 「같은 조건」 판정은 그대로 참이고,
  * 그 말이 맞으려면 점수 모집단이 문항 하나도 바뀌지 않아야 한다. 덧붙이기 전 은행 + 원래 응답과, 덧붙인 은행 + 원래 응답
  * + 실증 응답이 한 바이트도 다르지 않은 지표를 내야 한다. 특히 사실성 · 자사 인용률 · CI는 이름 없는 질문만이 아니라 전체
- * 응답을 써서, 이름 없는 질문 거르개만 고쳐서는 실증 인용이 자사 인용률(점수의 20%)에 섞인다.
+ * 응답을 써서, 이름 없는 질문 거르개만 고쳐서는 실증 인용이 자사 인용률(점수의 20%)에 섞인다. 점수 밖에서 문항을 직접 세는 곳
+ * (회차 보기 N · 브랜드 현황 질문지 비교 · 일반 질문 하한 · 인용 분해 · 인용 출처 · EEAT · 경쟁사 편집의 질문 수와 크기)도 같은
+ * 규칙을 따라야 화면 숫자가 카드와 맞는다. 브랜드 현황 · 경쟁사 편집은 임시 폴더를 APP_DATA_DIR로 쓴다.
  *
  *   npx tsx scripts/verify-probe-questions.ts
  */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import type { QuestionSpec } from '../src/prompts/types';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
+import { countAgnostic } from '../src/prompts/b1-question-bank';
 import { aggregateWeeklyMetrics } from '../server/aggregate';
 import { getEngineTrend } from '../server/engineTrend';
 import { agnosticAnalyses } from '../server/mentionScope';
 import type { ResultStore } from '../server/store';
-import type { CitationDetail, QuestionRepeatAnalysis } from '../server/types';
+import type { CitationDetail, QuestionRepeatAnalysis, TenantConfig } from '../server/types';
 
 const checks: [string, boolean, string][] = [];
 const check = (label: string, ok: boolean, actual = '') => checks.push([label, ok, actual]);
@@ -147,6 +153,218 @@ check(
   point !== undefined && !point.byEngine.some((e) => e.engine === 'perplexity') && point.byEngine.reduce((n, e) => n + e.answers, 0) === 4,
   JSON.stringify(point?.byEngine),
 );
+
+// ── 5. 일반 질문 하한 ────────────────────────────────────────────────────────
+check('countAgnostic: 실증 질문은 하한을 채우지 않음', countAgnostic(bankAfter) === 2 && countAgnostic(bankBefore) === 2, String(countAgnostic(bankAfter)));
+
+// 여기부터는 앱 데이터 폴더의 파일도 읽는다 — 위 import는 경로를 정하지 않으므로 이제 임시 폴더로 정하고 모듈을 불러온다.
+const dir = mkdtempSync(path.join(tmpdir(), 'verify-probe-questions-'));
+process.env.APP_DATA_DIR = dir;
+process.env.BLOB_READ_WRITE_TOKEN = '';
+process.env.BLOB_STORE_ID = '';
+const writeJson = (rel: string, value: unknown) => {
+  const file = path.join(dir, rel);
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify(value));
+};
+try {
+  const { PIPELINE_DATA_DIR } = await import('../server/appPaths');
+  check('준비: 앱 데이터 경로가 임시 폴더', PIPELINE_DATA_DIR.startsWith(dir), PIPELINE_DATA_DIR);
+  const { getRunHistory } = await import('../server/runHistory');
+  const { buildPortfolio } = await import('../server/portfolio');
+  const { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } = await import('../server/queries');
+
+  const weekCard = {
+    tenantId: 'probe-test',
+    weekOf: '2026-W44',
+    industry: '테스트업종',
+    region: '가상시',
+    brandName: '가상 숙소',
+    aeoScore: { current: 30, ma4: 30, previousWeek: null, ciLow: 0, ciHigh: 0 },
+    mentionRate: after.mentionRate,
+    shareOfMention: null,
+    avgRecommendationRank: null,
+    factualityScore: null,
+    brandOwnedCitationRate: after.brandOwnedCitationRate,
+    cohortRank: { position: 1, totalTenants: 2 },
+    hallucinationFlags: [],
+    enginesUsed: ['gemini', 'openai'],
+    judgeEngine: 'gemini',
+    judgeModel: 'g-1',
+    questionBankVersion: VERSION,
+    repeatsPerQuestion: 2,
+  } as unknown as WeeklyScorecard;
+  const bankFile = (questions: QuestionSpec[]) => ({ version: VERSION, generatedAt: '2026-10-01T00:00:00Z', questions });
+  // 그 주 카드 하나 · 그 판 은행 하나만 있는 가짜 저장소. bank가 null이면 은행을 못 찾는 주차다.
+  const weekStore = (bank: QuestionSpec[] | null, analyses: QuestionRepeatAnalysis[]) =>
+    ({
+      getScorecardHistory: async () => [weekCard],
+      getQuestionAnalyses: async () => analyses,
+      getQuestionBank: async (_tenantId: string, version: string) => (bank && version === VERSION ? bankFile(bank) : null),
+      getCohortScorecards: async () => [weekCard],
+      listRunSnapshots: async () => ({ runs: [], issues: [] }),
+    }) as unknown as ResultStore;
+  const beforeStore = weekStore(bankBefore, base);
+  const afterStore = weekStore(bankAfter, afterMixed);
+
+  // ── 6. 회차 보기 ───────────────────────────────────────────────────────────
+  const runOf = async (store: ResultStore) => (await getRunHistory(store, { tenantId: 'probe-test', questionBankVersion: VERSION }, [])).points[0];
+  const runBefore = await runOf(beforeStore);
+  const runAfter = await runOf(afterStore);
+  check('runHistory: 이름 없는 질문 수 N이 덧붙이기 전과 같음', runAfter?.agnosticQuestions === 2 && runBefore?.agnosticQuestions === 2, `${runBefore?.agnosticQuestions} → ${runAfter?.agnosticQuestions}`);
+  check(
+    'runHistory: k/N · 다시 센 점수가 덧붙이기 전과 같음',
+    runAfter !== undefined && JSON.stringify(runAfter.ranked) === JSON.stringify(runBefore?.ranked) && runAfter.score === runBefore?.score && runAfter.ranked?.n === 4,
+    `${JSON.stringify(runBefore?.ranked)} / ${JSON.stringify(runAfter?.ranked)}`,
+  );
+
+  // ── 7. 브랜드 현황(질문지 비교) ──────────────────────────────────────────────
+  // 고객은 실증을 덧붙인 은행, 같은 코호트 경쟁사는 실증 없는 같은 일반 질문. 실증을 세면 「질문지 다름」으로 뒤집힌다.
+  const rivalCard = { ...weekCard, tenantId: 'probe-rival', brandName: '가상 경쟁' } as WeeklyScorecard;
+  const portfolioStore = (customerBank: QuestionSpec[]) =>
+    ({
+      scorecardIndex: async () => ({
+        historyOf: (tenantId: string) => (tenantId === 'probe-test' ? [weekCard] : tenantId === 'probe-rival' ? [rivalCard] : []),
+        cohort: () => [weekCard, rivalCard],
+      }),
+      getQuestionBank: async (tenantId: string, version: string) => (version === VERSION ? bankFile(tenantId === 'probe-test' ? customerBank : bankBefore) : null),
+    }) as unknown as ResultStore;
+  const customer = {
+    tenantId: 'probe-test',
+    brandName: '가상 숙소',
+    aliases: [],
+    ownedDomains: ['own.example'],
+    industry: '테스트업종',
+    region: '가상시',
+    engines: ['gemini', 'openai'],
+    questionBankSize: 3,
+    questionBankVersion: VERSION,
+    repeatsPerQuestion: 2,
+    factGraph: [],
+    competitors: [],
+  } as unknown as TenantConfig;
+  const NOW = new Date('2026-10-28T03:00:00Z'); // 2026-W44
+  const pfRow = async (bank: QuestionSpec[]) => (await buildPortfolio([customer], portfolioStore(bank), NOW)).rows[0];
+  const pfAfter = await pfRow(bankAfter);
+  check('portfolio: 실증을 덧붙여도 「질문지 다름」이 아님', pfAfter?.status === 'done', String(pfAfter?.status));
+  const pfNaive = await pfRow(unflagged);
+  check('대조: probe 표시가 없으면 「질문지 다름」(검사가 헛돌지 않음)', pfNaive?.status === 'diff', String(pfNaive?.status));
+
+  // ── 8. 인용 분해 · 인용 출처 · EEAT · 이름 넣은/없는 질문 언급률 ──────────────────
+  const breakdownBefore = await getCitationBreakdown(beforeStore, 'probe-test', '2026-W44');
+  const breakdownAfter = await getCitationBreakdown(afterStore, 'probe-test', '2026-W44');
+  check(
+    '인용 분해: 자사 인용률 = 카드(실증 인용 뺌)',
+    breakdownAfter.brandOwnedCitationRate === after.brandOwnedCitationRate && breakdownAfter.totalCitations === 4,
+    `${breakdownAfter.brandOwnedCitationRate} · ${breakdownAfter.totalCitations}건`,
+  );
+  check('인용 분해: 덧붙이기 전과 같은 표', JSON.stringify(breakdownAfter) === JSON.stringify(breakdownBefore));
+  const breakdownNoBank = await getCitationBreakdown(weekStore(null, afterMixed), 'probe-test', '2026-W44');
+  check('인용 분해: 은행을 못 찾으면 지금처럼 전체를 셈', breakdownNoBank.totalCitations === 8, `${breakdownNoBank.totalCitations}건`);
+
+  const sourcesOf = (store: ResultStore, questions?: 'unnamed' | 'named' | 'probe') =>
+    getCitationSourceAnalysis(store, 'probe-test', '2026-W44', questions ? { questions } : {});
+  check('인용 출처 기본 보기: 덧붙이기 전과 같음(실증 응답 뺌)', JSON.stringify(await sourcesOf(afterStore)) === JSON.stringify(await sourcesOf(beforeStore)));
+  check(
+    '인용 출처 이름 없는 질문: 덧붙이기 전과 같음(실증 응답 뺌)',
+    JSON.stringify(await sourcesOf(afterStore, 'unnamed')) === JSON.stringify(await sourcesOf(beforeStore, 'unnamed')),
+  );
+  check(
+    '인용 출처 이름 넣은 질문: 덧붙이기 전과 같음',
+    JSON.stringify(await sourcesOf(afterStore, 'named')) === JSON.stringify(await sourcesOf(beforeStore, 'named')),
+  );
+  const probeSources = await sourcesOf(afterStore, 'probe');
+  check(
+    "인용 출처 'probe' 범위: 실증 응답 3건 · 인용 4건만",
+    probeSources.questionScope?.scope === 'probe' && probeSources.questionScope.responses === 3 && probeSources.questionScope.unknown === 0 && probeSources.totalCitations === 4,
+    JSON.stringify({ scope: probeSources.questionScope, total: probeSources.totalCitations }),
+  );
+  check(
+    "인용 출처 'probe' 범위: 실증 없는 은행이면 빈 집계",
+    (await sourcesOf(beforeStore, 'probe')).questionScope?.responses === 0,
+  );
+  check(
+    'EEAT: 덧붙이기 전과 같음(실증 응답 뺌)',
+    JSON.stringify(await getEeatAnalysis(afterStore, 'probe-test', '2026-W44')) === JSON.stringify(await getEeatAnalysis(beforeStore, 'probe-test', '2026-W44')),
+  );
+  const rankingTenant = { tenantId: 'probe-test', brandName: '가상 숙소', industry: '테스트업종', region: '가상시', questionBankVersion: VERSION };
+  const splitBefore = (await getRankingView(beforeStore, rankingTenant, '2026-W44')).promptedSplit;
+  const splitAfter = (await getRankingView(afterStore, rankingTenant, '2026-W44')).promptedSplit;
+  check(
+    '이름 넣은/없는 질문 언급률: 실증 응답을 어느 쪽에도 세지 않음',
+    JSON.stringify(splitAfter) === JSON.stringify(splitBefore) && splitAfter?.unnamed.answered === 4,
+    JSON.stringify(splitAfter),
+  );
+
+  // ── 9. 경쟁사 편집의 질문 수 · 크기 ─────────────────────────────────────────
+  // 저장소 설정의 고객 브랜드 하나(경쟁사 3곳 이상)에 가짜 질문지를 둔다(verify-competitor-save.ts와 같은 방식).
+  const ed = await import('../server/competitorEditor');
+  const reg = await import('../server/tenantRegistry');
+  const { FileResultStore } = await import('../server/store');
+  const fileStore = new FileResultStore();
+  const runtime0 = await reg.loadRuntimeTenants();
+  const repo = runtime0.find((t) => !t.cohortOnly && t.competitors.length >= 3 && t.autoCohort !== false);
+  if (!repo) {
+    check('경쟁사 편집: 시험할 고객 브랜드(경쟁사 3곳 이상)가 있어야 함', false);
+  } else {
+    const id = repo.tenantId;
+    const v = repo.questionBankVersion;
+    const [c0] = repo.competitors;
+    const q = (questionId: string, text: string, category: QuestionSpec['category'], extra: Partial<QuestionSpec> = {}) => ({
+      questionId,
+      text,
+      category,
+      industry: repo.industry,
+      region: repo.region,
+      containsBrandName: category !== 'category-agnostic',
+      version: v,
+      ...extra,
+    });
+    writeJson(`data/${id}/question-bank/${v}.json`, {
+      version: v,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      questions: [
+        q('c1-001', '가상 지역 좋은 곳 어디야?', 'category-agnostic', { cohortShared: true }),
+        q(`${v}-001`, `${repo.brandName}이랑 ${c0!.name} 중 어디가 더 나아?`, 'comparison'),
+        q(`${v}-002`, `${repo.brandName} 가격 알려줘`, 'price-spec'),
+        q(`${v}-p001`, '가상 지역 조용한 숙소 추천해줘', 'category-agnostic', { probe: true }),
+        q(`${v}-p002`, '가상 지역 아이랑 갈 만한 곳 골라줘', 'category-agnostic', { probe: true }),
+      ],
+    });
+    const s0 = await ed.buildEditorState(repo, runtime0, fileStore);
+    check(
+      '경쟁사 편집: 브랜드 질문 수에 실증을 세지 않고 따로 냄',
+      s0.questionBank.sharedCount === 1 && s0.questionBank.brandCount === 2 && s0.questionBank.probeCount === 2,
+      JSON.stringify({ shared: s0.questionBank.sharedCount, brand: s0.questionBank.brandCount, probe: s0.questionBank.probeCount }),
+    );
+    // 첫 경쟁사를 빼면 그 비교 질문을 넘겨받거나 빼서 새 판을 만든다 — 실증은 그대로 옮기되 크기에는 세지 않는다.
+    const fresh = async () => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === id)!;
+    const competitors = repo.competitors.slice(1);
+    const plan = await ed.planEdit(await fresh(), await reg.loadRuntimeTenants(), fileStore, competitors);
+    if (plan.questions.mode !== 'derive') {
+      check('경쟁사 편집: 첫 경쟁사를 빼면 질문지를 고쳐 만듦(derive)', false, plan.questions.mode);
+    } else {
+      const drafts = plan.questions.items
+        .filter((i) => i.action === 'rewrite')
+        .map((i) => ({ fromId: i.fromId, text: i.swaps.reduce((t, s) => t.replace(s.from.name, s.to!.name), i.source.text) }));
+      await ed.saveEdit(id, fileStore, { competitors, questions: { key: plan.questions.key, drafts } });
+      const derived = await fileStore.getQuestionBank(id, plan.questions.toVersion);
+      const saved = await fresh();
+      check(
+        '경쟁사 편집: 고쳐 만든 질문지에 실증을 그대로 옮김',
+        derived?.questions.filter(isProbe).length === 2 && derived.questions.length === plan.questions.sizeAfter,
+        JSON.stringify(derived?.questions.map((x) => x.questionId)),
+      );
+      check(
+        '경쟁사 편집: 저장한 크기(questionBankSize)에 실증을 세지 않음',
+        saved.questionBankVersion === plan.questions.toVersion && saved.questionBankSize === plan.questions.sizeAfter - 2,
+        `${saved.questionBankVersion} · ${saved.questionBankSize} / 문항 ${plan.questions.sizeAfter}`,
+      );
+    }
+  }
+} finally {
+  rmSync(dir, { recursive: true, force: true });
+}
 
 let failed = 0;
 for (const [label, ok, actual] of checks) {

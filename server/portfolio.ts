@@ -1,6 +1,8 @@
 import { compareConditions, conditionSummary, weeksBetween, type ConditionChange } from '../src/lib/comparability.js';
+import { isScoredAgnostic } from '../src/lib/questionScope.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import { getIsoWeekString } from '../src/prompts/isoWeek.js';
+import type { QuestionCategory } from '../src/prompts/types.js';
 import { pendingProfileEdit } from './brandProfileEditor.js';
 import { planCohortTargets } from './cohortPlan.js';
 import { pendingCompetitorEdit } from './competitorEditor.js';
@@ -90,10 +92,13 @@ export interface Portfolio {
   cohorts: PortfolioCohort[];
 }
 
-/** 일반 질문 글 집합 — 보고서(src/lib/reviewReport.ts generalQuestionTexts)와 같은 기준. */
-function generalTexts(bank: { questions: { category: string; text: string }[] } | null): Set<string> | null {
+/**
+ * 일반 질문 글 집합 — 보고서(src/lib/reviewReport.ts generalQuestionTexts)와 같은 기준. 실증 질문은 뺀다 — 덧붙인 브랜드만
+ * 「질문지 다름」으로 뒤집히지 않게(코호트 경쟁사 은행에는 실증이 없다).
+ */
+function generalTexts(bank: { questions: { category: QuestionCategory; text: string; probe?: boolean }[] } | null): Set<string> | null {
   if (!bank) return null;
-  return new Set(bank.questions.filter((q) => q.category === 'category-agnostic').map((q) => q.text.trim()));
+  return new Set(bank.questions.filter(isScoredAgnostic).map((q) => q.text.trim()));
 }
 
 const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));

@@ -52,8 +52,11 @@ export interface CitationSourceConsensusRow {
   citationCount: number;
 }
 
-/** 질문 유형 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문. */
-export type CitationQuestionScope = 'unnamed' | 'named';
+/**
+ * 질문 유형 — unnamed는 브랜드 이름이 없는 질문(containsBrandName=false), named는 이름을 댄 질문, probe는 실증 질문
+ * (src/lib/questionScope.ts). unnamed에는 실증 질문이 들지 않는다.
+ */
+export type CitationQuestionScope = 'unnamed' | 'named' | 'probe';
 
 export interface CitationSourceAnalysis {
   totalCitations: number;

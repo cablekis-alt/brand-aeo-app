@@ -46,6 +46,7 @@ const QUESTION_SCOPE_LABEL: Record<CitationQuestionScope | 'all', string> = {
   unnamed: '브랜드 이름 없는 질문',
   all: '모든 질문',
   named: '브랜드 이름을 댄 질문',
+  probe: '실증 질문',
 }
 
 /*

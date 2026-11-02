@@ -18,6 +18,7 @@ import {
 } from '../src/prompts/index.js';
 import type { Engine } from '../src/prompts/types.js';
 import { comparableWith } from '../src/lib/comparability.js';
+import { withoutProbes } from '../src/lib/questionScope.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { thoughtTokensOf } from './usageStats.js';
@@ -751,12 +752,15 @@ async function writeWeeklyReport(
   store: ResultStore,
   weekOf: string,
   scorecard: WeeklyScorecard,
+  questions: QuestionSpec[],
   analyses: QuestionRepeatAnalysis[],
   generation: number,
   history: WeeklyScorecard[],
 ): Promise<string> {
-  const eeat = computeEeatAnalysis(analyses);
-  const citationSources = analyzeCitationSources(analyses);
+  // 고객 리포트 서술에는 실증 질문(실험용 덧붙인 질문)의 응답을 섞지 않는다 — 점수와 같은 모집단으로 쓴다(src/lib/questionScope.ts).
+  const scored = withoutProbes(analyses, questions);
+  const eeat = computeEeatAnalysis(scored);
+  const citationSources = analyzeCitationSources(scored);
   // 전주와 견줘도 되는지는 앱 공용 규칙으로 — 측정 조건이 다르면 리포트도 증감으로 읽지 않는다(정기진단 보고서 표지와 같은 판정).
   const comparison = comparableWith([...history.filter((h) => h.weekOf < weekOf), scorecard], weekOf);
   const reportResult = await getJudgeClient().call(buildWeeklyReportPrompt(scorecard, { eeat, citationSources, comparison }));
@@ -886,7 +890,7 @@ export async function runWeeklyPipeline(
   reportGeneration.set(`${tenant.tenantId}|${weekOf}`, generation);
 
   if (options.deferReport) {
-    const pendingReport = writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation, history).then(
+    const pendingReport = writeWeeklyReport(tenant, store, weekOf, scorecard, questions, analyses, generation, history).then(
       () => undefined,
       (err: unknown) => {
         console.error(`[B8] ${tenant.tenantId} ${weekOf} 리포트 저장 실패(측정 결과는 저장됨): ${err instanceof Error ? err.message : err}`);
@@ -898,7 +902,7 @@ export async function runWeeklyPipeline(
   }
 
   updateActiveMeasure(tenant.tenantId, { stage: '리포트', done: 0, total: 0 });
-  const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, analyses, generation, history);
+  const reportMarkdown = await writeWeeklyReport(tenant, store, weekOf, scorecard, questions, analyses, generation, history);
   return { scorecard, reportMarkdown, enginesUsed, runId };
 }
 
