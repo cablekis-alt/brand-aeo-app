@@ -15,6 +15,9 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import * as React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import ExtraArticleForm from '../src/components/ExtraArticleForm';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import type { QuestionSpec } from '../src/prompts/types';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
@@ -23,7 +26,7 @@ import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from
 import { answersCsv, buildAnswerQuestions, engineMentions, questionCoverage, unnamedOwnedCitation } from '../src/lib/answerInsights';
 import { buildAnswerEvidence } from '../src/lib/answerEvidence';
 import { aeoScoreOf } from '../src/lib/b9-report';
-import { computeGapActions } from '../src/lib/gapActions';
+import { computeGapActions, probeQuestionList } from '../src/lib/gapActions';
 import { computeGapAnalysis } from '../src/lib/gapAnalysis';
 import { checkNewExtraArticle, topicArticleId } from '../src/lib/extraArticles';
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence';
@@ -405,6 +408,89 @@ if (created.ok) {
   );
   check('추가 글: 실증을 맡아도 본 글 · otherLost는 그대로', sameJson(mainOf(withProbeArticle), mainOf(gapAfter2)) && sameJson(withProbeArticle.otherLost, gapAfter2.otherLost));
   check('추가 글: 맡아도 plan.probes에 남음(처치 · 대조를 화면이 가름)', withProbeArticle.probes.length === 2);
+}
+
+// 추가 글이 맡은 실증에 이번 주 응답이 없을 때 — 엔진 호출이 모두 실패했거나, 실증을 덧붙이기 전에 잰 주(같은 판)를 볼 때다. 응답 줄이
+// 없어 plan.probes에 없지만, 은행에서 찾았으니 확인 불가(missingTexts)도 아니다. 은행으로 실증임을 가려(extra.probes) 「글 더 만들기」의
+// 본 글 목록에 「다른 글이 맡은 본 글 질문」으로 보이지 않고, 실증 목록 · 실증 칸에 「맡음」 · 확인 불가로 보여야 한다.
+const bankWithSilent: QuestionSpec[] = [...bankAfter, spec('v5-p003', 'category-agnostic', true)];
+const silentIds = ['v5-p003', 'v5-p001'];
+const silentArticle = checkNewExtraArticle(
+  { id: topicArticleId(silentIds), name: '가상 처치 글', bankVersion: VERSION, questionIds: silentIds, questionTexts: ['v5-p003 질문', 'v5-p001 질문'] },
+  [],
+  '2026-10-30T09:00:00.000Z',
+);
+check('응답 없는 실증: 추가 글을 만들 수 있음', silentArticle.ok, silentArticle.ok ? '' : silentArticle.error);
+if (silentArticle.ok) {
+  const silentPlan = gapPlan(bankWithSilent, gapAll, { extraArticles: [silentArticle.article], bankVersion: VERSION });
+  const silentAction = silentPlan.actions.find((a) => a.id === silentArticle.article.id);
+  const silentExtras = silentPlan.actions.filter((a) => a.extra);
+  check(
+    '응답 없는 실증: 같은 판에서 찾아 확인 불가(missingTexts)가 아니고 plan.probes에도 없음',
+    silentAction?.extra?.missingTexts.length === 0 && (silentAction?.questionIds.includes('v5-p003') ?? false) && !silentPlan.probes.some((p) => p.questionId === 'v5-p003'),
+    JSON.stringify({ ids: silentAction?.questionIds, missing: silentAction?.extra?.missingTexts, probes: silentPlan.probes.map((p) => p.questionId) }),
+  );
+  check(
+    '응답 없는 실증: extra.probes가 은행으로 실증을 가림(이번 주 id · 고정 문장, 응답 있는 실증 포함)',
+    sameJson(silentAction?.extra?.probes, [
+      { questionId: 'v5-p001', text: 'v5-p001 질문' },
+      { questionId: 'v5-p003', text: 'v5-p003 질문' },
+    ]),
+    JSON.stringify(silentAction?.extra?.probes),
+  );
+  const silentList = probeQuestionList(silentPlan.probes, silentExtras);
+  check(
+    '실증 목록: 응답 없는 실증을 맡음 · 판정 없음(확인 불가)으로 덧붙임',
+    silentList.map((p) => `${p.questionId}:${p.verdict ?? '-'}:${p.takenBy ?? '-'}`).join() === 'v5-p001:loss:가상 처치 글,v5-p002:win:-,v5-p003:-:가상 처치 글',
+    silentList.map((p) => `${p.questionId}:${p.verdict ?? '-'}:${p.takenBy ?? '-'}`).join(),
+  );
+  check(
+    '실증 목록: 맡은 글이 없으면 응답 없는 실증은 싣지 않음',
+    probeQuestionList(silentPlan.probes, []).map((p) => p.questionId).join() === 'v5-p001,v5-p002',
+  );
+  // 「글 더 만들기」 — 본 글 목록(aria-label="본 글의 이번 주 질문")과 실증 목록(aria-label="실증 질문")을 나눠 본다.
+  // 화면 파일은 jsx 자동 변환을 전제로 하는데 tsx는 고전 변환으로 읽는다 — React를 전역에 둔다(verify-execution-marks.ts와 같다).
+  Object.assign(globalThis, { React });
+  const formHtml = (extraActions: typeof silentExtras) =>
+    renderToStaticMarkup(
+      React.createElement(ExtraArticleForm, {
+        main: mainOf(silentPlan) ?? null,
+        probes: silentPlan.probes,
+        extraActions,
+        bankVersion: VERSION,
+        corrupt: false,
+        loadError: null,
+        onCreate: async () => null,
+      }),
+    );
+  const listOf = (html: string, label: string) => {
+    const start = html.indexOf(`aria-label="${label}"`);
+    // 정적 렌더가 이웃한 글자 사이에 넣는 <!-- -->는 떼고 본다.
+    return start < 0 ? '' : html.slice(start, html.indexOf('</ul>', start)).replaceAll('<!-- -->', '');
+  };
+  const html = formHtml(silentExtras);
+  const mainList = listOf(html, '본 글의 이번 주 질문');
+  const probeListHtml = listOf(html, '실증 질문');
+  check('글 더 만들기: 응답 없는 실증이 본 글 목록에 없음', mainList.includes('v5-001 질문') && !mainList.includes('v5-p003'), mainList);
+  check(
+    '글 더 만들기: 응답 없는 실증이 실증 목록에 「맡음」 · 확인 불가로 보임',
+    /v5-p003 질문<span class="muted"> · 이번 주 응답 없음\(확인 불가\)<\/span><span class="muted"> · 「가상 처치 글」 글이 맡음/.test(probeListHtml),
+    probeListHtml,
+  );
+  // 대조 — extra.probes가 없으면 예전처럼 본 글 목록에 「다른 글이 맡은」 질문으로 보인다(검사가 헛돌지 않게).
+  const naiveExtras = silentExtras.map((a) => ({ ...a, extra: a.extra ? { ...a.extra, probes: undefined } : undefined }));
+  check('대조: extra.probes가 없으면 응답 없는 실증이 본 글 목록에 보임', listOf(formHtml(naiveExtras), '본 글의 이번 주 질문').includes('v5-p003 질문'));
+
+  // 판이 바뀌어 문장으로 다시 찾은 주 — extra.probes는 새 id에 만들 때 고정한 문장을 붙인다.
+  const respec = (q: QuestionSpec, id: string): QuestionSpec => ({ ...q, questionId: id, version: 'v6' });
+  const bankV6: QuestionSpec[] = [...bankBefore.map((q) => ({ ...q, version: 'v6' })), respec(bankWithSilent[5], 'v6-p009')];
+  const byTextPlan = gapPlan(bankV6, gapBase, { extraArticles: [silentArticle.article], bankVersion: 'v6' });
+  const byTextAction = byTextPlan.actions.find((a) => a.id === silentArticle.article.id);
+  check(
+    '판이 바뀐 주: 문장으로 찾은 실증의 새 id · 고정 문장',
+    byTextAction?.extra?.how === 'by-text' && sameJson(byTextAction.extra.probes, [{ questionId: 'v6-p009', text: 'v5-p003 질문' }]),
+    JSON.stringify({ how: byTextAction?.extra?.how, probes: byTextAction?.extra?.probes }),
+  );
 }
 
 // 여기부터는 앱 데이터 폴더의 파일도 읽는다 — 위 import는 경로를 정하지 않으므로 이제 임시 폴더로 정하고 모듈을 불러온다.

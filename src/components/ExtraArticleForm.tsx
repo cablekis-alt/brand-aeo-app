@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { NewExtraArticleInput } from '../lib/api'
 import { EXTRA_LIMITS, NAME_AND_ANGLE_LIMIT, questionTextKey } from '../lib/extraArticles'
-import type { GapAction } from '../lib/gapActions'
+import { probeQuestionList, type GapAction } from '../lib/gapActions'
 import { VERDICT_WORD, type WinLossRow } from '../lib/questionWinLoss'
 
 /**
@@ -10,7 +10,8 @@ import { VERDICT_WORD, type WinLossRow } from '../lib/questionWinLoss'
  * 고른 질문은 다음 계산부터 추가 글이 맡고 본 글의 이번 주 질문에서 빠진다. 이미 만든 본 글은 다시 만들지 않는다 — 고친 글 · 빈칸
  * 기록 · 고른 사진이 사라진다. 본 글에는 질문이 하나는 남아야 한다(다 빼면 본 글이 목록에서 사라져 올린 기록이 갈 곳을 잃는다).
  *
- * 실증 질문(src/lib/questionScope.ts)은 본 글에 들지 않아 따로 목록을 둔다(plan.probes) — 고르면 그 글이 처치군이 되고, 고르지 않은
+ * 실증 질문(src/lib/questionScope.ts)은 본 글에 들지 않아 따로 목록을 둔다(plan.probes에 추가 글이 맡은 응답 없는 실증을 더한
+ * probeQuestionList) — 고르면 그 글이 처치군이 되고, 고르지 않은
  * 실증은 대조군으로 남는다. 본 글에서 빼는 질문이 아니라 「본 글에 하나는 남기기」 검사에 세지 않는다. 본 글이 없는 주(일반 질문을 모두
  * 이긴 주)에도 실증만으로 만들 수 있다(main null). 실증과 일반 질문을 한 글에 섞으면 막지 않고 알린다 — 실험 효과를 따로 읽기 어렵다.
  *
@@ -69,17 +70,18 @@ export default function ExtraArticleForm({
     text: main?.questionTexts[i] ?? id,
     takenBy: takenById.get(id) ?? null,
   }))
-  const probeItems: QuestionItem[] = probes.map((p) => ({
-    key: p.questionId,
-    id: p.questionId,
-    text: p.text,
-    takenBy: takenById.get(p.questionId) ?? null,
-  }))
-  const verdictById = new Map(probes.map((p) => [p.questionId, p.verdict]))
+  // 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다(plan.probes에 없다) — 판정은 확인 불가로 둔다.
+  const probeList = probeQuestionList(probes, extraActions)
+  const probeItems: QuestionItem[] = probeList.map((p) => ({ key: p.questionId, id: p.questionId, text: p.text, takenBy: p.takenBy }))
+  const verdictById = new Map(probeList.map((p) => [p.questionId, p.verdict]))
   // 본 글에서 빠진 질문 — 다른 글이 맡았다고 흐리게 보인다. 문장은 그 글이 만들 때 고정한 것이고, 이번 주 찾지 못한 질문은 뺀다.
-  // 실증은 본 글에서 빠진 질문이 아니라 실증 목록에 「맡음」으로 보인다. 본 글이 없는 주에는 본 글 목록째 그리지 않는다.
+  // 실증은 본 글에서 빠진 질문이 아니라 실증 목록에 「맡음」으로 보인다(응답이 없는 실증까지 — 고정 문장으로 가린다). 본 글이 없는
+  // 주에는 본 글 목록째 그리지 않는다.
   const mainKeys = new Set((main?.questionTexts ?? []).map(questionTextKey))
-  const probeKeys = new Set(probes.map((p) => questionTextKey(p.text)))
+  const probeKeys = new Set([
+    ...probes.map((p) => questionTextKey(p.text)),
+    ...extraActions.flatMap((x) => (x.extra?.probes ?? []).map((p) => questionTextKey(p.text))),
+  ])
   const takenItems: QuestionItem[] = main
     ? extraActions.flatMap((x) => {
         const missing = new Set((x.extra?.missingTexts ?? []).map(questionTextKey))
@@ -164,7 +166,9 @@ export default function ExtraArticleForm({
         <span>
           {q.text}
           {/* 이번 주 판정은 처치 · 대조를 고를 때 참고로만 보인다. */}
-          {probe && q.id !== null && verdictById.has(q.id) && <span className="muted"> · 이번 주 {VERDICT_WORD[verdictById.get(q.id)!]}</span>}
+          {probe && q.id !== null && verdictById.has(q.id) && (
+            <span className="muted"> · 이번 주 {verdictById.get(q.id) ? VERDICT_WORD[verdictById.get(q.id)!] : '응답 없음(확인 불가)'}</span>
+          )}
           {q.takenBy && <span className="muted"> · 「{q.takenBy}」 글이 맡음</span>}
         </span>
       </label>

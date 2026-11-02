@@ -26,7 +26,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { isExtraArticleId } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
-import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, type GapAction } from '../lib/gapActions'
+import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, probeQuestionList, type GapAction } from '../lib/gapActions'
 import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
 import { VERDICT_WORD } from '../lib/questionWinLoss'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
@@ -799,9 +799,8 @@ export default function GapActions() {
   const takenByExtras = mainKeptAll
     ? 0
     : extraActions.reduce((sum, a) => sum + a.reach - a.questionIds.filter((id) => lostProbeIds.has(id)).length, 0)
-  // 실증 질문을 맡은 추가 글 — 실증 칸이 처치(맡은 글 있음) · 대조(없음)를 밝힌다.
-  const probeTakenBy = new Map<string, string>()
-  for (const a of extraActions) for (const id of a.questionIds) probeTakenBy.set(id, a.extra?.name ?? a.title)
+  // 실증 칸 목록 — 맡은 추가 글로 처치(맡은 글 있음) · 대조(없음)를 밝힌다. 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다.
+  const probeList = probeQuestionList(plan.probes, extraActions)
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = publishPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
@@ -1182,30 +1181,30 @@ export default function GapActions() {
             </section>
           )}
 
-          {plan.probes.length > 0 && (
+          {probeList.length > 0 && (
             // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다. 본 글이 없는
-            // 주에는 그 칸이 본 글 카드 아래에 없으니 여기 둔다.
+            // 주에는 그 칸이 본 글 카드 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
             <section>
               <details className="gap-more">
-                <summary>실증 질문 {plan.probes.length}개 · 점수 제외 · 본 글에 넣지 않음</summary>
+                <summary>실증 질문 {probeList.length}개 · 점수 제외 · 본 글에 넣지 않음</summary>
                 <p className="hint" style={{ marginTop: 0 }}>
                   우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도
                   넣지 않습니다. 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서
                   같은 방향일 때만 읽으세요.
                 </p>
                 <ul className="gap-worst">
-                  {plan.probes.map((q) => (
+                  {probeList.map((q) => (
                     <li key={q.questionId}>
                       <span className="gap-q">{q.text}</span>{' '}
                       <span className="muted">
-                        · 이번 주 {VERDICT_WORD[q.verdict]}
-                        {probeTakenBy.has(q.questionId) ? ` · 「${probeTakenBy.get(q.questionId)}」 글이 맡음(처치)` : ' · 맡은 글 없음(대조)'}
+                        · 이번 주 {q.verdict ? VERDICT_WORD[q.verdict] : '응답 없음(확인 불가)'}
+                        {q.takenBy ? ` · 「${q.takenBy}」 글이 맡음(처치)` : ' · 맡은 글 없음(대조)'}
                       </span>
                     </li>
                   ))}
                 </ul>
               </details>
-              {!mainArticle && extras.available && (
+              {!mainArticle && extras.available && plan.probes.length > 0 && (
                 <ExtraArticleForm
                   main={null}
                   probes={plan.probes}
