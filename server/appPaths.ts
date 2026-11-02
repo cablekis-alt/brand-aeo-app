@@ -33,6 +33,18 @@ export const COHORT_BANK_DIR = APP_DATA_DIR
  */
 export const BUNDLED_COHORT_BANK_DIR = process.env.BUNDLED_COHORT_BANK_DIR || null;
 
+/**
+ * 동봉한 브랜드 질문지 — src/data/question-banks/<tenantId>/<판>.json(server/bundledBanks.ts). 여러 PC가 같은 판 이름으로 같은 질문을
+ * 재게 한다(v0.4.49 브랜드 통일). 패키징은 asar의 src/data(SEED_DATA_DIR, electron/main.cjs) 아래, dev · CI는 저장소의 것 — CI의
+ * data/는 비어 있어(.gitignore) 이게 없으면 저장소 설정이 올린 판을 AI로 새로 만든다. 웹(Vercel)은 쓰지 않는다 — 함수에 싣지 않는다
+ * (vercel.json includeFiles는 src/data/*.json 한 단계).
+ */
+export const BUNDLED_BANK_DIR = process.env.VERCEL
+  ? null
+  : process.env.SEED_DATA_DIR
+    ? path.join(process.env.SEED_DATA_DIR, 'question-banks')
+    : path.resolve(process.cwd(), 'src', 'data', 'question-banks');
+
 /** 런타임 상태 파일(오버레이·큐) 경로. 패키징이면 userData 바로 아래, 아니면 기존 server/ 경로. */
 export function stateFilePath(name: string): string {
   return APP_DATA_DIR ? path.join(APP_DATA_DIR, name) : path.resolve(process.cwd(), 'server', name);
