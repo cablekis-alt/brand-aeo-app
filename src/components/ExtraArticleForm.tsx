@@ -106,8 +106,9 @@ export default function ExtraArticleForm({
     : []
   const items = [...mainItems, ...takenItems]
   const selectable = mainItems.filter((q) => !q.takenBy)
-  const chosenMain = selectable.filter((q) => q.id !== null && selected.has(q.id))
-  const chosenProbes = probeItems.filter((q) => !q.takenBy && q.id !== null && selected.has(q.id))
+  // 실증 기간에는 질문을 고르지 않는다 — 배정이 늦게 와 그 전에 고른 체크가 남아도 세지 않는다(경고 · 단추 글자가 고를 수 없는 체크를 말하지 않게).
+  const chosenMain = probePlan ? [] : selectable.filter((q) => q.id !== null && selected.has(q.id))
+  const chosenProbes = probePlan ? [] : probeItems.filter((q) => !q.takenBy && q.id !== null && selected.has(q.id))
   const chosen = [...chosenMain, ...chosenProbes]
   // 실증과 일반 질문을 한 글에 섞었다 — 막지 않고 알린다.
   const mixed = chosenMain.length > 0 && chosenProbes.length > 0

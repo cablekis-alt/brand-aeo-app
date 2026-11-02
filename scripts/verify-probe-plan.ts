@@ -9,12 +9,17 @@
  * 배정 글은 화면이 정의를 그대로 「글 더 만들기」로 보내므로 추가 글 검사(checkNewExtraArticle)를 그대로 통과해야 하고, 이름은 브리프
  * 각도로 글에 들어가므로 실험 용어가 없어야 한다.
  *
+ * 화면은 두 가지만 본다(jsdom): 콘텐츠 생성 화면의 일괄 실행 잠금 · 브리프 · 초안이 브랜드를 넘지 않는지(src/lib/bulkRun.ts), 「글 더
+ * 만들기」에 배정이 늦게 와도 그 전에 고른 체크의 경고가 남지 않는지.
+ *
  *   npx tsx scripts/verify-probe-plan.ts
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { JSDOM } from 'jsdom';
+import * as React from 'react';
 import { articleIdOf } from './proof-read';
 import {
   buildProbePlan,
@@ -28,7 +33,10 @@ import {
   type DesignBrand,
   type ProbePlanInput,
 } from './write-probe-plan';
+import ExtraArticleForm from '../src/components/ExtraArticleForm';
+import { bulkRunsAfter, passForTenant, type BulkRuns } from '../src/lib/bulkRun';
 import { checkNewExtraArticle, extraBriefAngle, topicArticleId } from '../src/lib/extraArticles';
+import type { GapAction } from '../src/lib/gapActions';
 import {
   allowedTopicIds,
   articleLabel,
@@ -43,6 +51,7 @@ import {
   type ProbePlan,
   type ProbeRole,
 } from '../src/lib/probePlan';
+import type { WinLossRow } from '../src/lib/questionWinLoss';
 
 const checks: [string, boolean, string | undefined][] = [];
 /** detail은 실패했을 때만 찍는다(하위 프로세스 출력 등). */
@@ -397,6 +406,84 @@ function fakeInput(names: Record<string, string> = NAMES): ProbePlanInput {
     const res = buildProbePlan(input);
     ok(`만들기 실패 — ${label}`, res.errors.length > 0 && res.errors.some((e) => e.includes(needle)));
   }
+}
+
+// ── 화면 — 일괄 실행은 브랜드마다(src/lib/bulkRun.ts) ───────────────────────
+// 콘텐츠 생성 화면은 브랜드를 바꿔도 그대로다. 앞 브랜드에서 누른 차수 실행(몇 분)이 지금 브랜드를 잠그거나, 그 실행의 브리프 · 초안이
+// 지금 브랜드 목록에 섞이면 안 된다.
+{
+  let runs: BulkRuns = {};
+  runs = bulkRunsAfter(runs, 'demo-a', 'round', true);
+  ok('일괄 실행 — 시작한 브랜드만 돌고 있음(바꾼 브랜드는 잠기지 않음)', runs['demo-a'] === 'round' && runs['demo-b'] === undefined, JSON.stringify(runs));
+  runs = bulkRunsAfter(runs, 'demo-b', 'all', true);
+  runs = bulkRunsAfter(runs, 'demo-a', 'round', false);
+  ok('일괄 실행 — 앞 브랜드 실행이 끝나도 지금 브랜드의 실행은 그대로', runs['demo-b'] === 'all' && !('demo-a' in runs), JSON.stringify(runs));
+  runs = bulkRunsAfter(runs, 'demo-b', 'all', false);
+  ok('일괄 실행 — 모두 끝나면 빈 표', Object.keys(runs).length === 0, JSON.stringify(runs));
+  const idle: BulkRuns = {};
+  ok('일괄 실행 — 돌지 않는 브랜드를 끝내도 같은 표', bulkRunsAfter(idle, 'demo-a', 'all', false) === idle);
+
+  // 화면과 같이 — 실행은 누른 때의 브랜드를 쥐고, 넘길 때 지금 화면의 브랜드와 견준다.
+  let current = 'demo-a';
+  const got: string[] = [];
+  const started = current;
+  const onBrief = (s: string) => passForTenant(current, started, s, (v) => got.push(v));
+  onBrief('a-1');
+  current = 'demo-b';
+  onBrief('a-2');
+  current = 'demo-a';
+  onBrief('a-3');
+  ok('브리프 · 초안 — 브랜드를 바꾼 동안 앞 브랜드 실행이 넘긴 것은 버리고, 돌아오면 다시 받음', got.join() === 'a-1,a-3', got.join());
+}
+
+// ── 화면 — 「글 더 만들기」에 배정이 늦게 와도 고를 수 없는 체크의 경고가 남지 않음 ──────────────
+{
+  // 화면 파일은 jsx 자동 변환을 전제로 하는데 tsx는 고전 변환으로 읽는다 — React를 전역에 둔다(verify-execution-marks.ts와 같다).
+  // react-dom/client는 읽을 때 DOM이 있는지 보므로 jsdom 전역을 먼저 둔다.
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>');
+  Object.assign(globalThis, { React, window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const { createRoot } = await import('react-dom/client');
+  const host = dom.window.document.getElementById('root')!;
+  const root = createRoot(host);
+  const mainAction = { id: 'demo-main', kind: 'content', title: '본 글', questionIds: ['c1-001', 'c1-002'], questionTexts: [TEXT['c1-001'], TEXT['c1-002']] } as unknown as GapAction;
+  const probeRows = [{ questionId: 'v9-p001', text: TEXT['v9-p001'], verdict: 'loss' }] as unknown as WinLossRow[];
+  const render = (probePlan: ProbePlan | null) =>
+    React.act(async () => {
+      root.render(
+        React.createElement(ExtraArticleForm, {
+          main: mainAction,
+          probes: probeRows,
+          extraActions: [],
+          bankVersion: 'v9',
+          corrupt: false,
+          loadError: null,
+          onCreate: async () => null,
+          probePlan,
+        }),
+      );
+    });
+  const warnings = () => [...host.querySelectorAll('.hint.warn')].map((e) => e.textContent ?? '').join(' | ');
+  const LEAVES_NONE = '본 글에 질문을 하나 이상 남겨 두세요';
+  const MIXED = '실증과 일반 질문을 섞으면';
+
+  await render(null);
+  const boxes = [...host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+  for (const box of boxes) await React.act(async () => box.click());
+  // 대조 — 배정이 없으면 고른 체크가 경고를 낸다(검사가 헛돌지 않게).
+  ok('글 더 만들기 대조 — 배정 없이 본 글 질문 전부 + 실증을 고르면 두 경고', boxes.length === 3 && warnings().includes(LEAVES_NONE) && warnings().includes(MIXED), `${boxes.length} ${warnings()}`);
+
+  await render(plan);
+  const button = host.querySelector('.brief-bar button.primary')?.textContent ?? '';
+  ok(
+    '글 더 만들기 — 배정이 늦게 와 「배정표 글」로 바뀌면 체크 · 경고가 사라지고 배정표 글만 고름',
+    host.querySelectorAll('input[type="checkbox"]').length === 0 &&
+      host.querySelectorAll('input[type="radio"]').length === 3 &&
+      !warnings().includes(LEAVES_NONE) &&
+      !warnings().includes(MIXED) &&
+      button === '배정표 글 만들기',
+    `${warnings()} / ${button}`,
+  );
+  await React.act(async () => root.unmount());
 }
 
 // ── 배정 파일 쓰기(writeProbePlanFile) · 스크립트 — 임시 폴더의 가짜 브랜드 ──────────────────

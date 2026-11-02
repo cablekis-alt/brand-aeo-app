@@ -23,6 +23,7 @@ import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
+import { bulkRunsAfter, passForTenant, type BulkKind, type BulkRuns } from '../lib/bulkRun'
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
 import { aliveExtraArticles, EXTRA_LIMITS, isExtraArticleId, questionTextKey, type ExtraArticle } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
@@ -933,9 +934,17 @@ export default function GapActions() {
   // 실증 배정 — 잠금 기간 안이면 「글 더 만들기」가 배정표 글만 고르고 실증 칸에 차수 단추가 생긴다. 파일이 없으면 지금과 같다.
   const probe = useProbePlan(tenant?.tenantId ?? '')
   const activePlan = probe.active
-  // 도는 일괄 실행 — 실증 기간에는 도는 동안 카드와 「글 더 만들기」를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없다).
-  const [bulkRunning, setBulkRunning] = useState<'all' | 'round' | null>(null)
+  // 도는 일괄 실행 — 실증 기간에는 도는 동안 카드와 「글 더 만들기」를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없다). 브랜드마다 따로
+  // 센다 — 브랜드를 바꿔도 이 화면은 그대로라, 앞 브랜드에서 누른 실행이 끝날 때까지 지금 브랜드를 잠그면 안 된다(src/lib/bulkRun.ts).
+  const [bulkRuns, setBulkRuns] = useState<BulkRuns>({})
+  const bulkRunning = bulkRuns[tenant?.tenantId ?? ''] ?? null
   const pageLocked = activePlan !== null && bulkRunning !== null
+  const bulkBusy = (tenantId: string, kind: BulkKind) => (busy: boolean) => setBulkRuns((r) => bulkRunsAfter(r, tenantId, kind, busy))
+  // 지금 보는 브랜드 — 앞 브랜드의 차수 실행이 넘기는 브리프 · 초안을 버리는 데 쓴다(useGapActionPlan의 currentTenant와 같다).
+  const currentTenant = useRef(tenant?.tenantId ?? '')
+  useEffect(() => {
+    currentTenant.current = tenant?.tenantId ?? ''
+  }, [tenant?.tenantId])
   // 그 주 회차를 합친 올린 글 칸 — 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용된 글을 주소 알약이 밝힌다(성과 표와 같은 칸).
   const postsRevision = useMemo(() => posts.list.map((p) => `${p.id}|${p.publishedOn ?? ''}|${p.removedAt ?? ''}`).join(','), [posts.list])
   const weekHistory = usePublishedHistory(canRecordPosts ? (tenant?.tenantId ?? '') : '', 12, postsRevision)
@@ -1328,7 +1337,7 @@ export default function GapActions() {
                     onBrief={onBrief}
                     onDraft={onDraft}
                     locked={bulkRunning === 'round'}
-                    onBusyChange={(busy) => setBulkRunning(busy ? 'all' : null)}
+                    onBusyChange={bulkBusy(tenant.tenantId, 'all')}
                   />
                 )}
                 <div className="gap-grid">
@@ -1551,10 +1560,11 @@ export default function GapActions() {
                   briefs={briefs}
                   drafts={drafts}
                   mainId={mainId}
-                  onBrief={onBrief}
-                  onDraft={onDraft}
+                  // 브랜드를 바꾼 뒤에도 앞 브랜드의 실행이 돈다 — 그 브리프 · 초안은 지금 브랜드의 목록에 넣지 않는다.
+                  onBrief={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onBrief)}
+                  onDraft={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onDraft)}
                   locked={bulkRunning !== null}
-                  onBusyChange={(busy) => setBulkRunning(busy ? 'round' : null)}
+                  onBusyChange={bulkBusy(tenant.tenantId, 'round')}
                 />
               )}
               {!mainArticle && extras.available && plan.probes.length > 0 && (
