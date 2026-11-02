@@ -1083,7 +1083,11 @@ function derivedBankFor(rewrite: QuestionRewriteContext, repo: TenantConfig, raw
     ...(new Set(ids).size !== ids.length ? ['질문 id가 겹쳐요'] : []),
     ...(derived.questions.length !== plan.sizeAfter ? [`문항 수가 ${plan.sizeAfter}개가 아니에요`] : []),
     // 코호트 질문지를 쓰지 않는 은행은 측정이 일반 질문 하한을 다시 맞추며 은행을 고쳐 쓴다 — 하한 아래로 내려가면 안 된다.
-    ...(!repo.cohortQuestionBank && countAgnostic(derived.questions) < agnosticQuota(plan.sizeAfter) ? ['일반 질문이 하한보다 적어져요'] : []),
+    // 하한은 실증 질문을 뺀 문항 수로 정한다 — countAgnostic이 실증을 세지 않고, 측정도 실증을 뺀 저장 크기(questionBankSize)로
+    // 하한을 정한다(pipeline.ts). 문항 수에 실증을 넣으면 측정이 받아들이는 은행을 여기서 거절한다.
+    ...(!repo.cohortQuestionBank && countAgnostic(derived.questions) < agnosticQuota(plan.sizeAfter - derived.questions.filter(isProbe).length)
+      ? ['일반 질문이 하한보다 적어져요']
+      : []),
   ];
   if (problems.length) throw new EditorError(400, `새 질문지를 만들 수 없어요: ${problems.join(' · ')}`);
   return derived;

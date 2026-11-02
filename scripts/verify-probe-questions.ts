@@ -16,8 +16,10 @@ import path from 'node:path';
 import type { WeeklyScorecard } from '../src/prompts/b8-report';
 import type { QuestionSpec } from '../src/prompts/types';
 import { isProbe, isScoredAgnostic, probeIdsOf, withoutProbes } from '../src/lib/questionScope';
-import { countAgnostic } from '../src/prompts/b1-question-bank';
+import { agnosticQuota, countAgnostic } from '../src/prompts/b1-question-bank';
+import { QUESTION_SCOPE_LABEL, QUESTION_SCOPE_OPTIONS, citationBasisLabel } from '../src/lib/citationView';
 import { aggregateWeeklyMetrics } from '../server/aggregate';
+import { linkCompetitorQuestions } from '../server/competitorQuestions';
 import { getEngineTrend } from '../server/engineTrend';
 import { agnosticAnalyses } from '../server/mentionScope';
 import type { ResultStore } from '../server/store';
@@ -156,6 +158,32 @@ check(
 
 // ── 5. 일반 질문 하한 ────────────────────────────────────────────────────────
 check('countAgnostic: 실증 질문은 하한을 채우지 않음', countAgnostic(bankAfter) === 2 && countAgnostic(bankBefore) === 2, String(countAgnostic(bankAfter)));
+
+// ── 5-1. 경쟁사 질문 잇기 ────────────────────────────────────────────────────
+// 실증 질문은 만들 때 있던 경쟁사 이름을 피하지만, 나중에 더한 경쟁사 이름 · 별칭이 본문에 들어 있을 수 있다. 그래도 그 경쟁사의
+// 비교 질문으로 잇지 않는다 — 이으면 경쟁사를 뺄 때 고쳐 쓰이거나(문장 · id가 바뀜) 빠진다.
+const linkBank: QuestionSpec[] = [
+  { ...spec('v5-004', 'comparison'), text: '가상 숙소랑 한옥 가상채 중 어디가 나아?' },
+  { ...spec('v5-p003', 'category-agnostic', true), text: '가상시 한옥 가상채 같은 조용한 곳 추천해줘' },
+];
+const links = linkCompetitorQuestions(linkBank, [{ name: '한옥 가상채' }], ['가상 숙소']);
+check(
+  '경쟁사 질문 잇기: 경쟁사 이름이 든 실증 질문은 잇지 않음',
+  links.byCompetitor[0]?.join() === 'v5-004' && links.questions.length === 1,
+  JSON.stringify(links.byCompetitor),
+);
+check(
+  '대조: probe 표시가 없으면 같은 문장을 이음(검사가 헛돌지 않음)',
+  linkCompetitorQuestions(linkBank.map(({ probe: _probe, ...x }) => x), [{ name: '한옥 가상채' }], ['가상 숙소']).byCompetitor[0]?.length === 2,
+);
+
+// ── 5-2. 인용 갭 분석 질문 유형 필터 ─────────────────────────────────────────
+// 「모든 질문」 보기도 실증 응답을 뺀다(8번) — 이름표 · 기준 문구가 그렇게 말하고, 실증 인용 출처는 따로 고를 수 있어야 한다.
+check('인용 갭 필터: 실증 질문 칸이 있음', QUESTION_SCOPE_OPTIONS.includes('probe') && QUESTION_SCOPE_OPTIONS.length === 4, QUESTION_SCOPE_OPTIONS.join(','));
+check('인용 갭 필터: 기본 칸(이름 없는 질문)이 맨 앞', QUESTION_SCOPE_OPTIONS[0] === 'unnamed');
+check('인용 갭 필터: 「모든 질문」 이름표가 실증 제외를 말함', QUESTION_SCOPE_LABEL.all.includes('실증 제외'), QUESTION_SCOPE_LABEL.all);
+check('인용 갭 기준 문구: 모든 질문은 실증을 뺀 전체', citationBasisLabel('all') === '실증 질문을 뺀 전체 인용', citationBasisLabel('all'));
+check('인용 갭 기준 문구: 실증 질문 칸', citationBasisLabel('probe') === '실증 질문의 인용', citationBasisLabel('probe'));
 
 // 여기부터는 앱 데이터 폴더의 파일도 읽는다 — 위 import는 경로를 정하지 않으므로 이제 임시 폴더로 정하고 모듈을 불러온다.
 const dir = mkdtempSync(path.join(tmpdir(), 'verify-probe-questions-'));
@@ -360,6 +388,90 @@ try {
         saved.questionBankVersion === plan.questions.toVersion && saved.questionBankSize === plan.questions.sizeAfter - 2,
         `${saved.questionBankVersion} · ${saved.questionBankSize} / 문항 ${plan.questions.sizeAfter}`,
       );
+    }
+  }
+
+  // ── 10. 코호트 질문지 없는 고객의 고쳐 만들기 ───────────────────────────────────
+  // 일반 질문 하한은 실증을 뺀 문항 수로 정한다 — 측정(pipeline.ts)이 실증을 뺀 저장 크기로 하한을 정하니, 여기서 실증까지 세면
+  // 측정이 받아들이는 은행을 저장에서 거절한다. 일반 질문을 하한에 딱 맞게(실증 뺀 5문항 중 3개) 둔다. 실증 하나는 나중에 더한
+  // 경쟁사(빠질 곳) 이름을 품는다 — 그대로 옮겨져야 한다(5-1).
+  const nc = (name: string) => ({ name, aliases: [name], domains: [] as string[] });
+  const N = {
+    tenantId: 'probe-nocohort',
+    brandName: '가상머뭄',
+    aliases: ['가상머뭄'],
+    ownedDomains: ['fake-nocohort.example'],
+    industry: '가상업종',
+    region: '가상동',
+    engines: ['gemini'],
+    repeatsPerQuestion: 1,
+    factGraph: [],
+    questionBankVersion: 'v5',
+    questionBankSize: 5,
+    competitors: [nc('가상골목'), nc('가상옥도')],
+  };
+  writeJson('tenants.overlay.json', [N]);
+  const nq = (questionId: string, text: string, category: QuestionSpec['category'], extra: Partial<QuestionSpec> = {}) => ({
+    questionId,
+    text,
+    category,
+    industry: N.industry,
+    region: N.region,
+    containsBrandName: category !== 'category-agnostic',
+    version: 'v5',
+    ...extra,
+  });
+  const nBank = [
+    nq('v5-001', '가상동 가상업종 추천해줘', 'category-agnostic'),
+    nq('v5-002', '가상동에서 가상업종 고를 때 뭘 봐야 해?', 'category-agnostic'),
+    nq('v5-003', '가상동 가상업종 가격대는 어때?', 'category-agnostic'),
+    nq('v5-004', '가상머뭄이랑 가상골목 중에 어디가 더 나아?', 'comparison'),
+    nq('v5-005', '가상머뭄 체크인 몇 시야?', 'brand-direct'),
+    nq('v5-p001', '가상동 조용한 가상업종 골라줘', 'category-agnostic', { probe: true, containsBrandName: false }),
+    nq('v5-p002', '가상골목 근처 가상업종 추천해줘', 'category-agnostic', { probe: true, containsBrandName: false }),
+  ];
+  writeJson(`data/${N.tenantId}/question-bank/v5.json`, { version: 'v5', generatedAt: '2026-10-13T00:00:00.000Z', questions: nBank });
+  const freshN = async () => (await reg.loadRuntimeTenants()).find((t) => t.tenantId === N.tenantId);
+  const tN = await freshN();
+  if (!tN || tN.cohortQuestionBank) {
+    check('코호트 없는 고객: 준비(오버레이 브랜드 · 코호트 질문지 없음)', false, JSON.stringify(tN?.cohortQuestionBank));
+  } else {
+    const sN = await ed.buildEditorState(tN, await reg.loadRuntimeTenants(), fileStore);
+    const golmok = sN.rows.find((r) => r.name === '가상골목');
+    check('경쟁사 편집 서랍: 경쟁사 이름이 든 실증 질문을 그 경쟁사 질문으로 보이지 않음', golmok?.questionIds.join() === 'v5-004', JSON.stringify(golmok?.questionIds));
+    const nextList = [nc('가상옥도')];
+    const planN = await ed.planEdit(tN, await reg.loadRuntimeTenants(), fileStore, nextList);
+    if (planN.questions.mode !== 'derive') {
+      check('코호트 없는 고객: 가상골목을 빼면 질문지를 고쳐 만듦(derive)', false, planN.questions.mode);
+    } else {
+      const pq = planN.questions;
+      check('고쳐 만들기 계획: 실증 질문을 넘겨받기 항목에 넣지 않음', pq.items.length === 1 && pq.items[0]?.fromId === 'v5-004', pq.items.map((i) => i.fromId).join(','));
+      // 고치기 전 식(실증까지 센 문항 수로 하한)이면 거절됐을 은행인지 — 검사가 헛돌지 않게.
+      const scoredAfter = pq.sizeAfter - 2;
+      check(
+        '대조: 실증까지 센 문항 수로 하한을 정하면 거절될 은행',
+        countAgnostic(nBank) === agnosticQuota(scoredAfter) && countAgnostic(nBank) < agnosticQuota(pq.sizeAfter),
+        `일반 ${countAgnostic(nBank)} · 하한 ${agnosticQuota(scoredAfter)} / 실증 포함 ${agnosticQuota(pq.sizeAfter)}`,
+      );
+      const draftsN = pq.items
+        .filter((i) => i.action === 'rewrite')
+        .map((i) => ({ fromId: i.fromId, text: i.swaps.reduce((t, s) => t.replace(s.from.name, s.to!.name), i.source.text) }));
+      let saveError = '';
+      try {
+        await ed.saveEdit(N.tenantId, fileStore, { competitors: nextList, questions: { key: pq.key, drafts: draftsN } });
+      } catch (err) {
+        saveError = err instanceof Error ? err.message : String(err);
+      }
+      check('코호트 없는 고객: 일반 질문이 실증 뺀 하한에 딱 맞으면 저장됨', saveError === '', saveError);
+      const derivedN = await fileStore.getQuestionBank(N.tenantId, pq.toVersion);
+      const probesN = derivedN?.questions.filter(isProbe) ?? [];
+      check(
+        '고쳐 만든 질문지: 실증 질문의 id · 문장이 그대로',
+        probesN.length === 2 && probesN.every((p) => nBank.some((b) => b.questionId === p.questionId && b.text === p.text)),
+        JSON.stringify(probesN.map((p) => [p.questionId, p.text])),
+      );
+      const savedN = await freshN();
+      check('코호트 없는 고객: 저장한 크기에 실증을 세지 않음', savedN?.questionBankSize === pq.sizeAfter - 2, `${savedN?.questionBankSize} / 문항 ${pq.sizeAfter}`);
     }
   }
 } finally {

@@ -14,7 +14,13 @@ import {
   type GapBucket,
   type GapRow,
 } from '../lib/citationGap'
-import { KIND_PILL, comparisonFromHistory } from '../lib/citationView'
+import {
+  KIND_PILL,
+  QUESTION_SCOPE_LABEL,
+  QUESTION_SCOPE_OPTIONS,
+  citationBasisLabel,
+  comparisonFromHistory,
+} from '../lib/citationView'
 import { ENGINE_LABEL, formatPct } from '../lib/format'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b7-citation-sources'
@@ -36,18 +42,6 @@ interface LoadedGap {
   analysis: CitationSourceAnalysis
 }
 const EMPTY_LOADED: LoadedGap = { filterKey: '', analysis: EMPTY }
-
-/**
- * 질문 유형 필터. 기본은 브랜드 이름 없는 질문이다 — 이름을 댄 질문은 AI가 그 이름으로 찾아가 우리 페이지를 인용하기
- * 쉬워서, 섞어 보면 이름을 모르는 사람의 질문에서는 우리가 없는 출처가 「뒷받침함」으로 숨는다. 콘텐츠 생성의
- * 「충족」(src/lib/gapActions.ts)도 같은 기준이다.
- */
-const QUESTION_SCOPE_LABEL: Record<CitationQuestionScope | 'all', string> = {
-  unnamed: '브랜드 이름 없는 질문',
-  all: '모든 질문',
-  named: '브랜드 이름을 댄 질문',
-  probe: '실증 질문',
-}
 
 /*
  * 띠 색 — 범주형 팔레트의 고정 슬롯. 값은 src/index.css의 --bucket-* 토큰에 있다.
@@ -261,7 +255,7 @@ export default function CitationGap() {
           ))}
         </select>
         <select value={scope} onChange={(e) => setScope(e.target.value as CitationQuestionScope | 'all')} aria-label="질문 유형 필터">
-          {(['unnamed', 'all', 'named'] as const).map((s) => (
+          {QUESTION_SCOPE_OPTIONS.map((s) => (
             <option key={s} value={s}>
               {QUESTION_SCOPE_LABEL[s]}
             </option>
@@ -300,7 +294,7 @@ export default function CitationGap() {
               전체 인용 {gap.totalCitations.toLocaleString()}건 중 {gap.gapCitations.toLocaleString()}건이 우리 언급을 뒷받침하지
               않는 출처에서 나왔습니다 · 갭 도메인 {gap.gapDomains.length}개
               {engine && ` · ${ENGINE_LABEL[engine] ?? engine} 응답만`}
-              {questions && ` · ${QUESTION_SCOPE_LABEL[scope]}만`}
+              {questions ? ` · ${QUESTION_SCOPE_LABEL[scope]}만` : ' · 실증 질문 제외'}
               {unknownResponses > 0 && ` (질문 은행에 없는 질문의 응답 ${unknownResponses}개는 어느 쪽인지 몰라 뺐습니다)`}
             </p>
             {prevUnsplit && comparison ? (
@@ -382,9 +376,8 @@ export default function CitationGap() {
             </div>
 
             <p className="muted">
-              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주{' '}
-              {questions ? `${QUESTION_SCOPE_LABEL[scope]}의 ` : '전체 '}인용 기준입니다. 도메인을 펼치면 실제 인용된 URL(상위
-              10개)이 보입니다.
+              자사 도메인·자사 언급을 뒷받침한 출처는 제외했습니다. 점유율은 이 주 {citationBasisLabel(scope)} 기준입니다. 도메인을
+              펼치면 실제 인용된 URL(상위 10개)이 보입니다.
               {(bucket !== 'all' || query) && ` · 표시 ${rows.length}/${gap.gapDomains.length}개`}
             </p>
 
