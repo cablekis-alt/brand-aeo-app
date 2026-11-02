@@ -65,6 +65,8 @@ export interface QuestionSpec {
   region: string
   containsBrandName: boolean
   version: string
+  /** 실증 질문(점수 · 본 글 제외, 측정은 함). 근거는 src/prompts/types.ts QuestionSpec.probe. */
+  probe?: boolean
 }
 
 // 질문 프롬프트 빌더.
