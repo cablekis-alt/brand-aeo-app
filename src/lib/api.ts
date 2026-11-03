@@ -865,6 +865,8 @@ export interface StoredDraft {
   evidence?: AnswerEvidence
   /** 사람이 고른 홈페이지 사진 — 본문에는 넣지 않고 내보낼 때만 사진 자리에 넣는다(src/lib/articlePhotos.ts). */
   photos?: import('./articlePhotos').PhotoPick[]
+  /** 사람이 사진을 뺀 자리 — 자동 채우기가 다시 채우지 않는다(server/contentDraft.ts와 같다). */
+  photoCleared?: PhotoPlace[]
 }
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
 export interface GapFill {
@@ -1688,6 +1690,50 @@ export async function saveDraftPhoto(
   const out = (await res.json().catch(() => ({}))) as StoredDraft & { photoNote?: string; error?: string }
   if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status })
   return out
+}
+
+/** 자동 채우기 저장 결과 — server/contentDraft.ts AutoPhotoSaveResult와 같다. */
+export interface AutoPhotoSaveResult {
+  /** 사진을 하나라도 넣은 글(저장된 모양). */
+  drafts: StoredDraft[]
+  saved: number
+  /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다. */
+  skipped: number
+  /** 그사이 다시 만들어진 글 — 건너뛰었다. */
+  changed: string[]
+  /** 초안이 없어진 글 — 건너뛰었다. */
+  missing: string[]
+}
+
+/** 한 번에 보내는 글 수 — 서버가 받는 수(server/index.ts op auto)와 JSON 본문 한도 안. */
+const AUTO_PHOTO_BATCH = 10
+
+/**
+ * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진을 저장한다 — 글 AUTO_PHOTO_BATCH편씩 나눠 보내고(한 번에 drafts.json 쓰기 한 번),
+ * 결과를 합친다. 그사이 다시 만들어진 글은 서버가 건너뛰고 changed로 알린다. 판정 호출 없음. 중간에 실패하면 그때까지 저장된 것은 남고
+ * throw.
+ */
+export async function saveDraftPhotosAuto(
+  tenantId: string,
+  articles: readonly { actionId: string; generatedAt: string; picks: readonly import('./photoAutoPick').AutoPickInput[] }[],
+): Promise<AutoPhotoSaveResult> {
+  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] }
+  const list = articles.filter((a) => a.picks.length > 0)
+  for (let i = 0; i < list.length; i += AUTO_PHOTO_BATCH) {
+    const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: 'auto', articles: list.slice(i, i + AUTO_PHOTO_BATCH) }),
+    })
+    const out = (await res.json().catch(() => ({}))) as Partial<AutoPhotoSaveResult> & { error?: string }
+    if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status, partial: total })
+    total.drafts.push(...(out.drafts ?? []))
+    total.saved += out.saved ?? 0
+    total.skipped += out.skipped ?? 0
+    total.changed.push(...(out.changed ?? []))
+    total.missing.push(...(out.missing ?? []))
+  }
+  return total
 }
 
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */

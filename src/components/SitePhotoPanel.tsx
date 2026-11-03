@@ -3,7 +3,9 @@ import { loadPublishSettings, saveDraftPhoto, savePhotoRights, type PhotoPlace, 
 import { isPhotoMedical, matchPhotos, photoSlotsOf, type PhotoPick, type PhotoSlot } from '../lib/articlePhotos'
 import { publishMarkdownOf } from '../lib/draftGaps'
 import type { PublishSettings } from '../lib/publishSettings'
+import { isPeopleScene } from '../lib/photoAutoPick'
 import { loadSitePhotos, photoPageOf, type SitePhotoResult } from '../lib/sitePhotos'
+import PhotoAutoFill from './PhotoAutoFill'
 
 /**
  * 글 확인 화면의 「홈페이지 사진」 — 글의 사진 자리마다 브랜드 홈페이지 사진을 사람이 한 장씩 고른다(src/lib/articlePhotos.ts).
@@ -11,6 +13,9 @@ import { loadSitePhotos, photoPageOf, type SitePhotoResult } from '../lib/sitePh
  * 고른 사진은 본문에 넣지 않고 내보낼 때(복사 · .html)만 사진 자리에 들어간다. 홈페이지 사진도 예약 플랫폼 · 사진작가의
  * 사진이거나 사람이 찍혀 있을 수 있어, 브랜드마다 한 번 「써도 된다」는 확인을 받고(서버가 확인 없이 고르기를 막는다) 사진마다
  * 썸네일을 보고 고르게 한다 — 미리 골라 두지 않는다. 의료 업종은 기본으로 꺼 두고 의료광고 확인을 따로 받는다.
+ *
+ * 「자동 채우기」(PhotoAutoFill)는 빈 자리에 맞는 사진을 미리보기 표로 보이고 저장하면 「자동」 표시로 넣는다 — 여기서 바꾸거나 빼면
+ * 사람이 고른 자리가 되어 자동 채우기가 다시 덮지 않는다.
  */
 export default function SitePhotoPanel({
   tenantId,
@@ -19,6 +24,7 @@ export default function SitePhotoPanel({
   disabled,
   onStored,
   onSettings,
+  photoContext,
 }: {
   tenantId: string
   brand: TenantSummary
@@ -28,6 +34,8 @@ export default function SitePhotoPanel({
   onStored: (s: StoredDraft) => void
   /** 발행 설정을 읽거나 사진 사용 확인을 바꿨다 — 초안 패널의 「사진 받기」가 같은 확인을 본다. */
   onSettings?: (s: PublishSettings | null) => void
+  /** 자동 채우기의 반복 상한에 셀 브랜드의 초안 전부와 글의 작성자 — 없으면 이 글만 본다(브랜드 상한은 서버가 지킨다). */
+  photoContext?: { drafts: Readonly<Record<string, StoredDraft>>; groupOf?: (actionId: string) => string | undefined }
 }) {
   const md = useMemo(() => publishMarkdownOf(stored), [stored])
   const slots = useMemo(() => photoSlotsOf(md), [md])
@@ -198,6 +206,20 @@ export default function SitePhotoPanel({
               사람이 찍힌 사진은 초상권을 확인한 뒤 고르세요. 사진 아래 설명 줄이 사진과 어긋나면 「본문 편집」에서 고치세요.
             </p>
           )}
+          {slots.length > 0 && (
+            <PhotoAutoFill
+              tenantId={tenantId}
+              brand={brand}
+              articles={[{ stored, title: '' }]}
+              drafts={photoContext?.drafts ?? { [stored.actionId]: stored }}
+              groupOf={photoContext?.groupOf}
+              label="자동 채우기"
+              locked={off}
+              onStored={onStored}
+              source={found}
+              single
+            />
+          )}
         </>
       )}
 
@@ -215,6 +237,9 @@ export default function SitePhotoPanel({
               <div className="photo-picked">
                 <img src={picked.src} alt={picked.alt || slot.alt} referrerPolicy="no-referrer" loading="lazy" />
                 <span>
+                  {picked.auto && <span className="status-pill st-info no-glyph">자동</span>}
+                  {picked.auto && isPeopleScene(slot.key) && <span className="status-pill st-warn">확인 필요</span>}
+                  {picked.auto && ' '}
                   {picked.alt || <span className="muted">(설명은 사진 자리 글자로)</span>}
                   <br />
                   <span className="doc-meta">
