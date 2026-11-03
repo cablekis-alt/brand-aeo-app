@@ -32,8 +32,12 @@ export const TOUR_CREDIT = '한국관광공사'
 /** 한 번에 TourAPI를 새로 부르는 장소 수의 상한 — 장소 하나에 TourAPI 2~8번(7일 캐시). 캐시에서 온 장소는 세지 않는다. */
 export const TOUR_PLACE_LIMIT = 20
 
-/** 한 장소에서 돌려줄 사진 수의 상한(서비스마다). */
-export const TOUR_PHOTOS_PER_SOURCE = 12
+/**
+ * 한 장소에서 돌려줄 사진 수의 상한(서비스마다) — 장소의 사진을 모두 돌려준다(관광사진 정보는 여러 쪽을 넘겨 받는다 —
+ * server/tourPhotos.ts). 자동 채우기가 사진 장면을 읽어 자리에 맞는 사진을 고르므로(src/lib/photoScenes.ts), 앞 몇 장만 보면 맞는 사진이
+ * 있어도 못 찾는다(군산근대역사박물관 관광사진 115장 — 앞 40장은 모두 2013-01 실내 전시 사진).
+ */
+export const TOUR_PHOTOS_PER_SOURCE = 500
 
 /** 관광공사 사진 하나 — 자동 채우기 · 손으로 고르기의 공공 사진 후보(origin public)가 된다. */
 export interface TourPhoto {
@@ -60,6 +64,8 @@ export interface TourPhoto {
   location: string
   /** 사진 이름(국문 관광정보 imgname — 대표 사진은 없다). */
   imageName?: string
+  /** 촬영 연월(YYYYMM, 관광사진 정보 galPhotographyMonth) — 장면을 읽을 사진을 시기마다 고루 고른다. */
+  month?: string
 }
 
 /** 장소 하나를 찾을 단서 — 사이트 장소 이름, 장소 페이지의 다른 이름 · 주소 · 좌표. */
@@ -282,6 +288,12 @@ export function tourResultCode(json: unknown): string {
   return typeof code === 'string' || typeof code === 'number' ? String(code) : ''
 }
 
+/** 응답의 전체 건수 — response.body.totalCount. 없거나 숫자가 아니면 null(쪽 넘기기는 받은 건수로 멈춘다). */
+export function tourTotalCount(json: unknown): number | null {
+  const n = Number(((json ?? {}) as { response?: { body?: { totalCount?: unknown } } }).response?.body?.totalCount)
+  return Number.isInteger(n) && n >= 0 ? n : null
+}
+
 /** 응답의 항목들 — response.body.items.item이 배열 · 객체 하나 · ''(결과 없음)일 수 있다. */
 export function tourItems(json: unknown): Record<string, unknown>[] {
   const items = ((json ?? {}) as { response?: { body?: { items?: unknown } } }).response?.body?.items
@@ -346,9 +358,9 @@ function tourPhoto(
   source: TourSource,
   contentId: string,
   location: string,
-  extra: { photographer?: string; imageName?: string } = {},
+  extra: { photographer?: string; imageName?: string; month?: string } = {},
 ): TourPhoto {
-  const { photographer, imageName } = extra
+  const { photographer, imageName, month } = extra
   return {
     src,
     title,
@@ -363,6 +375,7 @@ function tourPhoto(
     contentId,
     location,
     ...(imageName ? { imageName } : {}),
+    ...(month ? { month } : {}),
   }
 }
 
@@ -432,7 +445,10 @@ export function galleryTourPhotos(
     }
     if (photos.length < TOUR_PHOTOS_PER_SOURCE) {
       const photographer = cleanPhotoCredit(it.galPhotographer)
-      photos.push(tourPhoto(src, title, place, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), photographer ? { photographer } : {}))
+      const month = /^\d{6}$/.test(str(it.galPhotographyMonth)) ? str(it.galPhotographyMonth) : ''
+      photos.push(
+        tourPhoto(src, title, place, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), { ...(photographer ? { photographer } : {}), ...(month ? { month } : {}) }),
+      )
     }
   }
   return { photos, rejected }

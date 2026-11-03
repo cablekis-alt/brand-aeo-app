@@ -185,6 +185,13 @@ const ok0 = (item: unknown) => ({
 })
 const mockCalls: string[] = []
 const badKeys: string[] = []
+/** 관광사진 정보 쪽 넘기기 확인 — 「가상큰박물관」 130장(2013-01 100장 · 2014-11 30장)을 쪽마다 numOfRows건씩. */
+const BIG_TOTAL = 130
+const bigPages: string[] = []
+const bigItems = Array.from({ length: BIG_TOTAL }, (_, i) => ({
+  galContentId: String(5000 + i), galTitle: '가상시가상큰박물관', galWebImageUrl: GAL(`big${i}`), galPhotographyLocation: '전라북도 가상',
+  galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상시가상큰박물관', galPhotographyMonth: i < 100 ? '201301' : '201411',
+}))
 const mock = http.createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${MOCK_PORT}`)
   const p = url.searchParams
@@ -195,6 +202,14 @@ const mock = http.createServer((req, res) => {
   const json = (body: unknown, status = 200) => {
     res.writeHead(status, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify(body))
+  }
+  if (op === 'PhotoGalleryService1/gallerySearchList1' && kw === '가상시가상큰박물관') {
+    const rows = Number(p.get('numOfRows') ?? '10')
+    const pageNo = Number(p.get('pageNo') ?? '1')
+    bigPages.push(`${pageNo}/${rows}`)
+    const item = bigItems.slice((pageNo - 1) * rows, pageNo * rows)
+    json({ response: { header: { resultCode: '0000', resultMsg: 'OK' }, body: { items: item.length ? { item } : '', numOfRows: rows, pageNo, totalCount: BIG_TOTAL } } })
+    return
   }
   if (kw === '가상금지관') {
     res.writeHead(403, { 'Content-Type': 'text/plain' })
@@ -263,6 +278,8 @@ const mock = http.createServer((req, res) => {
       return json(ok0({ contentid: '9200', originimgurl: IMG('9201'), imgname: '가상등대전망대_1.jpg', cpyrhtDivCd: 'Type1' }))
     case 'PhotoGalleryService1/gallerySearchList1|가상등대전망대':
       return json(ok0(''))
+    case 'KorService2/searchKeyword2|가상큰박물관':
+      return json(ok0([{ contentid: '9900', title: '가상시가상큰박물관', addr1: '전북특별자치도 가상시 큰길 1' }]))
     case 'KorService2/searchKeyword2|가상다른관':
       return json(ok0([{ contentid: '9500', title: '가상다른관', addr1: '부산광역시 다른구 바다로 1', firstimage: IMG('9500'), cpyrhtDivCd: 'Type1' }]))
     case 'PhotoGalleryService1/gallerySearchList1|가상다른관':
@@ -481,6 +498,16 @@ try {
     ok('자동 채우기의 출처 붙이기도 Type3 관광공사 사진은 빼고 센다', autoCredit.status === 200 && autoCredit.body.credited === 0 && autoCredit.body.skipped === 1 && !photosOfB()[0]?.origin)
     const creditType1 = await put({ actionId: 'content:b', generatedAt: AT, op: 'credit', ...creditBody('가상근대박물관 옛 야경', GAL('12')) })
     ok('제1유형 관광공사 사진에는 출처를 붙인다', creditType1.status === 200 && photosOfB()[1]?.origin === 'public' && photosOfB()[1]?.credit === '한국관광공사')
+
+    // 관광사진 정보는 장소의 사진을 모두 — 쪽을 넘겨 전체 건수까지(촬영 연월과 함께), 쪽마다 캐시
+    const big = await tour(TENANT, { place: '가상큰박물관' })
+    ok(
+      '관광사진 정보는 쪽을 넘겨 장소의 사진을 모두 받는다(전체 건수에서 멈춤 · 촬영 연월)',
+      big.body.photos.length === BIG_TOTAL && JSON.stringify(bigPages) === JSON.stringify(['1/100', '2/100']) &&
+        big.body.photos.filter((p) => p.month === '201411').length === 30 && big.body.photos.every((p) => p.source === 'gallery' && p.license === 'kogl-1'),
+    )
+    const bigAgain = await tour(TENANT, { place: '가상큰박물관' })
+    ok('다시 물으면 쪽마다 캐시에서(TourAPI를 다시 부르지 않는다)', bigAgain.body.photos.length === BIG_TOTAL && bigPages.length === 2 && bigAgain.body.liveCalls === 0)
 
     // 캐시 · 키 노출
     await new Promise((r) => setTimeout(r, 1500))
