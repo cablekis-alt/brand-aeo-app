@@ -43,7 +43,7 @@
  * 없다 — 저장소 설정의 판을 바꾸기 전까지 측정은 옛 판을 잰다.
  *
  * 동봉본 만들기(v0.4.49 브랜드 통일):
- *   npx tsx scripts/promote-probe-questions.ts web4ai gunsan gunsan-national --app-data "<userData>" --bundle-out src/data/question-banks
+ *   npx tsx scripts/promote-probe-questions.ts web4ai gunsan --app-data "<userData>" --bundle-out src/data/question-banks
  *     [--cohort-out cohort-banks]
  * 앱 데이터는 읽기만 하고, 저장소 폴더에만 쓴다 — 설치본이 측정 때 userData에 없으면 가져오는 질문지(server/bundledBanks.ts).
  *   - 실증 질문이 있는 브랜드는 위와 같은 다음 판(표시만 뗌)을, 없는 브랜드는 지금 판을 그대로 <bundle-out>/<tenantId>/<판>.json에 쓴다.

@@ -20,7 +20,7 @@
  * 판정 엔진은 측정과 같은 설정(JUDGE_ENGINE)을 쓴다. 키는 .env에서 읽는다 — 설치본 키를 쓰려면 DOTENV_CONFIG_PATH로 userData의
  * .env를 가리킨다. 키는 출력하지 않는다.
  *
- * 설치본에 담아 배포하는 판(src/data/question-banks — v0.4.49 브랜드 통일의 web4ai v6 · gunsan v7 · gunsan-national v3)에는
+ * 설치본에 담아 배포하는 판(src/data/question-banks — v0.4.49 브랜드 통일의 web4ai v6 · gunsan v7)에는
  * dry-run도 하지 않고 멈춘다(server/bundledBanks.ts bundledAppendBlocker). 같은 판에 덧붙이면 그 PC 질문지가 동봉본과 달라져 그 판의
  * 측정이 매번 멈춘다 — 같은 판은 모든 PC에서 같은 질문이다.
  *

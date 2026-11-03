@@ -44,14 +44,13 @@ interface Bank {
 const readJson = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T;
 
 // ── 1. 저장소의 동봉본 ───────────────────────────────────────────────────────
-/** 결정(2026-11-03): 스테이,머뭄 v6(= v5에서 실증 표시만 뗌) · 군산각 지역형 v7(= v6에서 뗌) · 군산각 전국형 v3(그대로). */
+/** 결정(2026-11-03): 스테이,머뭄 v6(= v5에서 실증 표시만 뗌) · 군산각 지역형 v7(= v6에서 뗌). 군산각 전국형(gunsan-national)은 통일에서 뺐다. */
 const EXPECTED: Record<string, { version: string; questions: number; agnostic: number; cohort: string }> = {
   web4ai: { version: 'v6', questions: 66, agnostic: 50, cohort: '펜션__전북_군산/c1' },
   gunsan: { version: 'v7', questions: 62, agnostic: 48, cohort: '관광정보서비스__전북_군산/c1' },
-  'gunsan-national': { version: 'v3', questions: 36, agnostic: 22, cohort: '관광안내__국내/c1' },
 };
 const bundledTenants = existsSync(BUNDLE_DIR) ? readdirSync(BUNDLE_DIR).filter((n) => statSync(path.join(BUNDLE_DIR, n)).isDirectory()).sort() : [];
-ok('동봉 브랜드 — web4ai · gunsan · gunsan-national', bundledTenants.join() === Object.keys(EXPECTED).sort().join(), bundledTenants.join());
+ok('동봉 브랜드 — web4ai · gunsan', bundledTenants.join() === Object.keys(EXPECTED).sort().join(), bundledTenants.join());
 ok('동봉 폴더에 브랜드 폴더 말고 다른 파일 없음', existsSync(BUNDLE_DIR) && readdirSync(BUNDLE_DIR).every((n) => bundledTenants.includes(n)), existsSync(BUNDLE_DIR) ? readdirSync(BUNDLE_DIR).join() : '없음');
 
 for (const tenantId of bundledTenants) {
@@ -131,20 +130,21 @@ for (const tenantId of bundledTenants) {
 }
 const tenantOf = (id: string) => config.find((t) => t.tenantId === id);
 ok(
-  '저장소 설정 — web4ai v6 · gunsan v7(관광정보서비스 · 전북 군산 · 지역형) · gunsan-national v3(관광안내 · 국내 · 전국형)',
+  '저장소 설정 — web4ai v6 · gunsan v7(관광정보서비스 · 전북 군산 · 지역형) · gunsan-national 없음(통일에서 뺌)',
   tenantOf('web4ai')?.questionBankVersion === 'v6' &&
     tenantOf('gunsan')?.questionBankVersion === 'v7' &&
     tenantOf('gunsan')?.industry === '관광정보서비스' &&
     tenantOf('gunsan')?.region === '전북 군산' &&
     tenantOf('gunsan')?.marketScope === undefined &&
-    tenantOf('gunsan-national')?.questionBankVersion === 'v3' &&
-    tenantOf('gunsan-national')?.industry === '관광안내' &&
-    tenantOf('gunsan-national')?.region === '국내' &&
-    tenantOf('gunsan-national')?.marketScope === 'national',
+    !tenantOf('gunsan-national'),
+);
+ok(
+  '저장소 cohort-banks/ — 군산각 전국형이 쓰던 관광안내__국내 기준본 없음(쓰는 구운 브랜드가 없다)',
+  !existsSync(path.join(COHORT_DIR, '관광안내__국내')) && !config.some((t) => cohortKey(t.industry, t.region) === '관광안내__국내'),
 );
 ok(
   '저장소 설정 — 군산각 사실에 옛 오버레이의 대구 주소(brand-address)가 없음(운영 PC의 fact-graph.json을 구움)',
-  ['gunsan', 'gunsan-national'].every((id) => (tenantOf(id)?.factGraph ?? []).length > 0 && (tenantOf(id)?.factGraph ?? []).every((f) => f.id !== 'brand-address' && !f.value.includes('대구'))),
+  ['gunsan'].every((id) => (tenantOf(id)?.factGraph ?? []).length > 0 && (tenantOf(id)?.factGraph ?? []).every((f) => f.id !== 'brand-address' && !f.value.includes('대구'))),
 );
 // 군산각은 데스크톱에서만 잰다 — CI가 재면 웹 데모 데이터 · 첫 실행 시드에 실린다.
 const srcData = readdirSync(path.join(repoRoot, 'src', 'data'));

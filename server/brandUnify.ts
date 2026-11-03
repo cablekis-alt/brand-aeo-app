@@ -14,23 +14,23 @@ import type { TenantConfig } from './types.js';
 import { sharesSite } from '../src/lib/brandVariant.js';
 
 /**
- * v0.4.49 브랜드 통일 — 스테이,머뭄(web4ai) · 군산각 지역형(gunsan) · 군산각 전국형(gunsan-national)을 모든 PC에서 같은 설정 · 같은
- * 질문지로 잰다. 설정은 저장소 설정(server/tenants.config.json)에 굽고, 질문지는 설치본에 담는다(bundledBanks.ts). 여기서는 그 둘로
+ * v0.4.49 브랜드 통일 — 스테이,머뭄(web4ai) · 군산각 지역형(gunsan)을 모든 PC에서 같은 설정 · 같은 질문지로 잰다. 군산각 전국형
+ * (gunsan-national)은 통일에서 뺐다(2026-11-03 결정). 설정은 저장소 설정(server/tenants.config.json)에 굽고, 질문지는 설치본에 담는다(bundledBanks.ts). 여기서는 그 둘로
  * 통일되지 않는 PC별 파일을 다룬다(서버 시작 때, seedFirstRunIfEmpty 바로 뒤 — server/index.ts).
  *
- * 1. 한 번만 하는 정리 — 세 브랜드의 engines.json · market-scope.json을 data/<id>/before-unify-0.4.49/로 옮긴다(이름 바꾸기 — 지우지
+ * 1. 한 번만 하는 정리 — 두 브랜드의 engines.json · market-scope.json을 data/<id>/before-unify-0.4.49/로 옮긴다(이름 바꾸기 — 지우지
  *    않는다). 두 파일은 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다(tenantRegistry.ts mergeRuntimeTenants). 표식 파일
  *    (userData/brand-unify-0.4.49.json)이 있으면 다시 하지 않는다 — 그 뒤 앱에서 다시 고친 값은 사람이 고친 것이다. 중간에 멈추면
  *    다음 시작은 첫 시도의 대상만 다시 하고, 그 사이 앱에서 새로 만들거나 고친 파일은 옮기지 않는다(UNIFY_PENDING_FILE). 이 PC가 그
  *    id를 다른 업체로 쓰고 있으면(idCollision) 그 id는 건너뛴다. fact-graph.json · owned-domains.json · publish-settings.json ·
  *    brand-page.json은 건드리지 않는다.
  * 2. 읽기만 하는 점검 — 시작할 때마다 userData/unify-check.json(과 로그)에 남긴다. 같은 홈페이지를 쓰는 다른 id(군산각을 다른 id로
- *    등록한 PC — 운영자가 지운다), 세 브랜드를 숨긴 툼스톤, 저장소 설정과 다른 오버레이 항목(그 id를 다른 업체로 쓰고 있으면 알린다),
+ *    등록한 PC — 운영자가 지운다), 두 브랜드를 숨긴 툼스톤, 저장소 설정과 다른 오버레이 항목(그 id를 다른 업체로 쓰고 있으면 알린다),
  *    동봉본과 다른 코호트 공통 질문지 · 질문지, 남아 있는 PC별 파일, 마치지 못한 정리.
  * 패키징(설치본)에서만 한다 — dev 체크아웃의 data/는 개발자 것이고, 웹은 이 서버를 쓰지 않는다.
  */
 export const UNIFY_VERSION = '0.4.49';
-export const UNIFIED_TENANTS = ['web4ai', 'gunsan', 'gunsan-national'] as const;
+export const UNIFIED_TENANTS = ['web4ai', 'gunsan'] as const;
 export const UNIFY_BACKUP_DIR = `before-unify-${UNIFY_VERSION}`;
 export const UNIFY_MARKER_FILE = `brand-unify-${UNIFY_VERSION}.json`;
 /** 정리하는 중의 기록 — 첫 시도의 대상을 고정한다(unifyCleanupOnce). 정리가 끝나면 표식이 이긴다. */
@@ -208,9 +208,9 @@ export interface UnifyCheck {
   /** 운영자가 볼 것. */
   issues: UnifyIssue[];
   tenants: Record<string, UnifyTenantReport>;
-  /** 세 브랜드와 같은 홈페이지를 쓰는 다른 id. */
+  /** 두 브랜드와 같은 홈페이지를 쓰는 다른 id. */
   sameSite: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string; cohortOnly: boolean; hidden: boolean; sharesWith: string[] }[];
-  /** 세 브랜드가 쓰는 코호트 공통 질문지 — 이 PC 것과 동봉 기준본. 동봉 기준본이 없는 실행(dev)이면 비교하지 않는다. */
+  /** 두 브랜드가 쓰는 코호트 공통 질문지 — 이 PC 것과 동봉 기준본. 동봉 기준본이 없는 실행(dev)이면 비교하지 않는다. */
   cohortBanks: { key: string; version: string; state: 'same' | 'differs' | 'missing' | 'unreadable' | 'not-compared'; detail?: string }[];
 }
 

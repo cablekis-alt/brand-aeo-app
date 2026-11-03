@@ -133,7 +133,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     ok('동봉 폴더 = SEED_DATA_DIR/question-banks', appPaths.BUNDLED_BANK_DIR === path.join(process.env.SEED_DATA_DIR!, 'question-banks'), String(appPaths.BUNDLED_BANK_DIR));
     const runtime = await loadRuntimeTenants();
     const v = (id: string) => runtime.find((t) => t.tenantId === id)?.questionBankVersion;
-    ok('브랜드 목록 — web4ai v6 · gunsan v7 · gunsan-national v3(저장소 설정)', v('web4ai') === 'v6' && v('gunsan') === 'v7' && v('gunsan-national') === 'v3', `${v('web4ai')} ${v('gunsan')} ${v('gunsan-national')}`);
+    ok('브랜드 목록 — web4ai v6 · gunsan v7(저장소 설정) · gunsan-national 없음(통일에서 뺌)', v('web4ai') === 'v6' && v('gunsan') === 'v7' && v('gunsan-national') === undefined, `${v('web4ai')} ${v('gunsan')} ${v('gunsan-national')}`);
     ok('처음에는 질문지 파일이 없음', !existsSync(path.join(root, 'data')));
     const got = await store.getQuestionBank('web4ai', 'v6');
     const file = bankFile('web4ai', 'v6');
@@ -141,8 +141,9 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     const mtime = statSync(file).mtimeMs;
     const again = await store.getQuestionBank('web4ai', 'v6');
     ok('다시 읽으면 이 PC 파일을 그대로 읽음(다시 쓰지 않음)', sameQuestions(again, bundled('web4ai', 'v6')) && statSync(file).mtimeMs === mtime);
-    const parallel = await Promise.all([store.getQuestionBank('gunsan-national', 'v3'), store.getQuestionBank('gunsan-national', 'v3'), store.getQuestionBank('gunsan-national', 'v3')]);
-    ok('같은 순간 세 번 읽어도 모두 같은 질문지(먼저 가져온 파일을 읽음)', parallel.every((b) => sameQuestions(b, bundled('gunsan-national', 'v3'))));
+    const parallel = await Promise.all([store.getQuestionBank('gunsan', 'v7'), store.getQuestionBank('gunsan', 'v7'), store.getQuestionBank('gunsan', 'v7')]);
+    ok('같은 순간 세 번 읽어도 모두 같은 질문지(먼저 가져온 파일을 읽음)', parallel.every((b) => sameQuestions(b, bundled('gunsan', 'v7'))));
+    ok('gunsan-national은 동봉하지 않음 — 없는 v3은 null · 파일을 만들지 않음', (await store.getQuestionBank('gunsan-national', 'v3')) === null && !existsSync(bankFile('gunsan-national', 'v3')));
     ok('동봉본에 없는 판은 null · 파일을 만들지 않음', (await store.getQuestionBank('web4ai', 'v5')) === null && !existsSync(bankFile('web4ai', 'v5')));
     await measureBundled('gunsan', 'v7', { questions: 62, agnostic: 48 });
     ok(
@@ -151,9 +152,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     );
     const web4ai = await ensureQuestionBank((await tenantNow('web4ai'))!, store);
     ok('측정 web4ai — 질문지 결정이 v6 66문항 그대로', web4ai.length === 66 && JSON.stringify(web4ai) === JSON.stringify(bundled('web4ai', 'v6').questions));
-    const national = await ensureQuestionBank((await tenantNow('gunsan-national'))!, store);
-    ok('측정 gunsan-national — 질문지 결정이 v3 36문항 그대로', national.length === 36 && JSON.stringify(national) === JSON.stringify(bundled('gunsan-national', 'v3').questions));
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const marker = readJson<{ moved: unknown[] }>(path.join(root, unify.UNIFY_MARKER_FILE));
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     ok('정리 · 점검 — 옮길 파일 없음 · 표식 · unify-check.json · 알릴 것 없음', marker.moved.length === 0 && check.issues.length === 0 && check.sameSite.length === 0, JSON.stringify(check.issues));
@@ -176,7 +175,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
       gunsan?.questionBankVersion === 'v7' && JSON.stringify(gunsan.competitors) === JSON.stringify(baked?.competitors) && gunsan.industry === '관광정보서비스',
       JSON.stringify({ v: gunsan?.questionBankVersion, competitors: gunsan?.competitors.map((c) => c.name) }),
     );
-    ok('툼스톤에 걸린 gunsan-national은 목록에서 숨은 채(점검이 알림)', !(await tenantNow('gunsan-national')));
+    ok('툼스톤에 걸린 gunsan-national은 목록에서 숨은 채', !(await tenantNow('gunsan-national')));
     const v6Before = readFileSync(bankFile('gunsan', 'v6'), 'utf8');
     const used = await ensureQuestionBank(gunsan!, store);
     ok('측정 — 동봉 v7 62문항을 가져와 씀 · 옛 v6 파일 그대로', used.length === 62 && JSON.stringify(used) === JSON.stringify(bundled('gunsan', 'v7').questions) && readFileSync(bankFile('gunsan', 'v6'), 'utf8') === v6Before);
@@ -188,7 +187,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     const webEnginesBefore = readFileSync(path.join(root, 'data', 'web4ai', 'engines.json'), 'utf8');
     const preUnify = (await tenantNow('gunsan'))!;
     ok('정리 전 — 이 PC의 엔진 · 시장 범위 파일이 저장소 설정을 덮고 있음', preUnify.engines.join() === 'gemini' && preUnify.marketScope === 'national', `${preUnify.engines} ${preUnify.marketScope}`);
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const backup = path.join(tenantDir, unify.UNIFY_BACKUP_DIR);
     ok(
       '정리 — 엔진 · 시장 범위 파일을 before-unify-0.4.49/로 옮김(내용 그대로 · 지우지 않음) · web4ai도',
@@ -206,17 +205,17 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     ok('정리 — 표식에 옮긴 파일 3개', movedList === 'gunsan/engines.json,gunsan/market-scope.json,web4ai/engines.json', JSON.stringify(marker));
     // 정리 뒤 앱에서 다시 고친 엔진은 사람이 고친 것 — 다시 시작해도 옮기지 않는다.
     put(path.join(tenantDir, 'engines.json'), { engines: ['openai'] });
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     ok('다시 시작 — 표식이 있어 다시 옮기지 않음', existsSync(path.join(tenantDir, 'engines.json')) && readFileSync(path.join(backup, 'engines.json'), 'utf8') === movedBefore[0]);
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     const kinds = check.issues.map((i) => `${i.kind}:${i.tenantId}`).sort().join();
-    ok('점검 — 툼스톤(gunsan-national) · 코호트 공통 질문지 다름(gunsan)을 알림', kinds === 'cohort-differs:gunsan,tombstone:gunsan-national', kinds);
+    ok('점검 — 코호트 공통 질문지 다름(gunsan)을 알림 · gunsan-national 툼스톤은 통일 대상이 아니라 알리지 않음', kinds === 'cohort-differs:gunsan', kinds);
     ok(
       '점검 — 옛 오버레이의 범위 · 업종 차이 · 남은 PC별 파일을 적음',
       check.tenants.gunsan!.overlayDiffers?.industry?.overlay === '관광안내' &&
         check.tenants.gunsan!.overlayDiffers?.marketScope?.overlay === 'national' &&
         ['brand-page.json', 'competitors.json', 'engines.json', 'fact-graph.json', 'owned-domains.json', 'publish-settings.json'].every((n) => check.tenants.gunsan!.files.includes(n)) &&
-        check.tenants['gunsan-national']!.hidden,
+        !('gunsan-national' in check.tenants),
       JSON.stringify(check.tenants.gunsan),
     );
     return;
@@ -260,7 +259,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     const before = readFileSync(path.join(root, 'tenants.overlay.json'), 'utf8');
     const ids = (await loadRuntimeTenants()).map((t) => t.tenantId);
     ok('다른 id — 저장소 설정의 gunsan과 옛 id all-about-gunsan이 둘 다 목록에 있음(병합은 홈페이지를 보지 않음)', ids.includes('gunsan') && ids.includes('all-about-gunsan'));
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     const issues = check.issues.filter((i) => i.kind === 'same-site').map((i) => i.tenantId).sort().join();
     ok('점검 — 보이는 고객 브랜드(all-about-gunsan · co)만 알림, 숨은 gunsan-local · 경쟁사 측정 브랜드는 목록에만', issues === 'all-about-gunsan,co', JSON.stringify(check.sameSite));
@@ -286,7 +285,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
       (err ?? '').includes('덮지 않음') && readFileSync(path.join(tenantDir, 'engines.json'), 'utf8') === before && !existsSync(path.join(root, unify.UNIFY_MARKER_FILE)),
       String(err),
     );
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     ok('그래도 점검 파일은 남김', existsSync(path.join(root, unify.UNIFY_CHECK_FILE)));
     return;
   }
@@ -300,19 +299,21 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
       [
         ['web4ai', 'v6'],
         ['gunsan', 'v7'],
-        ['gunsan-national', 'v3'],
       ].map(([t, v]) => bundledAppendBlocker(t!, v!)),
     );
-    ok('동봉한 판(web4ai v6 · gunsan v7 · gunsan-national v3)은 덧붙이기를 막음', blocks.every((b) => (b ?? '').includes('설치본에 담아 배포하는 질문지')), JSON.stringify(blocks));
+    ok('동봉한 판(web4ai v6 · gunsan v7)은 덧붙이기를 막음', blocks.every((b) => (b ?? '').includes('설치본에 담아 배포하는 질문지')), JSON.stringify(blocks));
     ok(
-      '동봉하지 않은 판 · 브랜드는 막지 않음(web4ai v5 · 「모두 새로 쓰기」 gunsan v8 · 동봉하지 않는 브랜드)',
-      (await bundledAppendBlocker('web4ai', 'v5')) === null && (await bundledAppendBlocker('gunsan', 'v8')) === null && (await bundledAppendBlocker('fake-unify-x', 'v2')) === null,
+      '동봉하지 않은 판 · 브랜드는 막지 않음(web4ai v5 · 「모두 새로 쓰기」 gunsan v8 · 통일에서 뺀 gunsan-national v3 · 동봉하지 않는 브랜드)',
+      (await bundledAppendBlocker('web4ai', 'v5')) === null &&
+        (await bundledAppendBlocker('gunsan', 'v8')) === null &&
+        (await bundledAppendBlocker('gunsan-national', 'v3')) === null &&
+        (await bundledAppendBlocker('fake-unify-x', 'v2')) === null,
     );
     return;
   }
 
   if (scenario === 'id-collision') {
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     const marker = readJson<{ moved: { from: string }[]; skipped?: { tenantId: string }[] }>(path.join(root, unify.UNIFY_MARKER_FILE));
     const collided = check.issues.filter((i) => i.kind === 'id-collision').map((i) => i.tenantId).sort().join();
@@ -326,12 +327,12 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     );
     const file = (id: string, name: string) => path.join(root, 'data', id, name);
     ok(
-      '정리 — 겹친 id(gunsan · web4ai)의 파일은 옮기지 않음 · 겹치지 않은 gunsan-national은 옮김',
+      '정리 — 겹친 id(gunsan · web4ai)의 파일은 옮기지 않음 · 통일에서 뺀 gunsan-national의 파일도 그대로',
       existsSync(file('gunsan', 'engines.json')) &&
         existsSync(file('gunsan', 'market-scope.json')) &&
         existsSync(file('web4ai', 'engines.json')) &&
-        !existsSync(file('gunsan-national', 'engines.json')) &&
-        marker.moved.map((m) => m.from.split(path.sep).join('/')).join() === 'gunsan-national/engines.json' &&
+        existsSync(file('gunsan-national', 'engines.json')) &&
+        marker.moved.length === 0 &&
         (marker.skipped ?? []).map((s) => s.tenantId).sort().join() === 'gunsan,web4ai',
       JSON.stringify(marker),
     );
@@ -380,7 +381,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
         readFileSync(backup('web4ai', 'market-scope.json'), 'utf8') === scopeBackup,
       String(err2),
     );
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     ok('점검 — 정리를 마치지 못한 것을 알림(cleanup-failed)', check.cleanup === null && check.issues.some((i) => i.kind === 'cleanup-failed' && i.message.includes('덮지 않음')), JSON.stringify(check.issues));
     // 운영자가 백업 자리의 옛 파일을 치웠다(다른 이름으로).
@@ -398,7 +399,7 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
   if (scenario === 'vercel') {
     ok('웹 — 동봉 폴더 없음(null)', appPaths.BUNDLED_BANK_DIR === null);
     ok('웹 — 없는 판은 null · 아무것도 쓰지 않음', (await store.getQuestionBank('web4ai', 'v6')) === null && !existsSync(path.join(root, 'data')));
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     ok('웹 — 정리 · 점검 안 함(파일 없음)', !existsSync(path.join(root, unify.UNIFY_CHECK_FILE)) && !existsSync(path.join(root, unify.UNIFY_MARKER_FILE)));
     return;
   }
@@ -406,7 +407,10 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
   if (scenario === 'real') {
     const runtime = await loadRuntimeTenants();
     const t = (id: string) => runtime.find((x) => x.tenantId === id);
-    ok('운영 PC 사본 — web4ai v6 · gunsan v7 · gunsan-national v3', t('web4ai')?.questionBankVersion === 'v6' && t('gunsan')?.questionBankVersion === 'v7' && t('gunsan-national')?.questionBankVersion === 'v3');
+    ok(
+      '운영 PC 사본 — web4ai v6 · gunsan v7(저장소 설정) · gunsan-national은 이 PC 오버레이의 v3(저장소 설정에 없음)',
+      t('web4ai')?.questionBankVersion === 'v6' && t('gunsan')?.questionBankVersion === 'v7' && t('gunsan-national')?.questionBankVersion === 'v3' && !(await findBakedTenant('gunsan-national')),
+    );
     ok('운영 PC 사본 — 판 v6(web4ai) · v7(gunsan)은 아직 이 PC에 없음', !existsSync(bankFile('web4ai', 'v6')) && !existsSync(bankFile('gunsan', 'v7')));
     const snap = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
     const keep = ['data/web4ai/question-bank/v5.json', 'data/gunsan/question-bank/v6.json', 'data/gunsan-national/question-bank/v3.json', 'cohort-banks/펜션__전북_군산/c1.json', 'cohort-banks/관광정보서비스__전북_군산/c1.json', 'cohort-banks/관광안내__국내/c1.json'];
@@ -419,16 +423,16 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     await measureBundled('web4ai', 'v6', { questions: 66, agnostic: 50 }, probeWeb);
     await measureBundled('gunsan', 'v7', { questions: 62, agnostic: 48 }, probeGunsan);
     const national = await ensureQuestionBank(t('gunsan-national')!, store);
-    ok('운영 PC 사본 — gunsan-national은 이 PC의 v3 36문항 그대로(동봉본과 같아 멈추지 않음)', national.length === 36);
+    ok('운영 PC 사본 — gunsan-national은 이 PC의 v3 36문항 그대로(동봉하지 않아 가져오거나 멈추지 않음)', national.length === 36);
     ok('운영 PC 사본 — 옛 판 · 코호트 공통 질문지 파일이 한 바이트도 안 바뀜', keep.map(snap).every((s, i) => s === before[i]));
     const factBefore = ['gunsan', 'gunsan-national', 'web4ai'].map((id) => snap(`data/${id}/fact-graph.json`));
-    await unify.runBrandUnify();
+    await unify.runBrandUnify(store);
     const marker = readJson<{ moved: unknown[] }>(path.join(root, unify.UNIFY_MARKER_FILE));
     const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
     ok('운영 PC 사본 — 정리할 엔진 · 시장 범위 파일 없음 · 사실 파일 그대로', marker.moved.length === 0 && ['gunsan', 'gunsan-national', 'web4ai'].every((id, i) => snap(`data/${id}/fact-graph.json`) === factBefore[i]));
     ok(
-      '운영 PC 사본 — 점검: 알릴 것 없음 · 질문지 · 코호트 공통 질문지 모두 동봉본과 같음',
-      check.issues.length === 0 && Object.values(check.tenants).every((t) => t.banks.every((b) => b.state === 'same')) && check.cohortBanks.every((c) => c.state === 'same'),
+      '운영 PC 사본 — 점검: 같은 홈페이지의 gunsan-national(통일에서 뺌)만 알림 · 질문지 · 코호트 공통 질문지 모두 동봉본과 같음',
+      check.issues.map((i) => `${i.kind}:${i.tenantId}`).join() === 'same-site:gunsan-national' && Object.values(check.tenants).every((t) => t.banks.every((b) => b.state === 'same')) && check.cohortBanks.every((c) => c.state === 'same'),
       JSON.stringify({ issues: check.issues, banks: Object.fromEntries(Object.entries(check.tenants).map(([k, v]) => [k, v.banks])), cohorts: check.cohortBanks }),
     );
     return;
@@ -527,7 +531,7 @@ async function parent(): Promise<void> {
     {
       const root = path.join(tmp, 'missing');
       const seed = path.join(tmp, 'missing-seed');
-      put(path.join(seed, 'question-banks', 'gunsan', 'v3.json'), { ...bundled('gunsan-national', 'v3') });
+      put(path.join(seed, 'question-banks', 'gunsan', 'v3.json'), { ...bundled('gunsan', 'v7'), version: 'v3' });
       runChild('missing', root, { ...packaged(root), SEED_DATA_DIR: seed });
     }
 
