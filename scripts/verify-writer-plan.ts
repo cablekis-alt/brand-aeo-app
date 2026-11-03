@@ -197,7 +197,7 @@ for (const c of cases) {
   ok(`${c.label} — 글 80편 · 작성자 8명 × 10편 · 보고서 위반 0 · 겹침 최대 1`, plan.articles.length === 80 && build.report!.violations.length === 0 && build.report!.maxOverlap === 1 && build.report!.perWriter.every((w) => w.articles === 10 && w.questions === 20));
   ok(`${c.label} — 같은 의미 묶음 짝이 하한 이상(${c.clusterFloor})`, build.report!.kinds.cluster >= c.clusterFloor, `${build.report!.kinds.cluster}`);
   ok(`${c.label} — parseWriterPlan 통과 · 다시 읽어도 같음`, JSON.stringify(parseWriterPlan(JSON.parse(JSON.stringify(plan))).plan) === JSON.stringify(plan));
-  ok(`${c.label} — 앱이 배정 글 80편을 모두 허용 · 추가 글 상한 80편(운영 기간)`, extraArticleCap(plan, '2026-11-03') === 80 && plan.articles.every((a) => topicGuard(plan, false, plan.bankVersion, a.id, '2026-11-03') === null));
+  ok(`${c.label} — 앱이 배정 글 80편을 모두 허용 · 추가 글 상한 80 + 10 = 90편(운영 기간)`, extraArticleCap(plan, '2026-11-03') === 90 && plan.articles.every((a) => topicGuard(plan, false, plan.bankVersion, a.id, '2026-11-03') === null));
   const again = buildWriterPlan(c.input);
   ok(`${c.label} — 같은 입력이면 같은 배정(결정적)`, JSON.stringify(again.plan) === JSON.stringify(plan) && JSON.stringify(again.report) === JSON.stringify(build.report));
 }

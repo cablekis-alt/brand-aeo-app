@@ -7,7 +7,7 @@
  *
  * 왜 잠그나: 배정 밖의 글(배정표와 다르게 묶은 글)이 생기면 글 id가 배정표와 어긋나 누가 어느 글을 올렸는지 · 질문마다 몇 편이 맡았는지가
  * 틀어진다. 사람이 지키던 절차를 앱이 막는다 — 운영 기간에는 추가 글 만들기 · 되살리기와 질문 은행 글의 브리프 · 초안을 배정 글만
- * 허용한다. 대신 배정 글끼리는 질문이 겹쳐도 되고(writerExtraRules), 살아 있는 추가 글 상한이 배정 글 수까지 늘어난다(extraArticleCap).
+ * 허용한다. 대신 배정 글끼리는 질문이 겹쳐도 되고(writerExtraRules), 살아 있는 추가 글 상한이 배정 글 수 + 10으로 늘어난다(extraArticleCap).
  *
  * ── 판 ──────────────────────────────────────────────────────────────────────
  * 질문 id의 뜻은 질문지 판마다 바뀐다. 배정은 한 판(승격한 새 판)의 id로 적었으므로 다른 판의 주에서는 작성자를 붙이지 않고, 글 만들기는
@@ -230,11 +230,25 @@ export function topicGuard(
 }
 
 /**
- * 살아 있는 추가 글 상한 — 운영 기간이면 max(10, 배정 글 수), 아니면 10(지금과 같다). 배정 글 80편을 한 PC에서 모두 만들어 두고
- * 작성자에게 나눠 주므로 10편 상한으로는 한 작성자 몫도 다 만들지 못한다.
+ * 살아 있는 추가 글 상한 — 운영 기간이면 배정 글 수 + 10(EXTRA_LIMITS.articles), 아니면 10(지금과 같다). 배정 글 80편을 한 PC에서 모두
+ * 만들어 두고 작성자에게 나눠 주므로 10편 상한으로는 한 작성자 몫도 다 만들지 못한다. 배정 전에 만든 글(배정 밖 글)도 살아 있으면 세므로
+ * 배정 글 수만큼만 열면 그 글 수만큼 배정 글이 모자란다(2026-11-03 web4ai · gunsan에 1편씩 — 80편 중 79편만 만들어졌다). 늘어난 몫으로
+ * 배정 밖 글을 만들 수는 없다 — 운영 기간에는 topicGuard가 배정 글만 허용한다.
  */
 export function extraArticleCap(plan: WriterPlan | null, todayKst: string): number {
-  return plan && isActive(plan, todayKst) ? Math.max(EXTRA_LIMITS.articles, plan.articles.length) : EXTRA_LIMITS.articles
+  return plan && isActive(plan, todayKst) ? plan.articles.length + EXTRA_LIMITS.articles : EXTRA_LIMITS.articles
+}
+
+/**
+ * 작성자 단추(src/pages/GapActions.tsx WriterRuns)의 편수 검사 — 그 작성자 몫 중 살아 있지 않은 글을 모두 더해도 상한(extraArticleCap)
+ * 안이면 null, 넘으면 화면에 보일 이유. 서버도 같은 상한으로 409를 내므로 누르기 전에 같은 셈으로 막는다. alive는 살아 있는 추가 글
+ * id 전부(배정 밖 글 포함)다.
+ */
+export function writerRunCapReason(plan: WriterPlan, alive: ReadonlySet<string>, writerKey: string, todayKst: string): string | null {
+  const cap = extraArticleCap(plan, todayKst)
+  const missing = plan.articles.filter((a) => a.writer.key === writerKey && !alive.has(a.id)).length
+  if (alive.size + missing <= cap) return null
+  return `추가 글은 ${cap}편까지예요 — 지금 ${alive.size}편에 ${missing}편을 더하면 넘습니다. 다 쓴 추가 글을 목록에서 뺀 뒤 눌러 주세요.`
 }
 
 /**
